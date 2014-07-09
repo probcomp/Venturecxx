@@ -20,10 +20,12 @@ class DrawFramePSP(psp.RandomPSP):
     self.window.fill(pygame.Color(255, 255, 255))
     for tick in [-2, -1, 0, 1, 2]:
       pygame.draw.line(self.window, pygame.Color(0, 0, 0), (0, self.y_to_pixels(tick)), (50, self.y_to_pixels(tick)), 1)
-    brown_y = self.y_to_pixels(inferrer.engine.sample(self.sym("brown_step"))["value"])
-    pygame.draw.rect(self.window, pygame.Color(0, 255, 0), (30, brown_y - 5, 10, 10), 2)
-    obs_y = self.y_to_pixels(inferrer.engine.sample(self.sym("obs_noise"))["value"])
-    pygame.draw.rect(self.window, pygame.Color(0, 0, 255), (15, obs_y - 5, 10, 10), 2)
+    brown_ys = self.ys_at(inferrer, "brown_step")
+    for brown_y in brown_ys:
+      pygame.draw.rect(self.window, pygame.Color(0, 255, 0), (30, brown_y - 5, 10, 10), 2)
+    obs_ys = self.ys_at(inferrer, "obs_noise")
+    for obs_y in obs_ys:
+      pygame.draw.rect(self.window, pygame.Color(0, 0, 255), (15, obs_y - 5, 10, 10), 2)
     plot_range = 2
     for (_did, directive) in inferrer.engine.directives.items():
       if directive[0] == "observe":
@@ -38,14 +40,18 @@ class DrawFramePSP(psp.RandomPSP):
         pr_i = int(datum[1]["value"])
         plot_range = max(plot_range, pr_i + 1)
     for i in range(1, plot_range):
-      (x_p, y_p) = self.point_at(inferrer, i-1)
-      (x_n, y_n) = self.point_at(inferrer, i)
-      pygame.draw.line(self.window, pygame.Color(255, 0, 0), (x_p, y_p), (x_n, y_n), 3)
+      old_ps = self.points_at(inferrer, i-1)
+      new_ps = self.points_at(inferrer, i)
+      for ((x_p, y_p), (x_n, y_n)) in zip(old_ps, new_ps):
+        pygame.draw.line(self.window, pygame.Color(255, 0, 0), (x_p, y_p), (x_n, y_n), 3)
     pygame.display.update()
     return inferrer
 
-  def point_at(self, inferrer, i):
-    return (self.x_to_pixels(i), self.y_to_pixels(inferrer.engine.sample([self.sym("position"), self.num(i)])["value"]))
+  def ys_at(self, inferrer, var):
+    return [self.y_to_pixels(y["value"]) for y in inferrer.engine.sample_all(self.sym(var))]
+
+  def points_at(self, inferrer, i):
+    return [(self.x_to_pixels(i), self.y_to_pixels(y["value"])) for y in inferrer.engine.sample_all([self.sym("position"), self.num(i)])]
 
   def y_to_pixels(self, model_y):
     return int(200 - 30 * model_y)
