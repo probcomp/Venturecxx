@@ -169,8 +169,8 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def do_dump_profile_data(self, s):
     '''Save the current profile data to the given file.'''
-    print s
-    self.ripl.profile_data()
+    self.ripl.profile_data().to_csv(s)
+    print "Profile data saved to %s" % s
 
 def run_venture_console(ripl):
   RiplCmd(ripl).cmdloop()
