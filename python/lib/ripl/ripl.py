@@ -494,6 +494,7 @@ Open issues:
             dir_id = directive['directive_id']
             dir_val = str(directive['value'])
             dir_type = directive['instruction']
+            dir_expr = self._cur_parser().unparse_expression(directive['expression'])
 
             # TODO: display expressions in a sensible way
 
@@ -501,13 +502,11 @@ Open issues:
 
             if dir_type == "assume":
               dir_name = directive['symbol']
-              print "%d: assume %s:\t%s" % (dir_id, dir_name, dir_val)
+              print "%d: assume %s %s:\t%s" % (dir_id, dir_name, dir_expr, dir_val)
             elif dir_type == "observe":
-              dir_expr = directive['expression']
               dir_literal = dir_val
               print "%d: observe %s = \t%s" % (dir_id, dir_expr, dir_literal)
             elif dir_type == "predict":
-              dir_expr = directive['expression']
               print "%d: predict %s:\t %s" % (dir_id, dir_expr, dir_val)
             else:
               assert False, "Unknown directive type found: %s" & str(directive)
