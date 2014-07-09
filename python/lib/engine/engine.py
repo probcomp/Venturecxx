@@ -40,7 +40,7 @@ class Engine(object):
     return self.inference_sps
 
   def bind_foreign_inference_sp(self, name, sp):
-    self.inference_sps.append((name, sp))
+    self.inference_sps.append([name, sp])
 
   def getDistinguishedTrace(self): 
     assert self.traces
