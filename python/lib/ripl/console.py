@@ -166,6 +166,12 @@ class RiplCmd(Cmd, object):
     '''Report the global logscore.'''
     print self._do_instruction('get_global_logscore', s)
 
+  @catchesVentureException
+  def do_dump_profile_data(self, s):
+    '''Save the current profile data to the given file.'''
+    print s
+    self.ripl.profile_data()
+
 def run_venture_console(ripl):
   RiplCmd(ripl).cmdloop()
 

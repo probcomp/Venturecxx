@@ -293,6 +293,7 @@ class Trace(object):
     return scope in self.scopes and self.numBlocksInScope(scope) > 0
 
   def recordProposal(self, name, time, accepted):
+    name = str(name)
     if name not in self.stats:
       self.stats[name] = []
     self.stats[name].append((time, accepted))

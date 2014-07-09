@@ -607,6 +607,14 @@ Open issues:
         return self.address_to_proposal_time[address]
 
     ############################################
+    # Hacky profiling support since the above is ill understood
+    ############################################
+
+    def profile_data(self):
+        return self.sivm.core_sivm.engine.profile_data()
+
+
+    ############################################
     # Library
     ############################################
     def load_prelude(self):
