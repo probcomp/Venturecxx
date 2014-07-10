@@ -29,7 +29,7 @@ def banner(help=True):
     print '''
 Venture, version 0.2  http://probcomp.csail.mit.edu/venture/{0}
 Venture is *alpha quality* software.
-Expect crashes that wipe out your Venture session.
+Expect occasional crashes that wipe out your Venture session.
 '''.format(help_ad).strip()
 
 def server(args):
