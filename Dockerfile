@@ -8,8 +8,8 @@
 # sudo docker build -t probcomp/venture .
 #
 # to save/load the image to/from a tarball:
-# sudo docker save -o venture.tar probcomp/venture
-# sudo docker load -o venture.tar
+# sudo docker save probcomp/venture | venture-0.2-docker.tar
+# cat venture-0.2-docker.tar | sudo docker load
 #
 # to start a container with an interactive shell:
 # sudo docker run -t -i probcomp/venture
