@@ -27,7 +27,7 @@ def banner(help=True):
     if not(help):
         help_ad = ""
     print '''
-Venture, version 0.1.1  http://probcomp.csail.mit.edu/venture/{0}
+Venture, version 0.2  http://probcomp.csail.mit.edu/venture/{0}
 Venture is *alpha quality* software.
 Expect crashes that wipe out your Venture session.
 '''.format(help_ad).strip()
@@ -57,7 +57,7 @@ def lite(args):
     run_venture_console(v.make_lite_church_prime_ripl())
 
 parser = argparse.ArgumentParser(description='An interactive, Turing-complete probabilistic programming platform')
-parser.add_argument('--version', action='version', version='Venture, version 0.1.1')
+parser.add_argument('--version', action='version', version='Venture, version 0.2')
 subparsers = parser.add_subparsers(title="optional mode")
 
 parser_local = subparsers.add_parser("puma", help="[default] Start a local Venture Puma session",

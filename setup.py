@@ -235,7 +235,7 @@ distutils.ccompiler.CCompiler.compile=parallelCCompile
 
 setup (
     name = 'Venture CXX',
-    version = '0.1.1',
+    version = '0.2',
     author = 'MIT.PCP',
     url = 'TBA',
     long_description = 'TBA.',
