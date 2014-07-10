@@ -444,9 +444,15 @@ Open issues:
             program = int(program)
         except: pass
         if program is None:
-            return "(rejection default all 1)"
+            if self.mode == 'church_prime':
+                return "(rejection default all 1)"
+            if self.mode == 'venture_script':
+                return "rejection(default, all, 1)"
         elif isinstance(program, int):
-            return "(mh default one %s)" % program
+            if self.mode == 'church_prime':
+                return "(mh default one %d)" % program
+            if self.mode == 'venture_script':
+                return "mh(default, one, %d)" % program
         else:
             return program
 
