@@ -20,7 +20,7 @@ FROM        ubuntu:14.04
 MAINTAINER  MIT Probabilistic Computing Project
 
 # Add source code repository (assumed to be in parent directory)
-ADD         ../venture-0.1.tgz /root/
+ADD         ../venture-0.2.tgz /root/
 WORKDIR     /root/Venturecxx/
 
 # Install dependencies

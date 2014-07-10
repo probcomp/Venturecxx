@@ -497,7 +497,7 @@ Open issues:
     
     def print_directives(self, *instructions, **kwargs):
         for directive in self.list_directives(instructions = instructions, **kwargs):
-            dir_id = directive['directive_id']
+            dir_id = int(directive['directive_id'])
             dir_val = str(directive['value'])
             dir_type = directive['instruction']
             dir_expr = self.directive_id_to_stringable_instruction[dir_id]['expression']
