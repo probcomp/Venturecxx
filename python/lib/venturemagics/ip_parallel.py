@@ -862,11 +862,15 @@ class MRipl():
         #     [r.forget('snapsp_%i'%j) for j in range(pop_size)]
         #     return vals
 
-        def batch_sample(ripl,exp,pop_size):
-            lst_string = '(list '+ ' '.join([exp]*pop_size) + ')'
+        def batch_sample(ripl,exp,pop_size,syntax='church_prime'):
+            if syntax=='church_prime':
+                lst_string = '(list '+ ' '.join([exp]*pop_size) + ')'
+            else:
+                lst_string = 'list('+ ','.join([exp]*pop_size) + ')'
+                
             return ripl.sample(lst_string)
 
-        mrmap_values = self.map_proc(no_groups,batch_sample,exp,pop_size)
+        mrmap_values = self.map_proc(no_groups,batch_sample,exp,pop_size,self.syntax)
 
         if flatten: mrmap_values = lst_flatten(mrmap_values)
 
