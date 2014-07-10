@@ -494,7 +494,7 @@ Open issues:
             dir_id = directive['directive_id']
             dir_val = str(directive['value'])
             dir_type = directive['instruction']
-            dir_expr = self._cur_parser().unparse_expression(directive['expression'])
+            dir_expr = self.directive_id_to_stringable_instruction[dir_id]['expression']
 
             # TODO: display expressions in a sensible way
 
