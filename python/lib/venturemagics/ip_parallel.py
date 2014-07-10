@@ -2,6 +2,8 @@ from IPython.parallel import Client
 from IPython.parallel.util import interactive
 from venture.shortcuts import make_puma_church_prime_ripl
 from venture.shortcuts import make_lite_church_prime_ripl
+from venture.shortcuts import make_puma_venture_script_ripl
+from venture.shortcuts import make_lite_venture_script_ripl
 import numpy as np
 import matplotlib.pylab as plt
 from scipy.stats import kde
@@ -39,14 +41,6 @@ mk_p_ripl = make_puma_church_prime_ripl
 # v.plot('x',**plottingkwargs) = v.snapshot(exp_list=['x'],plot=True,**kwargs)
 # move local_out to debug mode
 # move regression stuff to regression utils
-
-
-
-## TODO
-# 1. mr_map can just be v.map_proc (etc.)
-
-
-
 
 
 
@@ -103,7 +97,8 @@ def mk_picklable(out_lst):
 
 class MRipl():
 
-    def __init__(self, no_ripls, backend='puma',local_mode=False,
+    def __init__(self, no_ripls, backend='puma',
+                 syntax='church_prime', local_mode=False,
                  seeds=None, debug_mode=False, set_no_engines=None):
 
 # TODO DEBUG MODE should probably run inference
@@ -196,7 +191,18 @@ class MRipl():
         else:
             self.local_seeds = seeds[:self.no_local_ripls]
 
-        mk_ripl = mk_p_ripl if self.backend=='puma' else mk_l_ripl
+        self.syntax = syntax
+        if self.backend=='puma':
+            if self.syntax == 'church_prime':
+                mk_ripl = make_puma_church_prime_ripl
+            else:
+                mk_ripl = make_puma_venture_script_ripl
+        else:
+            if self.syntax == 'church_prime':
+                mk_ripl = make_lite_church_prime_ripl
+            else:
+                mk_ripl = make_lite_venture_script_ripl
+                
         self.local_ripls=[mk_ripl() for i in range(self.no_local_ripls)]
         self.mr_set_seeds(local_seeds=self.local_seeds)
 
@@ -247,12 +253,21 @@ class MRipl():
 
         # proc creates ripls, using ripls_per_engine attribute we send to engines
         @interactive
-        def make_mripl_proc(no_ripls_per_engine):
+        def make_mripl_proc(no_ripls_per_engine,syntax):
             k=no_ripls_per_engine
-            mripls.append({'lite':[mk_l_ripl() for i in range(k)],
-                           'puma':[mk_p_ripl() for i in range(k)], 'seeds':[]})
 
-        self.dview.apply(make_mripl_proc,self.no_ripls_per_engine)
+            if syntax == 'church_prime':
+                mk_puma = make_puma_church_prime_ripl
+                mk_lite = make_lite_church_prime_ripl
+            else:
+                mk_puma = make_puma_venture_script_ripl
+                mk_lite = make_lite_venture_script_ripl
+                
+            mripls.append({'lite':[mk_lite() for i in range(k)],
+                           'puma':[mk_puma() for i in range(k)], 'seeds':[]})
+
+        self.dview.apply(make_mripl_proc,
+                         self.no_ripls_per_engine, self.syntax)
         self.mr_set_seeds(self.seeds)
 
         # test invariant
@@ -599,6 +614,8 @@ class MRipl():
                                                    include_prelude=include_prelude)
     ## FIXME: need to serialize directives list
 
+    def print_directives(self,*instructions,**kwargs):
+        return self.local_ripls[0].print_directives(*instructions,**kwargs)
 
 
     ## MRIPL CONVENIENCE FEATURES: INFO AND SNAPSHOT
