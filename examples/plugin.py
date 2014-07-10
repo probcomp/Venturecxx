@@ -99,7 +99,6 @@ class QuitPSP(psp.RandomPSP):
   def canAbsorb(self, _trace, _appNode, _parentNode): return False
   def simulate(self, args):
     inferrer = args.operandValues[0]
-    print 8
     import pygame
     pygame.quit()
     return inferrer
