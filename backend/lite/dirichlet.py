@@ -1,5 +1,4 @@
 import copy
-from nose.tools import assert_greater_equal # assert_greater_equal is metaprogrammed pylint:disable=no-name-in-module
 import scipy.special
 import numpy.random as npr
 import math
@@ -46,14 +45,14 @@ class DirMultSPAux(SPAux):
     if os is not None: 
       self.os = os
       self.total = sum(os)
-      assert_greater_equal(min(self.os),0)
+      assert min(self.os) >= 0
     elif n is not None:
       self.os = [0.0 for _ in range(n)]
       self.total = 0
     else: raise Exception("Must pass 'n' or 'os' to DirMultSPAux")
 
   def copy(self): 
-    assert_greater_equal(min(self.os),0)
+    assert min(self.os) >= 0
     return DirMultSPAux(os = copy.copy(self.os))
 
 class DirMultSP(VentureSP):
@@ -114,7 +113,7 @@ class CDirMultOutputPSP(RandomPSP):
   def incorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
     index = self.index[val]
-    assert_greater_equal(args.spaux.os[index], 0)
+    assert args.spaux.os[index] >= 0
     args.spaux.os[index] += 1
     args.spaux.total += 1
     
@@ -123,7 +122,7 @@ class CDirMultOutputPSP(RandomPSP):
     index = self.index[val]
     args.spaux.os[index] -= 1
     args.spaux.total -= 1
-    assert_greater_equal(args.spaux.os[index], 0)
+    assert args.spaux.os[index] >= 0
         
   def enumerateValues(self,args):
     return self.os
@@ -190,14 +189,14 @@ class UDirMultOutputPSP(RandomPSP):
   def incorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
     index = self.index[val]
-    assert_greater_equal(args.spaux.os[index], 0)
+    assert args.spaux.os[index] >= 0
     args.spaux.os[index] += 1
     
   def unincorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
     index = self.index[val]
     args.spaux.os[index] -= 1
-    assert_greater_equal(args.spaux.os[index], 0)
+    assert args.spaux.os[index] >= 0
 
   def enumerateValues(self,args):
     return self.os
@@ -256,7 +255,7 @@ class CSymDirMultOutputPSP(RandomPSP):
   def incorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
     index = self.index[val]
-    assert_greater_equal(args.spaux.os[index], 0)
+    assert args.spaux.os[index] >= 0
     args.spaux.os[index] += 1
     args.spaux.total += 1
     
@@ -265,7 +264,7 @@ class CSymDirMultOutputPSP(RandomPSP):
     index = self.index[val]
     args.spaux.os[index] -= 1
     args.spaux.total -= 1
-    assert_greater_equal(args.spaux.os[index], 0)
+    assert args.spaux.os[index] >= 0
         
   def enumerateValues(self,args):
     return self.os
@@ -331,14 +330,14 @@ class USymDirMultOutputPSP(RandomPSP):
   def incorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
     index = self.index[val]
-    assert_greater_equal(args.spaux.os[index], 0)
+    assert args.spaux.os[index] >= 0
     args.spaux.os[index] += 1
     
   def unincorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
     index = self.index[val]
     args.spaux.os[index] -= 1
-    assert_greater_equal(args.spaux.os[index], 0)
+    assert args.spaux.os[index] >= 0
 
   def enumerateValues(self,args):
     return self.os

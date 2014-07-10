@@ -10,7 +10,6 @@ from scaffold import constructScaffold
 from node import ApplicationNode, Args
 from lkernel import VariationalLKernel, DeterministicLKernel
 from utils import sampleLogCategorical, cartesianProduct, logaddexp, FixedRandomness
-from nose.tools import assert_almost_equal # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
 from value import VentureNumber
 import copy
 from exception import VentureError
@@ -392,7 +391,7 @@ class ParticlePGibbsOperator(object):
       particleWeights[p] = regenAndAttachAtBorder(particles[p],scaffold.border[0],scaffold,False,OmegaDB(),{})
 
     particleWeights[P] = regenAndAttachAtBorder(particles[P],scaffold.border[0],scaffold,True,rhoDBs[0],{})
-    assert_almost_equal(particleWeights[P],rhoWeights[0])
+    # assert_almost_equal(particleWeights[P],rhoWeights[0])
 
 #   for every time step,
     for t in range(1,T):
@@ -405,7 +404,7 @@ class ParticlePGibbsOperator(object):
         newParticleWeights[p] = regenAndAttachAtBorder(newParticles[p],self.scaffold.border[t],self.scaffold,False,OmegaDB(),{})
       newParticles[P] = Particle(particles[P])
       newParticleWeights[P] = regenAndAttachAtBorder(newParticles[P],self.scaffold.border[t],self.scaffold,True,rhoDBs[t],{})
-      assert_almost_equal(newParticleWeights[P],rhoWeights[t])
+      # assert_almost_equal(newParticleWeights[P],rhoWeights[t])
       particles = newParticles
       particleWeights = newParticleWeights
 

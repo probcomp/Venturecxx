@@ -10,7 +10,6 @@ from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,Enumer
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
-from nose.tools import assert_is_not_none # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
 from scope import isScopeIncludeOutputPSP, isScopeExcludeOutputPSP
 from regen import regenAndAttach
 from detach import detachAndExtract
@@ -191,7 +190,7 @@ class Trace(object):
   def setMadeSPAt(self,node,sp): node.madeSP = sp
 
   def madeSPFamiliesAt(self,node):
-    assert_is_not_none(node.madeSPFamilies)
+    assert node.madeSPFamilies is not None
     return node.madeSPFamilies
 
   def setMadeSPFamiliesAt(self,node,families): node.madeSPFamilies = families

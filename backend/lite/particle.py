@@ -1,4 +1,3 @@
-from nose.tools import assert_equal,assert_is_none,assert_is_instance
 from wttree import PMap, PSet
 from trace import Trace
 
@@ -86,7 +85,6 @@ class Particle(Trace):
       return self.base.valueAt(node)
 
   def setValueAt(self,node,value): 
-#    assert_is_none(self.base.valueAt(node))
     self.values = self.values.insert(node,value)
 
   def madeSPAt(self,node):
@@ -135,7 +133,7 @@ class Particle(Trace):
   def containsSPFamilyAt(self,node,id): 
     makerNode = self.spRefAt(node).makerNode
     if makerNode in self.newMadeSPFamilies:
-      assert_is_instance(self.newMadeSPFamilies.lookup(makerNode),PMap)
+      assert isinstance(self.newMadeSPFamilies.lookup(makerNode),PMap)
       if id in self.newMadeSPFamilies.lookup(makerNode): 
         return True
     elif self.base.madeSPFamiliesAt(makerNode).containsFamily(id): return True
