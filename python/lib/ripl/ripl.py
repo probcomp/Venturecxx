@@ -444,9 +444,15 @@ Open issues:
             program = int(program)
         except: pass
         if program is None:
-            return "(rejection default all 1)"
+            if self.mode == 'church_prime':
+                return "(rejection default all 1)"
+            if self.mode == 'venture_script':
+                return "rejection(default, all, 1)"
         elif isinstance(program, int):
-            return "(mh default one %s)" % program
+            if self.mode == 'church_prime':
+                return "(mh default one %d)" % program
+            if self.mode == 'venture_script':
+                return "mh(default, one, %d)" % program
         else:
             return program
 
@@ -471,7 +477,7 @@ Open issues:
         self.execute_instruction({'instruction':'rollback'})
         return None
 
-    def list_directives(self, type=False, include_prelude = False):
+    def list_directives(self, type=False, include_prelude = False, instructions = []):
         with self.sivm._pause_continuous_inference():
             directives = self.execute_instruction({'instruction':'list_directives'})['directives']
             # modified to add value to each directive
@@ -485,8 +491,32 @@ Open issues:
             # if not requested to include the prelude, exclude those directives
             if hasattr(self, '_n_prelude') and (not include_prelude):
                 directives = directives[self._n_prelude:]
+            if len(instructions) > 0:
+                directives = [d for d in directives if d['instruction'] in instructions]
             return directives
+    
+    def print_directives(self, *instructions, **kwargs):
+        for directive in self.list_directives(instructions = instructions, **kwargs):
+            dir_id = directive['directive_id']
+            dir_val = str(directive['value'])
+            dir_type = directive['instruction']
+            dir_expr = self.directive_id_to_stringable_instruction[dir_id]['expression']
 
+            # TODO: display expressions in a sensible way
+
+            #print "DIRECTIVE: " + str(directive)
+
+            if dir_type == "assume":
+              dir_name = directive['symbol']
+              print "%d: assume %s %s:\t%s" % (dir_id, dir_name, dir_expr, dir_val)
+            elif dir_type == "observe":
+              dir_literal = dir_val
+              print "%d: observe %s = \t%s" % (dir_id, dir_expr, dir_literal)
+            elif dir_type == "predict":
+              print "%d: predict %s:\t %s" % (dir_id, dir_expr, dir_val)
+            else:
+              assert False, "Unknown directive type found: %s" & str(directive)
+      
     def get_directive(self, label_or_did):
         if isinstance(label_or_did,int):
             i = {'instruction':'get_directive', 'directive_id':label_or_did}
