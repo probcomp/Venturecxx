@@ -500,22 +500,16 @@ Open issues:
             dir_id = int(directive['directive_id'])
             dir_val = str(directive['value'])
             dir_type = directive['instruction']
-            dir_expr = self.directive_id_to_stringable_instruction[dir_id]['expression']
-
-            # TODO: display expressions in a sensible way
-
-            #print "DIRECTIVE: " + str(directive)
-
+            dir_text = self._get_raw_text(dir_id)
+            
             if dir_type == "assume":
-                dir_name = directive['symbol']
-                print "%d: assume %s %s:\t%s" % (dir_id, dir_name, dir_expr, dir_val)
+                print "%d: %s:\t%s" % (dir_id, dir_text, dir_val)
             elif dir_type == "observe":
-                dir_literal = dir_val
-                print "%d: observe %s = \t%s" % (dir_id, dir_expr, dir_literal)
+                print "%d: %s" % (dir_id, dir_text)
             elif dir_type == "predict":
-                print "%d: predict %s:\t %s" % (dir_id, dir_expr, dir_val)
+                print "%d: %s:\t %s" % (dir_id, dir_text, dir_val)
             else:
-                assert False, "Unknown directive type found: %s" & str(directive)
+                assert False, "Unknown directive type found: %s" % str(directive)
       
     def get_directive(self, label_or_did):
         if isinstance(label_or_did,int):
