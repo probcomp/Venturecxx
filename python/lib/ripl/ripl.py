@@ -507,15 +507,15 @@ Open issues:
             #print "DIRECTIVE: " + str(directive)
 
             if dir_type == "assume":
-              dir_name = directive['symbol']
-              print "%d: assume %s %s:\t%s" % (dir_id, dir_name, dir_expr, dir_val)
+                dir_name = directive['symbol']
+                print "%d: assume %s %s:\t%s" % (dir_id, dir_name, dir_expr, dir_val)
             elif dir_type == "observe":
-              dir_literal = dir_val
-              print "%d: observe %s = \t%s" % (dir_id, dir_expr, dir_literal)
+                dir_literal = dir_val
+                print "%d: observe %s = \t%s" % (dir_id, dir_expr, dir_literal)
             elif dir_type == "predict":
-              print "%d: predict %s:\t %s" % (dir_id, dir_expr, dir_val)
+                print "%d: predict %s:\t %s" % (dir_id, dir_expr, dir_val)
             else:
-              assert False, "Unknown directive type found: %s" & str(directive)
+                assert False, "Unknown directive type found: %s" & str(directive)
       
     def get_directive(self, label_or_did):
         if isinstance(label_or_did,int):
