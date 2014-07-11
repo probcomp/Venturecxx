@@ -37,7 +37,7 @@ class VentureSivm(object):
     _core_instructions = {"assume","observe","predict",
             "configure","forget","freeze","report","infer","start_continuous_inference",
             "stop_continuous_inference","continuous_inference_status",
-            "clear","rollback","get_directive_logscore","get_global_logscore",
+            "clear","rollback","get_logscore","get_global_logscore",
             "debugger_configure","debugger_list_random_choices", "debugger_clear",
             "debugger_force_random_choice","debugger_report_address",
             "debugger_history","debugger_dependents","debugger_address_to_source_code_location",
