@@ -566,6 +566,9 @@ Open issues:
         # rebuilds of the ripl, etc?
         self.sivm.core_sivm.engine.bind_foreign_sp(name, sp)
 
+    def bind_foreign_inference_sp(self, name, sp):
+        self.sivm.core_sivm.engine.bind_foreign_inference_sp(name, sp)
+
     ############################################
     # Serialization
     ############################################
@@ -629,6 +632,14 @@ Open issues:
 
     def profiler_get_proposal_time(self,address):
         return self.address_to_proposal_time[address]
+
+    ############################################
+    # Hacky profiling support since the above is ill understood
+    ############################################
+
+    def profile_data(self):
+        return self.sivm.core_sivm.engine.profile_data()
+
 
     ############################################
     # Library
