@@ -444,9 +444,15 @@ Open issues:
             program = int(program)
         except: pass
         if program is None:
-            return "(rejection default all 1)"
+            if self.mode == 'church_prime':
+                return "(rejection default all 1)"
+            if self.mode == 'venture_script':
+                return "rejection(default, all, 1)"
         elif isinstance(program, int):
-            return "(mh default one %s)" % program
+            if self.mode == 'church_prime':
+                return "(mh default one %d)" % program
+            if self.mode == 'venture_script':
+                return "mh(default, one, %d)" % program
         else:
             return program
 
@@ -491,26 +497,19 @@ Open issues:
     
     def print_directives(self, *instructions, **kwargs):
         for directive in self.list_directives(instructions = instructions, **kwargs):
-            dir_id = directive['directive_id']
+            dir_id = int(directive['directive_id'])
             dir_val = str(directive['value'])
             dir_type = directive['instruction']
-
-            # TODO: display expressions in a sensible way
-
-            #print "DIRECTIVE: " + str(directive)
-
+            dir_text = self._get_raw_text(dir_id)
+            
             if dir_type == "assume":
-              dir_name = directive['symbol']
-              print "%d: assume %s:\t%s" % (dir_id, dir_name, dir_val)
+                print "%d: %s:\t%s" % (dir_id, dir_text, dir_val)
             elif dir_type == "observe":
-              dir_expr = directive['expression']
-              dir_literal = dir_val
-              print "%d: observe %s = \t%s" % (dir_id, dir_expr, dir_literal)
+                print "%d: %s" % (dir_id, dir_text)
             elif dir_type == "predict":
-              dir_expr = directive['expression']
-              print "%d: predict %s:\t %s" % (dir_id, dir_expr, dir_val)
+                print "%d: %s:\t %s" % (dir_id, dir_text, dir_val)
             else:
-              assert False, "Unknown directive type found: %s" & str(directive)
+                assert False, "Unknown directive type found: %s" % str(directive)
       
     def get_directive(self, label_or_did):
         if isinstance(label_or_did,int):
