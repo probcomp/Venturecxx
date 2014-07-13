@@ -1,4 +1,20 @@
-# A custom inference SP to make Vikash happy
+# A custom inference SP for drawing the state of a particular model.
+
+# The goal is to illustrate extending Venture with custom inference
+# SPs, in this case one that offers a debugging display for a
+# particular model.
+
+# The model this applies to is
+# [assume brown_step (gamma 1 1)]
+# [assume obs_noise (gamma 1 1)]
+# [assume position (mem (lambda (t) (scope_include (quote exp) t (if (<= t 0) (normal 0 brown_step) (normal (position (- t 1)) brown_step)))))]
+# [assume obs_fun (lambda (t) (normal (position t) obs_noise))]
+# [predict (position 10)]
+
+# To use the drawing plugin, install it at the Venture prompt with
+#   eval execfile("examples/plugin.py")
+# Then enjoy with
+#   infer (cycle (draw) 10)
 
 import venture.lite.psp as psp
 import venture.lite.value as v
@@ -107,8 +123,3 @@ quit_sp = typed_nr(QuitPSP(), [v.ForeignBlobType()], v.ForeignBlobType())
 
 self.ripl.bind_foreign_inference_sp("draw", draw_sp)
 self.ripl.bind_foreign_inference_sp("stop", quit_sp)
-
-# Install me at the Venture prompt with
-#   eval execfile("examples/plugin.py")
-# Then enjoy with
-#   infer (cycle (draw) 10)
