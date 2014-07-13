@@ -6,6 +6,7 @@ import scipy.special as spsp
 import numpy as np
 from utils import logDensityMVNormal, numpy_force_number
 from exception import VentureValueError
+import warnings
 
 # For some reason, pylint can never find numpy members (presumably metaprogramming).
 # pylint: disable=no-member
@@ -269,6 +270,39 @@ class GammaOutputPSP(RandomPSP):
   def logDensityNumeric(self,x,alpha,beta): return scipy.stats.gamma.logpdf(x,alpha,scale=1.0/beta)
 
   def simulate(self,args): return self.simulateNumeric(*args.operandValues)
+  def gradientOfSimulate(self,args,value,direction):
+    # These gradients were computed by Sympy; the script to get them is
+    # in doc/gradients.py
+    alpha, beta = args.operandValues
+    if alpha == 1:
+      warnstr = ('Gradient of simulate is discontinuous at alpha = 1.\n'
+                 'Issue: https://app.asana.com/0/11192551635048/14271708124534.')
+      warnings.warn(warnstr, GradientWarning)
+      gradAlpha = 0
+      gradBeta = -value / math.pow(beta, 2.0)
+    elif alpha > 1:
+      x0 = value / (3.0 * alpha - 1)
+      gradAlpha = (-3.0 * x0 / 2 + 3 * 3 ** (2.0 / 3) *
+                   (beta * x0) ** (2.0 / 3) / (2.0 * beta))
+      gradBeta = -value/beta
+    else:
+      if value <= (1.0 / beta) * math.pow(1 - alpha, 1.0 / alpha):
+        x0 = (beta * value) ** alpha
+        gradAlpha = -x0 ** (1.0 / alpha) * math.log(x0) / (alpha ** 2.0 * beta)
+        gradBeta = -((beta * value) ** alpha) ** (1.0 / alpha) / beta ** 2.0
+      else:
+        x0 = -alpha + 1
+        x1 = 1.0 / alpha
+        x2 = alpha * math.log(math.exp(x1 * (x0 - (beta * value) ** alpha)))
+        x3 = -x2
+        x4 = x0 + x3
+        gradAlpha = (x4 ** (x0 * x1) * (x3 + (alpha + x2 - 1) *
+                     math.log(x4)) / (alpha ** 2.0 * beta))
+        x0 = 1.0 / alpha
+        gradBeta = (-(-alpha * math.log(math.exp(-x0 * (alpha + (beta * value) ** alpha - 1))) -
+                    alpha + 1) ** x0 / beta ** 2.0)
+    return [direction * gradAlpha, direction * gradBeta]
+
   def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
 
   def gradientOfLogDensity(self,x,args):
@@ -324,3 +358,8 @@ class InvGammaOutputPSP(RandomPSP):
 
   # TODO InvGamma presumably has a variational kernel too?
 
+class GradientWarning(UserWarning):
+  '''
+  Warnings for AD-related gradient issues.
+  '''
+  pass

@@ -1,4 +1,5 @@
 import scipy.stats as stats
+
 from venture.test.stats import statisticalTest, reportKnownContinuous
 from venture.test.config import get_ripl, default_num_samples
 
@@ -52,6 +53,8 @@ def testPlotfSmoke():
   for k in ["x", "y", "sweeps", "time (s)", "log score", "particle", "(abs (sub y x))"]:
     assert k in result
     assert len(result[k]) == 30
+  # Check that the dataset can be extracted again
+  (result == out.dataset()).all()
   # TODO Also check the distributions of x and the difference
   return reportKnownContinuous(cdf, result["y"], "N(0,1)")
 
