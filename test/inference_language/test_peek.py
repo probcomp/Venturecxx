@@ -54,3 +54,15 @@ def testPlotfSmoke():
     assert len(result[k]) == 30
   # TODO Also check the distributions of x and the difference
   return reportKnownContinuous(cdf, result["y"], "N(0,1)")
+
+def testPlotfDataset():
+  # make sure that calling dataset multiple times works
+  ripl = get_ripl()
+  ripl.assume('x', '(normal 0 1)')
+  out = ripl.infer('(cycle ((mh default one 1) (plotf h0 x)) 1)')
+  ds = out.dataset()
+  # using try-except make sure we get a failure instead of an error
+  try:
+    ds = out.dataset()
+  except KeyError:
+    assert False
