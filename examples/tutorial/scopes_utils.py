@@ -53,7 +53,7 @@ def make_latent_bag_string_scopes(bags,colors,max_alpha_prior=5):
                                    (dirichlet hyper_alpha) ) ) )]
 
     [assume draw_bag (mem (lambda (t)
-                           (scope_include (quote latents) t
+                           (scope_include (quote latent_bags) t
                              (atom_number
                                (uniform_discrete 0 bags) ) )) )]
 
