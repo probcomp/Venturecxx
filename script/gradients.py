@@ -1,3 +1,5 @@
+# Compute the simulation gradient of gamma with Sympy.
+
 import sympy as sy
 from sympy.simplify import cse
 from sympy import init_printing
