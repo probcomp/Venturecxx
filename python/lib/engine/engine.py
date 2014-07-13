@@ -33,6 +33,14 @@ class Engine(object):
     self.directiveCounter = 0
     self.directives = {}
     self.inferrer = None
+    import venture.lite.inference_sps as inf
+    self.inference_sps = dict(inf.inferenceSPsList)
+
+  def inferenceSPsList(self):
+    return self.inference_sps.iteritems()
+
+  def bind_foreign_inference_sp(self, name, sp):
+    self.inference_sps[name] = sp
 
   def getDistinguishedTrace(self): 
     assert self.traces
@@ -264,7 +272,7 @@ effect of renumbering the directives, if some had been forgotten."""
     symbol_scopes = [s for s in all_scopes if isinstance(s, basestring) and not s.startswith("default")]
     for hack in inf.inferenceKeywords + symbol_scopes:
       next_trace.bindPrimitiveName(hack, v.VentureSymbol(hack))
-    for name,sp in inf.inferenceSPsList:
+    for name,sp in self.inferenceSPsList():
       next_trace.bindPrimitiveSP(name, sp)
     self.install_inference_prelude(next_trace)
     next_trace.eval(4, [program, {"type":"blob", "value":target}])
@@ -451,6 +459,18 @@ effect of renumbering the directives, if some had been forgotten."""
   def to_puma(self):
     from venture.puma.engine import Engine as PumaEngine
     return self.convert(PumaEngine)
+
+  def profile_data(self):
+    from pandas import DataFrame
+    rows = []
+    for (pid, trace) in enumerate([t for t in self.traces if hasattr(t, "stats")]):
+      for (name, attempts) in trace.stats.iteritems():
+        for (t, accepted) in attempts:
+          rows.append({"name":str(name), "particle":pid, "time":t, "accepted":accepted})
+    ans = DataFrame.from_records(rows)
+    print ans
+    return ans
+
 
   # TODO: Add methods to inspect/manipulate the trace for debugging and profiling
 
