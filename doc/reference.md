@@ -122,8 +122,8 @@ instructions.
 
 - `[assume symbol expression]`: declare and initialize a variable.
 
-  Binds the result of `expression` to `symbol` in the global
-  environment.
+  Assume evaluates the `expression` and binds the result to `symbol`
+  in the global environment.
 
 - `[observe expression value]`: condition on observed data.
 
@@ -139,17 +139,16 @@ instructions.
   `observe` has no effect on the distribution of values obtained by
   running the Venture program until the next time `infer` is invoked.
 
-- `[predict expression]`: make a prediction.
+- `[predict expression]`: register a persitent prediction.
 
-  Tracks the `expression`, allowing its value to be reported before or
-  after inference.
+  Predict tracks the `expression`, allowing its value to be reported
+  before or after inference.
 
-  Note: A `predict` instruction is persistent, in the sense that it
-  becomes part of the program history and will be maintained and
-  potentially resampled during inference. A `predict`ed expression may
-  affect the evaluation of later expressions that are correlated or
-  conditionally dependent. To evaluate an expression non-persistently,
-  use `sample`.
+  A `predict` instruction is persistent, in the sense that it becomes
+  part of the program history and will be maintained and potentially
+  resampled during inference.  A `predict`ed expression may affect the
+  evaluation of later expressions that are correlated or conditionally
+  dependent.  To evaluate an expression non-persistently, use `sample`.
 
 ### Directive manipulation instructions
 
@@ -180,19 +179,24 @@ In addition to the directives themselves, there are instructions
 ### Pseudo-Directives
 
 The `force` and `sample` instructions are "pseudo-directives" which
-have temporary effects on the current program trace.
+have temporary effects on the current program history.
 
-`[force expression value]` is a temporary version of `observe` which
-is immediately forgotten after incorporating the observation. This has
-the effect of initializing `expression` to `value` without introducing
-a lasting constraint.
+- `[force expression value]`: set an expression to a value momentarily.
 
-`[sample expression]` is a temporary version of `predict` which is
-immediately forgotten. This has the effect of evaluating `expression`
-once, without adding it to the program trace. Therefore, unlike
-`predict`, a `sample` instruction will not be maintained during
-inference, and `sample`d expressions will be independent of one
-another (conditioned on the rest of the trace).
+  Force is a temporary version of `observe` which is immediately
+  forgotten after incorporating the observation. This has the effect
+  of initializing `expression` to `value` without introducing a
+  lasting constraint.  In typical use, the expression is just a single
+  variable, which sets that variable to the given value.
+
+- `[sample expression]`: make a transient prediction.
+
+  Sample is a temporary version of `predict` which is immediately
+  forgotten. This has the effect of evaluating `expression` once,
+  without adding it to the program trace.  Therefore, unlike
+  `predict`, a `sample` instruction will not be maintained during
+  inference, and `sample`d expressions will be independent of one
+  another (conditioned on the rest of the program history).
 
 ### Inference Instructions
 
