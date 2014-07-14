@@ -156,16 +156,26 @@ instructions.
 In addition to the directives themselves, there are instructions
 `forget`, `freeze`, and `report` which manipulate directives.
 
-`[forget directive_id]` removes a directive from the program trace, so
-that further inference will behave as if it had never been executed.
+- `[forget directive_id]`: remove a directive from the program history.
 
-`[freeze directive_id]` fixes a directive's current value, removing
-its random choices from the program trace. This instruction is used to
-implement Sequential Monte Carlo inference strategies.
+  Further inference will behave as if that directive had never been
+  executed.
 
-`[report directive_id]` reports the current value of a directive,
-without re-evaluating the expression or otherwise changing the program
-trace.
+  Be careful `forget`ting an `assume` directive: any functions
+  referring to the symbol that `assume` had bound will fail with
+  "Symbol not found" errors if executed after the `forget`.
+
+- `[freeze directive_id]`: fix a directive's current value.
+
+  Freeze removes the directive's random choices from the program
+  history and fixes the directive to its current value.  This
+  instruction is used to gain efficiency for inference strategies in
+  the Sequential Monte Carlo style.
+
+- `[report directive_id]`: report the current value of a directive.
+
+  Report does not re-evaluate the expression or otherwise change the
+  program history.
 
 ### Pseudo-Directives
 
