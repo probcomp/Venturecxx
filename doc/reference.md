@@ -240,17 +240,9 @@ inference expressions are described [below](#inference-expressions).
 
 ### Miscellaneous Instructions
 
-`[clear]` clears away the current program trace and all directives,
-starting from a clean slate.
+- `[clear]`: reset Venture to an empty state.
 
-`[get_global_logscore]` returns the sum of the log probability density
-of each random choice in the current program trace. TODO caveats
-
-`[get_logscore directive_id]` returns the log probability density of
-the outermost random choice made during the evaluation of the
-specified directive. TODO caveats
-
-`[rollback]` TODO
+- `[list_directives]': return a description of all extant directives.
 
 Modeling Expressions
 --------------------
