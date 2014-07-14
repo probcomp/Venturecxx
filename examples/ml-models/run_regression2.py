@@ -74,14 +74,14 @@ def get_fantasy_data(datafile = 'regression-evolution2/data.pkl'):
 def make_fantasy_data(infile = 'regression2.vnt'):
   r = build_ripl(infile)
   _ = r.forget('sigma_2')
-  _ = r.assume('sigma_2', 1, label = 'sigma_2')
+  _ = r.assume('sigma_2', 0.5, label = 'sigma_2')
   _ = r.forget('w')
-  _ = r.assume('w', '(vector 3 -2)', label = 'w')
+  _ = r.assume('w', '(vector 10 -8)', label = 'w')
   _ = r.assume('mem_unif', '(mem (lambda (i) (uniform_continuous -1 1)))')
   _ = r.assume('simulate', '(lambda (i) (list (vector 1 (mem_unif i)) (y (vector 1 (mem_unif i)))))')
   X_train = []
   y_train = []
-  for i in range(25):
+  for i in range(10):
     thisone = r.sample('(simulate {0})'.format(i))
     X_train.append(thisone[0])
     y_train.append(thisone[1])
@@ -89,15 +89,16 @@ def make_fantasy_data(infile = 'regression2.vnt'):
   y_train = pd.Series(y_train)
   X_test = []
   y_test = []
-  for i in range(10):
+  for i in range(2):
     thisone = r.sample('(simulate {0})'.format(i))
     X_test.append(thisone[0])
     y_test.append(thisone[1])
   X_test = pd.DataFrame(X_test)
   y_test = pd.Series(y_test)
-  with open('regression-evolution2/data.pkl', 'wb') as f:
-    pkl.dump({'X_train' : X_train, 'X_test' : X_test,
-              'y_train' : y_train, 'y_test' : y_test}, f)
+  return X_test, X_train, y_test, y_train
+  # with open('regression-evolution2/data.pkl', 'wb') as f:
+  #   pkl.dump({'X_train' : X_train, 'X_test' : X_test,
+  #             'y_train' : y_train, 'y_test' : y_test}, f)
 
 # make_fantasy_data()
 
@@ -135,15 +136,20 @@ def generalization_error(r):
 
 def runme():
   r = build_ripl()
-  X_test, X_train, y_test, y_train = get_fantasy_data()
+  X_test, X_train, y_test, y_train = make_fantasy_data()
   r = input_test(r, X_test, y_test)
   r = observe(r, X_train, y_train)
   r = generalization_error(r)
-  infer_command = ('(cycle ((nesterov (quote weights) 1 0.1 5 5) (nesterov (quote weights) 2 0.1 5 5) (nesterov (quote sigma_2) 0 0.1 5 5)) 5)')
+  # infer_command = ('(cycle ((nesterov (quote weights) 1 0.1 5 5) (nesterov (quote weights) 2 0.1 5 5) (nesterov (quote sigma_2) 0 0.1 5 5)) 5)')
   # infer_command = ('(cycle ((hmc (quote weights) 1 0.01 5 5) (hmc (quote weights) 2 0.01 5 5) (hmc (quote sigma_2) 0 0.05 5 5)) 5)')
-  # infer_command = ('(cycle ((mh (quote weights) 1 5) (mh (quote weights) 2 5) (mh (quote sigma_2) 0 5)) 5)')
+  # infer_command = ('(cycle ((mh (quote weights) 1 1) (mh (quote weights) 2 1) (mh (quote sigma_2) 0 1)) 10)')
+  # infer_command = '(mh default one 50)'
+  infer_command = '(hmc default one 0.1 10 50)'
+  # infer_command = '(nesterov default one 0.9 10 50)'
+  # infer_command = '(slice default one 20)'
   plot_command = '(plotf (pcdtd ls l0 l3 l2 p1d2ds) (generalization_error) w_1 w_2 sigma_2)'
-  cycle_command = '(cycle ({0} {1}) 50)'.format(infer_command, plot_command)
+  cycle_command = '(cycle ({0} {1}) 20)'.format(infer_command, plot_command)
+  r.infer('(mh default one 5)')
   res = r.infer(cycle_command)
   out = 'regression-evolution2'
   print res
@@ -152,7 +158,7 @@ def runme():
     thisfig.savefig(path.join(out, figname + '_nesterov.png'))
     plt.close(thisfig)
 
-runme()
+# runme()
 
 
 
