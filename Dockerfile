@@ -8,18 +8,18 @@
 # sudo docker build -t probcomp/venture .
 #
 # to save/load the image to/from a tarball:
-# sudo docker save -o venture.tar probcomp/venture
-# sudo docker load -o venture.tar
+# sudo docker save probcomp/venture > venture-0.2-docker.tar
+# cat venture-0.2-docker.tar | sudo docker load
 #
 # to start a container with an interactive shell (after generating or loading the image):
 # sudo docker run -t -i probcomp/venture
 #
 # in order to use IPython notebook, expose port 8888:
-# sudo docker run -t -i -p 8888:8888 probcomp/venture-summer-school
+# sudo docker run -t -i -p 8888:8888 probcomp/venture
 # (then run "ipcluster & ipython notebook" inside the container)
 #
 # in order to do graphical plotting, use VNC and expose port 5900:
-# sudo docker run -t -i -p 5900:5900 probcomp/venture-summer-school
+# sudo docker run -t -i -p 5900:5900 probcomp/venture
 # (then run "x11vnc -forever -create" inside the container, and point a VNC client to localhost:5900)
 
 FROM        ubuntu:14.04

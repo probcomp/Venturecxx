@@ -18,7 +18,6 @@ import time
 
 from venture.lite.value import ExpressionType
 from venture.lite.utils import simulateCategorical
-from copy import deepcopy
 
 class Infer(object):
   def __init__(self, engine):
@@ -278,15 +277,13 @@ class SpecPlot(object):
         self.add_data_from(engine, int(stream))
 
   def dataset(self):
-    # Do not delete original data; otherwise, can't call dataset() more than once
-    data = deepcopy(self.data)
     for name in ["sweeps", "time (s)", "log score", "particle"] + self.names:
-      if len(data[name]) == 0:
+      if (name in self.data) and (len(self.data[name]) == 0):
         # Data source was not requested; remove it to avoid confusing pandas
-        del data[name]
+        del self.data[name]
     from pandas import DataFrame
     from venture.ripl.utils import _strip_types_from_dict_values
-    return DataFrame.from_dict(_strip_types_from_dict_values(data))
+    return DataFrame.from_dict(_strip_types_from_dict_values(self.data))
 
   def draw(self):
     return self.spec.draw(self.dataset(), self.names)
