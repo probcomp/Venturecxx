@@ -11,6 +11,11 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   venture.shortcuts.rst
+   venture.ripl.ripl.rst
+   venture.ripl.console.rst
+   venture.lite.sp.rst
+   venture.lite.psp.rst
 
 
 Indices and tables
