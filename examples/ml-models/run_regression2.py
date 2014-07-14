@@ -6,6 +6,7 @@ from __future__ import division
 import re
 from venture.shortcuts import (make_puma_church_prime_ripl,
                                make_lite_church_prime_ripl)
+from venture.unit import Analytics, MRipl
 import numpy as np, scipy as sp, pandas as pd
 from matplotlib import pyplot as plt
 import seaborn as sns
@@ -15,6 +16,7 @@ import cPickle as pkl
 import sys
 from sklearn import datasets
 from venture.lite.psp import DeterministicPSP
+from time import time
 
 def load_model(infile):
   with open(infile) as f:
@@ -47,9 +49,12 @@ def load_model(infile):
   res = '\n'.join(res)
   return res
 
-def build_ripl(infile = 'regression2.vnt'):
+def build_ripl(infile = 'regression2.vnt', mripl = False, no_ripls = 1):
   model = load_model(infile)
-  r = make_lite_church_prime_ripl()
+  if mripl:
+    r = MRipl(no_ripls = no_ripls, backend = 'lite', local_mode = False)
+  else:
+    r = make_lite_church_prime_ripl()
   r.load_prelude()
   _ = r.execute_program(model)
   return r
@@ -81,7 +86,7 @@ def make_fantasy_data(infile = 'regression2.vnt'):
   _ = r.assume('simulate', '(lambda (i) (list (vector 1 (mem_unif i)) (y (vector 1 (mem_unif i)))))')
   X_train = []
   y_train = []
-  for i in range(10):
+  for i in range(20):
     thisone = r.sample('(simulate {0})'.format(i))
     X_train.append(thisone[0])
     y_train.append(thisone[1])
@@ -134,22 +139,52 @@ def generalization_error(r):
       (sqrt (mean (map generalization_error_1 test_set))))]''')
   return r
 
+def compare_mripl_vs_resample(mripl, no_ripls):
+  '''
+  Compare speed of mripl to speed of just running infer resample
+  '''
+  print mripl
+  # build it
+  start = time()
+  r = build_ripl(mripl = mripl, no_ripls = no_ripls)
+  build_time = time() - start
+  print 'build_time: ' + str(build_time)
+  X_test, X_train, y_test, y_train = make_fantasy_data()
+  r = input_test(r, X_test, y_test)
+  start = time()
+  r = observe(r, X_train, y_train)
+  observe_time = time() - start
+  print 'observe time: ' + str(observe_time)
+  r = generalization_error(r)
+  if not mripl:
+    r.infer('(resample {0})'.format(no_ripls))
+  infer_command = '(hmc default one 0.1 5 5)'
+  plot_command = '(plotf (pcdtd ls l0 l3 l2 p1d2ds) (generalization_error) w_1 w_2 sigma_2)'
+  cycle_command = '(cycle ({0} {1}) 5)'.format(infer_command, plot_command)
+  start = time()
+  res = r.infer(cycle_command)
+  infer_time = time() - start
+  print 'infer time: ' + str(infer_time)
+  print
+
+# compare_mripl_vs_resample(False, 50)
+compare_mripl_vs_resample(True, 50)
+
 def runme():
   r = build_ripl()
   X_test, X_train, y_test, y_train = make_fantasy_data()
   r = input_test(r, X_test, y_test)
   r = observe(r, X_train, y_train)
-  r = generalization_error(r)
+  # r = generalization_error(r)
   # infer_command = ('(cycle ((nesterov (quote weights) 1 0.1 5 5) (nesterov (quote weights) 2 0.1 5 5) (nesterov (quote sigma_2) 0 0.1 5 5)) 5)')
   # infer_command = ('(cycle ((hmc (quote weights) 1 0.01 5 5) (hmc (quote weights) 2 0.01 5 5) (hmc (quote sigma_2) 0 0.05 5 5)) 5)')
   # infer_command = ('(cycle ((mh (quote weights) 1 1) (mh (quote weights) 2 1) (mh (quote sigma_2) 0 1)) 10)')
   # infer_command = '(mh default one 50)'
-  infer_command = '(hmc default one 0.1 10 50)'
+  infer_command = '(hmc default one 0.1 5 10)'
   # infer_command = '(nesterov default one 0.9 10 50)'
   # infer_command = '(slice default one 20)'
   plot_command = '(plotf (pcdtd ls l0 l3 l2 p1d2ds) (generalization_error) w_1 w_2 sigma_2)'
-  cycle_command = '(cycle ({0} {1}) 20)'.format(infer_command, plot_command)
-  r.infer('(mh default one 5)')
+  cycle_command = '(cycle ({0} {1}) 5)'.format(infer_command, plot_command)
   res = r.infer(cycle_command)
   out = 'regression-evolution2'
   print res
