@@ -5,7 +5,7 @@ import numpy.linalg as npla
 import scipy.special as spsp
 import numpy as np
 from utils import logDensityMVNormal, numpy_force_number
-from exception import VentureValueError
+from exception import VentureValueError, GradientWarning
 import warnings
 
 # For some reason, pylint can never find numpy members (presumably metaprogramming).
@@ -379,9 +379,3 @@ class InvGammaOutputPSP(RandomPSP):
     return "(%s alpha beta) returns a sample from an inverse gamma distribution with shape parameter alpha and scale parameter beta" % name
 
   # TODO InvGamma presumably has a variational kernel too?
-
-class GradientWarning(UserWarning):
-  '''
-  Warnings for AD-related gradient issues.
-  '''
-  pass
