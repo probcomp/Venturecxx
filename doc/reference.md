@@ -116,30 +116,42 @@ The `assume`, `observe`, and `predict` instructions, also called
 *directives*, make up the core modeling language of Venture. Each
 directive contains a modeling expression to be evaluated. At any time,
 the probabilistic execution trace consists of all directives that have
-been evaluated and not forgotten.
+been evaluated and not forgotten.  Venture maintains an index of
+unique identifiers for directives so they can be referred to by other
+instructions.
 
-`[assume symbol expression]` declares a variable, binding the result
-of `expression` to `symbol` in the global environment.
+- `[assume symbol expression]`: declare and initialize a variable.
 
-`[observe expression value]` conditions on observed data, constraining
-the result of `expression` to be equal to `value`.
+  Binds the result of `expression` to `symbol` in the global
+  environment.
 
-(Note: Currently, an expression can only be constrained by an
-`observe` directive if its outermost procedure application is the
-result of a stochastic computation, rather than a deterministic
-one. For example, `[observe (normal 0 1) 0]` is valid, but `[observe
-(+ 1 (normal 0 1)) 0]` is not because `+` is a deterministic function
-of its arguments.)
+- `[observe expression value]`: condition on observed data.
 
-`[predict expression]` tracks an `expression`, allowing its value to
-be reported before or after inference.
+  The condition constrains the result of `expression` to be equal to
+  `value`.
 
-(Note: A `predict` instruction is persistent, in the sense that it
-becomes part of the program trace and will be maintained and
-potentially resampled during inference. A `predict`ed expression may
-affect the evaluation of later expressions that are correlated or
-conditionally dependent. To evaluate an expression non-persistently,
-use `sample`.)
+  An expression can only be constrained by an `observe` directive if
+  its outermost procedure application is the result of a stochastic
+  computation, rather than a deterministic one. For example, `[observe
+  (normal 0 1) 0]` is valid, but `[observe (+ 1 (normal 0 1)) 0]` is
+  not, because `+` is a deterministic function of its arguments.
+
+  `observe` has no effect on the distribution of values obtained by
+  running the Venture program until the next time `infer` is invoked.
+
+- `[predict expression]`: make a prediction.
+
+  Tracks the `expression`, allowing its value to be reported before or
+  after inference.
+
+  Note: A `predict` instruction is persistent, in the sense that it
+  becomes part of the program history and will be maintained and
+  potentially resampled during inference. A `predict`ed expression may
+  affect the evaluation of later expressions that are correlated or
+  conditionally dependent. To evaluate an expression non-persistently,
+  use `sample`.
+
+### Directive manipulation instructions
 
 In addition to the directives themselves, there are instructions
 `forget`, `freeze`, and `report` which manipulate directives.
