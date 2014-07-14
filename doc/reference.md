@@ -81,12 +81,10 @@ The major instructions affect the meaning as follows:
 For a more extensive conceptual introduction to Venture, see the
 [draft Venture paper](http://arxiv.org/abs/1404.0099).
 
-Instructions
-------------
+Instruction Reference
+---------------------
 
-Venture programs consist of a series of instructions which are
-executed by the Venture SIVM (Stochastic Inference Virtual
-Machine). Venture supports the following instructions:
+Summary:
 
     [assume symbol expression]
     [observe expression value]
@@ -112,63 +110,139 @@ Machine). Venture supports the following instructions:
     [get_state]
     [reset]
 
-Directives
-----------
+### Directives
 
-The `assume`, `observe`, and `predict` instructions, also called *directives*, make up the core modeling language of Venture. Each directive contains a modeling expression to be evaluated. At any time, the probabilistic execution trace consists of all directives that have been evaluated and not forgotten.
+The `assume`, `observe`, and `predict` instructions, also called
+*directives*, make up the core modeling language of Venture. Each
+directive contains a modeling expression to be evaluated. At any time,
+the probabilistic execution trace consists of all directives that have
+been evaluated and not forgotten.  Venture maintains an index of
+unique identifiers for directives so they can be referred to by other
+instructions.
 
-`[assume symbol expression]` declares a variable, binding the result of `expression` to `symbol` in the global environment.
+- `[assume symbol expression]`: declare and initialize a variable.
 
-`[observe expression value]` conditions on observed data, constraining the result of `expression` to be equal to `value`.
+  Assume evaluates the `expression` and binds the result to `symbol`
+  in the global environment.
 
-(Note: Currently, an expression can only be constrained by an `observe` directive if its outermost procedure application is the result of a stochastic computation, rather than a deterministic one. For example, `[observe (normal 0 1) 0]` is valid, but `[observe (+ 1 (normal 0 1)) 0]` is not because `+` is a deterministic function of its arguments.)
+- `[observe expression value]`: condition on observed data.
 
-`[predict expression]` tracks an `expression`, allowing its value to be reported before or after inference.
+  The condition constrains the result of `expression` to be equal to
+  `value`.
 
-(Note: A `predict` instruction is persistent, in the sense that it becomes part of the program trace and will be maintained and potentially resampled during inference. A `predict`ed expression may affect the evaluation of later expressions that are correlated or conditionally dependent. To evaluate an expression non-persistently, use `sample`.)
+  An expression can only be constrained by an `observe` directive if
+  its outermost procedure application is the result of a stochastic
+  computation, rather than a deterministic one. For example, `[observe
+  (normal 0 1) 0]` is valid, but `[observe (+ 1 (normal 0 1)) 0]` is
+  not, because `+` is a deterministic function of its arguments.
 
-In addition to the directives themselves, there are instructions `forget`, `freeze`, and `report` which manipulate directives.
+  `observe` has no effect on the distribution of values obtained by
+  running the Venture program until the next time `infer` is invoked.
 
-`[forget directive_id]` removes a directive from the program trace, so that further inference will behave as if it had never been executed.
+- `[predict expression]`: register a persitent prediction.
 
-`[freeze directive_id]` fixes a directive's current value, removing its random choices from the program trace. This instruction is used to implement Sequential Monte Carlo inference strategies.
+  Predict tracks the `expression`, allowing its value to be reported
+  before or after inference.
 
-`[report directive_id]` reports the current value of a directive, without re-evaluating the expression or otherwise changing the program trace.
+  A `predict` instruction is persistent, in the sense that it becomes
+  part of the program history and will be maintained and potentially
+  resampled during inference.  A `predict`ed expression may affect the
+  evaluation of later expressions that are correlated or conditionally
+  dependent.  To evaluate an expression non-persistently, use `sample`.
 
-Pseudo-Directives
------------------
+### Directive manipulation instructions
 
-The `force` and `sample` instructions are "pseudo-directives" which have temporary effects on the current program trace.
+In addition to the directives themselves, there are instructions
+`forget`, `freeze`, and `report` which manipulate directives.
 
-`[force expression value]` is a temporary version of `observe` which is immediately forgotten after incorporating the observation. This has the effect of initializing `expression` to `value` without introducing a lasting constraint.
+- `[forget directive_id]`: remove a directive from the program history.
 
-`[sample expression]` is a temporary version of `predict` which is immediately forgotten. This has the effect of evaluating `expression` once, without adding it to the program trace. Therefore, unlike `predict`, a `sample` instruction will not be maintained during inference, and `sample`d expressions will be independent of one another (conditioned on the rest of the trace).
+  Further inference will behave as if that directive had never been
+  executed.
 
-Inference Instructions
-----------------------
+  Be careful `forget`ting an `assume` directive: any functions
+  referring to the symbol that `assume` had bound will fail with
+  "Symbol not found" errors if executed after the `forget`.
 
-By themselves, the modeling directives do not perform any inference: when the directives are initially evaluated, their values will be drawn from the prior, ignoring any observations that have been made. Venture provides two "modes" of inference: manual (with the `infer` instruction) and continuous (with `start_continuous_inference` and `stop_continuous_inference`).
+- `[freeze directive_id]`: fix a directive's current value.
 
-Both `infer` and `start_continuous_inference` take an *inference expression*, which is an expression that specifies what inference strategy and what parameters (e.g. number of iterations) to use. The types of inference expressions are described below.
+  Freeze removes the directive's random choices from the program
+  history and fixes the directive to its current value.  This
+  instruction is used to gain efficiency for inference strategies in
+  the Sequential Monte Carlo style.
 
-`[infer expression]` evaluates an inference expression and executes the specified inference strategy on the current program trace for the specified number of iterations.
+- `[report directive_id]`: report the current value of a directive.
 
-`[start_continuous_inference expression]` evaluates an inference expression and starts executing the specified inference strategy continuously in the background. Values can be queried (e.g. with `report`) while inference is in progress.
+  Report does not re-evaluate the expression or otherwise change the
+  program history.
 
-`[stop_continuous_inference]`, when called after `start_continuous_inference`, stops the continuous inference process.
+### Pseudo-Directives
 
-`[continuous_inference_status]` reports the status of continuous inference: whether it is running and with what parameters.
+The `force` and `sample` instructions are "pseudo-directives" which
+have temporary effects on the current program history.
 
-Miscellaneous Instructions
---------------------------
+- `[force expression value]`: set an expression to a value momentarily.
 
-`[clear]` clears away the current program trace and all directives, starting from a clean slate.
+  Force is a temporary version of `observe` which is immediately
+  forgotten after incorporating the observation. This has the effect
+  of initializing `expression` to `value` without introducing a
+  lasting constraint.  In typical use, the expression is just a single
+  variable, which sets that variable to the given value.
 
-`[get_global_logscore]` returns the sum of the log probability density of each random choice in the current program trace. TODO caveats
+- `[sample expression]`: make a transient prediction.
 
-`[get_logscore directive_id]` returns the log probability density of the outermost random choice made during the evaluation of the specified directive. TODO caveats
+  Sample is a temporary version of `predict` which is immediately
+  forgotten. This has the effect of evaluating `expression` once,
+  without adding it to the program trace.  Therefore, unlike
+  `predict`, a `sample` instruction will not be maintained during
+  inference, and `sample`d expressions will be independent of one
+  another (conditioned on the rest of the program history).
 
-`[rollback]` TODO
+### Inference Instructions
+
+By themselves, the modeling directives do not perform any inference.
+When the directives are initially evaluated, their values will be
+drawn from the prior, ignoring any observations that have been made.
+To move from the prior to the posterior, it is necessary to invoke
+some inference program.
+
+Venture inference is available in two modes: batch (with the `infer`
+instruction) and continuous (with `start_continuous_inference` and
+`stop_continuous_inference`).
+
+Both `infer` and `start_continuous_inference` take an *inference
+program*, which is an expression that specifies what inference
+strategy and what parameters (e.g. number of iterations) to use. The
+inference expressions are described [below](#inference-expressions).
+
+- `[infer expression]`: execute batch inference.
+
+  Infer evaluates an inference expression and executes the specified
+  inference program over the current program trace.
+
+- `[start_continuous_inference expression]`: begin inferring continuously.
+
+  Start_continuous_inference evaluates an inference expression and
+  starts executing the specified inference strategy continuously in
+  the background. Values can be queried (e.g. with `report`) while
+  inference is in progress.
+
+- `[stop_continuous_inference]`: stop any ongoing continuous inference.
+
+  Stop_continuous_inference is safe to invoke even if continuous
+  inference is not running.
+
+- `[continuous_inference_status]`: report the status of continuous inference.
+
+  The continuous_inference_status instruction reports whether
+  continuous inference is currently running, and if so with what
+  inference program.
+
+### Miscellaneous Instructions
+
+- `[clear]`: reset Venture to an empty state.
+
+- `[list_directives]': return a description of all extant directives.
 
 Modeling Expressions
 --------------------
