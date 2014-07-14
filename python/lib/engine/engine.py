@@ -226,7 +226,6 @@ effect of renumbering the directives, if some had been forgotten."""
     if isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop":
       assert len(program) == 2
       prog = [sym("cycle"), program[1], {"type":"number", "value":1}]
-      # TODO Use the modeling language interpreter for infer loop too
       self.start_continuous_inference_exp(prog)
     else:
       exp = self.desugarLambda(self.macroexpand_inference(program))
