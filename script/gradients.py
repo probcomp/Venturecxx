@@ -1,4 +1,5 @@
-# Compute the simulation gradient of gamma with Sympy.
+# Compute the gradients of simulates and log densities using Sympy.
+# Currently, gradient of simulate for gamma, gradient of log density for student T
 
 import sympy as sy
 from sympy.simplify import cse
@@ -54,7 +55,7 @@ def grad_simulate_gamma_lt1_big_u():
 
 def grad_simulate_gamma():
   '''
-  Use sympy to cmpute derivate of simulate for gamma distribution.
+  Use sympy to compute gradient of simulate for gamma distribution.
   The actual simulation function is here:
   https://github.com/numpy/numpy/blob/master/numpy/random/mtrand/distributions.c#L124
   Parameters are named as in the numpy code; the output variable is labeled
@@ -65,3 +66,21 @@ def grad_simulate_gamma():
   f_lt1_small_u = grad_simulate_gamma_lt1_small_u()
   f_lt1_big_u = grad_simulate_gamma_lt1_big_u()
   return f_gt1, f_lt1_small_u, f_lt1_big_u
+
+def grad_of_log_density_t():
+  '''
+  Use sympy to get the gradient of log density for student t
+  '''
+  x, nu, loc, shape = sy.symbols('x nu loc shape')
+  logp = (sy.loggamma((nu + 1) / 2) - sy.loggamma(nu / 2) -
+          sy.Rational(1, 2) * sy.log(sy.pi * nu) - sy.log(shape) -
+          ((nu + 1) / 2) * sy.log(1 + (1 / nu) * ((x - loc) / shape) ** 2))
+  gradX = logp.diff(x).simplify()
+  # this one's messy, so we'll do it in pieces
+  gradNu = cse(logp.diff(nu).simplify())
+  gradLoc = logp.diff(loc).simplify()
+  gradShape = logp.diff(shape).simplify()
+  return gradX, gradNu, gradLoc, gradShape
+
+
+

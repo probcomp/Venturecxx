@@ -332,6 +332,28 @@ class StudentTOutputPSP(RandomPSP):
     shape = args.operandValues[2] if len(args.operandValues) > 1 else 1
     return self.logDensityNumeric(x,args.operandValues[0],loc,shape)
 
+  def gradientOfLogDensity(self,x,args):
+    nu = args.operandValues[0]
+    loc = args.operandValues[1] if len(args.operandValues) > 1 else 0
+    shape = args.operandValues[2] if len(args.operandValues) > 1 else 1
+    gradX = (loc - x) * (nu + 1) / (nu * shape ** 2 + (loc - x) ** 2)
+    # we'll do gradNu in pieces because it's messy
+    x0 = 1.0 / nu
+    x1 = shape ** 2
+    x2 = nu * x1
+    x3 = (loc - x) ** 2
+    x4 = x2 + x3
+    x5 = nu / 2.0
+    gradNu = (x0 * (nu * x4 * (-math.log(x0 * x4 / x1) - spsp.digamma(x5)
+              + spsp.digamma(x5 + 1.0 / 2)) - x2
+              + x3 * (nu + 1) - x3) / (2.0 * x4))
+    if len(args.operandValues) == 1:
+      return (gradX,[gradNu])
+    gradLoc = -(loc - x) * (nu + 1) / (nu * shape ** 2 + (loc - x) ** 2)
+    gradShape = ((-nu * shape ** 2 + (loc - x) ** 2 * (nu + 1) -
+                 (loc - x) ** 2) / (shape * (nu * shape ** 2 + (loc - x) ** 2)))
+    return (gradX,[gradNu,gradLoc,gradShape])
+
   def description(self,name):
     return "  (%s nu loc shape) returns a sample from Student's t distribution with nu degrees of freedom, with optional location and scale parameters." % name
 
