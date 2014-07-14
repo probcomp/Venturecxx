@@ -200,32 +200,43 @@ have temporary effects on the current program history.
 
 ### Inference Instructions
 
-By themselves, the modeling directives do not perform any inference:
-when the directives are initially evaluated, their values will be
-drawn from the prior, ignoring any observations that have been
-made. Venture provides two "modes" of inference: manual (with the
-`infer` instruction) and continuous (with `start_continuous_inference`
-and `stop_continuous_inference`).
+By themselves, the modeling directives do not perform any inference.
+When the directives are initially evaluated, their values will be
+drawn from the prior, ignoring any observations that have been made.
+To move from the prior to the posterior, it is necessary to invoke
+some inference program.
+
+Venture inference is available in two modes: batch (with the `infer`
+instruction) and continuous (with `start_continuous_inference` and
+`stop_continuous_inference`).
 
 Both `infer` and `start_continuous_inference` take an *inference
-expression*, which is an expression that specifies what inference
+program*, which is an expression that specifies what inference
 strategy and what parameters (e.g. number of iterations) to use. The
-types of inference expressions are described below.
+inference expressions are described [below](#inference-expressions).
 
-`[infer expression]` evaluates an inference expression and executes
-the specified inference strategy on the current program trace for the
-specified number of iterations.
+- `[infer expression]`: execute batch inference.
 
-`[start_continuous_inference expression]` evaluates an inference
-expression and starts executing the specified inference strategy
-continuously in the background. Values can be queried (e.g. with
-`report`) while inference is in progress.
+  Infer evaluates an inference expression and executes the specified
+  inference program over the current program trace.
 
-`[stop_continuous_inference]`, when called after
-`start_continuous_inference`, stops the continuous inference process.
+- `[start_continuous_inference expression]`: begin inferring continuously.
 
-`[continuous_inference_status]` reports the status of continuous
-inference: whether it is running and with what parameters.
+  Start_continuous_inference evaluates an inference expression and
+  starts executing the specified inference strategy continuously in
+  the background. Values can be queried (e.g. with `report`) while
+  inference is in progress.
+
+- `[stop_continuous_inference]`: stop any ongoing continuous inference.
+
+  Stop_continuous_inference is safe to invoke even if continuous
+  inference is not running.
+
+- `[continuous_inference_status]`: report the status of continuous inference.
+
+  The continuous_inference_status instruction reports whether
+  continuous inference is currently running, and if so with what
+  inference program.
 
 ### Miscellaneous Instructions
 
