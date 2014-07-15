@@ -14,3 +14,4 @@ Contents:
    overview.rst
    usage.rst
    instructions.rst
+   modeling.rst
