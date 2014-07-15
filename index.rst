@@ -15,3 +15,4 @@ Contents:
    usage.rst
    instructions.rst
    modeling.rst
+   inference.rst

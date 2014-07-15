@@ -7,8 +7,8 @@ Introduction
 The Venture modeling language is the language in which model
 expressions, namely the arguments to the `assume`, `observe`, and
 `predict` instructions are written.  The Venture inference language is
-the same language, but with a few additional predefined names,
-procedures, and special forms.
+the same language, but with a few additional predefined procedures and
+special forms.
 
 The VenChurch surface syntax for the Venture modeling language is a
 pure-functional dialect of Scheme, which puts it in the Lisp family of
