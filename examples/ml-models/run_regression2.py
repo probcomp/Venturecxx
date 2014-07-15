@@ -11,6 +11,7 @@ import numpy as np, scipy as sp, pandas as pd
 from matplotlib import pyplot as plt
 import seaborn as sns
 from os import path
+from multiprocessing import Pool
 import os
 import cPickle as pkl
 import sys
@@ -168,32 +169,36 @@ def compare_mripl_vs_resample(mripl, no_ripls):
   print
 
 # compare_mripl_vs_resample(False, 50)
-compare_mripl_vs_resample(True, 50)
+# compare_mripl_vs_resample(True, 50)
 
-def runme():
+def runme(eps):
   r = build_ripl()
   X_test, X_train, y_test, y_train = make_fantasy_data()
   r = input_test(r, X_test, y_test)
   r = observe(r, X_train, y_train)
-  # r = generalization_error(r)
+  r = generalization_error(r)
+  r.force('sigma_2', 6.0)
+  r.force('w_1', -7.0)
+  r.force('w_2', 5.0)
   # infer_command = ('(cycle ((nesterov (quote weights) 1 0.1 5 5) (nesterov (quote weights) 2 0.1 5 5) (nesterov (quote sigma_2) 0 0.1 5 5)) 5)')
   # infer_command = ('(cycle ((hmc (quote weights) 1 0.01 5 5) (hmc (quote weights) 2 0.01 5 5) (hmc (quote sigma_2) 0 0.05 5 5)) 5)')
   # infer_command = ('(cycle ((mh (quote weights) 1 1) (mh (quote weights) 2 1) (mh (quote sigma_2) 0 1)) 10)')
   # infer_command = '(mh default one 50)'
-  infer_command = '(hmc default one 0.1 5 10)'
-  # infer_command = '(nesterov default one 0.9 10 50)'
+  # infer_command = '(hmc default one 0.1 5 10)'
+  infer_command = '(nesterov default one {0:0.1f} 10 20)'.format(eps)
   # infer_command = '(slice default one 20)'
-  plot_command = '(plotf (pcdtd ls l0 l3 l2 p1d2ds) (generalization_error) w_1 w_2 sigma_2)'
-  cycle_command = '(cycle ({0} {1}) 5)'.format(infer_command, plot_command)
+  plotf_command = '(plotf (pts l0 l1 l2) w_1 w_2 sigma_2)'
+  cycle_command = '(cycle ({0} {1}) 1)'.format(plotf_command, infer_command)
   res = r.infer(cycle_command)
-  out = 'regression-evolution2'
-  print res
-  for figname in (['weights', 'slope', 'sigma_2', 'generalization_error', 'logscore', 'time']):
-    thisfig = plt.gcf()
-    thisfig.savefig(path.join(out, figname + '_nesterov.png'))
-    plt.close(thisfig)
+  out = path.join('regression-results', 'nesterov_{0:0.1f}.png'.format(eps))
+  fig, ax = plt.subplots(2,1)
+    res[['w_1', 'w_2', 'sigma_2']].plot(ax = ax[0])
+    res['log score'].plot(ax = ax[1])
+  fig.savefig(out)
+  plt.close(fig)
 
-# runme()
-
+eps = np.r_[0.05:1.45:0.1]
+workers = Pool(14)
+workers.map(runme, eps)
 
 
