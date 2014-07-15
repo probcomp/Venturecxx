@@ -51,3 +51,9 @@ The special forms in VenChurch are as follows:
   The semantics are as Scheme's `let*`: each `exp` is evaluated in turn,
   its result is bound to the `param`, and made available to subsequent
   `exp` s and the `body`.
+
+- `(quote datum)`: Literal data.
+
+  The datum must be a Venture expression.
+  As in Scheme, a `quote` form returns a representation of the given
+  expression as Venture data structures.
