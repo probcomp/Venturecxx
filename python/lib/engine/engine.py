@@ -226,7 +226,6 @@ effect of renumbering the directives, if some had been forgotten."""
     if isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop":
       assert len(program) == 2
       prog = [sym("cycle"), program[1], {"type":"number", "value":1}]
-      # TODO Use the modeling language interpreter for infer loop too
       self.start_continuous_inference_exp(prog)
     else:
       exp = self.desugarLambda(self.macroexpand_inference(program))
@@ -356,6 +355,7 @@ effect of renumbering the directives, if some had been forgotten."""
       return self.getDistinguishedTrace().continuous_inference_status() # awkward
 
   def start_continuous_inference(self, params):
+    self.stop_continuous_inference()
     self.set_default_params(params)
     if "in_python" not in params or params["in_python"] == False:
       # Run CI in the underlying traces
@@ -370,6 +370,7 @@ effect of renumbering the directives, if some had been forgotten."""
   def start_continuous_inference_exp(self, program):
     # Start continuous inference in the model-parsed infer expression
     # code path.
+    self.stop_continuous_inference()
     self.inferrer = ContinuousInferrer(self, program, expression_mode=True)
 
   def stop_continuous_inference(self):

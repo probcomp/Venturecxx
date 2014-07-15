@@ -18,10 +18,12 @@
 
 import traceback
 from cmd import Cmd
+from functools import wraps
+import os
+
 from venture.exception import VentureException
 from venture.lite.exception import VentureError
 from utils import _strip_types, expToDict, parse
-from functools import wraps
 
 def getValue(directive):
   '''Gets the actual value returned by an assume, predict, report, or sample directive.'''
@@ -157,10 +159,16 @@ class RiplCmd(Cmd, object):
     '''Escape into Python (evaluate the given string as Python source)'''
     exec(s)
 
+  @catchesVentureException
   def do_shell(self, s):
     '''Escape into the underlying shell.'''
-    import os
     os.system(s)
+
+  @catchesVentureException
+  def do_load(self, s):
+    '''Load the given Venture file.'''
+    with open(s) as fp:
+      self.ripl.execute_program(fp.read())
 
 def run_venture_console(ripl):
   RiplCmd(ripl).cmdloop()
