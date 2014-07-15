@@ -23,7 +23,7 @@ r.assume('alpha', 0.01)
 r.assume('w_1', '(normal 0 (sqrt (/ sigma_2 alpha)))')
 r.assume('w_2', '(normal 0 (sqrt (/ sigma_2 alpha)))')
 r.assume('y', '(lambda (x_1 x_2) (normal (+ (* x_1 w_1) (* x_2 w_2)) (sqrt sigma_2)))')
-for i in range(10):
+for i in range(5):
   r.observe('(y 1 {0:0.2f})'.format(X.iloc[i,1]), y.iloc[i])
 
 ###
@@ -35,19 +35,48 @@ r.assume('alpha', 0.01)
 r.assume('w_1', '(normal 0 (sqrt (/ sigma_2 alpha)))')
 r.assume('w_2', '(normal 0 (sqrt (/ sigma_2 alpha)))')
 r.assume('w', '(vector w_1 w_2)')
-r.assume('y', '(lambda (x) (normal (dot x w) (sqrt sigma_2)))')
+r.assume('y', '(lambda (x) (normal (_dot_vector x w 0 2) (sqrt sigma_2)))')
 for i in range(5):
   r.observe('(y (vector 1 {0:0.2f}))'.format(X.iloc[i,1]), y.iloc[i])
 
+###
+
+# this works by using delayed randomness; the function absorbs the randomness
+
+r.clear()
+# version using delayed randomness
+# this doesn't
+dot_delayed = '''
+[assume dot_delayed
+  (lambda (x y)
+    (_dot_helper x y 0 (size x)))]
+
+[assume _dot_helper
+  (lambda (x y idx length)
+    (if (= idx length)
+      0
+      (+
+        (* ((lookup x idx)) ((lookup y idx)))
+        (_dot_helper x y (+ 1 idx) length))))]
+'''
+r.execute_program(dot_delayed)
+r.assume('sigma_2', 0.5)
+r.assume('alpha', 0.01)
+r.assume('w_1', '(normal 0 (sqrt (/ sigma_2 alpha)))')
+r.assume('w_2', '(normal 0 (sqrt (/ sigma_2 alpha)))')
+r.assume('w', '(array (lambda () w_1) (lambda () w_2))')
+r.assume('y', '(lambda (x) (normal (dot_delayed x w) (sqrt sigma_2)))')
+for i in range(5):
+  r.observe('(y (array (lambda () 1) (lambda () {0:0.2f})))'.format(X.iloc[i,1]), y.iloc[i])
 
 ###
 
-# inference command is shared for both
+# inference command is shared for all methods
 
 r.force('w_1', -5.0)
 r.force('w_2', 7.0)
 
-infer_command = '(nesterov default one 73.3 5 10)'
+infer_command = '(nesterov default all 0.1 5 10)'
 plotf_command = '(plotf (pts l0 l1 l2) w_1 w_2 sigma_2)'
 cycle_command = '(cycle ({0} {1}) 20)'.format(plotf_command, infer_command)
 res = r.infer(cycle_command)
