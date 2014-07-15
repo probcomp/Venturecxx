@@ -189,12 +189,17 @@ def runme(eps):
   infer_command = '(nesterov default one {0:0.1f} 10 20)'.format(eps)
   # infer_command = '(slice default one 20)'
   plotf_command = '(plotf (pts l0 l1 l2) w_1 w_2 sigma_2)'
-  cycle_command = '(cycle ({0} {1}) 1)'.format(plotf_command, infer_command)
+  cycle_command = '(cycle ({0} {1}) 3)'.format(plotf_command, infer_command)
   res = r.infer(cycle_command)
   out = path.join('regression-results', 'nesterov_{0:0.1f}.png'.format(eps))
   fig, ax = plt.subplots(2,1)
-  res[['w_1', 'w_2', 'sigma_2']].plot(ax = ax[0])
-  res['log score'].plot(ax = ax[1])
+  ds = res.dataset().set_index('sweeps')
+  ds[['w_1', 'w_2', 'sigma_2']].plot(ax = ax[0])
+  ds['log score'].plot(ax = ax[1])
+  ax[0].set_title(infer_command)
+  avg_time = ds['time (s)'].diff().mean()
+  ax[1].set_title('Avg sweep time: {0:0.2f} s'.format(avg_time))
+  ax[1].legend()
   fig.savefig(out)
   plt.close(fig)
 
