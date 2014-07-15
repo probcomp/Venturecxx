@@ -3,14 +3,17 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Venture's documentation!
-===================================
+Venture Reference Manual
+========================
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
+   overview.rst
+   usage.rst
+   instructions.rst
    venture.shortcuts.rst
    venture.ripl.ripl.rst
    venture.ripl.console.rst
