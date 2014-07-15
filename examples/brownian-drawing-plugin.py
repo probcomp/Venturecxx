@@ -41,6 +41,8 @@ class DrawFramePSP(psp.RandomPSP):
 
     alpha_level = 100
 
+    # TODO Consider indicating the log score
+
     # Draw the motion speed levels
     brown_ys = self.ys_at(inferrer, "brown_step")
     for brown_y in brown_ys:

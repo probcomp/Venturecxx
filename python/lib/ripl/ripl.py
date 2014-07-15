@@ -16,6 +16,35 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+'''The Read, Infer, Predict Layer.
+
+The RIPL is the primary interface to using Venture as a Python
+library.  One object of the Ripl class represents a distinct Venture
+session and offers a programmatic interface to the underlying Venture
+Stochastic Inference Virtual Machine (SIVM).  The remainder of this
+document assumes a basic familiarity with the Venture language and
+programming model.
+
+The methods of Ripl generally correspond to Venture instructions.  Any
+necessary expressions can be passed in either as strings in concrete
+Venture syntax or as Python objects in abstract Venture syntax, or a
+mixture of both.  Providing pre-parsed instructions is more efficient
+(Venture's under-optimized parser currently imposes significant
+overhead), but strings in concrete syntax are likely to be more
+readable.
+
+Typical usage begins by using one of the factory functions in the
+venture.shortcuts module:
+
+    import venture.shortcuts as s
+    r = s.Lite().make_church_prime_ripl()
+    # r is a fresh Ripl
+    r.assume(...)
+    r.observe(...)
+    r.infer(...)
+
+'''
+
 import numbers
 from venture.exception import VentureException
 from venture.lite.value import VentureValue
@@ -26,6 +55,8 @@ from os import path
 PRELUDE_FILE = 'prelude.vnt'
 
 class Ripl():
+    '''The Read, Infer, Predict Layer of one running Venture instance.'''
+
     def __init__(self,sivm,parsers):
         self.sivm = sivm
         self.parsers = parsers
@@ -60,6 +91,7 @@ class Ripl():
     ############################################
 
     def backend(self):
+        '''Return the name of backend powering this Ripl.  Either "lite" or "puma".'''
         return self.sivm.core_sivm.engine.name
 
     ############################################
@@ -272,6 +304,16 @@ class Ripl():
     ############################################
 
     def assume(self, name, expression, label=None, type=False):
+        '''Declare a Venture variable and initialize it by evaluating the
+given expression.  Return its value.
+
+The `label` argument, if supplied, can later be passed as an argument
+to report, forget, or freeze to refer to this assume directive.
+
+The `type` argument, if supplied and given a true value, causes the
+value to be returned as a dict annotating its Venture type.
+
+        '''
         if label==None:
             i = {'instruction':'assume', 'symbol':name, 'expression':expression}
         else:
@@ -307,7 +349,8 @@ Operationally equivalent to
   for x in iterable:
     ripl.observe("<expr>", x)
 but appreciably faster.  See also open considerations and details of
-the semantics in ripl.observe_dataset
+the semantics in ripl.observe_dataset.
+
 """
         ret_vals = []
         parsed = self._ensure_parsed_expression(exp)
