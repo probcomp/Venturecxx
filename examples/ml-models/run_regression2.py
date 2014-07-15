@@ -174,11 +174,13 @@ def compare_mripl_vs_resample(mripl, no_ripls):
 def runme(eps):
   print 'runnng with eps = ' + str(eps)
   r = build_ripl()
+  r.forget('sigma_2')
+  r.assume('sigma_2', 0.5)
   X_test, X_train, y_test, y_train = make_fantasy_data()
   r = input_test(r, X_test, y_test)
   r = observe(r, X_train, y_train)
   r = generalization_error(r)
-  r.force('sigma_2', 6.0)
+  # r.force('sigma_2', 6.0)
   r.force('w_1', -7.0)
   r.force('w_2', 5.0)
   # infer_command = ('(cycle ((nesterov (quote weights) 1 0.1 5 5) (nesterov (quote weights) 2 0.1 5 5) (nesterov (quote sigma_2) 0 0.1 5 5)) 5)')
@@ -189,22 +191,24 @@ def runme(eps):
   infer_command = '(nesterov default one {0:0.1f} 10 20)'.format(eps)
   # infer_command = '(slice default one 20)'
   plotf_command = '(plotf (pts l0 l1 l2) w_1 w_2 sigma_2)'
-  cycle_command = '(cycle ({0} {1}) 3)'.format(plotf_command, infer_command)
+  cycle_command = '(cycle ({0} {1}) 25)'.format(plotf_command, infer_command)
   res = r.infer(cycle_command)
-  out = path.join('regression-results', 'nesterov_{0:0.1f}.png'.format(eps))
-  fig, ax = plt.subplots(2,1)
+  out = path.join('regression-results', 'nesterov_no_sigma_{0:0.1f}'.format(eps)).replace('.', '_')
   ds = res.dataset().set_index('sweeps')
+  ds.to_csv(out + '.txt', sep = '\t', index = False, encoding = 'utf-8')
+  fig, ax = plt.subplots(2,1)
   ds[['w_1', 'w_2', 'sigma_2']].plot(ax = ax[0])
   ds['log score'].plot(ax = ax[1])
   ax[0].set_title(infer_command)
   avg_time = ds['time (s)'].diff().mean()
   ax[1].set_title('Avg sweep time: {0:0.2f} s'.format(avg_time))
   ax[1].legend()
-  fig.savefig(out)
+  fig.savefig(out + '.png')
   plt.close(fig)
 
-eps = np.r_[0.05:1.45:0.1]
-workers = Pool(14)
-workers.map(runme, eps)
+runme(0.5)
+# eps = np.r_[0.05:1.45:0.1]
+# workers = Pool(14)
+# workers.map(runme, eps)
 
 
