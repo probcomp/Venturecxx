@@ -47,7 +47,7 @@ for i in range(5):
 r.force('w_1', -5.0)
 r.force('w_2', 7.0)
 
-infer_command = '(nesterov default all 73.3 5 10)'
+infer_command = '(nesterov default one 73.3 5 10)'
 plotf_command = '(plotf (pts l0 l1 l2) w_1 w_2 sigma_2)'
 cycle_command = '(cycle ({0} {1}) 20)'.format(plotf_command, infer_command)
 res = r.infer(cycle_command)
