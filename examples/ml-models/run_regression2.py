@@ -172,6 +172,7 @@ def compare_mripl_vs_resample(mripl, no_ripls):
 # compare_mripl_vs_resample(True, 50)
 
 def runme(eps):
+  print 'runnng with eps = ' + str(eps)
   r = build_ripl()
   X_test, X_train, y_test, y_train = make_fantasy_data()
   r = input_test(r, X_test, y_test)
@@ -192,13 +193,14 @@ def runme(eps):
   res = r.infer(cycle_command)
   out = path.join('regression-results', 'nesterov_{0:0.1f}.png'.format(eps))
   fig, ax = plt.subplots(2,1)
-    res[['w_1', 'w_2', 'sigma_2']].plot(ax = ax[0])
-    res['log score'].plot(ax = ax[1])
+  res[['w_1', 'w_2', 'sigma_2']].plot(ax = ax[0])
+  res['log score'].plot(ax = ax[1])
   fig.savefig(out)
   plt.close(fig)
 
 eps = np.r_[0.05:1.45:0.1]
-workers = Pool(14)
-workers.map(runme, eps)
+# workers = Pool(14)
+# workers.map(runme, eps)
+map(runme, eps)
 
 
