@@ -6,26 +6,17 @@ Summary::
     [assume symbol expression]
     [observe expression value]
     [predict expression]
-    [configure options]
     [forget directive_id]
     [freeze directive_id]
     [report directive_id]
+    [force expression value]
+    [sample expression]
     [infer expression]
     [start_continuous_inference expression]
     [stop_continuous_inference]
     [continuous_inference_status]
     [clear]
-    [rollback]
-    [get_logscore directive_id]
-    [get_global_logscore]
-
     [list_directives]
-    [get_directive directive_id]
-    [force expression value]
-    [sample expression]
-    [get_current_exception]
-    [get_state]
-    [reset]
 
 Directives
 ----------
