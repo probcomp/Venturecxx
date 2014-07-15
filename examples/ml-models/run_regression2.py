@@ -199,8 +199,7 @@ def runme(eps):
   plt.close(fig)
 
 eps = np.r_[0.05:1.45:0.1]
-# workers = Pool(14)
-# workers.map(runme, eps)
-map(runme, eps)
+workers = Pool(14)
+workers.map(runme, eps)
 
 
