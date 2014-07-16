@@ -900,6 +900,8 @@ class VentureType(object):
       return self.asPython(vthing) # Function will be added by inheritance pylint:disable=no-member
   def distribution(self, base, **kwargs):
     return base(self.name()[1:-1], **kwargs) # Strip the angle brackets
+  def __eq__(self, other):
+    return type(self) == type(other)
 
   def gradient_type(self):
     "The type of the cotangent space of the space represented by this type."
@@ -1060,6 +1062,8 @@ class HomogeneousListType(VentureType):
     return vthing.asPythonList(self.subtype)
   def __contains__(self, vthing):
     return vthing in ListType and all([v in self.subtype for v in vthing.asPythonList()])
+  def __eq__(self):
+    return type(self) == type(other) and self.subtype == other.subtype
   def name(self): return "<list %s>" % self.subtype.name()
   def distribution(self, base, **kwargs):
     # TODO Is this splitting what I want?
@@ -1079,6 +1083,8 @@ class HomogeneousArrayType(VentureType):
     return vthing.getArray(self.subtype)
   def __contains__(self, vthing):
     return isinstance(vthing, VentureArray) and all([v in self.subtype for v in vthing.getArray()])
+  def __eq__(self, other):
+    return type(self) == type(other) and self.subtype == other.subtype
   def name(self): return "<array %s>" % self.subtype.name()
   def distribution(self, base, **kwargs):
     # TODO Is this splitting what I want?
@@ -1096,6 +1102,8 @@ class ArrayUnboxedType(VentureType):
   def __contains__(self, vthing):
     # TODO Need a more general element type compatibility check
     return isinstance(vthing, VentureArrayUnboxed) and vthing.elt_type == self.subtype
+  def __eq__(self, other):
+    return type(self) == type(other) and self.subtype == other.subtype
   def name(self): return "<array %s>" % self.subtype.name()
   def distribution(self, base, **kwargs):
     return base("array_unboxed", elt_type=self.subtype, **kwargs)
@@ -1179,6 +1187,8 @@ class HomogeneousDictType(VentureType):
     return dict([(self.keytype.asPython(key), self.valtype.asPython(val)) for (key, val) in vthing.getDict().iteritems()])
   def __contains__(self, vthing):
     return isinstance(vthing, VentureDict) and all([k in self.keytype and v in self.valtype for (k,v) in vthing.getDict().iteritems()])
+  def __eq__(self, other):
+    return type(self) == type(other) and self.keytype == other.keytype and self.valtype == other.valtype
   def name(self): return "<dict %s %s>" % (self.keytype.name(), self.valtype.name())
   def distribution(self, base, **kwargs):
     # TODO Is this splitting what I want?
