@@ -16,6 +16,26 @@ which built-in inference procedures can operate. [#]_
 Scopes, Blocks, and the Local Posterior
 ---------------------------------------
 
+Venture defines the notion of `inference scope` to allow the
+programmer to control the parts of their model on which to apply
+various inference procedures.  The idea is that a `scope` is some
+collection of related random choices (for example, the states of a
+hidden Markov model could be one scope, and the hyperparameters could
+be another); and each scope is further subdivided into `block` s,
+which are choices that ought to be reproposed together (the name is
+meant to evoke the idea of block proposals).
+
+Any given random choice in an execution history can exist in an
+arbitrary number of scopes; but for each scope it is in it must be in
+a unique block.  As such, a scope-block pair denotes a set of random
+choices.
+
+Any set of random choices defines a `local posterior`, which is the
+posterior on those choices, conditioned on keeping the rest of the
+execution history fixed.  Every inference method accepts a scope id
+and a block id as its first two arguments, and operates only on those
+random choices, with respect to that local posterior.
+
 Built-in Procedures for Inference
 ---------------------------------
 
@@ -253,4 +273,9 @@ Special Forms
 
 .. rubric:: Footnotes
 
-.. [#] For the interested...
+.. [#] For the interested, the way this is actually done is that each
+   of the primitives documented here actually returns a procedure that
+   accepts a reified Trace, affects it, and returns it.  This is
+   relevant if you wish to define additional inference abstractions in
+   Venture, or more complex combinations of them than the provided
+   ones.
