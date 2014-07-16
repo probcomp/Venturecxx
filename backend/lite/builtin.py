@@ -15,6 +15,7 @@ import hmm
 import conditionals
 import scope
 import eval_sps
+import functional
 import value as v
 import env
 from utils import careful_exp
@@ -275,6 +276,17 @@ builtInSPsList = [
                                                [v.MatrixType(), v.MatrixType()],
                                                v.MatrixType(),
                                                descr="(%s x y) returns the product of matrices x and y.") ],
+
+           [ "apply", esr_output(TypedPSP(functional.ApplyRequestPSP(),
+                                          SPType([SPType([v.AnyType("a")], v.AnyType("b"), variadic=True),
+                                                  v.HomogeneousArrayType(v.AnyType("a"))],
+                                                 v.RequestType("b")))) ],
+
+           [ "mapv", VentureSP(TypedPSP(functional.ArrayMapRequestPSP(),
+                                        SPType([SPType([v.AnyType("a")], v.AnyType("b")),
+                                                v.HomogeneousArrayType(v.AnyType("a"))],
+                                               v.RequestType("<array b>"))),
+                               functional.ESRArrayOutputPSP()) ],
 
            [ "branch", esr_output(conditionals.branch_request_psp()) ],
            [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [v.BoolType(), v.AnyType(), v.AnyType()], v.AnyType(),
