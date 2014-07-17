@@ -92,7 +92,7 @@ VentureValuePtr parseSimplex(boost::python::object value)
 VentureValuePtr parseVector(boost::python::object value)
 {
   boost::python::extract<boost::python::list> getList(value);
-  if (!getList.check()) throw "Not a list: " + boost::python::str(value);
+  if (!getList.check()) { throw "Vector must be a list."; }
   boost::python::list l = getList();
 
   boost::python::ssize_t len = boost::python::len(l);
@@ -109,7 +109,7 @@ VentureValuePtr parseVector(boost::python::object value)
 VentureValuePtr parseTuple(boost::python::object value)
 {
   boost::python::extract<boost::python::tuple> getTuple(value);
-  if (!getTuple.check()) throw "Not a tuple: " + boost::python::str(value);
+  if (!getTuple.check()) { throw "Tuple must be a tuple."; }
   boost::python::tuple t = getTuple();
 
   boost::python::ssize_t len = boost::python::len(t);
