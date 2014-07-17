@@ -154,6 +154,7 @@ VentureValuePtr parseMatrix(boost::python::object value)
   boost::python::numeric::array data = getNumpyArray();
   boost::python::tuple shape = boost::python::extract<boost::python::tuple>(data.attr("shape"));
 
+  if (boost::python::len(shape) != 2) { throw "Matrix must be two-dimensional."; }
   size_t rows = boost::python::extract<size_t>(shape[0]);
   size_t cols = boost::python::extract<size_t>(shape[1]);
 

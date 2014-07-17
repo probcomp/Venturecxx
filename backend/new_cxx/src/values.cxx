@@ -193,6 +193,8 @@ boost::python::dict VentureMatrix::toPython(Trace * trace) const
     l.append(row);
   }
   boost::python::numeric::array a(l);
+  // set shape (needed for 0-length matrices)
+  a.attr("shape") = boost::python::make_tuple(m.rows(), m.cols());
   value["value"] = a;
   return value;
 }
