@@ -143,6 +143,7 @@ puma_src_files = [
     "src/sps/dstructure.cxx",
     "src/sps/eval.cxx",
     "src/sps/hmm.cxx",
+    "src/sps/lite.cxx",
     "src/sps/matrix.cxx",
     "src/sps/msp.cxx",
     "src/sps/mvn.cxx",
