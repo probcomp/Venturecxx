@@ -68,7 +68,9 @@
   (lambda (f v)
     (if (is_pair v)
       (_map_list f v)
-      (to_array (_map_list f (to_list v)))))]
+      (if (is_array v)
+        (to_array (_map_list f (to_list v)))
+        (to_vector (_map_list f (to_list v))))))]
 
 ; Map for lists (same args as above)
 [assume _map_list
@@ -88,7 +90,7 @@
   (lambda (f v identity)
     (if (is_pair v)
       (_reduce_list f v identity)
-      (to_array (_reduce_list f (to_list v) identity))))]
+      (_reduce_list f (to_list v) identity)))]
 
 ; Reduce for lists (same args as above)
 [assume _reduce_list
@@ -101,6 +103,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Vector / matrix ops
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 [assume dot
   (lambda (x y)
     (if (is_pair x)
@@ -135,6 +138,10 @@
   (lambda (x)
     (/ (sum x) (size x)))]
 
+; multiply list / array / vector v by scalar k
+[assume scalar_mult
+  (lambda (v k)
+    (map (lambda (x) (* x k)) v))]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Useful math functions
