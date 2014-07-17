@@ -171,53 +171,85 @@
 ; Convenience functions for assembling vectors and lists
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; Constructs a vector by repeating the value x, n times.
-[assume repeat_vector
-  (lambda (x n)
-    (to_vector (repeat_list x n)))]
-
-; Constructs a list by repeating a value x, n times.
-[assume repeat_list
-  (lambda (x n)
-    (_repeat_list_helper x n 0))]
+;Repeat the given value n times, and return as requested type
+;Allowed types are vector, list, array
+;[sample (repeat 4 7 (quote vector))]
+[assume repeat
+  (lambda (value n type)
+    (if (= type (quote list))
+      (_repeat_list_helper value n 0)
+      (if (= type (quote array))
+        (to_array (_repeat_list_helper value n 0))
+        (to_vector (_repeat_list_helper value n 0)))))]
 
 [assume _repeat_list_helper
-  (lambda (x n idx)
+  (lambda (value n idx)
     (if (= idx n)
       (list)
-      (pair x (_repeat_list_helper x n (+ idx 1)))))]
+      (pair value (_repeat_list_helper value n (+ idx 1)))))]
 
+; Construct vector of zeros of a given length n, of given type
+; [sample (zeros 3 (quote vector))]
+[assume zeros
+  (lambda (n type)
+    (repeat 0 n type))]
 
-; Identity matrix
-[assume identity_matrix
-  (lambda (p)
-    (diag_matrix p 1))]
+; Construct vector of ones of a given length n, of given type
+; [sample (zeros 3 (quote vector))
+[assume ones
+  (lambda (n type)
+    (repeat 0 n type))]
 
+; Range (as Python's range function)
+[assume range
+  (lambda (start stop type)
+    (if (= type (quote list))
+      (_range_list start stop)
+      (if (= type (quote array))
+        (to_array (_range_list start stop))
+        (to_vector (_range_list start stop)))))]
 
-; Code to construct diagonal matrices
-[assume diag_matrix
-  (lambda (p fill_value)
-    (matrix (diag_matrix_helper p fill_value 0)))]
+[assume _range_list
+  (lambda (start stop)
+    (let ((incr (if (>= stop start) 1 -1)))
+      (if (= start stop)
+          (list)
+          (pair start (_range_list (+ incr start) stop)))))]
 
-[assume diag_matrix_helper
-  (lambda (p fill_value idx)
-    (if (= idx p)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Matrix constructors
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Identity matrix of dimension D
+[assume eye
+  (lambda (D)
+    (diag D 1))]
+
+;; Diagonal matrix of dimension D
+[assume diag
+  (lambda (D diag_value)
+    (matrix (_diag_helper D diag_value 0)))]
+
+[assume _diag_helper
+  (lambda (D diag_value idx)
+    (if (= idx D)
       (list)
       (pair
-        (fill_one p fill_value idx)
-        (diag_matrix_helper p fill_value (+ idx 1)))))]
+        (_one_row D diag_value idx)
+        (_diag_helper D diag_value (+ idx 1)))))]
 
-[assume fill_one
-  (lambda (p fill_value fill_position)
-    (fill_one_helper p fill_value fill_position 0))]
+; Construct one row of a diagonal matrix.
+[assume _one_row
+  (lambda (D diag_value fill_position)
+    (_one_row_helper D diag_value fill_position 0))]
 
-[assume fill_one_helper
-  (lambda (p fill_value fill_position idx)
-    (if (= idx p)
+[assume _one_row_helper
+  (lambda (D diag_value fill_position idx)
+    (if (= idx D)
       (list)
       (pair
-        (if (= idx fill_position) fill_value 0)
-        (fill_one_helper p fill_value fill_position (+ idx 1)))))]
+        (if (= idx fill_position) diag_value 0)
+        (_one_row_helper D diag_value fill_position (+ idx 1)))))]
 
 
 
