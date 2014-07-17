@@ -207,6 +207,60 @@ through a ripl (applied fully uncurried)."""
     expr = [{"type":"symbol", "value":name}] + [v.expressionFor() for v in args_lists[0]]
     assert answer.equal(carefully(eval_in_ripl, expr))
 
+def eval_foreign_sp(name, sp, expr):
+  ripl = get_ripl()
+  ripl.bind_foreign_sp(name, sp)
+  ripl.predict(expr, label="thing")
+  return VentureValue.fromStackDict(ripl.report("thing", type=True))
+
+def testForeignInterfaceSimulate():
+  for (name,sp) in relevantSPs():
+    if name in ["scope_include", # Because scope_include is
+                                 # misannotated as to the true
+                                 # permissible types of scopes and
+                                 # blocks
+                "get_current_environment", # Because BogusArgs gives a bogus environment
+                "extend_environment", # Because BogusArgs gives a bogus environment
+              ]:
+      continue
+    if config["get_ripl"] != "lite" and name in [
+        ## Expected failures
+        "dict", # Because keys and values must be the same length
+        "matrix", # Because rows must be the same length
+        "get_empty_environment", # Environments can't be rendered to stack dicts
+        ## Incompatibilities with Puma
+        "simplex", # Disagreement about whether stack simplexes are lists or numpy arrays
+        "vector", # Disagreement about whether stack vectors are lists or numpy arrays
+    ]:
+      continue
+    if not sp.outputPSP.isRandom():
+      yield checkForeignInterfaceAgreesWithDeterministicSimulate, name, sp
+
+@ignoresConfiguredInferenceProgram
+def checkForeignInterfaceAgreesWithDeterministicSimulate(name, sp):
+  checkTypedProperty(propForeignInterfaceAgreesWithDeterministicSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)
+
+def propForeignInterfaceAgreesWithDeterministicSimulate(args_lists, name, sp):
+  """Check that the given SP produces the same answer directly and
+through the foreign function interface (applied fully uncurried)."""
+  args = BogusArgs(args_lists[0], sp.constructSPAux())
+  answer = carefully(sp.outputPSP.simulate, args)
+  if isinstance(answer, VentureSP):
+    if isinstance(answer.requestPSP, NullRequestPSP):
+      if not answer.outputPSP.isRandom():
+        args2 = BogusArgs(args_lists[1], answer.constructSPAux())
+        ans2 = carefully(answer.outputPSP.simulate, args2)
+        inner = [{"type":"symbol", "value":"test_sp"}] + [v.expressionFor() for v in args_lists[0]]
+        expr = [inner] + [v.expressionFor() for v in args_lists[1]]
+        assert ans2.equal(carefully(eval_foreign_sp, "test_sp", sp, expr))
+      else:
+        raise SkipTest("Putatively deterministic sp %s returned a random SP" % name)
+    else:
+      raise SkipTest("Putatively deterministic sp %s returned a requesting SP" % name)
+  else:
+    expr = [{"type":"symbol", "value":"test_sp"}] + [v.expressionFor() for v in args_lists[0]]
+    assert answer.equal(carefully(eval_foreign_sp, "test_sp", sp, expr))
+
 def testLogDensityDeterministic():
   for (name,sp) in relevantSPs():
     if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart", "categorical"]: # TODO
