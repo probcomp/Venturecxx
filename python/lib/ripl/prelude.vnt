@@ -103,6 +103,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Vector / matrix ops
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 [assume dot
   (lambda (x y)
     (if (is_pair x)
@@ -137,6 +138,10 @@
   (lambda (x)
     (/ (sum x) (size x)))]
 
+; multiply list / array / vector v by scalar k
+[assume scalar_mult
+  (lambda (v k)
+    (map (lambda (x) (* x k)) v))]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Useful math functions

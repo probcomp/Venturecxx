@@ -178,11 +178,11 @@ class TestPrelude(TestCase):
     self.assertAlmostEqual(res_py, res_ven)
 
   @run_containers
-  def test_sum_prod(self, container):
+  def test_math(self, container):
     '''
-    Test the "sum" and "product" vector aggregators.
+    Test the "sum", "product", "mean" vector aggregators.
     '''
-    fncs = [(np.sum, 'sum'), (np.prod, 'prod')]
+    fncs = [(np.sum, 'sum'), (np.prod, 'prod'), (np.mean, 'mean')]
     for f_py, f_ven in fncs:
       self.reset_ripl()
       x = self.r.assume('x', self.mk_random_data(container, 'numeric'))
