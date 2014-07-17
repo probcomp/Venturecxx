@@ -129,6 +129,10 @@ void CRPOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args) co
     aux->numTables--;
     aux->tableCounts.erase(table);
   }
+  // TODO Consider decrementing the nextIndex while the top table is
+  // empty, or even maintaining a free list.  Why?  So that
+  // resimulating big blocks of CRPs produces the same atoms.  Does
+  // this actually matter?  If the atoms are memoized on?
 }
 
 double CRPOutputPSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
