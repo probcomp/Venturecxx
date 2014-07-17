@@ -33,4 +33,7 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=CP1-Quad-Rotor \
     --exclude=.coverage \
     --exclude=.idea \
+    --exclude=venture-*.tgz \
+    --exclude=venture-*.tar.gz \
+    --exclude=venture-*.tar \
     Venturecxx/
