@@ -6,12 +6,12 @@ Basic
 
 Venture has the following distinct basic types:
 - Floating point numbers (64-bit precision)
-- Integers [TODO in Puma]
+- Integers
 - Atoms
 - Booleans
 - Symbols
 - Probabilities (represented in direct space, as floating point
-  numbers between 0 and 1) [TODO in Puma]
+  numbers between 0 and 1)
 - ForeignBlobs for carrying arbitrary user-supplied data that is
   opaque to Venture [MAYBE add to Puma]
 
@@ -91,15 +91,15 @@ Coersions
 The following Venture types are implicitly coerced to one another when
 needed.  If a coersion fails, an error is raised.
 
-- Unboxed X to boxed X by boxing [TODO in Puma]
+- Unboxed X to boxed X by boxing
 - Boxed X to unboxed X by type checking and unboxing (may fail) [TODO in Puma]
 - Proper linked lists to arrays
-- Integers to floating point numbers [TODO in Puma]
+- Integers to floating point numbers
 - Probabilities to floating point numbers by injection
 - Floating point numbers to direct-space probabilities by range
   checking (may fail) [MAYBE remove]
-- Symmetric matrices to general matrices by injection [TODO in Puma]
-- Matrices to symmetric matrices by checking symmetry (may fail) [TODO in Puma]
+- Symmetric matrices to general matrices by injection
+- Matrices to symmetric matrices by checking symmetry (may fail)
 
 Some Venture SPs also implement explicit coersions.
 
