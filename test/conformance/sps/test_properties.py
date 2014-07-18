@@ -228,9 +228,6 @@ def testForeignInterfaceSimulate():
         "dict", # Because keys and values must be the same length
         "matrix", # Because rows must be the same length
         "get_empty_environment", # Environments can't be rendered to stack dicts
-        ## Incompatibilities with Puma
-        "simplex", # Disagreement about whether stack simplexes are lists or numpy arrays
-        "vector", # Disagreement about whether stack vectors are lists or numpy arrays
     ]:
       continue
     if not sp.outputPSP.isRandom():

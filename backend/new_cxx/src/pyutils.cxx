@@ -73,10 +73,18 @@ VentureValuePtr parseArrayUnboxed(boost::python::object value, boost::python::ob
 
 VentureValuePtr parseSimplex(boost::python::object value)
 {
-  boost::python::extract<boost::python::list> getList(value);
-  if (!getList.check()) { throw "Simplex point must be a list."; }
-
-  boost::python::list l = getList();
+  boost::python::extract<boost::python::numeric::array> getNumpyArray(value);
+  boost::python::list l;
+  if (getNumpyArray.check())
+  {
+    l = boost::python::list(getNumpyArray());
+  }
+  else
+  {
+    boost::python::extract<boost::python::list> getList(value);
+    if (!getList.check()) { throw "Simplex must be a list or numpy array."; }
+    l = getList();
+  }
 
   boost::python::ssize_t len = boost::python::len(l);
   Simplex s;
@@ -91,9 +99,18 @@ VentureValuePtr parseSimplex(boost::python::object value)
 
 VentureValuePtr parseVector(boost::python::object value)
 {
-  boost::python::extract<boost::python::list> getList(value);
-  if (!getList.check()) { throw "Vector must be a list."; }
-  boost::python::list l = getList();
+  boost::python::extract<boost::python::numeric::array> getNumpyArray(value);
+  boost::python::list l;
+  if (getNumpyArray.check())
+  {
+    l = boost::python::list(getNumpyArray());
+  }
+  else
+  {
+    boost::python::extract<boost::python::list> getList(value);
+    if (!getList.check()) { throw "Vector must be a list or numpy array."; }
+    l = getList();
+  }
 
   boost::python::ssize_t len = boost::python::len(l);
   VectorXd v(len);
