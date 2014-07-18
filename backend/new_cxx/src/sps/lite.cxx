@@ -5,18 +5,18 @@
 #include "regen.h"
 #include "env.h"
 
-VentureValuePtr ForeignLiteOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr ForeignLitePSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   boost::python::list foreignOperandValues;
   for (size_t i = 0; i < args->operandValues.size(); ++i)
   {
     foreignOperandValues.append(args->operandValues[i]->toPython(args->trace));
   }
-  boost::python::object foreignResult = sp.attr("simulateOutputPSP")(foreignOperandValues);
+  boost::python::object foreignResult = psp.attr("simulate")(foreignOperandValues);
   return parseValue(boost::python::extract<boost::python::dict>(foreignResult));
 }
 
-double ForeignLiteOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double ForeignLitePSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
 {
   boost::python::dict foreignValue = value->toPython(args->trace);
   boost::python::list foreignOperandValues;
@@ -24,7 +24,7 @@ double ForeignLiteOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> 
   {
     foreignOperandValues.append(args->operandValues[i]->toPython(args->trace));
   }
-  boost::python::object foreignLogDensity = sp.attr("logDensityOutputPSP")(foreignValue, foreignOperandValues);
+  boost::python::object foreignLogDensity = psp.attr("logDensity")(foreignValue, foreignOperandValues);
   return boost::python::extract<double>(foreignLogDensity);
 }
 

@@ -15,21 +15,21 @@
 // to stack dicts, while the Lite half handles value translation from
 // stack dicts to Lite VentureValues.
 
-struct ForeignLiteOutputPSP : PSP
+struct ForeignLitePSP : PSP
 {
-  ForeignLiteOutputPSP(boost::python::object sp): sp(sp) {}
+  ForeignLitePSP(boost::python::object psp): psp(psp) {}
 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 
-  boost::python::object sp;
+  boost::python::object psp;
 };
 
 struct ForeignLiteSP : SP
 {
-  // TODO: requests, and add a ForeignLiteRequestPSP or something
+  // TODO: requestPSP (needs requests to be stackable)
   ForeignLiteSP(boost::python::object sp): SP(new NullRequestPSP(),
-                                              new ForeignLiteOutputPSP(sp)) {}
+                                              new ForeignLitePSP(sp.attr("outputPSP"))) {}
 };
 
 #endif

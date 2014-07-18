@@ -23,25 +23,28 @@ class ForeignArgs(object):
         self.spaux = None
         self.env = None
 
+class ForeignLitePSP(object):
+    """A wrapper around a Lite PSP that can be called by other backends."""
+
+    def __init__(self, psp):
+        self.psp = psp
+
+    def simulate(self, operandValues):
+        operandValues = map(VentureValue.fromStackDict, operandValues)
+        args = ForeignArgs(operandValues)
+        result = self.psp.simulate(args)
+        return result.asStackDict()
+
+    def logDensity(self, value, operandValues):
+        value = VentureValue.fromStackDict(value)
+        operandValues = map(VentureValue.fromStackDict, operandValues)
+        args = ForeignArgs(operandValues)
+        result = self.psp.logDensity(value, args)
+        return result
+
 class ForeignLiteSP(object):
     """A wrapper around a Lite SP that can be called by other backends."""
 
     def __init__(self, sp):
-        self.sp = sp
-
-    def simulateRequestPSP(self):
-        # TODO: do something about requests
-        return None
-
-    def simulateOutputPSP(self, operandValues):
-        operandValues = map(VentureValue.fromStackDict, operandValues)
-        args = ForeignArgs(operandValues)
-        result = self.sp.outputPSP.simulate(args)
-        return result.asStackDict()
-
-    def logDensityOutputPSP(self, value, operandValues):
-        value = VentureValue.fromStackDict(value)
-        operandValues = map(VentureValue.fromStackDict, operandValues)
-        args = ForeignArgs(operandValues)
-        result = self.sp.outputPSP.logDensity(value, args)
-        return result
+        # TODO: requestPSP (needs requests to be stackable)
+        self.outputPSP = ForeignLitePSP(sp.outputPSP)
