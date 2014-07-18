@@ -1,11 +1,11 @@
 ; Venture library functions
 
-; TODO: many of these functions do their work by converting vectors and arrays
-; to lists and back. This is bad for two reasons.
-; 1. Converting to lists and back introduces some overhead we don't want
-; 2. Right now, we can't tell vectors from arrays so I
-; just convert everything back to an array. This could break things, should
-; be fixed when vectors and arrays can be told apart.
+; TODO
+; 1. map relies on to_vector and to_list; not sure how bad this is.
+;   May need to implement map as SP instead
+; 2. Some of this would be cleaner (e.g. the "into" function, the to_vector
+;   and to_list functions) if there were sp's is_vector and is_list. If those
+;   are made, change things.
 
 ; check if a list is empty
 ; Parameters
@@ -23,9 +23,12 @@
 ; Convert an array or vector to a list
 ; Parameters
 ;   v : vector or array
+;   TODO : if we get is_list, use that instead of is_pair
 [assume to_list
   (lambda (v)
-    (_to_list_helper v 0 (size v)))]
+    (if (is_pair v)
+      v
+      (_to_list_helper v 0 (size v))))]
 
 ; Helper for the above. Needed because no letrec in Venture.
 [assume _to_list_helper
@@ -41,19 +44,21 @@
 ;   v : list
 [assume to_array
   (lambda (v)
-    (eval
-      (pair (quote array) v)
-      (get_current_environment)))]
+    (if (is_array v)
+      v
+      (eval
+        (pair (quote array) v)
+        (get_current_environment))))]
 
 ; Convert a list to a vector
 ; Parameters
 ;   v : list
+; TODO : if we get is_vector, use that to check
 [assume to_vector
   (lambda (v)
     (eval
       (pair (quote vector) v)
       (get_current_environment)))]
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Support for functional programming
@@ -66,11 +71,17 @@
 ;   v : list, vector, or array
 [assume map
   (lambda (f v)
-    (if (is_pair v)
-      (_map_list f v)
-      (if (is_array v)
-        (to_array (_map_list f (to_list v)))
-        (to_vector (_map_list f (to_list v))))))]
+    (into (_map_list f (to_list v)) v))]
+
+; Helper function for map. Output of map is always a list; this takes the
+; list output and converts it to the same type as the map function's input
+[assume into
+  (lambda (output input)
+    (if (is_pair input)
+      output
+      (if (is_array input)
+        (to_array output)
+        (to_vector output))))]
 
 ; Map for lists (same args as above)
 [assume _map_list
@@ -88,9 +99,7 @@
 ;   identity : identity value for the funciont f
 [assume reduce
   (lambda (f v identity)
-    (if (is_pair v)
-      (_reduce_list f v identity)
-      (_reduce_list f (to_list v) identity)))]
+    (_reduce_list f (to_list v) identity))]
 
 ; Reduce for lists (same args as above)
 [assume _reduce_list
@@ -171,50 +180,35 @@
 ; Convenience functions for assembling vectors and lists
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;Repeat the given value n times, and return as requested type
-;Allowed types are vector, list, array
-;[sample (repeat 4 7 (quote vector))]
+; Repeat the given value n times; returns a list
+;[sample (repeat 4 7)]
 [assume repeat
-  (lambda (value n type)
-    (if (= type (quote list))
-      (_repeat_list_helper value n 0)
-      (if (= type (quote array))
-        (to_array (_repeat_list_helper value n 0))
-        (to_vector (_repeat_list_helper value n 0)))))]
+  (lambda (value n)
+    (_repeat_helper value n 0))]
 
-[assume _repeat_list_helper
+[assume _repeat_helper
   (lambda (value n idx)
     (if (= idx n)
       (list)
-      (pair value (_repeat_list_helper value n (+ idx 1)))))]
+      (pair value (_repeat_helper value n (+ idx 1)))))]
 
-; Construct vector of zeros of a given length n, of given type
-; [sample (zeros 3 (quote vector))]
+; Construct vector of zeros of a given length n
 [assume zeros
-  (lambda (n type)
-    (repeat 0 n type))]
+  (lambda (n)
+    (repeat 0 n))]
 
-; Construct vector of ones of a given length n, of given type
-; [sample (zeros 3 (quote vector))
+; Construct vector of ones of a given length n
 [assume ones
-  (lambda (n type)
-    (repeat 0 n type))]
+  (lambda (n)
+    (repeat 0 n))]
 
-; Range (as Python's range function)
+; Range (as Python's range function); returns list
 [assume range
-  (lambda (start stop type)
-    (if (= type (quote list))
-      (_range_list start stop)
-      (if (= type (quote array))
-        (to_array (_range_list start stop))
-        (to_vector (_range_list start stop)))))]
-
-[assume _range_list
   (lambda (start stop)
     (let ((incr (if (>= stop start) 1 -1)))
       (if (= start stop)
           (list)
-          (pair start (_range_list (+ incr start) stop)))))]
+          (pair start (range (+ incr start) stop)))))]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Matrix constructors
@@ -250,7 +244,3 @@
       (pair
         (if (= idx fill_position) diag_value 0)
         (_one_row_helper D diag_value fill_position (+ idx 1)))))]
-
-
-
-

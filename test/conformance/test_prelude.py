@@ -226,31 +226,25 @@ class TestPrelude(TestCase):
     self.assertAlmostEqual(res_py, res_ven)
     self.check_type(container, 'res')
 
-  @run_containers
-  def test_repeats(self, container):
+  def test_repeats(self):
     'Test that "repeat", "ones", and "zeros" work as expected'
     for fname, value in zip(['repeat', 'zeros', 'ones'],
                             [np.random.uniform(0,10), 0, 1]):
       self.reset_ripl()
       n = int(self.r.assume('n', '(uniform_discrete 1 10)'))
       _ = self.r.assume('value', value)
-      x_ven = self.array_to_list(self.r.assume('x', '(repeat value n (quote {0}))'.format(container)),
-                                 container)
+      x_ven = self.r.assume('x', '(repeat value n)')
       x_py = [value] * n
       self.assertAlmostEqual(x_py, x_ven)
-      self.check_type(container, 'x')
 
-  @run_containers
-  def test_range(self, container):
+  def test_range(self):
     'Test that range function matches python'
     self.reset_ripl()
     start = int(self.r.assume('start', '(uniform_discrete 1 10)'))
     stop = int(self.r.assume('stop', '(uniform_discrete (+ 1 start) (+ 1 10))'))
     res_py = range(start, stop)
-    res_ven = self.array_to_list(self.r.assume('res', '(range start stop (quote {0}))'.format(container)),
-                                   container)
+    res_ven = self.r.assume('res', '(range start stop)')
     self.assertEqual(res_py, res_ven)
-    self.check_type(container, 'res')
 
   def test_matrices(self):
     'Test that diagonal and identity matrices are as expected'
