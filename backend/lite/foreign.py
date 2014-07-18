@@ -1,3 +1,4 @@
+from sp import VentureSP
 from value import VentureValue
 
 # Part of a mechanism for allowing Lite SPs to be called from
@@ -33,7 +34,10 @@ class ForeignLitePSP(object):
         operandValues = map(VentureValue.fromStackDict, operandValues)
         args = ForeignArgs(operandValues)
         result = self.psp.simulate(args)
-        return result.asStackDict()
+        if isinstance(result, VentureSP):
+            return ForeignLiteSP(result)
+        else:
+            return result.asStackDict()
 
     def logDensity(self, value, operandValues):
         value = VentureValue.fromStackDict(value)

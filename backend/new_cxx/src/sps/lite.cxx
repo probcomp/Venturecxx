@@ -1,4 +1,5 @@
 #include "sps/lite.h"
+#include "sprecord.h"
 #include "pyutils.h"
 #include "pytrace.h"
 #include "concrete_trace.h"
@@ -13,7 +14,14 @@ VentureValuePtr ForeignLitePSP::simulate(shared_ptr<Args> args, gsl_rng * rng) c
     foreignOperandValues.append(args->operandValues[i]->toPython(args->_trace));
   }
   boost::python::object foreignResult = psp.attr("simulate")(foreignOperandValues);
-  return parseValue(boost::python::extract<boost::python::dict>(foreignResult));
+  if (foreignResult.attr("__class__").attr("__name__") == "ForeignLiteSP")
+  {
+    return VentureValuePtr(new VentureSPRecord(new ForeignLiteSP(foreignResult)));
+  }
+  else
+  {
+    return parseValue(boost::python::extract<boost::python::dict>(foreignResult));
+  }
 }
 
 double ForeignLitePSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
