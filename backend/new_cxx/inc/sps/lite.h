@@ -22,6 +22,12 @@ struct ForeignLitePSP : PSP
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 
+  bool isRandom() const;
+  bool canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const;
+
+  bool canEnumerateValues(shared_ptr<Args> args) const;
+  vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
+
   boost::python::object psp;
 };
 

@@ -28,6 +28,41 @@ double ForeignLitePSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) 
   return boost::python::extract<double>(foreignLogDensity);
 }
 
+bool ForeignLitePSP::isRandom() const
+{
+  return boost::python::extract<bool>(psp.attr("isRandom")());
+}
+
+bool ForeignLitePSP::canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const
+{
+  // TODO: include the node information somehow
+  // currently the Lite wrapper stubs it
+  return boost::python::extract<bool>(psp.attr("canAbsorb")());
+}
+
+bool ForeignLitePSP::canEnumerateValues(shared_ptr<Args> args) const
+{
+  // TODO: Lite SPs do not seem to implement this usefully.
+  return true;
+}
+
+vector<VentureValuePtr> ForeignLitePSP::enumerateValues(shared_ptr<Args> args) const
+{
+  boost::python::list foreignOperandValues;
+  for (size_t i = 0; i < args->operandValues.size(); ++i)
+  {
+    foreignOperandValues.append(args->operandValues[i]->toPython(args->trace));
+  }
+  boost::python::object foreignResult = psp.attr("enumerateValues")(foreignOperandValues);
+  boost::python::list foreignValues = boost::python::extract<boost::python::list>(foreignResult);
+  vector<VentureValuePtr> values;
+  for (boost::python::ssize_t i = 0; i < boost::python::len(foreignValues); ++i)
+  {
+    values.push_back(parseValue(boost::python::extract<boost::python::dict>(foreignValues[i])));
+  }
+  return values;
+}
+
 void PyTrace::bindPrimitiveSP(const string& sym, boost::python::object sp)
 {
   ConstantNode * node = trace->createConstantNode(VentureValuePtr(new VentureSPRecord(new ForeignLiteSP(sp))));

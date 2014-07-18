@@ -42,6 +42,25 @@ class ForeignLitePSP(object):
         result = self.psp.logDensity(value, args)
         return result
 
+    def isRandom(self):
+        return self.psp.isRandom()
+
+    def canAbsorb(self):
+        try:
+            # try stubbing the node information...
+            return self.psp.canAbsorb(None, None, None)
+        except AttributeError:
+            return False
+
+    def canEnumerate(self):
+        return self.psp.canEnumerate()
+
+    def enumerateValues(self, operandValues):
+        operandValues = map(VentureValue.fromStackDict, operandValues)
+        args = ForeignArgs(operandValues)
+        result = self.psp.enumerateValues(args)
+        return [value.asStackDict() for value in result]
+
 class ForeignLiteSP(object):
     """A wrapper around a Lite SP that can be called by other backends."""
 
