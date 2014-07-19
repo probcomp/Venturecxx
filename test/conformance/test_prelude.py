@@ -105,7 +105,8 @@ class TestPrelude(TestCase):
       # make the data, check it's not a list to start
       x = self.mk_random_data(container, 'mixed')
       x_python = self.r.assume('x', x)
-      if container == 'vector': x_python = x_python.tolist()
+      if (container == 'vector') and (self.r.backend() == 'lite'):
+        x_python = x_python.tolist()
       # convert, check that it does the right thing
       y_python = self.r.assume('y', ('(to_list x)'))
       self.check_type('list', 'y')
@@ -123,7 +124,8 @@ class TestPrelude(TestCase):
       # convert, check
       cmd_str = '(to_{0} x)'.format(container)
       y_python = self.r.assume('y', cmd_str)
-      if container == 'vector': y_python = y_python.tolist()
+      if (container == 'vector') and (self.r.backend() == 'lite'):
+        y_python = y_python.tolist()
       self.check_type(container, 'y')
       self.assertEqual(x_python, y_python)
 
@@ -146,7 +148,8 @@ class TestPrelude(TestCase):
       # apply the mapping, make sure the results match
       mapped_py = map(f_py, x)
       mapped_ven = self.r.assume('mapped', '(map f x)')
-      if container == 'vector': mapped_ven = mapped_ven.tolist()
+      if (container == 'vector') and (self.r.backend() == 'lite'):
+        mapped_ven = mapped_ven.tolist()
       self.assertEqual(mapped_py, mapped_ven)
       self.check_type(container, 'mapped')
 
@@ -178,11 +181,11 @@ class TestPrelude(TestCase):
     self.assertAlmostEqual(res_py, res_ven)
 
   @run_containers
-  def test_sum_prod(self, container):
+  def test_math(self, container):
     '''
-    Test the "sum" and "product" vector aggregators.
+    Test the "sum", "product", "mean" vector aggregators.
     '''
-    fncs = [(np.sum, 'sum'), (np.prod, 'prod')]
+    fncs = [(np.sum, 'sum'), (np.prod, 'prod'), (np.mean, 'mean')]
     for f_py, f_ven in fncs:
       self.reset_ripl()
       x = self.r.assume('x', self.mk_random_data(container, 'numeric'))

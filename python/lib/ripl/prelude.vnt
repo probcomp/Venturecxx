@@ -103,6 +103,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Vector / matrix ops
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 [assume dot
   (lambda (x y)
     (if (is_pair x)
@@ -137,6 +138,10 @@
   (lambda (x)
     (/ (sum x) (size x)))]
 
+; multiply list / array / vector v by scalar k
+[assume scalar_mult
+  (lambda (v k)
+    (map (lambda (x) (* x k)) v))]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Useful math functions
@@ -162,36 +167,8 @@
   (lambda (x)
     (log (/ x (- 1 x))))]
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Assemble arrays, lists, vectors
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-; Appends the second (scalar) argument to the first
-; Parameters
-;   v : list, array, or vector
-;   x : scalar to be appended
-;[assume append
-;  (lambda (v x)
-;    (if (is_pair v)
-;      (_append_list v x)
-;      (to_array (_append_list(to_list v) x))))]
-
-; Helper for the above
-;[assume _append_list
-;  (lambda (v x)
-;    (if (is_empty v)
-;      (list x)
-;      (pair
-;        (first v)
-;        (_append_list (rest v) x))))]
-
-; Concatenates two lists, arrays, or vectors
-; Parameters
-;
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Logicals on variable-length lists
+; Convenience functions for assembling vectors and lists
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; Constructs a vector by repeating the value x, n times.
