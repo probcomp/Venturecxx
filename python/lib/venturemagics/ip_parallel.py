@@ -8,7 +8,8 @@ import numpy as np
 import matplotlib.pylab as plt
 from scipy.stats import kde
 gaussian_kde = kde.gaussian_kde
-import subprocess,time,pickle
+import subprocess,time
+import cPickle as pickle
 mk_l_ripl = make_lite_church_prime_ripl
 mk_p_ripl = make_puma_church_prime_ripl
 
@@ -88,7 +89,7 @@ def mk_picklable(out_lst):
     try:
         pickle.dumps(out_lst)
         return out_lst
-    except:
+    except pickle.PicklingError:
         return map(str,out_lst)
 
 
@@ -169,10 +170,11 @@ class MRipl():
             try:
                 self.cli=Client()
                 self.local_mode = False
-            except:
+            except IOError,e:
                 print 'Failed to create IPython Parallel Client object.'
                 print 'MRipl is running in local (serial) model.'
                 self.local_mode = True
+                print 'Error: {}'.format(e)
         else:
             self.local_mode = True
 
@@ -1058,7 +1060,7 @@ def ipython_inline():
     try:
         ip=get_ipython()
         ip.run_cell_magic("px",'','pass') # display any figs inline
-    except:
+    except: ## FIXME, should be NameError
         pass
 
 
@@ -1067,10 +1069,7 @@ def mk_directives_string(ripl):
         return '\n'.join(di_string_lst)
 
 def display_directives(ripl_mripl,instruction='observe'):
-    ## FIXME: add did and labels
-    #v=ripl_mripl
-    #mr=1  if isinstance(v,MRipl) else 0
-    #di_list = v.local_ripls[0].list_directives() if mr else v.list_directives()
+    ## REMOVE: obsoleted by print_directives
 
     di_list = ripl_mripl.list_directives()
     instruction_list = []
@@ -1081,7 +1080,6 @@ def display_directives(ripl_mripl,instruction='observe'):
     return instruction_list
 
 def directive_to_string(d):
-    ## FIXME: replace symbols
     if d['instruction']=='assume':
         return '[assume %s %s]' %( d['symbol'], build_exp(d['expression']) )
     elif d['instruction']=='observe':
