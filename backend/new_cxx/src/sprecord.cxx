@@ -13,12 +13,9 @@ size_t VentureSPRecord::hash() const
   return long_hash(reinterpret_cast<long>(sp.get()));
 }
 
-boost::python::dict VentureSPRecord::toPython(ConcreteTrace * trace) const
+boost::python::dict VentureSPRecord::toPython(Trace * trace) const
 {
-  boost::python::dict value;
-  value["type"] = "spRecord";
-  value["value"] = boost::python::object("spRecord");
-  return value;
+  return sp->toPython(trace, spAux);
 }
 
 string VentureSPRecord::toString() const { return "spRecord"; }
