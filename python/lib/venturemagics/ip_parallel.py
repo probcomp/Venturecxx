@@ -1014,17 +1014,18 @@ class MRipl():
             if var_type =='float':
                 try:
                     kde=list(gaussian_kde(vals)(np.linspace(min(vals),max(vals),50)))[0]
-                except:
-                    kde=False
-                if kde:
+                except np.linalg.LinAlgError,e:
+                    print 'No GKDE due to {}'.format(e)
+                    fig,ax = plt.subplots(figsize=(4,2))
+                    draw_hist(vals,label,ax,plot_range=plot_range)
+                    figs.append(fig)
+                else:
                     fig,ax = plt.subplots(nrows=1,ncols=2,sharex=True,figsize=(9,2))
                     draw_hist(vals,label,ax[0],plot_range=plot_range)
                     draw_kde(vals,label,ax[1],plot_range=plot_range)
                     figs.append(fig)
-                else:
-                    fig,ax = plt.subplots(figsize=(4,2))
-                    draw_hist(vals,label,ax,plot_range=plot_range)
-                    figs.append(fig)
+                
+                   
             elif var_type in 'int':
                 fig,ax = plt.subplots()
                 draw_hist(vals,label,ax,plot_range=plot_range)
@@ -1240,7 +1241,7 @@ def venture(line, cell):
 try:
     ip = get_ipython()
     ip.register_magic_function(venture, "cell")
-except:
+except NameError:
     pass
 
 

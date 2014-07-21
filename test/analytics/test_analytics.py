@@ -107,17 +107,16 @@ def testRuns():
 @statisticalTest
 def _testInfer(riplThunk,conditional_prior,inferProg):
     v,_,_,_= betaModel( riplThunk() )
-    samples = 40
-    runs = 20
+    samples = 20
+    runs = 15
     model = Analytics(v)
+    infer_kwargs = dict(runs=runs,infer=inferProg,simpleInfer=True)
 
     if conditional_prior == 'conditional':
-        history,_ = model.runFromConditional(samples,runs=runs,
-                                             infer=inferProg)
+        history,_ = model.runFromConditional(samples,**infer_kwargs)
         cdf = stats.beta(3,1).cdf
     else:
-        history,_ = model.runConditionedFromPrior(samples,runs=runs,
-                                                  infer=inferProg)
+        history,_ = model.runConditionedFromPrior(samples,**infer_kwargs)
         dataValues = [typeVal['value'] for _,typeVal in history.data]
         noHeads = sum(dataValues)
         noTails = len(dataValues) - noHeads
@@ -132,8 +131,7 @@ def testRunFromConditionalInfer():
     riplThunks = get_ripl, lambda: get_mripl(no_ripls=2)
     cond_prior = 'conditional', 'prior'
     k1 = '(mh default one 1)'
-    k2 = '(mh default one 2)'
-    infProgs =  None, k1, '(cycle (%s %s) 1)'%(k1,k2)
+    infProgs =  k1,
 
     for riplThunk,cond_prior,infProg in product(riplThunks,cond_prior,infProgs):
         yield _testInfer, riplThunk, cond_prior, infProg
