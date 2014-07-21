@@ -331,7 +331,7 @@ class Analytics(object):
         if removeAllQueryExps:
             self.queryExps = []
         if newQueryExps is not None:
-            assert not isinstance(newObserves,str), '*newQueryExps* is set of strings, not string' 
+            assert not isinstance(newObserves,str), '*newQueryExps* should be a set of strings, not a string' 
             self.queryExps.extend( newQueryExps )
         # always update mripl engines with whatever is current self.queryExps
         if self.mripl and self.mripl.local_mode is False:
@@ -345,6 +345,7 @@ class Analytics(object):
         self.backend = newBackend
         self.ripl = mk_p_ripl() if self.backend=='puma' else mk_l_ripl()
         # self.ripl.set_seed(seed)
+
 
     def _clearRipl(self):
         if self.muRipl:
@@ -537,7 +538,8 @@ class Analytics(object):
 
         elif isinstance(infer, str):
             self.ripl.infer(infer)
-        else:
+
+        else: # need to be careful passing function with MRipl
             infer(self.ripl, stepSize)
 
 
@@ -557,13 +559,7 @@ class Analytics(object):
         # another step (with larger stepsize) and repeat.
         while iterations < get_entropy_info()['unconstrained_random_choices']:
             step = get_entropy_info()['unconstrained_random_choices']
-            if infer is None:
-                self.ripl.infer(step)
-
-            elif isinstance(infer, str):
-                self.ripl.infer(infer)
-            else:
-                infer(self.ripl, step)
+            self._runInfer(infer,step)
             iterations += step
 
         return iterations
