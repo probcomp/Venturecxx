@@ -47,6 +47,30 @@ double ForeignLitePSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) 
   return boost::python::extract<double>(foreignLogDensity);
 }
 
+void ForeignLitePSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) const
+{
+  boost::python::dict foreignValue = value->toPython(args->_trace);
+  boost::python::list foreignOperandValues;
+  for (size_t i = 0; i < args->operandValues.size(); ++i)
+  {
+    foreignOperandValues.append(args->operandValues[i]->toPython(args->_trace));
+  }
+  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(args->spAux)->aux;
+  psp.attr("incorporate")(foreignValue, foreignOperandValues, foreignAux);
+}
+
+void ForeignLitePSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args) const
+{
+  boost::python::dict foreignValue = value->toPython(args->_trace);
+  boost::python::list foreignOperandValues;
+  for (size_t i = 0; i < args->operandValues.size(); ++i)
+  {
+    foreignOperandValues.append(args->operandValues[i]->toPython(args->_trace));
+  }
+  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(args->spAux)->aux;
+  psp.attr("unincorporate")(foreignValue, foreignOperandValues, foreignAux);
+}
+
 bool ForeignLitePSP::isRandom() const
 {
   return boost::python::extract<bool>(psp.attr("isRandom")());

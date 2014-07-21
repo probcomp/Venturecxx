@@ -59,6 +59,18 @@ class ForeignLitePSP(object):
         result = self.psp.logDensity(value, args)
         return result
 
+    def incorporate(self, value, operandValues, spaux):
+        value = self.fromStackDict(value)
+        operandValues = map(self.fromStackDict, operandValues)
+        args = ForeignArgs(operandValues, spaux)
+        self.psp.incorporate(value, args)
+
+    def unincorporate(self, value, operandValues, spaux):
+        value = self.fromStackDict(value)
+        operandValues = map(self.fromStackDict, operandValues)
+        args = ForeignArgs(operandValues, spaux)
+        self.psp.unincorporate(value, args)
+
     def isRandom(self):
         return self.psp.isRandom()
 
