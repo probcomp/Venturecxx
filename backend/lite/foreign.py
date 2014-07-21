@@ -30,18 +30,31 @@ class ForeignLitePSP(object):
     def __init__(self, psp):
         self.psp = psp
 
+    def fromStackDict(self, thing):
+        # proxy for VentureValue.fromStackDict that handles SPs by unwrapping them
+        # TODO: should foreign_sp be a recognized stack dict type?
+        # should this become the normal stack representation for SPs?
+        if thing["type"] == "foreign_sp":
+            return thing["sp"].sp
+        else:
+            return VentureValue.fromStackDict(thing)
+
+    def asStackDict(self, thing):
+        # proxy for VentureValue.asStackDict that handles SPs by wrapping them
+        if isinstance(thing, VentureSP):
+            return {"type": "foreign_sp", "value": ForeignLiteSP(thing)}
+        else:
+            return thing.asStackDict()
+
     def simulate(self, operandValues, spaux):
-        operandValues = map(VentureValue.fromStackDict, operandValues)
+        operandValues = map(self.fromStackDict, operandValues)
         args = ForeignArgs(operandValues, spaux)
         result = self.psp.simulate(args)
-        if isinstance(result, VentureSP):
-            return ForeignLiteSP(result)
-        else:
-            return result.asStackDict()
+        return self.asStackDict(result)
 
     def logDensity(self, value, operandValues, spaux):
-        value = VentureValue.fromStackDict(value)
-        operandValues = map(VentureValue.fromStackDict, operandValues)
+        value = self.fromStackDict(value)
+        operandValues = map(self.fromStackDict, operandValues)
         args = ForeignArgs(operandValues, spaux)
         result = self.psp.logDensity(value, args)
         return result
@@ -62,10 +75,10 @@ class ForeignLitePSP(object):
         return self.psp.canEnumerate()
 
     def enumerateValues(self, operandValues, spaux):
-        operandValues = map(VentureValue.fromStackDict, operandValues)
+        operandValues = map(self.fromStackDict, operandValues)
         args = ForeignArgs(operandValues, spaux)
         result = self.psp.enumerateValues(args)
-        return [value.asStackDict() for value in result]
+        return [self.asStackDict(value) for value in result]
 
 class ForeignLiteSP(object):
     """A wrapper around a Lite SP that can be called by other backends."""

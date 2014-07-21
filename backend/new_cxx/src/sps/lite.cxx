@@ -6,6 +6,22 @@
 #include "regen.h"
 #include "env.h"
 
+VentureValuePtr foreignFromPython(boost::python::object thing)
+{
+  // proxy for pyutils::parseValue that handles foreign SPs by wrapping them
+  // TODO: should foreign_sp be a recognized stack dict type?
+  if (thing["type"] == "foreign_sp")
+  {
+    boost::python::object sp = thing["value"];
+    return VentureValuePtr(new VentureSPRecord(new ForeignLiteSP(sp),
+                                               new ForeignLiteSPAux(sp)));
+  }
+  else
+  {
+    return parseValue(boost::python::extract<boost::python::dict>(thing));
+  }
+}
+
 VentureValuePtr ForeignLitePSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   boost::python::list foreignOperandValues;
@@ -15,15 +31,7 @@ VentureValuePtr ForeignLitePSP::simulate(shared_ptr<Args> args, gsl_rng * rng) c
   }
   boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(args->spAux)->aux;
   boost::python::object foreignResult = psp.attr("simulate")(foreignOperandValues, foreignAux);
-  if (foreignResult.attr("__class__").attr("__name__") == "ForeignLiteSP")
-  {
-    return VentureValuePtr(new VentureSPRecord(new ForeignLiteSP(foreignResult),
-                                               new ForeignLiteSPAux(foreignResult)));
-  }
-  else
-  {
-    return parseValue(boost::python::extract<boost::python::dict>(foreignResult));
-  }
+  return foreignFromPython(foreignResult);
 }
 
 double ForeignLitePSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
@@ -70,7 +78,7 @@ vector<VentureValuePtr> ForeignLitePSP::enumerateValues(shared_ptr<Args> args) c
   vector<VentureValuePtr> values;
   for (boost::python::ssize_t i = 0; i < boost::python::len(foreignValues); ++i)
   {
-    values.push_back(parseValue(boost::python::extract<boost::python::dict>(foreignValues[i])));
+    values.push_back(foreignFromPython(foreignValues[i]));
   }
   return values;
 }
@@ -81,6 +89,7 @@ boost::python::dict ForeignLiteSP::toPython(Trace * trace, shared_ptr<SPAux> aux
   // TODO: make this transparent if possible
   boost::python::dict stackDict;
   stackDict["type"] = "foreign_sp";
+  stackDict["sp"] = sp;
   stackDict["value"] = sp.attr("show")(foreignAux);
   return stackDict;
 }
