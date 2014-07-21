@@ -46,18 +46,18 @@ def client(args):
 
 def puma(args):
     banner()
-    run_venture_console(local_ripl(args, 'Puma'))
+    run_venture_console(local_ripl(args, v.Puma()))
 
 def cxx(args):
     banner()
-    run_venture_console(local_ripl(args, 'CXX'))
+    run_venture_console(local_ripl(args, v.CXX()))
 
 def lite(args):
     banner()
-    run_venture_console(local_ripl(args, 'Lite'))
+    run_venture_console(local_ripl(args, v.Lite()))
 
 def local_ripl(args, backend):
-    r = getattr(v, backend)().make_church_prime_ripl()
+    r = backend.make_church_prime_ripl()
     if (len(sys.argv) > 1) and args.prelude: r.load_prelude()
     return r
 
