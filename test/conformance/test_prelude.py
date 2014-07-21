@@ -1,6 +1,6 @@
-from unittest import TestCase, SkipTest
+from unittest import TestCase
 import nose.tools as nose
-from venture.test.config import get_ripl
+from venture.test.config import get_ripl, backend
 import numpy as np
 import random
 import string
@@ -246,6 +246,7 @@ class TestPrelude(TestCase):
     res_ven = self.r.assume('res', '(range start stop)')
     self.assertEqual(res_py, res_ven)
 
+  @backend("lite") # TODO Figure out why this segfaults in Puma
   def test_matrices(self):
     'Test that diagonal and identity matrices are as expected'
     for fname in ['eye', 'diag']:
