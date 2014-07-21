@@ -13,10 +13,12 @@ VentureValuePtr ForeignLitePSP::simulate(shared_ptr<Args> args, gsl_rng * rng) c
   {
     foreignOperandValues.append(args->operandValues[i]->toPython(args->_trace));
   }
-  boost::python::object foreignResult = psp.attr("simulate")(foreignOperandValues);
+  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(args->spAux)->aux;
+  boost::python::object foreignResult = psp.attr("simulate")(foreignOperandValues, foreignAux);
   if (foreignResult.attr("__class__").attr("__name__") == "ForeignLiteSP")
   {
-    return VentureValuePtr(new VentureSPRecord(new ForeignLiteSP(foreignResult)));
+    return VentureValuePtr(new VentureSPRecord(new ForeignLiteSP(foreignResult),
+                                               new ForeignLiteSPAux(foreignResult)));
   }
   else
   {
@@ -32,7 +34,8 @@ double ForeignLitePSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) 
   {
     foreignOperandValues.append(args->operandValues[i]->toPython(args->_trace));
   }
-  boost::python::object foreignLogDensity = psp.attr("logDensity")(foreignValue, foreignOperandValues);
+  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(args->spAux)->aux;
+  boost::python::object foreignLogDensity = psp.attr("logDensity")(foreignValue, foreignOperandValues, foreignAux);
   return boost::python::extract<double>(foreignLogDensity);
 }
 
@@ -61,7 +64,8 @@ vector<VentureValuePtr> ForeignLitePSP::enumerateValues(shared_ptr<Args> args) c
   {
     foreignOperandValues.append(args->operandValues[i]->toPython(args->_trace));
   }
-  boost::python::object foreignResult = psp.attr("enumerateValues")(foreignOperandValues);
+  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(args->spAux)->aux;
+  boost::python::object foreignResult = psp.attr("enumerateValues")(foreignOperandValues, foreignAux);
   boost::python::list foreignValues = boost::python::extract<boost::python::list>(foreignResult);
   vector<VentureValuePtr> values;
   for (boost::python::ssize_t i = 0; i < boost::python::len(foreignValues); ++i)
@@ -71,9 +75,20 @@ vector<VentureValuePtr> ForeignLitePSP::enumerateValues(shared_ptr<Args> args) c
   return values;
 }
 
+boost::python::dict ForeignLiteSP::toPython(Trace * trace, shared_ptr<SPAux> aux) const
+{
+  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(aux)->aux;
+  // TODO: make this transparent if possible
+  boost::python::dict stackDict;
+  stackDict["type"] = "foreign_sp";
+  stackDict["value"] = sp.attr("show")(foreignAux);
+  return stackDict;
+}
+
 void PyTrace::bindPrimitiveSP(const string& sym, boost::python::object sp)
 {
-  ConstantNode * node = trace->createConstantNode(VentureValuePtr(new VentureSPRecord(new ForeignLiteSP(sp))));
+  VentureValuePtr spRecord(new VentureSPRecord(new ForeignLiteSP(sp), new ForeignLiteSPAux(sp)));
+  ConstantNode * node = trace->createConstantNode(spRecord);
   processMadeSP(trace.get(), node, false, false, shared_ptr<DB>(new DB()));
   assert(dynamic_pointer_cast<VentureSPRef>(trace->getValue(node)));
   trace->globalEnvironment->addBinding(sym, node);

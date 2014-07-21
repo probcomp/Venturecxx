@@ -9,7 +9,7 @@ from value import VentureValue
 class ForeignArgs(object):
     """A mock Args object used to call a Lite SP from other backends."""
 
-    def __init__(self, operandValues, output=True):
+    def __init__(self, operandValues, spaux, output=True):
         self.node = None
         self.operandValues = operandValues
         self.operandNodes = [None for _ in self.operandValues]
@@ -21,7 +21,7 @@ class ForeignArgs(object):
             self.isOutput = True
         else:
             self.isOutput = False
-        self.spaux = None
+        self.spaux = spaux
         self.env = None
 
 class ForeignLitePSP(object):
@@ -30,19 +30,19 @@ class ForeignLitePSP(object):
     def __init__(self, psp):
         self.psp = psp
 
-    def simulate(self, operandValues):
+    def simulate(self, operandValues, spaux):
         operandValues = map(VentureValue.fromStackDict, operandValues)
-        args = ForeignArgs(operandValues)
+        args = ForeignArgs(operandValues, spaux)
         result = self.psp.simulate(args)
         if isinstance(result, VentureSP):
             return ForeignLiteSP(result)
         else:
             return result.asStackDict()
 
-    def logDensity(self, value, operandValues):
+    def logDensity(self, value, operandValues, spaux):
         value = VentureValue.fromStackDict(value)
         operandValues = map(VentureValue.fromStackDict, operandValues)
-        args = ForeignArgs(operandValues)
+        args = ForeignArgs(operandValues, spaux)
         result = self.psp.logDensity(value, args)
         return result
 
@@ -61,9 +61,9 @@ class ForeignLitePSP(object):
     def canEnumerate(self):
         return self.psp.canEnumerate()
 
-    def enumerateValues(self, operandValues):
+    def enumerateValues(self, operandValues, spaux):
         operandValues = map(VentureValue.fromStackDict, operandValues)
-        args = ForeignArgs(operandValues)
+        args = ForeignArgs(operandValues, spaux)
         result = self.psp.enumerateValues(args)
         return [value.asStackDict() for value in result]
 
@@ -73,3 +73,10 @@ class ForeignLiteSP(object):
     def __init__(self, sp):
         # TODO: requestPSP (needs requests to be stackable)
         self.outputPSP = ForeignLitePSP(sp.outputPSP)
+        self.sp = sp
+
+    def constructSPAux(self):
+        return self.sp.constructSPAux()
+
+    def show(self, spaux):
+        return self.sp.show(spaux)

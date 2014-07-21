@@ -31,11 +31,21 @@ struct ForeignLitePSP : PSP
   boost::python::object psp;
 };
 
+struct ForeignLiteSPAux : SPAux
+{
+  ForeignLiteSPAux(boost::python::object sp): aux(sp.attr("constructSPAux")()) {}
+  boost::python::object aux;
+};
+
 struct ForeignLiteSP : SP
 {
   // TODO: requestPSP (needs requests to be stackable)
   ForeignLiteSP(boost::python::object sp): SP(new NullRequestPSP(),
-                                              new ForeignLitePSP(sp.attr("outputPSP"))) {}
+                                              new ForeignLitePSP(sp.attr("outputPSP"))),
+                                           sp(sp) {}
+  boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;
+
+  boost::python::object sp;
 };
 
 #endif
