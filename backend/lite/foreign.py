@@ -50,6 +50,8 @@ class ForeignLitePSP(object):
             # try stubbing the node information...
             return self.psp.canAbsorb(None, None, None)
         except AttributeError:
+            import warnings
+            warnings.warn("Non-trivial canAbsorb methods not supported in foreign procedures")
             return False
 
     def canEnumerate(self):
