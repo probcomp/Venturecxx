@@ -1,0 +1,53 @@
+;; This buffer is for notes you don't want to save, and for Lisp evaluation.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer.
+
+notes towards tutorial on exchangeability, collapsed samplers, AAA
+
+1. Venture thunks output exchangeable sequence of RVs
+  - re-running whole Venture program will give iid sequence
+  - most venture builtin SPs will give iid sequence
+  - easy to write 'mixture model' thunk where values are not iid if you don't know the latent parameter values
+  - make_dir_mult constructs a thunk that has non-iid but exchangeable sequence of RVs as output. compare linear scaling of writing dir_mult by hand vs. using primitive. due to AAA. (but could also use sufficient statistics for same linear advantage). no ability in venture to read off the state of the dir_mult directly. at best could use SAMPLE and take an average. can read off counts outside venture by looking at type of the procedure.
+
+2. Exchangeability: some general results
+ - computable mixture models correspond to computable exchangeable sequence of RVs. any relevant complexity results?
+ - polya urn process: simple scheme that defines a sequence of RVs that are exchangeable (distribution on n-th RV only depends on the composition of urn at that point, which depends only on the previous draws from the urn and not their order). nb: for urn with (1 black,1white) starting point, each RV is unconditionally the same as the first one, namely, (flip .5). obvious here by symmetry, but this holds generally (iirc) for all finite urn processes. variables are identical but not independent. exchangeability is about dependency of variables.
+ - urn processes are exchangeable and so correspond to mixture model. rough idea of de finetti for urn: path dependence of urn, as n gets larger, it behaves increasingly like a fixed coin/dice. need an increasingly long and unlikely run to change bias. assuming that sequence of RVs does converge, we can ask what probability of different coin weights are as function of initial distribution of balls in urn. given by beta, dirichlet, dirichlet process.
+
+3. Computational upshot: 
+- use simulated urn process in place of mixture model. simple to code in impure language by mutating the counts. (exchangeability means the mutation is reversible and can be reversed in any order). could write this without mutation by computing the counts from the trace (not possible in venture currently). 
+
+- explanation of how the update is done in constant time in trace (exploiting exchangeability)
+
+- Q: in cases where uncollapsed sampler is available and can be done in constant time using sufficient statistics, what are the benefits of using the collapsed sampler? (i'm not sure here of what trade-offs are).
+
+- in non-parameteric case, what are trade-offs of using stick-breaking construction vs. crp construction? if you defined a stick-breaking construction in venture, this would scale poorly. (without sufficient statistics, you'll have linear scaling at least to compute likelihood of a given stick-length/coin-weight.) but what about efficiency of a new builtin that organizes computation to try to avoid linear scaling in observations? 
+
+
+references:
+probmods simple exchangeability examples. examples of pick-a-stick for concentrating continuous distribution
+
+freer and roy on computable random sequences. 
+
+vkm thesis on generalized purity and exchangeable sequences.
+
+bernardo and smith - bayesian theory.
+extensive but very dry discussion of exchangeability. part of discussion is to use de finetti to support bayesian practice. supposed problem is that bayesians introduce hidden, unobservable parameters and this is not kosher from extreme positivist standpoint (where only observations exist). a less general point would be: you should only introduce a parameter when you have good reason to think it corresponds to something real. if you see a series a balls coming from an urn, you can't assume there's a fixed parameter 'ratio of white:black balls'. maybe the urn is a polya urn whose state changes every draw. (interesting to think about this in context of fundamental physics, where we have no direct access to objects underlying observations). there's a practical upshot: there is a simple intervention that changes the state of a normal urn (with iid draws with replacement), while there's no comparable simple intervention on the polya urn. 
+
+de finetti is supposed to help because as long as you believe data is exchangeable (infite exchangeable -- finite case is more complex) you can use a mixture model as a purely mathematical convenience, with the parameter not corresponding to a fixed part of the world but just to a mathematical limit of a part of the world (as times goes to infinity). this is similar to vN-Morgenstern showing that if you satisfy decision-theory axioms then we can (as mathematical convenience) model your decisions as maximizing a real-value utility function. 
+
+pearl and others have investigate relation of exchangeability and causation:
+Pearl, Causality 2nd Edition
+Zhang, Exchangeability and Invariance: A Causal Theory
+Diaconis, Failure of Infinite Exchangeability and results for finite versions. 
+
+ 
+
+
+
+
+
+
+
+
