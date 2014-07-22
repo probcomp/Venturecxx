@@ -14,8 +14,7 @@
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 from venture import shortcuts
-from venture.unit import VentureUnit
-
+from venture.unit import VentureUnit, productMap, plotAsymptotics
 
 class LDA(VentureUnit):
     def makeAssumes(self):
@@ -38,24 +37,21 @@ class LDA(VentureUnit):
         return
 
 
-if __name__ == '__main__':
-    ripl = shortcuts.make_church_prime_ripl()
-    parameters = {'topics' : 4, 'vocab' : 10, 'documents' : 8, 'words_per_document' : 12}
+ripl = shortcuts.Lite().make_church_prime_ripl()
+#parameters = {'topics' : 4, 'vocab' : 10, 'documents' : 8, 'words_per_document' : 12}
 
-    model = LDA(ripl, parameters)
-    #history = model.runConditionedFromPrior(50, verbose=True)
-    #history = model.runFromJoint(50, verbose=True)
-    #history = model.sampleFromJoint(20, verbose=True)
-    sample_hist, infer_hist, klHistory = model.computeJointKL(20, 10, verbose=True)
-    #history = model.runFromConditional(50)
-    klHistory.plot(fmt='png')
-    
-    #parameters = {'topics' : [4, 8], 'vocab' : 10, 'documents' : [8, 12], 'words_per_document' : [10, 100]}
-    #run_count = 0
-    #def runner(params):
-    #    print "Running setting " + str(run_count) + " of 8"
-    #    print params
-    #    return LDA(ripl, params).computeJointKL(20, 20, verbose=True)
-    #histories = productMap(parameters, runner)
-    #
-    #plotAsymptotics(parameters, histories, 'sweep_time', fmt='png', aggregate=True)
+#model = LDA(ripl, parameters)
+#history = model.runConditionedFromPrior(50, verbose=True)
+#history = model.runFromJoint(50, verbose=True)
+#history = model.sampleFromJoint(20, verbose=True)
+#sample_hist, infer_hist, klHistory = model.computeJointKL(20, 10, verbose=True)
+#history = model.runFromConditional(50)
+#klHistory.plot(fmt='png')
+
+parameters = {'topics' : [4], 'vocab' : [2**n for n in range(10)], 'documents' : [8], 'words_per_document' : [10]}
+def runner(params):
+    print params
+    return LDA(ripl, params).runFromJoint(10, verbose=True, runs=1)
+histories = productMap(parameters, runner)
+#
+plotAsymptotics(parameters, histories, 'sweep time (s)', fmt='png', aggregate=False)
