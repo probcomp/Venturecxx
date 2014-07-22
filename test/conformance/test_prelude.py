@@ -250,7 +250,6 @@ class TestPrelude(TestCase):
     res_ven = self.r.assume('res', '(range start stop)')
     self.assertEqual(res_py, res_ven)
 
-  # @backend("lite") # TODO Figure out why this segfaults in Puma
   def test_matrices(self):
     'Test that diagonal and identity matrices are as expected'
     for fname in ['eye', 'diag']:
