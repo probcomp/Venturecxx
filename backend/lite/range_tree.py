@@ -4,6 +4,9 @@ import numpy.random as npr
 class Node(object):
   """Binary tree to speed up categorical sampling."""
   def __init__(self, vals):
+    if len(vals) == 0:
+      raise ValueError("Can't instantiate Node with empty values.")
+    
     self.leaf = len(vals) == 1
     
     if self.leaf:
