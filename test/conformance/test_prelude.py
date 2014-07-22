@@ -1,11 +1,15 @@
-from unittest import TestCase, SkipTest
+from unittest import TestCase
 import nose.tools as nose
-from venture.test.config import get_ripl
+from venture.test.config import get_ripl, backend
 import numpy as np
 import random
 import string
 import operator
 from numpy.testing import assert_equal
+
+# TODO: Sampling (uniform_discrete) returns atoms, not ints. This breaks things.
+# I hack it by doing (assume foo (* 1 (uniform_discrete ...))). Ideally, make
+# uniform_discrete return an int.
 
 def run_containers(testfun):
   'Decorator to apply a test function to all container types.'
@@ -231,7 +235,7 @@ class TestPrelude(TestCase):
     for fname, value in zip(['repeat', 'zeros', 'ones'],
                             [np.random.uniform(0,10), 0, 1]):
       self.reset_ripl()
-      n = int(self.r.assume('n', '(uniform_discrete 1 10)'))
+      n = int(self.r.assume('n', '(* 1 (uniform_discrete 1 10))'))
       _ = self.r.assume('value', value)
       x_ven = self.r.assume('x', '(repeat value n)')
       x_py = [value] * n
@@ -240,17 +244,18 @@ class TestPrelude(TestCase):
   def test_range(self):
     'Test that range function matches python'
     self.reset_ripl()
-    start = int(self.r.assume('start', '(uniform_discrete 1 10)'))
-    stop = int(self.r.assume('stop', '(uniform_discrete (+ 1 start) (+ 1 10))'))
+    start = int(self.r.assume('start', '(* 1 (uniform_discrete 1 10))'))
+    stop = int(self.r.assume('stop', '(* 1 (uniform_discrete (+ 1 start) (+ 1 10)))'))
     res_py = range(start, stop)
     res_ven = self.r.assume('res', '(range start stop)')
     self.assertEqual(res_py, res_ven)
 
+  # @backend("lite") # TODO Figure out why this segfaults in Puma
   def test_matrices(self):
     'Test that diagonal and identity matrices are as expected'
     for fname in ['eye', 'diag']:
       self.reset_ripl()
-      D = self.r.assume('D', '(uniform_discrete 1 10)')
+      D = self.r.assume('D', '(* 1 (uniform_discrete 1 10))')
       if fname == 'diag':
         diag_entry = self.r.assume('diag_value', '(uniform_continuous 0 10)')
         res_ven = self.r.assume('res', '(diag D diag_value)')

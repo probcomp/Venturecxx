@@ -15,6 +15,7 @@ import hmm
 import conditionals
 import scope
 import eval_sps
+import functional
 import value as v
 import env
 from utils import careful_exp
@@ -215,6 +216,8 @@ builtInSPsList = [
                                           descr="vector returns an unboxed numeric array initialized with its arguments") ],
 
            [ "is_array", type_test(v.ArrayType()) ],
+           [ "is_vector", type_test(v.ArrayUnboxedType(v.NumberType())) ],
+
            [ "dict", deterministic_typed(lambda keys, vals: dict(zip(keys, vals)),
                                          [v.HomogeneousListType(v.AnyType("k")), v.HomogeneousListType(v.AnyType("v"))],
                                          v.HomogeneousDictType(v.AnyType("k"), v.AnyType("v")),
@@ -242,6 +245,48 @@ builtInSPsList = [
                                          [v.HomogeneousMappingType(v.AnyType("k"), v.AnyType("v"))],
                                          v.NumberType(),
                                          descr="size returns the number of elements in the given collection (lists and arrays work too)") ],
+
+           [ "arange", deterministic_typed(np.arange,
+                                           [v.IntegerType(), v.IntegerType()],
+                                           v.ArrayUnboxedType(v.IntegerType()),
+                                           min_req_args=1,
+                                           descr="(%s [start] stop) returns an array of n consecutive integers from start (inclusive) up to stop (exclusive).")],
+
+           [ "linspace", deterministic_typed(np.linspace,
+                                             [v.NumberType(), v.NumberType(), v.CountType()],
+                                             v.ArrayUnboxedType(v.NumberType()),
+                                             descr="(%s start stop n) returns an array of n evenly spaced numbers over the interval [start, stop].") ],
+
+           [ "id_matrix", deterministic_typed(np.identity,
+                                              [v.CountType()],
+                                              v.MatrixType(),
+                                              descr="(%s n) returns an identity matrix of dimension n.") ],
+
+           [ "diag_matrix", deterministic_typed(np.diag,
+                                                [v.ArrayUnboxedType(v.NumberType())],
+                                                v.MatrixType(),
+                                                descr="(%s v) returns a diagonal array whose diagonal is v.") ],
+
+           [ "ravel", deterministic_typed(np.ravel,
+                                          [v.MatrixType()],
+                                          v.ArrayUnboxedType(v.NumberType()),
+                                          descr="(%s m) returns a 1-D array containing the elements of the matrix m.") ],
+
+           [ "matrix_mul", deterministic_typed(np.dot,
+                                               [v.MatrixType(), v.MatrixType()],
+                                               v.MatrixType(),
+                                               descr="(%s x y) returns the product of matrices x and y.") ],
+
+           [ "apply", esr_output(TypedPSP(functional.ApplyRequestPSP(),
+                                          SPType([SPType([v.AnyType("a")], v.AnyType("b"), variadic=True),
+                                                  v.HomogeneousArrayType(v.AnyType("a"))],
+                                                 v.RequestType("b")))) ],
+
+           [ "mapv", VentureSP(TypedPSP(functional.ArrayMapRequestPSP(),
+                                        SPType([SPType([v.AnyType("a")], v.AnyType("b")),
+                                                v.HomogeneousArrayType(v.AnyType("a"))],
+                                               v.RequestType("<array b>"))),
+                               functional.ESRArrayOutputPSP()) ],
 
            [ "branch", esr_output(conditionals.branch_request_psp()) ],
            [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [v.BoolType(), v.AnyType(), v.AnyType()], v.AnyType(),
