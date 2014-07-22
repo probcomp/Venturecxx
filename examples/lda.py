@@ -37,21 +37,22 @@ class LDA(VentureUnit):
         return
 
 
-ripl = shortcuts.Lite().make_church_prime_ripl()
-#parameters = {'topics' : 4, 'vocab' : 10, 'documents' : 8, 'words_per_document' : 12}
+if __name__ == '__main__':
+    ripl = shortcuts.Lite().make_church_prime_ripl()
+    #parameters = {'topics' : 4, 'vocab' : 10, 'documents' : 8, 'words_per_document' : 12}
 
-#model = LDA(ripl, parameters)
-#history = model.runConditionedFromPrior(50, verbose=True)
-#history = model.runFromJoint(50, verbose=True)
-#history = model.sampleFromJoint(20, verbose=True)
-#sample_hist, infer_hist, klHistory = model.computeJointKL(20, 10, verbose=True)
-#history = model.runFromConditional(50)
-#klHistory.plot(fmt='png')
+    #model = LDA(ripl, parameters)
+    #history = model.runConditionedFromPrior(50, verbose=True)
+    #history = model.runFromJoint(50, verbose=True)
+    #history = model.sampleFromJoint(20, verbose=True)
+    #sample_hist, infer_hist, klHistory = model.computeJointKL(20, 10, verbose=True)
+    #history = model.runFromConditional(50)
+    #klHistory.plot(fmt='png')
 
-parameters = {'topics' : [4], 'vocab' : [2**n for n in range(10)], 'documents' : [8], 'words_per_document' : [10]}
-def runner(params):
-    print params
-    return LDA(ripl, params).runFromJoint(10, verbose=True, runs=1)
-histories = productMap(parameters, runner)
-#
-plotAsymptotics(parameters, histories, 'sweep time (s)', fmt='png', aggregate=False)
+    parameters = {'topics' : [4], 'vocab' : [2**n for n in range(14)], 'documents' : [8], 'words_per_document' : [10]}
+    def runner(params):
+        print params
+        return LDA(ripl, params).runFromJoint(10, verbose=True, runs=1)
+    histories = productMap(parameters, runner)
+    #
+    plotAsymptotics(parameters, histories, 'sweep time (s)', fmt='png', aggregate=False)
