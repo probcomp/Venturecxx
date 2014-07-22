@@ -13,6 +13,8 @@ from venture.test.config import get_ripl,get_mripl
 
 from nose.tools import eq_, assert_almost_equal
 
+# TODO get rid of some tests, simplify others, make tests faster to run
+
 
 ## Functions used by tests
 def betaModel(ripl):
