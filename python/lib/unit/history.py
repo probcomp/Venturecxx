@@ -601,6 +601,12 @@ def addToDict(dictionary, key, value):
     answer[key] = value
     return answer
 
+
+#TODO probably bit-rotted
+# is meant to work with *parameters* dict from VentureUnit object
+# need to adjust Unit/Analytics or function below to make 
+# it easy to plot e.g. number of observes vs. runtime.
+
 # Produces plots for a given variable over a set of runs.
 # Variable parameters are the x-axis, 'seriesName' is the y-axis.
 # If aggregate=True, multiple plots that differ in only one parameter are overlayed.
