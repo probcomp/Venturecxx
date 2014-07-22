@@ -31,16 +31,10 @@ mk_p_ripl = make_puma_church_prime_ripl
 
 # note: might be able to simplify each (esp. local) with decorators.
 
-# constructor:
-# default is for only working with remotes. local_mode is only
-# with local. then debug mode gives default of one local, with
-# more as specified optionally.
-
 
 # TODO:
 # optional default inference program for mripl
 # move local_out to debug mode
-
 
 
 # Utility functions for working with ipcluster and mripl
@@ -778,11 +772,11 @@ class MRipl():
              logscore: Snapshot of logscore.'''
 
 
-        if isinstance(did_labels_list,(int,str)):
+        if isinstance(did_labels_list,(int,basestring)):
             did_labels_list = [did_labels_list]
         else:
             did_labels_list = list(did_labels_list)
-        if isinstance(exp_list,str):
+        if isinstance(exp_list,basestring):
             exp_list = [exp_list]
         else:
             exp_list = list(exp_list)
@@ -1069,7 +1063,6 @@ def mk_directives_string(ripl):
 
 def display_directives(ripl_mripl,instruction='observe'):
     ## REMOVE: obsoleted by print_directives
-
     di_list = ripl_mripl.list_directives()
     instruction_list = []
     for di in di_list:
@@ -1099,109 +1092,6 @@ def build_exp(exp):
             return str(exp['value'])
     else:
         return '('+ ' '.join(map(build_exp,exp)) + ')'
-
-
-
-### Functions defined on MRipl objects
-
-def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
-    '''Push procedure into engine namespaces. Use execute to map across ripls.
-    if no_ripls==0, 'all' or >mripl.no_ripls, then maps across all.
-    Maps proc across local ripls IFF in local_mode or mripl.output=="local".'''
-
-    ## FIXME: should be able to supress stdout from local_ripls when in remote mode
-    if no_ripls==0 or no_ripls=='all' or no_ripls>mripl.no_ripls:
-        no_ripls = mripl.no_ripls
-        no_local_ripls = mripl.no_local_ripls
-
-    # map across local ripls
-    if mripl.local_mode:
-        local_out=[proc(r,*proc_args,**proc_kwargs) for i,r in enumerate(mripl.local_ripls) if i<no_ripls]
-        return local_out
-    else:
-        local_out = [None]*no_ripls
-
-    # map across remote ripls
-    mripl.dview.push({'map_proc':interactive(proc),'map_args':proc_args,
-                      'map_kwargs':proc_kwargs})
-
-    if no_ripls < mripl.no_engines:
-        map_view = mripl.cli[:no_ripls]
-        per_eng = 1
-        mripl.dview.execute('apply_out=None')
-    else:
-        per_eng = int(np.ceil(no_ripls/float(mripl.no_engines)))
-
-    s1='apply_out='
-    s2='[map_proc(r,*map_args,**map_kwargs) for i,r in enumerate(mripls[%i]["%s"]) if i<%i]' % (mripl.mrid,
-                                                                                                mripl.backend,per_eng)
-    mripl.dview.execute(s1+s2)
-
-    ipython_inline()
-
-    remote_out = lst_flatten( mripl.dview['apply_out'] )
-
-    return remote_out[:no_ripls] if mripl.output=='remote' else local_out
-
-
-
-
-def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True,id_info_out=False):
-
-    no_args = len(proc_args_list)
-    assert no_args <= mripl.no_ripls, 'More arguments than ripls'
-
-    # map across local ripls
-    if mripl.local_mode:
-        id_local_out=[]; local_out=[]
-        for i,r in enumerate(mripl.local_ripls):
-            if i<no_args:
-                id_args = (mripl.local_seeds[i],proc_args_list[i])
-                if no_kwargs:
-                    outs = proc(r,*proc_args_list[i])
-                else:
-                    outs = proc(r,*proc_args_list[i][0],**proc_args_list[i][1])
-                local_out.append( outs )
-                id_local_out.append( (id_args,outs))
-        local_out = id_local_out if id_info_out else local_out
-        return local_out
-    else:
-        local_out = [None]*no_args
-
-    # map across remote ripls
-    no_args_per_engine = int(np.ceil(no_args/float(mripl.no_engines)))
-    extra_ripls = no_args_per_engine - no_args
-    proc_args_list = proc_args_list + [proc_args_list[-1]]*extra_ripls # pad args with last element
-
-    for i in range(mripl.no_engines):
-        engine_view = mripl.cli[i]
-        start=i*no_args_per_engine
-        eng_args = proc_args_list[start:start+no_args_per_engine]
-        engine_view.push({'ar_proc':interactive(proc),'eng_args':eng_args,
-                          'per_eng':len(eng_args)})
-        engine_view.push({'array_out':[]})
-
-        @interactive
-        def f(mrid,backend,eng_args,no_kwargs):
-            import os
-            for i,r in enumerate(mripls[mrid][backend]):
-                if i<per_eng:
-                    id_args = (os.getpid(), mripls[mrid]['seeds'][i], eng_args[i]),
-                    if no_kwargs:
-                        outs =ar_proc(r,*eng_args[i])
-                    else:
-                        outs=ar_proc(r,*eng_args[i][0],**eng_args[i][1])
-                    array_out.append((id_args,outs))
-            return None
-
-        engine_view.apply_sync(f,mripl.mrid,mripl.backend,eng_args,no_kwargs)
-
-    ipython_inline()
-    id_remote_out = (('pid','seed','arg'),lst_flatten( mripl.dview['array_out'] ) )
-    remote_out = [outs for id_args,outs in id_remote_out[1]]
-    remote_out = remote_out if not id_info_out else id_remote_out
-
-    return remote_out if mripl.output=='remote' else local_out
 
 
 
