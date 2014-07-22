@@ -83,6 +83,9 @@ class ForeignLitePSP(object):
             warnings.warn("Non-trivial canAbsorb methods not supported in foreign procedures")
             return False
 
+    def childrenCanAAA(self):
+        return self.psp.childrenCanAAA()
+
     def canEnumerate(self):
         return self.psp.canEnumerate()
 
@@ -91,6 +94,9 @@ class ForeignLitePSP(object):
         args = ForeignArgs(operandValues, spaux)
         result = self.psp.enumerateValues(args)
         return [self.asStackDict(value) for value in result]
+
+    def logDensityOfCounts(self, aux):
+        return self.psp.logDensityOfCounts(aux)
 
 class ForeignLiteSP(object):
     """A wrapper around a Lite SP that can be called by other backends."""

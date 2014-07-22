@@ -28,8 +28,14 @@ struct ForeignLitePSP : PSP
   bool isRandom() const;
   bool canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const;
 
+  bool childrenCanAAA() const;
+  // TODO kernel translation
+  // shared_ptr<LKernel> const getAAALKernel();
+
   bool canEnumerateValues(shared_ptr<Args> args) const;
   vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
+
+  double logDensityOfCounts(shared_ptr<SPAux> spAux) const;
 
   boost::python::object psp;
 };

@@ -83,6 +83,11 @@ bool ForeignLitePSP::canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode,
   return boost::python::extract<bool>(psp.attr("canAbsorb")());
 }
 
+bool ForeignLitePSP::childrenCanAAA() const
+{
+  return boost::python::extract<bool>(psp.attr("childrenCanAAA")());
+}
+
 bool ForeignLitePSP::canEnumerateValues(shared_ptr<Args> args) const
 {
   // TODO: Lite SPs do not seem to implement this usefully.
@@ -105,6 +110,13 @@ vector<VentureValuePtr> ForeignLitePSP::enumerateValues(shared_ptr<Args> args) c
     values.push_back(foreignFromPython(foreignValues[i]));
   }
   return values;
+}
+
+double ForeignLitePSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
+{
+  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(spAux)->aux;
+  boost::python::object foreignLogDensityOfCounts = psp.attr("logDensityOfCounts")(foreignAux);
+  return boost::python::extract<double>(foreignLogDensityOfCounts);
 }
 
 boost::python::dict ForeignLiteSP::toPython(Trace * trace, shared_ptr<SPAux> aux) const
