@@ -39,10 +39,7 @@ mk_p_ripl = make_puma_church_prime_ripl
 
 # TODO:
 # optional default inference program for mripl
-# v.plot('x',**plottingkwargs) = v.snapshot(exp_list=['x'],plot=True,**kwargs)
 # move local_out to debug mode
-# move regression stuff to regression utils
-
 
 
 
@@ -57,7 +54,7 @@ def erase_initialize_mripls(client=None,no_erase=False):
     if no_erase:
         try: # mripl vars already present: return client object
             client[:]['no_mripls']
-        except:
+        except NameError:
             client[:].execute('mripls=[]; no_mripls=0')
         return client
     else:
@@ -170,7 +167,7 @@ class MRipl():
             try:
                 self.cli=Client()
                 self.local_mode = False
-            except IOError,e:
+            except IOError as e:
                 print 'Failed to create IPython Parallel Client object.'
                 print 'MRipl is running in local (serial) model.'
                 self.local_mode = True
@@ -227,7 +224,7 @@ class MRipl():
 
         try:
             self.dview['no_mripls']
-        except:
+        except: # tried to catch NameError but failed due to parallel
             self.dview.execute('mripls=[]; no_mripls=0')
             print "New list *mripls* created on remote engines."
 
@@ -1016,7 +1013,7 @@ class MRipl():
             if var_type =='float':
                 try:
                     kde=list(gaussian_kde(vals)(np.linspace(min(vals),max(vals),50)))[0]
-                except np.linalg.LinAlgError,e:
+                except np.linalg.LinAlgError as e:
                     print 'No GKDE due to {}'.format(e)
                     fig,ax = plt.subplots(figsize=(4,2))
                     draw_hist(vals,label,ax,plot_range=plot_range)
@@ -1059,10 +1056,12 @@ def ipython_inline():
     to display previously generated figs inline.'''
     try:
         ip=get_ipython()
-        ip.run_cell_magic("px",'','pass') # display any figs inline
-    except: ## FIXME, should be NameError
+    except NameError:
         pass
-
+    try:
+        ip.run_cell_magic("px",'','pass') # display any figs inline
+    except: # should be some ipython specific exception
+        pass
 
 def mk_directives_string(ripl):
         di_string_lst = [directive_to_string(di) for di in ripl.list_directives() ]
