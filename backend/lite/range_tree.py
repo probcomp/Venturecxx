@@ -25,22 +25,22 @@ class Node(object):
     else:
       return self.right[index - self.mid]
   
-  def adjust(self, index, f):
-    if self.leaf:
-      self.total = f(self.total)
-    elif index < self.mid:
-      self.left.adjust(index, f)
-    else:
-      self.right.adjust(index - self.mid, f)
+  def delta(self, index, d):
+    self.total += d
+    if not self.leaf:
+      if index < self.mid:
+        self.left.delta(index, d)
+      else:
+        self.right.delta(index - self.mid, d)
   
   def increment(self, index):
-    self.adjust(index, lambda x: x+1)
+    self.delta(index, 1)
   
   def decrement(self, index):
-    self.adjust(index, lambda x: x-1)
+    self.delta(index, -1)
   
   def __setitem__(self, index, value):
-    self.adjust(index, lambda _: value)
+    self.delta(self, index, value - self[index])
   
   def __iter__(self):
     if self.leaf:
