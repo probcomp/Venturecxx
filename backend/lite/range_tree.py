@@ -63,7 +63,8 @@ def sample(*nodes):
   total = sum(node.total for node in nodes)
   left = sum(node.left.total for node in nodes)
   
-  if npr.randint(total) < left:
+  if npr.random() * total < left:
     return sample(*[node.left for node in nodes])
   else:
     return n.mid + sample(*[node.right for node in nodes])
+
