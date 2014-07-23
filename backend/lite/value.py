@@ -118,7 +118,7 @@ class VentureNumber(VentureValue):
     else: # TODO Do what?  Clip to [0,1]?  Raise?
       raise VentureTypeError("Probability out of range %s" % self.number)
   def getBool(self): return self.number
-    
+
   def asStackDict(self, _trace=None): return {"type":"number","value":self.number}
   @staticmethod
   def fromStackDict(thing): return VentureNumber(thing["value"])
@@ -179,6 +179,7 @@ class VentureInteger(VentureValue):
       return "VentureInteger(uninitialized)"
   def getInteger(self): return self.number
   def getNumber(self): return float(self.number)
+  def getBool(self): return self.number
   def asStackDict(self, _trace=None): return {"type":"integer","value":self.number}
   @staticmethod
   def fromStackDict(thing): return VentureInteger(thing["value"])
@@ -292,6 +293,7 @@ class VentureBool(VentureValue):
     # trials as well as dispatching on them.  Or should flip and
     # bernoulli be different SPs?
     return self.boolean
+  def getInteger(self): return self.boolean
   def asStackDict(self, _trace=None): return {"type":"boolean","value":self.boolean}
   @staticmethod
   def fromStackDict(thing): return VentureBool(thing["value"])
@@ -844,7 +846,7 @@ class SPRef(VentureValue):
   def asStackDict(self, trace=None):
     assert trace is not None
     return {"type":"sp","value":trace.madeSPAt(self.makerNode).show(trace.madeSPAuxAt(self.makerNode))}
-  
+
   @staticmethod
   def fromStackDict(thing): return thing["value"]
   # SPRefs are intentionally not comparable until we decide otherwise

@@ -46,7 +46,7 @@ VentureValuePtr BernoulliOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng
   if (!args->operandValues.empty()) { p = args->operandValues[0]->getProbability(); }
   int n = gsl_ran_bernoulli(rng,p);
   assert(n == 0 || n == 1);
-  return VentureValuePtr(new VentureAtom(n));
+  return VentureValuePtr(new VentureInteger(n));
 }
 
 double BernoulliOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
@@ -74,22 +74,22 @@ vector<VentureValuePtr> BernoulliOutputPSP::enumerateValues(shared_ptr<Args> arg
 VentureValuePtr UniformDiscreteOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {
   checkArgsLength("uniform_discrete", args, 2);
-  
+
   long lower = args->operandValues[0]->getInt();
   long upper = args->operandValues[1]->getInt();
 
   int n = gsl_rng_uniform_int(rng, upper - lower);
-  return VentureValuePtr(new VentureAtom(lower + n));
+  return VentureValuePtr(new VentureInteger(lower + n));
 }
 
 double UniformDiscreteOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
 {
   checkArgsLength("uniform_discrete", args, 2);
-  
+
   long lower = args->operandValues[0]->getInt();
   long upper = args->operandValues[1]->getInt();
   long sample = value->getInt();
-  
+
   return log(gsl_ran_flat_pdf(sample,lower,upper));
 }
 
@@ -130,14 +130,14 @@ double BinomialOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> arg
 }
 
 
-VentureValuePtr CategoricalOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const 
+VentureValuePtr CategoricalOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {
   checkArgsLength("categorical", args, 1, 2);
   if (args->operandValues.size() == 1) { return simulateCategorical(args->operandValues[0]->getSimplex(),rng); }
   else { return simulateCategorical(args->operandValues[0]->getSimplex(),args->operandValues[1]->getArray(),rng); }
 }
-double CategoricalOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const 
-{ 
+double CategoricalOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+{
   checkArgsLength("categorical", args, 1, 2);
   if (args->operandValues.size() == 1) { return logDensityCategorical(value,args->operandValues[0]->getSimplex()); }
   else { return logDensityCategorical(value,args->operandValues[0]->getSimplex(),args->operandValues[1]->getArray()); }
@@ -146,9 +146,9 @@ double CategoricalOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> 
 vector<VentureValuePtr> CategoricalOutputPSP::enumerateValues(shared_ptr<Args> args) const
 {
   const Simplex& s = args->operandValues[0]->getSimplex();
-  
+
   vector<VentureValuePtr> vs;
-  
+
   if (args->operandValues.size() == 1)
   {
     for (size_t i = 0; i < s.size(); ++i)
@@ -162,7 +162,7 @@ vector<VentureValuePtr> CategoricalOutputPSP::enumerateValues(shared_ptr<Args> a
   else
   {
     const vector<VentureValuePtr>& os = args->operandValues[1]->getArray();
-    
+
     for (size_t i = 0; i < s.size(); ++i)
     {
       if (s[i] > 0)
@@ -171,30 +171,30 @@ vector<VentureValuePtr> CategoricalOutputPSP::enumerateValues(shared_ptr<Args> a
       }
     }
   }
-  
+
   return vs;
 }
 
-VentureValuePtr LogCategoricalOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const 
+VentureValuePtr LogCategoricalOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {
   checkArgsLength("log_categorical", args, 1, 2);
   vector<double> ps = mapExpUptoMultConstant(args->operandValues[0]->getSimplex());
   size_t sample = sampleCategorical(ps,rng);
-  
+
   if (args->operandValues.size() == 1) { return VentureValuePtr(new VentureNumber(sample)); }
   else { return args->operandValues[1]->getArray()[sample]; }
 }
 
-double LogCategoricalOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const 
-{ 
+double LogCategoricalOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+{
   checkArgsLength("log_categorical", args, 1, 2);
-  
+
   const vector<double> ps = args->operandValues[0]->getSimplex();
   double logscore = 0;
-  
+
   if (args->operandValues.size() == 1) { logscore = ps[value->getInt()]; }
   else { logscore = ps[findVVPtr(value,args->operandValues[1]->getArray())]; }
-  
+
   logscore -= logSumExp(ps);
   return logscore;
 }
@@ -204,7 +204,7 @@ vector<VentureValuePtr> LogCategoricalOutputPSP::enumerateValues(shared_ptr<Args
   if (args->operandValues.size() == 1)
   {
     const Simplex& s = args->operandValues[0]->getSimplex();
-  
+
     vector<VentureValuePtr> vs;
     for (size_t i = 0; i < s.size(); ++i)
       { vs.push_back(VentureValuePtr(new VentureAtom(i))); }
@@ -216,8 +216,8 @@ vector<VentureValuePtr> LogCategoricalOutputPSP::enumerateValues(shared_ptr<Args
   }
 }
 
-VentureValuePtr SymmetricDirichletOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const 
-{ 
+VentureValuePtr SymmetricDirichletOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
   checkArgsLength("symmetric_dirichlet", args, 2);
   double alpha = args->operandValues[0]->getDouble();
   int n = args->operandValues[1]->getInt();
@@ -228,8 +228,8 @@ VentureValuePtr SymmetricDirichletOutputPSP::simulate(shared_ptr<Args> args, gsl
   return VentureValuePtr(new VentureSimplex(theta));;
 }
 
-double SymmetricDirichletOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) const 
-{ 
+double SymmetricDirichletOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) const
+{
   checkArgsLength("symmetric_dirichlet", args, 2);
   double alpha = args->operandValues[0]->getDouble();
   int n = args->operandValues[1]->getInt();
@@ -263,7 +263,7 @@ double DirichletOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> arg
 /* Poisson */
 VentureValuePtr PoissonOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 {
-  return VentureValuePtr(new VentureNumber(gsl_ran_poisson(rng,args->operandValues[0]->getDouble())));
+  return VentureValuePtr(new VentureInteger(gsl_ran_poisson(rng,args->operandValues[0]->getDouble())));
 }
 
 double PoissonOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
