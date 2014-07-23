@@ -95,6 +95,11 @@ bool ForeignLitePSP::childrenCanAAA() const
   return boost::python::extract<bool>(psp.attr("childrenCanAAA")());
 }
 
+shared_ptr<LKernel> const ForeignLitePSP::getAAALKernel()
+{
+  return shared_ptr<LKernel>(new ForeignLiteLKernel(psp.attr("getAAALKernel")()));
+}
+
 bool ForeignLitePSP::canEnumerateValues(shared_ptr<Args> args) const
 {
   // TODO: Lite SPs do not seem to implement this usefully.
@@ -119,6 +124,31 @@ double ForeignLitePSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
   boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(spAux)->aux;
   boost::python::object foreignLogDensityOfCounts = psp.attr("logDensityOfCounts")(foreignAux);
   return boost::python::extract<double>(foreignLogDensityOfCounts);
+}
+
+VentureValuePtr ForeignLiteLKernel::simulate(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args,gsl_rng * rng)
+{
+  boost::python::dict foreignOldValue = oldValue->toPython(args->_trace);
+  boost::python::dict foreignArgs = foreignArgsToPython(args);
+  boost::python::object foreignResult = lkernel.attr("simulate")(foreignOldValue, foreignArgs);
+  return foreignFromPython(foreignResult);
+}
+
+double ForeignLiteLKernel::weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,shared_ptr<Args> args)
+{
+  boost::python::dict foreignNewValue = newValue->toPython(args->_trace);
+  boost::python::dict foreignOldValue = oldValue->toPython(args->_trace);
+  boost::python::dict foreignArgs = foreignArgsToPython(args);
+  boost::python::object foreignWeight = lkernel.attr("weight")(foreignNewValue, foreignOldValue, foreignArgs);
+  return boost::python::extract<double>(foreignWeight);
+}
+
+double ForeignLiteLKernel::reverseWeight(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args)
+{
+  boost::python::dict foreignOldValue = oldValue->toPython(args->_trace);
+  boost::python::dict foreignArgs = foreignArgsToPython(args);
+  boost::python::object foreignWeight = lkernel.attr("reverseWeight")(foreignOldValue, foreignArgs);
+  return boost::python::extract<double>(foreignWeight);
 }
 
 boost::python::dict ForeignLiteSP::toPython(Trace * trace, shared_ptr<SPAux> aux) const

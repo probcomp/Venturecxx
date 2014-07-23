@@ -82,6 +82,9 @@ class ForeignLitePSP(object):
     def childrenCanAAA(self):
         return self.psp.childrenCanAAA()
 
+    def getAAALKernel(self):
+        return ForeignLiteLKernel(self.psp.getAAALKernel())
+
     def canEnumerate(self):
         return self.psp.canEnumerate()
 
@@ -92,6 +95,35 @@ class ForeignLitePSP(object):
 
     def logDensityOfCounts(self, aux):
         return self.psp.logDensityOfCounts(aux)
+
+class ForeignLiteLKernel(object):
+    def __init__(self, lkernel):
+        self.lkernel = lkernel
+
+    def simulate(self, oldValue, args):
+        oldValue = fromStackDict(oldValue)
+        args = ForeignArgs(args)
+        # stub the trace
+        # TODO: do any lkernels actually use the trace argument?
+        result = self.lkernel.simulate(None, oldValue, args)
+        return asStackDict(result)
+
+    def weight(self, newValue, oldValue, args):
+        newValue = fromStackDict(newValue)
+        oldValue = fromStackDict(oldValue)
+        args = ForeignArgs(args)
+        # stub the trace
+        # TODO: do any lkernels actually use the trace argument?
+        result = self.lkernel.weight(None, newValue, oldValue, args)
+        return result
+
+    def reverseWeight(self, oldValue, args):
+        oldValue = fromStackDict(oldValue)
+        args = ForeignArgs(args)
+        # stub the trace
+        # TODO: do any lkernels actually use the trace argument?
+        result = self.lkernel.reverseWeight(None, oldValue, args)
+        return result
 
 class ForeignLiteSP(object):
     """A wrapper around a Lite SP that can be called by other backends."""

@@ -7,6 +7,7 @@
 #include "types.h"
 #include "sp.h"
 #include "psp.h"
+#include "lkernel.h"
 
 // A mechanism for calling foreign SPs (written in Python, using the
 // Lite interface) in Puma. Implemented as a Puma SP which wraps a
@@ -29,8 +30,7 @@ struct ForeignLitePSP : PSP
   bool canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const;
 
   bool childrenCanAAA() const;
-  // TODO kernel translation
-  // shared_ptr<LKernel> const getAAALKernel();
+  shared_ptr<LKernel> const getAAALKernel();
 
   bool canEnumerateValues(shared_ptr<Args> args) const;
   vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
@@ -44,6 +44,16 @@ struct ForeignLiteSPAux : SPAux
 {
   ForeignLiteSPAux(boost::python::object sp): aux(sp.attr("constructSPAux")()) {}
   boost::python::object aux;
+};
+
+struct ForeignLiteLKernel : LKernel
+{
+  ForeignLiteLKernel(boost::python::object lkernel): lkernel(lkernel) {}
+  VentureValuePtr simulate(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args,gsl_rng * rng);
+  double weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,shared_ptr<Args> args);
+  double reverseWeight(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args);
+
+  boost::python::object lkernel;
 };
 
 struct ForeignLiteSP : SP
