@@ -177,6 +177,11 @@ def testRiplSimulate():
         "real", # Not implemented
         "atom_eq", # Not implemented
         "contains", # Not implemented for sequences
+        "arange", # Not implemented
+        "linspace", # Not implemented
+        "diag_matrix", # Not implemented
+        "ravel", # Not implemented
+        "matrix_mul", # Not implemented
     ]:
       continue
     if not sp.outputPSP.isRandom():

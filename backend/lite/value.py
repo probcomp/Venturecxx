@@ -118,7 +118,7 @@ class VentureNumber(VentureValue):
     else: # TODO Do what?  Clip to [0,1]?  Raise?
       raise VentureTypeError("Probability out of range %s" % self.number)
   def getBool(self): return self.number
-    
+
   def asStackDict(self, _trace=None): return {"type":"number","value":self.number}
   @staticmethod
   def fromStackDict(thing): return VentureNumber(thing["value"])
@@ -179,6 +179,7 @@ class VentureInteger(VentureValue):
       return "VentureInteger(uninitialized)"
   def getInteger(self): return self.number
   def getNumber(self): return float(self.number)
+  def getBool(self): return self.number
   def asStackDict(self, _trace=None): return {"type":"integer","value":self.number}
   @staticmethod
   def fromStackDict(thing): return VentureInteger(thing["value"])
@@ -292,6 +293,7 @@ class VentureBool(VentureValue):
     # trials as well as dispatching on them.  Or should flip and
     # bernoulli be different SPs?
     return self.boolean
+  def getInteger(self): return self.boolean
   def asStackDict(self, _trace=None): return {"type":"boolean","value":self.boolean}
   @staticmethod
   def fromStackDict(thing): return VentureBool(thing["value"])
@@ -844,7 +846,7 @@ class SPRef(VentureValue):
   def asStackDict(self, trace=None):
     assert trace is not None
     return {"type":"sp","value":trace.madeSPAt(self.makerNode).show(trace.madeSPAuxAt(self.makerNode))}
-  
+
   @staticmethod
   def fromStackDict(thing): return thing["value"]
   # SPRefs are intentionally not comparable until we decide otherwise
@@ -939,33 +941,29 @@ class NumberType(VentureType):
   def __contains__(self, vthing): return isinstance(vthing, VentureNumber)
   def name(self): return "<number>"
 
-def standard_venture_type(typename):
+def standard_venture_type(typename, gradient_typename=None):
+  if gradient_typename is None:
+    gradient_typename = typename
   return """
 class %sType(VentureType):
   def asVentureValue(self, thing): return Venture%s(thing)
   def asPython(self, vthing): return vthing.get%s()
   def __contains__(self, vthing): return isinstance(vthing, Venture%s)
   def name(self): return "<%s>"
-""" % (typename, typename, typename, typename, typename.lower())
+  def gradient_type(self): return %sType()
+""" % (typename, typename, typename, typename, typename.lower(), gradient_typename)
 
-for typestring in ["Integer", "Atom", "Bool", "Symbol", "ForeignBlob", "Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix"]:
+for typename in ["Integer", "Atom", "Bool", "Symbol", "ForeignBlob"]:
   # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
   # pylint: disable=exec-used
-  exec(standard_venture_type(typestring))
+  exec(standard_venture_type(typename, gradient_typename="Zero"))
 
-class ProbabilityType(VentureType):
-  def asVentureValue(self, thing): return VentureProbability(thing)
-  def asPython(self, vthing): return vthing.getProbability()
-  def __contains__(self, vthing): return isinstance(vthing, VentureProbability)
-  def name(self): return "<probability>"
-  def gradient_type(self): return NumberType()
+for typename in ["Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix"]:
+  # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
+  # pylint: disable=exec-used
+  exec(standard_venture_type(typename))
 
-class BoolType(VentureType):
-  def asVentureValue(self, thing): return VentureBool(thing)
-  def asPython(self, vthing): return vthing.getBool()
-  def __contains__(self, vthing): return isinstance(vthing, VentureBool)
-  def name(self): return "<bool>"
-  def gradient_type(self): return ZeroType()
+exec(standard_venture_type("Probability", gradient_typename="Number"))
 
 class CountType(VentureType):
   def asVentureValue(self, thing):
@@ -1239,4 +1237,10 @@ class ZeroType(VentureType):
 space.  This is needed only to serve as the gradient type of discrete
 types like BoolType."""
   def __init__(self): pass
+  def asVentureValue(self, thing):
+    assert thing == 0
+    return thing
+  def asPython(self, thing):
+    assert thing == 0
+    return thing
   def name(self): return "<zero>"
