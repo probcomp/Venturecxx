@@ -22,53 +22,60 @@ VentureValuePtr foreignFromPython(boost::python::object thing)
   }
 }
 
-VentureValuePtr ForeignLitePSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+boost::python::dict foreignArgsToPython(shared_ptr<Args> args)
 {
+  boost::python::dict foreignArgs;
+
   boost::python::list foreignOperandValues;
   for (size_t i = 0; i < args->operandValues.size(); ++i)
   {
     foreignOperandValues.append(args->operandValues[i]->toPython(args->_trace));
   }
+  foreignArgs["operandValues"] = foreignOperandValues;
+
   boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(args->spAux)->aux;
-  boost::python::object foreignResult = psp.attr("simulate")(foreignOperandValues, foreignAux);
+  foreignArgs["spaux"] = foreignAux;
+
+  OutputNode * outputNode = dynamic_cast<OutputNode*>(args->node);
+  if (outputNode && args->_trace->hasAAAMadeSPAux(outputNode))
+  {
+    shared_ptr<SPAux> madeSPAux = args->_trace->getAAAMadeSPAux(outputNode);
+    boost::python::object foreignMadeSPAux = dynamic_pointer_cast<ForeignLiteSPAux>(madeSPAux)->aux;
+    foreignArgs["madeSPAux"] = foreignMadeSPAux;
+  }
+
+  // TODO: nodes, env, requests
+
+  return foreignArgs;
+}
+
+VentureValuePtr ForeignLitePSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  boost::python::dict foreignArgs = foreignArgsToPython(args);
+  boost::python::object foreignResult = psp.attr("simulate")(foreignArgs);
   return foreignFromPython(foreignResult);
 }
 
 double ForeignLitePSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
 {
   boost::python::dict foreignValue = value->toPython(args->_trace);
-  boost::python::list foreignOperandValues;
-  for (size_t i = 0; i < args->operandValues.size(); ++i)
-  {
-    foreignOperandValues.append(args->operandValues[i]->toPython(args->_trace));
-  }
-  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(args->spAux)->aux;
-  boost::python::object foreignLogDensity = psp.attr("logDensity")(foreignValue, foreignOperandValues, foreignAux);
+  boost::python::dict foreignArgs = foreignArgsToPython(args);
+  boost::python::object foreignLogDensity = psp.attr("logDensity")(foreignValue, foreignArgs);
   return boost::python::extract<double>(foreignLogDensity);
 }
 
 void ForeignLitePSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) const
 {
   boost::python::dict foreignValue = value->toPython(args->_trace);
-  boost::python::list foreignOperandValues;
-  for (size_t i = 0; i < args->operandValues.size(); ++i)
-  {
-    foreignOperandValues.append(args->operandValues[i]->toPython(args->_trace));
-  }
-  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(args->spAux)->aux;
-  psp.attr("incorporate")(foreignValue, foreignOperandValues, foreignAux);
+  boost::python::dict foreignArgs = foreignArgsToPython(args);
+  psp.attr("incorporate")(foreignValue, foreignArgs);
 }
 
 void ForeignLitePSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args) const
 {
   boost::python::dict foreignValue = value->toPython(args->_trace);
-  boost::python::list foreignOperandValues;
-  for (size_t i = 0; i < args->operandValues.size(); ++i)
-  {
-    foreignOperandValues.append(args->operandValues[i]->toPython(args->_trace));
-  }
-  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(args->spAux)->aux;
-  psp.attr("unincorporate")(foreignValue, foreignOperandValues, foreignAux);
+  boost::python::dict foreignArgs = foreignArgsToPython(args);
+  psp.attr("unincorporate")(foreignValue, foreignArgs);
 }
 
 bool ForeignLitePSP::isRandom() const
@@ -96,13 +103,8 @@ bool ForeignLitePSP::canEnumerateValues(shared_ptr<Args> args) const
 
 vector<VentureValuePtr> ForeignLitePSP::enumerateValues(shared_ptr<Args> args) const
 {
-  boost::python::list foreignOperandValues;
-  for (size_t i = 0; i < args->operandValues.size(); ++i)
-  {
-    foreignOperandValues.append(args->operandValues[i]->toPython(args->_trace));
-  }
-  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(args->spAux)->aux;
-  boost::python::object foreignResult = psp.attr("enumerateValues")(foreignOperandValues, foreignAux);
+  boost::python::dict foreignArgs = foreignArgsToPython(args);
+  boost::python::object foreignResult = psp.attr("enumerateValues")(foreignArgs);
   boost::python::list foreignValues = boost::python::extract<boost::python::list>(foreignResult);
   vector<VentureValuePtr> values;
   for (boost::python::ssize_t i = 0; i < boost::python::len(foreignValues); ++i)

@@ -6,22 +6,38 @@ from value import VentureValue
 # translation from Lite VentureValues to stack dicts, which can be
 # consumed by another backend (as in new_cxx/inc/sps/lite.h).
 
+def fromStackDict(thing):
+    # proxy for VentureValue.fromStackDict that handles SPs by unwrapping them
+    # TODO: should foreign_sp be a recognized stack dict type?
+    # should this become the normal stack representation for SPs?
+    if thing["type"] == "foreign_sp":
+        return thing["sp"].sp
+    else:
+        return VentureValue.fromStackDict(thing)
+
+def asStackDict(thing):
+    # proxy for VentureValue.asStackDict that handles SPs by wrapping them
+    if isinstance(thing, VentureSP):
+        return {"type": "foreign_sp", "value": ForeignLiteSP(thing)}
+    else:
+        return thing.asStackDict()
+
 class ForeignArgs(object):
     """A mock Args object used to call a Lite SP from other backends."""
 
-    def __init__(self, operandValues, spaux, output=True):
+    def __init__(self, args, output=True):
         self.node = None
-        self.operandValues = operandValues
+        self.operandValues = map(fromStackDict, args.get('operandValues'))
         self.operandNodes = [None for _ in self.operandValues]
         if output:
             self.requestValue = None
             self.esrValues = []
             self.esrNodes = []
-            self.madeSPAux = None
+            self.madeSPAux = args.get('madeSPAux')
             self.isOutput = True
         else:
             self.isOutput = False
-        self.spaux = spaux
+        self.spaux = args.get('spaux')
         self.env = None
 
 class ForeignLitePSP(object):
@@ -30,45 +46,25 @@ class ForeignLitePSP(object):
     def __init__(self, psp):
         self.psp = psp
 
-    def fromStackDict(self, thing):
-        # proxy for VentureValue.fromStackDict that handles SPs by unwrapping them
-        # TODO: should foreign_sp be a recognized stack dict type?
-        # should this become the normal stack representation for SPs?
-        if thing["type"] == "foreign_sp":
-            return thing["sp"].sp
-        else:
-            return VentureValue.fromStackDict(thing)
-
-    def asStackDict(self, thing):
-        # proxy for VentureValue.asStackDict that handles SPs by wrapping them
-        if isinstance(thing, VentureSP):
-            return {"type": "foreign_sp", "value": ForeignLiteSP(thing)}
-        else:
-            return thing.asStackDict()
-
-    def simulate(self, operandValues, spaux):
-        operandValues = map(self.fromStackDict, operandValues)
-        args = ForeignArgs(operandValues, spaux)
+    def simulate(self, args):
+        args = ForeignArgs(args)
         result = self.psp.simulate(args)
-        return self.asStackDict(result)
+        return asStackDict(result)
 
-    def logDensity(self, value, operandValues, spaux):
-        value = self.fromStackDict(value)
-        operandValues = map(self.fromStackDict, operandValues)
-        args = ForeignArgs(operandValues, spaux)
+    def logDensity(self, value, args):
+        value = fromStackDict(value)
+        args = ForeignArgs(args)
         result = self.psp.logDensity(value, args)
         return result
 
-    def incorporate(self, value, operandValues, spaux):
-        value = self.fromStackDict(value)
-        operandValues = map(self.fromStackDict, operandValues)
-        args = ForeignArgs(operandValues, spaux)
+    def incorporate(self, value, args):
+        value = fromStackDict(value)
+        args = ForeignArgs(args)
         self.psp.incorporate(value, args)
 
-    def unincorporate(self, value, operandValues, spaux):
-        value = self.fromStackDict(value)
-        operandValues = map(self.fromStackDict, operandValues)
-        args = ForeignArgs(operandValues, spaux)
+    def unincorporate(self, value, args):
+        value = fromStackDict(value)
+        args = ForeignArgs(args)
         self.psp.unincorporate(value, args)
 
     def isRandom(self):
@@ -89,11 +85,10 @@ class ForeignLitePSP(object):
     def canEnumerate(self):
         return self.psp.canEnumerate()
 
-    def enumerateValues(self, operandValues, spaux):
-        operandValues = map(self.fromStackDict, operandValues)
-        args = ForeignArgs(operandValues, spaux)
+    def enumerateValues(self, args):
+        args = ForeignArgs(args)
         result = self.psp.enumerateValues(args)
-        return [self.asStackDict(value) for value in result]
+        return [asStackDict(value) for value in result]
 
     def logDensityOfCounts(self, aux):
         return self.psp.logDensityOfCounts(aux)
