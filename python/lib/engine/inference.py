@@ -127,7 +127,7 @@ class Infer(object):
       assert len(exp) == 2
       (_, subkernels) = exp
       prog = ["cycle", subkernels, 1]
-      self.engine.start_continuous_inference_exp(prog)
+      self.engine.start_continuous_inference(prog)
     elif operator == "cycle":
       assert len(exp) == 3
       (_, subkernels, transitions) = exp

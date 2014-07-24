@@ -226,7 +226,7 @@ effect of renumbering the directives, if some had been forgotten."""
     if isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop":
       assert len(program) == 2
       prog = [sym("cycle"), program[1], {"type":"number", "value":1}]
-      self.start_continuous_inference_exp(prog)
+      self.start_continuous_inference(prog)
     else:
       exp = self.desugarLambda(self.macroexpand_inference(program))
       return self.infer_v1_pre_t(exp, Infer(self))
@@ -354,12 +354,6 @@ effect of renumbering the directives, if some had been forgotten."""
       return {"running":False}
 
   def start_continuous_inference(self, program):
-    self.stop_continuous_inference()
-    self.inferrer = ContinuousInferrer(self, program, expression_mode=True)
-
-  def start_continuous_inference_exp(self, program):
-    # Start continuous inference in the model-parsed infer expression
-    # code path.
     self.stop_continuous_inference()
     self.inferrer = ContinuousInferrer(self, program, expression_mode=True)
 
