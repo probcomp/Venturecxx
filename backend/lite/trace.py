@@ -6,7 +6,11 @@ from regen import constrain, processMadeSP, evalFamily, restore
 from detach import unconstrain, unevalFamily
 from value import SPRef, ExpressionType, VentureValue, VentureSymbol
 from scaffold import Scaffold
-from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,RejectionOperator, MissingEsrParentError, NoSPRefError, HamiltonianMonteCarloOperator, MAPOperator, SliceOperator, NesterovAcceleratedGradientAscentOperator
+from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
+                   EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,
+                   RejectionOperator, MissingEsrParentError, NoSPRefError,
+                   HamiltonianMonteCarloOperator, MAPOperator, SliceOperator,
+                   NesterovAcceleratedGradientAscentOperator)
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
@@ -393,7 +397,7 @@ class Trace(object):
         #assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),EnumerativeGibbsOperator())
       elif params["kernel"] == "slice":
-        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),SliceOperator())
+        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),SliceOperator(params["w"], params["m"]))
       # [FIXME] egregrious style, but expedient. The stack is such a
       # mess anyway, it's hard to do anything with good style that
       # doesn't begin by destroying the stack.
@@ -408,7 +412,7 @@ class Trace(object):
             mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(int(params["particles"])))
           else:
             mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),ParticlePGibbsOperator(int(params["particles"])))
-          
+
       elif params["kernel"] == "map":
         assert params["with_mutation"]
         mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MAPOperator(params["rate"], int(params["steps"])))
@@ -445,7 +449,8 @@ class Trace(object):
       elif operator == "gibbs":
         mixMH(self, BlockScaffoldIndexer(scope, block), EnumerativeGibbsOperator())
       elif operator == "slice":
-        mixMH(self, BlockScaffoldIndexer(scope, block), SliceOperator())
+        (w, m) = exp[3:5]
+        mixMH(self, BlockScaffoldIndexer(scope, block), SliceOperator(w, m))
       elif operator == "pgibbs":
         particles = int(exp[3])
         if isinstance(block, list): # Ordered range
@@ -540,4 +545,4 @@ class Trace(object):
 
 
 
-    
+

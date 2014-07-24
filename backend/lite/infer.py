@@ -57,7 +57,7 @@ class BlockScaffoldIndexer(object):
       return constructScaffold(trace,[trace.getAllNodesInScope(self.scope)])
     elif self.block == "ordered":
       return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope))
-    elif self.block == "ordered_range": 
+    elif self.block == "ordered_range":
       assert self.interval
       return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope,self.interval))
     else: return constructScaffold(trace,[trace.getNodesInBlock(self.scope,self.block)])
@@ -462,11 +462,11 @@ class ParticlePGibbsOperator(object):
   def name(self): return "particle gibbs (functional)"
 
 #### Slice
-    
+
 # "stepping out" procedure
 # See "Slice Sampling" (Neal 2000) p11 for details
 def findInterval(f,x0,logy,w,m):
-  U = random.random()  
+  U = random.random()
   L = x0 - w * U
   R = L + w
 
@@ -475,7 +475,7 @@ def findInterval(f,x0,logy,w,m):
   K = (m - 1) - J
 
   maxIters = 10000
-  
+
   iterJ = 0
   while J > 0:
     iterJ += 1
@@ -487,7 +487,7 @@ def findInterval(f,x0,logy,w,m):
     L = L - w
     J = J - 1
 
-  iterK = 0    
+  iterK = 0
   while K > 0:
     iterK += 1
     if iterK == maxIters: raise Exception("Cannot find interval for slice")
@@ -523,8 +523,12 @@ def makeDensityFunction(trace,scaffold,psp,pnode,fixed_randomness):
       # TODO Do repeated regens along the same scaffold actually work?
       return regenAndAttach(Particle(trace),scaffold,False,OmegaDB(),{})
   return f
-  
+
 class SliceOperator(object):
+
+  def __init__(self, w, m):
+    self.w = w
+    self.m = m
 
   def propose(self,trace,scaffold):
     self.trace = trace
@@ -540,14 +544,12 @@ class SliceOperator(object):
 
     f = makeDensityFunction(trace,scaffold,psp,pnode,FixedRandomness())
     logy = f(currentValue) + math.log(random.uniform(0,1))
-    w = .5
-    m = 100
     # print "Slicing with x0", currentValue, "w", w, "m", m
-    L,R = findInterval(f,currentValue,logy,w,m)
+    L,R = findInterval(f,currentValue,logy,self.w,self.m)
     proposedValue = sampleInterval(f,currentValue,logy,L,R)
     proposedVValue = VentureNumber(proposedValue)
     scaffold.lkernels[pnode] = DeterministicLKernel(psp,proposedVValue)
-    
+
     xiWeight = regenAndAttach(trace,scaffold,False,self.rhoDB,{})
     return trace,xiWeight - rhoWeight
 

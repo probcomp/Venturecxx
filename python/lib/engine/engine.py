@@ -42,7 +42,7 @@ class Engine(object):
   def bind_foreign_inference_sp(self, name, sp):
     self.inference_sps[name] = sp
 
-  def getDistinguishedTrace(self): 
+  def getDistinguishedTrace(self):
     assert self.traces
     return self.traces[0]
 
@@ -302,7 +302,7 @@ effect of renumbering the directives, if some had been forgotten."""
     params = u.expToDict(exp)
     self.set_default_params(params)
     return params
-  
+
   # TODO put all inference param parsing in one place
   def set_default_params(self,params):
     if 'kernel' not in params:
@@ -320,7 +320,7 @@ effect of renumbering the directives, if some had been forgotten."""
       # python/test/ripl_test.py) fails, and if params are printed,
       # you'll see a float for the number of transitions
       params['transitions'] = int(params['transitions'])
-    
+
     if "particles" in params:
       params["particles"] = int(params["particles"])
     if "in_parallel" not in params:
@@ -332,7 +332,7 @@ effect of renumbering the directives, if some had been forgotten."""
         params['weights'] = [1 for _ in params['subkernels']]
       for p in params['subkernels']:
         self.set_default_params(p)
-  
+
   def get_logscore(self, did): return self.getDistinguishedTrace().getDirectiveLogScore(did)
   def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()
   def logscore_all(self): return [t.getGlobalLogScore() for t in self.traces]

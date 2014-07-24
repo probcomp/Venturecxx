@@ -12,14 +12,14 @@ class SPFamilies(object):
 
   def containsFamily(self,id): return id in self.families
   def getFamily(self,id): return self.families[id]
-  def registerFamily(self,id,esrParent): 
+  def registerFamily(self,id,esrParent):
     assert not id in self.families
     self.families[id] = esrParent
   def unregisterFamily(self,id): del self.families[id]
 
   def copy(self):
     return SPFamilies(self.families.copy())
-  
+
 class SPAux(object):
   def copy(self): return SPAux()
 
