@@ -351,21 +351,16 @@ effect of renumbering the directives, if some had been forgotten."""
       # Running CI in Python
       return {"running":True, "params":self.inferrer.params}
     else:
-      # Running CI in the underlying traces
-      return self.getDistinguishedTrace().continuous_inference_status() # awkward
+      return {"running":False}
 
   def start_continuous_inference(self, params):
     self.stop_continuous_inference()
     self.set_default_params(params)
-    if "in_python" not in params or params["in_python"] == False:
-      # Run CI in the underlying traces
-      for trace in self.traces: trace.start_continuous_inference(params)
+    # Run CI in Python
+    if "exp" in params:
+      self.start_continuous_inference_exp(params["exp"])
     else:
-      # Run CI in Python
-      if "exp" in params:
-        self.start_continuous_inference_exp(params["exp"])
-      else:
-        self.inferrer = ContinuousInferrer(self, params)
+      self.inferrer = ContinuousInferrer(self, params)
 
   def start_continuous_inference_exp(self, program):
     # Start continuous inference in the model-parsed infer expression
@@ -378,10 +373,6 @@ effect of renumbering the directives, if some had been forgotten."""
       # Running CI in Python
       self.inferrer.stop()
       self.inferrer = None
-    else:
-      # May be running CI in the underlying traces
-      if self.continuous_inference_status()["running"]:
-        for trace in self.traces: trace.stop_continuous_inference()
 
   def dump_trace(self, trace, skipStackDictConversion=False):
     db = trace.makeSerializationDB()
