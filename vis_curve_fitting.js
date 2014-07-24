@@ -444,19 +444,19 @@ function InitializeDemo() {
             inference_program = "(mh default one 10)";
         }
         if ( getEnumRequested() &&  getSliceRequested() && getNesterovCycleRequested()) {
-            inference_program = "(cycle ((mh default one 5) (gibbs structure one 1) (slice params one 0.5 100 1) (nesterov default all 0.1 5 1)) 1)";
+            inference_program = "(cycle ((mh default one 5) (gibbs structure one 1) (slice params one 0.5 100 1) (nesterov default all 0.03 5 1)) 1)";
         }
         if (!getEnumRequested() &&  getSliceRequested() && getNesterovCycleRequested()) {
-            inference_program = "(cycle ((mh default one 5) (slice params one 0.5 100 1) (nesterov default all 0.1 5 1)) 1)";
+            inference_program = "(cycle ((mh default one 5) (slice params one 0.5 100 1) (nesterov default all 0.03 5 1)) 1)";
         }
         if ( getEnumRequested() && !getSliceRequested() && getNesterovCycleRequested()) {
-            inference_program = "(cycle ((mh default one 5) (gibbs structure one 1) (nesterov default all 0.1 5 1)) 1)";
+            inference_program = "(cycle ((mh default one 5) (gibbs structure one 1) (nesterov default all 0.03 5 1)) 1)";
         }
         if (!getEnumRequested() && !getSliceRequested() && getNesterovCycleRequested()) {
-            inference_program = "(cycle ((mh default one 10) (nesterov default all 0.1 5 1)) 1)";
+            inference_program = "(cycle ((mh default one 10) (nesterov default all 0.03 5 1)) 1)";
         }
         if (getNesterovOnlyRequested()) {
-            inference_program = "(nesterov default all 0.1 5 1)"
+            inference_program = "(nesterov default all 0.03 5 1)"
         }
         if (old_inf_prog != inference_program) {
             changed = true;
