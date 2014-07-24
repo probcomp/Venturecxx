@@ -152,6 +152,7 @@ function InitializeDemo() {
         $("#loading-status").html("Demo loaded successfully!");
         $("#loading-status").remove();
         ripl.start_continuous_inference(inference_program);
+        // ripl.infer("(loop (" + inference_program + "))");
         ripl.register_a_request_processed_callback(function () {});
     };
     
@@ -431,10 +432,10 @@ function InitializeDemo() {
 
         var old_inf_prog = inference_program;
         if ( getEnumRequested() &&  getSliceRequested()) {
-            inference_program = "(cycle ((mh default one 5) (gibbs structure one 1) (slice params one 1)) 1)";
+            inference_program = "(cycle ((mh default one 5) (gibbs structure one 1) (slice params one 0.5 100 1)) 1)";
         }
         if (!getEnumRequested() &&  getSliceRequested()) {
-            inference_program = "(cycle ((mh default one 5) (slice params one 1)) 1)";
+            inference_program = "(cycle ((mh default one 5) (slice params one 0.5 100 1)) 1)";
         }
         if ( getEnumRequested() && !getSliceRequested()) {
             inference_program = "(cycle ((mh default one 5) (gibbs structure one 1)) 1)";
