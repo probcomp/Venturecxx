@@ -18,6 +18,12 @@ def fromStackDict(thing):
 def asStackDict(thing):
     # proxy for VentureValue.asStackDict that handles SPs by wrapping them
     if isinstance(thing, VentureSP):
+        if thing.constructSPAux.im_func is not VentureSP.constructSPAux.im_func:
+            # constructSPAux was overridden; emit a warning
+            # TODO: fix disagreement between Lite and Puma over auxes
+            # so that this can be implemented correctly.
+            import warnings
+            warnings.warn("Non-trivial SPAuxes not supported in foreign procedures")
         return {"type": "foreign_sp", "value": ForeignLiteSP(thing)}
     else:
         return thing.asStackDict()
