@@ -349,18 +349,13 @@ effect of renumbering the directives, if some had been forgotten."""
   def continuous_inference_status(self):
     if self.inferrer is not None:
       # Running CI in Python
-      return {"running":True, "params":self.inferrer.params}
+      return {"running":True, "expression":self.inferrer.program}
     else:
       return {"running":False}
 
-  def start_continuous_inference(self, params):
+  def start_continuous_inference(self, program):
     self.stop_continuous_inference()
-    self.set_default_params(params)
-    # Run CI in Python
-    if "exp" in params:
-      self.start_continuous_inference_exp(params["exp"])
-    else:
-      self.inferrer = ContinuousInferrer(self, params)
+    self.inferrer = ContinuousInferrer(self, program, expression_mode=True)
 
   def start_continuous_inference_exp(self, program):
     # Start continuous inference in the model-parsed infer expression
@@ -467,28 +462,22 @@ effect of renumbering the directives, if some had been forgotten."""
   # TODO: Add methods to inspect/manipulate the trace for debugging and profiling
 
 class ContinuousInferrer(object):
-  def __init__(self, engine, params, expression_mode=False):
+  def __init__(self, engine, program, expression_mode=False):
     self.engine = engine
-    if expression_mode:
-      self.params = {"exp": params, "in_python":True}
-    else:
-      self.params = copy.deepcopy(params)
-      self.params["in_python"] = True
+    assert expression_mode
+    self.program = program
     import threading as t
-    self.inferrer = t.Thread(target=self.infer_continuously, args=(self.params,))
+    self.inferrer = t.Thread(target=self.infer_continuously, args=(self.program,))
     self.inferrer.daemon = True
     self.inferrer.start()
 
-  def infer_continuously(self, params):
+  def infer_continuously(self, program):
     # Can use the storage of the thread object itself as the semaphore
     # controlling whether continuous inference proceeds.
     while self.inferrer is not None:
       # TODO React somehow to peeks and plotfs in the inference program
       # Currently suppressed for fear of clobbering the prompt
-      if "exp" in params:
-        self.engine.infer_exp(params["exp"])
-      else:
-        Infer(self.engine).infer(params)
+      self.engine.infer_exp(program)
       time.sleep(0.0001) # Yield to be a good citizen
 
   def stop(self):

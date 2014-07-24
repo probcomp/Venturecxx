@@ -182,9 +182,9 @@ class CoreSivm(object):
 
     def _do_start_continuous_inference(self,instruction):
         utils.require_state(self.state,'default')
-        params = utils.validate_arg(instruction, 'params', utils.validate_dict)
-        # TODO: validate parameters?
-        self.engine.start_continuous_inference(params)
+        e = utils.validate_arg(instruction, 'expression',
+                utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
+        self.engine.start_continuous_inference(e)
         
     def _do_stop_continuous_inference(self,_):
         utils.require_state(self.state,'default')
