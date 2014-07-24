@@ -15,7 +15,7 @@ double SliceGKernel::computeLogDensity(double x)
 {
   Node * node = static_cast<Node*>(pnode);
   trace->registerLKernel(scaffold,node,shared_ptr<LKernel>(new DeterministicLKernel(VentureValuePtr(new VentureNumber(x)),psp)));
-  
+
   /* The density is with respect to fixed entropy */
   shared_ptr<RNGbox> rng(new RNGbox(gsl_rng_mt19937));
   rng->set_seed(seed);
@@ -27,7 +27,7 @@ double SliceGKernel::computeLogDensity(double x)
 
 double SliceGKernel::sliceSample(double x0, double w, int m, double lower, double upper)
 {
-  // cout << "Slicing with x0 " << x0 << " w " << w << " m " << m << " lower " << lower << " upper " << upper << endl;
+  cout << "Slicing with x0 " << x0 << " w " << w << " m " << m << " lower " << lower << " upper " << upper << endl;
   double gx0 = computeLogDensity(x0);
   double logy = gx0 + log(gsl_ran_flat(trace->getRNG(),0.0,1.0));
 
@@ -84,7 +84,7 @@ pair<Trace*,double> SliceGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaff
   this->scaffold = scaffold;
 
   seed = time(NULL);
-  
+
   assertTrace(trace,scaffold);
   assert(scaffold->border.size() == 1);
 
@@ -105,7 +105,7 @@ pair<Trace*,double> SliceGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaff
   double rhoLD = computeLogDensity(x0);
   double w = 1; // TODO let psp's override this
   int m = 1000000; // TODO arbitrary large
-  
+
   double lower = psp->getSupportLowerBound();
   double upper = psp->getSupportUpperBound();
 
@@ -118,7 +118,7 @@ pair<Trace*,double> SliceGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaff
 
   return make_pair(trace,(xiWeight - xiLD) - (rhoWeight - rhoLD));
 }
- 
+
 
 void SliceGKernel::accept()
 {
@@ -132,4 +132,4 @@ void SliceGKernel::reject()
   assertTorus(scaffold);
   regenAndAttach(trace,scaffold->border[0],scaffold,true,rhoDB,shared_ptr<map<Node*,Gradient> >());
 }
-  
+
