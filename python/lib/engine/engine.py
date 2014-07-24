@@ -218,9 +218,6 @@ effect of renumbering the directives, if some had been forgotten."""
 
     return Infer(self).infer(params)
 
-#  def infer_exp(self, program):
-#    return Infer(self).infer_exp(ExpressionType().asPython(VentureValue.fromStackDict(program)))
-
   def infer_exp(self, program):
     self.incorporate()
     if isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop":
