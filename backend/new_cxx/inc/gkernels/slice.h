@@ -23,13 +23,18 @@ struct ApplicationNode;
 
 struct SliceGKernel : GKernel
 {
+  SliceGKernel(double w, int m): w(w), m(m) {}
+
+  double w;
+  int m;
+
   double computeLogDensity(double x);
   double sliceSample(double x0, double w, int m, double lower, double upper);
 
   pair<Trace*,double> propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold);
   void accept();
   void reject();
-  
+
   ConcreteTrace * trace;
   shared_ptr<Scaffold> scaffold;
   shared_ptr<PSP> psp;
@@ -39,6 +44,6 @@ struct SliceGKernel : GKernel
 
   /* The old DB */
   shared_ptr<DB> rhoDB;
-  
+
 };
 #endif

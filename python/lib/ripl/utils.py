@@ -121,9 +121,9 @@ def expToDict(exp, ripl=None):
       ans["in_parallel"] = exp[4]
     return ans
   elif tag == "slice":
-    assert len(exp) == 4
-    return {"kernel":"slice","scope":exp[1],"block":exp[2],"transitions":int(exp[3]),"with_mutation":True}
-  # [FIXME] expedient hack for now to allow windowing with pgibbs. 
+    assert len(exp) == 6
+    return {"kernel":"slice","scope":exp[1],"block":exp[2],"w":exp[3],"m":int(exp[4]),"transitions":int(exp[5])}
+  # [FIXME] expedient hack for now to allow windowing with pgibbs.
   elif tag == "pgibbs":
     assert 5 <= len(exp) and len(exp) <= 6
     if type(exp[2]) is list:
@@ -131,7 +131,7 @@ def expToDict(exp, ripl=None):
       ans = {"kernel":"pgibbs","scope":exp[1],"block":"ordered_range",
             "min_block":exp[2][1],"max_block":exp[2][2],
             "particles":int(exp[3]),"transitions":int(exp[4]),"with_mutation":True}
-    else: 
+    else:
       ans = {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":int(exp[3]),"transitions":int(exp[4]),"with_mutation":True}
     if len(exp) == 6:
       ans["in_parallel"] = exp[5]

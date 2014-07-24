@@ -26,7 +26,7 @@ PyTrace::PyTrace() : trace(new ConcreteTrace()), continuous_inference_running(fa
 }
 PyTrace::~PyTrace() {}
 
-void PyTrace::evalExpression(DirectiveID did, boost::python::object object) 
+void PyTrace::evalExpression(DirectiveID did, boost::python::object object)
 {
   VentureValuePtr exp = parseExpression(object);
   pair<double,Node*> p = evalFamily(trace.get(),
@@ -41,8 +41,8 @@ void PyTrace::evalExpression(DirectiveID did, boost::python::object object)
   trace->families[did] = shared_ptr<Node>(p.second);
 }
 
-void PyTrace::unevalDirectiveID(DirectiveID did) 
-{ 
+void PyTrace::unevalDirectiveID(DirectiveID did)
+{
  assert(trace->families.count(did));
  unevalFamily(trace.get(),trace->families[did].get(),shared_ptr<Scaffold>(new Scaffold()),shared_ptr<DB>(new DB()));
  trace->families.erase(did);
@@ -113,7 +113,7 @@ double PyTrace::getDirectiveLogScore(DirectiveID did)
   }
 }
 
-double PyTrace::getGlobalLogScore() 
+double PyTrace::getGlobalLogScore()
 {
   double ls = 0.0;
   for (set<Node*>::iterator iter = trace->unconstrainedChoices.begin();
@@ -150,7 +150,7 @@ struct Inferer
   size_t transitions;
   bool cycle; // TODO Turn this into an enum for mixtures
   vector<shared_ptr<Inferer> > subkernels;
-  
+
   Inferer(shared_ptr<ConcreteTrace> trace, boost::python::dict params) : trace(trace)
   {
     cycle = false;
@@ -181,7 +181,9 @@ struct Inferer
     }
     else if (kernel == "slice")
     {
-      gKernel = shared_ptr<GKernel>(new SliceGKernel);
+      double w = boost::python::extract<double>(params["w"]);
+      int m = boost::python::extract<int>(params["m"]);
+      gKernel = shared_ptr<GKernel>(new SliceGKernel(w,m));
     }
     else if (kernel == "cycle")
     {
@@ -200,7 +202,7 @@ struct Inferer
       cout << "\n***Kernel '" << kernel << "' not supported. Using MH instead.***" << endl;
       gKernel = shared_ptr<GKernel>(new MHGKernel);
     }
-    
+
     if (!(kernel == "cycle")) {
       scope = fromPython(params["scope"]);
       block = fromPython(params["block"]);
@@ -218,7 +220,7 @@ struct Inferer
     }
     transitions = boost::python::extract<size_t>(params["transitions"]);
   }
-  
+
   void infer()
   {
     if (trace->numUnconstrainedChoices() == 0) { return; }
@@ -256,7 +258,7 @@ struct Inferer
 };
 
 void PyTrace::infer(boost::python::dict params)
-{ 
+{
   Inferer inferer(trace, params);
   inferer.infer();
 }
@@ -279,13 +281,13 @@ void run_continuous_inference(shared_ptr<Inferer> inferer, bool * flag)
 void PyTrace::start_continuous_inference(boost::python::dict params)
 {
   stop_continuous_inference();
-  
+
   continuous_inference_params = params;
   continuous_inference_running = true;
   shared_ptr<Inferer> inferer = shared_ptr<Inferer>(new Inferer(trace, params));
-  
+
   trace->makeConsistent();
-  
+
   continuous_inference_thread = new boost::thread(run_continuous_inference, inferer, &continuous_inference_running);
 }
 
@@ -368,7 +370,7 @@ boost::python::list PyTrace::numFamilies()
   return xs;
 }
 
-void PyTrace::freeze(DirectiveID did) 
+void PyTrace::freeze(DirectiveID did)
 {
   trace->freezeDirectiveID(did);
 }
@@ -389,7 +391,7 @@ BOOST_PYTHON_MODULE(libpumatrace)
   using namespace boost::python;
 
   boost::python::numeric::array::set_module_and_type("numpy", "ndarray");
-  
+
   register_exception_translator<string>(&translateStringException);
   register_exception_translator<const char*>(&translateCStringException);
 
