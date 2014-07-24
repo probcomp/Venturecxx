@@ -355,7 +355,7 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def start_continuous_inference(self, program):
     self.stop_continuous_inference()
-    self.inferrer = ContinuousInferrer(self, program, expression_mode=True)
+    self.inferrer = ContinuousInferrer(self, program)
 
   def stop_continuous_inference(self):
     if self.inferrer is not None:
@@ -456,9 +456,8 @@ effect of renumbering the directives, if some had been forgotten."""
   # TODO: Add methods to inspect/manipulate the trace for debugging and profiling
 
 class ContinuousInferrer(object):
-  def __init__(self, engine, program, expression_mode=False):
+  def __init__(self, engine, program):
     self.engine = engine
-    assert expression_mode
     self.program = program
     import threading as t
     self.inferrer = t.Thread(target=self.infer_continuously, args=(self.program,))
