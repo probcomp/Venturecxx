@@ -456,7 +456,7 @@ function InitializeDemo() {
             inference_program = "(cycle ((mh default one 10) (nesterov default all 0.1 5 1)) 1)";
         }
         if (getNesterovOnlyRequested()) {
-            inference_program = "(nesterov default all 0.1 5 1)) 1)"
+            inference_program = "(nesterov default all 0.1 5 1)"
         }
         if (old_inf_prog != inference_program) {
             changed = true;
