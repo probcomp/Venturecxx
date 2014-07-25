@@ -1,48 +1,12 @@
 import random
 import math
+from abc import ABCMeta, abstractmethod
 from ..omegadb import OmegaDB
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
 from ..lkernel import DeterministicLKernel
 from ..utils import FixedRandomness
 from ..value import VentureNumber
-
-# "stepping out" procedure
-# See "Slice Sampling" (Neal 2000) p11 for details
-def findInterval(f,x0,logy,w,m):
-  U = random.random()
-  L = x0 - w * U
-  R = L + w
-
-  V = random.random()
-  J = math.floor(m * V)
-  K = (m - 1) - J
-
-  maxIters = 10000
-
-  iterJ = 0
-  while J > 0:
-    iterJ += 1
-    if iterJ == maxIters: raise Exception("Cannot find interval for slice")
-    fl = f(L)
-    # print "Expanding down from L", L, "f(L)", fl, "logy", logy
-    if logy >= fl: break
-    if math.isnan(fl): break
-    L = L - w
-    J = J - 1
-
-  iterK = 0
-  while K > 0:
-    iterK += 1
-    if iterK == maxIters: raise Exception("Cannot find interval for slice")
-    fr = f(R)
-    # print "Expanding up from R", R, "f(R)", fr, "logy", logy
-    if logy >= fr: break
-    if math.isnan(fr): break
-    R = R + w
-    K = K - 1
-
-  return L,R
 
 def sampleInterval(f,x0,logy,L,R):
   maxIters = 10000
@@ -69,10 +33,15 @@ def makeDensityFunction(trace,scaffold,psp,pnode,fixed_randomness):
   return f
 
 class SliceOperator(object):
+  __metaclass__ = ABCMeta
 
   def __init__(self, w, m):
     self.w = w
     self.m = m
+
+  @abstractmethod
+  def findInterval(self,f,x0,logy):
+    pass
 
   def propose(self,trace,scaffold):
     self.trace = trace
@@ -89,7 +58,7 @@ class SliceOperator(object):
     f = makeDensityFunction(trace,scaffold,psp,pnode,FixedRandomness())
     logy = f(currentValue) + math.log(random.uniform(0,1))
     # print "Slicing with x0", currentValue, "w", w, "m", m
-    L,R = findInterval(f,currentValue,logy,self.w,self.m)
+    L,R = self.findInterval(f,currentValue,logy)
     proposedValue = sampleInterval(f,currentValue,logy,L,R)
     proposedVValue = VentureNumber(proposedValue)
     scaffold.lkernels[pnode] = DeterministicLKernel(psp,proposedVValue)
@@ -102,3 +71,52 @@ class SliceOperator(object):
     detachAndExtract(self.trace,self.scaffold)
     regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,{})
   def name(self): return "slice sampling"
+
+class StepOutSliceOperator(SliceOperator):
+
+  # "stepping out" procedure
+  # See "Slice Sampling" (Neal 2000) p11 for details
+  def findInterval(self,f,x0,logy):
+    U = random.random()
+    L = x0 - self.w * U
+    R = L + self.w
+
+    V = random.random()
+    J = math.floor(self.m * V)
+    K = (self.m - 1) - J
+
+    maxIters = 10000
+
+    iterJ = 0
+    while J > 0:
+      iterJ += 1
+      if iterJ == maxIters: raise Exception("Cannot find interval for slice")
+      fl = f(L)
+      # print "Expanding down from L", L, "f(L)", fl, "logy", logy
+      if logy >= fl: break
+      if math.isnan(fl): break
+      L = L - self.w
+      J = J - 1
+
+    iterK = 0
+    while K > 0:
+      iterK += 1
+      if iterK == maxIters: raise Exception("Cannot find interval for slice")
+      fr = f(R)
+      # print "Expanding up from R", R, "f(R)", fr, "logy", logy
+      if logy >= fr: break
+      if math.isnan(fr): break
+      R = R + self.w
+      K = K - 1
+
+    return L,R
+
+class DoublingSliceOperator(SliceOperator):
+
+  # "doubling" procedure; p11 of Neal
+  @staticmethod
+  def findInterval(f,xo,logy):
+    pass
+
+
+
