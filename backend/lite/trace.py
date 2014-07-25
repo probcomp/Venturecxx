@@ -10,7 +10,7 @@ from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
                    EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,
                    RejectionOperator, MissingEsrParentError, NoSPRefError,
                    HamiltonianMonteCarloOperator, MAPOperator, StepOutSliceOperator,
-                   NesterovAcceleratedGradientAscentOperator)
+                   DoublingSliceOperator, NesterovAcceleratedGradientAscentOperator)
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
@@ -398,6 +398,9 @@ class Trace(object):
       elif operator == "slice":
         (w, m) = exp[3:5]
         mixMH(self, BlockScaffoldIndexer(scope, block), StepOutSliceOperator(w, m))
+      elif operator == "slice_doubling":
+        (w, p) = exp[3:5]
+        mixMH(self, BlockScaffoldIndexer(scope, block), DoublingSliceOperator(w, m))
       elif operator == "pgibbs":
         particles = int(exp[3])
         if isinstance(block, list): # Ordered range
