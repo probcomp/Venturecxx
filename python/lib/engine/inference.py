@@ -44,50 +44,6 @@ class Infer(object):
   def final_data(self):
     return self.plot if self.plot is not None else self.out
 
-  def infer(self, program):
-    self.engine.incorporate()
-    self.do_infer(program)
-    return self.final_data()
-
-  def do_infer(self, program):
-    if 'command' in program and program['command'] == "resample":
-      self.engine.resample(program['particles'])
-    elif 'command' in program and program['command'] == "incorporate":
-      pass
-    elif 'command' in program and program['command'] == "peek":
-      name = program['name']
-      self._ensure_peek_name(name)
-      value = self.engine.sample(program['expression'])
-      self.out[name].append(value)
-    elif 'command' in program and program['command'] == "peek_all":
-      name = program['name']
-      self._ensure_peek_name(name)
-      values = self.engine.sample_all(program['expression'])
-      self.out[name].append(values)
-    elif 'command' in program and program['command'] == "plotf":
-      self._ensure_plot(program["specification"], program["names"], program["expressions"])
-      self.plot.add_data(self.engine)
-    elif 'command' in program and program['command'] == "loop":
-      # TODO Assert that loop is only done at the top level?
-      params = {"kernel":"cycle", "subkernels":program["kernels"], "in_python":True, "transitions":1}
-      self.engine.start_continuous_inference(params)
-    elif program['kernel'] == "cycle":
-      if 'subkernels' not in program:
-        raise Exception("Cycle kernel must have things to cycle over (%r)" % program)
-      for _ in range(program["transitions"]):
-        for k in program["subkernels"]:
-          self.do_infer(k)
-    elif program["kernel"] == "mixture":
-      for _ in range(program["transitions"]):
-        self.do_infer(simulateCategorical(program["weights"], program["subkernels"]))
-    else: # A primitive infer expression
-      self.engine.primitive_infer(program)
-
-  def infer_exp(self, program):
-    self.engine.incorporate()
-    self.do_infer_exp(program)
-    return self.final_data()
-
   def default_name_for_exp(self,exp):
     if isinstance(exp, basestring):
       return exp
@@ -95,61 +51,6 @@ class Infer(object):
       return "(" + ' '.join([self.default_name_for_exp(e) for e in exp]) + ")"
     else:
       return str(exp)
-
-  def do_infer_exp(self, exp):
-    operator = exp[0]
-    if operator == "resample":
-      assert len(exp) == 2
-      self.resample(exp[1])
-    elif operator == "incorporate":
-      assert len(exp) == 1
-      self.incorporate()
-    elif operator in ["peek", "peek_all"]:
-      assert 2 <= len(exp) and len(exp) <= 3
-      if len(exp) == 3:
-        (_, expression, name) = exp
-      else:
-        (_, expression) = exp
-        name = self.default_name_for_exp(expression)
-      if operator == "peek":
-        self.peek(expression, name)
-      else:
-        self.peek_all(expression, name)
-    elif operator == "plotf":
-      assert len(exp) >= 2
-      spec = exp[1]
-      exprs = exp[2:]
-      names = [self.default_name_for_exp(e) for e in exprs]
-      self._ensure_plot(spec, names, exprs)
-      self.plot.add_data(self.engine)
-    elif operator == "loop":
-      # TODO Assert that loop is only done at the top level?
-      assert len(exp) == 2
-      (_, subkernels) = exp
-      prog = ["cycle", subkernels, 1]
-      self.engine.start_continuous_inference_exp(prog)
-    elif operator == "cycle":
-      assert len(exp) == 3
-      (_, subkernels, transitions) = exp
-      assert type(subkernels) is list
-      for _ in range(int(transitions)):
-        for k in subkernels:
-          self.do_infer_exp(k)
-    elif operator == "mixture":
-      assert len(exp) == 3
-      (_, weighted_subkernels, transitions) = exp
-      assert type(weighted_subkernels) is list
-      weights = []
-      subkernels = []
-      for i in range(len(weighted_subkernels)/2):
-        j = 2*i
-        k = j + 1
-        weights.append(weighted_subkernels[j])
-        subkernels.append(weighted_subkernels[k])
-      for _ in range(int(transitions)):
-        self.do_infer_exp(simulateCategorical(weights, subkernels))
-    else: # A primitive infer expression
-      self.primitive_infer(exp)
 
   def primitive_infer(self, exp): self.engine.primitive_infer(exp)
   def resample(self, ct): self.engine.resample(ct)

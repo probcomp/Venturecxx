@@ -1,0 +1,9 @@
+What I did to get ipython for the PPAML summer school students:
+- Create a user axch-ipython on probcomp-2
+- Copy the notebooks into that user's home directory
+- (install ipython-notebook)
+- Follow the instructions to set up a public IPython server:
+  http://ipython.org/ipython-doc/rel-1.1.0/interactive/public_server.html
+  Synthesize password 'ppaml'
+  Synthesize self-signed cert in notebook.pem
+  ipython profile create nbserver
