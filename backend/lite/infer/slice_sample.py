@@ -8,20 +8,6 @@ from ..lkernel import DeterministicLKernel
 from ..utils import FixedRandomness
 from ..value import VentureNumber
 
-def sampleInterval(f,x0,logy,L,R):
-  maxIters = 10000
-  it = 0
-  while True:
-    it += 1
-    if it == maxIters: raise Exception("Cannot sample interval for slice")
-    U = random.random()
-    x1 = L + U * (R - L)
-    fx1 = f(x1)
-    # print "Slicing at x1", x1, "f(x1)", fx1, "logy", logy, "L", L, "R", R
-    if logy <= fx1: return x1
-    if x1 < x0: L = x1
-    else: R = x1
-
 def makeDensityFunction(trace,scaffold,psp,pnode,fixed_randomness):
   from ..particle import Particle
   def f(x):
@@ -36,8 +22,24 @@ class SliceOperator(object):
   __metaclass__ = ABCMeta
 
   @abstractmethod
-  def findInterval(self,f,x0,logy):
-    pass
+  def findInterval(self,f,x0,logy): pass
+
+  @abstractmethod
+  def legalProposal(self,f,x0,x1,logy,L,R): pass
+
+  def sampleInterval(self,f,x0,logy,L,R):
+    maxIters = 10000
+    it = 0
+    while True:
+      it += 1
+      if it == maxIters: raise Exception("Cannot sample interval for slice")
+      U = random.random()
+      x1 = L + U * (R - L)
+      fx1 = f(x1)
+      # print "Slicing at x1", x1, "f(x1)", fx1, "logy", logy, "L", L, "R", R
+      if (logy <= fx1) and self.legalProposal(f,xo,x1,logy,L,R): return x1
+      if x1 < x0: L = x1
+      else: R = x1
 
   def propose(self,trace,scaffold):
     self.trace = trace
@@ -55,7 +57,7 @@ class SliceOperator(object):
     logy = f(currentValue) + math.log(random.uniform(0,1))
     # print "Slicing with x0", currentValue, "w", w, "m", m
     L,R = self.findInterval(f,currentValue,logy)
-    proposedValue = sampleInterval(f,currentValue,logy,L,R)
+    proposedValue = self.sampleInterval(f,currentValue,logy,L,R)
     proposedVValue = VentureNumber(proposedValue)
     scaffold.lkernels[pnode] = DeterministicLKernel(psp,proposedVValue)
 
@@ -110,6 +112,9 @@ class StepOutSliceOperator(SliceOperator):
 
     return L,R
 
+    def legalProposal(self,f,x0,x1,logy,L,R): return True
+
+
 class DoublingSliceOperator(SliceOperator):
   def __init__(self, w, p):
     self.w = w
@@ -138,4 +143,25 @@ class DoublingSliceOperator(SliceOperator):
         R = R + dist
         fr = f(R)
       K -= 1
+
+  def legalProposal(self,f,x0,x1,logy,L,R):
+    D = False
+    fr = f(R)
+    fl = f(L)
+    while (R - L) > (1.1 * self.w):
+      M = (L + R) / 2.0
+      if ((x0 < M) and (x1 >= M)) or ((x0 >= M) and (x1 < M)):
+        D = True
+      if x1 < M:
+        R = M
+        fr = f(R)
+      else:
+        L = M
+        fl = f(L)
+      if D and (logy >= fl) and (logy >= fr):
+        return False
+    return True
+
+
+
 
