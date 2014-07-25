@@ -114,7 +114,7 @@ class StepOutSliceOperator(SliceOperator):
 
     return L,R
 
-    def legalProposal(self,f,x0,x1,logy,L,R): return True
+  def legalProposal(self,f,x0,x1,logy,L,R): return True
 
 
 class DoublingSliceOperator(SliceOperator):
