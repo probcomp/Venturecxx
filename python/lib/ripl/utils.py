@@ -89,16 +89,7 @@ def unparse(exp):
   return '('+' '.join(map(unparse, exp))+')' if isinstance(exp, list) else str(exp)
 
 ## TODO Define a VentureScript version of this parser
-def expToDict(exp, ripl=None):
-  def _mimic_parser(exp):
-    return core_sivm._modify_expression(ripl._ensure_parsed_expression(exp))
-  def default_name_for_exp(exp):
-    if isinstance(exp, basestring):
-      return exp
-    elif hasattr(exp, "__iter__"):
-      return "(" + ' '.join([default_name_for_exp(e) for e in exp]) + ")"
-    else:
-      return str(exp)
+def expToDict(exp):
   if isinstance(exp, int):
     return {"transitions": exp}
   tag = exp[0]
@@ -164,66 +155,5 @@ def expToDict(exp, ripl=None):
       return {"kernel":"rejection","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}
     else:
       return {"kernel":"rejection","scope":exp[1],"block":exp[2],"transitions":1}
-  elif tag == "mixture":
-    assert len(exp) == 3
-    weights = []
-    subkernels = []
-    assert type(exp[1]) is list
-    for i in range(len(exp[1])/2):
-      j = 2*i
-      k = j + 1
-      weights.append(exp[1][j])
-      subkernels.append(expToDict(exp[1][k], ripl))
-    return {"kernel":"mixture","weights":weights,"subkernels":subkernels,"transitions":int(exp[2])}
-  elif tag == "cycle":
-    assert len(exp) == 3
-    assert type(exp[1]) is list
-    subkernels = [expToDict(e, ripl) for e in exp[1]]
-    return {"kernel":"cycle","subkernels":subkernels,"transitions":int(exp[2])}
-  elif tag == "resample":
-    assert len(exp) == 2
-    return {"command":"resample","particles":int(exp[1])}
-  elif tag == "incorporate":
-    assert len(exp) == 1
-    return {"command":"incorporate"}
-  elif tag == "loop":
-    assert len(exp) == 2
-    subkernels = [expToDict(e, ripl) for e in exp[1]]
-    return {"command":"loop", "kernels":subkernels}
-  elif tag == "peek" or tag == "peek_all":
-    assert 2 <= len(exp) and len(exp) <= 3
-    if len(exp) == 2:
-      name = default_name_for_exp(exp[1])
-    else:
-      name = exp[2]
-    if ripl is not None:
-      expr = _mimic_parser(exp[1])
-    else:
-      raise Exception("Need a ripl around in order to parse model expressions in inference expressions")
-    return {"command":tag, "expression":expr, "name":name}
-  elif tag == "plotf":
-    assert len(exp) >= 2
-    return {"command":"plotf", "specification":exp[1], "names":[default_name_for_exp(e) for e in exp[2:]], "expressions": [_mimic_parser(e) for e in exp[2:]]}
   else:
     raise Exception("Cannot parse infer instruction")
-
-def testHandInspect():
-  k1 = "(mh 11 22 33)"
-  k2 = "(pgibbs 11 22 33 44)"
-  k3 = "(meanfield 11 22 33 44)"
-  k4 = "(latents 11 22 33)"
-  k5 = "(rejection 11 22 33)"
-  k6 = "(resample 11)"
-  k7 = "(incorporate)"
-
-  print k1,expToDict(parse(k1))
-  print k2,expToDict(parse(k2))
-  print k3,expToDict(parse(k3))
-  print k4,expToDict(parse(k4))
-  print k5,expToDict(parse(k5))
-  print k6,expToDict(parse(k4))
-  print k7,expToDict(parse(k5))
-  print "----------------------"
-  print expToDict(parse("(cycle (%s %s) 100)" % (k1,k2)))
-  print expToDict(parse("(mixture (.1 %s .9 %s) 100)" % (k1,k2)))
-  print expToDict(parse("(cycle (%s (mixture (.1 %s .9 %s) 100)) 1000)" % (k1,k2,k3)))
