@@ -4,6 +4,7 @@ from ..omegadb import OmegaDB
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
 from ..exception import VentureError
+from mh import InPlaceOperator
 
 class MissingEsrParentError(VentureError): pass
 class NoSPRefError(VentureError): pass
