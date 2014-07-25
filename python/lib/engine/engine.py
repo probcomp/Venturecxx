@@ -15,13 +15,12 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import random
 import pickle
-import copy
 import time
 
 from venture.exception import VentureException
 from venture.lite.utils import sampleLogCategorical
 from venture.engine.inference import Infer
-from venture.lite.value import VentureValue, ExpressionType
+from venture.engine.utils import expToDict
 
 class Engine(object):
 
@@ -284,12 +283,7 @@ effect of renumbering the directives, if some had been forgotten."""
       else:
         # The trace cannot handle the inference primitive syntax
         # natively, so translate.
-        trace.infer(self.list_style_to_dict_style(exp))
-
-  def list_style_to_dict_style(self, exp):
-    import venture.ripl.utils as u
-    params = u.expToDict(exp)
-    return params
+        trace.infer(expToDict(exp))
 
   def get_logscore(self, did): return self.getDistinguishedTrace().getDirectiveLogScore(did)
   def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()
