@@ -211,13 +211,6 @@ effect of renumbering the directives, if some had been forgotten."""
     self.traces = newTraces
     self.weights = [0 for p in range(P)]
 
-  def infer(self,params=None):
-    if params is None:
-      params = {}
-    self.set_default_params(params)
-
-    return Infer(self).infer(params)
-
   def infer_exp(self, program):
     self.incorporate()
     if isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop":
