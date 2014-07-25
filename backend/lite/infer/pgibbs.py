@@ -120,7 +120,7 @@ class ParticlePGibbsOperator(object):
     self.P = P
 
   def propose(self,trace,scaffold):
-    from particle import Particle
+    from ..particle import Particle
     self.trace = trace
     self.scaffold = scaffold
 

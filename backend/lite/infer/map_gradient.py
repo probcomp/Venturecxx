@@ -1,6 +1,6 @@
 import math
 from ..lkernel import DeterministicLKernel
-from mh import InPlaceOperator
+from mh import InPlaceOperator, getCurrentValues, registerDeterministicLKernels
 
 class MAPOperator(InPlaceOperator):
   def __init__(self, epsilon, steps):

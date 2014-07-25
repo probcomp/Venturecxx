@@ -5,6 +5,13 @@ from ..regen import regenAndAttach
 from ..detach import detachAndExtract
 from ..scaffold import constructScaffold
 
+def getCurrentValues(trace,pnodes): return [trace.valueAt(pnode) for pnode in pnodes]
+
+def registerDeterministicLKernels(trace,scaffold,pnodes,currentValues):
+  for (pnode,currentValue) in zip(pnodes,currentValues):
+    assert not isinstance(currentValue,list)
+    scaffold.lkernels[pnode] = DeterministicLKernel(trace.pspAt(pnode),currentValue)
+
 def mixMH(trace,indexer,operator):
   start = time.time()
   index = indexer.sampleIndex(trace)

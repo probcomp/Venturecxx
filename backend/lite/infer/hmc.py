@@ -7,7 +7,7 @@ from ..detach import detachAndExtract
 from ..scaffold import constructScaffold
 from ..lkernel import DeterministicLKernel
 from ..utils import FixedRandomness
-from mh import InPlaceOperator
+from mh import InPlaceOperator, getCurrentValues, registerDeterministicLKernels
 
 class GradientOfRegen(object):
   """An applicable object, calling which computes the gradient

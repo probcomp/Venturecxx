@@ -4,12 +4,7 @@ from ..detach import detachAndExtract
 from ..lkernel import DeterministicLKernel
 from ..utils import sampleLogCategorical, cartesianProduct
 from ..consistency import assertTrace, assertTorus
-
-def getCurrentValues(trace,pnodes): return [trace.valueAt(pnode) for pnode in pnodes]
-def registerDeterministicLKernels(trace,scaffold,pnodes,currentValues):
-  for (pnode,currentValue) in zip(pnodes,currentValues):
-    assert not isinstance(currentValue,list)
-    scaffold.lkernels[pnode] = DeterministicLKernel(trace.pspAt(pnode),currentValue)
+from mh import getCurrentValues, registerDeterministicLKernels
 
 def getCartesianProductOfEnumeratedValues(trace,pnodes):
   assert len(pnodes) > 0
