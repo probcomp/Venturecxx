@@ -574,8 +574,8 @@ Open issues:
     def continuous_inference_status(self):
         return self.execute_instruction({'instruction':'continuous_inference_status'})
 
-    def start_continuous_inference(self, params=None):
-        self.execute_instruction({'instruction':'start_continuous_inference', 'params': self.parseInferParams(params)})
+    def start_continuous_inference(self, program=None):
+        self.execute_instruction({'instruction':'start_continuous_inference', 'expression': self.defaultInferProgram(program)})
         return None
 
     def stop_continuous_inference(self):
