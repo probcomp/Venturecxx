@@ -169,7 +169,7 @@ class TestCoreSivm(unittest.TestCase):
             self.assertEquals(e.exception,'invalid_argument')
 
     def test_infer(self):
-        from venture.shortcuts import *
+        from venture.shortcuts import symbol, number
         inst = {
                 'instruction':'infer',
                 'expression': [symbol("mh"), symbol("default"), symbol("one"), number(2)]
@@ -241,14 +241,13 @@ class TestCoreSivm(unittest.TestCase):
         self.assertEquals(o2['logscore'],-0.6931471805599453)
     
     def test_continuous_inference(self):
-        if config["get_ripl"] == "lite":
-            raise SkipTest("Venture Lite does not support continuous inference")
         status = {'instruction':'continuous_inference_status'}
         o1 = self.sivm.execute_instruction(status)
         self.assertEquals(o1['running'], False)
         
-        params = {'kernel': 'mh', 'use_global_scaffold': False}
-        self.sivm.execute_instruction({'instruction':'start_continuous_inference', 'params' : params})
+        from venture.shortcuts import symbol, number
+        exp = [symbol("mh"), symbol("default"), symbol("one"), number(2)]
+        self.sivm.execute_instruction({'instruction':'start_continuous_inference', 'expression' : exp})
         o2 = self.sivm.execute_instruction(status)
         self.assertEquals(o2['running'], True)
         
