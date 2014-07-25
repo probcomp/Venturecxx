@@ -148,6 +148,8 @@ class DoublingSliceOperator(SliceOperator):
         fr = f(R)
       K -= 1
 
+    return L,R
+
   def legalProposal(self,f,x0,x1,logy,L,R):
     D = False
     fr = f(R)

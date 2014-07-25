@@ -400,7 +400,7 @@ class Trace(object):
         mixMH(self, BlockScaffoldIndexer(scope, block), StepOutSliceOperator(w, m))
       elif operator == "slice_doubling":
         (w, p) = exp[3:5]
-        mixMH(self, BlockScaffoldIndexer(scope, block), DoublingSliceOperator(w, m))
+        mixMH(self, BlockScaffoldIndexer(scope, block), DoublingSliceOperator(w, p))
       elif operator == "pgibbs":
         particles = int(exp[3])
         if isinstance(block, list): # Ordered range
