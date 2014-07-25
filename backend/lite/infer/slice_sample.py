@@ -68,12 +68,14 @@ class SliceOperator(object):
   def reject(self):
     detachAndExtract(self.trace,self.scaffold)
     regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,{})
-  def name(self): return "slice sampling"
+
 
 class StepOutSliceOperator(SliceOperator):
   def __init__(self, w, m):
     self.w = w
     self.m = m
+
+  def name(self): return "slice sampling with stepping out"
 
   # "stepping out" procedure
   # See "Slice Sampling" (Neal 2000) p11 for details
@@ -119,6 +121,8 @@ class DoublingSliceOperator(SliceOperator):
   def __init__(self, w, p):
     self.w = w
     self.p = p
+
+  def name(self): return "slice sampling with doubling"
 
   # "doubling" procedure; p11 of Neal
   def findInterval(self,f,xo,logy):
