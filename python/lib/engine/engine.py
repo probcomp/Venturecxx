@@ -294,8 +294,6 @@ effect of renumbering the directives, if some had been forgotten."""
 
   # TODO put all inference param parsing in one place
   def set_default_params(self,params):
-    if 'with_mutation' not in params:
-      params['with_mutation'] = True
     if "in_parallel" not in params:
       params['in_parallel'] = True
 

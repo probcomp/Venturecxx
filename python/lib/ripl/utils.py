@@ -94,19 +94,19 @@ def expToDict(exp):
   tag = exp[0]
   if tag == "mh":
     assert len(exp) == 4
-    return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":int(exp[3]),"with_mutation":True}
+    return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}
   elif tag == "func_mh":
     assert len(exp) == 4
-    return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":int(exp[3]),"with_mutation":False}
+    return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}
   elif tag == "gibbs":
     assert 4 <= len(exp) and len(exp) <= 5
-    ans = {"kernel":"gibbs","scope":exp[1],"block":exp[2],"transitions":int(exp[3]),"with_mutation":False}
+    ans = {"kernel":"gibbs","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}
     if len(exp) == 5:
       ans["in_parallel"] = exp[4]
     return ans
   elif tag == "emap":
     assert 4 <= len(exp) and len(exp) <= 5
-    ans = {"kernel":"emap","scope":exp[1],"block":exp[2],"transitions":int(exp[3]),"with_mutation":False}
+    ans = {"kernel":"emap","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}
     if len(exp) == 5:
       ans["in_parallel"] = exp[4]
     return ans
@@ -120,15 +120,15 @@ def expToDict(exp):
       assert exp[2][0] == "ordered_range"
       ans = {"kernel":"pgibbs","scope":exp[1],"block":"ordered_range",
             "min_block":exp[2][1],"max_block":exp[2][2],
-            "particles":int(exp[3]),"transitions":int(exp[4]),"with_mutation":True}
+            "particles":int(exp[3]),"transitions":int(exp[4])}
     else:
-      ans = {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":int(exp[3]),"transitions":int(exp[4]),"with_mutation":True}
+      ans = {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":int(exp[3]),"transitions":int(exp[4])}
     if len(exp) == 6:
       ans["in_parallel"] = exp[5]
     return ans
   elif tag == "func_pgibbs":
     assert 5 <= len(exp) and len(exp) <= 6
-    ans = {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":int(exp[3]),"transitions":int(exp[4]),"with_mutation":False}
+    ans = {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":int(exp[3]),"transitions":int(exp[4])}
     if len(exp) == 6:
       ans["in_parallel"] = exp[5]
     return ans
