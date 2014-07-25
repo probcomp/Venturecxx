@@ -37,7 +37,7 @@ class SliceOperator(object):
       x1 = L + U * (R - L)
       fx1 = f(x1)
       # print "Slicing at x1", x1, "f(x1)", fx1, "logy", logy, "L", L, "R", R
-      if (logy <= fx1) and self.legalProposal(f,xo,x1,logy,L,R): return x1
+      if (logy <= fx1) and self.legalProposal(f,x0,x1,logy,L,R): return x1
       if x1 < x0: L = x1
       else: R = x1
 
@@ -125,7 +125,7 @@ class DoublingSliceOperator(SliceOperator):
   def name(self): return "slice sampling with doubling"
 
   # "doubling" procedure; p11 of Neal
-  def findInterval(self,f,xo,logy):
+  def findInterval(self,f,x0,logy):
     U = random.random()
     L = x0 - self.w * U
     R = L + self.w
