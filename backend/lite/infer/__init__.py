@@ -18,7 +18,7 @@ from egibbs import EnumerativeGibbsOperator
 from hmc import HamiltonianMonteCarloOperator
 from map_gradient import MAPOperator, NesterovAcceleratedGradientAscentOperator
 from meanfield import MeanfieldOperator
-from mh import mixMH,MHOperator,,BlockScaffoldIndexer,
+from mh import mixMH,MHOperator,BlockScaffoldIndexer
 from pgibbs import PGibbsOperator,ParticlePGibbsOperator
 from rejection import RejectionOperator, MissingEsrParentError, NoSPRefError
 from slice_sample import SliceOperator

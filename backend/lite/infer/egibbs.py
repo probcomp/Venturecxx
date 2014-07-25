@@ -1,5 +1,5 @@
 from omegadb import OmegaDB
-from regen import regenAndAttach,
+from regen import regenAndAttach
 from detach import detachAndExtract
 from lkernel import DeterministicLKernel
 from utils import sampleLogCategorical, cartesianProduct
