@@ -20,7 +20,7 @@
 
 #include <boost/python/exception_translator.hpp>
 
-PyTrace::PyTrace() : trace(new ConcreteTrace()), continuous_inference_running(false), continuous_inference_thread(NULL)
+PyTrace::PyTrace() : trace(new ConcreteTrace())
 {
   trace->initialize();
 }
@@ -148,12 +148,10 @@ struct Inferer
   BlockID block;
   shared_ptr<ScaffoldIndexer> scaffoldIndexer;
   size_t transitions;
-  bool cycle; // TODO Turn this into an enum for mixtures
   vector<shared_ptr<Inferer> > subkernels;
 
   Inferer(shared_ptr<ConcreteTrace> trace, boost::python::dict params) : trace(trace)
   {
-    cycle = false;
     string kernel = boost::python::extract<string>(params["kernel"]);
     if (kernel == "mh")
     {
@@ -185,38 +183,24 @@ struct Inferer
       int m = boost::python::extract<int>(params["m"]);
       gKernel = shared_ptr<GKernel>(new SliceGKernel(w,m));
     }
-    else if (kernel == "cycle")
-    {
-      cycle = true;
-      boost::python::list subs = boost::python::extract<boost::python::list>(params["subkernels"]);
-      boost::python::ssize_t len = boost::python::len(subs);
-      subkernels = vector<shared_ptr<Inferer> >(len);
-
-      for (boost::python::ssize_t i = 0; i < len; ++i)
-      {
-        subkernels[i] = shared_ptr<Inferer>(new Inferer(trace, boost::python::extract<boost::python::dict>(subs[i])));
-      }
-    }
     else
     {
       cout << "\n***Kernel '" << kernel << "' not supported. Using MH instead.***" << endl;
       gKernel = shared_ptr<GKernel>(new MHGKernel);
     }
 
-    if (!(kernel == "cycle")) {
-      scope = fromPython(params["scope"]);
-      block = fromPython(params["block"]);
+    scope = fromPython(params["scope"]);
+    block = fromPython(params["block"]);
 
-      if (block->hasSymbol() && block->getSymbol() == "ordered_range")
-      {
-        VentureValuePtr minBlock = fromPython(params["min_block"]);
-        VentureValuePtr maxBlock = fromPython(params["max_block"]);
-        scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block,minBlock,maxBlock));
-      }
-      else
-      {
-        scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
-      }
+    if (block->hasSymbol() && block->getSymbol() == "ordered_range")
+    {
+      VentureValuePtr minBlock = fromPython(params["min_block"]);
+      VentureValuePtr maxBlock = fromPython(params["max_block"]);
+      scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block,minBlock,maxBlock));
+    }
+    else
+    {
+      scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
     }
     transitions = boost::python::extract<size_t>(params["transitions"]);
   }
@@ -226,16 +210,7 @@ struct Inferer
     if (trace->numUnconstrainedChoices() == 0) { return; }
     for (size_t i = 0; i < transitions; ++i)
     {
-      if (cycle) { inferCycle(); }
-      else { inferPrimitive(); inferAEKernels(); }
-    }
-  }
-
-  void inferCycle()
-  {
-    for (size_t i = 0; i < subkernels.size(); i++)
-    {
-      subkernels[i]->infer();
+      inferPrimitive(); inferAEKernels();
     }
   }
 
@@ -261,43 +236,6 @@ void PyTrace::infer(boost::python::dict params)
 {
   Inferer inferer(trace, params);
   inferer.infer();
-}
-
-boost::python::dict PyTrace::continuous_inference_status()
-{
-  boost::python::dict status;
-  status["running"] = continuous_inference_running;
-  if(continuous_inference_running) {
-    status["params"] = continuous_inference_params;
-  }
-  return status;
-}
-
-void run_continuous_inference(shared_ptr<Inferer> inferer, bool * flag)
-{
-  while(*flag) { inferer->infer(); }
-}
-
-void PyTrace::start_continuous_inference(boost::python::dict params)
-{
-  stop_continuous_inference();
-
-  continuous_inference_params = params;
-  continuous_inference_running = true;
-  shared_ptr<Inferer> inferer = shared_ptr<Inferer>(new Inferer(trace, params));
-
-  trace->makeConsistent();
-
-  continuous_inference_thread = new boost::thread(run_continuous_inference, inferer, &continuous_inference_running);
-}
-
-void PyTrace::stop_continuous_inference() {
-  if(continuous_inference_running) {
-    continuous_inference_running = false;
-    continuous_inference_thread->join();
-    delete continuous_inference_thread;
-    continuous_inference_thread = NULL;
-  }
 }
 
 void translateStringException(const string& err) {
@@ -416,9 +354,6 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("numNodesInBlock", &PyTrace::numNodesInBlock)
     .def("numFamilies", &PyTrace::numFamilies)
     .def("freeze", &PyTrace::freeze)
-    .def("continuous_inference_status", &PyTrace::continuous_inference_status)
-    .def("start_continuous_inference", &PyTrace::start_continuous_inference)
-    .def("stop_continuous_inference", &PyTrace::stop_continuous_inference)
     .def("stop_and_copy", &PyTrace::stop_and_copy, return_value_policy<manage_new_object>())
     .def("makeSerializationDB", &PyTrace::makeEmptySerializationDB)
     .def("makeSerializationDB", &PyTrace::makeSerializationDB)

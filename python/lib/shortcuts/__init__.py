@@ -140,7 +140,7 @@ def symbol(s):
     return val("symbol",s)
 
 def blob(v):
-    return val("blob",s)
+    return val("blob",v)
 
 def list(vs):
     return val("list", vs)

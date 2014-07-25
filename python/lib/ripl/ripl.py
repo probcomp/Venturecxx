@@ -464,24 +464,6 @@ Open issues:
         value = self.execute_instruction(i)['value']
         return value if type else u._strip_types(value)
 
-    # takes params and turns them into the proper dict
-    # TODO Correctly default block choice?
-    def parseInferParams(self, params):
-        if params is None:
-            return {"kernel":"rejection","scope":"default","block":"all","transitions":1}
-        if isinstance(params, int):
-            return {"transitions": params, "kernel": "mh", "scope":"default", "block":"one"}
-        elif isinstance(params, basestring):
-            # TODO Technically, should make sure that inference
-            # programs are validated and desugared by the rest of the
-            # stack, especially since as of peek they can contain
-            # model program fragments.
-            return u.expToDict(u.parse(params), self)
-        elif isinstance(params, dict):
-            return params
-        else:
-            raise TypeError("Unknown params: " + str(params))
-
     def defaultInferProgram(self, program):
         try: # Check for being a string that represents an int
             program = int(program)
@@ -574,8 +556,8 @@ Open issues:
     def continuous_inference_status(self):
         return self.execute_instruction({'instruction':'continuous_inference_status'})
 
-    def start_continuous_inference(self, params=None):
-        self.execute_instruction({'instruction':'start_continuous_inference', 'params': self.parseInferParams(params)})
+    def start_continuous_inference(self, program=None):
+        self.execute_instruction({'instruction':'start_continuous_inference', 'expression': self.defaultInferProgram(program)})
         return None
 
     def stop_continuous_inference(self):
