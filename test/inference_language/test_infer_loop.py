@@ -55,3 +55,15 @@ def testStartCISmoke():
     assertInferring(ripl)
   finally:
     ripl.stop_continuous_inference() # Don't want to leave active threads lying around
+
+def testStartCIInstructionSmoke():
+  ripl = get_ripl()
+  ripl.assume("x", "(normal 0 1)")
+
+  assertNotInferring(ripl)
+
+  try:
+    ripl.execute_instruction("[start_continuous_inference (mh default one 1)]")
+    assertInferring(ripl)
+  finally:
+    ripl.stop_continuous_inference() # Don't want to leave active threads lying around
