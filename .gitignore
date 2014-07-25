@@ -15,6 +15,8 @@ htmlcov
 dump
 a.out
 
+.noseids
+
 # Release artifacts
 venture-*.tgz
 venture-*.tar
