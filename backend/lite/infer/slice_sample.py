@@ -35,10 +35,6 @@ def makeDensityFunction(trace,scaffold,psp,pnode,fixed_randomness):
 class SliceOperator(object):
   __metaclass__ = ABCMeta
 
-  def __init__(self, w, m):
-    self.w = w
-    self.m = m
-
   @abstractmethod
   def findInterval(self,f,x0,logy):
     pass
@@ -73,6 +69,9 @@ class SliceOperator(object):
   def name(self): return "slice sampling"
 
 class StepOutSliceOperator(SliceOperator):
+  def __init__(self, w, m):
+    self.w = w
+    self.m = m
 
   # "stepping out" procedure
   # See "Slice Sampling" (Neal 2000) p11 for details
@@ -112,11 +111,31 @@ class StepOutSliceOperator(SliceOperator):
     return L,R
 
 class DoublingSliceOperator(SliceOperator):
+  def __init__(self, w, p):
+    self.w = w
+    self.p = p
 
   # "doubling" procedure; p11 of Neal
-  @staticmethod
-  def findInterval(f,xo,logy):
-    pass
-
-
+  def findInterval(self,f,xo,logy):
+    U = random.random()
+    L = x0 - self.w * U
+    R = L + self.w
+    K = self.p
+    maxIters = 10000
+    iterK = 0
+    fl = f(L)
+    fr = f(R)
+    while K > 0:
+      iterK += 1
+      if iterK == maxIters: raise Exception("Cannot find interval for slice")
+      if (logy >= fl) and (logy >= fr): break
+      if math.isnan(fl) or math.isnan(fr): break
+      dist = R - L
+      if random.random() < 0.5:
+        L = L - dist
+        fl = f(L)
+      else:
+        R = R + dist
+        fr = f(R)
+      K -= 1
 
