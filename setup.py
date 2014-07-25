@@ -158,7 +158,8 @@ puma_inc_dirs = ["backend/new_cxx/" + d for d in puma_inc_dirs]
 ext_modules = []
 packages=["venture","venture.sivm","venture.ripl", "venture.engine",
           "venture.parser","venture.server","venture.shortcuts",
-          "venture.unit", "venture.test", "venture.cxx", "venture.puma", "venture.lite",
+          "venture.unit", "venture.test", "venture.cxx", "venture.puma",
+          "venture.lite", "venture.lite.infer",
           "venture.venturemagics"]
 
 cxx = Extension("venture.cxx.libtrace",
