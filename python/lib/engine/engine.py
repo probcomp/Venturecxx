@@ -15,13 +15,12 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import random
 import pickle
-import copy
 import time
 
 from venture.exception import VentureException
 from venture.lite.utils import sampleLogCategorical
 from venture.engine.inference import Infer
-from venture.lite.value import VentureValue, ExpressionType
+from venture.engine.utils import expToDict
 
 class Engine(object):
 
@@ -42,7 +41,7 @@ class Engine(object):
   def bind_foreign_inference_sp(self, name, sp):
     self.inference_sps[name] = sp
 
-  def getDistinguishedTrace(self): 
+  def getDistinguishedTrace(self):
     assert self.traces
     return self.traces[0]
 
@@ -214,22 +213,12 @@ effect of renumbering the directives, if some had been forgotten."""
     self.traces = newTraces
     self.weights = [0 for p in range(P)]
 
-  def infer(self,params=None):
-    if params is None:
-      params = {}
-    self.set_default_params(params)
-
-    return Infer(self).infer(params)
-
-#  def infer_exp(self, program):
-#    return Infer(self).infer_exp(ExpressionType().asPython(VentureValue.fromStackDict(program)))
-
-  def infer_exp(self, program):
+  def infer(self, program):
     self.incorporate()
     if isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop":
       assert len(program) == 2
       prog = [sym("cycle"), program[1], {"type":"number", "value":1}]
-      self.start_continuous_inference_exp(prog)
+      self.start_continuous_inference(prog)
     else:
       exp = self.desugarLambda(self.macroexpand_inference(program))
       return self.infer_v1_pre_t(exp, Infer(self))
@@ -289,53 +278,16 @@ effect of renumbering the directives, if some had been forgotten."""
       next_trace.eval(did, self.desugarLambda(exp))
       next_trace.bindInGlobalEnv(name, did)
 
-  def primitive_infer(self, params):
+  def primitive_infer(self, exp):
     for trace in self.traces:
-      if isinstance(params, dict):
-        trace.infer(params)
-      elif hasattr(trace, "infer_exp"):
-        # List style infer command and the trace can handle it natively
-        trace.infer_exp(params)
+      if hasattr(trace, "infer_exp"):
+        # The trace can handle the inference primitive syntax natively
+        trace.infer_exp(exp)
       else:
-        # List style infer command that the trace cannot handle natively
-        trace.infer(self.list_style_to_dict_style(params))
+        # The trace cannot handle the inference primitive syntax
+        # natively, so translate.
+        trace.infer(expToDict(exp))
 
-  def list_style_to_dict_style(self, exp):
-    import venture.ripl.utils as u
-    params = u.expToDict(exp)
-    self.set_default_params(params)
-    return params
-  
-  # TODO put all inference param parsing in one place
-  def set_default_params(self,params):
-    if 'kernel' not in params:
-      params['kernel'] = 'mh'
-    if 'scope' not in params:
-      params['scope'] = "default"
-    if 'block' not in params:
-      params['block'] = "one"
-    if 'with_mutation' not in params:
-      params['with_mutation'] = True
-    if 'transitions' not in params:
-      params['transitions'] = 1
-    else:
-      # FIXME: Kludge. If removed, test_infer (in
-      # python/test/ripl_test.py) fails, and if params are printed,
-      # you'll see a float for the number of transitions
-      params['transitions'] = int(params['transitions'])
-    
-    if "particles" in params:
-      params["particles"] = int(params["particles"])
-    if "in_parallel" not in params:
-      params['in_parallel'] = True
-    if params['kernel'] in ['cycle', 'mixture']:
-      if 'subkernels' not in params:
-        params['subkernels'] = []
-      if params['kernel'] == 'mixture' and 'weights' not in params:
-        params['weights'] = [1 for _ in params['subkernels']]
-      for p in params['subkernels']:
-        self.set_default_params(p)
-  
   def get_logscore(self, did): return self.getDistinguishedTrace().getDirectiveLogScore(did)
   def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()
   def logscore_all(self): return [t.getGlobalLogScore() for t in self.traces]
@@ -352,39 +304,19 @@ effect of renumbering the directives, if some had been forgotten."""
   def continuous_inference_status(self):
     if self.inferrer is not None:
       # Running CI in Python
-      return {"running":True, "params":self.inferrer.params}
+      return {"running":True, "expression":self.inferrer.program}
     else:
-      # Running CI in the underlying traces
-      return self.getDistinguishedTrace().continuous_inference_status() # awkward
+      return {"running":False}
 
-  def start_continuous_inference(self, params):
+  def start_continuous_inference(self, program):
     self.stop_continuous_inference()
-    self.set_default_params(params)
-    if "in_python" not in params or params["in_python"] == False:
-      # Run CI in the underlying traces
-      for trace in self.traces: trace.start_continuous_inference(params)
-    else:
-      # Run CI in Python
-      if "exp" in params:
-        self.start_continuous_inference_exp(params["exp"])
-      else:
-        self.inferrer = ContinuousInferrer(self, params)
-
-  def start_continuous_inference_exp(self, program):
-    # Start continuous inference in the model-parsed infer expression
-    # code path.
-    self.stop_continuous_inference()
-    self.inferrer = ContinuousInferrer(self, program, expression_mode=True)
+    self.inferrer = ContinuousInferrer(self, program)
 
   def stop_continuous_inference(self):
     if self.inferrer is not None:
       # Running CI in Python
       self.inferrer.stop()
       self.inferrer = None
-    else:
-      # May be running CI in the underlying traces
-      if self.continuous_inference_status()["running"]:
-        for trace in self.traces: trace.stop_continuous_inference()
 
   def dump_trace(self, trace, skipStackDictConversion=False):
     db = trace.makeSerializationDB()
@@ -479,28 +411,21 @@ effect of renumbering the directives, if some had been forgotten."""
   # TODO: Add methods to inspect/manipulate the trace for debugging and profiling
 
 class ContinuousInferrer(object):
-  def __init__(self, engine, params, expression_mode=False):
+  def __init__(self, engine, program):
     self.engine = engine
-    if expression_mode:
-      self.params = {"exp": params, "in_python":True}
-    else:
-      self.params = copy.deepcopy(params)
-      self.params["in_python"] = True
+    self.program = program
     import threading as t
-    self.inferrer = t.Thread(target=self.infer_continuously, args=(self.params,))
+    self.inferrer = t.Thread(target=self.infer_continuously, args=(self.program,))
     self.inferrer.daemon = True
     self.inferrer.start()
 
-  def infer_continuously(self, params):
+  def infer_continuously(self, program):
     # Can use the storage of the thread object itself as the semaphore
     # controlling whether continuous inference proceeds.
     while self.inferrer is not None:
       # TODO React somehow to peeks and plotfs in the inference program
       # Currently suppressed for fear of clobbering the prompt
-      if "exp" in params:
-        self.engine.infer_exp(params["exp"])
-      else:
-        Infer(self.engine).infer(params)
+      self.engine.infer(program)
       time.sleep(0.0001) # Yield to be a good citizen
 
   def stop(self):

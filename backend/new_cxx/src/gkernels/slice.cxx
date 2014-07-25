@@ -15,7 +15,7 @@ double SliceGKernel::computeLogDensity(double x)
 {
   Node * node = static_cast<Node*>(pnode);
   trace->registerLKernel(scaffold,node,shared_ptr<LKernel>(new DeterministicLKernel(VentureValuePtr(new VentureNumber(x)),psp)));
-  
+
   /* The density is with respect to fixed entropy */
   shared_ptr<RNGbox> rng(new RNGbox(gsl_rng_mt19937));
   rng->set_seed(seed);
@@ -84,7 +84,7 @@ pair<Trace*,double> SliceGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaff
   this->scaffold = scaffold;
 
   seed = time(NULL);
-  
+
   assertTrace(trace,scaffold);
   assert(scaffold->border.size() == 1);
 
@@ -103,9 +103,7 @@ pair<Trace*,double> SliceGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaff
   assertTorus(scaffold);
 
   double rhoLD = computeLogDensity(x0);
-  double w = 1; // TODO let psp's override this
-  int m = 1000000; // TODO arbitrary large
-  
+
   double lower = psp->getSupportLowerBound();
   double upper = psp->getSupportUpperBound();
 
@@ -118,7 +116,7 @@ pair<Trace*,double> SliceGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaff
 
   return make_pair(trace,(xiWeight - xiLD) - (rhoWeight - rhoLD));
 }
- 
+
 
 void SliceGKernel::accept()
 {
@@ -132,4 +130,4 @@ void SliceGKernel::reject()
   assertTorus(scaffold);
   regenAndAttach(trace,scaffold->border[0],scaffold,true,rhoDB,shared_ptr<map<Node*,Gradient> >());
 }
-  
+

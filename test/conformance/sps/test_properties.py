@@ -50,7 +50,7 @@ applied fully uncurried) match the expected types."""
   if len(args_lists) == 0:
     pass # OK
   else:
-    args = BogusArgs(args_lists[0], sp.constructSPAux())
+    args = carefully(BogusArgs, args_lists[0], sp.constructSPAux())
     answer = carefully(sp.outputPSP.simulate, args)
     assert answer in type_.return_type
     propTypeCorrect(args_lists[1:], answer, type_.return_type)
@@ -177,6 +177,11 @@ def testRiplSimulate():
         "real", # Not implemented
         "atom_eq", # Not implemented
         "contains", # Not implemented for sequences
+        "arange", # Not implemented
+        "linspace", # Not implemented
+        "diag_matrix", # Not implemented
+        "ravel", # Not implemented
+        "matrix_mul", # Not implemented
     ]:
       continue
     if not sp.outputPSP.isRandom():
@@ -338,7 +343,7 @@ def propDeterministicWhenFixed(args_lists, name, sp):
     answer = carefully(sp.outputPSP.simulate, args)
   if isinstance(answer, VentureSP):
     if isinstance(answer.requestPSP, NullRequestPSP):
-      args2 = BogusArgs(args_lists[1], answer.constructSPAux())
+      args2 = carefully(BogusArgs, args_lists[1], answer.constructSPAux())
       randomness2 = FixedRandomness()
       with randomness2:
         ans2 = carefully(answer.outputPSP.simulate, args2)

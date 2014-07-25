@@ -15,3 +15,7 @@ htmlcov
 dump
 a.out
 
+# Release artifacts
+venture-*.tgz
+venture-*.tar
+venture-*.tar.gz

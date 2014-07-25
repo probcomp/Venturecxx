@@ -1,11 +1,11 @@
 ; Venture library functions
 
-; TODO: many of these functions do their work by converting vectors and arrays
-; to lists and back. This is bad for two reasons.
-; 1. Converting to lists and back introduces some overhead we don't want
-; 2. Right now, we can't tell vectors from arrays so I
-; just convert everything back to an array. This could break things, should
-; be fixed when vectors and arrays can be told apart.
+; TODO
+; 1. map relies on to_vector and to_list; not sure how bad this is.
+;   May need to implement map as SP instead
+; 2. Some of this would be cleaner (e.g. the "into" function, the to_vector
+;   and to_list functions) if there were sp's is_vector and is_list. If those
+;   are made, change things.
 
 ; check if a list is empty
 ; Parameters
@@ -23,9 +23,12 @@
 ; Convert an array or vector to a list
 ; Parameters
 ;   v : vector or array
+;   TODO : if we get is_list, use that instead of is_pair
 [assume to_list
   (lambda (v)
-    (_to_list_helper v 0 (size v)))]
+    (if (is_pair v)
+      v
+      (_to_list_helper v 0 (size v))))]
 
 ; Helper for the above. Needed because no letrec in Venture.
 [assume _to_list_helper
@@ -41,19 +44,21 @@
 ;   v : list
 [assume to_array
   (lambda (v)
-    (eval
-      (pair (quote array) v)
-      (get_current_environment)))]
+    (if (is_array v)
+      v
+      (eval
+        (pair (quote array) v)
+        (get_current_environment))))]
 
 ; Convert a list to a vector
 ; Parameters
 ;   v : list
+; TODO : if we get is_vector, use that to check
 [assume to_vector
   (lambda (v)
     (eval
       (pair (quote vector) v)
       (get_current_environment)))]
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Support for functional programming
@@ -66,11 +71,17 @@
 ;   v : list, vector, or array
 [assume map
   (lambda (f v)
-    (if (is_pair v)
-      (_map_list f v)
-      (if (is_array v)
-        (to_array (_map_list f (to_list v)))
-        (to_vector (_map_list f (to_list v))))))]
+    (into (_map_list f (to_list v)) v))]
+
+; Helper function for map. Output of map is always a list; this takes the
+; list output and converts it to the same type as the map function's input
+[assume into
+  (lambda (output input)
+    (if (is_pair input)
+      output
+      (if (is_array input)
+        (to_array output)
+        (to_vector output))))]
 
 ; Map for lists (same args as above)
 [assume _map_list
@@ -88,9 +99,7 @@
 ;   identity : identity value for the funciont f
 [assume reduce
   (lambda (f v identity)
-    (if (is_pair v)
-      (_reduce_list f v identity)
-      (_reduce_list f (to_list v) identity)))]
+    (_reduce_list f (to_list v) identity))]
 
 ; Reduce for lists (same args as above)
 [assume _reduce_list
@@ -103,6 +112,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Vector / matrix ops
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 [assume dot
   (lambda (x y)
     (if (is_pair x)
@@ -137,6 +147,10 @@
   (lambda (x)
     (/ (sum x) (size x)))]
 
+; multiply list / array / vector v by scalar k
+[assume scalar_mult
+  (lambda (v k)
+    (map (lambda (x) (* x k)) v))]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Useful math functions
@@ -162,86 +176,71 @@
   (lambda (x)
     (log (/ x (- 1 x))))]
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Assemble arrays, lists, vectors
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-; Appends the second (scalar) argument to the first
-; Parameters
-;   v : list, array, or vector
-;   x : scalar to be appended
-;[assume append
-;  (lambda (v x)
-;    (if (is_pair v)
-;      (_append_list v x)
-;      (to_array (_append_list(to_list v) x))))]
-
-; Helper for the above
-;[assume _append_list
-;  (lambda (v x)
-;    (if (is_empty v)
-;      (list x)
-;      (pair
-;        (first v)
-;        (_append_list (rest v) x))))]
-
-; Concatenates two lists, arrays, or vectors
-; Parameters
-;
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Logicals on variable-length lists
+; Convenience functions for assembling vectors and lists
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; Constructs a vector by repeating the value x, n times.
-[assume repeat_vector
-  (lambda (x n)
-    (to_vector (repeat_list x n)))]
+; Repeat the given value n times; returns a list
+;[sample (repeat 4 7)]
+[assume repeat
+  (lambda (value n)
+    (_repeat_helper value n 0))]
 
-; Constructs a list by repeating a value x, n times.
-[assume repeat_list
-  (lambda (x n)
-    (_repeat_list_helper x n 0))]
-
-[assume _repeat_list_helper
-  (lambda (x n idx)
+[assume _repeat_helper
+  (lambda (value n idx)
     (if (= idx n)
       (list)
-      (pair x (_repeat_list_helper x n (+ idx 1)))))]
+      (pair value (_repeat_helper value n (+ idx 1)))))]
 
+; Construct vector of zeros of a given length n
+[assume zeros
+  (lambda (n)
+    (repeat 0 n))]
 
-; Identity matrix
-[assume identity_matrix
-  (lambda (p)
-    (diag_matrix p 1))]
+; Construct vector of ones of a given length n
+[assume ones
+  (lambda (n)
+    (repeat 0 n))]
 
+; Range (as Python's range function); returns list
+[assume range
+  (lambda (start stop)
+    (let ((incr (if (>= stop start) 1 -1)))
+      (if (= start stop)
+          (list)
+          (pair start (range (+ incr start) stop)))))]
 
-; Code to construct diagonal matrices
-[assume diag_matrix
-  (lambda (p fill_value)
-    (matrix (diag_matrix_helper p fill_value 0)))]
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Matrix constructors
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-[assume diag_matrix_helper
-  (lambda (p fill_value idx)
-    (if (= idx p)
+;; Identity matrix of dimension D
+[assume eye
+  (lambda (D)
+    (diag D 1))]
+
+;; Diagonal matrix of dimension D
+[assume diag
+  (lambda (D diag_value)
+    (matrix (_diag_helper D diag_value 0)))]
+
+[assume _diag_helper
+  (lambda (D diag_value idx)
+    (if (= idx D)
       (list)
       (pair
-        (fill_one p fill_value idx)
-        (diag_matrix_helper p fill_value (+ idx 1)))))]
+        (_one_row D diag_value idx)
+        (_diag_helper D diag_value (+ idx 1)))))]
 
-[assume fill_one
-  (lambda (p fill_value fill_position)
-    (fill_one_helper p fill_value fill_position 0))]
+; Construct one row of a diagonal matrix.
+[assume _one_row
+  (lambda (D diag_value fill_position)
+    (_one_row_helper D diag_value fill_position 0))]
 
-[assume fill_one_helper
-  (lambda (p fill_value fill_position idx)
-    (if (= idx p)
+[assume _one_row_helper
+  (lambda (D diag_value fill_position idx)
+    (if (= idx D)
       (list)
       (pair
-        (if (= idx fill_position) fill_value 0)
-        (fill_one_helper p fill_value fill_position (+ idx 1)))))]
-
-
-
-
+        (if (= idx fill_position) diag_value 0)
+        (_one_row_helper D diag_value fill_position (+ idx 1)))))]

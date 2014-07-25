@@ -23,7 +23,7 @@ import os
 
 from venture.exception import VentureException
 from venture.lite.exception import VentureError
-from utils import _strip_types, expToDict, parse
+from utils import _strip_types
 
 def getValue(directive):
   '''Gets the actual value returned by an assume, predict, report, or sample directive.'''
@@ -136,7 +136,7 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def do_start_continuous_inference(self, s):
     '''Start continuous inference.'''
-    self.ripl.start_continuous_inference(expToDict(parse(s)) if s else None)
+    self.ripl.start_continuous_inference(s if s else None)
 
   @catchesVentureException
   def do_stop_continuous_inference(self, s):
