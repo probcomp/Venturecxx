@@ -276,16 +276,15 @@ effect of renumbering the directives, if some had been forgotten."""
       next_trace.eval(did, self.desugarLambda(exp))
       next_trace.bindInGlobalEnv(name, did)
 
-  def primitive_infer(self, params):
+  def primitive_infer(self, exp):
     for trace in self.traces:
-      if isinstance(params, dict):
-        trace.infer(params)
-      elif hasattr(trace, "infer_exp"):
-        # List style infer command and the trace can handle it natively
-        trace.infer_exp(params)
+      if hasattr(trace, "infer_exp"):
+        # The trace can handle the inference primitive syntax natively
+        trace.infer_exp(exp)
       else:
-        # List style infer command that the trace cannot handle natively
-        trace.infer(self.list_style_to_dict_style(params))
+        # The trace cannot handle the inference primitive syntax
+        # natively, so translate.
+        trace.infer(self.list_style_to_dict_style(exp))
 
   def list_style_to_dict_style(self, exp):
     import venture.ripl.utils as u
