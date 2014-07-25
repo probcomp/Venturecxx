@@ -137,17 +137,10 @@ class CoreSivm(object):
 
     def _do_infer(self,instruction):
         utils.require_state(self.state,'default')
-        if 'params' in instruction:
-            d = utils.validate_arg(instruction,'params',
-                    utils.validate_dict)
-            # TODO FIXME figure out how to validate the arguments
-            val = self.engine.infer(d)
-            return {"value":val}
-        else:
-            e = utils.validate_arg(instruction,'expression',
-                    utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
-            val = self.engine.infer_exp(e)
-            return {"value":val}
+        e = utils.validate_arg(instruction,'expression',
+                utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
+        val = self.engine.infer_exp(e)
+        return {"value":val}
 
     def _do_clear(self,_):
         utils.require_state(self.state,'default')
