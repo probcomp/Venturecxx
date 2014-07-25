@@ -3,6 +3,7 @@ from ..regen import regenAndAttach
 from ..detach import detachAndExtract
 from ..lkernel import DeterministicLKernel
 from ..utils import sampleLogCategorical, cartesianProduct
+from ..consistency import assertTrace, assertTorus
 
 def getCurrentValues(trace,pnodes): return [trace.valueAt(pnode) for pnode in pnodes]
 def registerDeterministicLKernels(trace,scaffold,pnodes,currentValues):
@@ -19,7 +20,7 @@ def getCartesianProductOfEnumeratedValues(trace,pnodes):
 class EnumerativeGibbsOperator(object):
 
   def propose(self,trace,scaffold):
-    from particle import Particle
+    from ..particle import Particle
 
     assertTrace(trace,scaffold)
 
