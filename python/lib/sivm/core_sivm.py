@@ -139,7 +139,7 @@ class CoreSivm(object):
         utils.require_state(self.state,'default')
         e = utils.validate_arg(instruction,'expression',
                 utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
-        val = self.engine.infer_exp(e)
+        val = self.engine.infer(e)
         return {"value":val}
 
     def _do_clear(self,_):

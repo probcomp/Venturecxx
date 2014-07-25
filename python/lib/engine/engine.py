@@ -211,7 +211,7 @@ effect of renumbering the directives, if some had been forgotten."""
     self.traces = newTraces
     self.weights = [0 for p in range(P)]
 
-  def infer_exp(self, program):
+  def infer(self, program):
     self.incorporate()
     if isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop":
       assert len(program) == 2
@@ -460,7 +460,7 @@ class ContinuousInferrer(object):
     while self.inferrer is not None:
       # TODO React somehow to peeks and plotfs in the inference program
       # Currently suppressed for fear of clobbering the prompt
-      self.engine.infer_exp(program)
+      self.engine.infer(program)
       time.sleep(0.0001) # Yield to be a good citizen
 
   def stop(self):
