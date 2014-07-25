@@ -169,10 +169,10 @@ class TestCoreSivm(unittest.TestCase):
             self.assertEquals(e.exception,'invalid_argument')
 
     def test_infer(self):
-        # FIXME: Add more comprehensive test for inference parameters once spec stabilizes
+        from venture.shortcuts import *
         inst = {
                 'instruction':'infer',
-                'params': {'transitions': 2}
+                'expression': [symbol("mh"), symbol("default"), symbol("one"), number(2)]
                 }
         self.sivm.execute_instruction(inst)
 

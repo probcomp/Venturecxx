@@ -298,7 +298,7 @@ class VentureSivm(object):
                 }
         o1 = self._call_core_sivm_instruction(inst1)
         inst2 = { "instruction" : "infer",
-                  "params" : { "transitions" : 0 } }
+                  "expression" : [{"type":"symbol", "value":"incorporate"}] }
         self._call_core_sivm_instruction(inst2)
         inst3 = {
                 "instruction" : "forget",
