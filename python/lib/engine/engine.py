@@ -294,33 +294,10 @@ effect of renumbering the directives, if some had been forgotten."""
 
   # TODO put all inference param parsing in one place
   def set_default_params(self,params):
-    if 'kernel' not in params:
-      params['kernel'] = 'mh'
-    if 'scope' not in params:
-      params['scope'] = "default"
-    if 'block' not in params:
-      params['block'] = "one"
     if 'with_mutation' not in params:
       params['with_mutation'] = True
-    if 'transitions' not in params:
-      params['transitions'] = 1
-    else:
-      # FIXME: Kludge. If removed, test_infer (in
-      # python/test/ripl_test.py) fails, and if params are printed,
-      # you'll see a float for the number of transitions
-      params['transitions'] = int(params['transitions'])
-
-    if "particles" in params:
-      params["particles"] = int(params["particles"])
     if "in_parallel" not in params:
       params['in_parallel'] = True
-    if params['kernel'] in ['cycle', 'mixture']:
-      if 'subkernels' not in params:
-        params['subkernels'] = []
-      if params['kernel'] == 'mixture' and 'weights' not in params:
-        params['weights'] = [1 for _ in params['subkernels']]
-      for p in params['subkernels']:
-        self.set_default_params(p)
 
   def get_logscore(self, did): return self.getDistinguishedTrace().getDirectiveLogScore(did)
   def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()

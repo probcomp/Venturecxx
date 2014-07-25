@@ -88,10 +88,9 @@ def unparse(exp):
   "Convert a Python object back into a Lisp-readable string."
   return '('+' '.join(map(unparse, exp))+')' if isinstance(exp, list) else str(exp)
 
-## TODO Define a VentureScript version of this parser
 def expToDict(exp):
   if isinstance(exp, int):
-    return {"transitions": exp}
+    return {"kernel":"mh", "scope":"default", "block":"one", "transitions": exp}
   tag = exp[0]
   if tag == "mh":
     assert len(exp) == 4
