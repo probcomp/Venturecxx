@@ -289,13 +289,7 @@ effect of renumbering the directives, if some had been forgotten."""
   def list_style_to_dict_style(self, exp):
     import venture.ripl.utils as u
     params = u.expToDict(exp)
-    self.set_default_params(params)
     return params
-
-  # TODO put all inference param parsing in one place
-  def set_default_params(self,params):
-    if "in_parallel" not in params:
-      params['in_parallel'] = True
 
   def get_logscore(self, did): return self.getDistinguishedTrace().getDirectiveLogScore(did)
   def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()

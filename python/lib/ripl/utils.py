@@ -103,12 +103,16 @@ def expToDict(exp):
     ans = {"kernel":"gibbs","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}
     if len(exp) == 5:
       ans["in_parallel"] = exp[4]
+    else:
+      ans["in_parallel"] = True
     return ans
   elif tag == "emap":
     assert 4 <= len(exp) and len(exp) <= 5
     ans = {"kernel":"emap","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}
     if len(exp) == 5:
       ans["in_parallel"] = exp[4]
+    else:
+      ans["in_parallel"] = True
     return ans
   elif tag == "slice":
     assert len(exp) == 6
@@ -125,12 +129,16 @@ def expToDict(exp):
       ans = {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":int(exp[3]),"transitions":int(exp[4])}
     if len(exp) == 6:
       ans["in_parallel"] = exp[5]
+    else:
+      ans["in_parallel"] = True
     return ans
   elif tag == "func_pgibbs":
     assert 5 <= len(exp) and len(exp) <= 6
     ans = {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":int(exp[3]),"transitions":int(exp[4])}
     if len(exp) == 6:
       ans["in_parallel"] = exp[5]
+    else:
+      ans["in_parallel"] = True
     return ans
   elif tag == "meanfield":
     assert len(exp) == 5
