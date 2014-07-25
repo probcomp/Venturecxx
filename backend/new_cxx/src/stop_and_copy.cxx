@@ -49,8 +49,6 @@ void*& ForwardingMap::operator[] (const void* k)
 
 PyTrace* PyTrace::stop_and_copy() const
 {
-  assert(!this->continuous_inference_running);
-  assert(!this->continuous_inference_thread);
   PyTrace* answer = new PyTrace(*this);
   answer->trace = this->trace->stop_and_copy();
   return answer;

@@ -20,7 +20,7 @@
 
 #include <boost/python/exception_translator.hpp>
 
-PyTrace::PyTrace() : trace(new ConcreteTrace()), continuous_inference_running(false), continuous_inference_thread(NULL)
+PyTrace::PyTrace() : trace(new ConcreteTrace())
 {
   trace->initialize();
 }
@@ -238,43 +238,6 @@ void PyTrace::infer(boost::python::dict params)
   inferer.infer();
 }
 
-boost::python::dict PyTrace::continuous_inference_status()
-{
-  boost::python::dict status;
-  status["running"] = continuous_inference_running;
-  if(continuous_inference_running) {
-    status["params"] = continuous_inference_params;
-  }
-  return status;
-}
-
-void run_continuous_inference(shared_ptr<Inferer> inferer, bool * flag)
-{
-  while(*flag) { inferer->infer(); }
-}
-
-void PyTrace::start_continuous_inference(boost::python::dict params)
-{
-  stop_continuous_inference();
-
-  continuous_inference_params = params;
-  continuous_inference_running = true;
-  shared_ptr<Inferer> inferer = shared_ptr<Inferer>(new Inferer(trace, params));
-
-  trace->makeConsistent();
-
-  continuous_inference_thread = new boost::thread(run_continuous_inference, inferer, &continuous_inference_running);
-}
-
-void PyTrace::stop_continuous_inference() {
-  if(continuous_inference_running) {
-    continuous_inference_running = false;
-    continuous_inference_thread->join();
-    delete continuous_inference_thread;
-    continuous_inference_thread = NULL;
-  }
-}
-
 void translateStringException(const string& err) {
   PyErr_SetString(PyExc_RuntimeError, err.c_str());
 }
@@ -391,9 +354,6 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("numNodesInBlock", &PyTrace::numNodesInBlock)
     .def("numFamilies", &PyTrace::numFamilies)
     .def("freeze", &PyTrace::freeze)
-    .def("continuous_inference_status", &PyTrace::continuous_inference_status)
-    .def("start_continuous_inference", &PyTrace::start_continuous_inference)
-    .def("stop_continuous_inference", &PyTrace::stop_continuous_inference)
     .def("stop_and_copy", &PyTrace::stop_and_copy, return_value_policy<manage_new_object>())
     .def("makeSerializationDB", &PyTrace::makeEmptySerializationDB)
     .def("makeSerializationDB", &PyTrace::makeSerializationDB)

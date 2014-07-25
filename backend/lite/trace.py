@@ -373,8 +373,6 @@ class Trace(object):
   def numRandomChoices(self):
     return len(self.rcs)
 
-  def continuous_inference_status(self): return {"running" : False}
-
   def infer_exp(self,exp):
     assert len(exp) >= 4
     (operator, scope, block) = exp[0:3]
