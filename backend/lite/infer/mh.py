@@ -4,6 +4,7 @@ import time
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
 from ..scaffold import constructScaffold
+from ..lkernel import DeterministicLKernel
 
 def getCurrentValues(trace,pnodes): return [trace.valueAt(pnode) for pnode in pnodes]
 

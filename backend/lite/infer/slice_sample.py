@@ -59,7 +59,7 @@ def sampleInterval(f,x0,logy,L,R):
     else: R = x1
 
 def makeDensityFunction(trace,scaffold,psp,pnode,fixed_randomness):
-  from particle import Particle
+  from ..particle import Particle
   def f(x):
     with fixed_randomness:
       scaffold.lkernels[pnode] = DeterministicLKernel(psp,VentureNumber(x))
