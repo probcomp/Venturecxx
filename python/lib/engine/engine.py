@@ -164,8 +164,11 @@ class Engine(object):
     # method often.
     self.set_seed(random.randint(1,2**31-1))
 
-  # TODO Is bind_foreign_sp a directive or something like that?
   def bind_foreign_sp(self, name, sp):
+    if self.name != "lite":
+      # wrap it for backend translation
+      import venture.lite.foreign as f
+      sp = f.ForeignLiteSP(sp)
     for trace in self.traces:
       trace.bindPrimitiveSP(name, sp)
 
