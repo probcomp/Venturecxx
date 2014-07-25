@@ -3,6 +3,7 @@ from ..omegadb import OmegaDB
 from ..regen import regenAndAttach, regenAndAttachAtBorder
 from ..detach import detachAndExtract, detachAndExtractAtBorder
 from ..utils import sampleLogCategorical, logaddexp
+from ..consistency import assertTrace, assertTorus
 import copy
 
 # Construct ancestor path backwards
