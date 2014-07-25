@@ -1,11 +1,11 @@
 import random
 import math
-from omegadb import OmegaDB
-from regen import regenAndAttach
-from detach import detachAndExtract
-from lkernel import DeterministicLKernel
-from utils import FixedRandomness
-from value import VentureNumber
+from ..omegadb import OmegaDB
+from ..regen import regenAndAttach
+from ..detach import detachAndExtract
+from ..lkernel import DeterministicLKernel
+from ..utils import FixedRandomness
+from ..value import VentureNumber
 
 # "stepping out" procedure
 # See "Slice Sampling" (Neal 2000) p11 for details

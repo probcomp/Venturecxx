@@ -1,8 +1,8 @@
-from omegadb import OmegaDB
-from regen import regenAndAttach
-from detach import detachAndExtract
-from node import ApplicationNode, Args
-from lkernel import VariationalLKernel
+from ..omegadb import OmegaDB
+from ..regen import regenAndAttach
+from ..detach import detachAndExtract
+from ..node import ApplicationNode, Args
+from ..lkernel import VariationalLKernel
 
 def registerVariationalLKernels(trace,scaffold):
   hasVariational = False

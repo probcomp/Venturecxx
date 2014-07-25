@@ -1,12 +1,12 @@
 import random
 import numpy.random as npr
 import scipy.stats
-from omegadb import OmegaDB
-from regen import regenAndAttach
-from detach import detachAndExtract
-from scaffold import constructScaffold
-from lkernel import DeterministicLKernel
-from utils import FixedRandomness
+from ..omegadb import OmegaDB
+from ..regen import regenAndAttach
+from ..detach import detachAndExtract
+from ..scaffold import constructScaffold
+from ..lkernel import DeterministicLKernel
+from ..utils import FixedRandomness
 
 class GradientOfRegen(object):
   """An applicable object, calling which computes the gradient

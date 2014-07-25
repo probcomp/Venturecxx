@@ -1,8 +1,8 @@
 import time
-from omegadb import OmegaDB
-from regen import regenAndAttach, regenAndAttachAtBorder
-from detach import detachAndExtract, detachAndExtractAtBorder
-from utils import sampleLogCategorical, logaddexp
+from ..omegadb import OmegaDB
+from ..regen import regenAndAttach, regenAndAttachAtBorder
+from ..detach import detachAndExtract, detachAndExtractAtBorder
+from ..utils import sampleLogCategorical, logaddexp
 import copy
 
 # Construct ancestor path backwards
