@@ -132,7 +132,6 @@ Install any remaining dependencies by doing
 
 [Optional] Install ggplot (needed for the built-in plotting facilities)
 
-    sudo pip install pandas patsy
     sudo pip install ggplot
 
 On Linux systems now simply do
@@ -165,6 +164,10 @@ Activate the environment, and install any remaining dependencies
 
     source env.d/bin/activate
     pip install -r requirements.txt
+
+[Optional] Install ggplot (needed for the built-in plotting facilities)
+
+    sudo pip install ggplot
 
 On Linux, now install by typing
 
