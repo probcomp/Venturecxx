@@ -21,3 +21,11 @@ def checkGradientMethodsBasic(inference_method):
   prediction = collectSamples(ripl, "pid", infer = infer_statement,
                               num_samples = 1)[0]
   assert_almost_equal(prediction, 1)
+
+def testNesterovWithInt():
+  "Before making type fix, this test would error"
+  if config["get_ripl"] != "lite": raise SkipTest("Gradient climbers only implemented in Lite.")
+  ripl = get_ripl()
+  ripl.assume('x', '(normal 1 1)')
+  ripl.force('x', 0)
+  ripl.infer('(nesterov default one 0.1 10 20)')
