@@ -23,7 +23,7 @@ def checkGradientMethodsBasic(inference_method):
   assert_almost_equal(prediction, 1)
 
 def testNesterovWithInt():
-  "Before making type fix, this test would error"
+  "Without fixing VentureInteger to play nicely with Python numbers, this errors"
   if config["get_ripl"] != "lite": raise SkipTest("Gradient climbers only implemented in Lite.")
   ripl = get_ripl()
   ripl.assume('x', '(normal 1 1)')
