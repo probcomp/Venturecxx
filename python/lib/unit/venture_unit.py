@@ -228,6 +228,7 @@ class Analytics(object):
 
         assert not(assumes is None and observes is not None),'No *observes* without *assumes*.'
         assert queryExps is None or isinstance(queryExps,(list,tuple)), 'QueryExps must be list or tuple'
+        
 
         if hasattr(ripl_mripl,'no_ripls'): # test for ripl vs. MRipl
             ripl=ripl_mripl.local_ripls[0] # only needed because of set_seed
@@ -245,14 +246,14 @@ class Analytics(object):
 
         if assumes is not None:
             self.assumes = assumes
-            self.observes = observes if observes is not None else []
+            self.observes = list(observes) if observes is not None else []
         else:
             assumes = [d for d in directives_list if d['instruction']=='assume']
             self.assumes = map(directive_split,assumes)
             observes = [d for d in directives_list if d['instruction']=='observe']
             self.observes = map(directive_split,observes)
 
-        self.queryExps=[] if queryExps is None else queryExps
+        self.queryExps=[] if queryExps is None else list(queryExps)
 
 
         if parameters is None: parameters = {}
@@ -317,7 +318,7 @@ class Analytics(object):
             self.observes = []
         if newObserves is not None:
             assert not isinstance(newObserves,str), '*newObserves* is set of strings, not string' 
-            self.observes.extend( newObserves )
+            self.observes.extend( Observes )
 
         if self.muRipl:
             ripl = self.mripl if self.mripl else self.ripl
