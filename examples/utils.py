@@ -2,7 +2,6 @@ import numpy as np
 from numpy.linalg import solve
 from scipy.optimize import minimize
 from functools import partial
-from matplotlib import pyplot as plt
 
 def bivariate_normal_contour(ax, mu, Sigma, **kwargs):
     '''
