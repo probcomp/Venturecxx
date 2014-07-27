@@ -43,6 +43,17 @@ Zhang, Exchangeability and Invariance: A Causal Theory
 Diaconis, Failure of Infinite Exchangeability and results for finite versions. 
 
  
+notes rao-blackwell:
+info theory: if estimator is a func of SS then it's the same. if not, estimator must vary on datasets with same SS. if so, it's using some spurious aspect of data (irrelevant to param theta). like a weather forecaster incorporating horoscope/psychic into a forecast that also depends on some (but not all) recent data in timeseries. 
+
+one idea: you'd like to reverse taking into account the spurious data. if you had lost the info about which world you're in (and only kep the suff stat) and you had to use the estimator, you'd have to average over it. so RB is what you'd get if you were forced to do this. (after taking the av, you remove any info about the estimate about the spurious data source. estimate now is only a function of SS. 
+
+[info theory and estimation. the poisson estimator that only takes sum of a subset of the data  --- not clear how easy to combine with info theory. intuitively, the estimator that only uses subset of data is bad because it fails to use variables that are informative about the parameter. every X_i which is drawn iid from the poisson lambda gives certain amount of into about lam. can't formalize coz lam ain't a random variable. we can talk about info gain of observing X, average DROP in entropy from prior to posterior from observing X_i. But if you already know lam then there's no drop. So we need some prior assumption. 
+
+clear idea: let estimator be unbiased and expectation of estimator (= value of parameter) = 0. we then show that variance goes down when we RB the estimator. take the old estimator's variance, which is just weighted sum of g(x)^2 where x is data vector. under RB, we take all x's with same SS (i.e. in same cell of partition) and make their estimate E g(x) / S=s, and then square this estimate. so now the squaring takes place outside the sum. this make the sum smaller by convexity. (suggests that a version of RB will be more general and won't depend on variance but just on the squaring making for convexity). 
+question of whether we could instead condition on some other function of the data and still get same result. 
+
+
 
 
 
