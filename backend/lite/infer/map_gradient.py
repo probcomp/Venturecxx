@@ -1,6 +1,7 @@
 import math
 from ..lkernel import DeterministicLKernel
 from mh import InPlaceOperator, getCurrentValues, registerDeterministicLKernels
+from hmc import GradientOfRegen
 
 class MAPOperator(InPlaceOperator):
   def __init__(self, epsilon, steps):
