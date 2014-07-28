@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-from nose import SkipTest
-
 """
 Test Venturemagics2.py by running it on notebook, IPython terminal, and regular
 Python interpreter. Calls a notebook tester (nb_tester.py), a notebook
@@ -9,6 +7,7 @@ Python interpreter. Calls a notebook tester (nb_tester.py), a notebook
 """
 import subprocess,os
 
+from venture.test.config import in_backend
 
 
 ## Testing in IPython Notebook
@@ -16,7 +15,7 @@ import subprocess,os
 # Script for testing notebooks taken from 
 # https://github.com/ipython/ipython/wiki/Cookbook%3a-Notebook-utilities
 
-
+@in_backend('puma')
 def testMagicNotebook():
     file_dir = os.path.dirname(os.path.realpath(__file__))
     notebook_tester = file_dir + '/nb_tester.py'
@@ -30,6 +29,7 @@ def testMagicNotebook():
 
 
 ## Testing in IPython
+@in_backend('puma')
 def testMagicIpython():
     #raise SkipTest("The sequel fails in Jenkins for some reason.  Issue: https://app.asana.com/0/9277419963067/10168145986333")
     file_dir = os.path.dirname(os.path.realpath(__file__))
@@ -42,6 +42,7 @@ def testMagicIpython():
 
 
 ## Test in Python (weak test because can't test IPython magics)
+@in_backend('puma')
 def testMagicPython():
     from venture.venturemagics.venturemagics import ipy_ripl
     ipy_ripl.assume('x1','(flip)')
