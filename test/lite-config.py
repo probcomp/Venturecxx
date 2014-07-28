@@ -5,7 +5,7 @@ config["num_samples"] = 50
 config["num_transitions_per_sample"] = 50
 config["should_reset"] = True
 config["get_ripl"] = "lite"
-config["get_mripl_backend"] = "puma"
+config["get_mripl_backend"] = "lite"
 config["get_mripl_local_mode"] = True
 
 
