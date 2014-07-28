@@ -6,8 +6,7 @@ from nose.tools import with_setup, eq_,assert_equal,assert_almost_equal
 from nose import SkipTest
 
 from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, get_mripl
-from testconfig import config
+from venture.test.config import get_ripl, get_mripl, default_num_samples, default_num_transitions_per_sample
 
 from venture.venturemagics.ip_parallel import *
 
@@ -101,7 +100,7 @@ def testDirectivesExecute():
 @statisticalTest
 def testDirectivesInfer1():
     'infer'
-    v=get_mripl(no_ripls=30)
+    v=get_mripl(no_ripls=default_num_samples())
     samples = v.assume('x','(normal 1 1)',label='pid')
     v.infer(5)
     samples.extend(v.report('pid'))
@@ -111,7 +110,7 @@ def testDirectivesInfer1():
 @statisticalTest
 def testDirectivesInfer2():
     'inference program'
-    v=get_mripl(no_ripls=30)
+    v=get_mripl(no_ripls=default_num_samples())
     samples = v.assume('x','(normal 1 1)',label='pid')
     [v.infer(params='(mh default one 1)') for _ in range(5)]
     samples.extend(v.report('pid'))
@@ -121,12 +120,12 @@ def testDirectivesInfer2():
 @statisticalTest
 def testDirectivesForget():
     'forget'
-    v=get_mripl(no_ripls=30)
+    v=get_mripl(no_ripls=default_num_samples())
     v.assume('x','(normal 1 10)',label='pid')
     v.observe('(normal x .1)','1')
-    v.infer(20)
+    v.infer(default_num_transitions_per_sample())
     v.forget(2)
-    v.infer(20)
+    v.infer(default_num_transitions_per_sample())
     samples = v.report('pid')
     cdf = stats.norm(loc=1, scale=10).cdf
     return reportKnownContinuous(cdf,samples,"N(1,10)")
@@ -160,7 +159,7 @@ def testSeeds():
     eq_(v.seeds,range(10))
 
     # initial seeds are distinct and stay distinct after self.clear
-    v=get_mripl(no_ripls=20)
+    v=get_mripl(no_ripls=default_num_samples())
     v.sample("(normal 1 1)")
     v.clear()
     samples = v.sample("(normal 1 1)")
@@ -245,7 +244,7 @@ def testMapProc():
 @statisticalTest
 def testBackendSwitch():
     raise SkipTest('Fails on PUMA Jenkins. Re-examine method code')
-    v=get_mripl(no_ripls=30)
+    v=get_mripl(no_ripls=default_num_samples())
     new,old = ('puma','lite') if v.backend is 'lite' else ('lite','puma')
     v.assume('x','(normal 200 .1)')
     v.switch_backend(new)
