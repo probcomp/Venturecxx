@@ -2,6 +2,8 @@ import subprocess as s
 from unittest import SkipTest
 from distutils.spawn import find_executable
 
+from venture.test.config import gen_in_backend
+
 def findTimeout():
   '''
   Find the timeout shell command. If not present, skip the test.
@@ -18,6 +20,7 @@ def checkExample(example):
   timeout = findTimeout()
   assert s.call("%s 1.5s python examples/%s" % (timeout, example), shell=True) == 124
 
+@gen_in_backend("none")
 def testExamples():
   for ex in ["lda.py", "crosscat.py"]:
     yield checkExample, ex
