@@ -1,5 +1,5 @@
 from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
-from sp import VentureSP, SPType
+from sp import SP, VentureSPRecord, SPType
 import math
 from scipy.special import gammaln
 import scipy.stats
@@ -65,7 +65,7 @@ class CMVNSPAux(object):
     aux.xTotal = np.copy(self.xTotal)
     return aux
 
-class CMVNSP(VentureSP):
+class CMVNSP(SP):
   def __init__(self,requestPSP,outputPSP,d):
     super(CMVNSP,self).__init__(requestPSP,outputPSP)
     self.d = d
@@ -79,7 +79,7 @@ class MakeCMVNOutputPSP(DeterministicPSP):
 
     d = np.size(m0)
     output = TypedPSP(CMVNOutputPSP(d,m0,k0,v0,S0), SPType([], MatrixType()))
-    return CMVNSP(NullRequestPSP(),output,d)
+    return VentureSPRecord(CMVNSP(NullRequestPSP(),output,d))
     
   def childrenCanAAA(self): return True
 

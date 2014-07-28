@@ -4,7 +4,7 @@ import numpy.random as npr
 import math
 
 from lkernel import LKernel
-from sp import VentureSP, SPAux, SPType
+from sp import SP, VentureSPRecord, SPAux, SPType
 from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from utils import simulateCategorical, logDensityCategorical, simulateDirichlet, logDensityDirichlet
 from value import AnyType, VentureAtom
@@ -52,7 +52,7 @@ class DirMultSPAux(SPAux):
   def copy(self):
     return DirMultSPAux(counts = copy.deepcopy(self.counts))
 
-class DirMultSP(VentureSP):
+class DirMultSP(SP):
   def __init__(self,requestPSP,outputPSP,alpha,n):
     super(DirMultSP,self).__init__(requestPSP,outputPSP)
     self.alpha = alpha
@@ -83,7 +83,7 @@ class MakerCDirMultOutputPSP(DeterministicPSP):
     if not len(os) == len(alpha):
       raise VentureValueError("Set of objects to choose from is the wrong length")
     output = TypedPSP(CDirMultOutputPSP(alpha,os), SPType([], AnyType()))
-    return DirMultSP(NullRequestPSP(),output,alpha,len(alpha))
+    return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,len(alpha)))
 
   def childrenCanAAA(self): return True
 
@@ -144,14 +144,15 @@ class MakerUDirMultOutputPSP(RandomPSP):
       raise VentureValueError("Set of objects to choose from is the wrong length")
     theta = npr.dirichlet(alpha)
     output = TypedPSP(UDirMultOutputPSP(theta,os), SPType([], AnyType()))
-    return DirMultSP(NullRequestPSP(),output,alpha,n)
+    return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,n))
 
   def logDensity(self,value,args):
     alpha = args.operandValues[0]
-    assert isinstance(value, DirMultSP)
-    assert isinstance(value.outputPSP, TypedPSP)
-    assert isinstance(value.outputPSP.psp, UDirMultOutputPSP)
-    return logDensityDirichlet(value.outputPSP.psp.theta,alpha)
+    assert isinstance(value, VentureSPRecord)
+    assert isinstance(value.sp, DirMultSP)
+    assert isinstance(value.sp.outputPSP, TypedPSP)
+    assert isinstance(value.sp.outputPSP.psp, UDirMultOutputPSP)
+    return logDensityDirichlet(value.sp.outputPSP.psp.theta,alpha)
 
   def description(self,name):
     return "  %s is an uncollapsed variant of make_dir_mult." % name
@@ -164,7 +165,7 @@ class UDirMultAAALKernel(LKernel):
     counts = [count + a for (count,a) in zip(args.madeSPAux.counts,alpha)]
     newTheta = npr.dirichlet(counts)
     output = TypedPSP(UDirMultOutputPSP(newTheta,os), SPType([], AnyType()))
-    return DirMultSP(NullRequestPSP(),output,alpha,len(alpha))
+    return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,len(alpha)), args.madeSPAux)
 
   def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
 
@@ -204,7 +205,7 @@ class MakerCSymDirMultOutputPSP(DeterministicPSP):
     if not len(os) == n:
       raise VentureValueError("Set of objects to choose from is the wrong length")
     output = TypedPSP(CSymDirMultOutputPSP(alpha,n,os), SPType([], AnyType()))
-    return DirMultSP(NullRequestPSP(),output,alpha,n)
+    return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,n))
 
   def childrenCanAAA(self): return True
 
@@ -246,14 +247,15 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
       raise VentureValueError("Set of objects to choose from is the wrong length")
     theta = npr.dirichlet([alpha for _ in range(n)])
     output = TypedPSP(USymDirMultOutputPSP(theta,os), SPType([], AnyType()))
-    return DirMultSP(NullRequestPSP(),output,alpha,n)
+    return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,n))
 
   def logDensity(self,value,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
-    assert isinstance(value, DirMultSP)
-    assert isinstance(value.outputPSP, TypedPSP)
-    assert isinstance(value.outputPSP.psp, USymDirMultOutputPSP)
-    return logDensityDirichlet(value.outputPSP.psp.theta, [alpha for _ in range(n)])
+    assert isinstance(value, VentureSPRecord)
+    assert isinstance(value.sp, DirMultSP)
+    assert isinstance(value.sp.outputPSP, TypedPSP)
+    assert isinstance(value.sp.outputPSP.psp, USymDirMultOutputPSP)
+    return logDensityDirichlet(value.sp.outputPSP.psp.theta, [alpha for _ in range(n)])
 
   def description(self,name):
     return "  %s is an uncollapsed symmetric variant of make_dir_mult." % name
@@ -266,7 +268,7 @@ class USymDirMultAAALKernel(LKernel):
     counts = [count + alpha for count in args.madeSPAux.counts]
     newTheta = npr.dirichlet(counts)
     output = TypedPSP(USymDirMultOutputPSP(newTheta,os), SPType([], AnyType()))
-    return DirMultSP(NullRequestPSP(),output,alpha,n)
+    return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,n), args.madeSPAux)
 
   def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
 

@@ -1,5 +1,5 @@
 from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
-from sp import VentureSP, SPType
+from sp import SP, VentureSPRecord, SPType
 import math
 import scipy.special
 import scipy.stats
@@ -21,7 +21,7 @@ class CRPSPAux(object):
     crp.numCustomers = self.numCustomers
     return crp
 
-class CRPSP(VentureSP):
+class CRPSP(SP):
   def constructSPAux(self): return CRPSPAux()
   def show(self,spaux): return spaux.tableCounts
     
@@ -31,7 +31,7 @@ class MakeCRPOutputPSP(DeterministicPSP):
     d = args.operandValues[1] if len(args.operandValues) == 2 else 0
 
     output = TypedPSP(CRPOutputPSP(alpha,d), SPType([], AtomType()))
-    return CRPSP(NullRequestPSP(),output)
+    return VentureSPRecord(CRPSP(NullRequestPSP(),output))
 
   def childrenCanAAA(self): return True
 

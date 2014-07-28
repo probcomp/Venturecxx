@@ -1,4 +1,4 @@
-from sp import VentureSP
+from sp import SP, VentureSPRecord
 from value import VentureValue
 
 # Part of a mechanism for allowing Lite SPs to be called from
@@ -11,20 +11,20 @@ def fromStackDict(thing):
     # TODO: should foreign_sp be a recognized stack dict type?
     # should this become the normal stack representation for SPs?
     if thing["type"] == "foreign_sp":
-        return thing["sp"].sp
+        return VentureSPRecord(thing["sp"].sp)
     else:
         return VentureValue.fromStackDict(thing)
 
 def asStackDict(thing):
     # proxy for VentureValue.asStackDict that handles SPs by wrapping them
-    if isinstance(thing, VentureSP):
-        if thing.constructSPAux.im_func is not VentureSP.constructSPAux.im_func:
+    if isinstance(thing, VentureSPRecord):
+        if thing.sp.constructSPAux.im_func is not SP.constructSPAux.im_func:
             # constructSPAux was overridden; emit a warning
             # TODO: fix disagreement between Lite and Puma over auxes
             # so that this can be implemented correctly.
             import warnings
             warnings.warn("Non-trivial SPAuxes not supported in foreign procedures")
-        return {"type": "foreign_sp", "value": ForeignLiteSP(thing)}
+        return {"type": "foreign_sp", "value": ForeignLiteSP(thing.sp)}
     else:
         return thing.asStackDict()
 

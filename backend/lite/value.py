@@ -883,7 +883,7 @@ stackable_types = {
   "dict": VentureDict,
   "matrix": VentureMatrix,
   "symmetric_matrix": VentureSymmetricMatrix,
-  "SP": SPRef, # As opposed to VentureSP?
+  "SP": SPRef, # As opposed to VentureSPRecord?
   }
 
 def registerVentureType(t, name = None):
@@ -1121,7 +1121,7 @@ round-tripping from Venture to Python and back will not be the
 identity function, but should still be idempotent.
 
 Note 3: The same discussion applies to other nice types like
-VentureSPs.
+VentureSPRecords.
 
 In Haskell type notation:
 

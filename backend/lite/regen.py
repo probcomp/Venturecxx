@@ -1,7 +1,7 @@
 import numbers
 import exp as e
 from node import ConstantNode, LookupNode, RequestNode, OutputNode
-from sp import VentureSP
+from sp import VentureSPRecord
 from psp import NullRequestPSP, PSP
 from value import SPRef
 from lkernel import VariationalLKernel
@@ -146,14 +146,13 @@ def apply(trace,requestNode,outputNode,scaffold,shouldRestore,omegaDB,gradients)
   return weight
 
 def processMadeSP(trace,node,isAAA):
-  sp = trace.valueAt(node)
-  assert isinstance(sp,VentureSP)
-  trace.setMadeSPAt(node,sp)
+  spRecord = trace.valueAt(node)
+  assert isinstance(spRecord,VentureSPRecord)
+  trace.setMadeSPRecordAt(node,spRecord)
+  if isAAA:
+    trace.discardAAAMadeSPAuxAt(node)
+  if spRecord.sp.hasAEKernel(): trace.registerAEKernel(node)
   trace.setValueAt(node,SPRef(node))
-  if not isAAA:
-    trace.initMadeSPFamiliesAt(node)
-    trace.setMadeSPAuxAt(node,sp.constructSPAux())
-    if sp.hasAEKernel(): trace.registerAEKernel(node)
 
 def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
@@ -177,7 +176,7 @@ def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   trace.setValueAt(node,newValue)
   psp.incorporate(newValue,args)
 
-  if isinstance(newValue,VentureSP): processMadeSP(trace,node,scaffold.isAAA(node))
+  if isinstance(newValue,VentureSPRecord): processMadeSP(trace,node,scaffold.isAAA(node))
   if psp.isRandom(): trace.registerRandomChoice(node)
   if isScopeIncludeOutputPSP(psp):
     scope,block = [trace.valueAt(n) for n in node.operandNodes[0:2]]

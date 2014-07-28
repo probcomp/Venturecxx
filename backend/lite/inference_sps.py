@@ -8,9 +8,9 @@ class InferPrimitiveOutputPSP(psp.DeterministicPSP):
     self.name = name
     self.klass = klass
   def simulate(self, args):
-    return sp.VentureSP(psp.NullRequestPSP(),
-                        psp.TypedPSP(self.klass(self.name, args.operandValues),
-                                     sp.SPType([v.ForeignBlobType()], v.ForeignBlobType())))
+    return sp.VentureSPRecord(sp.SP(psp.NullRequestPSP(),
+                                    psp.TypedPSP(self.klass(self.name, args.operandValues),
+                                                 sp.SPType([v.ForeignBlobType()], v.ForeignBlobType()))))
 
 class MadeInferPrimitiveOutputPSP(psp.RandomPSP):
   def __init__(self, name, exp):
