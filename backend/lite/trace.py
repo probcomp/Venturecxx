@@ -9,8 +9,8 @@ from scaffold import Scaffold
 from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
                    EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,
                    RejectionOperator, MissingEsrParentError, NoSPRefError,
-                   HamiltonianMonteCarloOperator, MAPOperator, SliceOperator,
-                   NesterovAcceleratedGradientAscentOperator)
+                   HamiltonianMonteCarloOperator, MAPOperator, StepOutSliceOperator,
+                   DoublingSliceOperator, NesterovAcceleratedGradientAscentOperator)
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies
@@ -397,7 +397,10 @@ class Trace(object):
         mixMH(self, BlockScaffoldIndexer(scope, block), EnumerativeGibbsOperator())
       elif operator == "slice":
         (w, m) = exp[3:5]
-        mixMH(self, BlockScaffoldIndexer(scope, block), SliceOperator(w, m))
+        mixMH(self, BlockScaffoldIndexer(scope, block), StepOutSliceOperator(w, m))
+      elif operator == "slice_doubling":
+        (w, p) = exp[3:5]
+        mixMH(self, BlockScaffoldIndexer(scope, block), DoublingSliceOperator(w, p))
       elif operator == "pgibbs":
         particles = int(exp[3])
         if isinstance(block, list): # Ordered range

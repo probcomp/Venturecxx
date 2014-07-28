@@ -21,4 +21,4 @@ from meanfield import MeanfieldOperator
 from mh import mixMH,MHOperator,BlockScaffoldIndexer
 from pgibbs import PGibbsOperator,ParticlePGibbsOperator
 from rejection import RejectionOperator, MissingEsrParentError, NoSPRefError
-from slice_sample import SliceOperator
+from slice_sample import StepOutSliceOperator, DoublingSliceOperator
