@@ -92,6 +92,10 @@ def defaultInfer():
   # TODO adjust the number of transitions to be at most the default_num_transitions_per_sample
   return config["infer"]
 
+######################################################################
+### Test decorators                                                ###
+######################################################################
+
 def ignoresConfiguredInferenceProgram(f):
   """Annotate a test function as ignoring the configured inference
 program, lest it be run repeatedly when testing multiple ones.
@@ -125,14 +129,15 @@ general-purpose inference programs except rejection sampling.
     return wrapped
   return wrap
 
-def backend(*backends):
-  """Specifies which backends this test targets."""
+def broken_in(backend, reason = None):
+  """Marks this test as being known to be broken in some backend."""
   def wrap(f):
     @nose.make_decorator(f)
     def wrapped(*args):
       ripl = config["get_ripl"]
-      if ripl not in backends:
-        raise SkipTest(f.__name__ + " doesn't support " + ripl)
+      if ripl == backend:
+        msg = " because " + reason if reason is not None else ""
+        raise SkipTest(f.__name__ + " doesn't support " + ripl + msg)
       return f(*args)
     return wrapped
   return wrap
