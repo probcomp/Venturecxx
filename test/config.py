@@ -200,6 +200,7 @@ general-purpose inference programs except rejection sampling.
 def broken_in(backend, reason = None):
   """Marks this test as being known to be broken in some backend."""
   def wrap(f):
+    assert not isgeneratorfunction(f), "Use gen_broken_in for test generator %s" % f.__name__
     @nose.make_decorator(f)
     def wrapped(*args):
       ripl = config["get_ripl"]
@@ -207,6 +208,20 @@ def broken_in(backend, reason = None):
         msg = " because " + reason if reason is not None else ""
         raise SkipTest(f.__name__ + " doesn't support " + ripl + msg)
       return f(*args)
+    return wrapped
+  return wrap
+
+def gen_broken_in(backend, reason = None):
+  """Marks this test as being known to be broken in some backend."""
+  def wrap(f):
+    assert isgeneratorfunction(f), "Use broken_in for non-generator test %s" % f.__name__
+    @nose.make_decorator(f)
+    def wrapped(*args):
+      ripl = config["get_ripl"]
+      if ripl == backend:
+        msg = " because " + reason if reason is not None else ""
+        raise SkipTest(f.__name__ + " doesn't support " + ripl + msg)
+      for t in f(*args): yield t
     return wrapped
   return wrap
 
