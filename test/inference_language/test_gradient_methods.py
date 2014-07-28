@@ -1,6 +1,6 @@
 from itertools import product
 from nose.tools import assert_almost_equal
-
+from nose import SkipTest
 from venture.test.config import get_ripl, collectSamples, broken_in, gen_broken_in
 
 @gen_broken_in('puma', "Gradient climbers only implemented in Lite.")
@@ -24,6 +24,7 @@ def checkGradientMethodsBasic(inference_method):
 @broken_in('puma', "Gradient climbers only implemented in Lite.")
 def testNesterovWithInt():
   "Without fixing VentureInteger to play nicely with Python numbers, this errors"
+  raise SkipTest("Observes that change the type of a variable may break gradient methods. Issue: https://app.asana.com/0/11127829865276/15085515046349")
   ripl = get_ripl()
   ripl.assume('x', '(normal 1 1)')
   ripl.force('x', 0)
