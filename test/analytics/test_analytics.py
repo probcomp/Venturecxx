@@ -10,7 +10,7 @@ from nose import SkipTest
 from nose.plugins.attrib import attr
 from venture.test.stats import statisticalTest, reportKnownContinuous
 
-from venture.test.config import get_ripl,get_mripl,ignore_inference_quality,default_num_samples
+from venture.test.config import get_ripl,get_mripl,ignore_inference_quality,default_num_samples,gen_in_backend
 
 from nose.tools import eq_, assert_almost_equal
 
@@ -214,7 +214,7 @@ def _testCompareSampleDicts(sameDistribution):
     assert hasattr(cReport,'labels')
     return cReport.statsDict['x']['KSSameContinuous'] #test result object
 
-
+@gen_in_backend("none")
 def testCompareSampleDicts():
     sameDistribution = True,False
     for sameDistributionValue in sameDistribution:

@@ -1,6 +1,7 @@
 import nose.tools as nose
 from nose import SkipTest
 from testconfig import config
+
 import venture.shortcuts as s
 import venture.venturemagics.ip_parallel as ip_parallel
 
@@ -46,9 +47,12 @@ def default_num_transitions_per_sample():
     return 3
 
 disable_get_ripl = False
+ct_get_ripl_called = 0
 
 def get_ripl():
   assert not disable_get_ripl, "Trying to get the configured ripl in a test marked as not ripl-agnostic."
+  global ct_get_ripl_called
+  ct_get_ripl_called += 1
   return s.backend(config["get_ripl"]).make_church_prime_ripl()
 
 def get_mripl(no_ripls=2,local_mode=None,**kwargs):
@@ -99,10 +103,10 @@ def defaultInfer():
 ### Test decorators                                                ###
 ######################################################################
 
-def tests_backend(backend):
+def in_backend(backend):
   """Marks this test as applying against the given backend (i.e., the
 test could conceivably fail even if all changes are confined to that
-backend).  Possible values are:
+backend).  Only works for non-generator tests :(  Possible values are:
 
   "lite", "puma" for that backend
   "none" for a backend-independent test
@@ -115,16 +119,43 @@ backend).  Possible values are:
       name = config["get_ripl"]
       if backend in ["lite", "puma"] and name is not backend:
         raise SkipTest(f.__name__ + " doesn't test " + name)
-      if backend is not "any":
-        global disable_get_ripl
-        old = disable_get_ripl
-        disable_get_ripl = True
-        try:
-          return f(*args)
-        finally:
-          disable_get_ripl = old
-      else:
+      global disable_get_ripl
+      old = disable_get_ripl
+      disable_get_ripl = False if backend is "any" else True
+      try:
         return f(*args)
+      finally:
+        disable_get_ripl = old
+    wrapped.backend = backend
+    return wrapped
+  return wrap
+
+def gen_in_backend(backend):
+  """Marks this test as applying against the given backend (i.e., the
+test could conceivably fail even if all changes are confined to that
+backend).  Only works for test generators :(  Possible values are:
+
+  "lite", "puma" for that backend
+  "none" for a backend-independent test
+  "any"  for a backend-agnostic test (i.e., should work the same in any backend)
+  "all"  for a test that uses all backends (e.g., comparing them)
+"""
+  # TODO Is there a way to reduce the code duplication between the
+  # generator and non-generator version of this decorator?
+  def wrap(f):
+    @nose.make_decorator(f)
+    def wrapped(*args):
+      name = config["get_ripl"]
+      if backend in ["lite", "puma"] and name is not backend:
+        raise SkipTest(f.__name__ + " doesn't test " + name)
+      global disable_get_ripl
+      old = disable_get_ripl
+      disable_get_ripl = False if backend is "any" else True
+      try:
+        for t in f(*args): yield t
+      finally:
+        disable_get_ripl = old
+    wrapped.backend = backend
     return wrapped
   return wrap
 
