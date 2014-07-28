@@ -15,11 +15,8 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import unittest
 from venture.sivm import CoreSivm, VentureSivm
-from venture.exception import VentureException
-from nose import SkipTest
 from nose.tools import assert_equal
 # Note -- these tests only check for minimum functionality
-# these tests also depend on a functional CoreSivmCxx
 
 class TestVentureSivm(unittest.TestCase):
 
@@ -73,9 +70,3 @@ class TestVentureSivm(unittest.TestCase):
                               {'type':'number','value':1}])
         self.sivm.force('x',{'type':'number','value':-2})
         assert_equal(self.extractValue(self.sivm.sample('x')),-2)
-
-    def testInfer(self):
-        self.sivm.assume('x',[{'type':'symbol','value':'normal'},
-                              {'type':'number','value':0},
-                              {'type':'number','value':1}])
-        self.sivm.infer({})
