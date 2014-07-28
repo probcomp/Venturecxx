@@ -846,7 +846,7 @@ class SPRef(VentureValue):
   def __init__(self,makerNode): self.makerNode = makerNode
   def asStackDict(self, trace=None):
     assert trace is not None
-    return v.val("sp", trace.madeSPAt(self.makerNode).show(trace.madeSPAuxAt(self.makerNode)))
+    return v.val("sp", trace.madeSPRecordAt(self.makerNode).show())
 
   @staticmethod
   def fromStackDict(thing): return thing["value"]
