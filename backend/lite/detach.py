@@ -118,6 +118,7 @@ def unapply(trace, node, scaffold, omegaDB, compute_gradient = False):
 def teardownMadeSP(trace,node,isAAA):
   spRecord = trace.madeSPRecordAt(node)
   assert isinstance(spRecord,VentureSPRecord)
+  assert len(spRecord.spFamilies.families) == 0
   trace.setValueAt(node,spRecord)
   if spRecord.sp.hasAEKernel(): trace.unregisterAEKernel(node)
   if isAAA:
