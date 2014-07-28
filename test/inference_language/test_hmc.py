@@ -145,3 +145,13 @@ def testMoveMatrix():
   # TODO Figure out either how to compare distributions on matrices,
   # or how to extract a real number whose distribution to compare.
   #   return reportSameContinuous(preds_mh, preds_hmc)
+
+def testTypeSmoke():
+  if config["get_ripl"] != "lite": raise SkipTest("HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
+  raise SkipTest("Pending choice of representation of the zero gradient.  Issue: https://app.asana.com/0/11127829865276/15085515046349")
+  ripl = get_ripl()
+  ripl.assume("x", "(normal 0 1)")
+  ripl.force("x", 2) # This two comes in as a VentureInteger!  Either
+  # it should stay an integer and politely not move, or it should
+  # become a VentureNumber and politely move, but it should not crash.
+  ripl.infer("(hmc default one 0.1 10 1)")
