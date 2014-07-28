@@ -1,0 +1,30 @@
+from itertools import product
+from nose.tools import assert_almost_equal
+
+from venture.test.config import get_ripl, collectSamples, broken_in, gen_broken_in
+
+@gen_broken_in('puma', "Gradient climbers only implemented in Lite.")
+def testGradientMethodsBasic():
+  "Run tests over both gradient methods"
+  tests = (checkGradientMethodsBasic,)
+  methods = ("map", "nesterov")
+  for test, method in product(tests, methods):
+    yield test, method
+
+def checkGradientMethodsBasic(inference_method):
+  "Make sure that map methods find the maximum"
+  ripl = get_ripl()
+  ripl.assume("a", "(normal 1 1)", label = "pid")
+  ripl.force("a", 0.0)
+  infer_statement = "({0} default all 0.1 10 20)".format(inference_method)
+  prediction = collectSamples(ripl, "pid", infer = infer_statement,
+                              num_samples = 1)[0]
+  assert_almost_equal(prediction, 1)
+
+@broken_in('puma', "Gradient climbers only implemented in Lite.")
+def testNesterovWithInt():
+  "Without fixing VentureInteger to play nicely with Python numbers, this errors"
+  ripl = get_ripl()
+  ripl.assume('x', '(normal 1 1)')
+  ripl.force('x', 0)
+  ripl.infer('(nesterov default one 0.1 10 20)')

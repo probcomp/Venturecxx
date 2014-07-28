@@ -1,6 +1,8 @@
 import nose.tools as nose
 from nose import SkipTest
 from testconfig import config
+from inspect import isgeneratorfunction
+
 import venture.shortcuts as s
 import venture.venturemagics.ip_parallel as ip_parallel
 
@@ -45,7 +47,13 @@ def default_num_transitions_per_sample():
   else:
     return 3
 
+disable_get_ripl = False
+ct_get_ripl_called = 0
+
 def get_ripl():
+  assert not disable_get_ripl, "Trying to get the configured ripl in a test marked as not ripl-agnostic."
+  global ct_get_ripl_called
+  ct_get_ripl_called += 1
   return s.backend(config["get_ripl"]).make_church_prime_ripl()
 
 def get_mripl(no_ripls=2,local_mode=None,**kwargs):
@@ -92,6 +100,70 @@ def defaultInfer():
   # TODO adjust the number of transitions to be at most the default_num_transitions_per_sample
   return config["infer"]
 
+######################################################################
+### Test decorators                                                ###
+######################################################################
+
+def in_backend(backend):
+  """Marks this test as applying against the given backend (i.e., the
+test could conceivably fail even if all changes are confined to that
+backend).  Only works for non-generator tests :(  Possible values are:
+
+  "lite", "puma" for that backend
+  "none" for a backend-independent test
+  "any"  for a backend-agnostic test (i.e., should work the same in any backend)
+  "all"  for a test that uses all backends (e.g., comparing them)
+"""
+  # TODO Is there a way to reduce the code duplication between the
+  # generator and non-generator version of this decorator?
+  def wrap(f):
+    assert not isgeneratorfunction(f), "Use gen_in_backend for test generator %s" % f.__name__
+    @nose.make_decorator(f)
+    def wrapped(*args):
+      name = config["get_ripl"]
+      if backend in ["lite", "puma"] and name is not backend:
+        raise SkipTest(f.__name__ + " doesn't test " + name)
+      global disable_get_ripl
+      old = disable_get_ripl
+      disable_get_ripl = False if backend is "any" else True
+      try:
+        return f(*args)
+      finally:
+        disable_get_ripl = old
+    wrapped.backend = backend
+    return wrapped
+  return wrap
+
+def gen_in_backend(backend):
+  """Marks this test as applying against the given backend (i.e., the
+test could conceivably fail even if all changes are confined to that
+backend).  Only works for test generators :(  Possible values are:
+
+  "lite", "puma" for that backend
+  "none" for a backend-independent test
+  "any"  for a backend-agnostic test (i.e., should work the same in any backend)
+  "all"  for a test that uses all backends (e.g., comparing them)
+"""
+  # TODO Is there a way to reduce the code duplication between the
+  # generator and non-generator version of this decorator?
+  def wrap(f):
+    assert isgeneratorfunction(f), "Use in_backend for non-generator test %s" % f.__name__
+    @nose.make_decorator(f)
+    def wrapped(*args):
+      name = config["get_ripl"]
+      if backend in ["lite", "puma"] and name is not backend:
+        raise SkipTest(f.__name__ + " doesn't test " + name)
+      global disable_get_ripl
+      old = disable_get_ripl
+      disable_get_ripl = False if backend is "any" else True
+      try:
+        for t in f(*args): yield t
+      finally:
+        disable_get_ripl = old
+    wrapped.backend = backend
+    return wrapped
+  return wrap
+
 def ignoresConfiguredInferenceProgram(f):
   """Annotate a test function as ignoring the configured inference
 program, lest it be run repeatedly when testing multiple ones.
@@ -125,15 +197,31 @@ general-purpose inference programs except rejection sampling.
     return wrapped
   return wrap
 
-def backend(*backends):
-  """Specifies which backends this test targets."""
+def broken_in(backend, reason = None):
+  """Marks this test as being known to be broken in some backend."""
   def wrap(f):
+    assert not isgeneratorfunction(f), "Use gen_broken_in for test generator %s" % f.__name__
     @nose.make_decorator(f)
     def wrapped(*args):
       ripl = config["get_ripl"]
-      if ripl not in backends:
-        raise SkipTest(f.__name__ + " doesn't support " + ripl)
+      if ripl == backend:
+        msg = " because " + reason if reason is not None else ""
+        raise SkipTest(f.__name__ + " doesn't support " + ripl + msg)
       return f(*args)
+    return wrapped
+  return wrap
+
+def gen_broken_in(backend, reason = None):
+  """Marks this test as being known to be broken in some backend."""
+  def wrap(f):
+    assert isgeneratorfunction(f), "Use broken_in for non-generator test %s" % f.__name__
+    @nose.make_decorator(f)
+    def wrapped(*args):
+      ripl = config["get_ripl"]
+      if ripl == backend:
+        msg = " because " + reason if reason is not None else ""
+        raise SkipTest(f.__name__ + " doesn't support " + ripl + msg)
+      for t in f(*args): yield t
     return wrapped
   return wrap
 

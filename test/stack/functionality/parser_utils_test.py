@@ -14,6 +14,8 @@
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 # -*- coding: utf-8 -*-
+from nose.plugins.attrib import attr
+
 from venture.exception import VentureException
 from venture.parser import utils
 from venture.test.test_helpers import ParserTestCase
@@ -29,6 +31,9 @@ def j(*args):
         maxes.append(a+b-1)
     return [min(mins), max(maxes)]
 
+# Almost the same effect as @venture.test.config.in_backend("none"),
+# but works on the whole class
+@attr(backend="none")
 class TestParserUtilsAtoms(ParserTestCase):
     def test_symbol(self):
         # Symbol
@@ -200,6 +205,9 @@ class TestParserUtilsAtoms(ParserTestCase):
 
 
 
+# Almost the same effect as @venture.test.config.in_backend("none"),
+# but works on the whole class
+@attr(backend="none")
 class TestParserUtilsStuff(ParserTestCase):
     A = {"loc":j(12,5,43,4,90,3,100,5,123,1), "value":{
             "instruction":{"loc":j(12,5), "value":"asume"},

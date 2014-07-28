@@ -14,14 +14,19 @@
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import unittest
+from nose import SkipTest
+from nose.plugins.attrib import attr
+
 from venture.ripl import Ripl
 from venture.exception import VentureException
 from venture.sivm import VentureSivm
 from venture.parser import ChurchPrimeParser, VentureScriptParser
 from venture.test.config import get_core_sivm
-from testconfig import config
-from nose import SkipTest
 
+# TODO Not really backend independent, but doesn't test the backend much.
+# Almost the same effect as @venture.test.config.in_backend("none"),
+# but works on the whole class
+@attr(backend="none")
 class TestRipl(unittest.TestCase):
     _multiprocess_can_split_ = True
 
@@ -232,8 +237,6 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(output, 2)
 
     def test_continuous_inference(self):
-        if config["get_ripl"] == "lite":
-            raise SkipTest("Venture Lite does not support continuous inference")
         self.ripl.start_continuous_inference()
         output = self.ripl.continuous_inference_status()
         self.assertEqual(output['running'], True)

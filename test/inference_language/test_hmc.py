@@ -1,14 +1,14 @@
 import math
 import scipy.stats as stats
 from nose import SkipTest
-from testconfig import config
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportSameContinuous
-from venture.test.config import get_ripl, collectSamples
 
+from venture.test.stats import statisticalTest, reportKnownContinuous, reportSameContinuous
+from venture.test.config import get_ripl, collectSamples, broken_in, gen_broken_in
+
+@broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
 @statisticalTest
 def testNormalWithObserve1():
   "Checks the posterior distribution on a Gaussian given an unlikely observation"
-  if config["get_ripl"] != "lite": raise SkipTest("HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)", label="pid")
   ripl.observe("(normal a 1.0)", 14.0)
@@ -19,8 +19,8 @@ def testNormalWithObserve1():
   cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
   return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
 
+@gen_broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
 def testMVGaussSmoke():
-  if config["get_ripl"] != "lite": raise SkipTest("HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
   yield checkMVGaussSmoke, "(mh default one 1)"
   yield checkMVGaussSmoke, "(hmc default one 0.05 20 10)"
 
@@ -35,8 +35,8 @@ def checkMVGaussSmoke(infer):
   cdf = stats.norm(loc=1, scale=1).cdf
   return reportKnownContinuous(cdf, predictions, "N(1,1)")
 
+@gen_broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
 def testForceBrush1():
-  if config["get_ripl"] != "lite": raise SkipTest("HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
   yield checkForceBrush1, "(mh default one 2)"
   yield checkForceBrush1, "(hmc default one 0.05 20 10)"
 
@@ -49,8 +49,8 @@ def checkForceBrush1(infer):
   cdf = stats.norm(loc=0, scale=math.sqrt(2)).cdf
   return reportKnownContinuous(cdf, predictions, "N(0,sqrt(2))")
 
+@gen_broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
 def testForceBrush2():
-  if config["get_ripl"] != "lite": raise SkipTest("HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
   yield checkForceBrush2, "(mh default one 5)"
   yield checkForceBrush2, "(hmc default one 0.05 20 10)"
 
@@ -63,9 +63,9 @@ def checkForceBrush2(infer):
   cdf = lambda x: 0.5*stats.norm(loc=0, scale=1).cdf(x) + 0.5*stats.norm(loc=100, scale=1).cdf(x)
   return reportKnownContinuous(cdf, predictions, "N(0,1)/2 + N(100,1)/2")
 
+@broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
 @statisticalTest
 def testForceBrush3():
-  if config["get_ripl"] != "lite": raise SkipTest("HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
   ripl = get_ripl()
   ripl.assume("x", "(normal 0 1)")
   ripl.assume("y", "(if (< x 0) (normal x 1) (normal (+ x 10) 1))", label="pid")
@@ -74,9 +74,9 @@ def testForceBrush3():
   preds_hmc = collectSamples(ripl, "pid", infer="(hmc default one 0.1 20 10)")
   return reportSameContinuous(preds_mh, preds_hmc)
 
+@broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
 @statisticalTest
 def testForceBrush4():
-  if config["get_ripl"] != "lite": raise SkipTest("HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
   ripl = get_ripl()
   ripl.assume("x", "(normal 0 1)")
   ripl.assume("y", "(if (< x 0) (normal x 1) (normal (+ x 10) 1))")
@@ -86,9 +86,9 @@ def testForceBrush4():
   preds_hmc = collectSamples(ripl, "pid", infer="(hmc default one 0.1 20 10)")
   return reportSameContinuous(preds_mh, preds_hmc)
 
+@broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
 @statisticalTest
 def testForceBrush5():
-  if config["get_ripl"] != "lite": raise SkipTest("HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
   ripl = get_ripl()
   ripl.assume("x", "(normal 0 1)", label="pid")
   ripl.assume("y", "(if (< x 0) (normal x 1) (normal (+ x 10) 1))")
@@ -98,12 +98,12 @@ def testForceBrush5():
   preds_hmc = collectSamples(ripl, "pid", infer="(hmc default one 0.1 20 10)")
   return reportSameContinuous(preds_mh, preds_hmc)
 
+@broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
 @statisticalTest
 def testMoreElaborate():
   """Confirm that HMC still works in the presence of brush.  Do not,
   however, mess with the possibility that the principal nodes that HMC
   operates over may themselves be in the brush."""
-  if config["get_ripl"] != "lite": raise SkipTest("HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
   ripl = get_ripl()
   ripl.assume("x", "(scope_include (quote param) 0 (uniform_continuous -10 10))")
   ripl.assume("y", "(scope_include (quote param) 1 (uniform_continuous -10 10))",
@@ -129,8 +129,8 @@ def testMoreElaborate():
   preds_hmc = collectSamples(ripl, "pid", infer="(hmc param all 0.1 20 10)")
   return reportSameContinuous(preds_mh, preds_hmc)
 
+@broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
 def testMoveMatrix():
-  if config["get_ripl"] != "lite": raise SkipTest("HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
   ripl = get_ripl()
   ripl.assume("mu", "(array 0 0)")
   ripl.assume("scale", "(matrix (list (list 2 1) (list 1 2)))")
@@ -145,3 +145,13 @@ def testMoveMatrix():
   # TODO Figure out either how to compare distributions on matrices,
   # or how to extract a real number whose distribution to compare.
   #   return reportSameContinuous(preds_mh, preds_hmc)
+
+@broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
+def testTypeSmoke():
+  raise SkipTest("Pending choice of representation of the zero gradient.  Issue: https://app.asana.com/0/11127829865276/15085515046349")
+  ripl = get_ripl()
+  ripl.assume("x", "(normal 0 1)")
+  ripl.force("x", 2) # This two comes in as a VentureInteger!  Either
+  # it should stay an integer and politely not move, or it should
+  # become a VentureNumber and politely move, but it should not crash.
+  ripl.infer("(hmc default one 0.1 10 1)")

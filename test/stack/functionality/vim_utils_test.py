@@ -13,12 +13,17 @@
 # GNU General Public License for more details.
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+from nose.plugins.attrib import attr
 import unittest
+
 from venture.exception import VentureException
 from venture.sivm import utils
 
 #Note -- these tests only check for minimum functionality
 
+# Almost the same effect as @venture.test.config.in_backend("none"),
+# but works on the whole class
+@attr(backend="none")
 class TestSivmUtils(unittest.TestCase):
 
     ######################################

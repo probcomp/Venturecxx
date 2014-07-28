@@ -44,6 +44,9 @@ def expToDict(exp):
   elif tag == "slice":
     assert len(exp) == 6
     return {"kernel":"slice","scope":exp[1],"block":exp[2],"w":exp[3],"m":int(exp[4]),"transitions":int(exp[5])}
+  elif tag == "slice_doubling":
+    assert len(exp) == 6
+    return {"kernel":"slice_doubling","scope":exp[1],"block":exp[2],"w":exp[3],"p":int(exp[4]),"transitions":int(exp[5])}
   # [FIXME] expedient hack for now to allow windowing with pgibbs.
   elif tag == "pgibbs":
     assert 5 <= len(exp) and len(exp) <= 6

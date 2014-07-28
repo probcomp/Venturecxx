@@ -1,5 +1,7 @@
+from venture.test.config import in_backend
 from venture.lite.wttree import PMap, PSet
 
+@in_backend("none")
 def testPMapInsertContainsDelete():
   r = PMap()
   assert len(r) == 0
@@ -28,6 +30,7 @@ def testPMapInsertContainsDelete():
 def _hash(i):
   return (i * 14536777) % 107331
 
+@in_backend("none")
 def testPMapStressInsertDelete():
   r = PMap()
   N = 1000
@@ -54,6 +57,7 @@ def testPMapStressInsertDelete():
     assert _hash(i) not in r2
     assert r2.lookup(_hash(i)) is None
 
+@in_backend("none")
 def testPMapIterate():
   r = PMap()
   N = 1000
@@ -72,6 +76,7 @@ def testPMapIterate():
   for i in range(N):
     assert _hash(i) in ks
 
+@in_backend("none")
 def testPSetInsertContainsDelete():
   r = PSet()
   assert len(r) == 0
@@ -89,6 +94,7 @@ def testPSetInsertContainsDelete():
   assert 1 not in r2
   assert len(r2) == 0
 
+@in_backend("none")
 def testPSetStressInsertDelete():
   r = PSet()
   N = 1000
@@ -110,6 +116,7 @@ def testPSetStressInsertDelete():
     assert _hash(i) in r
     assert _hash(i) not in r2
 
+@in_backend("none")
 def testPSetIterate():
   r = PSet()
   N = 1000

@@ -4,7 +4,7 @@ from testconfig import config
 import math
 from numpy.testing import assert_allclose
 
-from venture.test.config import get_ripl, ignoresConfiguredInferenceProgram
+from venture.test.config import get_ripl, ignoresConfiguredInferenceProgram, in_backend, gen_in_backend
 from venture.lite.builtin import builtInSPsList
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.psp import NullRequestPSP
@@ -16,6 +16,7 @@ from venture.lite.exception import VentureBuiltinSPMethodError
 from venture.lite.utils import FixedRandomness
 
 @ignoresConfiguredInferenceProgram
+@in_backend("none")
 def testEquality():
   checkTypedProperty(propEquality, AnyType())
 
@@ -23,6 +24,7 @@ def propEquality(value):
   assert value.equal(value)
 
 @ignoresConfiguredInferenceProgram
+@in_backend("none")
 def testLiteToStack():
   checkTypedProperty(propLiteToStack, AnyType())
 
@@ -35,6 +37,7 @@ def relevantSPs():
       if name not in []: # Placeholder for selecting SPs to do or not do
         yield name, sp
 
+@gen_in_backend("none")
 def testTypes():
   for (name,sp) in relevantSPs():
     yield checkTypeCorrect, name, sp
@@ -55,6 +58,7 @@ applied fully uncurried) match the expected types."""
     assert answer in type_.return_type
     propTypeCorrect(args_lists[1:], answer, type_.return_type)
 
+@gen_in_backend("none")
 def testDeterministic():
   for (name,sp) in relevantSPs():
     if not sp.outputPSP.isRandom():
@@ -86,6 +90,7 @@ fully uncurried)."""
     for _ in range(5):
       eq_(answer, carefully(sp.outputPSP.simulate, args))
 
+@gen_in_backend("none")
 def testRandom():
   for (name,sp) in relevantSPs():
     if sp.outputPSP.isRandom():
@@ -263,6 +268,7 @@ through the foreign function interface (applied fully uncurried)."""
     expr = [{"type":"symbol", "value":"test_sp"}] + [v.expressionFor() for v in args_lists[0]]
     assert answer.equal(carefully(eval_foreign_sp, "test_sp", sp, expr))
 
+@gen_in_backend("none")
 def testLogDensityDeterministic():
   for (name,sp) in relevantSPs():
     if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart", "categorical"]: # TODO
@@ -282,6 +288,7 @@ def propLogDensityDeterministic(rnd, sp):
   for _ in range(5):
     eq_(answer, carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux())))
 
+@gen_in_backend("none")
 def testGradientOfLogDensity():
   for (name,sp) in relevantSPs():
     if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart", "categorical",  # TODO
@@ -327,6 +334,7 @@ def assert_gradients_close(numerical_gradient, computed_gradient):
 
   assert_allclose(numerical_gradient, numerical_values_of_computed_gradient, rtol=1e-05)
 
+@gen_in_backend("none")
 def testFixingRandomness():
   for (name,sp) in relevantSPs():
     yield checkFixingRandomness, name, sp
@@ -360,6 +368,7 @@ def propDeterministicWhenFixed(args_lists, name, sp):
       with randomness:
         eq_(answer, carefully(sp.outputPSP.simulate, args))
 
+@gen_in_backend("none")
 def testGradientOfSimulate():
   for (name,sp) in relevantSPs():
     if name not in ["dict",  # TODO Synthesize dicts to act as the directions

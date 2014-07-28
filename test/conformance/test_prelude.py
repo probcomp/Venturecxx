@@ -1,6 +1,6 @@
 from unittest import TestCase
 import nose.tools as nose
-from venture.test.config import get_ripl, backend
+from venture.test.config import get_ripl
 import numpy as np
 import random
 import string

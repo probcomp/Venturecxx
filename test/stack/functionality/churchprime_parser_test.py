@@ -15,10 +15,14 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from nose.plugins.attrib import attr
+
 from venture.parser import ChurchPrimeParser
 from venture.test.test_helpers import ParserTestCase
 
-
+# Almost the same effect as @venture.test.config.in_backend("none"),
+# but works on the whole class
+@attr(backend="none")
 class TestChurchPrimeParser(ParserTestCase):
     _multiprocess_can_split_ = True
     def setUp(self):
