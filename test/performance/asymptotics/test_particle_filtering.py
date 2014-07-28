@@ -1,18 +1,16 @@
-from testconfig import config
-from nose import SkipTest
-from venture.test.config import get_ripl
-import venture.test.timing as timing
 import scipy.stats
 from nose.plugins.attrib import attr
+
+from venture.test.config import get_ripl, broken_in
+import venture.test.timing as timing
 
 # TODO Rewrite this to use mem like one normally would.  Right now
 # it's metaprogrammed because freeze is only known to work on
 # directives.
 
 @attr('slow')
+@broken_in('lite', "freeze is only implemented in Puma")
 def testHMMParticleAsymptotics1():
-  if config["get_ripl"] != "puma":
-    raise SkipTest("freeze only implemented in Puma")
   num_particles = 5
   def particulate(num_steps):
     ripl = get_ripl()
