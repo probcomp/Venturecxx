@@ -1,3 +1,4 @@
+from mh import MHOperator
 from ..omegadb import OmegaDB
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
