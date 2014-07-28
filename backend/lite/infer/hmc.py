@@ -1,12 +1,11 @@
-import random
 import numpy.random as npr
 import scipy.stats
 from ..omegadb import OmegaDB
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
 from ..scaffold import constructScaffold
-from ..lkernel import DeterministicLKernel
 from ..utils import FixedRandomness
+from ..value import vv_dot_product
 from mh import InPlaceOperator, getCurrentValues, registerDeterministicLKernels
 
 class GradientOfRegen(object):
@@ -116,7 +115,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
   def kinetic(self, momenta):
     # This is the log density of sampling these momenta, up to an
     # additive constant
-    return sum([m.dot(m) for m in momenta]) / 2.0
+    return sum([vv_dot_product(m, m) for m in momenta]) / 2.0
 
   def evolve(self, grad_U, start_q, start_grad_q, start_p):
     epsilon = self.epsilon
