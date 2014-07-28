@@ -4,12 +4,13 @@ from venture.unit import *
 import numpy as np
 import scipy.stats as stats
 from itertools import product
+import math
 
 from nose import SkipTest
 from nose.plugins.attrib import attr
 from venture.test.stats import statisticalTest, reportKnownContinuous
 
-from venture.test.config import get_ripl,get_mripl
+from venture.test.config import get_ripl,get_mripl,ignore_inference_quality,default_num_samples
 
 from nose.tools import eq_, assert_almost_equal
 
@@ -87,16 +88,16 @@ def testLoadModelHistory():
 
 def _testRuns(riplThunk):
     v,_,_,queryExps,_ = normalModel( riplThunk() )
-    samples = 20
-    runsList = [2,3,7]
+    samples = default_num_samples()
+    no_runs = 4
     model = Analytics(v,queryExps=queryExps)
 
-    for no_runs in runsList:
-        history,_ = model.runFromConditional(samples,runs=no_runs)
-        eq_( len(history.nameToSeries['x']), no_runs)
+    history,_ = model.runFromConditional(samples,runs=no_runs)
+    eq_( len(history.nameToSeries['x']), no_runs)
 
-        for exp in ('x', queryExps[0]):
-            arValues = np.array([s.values for s in history.nameToSeries[exp]])
+    for exp in ('x', queryExps[0]):
+        arValues = np.array([s.values for s in history.nameToSeries[exp]])
+        if not ignore_inference_quality():
             assert all(np.var(arValues,axis=0) > .0001) # var across runs time t
             assert all(np.var(arValues,axis=1) > .000001) # var within runs
 
@@ -109,8 +110,12 @@ def testRuns():
 @statisticalTest
 def _testInfer(riplThunk,conditional_prior,inferProg):
     v,_,_,_= betaModel( riplThunk() )
-    samples = 20
-    runs = 15
+    if ignore_inference_quality():
+        samples = default_num_samples()
+        runs = 1
+    else:
+        samples = int(math.sqrt(default_num_samples()))
+        runs = int(math.sqrt(default_num_samples()))
     model = Analytics(v)
     infer_kwargs = dict(runs=runs,infer=inferProg,simpleInfer=True)
 
@@ -128,7 +133,6 @@ def _testInfer(riplThunk,conditional_prior,inferProg):
     return reportKnownContinuous(cdf,snapshot_t(history,'p',-1))
 
 
-@attr("slow")
 def testRunFromConditionalInfer():
     riplThunks = get_ripl, lambda: get_mripl(no_ripls=2)
     cond_prior = 'conditional', 'prior'
@@ -145,7 +149,7 @@ def _testSampleFromJoint(riplThunk,useMRipl):
     if riplThunk.func_name in 'get_ripl' or useMRipl is False:
         raise SkipTest('Bug with seeds for ripls')
     v,_,_,queryExps,xPriorCdf = normalModel( riplThunk() )
-    samples = 30
+    samples = default_num_samples()
     model = Analytics(v,queryExps=queryExps)
     history = model.sampleFromJoint(samples, useMRipl=useMRipl)
     xSamples = nameToFirstValues(history,'x')
@@ -166,18 +170,24 @@ def _testRunFromJoint1(riplThunk,inferProg):
     v,_,_,queryExps,xPriorCdf = normalModel( riplThunk() )
     model = Analytics(v,queryExps=queryExps)
     # variation across runs
-    history = model.runFromJoint(1, runs=30, infer=inferProg)
+    history = model.runFromJoint(1, runs=default_num_samples(), infer=inferProg)
     return reportKnownContinuous(xPriorCdf,snapshot_t(history,'x',0))
 
 @statisticalTest
 def _testRunFromJoint2(riplThunk,inferProg):
     v,_,_,queryExps,xPriorCdf = normalModel( riplThunk() )
     model = Analytics(v,queryExps=queryExps)
+    if ignore_inference_quality():
+        step_size = 1
+    else:
+        step_size = 20
+    samples = default_num_samples()
+    chain_len = step_size * samples
 
     # variation over single runs
-    history = model.runFromJoint(200, runs=1, infer=inferProg)
+    history = model.runFromJoint(chain_len, runs=1, infer=inferProg)
     XSamples = np.array(nameToFirstValues(history,'x'))
-    thinXSamples = XSamples[np.arange(0,200,20)]
+    thinXSamples = XSamples[np.arange(0,chain_len,step_size)]
 
     return reportKnownContinuous(xPriorCdf,thinXSamples)
 
@@ -214,9 +224,14 @@ def testCompareSampleDicts():
 @statisticalTest
 def _testCompareSnapshots(riplThunk):
     v,_,_,queryExps = betaModel(riplThunk())
-    samples = 20
+    if ignore_inference_quality():
+        samples = default_num_samples()
+        runs = 2
+    else:
+        samples = 2 * int(math.sqrt(2 * default_num_samples()))
+        runs = int(math.sqrt(2 * default_num_samples()))
     model = Analytics(v,queryExps=queryExps)
-    history,_ = model.runFromConditional(samples,runs=10)
+    history,_ = model.runFromConditional(samples,runs=runs)
     # two final snapshots should be very similar in distribution
     report = history.compareSnapshots(probes = (-2,-1))
     return report.statsDict['p']['KSSameContinuous']
@@ -233,7 +248,7 @@ def _testForce(riplThunk):
     for _ in range(4):
         v.observe('(normal (+ x0 x1) 30)',100.)
     model = Analytics(v)
-    samples = 50
+    samples = default_num_samples()
     inferProg = '(mh default one 1)'
     fdict = dict( [('x%i'%i,0) for i in range(5)] )
     history,_ = model.runFromConditional(samples,runs=5,simpleInfer=True,
