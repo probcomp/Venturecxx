@@ -17,8 +17,8 @@ import unittest
 from nose.plugins.attrib import attr
 from nose.tools import assert_equal
 
-from venture.sivm import CoreSivm, VentureSivm
-# Note -- these tests only check for minimum functionality
+from venture.sivm import VentureSivm
+from venture.test.config import get_core_sivm
 
 # TODO Not really backend independent, but doesn't test the backend much.
 # Almost the same effect as @venture.test.config.in_backend("none"),
@@ -29,8 +29,7 @@ class TestVentureSivm(unittest.TestCase):
     _multiprocess_can_split_ = True
 
     def setUp(self):
-        from venture.lite import engine
-        self.core_sivm = CoreSivm(engine.Engine())
+        self.core_sivm = get_core_sivm()
         self.core_sivm.execute_instruction({"instruction":"clear"})
         self.sivm = VentureSivm(self.core_sivm)
 

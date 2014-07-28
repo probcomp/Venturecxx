@@ -21,8 +21,6 @@ import venture.sivm.core_sivm as module
 from venture.exception import VentureException
 from venture.test.config import get_core_sivm
 
-#Note -- these tests only check for minimum functionality
-
 # TODO Not really backend independent, but doesn't test the backend much.
 # Almost the same effect as @venture.test.config.in_backend("none"),
 # but works on the whole class

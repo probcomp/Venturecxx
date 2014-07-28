@@ -15,12 +15,11 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 from nose.plugins.attrib import attr
 import unittest
-
-from venture.sivm import CoreSivm, VentureSivm
-from venture.exception import VentureException
 from nose import SkipTest
 
-# Note -- these tests only check for minimum functionality
+from venture.sivm import VentureSivm
+from venture.exception import VentureException
+from venture.test.config import get_core_sivm
 
 # TODO Maybe implement a stub backend that answers all method calls
 # with "Yes, Minister" and use that instead of Lite here.
@@ -32,8 +31,7 @@ class TestVentureSivm(unittest.TestCase):
     _multiprocess_can_split_ = True
 
     def setUp(self):
-        from venture.lite import engine
-        self.core_sivm = CoreSivm(engine.Engine())
+        self.core_sivm = get_core_sivm()
         self.core_sivm.execute_instruction({"instruction":"clear"})
         self.sivm = VentureSivm(self.core_sivm)
 
