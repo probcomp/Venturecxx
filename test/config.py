@@ -45,7 +45,10 @@ def default_num_transitions_per_sample():
   else:
     return 3
 
+disable_get_ripl = False
+
 def get_ripl():
+  assert not disable_get_ripl, "Trying to get the configured ripl in a test marked as not ripl-agnostic."
   return s.backend(config["get_ripl"]).make_church_prime_ripl()
 
 def get_mripl(no_ripls=2,local_mode=None,**kwargs):
@@ -95,6 +98,35 @@ def defaultInfer():
 ######################################################################
 ### Test decorators                                                ###
 ######################################################################
+
+def tests_backend(backend):
+  """Marks this test as applying against the given backend (i.e., the
+test could conceivably fail even if all changes are confined to that
+backend).  Possible values are:
+
+  "lite", "puma" for that backend
+  "none" for a backend-independent test
+  "any"  for a backend-agnostic test (i.e., should work the same in any backend)
+  "all"  for a test that uses all backends (e.g., comparing them)
+"""
+  def wrap(f):
+    @nose.make_decorator(f)
+    def wrapped(*args):
+      name = config["get_ripl"]
+      if backend in ["lite", "puma"] and name is not backend:
+        raise SkipTest(f.__name__ + " doesn't test " + name)
+      if backend is not "any":
+        global disable_get_ripl
+        old = disable_get_ripl
+        disable_get_ripl = True
+        try:
+          return f(*args)
+        finally:
+          disable_get_ripl = old
+      else:
+        return f(*args)
+    return wrapped
+  return wrap
 
 def ignoresConfiguredInferenceProgram(f):
   """Annotate a test function as ignoring the configured inference
