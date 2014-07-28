@@ -1,7 +1,6 @@
 from ..omegadb import OmegaDB
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
-from ..lkernel import DeterministicLKernel
 from ..utils import sampleLogCategorical, cartesianProduct
 from ..consistency import assertTrace, assertTorus
 from mh import getCurrentValues, registerDeterministicLKernels

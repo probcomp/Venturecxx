@@ -1,7 +1,6 @@
-import time
 from ..omegadb import OmegaDB
-from ..regen import regenAndAttach, regenAndAttachAtBorder
-from ..detach import detachAndExtract, detachAndExtractAtBorder
+from ..regen import regenAndAttachAtBorder
+from ..detach import detachAndExtractAtBorder
 from ..utils import sampleLogCategorical, logaddexp
 from ..consistency import assertTrace, assertTorus
 import copy

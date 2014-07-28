@@ -1,5 +1,4 @@
 import math
-from ..lkernel import DeterministicLKernel
 from mh import InPlaceOperator, getCurrentValues, registerDeterministicLKernels
 from hmc import GradientOfRegen
 
