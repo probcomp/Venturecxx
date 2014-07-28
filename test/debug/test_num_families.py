@@ -1,11 +1,10 @@
-from nose import SkipTest
-from testconfig import config
-from venture.test.config import get_ripl
 from nose.tools import assert_equal
 
+from venture.test.config import get_ripl, broken_in
+
+@broken_in('lite', "numFamilies is only implemented in puma")
 def testNumFamilies1():
   """A sanity test for numFamilies"""
-  if config["get_ripl"] != "puma": raise SkipTest("numFamilies only implemented in puma")
   ripl = get_ripl()
   ripl.assume("rain","(bernoulli 0.2)")
   ripl.assume("sprinkler","(if rain (bernoulli 0.01) (bernoulli 0.4))")

@@ -1,9 +1,9 @@
 import math
 import scipy.stats as stats
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
 from nose import SkipTest
-from venture.test.config import get_ripl, collectSamples, collect_iid_samples, default_num_transitions_per_sample
-from testconfig import config
+
+from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
+from venture.test.config import get_ripl, collectSamples, collect_iid_samples, default_num_transitions_per_sample, broken_in
 
 @statisticalTest
 def testBlockingExample0():
@@ -72,8 +72,8 @@ def testBlockingExample3():
   assert not oldb == newb
 
 @statisticalTest
+@broken_in('puma', "rejection is not implemented in Puma")
 def testBasicRejection1():
-  if config["get_ripl"] != "lite": raise SkipTest("This test is not supported by Puma yet")
   ripl = get_ripl()
   ripl.assume("x", "(bernoulli 0.5)",label="pid")
   predictions = collectSamples(ripl, "pid", infer="(rejection default all 1)")
@@ -81,8 +81,8 @@ def testBasicRejection1():
   return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
+@broken_in('puma', "rejection is not implemented in Puma")
 def testBasicRejection2():
-  if config["get_ripl"] != "lite": raise SkipTest("This test is not supported by Puma yet")
   ripl = get_ripl()
   ripl.assume("p", "(uniform_continuous 0 1)")
   ripl.assume("x", "(bernoulli p)", label="pid")
@@ -91,8 +91,8 @@ def testBasicRejection2():
   return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
+@broken_in('puma', "rejection is not implemented in Puma")
 def testBasicRejection3():
-  if config["get_ripl"] != "lite": raise SkipTest("This test is not supported by Puma yet")
   ripl = get_ripl()
   ripl.assume("p", "(uniform_continuous 0 1)", label="pid")
   ripl.observe("(bernoulli p)", "true")
