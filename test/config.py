@@ -114,6 +114,8 @@ backend).  Only works for non-generator tests :(  Possible values are:
   "any"  for a backend-agnostic test (i.e., should work the same in any backend)
   "all"  for a test that uses all backends (e.g., comparing them)
 """
+  # TODO Is there a way to reduce the code duplication between the
+  # generator and non-generator version of this decorator?
   def wrap(f):
     assert not isgeneratorfunction(f), "Use gen_in_backend for test generator %s" % f.__name__
     @nose.make_decorator(f)
