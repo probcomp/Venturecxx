@@ -13,7 +13,9 @@
 # GNU General Public License for more details.
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+from nose.plugins.attrib import attr
 import unittest
+
 from venture.exception import VentureException
 
 JSON_EXCEPTION = {
@@ -27,6 +29,9 @@ EXCEPTION = 'exception_type'
 MESSAGE = 'everything exploded'
 DATA = {'data1':1,'data2':[1,2,3]}
 
+# Almost the same effect as @venture.test.config.in_backend("none"),
+# but works on the whole class
+@attr(backend="none")
 class TestVentureException(unittest.TestCase):
 
     def test_constructor(self):

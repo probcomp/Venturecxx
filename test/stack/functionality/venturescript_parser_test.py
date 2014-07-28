@@ -14,6 +14,7 @@
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 # -*- coding: utf-8 -*-
+from nose.plugins.attrib import attr
 
 from venture.parser import VentureScriptParser
 import venture.parser.venture_script_parser as module
@@ -39,6 +40,9 @@ def j(*args):
     return [min(mins), max(maxes)]
 
 
+# Almost the same effect as @venture.test.config.in_backend("none"),
+# but works on the whole class
+@attr(backend="none")
 class TestVentureScriptParserAtoms(ParserTestCase):
     _multiprocess_can_split_ = True
 
@@ -526,6 +530,9 @@ class TestVentureScriptParserAtoms(ParserTestCase):
                 "expression")
 
 
+# Almost the same effect as @venture.test.config.in_backend("none"),
+# but works on the whole class
+@attr(backend="none")
 class TestVentureScriptParser(ParserTestCase):
     def setUp(self):
         self.p = VentureScriptParser.instance()
@@ -592,6 +599,9 @@ class TestVentureScriptParser(ParserTestCase):
         self.assertEqual(output,'infer %(expression)s')
 
 
+# Almost the same effect as @venture.test.config.in_backend("none"),
+# but works on the whole class
+@attr(backend="none")
 class TestInstructions(ParserTestCase):
     def setUp(self):
         self.p = VentureScriptParser.instance()
