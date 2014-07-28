@@ -1,6 +1,7 @@
 import nose.tools as nose
 from nose import SkipTest
 from testconfig import config
+from inspect import isgeneratorfunction
 
 import venture.shortcuts as s
 import venture.venturemagics.ip_parallel as ip_parallel
@@ -114,6 +115,7 @@ backend).  Only works for non-generator tests :(  Possible values are:
   "all"  for a test that uses all backends (e.g., comparing them)
 """
   def wrap(f):
+    assert not isgeneratorfunction(f), "Use gen_in_backend for test generator %s" % f.__name__
     @nose.make_decorator(f)
     def wrapped(*args):
       name = config["get_ripl"]
@@ -143,6 +145,7 @@ backend).  Only works for test generators :(  Possible values are:
   # TODO Is there a way to reduce the code duplication between the
   # generator and non-generator version of this decorator?
   def wrap(f):
+    assert isgeneratorfunction(f), "Use in_backend for non-generator test %s" % f.__name__
     @nose.make_decorator(f)
     def wrapped(*args):
       name = config["get_ripl"]
