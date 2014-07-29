@@ -19,6 +19,7 @@ import numpy as np
 
 from venture import shortcuts
 import venture.unit as u
+import venture.value.dicts as v
 
 class HMCDemo(u.VentureUnit):
   def makeAssumes(self):
@@ -35,8 +36,7 @@ class HMCDemo(u.VentureUnit):
       self.assume(var, exp)
 
   def makeObserves(self):
-    v = [{"type": "real", "value": 0}, {"type": "real", "value": 0}]
-    self.observe("out", {"type":"list","value":v})
+    self.observe("out", v.list([v.real(0), v.real(0)]))
 
 # int_R pdf(xout|x) pdf([0,0]|[xout, y])
 def true_pdf(x, y):

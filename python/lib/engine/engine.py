@@ -21,6 +21,7 @@ from venture.exception import VentureException
 from venture.lite.utils import sampleLogCategorical
 from venture.engine.inference import Infer
 from venture.engine.utils import expToDict
+import venture.value.dicts as v
 
 class Engine(object):
 
@@ -52,9 +53,9 @@ class Engine(object):
   # TODO Move this into stack.
   def desugarLambda(self,datum):
     if type(datum) is list and type(datum[0]) is dict and datum[0]["value"] == "lambda":
-      ids = [{"type" : "symbol","value" : "quote"}] + [datum[1]]
-      body = [{"type" : "symbol","value" : "quote"}] + [self.desugarLambda(datum[2])]
-      return [{"type" : "symbol", "value" : "make_csp"},ids,body]
+      ids = v.quote(datum[1])
+      body = v.quote(self.desugarLambda(datum[2]))
+      return [v.symbol("make_csp"), ids, body]
     elif type(datum) is list: return [self.desugarLambda(d) for d in datum]
     else: return datum
 
@@ -217,7 +218,7 @@ effect of renumbering the directives, if some had been forgotten."""
     self.incorporate()
     if isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop":
       assert len(program) == 2
-      prog = [sym("cycle"), program[1], {"type":"number", "value":1}]
+      prog = [v.sym("cycle"), program[1], v.number(1)]
       self.start_continuous_inference(prog)
     else:
       exp = self.desugarLambda(self.macroexpand_inference(program))
@@ -228,7 +229,7 @@ effect of renumbering the directives, if some had been forgotten."""
       assert len(program) == 3
       subkernels = self.macroexpand_inference(program[1])
       transitions = self.macroexpand_inference(program[2])
-      return [program[0], [sym("list")] + subkernels, transitions]
+      return [program[0], [v.sym("list")] + subkernels, transitions]
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "mixture":
       assert len(program) == 3
       weights = []
@@ -240,16 +241,16 @@ effect of renumbering the directives, if some had been forgotten."""
         k = j + 1
         weights.append(weighted_ks[j])
         subkernels.append(weighted_ks[k])
-      return [program[0], [sym("simplex")] + weights, [sym("array")] + subkernels, transitions]
+      return [program[0], [v.sym("simplex")] + weights, [v.sym("array")] + subkernels, transitions]
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] in ["peek", "peek_all"]:
       assert 2 <= len(program) and len(program) <= 3
       if len(program) == 2:
-        return [program[0], enquote(program[1])]
+        return [program[0], v.quote(program[1])]
       else:
-        return [program[0], enquote(program[1]), enquote(program[2])]
+        return [program[0], v.quote(program[1]), v.quote(program[2])]
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "plotf":
       assert len(program) >= 2
-      return [program[0]] + [enquote(e) for e in program[1:]]
+      return [program[0]] + [v.quote(e) for e in program[1:]]
     elif type(program) is list: return [self.macroexpand_inference(p) for p in program]
     else: return program
 
@@ -258,15 +259,15 @@ effect of renumbering the directives, if some had been forgotten."""
     next_trace = lite.Trace()
     # TODO Import the enclosing lexical environment into the new trace?
     import venture.lite.inference_sps as inf
-    import venture.lite.value as v
+    import venture.lite.value as val
     all_scopes = [s for s in target.engine.getDistinguishedTrace().scope_keys()]
     symbol_scopes = [s for s in all_scopes if isinstance(s, basestring) and not s.startswith("default")]
     for hack in inf.inferenceKeywords + symbol_scopes:
-      next_trace.bindPrimitiveName(hack, v.VentureSymbol(hack))
+      next_trace.bindPrimitiveName(hack, val.VentureSymbol(hack))
     for name,sp in self.inferenceSPsList():
       next_trace.bindPrimitiveSP(name, sp)
     self.install_inference_prelude(next_trace)
-    next_trace.eval(4, [program, {"type":"blob", "value":target}])
+    next_trace.eval(4, [program, v.blob(target)])
     ans = next_trace.extractValue(4)
     assert isinstance(ans, dict)
     assert ans["type"] is "blob"
@@ -432,12 +433,6 @@ class ContinuousInferrer(object):
     inferrer = self.inferrer
     self.inferrer = None # Grab the semaphore
     inferrer.join()
-
-def sym(symbol):
-  return {"type":"symbol", "value":symbol}
-
-def enquote(thing):
-  return [sym("quote"), thing]
 
 the_prelude = None
 
