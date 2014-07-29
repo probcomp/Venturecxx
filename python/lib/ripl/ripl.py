@@ -178,12 +178,16 @@ class Ripl():
         e.data['instruction_string'] = instruction_string
         return e
 
-    def execute_program(self, program_string, params=None):
+    def parse_program(self, program_string, params=None):
         p = self._cur_parser()
         # perform parameter substitution if necessary
         if params != None:
             program_string = self.substitute_params(program_string,params)
-        instructions, _positions = p.split_program(program_string)
+        instructions, positions = p.split_program(program_string)
+        return instructions, positions
+
+    def execute_program(self, program_string, params=None):
+        instructions, _positions = self.parse_program(program_string, params=params)
         vals = []
         for instruction in instructions:
             vals.append(self.execute_instruction(instruction))
