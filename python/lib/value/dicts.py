@@ -24,6 +24,8 @@ def val(t,v):
 def number(v):
     return val("number",v)
 
+num = number
+
 def real(v):
     return val("real",v)
 
@@ -42,11 +44,16 @@ def boolean(v):
 def symbol(s):
     return val("symbol",s)
 
+sym = symbol
+
 def blob(v):
     return val("blob",v)
 
 def list(vs):
     return val("list", vs)
+
+def dict(d):
+    return val("dict", d)
 
 def improper_list(vs, tail):
     return val("improper_list", (vs, tail))

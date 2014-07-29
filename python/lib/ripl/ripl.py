@@ -46,11 +46,13 @@ venture.shortcuts module:
 '''
 
 import numbers
+import re
+from os import path
+
 from venture.exception import VentureException
 from venture.lite.value import VentureValue
 import utils as u
-import re
-from os import path
+import venture.value.dicts as v
 
 PRELUDE_FILE = 'prelude.vnt'
 
@@ -260,9 +262,9 @@ class Ripl():
             # fully parsed.
             return expr
         elif isinstance(expr, int):
-            return {'type':'integer', 'value':expr}
+            return v.integer(expr)
         elif isinstance(expr, numbers.Number):
-            return {'type':'number', 'value':expr}
+            return v.number(expr)
         elif isinstance(expr, VentureValue):
             # A literal value as a Venture Value
             return expr.asStackDict(None)
@@ -417,7 +419,7 @@ Open issues:
         ret_vals = []
         parsed = self._ensure_parsed_expression(proc_expression)
         for i, (args, val) in enumerate(iterable):
-          expr = [parsed] + [[{"type":"symbol", "value":"quote"}, a] for a in args]
+          expr = [parsed] + [v.quote(a) for a in args]
           ret_vals.append(self.observe(expr,val,label+"_"+str(i) if label is not None else None))
         return ret_vals
 

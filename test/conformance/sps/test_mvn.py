@@ -6,6 +6,7 @@ import math
 
 from venture.test.stats import statisticalTest, reportKnownContinuous
 from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling
+import venture.value.dicts as v
 
 def testMVGaussSmoke():
   if config["get_ripl"] == "puma": raise SkipTest("Puma Vectors do not answer to is_array")
@@ -92,7 +93,7 @@ def testMVN3():
   ripl.assume("sigma","(matrix (array (array 1.0 0.0) (array 0.0 1.0)))")
   ripl.assume("x","(multivariate_normal mu sigma)")
   ripl.assume("y","(multivariate_normal x sigma)")
-  ripl.observe("y",{"type":"vector","value":[2, 2]})
+  ripl.observe("y",v.vector([2, 2]))
   ripl.predict("(lookup x 0)",label="pid")
 
   predictions = collectSamples(ripl,"pid")

@@ -1,18 +1,17 @@
-from venture.venturemagics.ip_parallel import MRipl
-from venture.unit import *
-
 import numpy as np
 import scipy.stats as stats
 from itertools import product
 import math
 
 from nose import SkipTest
-from nose.plugins.attrib import attr
-from venture.test.stats import statisticalTest, reportKnownContinuous
-
-from venture.test.config import get_ripl,get_mripl,ignore_inference_quality,default_num_samples,gen_in_backend
-
 from nose.tools import eq_, assert_almost_equal
+
+from venture.venturemagics.ip_parallel import MRipl
+from venture.unit import *
+from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.config import get_ripl,get_mripl,ignore_inference_quality,default_num_samples,gen_in_backend
+import venture.value.dicts as v
+
 
 # TODO get rid of some tests, simplify others, make tests faster to run
 
@@ -20,7 +19,7 @@ from nose.tools import eq_, assert_almost_equal
 ## Functions used by tests
 def betaModel(ripl):
     assumes=[('p','(beta 1.0 1.0)')]
-    observes=[('(flip p)',{'type': 'boolean', 'value': True}) for _ in range(2)]
+    observes=[('(flip p)',v.boolean(True)) for _ in range(2)]
     queryExps =  ['(add (bernoulli p) (bernoulli p))'] # exps in python form
     for sym,exp in assumes:
         ripl.assume(sym,exp)
@@ -30,7 +29,7 @@ def betaModel(ripl):
 
 def normalModel(ripl):
     assumes = [ ('x','(normal 0 100)') ]
-    observes = [ ('(normal x 100)',{'type': 'number', 'value': 0}) ]
+    observes = [ ('(normal x 100)',v.number(0)) ]
     queryExps = ('(* x 2)',)
     for sym,exp in assumes:
         ripl.assume(sym,exp)
