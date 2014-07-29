@@ -12,6 +12,7 @@ import venture.lite.value as v
 import numpy as np
 from numpy import linalg as npla
 from venture import shortcuts
+import time
 
 class GaussianFunnel(RandomPSP):
   def simulate(self, args):
@@ -69,18 +70,22 @@ def initialize_funnel(ripl):
   ripl.assume('helper', funnel)
   return ripl
 
-def build_funnel(backend):
+def build_ripl(backend, model):
   # make v and the x's
   ripl = shortcuts.backend(backend).make_church_prime_ripl()
-  print ripl.backend()
-  ripl.assume('v', '(scope_include (quote params) 0 (normal 0 3))')
-  ripl.assume('x_range', '(* 4 (sqrt (exp v)))')
+  ripl.assume('v', '(scope_include (quote params) 0 (uniform_continuous -12 12))')
+  ripl.force('v', 0.0)
+  if model == 'correct':
+    ripl.assume('x_range', '(* 4 (sqrt (exp 3)))')
+  elif model == 'incorrect':
+    ripl.assume('x_range', '(* 4 (sqrt (exp v)))')
+  else:
+    raise Exception('Method must be "correct" or "incorrect".')
   for i in range(1, 10):
     ripl.execute_instruction(assemble_x(i))
   # enforce the funnel potential
   ripl = initialize_funnel(ripl)
   # initialize values
-  ripl.force('v', 0.0)
   for i in range(1, 9):
     ripl.execute_instruction(force_x(i))
   return ripl
@@ -108,8 +113,8 @@ def assemble_infer_statement(infer_method, infer_args_v, infer_args_x, nupdate, 
   infer_statement = '(cycle ((plotf pcd0d v) {0}) {1})'.format(infer_cycle, niter)
   return infer_statement
 
-def run_experiment(backend, infer_method, infer_args_v, infer_args_x, nupdate, niter):
-  ripl = build_funnel(backend)
+def run_experiment(backend, model, infer_method, infer_args_v, infer_args_x, nupdate, niter):
+  ripl = build_ripl(backend, model)
   infer_statement = assemble_infer_statement(infer_method, infer_args_v,
                                              infer_args_x, nupdate, niter)
   res = ripl.infer(infer_statement)
@@ -118,10 +123,12 @@ def run_experiment(backend, infer_method, infer_args_v, infer_args_x, nupdate, n
 infer_method = 'mh'
 infer_args_v = []
 infer_args_x = []
-nupdate = 20
-niter = 10
-res = run_experiment('lite', 'mh', [], [], nupdate, niter)
+nupdate = 100
+niter = 50
 
+start = time.time()
+res = run_experiment('puma', 'incorrect', 'mh', [], [], nupdate, niter)
+print time.time() - start
 
 
 
