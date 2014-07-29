@@ -19,6 +19,7 @@ from nose.plugins.attrib import attr
 
 from venture.parser import ChurchPrimeParser
 from venture.test.test_helpers import ParserTestCase
+import venture.value.dicts as v
 
 # Almost the same effect as @venture.test.config.in_backend("none"),
 # but works on the whole class
@@ -41,7 +42,7 @@ class TestChurchPrimeParser(ParserTestCase):
                     {'loc': [3,3], 'value': 'b'},
                     {'loc': [5,15], 'value': [
                         {'loc': [6,6], 'value': 'c'},
-                        {'loc': [8,14], 'value': {'type': 'real', 'value': 1.0}}]}]}])
+                        {'loc': [8,14], 'value': v.real(1.0)}]}]}])
 
     def test_parse_instruction(self):
         output = self.p.parse_instruction('[assume a (b c d)]')
@@ -52,10 +53,7 @@ class TestChurchPrimeParser(ParserTestCase):
     def test_double_symbol(self):
         output = self.p.parse_instruction('[predict (>= 1 1)]')
         expected = {
-            'expression':
-                ['gte',
-                    {'type': 'number', 'value': 1.0},
-                    {'type': 'number', 'value': 1.0}],
+            'expression': ['gte', v.number(1.0), v.number(1.0)],
             'instruction': 'predict'}
         self.assertEqual(output, expected)
     
@@ -63,7 +61,7 @@ class TestChurchPrimeParser(ParserTestCase):
     def test_empty_lambda(self):
         output = self.p.parse_instruction('[predict (lambda () 0)]')
         expected = {'instruction': 'predict',
-            'expression': ['lambda', [], {'type': 'number', 'value': 0.0}]}
+                    'expression': ['lambda', [], v.number(0.0)]}
         self.assertEqual(output, expected)
     
     def test_split_program(self):
