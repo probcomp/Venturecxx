@@ -184,7 +184,7 @@ class Ripl():
         if params != None:
             program_string = self.substitute_params(program_string,params)
         instructions, positions = p.split_program(program_string)
-        return instructions, positions
+        return [self._ensure_parsed(i) for i in instructions], positions
 
     def execute_program(self, program_string, params=None):
         instructions, _positions = self.parse_program(program_string, params=params)
