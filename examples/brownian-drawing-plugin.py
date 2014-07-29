@@ -18,6 +18,7 @@
 
 import venture.lite.psp as psp
 import venture.lite.value as v
+import venture.value.dicts as val
 from venture.lite.builtin import typed_nr
 
 import pygame
@@ -94,20 +95,15 @@ class DrawFramePSP(psp.RandomPSP):
     return inferrer
 
   def ys_at(self, inferrer, var):
-    return [self.y_to_pixels(y["value"]) for y in inferrer.engine.sample_all(self.sym(var))]
+    return [self.y_to_pixels(y["value"]) for y in inferrer.engine.sample_all(val.sym(var))]
 
   def points_at(self, inferrer, i):
-    return [(self.x_to_pixels(i), self.y_to_pixels(y["value"])) for y in inferrer.engine.sample_all([self.sym("position"), self.num(i)])]
+    return [(self.x_to_pixels(i), self.y_to_pixels(y["value"])) for y in inferrer.engine.sample_all([val.sym("position"), val.num(i)])]
 
   def y_to_pixels(self, model_y):
     return int(200 - 30 * model_y)
   def x_to_pixels(self, model_x):
     return int(60 + 30 * model_x)
-
-  def sym(self, s):
-    return {"type":"symbol", "value":s}
-  def num(self, i):
-    return {"type":"number", "value":i}
 
 draw_sp = typed_nr(DrawFramePSP(window), [v.ForeignBlobType()], v.ForeignBlobType())
 

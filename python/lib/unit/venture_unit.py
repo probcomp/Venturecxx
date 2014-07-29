@@ -17,11 +17,11 @@
 import time, random
 import numpy as np
 from venture.lite.utils import FixedRandomness
-from venture.ripl.utils import _strip_types
+from venture.ripl.utils import strip_types
 from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl,mk_l_ripl, build_exp
 from history import History, Run, Series, historyOverlay,compareSampleDicts,filterDict,historyNameToValues
 
-parseValue = _strip_types
+parseValue = strip_types
 
 
 # TODO

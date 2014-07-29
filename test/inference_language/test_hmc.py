@@ -4,6 +4,7 @@ from nose import SkipTest
 
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportSameContinuous
 from venture.test.config import get_ripl, collectSamples, broken_in, gen_broken_in
+import venture.value.dicts as val
 
 @broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
 @statisticalTest
@@ -113,16 +114,14 @@ def testMoreElaborate():
     (normal x 1)
     (normal x 2))""")
   ripl.assume("out", "(multivariate_normal (array xout y) (matrix (list (list 1 0.5) (list 0.5 1))))")
-  # TODO Unexpectedly serious problem: how to observe a data structure?
-  # Can't observe coordinatewise because observe is not flexible
+  # Note: Can't observe coordinatewise because observe is not flexible
   # enough.  For this to work we would need observations of splits.
   # ripl.observe("(lookup out 0)", 0)
   # ripl.observe("(lookup out 1)", 0)
   # Can't observe through the ripl literally because the string
   # substitution (!) is not flexible enough.
   # ripl.observe("out", [0, 0])
-  v = [{"type": "real", "value": 0}, {"type": "real", "value": 0}]
-  ripl.observe("out", {"type":"list","value":v})
+  ripl.observe("out", val.list([val.real(0), val.real(0)]))
 
   preds_mh = collectSamples(ripl, "pid", infer="(mh default one 10)")
   ripl.sivm.core_sivm.engine.reinit_inference_problem()
@@ -136,8 +135,7 @@ def testMoveMatrix():
   ripl.assume("scale", "(matrix (list (list 2 1) (list 1 2)))")
   ripl.assume("sigma", "(wishart scale 4)", label="pid")
   ripl.assume("out", "(multivariate_normal mu sigma)")
-  v = [{"type": "real", "value": 1}, {"type": "real", "value": 1}]
-  ripl.observe("out", {"type":"list","value":v})
+  ripl.observe("out", val.list([val.real(1), val.real(1)]))
 
   preds_mh = collectSamples(ripl, "pid", infer="(mh default one 30)")
   ripl.sivm.core_sivm.engine.reinit_inference_problem()

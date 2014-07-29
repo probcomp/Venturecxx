@@ -1,22 +1,12 @@
-from venture import shortcuts
-from venture.unit import VentureUnit, historyOverlay
-from venture.sivm import VentureSivm
-from venture import ripl
-import scipy.io as sio
 import numpy as np
-import numpy.random as rd
-import argparse
-import sys
-import time
-from IPython.parallel import Client
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 
+from venture import shortcuts
+import venture.value.dicts as v
+
 def toVentureArray(array, token='array'):
   return '(%s %s)'%(token, ' '.join(['%.20f'%(x) for x in array]))
-
-def toVentureInternalArray(array, token='array'):
-  return {"type":"list", "value":[{"type":"real", "value": x} for x in array]}
 
 def toVentureMatrix(array):
   return '(matrix (list %s))'%(' '.join([toVentureArray(x, token='list') for x in array]))
@@ -52,16 +42,16 @@ class CRP2dMixtureDemo():
 
 
   def makeObserves(self):
-    self.ripl.observe('(get_datapoint 0)', {'type': 'list', 'value': [{'type': 'real', 'value': -2.4121470179012272}, {'type': 'real', 'value': -4.0898807104175177}]})
-    self.ripl.observe('(get_datapoint 1)', {'type': 'list', 'value': [{'type': 'real', 'value': -3.5742473969392483}, {'type': 'real', 'value': 16.047761595206289}]})
-    self.ripl.observe('(get_datapoint 2)', {'type': 'list', 'value': [{'type': 'real', 'value': -0.44139814963230056}, {'type': 'real', 'value': -4.366209321011203}]})
-    self.ripl.observe('(get_datapoint 3)', {'type': 'list', 'value': [{'type': 'real', 'value': -0.23258164982263235}, {'type': 'real', 'value': -5.687017265835844}]})
-    self.ripl.observe('(get_datapoint 4)', {'type': 'list', 'value': [{'type': 'real', 'value': 0.035565573263568961}, {'type': 'real', 'value': -3.337136380872824}]})
-    self.ripl.observe('(get_datapoint 5)', {'type': 'list', 'value': [{'type': 'real', 'value': -4.3443008510924654}, {'type': 'real', 'value': 17.827515632039944}]})
-    self.ripl.observe('(get_datapoint 6)', {'type': 'list', 'value': [{'type': 'real', 'value': -0.19026889153157978}, {'type': 'real', 'value': -3.6065264508558972}]})
-    self.ripl.observe('(get_datapoint 7)', {'type': 'list', 'value': [{'type': 'real', 'value': -4.8535236723040498}, {'type': 'real', 'value': 17.098870618931819}]})
-    self.ripl.observe('(get_datapoint 8)', {'type': 'list', 'value': [{'type': 'real', 'value': -1.1235421108040797}, {'type': 'real', 'value': -5.261098458581845}]})
-    self.ripl.observe('(get_datapoint 9)', {'type': 'list', 'value': [{'type': 'real', 'value': 1.1794444234381136}, {'type': 'real', 'value': -3.630199721409284}]})
+    self.ripl.observe('(get_datapoint 0)', v.list([v.real(-2.4121470179012272), v.real(-4.0898807104175177)]))
+    self.ripl.observe('(get_datapoint 1)', v.list([v.real(-3.5742473969392483), v.real(16.047761595206289)]))
+    self.ripl.observe('(get_datapoint 2)', v.list([v.num(-0.44139814963230056), v.num(-4.366209321011203)]))
+    self.ripl.observe('(get_datapoint 3)', v.list([v.num(-0.23258164982263235), v.num(-5.687017265835844)]))
+    self.ripl.observe('(get_datapoint 4)', v.list([v.num(0.035565573263568961), v.num(-3.337136380872824)]))
+    self.ripl.observe('(get_datapoint 5)', v.list([v.num(-4.3443008510924654), v.num(17.827515632039944)]))
+    self.ripl.observe('(get_datapoint 6)', v.list([v.num(-0.19026889153157978), v.num(-3.6065264508558972)]))
+    self.ripl.observe('(get_datapoint 7)', v.list([v.num(-4.8535236723040498), v.num(17.098870618931819)]))
+    self.ripl.observe('(get_datapoint 8)', v.list([v.num(-1.1235421108040797), v.num(-5.261098458581845)]))
+    self.ripl.observe('(get_datapoint 9)', v.list([v.num(1.1794444234381136), v.num(-3.630199721409284)]))
     self.num_sample = 10
 
 if __name__ == '__main__':

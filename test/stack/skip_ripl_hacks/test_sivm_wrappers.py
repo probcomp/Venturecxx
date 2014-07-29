@@ -19,6 +19,7 @@ from nose.tools import assert_equal
 
 from venture.sivm import VentureSivm
 from venture.test.config import get_core_sivm
+import venture.value.dicts as v
 
 # TODO Not really backend independent, but doesn't test the backend much.
 # Almost the same effect as @venture.test.config.in_backend("none"),
@@ -39,39 +40,35 @@ class TestVentureSivm(unittest.TestCase):
     def extractValue(self,d): return d['value']['value']
 
     def testAssume(self):
-        self.sivm.assume('x1',{'type':'number','value':1})
-        self.sivm.assume('x2',{'type':'number','value':2},label='xx2')
+        self.sivm.assume('x1',v.number(1))
+        self.sivm.assume('x2',v.number(2),label='xx2')
         assert_equal(self.extractValue(self.sivm.report(1)),1)
         assert_equal(self.extractValue(self.sivm.report('xx2')),2)
 
     def testPredict(self):
-        self.sivm.predict({'type':'number','value':1})
-        self.sivm.predict({'type':'number','value':2},label='xx2')
+        self.sivm.predict(v.number(1))
+        self.sivm.predict(v.number(2),label='xx2')
         assert_equal(self.extractValue(self.sivm.report(1)),1)
         assert_equal(self.extractValue(self.sivm.report('xx2')),2)
 
     def testListDirectives(self):
-        self.sivm.predict({'type':'number','value':1})
-        self.sivm.predict({'type':'number','value':2},label='xx2')
+        self.sivm.predict(v.number(1))
+        self.sivm.predict(v.number(2),label='xx2')
         assert_equal(len(self.sivm.list_directives()['directives']),2)
 
     def testObserve(self):
-        self.sivm.observe([{'type':'symbol','value':'normal'},
-                           {'type':'number','value':0},
-                           {'type':'number','value':1}],
-                          {'type':'number','value':1})
+        self.sivm.observe([v.symbol('normal'), v.number(0), v.number(1)],
+                          v.number(1))
         assert_equal(self.extractValue(self.sivm.report(1)),1)
 
     def testForget(self):
-        self.sivm.predict({'type':'number','value':1})
-        self.sivm.predict({'type':'number','value':2},label='xx2')
+        self.sivm.predict(v.number(1))
+        self.sivm.predict(v.number(2),label='xx2')
         self.sivm.forget(1)
         self.sivm.forget('xx2')
         assert_equal(len(self.sivm.list_directives()['directives']),0)
 
     def testForceAndSample(self):
-        self.sivm.assume('x',[{'type':'symbol','value':'normal'},
-                              {'type':'number','value':0},
-                              {'type':'number','value':1}])
-        self.sivm.force('x',{'type':'number','value':-2})
+        self.sivm.assume('x',[v.symbol('normal'), v.number(0), v.number(1)])
+        self.sivm.force('x',v.number(-2))
         assert_equal(self.extractValue(self.sivm.sample('x')),-2)

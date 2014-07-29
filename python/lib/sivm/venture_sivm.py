@@ -16,10 +16,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from venture.exception import VentureException
-from venture.sivm import utils
 import copy
 
+from venture.exception import VentureException
+from venture.sivm import utils
+import venture.value.dicts as v
 
 class VentureSivm(object):
 
@@ -298,7 +299,7 @@ class VentureSivm(object):
                 }
         o1 = self._call_core_sivm_instruction(inst1)
         inst2 = { "instruction" : "infer",
-                  "expression" : [{"type":"symbol", "value":"incorporate"}] }
+                  "expression" : [v.symbol("incorporate")] }
         self._call_core_sivm_instruction(inst2)
         inst3 = {
                 "instruction" : "forget",

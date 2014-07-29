@@ -183,8 +183,8 @@ class SpecPlot(object):
         # Data source was not requested; remove it to avoid confusing pandas
         del self.data[name]
     from pandas import DataFrame
-    from venture.ripl.utils import _strip_types_from_dict_values
-    return DataFrame.from_dict(_strip_types_from_dict_values(self.data))
+    from venture.ripl.utils import strip_types_from_dict_values
+    return DataFrame.from_dict(strip_types_from_dict_values(self.data))
 
   def draw(self):
     return self.spec.draw(self.dataset(), self.names)

@@ -20,6 +20,7 @@ from nose import SkipTest
 from venture.sivm import VentureSivm
 from venture.exception import VentureException
 from venture.test.config import get_core_sivm
+import venture.value.dicts as v
 
 # TODO Maybe implement a stub backend that answers all method calls
 # with "Yes, Minister" and use that instead of Lite here.
@@ -65,7 +66,7 @@ class TestVentureSivm(unittest.TestCase):
     def test_invalid_label(self):
         inst = {
                 'instruction':'labeled_assume',
-                'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
+                'expression': ['add',v.number(1),v.number(2)],
                 'symbol': 'moo',
                 'label': '123moo'
                 }
@@ -77,7 +78,7 @@ class TestVentureSivm(unittest.TestCase):
     def test_repeated_label(self):
         inst = {
                 'instruction':'labeled_assume',
-                'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
+                'expression': ['add',v.number(1),v.number(2)],
                 'symbol': 'moo',
                 'label': 'moo'
                 }
@@ -107,7 +108,7 @@ class TestVentureSivm(unittest.TestCase):
     # test exception_index desugaring
     def test_sugaring_2(self):
         raise SkipTest("Stubbing the sivm breaks pausing continuous inference.  Issue: https://app.asana.com/0/9277419963067/10281673660714")
-        num = {'type':'number','value':1}
+        num = v.number(1)
         did = self.sivm.execute_instruction({
             "instruction":"assume",
             "symbol":"d",
@@ -132,19 +133,19 @@ class TestVentureSivm(unittest.TestCase):
     def test_labeled_assume(self):
         inst = {
                 'instruction':'labeled_assume',
-                'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
+                'expression': ['add',v.number(1),v.number(2)],
                 'symbol': 'moo',
                 'label' : 'moo'
                 }
-        val = {'type':'number','value':3}
+        val = v.number(3)
         o = self.sivm.execute_instruction(inst)
         self.assertIsInstance(o['directive_id'],(int,float))
         self.assertEquals(o['value'],val)
     def test_labeled_observe(self):
         inst = {
                 'instruction':'labeled_observe',
-                'expression': ['normal',{'type':'number','value':1},{'type':'number','value':2}],
-                'value': {"type":"real","value":3},
+                'expression': ['normal',v.number(1),v.number(2)],
+                'value': v.real(3),
                 'label' : 'moo'
                 }
         o = self.sivm.execute_instruction(inst)
@@ -152,17 +153,17 @@ class TestVentureSivm(unittest.TestCase):
     def test_labeled_predict(self):
         inst = {
                 'instruction':'labeled_predict',
-                'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
+                'expression': ['add',v.number(1),v.number(2)],
                 'label' : 'moo'
                 }
-        val = {'type':'number','value':3}
+        val = v.number(3)
         o = self.sivm.execute_instruction(inst)
         self.assertIsInstance(o['directive_id'],(int,float))
         self.assertEquals(o['value'],val)
     def test_labeled_forget(self):
         inst1 = {
                 'instruction':'labeled_predict',
-                'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
+                'expression': ['add',v.number(1),v.number(2)],
                 'label' : 'moo',
                 }
         self.sivm.execute_instruction(inst1)
@@ -183,7 +184,7 @@ class TestVentureSivm(unittest.TestCase):
     def test_labeled_report(self):
         inst1 = {
                 'instruction':'labeled_predict',
-                'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
+                'expression': ['add',v.number(1),v.number(2)],
                 'label' : 'moo',
                 }
         self.sivm.execute_instruction(inst1)
@@ -192,11 +193,11 @@ class TestVentureSivm(unittest.TestCase):
                 'label' : 'moo',
                 }
         o2 = self.sivm.execute_instruction(inst2)
-        self.assertEquals(o2['value'], {'type':'number','value':3})
+        self.assertEquals(o2['value'], v.number(3))
     def test_labeled_get_logscore(self):
         inst1 = {
                 'instruction':'labeled_predict',
-                'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
+                'expression': ['add',v.number(1),v.number(2)],
                 'label' : 'moo',
                 }
         self.sivm.execute_instruction(inst1)
@@ -209,7 +210,7 @@ class TestVentureSivm(unittest.TestCase):
     def test_list_directives(self):
         inst1 = {
                 'instruction':'predict',
-                'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
+                'expression': ['add',v.number(1),v.number(2)],
                 }
         o1 = self.sivm.execute_instruction(inst1)
         inst1['directive_id'] = o1['directive_id']
@@ -221,7 +222,7 @@ class TestVentureSivm(unittest.TestCase):
     def test_get_directive(self):
         inst1 = {
                 'instruction':'predict',
-                'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
+                'expression': ['add',v.number(1),v.number(2)],
                 }
         o1 = self.sivm.execute_instruction(inst1)
         inst1['directive_id'] = o1['directive_id']
@@ -234,7 +235,7 @@ class TestVentureSivm(unittest.TestCase):
     def test_labeled_get_directive(self):
         inst1 = {
                 'instruction':'labeled_predict',
-                'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
+                'expression': ['add',v.number(1),v.number(2)],
                 'label': 'moo',
                 }
         o1 = self.sivm.execute_instruction(inst1)
@@ -247,15 +248,15 @@ class TestVentureSivm(unittest.TestCase):
         output = {
                 'directive_id': o1['directive_id'],
                 'instruction': 'predict',
-                'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
+                'expression': ['add',v.number(1),v.number(2)],
                 'label': 'moo',
                 }
         self.assertEquals(o2['directive'], output)
     def test_force(self):
         inst = {
                 'instruction':'force',
-                'expression': ['normal',{'type':'number','value':1},{'type':'number','value':2}],
-                'value': {"type":"real","value":3}
+                'expression': ['normal',v.number(1),v.number(2)],
+                'value': v.real(3)
                 }
         self.sivm.execute_instruction(inst)
         inst2 = {
@@ -266,9 +267,9 @@ class TestVentureSivm(unittest.TestCase):
     def test_sample(self):
         inst = {
                 'instruction':'sample',
-                'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
+                'expression': ['add',v.number(1),v.number(2)],
                 }
-        val = {'type':'number','value':3}
+        val = v.number(3)
         o = self.sivm.execute_instruction(inst)
         self.assertEquals(o['value'],val)
         inst2 = {
@@ -281,8 +282,8 @@ class TestVentureSivm(unittest.TestCase):
         raise SkipTest("cxx -> python exceptions not implemented.  Issue: https://app.asana.com/0/9277419963067/9940667562266")
         inst1 = {
                 'instruction':'force',
-                'expression': ['moo',{'type':'number','value':1},{'type':'number','value':2}],
-                'value': {"type":"real","value":3}
+                'expression': ['moo',v.number(1),v.number(2)],
+                'value': v.real(3)
                 }
         try:
             self.sivm.execute_instruction(inst1)

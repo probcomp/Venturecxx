@@ -22,6 +22,7 @@ from venture.exception import VentureException
 from venture.sivm import VentureSivm
 from venture.parser import ChurchPrimeParser, VentureScriptParser
 from venture.test.config import get_core_sivm
+import venture.value.dicts as v
 
 # TODO Not really backend independent, but doesn't test the backend much.
 # Almost the same effect as @venture.test.config.in_backend("none"),
@@ -68,12 +69,12 @@ class TestRipl(unittest.TestCase):
         f("[assume b (+ 1 2)]")
         f("[assume c (- b a)]")
         ret_value= f("[predict c]")
-        self.assertEqual(ret_value['value'], {"type":"number","value":2})
+        self.assertEqual(ret_value['value'], v.number(2))
 
     def test_execute_program(self):
         f = self.ripl.execute_program
         ret_value = f("[assume a 1] [assume b (+ 1 2)] [assume c (- b a)] [predict c]")
-        self.assertEqual(ret_value[-1]['value'], {"type":"number","value":2})
+        self.assertEqual(ret_value[-1]['value'], v.number(2))
 
     def test_parse_exception_sugaring(self):
         f = self.ripl.execute_instruction

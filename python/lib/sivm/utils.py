@@ -16,9 +16,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import re
+
 from venture.exception import VentureException
 from venture.lite.value import VentureValue
-import re
+import venture.value.dicts as v
 
 def is_valid_symbol(s):
     if not isinstance(s,basestring):
@@ -37,11 +39,11 @@ def desugar_expression(exp):
         if exp[0] == 'and':
             if len(exp) != 3:
                 raise VentureException('parse','"and" statement requires 2 arguments',expression_index=[])
-            return [['biplex',dsw(exp,1),['lambda',[],dsw(exp,2)],['lambda',[],{"type":"boolean", "value":False}]]]
+            return [['biplex',dsw(exp,1),['lambda',[],dsw(exp,2)],['lambda',[],v.boolean(False)]]]
         if exp[0] == 'or':
             if len(exp) != 3:
                 raise VentureException('parse','"or" statement requires 2 arguments',expression_index=[])
-            return [['biplex',dsw(exp,1),['lambda',[],{"type":"boolean", "value":True}],['lambda',[],dsw(exp,2)]]]
+            return [['biplex',dsw(exp,1),['lambda',[],v.boolean(True)],['lambda',[],dsw(exp,2)]]]
         if exp[0] == 'let':
             if len(exp) != 3:
                 raise VentureException('parse','"let" statement requires 2 arguments',expression_index=[])
@@ -281,13 +283,13 @@ def validate_arg(instruction,arg,validator,modifier=lambda x: x,required=True,wr
                     'the "{}" argument'.format(instruction['instruction'],arg),
                     argument=arg)
         return None
-    v = instruction[arg]
+    val = instruction[arg]
     try:
-        v = validator(v)
+        val = validator(val)
     except VentureException as e:
         if e.exception == 'parse' and wrap_exception:
             raise VentureException('invalid_argument',
                     'Invalid argument {}. {}'.format(arg, str(e)),
                     argument=arg)
         raise
-    return modifier(v)
+    return modifier(val)
