@@ -162,7 +162,7 @@ class Ripl():
             try:
                 p.parse_instruction(instruction_string)
             except VentureException as e2:
-                assert(e2.exception == 'text_parse')
+                assert e2.exception == 'text_parse'
                 e = e2
         # in case of invalid argument exception, the text index
         # refers to the argument's location in the string
@@ -183,7 +183,7 @@ class Ripl():
         # perform parameter substitution if necessary
         if params != None:
             program_string = self.substitute_params(program_string,params)
-        instructions, positions = p.split_program(program_string)
+        instructions, _positions = p.split_program(program_string)
         vals = []
         for instruction in instructions:
             vals.append(self.execute_instruction(instruction))
@@ -320,7 +320,7 @@ value to be returned as a dict annotating its Venture type.
             i = {'instruction':'labeled_assume',
                   'symbol':name, 'expression':expression, 'label':label}
         value = self.execute_instruction(i)['value']
-        return value if type else u._strip_types(value)
+        return value if type else u.strip_types(value)
 
     def predict(self, expression, label=None, type=False):
         if label==None:
@@ -328,7 +328,7 @@ value to be returned as a dict annotating its Venture type.
         else:
             i = {'instruction':'labeled_predict', 'expression':expression, 'label':label}
         value = self.execute_instruction(i)['value']
-        return value if type else u._strip_types(value)
+        return value if type else u.strip_types(value)
 
     def observe(self, expression, value, label=None):
         if label==None:
@@ -462,7 +462,7 @@ Open issues:
         else:
             i = {'instruction':'labeled_report', 'label':label_or_did}
         value = self.execute_instruction(i)['value']
-        return value if type else u._strip_types(value)
+        return value if type else u.strip_types(value)
 
     def defaultInferProgram(self, program):
         try: # Check for being a string that represents an int
@@ -487,7 +487,7 @@ Open issues:
         if type:
             return ans
         elif isinstance(ans, dict): # Presume this is peek output
-            return u._strip_types_from_dict_values(ans)
+            return u.strip_types_from_dict_values(ans)
         else: # Presume this is plotf output
             return ans
 
@@ -512,7 +512,7 @@ Open issues:
                          'directive_id':directive['directive_id'],
                          }
                 value = self.execute_instruction(inst)['value']
-                directive['value'] = value if type else u._strip_types(value)
+                directive['value'] = value if type else u.strip_types(value)
             # if not requested to include the prelude, exclude those directives
             if hasattr(self, '_n_prelude') and (not include_prelude):
                 directives = directives[self._n_prelude:]
@@ -551,7 +551,7 @@ Open issues:
     def sample(self, expression, type=False):
         i = {'instruction':'sample', 'expression':expression}
         value = self.execute_instruction(i)['value']
-        return value if type else u._strip_types(value)
+        return value if type else u.strip_types(value)
 
     def continuous_inference_status(self):
         return self.execute_instruction({'instruction':'continuous_inference_status'})
@@ -679,7 +679,10 @@ Open issues:
                 prog = f.readlines()
             prog = ''.join(x for x in prog if not re.match('^;', x))
             _ = self.execute_program(prog)
-        # keep track of the number of directives in the prelude
+        # Keep track of the number of directives in the prelude. Only
+        # works if the ripl is cleared immediately before loading the
+        # prelude, but that's the implicit assumption in the
+        # _n_prelude concept anyway.
         self._n_prelude += len(self.list_directives(include_prelude = True))
 
     ############################################
