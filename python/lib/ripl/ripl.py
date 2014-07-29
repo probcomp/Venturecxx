@@ -183,13 +183,15 @@ class Ripl():
         # perform parameter substitution if necessary
         if params != None:
             program_string = self.substitute_params(program_string,params)
-        # TODO the right thing is make "comment" a valid instruction type.
+        # TODO the right thing is to make "comment" a valid instruction type.
         no_comments = '\n'.join(x for x in program_string.split('\n') if not re.match('^;', x))
         instructions, positions = p.split_program(no_comments)
         return [self._ensure_parsed(i) for i in instructions], positions
 
     def execute_program(self, program_string, params=None):
-        instructions, _positions = self.parse_program(program_string, params=params)
+        self.execute_parsed_program(*self.parse_program(program_string, params=params))
+
+    def execute_parsed_program(self, instructions, _positions):
         vals = []
         for instruction in instructions:
             vals.append(self.execute_instruction(instruction))
@@ -671,6 +673,7 @@ Open issues:
     def profile_data(self):
         return self.sivm.core_sivm.engine.profile_data()
 
+    _parsed_prelude = None
 
     ############################################
     # Library
@@ -679,17 +682,19 @@ Open issues:
         '''
         Load the library of Venture helper functions
         '''
-        if self.mode == 'church_prime':
+        if Ripl._parsed_prelude is not None:
+            self.execute_parsed_program(*Ripl._parsed_prelude)
+            # Keep track of the number of directives in the prelude. Only
+            # works if the ripl is cleared immediately before loading the
+            # prelude, but that's the implicit assumption in the
+            # _n_prelude concept anyway.
+            self._n_prelude += len(self.list_directives(include_prelude = True))
+        elif self.mode == 'church_prime':
             prelude_path = path.join(path.dirname(__file__), PRELUDE_FILE)
             with open(prelude_path) as f:
-                prog = f.readlines()
-            prog = ''.join(x for x in prog if not re.match('^;', x))
-            _ = self.execute_program(prog)
-        # Keep track of the number of directives in the prelude. Only
-        # works if the ripl is cleared immediately before loading the
-        # prelude, but that's the implicit assumption in the
-        # _n_prelude concept anyway.
-        self._n_prelude += len(self.list_directives(include_prelude = True))
+                Ripl._parsed_prelude = self.parse_program(f.read())
+                print Ripl._parsed_prelude
+            self.load_prelude()
 
     ############################################
     # Private methods
