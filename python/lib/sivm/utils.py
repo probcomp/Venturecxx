@@ -256,7 +256,12 @@ def validate_symbol(s):
         raise VentureException('parse',
                 'Invalid symbol. May only contain letters, digits, and underscores. May not begin with digit.',
                 expression_index=[])
-    return s.encode('ascii')
+    # TODO Figure out where in the lower levels the symbol-as-string
+    # representation is expected and change to dict-symbols.
+    if isinstance(s, basestring):
+        return s.encode('ascii')
+    else:
+        return s["value"].encode('ascii')
 
 def validate_dict(s):
     if not isinstance(s,dict):
