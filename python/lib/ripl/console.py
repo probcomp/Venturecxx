@@ -23,11 +23,11 @@ import os
 
 from venture.exception import VentureException
 from venture.lite.exception import VentureError
-from utils import _strip_types
+from utils import strip_types
 
 def getValue(directive):
   '''Gets the actual value returned by an assume, predict, report, or sample directive.'''
-  return _strip_types(directive['value'])
+  return strip_types(directive['value'])
 
 def catchesVentureException(f):
   @wraps(f)
