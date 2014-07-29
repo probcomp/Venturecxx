@@ -38,22 +38,23 @@ class TestChurchPrimeParser(ParserTestCase):
         #        None)
         self.run_test( "(a b (c real<1>))",
                 [{'loc': [0,16], 'value':[
-                    {'loc': [1,1], 'value': 'a'},
-                    {'loc': [3,3], 'value': 'b'},
+                    {'loc': [1,1], 'value': v.sym('a')},
+                    {'loc': [3,3], 'value': v.sym('b')},
                     {'loc': [5,15], 'value': [
-                        {'loc': [6,6], 'value': 'c'},
+                        {'loc': [6,6], 'value': v.sym('c')},
                         {'loc': [8,14], 'value': v.real(1.0)}]}]}])
 
     def test_parse_instruction(self):
         output = self.p.parse_instruction('[assume a (b c d)]')
-        expected = {'instruction':'assume', 'symbol':'a', 'expression':['b','c','d']}
+        expected = {'instruction':'assume', 'symbol':v.sym('a'),
+                    'expression':[v.sym('b'),v.sym('c'),v.sym('d')]}
         self.assertEqual(output,expected)
 
     # detects bug where '>=' is parsed as '> =' (because '>' is its own symbol)
     def test_double_symbol(self):
         output = self.p.parse_instruction('[predict (>= 1 1)]')
         expected = {
-            'expression': ['gte', v.number(1.0), v.number(1.0)],
+            'expression': [v.symbol('gte'), v.number(1.0), v.number(1.0)],
             'instruction': 'predict'}
         self.assertEqual(output, expected)
 
@@ -61,7 +62,7 @@ class TestChurchPrimeParser(ParserTestCase):
     def test_empty_lambda(self):
         output = self.p.parse_instruction('[predict (lambda () 0)]')
         expected = {'instruction': 'predict',
-                    'expression': ['lambda', [], v.number(0.0)]}
+                    'expression': [v.symbol('lambda'), [], v.number(0.0)]}
         self.assertEqual(output, expected)
 
     def test_split_program(self):
