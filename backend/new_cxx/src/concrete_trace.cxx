@@ -449,7 +449,7 @@ double ConcreteTrace::makeConsistent()
        iter != unpropagatedObservations.end();
        ++iter)
   {
-    OutputNode * appNode = getOutermostNonRefAppNode(iter->first);
+    OutputNode * appNode = getConstrainableNode(iter->first);
     vector<set<Node*> > setsOfPNodes;
     set<Node*> pnodes;
     pnodes.insert(appNode);

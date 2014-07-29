@@ -84,11 +84,26 @@ shared_ptr<Args> Trace::getArgs(ApplicationNode * node) { return shared_ptr<Args
 
 
 ///////// misc
-OutputNode * Trace::getOutermostNonRefAppNode(Node * node)
+OutputNode * Trace::getConstrainableNode(Node * node)
 {
-  if (dynamic_cast<ConstantNode*>(node)) { throw "Cannot constrain a deterministic value."; }
+  Node * candidate = getOutermostNonReferenceNode(node);
+
+  if (dynamic_cast<ConstantNode*>(candidate)) { throw "Cannot constrain a deterministic value."; }
+  OutputNode * outputNode = dynamic_cast<OutputNode*>(candidate);
+  assert(outputNode);
+
+  if (!getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode)->isRandom())
+  {
+    throw "Cannot constrain a deterministic value.";
+  }
+  return outputNode;
+}
+
+Node * Trace::getOutermostNonReferenceNode(Node * node)
+{
+  if (dynamic_cast<ConstantNode*>(node)) { return node; }
   LookupNode * lookupNode = dynamic_cast<LookupNode*>(node);
-  if (lookupNode) { return getOutermostNonRefAppNode(lookupNode->sourceNode); }
+  if (lookupNode) { return getOutermostNonReferenceNode(lookupNode->sourceNode); }
   OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
   assert(outputNode);
   
@@ -97,16 +112,15 @@ OutputNode * Trace::getOutermostNonRefAppNode(Node * node)
   if (dynamic_pointer_cast<ESRRefOutputPSP>(psp))
   { 
     assert(getESRParents(outputNode).size() == 1);
-    return getOutermostNonRefAppNode(getESRParents(outputNode)[0].get());
+    return getOutermostNonReferenceNode(getESRParents(outputNode)[0].get());
   }
   else if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
   { 
-    return getOutermostNonRefAppNode(outputNode->operandNodes[2]);
+    return getOutermostNonReferenceNode(outputNode->operandNodes[2]);
   }
   else
   {
-    if(!psp->isRandom()) { throw "Cannot constrain a deterministic value."; }
-    return outputNode;
+    return node;
   }
 }
 
