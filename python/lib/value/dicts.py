@@ -52,6 +52,9 @@ def blob(v):
 def list(vs):
     return val("list", vs)
 
+def dict(d):
+    return val("dict", d)
+
 def improper_list(vs, tail):
     return val("improper_list", (vs, tail))
 
