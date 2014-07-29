@@ -23,6 +23,7 @@ import re
 import json
 
 from venture.exception import VentureException
+import venture.value.dicts as val
 
 # NOTE: when a ParseException is raised -- it fails soft, and the parser
 # will continue to try to match the string with the next pattern in its list
@@ -229,7 +230,7 @@ def value_token():
 # evalutes to a literal number value: {"type":"number", "value":s}
 def number_literal_token():
     def process_number_literal(_s, _loc, toks):
-        v = {'type':'number', 'value':float(toks[0]['value'])}
+        v = val.number(float(toks[0]['value']))
         l = toks[0]['loc']
         return [{"loc":l, "value":v}]
     number_literal = MatchFirst([number_token()])
@@ -241,7 +242,7 @@ def number_literal_token():
 # evalutes to a literal boolean value: {"type":"boolean", "value":s}
 def boolean_literal_token():
     def process_boolean_literal(_s, _loc, toks):
-        v = {'type':'boolean', 'value':toks[0]['value']}
+        v = val.boolean(toks[0]['value'])
         l = toks[0]['loc']
         return [{"loc":l, "value":v}]
     boolean_literal = MatchFirst([boolean_token()])
