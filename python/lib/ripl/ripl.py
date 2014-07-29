@@ -183,7 +183,9 @@ class Ripl():
         # perform parameter substitution if necessary
         if params != None:
             program_string = self.substitute_params(program_string,params)
-        instructions, positions = p.split_program(program_string)
+        # TODO the right thing is make "comment" a valid instruction type.
+        no_comments = '\n'.join(x for x in program_string.split('\n') if not re.match('^;', x))
+        instructions, positions = p.split_program(no_comments)
         return [self._ensure_parsed(i) for i in instructions], positions
 
     def execute_program(self, program_string, params=None):
