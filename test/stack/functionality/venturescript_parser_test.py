@@ -19,6 +19,7 @@ from nose.plugins.attrib import attr
 from venture.parser import VentureScriptParser
 import venture.parser.venture_script_parser as module
 from venture.test.test_helpers import ParserTestCase
+import venture.value.dicts as v
 
 exponent_ops = [('**','pow')]
 add_sub_ops = [('+', 'add'), ('-','sub')]
@@ -133,7 +134,7 @@ class TestVentureScriptParserAtoms(ParserTestCase):
     def test_proc(self):
         self.expression = self.p.proc
         self.run_test( "proc(arg, arg){ true }",
-                r(0,22,r(0,4,"lambda",4,10,r(5,3,"arg",10,3,"arg"),16,4,{'type':'boolean', 'value':True})))
+                r(0,22,r(0,4,"lambda",4,10,r(5,3,"arg",10,3,"arg"),16,4,v.boolean(True))))
         self.run_test( "proc(){ a=b c }",
                 r(0,15,r(0,4,"lambda",4,2,r(),8,5,r(8,5,'let',8,3,r(8,3,r(8,1,"a",10,1,'b')),12,1,"c"))))
 
@@ -477,7 +478,7 @@ class TestVentureScriptParserAtoms(ParserTestCase):
                 "expression")
         #proc
         self.run_legacy_test( "proc(){ a=2 b }",
-                [["lambda",[],['let',[["a", {'type':'number', 'value':2.0}]], "b"]]],
+                [["lambda",[],['let',[["a", v.number(2.0)]], "b"]]],
                 "expression")
         #symbol
         self.run_legacy_test( "b",
@@ -485,7 +486,7 @@ class TestVentureScriptParserAtoms(ParserTestCase):
                 "expression")
         #literal
         self.run_legacy_test( "3",
-                [{'type':'number', 'value':3.0}],
+                [v.number(3.0)],
                 "expression")
         #if_else
         self.run_legacy_test( "if (a) { b }else {c}",
@@ -513,7 +514,7 @@ class TestVentureScriptParserAtoms(ParserTestCase):
                 "expression")
         #boolean
         self.run_legacy_test( "true && true || true",
-                [['or', ['and', {'type':'boolean', 'value':True}, {'type':'boolean', 'value':True}], {'type':'boolean', 'value':True}]],
+                [['or', ['and', v.boolean(True), v.boolean(True)], v.boolean(True)]],
                 "expression")
 
 
@@ -523,10 +524,10 @@ class TestVentureScriptParserAtoms(ParserTestCase):
         """,
                 [['sub',
                             ['add',
-                                ['div',['add',{'type':'number','value':1.0},{'type':'number','value':4.0}],['pow',{'type':'number','value':3.0},{'type':'number','value':5.11}]],
-                                ['mul',{'type':'number','value':32.0},{'type':'number','value':4.0}],
+                                ['div',['add',v.number(1.0),v.number(4.0)],['pow',v.number(3.0),v.number(5.11)]],
+                                ['mul',v.number(32.0),v.number(4.0)],
                                 ],
-                            {'type':'number','value':2.0}]],
+                            v.number(2.0)]],
                 "expression")
 
 
@@ -650,7 +651,7 @@ class TestInstructions(ParserTestCase):
                 [{"loc":j(0,7,8,4,13,1,15,3), "value":{
                     "instruction" : {"loc":j(0,7), "value":"observe"},
                     "expression" : {"loc":j(8,4), "value":"blah"},
-                    "value" : {"loc": j(15,3), "value":{"type":"number", "value":1.3}},
+                    "value" : {"loc": j(15,3), "value":v.number(1.3)},
                     }}])
     def test_labeled_observe(self):
         self.run_test( "name : observe a = count<32>",
@@ -702,7 +703,7 @@ class TestInstructions(ParserTestCase):
         self.run_test( " infer 132",
                 [{"loc":j(1,5,7,3), "value":{
                     "instruction" : {"loc":j(1,5), "value":"infer"},
-                    "expression" : {"loc":j(7,3), "value":{"type":"number","value":132.0}},
+                    "expression" : {"loc":j(7,3), "value":v.number(132.0)},
                     }}])
 
     def test_program(self):
@@ -715,7 +716,7 @@ class TestInstructions(ParserTestCase):
                         "value" : {"loc":j(13,10), "value":{'type':'count', 'value':132.0}},
                         }},{"loc":j(24,5,30,3), "value":{
                         "instruction" : {"loc":j(24,5), "value":"infer"},
-                        "expression" : {"loc":j(30,3), "value":{"type":"number", "value":132.0}},
+                        "expression" : {"loc":j(30,3), "value":v.number(132.0)},
                     }}]}])
 
 
