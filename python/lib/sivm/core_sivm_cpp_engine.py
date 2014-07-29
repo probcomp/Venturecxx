@@ -16,12 +16,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from venture.exception import VentureException
-from venture.sivm import utils
 import json
 import re
 import copy
 
+from venture.exception import VentureException
+from venture.sivm import utils
+import venture.value.dicts as v
 
 class CoreSivmCppEngine(object):
     ###############################
@@ -271,8 +272,8 @@ def _modify_value(ob):
         else:
             ob['type'] = 'real'
     t = _literal_type_map[ob['type']]
-    v = json.dumps(ob['value'])
-    s = "{0}[{1}]".format(t,v).encode('ascii')
+    val = json.dumps(ob['value'])
+    s = "{0}[{1}]".format(t,val).encode('ascii')
     return s
 
 # the C++ engine now uses the correct symbol names
@@ -301,21 +302,21 @@ _reverse_literal_type_map = dict((y,x) for x,y in _literal_type_map.items())
 def _parse_value(val):
     #NOTE: the current c++ implementation ignores the return type -- just gives number
     if isinstance(val, bool):
-        return {"type":"boolean", "value":val}
+        return v.boolean(val)
     elif isinstance(val, int):
-        return {"type":"count", "value":val}
+        return v.integer(val)
     elif isinstance(val, float):
-        return {"type":"number", "value":val}
+        return v.number(val)
     elif isinstance(val, list):
-        return {"type":"list", "value":val}
+        return v.list(val)
     elif isinstance(val, tuple):
-        return {"type":"simplex_point", "value":val}
+        return v.simplex(val)
     else:       #assumed to be string
         # try to match one of the known types
         m = re.match(r'(.*?)\[(.*)\]',val)
         if m != None:
-            t, v = m.groups()
-            return {"type":_reverse_literal_type_map[t], "value":json.loads(v)}
+            t, val = m.groups()
+            return {"type":_reverse_literal_type_map[t], "value":json.loads(val)}
         
         #probably an XRP or compound procedure
         return {"type":"opaque", "value":val}

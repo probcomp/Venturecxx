@@ -18,6 +18,7 @@
 
 from venture.exception import VentureException
 from venture.sivm import utils
+import venture.value.dicts as val
 import copy
 
 class CoreSivm(object):
@@ -232,5 +233,5 @@ def _modify_symbol(s):
         s = _symbol_map[s]
     # NOTE: need to str() b/c unicode might come via REST,
     #       which the boost python wrappings can't convert
-    return {"type": "symbol", "value": str(s)}
+    return val.symbol(str(s))
 
