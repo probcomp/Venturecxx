@@ -24,6 +24,8 @@ def val(t,v):
 def number(v):
     return val("number",v)
 
+num = number
+
 def real(v):
     return val("real",v)
 
@@ -41,6 +43,8 @@ def boolean(v):
 
 def symbol(s):
     return val("symbol",s)
+
+sym = symbol
 
 def blob(v):
     return val("blob",v)

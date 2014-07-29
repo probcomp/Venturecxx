@@ -112,6 +112,3 @@ def make_ripl_rest_server():
 
 def make_ripl_rest_client(base_url):
     return ripl.RiplRestClient(base_url)
-
-# value shortcuts
-from venture.value.dicts import *

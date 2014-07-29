@@ -20,6 +20,7 @@ from nose.plugins.attrib import attr
 import venture.sivm.core_sivm as module
 from venture.exception import VentureException
 from venture.test.config import get_core_sivm
+import venture.value.dicts as v
 
 # TODO Not really backend independent, but doesn't test the backend much.
 # Almost the same effect as @venture.test.config.in_backend("none"),
@@ -172,17 +173,16 @@ class TestCoreSivm(unittest.TestCase):
             self.assertEquals(e.exception,'invalid_argument')
 
     def test_infer(self):
-        from venture.shortcuts import symbol, number
         inst = {
                 'instruction':'infer',
-                'expression': [symbol("mh"), symbol("default"), symbol("one"), number(2)]
+                'expression': [v.sym("mh"), v.sym("default"), v.sym("one"), v.num(2)]
                 }
         self.sivm.execute_instruction(inst)
 
     def test_clear(self):
         inst1 = {
                 'instruction':'predict',
-                'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
+                'expression': ['add', v.num(1), v.num(2)],
                 }
         o1 = self.sivm.execute_instruction(inst1)
         inst2 = {
@@ -248,8 +248,7 @@ class TestCoreSivm(unittest.TestCase):
         o1 = self.sivm.execute_instruction(status)
         self.assertEquals(o1['running'], False)
         
-        from venture.shortcuts import symbol, number
-        exp = [symbol("mh"), symbol("default"), symbol("one"), number(2)]
+        exp = [v.sym("mh"), v.sym("default"), v.sym("one"), v.num(2)]
         self.sivm.execute_instruction({'instruction':'start_continuous_inference', 'expression' : exp})
         o2 = self.sivm.execute_instruction(status)
         self.assertEquals(o2['running'], True)
