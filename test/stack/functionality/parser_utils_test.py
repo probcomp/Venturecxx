@@ -19,6 +19,7 @@ from nose.plugins.attrib import attr
 from venture.exception import VentureException
 from venture.parser import utils
 from venture.test.test_helpers import ParserTestCase
+import venture.value.dicts as v
 
 def r(a,b,c):
     return [{"loc":[a,a+b-1], "value":c}]
@@ -150,55 +151,42 @@ class TestParserUtilsAtoms(ParserTestCase):
         # Value
         #
         self.expression = utils.value_token()
-        self.run_test( "",
-                None)
-        self.run_test( "boolean<true>",
-                None)
-        self.run_test( "number<1.0>",
-                None)
-        self.run_test( "real<1.0>",
-                r(0,9,{"type": "real", "value":1.0}))
+        self.run_test( "", None)
+        self.run_test( "boolean<true>", None)
+        self.run_test( "number<1.0>", None)
+        self.run_test( "real<1.0>", r(0,9,v.real(1.0)))
         self.run_test( 'url<"www.google.com">',
-                r(0,21,{"type": "url", "value":"www.google.com"}))
+                       r(0,21,v.val("url", "www.google.com")))
         self.run_test( 'simplex_point<[0.5,0.5]>',
-                r(0,24,{"type": "simplex_point", "value":[0.5,0.5]}))
+                       r(0,24,v.val("simplex_point", [0.5,0.5])))
         self.run_test( 'costume<{"hat_color":"blue","shirt_color":"red"}>',
-                r(0,49,{"type": "costume", "value":
-                    {"hat_color":"blue", "shirt_color":"red"}}))
+                       r(0,49,v.val("costume", {"hat_color":"blue", "shirt_color":"red"})))
 
 
     def test_number_literal(self):
         # Number Literal
         #
         self.expression = utils.number_literal_token()
-        self.run_test( "",
-                None)
-        self.run_test( "1",
-                r(0,1,{"type":"number", "value":1.0}))
+        self.run_test( "", None)
+        self.run_test( "1", r(0,1,v.number(1.0)))
 
 
     def test_boolean_literal(self):
         # Boolean Literal
         #
         self.expression = utils.boolean_literal_token()
-        self.run_test( "",
-                None)
-        self.run_test( "true",
-                r(0,4,{"type":"boolean", "value":True}))
+        self.run_test( "", None)
+        self.run_test( "true", r(0,4,v.boolean(True)))
 
 
     def test_literal_token(self):
         # Literal
         #
         self.expression = utils.literal_token()
-        self.run_test( "",
-                None)
-        self.run_test( "1",
-                r(0,1,{"type":"number", "value":1.0}))
-        self.run_test( "true",
-                r(0,4,{"type":"boolean", "value":True}))
-        self.run_test( "real<1.0>",
-                r(0,9,{"type": "real", "value":1.0}))
+        self.run_test( "", None)
+        self.run_test( "1", r(0,1,v.number(1.0)))
+        self.run_test( "true", r(0,4,v.boolean(True)))
+        self.run_test( "real<1.0>", r(0,9,v.real(1.0)))
 
 
 
@@ -331,14 +319,14 @@ class TestParserUtilsStuff(ParserTestCase):
     def test_value_to_string(self):
         output = utils.value_to_string("real<1>")
         self.assertEqual(output, "real<1>")
-        output = utils.value_to_string({"type":"real","value":1})
+        output = utils.value_to_string(v.real(1))
         self.assertEqual(output, "real<1>")
-        output = utils.value_to_string({"type":"number","value":1})
+        output = utils.value_to_string(v.number(1))
         self.assertEqual(output, "1")
-        output = utils.value_to_string({"type":"boolean","value":True})
+        output = utils.value_to_string(v.boolean(True))
         self.assertEqual(output, 'true')
         try:
-            utils.value_to_string({"type":"real","val":1})
+            utils.value_to_string(v.real(1))
         except VentureException as e:
             self.assertEqual(e.exception, "fatal")
         output = utils.value_to_string(1)

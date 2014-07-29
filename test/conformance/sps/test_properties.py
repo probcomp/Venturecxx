@@ -14,6 +14,7 @@ from venture.lite.mlens import real_lenses
 import venture.test.numerical as num
 from venture.lite.exception import VentureBuiltinSPMethodError
 from venture.lite.utils import FixedRandomness
+import venture.value.dicts as v
 
 @ignoresConfiguredInferenceProgram
 @in_backend("none")
@@ -28,8 +29,8 @@ def propEquality(value):
 def testLiteToStack():
   checkTypedProperty(propLiteToStack, AnyType())
 
-def propLiteToStack(v):
-  assert v.equal(VentureValue.fromStackDict(v.asStackDict()))
+def propLiteToStack(val):
+  assert val.equal(VentureValue.fromStackDict(val.asStackDict()))
 
 def relevantSPs():
   for (name,sp) in builtInSPsList:
@@ -148,7 +149,7 @@ def testRiplRoundTripThroughStack():
   checkTypedProperty(propRiplRoundTripThroughStack, AnyType())
 
 def propRiplRoundTripThroughStack(value):
-  expr = [{"type":"symbol", "value":"quote"}, value.asStackDict()]
+  expr = v.quote(value.asStackDict())
   result = carefully(eval_in_ripl, expr)
   assert value.equal(result)
 
@@ -206,15 +207,15 @@ through a ripl (applied fully uncurried)."""
       if not answer.outputPSP.isRandom():
         args2 = BogusArgs(args_lists[1], carefully(answer.constructSPAux))
         ans2 = carefully(answer.outputPSP.simulate, args2)
-        inner = [{"type":"symbol", "value":name}] + [v.expressionFor() for v in args_lists[0]]
-        expr = [inner] + [v.expressionFor() for v in args_lists[1]]
+        inner = [v.symbol(name)] + [val.expressionFor() for val in args_lists[0]]
+        expr = [inner] + [val.expressionFor() for val in args_lists[1]]
         assert ans2.equal(carefully(eval_in_ripl, expr))
       else:
         raise SkipTest("Putatively deterministic sp %s returned a random SP" % name)
     else:
       raise SkipTest("Putatively deterministic sp %s returned a requesting SP" % name)
   else:
-    expr = [{"type":"symbol", "value":name}] + [v.expressionFor() for v in args_lists[0]]
+    expr = [v.symbol(name)] + [val.expressionFor() for val in args_lists[0]]
     assert answer.equal(carefully(eval_in_ripl, expr))
 
 def eval_foreign_sp(name, sp, expr):
@@ -257,15 +258,15 @@ through the foreign function interface (applied fully uncurried)."""
       if not answer.outputPSP.isRandom():
         args2 = BogusArgs(args_lists[1], carefully(answer.constructSPAux))
         ans2 = carefully(answer.outputPSP.simulate, args2)
-        inner = [{"type":"symbol", "value":"test_sp"}] + [v.expressionFor() for v in args_lists[0]]
-        expr = [inner] + [v.expressionFor() for v in args_lists[1]]
+        inner = [v.symbol("test_sp")] + [val.expressionFor() for val in args_lists[0]]
+        expr = [inner] + [val.expressionFor() for val in args_lists[1]]
         assert ans2.equal(carefully(eval_foreign_sp, "test_sp", sp, expr))
       else:
         raise SkipTest("Putatively deterministic sp %s returned a random SP" % name)
     else:
       raise SkipTest("Putatively deterministic sp %s returned a requesting SP" % name)
   else:
-    expr = [{"type":"symbol", "value":"test_sp"}] + [v.expressionFor() for v in args_lists[0]]
+    expr = [v.symbol("test_sp")] + [val.expressionFor() for val in args_lists[0]]
     assert answer.equal(carefully(eval_foreign_sp, "test_sp", sp, expr))
 
 @gen_in_backend("none")
@@ -327,7 +328,7 @@ def assert_gradients_close(numerical_gradient, computed_gradient):
   # value, translate it to gradient type, write the components of the
   # numerical gradient into its lenses, and then do a recursive
   # similarity comparison that takes the symbolic zero into account.
-  if any([math.isnan(v) or math.isinf(v) for v in numerical_gradient]):
+  if any([math.isnan(val) or math.isinf(val) for val in numerical_gradient]):
     raise ArgumentsNotAppropriate("Too close to a singularity; Richardson extrapolation gave non-finite derivatve")
 
   numerical_values_of_computed_gradient = [lens.get() for lens in real_lenses(computed_gradient)]

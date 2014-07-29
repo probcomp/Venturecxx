@@ -63,7 +63,7 @@ class TestCoreSivm(unittest.TestCase):
             self.assertEqual(e.data['argument'],'symbol')
 
     def test_modify_value(self):
-        val = {"type":"count", "value":1}
+        val = v.val("count", 1)
         s = v.number(1)
         self.assertEqual(module._modify_value(val),s)
 
