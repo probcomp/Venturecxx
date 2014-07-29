@@ -695,7 +695,6 @@ Open issues:
             prelude_path = path.join(path.dirname(__file__), PRELUDE_FILE)
             with open(prelude_path) as f:
                 Ripl._parsed_prelude = self.parse_program(f.read())
-                print Ripl._parsed_prelude
             self.load_prelude()
 
     ############################################
