@@ -189,7 +189,7 @@ class Ripl():
         return [self._ensure_parsed(i) for i in instructions], positions
 
     def execute_program(self, program_string, params=None):
-        self.execute_parsed_program(*self.parse_program(program_string, params=params))
+        return self.execute_parsed_program(*self.parse_program(program_string, params=params))
 
     def execute_parsed_program(self, instructions, _positions):
         vals = []
