@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-from sp import VentureSP, SPType
+from sp import SP, SPType
 from psp import NullRequestPSP, ESRRefOutputPSP, DeterministicPSP, TypedPSP
 
 import discrete
@@ -28,9 +28,9 @@ from exception import VentureBuiltinSPMethodError
 def builtInValues():
   return { "true" : v.VentureBool(True), "false" : v.VentureBool(False), "nil" : v.VentureNil() }
 
-def no_request(output): return VentureSP(NullRequestPSP(), output)
+def no_request(output): return SP(NullRequestPSP(), output)
 
-def esr_output(request): return VentureSP(request, ESRRefOutputPSP())
+def esr_output(request): return SP(request, ESRRefOutputPSP())
 
 def typed_nr(output, args_types, return_type, **kwargs):
   return no_request(TypedPSP(output, SPType(args_types, return_type, **kwargs)))
@@ -282,11 +282,11 @@ builtInSPsList = [
                                                   v.HomogeneousArrayType(v.AnyType("a"))],
                                                  v.RequestType("b")))) ],
 
-           [ "mapv", VentureSP(TypedPSP(functional.ArrayMapRequestPSP(),
-                                        SPType([SPType([v.AnyType("a")], v.AnyType("b")),
-                                                v.HomogeneousArrayType(v.AnyType("a"))],
-                                               v.RequestType("<array b>"))),
-                               functional.ESRArrayOutputPSP()) ],
+           [ "mapv", SP(TypedPSP(functional.ArrayMapRequestPSP(),
+                                 SPType([SPType([v.AnyType("a")], v.AnyType("b")),
+                                         v.HomogeneousArrayType(v.AnyType("a"))],
+                                        v.RequestType("<array b>"))),
+                        functional.ESRArrayOutputPSP()) ],
 
            [ "branch", esr_output(conditionals.branch_request_psp()) ],
            [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [v.BoolType(), v.AnyType(), v.AnyType()], v.AnyType(),

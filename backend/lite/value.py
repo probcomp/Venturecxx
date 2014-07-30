@@ -846,7 +846,7 @@ class SPRef(VentureValue):
   def __init__(self,makerNode): self.makerNode = makerNode
   def asStackDict(self, trace=None):
     assert trace is not None
-    return v.val("sp", trace.madeSPAt(self.makerNode).show(trace.madeSPAuxAt(self.makerNode)))
+    return v.val("sp", trace.madeSPRecordAt(self.makerNode).show())
 
   @staticmethod
   def fromStackDict(thing): return thing["value"]
@@ -883,7 +883,7 @@ stackable_types = {
   "dict": VentureDict,
   "matrix": VentureMatrix,
   "symmetric_matrix": VentureSymmetricMatrix,
-  "SP": SPRef, # As opposed to VentureSP?
+  "SP": SPRef, # As opposed to VentureSPRecord?
   }
 
 def registerVentureType(t, name = None):
@@ -1121,7 +1121,7 @@ round-tripping from Venture to Python and back will not be the
 identity function, but should still be idempotent.
 
 Note 3: The same discussion applies to other nice types like
-VentureSPs.
+VentureSPRecords.
 
 In Haskell type notation:
 

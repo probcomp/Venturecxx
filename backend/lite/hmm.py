@@ -1,4 +1,4 @@
-from sp import VentureSP, SPAux, SPType
+from sp import SP, VentureSPRecord, SPAux, SPType
 from psp import DeterministicPSP, RandomPSP, TypedPSP
 from request import Request
 import numpy as np
@@ -32,12 +32,12 @@ class MakeUncollapsedHMMOutputPSP(DeterministicPSP):
     # p0 comes in as a simplex but needs to become a 1-row matrix
     p0 = np.mat([p0])
     # Transposition for compatibility with CXX
-    return UncollapsedHMMSP(p0,np.transpose(T),np.transpose(O))
+    return VentureSPRecord(UncollapsedHMMSP(p0,np.transpose(T),np.transpose(O)))
 
   def description(self, _name):
     return "  Discrete-state HMM of unbounded length with discrete observations.  The inputs are the probability distribution of the first state, the transition matrix, and the observation matrix.  It is an error if the dimensionalities do not line up.  Returns observations from the HMM encoded as a stochastic procedure that takes the time step and samples a new observation at that time step."
 
-class UncollapsedHMMSP(VentureSP):
+class UncollapsedHMMSP(SP):
   def __init__(self,p0,T,O):
     req = TypedPSP(UncollapsedHMMRequestPSP(), SPType([NumberType()], RequestType()))
     output = TypedPSP(UncollapsedHMMOutputPSP(O), SPType([NumberType()], NumberType()))

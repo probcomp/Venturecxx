@@ -42,7 +42,7 @@ struct ForeignLitePSP : PSP
 
 struct ForeignLiteSPAux : SPAux
 {
-  ForeignLiteSPAux(boost::python::object sp): aux(sp.attr("constructSPAux")()) {}
+  ForeignLiteSPAux(boost::python::object aux): aux(aux) {}
   boost::python::object aux;
 };
 

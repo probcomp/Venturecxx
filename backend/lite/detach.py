@@ -2,7 +2,7 @@ from node import ConstantNode, LookupNode, ApplicationNode, RequestNode, OutputN
 from omegadb import OmegaDB
 from value import SPRef
 from scope import isScopeIncludeOutputPSP
-from sp import VentureSP
+from sp import VentureSPRecord
 from consistency import assertTorus, assertTrace
 
 def detachAndExtract(trace, scaffold, compute_gradient = False):
@@ -116,14 +116,14 @@ def unapply(trace, node, scaffold, omegaDB, compute_gradient = False):
   return weight
 
 def teardownMadeSP(trace,node,isAAA):
-  sp = trace.madeSPAt(node)
-  assert isinstance(sp,VentureSP)
-  trace.setValueAt(node,sp)
-  trace.setMadeSPAt(node,None)
-  if not isAAA: 
-    if sp.hasAEKernel(): trace.unregisterAEKernel(node)
-    trace.setMadeSPAuxAt(node,None)
-    trace.clearMadeSPFamiliesAt(node)
+  spRecord = trace.madeSPRecordAt(node)
+  assert isinstance(spRecord,VentureSPRecord)
+  assert len(spRecord.spFamilies.families) == 0
+  trace.setValueAt(node,spRecord)
+  if spRecord.sp.hasAEKernel(): trace.unregisterAEKernel(node)
+  if isAAA:
+    trace.registerAAAMadeSPAuxAt(node,trace.madeSPAuxAt(node))
+  trace.setMadeSPRecordAt(node,None)
 
 def unapplyPSP(trace, node, scaffold, omegaDB, compute_gradient = False):
   psp,args = trace.pspAt(node),trace.argsAt(node)

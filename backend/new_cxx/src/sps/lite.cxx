@@ -12,9 +12,8 @@ VentureValuePtr foreignFromPython(boost::python::object thing)
   // TODO: should foreign_sp be a recognized stack dict type?
   if (thing["type"] == "foreign_sp")
   {
-    boost::python::object sp = thing["value"];
-    return VentureValuePtr(new VentureSPRecord(new ForeignLiteSP(sp),
-                                               new ForeignLiteSPAux(sp)));
+    return VentureValuePtr(new VentureSPRecord(new ForeignLiteSP(thing["sp"]),
+                                               new ForeignLiteSPAux(thing["aux"])));
   }
   else
   {
@@ -158,6 +157,7 @@ boost::python::dict ForeignLiteSP::toPython(Trace * trace, shared_ptr<SPAux> aux
   boost::python::dict stackDict;
   stackDict["type"] = "foreign_sp";
   stackDict["sp"] = sp;
+  stackDict["aux"] = foreignAux;
   stackDict["value"] = sp.attr("show")(foreignAux);
   return stackDict;
 }

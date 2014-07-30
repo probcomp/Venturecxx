@@ -6,9 +6,8 @@ class Node(object):
     self.value = None
     self.children = set()
     self.isObservation = False
-    self.madeSP = None
-    self.madeSPFamilies = None
-    self.madeSPAux = None
+    self.madeSPRecord = None
+    self.aaaMadeSPAux = None
     self.numRequests = 0
     self.esrParents = []
     self.isObservation = False
@@ -96,7 +95,7 @@ class Args(object):
       self.requestValue = trace.valueAt(node.requestNode)
       self.esrValues = [trace.valueAt(esrParent) for esrParent in trace.esrParentsAt(node)]
       self.esrNodes = trace.esrParentsAt(node)
-      self.madeSPAux = trace.madeSPAuxAt(node)
+      self.madeSPAux = trace.getAAAMadeSPAuxAt(node)
       self.isOutput = True
     else:
       self.isOutput = False

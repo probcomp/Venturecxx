@@ -13,7 +13,7 @@ from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
                    DoublingSliceOperator, NesterovAcceleratedGradientAscentOperator)
 from omegadb import OmegaDB
 from smap import SMap
-from sp import SPFamilies
+from sp import SPFamilies, VentureSPRecord
 from scope import isScopeIncludeOutputPSP, isScopeExcludeOutputPSP
 from regen import regenAndAttach
 from detach import detachAndExtract
@@ -53,7 +53,7 @@ class Trace(object):
     self.globalEnv.addBinding(name,ConstantNode(val))
 
   def bindPrimitiveSP(self, name, sp):
-    spNode = self.createConstantNode(sp)
+    spNode = self.createConstantNode(VentureSPRecord(sp))
     processMadeSP(self,spNode,False)
     assert isinstance(self.valueAt(spNode), SPRef)
     self.globalEnv.addBinding(name,spNode)
@@ -157,7 +157,7 @@ class Trace(object):
 
   def groundValueAt(self,node):
     value = self.valueAt(node)
-    if isinstance(value,SPRef): return self.madeSPAt(value.makerNode)
+    if isinstance(value,SPRef): return self.madeSPRecordAt(value.makerNode)
     else: return value
 
   def argsAt(self,node): return Args(self,node)
@@ -192,17 +192,35 @@ class Trace(object):
     assert node.isAppropriateValue(value)
     node.value = value
 
-  def madeSPAt(self,node): return node.madeSP
-  def setMadeSPAt(self,node,sp): node.madeSP = sp
+  def madeSPRecordAt(self,node):
+    assert node.madeSPRecord is not None
+    return node.madeSPRecord
 
-  def madeSPFamiliesAt(self,node):
-    assert node.madeSPFamilies is not None
-    return node.madeSPFamilies
+  def setMadeSPRecordAt(self,node,spRecord):
+    node.madeSPRecord = spRecord
 
-  def setMadeSPFamiliesAt(self,node,families): node.madeSPFamilies = families
+  def madeSPAt(self,node): return self.madeSPRecordAt(node).sp
+  def setMadeSPAt(self,node,sp):
+    spRecord = self.madeSPRecordAt(node)
+    spRecord.sp = sp
 
-  def madeSPAuxAt(self,node): return node.madeSPAux
-  def setMadeSPAuxAt(self,node,aux): node.madeSPAux = aux
+  def madeSPFamiliesAt(self,node): return self.madeSPRecordAt(node).spFamilies
+  def setMadeSPFamiliesAt(self,node,families):
+    spRecord = self.madeSPRecordAt(node)
+    spRecord.spFamilies = families
+
+  def madeSPAuxAt(self,node): return self.madeSPRecordAt(node).spAux
+  def setMadeSPAuxAt(self,node,aux):
+    spRecord = self.madeSPRecordAt(node)
+    spRecord.spAux = aux
+
+  def getAAAMadeSPAuxAt(self,node): return node.aaaMadeSPAux
+  def discardAAAMadeSPAuxAt(self,node):
+    assert node.aaaMadeSPAux is not None
+    node.aaaMadeSPAux = None
+  def registerAAAMadeSPAuxAt(self,node,aux):
+    assert node.aaaMadeSPAux is None
+    node.aaaMadeSPAux = aux
 
   def parentsAt(self,node): return node.parents()
   def definiteParentsAt(self,node): return node.definiteParents()
@@ -485,9 +503,8 @@ class Trace(object):
 #################### Misc for particle commit
 
   def addNewMadeSPFamilies(self,node,newMadeSPFamilies):
-    if node.madeSPFamilies is None: node.madeSPFamilies = SPFamilies()
     for id,root in newMadeSPFamilies.iteritems():
-      node.madeSPFamilies.registerFamily(id,root)
+      node.madeSPRecord.spFamilies.registerFamily(id,root)
 
   def addNewChildren(self,node,newChildren):
     for child in newChildren:

@@ -1,5 +1,5 @@
 from psp import DeterministicPSP, ESRRefOutputPSP
-from sp import VentureSP
+from sp import SP, VentureSPRecord
 from env import VentureEnvironment
 from request import Request,ESR
 import value as v
@@ -29,7 +29,7 @@ class MakeCSPOutputPSP(DeterministicPSP):
   def simulate(self,args):
     ids = args.operandValues[0]
     exp = args.operandValues[1]
-    return VentureSP(CSPRequestPSP(ids,exp,args.env),ESRRefOutputPSP())
+    return VentureSPRecord(SP(CSPRequestPSP(ids,exp,args.env),ESRRefOutputPSP()))
 
   def gradientOfSimulate(self, args, _value, _direction):
     # A lambda is a constant.  I may need to do some plumbing here,

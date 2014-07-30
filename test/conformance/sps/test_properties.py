@@ -8,7 +8,7 @@ from venture.test.config import get_ripl, ignoresConfiguredInferenceProgram, in_
 from venture.lite.builtin import builtInSPsList
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.psp import NullRequestPSP
-from venture.lite.sp import VentureSP
+from venture.lite.sp import VentureSPRecord
 from venture.lite.value import AnyType, VentureValue, vv_dot_product, ZeroType
 from venture.lite.mlens import real_lenses
 import venture.test.numerical as num
@@ -54,7 +54,11 @@ applied fully uncurried) match the expected types."""
   if len(args_lists) == 0:
     pass # OK
   else:
-    args = BogusArgs(args_lists[0], carefully(sp.constructSPAux))
+    if isinstance(sp, VentureSPRecord):
+      sp, aux = sp.sp, sp.spAux
+    else:
+      aux = carefully(sp.constructSPAux)
+    args = BogusArgs(args_lists[0], aux)
     answer = carefully(sp.outputPSP.simulate, args)
     assert answer in type_.return_type
     propTypeCorrect(args_lists[1:], answer, type_.return_type)
@@ -74,14 +78,14 @@ def propDeterministic(args_lists, name, sp):
 fully uncurried)."""
   args = BogusArgs(args_lists[0], sp.constructSPAux())
   answer = carefully(sp.outputPSP.simulate, args)
-  if isinstance(answer, VentureSP):
-    if isinstance(answer.requestPSP, NullRequestPSP):
-      if not answer.outputPSP.isRandom():
-        args2 = BogusArgs(args_lists[1], carefully(answer.constructSPAux))
-        ans2 = carefully(answer.outputPSP.simulate, args2)
+  if isinstance(answer, VentureSPRecord):
+    if isinstance(answer.sp.requestPSP, NullRequestPSP):
+      if not answer.sp.outputPSP.isRandom():
+        args2 = BogusArgs(args_lists[1], answer.spAux)
+        ans2 = carefully(answer.sp.outputPSP.simulate, args2)
         for _ in range(5):
           new_ans = carefully(sp.outputPSP.simulate, args)
-          new_ans2 = carefully(new_ans.outputPSP.simulate, args2)
+          new_ans2 = carefully(new_ans.sp.outputPSP.simulate, args2)
           eq_(ans2, new_ans2)
       else:
         raise SkipTest("Putatively deterministic sp %s returned a random SP" % name)
@@ -105,7 +109,11 @@ def checkRandom(_name, sp):
   checkTypedProperty(propRandom, [args_type for _ in range(5)] , sp)
 
 def evaluate_fully_uncurried(sp, args_lists):
-  args = BogusArgs(args_lists[0], carefully(sp.constructSPAux))
+  if isinstance(sp, VentureSPRecord):
+    sp, aux = sp.sp, sp.spAux
+  else:
+    aux = carefully(sp.constructSPAux)
+  args = BogusArgs(args_lists[0], aux)
   answer = carefully(sp.outputPSP.simulate, args)
   if len(args_lists) == 1:
     return answer
@@ -202,11 +210,11 @@ def propRiplAgreesWithDeterministicSimulate(args_lists, name, sp):
 through a ripl (applied fully uncurried)."""
   args = BogusArgs(args_lists[0], sp.constructSPAux())
   answer = carefully(sp.outputPSP.simulate, args)
-  if isinstance(answer, VentureSP):
-    if isinstance(answer.requestPSP, NullRequestPSP):
-      if not answer.outputPSP.isRandom():
-        args2 = BogusArgs(args_lists[1], carefully(answer.constructSPAux))
-        ans2 = carefully(answer.outputPSP.simulate, args2)
+  if isinstance(answer, VentureSPRecord):
+    if isinstance(answer.sp.requestPSP, NullRequestPSP):
+      if not answer.sp.outputPSP.isRandom():
+        args2 = BogusArgs(args_lists[1], answer.spAux)
+        ans2 = carefully(answer.sp.outputPSP.simulate, args2)
         inner = [v.symbol(name)] + [val.expressionFor() for val in args_lists[0]]
         expr = [inner] + [val.expressionFor() for val in args_lists[1]]
         assert ans2.equal(carefully(eval_in_ripl, expr))
@@ -253,11 +261,11 @@ def propForeignInterfaceAgreesWithDeterministicSimulate(args_lists, name, sp):
 through the foreign function interface (applied fully uncurried)."""
   args = BogusArgs(args_lists[0], sp.constructSPAux())
   answer = carefully(sp.outputPSP.simulate, args)
-  if isinstance(answer, VentureSP):
-    if isinstance(answer.requestPSP, NullRequestPSP):
-      if not answer.outputPSP.isRandom():
-        args2 = BogusArgs(args_lists[1], carefully(answer.constructSPAux))
-        ans2 = carefully(answer.outputPSP.simulate, args2)
+  if isinstance(answer, VentureSPRecord):
+    if isinstance(answer.sp.requestPSP, NullRequestPSP):
+      if not answer.sp.outputPSP.isRandom():
+        args2 = BogusArgs(args_lists[1], answer.spAux)
+        ans2 = carefully(answer.sp.outputPSP.simulate, args2)
         inner = [v.symbol("test_sp")] + [val.expressionFor() for val in args_lists[0]]
         expr = [inner] + [val.expressionFor() for val in args_lists[1]]
         assert ans2.equal(carefully(eval_foreign_sp, "test_sp", sp, expr))
@@ -350,17 +358,17 @@ def propDeterministicWhenFixed(args_lists, name, sp):
   randomness = FixedRandomness()
   with randomness:
     answer = carefully(sp.outputPSP.simulate, args)
-  if isinstance(answer, VentureSP):
-    if isinstance(answer.requestPSP, NullRequestPSP):
-      args2 = BogusArgs(args_lists[1], carefully(answer.constructSPAux))
+  if isinstance(answer, VentureSPRecord):
+    if isinstance(answer.sp.requestPSP, NullRequestPSP):
+      args2 = BogusArgs(args_lists[1], answer.spAux)
       randomness2 = FixedRandomness()
       with randomness2:
-        ans2 = carefully(answer.outputPSP.simulate, args2)
+        ans2 = carefully(answer.sp.outputPSP.simulate, args2)
       for _ in range(5):
         with randomness:
           new_ans = carefully(sp.outputPSP.simulate, args)
         with randomness2:
-          new_ans2 = carefully(new_ans.outputPSP.simulate, args2)
+          new_ans2 = carefully(new_ans.sp.outputPSP.simulate, args2)
         eq_(ans2, new_ans2)
     else:
       raise SkipTest("SP %s returned a requesting SP" % name)

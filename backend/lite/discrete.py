@@ -4,7 +4,7 @@ import scipy
 import scipy.special
 from utils import extendedLog, simulateCategorical, logDensityCategorical
 from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
-from sp import VentureSP, SPAux, SPType
+from sp import SP, SPAux, VentureSPRecord, SPType
 from lkernel import LKernel
 from value import VentureAtom, BoolType # BoolType is metaprogrammed pylint:disable=no-name-in-module
 from exception import VentureValueError
@@ -116,7 +116,7 @@ class BetaBernoulliSPAux(SPAux):
 
   def cts(self): return [self.yes,self.no]
 
-class BetaBernoulliSP(VentureSP):
+class BetaBernoulliSP(SP):
   def constructSPAux(self): return BetaBernoulliSPAux()
   def show(self,spaux): return spaux.cts()
 
@@ -127,7 +127,7 @@ class MakerCBetaBernoulliOutputPSP(DeterministicPSP):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
     output = TypedPSP(CBetaBernoulliOutputPSP(alpha, beta), SPType([], BoolType()))
-    return BetaBernoulliSP(NullRequestPSP(), output)
+    return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output))
 
   def description(self,name):
     return "  (%s alpha beta) returns a collapsed beta bernoulli sampler with pseudocounts alpha (for true) and beta (for false).  While this procedure itself is deterministic, the returned sampler is stochastic." % name
@@ -186,13 +186,14 @@ class MakerUBetaBernoulliOutputPSP(DiscretePSP):
     beta  = args.operandValues[1]
     weight = scipy.stats.beta.rvs(alpha, beta)
     output = TypedPSP(UBetaBernoulliOutputPSP(weight), SPType([], BoolType()))
-    return BetaBernoulliSP(NullRequestPSP(), output)
+    return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output))
 
   def logDensity(self,value,args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
-    assert isinstance(value,BetaBernoulliSP)
-    coinWeight = value.outputPSP.psp.weight
+    assert isinstance(value,VentureSPRecord)
+    assert isinstance(value.sp,BetaBernoulliSP)
+    coinWeight = value.sp.outputPSP.psp.weight
     return scipy.stats.beta.logpdf(coinWeight,alpha,beta)
 
   def description(self,name):
@@ -205,7 +206,7 @@ class UBetaBernoulliAAALKernel(LKernel):
     [ctY,ctN] = args.madeSPAux.cts()
     newWeight = scipy.stats.beta.rvs(alpha + ctY, beta + ctN)
     output = TypedPSP(UBetaBernoulliOutputPSP(newWeight), SPType([], BoolType()))
-    return BetaBernoulliSP(NullRequestPSP(), output)
+    return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output), args.madeSPAux)
   # Weight is zero because it's simulating from the right distribution
 
   def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
