@@ -9,7 +9,7 @@ from nose.tools import eq_, assert_almost_equal
 from venture.venturemagics.ip_parallel import MRipl
 from venture.unit import *
 from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl,get_mripl,ignore_inference_quality,default_num_samples,gen_in_backend
+from venture.test.config import get_ripl,get_mripl,ignore_inference_quality,default_num_samples,gen_in_backend, gen_on_inf_prim
 import venture.value.dicts as v
 
 
@@ -77,12 +77,14 @@ def _testHistory(riplThunk):
     averageP = np.mean( history.nameToSeries['p'][0].values )
     assert_almost_equal(averageP,history.averageValue('p'))
 
+@gen_on_inf_prim("none")
+def testLoadModel():
+    for riplThunk in [get_ripl, lambda:get_mripl(no_ripls=3)]:
+        yield _testLoadModel, riplThunk
 
-def testLoadModelHistory():
-    tests = _testLoadModel, _testHistory
-    riplThunks = get_ripl, lambda:get_mripl(no_ripls=3)
-    for test,riplThunk in product(tests,riplThunks):
-        yield test, riplThunk
+def testModelHistory():
+    for riplThunk in [get_ripl, lambda:get_mripl(no_ripls=3)]:
+        yield _testHistory, riplThunk
 
 
 def _testRuns(riplThunk):
@@ -154,6 +156,7 @@ def _testSampleFromJoint(riplThunk,useMRipl):
     xSamples = nameToFirstValues(history,'x')
     return reportKnownContinuous(xPriorCdf,xSamples)
 
+@gen_on_inf_prim("none")
 def testSampleFromJoint():
     riplThunks = get_ripl, lambda: get_mripl(no_ripls=3)
     useMRiplValues = (True,False)

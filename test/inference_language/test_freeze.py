@@ -1,7 +1,8 @@
 from nose.tools import eq_
 
-from venture.test.config import get_ripl, broken_in
+from venture.test.config import get_ripl, broken_in, on_inf_prim
 
+@on_inf_prim("none")
 @broken_in('lite', "freeze is only implemented in puma")
 def testFreezeSanityCheck1():
   ripl = get_ripl()
@@ -15,6 +16,7 @@ def testFreezeSanityCheck1():
   ripl.freeze(2)
   eq_(engine.get_entropy_info()["unconstrained_random_choices"],1)
 
+@on_inf_prim("none")
 @broken_in('lite', "freeze is only implemented in puma")
 def testFreezeSanityCheck2():
   ripl = get_ripl()

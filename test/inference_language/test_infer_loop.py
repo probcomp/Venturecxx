@@ -1,7 +1,8 @@
 import time
 
-from venture.test.config import get_ripl
+from venture.test.config import get_ripl, on_inf_prim
 
+@on_inf_prim("none")
 def testStopSmoke():
   get_ripl().stop_continuous_inference()
 

@@ -1,7 +1,8 @@
 from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, collectSamples, on_inf_prim
 from nose.tools import eq_
 
+@on_inf_prim("none")
 def testMemSmoke1():
   "Mem should be a noop on deterministic procedures (only memoizing)."
   eq_(get_ripl().predict("((mem (lambda (x) 3)) 1)"), 3.0)

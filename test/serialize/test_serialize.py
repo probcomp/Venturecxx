@@ -2,7 +2,7 @@ from nose import SkipTest
 from testconfig import config
 
 from venture.test.stats import statisticalTest, reportKnownDiscrete, reportSameDiscrete
-from venture.test.config import get_ripl, collectStateSequence, ignoresConfiguredInferenceProgram
+from venture.test.config import get_ripl, collectStateSequence, ignoresConfiguredInferenceProgram, on_inf_prim
 
 @ignoresConfiguredInferenceProgram
 @statisticalTest
@@ -198,7 +198,7 @@ def test_serialize_forget():
     ans = [(False, 0.8), (True, 0.2)]
     return reportKnownDiscrete(ans, samples)
 
-@ignoresConfiguredInferenceProgram
+@on_inf_prim("none")
 def test_serialize_recursion():
     v = get_ripl()
     v.assume('f', '''

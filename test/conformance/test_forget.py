@@ -1,13 +1,15 @@
-from venture.test.config import get_ripl
+from venture.test.config import get_ripl, on_inf_prim
 
-def testForgetContinuousInference1():
+@on_inf_prim("none")
+def testForgetSmoke1():
   ripl = get_ripl()
   for i in range(10):
     pid = "pid%d" % i
     ripl.predict("(flip)",label=pid)
     ripl.forget(pid)
 
-def testForgetContinuousInference2():
+@on_inf_prim("none")
+def testForgetSmoke2():
   ripl = get_ripl()
   for i in range(10):
     pid = "pid%d" % i

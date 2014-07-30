@@ -1,14 +1,16 @@
 from nose.tools import raises
-from venture.test.config import get_ripl, broken_in
+from venture.test.config import get_ripl, broken_in, on_inf_prim
 from venture.lite.exception import VentureError
 
 @broken_in('puma')
+@on_inf_prim("none")
 @raises(VentureError)
 def testSymbolNotFound():
   ripl = get_ripl()
   ripl.predict('a')
 
 @broken_in('puma')
+@on_inf_prim("none")
 @raises(VentureError)
 def testDoubleAssume():
   ripl = get_ripl()
@@ -16,12 +18,14 @@ def testDoubleAssume():
   ripl.assume('a', 1)
 
 @broken_in('puma')
+@on_inf_prim("none")
 @raises(VentureError)
 def testNoSPRef():
   ripl = get_ripl()
   ripl.predict('(1 + 1)')
 
 @broken_in('puma')
+@on_inf_prim("none")
 @raises(VentureError)
 def testLambda():
   ripl = get_ripl()
@@ -29,6 +33,7 @@ def testLambda():
   ripl.predict('(err)')
 
 @broken_in('puma')
+@on_inf_prim("none")
 @raises(VentureError)
 def testLargeStack():
   ripl = get_ripl()
@@ -36,12 +41,14 @@ def testLargeStack():
   ripl.predict('(f 20)')
 
 @broken_in('puma')
+@on_inf_prim("none")
 @raises(VentureError)
 def testTooFewArgs():
   ripl = get_ripl()
   ripl.predict('(-)')
 
 @broken_in('puma')
+@on_inf_prim("none")
 @raises(VentureError)
 def testTooManyArgs():
   ripl = get_ripl()

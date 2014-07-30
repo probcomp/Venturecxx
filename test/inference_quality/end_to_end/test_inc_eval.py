@@ -15,11 +15,11 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import scipy.stats as stats
-from nose import SkipTest
-from nose.tools import assert_equal
+from nose.tools import eq_
 from nose.plugins.attrib import attr
+
 from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, collectSamples, on_inf_prim
 
 ### Expressions
 
@@ -112,6 +112,7 @@ def extractValue(d):
   else: return d
 
 
+@on_inf_prim("none")
 def testIncrementalEvaluator1a():
   "Extremely basic test"
   ripl = get_ripl()
@@ -119,8 +120,9 @@ def testIncrementalEvaluator1a():
   ripl.assume("expr","(quote 1)")
   ripl.assume("env","(incremental_initial_environment)")
   ripl.predict("(incremental_eval expr env)",label="pid")
-  assert_equal(ripl.report("pid"),1)
+  eq_(ripl.report("pid"),1)
 
+@on_inf_prim("none")
 def testIncrementalEvaluator1b():
   "Extremely basic test"
   ripl = get_ripl()
@@ -128,7 +130,7 @@ def testIncrementalEvaluator1b():
   ripl.assume("expr","(list (make_ref add) (make_ref 1) (make_ref 1))")
   ripl.assume("env","(incremental_initial_environment)")
   ripl.predict("(incremental_eval expr env)",label="pid")
-  assert_equal(ripl.report("pid"),2)
+  eq_(ripl.report("pid"),2)
 
 @statisticalTest
 def testIncrementalEvaluator1c():
