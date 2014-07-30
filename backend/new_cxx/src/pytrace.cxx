@@ -59,7 +59,7 @@ void PyTrace::unobserve(DirectiveID did)
 {
   assert(trace->families.count(did));
   Node * node = trace->families[did].get();
-  OutputNode * appNode = trace->getOutermostNonRefAppNode(node);
+  OutputNode * appNode = trace->getConstrainableNode(node);
   if (trace->isObservation(node)) { unconstrain(trace.get(),appNode); trace->unobserveNode(node); }
   else
   {
@@ -102,7 +102,7 @@ double PyTrace::getDirectiveLogScore(DirectiveID did)
 {
   assert(trace->families.count(did));
   RootOfFamily root = trace->families[did];
-  ApplicationNode * node = dynamic_cast<ApplicationNode*>(trace->getOutermostNonRefAppNode(root.get()));
+  ApplicationNode * node = dynamic_cast<ApplicationNode*>(trace->getOutermostNonReferenceNode(root.get()));
   if (node != NULL)
   {
     shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);

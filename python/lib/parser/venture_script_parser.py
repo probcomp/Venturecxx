@@ -110,7 +110,7 @@ class VentureScriptParser(object):
         self.reserved_symbols = set(['if','else','proc',
             'true','false','lambda','identity', 'let','add','sub','div',
             'mul','pow','neq','gte','lte', 'eq', 'gt', 'lt', 'and', 'or'])
-        self.symbol = utils.symbol_token(blacklist_symbols = self.reserved_symbols)
+        self.symbol = utils.symbol_literal_token(blacklist_symbols = self.reserved_symbols)
 
 
         self.number = utils.number_token()

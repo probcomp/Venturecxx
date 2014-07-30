@@ -41,8 +41,8 @@ double regenAndAttach(Trace * trace,
       weight += regen(trace,node,scaffold,shouldRestore,db,gradients);
       if (trace->isObservation(node))
       {
-        OutputNode * outputNode = trace->getOutermostNonRefAppNode(node);
-              weight += constrain(trace,outputNode,trace->getObservedValue(node));
+        OutputNode * outputNode = trace->getConstrainableNode(node);
+        weight += constrain(trace,outputNode,trace->getObservedValue(node));
         constraintsToPropagate[outputNode] = trace->getObservedValue(node);
       }
     }

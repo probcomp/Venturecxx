@@ -254,7 +254,13 @@ class Ripl():
 
     def _ensure_parsed_expression(self, expr):
         if isinstance(expr, basestring):
-            return self._cur_parser().parse_expression(expr)
+            answer = self._cur_parser().parse_expression(expr)
+            if isinstance(answer, basestring):
+                # Was a symbol; wrap it in a stack dict to prevent it
+                # from being processed again.
+                return {'type':'symbol', 'value':answer}
+            else:
+                return answer
         elif isinstance(expr, list):
             return [self._ensure_parsed_expression(e) for e in expr]
         elif isinstance(expr, dict):
@@ -695,7 +701,6 @@ Open issues:
             prelude_path = path.join(path.dirname(__file__), PRELUDE_FILE)
             with open(prelude_path) as f:
                 Ripl._parsed_prelude = self.parse_program(f.read())
-                print Ripl._parsed_prelude
             self.load_prelude()
 
     ############################################

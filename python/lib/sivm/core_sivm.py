@@ -221,6 +221,11 @@ def _modify_value(ob):
         ans = copy.copy(ob)
         ans['value'] = int(ob['value'])
         return ans
+    elif ob['type'] == 'symbol':
+        # Unicode hack for the same reason as in _modify_symbol
+        ans = copy.copy(ob)
+        ans['value'] = str(ob['value'])
+        return ans
     return ob
 
 _symbol_map = {}

@@ -23,28 +23,38 @@ from venture.lite.value import VentureValue
 import venture.value.dicts as v
 
 def is_valid_symbol(s):
-    if not isinstance(s,basestring):
+    if isinstance(s, basestring):
+        candidate = s
+    elif isinstance(s, dict) and 'type' in s and 'value' in s and s['type'] == 'symbol':
+        candidate = s['value']
+    else:
         return False
-    if not re.match(r'[a-zA-Z_][a-zA-Z0-9_]*',s):
+    if not re.match(r'[a-zA-Z_][a-zA-Z0-9_]*', candidate):
         return False
     return True
 
 def desugar_expression(exp):
     """returns a de-sugared version of exp"""
     if isinstance(exp,(list,tuple)) and len(exp) > 0:
-        if exp[0] == 'if':
+        if isinstance(exp[0], basestring):
+            lead_symbol = exp[0]
+        elif isinstance(exp[0], dict) and 'type' in exp[0] and 'value' in exp[0] and exp[0]['type'] == 'symbol':
+            lead_symbol = exp[0]['value']
+        else:
+            lead_symbol = None
+        if lead_symbol == 'if':
             if len(exp) != 4:
                 raise VentureException('parse','"if" statement requires 3 arguments',expression_index=[])
             return [['biplex',dsw(exp,1),['lambda',[],dsw(exp,2)],['lambda',[],dsw(exp,3)]]]
-        if exp[0] == 'and':
+        if lead_symbol == 'and':
             if len(exp) != 3:
                 raise VentureException('parse','"and" statement requires 2 arguments',expression_index=[])
             return [['biplex',dsw(exp,1),['lambda',[],dsw(exp,2)],['lambda',[],v.boolean(False)]]]
-        if exp[0] == 'or':
+        if lead_symbol == 'or':
             if len(exp) != 3:
                 raise VentureException('parse','"or" statement requires 2 arguments',expression_index=[])
             return [['biplex',dsw(exp,1),['lambda',[],v.boolean(True)],['lambda',[],dsw(exp,2)]]]
-        if exp[0] == 'let':
+        if lead_symbol == 'let':
             if len(exp) != 3:
                 raise VentureException('parse','"let" statement requires 2 arguments',expression_index=[])
             if not isinstance(exp[1],(list,tuple)):
@@ -53,11 +63,11 @@ def desugar_expression(exp):
             for index,val in enumerate(exp[1][::-1]):
                 if (not isinstance(val, (list,tuple))) or (len(val) != 2):
                     raise VentureException('parse','Invalid (symbol,value) pair "let" statement',expression_index=[1,index])
-                if (not isinstance(val[0], basestring)) or (not is_valid_symbol(val[0])):
+                if not is_valid_symbol(val[0]):
                     raise VentureException('parse','First argument of pair must be valid symbol',expression_index=[1,index,0])
                 tmp = [['lambda', [val[0]], tmp], dsw(val,1)]
             return tmp
-        if exp[0] == 'identity':
+        if lead_symbol == 'identity':
             if len(exp) != 2:
                 raise VentureException('parse','"identity" statement requires 1 argument',expression_index=[])
             return [['lambda',[],dsw(exp,1)]]
@@ -83,8 +93,13 @@ def sugar_expression_index(exp, index):
     desugared expression index."""
     if (not isinstance(exp,(tuple,list))) or len(index) == 0:
         return []
-    directive = exp[0]
-    if directive == 'if':
+    if isinstance(exp[0], basestring):
+        lead_symbol = exp[0]
+    elif isinstance(exp[0], dict) and 'type' in exp[0] and 'value' in exp[0] and exp[0]['type'] == 'symbol':
+        lead_symbol = exp[0]['value']
+    else:
+        lead_symbol = None
+    if lead_symbol == 'if':
         if len(index) >= 2:
             if index[1] == 1:
                 return [1] + sugar_expression_index(exp[1], index[2:])
@@ -94,7 +109,7 @@ def sugar_expression_index(exp, index):
             if index[1] == 3 and index[2] == 2:
                 return [3] + sugar_expression_index(exp[3], index[3:])
         return [0]
-    if directive == 'and':
+    if lead_symbol == 'and':
         if len(index) >= 2:
             if index[1] == 1:
                 return [1] + sugar_expression_index(exp[1], index[2:])
@@ -102,7 +117,7 @@ def sugar_expression_index(exp, index):
             if index[1] == 2 and index[2] == 2:
                 return [2] + sugar_expression_index(exp[2], index[3:])
         return [0]
-    if directive == 'or':
+    if lead_symbol == 'or':
         if len(index) >= 2:
             if index[1] == 1:
                 return [1] + sugar_expression_index(exp[1], index[2:])
@@ -110,7 +125,7 @@ def sugar_expression_index(exp, index):
             if index[1] == 3 and index[2] == 2:
                 return [2] + sugar_expression_index(exp[2], index[3:])
         return [0]
-    if directive == 'let':
+    if lead_symbol == 'let':
         args = len(exp[1])
         tmp_index = index
         for i in range(args):
@@ -124,7 +139,7 @@ def sugar_expression_index(exp, index):
                 return [0]
             tmp_index = tmp_index[2:]
         return [2] + sugar_expression_index(exp[2], tmp_index)
-    if directive == 'identity':
+    if lead_symbol == 'identity':
         if len(index) >= 2:
             if index[1] == 2:
                 return [1] + sugar_expression_index(exp[1], index[2:])
@@ -144,8 +159,13 @@ def desugar_expression_index(exp, index):
     index should be a sugared expression index."""
     if (not isinstance(exp,(tuple,list))) or len(index) == 0:
         return []
-    directive = exp[0]
-    if directive == 'if':
+    if isinstance(exp[0], basestring):
+        lead_symbol = exp[0]
+    elif isinstance(exp[0], dict) and 'type' in exp[0] and 'value' in exp[0] and exp[0]['type'] == 'symbol':
+        lead_symbol = exp[0]['value']
+    else:
+        lead_symbol = None
+    if lead_symbol == 'if':
         if index[0] == 0:
             _raise_eid()
         if index[0] == 1:
@@ -154,21 +174,21 @@ def desugar_expression_index(exp, index):
             return [0,2,2] + desugar_expression_index(exp[2], index[1:])
         if index[0] == 3:
             return [0,3,2] + desugar_expression_index(exp[3], index[1:])
-    if directive == 'and':
+    if lead_symbol == 'and':
         if index[0] == 0:
             _raise_eid()
         if index[0] == 1:
             return [0,1] + desugar_expression_index(exp[1], index[1:])
         if index[0] == 2:
             return [0,2,2] + desugar_expression_index(exp[2], index[1:])
-    if directive == 'or':
+    if lead_symbol == 'or':
         if index[0] == 0:
             _raise_eid()
         if index[0] == 1:
             return [0,1] + desugar_expression_index(exp[1], index[1:])
         if index[0] == 2:
             return [0,3,2] + desugar_expression_index(exp[2], index[1:])
-    if directive == 'let':
+    if lead_symbol == 'let':
         if index[0] == 0:
             _raise_eid()
         if index[0] == 1:
@@ -181,7 +201,7 @@ def desugar_expression_index(exp, index):
                 return [0,2]*(index[1]) + [1] + desugar_expression_index(e[1], index[3:])
         if index[0] == 2:
             return [0,2]*(len(exp[1])) + desugar_expression_index(exp[2], index[1:])
-    if directive == 'identity':
+    if lead_symbol == 'identity':
         if index[0] == 0:
             _raise_eid()
         if index[0] == 1:
@@ -236,7 +256,12 @@ def validate_symbol(s):
         raise VentureException('parse',
                 'Invalid symbol. May only contain letters, digits, and underscores. May not begin with digit.',
                 expression_index=[])
-    return s.encode('ascii')
+    # TODO Figure out where in the lower levels the symbol-as-string
+    # representation is expected and change to dict-symbols.
+    if isinstance(s, basestring):
+        return s.encode('ascii')
+    else:
+        return s["value"].encode('ascii')
 
 def validate_dict(s):
     if not isinstance(s,dict):

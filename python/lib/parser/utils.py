@@ -225,6 +225,18 @@ def value_token():
     value.setParseAction(process_value)
     return value
 
+# <symbol_literal>
+#
+# evalutes to a literal symbol value: {"type":"symbol", "value":s}
+def symbol_literal_token(*args, **kwargs):
+    def process_symbol_literal(_s, _loc, toks):
+        v = val.symbol(toks[0]['value'])
+        l = toks[0]['loc']
+        return [{"loc":l, "value":v}]
+    symbol_literal = MatchFirst([symbol_token(*args, **kwargs)])
+    symbol_literal.setParseAction(process_symbol_literal)
+    return symbol_literal
+
 # <number_literal>
 #
 # evalutes to a literal number value: {"type":"number", "value":s}
