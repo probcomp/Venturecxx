@@ -44,7 +44,10 @@ inference program to use.
 
 When writing tests, we recommend interacting with Venture through the
 `venture.test.config` module (in `test/config.py`) to be as generic as
-is appropriate for the test.
+is appropriate for the test.  In particular, if a new test is not
+generic across backends, please decorate it with
+`@venture.test.config.in_backend` (or `@gen_in_backend` for
+generators), whose docstrings see.
 
 Statistical Tests
 -----------------
