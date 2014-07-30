@@ -32,7 +32,11 @@ boost::python::dict foreignArgsToPython(shared_ptr<Args> args)
   }
   foreignArgs["operandValues"] = foreignOperandValues;
 
-  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(args->spAux)->aux;
+  boost::python::object foreignAux;
+  if (shared_ptr<ForeignLiteSPAux> aux = dynamic_pointer_cast<ForeignLiteSPAux>(args->spAux))
+  {
+    foreignAux = aux->aux;
+  }
   foreignArgs["spaux"] = foreignAux;
 
   OutputNode * outputNode = dynamic_cast<OutputNode*>(args->node);
@@ -127,7 +131,11 @@ double ForeignLitePSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
 
 VentureValuePtr ForeignLiteLKernel::simulate(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args,gsl_rng * rng)
 {
-  boost::python::dict foreignOldValue = oldValue->toPython(args->_trace);
+  boost::python::object foreignOldValue;
+  if (oldValue)
+  {
+    foreignOldValue = oldValue->toPython(args->_trace);
+  }
   boost::python::dict foreignArgs = foreignArgsToPython(args);
   boost::python::object foreignResult = lkernel.attr("simulate")(foreignOldValue, foreignArgs);
   return foreignFromPython(foreignResult);
@@ -136,7 +144,11 @@ VentureValuePtr ForeignLiteLKernel::simulate(Trace * trace,VentureValuePtr oldVa
 double ForeignLiteLKernel::weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,shared_ptr<Args> args)
 {
   boost::python::dict foreignNewValue = newValue->toPython(args->_trace);
-  boost::python::dict foreignOldValue = oldValue->toPython(args->_trace);
+  boost::python::object foreignOldValue;
+  if (oldValue)
+  {
+    foreignOldValue = oldValue->toPython(args->_trace);
+  }
   boost::python::dict foreignArgs = foreignArgsToPython(args);
   boost::python::object foreignWeight = lkernel.attr("weight")(foreignNewValue, foreignOldValue, foreignArgs);
   return boost::python::extract<double>(foreignWeight);

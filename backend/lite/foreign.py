@@ -10,7 +10,9 @@ def fromStackDict(thing):
     # proxy for VentureValue.fromStackDict that handles SPs by unwrapping them
     # TODO: should foreign_sp be a recognized stack dict type?
     # should this become the normal stack representation for SPs?
-    if thing["type"] == "foreign_sp":
+    if thing is None:
+        return None
+    elif thing["type"] == "foreign_sp":
         return VentureSPRecord(thing["sp"].sp, thing["aux"])
     else:
         return VentureValue.fromStackDict(thing)
