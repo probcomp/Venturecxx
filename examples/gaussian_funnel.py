@@ -16,6 +16,7 @@ from time import time
 from os import path
 import os
 import cPickle as pkl
+import argparse
 
 class GaussianFunnel(RandomPSP):
   def simulate(self, args):
@@ -133,7 +134,7 @@ def annotate_plotf(plotf_output, elapsed):
 
 def output_report(backend, model, infer_type, infer_method,
                   infer_statement, nupdate, niter, elapsed):
-  basedir = path.expanduser('~/Google Drive/probcomp/gaussian-funnel/results')
+  basedir = path.expanduser('~/probcomp/funnel-results')
   wkname = '-'.join([backend, model, infer_type, infer_method, str(nupdate), str(niter)])
   wkdir = path.join(basedir, wkname)
   if not path.exists(wkdir): os.mkdir(wkdir)
@@ -158,18 +159,22 @@ def run_experiment(backend, model, infer_type, infer_method, infer_args_v, infer
   fig.savefig(path.join(wkdir, 'trace.png'))
   with open(path.join(wkdir, 'trace-history.pkl'), 'wb') as f:
     pkl.dump(res, f, protocol = 2)
+  print 'Finished model {0}, infer_method {1}.'.format(model, infer_method)
 
-backend = 'lite'
-model = 'correct'
-infer_type = 'univariate'
-infer_method = 'mh'
-infer_args_v = []
-infer_args_x = []
-nupdate = 80
-niter = 16
+def make_parser():
+  parser = argparse.ArgumentParser()
+  for field in ['backend', 'model', 'infer_type', 'infer_method',
+                'infer_args_v', 'infer_args_x']:
+    parser.add_argument(field, type = str)
+  for field in ['nupdate', 'niter']:
+    parser.add_argument(field, type = int)
+  args = parser.parse_args()
+  kwargs = vars(args)
+  for field in ['infer_args_v', 'infer_args_x']:
+    kwargs[field] = [] if kwargs[field] == 'none' else kwargs[field].split(',')
+  return kwargs
 
-run_experiment(backend, model, infer_type, infer_method, [], [], nupdate, niter)
-
-
-
+if __name__ == '__main__':
+  kwargs = make_parser()
+  run_experiment(**kwargs)
 
