@@ -6,7 +6,7 @@ import math
 from lkernel import LKernel
 from sp import SP, VentureSPRecord, SPAux, SPType
 from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
-from utils import simulateCategorical, logDensityCategorical, simulateDirichlet, logDensityDirichlet
+from utils import simulateDirichlet, logDensityDirichlet
 from value import AnyType, VentureAtom
 from exception import VentureValueError
 from range_tree import Node, sample
@@ -171,11 +171,13 @@ class UDirMultAAALKernel(LKernel):
 
 class UDirMultOutputPSP(RandomPSP):
   def __init__(self,theta,os):
-    self.theta = theta
+    self.theta = Node(theta)
     self.os = os
     self.index = dict((val, i) for (i, val) in enumerate(os))
 
-  def simulate(self,args): return simulateCategorical(self.theta,self.os)
+  def simulate(self,args):
+    index = sample(self.theta)
+    return self.os[index]
 
   def logDensity(self, val, _args):
     index = self.index[val]
