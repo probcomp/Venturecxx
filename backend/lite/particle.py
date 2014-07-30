@@ -1,5 +1,6 @@
 from wttree import PMap, PSet
 from trace import Trace
+from sp import VentureSPRecord
 
 class Particle(Trace):
 
@@ -89,10 +90,13 @@ class Particle(Trace):
   def setValueAt(self,node,value): 
     self.values = self.values.insert(node,value)
 
-  def setMadeSPRecordAt(self,node,sprecord):
+  def madeSPRecordAt(self,node):
+    return VentureSPRecord(self.madeSPAt(node), self.madeSPAuxAt(node))
+
+  def setMadeSPRecordAt(self,node,spRecord):
     self.madeSPs = self.madeSPs.insert(node,spRecord.sp)
-    self.madeSPAuxs[node] = aux
-    self.newMadeSPFamilies # TODO
+    self.madeSPAuxs[node] = spRecord.spAux
+    self.newMadeSPFamilies = self.newMadeSPFamilies.insert(node, PMap())
 
   def madeSPAt(self,node):
     if node in self.madeSPs: return self.madeSPs.lookup(node)
@@ -214,7 +218,8 @@ class Particle(Trace):
     for (node,value) in self.values.iteritems(): 
       self.base.setValueAt(node,value)
 
-    for (node,madeSP) in self.madeSPs.iteritems(): self.base.setMadeSPAt(node,madeSP)
+    for (node,madeSP) in self.madeSPs.iteritems():
+      self.base.setMadeSPRecordAt(node,VentureSPRecord(madeSP))
 
     
           
@@ -233,7 +238,6 @@ class Particle(Trace):
 
 
 ################### Methods that should never be called on particles
-  def madeSPRecordAt(self,node): raise Exception("Should not be called on a particle")
   def registerAAAMadeSPAuxAt(self,node,aux): raise Exception("Should not be called on a particle")
   def unregisterFamilyAt(self,node,esrId): raise Exception("Should not be called on a particle")
   def popEsrParentAt(self,node): raise Exception("Should not be called on a particle")

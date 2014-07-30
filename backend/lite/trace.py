@@ -216,10 +216,8 @@ class Trace(object):
 
   def getAAAMadeSPAuxAt(self,node): return node.aaaMadeSPAux
   def discardAAAMadeSPAuxAt(self,node):
-    assert node.aaaMadeSPAux is not None
     node.aaaMadeSPAux = None
   def registerAAAMadeSPAuxAt(self,node,aux):
-    assert node.aaaMadeSPAux is None
     node.aaaMadeSPAux = aux
 
   def parentsAt(self,node): return node.parents()
