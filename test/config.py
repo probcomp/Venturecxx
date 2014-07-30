@@ -223,7 +223,7 @@ values are:
 
   "mh", "func_mh", "gibbs", "emap", "pgibbs", "func_pgibbs",
   "meanfield", "hmc", "map", "nesterov", "rejection", "slice", or
-  "slice_doubling"
+  "slice_doubling", "resample", "peek", "peek_all", "plotf"
          for that inference primitive
   "none" for a primitive-independent test (i.e., does not test inference meaningfully)
   "any"  for a primitive-agnostic test (i.e., should work the same for
@@ -268,7 +268,7 @@ Possible values are:
 
   "mh", "func_mh", "gibbs", "emap", "pgibbs", "func_pgibbs",
   "meanfield", "hmc", "map", "nesterov", "rejection", "slice", or
-  "slice_doubling"
+  "slice_doubling", "resample", "peek", "peek_all", "plotf"
          for that inference primitive
   "none" for primitive-independent tests (i.e., do not test inference meaningfully)
   "any"  for primitive-agnostic tests (i.e., should work the same for

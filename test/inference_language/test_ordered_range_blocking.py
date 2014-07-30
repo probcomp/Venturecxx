@@ -1,5 +1,6 @@
-from venture.test.config import get_ripl
+from venture.test.config import get_ripl, on_inf_prim
 
+@on_inf_prim("pgibbs")
 def testOrderedRangeBlockingExample():
   ripl = get_ripl()
   ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))", label="a")

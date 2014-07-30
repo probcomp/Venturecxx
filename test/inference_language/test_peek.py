@@ -1,7 +1,7 @@
 import scipy.stats as stats
 
 from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, default_num_samples
+from venture.test.config import get_ripl, default_num_samples, on_inf_prim
 
 @statisticalTest
 def testPeekSmoke1():
@@ -12,6 +12,7 @@ def testPeekSmoke1():
   return reportKnownContinuous(cdf, predictions, "N(0,1)")
 
 @statisticalTest
+@on_inf_prim("peek")
 def testPeekSmoke2():
   ripl = get_ripl()
   predictions = ripl.infer("(cycle ((peek (normal 0 1) x)) %s)" % default_num_samples())['x']

@@ -1,6 +1,6 @@
 from venture.test.stats import statisticalTest, reportKnownMean
 from nose.tools import eq_, raises
-from venture.test.config import get_ripl, collectSamples, ignoresConfiguredInferenceProgram, collectStateSequence, skipWhenRejectionSampling
+from venture.test.config import get_ripl, collectSamples, ignoresConfiguredInferenceProgram, collectStateSequence, skipWhenRejectionSampling, on_inf_prim
 from testconfig import config
 from nose import SkipTest
 
@@ -344,7 +344,7 @@ def testConstrainInAScope2brush():
 
   ripl.infer("(mh 0 0 20)")
 
-@ignoresConfiguredInferenceProgram
+@on_inf_prim("pgibbs")
 def testConstrainInAScope2particles():
   """Particles need to override some of the relevant methods as well"""
   ripl = get_ripl()

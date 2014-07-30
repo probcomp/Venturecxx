@@ -2,22 +2,25 @@ import math
 import scipy.stats as stats
 from nose import SkipTest
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownMeanVariance
-from venture.test.config import get_ripl, collectSamples, ignoresConfiguredInferenceProgram, default_num_transitions_per_sample
-from itertools import product
+from venture.test.config import get_ripl, collectSamples, default_num_transitions_per_sample, gen_on_inf_prim
 from testconfig import config
 
-def testAll():
+@gen_on_inf_prim("slice")
+def testAllSteppingOut():
   tests = (checkSliceBasic1, checkSliceNormalWithObserve1, checkSliceNormalWithObserve2a,
            checkSliceNormalWithObserve2b, checkSliceStudentT1, checkSliceStudentT2)
-  slice_methods = ('slice', 'slice_doubling')
-  for test, slice_method in product(tests, slice_methods):
-    yield test, slice_method
+  for test in tests: yield test, 'slice'
+
+@gen_on_inf_prim("slice_doubling")
+def testAllDoubling():
+  tests = (checkSliceBasic1, checkSliceNormalWithObserve1, checkSliceNormalWithObserve2a,
+           checkSliceNormalWithObserve2b, checkSliceStudentT1, checkSliceStudentT2)
+  for test in tests: yield test, 'slice_doubling'
 
 def inferCommand(slice_method, transitions_mult):
   ntransitions = default_num_transitions_per_sample() * transitions_mult
   return "(%s default one 0.5 100 %s)" % (slice_method, ntransitions)
 
-@ignoresConfiguredInferenceProgram
 @statisticalTest
 def checkSliceBasic1(slice_method):
   "Basic sanity test for slice"
@@ -29,7 +32,6 @@ def checkSliceBasic1(slice_method):
   cdf = stats.norm(loc=10, scale=1).cdf
   return reportKnownContinuous(cdf, predictions, "N(10,1.0))")
 
-@ignoresConfiguredInferenceProgram
 @statisticalTest
 def checkSliceNormalWithObserve1(slice_method):
   "Checks the posterior distribution on a Gaussian given an unlikely observation"
@@ -45,7 +47,6 @@ def checkSliceNormalWithObserve1(slice_method):
   cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
   return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
 
-@ignoresConfiguredInferenceProgram
 @statisticalTest
 def checkSliceNormalWithObserve2a(slice_method):
   "Checks the posterior distribution on a Gaussian given an unlikely observation.  The difference between this and 1 is an extra predict, which apparently has a deleterious effect on mixing."
@@ -61,7 +62,6 @@ def checkSliceNormalWithObserve2a(slice_method):
   cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
   return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
 
-@ignoresConfiguredInferenceProgram
 @statisticalTest
 def checkSliceNormalWithObserve2b(slice_method):
   "Checks the posterior distribution on a Gaussian given an unlikely observation"
@@ -77,7 +77,6 @@ def checkSliceNormalWithObserve2b(slice_method):
   cdf = stats.norm(loc=12, scale=math.sqrt(1.5)).cdf
   return reportKnownContinuous(cdf, predictions, "N(12,sqrt(1.5))")
 
-@ignoresConfiguredInferenceProgram
 @statisticalTest
 def checkSliceStudentT1(slice_method):
   "Simple program involving simulating from a student_t"
@@ -99,7 +98,6 @@ def checkSliceStudentT1(slice_method):
   vara = meanasq - meana * meana
   return reportKnownMeanVariance(meana, vara, predictions)
 
-@ignoresConfiguredInferenceProgram
 @statisticalTest
 def checkSliceStudentT2(slice_method):
   "Simple program involving simulating from a student_t"
