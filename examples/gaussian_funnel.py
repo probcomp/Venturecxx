@@ -12,7 +12,10 @@ import venture.lite.value as v
 import numpy as np
 from numpy import linalg as npla
 from venture import shortcuts
-import time
+from time import time
+from os import path
+import os
+import cPickle as pkl
 
 class GaussianFunnel(RandomPSP):
   def simulate(self, args):
@@ -73,7 +76,7 @@ def initialize_funnel(ripl):
 def build_ripl(backend, model):
   # make v and the x's
   ripl = shortcuts.backend(backend).make_church_prime_ripl()
-  ripl.assume('v', '(scope_include (quote params) 0 (uniform_continuous -12 12))')
+  ripl.assume('v', '(scope_include (quote data) 0 (uniform_continuous -12 12))')
   ripl.force('v', 0.0)
   if model == 'correct':
     ripl.assume('x_range', '(* 4 (sqrt (exp 3)))')
@@ -86,7 +89,7 @@ def build_ripl(backend, model):
   # enforce the funnel potential
   ripl = initialize_funnel(ripl)
   # initialize values
-  for i in range(1, 9):
+  for i in range(1, 10):
     ripl.execute_instruction(force_x(i))
   return ripl
 
@@ -98,7 +101,7 @@ def make_str_args(infer_args):
     return ' '
 
 def assemble_infer_cycle(infer_method, infer_args_v, infer_args_x, nupdate):
-  v_cycle = '({0} (quote params) 0{1}1)'.format(infer_method, make_str_args(infer_args_v))
+  v_cycle = '({0} (quote data) 0{1}1)'.format(infer_method, make_str_args(infer_args_v))
   x_cycle = []
   for i in range(1,10):
     x = '({0} (quote data) {1}{2}1)'.format(infer_method,
@@ -108,27 +111,65 @@ def assemble_infer_cycle(infer_method, infer_args_v, infer_args_x, nupdate):
   infer_cycle = '(cycle ({0}) {1})'.format(v_cycle + ' ' + x_cycle, nupdate)
   return infer_cycle
 
-def assemble_infer_statement(infer_method, infer_args_v, infer_args_x, nupdate, niter):
-  infer_cycle = assemble_infer_cycle(infer_method, infer_args_v, infer_args_x, nupdate)
+def assemble_infer_statement(infer_type, infer_method, infer_args_v,
+                             infer_args_x, nupdate, niter):
+  if infer_type == 'univariate':
+    infer_cycle = assemble_infer_cycle(infer_method, infer_args_v, infer_args_x, nupdate)
+  elif infer_type == 'multivariate':
+    infer_cycle = '({0} (quote data) all{1}{2})'.format(infer_method, make_str_args(infer_args_v), nupdate)
+  else:
+    raise Exception('Give a valid infer type.')
   infer_statement = '(cycle ((plotf pcd0d v) {0}) {1})'.format(infer_cycle, niter)
   return infer_statement
 
-def run_experiment(backend, model, infer_method, infer_args_v, infer_args_x, nupdate, niter):
-  ripl = build_ripl(backend, model)
-  infer_statement = assemble_infer_statement(infer_method, infer_args_v,
-                                             infer_args_x, nupdate, niter)
-  res = ripl.infer(infer_statement)
-  return res
+def annotate_plotf(plotf_output, elapsed):
+  fig = plotf_output.draw()[0]
+  ax = fig.axes[0]
+  ax.set_title('Elapsed time: {0:0.2f}s'.format(elapsed))
+  ax.set_ylim([-10,10])
+  ax.axhline(7.5, color = 'black', linestyle = '--')
+  ax.axhline(-7.5, color = 'black', linestyle = '--')
+  return fig
 
+def output_report(backend, model, infer_type, infer_method,
+                  infer_statement, nupdate, niter, elapsed):
+  basedir = path.expanduser('~/Google Drive/probcomp/gaussian-funnel/results')
+  wkname = '-'.join([backend, model, infer_type, infer_method, str(nupdate), str(niter)])
+  wkdir = path.join(basedir, wkname)
+  if not path.exists(wkdir): os.mkdir(wkdir)
+  fields = ['backend', 'model', 'infer_statement', 'elapsed']
+  with open(path.join(wkdir, 'report.txt'), 'w') as f:
+    for field in fields:
+      res = int(eval(field)) if field == 'elapsed' else eval(field)
+      outstr = '{0}: {1}'.format(field, res)
+      f.write(outstr + '\n')
+  return wkdir
+
+def run_experiment(backend, model, infer_type, infer_method, infer_args_v, infer_args_x, nupdate, niter):
+  ripl = build_ripl(backend, model)
+  infer_statement = assemble_infer_statement(infer_type, infer_method, infer_args_v,
+                                             infer_args_x, nupdate, niter)
+  start = time()
+  res = ripl.infer(infer_statement)
+  elapsed = time() - start
+  wkdir = output_report(backend, model, infer_type, infer_method,
+                        infer_statement, nupdate, niter, elapsed)
+  fig = annotate_plotf(res, elapsed)
+  fig.savefig(path.join(wkdir, 'trace.png'))
+  with open(path.join(wkdir, 'trace-history.pkl'), 'wb') as f:
+    pkl.dump(res, f, protocol = 2)
+
+backend = 'lite'
+model = 'correct'
+infer_type = 'univariate'
 infer_method = 'mh'
 infer_args_v = []
 infer_args_x = []
-nupdate = 100
-niter = 50
+nupdate = 80
+niter = 16
 
-start = time.time()
-res = run_experiment('puma', 'incorrect', 'mh', [], [], nupdate, niter)
-print time.time() - start
+run_experiment(backend, model, infer_type, infer_method, [], [], nupdate, niter)
+
 
 
 
