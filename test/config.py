@@ -321,3 +321,21 @@ general-purpose inference programs except rejection sampling.
 
 def rejectionSampling():
   return config["infer"].startswith("(rejection default all")
+
+def skipWhenInParallel(reason):
+  def wrap(f):
+    @nose.make_decorator(f)
+    def wrapped(*args):
+      if not inParallel():
+        f(*args)
+      else:
+        raise SkipTest(reason)
+    wrapped.skip_when_in_parallel = True # TODO Skip by these tags in all-crashes & co
+    return wrapped
+  return wrap
+
+def inParallel():
+  for operator in ["gibbs", "pgibbs", "func_pgibbs"]:
+    if config["infer"].startswith("(" + operator) and not config["infer"].endswith("false)"):
+      return True
+  return False

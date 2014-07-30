@@ -1,4 +1,4 @@
-from venture.test.config import get_ripl, defaultInfer
+from venture.test.config import get_ripl, defaultInfer, skipWhenInParallel
 from venture.lite import builtin
 
 def test_foreign_aaa():
@@ -15,6 +15,7 @@ def test_foreign_aaa():
     ripl.infer(defaultInfer())
     assert ripl.sample("f")["counts"] == [1]
 
+@skipWhenInParallel("Calling into Lite from Puma is not thread-safe. Issue: https://app.asana.com/0/11127829865276/15184529953373")
 def test_foreign_aaa_resampled():
     builtins = builtin.builtInSPs()
     ripl = get_ripl()
@@ -30,6 +31,7 @@ def test_foreign_aaa_resampled():
     ripl.infer(defaultInfer())
     assert ripl.sample("f")["counts"] == [1]
 
+@skipWhenInParallel("Calling into Lite from Puma is not thread-safe. Issue: https://app.asana.com/0/11127829865276/15184529953373")
 def test_foreign_aaa_uc():
     builtins = builtin.builtInSPs()
     ripl = get_ripl()
