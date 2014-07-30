@@ -145,5 +145,14 @@ class ForeignLiteSP(object):
     def constructSPAux(self):
         return self.sp.constructSPAux()
 
+    def constructLatentDB(self):
+        return self.sp.constructLatentDB()
+
+    def simulateLatents(self,spaux,lsr,shouldRestore,latentDB):
+        return self.sp.simulateLatents(spaux,lsr,shouldRestore,latentDB)
+
+    def detachLatents(self,spaux,lsr,latentDB):
+        return self.sp.detachLatents(spaux,lsr,latentDB)
+
     def show(self, spaux):
         return self.sp.show(spaux)
