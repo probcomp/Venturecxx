@@ -17,8 +17,14 @@ VentureValuePtr foreignFromPython(boost::python::object thing)
   }
   else if (thing["type"] == "request")
   {
-    // TODO
-    return VentureValuePtr(new ForeignLiteRequest());
+    // TODO: ESRs
+    boost::python::list foreignLSRs = boost::python::extract<boost::python::list>(thing["value"]["lsrs"]);
+    vector<shared_ptr<LSR> > lsrs;
+    for (boost::python::ssize_t i = 0; i < boost::python::len(foreignLSRs); ++i)
+    {
+      lsrs.push_back(shared_ptr<LSR>(new ForeignLiteLSR(foreignLSRs[i])));
+    }
+    return VentureValuePtr(new ForeignLiteRequest(lsrs));
   }
   else
   {
@@ -169,9 +175,17 @@ double ForeignLiteLKernel::reverseWeight(Trace * trace,VentureValuePtr oldValue,
 
 boost::python::dict ForeignLiteRequest::toPython(Trace * trace) const
 {
-  // TODO
+  // TODO: ESRs
+  boost::python::list foreignLSRs;
+  for (size_t i = 0; i < lsrs.size(); ++i)
+  {
+    foreignLSRs.append(dynamic_pointer_cast<ForeignLiteLSR>(lsrs[i])->lsr);
+  }
+  boost::python::dict value;
+  value["lsrs"] = foreignLSRs;
   boost::python::dict stackDict;
   stackDict["type"] = "request";
+  stackDict["value"] = value;
   return stackDict;
 }
 

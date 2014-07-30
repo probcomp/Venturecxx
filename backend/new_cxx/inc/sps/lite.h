@@ -56,9 +56,17 @@ struct ForeignLiteLKernel : LKernel
   boost::python::object lkernel;
 };
 
+struct ForeignLiteLSR : LSR
+{
+  ForeignLiteLSR(boost::python::object lsr): lsr(lsr) {}
+
+  boost::python::object lsr;
+};
+
 struct ForeignLiteRequest : VentureRequest
 {
-  ForeignLiteRequest(): VentureRequest(vector<ESR>(), vector<shared_ptr<LSR> >()) {}
+  ForeignLiteRequest(const vector<ESR> & esrs, const vector<shared_ptr<LSR> > & lsrs): VentureRequest(esrs, lsrs) {}
+  ForeignLiteRequest(const vector<shared_ptr<LSR> > & lsrs): VentureRequest(lsrs) {}
   boost::python::dict toPython(Trace * trace) const;
 };
 
