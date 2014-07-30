@@ -24,7 +24,12 @@ class DefaultAAALKernel(LKernel):
     spRecord = self.makerPSP.simulate(args)
     spRecord.spAux = args.madeSPAux
     return spRecord
-  def weight(self,_trace,newValue,_oldValue,args):
+  def weight(self,_trace,newValue,_oldValue,_args):
+    # Using newValue.spAux here because args.madeSPAux is liable to be
+    # None when detaching. This has something to do with when the Args
+    # object is constructed relative to other things that happen
+    # during detach/regen. TODO: fix it so that this code is less
+    # fragile.
     assert isinstance(newValue,VentureSPRecord)
     return newValue.sp.outputPSP.logDensityOfCounts(newValue.spAux)
   def weightBound(self, _trace, _newValue, _oldValue, args):
@@ -32,7 +37,7 @@ class DefaultAAALKernel(LKernel):
     # be None when computing bounds for rejection, but the maker
     # should know enough about its possible values future to answer my
     # question.
-    return self.makerPSP.madeSpLogDensityOfCountsBound(newValue.spAux)
+    return self.makerPSP.madeSpLogDensityOfCountsBound(args.madeSPAux)
 
 class DeterministicLKernel(LKernel):
   def __init__(self,psp,value):
