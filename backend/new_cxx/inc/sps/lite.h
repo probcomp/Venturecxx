@@ -56,10 +56,16 @@ struct ForeignLiteLKernel : LKernel
   boost::python::object lkernel;
 };
 
+struct ForeignLiteRequest : VentureRequest
+{
+  ForeignLiteRequest(): VentureRequest(vector<ESR>(), vector<shared_ptr<LSR> >()) {}
+  boost::python::dict toPython(Trace * trace) const;
+};
+
 struct ForeignLiteSP : SP
 {
   // TODO: requestPSP (needs requests to be stackable)
-  ForeignLiteSP(boost::python::object sp): SP(new NullRequestPSP(),
+  ForeignLiteSP(boost::python::object sp): SP(new ForeignLitePSP(sp.attr("requestPSP")),
                                               new ForeignLitePSP(sp.attr("outputPSP"))),
                                            sp(sp) {}
   boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;

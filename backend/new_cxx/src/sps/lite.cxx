@@ -15,6 +15,11 @@ VentureValuePtr foreignFromPython(boost::python::object thing)
     return VentureValuePtr(new VentureSPRecord(new ForeignLiteSP(thing["sp"]),
                                                new ForeignLiteSPAux(thing["aux"])));
   }
+  else if (thing["type"] == "request")
+  {
+    // TODO
+    return VentureValuePtr(new ForeignLiteRequest());
+  }
   else
   {
     return parseValue(boost::python::extract<boost::python::dict>(thing));
@@ -160,6 +165,14 @@ double ForeignLiteLKernel::reverseWeight(Trace * trace,VentureValuePtr oldValue,
   boost::python::dict foreignArgs = foreignArgsToPython(args);
   boost::python::object foreignWeight = lkernel.attr("reverseWeight")(foreignOldValue, foreignArgs);
   return boost::python::extract<double>(foreignWeight);
+}
+
+boost::python::dict ForeignLiteRequest::toPython(Trace * trace) const
+{
+  // TODO
+  boost::python::dict stackDict;
+  stackDict["type"] = "request";
+  return stackDict;
 }
 
 boost::python::dict ForeignLiteSP::toPython(Trace * trace, shared_ptr<SPAux> aux) const
