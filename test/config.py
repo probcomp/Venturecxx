@@ -105,15 +105,24 @@ def defaultInfer():
 ######################################################################
 
 def in_backend(backend):
-  """Marks this test as applying against the given backend (i.e., the
-test could conceivably fail even if all changes are confined to that
-backend).  Only works for non-generator tests :(  Possible values are:
+  """Marks this test as testing the given backend.
+
+That is, the test could conceivably expose a bug introduced by changes
+confined to that backend.  Only works for non-generator tests---use
+gen_in_backend for generators.  Possible values are:
 
   "lite", "puma" for that backend
-  "none" for a backend-independent test
+  "none" for a backend-independent test (i.e., does not test backends meaningfully)
   "any"  for a backend-agnostic test (i.e., should work the same in any backend)
   "all"  for a test that uses all backends (e.g., comparing them)
-"""
+
+Example:
+@in_backend("puma")
+def testSomethingAboutPuma():
+  ripl = make_puma_church_prime_ripl()
+  ...
+
+  """
   # TODO Is there a way to reduce the code duplication between the
   # generator and non-generator version of this decorator?
   def wrap(f):
@@ -135,15 +144,24 @@ backend).  Only works for non-generator tests :(  Possible values are:
   return wrap
 
 def gen_in_backend(backend):
-  """Marks this test as applying against the given backend (i.e., the
-test could conceivably fail even if all changes are confined to that
-backend).  Only works for test generators :(  Possible values are:
+  """Marks this test generator as generating tests that test the given backend.
+
+That is, the generated tests could conceivably expose a bug introduced
+by changes confined to that backend.  Only works for test
+generators---use in_backend for individual tests.  Possible values are:
 
   "lite", "puma" for that backend
-  "none" for a backend-independent test
-  "any"  for a backend-agnostic test (i.e., should work the same in any backend)
-  "all"  for a test that uses all backends (e.g., comparing them)
-"""
+  "none" for backend-independent tests (i.e., does not test backends meaningfully)
+  "any"  for backend-agnostic tests (i.e., should work the same in any backend)
+  "all"  for tests that use all backends (e.g., comparing them)
+
+Example:
+@gen_in_backend("puma")
+def testSomeThingsAboutPuma():
+  for thing in some(things):
+    yield ...
+
+  """
   # TODO Is there a way to reduce the code duplication between the
   # generator and non-generator version of this decorator?
   def wrap(f):
