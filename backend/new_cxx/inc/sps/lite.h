@@ -8,6 +8,7 @@
 #include "sp.h"
 #include "psp.h"
 #include "lkernel.h"
+#include "db.h"
 
 // A mechanism for calling foreign SPs (written in Python, using the
 // Lite interface) in Puma. Implemented as a Puma SP which wraps a
@@ -63,6 +64,13 @@ struct ForeignLiteLSR : LSR
   boost::python::object lsr;
 };
 
+struct ForeignLiteLatentDB : LatentDB
+{
+  ForeignLiteLatentDB(boost::python::object latentDB): latentDB(latentDB) {}
+
+  boost::python::object latentDB;
+};
+
 struct ForeignLiteRequest : VentureRequest
 {
   ForeignLiteRequest(const vector<ESR> & esrs, const vector<shared_ptr<LSR> > & lsrs): VentureRequest(esrs, lsrs) {}
@@ -76,6 +84,11 @@ struct ForeignLiteSP : SP
   ForeignLiteSP(boost::python::object sp): SP(new ForeignLitePSP(sp.attr("requestPSP")),
                                               new ForeignLitePSP(sp.attr("outputPSP"))),
                                            sp(sp) {}
+
+  shared_ptr<LatentDB> constructLatentDB() const;
+  double simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB,gsl_rng * rng) const;
+  double detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const;
+
   boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;
 
   boost::python::object sp;

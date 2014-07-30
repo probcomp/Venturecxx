@@ -189,6 +189,31 @@ boost::python::dict ForeignLiteRequest::toPython(Trace * trace) const
   return stackDict;
 }
 
+shared_ptr<LatentDB> ForeignLiteSP::constructLatentDB() const
+{
+  return shared_ptr<LatentDB>(new ForeignLiteLatentDB(sp.attr("constructLatentDB")()));
+}
+
+double ForeignLiteSP::simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB,gsl_rng * rng) const
+{
+  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(spaux)->aux;
+  boost::python::object foreignLSR = dynamic_pointer_cast<ForeignLiteLSR>(lsr)->lsr;
+  boost::python::object foreignLatentDB;
+  if (latentDB)
+  {
+    foreignLatentDB = dynamic_pointer_cast<ForeignLiteLatentDB>(latentDB)->latentDB;
+  }
+  return boost::python::extract<double>(sp.attr("simulateLatents")(foreignAux, foreignLSR, shouldRestore, foreignLatentDB));
+}
+
+double ForeignLiteSP::detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const
+{
+  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(spaux)->aux;
+  boost::python::object foreignLSR = dynamic_pointer_cast<ForeignLiteLSR>(lsr)->lsr;
+  boost::python::object foreignLatentDB = dynamic_pointer_cast<ForeignLiteLatentDB>(latentDB)->latentDB;
+  return boost::python::extract<double>(sp.attr("detachLatents")(foreignAux, foreignLSR, foreignLatentDB));
+}
+
 boost::python::dict ForeignLiteSP::toPython(Trace * trace, shared_ptr<SPAux> aux) const
 {
   boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(aux)->aux;
