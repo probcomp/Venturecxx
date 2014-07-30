@@ -45,3 +45,14 @@ def test_foreign_aaa_uc():
 
     ripl.infer(defaultInfer())
     assert ripl.sample("f")["counts"] == [1]
+
+def test_foreign_latents():
+    builtins = builtin.builtInSPs()
+    ripl = get_ripl()
+    ripl.bind_foreign_sp("test_lazy_hmm", builtins["make_lazy_hmm"])
+
+    ripl.assume("f", "(test_lazy_hmm (simplex 1) (id_matrix 1) (id_matrix 1))")
+    assert ripl.sample("(f 1)") == 0
+
+    ripl.infer(defaultInfer())
+    assert ripl.sample("(f 1)") == 0
