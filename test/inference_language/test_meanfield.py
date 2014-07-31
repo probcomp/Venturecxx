@@ -12,7 +12,7 @@ def testMeanFieldBasic():
 
 @statisticalTest
 def checkMeanFieldBasic1(infer):
-  "Basic sanity test for slice"
+  "Basic sanity test for meanfield"
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)",label="pid")
   predictions = collectSamples(ripl,"pid",infer=infer)
