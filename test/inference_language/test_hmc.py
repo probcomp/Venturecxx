@@ -35,7 +35,7 @@ def checkMVGaussSmoke(infer):
   """Confirm that projecting a multivariate Gaussian to one dimension
   results in a univariate Gaussian."""
   ripl = get_ripl()
-  ripl.assume("vec", "(multivariate_normal (array 1 2) (matrix (list (list 1 0.5) (list 0.5 1))))")
+  ripl.assume("vec", "(multivariate_normal (vector 1 2) (matrix (list (list 1 0.5) (list 0.5 1))))")
   ripl.assume("x", "(lookup vec 0)", label="pid")
   predictions = collectSamples(ripl,"pid",infer=infer)
   cdf = stats.norm(loc=1, scale=1).cdf
