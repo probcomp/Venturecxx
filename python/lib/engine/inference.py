@@ -23,7 +23,7 @@ class Infer(object):
     self.engine = engine
     self.out = {}
     self.plot = None
-    self.start_time = None
+    self.printer = None
 
   def _ensure_peek_name(self, name):
     if self.plot is not None:
@@ -40,6 +40,17 @@ class Infer(object):
       pass
     else:
       raise Exception("TODO Cannot plot with different specs in the same inference program")
+
+  def _ensure_print(self, names):
+    if self.printer is None:
+      self.printer = SpecPrint(names)
+    elif names == self.printer.names:
+      pass
+    else:
+      # In order to count iterations, can only have one printf call
+      # This will still multi-count interations if you enter the same printf command multiple times
+      # This is going to get refactored soon anyhow, so not worth guarding against that case here
+      raise Exception("TODO Cannot have multiple printf commands in same inference program")
 
   def _start_timer(self):
     if self.start_time is None:
@@ -83,22 +94,34 @@ class Infer(object):
     names = [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
     self._ensure_plot(spec, names, exps)
     self.plot.add_data(self.engine)
-  def printf(self, expression):
-    # TODO: This is quick and dirty to debug long inference runs.
-    #   Should refactor when inference language settles.
-    self._start_timer()
-    name = ExpressionType().asPython(expression)
-    if name == 'counter':
-      print 'Sweep count: {0}'.format(len(self.engine.traces))
-    elif name == 'time':
-      elapsed = round(time.time() - self.start_time)
-      print 'Wall time: {0} s'.format(elapsed)
-    elif name == 'score':
-      print 'Global log score: {0:0.2f}'.format(self.engine.logscore())
-    else:
-      # TODO: support for pretty-printing of floats
-      value = self.engine.sample(ExpressionType().asVentureValue(expression).asStackDict())
-      print '{0}: {1}'.format(name, value['value'])
+  def printf(self, *exprs):
+    names = [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
+    self._ensure_print(names)
+    self.printer.show_data(self.engine)
+
+class SpecPrint(object):
+  "Quick and dirty way to allow printing to stdout on long runs."
+  # TODO: refactor to integrate with peek and plotf
+  def __init__(self, names):
+    self.names = names
+    self.sweep = 0
+    self.time = time.time()
+
+  def show_data(self, engine):
+    self.sweep += 1
+    the_time = time.time() - self.time
+    for name in self.names:
+      if name == 'counter':
+        print 'Sweep count: {0}'.format(self.sweep)
+      elif name == 'time':
+        print 'Wall time: {0:0.2f} s'.format(the_time)
+      elif name == 'score':
+        print 'Global log score: {0:0.2f}'.format(engine.logscore())
+      else:
+        # TODO: support for pretty-printing of floats
+        value = engine.sample(ExpressionType().asVentureValue(name).asStackDict())
+        print '{0}: {1}'.format(name, value['value'])
+    print
 
 class SpecPlot(object):
   """(plotf spec exp0 ...) -- Generate a plot according to a format specification.
