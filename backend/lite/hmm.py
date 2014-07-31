@@ -5,7 +5,7 @@ import numpy as np
 import numpy.random as npr
 import math
 from copy import copy
-from value import NumberType, RequestType
+from value import NumberType, CountType, RequestType
 from exception import VentureValueError
 
 def npSampleVector(pVec): return np.mat(npr.multinomial(1,np.array(pVec)[0,:]))
@@ -39,8 +39,8 @@ class MakeUncollapsedHMMOutputPSP(DeterministicPSP):
 
 class UncollapsedHMMSP(SP):
   def __init__(self,p0,T,O):
-    req = TypedPSP(UncollapsedHMMRequestPSP(), SPType([NumberType()], RequestType()))
-    output = TypedPSP(UncollapsedHMMOutputPSP(O), SPType([NumberType()], NumberType()))
+    req = TypedPSP(UncollapsedHMMRequestPSP(), SPType([CountType()], RequestType()))
+    output = TypedPSP(UncollapsedHMMOutputPSP(O), SPType([CountType()], NumberType()))
     super(UncollapsedHMMSP,self).__init__(req,output)
     self.p0 = p0
     self.T = T
@@ -106,30 +106,30 @@ class UncollapsedHMMOutputPSP(RandomPSP):
     self.O = O
 
   def simulate(self,args): 
-    n = int(args.operandValues[0])
+    n = args.operandValues[0]
     if 0 <= n and n < len(args.spaux.xs):
       return npIndexOfOne(npSampleVector(args.spaux.xs[n] * self.O))
     else:
       raise VentureValueError("Index out of bounds %s" % n)
 
   def logDensity(self,value,args):
-    n = int(args.operandValues[0])
+    n = args.operandValues[0]
     assert len(args.spaux.xs) > n
     theta = args.spaux.xs[n] * self.O
     return math.log(theta[0,value])
 
   def incorporate(self,value,args):
-    n = int(args.operandValues[0])
+    n = args.operandValues[0]
     if not n in args.spaux.os: args.spaux.os[n] = []
     args.spaux.os[n].append(value)
 
   def unincorporate(self,value,args):
-    n = int(args.operandValues[0])
+    n = args.operandValues[0]
     del args.spaux.os[n][args.spaux.os[n].index(value)]
     if not args.spaux.os[n]: del args.spaux.os[n]
 
 class UncollapsedHMMRequestPSP(DeterministicPSP):
-  def simulate(self,args): return Request([],[int(args.operandValues[0])])
+  def simulate(self,args): return Request([],[args.operandValues[0]])
 
 
 ##########################################

@@ -356,7 +356,7 @@ builtInSPsList = [
                                   [v.HomogeneousArrayType(v.NumberType()),v.NumberType(),v.NumberType(),v.MatrixType()],
                                   SPType([], v.MatrixType())) ],
 
-           [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [v.SimplexType(), v.MatrixType(), v.MatrixType()], SPType([v.NumberType()], v.NumberType())) ],
+           [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [v.SimplexType(), v.MatrixType(), v.MatrixType()], SPType([v.CountType()], v.NumberType())) ],
 ]
 
 def builtInSPs():
