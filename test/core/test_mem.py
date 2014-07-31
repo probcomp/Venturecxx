@@ -107,6 +107,50 @@ def testMem4():
   ripl.predict("(g)")
   ripl.infer(40)
 
+@statisticalTest
+def testMemArray():
+  "Same as testMem2 but when the arguments are arrays"
+  ripl = get_ripl()
+  ripl.assume("f","(mem (lambda (arg) (categorical (simplex 0.4 0.6) (array 1 2))))")
+  ripl.assume("x","(f (array 1 2))")
+  ripl.assume("y","(f (array 1 2))")
+  ripl.assume("w","(f (array 3 4))")
+  ripl.assume("z","(f (array 3 4))")
+  ripl.assume("q","(categorical (simplex 0.1 0.9) (array 1 2))")
+  ripl.predict('(add x y w z q)',label="pid")
+
+  predictions = collectSamples(ripl,"pid")
+  ans = [(5,  0.4 * 0.4 * 0.1),
+         (6,  0.4 * 0.4 * 0.9),
+         (7,  0.4 * 0.6 * 0.1 * 2),
+         (8,  0.4 * 0.6 * 0.9 * 2),
+         (9,  0.6 * 0.6 * 0.1),
+         (10, 0.6 * 0.6 * 0.9)]
+  return reportKnownDiscrete(ans, predictions)
+
+@statisticalTest
+def testMemSP():
+  "Same as testMem2 but when the arguments are SPs"
+  ripl = get_ripl()
+  ripl.assume("f","(mem (lambda (arg) (categorical (simplex 0.4 0.6) (array 1 2))))")
+  ripl.assume("g","(lambda (x) x)")
+  ripl.assume("h","(lambda (x) 1)")
+  ripl.assume("x","(f g)")
+  ripl.assume("y","(f g)")
+  ripl.assume("w","(f h)")
+  ripl.assume("z","(f h)")
+  ripl.assume("q","(categorical (simplex 0.1 0.9) (array 1 2))")
+  ripl.predict('(add x y w z q)',label="pid")
+
+  predictions = collectSamples(ripl,"pid")
+  ans = [(5,  0.4 * 0.4 * 0.1),
+         (6,  0.4 * 0.4 * 0.9),
+         (7,  0.4 * 0.6 * 0.1 * 2),
+         (8,  0.4 * 0.6 * 0.9 * 2),
+         (9,  0.6 * 0.6 * 0.1),
+         (10, 0.6 * 0.6 * 0.9)]
+  return reportKnownDiscrete(ans, predictions)
+
 ############ CXX mem tests
 
 def testMemoizingOnAList1():
