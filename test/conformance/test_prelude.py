@@ -30,9 +30,6 @@ class TestPrelude(TestCase):
   random_modes = ['numeric', 'boolean', 'mixed']
   container_length = [3,11]
 
-  def runTest(self):
-    pass
-
   def setUp(self):
     self.r = get_ripl()
 
