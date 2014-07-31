@@ -19,6 +19,7 @@ def testForgetSmoke2():
     pid = "pid%d" % i
     ripl.forget(pid)
 
+@on_inf_prim("mh")
 def testForgetContinuousInference3():
   ripl = get_ripl()
   for i in range(10):
@@ -31,6 +32,7 @@ def testForgetContinuousInference3():
     ripl.forget(pid)
     ripl.infer(5)
 
+@on_inf_prim("mh")
 def testForgetContinuousInference4():
   ripl = get_ripl()
   for i in range(10):

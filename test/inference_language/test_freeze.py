@@ -32,6 +32,7 @@ def testFreezeSanityCheck2():
   eq_(engine.getDistinguishedTrace().numNodesInBlock(0,0),1)
 
 @broken_in('lite', "freeze is only implemented in puma")
+@on_inf_prim("mh")
 def testFreezeSanityCheck3():
   """Check that a frozen value no longer changes under inference, even
 though unfrozen ones do."""

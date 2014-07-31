@@ -4,6 +4,7 @@ from venture.test.stats import statisticalTest, reportKnownContinuous
 from venture.test.config import get_ripl, default_num_samples, on_inf_prim
 
 @statisticalTest
+@on_inf_prim("peek") # Technically also MH, but not testing it
 def testPeekSmoke1():
   ripl = get_ripl()
   ripl.assume("x", "(normal 0 1)")
@@ -20,6 +21,7 @@ def testPeekSmoke2():
   return reportKnownContinuous(cdf, predictions, "N(0,1)")
 
 @statisticalTest
+@on_inf_prim("peek_all") # Technically also resample and MH, but not testing them
 def testPeekAllSmoke1():
   ripl = get_ripl()
   ripl.infer("(resample 2)")
@@ -31,6 +33,7 @@ def testPeekAllSmoke1():
   return reportKnownContinuous(cdf, [i[0] for i in predictionss], "N(0,1)")
 
 @statisticalTest
+@on_inf_prim("peek_all") # Technically also resample, but not testing it
 def testPeekAllSmoke2():
   ripl = get_ripl()
   ripl.infer("(resample 2)")
@@ -41,6 +44,7 @@ def testPeekAllSmoke2():
   return reportKnownContinuous(cdf, [i[0] for i in predictionss], "N(0,1)")
 
 @statisticalTest
+@on_inf_prim("plotf") # Technically also resample and MH, but not testing them
 def testPlotfSmoke():
   # This is the example from examples/normal_plot.vnt
   ripl = get_ripl()
@@ -59,6 +63,7 @@ def testPlotfSmoke():
   # TODO Also check the distributions of x and the difference
   return reportKnownContinuous(cdf, result["y"], "N(0,1)")
 
+@on_inf_prim("plotf") # Technically also MH, but not testing it
 def testPlotfDataset():
   # make sure that calling dataset multiple times works
   ripl = get_ripl()

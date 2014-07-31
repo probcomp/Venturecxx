@@ -101,6 +101,7 @@ def testDirectivesExecute():
     eq_( v.report('pid3')[0], 10)
 
 @statisticalTest
+@on_inf_prim("mh")
 def testDirectivesInfer1():
     'infer'
     v=get_mripl(no_ripls=default_num_samples())
@@ -111,6 +112,7 @@ def testDirectivesInfer1():
     return reportKnownContinuous(cdf,samples,"N(1,1)")
 
 @statisticalTest
+@on_inf_prim("mh")
 def testDirectivesInfer2():
     'inference program'
     v=get_mripl(no_ripls=default_num_samples())
@@ -121,6 +123,7 @@ def testDirectivesInfer2():
     return reportKnownContinuous(cdf,samples,"N(1,1)")
 
 @statisticalTest
+@on_inf_prim("mh")
 def testDirectivesForget():
     'forget'
     v=get_mripl(no_ripls=default_num_samples())
@@ -264,6 +267,7 @@ def testBackendSwitch():
     cdf = stats.norm(loc=200,scale=.1).cdf
     return reportKnownContinuous(cdf,v.report(1))
 
+@on_inf_prim("mh")
 def testTransitionsCount():
     v=get_mripl(no_ripls=2)
     eq_( v.total_transitions, 0)

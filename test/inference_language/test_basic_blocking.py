@@ -6,6 +6,7 @@ from venture.test.stats import statisticalTest, reportKnownContinuous, reportKno
 from venture.test.config import get_ripl, collectSamples, collect_iid_samples, default_num_transitions_per_sample, broken_in, on_inf_prim
 
 @statisticalTest
+@on_inf_prim("mh")
 def testBlockingExample0():
   ripl = get_ripl()
   if not collect_iid_samples(): raise SkipTest("This test should not pass without reset.")
@@ -20,6 +21,7 @@ def testBlockingExample0():
   cdf = stats.norm(loc=10.0, scale=1.0).cdf
   return reportKnownContinuous(cdf, predictions, "N(10.0,1.0)")
 
+@on_inf_prim("mh")
 def testBlockingExample1():
   ripl = get_ripl()
   ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))",label="a")
@@ -33,6 +35,7 @@ def testBlockingExample1():
   assert not olda == newa
   assert not oldb == newb
 
+@on_inf_prim("mh")
 def testBlockingExample2():
   ripl = get_ripl()
   ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))", label="a")
@@ -58,6 +61,7 @@ def testBlockingExample2():
     assert oldc == newc
     assert oldd == newd
 
+@on_inf_prim("mh")
 def testBlockingExample3():
   ripl = get_ripl()
   ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))", label="a")

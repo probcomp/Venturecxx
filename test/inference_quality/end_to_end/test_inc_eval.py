@@ -155,6 +155,7 @@ def testIncrementalEvaluator1c():
   return reportKnownContinuous(cdf, predictions, "0.3*N(0,1) + 0.7*N(10,1)")
 
 @attr('slow')
+@on_inf_prim("mh")
 def testIncrementalEvaluator2():
   "Difficult test. We make sure that it stumbles on the solution in a reasonable amount of time."
   ripl = get_ripl()

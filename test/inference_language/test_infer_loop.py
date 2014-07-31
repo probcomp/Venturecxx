@@ -20,6 +20,7 @@ def assertNotInferring(ripl):
   time.sleep(0.00001) # Yield to give CI a chance to work, if it's on
   assert v == ripl.sample("x")
 
+@on_inf_prim("mh") # Really loop, but that's very special
 def testInferLoopSmoke():
   ripl = get_ripl()
   ripl.assume("x", "(normal 0 1)")
@@ -32,6 +33,7 @@ def testInferLoopSmoke():
   finally:
     ripl.stop_continuous_inference() # Don't want to leave active threads lying around
 
+@on_inf_prim("mh") # Really loop, but that's very special
 def testStartStopInferLoop():
   ripl = get_ripl()
   ripl.assume("x", "(normal 0 1)")
@@ -45,6 +47,7 @@ def testStartStopInferLoop():
   finally:
     ripl.stop_continuous_inference() # Don't want to leave active threads lying around
 
+@on_inf_prim("mh") # Really loop, but that's very special
 def testStartCISmoke():
   ripl = get_ripl()
   ripl.assume("x", "(normal 0 1)")
@@ -57,6 +60,7 @@ def testStartCISmoke():
   finally:
     ripl.stop_continuous_inference() # Don't want to leave active threads lying around
 
+@on_inf_prim("mh") # Really loop, but that's very special
 def testStartCIInstructionSmoke():
   ripl = get_ripl()
   ripl.assume("x", "(normal 0 1)")
