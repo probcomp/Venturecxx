@@ -16,8 +16,7 @@ def fromStackDict(thing):
     elif thing["type"] == "foreign_sp":
         return VentureSPRecord(thing["sp"].sp, thing["aux"])
     elif thing["type"] == "request":
-        # TODO
-        return Request(lsrs=thing["value"]["lsrs"])
+        return Request(thing["value"]["esrs"], thing["value"]["lsrs"])
     else:
         return VentureValue.fromStackDict(thing)
 
