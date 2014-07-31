@@ -2,7 +2,7 @@ from nose.tools import eq_, assert_raises # Pylint misses metaprogrammed names p
 from nose import SkipTest
 
 from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, collectStateSequence, gen_broken_in
+from venture.test.config import get_ripl, collectSamples, collectStateSequence, gen_broken_in, gen_on_inf_prim
 
 def testInferWithNoEntropy():
   "Makes sure that infer doesn't crash when there are no random choices in the trace"
@@ -54,6 +54,7 @@ def testHiddenDeterminism2():
   return reportKnownDiscrete(ans, predictions)
 
 @gen_broken_in('puma', "rejection is not implemented in Puma")
+@gen_on_inf_prim("rejection")
 def testRejectNormal1():
   """Rejection sampling shouldn't work if both mean and variance of a
   normal are subject to change; shouldn't work if the mean is known

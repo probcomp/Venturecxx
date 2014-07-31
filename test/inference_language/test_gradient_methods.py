@@ -1,15 +1,17 @@
-from itertools import product
 from nose.tools import assert_almost_equal
 from nose import SkipTest
-from venture.test.config import get_ripl, collectSamples, broken_in, gen_broken_in
+
+from venture.test.config import get_ripl, collectSamples, broken_in, gen_broken_in, on_inf_prim, gen_on_inf_prim
 
 @gen_broken_in('puma', "Gradient climbers only implemented in Lite.")
-def testGradientMethodsBasic():
-  "Run tests over both gradient methods"
-  tests = (checkGradientMethodsBasic,)
-  methods = ("map", "nesterov")
-  for test, method in product(tests, methods):
-    yield test, method
+@gen_on_inf_prim("map")
+def testGradientMethodsBasicMap():
+  yield checkGradientMethodsBasic, "map"
+
+@gen_broken_in('puma', "Gradient climbers only implemented in Lite.")
+@gen_on_inf_prim("nesterov")
+def testGradientMethodsBasicNesterov():
+  yield checkGradientMethodsBasic, "nesterov"
 
 def checkGradientMethodsBasic(inference_method):
   "Make sure that map methods find the maximum"
@@ -22,6 +24,7 @@ def checkGradientMethodsBasic(inference_method):
   assert_almost_equal(prediction, 1)
 
 @broken_in('puma', "Gradient climbers only implemented in Lite.")
+@on_inf_prim("nesterov")
 def testNesterovWithInt():
   "Without fixing VentureInteger to play nicely with Python numbers, this errors"
   raise SkipTest("Observes that change the type of a variable may break gradient methods. Issue: https://app.asana.com/0/11127829865276/15085515046349")
