@@ -61,10 +61,11 @@ def testMem2():
   ripl.predict('(add x y w z q)',label="pid")
 
   predictions = collectSamples(ripl,"pid")
-  # TODO This test can be strengthened by computing more of the ratios in the answer
-  # (also by picking constants to have less severe buckets)
   ans = [(5,  0.4 * 0.4 * 0.1),
-         (6,  None), (7,  None), (8,  None), (9,  None),
+         (6,  0.4 * 0.4 * 0.9),
+         (7,  0.4 * 0.6 * 0.1 * 2),
+         (8,  0.4 * 0.6 * 0.9 * 2),
+         (9,  0.6 * 0.6 * 0.1),
          (10, 0.6 * 0.6 * 0.9)]
   return reportKnownDiscrete(ans, predictions)
 
@@ -82,10 +83,11 @@ def testMem3():
   ripl.predict('(add x y w z q)',label="pid")
 
   predictions = collectSamples(ripl,"pid")
-  # TODO This test can be strengthened by computing more of the ratios in the answer
-  # (also by picking constants to have less severe buckets)
   ans = [(5,  0.4 * 0.4 * 0.1),
-         (6,  None), (7,  None), (8,  None), (9,  None),
+         (6,  0.4 * 0.4 * 0.9),
+         (7,  0.4 * 0.6 * 0.1 * 2),
+         (8,  0.4 * 0.6 * 0.9 * 2),
+         (9,  0.6 * 0.6 * 0.1),
          (10, 0.6 * 0.6 * 0.9)]
   return reportKnownDiscrete(ans, predictions)
 
