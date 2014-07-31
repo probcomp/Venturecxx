@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
-
 from venture.lite.value import ExpressionType
 from venture.lite.utils import simulateCategorical
 
@@ -24,6 +23,7 @@ class Infer(object):
     self.engine = engine
     self.out = {}
     self.plot = None
+    self.start_time = None
 
   def _ensure_peek_name(self, name):
     if self.plot is not None:
@@ -41,6 +41,10 @@ class Infer(object):
     else:
       raise Exception("TODO Cannot plot with different specs in the same inference program")
 
+  def _start_timer(self):
+    if self.start_time is None:
+      self.start_time = time.time()
+
   def final_data(self):
     return self.plot if self.plot is not None else self.out
 
@@ -56,6 +60,8 @@ class Infer(object):
   def resample(self, ct): self.engine.resample(ct)
   def incorporate(self): pass # Since we incorporate at the beginning anyway
   def peek(self, expression, name=None):
+    from dw_utils.debug import set_trace; set_trace()
+    # from dw_utils.debug import set_trace; set_trace()
     if name is None:
       # I was called from the "peek" SP, so the expression is a VentureValue
       name = self.default_name_for_exp(ExpressionType().asPython(expression))
@@ -79,7 +85,20 @@ class Infer(object):
     names = [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
     self._ensure_plot(spec, names, exps)
     self.plot.add_data(self.engine)
-
+  def printf(self, expression):
+    # TODO: This is quick and dirty to debug long inference runs.
+    #   Should refactor when inference language settles.
+    self._start_timer()
+    if expression == 'counter':
+      print 'Sweep count: {0}'.format(len(self.engine.traces))
+    elif expression == 'time':
+      elapsed = round(time.time() - self.self.start_time)
+      print 'Wall time: {0} s'.format(elapsed)
+    elif expression == 'score':
+      print 'Global log score: {0:0.2f}'.format(engine.logscore_all)
+    else:
+      value = self.engine.sample(expression)
+      print '{0}: {1}'.format(expression, value)
 
 class SpecPlot(object):
   """(plotf spec exp0 ...) -- Generate a plot according to a format specification.
