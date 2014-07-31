@@ -24,6 +24,10 @@ import json
 from venture.exception import VentureException
 from crossdomain import crossdomain
 
+import logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
+
 class RestClient(object):
     def __init__(self, base_url, function_list):
         self.base_url = base_url.rstrip('/') + '/'
