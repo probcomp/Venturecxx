@@ -14,7 +14,7 @@ from numpy import linalg as npla
 from venture import shortcuts
 from time import time
 from os import path
-import os
+import os, shutil
 import cPickle as pkl
 import argparse
 
@@ -97,7 +97,7 @@ def build_ripl(backend, model):
 # being lazy here and not writing out the parsed instructions... those would be pretty messy
 def make_str_args(infer_args):
   if infer_args:
-    return ' ' + ' '.join(map(str, infer_args_v)) + ' '
+    return ' ' + ' '.join(map(str, infer_args)) + ' '
   else:
     return ' '
 
@@ -120,24 +120,28 @@ def assemble_infer_statement(infer_type, infer_method, infer_args_v,
     infer_cycle = '({0} (quote data) all{1}{2})'.format(infer_method, make_str_args(infer_args_v), nupdate)
   else:
     raise Exception('Give a valid infer type.')
-  infer_statement = '(cycle ((plotf pcd0d v) {0}) {1})'.format(infer_cycle, niter)
+  infer_statement = '(cycle ((printf counter time) (plotf (lct pcd0d) v) {0}) {1})'.format(infer_cycle, niter)
   return infer_statement
 
-def annotate_plotf(plotf_output, elapsed):
-  fig = plotf_output.draw()[0]
-  ax = fig.axes[0]
-  ax.set_title('Elapsed time: {0:0.2f}s'.format(elapsed))
-  ax.set_ylim([-10,10])
-  ax.axhline(7.5, color = 'black', linestyle = '--')
-  ax.axhline(-7.5, color = 'black', linestyle = '--')
-  return fig
+def annotate_plotf(plotf_output, elapsed, niter):
+  timefig, vfig = plotf_output.draw()
+  tax = timefig.axes[0]
+  tax.set_xlim([0,niter])
+  vax = vfig.axes[0]
+  vax.set_title('Elapsed time: {0:0.2f}s'.format(elapsed))
+  vax.set_xlim([0,niter])
+  vax.set_ylim([-12,12])
+  vax.axhline(7.5, color = 'black', linestyle = '--')
+  vax.axhline(-7.5, color = 'black', linestyle = '--')
+  return timefig, vfig
 
 def output_report(backend, model, infer_type, infer_method,
                   infer_statement, nupdate, niter, elapsed):
-  basedir = path.expanduser('~/probcomp/funnel-results')
+  basedir = path.expanduser('~/Google Drive/probcomp/gaussian-funnel/results/')
   wkname = '-'.join([backend, model, infer_type, infer_method, str(nupdate), str(niter)])
   wkdir = path.join(basedir, wkname)
-  if not path.exists(wkdir): os.mkdir(wkdir)
+  if path.exists(wkdir): shutil.rmtree(wkdir)
+  os.mkdir(wkdir)
   fields = ['backend', 'model', 'infer_statement', 'elapsed']
   with open(path.join(wkdir, 'report.txt'), 'w') as f:
     for field in fields:
@@ -155,8 +159,9 @@ def run_experiment(backend, model, infer_type, infer_method, infer_args_v, infer
   elapsed = time() - start
   wkdir = output_report(backend, model, infer_type, infer_method,
                         infer_statement, nupdate, niter, elapsed)
-  fig = annotate_plotf(res, elapsed)
-  fig.savefig(path.join(wkdir, 'trace.png'))
+  timefig, vfig = annotate_plotf(res, elapsed, niter)
+  timefig.savefig(path.join(wkdir, 'sweeptime.png'))
+  vfig.savefig(path.join(wkdir, 'trace.png'))
   with open(path.join(wkdir, 'trace-history.pkl'), 'wb') as f:
     pkl.dump(res, f, protocol = 2)
   print 'Finished model {0}, infer_method {1}.'.format(model, infer_method)
