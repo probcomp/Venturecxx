@@ -60,8 +60,6 @@ class Infer(object):
   def resample(self, ct): self.engine.resample(ct)
   def incorporate(self): pass # Since we incorporate at the beginning anyway
   def peek(self, expression, name=None):
-    from dw_utils.debug import set_trace; set_trace()
-    # from dw_utils.debug import set_trace; set_trace()
     if name is None:
       # I was called from the "peek" SP, so the expression is a VentureValue
       name = self.default_name_for_exp(ExpressionType().asPython(expression))
