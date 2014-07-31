@@ -1,7 +1,6 @@
-from venture.test.config import get_ripl, on_inf_prim
+from venture.test.config import get_ripl, defaultInfer, skipWhenInParallel
 from venture.lite import builtin
 
-@on_inf_prim("mh")
 def test_foreign_aaa():
     builtins = builtin.builtInSPs()
     ripl = get_ripl()
@@ -13,10 +12,10 @@ def test_foreign_aaa():
     ripl.observe("(f)", "atom<0>")
     assert ripl.sample("f")["counts"] == [1]
 
-    ripl.infer(10)
+    ripl.infer(defaultInfer())
     assert ripl.sample("f")["counts"] == [1]
 
-@on_inf_prim("mh")
+@skipWhenInParallel("Calling into Lite from Puma is not thread-safe. Issue: https://app.asana.com/0/11127829865276/15184529953373")
 def test_foreign_aaa_resampled():
     builtins = builtin.builtInSPs()
     ripl = get_ripl()
@@ -29,10 +28,10 @@ def test_foreign_aaa_resampled():
     ripl.observe("(f)", "atom<0>")
     assert ripl.sample("f")["counts"] == [1]
 
-    ripl.infer(10)
+    ripl.infer(defaultInfer())
     assert ripl.sample("f")["counts"] == [1]
 
-@on_inf_prim("mh")
+@skipWhenInParallel("Calling into Lite from Puma is not thread-safe. Issue: https://app.asana.com/0/11127829865276/15184529953373")
 def test_foreign_aaa_uc():
     builtins = builtin.builtInSPs()
     ripl = get_ripl()
@@ -44,5 +43,5 @@ def test_foreign_aaa_uc():
     ripl.observe("(f)", "atom<0>")
     assert ripl.sample("f")["counts"] == [1]
 
-    ripl.infer(10)
+    ripl.infer(defaultInfer())
     assert ripl.sample("f")["counts"] == [1]
