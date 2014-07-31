@@ -1,9 +1,8 @@
-from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, default_num_transitions_per_sample
-from testconfig import config
 import scipy.stats
 from nose.tools import assert_equal, assert_almost_equal
-from nose import SkipTest
+
+from venture.test.stats import statisticalTest, reportKnownDiscrete
+from venture.test.config import get_ripl, collectSamples, default_num_transitions_per_sample, on_inf_prim, broken_in
 
 @statisticalTest
 def testBinomial1():
@@ -38,9 +37,10 @@ def testBinomial2():
   return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
+@broken_in("puma", "Puma is missing an enumerate method here")
+@on_inf_prim("gibbs") # Also MH, but really testing gibbs
 def testBinomial3():
   "A simple test that checks the binomial enumerate method"
-  if config["get_ripl"] == "puma": raise SkipTest("Puma is missing an enumerate method here")
   ripl = get_ripl()
 
   b = 0.7
