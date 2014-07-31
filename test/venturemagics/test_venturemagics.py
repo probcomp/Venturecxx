@@ -7,7 +7,7 @@ Python interpreter. Calls a notebook tester (nb_tester.py), a notebook
 """
 import subprocess,os
 
-from venture.test.config import in_backend
+from venture.test.config import in_backend, on_inf_prim
 
 
 ## Testing in IPython Notebook
@@ -16,6 +16,7 @@ from venture.test.config import in_backend
 # https://github.com/ipython/ipython/wiki/Cookbook%3a-Notebook-utilities
 
 @in_backend('puma')
+@on_inf_prim("mh")
 def testMagicNotebook():
     file_dir = os.path.dirname(os.path.realpath(__file__))
     notebook_tester = file_dir + '/nb_tester.py'
@@ -30,6 +31,7 @@ def testMagicNotebook():
 
 ## Testing in IPython
 @in_backend('puma')
+@on_inf_prim("mh")
 def testMagicIpython():
     #raise SkipTest("The sequel fails in Jenkins for some reason.  Issue: https://app.asana.com/0/9277419963067/10168145986333")
     file_dir = os.path.dirname(os.path.realpath(__file__))
@@ -43,6 +45,7 @@ def testMagicIpython():
 
 ## Test in Python (weak test because can't test IPython magics)
 @in_backend('puma')
+@on_inf_prim("mh")
 def testMagicPython():
     from venture.venturemagics.venturemagics import ipy_ripl
     ipy_ripl.assume('x1','(flip)')
