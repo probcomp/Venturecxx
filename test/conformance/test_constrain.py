@@ -1,19 +1,9 @@
 from venture.test.stats import statisticalTest, reportKnownMean
 from nose.tools import eq_, raises
-from venture.test.config import get_ripl, collectSamples, ignoresConfiguredInferenceProgram, collectStateSequence, skipWhenRejectionSampling
+from venture.test.config import get_ripl, collectSamples, collectStateSequence, skipWhenRejectionSampling, on_inf_prim, gen_on_inf_prim
 from testconfig import config
 from nose import SkipTest
 
-def testConstrainAVar1a():
-  for p in ["(mh 0 0 50)",
-            # Rejection sampling doesn't work when resimulations of unknown code are observed
-            "(func_pgibbs 0 0 3 50)",
-            "(pgibbs 0 0 3 50)",
-            "(gibbs 0 0 50)",
-            ]:
-    yield checkConstrainAVar1a, p
-
-@ignoresConfiguredInferenceProgram
 def checkConstrainAVar1a(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
@@ -25,16 +15,6 @@ def checkConstrainAVar1a(program):
   collectStateSequence(ripl,"pid",infer=program)
   eq_(ripl.report("pid"), 3)
 
-def testConstrainAVar1b():
-  for p in ["(mh 0 0 50)",
-            # Rejection sampling doesn't work when resimulations of unknown code are observed
-            "(func_pgibbs 0 0 3 50)",
-            "(pgibbs 0 0 3 50)",
-            "(gibbs 0 0 50)",
-            ]:
-    yield checkConstrainAVar1b, p
-
-@ignoresConfiguredInferenceProgram
 def checkConstrainAVar1b(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
@@ -46,16 +26,6 @@ def checkConstrainAVar1b(program):
   collectStateSequence(ripl,"pid",infer=program)
   eq_(ripl.report("pid"), 3)
 
-def testConstrainAVar2a():
-  for p in ["(mh 0 0 50)",
-            # Rejection sampling doesn't work when resimulations of unknown code are observed
-            "(func_pgibbs 0 0 3 50)",
-            "(pgibbs 0 0 3 50)",
-            "(gibbs 0 0 50)",
-            ]:
-    yield checkConstrainAVar2a, p
-
-@ignoresConfiguredInferenceProgram
 def checkConstrainAVar2a(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
@@ -68,16 +38,6 @@ def checkConstrainAVar2a(program):
   collectStateSequence(ripl,"pid",infer=program)
   eq_(ripl.report("pid"), 3)
 
-def testConstrainAVar2b():
-  for p in ["(mh 0 0 50)",
-            # Rejection sampling doesn't work when resimulations of unknown code are observed
-            "(func_pgibbs 0 0 3 50)",
-            "(pgibbs 0 0 3 50)",
-            "(gibbs 0 0 50)",
-            ]:
-    yield checkConstrainAVar2b, p
-
-@ignoresConfiguredInferenceProgram
 def checkConstrainAVar2b(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
@@ -90,7 +50,7 @@ def checkConstrainAVar2b(program):
   collectStateSequence(ripl,"pid",infer=program)
   eq_(ripl.report("pid"), 3)
 
-@ignoresConfiguredInferenceProgram
+@on_inf_prim("mh")
 def testConstrainAVar3a():
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
@@ -103,7 +63,7 @@ def testConstrainAVar3a():
   eq_(ripl.report("pid"), 3)
 
 # @raises(Exception)
-@ignoresConfiguredInferenceProgram
+@on_inf_prim("mh")
 def testConstrainAVar3b():
   raise SkipTest("This program is illegal, since propagating from (f) reaches a request")
   ripl = get_ripl()
@@ -116,16 +76,6 @@ def testConstrainAVar3b():
   ripl.infer("(mh default one 50)")
   eq_(ripl.report("pid"), 3)
 
-def testConstrainAVar4a():
-  for p in ["(mh 0 0 50)",
-            # Rejection sampling doesn't work when resimulations of unknown code are observed
-            "(func_pgibbs 0 0 3 50)",
-            "(pgibbs 0 0 3 50)",
-            "(gibbs 0 0 50)",
-            ]:
-    yield checkConstrainAVar4a, p
-
-@ignoresConfiguredInferenceProgram
 def checkConstrainAVar4a(program):
   """We allow downstream processing with no requests and no randomness."""
   ripl = get_ripl()
@@ -139,16 +89,6 @@ def checkConstrainAVar4a(program):
   collectStateSequence(ripl,"pid",infer=program)
   eq_(ripl.report("pid"), 15.0)
 
-def testConstrainAVar4b():
-  for p in ["(mh 0 0 50)",
-            # Rejection sampling doesn't work when resimulations of unknown code are observed
-            "(func_pgibbs 0 0 3 50)",
-            "(pgibbs 0 0 3 50)",
-            "(gibbs 0 0 50)",
-            ]:
-    yield checkConstrainAVar4b, p
-
-@ignoresConfiguredInferenceProgram
 def checkConstrainAVar4b(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
@@ -161,16 +101,6 @@ def checkConstrainAVar4b(program):
   collectStateSequence(ripl,"pid",infer=program)
   eq_(ripl.report("pid"), 15.0)
 
-def testConstrainAVar4c():
-  for p in ["(mh 0 0 50)",
-            # Rejection sampling doesn't work when resimulations of unknown code are observed
-            "(func_pgibbs 0 0 3 50)",
-            "(pgibbs 0 0 3 50)",
-            "(gibbs 0 0 50)",
-            ]:
-    yield checkConstrainAVar4c, p
-
-@ignoresConfiguredInferenceProgram
 def checkConstrainAVar4c(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
@@ -183,17 +113,7 @@ def checkConstrainAVar4c(program):
   collectStateSequence(ripl,"pid",infer=program)
   eq_(ripl.report("pid"), 15.0)
 
-def testConstrainAVar5a():
-  for p in ["(mh 0 0 50)",
-            "(rejection 0 0 50)",
-            "(func_pgibbs 0 0 3 50 false)",
-            "(pgibbs 0 0 3 50 false)",
-            "(gibbs 0 0 50 false)",
-            ]:
-    yield checkConstrainAVar5a, p
-
 @raises(Exception)
-@ignoresConfiguredInferenceProgram
 def checkConstrainAVar5a(program):
   """
     This program is illegal, because when proposing to f, we may end up constraining x,
@@ -209,17 +129,7 @@ def checkConstrainAVar5a(program):
   ripl.observe("(if (f) x y)", 3.0)
   collectSamples(ripl,"pid",infer=program)
 
-def testConstrainAVar5b():
-  for p in ["(mh 0 0 50)",
-            "(rejection 0 0 50)",
-            "(func_pgibbs 0 0 3 50 false)",
-            "(pgibbs 0 0 3 50 false)",
-            "(gibbs 0 0 50 false)",
-            ]:
-    yield checkConstrainAVar5b, p
-
 @raises(Exception)
-@ignoresConfiguredInferenceProgram
 def checkConstrainAVar5b(program):
   """
     This program is illegal, because when proposing to f, we may end up constraining x,
@@ -233,17 +143,7 @@ def checkConstrainAVar5b(program):
   ripl.observe("(if (f) x y)", 3.0)
   collectSamples(ripl,"pid",infer=program)
 
-def testConstrainAVar6a():
-  for p in ["(mh 0 0 50)",
-            "(rejection 0 0 50)",
-            "(func_pgibbs 0 0 3 50 false)",
-            "(pgibbs 0 0 3 50 false)",
-            "(gibbs 0 0 50 false)",
-            ]:
-    yield checkConstrainAVar6a, p
-
 @raises(Exception)
-@ignoresConfiguredInferenceProgram
 def checkConstrainAVar6a(program):
   """
     This program is illegal, because when proposing to f, we may end up constraining x,
@@ -257,17 +157,7 @@ def checkConstrainAVar6a(program):
   ripl.observe("(if (f) x y)", 3.0)
   collectSamples(ripl,"pid",infer=program)
 
-def testConstrainAVar6b():
-  for p in ["(mh 0 0 50)",
-            "(rejection 0 0 50)",
-            "(func_pgibbs 0 0 3 50 false)",
-            "(pgibbs 0 0 3 50 false)",
-            "(gibbs 0 0 50 false)",
-            ]:
-    yield checkConstrainAVar6b, p
-
 @raises(Exception)
-@ignoresConfiguredInferenceProgram
 def checkConstrainAVar6b(program):
   """
     This program is illegal, because when proposing to f, we may end up constraining x,
@@ -281,6 +171,7 @@ def checkConstrainAVar6b(program):
   ripl.predict("(if (< (normal x 1.0) 3) x y)")
   collectSamples(ripl,"pid",infer=program)
 
+@gen_on_inf_prim("all") # TODO Segregate generated tests by inference method
 def testConstrainWithAPredict1():
   if config["get_ripl"] != "lite": raise SkipTest("assert(false) crashes NoseTests")
   for p in ["(mh default one 50)",
@@ -292,7 +183,6 @@ def testConstrainWithAPredict1():
     yield checkConstrainWithAPredict1, p
 
 @raises(Exception)
-@ignoresConfiguredInferenceProgram
 def checkConstrainWithAPredict1(program):
   """
   We may constrain the (flip) in f, and this has a child that makes requests. Therefore this
@@ -322,7 +212,7 @@ def testConstrainWithAPredict2():
   predictions = collectSamples(ripl,"pid")
   return reportKnownMean(50, predictions) # will divide by 0 if there is no sample variance
 
-@ignoresConfiguredInferenceProgram
+@on_inf_prim("mh")
 def testConstrainInAScope1():
   """At some point, constrain did not remove choices from scopes besides the default scope"""
   ripl = get_ripl()
@@ -333,7 +223,7 @@ def testConstrainInAScope1():
 
   ripl.infer("(mh 0 0 10)")
 
-@ignoresConfiguredInferenceProgram
+@on_inf_prim("mh")
 def testConstrainInAScope2brush():
   """Particles need to override some of the relevant methods as well"""
   ripl = get_ripl()
@@ -344,7 +234,7 @@ def testConstrainInAScope2brush():
 
   ripl.infer("(mh 0 0 20)")
 
-@ignoresConfiguredInferenceProgram
+@on_inf_prim("pgibbs")
 def testConstrainInAScope2particles():
   """Particles need to override some of the relevant methods as well"""
   ripl = get_ripl()
@@ -355,3 +245,48 @@ def testConstrainInAScope2particles():
 
   ripl.infer("(pgibbs 0 0 5 5)")
 
+@gen_on_inf_prim("mh")
+def testMHConstrains():
+  for t in [checkConstrainAVar1a, checkConstrainAVar1b,
+            checkConstrainAVar2a, checkConstrainAVar2b,
+            checkConstrainAVar4a, checkConstrainAVar4b, checkConstrainAVar4c,
+            checkConstrainAVar5a, checkConstrainAVar5b,
+            checkConstrainAVar6a, checkConstrainAVar6b]:
+    yield t, "(mh 0 0 50)"
+
+@gen_on_inf_prim("func_pgibbs")
+def testFuncPGibbsConstrains():
+  for t in [checkConstrainAVar1a, checkConstrainAVar1b,
+            checkConstrainAVar2a, checkConstrainAVar2b,
+            checkConstrainAVar4a, checkConstrainAVar4b, checkConstrainAVar4c]:
+    yield t, "(func_pgibbs 0 0 3 50)"
+  for t in [checkConstrainAVar5a, checkConstrainAVar5b,
+            checkConstrainAVar6a, checkConstrainAVar6b]:
+    yield t, "(func_pgibbs 0 0 3 50 false)"
+
+@gen_on_inf_prim("pgibbs")
+def testPGibbsConstrains():
+  for t in [checkConstrainAVar1a, checkConstrainAVar1b,
+            checkConstrainAVar2a, checkConstrainAVar2b,
+            checkConstrainAVar4a, checkConstrainAVar4b, checkConstrainAVar4c]:
+    yield t, "(pgibbs 0 0 3 50)"
+  for t in [checkConstrainAVar5a, checkConstrainAVar5b,
+            checkConstrainAVar6a, checkConstrainAVar6b]:
+    yield t, "(pgibbs 0 0 3 50 false)"
+
+@gen_on_inf_prim("gibbs")
+def testGibbsConstrains():
+  for t in [checkConstrainAVar1a, checkConstrainAVar1b,
+            checkConstrainAVar2a, checkConstrainAVar2b,
+            checkConstrainAVar4a, checkConstrainAVar4b, checkConstrainAVar4c]:
+    yield t, "(gibbs 0 0 50)"
+  for t in [checkConstrainAVar5a, checkConstrainAVar5b,
+            checkConstrainAVar6a, checkConstrainAVar6b]:
+    yield t, "(gibbs 0 0 50 false)"
+
+@gen_on_inf_prim("rejection")
+def testRejectionConstrains():
+  # Rejection sampling doesn't work when resimulations of unknown code are observed
+  for t in [checkConstrainAVar5a, checkConstrainAVar5b,
+            checkConstrainAVar6a, checkConstrainAVar6b]:
+    yield t, "(rejection 0 0 50)"

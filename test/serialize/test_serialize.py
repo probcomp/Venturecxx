@@ -2,9 +2,8 @@ from nose import SkipTest
 from testconfig import config
 
 from venture.test.stats import statisticalTest, reportKnownDiscrete, reportSameDiscrete
-from venture.test.config import get_ripl, collectStateSequence, ignoresConfiguredInferenceProgram
+from venture.test.config import get_ripl, collectStateSequence, on_inf_prim, default_num_transitions_per_sample, gen_on_inf_prim
 
-@ignoresConfiguredInferenceProgram
 @statisticalTest
 def _test_serialize_program(v, label, action):
     engine = v.sivm.core_sivm.engine
@@ -33,16 +32,17 @@ def _test_serialize_program(v, label, action):
     else:
         assert False
 
+    infer = "(mh default one %s)" % default_num_transitions_per_sample()
     engine.traces = [trace2]
-    r2 = collectStateSequence(v, label)
+    r2 = collectStateSequence(v, label, infer=infer)
 
     engine.traces = [trace1]
-    r1 = collectStateSequence(v, label)
+    r1 = collectStateSequence(v, label, infer=infer)
 
     return reportSameDiscrete(r1, r2)
 
+@gen_on_inf_prim("mh") # Easy to generalize but little testing value
 def test_serialize_basic():
-    @ignoresConfiguredInferenceProgram
     def check(action):
         v = get_ripl()
         v.assume('is_tricky', '(flip 0.2)')
@@ -54,8 +54,8 @@ def test_serialize_basic():
     for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
         yield check, action
 
+@gen_on_inf_prim("mh") # Easy to generalize but little testing value
 def test_serialize_mem():
-    @ignoresConfiguredInferenceProgram
     def check(action):
         v = get_ripl()
         v.assume('coin', '(mem (lambda (x) (beta 1.0 1.0)))')
@@ -67,8 +67,8 @@ def test_serialize_mem():
     for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
         yield check, action
 
+@gen_on_inf_prim("mh") # Easy to generalize but little testing value
 def test_serialize_closure():
-    @ignoresConfiguredInferenceProgram
     def check(action):
         v = get_ripl()
         v.assume('make_coin', '(lambda (p) (lambda () (flip p)))')
@@ -80,6 +80,7 @@ def test_serialize_closure():
     for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
         yield check, action
 
+@gen_on_inf_prim("mh") # Easy to generalize but little testing value
 def test_serialize_aaa():
     def check_beta_bernoulli(maker, action):
         if maker == "make_uc_beta_bernoulli" and action in ['serialize', 'convert_lite', 'convert_puma']:
@@ -127,6 +128,7 @@ def test_serialize_aaa():
         for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
             yield check_cmvn, maker, action
 
+@gen_on_inf_prim("mh") # Easy to generalize but little testing value
 def test_serialize_latents():
     def check(action):
         raise SkipTest("Cannot serialize latents")
@@ -149,7 +151,7 @@ def test_serialize_latents():
     for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
         yield check, action
 
-@ignoresConfiguredInferenceProgram
+@on_inf_prim("mh")
 def test_serialize_ripl():
     v1 = get_ripl()
     v1.assume('is_tricky', '(flip 0.2)')
@@ -173,7 +175,7 @@ def test_serialize_ripl():
     text2 = v2.get_text(1)
     assert text1 == text2
 
-@ignoresConfiguredInferenceProgram
+@on_inf_prim("mh") # Easy to generalize but little testing value
 @statisticalTest
 def test_serialize_forget():
     v1 = get_ripl()
@@ -183,7 +185,7 @@ def test_serialize_forget():
     for i in range(10):
         v1.observe('(flip_coin)', 'true', label='y{}'.format(i))
 
-    v1.infer(0)
+    v1.infer("(incorporate)")
     v1.save('/tmp/serialized.ripl')
 
     v2 = get_ripl()
@@ -194,11 +196,12 @@ def test_serialize_forget():
 
     v2.predict('is_tricky', label='pid')
 
-    samples = collectStateSequence(v2, 'pid')
+    infer = "(mh default one %s)" % default_num_transitions_per_sample()
+    samples = collectStateSequence(v2, 'pid', infer=infer)
     ans = [(False, 0.8), (True, 0.2)]
     return reportKnownDiscrete(ans, samples)
 
-@ignoresConfiguredInferenceProgram
+@on_inf_prim("none")
 def test_serialize_recursion():
     v = get_ripl()
     v.assume('f', '''
@@ -217,12 +220,12 @@ def test_serialize_recursion():
         assert 'maximum recursion depth exceeded' not in e.message
         raise
 
-@ignoresConfiguredInferenceProgram
+@on_inf_prim("none")
 def test_serialize_repeatedly():
     v = get_ripl()
     v.assume('theta', '(beta 1 1)')
     v.observe('(flip theta)', 'true')
-    v.infer(0)
+    v.infer("(incorporate)")
     # just make sure this doesn't crash
     v.save('/tmp/serialized.ripl')
     v.save('/tmp/serialized.ripl')

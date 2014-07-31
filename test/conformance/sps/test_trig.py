@@ -1,5 +1,6 @@
-from venture.test.config import get_ripl
+from venture.test.config import get_ripl, on_inf_prim
 
+@on_inf_prim("mh")
 def testTrig1():
   "Simple test that verifies sin^2 + cos^2 = 1 as x varies"
   ripl = get_ripl()

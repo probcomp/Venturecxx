@@ -1,10 +1,12 @@
-from venture.test.config import get_ripl
 from nose.plugins.attrib import attr
 from nose.tools import assert_less, assert_greater
+
+from venture.test.config import get_ripl, on_inf_prim
 
 def mean(xs): return sum(xs) / float(len(xs))
 
 @attr("slow")    
+@on_inf_prim("mh")
 def testCRPMixSimple1():
   """Makes sure basic clustering model behaves reasonably"""
   ripl = get_ripl()

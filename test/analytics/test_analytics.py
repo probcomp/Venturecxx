@@ -9,7 +9,7 @@ from nose.tools import eq_, assert_almost_equal
 from venture.venturemagics.ip_parallel import MRipl
 from venture.unit import *
 from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl,get_mripl,ignore_inference_quality,default_num_samples,gen_in_backend
+from venture.test.config import get_ripl,get_mripl,ignore_inference_quality,default_num_samples,gen_in_backend, gen_on_inf_prim
 import venture.value.dicts as v
 
 
@@ -77,12 +77,15 @@ def _testHistory(riplThunk):
     averageP = np.mean( history.nameToSeries['p'][0].values )
     assert_almost_equal(averageP,history.averageValue('p'))
 
+@gen_on_inf_prim("none")
+def testLoadModel():
+    for riplThunk in [get_ripl, lambda:get_mripl(no_ripls=3)]:
+        yield _testLoadModel, riplThunk
 
-def testLoadModelHistory():
-    tests = _testLoadModel, _testHistory
-    riplThunks = get_ripl, lambda:get_mripl(no_ripls=3)
-    for test,riplThunk in product(tests,riplThunks):
-        yield test, riplThunk
+@gen_on_inf_prim("mh")
+def testModelHistory():
+    for riplThunk in [get_ripl, lambda:get_mripl(no_ripls=3)]:
+        yield _testHistory, riplThunk
 
 
 def _testRuns(riplThunk):
@@ -100,6 +103,7 @@ def _testRuns(riplThunk):
             assert all(np.var(arValues,axis=0) > .0001) # var across runs time t
             assert all(np.var(arValues,axis=1) > .000001) # var within runs
 
+@gen_on_inf_prim("mh")
 def testRuns():
     riplThunks = get_ripl, lambda:get_mripl(no_ripls=4)
     for riplThunk in riplThunks:
@@ -132,6 +136,7 @@ def _testInfer(riplThunk,conditional_prior,inferProg):
     return reportKnownContinuous(cdf,snapshot_t(history,'p',-1))
 
 
+@gen_on_inf_prim("mh")
 def testRunFromConditionalInfer():
     riplThunks = get_ripl, lambda: get_mripl(no_ripls=2)
     cond_prior = 'conditional', 'prior'
@@ -154,6 +159,7 @@ def _testSampleFromJoint(riplThunk,useMRipl):
     xSamples = nameToFirstValues(history,'x')
     return reportKnownContinuous(xPriorCdf,xSamples)
 
+@gen_on_inf_prim("none")
 def testSampleFromJoint():
     riplThunks = get_ripl, lambda: get_mripl(no_ripls=3)
     useMRiplValues = (True,False)
@@ -191,6 +197,7 @@ def _testRunFromJoint2(riplThunk,inferProg):
     return reportKnownContinuous(xPriorCdf,thinXSamples)
 
 
+@gen_on_inf_prim("mh")
 def testRunFromJoint():
     tests = (_testRunFromJoint1, _testRunFromJoint2)
     riplThunks = (get_ripl, lambda: get_mripl(no_ripls=4))
@@ -235,6 +242,7 @@ def _testCompareSnapshots(riplThunk):
     report = history.compareSnapshots(probes = (-2,-1))
     return report.statsDict['p']['KSSameContinuous']
 
+@gen_on_inf_prim("mh")
 def testCompareSnapshots():
     riplThunks = (get_ripl, lambda: get_mripl(no_ripls=4))
     for riplThunk in riplThunks:
@@ -266,6 +274,7 @@ def _testAtomType(conditional_prior):
         history, _ = model.runConditionedFromPrior(samples)
     assert all(-1 < logscore < 0 for logscore in snapshot_t(history, 'logscore', 0))
 
+@gen_on_inf_prim("mh")
 def testAtomType():
     for cond_prior in 'conditional', 'prior':
         yield _testAtomType, cond_prior

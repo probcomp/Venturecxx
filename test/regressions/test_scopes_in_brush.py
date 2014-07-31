@@ -1,7 +1,11 @@
-from venture.test.config import get_ripl
+from venture.test.config import get_ripl, gen_on_inf_prim
 
-def testBrushScope():
+@gen_on_inf_prim("pgibbs")
+def testBrushScopePGibbs():
   yield checkBrushScope, "pgibbs"
+
+@gen_on_inf_prim("func_pgibbs")
+def testBrushScopeFuncPGibbs():
   yield checkBrushScope, "func_pgibbs"
 
 def checkBrushScope(operator):

@@ -1,9 +1,9 @@
 import scipy.stats
 
-from venture.test.config import get_ripl, default_num_samples, default_num_transitions_per_sample, ignoresConfiguredInferenceProgram
+from venture.test.config import get_ripl, default_num_samples, default_num_transitions_per_sample, on_inf_prim
 from venture.test.stats import statisticalTest, reportKnownContinuous
 
-@ignoresConfiguredInferenceProgram
+@on_inf_prim("mh")
 @statisticalTest
 def testExecuteSmoke():
   ripl = get_ripl()

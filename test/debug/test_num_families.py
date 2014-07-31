@@ -1,8 +1,9 @@
 from nose.tools import assert_equal
 
-from venture.test.config import get_ripl, broken_in
+from venture.test.config import get_ripl, broken_in, on_inf_prim
 
 @broken_in('lite', "numFamilies is only implemented in puma")
+@on_inf_prim("none")
 def testNumFamilies1():
   """A sanity test for numFamilies"""
   ripl = get_ripl()

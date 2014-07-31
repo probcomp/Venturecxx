@@ -1,11 +1,13 @@
 import scipy.stats
 
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, collectSamples, on_inf_prim
 from venture.test.stats import statisticalTest, reportKnownContinuous
 
+@on_inf_prim("none")
 def testEq():
   assert get_ripl().predict("(eq 1 1)")
 
+@on_inf_prim("none")
 def testCompare():
   assert get_ripl().predict("(<= 1 1)")
   assert get_ripl().predict("(< 1 2)")
