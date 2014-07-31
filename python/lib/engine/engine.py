@@ -248,6 +248,9 @@ effect of renumbering the directives, if some had been forgotten."""
         return [program[0], v.quote(program[1])]
       else:
         return [program[0], v.quote(program[1]), v.quote(program[2])]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "printf":
+      assert len(program) >= 2
+      return [program[0]] + [v.quote(e) for e in program[1:]]
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "plotf":
       assert len(program) >= 2
       return [program[0]] + [v.quote(e) for e in program[1:]]
