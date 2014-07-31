@@ -87,16 +87,18 @@ class Infer(object):
     # TODO: This is quick and dirty to debug long inference runs.
     #   Should refactor when inference language settles.
     self._start_timer()
-    if expression == 'counter':
+    name = ExpressionType().asPython(expression)
+    if name == 'counter':
       print 'Sweep count: {0}'.format(len(self.engine.traces))
-    elif expression == 'time':
-      elapsed = round(time.time() - self.self.start_time)
+    elif name == 'time':
+      elapsed = round(time.time() - self.start_time)
       print 'Wall time: {0} s'.format(elapsed)
-    elif expression == 'score':
-      print 'Global log score: {0:0.2f}'.format(engine.logscore_all)
+    elif name == 'score':
+      print 'Global log score: {0:0.2f}'.format(self.engine.logscore())
     else:
-      value = self.engine.sample(expression)
-      print '{0}: {1}'.format(expression, value)
+      # TODO: support for pretty-printing of floats
+      value = self.engine.sample(ExpressionType().asVentureValue(expression).asStackDict())
+      print '{0}: {1}'.format(name, value['value'])
 
 class SpecPlot(object):
   """(plotf spec exp0 ...) -- Generate a plot according to a format specification.
