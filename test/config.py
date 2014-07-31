@@ -133,7 +133,7 @@ def testSomethingAboutPuma():
     @nose.make_decorator(f)
     def wrapped(*args):
       name = config["get_ripl"]
-      if backend in ["lite", "puma"] and name is not backend:
+      if backend in ["lite", "puma"] and not name == backend:
         raise SkipTest(f.__name__ + " doesn't test " + name)
       global disable_get_ripl
       old = disable_get_ripl
