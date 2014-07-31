@@ -420,12 +420,23 @@ class ContinuousInferrer(object):
     self.inferrer.start()
 
   def infer_continuously(self, program):
+    start = time.time()
+    count = 0
+  
     # Can use the storage of the thread object itself as the semaphore
     # controlling whether continuous inference proceeds.
     while self.inferrer is not None:
       # TODO React somehow to peeks and plotfs in the inference program
       # Currently suppressed for fear of clobbering the prompt
       self.engine.infer(program)
+      
+      count += 1
+      if count == 10:
+        t = time.time() - start
+        print count / t
+        count = 0
+        start += t
+      
       time.sleep(0.0001) # Yield to be a good citizen
 
   def stop(self):
