@@ -303,23 +303,6 @@ def testSomeThingsAboutSlice():
     return wrapped
   return wrap
 
-def ignoresConfiguredInferenceProgram(f):
-  """Annotate a test function as ignoring the configured inference
-program, lest it be run repeatedly when testing multiple ones.
-
-  """
-  @nose.make_decorator(f)
-  def wrapped(*args):
-    # TODO Add a hook to get_ripl or config["infer"] or something to
-    # enforce that the function really does ignore the configured
-    # inference program
-    if config["infer"].startswith("(mh default one"):
-      f(*args)
-    else:
-      raise SkipTest("Avoid repeating a test that ignores the configured inference program.")
-  wrapped.ignores_configured_inference_program = True # TODO Skip by these tags in all-crashes & co
-  return wrapped
-
 def skipWhenRejectionSampling(reason):
   """Annotate a test function as being suitable for testing all
 general-purpose inference programs except rejection sampling.

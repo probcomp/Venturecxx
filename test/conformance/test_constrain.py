@@ -1,6 +1,6 @@
 from venture.test.stats import statisticalTest, reportKnownMean
 from nose.tools import eq_, raises
-from venture.test.config import get_ripl, collectSamples, ignoresConfiguredInferenceProgram, collectStateSequence, skipWhenRejectionSampling, on_inf_prim, gen_on_inf_prim
+from venture.test.config import get_ripl, collectSamples, collectStateSequence, skipWhenRejectionSampling, on_inf_prim, gen_on_inf_prim
 from testconfig import config
 from nose import SkipTest
 
@@ -183,7 +183,6 @@ def testConstrainWithAPredict1():
     yield checkConstrainWithAPredict1, p
 
 @raises(Exception)
-@ignoresConfiguredInferenceProgram
 def checkConstrainWithAPredict1(program):
   """
   We may constrain the (flip) in f, and this has a child that makes requests. Therefore this

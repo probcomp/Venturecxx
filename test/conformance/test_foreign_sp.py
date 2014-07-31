@@ -1,7 +1,7 @@
-from venture.test.config import get_ripl, ignoresConfiguredInferenceProgram
+from venture.test.config import get_ripl, on_inf_prim
 from venture.lite import builtin
 
-@ignoresConfiguredInferenceProgram
+@on_inf_prim("mh")
 def test_foreign_aaa():
     builtins = builtin.builtInSPs()
     ripl = get_ripl()
@@ -16,7 +16,7 @@ def test_foreign_aaa():
     ripl.infer(10)
     assert ripl.sample("f")["counts"] == [1]
 
-@ignoresConfiguredInferenceProgram
+@on_inf_prim("mh")
 def test_foreign_aaa_resampled():
     builtins = builtin.builtInSPs()
     ripl = get_ripl()
@@ -32,7 +32,7 @@ def test_foreign_aaa_resampled():
     ripl.infer(10)
     assert ripl.sample("f")["counts"] == [1]
 
-@ignoresConfiguredInferenceProgram
+@on_inf_prim("mh")
 def test_foreign_aaa_uc():
     builtins = builtin.builtInSPs()
     ripl = get_ripl()

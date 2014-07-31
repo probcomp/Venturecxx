@@ -4,7 +4,7 @@ from testconfig import config
 import math
 from numpy.testing import assert_allclose
 
-from venture.test.config import get_ripl, ignoresConfiguredInferenceProgram, in_backend, gen_in_backend, on_inf_prim, gen_on_inf_prim
+from venture.test.config import get_ripl, in_backend, gen_in_backend, on_inf_prim, gen_on_inf_prim
 from venture.lite.builtin import builtInSPsList
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.psp import NullRequestPSP
@@ -278,7 +278,6 @@ def testLogDensityDeterministic():
     if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart", "categorical"]: # TODO
       yield checkLogDensityDeterministic, name, sp
 
-@ignoresConfiguredInferenceProgram
 def checkLogDensityDeterministic(_name, sp):
   checkTypedProperty(propLogDensityDeterministic, (fully_uncurried_sp_type(sp.venture_type()), final_return_type(sp.venture_type())), sp)
 
@@ -300,7 +299,6 @@ def testGradientOfLogDensity():
       if sp.outputPSP.isRandom(): # TODO Check the ones that are random when curried
         yield checkGradientOfLogDensity, name, sp
 
-@ignoresConfiguredInferenceProgram
 def checkGradientOfLogDensity(name, sp):
   ret_type = final_return_type(sp.venture_type())
   args_type = fully_uncurried_sp_type(sp.venture_type())
@@ -343,7 +341,6 @@ def testFixingRandomness():
   for (name,sp) in relevantSPs():
     yield checkFixingRandomness, name, sp
 
-@ignoresConfiguredInferenceProgram
 def checkFixingRandomness(name, sp):
   checkTypedProperty(propDeterministicWhenFixed, fully_uncurried_sp_type(sp.venture_type()), name, sp)
 
@@ -390,7 +387,6 @@ def testGradientOfSimulate():
                    ]:
       yield checkGradientOfSimulate, name, sp
 
-@ignoresConfiguredInferenceProgram
 def checkGradientOfSimulate(name, sp):
   checkTypedProperty(propGradientOfSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)
 

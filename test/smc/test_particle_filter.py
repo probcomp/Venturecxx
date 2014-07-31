@@ -1,7 +1,7 @@
 import math
 import scipy.stats as stats
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
-from venture.test.config import get_ripl, ignoresConfiguredInferenceProgram, default_num_samples, on_inf_prim
+from venture.test.config import get_ripl, default_num_samples, on_inf_prim
 import sys
 from nose.plugins.attrib import attr
 
