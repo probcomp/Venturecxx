@@ -74,7 +74,7 @@ def testObserveThenProcessDeterministically1b():
   # But the infer should have propagated by here
   eq_(ripl.report("pid"), 15)
 
-@on_inf_prim("none")
+@on_inf_prim("mh")
 def testObserveThenProcessStochastically1a():
   "Observations should propagate through stochastic SPs without crashing."
   ripl = get_ripl()
@@ -82,12 +82,12 @@ def testObserveThenProcessStochastically1a():
   ripl.observe("x", 3.0)
   ripl.predict("(normal x 0.00001)", label="pid")
   # TODO assert that ripl.report("pid") is normally distributed here
-  ripl.infer("(incorporate)")
+  ripl.infer(1)
   # But the infer should have propagated by here
   assert_greater(ripl.report("pid"), 2.99)
   assert_less(ripl.report("pid"), 3.01)  
   
-@on_inf_prim("none")
+@on_inf_prim("mh")
 def testObserveThenProcessStochastically1b():
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
@@ -95,7 +95,7 @@ def testObserveThenProcessStochastically1b():
   ripl.observe("x", 3.0)
   
   # TODO assert that ripl.report("pid") is normally distributed here
-  ripl.infer("(incorporate)")
+  ripl.infer(1)
   # But the infer should have propagated by here
   assert_greater(ripl.report("pid"), 2.99)
   assert_less(ripl.report("pid"), 3.01)
