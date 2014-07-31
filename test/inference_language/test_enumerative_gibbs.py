@@ -1,6 +1,7 @@
 from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, default_num_transitions_per_sample
+from venture.test.config import get_ripl, collectSamples, default_num_transitions_per_sample, gen_on_inf_prim, on_inf_prim
 
+@gen_on_inf_prim("gibbs")
 def testEnumerativeGibbsBasic1():
   yield checkEnumerativeGibbsBasic1, "false"
   yield checkEnumerativeGibbsBasic1, "true"
@@ -16,6 +17,7 @@ def checkEnumerativeGibbsBasic1(in_parallel):
   ans = [(True,.5),(False,.5)]
   return reportKnownDiscrete(ans, predictions)
 
+@gen_on_inf_prim("gibbs")
 def testEnumerativeGibbsBasic2():
   yield checkEnumerativeGibbsBasic2, "false"
   yield checkEnumerativeGibbsBasic2, "true"
@@ -30,6 +32,7 @@ def checkEnumerativeGibbsBasic2(in_parallel):
   ans = [(False,.9),(True,.1)]
   return reportKnownDiscrete(ans, predictions)
 
+@gen_on_inf_prim("gibbs")
 def testEnumerativeGibbsGotcha():
   yield checkEnumerativeGibbsGotcha, "false"
   yield checkEnumerativeGibbsGotcha, "true"
@@ -43,6 +46,7 @@ def checkEnumerativeGibbsGotcha(in_parallel):
   ripl.infer("(gibbs default all 1 %s)" % in_parallel)
 
 @statisticalTest
+@on_inf_prim("gibbs")
 def testEnumerativeGibbsBoostThrashExact():
   """Enumerating two choices with the same posterior probability should not thrash"""
   ripl = get_ripl()
@@ -52,6 +56,7 @@ def testEnumerativeGibbsBoostThrashExact():
   ans = [(False,.5),(True,.5)]
   return reportKnownDiscrete(ans, predictions)
 
+@gen_on_inf_prim("gibbs")
 def testEnumerativeGibbsBoostThrashClose():
   yield checkEnumerativeGibbsBoostThrashClose, "false"
   yield checkEnumerativeGibbsBoostThrashClose, "true"
@@ -68,6 +73,7 @@ def checkEnumerativeGibbsBoostThrashClose(in_parallel):
   return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
+@on_inf_prim("gibbs")
 def testEnumerativeGibbsCategorical1():
   """Tests mixing when the prior is far from the posterior."""
   ripl = get_ripl()
@@ -78,6 +84,7 @@ def testEnumerativeGibbsCategorical1():
   ans = [(False, .5), (True, .5)]
   return reportKnownDiscrete(ans, predictions)
   
+@gen_on_inf_prim("gibbs")
 def testEnumerativeGibbsXOR1():
   yield checkEnumerativeGibbsXOR1, "false"
   yield checkEnumerativeGibbsXOR1, "true"
@@ -98,6 +105,7 @@ def checkEnumerativeGibbsXOR1(in_parallel):
   ans = [(True,.5),(False,.5)]
   return reportKnownDiscrete(ans, predictions)
 
+@gen_on_inf_prim("gibbs")
 def testEnumerativeGibbsXOR2():
   yield checkEnumerativeGibbsXOR2, "false"
   yield checkEnumerativeGibbsXOR2, "true"
@@ -116,6 +124,7 @@ def checkEnumerativeGibbsXOR2(in_parallel):
   ans = [(True,.75),(False,.25)]
   return reportKnownDiscrete(ans, predictions)
 
+@gen_on_inf_prim("gibbs")
 def testEnumerativeGibbsXOR3():
   yield checkEnumerativeGibbsXOR3, "false"
   yield checkEnumerativeGibbsXOR3, "true"

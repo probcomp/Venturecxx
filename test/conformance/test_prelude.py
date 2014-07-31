@@ -1,6 +1,6 @@
 from unittest import TestCase
 import nose.tools as nose
-from venture.test.config import get_ripl
+from venture.test.config import get_ripl, on_inf_prim
 import numpy as np
 import random
 import string
@@ -90,6 +90,7 @@ class TestPrelude(TestCase):
     return res
 
   @run_containers
+  @on_inf_prim("none")
   def test_is_empty(self, container):
     'Make sure that is_empty does what we expect.'
     self.reset_ripl()
@@ -102,6 +103,7 @@ class TestPrelude(TestCase):
     res = self.r.sample(cmd_str)
     self.assertFalse(res)
 
+  @on_inf_prim("none")
   def test_to_list(self):
     '''
     Check that to_list converts vectors and arrays properly. The python
@@ -118,6 +120,7 @@ class TestPrelude(TestCase):
       self.check_type('list', 'y')
       self.assertEqual(x_python, y_python)
 
+  @on_inf_prim("none")
   def test_from_list(self):
     '''
     Check that to_array and to_vector convert lists properly.
@@ -134,6 +137,7 @@ class TestPrelude(TestCase):
       self.assertEqual(x_python, y_python)
 
   @run_containers
+  @on_inf_prim("none")
   def test_map(self, container):
     '''
     Test that applying "map" in Venture does the same thing as applying it
@@ -157,6 +161,7 @@ class TestPrelude(TestCase):
       self.check_type(container, 'mapped')
 
   @run_containers
+  @on_inf_prim("none")
   def test_reduce(self, container):
     '''
     Test that applying "reduce" in Venture does same thing as in Python.
@@ -172,6 +177,7 @@ class TestPrelude(TestCase):
       self.assertAlmostEqual(reduced_py, reduced_ven)
 
   @run_containers
+  @on_inf_prim("none")
   def test_dot(self, container):
     '''
     Test the dot product.
@@ -184,6 +190,7 @@ class TestPrelude(TestCase):
     self.assertAlmostEqual(res_py, res_ven)
 
   @run_containers
+  @on_inf_prim("none")
   def test_math(self, container):
     '''
     Test the "sum", "product", "mean" vector aggregators.
@@ -196,6 +203,7 @@ class TestPrelude(TestCase):
       res_ven = self.r.sample('({0} x)'.format(f_ven))
       self.assertAlmostEqual(res_py, res_ven)
 
+  @on_inf_prim("none")
   def test_negative(self):
     '''
     Make sure the Venture "negative" gives the negative of a number.
@@ -205,6 +213,7 @@ class TestPrelude(TestCase):
     neg_x = self.r.sample('(negative x)')
     self.assertAlmostEqual(-1 * x, neg_x)
 
+  @on_inf_prim("none")
   def test_logit_logistic(self):
     '''
     Test that the logit and logistic functions do what they say.
@@ -219,6 +228,7 @@ class TestPrelude(TestCase):
       self.assertAlmostEqual(res_py, res_ven)
 
   @run_containers
+  @on_inf_prim("none")
   def test_scalar_mult(self, container):
     'Test that multiplying by a scalar matches Python'
     self.reset_ripl()
@@ -230,6 +240,7 @@ class TestPrelude(TestCase):
     self.assertAlmostEqual(res_py, res_ven)
     self.check_type(container, 'res')
 
+  @on_inf_prim("none")
   def test_repeats(self):
     'Test that "repeat", "ones", and "zeros" work as expected'
     for fname, value in zip(['repeat', 'zeros', 'ones'],
@@ -241,6 +252,7 @@ class TestPrelude(TestCase):
       x_py = [value] * n
       self.assertAlmostEqual(x_py, x_ven)
 
+  @on_inf_prim("none")
   def test_range(self):
     'Test that range function matches python'
     self.reset_ripl()
@@ -250,6 +262,7 @@ class TestPrelude(TestCase):
     res_ven = self.r.assume('res', '(range start stop)')
     self.assertEqual(res_py, res_ven)
 
+  @on_inf_prim("none")
   def test_matrices(self):
     'Test that diagonal and identity matrices are as expected'
     for fname in ['eye', 'diag']:

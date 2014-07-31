@@ -1,8 +1,9 @@
 from venture.test.stats import statisticalTest, reportKnownMean
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling
+from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, on_inf_prim
 from nose import SkipTest
 from testconfig import config
 
+@on_inf_prim("none")
 def testCMVNSmoke():
   if config["get_ripl"] != "lite": raise SkipTest("CMVN in lite only")  
   get_ripl().predict("((make_cmvn (array 1.0 1.0) 2 2 (matrix (array (array 1.0 0.0) (array 0.0 1.0)))))")

@@ -1,7 +1,8 @@
 from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, collectSamples, on_inf_prim, defaultInfer
 from nose.tools import eq_
 
+@on_inf_prim("none")
 def testMemSmoke1():
   "Mem should be a noop on deterministic procedures (only memoizing)."
   eq_(get_ripl().predict("((mem (lambda (x) 3)) 1)"), 3.0)
@@ -11,30 +12,32 @@ def testMemBasic1():
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda () (bernoulli 0.5)))")
   for i in range(10): ripl.predict("(f)",label="p%d" % i)
-  for t in range(5):
+  for _ in range(5):
     assert reduce(lambda x,y: x == y,[ripl.report("p%d" % i) for i in range(10)])
-    ripl.infer(5)
+    ripl.infer(defaultInfer())
 
 def testMemBasic2():
   "MSPs should always give the same answer when called on the same arguments"
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   for i in range(10): ripl.predict("(f 1)",label="p%d" % i)
-  for t in range(5):
+  for _ in range(5):
     assert reduce(lambda x,y: x == y,[ripl.report("p%d" % i) for i in range(10)])
-    ripl.infer(5)
+    ripl.infer(defaultInfer())
 
 def testMemBasic3():
   "MSPs should always give the same answer when called on the same arguments"
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (x y) (bernoulli 0.5)))")
   for i in range(10): ripl.predict("(f 1 2)",label="p%d" % i)
-  for t in range(5):
+  for _ in range(5):
     assert reduce(lambda x,y: x == y,[ripl.report("p%d" % i) for i in range(10)])
-    ripl.infer(5)
+    ripl.infer(defaultInfer())
             
   
 @statisticalTest
+@on_inf_prim("any") # Not completely agnostic because uses MH, but
+                    # responds to the default inference program
 def testMem1():
   "MSPs should deal with their arguments changing under inference."
   ripl = get_ripl()
@@ -86,6 +89,7 @@ def testMem3():
          (10, 0.6 * 0.6 * 0.9)]
   return reportKnownDiscrete(ans, predictions)
 
+@on_inf_prim("mh")
 def testMem4():
   "Like TestMem1, makes sure that MSPs handle changes to their arguments without crashing"
   ripl = get_ripl()

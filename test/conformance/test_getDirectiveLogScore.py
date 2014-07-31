@@ -1,7 +1,8 @@
-from venture.test.config import get_ripl
-from nose.tools import assert_equal, assert_less
+from venture.test.config import get_ripl, on_inf_prim
+from nose.tools import eq_
 import numpy as np
 
+@on_inf_prim("none")
 def testgetDirectiveLogScore():
     ripl = get_ripl()
     ripl.assume('x', '(scope_include (quote dummy) 0 (normal 0 1))', label="x")
@@ -13,4 +14,4 @@ def testgetDirectiveLogScore():
     val = ripl.report(directive_id)
     logscore_true = -0.5*np.log(2*np.pi) - 0.5*val*val
 
-    assert_equal(logscore_venture, logscore_true)
+    eq_(logscore_venture, logscore_true)

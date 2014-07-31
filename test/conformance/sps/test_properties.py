@@ -4,7 +4,7 @@ from testconfig import config
 import math
 from numpy.testing import assert_allclose
 
-from venture.test.config import get_ripl, ignoresConfiguredInferenceProgram, in_backend, gen_in_backend
+from venture.test.config import get_ripl, in_backend, gen_in_backend, on_inf_prim, gen_on_inf_prim
 from venture.lite.builtin import builtInSPsList
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.psp import NullRequestPSP
@@ -16,7 +16,6 @@ from venture.lite.exception import VentureBuiltinSPMethodError
 from venture.lite.utils import FixedRandomness
 import venture.value.dicts as v
 
-@ignoresConfiguredInferenceProgram
 @in_backend("none")
 def testEquality():
   checkTypedProperty(propEquality, AnyType())
@@ -24,7 +23,6 @@ def testEquality():
 def propEquality(value):
   assert value.equal(value)
 
-@ignoresConfiguredInferenceProgram
 @in_backend("none")
 def testLiteToStack():
   checkTypedProperty(propLiteToStack, AnyType())
@@ -43,7 +41,6 @@ def testTypes():
   for (name,sp) in relevantSPs():
     yield checkTypeCorrect, name, sp
 
-@ignoresConfiguredInferenceProgram
 def checkTypeCorrect(_name, sp):
   type_ = sp.venture_type()
   checkTypedProperty(propTypeCorrect, fully_uncurried_sp_type(type_), sp, type_)
@@ -69,7 +66,6 @@ def testDeterministic():
     if not sp.outputPSP.isRandom():
       yield checkDeterministic, name, sp
 
-@ignoresConfiguredInferenceProgram
 def checkDeterministic(name, sp):
   checkTypedProperty(propDeterministic, fully_uncurried_sp_type(sp.venture_type()), name, sp)
 
@@ -102,7 +98,6 @@ def testRandom():
       if not name in ["make_uc_dir_mult", "categorical", "make_uc_sym_dir_mult"]:
         yield checkRandom, name, sp
 
-@ignoresConfiguredInferenceProgram
 def checkRandom(_name, sp):
   # I take the name because I want it to appear in the nose arg list
   args_type = fully_uncurried_sp_type(sp.venture_type())
@@ -143,7 +138,7 @@ def propRandom(args_listss, sp):
         continue
   assert False, "SP deterministically returned %s (parallel to arguments)" % answers
 
-@ignoresConfiguredInferenceProgram
+@on_inf_prim("none")
 def testExpressionFor():
   checkTypedProperty(propExpressionWorks, AnyType())
 
@@ -152,7 +147,7 @@ def propExpressionWorks(value):
   result = carefully(eval_in_ripl, expr)
   assert value.equal(result)
 
-@ignoresConfiguredInferenceProgram
+@on_inf_prim("none")
 def testRiplRoundTripThroughStack():
   checkTypedProperty(propRiplRoundTripThroughStack, AnyType())
 
@@ -166,6 +161,7 @@ def eval_in_ripl(expr):
   ripl.predict(expr, label="thing")
   return VentureValue.fromStackDict(ripl.report("thing", type=True))
 
+@gen_on_inf_prim("none")
 def testRiplSimulate():
   for (name,sp) in relevantSPs():
     if name in ["scope_include", # Because scope_include is
@@ -201,7 +197,6 @@ def testRiplSimulate():
     if not sp.outputPSP.isRandom():
       yield checkRiplAgreesWithDeterministicSimulate, name, sp
 
-@ignoresConfiguredInferenceProgram
 def checkRiplAgreesWithDeterministicSimulate(name, sp):
   checkTypedProperty(propRiplAgreesWithDeterministicSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)
 
@@ -232,6 +227,7 @@ def eval_foreign_sp(name, sp, expr):
   ripl.predict(expr, label="thing")
   return VentureValue.fromStackDict(ripl.report("thing", type=True))
 
+@gen_on_inf_prim("none")
 def testForeignInterfaceSimulate():
   for (name,sp) in relevantSPs():
     if name in ["scope_include", # Because scope_include is
@@ -252,7 +248,6 @@ def testForeignInterfaceSimulate():
     if not sp.outputPSP.isRandom():
       yield checkForeignInterfaceAgreesWithDeterministicSimulate, name, sp
 
-@ignoresConfiguredInferenceProgram
 def checkForeignInterfaceAgreesWithDeterministicSimulate(name, sp):
   checkTypedProperty(propForeignInterfaceAgreesWithDeterministicSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)
 
@@ -283,7 +278,6 @@ def testLogDensityDeterministic():
     if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart", "categorical"]: # TODO
       yield checkLogDensityDeterministic, name, sp
 
-@ignoresConfiguredInferenceProgram
 def checkLogDensityDeterministic(_name, sp):
   checkTypedProperty(propLogDensityDeterministic, (fully_uncurried_sp_type(sp.venture_type()), final_return_type(sp.venture_type())), sp)
 
@@ -305,7 +299,6 @@ def testGradientOfLogDensity():
       if sp.outputPSP.isRandom(): # TODO Check the ones that are random when curried
         yield checkGradientOfLogDensity, name, sp
 
-@ignoresConfiguredInferenceProgram
 def checkGradientOfLogDensity(name, sp):
   ret_type = final_return_type(sp.venture_type())
   args_type = fully_uncurried_sp_type(sp.venture_type())
@@ -348,7 +341,6 @@ def testFixingRandomness():
   for (name,sp) in relevantSPs():
     yield checkFixingRandomness, name, sp
 
-@ignoresConfiguredInferenceProgram
 def checkFixingRandomness(name, sp):
   checkTypedProperty(propDeterministicWhenFixed, fully_uncurried_sp_type(sp.venture_type()), name, sp)
 
@@ -395,7 +387,6 @@ def testGradientOfSimulate():
                    ]:
       yield checkGradientOfSimulate, name, sp
 
-@ignoresConfiguredInferenceProgram
 def checkGradientOfSimulate(name, sp):
   checkTypedProperty(propGradientOfSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)
 

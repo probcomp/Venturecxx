@@ -1,5 +1,5 @@
 from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, collectSamples, on_inf_prim
 import scipy.stats as stats
 
 # TODO
@@ -11,18 +11,23 @@ import scipy.stats as stats
 # but will leave it as is for now. It would not be hard to check the argument types
 # and allow either.
 
+@on_inf_prim("none")
 def testDict0():
   assert get_ripl().predict("(is_dict (dict (array) (array)))")
 
+@on_inf_prim("none")
 def testDict01():
   assert get_ripl().predict("(is_dict (dict (array 1) (array 2)))")
 
+@on_inf_prim("none")
 def testDictSize0():
   assert get_ripl().predict("(size (dict (array) (array)))") == 0
 
+@on_inf_prim("none")
 def testDictSize1():
   assert get_ripl().predict("(size (dict (array 1) (array 2)))") == 1
 
+@on_inf_prim("none")
 def testDictSize2():
   assert get_ripl().predict("(size (dict (array 1 5) (array 2 6)))") == 2
 
@@ -43,6 +48,7 @@ def testDict1():
   cdf = stats.norm(loc=20, scale=2).cdf
   return reportKnownContinuous(cdf, predictions, "N(20,2)")
 
+@on_inf_prim("none")
 def testDict2():
   ripl = get_ripl()
   ripl.assume("d","""(dict (array (quote x) (quote y))
@@ -55,6 +61,7 @@ def testDict2():
   assert ripl.report("p2")
   assert not ripl.report("p3")
 
+@on_inf_prim("none")
 def testDict3():
   ripl = get_ripl()
   ripl.assume("d","""(dict (array atom<1> atom<2>)

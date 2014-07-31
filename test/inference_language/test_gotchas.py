@@ -2,14 +2,14 @@ from nose.tools import eq_, assert_raises # Pylint misses metaprogrammed names p
 from nose import SkipTest
 
 from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, collectStateSequence, gen_broken_in
+from venture.test.config import get_ripl, collectSamples, collectStateSequence, gen_broken_in, gen_on_inf_prim, defaultInfer, on_inf_prim
 
 def testInferWithNoEntropy():
   "Makes sure that infer doesn't crash when there are no random choices in the trace"
   ripl = get_ripl()
-  ripl.infer(1)
+  ripl.infer(defaultInfer())
   ripl.predict("(if true 1 2)")
-  ripl.infer(1)
+  ripl.infer(defaultInfer())
   
 @statisticalTest
 def testOuterMix1():
@@ -31,6 +31,7 @@ def progHiddenDeterminism():
 # TODO Figure out a coherent way to run these two tests against all
 # kernels including gibbs.  Should I rely on the "generic inference
 # program" mechanism?
+@on_inf_prim("mh")
 def testHiddenDeterminism1():
   """Makes sure that proposals of impossible things don't cause
   trouble"""
@@ -44,6 +45,7 @@ def testHiddenDeterminism1():
   for pred in predictions:
     eq_(pred, c1)
 
+@on_inf_prim("mh")
 def testHiddenDeterminism2():
   """Makes sure that blocking can avoid proposing impossible things."""
   ripl = progHiddenDeterminism()
@@ -54,6 +56,7 @@ def testHiddenDeterminism2():
   return reportKnownDiscrete(ans, predictions)
 
 @gen_broken_in('puma', "rejection is not implemented in Puma")
+@gen_on_inf_prim("rejection")
 def testRejectNormal1():
   """Rejection sampling shouldn't work if both mean and variance of a
   normal are subject to change; shouldn't work if the mean is known

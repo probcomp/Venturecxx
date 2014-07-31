@@ -3,9 +3,10 @@ import scipy.stats as stats
 from nose import SkipTest
 
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, collect_iid_samples, default_num_transitions_per_sample, broken_in
+from venture.test.config import get_ripl, collectSamples, collect_iid_samples, default_num_transitions_per_sample, broken_in, on_inf_prim
 
 @statisticalTest
+@on_inf_prim("mh")
 def testBlockingExample0():
   ripl = get_ripl()
   if not collect_iid_samples(): raise SkipTest("This test should not pass without reset.")
@@ -20,6 +21,7 @@ def testBlockingExample0():
   cdf = stats.norm(loc=10.0, scale=1.0).cdf
   return reportKnownContinuous(cdf, predictions, "N(10.0,1.0)")
 
+@on_inf_prim("mh")
 def testBlockingExample1():
   ripl = get_ripl()
   ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))",label="a")
@@ -33,6 +35,7 @@ def testBlockingExample1():
   assert not olda == newa
   assert not oldb == newb
 
+@on_inf_prim("mh")
 def testBlockingExample2():
   ripl = get_ripl()
   ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))", label="a")
@@ -58,6 +61,7 @@ def testBlockingExample2():
     assert oldc == newc
     assert oldd == newd
 
+@on_inf_prim("mh")
 def testBlockingExample3():
   ripl = get_ripl()
   ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))", label="a")
@@ -73,6 +77,7 @@ def testBlockingExample3():
 
 @statisticalTest
 @broken_in('puma', "rejection is not implemented in Puma")
+@on_inf_prim("rejection")
 def testBasicRejection1():
   ripl = get_ripl()
   ripl.assume("x", "(bernoulli 0.5)",label="pid")
@@ -82,6 +87,7 @@ def testBasicRejection1():
 
 @statisticalTest
 @broken_in('puma', "rejection is not implemented in Puma")
+@on_inf_prim("rejection")
 def testBasicRejection2():
   ripl = get_ripl()
   ripl.assume("p", "(uniform_continuous 0 1)")
@@ -92,6 +98,7 @@ def testBasicRejection2():
 
 @statisticalTest
 @broken_in('puma', "rejection is not implemented in Puma")
+@on_inf_prim("rejection")
 def testBasicRejection3():
   ripl = get_ripl()
   ripl.assume("p", "(uniform_continuous 0 1)", label="pid")
@@ -101,6 +108,7 @@ def testBasicRejection3():
   return reportKnownContinuous(cdf, predictions, "beta(2,1)")
 
 @statisticalTest
+@on_inf_prim("mh") # Also cycle, but that's not a "primitive"
 def testCycleKernel():
   """Same example as testBlockingExample0, but a cycle kernel that covers everything should solve it"""
   ripl = get_ripl()
@@ -116,6 +124,7 @@ def testCycleKernel():
   return reportKnownContinuous(cdf, predictions, "N(34/3,sqrt(2/3))")
 
 @statisticalTest
+@on_inf_prim("mh") # Also mixture, but that's not a "primitive"
 def testMixtureKernel():
   """Same example as testCycleKernel, but with a mixture kernel"""
   ripl = get_ripl()

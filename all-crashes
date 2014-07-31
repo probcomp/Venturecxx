@@ -21,15 +21,15 @@ lite_multiprocess=""
 # quoting mechanisms.
 function test_inference_program_in_lite() {
     infer=$1
-    echo nosetests $lite_multiprocess -c inference-quality.cfg --eval-attr="\"not slow and (not backend or backend in ['lite', 'any'])\"" --tc=get_ripl:lite --tc=ignore_inference_quality:true --tc=infer:"\"$infer\""
-    nosetests $lite_multiprocess -c inference-quality.cfg --eval-attr="not slow and (not backend or backend in ['lite', 'any'])" --tc=get_ripl:lite --tc=ignore_inference_quality:true --tc=infer:"$infer"
+    echo nosetests $lite_multiprocess -c inference-quality.cfg --eval-attr="\"not slow and (not backend or backend in ['lite', 'any']) and (not inf_prim or inf_prim in ['any'])\"" --tc=get_ripl:lite --tc=ignore_inference_quality:true --tc=infer:"\"$infer\""
+    nosetests $lite_multiprocess -c inference-quality.cfg --eval-attr="not slow and (not backend or backend in ['lite', 'any']) and (not inf_prim or inf_prim in ['any'])" --tc=get_ripl:lite --tc=ignore_inference_quality:true --tc=infer:"$infer"
     abort_on_error "$infer in Lite"
 }
 
 function test_inference_program_in_puma() {
     infer=$1
-    echo nosetests -c inference-quality.cfg --tc=ignore_inference_quality:true --eval-attr="\"not slow and (not backend or backend in ['puma', 'any'])\"" --tc=infer:"\"$infer\"" --tc=get_ripl:puma
-    nosetests -c inference-quality.cfg --tc=ignore_inference_quality:true --eval-attr="not slow and (not backend or backend in ['puma', 'any'])" --tc=infer:"$infer" --tc=get_ripl:puma
+    echo nosetests -c inference-quality.cfg --tc=ignore_inference_quality:true --eval-attr="\"not slow and (not backend or backend in ['puma', 'any']) and (not inf_prim or inf_prim in ['any'])\"" --tc=infer:"\"$infer\"" --tc=get_ripl:puma
+    nosetests -c inference-quality.cfg --tc=ignore_inference_quality:true --eval-attr="not slow and (not backend or backend in ['puma', 'any']) and (not inf_prim or inf_prim in ['any'])" --tc=infer:"$infer" --tc=get_ripl:puma
     abort_on_error "$infer in Puma"
 }
 
