@@ -34,6 +34,7 @@ class Engine(object):
     self.directives = {}
     self.inferrer = None
     import venture.lite.inference_sps as inf
+    self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
 
   def inferenceSPsList(self):
@@ -166,6 +167,7 @@ class Engine(object):
     self.set_seed(random.randint(1,2**31-1))
 
   def bind_foreign_sp(self, name, sp):
+    self.foreign_sps[name] = sp
     if self.name != "lite":
       # wrap it for backend translation
       import venture.lite.foreign as f
@@ -185,6 +187,8 @@ effect of renumbering the directives, if some had been forgotten."""
     self.clear()
     if num_particles is not None:
       self.infer("(resample %d)" % num_particles)
+    for (name,sp) in self.foreign_sps.iteritems():
+      self.bind_foreign_sp(name,sp)
     for (_,dir) in worklist:
       self.replay(dir)
 
