@@ -54,7 +54,7 @@ VentureValuePtr ContainsOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng
 
 VentureValuePtr SizeOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  return VentureValuePtr(new VentureNumber(args->operandValues[0]->size()));
+  return VentureValuePtr(new VentureInteger(args->operandValues[0]->size()));
 }
 
 /* Dicts */
