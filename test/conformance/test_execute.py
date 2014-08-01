@@ -1,3 +1,4 @@
+import math
 import scipy.stats
 
 from venture.test.config import get_ripl, default_num_samples, default_num_transitions_per_sample, on_inf_prim
@@ -15,5 +16,5 @@ def testExecuteSmoke():
 [observe (normal x 1) 2]
 [infer (mh default one %s)]""" % default_num_transitions_per_sample())
     predictions.append(ripl.sample("x"))
-  cdf = scipy.stats.norm(loc=1, scale=2).cdf
-  return reportKnownContinuous(cdf, predictions, "N(1, 2)")
+  cdf = scipy.stats.norm(loc=1, scale=math.sqrt(0.5)).cdf
+  return reportKnownContinuous(cdf, predictions, "N(1, sqrt(1/2))")
