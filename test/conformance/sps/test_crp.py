@@ -20,9 +20,7 @@ def replaceWithDefault(items, known, default):
 @statisticalTest
 def testCRP1():
   ripl = get_ripl()
-  ripl.assume("alpha", "(gamma 1 1000)")
-  ripl.assume("f", "(make_crp alpha)")
-  ripl.observe("alpha", "1")
+  ripl.assume("f", "(make_crp 1)")
   ripl.observe("(f)", "atom<1>")
   ripl.observe("(f)", "atom<1>")
   ripl.observe("(f)", "atom<2>")
@@ -40,9 +38,7 @@ def testCRPCounter():
 @statisticalTest
 def checkCRPCounter(n):
   ripl = get_ripl()
-  ripl.assume("alpha", "(gamma 1 1000)")
-  ripl.assume("f", "(make_crp alpha)")
-  ripl.observe("alpha", "1")
+  ripl.assume("f", "(make_crp 1)")
   ripl.observe("(f)", "atom<%d>" % n)
   ripl.predict("(f)", label="pid")
 
