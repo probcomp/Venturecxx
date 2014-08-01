@@ -179,7 +179,7 @@ def run_experiment(backend, model, method, infer_type, infer_method, infer_args_
 
 def make_parser():
   parser = argparse.ArgumentParser()
-  for field in ['backend', 'model', 'infer_type', 'infer_method',
+  for field in ['backend', 'model', 'method', 'infer_type', 'infer_method',
                 'infer_args_v', 'infer_args_x']:
     parser.add_argument(field, type = str)
   for field in ['nupdate', 'niter']:
