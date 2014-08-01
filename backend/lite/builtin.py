@@ -243,7 +243,7 @@ builtInSPsList = [
                                              descr="contains reports whether the given key appears in the given mapping or not.") ],
            [ "size", deterministic_typed(lambda xs: xs.size(),
                                          [v.HomogeneousMappingType(v.AnyType("k"), v.AnyType("v"))],
-                                         v.CountType(),
+                                         v.NumberType(),
                                          descr="size returns the number of elements in the given collection (lists and arrays work too)") ],
 
            [ "arange", deterministic_typed(np.arange,
