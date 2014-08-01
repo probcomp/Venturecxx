@@ -112,7 +112,7 @@ void CRPOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) cons
   {
     aux->tableCounts[table] = 1;
     aux->numTables++;
-    aux->nextIndex++;
+    aux->nextIndex = std::max(aux->nextIndex, table + 1);
   }
 }
 
