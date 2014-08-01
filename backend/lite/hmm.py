@@ -5,7 +5,7 @@ import numpy as np
 import numpy.random as npr
 import math
 from copy import copy
-from value import NumberType, CountType, RequestType
+from value import CountType, AtomType, RequestType
 from exception import VentureValueError
 
 def npSampleVector(pVec): return np.mat(npr.multinomial(1,np.array(pVec)[0,:]))
@@ -40,7 +40,7 @@ class MakeUncollapsedHMMOutputPSP(DeterministicPSP):
 class UncollapsedHMMSP(SP):
   def __init__(self,p0,T,O):
     req = TypedPSP(UncollapsedHMMRequestPSP(), SPType([CountType()], RequestType()))
-    output = TypedPSP(UncollapsedHMMOutputPSP(O), SPType([CountType()], NumberType()))
+    output = TypedPSP(UncollapsedHMMOutputPSP(O), SPType([CountType()], AtomType()))
     super(UncollapsedHMMSP,self).__init__(req,output)
     self.p0 = p0
     self.T = T
