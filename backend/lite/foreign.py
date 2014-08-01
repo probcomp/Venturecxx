@@ -1,3 +1,4 @@
+from request import Request
 from sp import SP, VentureSPRecord
 from value import VentureValue
 
@@ -14,6 +15,8 @@ def fromStackDict(thing):
         return None
     elif thing["type"] == "foreign_sp":
         return VentureSPRecord(thing["sp"].sp, thing["aux"])
+    elif thing["type"] == "request":
+        return Request(thing["value"]["esrs"], thing["value"]["lsrs"])
     else:
         return VentureValue.fromStackDict(thing)
 
@@ -22,6 +25,8 @@ def asStackDict(thing):
     if isinstance(thing, VentureSPRecord):
         return {"type": "foreign_sp", "value": thing.show(),
                 "sp": ForeignLiteSP(thing.sp), "aux": thing.spAux}
+    elif isinstance(thing, Request):
+        return {"type": "request", "value": {"esrs": thing.esrs, "lsrs": thing.lsrs}}
     else:
         return thing.asStackDict()
 
@@ -132,12 +137,24 @@ class ForeignLiteSP(object):
     """A wrapper around a Lite SP that can be called by other backends."""
 
     def __init__(self, sp):
-        # TODO: requestPSP (needs requests to be stackable)
+        self.requestPSP = ForeignLitePSP(sp.requestPSP)
         self.outputPSP = ForeignLitePSP(sp.outputPSP)
         self.sp = sp
 
     def constructSPAux(self):
         return self.sp.constructSPAux()
+
+    def constructLatentDB(self):
+        return self.sp.constructLatentDB()
+    def simulateLatents(self,spaux,lsr,shouldRestore,latentDB):
+        return self.sp.simulateLatents(spaux,lsr,shouldRestore,latentDB)
+    def detachLatents(self,spaux,lsr,latentDB):
+        return self.sp.detachLatents(spaux,lsr,latentDB)
+
+    def hasAEKernel(self):
+        return self.sp.hasAEKernel()
+    def AEInfer(self, aux):
+        return self.sp.AEInfer(aux)
 
     def show(self, spaux):
         return self.sp.show(spaux)

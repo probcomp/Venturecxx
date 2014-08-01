@@ -8,6 +8,7 @@
 #include "sp.h"
 #include "psp.h"
 #include "lkernel.h"
+#include "db.h"
 
 // A mechanism for calling foreign SPs (written in Python, using the
 // Lite interface) in Puma. Implemented as a Puma SP which wraps a
@@ -56,12 +57,41 @@ struct ForeignLiteLKernel : LKernel
   boost::python::object lkernel;
 };
 
+struct ForeignLiteLSR : LSR
+{
+  ForeignLiteLSR(boost::python::object lsr): lsr(lsr) {}
+
+  boost::python::object lsr;
+};
+
+struct ForeignLiteLatentDB : LatentDB
+{
+  ForeignLiteLatentDB(boost::python::object latentDB): latentDB(latentDB) {}
+
+  boost::python::object latentDB;
+};
+
+struct ForeignLiteRequest : VentureRequest
+{
+  ForeignLiteRequest(const vector<ESR> & esrs, const vector<shared_ptr<LSR> > & lsrs): VentureRequest(esrs, lsrs) {}
+  ForeignLiteRequest(const vector<shared_ptr<LSR> > & lsrs): VentureRequest(lsrs) {}
+  boost::python::dict toPython(Trace * trace) const;
+};
+
 struct ForeignLiteSP : SP
 {
   // TODO: requestPSP (needs requests to be stackable)
-  ForeignLiteSP(boost::python::object sp): SP(new NullRequestPSP(),
+  ForeignLiteSP(boost::python::object sp): SP(new ForeignLitePSP(sp.attr("requestPSP")),
                                               new ForeignLitePSP(sp.attr("outputPSP"))),
                                            sp(sp) {}
+
+  shared_ptr<LatentDB> constructLatentDB() const;
+  double simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB,gsl_rng * rng) const;
+  double detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const;
+
+  bool hasAEKernel() const;
+  void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args, gsl_rng * rng) const;
+
   boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;
 
   boost::python::object sp;

@@ -15,6 +15,19 @@ VentureValuePtr foreignFromPython(boost::python::object thing)
     return VentureValuePtr(new VentureSPRecord(new ForeignLiteSP(thing["sp"]),
                                                new ForeignLiteSPAux(thing["aux"])));
   }
+  else if (thing["type"] == "request")
+  {
+    boost::python::list foreignESRs = boost::python::extract<boost::python::list>(thing["value"]["esrs"]);
+    boost::python::list foreignLSRs = boost::python::extract<boost::python::list>(thing["value"]["lsrs"]);
+    vector<ESR> esrs;
+    vector<shared_ptr<LSR> > lsrs;
+    // TODO: ESRs
+    for (boost::python::ssize_t i = 0; i < boost::python::len(foreignLSRs); ++i)
+    {
+      lsrs.push_back(shared_ptr<LSR>(new ForeignLiteLSR(foreignLSRs[i])));
+    }
+    return VentureValuePtr(new ForeignLiteRequest(esrs, lsrs));
+  }
   else
   {
     return parseValue(boost::python::extract<boost::python::dict>(thing));
@@ -160,6 +173,60 @@ double ForeignLiteLKernel::reverseWeight(Trace * trace,VentureValuePtr oldValue,
   boost::python::dict foreignArgs = foreignArgsToPython(args);
   boost::python::object foreignWeight = lkernel.attr("reverseWeight")(foreignOldValue, foreignArgs);
   return boost::python::extract<double>(foreignWeight);
+}
+
+boost::python::dict ForeignLiteRequest::toPython(Trace * trace) const
+{
+  boost::python::list foreignESRs;
+  boost::python::list foreignLSRs;
+  // TODO: ESRs
+  for (size_t i = 0; i < lsrs.size(); ++i)
+  {
+    foreignLSRs.append(dynamic_pointer_cast<ForeignLiteLSR>(lsrs[i])->lsr);
+  }
+  boost::python::dict value;
+  value["esrs"] = foreignESRs;
+  value["lsrs"] = foreignLSRs;
+  boost::python::dict stackDict;
+  stackDict["type"] = "request";
+  stackDict["value"] = value;
+  return stackDict;
+}
+
+shared_ptr<LatentDB> ForeignLiteSP::constructLatentDB() const
+{
+  return shared_ptr<LatentDB>(new ForeignLiteLatentDB(sp.attr("constructLatentDB")()));
+}
+
+double ForeignLiteSP::simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB,gsl_rng * rng) const
+{
+  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(spaux)->aux;
+  boost::python::object foreignLSR = dynamic_pointer_cast<ForeignLiteLSR>(lsr)->lsr;
+  boost::python::object foreignLatentDB;
+  if (latentDB)
+  {
+    foreignLatentDB = dynamic_pointer_cast<ForeignLiteLatentDB>(latentDB)->latentDB;
+  }
+  return boost::python::extract<double>(sp.attr("simulateLatents")(foreignAux, foreignLSR, shouldRestore, foreignLatentDB));
+}
+
+double ForeignLiteSP::detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const
+{
+  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(spaux)->aux;
+  boost::python::object foreignLSR = dynamic_pointer_cast<ForeignLiteLSR>(lsr)->lsr;
+  boost::python::object foreignLatentDB = dynamic_pointer_cast<ForeignLiteLatentDB>(latentDB)->latentDB;
+  return boost::python::extract<double>(sp.attr("detachLatents")(foreignAux, foreignLSR, foreignLatentDB));
+}
+
+bool ForeignLiteSP::hasAEKernel() const
+{
+  return boost::python::extract<bool>(sp.attr("hasAEKernel")());
+}
+
+void ForeignLiteSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args, gsl_rng * rng) const
+{
+  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(spAux)->aux;
+  sp.attr("AEInfer")(foreignAux);
 }
 
 boost::python::dict ForeignLiteSP::toPython(Trace * trace, shared_ptr<SPAux> aux) const
