@@ -49,6 +49,7 @@ def test_foreign_aaa_uc():
     ripl.infer(defaultInfer())
     assert ripl.sample("f")["counts"] == [1]
 
+@skipWhenInParallel("Calling into Lite from Puma is not thread-safe. Issue: https://app.asana.com/0/11127829865276/15184529953373")
 @statisticalTest
 def test_foreign_aaa_infer():
     "Same as test.inference_quality.micro.test_misc_aaa.testMakeBetaBernoulli1"
@@ -80,6 +81,7 @@ def test_foreign_latents():
     ripl.infer(defaultInfer())
     assert ripl.sample("f")[0] == [np.matrix([[1]]), np.matrix([[1]])]
 
+@skipWhenInParallel("Calling into Lite from Puma is not thread-safe. Issue: https://app.asana.com/0/11127829865276/15184529953373")
 @statisticalTest
 def test_foreign_latents_infer():
     "Same as test.inference_quality.micro.test_latents.testHMMSP1"
