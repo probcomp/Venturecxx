@@ -240,6 +240,11 @@ def testSomethingAboutSlice():
   ripl.infer("(slice default one 0.5 100 20)")
   ...
 
+Note: any test that is already backend-independent is perforce
+inference-independent, since all inference happens in backends.  Such
+tests need not be tagged with on_inf_prim, because the selection takes
+this into account.
+
   """
   # TODO Is there a way to reduce the code duplication between the
   # generator and non-generator version of this decorator?
@@ -284,6 +289,11 @@ Example:
 def testSomeThingsAboutSlice():
   for thing in some(things):
     yield ...
+
+Note: any test that is already backend-independent is perforce
+inference-independent, since all inference happens in backends.  Such
+tests need not be tagged with gen_on_inf_prim, because the selection
+takes this into account.
 
   """
   # TODO Is there a way to reduce the code duplication between the
