@@ -417,12 +417,11 @@ class ContinuousInferrer(object):
     import threading as t
     self.inferrer = t.Thread(target=self.infer_continuously, args=(self.program,))
     self.inferrer.daemon = True
+    self.start = time.time()
+    self.count = 0
     self.inferrer.start()
 
   def infer_continuously(self, program):
-    start = time.time()
-    count = 0
-  
     # Can use the storage of the thread object itself as the semaphore
     # controlling whether continuous inference proceeds.
     while self.inferrer is not None:
@@ -430,16 +429,17 @@ class ContinuousInferrer(object):
       # Currently suppressed for fear of clobbering the prompt
       self.engine.infer(program)
       
-      count += 1
-      if count == 10:
-        t = time.time() - start
-        print count / t
-        count = 0
-        start += t
+      self.count += 1
+      if self.count % 100 == 0:
+        t = time.time() - self.start
+        print self.count / t
       
       time.sleep(0.0001) # Yield to be a good citizen
 
   def stop(self):
+    t = time.time() - self.start
+    print self.count, self.count / t
+  
     inferrer = self.inferrer
     self.inferrer = None # Grab the semaphore
     inferrer.join()
