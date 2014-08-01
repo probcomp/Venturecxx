@@ -218,6 +218,17 @@ double ForeignLiteSP::detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,
   return boost::python::extract<double>(sp.attr("detachLatents")(foreignAux, foreignLSR, foreignLatentDB));
 }
 
+bool ForeignLiteSP::hasAEKernel() const
+{
+  return boost::python::extract<bool>(sp.attr("hasAEKernel")());
+}
+
+void ForeignLiteSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args, gsl_rng * rng) const
+{
+  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(spAux)->aux;
+  sp.attr("AEInfer")(foreignAux);
+}
+
 boost::python::dict ForeignLiteSP::toPython(Trace * trace, shared_ptr<SPAux> aux) const
 {
   boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(aux)->aux;

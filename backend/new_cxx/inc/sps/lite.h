@@ -89,6 +89,9 @@ struct ForeignLiteSP : SP
   double simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB,gsl_rng * rng) const;
   double detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const;
 
+  bool hasAEKernel() const;
+  void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args, gsl_rng * rng) const;
+
   boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;
 
   boost::python::object sp;

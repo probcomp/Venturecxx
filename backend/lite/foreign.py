@@ -146,12 +146,15 @@ class ForeignLiteSP(object):
 
     def constructLatentDB(self):
         return self.sp.constructLatentDB()
-
     def simulateLatents(self,spaux,lsr,shouldRestore,latentDB):
         return self.sp.simulateLatents(spaux,lsr,shouldRestore,latentDB)
-
     def detachLatents(self,spaux,lsr,latentDB):
         return self.sp.detachLatents(spaux,lsr,latentDB)
+
+    def hasAEKernel(self):
+        return self.sp.hasAEKernel()
+    def AEInfer(self, aux):
+        return self.sp.AEInfer(aux)
 
     def show(self, spaux):
         return self.sp.show(spaux)
