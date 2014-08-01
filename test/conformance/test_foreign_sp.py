@@ -1,6 +1,8 @@
 from venture.test.config import get_ripl, defaultInfer, skipWhenInParallel
 from venture.lite import builtin
 
+import numpy as np
+
 def test_foreign_aaa():
     builtins = builtin.builtInSPs()
     ripl = get_ripl()
@@ -52,7 +54,10 @@ def test_foreign_latents():
     ripl.bind_foreign_sp("test_lazy_hmm", builtins["make_lazy_hmm"])
 
     ripl.assume("f", "(test_lazy_hmm (simplex 1) (id_matrix 1) (id_matrix 1))")
-    assert ripl.sample("(f 1)") == 0
+    assert ripl.sample("f")[0] == []
+
+    ripl.observe("(f 1)", "atom<0>")
+    assert ripl.sample("f")[0] == [np.matrix([[1]]), np.matrix([[1]])]
 
     ripl.infer(defaultInfer())
-    assert ripl.sample("(f 1)") == 0
+    assert ripl.sample("f")[0] == [np.matrix([[1]]), np.matrix([[1]])]
