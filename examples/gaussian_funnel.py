@@ -160,8 +160,9 @@ def output_report(backend, model, infer_type, infer_method,
       f.write(outstr + '\n')
   return wkdir
 
-def run_experiment(backend, model, infer_type, infer_method, infer_args_v, infer_args_x, nupdate, niter):
-  ripl = build_ripl(backend, model)
+def run_experiment(backend, model, method, infer_type, infer_method, infer_args_v, infer_args_x, nupdate, niter):
+  buildfun = build_ripl if method == 'custom' else build_ripl_alt
+  ripl = buildfun(backend, model)
   infer_statement = assemble_infer_statement(infer_type, infer_method, infer_args_v,
                                              infer_args_x, nupdate, niter)
   start = time()
