@@ -97,7 +97,7 @@ def build_ripl(backend, model):
 def build_ripl_alt(backend, model):
   ripl = shortcuts.backend(backend).make_church_prime_ripl()
   ripl.assume('v', '(scope_include (quote data) 0 (normal 0 3))')
-  ripl.force('v', 0)
+  ripl.force('v', 0.0)
   for i in range(1,10):
     ripl.assume('x_{0}'.format(str(i)),
                 '(scope_include (quote data) {1} (normal 0 (sqrt (exp v))))'.format('x_' + str(i), i))
@@ -145,14 +145,14 @@ def annotate_plotf(plotf_output, elapsed, niter):
   vax.axhline(-7.5, color = 'black', linestyle = '--')
   return timefig, vfig
 
-def output_report(backend, model, infer_type, infer_method,
+def output_report(backend, model, method, infer_type, infer_method,
                   infer_statement, nupdate, niter, elapsed):
   basedir = path.expanduser('~/Google Drive/probcomp/gaussian-funnel/results/')
-  wkname = '-'.join([backend, model, infer_type, infer_method, str(nupdate), str(niter)])
+  wkname = '-'.join([backend, model, method, infer_type, infer_method, str(nupdate), str(niter)])
   wkdir = path.join(basedir, wkname)
   if path.exists(wkdir): shutil.rmtree(wkdir)
   os.mkdir(wkdir)
-  fields = ['backend', 'model', 'infer_statement', 'elapsed']
+  fields = ['backend', 'model', 'method', 'infer_statement', 'elapsed']
   with open(path.join(wkdir, 'report.txt'), 'w') as f:
     for field in fields:
       res = int(eval(field)) if field == 'elapsed' else eval(field)
@@ -161,14 +161,19 @@ def output_report(backend, model, infer_type, infer_method,
   return wkdir
 
 def run_experiment(backend, model, method, infer_type, infer_method, infer_args_v, infer_args_x, nupdate, niter):
-  buildfun = build_ripl if method == 'custom' else build_ripl_alt
+  if method == 'custom':
+    buildfun = build_ripl
+  elif method == 'direct':
+    buildfun = build_ripl_alt
+  else:
+    raise Exception('Not a valid method')
   ripl = buildfun(backend, model)
   infer_statement = assemble_infer_statement(infer_type, infer_method, infer_args_v,
                                              infer_args_x, nupdate, niter)
   start = time()
   res = ripl.infer(infer_statement)
   elapsed = time() - start
-  wkdir = output_report(backend, model, infer_type, infer_method,
+  wkdir = output_report(backend, model, method, infer_type, infer_method,
                         infer_statement, nupdate, niter, elapsed)
   timefig, vfig = annotate_plotf(res, elapsed, niter)
   timefig.savefig(path.join(wkdir, 'sweeptime.png'))
