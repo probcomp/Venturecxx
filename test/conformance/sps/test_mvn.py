@@ -51,7 +51,7 @@ def testMVN1b():
   ripl.observe("(normal (lookup x 0) 1.0)","14")
   ripl.predict("(lookup x 0)",label="pid")
 
-  predictions = collectSamples(ripl,"pid")
+  predictions = collectSamples(ripl,"pid",infer="mixes_slowly")
   cdf = lambda x: stats.norm.cdf(x,loc=12,scale=math.sqrt(0.5))
   return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
 
