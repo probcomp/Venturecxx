@@ -49,6 +49,23 @@ def test_foreign_aaa_uc():
     ripl.infer(defaultInfer())
     assert ripl.sample("f")["counts"] == [1]
 
+@statisticalTest
+def test_foreign_aaa_infer():
+    "Same as test.inference_quality.micro.test_misc_aaa.testMakeBetaBernoulli1"
+    builtins = builtin.builtInSPs()
+    ripl = get_ripl()
+    ripl.bind_foreign_sp("test_beta_bernoulli", builtins["make_uc_beta_bernoulli"])
+
+    ripl.assume("a", "(normal 10.0 1.0)")
+    ripl.assume("f", "(test_beta_bernoulli a a)")
+    ripl.predict("(f)", label="pid")
+
+    for _ in range(20): ripl.observe("(f)", "true")
+
+    predictions = collectSamples(ripl,"pid")
+    ans = [(False,.25), (True,.75)]
+    return reportKnownDiscrete(ans, predictions)
+
 def test_foreign_latents():
     builtins = builtin.builtInSPs()
     ripl = get_ripl()
