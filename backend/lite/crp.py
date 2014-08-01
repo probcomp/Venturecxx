@@ -70,7 +70,7 @@ class CRPOutputPSP(RandomPSP):
     else:
       aux.tableCounts[index] = 1
       aux.numTables += 1
-      aux.nextIndex += 1
+      aux.nextIndex = max(aux.nextIndex, index + 1)
 
   def unincorporate(self,index,args):
     aux = args.spaux
