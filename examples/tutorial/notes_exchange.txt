@@ -71,6 +71,63 @@ Suppose we use an improper prior on a parameter. The compiler won't be able to t
 If form of observes is fixed, we should be able to compute Fisher information for parameters and hence Jeffreys priors. (Maybe this is very messy for a model with lots of parameter. I'm not sure the Fisher information will factor neatly if the parameters depend on each other). 
 
 
+4. Interactive, online, diachronic Bayes vs. Static Batch Bayes
+In AI/ML/stats, we might distinguish two kinds of theory of rational inference. One is a theory for an algorithm that updates its beliefs in response to data, where the data it collects varies in kind and where there are many update 'events' over time (not one big batch update). This kind of theory is more relevant to robotics, AI and cog sci. I'll call this a theory of Dynamic Update.
+
+Another kind of theory is the theory of how to do inference after a particular experiment / observational study. Here all inference is done at once and one is interested only in the present data and not anything after (or, for the most part, before). This kind of theory is relevant in stats, ML, and philosophy of science. Call this a theory of Batch Inference. 
+
+Bayes as a theory of Dynamic Update: Idea that you set your initial prior, then you can update on any kind of evidence. Bayes tells you exactly what to do. Evidence could be very heterogeneous. It can come in batch or in small pieces.
+
+Suppose you have a complex world model and you can condition on any kind of evidence about the world model. Before you go out to collect data, you may not be able to narrow down the logical form of the evidence you will collect. For example, in observing some urns with marbles in them, you might observe the color of a ball from a known or random urn, the color up to nearby shades, the fact that an urn is non-empty, the fact that the first two balls from two urns were the same color, the fact that the number of balls in an urn is prime, etc. You have to set your prior BEFORE you know the form of the evidence you are going to get. 
+
+In programming terms, your prior and update mechanism is a fixed part of the program that cannot vary in response to the form of the evidence. You only know the form of the evidence at each successive 'run-time'.
+
+Key general property of Bayes: today's posterior is tomorrow's prior. Bayes specifies the sufficient statistic of your observations. It is simply the posterior of your observations. Once you have updated, you can throw away everything but the posterior (assuming a fixed likelihood function). It's not clear how much of a saving this will provide. A robot trying to map a whole city in detail will have very complex posteriors. But estimating a single parameter (integrating out everything else) will to concise posteriors. 
+
+
+Problems with Bayes:
+
+Ignorance Priors violate Dynamic Update
+You might want an ignorance prior that is invariant to certain transformation of the parameter. But some of the priors that satisfy this invariance are improper and so you can't update them on certain kinds of evidence (as you won't get a proper posterior). The general way of getting invariance depends on the Fisher information, which depends on the experiment you are doing. This again assumes knowledge of the form of evidence. 
+
+Tractability conflicts with Dynamic Update
+There are many techniques for approximate Bayes. Many don't work given heterogenous dynamic updates. 
+
+Exponential families: If the likelihood function is in an exponential family, then you can get analytical updates via a conjugate prior. This also makes for very efficient online updates (as you only need update sufficient statistics). However, if you must set your prior without knowing the likelihood in advance, then you can't choose a conjugate prior. (Example: Given parameter theta, I might observe (normal theta 1) or (gamma theta^2 1). My guess is that even if likelihoods are an exp family you still can't set a prior for them in advance.)
+
+
+Gibbs Sampling: I generally need to be able to compute conditional distributions analytically (so as to sample from them). But doing so requires observations that have a form that makes this possible. 
+
+Sample based methods (MH/Particles): when these techniques work they give you a number of samples from the posterior. You can't do analytical updates or computations on the samples. (You could try to fit a closed-form distributio to the samples, but this is hard in high dimensions). Thus once you move from a closed-form prior to samples, it will generally be easier to stick with the samples. Various ways of speeding up MH depend on the form of data.
+
+Variational: Gives a closed-form approximation of the posterior and so allows for past computations with the posterior. Not sure how easily you can optimize the KL for unknown likelihood functions.
+
+
+Probabilisic languages exploit the fact that MH samplers can be build up compositionally from primitives with analytical likelihoods. Though various optimizations that depend on the form of the observations are not available, we can compute the likelihood of the data by multiplying the likelihoods of the primitive procedures involved.
+
+Such languages do not really embody the 'today's prior is tomorrow's posterior' property. In Venture, suppose you do inference on some observes and then add some observes of a different form. The initial inference just changes the value of parameters, it doesn't mutate the priors into the posterior. Thus, all observes have to stay around forever. In general, this will lead to linear scaling for a single sample. (Sufficient statistics can help here, but they aren't available in general).
+
+So why not mutate the priors? We could replace the prior with a bunch of samples from the posterior. The problem is that this will be too crude for certain future updates. (As the delta function approximation will leave out certain regions of param space we might need). We could fit a prior. Then we need to worry about the quality of that inference. Unclear how to do this in general. Still, fitting some gGaussian mixture may be useful if we have enough data. 
+
+
+Batch Inference:
+Batch inference is a specialization of the dynamic problem where you know the form of the observations ahead of time and you get to choose your priors/inference strategy based on the form of the observations.
+
+[One value of experiments is being able to rule out possible causes via interventions/RCTs. Another might be that we fix the form of the data and can choose it to make inference viable.]
+
+Lots of statistical / ML ideas depend on this setting. For example, estimation theory depends on the observations having a particular form. Point estimation methods don't sequentialize in an obvious way. You get an ML estimate for regression param. Not an obvious way to use this to now do logistic regression. (Could be initiaizer). Frequentist theory doesn't have notion of prior where previous learning can be exploited. This seems another crucial aspect of Bayes vs. Freq: posterior is your sufficient statistic for future inference. 
+
+So an obvious idea is to try to use batch methods to help dynamic updates. 
+
+ 
+
+
+
+
+ 
+
+
+
 
 
 
