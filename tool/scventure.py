@@ -33,7 +33,7 @@ which you can set in your starcluster configuration file:
 
 Additional option:
 - skip_cxx = true
-    for version of Venture that support it, saves time by not
+    for versions of Venture that support it, saves time by not
     installing the dependencies for the CXX backend of Venture, and by
     not compiling the backend itself.
 """

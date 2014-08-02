@@ -2,24 +2,24 @@
 # -*- coding: utf-8 -*-
 
 # Copyright (c) 2013, MIT Probabilistic Computing Project.
-# 
+#
 # This file is part of Venture.
-# 	
+#
 # Venture is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 	
+#
 # Venture is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 	
+#
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
 import argparse
-from venture.ripl.utils import run_venture_console
+from venture.ripl.console import run_venture_console
 import venture.shortcuts as v
 
 def banner(help=True):
@@ -27,9 +27,9 @@ def banner(help=True):
     if not(help):
         help_ad = ""
     print '''
-Venture, version 0.1.1  http://probcomp.csail.mit.edu/venture/{0}
+Venture, version 0.2.1  http://probcomp.csail.mit.edu/venture/{0}
 Venture is *alpha quality* software.
-Expect crashes that wipe out your Venture session.
+Expect occasional crashes that wipe out your Venture session.
 '''.format(help_ad).strip()
 
 def server(args):
@@ -46,31 +46,44 @@ def client(args):
 
 def puma(args):
     banner()
-    run_venture_console(v.make_puma_church_prime_ripl())
+    run_venture_console(local_ripl(args, v.Puma()))
 
 def cxx(args):
     banner()
-    run_venture_console(v.make_cxx_church_prime_ripl())
+    run_venture_console(local_ripl(args, v.CXX()))
 
 def lite(args):
     banner()
-    run_venture_console(v.make_lite_church_prime_ripl())
+    run_venture_console(local_ripl(args, v.Lite()))
+
+def local_ripl(args, backend):
+    r = backend.make_church_prime_ripl()
+    if (len(sys.argv) > 1) and args.prelude: r.load_prelude()
+    return r
+
+def add_prelude(parser_local):
+    parser_local.add_argument('--prelude', action='store_true',
+                              help = 'Load prelude on startup. Applies only to local sessions.')
+    return parser_local
 
 parser = argparse.ArgumentParser(description='An interactive, Turing-complete probabilistic programming platform')
-parser.add_argument('--version', action='version', version='Venture, version 0.1.1')
+parser.add_argument('--version', action='version', version='Venture, version 0.2.1')
 subparsers = parser.add_subparsers(title="optional mode")
 
 parser_local = subparsers.add_parser("puma", help="[default] Start a local Venture Puma session",
                                      description="Start a local Venture Puma session")
 parser_local.set_defaults(func=puma)
+parsers_local = add_prelude(parser_local)
 
 parser_local = subparsers.add_parser("cxx", help="Start a local Venture CXX session",
                                      description="Start a local Venture CXX session")
 parser_local.set_defaults(func=cxx)
+parsers_local = add_prelude(parser_local)
 
 parser_local = subparsers.add_parser("lite", help="Start a local Venture Lite session",
                                      description="Start a local Venture Lite session")
 parser_local.set_defaults(func=lite)
+parser_local = add_prelude(parser_local)
 
 default_port = 8082
 

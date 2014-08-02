@@ -25,6 +25,7 @@ class OmegaDB(object):
 
   def getLatentDB(self,sp): return self.latentDBs[sp]
 
+  def hasESRParent(self,sp,id): return (sp,id) in self.spFamilyDBs
   def getESRParent(self,sp,id): return self.spFamilyDBs[(sp,id)]
   def registerSPFamily(self,sp,id,esrParent):
     assert not (sp,id) in self.spFamilyDBs

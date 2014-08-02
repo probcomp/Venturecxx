@@ -16,6 +16,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# Raise Python's recursion limit, per
+# http://log.brandonthomson.com/2009/07/increase-pythons-recursion-limit.html
+# The reason to do this is that Venture is not tail recursive, and the
+# cycle and mixture inference programs are written as recursive
+# functions in Venture.
+import sys
+import resource
+# Try to increase max stack size from 8MB to 512MB
+(soft, hard) = resource.getrlimit(resource.RLIMIT_STACK)
+if hard > -1:
+    new_soft = max(soft, min(2**29, hard))
+else:
+    new_soft = max(soft, 2**29)
+resource.setrlimit(resource.RLIMIT_STACK, (new_soft, hard))
+# Set a large recursion depth limit
+sys.setrecursionlimit(max(10**6, sys.getrecursionlimit()))
+
 from venture import parser, ripl, sivm, server
 
 class Backend(object):
@@ -23,15 +40,20 @@ class Backend(object):
     def make_venture_sivm(self):
         return sivm.VentureSivm(self.make_core_sivm())
     def make_church_prime_ripl(self):
-        return ripl.Ripl(self.make_venture_sivm(), {"church_prime":parser.ChurchPrimeParser()})
+        r = ripl.Ripl(self.make_venture_sivm(), {"church_prime":parser.ChurchPrimeParser.instance()})
+        r.backend_name = self.name()
+        return r
     def make_venture_script_ripl(self):
-        return ripl.Ripl(self.make_venture_sivm(), {"venture_script":parser.VentureScriptParser()})
+        r = ripl.Ripl(self.make_venture_sivm(), {"venture_script":parser.VentureScriptParser.instance()})
+        r.backend_name = self.name()
+        return r
     def make_combined_ripl(self):
         v = self.make_venture_sivm()
-        parser1 = parser.ChurchPrimeParser()
-        parser2 = parser.VentureScriptParser()
+        parser1 = parser.ChurchPrimeParser.instance()
+        parser2 = parser.VentureScriptParser.instance()
         r = ripl.Ripl(v,{"church_prime":parser1, "venture_script":parser2})
         r.set_mode("church_prime")
+        r.backend_name = self.name()
         return r
     def make_ripl_rest_server(self):
         return server.RiplRestServer(self.make_combined_ripl())
@@ -40,16 +62,19 @@ class CXX(Backend):
     def make_core_sivm(self):
         from venture.cxx import engine
         return sivm.CoreSivm(engine.Engine())
+    def name(self): return "cxx"
 
 class Lite(Backend):
     def make_core_sivm(self):
         from venture.lite import engine
         return sivm.CoreSivm(engine.Engine())
+    def name(self): return "lite"
 
 class Puma(Backend):
     def make_core_sivm(self):
         from venture.puma import engine
         return sivm.CoreSivm(engine.Engine())
+    def name(self): return "puma"
 
 def backend(name = "puma"):
     if name == "lite":
@@ -60,98 +85,30 @@ def backend(name = "puma"):
         return Puma()
     raise Exception("Unknown backend %s" % name)
 
-def make_core_cxx_sivm():
-    from venture.cxx import engine
-    return sivm.CoreSivm(engine.Engine())
+for (prefix, suffix) in [("make_core_", "sivm"),
+                         ("make_venture_", "sivm"),
+                         ("make_", "church_prime_ripl"),
+                         ("make_", "venture_script_ripl"),
+                         ("make_", "combined_ripl")]:
+    method = prefix + suffix
+    # Your complaints about metaprogramming do not fall upon deaf ears, pylint: disable=exec-used
+    string2 = """
+def %s():
+  return backend().%s()
+""" % (method, method)
+    exec(string2)
 
-def make_core_lite_sivm():
-    from venture.lite import engine
-    return sivm.CoreSivm(engine.Engine())
-
-def make_core_puma_sivm():
-    from venture.puma import engine
-    return sivm.CoreSivm(engine.Engine())
-
-make_core_sivm = make_core_puma_sivm
-
-def make_venture_cxx_sivm():
-    return sivm.VentureSivm(make_core_cxx_sivm())
-
-def make_venture_lite_sivm():
-    return sivm.VentureSivm(make_core_lite_sivm())
-
-def make_venture_puma_sivm():
-    return sivm.VentureSivm(make_core_puma_sivm())
-
-def make_venture_sivm():
-    return sivm.VentureSivm(make_core_sivm())
-
-def make_church_prime_ripl():
-    v = make_venture_sivm()
-    parser1 = parser.ChurchPrimeParser()
-    return ripl.Ripl(v,{"church_prime":parser1})
-
-def make_cxx_church_prime_ripl():
-    v = make_venture_cxx_sivm()
-    parser1 = parser.ChurchPrimeParser()
-    return ripl.Ripl(v,{"church_prime":parser1})
-
-def make_lite_church_prime_ripl():
-    v = make_venture_lite_sivm()
-    parser1 = parser.ChurchPrimeParser()
-    return ripl.Ripl(v,{"church_prime":parser1})
-
-def make_puma_church_prime_ripl():
-    v = make_venture_puma_sivm()
-    parser1 = parser.ChurchPrimeParser()
-    return ripl.Ripl(v,{"church_prime":parser1})
-
-def make_venture_script_ripl():
-    v = make_venture_sivm()
-    parser1 = parser.VentureScriptParser()
-    return ripl.Ripl(v,{"venture_script":parser1})
-
-def make_combined_ripl():
-    v = make_venture_sivm()
-    parser1 = parser.ChurchPrimeParser()
-    parser2 = parser.VentureScriptParser()
-    r = ripl.Ripl(v,{"church_prime":parser1, "venture_script":parser2})
-    r.set_mode("church_prime")
-    return r
+    for backend_name in ["lite", "puma", "cxx"]:
+        function = prefix + backend_name + "_" + suffix
+        string = """
+def %s():
+  return backend("%s").%s()
+""" % (function, backend_name, method)
+        exec(string)
 
 def make_ripl_rest_server():
-    r = make_combined_ripl()
+    r = make_combined_ripl() # Metaprogrammed.  pylint: disable=undefined-variable
     return server.RiplRestServer(r)
 
 def make_ripl_rest_client(base_url):
     return ripl.RiplRestClient(base_url)
-
-
-# value shortcuts
-
-def val(t,v):
-    return {"type":t,"value":v}
-
-def number(v):
-    return val("number",v)
-
-def boolean(v):
-    return val("boolean",v)
-
-def real(v):
-    return val("real",v)
-
-def count(v):
-    return val("count",v)
-
-def probability(v):
-    return val("probability",v)
-
-def atom(v):
-    return val("atom",v)
-
-def smoothed_count(v):
-    return val("smoothed_count",v)
-
-def simplex_point(v):
-    return val("simplex_point",v)

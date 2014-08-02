@@ -1,4 +1,5 @@
-from venture.test.stats import statisticalTest, reportKnownMean
+import scipy.stats
+from venture.test.stats import statisticalTest, reportKnownMean, reportKnownContinuous
 from venture.test.config import get_ripl, collectSamples
 
 @statisticalTest
@@ -7,10 +8,10 @@ def testPoisson1():
   ripl = get_ripl()
 
   ripl.assume("lambda","(gamma 1 1)",label="pid")
-  ripl.predict("(poisson lambda)")
+  #ripl.predict("(poisson lambda)")
 
   predictions = collectSamples(ripl,"pid")
-  return reportKnownMean(1,predictions)
+  return reportKnownContinuous(scipy.stats.gamma(1, scale=1/1.0).cdf,predictions,"(gamma 1 1)")
 
 @statisticalTest
 def testPoisson2():
@@ -23,5 +24,3 @@ def testPoisson2():
   predictions = collectSamples(ripl,"pid")
   return reportKnownMean(5,predictions)
   
-  
-

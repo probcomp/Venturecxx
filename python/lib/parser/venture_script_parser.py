@@ -110,7 +110,7 @@ class VentureScriptParser(object):
         self.reserved_symbols = set(['if','else','proc',
             'true','false','lambda','identity', 'let','add','sub','div',
             'mul','pow','neq','gte','lte', 'eq', 'gt', 'lt', 'and', 'or'])
-        self.symbol = utils.symbol_token(blacklist_symbols = self.reserved_symbols)
+        self.symbol = utils.symbol_literal_token(blacklist_symbols = self.reserved_symbols)
 
 
         self.number = utils.number_token()
@@ -411,7 +411,7 @@ class VentureScriptParser(object):
             ['labeled_forget','<!forget> <label:sym>'],
             ['report','<!report> <directive_id:int>'],
             ['labeled_report','<!report> <label:sym>'],
-            ['infer','<!infer> <params:json>'],
+            ['infer','<!infer> <expression:exp>'],
             ['clear','<!clear>'],
             ['rollback','<!rollback>'],
             ['list_directives','<!list> <!directives>'],
@@ -420,7 +420,7 @@ class VentureScriptParser(object):
             ['force','<!force> <expression:exp> = <value:lit>'],
             ['sample','<!sample> <expression:exp>'],
             ['continuous_inference_status','[ <!continuous> <!inference> <!status> ]'],
-            ['start_continuous_inference','[ <!start> <!continuous> <!inference> ]'],
+            ['start_continuous_inference','[ <!start> <!continuous> <!inference> <expression:exp> ]'],
             ['stop_continuous_inference','[ <!stop> <!continuous> <!inference> ]'],
             ['get_current_exception', '<!get> <!current> <!exception>'],
             ['get_state', '<!get> <!state>'],
@@ -450,6 +450,16 @@ class VentureScriptParser(object):
         return utils.simplify_instruction_parse_tree(
                 utils.apply_parser(self.instruction, instruction_string)[0])
 
+    def parse_expression(self, expression_string):
+        return utils.simplify_expression_parse_tree(
+            utils.apply_parser(self.expression, expression_string)[0])
+
+    def unparse_expression(self, _expression):
+        return None # TODO What is the syntax to unparse to?
+
+    def parse_number(self, number_string):
+        return utils.apply_parser(self.literal, number_string)[0]
+
     def split_program(self, s):
         locs = utils.split_program_parse_tree(
                 utils.apply_parser(self.program, s)[0])
@@ -471,3 +481,12 @@ class VentureScriptParser(object):
     def expression_index_to_text_index(self, expression_string, expression_index):
         parse_tree = utils.apply_parser(self.expression, expression_string)[0]
         return utils.get_text_index(parse_tree, expression_index)
+
+    @staticmethod
+    def instance():
+        global the_parser
+        if the_parser is None:
+            the_parser = VentureScriptParser()
+        return the_parser
+
+the_parser = None

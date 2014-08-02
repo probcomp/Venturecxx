@@ -27,7 +27,7 @@ class ChurchPrimeParser(object):
                 '>':'gt', '<=':'lte', '>=':'gte', '=':'eq', '!=':'neq'}
         w = m.keys()
 
-        self.symbol = utils.symbol_token(whitelist_symbols = w, symbol_map = m)
+        self.symbol = utils.symbol_literal_token(whitelist_symbols = w, symbol_map = m)
 
         self.literal = utils.literal_token()
 
@@ -87,31 +87,36 @@ class ChurchPrimeParser(object):
             ['labeled_forget','[ <!forget> <label:sym> ]'],
             ['report','[ <!report> <directive_id:int> ]'],
             ['labeled_report','[ <!report> <label:sym> ]'],
-            ['infer','[ <!infer> <params:json> ]'],
+            ['infer','[ <!infer> <expression:exp> ]'],
             ['clear','[ <!clear> ]'],
             ['rollback','[ <!rollback> ]'],
-            ['list_directives','[ <!list> <!directives> ]'],
-            ['get_directive','[ <!get> <!directive> <directive_id:int> ]'],
-            ['labeled_get_directive','[ <!get> <!directive> <label:sym> ]'],
+            ['list_directives','[ <!list_directives> ]'],
+            ['get_directive','[ <!get_directive> <directive_id:int> ]'],
+            ['labeled_get_directive','[ <!get_directive> <label:sym> ]'],
             ['force','[ <!force> <expression:exp> <value:lit> ]'],
             ['sample','[ <!sample> <expression:exp> ]'],
-            ['continuous_inference_status','[ <!continuous> <!inference> <!status> ]'],
-            ['start_continuous_inference','[ <!start> <!continuous> <!inference> <params:json> ]'],
-            ['stop_continuous_inference','[ <!stop> <!continuous> <!inference> ]'],
-            ['get_current_exception', '[ <!get> <!current> <!exception> ]'],
-            ['get_state', '[ <!get> <!state> ]'],
-            ['get_logscore', '[ <!get> <!logscore> <directive_id:int> ]'],
-            ['labeled_get_logscore', '[ <!get> <!logscore> <label:sym> ]'],
-            ['get_global_logscore', '[ <!get> <!global> <!logscore> ]'],
+            ['continuous_inference_status','[ <!continuous_inference_status> ]'],
+            ['start_continuous_inference','[ <!start_continuous_inference> <expression:exp> ]'],
+            ['stop_continuous_inference','[ <!stop_continuous_inference> ]'],
+            ['get_current_exception', '[ <!get_current_exception> ]'],
+            ['get_state', '[ <!get_state> ]'],
+            ['get_logscore', '[ <!get_logscore> <directive_id:int> ]'],
+            ['labeled_get_logscore', '[ <!get_logscore> <label:sym> ]'],
+            ['get_global_logscore', '[ <!get_global_logscore> ]'],
             # Profiler
-            ['profiler_configure','[ <!profiler> <!configure> <options:json> ]'],
-            ['profiler_clear','[ <!profiler> <!configure> ]'],
-            ['profiler_list_random_choices', '[ <!profiler> <!list> <!random> <!choices> ]']
+            ['profiler_configure','[ <!profiler_configure> <options:json> ]'],
+            ['profiler_clear','[ <!profiler_configure> ]'],
+            ['profiler_list_random_choices', '[ <!profiler_list_random> <!choices> ]']
         ]
 
         self.instruction = utils.make_instruction_parser(instruction_list,patterns)
         self.program = utils.make_program_parser(self.instruction)
         self.instruction_strings = utils.make_instruction_strings(instruction_list,antipatterns)
+
+    # NOTE:
+    # the following is copy-pasted to the venture_script_parser
+    # the two code fragments should be manually kept in sync until
+    # the directive syntax is finalized (then code refactor can happen)
 
     def get_instruction_string(self,instruction_type):
         return self.instruction_strings[instruction_type]
@@ -123,6 +128,24 @@ class ChurchPrimeParser(object):
         return utils.simplify_instruction_parse_tree(
                 utils.apply_parser(self.instruction, instruction_string)[0])
 
+    def parse_expression(self, expression_string):
+        return utils.simplify_expression_parse_tree(
+            utils.apply_parser(self.expression, expression_string)[0])
+
+    def unparse_expression(self, expression):
+        if isinstance(expression, dict):
+            # Should be a leaf value
+            return utils.value_to_string(expression)
+        elif isinstance(expression, basestring): # Symbol
+            return expression
+        elif isinstance(expression, list):
+            return '(' + ' '.join([self.unparse_expression(e) for e in expression]) + ')'
+        else:
+            raise Exception("Don't know how to unparse %s" % expression)
+
+    def parse_number(self, number_string):
+        return utils.apply_parser(self.literal, number_string)[0]
+        
     def split_program(self, s):
         locs = utils.split_program_parse_tree(
                 utils.apply_parser(self.program, s)[0])
@@ -144,3 +167,12 @@ class ChurchPrimeParser(object):
     def expression_index_to_text_index(self, expression_string, expression_index):
         parse_tree = utils.apply_parser(self.expression, expression_string)[0]
         return utils.get_text_index(parse_tree, expression_index)
+
+    @staticmethod
+    def instance():
+        global the_parser
+        if the_parser is None:
+            the_parser = ChurchPrimeParser()
+        return the_parser
+
+the_parser = None

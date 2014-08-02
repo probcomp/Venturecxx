@@ -12,7 +12,13 @@ function abort_on_error () {
     fi
 }
 
+if [ -z $1 ]; then
+    backend="puma"
+else
+    backend=$1
+fi
+
 # Actually run the tests
-echo "This may take several minutes"
-nosetests -c crashes.cfg
-abort_on_error "engine self-checking"
+echo "Sanity-checking the $backend backend.  This may take several minutes"
+nosetests -c crashes.cfg --tc=get_ripl:$backend
+abort_on_error "$backend backend self-checking"

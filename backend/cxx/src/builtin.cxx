@@ -37,6 +37,7 @@
 #include "sps/makelazyhmm.h"
 
 #include "sps/vector.h"
+#include "sps/matrix.h"
 #include "sps/list.h"
 #include "sps/map.h"
 
@@ -100,6 +101,10 @@ map<string,SP *> initBuiltInSPs()
     {"simplex", new MakeVectorSP},
     {"array", new MakeVectorSP},
     {"array_lookup", new VectorLookupSP},
+
+    // matrices
+    {"matrix", new MakeMatrixSP}, 
+    {"matrix_lookup", new MatrixLookupSP},
 
     // maps
     {"dict", new MakeMapSP},

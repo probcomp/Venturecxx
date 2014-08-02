@@ -2,6 +2,7 @@
 #define GKERNEL_H
 
 #include "types.h"
+#include "node.h"
 
 struct Scaffold;
 struct ConcreteTrace;
@@ -14,8 +15,14 @@ struct GKernel
 
   virtual void accept() =0;
   virtual void reject() =0;
-  
+
+  virtual ~GKernel() {}
 };
 
+
+void registerDeterministicLKernels(Trace * trace,
+  shared_ptr<Scaffold> scaffold,
+  const vector<ApplicationNode*>& applicationNodes,
+  const vector<VentureValuePtr>& values);
 
 #endif

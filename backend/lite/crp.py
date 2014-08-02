@@ -1,5 +1,5 @@
 from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
-from sp import VentureSP, SPType
+from sp import SP, VentureSPRecord, SPType
 import math
 import scipy.special
 import scipy.stats
@@ -21,7 +21,7 @@ class CRPSPAux(object):
     crp.numCustomers = self.numCustomers
     return crp
 
-class CRPSP(VentureSP):
+class CRPSP(SP):
   def constructSPAux(self): return CRPSPAux()
   def show(self,spaux): return spaux.tableCounts
     
@@ -31,7 +31,7 @@ class MakeCRPOutputPSP(DeterministicPSP):
     d = args.operandValues[1] if len(args.operandValues) == 2 else 0
 
     output = TypedPSP(CRPOutputPSP(alpha,d), SPType([], AtomType()))
-    return CRPSP(NullRequestPSP(),output)
+    return VentureSPRecord(CRPSP(NullRequestPSP(),output))
 
   def childrenCanAAA(self): return True
 
@@ -57,6 +57,11 @@ class CRPOutputPSP(RandomPSP):
     else:
       return math.log(self.alpha + (aux.numTables * self.d)) - math.log(self.alpha + aux.numCustomers)
 
+  # def gradientOfLogDensity(self, value, args):
+  #   aux = args.spaux
+  #   if index in aux.tableCounts:
+      
+
   def incorporate(self,index,args):
     aux = args.spaux
     aux.numCustomers += 1
@@ -65,7 +70,7 @@ class CRPOutputPSP(RandomPSP):
     else:
       aux.tableCounts[index] = 1
       aux.numTables += 1
-      aux.nextIndex += 1
+      aux.nextIndex = max(aux.nextIndex, index + 1)
 
   def unincorporate(self,index,args):
     aux = args.spaux
@@ -80,3 +85,9 @@ class CRPOutputPSP(RandomPSP):
     term2 = aux.numTables + math.log(self.alpha + (aux.numTables * self.d))
     term3 = sum([scipy.special.gammaln(aux.tableCounts[index] - self.d) for index in aux.tableCounts])
     return term1 + term2 + term3
+
+  def enumerateValues(self,args):
+    aux = args.spaux
+    old_indices = [i for i in aux.tableCounts]
+    indices = old_indices + [aux.nextIndex]
+    return indices

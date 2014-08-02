@@ -18,6 +18,7 @@
 
 from venture.exception import VentureException
 from venture.sivm import utils
+import venture.value.dicts as val
 import copy
 
 class CoreSivm(object):
@@ -33,7 +34,7 @@ class CoreSivm(object):
         self.profiler_enabled = False
     
     _implemented_instructions = {"assume","observe","predict",
-            "configure","forget","report","infer",
+            "configure","forget","freeze","report","infer",
             "clear","rollback","get_logscore","get_global_logscore",
             "start_continuous_inference","stop_continuous_inference",
             "continuous_inference_status", "profiler_configure"}
@@ -42,6 +43,21 @@ class CoreSivm(object):
         utils.validate_instruction(instruction,self._implemented_instructions)
         f = getattr(self,'_do_'+instruction['instruction'])
         return f(instruction)
+
+    ###############################
+    # Serialization
+    ###############################
+
+    def save(self, fname, extra=None):
+        if extra is None:
+            extra = {}
+        extra['observe_dict'] = self.observe_dict
+        return self.engine.save(fname, extra)
+
+    def load(self, fname):
+        extra = self.engine.load(fname)
+        self.observe_dict = extra['observe_dict']
+        return extra
 
     ###############################
     # Instruction implementations
@@ -55,7 +71,7 @@ class CoreSivm(object):
         sym = utils.validate_arg(instruction,'symbol',
                 utils.validate_symbol)
         did, val = self.engine.assume(sym,exp)
-        return {"directive_id":did, "value":_parse_value(val)}
+        return {"directive_id":did, "value":val}
 
     def _do_observe(self,instruction):
         utils.require_state(self.state,'default')
@@ -72,7 +88,7 @@ class CoreSivm(object):
         exp = utils.validate_arg(instruction,'expression',
                 utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
         did, val = self.engine.predict(exp)
-        return {"directive_id":did, "value":_parse_value(val)}
+        return {"directive_id":did, "value":val}
 
     def _do_configure(self,instruction):
         utils.require_state(self.state,'default')
@@ -103,6 +119,13 @@ class CoreSivm(object):
             raise
         return {}
 
+    def _do_freeze(self,instruction):
+        utils.require_state(self.state,'default')
+        did = utils.validate_arg(instruction,'directive_id',
+                utils.validate_nonnegative_integer)
+        self.engine.freeze(did)
+        return {}
+
     def _do_report(self,instruction):
         utils.require_state(self.state,'default')
         did = utils.validate_arg(instruction,'directive_id',
@@ -111,16 +134,14 @@ class CoreSivm(object):
             return {"value":copy.deepcopy(self.observe_dict[did]['value'])}
         else:
             val = self.engine.report_value(did)
-            return {"value":_parse_value(val)}
+            return {"value":val}
 
     def _do_infer(self,instruction):
         utils.require_state(self.state,'default')
-
-        d = utils.validate_arg(instruction,'params',
-                utils.validate_dict)
-        # TODO FIXME figure out how to validate the arguments
-        val = self.engine.infer(d)
-        return {}
+        e = utils.validate_arg(instruction,'expression',
+                utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
+        val = self.engine.infer(e)
+        return {"value":val}
 
     def _do_clear(self,_):
         utils.require_state(self.state,'default')
@@ -135,21 +156,10 @@ class CoreSivm(object):
         return {}
 
     def _do_get_logscore(self,instruction):
-        #TODO: this implementation is a phony
-        # it has the same args + state requirements as report,
-        # so that code was copy/pasted here just to verify
-        # that the directive exists for testing purposes
         utils.require_state(self.state,'default')
         did = utils.validate_arg(instruction,'directive_id',
                 utils.validate_nonnegative_integer)
-        if did not in self.observe_dict:
-            try:
-                val = self.engine.report_value(did)
-            except Exception as e:
-                if e.message == 'Attempt to report value for non-existent directive.':
-                    raise VentureException('invalid_argument',e.message,argument='directive_id')
-                raise
-        return {"logscore":0}
+        return {"logscore":self.engine.get_logscore(did)}
 
     def _do_get_global_logscore(self,_):
         utils.require_state(self.state,'default')
@@ -166,13 +176,13 @@ class CoreSivm(object):
 
     def _do_start_continuous_inference(self,instruction):
         utils.require_state(self.state,'default')
-        params = utils.validate_arg(instruction, 'params', utils.validate_dict)
-        # TODO: validate parameters?
-        self.engine.start_continuous_inference(params)
+        e = utils.validate_arg(instruction, 'expression',
+                utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
+        self.engine.start_continuous_inference(e)
         
     def _do_stop_continuous_inference(self,_):
         utils.require_state(self.state,'default')
-        self.engine.trace.stop_continuous_inference()
+        self.engine.stop_continuous_inference()
     
     ##############################
     # Profiler (stubs)
@@ -200,24 +210,25 @@ def _modify_expression(expression):
         return map(_modify_expression, expression)
     if isinstance(expression, dict):
         return _modify_value(expression)
+    return expression
 
 def _modify_value(ob):
     if ob['type'] in {'count', 'real'}:
-        ob['type'] = 'number'
+        ans = copy.copy(ob)
+        ans['type'] = 'number'
+        return ans
     elif ob['type'] == 'atom':
-        ob['value'] = int(ob['value'])
+        ans = copy.copy(ob)
+        ans['value'] = int(ob['value'])
+        return ans
+    elif ob['type'] == 'symbol':
+        # Unicode hack for the same reason as in _modify_symbol
+        ans = copy.copy(ob)
+        ans['value'] = str(ob['value'])
+        return ans
     return ob
 
-_symbol_map = { 
-    "add" : 'plus', 
-    "sub" : 'minus', 
-    "mul" : 'times',
-    "symmetric_dirichlet_multinomial_make" : "make_sym_dir_mult",
-    "condition_erp" : "biplex", 
-    "crp_make" : "make_crp",
-    "dirichlet_multinomial_make" : "make_dir_mult",
-    "beta_bernoulli_make" : "make_beta_bernoulli",
-}
+_symbol_map = {}
 
 for s in ["lt", "gt", "lte", "gte"]:
     _symbol_map["int_" + s] = s
@@ -227,7 +238,5 @@ def _modify_symbol(s):
         s = _symbol_map[s]
     # NOTE: need to str() b/c unicode might come via REST,
     #       which the boost python wrappings can't convert
-    return {"type": "symbol", "value": str(s)}
+    return val.symbol(str(s))
 
-def _parse_value(val):
-    return val

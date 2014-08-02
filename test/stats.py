@@ -1,3 +1,39 @@
+"""Support for statistical testing of Venture.
+
+The general problem with testing random things is that they are
+supposed to be random, so one never quite knows whether one got the
+right behavior.
+
+One can address this problem with statistical hypothesis testing: given
+- a particular experimental setup (i.e., test case), and
+- a particular measure of weirdness on observed results (i.e., test statistic),
+- and the assumption that (the relevant portion of) Venture is correct,
+one can compute a p-value for the observed results, and report a test
+failure if that p-value is small enough to be noteworthy.
+
+This module supplies facilities for testing in that style.  Of note:
+- statisticalTest is an annotation that tags a test as being
+  statistical in this way, and arranges for duly suspicious execution
+- Every test annotated by as a statisticalTest must return a
+  TestResult object, which represents the p-value.
+- The reportKnownFoo functions encapsulate standard statistical
+  tests and return TestResult objects.
+- This module respects the ignore_inference_quality configuration
+  (which is on for the crash test suite and off for the inference
+  quality test suite).
+
+For example, here is one way to test a coin flipping device:
+
+  from venture.test.stats import statisticalTest, reportKnownDiscrete
+
+  @statisticalTest
+  def test_flip_coins():
+    observed = ... # Flip a bunch of coins and count the heads and tails
+    expected = [("heads", 0.5), ("tails", 0.5)]
+    return reportKnownDiscrete(expected, observed)
+
+"""
+
 import math
 import scipy.stats as stats
 import numpy as np
@@ -26,6 +62,7 @@ def tabulatelst(fmt, lst, width=10, prefix=""):
   return prefix + "[" + bulk + "]"
 
 class TestResult(object):
+  """A container for a p-value and a report to print to the user if the test is deemed to have failed."""
   def __init__(self, pval, report):
     self.pval = pval
     self.report = report
@@ -42,6 +79,7 @@ def fisherMethod(pvals):
 def repeatTest(func, *args):
   globalReportingThreshold = float(config["global_reporting_threshold"])
   result = func(*args)
+  assert isinstance(result, TestResult)
   if ignore_inference_quality():
     return result
   if result.pval > 0.05:
@@ -68,16 +106,33 @@ def reportTest(result):
     assert result.pval > globalReportingThreshold, result
 
 def statisticalTest(f):
+  """Annotate a test function as being statistical.
+
+  The function must return a TestResult (for example, using one of the
+  reportKnownFoo functions), and must not object to being executed
+  repeatedly.
+
+  """
   @nose.make_decorator(f)
   def wrapped(*args):
     reportTest(repeatTest(f, *args))
   return wrapped
 
 
-# Chi^2 test for agreement with the given discrete distribution.
 # TODO Broken (too stringent?) for small sample sizes; warn?
-# reportKnownDiscrete :: (Eq a) => String -> [(a,Double)] -> [a] -> IO ()
 def reportKnownDiscrete(expectedRates, observed):
+  """Chi^2 test for agreement with the given discrete distribution.
+  reportKnownDiscrete :: (Eq a) => [(a,Double)] -> [a] -> TestResult
+
+  The input format for the expected distribution is a list of
+  item-rate pairs.  The probability of items that do not appear on the
+  list is taken to be zero.  If a rate is given as None, that item is
+  assumed possible but with unknown frequency.
+
+  Try to have enough samples that every item is expected to appear at
+  least five times for the Chi^2 statistic to be reasonable.
+
+  """
   items = [pair[0] for pair in expectedRates]
   itemsDict = {pair[0]:pair[1] for pair in expectedRates}
   for o in observed:
@@ -114,6 +169,12 @@ def chi2_contingency(cts1, cts2):
     return stats.chisquare(cts1 + cts2, f_exp = np.array(expected1 + expected2), ddof = len(cts1 + cts2) - 1 - dof)
 
 def reportSameDiscrete(observed1, observed2):
+  """Chi^2 test for sameness of two empirical discrete distributions.
+
+  Try to have enough samples that every item is expected to appear at
+  least five times for the Chi^2 statistic to be reasonable.
+
+  """
   items = sorted(set(observed1 + observed2))
   counts1 = [observed1.count(x) for x in items]
   counts2 = [observed2.count(x) for x in items]
@@ -139,8 +200,10 @@ def explainOneDSample(observed):
     ans += tabulatelst("%.2f", percentiles, width=10, prefix="  ")
   return ans
 
-# Kolmogorov-Smirnov test for agreement with known 1-D CDF.
 def reportKnownContinuous(expectedCDF, observed, descr=None):
+  """Kolmogorov-Smirnov test for agreement with known 1-D cumulative density function.
+
+  The CDF argument should be a Python callable that computes the cumulative density. """
   (K, pval) = stats.kstest(observed, expectedCDF)
   return TestResult(pval, "\n".join([
     "Expected: %4d samples from %s" % (len(observed), descr),
@@ -149,6 +212,7 @@ def reportKnownContinuous(expectedCDF, observed, descr=None):
     "P value : " + str(pval)]))
 
 def reportSameContinuous(observed1, observed2):
+  """Kolmogorov-Smirnov test for sameness of two empirical 1-D continuous distributions."""
   (D, pval) = stats.ks_2samp(observed1, observed2)
   return TestResult(pval, "\n".join([
     "Expected samples from the same distribution",
@@ -157,9 +221,6 @@ def reportSameContinuous(observed1, observed2):
     "D stat  : " + str(D),
     "P value : " + str(pval)]))
 
-# Z-score test for known mean, given known variance.
-# Doesn't work for distributions that are fat-tailed enough not to
-# have a mean.
 # TODO Also sensibly compare the variance of the sample to the
 # expected variance (what's the right test statistic when the
 # "population distribution" is not known?  How many samples do I need
@@ -168,6 +229,15 @@ def reportSameContinuous(observed1, observed2):
 # for a more precise computation of test validity?  How about
 # comparing sample skewness to expected skewness?
 def reportKnownMeanVariance(expMean, expVar, observed):
+  """Z-score test for data having a known mean and variance.
+
+  Doesn't work for distributions that are fat-tailed enough not to
+  have a mean.
+
+  The K-S test done by reportKnownContinuous is much tighter, so try
+  to use that if possible.
+
+  """
   count = len(observed)
   mean = np.mean(observed)
   zscore = (mean - expMean) * math.sqrt(count) / math.sqrt(expVar)
@@ -178,11 +248,19 @@ def reportKnownMeanVariance(expMean, expVar, observed):
     "Z score : " + str(zscore),
     "P value : " + str(pval)]))
 
-# T-test for known mean, without knowing the variance.
-# Doesn't work for distributions that are fat-tailed enough not to
-# have a mean.
-# TODO This is only valid if there are enough observations; 30 are recommended.
+# TODO Warn if not enough observations?
 def reportKnownMean(expMean, observed):
+  """T-test for known mean, without knowing the variance.
+
+  Doesn't work for distributions that are fat-tailed enough not to
+  have a mean.
+
+  The T-statistic is only valid if there are enough observations; 30
+  are recommended.
+
+  The K-S test done by reportKnownContinuous is much tighter, so try
+  to use that if possible.
+  """
   count = len(observed)
   (tstat, pval) = stats.ttest_1samp(observed, expMean)
   return TestResult(pval, "\n".join([
@@ -191,6 +269,8 @@ def reportKnownMean(expMean, observed):
     "T stat  : " + str(tstat),
     "P value : " + str(pval)]))
 
-# For a deterministic test that is nonetheless labeled statistical
 def reportPassage():
+  """Pass a deterministic test that is nevertheless labeled statistical.
+
+  Just returns a TestResult with p-value 1."""
   return TestResult(1.0, "")

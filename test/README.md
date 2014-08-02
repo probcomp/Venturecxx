@@ -1,5 +1,8 @@
-Organization of the Venture test suite
-======================================
+The Venture test suite
+======================
+
+Organization
+------------
 
 The test suite lives in the `test/` directory.
 
@@ -30,3 +33,90 @@ The test suite lives in the `test/` directory.
 
 - `unit/` is unit tests of separable pieces (there are quite few of
   these right now).
+
+Configurations
+--------------
+
+Many of Venture's test cases naturally apply to both backends, and/or
+to a variety of generic inference strategies.  Therefore, the test
+runner is configurable, to select which backend to test and which
+inference program to use.
+
+When writing tests, we recommend interacting with Venture through the
+`venture.test.config` module (in `test/config.py`) to be as generic as
+is appropriate for the test.  In particular:
+
+- if a new test is not generic across backends, please decorate it
+  with `@venture.test.config.in_backend` (or `@gen_in_backend` for
+  generators), whose docstrings see.
+
+- if a new test is not generic across inference programs, please
+  decorate it with `@venture.test.config.on_inf_prim` (or
+  `@gen_on_inf_prim` for generators), whose docstrings see.
+
+Statistical Tests
+-----------------
+
+Often, a given test situation is expected to produce some distribution
+on answers, and should be judged incorrect if it does not.  The
+`venture.test.stats` module (in `test/stats.py`) provides some helper
+procedures for testing more effectively in these circumstances.
+
+The general pattern: annotate such a test `@statisticalTest`, and have
+it `return reportKnownSomething(...)` as appropriate from the helpers
+in the `stats` module.
+
+Randomized Tests
+----------------
+
+Not to be confused with statistical tests.
+
+The idea of randomized testing is that instead of spelling out
+particular examples that should behave in some predicted way, one
+spells out properties that should hold true of all inputs, and the
+testing framework generates random examples on which to try them.  If
+the property fails on even one example, the test fails (this is why
+these are different from statistical tests).
+
+Venture has a modest custom randomized testing framework, that only
+supports testing properties that are supposed to be true of all
+VentureValues (possibly restricted to some type).  The framework
+itself is in `test/randomized.py`, with a generator for random
+VentureValues in `test/random_values.py`.  The extant tests using the
+framework currently live in `test/conformance/sps/test_properties.py`,
+and check things like "This SP accepts VentureValues of the types it
+is annotated with and returns VentureValues of the types it is
+annotated with", or "This type-annotated SP is as deterministic as it
+claims to be".
+
+Jenkins Continuous Build
+------------------------
+
+The continuous build server lives at http://ec2-54-84-30-252.compute-1.amazonaws.com:8080/
+
+The build structure is as follows:
+
+- `venture-crashes` is intended to exercise all the code reasonably
+  quickly to check for crashes.  It runs the `all-crashes` script.
+
+- `venture-inference-quality` and the nine other builds named
+  `<backend>-<method>-inference-quality` are intended to make sure
+  that various probabilistic programs actually sample from the
+  distributions we expect, in each backend and exercising each
+  inference strategy we have built in.
+
+    - `venture-inference-quality` should really be named
+      `lite-mh-inference-quality`.
+
+    - `puma-{meanfield,rejection}-inference-quality` are disabled
+      because Puma does not implement those two methods (yet).
+
+    - `<backend>-misc-inference-quality` test methods we do not have
+      many tests for, as well as combinations of methods.
+
+- `venture-performance` and `puma-performance` confirm a handful of
+  asymptotic performance properties on a few examples.
+
+The test selection is done via nose attributes installed by the
+`@in_backend` and `@on_inf_prim` decorators.  If you want to grok
+how the selection actually happens, read `base.cfg`.

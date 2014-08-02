@@ -11,7 +11,9 @@ class Scaffold(object):
     self.lkernels = lkernels if lkernels else {} # {Node:LKernel}
     self.brush = brush if brush else set() # Set Node
 
-  def getPrincipalNodes(self): return set.union(*self.setsOfPNodes)
+  def getPrincipalNodes(self):
+    # Return a list so that repeated traversals have the same order
+    return [n for n in set.union(*self.setsOfPNodes)]
   def getRegenCount(self,node): return self.regenCounts[node]
   def incrementRegenCount(self,node): self.regenCounts[node] += 1
   def decrementRegenCount(self,node): self.regenCounts[node] -= 1
@@ -20,6 +22,12 @@ class Scaffold(object):
   def isAAA(self,node): return node in self.aaa
   def hasLKernel(self,node): return node in self.lkernels
   def getLKernel(self,node): return self.lkernels[node]
+  def getPNode(self):
+    assert len(self.setsOfPNodes) == 1
+    pnodes = []
+    for pnode in self.setsOfPNodes[0]: pnodes.append(pnode)
+    assert len(pnodes) == 1
+    return pnodes[0]
   def isBrush(self, node): return node in self.brush
 
   def show(self):
@@ -79,11 +87,13 @@ def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i):
 
   while q:
     node,isPrincipal,parentNode = q.pop()
-    if node in drg and not node in aaa: pass
+    if node in drg and not node in aaa:
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
     elif isinstance(node,LookupNode) or node.operatorNode in drg:
       addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
     # TODO temporary: once we put all uncollapsed AAA procs into AEKernels, this line won't be necessary
-    elif node in aaa: pass 
+    elif node in aaa:
+      addAAANode(drg,aaa,absorbing,node,indexAssignments,i)      
     elif (not isPrincipal) and trace.pspAt(node).canAbsorb(trace,node,parentNode):
       addAbsorbingNode(drg,absorbing,aaa,node,indexAssignments,i)
     elif trace.pspAt(node).childrenCanAAA(): 

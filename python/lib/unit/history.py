@@ -3,8 +3,14 @@ import cPickle as pickle
 import os
 import copy
 import numpy as np
+import random
 
 from utils import cartesianProduct, makeIterable
+
+
+def plot(type):
+    return type in {'boolean', 'real', 'number', 'atom', 'count'}
+
 
 class History(object):
     """Aggregates data collected from a typical Venture experiment.
@@ -27,23 +33,127 @@ typically also tracked."""
         self.label = label # :: string
         self.parameters = parameters # :: {string: a}  the model parameters leading to the data stored here
         self.nameToSeries = {} # :: {string: [Series]} the list is over multiple runs
+        self.data = [] 
 
-    def addSeries(self, name, label, values, hist=True):
-        self._addSeries(name, Series(label, values, hist))
+        self.nameToType = {}
 
-    def _addSeries(self, name, series):
+    @staticmethod
+    def fromRuns(runs):
+        if len(runs) == 0:
+            return History()
+        else:
+            answer = History(runs[0].label, runs[0].parameters)
+            for r in runs: answer.addRun(r)
+            return answer
+        
+    def addSeries(self, name, type, label, values, hist=True):
+        self._addSeries(name, type, Series(label, values, hist))
+
+    def _addSeries(self, name, type, series):
         if name not in self.nameToSeries:
             self.nameToSeries[name] = []
+            self.nameToType[name] = type
         self.nameToSeries[name].append(series)
 
     def addRun(self, run):
-        assert run.parameters == self.parameters # Require compatible metadata
+        #assert run.parameters == self.parameters
+        ## don't want different seeds to preventing adding runs
         for (name, series) in run.namedSeries.iteritems():
-            self._addSeries(name, series)
+            self._addSeries(name, run.nameToType[name], series)
 
-    # Returns the average over all series with the given name.
+    def addData(self, data):
+        'Extend list of data. Input: data::[(exp,value)]'
+        self.data.extend(data)
+
+    def addDataset(self,dataset):
+        'Input: dataset :: [(exp,value)]'
+        self.data.append(dataset)
+
+    def addGroundTruth(self,groundTruth,totalSamples):
+        '''Add Series to self.nameToValues for true parameter values.
+           Series will be displayed on plots.
+           Inputs: groundTruth :: {symbol/expression:value}
+                   totalSamples :: int
+                      Length of Series in self.nameToValues.'''
+        self.groundTruth = groundTruth
+
+        for exp,value in self.groundTruth.iteritems():
+            type = value['type']
+            value = value['value'] # FIXME do with parseValue
+            values=[value]*totalSamples # pad out with totalSamples for plotting
+            self.addSeries(exp,type,'gTruth',values)
+
+        ## FIXME GroundTruth Series must be removed from snapshots
+        
+    def sampleRuns(self,numSamples):
+        '''Returns new History with pointers to *numSamples* randomly
+        sampled Runs from self'''
+        newHistory=History(label= self.label+'_sampled', parameters=self.parameters)
+    
+        noRuns = len(self.nameToSeries.items()[0][1])
+        indices = random.sample(xrange(noRuns),numSamples)
+
+        for name,listSeries in self.nameToSeries.iteritems():
+            type = self.nameToType[name]
+            subList = [listSeries[i] for i in indices]
+            for s in subList:
+                newHistory.addSeries(name, type, s.label, s.values, hist=s.hist)
+
+        ## FIXME: addData and addGroundTruth (generally COPY HISTORY)
+        return newHistory
+
+
     def averageValue(self, seriesName):
-        return np.mean([np.mean(series.values) for series in self.nameToSeries[seriesName]])
+        'Returns the average over all series with the given name.'
+        flatSeries = []
+        for series in self.nameToSeries[seriesName]:
+            if 'gtruth' not in series.label.lower():
+                flatSeries.extend(series.values)
+        return np.mean(flatSeries)
+
+    def historyToSnapshots(self):
+        '''
+        Snapshot of values across series for each time-step.
+        Created by copying scalar values from nameToSeries.
+        Output = {name:[ snapshot_i ] }, where snapshot_i
+        is [series.value[i] for series in nameToSeries[name]]''' 
+        snapshots={}
+        # always ignore sweep time for snapshots
+        ignore=('sweep time','sweep_iters')
+        for name,listSeries in self.nameToSeries.iteritems():
+            if any([s in name.lower() for s in ignore]):
+                continue
+            arrayValues = np.array( [s.values for s in listSeries] )
+            snapshots[name] = map(list,arrayValues.T) 
+        return snapshots
+
+
+    def compareSnapshots(self, names=None, probes=None):
+        '''
+        Compare samples across runs at two different probe points
+        in History. Defaults to comparing all names and probes =
+        (midPoint,lastPoint).'''
+    
+        allSnapshots = self.historyToSnapshots()
+        samples = len(allSnapshots.items()[0][1])
+
+        # restrict to probes
+        probes = (int(.5*samples),-1) if probes is None else probes
+        assert len(probes)==2
+
+        # restrict to names
+        if names is not None:
+            filterSnapshots = filterDict(allSnapshots,keep=names)
+        else:
+            filterSnapshots = allSnapshots
+
+        snapshotDicts=({},{})
+        for name,snapshots in filterSnapshots.iteritems():
+            for snapshotDict,probe in zip(snapshotDicts,probes):
+                snapshotDict[name]=snapshots[probe]
+
+        labels =[self.label+'_'+'snap_%i'%i for i in probes]
+        return compareSampleDicts(snapshotDicts,labels,plot=True)
 
     # default directory for plots, created from parameters
     def defaultDirectory(self):
@@ -55,6 +165,10 @@ typically also tracked."""
     # directory specifies location of plots
     # default format is pdf
     def plot(self, fmt='pdf', directory=None):
+        '''plot(fmt='pdf', directory=None)
+
+           Save time-series and histogram for each name in self.nameToSeries.
+           Default directory is given by self.defaultDirectory().'''
         self.save(directory)
         if directory == None:
             directory = self.defaultDirectory()
@@ -62,8 +176,9 @@ typically also tracked."""
         ensure_directory(directory)
 
         for name in self.nameToSeries:
-            self.plotOneSeries(name, fmt=fmt, directory=directory)
-            self.plotOneHistogram(name, fmt=fmt, directory=directory)
+            if plot(self.nameToType[name]):
+                self.plotOneSeries(name, fmt=fmt, directory=directory)
+                self.plotOneHistogram(name, fmt=fmt, directory=directory)
 
         # TODO There is a better way to expose computed series like
         # this: make the nameToSeries lookup be a method that does
@@ -85,12 +200,29 @@ typically also tracked."""
         self._plotOne(plotSeries, name, **kwargs)
 
     def quickPlot(self, name, **kwargs):
+        '''quickPlot( name, **kwargs)
+
+           Show time-series plot of series in self.nameToSeries[name]
+           with default labeling and formatting.
+    
+           Arguments
+           ---------
+           name :: string
+             String in nameToSeries.keys() and either model.assumes
+             or model.queryExps.
+           ylabel :: string
+           limitLegend :: int
+             Limit how many series are listed on the legend. (To limit
+             how many series are plotted, use self.sampleRuns).
+        
+           '''
         self._plotOne(plotSeries, name, save=False, show=True, **kwargs)
 
     def _plotOne(self, f, name, directory=None, **kwargs):
         if directory == None:
             directory = self.defaultDirectory()
-        ensure_directory(directory)
+        # ENS remove
+        #ensure_directory(directory)
         if name in self.nameToSeries:
             f(name, self.nameToSeries[name], subtitle=self.label,
               parameters=self.parameters, directory=directory, **kwargs)
@@ -134,15 +266,188 @@ def ensure_directory(directory):
 def loadHistory(filename):
     return pickle.load(open(filename))
 
-# :: string -> [(string,History)] -> History containing all those time series overlaid
+
+### Analysis Functions for History
+from venture.test.stats import reportSameContinuous
+import scipy.stats
+
+def flattenRuns(history):
+    '''Copy values from each series into one (flat) series and
+       create new History'''
+    newHistory = History(history.label,history.parameters)
+    for name,listSeries in history.nameToSeries.iteritems():
+        label = 'flattened_'+listSeries[0].label+'...'
+        hist = listSeries[0].hist
+        type = history.nameToType[name]
+        flatValues = [el for series in listSeries for el in series.values]
+        newHistory.addSeries(name,type,label,flatValues,hist=hist)
+    return newHistory
+
+
+def plotSnapshot(history,name,probe=-1):
+    allSnapshots = history.historyToSnapshots()
+    snap = allSnapshots[name][probe]
+    title = 'Histogram: '+ name+'_snapshot_%i'%probe
+    fig,ax = plt.subplots(figsize = (4,3))
+    ax.hist(snap,bins=20,alpha=0.8,color='c')
+    ax.set_xlabel(name)
+    ax.set_ylabel('frequency')
+    ax.set_title(title)
+    return snap,fig
+
+
+def qqPlotAll(dicts,labels):
+    # FIXME do interpolation where samples have different lengths
+    exps = intersectKeys(dicts)
+    fig,ax = plt.subplots( len(exps),2,figsize=(12,4*len(exps)) )
+    
+    for i,exp in enumerate(exps):
+        s1,s2 = (dicts[0][exp],dicts[1][exp])
+        assert len(s1)==len(s2)
+
+        def makeHists(ax):
+            ax.hist(s1,bins=20,alpha=0.8,color='b',label=labels[0])
+            ax.hist(s2,bins=20,alpha=0.6,color='y',label=labels[1])
+            ax.legend()
+            ax.set_title('Histogram: %s'%exp)
+
+        def makeQQ(ax):
+            ax.scatter(sorted(s1),sorted(s2),s=4,lw=0)
+            ax.set_xlabel(labels[0])
+            ax.set_ylabel(labels[1])
+            ax.set_title('QQ Plot %s'%exp)
+            xr = np.linspace(min(s1),max(s1),30)
+            ax.plot(xr,xr)
+            
+        if len(exps)==1:
+            makeHists(ax[0])
+            makeQQ(ax[1])
+        else:
+            makeHists(ax[i,0])
+            makeQQ(ax[i,1])
+
+    fig.tight_layout()
+    return fig
+
+
+def filterScalar(dct):
+    'Remove non-scalars from {exp:values}'
+    scalar=lambda x:isinstance(x,(float,int))
+    scalarDct={}
+    for exp,values in dct.items():
+        if all(map(scalar,values)):
+            scalarDct[exp]=values
+    return scalarDct
+
+
+def filterDict(d,keep=(),ignore=()):
+    '''Shallow copy of dictionary d filtered on keys.
+       If *keep* nonempty copy its members. Else: copy items not in *ignore*'''
+    assert isinstance(keep,(tuple,list))
+    if keep:
+        return dict([(k,v) for k,v in d.items() if k in keep])
+    else:
+        return dict([(k,v) for k,v in d.items() if k not in ignore])
+
+
+def intersectKeys(dicts):
+    return tuple(set(dicts[0].keys()).intersection(set(dicts[1].keys())))
+
+
+class CompareSamplesReport(object):
+    def __init__(self,labels,reportString=None,statsDict=None,compareFig=None):
+        self.labels = labels
+        if reportString:
+            self.reportString = reportString
+        if statsDict:
+            self.statsDict = statsDict
+        if compareFig:
+            self.compareFig = compareFig
+    
+
+def compareSampleDicts(dicts_hists,labels,plot=False):
+    '''Input: dicts_hists :: ({exp:values}) | (History)
+     where the first Series in History is used as values. History objects
+     are converted to dicts. Flatten History to include all Series.''' 
+    if not isinstance(dicts_hists[0],dict):
+        dicts = [historyNameToValues(h,seriesInd=0) for h in dicts_hists]
+    else:
+        dicts = dicts_hists
+        
+    dicts = map(filterScalar,dicts) # could skip for Analytics
+    
+    stats = (np.mean,scipy.stats.sem,np.median,len)
+    statsString = ' '.join(['mean','std_err','median','N'])
+    statsDict = {}
+    report = ['compareSampleDicts: %s vs. %s \n'%(labels[0],labels[1])]
+    
+    for exp in intersectKeys(dicts):
+        report.append( '\n---------\n Name:  %s \n'%exp )
+        statsDict[exp] = {}
+        
+        for dict_i,label_i in zip(dicts,labels):
+            samples=dict_i[exp]
+            s_stats = tuple([s(samples) for s in stats])
+            statsDict[exp]['stats: '+statsString]=s_stats
+            labelStr='%s : %s ='%(label_i,statsString)
+            report.append( labelStr+'  %.3f  %.3f  %.3f  %i\n'%s_stats )
+
+        testResult=reportSameContinuous(dicts[0][exp],dicts[1][exp])
+        ksOut='KS Test:   '+ '  '.join(testResult.report.split('\n')[-2:])
+        report.append( ksOut )
+        statsDict[exp]['KSSameContinuous']=testResult
+        
+    repSt = ' '.join(report)
+    compareFig = qqPlotAll(dicts,labels) if plot else None
+    return CompareSamplesReport(labels,repSt,statsDict,compareFig)
+
+
+def historyNameToValues(history,seriesInd=0,flatten=False):
+    ''':: History -> {name:values}. Default is to take first series.
+    If flatten then we combine all.'''
+    nameToValues={}
+    for name,listSeries in history.nameToSeries.items():
+        if flatten:
+            values = [el for series in listSeries for el in series.values]
+        else:
+            values = listSeries[seriesInd].values
+        nameToValues[name]=values
+    return nameToValues
+
+# 
 # TODO Parameters have to agree for now
+# FIXME does nameToType work with histOverlay?
+# TODO have a sensible default naming (for convenience)
 def historyOverlay(name, named_hists):
+    ''':: string -> [(string,History)] -> History containing all those
+    time series overlaid'''  
     answer = History(label=name, parameters=named_hists[0][1].parameters)
     for (subname,subhist) in named_hists:
         for (seriesname,seriesSet) in subhist.nameToSeries.iteritems():
+            seriesType = subhist.nameToType[seriesname]
             for subseries in seriesSet:
-                answer.addSeries(seriesname, subname + "_" + subseries.label, subseries.values, subseries.hist)
+                answer.addSeries( seriesname, seriesType,
+                                  subname+"_"+subseries.label,
+                                  subseries.values, hist=subseries.hist)
+        
+    for (subname,subhist) in named_hists:
+        answer.addDataset(subhist.data)
     return answer
+
+
+def historyStitch(hists,nansAtStitches=False):
+    '''Mutate hists[0] by appending values (in order) from rest of hists'''
+    h0 = hists[0]
+    h0.label + '--1st of %i stitched hists'%len(hists)
+    for h in hists[1:]:
+        for name,_ in h.nameToSeries.iteritems():
+            h_values = h.nameToSeries[name][0].values
+            h0.nameToSeries[name][0].values.extend( h_values )
+            if nansAtStitches:
+                h0.nameToSeries[name][0].values.extend( [NaN]*20 )
+
+    return h0
+
 
 class Run(object):
     """Data from a single run of a model.  A History is effectively a set
@@ -156,8 +461,11 @@ differently)."""
         self.namedSeries = {}
         for (name, series) in data.iteritems():
             self.namedSeries[name] = series
+        self.nameToType = {}
 
-    def addSeries(self, name, series):
+    #TODO Store the type somewhere
+    def addSeries(self, name, type, series):
+        self.nameToType[name] = type
         self.namedSeries[name] = series
 
 # aggregates values for one variable over the course of a run
@@ -189,7 +497,8 @@ def showParameters(parameters):
 
     text = items[0][0] + ' = ' + str(items[0][1])
     for (name, value) in items[1:]:
-        text += '\n' + name + ' = ' + str(value)
+        # TODO: something more principled to truncate overly long parameter values            
+        text += '\n' + name + ' = ' + str(value)[:20]
 
     plt.text(0, 1, text, transform=plt.axes().transAxes, va='top', size='small', linespacing=1.0)
 
@@ -213,9 +522,13 @@ def plotSeries(name, seriesList, subtitle="", xlabel='Sweep', **kwargs):
     _plotPrettily(_doPlotSeries, name, seriesList, title='Series for ' + name + '\n' + subtitle,
                   filesuffix='series', xlabel=xlabel, **kwargs)
 
-def _doPlotSeries(seriesList, ybounds=None):
+def _doPlotSeries(seriesList, ybounds=None,**kwargs):
     for series in seriesList:
-        plt.plot(series.xvals(), series.values, label=series.label)
+        if series.label and 'gtruth' in series.label.lower():
+            plt.plot(series.xvals(), series.values,linestyle=':',
+                     markersize=6, label=series.label)
+        else:
+            plt.plot(series.xvals(), series.values, label=series.label)
     setYBounds(seriesList, ybounds)
 
 # Plots histograms for a set of series.
@@ -233,10 +546,14 @@ def scatterPlotSeries(name1, seriesList1, name2, seriesList2, subtitle="", **kwa
                   filesuffix='scatter', xlabel=name1, ylabel=name2, **kwargs)
 
 def _doScatterPlot(data, style=' o', ybounds=None, contour_func=None, contour_delta=0.125):
+    ## FIXME: correct this
     xSeries, ySeries = data
     for (xs, ys) in zip(xSeries, ySeries):
-        plt.plot(xs.values, ys.values, style, label=xs.label) # Assume ys labels are the same
-    setYBounds(ySeries, ybounds)
+        plt.plot(xs.values, ys.values, style,label=xs.label) # Assume ys labels are the same
+                 #marker='+',
+                 #lw=.2,markersize=.4,
+                 
+        setYBounds(ySeries, ybounds)
     if contour_func is not None:
         [xmin, xmax] = seriesBounds(xSeries)
         [ymin, ymax] = seriesBounds(ySeries)
@@ -265,9 +582,11 @@ def _plotPrettily(f, name, data, title="", parameters=None, filesuffix='',
 
     f(data, **kwargs)
 
-    legend_outside()
+    legend_outside(**kwargs)
+    
 
     if save:
+        ensure_directory(directory)
         filename = directory + name.replace(' ', '_') + '_' + filesuffix + '.' + fmt
         savefig_legend_outside(filename)
     if show:
@@ -281,6 +600,12 @@ def addToDict(dictionary, key, value):
     answer = copy.copy(dictionary)
     answer[key] = value
     return answer
+
+
+#TODO probably bit-rotted
+# is meant to work with *parameters* dict from VentureUnit object
+# need to adjust Unit/Analytics or function below to make 
+# it easy to plot e.g. number of observes vs. runtime.
 
 # Produces plots for a given variable over a set of runs.
 # Variable parameters are the x-axis, 'seriesName' is the y-axis.
@@ -344,6 +669,7 @@ def plotAsymptotics(parameters, histories, seriesName, fmt='pdf', directory=None
 
                     #plt.tight_layout()
                     #fig.savefig(directory + filename.replace(' ', '_') + '_asymptotics.' + fmt, format=fmt)
+                    ensure_directory(directory)
                     filename = directory + filename.replace(' ', '_') + '_asymptotics.' + fmt
                     savefig_legend_outside(filename)
         else:
@@ -362,24 +688,39 @@ def plotAsymptotics(parameters, histories, seriesName, fmt='pdf', directory=None
                     filename += '_' + param + '=' + str(value)
 
                 #plt.tight_layout()
+                ensure_directory(directory)
                 fig.savefig(directory + filename.replace(' ', '_') + '_asymptotics.' + fmt, format=fmt)
 
 
 def legend_outside(ax=None, bbox_to_anchor=(0.5, -.05), loc='upper center',
-                   ncol=None, label_cmp=None):
+                   ncol=None, label_cmp=None, limitLegend=8,**kwargs):
     # labels must be set in original plot call: plot(..., label=label)
     if ax is None:
         ax = pylab.gca()
     handles, labels = ax.get_legend_handles_labels()
-    label_to_handle = dict(zip(labels, handles))
+    
+    if len(handles)>limitLegend:
+        title='(%i data-series of %i not shown on legend)'%( (len(handles)-limitLegend),len(handles) )
+    else:
+        title = None
+
+    label_to_handle = dict(zip(labels, handles)[:limitLegend])
+
+    # always include groundTruth on legend
+    for label,handle in zip(labels,handles):
+        if 'gtruth' in label.lower():
+            label_to_handle[label] = handle
+
     labels = label_to_handle.keys()
     if label_cmp is not None:
         labels = sorted(labels, cmp=label_cmp)
     handles = [label_to_handle[label] for label in labels]
     if ncol is None:
-        ncol = min(len(labels), 3)
-    ax.legend(handles, labels, loc=loc, ncol=ncol,
-              bbox_to_anchor=bbox_to_anchor, prop={"size":14})
+        ncol = min(len(labels), 4)
+
+
+    ax.legend(handles, labels, loc=loc, ncol=ncol, title=title,
+              bbox_to_anchor=bbox_to_anchor, prop={"size":10})
     return
 
 def savefig_legend_outside(filename, ax=None, bbox_inches='tight'):
@@ -391,3 +732,4 @@ def savefig_legend_outside(filename, ax=None, bbox_inches='tight'):
                   bbox_inches=bbox_inches,
                   )
     return
+

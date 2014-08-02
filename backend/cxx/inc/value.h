@@ -179,6 +179,19 @@ struct VentureVector : VentureValue
   void destroyParts() override;
 };
 
+struct VentureMatrix : VentureValue 
+{
+  VentureMatrix() {}
+  VentureMatrix(const vector<VentureVector *> &xs): xs(xs) {}
+  vector<VentureVector *> xs;
+  size_t toHash() const override;
+  boost::python::dict toPython() const override;
+
+  bool equals(const VentureValue * & other) const override;
+
+  void destroyParts() override;
+};
+
 /* RequestPSPs must return VentureRequests. */
 struct VentureRequest : VentureValue
 {

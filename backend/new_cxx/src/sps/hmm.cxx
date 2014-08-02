@@ -1,15 +1,3 @@
-// struct HMMSPAux : SPAux
-// {
-//   /* Latents */
-//   vector<VectorXd> xs; 
-  
-//   /* Observations: may be many observations at a single index */
-//   /* We expect very few, otherwise we would use a set */
-//   map<size_t,vector<uint32_t> > os;
-// };
-
-/* MakeUncollapsedHMMSP */
-
 #include "sps/hmm.h"
 #include "args.h"
 #include "sprecord.h"
@@ -24,6 +12,8 @@ uint32_t indexOfOne(const VectorXd & v);
 VectorXd sampleVectorXd(const VectorXd & v,gsl_rng * rng);
 uint32_t sampleVector(const VectorXd & v,gsl_rng * rng);
 VectorXd normalizedVectorXd(VectorXd & v);
+
+/* MakeUncollapsedHMMSP */
 
 VentureValuePtr MakeUncollapsedHMMOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 { 
@@ -336,7 +326,4 @@ VectorXd normalizedVectorXd(VectorXd & v)
   return newVector;
 }
 
-//
-
-shared_ptr<SPAux> HMMSPAux::clone() { return shared_ptr<SPAux>(new HMMSPAux(*this)); }
-
+SPAux* HMMSPAux::copy_help(ForwardingMap* m) const { return new HMMSPAux(*this); }

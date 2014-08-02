@@ -13,6 +13,7 @@
 
 struct Node;
 struct SPRef;
+struct LKernel;
 
 struct Trace 
 {
@@ -34,16 +35,21 @@ struct Trace
 
   /* Creating nodes */
   virtual ConstantNode * createConstantNode(VentureValuePtr);
-  virtual LookupNode * createLookupNode(Node * sourceNode);
+  virtual LookupNode * createLookupNode(Node * sourceNode,VentureValuePtr exp);
   virtual pair<RequestNode*,OutputNode*> createApplicationNodes(Node * operatorNode,
 								const vector<Node*> & operandNodes,
-								const shared_ptr<VentureEnvironment> & env);
+								const shared_ptr<VentureEnvironment> & env,
+								VentureValuePtr exp);
 
   /* Regen mutations */
   virtual void addESREdge(RootOfFamily esrRoot,OutputNode * outputNode) =0;
   virtual void reconnectLookup(LookupNode * lookupNode) =0;
   virtual void incNumRequests(RootOfFamily root) =0;
   virtual void incRegenCount(shared_ptr<Scaffold> scaffold,Node * node) =0;
+
+  virtual bool hasLKernel(shared_ptr<Scaffold> scaffold, Node * node) =0;
+  virtual void registerLKernel(shared_ptr<Scaffold> scaffold,Node * node,shared_ptr<LKernel> lkernel) =0;
+  virtual shared_ptr<LKernel> getLKernel(shared_ptr<Scaffold> scaffold, Node * node) =0;
   virtual void addChild(Node * node, Node * child) =0;
 
   /* Detach mutations */  
@@ -74,6 +80,7 @@ struct Trace
   virtual Node * getOperatorSPMakerNode(ApplicationNode * node);
   virtual vector<Node*> getParents(Node * node);
   virtual shared_ptr<Args> getArgs(ApplicationNode * node);
+  virtual shared_ptr<PSP> getPSP(ApplicationNode * node);
 
   /* Primitive setters */
   virtual void setValue(Node * node, VentureValuePtr value) =0;
@@ -100,7 +107,8 @@ struct Trace
   virtual bool containsMadeSPFamily(Node * makerNode, FamilyID id) =0;
   virtual RootOfFamily getMadeSPFamilyRoot(Node * makerNode, FamilyID id) =0;
 
-  virtual OutputNode * getOutermostNonRefAppNode(Node * node);
+  virtual OutputNode * getConstrainableNode(Node * node);
+  virtual Node * getOutermostNonReferenceNode(Node * node);
 
   virtual double logDensityOfBlock(ScopeID scope);
   virtual int numBlocksInScope(ScopeID scope) =0;

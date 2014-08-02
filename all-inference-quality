@@ -23,6 +23,6 @@ function test_inference_program_in_lite() {
 
 test_inference_program_in_lite "(mh default one 50)"
 test_inference_program_in_lite "(rejection default all 1)"
-test_inference_program_in_lite "(func-pgibbs default ordered 2 2)"
+test_inference_program_in_lite "(func_pgibbs default ordered 2 2)"
 # test_inference_program_in_lite "(pgibbs default ordered 10 3)"
 test_inference_program_in_lite "(meanfield default one 10 10)"

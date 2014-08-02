@@ -14,4 +14,13 @@ distribute>=0.7.3
 matplotlib
 
 # IPython Magics
-ipython>=0.13
+ipython>=1.2
+pyzmq
+
+# lite
+scipy>=0.13
+
+# Plotting (optional)
+patsy # Because ggplot needs this installed first ??
+pandas
+# ggplot

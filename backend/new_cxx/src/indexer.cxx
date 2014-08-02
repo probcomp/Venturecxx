@@ -6,6 +6,7 @@
 
 // TODO add assert from lite
 ScaffoldIndexer::ScaffoldIndexer(ScopeID scope,BlockID block): scope(scope),block(block) {}
+ScaffoldIndexer::ScaffoldIndexer(ScopeID scope,BlockID block,BlockID minBlock,BlockID maxBlock): scope(scope),block(block),minBlock(minBlock),maxBlock(maxBlock) {}
 
 shared_ptr<Scaffold> ScaffoldIndexer::sampleIndex(ConcreteTrace * trace) const
 {
@@ -14,7 +15,9 @@ shared_ptr<Scaffold> ScaffoldIndexer::sampleIndex(ConcreteTrace * trace) const
       BlockID actualBlock = trace->sampleBlock(scope);
       vector<set<Node*> > setsOfPNodes;
       setsOfPNodes.push_back(trace->getNodesInBlock(scope,actualBlock));
-      return constructScaffold(trace,setsOfPNodes,false);
+      shared_ptr<Scaffold> scaffold = constructScaffold(trace,setsOfPNodes,false);
+      //cout << scaffold->showSizes() << endl;
+      return scaffold;
     }
   else if (block->hasSymbol() && block->getSymbol() == "all")
     {
@@ -25,6 +28,10 @@ shared_ptr<Scaffold> ScaffoldIndexer::sampleIndex(ConcreteTrace * trace) const
   else if (block->hasSymbol() && block->getSymbol() == "ordered")
     {
       return constructScaffold(trace,trace->getOrderedSetsInScope(scope),false);
+    }
+  else if (block->hasSymbol() && block->getSymbol() == "ordered_range")
+    {
+      return constructScaffold(trace,trace->getOrderedSetsInScopeAndRange(scope,minBlock,maxBlock),false);
     }
   else
     {

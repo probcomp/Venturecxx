@@ -1,6 +1,6 @@
-from value import VentureValue, registerVentureType, VentureType
-from abc import ABCMeta
+from value import VentureValue, registerVentureType, VentureType, PositiveType, NumberType, ProbabilityType, MatrixType, SymmetricMatrixType, BoolType, ZeroType
 import copy
+from exception import VentureError
 
 class SPFamilies(object):
   def __init__(self, families=None):
@@ -12,30 +12,31 @@ class SPFamilies(object):
 
   def containsFamily(self,id): return id in self.families
   def getFamily(self,id): return self.families[id]
-  def registerFamily(self,id,esrParent): 
+  def registerFamily(self,id,esrParent):
     assert not id in self.families
     self.families[id] = esrParent
   def unregisterFamily(self,id): del self.families[id]
 
   def copy(self):
     return SPFamilies(self.families.copy())
-  
+
 class SPAux(object):
   def copy(self): return SPAux()
 
-class VentureSP(VentureValue):
-  __metaclass__ = ABCMeta
-
+class SP(object):
   def __init__(self,requestPSP,outputPSP):
+    from psp import PSP
     self.requestPSP = requestPSP
     self.outputPSP = outputPSP
+    assert isinstance(requestPSP, PSP)
+    assert isinstance(outputPSP, PSP)
 
   def constructSPAux(self): return SPAux()
   def constructLatentDB(self): return None
   def simulateLatents(self,spaux,lsr,shouldRestore,latentDB): pass
   def detachLatents(self,spaux,lsr,latentDB): pass
   def hasAEKernel(self): return False
-  def show(self,spaux): return "unknown spAux"
+  def show(self, _spaux): return "unknown spAux"
   def description(self,name):
     candidate = self.outputPSP.description(name)
     if candidate:
@@ -44,10 +45,28 @@ class VentureSP(VentureValue):
     if candidate:
       return candidate
     return name
+  def venture_type(self):
+    if hasattr(self.outputPSP, "f_type"):
+      return self.outputPSP.f_type
+    else:
+      return self.requestPSP.f_type
   # VentureSPs are intentionally not comparable until we decide
   # otherwise
 
-registerVentureType(VentureSP)
+class VentureSPRecord(VentureValue):
+  def __init__(self, sp, spAux=None, spFamilies=None):
+    if spAux is None:
+      spAux = sp.constructSPAux()
+    if spFamilies is None:
+      spFamilies = SPFamilies()
+    self.sp = sp
+    self.spAux = spAux
+    self.spFamilies = spFamilies
+
+  def show(self):
+    return self.sp.show(self.spAux)
+
+registerVentureType(VentureSPRecord)
 
 class SPType(VentureType):
   """An object representing a Venture function type.  It knows
@@ -56,7 +75,9 @@ how to wrap and unwrap individual values or Args objects.  This is
 used in the implementation of TypedPSP and TypedLKernel."""
   def asVentureValue(self, thing): return thing
   def asPython(self, vthing): return vthing
-  def __contains__(self, vthing): return isinstance(vthing, VentureSP)
+  def distribution(self, _base, **_kwargs):
+    return None
+  def __contains__(self, vthing): return isinstance(vthing, VentureSPRecord)
 
   def __init__(self, args_types, return_type, variadic=False, min_req_args=None):
     self.args_types = args_types
@@ -83,8 +104,10 @@ used in the implementation of TypedPSP and TypedLKernel."""
 
   def unwrap_arg_list(self, lst):
     if not self.variadic:
-      assert len(lst) >= self.min_req_args
-      assert len(lst) <= len(self.args_types)
+      if len(lst) < self.min_req_args:
+        raise VentureError("Too few arguments: SP requires at least %d args, got only %d." % (self.min_req_args, len(lst)))
+      if len(lst) > len(self.args_types):
+        raise VentureError("Too many arguments: SP takes at most %d args, got %d." % (len(self.args_types), len(lst)))
       # v could be None when computing log density bounds for a torus
       return [self.args_types[i].asPythonNoneable(v) for (i,v) in enumerate(lst)]
     else:
@@ -112,3 +135,6 @@ used in the implementation of TypedPSP and TypedLKernel."""
   def name(self):
     """A default name for when there is only room for one name."""
     return self._name_for_fixed_arity(self.args_types)
+
+  def gradient_type(self):
+    return SPType([t.gradient_type() for t in self.args_types], self.return_type.gradient_type(), self.variadic, self.min_req_args)

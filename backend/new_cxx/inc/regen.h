@@ -60,6 +60,7 @@ pair<double,Node*> evalFamily(Trace * trace,
 			      VentureValuePtr exp,
 			      shared_ptr<VentureEnvironment> env,
 			      shared_ptr<Scaffold> scaffold,
+			      bool shouldRestore,
 			      shared_ptr<DB> db,
 			      shared_ptr<map<Node*,Gradient> > gradients);
 

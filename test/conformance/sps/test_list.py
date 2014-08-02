@@ -1,39 +1,49 @@
 from nose.tools import eq_
 from math import sin, cos
-from venture.test.config import get_ripl
-from nose import SkipTest
+from venture.test.config import get_ripl, on_inf_prim
 from nose.tools import assert_equal
 
+@on_inf_prim("none")
 def testList1():
   assert get_ripl().predict("(list)") == []
 
+@on_inf_prim("none")
 def testList2():
   assert get_ripl().predict("(list 1)") == [1.0]
 
+@on_inf_prim("none")
 def testList3():
   assert get_ripl().predict("(list 1 2)") == [1.0, 2.0]
 
+@on_inf_prim("none")
 def testPair1():
   assert get_ripl().predict("(pair 1 (list))") == [1.0]
 
+@on_inf_prim("none")
 def testIsPair1():
   assert not get_ripl().predict("(is_pair 1)")
 
+@on_inf_prim("none")
 def testIsPair2():
   assert not get_ripl().predict("(is_pair (list))")
 
+@on_inf_prim("none")
 def testIsPair3():
   assert get_ripl().predict("(is_pair (list 1))")
 
+@on_inf_prim("none")
 def testIsPair4():
   assert get_ripl().predict("(is_pair (pair 1 3))")
 
+@on_inf_prim("none")
 def testSize1():
   assert get_ripl().predict("(size (list))") == 0
 
+@on_inf_prim("none")
 def testSize2():
   assert get_ripl().predict("(size (list 4))") == 1
 
+@on_inf_prim("none")
 def testSize3():
   assert get_ripl().predict("(size (pair 3 (list 4)))") == 2
 
@@ -47,27 +57,35 @@ class TestList(object):
     self.ripl.assume("x3","(pair 2.0 x2)")
     self.ripl.assume("x4","(pair 3.0 x3)")
 
+  @on_inf_prim("none")
   def testFirst1(self):
     assert self.ripl.predict("(first x4)") == 3.0
 
+  @on_inf_prim("none")
   def testSecond1(self):
     assert self.ripl.predict("(second x4)") == 2.0
 
+  @on_inf_prim("none")
   def testRest1(self):
     assert_equal(self.ripl.predict("(rest x4)"),[2.0, 1.0])
 
+  @on_inf_prim("none")
   def testLookup1(self):
     assert self.ripl.predict("(lookup x4 1)") == 2.0
 
+  @on_inf_prim("none")
   def testLookup2(self):
     assert self.ripl.predict("(lookup (rest x4) 1)") == 1.0
 
+  @on_inf_prim("none")
   def testIsPair1(self):
     assert not self.ripl.predict("(is_pair x1)")
 
+  @on_inf_prim("none")
   def testIsPair2(self):
     assert self.ripl.predict("(is_pair x4)")
 
+  @on_inf_prim("none")
   def testSize1(self):
     assert self.ripl.predict("(size x4)") == 3
 
@@ -84,24 +102,30 @@ class TestListExtended(object):
 """)
 
     self.ripl.assume("x","(list 3.0 2.0 1.0)")
-    self.ripl.assume("f","(lambda (x) (times x x x))")
+    self.ripl.assume("f","(lambda (x) (* x x x))")
     self.ripl.assume("y","(vmap_list f x)")
 
+  @on_inf_prim("none")
   def testFirst1(self):
     assert self.ripl.predict("(first y)") == 27.0
 
+  @on_inf_prim("none")
   def testLookup1(self):
     assert self.ripl.predict("(lookup y 1)") == 8.0
 
+  @on_inf_prim("none")
   def testLookup2(self):
     assert self.ripl.predict("(lookup (rest y) 1)") == 1.0
 
+  @on_inf_prim("none")
   def testIsPair3(self):
     assert self.ripl.predict("(is_pair y)")
 
+  @on_inf_prim("none")
   def testSize1(self):
     assert self.ripl.predict("(size y)") == 3
 
+  @on_inf_prim("none")
   def testMapOverListOfSPs(self):
     eq_(self.ripl.predict("(vmap_list (lambda (f) (f 1)) (list sin cos (lambda (x) (+ (* (sin x) (sin x)) (* (cos x) (cos x))))))"), [ sin(1), cos(1), 1])
 

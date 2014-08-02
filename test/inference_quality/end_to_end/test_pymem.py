@@ -8,15 +8,15 @@ def loadPYMem(ripl):
 (lambda (sticks k)
   (if (bernoulli (sticks k))
       k
-      (pick_a_stick sticks (plus k 1))))
+      (pick_a_stick sticks (+ k 1))))
 """)
 
   ripl.assume("make_sticks","""
 (lambda (alpha d)
   ((lambda (sticks) (lambda () (pick_a_stick sticks 1)))
    (mem (lambda (k)
-     (beta (minus 1 d)
-           (plus alpha (times k d)))))))
+     (beta (- 1 d)
+           (+ alpha (* k d)))))))
 """)
 
   ripl.assume("uc_pymem","""

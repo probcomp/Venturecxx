@@ -48,8 +48,10 @@ struct UniformContinuousPSP : RandomPSP
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 
   bool isContinuous() const { return true; }
-  double getSupportLowerBound() const { return 0; }
-  double getSupportUpperBound() const { return 1; }
+  // TODO Upper and lower bounds really depend on the arguments
+  // Defaulting to permissive for now.
+  // double getSupportLowerBound() const { return 0; }
+  // double getSupportUpperBound() const { return 1; }
 
 };
 
@@ -101,5 +103,14 @@ struct InvChiSquaredPSP : RandomPSP
 
 };
 
+struct ApproximateBinomialPSP : RandomPSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+
+  bool isContinuous() const { return true; }
+  double getSupportLowerBound() const { return 0; }
+
+};
 
 #endif

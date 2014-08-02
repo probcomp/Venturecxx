@@ -1,0 +1,246 @@
+; Venture library functions
+
+; TODO
+; 1. map relies on to_vector and to_list; not sure how bad this is.
+;   May need to implement map as SP instead
+; 2. Some of this would be cleaner (e.g. the "into" function, the to_vector
+;   and to_list functions) if there were sp's is_vector and is_list. If those
+;   are made, change things.
+
+; check if a list is empty
+; Parameters
+;   v : list, vector, or array
+[assume is_empty
+  (lambda (v)
+    (if (= (size v) 0)
+      true
+      false))]
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Convert between arrays, lists, and vectors
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Convert an array or vector to a list
+; Parameters
+;   v : vector or array
+;   TODO : if we get is_list, use that instead of is_pair
+[assume to_list
+  (lambda (v)
+    (if (is_pair v)
+      v
+      (_to_list_helper v 0 (size v))))]
+
+; Helper for the above. Needed because no letrec in Venture.
+[assume _to_list_helper
+  (lambda (v idx n)
+    (if (= idx n)
+      (list)
+      (pair
+        (lookup v idx)
+        (_to_list_helper v (+ 1 idx) n))))]
+
+; Convert a list to an array
+; Parameters
+;   v : list
+[assume to_array
+  (lambda (v)
+    (if (is_array v)
+      v
+      (eval
+        (pair (quote array) v)
+        (get_current_environment))))]
+
+; Convert a list to a vector
+; Parameters
+;   v : list
+; TODO : if we get is_vector, use that to check
+[assume to_vector
+  (lambda (v)
+    (eval
+      (pair (quote vector) v)
+      (get_current_environment)))]
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Support for functional programming
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Map function over elements of array
+; TODO: allow to map over arbitrary number of arrays. Not possible currently.
+; Parameters
+;   f : function
+;   v : list, vector, or array
+[assume map
+  (lambda (f v)
+    (into (_map_list f (to_list v)) v))]
+
+; Helper function for map. Output of map is always a list; this takes the
+; list output and converts it to the same type as the map function's input
+[assume into
+  (lambda (output input)
+    (if (is_pair input)
+      output
+      (if (is_array input)
+        (to_array output)
+        (to_vector output))))]
+
+; Map for lists (same args as above)
+[assume _map_list
+  (lambda (f v)
+    (if (is_empty v)
+      (list)
+      (pair
+        (f (first v))
+        (_map_list f (rest v)))))]
+
+; Reduce (mirrors functionality here: http://srfi.schemers.org/srfi-1/srfi-1.html)
+; Parameters
+;   f : function
+;   v : list, vector, or array
+;   identity : identity value for the funciont f
+[assume reduce
+  (lambda (f v identity)
+    (_reduce_list f (to_list v) identity))]
+
+; Reduce for lists (same args as above)
+[assume _reduce_list
+  (lambda (f v identity)
+    (if (is_empty v)
+      identity
+      (f (first v) (_reduce_list f (rest v) identity))))]
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Vector / matrix ops
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[assume dot
+  (lambda (x y)
+    (if (is_pair x)
+      (_dot_list x y)
+      (_dot_vector x y 0 (size x))))]
+
+[assume _dot_list
+  (lambda (x y)
+    (if (is_empty x)
+      0
+      (+
+        (* (first x) (first y))
+        (dot (rest x) (rest y)))))]
+
+[assume _dot_vector
+  (lambda (x y idx length)
+    (if (= idx length)
+      0
+      (+
+        (* (lookup x idx) (lookup y idx))
+        (_dot_vector x y (+ 1 idx) length))))]
+
+[assume sum
+  (lambda (x)
+    (reduce + x 0))]
+
+[assume prod
+  (lambda (x)
+    (reduce * x 1))]
+
+[assume mean
+  (lambda (x)
+    (/ (sum x) (size x)))]
+
+; multiply list / array / vector v by scalar k
+[assume scalar_mult
+  (lambda (v k)
+    (map (lambda (x) (* x k)) v))]
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Useful math functions
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Take the negative of a number.
+; Parameters
+;   x : number
+[assume negative
+  (lambda (x)
+    (* x -1))]
+
+; The logistic (sigmoid) function
+; Parameters
+;   x : number
+[assume logistic
+  (lambda (x)
+    (/ 1 (+ 1 (exp (negative x)))))]
+
+; The logit (inverse logistic) function
+; Parameters
+;   x : number
+[assume logit
+  (lambda (x)
+    (log (/ x (- 1 x))))]
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Convenience functions for assembling vectors and lists
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Repeat the given value n times; returns a list
+;[sample (repeat 4 7)]
+[assume repeat
+  (lambda (value n)
+    (_repeat_helper value n 0))]
+
+[assume _repeat_helper
+  (lambda (value n idx)
+    (if (= idx n)
+      (list)
+      (pair value (_repeat_helper value n (+ idx 1)))))]
+
+; Construct vector of zeros of a given length n
+[assume zeros
+  (lambda (n)
+    (repeat 0 n))]
+
+; Construct vector of ones of a given length n
+[assume ones
+  (lambda (n)
+    (repeat 0 n))]
+
+; Range (as Python's range function); returns list
+[assume range
+  (lambda (start stop)
+    (let ((incr (if (>= stop start) 1 -1)))
+      (if (= start stop)
+          (list)
+          (pair start (range (+ incr start) stop)))))]
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Matrix constructors
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Identity matrix of dimension D
+[assume eye
+  (lambda (D)
+    (diag D 1))]
+
+;; Diagonal matrix of dimension D
+[assume diag
+  (lambda (D diag_value)
+    (matrix (_diag_helper D diag_value 0)))]
+
+[assume _diag_helper
+  (lambda (D diag_value idx)
+    (if (= idx D)
+      (list)
+      (pair
+        (_one_row D diag_value idx)
+        (_diag_helper D diag_value (+ idx 1)))))]
+
+; Construct one row of a diagonal matrix.
+[assume _one_row
+  (lambda (D diag_value fill_position)
+    (_one_row_helper D diag_value fill_position 0))]
+
+[assume _one_row_helper
+  (lambda (D diag_value fill_position idx)
+    (if (= idx D)
+      (list)
+      (pair
+        (if (= idx fill_position) diag_value 0)
+        (_one_row_helper D diag_value fill_position (+ idx 1)))))]

@@ -1,27 +1,33 @@
 # Copyright (c) 2013, MIT Probabilistic Computing Project.
-# 
+#
 # This file is part of Venture.
-# 	
+#
 # Venture is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 	
+#
 # Venture is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 	
+#
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import unittest
+from nose import SkipTest
+from nose.plugins.attrib import attr
+
 from venture.ripl import Ripl
 from venture.exception import VentureException
 from venture.sivm import VentureSivm
 from venture.parser import ChurchPrimeParser, VentureScriptParser
 from venture.test.config import get_core_sivm
-from testconfig import config
-from nose import SkipTest
+import venture.value.dicts as v
 
+# TODO Not really backend independent, but doesn't test the backend much.
+# Almost the same effect as @venture.test.config.in_backend("none"),
+# but works on the whole class
+@attr(backend="none")
 class TestRipl(unittest.TestCase):
     _multiprocess_can_split_ = True
 
@@ -29,8 +35,8 @@ class TestRipl(unittest.TestCase):
         self.core_sivm = get_core_sivm()
         self.core_sivm.execute_instruction({"instruction":"clear"})
         self.venture_sivm = VentureSivm(self.core_sivm)
-        parser1 = ChurchPrimeParser()
-        parser2 = VentureScriptParser()
+        parser1 = ChurchPrimeParser.instance()
+        parser2 = VentureScriptParser.instance()
         self.ripl = Ripl(self.venture_sivm,
                 {"church_prime":parser1,
                     "church_prime_2":parser1,
@@ -63,12 +69,12 @@ class TestRipl(unittest.TestCase):
         f("[assume b (+ 1 2)]")
         f("[assume c (- b a)]")
         ret_value= f("[predict c]")
-        self.assertEqual(ret_value['value'], {"type":"number","value":2})
+        self.assertEqual(ret_value['value'], v.number(2))
 
     def test_execute_program(self):
         f = self.ripl.execute_program
         ret_value = f("[assume a 1] [assume b (+ 1 2)] [assume c (- b a)] [predict c]")
-        self.assertEqual(ret_value[-1]['value'], {"type":"number","value":2})
+        self.assertEqual(ret_value[-1]['value'], v.number(2))
 
     def test_parse_exception_sugaring(self):
         f = self.ripl.execute_instruction
@@ -162,7 +168,7 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(b,self.ripl.sample('b'))
         self.ripl.infer(0)
         self.assertEqual(self.ripl.sample('b'), 0.5)
-    
+
     ############################################
     # Core
     ############################################
@@ -179,9 +185,8 @@ class TestRipl(unittest.TestCase):
             self.ripl.forget(ret_value['directive_id'])
         #labeled forget
         self.ripl.assume('a','(uniform_continuous 0 1)', 'moo')
-        # assumes can't be forgotten
-        with self.assertRaises(VentureException):
-            self.ripl.forget('moo')
+        # assumes can be forgotten
+        self.ripl.forget('moo')
 
     def test_report(self):
         #normal report
@@ -209,9 +214,10 @@ class TestRipl(unittest.TestCase):
         pass
 
     def test_list_directives(self):
+        n_before = len(self.ripl.list_directives())
         self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
-        output = self.ripl.list_directives()
-        self.assertEqual(len(output),1)
+        n_after = len(self.ripl.list_directives())
+        self.assertEqual(n_after, n_before + 1)
 
     def test_get_directive(self):
         ret_value = self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
@@ -232,8 +238,6 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(output, 2)
 
     def test_continuous_inference(self):
-        if config["get_ripl"] == "lite":
-            raise SkipTest("Venture Lite does not support continuous inference")
         self.ripl.start_continuous_inference()
         output = self.ripl.continuous_inference_status()
         self.assertEqual(output['running'], True)
@@ -261,11 +265,11 @@ class TestRipl(unittest.TestCase):
         self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
         output = self.ripl.get_global_logscore()
         self.assertEqual(output,0)
-    
+
     ############################################
     # Profiler
     ############################################
-    
+
     def test_profiler_configure(self):
         output = self.ripl.profiler_configure()
         self.assertEqual(output, {'profiler_enabled': False})
@@ -273,4 +277,4 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(output, {'profiler_enabled': True})
         output = self.ripl.profiler_configure({'profiler_enabled': False})
         self.assertEqual(output, {'profiler_enabled': False})
-    
+

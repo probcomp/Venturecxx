@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-#!/usr/bin/python
+#!/usr/bin/env python
 
 from distutils.core import setup, Extension
 from distutils import sysconfig
@@ -104,7 +104,7 @@ puma_src_files = [
 
     "src/env.cxx",
     "src/expressions.cxx",
-
+    "src/gkernel.cxx",
     "src/indexer.cxx",
     "src/lkernel.cxx",
     "src/mixmh.cxx",
@@ -114,9 +114,12 @@ puma_src_files = [
     "src/pytrace.cxx",
     "src/pyutils.cxx",
     "src/regen.cxx",
+    "src/render.cxx",
     "src/scaffold.cxx",
+    "src/serialize.cxx",
     "src/sp.cxx",
     "src/sprecord.cxx",
+    "src/stop_and_copy.cxx",
     "src/trace.cxx",
     "src/utils.cxx",
     "src/value.cxx",
@@ -126,7 +129,8 @@ puma_src_files = [
     "src/gkernels/mh.cxx",
     "src/gkernels/pgibbs.cxx",
     "src/gkernels/egibbs.cxx",
-    "src/gkernels/slice.cxx",    
+    "src/gkernels/slice.cxx",
+    "src/gkernels/hmc.cxx",
 
     "src/sps/betabernoulli.cxx",
     "src/sps/conditional.cxx",
@@ -139,8 +143,11 @@ puma_src_files = [
     "src/sps/dstructure.cxx",
     "src/sps/eval.cxx",
     "src/sps/hmm.cxx",
+    "src/sps/lite.cxx",
     "src/sps/matrix.cxx",
     "src/sps/msp.cxx",
+    "src/sps/mvn.cxx",
+    "src/sps/silva_mvn.cxx",
     "src/sps/numerical_helpers.cxx",
     "src/sps/scope.cxx",
 ]
@@ -150,9 +157,10 @@ puma_inc_dirs = ['inc/', 'inc/sps/', 'inc/infer/', 'inc/Eigen']
 puma_inc_dirs = ["backend/new_cxx/" + d for d in puma_inc_dirs]
 
 ext_modules = []
-packages=["venture","venture.sivm","venture.ripl",
+packages=["venture","venture.value","venture.sivm","venture.ripl", "venture.engine",
           "venture.parser","venture.server","venture.shortcuts",
-          "venture.unit", "venture.test", "venture.cxx", "venture.puma", "venture.lite",
+          "venture.unit", "venture.test", "venture.cxx", "venture.puma",
+          "venture.lite", "venture.lite.infer",
           "venture.venturemagics"]
 
 cxx = Extension("venture.cxx.libtrace",
@@ -171,21 +179,21 @@ else:
     print "Skipping old CXX backend. To include it, set the flag COMPILE_CXX_BACKEND"
 
 if ON_LINUX:
-    puma = Extension("venture.puma.libtrace",
+    puma = Extension("venture.puma.libpumatrace",
         define_macros = [('MAJOR_VERSION', '0'),
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
-        libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread'],        
+        libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread'],
         extra_compile_args = ["-Wall", "-g", "-O0", "-fPIC"],
         #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
         include_dirs = puma_inc_dirs,
         sources = puma_src_files)
 if ON_MAC:
-    puma = Extension("venture.puma.libtrace",
+    puma = Extension("venture.puma.libpumatrace",
         define_macros = [('MAJOR_VERSION', '0'),
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
-        libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread-mt'],        
+        libraries = ['gsl', 'gslcblas', 'boost_python-mt', 'boost_system-mt', 'boost_thread-mt'],
         extra_compile_args = ["-Wall", "-g", "-O0", "-fPIC"],
         #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
         include_dirs = puma_inc_dirs,
@@ -214,8 +222,8 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
         self.compiler_so = ["ccache", "gcc-4.8"]
 
     # parallel code
-    N=2 # number of parallel compilations
-    import multiprocessing.pool
+    import multiprocessing, multiprocessing.pool
+    N=multiprocessing.cpu_count() # number of parallel compilations
     def _single_compile(obj):
         try: src, ext = build[obj]
         except KeyError: return
@@ -229,7 +237,7 @@ distutils.ccompiler.CCompiler.compile=parallelCCompile
 
 setup (
     name = 'Venture CXX',
-    version = '0.1.1',
+    version = '0.2',
     author = 'MIT.PCP',
     url = 'TBA',
     long_description = 'TBA.',
@@ -237,6 +245,7 @@ setup (
     package_dir={"venture":"python/lib/", "venture.test":"test/",
                  "venture.cxx":"backend/cxx",
         "venture.puma":"backend/new_cxx/", "venture.lite":"backend/lite/"},
+    package_data = {'':['*.vnt']},
     ext_modules = ext_modules,
     scripts = ['script/venture']
 )

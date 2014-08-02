@@ -13,31 +13,15 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-from trace import Trace
-from venture.cxx import engine
-
-# Hack the Engine class from backend/cxx/engine.py to wrap Lite traces
-# instead of CXX traces.
+from venture.engine import engine
+from venture.lite import trace
 
 class Engine(engine.Engine):
 
-  def __init__(self): # pylint: disable=super-init-not-called
-    # Intentionally overriding the superclass init to avoid loading libtrace.so
-    self.name = "lite"
-    self.directiveCounter = 0
-    self.directives = {}
-    self.trace = Trace() # Same code, different Trace, due to different import
+  def __init__(self):
+    super(Engine, self).__init__(name="lite", Trace=trace.Trace)
 
-  def clear(self):
-    del self.trace
-    self.directiveCounter = 0
-    self.directives = {}
-    self.trace = Trace()
-
-  def reset(self):
-    worklist = sorted(self.directives.iteritems())
-    self.clear()
+  def ensure_rng_seeded_decently(self):
     # Do not frobnicate the random seed, because the Lite trace uses
     # Python's rng rather than seeding its own from the system clock.
-    for (_,directive) in worklist:
-      self.replay(directive)
+    pass

@@ -13,12 +13,16 @@
 # GNU General Public License for more details.
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+from nose.plugins.attrib import attr
 import unittest
+
 from venture.exception import VentureException
 from venture.sivm import utils
+import venture.value.dicts as v
 
-#Note -- these tests only check for minimum functionality
-
+# Almost the same effect as @venture.test.config.in_backend("none"),
+# but works on the whole class
+@attr(backend="none")
 class TestSivmUtils(unittest.TestCase):
 
     ######################################
@@ -37,8 +41,8 @@ class TestSivmUtils(unittest.TestCase):
 
     def test_desugar_expression_if(self):
         a = ['if','a','b',['if','c','d','e']]
-        b = [['condition_erp','a',['lambda',[],'b'],['lambda',[],
-                [['condition_erp','c',['lambda',[],'d'],['lambda',[],'e']]]]]]
+        b = [['biplex','a',['lambda',[],'b'],['lambda',[],
+                [['biplex','c',['lambda',[],'d'],['lambda',[],'e']]]]]]
         self.assertEqual(utils.desugar_expression(a),b)
     def test_desugar_expression_if_failure(self):
         a = ['if','a','b',['if',['if'],'d','e']]
@@ -51,17 +55,17 @@ class TestSivmUtils(unittest.TestCase):
 
     def test_desugar_expression_and(self):
         a = ['and','a','b']
-        b = [['condition_erp','a',['lambda',[],'b'],['lambda', [], {"type":"boolean","value":False}]]]
+        b = [['biplex','a',['lambda',[],'b'],['lambda', [], v.boolean(False)]]]
         self.assertEqual(utils.desugar_expression(a),b)
     
     def test_desugar_expression_nested(self):
         a = [['and','a','b']]
-        b = [[['condition_erp','a',['lambda',[],'b'],['lambda', [], {"type":"boolean","value":False}]]]]
+        b = [[['biplex','a',['lambda',[],'b'],['lambda', [], v.boolean(False)]]]]
         self.assertEqual(utils.desugar_expression(a),b)
 
     def test_desugar_expression_or(self):
         a = ['or','a','b']
-        b = [['condition_erp','a',['lambda', [], {"type":"boolean","value":True}],['lambda',[],'b']]]
+        b = [['biplex','a',['lambda', [], v.boolean(True)],['lambda',[],'b']]]
         self.assertEqual(utils.desugar_expression(a),b)
 
     def test_desugar_expression_let_1(self):
@@ -254,23 +258,17 @@ class TestSivmUtils(unittest.TestCase):
             self.assertEqual(e.exception, 'parse')
 
     def test_validate_value_1(self):
-        v = {
-            "type":"real",
-            "value":1,
-            }
-        self.assertEqual(utils.validate_value(v),v)
+        val = v.real(1)
+        self.assertEqual(utils.validate_value(val),val)
     def test_validate_value_2(self):
-        v = {
-            "tawfepo":"real",
-            "value":1,
-            }
+        val = {'tawfepo':'real', 'value':1}
         try:
-            utils.validate_value(v)
+            utils.validate_value(val)
         except VentureException as e:
             self.assertEqual(e.exception, 'parse')
 
     def test_validate_expression_1(self):
-        e = ['a',{'type':'atom','value':1},['b']]
+        e = ['a',v.atom(1),['b']]
         self.assertEqual(utils.validate_expression(e),e)
     def test_validate_expression_2(self):
         try:

@@ -1,4 +1,4 @@
-#!/usr/bin/python -i
+#!/usr/bin/env python -i
 
 # Copyright (c) 2013, MIT Probabilistic Computing Project.
 # 

@@ -1,6 +1,7 @@
-from venture.test.config import get_ripl
+from venture.test.config import get_ripl, on_inf_prim
 from nose.tools import assert_equal, assert_less
 
+@on_inf_prim("none")
 def testForget1():
   ripl = get_ripl()
 

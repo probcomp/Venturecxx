@@ -1,12 +1,12 @@
-from venture.test.config import get_ripl, default_num_transitions_per_sample
-import itertools
 from nose.plugins.attrib import attr
 from nose.tools import assert_less, assert_greater
-from nose import SkipTest
-from venture.test.config import get_ripl, collectSamples, collect_iid_samples, defaultKernel
+
+from venture.test.config import get_ripl, on_inf_prim
 
 def mean(xs): return sum(xs) / float(len(xs))
-    
+
+@attr("slow")    
+@on_inf_prim("mh")
 def testCRPMixSimple1():
   """Makes sure basic clustering model behaves reasonably"""
   ripl = get_ripl()

@@ -1,9 +1,10 @@
-from venture.test.config import get_ripl, collectSamples
-from nose.tools import assert_equal
+from venture.test.config import get_ripl, on_inf_prim
+from nose.tools import eq_
 
+@on_inf_prim("none")
 def testMem1():
   ripl = get_ripl()
   ripl.assume('f', '(mem flip)')
   flip1 = ripl.predict('(f)')
   flip2 = ripl.predict('(f)')
-  assert_equal(flip1, flip2)
+  eq_(flip1, flip2)

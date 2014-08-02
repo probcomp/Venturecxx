@@ -11,7 +11,7 @@ struct Particle;
 /* Functional particle gibbs. */
 struct PGibbsGKernel : GKernel
 {
-  PGibbsGKernel(size_t numNewParticles) : numNewParticles(numNewParticles) {}
+  PGibbsGKernel(size_t numNewParticles,bool inParallel): inParallel(inParallel), numNewParticles(numNewParticles) {}
 
   pair<Trace*,double> propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold);
   void accept();
@@ -20,6 +20,8 @@ struct PGibbsGKernel : GKernel
   ConcreteTrace * trace;
   shared_ptr<Scaffold> scaffold;
   shared_ptr<DB> rhoDB;
+
+  bool inParallel;
   
   /* Does not include the old particle. */
   size_t numNewParticles;

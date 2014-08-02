@@ -1,7 +1,8 @@
-from venture.test.config import get_ripl
-import venture.test.timing as timing
 import scipy.stats
 from nose.plugins.attrib import attr
+
+from venture.test.config import get_ripl, on_inf_prim
+import venture.test.timing as timing
 
 def loadHMMParticleAsymptoticProgram1(M):
   """Easiest possible HMM asymptotic test for particles"""
@@ -11,7 +12,7 @@ def loadHMMParticleAsymptoticProgram1(M):
 (mem (lambda (i)
   (if (eq i 0)
     (scope_include (quote states) 0 (normal 0.0 1.0))
-    (scope_include (quote states) i (normal (f (minus i 1)) 1.0)))))
+    (scope_include (quote states) i (normal (f (- i 1)) 1.0)))))
 """)
   ripl.assume("g","""
 (mem (lambda (i)
@@ -30,9 +31,10 @@ def loadHMMParticleAsymptoticProgram1(M):
 # O(N) forwards
 # O(N log N) to infer
 @attr('slow')
+@on_inf_prim("func_pgibbs")
 def testHMMParticleAsymptotics1():
   def particulate(num_steps):
     ripl = loadHMMParticleAsymptoticProgram1(num_steps)
-    return lambda : ripl.infer({"kernel":"pgibbs","scope":"states","block":"ordered","transitions":5,"particles":10,"with_mutation":False})
+    return lambda : ripl.infer("(func_pgibbs states ordered 10 5)")
 
   timing.assertNLogNTime(particulate)

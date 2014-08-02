@@ -14,14 +14,18 @@
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import unittest
+from nose import SkipTest
+from nose.plugins.attrib import attr
+
 import venture.sivm.core_sivm as module
 from venture.exception import VentureException
 from venture.test.config import get_core_sivm
-from testconfig import config
-from nose import SkipTest
+import venture.value.dicts as v
 
-#Note -- these tests only check for minimum functionality
-
+# TODO Not really backend independent, but doesn't test the backend much.
+# Almost the same effect as @venture.test.config.in_backend("none"),
+# but works on the whole class
+@attr(backend="none")
 class TestCoreSivm(unittest.TestCase):
 
     _multiprocess_can_split_ = True
@@ -59,27 +63,27 @@ class TestCoreSivm(unittest.TestCase):
             self.assertEqual(e.data['argument'],'symbol')
 
     def test_modify_value(self):
-        v = {"type":"count", "value":1}
-        s = {"type":"number", "value":1}
-        self.assertEqual(module._modify_value(v),s)
+        val = v.val("count", 1)
+        s = v.number(1)
+        self.assertEqual(module._modify_value(val),s)
 
     def test_modify_symbol(self):
-        v = 'add'
-        s = {'type': 'symbol', 'value': 'plus'}
-        self.assertEqual(module._modify_symbol(v),s)
+        val = 'add'
+        s = v.symbol('add')
+        self.assertEqual(module._modify_symbol(val),s)
 
     def test_modify_expression(self):
-        v = ['sub',{"type":"real","value":2},'a']
-        s = [{'type': 'symbol', 'value': 'minus'},{"type":"number","value":2},{'type': 'symbol', 'value': 'a'}]
-        self.assertEqual(module._modify_expression(v),s)
+        exp= ['sub', v.real(2), 'a']
+        s = [v.symbol('sub'), v.number(2), v.symbol('a')]
+        self.assertEqual(module._modify_expression(exp),s)
 
     def test_assume(self):
         inst = {
                 'instruction':'assume',
-                'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
+                'expression': ['add',v.number(1),v.number(2)],
                 'symbol': 'moo'
                 }
-        val = {'type':'number','value':3}
+        val = v.number(3)
         o = self.sivm.execute_instruction(inst)
         self.assertIsInstance(o['directive_id'],(int,float))
         self.assertEquals(o['value'],val)
@@ -87,8 +91,8 @@ class TestCoreSivm(unittest.TestCase):
     def test_observe(self):
         inst = {
                 'instruction':'observe',
-                'expression': ['normal',{'type':'number','value':1},{'type':'number','value':2}],
-                'value': {"type":"real","value":3}
+                'expression': ['normal',v.number(1),v.number(2)],
+                'value': v.real(3)
                 }
         o = self.sivm.execute_instruction(inst)
         self.assertIsInstance(o['directive_id'],(int,float))
@@ -96,8 +100,8 @@ class TestCoreSivm(unittest.TestCase):
         raise SkipTest("Engine should report a polite exception on constraint of a deterministic choice.  Issue: https://app.asana.com/0/9277419963067/9940667562268")
         inst = {
                 'instruction':'observe',
-                'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
-                'value': {"type":"real","value":4}
+                'expression': ['add',v.number(1),v.number(2)],
+                'value': v.real(4)
                 }
         try:
             self.sivm.execute_instruction(inst)
@@ -107,9 +111,9 @@ class TestCoreSivm(unittest.TestCase):
     def test_predict(self):
         inst = {
                 'instruction':'predict',
-                'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
+                'expression': ['add',v.number(1),v.number(2)],
                 }
-        val = {'type':'number','value':3}
+        val = v.number(3)
         o = self.sivm.execute_instruction(inst)
         self.assertIsInstance(o['directive_id'],(int,float))
         self.assertEquals(o['value'],val)
@@ -117,7 +121,7 @@ class TestCoreSivm(unittest.TestCase):
     def test_configure(self):
         inst = {
                 'instruction':'configure',
-                "options":{
+                'options':{
                     'inference_timeout':5000,           # inference timeout hook is not implemented
                     'seed':0,
                     },
@@ -131,7 +135,7 @@ class TestCoreSivm(unittest.TestCase):
     def test_forget(self):
         inst1 = {
                 'instruction':'predict',
-                'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
+                'expression': ['add',v.number(1),v.number(2)],
                 }
         o1 = self.sivm.execute_instruction(inst1)
         inst2 = {
@@ -149,7 +153,7 @@ class TestCoreSivm(unittest.TestCase):
     def test_report(self):
         inst1 = {
                 'instruction':'predict',
-                'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
+                'expression': ['add',v.number(1),v.number(2)],
                 }
         o1 = self.sivm.execute_instruction(inst1)
         inst2 = {
@@ -157,7 +161,7 @@ class TestCoreSivm(unittest.TestCase):
                 'directive_id':o1['directive_id'],
                 }
         o2 = self.sivm.execute_instruction(inst2)
-        self.assertEquals(o2['value'], {'type':'number','value':3})
+        self.assertEquals(o2['value'], v.number(3))
     def test_report_invalid_did(self):
         inst = {
                 'instruction':'report',
@@ -169,17 +173,16 @@ class TestCoreSivm(unittest.TestCase):
             self.assertEquals(e.exception,'invalid_argument')
 
     def test_infer(self):
-        # FIXME: Add more comprehensive test for inference parameters once spec stabilizes
         inst = {
                 'instruction':'infer',
-                'params': {'transitions': 2}
+                'expression': [v.sym("mh"), v.sym("default"), v.sym("one"), v.num(2)]
                 }
         self.sivm.execute_instruction(inst)
 
     def test_clear(self):
         inst1 = {
                 'instruction':'predict',
-                'expression': ['add',{'type':'number','value':1},{'type':'number','value':2}],
+                'expression': ['add', v.num(1), v.num(2)],
                 }
         o1 = self.sivm.execute_instruction(inst1)
         inst2 = {
@@ -200,7 +203,7 @@ class TestCoreSivm(unittest.TestCase):
         inst1 = {
                 'instruction':'observe',
                 'expression': 'aweopfjiaweopfaweopfjopawejiawoiejf',
-                'value':{"type":"number","value":3}
+                'value':v.number(3)
                 }
         try:
             self.sivm.execute_instruction(inst1)
@@ -217,7 +220,7 @@ class TestCoreSivm(unittest.TestCase):
         inst1 = {
                 'instruction':'observe',
                 'expression': ['flip'],
-                'value': {"type":"boolean","value":True}
+                'value': v.boolean(True)
                 }
         self.sivm.execute_instruction(inst1)
         inst2 = {
@@ -230,7 +233,7 @@ class TestCoreSivm(unittest.TestCase):
         inst1 = {
                 'instruction':'observe',
                 'expression': ['flip'],
-                'value': {"type":"boolean","value":True}
+                'value': v.boolean(True)
                 }
         o1 = self.sivm.execute_instruction(inst1)
         inst2 = {
@@ -241,14 +244,12 @@ class TestCoreSivm(unittest.TestCase):
         self.assertEquals(o2['logscore'],-0.6931471805599453)
     
     def test_continuous_inference(self):
-        if config["get_ripl"] == "lite":
-            raise SkipTest("Venture Lite does not support continuous inference")
         status = {'instruction':'continuous_inference_status'}
         o1 = self.sivm.execute_instruction(status)
         self.assertEquals(o1['running'], False)
         
-        params = {'kernel': 'mh', 'use_global_scaffold': False}
-        self.sivm.execute_instruction({'instruction':'start_continuous_inference', 'params' : params})
+        exp = [v.sym("mh"), v.sym("default"), v.sym("one"), v.num(2)]
+        self.sivm.execute_instruction({'instruction':'start_continuous_inference', 'expression' : exp})
         o2 = self.sivm.execute_instruction(status)
         self.assertEquals(o2['running'], True)
         

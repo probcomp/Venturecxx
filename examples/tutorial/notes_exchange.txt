@@ -1,0 +1,164 @@
+;; This buffer is for notes you don't want to save, and for Lisp evaluation.
+;; If you want to create a file, visit that file with C-x C-f,
+;; then enter the text in that file's own buffer.
+
+notes towards tutorial on exchangeability, collapsed samplers, AAA
+
+1. Venture thunks output exchangeable sequence of RVs
+  - re-running whole Venture program will give iid sequence
+  - most venture builtin SPs will give iid sequence
+  - easy to write 'mixture model' thunk where values are not iid if you don't know the latent parameter values
+  - make_dir_mult constructs a thunk that has non-iid but exchangeable sequence of RVs as output. compare linear scaling of writing dir_mult by hand vs. using primitive. due to AAA. (but could also use sufficient statistics for same linear advantage). no ability in venture to read off the state of the dir_mult directly. at best could use SAMPLE and take an average. can read off counts outside venture by looking at type of the procedure.
+
+2. Exchangeability: some general results
+ - computable mixture models correspond to computable exchangeable sequence of RVs. any relevant complexity results?
+ - polya urn process: simple scheme that defines a sequence of RVs that are exchangeable (distribution on n-th RV only depends on the composition of urn at that point, which depends only on the previous draws from the urn and not their order). nb: for urn with (1 black,1white) starting point, each RV is unconditionally the same as the first one, namely, (flip .5). obvious here by symmetry, but this holds generally (iirc) for all finite urn processes. variables are identical but not independent. exchangeability is about dependency of variables.
+ - urn processes are exchangeable and so correspond to mixture model. rough idea of de finetti for urn: path dependence of urn, as n gets larger, it behaves increasingly like a fixed coin/dice. need an increasingly long and unlikely run to change bias. assuming that sequence of RVs does converge, we can ask what probability of different coin weights are as function of initial distribution of balls in urn. given by beta, dirichlet, dirichlet process.
+
+3. Computational upshot: 
+- use simulated urn process in place of mixture model. simple to code in impure language by mutating the counts. (exchangeability means the mutation is reversible and can be reversed in any order). could write this without mutation by computing the counts from the trace (not possible in venture currently). 
+
+- explanation of how the update is done in constant time in trace (exploiting exchangeability)
+
+- Q: in cases where uncollapsed sampler is available and can be done in constant time using sufficient statistics, what are the benefits of using the collapsed sampler? (i'm not sure here of what trade-offs are).
+
+- in non-parameteric case, what are trade-offs of using stick-breaking construction vs. crp construction? if you defined a stick-breaking construction in venture, this would scale poorly. (without sufficient statistics, you'll have linear scaling at least to compute likelihood of a given stick-length/coin-weight.) but what about efficiency of a new builtin that organizes computation to try to avoid linear scaling in observations? 
+
+
+references:
+probmods simple exchangeability examples. examples of pick-a-stick for concentrating continuous distribution
+
+freer and roy on computable random sequences. 
+
+vkm thesis on generalized purity and exchangeable sequences.
+
+bernardo and smith - bayesian theory.
+extensive but very dry discussion of exchangeability. part of discussion is to use de finetti to support bayesian practice. supposed problem is that bayesians introduce hidden, unobservable parameters and this is not kosher from extreme positivist standpoint (where only observations exist). a less general point would be: you should only introduce a parameter when you have good reason to think it corresponds to something real. if you see a series a balls coming from an urn, you can't assume there's a fixed parameter 'ratio of white:black balls'. maybe the urn is a polya urn whose state changes every draw. (interesting to think about this in context of fundamental physics, where we have no direct access to objects underlying observations). there's a practical upshot: there is a simple intervention that changes the state of a normal urn (with iid draws with replacement), while there's no comparable simple intervention on the polya urn. 
+
+de finetti is supposed to help because as long as you believe data is exchangeable (infite exchangeable -- finite case is more complex) you can use a mixture model as a purely mathematical convenience, with the parameter not corresponding to a fixed part of the world but just to a mathematical limit of a part of the world (as times goes to infinity). this is similar to vN-Morgenstern showing that if you satisfy decision-theory axioms then we can (as mathematical convenience) model your decisions as maximizing a real-value utility function. 
+
+pearl and others have investigate relation of exchangeability and causation:
+Pearl, Causality 2nd Edition
+Zhang, Exchangeability and Invariance: A Causal Theory
+Diaconis, Failure of Infinite Exchangeability and results for finite versions. 
+
+ 
+
+notes on venture and stats :
+
+[assume x (uniform_discrete -100 100)]
+[assume y (normal x .01)]
+
+1. if you get [observe (normal x epsilon) 50.], then do [infer (mh scope_xy all transitions)] you will infer that y is close to 50. this is true as the noise *epsilon* on *x* tends to zero. But if you do an observe with no noise, [observe x 50], then you get an exception. (Currently not a helpful exception). 
+
+suppose you do observe the value of *x* directly. in venture you'd have to model this by re-writing the model. this is reasonable but goes against the use of venture for online inference on heterogenous expressions. (suppose you want to update your model in response to a series of observations of unknown expressions in your model. then there are discontinuities in the kinds of expressions you can observe.)
+
+
+2. improper priors: 
+Not clear if you can sample from them. However, even if you can't, you can get initial sample from the best available proxy and then do MH using the improper prior. Afaict this is what STAN does. Could Venture not do the same? One problem is that Venture doesn't specify the form that *observes* can take. So given an improper prior, it would be possible to add an *observe* that leads to an improper posterior. Generally, we see a conflict between having flexible *observes* that aren't of a pre-specified form and having improper priors. 
+
+3. Jeffreys Priors
+Venture supports some Jeffreys priors (e.g. Beta(.5,.5)), but not the improper ones. Generally, Jeffreys priors depend on computing the Fisher information matrix for the parameters of the model. The Fisher information depends on taking an expectation w.r.t possible datasets generated by the model. This leads to different values for the Fisher information depending on which experiment is done. For example, whether we decide to flip a coin 10 times or to flip a coin till it comes up tails.
+
+ So Jeffreys priors also depend on which experiment is done. Venture programs don't specify what form 'observes' will take and so it's not clear if Jeffreys priors make sense for Venture programs.
+
+Related point is that estimation theory depends on there being iid samples. If we don't have a set form for observes, then specific results on asymptotics of variance of an estimator will not be useful.
+
+4. Compiled Venture programs
+Suppose we fix the assumes and all the forms of the observes. The only unspecified variables are the number of observes and their values. 
+
+Suppose we use an improper prior on a parameter. The compiler won't be able to tell that posterior is proper (as it's a non-trivial analytic derivation in general -- maybe a combination of good type-system and clever compiler could help out in a range of basic cases). However, the user will at least be able to verify that the posterior is improper (because the form of the observes has been fixed forever). 
+If form of observes is fixed, we should be able to compute Fisher information for parameters and hence Jeffreys priors. (Maybe this is very messy for a model with lots of parameter. I'm not sure the Fisher information will factor neatly if the parameters depend on each other). 
+
+
+4. Interactive, online, diachronic Bayes vs. Static Batch Bayes
+In AI/ML/stats, we might distinguish two kinds of theory of rational inference. One is a theory for an algorithm that updates its beliefs in response to data, where the data it collects varies in kind and where there are many update 'events' over time (not one big batch update). This kind of theory is more relevant to robotics, AI and cog sci. I'll call this a theory of Dynamic Update.
+
+Another kind of theory is the theory of how to do inference after a particular experiment / observational study. Here all inference is done at once and one is interested only in the present data and not anything after (or, for the most part, before). This kind of theory is relevant in stats, ML, and philosophy of science. Call this a theory of Batch Inference. 
+
+Bayes as a theory of Dynamic Update: Idea that you set your initial prior, then you can update on any kind of evidence. Bayes tells you exactly what to do. Evidence could be very heterogeneous. It can come in batch or in small pieces.
+
+Suppose you have a complex world model and you can condition on any kind of evidence about the world model. Before you go out to collect data, you may not be able to narrow down the logical form of the evidence you will collect. For example, in observing some urns with marbles in them, you might observe the color of a ball from a known or random urn, the color up to nearby shades, the fact that an urn is non-empty, the fact that the first two balls from two urns were the same color, the fact that the number of balls in an urn is prime, etc. You have to set your prior BEFORE you know the form of the evidence you are going to get. 
+
+In programming terms, your prior and update mechanism is a fixed part of the program that cannot vary in response to the form of the evidence. You only know the form of the evidence at each successive 'run-time'.
+
+Key general property of Bayes: today's posterior is tomorrow's prior. Bayes specifies the sufficient statistic of your observations. It is simply the posterior of your observations. Once you have updated, you can throw away everything but the posterior (assuming a fixed likelihood function). It's not clear how much of a saving this will provide. A robot trying to map a whole city in detail will have very complex posteriors. But estimating a single parameter (integrating out everything else) will to concise posteriors. 
+
+
+Problems with Bayes:
+
+Ignorance Priors violate Dynamic Update
+You might want an ignorance prior that is invariant to certain transformation of the parameter. But some of the priors that satisfy this invariance are improper and so you can't update them on certain kinds of evidence (as you won't get a proper posterior). The general way of getting invariance depends on the Fisher information, which depends on the experiment you are doing. This again assumes knowledge of the form of evidence. 
+
+Tractability conflicts with Dynamic Update
+There are many techniques for approximate Bayes. Many don't work given heterogenous dynamic updates. 
+
+Exponential families: If the likelihood function is in an exponential family, then you can get analytical updates via a conjugate prior. This also makes for very efficient online updates (as you only need update sufficient statistics). However, if you must set your prior without knowing the likelihood in advance, then you can't choose a conjugate prior. (Example: Given parameter theta, I might observe (normal theta 1) or (gamma theta^2 1). My guess is that even if likelihoods are an exp family you still can't set a prior for them in advance.)
+
+
+Gibbs Sampling: I generally need to be able to compute conditional distributions analytically (so as to sample from them). But doing so requires observations that have a form that makes this possible. 
+
+Sample based methods (MH/Particles): when these techniques work they give you a number of samples from the posterior. You can't do analytical updates or computations on the samples. (You could try to fit a closed-form distributio to the samples, but this is hard in high dimensions). Thus once you move from a closed-form prior to samples, it will generally be easier to stick with the samples. Various ways of speeding up MH depend on the form of data.
+
+Variational: Gives a closed-form approximation of the posterior and so allows for past computations with the posterior. Not sure how easily you can optimize the KL for unknown likelihood functions.
+
+
+Probabilisic languages exploit the fact that MH samplers can be build up compositionally from primitives with analytical likelihoods. Though various optimizations that depend on the form of the observations are not available, we can compute the likelihood of the data by multiplying the likelihoods of the primitive procedures involved.
+
+Such languages do not really embody the 'today's prior is tomorrow's posterior' property. In Venture, suppose you do inference on some observes and then add some observes of a different form. The initial inference just changes the value of parameters, it doesn't mutate the priors into the posterior. Thus, all observes have to stay around forever. In general, this will lead to linear scaling for a single sample. (Sufficient statistics can help here, but they aren't available in general).
+
+So why not mutate the priors? We could replace the prior with a bunch of samples from the posterior. The problem is that this will be too crude for certain future updates. (As the delta function approximation will leave out certain regions of param space we might need). We could fit a prior. Then we need to worry about the quality of that inference. Unclear how to do this in general. Still, fitting some gGaussian mixture may be useful if we have enough data. 
+
+
+Batch Inference:
+Batch inference is a specialization of the dynamic problem where you know the form of the observations ahead of time and you get to choose your priors/inference strategy based on the form of the observations.
+
+[One value of experiments is being able to rule out possible causes via interventions/RCTs. Another might be that we fix the form of the data and can choose it to make inference viable.]
+
+Lots of statistical / ML ideas depend on this setting. For example, estimation theory depends on the observations having a particular form. Point estimation methods don't sequentialize in an obvious way. You get an ML estimate for regression param. Not an obvious way to use this to now do logistic regression. (Could be initiaizer). Frequentist theory doesn't have notion of prior where previous learning can be exploited. This seems another crucial aspect of Bayes vs. Freq: posterior is your sufficient statistic for future inference. 
+
+So an obvious idea is to try to use batch methods to help dynamic updates. 
+
+ 
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+notes rao-blackwell:
+info theory: if estimator is a func of SS then it's the same. if not, estimator must vary on datasets with same SS. if so, it's using some spurious aspect of data (irrelevant to param theta). like a weather forecaster incorporating horoscope/psychic into a forecast that also depends on some (but not all) recent data in timeseries. 
+
+one idea: you'd like to reverse taking into account the spurious data. if you had lost the info about which world you're in (and only kep the suff stat) and you had to use the estimator, you'd have to average over it. so RB is what you'd get if you were forced to do this. (after taking the av, you remove any info about the estimate about the spurious data source. estimate now is only a function of SS. 
+
+[info theory and estimation. the poisson estimator that only takes sum of a subset of the data  --- not clear how easy to combine with info theory. intuitively, the estimator that only uses subset of data is bad because it fails to use variables that are informative about the parameter. every X_i which is drawn iid from the poisson lambda gives certain amount of into about lam. can't formalize coz lam ain't a random variable. we can talk about info gain of observing X, average DROP in entropy from prior to posterior from observing X_i. But if you already know lam then there's no drop. So we need some prior assumption. 
+
+clear idea: let estimator be unbiased and expectation of estimator (= value of parameter) = 0. we then show that variance goes down when we RB the estimator. take the old estimator's variance, which is just weighted sum of g(x)^2 where x is data vector. under RB, we take all x's with same SS (i.e. in same cell of partition) and make their estimate E g(x) / S=s, and then square this estimate. so now the squaring takes place outside the sum. this make the sum smaller by convexity. (suggests that a version of RB will be more general and won't depend on variance but just on the squaring making for convexity). 
+question of whether we could instead condition on some other function of the data and still get same result. 
+
+
+
+
+
+
+
+
+
+

@@ -1,5 +1,7 @@
 #include "sps/dstructure.h"
 #include "values.h"
+#include "utils.h"
+#include <boost/foreach.hpp>
 
 VentureValuePtr SimplexOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
@@ -11,9 +13,29 @@ VentureValuePtr SimplexOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)
   return VentureValuePtr(new VentureSimplex(s));
 }
 
+VentureValuePtr ToSimplexOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  Simplex s;
+  double sum = 0;
+  
+  BOOST_FOREACH(VentureValuePtr v, args->operandValues[0]->getArray())
+  {
+    s.push_back(v->getDouble());
+    sum += s.back();
+  }
+  
+  for (size_t i = 0; i < s.size(); ++i)
+  {
+    s[i] /= sum;
+  }
+  
+  return VentureValuePtr(new VentureSimplex(s));
+}
+
+
 VentureValuePtr IsSimplexOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureSimplex>(args->operandValues[0])));
+  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureSimplex>(args->operandValues[0]) != NULL));
 }
 
 
@@ -39,17 +61,17 @@ VentureValuePtr SizeOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
 
 VentureValuePtr DictOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  VentureValuePtrMap<VentureValuePtr> d;
+  MapVVPtrVVPtr d;
   vector<VentureValuePtr> syms = args->operandValues[0]->getArray();
   vector<VentureValuePtr> vals = args->operandValues[1]->getArray();
-  assert(syms.size() == vals.size());
+  if(syms.size() != vals.size()) throw "Dict must take equal numbers of keys and values.";
   for (size_t i = 0; i < syms.size(); ++i) { d[syms[i]] = vals[i]; }
   return VentureValuePtr(new VentureDictionary(d));
 }
 
 VentureValuePtr IsDictOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureDictionary>(args->operandValues[0])));
+  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureDictionary>(args->operandValues[0]) != NULL));
 }
 
 
@@ -63,6 +85,7 @@ VentureValuePtr ArrayOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) c
 
 VentureValuePtr PrependOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
+  checkArgsLength("prepend", args, 2);
   vector<VentureValuePtr> v;
   v.push_back(args->operandValues[0]);
   vector<VentureValuePtr> old = args->operandValues[1]->getArray();
@@ -70,11 +93,27 @@ VentureValuePtr PrependOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)
   return VentureValuePtr(new VentureArray(v));
 }
 
+VentureValuePtr AppendOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("concat", args, 2);
+  vector<VentureValuePtr> v(args->operandValues[0]->getArray());
+  v.push_back(args->operandValues[1]);
+  return VentureValuePtr(new VentureArray(v));
+}
 
+VentureValuePtr ConcatOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("append", args, 2);
+  vector<VentureValuePtr> v1(args->operandValues[0]->getArray());
+  const vector<VentureValuePtr>& v2 = args->operandValues[1]->getArray();
+  v1.insert(v1.end(), v2.begin(), v2.end());
+  return VentureValuePtr(new VentureArray(v1));
+}
 
 VentureValuePtr IsArrayOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureArray>(args->operandValues[0])));
+  checkArgsLength("is_array", args, 1);
+  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureArray>(args->operandValues[0]) != NULL));
 }
 
 
@@ -87,7 +126,7 @@ VentureValuePtr PairOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
 
 VentureValuePtr IsPairOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VenturePair>(args->operandValues[0])));
+  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VenturePair>(args->operandValues[0]) != NULL));
 }
 
 

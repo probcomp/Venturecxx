@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <memory>
+#include <vector>
 #include <gsl/gsl_rng.h>
 
 using namespace std;

@@ -6,6 +6,7 @@
 #include "smap.h"
 #include "value.h"
 
+#include "rng.h"
 #include "pset.hpp"
 #include "pmap.hpp"
 
@@ -15,7 +16,7 @@ using persistent::PSet;
 struct Particle : Trace
 {
   Particle(ConcreteTrace * outerTrace);
-  Particle(ConcreteTrace * outerTrace, shared_ptr<gsl_rng> rng);
+  Particle(ConcreteTrace * outerTrace, shared_ptr<RNGbox> rng);
   Particle(shared_ptr<Particle> outerParticle);
 
 /* Methods */
@@ -37,6 +38,10 @@ struct Particle : Trace
   void reconnectLookup(LookupNode * lookupNode);
   void incNumRequests(RootOfFamily root);
   void incRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
+
+  bool hasLKernel(shared_ptr<Scaffold> scaffold, Node * node);
+  void registerLKernel(shared_ptr<Scaffold> scaffold,Node * node,shared_ptr<LKernel> lkernel);
+  shared_ptr<LKernel> getLKernel(shared_ptr<Scaffold> scaffold,Node * node);
   void addChild(Node * node, Node * child);
 
   /* Detach mutations */  
@@ -131,7 +136,7 @@ struct Particle : Trace
 
   /* persistent, not stored in concrete trace */
   PMap<Node*, int> regenCounts;
-
+  PMap<Node*, shared_ptr<LKernel> > lkernels;
 
   /* persistent additions */
   PMap<Node*, PMap<FamilyID,RootOfFamily,VentureValuePtrsLess> > newMadeSPFamilies;
@@ -144,7 +149,7 @@ struct Particle : Trace
   map<Node*, shared_ptr<SPAux> > madeSPAuxs;
 
   /* (optional) rng override */
-  shared_ptr<gsl_rng> rng;
+  shared_ptr<RNGbox> rng;
 };
 
 

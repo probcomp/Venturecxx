@@ -1,0 +1,19 @@
+How to profile Puma
+
+============================================================
+
+1. Step One: cProfile
+
+Create a script that runs a computation under cProfile, as in
+
+example_profile_script.py
+
+2. Step 2: run it under callgrind to do the actual profiling
+
+valgrind --tool=callgrind python -E -tt -c "import <filename> as p; p.<methodname>()"
+
+e.g.
+
+valgrind --tool=callgrind python -E -tt -c "import example_profile_script as p; p.profileReferencesProgram()"
+
+3. Step 3: launch kcachegrind and open the result (callgrind.annotate.<id>)

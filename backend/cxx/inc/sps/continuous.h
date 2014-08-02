@@ -3,7 +3,26 @@
 
 #include "sp.h"
 
-/* Continuous scalar random SPs. */
+// /* Continuous scalar random SPs. */
+// struct MVNormalSP : SP {
+//   MVNormalSP() : SP("mvnormal") {
+//     isRandomOutput = true;
+//     canAbsorbOutput = true;
+//     hasVariationalLKernel = true;
+//   }
+
+//   VentureValue * simulateOutput(Node * node, gsl_rng * rng) const override;
+//   double simulateOutputNumeric(const vector<double> & args, gsl_rng * rng) const override;
+//   double logDensityOutput(VentureValue * value, Node * node) const override;
+
+//   double logDensityOutputNumeric(double output, const vector<double> & args) const override;
+
+//   vector<ParameterScope> getParameterScopes() const override;
+//   vector<double> gradientOfLogDensity(double output,
+//               const vector<double> & arguments) const override;
+// };
+
+
 struct NormalSP : SP
 {
   NormalSP(): SP("normal")

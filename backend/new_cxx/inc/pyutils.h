@@ -8,6 +8,7 @@
 
 #include "types.h"
 
+VentureValuePtr fromPython(boost::python::object o);
 VentureValuePtr parseValue(boost::python::dict d);
 VentureValuePtr parseExpression(boost::python::object o);
 

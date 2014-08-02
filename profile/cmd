@@ -1,7 +1,0 @@
-1. kcachegrind from cPython output:
-
-pyprof2calltree -i <filename>.pyprof -k
-
-2. callgrind (wo suppression):
-
-valgrind --tool=callgrind python -E -tt -c “import <filename> as p; p.<methodname>()”

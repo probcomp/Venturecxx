@@ -1,16 +1,13 @@
-from abc import ABCMeta, abstractmethod
 from value import VentureValue, ExpressionType
 from request import Request
 
 class Node(object):
-  __metaclass__ = ABCMeta
   def __init__(self):
     self.value = None
     self.children = set()
     self.isObservation = False
-    self.madeSP = None
-    self.madeSPFamilies = None
-    self.madeSPAux = None
+    self.madeSPRecord = None
+    self.aaaMadeSPAux = None
     self.numRequests = 0
     self.esrParents = []
     self.isObservation = False
@@ -25,8 +22,9 @@ class Node(object):
     return value is None or isinstance(value, VentureValue)
 
   def parents(self): return self.definiteParents()
-  @abstractmethod
-  def definiteParents(self): pass
+  def definiteParents(self):
+    raise Exception("Cannot compute the definite parents of an abstract node.")
+
 
 class ConstantNode(Node):
   def __init__(self,value):
@@ -51,8 +49,6 @@ class LookupNode(Node):
 
 
 class ApplicationNode(Node):
-  __metaclass__ = ABCMeta
-
   def __init__(self, operatorNode, operandNodes):
     super(ApplicationNode, self).__init__()
     self.operatorNode = operatorNode
@@ -99,7 +95,7 @@ class Args(object):
       self.requestValue = trace.valueAt(node.requestNode)
       self.esrValues = [trace.valueAt(esrParent) for esrParent in trace.esrParentsAt(node)]
       self.esrNodes = trace.esrParentsAt(node)
-      self.madeSPAux = trace.madeSPAuxAt(node)
+      self.madeSPAux = trace.getAAAMadeSPAuxAt(node)
       self.isOutput = True
     else:
       self.isOutput = False

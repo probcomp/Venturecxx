@@ -9,7 +9,7 @@
 struct CRPSPAux : SPAux
 {
   CRPSPAux(): nextIndex(1), numCustomers(0), numTables(0) {}
-  shared_ptr<SPAux> clone() { return shared_ptr<CRPSPAux>(new CRPSPAux(*this)); }
+  SPAux* copy_help(ForwardingMap* m) const { return new CRPSPAux(*this); }
   boost::python::object toPython(Trace * trace) const;
   
   uint32_t nextIndex;
@@ -30,7 +30,7 @@ struct CRPSP : SP
   boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;
   
   // for toPython
-  double alpha, d;
+  const double alpha, d;
 };
 
 struct CRPOutputPSP : RandomPSP
@@ -45,8 +45,8 @@ struct CRPOutputPSP : RandomPSP
   double logDensityOfCounts(shared_ptr<SPAux> spAux) const;
 
  private:
-  double alpha;
-  double d;
+  const double alpha;
+  const double d;
 };
 
 #endif

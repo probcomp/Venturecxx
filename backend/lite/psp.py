@@ -1,7 +1,7 @@
-from abc import ABCMeta, abstractmethod
 from utils import override
 from lkernel import DefaultAAALKernel,DefaultVariationalLKernel,LKernel
 from request import Request
+from exception import VentureBuiltinSPMethodError
 
 class PSP(object):
   """A Primitive Stochastic Procedure.
@@ -40,12 +40,10 @@ class PSP(object):
   additional contextual information that can be useful for special
   PSPs.  See node.py for the definition of Args.
   """
-  __metaclass__ = ABCMeta
 
-  @abstractmethod
-  def simulate(self,args):
+  def simulate(self, _args):
     """Simulate this process with the given parameters and return the result."""
-    pass
+    raise VentureBuiltinSPMethodError("Simulate not implemented!")
 
   def gradientOfSimulate(self, _args, _value, _direction):
     """Return the gradient of this PSP's simulation function.  This method
@@ -84,7 +82,7 @@ class PSP(object):
     the DRG, or in the brush).
 
     """
-    raise Exception("Cannot compute simulation gradient of %s", type(self))
+    raise VentureBuiltinSPMethodError("Cannot compute simulation gradient of %s", type(self))
 
   def isRandom(self):
     """Return whether this PSP is stochastic or not.  This is important
@@ -92,7 +90,7 @@ class PSP(object):
     principal.
 
     """
-    raise Exception("Do not know whether %s is random", type(self))
+    raise VentureBuiltinSPMethodError("Do not know whether %s is random", type(self))
 
   def canAbsorb(self, _trace, _appNode, _parentNode):
     """Return whether this PSP, which is the operator of the given
@@ -106,7 +104,7 @@ class PSP(object):
     claiming to absorb changes to both of them simultaneously.
 
     """
-    raise Exception("Do not know whether %s can absorb", type(self))
+    raise VentureBuiltinSPMethodError("Do not know whether %s can absorb", type(self))
 
   def logDensity(self, _value, _args):
     """Return the log-density of simulating the given value from the given args.
@@ -121,7 +119,7 @@ class PSP(object):
     Implementing this method is not strictly necessary for a valid
     PSP, but is very helpful for many purposes if the density
     information is available.  See also canAbsorb."""
-    raise Exception("Cannot compute log density of %s", type(self))
+    raise VentureBuiltinSPMethodError("Cannot compute log density of %s", type(self))
 
   def gradientOfLogDensity(self, _value, _args):
     """Return the gradient of this PSP's logDensity function.  This method
@@ -131,7 +129,7 @@ class PSP(object):
     The gradient should be returned as a 2-tuple of the partial
     derivative with respect to the value and a list of the partial
     derivatives with respect to the arguments."""
-    raise Exception("Cannot compute gradient of log density of %s", type(self))
+    raise VentureBuiltinSPMethodError("Cannot compute gradient of log density of %s", type(self))
 
   def logDensityBound(self, _value, _args):
     """Return an upper bound on the possible log density of this PSP
@@ -152,7 +150,7 @@ class PSP(object):
     bound, and in this case do not try to absorb at this node when
     doing rejection sampling?  Or should that be a separate method
     called logDensityBounded?"""
-    raise Exception("Cannot compute log density bound of %s", type(self))
+    raise VentureBuiltinSPMethodError("Cannot compute log density bound of %s", type(self))
 
   def incorporate(self,value,args):
     """Register that an application of this PSP produced the given value
@@ -187,7 +185,7 @@ class PSP(object):
     method, given the same arguments.
 
     """
-    raise Exception("Cannot enumerate")
+    raise VentureBuiltinSPMethodError("Cannot enumerate")
 
   def description(self, _name):
     """Return a string describing this PSP.  The string may include the
@@ -207,14 +205,10 @@ class PSP(object):
   def hasDeltaKernel(self): return False
 
   def madeSpLogDensityOfCountsBound(self, _aux):
-    raise Exception("Cannot rejection sample AAA procedure with unbounded log density of counts")
+    raise VentureBuiltinSPMethodError("Cannot rejection sample AAA procedure with unbounded log density of counts")
 
 class DeterministicPSP(PSP):
   """Provides good default implementations of PSP methods for deterministic PSPs."""
-  __metaclass__ = ABCMeta
-  @abstractmethod
-  def simulate(self,args): pass
-
   @override(PSP)
   def isRandom(self): return False
   @override(PSP)
@@ -229,7 +223,7 @@ class DeterministicPSP(PSP):
 
 class NullRequestPSP(DeterministicPSP):
   @override(DeterministicPSP)
-  def simulate(self,args): return Request()
+  def simulate(self, _args): return Request()
   @override(PSP)
   def gradientOfSimulate(self, args, _value, _direction): return [0 for _ in args.operandValues]
   @override(DeterministicPSP)
@@ -246,15 +240,15 @@ class ESRRefOutputPSP(DeterministicPSP):
     return [0 for _ in args.operandValues] + [direction]
 
   @override(DeterministicPSP)
+  def gradientOfLogDensity(self, _value, args):
+    return (0, [0 for _ in args.operandValues + args.esrNodes])
+
+  @override(DeterministicPSP)
   def canAbsorb(self,trace,appNode,parentNode):
     return parentNode != trace.esrParentsAt(appNode)[0] and parentNode != appNode.requestNode
 
 class RandomPSP(PSP):
   """Provides good default implementations of (two) PSP methods for stochastic PSPs."""
-  __metaclass__ = ABCMeta
-  @abstractmethod
-  def simulate(self,args): pass
-
   @override(PSP)
   def isRandom(self): return True
   @override(PSP)
@@ -273,7 +267,7 @@ class TypedPSP(PSP):
     return self.psp.logDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def gradientOfLogDensity(self, value, args):
     (dvalue, dargs) = self.psp.gradientOfLogDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
-    return (self.f_type.wrap_return(dvalue), self.f_type.wrap_arg_list(dargs))
+    return (self.f_type.gradient_type().wrap_return(dvalue), self.f_type.gradient_type().wrap_arg_list(dargs))
   def logDensityBound(self, value, args):
     return self.psp.logDensityBound(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def incorporate(self,value,args):

@@ -1,0 +1,14 @@
+[assume brown_step (gamma 1 1)]
+
+[assume obs_noise (gamma 1 1)]
+
+[assume position (mem (lambda (t)
+  (scope_include (quote exp) t
+   (if (<= t 0)
+       (normal 0 brown_step)
+       (normal (position (- t 1)) brown_step)))))]
+
+[assume obs_fun (lambda (t)
+  (normal (position t) obs_noise))]
+
+[predict (position 10)]

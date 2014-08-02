@@ -21,31 +21,35 @@ struct VentureSPRef : VentureValue
   VentureSPRef(Node * makerNode): makerNode(makerNode) {}
   Node * makerNode;
 
+  int getValueTypeRank() const;
   bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
   boost::python::dict toPython(Trace * trace) const;
   string toString() const;
 
+  VentureSPRef* copy_help(ForwardingMap* m) const;
 };
 
 struct SPFamilies
 {
   SPFamilies() {}
-  SPFamilies(const VentureValuePtrMap<RootOfFamily> & families): families(families) {}
+  SPFamilies(const MapVVPtrRootOfFamily & families): families(families) {}
 
-  VentureValuePtrMap<RootOfFamily> families;
+  MapVVPtrRootOfFamily families;
   bool containsFamily(FamilyID id);
   RootOfFamily getRootOfFamily(FamilyID id);
   void registerFamily(FamilyID id,RootOfFamily root);
   void unregisterFamily(FamilyID id);
+  SPFamilies* copy_help(ForwardingMap* m) const;
 };
 
 struct SPAux
 {
   virtual ~SPAux() {}
-  // TODO stupid and may make bugs hard to find
-  virtual shared_ptr<SPAux> clone() { return shared_ptr<SPAux>(new SPAux()); } 
+  shared_ptr<SPAux> clone();
   virtual boost::python::object toPython(Trace * trace) const;
+  // TODO stupid and may make bugs hard to find
+  virtual SPAux* copy_help(ForwardingMap* m) const { return new SPAux(); }
 };
 
 struct SP
@@ -64,6 +68,8 @@ struct SP
   virtual void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args, gsl_rng * rng) const;
   
   virtual boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;
+  virtual SP* copy_help(ForwardingMap* m) const;
+  virtual ~SP() {}
 };
 
 #endif

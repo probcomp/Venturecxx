@@ -13,6 +13,7 @@
 #include "sps/hmm.h"
 #include "sps/matrix.h"
 #include "sps/msp.h"
+#include "sps/mvn.h"
 #include "sps/scope.h"
 
 map<string,VentureValuePtr> initBuiltInValues() 
@@ -29,10 +30,12 @@ map<string,SP*> initBuiltInSPs()
   map<string,SP*> m;
 
   /* Deterministic SPs */
-  m["plus"] = new SP(new NullRequestPSP(), new PlusOutputPSP());
-  m["minus"] = new SP(new NullRequestPSP(), new MinusOutputPSP());
-  m["times"] = new SP(new NullRequestPSP(), new TimesOutputPSP());
+  m["add"] = new SP(new NullRequestPSP(), new AddOutputPSP());
+  m["sub"] = new SP(new NullRequestPSP(), new SubOutputPSP());
+  m["mul"] = new SP(new NullRequestPSP(), new MulOutputPSP());
   m["div"] = new SP(new NullRequestPSP(), new DivOutputPSP());
+  m["int_div"] = new SP(new NullRequestPSP(), new IntDivOutputPSP());
+  m["int_mod"] = new SP(new NullRequestPSP(), new IntModOutputPSP());
   m["eq"] = new SP(new NullRequestPSP(), new EqOutputPSP());
   m["gt"] = new SP(new NullRequestPSP(), new GtOutputPSP());
   m["gte"] = new SP(new NullRequestPSP(), new GteOutputPSP());
@@ -48,7 +51,11 @@ map<string,SP*> initBuiltInSPs()
   m["sqrt"] = new SP(new NullRequestPSP(), new SqrtOutputPSP());
   m["not"] = new SP(new NullRequestPSP(), new NotOutputPSP());
   m["is_symbol"] = new SP(new NullRequestPSP(), new IsSymbolOutputPSP());
+  
+  m["to_atom"] = new SP(new NullRequestPSP(), new ToAtomOutputPSP());
   m["is_atom"] = new SP(new NullRequestPSP(), new IsAtomOutputPSP());
+
+  m["probability"] = new SP(new NullRequestPSP(), new ProbabilityOutputPSP());
   
   /* Continuous SPs */
   m["normal"] = new SP(new NullRequestPSP(), new NormalPSP());
@@ -59,6 +66,9 @@ map<string,SP*> initBuiltInSPs()
   m["student_t"] = new SP(new NullRequestPSP(), new StudentTPSP());
   m["chi_sq"] = new SP(new NullRequestPSP(), new ChiSquaredPSP());
   m["inv_chi_sq"] = new SP(new NullRequestPSP(), new InvChiSquaredPSP());
+  m["approx_binomial"] = new SP(new NullRequestPSP(), new ApproximateBinomialPSP());
+
+  m["multivariate_normal"] = new SP(new NullRequestPSP(), new MVNormalPSP());
 
   /* Discrete SPs */
   m["bernoulli"] = new SP(new NullRequestPSP(), new BernoulliOutputPSP());
@@ -66,6 +76,7 @@ map<string,SP*> initBuiltInSPs()
   m["uniform_discrete"] = new SP(new NullRequestPSP(), new UniformDiscreteOutputPSP());
   m["binomial"] = new SP(new NullRequestPSP(), new BinomialOutputPSP());
   m["categorical"] = new SP(new NullRequestPSP(), new CategoricalOutputPSP());
+  m["log_categorical"] = new SP(new NullRequestPSP(), new LogCategoricalOutputPSP());
   m["symmetric_dirichlet"] = new SP(new NullRequestPSP(), new SymmetricDirichletOutputPSP());
   m["dirichlet"] = new SP(new NullRequestPSP(), new DirichletOutputPSP());
   m["poisson"] = new SP(new NullRequestPSP(), new PoissonOutputPSP());
@@ -87,13 +98,18 @@ map<string,SP*> initBuiltInSPs()
   /* Matrices */
   m["matrix"] = new SP(new NullRequestPSP(), new MatrixOutputPSP());
   m["is_matrix"] = new SP(new NullRequestPSP(), new IsMatrixOutputPSP());
+  m["id_matrix"] = new SP(new NullRequestPSP(), new IdentityMatrixOutputPSP());
+  m["vector"] = new SP(new NullRequestPSP(), new VectorOutputPSP());
+  m["is_vector"] = new SP(new NullRequestPSP(), new IsVectorOutputPSP());
 
   /* Scoping */
   m["scope_include"] = new SP(new NullRequestPSP(), new ScopeIncludeOutputPSP());
+  m["scope_exclude"] = new SP(new NullRequestPSP(), new ScopeExcludeOutputPSP());
 
   /* Data structures */
   m["simplex"] = new SP(new NullRequestPSP(), new SimplexOutputPSP());
   m["is_simplex"] = new SP(new NullRequestPSP(), new IsSimplexOutputPSP());
+  m["to_simplex"] = new SP(new NullRequestPSP(), new ToSimplexOutputPSP());
 
   m["lookup"] = new SP(new NullRequestPSP(), new LookupOutputPSP());
   m["contains"] = new SP(new NullRequestPSP(), new ContainsOutputPSP());
@@ -102,6 +118,8 @@ map<string,SP*> initBuiltInSPs()
   m["is_dict"] = new SP(new NullRequestPSP(), new IsDictOutputPSP());
   m["array"] = new SP(new NullRequestPSP(), new ArrayOutputPSP());
   m["prepend"] = new SP(new NullRequestPSP(), new PrependOutputPSP());
+  m["append"] = new SP(new NullRequestPSP(), new AppendOutputPSP());
+  m["concat"] = new SP(new NullRequestPSP(), new ConcatOutputPSP());
   m["is_array"] = new SP(new NullRequestPSP(), new IsArrayOutputPSP());
   m["pair"] = new SP(new NullRequestPSP(), new PairOutputPSP());
   m["is_pair"] = new SP(new NullRequestPSP(), new IsPairOutputPSP());

@@ -33,6 +33,9 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 #    MESSAGE(FATAL_ERROR "g++ version 4.8 is required!")
 #  ENDIF()
   ADD_DEFINITIONS("-std=c++11" "-Wall" "-g" "-O0" "-fPIC")
+ELSE("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+	message("Found clang++ version" ${CMAKE_CXX_COMPILER_VERSION})
+	ADD_DEFINITIONS("-std=c++11" "-Wall" "-g" "-O3" "-fPIC")
 ELSE()
   MESSAGE(FATAL_ERROR "CMakeLists.txt has not been tested/written for your compiler.")
 ENDIF()
@@ -71,6 +74,7 @@ ADD_LIBRARY(trace SHARED
     src/sps/cond.cxx
     src/sps/sym.cxx
     src/sps/vector.cxx
+	src/sps/matrix.cxx
     src/sps/list.cxx
     src/sps/map.cxx
     src/sps/envs.cxx
@@ -81,6 +85,7 @@ ADD_LIBRARY(trace SHARED
     src/sps/makebetabernoulli.cxx
     src/sps/makeucsymdirmult.cxx
     src/sps/makelazyhmm.cxx
+	src/render.cxx
     src/pytrace.cxx
 )
 

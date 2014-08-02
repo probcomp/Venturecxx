@@ -443,4 +443,195 @@
    fun:SHA1_Update
 }
 
+### Additions by axch
 
+{
+   Conditional jump or move depends on uninitialised value(s)
+   Memcheck:Cond
+   fun:PyObject_GC_Del
+   ...
+}
+
+{
+   Use of uninitialised value of size 8
+   Memcheck:Value8
+   fun:PyObject_GC_Del
+   ...
+   fun:PyImport_ImportModuleLevel
+   ...
+}
+
+{
+   Invalid read of size 4
+   Memcheck:Addr4
+   fun:PyObject_GC_Del
+   ...
+}
+
+{
+   Use of uninitialised value of size 8
+   Memcheck:Value8
+   fun:PyObject_GC_Del
+   ...
+}
+
+{
+   Invalid read of size 4
+   Memcheck:Addr4
+   ...
+   fun:_PyObject_GC_Resize
+   fun:PyFrame_New
+   ...
+}
+
+{
+   Conditional jump or move depends on uninitialised value(s)
+   Memcheck:Cond
+   ...
+   fun:_PyObject_GC_Resize
+   fun:PyFrame_New
+   ...
+}
+
+{
+   Use of uninitialised value of size 8
+   Memcheck:Value8
+   ...
+   fun:_PyObject_GC_Resize
+   fun:PyFrame_New
+   ...
+}
+
+{
+   Invalid read of size 4
+   Memcheck:Addr4
+   ...
+   fun:PyAST_Compile
+   fun:PyRun_StringFlags
+   ...
+}
+
+{
+   Conditional jump or move depends on uninitialised value(s)
+   Memcheck:Cond
+   ...
+   fun:PyAST_Compile
+   fun:PyRun_StringFlags
+   ...
+}
+
+{
+   Use of uninitialised value of size 8
+   Memcheck:Value8
+   ...
+   fun:PyAST_Compile
+   fun:PyRun_StringFlags
+   ...
+}
+
+{
+   Invalid read of size 4
+   Memcheck:Addr4
+   ...
+   fun:_PyString_Resize
+   ...
+}
+
+{
+   Conditional jump or move depends on uninitialised value(s)
+   Memcheck:Cond
+   ...
+   fun:_PyString_Resize
+   ...
+}
+
+{
+   Use of uninitialised value of size 8
+   Memcheck:Value8
+   ...
+   fun:_PyString_Resize
+   ...
+}
+
+{
+   Conditional jump or move depends on uninitialised value(s)
+   Memcheck:Cond
+   ...
+   fun:PyParser_AddToken
+   ...
+   fun:PyParser_ASTFromString
+   ...
+}
+
+{
+   Invalid read of size 4
+   Memcheck:Addr4
+   ...
+   fun:PyParser_AddToken
+   ...
+   fun:PyParser_ASTFromString
+   ...
+}
+
+{
+   Use of uninitialised value of size 8
+   Memcheck:Value8
+   ...
+   fun:PyParser_AddToken
+   ...
+   fun:PyParser_ASTFromString
+   ...
+}
+
+{
+   Invalid read of size 4
+   Memcheck:Addr4
+   fun:PyGrammar_RemoveAccelerators
+   fun:Py_Finalize
+   fun:Py_Main
+   fun:(below main)
+}
+
+### Leak suppressions added by axch
+
+{
+   Some random putative Python leak
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:_PyObject_GC_NewVar
+   fun:PyFrame_New
+   ...
+}
+
+{
+   Some random putative Python leak
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:_PyObject_GC_NewVar
+   fun:PyTuple_New
+   ...
+}
+
+{
+   Some random putative Python leak
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:_PyObject_GC_Resize
+   fun:PyFrame_New
+   ...
+}
+
+{
+   Some random putative Python leak
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:PyString_FromStringAndSize
+   ...
+   fun:PyEval_EvalCode
+   fun:PyImport_ExecCodeModuleEx
+   ...
+}

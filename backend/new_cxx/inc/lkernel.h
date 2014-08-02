@@ -47,7 +47,7 @@ struct DeterministicLKernel : LKernel
 
 struct VariationalLKernel : LKernel
 {
-  virtual double gradientOfLogDensity(VentureValuePtr value, shared_ptr<Args> args) =0;
+  virtual vector<double> gradientOfLogDensity(VentureValuePtr value, shared_ptr<Args> args) =0;
   virtual void updateParameters(Gradient gradient,double gain,double stepSize) =0;
 };
 

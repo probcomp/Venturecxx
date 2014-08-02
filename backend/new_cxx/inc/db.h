@@ -12,14 +12,15 @@ struct LatentDB { virtual ~LatentDB() {}; };
 
 struct DB
 {
-  bool hasValue(Node * node);
-  VentureValuePtr getValue(Node * node);
-  void registerValue(Node * node, VentureValuePtr value);
+  virtual bool hasValue(Node * node);
+  virtual VentureValuePtr getValue(Node * node);
+  virtual void registerValue(Node * node, VentureValuePtr value);
 
   bool hasLatentDB(Node * makerNode);
   shared_ptr<LatentDB> getLatentDB(Node * makerNode);
   void registerLatentDB(Node * makerNode, shared_ptr<LatentDB> latentDB);
 
+  bool hasESRParent(shared_ptr<SP> sp,FamilyID id);
   RootOfFamily getESRParent(shared_ptr<SP> sp,FamilyID id);
   void registerSPFamily(shared_ptr<SP> sp,FamilyID id,RootOfFamily esrParent);
 

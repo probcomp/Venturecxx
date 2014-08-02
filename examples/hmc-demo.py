@@ -19,6 +19,7 @@ import numpy as np
 
 from venture import shortcuts
 import venture.unit as u
+import venture.value.dicts as v
 
 class HMCDemo(u.VentureUnit):
   def makeAssumes(self):
@@ -35,8 +36,7 @@ class HMCDemo(u.VentureUnit):
       self.assume(var, exp)
 
   def makeObserves(self):
-    v = [{"type": "real", "value": 0}, {"type": "real", "value": 0}]
-    self.observe("out", {"type":"list","value":v})
+    self.observe("out", v.list([v.real(0), v.real(0)]))
 
 # int_R pdf(xout|x) pdf([0,0]|[xout, y])
 def true_pdf(x, y):
@@ -54,12 +54,20 @@ def make_pic(name, inf_prog):
   history = model.runFromConditional(70, runs=3, verbose=True, name=name, infer=inf_prog)
   return history
 
+
 if __name__ == '__main__':
   # TODO To compare rejection sampling, would need to define logDensityBound for MVNormalOutputPSP
   # make_pic("rej", "(rejection default all 1)")
   h1 = make_pic("hmc", "(hmc param all 0.1 20 1)")
-#  h1.quickScatter("x", "y", style="-", contour_func=true_pdf, contour_delta=0.5)
+# h1.quickScatter("x", "y", style="-", contour_func=true_pdf, contour_delta=0.5)
   h2 = make_pic("mh", "(mh default one 10)")
   h3 = make_pic("map", "(map param all 0.1 2 1)")
-#  h3.quickScatter("x", "y", style="-", contour_func=true_pdf, contour_delta=0.5)
+# h3.quickScatter("x", "y", style="-", contour_func=true_pdf, contour_delta=0.5)
   u.historyOverlay("demo", [("hmc", h1), ("mh", h2), ("map", h3)]).quickScatter("x", "y", contour_func=true_pdf, contour_delta=0.5)
+
+
+
+
+
+
+

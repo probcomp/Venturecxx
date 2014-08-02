@@ -20,7 +20,7 @@ vector<double> mapExpUptoMultConstant(const vector<double>& xs)
   return ps;
 }
 
-double logaddexp(const vector<double>& xs)
+double logSumExp(const vector<double>& xs)
 {
   double sum = 0;
   if (xs.empty()) { return sum; }
@@ -91,6 +91,13 @@ Simplex normalizeVector(const vector<double> & xs)
   }
   assert(fabs(newSum - 1) < 0.01);
   return ps;
+}
+
+size_t findVVPtr(VentureValuePtr val, const vector<VentureValuePtr>& vec)
+{
+  for (size_t i = 0; i < vec.size(); ++i)
+    { if (vec[i]->equals(val)) { return i; } }
+  return vec.size();
 }
 
 VentureValuePtr simulateCategorical(const Simplex & ps, gsl_rng * rng)

@@ -2,7 +2,7 @@ import math
 import scipy.stats as stats
 from nose import SkipTest
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, defaultKernel
+from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling
 
 @statisticalTest
 def testVentureNormalHMM1():
@@ -12,7 +12,7 @@ def testVentureNormalHMM1():
 (mem (lambda (i)
   (if (eq i 0)
     (normal 0.0 1.0)
-    (normal (f (minus i 1)) 1.0))))
+    (normal (f (- i 1)) 1.0))))
 """)
   ripl.assume("g","""
 (mem (lambda (i)
@@ -39,23 +39,22 @@ def testVentureNormalHMM1():
   # p((g 4) | (f 4))   = normal mean  (f 4), var     1, prec 1
   ripl.observe("(g 4)",5.0)
   # p((f 4) | history) = normal mean 390/89, var 55/89, prec 89/55
-  ripl.predict("(f 4)")
+  ripl.predict("(f 4)", label="pid")
 
-  predictions = collectSamples(ripl,8,infer="mixes_slowly")
+  predictions = collectSamples(ripl,"pid",infer="mixes_slowly")
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
   return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
 
+@skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @statisticalTest
 def testVentureBinaryHMM1():
-  if defaultKernel() == "rejection":
-    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
 
   ripl.assume("f","""
 (mem (lambda (i)
   (if (eq i 0)
     (bernoulli 0.5)
-    (if (f (minus i 1))
+    (if (f (- i 1))
       (bernoulli 0.7)
       (bernoulli 0.3)))))
 """)

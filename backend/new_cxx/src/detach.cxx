@@ -21,7 +21,7 @@ pair<double,shared_ptr<DB> > detachAndExtract(ConcreteTrace * trace,const vector
        ++borderIter)
   {
     Node * node = *borderIter;
-    if (scaffold->isAbsorbing(node)) 
+    if (scaffold->isAbsorbing(node))
     {
       ApplicationNode * appNode = dynamic_cast<ApplicationNode*>(node);
       assert(appNode);
@@ -31,7 +31,7 @@ pair<double,shared_ptr<DB> > detachAndExtract(ConcreteTrace * trace,const vector
     {
       if (trace->isObservation(node))
       {
-	weight += unconstrain(trace,trace->getOutermostNonRefAppNode(node)); 
+        weight += unconstrain(trace,trace->getConstrainableNode(node));
       }
       weight += extract(trace,node,scaffold,db);
     }
@@ -56,10 +56,18 @@ double unconstrain(ConcreteTrace * trace,OutputNode * node)
 double detach(ConcreteTrace * trace,ApplicationNode * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 {
   //cout << "detach(" << node << ")" << endl;
-  
+
   shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
   shared_ptr<Args> args = trace->getArgs(node);
   VentureValuePtr groundValue = trace->getGroundValue(node);
+
+  if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
+  {
+    ScopeID scope = trace->getValue(node->operandNodes[0]);
+    BlockID block = trace->getValue(node->operandNodes[1]);
+    Node * blockNode = node->operandNodes[2];
+    trace->unregisterUnconstrainedChoiceInScope(scope,block,blockNode);
+  }
 
   psp->unincorporate(groundValue,args);
   double weight = psp->logDensity(groundValue,args);
@@ -71,8 +79,9 @@ double detach(ConcreteTrace * trace,ApplicationNode * node,shared_ptr<Scaffold> 
 double extractParents(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaffold,shared_ptr<DB> db)
 {
   double weight = extractESRParents(trace,node,scaffold,db);
-  for (vector<Node*>::reverse_iterator defParentIter = node->definiteParents.rbegin();
-       defParentIter != node->definiteParents.rend();
+  vector<Node*> definiteParents = node->getDefiniteParents();
+  for (vector<Node*>::reverse_iterator defParentIter = definiteParents.rbegin();
+       defParentIter != definiteParents.rend();
        ++defParentIter)
   {
     weight += extract(trace,*defParentIter,scaffold,db);
@@ -116,14 +125,14 @@ double extract(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaffold,s
       RequestNode * requestNode = dynamic_cast<RequestNode*>(node);
       OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
       if (lookupNode) { trace->clearValue(lookupNode); }
-      else if (requestNode) 
-      { 
+      else if (requestNode)
+      {
         weight += unevalRequests(trace,requestNode,scaffold,db);
         weight += unapplyPSP(trace,requestNode,scaffold,db);
       }
       else
       {
-	assert(outputNode);
+        assert(outputNode);
         weight += unapplyPSP(trace,outputNode,scaffold,db);
       }
       weight += extractParents(trace,node,scaffold,db);
@@ -141,7 +150,10 @@ double unevalFamily(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaff
   ConstantNode * constantNode = dynamic_cast<ConstantNode*>(node);
   OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
 
-  if (constantNode) { }
+  if (constantNode || (outputNode && outputNode->isFrozen) )
+  {
+    trace->clearValue(node);
+  }
   else if (lookupNode)
   {
     trace->disconnectLookup(lookupNode);
@@ -153,8 +165,8 @@ double unevalFamily(ConcreteTrace * trace,Node * node,shared_ptr<Scaffold> scaff
     assert(outputNode);
     weight += unapply(trace,outputNode,scaffold,db);
     for (vector<Node*>::reverse_iterator operandNodeIter = outputNode->operandNodes.rbegin();
-	 operandNodeIter != outputNode->operandNodes.rend();
-	 ++operandNodeIter)
+         operandNodeIter != outputNode->operandNodes.rend();
+         ++operandNodeIter)
     {
       weight += unevalFamily(trace,*operandNodeIter,scaffold,db);
     }
@@ -181,12 +193,12 @@ void teardownMadeSP(ConcreteTrace * trace,Node * makerNode,bool isAAA,shared_ptr
   shared_ptr<SP> sp = spRecord->sp;
   if (sp->hasAEKernel()) { trace->unregisterAEKernel(makerNode); }
   db->registerMadeSPAux(makerNode,trace->getMadeSPAux(makerNode));
-  if (isAAA) 
-    {
-      OutputNode * outputNode = dynamic_cast<OutputNode*>(makerNode);
-      assert(outputNode);
-      trace->registerAAAMadeSPAux(outputNode,trace->getMadeSPAux(outputNode));
-    }
+  if (isAAA)
+  {
+    OutputNode * outputNode = dynamic_cast<OutputNode*>(makerNode);
+    assert(outputNode);
+    trace->registerAAAMadeSPAux(outputNode,trace->getMadeSPAux(outputNode));
+  }
   trace->destroyMadeSPRecord(makerNode);
 }
 
@@ -214,7 +226,7 @@ double unapplyPSP(ConcreteTrace * trace,ApplicationNode * node,shared_ptr<Scaffo
 
   double weight = 0;
   psp->unincorporate(value,args);
-  if (scaffold->hasLKernel(node)) { weight += scaffold->getLKernel(node)->reverseWeight(trace,value,args); }
+  if (trace->hasLKernel(scaffold,node)) { weight += trace->getLKernel(scaffold,node)->reverseWeight(trace,value,args); }
   db->registerValue(node,value);
 
   trace->clearValue(node);
@@ -231,7 +243,7 @@ double unevalRequests(ConcreteTrace * trace,RequestNode * node,shared_ptr<Scaffo
 
   const vector<ESR>& esrs = trace->getValue(node)->getESRs();
   const vector<shared_ptr<LSR> >& lsrs = trace->getValue(node)->getLSRs();
-  
+
   Node * makerNode = trace->getOperatorSPMakerNode(node);
   shared_ptr<SP> sp = trace->getMadeSP(makerNode);
   shared_ptr<SPAux> spAux = trace->getMadeSPAux(makerNode);
