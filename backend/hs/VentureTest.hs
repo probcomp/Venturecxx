@@ -2,6 +2,7 @@ import Test.HUnit
 
 import Language
 import Venture
+import Engine
 
 main = runTestTT $ test
   [ venture_main 1 [Predict 1] >>= (@?= [1])
