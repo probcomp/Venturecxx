@@ -1,3 +1,5 @@
+from venture.lite.exception import VentureTypeError
+
 def derivative(f, x):
   return lambda(h): (f(x+h) - f(x-h)) / (2*h)
 
@@ -19,6 +21,17 @@ def tweaking_lens(lens, thunk):
       lens.set(x + h)
       ans = thunk()
       return ans
+    except VentureTypeError:
+      # Interpret a Venture type error as a constraint violation
+      # caused by taking the step.  This is useful because the
+      # carefully function in the randomized testing framework
+      # interprets value errors as a signal that it chose bad
+      # arguments.
+      # TODO Maybe rewrite richardson to do a one-sided limit if the
+      # other side steps off the cliff?
+      import sys
+      info = sys.exc_info()
+      raise ValueError(info[1]), None, info[2]
     finally:
       # Leave the value in the lens undisturbed
       lens.set(x)

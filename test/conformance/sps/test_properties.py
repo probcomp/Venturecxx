@@ -319,8 +319,8 @@ def propGradientOfLogDensity(rnd, name, sp):
     raise SkipTest("%s does not support computing gradient of log density :(" % name)
 
   def log_d_displacement_func():
-    return carefully(sp.outputPSP.logDensity, value, args)
-  numerical_gradient = num.gradient_from_lenses(log_d_displacement_func, real_lenses([value, args_lists[0]]))
+    return sp.outputPSP.logDensity(value, args)
+  numerical_gradient = carefully(num.gradient_from_lenses, log_d_displacement_func, real_lenses([value, args_lists[0]]))
   assert_gradients_close(numerical_gradient, computed_gradient)
 
 def assert_gradients_close(numerical_gradient, computed_gradient):
@@ -418,7 +418,7 @@ def propGradientOfSimulate(args_lists, name, sp):
 
   def sim_displacement_func():
     with randomness:
-      ans = carefully(sp.outputPSP.simulate, args)
+      ans = sp.outputPSP.simulate(args)
     return vv_dot_product(direction, asGradient(ans))
-  numerical_gradient = num.gradient_from_lenses(sim_displacement_func, real_lenses(args_lists[0]))
+  numerical_gradient = carefully(num.gradient_from_lenses, sim_displacement_func, real_lenses(args_lists[0]))
   assert_gradients_close(numerical_gradient, computed_gradient)
