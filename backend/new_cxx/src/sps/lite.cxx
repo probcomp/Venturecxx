@@ -243,7 +243,7 @@ boost::python::dict ForeignLiteSP::toPython(Trace * trace, shared_ptr<SPAux> aux
 
 void PyTrace::bindPrimitiveSP(const string& sym, boost::python::object sp)
 {
-  VentureValuePtr spRecord(new VentureSPRecord(new ForeignLiteSP(sp), new ForeignLiteSPAux(sp)));
+  VentureValuePtr spRecord(new VentureSPRecord(new ForeignLiteSP(sp)));
   ConstantNode * node = trace->createConstantNode(spRecord);
   processMadeSP(trace.get(), node, false, false, shared_ptr<DB>(new DB()));
   assert(dynamic_pointer_cast<VentureSPRef>(trace->getValue(node)));
