@@ -51,12 +51,13 @@ error_response err = responseLBS status500 [("Content-Type", "text/plain")] $ en
   json :: M.Map String String
   json = M.fromList [("exception", "fatal"), ("message", err)]
 
-application :: MVar (Engine IO) -> Request -> IO Response
-application engineMVar r = do
-  parsed <- off_the_wire r
+application :: MVar (Engine IO) -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
+application engineMVar req k = do
+  parsed <- off_the_wire req
   case parsed of
-    Left err -> return $ error_response err
-    Right (method, args) -> execute engineMVar method args
+    Left err -> k $ error_response err
+    Right (method, args) -> do resp <- execute engineMVar method args
+                               k resp
 
 interpret :: String -> [String] -> Either String Directive
 interpret "assume" [var, expr] = Right $ Assume var $ G.parse expr
@@ -97,6 +98,6 @@ onMVar var act = do
 
 main :: IO ()
 main = do
-  engineMVar <- newMVar initial
+  engineMVar <- newMVar initial :: IO (MVar (Engine IO))
   putStrLn "Venture listening on 3000"
   run 3000 (application engineMVar)
