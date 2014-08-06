@@ -28,6 +28,7 @@ class LiteralSugar(Sugar):
   def desugar(self):
     return self.literal
   def resugar(self, index):
+    assert(len(index) == 0)
     return index
 
 class ListMacro(Macro):
@@ -42,8 +43,9 @@ class ListSugar(Sugar):
   def desugar(self):
     return [e.desugar() for e in self.expr]
   def resugar(self, index):
-    i = index[0]
-    return [i] + self.expr[i].resugar(index[1:])
+    if len(index) == 0:
+      return index
+    return index[:1] + self.expr[index[0]].resugar(index[1:])
 
 def traverse(expr):
   if isinstance(expr, list):
@@ -95,6 +97,16 @@ class SubSugar(Sugar):
         return j + index[len(i):]
     return index
 
+class LetMacro(Macro):
+  def applies(self, expr):
+    return isinstance(expr, list) and len(expr) > 0 and expr[0] == "let"
+  
+  def expand(self, expr):
+    pattern = (2,)
+    for index in reversed(range(len(expr[1]))):
+      pattern = [['lambda', [(1, index, 0)], pattern], (1, index, 1)]
+    return SubMacro(pattern).expand(expr)
+
 def kwMacro(keyword, macro):
   def applies(self, expr):
     return isinstance(expr, list) and len(expr) > 0 and expr[0] == keyword
@@ -106,7 +118,7 @@ ifMacro = kwMacro("if", SubMacro([['biplex', (1,), ['lambda', [], (2,)], ['lambd
 andMacro = kwMacro("and", SubMacro(['if', (1,), (2,), v.boolean(True)]))
 orMacro = kwMacro("or", SubMacro(['if', (1,), v.boolean(True), (2,)]))
 
-macros = [lambdaMacro, ifMacro, andMacro, orMacro, ListMacro(), LiteralMacro()]
+macros = [lambdaMacro, ifMacro, andMacro, orMacro, LetMacro(), ListMacro(), LiteralMacro()]
 
 def expand(expr):
   for macro in macros:
@@ -145,6 +157,16 @@ def testOr():
   print sugar.resugar([0, 1])
   print sugar.resugar([0, 3, 2, 1])
 
+def testLet():
+  sugar = expand(['let', [['a', '1'], ['b', '2']], ['+', 'a', 'b']])
+  print sugar.desugar()
+  print sugar.resugar([0, 1, 1, 0])
+  print sugar.resugar([1])
+  print sugar.resugar([0, 2, 1, 0, 1, 1, 0])
+  print sugar.resugar([0, 2, 1, 1])
+  
+  print sugar.resugar([0, 2, 1, 0, 2, 1])
+
 if __name__ == '__main__':
   testLiteral()
   testList()
@@ -152,4 +174,4 @@ if __name__ == '__main__':
   testIf()
   testAnd()
   testOr()
-
+  testLet()
