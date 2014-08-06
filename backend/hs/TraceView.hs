@@ -206,9 +206,6 @@ do_incorporate = undefined
 do_incorporateR :: (MonadState (TraceView m) m1) => Address -> m1 ()
 do_incorporateR = undefined
 
-hack_ViewReference :: Address -> (TraceView m) -> Node m
-hack_ViewReference = undefined
-
 infer :: (MonadRandom m) => Exp m -> (StateT (TraceView m) m) ()
 infer prog = do
   t <- get
@@ -302,24 +299,9 @@ regenValue a = lift (do
       (subaddr, t'') <- lift $ runStateT (eval exp $ t' ^. env) t'
       -- TODO The right set of parents for the extension node is the set of
       -- addresses that the expression read from the enclosing view.
+      -- The Nodes in t'' will have correct child pointers, if it is self-contained.
       let v = fromJust "Subevaluation yielded no value" $ valueAt subaddr t''
       nodes . ix a . value .= Just v)
-
-eval_extend :: (MonadRandom m, MonadTrans t, MonadState (TraceView m) (t m)) => Exp m -> Env -> t m Address
-eval_extend subexp e = do
-  t <- get
-  let t' = extend_trace_view t e
-  (addr, t'') <- lift $ runStateT (eval subexp $ t' ^. env) t'
-  -- The Nodes in t'' will have correct child pointers in t''.  That
-  -- means I can compute here which nodes of t this evaluation
-  -- actually depends upon, by examining all of the (outward-pointing)
-  -- ViewReference nodes in t''.
-
-  -- The right set of parents for the new node is the set of addresses
-  -- that the expression read from the enclosing view.
-  addr' <- state $ addFreshNode (hack_ViewReference addr t'')
-  -- Presumably regenNode addr' here to propagate the value
-  return addr'
 
 -- Idea: Implement a RandomDB version of this, with restricted infer.
 -- - A TraceFrame has a map from addresses to values and a parent pointer
@@ -340,7 +322,3 @@ eval_extend subexp e = do
 -- enclosing view.  That should be fine, however, because that can
 -- only happen during resimulation of the enclosed view caused by
 -- inference on the enclosing view.  So I choose one node.
-
--- regenValue_extend :: (MonadRandom m, MonadTrans t, MonadState (TraceView m) (t m)) => Address -> WriterT LogDensity (t m) ()
--- regenValue_extend ... = lift (do
-
