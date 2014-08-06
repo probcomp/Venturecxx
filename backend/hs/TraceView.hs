@@ -1,6 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 -- Data structure for extensible traces, which scope inference.
 
@@ -23,12 +25,13 @@ import Trace (SPRecord)
 -- Small objects                                                    --
 ----------------------------------------------------------------------
 
-data Value = Number Double
-           | Symbol String
-           | List [Value]
-           | Procedure SPAddress
-           | Boolean Bool
-  deriving (Eq, Ord, Show)
+data Value m = Number Double
+             | Symbol String
+             | List [Value m]
+             | Procedure SPAddress
+             | ReifiedTraceView (TraceView m)
+             | Boolean Bool
+  deriving Show
 
 newtype LogDensity = LogDensity Double
     deriving Random
@@ -40,33 +43,33 @@ instance Monoid LogDensity where
 log_density_negate :: LogDensity -> LogDensity
 log_density_negate (LogDensity x) = LogDensity $ -x
 
-data Exp = Datum Value
-         | Var String
-         | App Exp [Exp]
-         | Lam [String] Exp
+data Exp m = Datum (Value m)
+           | Var String
+           | App (Exp m) [Exp m]
+           | Lam [String] (Exp m)
   deriving Show
 
 data Env = Toplevel
          | Frame (M.Map String Address) Env
     deriving Show
 
-class Valuable b where
-    fromValue :: Value -> Maybe b
+class Valuable m b where
+    fromValue :: Value m -> Maybe b
 
-instance Valuable Double where
+instance Valuable m Double where
     fromValue (Number d) = Just d
     fromValue _ = Nothing
 
-instance Valuable Bool where
+instance Valuable m Bool where
     fromValue (Boolean b) = Just b
     fromValue _ = Nothing
 
-instance Valuable SPAddress where
+instance Valuable m SPAddress where
     fromValue (Procedure a) = Just a
     fromValue _ = Nothing
 
-instance Valuable Value where
-    fromValue = Just
+instance Valuable m (Value m) where
+    fromValue v = Just v
 
 newtype Address = Address Unique
     deriving (Eq, Ord, Show)
@@ -77,23 +80,23 @@ newtype SPAddress = SPAddress Unique
 newtype SRId = SRId Unique
     deriving (Eq, Ord, Show)
 
-data SimulationRequest = SimulationRequest SRId Exp Env
+data SimulationRequest m = SimulationRequest SRId (Exp m) Env
     deriving Show
 
-srid :: SimulationRequest -> SRId
+srid :: SimulationRequest m -> SRId
 srid (SimulationRequest id _ _) = id
 
 ----------------------------------------------------------------------
 -- Nodes                                                            --
 ----------------------------------------------------------------------
 
-data Node = Constant Value
-          | Reference (Maybe Value) Address
-          | Request (Maybe [SimulationRequest]) (Maybe Address) Address [Address]
-          | Output (Maybe Value) Address Address [Address] [Address]
-    deriving Show
+data Node m = Constant (Value m)
+            | Reference (Maybe (Value m)) Address
+            | Request (Maybe [SimulationRequest m]) (Maybe Address) Address [Address]
+            | Output (Maybe (Value m)) Address Address [Address] [Address]
+  deriving Show
 
-valueOf :: Node -> Maybe Value
+valueOf :: Node m -> Maybe (Value m)
 valueOf (Constant v) = Just v
 valueOf (Reference v _) = v
 valueOf (Output v _ _ _ _) = v
@@ -104,7 +107,7 @@ valueOf _ = Nothing
 ----------------------------------------------------------------------
 
 data TraceView rand =
-    TraceView { _nodes :: M.Map Address Node
+    TraceView { _nodes :: M.Map Address (Node rand)
               , _randoms :: S.Set Address -- Really scopes, but ok
               , _node_children :: M.Map Address (S.Set Address)
               , _sprs :: M.Map SPAddress (SPRecord rand)
@@ -115,10 +118,10 @@ data TraceView rand =
 makeLenses ''TraceView
 
 
-eval :: (MonadRandom m, MonadTrans t, MonadState (TraceView m) (t m)) => Exp -> Env -> t m Address
+eval :: (MonadRandom m, MonadTrans t, MonadState (TraceView m) (t m)) => Exp m -> Env -> t m Address
 eval = undefined
 
-assume :: (MonadRandom m) => String -> Exp -> (StateT (TraceView m) m) Address
+assume :: (MonadRandom m) => String -> Exp m -> (StateT (TraceView m) m) Address
 assume var exp = do
   -- TODO This implementation of assume does not permit recursive
   -- functions, because of insufficient indirection to the
@@ -128,25 +131,25 @@ assume var exp = do
   env %= Frame (M.fromList [(var, address)])
   return address
 
-hack_ReifiedTraceView :: (TraceView m) -> Value
+hack_ReifiedTraceView :: (TraceView m) -> Value m
 hack_ReifiedTraceView = undefined
 
-hack_ReifiedTraceView' :: Value -> (TraceView m)
+hack_ReifiedTraceView' :: Value m -> (TraceView m)
 hack_ReifiedTraceView' = undefined
 
 extend_trace_view :: (TraceView m) -> Env -> (TraceView m)
 extend_trace_view = undefined
 
-lookupNode :: Address -> (TraceView m) -> Maybe Node
+lookupNode :: Address -> (TraceView m) -> Maybe (Node m)
 lookupNode = undefined
 
-addFreshNode :: Node -> TraceView m -> (Address, TraceView m)
+addFreshNode :: Node m -> TraceView m -> (Address, TraceView m)
 addFreshNode = undefined
 
-hack_ViewReference :: Address -> (TraceView m) -> Node
+hack_ViewReference :: Address -> (TraceView m) -> Node m
 hack_ViewReference = undefined
 
-infer :: (MonadRandom m) => Exp -> (StateT (TraceView m) m) ()
+infer :: (MonadRandom m) => Exp m -> (StateT (TraceView m) m) ()
 infer prog = do
   t <- get
   let t' = extend_trace_view t (t ^. env)
@@ -166,7 +169,7 @@ infer prog = do
 
 -- Here I choose to extend at eval.
 -- Eval the "extend" clause of the envisaged new expression grammar.
-eval_extend :: (MonadRandom m, MonadTrans t, MonadState (TraceView m) (t m)) => Exp -> Env -> t m Address
+eval_extend :: (MonadRandom m, MonadTrans t, MonadState (TraceView m) (t m)) => Exp m -> Env -> t m Address
 eval_extend subexp e = do
   t <- get
   let t' = extend_trace_view t e
