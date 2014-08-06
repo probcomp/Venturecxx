@@ -148,6 +148,9 @@ data TraceView rand =
 
 makeLenses ''TraceView
 
+valueAt :: Address -> TraceView m -> Maybe (Value m)
+valueAt a t = (t^. nodes . at a) >>= valueOf
+
 fromValueAt :: Valuable m b => Address -> TraceView m -> Maybe b
 fromValueAt a t = (t^. nodes . at a) >>= valueOf >>= fromValue
 
@@ -292,7 +295,15 @@ regenValue a = lift (do
       addr <- gets $ fromJust "Regenerating value for an output with no operator" . (fromValueAt opa)
       v <- runOutputter addr ps rs
       nodes . ix a . value .= Just v
-      do_incorporate a)
+      do_incorporate a
+    (Extension _ exp e _) -> do
+      t <- get
+      let t' = extend_trace_view t e
+      (subaddr, t'') <- lift $ runStateT (eval exp $ t' ^. env) t'
+      -- TODO The right set of parents for the extension node is the set of
+      -- addresses that the expression read from the enclosing view.
+      let v = fromJust "Subevaluation yielded no value" $ valueAt subaddr t''
+      nodes . ix a . value .= Just v)
 
 eval_extend :: (MonadRandom m, MonadTrans t, MonadState (TraceView m) (t m)) => Exp m -> Env -> t m Address
 eval_extend subexp e = do
