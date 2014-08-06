@@ -131,12 +131,6 @@ assume var exp = do
   env %= Frame (M.fromList [(var, address)])
   return address
 
-hack_ReifiedTraceView :: (TraceView m) -> Value m
-hack_ReifiedTraceView = undefined
-
-hack_ReifiedTraceView' :: Value m -> (TraceView m)
-hack_ReifiedTraceView' = undefined
-
 extend_trace_view :: (TraceView m) -> Env -> (TraceView m)
 extend_trace_view = undefined
 
@@ -153,9 +147,10 @@ infer :: (MonadRandom m) => Exp m -> (StateT (TraceView m) m) ()
 infer prog = do
   t <- get
   let t' = extend_trace_view t (t ^. env)
-  let inf_exp = App prog [Datum $ hack_ReifiedTraceView t]
+  let inf_exp = App prog [Datum $ ReifiedTraceView t]
   (addr, t'') <- lift $ runStateT (eval inf_exp $ t' ^. env) t'
-  put $ hack_ReifiedTraceView' $ fromJust "eval returned empty node" $ valueOf $ fromJust "eval returned invalid address" $ lookupNode addr t''
+  let ReifiedTraceView t''' = fromJust "eval returned empty node" $ valueOf $ fromJust "eval returned invalid address" $ lookupNode addr t''
+  put t'''
 
 -- Choice: cut-and-extend at eval or at apply?
 
