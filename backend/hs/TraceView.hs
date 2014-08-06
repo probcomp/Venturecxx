@@ -143,10 +143,14 @@ data TraceView rand =
               , _node_children :: M.Map Address (S.Set Address)
               , _sprs :: M.Map SPAddress (SPRecord rand)
               , _env :: Env
+              , _parent_view :: Maybe (TraceView rand)
               }
     deriving Show
 
 makeLenses ''TraceView
+
+empty :: TraceView m
+empty = TraceView M.empty S.empty M.empty M.empty Toplevel Nothing
 
 valueAt :: Address -> TraceView m -> Maybe (Value m)
 valueAt a t = (t^. nodes . at a) >>= valueOf
@@ -163,9 +167,6 @@ assume var exp = do
   address <- (eval exp e)
   env %= Frame (M.fromList [(var, address)])
   return address
-
-extend_trace_view :: (TraceView m) -> Env -> (TraceView m)
-extend_trace_view = undefined
 
 lookupNode :: Address -> (TraceView m) -> Maybe (Node m)
 lookupNode = undefined
@@ -184,6 +185,9 @@ compoundSP = undefined
 
 responsesAt :: Address -> Simple Lens (TraceView m) [Address]
 responsesAt = undefined
+
+extend_trace_view :: (TraceView m) -> Env -> (TraceView m)
+extend_trace_view p e = empty { _parent_view = Just p, _env = e }
 
 ----------------------------------------------------------------------
 -- Advanced Trace Manipulations                                     --
