@@ -3,6 +3,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE RankNTypes #-}
 
 -- Data structure for extensible traces, which scope inference.
 
@@ -108,6 +109,9 @@ valueOf (Reference v _) = v
 valueOf (Output v _ _ _ _) = v
 valueOf _ = Nothing
 
+value :: Simple Lens (Node m) (Maybe (Value m))
+value = lens valueOf undefined
+
 isRegenerated :: Node m -> Bool
 isRegenerated (Constant _) = True
 isRegenerated (Reference Nothing _) = False
@@ -118,6 +122,9 @@ isRegenerated (Output Nothing _ _ _ _) = False
 isRegenerated (Output (Just _) _ _ _ _) = True
 isRegenerated (Extension Nothing _ _ _) = False
 isRegenerated (Extension (Just _) _ _ _) = True
+
+sim_reqs :: Simple Lens (Node m) (Maybe [SimulationRequest m])
+sim_reqs = undefined
 
 parentAddrs :: Node m -> [Address]
 parentAddrs (Constant _) = []
@@ -141,6 +148,8 @@ data TraceView rand =
 
 makeLenses ''TraceView
 
+fromValueAt :: Valuable m b => Address -> TraceView m -> Maybe b
+fromValueAt a t = (t^. nodes . at a) >>= valueOf >>= fromValue
 
 assume :: (MonadRandom m) => String -> Exp m -> (StateT (TraceView m) m) Address
 assume var exp = do
@@ -164,14 +173,35 @@ addFreshNode = undefined
 addFreshSP :: SP m -> TraceView m -> (SPAddress, TraceView m)
 addFreshSP = undefined
 
-fulfilments :: Address -> TraceView m -> [Address]
-fulfilments = undefined
-
 out_node :: Simple Setter (Node m) (Maybe Address)
 out_node = undefined
 
 compoundSP :: (Monad m) => [String] -> Exp m -> Env -> SP m
 compoundSP = undefined
+
+responsesAt :: Address -> Simple Lens (TraceView m) [Address]
+responsesAt = undefined
+
+----------------------------------------------------------------------
+-- Advanced Trace Manipulations                                     --
+----------------------------------------------------------------------
+
+runRequester :: (Monad m, MonadTrans t, MonadState (TraceView m) (t m)) =>
+                SPAddress -> [Address] -> t m [SimulationRequest m]
+runRequester = undefined
+
+runOutputter :: (Monad m, MonadTrans t, MonadState (TraceView m) (t m)) =>
+                SPAddress -> [Address] -> [Address] -> t m (Value m)
+runOutputter = undefined
+
+fulfilments :: Address -> TraceView m -> [Address]
+fulfilments = undefined
+
+do_incorporate :: (MonadState (TraceView m) m1) => Address -> m1 ()
+do_incorporate = undefined
+
+do_incorporateR :: (MonadState (TraceView m) m1) => Address -> m1 ()
+do_incorporateR = undefined
 
 hack_ViewReference :: Address -> (TraceView m) -> Node m
 hack_ViewReference = undefined
@@ -184,6 +214,9 @@ infer prog = do
   (addr, t'') <- lift $ runStateT (eval inf_exp $ t' ^. env) t'
   let ReifiedTraceView t''' = fromJust "eval returned empty node" $ valueOf $ fromJust "eval returned invalid address" $ lookupNode addr t''
   put t'''
+
+evalRequests :: (MonadRandom m) => SPAddress -> [SimulationRequest m] -> StateT (TraceView m) m [Address]
+evalRequests = undefined
 
 -- Choice: cut-and-extend at eval or at apply?
 
@@ -238,7 +271,28 @@ regenNode a = do
     regenValue a
 
 regenValue :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (TraceView m) m) ()
-regenValue = undefined
+regenValue a = lift (do
+  node <- use $ nodes . hardix "Regenerating value for nonexistent node" a
+  case node of
+    (Constant _) -> return ()
+    (Reference _ a') -> do
+      node' <- use $ nodes . hardix "Dangling reference found in regenValue" a'
+      let v = fromJust "Regenerating value for a reference with non-regenerated referent" $ node' ^. value
+      nodes . ix a . value .= Just v
+    (Request _ outA opa ps) -> do
+      addr <- gets $ fromJust "Regenerating value for a request with no operator" . (fromValueAt opa)
+      reqs <- runRequester addr ps
+      nodes . ix a . sim_reqs .= Just reqs
+      resps <- evalRequests addr reqs
+      do_incorporateR a
+      case outA of
+        Nothing -> return ()
+        (Just outA') -> responsesAt outA' .= resps
+    (Output _ _ opa ps rs) -> do
+      addr <- gets $ fromJust "Regenerating value for an output with no operator" . (fromValueAt opa)
+      v <- runOutputter addr ps rs
+      nodes . ix a . value .= Just v
+      do_incorporate a)
 
 eval_extend :: (MonadRandom m, MonadTrans t, MonadState (TraceView m) (t m)) => Exp m -> Env -> t m Address
 eval_extend subexp e = do
