@@ -108,6 +108,24 @@ valueOf (Reference v _) = v
 valueOf (Output v _ _ _ _) = v
 valueOf _ = Nothing
 
+isRegenerated :: Node m -> Bool
+isRegenerated (Constant _) = True
+isRegenerated (Reference Nothing _) = False
+isRegenerated (Reference (Just _) _) = True
+isRegenerated (Request Nothing _ _ _) = False
+isRegenerated (Request (Just _) _ _ _) = True
+isRegenerated (Output Nothing _ _ _ _) = False
+isRegenerated (Output (Just _) _ _ _ _) = True
+isRegenerated (Extension Nothing _ _ _) = False
+isRegenerated (Extension (Just _) _ _ _) = True
+
+parentAddrs :: Node m -> [Address]
+parentAddrs (Constant _) = []
+parentAddrs (Reference _ addr) = [addr]
+parentAddrs (Request _ _ a as) = a:as
+parentAddrs (Output _ reqA a as as') = reqA:a:(as ++ as')
+parentAddrs (Extension _ _ _ as) = as
+
 ----------------------------------------------------------------------
 -- Traces                                                           --
 ----------------------------------------------------------------------
@@ -212,7 +230,15 @@ eval (Ext exp) e = do
   return addr
 
 regenNode :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (TraceView m) m) ()
-regenNode = undefined
+regenNode a = do
+  node <- use $ nodes . hardix "Regenerating a nonexistent node" a
+  if isRegenerated node then return ()
+  else do
+    mapM_ regenNode (parentAddrs node) -- Note that this may change the node at address a
+    regenValue a
+
+regenValue :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (TraceView m) m) ()
+regenValue = undefined
 
 eval_extend :: (MonadRandom m, MonadTrans t, MonadState (TraceView m) (t m)) => Exp m -> Env -> t m Address
 eval_extend subexp e = do
