@@ -16,7 +16,7 @@ import Control.Monad.Random -- From cabal install MonadRandom
 
 import Utils
 import Language hiding (Value, Exp, Env)
-import Trace hiding (Trace(..), lookupNode)
+import Trace hiding (Trace(..), lookupNode, addFreshNode)
 
 data TraceView rand =
     TraceView { _nodes :: M.Map Address Node
@@ -55,6 +55,12 @@ extend_trace_view = undefined
 lookupNode :: Address -> (TraceView m) -> Maybe Node
 lookupNode = undefined
 
+addFreshNode :: Node -> TraceView m -> (Address, TraceView m)
+addFreshNode = undefined
+
+hack_ViewReference :: Address -> (TraceView m) -> Node
+hack_ViewReference = undefined
+
 infer :: (MonadRandom m) => Exp -> (StateT (TraceView m) m) ()
 infer prog = do
   t <- get
@@ -62,3 +68,24 @@ infer prog = do
   let inf_exp = App prog [Datum $ hack_ReifiedTraceView t]
   (addr, t'') <- lift $ runStateT (eval inf_exp $ t' ^. env) t'
   put $ hack_ReifiedTraceView' $ fromJust "eval returned empty node" $ valueOf $ fromJust "eval returned invalid address" $ lookupNode addr t''
+
+-- Choice: cut-and-extend at eval or at apply?
+
+-- It doesn't actually matter, because either way, the enclosed trace
+-- can read unknown nodes from the enclosing one from the environments
+-- contained in closures (or from the immediate lexical environment if
+-- it's syntax).  The node representing the extension (be it an
+-- extend-apply node or just an extend node) needs (in general) to
+-- become a child of all the nodes that it reads.  (Hopefully not all
+-- the nodes it could have read?)
+
+-- Here I choose to extend at eval.
+-- Eval the "extend" clause of the envisaged new expression grammar.
+eval_extend :: (MonadRandom m, MonadTrans t, MonadState (TraceView m) (t m)) => Exp -> Env -> t m Address
+eval_extend subexp e = do
+  t <- get
+  let t' = extend_trace_view t e
+  (addr, t'') <- lift $ runStateT (eval subexp $ t' ^. env) t'
+  addr' <- state $ addFreshNode (hack_ViewReference addr t'')
+  -- Presumably regenNode addr' here to propagate the value
+  return addr'
