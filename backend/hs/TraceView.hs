@@ -86,6 +86,37 @@ eval_extend subexp e = do
   t <- get
   let t' = extend_trace_view t e
   (addr, t'') <- lift $ runStateT (eval subexp $ t' ^. env) t'
+  -- The Nodes in t'' will have correct child pointers in t''.  That
+  -- means I can compute here which nodes of t this evaluation
+  -- actually depends upon, by examining all of the (outward-pointing)
+  -- ViewReference nodes in t''.
+
+  -- The right set of parents for the new node is the set of addresses
+  -- that the expression read from the enclosing view.
   addr' <- state $ addFreshNode (hack_ViewReference addr t'')
   -- Presumably regenNode addr' here to propagate the value
   return addr'
+
+-- Idea: Implement a RandomDB version of this, with restricted infer.
+-- - A TraceFrame has a map from addresses to values and a parent pointer
+-- - An environment frame has lexical bindings to addresses, which can be
+--   looked up in a trace
+
+-- Choice: One Extend node or two?
+
+-- It seems that if I try to represent the extend syntax with one
+-- node, it will have the funny property that resimulating it will
+-- change its own dependency list.  That means that come regeneration
+-- time, I don't actually know which other nodes I need to be sure to
+-- have regenerated before starting to regenerate this one.  Is this
+-- the problem that requests were meant to solve for splicing
+-- application of compound procedures?  It doesn't work that way here.
+-- But I nevertheless can create lookup nodes in the enclosed view and
+-- regenerate them -- which may necessitate regenerating nodes in the
+-- enclosing view.  That should be fine, however, because that can
+-- only happen during resimulation of the enclosed view caused by
+-- inference on the enclosing view.  So I choose one node.
+
+-- regenValue_extend :: (MonadRandom m, MonadTrans t, MonadState (TraceView m) (t m)) => Address -> WriterT LogDensity (t m) ()
+-- regenValue_extend ... = lift (do
+
