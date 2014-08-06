@@ -1,5 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 -- Data structure for extensible traces, which scope inference.
 
@@ -8,15 +9,99 @@
 
 module TraceView where
 
-import qualified Data.Map as M
-import qualified Data.Set as S
 import Control.Lens  -- from cabal install len
 import Control.Monad.State -- :set -hide-package monads-tf-0.1.0.1
 import Control.Monad.Random -- From cabal install MonadRandom
+import qualified Data.Map as M
+import Data.Monoid
+import qualified Data.Set as S
 
 import Utils
-import Language hiding (Value, Exp, Env)
-import Trace hiding (Trace(..), lookupNode, addFreshNode)
+import Trace (SPRecord)
+
+----------------------------------------------------------------------
+-- Small objects                                                    --
+----------------------------------------------------------------------
+
+data Value = Number Double
+           | Symbol String
+           | List [Value]
+           | Procedure SPAddress
+           | Boolean Bool
+  deriving (Eq, Ord, Show)
+
+newtype LogDensity = LogDensity Double
+    deriving Random
+
+instance Monoid LogDensity where
+    mempty = LogDensity 0.0
+    (LogDensity x) `mappend` (LogDensity y) = LogDensity $ x + y
+
+log_density_negate :: LogDensity -> LogDensity
+log_density_negate (LogDensity x) = LogDensity $ -x
+
+data Exp = Datum Value
+         | Var String
+         | App Exp [Exp]
+         | Lam [String] Exp
+  deriving Show
+
+data Env = Toplevel
+         | Frame (M.Map String Address) Env
+    deriving Show
+
+class Valuable b where
+    fromValue :: Value -> Maybe b
+
+instance Valuable Double where
+    fromValue (Number d) = Just d
+    fromValue _ = Nothing
+
+instance Valuable Bool where
+    fromValue (Boolean b) = Just b
+    fromValue _ = Nothing
+
+instance Valuable SPAddress where
+    fromValue (Procedure a) = Just a
+    fromValue _ = Nothing
+
+instance Valuable Value where
+    fromValue = Just
+
+newtype Address = Address Unique
+    deriving (Eq, Ord, Show)
+
+newtype SPAddress = SPAddress Unique
+    deriving (Eq, Ord, Show)
+
+newtype SRId = SRId Unique
+    deriving (Eq, Ord, Show)
+
+data SimulationRequest = SimulationRequest SRId Exp Env
+    deriving Show
+
+srid :: SimulationRequest -> SRId
+srid (SimulationRequest id _ _) = id
+
+----------------------------------------------------------------------
+-- Nodes                                                            --
+----------------------------------------------------------------------
+
+data Node = Constant Value
+          | Reference (Maybe Value) Address
+          | Request (Maybe [SimulationRequest]) (Maybe Address) Address [Address]
+          | Output (Maybe Value) Address Address [Address] [Address]
+    deriving Show
+
+valueOf :: Node -> Maybe Value
+valueOf (Constant v) = Just v
+valueOf (Reference v _) = v
+valueOf (Output v _ _ _ _) = v
+valueOf _ = Nothing
+
+----------------------------------------------------------------------
+-- Traces                                                           --
+----------------------------------------------------------------------
 
 data TraceView rand =
     TraceView { _nodes :: M.Map Address Node
