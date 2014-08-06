@@ -1,5 +1,6 @@
 # Framework for writing macros that resugar errors.
 
+from types import MethodType
 import venture.value.dicts as v
 
 class Macro(object):
@@ -94,17 +95,16 @@ class SubSugar(Sugar):
         return j + index[len(i):]
     return index
 
-class SubMacro1(SubMacro):
-  def __init__(self, keyword, pattern):
-    super(SubMacro1, self).__init__(pattern)
-    self.keyword = keyword
+def kwMacro(keyword, macro):
   def applies(self, expr):
-    return isinstance(expr, list) and len(expr) > 0 and expr[0] == self.keyword
+    return isinstance(expr, list) and len(expr) > 0 and expr[0] == keyword
+  macro.applies = MethodType(applies, macro)
+  return macro
 
-lambdaMacro = SubMacro1("lambda", ['make_csp', ['quote', (1,)], ['quote', (2,)]])
-ifMacro = SubMacro1("if", [['biplex', (1,), ['lambda', [], (2,)], ['lambda', [], (3,)]]])
-andMacro = SubMacro1("and", ['if', (1,), (2,), v.boolean(True)])
-orMacro = SubMacro1("or", ['if', (1,), v.boolean(True), (2,)])
+lambdaMacro = kwMacro("lambda", SubMacro(['make_csp', ['quote', (1,)], ['quote', (2,)]]))
+ifMacro = kwMacro("if", SubMacro([['biplex', (1,), ['lambda', [], (2,)], ['lambda', [], (3,)]]]))
+andMacro = kwMacro("and", SubMacro(['if', (1,), (2,), v.boolean(True)]))
+orMacro = kwMacro("or", SubMacro(['if', (1,), v.boolean(True), (2,)]))
 
 macros = [lambdaMacro, ifMacro, andMacro, orMacro, ListMacro(), LiteralMacro()]
 
