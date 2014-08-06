@@ -48,6 +48,7 @@ data Exp m = Datum (Value m)
            | Var String
            | App (Exp m) [Exp m]
            | Lam [String] (Exp m)
+           | Ext (Exp m)
   deriving Show
 
 data Env = Toplevel
@@ -98,7 +99,7 @@ data Node m = Constant (Value m)
             | Reference (Maybe (Value m)) Address
             | Request (Maybe [SimulationRequest m]) (Maybe Address) Address [Address]
             | Output (Maybe (Value m)) Address Address [Address] [Address]
-            | Extension (Maybe (Value m)) (Exp m) [Address]
+            | Extension (Maybe (Value m)) (Exp m) Env [Address]
   deriving Show
 
 valueOf :: Node m -> Maybe (Value m)
@@ -204,6 +205,11 @@ eval (App op args) env = do
   -- Is there a good reason why I don't care about the log density of this regenNode?
   _ <- runWriterT $ regenNode addr'
   return addr'
+eval (Ext exp) e = do
+  addr <- state $ addFreshNode (Extension Nothing exp e [])
+  -- Is there a good reason why I don't care about the log density of this regenNode?
+  _ <- runWriterT $ regenNode addr
+  return addr
 
 regenNode :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (TraceView m) m) ()
 regenNode = undefined
