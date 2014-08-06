@@ -12,14 +12,15 @@
 module TraceView where
 
 import Control.Lens  -- from cabal install len
-import Control.Monad.State -- :set -hide-package monads-tf-0.1.0.1
 import Control.Monad.Random -- From cabal install MonadRandom
+import Control.Monad.State -- :set -hide-package monads-tf-0.1.0.1
+import Control.Monad.Trans.Writer.Strict
 import qualified Data.Map as M
 import Data.Monoid
 import qualified Data.Set as S
 
 import Utils
-import Trace (SPRecord)
+import Trace (SP, SPRecord)
 
 ----------------------------------------------------------------------
 -- Small objects                                                    --
@@ -52,6 +53,9 @@ data Exp m = Datum (Value m)
 data Env = Toplevel
          | Frame (M.Map String Address) Env
     deriving Show
+
+env_lookup :: String -> Env -> Maybe Address
+env_lookup = undefined
 
 class Valuable m b where
     fromValue :: Value m -> Maybe b
@@ -94,6 +98,7 @@ data Node m = Constant (Value m)
             | Reference (Maybe (Value m)) Address
             | Request (Maybe [SimulationRequest m]) (Maybe Address) Address [Address]
             | Output (Maybe (Value m)) Address Address [Address] [Address]
+            | Extension (Maybe (Value m)) (Exp m) [Address]
   deriving Show
 
 valueOf :: Node m -> Maybe (Value m)
@@ -118,9 +123,6 @@ data TraceView rand =
 makeLenses ''TraceView
 
 
-eval :: (MonadRandom m, MonadTrans t, MonadState (TraceView m) (t m)) => Exp m -> Env -> t m Address
-eval = undefined
-
 assume :: (MonadRandom m) => String -> Exp m -> (StateT (TraceView m) m) Address
 assume var exp = do
   -- TODO This implementation of assume does not permit recursive
@@ -139,6 +141,18 @@ lookupNode = undefined
 
 addFreshNode :: Node m -> TraceView m -> (Address, TraceView m)
 addFreshNode = undefined
+
+addFreshSP :: SP m -> TraceView m -> (SPAddress, TraceView m)
+addFreshSP = undefined
+
+fulfilments :: Address -> TraceView m -> [Address]
+fulfilments = undefined
+
+out_node :: Simple Setter (Node m) (Maybe Address)
+out_node = undefined
+
+compoundSP :: (Monad m) => [String] -> Exp m -> Env -> SP m
+compoundSP = undefined
 
 hack_ViewReference :: Address -> (TraceView m) -> Node m
 hack_ViewReference = undefined
@@ -163,7 +177,37 @@ infer prog = do
 -- the nodes it could have read?)
 
 -- Here I choose to extend at eval.
--- Eval the "extend" clause of the envisaged new expression grammar.
+-- Returns the address of the fresh node holding the result of the
+-- evaluation.
+eval :: (MonadRandom m) => Exp m -> Env -> StateT (TraceView m) m Address
+eval (Datum v) _ = state $ addFreshNode $ Constant v
+eval (Var n) e = do
+  let answer = case env_lookup n e of
+                 Nothing -> error $ "Unbound variable " ++ show n
+                 (Just a) -> Reference Nothing a
+  addr <- state $ addFreshNode answer
+  -- Is there a good reason why I don't care about the log density of this regenNode?
+  _ <- runWriterT $ regenNode addr
+  return addr
+eval (Lam vs exp) e = do
+  spAddr <- state $ addFreshSP $ compoundSP vs exp e
+  state $ addFreshNode $ Constant $ Procedure spAddr
+eval (App op args) env = do
+  op' <- eval op env
+  args' <- sequence $ map (flip eval env) args
+  addr <- state $ addFreshNode (Request Nothing Nothing op' args')
+  -- Is there a good reason why I don't care about the log density of this regenNode?
+  _ <- runWriterT $ regenNode addr
+  reqAddrs <- gets $ fulfilments addr
+  addr' <- state $ addFreshNode (Output Nothing addr op' args' reqAddrs)
+  nodes . ix addr . out_node .= Just addr'
+  -- Is there a good reason why I don't care about the log density of this regenNode?
+  _ <- runWriterT $ regenNode addr'
+  return addr'
+
+regenNode :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (TraceView m) m) ()
+regenNode = undefined
+
 eval_extend :: (MonadRandom m, MonadTrans t, MonadState (TraceView m) (t m)) => Exp m -> Env -> t m Address
 eval_extend subexp e = do
   t <- get
