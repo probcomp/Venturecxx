@@ -12,7 +12,6 @@ from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
                    HamiltonianMonteCarloOperator, MAPOperator, StepOutSliceOperator,
                    DoublingSliceOperator, NesterovAcceleratedGradientAscentOperator)
 from subsampled_mh import drawScaffoldKernel,drawSubsampledScaffoldKernel,subsampledMixMH,SubsampledMHOperator,SubsampledBlockScaffoldIndexer
-from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,RejectionOperator, MissingEsrParentError, NoSPRefError, HamiltonianMonteCarloOperator, MAPOperator, SliceOperator, NesterovAcceleratedGradientAscentOperator
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies, VentureSPRecord
