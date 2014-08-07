@@ -7,6 +7,7 @@ import Data.List (find)
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Control.Lens
+import Control.Monad.Coroutine -- from cabal install monad-coroutine
 import Control.Monad.Morph
 import Control.Monad.Identity
 import Control.Monad.Trans.State.Lazy
@@ -87,3 +88,17 @@ instance (Pretty a) => Pretty (O.Set a) where
 
 instance (Pretty a) => Pretty (S.Set a) where
     pp as = brackets $ sep $ map pp $ S.toList as
+
+pogoStickM :: (Monad m1, Monad m2)
+              => (s (Coroutine s m1 x) -> m2 (Coroutine s m1 x))
+                 -> m2 (m1 (Either (s (Coroutine s m1 x)) x) -> (Either (s (Coroutine s m1 x)) x))
+                 -> Coroutine s m1 x
+                 -> m2 x
+pogoStickM spring open c = do
+  opener <- open
+  case opener $ resume c of
+    (Left suspended) -> do
+      c' <- spring suspended
+      pogoStickM spring open c'
+    (Right result) -> return result
+
