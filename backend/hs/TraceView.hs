@@ -329,11 +329,13 @@ regenValue' a = do
       let t' = extend_trace_view t e
           spring :: (Susp.Request Address (Value m) (RegenType m Address)) -> RegenType m (RegenType m Address)
           spring = undefined
-          open :: RegenType m (RegenEffect m (SuspensionType m Address) -> SuspensionType m Address)
-          open = undefined
+          swap :: RegenEffect m (RegenType m a) -> RegenType m (RegenEffect m a)
+          swap = undefined
+          swap' :: RegenType m (RegenEffect m a) -> RegenEffect m (RegenType m a)
+          swap' = undefined
           subregen :: RegenType m Address
           subregen = eval' exp e
-      addr <- pogoStickM undefined undefined spring subregen
+      addr <- ((pogoStickM swap swap' spring subregen) :: (RegenType m (RegenEffect m Address)))
       return ()
 
 lookupMaybeRequesting :: (MonadRandom m) => Address -> RegenType m (Value m)
