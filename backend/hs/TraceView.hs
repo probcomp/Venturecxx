@@ -22,6 +22,7 @@ import qualified Data.Set as S
 
 import Utils
 import Trace (SP, SPRecord)
+import Engine (runOn, execOn)
 
 ----------------------------------------------------------------------
 -- Small objects                                                    --
@@ -216,6 +217,13 @@ do_incorporate = undefined
 do_incorporateR :: (MonadState (TraceView m) m1) => Address -> m1 ()
 do_incorporateR = undefined
 
+constrain :: (MonadState (TraceView m) m1) => Address -> (Value m) -> m1 ()
+constrain = undefined
+
+----------------------------------------------------------------------
+-- Interpreting Venture                                             --
+----------------------------------------------------------------------
+
 evalRequests :: (MonadRandom m) => SPAddress -> [SimulationRequest m] -> StateT (TraceView m) m [Address]
 evalRequests = undefined
 
@@ -333,8 +341,27 @@ regenValue a = lift (do
 -- inference on the enclosing view.  So I choose one node.
 
 exec :: (MonadRandom m) => Statement m -> StateT ((TraceView m), Env) m ()
-exec (Assume name exp) = undefined
-exec (Observe exp v) = undefined
+exec (Assume var exp) = do
+  -- TODO This implementation of assume does not permit recursive
+  -- functions, because of insufficient indirection to the
+  -- environment.
+  e <- gets snd
+  address <- _1 `runOn` (eval exp e)
+  _2 %= Frame (M.fromList [(var, address)])
+  return ()
+exec (Observe exp v) = do
+  e <- gets snd
+  address <- _1 `runOn` (eval exp e)
+  -- TODO What should happen if one observes a value that had
+  -- (deterministic) consequences, e.g.
+  -- (assume x (normal 1 1))
+  -- (assume y (+ x 1))
+  -- (observe x 1)
+  -- After this, the trace is presumably in an inconsistent state,
+  -- from which it in fact has no way to recover.  Venturecxx invokes
+  -- a complicated operation to fix this, which I should probably
+  -- port.
+  _1 `execOn` (constrain address v)
 exec (Infer prog) = do
   t <- gets fst
   let t' = extend_trace_view t (t ^. env)
