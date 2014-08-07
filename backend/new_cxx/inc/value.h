@@ -44,36 +44,63 @@ typedef boost::unordered_map<VentureValuePtr, RootOfFamily, HashVentureValuePtr,
 struct SPAux;
 struct Trace;
 
-// TODO AXCH
-// We need to be more consistent about whether this unboxes
 struct VentureValue
 {
+  // Conversions to "native" representation
   virtual bool hasDouble() const; // TODO hack for operator<
   virtual double getDouble() const;
 
   virtual bool hasInt() const;
   virtual long getInt() const;
+  virtual double getProbability() const;
+
   virtual int getAtom() const;
   virtual bool isBool() const;
   virtual bool getBool() const;
+
   virtual bool hasSymbol() const;
   virtual const string & getSymbol() const;
 
-  virtual string asExpression() const;
+  // TODO: Maybe foreign blob?
+
+  virtual bool isNil() const { return false; }
+  virtual const VentureValuePtr& getFirst() const;
+  virtual const VentureValuePtr& getRest() const;
 
   virtual bool hasArray() const { return false; }
   virtual vector<VentureValuePtr> getArray() const;
-  virtual bool isNil() const { return false; }
-  
-  virtual const VentureValuePtr& getFirst() const;
-  virtual const VentureValuePtr& getRest() const;
-  
+
   virtual const Simplex& getSimplex() const;
+
   virtual const MapVVPtrVVPtr& getDictionary() const;
 
   virtual VectorXd getVector() const;
+
   virtual MatrixXd getMatrix() const;
-  
+  virtual MatrixXd getSymmetricMatrix() const;
+
+  // Stack representation
+  virtual boost::python::dict toPython(Trace * trace) const;
+
+  // Comparison
+  virtual bool operator<(const VentureValuePtr & rhs) const;
+  virtual int getValueTypeRank() const;
+  virtual bool ltSameType(const VentureValuePtr & rhs) const;
+
+  // Equality and hashing
+  virtual bool equals(const VentureValuePtr & other) const;
+  virtual bool equalsSameType(const VentureValuePtr & other) const;
+  virtual size_t hash() const;
+
+  // Generic container methods
+  virtual VentureValuePtr lookup(VentureValuePtr index) const;
+  virtual bool contains(VentureValuePtr index) const;
+  virtual int size() const;
+
+  // For stop_and_copy
+  virtual VentureValue* copy_help(ForwardingMap* m) const { return const_cast<VentureValue*>(this); }
+
+  // Other
   virtual const vector<ESR>& getESRs() const;
   virtual const vector<shared_ptr<LSR> >& getLSRs() const;
 
@@ -82,24 +109,9 @@ struct VentureValue
 
   virtual shared_ptr<SPAux> getSPAux() const;
 
-  /* for containers */
-  virtual VentureValuePtr lookup(VentureValuePtr index) const;
-  virtual bool contains(VentureValuePtr index) const;
-  virtual int size() const;
-  
-  virtual boost::python::dict toPython(Trace * trace) const;
-
-  /* for unordered_maps */
-  virtual bool equals(const VentureValuePtr & other) const;
-  virtual bool equalsSameType(const VentureValuePtr & other) const;
-  virtual size_t hash() const;
-  
   virtual string toString() const { return "Unknown VentureValue"; };
 
-  virtual bool operator<(const VentureValuePtr & rhs) const;
-  virtual bool ltSameType(const VentureValuePtr & rhs) const;
-
-  virtual VentureValue* copy_help(ForwardingMap* m) const { return const_cast<VentureValue*>(this); }
+  virtual string asExpression() const;
 
   virtual ~VentureValue() {}
 };

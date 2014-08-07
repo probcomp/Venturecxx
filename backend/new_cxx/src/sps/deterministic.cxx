@@ -59,13 +59,13 @@ VentureValuePtr EqOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) cons
 VentureValuePtr GtOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength(">", args, 2);
-  return shared_ptr<VentureBool>(new VentureBool(args->operandValues[0]->getDouble() > args->operandValues[1]->getDouble()));
+  return shared_ptr<VentureBool>(new VentureBool(args->operandValues[0] > args->operandValues[1]));
 }
 
 VentureValuePtr GteOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength(">=", args, 2);
-  return shared_ptr<VentureBool>(new VentureBool(args->operandValues[0]->getDouble() >= args->operandValues[1]->getDouble()));
+  return shared_ptr<VentureBool>(new VentureBool(args->operandValues[0] >= args->operandValues[1]));
 }
 
 VentureValuePtr MinOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
@@ -80,13 +80,13 @@ VentureValuePtr MinOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
 VentureValuePtr LtOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("<", args, 2);
-  return shared_ptr<VentureBool>(new VentureBool(args->operandValues[0]->getDouble() < args->operandValues[1]->getDouble()));
+  return shared_ptr<VentureBool>(new VentureBool(args->operandValues[0] < args->operandValues[1]));
 }
 
 VentureValuePtr LteOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("<=", args, 2);
-  return shared_ptr<VentureBool>(new VentureBool(args->operandValues[0]->getDouble() <= args->operandValues[1]->getDouble()));
+  return shared_ptr<VentureBool>(new VentureBool(args->operandValues[0] <= args->operandValues[1]));
 }
 
 
@@ -163,4 +163,10 @@ VentureValuePtr IsAtomOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
 {
   checkArgsLength("is_atom", args, 1);
   return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureAtom>(args->operandValues[0]) != NULL));
+}
+
+VentureValuePtr ProbabilityOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("probability", args, 1);
+  return VentureValuePtr(new VentureProbability(args->operandValues[0]->getProbability()));
 }

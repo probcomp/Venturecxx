@@ -1,7 +1,8 @@
 from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, collectSamples, on_inf_prim, defaultInfer
 from nose.tools import eq_
 
+@on_inf_prim("none")
 def testMemSmoke1():
   "Mem should be a noop on deterministic procedures (only memoizing)."
   eq_(get_ripl().predict("((mem (lambda (x) 3)) 1)"), 3.0)
@@ -11,38 +12,40 @@ def testMemBasic1():
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda () (bernoulli 0.5)))")
   for i in range(10): ripl.predict("(f)",label="p%d" % i)
-  for t in range(5):
+  for _ in range(5):
     assert reduce(lambda x,y: x == y,[ripl.report("p%d" % i) for i in range(10)])
-    ripl.infer(5)
+    ripl.infer(defaultInfer())
 
 def testMemBasic2():
   "MSPs should always give the same answer when called on the same arguments"
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   for i in range(10): ripl.predict("(f 1)",label="p%d" % i)
-  for t in range(5):
+  for _ in range(5):
     assert reduce(lambda x,y: x == y,[ripl.report("p%d" % i) for i in range(10)])
-    ripl.infer(5)
+    ripl.infer(defaultInfer())
 
 def testMemBasic3():
   "MSPs should always give the same answer when called on the same arguments"
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (x y) (bernoulli 0.5)))")
   for i in range(10): ripl.predict("(f 1 2)",label="p%d" % i)
-  for t in range(5):
+  for _ in range(5):
     assert reduce(lambda x,y: x == y,[ripl.report("p%d" % i) for i in range(10)])
-    ripl.infer(5)
+    ripl.infer(defaultInfer())
             
   
 @statisticalTest
+@on_inf_prim("any") # Not completely agnostic because uses MH, but
+                    # responds to the default inference program
 def testMem1():
   "MSPs should deal with their arguments changing under inference."
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   ripl.predict("(f (bernoulli 0.5))")
-  ripl.predict("(f (bernoulli 0.5))")
+  ripl.predict("(f (bernoulli 0.5))",label="pid")
   ripl.infer(20) # Run even in crash testing mode
-  predictions = collectSamples(ripl, 3)
+  predictions = collectSamples(ripl, "pid")
   return reportKnownDiscrete([[True, 0.5], [False, 0.5]], predictions)
 
 @statisticalTest
@@ -58,10 +61,11 @@ def testMem2():
   ripl.predict('(add x y w z q)',label="pid")
 
   predictions = collectSamples(ripl,"pid")
-  # TODO This test can be strengthened by computing more of the ratios in the answer
-  # (also by picking constants to have less severe buckets)
   ans = [(5,  0.4 * 0.4 * 0.1),
-         (6,  None), (7,  None), (8,  None), (9,  None),
+         (6,  0.4 * 0.4 * 0.9),
+         (7,  0.4 * 0.6 * 0.1 * 2),
+         (8,  0.4 * 0.6 * 0.9 * 2),
+         (9,  0.6 * 0.6 * 0.1),
          (10, 0.6 * 0.6 * 0.9)]
   return reportKnownDiscrete(ans, predictions)
 
@@ -76,16 +80,18 @@ def testMem3():
   ripl.assume("w","((lambda () (f 2)))")
   ripl.assume("z","(g 1)")
   ripl.assume("q","(categorical (simplex 0.1 0.9) (array 1 2))")
-  ripl.predict('(add x y w z q)')
+  ripl.predict('(add x y w z q)',label="pid")
 
-  predictions = collectSamples(ripl,8)
-  # TODO This test can be strengthened by computing more of the ratios in the answer
-  # (also by picking constants to have less severe buckets)
+  predictions = collectSamples(ripl,"pid")
   ans = [(5,  0.4 * 0.4 * 0.1),
-         (6,  None), (7,  None), (8,  None), (9,  None),
+         (6,  0.4 * 0.4 * 0.9),
+         (7,  0.4 * 0.6 * 0.1 * 2),
+         (8,  0.4 * 0.6 * 0.9 * 2),
+         (9,  0.6 * 0.6 * 0.1),
          (10, 0.6 * 0.6 * 0.9)]
   return reportKnownDiscrete(ans, predictions)
 
+@on_inf_prim("mh")
 def testMem4():
   "Like TestMem1, makes sure that MSPs handle changes to their arguments without crashing"
   ripl = get_ripl()
@@ -100,6 +106,50 @@ def testMem4():
   ripl.assume("g","(lambda () (pick_a_stick f 1))")
   ripl.predict("(g)")
   ripl.infer(40)
+
+@statisticalTest
+def testMemArray():
+  "Same as testMem2 but when the arguments are arrays"
+  ripl = get_ripl()
+  ripl.assume("f","(mem (lambda (arg) (categorical (simplex 0.4 0.6) (array 1 2))))")
+  ripl.assume("x","(f (array 1 2))")
+  ripl.assume("y","(f (array 1 2))")
+  ripl.assume("w","(f (array 3 4))")
+  ripl.assume("z","(f (array 3 4))")
+  ripl.assume("q","(categorical (simplex 0.1 0.9) (array 1 2))")
+  ripl.predict('(add x y w z q)',label="pid")
+
+  predictions = collectSamples(ripl,"pid")
+  ans = [(5,  0.4 * 0.4 * 0.1),
+         (6,  0.4 * 0.4 * 0.9),
+         (7,  0.4 * 0.6 * 0.1 * 2),
+         (8,  0.4 * 0.6 * 0.9 * 2),
+         (9,  0.6 * 0.6 * 0.1),
+         (10, 0.6 * 0.6 * 0.9)]
+  return reportKnownDiscrete(ans, predictions)
+
+@statisticalTest
+def testMemSP():
+  "Same as testMem2 but when the arguments are SPs"
+  ripl = get_ripl()
+  ripl.assume("f","(mem (lambda (arg) (categorical (simplex 0.4 0.6) (array 1 2))))")
+  ripl.assume("g","(lambda (x) x)")
+  ripl.assume("h","(lambda (x) 1)")
+  ripl.assume("x","(f g)")
+  ripl.assume("y","(f g)")
+  ripl.assume("w","(f h)")
+  ripl.assume("z","(f h)")
+  ripl.assume("q","(categorical (simplex 0.1 0.9) (array 1 2))")
+  ripl.predict('(add x y w z q)',label="pid")
+
+  predictions = collectSamples(ripl,"pid")
+  ans = [(5,  0.4 * 0.4 * 0.1),
+         (6,  0.4 * 0.4 * 0.9),
+         (7,  0.4 * 0.6 * 0.1 * 2),
+         (8,  0.4 * 0.6 * 0.9 * 2),
+         (9,  0.6 * 0.6 * 0.1),
+         (10, 0.6 * 0.6 * 0.9)]
+  return reportKnownDiscrete(ans, predictions)
 
 ############ CXX mem tests
 

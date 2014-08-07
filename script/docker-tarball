@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Reset the working directory to the directory above the script's path
+my_abs_path=$(readlink -f "$0")
+root_dirname=$(dirname $(dirname $my_abs_path))
+echo "$root_dirname"
+cd $root_dirname
+
+release=0.2
+if [[ ! -z $1 ]]; then
+    release=$1
+fi
+
+./script/release-tarball
+mv ../venture-$release.tgz .
+sudo docker build -t probcomp/venture .
+sudo docker save probcomp/venture | gzip > ../venture-$release-docker.tgz
+mv ./venture-$release.tgz ..

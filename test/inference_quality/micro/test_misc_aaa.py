@@ -1,6 +1,6 @@
 from nose import SkipTest
 from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, defaultKernel
+from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, rejectionSampling
 
 def testMakeBetaBernoulli1():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
@@ -9,17 +9,17 @@ def testMakeBetaBernoulli1():
 
 @statisticalTest
 def checkMakeBetaBernoulli1(maker, hyper):
-  if defaultKernel() == "rejection" and maker == "make_beta_bernoulli" and hyper == "(normal 10.0 1.0)":
+  if rejectionSampling() and maker == "make_beta_bernoulli" and hyper == "(normal 10.0 1.0)":
     raise SkipTest("Is the log density of counts bounded for collapsed beta bernoulli?  Issue: https://app.asana.com/0/9277419963067/10623454782852")
   ripl = get_ripl()
 
   ripl.assume("a", hyper)
   ripl.assume("f", "(%s a a)" % maker)
-  ripl.predict("(f)")
+  ripl.predict("(f)", label="pid")
 
   for _ in range(20): ripl.observe("(f)", "true")
 
-  predictions = collectSamples(ripl,3)
+  predictions = collectSamples(ripl,"pid")
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete(ans, predictions)
 
@@ -32,17 +32,17 @@ def testMakeBetaBernoulli2():
 # constraint forwarding and brush).
 @statisticalTest
 def checkMakeBetaBernoulli2(maker):
-  if defaultKernel() == "rejection" and maker == "make_beta_bernoulli":
+  if rejectionSampling() and maker == "make_beta_bernoulli":
     raise SkipTest("Is the log density of counts bounded for collapsed beta bernoulli?  Issue: https://app.asana.com/0/9277419963067/10623454782852")
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "((lambda () (%s ((lambda () a)) ((lambda () a)))))" % maker)
-  ripl.predict("(f)")
+  ripl.predict("(f)", label="pid")
 
   for _ in range(20): ripl.observe("((lambda () (f)))", "true")
 
-  predictions = collectSamples(ripl,3)
+  predictions = collectSamples(ripl,"pid")
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete(ans, predictions)
 
@@ -50,15 +50,14 @@ def testMakeBetaBernoulli3():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
     yield checkMakeBetaBernoulli3,maker
 
+@skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @statisticalTest
 def checkMakeBetaBernoulli3(maker):
-  if defaultKernel() == "rejection":
-    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(%s a a)" % maker)
-  ripl.predict("(f)")
+  ripl.predict("(f)", label="pid")
 
   for _ in range(10): ripl.observe("(f)", "true")
   for _ in range(10): ripl.observe("""
@@ -66,7 +65,7 @@ def checkMakeBetaBernoulli3(maker):
   (f)
   (f))""", "true")
 
-  predictions = collectSamples(ripl,3)
+  predictions = collectSamples(ripl,"pid")
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete(ans, predictions)
 
@@ -74,10 +73,9 @@ def testMakeBetaBernoulli4():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
     yield checkMakeBetaBernoulli4,maker
 
+@skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @statisticalTest
 def checkMakeBetaBernoulli4(maker):
-  if defaultKernel() == "rejection":
-    raise SkipTest("Rejection sampling doesn't work when resimulations of unknown code are observed")
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
@@ -85,11 +83,11 @@ def checkMakeBetaBernoulli4(maker):
 (if (lt a 10.0)
   ({0} a a)
   ({0} a a))""".format(maker))
-  ripl.predict("(f)")
+  ripl.predict("(f)", label="pid")
 
   for _ in range(20): ripl.observe("(f)", "true")
 
-  predictions = collectSamples(ripl,3)
+  predictions = collectSamples(ripl,"pid")
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete(ans, predictions)
 

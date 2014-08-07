@@ -16,10 +16,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from venture.exception import VentureException
-from venture.sivm import utils
 import copy
 
+from venture.exception import VentureException
+from venture.sivm import utils
+import venture.value.dicts as v
 
 class VentureSivm(object):
 
@@ -37,7 +38,7 @@ class VentureSivm(object):
     _core_instructions = {"assume","observe","predict",
             "configure","forget","freeze","report","infer","start_continuous_inference",
             "stop_continuous_inference","continuous_inference_status",
-            "clear","rollback","get_directive_logscore","get_global_logscore",
+            "clear","rollback","get_logscore","get_global_logscore",
             "debugger_configure","debugger_list_random_choices", "debugger_clear",
             "debugger_force_random_choice","debugger_report_address",
             "debugger_history","debugger_dependents","debugger_address_to_source_code_location",
@@ -178,7 +179,8 @@ class VentureSivm(object):
     # Continuous Inference Pauser
     ###############################
 
-    def _pause_continuous_inference(sivm, pause=True):
+    def _pause_continuous_inference(self, pause=True):
+        sivm = self # Naming conventions...
         class tmp(object):
             def __enter__(self):
                 self.ci_status = sivm._continuous_inference_status()
@@ -188,7 +190,7 @@ class VentureSivm(object):
             def __exit__(self, type, value, traceback):
                 if self.ci_was_running:
                     #print("restarting continuous inference")
-                    sivm._start_continuous_inference(self.ci_status["params"])
+                    sivm._start_continuous_inference(self.ci_status["expression"])
         return tmp()
 
 
@@ -202,8 +204,8 @@ class VentureSivm(object):
     def _continuous_inference_status(self):
         return self._call_core_sivm_instruction({"instruction" : "continuous_inference_status"})
 
-    def _start_continuous_inference(self, params):
-        self._call_core_sivm_instruction({"instruction" : "start_continuous_inference", "params" : params})
+    def _start_continuous_inference(self, expression):
+        self._call_core_sivm_instruction({"instruction" : "start_continuous_inference", "expression" : expression})
 
     def _stop_continuous_inference(self):
         self._call_core_sivm_instruction({"instruction" : "stop_continuous_inference"})
@@ -297,7 +299,7 @@ class VentureSivm(object):
                 }
         o1 = self._call_core_sivm_instruction(inst1)
         inst2 = { "instruction" : "infer",
-                  "params" : { "transitions" : 0 } }
+                  "expression" : [v.symbol("incorporate")] }
         self._call_core_sivm_instruction(inst2)
         inst3 = {
                 "instruction" : "forget",

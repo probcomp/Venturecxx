@@ -25,7 +25,7 @@ what's going on will be to ask us or to read the source code.
 Dependencies (Ubuntu)
 ---------------------
 
-Here is what we install on a clean Ubuntu 12.04 (or higher).
+Here is what we install on a clean Ubuntu (works best in 14.04 or higher).
 
     # Get system dependencies
     sudo apt-get install -y libboost-all-dev libgsl0-dev python-pip ccache libfreetype6-dev
@@ -35,8 +35,12 @@ Here is what we install on a clean Ubuntu 12.04 (or higher).
     # [Optional] Get Python dependencies (faster to install prepackaged than via pip)
     # Also pulls in required external libraries
     # HOWEVER, version skew problems have been reported if installing
-    # python-numpy and python-scipy via apt-get
+    # python-numpy and python-scipy via apt-get on older versions of Ubuntu
     sudo apt-get install -y python-pyparsing python-flask python-requests python-numpy python-matplotlib python-scipy python-zmq ipython
+
+    # [Optional] Get dependencies for ggplot (needed for the built-in plotting facilities)
+    # Note: on older versions of Ubuntu, install them via pip (see "Install ggplot" below)
+    sudo apt-get install -y python-pandas python-patsy
 
 Dependencies (OSX, Homebrew)
 ----------------------------
@@ -50,13 +54,14 @@ Here is what we install on a clean Mac OS X 10.9 (or higher).
     brew install gcc48
 
     # Install libraries using homebrew
-    brew install python ccache
+    brew install python ccache gsl
 
 The tricky step is installing the correct version of the Boost library. The current Homebrew version of Boost is 1.55, but the puma backend breaks if Venture is built under this version. Instead, Boost 1.49 must be installed. These instructions assume that no versions of Boost are currently installed. If 1.55 and 1.49 are already installed on the machine, simply follow the instructions in part 1 of this thread: <http://stackoverflow.com/questions/3987683/homebrew-install-specific-version-of-formula> to switch to version 1.49.
 
     # First, install the current version
     brew install --without-python boost
     # Install an old version of gcc; Boost 1.49 breaks with clang on OS X 10.9
+    # (try "brew search gcc" to find gcc42)
     brew install apple-gcc42
     # Install the old Boost
     brew tap homebrew/versions
@@ -78,8 +83,8 @@ Finally, Python dependendencies:
 
     # [Optional] Get Python dependencies (faster to install prepackaged than via pip)
     # Also pulls in required external libraries
-	sudo brew install ipython
-    sudo pip install pyparsing flask numpy matplotlib scipyn
+    pip install ipython
+    pip install pyparsing flask numpy matplotlib scipy
 
 Dependencies (OSX, macports)
 ----------------------------
@@ -125,6 +130,10 @@ Install any remaining dependencies by doing
 
     sudo pip install -r requirements.txt
 
+[Optional] Install ggplot (needed for the built-in plotting facilities)
+
+    sudo pip install ggplot
+
 On Linux systems now simply do
 
     sudo python setup.py install
@@ -155,6 +164,10 @@ Activate the environment, and install any remaining dependencies
 
     source env.d/bin/activate
     pip install -r requirements.txt
+
+[Optional] Install ggplot (needed for the built-in plotting facilities)
+
+    sudo pip install ggplot
 
 On Linux, now install by typing
 

@@ -41,8 +41,8 @@ double regenAndAttach(Trace * trace,
       weight += regen(trace,node,scaffold,shouldRestore,db,gradients);
       if (trace->isObservation(node))
       {
-        OutputNode * outputNode = trace->getOutermostNonRefAppNode(node);
-              weight += constrain(trace,outputNode,trace->getObservedValue(node));
+        OutputNode * outputNode = trace->getConstrainableNode(node);
+        weight += constrain(trace,outputNode,trace->getObservedValue(node));
         constraintsToPropagate[outputNode] = trace->getObservedValue(node);
       }
     }
@@ -211,6 +211,7 @@ pair<double,Node*> evalFamily(Trace * trace,
                               VentureValuePtr exp,
                               shared_ptr<VentureEnvironment> env,
                               shared_ptr<Scaffold> scaffold,
+                              bool shouldRestore,
                               shared_ptr<DB> db,
                               shared_ptr<map<Node*,Gradient> > gradients)
 {
@@ -219,7 +220,7 @@ pair<double,Node*> evalFamily(Trace * trace,
     double weight = 0;
     shared_ptr<VentureSymbol> symbol = dynamic_pointer_cast<VentureSymbol>(exp);
     Node * sourceNode = env->lookupSymbol(symbol);
-    weight = regen(trace,sourceNode,scaffold,false,db,gradients);
+    weight = regen(trace,sourceNode,scaffold,shouldRestore,db,gradients);
 
     return make_pair(weight,trace->createLookupNode(sourceNode,exp));
   }
@@ -229,7 +230,7 @@ pair<double,Node*> evalFamily(Trace * trace,
   {
     assert(exp->hasArray());
     vector<VentureValuePtr> array = exp->getArray();
-    pair<double,Node*> p = evalFamily(trace,array[0],env,scaffold,db,gradients);
+    pair<double,Node*> p = evalFamily(trace,array[0],env,scaffold,shouldRestore,db,gradients);
     double weight = p.first;
     Node * operatorNode = p.second;
 
@@ -241,13 +242,13 @@ pair<double,Node*> evalFamily(Trace * trace,
     vector<Node*> operandNodes;
     for (size_t i = 1; i < array.size(); ++i)
     {
-      pair<double,Node*>p = evalFamily(trace,array[i],env,scaffold,db,gradients);
+      pair<double,Node*>p = evalFamily(trace,array[i],env,scaffold,shouldRestore,db,gradients);
       weight += p.first;
       operandNodes.push_back(p.second);
     }
 
     pair<RequestNode*,OutputNode*> appNodes = trace->createApplicationNodes(operatorNode,operandNodes,env,exp);
-    weight += apply(trace,appNodes.first,appNodes.second,scaffold,false,db,gradients);
+    weight += apply(trace,appNodes.first,appNodes.second,scaffold,shouldRestore,db,gradients);
     return make_pair(weight,appNodes.second);
   }
 }
@@ -374,14 +375,15 @@ double evalRequests(Trace * trace,
     if (!trace->containsMadeSPFamily(trace->getOperatorSPMakerNode(requestNode),esr.id))
     {
       RootOfFamily esrRoot;
-      if (shouldRestore)
+      shared_ptr<SP> sp = trace->getMadeSP(trace->getOperatorSPMakerNode(requestNode));
+      if (shouldRestore && db->hasESRParent(sp, esr.id))
       {
-        esrRoot = db->getESRParent(trace->getMadeSP(trace->getOperatorSPMakerNode(requestNode)),esr.id);
+        esrRoot = db->getESRParent(sp,esr.id);
         weight += restore(trace,esrRoot.get(),scaffold,db,gradients);
       }
       else
       {
-        pair<double,Node*> p = evalFamily(trace,esr.exp,esr.env,scaffold,db,gradients);
+        pair<double,Node*> p = evalFamily(trace,esr.exp,esr.env,scaffold,shouldRestore,db,gradients);
         weight += p.first;
         esrRoot = shared_ptr<Node>(p.second);
       }

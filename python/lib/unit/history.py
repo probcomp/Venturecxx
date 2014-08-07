@@ -414,31 +414,10 @@ def historyNameToValues(history,seriesInd=0,flatten=False):
         nameToValues[name]=values
     return nameToValues
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # 
 # TODO Parameters have to agree for now
 # FIXME does nameToType work with histOverlay?
+# TODO have a sensible default naming (for convenience)
 def historyOverlay(name, named_hists):
     ''':: string -> [(string,History)] -> History containing all those
     time series overlaid'''  
@@ -454,6 +433,20 @@ def historyOverlay(name, named_hists):
     for (subname,subhist) in named_hists:
         answer.addDataset(subhist.data)
     return answer
+
+
+def historyStitch(hists,nansAtStitches=False):
+    '''Mutate hists[0] by appending values (in order) from rest of hists'''
+    h0 = hists[0]
+    h0.label + '--1st of %i stitched hists'%len(hists)
+    for h in hists[1:]:
+        for name,_ in h.nameToSeries.iteritems():
+            h_values = h.nameToSeries[name][0].values
+            h0.nameToSeries[name][0].values.extend( h_values )
+            if nansAtStitches:
+                h0.nameToSeries[name][0].values.extend( [NaN]*20 )
+
+    return h0
 
 
 class Run(object):
@@ -504,7 +497,8 @@ def showParameters(parameters):
 
     text = items[0][0] + ' = ' + str(items[0][1])
     for (name, value) in items[1:]:
-        text += '\n' + name + ' = ' + str(value)
+        # TODO: something more principled to truncate overly long parameter values            
+        text += '\n' + name + ' = ' + str(value)[:20]
 
     plt.text(0, 1, text, transform=plt.axes().transAxes, va='top', size='small', linespacing=1.0)
 
@@ -606,6 +600,12 @@ def addToDict(dictionary, key, value):
     answer = copy.copy(dictionary)
     answer[key] = value
     return answer
+
+
+#TODO probably bit-rotted
+# is meant to work with *parameters* dict from VentureUnit object
+# need to adjust Unit/Analytics or function below to make 
+# it easy to plot e.g. number of observes vs. runtime.
 
 # Produces plots for a given variable over a set of runs.
 # Variable parameters are the x-axis, 'seriesName' is the y-axis.

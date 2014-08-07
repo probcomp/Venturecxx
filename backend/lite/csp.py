@@ -1,11 +1,10 @@
 from psp import DeterministicPSP, ESRRefOutputPSP
-from sp import VentureSP
+from sp import SP, VentureSPRecord
 from env import VentureEnvironment
 from request import Request,ESR
 import value as v
-import serialize
+from exception import VentureError
 
-@serialize.register
 class CSPRequestPSP(DeterministicPSP):
   def __init__(self,ids,exp,env):
     self.ids = ids
@@ -13,7 +12,8 @@ class CSPRequestPSP(DeterministicPSP):
     self.env = env
 
   def simulate(self,args):
-    assert len(self.ids) == len(args.operandNodes)
+    if len(self.ids) != len(args.operandNodes):
+      raise VentureError("Wrong number of arguments: compound takes exactly %d arguments, got %d." % (len(self.ids), len(args.operandNodes)))
     extendedEnv = VentureEnvironment(self.env,self.ids,args.operandNodes)
     return Request([ESR(args.node,self.exp,extendedEnv)])
 
@@ -25,23 +25,11 @@ class CSPRequestPSP(DeterministicPSP):
 
   def canAbsorb(self, _trace, _appNode, _parentNode): return True
 
-  def serialize(self, s):
-    ret = {}
-    ret['ids'] = [s.serialize(id) for id in self.ids]
-    ret['exp'] = s.serialize(self.exp)
-    ret['env'] = s.serialize(self.env)
-    return ret
-
-  def deserialize(self, s, value):
-    self.ids = [s.deserialize(id) for id in value['ids']]
-    self.exp = s.deserialize(value['exp'])
-    self.env = s.deserialize(value['env'])
-
 class MakeCSPOutputPSP(DeterministicPSP):
   def simulate(self,args):
     ids = args.operandValues[0]
     exp = args.operandValues[1]
-    return VentureSP(CSPRequestPSP(ids,exp,args.env),ESRRefOutputPSP())
+    return VentureSPRecord(SP(CSPRequestPSP(ids,exp,args.env),ESRRefOutputPSP()))
 
   def gradientOfSimulate(self, args, _value, _direction):
     # A lambda is a constant.  I may need to do some plumbing here,

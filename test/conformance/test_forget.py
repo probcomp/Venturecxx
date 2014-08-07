@@ -1,14 +1,15 @@
-from venture.test.config import get_ripl, collectSamples, defaultKernel
-from nose.tools import eq_
+from venture.test.config import get_ripl, on_inf_prim
 
-def testForgetContinuousInference1():
+@on_inf_prim("none")
+def testForgetSmoke1():
   ripl = get_ripl()
   for i in range(10):
     pid = "pid%d" % i
     ripl.predict("(flip)",label=pid)
     ripl.forget(pid)
 
-def testForgetContinuousInference2():
+@on_inf_prim("none")
+def testForgetSmoke2():
   ripl = get_ripl()
   for i in range(10):
     pid = "pid%d" % i
@@ -18,6 +19,7 @@ def testForgetContinuousInference2():
     pid = "pid%d" % i
     ripl.forget(pid)
 
+@on_inf_prim("mh")
 def testForgetContinuousInference3():
   ripl = get_ripl()
   for i in range(10):
@@ -30,7 +32,8 @@ def testForgetContinuousInference3():
     ripl.forget(pid)
     ripl.infer(5)
 
-def testForgetContinuousInference3():
+@on_inf_prim("mh")
+def testForgetContinuousInference4():
   ripl = get_ripl()
   for i in range(10):
     pid = "pid%d" % i

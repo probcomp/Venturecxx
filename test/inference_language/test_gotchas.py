@@ -1,23 +1,23 @@
 from nose.tools import eq_, assert_raises # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
 from nose import SkipTest
+
 from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, collectStateSequence
-from testconfig import config
+from venture.test.config import get_ripl, collectSamples, collectStateSequence, gen_broken_in, gen_on_inf_prim, defaultInfer, on_inf_prim
 
 def testInferWithNoEntropy():
   "Makes sure that infer doesn't crash when there are no random choices in the trace"
   ripl = get_ripl()
-  ripl.infer(1)
+  ripl.infer(defaultInfer())
   ripl.predict("(if true 1 2)")
-  ripl.infer(1)
+  ripl.infer(defaultInfer())
   
 @statisticalTest
 def testOuterMix1():
   "Makes sure that the mix-mh weights are correct"
   ripl = get_ripl()
-  ripl.predict("(if (bernoulli 0.5) (if (bernoulli 0.5) 2 3) 1)")
+  ripl.predict("(if (bernoulli 0.5) (if (bernoulli 0.5) 2 3) 1)", label="pid")
 
-  predictions = collectSamples(ripl,1)
+  predictions = collectSamples(ripl,"pid")
   ans = [(1,.5), (2,.25), (3,.25)]
   return reportKnownDiscrete(ans, predictions)
 
@@ -31,6 +31,7 @@ def progHiddenDeterminism():
 # TODO Figure out a coherent way to run these two tests against all
 # kernels including gibbs.  Should I rely on the "generic inference
 # program" mechanism?
+@on_inf_prim("mh")
 def testHiddenDeterminism1():
   """Makes sure that proposals of impossible things don't cause
   trouble"""
@@ -39,23 +40,24 @@ def testHiddenDeterminism1():
   c1 = ripl.report("c1")
   # TODO Expand collectSamples to accept a list of indices and report all of them
   # TODO Expand collectSamples to accept the inference command as a string
-  predictions = collectStateSequence(ripl, "c1", infer={"kernel":"mh", "scope":"default", "block":"one", "transitions":20})
+  predictions = collectStateSequence(ripl, "c1", infer="(mh default one 20)")
   # Single-site MH can't move on this problem
   for pred in predictions:
     eq_(pred, c1)
 
+@on_inf_prim("mh")
 def testHiddenDeterminism2():
   """Makes sure that blocking can avoid proposing impossible things."""
   ripl = progHiddenDeterminism()
   # TODO enumerative gibbs triggers the log(0) bug even when blocked.
-  predictions = collectStateSequence(ripl, "c2", infer={"kernel":"mh", "scope":"default", "block":"all", "transitions":50})
+  predictions = collectStateSequence(ripl, "c2", infer="(mh default all 50)")
   # Block MH should explore the posterior
   ans = [(True,.5), (False,.5)]
   return reportKnownDiscrete(ans, predictions)
 
+@gen_broken_in('puma', "rejection is not implemented in Puma")
+@gen_on_inf_prim("rejection")
 def testRejectNormal1():
-  if config["get_ripl"] != "lite": raise SkipTest("Rejection not implemented in Puma")
-
   """Rejection sampling shouldn't work if both mean and variance of a
   normal are subject to change; shouldn't work if the mean is known
   but the variance and the output are unknown; but still should work
@@ -66,8 +68,6 @@ def testRejectNormal1():
   as the variance is bounded away from zero, but that seems too hard
   to chase down."""
   
-  if config["get_ripl"] != "lite": raise SkipTest("This test is not supported by CXX yet")
-
   for incl_mu in [False, True]:
     for incl_sigma in [False, True]:
       for incl_out in [False, True]:

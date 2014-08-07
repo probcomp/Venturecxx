@@ -15,6 +15,7 @@ struct Args
 {
   Args(Trace * trace, ApplicationNode * node);
 
+  Trace * _trace;
   ApplicationNode * node;
   vector<VentureValuePtr> operandValues;
   vector<Node*> operandNodes;

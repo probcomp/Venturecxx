@@ -325,7 +325,9 @@ RootOfFamily ConcreteTrace::getMadeSPFamilyRoot(Node * makerNode, FamilyID id)
 
 BlockID ConcreteTrace::sampleBlock(ScopeID scope)
 {
-  assert(scopes.count(scope));
+  if (!scopes.count(scope)) {
+    throw "scope " + scope->toString() + " does not contain any blocks";
+  }
   return scopes[scope].sampleKeyUniformly(getRNG());
 }
 
@@ -447,7 +449,7 @@ double ConcreteTrace::makeConsistent()
        iter != unpropagatedObservations.end();
        ++iter)
   {
-    OutputNode * appNode = getOutermostNonRefAppNode(iter->first);
+    OutputNode * appNode = getConstrainableNode(iter->first);
     vector<set<Node*> > setsOfPNodes;
     set<Node*> pnodes;
     pnodes.insert(appNode);

@@ -1,13 +1,22 @@
 import numbers
 import exp as e
 from node import ConstantNode, LookupNode, RequestNode, OutputNode
-from sp import VentureSP
-from psp import NullRequestPSP
+from sp import VentureSPRecord
+from psp import NullRequestPSP, PSP
 from value import SPRef
 from lkernel import VariationalLKernel
 from scope import isScopeIncludeOutputPSP
+from consistency import assertTorus, assertTrace
+from exception import VentureError, StackFrame
 
-def regenAndAttach(trace,border,scaffold,shouldRestore,omegaDB,gradients):
+def regenAndAttach(trace,scaffold,shouldRestore,omegaDB,gradients):
+  assertTorus(scaffold)
+  assert len(scaffold.border) == 1
+  ans = regenAndAttachAtBorder(trace, scaffold.border[0], scaffold, shouldRestore, omegaDB, gradients)
+  assertTrace(trace, scaffold)
+  return ans
+
+def regenAndAttachAtBorder(trace,border,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
   constraintsToPropagate = {}
   for node in border:
@@ -93,23 +102,37 @@ def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   assert isinstance(weight, numbers.Number)
   return weight
 
-def evalFamily(trace,exp,env,scaffold,omegaDB,gradients):
-  if e.isVariable(exp): 
-    sourceNode = env.findSymbol(exp)
-    weight = regen(trace,sourceNode,scaffold,False,omegaDB,gradients)
+def evalFamily(trace,exp,env,scaffold,shouldRestore,omegaDB,gradients):
+  if e.isVariable(exp):
+    try:
+      sourceNode = env.findSymbol(exp)
+    except VentureError as err:
+      err.stack_frame = StackFrame(exp, [])
+      raise err
+    weight = regen(trace,sourceNode,scaffold,shouldRestore,omegaDB,gradients)
     return (weight,trace.createLookupNode(sourceNode))
   elif e.isSelfEvaluating(exp): return (0,trace.createConstantNode(exp))
   elif e.isQuotation(exp): return (0,trace.createConstantNode(e.textOfQuotation(exp)))
   else:
-    (weight,operatorNode) = evalFamily(trace,e.getOperator(exp),env,scaffold,omegaDB,gradients)
-    operandNodes = []
-    for operand in e.getOperands(exp):
-      (w,operandNode) = evalFamily(trace,operand,env,scaffold,omegaDB,gradients)
-      weight += w
-      operandNodes.append(operandNode)
+    weight = 0
+    nodes = []
+    for index, subexp in enumerate(exp):
+      try:
+        w, n = evalFamily(trace,subexp,env,scaffold,shouldRestore,omegaDB,gradients)
+        weight += w
+        nodes.append(n)
+      except VentureError as err:
+        # here we flatten nested expressions
+        err.stack_frame.exp = exp
+        err.stack_frame.index.append(index)
+        raise err
 
-    (requestNode,outputNode) = trace.createApplicationNodes(operatorNode,operandNodes,env)
-    weight += apply(trace,requestNode,outputNode,scaffold,False,omegaDB,gradients)
+    (requestNode,outputNode) = trace.createApplicationNodes(nodes[0],nodes[1:],env)
+    try:
+      weight += apply(trace,requestNode,outputNode,scaffold,shouldRestore,omegaDB,gradients)
+    except VentureError as err:
+      err.stack_frame = StackFrame(exp, [], err.stack_frame)
+      raise err
     assert isinstance(weight, numbers.Number)
     return weight,outputNode
 
@@ -123,18 +146,18 @@ def apply(trace,requestNode,outputNode,scaffold,shouldRestore,omegaDB,gradients)
   return weight
 
 def processMadeSP(trace,node,isAAA):
-  sp = trace.valueAt(node)
-  assert isinstance(sp,VentureSP)
-  trace.setMadeSPAt(node,sp)
+  spRecord = trace.valueAt(node)
+  assert isinstance(spRecord,VentureSPRecord)
+  trace.setMadeSPRecordAt(node,spRecord)
+  if isAAA:
+    trace.discardAAAMadeSPAuxAt(node)
+  if spRecord.sp.hasAEKernel(): trace.registerAEKernel(node)
   trace.setValueAt(node,SPRef(node))
-  if not isAAA:
-    trace.initMadeSPFamiliesAt(node)
-    trace.setMadeSPAuxAt(node,sp.constructSPAux())
-    if sp.hasAEKernel(): trace.registerAEKernel(node)
 
 def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = 0
   psp,args = trace.pspAt(node),trace.argsAt(node)
+  assert isinstance(psp, PSP)
 
   if omegaDB.hasValueFor(node): oldValue = omegaDB.getValue(node)
   else: oldValue = None
@@ -153,7 +176,7 @@ def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   trace.setValueAt(node,newValue)
   psp.incorporate(newValue,args)
 
-  if isinstance(newValue,VentureSP): processMadeSP(trace,node,scaffold.isAAA(node))
+  if isinstance(newValue,VentureSPRecord): processMadeSP(trace,node,scaffold.isAAA(node))
   if psp.isRandom(): trace.registerRandomChoice(node)
   if isScopeIncludeOutputPSP(psp):
     scope,block = [trace.valueAt(n) for n in node.operandNodes[0:2]]
@@ -170,11 +193,11 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   # first evaluate exposed simulation requests (ESRs)
   for esr in request.esrs:
     if not trace.containsSPFamilyAt(node,esr.id):
-      if shouldRestore: 
+      if shouldRestore and omegaDB.hasESRParent(trace.spAt(node),esr.id):
         esrParent = omegaDB.getESRParent(trace.spAt(node),esr.id)
         weight += restore(trace,esrParent,scaffold,omegaDB,gradients)
       else:
-        (w,esrParent) = evalFamily(trace,esr.exp,esr.env,scaffold,omegaDB,gradients)
+        (w,esrParent) = evalFamily(trace,esr.exp,esr.env,scaffold,shouldRestore,omegaDB,gradients)
         weight += w
       trace.registerFamilyAt(node,esr.id,esrParent)
 

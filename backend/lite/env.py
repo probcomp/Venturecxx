@@ -1,10 +1,9 @@
 from value import VentureValue, registerVentureType, standard_venture_type
-import serialize
+from exception import VentureError
 
 # Environments store Python strings for the symbols, not Venture
 # symbol objects.  This is a choice, but whichever way it is made it
 # should be consistent.
-@serialize.register
 class VentureEnvironment(VentureValue):
   def __init__(self,outerEnv=None,ids=None,nodes=None):
     self.outerEnv = outerEnv
@@ -15,26 +14,28 @@ class VentureEnvironment(VentureValue):
     if ids and nodes: self.frame.update(zip(ids,nodes))
 
   def addBinding(self,sym,val):
-    assert isinstance(sym, str)
-    assert not sym in self.frame
+    if not isinstance(sym, str):
+      raise VentureError("Symbol '%s' must be a string, not " % (str(sym), type(sym)))
+    if sym in self.frame:
+      raise VentureError("Symbol '%s' already bound" % sym)
     self.frame[sym] = val
 
   def removeBinding(self,sym):
     assert isinstance(sym, str)
     if sym in self.frame: del self.frame[sym]
-    elif not self.outerEnv: raise Exception("Cannot unbind unbound symbol %s" % sym)
+    elif not self.outerEnv: raise VentureError("Cannot unbind unbound symbol '%s'" % sym)
     else: self.outerEnv.removeBinding(sym)
 
   def findSymbol(self,sym):
     if sym in self.frame: return self.frame[sym]
-    elif not self.outerEnv: raise Exception("Cannot find symbol %s" % sym)
+    elif not self.outerEnv: raise VentureError("Cannot find symbol '%s'" % sym)
     else: return self.outerEnv.findSymbol(sym)
   # VentureEnvironments are intentionally not comparable until we
   # decide otherwise
 
   def getEnvironment(self): return self
 
-  def asStackDict(self, _trace):
+  def asStackDict(self, _trace=None):
     # Methinks environments can be pretty opaque things for now.
     return {"type":"environment", "value":self}
   @staticmethod
@@ -55,9 +56,6 @@ class VentureEnvironment(VentureValue):
   def lookup(self, key):
     return self.findSymbol(key.getSymbol())
   # TODO Define contains to check whether the symbol is there (without throwing exceptions)
-
-  # for serialization
-  cyclic = True
 
 registerVentureType(VentureEnvironment, "environment")
 # Exec is appropriate for metaprogramming

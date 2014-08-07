@@ -1,0 +1,5 @@
+[assume a (scope_include 0 1 (normal (uniform_discrete 1 6) 1))]
+[assume b (scope_include 0 2 (normal (uniform_discrete 1 6) 1))]
+[assume c (scope_include 0 3 (normal (uniform_discrete 1 6) 1))]
+[observe (scope_include 0 4 (normal (+ a b c) 0.2)) 7]
+[infer (cycle ((mh 0 one 1) (plotf (p0d1d2 p0d1dt c3 cs) a b c (+ a b c))) 100)]

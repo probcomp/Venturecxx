@@ -173,7 +173,7 @@ VentureValuePtr BetaPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
   if (x > .99) { x = 0.99; }
   if (x < 0.01) { x = 0.01; }
 
-  return VentureValuePtr(new VentureNumber(x));
+  return VentureValuePtr(new VentureProbability(x));
 }
 
 double BetaPSP::simulateNumeric(const vector<double> & args, gsl_rng * rng) const
@@ -192,7 +192,7 @@ double BetaPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 {
   double a = args->operandValues[0]->getDouble();
   double b = args->operandValues[1]->getDouble();
-  double x = value->getDouble();
+  double x = value->getProbability();
   return BetaDistributionLogLikelihood(x, a, b);
 }
 
@@ -309,8 +309,10 @@ VentureValuePtr ApproximateBinomialPSP::simulate(shared_ptr<Args> args, gsl_rng 
   double mean = n * p;
   double sigma = sqrt(n * (p - p * p));
   
-  double x = gsl_ran_gaussian(rng, sigma) + mean;
-  if (x < 0) { x = 0; }
+  double x;
+  do {
+    x = gsl_ran_gaussian(rng, sigma) + mean;
+  } while (x < 0);
   
   return VentureValuePtr(new VentureNumber(x));
 }

@@ -1,7 +1,7 @@
 from testconfig import config
 from nose import SkipTest
 from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, collectSamples, on_inf_prim
 from nose.tools import eq_
 
 @statisticalTest
@@ -11,9 +11,9 @@ def testCategorical1():
 
   ripl.assume("x", "(categorical (simplex 0.1 0.2 0.3 0.4) (array 1 2 3 4))")
   ripl.assume("y", "(categorical (simplex 0.2 0.6 0.2) (array 1 2 3))")
-  ripl.predict("(+ x y)")
+  ripl.predict("(+ x y)",label="pid")
 
-  predictions = collectSamples(ripl,3)
+  predictions = collectSamples(ripl,"pid")
   ans = [(2, 0.1 * 0.2),
          (3, 0.1 * 0.6 + 0.2 * 0.2),
          (4, 0.1 * 0.2 + 0.2 * 0.6 + 0.3 * 0.2),
@@ -36,6 +36,7 @@ def testCategoricalAbsorb():
   ans = [(False,0.333),(True,0.667)]
   return reportKnownDiscrete(ans, predictions)
 
+@on_inf_prim("none")
 def testCategoricalDefault1():
   eq_(get_ripl().predict("(categorical (simplex 1))"), 0)
 

@@ -1,6 +1,6 @@
-from nose.tools import assert_equal,assert_is_none,assert_is_instance
 from wttree import PMap, PSet
 from trace import Trace
+from sp import VentureSPRecord
 
 class Particle(Trace):
 
@@ -29,6 +29,7 @@ class Particle(Trace):
     self.regenCounts = particle.regenCounts
     self.newMadeSPFamilies = particle.newMadeSPFamilies # pmap => pmap => node
     self.newChildren = particle.newChildren
+    self.discardedAAAMakerNodes = particle.discardedAAAMakerNodes
 
     # (2) Maps to things that change outside of particle methods
     self.madeSPAuxs = { node : spaux.copy() for node,spaux in particle.madeSPAuxs.iteritems() }
@@ -42,7 +43,7 @@ class Particle(Trace):
     self.aes = PSet() # PSet Node
 
     self.values = PMap()  # PMap Node VentureValue
-    self.madeSPs = PMap() # PMap Node VentureSP
+    self.madeSPs = PMap() # PMap Node SP
 
     self.scopes = PMap()  # PMap scopeid (PMap blockid (PSet Node))
     self.esrParents = PMap() # PMap Node [Node] # mutable list ok b/c only touched by one particle
@@ -50,6 +51,7 @@ class Particle(Trace):
     self.regenCounts = PMap() # PMap Node int
     self.newMadeSPFamilies = PMap() # PMap Node (PMap id Node)
     self.newChildren = PMap() # PMap Node (PSet Node)
+    self.discardedAAAMakerNodes = PSet() # PSet Node
 
     # (2) Maps to things that change outside of particle methods
     self.madeSPAuxs = {}
@@ -86,8 +88,15 @@ class Particle(Trace):
       return self.base.valueAt(node)
 
   def setValueAt(self,node,value): 
-#    assert_is_none(self.base.valueAt(node))
     self.values = self.values.insert(node,value)
+
+  def madeSPRecordAt(self,node):
+    return VentureSPRecord(self.madeSPAt(node), self.madeSPAuxAt(node))
+
+  def setMadeSPRecordAt(self,node,spRecord):
+    self.madeSPs = self.madeSPs.insert(node,spRecord.sp)
+    self.madeSPAuxs[node] = spRecord.spAux
+    self.newMadeSPFamilies = self.newMadeSPFamilies.insert(node, PMap())
 
   def madeSPAt(self,node):
     if node in self.madeSPs: return self.madeSPs.lookup(node)
@@ -130,12 +139,18 @@ class Particle(Trace):
     if not node in self.newChildren: self.newChildren = self.newChildren.insert(node,PSet())
     self.newChildren = self.newChildren.adjust(node, lambda children: children.insert(child))
 
+  def discardAAAMadeSPAuxAt(self,node):
+    self.discardedAAAMakerNodes = self.discardedAAAMakerNodes.insert(node)
+
+  def getAAAMadeSPAuxAt(self,node):
+    return None if node in self.discardedAAAMakerNodes else self.base.getAAAMadeSPAuxAt(node)
+
 ### SPFamilies
 
   def containsSPFamilyAt(self,node,id): 
     makerNode = self.spRefAt(node).makerNode
     if makerNode in self.newMadeSPFamilies:
-      assert_is_instance(self.newMadeSPFamilies.lookup(makerNode),PMap)
+      assert isinstance(self.newMadeSPFamilies.lookup(makerNode),PMap)
       if id in self.newMadeSPFamilies.lookup(makerNode): 
         return True
     elif self.base.madeSPFamiliesAt(makerNode).containsFamily(id): return True
@@ -203,7 +218,8 @@ class Particle(Trace):
     for (node,value) in self.values.iteritems(): 
       self.base.setValueAt(node,value)
 
-    for (node,madeSP) in self.madeSPs.iteritems(): self.base.setMadeSPAt(node,madeSP)
+    for (node,madeSP) in self.madeSPs.iteritems():
+      self.base.setMadeSPRecordAt(node,VentureSPRecord(madeSP))
 
     
           
@@ -222,6 +238,7 @@ class Particle(Trace):
 
 
 ################### Methods that should never be called on particles
+  def registerAAAMadeSPAuxAt(self,node,aux): raise Exception("Should not be called on a particle")
   def unregisterFamilyAt(self,node,esrId): raise Exception("Should not be called on a particle")
   def popEsrParentAt(self,node): raise Exception("Should not be called on a particle")
   def removeChildAt(self,node,child): raise Exception("Should not be called on a particle")

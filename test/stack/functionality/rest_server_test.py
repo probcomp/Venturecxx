@@ -14,9 +14,10 @@
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 # -*- coding: utf-8 -*-
-
 import unittest
 import json
+from nose.plugins.attrib import attr
+
 from venture.server import RiplRestServer
 from venture.server import utils
 from venture.shortcuts import make_venture_script_ripl, make_combined_ripl
@@ -38,6 +39,10 @@ class ServerTestCase(unittest.TestCase):
         return r
 
 
+# TODO Not really backend independent, but doesn't test the backend much.
+# Almost the same effect as @venture.test.config.in_backend("none"),
+# but works on the whole class
+@attr(backend="none")
 class TestRestServer(ServerTestCase):
 
     def setUp(self):
@@ -61,6 +66,10 @@ class TestRestServer(ServerTestCase):
 
 
 
+# TODO Not really backend independent, but doesn't test the backend much.
+# Almost the same effect as @venture.test.config.in_backend("none"),
+# but works on the whole class
+@attr(backend="none")
 class TestRiplRestServer(ServerTestCase):
 
     def setUp(self):

@@ -1,17 +1,15 @@
 import math
 import scipy.stats as stats
-from nose import SkipTest
-from testconfig import config
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
-from venture.test.config import get_ripl, defaultKernel, default_num_samples
+from venture.test.config import get_ripl, default_num_samples, on_inf_prim
 import sys
 from nose.plugins.attrib import attr
 
 sys.setrecursionlimit(10000)
 
+@on_inf_prim("resample")
 def testIncorporateDoesNotCrash():
   """A sanity test for stack handling of incorporate"""
-  if defaultKernel() != "mh": raise SkipTest("Doesn't depend on kernel, only run it for mh")
 
   ripl = get_ripl()
   P = 60
@@ -51,11 +49,11 @@ def initBasicPFripl1():
 
   return ripl
 
+@on_inf_prim("all") # Really resample and mh
 @statisticalTest
 @attr("slow")
 def testBasicParticleFilter1(P = 10):
   """A sanity test for particle filtering (discrete)"""
-  if defaultKernel() != "mh": raise SkipTest("Doesn't depend on kernel, only run it for mh")
 
   N = default_num_samples()
   predictions = []
@@ -94,11 +92,11 @@ def initBasicPFripl2():
 
   return ripl
 
+@on_inf_prim("all") # Really resample and mh
 @statisticalTest
 @attr("slow")
 def testBasicParticleFilter2(P = 10):
   """A sanity test for particle filtering (continuous)"""
-  if defaultKernel() != "mh": raise SkipTest("Doesn't depend on kernel, only run it for mh")
 
   N = default_num_samples()
   predictions = []

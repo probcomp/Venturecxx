@@ -14,12 +14,14 @@
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import random
+import pickle
+import time
 
 from venture.exception import VentureException
-from venture.lite.utils import simulateCategorical, sampleLogCategorical
-
-# Thin wrapper around Trace
-# TODO: merge with CoreSivm?
+from venture.lite.utils import sampleLogCategorical
+from venture.engine.inference import Infer
+from venture.engine.utils import expToDict
+import venture.value.dicts as v
 
 class Engine(object):
 
@@ -30,6 +32,16 @@ class Engine(object):
     self.weights = [0]
     self.directiveCounter = 0
     self.directives = {}
+    self.inferrer = None
+    import venture.lite.inference_sps as inf
+    self.foreign_sps = {}
+    self.inference_sps = dict(inf.inferenceSPsList)
+
+  def inferenceSPsList(self):
+    return self.inference_sps.iteritems()
+
+  def bind_foreign_inference_sp(self, name, sp):
+    self.inference_sps[name] = sp
 
   def getDistinguishedTrace(self):
     assert self.traces
@@ -42,9 +54,9 @@ class Engine(object):
   # TODO Move this into stack.
   def desugarLambda(self,datum):
     if type(datum) is list and type(datum[0]) is dict and datum[0]["value"] == "lambda":
-      ids = [{"type" : "symbol","value" : "quote"}] + [datum[1]]
-      body = [{"type" : "symbol","value" : "quote"}] + [self.desugarLambda(datum[2])]
-      return [{"type" : "symbol", "value" : "make_csp"},ids,body]
+      ids = v.quote(datum[1])
+      body = v.quote(self.desugarLambda(datum[2]))
+      return [v.symbol("make_csp"), ids, body]
     elif type(datum) is list: return [self.desugarLambda(d) for d in datum]
     else: return datum
 
@@ -61,14 +73,18 @@ class Engine(object):
 
     return (self.directiveCounter,self.getDistinguishedTrace().extractValue(baseAddr))
 
-  def predict(self,datum):
+  def predict_all(self,datum):
     baseAddr = self.nextBaseAddr()
     for trace in self.traces:
       trace.eval(baseAddr,self.desugarLambda(datum))
 
     self.directives[self.directiveCounter] = ["predict",datum]
 
-    return (self.directiveCounter,self.getDistinguishedTrace().extractValue(baseAddr))
+    return (self.directiveCounter,[t.extractValue(baseAddr) for t in self.traces])
+
+  def predict(self, datum):
+    (did, answers) = self.predict_all(datum)
+    return (did, answers[0])
 
   def observe(self,datum,val):
     baseAddr = self.nextBaseAddr()
@@ -96,6 +112,22 @@ class Engine(object):
       if directive[0] == "assume": trace.unbindInGlobalEnv(directive[1])
 
     del self.directives[directiveId]
+
+  def sample(self,datum):
+    # TODO Officially this is taken care of by the Venture SIVM level,
+    # but I want it here because it is used in the interpretation of
+    # the "peek" infer command.  Design clarification time?
+    # TODO With this definition of "sample", "peek" will pump the
+    # directive counter of the engine.  That is likely to make us at
+    # least somewhat sad.
+    (did, value) = self.predict(datum)
+    self.forget(did)
+    return value
+
+  def sample_all(self, datum):
+    (did, values) = self.predict_all(datum)
+    self.forget(did)
+    return values
 
   def freeze(self,directiveId):
     if directiveId not in self.directives:
@@ -134,8 +166,12 @@ class Engine(object):
     # method often.
     self.set_seed(random.randint(1,2**31-1))
 
-  # TODO Is bind_foreign_sp a directive or something like that?
   def bind_foreign_sp(self, name, sp):
+    self.foreign_sps[name] = sp
+    if self.name != "lite":
+      # wrap it for backend translation
+      import venture.lite.foreign as f
+      sp = f.ForeignLiteSP(sp)
     for trace in self.traces:
       trace.bindPrimitiveSP(name, sp)
 
@@ -151,6 +187,8 @@ effect of renumbering the directives, if some had been forgotten."""
     self.clear()
     if num_particles is not None:
       self.infer("(resample %d)" % num_particles)
+    for (name,sp) in self.foreign_sps.iteritems():
+      self.bind_foreign_sp(name,sp)
     for (_,dir) in worklist:
       self.replay(dir)
 
@@ -168,76 +206,99 @@ effect of renumbering the directives, if some had been forgotten."""
     for i,trace in enumerate(self.traces):
       self.weights[i] += trace.makeConsistent()
 
-  def infer(self,params=None):
-    if params is None:
-      params = {}
-    self.set_default_params(params)
+  def resample(self, P):
+    P = int(P)
+    newTraces = [None for p in range(P)]
+    for p in range(P):
+      parent = sampleLogCategorical(self.weights) # will need to include or rewrite
+      newTrace = self.copy_trace(self.traces[parent])
+      newTraces[p] = newTrace
+      if self.name != "lite":
+        newTraces[p].set_seed(random.randint(1,2**31-1))
+    self.traces = newTraces
+    self.weights = [0 for p in range(P)]
 
+  def infer(self, program):
     self.incorporate()
-    if 'command' in params and params['command'] == "resample":
-      P = params['particles']
-      newTraces = [None for p in range(P)]
-      for p in range(P):
-        parent = sampleLogCategorical(self.weights) # will need to include or rewrite
-        newTraces[p] = self.traces[parent].stop_and_copy()
-        if self.name != "lite":
-          newTraces[p].set_seed(random.randint(1,2**31-1))
-      self.traces = newTraces
-      self.weights = [0 for p in range(P)]
-
-    elif 'command' in params and params['command'] == "incorporate": pass
-
-    elif params['kernel'] == "cycle":
-      if 'subkernels' not in params:
-        raise Exception("Cycle kernel must have things to cycle over (%r)" % params)
-      for _ in range(params["transitions"]):
-        for k in params["subkernels"]:
-          self.infer(k)
-    elif params["kernel"] == "mixture":
-      for _ in range(params["transitions"]):
-        self.infer(simulateCategorical(params["weights"], params["subkernels"]))
-    else: # A primitive infer expression
-      #import pdb; pdb.set_trace()
-      for trace in self.traces: trace.infer(params)
-
-  # TODO put all inference param parsing in one place
-  def set_default_params(self,params):
-    if 'kernel' not in params:
-      params['kernel'] = 'mh'
-    if 'scope' not in params:
-      params['scope'] = "default"
-    if 'block' not in params:
-      params['block'] = "one"
-    if 'with_mutation' not in params:
-      params['with_mutation'] = True
-    if 'transitions' not in params:
-      params['transitions'] = 1
+    if isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop":
+      assert len(program) == 2
+      prog = [v.sym("cycle"), program[1], v.number(1)]
+      self.start_continuous_inference(prog)
     else:
-      # FIXME: Kludge. If removed, test_infer (in
-      # python/test/ripl_test.py) fails, and if params are printed,
-      # you'll see a float for the number of transitions
-      params['transitions'] = int(params['transitions'])
-    if 'useDeltaKernels' not in params:
-      params['useDeltaKernels'] = False
-    if 'deltaKernelArgs' not in params:
-      params['deltaKernelArgs'] = None
-    if 'updateValue' not in params:
-      params['updateValue'] = False
+      exp = self.desugarLambda(self.macroexpand_inference(program))
+      return self.infer_v1_pre_t(exp, Infer(self))
 
-    if "particles" in params:
-      params["particles"] = int(params["particles"])
-    if "in_parallel" not in params:
-      params['in_parallel'] = True
-    if params['kernel'] in ['cycle', 'mixture']:
-      if 'subkernels' not in params:
-        params['subkernels'] = []
-      if params['kernel'] == 'mixture' and 'weights' not in params:
-        params['weights'] = [1 for _ in params['subkernels']]
-      for p in params['subkernels']:
-        self.set_default_params(p)
+  def macroexpand_inference(self, program):
+    if type(program) is list and type(program[0]) is dict and program[0]["value"] == "cycle":
+      assert len(program) == 3
+      subkernels = self.macroexpand_inference(program[1])
+      transitions = self.macroexpand_inference(program[2])
+      return [program[0], [v.sym("list")] + subkernels, transitions]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "mixture":
+      assert len(program) == 3
+      weights = []
+      subkernels = []
+      weighted_ks = self.macroexpand_inference(program[1])
+      transitions = self.macroexpand_inference(program[2])
+      for i in range(len(weighted_ks)/2):
+        j = 2*i
+        k = j + 1
+        weights.append(weighted_ks[j])
+        subkernels.append(weighted_ks[k])
+      return [program[0], [v.sym("simplex")] + weights, [v.sym("array")] + subkernels, transitions]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] in ["peek", "peek_all"]:
+      assert 2 <= len(program) and len(program) <= 3
+      if len(program) == 2:
+        return [program[0], v.quote(program[1])]
+      else:
+        return [program[0], v.quote(program[1]), v.quote(program[2])]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "printf":
+      assert len(program) >= 2
+      return [program[0]] + [v.quote(e) for e in program[1:]]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "plotf":
+      assert len(program) >= 2
+      return [program[0]] + [v.quote(e) for e in program[1:]]
+    elif type(program) is list: return [self.macroexpand_inference(p) for p in program]
+    else: return program
+
+  def infer_v1_pre_t(self, program, target):
+    import venture.lite.trace as lite
+    next_trace = lite.Trace()
+    # TODO Import the enclosing lexical environment into the new trace?
+    import venture.lite.inference_sps as inf
+    import venture.lite.value as val
+    all_scopes = [s for s in target.engine.getDistinguishedTrace().scope_keys()]
+    symbol_scopes = [s for s in all_scopes if isinstance(s, basestring) and not s.startswith("default")]
+    for hack in inf.inferenceKeywords + symbol_scopes:
+      next_trace.bindPrimitiveName(hack, val.VentureSymbol(hack))
+    for name,sp in self.inferenceSPsList():
+      next_trace.bindPrimitiveSP(name, sp)
+    self.install_inference_prelude(next_trace)
+    next_trace.eval(4, [program, v.blob(target)])
+    ans = next_trace.extractValue(4)
+    assert isinstance(ans, dict)
+    assert ans["type"] is "blob"
+    assert isinstance(ans["value"], Infer)
+    return ans["value"].final_data()
+
+  def install_inference_prelude(self, next_trace):
+    for did, (name, exp) in enumerate(_inference_prelude()):
+      next_trace.eval(did, self.desugarLambda(exp))
+      next_trace.bindInGlobalEnv(name, did)
+
+  def primitive_infer(self, exp):
+    for trace in self.traces:
+      if hasattr(trace, "infer_exp"):
+        # The trace can handle the inference primitive syntax natively
+        trace.infer_exp(exp)
+      else:
+        # The trace cannot handle the inference primitive syntax
+        # natively, so translate.
+        trace.infer(expToDict(exp))
 
   def get_logscore(self, did): return self.getDistinguishedTrace().getDirectiveLogScore(did)
   def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()
+  def logscore_all(self): return [t.getGlobalLogScore() for t in self.traces]
 
   def get_entropy_info(self):
     return { 'unconstrained_random_choices' : self.getDistinguishedTrace().numRandomChoices() }
@@ -249,27 +310,163 @@ effect of renumbering the directives, if some had been forgotten."""
     self.getDistinguishedTrace().set_seed(seed) # TODO is this what we want?
 
   def continuous_inference_status(self):
-    return self.getDistinguishedTrace().continuous_inference_status() # awkward
+    if self.inferrer is not None:
+      # Running CI in Python
+      return {"running":True, "expression":self.inferrer.program}
+    else:
+      return {"running":False}
 
-  def start_continuous_inference(self, params):
-    self.set_default_params(params)
-    for trace in self.traces: trace.start_continuous_inference(params)
+  def start_continuous_inference(self, program):
+    self.stop_continuous_inference()
+    self.inferrer = ContinuousInferrer(self, program)
 
   def stop_continuous_inference(self):
-    for trace in self.traces: trace.stop_continuous_inference()
+    if self.inferrer is not None:
+      # Running CI in Python
+      self.inferrer.stop()
+      self.inferrer = None
+
+  def dump_trace(self, trace, skipStackDictConversion=False):
+    db = trace.makeSerializationDB()
+
+    for did, directive in sorted(self.directives.items(), reverse=True):
+      if directive[0] == "observe":
+        trace.unobserve(did)
+      trace.unevalAndExtract(did, db)
+
+    for did, directive in sorted(self.directives.items()):
+      trace.restore(did, db)
+      if directive[0] == "observe":
+        trace.observe(did, directive[2])
+
+    return trace.dumpSerializationDB(db, skipStackDictConversion)
+
+  def restore_trace(self, values, skipStackDictConversion=False):
+    trace = self.Trace()
+    db = trace.makeSerializationDB(values, skipStackDictConversion)
+
+    for did, directive in sorted(self.directives.items()):
+        if directive[0] == "assume":
+            name, datum = directive[1], directive[2]
+            trace.evalAndRestore(did, self.desugarLambda(datum), db)
+            trace.bindInGlobalEnv(name, did)
+        elif directive[0] == "observe":
+            datum, val = directive[1], directive[2]
+            trace.evalAndRestore(did, self.desugarLambda(datum), db)
+            trace.observe(did, val)
+        elif directive[0] == "predict":
+            datum = directive[1]
+            trace.evalAndRestore(did, self.desugarLambda(datum), db)
+
+    return trace
+
+  def copy_trace(self, trace):
+    values = self.dump_trace(trace, skipStackDictConversion=True)
+    return self.restore_trace(values, skipStackDictConversion=True)
 
   def save(self, fname, extra=None):
-    if extra is None:
-      extra = {}
-    extra['directives'] = self.directives
-    extra['directiveCounter'] = self.directiveCounter
-    return self.getDistinguishedTrace().save(fname, extra)
+    data = {}
+    data['traces'] = [self.dump_trace(trace) for trace in self.traces]
+    data['weights'] = self.weights
+    data['directives'] = self.directives
+    data['directiveCounter'] = self.directiveCounter
+    data['extra'] = extra
+    version = '0.2'
+    with open(fname, 'w') as fp:
+      pickle.dump((data, version), fp)
 
   def load(self, fname):
-    trace, extra = self.Trace.load(fname)
-    self.traces = [trace]
-    self.directives = extra['directives']
-    self.directiveCounter = extra['directiveCounter']
-    return extra
+    with open(fname) as fp:
+      (data, version) = pickle.load(fp)
+    assert version == '0.2', "Incompatible version or unrecognized object"
+    self.directiveCounter = data['directiveCounter']
+    self.directives = data['directives']
+    self.traces = [self.restore_trace(trace) for trace in data['traces']]
+    self.weights = data['weights']
+    return data['extra']
+
+  def convert(self, EngineClass):
+    engine = EngineClass()
+    engine.directiveCounter = self.directiveCounter
+    engine.directives = self.directives
+    engine.traces = []
+    for trace in self.traces:
+      values = self.dump_trace(trace)
+      engine.traces.append(engine.restore_trace(values))
+    engine.weights = self.weights
+    return engine
+
+  def to_lite(self):
+    from venture.lite.engine import Engine as LiteEngine
+    return self.convert(LiteEngine)
+
+  def to_puma(self):
+    from venture.puma.engine import Engine as PumaEngine
+    return self.convert(PumaEngine)
+
+  def profile_data(self):
+    from pandas import DataFrame
+    rows = []
+    for (pid, trace) in enumerate([t for t in self.traces if hasattr(t, "stats")]):
+      for (name, attempts) in trace.stats.iteritems():
+        for (t, accepted) in attempts:
+          rows.append({"name":str(name), "particle":pid, "time":t, "accepted":accepted})
+    ans = DataFrame.from_records(rows)
+    print ans
+    return ans
+
 
   # TODO: Add methods to inspect/manipulate the trace for debugging and profiling
+
+class ContinuousInferrer(object):
+  def __init__(self, engine, program):
+    self.engine = engine
+    self.program = program
+    import threading as t
+    self.inferrer = t.Thread(target=self.infer_continuously, args=(self.program,))
+    self.inferrer.daemon = True
+    self.inferrer.start()
+
+  def infer_continuously(self, program):
+    # Can use the storage of the thread object itself as the semaphore
+    # controlling whether continuous inference proceeds.
+    while self.inferrer is not None:
+      # TODO React somehow to peeks and plotfs in the inference program
+      # Currently suppressed for fear of clobbering the prompt
+      self.engine.infer(program)
+      time.sleep(0.0001) # Yield to be a good citizen
+
+  def stop(self):
+    inferrer = self.inferrer
+    self.inferrer = None # Grab the semaphore
+    inferrer.join()
+
+the_prelude = None
+
+def _inference_prelude():
+  global the_prelude
+  if the_prelude is None:
+    the_prelude = _compute_inference_prelude()
+  return the_prelude
+
+def _compute_inference_prelude():
+  ans = []
+  for (name, form) in [
+        ["cycle", """(lambda (ks iter)
+  (iterate (sequence ks) iter))"""],
+        ["iterate", """(lambda (f iter)
+  (if (<= iter 1)
+      f
+      (lambda (t) (f ((iterate f (- iter 1)) t)))))"""],
+        ["sequence", """(lambda (ks)
+  (if (is_pair ks)
+      (lambda (t) ((sequence (rest ks)) ((first ks) t)))
+      (lambda (t) t)))"""],
+        ["mixture", """(lambda (weights kernels transitions)
+  (iterate (lambda (t) ((categorical weights kernels) t)) transitions))"""]]:
+    from venture.parser.church_prime_parser import ChurchPrimeParser
+    from venture.sivm.utils import desugar_expression
+    from venture.sivm.core_sivm import _modify_expression
+    exp = _modify_expression(desugar_expression(ChurchPrimeParser.instance().parse_expression(form)))
+    ans.append((name, exp))
+  return ans

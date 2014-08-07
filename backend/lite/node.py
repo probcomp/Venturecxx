@@ -1,15 +1,13 @@
 from value import VentureValue, ExpressionType
 from request import Request
-import serialize
 
 class Node(object):
   def __init__(self):
     self.value = None
     self.children = set()
     self.isObservation = False
-    self.madeSP = None
-    self.madeSPFamilies = None
-    self.madeSPAux = None
+    self.madeSPRecord = None
+    self.aaaMadeSPAux = None
     self.numRequests = 0
     self.esrParents = []
     self.isObservation = False
@@ -27,11 +25,7 @@ class Node(object):
   def definiteParents(self):
     raise Exception("Cannot compute the definite parents of an abstract node.")
 
-  # for serialization
-  cyclic = True
 
-
-@serialize.register
 class ConstantNode(Node):
   def __init__(self,value):
     super(ConstantNode,self).__init__()
@@ -46,7 +40,6 @@ class ConstantNode(Node):
   def definiteParents(self): return []
 
 
-@serialize.register
 class LookupNode(Node):
   def __init__(self,sourceNode):
     super(LookupNode,self).__init__()
@@ -62,7 +55,6 @@ class ApplicationNode(Node):
     self.operandNodes = operandNodes
 
 
-@serialize.register
 class RequestNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,env):
     super(RequestNode,self).__init__(operatorNode, operandNodes)
@@ -79,7 +71,6 @@ class RequestNode(ApplicationNode):
     return value is None or isinstance(value, Request)
 
 
-@serialize.register
 class OutputNode(ApplicationNode):
   def __init__(self,operatorNode,operandNodes,requestNode,env):
     super(OutputNode,self).__init__(operatorNode, operandNodes)
@@ -104,7 +95,7 @@ class Args(object):
       self.requestValue = trace.valueAt(node.requestNode)
       self.esrValues = [trace.valueAt(esrParent) for esrParent in trace.esrParentsAt(node)]
       self.esrNodes = trace.esrParentsAt(node)
-      self.madeSPAux = trace.madeSPAuxAt(node)
+      self.madeSPAux = trace.getAAAMadeSPAuxAt(node)
       self.isOutput = True
     else:
       self.isOutput = False

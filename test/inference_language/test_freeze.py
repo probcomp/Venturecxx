@@ -1,11 +1,10 @@
-from testconfig import config
-from nose import SkipTest
-from venture.test.config import get_ripl
 from nose.tools import eq_
 
-def testFreezeSanityCheck1():
-  if config["get_ripl"] != "puma": raise SkipTest("Freeze only implemented in puma")
+from venture.test.config import get_ripl, broken_in, on_inf_prim
 
+@on_inf_prim("none")
+@broken_in('lite', "freeze is only implemented in puma")
+def testFreezeSanityCheck1():
   ripl = get_ripl()
 
   ripl.assume("x", "(normal 0.0 1.0)")
@@ -17,9 +16,9 @@ def testFreezeSanityCheck1():
   ripl.freeze(2)
   eq_(engine.get_entropy_info()["unconstrained_random_choices"],1)
 
+@on_inf_prim("none")
+@broken_in('lite', "freeze is only implemented in puma")
 def testFreezeSanityCheck2():
-  if config["get_ripl"] != "puma": raise SkipTest("Freeze only implemented in puma")
-
   ripl = get_ripl()
 
   ripl.assume("x", "(normal 0.0 1.0)")
@@ -32,10 +31,11 @@ def testFreezeSanityCheck2():
   ripl.freeze(2)
   eq_(engine.getDistinguishedTrace().numNodesInBlock(0,0),1)
 
+@broken_in('lite', "freeze is only implemented in puma")
+@on_inf_prim("mh")
 def testFreezeSanityCheck3():
   """Check that a frozen value no longer changes under inference, even
 though unfrozen ones do."""
-  if config["get_ripl"] != "puma": raise SkipTest("Freeze only implemented in puma")
   ripl = get_ripl()
   ripl.assume("x", "(normal 0.0 1.0)")
   ripl.assume("y", "(normal 0.0 1.0)")

@@ -18,6 +18,7 @@
 
 from venture.exception import VentureException
 from venture.sivm import utils
+import venture.value.dicts as val
 import copy
 
 class CoreSivm(object):
@@ -137,12 +138,10 @@ class CoreSivm(object):
 
     def _do_infer(self,instruction):
         utils.require_state(self.state,'default')
-
-        d = utils.validate_arg(instruction,'params',
-                utils.validate_dict)
-        # TODO FIXME figure out how to validate the arguments
-        val = self.engine.infer(d)
-        return {}
+        e = utils.validate_arg(instruction,'expression',
+                utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
+        val = self.engine.infer(e)
+        return {"value":val}
 
     def _do_clear(self,_):
         utils.require_state(self.state,'default')
@@ -177,13 +176,13 @@ class CoreSivm(object):
 
     def _do_start_continuous_inference(self,instruction):
         utils.require_state(self.state,'default')
-        params = utils.validate_arg(instruction, 'params', utils.validate_dict)
-        # TODO: validate parameters?
-        self.engine.start_continuous_inference(params)
+        e = utils.validate_arg(instruction, 'expression',
+                utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
+        self.engine.start_continuous_inference(e)
         
     def _do_stop_continuous_inference(self,_):
         utils.require_state(self.state,'default')
-        self.engine.getDistinguishedTrace().stop_continuous_inference()
+        self.engine.stop_continuous_inference()
     
     ##############################
     # Profiler (stubs)
@@ -222,6 +221,11 @@ def _modify_value(ob):
         ans = copy.copy(ob)
         ans['value'] = int(ob['value'])
         return ans
+    elif ob['type'] == 'symbol':
+        # Unicode hack for the same reason as in _modify_symbol
+        ans = copy.copy(ob)
+        ans['value'] = str(ob['value'])
+        return ans
     return ob
 
 _symbol_map = {}
@@ -234,5 +238,5 @@ def _modify_symbol(s):
         s = _symbol_map[s]
     # NOTE: need to str() b/c unicode might come via REST,
     #       which the boost python wrappings can't convert
-    return {"type": "symbol", "value": str(s)}
+    return val.symbol(str(s))
 

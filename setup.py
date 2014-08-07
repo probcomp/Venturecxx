@@ -116,6 +116,7 @@ puma_src_files = [
     "src/regen.cxx",
     "src/render.cxx",
     "src/scaffold.cxx",
+    "src/serialize.cxx",
     "src/sp.cxx",
     "src/sprecord.cxx",
     "src/stop_and_copy.cxx",
@@ -142,6 +143,7 @@ puma_src_files = [
     "src/sps/dstructure.cxx",
     "src/sps/eval.cxx",
     "src/sps/hmm.cxx",
+    "src/sps/lite.cxx",
     "src/sps/matrix.cxx",
     "src/sps/msp.cxx",
     "src/sps/mvn.cxx",
@@ -155,9 +157,10 @@ puma_inc_dirs = ['inc/', 'inc/sps/', 'inc/infer/', 'inc/Eigen']
 puma_inc_dirs = ["backend/new_cxx/" + d for d in puma_inc_dirs]
 
 ext_modules = []
-packages=["venture","venture.sivm","venture.ripl", "venture.engine",
+packages=["venture","venture.value","venture.sivm","venture.ripl", "venture.engine",
           "venture.parser","venture.server","venture.shortcuts",
-          "venture.unit", "venture.test", "venture.cxx", "venture.puma", "venture.lite",
+          "venture.unit", "venture.test", "venture.cxx", "venture.puma",
+          "venture.lite", "venture.lite.infer",
           "venture.venturemagics"]
 
 cxx = Extension("venture.cxx.libtrace",
@@ -234,7 +237,7 @@ distutils.ccompiler.CCompiler.compile=parallelCCompile
 
 setup (
     name = 'Venture CXX',
-    version = '0.1.1',
+    version = '0.2',
     author = 'MIT.PCP',
     url = 'TBA',
     long_description = 'TBA.',
@@ -242,6 +245,7 @@ setup (
     package_dir={"venture":"python/lib/", "venture.test":"test/",
                  "venture.cxx":"backend/cxx",
         "venture.puma":"backend/new_cxx/", "venture.lite":"backend/lite/"},
+    package_data = {'':['*.vnt']},
     ext_modules = ext_modules,
     scripts = ['script/venture']
 )

@@ -1,24 +1,25 @@
-from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl
-from venture.unit import *
-
 import numpy as np
 import scipy.stats as stats
 from itertools import product
+import math
 
 from nose import SkipTest
-from nose.plugins.attrib import attr
+from nose.tools import eq_, assert_almost_equal
+
+from venture.venturemagics.ip_parallel import MRipl
+from venture.unit import *
 from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.config import get_ripl,get_mripl,ignore_inference_quality,default_num_samples,gen_in_backend, gen_on_inf_prim
+import venture.value.dicts as v
 
-from venture.test.config import get_ripl,get_mripl,collectSamples
-from testconfig import config
 
-from nose.tools import eq_, assert_equal, assert_almost_equal
+# TODO get rid of some tests, simplify others, make tests faster to run
 
 
 ## Functions used by tests
 def betaModel(ripl):
     assumes=[('p','(beta 1.0 1.0)')]
-    observes=[('(flip p)',True) for _ in range(2)]
+    observes=[('(flip p)',v.boolean(True)) for _ in range(2)]
     queryExps =  ['(add (bernoulli p) (bernoulli p))'] # exps in python form
     for sym,exp in assumes:
         ripl.assume(sym,exp)
@@ -28,7 +29,7 @@ def betaModel(ripl):
 
 def normalModel(ripl):
     assumes = [ ('x','(normal 0 100)') ]
-    observes = [ ('(normal x 100)','0') ]
+    observes = [ ('(normal x 100)',v.number(0)) ]
     queryExps = ('(* x 2)',)
     for sym,exp in assumes:
         ripl.assume(sym,exp)
@@ -76,29 +77,33 @@ def _testHistory(riplThunk):
     averageP = np.mean( history.nameToSeries['p'][0].values )
     assert_almost_equal(averageP,history.averageValue('p'))
 
+@gen_on_inf_prim("none")
+def testLoadModel():
+    for riplThunk in [get_ripl, lambda:get_mripl(no_ripls=3)]:
+        yield _testLoadModel, riplThunk
 
-def testLoadModelHistory():
-    tests = _testLoadModel, _testHistory
-    riplThunks = get_ripl, lambda:get_mripl(no_ripls=3)
-    for test,riplThunk in product(tests,riplThunks):
-        yield test, riplThunk
+@gen_on_inf_prim("mh")
+def testModelHistory():
+    for riplThunk in [get_ripl, lambda:get_mripl(no_ripls=3)]:
+        yield _testHistory, riplThunk
 
 
 def _testRuns(riplThunk):
     v,_,_,queryExps,_ = normalModel( riplThunk() )
-    samples = 20
-    runsList = [2,3,7]
+    samples = default_num_samples()
+    no_runs = 4
     model = Analytics(v,queryExps=queryExps)
 
-    for no_runs in runsList:
-        history,_ = model.runFromConditional(samples,runs=no_runs)
-        eq_( len(history.nameToSeries['x']), no_runs)
+    history,_ = model.runFromConditional(samples,runs=no_runs)
+    eq_( len(history.nameToSeries['x']), no_runs)
 
-        for exp in ('x', queryExps[0]):
-            arValues = np.array([s.values for s in history.nameToSeries[exp]])
+    for exp in ('x', queryExps[0]):
+        arValues = np.array([s.values for s in history.nameToSeries[exp]])
+        if not ignore_inference_quality():
             assert all(np.var(arValues,axis=0) > .0001) # var across runs time t
             assert all(np.var(arValues,axis=1) > .000001) # var within runs
 
+@gen_on_inf_prim("mh")
 def testRuns():
     riplThunks = get_ripl, lambda:get_mripl(no_ripls=4)
     for riplThunk in riplThunks:
@@ -108,17 +113,20 @@ def testRuns():
 @statisticalTest
 def _testInfer(riplThunk,conditional_prior,inferProg):
     v,_,_,_= betaModel( riplThunk() )
-    samples = 40
-    runs = 20
+    if ignore_inference_quality():
+        samples = default_num_samples()
+        runs = 1
+    else:
+        samples = int(math.sqrt(default_num_samples()))
+        runs = int(math.sqrt(default_num_samples()))
     model = Analytics(v)
+    infer_kwargs = dict(runs=runs,infer=inferProg,simpleInfer=True)
 
     if conditional_prior == 'conditional':
-        history,_ = model.runFromConditional(samples,runs=runs,
-                                             infer=inferProg)
+        history,_ = model.runFromConditional(samples,**infer_kwargs)
         cdf = stats.beta(3,1).cdf
     else:
-        history,_ = model.runConditionedFromPrior(samples,runs=runs,
-                                                  infer=inferProg)
+        history,_ = model.runConditionedFromPrior(samples,**infer_kwargs)
         dataValues = [typeVal['value'] for _,typeVal in history.data]
         noHeads = sum(dataValues)
         noTails = len(dataValues) - noHeads
@@ -128,14 +136,12 @@ def _testInfer(riplThunk,conditional_prior,inferProg):
     return reportKnownContinuous(cdf,snapshot_t(history,'p',-1))
 
 
-@attr("slow")
+@gen_on_inf_prim("mh")
 def testRunFromConditionalInfer():
     riplThunks = get_ripl, lambda: get_mripl(no_ripls=2)
     cond_prior = 'conditional', 'prior'
-    #k1 = {"transitions":1,"kernel":"mh","scope":"default","block":"all"}
     k1 = '(mh default one 1)'
-    k2 = '(mh default one 2)'
-    infProgs =  None, k1, '(cycle (%s %s) 1)'%(k1,k2)
+    infProgs =  k1,
 
     for riplThunk,cond_prior,infProg in product(riplThunks,cond_prior,infProgs):
         yield _testInfer, riplThunk, cond_prior, infProg
@@ -147,12 +153,13 @@ def _testSampleFromJoint(riplThunk,useMRipl):
     if riplThunk.func_name in 'get_ripl' or useMRipl is False:
         raise SkipTest('Bug with seeds for ripls')
     v,_,_,queryExps,xPriorCdf = normalModel( riplThunk() )
-    samples = 30
+    samples = default_num_samples()
     model = Analytics(v,queryExps=queryExps)
     history = model.sampleFromJoint(samples, useMRipl=useMRipl)
     xSamples = nameToFirstValues(history,'x')
     return reportKnownContinuous(xPriorCdf,xSamples)
 
+@gen_on_inf_prim("none")
 def testSampleFromJoint():
     riplThunks = get_ripl, lambda: get_mripl(no_ripls=3)
     useMRiplValues = (True,False)
@@ -168,22 +175,29 @@ def _testRunFromJoint1(riplThunk,inferProg):
     v,_,_,queryExps,xPriorCdf = normalModel( riplThunk() )
     model = Analytics(v,queryExps=queryExps)
     # variation across runs
-    history = model.runFromJoint(1, runs=30, infer=inferProg)
+    history = model.runFromJoint(1, runs=default_num_samples(), infer=inferProg)
     return reportKnownContinuous(xPriorCdf,snapshot_t(history,'x',0))
 
 @statisticalTest
 def _testRunFromJoint2(riplThunk,inferProg):
     v,_,_,queryExps,xPriorCdf = normalModel( riplThunk() )
     model = Analytics(v,queryExps=queryExps)
+    if ignore_inference_quality():
+        step_size = 1
+    else:
+        step_size = 20
+    samples = default_num_samples()
+    chain_len = step_size * samples
 
     # variation over single runs
-    history = model.runFromJoint(200, runs=1, infer=inferProg)
+    history = model.runFromJoint(chain_len, runs=1, infer=inferProg)
     XSamples = np.array(nameToFirstValues(history,'x'))
-    thinXSamples = XSamples[np.arange(0,200,20)]
+    thinXSamples = XSamples[np.arange(0,chain_len,step_size)]
 
     return reportKnownContinuous(xPriorCdf,thinXSamples)
 
 
+@gen_on_inf_prim("mh")
 def testRunFromJoint():
     tests = (_testRunFromJoint1, _testRunFromJoint2)
     riplThunks = (get_ripl, lambda: get_mripl(no_ripls=4))
@@ -206,7 +220,7 @@ def _testCompareSampleDicts(sameDistribution):
     assert hasattr(cReport,'labels')
     return cReport.statsDict['x']['KSSameContinuous'] #test result object
 
-
+@gen_in_backend("none")
 def testCompareSampleDicts():
     sameDistribution = True,False
     for sameDistributionValue in sameDistribution:
@@ -216,13 +230,19 @@ def testCompareSampleDicts():
 @statisticalTest
 def _testCompareSnapshots(riplThunk):
     v,_,_,queryExps = betaModel(riplThunk())
-    samples = 20
+    if ignore_inference_quality():
+        samples = default_num_samples()
+        runs = 2
+    else:
+        samples = 2 * int(math.sqrt(2 * default_num_samples()))
+        runs = int(math.sqrt(2 * default_num_samples()))
     model = Analytics(v,queryExps=queryExps)
-    history,_ = model.runFromConditional(samples,runs=10)
+    history,_ = model.runFromConditional(samples,runs=runs)
     # two final snapshots should be very similar in distribution
     report = history.compareSnapshots(probes = (-2,-1))
     return report.statsDict['p']['KSSameContinuous']
 
+@gen_on_inf_prim("mh")
 def testCompareSnapshots():
     riplThunks = (get_ripl, lambda: get_mripl(no_ripls=4))
     for riplThunk in riplThunks:
@@ -235,13 +255,29 @@ def _testForce(riplThunk):
     for _ in range(4):
         v.observe('(normal (+ x0 x1) 30)',100.)
     model = Analytics(v)
-    samples = 50
+    samples = default_num_samples()
     inferProg = '(mh default one 1)'
     fdict = dict( [('x%i'%i,0) for i in range(5)] )
     history,_ = model.runFromConditional(samples,runs=5,simpleInfer=True,
                                          infer=inferProg,force=fdict)
     return history
 
+def _testAtomType(conditional_prior):
+    # make sure Analytics isn't confusing atoms with numbers
+    v = get_ripl()
+    v.observe('(categorical (simplex 0.5 0.5))', 'atom<1>')
+    model = Analytics(v)
+    samples = 1
+    if conditional_prior == 'conditional':
+        history, _ = model.runFromConditional(samples)
+    else:
+        history, _ = model.runConditionedFromPrior(samples)
+    assert all(-1 < logscore < 0 for logscore in snapshot_t(history, 'logscore', 0))
+
+@gen_on_inf_prim("mh")
+def testAtomType():
+    for cond_prior in 'conditional', 'prior':
+        yield _testAtomType, cond_prior
 
 ## FIXME resinstate geweks
 def _testGewekeTest():

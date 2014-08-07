@@ -1,25 +1,29 @@
-from venture.test.config import get_ripl
+from venture.test.config import get_ripl, on_inf_prim
 from nose.tools import assert_equals
 
+@on_inf_prim("none")
 def testMakeCSP1():
   ripl = get_ripl()
   ripl.assume("f", "(lambda (x) (* x x))")
-  ripl.predict("(f 1)")
-  assert_equals(ripl.report(2),1.0)
+  ripl.predict("(f 1)",label="pid")
+  assert_equals(ripl.report("pid"),1.0)
 
-def testMakeCSP2():  
+@on_inf_prim("none")
+def testMakeCSP2():
   ripl = get_ripl()
   ripl.assume("g", "(lambda (x y) (* x y))")
-  ripl.predict("(g 2 3)")
-  assert_equals(ripl.report(2),6.0)
+  ripl.predict("(g 2 3)",label="pid")
+  assert_equals(ripl.report("pid"),6.0)
 
-def testMakeCSP3():  
+@on_inf_prim("none")
+def testMakeCSP3():
   ripl = get_ripl()
   ripl.assume("h", "(lambda () 5)")
-  ripl.predict("(h)")
-  assert_equals(ripl.report(2),5.0)
+  ripl.predict("(h)",label="pid")
+  assert_equals(ripl.report("pid"),5.0)
 
-def testMakeCSP4():  
+@on_inf_prim("none")
+def testMakeCSP4():
   ripl = get_ripl()
   ripl.assume("f", "(lambda (x y z) (lambda (u v w) (lambda () (+ (* x u) (* y v) (* z w)))))")
   ripl.assume("g", "(f 10 20 30)")

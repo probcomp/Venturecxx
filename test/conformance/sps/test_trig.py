@@ -1,5 +1,6 @@
-from venture.test.config import get_ripl
+from venture.test.config import get_ripl, on_inf_prim
 
+@on_inf_prim("mh")
 def testTrig1():
   "Simple test that verifies sin^2 + cos^2 = 1 as x varies"
   ripl = get_ripl()
@@ -7,7 +8,7 @@ def testTrig1():
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("a","(sq (sin x))")
   ripl.assume("b","(sq (cos x))")
-  ripl.predict("(+ a b)")
+  ripl.predict("(+ a b)",label="pid")
   for _ in range(10):
     ripl.infer(1)
-    assert abs(ripl.report(5) - 1) < .001
+    assert abs(ripl.report("pid") - 1) < .001

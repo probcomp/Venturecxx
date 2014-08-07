@@ -19,9 +19,10 @@ struct VentureSPRecord : VentureValue
 
   shared_ptr<SPAux> getSPAux() const { return spAux; }
 
+  int getValueTypeRank() const;
   bool equals(const VentureValuePtr & other) const;
   size_t hash() const;
-  boost::python::dict toPython(ConcreteTrace * trace) const;
+  boost::python::dict toPython(Trace * trace) const;
   string toString() const;
 
   VentureSPRecord* copy_help(ForwardingMap* m) const;

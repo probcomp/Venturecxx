@@ -14,16 +14,20 @@ class DefaultRandomVentureValue(object):
     return getattr(self, self.method)(**(dict(self.kwargs.items() + kwargs.items())))
   def number(self, **_kwargs):
     return v.VentureNumber(npr.uniform(-10, 10))
+  def integer(self, **_kwargs):
+    return v.VentureInteger(npr.choice(range(-10, 10)))
   def count(self, **_kwargs):
-    return v.VentureCount(npr.choice(range(10)))
+    return v.VentureInteger(npr.choice(range(10)))
   def positive(self, **_kwargs):
-    return v.VenturePositive(npr.uniform(0, 10)) # TODO Prevent zero
+    return v.VentureNumber(npr.uniform(0, 10)) # TODO Prevent zero
   def probability(self, **_kwargs):
     return v.VentureProbability(npr.uniform(0, 1))
   def atom(self, **_kwargs):
-    return v.VentureAtom(npr.randint(-10, 11)) # Open at the top
+    return v.VentureAtom(npr.randint(0, 11)) # Open at the top
   def bool(self, **_kwargs):
     return v.VentureBool(npr.choice([False, True]))
+  def zero(self, **_kwargs):
+    return 0 # A gradient in an empty vector space
   def symbol(self, length=None, **_kwargs):
     if length is None:
       length = npr.randint(1, 10)
@@ -35,6 +39,12 @@ class DefaultRandomVentureValue(object):
     if elt_dist is None:
       elt_dist = DefaultRandomVentureValue("object") # TODO reuse class of self
     return v.VentureArray([elt_dist.generate(**kwargs) for _ in range(length)])
+  def array_unboxed(self, length=None, elt_type=None, **kwargs):
+    if length is None:
+      length = npr.randint(0, 10)
+    if elt_type is None:
+      elt_type = v.NumberType() # TODO Do I want to test on a screwy class of unboxed arrays in general?
+    return v.VentureArrayUnboxed([elt_type.asPython(elt_type.distribution(self.__class__, **kwargs).generate()) for _ in range(length)], elt_type)
   def nil(self, **_kwargs):
     return v.VentureNil()
   def pair(self, size=None, first_dist=None, second_dist=None, **kwargs):
@@ -64,11 +74,11 @@ class DefaultRandomVentureValue(object):
     return getattr(self, kind)(**kwargs)
   def matrix(self, length=None, **_kwargs):
     if length is None:
-      length = npr.randint(0, 10)
+      length = npr.randint(1, 10)
     return v.VentureMatrix(npr.uniform(-10, 10, (length, length))) # Square matrices
   def symmetricmatrix(self, length=None, **_kwargs):
     if length is None:
-      length = npr.randint(0, 10)
+      length = npr.randint(1, 10)
     candidate = npr.uniform(-10, 10, (length, length)) # Square matrices
     return v.VentureSymmetricMatrix((candidate + candidate.transpose()) / 2)
   def sp(self, **_kwargs):
@@ -89,6 +99,6 @@ class DefaultRandomVentureValue(object):
     if depth is None:
       depth = npr.randint(0, 5)
     if depth == 0:
-      return getattr(self, npr.choice(["number", "atom", "bool", "symbol", "nil"]))(**kwargs)
+      return getattr(self, npr.choice(["number", "integer", "probability", "atom", "bool", "symbol", "nil"]))(**kwargs)
     else:
-      return getattr(self, npr.choice(["array", "pair", "simplex", "matrix", "list"]))(depth=depth-1, **kwargs)
+      return getattr(self, npr.choice(["pair", "list", "array", "array_unboxed", "simplex", "matrix", "symmetricmatrix"]))(depth=depth-1, **kwargs)

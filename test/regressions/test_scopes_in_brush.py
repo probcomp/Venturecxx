@@ -1,10 +1,14 @@
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, gen_on_inf_prim
 
-def testBrushScope():
-  yield checkBrushScope, True
-  yield checkBrushScope, False
+@gen_on_inf_prim("pgibbs")
+def testBrushScopePGibbs():
+  yield checkBrushScope, "pgibbs"
 
-def checkBrushScope(mutate):
+@gen_on_inf_prim("func_pgibbs")
+def testBrushScopeFuncPGibbs():
+  yield checkBrushScope, "func_pgibbs"
+
+def checkBrushScope(operator):
   """Check that putting scope control in the brush doesn't cause
   particle Gibbs to crash."""
   ripl = get_ripl()
@@ -15,4 +19,4 @@ def checkBrushScope(mutate):
     (scope_include (quote state) t (normal 2 1))
     (scope_include (quote state) t (normal 0 1)))
 """)
-  ripl.infer({"kernel":"pgibbs", "scope":"state", "block":"ordered", "transitions":3, "particles":4, "with_mutation":mutate})
+  ripl.infer("(%s state ordered 4 3)" % operator)

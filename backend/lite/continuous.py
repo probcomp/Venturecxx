@@ -5,9 +5,9 @@ import numpy.linalg as npla
 import scipy.special as spsp
 import numpy as np
 from utils import logDensityMVNormal, numpy_force_number
-from utils import logDensityMVNormal
 from utils import override
-from exception import VentureValueError
+from exception import VentureValueError, GradientWarning
+import warnings
 
 # For some reason, pylint can never find numpy members (presumably metaprogramming).
 # pylint: disable=no-member
@@ -301,6 +301,28 @@ class StudentTOutputPSP(RandomPSP):
     shape = args.operandValues[2] if len(args.operandValues) > 1 else 1
     return self.logDensityNumeric(x,args.operandValues[0],loc,shape)
 
+  def gradientOfLogDensity(self,x,args):
+    nu = args.operandValues[0]
+    loc = args.operandValues[1] if len(args.operandValues) > 1 else 0
+    shape = args.operandValues[2] if len(args.operandValues) > 1 else 1
+    gradX = (loc - x) * (nu + 1) / (nu * shape ** 2 + (loc - x) ** 2)
+    # we'll do gradNu in pieces because it's messy
+    x0 = 1.0 / nu
+    x1 = shape ** 2
+    x2 = nu * x1
+    x3 = (loc - x) ** 2
+    x4 = x2 + x3
+    x5 = nu / 2.0
+    gradNu = (x0 * (nu * x4 * (-math.log(x0 * x4 / x1) - spsp.digamma(x5)
+              + spsp.digamma(x5 + 1.0 / 2)) - x2
+              + x3 * (nu + 1) - x3) / (2.0 * x4))
+    if len(args.operandValues) == 1:
+      return (gradX,[gradNu])
+    gradLoc = -(loc - x) * (nu + 1) / (nu * shape ** 2 + (loc - x) ** 2)
+    gradShape = ((-nu * shape ** 2 + (loc - x) ** 2 * (nu + 1) -
+                 (loc - x) ** 2) / (shape * (nu * shape ** 2 + (loc - x) ** 2)))
+    return (gradX,[gradNu,gradLoc,gradShape])
+
   def description(self,name):
     return "  (%s nu loc shape) returns a sample from Student's t distribution with nu degrees of freedom, with optional location and scale parameters." % name
 
@@ -308,14 +330,22 @@ class StudentTOutputPSP(RandomPSP):
 
 class InvGammaOutputPSP(RandomPSP):
   # TODO don't need to be class methods
-  def simulateNumeric(self,a,b): return scipy.stats.invgamma.rvs(a,b)
-  def logDensityNumeric(self,x,a,b): return scipy.stats.invgamma.logpdf(x,a,b)
+  def simulateNumeric(self,a,b): return scipy.stats.invgamma.rvs(a,scale=b)
+  def logDensityNumeric(self,x,a,b): return scipy.stats.invgamma.logpdf(x,a,scale=b)
 
   def simulate(self,args): return self.simulateNumeric(*args.operandValues)
   def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
 
+  def gradientOfLogDensity(self,x,args):
+    alpha = args.operandValues[0]
+    beta = args.operandValues[1]
+    gradX = (1.0 / x) * (-alpha - 1 + (beta / x))
+    gradAlpha = math.log(beta) - spsp.digamma(alpha) - math.log(x)
+    gradBeta = (float(alpha) / beta) - (1.0 / x)
+    return (gradX,[gradAlpha,gradBeta])
+
   def description(self,name):
-    return "(%s nu) -> <number>" % name
+    return "(%s alpha beta) returns a sample from an inverse gamma distribution with shape parameter alpha and scale parameter beta" % name
 
   # TODO InvGamma presumably has a variational kernel too?
 

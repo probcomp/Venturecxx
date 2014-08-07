@@ -64,13 +64,10 @@ double SymDirMultOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> ar
   assert(aux);
   assert(aux->counts.size() == n);
 
-  vector<double> xs;
-  for (size_t i = 0; i < n ; ++i)
-  {
-    xs.push_back(aux->counts[i] + alpha);
-  }
-  xs = normalizeVector(xs);
-  return log(xs[value->getInt()]);
+  int index = value->getInt();
+  double num = aux->counts[index] + alpha;
+  double denom = aux->total + alpha * n;
+  return log(num/denom);
 }
 
 void SymDirMultOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) const
@@ -81,6 +78,7 @@ void SymDirMultOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args> arg
   
   int index = value->getInt();
   aux->counts[index]++;
+  aux->total++;
 }
 
 void SymDirMultOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args) const
@@ -91,8 +89,18 @@ void SymDirMultOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> a
   
   int index = value->getInt();
   aux->counts[index]--;
+  aux->total--;
   
   assert(aux->counts[index] >= 0);
+}
+
+vector<VentureValuePtr> SymDirMultOutputPSP::enumerateValues(shared_ptr<Args> args) const
+{
+  vector<VentureValuePtr> vs;
+  for (size_t i = 0; i < n; ++i) {
+    vs.push_back(VentureValuePtr(new VentureAtom(i)));
+  }
+  return vs;
 }
 
 double SymDirMultOutputPSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
@@ -100,7 +108,7 @@ double SymDirMultOutputPSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
   shared_ptr<DirMultSPAux> aux = dynamic_pointer_cast<DirMultSPAux>(spAux);
   assert(aux);
 
-  int N = boost::accumulate(aux->counts, 0);
+  int N = aux->total;
   double A = alpha * n;
 
   double x = gsl_sf_lngamma(A) - gsl_sf_lngamma(N + A);
@@ -126,7 +134,7 @@ VentureValuePtr MakeDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * 
   }
   
   PSP * requestPSP = new NullRequestPSP();
-  PSP * outputPSP = new DirMultOutputPSP(alpha);
+  PSP * outputPSP = new DirMultOutputPSP(alpha, boost::accumulate(alpha, 0));
   
   return VentureValuePtr(new VentureSPRecord(new SP(requestPSP,outputPSP),new DirMultSPAux(alpha.size())));
 }
@@ -155,13 +163,10 @@ double DirMultOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args)
   assert(aux);
   assert(aux->counts.size() == alpha.size());
 
-  vector<double> weights(alpha);
-  for (size_t i = 0; i < alpha.size(); ++i)
-  {
-    weights[i] += aux->counts[i];
-  }
-  weights = normalizeVector(weights);
-  return log(weights[value->getInt()]);
+  int index = value->getInt();
+  double num = aux->counts[index] + alpha[index];
+  double denom = aux->total + total;
+  return log(num/denom);
 }
 
 void DirMultOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) const
@@ -172,6 +177,7 @@ void DirMultOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) 
   
   int index = value->getInt();
   aux->counts[index]++;
+  aux->total++;
 }
 
 void DirMultOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args) const
@@ -182,8 +188,18 @@ void DirMultOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args
   
   int index = value->getInt();
   aux->counts[index]--;
+  aux->total--;
   
   assert(aux->counts[index] >= 0);
+}
+
+vector<VentureValuePtr> DirMultOutputPSP::enumerateValues(shared_ptr<Args> args) const
+{
+  vector<VentureValuePtr> vs;
+  for (size_t i = 0; i < alpha.size(); ++i) {
+    vs.push_back(VentureValuePtr(new VentureAtom(i)));
+  }
+  return vs;
 }
 
 double DirMultOutputPSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
@@ -191,8 +207,8 @@ double DirMultOutputPSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
   shared_ptr<DirMultSPAux> aux = dynamic_pointer_cast<DirMultSPAux>(spAux);
   assert(aux);
 
-  int N = boost::accumulate(aux->counts, 0);
-  double A = boost::accumulate(alpha, 0);
+  int N = aux->total;
+  double A = total;
 
   double x = gsl_sf_lngamma(A) - gsl_sf_lngamma(N + A);
   for (size_t i = 0; i < alpha.size(); ++i)
@@ -317,6 +333,15 @@ void UCSymDirMultOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args>
   assert(aux->counts[index] >= 0);
 }
 
+vector<VentureValuePtr> UCSymDirMultOutputPSP::enumerateValues(shared_ptr<Args> args) const
+{
+  vector<VentureValuePtr> vs;
+  for (size_t i = 0; i < n; ++i) {
+    vs.push_back(VentureValuePtr(new VentureAtom(i)));
+  }
+  return vs;
+}
+
 // Uncollapsed Asymmetric
 
 VentureValuePtr MakeUCDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
@@ -438,6 +463,15 @@ void UCDirMultOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> ar
   aux->counts[index]--;
   
   assert(aux->counts[index] >= 0);
+}
+
+vector<VentureValuePtr> UCDirMultOutputPSP::enumerateValues(shared_ptr<Args> args) const
+{
+  vector<VentureValuePtr> vs;
+  for (size_t i = 0; i < n; ++i) {
+    vs.push_back(VentureValuePtr(new VentureAtom(i)));
+  }
+  return vs;
 }
 
 // Aux clones

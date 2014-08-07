@@ -1,13 +1,12 @@
-from sp import VentureSP, SPAux, SPType
+from sp import SP, VentureSPRecord, SPAux, SPType
 from psp import DeterministicPSP, RandomPSP, TypedPSP
 from request import Request
 import numpy as np
 import numpy.random as npr
 import math
 from copy import copy
-from value import NumberType, RequestType
+from value import CountType, AtomType, RequestType
 from exception import VentureValueError
-import serialize
 
 def npSampleVector(pVec): return np.mat(npr.multinomial(1,np.array(pVec)[0,:]))
 def npIndexOfOne(pVec): return np.where(pVec[0] == 1)[1][0,0]
@@ -15,7 +14,6 @@ def npMakeDiag(colvec):
   return np.diag(np.array(colvec))
 def npNormalizeVector(vec): return vec / np.sum(vec)
 
-@serialize.register
 class HMMSPAux(SPAux):
   def __init__(self):
     super(HMMSPAux,self).__init__()
@@ -28,28 +26,21 @@ class HMMSPAux(SPAux):
     ans.os = {k:copy(v) for (k,v) in self.os.iteritems()}
     return ans
 
-  def serialize(self, s):
-    return s.serialize_default(self)
-
-  def deserialize(self, s, data):
-    s.deserialize_default(self, data)
-
 class MakeUncollapsedHMMOutputPSP(DeterministicPSP):
   def simulate(self,args):
     (p0,T,O) = args.operandValues
     # p0 comes in as a simplex but needs to become a 1-row matrix
     p0 = np.mat([p0])
     # Transposition for compatibility with CXX
-    return UncollapsedHMMSP(p0,np.transpose(T),np.transpose(O))
+    return VentureSPRecord(UncollapsedHMMSP(p0,np.transpose(T),np.transpose(O)))
 
   def description(self, _name):
     return "  Discrete-state HMM of unbounded length with discrete observations.  The inputs are the probability distribution of the first state, the transition matrix, and the observation matrix.  It is an error if the dimensionalities do not line up.  Returns observations from the HMM encoded as a stochastic procedure that takes the time step and samples a new observation at that time step."
 
-@serialize.register
-class UncollapsedHMMSP(VentureSP):
+class UncollapsedHMMSP(SP):
   def __init__(self,p0,T,O):
-    req = TypedPSP(UncollapsedHMMRequestPSP(), SPType([NumberType()], RequestType()))
-    output = TypedPSP(UncollapsedHMMOutputPSP(O), SPType([NumberType()], NumberType()))
+    req = TypedPSP(UncollapsedHMMRequestPSP(), SPType([CountType()], RequestType()))
+    output = TypedPSP(UncollapsedHMMOutputPSP(O), SPType([CountType()], AtomType()))
     super(UncollapsedHMMSP,self).__init__(req,output)
     self.p0 = p0
     self.T = T
@@ -107,19 +98,6 @@ class UncollapsedHMMSP(VentureSP):
       gamma = npNormalizeVector(fs[i] * T_i)
       aux.xs[i] = npSampleVector(gamma)
 
-  def serialize(self, s):
-    ret = {}
-    ret['p0'] = s.serialize(self.p0)
-    ret['T'] = s.serialize(self.T)
-    ret['O'] = s.serialize(self.O)
-    return ret
-
-  def deserialize(self, s, data):
-    p0 = s.deserialize(data['p0'])
-    T = s.deserialize(data['T'])
-    O = s.deserialize(data['O'])
-    self.__init__(p0, T, O)
-
 
 class UncollapsedHMMOutputPSP(RandomPSP):
 
@@ -128,30 +106,30 @@ class UncollapsedHMMOutputPSP(RandomPSP):
     self.O = O
 
   def simulate(self,args): 
-    n = int(args.operandValues[0])
+    n = args.operandValues[0]
     if 0 <= n and n < len(args.spaux.xs):
       return npIndexOfOne(npSampleVector(args.spaux.xs[n] * self.O))
     else:
       raise VentureValueError("Index out of bounds %s" % n)
 
   def logDensity(self,value,args):
-    n = int(args.operandValues[0])
+    n = args.operandValues[0]
     assert len(args.spaux.xs) > n
     theta = args.spaux.xs[n] * self.O
     return math.log(theta[0,value])
 
   def incorporate(self,value,args):
-    n = int(args.operandValues[0])
+    n = args.operandValues[0]
     if not n in args.spaux.os: args.spaux.os[n] = []
     args.spaux.os[n].append(value)
 
   def unincorporate(self,value,args):
-    n = int(args.operandValues[0])
+    n = args.operandValues[0]
     del args.spaux.os[n][args.spaux.os[n].index(value)]
     if not args.spaux.os[n]: del args.spaux.os[n]
 
 class UncollapsedHMMRequestPSP(DeterministicPSP):
-  def simulate(self,args): return Request([],[int(args.operandValues[0])])
+  def simulate(self,args): return Request([],[args.operandValues[0]])
 
 
 ##########################################

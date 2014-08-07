@@ -1,8 +1,7 @@
-from value import VentureValue, registerVentureType, VentureType, PositiveType, NumberType, ProbabilityType, MatrixType, SymmetricMatrixType, BoolType
+from value import VentureValue, registerVentureType, VentureType, PositiveType, NumberType, ProbabilityType, MatrixType, SymmetricMatrixType, BoolType, ZeroType
 import copy
-import serialize
+from exception import VentureError
 
-@serialize.register
 class SPFamilies(object):
   def __init__(self, families=None):
     if families:
@@ -13,7 +12,7 @@ class SPFamilies(object):
 
   def containsFamily(self,id): return id in self.families
   def getFamily(self,id): return self.families[id]
-  def registerFamily(self,id,esrParent): 
+  def registerFamily(self,id,esrParent):
     assert not id in self.families
     self.families[id] = esrParent
   def unregisterFamily(self,id): del self.families[id]
@@ -21,27 +20,16 @@ class SPFamilies(object):
   def copy(self):
     return SPFamilies(self.families.copy())
 
-  def serialize(self, s):
-    return s.serialize_default(self)
-
-  def deserialize(self, s, data):
-    return s.deserialize_default(self, data)
-  
-@serialize.register
 class SPAux(object):
   def copy(self): return SPAux()
 
-  def serialize(self, s):
-    return {}
-
-  def deserialize(self, s, _):
-    pass
-
-@serialize.register
-class VentureSP(VentureValue):
+class SP(object):
   def __init__(self,requestPSP,outputPSP):
+    from psp import PSP
     self.requestPSP = requestPSP
     self.outputPSP = outputPSP
+    assert isinstance(requestPSP, PSP)
+    assert isinstance(outputPSP, PSP)
 
   def constructSPAux(self): return SPAux()
   def constructLatentDB(self): return None
@@ -65,20 +53,20 @@ class VentureSP(VentureValue):
   # VentureSPs are intentionally not comparable until we decide
   # otherwise
 
-  # for serialization
-  cyclic = True
+class VentureSPRecord(VentureValue):
+  def __init__(self, sp, spAux=None, spFamilies=None):
+    if spAux is None:
+      spAux = sp.constructSPAux()
+    if spFamilies is None:
+      spFamilies = SPFamilies()
+    self.sp = sp
+    self.spAux = spAux
+    self.spFamilies = spFamilies
 
-  def serialize(self, s):
-    ret = {}
-    ret['requestPSP'] = s.serialize(self.requestPSP)
-    ret['outputPSP'] = s.serialize(self.outputPSP)
-    return ret
+  def show(self):
+    return self.sp.show(self.spAux)
 
-  def deserialize(self, s, data):
-    self.requestPSP = s.deserialize(data['requestPSP'])
-    self.outputPSP = s.deserialize(data['outputPSP'])
-
-registerVentureType(VentureSP)
+registerVentureType(VentureSPRecord)
 
 class SPType(VentureType):
   """An object representing a Venture function type.  It knows
@@ -89,7 +77,7 @@ used in the implementation of TypedPSP and TypedLKernel."""
   def asPython(self, vthing): return vthing
   def distribution(self, _base, **_kwargs):
     return None
-  def __contains__(self, vthing): return isinstance(vthing, VentureSP)
+  def __contains__(self, vthing): return isinstance(vthing, VentureSPRecord)
 
   def __init__(self, args_types, return_type, variadic=False, min_req_args=None):
     self.args_types = args_types
@@ -116,8 +104,10 @@ used in the implementation of TypedPSP and TypedLKernel."""
 
   def unwrap_arg_list(self, lst):
     if not self.variadic:
-      assert len(lst) >= self.min_req_args
-      assert len(lst) <= len(self.args_types)
+      if len(lst) < self.min_req_args:
+        raise VentureError("Too few arguments: SP requires at least %d args, got only %d." % (self.min_req_args, len(lst)))
+      if len(lst) > len(self.args_types):
+        raise VentureError("Too many arguments: SP takes at most %d args, got %d." % (len(self.args_types), len(lst)))
       # v could be None when computing log density bounds for a torus
       return [self.args_types[i].asPythonNoneable(v) for (i,v) in enumerate(lst)]
     else:
@@ -147,12 +137,4 @@ used in the implementation of TypedPSP and TypedLKernel."""
     return self._name_for_fixed_arity(self.args_types)
 
   def gradient_type(self):
-    def to_grad_type(type_):
-      if isinstance(type_, ProbabilityType) or isinstance(type_, PositiveType):
-        return NumberType()
-      elif isinstance(type_, BoolType):
-        # TODO Really should be ZeroType
-        return NumberType()
-      else:
-        return type_
-    return SPType([to_grad_type(t) for t in self.args_types], to_grad_type(self.return_type), self.variadic, self.min_req_args)
+    return SPType([t.gradient_type() for t in self.args_types], self.return_type.gradient_type(), self.variadic, self.min_req_args)

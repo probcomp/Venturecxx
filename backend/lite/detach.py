@@ -2,9 +2,17 @@ from node import ConstantNode, LookupNode, ApplicationNode, RequestNode, OutputN
 from omegadb import OmegaDB
 from value import SPRef
 from scope import isScopeIncludeOutputPSP
-from sp import VentureSP
+from sp import VentureSPRecord
+from consistency import assertTorus, assertTrace
 
-def detachAndExtract(trace, border, scaffold, compute_gradient = False):
+def detachAndExtract(trace, scaffold, compute_gradient = False):
+  assertTrace(trace, scaffold)
+  assert len(scaffold.border) == 1
+  ans = detachAndExtractAtBorder(trace, scaffold.border[0], scaffold, compute_gradient=compute_gradient)
+  assertTorus(scaffold)
+  return ans
+
+def detachAndExtractAtBorder(trace, border, scaffold, compute_gradient = False):
   """Returns the weight and an OmegaDB.  The OmegaDB contains
   sufficient information to restore the trace, and, if
   compute_gradient is True, to determine the partial derivative of
@@ -108,14 +116,14 @@ def unapply(trace, node, scaffold, omegaDB, compute_gradient = False):
   return weight
 
 def teardownMadeSP(trace,node,isAAA):
-  sp = trace.madeSPAt(node)
-  assert isinstance(sp,VentureSP)
-  trace.setValueAt(node,sp)
-  trace.setMadeSPAt(node,None)
-  if not isAAA: 
-    if sp.hasAEKernel(): trace.unregisterAEKernel(node)
-    trace.setMadeSPAuxAt(node,None)
-    trace.clearMadeSPFamiliesAt(node)
+  spRecord = trace.madeSPRecordAt(node)
+  assert isinstance(spRecord,VentureSPRecord)
+  assert len(spRecord.spFamilies.families) == 0
+  trace.setValueAt(node,spRecord)
+  if spRecord.sp.hasAEKernel(): trace.unregisterAEKernel(node)
+  if isAAA:
+    trace.registerAAAMadeSPAuxAt(node,trace.madeSPAuxAt(node))
+  trace.setMadeSPRecordAt(node,None)
 
 def unapplyPSP(trace, node, scaffold, omegaDB, compute_gradient = False):
   psp,args = trace.pspAt(node),trace.argsAt(node)

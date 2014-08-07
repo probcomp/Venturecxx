@@ -23,6 +23,7 @@ import re
 import json
 
 from venture.exception import VentureException
+import venture.value.dicts as val
 
 # NOTE: when a ParseException is raised -- it fails soft, and the parser
 # will continue to try to match the string with the next pattern in its list
@@ -224,12 +225,24 @@ def value_token():
     value.setParseAction(process_value)
     return value
 
+# <symbol_literal>
+#
+# evalutes to a literal symbol value: {"type":"symbol", "value":s}
+def symbol_literal_token(*args, **kwargs):
+    def process_symbol_literal(_s, _loc, toks):
+        v = val.symbol(toks[0]['value'])
+        l = toks[0]['loc']
+        return [{"loc":l, "value":v}]
+    symbol_literal = MatchFirst([symbol_token(*args, **kwargs)])
+    symbol_literal.setParseAction(process_symbol_literal)
+    return symbol_literal
+
 # <number_literal>
 #
 # evalutes to a literal number value: {"type":"number", "value":s}
 def number_literal_token():
     def process_number_literal(_s, _loc, toks):
-        v = {'type':'number', 'value':float(toks[0]['value'])}
+        v = val.number(float(toks[0]['value']))
         l = toks[0]['loc']
         return [{"loc":l, "value":v}]
     number_literal = MatchFirst([number_token()])
@@ -241,7 +254,7 @@ def number_literal_token():
 # evalutes to a literal boolean value: {"type":"boolean", "value":s}
 def boolean_literal_token():
     def process_boolean_literal(_s, _loc, toks):
-        v = {'type':'boolean', 'value':toks[0]['value']}
+        v = val.boolean(toks[0]['value'])
         l = toks[0]['loc']
         return [{"loc":l, "value":v}]
     boolean_literal = MatchFirst([boolean_token()])
