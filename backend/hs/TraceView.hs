@@ -165,16 +165,6 @@ valueAt a t = (t^. nodes . at a) >>= valueOf
 fromValueAt :: Valuable m b => Address -> TraceView m -> Maybe b
 fromValueAt a t = (t^. nodes . at a) >>= valueOf >>= fromValue
 
-assume :: (MonadRandom m) => String -> Exp m -> (StateT (TraceView m) m) Address
-assume var exp = do
-  -- TODO This implementation of assume does not permit recursive
-  -- functions, because of insufficient indirection to the
-  -- environment.
-  e <- use env
-  address <- (eval exp e)
-  env %= Frame (M.fromList [(var, address)])
-  return address
-
 lookupNode :: Address -> (TraceView m) -> Maybe (Node m)
 lookupNode = undefined
 
