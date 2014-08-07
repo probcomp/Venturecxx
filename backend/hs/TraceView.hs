@@ -36,7 +36,7 @@ data Value m = Number Double
   deriving Show
 
 newtype LogDensity = LogDensity Double
-    deriving Random
+  deriving Random
 
 instance Monoid LogDensity where
     mempty = LogDensity 0.0
@@ -50,11 +50,17 @@ data Exp m = Datum (Value m)
            | App (Exp m) [Exp m]
            | Lam [String] (Exp m)
            | Ext (Exp m)
+           | Body [Statement m] (Exp m)
   deriving Show
 
 data Env = Toplevel
          | Frame (M.Map String Address) Env
-    deriving Show
+  deriving Show
+
+data Statement m = Assume String (Exp m)
+                 | Observe (Exp m) (Value m) -- TODO generalize to "constants" read from the environment
+                 | Infer (Exp m)
+  deriving Show
 
 env_lookup :: String -> Env -> Maybe Address
 env_lookup = undefined
@@ -210,15 +216,6 @@ do_incorporate = undefined
 do_incorporateR :: (MonadState (TraceView m) m1) => Address -> m1 ()
 do_incorporateR = undefined
 
-infer :: (MonadRandom m) => Exp m -> (StateT (TraceView m) m) ()
-infer prog = do
-  t <- get
-  let t' = extend_trace_view t (t ^. env)
-  let inf_exp = App prog [Datum $ ReifiedTraceView t]
-  (addr, t'') <- lift $ runStateT (eval inf_exp $ t' ^. env) t'
-  let ReifiedTraceView t''' = fromJust "eval returned empty node" $ valueOf $ fromJust "eval returned invalid address" $ lookupNode addr t''
-  put t'''
-
 evalRequests :: (MonadRandom m) => SPAddress -> [SimulationRequest m] -> StateT (TraceView m) m [Address]
 evalRequests = undefined
 
@@ -265,6 +262,14 @@ eval (Ext exp) e = do
   -- Is there a good reason why I don't care about the log density of this regenNode?
   _ <- runWriterT $ regenNode addr
   return addr
+-- TODO If begin is really supposed to splice into the enclosing
+-- environment, then eval must be able to modify the environment it is
+-- running in.
+eval (Body stmts exp) e = do
+  t <- get
+  (t', e') <- lift $ execStateT (mapM_ exec stmts) (t, e)
+  put t'
+  eval exp e'
 
 regenNode :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (TraceView m) m) ()
 regenNode a = do
@@ -326,3 +331,14 @@ regenValue a = lift (do
 -- enclosing view.  That should be fine, however, because that can
 -- only happen during resimulation of the enclosed view caused by
 -- inference on the enclosing view.  So I choose one node.
+
+exec :: (MonadRandom m) => Statement m -> StateT ((TraceView m), Env) m ()
+exec (Assume name exp) = undefined
+exec (Observe exp v) = undefined
+exec (Infer prog) = do
+  t <- gets fst
+  let t' = extend_trace_view t (t ^. env)
+  let inf_exp = App prog [Datum $ ReifiedTraceView t]
+  (addr, t'') <- lift $ runStateT (eval inf_exp $ t' ^. env) t'
+  let ReifiedTraceView t''' = fromJust "eval returned empty node" $ valueOf $ fromJust "eval returned invalid address" $ lookupNode addr t''
+  _1 .= t'''
