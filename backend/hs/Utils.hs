@@ -1,4 +1,5 @@
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Utils (module Utils, module Unique) where
 
@@ -89,16 +90,26 @@ instance (Pretty a) => Pretty (O.Set a) where
 instance (Pretty a) => Pretty (S.Set a) where
     pp as = brackets $ sep $ map pp $ S.toList as
 
-pogoStickM :: (Monad m1, Monad m2)
-              => (s (Coroutine s m1 x) -> m2 (Coroutine s m1 x))
-                 -> m2 (m1 (Either (s (Coroutine s m1 x)) x) -> (Either (s (Coroutine s m1 x)) x))
+pogoStickM :: forall m1 m2 s x. (Monad m1, Monad m2)
+              => (m1 (m2 x) -> m2 (m1 x))
+                 -> (m2 (m1 x) -> m1 (m2 x))
+                 -> (s (Coroutine s m1 x) -> m2 (Coroutine s m1 x))
                  -> Coroutine s m1 x
-                 -> m2 x
-pogoStickM spring open c = do
-  opener <- open
-  case opener $ resume c of
-    (Left suspended) -> do
-      c' <- spring suspended
-      pogoStickM spring open c'
-    (Right result) -> return result
+                 -> m2 (m1 x)
+pogoStickM swap swap' spring c = swap $ resume c >>= either continue stop where
+    continue :: s (Coroutine s m1 x) -> m1 (m2 x)
+    continue suspended = swap' act where
+        act :: m2 (m1 x)
+        act = do c' <- spring suspended
+                 pogoStickM swap swap' spring c'
+    stop :: x -> m1 (m2 x)
+    stop = return . return
+
+ -- do
+ --  opener <- open
+ --  case opener $ resume c of
+ --    (Left suspended) -> do
+ --      c' <- spring suspended
+ --      pogoStickM spring open c'
+ --    (Right result) -> return result
 

@@ -4,6 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- Data structure for extensible traces, which scope inference.
 
@@ -13,6 +14,8 @@
 module TraceView where
 
 import Control.Lens  -- from cabal install len
+import Control.Monad.Coroutine -- from cabal install monad-coroutine
+import qualified Control.Monad.Coroutine.SuspensionFunctors as Susp -- from cabal install monad-coroutine
 import Control.Monad.Random -- From cabal install MonadRandom
 import Control.Monad.State -- :set -hide-package monads-tf-0.1.0.1
 import Control.Monad.Trans.Writer.Strict
@@ -309,6 +312,39 @@ regenValue a = lift (do
       -- The Nodes in t'' will have correct child pointers, if it is self-contained.
       let v = fromJust "Subevaluation yielded no value" $ valueAt subaddr t''
       nodes . ix a . value .= Just v)
+
+type RegenEffect m = WriterT LogDensity (StateT (TraceView m) m)
+type RegenType m a = Coroutine (Susp.Request Address (Value m)) (RegenEffect m) a
+type SuspensionType m a = (Either (Susp.Request Address (Value m) (RegenType m a)) a)
+
+regenValue' :: forall m. (MonadRandom m) => Address -> RegenType m ()
+regenValue' a = do
+  node <- lift (use $ nodes . hardix "Regenerating value for nonexistent node" a)
+  case node of
+    (Reference _ a') -> do
+      v <- lookupMaybeRequesting a'
+      lift (nodes . ix a . value .= Just v)
+    (Extension _ exp e _) -> do
+      t <- lift get
+      let t' = extend_trace_view t e
+          spring :: (Susp.Request Address (Value m) (RegenType m Address)) -> RegenType m (RegenType m Address)
+          spring = undefined
+          open :: RegenType m (RegenEffect m (SuspensionType m Address) -> SuspensionType m Address)
+          open = undefined
+          subregen :: RegenType m Address
+          subregen = eval' exp e
+      addr <- pogoStickM undefined undefined spring subregen
+      return ()
+
+lookupMaybeRequesting :: (MonadRandom m) => Address -> RegenType m (Value m)
+lookupMaybeRequesting a = do
+  t <- lift get
+  case lookupNode a t of
+    (Just node') -> return $ fromJust "Regenerating value for a reference with non-regenerated referent" $ node' ^. value
+    Nothing -> Susp.request a
+
+eval' :: (MonadRandom m) => Exp m -> Env -> RegenType m Address
+eval' = undefined
 
 -- Idea: Implement a RandomDB version of this, with restricted infer.
 -- - A TraceFrame has a map from addresses to values and a parent pointer
