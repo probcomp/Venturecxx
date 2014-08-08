@@ -4,11 +4,15 @@ from types import MethodType
 import venture.value.dicts as v
 
 class Macro(object):
+  def __init__(self, predicate=None, expander=None):
+    self.predicate = predicate
+    self.expander = expander
+
   def applies(self, expr):
-    raise Exception("Not implemented!")
+    return self.predicate(expr)
   
   def expand(self, expr):
-    raise Exception("Not implemented!")
+    return self.expander(expr)
 
 class Sugar(object):
   def desugar(self):
@@ -54,27 +58,28 @@ def traverse(expr):
         yield [i] + j, f
   yield [], expr
 
-def index(expr, i):
+def index(i, expr):
+  """Index into an expression."""
   if len(i) == 0:
     return expr
-  return index(expr[i[0]], i[1:])
+  return index(i[1:], expr[i[0]])
 
 def substitute(expr, pattern):
   if isinstance(pattern, list):
     return [substitute(expr, p) for p in pattern]
   if isinstance(pattern, tuple):
-    return index(expr, pattern)
+    return index(pattern, expr)
   return pattern
 
-class SubMacro(Macro):
-  def __init__(self, pattern):
-    self.pattern = pattern
-    self.inverse = [(i,list(tup)) for (i, tup) in traverse(pattern) if isinstance(tup, tuple)]
+def PatternExpand(pattern):
+  inverse = [(i,list(tup)) for (i, tup) in traverse(pattern) if isinstance(tup, tuple)]
   
-  def expand(self, expr):
-    sub = substitute(expr, self.pattern)
+  def expander(expr):
+    sub = substitute(expr, pattern)
     #print sub
-    return SubSugar(expand(sub), self.inverse)
+    return SubSugar(expand(sub), inverse)
+  
+  return expander
 
 def prefix(l1, l2):
   if len(l1) > len(l2):
@@ -97,28 +102,24 @@ class SubSugar(Sugar):
         return j + index[len(i):]
     return index
 
-class LetMacro(Macro):
-  def applies(self, expr):
-    return isinstance(expr, list) and len(expr) > 0 and expr[0] == "let"
-  
-  def expand(self, expr):
-    pattern = (2,)
-    for index in reversed(range(len(expr[1]))):
-      pattern = [['lambda', [(1, index, 0)], pattern], (1, index, 1)]
-    return SubMacro(pattern).expand(expr)
+def LetExpand(expr):
+  pattern = (2,)
+  for index in reversed(range(len(expr[1]))):
+    pattern = [['lambda', [(1, index, 0)], pattern], (1, index, 1)]
+  return PatternExpand(pattern)(expr)
 
-def kwMacro(keyword, macro):
-  def applies(self, expr):
+def arg0(keyword):
+  def applies(expr):
     return isinstance(expr, list) and len(expr) > 0 and expr[0] == keyword
-  macro.applies = MethodType(applies, macro)
-  return macro
+  return applies
 
-lambdaMacro = kwMacro("lambda", SubMacro(['make_csp', ['quote', (1,)], ['quote', (2,)]]))
-ifMacro = kwMacro("if", SubMacro([['biplex', (1,), ['lambda', [], (2,)], ['lambda', [], (3,)]]]))
-andMacro = kwMacro("and", SubMacro(['if', (1,), (2,), v.boolean(True)]))
-orMacro = kwMacro("or", SubMacro(['if', (1,), v.boolean(True), (2,)]))
+lambdaMacro = Macro(arg0("lambda"), PatternExpand(['make_csp', ['quote', (1,)], ['quote', (2,)]]))
+ifMacro = Macro(arg0("if"), PatternExpand([['biplex', (1,), ['lambda', [], (2,)], ['lambda', [], (3,)]]]))
+andMacro = Macro(arg0("and"), PatternExpand(['if', (1,), (2,), v.boolean(True)]))
+orMacro = Macro(arg0("or"), PatternExpand(['if', (1,), v.boolean(True), (2,)]))
+letMacro = Macro(arg0("let"), LetExpand)
 
-macros = [lambdaMacro, ifMacro, andMacro, orMacro, LetMacro(), ListMacro(), LiteralMacro()]
+macros = [lambdaMacro, ifMacro, andMacro, orMacro, letMacro, ListMacro(), LiteralMacro()]
 
 def expand(expr):
   for macro in macros:
