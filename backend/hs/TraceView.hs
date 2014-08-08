@@ -152,7 +152,6 @@ data TraceView rand =
               , _randoms :: S.Set Address -- Really scopes, but ok
               , _node_children :: M.Map Address (S.Set Address)
               , _sprs :: M.Map SPAddress (SPRecord rand)
-              , _env :: Env
               , _parent_view :: Maybe (TraceView rand)
               }
     deriving Show
@@ -160,7 +159,7 @@ data TraceView rand =
 makeLenses ''TraceView
 
 empty :: TraceView m
-empty = TraceView M.empty S.empty M.empty M.empty Toplevel Nothing
+empty = TraceView M.empty S.empty M.empty M.empty Nothing
 
 valueAt :: Address -> TraceView m -> Maybe (Value m)
 valueAt a t = (t^. nodes . at a) >>= valueOf
@@ -187,7 +186,7 @@ responsesAt :: Address -> Simple Lens (TraceView m) [Address]
 responsesAt = undefined
 
 extend_trace_view :: (TraceView m) -> Env -> (TraceView m)
-extend_trace_view p e = empty { _parent_view = Just p, _env = e }
+extend_trace_view p e = empty { _parent_view = Just p }
 
 ----------------------------------------------------------------------
 -- Advanced Trace Manipulations                                     --
@@ -309,7 +308,7 @@ regenValue a = lift (do
     (Extension _ exp e _) -> do
       t <- get
       let t' = extend_trace_view t e
-      (subaddr, t'') <- lift $ runStateT (eval exp $ t' ^. env) t'
+      (subaddr, t'') <- lift $ runStateT (eval exp e) t'
       -- TODO The right set of parents for the extension node is the set of
       -- addresses that the expression read from the enclosing view.
       -- The Nodes in t'' will have correct child pointers, if it is self-contained.
