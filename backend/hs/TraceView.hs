@@ -435,10 +435,13 @@ exec (Observe exp v) = do
   -- a complicated operation to fix this, which I should probably
   -- port.
   _1 `execOn` (constrain address v)
-exec (Infer prog) = do
-  t <- gets fst
-  let t' = extend_trace_view t (t ^. env)
+
+exec' :: (MonadRandom m) => Statement m -> Coroutine (RequestingValue m) (StateT ((TraceView m), Env) m) ()
+exec' (Infer prog) = do
+  (t, e) <- lift get
+  let t' = extend_trace_view t e
   let inf_exp = App prog [Datum $ ReifiedTraceView t]
-  (addr, t'') <- lift $ runStateT (eval inf_exp $ t' ^. env) t'
+  ((addr, d), t'') <- mapMonad lift $ coroutineRunRegenEffect (eval' inf_exp e) mempty t'
   let ReifiedTraceView t''' = fromJust "eval returned empty node" $ valueOf $ fromJust "eval returned invalid address" $ lookupNode addr t''
-  _1 .= t'''
+  -- TODO What do I do with the density coming up from the bottom, if any?
+  lift (_1 .= t''')
