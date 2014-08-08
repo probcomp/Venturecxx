@@ -353,7 +353,7 @@ manage_subregen exp e t = do
     where
       inner_t = extend_trace_view t e
       subregen :: RegenType m Address
-      subregen = eval' exp e
+      subregen = eval exp e
       subregen' :: Coroutine (RequestingValue m) m ((Address, LogDensity), (TraceView m))
       subregen' = coroutineRunRegenEffect subregen mempty inner_t
 
@@ -374,8 +374,8 @@ handle_regeneration_request (d, as, t) (Susp.Request addr k) = do
   ((v, d'), t') <- coroutineRunRegenEffect (regenNode' addr) d t
   return (k v, (d', (addr:as), t'))
 
-eval' :: (MonadRandom m) => Exp m -> Env -> RegenType m Address
-eval' = undefined
+eval :: (MonadRandom m) => Exp m -> Env -> RegenType m Address
+eval = undefined
 
 -- Idea: Implement a RandomDB version of this, with restricted infer.
 -- - A TraceFrame has a map from addresses to values and a parent pointer
@@ -434,14 +434,14 @@ exec' (Infer prog) = do
   -- Can exec' ever be called inside a regen' without an intervening
   -- extend?  I think so.  If that is the case, then it may happen
   -- that some nodes in the current view are not yet regenerated.  If
-  -- that, in turn, is the case, then the enclosed eval' of the
+  -- that, in turn, is the case, then the enclosed eval of the
   -- inf_exp may uncover new dependencies on such unregenerated
   -- values, in which case it will be necessary to regenerate them.
   -- TODO: Make that happen, or arrange for it not to be an issue.
   -- Note: if the reified trace can be under-regenerated, then SPs
   -- need to be able to suspend themselves in order to request further
   -- regeneration.
-  ((addr, d), t'') <- mapMonad lift $ coroutineRunRegenEffect (eval' inf_exp e) mempty t'
+  ((addr, d), t'') <- mapMonad lift $ coroutineRunRegenEffect (eval inf_exp e) mempty t'
   let ReifiedTraceView t''' = fromJust "eval returned empty node" $ valueOf $ fromJust "eval returned invalid address" $ lookupNode addr t''
   -- TODO What do I do with the density coming up from the bottom, if any?
   lift (_1 .= t''')
