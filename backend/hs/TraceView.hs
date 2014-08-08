@@ -216,6 +216,11 @@ constrain = undefined
 -- Interpreting Venture                                             --
 ----------------------------------------------------------------------
 
+type RegenEffect m = WriterT LogDensity (StateT (TraceView m) m)
+type RequestingValue m = (Susp.Request Address (Value m))
+type RegenType m a = Coroutine (RequestingValue m) (RegenEffect m) a
+type SuspensionType m a = (Either (RequestingValue m (RegenType m a)) a)
+
 evalRequests :: (MonadRandom m) => SPAddress -> [SimulationRequest m] -> StateT (TraceView m) m [Address]
 evalRequests = undefined
 
@@ -232,15 +237,14 @@ evalRequests = undefined
 -- Here I choose to extend at eval.
 -- Returns the address of the fresh node holding the result of the
 -- evaluation.
-eval :: (MonadRandom m) => Exp m -> Env -> StateT (TraceView m) m Address
+eval :: (MonadRandom m) => Exp m -> Env -> RegenEffect m Address
 eval (Datum v) _ = state $ addFreshNode $ Constant v
 eval (Var n) e = do
   let answer = case env_lookup n e of
                  Nothing -> error $ "Unbound variable " ++ show n
                  (Just a) -> Reference Nothing a
   addr <- state $ addFreshNode answer
-  -- Is there a good reason why I don't care about the log density of this regenNode?
-  _ <- runWriterT $ regenNode addr
+  _ <- regenNode addr
   return addr
 eval (Lam vs exp) e = do
   spAddr <- state $ addFreshSP $ compoundSP vs exp e
@@ -249,25 +253,22 @@ eval (App op args) env = do
   op' <- eval op env
   args' <- sequence $ map (flip eval env) args
   addr <- state $ addFreshNode (Request Nothing Nothing op' args')
-  -- Is there a good reason why I don't care about the log density of this regenNode?
-  _ <- runWriterT $ regenNode addr
+  _ <- regenNode addr
   reqAddrs <- gets $ fulfilments addr
   addr' <- state $ addFreshNode (Output Nothing addr op' args' reqAddrs)
   nodes . ix addr . out_node .= Just addr'
-  -- Is there a good reason why I don't care about the log density of this regenNode?
-  _ <- runWriterT $ regenNode addr'
+  _ <- regenNode addr'
   return addr'
 eval (Ext exp) e = do
   addr <- state $ addFreshNode (Extension Nothing exp e [])
-  -- Is there a good reason why I don't care about the log density of this regenNode?
-  _ <- runWriterT $ regenNode addr
+  _ <- regenNode addr
   return addr
 -- TODO If begin is really supposed to splice into the enclosing
 -- environment, then eval must be able to modify the environment it is
 -- running in.
 eval (Body stmts exp) e = do
   t <- get
-  (t', e') <- lift $ execStateT (mapM_ exec stmts) (t, e)
+  (t', e') <- lift $ lift $ execStateT (mapM_ exec stmts) (t, e)
   put t'
   eval exp e'
 
@@ -308,18 +309,14 @@ regenValue a = lift (do
     (Extension _ exp e _) -> do
       t <- get
       let t' = extend_trace_view t e
-      (subaddr, t'') <- lift $ runStateT (eval exp e) t'
+      ((subaddr, density), t'') <- lift $ runRegenEffect (eval exp e) t'
+      -- TODO Tell the density
       -- TODO The right set of parents for the extension node is the set of
       -- addresses that the expression read from the enclosing view.
       -- The Nodes in t'' will have correct child pointers, if it is self-contained.
       let v = fromJust "Subevaluation yielded no value" $ valueAt subaddr t''
       nodes . ix a . value .= Just v
       return v)
-
-type RegenEffect m = WriterT LogDensity (StateT (TraceView m) m)
-type RequestingValue m = (Susp.Request Address (Value m))
-type RegenType m a = Coroutine (RequestingValue m) (RegenEffect m) a
-type SuspensionType m a = (Either (RequestingValue m (RegenType m a)) a)
 
 runRegenEffect :: RegenEffect m a -> (TraceView m) -> m ((a, LogDensity), (TraceView m))
 runRegenEffect act t = runStateT (runWriterT act) t
@@ -418,12 +415,14 @@ exec (Assume var exp) = do
   -- functions, because of insufficient indirection to the
   -- environment.
   e <- gets snd
-  address <- _1 `runOn` (eval exp e)
+  (address, density) <- _1 `runOn` (runWriterT $ eval exp e)
+  -- TODO Carry the density
   _2 %= Frame (M.fromList [(var, address)])
   return ()
 exec (Observe exp v) = do
   e <- gets snd
-  address <- _1 `runOn` (eval exp e)
+  (address, density) <- _1 `runOn` (runWriterT $ eval exp e)
+  -- TODO Carry the density
   -- TODO What should happen if one observes a value that had
   -- (deterministic) consequences, e.g.
   -- (assume x (normal 1 1))
