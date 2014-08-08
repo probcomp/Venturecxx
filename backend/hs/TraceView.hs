@@ -217,9 +217,22 @@ constrain = undefined
 ----------------------------------------------------------------------
 
 type RegenEffect m = WriterT LogDensity (StateT (TraceView m) m)
+
+runRegenEffect :: RegenEffect m a -> (TraceView m) -> m ((a, LogDensity), (TraceView m))
+runRegenEffect act t = runStateT (runWriterT act) t
+
 type RequestingValue m = (Susp.Request Address (Value m))
 type RegenType m a = Coroutine (RequestingValue m) (RegenEffect m) a
 type SuspensionType m a = (Either (RequestingValue m (RegenType m a)) a)
+
+coroutineRunRegenEffect :: (Monad m) => RegenType m a -> LogDensity -> (TraceView m) -> Coroutine (RequestingValue m) m ((a, LogDensity), (TraceView m))
+coroutineRunRegenEffect c d t = Coroutine act where
+    act = do
+      ((res, density), t') <- runRegenEffect (resume c) t
+      case res of
+        Right result -> return $ Right ((result, d `mappend` density), t')
+        Left susp -> return $ Left $ fmap (\c' -> coroutineRunRegenEffect c' (d `mappend` density) t') susp
+
 
 evalRequests :: (MonadRandom m) => SPAddress -> [SimulationRequest m] -> StateT (TraceView m) m [Address]
 evalRequests = undefined
@@ -303,17 +316,6 @@ regenValueNoCoroutine a = lift (do -- Should be able to produce weight in princi
       do_incorporate a
       return v
     (Extension _ _ _ _) -> error "Extensions are handled by regenValue directly")
-
-runRegenEffect :: RegenEffect m a -> (TraceView m) -> m ((a, LogDensity), (TraceView m))
-runRegenEffect act t = runStateT (runWriterT act) t
-
-coroutineRunRegenEffect :: (Monad m) => RegenType m a -> LogDensity -> (TraceView m) -> Coroutine (RequestingValue m) m ((a, LogDensity), (TraceView m))
-coroutineRunRegenEffect c d t = Coroutine act where
-    act = do
-      ((res, density), t') <- runRegenEffect (resume c) t
-      case res of
-        Right result -> return $ Right ((result, d `mappend` density), t')
-        Left susp -> return $ Left $ fmap (\c' -> coroutineRunRegenEffect c' (d `mappend` density) t') susp
 
 regenNode' :: (MonadRandom m) => Address -> RegenType m (Value m)
 regenNode' a = do
