@@ -336,11 +336,11 @@ regenNode' a = do
     (Just node) -> if isRegenerated node then return $ fromJust "foo" $ valueOf node
                    else do
                      mapM_ regenNode' (parentAddrs node) -- Note that this may change the node at address a
-                     regenValue' a
+                     regenValue a
     Nothing -> Susp.request a
 
-regenValue' :: (MonadRandom m) => Address -> RegenType m (Value m)
-regenValue' a = do
+regenValue :: (MonadRandom m) => Address -> RegenType m (Value m)
+regenValue a = do
   node <- lift (use $ nodes . hardix "Regenerating value for nonexistent node" a)
   case node of
     (Reference _ a') -> do
