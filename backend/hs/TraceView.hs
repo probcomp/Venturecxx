@@ -278,10 +278,10 @@ regenNode a = do
   if isRegenerated node then return $ fromJust "foo" $ valueOf node
   else do
     mapM_ regenNode (parentAddrs node) -- Note that this may change the node at address a
-    regenValue a
+    regenValueNoCoroutine a
 
-regenValue :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (TraceView m) m) (Value m)
-regenValue a = lift (do
+regenValueNoCoroutine :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (TraceView m) m) (Value m)
+regenValueNoCoroutine a = lift (do
   node <- use $ nodes . hardix "Regenerating value for nonexistent node" a
   case node of
     (Constant v) -> return v
@@ -355,7 +355,7 @@ regenValue' a = do
       lift (nodes . ix a . undefined .= reverse requested)
       lift (nodes . ix a . value .= Just v)
       return v
-    _ -> lift $ regenValue a
+    _ -> lift $ regenValueNoCoroutine a
 
 manage_subregen :: forall m. (MonadRandom m) => Exp m -> Env -> TraceView m -> Coroutine (RequestingValue m) m (Value m, LogDensity, [Address], TraceView m)
 manage_subregen exp e t = do
