@@ -435,6 +435,7 @@ exec (Observe exp v) = do
   -- a complicated operation to fix this, which I should probably
   -- port.
   _1 `execOn` (constrain address v)
+exec (Infer _) = error "Infer should be handled by exec'"
 
 exec' :: (MonadRandom m) => Statement m -> Coroutine (RequestingValue m) (StateT ((TraceView m), Env) m) ()
 exec' (Infer prog) = do
@@ -447,8 +448,12 @@ exec' (Infer prog) = do
   -- that, in turn, is the case, then the enclosed eval' of the
   -- inf_exp may uncover new dependencies on such unregenerated
   -- values, in which case it will be necessary to regenerate them.
-  -- TODO: Make that happen.
+  -- TODO: Make that happen, or arrange for it not to be an issue.
+  -- Note: if the reified trace can be under-regenerated, then SPs
+  -- need to be able to suspend themselves in order to request further
+  -- regeneration.
   ((addr, d), t'') <- mapMonad lift $ coroutineRunRegenEffect (eval' inf_exp e) mempty t'
   let ReifiedTraceView t''' = fromJust "eval returned empty node" $ valueOf $ fromJust "eval returned invalid address" $ lookupNode addr t''
   -- TODO What do I do with the density coming up from the bottom, if any?
   lift (_1 .= t''')
+exec' s = lift $ exec s
