@@ -272,23 +272,24 @@ eval (Body stmts exp) e = do
   put t'
   eval exp e'
 
-regenNode :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (TraceView m) m) ()
+regenNode :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (TraceView m) m) (Value m)
 regenNode a = do
   node <- use $ nodes . hardix "Regenerating a nonexistent node" a
-  if isRegenerated node then return ()
+  if isRegenerated node then return $ fromJust "foo" $ valueOf node
   else do
     mapM_ regenNode (parentAddrs node) -- Note that this may change the node at address a
     regenValue a
 
-regenValue :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (TraceView m) m) ()
+regenValue :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (TraceView m) m) (Value m)
 regenValue a = lift (do
   node <- use $ nodes . hardix "Regenerating value for nonexistent node" a
   case node of
-    (Constant _) -> return ()
+    (Constant v) -> return v
     (Reference _ a') -> do
       node' <- use $ nodes . hardix "Dangling reference found in regenValue" a'
       let v = fromJust "Regenerating value for a reference with non-regenerated referent" $ node' ^. value
       nodes . ix a . value .= Just v
+      return v
     (Request _ outA opa ps) -> do
       addr <- gets $ fromJust "Regenerating value for a request with no operator" . (fromValueAt opa)
       reqs <- runRequester addr ps
@@ -298,11 +299,13 @@ regenValue a = lift (do
       case outA of
         Nothing -> return ()
         (Just outA') -> responsesAt outA' .= resps
+      return undefined
     (Output _ _ opa ps rs) -> do
       addr <- gets $ fromJust "Regenerating value for an output with no operator" . (fromValueAt opa)
       v <- runOutputter addr ps rs
       nodes . ix a . value .= Just v
       do_incorporate a
+      return v
     (Extension _ exp e _) -> do
       t <- get
       let t' = extend_trace_view t e
@@ -311,7 +314,8 @@ regenValue a = lift (do
       -- addresses that the expression read from the enclosing view.
       -- The Nodes in t'' will have correct child pointers, if it is self-contained.
       let v = fromJust "Subevaluation yielded no value" $ valueAt subaddr t''
-      nodes . ix a . value .= Just v)
+      nodes . ix a . value .= Just v
+      return v)
 
 type RegenEffect m = WriterT LogDensity (StateT (TraceView m) m)
 type RequestingValue m = (Susp.Request Address (Value m))
@@ -330,15 +334,23 @@ coroutineRunRegenEffect c d t = Coroutine act where
         Left susp -> return $ Left $ fmap (\c' -> coroutineRunRegenEffect c' (d `mappend` density) t') susp
 
 regenNode' :: (MonadRandom m) => Address -> RegenType m (Value m)
-regenNode' = undefined
+regenNode' a = do
+  t <- lift get
+  case lookupNode a t of
+    (Just node) -> if isRegenerated node then return $ fromJust "foo" $ valueOf node
+                   else do
+                     mapM_ regenNode' (parentAddrs node) -- Note that this may change the node at address a
+                     regenValue' a
+    Nothing -> Susp.request a
 
-regenValue' :: (MonadRandom m) => Address -> RegenType m ()
+regenValue' :: (MonadRandom m) => Address -> RegenType m (Value m)
 regenValue' a = do
   node <- lift (use $ nodes . hardix "Regenerating value for nonexistent node" a)
   case node of
     (Reference _ a') -> do
       v <- lookupMaybeRequesting a'
       lift (nodes . ix a . value .= Just v)
+      return v
     (Extension _ exp e _) -> do
       t <- lift get
       (v, density, requested, new_trace) <- mapMonad (lift . lift) $ manage_subregen exp e t
@@ -346,6 +358,8 @@ regenValue' a = do
       lift $ put new_trace
       lift (nodes . ix a . undefined .= reverse requested)
       lift (nodes . ix a . value .= Just v)
+      return v
+    _ -> lift $ regenValue a
 
 manage_subregen :: forall m. (MonadRandom m) => Exp m -> Env -> TraceView m -> Coroutine (RequestingValue m) m (Value m, LogDensity, [Address], TraceView m)
 manage_subregen exp e t = do
