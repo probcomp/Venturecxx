@@ -250,21 +250,21 @@ evalRequests = undefined
 -- Here I choose to extend at eval.
 -- Returns the address of the fresh node holding the result of the
 -- evaluation.
-eval :: (MonadRandom m) => Exp m -> Env -> RegenEffect m Address
-eval (Datum v) _ = state $ addFreshNode $ Constant v
-eval (Var n) e = do
+evalNoCoroutine :: (MonadRandom m) => Exp m -> Env -> RegenEffect m Address
+evalNoCoroutine (Datum v) _ = state $ addFreshNode $ Constant v
+evalNoCoroutine (Var n) e = do
   let answer = case env_lookup n e of
                  Nothing -> error $ "Unbound variable " ++ show n
                  (Just a) -> Reference Nothing a
   addr <- state $ addFreshNode answer
   _ <- regenNode addr
   return addr
-eval (Lam vs exp) e = do
+evalNoCoroutine (Lam vs exp) e = do
   spAddr <- state $ addFreshSP $ compoundSP vs exp e
   state $ addFreshNode $ Constant $ Procedure spAddr
-eval (App op args) env = do
-  op' <- eval op env
-  args' <- sequence $ map (flip eval env) args
+evalNoCoroutine (App op args) env = do
+  op' <- evalNoCoroutine op env
+  args' <- sequence $ map (flip evalNoCoroutine env) args
   addr <- state $ addFreshNode (Request Nothing Nothing op' args')
   _ <- regenNode addr
   reqAddrs <- gets $ fulfilments addr
@@ -272,18 +272,18 @@ eval (App op args) env = do
   nodes . ix addr . out_node .= Just addr'
   _ <- regenNode addr'
   return addr'
-eval (Ext exp) e = do
+evalNoCoroutine (Ext exp) e = do
   addr <- state $ addFreshNode (Extension Nothing exp e [])
   _ <- regenNode addr
   return addr
 -- TODO If begin is really supposed to splice into the enclosing
 -- environment, then eval must be able to modify the environment it is
 -- running in.
-eval (Body stmts exp) e = do
+evalNoCoroutine (Body stmts exp) e = do
   t <- get
   (t', e') <- lift $ lift $ execStateT (mapM_ exec stmts) (t, e)
   put t'
-  eval exp e'
+  evalNoCoroutine exp e'
 
 regenNode :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (TraceView m) m) (Value m)
 regenNode a = do
@@ -403,13 +403,13 @@ exec (Assume var exp) = do
   -- functions, because of insufficient indirection to the
   -- environment.
   e <- gets snd
-  (address, density) <- _1 `runOn` (runWriterT $ eval exp e)
+  (address, density) <- _1 `runOn` (runWriterT $ evalNoCoroutine exp e)
   -- TODO Carry the density
   _2 %= Frame (M.fromList [(var, address)])
   return ()
 exec (Observe exp v) = do
   e <- gets snd
-  (address, density) <- _1 `runOn` (runWriterT $ eval exp e)
+  (address, density) <- _1 `runOn` (runWriterT $ evalNoCoroutine exp e)
   -- TODO Carry the density
   -- TODO What should happen if one observes a value that had
   -- (deterministic) consequences, e.g.
