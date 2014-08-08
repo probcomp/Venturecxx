@@ -442,6 +442,9 @@ exec' (Infer prog) = do
   (t, e) <- lift get
   let t' = extend_trace_view t e
   let inf_exp = App prog [Datum $ ReifiedTraceView t]
+  -- Is the view t itself fully regenerated here?  Do I need to be
+  -- able to intercept regeneration requests?  Do I need to be able to
+  -- update the reified view!?
   -- Can exec' ever be called inside a regen' without an intervening
   -- extend?  I think so.  If that is the case, then it may happen
   -- that some nodes in the current view are not yet regenerated.  If
