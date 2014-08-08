@@ -281,7 +281,7 @@ regenNode a = do
     regenValueNoCoroutine a
 
 regenValueNoCoroutine :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (TraceView m) m) (Value m)
-regenValueNoCoroutine a = lift (do
+regenValueNoCoroutine a = lift (do -- Should be able to produce weight in principle, but current SPs do not.
   node <- use $ nodes . hardix "Regenerating value for nonexistent node" a
   case node of
     (Constant v) -> return v
