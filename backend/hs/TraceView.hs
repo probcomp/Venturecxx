@@ -285,11 +285,7 @@ regenValueNoCoroutine a = lift (do
   node <- use $ nodes . hardix "Regenerating value for nonexistent node" a
   case node of
     (Constant v) -> return v
-    (Reference _ a') -> do
-      node' <- use $ nodes . hardix "Dangling reference found in regenValue" a'
-      let v = fromJust "Regenerating value for a reference with non-regenerated referent" $ node' ^. value
-      nodes . ix a . value .= Just v
-      return v
+    (Reference _ _) -> error "References are handled by regenValue directly"
     (Request _ outA opa ps) -> do
       addr <- gets $ fromJust "Regenerating value for a request with no operator" . (fromValueAt opa)
       reqs <- runRequester addr ps
@@ -306,17 +302,7 @@ regenValueNoCoroutine a = lift (do
       nodes . ix a . value .= Just v
       do_incorporate a
       return v
-    (Extension _ exp e _) -> do
-      t <- get
-      let t' = extend_trace_view t e
-      ((subaddr, density), t'') <- lift $ runRegenEffect (eval exp e) t'
-      -- TODO Tell the density
-      -- TODO The right set of parents for the extension node is the set of
-      -- addresses that the expression read from the enclosing view.
-      -- The Nodes in t'' will have correct child pointers, if it is self-contained.
-      let v = fromJust "Subevaluation yielded no value" $ valueAt subaddr t''
-      nodes . ix a . value .= Just v
-      return v)
+    (Extension _ _ _ _) -> error "Extensions are handled by regenValue directly")
 
 runRegenEffect :: RegenEffect m a -> (TraceView m) -> m ((a, LogDensity), (TraceView m))
 runRegenEffect act t = runStateT (runWriterT act) t
