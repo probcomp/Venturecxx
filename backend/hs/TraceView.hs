@@ -349,17 +349,11 @@ regenValue' a = do
 
 manage_subregen :: forall m. (MonadRandom m) => Exp m -> Env -> TraceView m -> Coroutine (RequestingValue m) m (Value m, LogDensity, TraceView m)
 manage_subregen exp e t = do
-  (((addr, inner_density), inner_t'), (density, t')) <- foldRunMC spring (mempty, t) subregen'
+  (((addr, inner_density), inner_t'), (density, t')) <- foldRunMC handle_regeneration_request (mempty, t) subregen'
   let v = fromJust "Subevaluation yielded no value" $ valueAt addr inner_t'
   return (v, density, t') -- TODO What to do with the inner density?
     where
       inner_t = extend_trace_view t e
-      spring :: (LogDensity, TraceView m) ->
-                (RequestingValue m (Coroutine (RequestingValue m) m ((Address, LogDensity), (TraceView m)))) ->
-                Coroutine (RequestingValue m) m (Coroutine (RequestingValue m) m ((Address, LogDensity), (TraceView m)), (LogDensity, TraceView m))
-      spring (d, t) (Susp.Request addr k) = do
-        ((v, d'), t') <- coroutineRunRegenEffect (regenNode' addr) d t
-        return (k v, (d', t'))
       subregen :: RegenType m Address
       subregen = eval' exp e
       subregen' :: Coroutine (RequestingValue m) m ((Address, LogDensity), (TraceView m))
@@ -371,6 +365,16 @@ lookupMaybeRequesting a = do
   case lookupNode a t of
     (Just node') -> return $ fromJust "Regenerating value for a reference with non-regenerated referent" $ node' ^. value
     Nothing -> Susp.request a
+
+handle_regeneration_request :: (MonadRandom m) => (LogDensity, TraceView m) ->
+                               (RequestingValue m (Coroutine (RequestingValue m) m
+                                                             ((Address, LogDensity), (TraceView m)))) ->
+                               Coroutine (RequestingValue m) m (Coroutine (RequestingValue m) m
+                                                                          ((Address, LogDensity), (TraceView m))
+                                                               , (LogDensity, TraceView m))
+handle_regeneration_request (d, t) (Susp.Request addr k) = do
+  ((v, d'), t') <- coroutineRunRegenEffect (regenNode' addr) d t
+  return (k v, (d', t'))
 
 eval' :: (MonadRandom m) => Exp m -> Env -> RegenType m Address
 eval' = undefined
