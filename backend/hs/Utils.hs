@@ -105,11 +105,49 @@ pogoStickM swap swap' spring c = swap $ resume c >>= either continue stop where
     stop :: x -> m1 (m2 x)
     stop = return . return
 
- -- do
- --  opener <- open
- --  case opener $ resume c of
- --    (Left suspended) -> do
- --      c' <- spring suspended
- --      pogoStickM spring open c'
- --    (Right result) -> return result
+foldRunM :: forall s m t a x. (Monad m, MonadTrans t) =>
+            (a -> s (Coroutine s (t m) x) -> m (a, (Coroutine s (t m) x))) ->
+            Coroutine s (t m) x ->
+            (t m) (a, x)
+foldRunM spring c = undefined
 
+-- Generalize foldRun to the case where the step function is itself a
+-- coroutine, over the same underlying monad.
+foldRunMC ::  forall s s2 m a x. (Monad m, Functor s2) =>
+            (a -> s (Coroutine s m x) -> (Coroutine s2 m) ((Coroutine s m x), a)) ->
+            a ->
+            Coroutine s m x ->
+            Coroutine s2 m (x, a)
+foldRunMC = undefined
+
+-- foldRunMC with a monad transformer.  In the case of recursive
+-- regeneration, this achieves the effect of separating the weight log
+-- and the TraceView changes between the inner and outer regen (the
+-- outer log and changes travel through the value a in the spring
+-- function, and the inner ones travel in the monad transformer t).
+foldRunMC1 :: forall s s2 m t a x. (Monad m, MonadTrans t, Functor s2, Monad (t m)) =>
+            (a -> s (Coroutine s (t m) x) -> (Coroutine s2 m) ((Coroutine s (t m) x), a)) ->
+            a ->
+            Coroutine s (t m) x ->
+            Coroutine s2 (t m) (x, a)
+foldRunMC1 spring start c = do
+  step <- lift $ resume c
+  case step of
+    Right result -> return (result, start)
+    Left susp -> do
+      (c', start') <- mapMonad lift $ spring start susp
+      foldRunMC1 spring start' c'
+
+-- And now with *two* monad transformers
+foldRunMC2 :: forall s s2 m t1 t2 a x. (Monad m, MonadTrans t1, MonadTrans t2, Functor s2, Monad (t1 (t2 m)), Monad (t2 m)) =>
+            (a -> s (Coroutine s (t1 (t2 m)) x) -> (Coroutine s2 m) ((Coroutine s (t1 (t2 m)) x), a)) ->
+            a ->
+            Coroutine s (t1 (t2 m)) x ->
+            Coroutine s2 (t1 (t2 m)) (x, a)
+foldRunMC2 spring start c = do
+  step <- lift $ resume c
+  case step of
+    Right result -> return (result, start)
+    Left susp -> do
+      (c', start') <- mapMonad (lift . lift) $ spring start susp
+      foldRunMC2 spring start' c'

@@ -314,10 +314,22 @@ regenValue a = lift (do
       nodes . ix a . value .= Just v)
 
 type RegenEffect m = WriterT LogDensity (StateT (TraceView m) m)
-type RegenType m a = Coroutine (Susp.Request Address (Value m)) (RegenEffect m) a
-type SuspensionType m a = (Either (Susp.Request Address (Value m) (RegenType m a)) a)
+type RequestingValue m = (Susp.Request Address (Value m))
+type RegenType m a = Coroutine (RequestingValue m) (RegenEffect m) a
+type SuspensionType m a = (Either (RequestingValue m (RegenType m a)) a)
 
-regenValue' :: forall m. (MonadRandom m) => Address -> RegenType m ()
+runRegenEffect :: RegenEffect m a -> (TraceView m) -> m ((a, LogDensity), (TraceView m))
+runRegenEffect act t = runStateT (runWriterT act) t
+
+coroutineRunRegenEffect :: (Monad m) => RegenType m a -> LogDensity -> (TraceView m) -> Coroutine (RequestingValue m) m ((a, LogDensity), (TraceView m))
+coroutineRunRegenEffect c d t = Coroutine act where
+    act = do
+      ((res, density), t') <- runRegenEffect (resume c) t
+      case res of
+        Right result -> return $ Right ((result, d `mappend` density), t')
+        Left susp -> return $ Left $ fmap (\c' -> coroutineRunRegenEffect c' (d `mappend` density) t') susp
+
+regenValue' :: (MonadRandom m) => Address -> RegenType m ()
 regenValue' a = do
   node <- lift (use $ nodes . hardix "Regenerating value for nonexistent node" a)
   case node of
@@ -326,17 +338,25 @@ regenValue' a = do
       lift (nodes . ix a . value .= Just v)
     (Extension _ exp e _) -> do
       t <- lift get
-      let t' = extend_trace_view t e
-          spring :: (Susp.Request Address (Value m) (RegenType m Address)) -> RegenType m (RegenType m Address)
-          spring = undefined
-          swap :: RegenEffect m (RegenType m a) -> RegenType m (RegenEffect m a)
-          swap = undefined
-          swap' :: RegenType m (RegenEffect m a) -> RegenEffect m (RegenType m a)
-          swap' = undefined
-          subregen :: RegenType m Address
-          subregen = eval' exp e
-      addr <- ((pogoStickM swap swap' spring subregen) :: (RegenType m (RegenEffect m Address)))
-      return ()
+      (v, density, new_trace) <- mapMonad (lift . lift) $ manage_subregen exp e t
+      lift $ tell density
+      lift $ put new_trace
+      -- TODO Update dependencies of the extension node
+      lift (nodes . ix a . value .= Just v)
+
+manage_subregen :: forall m. (MonadRandom m) => Exp m -> Env -> TraceView m -> Coroutine (RequestingValue m) m (Value m, LogDensity, TraceView m)
+manage_subregen exp e t = do
+  (((addr, inner_density), inner_t'), (density, t')) <- foldRunMC spring (mempty, t) subregen'
+  let v = fromJust "Subevaluation yielded no value" $ valueAt addr inner_t'
+  return (v, density, t') -- TODO What to do with the inner density?
+    where
+      inner_t = extend_trace_view t e
+      spring :: (LogDensity, TraceView m) -> (RequestingValue m (Coroutine (RequestingValue m) m ((Address, LogDensity), (TraceView m)))) -> Coroutine (RequestingValue m) m (Coroutine (RequestingValue m) m ((Address, LogDensity), (TraceView m)), (LogDensity, TraceView m))
+      spring = undefined
+      subregen :: RegenType m Address
+      subregen = eval' exp e
+      subregen' :: Coroutine (RequestingValue m) m ((Address, LogDensity), (TraceView m))
+      subregen' = coroutineRunRegenEffect subregen mempty inner_t
 
 lookupMaybeRequesting :: (MonadRandom m) => Address -> RegenType m (Value m)
 lookupMaybeRequesting a = do
