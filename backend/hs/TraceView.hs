@@ -329,6 +329,9 @@ coroutineRunRegenEffect c d t = Coroutine act where
         Right result -> return $ Right ((result, d `mappend` density), t')
         Left susp -> return $ Left $ fmap (\c' -> coroutineRunRegenEffect c' (d `mappend` density) t') susp
 
+regenNode' :: (MonadRandom m) => Address -> RegenType m (Value m)
+regenNode' = undefined
+
 regenValue' :: (MonadRandom m) => Address -> RegenType m ()
 regenValue' a = do
   node <- lift (use $ nodes . hardix "Regenerating value for nonexistent node" a)
@@ -351,8 +354,12 @@ manage_subregen exp e t = do
   return (v, density, t') -- TODO What to do with the inner density?
     where
       inner_t = extend_trace_view t e
-      spring :: (LogDensity, TraceView m) -> (RequestingValue m (Coroutine (RequestingValue m) m ((Address, LogDensity), (TraceView m)))) -> Coroutine (RequestingValue m) m (Coroutine (RequestingValue m) m ((Address, LogDensity), (TraceView m)), (LogDensity, TraceView m))
-      spring = undefined
+      spring :: (LogDensity, TraceView m) ->
+                (RequestingValue m (Coroutine (RequestingValue m) m ((Address, LogDensity), (TraceView m)))) ->
+                Coroutine (RequestingValue m) m (Coroutine (RequestingValue m) m ((Address, LogDensity), (TraceView m)), (LogDensity, TraceView m))
+      spring (d, t) (Susp.Request addr k) = do
+        ((v, d'), t') <- coroutineRunRegenEffect (regenNode' addr) d t
+        return (k v, (d', t'))
       subregen :: RegenType m Address
       subregen = eval' exp e
       subregen' :: Coroutine (RequestingValue m) m ((Address, LogDensity), (TraceView m))
