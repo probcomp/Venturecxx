@@ -222,14 +222,6 @@ type RequestingValue m = (Susp.Request Address (Value m))
 type RegenType m a = Coroutine (RequestingValue m) (RegenEffect m) a
 type SuspensionType m a = (Either (RequestingValue m (RegenType m a)) a)
 
-coroutineRunStateT :: (Monad m) => Coroutine (RequestingValue m) (StateT s m) a -> s -> Coroutine (RequestingValue m) m (a, s)
-coroutineRunStateT c state = Coroutine act where
-    act = do
-      (res, state') <- runStateT (resume c) state
-      case res of
-        Right result -> return $ Right (result, state')
-        Left susp -> return $ Left $ fmap (\c' -> coroutineRunStateT c' state') susp
-
 evalRequests :: (MonadRandom m) => SPAddress -> [SimulationRequest m] -> StateT (TraceView m) m [Address]
 evalRequests = undefined
 
