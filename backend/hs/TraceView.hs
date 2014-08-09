@@ -218,14 +218,17 @@ constrain = undefined
 
 type RegenEffect m = WriterT LogDensity (StateT (TraceView m) m)
 
-runRegenEffect :: RegenEffect m a -> (TraceView m) -> m ((a, LogDensity), (TraceView m))
+runRegenEffect :: WriterT w (StateT s m) a -> s -> m ((a, w), s)
 runRegenEffect act t = runStateT (runWriterT act) t
 
 type RequestingValue m = (Susp.Request Address (Value m))
 type RegenType m a = Coroutine (RequestingValue m) (RegenEffect m) a
 type SuspensionType m a = (Either (RequestingValue m (RegenType m a)) a)
 
-coroutineRunRegenEffect :: (Monad m) => RegenType m a -> LogDensity -> (TraceView m) -> Coroutine (RequestingValue m) m ((a, LogDensity), (TraceView m))
+coroutineRunRegenEffect
+  :: (Monad m, Functor s, Monoid a) =>
+     Coroutine s (WriterT a (StateT t m)) t1
+     -> a -> t -> Coroutine s m ((t1, a), t)
 coroutineRunRegenEffect c d t = Coroutine act where
     act = do
       ((res, density), t') <- runRegenEffect (resume c) t
