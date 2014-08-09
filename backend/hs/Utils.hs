@@ -10,7 +10,6 @@ import qualified Data.Set as S
 import Control.Lens
 import Control.Monad.Coroutine -- from cabal install monad-coroutine
 import Control.Monad.Morph
-import Control.Monad.Identity
 import Control.Monad.Trans.State.Lazy
 import Text.PrettyPrint -- presumably from cabal install pretty
 
@@ -90,27 +89,6 @@ instance (Pretty a) => Pretty (O.Set a) where
 instance (Pretty a) => Pretty (S.Set a) where
     pp as = brackets $ sep $ map pp $ S.toList as
 
-pogoStickM :: forall m1 m2 s x. (Monad m1, Monad m2)
-              => (m1 (m2 x) -> m2 (m1 x))
-                 -> (m2 (m1 x) -> m1 (m2 x))
-                 -> (s (Coroutine s m1 x) -> m2 (Coroutine s m1 x))
-                 -> Coroutine s m1 x
-                 -> m2 (m1 x)
-pogoStickM swap swap' spring c = swap $ resume c >>= either continue stop where
-    continue :: s (Coroutine s m1 x) -> m1 (m2 x)
-    continue suspended = swap' act where
-        act :: m2 (m1 x)
-        act = do c' <- spring suspended
-                 pogoStickM swap swap' spring c'
-    stop :: x -> m1 (m2 x)
-    stop = return . return
-
-foldRunM :: forall s m t a x. (Monad m, MonadTrans t) =>
-            (a -> s (Coroutine s (t m) x) -> m (a, (Coroutine s (t m) x))) ->
-            Coroutine s (t m) x ->
-            (t m) (a, x)
-foldRunM spring c = undefined
-
 -- Generalize foldRun to the case where the step function is itself a
 -- coroutine, over the same underlying monad.
 foldRunMC ::  forall s s2 m a x. (Monad m, Functor s2) =>
@@ -125,35 +103,3 @@ foldRunMC spring start c = do
     Left susp -> do
       (c', start') <- spring start susp
       foldRunMC spring start' c'
-
--- foldRunMC with a monad transformer.  In the case of recursive
--- regeneration, this achieves the effect of separating the weight log
--- and the TraceView changes between the inner and outer regen (the
--- outer log and changes travel through the value a in the spring
--- function, and the inner ones travel in the monad transformer t).
-foldRunMC1 :: forall s s2 m t a x. (Monad m, MonadTrans t, Functor s2, Monad (t m)) =>
-            (a -> s (Coroutine s (t m) x) -> (Coroutine s2 m) ((Coroutine s (t m) x), a)) ->
-            a ->
-            Coroutine s (t m) x ->
-            Coroutine s2 (t m) (x, a)
-foldRunMC1 spring start c = do
-  step <- lift $ resume c
-  case step of
-    Right result -> return (result, start)
-    Left susp -> do
-      (c', start') <- mapMonad lift $ spring start susp
-      foldRunMC1 spring start' c'
-
--- And now with *two* monad transformers
-foldRunMC2 :: forall s s2 m t1 t2 a x. (Monad m, MonadTrans t1, MonadTrans t2, Functor s2, Monad (t1 (t2 m)), Monad (t2 m)) =>
-            (a -> s (Coroutine s (t1 (t2 m)) x) -> (Coroutine s2 m) ((Coroutine s (t1 (t2 m)) x), a)) ->
-            a ->
-            Coroutine s (t1 (t2 m)) x ->
-            Coroutine s2 (t1 (t2 m)) (x, a)
-foldRunMC2 spring start c = do
-  step <- lift $ resume c
-  case step of
-    Right result -> return (result, start)
-    Left susp -> do
-      (c', start') <- mapMonad (lift . lift) $ spring start susp
-      foldRunMC2 spring start' c'
