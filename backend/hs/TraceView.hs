@@ -185,8 +185,8 @@ compoundSP = undefined
 responsesAt :: Address -> Simple Lens (TraceView m) [Address]
 responsesAt = undefined
 
-extend_trace_view :: (TraceView m) -> Env -> (TraceView m)
-extend_trace_view p _ = empty { _parent_view = Just p }
+extend_trace_view :: (TraceView m) -> (TraceView m)
+extend_trace_view p = empty { _parent_view = Just p }
 
 ----------------------------------------------------------------------
 -- Advanced Trace Manipulations                                     --
@@ -344,7 +344,7 @@ manage_subregen exp e t = do
   let v = fromJust "Subevaluation yielded no value" $ valueAt addr inner_t'
   return (v, density, requested, t') -- TODO What to do with the inner density?
     where
-      inner_t = extend_trace_view t e
+      inner_t = extend_trace_view t
       subregen :: RegenType m Address
       subregen = eval exp e
       subregen' :: Coroutine (RequestingValue m) m ((Address, LogDensity), (TraceView m))
@@ -416,7 +416,7 @@ exec (Infer _) = error "Infer should be handled by exec'"
 exec' :: (MonadRandom m) => Statement m -> Coroutine (RequestingValue m) (WriterT LogDensity (StateT ((TraceView m), Env) m)) ()
 exec' (Infer prog) = do
   (t, e) <- get
-  let t' = extend_trace_view t e
+  let t' = extend_trace_view t
   let inf_exp = App prog [Datum $ ReifiedTraceView t]
   -- Is the view t itself fully regenerated here?  Do I need to be
   -- able to intercept regeneration requests?  Do I need to be able to
