@@ -127,6 +127,9 @@ def expand(expr):
       return macro.expand(expr)
   raise Exception("Could not match " + str(expr))
 
+def desugar_expression(expr):
+  return expand(expr).desugar()
+
 def testLiteral():
   sugar = expand('0')
   print sugar.desugar()
