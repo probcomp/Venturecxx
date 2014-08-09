@@ -25,7 +25,6 @@ import qualified Data.Set as S
 
 import Utils
 import Trace (SP, SPRecord)
-import Engine (runOn, execOn)
 
 ----------------------------------------------------------------------
 -- Small objects                                                    --
@@ -387,24 +386,6 @@ handle_regeneration_request (d, as, t) (Susp.Request addr k) = do
 -- only happen during resimulation of the enclosed view caused by
 -- inference on the enclosing view.  So I choose one node.
 
-exec :: (MonadRandom m) => Statement m -> StateT ((TraceView m), Env) m ()
-exec (Assume _ _) = error "Infer should be handled by exec'"
-exec (Observe exp v) = do
-  e <- gets snd
-  (address, density) <- _1 `runOn` (runWriterT $ evalNoCoroutine exp e)
-  -- TODO Carry the density
-  -- TODO What should happen if one observes a value that had
-  -- (deterministic) consequences, e.g.
-  -- (assume x (normal 1 1))
-  -- (assume y (+ x 1))
-  -- (observe x 1)
-  -- After this, the trace is presumably in an inconsistent state,
-  -- from which it in fact has no way to recover.  Venturecxx invokes
-  -- a complicated operation to fix this, which I should probably
-  -- port.
-  _1 `execOn` (constrain address v)
-exec (Infer _) = error "Infer should be handled by exec'"
-
 exec' :: (MonadRandom m) => Statement m -> Coroutine (RequestingValue m) (WriterT LogDensity (StateT ((TraceView m), Env) m)) ()
 exec' (Assume var exp) = do
   -- TODO This implementation of assume does not permit recursive
@@ -416,6 +397,21 @@ exec' (Assume var exp) = do
   _1 .= t'
   _2 %= Frame (M.fromList [(var, address)])
   return ()
+exec' (Observe exp v) = do
+  (t, e) <- get
+  ((address, density), t') <- mapMonad (lift . lift) $ coroutineRunWS (eval exp e) mempty t
+  lift $ tell density
+  _1 .= t'
+  -- TODO What should happen if one observes a value that had
+  -- (deterministic) consequences, e.g.
+  -- (assume x (normal 1 1))
+  -- (assume y (+ x 1))
+  -- (observe x 1)
+  -- After this, the trace is presumably in an inconsistent state,
+  -- from which it in fact has no way to recover.  Venturecxx invokes
+  -- a complicated operation to fix this, which I should probably
+  -- port.
+  lift $ zoom _1 (constrain address v)
 exec' (Infer prog) = do
   (t, e) <- get
   let t' = extend_trace_view t
@@ -437,4 +433,3 @@ exec' (Infer prog) = do
   let ReifiedTraceView t''' = fromJust "eval returned empty node" $ valueOf $ fromJust "eval returned invalid address" $ lookupNode addr t''
   -- TODO What do I do with the density coming up from the bottom, if any?
   _1 .= t'''
-exec' s = lift $ lift $ exec s
