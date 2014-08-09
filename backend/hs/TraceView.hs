@@ -244,7 +244,7 @@ eval (Var n) e = do
                  Nothing -> error $ "Unbound variable " ++ show n
                  (Just a) -> Reference Nothing a
   addr <- state $ addFreshNode answer
-  _ <- regenNode' addr
+  _ <- regenNode addr
   return addr
 eval (Lam vs exp) e = do
   spAddr <- state $ addFreshSP $ compoundSP vs exp e
@@ -253,15 +253,15 @@ eval (App op args) env = do
   op' <- eval op env
   args' <- sequence $ map (flip eval env) args
   addr <- state $ addFreshNode (Request Nothing Nothing op' args')
-  _ <- regenNode' addr
+  _ <- regenNode addr
   reqAddrs <- gets $ fulfilments addr
   addr' <- state $ addFreshNode (Output Nothing addr op' args' reqAddrs)
   nodes . ix addr . out_node .= Just addr'
-  _ <- regenNode' addr'
+  _ <- regenNode addr'
   return addr'
 eval (Ext exp) e = do
   addr <- state $ addFreshNode (Extension Nothing exp e [])
-  _ <- regenNode' addr
+  _ <- regenNode addr
   return addr
 -- TODO If begin is really supposed to splice into the enclosing
 -- environment, then eval must be able to modify the environment it is
@@ -297,13 +297,13 @@ regenValueNoCoroutine a = lift (do -- Should be able to produce weight in princi
       return v
     (Extension _ _ _ _) -> error "Extensions are handled by regenValue directly")
 
-regenNode' :: (MonadRandom m) => Address -> RegenType m (Value m)
-regenNode' a = do
+regenNode :: (MonadRandom m) => Address -> RegenType m (Value m)
+regenNode a = do
   t <- get
   case lookupNode a t of
     (Just node) -> if isRegenerated node then return $ fromJust "foo" $ valueOf node
                    else do
-                     mapM_ regenNode' (parentAddrs node) -- Note that this may change the node at address a
+                     mapM_ regenNode (parentAddrs node) -- Note that this may change the node at address a
                      regenValue a
     Nothing -> Susp.request a
 
@@ -351,7 +351,7 @@ handle_regeneration_request :: (MonadRandom m) => (LogDensity, [Address], TraceV
                                                                           ((Address, LogDensity), (TraceView m))
                                                                , (LogDensity, [Address], TraceView m))
 handle_regeneration_request (d, as, t) (Susp.Request addr k) = do
-  ((v, d'), t') <- coroutineRunWS (regenNode' addr) d t
+  ((v, d'), t') <- coroutineRunWS (regenNode addr) d t
   return (k v, (d', (addr:as), t'))
 
 -- Idea: Implement a RandomDB version of this, with restricted infer.
