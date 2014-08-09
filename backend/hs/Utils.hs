@@ -118,7 +118,13 @@ foldRunMC ::  forall s s2 m a x. (Monad m, Functor s2) =>
             a ->
             Coroutine s m x ->
             Coroutine s2 m (x, a)
-foldRunMC = undefined
+foldRunMC spring start c = do
+  step <- lift $ resume c
+  case step of
+    Right result -> return (result, start)
+    Left susp -> do
+      (c', start') <- spring start susp
+      foldRunMC spring start' c'
 
 -- foldRunMC with a monad transformer.  In the case of recursive
 -- regeneration, this achieves the effect of separating the weight log
