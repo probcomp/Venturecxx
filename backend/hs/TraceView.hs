@@ -219,22 +219,22 @@ constrain = undefined
 type RegenEffect m = WriterT LogDensity (StateT (TraceView m) m)
 
 runWS :: WriterT w (StateT s m) a -> s -> m ((a, w), s)
-runWS act t = runStateT (runWriterT act) t
+runWS act state = runStateT (runWriterT act) state
 
 type RequestingValue m = (Susp.Request Address (Value m))
 type RegenType m a = Coroutine (RequestingValue m) (RegenEffect m) a
 type SuspensionType m a = (Either (RequestingValue m (RegenType m a)) a)
 
 coroutineRunWS
-  :: (Monad m, Functor s, Monoid a) =>
-     Coroutine s (WriterT a (StateT t m)) t1
-     -> a -> t -> Coroutine s m ((t1, a), t)
-coroutineRunWS c d t = Coroutine act where
+  :: (Monad m, Functor s, Monoid w) =>
+     Coroutine s (WriterT w (StateT state m)) a
+     -> w -> state -> Coroutine s m ((a, w), state)
+coroutineRunWS c log state = Coroutine act where
     act = do
-      ((res, density), t') <- runWS (resume c) t
+      ((res, log'), state') <- runWS (resume c) state
       case res of
-        Right result -> return $ Right ((result, d `mappend` density), t')
-        Left susp -> return $ Left $ fmap (\c' -> coroutineRunWS c' (d `mappend` density) t') susp
+        Right result -> return $ Right ((result, log `mappend` log'), state')
+        Left susp -> return $ Left $ fmap (\c' -> coroutineRunWS c' (log `mappend` log') state') susp
 
 coroutineRunStateT :: (Monad m) => Coroutine (RequestingValue m) (StateT s m) a -> s -> Coroutine (RequestingValue m) m (a, s)
 coroutineRunStateT c state = Coroutine act where
