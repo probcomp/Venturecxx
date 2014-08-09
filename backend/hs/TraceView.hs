@@ -186,7 +186,7 @@ responsesAt :: Address -> Simple Lens (TraceView m) [Address]
 responsesAt = undefined
 
 extend_trace_view :: (TraceView m) -> Env -> (TraceView m)
-extend_trace_view p e = empty { _parent_view = Just p }
+extend_trace_view p _ = empty { _parent_view = Just p }
 
 ----------------------------------------------------------------------
 -- Advanced Trace Manipulations                                     --
@@ -276,7 +276,7 @@ evalNoCoroutine (Ext exp) e = do
   addr <- state $ addFreshNode (Extension Nothing exp e [])
   _ <- regenNode addr
   return addr
-evalNoCoroutine (Body stmts exp) e = error "Body handled by directly eval"
+evalNoCoroutine (Body _ _) _ = error "Body handled by directly eval"
 
 regenNode :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (TraceView m) m) (Value m)
 regenNode a = do
