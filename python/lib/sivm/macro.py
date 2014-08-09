@@ -115,7 +115,7 @@ def arg0(keyword):
 
 lambdaMacro = Macro(arg0("lambda"), PatternExpand(['make_csp', ['quote', (1,)], ['quote', (2,)]]))
 ifMacro = Macro(arg0("if"), PatternExpand([['biplex', (1,), ['lambda', [], (2,)], ['lambda', [], (3,)]]]))
-andMacro = Macro(arg0("and"), PatternExpand(['if', (1,), (2,), v.boolean(True)]))
+andMacro = Macro(arg0("and"), PatternExpand(['if', (1,), (2,), v.boolean(False)]))
 orMacro = Macro(arg0("or"), PatternExpand(['if', (1,), v.boolean(True), (2,)]))
 letMacro = Macro(arg0("let"), LetExpand)
 
