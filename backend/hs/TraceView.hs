@@ -388,15 +388,7 @@ handle_regeneration_request (d, as, t) (Susp.Request addr k) = do
 -- inference on the enclosing view.  So I choose one node.
 
 exec :: (MonadRandom m) => Statement m -> StateT ((TraceView m), Env) m ()
-exec (Assume var exp) = do
-  -- TODO This implementation of assume does not permit recursive
-  -- functions, because of insufficient indirection to the
-  -- environment.
-  e <- gets snd
-  (address, density) <- _1 `runOn` (runWriterT $ evalNoCoroutine exp e)
-  -- TODO Carry the density
-  _2 %= Frame (M.fromList [(var, address)])
-  return ()
+exec (Assume _ _) = error "Infer should be handled by exec'"
 exec (Observe exp v) = do
   e <- gets snd
   (address, density) <- _1 `runOn` (runWriterT $ evalNoCoroutine exp e)
@@ -414,6 +406,16 @@ exec (Observe exp v) = do
 exec (Infer _) = error "Infer should be handled by exec'"
 
 exec' :: (MonadRandom m) => Statement m -> Coroutine (RequestingValue m) (WriterT LogDensity (StateT ((TraceView m), Env) m)) ()
+exec' (Assume var exp) = do
+  -- TODO This implementation of assume does not permit recursive
+  -- functions, because of insufficient indirection to the
+  -- environment.
+  (t, e) <- get
+  ((address, density), t') <- mapMonad (lift . lift) $ coroutineRunWS (eval exp e) mempty t
+  lift $ tell density
+  _1 .= t'
+  _2 %= Frame (M.fromList [(var, address)])
+  return ()
 exec' (Infer prog) = do
   (t, e) <- get
   let t' = extend_trace_view t
