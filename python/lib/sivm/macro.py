@@ -56,7 +56,7 @@ def traverse(expr):
     for i, e in enumerate(expr):
       for j, f in traverse(e):
         yield [i] + j, f
-  yield [], expr
+  else: yield [], expr
 
 def index(i, expr):
   """Index into an expression."""
@@ -80,6 +80,41 @@ def PatternExpand(pattern):
     return SubSugar(expand(sub), inverse)
   
   return expander
+
+
+def bind(pattern, exp):
+  if isinstance(pattern, list):
+    bindings = {}
+    for i, p in enumerate(pattern):
+      bindings.update(bind(p, exp[i]))
+    return bindings
+  return {pattern: exp}
+
+def sub(bindings, template):
+  if isinstance(template, list):
+    return [sub(bindings, t) for t in template]
+  if template in bindings:
+    return bindings[template]
+  return template
+
+class SyntaxRule(Macro):
+  """My interpretation of scheme's define-syntax-rule."""
+  def __init__(self, pattern, template):
+    self.name = pattern[0]
+    self.pattern = pattern
+    self.template = template
+    
+    patternMap = {sym: index for index, sym in traverse(pattern) if isinstance(sym, str)}
+    self.inverse = [(index, patternMap[sym]) for index, sym in traverse(template) if sym in patternMap]
+  
+  def applies(self, exp):
+    return isinstance(exp, list) and len(exp) > 0 and exp[0] == self.name
+  
+  def expand(self, exp):
+    bindings = bind(self.pattern, exp)
+    subbed = sub(bindings, self.template)
+    expanded = expand(subbed)
+    return SubSugar(expanded, self.inverse)
 
 def prefix(l1, l2):
   if len(l1) > len(l2):
@@ -113,7 +148,7 @@ def arg0(keyword):
     return isinstance(expr, list) and len(expr) > 0 and expr[0] == keyword
   return applies
 
-lambdaMacro = Macro(arg0("lambda"), PatternExpand(['make_csp', ['quote', (1,)], ['quote', (2,)]]))
+lambdaMacro = SyntaxRule(['lambda', 'args', 'body'], ['make_csp', ['quote', 'args'], ['quote', 'body']])
 ifMacro = Macro(arg0("if"), PatternExpand([['biplex', (1,), ['lambda', [], (2,)], ['lambda', [], (3,)]]]))
 andMacro = Macro(arg0("and"), PatternExpand(['if', (1,), (2,), v.boolean(False)]))
 orMacro = Macro(arg0("or"), PatternExpand(['if', (1,), v.boolean(True), (2,)]))
