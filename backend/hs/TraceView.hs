@@ -273,14 +273,6 @@ eval (Body stmts exp) e = do
   put t'
   eval exp e'
 
-regenNode :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (TraceView m) m) (Value m)
-regenNode a = do
-  node <- use $ nodes . hardix "Regenerating a nonexistent node" a
-  if isRegenerated node then return $ fromJust "foo" $ valueOf node
-  else do
-    mapM_ regenNode (parentAddrs node) -- Note that this may change the node at address a
-    regenValueNoCoroutine a
-
 regenValueNoCoroutine :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (TraceView m) m) (Value m)
 regenValueNoCoroutine a = lift (do -- Should be able to produce weight in principle, but current SPs do not.
   node <- use $ nodes . hardix "Regenerating value for nonexistent node" a
