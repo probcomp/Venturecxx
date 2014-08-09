@@ -344,12 +344,13 @@ lookupMaybeRequesting a = do
     (Just node') -> return $ fromJust "Regenerating value for a reference with non-regenerated referent" $ node' ^. value
     Nothing -> Susp.request a
 
-handle_regeneration_request :: (MonadRandom m) => (LogDensity, [Address], TraceView m) ->
-                               (RequestingValue m (Coroutine (RequestingValue m) m
-                                                             ((Address, LogDensity), (TraceView m)))) ->
-                               Coroutine (RequestingValue m) m (Coroutine (RequestingValue m) m
-                                                                          ((Address, LogDensity), (TraceView m))
-                                                               , (LogDensity, [Address], TraceView m))
+handle_regeneration_request
+  :: (MonadRandom m) => (LogDensity, [Address], TraceView m) ->
+     (RequestingValue m (Coroutine (RequestingValue m) m
+                         ((Address, LogDensity), (TraceView m)))) ->
+     Coroutine (RequestingValue m) m (Coroutine (RequestingValue m) m
+                                      ((Address, LogDensity), (TraceView m))
+                                     , (LogDensity, [Address], TraceView m))
 handle_regeneration_request (d, as, t) (Susp.Request addr k) = do
   ((v, d'), t') <- coroutineRunWS (regenNode addr) d t
   return (k v, (d', (addr:as), t'))
