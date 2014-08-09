@@ -1,5 +1,8 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE UndecidableInstances #-} -- Like in the mtl
 
 module Utils (module Utils, module Unique) where
 
@@ -11,6 +14,7 @@ import qualified Data.Set as S
 import Control.Lens
 import Control.Monad.Coroutine -- from cabal install monad-coroutine
 import Control.Monad.Morph
+import qualified Control.Monad.State.Class as Cl
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Writer.Strict
 import Text.PrettyPrint -- presumably from cabal install pretty
@@ -119,3 +123,7 @@ coroutineRunWS c log state = Coroutine act where
       case res of
         Right result -> return $ Right ((result, log `mappend` log'), state')
         Left susp -> return $ Left $ fmap (\c' -> coroutineRunWS c' (log `mappend` log') state') susp
+
+instance (Functor s, Cl.MonadState state m) => Cl.MonadState state (Coroutine s m) where
+    get = lift Cl.get
+    put = lift . Cl.put

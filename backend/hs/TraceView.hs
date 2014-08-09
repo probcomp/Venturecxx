@@ -243,10 +243,10 @@ eval :: (MonadRandom m) => Exp m -> Env -> RegenType m Address
 -- environment, then eval must be able to modify the environment it is
 -- running in.
 eval (Body stmts exp) e = do
-  t <- lift get
+  t <- get
   ((_, d), (t', e')) <- mapMonad (lift . lift) $ coroutineRunWS (mapM_ exec' stmts) mempty (t, e)
   lift $ tell d
-  lift $ put t'
+  put t'
   eval exp e'
 eval exp env = lift $ evalNoCoroutine exp env
 
@@ -312,7 +312,7 @@ regenValueNoCoroutine a = lift (do -- Should be able to produce weight in princi
 
 regenNode' :: (MonadRandom m) => Address -> RegenType m (Value m)
 regenNode' a = do
-  t <- lift get
+  t <- get
   case lookupNode a t of
     (Just node) -> if isRegenerated node then return $ fromJust "foo" $ valueOf node
                    else do
@@ -329,10 +329,10 @@ regenValue a = do
       lift (nodes . ix a . value .= Just v)
       return v
     (Extension _ exp e _) -> do
-      t <- lift get
+      t <- get
       (v, density, requested, new_trace) <- mapMonad (lift . lift) $ manage_subregen exp e t
       lift $ tell density
-      lift $ put new_trace
+      put new_trace
       lift (nodes . ix a . undefined .= reverse requested)
       lift (nodes . ix a . value .= Just v)
       return v
@@ -352,7 +352,7 @@ manage_subregen exp e t = do
 
 lookupMaybeRequesting :: (MonadRandom m) => Address -> RegenType m (Value m)
 lookupMaybeRequesting a = do
-  t <- lift get
+  t <- get
   case lookupNode a t of
     (Just node') -> return $ fromJust "Regenerating value for a reference with non-regenerated referent" $ node' ^. value
     Nothing -> Susp.request a
@@ -415,7 +415,7 @@ exec (Infer _) = error "Infer should be handled by exec'"
 
 exec' :: (MonadRandom m) => Statement m -> Coroutine (RequestingValue m) (WriterT LogDensity (StateT ((TraceView m), Env) m)) ()
 exec' (Infer prog) = do
-  (t, e) <- lift get
+  (t, e) <- get
   let t' = extend_trace_view t e
   let inf_exp = App prog [Datum $ ReifiedTraceView t]
   -- Is the view t itself fully regenerated here?  Do I need to be
@@ -434,5 +434,5 @@ exec' (Infer prog) = do
   ((addr, d), t'') <- mapMonad (lift . lift) $ coroutineRunWS (eval inf_exp e) mempty t'
   let ReifiedTraceView t''' = fromJust "eval returned empty node" $ valueOf $ fromJust "eval returned invalid address" $ lookupNode addr t''
   -- TODO What do I do with the density coming up from the bottom, if any?
-  lift (_1 .= t''')
+  _1 .= t'''
 exec' s = lift $ lift $ exec s
