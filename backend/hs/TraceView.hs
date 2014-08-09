@@ -233,6 +233,13 @@ coroutineRunRegenEffect c d t = Coroutine act where
         Right result -> return $ Right ((result, d `mappend` density), t')
         Left susp -> return $ Left $ fmap (\c' -> coroutineRunRegenEffect c' (d `mappend` density) t') susp
 
+coroutineRunStateT :: (Monad m) => Coroutine (RequestingValue m) (StateT s m) a -> s -> Coroutine (RequestingValue m) m (a, s)
+coroutineRunStateT c state = Coroutine act where
+    act = do
+      (res, state') <- runStateT (resume c) state
+      case res of
+        Right result -> return $ Right (result, state')
+        Left susp -> return $ Left $ fmap (\c' -> coroutineRunStateT c' state') susp
 
 evalRequests :: (MonadRandom m) => SPAddress -> [SimulationRequest m] -> StateT (TraceView m) m [Address]
 evalRequests = undefined
@@ -250,6 +257,14 @@ evalRequests = undefined
 -- Here I choose to extend at eval.
 -- Returns the address of the fresh node holding the result of the
 -- evaluation.
+eval :: (MonadRandom m) => Exp m -> Env -> RegenType m Address
+eval (Body stmts exp) e = do
+  t <- lift get
+  (_, (t', e')) <- mapMonad (lift . lift) $ coroutineRunStateT (mapM_ exec' stmts) (t, e)
+  lift $ put t'
+  eval exp e'
+eval exp env = lift $ evalNoCoroutine exp env
+
 evalNoCoroutine :: (MonadRandom m) => Exp m -> Env -> RegenEffect m Address
 evalNoCoroutine (Datum v) _ = state $ addFreshNode $ Constant v
 evalNoCoroutine (Var n) e = do
@@ -279,11 +294,7 @@ evalNoCoroutine (Ext exp) e = do
 -- TODO If begin is really supposed to splice into the enclosing
 -- environment, then eval must be able to modify the environment it is
 -- running in.
-evalNoCoroutine (Body stmts exp) e = do
-  t <- get
-  (t', e') <- lift $ lift $ execStateT (mapM_ exec stmts) (t, e)
-  put t'
-  evalNoCoroutine exp e'
+evalNoCoroutine (Body stmts exp) e = error "Body handled by directly eval"
 
 regenNode :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (TraceView m) m) (Value m)
 regenNode a = do
@@ -373,9 +384,6 @@ handle_regeneration_request :: (MonadRandom m) => (LogDensity, [Address], TraceV
 handle_regeneration_request (d, as, t) (Susp.Request addr k) = do
   ((v, d'), t') <- coroutineRunRegenEffect (regenNode' addr) d t
   return (k v, (d', (addr:as), t'))
-
-eval :: (MonadRandom m) => Exp m -> Env -> RegenType m Address
-eval = undefined
 
 -- Idea: Implement a RandomDB version of this, with restricted infer.
 -- - A TraceFrame has a map from addresses to values and a parent pointer
