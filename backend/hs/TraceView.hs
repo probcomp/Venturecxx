@@ -218,23 +218,23 @@ constrain = undefined
 
 type RegenEffect m = WriterT LogDensity (StateT (TraceView m) m)
 
-runRegenEffect :: WriterT w (StateT s m) a -> s -> m ((a, w), s)
-runRegenEffect act t = runStateT (runWriterT act) t
+runWS :: WriterT w (StateT s m) a -> s -> m ((a, w), s)
+runWS act t = runStateT (runWriterT act) t
 
 type RequestingValue m = (Susp.Request Address (Value m))
 type RegenType m a = Coroutine (RequestingValue m) (RegenEffect m) a
 type SuspensionType m a = (Either (RequestingValue m (RegenType m a)) a)
 
-coroutineRunRegenEffect
+coroutineRunWS
   :: (Monad m, Functor s, Monoid a) =>
      Coroutine s (WriterT a (StateT t m)) t1
      -> a -> t -> Coroutine s m ((t1, a), t)
-coroutineRunRegenEffect c d t = Coroutine act where
+coroutineRunWS c d t = Coroutine act where
     act = do
-      ((res, density), t') <- runRegenEffect (resume c) t
+      ((res, density), t') <- runWS (resume c) t
       case res of
         Right result -> return $ Right ((result, d `mappend` density), t')
-        Left susp -> return $ Left $ fmap (\c' -> coroutineRunRegenEffect c' (d `mappend` density) t') susp
+        Left susp -> return $ Left $ fmap (\c' -> coroutineRunWS c' (d `mappend` density) t') susp
 
 coroutineRunStateT :: (Monad m) => Coroutine (RequestingValue m) (StateT s m) a -> s -> Coroutine (RequestingValue m) m (a, s)
 coroutineRunStateT c state = Coroutine act where
@@ -266,7 +266,7 @@ eval :: (MonadRandom m) => Exp m -> Env -> RegenType m Address
 -- running in.
 eval (Body stmts exp) e = do
   t <- lift get
-  ((_, d), (t', e')) <- mapMonad (lift . lift) $ coroutineRunRegenEffect (mapM_ exec' stmts) mempty (t, e)
+  ((_, d), (t', e')) <- mapMonad (lift . lift) $ coroutineRunWS (mapM_ exec' stmts) mempty (t, e)
   lift $ tell d
   lift $ put t'
   eval exp e'
@@ -370,7 +370,7 @@ manage_subregen exp e t = do
       subregen :: RegenType m Address
       subregen = eval exp e
       subregen' :: Coroutine (RequestingValue m) m ((Address, LogDensity), (TraceView m))
-      subregen' = coroutineRunRegenEffect subregen mempty inner_t
+      subregen' = coroutineRunWS subregen mempty inner_t
 
 lookupMaybeRequesting :: (MonadRandom m) => Address -> RegenType m (Value m)
 lookupMaybeRequesting a = do
@@ -386,7 +386,7 @@ handle_regeneration_request :: (MonadRandom m) => (LogDensity, [Address], TraceV
                                                                           ((Address, LogDensity), (TraceView m))
                                                                , (LogDensity, [Address], TraceView m))
 handle_regeneration_request (d, as, t) (Susp.Request addr k) = do
-  ((v, d'), t') <- coroutineRunRegenEffect (regenNode' addr) d t
+  ((v, d'), t') <- coroutineRunWS (regenNode' addr) d t
   return (k v, (d', (addr:as), t'))
 
 -- Idea: Implement a RandomDB version of this, with restricted infer.
@@ -453,7 +453,7 @@ exec' (Infer prog) = do
   -- Note: if the reified trace can be under-regenerated, then SPs
   -- need to be able to suspend themselves in order to request further
   -- regeneration.
-  ((addr, d), t'') <- mapMonad (lift . lift) $ coroutineRunRegenEffect (eval inf_exp e) mempty t'
+  ((addr, d), t'') <- mapMonad (lift . lift) $ coroutineRunWS (eval inf_exp e) mempty t'
   let ReifiedTraceView t''' = fromJust "eval returned empty node" $ valueOf $ fromJust "eval returned invalid address" $ lookupNode addr t''
   -- TODO What do I do with the density coming up from the bottom, if any?
   lift (_1 .= t''')
