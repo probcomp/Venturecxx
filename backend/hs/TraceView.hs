@@ -266,7 +266,8 @@ eval :: (MonadRandom m) => Exp m -> Env -> RegenType m Address
 -- running in.
 eval (Body stmts exp) e = do
   t <- lift get
-  (_, (t', e')) <- mapMonad (lift . lift) $ coroutineRunStateT (mapM_ exec' stmts) (t, e)
+  ((_, d), (t', e')) <- mapMonad (lift . lift) $ coroutineRunRegenEffect (mapM_ exec' stmts) mempty (t, e)
+  lift $ tell d
   lift $ put t'
   eval exp e'
 eval exp env = lift $ evalNoCoroutine exp env
@@ -434,7 +435,7 @@ exec (Observe exp v) = do
   _1 `execOn` (constrain address v)
 exec (Infer _) = error "Infer should be handled by exec'"
 
-exec' :: (MonadRandom m) => Statement m -> Coroutine (RequestingValue m) (StateT ((TraceView m), Env) m) ()
+exec' :: (MonadRandom m) => Statement m -> Coroutine (RequestingValue m) (WriterT LogDensity (StateT ((TraceView m), Env) m)) ()
 exec' (Infer prog) = do
   (t, e) <- lift get
   let t' = extend_trace_view t e
@@ -452,8 +453,8 @@ exec' (Infer prog) = do
   -- Note: if the reified trace can be under-regenerated, then SPs
   -- need to be able to suspend themselves in order to request further
   -- regeneration.
-  ((addr, d), t'') <- mapMonad lift $ coroutineRunRegenEffect (eval inf_exp e) mempty t'
+  ((addr, d), t'') <- mapMonad (lift . lift) $ coroutineRunRegenEffect (eval inf_exp e) mempty t'
   let ReifiedTraceView t''' = fromJust "eval returned empty node" $ valueOf $ fromJust "eval returned invalid address" $ lookupNode addr t''
   -- TODO What do I do with the density coming up from the bottom, if any?
   lift (_1 .= t''')
-exec' s = lift $ exec s
+exec' s = lift $ lift $ exec s
