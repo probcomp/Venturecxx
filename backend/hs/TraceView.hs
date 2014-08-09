@@ -243,7 +243,7 @@ eval :: (MonadRandom m) => Exp m -> Env -> RegenType m Address
 -- running in.
 eval (Body stmts exp) e = do
   t <- get
-  ((_, d), (t', e')) <- mapMonad (lift . lift) $ coroutineRunWS (mapM_ exec' stmts) mempty (t, e)
+  ((_, d), (t', e')) <- mapMonad (lift . lift) $ coroutineRunWS (mapM_ exec stmts) mempty (t, e)
   lift $ tell d
   put t'
   eval exp e'
@@ -386,8 +386,8 @@ handle_regeneration_request (d, as, t) (Susp.Request addr k) = do
 -- only happen during resimulation of the enclosed view caused by
 -- inference on the enclosing view.  So I choose one node.
 
-exec' :: (MonadRandom m) => Statement m -> Coroutine (RequestingValue m) (WriterT LogDensity (StateT ((TraceView m), Env) m)) ()
-exec' (Assume var exp) = do
+exec :: (MonadRandom m) => Statement m -> Coroutine (RequestingValue m) (WriterT LogDensity (StateT ((TraceView m), Env) m)) ()
+exec (Assume var exp) = do
   -- TODO This implementation of assume does not permit recursive
   -- functions, because of insufficient indirection to the
   -- environment.
@@ -397,7 +397,7 @@ exec' (Assume var exp) = do
   _1 .= t'
   _2 %= Frame (M.fromList [(var, address)])
   return ()
-exec' (Observe exp v) = do
+exec (Observe exp v) = do
   (t, e) <- get
   ((address, density), t') <- mapMonad (lift . lift) $ coroutineRunWS (eval exp e) mempty t
   lift $ tell density
@@ -412,14 +412,14 @@ exec' (Observe exp v) = do
   -- a complicated operation to fix this, which I should probably
   -- port.
   lift $ zoom _1 (constrain address v)
-exec' (Infer prog) = do
+exec (Infer prog) = do
   (t, e) <- get
   let t' = extend_trace_view t
   let inf_exp = App prog [Datum $ ReifiedTraceView t]
   -- Is the view t itself fully regenerated here?  Do I need to be
   -- able to intercept regeneration requests?  Do I need to be able to
   -- update the reified view!?
-  -- Can exec' ever be called inside a regen' without an intervening
+  -- Can exec ever be called inside a regen' without an intervening
   -- extend?  I think so.  If that is the case, then it may happen
   -- that some nodes in the current view are not yet regenerated.  If
   -- that, in turn, is the case, then the enclosed eval of the
