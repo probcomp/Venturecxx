@@ -258,6 +258,9 @@ evalRequests = undefined
 -- Returns the address of the fresh node holding the result of the
 -- evaluation.
 eval :: (MonadRandom m) => Exp m -> Env -> RegenType m Address
+-- TODO If begin is really supposed to splice into the enclosing
+-- environment, then eval must be able to modify the environment it is
+-- running in.
 eval (Body stmts exp) e = do
   t <- lift get
   (_, (t', e')) <- mapMonad (lift . lift) $ coroutineRunStateT (mapM_ exec' stmts) (t, e)
@@ -291,9 +294,6 @@ evalNoCoroutine (Ext exp) e = do
   addr <- state $ addFreshNode (Extension Nothing exp e [])
   _ <- regenNode addr
   return addr
--- TODO If begin is really supposed to splice into the enclosing
--- environment, then eval must be able to modify the environment it is
--- running in.
 evalNoCoroutine (Body stmts exp) e = error "Body handled by directly eval"
 
 regenNode :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (TraceView m) m) (Value m)
