@@ -326,15 +326,15 @@ regenValue a = do
   case node of
     (Reference _ a') -> do
       v <- lookupMaybeRequesting a'
-      lift (nodes . ix a . value .= Just v)
+      nodes . ix a . value .= Just v
       return v
     (Extension _ exp e _) -> do
       t <- get
       (v, density, requested, new_trace) <- mapMonad (lift . lift) $ manage_subregen exp e t
       lift $ tell density
       put new_trace
-      lift (nodes . ix a . undefined .= reverse requested)
-      lift (nodes . ix a . value .= Just v)
+      nodes . ix a . undefined .= reverse requested
+      nodes . ix a . value .= Just v
       return v
     _ -> lift $ regenValueNoCoroutine a
 
