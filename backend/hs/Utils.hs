@@ -5,12 +5,14 @@ module Utils (module Utils, module Unique) where
 
 import Debug.Trace
 import Data.List (find)
+import Data.Monoid
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Control.Lens
 import Control.Monad.Coroutine -- from cabal install monad-coroutine
 import Control.Monad.Morph
 import Control.Monad.Trans.State.Lazy
+import Control.Monad.Trans.Writer.Strict
 import Text.PrettyPrint -- presumably from cabal install pretty
 
 import Unique
@@ -89,6 +91,9 @@ instance (Pretty a) => Pretty (O.Set a) where
 instance (Pretty a) => Pretty (S.Set a) where
     pp as = brackets $ sep $ map pp $ S.toList as
 
+runWS :: WriterT w (StateT s m) a -> s -> m ((a, w), s)
+runWS act state = runStateT (runWriterT act) state
+
 -- Generalize foldRun to the case where the step function is itself a
 -- coroutine, over the same underlying monad.
 foldRunMC ::  forall s s2 m a x. (Monad m, Functor s2) =>
@@ -103,3 +108,14 @@ foldRunMC spring start c = do
     Left susp -> do
       (c', start') <- spring start susp
       foldRunMC spring start' c'
+
+coroutineRunWS
+  :: (Monad m, Functor s, Monoid w) =>
+     Coroutine s (WriterT w (StateT state m)) a
+     -> w -> state -> Coroutine s m ((a, w), state)
+coroutineRunWS c log state = Coroutine act where
+    act = do
+      ((res, log'), state') <- runWS (resume c) state
+      case res of
+        Right result -> return $ Right ((result, log `mappend` log'), state')
+        Left susp -> return $ Left $ fmap (\c' -> coroutineRunWS c' (log `mappend` log') state') susp
