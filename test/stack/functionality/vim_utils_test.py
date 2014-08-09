@@ -41,8 +41,8 @@ class TestSivmUtils(unittest.TestCase):
 
     def test_desugar_expression_if(self):
         a = ['if','a','b',['if','c','d','e']]
-        b = [['biplex','a',['lambda',[],'b'],['lambda',[],
-                [['biplex','c',['lambda',[],'d'],['lambda',[],'e']]]]]]
+        b = [['biplex','a',['make_csp',['quote', []],['quote', 'b']],['make_csp',['quote', []],['quote',
+            [['biplex','c',['make_csp',['quote', []],['quote', 'd']],['make_csp',['quote', []],['quote', 'e']]]]]]]]
         self.assertEqual(macro.desugar_expression(a),b)
     def test_desugar_expression_if_failure(self):
         a = ['if','a','b',['if',['if'],'d','e']]
@@ -55,17 +55,17 @@ class TestSivmUtils(unittest.TestCase):
 
     def test_desugar_expression_and(self):
         a = ['and','a','b']
-        b = [['biplex','a',['lambda',[],'b'],['lambda', [], v.boolean(False)]]]
+        b = [['biplex','a',['make_csp',['quote', []],['quote', 'b']],['make_csp',['quote', []],['quote', v.boolean(False)]]]]
         self.assertEqual(macro.desugar_expression(a),b)
     
     def test_desugar_expression_nested(self):
         a = [['and','a','b']]
-        b = [[['biplex','a',['lambda',[],'b'],['lambda', [], v.boolean(False)]]]]
+        b = [[['biplex','a',['make_csp',['quote', []],['quote', 'b']],['make_csp',['quote', []],['quote', v.boolean(False)]]]]]
         self.assertEqual(macro.desugar_expression(a),b)
 
     def test_desugar_expression_or(self):
         a = ['or','a','b']
-        b = [['biplex','a',['lambda', [], v.boolean(True)],['lambda',[],'b']]]
+        b = [['biplex','a',['make_csp',['quote', []],['quote', v.boolean(True)]],['make_csp',['quote', []],['quote', 'b']]]]
         self.assertEqual(macro.desugar_expression(a),b)
 
     def test_desugar_expression_let_1(self):
@@ -74,11 +74,11 @@ class TestSivmUtils(unittest.TestCase):
         self.assertEqual(macro.desugar_expression(a),b)
     def test_desugar_expression_let_2(self):
         a = ['let',[['a','b']],'c']
-        b = [['lambda',['a'],'c'],'b']
+        b = [['make_csp',['quote', ['a']],['quote', 'c']],'b']
         self.assertEqual(macro.desugar_expression(a),b)
     def test_desugar_expression_let_3(self):
         a = ['let',[['a','b'],['c','d']],'e']
-        b = [['lambda',['a'],[['lambda',['c'],'e'],'d']],'b']
+        b = [['make_csp',['quote', ['a']],['quote', [['make_csp',['quote', ['c']],['quote', 'e']],'d']]],'b']
         self.assertEqual(macro.desugar_expression(a),b)
     def test_desugar_expression_let_failure_1(self):
         a = ['let','a','b']
@@ -205,7 +205,7 @@ class TestSivmUtils(unittest.TestCase):
                 i1 = self.find_sym(a,sym)
                 i2 = self.find_sym(s,sym)
                 try:
-                    i3 = macro.desugar_expression_index(a,i1)
+                    i3 = utils.desugar_expression_index(a,i1)
                 except:
                     print msg_string.format(sym,a,s,i1,i2,None)
                     raise
@@ -218,7 +218,7 @@ class TestSivmUtils(unittest.TestCase):
             s = macro.desugar_expression(a)
             for i in self.iter_indices(a):
                 try:
-                    self.assertIsNotNone(macro.desugar_expression_index(a,i),
+                    self.assertIsNotNone(utils.desugar_expression_index(a,i),
                             msg=msg_string.format(a,s,i))
                 except VentureException as e:
                     self.assertEquals(e.exception,'expression_index_desugaring')
