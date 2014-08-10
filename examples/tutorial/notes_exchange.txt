@@ -254,8 +254,8 @@ Notes on Online vs. Offline Inference
 
 Distinguish ML settings:
 1. Algorithm/rule for generalization is chosen as a function of the dataset D, where D ~ P(D / theta)
-- You do a search over classifiers (or parameter settings for same classifer) and take the one with best regularized or cross-validated performance on the dataset. 
-- A different data-set drawn from same distribution would yield a different classifier. The variance of the search procedure over classifiers gives information about how much the dataset matters.
+- For example: you search over different classifiers (e.g. logistic regression vs SVM) or variants of the same classifier and take the one with best regularized or cross-validated performance on the dataset. 
+- A different data-set drawn from same distribution would yield a different classifier. The variance of the search procedure over classifiers gives information about how much the particular dataset matters.
 - Search can be automated or done manually. Automated search for parameter settings vs. manual search over different kinds of classifiers (e.g. decision-trees vs. SVMs vs. neural nets).
 - Bayesian approaches may choose hyper-parameters or priors by seeing if they give 'sensible' results on the actual data. (Empirical Bayes does this in a systematic way). 
 
@@ -278,9 +278,16 @@ Distinguish ML settings:
 
 This generalizes Online Learning to case where at each timestep you observe both a likelihood function (which you may not have seen before) and a set of draws from it.
 
-(One can argue that we rarely know the real likelihood function and usually use a plausible approximation of it. I'm not questioning that assumption here.)
+Concrete example:
+Balls are drawn iid with replacement from K urns, where K is unknown. Balls come in C different colors, where C is unknown, and the distributions of the colors in urns are unknown. You get a series of observations and after each one you are asked to guess the color of the next draw from some urn.
 
-- Motivation 1: Robot with fixed infernce algorithm
+Case 1: you know P(D / theta) and D before making predictions
+If data are (urn,color) pairs not iid, and predictions are judging (urn,color) pairs true/false, then you know a lower bound for K and C and can use a multi-class classifier. 
+
+
+(One can argue that we rarely know the real likelihood function and instead pick a convenient approximation. I'm not questioning that assumption here.)
+
+- Motivation 1: Robot with fixed inference algorithm
 You need online learning algorithm for a robot that will learn a map of its environment from observations. The robot has a very large set of sensors which can vary over time (say the robot looses some sensors and bolts on others). The sensors provide data and an estimate of the accuracy of the data. The accuracy of sensor will vary over time (but the robot doesn't model how it varies).
 
 If the robot is trying to estimate a parameter theta, then it might get observations that are different functions of theta e.g. N(theta,1), N(theta,10), student_t(theta,1,2), Beta( abs(theta),abs(theta) ). The idea is that sensors might vary in their accuracy (resulting in different variance for Gaussian observations) due to things like local temperature.
