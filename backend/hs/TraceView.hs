@@ -279,16 +279,7 @@ regenValueNoCoroutine a = lift (do -- Should be able to produce weight in princi
   case node of
     (Constant v) -> return v
     (Reference _ _) -> error "References are handled by regenValue directly"
-    (Request _ outA opa ps) -> do
-      addr <- gets $ fromJust "Regenerating value for a request with no operator" . (fromValueAt opa)
-      reqs <- runRequester addr ps
-      nodes . ix a . sim_reqs .= Just reqs
-      resps <- evalRequests addr reqs
-      do_incorporateR a
-      case outA of
-        Nothing -> return ()
-        (Just outA') -> responsesAt outA' .= resps
-      return undefined
+    (Request _ _ _ _) -> error "Requests are handled by regenValue directly"
     (Output _ _ opa ps rs) -> do
       addr <- gets $ fromJust "Regenerating value for an output with no operator" . (fromValueAt opa)
       v <- runOutputter addr ps rs
@@ -315,6 +306,16 @@ regenValue a = do
       v <- lookupMaybeRequesting a'
       nodes . ix a . value .= Just v
       return v
+    (Request _ outA opa ps) -> do
+      addr <- gets $ fromJust "Regenerating value for a request with no operator" . (fromValueAt opa)
+      reqs <- lift $ lift $ runRequester addr ps
+      nodes . ix a . sim_reqs .= Just reqs
+      resps <- lift $ lift $ evalRequests addr reqs
+      do_incorporateR a
+      case outA of
+        Nothing -> return ()
+        (Just outA') -> responsesAt outA' .= resps
+      return undefined
     (Extension _ exp e _) -> do
       t <- get
       (v, density, requested, new_trace) <- mapMonad (lift . lift) $ manage_subregen exp e t
