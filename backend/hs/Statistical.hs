@@ -46,4 +46,4 @@ knownDiscrete expected_rates observed = Result (pval, msg) where
     cts = map count $ M.keys expected_cts
     count item = length $ filter (== item) observed
     (chisq, pval) = chi2test cts $ map (* fromIntegral total) $ M.elems expected_cts
-    msg = "discrete distribution didn't line up" -- TODO: more information
+    msg = "discrete distribution didn't line up " ++ show chisq ++ " " ++ show pval -- TODO: more information
