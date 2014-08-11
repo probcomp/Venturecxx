@@ -37,29 +37,13 @@ lookupValue a (Engine _ t) =
     fromJust "No value at address" $ valueOf
     $ fromJust "Invalid address" $ lookupNode a t
 
--- I don't know whether this type signature is as general as possible,
--- but it compiles.
-runOn :: (Monad m) => Simple Lens s a -> StateT a m r -> StateT s m r
-runOn lens action = do
-  value <- use lens
-  (result, value') <- lift $ runStateT action value
-  lens .= value'
-  return result
-
-execOn :: (Monad m) => Simple Lens s a -> StateT a m r -> StateT s m ()
-execOn lens action = do
-  value <- use lens
-  value' <- lift $ execStateT action value
-  lens .= value'
-  return ()
-
 assume :: (MonadRandom m) => String -> Exp -> (StateT (Engine m) m) Address
 assume var exp = do
   -- TODO This implementation of assume does not permit recursive
   -- functions, because of insufficient indirection to the
   -- environment.
   (Engine e _) <- get
-  address <- trace `runOn` (eval exp e)
+  address <- trace `zoom` (eval exp e)
   env %= Frame (M.fromList [(var, address)])
   return address
 
@@ -71,7 +55,7 @@ assume var exp = do
 observe :: (MonadRandom m) => Exp -> Value -> (StateT (Engine m) m) ()
 observe exp v = do
   (Engine e _) <- get
-  address <- trace `runOn` (eval exp e)
+  address <- trace `zoom` (eval exp e)
   -- TODO What should happen if one observes a value that had
   -- (deterministic) consequences, e.g.
   -- (assume x (normal 1 1))
@@ -81,12 +65,12 @@ observe exp v = do
   -- from which it in fact has no way to recover.  As of the present
   -- writing, Venturecxx has this limitation as well, so I will not
   -- address it here.
-  trace `execOn` (constrain address v)
+  trace `zoom` (constrain address v)
 
 predict :: (MonadRandom m) => Exp -> (StateT (Engine m) m) Address
 predict exp = do
   (Engine e _) <- get
-  trace `runOn` (eval exp e)
+  trace `zoom` (eval exp e)
 
 data Directive = Assume String Exp
                | Observe Exp Value
@@ -110,7 +94,7 @@ watching_infer' address ct = replicateM ct (do
          . fromJust "Address became invalid after inference" . (lookupNode address))
 
 watching_infer :: (MonadRandom m) => Address -> Int -> StateT (Engine m) m [Value]
-watching_infer address ct = trace `runOn` (watching_infer' address ct)
+watching_infer address ct = trace `zoom` (watching_infer' address ct)
 
 runDirective' :: (MonadRandom m) => Directive -> StateT (Engine m) m (Maybe Address)
 runDirective' (Assume s e) = assume s e >>= return . Just
