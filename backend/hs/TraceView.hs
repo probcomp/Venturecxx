@@ -221,7 +221,7 @@ type RequestingValue m = (Susp.Request Address (Value m))
 type RegenType m a = Coroutine (RequestingValue m) (RegenEffect m) a
 type SuspensionType m a = (Either (RequestingValue m (RegenType m a)) a)
 
-evalRequests :: (MonadRandom m) => SPAddress -> [SimulationRequest m] -> StateT (TraceView m) m [Address]
+evalRequests :: (MonadRandom m) => SPAddress -> [SimulationRequest m] -> RegenType m [Address]
 evalRequests = undefined
 
 -- Choice: cut-and-extend at eval or at apply?
@@ -310,7 +310,7 @@ regenValue a = do
       addr <- gets $ fromJust "Regenerating value for a request with no operator" . (fromValueAt opa)
       reqs <- lift $ lift $ runRequester addr ps
       nodes . ix a . sim_reqs .= Just reqs
-      resps <- lift $ lift $ evalRequests addr reqs
+      resps <- evalRequests addr reqs
       do_incorporateR a
       case outA of
         Nothing -> return ()
