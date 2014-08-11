@@ -8,74 +8,91 @@ class Macro(object):
     self.predicate = predicate
     self.expander = expander
 
-  def applies(self, expr):
-    return self.predicate(expr)
+  def applies(self, exp):
+    return self.predicate(exp)
   
-  def expand(self, expr):
-    return self.expander(expr)
+  def expand(self, exp):
+    return self.expander(exp)
 
 class Sugar(object):
-  def desugar(self):
+  def desugared(self):
+    """The desugared expression."""
     raise Exception("Not implemented!")
-  def resugar(self, index):
+  
+  def desugar_index(self, index):
+    """Desugar an expression index."""
+    raise Exception("Not implemented!")
+  
+  def resugar_index(self, index):
+    """Transform the desugared expression index back into a sugared one."""
     raise Exception("Not implemented!")
 
+def isLiteral(exp):
+  return isinstance(exp, (basestring, dict))
+
 class LiteralMacro(Macro):
-  def applies(self, expr):
-    return isinstance(expr, (basestring, dict))
-  def expand(self, expr):
-    return LiteralSugar(expr)
+  def applies(self, exp):
+    return isLiteral(exp)
+  def expand(self, exp):
+    return LiteralSugar(exp)
 
 class LiteralSugar(Sugar):
   def __init__(self, literal):
     self.literal = literal
-  def desugar(self):
+  def desugared(self):
     return self.literal
-  def resugar(self, index):
+  def desugar_index(self, index):
+    assert(len(index) == 0)
+    return index
+  def resugar_index(self, index):
     assert(len(index) == 0)
     return index
 
 class ListMacro(Macro):
-  def applies(self, expr):
-    return isinstance(expr, list)
-  def expand(self, expr):
-    return ListSugar(map(expand, expr))
+  def applies(self, exp):
+    return isinstance(exp, list)
+  def expand(self, exp):
+    return ListSugar(map(expand, exp))
 
 class ListSugar(Sugar):
-  def __init__(self, expr):
-    self.expr = expr
-  def desugar(self):
-    return [e.desugar() for e in self.expr]
-  def resugar(self, index):
+  def __init__(self, exp):
+    self.exp = exp
+  def desugared(self):
+    return [e.desugared() for e in self.exp]
+  def desugar_index(self, index):
     if len(index) == 0:
       return index
-    return index[:1] + self.expr[index[0]].resugar(index[1:])
+    return index[:1] + self.exp[index[0]].desugar_index(index[1:])
+  def resugar_index(self, index):
+    if len(index) == 0:
+      return index
+    return index[:1] + self.exp[index[0]].resugar_index(index[1:])
 
-def traverse(expr):
-  if isinstance(expr, list):
-    for i, e in enumerate(expr):
+def traverse(exp):
+  if isinstance(exp, list):
+    for i, e in enumerate(exp):
       for j, f in traverse(e):
         yield [i] + j, f
-  else: yield [], expr
+  else: yield [], exp
 
-def index(i, expr):
+def index(i, exp):
   """Index into an expression."""
   if len(i) == 0:
-    return expr
-  return index(i[1:], expr[i[0]])
+    return exp
+  return index(i[1:], exp[i[0]])
 
-def substitute(expr, pattern):
+def substitute(exp, pattern):
   if isinstance(pattern, list):
-    return [substitute(expr, p) for p in pattern]
+    return [substitute(exp, p) for p in pattern]
   if isinstance(pattern, tuple):
-    return index(pattern, expr)
+    return index(pattern, exp)
   return pattern
 
 def PatternExpand(pattern):
   inverse = [(i,list(tup)) for (i, tup) in traverse(pattern) if isinstance(tup, tuple)]
   
-  def expander(expr):
-    sub = substitute(expr, pattern)
+  def expander(exp):
+    sub = substitute(exp, pattern)
     #print sub
     return SubSugar(expand(sub), inverse)
   
@@ -106,9 +123,12 @@ class SyntaxRule(Macro):
     self.pattern = pattern
     self.template = template
     
-    patternMap = {sym: index for index, sym in traverse(pattern) if isSym(sym)}
-    self.inverse = [(index, patternMap[sym]) for index, sym in traverse(template) if isSym(sym) and sym in patternMap]
-  
+    patternIndeces = {sym: index for index, sym in traverse(pattern) if isSym(sym)}
+    templateIndeces = {sym: index for index, sym in traverse(template) if isSym(sym)}
+    
+    self.desugar = lambda index: replace(pattern, templateIndeces, index)
+    self.resugar = lambda index: replace(template, patternIndeces, index)
+    
   def applies(self, exp):
     return isinstance(exp, list) and len(exp) > 0 and exp[0] == self.name
   
@@ -116,34 +136,39 @@ class SyntaxRule(Macro):
     bindings = bind(self.pattern, exp)
     subbed = sub(bindings, self.template)
     expanded = expand(subbed)
-    return SubSugar(expanded, self.inverse)
+    return SubSugar(expanded, self.desugar, self.resugar)
 
-def prefix(l1, l2):
-  if len(l1) > len(l2):
-    return False
-  for e1, e2 in zip(l1, l2):
-    if e1 != e2:
-      return False
-  return True
+def replace(exp, indexMap, index):
+  i = 0
+  while isinstance(exp, list):
+    #print exp, index[i]
+    exp = exp[index[i]]
+    i += 1
+  
+  if isSym(exp) and exp in indexMap:
+    return indexMap[exp] + index[i:]
+  
+  raise Exception("Index replacement failed.")
 
 class SubSugar(Sugar):
-  def __init__(self, sugar, inverse):
+  def __init__(self, sugar, desugar, resugar):
     self.sugar = sugar
-    self.inverse = inverse
-  def desugar(self):
-    return self.sugar.desugar()
-  def resugar(self, index):
-    index = self.sugar.resugar(index)
-    for i, j in self.inverse:
-      if prefix(i, index):
-        return j + index[len(i):]
-    return index
+    self.desugar = desugar
+    self.resugar = resugar
+  def desugared(self):
+    return self.sugar.desugared()
+  def desugar_index(self, index):
+    index = self.desugar(index)
+    return self.sugar.desugar_index(index)
+  def resugar_index(self, index):
+    index = self.sugar.resugar_index(index)
+    return self.resugar(index)
 
-def LetExpand(expr):
+def LetExpand(exp):
   pattern = (2,)
-  for index in reversed(range(len(expr[1]))):
+  for index in reversed(range(len(exp[1]))):
     pattern = [['lambda', [(1, index, 0)], pattern], (1, index, 1)]
-  return PatternExpand(pattern)(expr)
+  return PatternExpand(pattern)(exp)
 
 def arg0(name):
   def applies(exp):
@@ -155,62 +180,65 @@ lambdaMacro = SyntaxRule(['lambda', 'args', 'body'], ['make_csp', ['quote', 'arg
 ifMacro = SyntaxRule(['if', 'predicate', 'consequent', 'alternative'], [['biplex', 'predicate', ['lambda', [], 'consequent'], ['lambda', [], 'alternative']]])
 andMacro = SyntaxRule(['and', 'exp1', 'exp2'], ['if', 'exp1', 'exp2', v.boolean(False)])
 orMacro = SyntaxRule(['or', 'exp1', 'exp2'], ['if', 'exp1', v.boolean(True), 'exp2'])
-letMacro = Macro(arg0("let"), LetExpand)
+#letMacro = Macro(arg0("let"), LetExpand)
 
-macros = [identityMacro, lambdaMacro, ifMacro, andMacro, orMacro, letMacro, ListMacro(), LiteralMacro()]
+macros = [identityMacro, lambdaMacro, ifMacro, andMacro, orMacro, ListMacro(), LiteralMacro()]
 
-def expand(expr):
+def expand(exp):
   for macro in macros:
-    if macro.applies(expr):
-      return macro.expand(expr)
-  raise Exception("Could not match " + str(expr))
+    if macro.applies(exp):
+      return macro.expand(exp)
+  raise Exception("Could not match " + str(exp))
 
 def desugar_expression(exp):
-  return expand(exp).desugar()
+  return expand(exp).desugared()
 
 def sugar_expression_index(exp, index):
-  return expand(exp).resugar(index)
+  return expand(exp).resugar_index(index)
+
+def desugar_expression_index(exp, index):
+  return expand(exp).desugar_index(index)
 
 def testLiteral():
   sugar = expand('0')
-  print sugar.desugar()
+  print sugar.desugared()
 
 def testList():
   sugar = expand([['+', '1', ['*', '2', '3']]])
-  print sugar.desugar()
-  print sugar.resugar([0, 2, 0])
+  print sugar.desugared()
+  print sugar.resugar_index([0, 2, 0])
 
 def testLambda():
   sugar = expand(['lambda', ['x'], ['+', 'x', 'x']])
-  print sugar.desugar()
-  print sugar.resugar([2, 1, 2])
+  print sugar.desugared()
+  print sugar.resugar_index([2, 1, 2])
 
 def testIf():
   sugar = expand(['if', ['flip'], '0', '1'])
-  print sugar.desugar()
-  print sugar.resugar([0, 3, 2, 1])
+  print sugar.desugared()
+  print sugar.resugar_index([0, 3, 2, 1])
 
 def testAnd():
   sugar = expand(['and', '1', '2'])
-  print sugar.desugar()
-  print sugar.resugar([0, 1])
-  print sugar.resugar([0, 2, 2, 1])
+  print sugar.desugared()
+  print sugar.resugar_index([0, 1])
+  print sugar.resugar_index([0, 2, 2, 1])
 
 def testOr():
   sugar = expand(['or', '1', '2'])
-  print sugar.desugar()
-  print sugar.resugar([0, 1])
-  print sugar.resugar([0, 3, 2, 1])
+  print sugar.desugared()
+  print sugar.resugar_index([0, 1])
+  print sugar.resugar_index([0, 3, 2, 1])
 
 def testLet():
   sugar = expand(['let', [['a', '1'], ['b', '2']], ['+', 'a', 'b']])
-  print sugar.desugar()
-  print sugar.resugar([0, 1, 1, 0])
-  print sugar.resugar([1])
-  print sugar.resugar([0, 2, 1, 0, 1, 1, 0])
-  print sugar.resugar([0, 2, 1, 1])
+  print sugar.desugared()
+  print sugar.resugar_index([0, 1, 1, 0])
+  print sugar.resugar_index([1])
+  print sugar.resugar_index([0, 2, 1, 0, 1, 1, 0])
+  print sugar.resugar_index([0, 2, 1, 1])
   
-  print sugar.resugar([0, 2, 1, 0, 2, 1])
+  print sugar.resugar_index([0, 2, 1, 0, 2, 1])
 
 if __name__ == '__main__':
   testLiteral()
@@ -219,4 +247,4 @@ if __name__ == '__main__':
   testIf()
   testAnd()
   testOr()
-  testLet()
+  #testLet()

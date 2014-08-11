@@ -47,7 +47,7 @@ class TestSivmUtils(unittest.TestCase):
     def test_desugar_expression_if_failure(self):
         a = ['if','a','b',['if',['if'],'d','e']]
         try:
-            macro.desugar_expression(a)
+            utils.desugar_expression(a)
         except VentureException as e:
             self.assertEqual(e.data['expression_index'],[3,1])
         else:
@@ -71,19 +71,19 @@ class TestSivmUtils(unittest.TestCase):
     def test_desugar_expression_let_1(self):
         a = ['let',[],'b']
         b = 'b'
-        self.assertEqual(macro.desugar_expression(a),b)
+        self.assertEqual(utils.desugar_expression(a),b)
     def test_desugar_expression_let_2(self):
         a = ['let',[['a','b']],'c']
         b = [['make_csp',['quote', ['a']],['quote', 'c']],'b']
-        self.assertEqual(macro.desugar_expression(a),b)
+        self.assertEqual(utils.desugar_expression(a),b)
     def test_desugar_expression_let_3(self):
         a = ['let',[['a','b'],['c','d']],'e']
         b = [['make_csp',['quote', ['a']],['quote', [['make_csp',['quote', ['c']],['quote', 'e']],'d']]],'b']
-        self.assertEqual(macro.desugar_expression(a),b)
+        self.assertEqual(utils.desugar_expression(a),b)
     def test_desugar_expression_let_failure_1(self):
         a = ['let','a','b']
         try:
-            macro.desugar_expression(a)
+            utils.desugar_expression(a)
         except VentureException as e:
             self.assertEqual(e.data['expression_index'],[1])
         else:
@@ -91,7 +91,7 @@ class TestSivmUtils(unittest.TestCase):
     def test_desugar_expression_let_failure_2(self):
         a = ['let',['a'],'b']
         try:
-            macro.desugar_expression(a)
+            utils.desugar_expression(a)
         except VentureException as e:
             self.assertEqual(e.data['expression_index'],[1,0])
         else:
@@ -99,7 +99,7 @@ class TestSivmUtils(unittest.TestCase):
     def test_desugar_expression_let_failure_3(self):
         a = ['let',[[object(),'c']],'b']
         try:
-            macro.desugar_expression(a)
+            utils.desugar_expression(a)
         except VentureException as e:
             self.assertEqual(e.data['expression_index'],[1,0,0])
         else:
@@ -200,12 +200,12 @@ class TestSivmUtils(unittest.TestCase):
                     "sugared_index: {}\nexpected_index: {}\n"\
                     "got_index: {}"
         for a in self.fancy_expressions:
-            s = utils.desugar_expression(a)
+            s = macro.desugar_expression(a)
             for sym in ('a','b','c','d'):
                 i1 = self.find_sym(a,sym)
                 i2 = self.find_sym(s,sym)
                 try:
-                    i3 = utils.desugar_expression_index(a,i1)
+                    i3 = macro.desugar_expression_index(a,i1)
                 except:
                     print msg_string.format(sym,a,s,i1,i2,None)
                     raise
@@ -215,10 +215,10 @@ class TestSivmUtils(unittest.TestCase):
         msg_string ="\n\nsugared_exp: {}\ndesugared_exp: {}\n"\
                     "sugared_index: {}"
         for a in self.fancy_expressions:
-            s = utils.desugar_expression(a)
+            s = macro.desugar_expression(a)
             for i in self.iter_indices(a):
                 try:
-                    self.assertIsNotNone(utils.desugar_expression_index(a,i),
+                    self.assertIsNotNone(macro.desugar_expression_index(a,i),
                             msg=msg_string.format(a,s,i))
                 except VentureException as e:
                     self.assertEquals(e.exception,'expression_index_desugaring')
