@@ -119,11 +119,11 @@ cbeta_binomial =
 -- liftM discreteHistogram $ venture_main 100 cbeta_binomial
 
 -- (assume x (flip))
--- (predict (if x x 0.0))
+-- (predict (if x x false))
 self_select_1 :: [Directive]
 self_select_1 =
     [ Assume "x" $ App (Var "bernoulli") []
-    , Predict $ v_if (Var "x") (Var "x") 0
+    , Predict $ v_if (Var "x") (Var "x") (Datum $ Boolean False)
     ]
 -- liftM discreteHistogram $ venture_main 100 self_select_1
 

@@ -5,10 +5,10 @@ import Data.Random.Distribution.Normal
 import System.Exit
 import Test.HUnit
 
-import Language
+import Language hiding (Value)
 import Venture
 import Engine
-import Trace (Valuable, fromValue)
+import Trace (Valuable, fromValue, Value)
 
 import qualified Statistical as Stat
 
@@ -41,7 +41,20 @@ more = map (liftM report)
   , liftM (Stat.knownContinuous (Normal 0.0 (sqrt 8.0) :: Normal Double)) $ samples chained_normals
   , liftM (Stat.knownContinuous (Normal 2.0 (sqrt 2.0) :: Normal Double)) $ samples observed_chained_normals
   , liftM (Stat.knownContinuous (Normal 2.0 (sqrt 2.0) :: Normal Double)) $ samples observed_chained_normals_lam
+    -- list_of_coins does not appear to be a very interesting example
+  , liftM (Stat.knownDiscrete [(True, 0.75), (False, 0.25)]) $ samples beta_binomial
+  , liftM (Stat.knownDiscrete [(True, 0.75), (False, 0.25)]) $ samples cbeta_binomial
+  , liftM (Stat.knownDiscrete [(Boolean True, 0.5), (Boolean False, 0.5)]) $ venture_main 100 self_select_1
+  , liftM (Stat.knownDiscrete [(1, 0.5), (0, 0.5)]) $ venture_main 100 self_select_2
+    -- TODO Test the two mem examples
+  , liftM (Stat.knownDiscrete [(True, 0.5), (False, 0.5)]) $ liftM (map checkList) $ samples uncollapsed_conditional_and_coupled
+  , liftM (Stat.knownDiscrete [(True, 0.5), (False, 0.5)]) $ liftM (map checkList) $ samples conditional_and_coupled
+  , liftM (Stat.knownDiscrete [(True, 0.75), (False, 0.25)]) $ samples whether_a_node_is_random_can_change
   ]
+    where checkList :: Value -> Bool
+          checkList (List _) = True
+          checkList (Boolean False) = False
+          checkList _ = error "What?"
 
 main :: IO ()
 main = do
