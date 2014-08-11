@@ -8,6 +8,7 @@ import Data.List
 
 import Data.Random.Distribution
 import Data.Random.Distribution.ChiSquare
+import Math.Statistics.KSTest
 
 type PValue = Double
 
@@ -47,3 +48,8 @@ knownDiscrete expected_rates observed = Result (pval, msg) where
     count item = length $ filter (== item) observed
     (chisq, pval) = chi2test cts $ map (* fromIntegral total) $ M.elems expected_cts
     msg = "discrete distribution didn't line up " ++ show chisq ++ " " ++ show pval -- TODO: more information
+
+knownContinuous :: (CDF d t) => d t -> [t] -> Result String
+knownContinuous distr observed = Result (pval, msg) where
+    pval = ksTest (cdf distr) observed
+    msg = "continuous distribution didn't line up " ++ show pval -- TODO: more information

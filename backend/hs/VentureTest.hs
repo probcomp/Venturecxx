@@ -1,11 +1,14 @@
 import Control.Monad
 import Control.Monad.Random.Class
+import Data.Maybe
+import Data.Random.Distribution.Normal
 import System.Exit
 import Test.HUnit
 
 import Language
 import Venture
 import Engine
+import Trace (fromValue)
 
 import qualified Statistical as Stat
 
@@ -26,6 +29,8 @@ basics = test
 more :: (MonadRandom m) => [m Assertion]
 more = map (liftM report)
   [ liftM (Stat.knownDiscrete [(Boolean True, 0.5), (Boolean False, 0.5)]) $ venture_main 100 flip_one_coin
+  , liftM (Stat.knownDiscrete [(1, 0.5), (2, 0.5)]) $ venture_main 100 condition_on_flip
+  , liftM (Stat.knownContinuous (Normal 0.0 2.0 :: Normal Double)) $ liftM (map $ fromJust . fromValue) $ venture_main 100 single_normal
   ]
 
 main :: IO ()
