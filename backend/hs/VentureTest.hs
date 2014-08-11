@@ -8,7 +8,7 @@ import Test.HUnit
 import Language
 import Venture
 import Engine
-import Trace (fromValue)
+import Trace (Valuable, fromValue)
 
 import qualified Statistical as Stat
 
@@ -26,11 +26,21 @@ basics = test
     where v_id = (Lam ["x"] (Var "x"))
           v_k = (Lam ["x"] (Lam ["y"] (Var "x")))
 
+downsample :: Int -> [a] -> [a]
+downsample _ [] = []
+downsample n (x:xs) = x:(downsample n $ drop (n-1) xs)
+
+samples :: (MonadRandom m, Valuable a) => [Directive] -> m [a]
+samples prog = liftM (downsample 20) $ liftM (map $ fromJust . fromValue) $ venture_main 1000 prog
+
 more :: (MonadRandom m) => [m Assertion]
 more = map (liftM report)
   [ liftM (Stat.knownDiscrete [(Boolean True, 0.5), (Boolean False, 0.5)]) $ venture_main 100 flip_one_coin
   , liftM (Stat.knownDiscrete [(1, 0.5), (2, 0.5)]) $ venture_main 100 condition_on_flip
   , liftM (Stat.knownContinuous (Normal 0.0 2.0 :: Normal Double)) $ liftM (map $ fromJust . fromValue) $ venture_main 100 single_normal
+  , liftM (Stat.knownContinuous (Normal 0.0 (sqrt 8.0) :: Normal Double)) $ samples chained_normals
+  , liftM (Stat.knownContinuous (Normal 2.0 (sqrt 2.0) :: Normal Double)) $ samples observed_chained_normals
+  , liftM (Stat.knownContinuous (Normal 2.0 (sqrt 2.0) :: Normal Double)) $ samples observed_chained_normals_lam
   ]
 
 main :: IO ()
