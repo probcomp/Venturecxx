@@ -62,7 +62,8 @@ library
   build-depends:       base >=4.5, containers >=0.4,
                        lens >=3.10, pretty >=1.1,
                        MonadRandom >=0.1, transformers >=0.3,
-                       math-functions >=0.1, mtl, mmorph, monad-coroutine
+                       math-functions >=0.1, mtl, mmorph, monad-coroutine,
+                       random-fu
   
   -- Directories containing source files.
   -- hs-source-dirs:      
