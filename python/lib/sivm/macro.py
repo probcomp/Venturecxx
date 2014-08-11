@@ -81,6 +81,8 @@ def PatternExpand(pattern):
   
   return expander
 
+def isSym(exp):
+  return isinstance(exp, (str, int))
 
 def bind(pattern, exp):
   if isinstance(pattern, list):
@@ -93,7 +95,7 @@ def bind(pattern, exp):
 def sub(bindings, template):
   if isinstance(template, list):
     return [sub(bindings, t) for t in template]
-  if template in bindings:
+  if isSym(template) and template in bindings:
     return bindings[template]
   return template
 
@@ -104,8 +106,8 @@ class SyntaxRule(Macro):
     self.pattern = pattern
     self.template = template
     
-    patternMap = {sym: index for index, sym in traverse(pattern) if isinstance(sym, str)}
-    self.inverse = [(index, patternMap[sym]) for index, sym in traverse(template) if sym in patternMap]
+    patternMap = {sym: index for index, sym in traverse(pattern) if isSym(sym)}
+    self.inverse = [(index, patternMap[sym]) for index, sym in traverse(template) if isSym(sym) and sym in patternMap]
   
   def applies(self, exp):
     return isinstance(exp, list) and len(exp) > 0 and exp[0] == self.name
@@ -143,18 +145,19 @@ def LetExpand(expr):
     pattern = [['lambda', [(1, index, 0)], pattern], (1, index, 1)]
   return PatternExpand(pattern)(expr)
 
-def arg0(keyword):
-  def applies(expr):
-    return isinstance(expr, list) and len(expr) > 0 and expr[0] == keyword
+def arg0(name):
+  def applies(exp):
+    return isinstance(exp, list) and len(exp) > 0 and exp[0] == name
   return applies
-
+  
+identityMacro = SyntaxRule(['identity', 'exp'], ['lambda', [], 'exp'])
 lambdaMacro = SyntaxRule(['lambda', 'args', 'body'], ['make_csp', ['quote', 'args'], ['quote', 'body']])
-ifMacro = Macro(arg0("if"), PatternExpand([['biplex', (1,), ['lambda', [], (2,)], ['lambda', [], (3,)]]]))
-andMacro = Macro(arg0("and"), PatternExpand(['if', (1,), (2,), v.boolean(False)]))
-orMacro = Macro(arg0("or"), PatternExpand(['if', (1,), v.boolean(True), (2,)]))
+ifMacro = SyntaxRule(['if', 'predicate', 'consequent', 'alternative'], [['biplex', 'predicate', ['lambda', [], 'consequent'], ['lambda', [], 'alternative']]])
+andMacro = SyntaxRule(['and', 'exp1', 'exp2'], ['if', 'exp1', 'exp2', v.boolean(False)])
+orMacro = SyntaxRule(['or', 'exp1', 'exp2'], ['if', 'exp1', v.boolean(True), 'exp2'])
 letMacro = Macro(arg0("let"), LetExpand)
 
-macros = [lambdaMacro, ifMacro, andMacro, orMacro, letMacro, ListMacro(), LiteralMacro()]
+macros = [identityMacro, lambdaMacro, ifMacro, andMacro, orMacro, letMacro, ListMacro(), LiteralMacro()]
 
 def expand(expr):
   for macro in macros:
@@ -162,8 +165,11 @@ def expand(expr):
       return macro.expand(expr)
   raise Exception("Could not match " + str(expr))
 
-def desugar_expression(expr):
-  return expand(expr).desugar()
+def desugar_expression(exp):
+  return expand(exp).desugar()
+
+def sugar_expression_index(exp, index):
+  return expand(exp).resugar(index)
 
 def testLiteral():
   sugar = expand('0')

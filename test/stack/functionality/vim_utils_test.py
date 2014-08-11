@@ -107,7 +107,7 @@ class TestSivmUtils(unittest.TestCase):
 
     def test_desugar_expression_identity(self):
         a = ['identity','b']
-        b = [['lambda',[],'b']]
+        b = ['make_csp', ['quote', []], ['quote', 'b']]
         self.assertEqual(macro.desugar_expression(a),b)
 
     def test_desugar_nothing(self):
@@ -175,7 +175,7 @@ class TestSivmUtils(unittest.TestCase):
                 i1 = self.find_sym(a,sym)
                 i2 = self.find_sym(s,sym)
                 try:
-                    i3 = utils.sugar_expression_index(a,i2)
+                    i3 = macro.sugar_expression_index(a,i2)
                 except:
                     print msg_string.format(sym,a,s,i2,i1,None)
                     raise
@@ -188,7 +188,7 @@ class TestSivmUtils(unittest.TestCase):
             s = macro.desugar_expression(a)
             for i in self.iter_indices(s):
                 try:
-                    self.assertIsNotNone(utils.sugar_expression_index(a,i),
+                    self.assertIsNotNone(macro.sugar_expression_index(a,i),
                             msg=msg_string.format(a,s,i))
                 except:
                     print msg_string.format(a,s,i)
@@ -200,7 +200,7 @@ class TestSivmUtils(unittest.TestCase):
                     "sugared_index: {}\nexpected_index: {}\n"\
                     "got_index: {}"
         for a in self.fancy_expressions:
-            s = macro.desugar_expression(a)
+            s = utils.desugar_expression(a)
             for sym in ('a','b','c','d'):
                 i1 = self.find_sym(a,sym)
                 i2 = self.find_sym(s,sym)
@@ -215,7 +215,7 @@ class TestSivmUtils(unittest.TestCase):
         msg_string ="\n\nsugared_exp: {}\ndesugared_exp: {}\n"\
                     "sugared_index: {}"
         for a in self.fancy_expressions:
-            s = macro.desugar_expression(a)
+            s = utils.desugar_expression(a)
             for i in self.iter_indices(a):
                 try:
                     self.assertIsNotNone(utils.desugar_expression_index(a,i),
