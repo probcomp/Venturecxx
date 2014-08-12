@@ -236,26 +236,6 @@ reversible computing: all operations should be reversible. then you can deal det
 
 
 
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 notes rao-blackwell:
 info theory: if estimator is a func of SS then it's the same. if not, estimator must vary on datasets with same SS. if so, it's using some spurious aspect of data (irrelevant to param theta). like a weather forecaster incorporating horoscope/psychic into a forecast that also depends on some (but not all) recent data in timeseries. 
 
@@ -265,6 +245,94 @@ one idea: you'd like to reverse taking into account the spurious data. if you ha
 
 clear idea: let estimator be unbiased and expectation of estimator (= value of parameter) = 0. we then show that variance goes down when we RB the estimator. take the old estimator's variance, which is just weighted sum of g(x)^2 where x is data vector. under RB, we take all x's with same SS (i.e. in same cell of partition) and make their estimate E g(x) / S=s, and then square this estimate. so now the squaring takes place outside the sum. this make the sum smaller by convexity. (suggests that a version of RB will be more general and won't depend on variance but just on the squaring making for convexity). 
 question of whether we could instead condition on some other function of the data and still get same result. 
+
+
+
+
+
+Notes on Online vs. Offline Inference
+
+Distinguish ML settings:
+1. Algorithm/rule for generalization is chosen as a function of the dataset D, where D ~ P(D / theta)
+- For example: you search over different classifiers (e.g. logistic regression vs SVM) or variants of the same classifier and take the one with best regularized or cross-validated performance on the dataset. 
+- A different data-set drawn from same distribution would yield a different classifier. The variance of the search procedure over classifiers gives information about how much the particular dataset matters.
+- Search can be automated or done manually. Automated search for parameter settings vs. manual search over different kinds of classifiers (e.g. decision-trees vs. SVMs vs. neural nets).
+- Bayesian approaches may choose hyper-parameters or priors by seeing if they give 'sensible' results on the actual data. (Empirical Bayes does this in a systematic way). 
+
+2. Algorithm/rule is chosen as a function of a known data-generating procedure P(D / theta)
+
+- In Bayesian setting, knowing P(D / theta) is knowing the likelihood function for the entire dataset in advance. Assuming iid data, knowing P(d_i / theta) where d_i is a single draw implies knowing the likelihood function for any number of iid draws.
+
+- Given the likelihood, a prior can be chosen for tractable inference. Examples: conjugate prior if P(D / theta) is exponential family. For non-exponential family, e.g. mixture models, choose conjugate priors for P(mixture weights) and P(mixture parameter) so that Gibbs conditional probabilities can be analytically computed. Jeffreys priors are generally improper and yield a proper posterior only for certain likelihood functions.
+
+- NB: Given a (simple, analytically tractable) likelihood function, it is often possible to construct a Bayesian model for which inference is tractable. But Bayesian theory does not constrain the likelihood function to be simple or tractable. Moreover, we can still do Bayesian updates over theta if, after every update t, we have a new likelihood function P_t(data / theta). That is, the likelihood function could vary over the sequence of updates. 
+
+- In Frequentist statistics, the likelihood function is used for computing the bias, variance and asymptotic properties of an estimator. The risk cannot be computed but its definition depends on having a likelihood function.
+
+- In Online Learning, you know P(D / theta), but you have to make decisions/classifications incrementally rather than after seeing all the data. 
+
+
+3. Algorithm/rule is chosen without knowledge of data-generating procedure
+
+- Idea is that you know the types of the parameters you are trying to learn (e.g. number and dimension of the parameters) but you don't know which functions of the parameters you will observe.
+
+This generalizes Online Learning to case where at each timestep you observe both a likelihood function (which you may not have seen before) and a set of draws from it.
+
+Concrete example:
+Balls are drawn iid with replacement from K urns, where K is unknown. Balls come in C different colors, where C is unknown, and the distributions of the colors in urns are unknown. You get a series of observations and after each one you are asked to guess the color of the next draw from some urn.
+
+Case 1: you know P(D / theta) and D before making predictions
+If data are (urn,color) pairs not iid, and predictions are judging (urn,color) pairs true/false, then you know a lower bound for K and C and can use a multi-class classifier. 
+
+
+(One can argue that we rarely know the real likelihood function and instead pick a convenient approximation. I'm not questioning that assumption here.)
+
+- Motivation 1: Robot with fixed inference algorithm
+You need online learning algorithm for a robot that will learn a map of its environment from observations. The robot has a very large set of sensors which can vary over time (say the robot looses some sensors and bolts on others). The sensors provide data and an estimate of the accuracy of the data. The accuracy of sensor will vary over time (but the robot doesn't model how it varies).
+
+If the robot is trying to estimate a parameter theta, then it might get observations that are different functions of theta e.g. N(theta,1), N(theta,10), student_t(theta,1,2), Beta( abs(theta),abs(theta) ). The idea is that sensors might vary in their accuracy (resulting in different variance for Gaussian observations) due to things like local temperature.
+
+Try to reduce to case where we know likelihood:
+(a) Let likelihood be a mixture model over all possible observations. This requires some parameterization of all possible observations and a prior over parameter settings. This is exactly like setting a prior over a very broad class of models, and will be difficult in general. 
+(b) Use an algorithm that transforms different kinds of observations into the same form. If we have observations N(theta,1) and N(theta,2), we can transform the low variance observations into high-variance observation using weights. If d_i ~ Gamma(a,b), we can convert to a Gaussian observation using a change of variables. I'm not sure there is any general and automatic way to do these tranforms.
+
+Similar example: You are running a database where records are simultaneously added, updated, and queried. Probabilistic inference could be used to model noise in the input data. This will facilitate probabilistic inference of missing data. (Different fields will be subject to different amounts and kinds of noise). For a complex database, there will be a very wide range of possible updates. You might update a single field for all (or some) records. You might update multiple, related fields simultaneously with dependent noise. You might learn some data is unreliable and its 'error bars' should be increased. You might learn that some records or fields are duplicates and should be combined. In the robot case, it's not possible to have a human in the loop changing the model/priors as a function of the form of the observations. In the database case, it would be possible in principle, but if the database has a high enough volume of simultaneous updates and queries, there won't be enough time for a human to intervene. 
+
+- Motivation 2: Bayesianism and Likelihoods
+Consider a case where we have substantive background knowledge about the parameters in our model. Computational tractability aside, we should pick a model and priors that best reflect that substantive knowledge. In most cases, the setting of these parameters is logically orthogonal to the kinds of observations we make. (The observations depend on what experiments humans choose to carry out, which is a function of technology and cost). 
+
+For ideal Bayesians, there is a question of how to set the likelihood function. Likelihood function models experiments you observe, where the working of the experiments depends on theta. (So likelihood function not independent of theta). Another view: likelihood function has to be fixed (is logically independent of theta and the data). This is AIXI view.
+
+- Motivation 3: Probabilistic Programming
+The language Venture (others?) makes it easy to define procedures that perform inference on a series of observations without a pre-specified likelihood function. Here is a Venture program that specifies a model:
+[assume theta (normal 0 10)]
+We can condition this model on arbitary 'observe' statements. Inference (via MH) will now compute likelihoods based on the statements we add.
+[observe (normal theta 1) 5.32]
+[infer 20]
+[observe (normal theta .1) 5.2]
+[infer 20]
+[observe (student_t theta 1 3) 4]
+
+
+
+Bayesian Online Inference without likelihood function
+
+1. In Venture, there's currently linear scaling for exponential family inference (even with conj prior) because SSs are not tracked. So if you knew the SS for the family, you could get big gains with hand-coded sampler. However, Venture could conceivably track SSs. Moreover, Venture could build on Dirichlet-Multinomial and have other conjugate priors (which need not be collapsed). With conjugate priors you get fast inference and a closed form posterior. 
+
+2. Consider this Venture program:
+[assume theta (normal 0 10)]
+[observe (normal theta 1) 5.32]
+[observe (normal theta 1) 5.1]
+[infer 20]
+[observe (normal theta .1) 5.2]
+[infer 20]
+[observe (poisson (abs theta)) 4]
+
+First, we couldn't track SSs for first two observes in Venture. To track SS's we'd need to define a data-generating function using '(lambda () (normal theta 1))'. Venture would allow us to do this dynamically. We could look at first 'observe' and then add the appropriate 'assume' (e.g. (assume data_generator_1)). We would then pre-process any observations of the same expression to be draws from this assumed procedure.
+
+Second, we are conditioning both on Normal and Poisson functions of theta. The prior on theta is Normal, which is conjugate to Normal but not to Poisson.
+
+
 
 
 
