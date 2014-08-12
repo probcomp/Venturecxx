@@ -71,15 +71,15 @@ class TestSivmUtils(unittest.TestCase):
     def test_desugar_expression_let_1(self):
         a = ['let',[],'b']
         b = 'b'
-        self.assertEqual(utils.desugar_expression(a),b)
+        self.assertEqual(macro.desugar_expression(a),b)
     def test_desugar_expression_let_2(self):
         a = ['let',[['a','b']],'c']
         b = [['make_csp',['quote', ['a']],['quote', 'c']],'b']
-        self.assertEqual(utils.desugar_expression(a),b)
+        self.assertEqual(macro.desugar_expression(a),b)
     def test_desugar_expression_let_3(self):
         a = ['let',[['a','b'],['c','d']],'e']
         b = [['make_csp',['quote', ['a']],['quote', [['make_csp',['quote', ['c']],['quote', 'e']],'d']]],'b']
-        self.assertEqual(utils.desugar_expression(a),b)
+        self.assertEqual(macro.desugar_expression(a),b)
     def test_desugar_expression_let_failure_1(self):
         a = ['let','a','b']
         try:

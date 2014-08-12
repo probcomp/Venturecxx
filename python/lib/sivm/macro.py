@@ -75,29 +75,6 @@ def traverse(exp):
         yield [i] + j, f
   else: yield [], exp
 
-def index(i, exp):
-  """Index into an expression."""
-  if len(i) == 0:
-    return exp
-  return index(i[1:], exp[i[0]])
-
-def substitute(exp, pattern):
-  if isinstance(pattern, list):
-    return [substitute(exp, p) for p in pattern]
-  if isinstance(pattern, tuple):
-    return index(pattern, exp)
-  return pattern
-
-def PatternExpand(pattern):
-  inverse = [(i,list(tup)) for (i, tup) in traverse(pattern) if isinstance(tup, tuple)]
-  
-  def expander(exp):
-    sub = substitute(exp, pattern)
-    #print sub
-    return SubSugar(expand(sub), inverse)
-  
-  return expander
-
 def isSym(exp):
   return isinstance(exp, (str, int))
 
@@ -117,7 +94,7 @@ def sub(bindings, template):
   return template
 
 class SyntaxRule(Macro):
-  """My interpretation of scheme's define-syntax-rule."""
+  """Tries to be scheme's define-syntax-rule."""
   def __init__(self, pattern, template):
     self.name = pattern[0]
     self.pattern = pattern
@@ -141,7 +118,6 @@ class SyntaxRule(Macro):
 def replace(exp, indexMap, index):
   i = 0
   while isinstance(exp, list):
-    #print exp, index[i]
     exp = exp[index[i]]
     i += 1
   
@@ -165,10 +141,14 @@ class SubSugar(Sugar):
     return self.resugar(index)
 
 def LetExpand(exp):
-  pattern = (2,)
-  for index in reversed(range(len(exp[1]))):
-    pattern = [['lambda', [(1, index, 0)], pattern], (1, index, 1)]
-  return PatternExpand(pattern)(exp)
+  n = len(exp[1])
+  syms = ['__sym%d__' % i for i in range(n)]
+  vals = ['__val%d__' % i for i in range(n)]
+  pattern = ['let', map(list, zip(syms, vals)), 'body']
+  template = 'body'
+  for i in reversed(range(n)):
+    template = [['lambda', [syms[i]], template], vals[i]]
+  return SyntaxRule(pattern, template).expand(exp)
 
 def arg0(name):
   def applies(exp):
@@ -180,9 +160,9 @@ lambdaMacro = SyntaxRule(['lambda', 'args', 'body'], ['make_csp', ['quote', 'arg
 ifMacro = SyntaxRule(['if', 'predicate', 'consequent', 'alternative'], [['biplex', 'predicate', ['lambda', [], 'consequent'], ['lambda', [], 'alternative']]])
 andMacro = SyntaxRule(['and', 'exp1', 'exp2'], ['if', 'exp1', 'exp2', v.boolean(False)])
 orMacro = SyntaxRule(['or', 'exp1', 'exp2'], ['if', 'exp1', v.boolean(True), 'exp2'])
-#letMacro = Macro(arg0("let"), LetExpand)
+letMacro = Macro(arg0("let"), LetExpand)
 
-macros = [identityMacro, lambdaMacro, ifMacro, andMacro, orMacro, ListMacro(), LiteralMacro()]
+macros = [identityMacro, lambdaMacro, ifMacro, andMacro, orMacro, letMacro, ListMacro(), LiteralMacro()]
 
 def expand(exp):
   for macro in macros:
@@ -247,4 +227,4 @@ if __name__ == '__main__':
   testIf()
   testAnd()
   testOr()
-  #testLet()
+  testLet()
