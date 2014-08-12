@@ -1,6 +1,6 @@
 # Framework for writing macros that resugar errors.
 
-from types import MethodType
+from venture.exception import VentureException
 import venture.value.dicts as v
 
 class Macro(object):
@@ -30,6 +30,9 @@ class Sugar(object):
 def isLiteral(exp):
   return isinstance(exp, (basestring, dict))
 
+def isSym(exp):
+  return isinstance(exp, (str, int))
+
 class LiteralMacro(Macro):
   def applies(self, exp):
     return isLiteral(exp)
@@ -52,7 +55,14 @@ class ListMacro(Macro):
   def applies(self, exp):
     return isinstance(exp, list)
   def expand(self, exp):
-    return ListSugar(map(expand, exp))
+    expanded = []
+    for i, s in enumerate(exp):
+      try:
+        expanded.append(expand(s))
+      except VentureException as e:
+        e.data['expression_index'].insert(0, i)
+        raise
+    return ListSugar(expanded)
 
 class ListSugar(Sugar):
   def __init__(self, exp):
@@ -75,9 +85,6 @@ def traverse(exp):
         yield [i] + j, f
   else: yield [], exp
 
-def isSym(exp):
-  return isinstance(exp, (str, int))
-
 def bind(pattern, exp):
   if isinstance(pattern, list):
     bindings = {}
@@ -92,6 +99,20 @@ def sub(bindings, template):
   if isSym(template) and template in bindings:
     return bindings[template]
   return template
+
+def verify(pattern, exp):
+  """Verifies that the given expression matches the pattern in form."""
+  if isinstance(pattern, list):
+    if not isinstance(exp, list):
+      raise VentureException('parse', 'Invalid expression -- expected list!', expression_index=[])
+    if len(exp) != len(pattern):
+      raise VentureException('parse', 'Invalid expression -- expected length %d' % len(pattern), expression_index=[])
+    for index, (p, e) in enumerate(zip(pattern, exp)):
+      try:
+        verify(p, e)
+      except VentureException as e:
+        e.data['expression_index'].insert(0, index)
+        raise
 
 class SyntaxRule(Macro):
   """Tries to be scheme's define-syntax-rule."""
@@ -110,10 +131,15 @@ class SyntaxRule(Macro):
     return isinstance(exp, list) and len(exp) > 0 and exp[0] == self.name
   
   def expand(self, exp):
-    bindings = bind(self.pattern, exp)
-    subbed = sub(bindings, self.template)
-    expanded = expand(subbed)
-    return SubSugar(expanded, self.desugar, self.resugar)
+    verify(self.pattern, exp)
+    try:
+      bindings = bind(self.pattern, exp)
+      subbed = sub(bindings, self.template)
+      expanded = expand(subbed)
+      return SubSugar(expanded, self.desugar, self.resugar)
+    except VentureException as e:
+      e.data['expression_index'] = self.resugar(e.data['expression_index'])
+      raise
 
 def replace(exp, indexMap, index):
   i = 0
@@ -143,10 +169,17 @@ class SubSugar(Sugar):
     return self.resugar(index)
 
 def LetExpand(exp):
+  if len(exp) != 3:
+      raise VentureException('parse','"let" statement requires 2 arguments',expression_index=[])
+  if not isinstance(exp[1], list):
+      raise VentureException('parse','"let" first argument must be a list',expression_index=[1])
+  
   n = len(exp[1])
   syms = ['__sym%d__' % i for i in range(n)]
   vals = ['__val%d__' % i for i in range(n)]
+  
   pattern = ['let', map(list, zip(syms, vals)), 'body']
+  
   template = 'body'
   for i in reversed(range(n)):
     template = [['lambda', [syms[i]], template], vals[i]]
@@ -170,7 +203,7 @@ def expand(exp):
   for macro in macros:
     if macro.applies(exp):
       return macro.expand(exp)
-  raise Exception("Could not match " + str(exp))
+  raise VentureException('parse', "Unrecognizable expression " + str(exp), expression_index=[])
 
 def desugar_expression(exp):
   return expand(exp).desugared()
@@ -222,6 +255,13 @@ def testLet():
   
   print sugar.resugar_index([0, 2, 1, 0, 2, 1])
 
+def testVerify():
+  try:
+    verify(['let', [['__sym0__', '__val0__']], 'body'], ['let', ['a'], 'b'])
+    print "testVerify() failed!"
+  except VentureException as e:
+    print e.data['expression_index']
+
 if __name__ == '__main__':
   testLiteral()
   testList()
@@ -230,3 +270,4 @@ if __name__ == '__main__':
   testAnd()
   testOr()
   testLet()
+  testVerify()

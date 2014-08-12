@@ -47,7 +47,7 @@ class TestSivmUtils(unittest.TestCase):
     def test_desugar_expression_if_failure(self):
         a = ['if','a','b',['if',['if'],'d','e']]
         try:
-            utils.desugar_expression(a)
+            macro.desugar_expression(a)
         except VentureException as e:
             self.assertEqual(e.data['expression_index'],[3,1])
         else:
@@ -83,7 +83,7 @@ class TestSivmUtils(unittest.TestCase):
     def test_desugar_expression_let_failure_1(self):
         a = ['let','a','b']
         try:
-            utils.desugar_expression(a)
+            macro.desugar_expression(a)
         except VentureException as e:
             self.assertEqual(e.data['expression_index'],[1])
         else:
@@ -91,7 +91,7 @@ class TestSivmUtils(unittest.TestCase):
     def test_desugar_expression_let_failure_2(self):
         a = ['let',['a'],'b']
         try:
-            utils.desugar_expression(a)
+            macro.desugar_expression(a)
         except VentureException as e:
             self.assertEqual(e.data['expression_index'],[1,0])
         else:
@@ -99,7 +99,7 @@ class TestSivmUtils(unittest.TestCase):
     def test_desugar_expression_let_failure_3(self):
         a = ['let',[[object(),'c']],'b']
         try:
-            utils.desugar_expression(a)
+            macro.desugar_expression(a)
         except VentureException as e:
             self.assertEqual(e.data['expression_index'],[1,0,0])
         else:
