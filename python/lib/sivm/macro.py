@@ -118,13 +118,15 @@ class SyntaxRule(Macro):
 def replace(exp, indexMap, index):
   i = 0
   while isinstance(exp, list):
+    if i == len(index):
+      return []
     exp = exp[index[i]]
     i += 1
   
   if isSym(exp) and exp in indexMap:
     return indexMap[exp] + index[i:]
   
-  raise Exception("Index replacement failed.")
+  return []
 
 class SubSugar(Sugar):
   def __init__(self, sugar, desugar, resugar):
