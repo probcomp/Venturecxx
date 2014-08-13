@@ -1,5 +1,6 @@
-from venture.test.config import get_ripl
+from venture.test.config import get_ripl, on_inf_prim
 
+@on_inf_prim("mh")
 def testOwainMixture():
   """Owain got <Exception: Cannot make random choices downstream of a node that gets constrained during regen> and thinks this is a mistake. DHS cannot reproduce the error."""
   ripl = get_ripl()

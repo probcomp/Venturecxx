@@ -1,7 +1,7 @@
 from testconfig import config
 from nose import SkipTest
 from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, collectSamples, on_inf_prim
 from nose.tools import eq_
 
 @statisticalTest
@@ -36,6 +36,7 @@ def testCategoricalAbsorb():
   ans = [(False,0.333),(True,0.667)]
   return reportKnownDiscrete(ans, predictions)
 
+@on_inf_prim("none")
 def testCategoricalDefault1():
   eq_(get_ripl().predict("(categorical (simplex 1))"), 0)
 

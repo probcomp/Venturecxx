@@ -74,11 +74,11 @@ class DefaultRandomVentureValue(object):
     return getattr(self, kind)(**kwargs)
   def matrix(self, length=None, **_kwargs):
     if length is None:
-      length = npr.randint(0, 10)
+      length = npr.randint(1, 10)
     return v.VentureMatrix(npr.uniform(-10, 10, (length, length))) # Square matrices
   def symmetricmatrix(self, length=None, **_kwargs):
     if length is None:
-      length = npr.randint(0, 10)
+      length = npr.randint(1, 10)
     candidate = npr.uniform(-10, 10, (length, length)) # Square matrices
     return v.VentureSymmetricMatrix((candidate + candidate.transpose()) / 2)
   def sp(self, **_kwargs):

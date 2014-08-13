@@ -1,12 +1,13 @@
-from IPython.core.magic import (Magics,register_cell_magic, magics_class, line_magic, cell_magic, line_cell_magic)
+from IPython.core.magic import (Magics,register_cell_magic, magics_class,
+                                line_magic, cell_magic, line_cell_magic)
 
 found_venture_ripl = 0
 
 try: 
     from venture.shortcuts import make_church_prime_ripl
     ipy_ripl = make_church_prime_ripl()
-    found_venture_ripl = 1
-except:
+    found_venture_ripl += 1
+except ImportError,TypeError:
     print 'Error in created Venture RIPL via make_church_prime_ripl()'
         
 

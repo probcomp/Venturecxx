@@ -1,6 +1,6 @@
 import copy
 import numbers
-from sp import VentureSP
+from sp import VentureSPRecord
 from value import VentureValue
 import sys
 import math
@@ -20,10 +20,18 @@ class LKernel(object):
 
 class DefaultAAALKernel(LKernel):
   def __init__(self,makerPSP): self.makerPSP = makerPSP
-  def simulate(self,_trace,_oldValue,args): return self.makerPSP.simulate(args)
-  def weight(self,_trace,newValue,_oldValue,args):
-    assert isinstance(newValue,VentureSP)
-    return newValue.outputPSP.logDensityOfCounts(args.madeSPAux)
+  def simulate(self,_trace,_oldValue,args):
+    spRecord = self.makerPSP.simulate(args)
+    spRecord.spAux = args.madeSPAux
+    return spRecord
+  def weight(self,_trace,newValue,_oldValue,_args):
+    # Using newValue.spAux here because args.madeSPAux is liable to be
+    # None when detaching. This has something to do with when the Args
+    # object is constructed relative to other things that happen
+    # during detach/regen. TODO: fix it so that this code is less
+    # fragile.
+    assert isinstance(newValue,VentureSPRecord)
+    return newValue.sp.outputPSP.logDensityOfCounts(newValue.spAux)
   def weightBound(self, _trace, _newValue, _oldValue, args):
     # Going through the maker here because the new value is liable to
     # be None when computing bounds for rejection, but the maker

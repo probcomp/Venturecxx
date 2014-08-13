@@ -12,18 +12,18 @@ class SPFamilies(object):
 
   def containsFamily(self,id): return id in self.families
   def getFamily(self,id): return self.families[id]
-  def registerFamily(self,id,esrParent): 
+  def registerFamily(self,id,esrParent):
     assert not id in self.families
     self.families[id] = esrParent
   def unregisterFamily(self,id): del self.families[id]
 
   def copy(self):
     return SPFamilies(self.families.copy())
-  
+
 class SPAux(object):
   def copy(self): return SPAux()
 
-class VentureSP(VentureValue):
+class SP(object):
   def __init__(self,requestPSP,outputPSP):
     from psp import PSP
     self.requestPSP = requestPSP
@@ -53,7 +53,20 @@ class VentureSP(VentureValue):
   # VentureSPs are intentionally not comparable until we decide
   # otherwise
 
-registerVentureType(VentureSP)
+class VentureSPRecord(VentureValue):
+  def __init__(self, sp, spAux=None, spFamilies=None):
+    if spAux is None:
+      spAux = sp.constructSPAux()
+    if spFamilies is None:
+      spFamilies = SPFamilies()
+    self.sp = sp
+    self.spAux = spAux
+    self.spFamilies = spFamilies
+
+  def show(self):
+    return self.sp.show(self.spAux)
+
+registerVentureType(VentureSPRecord)
 
 class SPType(VentureType):
   """An object representing a Venture function type.  It knows
@@ -64,7 +77,7 @@ used in the implementation of TypedPSP and TypedLKernel."""
   def asPython(self, vthing): return vthing
   def distribution(self, _base, **_kwargs):
     return None
-  def __contains__(self, vthing): return isinstance(vthing, VentureSP)
+  def __contains__(self, vthing): return isinstance(vthing, VentureSPRecord)
 
   def __init__(self, args_types, return_type, variadic=False, min_req_args=None):
     self.args_types = args_types

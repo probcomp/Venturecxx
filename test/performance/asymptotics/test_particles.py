@@ -1,7 +1,8 @@
-from venture.test.config import get_ripl
-import venture.test.timing as timing
 import scipy.stats
 from nose.plugins.attrib import attr
+
+from venture.test.config import get_ripl, on_inf_prim
+import venture.test.timing as timing
 
 def loadHMMParticleAsymptoticProgram1(M):
   """Easiest possible HMM asymptotic test for particles"""
@@ -30,6 +31,7 @@ def loadHMMParticleAsymptoticProgram1(M):
 # O(N) forwards
 # O(N log N) to infer
 @attr('slow')
+@on_inf_prim("func_pgibbs")
 def testHMMParticleAsymptotics1():
   def particulate(num_steps):
     ripl = loadHMMParticleAsymptoticProgram1(num_steps)

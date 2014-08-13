@@ -1,7 +1,6 @@
-from testconfig import config
-from nose import SkipTest
-from venture.test.config import get_ripl
+from venture.test.config import get_ripl, broken_in, on_inf_prim
 
+@on_inf_prim("resample") # And MH, but it's testing resample more
 def testUnevalConstantAndForget():
   """Check that unevaling a constant node does not produce a trace the
 copying of which would be invalid."""
@@ -13,11 +12,11 @@ copying of which would be invalid."""
   ripl.forget("pid")
   ripl.infer("(resample 5)")
 
+@broken_in('lite', "freeze is only implemented in Puma")
+@on_inf_prim("resample") # And MH, but it's testing resample more
 def testUnevalConstantAndFreeze():
   """Check that unevaling a constant node does not produce a trace the
 copying of which would be invalid."""
-  if config["get_ripl"] != "puma":
-    raise SkipTest("freeze only implemented in Puma")
   ripl = get_ripl()
   ripl.assume("foo", "(if (flip) 0 1)", label="pid")
   ripl.infer(10)
@@ -26,11 +25,11 @@ copying of which would be invalid."""
   ripl.freeze("pid")
   ripl.infer("(resample 5)")
 
+@broken_in('lite', "freeze is only implemented in Puma")
+@on_inf_prim("resample") # And MH, but it's testing resample more
 def testUnevalConstantAndFreezeWithObservations():
   """Check that unevaling a constant node does not produce an invalid
 trace (even when transitions are rejected)."""
-  if config["get_ripl"] != "puma":
-    raise SkipTest("freeze only implemented in Puma")
   ripl = get_ripl()
   ripl.assume("foo", "(if (flip) 0 1)", label="pid")
   ripl.observe("(normal foo 0.1)", 1)

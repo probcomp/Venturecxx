@@ -31,6 +31,8 @@ struct PyTrace
 
   boost::python::object extractPythonValue(DirectiveID did);
 
+  void bindPrimitiveSP(const string& sym, boost::python::object sp);
+
   void setSeed(size_t seed);
   size_t getSeed();
 
@@ -48,10 +50,6 @@ struct PyTrace
 
   void infer(boost::python::dict params);
   
-  boost::python::dict continuous_inference_status();
-  void start_continuous_inference(boost::python::dict params);
-  void stop_continuous_inference();
-
   void freeze(DirectiveID did);
 
   PyTrace* stop_and_copy() const;
@@ -67,11 +65,6 @@ struct PyTrace
 
 private:
   shared_ptr<ConcreteTrace> trace;
-  
-  bool continuous_inference_running;
-  boost::python::dict continuous_inference_params;
-  boost::thread * continuous_inference_thread;
-
 };
 
 #endif

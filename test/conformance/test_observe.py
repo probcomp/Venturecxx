@@ -1,9 +1,10 @@
 import scipy.stats as stats
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling
-from venture.test.stats import statisticalTest, reportKnownContinuous
 from nose.tools import eq_, assert_greater, assert_less # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
-from nose import SkipTest
 
+from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, on_inf_prim
+from venture.test.stats import statisticalTest, reportKnownContinuous
+
+@on_inf_prim("none")
 def testObserveAVar1a():
   "Observations should propagate through variables."
   ripl = get_ripl()
@@ -11,20 +12,22 @@ def testObserveAVar1a():
   ripl.observe("x", 3.0)
   ripl.predict("x", label="pid")
   # TODO assert that ripl.report("pid") is normally distributed here
-  ripl.infer(1)
+  ripl.infer("(incorporate)")
   # But the infer should have propagated by here
   eq_(ripl.report("pid"), 3.0)
 
+@on_inf_prim("none")
 def testObserveAVar1b():
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.predict("x", label="pid")
   ripl.observe("x", 3.0)
   # TODO assert that ripl.report("pid") is normally distributed here
-  ripl.infer(1)
+  ripl.infer("(incorporate)")
   # But the infer should have propagated by here
   eq_(ripl.report("pid"), 3)
 
+@on_inf_prim("none")
 def testObserveAMem1a():
   "Observations should propagate through mem."
   ripl = get_ripl()
@@ -32,20 +35,22 @@ def testObserveAMem1a():
   ripl.observe("(f)", 3.0)
   ripl.predict("(f)", label="pid")
   # TODO assert that ripl.report("pid") is normally distributed here
-  ripl.infer(1)
+  ripl.infer("(incorporate)")
   # But the infer should have propagated by here
   eq_(ripl.report("pid"), 3)
 
+@on_inf_prim("none")
 def testObserveAMem1b():
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda () (normal 0.0 1.0)))")
   ripl.predict("(f)", label="pid")
   ripl.observe("(f)", 3.0)
   # TODO assert that ripl.report("pid") is normally distributed here
-  ripl.infer(1)
+  ripl.infer("(incorporate)")
   # But the infer should have propagated by here
   eq_(ripl.report("pid"), 3)
 
+@on_inf_prim("none")
 def testObserveThenProcessDeterministically1a():
   "Observations should propagate through deterministic SPs."
   ripl = get_ripl()
@@ -53,10 +58,11 @@ def testObserveThenProcessDeterministically1a():
   ripl.observe("x", 3.0)
   ripl.predict("(* x 5)", label="pid")
   # TODO assert that ripl.report("pid") is normally distributed here
-  ripl.infer(1)
+  ripl.infer("(incorporate)")
   # But the infer should have propagated by here
   eq_(ripl.report("pid"), 15)
   
+@on_inf_prim("none")
 def testObserveThenProcessDeterministically1b():
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
@@ -64,10 +70,11 @@ def testObserveThenProcessDeterministically1b():
   ripl.observe("x", 3.0)
   
   # TODO assert that ripl.report("pid") is normally distributed here
-  ripl.infer(1)
+  ripl.infer("(incorporate)")
   # But the infer should have propagated by here
   eq_(ripl.report("pid"), 15)
 
+@on_inf_prim("mh")
 def testObserveThenProcessStochastically1a():
   "Observations should propagate through stochastic SPs without crashing."
   ripl = get_ripl()
@@ -80,6 +87,7 @@ def testObserveThenProcessStochastically1a():
   assert_greater(ripl.report("pid"), 2.99)
   assert_less(ripl.report("pid"), 3.01)  
   
+@on_inf_prim("mh")
 def testObserveThenProcessStochastically1b():
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")

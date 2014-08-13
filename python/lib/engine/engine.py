@@ -15,13 +15,13 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import random
 import pickle
-import copy
 import time
 
 from venture.exception import VentureException
 from venture.lite.utils import sampleLogCategorical
 from venture.engine.inference import Infer
-from venture.lite.value import VentureValue, ExpressionType
+from venture.engine.utils import expToDict
+import venture.value.dicts as v
 
 class Engine(object):
 
@@ -34,6 +34,7 @@ class Engine(object):
     self.directives = {}
     self.inferrer = None
     import venture.lite.inference_sps as inf
+    self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
 
   def inferenceSPsList(self):
@@ -42,7 +43,7 @@ class Engine(object):
   def bind_foreign_inference_sp(self, name, sp):
     self.inference_sps[name] = sp
 
-  def getDistinguishedTrace(self): 
+  def getDistinguishedTrace(self):
     assert self.traces
     return self.traces[0]
 
@@ -50,19 +51,10 @@ class Engine(object):
     self.directiveCounter += 1
     return self.directiveCounter
 
-  # TODO Move this into stack.
-  def desugarLambda(self,datum):
-    if type(datum) is list and type(datum[0]) is dict and datum[0]["value"] == "lambda":
-      ids = [{"type" : "symbol","value" : "quote"}] + [datum[1]]
-      body = [{"type" : "symbol","value" : "quote"}] + [self.desugarLambda(datum[2])]
-      return [{"type" : "symbol", "value" : "make_csp"},ids,body]
-    elif type(datum) is list: return [self.desugarLambda(d) for d in datum]
-    else: return datum
-
   def assume(self,id,datum):
     baseAddr = self.nextBaseAddr()
 
-    exp = self.desugarLambda(datum)
+    exp = datum
 
     for trace in self.traces:
       trace.eval(baseAddr,exp)
@@ -75,7 +67,7 @@ class Engine(object):
   def predict_all(self,datum):
     baseAddr = self.nextBaseAddr()
     for trace in self.traces:
-      trace.eval(baseAddr,self.desugarLambda(datum))
+      trace.eval(baseAddr,datum)
 
     self.directives[self.directiveCounter] = ["predict",datum]
 
@@ -89,7 +81,7 @@ class Engine(object):
     baseAddr = self.nextBaseAddr()
 
     for trace in self.traces:
-      trace.eval(baseAddr,self.desugarLambda(datum))
+      trace.eval(baseAddr,datum)
       logDensity = trace.observe(baseAddr,val)
 
       # TODO check for -infinity? Throw an exception?
@@ -165,8 +157,12 @@ class Engine(object):
     # method often.
     self.set_seed(random.randint(1,2**31-1))
 
-  # TODO Is bind_foreign_sp a directive or something like that?
   def bind_foreign_sp(self, name, sp):
+    self.foreign_sps[name] = sp
+    if self.name != "lite":
+      # wrap it for backend translation
+      import venture.lite.foreign as f
+      sp = f.ForeignLiteSP(sp)
     for trace in self.traces:
       trace.bindPrimitiveSP(name, sp)
 
@@ -182,6 +178,8 @@ effect of renumbering the directives, if some had been forgotten."""
     self.clear()
     if num_particles is not None:
       self.infer("(resample %d)" % num_particles)
+    for (name,sp) in self.foreign_sps.iteritems():
+      self.bind_foreign_sp(name,sp)
     for (_,dir) in worklist:
       self.replay(dir)
 
@@ -211,24 +209,14 @@ effect of renumbering the directives, if some had been forgotten."""
     self.traces = newTraces
     self.weights = [0 for p in range(P)]
 
-  def infer(self,params=None):
-    if params is None:
-      params = {}
-    self.set_default_params(params)
-
-    return Infer(self).infer(params)
-
-#  def infer_exp(self, program):
-#    return Infer(self).infer_exp(ExpressionType().asPython(VentureValue.fromStackDict(program)))
-
-  def infer_exp(self, program):
+  def infer(self, program):
     self.incorporate()
     if isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop":
       assert len(program) == 2
-      prog = [sym("cycle"), program[1], {"type":"number", "value":1}]
-      self.start_continuous_inference_exp(prog)
+      prog = [v.sym("cycle"), program[1], v.number(1)]
+      self.start_continuous_inference(prog)
     else:
-      exp = self.desugarLambda(self.macroexpand_inference(program))
+      exp = self.macroexpand_inference(program)
       return self.infer_v1_pre_t(exp, Infer(self))
 
   def macroexpand_inference(self, program):
@@ -236,7 +224,7 @@ effect of renumbering the directives, if some had been forgotten."""
       assert len(program) == 3
       subkernels = self.macroexpand_inference(program[1])
       transitions = self.macroexpand_inference(program[2])
-      return [program[0], [sym("list")] + subkernels, transitions]
+      return [program[0], [v.sym("list")] + subkernels, transitions]
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "mixture":
       assert len(program) == 3
       weights = []
@@ -248,16 +236,19 @@ effect of renumbering the directives, if some had been forgotten."""
         k = j + 1
         weights.append(weighted_ks[j])
         subkernels.append(weighted_ks[k])
-      return [program[0], [sym("simplex")] + weights, [sym("array")] + subkernels, transitions]
+      return [program[0], [v.sym("simplex")] + weights, [v.sym("array")] + subkernels, transitions]
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] in ["peek", "peek_all"]:
       assert 2 <= len(program) and len(program) <= 3
       if len(program) == 2:
-        return [program[0], enquote(program[1])]
+        return [program[0], v.quote(program[1])]
       else:
-        return [program[0], enquote(program[1]), enquote(program[2])]
+        return [program[0], v.quote(program[1]), v.quote(program[2])]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "printf":
+      assert len(program) >= 2
+      return [program[0]] + [v.quote(e) for e in program[1:]]
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "plotf":
       assert len(program) >= 2
-      return [program[0]] + [enquote(e) for e in program[1:]]
+      return [program[0]] + [v.quote(e) for e in program[1:]]
     elif type(program) is list: return [self.macroexpand_inference(p) for p in program]
     else: return program
 
@@ -266,15 +257,15 @@ effect of renumbering the directives, if some had been forgotten."""
     next_trace = lite.Trace()
     # TODO Import the enclosing lexical environment into the new trace?
     import venture.lite.inference_sps as inf
-    import venture.lite.value as v
+    import venture.lite.value as val
     all_scopes = [s for s in target.engine.getDistinguishedTrace().scope_keys()]
     symbol_scopes = [s for s in all_scopes if isinstance(s, basestring) and not s.startswith("default")]
     for hack in inf.inferenceKeywords + symbol_scopes:
-      next_trace.bindPrimitiveName(hack, v.VentureSymbol(hack))
+      next_trace.bindPrimitiveName(hack, val.VentureSymbol(hack))
     for name,sp in self.inferenceSPsList():
       next_trace.bindPrimitiveSP(name, sp)
     self.install_inference_prelude(next_trace)
-    next_trace.eval(4, [program, {"type":"blob", "value":target}])
+    next_trace.eval(4, [program, v.blob(target)])
     ans = next_trace.extractValue(4)
     assert isinstance(ans, dict)
     assert ans["type"] is "blob"
@@ -283,56 +274,19 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def install_inference_prelude(self, next_trace):
     for did, (name, exp) in enumerate(_inference_prelude()):
-      next_trace.eval(did, self.desugarLambda(exp))
+      next_trace.eval(did, exp)
       next_trace.bindInGlobalEnv(name, did)
 
-  def primitive_infer(self, params):
+  def primitive_infer(self, exp):
     for trace in self.traces:
-      if isinstance(params, dict):
-        trace.infer(params)
-      elif hasattr(trace, "infer_exp"):
-        # List style infer command and the trace can handle it natively
-        trace.infer_exp(params)
+      if hasattr(trace, "infer_exp"):
+        # The trace can handle the inference primitive syntax natively
+        trace.infer_exp(exp)
       else:
-        # List style infer command that the trace cannot handle natively
-        trace.infer(self.list_style_to_dict_style(params))
+        # The trace cannot handle the inference primitive syntax
+        # natively, so translate.
+        trace.infer(expToDict(exp))
 
-  def list_style_to_dict_style(self, exp):
-    import venture.ripl.utils as u
-    params = u.expToDict(exp)
-    self.set_default_params(params)
-    return params
-  
-  # TODO put all inference param parsing in one place
-  def set_default_params(self,params):
-    if 'kernel' not in params:
-      params['kernel'] = 'mh'
-    if 'scope' not in params:
-      params['scope'] = "default"
-    if 'block' not in params:
-      params['block'] = "one"
-    if 'with_mutation' not in params:
-      params['with_mutation'] = True
-    if 'transitions' not in params:
-      params['transitions'] = 1
-    else:
-      # FIXME: Kludge. If removed, test_infer (in
-      # python/test/ripl_test.py) fails, and if params are printed,
-      # you'll see a float for the number of transitions
-      params['transitions'] = int(params['transitions'])
-    
-    if "particles" in params:
-      params["particles"] = int(params["particles"])
-    if "in_parallel" not in params:
-      params['in_parallel'] = True
-    if params['kernel'] in ['cycle', 'mixture']:
-      if 'subkernels' not in params:
-        params['subkernels'] = []
-      if params['kernel'] == 'mixture' and 'weights' not in params:
-        params['weights'] = [1 for _ in params['subkernels']]
-      for p in params['subkernels']:
-        self.set_default_params(p)
-  
   def get_logscore(self, did): return self.getDistinguishedTrace().getDirectiveLogScore(did)
   def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()
   def logscore_all(self): return [t.getGlobalLogScore() for t in self.traces]
@@ -349,39 +303,19 @@ effect of renumbering the directives, if some had been forgotten."""
   def continuous_inference_status(self):
     if self.inferrer is not None:
       # Running CI in Python
-      return {"running":True, "params":self.inferrer.params}
+      return {"running":True, "expression":self.inferrer.program}
     else:
-      # Running CI in the underlying traces
-      return self.getDistinguishedTrace().continuous_inference_status() # awkward
+      return {"running":False}
 
-  def start_continuous_inference(self, params):
+  def start_continuous_inference(self, program):
     self.stop_continuous_inference()
-    self.set_default_params(params)
-    if "in_python" not in params or params["in_python"] == False:
-      # Run CI in the underlying traces
-      for trace in self.traces: trace.start_continuous_inference(params)
-    else:
-      # Run CI in Python
-      if "exp" in params:
-        self.start_continuous_inference_exp(params["exp"])
-      else:
-        self.inferrer = ContinuousInferrer(self, params)
-
-  def start_continuous_inference_exp(self, program):
-    # Start continuous inference in the model-parsed infer expression
-    # code path.
-    self.stop_continuous_inference()
-    self.inferrer = ContinuousInferrer(self, program, expression_mode=True)
+    self.inferrer = ContinuousInferrer(self, program)
 
   def stop_continuous_inference(self):
     if self.inferrer is not None:
       # Running CI in Python
       self.inferrer.stop()
       self.inferrer = None
-    else:
-      # May be running CI in the underlying traces
-      if self.continuous_inference_status()["running"]:
-        for trace in self.traces: trace.stop_continuous_inference()
 
   def dump_trace(self, trace, skipStackDictConversion=False):
     db = trace.makeSerializationDB()
@@ -405,15 +339,15 @@ effect of renumbering the directives, if some had been forgotten."""
     for did, directive in sorted(self.directives.items()):
         if directive[0] == "assume":
             name, datum = directive[1], directive[2]
-            trace.evalAndRestore(did, self.desugarLambda(datum), db)
+            trace.evalAndRestore(did, datum, db)
             trace.bindInGlobalEnv(name, did)
         elif directive[0] == "observe":
             datum, val = directive[1], directive[2]
-            trace.evalAndRestore(did, self.desugarLambda(datum), db)
+            trace.evalAndRestore(did, datum, db)
             trace.observe(did, val)
         elif directive[0] == "predict":
             datum = directive[1]
-            trace.evalAndRestore(did, self.desugarLambda(datum), db)
+            trace.evalAndRestore(did, datum, db)
 
     return trace
 
@@ -476,40 +410,27 @@ effect of renumbering the directives, if some had been forgotten."""
   # TODO: Add methods to inspect/manipulate the trace for debugging and profiling
 
 class ContinuousInferrer(object):
-  def __init__(self, engine, params, expression_mode=False):
+  def __init__(self, engine, program):
     self.engine = engine
-    if expression_mode:
-      self.params = {"exp": params, "in_python":True}
-    else:
-      self.params = copy.deepcopy(params)
-      self.params["in_python"] = True
+    self.program = program
     import threading as t
-    self.inferrer = t.Thread(target=self.infer_continuously, args=(self.params,))
+    self.inferrer = t.Thread(target=self.infer_continuously, args=(self.program,))
     self.inferrer.daemon = True
     self.inferrer.start()
 
-  def infer_continuously(self, params):
+  def infer_continuously(self, program):
     # Can use the storage of the thread object itself as the semaphore
     # controlling whether continuous inference proceeds.
     while self.inferrer is not None:
       # TODO React somehow to peeks and plotfs in the inference program
       # Currently suppressed for fear of clobbering the prompt
-      if "exp" in params:
-        self.engine.infer_exp(params["exp"])
-      else:
-        Infer(self.engine).infer(params)
+      self.engine.infer(program)
       time.sleep(0.0001) # Yield to be a good citizen
 
   def stop(self):
     inferrer = self.inferrer
     self.inferrer = None # Grab the semaphore
     inferrer.join()
-
-def sym(symbol):
-  return {"type":"symbol", "value":symbol}
-
-def enquote(thing):
-  return [sym("quote"), thing]
 
 the_prelude = None
 
@@ -535,7 +456,7 @@ def _compute_inference_prelude():
         ["mixture", """(lambda (weights kernels transitions)
   (iterate (lambda (t) ((categorical weights kernels) t)) transitions))"""]]:
     from venture.parser.church_prime_parser import ChurchPrimeParser
-    from venture.sivm.utils import desugar_expression
+    from venture.sivm.macro import desugar_expression
     from venture.sivm.core_sivm import _modify_expression
     exp = _modify_expression(desugar_expression(ChurchPrimeParser.instance().parse_expression(form)))
     ans.append((name, exp))

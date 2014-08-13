@@ -149,7 +149,7 @@ struct VentureNil : VentureValue
   bool equalsSameType(const VentureValuePtr & other) const;
   size_t hash() const;
 
-  VentureValuePtr lookup(VentureValuePtr index) const { cout << "lookup in nil" << endl; assert(false); }
+  VentureValuePtr lookup(VentureValuePtr index) const { throw "Tried to lookup in nil or list index out of range"; }
   int size() const { return 0; }
 
   string toString() const;

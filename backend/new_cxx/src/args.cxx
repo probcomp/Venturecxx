@@ -23,6 +23,7 @@ vector<VentureValuePtr> makeVectorOfValues(Trace * trace, const vector<RootOfFam
 
 Args::Args(Trace * trace, ApplicationNode * appNode)
 {
+  _trace = trace;
   node = appNode;
 
   operandNodes = node->operandNodes;

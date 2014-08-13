@@ -16,6 +16,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# Raise Python's recursion limit, per
+# http://log.brandonthomson.com/2009/07/increase-pythons-recursion-limit.html
+# The reason to do this is that Venture is not tail recursive, and the
+# cycle and mixture inference programs are written as recursive
+# functions in Venture.
+import sys
+import resource
+# Try to increase max stack size from 8MB to 512MB
+(soft, hard) = resource.getrlimit(resource.RLIMIT_STACK)
+if hard > -1:
+    new_soft = max(soft, min(2**29, hard))
+else:
+    new_soft = max(soft, 2**29)
+resource.setrlimit(resource.RLIMIT_STACK, (new_soft, hard))
+# Set a large recursion depth limit
+sys.setrecursionlimit(max(10**6, sys.getrecursionlimit()))
+
 from venture import parser, ripl, sivm, server
 
 class Backend(object):
@@ -95,63 +112,3 @@ def make_ripl_rest_server():
 
 def make_ripl_rest_client(base_url):
     return ripl.RiplRestClient(base_url)
-
-# value shortcuts
-
-def val(t,v):
-    return {"type":t,"value":v}
-
-def number(v):
-    return val("number",v)
-
-def real(v):
-    return val("real",v)
-
-def integer(v):
-    return val("integer",v)
-
-def probability(v):
-    return val("probability",v)
-
-def atom(v):
-    return val("atom",v)
-
-def boolean(v):
-    return val("boolean",v)
-
-def symbol(s):
-    return val("symbol",s)
-
-def blob(v):
-    return val("blob",s)
-
-def list(vs):
-    return val("list", vs)
-
-def improper_list(vs, tail):
-    return val("improper_list", (vs, tail))
-
-def array(vs):
-    return val("array", vs)
-
-def array_unboxed(vs, subtype):
-    ret = val("array_unboxed", vs)
-    ret["subtype"] = subtype
-    return ret
-
-def vector(vs):
-    return val("vector", vs)
-
-def simplex(vs):
-    return val("simplex", vs)
-
-def matrix(vs):
-    import numpy as np
-    return val("matrix", np.asarray(vs))
-
-def symmetric_matrix(vs):
-    import numpy as np
-    return val("symmetric_matrix", np.asarray(vs))
-
-def quote(v):
-    return [symbol("quote"), v]

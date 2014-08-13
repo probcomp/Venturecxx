@@ -6,10 +6,14 @@ from regen import constrain, processMadeSP, evalFamily, restore
 from detach import unconstrain, unevalFamily
 from value import SPRef, ExpressionType, VentureValue, VentureSymbol
 from scaffold import Scaffold
-from infer import mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,RejectionOperator, MissingEsrParentError, NoSPRefError, HamiltonianMonteCarloOperator, MAPOperator, SliceOperator, NesterovAcceleratedGradientAscentOperator
+from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
+                   EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,
+                   RejectionOperator, MissingEsrParentError, NoSPRefError,
+                   HamiltonianMonteCarloOperator, MAPOperator, StepOutSliceOperator,
+                   DoublingSliceOperator, NesterovAcceleratedGradientAscentOperator)
 from omegadb import OmegaDB
 from smap import SMap
-from sp import SPFamilies
+from sp import SPFamilies, VentureSPRecord
 from scope import isScopeIncludeOutputPSP, isScopeExcludeOutputPSP
 from regen import regenAndAttach
 from detach import detachAndExtract
@@ -49,7 +53,7 @@ class Trace(object):
     self.globalEnv.addBinding(name,ConstantNode(val))
 
   def bindPrimitiveSP(self, name, sp):
-    spNode = self.createConstantNode(sp)
+    spNode = self.createConstantNode(VentureSPRecord(sp))
     processMadeSP(self,spNode,False)
     assert isinstance(self.valueAt(spNode), SPRef)
     self.globalEnv.addBinding(name,spNode)
@@ -153,7 +157,7 @@ class Trace(object):
 
   def groundValueAt(self,node):
     value = self.valueAt(node)
-    if isinstance(value,SPRef): return self.madeSPAt(value.makerNode)
+    if isinstance(value,SPRef): return self.madeSPRecordAt(value.makerNode)
     else: return value
 
   def argsAt(self,node): return Args(self,node)
@@ -188,17 +192,33 @@ class Trace(object):
     assert node.isAppropriateValue(value)
     node.value = value
 
-  def madeSPAt(self,node): return node.madeSP
-  def setMadeSPAt(self,node,sp): node.madeSP = sp
+  def madeSPRecordAt(self,node):
+    assert node.madeSPRecord is not None
+    return node.madeSPRecord
 
-  def madeSPFamiliesAt(self,node):
-    assert node.madeSPFamilies is not None
-    return node.madeSPFamilies
+  def setMadeSPRecordAt(self,node,spRecord):
+    node.madeSPRecord = spRecord
 
-  def setMadeSPFamiliesAt(self,node,families): node.madeSPFamilies = families
+  def madeSPAt(self,node): return self.madeSPRecordAt(node).sp
+  def setMadeSPAt(self,node,sp):
+    spRecord = self.madeSPRecordAt(node)
+    spRecord.sp = sp
 
-  def madeSPAuxAt(self,node): return node.madeSPAux
-  def setMadeSPAuxAt(self,node,aux): node.madeSPAux = aux
+  def madeSPFamiliesAt(self,node): return self.madeSPRecordAt(node).spFamilies
+  def setMadeSPFamiliesAt(self,node,families):
+    spRecord = self.madeSPRecordAt(node)
+    spRecord.spFamilies = families
+
+  def madeSPAuxAt(self,node): return self.madeSPRecordAt(node).spAux
+  def setMadeSPAuxAt(self,node,aux):
+    spRecord = self.madeSPRecordAt(node)
+    spRecord.spAux = aux
+
+  def getAAAMadeSPAuxAt(self,node): return node.aaaMadeSPAux
+  def discardAAAMadeSPAuxAt(self,node):
+    node.aaaMadeSPAux = None
+  def registerAAAMadeSPAuxAt(self,node,aux):
+    node.aaaMadeSPAux = aux
 
   def parentsAt(self,node): return node.parents()
   def definiteParentsAt(self,node): return node.definiteParents()
@@ -369,59 +389,6 @@ class Trace(object):
   def numRandomChoices(self):
     return len(self.rcs)
 
-  def continuous_inference_status(self): return {"running" : False}
-
-  # params is a dict with keys "kernel", "scope", "block",
-  # "transitions" (the latter should be named "repeats").
-
-  def infer(self,params):
-    if isinstance(params, list):
-      return self.infer_exp(params)
-    if not self.scopeHasEntropy(params["scope"]):
-      return
-    for _ in range(params["transitions"]):
-      if params["kernel"] == "mh":
-        assert params["with_mutation"]
-        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MHOperator())
-      elif params["kernel"] == "meanfield":
-        assert params["with_mutation"]
-        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MeanfieldOperator(params["steps"],0.0001))
-      elif params["kernel"] == "hmc":
-        assert params["with_mutation"]
-        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),HamiltonianMonteCarloOperator(params["epsilon"], params["L"]))
-      elif params["kernel"] == "gibbs":
-        #assert params["with_mutation"]
-        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),EnumerativeGibbsOperator())
-      elif params["kernel"] == "slice":
-        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),SliceOperator())
-      # [FIXME] egregrious style, but expedient. The stack is such a
-      # mess anyway, it's hard to do anything with good style that
-      # doesn't begin by destroying the stack.
-      elif params["kernel"] == "pgibbs":
-        if params["block"] == "ordered_range":
-          if params["with_mutation"]:
-            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"],(params["min_block"],params["max_block"])),PGibbsOperator(int(params["particles"])))
-          else:
-            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"],(params["min_block"],params["max_block"])),ParticlePGibbsOperator(int(params["particles"])))
-        else:
-          if params["with_mutation"]:
-            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),PGibbsOperator(int(params["particles"])))
-          else:
-            mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),ParticlePGibbsOperator(int(params["particles"])))
-          
-      elif params["kernel"] == "map":
-        assert params["with_mutation"]
-        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),MAPOperator(params["rate"], int(params["steps"])))
-      elif params["kernel"] == "nesterov":
-        assert params["with_mutation"]
-        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),NesterovAcceleratedGradientAscentOperator(params["rate"], int(params["steps"])))
-      elif params["kernel"] == "rejection":
-        assert params["with_mutation"]
-        mixMH(self,BlockScaffoldIndexer(params["scope"],params["block"]),RejectionOperator())
-      else: raise Exception("INFER (%s) MH is not implemented" % params["kernel"])
-
-      for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
-
   def infer_exp(self,exp):
     assert len(exp) >= 4
     (operator, scope, block) = exp[0:3]
@@ -445,7 +412,11 @@ class Trace(object):
       elif operator == "gibbs":
         mixMH(self, BlockScaffoldIndexer(scope, block), EnumerativeGibbsOperator())
       elif operator == "slice":
-        mixMH(self, BlockScaffoldIndexer(scope, block), SliceOperator())
+        (w, m) = exp[3:5]
+        mixMH(self, BlockScaffoldIndexer(scope, block), StepOutSliceOperator(w, m))
+      elif operator == "slice_doubling":
+        (w, p) = exp[3:5]
+        mixMH(self, BlockScaffoldIndexer(scope, block), DoublingSliceOperator(w, p))
       elif operator == "pgibbs":
         particles = int(exp[3])
         if isinstance(block, list): # Ordered range
@@ -530,9 +501,8 @@ class Trace(object):
 #################### Misc for particle commit
 
   def addNewMadeSPFamilies(self,node,newMadeSPFamilies):
-    if node.madeSPFamilies is None: node.madeSPFamilies = SPFamilies()
     for id,root in newMadeSPFamilies.iteritems():
-      node.madeSPFamilies.registerFamily(id,root)
+      node.madeSPRecord.spFamilies.registerFamily(id,root)
 
   def addNewChildren(self,node,newChildren):
     for child in newChildren:
@@ -540,4 +510,4 @@ class Trace(object):
 
 
 
-    
+

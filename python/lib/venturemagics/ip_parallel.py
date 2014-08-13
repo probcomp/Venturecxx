@@ -8,7 +8,8 @@ import numpy as np
 import matplotlib.pylab as plt
 from scipy.stats import kde
 gaussian_kde = kde.gaussian_kde
-import subprocess,time,pickle
+import subprocess,time
+import cPickle as pickle
 mk_l_ripl = make_lite_church_prime_ripl
 mk_p_ripl = make_puma_church_prime_ripl
 
@@ -30,19 +31,10 @@ mk_p_ripl = make_puma_church_prime_ripl
 
 # note: might be able to simplify each (esp. local) with decorators.
 
-# constructor:
-# default is for only working with remotes. local_mode is only
-# with local. then debug mode gives default of one local, with
-# more as specified optionally.
-
 
 # TODO:
 # optional default inference program for mripl
-# v.plot('x',**plottingkwargs) = v.snapshot(exp_list=['x'],plot=True,**kwargs)
 # move local_out to debug mode
-# move regression stuff to regression utils
-
-
 
 
 # Utility functions for working with ipcluster and mripl
@@ -56,7 +48,7 @@ def erase_initialize_mripls(client=None,no_erase=False):
     if no_erase:
         try: # mripl vars already present: return client object
             client[:]['no_mripls']
-        except:
+        except NameError:
             client[:].execute('mripls=[]; no_mripls=0')
         return client
     else:
@@ -88,7 +80,7 @@ def mk_picklable(out_lst):
     try:
         pickle.dumps(out_lst)
         return out_lst
-    except:
+    except pickle.PicklingError:
         return map(str,out_lst)
 
 
@@ -169,10 +161,11 @@ class MRipl():
             try:
                 self.cli=Client()
                 self.local_mode = False
-            except:
+            except IOError as e:
                 print 'Failed to create IPython Parallel Client object.'
                 print 'MRipl is running in local (serial) model.'
                 self.local_mode = True
+                print 'Error: {}'.format(e)
         else:
             self.local_mode = True
 
@@ -225,7 +218,7 @@ class MRipl():
 
         try:
             self.dview['no_mripls']
-        except:
+        except: # tried to catch NameError but failed due to parallel
             self.dview.execute('mripls=[]; no_mripls=0')
             print "New list *mripls* created on remote engines."
 
@@ -779,11 +772,11 @@ class MRipl():
              logscore: Snapshot of logscore.'''
 
 
-        if isinstance(did_labels_list,(int,str)):
+        if isinstance(did_labels_list,(int,basestring)):
             did_labels_list = [did_labels_list]
         else:
             did_labels_list = list(did_labels_list)
-        if isinstance(exp_list,str):
+        if isinstance(exp_list,basestring):
             exp_list = [exp_list]
         else:
             exp_list = list(exp_list)
@@ -1014,17 +1007,18 @@ class MRipl():
             if var_type =='float':
                 try:
                     kde=list(gaussian_kde(vals)(np.linspace(min(vals),max(vals),50)))[0]
-                except:
-                    kde=False
-                if kde:
+                except np.linalg.LinAlgError as e:
+                    print 'No GKDE due to {}'.format(e)
+                    fig,ax = plt.subplots(figsize=(4,2))
+                    draw_hist(vals,label,ax,plot_range=plot_range)
+                    figs.append(fig)
+                else:
                     fig,ax = plt.subplots(nrows=1,ncols=2,sharex=True,figsize=(9,2))
                     draw_hist(vals,label,ax[0],plot_range=plot_range)
                     draw_kde(vals,label,ax[1],plot_range=plot_range)
                     figs.append(fig)
-                else:
-                    fig,ax = plt.subplots(figsize=(4,2))
-                    draw_hist(vals,label,ax,plot_range=plot_range)
-                    figs.append(fig)
+                
+                   
             elif var_type in 'int':
                 fig,ax = plt.subplots()
                 draw_hist(vals,label,ax,plot_range=plot_range)
@@ -1056,21 +1050,19 @@ def ipython_inline():
     to display previously generated figs inline.'''
     try:
         ip=get_ipython()
-        ip.run_cell_magic("px",'','pass') # display any figs inline
-    except:
+    except NameError:
         pass
-
+    try:
+        ip.run_cell_magic("px",'','pass') # display any figs inline
+    except: # should be some ipython specific exception
+        pass
 
 def mk_directives_string(ripl):
         di_string_lst = [directive_to_string(di) for di in ripl.list_directives() ]
         return '\n'.join(di_string_lst)
 
 def display_directives(ripl_mripl,instruction='observe'):
-    ## FIXME: add did and labels
-    #v=ripl_mripl
-    #mr=1  if isinstance(v,MRipl) else 0
-    #di_list = v.local_ripls[0].list_directives() if mr else v.list_directives()
-
+    ## REMOVE: obsoleted by print_directives
     di_list = ripl_mripl.list_directives()
     instruction_list = []
     for di in di_list:
@@ -1080,7 +1072,6 @@ def display_directives(ripl_mripl,instruction='observe'):
     return instruction_list
 
 def directive_to_string(d):
-    ## FIXME: replace symbols
     if d['instruction']=='assume':
         return '[assume %s %s]' %( d['symbol'], build_exp(d['expression']) )
     elif d['instruction']=='observe':
@@ -1101,109 +1092,6 @@ def build_exp(exp):
             return str(exp['value'])
     else:
         return '('+ ' '.join(map(build_exp,exp)) + ')'
-
-
-
-### Functions defined on MRipl objects
-
-def mr_map_proc(mripl,no_ripls,proc,*proc_args,**proc_kwargs):
-    '''Push procedure into engine namespaces. Use execute to map across ripls.
-    if no_ripls==0, 'all' or >mripl.no_ripls, then maps across all.
-    Maps proc across local ripls IFF in local_mode or mripl.output=="local".'''
-
-    ## FIXME: should be able to supress stdout from local_ripls when in remote mode
-    if no_ripls==0 or no_ripls=='all' or no_ripls>mripl.no_ripls:
-        no_ripls = mripl.no_ripls
-        no_local_ripls = mripl.no_local_ripls
-
-    # map across local ripls
-    if mripl.local_mode:
-        local_out=[proc(r,*proc_args,**proc_kwargs) for i,r in enumerate(mripl.local_ripls) if i<no_ripls]
-        return local_out
-    else:
-        local_out = [None]*no_ripls
-
-    # map across remote ripls
-    mripl.dview.push({'map_proc':interactive(proc),'map_args':proc_args,
-                      'map_kwargs':proc_kwargs})
-
-    if no_ripls < mripl.no_engines:
-        map_view = mripl.cli[:no_ripls]
-        per_eng = 1
-        mripl.dview.execute('apply_out=None')
-    else:
-        per_eng = int(np.ceil(no_ripls/float(mripl.no_engines)))
-
-    s1='apply_out='
-    s2='[map_proc(r,*map_args,**map_kwargs) for i,r in enumerate(mripls[%i]["%s"]) if i<%i]' % (mripl.mrid,
-                                                                                                mripl.backend,per_eng)
-    mripl.dview.execute(s1+s2)
-
-    ipython_inline()
-
-    remote_out = lst_flatten( mripl.dview['apply_out'] )
-
-    return remote_out[:no_ripls] if mripl.output=='remote' else local_out
-
-
-
-
-def mr_map_array(mripl,proc,proc_args_list,no_kwargs=True,id_info_out=False):
-
-    no_args = len(proc_args_list)
-    assert no_args <= mripl.no_ripls, 'More arguments than ripls'
-
-    # map across local ripls
-    if mripl.local_mode:
-        id_local_out=[]; local_out=[]
-        for i,r in enumerate(mripl.local_ripls):
-            if i<no_args:
-                id_args = (mripl.local_seeds[i],proc_args_list[i])
-                if no_kwargs:
-                    outs = proc(r,*proc_args_list[i])
-                else:
-                    outs = proc(r,*proc_args_list[i][0],**proc_args_list[i][1])
-                local_out.append( outs )
-                id_local_out.append( (id_args,outs))
-        local_out = id_local_out if id_info_out else local_out
-        return local_out
-    else:
-        local_out = [None]*no_args
-
-    # map across remote ripls
-    no_args_per_engine = int(np.ceil(no_args/float(mripl.no_engines)))
-    extra_ripls = no_args_per_engine - no_args
-    proc_args_list = proc_args_list + [proc_args_list[-1]]*extra_ripls # pad args with last element
-
-    for i in range(mripl.no_engines):
-        engine_view = mripl.cli[i]
-        start=i*no_args_per_engine
-        eng_args = proc_args_list[start:start+no_args_per_engine]
-        engine_view.push({'ar_proc':interactive(proc),'eng_args':eng_args,
-                          'per_eng':len(eng_args)})
-        engine_view.push({'array_out':[]})
-
-        @interactive
-        def f(mrid,backend,eng_args,no_kwargs):
-            import os
-            for i,r in enumerate(mripls[mrid][backend]):
-                if i<per_eng:
-                    id_args = (os.getpid(), mripls[mrid]['seeds'][i], eng_args[i]),
-                    if no_kwargs:
-                        outs =ar_proc(r,*eng_args[i])
-                    else:
-                        outs=ar_proc(r,*eng_args[i][0],**eng_args[i][1])
-                    array_out.append((id_args,outs))
-            return None
-
-        engine_view.apply_sync(f,mripl.mrid,mripl.backend,eng_args,no_kwargs)
-
-    ipython_inline()
-    id_remote_out = (('pid','seed','arg'),lst_flatten( mripl.dview['array_out'] ) )
-    remote_out = [outs for id_args,outs in id_remote_out[1]]
-    remote_out = remote_out if not id_info_out else id_remote_out
-
-    return remote_out if mripl.output=='remote' else local_out
 
 
 
@@ -1240,7 +1128,7 @@ def venture(line, cell):
 try:
     ip = get_ipython()
     ip.register_magic_function(venture, "cell")
-except:
+except NameError:
     pass
 
 

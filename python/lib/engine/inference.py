@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
-
 from venture.lite.value import ExpressionType
 from venture.lite.utils import simulateCategorical
 
@@ -24,6 +23,7 @@ class Infer(object):
     self.engine = engine
     self.out = {}
     self.plot = None
+    self.printer = None
 
   def _ensure_peek_name(self, name):
     if self.plot is not None:
@@ -41,52 +41,23 @@ class Infer(object):
     else:
       raise Exception("TODO Cannot plot with different specs in the same inference program")
 
+  def _ensure_print(self, names):
+    if self.printer is None:
+      self.printer = SpecPrint(names)
+    elif names == self.printer.names:
+      pass
+    else:
+      # In order to count iterations, can only have one printf call
+      # This will still multi-count interations if you enter the same printf command multiple times
+      # This is going to get refactored soon anyhow, so not worth guarding against that case here
+      raise Exception("TODO Cannot have multiple printf commands in same inference program")
+
+  def _start_timer(self):
+    if self.start_time is None:
+      self.start_time = time.time()
+
   def final_data(self):
     return self.plot if self.plot is not None else self.out
-
-  def infer(self, program):
-    self.engine.incorporate()
-    self.do_infer(program)
-    return self.final_data()
-
-  def do_infer(self, program):
-    if 'command' in program and program['command'] == "resample":
-      self.engine.resample(program['particles'])
-    elif 'command' in program and program['command'] == "incorporate":
-      pass
-    elif 'command' in program and program['command'] == "peek":
-      name = program['name']
-      self._ensure_peek_name(name)
-      value = self.engine.sample(program['expression'])
-      self.out[name].append(value)
-    elif 'command' in program and program['command'] == "peek_all":
-      name = program['name']
-      self._ensure_peek_name(name)
-      values = self.engine.sample_all(program['expression'])
-      self.out[name].append(values)
-    elif 'command' in program and program['command'] == "plotf":
-      self._ensure_plot(program["specification"], program["names"], program["expressions"])
-      self.plot.add_data(self.engine)
-    elif 'command' in program and program['command'] == "loop":
-      # TODO Assert that loop is only done at the top level?
-      params = {"kernel":"cycle", "subkernels":program["kernels"], "in_python":True, "transitions":1}
-      self.engine.start_continuous_inference(params)
-    elif program['kernel'] == "cycle":
-      if 'subkernels' not in program:
-        raise Exception("Cycle kernel must have things to cycle over (%r)" % program)
-      for _ in range(program["transitions"]):
-        for k in program["subkernels"]:
-          self.do_infer(k)
-    elif program["kernel"] == "mixture":
-      for _ in range(program["transitions"]):
-        self.do_infer(simulateCategorical(program["weights"], program["subkernels"]))
-    else: # A primitive infer expression
-      self.engine.primitive_infer(program)
-
-  def infer_exp(self, program):
-    self.engine.incorporate()
-    self.do_infer_exp(program)
-    return self.final_data()
 
   def default_name_for_exp(self,exp):
     if isinstance(exp, basestring):
@@ -95,61 +66,6 @@ class Infer(object):
       return "(" + ' '.join([self.default_name_for_exp(e) for e in exp]) + ")"
     else:
       return str(exp)
-
-  def do_infer_exp(self, exp):
-    operator = exp[0]
-    if operator == "resample":
-      assert len(exp) == 2
-      self.resample(exp[1])
-    elif operator == "incorporate":
-      assert len(exp) == 1
-      self.incorporate()
-    elif operator in ["peek", "peek_all"]:
-      assert 2 <= len(exp) and len(exp) <= 3
-      if len(exp) == 3:
-        (_, expression, name) = exp
-      else:
-        (_, expression) = exp
-        name = self.default_name_for_exp(expression)
-      if operator == "peek":
-        self.peek(expression, name)
-      else:
-        self.peek_all(expression, name)
-    elif operator == "plotf":
-      assert len(exp) >= 2
-      spec = exp[1]
-      exprs = exp[2:]
-      names = [self.default_name_for_exp(e) for e in exprs]
-      self._ensure_plot(spec, names, exprs)
-      self.plot.add_data(self.engine)
-    elif operator == "loop":
-      # TODO Assert that loop is only done at the top level?
-      assert len(exp) == 2
-      (_, subkernels) = exp
-      prog = ["cycle", subkernels, 1]
-      self.engine.start_continuous_inference_exp(prog)
-    elif operator == "cycle":
-      assert len(exp) == 3
-      (_, subkernels, transitions) = exp
-      assert type(subkernels) is list
-      for _ in range(int(transitions)):
-        for k in subkernels:
-          self.do_infer_exp(k)
-    elif operator == "mixture":
-      assert len(exp) == 3
-      (_, weighted_subkernels, transitions) = exp
-      assert type(weighted_subkernels) is list
-      weights = []
-      subkernels = []
-      for i in range(len(weighted_subkernels)/2):
-        j = 2*i
-        k = j + 1
-        weights.append(weighted_subkernels[j])
-        subkernels.append(weighted_subkernels[k])
-      for _ in range(int(transitions)):
-        self.do_infer_exp(simulateCategorical(weights, subkernels))
-    else: # A primitive infer expression
-      self.primitive_infer(exp)
 
   def primitive_infer(self, exp): self.engine.primitive_infer(exp)
   def resample(self, ct): self.engine.resample(ct)
@@ -178,7 +94,34 @@ class Infer(object):
     names = [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
     self._ensure_plot(spec, names, exps)
     self.plot.add_data(self.engine)
+  def printf(self, *exprs):
+    names = [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
+    self._ensure_print(names)
+    self.printer.show_data(self.engine)
 
+class SpecPrint(object):
+  "Quick and dirty way to allow printing to stdout on long runs."
+  # TODO: refactor to integrate with peek and plotf
+  def __init__(self, names):
+    self.names = names
+    self.sweep = 0
+    self.time = time.time()
+
+  def show_data(self, engine):
+    self.sweep += 1
+    the_time = time.time() - self.time
+    for name in self.names:
+      if name == 'counter':
+        print 'Sweep count: {0}'.format(self.sweep)
+      elif name == 'time':
+        print 'Wall time: {0:0.2f} s'.format(the_time)
+      elif name == 'score':
+        print 'Global log score: {0:0.2f}'.format(engine.logscore())
+      else:
+        # TODO: support for pretty-printing of floats
+        value = engine.sample(ExpressionType().asVentureValue(name).asStackDict())
+        print '{0}: {1}'.format(name, value['value'])
+    print
 
 class SpecPlot(object):
   """(plotf spec exp0 ...) -- Generate a plot according to a format specification.
@@ -282,8 +225,8 @@ class SpecPlot(object):
         # Data source was not requested; remove it to avoid confusing pandas
         del self.data[name]
     from pandas import DataFrame
-    from venture.ripl.utils import _strip_types_from_dict_values
-    return DataFrame.from_dict(_strip_types_from_dict_values(self.data))
+    from venture.ripl.utils import strip_types_from_dict_values
+    return DataFrame.from_dict(strip_types_from_dict_values(self.data))
 
   def draw(self):
     return self.spec.draw(self.dataset(), self.names)

@@ -1,7 +1,8 @@
-from venture.test.config import get_ripl
-import venture.test.timing as timing
 import sys
 from nose.plugins.attrib import attr
+
+from venture.test.config import get_ripl, on_inf_prim
+import venture.test.timing as timing
 
 sys.setrecursionlimit(1000000) 
 
@@ -22,6 +23,7 @@ def loadChurchPairProgram(K):
 # O(N) forwards
 # O(1) to infer
 @attr('slow')
+@on_inf_prim("mh")
 def testChurchPairProgram1():
 
   def pairify(K):
@@ -46,8 +48,9 @@ def loadReferencesProgram(K):
 
 # O(N) forwards
 # O(1) to infer
-# (this could be reused from testChurchPairProgram
+# (this could be reused from testChurchPairProgram)
 @attr('slow')
+@on_inf_prim("mh")
 def testReferencesProgram1():
 
   def refify(K):

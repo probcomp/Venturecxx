@@ -8,9 +8,9 @@ class InferPrimitiveOutputPSP(psp.DeterministicPSP):
     self.name = name
     self.klass = klass
   def simulate(self, args):
-    return sp.VentureSP(psp.NullRequestPSP(),
-                        psp.TypedPSP(self.klass(self.name, args.operandValues),
-                                     sp.SPType([v.ForeignBlobType()], v.ForeignBlobType())))
+    return sp.VentureSPRecord(sp.SP(psp.NullRequestPSP(),
+                                    psp.TypedPSP(self.klass(self.name, args.operandValues),
+                                                 sp.SPType([v.ForeignBlobType()], v.ForeignBlobType()))))
 
 class MadeInferPrimitiveOutputPSP(psp.RandomPSP):
   def __init__(self, name, exp):
@@ -50,12 +50,14 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
   SPsListEntry("map", [v.ExpressionType(), v.ExpressionType(), v.NumberType(), v.IntegerType(), v.IntegerType()]),
   SPsListEntry("nesterov", [v.ExpressionType(), v.ExpressionType(), v.NumberType(), v.IntegerType(), v.IntegerType()]),
   SPsListEntry("rejection", [v.ExpressionType(), v.ExpressionType(), v.IntegerType()], min_req_args=2),
-
+  SPsListEntry("slice", [v.ExpressionType(), v.ExpressionType(), v.NumberType(), v.IntegerType(), v.IntegerType()]),
+  SPsListEntry("slice_doubling", [v.ExpressionType(), v.ExpressionType(), v.NumberType(), v.IntegerType(), v.IntegerType()]),
   SPsListEntry("resample", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
   SPsListEntry("incorporate", [], klass=MadeEngineMethodInferOutputPSP),
   SPsListEntry("peek", [v.AnyType(), v.SymbolType()], klass=MadeEngineMethodInferOutputPSP, min_req_args=1),
   SPsListEntry("peek_all", [v.AnyType(), v.SymbolType()], klass=MadeEngineMethodInferOutputPSP, min_req_args=1),
   SPsListEntry("plotf", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
+  SPsListEntry("printf", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
 
   # Hackety hack hack backward compatibility
   ["ordered_range", deterministic_typed(lambda *args: (v.VentureSymbol("ordered_range"),) + args,

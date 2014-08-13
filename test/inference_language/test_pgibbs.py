@@ -1,8 +1,9 @@
 import math
 import scipy.stats as stats
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, ignore_inference_quality, default_num_transitions_per_sample
+from venture.test.config import get_ripl, collectSamples, ignore_inference_quality, default_num_transitions_per_sample, gen_on_inf_prim, on_inf_prim
 
+@gen_on_inf_prim("pgibbs")
 def testPGibbsBasic1():
   yield checkPGibbsBasic1, "false"
   yield checkPGibbsBasic1, "true"
@@ -18,6 +19,7 @@ def checkPGibbsBasic1(in_parallel):
   ans = [(True,.5),(False,.5)]
   return reportKnownDiscrete(ans, predictions)
 
+@gen_on_inf_prim("pgibbs")
 def testPGibbsBasic2():
   yield checkPGibbsBasic2, "false"
   yield checkPGibbsBasic2, "true"
@@ -31,9 +33,14 @@ def checkPGibbsBasic2(in_parallel):
   predictions = collectSamples(ripl,"pid",infer=infer)
   ans = [(False,.9),(True,.1)]
   return reportKnownDiscrete(ans, predictions)
- 
+
+# Not the same test generator because I want to annotate them differently. 
+@gen_on_inf_prim("pgibbs")
 def testPGibbsBlockingMHHMM1():
   yield checkPGibbsBlockingMHHMM1, "pgibbs"
+
+@gen_on_inf_prim("func_pgibbs")
+def testFuncPGibbsBlockingMHHMM1():
   yield checkPGibbsBlockingMHHMM1, "func_pgibbs"
 
 @statisticalTest
@@ -70,8 +77,12 @@ def checkPGibbsBlockingMHHMM1(operator):
   return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
 
 
+@gen_on_inf_prim("pgibbs")
 def testPGibbsDynamicScope1():
   yield checkPGibbsDynamicScope1, "pgibbs"
+
+@gen_on_inf_prim("func_pgibbs")
+def testFuncPGibbsDynamicScope1():
   yield checkPGibbsDynamicScope1, "func_pgibbs"
 
 @statisticalTest
@@ -106,6 +117,7 @@ def checkPGibbsDynamicScope1(operator):
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
   return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
 
+@on_inf_prim("pgibbs")
 @statisticalTest
 def testPGibbsDynamicScopeInterval():
   ripl = get_ripl()
@@ -138,6 +150,7 @@ def testPGibbsDynamicScopeInterval():
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
   return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
 
+@gen_on_inf_prim("func_pgibbs")
 def testFunnyHMM():
   yield checkFunnyHMM, "false"
   yield checkFunnyHMM, "true"

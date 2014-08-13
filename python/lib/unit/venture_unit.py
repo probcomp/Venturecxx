@@ -17,11 +17,11 @@
 import time, random
 import numpy as np
 from venture.lite.utils import FixedRandomness
-from venture.ripl.utils import _strip_types
+from venture.ripl.utils import strip_types
 from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl,mk_l_ripl, build_exp
 from history import History, Run, Series, historyOverlay,compareSampleDicts,filterDict,historyNameToValues
 
-parseValue = _strip_types
+parseValue = strip_types
 
 
 # TODO
@@ -228,6 +228,7 @@ class Analytics(object):
 
         assert not(assumes is None and observes is not None),'No *observes* without *assumes*.'
         assert queryExps is None or isinstance(queryExps,(list,tuple)), 'QueryExps must be list or tuple'
+        
 
         if hasattr(ripl_mripl,'no_ripls'): # test for ripl vs. MRipl
             ripl=ripl_mripl.local_ripls[0] # only needed because of set_seed
@@ -245,14 +246,14 @@ class Analytics(object):
 
         if assumes is not None:
             self.assumes = assumes
-            self.observes = observes if observes is not None else []
+            self.observes = list(observes) if observes is not None else []
         else:
             assumes = [d for d in directives_list if d['instruction']=='assume']
             self.assumes = map(directive_split,assumes)
             observes = [d for d in directives_list if d['instruction']=='observe']
             self.observes = map(directive_split,observes)
 
-        self.queryExps=[] if queryExps is None else queryExps
+        self.queryExps=[] if queryExps is None else list(queryExps)
 
 
         if parameters is None: parameters = {}
@@ -317,7 +318,7 @@ class Analytics(object):
             self.observes = []
         if newObserves is not None:
             assert not isinstance(newObserves,str), '*newObserves* is set of strings, not string' 
-            self.observes.extend( newObserves )
+            self.observes.extend( Observes )
 
         if self.muRipl:
             ripl = self.mripl if self.mripl else self.ripl
@@ -331,7 +332,7 @@ class Analytics(object):
         if removeAllQueryExps:
             self.queryExps = []
         if newQueryExps is not None:
-            assert not isinstance(newObserves,str), '*newQueryExps* is set of strings, not string' 
+            assert not isinstance(newObserves,str), '*newQueryExps* should be a set of strings, not a string' 
             self.queryExps.extend( newQueryExps )
         # always update mripl engines with whatever is current self.queryExps
         if self.mripl and self.mripl.local_mode is False:
@@ -345,6 +346,7 @@ class Analytics(object):
         self.backend = newBackend
         self.ripl = mk_p_ripl() if self.backend=='puma' else mk_l_ripl()
         # self.ripl.set_seed(seed)
+
 
     def _clearRipl(self):
         if self.muRipl:
@@ -537,7 +539,8 @@ class Analytics(object):
 
         elif isinstance(infer, str):
             self.ripl.infer(infer)
-        else:
+
+        else: # need to be careful passing function with MRipl
             infer(self.ripl, stepSize)
 
 
@@ -557,13 +560,7 @@ class Analytics(object):
         # another step (with larger stepsize) and repeat.
         while iterations < get_entropy_info()['unconstrained_random_choices']:
             step = get_entropy_info()['unconstrained_random_choices']
-            if infer is None:
-                self.ripl.infer(step)
-
-            elif isinstance(infer, str):
-                self.ripl.infer(infer)
-            else:
-                infer(self.ripl, step)
+            self._runInfer(infer,step)
             iterations += step
 
         return iterations

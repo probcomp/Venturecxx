@@ -1,5 +1,6 @@
-from venture.test.config import get_ripl
+from venture.test.config import get_ripl, on_inf_prim
 
+@on_inf_prim("mh")
 def testIf1():
   """This caused an earlier CXX implementation to crash because of a
   corner case of operators changing during inference."""
@@ -9,6 +10,7 @@ def testIf1():
   ripl.predict('(IF2 (bernoulli 0.5) IF IF)')
   ripl.infer(10)
 
+@on_inf_prim("mh")
 def testIf2():
   "More extended version of testIf1"
   ripl = get_ripl()

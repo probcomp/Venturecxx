@@ -14,14 +14,20 @@
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import unittest
+from nose import SkipTest
+from nose.plugins.attrib import attr
+
 from venture.ripl import Ripl
 from venture.exception import VentureException
 from venture.sivm import VentureSivm
 from venture.parser import ChurchPrimeParser, VentureScriptParser
 from venture.test.config import get_core_sivm
-from testconfig import config
-from nose import SkipTest
+import venture.value.dicts as v
 
+# TODO Not really backend independent, but doesn't test the backend much.
+# Almost the same effect as @venture.test.config.in_backend("none"),
+# but works on the whole class
+@attr(backend="none")
 class TestRipl(unittest.TestCase):
     _multiprocess_can_split_ = True
 
@@ -63,12 +69,12 @@ class TestRipl(unittest.TestCase):
         f("[assume b (+ 1 2)]")
         f("[assume c (- b a)]")
         ret_value= f("[predict c]")
-        self.assertEqual(ret_value['value'], {"type":"number","value":2})
+        self.assertEqual(ret_value['value'], v.number(2))
 
     def test_execute_program(self):
         f = self.ripl.execute_program
         ret_value = f("[assume a 1] [assume b (+ 1 2)] [assume c (- b a)] [predict c]")
-        self.assertEqual(ret_value[-1]['value'], {"type":"number","value":2})
+        self.assertEqual(ret_value[-1]['value'], v.number(2))
 
     def test_parse_exception_sugaring(self):
         f = self.ripl.execute_instruction
@@ -232,8 +238,6 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(output, 2)
 
     def test_continuous_inference(self):
-        if config["get_ripl"] == "lite":
-            raise SkipTest("Venture Lite does not support continuous inference")
         self.ripl.start_continuous_inference()
         output = self.ripl.continuous_inference_status()
         self.assertEqual(output['running'], True)

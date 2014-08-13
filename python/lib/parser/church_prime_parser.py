@@ -27,7 +27,7 @@ class ChurchPrimeParser(object):
                 '>':'gt', '<=':'lte', '>=':'gte', '=':'eq', '!=':'neq'}
         w = m.keys()
 
-        self.symbol = utils.symbol_token(whitelist_symbols = w, symbol_map = m)
+        self.symbol = utils.symbol_literal_token(whitelist_symbols = w, symbol_map = m)
 
         self.literal = utils.literal_token()
 
@@ -96,7 +96,7 @@ class ChurchPrimeParser(object):
             ['force','[ <!force> <expression:exp> <value:lit> ]'],
             ['sample','[ <!sample> <expression:exp> ]'],
             ['continuous_inference_status','[ <!continuous_inference_status> ]'],
-            ['start_continuous_inference','[ <!start_continuous_inference> <params:json> ]'],
+            ['start_continuous_inference','[ <!start_continuous_inference> <expression:exp> ]'],
             ['stop_continuous_inference','[ <!stop_continuous_inference> ]'],
             ['get_current_exception', '[ <!get_current_exception> ]'],
             ['get_state', '[ <!get_state> ]'],

@@ -44,7 +44,15 @@ inference program to use.
 
 When writing tests, we recommend interacting with Venture through the
 `venture.test.config` module (in `test/config.py`) to be as generic as
-is appropriate for the test.
+is appropriate for the test.  In particular:
+
+- if a new test is not generic across backends, please decorate it
+  with `@venture.test.config.in_backend` (or `@gen_in_backend` for
+  generators), whose docstrings see.
+
+- if a new test is not generic across inference programs, please
+  decorate it with `@venture.test.config.on_inf_prim` (or
+  `@gen_on_inf_prim` for generators), whose docstrings see.
 
 Statistical Tests
 -----------------
@@ -80,3 +88,35 @@ and check things like "This SP accepts VentureValues of the types it
 is annotated with and returns VentureValues of the types it is
 annotated with", or "This type-annotated SP is as deterministic as it
 claims to be".
+
+Jenkins Continuous Build
+------------------------
+
+The continuous build server lives at http://ec2-54-84-30-252.compute-1.amazonaws.com:8080/
+
+The build structure is as follows:
+
+- `venture-crashes` is intended to exercise all the code reasonably
+  quickly to check for crashes.  It runs the `all-crashes` script.
+
+- `venture-inference-quality` and the nine other builds named
+  `<backend>-<method>-inference-quality` are intended to make sure
+  that various probabilistic programs actually sample from the
+  distributions we expect, in each backend and exercising each
+  inference strategy we have built in.
+
+    - `venture-inference-quality` should really be named
+      `lite-mh-inference-quality`.
+
+    - `puma-{meanfield,rejection}-inference-quality` are disabled
+      because Puma does not implement those two methods (yet).
+
+    - `<backend>-misc-inference-quality` test methods we do not have
+      many tests for, as well as combinations of methods.
+
+- `venture-performance` and `puma-performance` confirm a handful of
+  asymptotic performance properties on a few examples.
+
+The test selection is done via nose attributes installed by the
+`@in_backend` and `@on_inf_prim` decorators.  If you want to grok
+how the selection actually happens, read `base.cfg`.

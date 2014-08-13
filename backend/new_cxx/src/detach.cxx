@@ -31,7 +31,7 @@ pair<double,shared_ptr<DB> > detachAndExtract(ConcreteTrace * trace,const vector
     {
       if (trace->isObservation(node))
       {
-        weight += unconstrain(trace,trace->getOutermostNonRefAppNode(node));
+        weight += unconstrain(trace,trace->getConstrainableNode(node));
       }
       weight += extract(trace,node,scaffold,db);
     }

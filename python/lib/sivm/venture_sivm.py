@@ -16,10 +16,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from venture.exception import VentureException
-from venture.sivm import utils
 import copy
 
+from venture.exception import VentureException
+from venture.sivm import utils, macro
+import venture.value.dicts as v
 
 class VentureSivm(object):
 
@@ -110,7 +111,7 @@ class VentureSivm(object):
         if instruction_type in ['assume','observe','predict']:
             exp = utils.validate_arg(instruction,'expression',
                     utils.validate_expression, wrap_exception=False)
-            new_exp = utils.desugar_expression(exp)
+            new_exp = macro.desugar_expression(exp)
             desugared_instruction['expression'] = new_exp
         # desugar the expression index
         if instruction_type == 'debugger_set_breakpoint_source_code_location':
@@ -118,7 +119,7 @@ class VentureSivm(object):
             did = desugared_src_location['directive_id']
             old_index = desugared_src_location['expression_index']
             exp = self.directive_dict[did]['expression']
-            new_index = utils.desugar_expression_index(exp, old_index)
+            new_index = macro.desugar_expression_index(exp, old_index)
             desugared_src_location['expression_index'] = new_index
         try:
             response = self.core_sivm.execute_instruction(desugared_instruction)
@@ -133,7 +134,7 @@ class VentureSivm(object):
             if e.exception == 'parse':
                 i = e.data['expression_index']
                 exp = instruction['expression']
-                i = utils.sugar_expression_index(exp,i)
+                i = macro.sugar_expression_index(exp,i)
                 e.data['expression_index'] = i
             # turn directive_id into label
             if e.exception == 'invalid_argument':
@@ -189,7 +190,7 @@ class VentureSivm(object):
             def __exit__(self, type, value, traceback):
                 if self.ci_was_running:
                     #print("restarting continuous inference")
-                    sivm._start_continuous_inference(self.ci_status["params"])
+                    sivm._start_continuous_inference(self.ci_status["expression"])
         return tmp()
 
 
@@ -203,8 +204,8 @@ class VentureSivm(object):
     def _continuous_inference_status(self):
         return self._call_core_sivm_instruction({"instruction" : "continuous_inference_status"})
 
-    def _start_continuous_inference(self, params):
-        self._call_core_sivm_instruction({"instruction" : "start_continuous_inference", "params" : params})
+    def _start_continuous_inference(self, expression):
+        self._call_core_sivm_instruction({"instruction" : "start_continuous_inference", "expression" : expression})
 
     def _stop_continuous_inference(self):
         self._call_core_sivm_instruction({"instruction" : "stop_continuous_inference"})
@@ -298,7 +299,7 @@ class VentureSivm(object):
                 }
         o1 = self._call_core_sivm_instruction(inst1)
         inst2 = { "instruction" : "infer",
-                  "params" : { "transitions" : 0 } }
+                  "expression" : [v.symbol("incorporate")] }
         self._call_core_sivm_instruction(inst2)
         inst3 = {
                 "instruction" : "forget",

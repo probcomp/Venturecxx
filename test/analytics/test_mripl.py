@@ -6,8 +6,7 @@ from nose.tools import with_setup, eq_,assert_equal,assert_almost_equal
 from nose import SkipTest
 
 from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, get_mripl
-from testconfig import config
+from venture.test.config import get_ripl, get_mripl, default_num_samples, default_num_transitions_per_sample, on_inf_prim
 
 from venture.venturemagics.ip_parallel import *
 
@@ -47,6 +46,7 @@ def localRunFunctions():
     [t() for t in tests]
 
 
+@on_inf_prim("none")
 def testInitSwitchLocal():
     'if no engines are running, should switch to local'
     try:
@@ -57,6 +57,7 @@ def testInitSwitchLocal():
         print 'Exception caused by doing "try" on Client"'
 
 
+@on_inf_prim("none")
 def testDirectivesAssume():
     'assume,report,predict,sample,observe'
     v=get_mripl(no_ripls=4)
@@ -79,6 +80,7 @@ def testDirectivesAssume():
     assert_almost_equal(outAssume[0],v.report("x")[0])
 
 
+@on_inf_prim("none")
 def testDirectivesExecute():
     "execute_program, force"
     v = get_mripl(no_ripls=3)
@@ -99,9 +101,10 @@ def testDirectivesExecute():
     eq_( v.report('pid3')[0], 10)
 
 @statisticalTest
+@on_inf_prim("mh")
 def testDirectivesInfer1():
     'infer'
-    v=get_mripl(no_ripls=30)
+    v=get_mripl(no_ripls=default_num_samples())
     samples = v.assume('x','(normal 1 1)',label='pid')
     v.infer(5)
     samples.extend(v.report('pid'))
@@ -109,9 +112,10 @@ def testDirectivesInfer1():
     return reportKnownContinuous(cdf,samples,"N(1,1)")
 
 @statisticalTest
+@on_inf_prim("mh")
 def testDirectivesInfer2():
     'inference program'
-    v=get_mripl(no_ripls=30)
+    v=get_mripl(no_ripls=default_num_samples())
     samples = v.assume('x','(normal 1 1)',label='pid')
     [v.infer(params='(mh default one 1)') for _ in range(5)]
     samples.extend(v.report('pid'))
@@ -119,19 +123,21 @@ def testDirectivesInfer2():
     return reportKnownContinuous(cdf,samples,"N(1,1)")
 
 @statisticalTest
+@on_inf_prim("mh")
 def testDirectivesForget():
     'forget'
-    v=get_mripl(no_ripls=30)
+    v=get_mripl(no_ripls=default_num_samples())
     v.assume('x','(normal 1 10)',label='pid')
     v.observe('(normal x .1)','1')
-    v.infer(20)
+    v.infer(default_num_transitions_per_sample())
     v.forget(2)
-    v.infer(20)
+    v.infer(default_num_transitions_per_sample())
     samples = v.report('pid')
     cdf = stats.norm(loc=1, scale=10).cdf
     return reportKnownContinuous(cdf,samples,"N(1,10)")
 
 
+@on_inf_prim("none")
 def testDirectivesListDirectives():
     'list_directives'
     no_ripls=4
@@ -147,6 +153,7 @@ def testDirectivesListDirectives():
     eq_(di_list[0]['value'],20.)
 
 
+@on_inf_prim("none")
 @statisticalTest
 def testSeeds():
     # seeds can be set via constructor or self.mr_set_seeds
@@ -160,7 +167,7 @@ def testSeeds():
     eq_(v.seeds,range(10))
 
     # initial seeds are distinct and stay distinct after self.clear
-    v=get_mripl(no_ripls=20)
+    v=get_mripl(no_ripls=default_num_samples())
     v.sample("(normal 1 1)")
     v.clear()
     samples = v.sample("(normal 1 1)")
@@ -168,6 +175,7 @@ def testSeeds():
     return reportKnownContinuous(cdf,samples,"N(1,1)")
 
 
+@on_inf_prim("none")
 def testMultiMRipls():
     'Create multiple mripls that share the same engine namespaces'
     vs=[get_mripl(no_ripls=2) for _ in range(2)]
@@ -188,6 +196,7 @@ def testMultiMRipls():
         assert vs[0].mrid != vs[1].mrid     # distinct mripl ids
 
 
+@on_inf_prim("none")
 def testMapProc():
     v=get_mripl(no_ripls=4)
 
@@ -242,10 +251,11 @@ def testMapProc():
         assert all( [pairs[0]==pair for pair in pairs] )
 
 
+@on_inf_prim("none")
 @statisticalTest
 def testBackendSwitch():
     raise SkipTest('Fails on PUMA Jenkins. Re-examine method code')
-    v=get_mripl(no_ripls=30)
+    v=get_mripl(no_ripls=default_num_samples())
     new,old = ('puma','lite') if v.backend is 'lite' else ('lite','puma')
     v.assume('x','(normal 200 .1)')
     v.switch_backend(new)
@@ -257,6 +267,7 @@ def testBackendSwitch():
     cdf = stats.norm(loc=200,scale=.1).cdf
     return reportKnownContinuous(cdf,v.report(1))
 
+@on_inf_prim("mh")
 def testTransitionsCount():
     v=get_mripl(no_ripls=2)
     eq_( v.total_transitions, 0)
@@ -274,6 +285,7 @@ def testTransitionsCount():
     eq_( v.total_transitions, 11)
 
 
+@on_inf_prim("none")
 def testSnapshot():
     # snapshot == sample
     v=get_mripl(no_ripls=2)
@@ -285,6 +297,7 @@ def testSnapshot():
     #    [v.report(1) for _ in range(4)])
 
 
+@on_inf_prim("none")
 def testMRiplUtils():
     'mk_directives_string, build_exp, directive_to_string'
     v=get_ripl()

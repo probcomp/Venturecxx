@@ -13,9 +13,10 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-from venture.test.config import get_ripl
+from venture.test.config import get_ripl, on_inf_prim
 from nose.tools import eq_
 
+@on_inf_prim("mh")
 def testBulkObserve1():
   ripl = get_ripl()
   n_before = len(ripl.list_directives())

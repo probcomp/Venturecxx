@@ -1,6 +1,8 @@
+from venture.test.config import in_backend
 from venture.lite.value import VentureNumber
 from venture.lite.mlens import real_lenses
 
+@in_backend("none")
 def testLensSmoke1():
   v1 = VentureNumber(3)
   v2 = VentureNumber(4)
