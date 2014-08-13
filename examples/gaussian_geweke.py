@@ -35,29 +35,15 @@ def format_results_successive(res):
 
 def collect_succesive_conditional(ripl):
   'Simulate data, infer based on it, forget the simulation, repeat'
-  # the FORGET command isn't working; write this another way
-  # program = '''
-  #   forgetme : [ASSUME dummy (x)]
-  #   [INFER (cycle
-  #            ((peek mu) (peek sigma) (peek dummy)
-  #             (hmc (quote parameters) all 0.1 10 1)) 1)]
-  #   [FORGET forgetme]'''
-
-  # bug in hmc; getting negative values for sigma_2
-  infer_cmd = '''
+  program = '''
+    forgetme : [ASSUME dummy (x)]
     [INFER (cycle
-         ((peek mu) (peek sigma)
-          (hmc (quote parameters) all 0.08 10 1)) 1)]'''
-  # infer_cmd = '''
-  #   [INFER (cycle
-  #        ((peek mu) (peek sigma)
-  #         (slice (quote parameters) 0 10 100 1)
-  #         (slice (quote paramters) 1 1 100 1)) 1)]'''
+             ((peek mu) (peek sigma) (peek dummy)
+              (hmc (quote parameters) all 0.1 10 1)) 1)]
+    [FORGET forgetme]'''
   res = []
   for i in range(BURN + NSAMPLE * THIN):
-    # ripl.assume('dummy', '(x)', label = 'forgetme')
-    ripl.predict('(x)', label = 'forgetme')
-    tmp = ripl.execute_instruction(infer_cmd)
+  tmp = ripl.execute_program(program)
     if (i >= BURN) and not ((i - BURN) % THIN):
       res.append(tmp)
       print (i - BURN) / THIN
@@ -70,8 +56,7 @@ def compute_statistics(df, g):
   res.columns = ['g' + str(i + 1) for i in range(res.shape[1])]
   M = res.shape[0]
   g_bar, sigma2_g = res.mean(), res.var()
-  return res, M, g_bar, sigma2_g
-
+  return {'g' : res, 'M' : M, 'g_bar' : g_bar, 'sigma2_g' : sigma2_g}
 
 def main():
   df_marginal = collect_marginal_conditional(build_ripl())
@@ -82,6 +67,6 @@ def main():
        lambda df: df.mu ** 2,
        lambda df: df.sigma ** 2,
        lambda df: df.mu * df.sigma]
-  g_marginal = compute_statistics(df_marginal, g)
-  g_successive = compute_statistics(df_successive, g)
+  res_marginal = compute_statistics(df_marginal, g)
+  res_successive = compute_statistics(df_successive, g)
 
