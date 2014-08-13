@@ -252,6 +252,11 @@ builtInSPsList = [
                                            min_req_args=1,
                                            descr="(%s [start] stop) returns an array of n consecutive integers from start (inclusive) up to stop (exclusive).")],
 
+           [ "repeat", deterministic_typed(np.repeat,
+                                           [v.NumberType(), v.IntegerType()],
+                                           v.ArrayUnboxedType(v.NumberType()),
+                                           descr="(%s x n) returns an array with the number x repeated n times")],
+
            [ "linspace", deterministic_typed(np.linspace,
                                              [v.NumberType(), v.NumberType(), v.CountType()],
                                              v.ArrayUnboxedType(v.NumberType()),
