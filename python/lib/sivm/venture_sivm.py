@@ -232,7 +232,7 @@ class VentureSivm(object):
     ###############################
     
     def _do_labeled_directive(self, instruction):
-        label = self._validate_label(instruction)
+        label = self._validate_label(instruction, exists=False)
         tmp = instruction.copy()
         tmp['instruction'] = instruction['instruction'][len('labeled_'):]
         del tmp['label']
@@ -247,10 +247,10 @@ class VentureSivm(object):
     _do_labeled_predict = _do_labeled_directive    
     
     def _do_labeled_operation(self, instruction):
-        self._validate_label(instruction, exists=True)
+        label = self._validate_label(instruction, exists=True)
         tmp = instruction.copy()
         tmp['instruction'] = instruction['instruction'][len('labeled_'):]
-        tmp['directive_id'] = self.label_dict[instruction['label']]
+        tmp['directive_id'] = self.label_dict[label]
         del tmp['label']
         return self._call_core_sivm_instruction(tmp)        
     
