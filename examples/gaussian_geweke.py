@@ -1,9 +1,10 @@
 from venture.shortcuts import (make_puma_church_prime_ripl,
                                make_lite_church_prime_ripl)
 import pandas as pd
+import seaborn as sns
 
 NSAMPLE = 50
-BURN = 100
+BURN = 50
 THIN = 100
 
 def build_ripl():
@@ -25,8 +26,7 @@ def collect_marginal_conditional(ripl):
   infer_statement = '''
   [INFER (cycle
            ((peek mu) (peek sigma)
-            (mh (quote parameters) 0 1)
-            (mh (quote parameters) 1 1)) {0})]'''.format(NSAMPLE)
+            (mh (quote parameters) all 1)) {0})]'''.format(NSAMPLE)
   res = format_results_marginal(ripl.execute_program(infer_statement))
   return res
 
@@ -42,11 +42,18 @@ def collect_succesive_conditional(ripl):
   #            ((peek mu) (peek sigma) (peek dummy)
   #             (hmc (quote parameters) all 0.1 10 1)) 1)]
   #   [FORGET forgetme]'''
-  res = []
+
+  # bug in hmc; getting negative values for sigma_2
   infer_cmd = '''
     [INFER (cycle
          ((peek mu) (peek sigma)
-          (hmc (quote parameters) all 0.1 10 1)) 1)]'''
+          (hmc (quote parameters) all 0.08 10 1)) 1)]'''
+  # infer_cmd = '''
+  #   [INFER (cycle
+  #        ((peek mu) (peek sigma)
+  #         (slice (quote parameters) 0 10 100 1)
+  #         (slice (quote paramters) 1 1 100 1)) 1)]'''
+  res = []
   for i in range(BURN + NSAMPLE * THIN):
     # ripl.assume('dummy', '(x)', label = 'forgetme')
     ripl.predict('(x)', label = 'forgetme')
@@ -57,7 +64,24 @@ def collect_succesive_conditional(ripl):
     ripl.forget('forgetme')
   return format_results_successive(res)
 
+def compute_statistics(df, g):
+  'Compute the two first and 3 second moments of the parameter vector (mu, sigma)'
+  res = pd.DataFrame([f(df) for f in g]).T
+  res.columns = ['g' + str(i + 1) for i in range(res.shape[1])]
+  M = res.shape[0]
+  g_bar, sigma2_g = res.mean(), res.var()
+  return res, M, g_bar, sigma2_g
+
+
 def main():
   df_marginal = collect_marginal_conditional(build_ripl())
   df_successive = collect_succesive_conditional(build_ripl())
+  # the list of functions of the data and parameters to compute
+  g = [lambda df: df.mu,
+       lambda df: df.sigma,
+       lambda df: df.mu ** 2,
+       lambda df: df.sigma ** 2,
+       lambda df: df.mu * df.sigma]
+  g_marginal = compute_statistics(df_marginal, g)
+  g_successive = compute_statistics(df_successive, g)
 
