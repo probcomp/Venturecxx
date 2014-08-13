@@ -33,6 +33,14 @@ def isLiteral(exp):
 def isSym(exp):
   return isinstance(exp, str)
 
+def getSym(exp):
+  if isSym(exp):
+    return exp
+  if isinstance(exp, dict):
+    if exp['type'] == 'symbol':
+      return exp['value']
+  return None
+
 class LiteralMacro(Macro):
   def applies(self, exp):
     return isLiteral(exp)
@@ -128,7 +136,7 @@ class SyntaxRule(Macro):
     self.resugar = lambda index: replace(template, patternIndeces, index)
     
   def applies(self, exp):
-    return isinstance(exp, list) and len(exp) > 0 and (exp[0] == self.name or exp[0] == v.symbol(self.name))
+    return isinstance(exp, list) and len(exp) > 0 and getSym(exp[0]) == self.name
   
   def expand(self, exp):
     verify(self.pattern, exp)
@@ -187,7 +195,7 @@ def LetExpand(exp):
 
 def arg0(name):
   def applies(exp):
-    return isinstance(exp, list) and len(exp) > 0 and (exp[0] == name or exp[0] == v.symbol(name))
+    return isinstance(exp, list) and len(exp) > 0 and getSym(exp[0]) == name
   return applies
   
 identityMacro = SyntaxRule(['identity', 'exp'], ['lambda', [], 'exp'])
