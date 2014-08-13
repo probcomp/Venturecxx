@@ -51,19 +51,10 @@ class Engine(object):
     self.directiveCounter += 1
     return self.directiveCounter
 
-  # TODO Move this into stack.
-  def desugarLambda(self,datum):
-    if type(datum) is list and type(datum[0]) is dict and datum[0]["value"] == "lambda":
-      ids = v.quote(datum[1])
-      body = v.quote(self.desugarLambda(datum[2]))
-      return [v.symbol("make_csp"), ids, body]
-    elif type(datum) is list: return [self.desugarLambda(d) for d in datum]
-    else: return datum
-
   def assume(self,id,datum):
     baseAddr = self.nextBaseAddr()
 
-    exp = self.desugarLambda(datum)
+    exp = datum
 
     for trace in self.traces:
       trace.eval(baseAddr,exp)
@@ -76,7 +67,7 @@ class Engine(object):
   def predict_all(self,datum):
     baseAddr = self.nextBaseAddr()
     for trace in self.traces:
-      trace.eval(baseAddr,self.desugarLambda(datum))
+      trace.eval(baseAddr,datum)
 
     self.directives[self.directiveCounter] = ["predict",datum]
 
@@ -90,7 +81,7 @@ class Engine(object):
     baseAddr = self.nextBaseAddr()
 
     for trace in self.traces:
-      trace.eval(baseAddr,self.desugarLambda(datum))
+      trace.eval(baseAddr,datum)
       logDensity = trace.observe(baseAddr,val)
 
       # TODO check for -infinity? Throw an exception?
@@ -225,7 +216,7 @@ effect of renumbering the directives, if some had been forgotten."""
       prog = [v.sym("cycle"), program[1], v.number(1)]
       self.start_continuous_inference(prog)
     else:
-      exp = self.desugarLambda(self.macroexpand_inference(program))
+      exp = self.macroexpand_inference(program)
       return self.infer_v1_pre_t(exp, Infer(self))
 
   def macroexpand_inference(self, program):
@@ -283,7 +274,7 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def install_inference_prelude(self, next_trace):
     for did, (name, exp) in enumerate(_inference_prelude()):
-      next_trace.eval(did, self.desugarLambda(exp))
+      next_trace.eval(did, exp)
       next_trace.bindInGlobalEnv(name, did)
 
   def primitive_infer(self, exp):
@@ -348,15 +339,15 @@ effect of renumbering the directives, if some had been forgotten."""
     for did, directive in sorted(self.directives.items()):
         if directive[0] == "assume":
             name, datum = directive[1], directive[2]
-            trace.evalAndRestore(did, self.desugarLambda(datum), db)
+            trace.evalAndRestore(did, datum, db)
             trace.bindInGlobalEnv(name, did)
         elif directive[0] == "observe":
             datum, val = directive[1], directive[2]
-            trace.evalAndRestore(did, self.desugarLambda(datum), db)
+            trace.evalAndRestore(did, datum, db)
             trace.observe(did, val)
         elif directive[0] == "predict":
             datum = directive[1]
-            trace.evalAndRestore(did, self.desugarLambda(datum), db)
+            trace.evalAndRestore(did, datum, db)
 
     return trace
 
@@ -465,7 +456,7 @@ def _compute_inference_prelude():
         ["mixture", """(lambda (weights kernels transitions)
   (iterate (lambda (t) ((categorical weights kernels) t)) transitions))"""]]:
     from venture.parser.church_prime_parser import ChurchPrimeParser
-    from venture.sivm.utils import desugar_expression
+    from venture.sivm.macro import desugar_expression
     from venture.sivm.core_sivm import _modify_expression
     exp = _modify_expression(desugar_expression(ChurchPrimeParser.instance().parse_expression(form)))
     ans.append((name, exp))

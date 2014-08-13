@@ -275,6 +275,11 @@ builtInSPsList = [
                                            min_req_args=1,
                                            descr="(%s [start] stop) returns an array of n consecutive integers from start (inclusive) up to stop (exclusive).")],
 
+           [ "repeat", deterministic_typed(np.repeat,
+                                           [v.NumberType(), v.IntegerType()],
+                                           v.ArrayUnboxedType(v.NumberType()),
+                                           descr="(%s x n) returns an array with the number x repeated n times")],
+
            [ "linspace", deterministic_typed(np.linspace,
                                              [v.NumberType(), v.NumberType(), v.CountType()],
                                              v.ArrayUnboxedType(v.NumberType()),
@@ -294,6 +299,11 @@ builtInSPsList = [
                                           [v.MatrixType()],
                                           v.ArrayUnboxedType(v.NumberType()),
                                           descr="(%s m) returns a 1-D array containing the elements of the matrix m.") ],
+
+           [ "vector_dot", deterministic_typed(np.dot,
+                                               [v.ArrayUnboxedType(v.NumberType()), v.ArrayUnboxedType(v.NumberType())],
+                                               v.NumberType(),
+                                               descr="(%s x y) returns the dot product of vectors x and y.") ],
 
            [ "matrix_mul", deterministic_typed(np.dot,
                                                [v.MatrixType(), v.MatrixType()],
