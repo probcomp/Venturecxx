@@ -272,6 +272,11 @@ builtInSPsList = [
                                           v.ArrayUnboxedType(v.NumberType()),
                                           descr="(%s m) returns a 1-D array containing the elements of the matrix m.") ],
 
+           [ "vector_dot", deterministic_typed(np.dot,
+                                               [v.ArrayUnboxedType(v.NumberType()), v.ArrayUnboxedType(v.NumberType())],
+                                               v.NumberType(),
+                                               descr="(%s x y) returns the dot product of vectors x and y.") ],
+
            [ "matrix_mul", deterministic_typed(np.dot,
                                                [v.MatrixType(), v.MatrixType()],
                                                v.MatrixType(),
