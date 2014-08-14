@@ -82,6 +82,11 @@ Issues:
   out of regular extends, but might nonetheless make Venture v1
   considerably easier to program in.  Or might not.
 
+Ha!  Env in HsVenture doesn't actually need frames, because the
+persistence of the map data structure does the right thing anyway!
+- Frames get persistence by paying linear time in the depth of
+  histories; proper persistent trees just have a log everywhere.
+
 Code review questions
 ---------------------
 
