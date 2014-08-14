@@ -33,9 +33,11 @@ Potential uses for HsVenture
   (especially HMC, which in HsVenture should be implementable with a
   good third-party AD library instead of by hand)
 
-It would be a Simple Matter of Programming to develop HsVenture into a
-full implementation of Venture 0.2.  The punch list for that job, in
-broad strokes, is:
+Developing HsVenture into a full implementation of Ventore 0.2
+==============================================================
+
+Would be a Simple Matter of Programming.  The punch list for that job,
+in broad strokes, is:
 
 - Extend the definition of Value to include ReifiedTrace as an option
 - Refactor inference programming to run the inference program in a new
@@ -70,3 +72,66 @@ broad strokes, is:
   run HsVenture in-process (presumably by overriding CoreSivm or
   the stack's Engine)
 
+HS-V1
+-----
+
+HS-V1 is a draft implementation of the Venture v1 ideas in Haskell,
+based on extendable PETs.  It is here because it should in principle
+share substantial chunks of code with HsVenture, but currently it does
+not.  The HS-V1 draft is the TraceView module, with its minor imports
+from the HsVenture codebase.
+
+HS-V1 compiles, with `undefined` stubs for a number of helper
+functions.  It has never been actually run.  Development is currently
+stopped on the upward funarg problem: how should the system treat
+closures that are returned from extend nodes?
+
+To complete HS-V1
+=================
+
+One appealing and reasonably mapped-out path is to refactor the
+supporting structures in HsVenture to be usable for HS-V1 as well.
+To proceed along that path:
+
+Decide what to do about upward funargs (solve the problem, ban them,
+or something)
+
+Refactor HsVenture to be compatible with HS-V1
+- Relocate the basic types so they can be cyclic
+- Add the stupid type variable to Value
+- Add the needed extra clauses to Value, Exp, Node
+    - Can react to them with "error" in the current code
+- Import the new small object types from the base code in TraceView
+- Notionally split lookupNode into a version that looks the thing up
+  in the whole trace chain (and returns just the value, without
+  permission to set?) and a version that accesses that index in the
+  "current" trace, with permission to set (that would be the "nodes"
+  lens).
+- Introduce my own typeclass for monads that have randomness and the
+  needed unique sources (addresses, sp addresses, maybe trace
+  addresses if I go there)
+    - I think this needs to be enough a state monad, so I can store the
+      state between IO actions in the server.
+- Split the really global state out of the Trace and put it into
+  my new monad (namely the seeds for addresses and sp addresses)
+- Add an (unused) parent_view field to Trace
+- Rewrite the invariants list?
+
+Then use the compatible HsVenture for HS-V1
+- Make TraceView a type synonym for Trace and flush all the duplicated
+  operations on trace views.
+- Port evalRequests to the new world order
+- I feel like I should be able to just reuse detach
+- Port or adapt Inference to the new world order
+- Add an SP named "mh" to the pantheon
+- Test lightly and start playing with programs
+- [Optional]: Quickcheck the data structure invariants
+- If ready:
+    - Adjust the grammar to emit the new expression types
+    - Port Server.hs to the new way
+    - Abandon the current Regen.hs, Engine.hs, and/or Venture.hs
+    - Run against the extant Venture test suite (except scopes)?
+
+Another path is to grow the existing HS-V1 into a distinct full
+implementation, possibly copying and modifying chunks of code from
+HsVenture as needed.

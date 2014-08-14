@@ -221,6 +221,24 @@ type RequestingValue m = (Susp.Request Address (Value m))
 type RegenType m a = Coroutine (RequestingValue m) (RegenEffect m) a
 type SuspensionType m a = (Either (RequestingValue m (RegenType m a)) a)
 
+-- What's the deal with RegenType?
+-- - The underlying monad is presumed to be the source of randomness,
+--   though could be extended to include the source of fresh
+--   Addresses.
+-- - The "current" TraceView is in the StateT because eval, exec, and
+--   regen can modify it
+-- - The WriterT LogDensity is there because (in principle) any part
+--   of forward simulation or regeneration can contribute to the weight
+-- - The Coroutine is there because any of these functions might be
+--   operating on a TraceView which is nested inside one that is being
+--   regenerated at a higher level, in which case some lexically
+--   visible variables may have been detached but not restored
+--   (because the higher level cannot know all the dependencies of
+--   this level in advance).  So eval/exec/regen suspends itself and
+--   requests from the higher level that some Address be regenerated
+--   (and allows that higher level to account for the weight and
+--   mutation effects of doing that).
+
 evalRequests :: (MonadRandom m) => SPAddress -> [SimulationRequest m] -> RegenType m [Address]
 evalRequests = undefined
 
@@ -273,6 +291,7 @@ eval (Body stmts exp) e = do
   put t'
   eval exp e'
 
+-- TODO Absorb this function completely into regenValue
 regenValueNoCoroutine :: (MonadRandom m) => Address -> WriterT LogDensity (StateT (TraceView m) m) (Value m)
 regenValueNoCoroutine a = lift (do -- Should be able to produce weight in principle, but current SPs do not.
   node <- use $ nodes . hardix "Regenerating value for nonexistent node" a
@@ -356,11 +375,6 @@ handle_regeneration_request (d, as, t) (Susp.Request addr k) = do
   ((v, d'), t') <- coroutineRunWS (regenNode addr) d t
   return (k v, (d', (addr:as), t'))
 
--- Idea: Implement a RandomDB version of this, with restricted infer.
--- - A TraceFrame has a map from addresses to values and a parent pointer
--- - An environment frame has lexical bindings to addresses, which can be
---   looked up in a trace
-
 -- Choice: One Extend node or two?
 
 -- It seems that if I try to represent the extend syntax with one
@@ -409,7 +423,7 @@ exec (Infer prog) = do
   -- Is the view t itself fully regenerated here?  Do I need to be
   -- able to intercept regeneration requests?  Do I need to be able to
   -- update the reified view!?
-  -- Can exec ever be called inside a regen' without an intervening
+  -- Can exec ever be called inside a regen without an intervening
   -- extend?  I think so.  If that is the case, then it may happen
   -- that some nodes in the current view are not yet regenerated.  If
   -- that, in turn, is the case, then the enclosed eval of the
