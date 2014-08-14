@@ -1,7 +1,7 @@
 As of this writing, this directory contains two distinct artifacts.
 
 HsVenture
----------
+=========
 
 HsVenture is a partial Haskell implementation of the Venture language
 as I understood it right around the 0.1.x releases (the bulk of
@@ -24,7 +24,7 @@ plumbing Traces, and at the threat that the extra layer of indirection
 will come back and bite the program's performance.
 
 Potential uses for HsVenture
-============================
+----------------------------
 
 - Expository implementation (this would require some considerable
   massaging and beautifying)
@@ -33,8 +33,8 @@ Potential uses for HsVenture
   (especially HMC, which in HsVenture should be implementable with a
   good third-party AD library instead of by hand)
 
-Developing HsVenture into a full implementation of Ventore 0.2
-==============================================================
+Developing HsVenture into a full implementation of Venture 0.2
+--------------------------------------------------------------
 
 Would be a Simple Matter of Programming.  The punch list for that job,
 in broad strokes, is:
@@ -73,7 +73,7 @@ in broad strokes, is:
   the stack's Engine)
 
 HS-V1
------
+=====
 
 HS-V1 is a draft implementation of the Venture v1 ideas in Haskell,
 based on extendable PETs.  It is here because it should in principle
@@ -89,7 +89,7 @@ closures that are returned from extend nodes?
 See [hs-v1.md](hs-v1.md) for implementation design notes.
 
 To complete HS-V1
-=================
+-----------------
 
 One appealing and reasonably mapped-out path is to refactor the
 supporting structures in HsVenture to be usable for HS-V1 as well.

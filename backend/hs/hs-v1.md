@@ -1,5 +1,5 @@
 Design Notes for HS-V1
-----------------------
+======================
 
 From Alexey's point of view.  This document is somewhat stream-of-consciousness.
 
@@ -83,7 +83,7 @@ Issues:
   considerably easier to program in.  Or might not.
 
 Code review questions
-=====================
+---------------------
 
 - How can I get the randomness monad not to pollute my type signatures
   all over the place?  Do I even want to?
