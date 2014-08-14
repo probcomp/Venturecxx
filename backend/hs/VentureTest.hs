@@ -45,7 +45,7 @@ more = map (liftM report)
   , liftM (Stat.knownDiscrete [(True, 0.75), (False, 0.25)]) $ samples beta_binomial
   , liftM (Stat.knownDiscrete [(True, 0.75), (False, 0.25)]) $ samples cbeta_binomial
   , liftM (Stat.knownDiscrete [(Boolean True, 0.5), (Boolean False, 0.5)]) $ venture_main 100 self_select_1
-  , liftM (Stat.knownDiscrete [(1, 0.5), (0, 0.5)]) $ venture_main 100 self_select_2
+  , liftM (Stat.knownDiscrete [(Boolean True, 0.5), (0, 0.5)]) $ venture_main 100 self_select_2
     -- TODO Test the two mem examples
   , liftM (Stat.knownDiscrete [(True, 0.5), (False, 0.5)]) $ liftM (map checkList) $ samples uncollapsed_conditional_and_coupled
   , liftM (Stat.knownDiscrete [(True, 0.5), (False, 0.5)]) $ liftM (map checkList) $ samples conditional_and_coupled
