@@ -86,6 +86,8 @@ functions.  It has never been actually run.  Development is currently
 stopped on the upward funarg problem: how should the system treat
 closures that are returned from extend nodes?
 
+See [hs-v1.md](hs-v1.md) for implementation design notes.
+
 To complete HS-V1
 =================
 
