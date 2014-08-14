@@ -335,7 +335,9 @@ isRandomNode _ _ = False
 -- its Nodes or SPRecords (but the node_children map doesn't count).
 
 -- I should be able to construct a valid trace from a valid pair of
--- nodes and sprs maps.
+-- nodes and sprs maps, except for the question of how observations
+-- are tracked (which right now happens by removing things from the
+-- "randoms" field, but probably should be done separately).
 
 -- The "randoms" field can really only be defined in the presence of
 -- stricter conditions, such as well-typedness (e.g., nodes that occur

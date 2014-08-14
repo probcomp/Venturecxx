@@ -56,6 +56,24 @@ more = map (liftM report)
           checkList (Boolean False) = False
           checkList _ = error "What?"
 
+-- More testing possibilities
+-- - Test mem more?
+--   - Make sure that I do not leak anything (but especially not memoized
+--     SRId entries) under inference with programs involving mem.
+-- - Do more tests on the interaction between brush, collapsed state,
+--   mem, and observations.  Is there anything here besides the
+--   (observe (max (normal .) (normal .)) 0) can of bugs?
+
+-- Known bugs:
+-- - whether_a_node_is_random_can_change successfully confuses the
+--   _randoms field of the Trace, but it is not clear how to get
+--   measurably incorrect behavior from this
+--   - Presumably the fix would be to insert an approprate
+--     isRandomNode check into regenValue somewhere; is a symmetric
+--     affordance needed for detach?
+-- - self_select_2 (but not self_select_1) leaks (empty) SPRecords
+--   (presumably for the lambdas that v_if desugars into)
+
 main :: IO ()
 main = do
   Counts { failures = f, errors = e } <- runTestTT $ test [basics, test (more :: [IO Assertion])]

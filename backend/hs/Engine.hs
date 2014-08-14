@@ -107,3 +107,27 @@ runDirective d = do
   case addr of
     Nothing -> return Nothing
     Just a -> gets (Just . (lookupValue a))
+
+-- TODO Understand the set of layers of abstraction of trace operations:
+-- - what invariants does each layer preserve?
+-- - quickcheck and/or prove preservation of those invariants
+--   - do I want versions of layer operations that check their
+--     preconditions and throw errors?
+--     - e.g., deleteNode can probably do so at an additive log cost
+--       by checking whether the node to be deleted is referenced.
+-- - find complete sets of operations at each level, so that a higher
+--   level does not need to circumvent the level below it
+-- - enforce by module export lists that clients do not circumvent
+--   those abstraction boundaries.
+
+-- TODO AAA.  Daniel's explanation for how appears to translate as follows:
+-- To cbeta_bernoullii add
+--   cbeta_bernoulli_flip (phanY, phanN) (incY, incN) = ... where
+--     ctYes = phanY + incY
+--     ctNo = phanN + incN
+-- etc; also
+--   cbeta_bernoulli_log_d_counts :: (phanY, phanN) (incY, incN) = ... -- some double
+-- which becomes the weight when detaching or regenning.
+-- Daniel says that complexities arise when, e.g., resampling the
+-- hyperparameter also causes the set of applications of the made SP to
+-- change.
