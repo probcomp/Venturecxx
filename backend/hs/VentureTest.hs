@@ -6,7 +6,7 @@ import System.Exit
 import Test.HUnit
 
 import Language hiding (Value)
-import Venture
+import Examples
 import Engine
 import Trace (Valuable, fromValue, Value)
 

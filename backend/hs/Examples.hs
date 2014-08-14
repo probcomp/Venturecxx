@@ -1,4 +1,4 @@
-module Venture where
+module Examples where
 
 import Debug.Trace
 import Control.Monad.Reader

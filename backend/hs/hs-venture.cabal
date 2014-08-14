@@ -48,7 +48,7 @@ cabal-version:       >=1.10
 
 library
   -- Modules exported by the library.
-  exposed-modules:     Venture, Utils, Language, Inference, Trace, Unique, Detach, SP, Regen, InsertionOrderedSet
+  exposed-modules:     Examples, Utils, Language, Inference, Trace, Unique, Detach, SP, Regen, InsertionOrderedSet
   
   -- Modules included in this library but not exported.
   -- other-modules:       
