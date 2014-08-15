@@ -1,7 +1,3 @@
-;; This buffer is for notes you don't want to save, and for Lisp evaluation.
-;; If you want to create a file, visit that file with C-x C-f,
-;; then enter the text in that file's own buffer.
-
 notes towards tutorial on exchangeability, collapsed samplers, AAA
 
 1. Venture thunks output exchangeable sequence of RVs
@@ -252,6 +248,9 @@ question of whether we could instead condition on some other function of the dat
 
 Notes on Online vs. Offline Inference
 
+Change this section:
+For a statistical inference task, we might have all the data and just want to do inference. Then we can tinker with the prior to try to get sensible inference, but we have to be careful we are not biasing our inference based on our previous intuitions. For a supervised learning task, there is the distinction of test and training. Simple assumption is that test is on iid draws from the training set. 
+
 Distinguish ML settings:
 1. Algorithm/rule for generalization is chosen as a function of the dataset D, where D ~ P(D / theta)
 - For example: you search over different classifiers (e.g. logistic regression vs SVM) or variants of the same classifier and take the one with best regularized or cross-validated performance on the dataset. 
@@ -279,6 +278,14 @@ Distinguish ML settings:
 This generalizes Online Learning to case where at each timestep you observe both a likelihood function (which you may not have seen before) and a set of draws from it.
 
 Concrete example:
+We consider a task based on supervised classification. The prediction task is to label feature vectors x_i with class-label. 
+
+Case 1: If you know the likelihood function for the data, and you are given the data itself, you can infer the number 
+
+
+
+
+
 Balls are drawn iid with replacement from K urns, where K is unknown. Balls come in C different colors, where C is unknown, and the distributions of the colors in urns are unknown. You get a series of observations and after each one you are asked to guess the color of the next draw from some urn.
 
 Case 1: you know P(D / theta) and D before making predictions
@@ -334,12 +341,19 @@ Second, we are conditioning both on Normal and Poisson functions of theta. The p
 
 
 
+Question: What are possible angles for a paper or a series of blog posts? The ambitious thing is adding conjugacy into Venture and then showing cool examples of what is possible (with simple code) given that you have conjugacy.  Another angle is just defining this kind of problem, showing examples where online version is harder. not clear there are such examples, actually, if you can dynamically change your prior.  
 
 
 
+Conjugate Bliss:
+The size/scale param for Normal, Poisson, Gamma, Pareto, Lognormal is Gamma. This suggests that if we have the right prior, and we get diverse draws from it (without transformation) then we can do everything analytically and have a closed form posterior. I guess we need the contents of the wiki table which lists the posterior params given different likelihoods. [We also lose interpretation in terms of pseudocounts.]
 
+Upshot: if in your model, you know you have something positive or in [0,1]. then any exp family function directly of theta (as opposed to a transformation of it) is s.t. you can do conjugate updates. what about sufficient statistics? for online updates, if we can do conjugacy, then we don't need SSs. there is no obvious benefit to storing them.
 
+Mixture of conjugate priors is conjugate. So we should be able to customize our prior as we wish. Cool thing: Venture allows us to write this prog where we get very diverse evidence. If we use conjugacy, we get fast analytic updates. For a single variable, these are easy to write in any any prog lang. You just need a syntax for '(normal 0 theta)', and so on.
 
+Student-t: integrate , with hyper-variance determining the degress of freedom (i presume). 
 
+What's a situation where not having likelihood in advance makes you do worse? If variable gets transformed, then you can untransform. But the conjugate prior on that variable is the same anyway.
 
-
+What about?
