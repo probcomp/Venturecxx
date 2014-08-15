@@ -45,41 +45,23 @@ Here is what we install on a clean Ubuntu (works best in 14.04 or higher).
 Dependencies (OSX, Homebrew)
 ----------------------------
 
-Here is what we install on a clean Mac OS X 10.9 (or higher).
+This is the best-supported and best-tested method for building Venture on Mac.
+    
     # Install Packet Manager "Homebrew"
     http://brew.sh/
 
-    # Install g++-4.8 using homebrew.
+    # Install the current Homebrew version of gcc / g++ (4.9 at time of writing)
     # see this thread: http://apple.stackexchange.com/questions/38222/how-do-i-install-gcc-via-homebrew
-    brew install gcc48
+    brew install gcc
 
     # Install libraries using homebrew
     brew install python ccache gsl
 
-The tricky step is installing the correct version of the Boost library. The current Homebrew version of Boost is 1.55, but the puma backend breaks if Venture is built under this version. Instead, Boost 1.49 must be installed. These instructions assume that no versions of Boost are currently installed. If 1.55 and 1.49 are already installed on the machine, simply follow the instructions in part 1 of this thread: <http://stackoverflow.com/questions/3987683/homebrew-install-specific-version-of-formula> to switch to version 1.49.
+The one slightly tricky step is installing Boost. The difficulty comes from the fact that GNU c++ compilers use the standard library libstdc++, while Mac's c++ compiler on Mavericks uses libc++. In order for Venture to build, you must build Boost using libstdc++, and then build Venture using the same. This can be accomplished by building both Boost and Venture using Homebrew (GNU) gcc / g++ instead of Mac's compiler. The correct version of gcc is set for Venture installation in the setup.py file. The install Boost with the correct library, call:
 
-    # First, install the current version
-    brew install --without-python boost
-    # Install an old version of gcc; Boost 1.49 breaks with clang on OS X 10.9
-    # (try "brew search gcc" to find gcc42)
-    brew install apple-gcc42
-    # Install the old Boost
-    brew tap homebrew/versions
-    brew install boost149 --cc=gcc-4.2
-    # Symlink boost 1.49 into boost folder, switch versions
-    ln -s /usr/local/Cellar/boost149/1.49.0/ /usr/local/Cellar/boost/1.49.0
-    brew switch boost 1.49.0
+    brew install boost --with-python --cc=gcc-4.9
 
-With this version of Boost in place, simply call the install script in the Venturecxx directory:
-
-	./install_osx_homebrew.sh
-
-If desired, clean up by removing symlinks and switching back to default Boost:
-
-	brew switch boost 1.55.0_1
-	rm /usr/local/Cellar/boost/1.49.0
-
-Finally, Python dependendencies:
+Finally, install Python dependencies:
 
     # [Optional] Get Python dependencies (faster to install prepackaged than via pip)
     # Also pulls in required external libraries
@@ -89,12 +71,14 @@ Finally, Python dependendencies:
 Dependencies (OSX, macports)
 ----------------------------
 
+This installation method is not as well-tested as Homebrew. It may break.
+
 For macports installation instructions see: [https://www.macports.org/install.php](https://www.macports.org/install.php)
 
 ```
 # System dependencies
 sudo port install \
-    gcc_select gcc48 ccache \
+    gcc_select gcc49 ccache \
     python_select python27 \
     pip_select py27-pip \
     virtualenv_select virtualenv \
@@ -116,7 +100,7 @@ sudo port install \
 
 Macports allows side-by-side installation of multiple versions of gcc, python, ipython, etc. In order to set the default versions of each of these, do
 
-    sudo port select gcc mp-gcc48
+    sudo port select gcc mp-gcc49
     sudo port select python python27
     sudo port select ipython ipython27
     sudo port select pip pip27
@@ -134,13 +118,9 @@ Install any remaining dependencies by doing
 
     sudo pip install ggplot
 
-On Linux systems now simply do
+On Linux systems and OSX with Homebrew, now simply do
 
     sudo python setup.py install
-
-On OSX with Homebrew, run the helper script
-
-    ./global_install_osx_homebrew.sh
 
 On OSX with Macports, run
 
@@ -169,13 +149,9 @@ Activate the environment, and install any remaining dependencies
 
     sudo pip install ggplot
 
-On Linux, now install by typing
+On Linux and OSX with Homebrew, now install by typing
 
     python setup.py install
-
-On OSX, using Homebrew, run the helper script
-
-    ./install_osx_homebrew.sh
 
 If using macports, run
 
