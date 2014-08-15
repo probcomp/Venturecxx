@@ -25,6 +25,17 @@ parseValue = strip_types
 
 
 # TODO
+
+# 0. FIXME: If Analytics is given a ripl with assumes/observes, it uses list_directives
+# to extract them. This leads to the Python dict form of Venture values. For example,
+# the symbol for an assume will be {'type':'symbol','value':'theta'}. Analytics then
+# tries to build dicts that have these dicts as keys. Unit tests don't catch this 
+# because they specify *assumes* as an argument to Analytics, rather than implicitly
+# by handing it a ripl and no *assumes* optional keyword argument.
+# Fix is to switch from using list_directives to using the same unparsing as print_directive
+# (note that execute_program doesn't play well t
+
+
 # 1. simpleInfer option for runFromConditional avoids using sweeps
 # and so gives fine-grained control of inference transitions. 
 # Currently this is only documented in runFromConditional doc-string.
