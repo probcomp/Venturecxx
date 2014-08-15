@@ -1,16 +1,16 @@
 import random
 import math
-from consistency import assertTorus
-from regen import regenAndAttach
-from detach import detachAndExtract
-from node import LookupNode, RequestNode, OutputNode
-from value import SPRef
 from matplotlib import pyplot as plt
 import networkx as nx
-from scope import isScopeIncludeOutputPSP
 import numpy as np
 import scipy.stats as stats
-from scaffold import Scaffold, constructScaffold, updateValuesAtScaffold
+from ..consistency import assertTorus
+from ..regen import regenAndAttach
+from ..detach import detachAndExtract
+from ..node import LookupNode, RequestNode, OutputNode
+from ..value import SPRef
+from ..scope import isScopeIncludeOutputPSP
+from ..scaffold import Scaffold, constructScaffold, updateValuesAtScaffold
 
 def constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKernels = False, deltaKernelArgs = None, updateValue = False, updatedNodes = None):
   if updatedNodes is None:
@@ -361,6 +361,7 @@ def partitionScaffold(trace,scaffold,scope_to_subsample):
 def drawSubsampledScaffoldKernel(trace,indexer,scope_to_subsample):
   index = indexer.sampleIndex(trace)
 
+  import pdb; pdb.set_trace()
   borders_in_block,source_block_dict = partitionScaffold(trace,index,scope_to_subsample)
 
   G = traveseScaffold(trace,index)
@@ -535,7 +536,7 @@ class SubsampledInPlaceOperator(object):
     detach along the scaffold and return the weight thereof."""
     self.trace = trace
     self.global_scaffold = global_scaffold
-    rhoWeight,self.global_rhoDB = detachAndExtract(trace, global_scaffold.border[0], global_scaffold, compute_gradient)
+    rhoWeight,self.global_rhoDB = detachAndExtract(trace, global_scaffold, compute_gradient)
     assertTorus(self.global_scaffold)
     return rhoWeight
 
@@ -547,7 +548,7 @@ class SubsampledInPlaceOperator(object):
     ## Regen and attach with the old value
     #proposed_value = trace.valueAt(self.global_scaffold.globalBorder)
     #trace.setValueAt(globalBorder, self.global_rhoDB.getValue(globalBorder))
-    #regenAndAttach(trace,local_scaffold.border[0],local_scaffold,False,local_rhoDB,{})
+    #regenAndAttach(trace,local_scaffold,False,local_rhoDB,{})
 
     # Update with the old value.
     proposed_value = trace.valueAt(globalBorder)
@@ -556,19 +557,19 @@ class SubsampledInPlaceOperator(object):
     updateValuesAtScaffold(trace,local_scaffold,updatedNodes)
 
     # Detach and extract
-    rhoWeight,local_rhoDB = detachAndExtract(trace, local_scaffold.border[0], local_scaffold, compute_gradient)
+    rhoWeight,local_rhoDB = detachAndExtract(trace, local_scaffold, compute_gradient)
 
     # Regen and attach with the new value
     trace.setValueAt(globalBorder, proposed_value)
-    xiWeight = regenAndAttach(trace,local_scaffold.border[0],local_scaffold,False,local_rhoDB,{})
+    xiWeight = regenAndAttach(trace,local_scaffold,False,local_rhoDB,{})
     return xiWeight - rhoWeight
 
   def accept(self): pass
   def reject(self):
     # Only restore the global section.
-    detachAndExtract(self.trace,self.global_scaffold.border[0],self.global_scaffold)
+    detachAndExtract(self.trace,self.global_scaffold)
     assertTorus(self.global_scaffold)
-    regenAndAttach(self.trace,self.global_scaffold.border[0],self.global_scaffold,True,self.global_rhoDB,{})
+    regenAndAttach(self.trace,self.global_scaffold,True,self.global_rhoDB,{})
 
   def makeConsistent(self,trace,indexer):
     # Go through every local child and do extra and regen.
@@ -577,8 +578,8 @@ class SubsampledInPlaceOperator(object):
       self.global_scaffold = indexer.sampleGlobalIndex(trace)
     for local_child in self.global_scaffold.local_children:
       local_scaffold = indexer.sampleLocalIndex(trace,local_child)
-      _,local_rhoDB = detachAndExtract(trace, local_scaffold.border[0], local_scaffold)
-      regenAndAttach(trace,local_scaffold.border[0],local_scaffold,False,local_rhoDB,{})
+      _,local_rhoDB = detachAndExtract(trace, local_scaffold)
+      regenAndAttach(trace,local_scaffold,False,local_rhoDB,{})
 
 class InPlaceOperator(object):
   def prepare(self, trace, scaffold, compute_gradient = False):
@@ -586,15 +587,15 @@ class InPlaceOperator(object):
     detach along the scaffold and return the weight thereof."""
     self.trace = trace
     self.scaffold = scaffold
-    rhoWeight,self.rhoDB = detachAndExtract(trace, scaffold.border[0], scaffold, compute_gradient)
+    rhoWeight,self.rhoDB = detachAndExtract(trace, scaffold, compute_gradient)
     assertTorus(scaffold)
     return rhoWeight
 
   def accept(self): pass
   def reject(self):
-    detachAndExtract(self.trace,self.scaffold.border[0],self.scaffold)
+    detachAndExtract(self.trace,self.scaffold)
     assertTorus(self.scaffold)
-    regenAndAttach(self.trace,self.scaffold.border[0],self.scaffold,True,self.rhoDB,{})
+    regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,{})
 
 #### Subsampled_MH Operator
 #### Resampling from the prior
@@ -602,7 +603,7 @@ class InPlaceOperator(object):
 class SubsampledMHOperator(SubsampledInPlaceOperator):
   def propose(self, trace, global_scaffold):
     rhoWeight = self.prepare(trace, global_scaffold)
-    xiWeight = regenAndAttach(trace,global_scaffold.border[0],global_scaffold,False,self.global_rhoDB,{})
+    xiWeight = regenAndAttach(trace,global_scaffold,False,self.global_rhoDB,{})
     return trace, xiWeight - rhoWeight
 
 

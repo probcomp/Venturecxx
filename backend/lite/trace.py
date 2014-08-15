@@ -10,8 +10,9 @@ from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
                    EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,
                    RejectionOperator, MissingEsrParentError, NoSPRefError,
                    HamiltonianMonteCarloOperator, MAPOperator, StepOutSliceOperator,
-                   DoublingSliceOperator, NesterovAcceleratedGradientAscentOperator)
-from subsampled_mh import drawScaffoldKernel,drawSubsampledScaffoldKernel,subsampledMixMH,SubsampledMHOperator,SubsampledBlockScaffoldIndexer
+                   DoublingSliceOperator, NesterovAcceleratedGradientAscentOperator,
+                   drawScaffoldKernel, drawSubsampledScaffoldKernel, subsampledMixMH,
+                   SubsampledMHOperator,SubsampledBlockScaffoldIndexer)
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies, VentureSPRecord
@@ -405,15 +406,16 @@ class Trace(object):
       if operator == "mh":
         mixMH(self, BlockScaffoldIndexer(scope, block), MHOperator())
       elif operator == "draw_scaffold":
-        drawScaffoldKernel(self,BlockScaffoldIndexer(params["scope"],params["block"]))
+        drawScaffoldKernel(self, BlockScaffoldIndexer(scope, block))
       elif operator == "draw_subsampled_scaffold":
-        drawSubsampledScaffoldKernel(self,BlockScaffoldIndexer(params["scope"],params["block"]),params["scope_to_subsample"])
+        scope_to_subsample = exp[3]
+        drawSubsampledScaffoldKernel(self, BlockScaffoldIndexer(scope, block), scope_to_subsample)
       elif operator == "subsampled_mh":
-        assert params["with_mutation"]
-        subsampledMixMH(self,SubsampledBlockScaffoldIndexer(params["scope"],params["block"],params["useDeltaKernels"],params["deltaKernelArgs"],updateValue=params["updateValue"]),SubsampledMHOperator(), params["Nbatch"], params["k0"], params["epsilon"])
+        (Nbatch, k0, epsilon, useDeltaKernels, deltaKernelArgs, updateValue) = exp[3:9]
+        subsampledMixMH(self, SubsampledBlockScaffoldIndexer(scope, block, useDeltaKernels, deltaKernelArgs, updateValue), SubsampledMHOperator(), Nbatch, k0, epsilon)
       elif operator == "subsampled_mh_make_consistent":
-        assert params["with_mutation"]
-        SubsampledMHOperator().makeConsistent(self,SubsampledBlockScaffoldIndexer(params["scope"],params["block"],params["useDeltaKernels"],params["deltaKernelArgs"]))
+        (useDeltaKernels, deltaKernelArgs, updateValue) = exp[3:6]
+        SubsampledMHOperator().makeConsistent(self,SubsampledBlockScaffoldIndexer(scope, block, exp[3], exp[-2], exp[-1]))
       elif operator == "meanfield":
         steps = int(exp[3])
         mixMH(self, BlockScaffoldIndexer(scope, block), MeanfieldOperator(steps, 0.0001))

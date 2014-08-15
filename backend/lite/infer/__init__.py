@@ -19,6 +19,9 @@ from hmc import HamiltonianMonteCarloOperator
 from map_gradient import MAPOperator, NesterovAcceleratedGradientAscentOperator
 from meanfield import MeanfieldOperator
 from mh import mixMH,MHOperator,BlockScaffoldIndexer
+from subsampled_mh import (drawScaffoldKernel, drawSubsampledScaffoldKernel,
+                           subsampledMixMH, SubsampledMHOperator,
+                           SubsampledBlockScaffoldIndexer)
 from pgibbs import PGibbsOperator,ParticlePGibbsOperator
 from rejection import RejectionOperator, MissingEsrParentError, NoSPRefError
 from slice_sample import StepOutSliceOperator, DoublingSliceOperator
