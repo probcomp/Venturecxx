@@ -7,7 +7,7 @@ from scipy.stats import norm
 from statsmodels.distributions import ECDF
 from venture.unit import VentureUnit
 
-NSAMPLE = 200
+NSAMPLE = 1000
 BURN = 100
 THIN = 100
 
@@ -43,12 +43,25 @@ def format_results_successive(res):
 
 def collect_succesive_conditional(ripl):
   'Simulate data, infer based on it, forget the simulation, repeat'
+  # program = '''
+  #   forgetme : [ASSUME dummy (x)]
+  #   [INFER (cycle
+  #            ((peek mu) (peek sigma) (peek dummy)
+  #             (hmc (quote parameters) all 0.05 10 1)) 1)]
+  #   [FORGET forgetme]'''
   program = '''
     forgetme : [ASSUME dummy (x)]
     [INFER (cycle
              ((peek mu) (peek sigma) (peek dummy)
-              (hmc (quote parameters) all 0.05 10 1)) 1)]
+              (mh (quote parameters) one 1)) 1)]
     [FORGET forgetme]'''
+  # program = '''
+  #   forgetme : [ASSUME dummy (x)]
+  #   [INFER (cycle
+  #            ((peek mu) (peek sigma) (peek dummy)
+  #             (slice (quote params) 0 10 100 1)
+  #             (slice (quote params) 1 1 100 1)) 1)]
+  #   [FORGET forgetme]'''
   res = []
   for i in range(BURN + NSAMPLE * THIN):
     tmp = ripl.execute_program(program)
@@ -105,7 +118,7 @@ def pp_plots(stats_marginal, stats_successive, stats, ps, out = None):
     one_pp_plot(stats_marginal['g'].iloc[:,i],
                 stats_successive['g'].iloc[:,i],
                 ax[i], ps[i])
-  if out is None: out = 'geweke-report.pdf'
+  if out is None: out = 'geweke-results/mh-one-report.pdf'
   fig.savefig(out, format = 'pdf')
 
 def parameter_histograms(df_marginal, df_successive):
@@ -114,7 +127,7 @@ def parameter_histograms(df_marginal, df_successive):
     sns.distplot(df_marginal[param], label = 'marginal', ax = ax[i])
     sns.distplot(df_successive[param], label = 'conditional', ax = ax[i])
     ax[i].set_title(param)
-  fig.savefig('geweke-parameters.pdf')
+  fig.savefig('geweke-results/mh-one-parameters.pdf')
 
 def main():
   df_marginal = collect_marginal_conditional(build_ripl())
@@ -137,8 +150,8 @@ def analytics_comparison():
   '''
   class GaussianModel(VentureUnit):
     def makeAssumes(self):
-      self.assume('mu', '(normal 0 10)')
-      self.assume('sigma', '(sqrt (inv_gamma 1 1))')
+      self.assume('mu', '(scope_include (quote params) 0 (normal 0 10))')
+      self.assume('sigma', '(scope_include (quote params) 1 (sqrt (inv_gamma 1 1)))')
       self.assume('x', '(lambda () (normal mu sigma))')
 
     def makeObserves(self):
@@ -146,17 +159,17 @@ def analytics_comparison():
 
   ripl = make_lite_church_prime_ripl()
   model = GaussianModel(ripl).getAnalytics(ripl)
-  fh, ih, cr = model.gewekeTest(samples = 10000,
+  fh, ih, cr = model.gewekeTest(samples = 100000,
                                 infer = '(hmc default all 0.05 10 1)',
                                 plot = True)
-  with open('analytics-geweke.txt', 'w') as f:
+  with open('geweke-results/analytics-hmc.txt', 'w') as f:
     f.write(cr.reportString)
-  cr.compareFig.savefig('analytics-geweke.pdf', format = 'pdf')
+  cr.compareFig.savefig('geweke-results/analytics-hmc.pdf', format = 'pdf')
 
 if __name__ == '__main__':
-  main()
+  # main()
   # run the comparison
-  # analytics_comparison()
+  analytics_comparison()
 
 
 
