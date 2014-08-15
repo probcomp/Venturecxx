@@ -447,9 +447,9 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
       else:
         # Compute estimated standard deviation sx.
         # For the last minibatch 1 - n / N = 0.
-        sx = np.sqrt((1 - n / N) * (mx2 - mx * mx) / (k - 1))
+        sx = np.sqrt((1 - (n - 1) / (N - 1)) * (mx2 - mx * mx) / (n - 1))
         # Compute q: p-value
-        q = stats.t.cdf((mx - mu_0) / sx, k - 1) # p-value
+        q = stats.t.cdf((mx - mu_0) / sx, n - 1) # p-value
         if q <= epsilon:
           accept = False
           break
