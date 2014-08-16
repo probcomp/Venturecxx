@@ -130,6 +130,10 @@ def grad_pow(args, direction):
 def grad_sqrt(args, direction):
   return [direction * (0.5 / math.sqrt(args[0]))]
 
+def grad_vector_dot(args, direction):
+  # TODO: Not sure this is the correct way to write this.
+  return [direction * np.array(args[1]), direction * np.array(args[0])]
+
 def grad_list(args, direction):
   if direction == 0:
     return [0 for _ in args]
@@ -280,6 +284,7 @@ builtInSPsList = [
            [ "vector_dot", deterministic_typed(np.dot,
                                                [v.ArrayUnboxedType(v.NumberType()), v.ArrayUnboxedType(v.NumberType())],
                                                v.NumberType(),
+                                               sim_grad=grad_vector_dot,
                                                descr="(%s x y) returns the dot product of vectors x and y.") ],
 
            [ "matrix_mul", deterministic_typed(np.dot,
