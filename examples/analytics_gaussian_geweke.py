@@ -1,6 +1,6 @@
 from venture.unit import *
 from venture.venturemagics.ip_parallel import *
-
+import time
 # class GaussianModel(VentureUnit):
 #     def makeAssumes(self):
 #       self.assume('mu', '(scope_include (quote params) 0 (normal 0 10))')
@@ -30,6 +30,7 @@ program = '''
 
 
 infer_statement = '(mh default one 20)' #infer_scope = '(mh params all 10)'
+hmc = '(hmc default one .05 10 1)'
 
 # mu has high variance prior, sigma has low variance prior.
 # if x is close to mu, hard to change value of x.
@@ -41,21 +42,28 @@ fail_assumes = [ ('mu', '(scope_include (quote params) 0 (normal 0 30))') ,
 pass_assumes = [ ('mu', '(scope_include (quote params) 0 (normal 0 1))') ,
             ('sigma', '(scope_include (quote params) 1 (gamma 1 1))'),
             ('x', '(lambda () (normal mu sigma))') ]
+hmc_assumes = [ ('mu', '(scope_include (quote params) 0 (normal 0 1))') ]
+
 observes = [('(x)','0')]
+hmc_observes = [('(normal mu .4)','0')]
+
 
 # variables are highly correlated and so '(mh default one)' will never accept
 fail_assumes_correlated = [('x','(normal 0 10)'),('y','(normal x .0001)') ]
 fail_observes_correlated = None
 
 
-ripl = mk_p_ripl()
-ana = Analytics(ripl,assumes=pass_assumes,observes=observes)
+ripl = mk_l_ripl()
+ana = Analytics(ripl,assumes=hmc_assumes,observes=hmc_observes)
 
-fh,ih,cr = ana.gewekeTest(samples=1000,infer=infer_statement,useMRipl=False,plot=True)
+t = time.time()
+fh,ih,cr = ana.gewekeTest(samples=1000,infer=hmc,useMRipl=False,plot=True)
+print 'time: ', time.time() - t
 
 
 
-#notes on geweke:                
+
+# notes on geweke:                
 
 # Geweke 2004:
 # Grosse's blogpost recommends using QQ plots to compare the marginal distributions on variables for forward samples vs. samples from MCMC. Doing so gives rich visual information about these distributions. But one has to be careful with the number of samples (and the autocorrelation of the MCMC samples). I added KS tests, histograms and QQ plots to the Geweke test in Analytics. 
@@ -66,7 +74,7 @@ fh,ih,cr = ana.gewekeTest(samples=1000,infer=infer_statement,useMRipl=False,plot
  
 # You first estimate E( g(theta) ), then you compute its variances. These variances depend on the variance of the expectation and so you can only estimate them. So you need enough samples that your estimate is very close whp. (Geweke runs his tests for 10^5 iterations). Finally you implement/borrow some standard test for samples being ~ N(0,1).
 
-# If theta has high dimension it will have lots of second moments. Geweke suggests we test lots of them and use Bonferonni.
+# If theta has high dimension it will have lots of second moments. Geweke suggests we test lots of them and use Bonferronni. (Some models may have a very large number of variables, and so running a KS test on all of them is likely to produce failures due to chance. One could just eyeball the KS p-values. But it might be good to use Bonferroni here also). 
 
 # Since the g(theta) statistics just depend on samples of theta, there is an incremental path from the current QQ plot Geweke for marginals and the generalization to arbitrary functions of theta.
 
@@ -86,9 +94,14 @@ fh,ih,cr = ana.gewekeTest(samples=1000,infer=infer_statement,useMRipl=False,plot
 
 # Third, since the inference language now allows non-convergent programs, there is a need for a basic debugging tool for users. (These could be advanced users experimenting with subtle variants of MCMC that should converge but don't due to errors not in the backend but in their inference program).
 
-# Fourth, Geweke gives a picture of how well the MCMC transition operator moves around when conditioned on plausible data (i.e. data from the prior). Good visualization of this process seems potentially useful as a tool for getting early-warning about a transition operator that is liable to get stuck.
+# Fourth, Geweke gives a picture of how well the MCMC transition operator moves around when conditioned on plausible data (i.e. data from the prior). Good visualization of this process seems potentially useful as a tool for getting early-warning about a transition operator that is liable to get stuck. (I'm still unclear of the usefulness of Geweke here as opposed to the standard MCMC diagnostics. One issue is that Geweke ignores your actual data, which might be bad if your data has low probability on the prior. Another is that 
+
+# An additional thing to keep in mind: apart from the program transformation, the main thing you need for Geweke is tools for comparing distributions. Currently there is a QQ plot, Axch's KS test from test suite (which uses KS from scipy), and plotting histograms on same axis. All these tools for comparing marginals are also needed for basic MCMC diagnostics. The simplest diagnostic for MCMC is just to compare random variables at two points in the Markov chain (where variables are sampled via parallel chains). If the distributions are different then you haven't converged. The QQ plot could be improved (and maybe a PP plot is better?) and should have documentation explaining its semantics.
 
 # Related, vkm sketched an interesting extension of the current observes->predicts program transformation. You annotate variables with potential kernels for inference, e.g. variables that support gradients, or discrete enumeration, etc. Programs in this form can be automatically coupled with a big space of compatible inference programs (i.e. programs that use any of the permissible kernels on the given variable).
+
+
+
 
 
 
