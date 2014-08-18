@@ -41,7 +41,7 @@ class DefaultRandomVentureValue(object):
     return v.VentureArray([elt_dist.generate(**kwargs) for _ in range(length)])
   def array_unboxed(self, length=None, elt_type=None, **kwargs):
     if length is None:
-      length = npr.randint(0, 10)
+      length = npr.randint(1, 10)
     if elt_type is None:
       elt_type = v.NumberType() # TODO Do I want to test on a screwy class of unboxed arrays in general?
     return v.VentureArrayUnboxed([elt_type.asPython(elt_type.distribution(self.__class__, **kwargs).generate()) for _ in range(length)], elt_type)
