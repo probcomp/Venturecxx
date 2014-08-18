@@ -57,29 +57,31 @@
            ;; it in the parent pointer
            (eval exp env subtrace addr read-traces)))
         (else ;; Application
-         (let ((subvals (map (lambda (e)
+         (let ((subaddrs (map (lambda (e)
                                (let ((addr (fresh-address)))
-                                 (eval e env trace addr read-traces)))
+                                 (eval e env trace addr read-traces)
+                                 addr))
                              (subforms exp))))
-           (apply (car subvals) (cdr subvals) trace)))))
+           (apply (car subaddrs) (cdr subaddrs) trace)))))
 
 (define (apply oper opands cur-trace)
-  (cond ((primitive? oper)
-         ((primitive-apply oper) opands))
-        ((compound? oper)
-         (let ((formals (compound-formals oper))
-               (body (compound-body oper))
-               (env (compound-env oper))
-               (trace (compound-trace oper))
-               (read-traces (compound-read-traces oper)))
-           (let ((env* (extend-env env formals opands))
-                 (trace* cur-trace)
-                 (addr* (fresh-address))
-                 ;; This way, a compound procedure does not carry
-                 ;; write permission to the trace in which it was
-                 ;; created
-                 (read-traces* (cons trace read-traces)))
-             (eval body env* trace* addr* read-traces*))))))
+  (let ((oper (trace-lookup cur-trace oper)))
+    (cond ((primitive? oper)
+           ((primitive-apply oper) opands))
+          ((compound? oper)
+           (let ((formals (compound-formals oper))
+                 (body (compound-body oper))
+                 (env (compound-env oper))
+                 (trace (compound-trace oper))
+                 (read-traces (compound-read-traces oper)))
+             (let ((env* (extend-env env formals opands))
+                   (trace* cur-trace)
+                   (addr* (fresh-address))
+                   ;; This way, a compound procedure does not carry
+                   ;; write permission to the trace in which it was
+                   ;; created
+                   (read-traces* (cons trace read-traces)))
+               (eval body env* trace* addr* read-traces*)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
