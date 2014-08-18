@@ -201,8 +201,11 @@ The interesting parts of the code are:
 - The frontend stack (including SIVM, RIPL, VentureUnit, server, and Python client) in `python/`.
 - The pure-Python, clearer, normative Lite backend in `backend/lite/`.
 - The C++, faster Puma backend (plus a thin Python driver) in `backend/puma/`.
+- The test suite lives under `test/`.
 - The actual entry points are in `script/`, notably `script/venture`.
 - Advanced example programs live in `examples/`.
+- There are some developer tools available in `tool/`.
+- There is a stale C++11 backend in `backend/cxx/`.
 - The Javascript client and web demos are actually in the
   [VentureJSRIPL](https://github.com/mit-probabilistic-computing-project/VentureJSRIPL)
   repository.
