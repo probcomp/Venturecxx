@@ -17,6 +17,8 @@
   trace
   read-traces)
 
+(define-structure primitive) ; What's in primitive procedures?
+
 (define-structure address) ; Contentless structure with only identity
 (define (fresh-address) (make-address))
 
@@ -87,7 +89,7 @@
                  (as (env-frame-addresses env)))
         (cond ((null? ss)
                (env-lookup (env-frame-parent env) symbol))
-              ((eq? (car ss) symb)
+              ((eq? (car ss) symbol)
                (car as))
               (else (loop (cdr ss) (cdr as)))))
       (error "Symbol not found" symbol)))
@@ -133,8 +135,9 @@
 ;;; Expressions
 
 (define (constant? exp)
-  (or (and (not (pair? exp)) (not (symbol? exp)))
-      (eq? (car exp) 'quote)))
+  (and (not (symbol? exp))
+       (or (not (pair? exp))
+           (eq? (car exp) 'quote))))
 
 (define (constant-value exp)
   (if (pair? exp)
