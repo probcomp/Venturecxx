@@ -123,8 +123,36 @@
   (trace-set-addresses! trace (cons addr (trace-addresses trace)))
   (trace-set-values trace (cons val (trace-values trace))))
 
+(define (trace-extend trace)
+  (make-trace trace '() '()))
+
 (define (top-eval exp)
   (eval exp (make-env-frame #f '() '()) (make-trace #f '() '()) (fresh-address) '()))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Expressions
+
+(define (constant? exp)
+  (or (and (not (pair? exp)) (not (symbol? exp)))
+      (eq? (car exp) 'quote)))
+
+(define (constant-value exp)
+  (if (pair? exp)
+      (cadr exp)
+      exp))
+
+(define variable? symbol?)
+
+(define (lambda? exp)
+  (and (pair? exp) (eq? (car exp) 'lambda)))
+
+(define lambda-formals cadr)
+(define lambda-body caddr)
+
+(define (extend? exp)
+  (and (pair? exp) (eq? (car exp) 'ext)))
+
+(define (subforms exp) exp)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; VKM's pronouncements:
