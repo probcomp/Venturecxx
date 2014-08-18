@@ -410,12 +410,15 @@ class Trace(object):
       elif operator == "draw_subsampled_scaffold":
         scope_to_subsample = exp[3]
         drawSubsampledScaffoldKernel(self, BlockScaffoldIndexer(scope, block), scope_to_subsample)
+      elif operator == "mh_kernel_update":
+        (useDeltaKernels, deltaKernelArgs, updateValue) = exp[3:6]
+        mixMH(self, BlockScaffoldIndexer(scope, block, useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs, updateValue=updateValue), MHOperator())
       elif operator == "subsampled_mh":
         (Nbatch, k0, epsilon, useDeltaKernels, deltaKernelArgs, updateValue) = exp[3:9]
         subsampledMixMH(self, SubsampledBlockScaffoldIndexer(scope, block, useDeltaKernels, deltaKernelArgs, updateValue), SubsampledMHOperator(), Nbatch, k0, epsilon)
       elif operator == "subsampled_mh_make_consistent":
         (useDeltaKernels, deltaKernelArgs, updateValue) = exp[3:6]
-        SubsampledMHOperator().makeConsistent(self,SubsampledBlockScaffoldIndexer(scope, block, exp[3], exp[-2], exp[-1]))
+        SubsampledMHOperator().makeConsistent(self,SubsampledBlockScaffoldIndexer(scope, block, useDeltaKernels, deltaKernelArgs, updateValue))
       elif operator == "meanfield":
         steps = int(exp[3])
         mixMH(self, BlockScaffoldIndexer(scope, block), MeanfieldOperator(steps, 0.0001))
@@ -424,6 +427,8 @@ class Trace(object):
         mixMH(self, BlockScaffoldIndexer(scope, block), HamiltonianMonteCarloOperator(epsilon, int(L)))
       elif operator == "gibbs":
         mixMH(self, BlockScaffoldIndexer(scope, block), EnumerativeGibbsOperator())
+      elif operator == "gibbs_update":
+        mixMH(self, BlockScaffoldIndexer(scope, block, updateValue=True), EnumerativeGibbsOperator())
       elif operator == "slice":
         (w, m) = exp[3:5]
         mixMH(self, BlockScaffoldIndexer(scope, block), StepOutSliceOperator(w, m))
@@ -437,6 +442,13 @@ class Trace(object):
           mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block)), PGibbsOperator(particles))
         else:
           mixMH(self, BlockScaffoldIndexer(scope, block), PGibbsOperator(particles))
+      elif operator == "pgibbs_update":
+        particles = int(exp[3])
+        if isinstance(block, list): # Ordered range
+          (_, min_block, max_block) = block
+          mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block), updateValue=True), PGibbsOperator(particles))
+        else:
+          mixMH(self, BlockScaffoldIndexer(scope, block, updateValue=True), PGibbsOperator(particles))
       elif operator == "func_pgibbs":
         particles = int(exp[3])
         if isinstance(block, list): # Ordered range

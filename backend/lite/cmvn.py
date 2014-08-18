@@ -79,7 +79,7 @@ class MakeCMVNOutputPSP(DeterministicPSP):
 
     d = np.size(m0)
     output = TypedPSP(CMVNOutputPSP(d,m0,k0,v0,S0), SPType([], HomogeneousArrayType(NumberType())))
-    return CMVNSP(NullRequestPSP(),output,d)
+    return VentureSPRecord(CMVNSP(NullRequestPSP(),output,d))
 
   def childrenCanAAA(self): return True
 
