@@ -198,6 +198,8 @@ Developing Venture
 ==================
 
 The interesting parts of the code are:
+- There is a live tutorial in `examples/tutorial/part*` (run an
+  ipython notebook server in that directory)
 - The frontend stack (including SIVM, RIPL, VentureUnit, server, and Python client) in `python/`.
 - The pure-Python, clearer, normative Lite backend in `backend/lite/`.
 - The C++, faster Puma backend (plus a thin Python driver) in `backend/puma/`.
