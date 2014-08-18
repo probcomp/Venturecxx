@@ -106,7 +106,7 @@
    (lambda () (error "Symbol not found" symbol))))
 
 (define (traces-lookup traces addr)
-  (let loop ((ts traces))
+  (let loop ((traces traces))
     (if (null? traces)
         (error "Address not found" addr)
         (trace-search (car traces) addr (lambda (v) v)
