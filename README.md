@@ -198,21 +198,23 @@ Developing Venture
 ==================
 
 The interesting parts of the code are:
-- The stack (including SIVM, RIPL, VentureUnit, server, and Python client) in `python/`
-- The C++11 engine (plus a thin Python driver) in `backend/cxx/`
-- The actual entry points are in `script/`
-- Advanced example programs live in `examples/`
+- The frontend stack (including SIVM, RIPL, VentureUnit, server, and Python client) in `python/`.
+- The pure-Python, clearer, normative Lite backend in `backend/lite/`.
+- The C++, faster Puma backend (plus a thin Python driver) in `backend/puma/`.
+- The actual entry points are in `script/`, notably `script/venture`.
+- Advanced example programs live in `examples/`.
 - The Javascript client and web demos are actually in the
   [VentureJSRIPL](https://github.com/mit-probabilistic-computing-project/VentureJSRIPL)
   repository.
 - There are language-level benchmarks (and correctness tests) in the
   [VentureBenchmarksAndTests](https://github.com/mit-probabilistic-computing-project/VentureBenchmarksAndTests)
-  repository.
+  repository, but they may have bit rotted by now.
 
 Python Development
 ------------------
 
-We recommend using ipython for Venture development; you can obtain it via
+We recommend using ipython for Venture development; you can obtain it
+via
 
     pip install ipython
 
