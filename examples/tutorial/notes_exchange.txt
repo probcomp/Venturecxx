@@ -356,4 +356,6 @@ Student-t: integrate , with hyper-variance determining the degress of freedom (i
 
 What's a situation where not having likelihood in advance makes you do worse? If variable gets transformed, then you can untransform. But the conjugate prior on that variable is the same anyway.
 
-What about?
+What about'\
+/,.
+/.
