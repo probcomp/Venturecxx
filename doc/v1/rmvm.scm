@@ -55,7 +55,7 @@
                (addr (fresh-address)))
            ;; Could add trace to read-traces here instead of stashing
            ;; it in the parent pointer
-           (eval exp env subtrace addr read-traces)))
+           (eval (ext-subexp exp) env subtrace addr read-traces)))
         (else ;; Application
          (let ((subaddrs (map (lambda (e)
                                (let ((addr (fresh-address)))
@@ -156,8 +156,19 @@
 
 (define (extend? exp)
   (and (pair? exp) (eq? (car exp) 'ext)))
+(define ext-subexp cadr)
 
 (define (subforms exp) exp)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Test cases
+
+; 1 => 1
+; '((lambda () 1)) => 1
+; '((lambda (x) 1) 2) => 1
+; '((lambda (x) x) 2) => 2
+; '((lambda (x) (ext x)) 3) => 3
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; VKM's pronouncements:
