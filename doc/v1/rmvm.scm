@@ -1,19 +1,16 @@
 (declare (usual-integrations))
 
-(define-structure trace
-  (safe-accessors #t)
+(define-structure (trace (safe-accessors #t))
   parent
   addresses
   values) ; Parallel lists mapping addresses to values, and possible metadata
 
-(define-structure env-frame
-  (safe-accessors #t)
+(define-structure (env-frame (safe-accessors #t))
   parent
   symbols
   addresses) ; Parallel lists mapping symbols to addresses
 
-(define-structure compound
-  (safe-accessors #t)
+(define-structure (compound (safe-accessors #t))
   formals
   body
   env
