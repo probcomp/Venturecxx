@@ -120,8 +120,8 @@
           (else (loop (cdr as) (cdr vs))))))
 
 (define (trace-store! trace addr val)
-  (trace-set-addresses! trace (cons addr (trace-addresses trace)))
-  (trace-set-values trace (cons val (trace-values trace))))
+  (set-trace-addresses! trace (cons addr (trace-addresses trace)))
+  (set-trace-values! trace (cons val (trace-values trace))))
 
 (define (trace-extend trace)
   (make-trace trace '() '()))
