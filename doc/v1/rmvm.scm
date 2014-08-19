@@ -41,8 +41,11 @@
   (cond ((constant? exp)
          (constant-value exp))
         ((variable? exp)
-         (let ((addr (env-lookup env exp)))
-           (traces-lookup (cons trace read-traces) addr)))
+         (env-search env exp
+           (lambda (addr)
+             (traces-lookup (cons trace read-traces) addr))
+           (lambda ()
+             ((access eval system-global-environment) exp user-initial-environment))))
         ((lambda? exp)
          (make-compound
           (lambda-formals exp)
@@ -62,9 +65,9 @@
                                  (eval e env trace addr read-traces)
                                  addr))
                              (subforms exp))))
-           (apply (car subaddrs) (cdr subaddrs) trace)))))
+           (apply (car subaddrs) (cdr subaddrs) trace read-traces)))))
 
-(define (apply oper opands cur-trace)
+(define (apply oper opands cur-trace read-traces)
   (let ((oper (trace-lookup cur-trace oper)))
     (cond ((primitive? oper)
            ((primitive-apply oper) opands))
@@ -81,20 +84,26 @@
                    ;; write permission to the trace in which it was
                    ;; created
                    (read-traces* (cons trace read-traces)))
-               (eval body env* trace* addr* read-traces*)))))))
+               (eval body env* trace* addr* read-traces*))))
+          ((procedure? oper) ; An MIT Scheme procedure
+           (let ((arguments (map (lambda (o)
+                                   (traces-lookup (cons cur-trace read-traces) o))
+                                 opands)))
+             ((access apply system-global-environment) oper arguments))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (env-lookup env symbol)
+(define (env-search env symbol win lose)
   (if (env-frame? env)
       (let loop ((ss (env-frame-symbols env))
                  (as (env-frame-addresses env)))
         (cond ((null? ss)
-               (env-lookup (env-frame-parent env) symbol))
+               (env-search (env-frame-parent env) symbol win lose))
               ((eq? (car ss) symbol)
-               (car as))
+               (win (car as)))
               (else (loop (cdr ss) (cdr as)))))
-      (error "Symbol not found" symbol)))
+      (lose)
+      #;(error "Symbol not found" symbol)))
 (define extend-env make-env-frame)
 
 (define (trace-search trace addr win lose)
@@ -105,7 +114,7 @@
 
 (define (trace-lookup trace addr)
   (trace-search trace addr (lambda (v) v)
-   (lambda () (error "Symbol not found" symbol))))
+   (lambda () (error "Address not found" addr))))
 
 (define (traces-lookup traces addr)
   (let loop ((traces traces))
@@ -168,7 +177,8 @@
 ; '((lambda (x) 1) 2) => 1
 ; '((lambda (x) x) 2) => 2
 ; '((lambda (x) (ext x)) 3) => 3
-
+; '((ext (lambda (x) (ext x))) 4) => 4
+; '(+ 3 2) => 5
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; VKM's pronouncements:
