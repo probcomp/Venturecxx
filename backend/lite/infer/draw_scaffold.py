@@ -2,7 +2,7 @@ import networkx as nx
 #from matplotlib import pyplot as plt
 from ..node import Node, OutputNode, RequestNode, LookupNode, ConstantNode
 
-def drawScaffoldKernel(trace,indexer):
+def drawScaffold(trace, indexer):
   index = indexer.sampleIndex(trace)
   G = traveseScaffold(trace, index)
   drawScaffoldGraph(trace, G)
