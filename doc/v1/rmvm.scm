@@ -59,6 +59,15 @@
            ;; Could add trace to read-traces here instead of stashing
            ;; it in the parent pointer
            (eval (ext-subexp exp) env subtrace addr read-traces)))
+        ((begin? exp)
+         (let ()
+           (define result #f)
+           (for-each
+            (lambda (s)
+              (let ((addr (fresh-address)))
+                (set! result (eval s env trace addr read-traces))))
+            (cdr (subforms exp)))     ; cdr excludes the 'begin symbol
+           result))
         (else ;; Application
          (let ((subaddrs (map (lambda (e)
                                (let ((addr (fresh-address)))
@@ -167,6 +176,9 @@
   (and (pair? exp) (eq? (car exp) 'ext)))
 (define ext-subexp cadr)
 
+(define (begin? exp)
+  (and (pair? exp) (eq? (car exp) 'begin)))
+
 (define (subforms exp) exp)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -179,6 +191,9 @@
 ; '((lambda (x) (ext x)) 3) => 3
 ; '((ext (lambda (x) (ext x))) 4) => 4
 ; '(+ 3 2) => 5
+; '(((lambda (x) (lambda (y) (+ x y))) 3) 4) => 7
+; '(((lambda (x) (ext (lambda (y) (+ x y)))) 3) 4) => 7
+; '(begin (+ 2 3) (* 2 3)) => 6
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; VKM's pronouncements:
