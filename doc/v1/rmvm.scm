@@ -225,21 +225,52 @@
        x))
    (fresh-address)) ; => 8
 
-'(begin
-   (define map (lambda (f lst)
-                 (if (pair? lst)
-                     (cons (f (car lst)) (map f (cdr lst)))
-                     lst)))
-   (map (lambda (x) (+ x 1)) (list 1 2 3)))
+(define map-defn
+  '(define map
+     (lambda (f lst)
+       (if (pair? lst)
+           (cons (f (car lst)) (map f (cdr lst)))
+           lst))))
 
+#;
+`(begin
+   ,map-defn
+   (map (lambda (x) (+ x 1)) (list 1 2 3))) ; => (2 3 4)
 
-(lambda (trace)
-  (set-trace-values! trace
-   (map (lambda (item)
-          (if (number? item)
-              (+ item 1)
-              item))
-        (trace-values trace))))
+(define frobnicate-defn
+  '(define frobnicate
+     (lambda (trace)
+       (set-trace-values! trace
+         (map (lambda (item)
+                (if (number? item)
+                    (+ item 1)
+                    item))
+              (trace-values trace))))))
+
+;; Directly frobnicating breaks because the set at the end drops all
+;; the additional structure created since the fetch at the beginning
+;; of frobnicate.
+
+#;
+`(begin
+   ,map-defn
+   ,frobnicate-defn
+   (define x 2)
+   (define t (get-current-trace))
+   (ext (frobnicate t))
+   x) ; => 3
+
+`(begin
+   ,map-defn
+   ,frobnicate-defn
+   (define x 3)
+   (define y2
+     (ext (begin
+            (define y 4)
+            (define t (get-current-trace))
+            (ext (frobnicate t))
+            y)))
+   (* x y2))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; VKM's pronouncements:
