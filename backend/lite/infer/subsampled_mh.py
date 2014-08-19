@@ -12,30 +12,28 @@ from ..value import SPRef
 from ..scope import isScopeIncludeOutputPSP
 from ..scaffold import Scaffold, constructScaffold, updateValuesAtScaffold
 
-def constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKernels = False, deltaKernelArgs = None, updateValue = False, updatedNodes = None):
-  if updatedNodes is None:
-    updatedNodes = set()
-  while True:
-    cDRG,cAbsorbing,cAAA = set(),set(),set()
-    indexAssignments = {}
-    assert isinstance(setsOfPNodes,list)
-    for i in range(len(setsOfPNodes)):
-      assert isinstance(setsOfPNodes[i],set)
-      extendCandidateScaffoldGlobalSection(trace,setsOfPNodes[i],globalBorder,cDRG,cAbsorbing,cAAA,indexAssignments,i)
+def constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKernels = False, deltaKernelArgs = None, updateValue = False):
+  cDRG,cAbsorbing,cAAA = set(),set(),set()
+  indexAssignments = {}
+  assert isinstance(setsOfPNodes,list)
+  for i in range(len(setsOfPNodes)):
+    assert isinstance(setsOfPNodes[i],set)
+    extendCandidateScaffoldGlobalSection(trace,setsOfPNodes[i],globalBorder,cDRG,cAbsorbing,cAAA,indexAssignments,i)
 
-    brush = findBrush(trace,cDRG)
-    drg,absorbing,aaa = removeBrush(cDRG,cAbsorbing,cAAA,brush)
-    border = findBorder(trace,drg,absorbing,aaa)
-    regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
-    if globalBorder is not None:
-      assert globalBorder in border
-      assert globalBorder in drg
-      regenCounts[globalBorder] = 1
-    lkernels = loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs)
-    borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
-    scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
-    if not updateValue or not updateValuesAtScaffold(trace,scaffold,updatedNodes):
-      break
+  brush = findBrush(trace,cDRG)
+  drg,absorbing,aaa = removeBrush(cDRG,cAbsorbing,cAAA,brush)
+  border = findBorder(trace,drg,absorbing,aaa)
+  regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
+  if globalBorder is not None:
+    assert globalBorder in border
+    assert globalBorder in drg
+    regenCounts[globalBorder] = 1
+  lkernels = loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs)
+  borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
+  scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
+  if updateValue:
+    updatedNodes = set()
+    updateValuesAtScaffold(trace,scaffold,updatedNodes)
 
   scaffold.globalBorder = globalBorder
   scaffold.local_children = list(trace.childrenAt(globalBorder)) if globalBorder is not None else []
@@ -290,7 +288,6 @@ class SubsampledBlockScaffoldIndexer(object):
     self.useDeltaKernels = useDeltaKernels
     self.deltaKernelArgs = deltaKernelArgs
     self.updateValue = updateValue
-    self.updatedNodes = set()
 
   def sampleGlobalIndex(self,trace):
     if self.block == "one": setsOfPNodes = [trace.getNodesInBlock(self.scope,trace.sampleBlock(self.scope))]
@@ -323,7 +320,7 @@ class SubsampledBlockScaffoldIndexer(object):
       node = nextNode
     self.globalBorder = globalBorder
 
-    index = constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs,updateValue=False,updatedNodes=self.updatedNodes)
+    index = constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs,updateValue=False)
 
     return index
 
