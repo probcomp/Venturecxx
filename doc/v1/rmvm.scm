@@ -62,6 +62,14 @@
         ((nullary? 'get-current-environment exp) env)
         ((nullary? 'get-current-trace exp) trace)
         ((nullary? 'get-current-read-traces exp) read-traces)
+        ((define? exp)
+         (let ((addr (fresh-address)))
+           (eval (caddr exp) env trace addr read-traces)
+           (env-bind! env (cadr exp) addr)))
+        ((if? exp)
+         (if (eval (cadr exp)   env trace (fresh-address) read-traces)
+             (eval (caddr exp)  env trace (fresh-address) read-traces)
+             (eval (cadddr exp) env trace (fresh-address) read-traces)))
         ((begin? exp)
          (let ()
            (define result #f)
@@ -185,6 +193,12 @@
 (define (begin? exp)
   (and (pair? exp) (eq? (car exp) 'begin)))
 
+(define (define? exp)
+  (and (pair? exp) (eq? (car exp) 'define)))
+
+(define (if? exp)
+  (and (pair? exp) (eq? (car exp) 'if)))
+
 (define (subforms exp) exp)
 
 (define (nullary? symbol exp)
@@ -210,6 +224,22 @@
        (env-bind! (get-current-environment) 'x addr)
        x))
    (fresh-address)) ; => 8
+
+'(begin
+   (define map (lambda (f lst)
+                 (if (pair? lst)
+                     (cons (f (car lst)) (map f (cdr lst)))
+                     lst)))
+   (map (lambda (x) (+ x 1)) (list 1 2 3)))
+
+
+(lambda (trace)
+  (set-trace-values! trace
+   (map (lambda (item)
+          (if (number? item)
+              (+ item 1)
+              item))
+        (trace-values trace))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; VKM's pronouncements:
