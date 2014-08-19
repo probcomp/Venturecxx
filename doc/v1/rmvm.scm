@@ -281,3 +281,15 @@
 ;;; The only way you get to allocate mutable storage is if you have
 ;;; written a program whose space of executions defines the set of all
 ;;; valid values that can be stored.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; AXCH's pronouncement:
+
+;;; I now think that the part of the problem I had in HS-V1 that would
+;;; not be solved by the read-traces mechanism is a dependency
+;;; problem.  Specifically:
+;;; - dependency tracing; and
+;;; - dependency-directed computation order, in the presence of
+;;;   potential runtime discovery of new dependencies.  (Which
+;;;   manifests as the possibility that a value newly discovered to be
+;;;   needed may be unregenerated.)
