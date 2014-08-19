@@ -59,6 +59,9 @@
            ;; Could add trace to read-traces here instead of stashing
            ;; it in the parent pointer
            (eval (ext-subexp exp) env subtrace addr read-traces)))
+        ((nullary? 'get-current-environment exp) env)
+        ((nullary? 'get-current-trace exp) trace)
+        ((nullary? 'get-current-read-traces exp) read-traces)
         ((begin? exp)
          (let ()
            (define result #f)
@@ -114,6 +117,9 @@
       (lose)
       #;(error "Symbol not found" symbol)))
 (define extend-env make-env-frame)
+(define (env-bind! env sym addr)
+  (set-env-frame-symbols! env (cons sym (env-frame-symbols env)))
+  (set-env-frame-addresses! env (cons addr (env-frame-addresses env))))
 
 (define (trace-search trace addr win lose)
   (if (trace? trace)
@@ -181,6 +187,9 @@
 
 (define (subforms exp) exp)
 
+(define (nullary? symbol exp)
+  (and (pair? exp) (null? (cdr exp)) (eq? symbol (car exp))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Test cases
 
@@ -194,6 +203,13 @@
 ; '(((lambda (x) (lambda (y) (+ x y))) 3) 4) => 7
 ; '(((lambda (x) (ext (lambda (y) (+ x y)))) 3) 4) => 7
 ; '(begin (+ 2 3) (* 2 3)) => 6
+#;
+ '((lambda (addr)
+     (begin
+       (trace-store! (get-current-trace) addr 8)
+       (env-bind! (get-current-environment) 'x addr)
+       x))
+   (fresh-address)) ; => 8
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; VKM's pronouncements:
