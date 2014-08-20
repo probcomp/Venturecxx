@@ -49,9 +49,10 @@ class Scaffold(object):
     print "borders: " + str(self.border)
     print "lkernels: " + str(self.lkernels)
 
-"""
-When subsampled_mh is called, there will exist broken deterministic relationships in the trace.
-For example, in the program:
+"""Calling subsampled_mh may create broken deterministic
+relationships in the trace.  For example, consider updating mu in the
+program:
+
 [assume mu (normal 0 1)]
 [assume x (lambda () (normal mu 1))]
 [observe (x) 0.1]
@@ -59,22 +60,27 @@ For example, in the program:
 ...
 N observations
 ...
-After mu is updated. If a subsampled scaffold only include the first n observations,
-the lookup nodes for mu in the remaining N-n observations will have a stale value.
-At a second call to infer, these inconsistency may cause a problem.
 
-updateValuesAtScaffold updates all the nodes in a newly constructed scaffold by
-calling updateValueAtNode for each node. The main idea is that:
-Assume all the random output nodes have the latest values and the problem is in
-the nodes with determnistic dependency on their parents.
-For every node that cannot absorb, update the value of all its parents, and then
-unapplyPSP and apply PSP.
+If the subsampled scaffold only included the first n observations, the
+lookup nodes for mu in the remaining N-n observations will have a
+stale value.  At a second call to infer, these inconsistencies may cause
+a problem.
+
+updateValuesAtScaffold updates all the nodes in a newly constructed
+scaffold by calling updateValueAtNode for each node. The main idea is:
+- Assume all the random output nodes have the latest values and the
+  problem is in the nodes with deterministic dependence on their
+  parents.
+- For every node that cannot absorb, update the value of all its
+  parents, and then unapplyPSP and applyPSP.
 
 Assumptions/Limitations:
-Currently we assume the stale values do not change the structure of the trace
-(the existence of ESRs) and the value of the request node is always up to date.
-Also, we assume the values of brush/border nodes and their parents are up to date.
-As a result, we only update the application and lookup nodes in the DRG.
+Currently we assume the stale values do not change the structure of
+the trace (the existence of ESRs) and the value of the request node is
+always up to date.  Also, we assume the values of brush/border nodes
+and their parents are up to date.  As a result, we only update the
+application and lookup nodes in the DRG.
+
 """
 def updateValuesAtScaffold(trace,scaffold,updatedNodes):
   for node in scaffold.regenCounts:
