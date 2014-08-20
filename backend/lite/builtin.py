@@ -131,10 +131,6 @@ def grad_pow(args, direction):
 def grad_sqrt(args, direction):
   return [direction * (0.5 / math.sqrt(args[0]))]
 
-def grad_vector_dot(args, direction):
-  # TODO: Not sure this is the correct way to write this.
-  return [direction * np.array(args[1]), direction * np.array(args[0])]
-
 def grad_list(args, direction):
   if direction == 0:
     return [0 for _ in args]
@@ -150,6 +146,10 @@ def vector_dot(v1, v2):
     return candidate
   else:
     return 0
+
+def grad_vector_dot(args, direction):
+  return [direction * v.VentureArray(args[1]),
+          direction * v.VentureArray(args[0])]
 
 builtInSPsList = [
            [ "add",  naryNum(lambda *args: sum(args),
