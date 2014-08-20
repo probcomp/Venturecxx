@@ -51,7 +51,7 @@ class Trace(object):
     return self.scopes.keys()
 
   def bindPrimitiveName(self, name, val):
-    self.globalEnv.addBinding(name,ConstantNode(val))
+    self.globalEnv.addBinding(name,self.createConstantNode(None, val))
 
   def bindPrimitiveSP(self, name, sp):
     spNode = self.createConstantNode(None, VentureSPRecord(sp))
@@ -120,16 +120,16 @@ class Trace(object):
     self.ccs.remove(node)
     if self.pspAt(node).isRandom(): self.registerRandomChoice(node)
 
-  def createConstantNode(self,address,val): return ConstantNode(val)
-  def createLookupNode(self,sourceNode):
-    lookupNode = LookupNode(sourceNode)
+  def createConstantNode(self,address,val): return ConstantNode(address,val)
+  def createLookupNode(self,address,sourceNode):
+    lookupNode = LookupNode(address,sourceNode)
     self.setValueAt(lookupNode,self.valueAt(sourceNode))
     self.addChildAt(sourceNode,lookupNode)
     return lookupNode
 
-  def createApplicationNodes(self,operatorNode,operandNodes,env):
-    requestNode = RequestNode(operatorNode,operandNodes,env)
-    outputNode = OutputNode(operatorNode,operandNodes,requestNode,env)
+  def createApplicationNodes(self,address,operatorNode,operandNodes,env):
+    requestNode = RequestNode(address,operatorNode,operandNodes,env)
+    outputNode = OutputNode(address,operatorNode,operandNodes,requestNode,env)
     self.addChildAt(operatorNode,requestNode)
     self.addChildAt(operatorNode,outputNode)
     for operandNode in operandNodes:
