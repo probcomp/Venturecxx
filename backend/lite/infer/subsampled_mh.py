@@ -411,31 +411,30 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
     perm_local_chidren = np.random.permutation(global_index.local_children)
 
     # Sequentially do until termination condition is met.
-    mx = 0.0  # Mean of mllh.
-    mx2 = 0.0 # Mean of mllh^2.
+    mx = 0.0  # Mean of llh.
+    mx2 = 0.0 # Mean of llh^2.
     k = 0.0   # Index of minibatch.
     n = 0.0   # Number of processed local variables.
+    cum_dllh = 0.0
+    cum_dllh2 = 0.0
     accept = None
     while n < N:
       # Process k'th subset of local variables subsampled w/o replacement.
       n_start = n
       n_end = min(n + Nbatch, N)
-      cum_dllh = 0
       for i in xrange(int(n_start), int(n_end)):
         # Construct a local scaffold section.
         local_scaffold = indexer.sampleLocalIndex(trace,perm_local_chidren[i])
         # Compute diff of log-likelihood for i'th local variable.
         dllh = operator.evalOneLocalSection(trace, local_scaffold)
-        cum_dllh += dllh
-      # Compute mllh for k
-      size_batch = n_end - n_start
-      mllh = cum_dllh / size_batch
+        cum_dllh  += dllh
+        cum_dllh2 += dllh * dllh
 
-      # Update mx, mx2, k, n
-      mx  = (size_batch * mllh        + n * mx ) / n_end
-      mx2 = (size_batch * mllh * mllh + n * mx2) / n_end
+      # Update k, n, mx, mx2
       k += 1
       n = n_end
+      mx  = cum_dllh  / n_end
+      mx2 = cum_dllh2 / n_end
 
       if k < k0 and n < N:
         # Do not run testing for the first k0 minibatches.
@@ -447,9 +446,9 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
       else:
         # Compute estimated standard deviation sx.
         # For the last minibatch 1 - n / N = 0.
-        sx = np.sqrt((1 - (n - 1) / (N - 1)) * (mx2 - mx * mx) / (k - 1))
+        sx = np.sqrt((1 - (n - 1) / (N - 1)) * (mx2 - mx * mx) / (n - 1))
         # Compute q: p-value
-        q = stats.t.cdf((mx - mu_0) / sx, k - 1) # p-value
+        q = stats.t.cdf((mx - mu_0) / sx, n - 1) # p-value
         if q <= epsilon:
           accept = False
           break
