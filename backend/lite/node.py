@@ -10,7 +10,6 @@ class Node(object):
     self.aaaMadeSPAux = None
     self.numRequests = 0
     self.esrParents = []
-    self.isObservation = False
     self.esrParents = []
 
   def observe(self,val):
