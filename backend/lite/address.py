@@ -9,10 +9,10 @@ class Address(object):
     return Address(index, self)
   
   def __iter__(self):
-    yield self.index
     if self.parent:
       for i in self.parent:
         yield i
+    yield self.index
   
-  def __str__(self):
+  def __repr__(self):
     return str(list(self))
