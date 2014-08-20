@@ -1,3 +1,4 @@
+from address import Address
 from builtin import builtInValues, builtInSPs
 from env import VentureEnvironment
 from node import Node,ConstantNode,LookupNode,RequestNode,OutputNode,Args
@@ -53,7 +54,7 @@ class Trace(object):
     self.globalEnv.addBinding(name,ConstantNode(val))
 
   def bindPrimitiveSP(self, name, sp):
-    spNode = self.createConstantNode(VentureSPRecord(sp))
+    spNode = self.createConstantNode(None, VentureSPRecord(sp))
     processMadeSP(self,spNode,False)
     assert isinstance(self.valueAt(spNode), SPRef)
     self.globalEnv.addBinding(name,spNode)
@@ -119,7 +120,7 @@ class Trace(object):
     self.ccs.remove(node)
     if self.pspAt(node).isRandom(): self.registerRandomChoice(node)
 
-  def createConstantNode(self,val): return ConstantNode(val)
+  def createConstantNode(self,address,val): return ConstantNode(val)
   def createLookupNode(self,sourceNode):
     lookupNode = LookupNode(sourceNode)
     self.setValueAt(lookupNode,self.valueAt(sourceNode))
@@ -320,7 +321,7 @@ class Trace(object):
   #### External interface to engine.py
   def eval(self,id,exp):
     assert not id in self.families
-    (_,self.families[id]) = evalFamily(self,self.unboxExpression(exp),self.globalEnv,Scaffold(),False,OmegaDB(),{})
+    (_,self.families[id]) = evalFamily(self,Address(id),self.unboxExpression(exp),self.globalEnv,Scaffold(),False,OmegaDB(),{})
 
   def bindInGlobalEnv(self,sym,id): self.globalEnv.addBinding(sym,self.families[id])
   def unbindInGlobalEnv(self,sym): self.globalEnv.removeBinding(sym)
