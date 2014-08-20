@@ -3,6 +3,7 @@ from request import Request
 
 class Node(object):
   def __init__(self, address):
+    print address
     self.address = address
     self.value = None
     self.children = set()

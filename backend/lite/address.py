@@ -7,3 +7,12 @@ class Address(object):
   
   def extend(self, index):
     return Address(index, self)
+  
+  def __iter__(self):
+    yield self.index
+    if self.parent:
+      for i in self.parent:
+        yield i
+  
+  def __str__(self):
+    return str(list(self))
