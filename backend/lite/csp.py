@@ -2,7 +2,6 @@ from psp import DeterministicPSP, ESRRefOutputPSP
 from sp import SP, VentureSPRecord
 from env import VentureEnvironment
 from request import Request,ESR
-import value as v
 from exception import VentureError
 
 class CSPRequestPSP(DeterministicPSP):
