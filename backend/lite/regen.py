@@ -192,7 +192,7 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
         esrParent = omegaDB.getESRParent(trace.spAt(node),esr.id)
         weight += restore(trace,esrParent,scaffold,omegaDB,gradients)
       else:
-        address = node.address.extend(esr.id)
+        address = node.address.extend(esr.addr)
         (w,esrParent) = evalFamily(trace,address,esr.exp,esr.env,scaffold,shouldRestore,omegaDB,gradients)
         weight += w
       trace.registerFamilyAt(node,esr.id,esrParent)
