@@ -24,3 +24,7 @@ scipy>=0.13
 patsy # Because ggplot needs this installed first ??
 pandas
 # ggplot
+
+# Drawing scaffolds for debugging (optional)
+pygraphviz
+networkx
