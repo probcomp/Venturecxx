@@ -149,7 +149,7 @@ def vector_dot(v1, v2):
 
 def grad_vector_dot(args, direction):
   unscaled = [v.VentureArray(args[1]), v.VentureArray(args[0])]
-  return [direction.number * x for x in unscaled]
+  return [direction.getNumber() * x for x in unscaled]
 
 builtInSPsList = [
            [ "add",  naryNum(lambda *args: sum(args),
