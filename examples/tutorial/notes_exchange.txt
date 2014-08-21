@@ -341,7 +341,7 @@ Second, we are conditioning both on Normal and Poisson functions of theta. The p
 
 
 
-Question: What are possible angles for a paper or a series of blog posts? The ambitious thing is adding conjugacy into Venture and then showing cool examples of what is possible (with simple code) given that you have conjugacy.  Another angle is just defining this kind of problem, showing examples where online version is harder. not clear there are such examples, actually, if you can dynamically change your prior.  
+Question: What are possible angles for a paper or a series of blog posts? The ambitious thing is adding conjugacy into Venture and then showing cool examples of what is possible (with simple code) given that you have conjugacy.  Another angle is just defining this kind of problem, showing examples where online version is harder. not clear there are such examples, actually, if you can dynamically change your prior. (But would be a good project to try to look for examples. Maybe just show that various things don't work as possible examples and in showing that you might turn up something that does work. Maybe an hour of thought will show the whole thing to be a wrong turn). 
 
 
 
@@ -356,6 +356,4 @@ Student-t: integrate , with hyper-variance determining the degress of freedom (i
 
 What's a situation where not having likelihood in advance makes you do worse? If variable gets transformed, then you can untransform. But the conjugate prior on that variable is the same anyway.
 
-What about'\
-/,.
-/.
+
