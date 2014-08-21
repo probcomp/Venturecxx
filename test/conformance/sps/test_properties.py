@@ -1,6 +1,5 @@
 from nose import SkipTest
-from nose.tools import eq_
-from venture.test.tools import assert_almost_equal
+from nose.tools import eq_, assert_almost_equal
 from testconfig import config
 import math
 from numpy.testing import assert_allclose
