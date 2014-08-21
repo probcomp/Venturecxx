@@ -8,9 +8,9 @@
 ; Specific to non-Bayesian model
 [ASSUME sigma_2_u 250]
 [ASSUME sigma_2_v 250]
-[ASSUME Sigma_U (scalar_mult sigma_2_u (id_matrix D))]
+[ASSUME Sigma_U (scalar_mult sigma_2_U (id_matrix D))]
 [ASSUME mu_U (repeat 0 D)]
-[ASSUME Sigma_V (scalar_mult sigma_2_v (id_matrix D))]
+[ASSUME Sigma_V (scalar_mult sigma_2_V (id_matrix D))]
 [ASSUME mu_V (repeat 0 D)]
 
 ; Specific to Bayesian model
@@ -19,9 +19,9 @@
 [ASSUME beta_0 1]
 [ASSUME W_0 (id_matrix D)]
 [ASSUME Sigma_U (inv_wishart W_0 nu_0)]
-[ASSUME mu_U (multivariate_normal mu_0 (scalar_mult beta_0 Sigma_u))]
+[ASSUME mu_U (multivariate_normal mu_0 (scalar_mult beta_0 Sigma_U))]
 [ASSUME Sigma_V (inv_wishart W_0 nu_0)]
-[ASSUME mu_V (multivariate_normal mu_0 (scalar_mult beta_0 Sigma_u))]
+[ASSUME mu_V (multivariate_normal mu_0 (scalar_mult beta_0 Sigma_V))]
 
 ; Shared by both
 [ASSUME make_U
@@ -40,3 +40,8 @@
       (normal
         (vector_dot (make_U user) (make_V movie))
         (sqrt sigma_2))))]
+[ASSUME crossval_predict
+  (lambda (test)
+    (map (lambda (x)
+           (make_R (lookup x 0) (lookup x 1)))
+         test))]
