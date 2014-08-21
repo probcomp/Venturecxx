@@ -37,7 +37,8 @@ ON_MAC = 'darwin' in sys.platform
 if ON_LINUX:
     os.environ['CC'] = 'ccache gcc '
 if ON_MAC:
-    os.environ['CC'] = 'ccache gcc-4.8'
+    os.environ['CC'] = 'ccache gcc-4.9'
+    os.environ['CXX'] = 'ccache g++-4.9'
 
 src_files = [
     "src/value.cxx",
@@ -219,7 +220,7 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
     if ON_LINUX:
         self.compiler_so = ["ccache", "gcc"]
     if ON_MAC:
-        self.compiler_so = ["ccache", "gcc-4.8"]
+        self.compiler_so = ["ccache", "gcc-4.9"]
 
     # parallel code
     import multiprocessing, multiprocessing.pool

@@ -200,7 +200,7 @@ class MakerUBetaBernoulliOutputPSP(DiscretePSP):
     return "  (%s alpha beta) returns an uncollapsed beta bernoulli sampler with pseudocounts alpha (for true) and beta (for false)." % name
 
 class UBetaBernoulliAAALKernel(LKernel):
-  def simulate(self,trace,oldValue,args):
+  def simulate(self, _trace, _oldValue, args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
     [ctY,ctN] = args.madeSPAux.cts()
@@ -229,7 +229,7 @@ class UBetaBernoulliOutputPSP(DiscretePSP):
     else: # I produced false
       spaux.no -= 1
 
-  def simulate(self,args): return random.random() < self.weight
+  def simulate(self, _args): return random.random() < self.weight
 
   def logDensity(self, value, _args):
     if value == True:

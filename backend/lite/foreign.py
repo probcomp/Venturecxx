@@ -1,5 +1,5 @@
 from request import Request
-from sp import SP, VentureSPRecord
+from sp import VentureSPRecord
 from value import VentureValue
 
 # Part of a mechanism for allowing Lite SPs to be called from

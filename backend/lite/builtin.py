@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from numbers import Number
 
 from sp import SP, SPType
 from psp import NullRequestPSP, ESRRefOutputPSP, DeterministicPSP, TypedPSP
@@ -139,6 +140,17 @@ def grad_list(args, direction):
     tails = [0 for _ in range(len(args) - len(list_))]
     return list_ + tails
 
+def vector_dot(v1, v2):
+  candidate = np.dot(v1, v2)
+  if isinstance(candidate, Number):  # Numpy! WTF?
+    return candidate
+  else:
+    return 0
+
+def grad_vector_dot(args, direction):
+  unscaled = [v.VentureArray(args[1]), v.VentureArray(args[0])]
+  return [direction.number * x for x in unscaled]
+
 builtInSPsList = [
            [ "add",  naryNum(lambda *args: sum(args),
                              sim_grad=lambda args, direction: [direction for _ in args],
@@ -277,9 +289,10 @@ builtInSPsList = [
                                           v.ArrayUnboxedType(v.NumberType()),
                                           descr="(%s m) returns a 1-D array containing the elements of the matrix m.") ],
 
-           [ "vector_dot", deterministic_typed(np.dot,
+           [ "vector_dot", deterministic_typed(vector_dot,
                                                [v.ArrayUnboxedType(v.NumberType()), v.ArrayUnboxedType(v.NumberType())],
                                                v.NumberType(),
+                                               sim_grad=grad_vector_dot,
                                                descr="(%s x y) returns the dot product of vectors x and y.") ],
 
            [ "matrix_mul", deterministic_typed(np.dot,

@@ -1,5 +1,5 @@
 from nose import SkipTest
-from nose.tools import eq_
+from nose.tools import eq_, assert_almost_equal
 from testconfig import config
 import math
 from numpy.testing import assert_allclose
@@ -89,7 +89,7 @@ fully uncurried)."""
       raise SkipTest("Putatively deterministic sp %s returned a requesting SP" % name)
   else:
     for _ in range(5):
-      eq_(answer, carefully(sp.outputPSP.simulate, args))
+      assert_almost_equal(answer, carefully(sp.outputPSP.simulate, args), places = 10)
 
 @gen_in_backend("none")
 def testRandom():
@@ -192,6 +192,8 @@ def testRiplSimulate():
         "diag_matrix", # Not implemented
         "ravel", # Not implemented
         "matrix_mul", # Not implemented
+        "repeat", # Not implemented
+        "vector_dot", # Not implemented
     ]:
       continue
     if not sp.outputPSP.isRandom():
