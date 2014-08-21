@@ -15,7 +15,7 @@ class VentureEnvironment(VentureValue):
 
   def addBinding(self,sym,val):
     if not isinstance(sym, str):
-      raise VentureError("Symbol '%s' must be a string, not " % (str(sym), type(sym)))
+      raise VentureError("Symbol '%s' must be a string, not %s" % (str(sym), type(sym)))
     if sym in self.frame:
       raise VentureError("Symbol '%s' already bound" % sym)
     self.frame[sym] = val

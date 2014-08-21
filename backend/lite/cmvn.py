@@ -2,11 +2,8 @@ from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, VentureSPRecord, SPType
 import math
 from scipy.special import gammaln
-import scipy.stats
-from utils import simulateCategorical
-from value import AtomType, ArrayType, MatrixType # The type names are metaprogrammed pylint: disable=no-name-in-module
+from value import ArrayType, MatrixType # The type names are metaprogrammed pylint: disable=no-name-in-module
 import numpy as np
-import pdb
 
 def logGenGamma(d,x):
   term1 = float(d * (d - 1)) / 4 * math.log(math.pi)
@@ -132,7 +129,7 @@ class CMVNOutputPSP(RandomPSP):
     args.spaux.STotal -= x * x.T
 
   def logDensityOfCounts(self,aux):
-    (mN,kN,vN,SN) = self.updatedParams(aux)
+    (_mN,kN,vN,SN) = self.updatedParams(aux)
     term1 = - (aux.N * self.d * math.log(math.pi)) / 2
     term2 = logGenGamma(self.d,float(vN) / 2)
     term3 = - logGenGamma(self.d,float(self.v0) / 2)
