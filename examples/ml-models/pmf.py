@@ -43,8 +43,6 @@ class CrossValPSP(psp.RandomPSP):
     from dw_utils.debug import set_trace; set_trace()
     pass
 
-crossval_sp = typed_nr(CrossValPSP(), [v.ListType()], v.NumberType())
-
 def build_bayes_ripl(ripl):
   prog = '''
   [ASSUME mu_0 (repeat 0 D)]
@@ -106,10 +104,12 @@ def build_ripl(bayes = True):
              (make_R (lookup x 0) (lookup x 1)))
            test))]'''
   ripl.execute_program(prog)
+  crossval_sp = typed_nr(CrossValPSP(), [v.ListType()], v.NumberType())
+  ripl.bind_foreign_sp('crossval', crossval_sp)
   return ripl
 
 
 def main():
   ripl = build_ripl(bayes = True)
-  ripl.bind_foreign_inference_sp('crossval', crossval_sp)
+
 
