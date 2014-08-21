@@ -16,7 +16,6 @@
 
 import time
 from venture.lite.value import ExpressionType
-from venture.lite.utils import simulateCategorical
 
 class Infer(object):
   def __init__(self, engine):
