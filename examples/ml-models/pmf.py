@@ -3,12 +3,13 @@ Run probabilistic matrix factorization on a toy dataset and on the MovieLens
 100k dataset
 '''
 from os import path
-import pandas as pd
+import numpy as np, pandas as pd
 from venture.lite import psp
 from venture.unit import VentureUnit
 from venture.shortcuts import make_lite_church_prime_ripl
 from venture.lite.builtin import typed_nr
 from venture.lite import value as v
+from venture.lite.builtin import deterministic_typed
 
 def get_data(ntrain = None, ntest = None):
   '''
@@ -70,7 +71,10 @@ def build_nonbayes_ripl(ripl):
 
 def build_ripl(bayes = True):
   ripl = make_lite_church_prime_ripl()
-  ripl.load_prelude()
+  scalar_mult = deterministic_typed(np.dot,
+                                    [v.NumberType(), v.MatrixType()],
+                                    v.MatrixType())
+  ripl.bind_foreign_sp('scalar_mult', scalar_mult)
   prog = '''
   [ASSUME D 10]
   [ASSUME sigma_2 (/ 1 2)]'''
@@ -101,7 +105,7 @@ def build_ripl(bayes = True):
       (map (lambda (x)
              (make_R (lookup x 0) (lookup x 1)))
            test))]'''
-  ripl.execute_program(program)
+  ripl.execute_program(prog)
   return ripl
 
 
