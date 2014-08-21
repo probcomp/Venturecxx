@@ -1,0 +1,42 @@
+; Should try a range of D
+; All other "magic numbers" are the priors from the PMF papers
+; Stick with them unless they give really wacky results
+
+[ASSUME D 10]
+[ASSUME sigma_2 (/ 1 2)]
+
+; Specific to non-Bayesian model
+[ASSUME sigma_2_u 250]
+[ASSUME sigma_2_v 250]
+[ASSUME Sigma_U (scalar_mult sigma_2_u (id_matrix D))]
+[ASSUME mu_U (repeat 0 D)]
+[ASSUME Sigma_V (scalar_mult sigma_2_v (id_matrix D))]
+[ASSUME mu_V (repeat 0 D)]
+
+; Specific to Bayesian model
+[ASSUME mu_0 (repeat 0 D)]
+[ASSUME nu_0 D]
+[ASSUME beta_0 1]
+[ASSUME W_0 (id_matrix D)]
+[ASSUME Sigma_U (inv_wishart W_0 nu_0)]
+[ASSUME mu_U (multivariate_normal mu_0 (scalar_mult beta_0 Sigma_u))]
+[ASSUME Sigma_V (inv_wishart W_0 nu_0)]
+[ASSUME mu_V (multivariate_normal mu_0 (scalar_mult beta_0 Sigma_u))]
+
+; Shared by both
+[ASSUME make_U
+  (mem
+    (lambda (user)
+      (scope_include (quote U) user
+        multivariate_normal mu_U Sigma_U))))]
+[ASSUME make_V
+  (mem
+    (lambda (movie)
+      (scope_include (quote V) movie
+        (multivariate_normal mu_V Sigma_V))))]
+[ASSUME make_R
+  (mem
+    (lambda (user movie)
+      (normal
+        (vector_dot (make_U user) (make_V movie))
+        (sqrt sigma_2))))]
