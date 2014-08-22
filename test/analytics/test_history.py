@@ -1,13 +1,17 @@
-from venture.test.config import get_ripl
-from venture import unit
 from os import path, listdir
 from itertools import product
 import shutil
+from nose.plugins.attrib import attr
+
+from venture.test.config import get_ripl, gen_on_inf_prim
+from venture import unit
 
 class HistoryChecker(unit.VentureUnit):
   def makeAssumes(self):
     self.assume('x', '(normal 0 10)')
 
+@attr("slow")
+@gen_on_inf_prim("none")
 def test_plot():
   for output_format in ['pdf', 'png']:
     yield check_plot, output_format
