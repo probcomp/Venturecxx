@@ -2,7 +2,7 @@ from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, VentureSPRecord, SPType
 import math
 import stats_utils as su
-from utils import simulateCategorical
+from utils import simulateCategorical, MVNormalRnd
 from value import AtomType, ArrayType, HomogeneousArrayType, NumberType # The type names are metaprogrammed pylint: disable=no-name-in-module
 import numpy as np
 import pdb
@@ -36,7 +36,8 @@ def mvtSample(mu,Sigma,N):
 
   d = len(Sigma)
   g = np.tile(np.random.gamma(N/2.,2./N,1),(d,1))
-  Z = np.random.multivariate_normal(np.zeros(d),Sigma,1)
+  #Z = np.random.multivariate_normal(np.zeros(d),Sigma,1)
+  Z = MVNormalRnd(np.zeros(d),Sigma)
 
   return mu + (Z.T)/np.sqrt(g)
 

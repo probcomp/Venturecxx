@@ -19,3 +19,9 @@ def loadSeqData(data_file):
   data = loadObj(data_file)
   return data['N'], data['X']
 
+def convertMatToJson(data_file_no_ext):
+  import load_data
+  N, D, X, Y, Ntst, Xtst, Ytst = load_data.loadData(data_file_no_ext+'.mat')
+  data = {'N':N, 'D':D, 'X':X, 'Y':Y, 'Ntst':Ntst, 'Xtst':Xtst, 'Ytst':Ytst}
+  saveObj(data, data_file_no_ext+'.json')
+

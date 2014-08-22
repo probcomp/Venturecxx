@@ -83,19 +83,21 @@ def logDensityMVNormal(x, mu, sigma):
   else:
     sigma_det = sigma[0,0] * sigma[1,1] - sigma[0,1] * sigma[1,0]
     assert(sigma_det > 0)
-    sigma_inv = 1.0/sigma_det * np.array([[sigma[1][1], -sigma[0][1]],
-                                          [-sigma[1][0], sigma[0][0]]])
+    sigma_inv = 1.0/sigma_det * np.array([[sigma[1,1], -sigma[0,1]],
+                                          [-sigma[1,0], sigma[0,0]]])
     answer =  -.5*np.dot(np.dot(x-mu, sigma_inv), np.transpose(x-mu)) \
               -.5*len(sigma)*np.log(2 * np.pi)-.5*np.log(sigma_det)
   return numpy_force_number(answer)
 
 def chol2d(a):
-  sqrt_a00 = math.sqrt(a[0][0])
+  sqrt_a00 = math.sqrt(a[0,0])
   L = np.array([[sqrt_a00, 0.0],
-                [a[1][0] / sqrt_a00, math.sqrt(a[1][1] - a[1][0] * a[0][1] / a[0][0])]])
+                [a[1,0] / sqrt_a00, math.sqrt(a[1,1] - a[1,0] * a[0,1] / a[0,0])]])
   return L
 
 def MVNormalRnd(mu, sigma):
+  import pdb
+  pdb.set_trace()
   assert(mu.size <= 2)
   if mu.size == 1:
     return npr.normal(mu, math.sqrt(sigma))

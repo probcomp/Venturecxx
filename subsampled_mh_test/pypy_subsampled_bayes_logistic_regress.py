@@ -69,7 +69,7 @@ def main(data_source_, epsilon_):
   tag_austerity = "submh_%.2f" % epsilon if use_austerity else "mh"
 
   # bayeslr_mnist_mh or bayeslr_mnist_submh
-  tag = "_".join(["bayeslr_fast_m100_Time5e5", data_source, tag_austerity])
+  tag = "_".join(["pypy_bayeslr_fast_m100_Time5e5", data_source, tag_austerity])
 
   stage_file = 'data/output/bayeslr/stage_'+tag+'.json'
 

@@ -1,6 +1,7 @@
 import math
 import numpy.random as npr
 import numpy as np
+import stats_utils as su
 from utils import override, numpy_force_number, logDensityNormal, logDensityMVNormal, MVNormalRnd
 from exception import VentureValueError, GradientWarning
 import warnings
@@ -148,4 +149,16 @@ class UniformOutputPSP(RandomPSP):
     return "  (%s low high) -> samples a uniform real number between low and high." % name
 
   # TODO Uniform presumably has a variational kernel?
+
+class GammaOutputPSP(RandomPSP):
+  # TODO don't need to be class methods
+  def simulateNumeric(self,alpha,beta): return npr.gamma(alpha,scale=1.0/beta)
+  def logDensityNumeric(self,x,alpha,beta):
+    return -su.C.gammaln(alpha) + alpha * math.log(beta) + (alpha - 1) * math.log(x) - x * beta
+
+  def simulate(self,args): return self.simulateNumeric(*args.operandValues)
+  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
+
+  def description(self,name):
+    return "  (%s alpha beta) returns a sample from a gamma distribution with shape parameter alpha and rate parameter beta." % name
 

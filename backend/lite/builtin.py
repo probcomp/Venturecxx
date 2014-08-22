@@ -369,6 +369,7 @@ builtInSPsList = [
            [ "uniform_discrete", typed_nr(discrete.UniformDiscreteOutputPSP(), [v.IntegerType(), v.IntegerType()], v.IntegerType()) ],
            [ "normal", typed_nr(continuous.NormalOutputPSP(), [v.NumberType(), v.NumberType()], v.NumberType()) ], # TODO Sigma is really non-zero, but negative is OK by scaling
            [ "uniform_continuous",typed_nr(continuous.UniformOutputPSP(), [v.NumberType(), v.NumberType()], v.NumberType()) ],
+           [ "gamma", typed_nr(continuous.GammaOutputPSP(), [v.PositiveType(), v.PositiveType()], v.PositiveType()) ],
            [ "multivariate_normal", typed_nr(continuous.MVNormalOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.SymmetricMatrixType()], v.HomogeneousArrayType(v.NumberType())) ],
            [ "multivariate_diag_normal", typed_nr(continuous.MVDNormalOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.HomogeneousArrayType(v.NumberType())], v.HomogeneousArrayType(v.NumberType())) ],
            [ "dirichlet",typed_nr(dirichlet.DirichletOutputPSP(), [v.HomogeneousArrayType(v.PositiveType())], v.SimplexType()) ],
