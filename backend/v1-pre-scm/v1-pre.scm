@@ -2,6 +2,10 @@
 (declare (integrate-external "syntax"))
 (declare (integrate-external "pattern-case/pattern-case"))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Types
+
 (define-structure (evaluation-context
                    (safe-accessors #t)
                    (conc-name evc-))
@@ -32,6 +36,8 @@
   read-traces)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Essential evaluation
 
 (define (eval exp env trace addr read-traces)
   (trace-search-one trace addr (lambda (v) v)
@@ -121,7 +127,12 @@
                                  opands)))
              ((access apply system-global-environment) oper arguments))))))
 
+(define (top-eval exp)
+  (eval exp (make-env-frame #f '() '()) (make-rdb) (toplevel-address) '()))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Environments
 
 (define (env-search env symbol win lose)
   (if (env-frame? env)
@@ -137,3 +148,49 @@
 (define (env-bind! env sym addr)
   (set-env-frame-symbols! env (cons sym (env-frame-symbols env)))
   (set-env-frame-addresses! env (cons addr (env-frame-addresses env))))
+
+;;; Traces
+
+(define (trace-lookup trace addr)
+  (trace-search trace addr (lambda (v) v)
+   (lambda () (error "Address not found" addr))))
+
+(define (traces-lookup traces addr)
+  (let loop ((traces traces))
+    (if (null? traces)
+        (error "Address not found" addr)
+        (trace-search (car traces) addr (lambda (v) v)
+         (lambda () (loop (cdr traces)))))))
+
+;;; Pluggable trace interface
+
+(define (trace-search trace addr win lose)
+  (cond ((rdb? trace)
+         (rdb-trace-search trace addr win lose))
+        ;; Poor man's dynamic dispatch system
+        (else (lose))))
+
+(define (record! trace exp env addr read-traces answer)
+  (cond ((rdb? trace)
+         (rdb-record! trace exp env addr read-traces answer))
+        (else (error "Unknown trace type" trace))))
+
+(define (trace-extend trace)
+  (cond ((rdb? trace)
+         (rdb-extend trace))
+        (else (error "Unknown trace type" trace))))
+
+;;; Addresses
+
+(define (toplevel-address) (make-address))
+(define (extend-address addr step)
+  (extend-address-uncurried (cons addr step)))
+(define (memoize-in-hash-table table f)
+  (lambda (x)
+    ;; Not hash-table/intern! because f may modify the table (for
+    ;; instance, by recurring through the memoization).
+    (hash-table/lookup table x
+     (lambda (datum) datum)
+     (lambda ()
+       (abegin1 (f x) (hash-table/put! table x it))))))
+(define extend-address-uncurried (memoize-in-hash-table (make-equal-hash-table) make-address))
