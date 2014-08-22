@@ -2,7 +2,7 @@ from psp import DeterministicPSP, ESRRefOutputPSP
 from sp import SP, VentureSPRecord
 from env import VentureEnvironment
 from request import Request,ESR
-
+from address import List
 
 class MakeMSPOutputPSP(DeterministicPSP):
   def simulate(self,args):
@@ -20,4 +20,4 @@ class MSPRequestPSP(DeterministicPSP):
     id = str(args.operandValues)
     exp = ["memoizedSP"] + [["quote",val] for val in args.operandValues]
     env = VentureEnvironment(None,["memoizedSP"],[self.sharedOperatorNode])
-    return Request([ESR(id,exp,None,env)])
+    return Request([ESR(id,exp,List(None),env)])

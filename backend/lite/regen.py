@@ -7,7 +7,8 @@ from value import SPRef
 from lkernel import VariationalLKernel
 from scope import isScopeIncludeOutputPSP
 from consistency import assertTorus, assertTrace
-from exception import VentureError, StackFrame
+from exception import VentureError
+from venture.exception import VentureException
 
 def regenAndAttach(trace,scaffold,shouldRestore,omegaDB,gradients):
   assertTorus(scaffold)
@@ -107,8 +108,7 @@ def evalFamily(trace,address,exp,env,scaffold,shouldRestore,omegaDB,gradients):
     try:
       sourceNode = env.findSymbol(exp)
     except VentureError as err:
-      err.stack_frame = StackFrame(address, [])
-      raise err
+      raise VentureException("runtime", err.message, address=address)
     weight = regen(trace,sourceNode,scaffold,shouldRestore,omegaDB,gradients)
     return (weight,trace.createLookupNode(address,sourceNode))
   elif e.isSelfEvaluating(exp): return (0,trace.createConstantNode(address,exp))
@@ -126,8 +126,7 @@ def evalFamily(trace,address,exp,env,scaffold,shouldRestore,omegaDB,gradients):
     try:
       weight += apply(trace,requestNode,outputNode,scaffold,shouldRestore,omegaDB,gradients)
     except VentureError as err:
-      err.stack_frame = StackFrame(exp, [], err.stack_frame)
-      raise err
+      raise VentureException("runtime", err.message, address=address)
     assert isinstance(weight, numbers.Number)
     return weight,outputNode
 
@@ -192,7 +191,7 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
         esrParent = omegaDB.getESRParent(trace.spAt(node),esr.id)
         weight += restore(trace,esrParent,scaffold,omegaDB,gradients)
       else:
-        address = node.address.extend(esr.addr)
+        address = node.address.request(esr.addr)
         (w,esrParent) = evalFamily(trace,address,esr.exp,esr.env,scaffold,shouldRestore,omegaDB,gradients)
         weight += w
       trace.registerFamilyAt(node,esr.id,esrParent)

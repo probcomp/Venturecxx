@@ -1,4 +1,4 @@
-from address import Address
+from address import Address, List
 from builtin import builtInValues, builtInSPs
 from env import VentureEnvironment
 from node import Node,ConstantNode,LookupNode,RequestNode,OutputNode,Args
@@ -321,7 +321,7 @@ class Trace(object):
   #### External interface to engine.py
   def eval(self,id,exp):
     assert not id in self.families
-    (_,self.families[id]) = evalFamily(self,Address(id),self.unboxExpression(exp),self.globalEnv,Scaffold(),False,OmegaDB(),{})
+    (_,self.families[id]) = evalFamily(self,Address(List(id)),self.unboxExpression(exp),self.globalEnv,Scaffold(),False,OmegaDB(),{})
 
   def bindInGlobalEnv(self,sym,id): self.globalEnv.addBinding(sym,self.families[id])
   def unbindInGlobalEnv(self,sym): self.globalEnv.removeBinding(sym)
