@@ -40,11 +40,11 @@ class Infer(object):
   def _init_plot(self, spec, names, exprs):
     if self.result is None:
       self.result = InferResult(first_command = 'plotf')
-    if self.result.plot is None:
+    if self.result.spec_plot is None:
       self.result._init_plot(spec, names, exprs)
-    elif (spec == self.result.plot.spec_string and
-          names == self.result.plot.names and
-          exprs == self.result.plot.exprs):
+    elif (spec == self.result.spec_plot.spec_string and
+          names == self.result.spec_plot.names and
+          exprs == self.result.spec_plot.exprs):
       pass
     else:
       raise Exception("Cannot plot with different specs in the same inference program")
@@ -89,6 +89,7 @@ class Infer(object):
 
 class InferResult(object):
   def __init__(self, first_command):
+    from dw_utils.debug import set_trace; set_trace()
     self.sweep = 0
     self.time = time.time()
     self.first_command = first_command
@@ -96,8 +97,18 @@ class InferResult(object):
     self.peek_names = None
     self.spec_plot = None
 
+  def _init_plot(self, spec, names, exprs):
+    self.spec_plot = SpecPlot(spec, names, exprs)
+
+  def _init_print(self, names):
+    self.print_names = names
+
+  def _init_peek(self, names):
+    self.peek_names = names
+
   def add_data(self, engine, command):
     # if it's the first command, add all the default fields and increment the counter
+    from dw_utils.debug import set_trace; set_trace()
     if command == self.first_command:
       self.sweep += 1
       self.append_to_data()
