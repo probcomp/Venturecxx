@@ -16,47 +16,48 @@
 
 import time
 from venture.lite.value import ExpressionType
+from venture.ripl.utils import strip_types_from_dict_values
+from pandas import DataFrame
+from plot_spec import PlotSpec
 
 class Infer(object):
   def __init__(self, engine):
     self.engine = engine
     self.out = {}
-    self.plot = None
-    self.printer = None
-
-  def _ensure_peek_name(self, name):
-    if self.plot is not None:
-      raise Exception("TODO Cannot plot and peek in the same inference program")
-    if name in self.out: pass
-    else: self.out[name] = []
-
-  def _ensure_plot(self, spec, names, exprs):
-    if len(self.out) > 0:
-      raise Exception("TODO Cannot peek and plot in the same inference program")
-    if self.plot is None:
-      self.plot = SpecPlot(spec, names, exprs)
-    elif spec == self.plot.spec_string and names == self.plot.names and exprs == self.plot.exprs:
-      pass
-    else:
-      raise Exception("TODO Cannot plot with different specs in the same inference program")
-
-  def _ensure_print(self, names):
-    if self.printer is None:
-      self.printer = SpecPrint(names)
-    elif names == self.printer.names:
-      pass
-    else:
-      # In order to count iterations, can only have one printf call
-      # This will still multi-count interations if you enter the same printf command multiple times
-      # This is going to get refactored soon anyhow, so not worth guarding against that case here
-      raise Exception("TODO Cannot have multiple printf commands in same inference program")
-
-  def _start_timer(self):
-    if self.start_time is None:
-      self.start_time = time.time()
+    self.result = None
 
   def final_data(self):
-    return self.plot if self.plot is not None else self.out
+    return self.result
+
+  def _init_peek(self, names):
+    if self.result is None:
+      self.result = InferResult(first_command = 'peek')
+    if self.result.peek_names is None:
+      self.result._init_peek(names)
+    elif names != self.result.peek_names:
+      raise Exception("Cannot issue multiple peek commands in the same inference program")
+
+  def _init_plot(self, spec, names, exprs):
+    if self.result is None:
+      self.result = InferResult(first_command = 'plotf')
+    if self.result.plot is None:
+      self.result._init_plot(spec, names, exprs)
+    elif (spec == self.result.plot.spec_string and
+          names == self.result.plot.names and
+          exprs == self.result.plot.exprs):
+      pass
+    else:
+      raise Exception("Cannot plot with different specs in the same inference program")
+
+  def _init_print(self, names):
+    if self.result is None:
+      self.result = InferResult(first_command = 'printf')
+    if self.result.print_names is None:
+      self.result._init_print(names)
+    elif names != self.result.print_names:
+      # In order to count iterations, can only have one printf call
+      # This will still multi-count interations if you enter the identical printf command multiple times
+      raise Exception("Cannot have multiple printf commands in same inference program")
 
   def default_name_for_exp(self,exp):
     if isinstance(exp, basestring):
@@ -69,58 +70,102 @@ class Infer(object):
   def primitive_infer(self, exp): self.engine.primitive_infer(exp)
   def resample(self, ct): self.engine.resample(ct)
   def incorporate(self): pass # Since we incorporate at the beginning anyway
-  def peek(self, expression, name=None):
-    if name is None:
-      # I was called from the "peek" SP, so the expression is a VentureValue
-      name = self.default_name_for_exp(ExpressionType().asPython(expression))
-    self._ensure_peek_name(name)
-    # The sample method expects stack dicts, not Python or Venture
-    # representations of expressions...
-    # Also, ExpressionType().asVentureValue does not alter things that
-    # are already VentureValues.
-    value = self.engine.sample(ExpressionType().asVentureValue(expression).asStackDict())
-    self.out[name].append(value)
-  def peek_all(self, expression, name=None):
-    if name is None:
-      # I was called from the "peek" SP, so the expression is a VentureValue
-      name = self.default_name_for_exp(ExpressionType().asPython(expression))
-    self._ensure_peek_name(name)
-    values = self.engine.sample_all(ExpressionType().asVentureValue(expression).asStackDict())
-    self.out[name].append(values)
+  def peek(self, expressions):
+    names = [self.default_name_for_exp(ExpressionType().asPython(expression))
+             for expression in expressions]
+    self._init_peak(names)
+    self.result.add_data(self.engine, 'peek')
   def plotf(self, spec, *exprs): # This one only works from the "plotf" SP.
     spec = ExpressionType().asPython(spec)
     exps = [ExpressionType().asVentureValue(e).asStackDict() for e in exprs]
     names = [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
-    self._ensure_plot(spec, names, exps)
-    self.plot.add_data(self.engine)
+    self._init_plot(spec, names, exps)
+    self.result.add_data(self.engine, 'printf')
   def printf(self, *exprs):
     names = [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
-    self._ensure_print(names)
-    self.printer.show_data(self.engine)
+    self._init_print(names)
+    self.result.add_data(self.engine, 'plotf')
+    self.result.print_data()
 
-class SpecPrint(object):
-  "Quick and dirty way to allow printing to stdout on long runs."
-  # TODO: refactor to integrate with peek and plotf
-  def __init__(self, names):
-    self.names = names
+class InferResult(object):
+  def __init__(self, first_command):
     self.sweep = 0
     self.time = time.time()
+    self.first_command = first_command
+    self.print_names = None
+    self.peek_names = None
+    self.spec_plot = None
 
-  def show_data(self, engine):
-    self.sweep += 1
+  def add_data(self, engine, command):
+    # if it's the first command, add all the default fields and increment the counter
+    if command == self.first_command:
+      self.sweep += 1
+      self.append_to_data()
+      self._collect_default_streams(engine)
+    self._collect_data(engine, command)
+
+  def append_to_data(self):
+    # haven't recorded any data yet on sweep 1
+    if self.sweep == 1:
+      pass
+    elif self.sweep == 2:
+      self.data = self.this_data
+    else:
+      for field in self.data:
+        self.data[field].extend(self.this_data[field])
+    # reset the data to record the current iteration
+    self.this_data = {}
+
+  def _collect_default_streams(self, engine):
     the_time = time.time() - self.time
-    for name in self.names:
+    self.this_data['sweeps'] = [self.sweep] * len(engine.traces)
+    self.this_data['particle'] = range(len(engine.traces))
+    self.this_data['time (s)'] = [the_time] * len(engine.traces)
+    self.this_data['log score'] = engine.logscore_all()
+
+  def _collect_data(self, engine, command):
+    if command == 'printf':
+      names = self.print_names
+      exps = [ExpressionType().asVentureValue(name).asStackDict()
+              for name in names]
+    elif command == 'peek':
+      names = self.peek_names
+      exps = [ExpressionType().asVentureValue(name).asStackDict()
+              for name in self.peek_names]
+      names = self.peek_names
+    else:
+      names = self.spec_plot.names
+      exps = self.spec_plot.exps
+    for name, expr in zip(names, exps):
+      if name not in self.this_data:
+        self.this_data[name] = engine.sample_all(expr)
+
+  def print_data(self):
+    for name in self.print_names:
       if name == 'counter':
         print 'Sweep count: {0}'.format(self.sweep)
       elif name == 'time':
-        print 'Wall time: {0:0.2f} s'.format(the_time)
+        print 'Wall time: {0:0.2f} s'.format(self.this_data['time (s)'])
       elif name == 'score':
-        print 'Global log score: {0:0.2f}'.format(engine.logscore())
+        print 'Global log score: {0:0.2f}'.format(self.this_data['log score'])
       else:
         # TODO: support for pretty-printing of floats
-        value = engine.sample(ExpressionType().asVentureValue(name).asStackDict())
-        print '{0}: {1}'.format(name, value['value'])
+        print '{0}: {1}'.format(name, self.this_data[name])
     print
+
+  def dataset(self):
+    return DataFrame.from_dict(strip_types_from_dict_values(self.data))
+
+  def draw(self):
+    return self.spec_plot.draw(self.dataset())
+
+  def plot(self):
+    self.spec_plot.plot(self.dataset())
+
+  def __str__(self):
+    "Not really a string method, but does get itself displayed when printed."
+    self.plot()
+    return "a plot"
 
 class SpecPlot(object):
   """(plotf spec exp0 ...) -- Generate a plot according to a format specification.
@@ -180,60 +225,13 @@ class SpecPlot(object):
 
   """
   def __init__(self, spec, names, exprs):
-    from plot_spec import PlotSpec
     self.spec_string = spec
     self.spec = PlotSpec(spec)
     self.names = names
     self.exprs = exprs
-    self.data = dict([(name, []) for name in names + ["sweeps", "time (s)", "log score", "particle"]])
-    self.sweep = 0
-    self.time = time.time() # For sweep timing, should it be requested
-    self.next_index = 0
 
-  def add_data_from(self, engine, index):
-    values = engine.sample_all(self.exprs[index])
-    self.data[self.names[index]].extend(values)
-    self.next_index = index+1
+  def draw(self, data):
+    return self.spec.draw(data, self.names)
 
-  def add_data(self, engine):
-    self.next_index = 0
-    self.sweep += 1
-    the_time = time.time() - self.time
-    touched = set()
-    for stream in self.spec.streams():
-      if stream in touched:
-        continue
-      else:
-        touched.add(stream)
-      if stream == "c":
-        self.data["sweeps"].extend([self.sweep] * len(engine.traces))
-      elif stream == "r": # TODO Wanted "p" for "particle", but may conflict with "p" for "point"
-        self.data["particle"].extend(range(len(engine.traces)))
-      elif stream == "t":
-        self.data["time (s)"].extend([the_time] * len(engine.traces))
-      elif stream == "s":
-        self.data["log score"].extend(engine.logscore_all())
-      elif stream == "" or stream == "%":
-        self.add_data_from(engine, self.next_index)
-      else:
-        self.add_data_from(engine, int(stream))
-
-  def dataset(self):
-    for name in ["sweeps", "time (s)", "log score", "particle"] + self.names:
-      if (name in self.data) and (len(self.data[name]) == 0):
-        # Data source was not requested; remove it to avoid confusing pandas
-        del self.data[name]
-    from pandas import DataFrame
-    from venture.ripl.utils import strip_types_from_dict_values
-    return DataFrame.from_dict(strip_types_from_dict_values(self.data))
-
-  def draw(self):
-    return self.spec.draw(self.dataset(), self.names)
-
-  def plot(self):
-    self.spec.plot(self.dataset(), self.names)
-
-  def __str__(self):
-    "Not really a string method, but does get itself displayed when printed."
-    self.plot()
-    return "a plot"
+  def plot(self, data):
+    self.spec.plot(data, self.names)
