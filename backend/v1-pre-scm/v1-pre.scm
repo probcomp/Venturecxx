@@ -67,9 +67,9 @@
        ;; it in the parent pointer
        (eval subform env subtrace addr* read-traces)))
     ;; Permit reflection on the evaluation context
-    ((nullary-magic 'get-current-environment) env)
-    ((nullary-magic 'get-current-trace) trace)
-    ((nullary-magic 'get-current-read-traces) read-traces)
+    (((nullary-magic 'get-current-environment)) env)
+    (((nullary-magic 'get-current-trace)) trace)
+    (((nullary-magic 'get-current-read-traces)) read-traces)
     ((definition x subexp)
      (let ((addr* (extend-address addr 'defn)))
        (eval subexp env trace addr* read-traces)
@@ -88,7 +88,7 @@
         forms
         (iota (length forms)))
        result))
-    (else ;; Application
+    (_ ;; Application
      (let ((subaddrs (map (lambda (e i)
                             (let ((addr* (extend-address addr `(app-sub ,i))))
                               (eval e env trace addr* read-traces)
