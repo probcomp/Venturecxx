@@ -150,6 +150,12 @@ class VentureNumber(VentureValue):
     # Assume other is a scalar
     assert isinstance(other, Number)
     return VentureNumber(other * self.number)
+  def __abs__(self):
+    return VentureNumber(abs(self.number))
+  def __float__(self):
+    # Returns a Python number. Implemented for testing. assert_not_equal
+    # calls round(), which in turn calls float()
+    return self.number
   def dot(self, other):
     assert isinstance(other, VentureNumber)
     return self.number * other.number
