@@ -1,5 +1,5 @@
 import copy
-import scipy.special
+import stats_utils as su
 import numpy.random as npr
 import math
 
@@ -126,8 +126,8 @@ class CDirMultOutputPSP(RandomPSP):
     N = aux.counts.total
     A = self.alpha.total
 
-    term1 = scipy.special.gammaln(A) - scipy.special.gammaln(N + A)
-    term2 = sum([scipy.special.gammaln(alpha + count) - scipy.special.gammaln(alpha) for (alpha,count) in zip(self.alpha,aux.counts)])
+    term1 = su.C.gammaln(A) - su.C.gammaln(N + A)
+    term2 = sum([su.C.gammaln(alpha + count) - su.C.gammaln(alpha) for (alpha,count) in zip(self.alpha,aux.counts)])
     return term1 + term2
 
 #### Uncollapsed dirichlet multinomial
@@ -225,9 +225,9 @@ class MakerCSymDirMultOutputPSP(DeterministicPSP):
     # TODO Do the math properly, esp. for alpha < 1
     N = aux.counts.total
     A = len(aux.counts) * 1.0
-    gamma_one = scipy.special.gammaln(1.0)
-    term1 = scipy.special.gammaln(A) - scipy.special.gammaln(N+A)
-    return term1 + sum([scipy.special.gammaln(1+count) - gamma_one for count in aux.counts])
+    gamma_one = su.C.gammaln(1.0)
+    term1 = su.C.gammaln(A) - su.C.gammaln(N+A)
+    return term1 + sum([su.C.gammaln(1+count) - gamma_one for count in aux.counts])
 
   def description(self,name):
     return "  %s is a symmetric variant of make_dir_mult." % name

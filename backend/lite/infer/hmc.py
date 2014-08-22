@@ -1,5 +1,4 @@
 import numpy.random as npr
-import scipy.stats
 from ..omegadb import OmegaDB
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
@@ -110,7 +109,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
 
   def sampleMomenta(self, currentValues):
     def sample_normal(_):
-      return scipy.stats.norm.rvs(loc=0, scale=1)
+      return npr.randn()
     return [v.map_real(sample_normal) for v in currentValues]
   def kinetic(self, momenta):
     # This is the log density of sampling these momenta, up to an

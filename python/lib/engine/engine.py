@@ -268,7 +268,7 @@ effect of renumbering the directives, if some had been forgotten."""
     next_trace.eval(4, [program, v.blob(target)])
     ans = next_trace.extractValue(4)
     assert isinstance(ans, dict)
-    assert ans["type"] is "blob"
+    assert ans["type"] == "blob"
     assert isinstance(ans["value"], Infer)
     return ans["value"].final_data()
 

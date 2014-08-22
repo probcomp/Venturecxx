@@ -11,7 +11,7 @@ from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
                    RejectionOperator, MissingEsrParentError, NoSPRefError,
                    HamiltonianMonteCarloOperator, MAPOperator, StepOutSliceOperator,
                    DoublingSliceOperator, NesterovAcceleratedGradientAscentOperator,
-                   drawScaffoldKernel, drawSubsampledScaffoldKernel, subsampledMixMH,
+                   subsampledMixMH,
                    SubsampledMHOperator,SubsampledBlockScaffoldIndexer)
 from omegadb import OmegaDB
 from smap import SMap
@@ -405,11 +405,6 @@ class Trace(object):
     for _ in range(transitions):
       if operator == "mh":
         mixMH(self, BlockScaffoldIndexer(scope, block), MHOperator())
-      elif operator == "draw_scaffold":
-        drawScaffoldKernel(self, BlockScaffoldIndexer(scope, block))
-      elif operator == "draw_subsampled_scaffold":
-        scope_to_subsample = exp[3]
-        drawSubsampledScaffoldKernel(self, BlockScaffoldIndexer(scope, block), scope_to_subsample)
       elif operator == "mh_kernel_update":
         (useDeltaKernels, deltaKernelArgs, updateValue) = exp[3:6]
         mixMH(self, BlockScaffoldIndexer(scope, block, useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs, updateValue=updateValue), MHOperator())

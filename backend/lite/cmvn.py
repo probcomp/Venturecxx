@@ -1,8 +1,7 @@
 from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, VentureSPRecord, SPType
 import math
-from scipy.special import gammaln
-import scipy.stats
+import stats_utils as su
 from utils import simulateCategorical
 from value import AtomType, ArrayType, HomogeneousArrayType, NumberType # The type names are metaprogrammed pylint: disable=no-name-in-module
 import numpy as np
@@ -10,13 +9,13 @@ import pdb
 
 def logGenGamma(d,x):
   term1 = float(d * (d - 1)) / 4 * math.log(math.pi)
-  term2 = sum([gammaln(float(2 * x - i) / 2) for i in range(d)])
+  term2 = sum([su.C.gammaln(float(2 * x - i) / 2) for i in range(d)])
   return term1 + term2
 
 def mvtLogDensity(x,mu,Sigma,v):
   p = np.size(x)
-  pterm1 = gammaln(float(v + p) / 2)
-  nterm1 = gammaln(float(v) / 2)
+  pterm1 = su.C.gammaln(float(v + p) / 2)
+  nterm1 = su.C.gammaln(float(v) / 2)
   nterm2 = (float(p)/2) * math.log(v * math.pi)
   nterm3 = (float(1)/2) * np.linalg.slogdet(Sigma)[1]
   nterm4 = (float(v + p)/2) * math.log(1 + (float(1)/v) * (x - mu).T * np.linalg.inv(Sigma) * (x - mu))

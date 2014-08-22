@@ -1,8 +1,7 @@
 from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, VentureSPRecord, SPType
 import math
-import scipy.special
-import scipy.stats
+import stats_utils as su
 from utils import simulateCategorical
 from value import AtomType # The type names are metaprogrammed pylint: disable=no-name-in-module
 from copy import deepcopy
@@ -87,9 +86,9 @@ class CRPOutputPSP(RandomPSP):
       del aux.tableCounts[index]
 
   def logDensityOfCounts(self,aux):
-    term1 = scipy.special.gammaln(self.alpha) - scipy.special.gammaln(self.alpha + aux.numCustomers)
+    term1 = su.C.gammaln(self.alpha) - su.C.gammaln(self.alpha + aux.numCustomers)
     term2 = aux.numTables + math.log(self.alpha + (aux.numTables * self.d))
-    term3 = sum([scipy.special.gammaln(aux.tableCounts[index] - self.d) for index in aux.tableCounts])
+    term3 = sum([su.C.gammaln(aux.tableCounts[index] - self.d) for index in aux.tableCounts])
     return term1 + term2 + term3
 
   def enumerateValues(self,args):

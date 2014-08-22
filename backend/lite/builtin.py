@@ -228,14 +228,14 @@ builtInSPsList = [
                                            descr="second returns the first component of the second component of its argument") ],
 
 
-           [ "array", deterministic_typed(lambda *args: np.array(args), [v.AnyType()], v.ArrayType(), variadic=True,
+           [ "array", deterministic_typed(lambda *args: np.array(args), [v.NumberType()], v.HomogeneousArrayType(v.NumberType()), variadic=True,
                                           sim_grad=lambda args, direction: direction.getArray(),
                                           descr="array returns an array initialized with its arguments") ],
            [ "cat_array", deterministic_typed(lambda *args: np.concatenate(args), [v.ArrayType()], v.ArrayType(), variadic=True,
                                               descr="%s concates its arguments") ],
-           [ "ones_array", deterministic_typed(np.ones, [v.NumberType()], v.HomogeneousArrayType(v.NumberType()),
+           [ "ones_array", deterministic_typed(lambda n: np.ones(int(n)), [v.NumberType()], v.HomogeneousArrayType(v.NumberType()),
                                                descr="%s returns an array of ones with the number given by its argument") ],
-           [ "zeros_array", deterministic_typed(np.zeros, [v.NumberType()], v.HomogeneousArrayType(v.NumberType()),
+           [ "zeros_array", deterministic_typed(lambda n: np.zeros(int(n)), [v.NumberType()], v.HomogeneousArrayType(v.NumberType()),
                                                 descr="%s returns an array of zeros with the number given by its argument") ],
 
            [ "vector", deterministic_typed(lambda *args: np.array(args), [v.NumberType()], v.ArrayUnboxedType(v.NumberType()), variadic=True,
@@ -363,27 +363,14 @@ builtInSPsList = [
                                       [v.AnyType("<scope>"), v.AnyType()],
                                       v.AnyType()) ],
 
-           [ "binomial", typed_nr(discrete.BinomialOutputPSP(), [v.CountType(), v.ProbabilityType()], v.CountType()) ],
            [ "flip", typed_nr(discrete.BernoulliOutputPSP(), [v.ProbabilityType()], v.BoolType(), min_req_args=0) ],
            [ "bernoulli", typed_nr(discrete.BernoulliOutputPSP(), [v.ProbabilityType()], v.IntegerType(), min_req_args=0) ],
            [ "categorical", typed_nr(discrete.CategoricalOutputPSP(), [v.SimplexType(), v.ArrayType()], v.AnyType(), min_req_args=1) ],
            [ "uniform_discrete", typed_nr(discrete.UniformDiscreteOutputPSP(), [v.IntegerType(), v.IntegerType()], v.IntegerType()) ],
-           [ "poisson", typed_nr(discrete.PoissonOutputPSP(), [v.PositiveType()], v.CountType()) ],
-
            [ "normal", typed_nr(continuous.NormalOutputPSP(), [v.NumberType(), v.NumberType()], v.NumberType()) ], # TODO Sigma is really non-zero, but negative is OK by scaling
            [ "uniform_continuous",typed_nr(continuous.UniformOutputPSP(), [v.NumberType(), v.NumberType()], v.NumberType()) ],
-           [ "beta", typed_nr(continuous.BetaOutputPSP(), [v.PositiveType(), v.PositiveType()], v.ProbabilityType()) ],
-           [ "gamma", typed_nr(continuous.GammaOutputPSP(), [v.PositiveType(), v.PositiveType()], v.PositiveType()) ],
-           [ "student_t", typed_nr(continuous.StudentTOutputPSP(), [v.PositiveType(), v.NumberType(), v.NumberType()], v.NumberType(), min_req_args=1 ) ],
-           [ "inv_gamma", typed_nr(continuous.InvGammaOutputPSP(), [v.PositiveType(), v.PositiveType()], v.PositiveType()) ],
-
            [ "multivariate_normal", typed_nr(continuous.MVNormalOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.SymmetricMatrixType()], v.HomogeneousArrayType(v.NumberType())) ],
-           [ "inv_wishart", typed_nr(continuous.InverseWishartPSP(), [v.SymmetricMatrixType(), v.PositiveType()], v.SymmetricMatrixType())],
-           [ "wishart", typed_nr(continuous.WishartPSP(), [v.SymmetricMatrixType(), v.PositiveType()], v.SymmetricMatrixType())],
-
-           [ "make_beta_bernoulli",typed_nr(discrete.MakerCBetaBernoulliOutputPSP(), [v.PositiveType(), v.PositiveType()], SPType([], v.BoolType())) ],
-           [ "make_uc_beta_bernoulli",typed_nr(discrete.MakerUBetaBernoulliOutputPSP(), [v.PositiveType(), v.PositiveType()], SPType([], v.BoolType())) ],
-
+           [ "multivariate_diag_normal", typed_nr(continuous.MVDNormalOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.HomogeneousArrayType(v.NumberType())], v.HomogeneousArrayType(v.NumberType())) ],
            [ "dirichlet",typed_nr(dirichlet.DirichletOutputPSP(), [v.HomogeneousArrayType(v.PositiveType())], v.SimplexType()) ],
            [ "symmetric_dirichlet",typed_nr(dirichlet.SymmetricDirichletOutputPSP(), [v.PositiveType(), v.CountType()], v.SimplexType()) ],
 

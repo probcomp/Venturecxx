@@ -1,9 +1,8 @@
 import random
 import numpy.random as npr
 import math
-import scipy.special as ss
+import stats_utils as su
 import numpy as np
-import numpy.linalg as npla
 import numbers
 
 # This one is from http://stackoverflow.com/questions/1167617/in-python-how-do-i-indicate-im-overriding-a-method
@@ -47,7 +46,7 @@ def logDensityDirichlet(theta, alpha):
   theta = np.array(theta)
   alpha = np.array(alpha)
 
-  return ss.gammaln(sum(alpha)) - sum(ss.gammaln(alpha)) + np.dot((alpha - 1).T, np.log(theta).T)
+  return su.C.gammaln(sum(alpha)) - sum(su.C.gammaln(alpha)) + np.dot((alpha - 1).T, np.log(theta).T)
 
 # why not use itertools.prod?
 def cartesianProduct(original):
@@ -74,10 +73,35 @@ def numpy_force_number(answer):
   else:
     return answer[0,0]
 
+def logDensityNormal(x, mu, sigma):
+  return -0.5 * ((x - mu) / sigma)**2 - 0.5 * np.log(2 * math.pi * sigma**2)
+
 def logDensityMVNormal(x, mu, sigma):
-  answer =  -.5*np.dot(np.dot(x-mu, npla.inv(sigma)), np.transpose(x-mu)) \
-            -.5*len(sigma)*np.log(np.pi)-.5*np.log(abs(npla.det(sigma)))
+  assert(mu.size <= 2)
+  if mu.size == 1:
+    answer = logDensityNormal(x, mu, sigma)
+  else:
+    sigma_det = sigma[0,0] * sigma[1,1] - sigma[0,1] * sigma[1,0]
+    assert(sigma_det > 0)
+    sigma_inv = 1.0/sigma_det * np.array([[sigma[1][1], -sigma[0][1]],
+                                          [-sigma[1][0], sigma[0][0]]])
+    answer =  -.5*np.dot(np.dot(x-mu, sigma_inv), np.transpose(x-mu)) \
+              -.5*len(sigma)*np.log(2 * np.pi)-.5*np.log(sigma_det)
   return numpy_force_number(answer)
+
+def chol2d(a):
+  sqrt_a00 = math.sqrt(a[0][0])
+  L = np.array([[sqrt_a00, 0.0],
+                [a[1][0] / sqrt_a00, math.sqrt(a[1][1] - a[1][0] * a[0][1] / a[0][0])]])
+  return L
+
+def MVNormalRnd(mu, sigma):
+  assert(mu.size <= 2)
+  if mu.size == 1:
+    return npr.normal(mu, math.sqrt(sigma))
+  else:
+    L = chol2d(sigma)
+    return L.dot(npr.normal(size=2)) + mu
 
 def careful_exp(x):
   try:
