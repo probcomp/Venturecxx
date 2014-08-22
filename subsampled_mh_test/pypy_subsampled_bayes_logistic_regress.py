@@ -79,8 +79,8 @@ def main(data_source_, epsilon_):
   [clear]
   [assume D %d]
   [assume mu (zeros_array (+ D 1))]
-  [assume sigma (scalar_product (sqrt 0.1) (ones_array (+ D 1)))]
-  [assume w (scope_include (quote w) 0 (multivariate_diag_normal mu sigma))]
+  [assume Sigma (scalar_product 0.1 (ones_array (+ D 1)))]
+  [assume w (scope_include (quote w) 0 (multivariate_diag_normal mu Sigma))]
   [assume y_x (lambda (x) (bernoulli (linear_logistic w x)))]
   """ % D
   v = make_ripl()

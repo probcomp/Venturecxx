@@ -126,7 +126,7 @@ def main(data_source_, epsilon_, N_):
   [clear]
   [assume D {D}]
   [assume mu_w (zeros_array (+ D 1))]
-  [assume Sigma_w (diagonal_matrix (scalar_product {Sigma_w!r} (ones_array (+ D 1))))]
+  [assume Sigma_w (scalar_product {Sigma_w!r} (ones_array (+ D 1)))]
   [assume m0 (zeros_array D)]
   [assume k0 {k0}]
   [assume v0 {v0}]
@@ -134,7 +134,7 @@ def main(data_source_, epsilon_, N_):
   [assume alpha (scope_include (quote alpha) 0 (gamma {a_alpha!r} {b_alpha!r}))]
   [assume crp (make_crp alpha)]
   [assume z (mem (lambda (i) (scope_include (quote z) i (crp))))]
-  [assume w (mem (lambda (z) (scope_include (quote w) z (multivariate_normal mu_w Sigma_w))))]
+  [assume w (mem (lambda (z) (scope_include (quote w) z (multivariate_diag_normal mu_w Sigma_w))))]
   [assume cmvn (mem (lambda (z) (make_cmvn m0 k0 v0 S0)))]
   [assume x (lambda (i) ((cmvn (z i))))]
   [assume y (lambda (i x) (bernoulli (linear_logistic (w (z i)) x)))]
@@ -278,13 +278,13 @@ def main(data_source_, epsilon_, N_):
       ws.append(np.array([vn.number for vn in va.array]))
     rst['ws'].append(ws)
 
-    # Save CMNV Statistics
-    families = cmvnNode.madeSPFamilies.families
+    # Save CMVN Statistics
+    families = trace.madeSPFamiliesAt(cmvnNode).families
     cmvnN = list()
     cmvnXTotal = list()
     cmvnSTotal = list()
     for z,count in sorted(tableCounts.iteritems()):
-      aux = trace.valueAt(families['[Atom(%d)]' % z]).makerNode.madeSPAux.copy()
+      aux = trace.madeSPAuxAt(trace.valueAt(families['[Atom(%d)]' % z]).makerNode).copy()
       cmvnN.append(aux.N)
       cmvnXTotal.append(aux.xTotal)
       cmvnSTotal.append(aux.STotal)

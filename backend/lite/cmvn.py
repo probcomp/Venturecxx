@@ -2,7 +2,7 @@ from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, VentureSPRecord, SPType
 import math
 import stats_utils as su
-from utils import simulateCategorical, MVNormalRnd
+from utils import simulateCategorical, MVNormalRnd, matDet2D, matInv2D
 from value import AtomType, ArrayType, HomogeneousArrayType, NumberType # The type names are metaprogrammed pylint: disable=no-name-in-module
 import numpy as np
 import pdb
@@ -17,8 +17,8 @@ def mvtLogDensity(x,mu,Sigma,v):
   pterm1 = su.C.gammaln(float(v + p) / 2)
   nterm1 = su.C.gammaln(float(v) / 2)
   nterm2 = (float(p)/2) * math.log(v * math.pi)
-  nterm3 = (float(1)/2) * np.linalg.slogdet(Sigma)[1]
-  nterm4 = (float(v + p)/2) * math.log(1 + (float(1)/v) * (x - mu).T * np.linalg.inv(Sigma) * (x - mu))
+  nterm3 = (float(1)/2) * math.log(matDet2D(Sigma))
+  nterm4 = (float(v + p)/2) * math.log(1 + (float(1)/v) * (x - mu).T * np.mat(matInv2D(Sigma)) * (x - mu))
   return pterm1 - (nterm1 + nterm2 + nterm3 + nterm4)
 
 def mvtSample(mu,Sigma,N):
@@ -37,7 +37,7 @@ def mvtSample(mu,Sigma,N):
   d = len(Sigma)
   g = np.tile(np.random.gamma(N/2.,2./N,1),(d,1))
   #Z = np.random.multivariate_normal(np.zeros(d),Sigma,1)
-  Z = MVNormalRnd(np.zeros(d),Sigma)
+  Z = MVNormalRnd(np.zeros(d),Sigma).reshape(1,d)
 
   return mu + (Z.T)/np.sqrt(g)
 
@@ -113,7 +113,7 @@ class CMVNOutputPSP(RandomPSP):
     (mN,kN,vN,SN) = self.updatedParams(args.spaux)
     params = self.mvtParams(mN,kN,vN,SN)
     x = mvtSample(*params)
-    return np.squeeze(np.array(x))
+    return np.squeeze(np.asarray(x.T))
 
   def logDensity(self,x,args):
     x = np.mat(x).reshape((self.d,1))
@@ -137,8 +137,8 @@ class CMVNOutputPSP(RandomPSP):
     term1 = - (aux.N * self.d * math.log(math.pi)) / 2
     term2 = logGenGamma(self.d,float(vN) / 2)
     term3 = - logGenGamma(self.d,float(self.v0) / 2)
-    term4 = (float(self.v0) / 2) * np.linalg.slogdet(self.S0)[1] # first is sign
-    term5 = -(float(vN) / 2) * np.linalg.slogdet(SN)[1]
+    term4 = (float(self.v0) / 2) * math.log(matDet2D(self.S0))
+    term5 = -(float(vN) / 2) * math.log(matDet2D(SN))
     term6 = (float(self.d) / 2) * math.log(float(self.k0) / kN)
     return term1 + term2 + term3 + term4 + term5 + term6
 
