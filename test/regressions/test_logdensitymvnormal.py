@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.linalg as npla
 from scipy import stats
 from nose.tools import assert_almost_equal
 
