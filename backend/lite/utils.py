@@ -2,6 +2,7 @@ import random
 import numpy.random as npr
 import math
 import scipy.special as ss
+import scipy.stats
 import numpy as np
 import numpy.linalg as npla
 import numbers
@@ -75,8 +76,7 @@ def numpy_force_number(answer):
     return answer[0,0]
 
 def logDensityMVNormal(x, mu, sigma):
-  answer =  -.5*np.dot(np.dot(x-mu, npla.inv(sigma)), np.transpose(x-mu)) \
-            -.5*len(sigma)*np.log(np.pi)-.5*np.log(abs(npla.det(sigma)))
+  answer = scipy.stats.multivariate_normal.logpdf(x, mu, sigma)
   return numpy_force_number(answer)
 
 def careful_exp(x):
