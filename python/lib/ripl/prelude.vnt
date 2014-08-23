@@ -282,10 +282,10 @@
 [ASSUME rmse_accuracy
   (heldout_method_factory
     (lambda (lab_true lab_pred) (pow (- lab_true lab_pred) 2))
-    (lambda (diffs) (sqrt (mean (diffs)))))]
+    (lambda (diffs) (sqrt (mean diffs))))]
 
 ; Mean absolute error accuracy
 [ASSUME mean_abs_accuracy
   (heldout_method_factory
     (lambda (lab_true lab_pred) (abs (- lab_true lab_pred)))
-    (lambda (diffs) (mean (diffs))))]
+    (lambda (diffs) (mean diffs)))]
