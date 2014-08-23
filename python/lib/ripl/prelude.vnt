@@ -244,3 +244,42 @@
       (pair
         (if (= idx fill_position) diag_value 0)
         (_one_row_helper D diag_value fill_position (+ idx 1)))))]
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Code for evaluating predictive accuracy
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Supports model accuracy in a traditional supervised learning setting
+; Parameters
+;   data : A list where the ith entry is a pair. The first entry in each pair
+;     is the features (covariates) for the ith data point. The second entry
+;     in each pair is the observed label for the ith data point.
+;   f_predict : The function used to predict a label given the features.
+;   f_compare : The function used to compare the predicted label to the actual
+;     label for a single observation. A common example would be squared difference
+;     between actual and predicted.
+;   f_aggregate : The function to aggregate the comparisons over all entries.
+;     A common example would be square root of the mean of the comparisions.
+[ASSUME heldout_accuracy
+  (lambda (data f_predict f_compare f_aggregate)
+    (let ((heldout_accuracy_one
+            (lambda (datum f_predict f_compare)
+              (f_compare (f_predict (first datum)) (rest datum))))
+          (mapper (lambda (datum)
+                    (heldout_accuracy_one
+                      datum
+                      f_predict
+                      f_compare))))
+      (f_aggregate (mapv mapper data))))]
+
+; Return SP's that compute heldout accuracy using specified comparison and
+; aggregation functions
+[ASSUME heldout_method_factory
+  (lambda (f_compare f_aggregate)
+    (lambda (data f_predict)
+      (heldout_accuracy data f_predict f_compare f_aggregate)))]
+
+; Root mean square error accuracy
+[ASSUME rmse_accuracy
+  (heldout_method_factory
+    (lambda (lab_true lab_pred) (pow (- lab_true lab_pred) 2))
+    (lambda (diffs) (sqrt (mean diffs))))]
