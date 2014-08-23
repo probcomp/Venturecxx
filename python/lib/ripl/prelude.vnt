@@ -246,7 +246,7 @@
         (_one_row_helper D diag_value fill_position (+ idx 1)))))]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Code for model accuracy evaluation
+; Code for evaluating predictive accuracy
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Supports model accuracy in a traditional supervised learning setting
 ; Parameters
