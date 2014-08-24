@@ -54,4 +54,7 @@ class Address(List):
   def extend(self, index):
     """Extend the current stack frame."""
     return Address(self.first.prepend(index), self.rest)
-
+  
+  def asList(self):
+    """Converts to nested lists."""
+    return map(list, list(self))

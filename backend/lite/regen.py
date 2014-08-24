@@ -108,7 +108,7 @@ def evalFamily(trace,address,exp,env,scaffold,shouldRestore,omegaDB,gradients):
     try:
       sourceNode = env.findSymbol(exp)
     except VentureError as err:
-      raise VentureException("runtime", err.message, address=address)
+      raise VentureException("evaluation", err.message, address=address)
     weight = regen(trace,sourceNode,scaffold,shouldRestore,omegaDB,gradients)
     return (weight,trace.createLookupNode(address,sourceNode))
   elif e.isSelfEvaluating(exp): return (0,trace.createConstantNode(address,exp))
@@ -126,7 +126,7 @@ def evalFamily(trace,address,exp,env,scaffold,shouldRestore,omegaDB,gradients):
     try:
       weight += apply(trace,requestNode,outputNode,scaffold,shouldRestore,omegaDB,gradients)
     except VentureError as err:
-      raise VentureException("runtime", err.message, address=address)
+      raise VentureException("evaluation", err.message, address=address)
     assert isinstance(weight, numbers.Number)
     return weight,outputNode
 

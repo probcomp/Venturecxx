@@ -127,6 +127,7 @@ class VentureSivm(object):
             if e.exception == "evaluation":
                 self.state='exception'
                 self.current_exception = e.to_json_object()
+                print e.data['address']
             if e.exception == "breakpoint":
                 self.state='paused'
                 self.current_exception = e.to_json_object()
