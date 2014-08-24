@@ -19,6 +19,8 @@ def main(data_source_, epsilon_, N_):
   print "N_:", N_
 
   rand_seed = 101
+  random.seed(rand_seed)
+  np.random.seed(rand_seed)
 
   ## Data
   data_source = data_source_ # "mnist" # "mnist_mini" # "synthetic" # "circle"
@@ -141,8 +143,6 @@ def main(data_source_, epsilon_, N_):
   """.format(D = D, Sigma_w = Sigma_w, k0 = k0, v0 = v0, a_alpha = a_alpha, b_alpha = b_alpha)
   v = make_ripl()
   #v.set_seed(rand_seed)
-  random.seed(rand_seed)
-  np.random.seed(rand_seed)
   v.execute_program(prog);
 
   ##########################################
