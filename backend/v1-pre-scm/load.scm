@@ -9,6 +9,7 @@
   (self-relatively (lambda () (load filename environment))))
 
 (load-relative "pattern-case/load")
+(load-relative "utils")
 (load-relative "syntax")
 (load-relative "v1-pre")
 (load-relative "random-db")
