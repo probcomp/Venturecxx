@@ -32,6 +32,10 @@
   trace
   read-traces)
 
+;; Eventually, primmitive procedures will have optional densities and
+;; such, but I don't need any yet.
+(define-structure (primitive (safe-accessors #t)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Essential evaluation
