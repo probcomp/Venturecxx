@@ -194,6 +194,7 @@ def testRiplSimulate():
         "matrix_mul", # Not implemented
         "repeat", # Not implemented
         "vector_dot", # Not implemented
+        "zip", # Not implemented
     ]:
       continue
     if not sp.outputPSP.isRandom():
