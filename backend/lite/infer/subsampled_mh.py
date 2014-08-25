@@ -1,7 +1,5 @@
 import random
 import math
-from matplotlib import pyplot as plt
-import networkx as nx
 import numpy as np
 import scipy.stats as stats
 from ..consistency import assertTorus
@@ -9,7 +7,6 @@ from ..regen import regenAndAttach
 from ..detach import detachAndExtract
 from ..node import LookupNode, RequestNode, OutputNode
 from ..value import SPRef
-from ..scope import isScopeIncludeOutputPSP
 from ..scaffold import Scaffold, constructScaffold, updateValuesAtScaffold
 
 def constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKernels = False, deltaKernelArgs = None, updateValue = False):
@@ -209,7 +206,7 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
   # May mutate trace and possibly operator, proposedTrace is the mutated trace
   # Returning the trace is necessary for the non-mutating versions
   proposedGlobalTrace,logGlobalAlpha = operator.propose(trace,global_index)
-  global_xiMix = indexer.logDensityOfGlobalIndex(trace,global_index)
+  global_xiMix = indexer.logDensityOfGlobalIndex(proposedGlobalTrace,global_index)
 
   # Sample u.
   log_u = math.log(random.random())
@@ -268,10 +265,9 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
           accept = False
           break
         elif q >= 1 - epsilon:
-          accept = True;
+          accept = True
           break
-    assert(accept is not None)
-    # print n, N, float(n) / N
+    assert accept is not None
 
   if accept:
     operator.accept() # May mutate trace
@@ -324,7 +320,7 @@ class SubsampledBlockScaffoldIndexer(object):
     return index
 
   def sampleLocalIndex(self,trace,local_child):
-    assert(isinstance(local_child, LookupNode) or isinstance(local_child, OutputNode))
+    assert isinstance(local_child, LookupNode) or isinstance(local_child, OutputNode)
     setsOfPNodes = [set([local_child])]
     # Set updateValue = False because we'll do detachAndExtract manually.
     return constructScaffold(trace,setsOfPNodes,updateValue=False)
@@ -347,7 +343,11 @@ class SubsampledInPlaceOperator(object):
 
   def evalOneLocalSection(self, trace, local_scaffold, compute_gradient = False):
     globalBorder = self.global_scaffold.globalBorder
-    assert(globalBorder is not None)
+    assert globalBorder is not None
+
+    # A safer but slower way to update values. It's now replaced by the the next
+    # updating lines but may be useful for debugging purpose.
+    #
     ## Detach and extract
     #_,local_rhoDB = detachAndExtract(trace, local_scaffold.border[0], local_scaffold, compute_gradient)
     ## Regen and attach with the old value

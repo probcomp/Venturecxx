@@ -1,5 +1,4 @@
 import networkx as nx
-#from matplotlib import pyplot as plt
 from ..node import Node, OutputNode, RequestNode, LookupNode, ConstantNode
 
 def drawScaffold(trace, indexer):
@@ -67,14 +66,11 @@ def drawScaffoldGraph(trace, G, labels=None):
     if labels is None:
         labels = nodeLabelDict(G.nodes(), trace)
 
-#    plt.figure(figsize=(20,20))
     pos=nx.graphviz_layout(G,prog='dot')
-#    pos=nx.spring_layout(G)
     nx.draw_networkx(G, pos=pos, with_labels=True,
                      node_color=[color_map[data['type']] for (_,data) in G.nodes_iter(True)],
                      labels=labels)
-#                     labels={node:node.value for node in G.nodes_iter()})
-    ## Store variables for furthur manipulation from the caller.
+    ## Store variables. It's useful if furthur manipulation is needed from the caller.
     #trace.G = G
     #trace.labels = labels
     #trace.cm = color_map
