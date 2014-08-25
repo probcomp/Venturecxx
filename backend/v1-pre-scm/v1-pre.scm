@@ -34,7 +34,9 @@
 
 ;; Eventually, primmitive procedures will have optional densities and
 ;; such, but I don't need any yet.
-(define-structure (primitive (safe-accessors #t)))
+(define-structure (primitive (safe-accessors #t))
+  simulate
+  (log-density #f))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -54,13 +56,14 @@
 
 (define (do-eval exp env trace addr read-traces)
   (case* exp
-    ((constant val) val)
+    ((constant val) (scheme->venture val))
     ((var x)
      (env-search env x
       (lambda (addr)
         (traces-lookup (cons trace read-traces) addr))
       (lambda ()
-        ((access eval system-global-environment) x user-initial-environment))))
+        (scheme->venture
+         ((access eval system-global-environment) x user-initial-environment)))))
     ((lambda-form formals body)
      ;; Do I need to close over the maker address?
      (make-compound formals body env trace read-traces))
@@ -109,7 +112,12 @@
 (define (apply oper opands addr cur-trace read-traces)
   (let ((oper (trace-lookup cur-trace oper)))
     (cond ((primitive? oper)
-           ((primitive-apply oper) opands))
+           (let ((sim (primitive-simulate oper)))
+             (let ((arguments (map (lambda (o)
+                                   (traces-lookup (cons cur-trace read-traces) o))
+                                 opands)))
+               ;; TODO Density
+               ((access apply system-global-environment) sim arguments))))
           ((compound? oper)
            (let ((formals (compound-formals oper))
                  (body (compound-body oper))
@@ -123,12 +131,7 @@
                    ;; write permission to the trace in which it was
                    ;; created
                    (read-traces* (cons trace read-traces)))
-               (eval body env* trace* addr* read-traces*))))
-          ((procedure? oper) ; An MIT Scheme procedure
-           (let ((arguments (map (lambda (o)
-                                   (traces-lookup (cons cur-trace read-traces) o))
-                                 opands)))
-             ((access apply system-global-environment) oper arguments))))))
+               (eval body env* trace* addr* read-traces*)))))))
 
 (define (top-eval exp)
   (eval exp (make-env-frame #f '() '()) (rdb-empty) (toplevel-address) '()))
@@ -197,3 +200,10 @@
      (lambda ()
        (abegin1 (f x) (hash-table/put! table x it))))))
 (define extend-address-uncurried (memoize-in-hash-table (make-equal-hash-table) (lambda (x) (make-address))))
+
+;;; Host interface
+
+(define (scheme->venture thing)
+  (if (procedure? thing)
+      (make-primitive thing #f) ; Don't know the density
+      thing)) ; Represent everything else by itself
