@@ -271,3 +271,53 @@ def assignBorderSequnce(border,indexAssignments,numIndices):
   for node in border:
     borderSequence[indexAssignments[node]].append(node)
   return borderSequence
+
+def constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKernels = False, deltaKernelArgs = None, updateValue = False):
+  cDRG,cAbsorbing,cAAA = set(),set(),set()
+  indexAssignments = {}
+  assert isinstance(setsOfPNodes,list)
+  for i in range(len(setsOfPNodes)):
+    assert isinstance(setsOfPNodes[i],set)
+    extendCandidateScaffoldGlobalSection(trace,setsOfPNodes[i],globalBorder,cDRG,cAbsorbing,cAAA,indexAssignments,i)
+
+  brush = findBrush(trace,cDRG)
+  drg,absorbing,aaa = removeBrush(cDRG,cAbsorbing,cAAA,brush)
+  border = findBorder(trace,drg,absorbing,aaa)
+  regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
+  if globalBorder is not None:
+    assert globalBorder in border
+    assert globalBorder in drg
+    regenCounts[globalBorder] = 1
+  lkernels = loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs)
+  borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
+  scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
+  if updateValue:
+    updatedNodes = set()
+    updateValuesAtScaffold(trace,scaffold,updatedNodes)
+
+  scaffold.globalBorder = globalBorder
+  scaffold.local_children = list(trace.childrenAt(globalBorder)) if globalBorder is not None else []
+  scaffold.N = len(scaffold.local_children)
+  return scaffold
+
+def extendCandidateScaffoldGlobalSection(trace,pnodes,globalBorder,drg,absorbing,aaa,indexAssignments,i):
+  q = [(pnode,True,None) for pnode in pnodes]
+
+  while q:
+    node,isPrincipal,parentNode = q.pop()
+    if node is globalBorder and globalBorder is not None:
+      drg.add(node)
+      indexAssignments[node] = i
+    elif node in drg and not node in aaa:
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
+    elif isinstance(node,LookupNode) or node.operatorNode in drg:
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
+    # TODO temporary: once we put all uncollapsed AAA procs into AEKernels, this line won't be necessary
+    elif node in aaa:
+      addAAANode(drg,aaa,absorbing,node,indexAssignments,i)
+    elif (not isPrincipal) and trace.pspAt(node).canAbsorb(trace,node,parentNode):
+      addAbsorbingNode(drg,absorbing,aaa,node,indexAssignments,i)
+    elif trace.pspAt(node).childrenCanAAA():
+      addAAANode(drg,aaa,absorbing,node,indexAssignments,i)
+    else:
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
