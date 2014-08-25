@@ -193,4 +193,4 @@
      (lambda (datum) datum)
      (lambda ()
        (abegin1 (f x) (hash-table/put! table x it))))))
-(define extend-address-uncurried (memoize-in-hash-table (make-equal-hash-table) make-address))
+(define extend-address-uncurried (memoize-in-hash-table (make-equal-hash-table) (lambda (x) (make-address))))
