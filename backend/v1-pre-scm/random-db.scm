@@ -10,12 +10,12 @@
 (define (rdb-trace-search trace addr win lose)
   (if (rdb? trace)
       (rdb-trace-search-one trace addr win
-       (lambda () (trace-search (trace-parent trace) addr win lose)))
+       (lambda () (trace-search (rdb-parent trace) addr win lose)))
       (lose)))
 
 (define (rdb-trace-search-one trace addr win lose)
-  (let loop ((as (trace-addresses trace))
-             (vs (trace-values trace)))
+  (let loop ((as (rdb-addresses trace))
+             (vs (rdb-values trace)))
     (cond ((null? as)
            (lose))
           ((eq? (car as) addr)
@@ -23,8 +23,8 @@
           (else (loop (cdr as) (cdr vs))))))
 
 (define (rdb-trace-store! trace addr val)
-  (set-trace-addresses! trace (cons addr (trace-addresses trace)))
-  (set-trace-values! trace (cons val (trace-values trace))))
+  (set-rdb-addresses! trace (cons addr (rdb-addresses trace)))
+  (set-rdb-values! trace (cons val (rdb-values trace))))
 
 (define (rdb-record! trace exp env addr read-traces answer)
   (rdb-trace-store! trace addr answer))

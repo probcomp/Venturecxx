@@ -37,7 +37,9 @@
 ;;; Essential evaluation
 
 (define (eval exp env trace addr read-traces)
-  (trace-search-one trace addr (lambda (v) v)
+  ;; TODO What happens if this address is recorded, but not in the
+  ;; current trace?
+  (trace-search trace addr (lambda (v) v)
    (lambda ()
      (let ((answer (do-eval exp env trace addr read-traces)))
        ;; And maybe metadata depending on what kind of trace it is.
