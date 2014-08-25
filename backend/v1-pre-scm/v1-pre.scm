@@ -17,9 +17,6 @@
 
 (define-structure address) ; Opaque
 
-(define-structure (rdb (safe-accessors #t))
-  )
-
 ;; A standard lexical environment structure; holds addresses into
 ;; traces rather than values.
 (define-structure (env-frame (safe-accessors #t))
@@ -128,7 +125,7 @@
              ((access apply system-global-environment) oper arguments))))))
 
 (define (top-eval exp)
-  (eval exp (make-env-frame #f '() '()) (make-rdb) (toplevel-address) '()))
+  (eval exp (make-env-frame #f '() '()) (rdb-empty) (toplevel-address) '()))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

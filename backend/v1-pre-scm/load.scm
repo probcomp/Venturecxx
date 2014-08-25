@@ -11,3 +11,4 @@
 (load-relative "pattern-case/load")
 (load-relative "syntax")
 (load-relative "v1-pre")
+(load-relative "random-db")
