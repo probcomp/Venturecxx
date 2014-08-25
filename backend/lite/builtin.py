@@ -197,19 +197,10 @@ builtInSPsList = [
                              descr="Returns the log of its argument") ],
            [ "pow", binaryNum(math.pow, sim_grad=grad_pow, descr="pow returns its first argument raised to the power of its second argument") ],
            [ "sqrt", unaryNum(math.sqrt, sim_grad=grad_sqrt, descr="Returns the sqrt of its argument") ],
-           [ "logistic", unaryNum(lambda x: 1/(1+math.exp(-x)), descr="logistic returns the output of the logistic function of its argument") ],
-           [ "linear_logistic", deterministic_typed(lambda w,x: 1/(1+math.exp(-(w[0] + np.dot(w[1:], x)))),
-                                                    [v.HomogeneousArrayType(v.NumberType()), v.HomogeneousArrayType(v.NumberType())], v.NumberType(),
-                                                    descr="linear_logistic(w, x) returns the output of logistic regression with weight and input") ],
 
            [ "not", deterministic_typed(lambda x: not x, [v.BoolType()], v.BoolType(),
                                         descr="not returns the logical negation of its argument") ],
 
-           [ "dot_product", deterministic_typed(np.dot, [v.HomogeneousArrayType(v.NumberType()), v.HomogeneousArrayType(v.NumberType())], v.NumberType(),
-                                                descr="dot_product returns the dot product of its arguments") ],
-           [ "scalar_product", deterministic_typed(lambda x,y: x * np.array(y), [v.NumberType(), v.HomogeneousArrayType(v.NumberType())],
-                                                   v.HomogeneousArrayType(v.NumberType()),
-                                                   descr="scalar_product returns the scalar product between the first scalar argument and the second array argument") ],
            [ "is_symbol", type_test(v.SymbolType()) ],
            [ "is_atom", type_test(v.AtomType()) ],
 
@@ -232,12 +223,6 @@ builtInSPsList = [
            [ "array", deterministic_typed(lambda *args: np.array(args), [v.AnyType()], v.ArrayType(), variadic=True,
                                           sim_grad=lambda args, direction: direction.getArray(),
                                           descr="array returns an array initialized with its arguments") ],
-           [ "cat_array", deterministic_typed(lambda *args: np.concatenate(args), [v.ArrayType()], v.ArrayType(), variadic=True,
-                                              descr="cat_array concates its array arguments") ],
-           [ "ones_array", deterministic_typed(np.ones, [v.NumberType()], v.HomogeneousArrayType(v.NumberType()),
-                                               descr="ones_array returns an array of ones with the number given by its argument") ],
-           [ "zeros_array", deterministic_typed(np.zeros, [v.NumberType()], v.HomogeneousArrayType(v.NumberType()),
-                                                descr="zeros_array returns an array of zeros with the number given by its argument") ],
 
            [ "vector", deterministic_typed(lambda *args: np.array(args), [v.NumberType()], v.ArrayUnboxedType(v.NumberType()), variadic=True,
                                           sim_grad=lambda args, direction: direction.getArray(),
@@ -255,10 +240,6 @@ builtInSPsList = [
                                            [v.HomogeneousListType(v.HomogeneousListType(v.NumberType()))],
                                            v.MatrixType(),
                                            descr="matrix returns a matrix formed from the given list of rows.  It is an error if the given list is not rectangular.") ],
-           [ "diagonal_matrix", deterministic_typed(lambda x: np.mat(np.diag(x)),
-                                                    [v.HomogeneousListType(v.NumberType())],
-                                                    v.MatrixType(),
-                                                    "diagonal_matrix returns a diagonal matrix formed from the given list.") ],
            [ "is_matrix", type_test(v.MatrixType()) ],
            [ "simplex", deterministic_typed(lambda *nums: np.array(nums), [v.ProbabilityType()], v.SimplexType(), variadic=True,
                                             descr="simplex returns the simplex point given by its argument coordinates.") ],
@@ -371,7 +352,6 @@ builtInSPsList = [
            [ "categorical", typed_nr(discrete.CategoricalOutputPSP(), [v.SimplexType(), v.ArrayType()], v.AnyType(), min_req_args=1) ],
            [ "uniform_discrete", typed_nr(discrete.UniformDiscreteOutputPSP(), [v.IntegerType(), v.IntegerType()], v.IntegerType()) ],
            [ "poisson", typed_nr(discrete.PoissonOutputPSP(), [v.PositiveType()], v.CountType()) ],
-
            [ "normal", typed_nr(continuous.NormalOutputPSP(), [v.NumberType(), v.NumberType()], v.NumberType()) ], # TODO Sigma is really non-zero, but negative is OK by scaling
            [ "uniform_continuous",typed_nr(continuous.UniformOutputPSP(), [v.NumberType(), v.NumberType()], v.NumberType()) ],
            [ "beta", typed_nr(continuous.BetaOutputPSP(), [v.PositiveType(), v.PositiveType()], v.ProbabilityType()) ],
