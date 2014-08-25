@@ -147,6 +147,10 @@ def vector_dot(v1, v2):
   else:
     return 0
 
+def grad_vector_dot(args, direction):
+  unscaled = [v.VentureArray(args[1]), v.VentureArray(args[0])]
+  return [direction.getNumber() * x for x in unscaled]
+
 builtInSPsList = [
            [ "add",  naryNum(lambda *args: sum(args),
                              sim_grad=lambda args, direction: [direction for _ in args],
@@ -288,6 +292,7 @@ builtInSPsList = [
            [ "vector_dot", deterministic_typed(vector_dot,
                                                [v.ArrayUnboxedType(v.NumberType()), v.ArrayUnboxedType(v.NumberType())],
                                                v.NumberType(),
+                                               sim_grad=grad_vector_dot,
                                                descr="(%s x y) returns the dot product of vectors x and y.") ],
 
            [ "matrix_mul", deterministic_typed(np.dot,
@@ -305,6 +310,9 @@ builtInSPsList = [
                                          v.HomogeneousArrayType(v.AnyType("a"))],
                                         v.RequestType("<array b>"))),
                         functional.ESRArrayOutputPSP()) ],
+
+           [ "zip", deterministic_typed(lambda *args: zip(*args), [v.ListType()], v.HomogeneousListType(v.ListType()), variadic=True,
+                                         descr="zip returns a list of lists, where the i-th nested list contains the i-th element from each of the input arguments") ],
 
            [ "branch", esr_output(conditionals.branch_request_psp()) ],
            [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [v.BoolType(), v.AnyType(), v.AnyType()], v.AnyType(),

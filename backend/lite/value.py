@@ -150,6 +150,12 @@ class VentureNumber(VentureValue):
     # Assume other is a scalar
     assert isinstance(other, Number)
     return VentureNumber(other * self.number)
+  def __abs__(self):
+    return VentureNumber(abs(self.number))
+  def __float__(self):
+    # Returns a Python number. Implemented for testing. assert_not_equal
+    # calls round(), which in turn calls float()
+    return self.number
   def dot(self, other):
     assert isinstance(other, VentureNumber)
     return self.number * other.number
@@ -1062,7 +1068,7 @@ class HomogeneousListType(VentureType):
   def asPython(self, vthing):
     return vthing.asPythonList(self.subtype)
   def __contains__(self, vthing):
-    return vthing in ListType and all([val in self.subtype for val in vthing.asPythonList()])
+    return vthing in ListType() and all([val in self.subtype for val in vthing.asPythonList()])
   def __eq__(self, other):
     return type(self) == type(other) and self.subtype == other.subtype
   def name(self): return "<list %s>" % self.subtype.name()
