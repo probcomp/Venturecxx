@@ -7,7 +7,8 @@ from ..regen import regenAndAttach
 from ..detach import detachAndExtract
 from ..node import LookupNode, RequestNode, OutputNode
 from ..value import SPRef
-from ..scaffold import constructScaffold, updateValuesAtScaffold
+from ..scaffold import constructScaffold, constructScaffoldGlobalSection, updateValuesAtScaffold
+from mh import BlockScaffoldIndexer, InPlaceOperator
 
 def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
   # Assumptions:
@@ -20,12 +21,12 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
   # Construct the global section with a globalBorder node or None.
   global_index = indexer.sampleGlobalIndex(trace)
 
-  global_rhoMix = indexer.logDensityOfGlobalIndex(trace,global_index)
+  global_rhoMix = indexer.logDensityOfIndex(trace,global_index)
   # Propose variables in the global section.
   # May mutate trace and possibly operator, proposedTrace is the mutated trace
   # Returning the trace is necessary for the non-mutating versions
   proposedGlobalTrace,logGlobalAlpha = operator.propose(trace,global_index)
-  global_xiMix = indexer.logDensityOfGlobalIndex(proposedGlobalTrace,global_index)
+  global_xiMix = indexer.logDensityOfIndex(proposedGlobalTrace,global_index)
 
   # Sample u.
   log_u = math.log(random.random())
@@ -93,21 +94,9 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
   else:
     operator.reject() # May mutate trace
 
-class SubsampledBlockScaffoldIndexer(object):
-  def __init__(self,scope,block,useDeltaKernels=False,deltaKernelArgs=None,updateValue=False):
-    if scope == "default" and not (block == "all" or block == "one" or block == "ordered"):
-        raise Exception("INFER default scope does not admit custom blocks (%r)" % block)
-    self.scope = scope
-    self.block = block
-    self.useDeltaKernels = useDeltaKernels
-    self.deltaKernelArgs = deltaKernelArgs
-    self.updateValue = updateValue
-
+class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
   def sampleGlobalIndex(self,trace):
-    if self.block == "one": setsOfPNodes = [trace.getNodesInBlock(self.scope,trace.sampleBlock(self.scope))]
-    elif self.block == "all": setsOfPNodes = [trace.getAllNodesInScope(self.scope)]
-    elif self.block == "ordered": setsOfPNodes = trace.getOrderedSetsInScope(self.scope)
-    else: setsOfPNodes = [trace.getNodesInBlock(self.scope,self.block)]
+    setsOfPNodes = self.getSetsOfPNodes(trace)
 
     # Assumption 1. Single principal node.
     assert len(setsOfPNodes) == 1
@@ -141,27 +130,17 @@ class SubsampledBlockScaffoldIndexer(object):
   def sampleLocalIndex(self,trace,local_child):
     assert isinstance(local_child, LookupNode) or isinstance(local_child, OutputNode)
     setsOfPNodes = [set([local_child])]
-    # Set updateValue = False because we'll do detachAndExtract manually.
+    # Set updateValue = False because we'll update values in evalOneLocalSection.
     return constructScaffold(trace,setsOfPNodes,updateValue=False)
 
-  def logDensityOfGlobalIndex(self,trace,_):
-    if self.block == "one": return trace.logDensityOfBlock(self.scope)
-    elif self.block == "all": return 0
-    elif self.block == "ordered": return 0
-    else: return 0
+  def name(self):
+    return ["subsampled_scaffold", self.scope, self.block] + ([self.interval] if self.interval is not None else []) + ([self.true_block] if hasattr(self, "true_block") else [])
 
-class SubsampledInPlaceOperator(object):
-  def prepare(self, trace, global_scaffold, compute_gradient = False):
-    """Record the trace and scaffold for accepting or rejecting later;
-    detach along the scaffold and return the weight thereof."""
-    self.trace = trace
-    self.global_scaffold = global_scaffold
-    rhoWeight,self.global_rhoDB = detachAndExtract(trace, global_scaffold, compute_gradient)
-    assertTorus(self.global_scaffold)
-    return rhoWeight
-
+# When accepting/rejecting a proposal, only accept/restore the global section.
+# The local sections are left in the state when returned from subsampledMixMH.
+class SubsampledInPlaceOperator(InPlaceOperator):
   def evalOneLocalSection(self, trace, local_scaffold, compute_gradient = False):
-    globalBorder = self.global_scaffold.globalBorder
+    globalBorder = self.scaffold.globalBorder
     assert globalBorder is not None
 
     # A safer but slower way to update values. It's now replaced by the the next
@@ -170,13 +149,13 @@ class SubsampledInPlaceOperator(object):
     ## Detach and extract
     #_,local_rhoDB = detachAndExtract(trace, local_scaffold.border[0], local_scaffold, compute_gradient)
     ## Regen and attach with the old value
-    #proposed_value = trace.valueAt(self.global_scaffold.globalBorder)
-    #trace.setValueAt(globalBorder, self.global_rhoDB.getValue(globalBorder))
+    #proposed_value = trace.valueAt(self.scaffold.globalBorder)
+    #trace.setValueAt(globalBorder, self.rhoDB.getValue(globalBorder))
     #regenAndAttach(trace,local_scaffold,False,local_rhoDB,{})
 
     # Update with the old value.
     proposed_value = trace.valueAt(globalBorder)
-    trace.setValueAt(globalBorder, self.global_rhoDB.getValue(globalBorder))
+    trace.setValueAt(globalBorder, self.rhoDB.getValue(globalBorder))
     updatedNodes = set([globalBorder])
     updateValuesAtScaffold(trace,local_scaffold,updatedNodes)
 
@@ -188,19 +167,12 @@ class SubsampledInPlaceOperator(object):
     xiWeight = regenAndAttach(trace,local_scaffold,False,local_rhoDB,{})
     return xiWeight - rhoWeight
 
-  def accept(self): pass
-  def reject(self):
-    # Only restore the global section.
-    detachAndExtract(self.trace,self.global_scaffold)
-    assertTorus(self.global_scaffold)
-    regenAndAttach(self.trace,self.global_scaffold,True,self.global_rhoDB,{})
-
   def makeConsistent(self,trace,indexer):
     # Go through every local child and do extra and regen.
     # This is to be called at the end of a number of transitions.
-    if not hasattr(self, "global_scaffold"):
-      self.global_scaffold = indexer.sampleGlobalIndex(trace)
-    for local_child in self.global_scaffold.local_children:
+    if not hasattr(self, "scaffold"):
+      self.scaffold = indexer.sampleGlobalIndex(trace)
+    for local_child in self.scaffold.local_children:
       local_scaffold = indexer.sampleLocalIndex(trace,local_child)
       _,local_rhoDB = detachAndExtract(trace, local_scaffold)
       regenAndAttach(trace,local_scaffold,False,local_rhoDB,{})
@@ -209,10 +181,10 @@ class SubsampledInPlaceOperator(object):
 #### Resampling from the prior
 
 class SubsampledMHOperator(SubsampledInPlaceOperator):
-  def propose(self, trace, global_scaffold):
-    rhoWeight = self.prepare(trace, global_scaffold)
-    xiWeight = regenAndAttach(trace,global_scaffold,False,self.global_rhoDB,{})
+  def propose(self, trace, scaffold):
+    rhoWeight = self.prepare(trace, scaffold)
+    xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, {})
     return trace, xiWeight - rhoWeight
 
-
+  def name(self): return "resimulation subsampled MH"
 
