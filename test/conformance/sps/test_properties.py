@@ -30,10 +30,12 @@ def testLiteToStack():
 def propLiteToStack(val):
   assert val.equal(VentureValue.fromStackDict(val.asStackDict()))
 
+# Select particular SPs to test thus:
+# nosetests --tc=relevant:'["foo", "bar", "baz"]'
 def relevantSPs():
   for (name,sp) in builtInSPsList:
     if isinstance(sp.requestPSP, NullRequestPSP):
-      if name not in []: # Placeholder for selecting SPs to do or not do
+      if "relevant" not in config or config["relevant"] is None or name in config["relevant"]:
         yield name, sp
 
 @gen_in_backend("none")
@@ -194,6 +196,7 @@ def testRiplSimulate():
         "matrix_mul", # Not implemented
         "repeat", # Not implemented
         "vector_dot", # Not implemented
+        "zip", # Not implemented
     ]:
       continue
     if not sp.outputPSP.isRandom():
