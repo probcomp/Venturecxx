@@ -102,8 +102,8 @@
                             (let ((addr* (extend-address addr `(app-sub ,i))))
                               (eval e env trace addr* read-traces)
                               addr*))
-                          (subforms exp)
-                          (iota (length (subforms exp))))))
+                          exp ; The subforms
+                          (iota (length exp)))))
        (apply (car subaddrs) (cdr subaddrs) addr trace read-traces)))))
 
 (define (apply oper opands addr cur-trace read-traces)
