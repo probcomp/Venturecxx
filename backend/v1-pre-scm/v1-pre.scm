@@ -67,7 +67,7 @@
     ;; Interesting new operation: evaluate in a subtrace.  Adding a
     ;; new trace frame like this hides the nested evaluation from
     ;; appearing in the current trace, and can shield the current
-    ;; trace from reflective changes made to the nexted one if the
+    ;; trace from reflective changes made to the nested one if the
     ;; trace modification policy enforces that.
     ((extend-form subform)
      (let ((subtrace (trace-extend trace))
