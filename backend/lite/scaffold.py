@@ -1,4 +1,4 @@
-from node import ConstantNode, LookupNode, RequestNode, OutputNode
+from node import LookupNode, RequestNode, OutputNode
 from value import SPRef
 from omegadb import OmegaDB
 from detach import unapplyPSP
@@ -80,38 +80,25 @@ def updateValuesAtScaffold(trace,scaffold,updatedNodes):
     updateValueAtNode(trace, scaffold, node, updatedNodes)
 
 def updateValueAtNode(trace, scaffold, node, updatedNodes):
-  if node in updatedNodes:
-    return
-
   # Strong assumption! Only consider resampling nodes in the scaffold.
-  if not scaffold.isResampling(node):
-    return
+  if node not in updatedNodes and scaffold.isResampling(node):
+    if isinstance(node, LookupNode):
+      updateValueAtNode(trace, scaffold, node.sourceNode, updatedNodes)
+      trace.setValueAt(node, trace.valueAt(node.sourceNode))
+    elif isinstance(node, OutputNode):
+      # Assume SPRef and AAA nodes are always updated.
+      psp = trace.pspAt(node)
+      if not isinstance(trace.valueAt(node), SPRef) and not psp.childrenCanAAA():
+        canAbsorb = True
+        for parent in trace.parentsAt(node):
+          if not psp.canAbsorb(trace, node, parent):
+            updateValueAtNode(trace, scaffold, parent, updatedNodes)
+            canAbsorb = False
+        if not canAbsorb:
+          update(trace, node)
+    updatedNodes.add(node)
 
-  if isinstance(node, ConstantNode):
-    return
-  elif isinstance(node, LookupNode):
-    updateValueAtNode(trace, scaffold, node.sourceNode, updatedNodes)
-    trace.setValueAt(node, trace.valueAt(node.sourceNode))
-  elif isinstance(node, RequestNode):
-    return
-  else: # OutputNode.
-    # Assume SPRef and AAA nodes are always updated.
-    psp = trace.pspAt(node)
-    if isinstance(trace.valueAt(node), SPRef) or psp.childrenCanAAA():
-      pass
-
-    canAbsorb = True
-    for parent in trace.parentsAt(node):
-      if not psp.canAbsorb(trace, node, parent):
-        updateValueAtNode(trace, scaffold, parent, updatedNodes)
-        canAbsorb = False
-
-    if not canAbsorb:
-      updateValueAt(trace, node)
-
-  updatedNodes.add(node)
-
-def updateValueAt(trace, node):
+def update(trace, node):
   scaffold = Scaffold()
   omegaDB = OmegaDB()
   unapplyPSP(trace, node, scaffold, omegaDB)
