@@ -152,7 +152,7 @@ will be accomplished:
 
     (let ((env (get-current-environment))
           (addr (fresh-address)))
-      (eval <exp> env (get-current-trace) addr)
+      (eval <exp> env (get-current-trace) addr (get-current-read-traces))
       (bind! env <name> addr)
       ... save the directive ID and value ...)
 

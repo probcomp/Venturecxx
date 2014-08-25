@@ -1,4 +1,4 @@
-from value import VentureValue, registerVentureType, VentureType, PositiveType, NumberType, ProbabilityType, MatrixType, SymmetricMatrixType, BoolType, ZeroType
+from value import VentureValue, registerVentureType, VentureType
 import copy
 from exception import VentureError
 
