@@ -1068,7 +1068,7 @@ class HomogeneousListType(VentureType):
   def asPython(self, vthing):
     return vthing.asPythonList(self.subtype)
   def __contains__(self, vthing):
-    return vthing in ListType and all([val in self.subtype for val in vthing.asPythonList()])
+    return vthing in ListType() and all([val in self.subtype for val in vthing.asPythonList()])
   def __eq__(self, other):
     return type(self) == type(other) and self.subtype == other.subtype
   def name(self): return "<list %s>" % self.subtype.name()
