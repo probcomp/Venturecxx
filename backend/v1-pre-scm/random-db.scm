@@ -34,3 +34,21 @@
 
 (define (rdb-empty)
   (make-rdb #f '() '()))
+
+;;; Translation of the Lightweight MCMC algorithm to the present context
+
+(define (rebuild-rdb orig replacements)
+  (let ((new (rdb-extend (rdb-parent orig))))
+    (for-each
+     (lambda (addr record)
+       ;; Order (not counting issues with coupled primitives) will be
+       ;; enforced by evaluation recursion regardless of the order in
+       ;; which the available expressions are traversed, provided the
+       ;; replacement caches results.
+       (regenerate! exp env new addr read-traces replacements orig))
+     ;; Walking over exactly the expressions already recorded is the
+     ;; right thing, because it will not attempt to rerun the extend
+     ;; node that contains the executing inference program itself.
+     (rdb-addresses orig)
+     (rdb-records orig))
+    new))
