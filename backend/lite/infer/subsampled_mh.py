@@ -2,11 +2,9 @@ import random
 import math
 import numpy as np
 import scipy.stats as stats
-from ..consistency import assertTorus
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
-from ..node import LookupNode, RequestNode, OutputNode
-from ..value import SPRef
+from ..node import LookupNode, OutputNode
 from ..scaffold import constructScaffold, constructScaffoldGlobalSection, updateValuesAtScaffold
 from mh import BlockScaffoldIndexer, InPlaceOperator
 
