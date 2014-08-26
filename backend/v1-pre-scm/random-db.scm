@@ -14,14 +14,17 @@
        (lambda () (trace-search (rdb-parent trace) addr win lose)))
       (lose)))
 
-(define (rdb-trace-search-one trace addr win lose)
+(define (rdb-trace-search-one-record trace addr win lose)
   (let loop ((as (rdb-addresses trace))
              (vs (rdb-records trace)))
     (cond ((null? as)
            (lose))
           ((eq? (car as) addr)
-           (win (car (cddddr (car vs)))))
+           (win (car vs)))
           (else (loop (cdr as) (cdr vs))))))
+
+(define (rdb-trace-search-one trace addr win lose)
+  (rdb-trace-search-one-record trace addr (lambda (rec) (win (car (cddddr rec)))) lose))
 
 (define (rdb-trace-store! trace addr thing)
   (set-rdb-addresses! trace (cons addr (rdb-addresses trace)))
@@ -42,6 +45,28 @@
   (make-rdb #f '() '() #f))
 
 ;;; Translation of the Lightweight MCMC algorithm to the present context
+
+(define (weight-at addr trace read-traces)
+  (rdb-trace-search-one trace addr
+   (lambda (v) (weight-for-at v addr trace read-traces))
+   (lambda () (error "Trying to compute weight for a value that isn't there" addr))))
+
+(define (weight-for-at val addr trace read-traces)
+  0) ; TODO Something about the density methods of primitives
+
+(define (compatible-operators-for? addr new-trace old-trace)
+  (let ((op-addr (extend-address addr '(app-sub 0))))
+    (rdb-trace-search-one
+     new-trace op-addr
+     (lambda (new-op)
+       (rdb-trace-search-one
+        old-trace op-addr
+        (lambda (old-op)
+          (and (eqv? new-op old-op)
+               (primitive? new-op)
+               (primitive-log-density new-op)))
+        (lambda () #f)))
+     (lambda () #f))))
 
 (define (rebuild-rdb orig replacements)
   (pp orig)
@@ -66,10 +91,10 @@
       ;; didn't change due to other replacements?)
       (aif (assq addr replacements)
            (record-as-absorbed it)
-           (if (compatible-operators-for? addr new orig read-traces)
+           (if (compatible-operators-for? addr new orig)
                ;; One?  Should be one...
                (rdb-trace-search-one orig addr record-as-absorbed record-as-resampled)
-               record-as-resampled))
+               (record-as-resampled)))
       ;; TODO I believe the fresh and stale log likelihoods
       ;; mentioned in Wingate, Stuhlmuller, Goodman 2008 are
       ;; actually a distraction, in that they always cancel against
