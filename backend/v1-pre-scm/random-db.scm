@@ -5,7 +5,8 @@
 (define-structure (rdb (safe-accessors #t))
   parent
   addresses
-  values)
+  records
+  record-hook)
 
 (define (rdb-trace-search trace addr win lose)
   (if (rdb? trace)
@@ -15,40 +16,57 @@
 
 (define (rdb-trace-search-one trace addr win lose)
   (let loop ((as (rdb-addresses trace))
-             (vs (rdb-values trace)))
+             (vs (rdb-records trace)))
     (cond ((null? as)
            (lose))
           ((eq? (car as) addr)
-           (win (car vs)))
+           (win (car (cddddr (car vs)))))
           (else (loop (cdr as) (cdr vs))))))
 
-(define (rdb-trace-store! trace addr val)
+(define (rdb-trace-store! trace addr thing)
   (set-rdb-addresses! trace (cons addr (rdb-addresses trace)))
-  (set-rdb-values! trace (cons val (rdb-values trace))))
+  (set-rdb-records! trace (cons thing (rdb-records trace))))
 
 (define (rdb-record! trace exp env addr read-traces answer)
-  (rdb-trace-store! trace addr answer))
+  (rdb-trace-store! trace addr (list exp env addr read-traces answer))
+  (aif (rdb-record-hook trace)
+       (it exp env addr read-traces answer)))
 
 (define (rdb-extend trace)
-  (make-rdb trace '() '()))
+  (make-rdb trace '() '() #f))
 
 (define (rdb-empty)
-  (make-rdb #f '() '()))
+  (make-rdb #f '() '() #f))
 
 ;;; Translation of the Lightweight MCMC algorithm to the present context
 
 (define (rebuild-rdb orig replacements)
+  (pp orig)
   (let ((new (rdb-extend (rdb-parent orig))))
+    (define (regeneration-hook exp env addr read-traces answer)
+      (pp exp))
+    (set-rdb-record-hook! new regeneration-hook)
     (for-each
      (lambda (addr record)
        ;; Order (not counting issues with coupled primitives) will be
        ;; enforced by evaluation recursion regardless of the order in
        ;; which the available expressions are traversed, provided the
        ;; replacement caches results.
-       (regenerate! exp env new addr read-traces replacements orig))
+       ;; However, I do need to order things so that defines get executed
+       ;; before lookups of those symbols.
+       ;; TODO: Mutation problem: define changes the evaluation environment!
+       (case* record
+         ((pair exp (pair env (pair addr (pair read-traces (pair answer null)))))
+          (eval exp env new addr read-traces))))
      ;; Walking over exactly the expressions already recorded is the
      ;; right thing, because it will not attempt to rerun the extend
      ;; node that contains the executing inference program itself.
-     (rdb-addresses orig)
-     (rdb-records orig))
+     (reverse (rdb-addresses orig))
+     (reverse (rdb-records orig)))
     new))
+
+#;
+`(begin
+   (define x (flip))
+   ,infer-defn
+   (infer (lambda (t) (rebuild-rdb t '()))))
