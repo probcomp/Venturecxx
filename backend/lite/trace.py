@@ -20,12 +20,9 @@ from scope import isScopeIncludeOutputPSP, isScopeExcludeOutputPSP
 from regen import regenAndAttach
 from detach import detachAndExtract
 from scaffold import constructScaffold
-from consistency import assertTorus
 from lkernel import DeterministicLKernel
 from psp import ESRRefOutputPSP
 from serialize import OrderedOmegaDB
-import random
-import numpy.random
 
 class Trace(object):
   def __init__(self):
@@ -412,10 +409,10 @@ class Trace(object):
         mixMH(self, BlockScaffoldIndexer(scope, block, useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs, updateValue=updateValue), MHOperator())
       elif operator == "subsampled_mh":
         (Nbatch, k0, epsilon, useDeltaKernels, deltaKernelArgs, updateValue) = exp[3:9]
-        subsampledMixMH(self, SubsampledBlockScaffoldIndexer(scope, block, useDeltaKernels, deltaKernelArgs, updateValue), SubsampledMHOperator(), Nbatch, k0, epsilon)
+        subsampledMixMH(self, SubsampledBlockScaffoldIndexer(scope, block, useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs, updateValue=updateValue), SubsampledMHOperator(), Nbatch, k0, epsilon)
       elif operator == "subsampled_mh_make_consistent":
         (useDeltaKernels, deltaKernelArgs, updateValue) = exp[3:6]
-        SubsampledMHOperator().makeConsistent(self,SubsampledBlockScaffoldIndexer(scope, block, useDeltaKernels, deltaKernelArgs, updateValue))
+        SubsampledMHOperator().makeConsistent(self,SubsampledBlockScaffoldIndexer(scope, block, useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs, updateValue=updateValue))
       elif operator == "meanfield":
         steps = int(exp[3])
         mixMH(self, BlockScaffoldIndexer(scope, block), MeanfieldOperator(steps, 0.0001))
