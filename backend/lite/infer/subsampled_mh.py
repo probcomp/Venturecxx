@@ -143,15 +143,15 @@ class SubsampledInPlaceOperator(InPlaceOperator):
     globalBorder = self.scaffold.globalBorder
     assert globalBorder is not None
 
-    # A safer but slower way to update values. It's now replaced by the the next
-    # updating lines but may be useful for debugging purpose.
+    # A safer but slower way to update values. It's now replaced by the next
+    # updating lines but may be useful for debugging purposes.
     #
     ## Detach and extract
-    #_,local_rhoDB = detachAndExtract(trace, local_scaffold.border[0], local_scaffold, compute_gradient)
+    # _,local_rhoDB = detachAndExtract(trace, local_scaffold.border[0], local_scaffold, compute_gradient)
     ## Regen and attach with the old value
-    #proposed_value = trace.valueAt(self.scaffold.globalBorder)
-    #trace.setValueAt(globalBorder, self.rhoDB.getValue(globalBorder))
-    #regenAndAttach(trace,local_scaffold,False,local_rhoDB,{})
+    # proposed_value = trace.valueAt(self.scaffold.globalBorder)
+    # trace.setValueAt(globalBorder, self.rhoDB.getValue(globalBorder))
+    # regenAndAttach(trace,local_scaffold,False,local_rhoDB,{})
 
     # Update with the old value.
     proposed_value = trace.valueAt(globalBorder)
