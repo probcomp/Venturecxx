@@ -27,10 +27,10 @@ class NormalDriftKernel(LKernel):
     return term1 + term2 + term3
 
 class MVNormalRandomWalkKernel(LKernel):
-  def __init__(self,epsilon = 0.7):
+  def __init__(self, epsilon = 0.7):
     self.epsilon = epsilon if epsilon is not None else 0.7
 
-  def simulate(self,trace,oldValue,args):
+  def simulate(self, _trace, oldValue, args):
     (mu, _) = MVNormalOutputPSP.__parse_args__(args)
     nu = scipy.stats.norm.rvs(0,self.epsilon,mu.shape)
     return oldValue + nu
