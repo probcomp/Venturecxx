@@ -126,8 +126,13 @@ class VentureSivm(object):
         except VentureException as e:
             if e.exception == "evaluation":
                 self.state='exception'
+                address = e.data['address'].asList()
+                del e.data['address']
+                
+                stack_trace = [self.resugar(index) for index in address]
+                e.data['stack_trace'] = stack_trace
+                
                 self.current_exception = e.to_json_object()
-                print e.data['address']
             if e.exception == "breakpoint":
                 self.state='paused'
                 self.current_exception = e.to_json_object()
@@ -175,7 +180,12 @@ class VentureSivm(object):
             self.breakpoint_dict[bid] = tmp_instruction
         return response
 
-
+    def resugar(self, index):
+        did = index[0]
+        exp = self.directive_dict[did]
+        index = index[1:]
+        return (macro.sugar_expression_index(exp, index), exp)
+    
     ###############################
     # Continuous Inference Pauser
     ###############################
