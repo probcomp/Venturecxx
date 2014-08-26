@@ -124,6 +124,11 @@
                  (read-traces (compound-read-traces oper)))
              (let ((env* (extend-env env formals opands))
                    (trace* cur-trace)
+                   ;; Hm.  This strategy means that addresses do not
+                   ;; directly depend on which compound got applied,
+                   ;; so if the operator changes, I will still have
+                   ;; the same addresses in the new body (until the
+                   ;; evaluation structure of the bodies diverges).
                    (addr* (extend-address addr 'app))
                    ;; This way, a compound procedure does not carry
                    ;; write permission to the trace in which it was
