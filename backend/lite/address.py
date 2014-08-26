@@ -18,6 +18,10 @@ class EmptyList(object):
 emptyList = EmptyList()
 
 class List(object):
+  """Functional list data structure.
+  Note that order is reversed from the traditional
+  scheme implementation. That is, insertion (via
+  append) is done at the end of the list."""
   
   def __init__(self, last, rest=emptyList):
     self.last = last
