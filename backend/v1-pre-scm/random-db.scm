@@ -45,12 +45,36 @@
 
 (define (rebuild-rdb orig replacements)
   (pp orig)
-  (let ((new (rdb-extend (rdb-parent orig))))
+  (let ((new (rdb-extend (rdb-parent orig)))
+        (log-weight 0))
+    (define (add-weight w)
+      (pp w)
+      (set! log-weight (+ log-weight w)))
     (define (regeneration-hook exp env addr read-traces answer)
       (pp exp)
+      (define new-value)
+      (define (record-as-resampled)
+        (set! new-value answer)) ; No weight
+      (define (record-as-absorbed val)
+        (set! new-value val)
+        ;; TODO Could optimize this not to recompute weights if the
+        ;; parameters did not change.
+        (add-weight (- (weight-for-at new-value addr new read-traces)
+                       (weight-at addr orig read-traces))))
+      ;; Assume that replacements are added judiciously, namely to
+      ;; random choices from the original trace (whose operators
+      ;; didn't change due to other replacements?)
       (aif (assq addr replacements)
-           (cdr it)
-           answer))
+           (record-as-absorbed it)
+           (if (compatible-operators-for? addr new orig read-traces)
+               ;; One?  Should be one...
+               (rdb-trace-search-one orig addr record-as-absorbed record-as-resampled)
+               record-as-resampled))
+      ;; TODO I believe the fresh and stale log likelihoods
+      ;; mentioned in Wingate, Stuhlmuller, Goodman 2008 are
+      ;; actually a distraction, in that they always cancel against
+      ;; the log likelihood of newly sampled randomness.
+      new-value)
     (set-rdb-record-hook! new regeneration-hook)
     (for-each
      (lambda (addr record)
@@ -75,4 +99,5 @@
 `(begin
    (define x (flip))
    ,infer-defn
-   (infer (lambda (t) (rebuild-rdb t '()))))
+   (infer (lambda (t) (rebuild-rdb t '())))
+   x)
