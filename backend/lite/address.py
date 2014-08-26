@@ -26,7 +26,7 @@ class List(object):
     self.rest = rest
   
   # FIXME: quadratic runtime :(
-  # needs python 3's "yield from"
+  # even python3's "yield from" doesn't work
   def __iter__(self):
     yield self.first
     for i in self.rest:
