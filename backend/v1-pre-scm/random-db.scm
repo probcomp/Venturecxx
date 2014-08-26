@@ -47,12 +47,23 @@
 ;;; Translation of the Lightweight MCMC algorithm to the present context
 
 (define (weight-at addr trace read-traces)
-  (rdb-trace-search-one trace addr
-   (lambda (v) (weight-for-at v addr trace read-traces))
+  (rdb-trace-search-one-record trace addr
+   (lambda (rec)
+     (weight-for-at (car (cdddr rec)) addr (car rec) trace read-traces))
    (lambda () (error "Trying to compute weight for a value that isn't there" addr))))
 
-(define (weight-for-at val addr trace read-traces)
-  0) ; TODO Something about the density methods of primitives
+(define (weight-for-at val addr exp trace read-traces)
+  ;; Expect exp for be an application
+  ;; Do not look for it in the trace itself because it may not have been recorded yet.
+  (let ((sub-vals (map (lambda (i)
+                         (traces-lookup (cons trace read-traces) (extend-address addr `(app-sub ,i))))
+                       (iota (length exp)))))
+    (if (not (primitive? (car sub-vals)))
+        (error "What!?"))
+    (if (not (primitive-log-density (car sub-vals)))
+        (error "What?!?"))
+    ((access apply system-global-environment)
+     (primitive-log-density (car sub-vals)) val (cdr sub-vals))))
 
 (define (compatible-operators-for? addr new-trace old-trace)
   (let ((op-addr (extend-address addr '(app-sub 0))))
@@ -84,7 +95,7 @@
         (set! new-value val)
         ;; TODO Could optimize this not to recompute weights if the
         ;; parameters did not change.
-        (add-weight (- (weight-for-at new-value addr new read-traces)
+        (add-weight (- (weight-for-at new-value addr exp new read-traces)
                        (weight-at addr orig read-traces))))
       ;; Assume that replacements are added judiciously, namely to
       ;; random choices from the original trace (whose operators
