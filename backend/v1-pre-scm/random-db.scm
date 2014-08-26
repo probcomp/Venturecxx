@@ -28,9 +28,12 @@
   (set-rdb-records! trace (cons thing (rdb-records trace))))
 
 (define (rdb-record! trace exp env addr read-traces answer)
-  (rdb-trace-store! trace addr (list exp env addr read-traces answer))
-  (aif (rdb-record-hook trace)
-       (it exp env addr read-traces answer)))
+  (let ((real-answer
+         (aif (rdb-record-hook trace)
+              (it exp env addr read-traces answer)
+              answer)))
+    (rdb-trace-store! trace addr (list exp env addr read-traces real-answer))
+    real-answer))
 
 (define (rdb-extend trace)
   (make-rdb trace '() '() #f))
@@ -44,7 +47,10 @@
   (pp orig)
   (let ((new (rdb-extend (rdb-parent orig))))
     (define (regeneration-hook exp env addr read-traces answer)
-      (pp exp))
+      (pp exp)
+      (aif (assq addr replacements)
+           (cdr it)
+           answer))
     (set-rdb-record-hook! new regeneration-hook)
     (for-each
      (lambda (addr record)

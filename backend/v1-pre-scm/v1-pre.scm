@@ -48,11 +48,9 @@
   (trace-search trace addr (lambda (v) v)
    (lambda ()
      (let ((answer (do-eval exp env trace addr read-traces)))
-       ;; And maybe metadata depending on what kind of trace it is.
-       ;; The metadata is presumably dependent on the structure of
-       ;; the thunk, so this abstraction will not endure
-       (record! trace exp env addr read-traces answer)
-       answer))))
+       ;; The trace can substitute the return value as well as
+       ;; recording
+       (record! trace exp env addr read-traces answer)))))
 
 (define (do-eval exp env trace addr read-traces)
   (case* exp
