@@ -40,7 +40,7 @@ def traveseScaffold(trace, scaffold):
       processScaffoldNode(parent, scaffold, pnodes, border_nodes, G, q)
       G.add_edge(parent, node, type = 'regular')
 
-  #TODO Add dotted arrow from request node to esrparent?
+  # TODO Add dotted arrow from request node to esrparent?
   return G
 
 def processScaffoldNode(node, scaffold, pnodes, border_nodes,
@@ -80,11 +80,12 @@ def drawScaffoldGraph(trace, G, labels=None):
   nx.draw_networkx(G, pos=pos, with_labels=True,
                    node_color=[color_map[data['type']] for (_,data) in G.nodes_iter(True)],
                    labels=labels)
-  ## Store variables. It's useful if furthur manipulation is needed from the caller.
-  #trace.G = G
-  #trace.labels = labels
-  #trace.cm = color_map
-  #trace.pos = pos
+  ## Store variables. It could be useful if further manipulation is
+  ## needed from the caller.
+  # trace.G = G
+  # trace.labels = labels
+  # trace.cm = color_map
+  # trace.pos = pos
 
 def nodeLabelDict(nodes, trace):
   # Inverse look up dict for node -> symbol from trace.globalEnv
