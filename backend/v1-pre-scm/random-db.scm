@@ -99,7 +99,7 @@
       ;; random choices from the original trace (whose operators
       ;; didn't change due to other replacements?)
       (aif (assq addr replacements)
-           (record-as-absorbed it)
+           (record-as-absorbed (cdr it))
            (if (compatible-operators-for? addr new orig)
                ;; One?  Should be one...
                (rdb-trace-search-one orig addr record-as-absorbed record-as-resampled)
@@ -164,7 +164,7 @@
 (define (mcmc-step trace)
   (let* ((target-addr (select-uniformly (random-choices trace)))
          (proposed-value (prior-resimulate target-addr trace))
-         (replacements `((target-addr . proposed-value))))
+         (replacements `((,target-addr . ,proposed-value))))
     (receive (new-trace weight)
       (rebuild-rdb trace replacements)
       (let ((correction (- (log (length (random-choices trace)))
