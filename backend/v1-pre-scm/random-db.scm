@@ -198,3 +198,10 @@
             (pp (list x1 x2))
             (infer mcmc-step)))
         '(1 2 3 4)))
+
+#;
+`(begin
+   (define is-trick? (flip 0.1))
+   (define weight (if is-trick? (uniform 0 1) 0.5))
+   (define coin (lambda () (flip weight)))
+   (list weight (coin) (coin) (coin) (coin) (coin)))
