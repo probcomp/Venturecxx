@@ -2,6 +2,7 @@ import random
 import math
 import numpy as np
 import scipy.stats as stats
+from ..value import SPRef
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
 from ..node import LookupNode, OutputNode
@@ -31,12 +32,14 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
 
   alpha = global_xiMix + logGlobalAlpha - global_rhoMix
 
-  N = float(global_index.N)
-  if N == 0:
+  if global_index.globalBorder is None:
     # No local sections. Regular MH.
     accept = alpha > log_u
   else:
     # Austerity MH.
+    N = float(global_index.N)
+    assert N > 1
+
     mu_0 = (log_u - alpha) / N
     perm_local_chidren = np.random.permutation(global_index.local_children)
 
@@ -78,7 +81,10 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
         # For the last minibatch 1 - n / N = 0.
         sx = np.sqrt((1 - (n - 1) / (N - 1)) * (mx2 - mx * mx) / (n - 1))
         # Compute q: p-value
-        q = stats.t.cdf((mx - mu_0) / sx, n - 1) # p-value
+        if sx == 0:
+          q = 1 if mx >= mu_0 else 0
+        else:
+          q = stats.t.cdf((mx - mu_0) / sx, n - 1) # p-value
         if q <= epsilon:
           accept = False
           break
@@ -120,6 +126,7 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
         break
       node = nextNode
     self.globalBorder = globalBorder
+    assert not isinstance(trace.valueAt(globalBorder), SPRef)
 
     index = constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs,updateValues=False)
 

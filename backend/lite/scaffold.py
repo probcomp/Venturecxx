@@ -287,8 +287,9 @@ def constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKerne
     updateValuesAtScaffold(trace,scaffold,set())
 
   scaffold.globalBorder = globalBorder
-  scaffold.local_children = list(trace.childrenAt(globalBorder)) if globalBorder is not None else []
-  scaffold.N = len(scaffold.local_children)
+  if globalBorder is not None:
+    scaffold.local_children = list(trace.childrenAt(globalBorder))
+    scaffold.N = len(scaffold.local_children)
   return scaffold
 
 def extendCandidateScaffoldGlobalSection(trace,pnodes,globalBorder,drg,absorbing,aaa,indexAssignments,i):
