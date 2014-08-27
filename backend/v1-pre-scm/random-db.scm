@@ -83,7 +83,7 @@
   (let ((new (rdb-extend (rdb-parent orig)))
         (log-weight 0))
     (define (add-weight w)
-      (pp w)
+      ; (pp w)
       (set! log-weight (+ log-weight w)))
     (define (regeneration-hook exp env addr read-traces answer)
       (define new-value)
@@ -162,6 +162,7 @@
    (lambda () (error "What?"))))
 
 (define (mcmc-step trace)
+  (pp 'inferring)
   (let* ((target-addr (select-uniformly (random-choices trace)))
          (proposed-value (prior-resimulate target-addr trace))
          (replacements `((,target-addr . ,proposed-value))))
@@ -183,3 +184,17 @@
    (pp x)
    (infer (lambda (t) (mcmc-step t)))
    x)
+
+;; This one exhibits eponential behavior, because each infer command
+;; reruns the entire program -- including all previous infer commands!
+#;
+`(begin
+   (define x1 (flip))
+   (define x2 (flip))
+   ,infer-defn
+   ,map-defn
+   (map (lambda (i)
+          (begin
+            (pp (list x1 x2))
+            (infer mcmc-step)))
+        '(1 2 3 4)))
