@@ -11,6 +11,16 @@
                              0.5
                              (if val weight (- 1 weight)))))))
 
+(define uniform
+  (make-primitive
+   (lambda (low high)
+     (+ low (random (exact->inexact (- high low)))))
+   (lambda (val low high)
+     (if (< low val high)
+         (- (log (- high low)))
+         -1e200 ; Poor man's negative infinity
+         ))))
+
 (define infer-defn
   '(define infer
      (lambda (prog)
