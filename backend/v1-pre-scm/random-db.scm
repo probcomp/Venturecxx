@@ -198,9 +198,22 @@
             (infer mcmc-step)))
         '(1 2 3 4)))
 
+;; VKM says that the solution to this is not to trace ext nodes.  If
+;; ext is restricted to appear only at applications, then you can
+;; still rerun the procedure if you need to because you have the
+;; source code, but you don't introspect on its interior.
+
 #;
 `(begin
    (define is-trick? (flip 0.1))
    (define weight (if is-trick? (uniform 0 1) 0.5))
    (define coin (lambda () (flip weight)))
-   (list weight (coin) (coin) (coin) (coin) (coin)))
+   (define answer (list weight (coin) (coin) (coin) (coin) (coin)))
+   ,infer-defn
+   (infer mcmc-step))
+
+;;; On observations: VKM argues that requiring observe to accept only
+;;; a constant (!) (wrt current trace) procedure that has a density as
+;;; the top expression is fine, for deep philosophical reasons.  The
+;;; extra flexibility afforded by nesting and inference programming
+;;; may go a long way to alleviating the trouble that causes.
