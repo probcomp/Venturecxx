@@ -80,14 +80,12 @@
      (lambda () #f))))
 
 (define (rebuild-rdb orig replacements)
-  (pp orig)
   (let ((new (rdb-extend (rdb-parent orig)))
         (log-weight 0))
     (define (add-weight w)
       (pp w)
       (set! log-weight (+ log-weight w)))
     (define (regeneration-hook exp env addr read-traces answer)
-      (pp exp)
       (define new-value)
       (define (record-as-resampled)
         (set! new-value answer)) ; No weight
@@ -129,11 +127,59 @@
      ;; node that contains the executing inference program itself.
      (reverse (rdb-addresses orig))
      (reverse (rdb-records orig)))
-    new))
+    (values new log-weight)))
+
+(define (random-choice? addr trace)
+  ;; TODO Ignores possibility of constraints induced by observations.
+  (rdb-trace-search-one
+   trace (extend-address addr '(app-sub 0))
+   (lambda (op)
+     (and (primitive? op)
+          (primitive-log-density op)))
+   (lambda () #f)))
+
+(define (random-choices trace)
+  (filter (lambda (a) (random-choice? a trace)) (rdb-addresses trace)))
+
+(define (select-uniformly items)
+  (let ((index (random (length items))))
+    (list-ref items index)))
+
+(define (prior-resimulate-exp addr exp trace)
+  (let ((sub-vals (map (lambda (i)
+                         (traces-lookup (list trace) (extend-address addr `(app-sub ,i))))
+                       (iota (length exp)))))
+    (if (not (primitive? (car sub-vals)))
+        (error "What!?"))
+    ((access apply system-global-environment)
+     (primitive-simulate (car sub-vals)) (cdr sub-vals))))
+
+(define (prior-resimulate addr trace)
+  (rdb-trace-search-one-record
+   trace addr
+   (lambda (rec)
+     (prior-resimulate-exp addr (car rec) trace))
+   (lambda () (error "What?"))))
+
+(define (mcmc-step trace)
+  (let* ((target-addr (select-uniformly (random-choices trace)))
+         (proposed-value (prior-resimulate target-addr trace))
+         (replacements `((target-addr . proposed-value))))
+    (receive (new-trace weight)
+      (rebuild-rdb trace replacements)
+      (let ((correction (- (log (length (random-choices trace)))
+                           (log (length (random-choices new-trace))))))
+        (if (< (log (random 1.0)) (+ weight correction))
+            (rdb-trace-commit! new-trace trace))))))
+
+(define (rdb-trace-commit! from to)
+  (set-rdb-addresses! to (rdb-addresses from))
+  (set-rdb-records! to (rdb-records from)))
 
 #;
 `(begin
    (define x (flip))
    ,infer-defn
-   (infer (lambda (t) (rebuild-rdb t '())))
+   (pp x)
+   (infer (lambda (t) (mcmc-step t)))
    x)
