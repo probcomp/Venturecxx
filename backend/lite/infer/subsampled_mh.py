@@ -121,15 +121,15 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
       node = nextNode
     self.globalBorder = globalBorder
 
-    index = constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs,updateValue=False)
+    index = constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs,updateValues=False)
 
     return index
 
   def sampleLocalIndex(self,trace,local_child):
     assert isinstance(local_child, LookupNode) or isinstance(local_child, OutputNode)
     setsOfPNodes = [set([local_child])]
-    # Set updateValue = False because we'll update values in evalOneLocalSection.
-    return constructScaffold(trace,setsOfPNodes,updateValue=False)
+    # Set updateValues = False because we'll update values in evalOneLocalSection.
+    return constructScaffold(trace,setsOfPNodes,updateValues=False)
 
   def name(self):
     return ["subsampled_scaffold", self.scope, self.block] + ([self.interval] if self.interval is not None else []) + ([self.true_block] if hasattr(self, "true_block") else [])

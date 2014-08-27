@@ -111,26 +111,25 @@ def update(trace, node):
   applyPSP(trace,node,scaffold,False,omegaDB,{})
 
 
-def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False, deltaKernelArgs = None, updateValue = False, updatedNodes = None):
-  if updatedNodes is None:
-    updatedNodes = set()
-  while True:
-    cDRG,cAbsorbing,cAAA = set(),set(),set()
-    indexAssignments = {}
-    assert isinstance(setsOfPNodes,list)
-    for i in range(len(setsOfPNodes)):
-      assert isinstance(setsOfPNodes[i],set)
-      extendCandidateScaffold(trace,setsOfPNodes[i],cDRG,cAbsorbing,cAAA,indexAssignments,i)
+def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False, deltaKernelArgs = None, updateValues = False, updatedNodes = None):
+  cDRG,cAbsorbing,cAAA = set(),set(),set()
+  indexAssignments = {}
+  assert isinstance(setsOfPNodes,list)
+  for i in range(len(setsOfPNodes)):
+    assert isinstance(setsOfPNodes[i],set)
+    extendCandidateScaffold(trace,setsOfPNodes[i],cDRG,cAbsorbing,cAAA,indexAssignments,i)
 
-    brush = findBrush(trace,cDRG)
-    drg,absorbing,aaa = removeBrush(cDRG,cAbsorbing,cAAA,brush)
-    border = findBorder(trace,drg,absorbing,aaa)
-    regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
-    lkernels = loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs)
-    borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
-    scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
-    if not updateValue or not updateValuesAtScaffold(trace,scaffold,updatedNodes):
-      break
+  brush = findBrush(trace,cDRG)
+  drg,absorbing,aaa = removeBrush(cDRG,cAbsorbing,cAAA,brush)
+  border = findBorder(trace,drg,absorbing,aaa)
+  regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
+  lkernels = loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs)
+  borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
+  scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
+
+  if updateValues:
+    updateValuesAtScaffold(trace,scaffold,set())
+
   return scaffold
 
 def addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i):
@@ -265,7 +264,7 @@ def assignBorderSequnce(border,indexAssignments,numIndices):
     borderSequence[indexAssignments[node]].append(node)
   return borderSequence
 
-def constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKernels = False, deltaKernelArgs = None, updateValue = False):
+def constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKernels = False, deltaKernelArgs = None, updateValues = False):
   cDRG,cAbsorbing,cAAA = set(),set(),set()
   indexAssignments = {}
   assert isinstance(setsOfPNodes,list)
@@ -284,9 +283,8 @@ def constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKerne
   lkernels = loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs)
   borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
   scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
-  if updateValue:
-    updatedNodes = set()
-    updateValuesAtScaffold(trace,scaffold,updatedNodes)
+  if updateValues:
+    updateValuesAtScaffold(trace,scaffold,set())
 
   scaffold.globalBorder = globalBorder
   scaffold.local_children = list(trace.childrenAt(globalBorder)) if globalBorder is not None else []
