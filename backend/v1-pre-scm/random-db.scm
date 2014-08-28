@@ -180,7 +180,7 @@
   (pp 'inferring)
   (let* ((target-addr (select-uniformly (random-choices trace)))
          (proposed-value (prior-resimulate target-addr trace))
-         (replacements `((,target-addr . ,proposed-value))))
+         (replacements (cons `(,target-addr . ,proposed-value) (rdb-constraints trace))))
     (receive (new-trace weight) (rebuild-rdb trace replacements)
       (let ((correction (- (log (length (random-choices trace)))
                            (log (length (random-choices new-trace))))))
