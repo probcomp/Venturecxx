@@ -21,23 +21,23 @@ def testPeekSmoke2():
   return reportKnownContinuous(cdf, predictions, "N(0,1)")
 
 @statisticalTest
-@on_inf_prim("peek_all") # Technically also resample and MH, but not testing them
+@on_inf_prim("peek") # Technically also resample and MH, but not testing them
 def testPeekAllSmoke1():
   ripl = get_ripl()
   ripl.infer("(resample 2)")
   ripl.assume("x", "(normal 0 1)")
-  predictionss = ripl.infer("(cycle ((mh default one 1) (peek_all x)) %s)" % default_num_samples())['x']
+  predictionss = ripl.infer("(cycle ((mh default one 1) (peek x)) %s)" % default_num_samples())['x']
   for item in predictionss:
     assert len(item) == 2
   cdf = stats.norm(loc=0.0, scale=1.0).cdf
   return reportKnownContinuous(cdf, [i[0] for i in predictionss], "N(0,1)")
 
 @statisticalTest
-@on_inf_prim("peek_all") # Technically also resample, but not testing it
+@on_inf_prim("peek") # Technically also resample, but not testing it
 def testPeekAllSmoke2():
   ripl = get_ripl()
   ripl.infer("(resample 2)")
-  predictionss = ripl.infer("(cycle ((peek_all (normal 0 1) x)) %s)" % default_num_samples())['x']
+  predictionss = ripl.infer("(cycle ((peek (normal 0 1) x)) %s)" % default_num_samples())['x']
   for item in predictionss:
     assert len(item) == 2
   cdf = stats.norm(loc=0.0, scale=1.0).cdf

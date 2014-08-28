@@ -62,7 +62,7 @@ def get_mripl(no_ripls=2,local_mode=None,**kwargs):
   backend = config["get_ripl"]
   local_mode = config["get_mripl_local_mode"] if local_mode is None else local_mode
   return ip_parallel.MRipl(no_ripls,backend=backend,local_mode=local_mode,**kwargs)
-  
+
 
 def get_core_sivm():
   return s.backend(config["get_ripl"]).make_core_sivm()
@@ -223,7 +223,7 @@ values are:
 
   "mh", "func_mh", "gibbs", "emap", "pgibbs", "func_pgibbs",
   "meanfield", "hmc", "map", "nesterov", "rejection", "slice", or
-  "slice_doubling", "resample", "peek", "peek_all", "plotf"
+  "slice_doubling", "resample", "peek", "plotf"
          for that inference primitive
   "none" for a primitive-independent test (i.e., does not test inference meaningfully)
   "any"  for a primitive-agnostic test (i.e., should work the same for
@@ -273,7 +273,7 @@ Possible values are:
 
   "mh", "func_mh", "gibbs", "emap", "pgibbs", "func_pgibbs",
   "meanfield", "hmc", "map", "nesterov", "rejection", "slice", or
-  "slice_doubling", "resample", "peek", "peek_all", "plotf"
+  "slice_doubling", "resample", "peek", "plotf"
          for that inference primitive
   "none" for primitive-independent tests (i.e., do not test inference meaningfully)
   "any"  for primitive-agnostic tests (i.e., should work the same for
