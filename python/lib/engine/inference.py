@@ -33,12 +33,15 @@ class Infer(object):
     if self.result is not None: self.result._append_to_data()
     return self.result
 
-  def _init_peek(self, names):
+  def _init_peek(self, names, exprs):
     if self.result is None:
       self.result = InferResult(first_command = 'peek')
-    if self.result._peek_names is None:
-      self.result._init_peek(names)
-    elif names != self.result._peek_names:
+    if self.result._spec_peek is None:
+      self.result._init_peek(names, exprs)
+    elif (names == self.result._spec_peek['names'] and
+          exprs == self.result._spec_peek['exprs']):
+      pass
+    else:
       raise Exception("Cannot issue multiple peek commands in the same inference program")
 
   def _init_plot(self, spec, names, exprs):
@@ -53,15 +56,18 @@ class Infer(object):
     else:
       raise Exception("Cannot plot with different specs in the same inference program")
 
-  def _init_print(self, names):
+  def _init_print(self, names, exprs):
     if self.result is None:
       self.result = InferResult(first_command = 'printf')
-    if self.result._print_names is None:
-      self.result._init_print(names)
-    elif names != self.result._print_names:
+    if self.result._spec_print is None:
+      self.result._init_print(names, exprs)
+    elif (names == self.result._spec_print['names'] and
+          exprs == self.result._spec_print['exprs']):
+      pass
+    else:
       # In order to count iterations, can only have one printf call
       # This will still multi-count interations if you enter the identical printf command multiple times
-      raise Exception("Cannot have multiple printf commands in same inference program")
+      raise Exception("Cannot issue multiple printf commands in same inference program")
 
   def default_name_for_exp(self,exp):
     if isinstance(exp, basestring):
@@ -79,7 +85,7 @@ class Infer(object):
   def incorporate(self): pass # Since we incorporate at the beginning anyway
   def peek(self, *exprs):
     names = self.default_names_from_exprs(exprs)
-    self._init_peek(names)
+    self._init_peek(names, exprs)
     self.result.add_data(self.engine, 'peek')
   def plotf(self, spec, *exprs): # This one only works from the "plotf" SP.
     spec = ExpressionType().asPython(spec)
@@ -88,7 +94,7 @@ class Infer(object):
     self.result.add_data(self.engine, 'plotf')
   def printf(self, *exprs):
     names = self.default_names_from_exprs(exprs)
-    self._init_print(names)
+    self._init_print(names, exprs)
     self.result.add_data(self.engine, 'printf')
     self.result.print_data()
 
@@ -112,18 +118,18 @@ class InferResult(object):
     self.sweep = 0
     self.time = time.time()
     self._first_command = first_command
-    self._print_names = None
-    self._peek_names = None
+    self._spec_print = None
+    self._spec_peek = None
     self.spec_plot = None
 
   def _init_plot(self, spec, names, exprs):
     self.spec_plot = SpecPlot(spec, names, exprs)
 
-  def _init_print(self, names):
-    self._print_names = names
+  def _init_print(self, names, exprs):
+    self._spec_print = {'names' : names, 'exprs' : exprs}
 
-  def _init_peek(self, names):
-    self._peek_names = names
+  def _init_peek(self, names, exprs):
+    self._spec_peek = {'names' : names, 'exprs' : exprs}
 
   def add_data(self, engine, command):
     # if it's the first command, add all the default fields and increment the counter
@@ -155,19 +161,21 @@ class InferResult(object):
 
   def _collect_data(self, engine, command):
     if command == 'printf':
-      names = self._print_names
+      names = self._spec_print['names']
+      exprs = self._spec_print['exprs']
     elif command == 'peek':
-      names = self._peek_names
+      names = self._spec_peek['names']
+      exprs = self._spec_peek['exprs']
     else:
       names = self.spec_plot.names
-    exprs = [ExpressionType().asVentureValue(name).asStackDict()
-             for name in names]
-    for name, expr in zip(names, exprs):
+      exprs = self.spec_plot.exprs
+    stack_dicts = [x.asStackDict() for x in exprs]
+    for name, stack_dict in zip(names, stack_dicts):
       if name not in self._this_data:
-        self._this_data[name] = engine.sample_all(expr)
+        self._this_data[name] = engine.sample_all(stack_dict)
 
   def print_data(self):
-    for name in self._print_names:
+    for name in self._spec_print['names']:
       if name == 'counter':
         print 'Sweep count: {0}'.format(self.sweep)
       elif name == 'time':
