@@ -103,7 +103,7 @@ class InferResult(object):
   See the SpecPlot class for more information on the arguments to plotf and
   the corresponding output.
   The dataset() method returns all data requested by any of the above commands
-  as a Pandas DataFrame. By default, this data frame will always includes the
+  as a Pandas DataFrame. By default, this data frame will always include the
   sweep count, particle id, wall time, and global log score.
   Calling print will generate all plots stored in the spec_plot attribute. This
   attribute in turn is a SpecPlot object.
