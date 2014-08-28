@@ -86,17 +86,17 @@ class Infer(object):
   def peek(self, *exprs):
     names = self.default_names_from_exprs(exprs)
     self._init_peek(names, exprs)
-    self.result.add_data(self.engine, 'peek')
+    self.result._add_data(self.engine, 'peek')
   def printf(self, *exprs):
     names = self.default_names_from_exprs(exprs)
     self._init_print(names, exprs)
-    self.result.add_data(self.engine, 'printf')
+    self.result._add_data(self.engine, 'printf')
     self.result.print_data()
   def plotf(self, spec, *exprs): # This one only works from the "plotf" SP.
     spec = ExpressionType().asPython(spec)
     names = self.default_names_from_exprs(exprs)
     self._init_plot(spec, names, exprs)
-    self.result.add_data(self.engine, 'plotf')
+    self.result._add_data(self.engine, 'plotf')
 
 class InferResult(object):
   '''
@@ -131,7 +131,7 @@ class InferResult(object):
   def _init_plot(self, spec, names, exprs):
     self.spec_plot = SpecPlot(spec, names, exprs)
 
-  def add_data(self, engine, command):
+  def _add_data(self, engine, command):
     # if it's the first command, add all the default fields and increment the counter
     if command == self._first_command:
       self.sweep += 1
