@@ -20,6 +20,7 @@ def traverseScaffold(trace, scaffold):
   G = nx.DiGraph()
   pnodes = scaffold.getPrincipalNodes()
   border_nodes = set([node for node_list in scaffold.border for node in node_list])
+  border_nodes = border_nodes.union(scaffold.absorbing)
 
   # Depth first search.
   q = list(pnodes)
@@ -54,10 +55,11 @@ def processScaffoldNode(node, scaffold, pnodes, border_nodes,
     type = 'aaa'
   elif scaffold.isBrush(node):
     type = 'brush'
+  elif scaffold.isResampling(node):
+    # Resampling nodes in the border are drawn as DRG nodes.
+    type = 'drg'
   elif node in border_nodes:
     type = 'border'
-  elif scaffold.isResampling(node):
-    type = 'drg'
   else:
     type = 'other'
   G.add_node(node, type = type)

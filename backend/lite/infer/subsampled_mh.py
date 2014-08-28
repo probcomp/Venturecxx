@@ -85,10 +85,11 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
           q = 1 if mx >= mu_0 else 0
         else:
           q = stats.t.cdf((mx - mu_0) / sx, n - 1) # p-value
-        if q <= epsilon:
+        # If epsilon = 0, keep drawing until n reaches N even if sx = 0.
+        if q < epsilon:
           accept = False
           break
-        elif q >= 1 - epsilon:
+        elif q > 1 - epsilon:
           accept = True
           break
     assert accept is not None
@@ -97,6 +98,10 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
     operator.accept() # May mutate trace
   else:
     operator.reject() # May mutate trace
+
+  # DEBUG
+  # if global_index.globalBorder:
+  #   operator.makeConsistent(trace,indexer)
 
 class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
   def sampleGlobalIndex(self,trace):
@@ -127,15 +132,20 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
           # The global border can not have children other than lookup or output node.
           maybeBorder = False
       if numLONode > 1:
-        assert maybeBorder
         globalBorder.append(node)
         break
       node = nextNode
     self.globalBorder = globalBorder
     assert len(globalBorder) <= 1
     if globalBorder:
-      assert not isinstance(trace.valueAt(globalBorder[0]), SPRef)
-      assert not trace.pspAt(globalBorder[0]).childrenCanAAA()
+      # assert maybeBorder
+      # assert not isinstance(trace.valueAt(globalBorder[0]), SPRef)
+      # assert not trace.pspAt(globalBorder[0]).childrenCanAAA()
+      if not (maybeBorder and 
+          not isinstance(trace.valueAt(globalBorder[0]), SPRef) and
+          not trace.pspAt(globalBorder[0]).childrenCanAAA()):
+        # Is not a valid globalBorder. Revert to regular MH.
+        globalBorder = []
 
     # Construct the bounded scaffold.
     index = constructScaffold(trace,setsOfPNodes,useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs,hardBorder=globalBorder,updateValues=self.updateValues)
@@ -201,10 +211,11 @@ class SubsampledInPlaceOperator(InPlaceOperator):
     # This is to be called at the end of a number of transitions.
     if not hasattr(self, "scaffold"):
       self.scaffold = indexer.sampleGlobalIndex(trace)
-    for local_child in self.scaffold.local_children:
-      local_scaffold = indexer.sampleLocalIndex(trace,local_child)
-      _,local_rhoDB = detachAndExtract(trace, local_scaffold)
-      regenAndAttach(trace,local_scaffold,False,local_rhoDB,{})
+    if self.scaffold.globalBorder:
+      for local_child in self.scaffold.local_children:
+        local_scaffold = indexer.sampleLocalIndex(trace,local_child)
+        _,local_rhoDB = detachAndExtract(trace, local_scaffold)
+        regenAndAttach(trace,local_scaffold,False,local_rhoDB,{})
 
 #### Subsampled_MH Operator
 #### Resampling from the prior
