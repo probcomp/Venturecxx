@@ -91,6 +91,18 @@ class Infer(object):
 class InferResult(object):
   '''
   Returned if any of "peek", "plotf", "printf" issued in an "infer" command.
+  There may be at most one of each command per inference program.
+  The "peek" command may give any number of model expressions. These will
+  be recorded.
+  Similarly, the "printf" command may give any number of model expressions, which
+  will be recorded and printed as output on each iteration.
+  See the SpecPlot class for more information on the arguments to plotf and
+  the corresponding output.
+  The dataset() method returns all data requested by any of the above commands
+  as a Pandas DataFrame. By default, this data frame will always includes the
+  sweep count, particle id, wall time, and global log score.
+  Calling print will generate all plots stored in the spec_plot attribute. This
+  attribute in turn is a SpecPlot object.
   '''
   def __init__(self, first_command):
     self.sweep = 0
