@@ -76,12 +76,13 @@ class Infer(object):
     self._init_peak(names)
     self.result.add_data(self.engine, 'peek')
   def plotf(self, spec, *exprs): # This one only works from the "plotf" SP.
+    from dw_utils.debug import set_trace; set_trace()
     spec = ExpressionType().asPython(spec)
-    exprs = [ExpressionType().asVentureValue(e).asStackDict() for e in exprs]
     names = [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
     self._init_plot(spec, names, exprs)
     self.result.add_data(self.engine, 'plotf')
   def printf(self, *exprs):
+    from dw_utils.debug import set_trace; set_trace()
     names = [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
     self._init_print(names)
     self.result.add_data(self.engine, 'printf')
@@ -135,17 +136,17 @@ class InferResult(object):
   def _collect_data(self, engine, command):
     if command == 'printf':
       names = self.print_names
-      exps = [ExpressionType().asVentureValue(name).asStackDict()
+      exprs = [ExpressionType().asVentureValue(name).asStackDict()
               for name in names]
     elif command == 'peek':
       names = self.peek_names
-      exps = [ExpressionType().asVentureValue(name).asStackDict()
+      exprs = [ExpressionType().asVentureValue(name).asStackDict()
               for name in self.peek_names]
       names = self.peek_names
     else:
       names = self.spec_plot.names
-      exps = self.spec_plot.exps
-    for name, expr in zip(names, exps):
+      exprs = self.spec_plot.exprs
+    for name, expr in zip(names, exprs):
       if name not in self.this_data:
         self.this_data[name] = engine.sample_all(expr)
 
