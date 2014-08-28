@@ -1,6 +1,8 @@
 import math
 from nose.tools import eq_
 import scipy.stats
+import numpy as np
+from numpy.testing import assert_array_equal
 
 from venture.test.config import get_ripl, default_num_samples, default_num_transitions_per_sample, on_inf_prim
 from venture.test.stats import statisticalTest, reportKnownContinuous
@@ -32,18 +34,31 @@ def testForget():
 def testPeekOutput():
   '''Make sure that execute_program returns results from peek commands'''
   ripl = get_ripl()
-  prog = programString('[INFER (cycle ((peek mu) (peek sigma) (mh default one 5)) 5)]')
+  prog = programString('[INFER (cycle ((peek mu sigma) (mh default one 5)) 5)]')
+  ripl.infer('(resample 3)')
   res = ripl.execute_program(prog)[-1]['value']
-  eq_(set(res.keys()), {'mu', 'sigma'})
-  eq_(len(res['mu']), 5)
-  eq_(len(res['sigma']), 5)
+  assert 'mu' in res.dataset()
+  assert 'sigma' in res.dataset()
+  eq_(res.dataset().shape[0], 15)
+  assert_array_equal(res.dataset().particle.unique(), np.arange(3))
+
+def testPeekFunction():
+  '''
+  Make sure that calling peak on a function evaluation doesn't break
+  '''
+  ripl = get_ripl()
+  ripl.assume('x', '(lambda() 2)')
+  res = ripl.infer('(cycle ((mh default one 1) (peek (x))) 1)')
 
 def testPlotfOutput():
   '''Make sure that execute_program returns result form plotf commands'''
   ripl = get_ripl()
   prog = programString('[INFER (cycle ((plotf p0d1d mu sigma) (mh default one 5)) 5)]')
   res = ripl.execute_program(prog)[-1]['value']
-  assert type(res) is SpecPlot
+  assert type(res.spec_plot) is SpecPlot
+  assert 'mu' in res.dataset()
+  assert 'sigma' in res.dataset()
+  eq_(res.dataset().shape[0], 5)
 
 def programString(infer):
   prog = '''
