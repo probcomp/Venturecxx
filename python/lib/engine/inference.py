@@ -32,9 +32,9 @@ class Infer(object):
   def _init_peek(self, names):
     if self.result is None:
       self.result = InferResult(first_command = 'peek')
-    if self.result.peek_names is None:
+    if self.result._peek_names is None:
       self.result._init_peek(names)
-    elif names != self.result.peek_names:
+    elif names != self.result._peek_names:
       raise Exception("Cannot issue multiple peek commands in the same inference program")
 
   def _init_plot(self, spec, names, exprs):
@@ -52,9 +52,9 @@ class Infer(object):
   def _init_print(self, names):
     if self.result is None:
       self.result = InferResult(first_command = 'printf')
-    if self.result.print_names is None:
+    if self.result._print_names is None:
       self.result._init_print(names)
-    elif names != self.result.print_names:
+    elif names != self.result._print_names:
       # In order to count iterations, can only have one printf call
       # This will still multi-count interations if you enter the identical printf command multiple times
       raise Exception("Cannot have multiple printf commands in same inference program")
@@ -89,26 +89,29 @@ class Infer(object):
     self.result.print_data()
 
 class InferResult(object):
+  '''
+  Returned if any of "peek", "plotf", "printf" issued in an "infer" command.
+  '''
   def __init__(self, first_command):
     self.sweep = 0
     self.time = time.time()
-    self.first_command = first_command
-    self.print_names = None
-    self.peek_names = None
+    self._first_command = first_command
+    self._print_names = None
+    self._peek_names = None
     self.spec_plot = None
 
   def _init_plot(self, spec, names, exprs):
     self.spec_plot = SpecPlot(spec, names, exprs)
 
   def _init_print(self, names):
-    self.print_names = names
+    self._print_names = names
 
   def _init_peek(self, names):
-    self.peek_names = names
+    self._peek_names = names
 
   def add_data(self, engine, command):
     # if it's the first command, add all the default fields and increment the counter
-    if command == self.first_command:
+    if command == self._first_command:
       self.sweep += 1
       self.append_to_data()
       self._collect_default_streams(engine)
@@ -135,14 +138,14 @@ class InferResult(object):
 
   def _collect_data(self, engine, command):
     if command == 'printf':
-      names = self.print_names
+      names = self._print_names
       exprs = [ExpressionType().asVentureValue(name).asStackDict()
               for name in names]
     elif command == 'peek':
-      names = self.peek_names
+      names = self._peek_names
       exprs = [ExpressionType().asVentureValue(name).asStackDict()
-              for name in self.peek_names]
-      names = self.peek_names
+              for name in self._peek_names]
+      names = self._peek_names
     else:
       names = self.spec_plot.names
       exprs = self.spec_plot.exprs
@@ -151,7 +154,7 @@ class InferResult(object):
         self.this_data[name] = engine.sample_all(expr)
 
   def print_data(self):
-    for name in self.print_names:
+    for name in self._print_names:
       if name == 'counter':
         print 'Sweep count: {0}'.format(self.sweep)
       elif name == 'time':
