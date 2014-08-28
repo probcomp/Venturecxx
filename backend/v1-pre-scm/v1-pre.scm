@@ -157,6 +157,8 @@
 (define (env-bind! env sym addr)
   (set-env-frame-symbols! env (cons sym (env-frame-symbols env)))
   (set-env-frame-addresses! env (cons addr (env-frame-addresses env))))
+(define (env-lookup env symbol)
+  (env-search env symbol (lambda (a) a) (lambda () #f)))
 
 ;;; Traces
 
@@ -182,6 +184,11 @@
 (define (record! trace exp env addr read-traces answer)
   (cond ((rdb? trace)
          (rdb-record! trace exp env addr read-traces answer))
+        (else (error "Unknown trace type" trace))))
+
+(define (record-constraint! trace addr value)
+  (cond ((rdb? trace)
+         (rdb-record-constraint! trace addr value))
         (else (error "Unknown trace type" trace))))
 
 (define (trace-extend trace)

@@ -27,3 +27,14 @@
        (begin
          (define t (get-current-trace))
          (ext (prog t))))))
+
+(define observe-defn
+  '(define observe
+     (lambda (found desired)
+       (begin
+         (define t (get-current-trace))
+         (define e (get-current-environment))
+         (define addr (env-lookup e 'found))
+         ;; When inference reruns the program, it will re-record the
+         ;; constraint.  That might be fine.
+         (record-constraint! t addr desired)))))

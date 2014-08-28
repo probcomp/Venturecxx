@@ -6,6 +6,7 @@
   parent
   addresses
   records
+  constraints
   record-hook)
 
 (define (rdb-trace-search trace addr win lose)
@@ -38,11 +39,14 @@
     (rdb-trace-store! trace addr (list exp env addr read-traces real-answer))
     real-answer))
 
+(define (rdb-record-constraint! trace addr value)
+  (set-rdb-constraints! trace (cons (cons addr value) (rdb-constraints trace))))
+
 (define (rdb-extend trace)
-  (make-rdb trace '() '() #f))
+  (make-rdb trace '() '() '() #f))
 
 (define (rdb-empty)
-  (make-rdb #f '() '() #f))
+  (make-rdb #f '() '() '() #f))
 
 ;;; Translation of the Lightweight MCMC algorithm to the present context
 
