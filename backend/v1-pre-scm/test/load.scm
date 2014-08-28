@@ -25,13 +25,6 @@
       assert-proc
       run-tests-and-exit)))
 
-(define map-defn
-  '(define map
-     (lambda (f lst)
-       (if (pair? lst)
-           (cons (f (car lst)) (map f (cdr lst)))
-           lst))))
-
 (define-each-check
   (equal? (top-eval 1) 1)
   (equal? (top-eval '((lambda () 1))) 1)

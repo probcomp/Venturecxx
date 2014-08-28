@@ -38,3 +38,10 @@
          ;; When inference reruns the program, it will re-record the
          ;; constraint.  That might be fine.
          (record-constraint! t addr desired)))))
+
+(define map-defn
+  '(define map
+     (lambda (f lst)
+       (if (pair? lst)
+           (cons (f (car lst)) (map f (cdr lst)))
+           lst))))
