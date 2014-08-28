@@ -32,7 +32,7 @@ class Infer(object):
 
   def final_data(self):
     # add the last data point if result isn't None
-    if self.result is not None: self.result._append_to_data()
+    if self.result is not None: self.result._save_previous_iter()
     return self.result
 
   def _init_peek(self, names, exprs):
@@ -135,35 +135,35 @@ class InferResult(object):
     # if it's the first command, add all the default fields and increment the counter
     if command == self._first_command:
       self.sweep += 1
-      self._append_to_data()
+      self._save_previous_iter()
       self._collect_default_streams(engine)
-    self._collect_data(engine, command)
+    self._collect_requested_streams(engine, command)
 
-  def _append_to_data(self):
-    # self._this_data always defined on sweep 1
+  def _save_previous_iter(self):
+    # self._this_iter_data always defined on sweep 1
     # pylint: disable=access-member-before-definition
     if self.sweep == 1:
       pass
     elif self.sweep == 2:
-      self.data = self._this_data
+      self.data = self._this_iter_data
     else:
       for field in self.data:
-        self.data[field].extend(self._this_data[field])
+        self.data[field].extend(self._this_iter_data[field])
     # reset the data to record the current iteration
-    self._this_data = {}
+    self._this_iter_data = {}
 
   def _collect_default_streams(self, engine):
     the_time = time.time() - self.time
-    self._this_data['sweeps'] = [self.sweep] * len(engine.traces)
-    self._this_data['particle'] = range(len(engine.traces))
-    self._this_data['time (s)'] = [the_time] * len(engine.traces)
-    self._this_data['log score'] = engine.logscore_all()
+    self._this_iter_data['sweeps'] = [self.sweep] * len(engine.traces)
+    self._this_iter_data['particle'] = range(len(engine.traces))
+    self._this_iter_data['time (s)'] = [the_time] * len(engine.traces)
+    self._this_iter_data['log score'] = engine.logscore_all()
 
-  def _collect_data(self, engine, command):
-    elif command == 'peek':
+  def _collect_requested_streams(self, engine, command):
+    if command == 'peek':
       names = self._spec_peek['names']
       exprs = self._spec_peek['exprs']
-    if command == 'printf':
+    elif command == 'printf':
       names = self._spec_print['names']
       exprs = self._spec_print['exprs']
     else:
@@ -171,20 +171,20 @@ class InferResult(object):
       exprs = self.spec_plot.exprs
     stack_dicts = [x.asStackDict() for x in exprs]
     for name, stack_dict in zip(names, stack_dicts):
-      if name not in self._this_data:
-        self._this_data[name] = engine.sample_all(stack_dict)
+      if name not in self._this_iter_data:
+        self._this_iter_data[name] = engine.sample_all(stack_dict)
 
   def _print_data(self):
     for name in self._spec_print['names']:
       if name == 'counter':
         print 'Sweep count: {0}'.format(self.sweep)
       elif name == 'time':
-        print 'Wall time: {0:0.2f} s'.format(self._this_data['time (s)'])
+        print 'Wall time: {0:0.2f} s'.format(self._this_iter_data['time (s)'])
       elif name == 'score':
-        print 'Global log score: {0:0.2f}'.format(self._this_data['log score'])
+        print 'Global log score: {0:0.2f}'.format(self._this_iter_data['log score'])
       else:
         # TODO: support for pretty-printing of floats
-        print '{0}: {1}'.format(name, strip_types_from_dict_values(self._this_data)[name])
+        print '{0}: {1}'.format(name, strip_types_from_dict_values(self._this_iter_data)[name])
     print
 
   def dataset(self):
