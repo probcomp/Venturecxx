@@ -21,6 +21,8 @@ from pandas import DataFrame
 from plot_spec import PlotSpec
 
 class Infer(object):
+  # I don't want these methods accessible to other modules, but Infer needs to access them
+  # pylint:disable=protected-access
   def __init__(self, engine):
     self.engine = engine
     self.out = {}
@@ -130,7 +132,8 @@ class InferResult(object):
     self._collect_data(engine, command)
 
   def append_to_data(self):
-    # haven't recorded any data yet on sweep 1
+    # self.this_data always defined on sweep 1
+    # pylint: disable=access-member-before-definition
     if self.sweep == 1:
       pass
     elif self.sweep == 2:
@@ -152,11 +155,11 @@ class InferResult(object):
     if command == 'printf':
       names = self._print_names
       exprs = [ExpressionType().asVentureValue(name).asStackDict()
-              for name in names]
+               for name in names]
     elif command == 'peek':
       names = self._peek_names
       exprs = [ExpressionType().asVentureValue(name).asStackDict()
-              for name in self._peek_names]
+               for name in self._peek_names]
       names = self._peek_names
     else:
       names = self.spec_plot.names
