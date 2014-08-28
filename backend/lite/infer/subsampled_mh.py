@@ -41,7 +41,7 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
     assert N > 1
 
     mu_0 = (log_u - alpha) / N
-    perm_local_chidren = np.random.permutation(global_index.local_children)
+    perm_local_children = np.random.permutation(global_index.local_children)
 
     # Sequentially do until termination condition is met.
     mx = 0.0  # Mean of llh.
@@ -57,7 +57,7 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
       n_end = min(n + Nbatch, N)
       for i in xrange(int(n_start), int(n_end)):
         # Construct a local scaffold section.
-        local_scaffold = indexer.sampleLocalIndex(trace,perm_local_chidren[i])
+        local_scaffold = indexer.sampleLocalIndex(trace,perm_local_children[i])
         # Compute diff of log-likelihood for i'th local variable.
         dllh = operator.evalOneLocalSection(trace, local_scaffold)
         cum_dllh  += dllh
@@ -102,6 +102,9 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
   def sampleGlobalIndex(self,trace):
     setsOfPNodes = self.getSetsOfPNodes(trace)
 
+    # Find the globalBorder. If it's empty, the subsampled scaffold is the same
+    # as a regular scaffold.
+
     # Assumption 1. Single principal node.
     assert len(setsOfPNodes) == 1
     assert len(setsOfPNodes[0]) == 1
@@ -111,26 +114,33 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
     node = pnode
     globalBorder = []
     while True:
+      maybeBorder = True
       children = trace.childrenAt(node)
       if len(children) == 0:
         break
       numLONode = 0
       for child in children:
-        if isinstance(child, LookupNode) or isinstance(child, OutputNode):
+        if isinstance(child, (LookupNode, OutputNode)):
           numLONode += 1
           nextNode = child
-          if numLONode > 1:
-            break
+        else:
+          # The global border can not have children other than lookup or output node.
+          maybeBorder = False
       if numLONode > 1:
+        assert maybeBorder
         globalBorder.append(node)
         break
       node = nextNode
     self.globalBorder = globalBorder
     assert len(globalBorder) <= 1
-    assert not globalBorder or not isinstance(trace.valueAt(globalBorder[0]), SPRef)
+    if globalBorder:
+      assert not isinstance(trace.valueAt(globalBorder[0]), SPRef)
+      assert not trace.pspAt(globalBorder[0]).childrenCanAAA()
 
-    index = constructScaffold(trace,setsOfPNodes,useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs,hardBorder=globalBorder,updateValues=False)
+    # Construct the bounded scaffold.
+    index = constructScaffold(trace,setsOfPNodes,useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs,hardBorder=globalBorder,updateValues=self.updateValues)
 
+    # Check if it's a valid partition.
     index.globalBorder = globalBorder
     if globalBorder:
       assert (index.isResampling(globalBorder[0]) and
@@ -138,13 +148,19 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
       index.local_children = list(trace.childrenAt(globalBorder[0]))
       index.N = len(index.local_children)
 
+    # TODO Check if local sections have intersection with each other.
+
     return index
 
   def sampleLocalIndex(self,trace,local_child):
-    assert isinstance(local_child, LookupNode) or isinstance(local_child, OutputNode)
+    assert isinstance(local_child, (LookupNode, OutputNode))
     setsOfPNodes = [set([local_child])]
     # Set updateValues = False because we'll update values in evalOneLocalSection.
-    return constructScaffold(trace,setsOfPNodes,updateValues=False)
+    index = constructScaffold(trace,setsOfPNodes,updateValues=False)
+
+    # Local section should not have brush.
+    assert not index.brush
+    return index
 
   def name(self):
     return ["subsampled_scaffold", self.scope, self.block] + ([self.interval] if self.interval is not None else []) + ([self.true_block] if hasattr(self, "true_block") else [])
@@ -153,10 +169,9 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
 # The local sections are left in the state when returned from subsampledMixMH.
 class SubsampledInPlaceOperator(InPlaceOperator):
   def evalOneLocalSection(self, trace, local_scaffold, compute_gradient = False):
-    globalBorder = self.scaffold.globalBorder
-    assert len(globalBorder) == 1
+    assert len(self.scaffold.globalBorder) == 1
     # Take the single node.
-    globalBorder = globalBorder[0]
+    globalBorder = self.scaffold.globalBorder[0]
 
     # A safer but slower way to update values. It's now replaced by the next
     # updating lines but may be useful for debugging purposes.
@@ -171,8 +186,7 @@ class SubsampledInPlaceOperator(InPlaceOperator):
     # Update with the old value.
     proposed_value = trace.valueAt(globalBorder)
     trace.setValueAt(globalBorder, self.rhoDB.getValue(globalBorder))
-    updatedNodes = set([globalBorder])
-    updateValuesAtScaffold(trace,local_scaffold,updatedNodes)
+    updateValuesAtScaffold(trace,local_scaffold,set([globalBorder]))
 
     # Detach and extract
     rhoWeight,local_rhoDB = detachAndExtract(trace, local_scaffold, compute_gradient)

@@ -13,10 +13,10 @@ def drawScaffold(trace, indexer):
     warnings.warn('Failed to import module networkx.')
   else:
     index = indexer.sampleIndex(trace)
-    G = traveseScaffold(trace, index)
+    G = traverseScaffold(trace, index)
     drawScaffoldGraph(trace, G)
 
-def traveseScaffold(trace, scaffold):
+def traverseScaffold(trace, scaffold):
   G = nx.DiGraph()
   pnodes = scaffold.getPrincipalNodes()
   border_nodes = set([node for node_list in scaffold.border for node in node_list])
