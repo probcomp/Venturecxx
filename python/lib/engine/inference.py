@@ -108,6 +108,16 @@ class InferResult(object):
   will be recorded and printed as output on each iteration.
   See the SpecPlot class for more information on the arguments to plotf and
   the corresponding output.
+
+  WARNING: Expressions are recorded the first time they are encountered in an
+  inference program. For example, consider the program:
+  [INFER (cycle ((peek x) (infer mh default one 1) (plotf l0 x)))].
+  In this program, the mh proposal could change the value of x. The value recorded
+  for the iteration will be the value BEFORE the change, since x appears in a "peek"
+  statement before. On the other hand, in the inference statement
+  [INFER (cycle ((infer mh default one 1) (peek x) (plotf l0 x)))],
+  the value of x will be the value AFTER the proposal.
+
   The dataset() method returns all data requested by any of the above commands
   as a Pandas DataFrame. By default, this data frame will always includes the
   sweep count, particle id, wall time, and global log score.
