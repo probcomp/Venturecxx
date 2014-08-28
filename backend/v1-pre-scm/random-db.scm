@@ -103,7 +103,9 @@
       ;; random choices from the original trace (whose operators
       ;; didn't change due to other replacements?)
       (aif (assq addr replacements)
-           (record-as-absorbed (cdr it))
+           (if (random-choice? addr new)
+               (record-as-absorbed (cdr it))
+               (error "Trying to replace the value of a deterministic computation"))
            (if (compatible-operators-for? addr new orig)
                ;; One?  Should be one...
                (rdb-trace-search-one orig addr record-as-absorbed record-as-resampled)
@@ -214,11 +216,16 @@
 
 (define trick-coin-example
   `(begin
+     ,infer-defn
+     ,observe-defn
      (define is-trick? (flip 0.5))
      (define weight (if is-trick? (uniform 0 1) 0.5))
-     (define coin (lambda () (flip weight)))
-     (define answer (list weight (coin) (coin) (coin) (coin) (coin)))
-     ,infer-defn
+     (observe (flip weight) #t)
+     (observe (flip weight) #t)
+     (observe (flip weight) #t)
+     (observe (flip weight) #t)
+     (observe (flip weight) #t)
+     (define answer (list is-trick? weight))
      (pp answer)
      (infer (lambda (t) (begin (enforce-constraints t) (mcmc-step t))))
      (pp answer)))
