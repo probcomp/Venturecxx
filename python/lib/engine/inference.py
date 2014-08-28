@@ -261,7 +261,13 @@ class SpecPlot(object):
     self.exprs = exprs
 
   def draw(self, data):
-    return self.spec.draw(data, self.names)
+    if self.spec is None:
+      pass
+    else:
+      return self.spec.draw(data, self.names)
 
   def plot(self, data):
-    self.spec.plot(data, self.names)
+    if self.spec is None:
+      pass
+    else:
+      return self.spec.plot(data, self.names)
