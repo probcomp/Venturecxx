@@ -156,16 +156,12 @@ class InferResult(object):
   def _collect_data(self, engine, command):
     if command == 'printf':
       names = self._print_names
-      exprs = [ExpressionType().asVentureValue(name).asStackDict()
-               for name in names]
     elif command == 'peek':
-      names = self._peek_names
-      exprs = [ExpressionType().asVentureValue(name).asStackDict()
-               for name in self._peek_names]
       names = self._peek_names
     else:
       names = self.spec_plot.names
-      exprs = self.spec_plot.exprs
+    exprs = [ExpressionType().asVentureValue(name).asStackDict()
+             for name in names]
     for name, expr in zip(names, exprs):
       if name not in self._this_data:
         self._this_data[name] = engine.sample_all(expr)
