@@ -87,7 +87,7 @@
   (let ((new (rdb-extend (rdb-parent orig)))
         (log-weight 0))
     (define (add-weight w)
-      ; (pp w)
+      (pp w)
       (set! log-weight (+ log-weight w)))
     (define (regeneration-hook exp env addr read-traces answer)
       (define new-value)
@@ -177,15 +177,18 @@
      (rdb-trace-commit! new-trace trace)))
 
 (define (mcmc-step trace)
-  (pp 'inferring)
   (let* ((target-addr (select-uniformly (random-choices trace)))
          (proposed-value (prior-resimulate target-addr trace))
          (replacements (cons `(,target-addr . ,proposed-value) (rdb-constraints trace))))
+    (pp `(proposing ,target-addr ,proposed-value))
     (receive (new-trace weight) (rebuild-rdb trace replacements)
       (let ((correction (- (log (length (random-choices trace)))
                            (log (length (random-choices new-trace))))))
         (if (< (log (random 1.0)) (+ weight correction))
-            (rdb-trace-commit! new-trace trace))))))
+            (begin
+              (pp 'accept)
+              (rdb-trace-commit! new-trace trace))
+            (pp 'reject))))))
 
 (define (rdb-trace-commit! from to)
   (set-rdb-addresses! to (rdb-addresses from))
@@ -231,7 +234,11 @@
      (observe (flip weight) #t)
      (define answer (list is-trick? weight))
      (pp answer)
-     (infer (lambda (t) (begin (enforce-constraints t) (mcmc-step t))))
+     (infer (lambda (t)
+              (begin ,map-defn
+                     (enforce-constraints t)
+                     (map (lambda (i) (mcmc-step t))
+                          '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)))))
      (pp answer)))
 
 ;;; On observations: VKM argues that requiring observe to accept only
@@ -239,3 +246,10 @@
 ;;; the top expression is fine, for deep philosophical reasons.  The
 ;;; extra flexibility afforded by nesting and inference programming
 ;;; may go a long way to alleviating the trouble that causes.
+
+;;; Hm.  The way I wrote this program, it never actually garbage
+;;; collects old addresses from the trace, which has the two funny
+;;; effects that
+;;; a) Old choices stick around and may come back
+;;; b) Proposals to shadow choices are made (and always accepted
+;;;    because there is no likelihood)
