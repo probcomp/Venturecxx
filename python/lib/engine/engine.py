@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import random
-import pickle
+import dill as pickle
 import time
 
 from venture.exception import VentureException
