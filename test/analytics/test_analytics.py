@@ -150,8 +150,8 @@ def testRunFromConditionalInfer():
 
 @statisticalTest
 def _testSampleFromJoint(riplThunk,useMRipl):
-    if riplThunk.func_name in 'get_ripl' or useMRipl is False:
-        raise SkipTest('Bug with seeds for ripls')
+    # if riplThunk.func_name in 'get_ripl' or useMRipl is False:
+    #     raise SkipTest('Bug with seeds for ripls')
     v,_,_,queryExps,xPriorCdf = normalModel( riplThunk() )
     samples = default_num_samples()
     model = Analytics(v,queryExps=queryExps)
@@ -279,7 +279,8 @@ def testAtomType():
     for cond_prior in 'conditional', 'prior':
         yield _testAtomType, cond_prior
 
-## FIXME resinstate geweks
+
+## FIXME clean-up and add this test of Geweke (if Geweke is being used)
 def _testGewekeTest():
     params = generateMRiplParams(no_ripls=(2,3), backends=('puma','lite'),
                                  modes=(True,))  ## ONLY LOCAL

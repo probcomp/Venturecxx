@@ -1,8 +1,94 @@
 Venture Type System
 ===================
 
-Basic
------
+Introduction
+------------
+
+It was decided that Venture values should be explicitly boxed, rather
+than simply inheriting from the underlying Python values.  One
+advantage of doing so is that we make various choices about Venture's
+value and type system explicitly, rather than inheriting it from the
+implementation language.  A consequent advantage is ease of enforcing
+uniformity between backends implemented in different implementation
+languages.
+
+To that end, the trace (and a few other strategically chosen places)
+enforces (by an assert) that any object coming through must either be
+an instance of the VentureValue base class defined below, or None (for
+detaching from nodes, e.g.).
+
+This impacts the SP interface, of course.  The official interface is
+that SPs accept and return VentureValue objects in all the places that
+come from or go to nodes in the trace, and return implementation
+language entities in places that interact with the interpreter itself.
+To wit, `simulate` returns a VentureValue, `logDensity` returns an
+implementation number, `enumerateValues` returns an implementation
+sequence of VentureValues, and the various boolean methods return
+implementation booleans.  Notably, special kernels are expected to
+themselves be implementation language objects, but to accept and
+produce VentureValue objects as appropriate.
+
+If you're thinking that this interface will lead to tons of stupid
+boilerplate involving wrapping and unwrapping things, you're right.
+Fortunately, much of that boilerplate can be abstracted away---most
+SPs have simple enough type signatures that they can just be wrapped
+in a generic wrapper that extracts implementation values from
+VentureValue objects, hands them to the SP, and then wraps the result.
+This wrapper is the class TypedPSP, in backend/lite/psp.py.  The interface
+presented by TypedPSP to the PSPs it would wrap is the same as the
+official SP interface, except that the unwrapping indicated by the
+type signature that TypedPSP is created with is handled on behalf of
+the underlying PSP.
+
+The architecture of Venture's actual type system follows what Alexey
+thinks of as the typical dynamic language pattern.  There is a
+universal notion of "a value", and then several particular kinds of
+values that instantiate that notion.  Every value directly knows what
+kind of value it is (by virtue of being an instance of the appropriate
+class), and operations that need to be generic over values of
+different kinds are implemented as methods of the value class
+hierarchy (for example, equality checking).  The underlying
+representation of a value of a given type is extracted by a method of
+the form `get<Type>`.
+
+The particular Venture type system contains an additional, perhaps
+somewhat Pythonic choice, which is that values of several different
+types are somewhat interconvertable (for example, a Venture Atom can
+be interpreted as a Venture Number if needed).  These conversions are
+implemented by the getType functions being methods, so that, for
+example, the VentureAtom class can implement the getNumber method.
+
+As is also typical for dynamic languages, Venture containers are
+heterogenous by default, and store their contents wrapped.  So an
+array of numbers would be represented as a VentureArray object, whose
+internal representation is a Python array of VentureNumber objects.
+This is less than optimally efficient; but the type system also includes
+homogeneous arrays where the array itself knows the types
+of its elements and stores their representations directly, without the
+extra level of wrapping.  Case in point: VentureArrayUnboxed.
+
+A choice made here that may not feel immediately natural is the
+introduction of explicit objects that represent Venture types (e.g.,
+instances of the NumberType class).  Every Venture type object knows
+how to convert Venture values of its type to their underlying Python
+representation, and also how to convert Python objects of appropriate
+type to Venture values of the type represented by the type object.
+The goal is to enable declarative discussion of Venture types by
+storing the type objects; the main extant use of this facility is the
+TypedPSP wrapper class.
+
+There are more subclasses of VentureType than of VentureValue, because
+several of the type objects represent sum types.  The most complex of
+these is ExpressionType, which represents the type of Venture
+expressions (reflected as Venture values).
+
+The actual type system is encoded in value.py (including the FooType
+classes, though those may profit from moving to a module of their
+own).
+
+
+Basic Types
+-----------
 
 Venture has the following distinct basic types:
 - Floating point numbers (64-bit precision)

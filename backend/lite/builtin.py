@@ -311,6 +311,9 @@ builtInSPsList = [
                                         v.RequestType("<array b>"))),
                         functional.ESRArrayOutputPSP()) ],
 
+           [ "zip", deterministic_typed(lambda *args: zip(*args), [v.ListType()], v.HomogeneousListType(v.ListType()), variadic=True,
+                                         descr="zip returns a list of lists, where the i-th nested list contains the i-th element from each of the input arguments") ],
+
            [ "branch", esr_output(conditionals.branch_request_psp()) ],
            [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [v.BoolType(), v.AnyType(), v.AnyType()], v.AnyType(),
                                            sim_grad=lambda args, direc: [0, direc, 0] if args[0] else [0, 0, direc],
