@@ -29,9 +29,8 @@ class Infer(object):
     self.result = None
 
   def final_data(self):
-    # add the last data point and return
-    from dw_utils.debug import set_trace; set_trace()
-    self.result.append_to_data()
+    # add the last data point if result isn't None
+    if self.result is not None: self.result._append_to_data()
     return self.result
 
   def _init_peek(self, names):
@@ -130,11 +129,11 @@ class InferResult(object):
     # if it's the first command, add all the default fields and increment the counter
     if command == self._first_command:
       self.sweep += 1
-      self.append_to_data()
+      self._append_to_data()
       self._collect_default_streams(engine)
     self._collect_data(engine, command)
 
-  def append_to_data(self):
+  def _append_to_data(self):
     # self._this_data always defined on sweep 1
     # pylint: disable=access-member-before-definition
     if self.sweep == 1:
