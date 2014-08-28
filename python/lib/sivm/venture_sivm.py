@@ -72,6 +72,7 @@ class VentureSivm(object):
         self.label_dict = {}
         self.did_dict = {}
         self.directive_dict = {}
+        self.sugar_dict = {}
         self._debugger_clear()
         self.state = 'default'
 
@@ -107,14 +108,15 @@ class VentureSivm(object):
     def _call_core_sivm_instruction(self,instruction):
         desugared_instruction = copy.deepcopy(instruction)
         instruction_type = instruction['instruction']
+        sugar = None
         # desugar the expression
         if instruction_type in ['assume','observe','predict']:
             exp = utils.validate_arg(instruction,'expression',
                     utils.validate_expression, wrap_exception=False)
-            new_exp = macro.desugar_expression(exp)
-            desugared_instruction['expression'] = new_exp
+            sugar = macro.expand(exp)
+            desugared_instruction['expression'] = sugar.desugared()
             # for error handling
-            self.attempted = new_exp
+            self.attempted = (exp, sugar)
         # desugar the expression index
         if instruction_type == 'debugger_set_breakpoint_source_code_location':
             desugared_src_location = desugared_instruction['source_code_location']
@@ -128,11 +130,10 @@ class VentureSivm(object):
         except VentureException as e:
             if e.exception == "evaluation":
                 self.state='exception'
+                
                 address = e.data['address'].asList()
                 del e.data['address']
-                
-                stack_trace = [self._resugar(index) for index in address]
-                e.data['stack_trace'] = stack_trace
+                e.data['stack_trace'] = [self._resugar(index) for index in address]
                 
                 self.current_exception = e.to_json_object()
             if e.exception == "breakpoint":
@@ -160,6 +161,7 @@ class VentureSivm(object):
         if instruction_type == 'forget':
             did = instruction['directive_id']
             del self.directive_dict[did]
+            del self.sugar_dict[did]
             if did in self.did_dict:
                 del self.label_dict[self.did_dict[did]]
                 del self.did_dict[did]
@@ -172,6 +174,7 @@ class VentureSivm(object):
                 if key in instruction:
                     tmp_instruction[key] = copy.deepcopy(instruction[key])
             self.directive_dict[did] = tmp_instruction
+            self.sugar_dict[did] = self.attempted
         # save the breakpoint if the instruction sets the breakpoint
         if instruction_type in ['debugger_set_breakpoint_address',
                 'debugger_set_breakpoint_source_code_location']:
@@ -182,16 +185,16 @@ class VentureSivm(object):
             self.breakpoint_dict[bid] = tmp_instruction
         return response
     
-    def _get_exp(self, did):
-        if did in self.directive_dict:
-            return self.directive_dict[did]
+    def _get_sugar(self, did):
+        if did in self.sugar_dict:
+            return self.sugar_dict[did]
         return self.attempted
     
     def _resugar(self, index):
         did = index[0]
-        exp = self._get_exp(did)
+        exp, sugar = self._get_sugar(did)
         index = index[1:]
-        return (macro.sugar_expression_index(exp, index), exp)
+        return (exp, sugar.resugar_index(index))
     
     ###############################
     # Continuous Inference Pauser
