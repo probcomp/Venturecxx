@@ -113,6 +113,8 @@ class VentureSivm(object):
                     utils.validate_expression, wrap_exception=False)
             new_exp = macro.desugar_expression(exp)
             desugared_instruction['expression'] = new_exp
+            # for error handling
+            self.attempted = new_exp
         # desugar the expression index
         if instruction_type == 'debugger_set_breakpoint_source_code_location':
             desugared_src_location = desugared_instruction['source_code_location']
@@ -129,7 +131,7 @@ class VentureSivm(object):
                 address = e.data['address'].asList()
                 del e.data['address']
                 
-                stack_trace = [self.resugar(index) for index in address]
+                stack_trace = [self._resugar(index) for index in address]
                 e.data['stack_trace'] = stack_trace
                 
                 self.current_exception = e.to_json_object()
@@ -179,10 +181,15 @@ class VentureSivm(object):
             del tmp_instruction['instruction']
             self.breakpoint_dict[bid] = tmp_instruction
         return response
-
-    def resugar(self, index):
+    
+    def _get_exp(self, did):
+        if did in self.directive_dict:
+            return self.directive_dict[did]
+        return self.attempted
+    
+    def _resugar(self, index):
         did = index[0]
-        exp = self.directive_dict[did]
+        exp = self._get_exp(did)
         index = index[1:]
         return (macro.sugar_expression_index(exp, index), exp)
     
