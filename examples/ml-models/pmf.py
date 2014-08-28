@@ -115,7 +115,11 @@ def define_prediction_error(ripl):
   ripl.execute_program(prog)
   return ripl
 
-def main():
+def run_ripl():
+  '''
+  Run the model using the ripl interface.
+  This breaks, with error "'float' object has no attribute 'number'"
+  '''
   start = time()
   # ripl = build_ripl(bayes = True)
   ripl = build_ripl(bayes = False)
@@ -126,3 +130,15 @@ def main():
   print time() - start
   return ripl, res
 
+def run_analytics():
+  '''
+  Run the model using the analytics interface.
+  This breaks, with error "unhashable type: 'dict'"
+  '''
+  start = time()
+  ripl = build_ripl(bayes = True)
+  ripl = define_prediction_error(load_data(ripl, ntrain = 100, ntest = 20))
+  model = Analytics(ripl, queryExps = ['(prediction_error)'])
+  history, ripl = model.runFromConditional(sweeps = 10,
+                                           infer = '(mh deafault one 10)')
+  return history, ripl

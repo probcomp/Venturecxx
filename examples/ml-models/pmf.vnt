@@ -1,5 +1,5 @@
 ; Should try a range of D
-; All other "magic numbers" are the priors from the PMF papers
+; All other parameters are the priors from the PMF papers
 ; Stick with them unless they give really wacky results
 
 [ASSUME D 10]
@@ -40,3 +40,12 @@
       (normal
         (vector_dot (make_U user) (make_V movie))
         (sqrt sigma_2))))]
+
+; Code for computing prediction error
+[ASSUME make_R_list
+  (lambda (data)
+    (make_R (lookup data 0) (lookup data 1)))]
+
+[ASSUME prediction_error
+  (lambda ()
+    (rmse_accuracy data_val make_R_list))]
