@@ -28,6 +28,8 @@ class VentureSivm(object):
         self.core_sivm = core_sivm
         self._clear()
         self._init_continuous_inference()
+    
+    dicts = [s + '_dict' for s in ['breakpoint', 'label', 'did', 'sugar', 'directive']]
 
     # list of all instructions supported by venture sivm
     _extra_instructions = {'labeled_assume','labeled_observe',
@@ -86,18 +88,14 @@ class VentureSivm(object):
     def save(self, fname, extra=None):
         if extra is None:
             extra = {}
-        extra['label_dict'] = self.label_dict
-        extra['did_dict'] = self.did_dict
-        extra['directive_dict'] = self.directive_dict
-        extra['breakpoint_dict'] = self.breakpoint_dict
+        for d in self.dicts:
+            extra[d] = getattr(self, d)
         return self.core_sivm.save(fname, extra)
 
     def load(self, fname):
         extra = self.core_sivm.load(fname)
-        self.label_dict = extra['label_dict']
-        self.did_dict = extra['did_dict']
-        self.directive_dict = extra['directive_dict']
-        self.breakpoint_dict = extra['breakpoint_dict']
+        for d in self.dicts:
+            setattr(self, d, extra[d])
         return extra
 
     ###############################
