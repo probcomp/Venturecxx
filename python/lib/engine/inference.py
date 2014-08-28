@@ -91,7 +91,7 @@ class Infer(object):
     names = self.default_names_from_exprs(exprs)
     self._init_print(names, exprs)
     self.result._add_data(self.engine, 'printf')
-    self.result.print_data()
+    self.result._print_data()
   def plotf(self, spec, *exprs): # This one only works from the "plotf" SP.
     spec = ExpressionType().asPython(spec)
     names = self.default_names_from_exprs(exprs)
@@ -174,7 +174,7 @@ class InferResult(object):
       if name not in self._this_data:
         self._this_data[name] = engine.sample_all(stack_dict)
 
-  def print_data(self):
+  def _print_data(self):
     for name in self._spec_print['names']:
       if name == 'counter':
         print 'Sweep count: {0}'.format(self.sweep)
