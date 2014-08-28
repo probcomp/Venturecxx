@@ -67,21 +67,23 @@ class Infer(object):
     else:
       return str(exp)
 
+  def default_names_from_exprs(self, exprs):
+    return [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
+
   def primitive_infer(self, exp): self.engine.primitive_infer(exp)
   def resample(self, ct): self.engine.resample(ct)
   def incorporate(self): pass # Since we incorporate at the beginning anyway
-  def peek(self, expressions):
-    names = [self.default_name_for_exp(ExpressionType().asPython(expression))
-             for expression in expressions]
-    self._init_peak(names)
+  def peek(self, *exprs):
+    names = self.default_names_from_exprs(exprs)
+    self._init_peek(names)
     self.result.add_data(self.engine, 'peek')
   def plotf(self, spec, *exprs): # This one only works from the "plotf" SP.
     spec = ExpressionType().asPython(spec)
-    names = [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
+    names = self.default_names_from_exprs(exprs)
     self._init_plot(spec, names, exprs)
     self.result.add_data(self.engine, 'plotf')
   def printf(self, *exprs):
-    names = [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
+    names = self.default_names_from_exprs(exprs)
     self._init_print(names)
     self.result.add_data(self.engine, 'printf')
     self.result.print_data()
