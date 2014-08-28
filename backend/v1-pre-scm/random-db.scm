@@ -53,7 +53,7 @@
 (define (weight-at addr trace read-traces)
   (rdb-trace-search-one-record trace addr
    (lambda (rec)
-     (weight-for-at (car (cdddr rec)) addr (car rec) trace read-traces))
+     (weight-for-at (car (cddddr rec)) addr (car rec) trace read-traces))
    (lambda () (error "Trying to compute weight for a value that isn't there" addr))))
 
 (define (weight-for-at val addr exp trace read-traces)
