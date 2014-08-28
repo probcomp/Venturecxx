@@ -38,10 +38,10 @@ class Infer(object):
   def _init_peek(self, names, exprs):
     if self.result is None:
       self.result = InferResult(first_command = 'peek')
-    if self.result._spec_peek is None:
+    if self.result._peek_names is None:
       self.result._init_peek(names, exprs)
-    elif (names == self.result._spec_peek['names'] and
-          exprs == self.result._spec_peek['exprs']):
+    elif (names == self.result._peek_names and
+          exprs == self.result._peek_exprs):
       pass
     else:
       raise Exception("Cannot issue multiple peek commands in the same inference program")
@@ -49,10 +49,10 @@ class Infer(object):
   def _init_print(self, names, exprs):
     if self.result is None:
       self.result = InferResult(first_command = 'printf')
-    if self.result._spec_print is None:
+    if self.result._print_names is None:
       self.result._init_print(names, exprs)
-    elif (names == self.result._spec_print['names'] and
-          exprs == self.result._spec_print['exprs']):
+    elif (names == self.result._print_names and
+          exprs == self.result._print_exprs):
       pass
     else:
       raise Exception("Cannot issue multiple printf commands in same inference program")
@@ -118,15 +118,19 @@ class InferResult(object):
     self.sweep = 0
     self.time = time.time()
     self._first_command = first_command
-    self._spec_peek = None
-    self._spec_print = None
+    self._peek_names = None
+    self._peek_exprs = None
+    self._print_names = None
+    self._print_exprs = None
     self.spec_plot = None
 
   def _init_peek(self, names, exprs):
-    self._spec_peek = {'names' : names, 'exprs' : exprs}
+    self._peek_names = names
+    self._peek_exprs = exprs
 
   def _init_print(self, names, exprs):
-    self._spec_print = {'names' : names, 'exprs' : exprs}
+    self._print_names = names
+    self._print_exprs = exprs
 
   def _init_plot(self, spec, names, exprs):
     self.spec_plot = SpecPlot(spec, names, exprs)
@@ -161,11 +165,11 @@ class InferResult(object):
 
   def _collect_requested_streams(self, engine, command):
     if command == 'peek':
-      names = self._spec_peek['names']
-      exprs = self._spec_peek['exprs']
+      names = self._peek_names
+      exprs = self._peek_exprs
     elif command == 'printf':
-      names = self._spec_print['names']
-      exprs = self._spec_print['exprs']
+      names = self._print_names
+      exprs = self._print_exprs
     else:
       names = self.spec_plot.names
       exprs = self.spec_plot.exprs
@@ -175,7 +179,7 @@ class InferResult(object):
         self._this_iter_data[name] = engine.sample_all(stack_dict)
 
   def _print_data(self):
-    for name in self._spec_print['names']:
+    for name in self._print_names:
       if name == 'counter':
         print 'Sweep count: {0}'.format(self.sweep)
       elif name == 'time':
