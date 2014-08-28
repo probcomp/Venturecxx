@@ -77,9 +77,9 @@ class Infer(object):
     self.result.add_data(self.engine, 'peek')
   def plotf(self, spec, *exprs): # This one only works from the "plotf" SP.
     spec = ExpressionType().asPython(spec)
-    exps = [ExpressionType().asVentureValue(e).asStackDict() for e in exprs]
+    exprs = [ExpressionType().asVentureValue(e).asStackDict() for e in exprs]
     names = [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
-    self._init_plot(spec, names, exps)
+    self._init_plot(spec, names, exprs)
     self.result.add_data(self.engine, 'plotf')
   def printf(self, *exprs):
     names = [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
