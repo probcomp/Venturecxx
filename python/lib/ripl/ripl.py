@@ -121,7 +121,9 @@ class Ripl():
             try:
                 annotated = self._annotated_error(e, instruction)
             except Exception as e2:
-                print "Trying to annotate an exception led to %r" % e2
+                print "Trying to annotate an exception led to:"
+                import traceback
+                print traceback.format_exc()
                 raise e, None, info[2]
             raise annotated, None, info[2]
         # if directive, then save the text string
@@ -133,6 +135,17 @@ class Ripl():
         return ret_value
 
     def _annotated_error(self, e, instruction):
+        if e.exception is 'evaluation':
+            p = self._cur_parser()
+            for i, (exp, index) in enumerate(e.data['stack_trace']):
+                exp = p.unparse_expression(exp)
+                text_index = p.expression_index_to_text_index(exp, index)
+                e.data['stack_trace'][i] = {
+                    'expression_string' : exp,
+                    'text_index' : text_index,
+                }
+            return e
+
         # TODO This error reporting is broken for ripl methods,
         # because the computed text chunks refer to the synthetic
         # instruction string instead of the actual data the caller
@@ -178,6 +191,7 @@ class Ripl():
         b = e.data['text_index'][1]+1
         e.data['text_snippet'] = instruction_string[a:b]
         e.data['instruction_string'] = instruction_string
+        
         return e
 
     def parse_program(self, program_string, params=None):
