@@ -6,8 +6,8 @@
 [ASSUME sigma_2 (/ 1 2)]
 
 ; Specific to non-Bayesian model
-[ASSUME sigma_2_u 250]
-[ASSUME sigma_2_v 250]
+[ASSUME sigma_2_U 250]
+[ASSUME sigma_2_V 250]
 [ASSUME Sigma_U (scalar_mult sigma_2_U (id_matrix D))]
 [ASSUME mu_U (repeat 0 D)]
 [ASSUME Sigma_V (scalar_mult sigma_2_V (id_matrix D))]
@@ -28,7 +28,7 @@
   (mem
     (lambda (user)
       (scope_include (quote U) user
-        multivariate_normal mu_U Sigma_U))))]
+        (multivariate_normal mu_U Sigma_U))))]
 [ASSUME make_V
   (mem
     (lambda (movie)
@@ -40,8 +40,3 @@
       (normal
         (vector_dot (make_U user) (make_V movie))
         (sqrt sigma_2))))]
-[ASSUME crossval_predict
-  (lambda (test)
-    (map (lambda (x)
-           (make_R (lookup x 0) (lookup x 1)))
-         test))]
