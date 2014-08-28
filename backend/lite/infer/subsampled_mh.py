@@ -6,7 +6,7 @@ from ..value import SPRef
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
 from ..node import LookupNode, OutputNode
-from ..scaffold import constructScaffold, constructScaffoldGlobalSection, updateValuesAtScaffold
+from ..scaffold import constructScaffold, updateValuesAtScaffold
 from mh import BlockScaffoldIndexer, InPlaceOperator
 
 def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
@@ -32,7 +32,7 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
 
   alpha = global_xiMix + logGlobalAlpha - global_rhoMix
 
-  if global_index.globalBorder is None:
+  if not global_index.globalBorder:
     # No local sections. Regular MH.
     accept = alpha > log_u
   else:
@@ -109,7 +109,7 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
 
     # Assumption 2. P -> single path (single lookup node or output node) -> N outgoing lookup or output nodes.
     node = pnode
-    globalBorder = None
+    globalBorder = []
     while True:
       children = trace.childrenAt(node)
       if len(children) == 0:
@@ -122,13 +122,21 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
           if numLONode > 1:
             break
       if numLONode > 1:
-        globalBorder = node
+        globalBorder.append(node)
         break
       node = nextNode
     self.globalBorder = globalBorder
-    assert not isinstance(trace.valueAt(globalBorder), SPRef)
+    assert len(globalBorder) <= 1
+    assert not globalBorder or not isinstance(trace.valueAt(globalBorder[0]), SPRef)
 
-    index = constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs,updateValues=False)
+    index = constructScaffold(trace,setsOfPNodes,useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs,hardBorder=globalBorder,updateValues=False)
+
+    index.globalBorder = globalBorder
+    if globalBorder:
+      assert (index.isResampling(globalBorder[0]) and
+              not index.isAAA(globalBorder[0]))
+      index.local_children = list(trace.childrenAt(globalBorder[0]))
+      index.N = len(index.local_children)
 
     return index
 
@@ -146,7 +154,9 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
 class SubsampledInPlaceOperator(InPlaceOperator):
   def evalOneLocalSection(self, trace, local_scaffold, compute_gradient = False):
     globalBorder = self.scaffold.globalBorder
-    assert globalBorder is not None
+    assert len(globalBorder) == 1
+    # Take the single node.
+    globalBorder = globalBorder[0]
 
     # A safer but slower way to update values. It's now replaced by the next
     # updating lines but may be useful for debugging purposes.

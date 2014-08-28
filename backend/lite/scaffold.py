@@ -111,18 +111,23 @@ def update(trace, node):
   applyPSP(trace,node,scaffold,False,omegaDB,{})
 
 
-def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False, deltaKernelArgs = None, updateValues = False, updatedNodes = None):
+def constructScaffold(trace, setsOfPNodes, useDeltaKernels=False, deltaKernelArgs=None, hardBorder=None, updateValues=False):
+  if hardBorder is None:
+    hardBorder = []
+  assert(len(hardBorder) <= 1)
+
   cDRG,cAbsorbing,cAAA = set(),set(),set()
   indexAssignments = {}
   assert isinstance(setsOfPNodes,list)
   for i in range(len(setsOfPNodes)):
     assert isinstance(setsOfPNodes[i],set)
-    extendCandidateScaffold(trace,setsOfPNodes[i],cDRG,cAbsorbing,cAAA,indexAssignments,i)
+    extendCandidateScaffold(trace,setsOfPNodes[i],cDRG,cAbsorbing,cAAA,indexAssignments,i,hardBorder)
 
   brush = findBrush(trace,cDRG)
   drg,absorbing,aaa = removeBrush(cDRG,cAbsorbing,cAAA,brush)
   border = findBorder(trace,drg,absorbing,aaa)
-  regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
+  regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush,hardBorder)
+  for node in hardBorder: assert node in border
   lkernels = loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs)
   borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
   scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
@@ -132,11 +137,12 @@ def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False, deltaKernelArg
 
   return scaffold
 
-def addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i):
+def addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder):
   if node in absorbing: absorbing.remove(node)
   if node in aaa: aaa.remove(node)
   drg.add(node)
-  q.extend([(n,False,node) for n in trace.childrenAt(node)])
+  if node not in hardBorder:
+    q.extend([(n,False,node) for n in trace.childrenAt(node)])
   indexAssignments[node] = i
 
 def addAbsorbingNode(drg,absorbing,aaa,node,indexAssignments,i):
@@ -152,15 +158,15 @@ def addAAANode(drg,aaa,absorbing,node,indexAssignments,i):
   indexAssignments[node] = i
 
 
-def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i):
+def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i,hardBorder):
   q = [(pnode,True,None) for pnode in pnodes]
 
   while q:
     node,isPrincipal,parentNode = q.pop()
     if node in drg and not node in aaa:
-      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder)
     elif isinstance(node,LookupNode) or node.operatorNode in drg:
-      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder)
     # TODO temporary: once we put all uncollapsed AAA procs into AEKernels, this line won't be necessary
     elif node in aaa:
       addAAANode(drg,aaa,absorbing,node,indexAssignments,i)      
@@ -169,8 +175,7 @@ def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i):
     elif trace.pspAt(node).childrenCanAAA(): 
       addAAANode(drg,aaa,absorbing,node,indexAssignments,i)
     else: 
-      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
-
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder)
 
 def findBrush(trace,cDRG):
   disableCounts = {}
@@ -223,11 +228,14 @@ def maybeIncrementAAARegenCount(trace,regenCounts,aaa,node):
   if isinstance(value,SPRef) and value.makerNode in aaa: 
     regenCounts[value.makerNode] += 1
 
-def computeRegenCounts(trace,drg,absorbing,aaa,border,brush):
+def computeRegenCounts(trace,drg,absorbing,aaa,border,brush,hardBorder):
   regenCounts = {}
   for node in drg:
     if node in aaa:
       regenCounts[node] = 1 # will be added to shortly
+    elif node in hardBorder:
+      # hardBorder nodes will regenerate despite the number of children.
+      regenCounts[node] = 1
     elif node in border:
       regenCounts[node] = len(trace.childrenAt(node)) + 1
     else:
@@ -264,52 +272,3 @@ def assignBorderSequnce(border,indexAssignments,numIndices):
     borderSequence[indexAssignments[node]].append(node)
   return borderSequence
 
-def constructScaffoldGlobalSection(trace,setsOfPNodes,globalBorder,useDeltaKernels = False, deltaKernelArgs = None, updateValues = False):
-  cDRG,cAbsorbing,cAAA = set(),set(),set()
-  indexAssignments = {}
-  assert isinstance(setsOfPNodes,list)
-  for i in range(len(setsOfPNodes)):
-    assert isinstance(setsOfPNodes[i],set)
-    extendCandidateScaffoldGlobalSection(trace,setsOfPNodes[i],globalBorder,cDRG,cAbsorbing,cAAA,indexAssignments,i)
-
-  brush = findBrush(trace,cDRG)
-  drg,absorbing,aaa = removeBrush(cDRG,cAbsorbing,cAAA,brush)
-  border = findBorder(trace,drg,absorbing,aaa)
-  regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
-  if globalBorder is not None:
-    assert globalBorder in border
-    assert globalBorder in drg
-    regenCounts[globalBorder] = 1
-  lkernels = loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs)
-  borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
-  scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
-  if updateValues:
-    updateValuesAtScaffold(trace,scaffold,set())
-
-  scaffold.globalBorder = globalBorder
-  if globalBorder is not None:
-    scaffold.local_children = list(trace.childrenAt(globalBorder))
-    scaffold.N = len(scaffold.local_children)
-  return scaffold
-
-def extendCandidateScaffoldGlobalSection(trace,pnodes,globalBorder,drg,absorbing,aaa,indexAssignments,i):
-  q = [(pnode,True,None) for pnode in pnodes]
-
-  while q:
-    node,isPrincipal,parentNode = q.pop()
-    if node is globalBorder and globalBorder is not None:
-      drg.add(node)
-      indexAssignments[node] = i
-    elif node in drg and not node in aaa:
-      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
-    elif isinstance(node,LookupNode) or node.operatorNode in drg:
-      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
-    # TODO temporary: once we put all uncollapsed AAA procs into AEKernels, this line won't be necessary
-    elif node in aaa:
-      addAAANode(drg,aaa,absorbing,node,indexAssignments,i)
-    elif (not isPrincipal) and trace.pspAt(node).canAbsorb(trace,node,parentNode):
-      addAbsorbingNode(drg,absorbing,aaa,node,indexAssignments,i)
-    elif trace.pspAt(node).childrenCanAAA():
-      addAAANode(drg,aaa,absorbing,node,indexAssignments,i)
-    else:
-      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
