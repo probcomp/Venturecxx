@@ -165,6 +165,11 @@
      (prior-resimulate-exp addr (car rec) trace))
    (lambda () (error "What?"))))
 
+(define (enforce-constraints trace)
+  (pp 'enforcing)
+  (receive (new-trace weight) (rebuild-rdb trace (rdb-constraints trace))
+     (rdb-trace-commit! new-trace trace)))
+
 (define (mcmc-step trace)
   (pp 'inferring)
   (let* ((target-addr (select-uniformly (random-choices trace)))
