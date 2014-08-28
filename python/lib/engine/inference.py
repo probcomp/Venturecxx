@@ -29,6 +29,9 @@ class Infer(object):
     self.result = None
 
   def final_data(self):
+    # add the last data point and return
+    from dw_utils.debug import set_trace; set_trace()
+    self.result.append_to_data()
     return self.result
 
   def _init_peek(self, names):
@@ -132,24 +135,24 @@ class InferResult(object):
     self._collect_data(engine, command)
 
   def append_to_data(self):
-    # self.this_data always defined on sweep 1
+    # self._this_data always defined on sweep 1
     # pylint: disable=access-member-before-definition
     if self.sweep == 1:
       pass
     elif self.sweep == 2:
-      self.data = self.this_data
+      self.data = self._this_data
     else:
       for field in self.data:
-        self.data[field].extend(self.this_data[field])
+        self.data[field].extend(self._this_data[field])
     # reset the data to record the current iteration
-    self.this_data = {}
+    self._this_data = {}
 
   def _collect_default_streams(self, engine):
     the_time = time.time() - self.time
-    self.this_data['sweeps'] = [self.sweep] * len(engine.traces)
-    self.this_data['particle'] = range(len(engine.traces))
-    self.this_data['time (s)'] = [the_time] * len(engine.traces)
-    self.this_data['log score'] = engine.logscore_all()
+    self._this_data['sweeps'] = [self.sweep] * len(engine.traces)
+    self._this_data['particle'] = range(len(engine.traces))
+    self._this_data['time (s)'] = [the_time] * len(engine.traces)
+    self._this_data['log score'] = engine.logscore_all()
 
   def _collect_data(self, engine, command):
     if command == 'printf':
@@ -165,20 +168,20 @@ class InferResult(object):
       names = self.spec_plot.names
       exprs = self.spec_plot.exprs
     for name, expr in zip(names, exprs):
-      if name not in self.this_data:
-        self.this_data[name] = engine.sample_all(expr)
+      if name not in self._this_data:
+        self._this_data[name] = engine.sample_all(expr)
 
   def print_data(self):
     for name in self._print_names:
       if name == 'counter':
         print 'Sweep count: {0}'.format(self.sweep)
       elif name == 'time':
-        print 'Wall time: {0:0.2f} s'.format(self.this_data['time (s)'])
+        print 'Wall time: {0:0.2f} s'.format(self._this_data['time (s)'])
       elif name == 'score':
-        print 'Global log score: {0:0.2f}'.format(self.this_data['log score'])
+        print 'Global log score: {0:0.2f}'.format(self._this_data['log score'])
       else:
         # TODO: support for pretty-printing of floats
-        print '{0}: {1}'.format(name, strip_types_from_dict_values(self.this_data)[name])
+        print '{0}: {1}'.format(name, strip_types_from_dict_values(self._this_data)[name])
     print
 
   def dataset(self):
