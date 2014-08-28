@@ -80,16 +80,15 @@ class Infer(object):
     exps = [ExpressionType().asVentureValue(e).asStackDict() for e in exprs]
     names = [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
     self._init_plot(spec, names, exps)
-    self.result.add_data(self.engine, 'printf')
+    self.result.add_data(self.engine, 'plotf')
   def printf(self, *exprs):
     names = [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
     self._init_print(names)
-    self.result.add_data(self.engine, 'plotf')
+    self.result.add_data(self.engine, 'printf')
     self.result.print_data()
 
 class InferResult(object):
   def __init__(self, first_command):
-    from dw_utils.debug import set_trace; set_trace()
     self.sweep = 0
     self.time = time.time()
     self.first_command = first_command
@@ -108,7 +107,6 @@ class InferResult(object):
 
   def add_data(self, engine, command):
     # if it's the first command, add all the default fields and increment the counter
-    from dw_utils.debug import set_trace; set_trace()
     if command == self.first_command:
       self.sweep += 1
       self.append_to_data()
