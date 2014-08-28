@@ -212,14 +212,16 @@
 ;; still rerun the procedure if you need to because you have the
 ;; source code, but you don't introspect on its interior.
 
-#;
-`(begin
-   (define is-trick? (flip 0.1))
-   (define weight (if is-trick? (uniform 0 1) 0.5))
-   (define coin (lambda () (flip weight)))
-   (define answer (list weight (coin) (coin) (coin) (coin) (coin)))
-   ,infer-defn
-   (infer mcmc-step))
+(define trick-coin-example
+  `(begin
+     (define is-trick? (flip 0.5))
+     (define weight (if is-trick? (uniform 0 1) 0.5))
+     (define coin (lambda () (flip weight)))
+     (define answer (list weight (coin) (coin) (coin) (coin) (coin)))
+     ,infer-defn
+     (pp answer)
+     (infer (lambda (t) (begin (enforce-constraints t) (mcmc-step t))))
+     (pp answer)))
 
 ;;; On observations: VKM argues that requiring observe to accept only
 ;;; a constant (!) (wrt current trace) procedure that has a density as

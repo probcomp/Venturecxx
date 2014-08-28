@@ -12,5 +12,5 @@
 (load-relative "utils")
 (load-relative "syntax")
 (load-relative "v1-pre")
-(load-relative "random-db")
 (load-relative "primitives")
+(load-relative "random-db")
