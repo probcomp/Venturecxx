@@ -21,6 +21,8 @@ from pandas import DataFrame
 from plot_spec import PlotSpec
 
 class Infer(object):
+  # In order to count iterations, can only have one call to each of printf, peek, plotf
+  # This will still multi-count interations if you enter the identical printf command multiple times
   # I don't want these methods accessible to other modules, but Infer needs to access them
   # pylint:disable=protected-access
   def __init__(self, engine):
@@ -44,6 +46,17 @@ class Infer(object):
     else:
       raise Exception("Cannot issue multiple peek commands in the same inference program")
 
+  def _init_print(self, names, exprs):
+    if self.result is None:
+      self.result = InferResult(first_command = 'printf')
+    if self.result._spec_print is None:
+      self.result._init_print(names, exprs)
+    elif (names == self.result._spec_print['names'] and
+          exprs == self.result._spec_print['exprs']):
+      pass
+    else:
+      raise Exception("Cannot issue multiple printf commands in same inference program")
+
   def _init_plot(self, spec, names, exprs):
     if self.result is None:
       self.result = InferResult(first_command = 'plotf')
@@ -55,19 +68,6 @@ class Infer(object):
       pass
     else:
       raise Exception("Cannot plot with different specs in the same inference program")
-
-  def _init_print(self, names, exprs):
-    if self.result is None:
-      self.result = InferResult(first_command = 'printf')
-    if self.result._spec_print is None:
-      self.result._init_print(names, exprs)
-    elif (names == self.result._spec_print['names'] and
-          exprs == self.result._spec_print['exprs']):
-      pass
-    else:
-      # In order to count iterations, can only have one printf call
-      # This will still multi-count interations if you enter the identical printf command multiple times
-      raise Exception("Cannot issue multiple printf commands in same inference program")
 
   def default_name_for_exp(self,exp):
     if isinstance(exp, basestring):
@@ -87,16 +87,16 @@ class Infer(object):
     names = self.default_names_from_exprs(exprs)
     self._init_peek(names, exprs)
     self.result.add_data(self.engine, 'peek')
-  def plotf(self, spec, *exprs): # This one only works from the "plotf" SP.
-    spec = ExpressionType().asPython(spec)
-    names = self.default_names_from_exprs(exprs)
-    self._init_plot(spec, names, exprs)
-    self.result.add_data(self.engine, 'plotf')
   def printf(self, *exprs):
     names = self.default_names_from_exprs(exprs)
     self._init_print(names, exprs)
     self.result.add_data(self.engine, 'printf')
     self.result.print_data()
+  def plotf(self, spec, *exprs): # This one only works from the "plotf" SP.
+    spec = ExpressionType().asPython(spec)
+    names = self.default_names_from_exprs(exprs)
+    self._init_plot(spec, names, exprs)
+    self.result.add_data(self.engine, 'plotf')
 
 class InferResult(object):
   '''
@@ -118,18 +118,18 @@ class InferResult(object):
     self.sweep = 0
     self.time = time.time()
     self._first_command = first_command
-    self._spec_print = None
     self._spec_peek = None
+    self._spec_print = None
     self.spec_plot = None
 
-  def _init_plot(self, spec, names, exprs):
-    self.spec_plot = SpecPlot(spec, names, exprs)
+  def _init_peek(self, names, exprs):
+    self._spec_peek = {'names' : names, 'exprs' : exprs}
 
   def _init_print(self, names, exprs):
     self._spec_print = {'names' : names, 'exprs' : exprs}
 
-  def _init_peek(self, names, exprs):
-    self._spec_peek = {'names' : names, 'exprs' : exprs}
+  def _init_plot(self, spec, names, exprs):
+    self.spec_plot = SpecPlot(spec, names, exprs)
 
   def add_data(self, engine, command):
     # if it's the first command, add all the default fields and increment the counter
@@ -160,12 +160,12 @@ class InferResult(object):
     self._this_data['log score'] = engine.logscore_all()
 
   def _collect_data(self, engine, command):
-    if command == 'printf':
-      names = self._spec_print['names']
-      exprs = self._spec_print['exprs']
     elif command == 'peek':
       names = self._spec_peek['names']
       exprs = self._spec_peek['exprs']
+    if command == 'printf':
+      names = self._spec_print['names']
+      exprs = self._spec_print['exprs']
     else:
       names = self.spec_plot.names
       exprs = self.spec_plot.exprs
