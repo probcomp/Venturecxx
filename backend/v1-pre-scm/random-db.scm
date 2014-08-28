@@ -144,8 +144,12 @@
           (primitive-log-density op)))
    (lambda () #f)))
 
+(define (unconstrained-random-choice? addr trace)
+  (and (random-choice? addr trace)
+       (not (assq addr (rdb-constraints trace)))))
+
 (define (random-choices trace)
-  (filter (lambda (a) (random-choice? a trace)) (rdb-addresses trace)))
+  (filter (lambda (a) (unconstrained-random-choice? a trace)) (rdb-addresses trace)))
 
 (define (select-uniformly items)
   (let ((index (random (length items))))
