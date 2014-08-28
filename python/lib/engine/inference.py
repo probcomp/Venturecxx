@@ -76,13 +76,11 @@ class Infer(object):
     self._init_peak(names)
     self.result.add_data(self.engine, 'peek')
   def plotf(self, spec, *exprs): # This one only works from the "plotf" SP.
-    from dw_utils.debug import set_trace; set_trace()
     spec = ExpressionType().asPython(spec)
     names = [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
     self._init_plot(spec, names, exprs)
     self.result.add_data(self.engine, 'plotf')
   def printf(self, *exprs):
-    from dw_utils.debug import set_trace; set_trace()
     names = [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
     self._init_print(names)
     self.result.add_data(self.engine, 'printf')
@@ -160,7 +158,7 @@ class InferResult(object):
         print 'Global log score: {0:0.2f}'.format(self.this_data['log score'])
       else:
         # TODO: support for pretty-printing of floats
-        print '{0}: {1}'.format(name, self.this_data[name])
+        print '{0}: {1}'.format(name, strip_types_from_dict_values(self.this_data)[name])
     print
 
   def dataset(self):
