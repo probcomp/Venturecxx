@@ -53,7 +53,7 @@ class Address(List):
   
   def request(self, index):
     """Make a new stack frame."""
-    return self.append(index)
+    return Address(index, self)
   
   def extend(self, index):
     """Extend the current stack frame."""
