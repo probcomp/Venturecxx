@@ -126,21 +126,27 @@ class InferResult(object):
   '''
   Returned if any of "peek", "plotf", "printf" issued in an "infer" command.
   There may be at most one of each command per inference program.
-  The "peek" command may give any number of model expressions. These will
-  be recorded.
-  Similarly, the "printf" command may give any number of model expressions, which
-  will be recorded and printed as output on each iteration.
+  Any number of arguments may be given to plotf and peek. Each argument must be
+  either a Venture model expression, or a pair. If a model expression is given,
+  the expression is sampled, recorded, and printed to the screen in the case of
+  plotf. If a pair is given, the car of the pair is the model expression to
+  sample. The cdr is the label for the expression when it is stored and printed.
   See the SpecPlot class for more information on the arguments to plotf and
   the corresponding output.
 
   WARNING: Expressions are recorded the first time they are encountered in an
   inference program. For example, consider the program:
-  [INFER (cycle ((peek x) (infer mh default one 1) (plotf l0 x)))].
-  In this program, the mh proposal could change the value of x. The value recorded
-  for the iteration will be the value BEFORE the change, since x appears in a "peek"
-  statement before. On the other hand, in the inference statement
-  [INFER (cycle ((infer mh default one 1) (peek x) (plotf l0 x)))],
+  [INFER (cycle ((peek x) (mh default one 1) (plotf l0 x)) 10)].
+  In this program, the mh proposal could change the value of x. The value
+  recorded for the iteration will be the value BEFORE the change, since x
+  appears in a "peek" statement before. On the other hand, in the inference
+  statement [INFER (cycle ((mh default one 1) (peek x) (plotf l0 x)) 10)],
   the value of x will be the value AFTER the proposal.
+  If knowledge of x both before and after inference is desired, simply label
+  x differently in the statements before and after inference:
+  [INFER (cycle ((peek (pair x x_before))
+                 (mh default one 1)
+                 (plotf l0 (pair x x_after))) 10)]
 
   The dataset() method returns all data requested by any of the above commands
   as a Pandas DataFrame. By default, this data frame will always include the
@@ -196,8 +202,8 @@ class InferResult(object):
 
   def _collect_default_streams(self, engine):
     the_time = time.time() - self.time
-    self._this_iter_data['sweeps'] = [self.sweep] * len(engine.traces)
-    self._this_iter_data['particle'] = range(len(engine.traces))
+    self._this_iter_data['sweep count'] = [self.sweep] * len(engine.traces)
+    self._this_iter_data['particle id'] = range(len(engine.traces))
     self._this_iter_data['time (s)'] = [the_time] * len(engine.traces)
     self._this_iter_data['log score'] = engine.logscore_all()
 
@@ -250,6 +256,11 @@ class SpecPlot(object):
   will do 1000 iterations of MH and then show a plot of the x variable
   (which should be a scalar) against the sweep number (from 1 to
   1000), colored according to the global log score.
+
+  By passing a pair to the format spec, Venture statements can be assigned labels:
+    [INFER (cycle ((mh default one 1) (plotf c0s (pair (normal 0 1) foo))) 1000)]
+  will plot a draw from a normal distribution against the sweep number, and label
+  the x axis as "foo".
 
   Example library use:
     ripl.infer("(cycle ((mh default one 1) (plotf c0s x)) 1000)")
