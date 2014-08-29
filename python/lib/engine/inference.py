@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
-from pandas import DataFrame
+from pandas import DataFrame, Index
 
 from venture.lite.value import (ExpressionType, VentureArray, VentureSymbol,
                                 VenturePair, VentureInteger)
@@ -235,7 +235,21 @@ class InferResult(object):
     print
 
   def dataset(self):
-    return DataFrame.from_dict(strip_types_from_dict_values(self.data))
+    ds = DataFrame.from_dict(strip_types_from_dict_values(self.data))
+    cols = ds.columns
+    first_cols = Index(['sweep count', 'particle id', 'time (s)', 'log score'])
+    rest_cols = cols - first_cols
+    order = first_cols.tolist() + rest_cols.tolist()
+    return ds[order]
+
+  def panel(self):
+    '''
+    Returns a Pandas Panel, a 3-d data structure. Use case is for multiple
+    particles. In this case, each particle gets its own "slice". So, calling
+    panel[0] returns the traces for all variables, for the first particle.
+    '''
+    ix = ['sweep count', 'particle id']
+    return self.dataset().set_index(ix).to_panel().transpose(2,1,0)
 
   def draw(self):
     return self.spec_plot.draw(self.dataset())
