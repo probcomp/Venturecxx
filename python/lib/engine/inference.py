@@ -32,7 +32,7 @@ class Infer(object):
 
   def final_data(self):
     # add the last data point if result isn't None
-    if self.result is not None: self.result._save_previous_iter()
+    if self.result is not None: self.result._save_previous_iter(self.sweep + 1)
     return self.result
 
   def _init_peek(self, names, exprs):
@@ -149,16 +149,16 @@ class InferResult(object):
     # if it's the first command, add all the default fields and increment the counter
     if command == self._first_command:
       self.sweep += 1
-      self._save_previous_iter()
+      self._save_previous_iter(self.sweep)
       self._collect_default_streams(engine)
     self._collect_requested_streams(engine, command)
 
-  def _save_previous_iter(self):
+  def _save_previous_iter(self, sweep):
     # self._this_iter_data always defined on sweep 1
     # pylint: disable=access-member-before-definition
-    if self.sweep == 1:
+    if sweep == 1:
       pass
-    elif self.sweep == 2:
+    elif sweep == 2:
       self.data = self._this_iter_data
     else:
       for field in self.data:
