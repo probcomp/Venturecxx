@@ -32,7 +32,8 @@ class Infer(object):
 
   def final_data(self):
     # add the last data point if result isn't None
-    if self.result is not None: self.result._save_previous_iter(self.sweep + 1)
+    if self.result is not None:
+      self.result._save_previous_iter(self.result.sweep + 1)
     return self.result
 
   def _init_peek(self, names, exprs):
