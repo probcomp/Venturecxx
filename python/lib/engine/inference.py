@@ -15,9 +15,11 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
-from venture.lite.value import ExpressionType
-from venture.ripl.utils import strip_types_from_dict_values
 from pandas import DataFrame
+
+from venture.lite.value import (ExpressionType, VentureArray, VentureSymbol,
+                                VenturePair, VentureInteger)
+from venture.ripl.utils import strip_types_from_dict_values
 from plot_spec import PlotSpec
 
 class Infer(object):
@@ -36,33 +38,33 @@ class Infer(object):
       self.result._save_previous_iter(self.result.sweep + 1)
     return self.result
 
-  def _init_peek(self, names, exprs):
+  def _init_peek(self, names, exprs, stack_dicts):
     if self.result is None:
       self.result = InferResult(first_command = 'peek')
     if self.result._peek_names is None:
-      self.result._init_peek(names, exprs)
+      self.result._init_peek(names, exprs, stack_dicts)
     elif (names == self.result._peek_names and
           exprs == self.result._peek_exprs):
       pass
     else:
       raise Exception("Cannot issue multiple peek commands in the same inference program")
 
-  def _init_print(self, names, exprs):
+  def _init_print(self, names, exprs, stack_dicts):
     if self.result is None:
       self.result = InferResult(first_command = 'printf')
     if self.result._print_names is None:
-      self.result._init_print(names, exprs)
+      self.result._init_print(names, exprs, stack_dicts)
     elif (names == self.result._print_names and
           exprs == self.result._print_exprs):
       pass
     else:
       raise Exception("Cannot issue multiple printf commands in same inference program")
 
-  def _init_plot(self, spec, names, exprs):
+  def _init_plot(self, spec, names, exprs, stack_dicts):
     if self.result is None:
       self.result = InferResult(first_command = 'plotf')
     if self.result.spec_plot is None:
-      self.result._init_plot(spec, names, exprs)
+      self.result._init_plot(spec, names, exprs, stack_dicts)
     elif (spec == self.result.spec_plot.spec_string and
           names == self.result.spec_plot.names and
           exprs == self.result.spec_plot.exprs):
@@ -81,22 +83,43 @@ class Infer(object):
   def default_names_from_exprs(self, exprs):
     return [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
 
+  def parse_exprs(self, exprs):
+    names = []
+    stack_dicts = []
+    for expr in exprs:
+      name, stack_dict = self.parse_expr(expr)
+      names.append(name)
+      stack_dicts.append(stack_dict)
+    return names, stack_dicts
+
+  def parse_expr(self, expr):
+    if (type(expr) is VentureArray and
+        expr.lookup(VentureInteger(0)) == VentureSymbol('pair')):
+      # the car of the pair is the command, the cdr is the symbol
+      stack_dict = expr.lookup(VentureInteger(1)).asStackDict()
+      name = expr.lookup(VentureInteger(2)).symbol
+    else:
+      # generate the default name, get the stack dict
+      stack_dict = expr.asStackDict()
+      name = self.default_name_for_exp(ExpressionType().asPython(expr))
+    return name, stack_dict
+
   def primitive_infer(self, exp): self.engine.primitive_infer(exp)
   def resample(self, ct): self.engine.resample(ct)
   def incorporate(self): pass # Since we incorporate at the beginning anyway
   def peek(self, *exprs):
-    names = self.default_names_from_exprs(exprs)
-    self._init_peek(names, exprs)
+    names, stack_dicts = self.parse_exprs(exprs)
+    self._init_peek(names, exprs, stack_dicts)
     self.result._add_data(self.engine, 'peek')
   def printf(self, *exprs):
-    names = self.default_names_from_exprs(exprs)
-    self._init_print(names, exprs)
+    names, stack_dicts = self.parse_exprs(exprs)
+    self._init_print(names, exprs, stack_dicts)
     self.result._add_data(self.engine, 'printf')
     self.result._print_data()
   def plotf(self, spec, *exprs): # This one only works from the "plotf" SP.
     spec = ExpressionType().asPython(spec)
-    names = self.default_names_from_exprs(exprs)
-    self._init_plot(spec, names, exprs)
+    names, stack_dicts = self.parse_exprs(exprs)
+    self._init_plot(spec, names, exprs, stack_dicts)
     self.result._add_data(self.engine, 'plotf')
 
 class InferResult(object):
@@ -131,20 +154,24 @@ class InferResult(object):
     self._first_command = first_command
     self._peek_names = None
     self._peek_exprs = None
+    self._peek_stack_dicts = None
     self._print_names = None
     self._print_exprs = None
+    self._print_stack_dicts = None
     self.spec_plot = None
 
-  def _init_peek(self, names, exprs):
+  def _init_peek(self, names, exprs, stack_dicts):
     self._peek_names = names
     self._peek_exprs = exprs
+    self._peek_stack_dicts = stack_dicts
 
-  def _init_print(self, names, exprs):
+  def _init_print(self, names, exprs, stack_dicts):
     self._print_names = names
     self._print_exprs = exprs
+    self._print_stack_dicts = stack_dicts
 
-  def _init_plot(self, spec, names, exprs):
-    self.spec_plot = SpecPlot(spec, names, exprs)
+  def _init_plot(self, spec, names, exprs, stack_dicts):
+    self.spec_plot = SpecPlot(spec, names, exprs, stack_dicts)
 
   def _add_data(self, engine, command):
     # if it's the first command, add all the default fields and increment the counter
@@ -177,14 +204,13 @@ class InferResult(object):
   def _collect_requested_streams(self, engine, command):
     if command == 'peek':
       names = self._peek_names
-      exprs = self._peek_exprs
+      stack_dicts = self._peek_stack_dicts
     elif command == 'printf':
       names = self._print_names
-      exprs = self._print_exprs
+      stack_dicts = self._print_stack_dicts
     else:
       names = self.spec_plot.names
-      exprs = self.spec_plot.exprs
-    stack_dicts = [x.asStackDict() for x in exprs]
+      stack_dicts = self.spec_plot.stack_dicts
     for name, stack_dict in zip(names, stack_dicts):
       if name not in self._this_iter_data:
         self._this_iter_data[name] = engine.sample_all(stack_dict)
@@ -273,11 +299,12 @@ class SpecPlot(object):
   If the given specification is a list, make all those plots at once.
 
   """
-  def __init__(self, spec, names, exprs):
+  def __init__(self, spec, names, exprs, stack_dicts):
     self.spec_string = spec
     self.spec = PlotSpec(spec)
     self.names = names
     self.exprs = exprs
+    self.stack_dicts = stack_dicts
 
   def draw(self, data):
     if self.spec is None:
