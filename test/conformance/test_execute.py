@@ -40,7 +40,7 @@ def testPeekOutput():
   assert 'mu' in res.dataset()
   assert 'sigma' in res.dataset()
   eq_(res.dataset().shape[0], 15)
-  assert_array_equal(res.dataset().particle.unique(), np.arange(3))
+  assert_array_equal(res.dataset()['particle id'].unique(), np.arange(3))
 
 def testPeekFunction():
   '''
@@ -48,7 +48,7 @@ def testPeekFunction():
   '''
   ripl = get_ripl()
   ripl.assume('x', '(lambda() 2)')
-  res = ripl.infer('(cycle ((mh default one 1) (peek (x))) 1)')
+  _ = ripl.infer('(cycle ((mh default one 1) (peek (x))) 1)')
 
 def testPlotfOutput():
   '''Make sure that execute_program returns result form plotf commands'''
