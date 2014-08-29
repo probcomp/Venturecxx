@@ -1,7 +1,11 @@
+import warnings
 import random
 import math
 import numpy as np
 import scipy.stats as stats
+from ..exception import (SubsampledScaffoldError,
+                         SubsampledScaffoldNotEffectiveWarning,
+                         SubsampledScaffoldNotApplicableWarning)
 from ..value import SPRef
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
@@ -41,7 +45,7 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
     assert N > 1
 
     mu_0 = (log_u - alpha) / N
-    perm_local_children = np.random.permutation(global_index.local_children)
+    perm_local_roots = np.random.permutation(global_index.local_roots)
 
     # Sequentially do until termination condition is met.
     mx = 0.0  # Mean of llh.
@@ -57,7 +61,8 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
       n_end = min(n + Nbatch, N)
       for i in xrange(int(n_start), int(n_end)):
         # Construct a local scaffold section.
-        local_scaffold = indexer.sampleLocalIndex(trace,perm_local_children[i])
+        local_scaffold = indexer.sampleLocalIndex(
+            trace,perm_local_roots[i],global_index.globalBorder)
         # Compute diff of log-likelihood for i'th local variable.
         dllh = operator.evalOneLocalSection(trace, local_scaffold)
         cum_dllh  += dllh
@@ -107,12 +112,150 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
   def sampleGlobalIndex(self,trace):
     setsOfPNodes = self.getSetsOfPNodes(trace)
 
-    # Find the globalBorder. If it's empty, the subsampled scaffold is the same
+    # If it's empty, the subsampled scaffold is the same
     # as a regular scaffold.
+    globalBorder = self.findGlobalBorder(trace, setsOfPNodes)
+    self.globalBorder = globalBorder
+
+    # Construct the bounded scaffold.
+    index = constructScaffold(trace,setsOfPNodes,useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs,hardBorder=globalBorder,updateValues=self.updateValues)
+
+    # Check if it's a valid partition.
+    index.globalBorder = globalBorder
+    if globalBorder:
+      if not all(node in index.border and index.isResampling(node) and
+                 not index.isAAA(node) for node in globalBorder):
+        raise SubsampledScaffoldError("Invalid global border.")
+      index.local_roots = list(trace.childrenAt(globalBorder[0]))
+      index.N = len(index.local_roots)
+
+    # TODO Check if local sections have intersection with each other.
+
+    return index
+
+  def sampleLocalIndex(self,trace,localRoot,globalBorder):
+    # TODO Remove the restriction that a local root cannot be an absorbing node.
+    if not (isinstance(localRoot, LookupNode) or
+        (isinstance(localRoot, OutputNode) and
+         len(globalBorder) == 1 and
+         not trace.pspAt(localRoot).canAbsorb(trace, localRoot, globalBorder[0]))):
+      raise SubsampledScaffoldError("Invalid local root node.")
+    setsOfPNodes = [set([localRoot])]
+    # Set updateValues = False because we'll update values in evalOneLocalSection.
+    index = constructScaffold(trace,setsOfPNodes,updateValues=False)
+
+    # Local section should not have brush.
+    if index.brush:
+      raise SubsampledScaffoldError("Local section should not have brush.")
+    return index
+
+  # Raise two types of warnings:
+  # - SubsampledScaffoldNotEffectiveWarning: calling subsampled_mh will be the
+  #   same as calling mh.
+  # - SubsampledScaffoldNotApplicableWarning: calling subsampled_mh will cause
+  #   a incorrect behavior.
+  def checkApplicability(self, trace):
+    # Check cannot be done with a random set of PNodes.
+    # assert self.block != "one" or len(trace.blocksInScope(self.scope)) == 1
+    if self.block == "one" and len(trace.blocksInScope(self.scope)) > 1:
+      warnings.warn("Check cannot be done with a random set of PNodes.")
+      return False
+    setsOfPNodes = self.getSetsOfPNodes(trace)
+
+    # If it's empty, the subsampled scaffold is the same
+    # as a regular scaffold.
+    globalBorder = self.findGlobalBorder(trace, setsOfPNodes)
+    if not globalBorder:
+      warnings.warn("No global border found. subsampled_mh will behave the "
+                    "same as mh.", SubsampledScaffoldNotEffectiveWarning)
+      return False
+
+    # Construct the regular scaffold.
+    index = self.sampleIndex(trace)
+    if not all(index.isResampling(node) and not index.isAAA(node)
+               for node in globalBorder):
+      warnings.warn("Invalid global border.", SubsampledScaffoldNotApplicableWarning)
+      return False
+    allNodes = self.allNodesInScaffold(index)
+
+    # Check the global section.
+    if not self.checkOneSection(index,
+        lambda: self.traverseTrace(trace, allNodes, set(globalBorder), False, set()),
+        lambda: self.sampleGlobalIndex(trace)):
+      return False
+
+    # Find the local sections from the scaffold.
+    assert len(globalBorder) == 1 # This should already be guaranteed in findGlobalBorder.
+    localRootNodes = trace.childrenAt(globalBorder[0])
+    for localRoot in localRootNodes:
+      if not self.checkOneSection(index,
+          lambda: self.traverseTrace(trace, allNodes, {localRoot}, True, set(globalBorder)),
+          lambda: self.sampleLocalIndex(trace, localRoot, globalBorder)):
+        return False
+
+    return True
+
+  def checkOneSection(self, index, traverser, sectionIndexer):
+    # Find the node set of a section from the scaffold by graph traversal.
+    success, localNodes = traverser()
+    if not success:
+      warnings.warn("The global border does not seperate sections.",
+                    SubsampledScaffoldNotApplicableWarning)
+      return False
+
+    # Construct a scaffold section using the indexer.
+    try:
+      sectionIndex = sectionIndexer()
+    except SubsampledScaffoldError as e:
+      warnings.warn(e.message, SubsampledScaffoldNotApplicableWarning)
+      return False
+
+    # Compare the two sets of nodes.
+    if not (nodeSet == self.allNodesInScaffold(sectionIndex) and
+            all(self.checkType(n, index, sectionIndex) for n in nodeSet)):
+      warnings.warn("The scaffold section is not consistent with the entire scaffold.",
+                    SubsampledScaffoldNotApplicableWarning)
+      return False
+
+    return True
+
+  def checkType(self, node, index1, index2):
+    return (index1.isResampling(node) == index2.isResampling(node) and
+            index1.isAbsorbing(node)  == index2.isAbsorbing(node) and
+            index1.isAAA(node)        == index2.isAAA(node) and
+            (node in index1.brush)    == (node in index2.brush))
+
+  def allNodesInScaffold(self, index):
+    return set(index.regenCounts.keys()) | index.absorbing | index.brush
+
+  def traverseTrace(self, trace, include, startSet, descend, failAt):
+    nodeSet = set()
+    q = list(startSet & include)
+    while q:
+      node = q.pop()
+      if node not in nodeSet:
+        nodeSet.add(node)
+
+        toExtend = set()
+        if node not in startSet or descend:
+          toExtend = toExtend.union(trace.childrenAt(node))
+        if node not in startSet or not descend:
+          toExtend = toExtend.union(trace.parentsAt(node))
+        for n in toExtend:
+          if n in failAt: return False, set()
+          if n in include: q.append(n)
+    return True, nodeSet
+
+  def findGlobalBorder(self, trace, setsOfPNodes):
+    # Find the globalBorder. Return an empty list if the desired structure
+    # does not exist. However, the validity of the returned value is not
+    # guaranteed.
 
     # Assumption 1. Single principal node.
-    assert len(setsOfPNodes) == 1
-    assert len(setsOfPNodes[0]) == 1
+    # assert len(setsOfPNodes) == 1
+    # assert len(setsOfPNodes[0]) == 1
+    if not (len(setsOfPNodes) == 1 and len(setsOfPNodes[0]) == 1):
+      return []
     pnode = next(iter(setsOfPNodes[0]))
 
     # Assumption 2. P -> single path (single lookup node or output node) -> N outgoing lookup or output nodes.
@@ -135,7 +278,6 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
         globalBorder.append(node)
         break
       node = nextNode
-    self.globalBorder = globalBorder
     assert len(globalBorder) <= 1
     if globalBorder:
       # assert maybeBorder
@@ -146,31 +288,7 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
           not trace.pspAt(globalBorder[0]).childrenCanAAA()):
         # Is not a valid globalBorder. Revert to regular MH.
         globalBorder = []
-
-    # Construct the bounded scaffold.
-    index = constructScaffold(trace,setsOfPNodes,useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs,hardBorder=globalBorder,updateValues=self.updateValues)
-
-    # Check if it's a valid partition.
-    index.globalBorder = globalBorder
-    if globalBorder:
-      assert (index.isResampling(globalBorder[0]) and
-              not index.isAAA(globalBorder[0]))
-      index.local_children = list(trace.childrenAt(globalBorder[0]))
-      index.N = len(index.local_children)
-
-    # TODO Check if local sections have intersection with each other.
-
-    return index
-
-  def sampleLocalIndex(self,trace,local_child):
-    assert isinstance(local_child, (LookupNode, OutputNode))
-    setsOfPNodes = [set([local_child])]
-    # Set updateValues = False because we'll update values in evalOneLocalSection.
-    index = constructScaffold(trace,setsOfPNodes,updateValues=False)
-
-    # Local section should not have brush.
-    assert not index.brush
-    return index
+    return globalBorder
 
   def name(self):
     return ["subsampled_scaffold", self.scope, self.block] + ([self.interval] if self.interval is not None else []) + ([self.true_block] if hasattr(self, "true_block") else [])
@@ -212,8 +330,8 @@ class SubsampledInPlaceOperator(InPlaceOperator):
     if not hasattr(self, "scaffold"):
       self.scaffold = indexer.sampleGlobalIndex(trace)
     if self.scaffold.globalBorder:
-      for local_child in self.scaffold.local_children:
-        local_scaffold = indexer.sampleLocalIndex(trace,local_child)
+      for local_root in self.scaffold.local_roots:
+        local_scaffold = indexer.sampleLocalIndex(trace,local_root)
         _,local_rhoDB = detachAndExtract(trace, local_scaffold)
         regenAndAttach(trace,local_scaffold,False,local_rhoDB,{})
 

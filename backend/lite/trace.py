@@ -410,6 +410,8 @@ class Trace(object):
       elif operator == "subsampled_mh":
         (Nbatch, k0, epsilon, useDeltaKernels, deltaKernelArgs, updateValues) = exp[3:9]
         subsampledMixMH(self, SubsampledBlockScaffoldIndexer(scope, block, useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs, updateValues=updateValues), SubsampledMHOperator(), Nbatch, k0, epsilon)
+      elif operator == "subsampled_mh_check_applicability":
+        SubsampledBlockScaffoldIndexer(scope, block).checkApplicability(self)
       elif operator == "subsampled_mh_make_consistent":
         (useDeltaKernels, deltaKernelArgs, updateValues) = exp[3:6]
         SubsampledMHOperator().makeConsistent(self,SubsampledBlockScaffoldIndexer(scope, block, useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs, updateValues=updateValues))
