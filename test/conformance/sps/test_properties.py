@@ -33,7 +33,7 @@ def propLiteToStack(val):
 def relevantSPs():
   for (name,sp) in builtInSPsList:
     if isinstance(sp.requestPSP, NullRequestPSP):
-      if name not in []: # Placeholder for selecting SPs to do or not do
+      if name not in ['make_csp']: # Placeholder for selecting SPs to do or not do
         yield name, sp
 
 @gen_in_backend("none")
