@@ -487,7 +487,7 @@ class Trace(object):
 
   def evalAndRestore(self,id,exp,db):
     assert id not in self.families
-    (_,self.families[id]) = evalFamily(self,self.unboxExpression(exp),self.globalEnv,Scaffold(),True,db,{})
+    (_,self.families[id]) = evalFamily(self,Address(List(id)),self.unboxExpression(exp),self.globalEnv,Scaffold(),True,db,{})
 
   #### Helpers (shouldn't be class methods)
 
