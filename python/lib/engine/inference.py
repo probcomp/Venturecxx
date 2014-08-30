@@ -18,7 +18,7 @@ import time
 from pandas import DataFrame, Index
 
 from venture.lite.value import (ExpressionType, VentureArray, VentureSymbol,
-                                VenturePair, VentureInteger)
+                                VentureInteger)
 from venture.ripl.utils import strip_types_from_dict_values
 from plot_spec import PlotSpec
 
@@ -95,8 +95,8 @@ class Infer(object):
   def parse_expr(self, expr, command):
     special_names = [VentureSymbol(x) for x in ['sweep', 'time', 'score']]
     if (type(expr) is VentureArray and
-        expr.lookup(VentureInteger(0)) == VentureSymbol('pair')):
-      # the car of the pair is the command, the cdr is the symbol
+        expr.lookup(VentureInteger(0)) == VentureSymbol('labelled')):
+      # the first element is the command, the second is the label for the command
       stack_dict = expr.lookup(VentureInteger(1)).asStackDict()
       name = expr.lookup(VentureInteger(2)).symbol
     elif command == 'printf' and expr in special_names:
@@ -131,18 +131,21 @@ class InferResult(object):
   Returned if any of "peek", "plotf", "printf" issued in an "infer" command.
   There may be at most one of each command per inference program.
   Any number of arguments may be given to plotf and peek. Each argument must be
-  either a Venture model expression, or a pair. If a model expression is given,
-  the expression is sampled, recorded, and printed to the screen in the case of
-  plotf. If a pair is given, the car of the pair is the model expression to
-  sample. The cdr is the label for the expression when it is stored and printed.
+  either a Venture model expression, or a statement of the form
+  (labelled <venture-expression> <expression-label>).
+  If a model expression is given, the expression is sampled, recorded, and
+  printed to the screen in the case of plotf. If a (labelled) statement is
+  given, <venture-expression> is the model expression to sample.
+  <expression-label> is the label for the expression when it is stored and
+  printed.
   See the SpecPlot class for more information on the arguments to plotf and
   the corresponding output.
 
   There are three "special" names for printf: "sweep", "time", and "score".
-  If sweep is given, for instance, printf will display the sweep count on each
+  If "sweep" is given, for instance, printf will display the sweep count on each
   iteration. To display the value of an actual Venture variable named sweep,
-  enclose it in a pair. For instance:
-  [INFER (printf sweep (pair sweep var_sweep))].
+  enclose it in a (labelled) statement. For instance:
+  [INFER (printf sweep (labelled sweep var_sweep))].
   The three names above are just treated as normal Venture variables for
   peek and plotf.
 
@@ -156,9 +159,9 @@ class InferResult(object):
   the value of x will be the value AFTER the proposal.
   If knowledge of x both before and after inference is desired, simply label
   x differently in the statements before and after inference:
-  [INFER (cycle ((peek (pair x x_before))
+  [INFER (cycle ((peek (labelled x x_before))
                  (mh default one 1)
-                 (plotf l0 (pair x x_after))) 10)]
+                 (plotf l0 (labelled x x_after))) 10)]
 
   The dataset() method returns all data requested by any of the above commands
   as a Pandas DataFrame. By default, this data frame will always include the
@@ -283,8 +286,9 @@ class SpecPlot(object):
   (which should be a scalar) against the sweep number (from 1 to
   1000), colored according to the global log score.
 
-  By passing a pair to the format spec, Venture statements can be assigned labels:
-    [INFER (cycle ((mh default one 1) (plotf c0s (pair (normal 0 1) foo))) 1000)]
+  By passing a "labelled" statement to the format spec, Venture statements can
+  be assigned labels (see InferResult documentation for more details):
+    [INFER (cycle ((mh default one 1) (plotf c0s (labelled (normal 0 1) foo))) 1000)]
   will plot a draw from a normal distribution against the sweep number, and label
   the x axis as "foo".
 
