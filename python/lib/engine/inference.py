@@ -83,21 +83,25 @@ class Infer(object):
   def default_names_from_exprs(self, exprs):
     return [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
 
-  def parse_exprs(self, exprs):
+  def parse_exprs(self, exprs, command):
     names = []
     stack_dicts = []
     for expr in exprs:
-      name, stack_dict = self.parse_expr(expr)
+      name, stack_dict = self.parse_expr(expr, command)
       names.append(name)
       stack_dicts.append(stack_dict)
     return names, stack_dicts
 
-  def parse_expr(self, expr):
+  def parse_expr(self, expr, command):
+    special_names = [VentureSymbol(x) for x in ['sweep', 'time', 'score']]
     if (type(expr) is VentureArray and
         expr.lookup(VentureInteger(0)) == VentureSymbol('pair')):
       # the car of the pair is the command, the cdr is the symbol
       stack_dict = expr.lookup(VentureInteger(1)).asStackDict()
       name = expr.lookup(VentureInteger(2)).symbol
+    elif command == 'printf' and expr in special_names:
+      name = expr.getSymbol()
+      stack_dict = None
     else:
       # generate the default name, get the stack dict
       stack_dict = expr.asStackDict()
@@ -108,17 +112,17 @@ class Infer(object):
   def resample(self, ct): self.engine.resample(ct)
   def incorporate(self): pass # Since we incorporate at the beginning anyway
   def peek(self, *exprs):
-    names, stack_dicts = self.parse_exprs(exprs)
+    names, stack_dicts = self.parse_exprs(exprs, 'peek')
     self._init_peek(names, exprs, stack_dicts)
     self.result._add_data(self.engine, 'peek')
   def printf(self, *exprs):
-    names, stack_dicts = self.parse_exprs(exprs)
+    names, stack_dicts = self.parse_exprs(exprs, 'printf')
     self._init_print(names, exprs, stack_dicts)
     self.result._add_data(self.engine, 'printf')
     self.result._print_data()
   def plotf(self, spec, *exprs): # This one only works from the "plotf" SP.
     spec = ExpressionType().asPython(spec)
-    names, stack_dicts = self.parse_exprs(exprs)
+    names, stack_dicts = self.parse_exprs(exprs, 'plotf')
     self._init_plot(spec, names, exprs, stack_dicts)
     self.result._add_data(self.engine, 'plotf')
 
@@ -133,6 +137,14 @@ class InferResult(object):
   sample. The cdr is the label for the expression when it is stored and printed.
   See the SpecPlot class for more information on the arguments to plotf and
   the corresponding output.
+
+  There are three "special" names for printf: "sweep", "time", and "score".
+  If sweep is given, for instance, printf will display the sweep count on each
+  iteration. To display the value of an actual Venture variable named sweep,
+  enclose it in a pair. For instance:
+  [INFER (printf sweep (pair sweep var_sweep))].
+  The three names above are just treated as normal Venture variables for
+  peek and plotf.
 
   WARNING: Expressions are recorded the first time they are encountered in an
   inference program. For example, consider the program:
@@ -218,17 +230,17 @@ class InferResult(object):
       names = self.spec_plot.names
       stack_dicts = self.spec_plot.stack_dicts
     for name, stack_dict in zip(names, stack_dicts):
-      if name not in self._this_iter_data:
+      if name not in self._this_iter_data and stack_dict is not None:
         self._this_iter_data[name] = engine.sample_all(stack_dict)
 
   def _print_data(self):
     for name in self._print_names:
-      if name == 'counter':
+      if name == 'sweep':
         print 'Sweep count: {0}'.format(self.sweep)
       elif name == 'time':
-        print 'Wall time: {0:0.2f} s'.format(self._this_iter_data['time (s)'])
+        print 'Wall time: {0:0.2f} s'.format(self._this_iter_data['time (s)'][0])
       elif name == 'score':
-        print 'Global log score: {0:0.2f}'.format(self._this_iter_data['log score'])
+        print 'Global log score: {0}'.format(self._this_iter_data['log score'])
       else:
         # TODO: support for pretty-printing of floats
         print '{0}: {1}'.format(name, strip_types_from_dict_values(self._this_iter_data)[name])
