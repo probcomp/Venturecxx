@@ -274,8 +274,11 @@ class InferResult(object):
 
   def __str__(self):
     "Not really a string method, but does get itself displayed when printed."
-    self.plot()
-    return "a plot"
+    if self.spec_plot is None:
+      return self.__repr__()
+    else:
+      self.plot()
+      return "a plot"
 
 class SpecPlot(object):
   """(plotf spec exp0 ...) -- Generate a plot according to a format specification.
