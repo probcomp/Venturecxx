@@ -94,8 +94,8 @@ def testPlotfDataset():
 
 def testPrintf():
   '''Intercept stdout and make sure the message read what we expect'''
-  pattern = make_pattern()
   ripl = get_ripl()
+  pattern = make_pattern(ripl.backend())
   ripl.infer('(resample 2)')
   ripl.assume('x', 2.1)
   old_stdout = sys.stdout
@@ -106,19 +106,23 @@ def testPrintf():
   res = result.getvalue()
   assert pattern.match(res) is not None
 
-def make_pattern():
+def make_pattern(backend):
+  if backend == 'lite':
+    logscore_pattern = '\[0, 0\]'
+  else:
+    logscore_pattern = '\[0\.0, 0\.0\]'
   pattern = '''x: \[2.1, 2.1\]
-Global log score: \[0, 0\]
+Global log score: {0}
 foo: \[3.1, 3.1\]
 Sweep count: 1
 Wall time: .*\... s
 
 x: \[2.1, 2.1\]
-Global log score: \[0, 0\]
+Global log score: {0}
 foo: \[3.1, 3.1\]
 Sweep count: 2
 Wall time: .*\... s
 
-'''
+'''.format(logscore_pattern)
   return re.compile(pattern)
 
