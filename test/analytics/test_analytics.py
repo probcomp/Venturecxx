@@ -13,7 +13,7 @@ from venture.test.config import get_ripl,get_mripl,ignore_inference_quality,defa
 import venture.value.dicts as v
 
 
-# TODO get rid of some tests, simplify others, make tests faster to run
+
 
 
 ## Functions used by tests
@@ -151,7 +151,7 @@ def testRunFromConditionalInfer():
 @statisticalTest
 def _testSampleFromJoint(riplThunk,useMRipl):
     # if riplThunk.func_name in 'get_ripl' or useMRipl is False:
-    #     raise SkipTest('Bug with seeds for ripls')
+
     v,_,_,queryExps,xPriorCdf = normalModel( riplThunk() )
     samples = default_num_samples()
     model = Analytics(v,queryExps=queryExps)
