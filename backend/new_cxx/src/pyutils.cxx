@@ -227,7 +227,14 @@ VentureValuePtr parseValue(boost::python::dict d)
 
   if (type == "number") { return VentureValuePtr(new VentureNumber(boost::python::extract<double>(value))); }
   else if (type == "real") { return VentureValuePtr(new VentureNumber(boost::python::extract<double>(value))); }
-  else if (type == "integer") { return VentureValuePtr(new VentureInteger(boost::python::extract<int>(value))); }
+  else if (type == "integer") {
+    // The parser currently makes these be Python floats
+    boost::python::extract<int> i(value);
+    if (i.check()) { return VentureValuePtr(new VentureInteger(i)); }
+    boost::python::extract<double> d(value);
+    if (d.check()) { return VentureValuePtr(new VentureInteger((int)round(d))); }
+    throw "Unknown format for integer";
+  }
   else if (type == "probability") { return VentureValuePtr(new VentureProbability(boost::python::extract<double>(value))); }
   else if (type == "atom") { return VentureValuePtr(new VentureAtom(boost::python::extract<uint32_t>(value))); }
   else if (type == "boolean") { return VentureValuePtr(new VentureBool(boost::python::extract<bool>(value))); }
