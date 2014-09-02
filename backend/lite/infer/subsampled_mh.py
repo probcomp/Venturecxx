@@ -197,7 +197,7 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
 
   def checkOneSection(self, index, traverser, sectionIndexer):
     # Find the node set of a section from the scaffold by graph traversal.
-    success, localNodes = traverser()
+    success, nodeSet = traverser()
     if not success:
       warnings.warn("The global border does not seperate sections.",
                     SubsampledScaffoldNotApplicableWarning)

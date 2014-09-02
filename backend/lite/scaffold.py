@@ -114,7 +114,7 @@ def update(trace, node):
 def constructScaffold(trace, setsOfPNodes, useDeltaKernels=False, deltaKernelArgs=None, hardBorder=None, updateValues=False):
   if hardBorder is None:
     hardBorder = []
-  assert(len(hardBorder) <= 1)
+  assert len(hardBorder) <= 1
 
   cDRG,cAbsorbing,cAAA = set(),set(),set()
   indexAssignments = {}
