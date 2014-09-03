@@ -41,5 +41,6 @@
               ,map-defn
               (map (lambda (x) (+ x 1)) (list 1 2 3))))
           '(2 3 4))
+  (boolean? (top-eval inference-smoke-test-defn))
   )
 

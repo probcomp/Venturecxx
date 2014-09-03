@@ -188,13 +188,16 @@
   (set-rdb-addresses! to (rdb-addresses from))
   (set-rdb-records! to (rdb-records from)))
 
-#;
-`(begin
-   (define x (flip))
-   ,infer-defn
-   (pp x)
-   (infer (lambda (t) (mcmc-step t)))
-   x)
+(define inference-smoke-test-defn
+  `(begin
+     (define model-trace (rdb-extend (get-current-trace)))
+     (trace-in model-trace
+               (begin
+                 (define x (flip))
+                 x))
+     (pp (trace-in (store-extend model-trace) x))
+     (mcmc-step model-trace)
+     (trace-in (store-extend model-trace) x)))
 
 ;; This one exhibits eponential behavior, because each infer command
 ;; reruns the entire program -- including all previous infer commands!
