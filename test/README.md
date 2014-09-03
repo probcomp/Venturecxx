@@ -34,6 +34,41 @@ The test suite lives in the `test/` directory.
 - `unit/` is unit tests of separable pieces (there are quite few of
   these right now).
 
+Crash Testing vs Inference Quality Testing
+------------------------------------------
+
+General software has broadly two kinds of correctness failures:
+crashes and getting the wrong answer.  When the right answer for a
+given test situation is deterministic and sufficiently easily
+obtainable, these modes can be conflated by causing an artificial
+crash when the answer is wrong -- this is how all the fooUnit testing
+frameworks operate.
+
+Venture's notion of a "correct answer" is more subtle, because the
+"correct answer" is actually a probability distribution on outputs.
+As such, knowing whether the distribution is right or wrong tends to
+take a lot of computation, and even then remains uncertain.
+
+Consequently, when testing Venture we separate the notion of checking
+for crashes, which always indicate bugs, from the notion of checking
+that probabilistic programs written in Venture have the expected
+distributional behavior.  The former tends to be relatively fast and
+clear-cut (a situation either caused a crash or it didn't), while the
+latter consumes much more compute, and is prone to problems that
+manifest only sporadically and are difficult to diagnose.
+
+Therefore, axch for one tends not to run the inference quality test
+suite much locally, relying instead on the [continuous integration
+server](http://ec2-54-84-30-252.compute-1.amazonaws.com:8080/) to
+notice problems.  If you are working on something related, however,
+`nosetests -c inference-quality.cfg` is your friend.
+
+Note: One can and we do run inference quality tests as crash tests by
+taking fewer samples and fewer iterations of any inference method, and
+ignoring the statistical properties of the results.  This is turned on
+by passing `--tc=ignore_inference_quality:true` to nose, which the
+various `crashes.cfg` files do.
+
 Configurations
 --------------
 
