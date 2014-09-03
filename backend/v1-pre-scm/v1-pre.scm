@@ -209,6 +209,9 @@
          (store-extend trace))
         (else (error "Unknown trace type" trace))))
 
+;;; One hack: allow PETs but do not allow them to be extended.  Then
+;;; we should be able to grandfather in all our old code.
+
 ;;; Addresses
 
 (define (toplevel-address) (make-address))
