@@ -18,6 +18,10 @@ rather than silently not following it.
 - We use [pylint](http://www.pylint.org/) to maintain our Python code style.  The normative
   pylint configuration file is in `tool/pylintrc`.
 
+- We have a [Testing Policy](#testing-policy).
+
+- We have a [Dependencies Policy](#dependencies-policy) for Python dependencies.
+
 Particulars
 ===========
 
@@ -97,6 +101,15 @@ Test Suite Configuration
     - convergence per computron
   - Profile the computations triggered by the tests (statistically or by instrumentation)
   - Issue: https://app.asana.com/0/9277419963067/10442847514621
+
+Dependencies Policy
+-------------------
+
+The definitive list of Venture's Python dependencies is in
+`requirements.txt`.  The honor of the project is tarnished if an
+installation exists that satisfies the requirements listed there but
+Venture does not run on it because of a Python library version
+problem.
 
 Starcluster
 -----------

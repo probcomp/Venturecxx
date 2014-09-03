@@ -1,3 +1,8 @@
+# This is the definitive list of Venture's Python dependencies.  The
+# honor of the project is tarnished if an installation exists that
+# satisfies the requirements listed here but Venture does not run on
+# it because of a Python library version problem.
+
 # Venture
 pyparsing>=1.5.7
 flask>=0.10
