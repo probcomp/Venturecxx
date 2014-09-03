@@ -14,3 +14,4 @@
 (load-relative "v1-pre")
 (load-relative "primitives")
 (load-relative "random-db")
+(load-relative "store")

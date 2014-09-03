@@ -179,21 +179,31 @@
   (cond ((rdb? trace)
          (rdb-trace-search trace addr win lose))
         ;; Poor man's dynamic dispatch system
+        ((store? trace)
+         (store-trace-search trace addr win lose))
         (else (lose))))
 
 (define (record! trace exp env addr read-traces answer)
   (cond ((rdb? trace)
          (rdb-record! trace exp env addr read-traces answer))
+        ((store? trace)
+         (store-record! trace exp env addr read-traces answer))
         (else (error "Unknown trace type" trace))))
 
 (define (record-constraint! trace addr value)
   (cond ((rdb? trace)
          (rdb-record-constraint! trace addr value))
+        ((store? trace)
+         (store-record-constraint! trace addr value))
         (else (error "Unknown trace type" trace))))
 
+;; TODO This notion of extend is a little silly now, because it does
+;; not admit changing the trace type.
 (define (trace-extend trace)
   (cond ((rdb? trace)
          (rdb-extend trace))
+        ((store? trace)
+         (store-extend trace))
         (else (error "Unknown trace type" trace))))
 
 ;;; Addresses

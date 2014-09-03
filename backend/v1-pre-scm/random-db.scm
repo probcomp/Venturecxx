@@ -40,8 +40,7 @@
 (define (rdb-extend trace)
   (make-rdb trace '() '() '() #f))
 
-(define (rdb-empty)
-  (make-rdb #f '() '() '() #f))
+(define (rdb-empty) (rdb-extend #f))
 
 ;;; Translation of the Lightweight MCMC algorithm to the present context
 
