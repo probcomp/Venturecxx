@@ -16,6 +16,8 @@
 import random
 import pickle
 import time
+import queue
+from multiprocessing import Process, Pipe
 
 from venture.exception import VentureException
 from venture.lite.utils import sampleLogCategorical
@@ -33,9 +35,17 @@ class Engine(object):
     self.directiveCounter = 0
     self.directives = {}
     self.inferrer = None
+    self.trace_handler = None
     import venture.lite.inference_sps as inf
     self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
+
+  def parallelize(self, method):
+    '''Decorator for parallelizable methods'''
+    if self.trace_handler is None:
+      return self.method
+    else:
+      return self.trace_handler.method
 
   def inferenceSPsList(self):
     return self.inference_sps.iteritems()
@@ -51,6 +61,7 @@ class Engine(object):
     self.directiveCounter += 1
     return self.directiveCounter
 
+  @self.parallelize
   def assume(self,id,datum):
     baseAddr = self.nextBaseAddr()
 
@@ -64,6 +75,7 @@ class Engine(object):
 
     return (self.directiveCounter,self.getDistinguishedTrace().extractValue(baseAddr))
 
+  @self.parallelize
   def predict_all(self,datum):
     baseAddr = self.nextBaseAddr()
     for trace in self.traces:
@@ -77,6 +89,7 @@ class Engine(object):
     (did, answers) = self.predict_all(datum)
     return (did, answers[0])
 
+  @self.parallelize
   def observe(self,datum,val):
     baseAddr = self.nextBaseAddr()
 
@@ -92,6 +105,7 @@ class Engine(object):
     self.directives[self.directiveCounter] = ["observe",datum,val]
     return self.directiveCounter
 
+  @self.parallelize
   def forget(self,directiveId):
     if directiveId not in self.directives:
       raise VentureException("invalid_argument", "Cannot forget a non-existent directive id",
@@ -120,6 +134,7 @@ class Engine(object):
     self.forget(did)
     return values
 
+  @self.parallelize
   def freeze(self,directiveId):
     if directiveId not in self.directives:
       raise VentureException("invalid_argument", "Cannot freeze a non-existent directive id",
@@ -143,6 +158,7 @@ class Engine(object):
                              argument=directiveId)
     return self.getDistinguishedTrace().extractRaw(directiveId)
 
+  @self.parallelize
   def clear(self):
     for trace in self.traces: del trace
     self.directiveCounter = 0
@@ -157,6 +173,7 @@ class Engine(object):
     # method often.
     self.set_seed(random.randint(1,2**31-1))
 
+  @self.parallelize
   def bind_foreign_sp(self, name, sp):
     self.foreign_sps[name] = sp
     if self.name != "lite":
@@ -274,6 +291,7 @@ effect of renumbering the directives, if some had been forgotten."""
       next_trace.eval(did, exp)
       next_trace.bindInGlobalEnv(name, did)
 
+  @self.parallelize
   def primitive_infer(self, exp):
     for trace in self.traces:
       if hasattr(trace, "infer_exp"):
@@ -428,6 +446,42 @@ class ContinuousInferrer(object):
     inferrer = self.inferrer
     self.inferrer = None # Grab the semaphore
     inferrer.join()
+
+# Classes to handle parallelization
+
+class TraceHandler(object):
+  '''Parent process to delegate handling of parallel traces'''
+  def __init__(self, N):
+    self.traces = []
+    self.pipes = []
+    for i in range(N):
+      parent, child = Pipe()
+      trace = TraceProcess(Trace(), child)
+      self.pipes.append(parent)
+      self.traces.append(trace)
+
+  def delegate(self, exp):
+    # send command
+    for pipe in self.pipes: pipe.send(exp)
+    # wait for traces to finish
+    for trace in self.traces: trace.join()
+
+  def retrieve(self):
+    # retrieve results from all traces
+    res = []
+    for pipe in self.pipes:
+      res.append(pipe.recv())
+
+class TraceProcess(Process):
+  '''Child process implementing parallel traces'''
+  def __init__(self, trace, pipe):
+    self.trace = trace
+    self.pipe = pipe
+    Process.__init__(self)
+
+  def run(self):
+    while True:
+      directive = pipe.recv()
 
 the_prelude = None
 
