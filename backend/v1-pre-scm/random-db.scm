@@ -224,21 +224,23 @@
   `(begin
      ,infer-defn
      ,observe-defn
-     (define is-trick? (flip 0.5))
-     (define weight (if is-trick? (uniform 0 1) 0.5))
-     (observe (flip weight) #t)
-     (observe (flip weight) #t)
-     (observe (flip weight) #t)
-     (observe (flip weight) #t)
-     (observe (flip weight) #t)
-     (define answer (list is-trick? weight))
-     (pp answer)
-     (infer (lambda (t)
-              (begin ,map-defn
-                     (enforce-constraints t)
-                     (map (lambda (i) (mcmc-step t))
-                          '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)))))
-     answer))
+     (define model-trace (rdb-extend (get-current-trace)))
+     (trace-in model-trace
+               (begin
+                 (define is-trick? (flip 0.5))
+                 (define weight (if is-trick? (uniform 0 1) 0.5))
+                 (observe (flip weight) #t)
+                 (observe (flip weight) #t)
+                 (observe (flip weight) #t)
+                 (observe (flip weight) #t)
+                 (observe (flip weight) #t)
+                 (define answer (list is-trick? weight))))
+     (pp (trace-in (store-extend model-trace) answer))
+     ,map-defn
+     (enforce-constraints model-trace)
+     (map (lambda (i) (mcmc-step model-trace))
+          '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))
+     (trace-in (store-extend model-trace) answer)))
 
 ;;; On observations: VKM argues that requiring observe to accept only
 ;;; a constant (!) (wrt current trace) procedure that has a density as
