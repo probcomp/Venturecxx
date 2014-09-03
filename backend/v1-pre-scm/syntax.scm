@@ -31,6 +31,9 @@
 (define lambda-form? (tagged-list? 'lambda))
 (define-algebraic-matcher lambda-form lambda-form? cadr caddr)
 
+(define trace-in-form? (tagged-list? 'trace-in))
+(define-algebraic-matcher trace-in-form trace-in-form? cadr caddr)
+
 (define extend-form? (tagged-list? 'ext))
 (define-algebraic-matcher extend-form extend-form? cadr)
 

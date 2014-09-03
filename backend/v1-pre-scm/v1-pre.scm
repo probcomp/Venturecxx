@@ -65,6 +65,9 @@
     ((lambda-form formals body)
      ;; Do I need to close over the maker address?
      (make-compound formals body env trace read-traces))
+    ((trace-in-form trace-form subform)
+     (let ((subtrace (eval trace-form env trace (extend-address addr '(trace-in trace)) read-traces)))
+       (eval subform env subtrace (extend-address addr '(trace-in form)) read-traces)))
     ;; Interesting new operation: evaluate in a subtrace.  Adding a
     ;; new trace frame like this hides the nested evaluation from
     ;; appearing in the current trace, and can shield the current
