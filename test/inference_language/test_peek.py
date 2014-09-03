@@ -45,7 +45,7 @@ def testPeekAllSmoke1():
   ripl.infer("(resample 2)")
   ripl.assume("x", "(normal 0 1)")
   predictionss = extract_from_panel(ripl.infer("(cycle ((mh default one 1) (peek x)) %s)" % default_num_samples()), 'x')
-  eq_(predictionss.shape, (2,2))
+  eq_(predictionss.shape, (default_num_samples(),2))
   cdf = stats.norm(loc=0.0, scale=1.0).cdf
   return reportKnownContinuous(cdf, predictionss.values.ravel(), "N(0,1)")
 
@@ -55,7 +55,7 @@ def testPeekAllSmoke2():
   ripl = get_ripl()
   ripl.infer("(resample 2)")
   predictionss = extract_from_panel(ripl.infer("(cycle ((peek (labelled (normal 0 1) x))) %s)" % default_num_samples()), 'x')
-  eq_(predictionss.shape, (2,2))
+  eq_(predictionss.shape, (default_num_samples(),2))
   cdf = stats.norm(loc=0.0, scale=1.0).cdf
   return reportKnownContinuous(cdf, predictionss.values.ravel(), "N(0,1)")
 
