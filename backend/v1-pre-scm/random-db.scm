@@ -199,19 +199,21 @@
      (mcmc-step model-trace)
      (trace-in (store-extend model-trace) x)))
 
-;; This one exhibits eponential behavior, because each infer command
-;; reruns the entire program -- including all previous infer commands!
-#;
-`(begin
-   (define x1 (flip))
-   (define x2 (flip))
-   ,infer-defn
-   ,map-defn
-   (map (lambda (i)
-          (begin
-            (pp (list x1 x2))
-            (infer mcmc-step)))
-        '(1 2 3 4)))
+;; We can flip different choices
+
+(define inference-smoke-test-2-defn
+  `(begin
+     (define model-trace (rdb-extend (get-current-trace)))
+     (trace-in model-trace
+               (begin (define x1 (flip))
+                      (define x2 (flip))))
+     ,map-defn
+     (map (lambda (i)
+            (begin
+              (pp (trace-in (store-extend model-trace) (list x1 x2)))
+              (mcmc-step model-trace)))
+          '(1 2 3 4))
+     (trace-in (store-extend model-trace) (list x1 x2))))
 
 ;; VKM says that the solution to this is not to trace ext nodes.  If
 ;; ext is restricted to appear only at applications, then you can
