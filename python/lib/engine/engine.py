@@ -460,9 +460,9 @@ class TraceHandler(object):
       self.pipes.append(parent)
       self.traces.append(trace)
 
-  def delegate(self, exp):
+  def delegate(self, cmd, **kwargs):
     # send command
-    for pipe in self.pipes: pipe.send(exp)
+    for pipe in self.pipes: pipe.send((cmd, kwargs))
     # wait for traces to finish
     for trace in self.traces: trace.join()
 
@@ -481,7 +481,17 @@ class TraceProcess(Process):
 
   def run(self):
     while True:
-      directive = pipe.recv()
+      cmd, kwargs = pipe.recv()
+      if cmd == 'stop':
+        sys.exit()
+      res = getatrr(self, cmd)(**kwargs)
+      if res is not None:
+        pipe.send(res)
+
+  def assume(self, id, baseAddr, datum):
+    self.trace.eval(baseAddr, datum)
+    self.trace.bindInGlobalEnv(id, baseAddr)
+    return self.trace.extractValue(baseAddr)
 
 the_prelude = None
 
