@@ -1,5 +1,10 @@
 (declare (usual-integrations))
 
+(define minus-inf
+  (flo:with-exceptions-untrapped (flo:exception:divide-by-zero)
+     (lambda ()
+       (flo:/ -1. 0.))))
+
 (define flip
   (make-primitive (lambda (#!optional weight)
                     (< (random 1.0)
@@ -18,7 +23,7 @@
    (lambda (val low high)
      (if (< low val high)
          (- (log (- high low)))
-         -1e200 ; Poor man's negative infinity
+         minus-inf
          ))))
 
 (define infer-defn
