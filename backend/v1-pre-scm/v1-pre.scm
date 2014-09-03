@@ -137,7 +137,7 @@
                (eval body env* trace* addr* read-traces*)))))))
 
 (define (top-eval exp)
-  (eval exp (make-env-frame #f '() '()) (rdb-empty) (toplevel-address) '()))
+  (eval exp (make-env-frame #f '() '()) (store-extend #f) (toplevel-address) '()))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

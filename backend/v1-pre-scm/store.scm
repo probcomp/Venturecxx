@@ -22,7 +22,8 @@
 
 (define (store-record! trace exp env addr read-traces answer)
   (set-store-addresses! trace (cons addr (store-addresses trace)))
-  (set-store-values! trace (cons answer (store-values trace))))
+  (set-store-values! trace (cons answer (store-values trace)))
+  answer)
 
 (define (store-record-constraint! trace addr value)
   (error "Forward execution does not support constraining; did you mean to use mutation?" trace addr value))
