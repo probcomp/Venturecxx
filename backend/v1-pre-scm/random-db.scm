@@ -215,10 +215,7 @@
           '(1 2 3 4))
      (trace-in (store-extend model-trace) (list x1 x2))))
 
-;; VKM says that the solution to this is not to trace ext nodes.  If
-;; ext is restricted to appear only at applications, then you can
-;; still rerun the procedure if you need to because you have the
-;; source code, but you don't introspect on its interior.
+;; Trick coin
 
 (define trick-coin-example
   `(begin
