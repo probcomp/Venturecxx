@@ -16,13 +16,8 @@
       (lose)))
 
 (define (rdb-trace-search-one-record trace addr win lose)
-  (let loop ((as (rdb-addresses trace))
-             (vs (rdb-records trace)))
-    (cond ((null? as)
-           (lose))
-          ((eq? (car as) addr)
-           (win (car vs)))
-          (else (loop (cdr as) (cdr vs))))))
+  (search-parallel-lists
+   addr (rdb-addresses trace) (rdb-records trace) win lose))
 
 (define (rdb-trace-search-one trace addr win lose)
   (rdb-trace-search-one-record trace addr (lambda (rec) (win (car (cddddr rec)))) lose))

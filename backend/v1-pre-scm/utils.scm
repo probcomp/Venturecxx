@@ -21,3 +21,14 @@
        `(let ((it ,object))
 	  ,@forms
           it)))))
+
+(define (search-parallel-lists item keys vals win lose #!optional =)
+  (if (default-object? =)
+      (set! = eq?))
+  (let loop ((ks keys)
+             (vs vals))
+    (cond ((null? ks)
+           (lose))
+          ((= (car ks) item)
+           (win (car vs)))
+          (else (loop (cdr ks) (cdr vs))))))
