@@ -65,8 +65,7 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
   # (subsampled_mh_make_consistent scope block useDeltaKernels deltaKernelArgs updateValues transitions)
   SPsListEntry("subsampled_mh_make_consistent", [v.ExpressionType(), v.ExpressionType(), v.BoolType(), v.NumberType(), v.BoolType(), v.IntegerType()], min_req_args=6),
   SPsListEntry("incorporate", [], klass=MadeEngineMethodInferOutputPSP),
-  SPsListEntry("peek", [v.AnyType(), v.SymbolType()], klass=MadeEngineMethodInferOutputPSP, min_req_args=1),
-  SPsListEntry("peek_all", [v.AnyType(), v.SymbolType()], klass=MadeEngineMethodInferOutputPSP, min_req_args=1),
+  SPsListEntry("peek", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
   SPsListEntry("plotf", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
   SPsListEntry("printf", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
 

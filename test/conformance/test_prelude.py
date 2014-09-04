@@ -276,6 +276,12 @@ class TestPrelude(TestCase):
         res_py = np.eye(D)
       assert_equal(res_ven, res_py)
 
+  @on_inf_prim("none")
+  def test_abs(self):
+    self.reset_ripl()
+    self.assertEqual(self.r.sample('(abs 2.1)'), 2.1)
+    self.assertEqual(self.r.sample('(abs -2.1)'), 2.1)
+
   def array_to_list(self, x, container):
     '''
     Vectors are returned as numpy arrays in lite backend; need to convert to
