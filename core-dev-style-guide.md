@@ -124,6 +124,10 @@ Starcluster
 Pylint
 ------
 
+We use pylint to maintain a Python code style.  The normative style
+file is in `tool/pylintrc`.  A number of existing style violations are
+grandfathered, but we try not to introduce new ones.
+
 - Our pylint config doesn't work with the version packaged for Ubuntu,
   so install pylint from pip:
   `sudo pip install pylint`

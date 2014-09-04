@@ -3,6 +3,9 @@
 # satisfies the requirements listed here but Venture does not run on
 # it because of a Python library version problem.
 
+# Prereq
+distribute>=0.6.28
+
 # Venture
 pyparsing>=1.5.7
 flask>=0.10
@@ -16,7 +19,6 @@ nose-cov>=1.6
 
 # VentureUnit
 numpy>=1.8
-distribute>=0.7.3
 matplotlib>=1.1
 
 # IPython Magics
