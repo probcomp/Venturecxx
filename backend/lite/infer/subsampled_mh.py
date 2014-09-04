@@ -47,7 +47,7 @@ from mh import BlockScaffoldIndexer, InPlaceOperator
 #
 # When there exist unconstrained random choices in the border of a stale local
 # section, if that node is later selected as a principal component later, it
-# will not give a correct weight during inference becaues its parents may have
+# will not give a correct weight during inference because its parents may have
 # stale values. makeConsistent is provided to update stale nodes but takes
 # O(N) time.
 # TODO Relax this constaint with a smart stale node tagging method.
@@ -193,11 +193,11 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
   # - SubsampledScaffoldNotEffectiveWarning: calling subsampled_mh will be the
   #   same as calling mh.
   # - SubsampledScaffoldNotApplicableWarning: calling subsampled_mh will cause
-  #   a incorrect behavior.
-  # - SubsampledScaffoldStaleNodesWarning: stale node will affect the inference
-  #   of other random variables. This is not a critical problem but requires to
-  #   call makeConsistent before other random nodes are selected as principal
-  #   nodes.
+  #   incorrect behavior.
+  # - SubsampledScaffoldStaleNodesWarning: stale node will affect the
+  #   inference of other random variables. This is not a critical
+  #   problem but requires one to call makeConsistent before other
+  #   random nodes are selected as principal nodes.
   #
   # This method cannot check all potential problems caused by stale nodes.
   def checkApplicability(self, trace):
