@@ -80,7 +80,6 @@ class Scaffold(object):
 # always up to date.  Also, we assume the values of brush/border nodes
 # and their parents are up to date.  As a result, we only update the
 # application and lookup nodes in the DRG.
-
 def updateValuesAtScaffold(trace,scaffold,updatedNodes):
   for node in scaffold.regenCounts:
     updateValueAtNode(trace, scaffold, node, updatedNodes)
