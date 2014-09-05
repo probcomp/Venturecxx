@@ -322,7 +322,7 @@ general-purpose inference programs except rejection sampling.
     @nose.make_decorator(f)
     def wrapped(*args):
       if not rejectionSampling():
-        f(*args)
+        return f(*args)
       else:
         raise SkipTest(reason)
     wrapped.skip_when_rejection_sampling = True # TODO Skip by these tags in all-crashes & co
@@ -342,7 +342,7 @@ general-purpose inference programs except sub-sampled MH.
     @nose.make_decorator(f)
     def wrapped(*args):
       if not subSampling():
-        f(*args)
+        return f(*args)
       else:
         raise SkipTest(reason)
     wrapped.skip_when_sub_sampling = True # TODO Skip by these tags in all-crashes & co
@@ -357,7 +357,7 @@ def skipWhenInParallel(reason):
     @nose.make_decorator(f)
     def wrapped(*args):
       if not inParallel():
-        f(*args)
+        return f(*args)
       else:
         raise SkipTest(reason)
     wrapped.skip_when_in_parallel = True # TODO Skip by these tags in all-crashes & co
