@@ -37,14 +37,21 @@
 (define extend-form? (tagged-list? 'ext))
 (define-algebraic-matcher extend-form extend-form? cadr)
 
-(define-structure (operative (safe-accessors #t))
-  procedure)
+;;; Special forms Kernel-style
+(define-structure (operative (safe-accessors #t)) procedure)
+(define operatives '())
+(define (register-operative! name operative)
+  (set! operatives (cons (cons name operative) operatives)))
 
-(define operatives
-  ;; Permit reflection on the evaluation context
-  `((get-current-environment . ,(make-operative (lambda (subforms env addr trace read-traces) env)))
-    (get-current-trace . ,(make-operative (lambda (subforms env addr trace read-traces) trace)))
-    (get-current-read-traces . ,(make-operative (lambda (subforms env addr trace read-traces) read-traces)))))
+(define-syntax define-operative
+  (syntax-rules ()
+    ((_ (name arg ...) body ...)
+     (register-operative! 'name (make-operative (lambda (arg ...) body ...))))))
+
+;; Permit reflection on the evaluation context
+(define-operative (get-current-environment subforms env addr trace read-traces) env)
+(define-operative (get-current-trace subforms env addr trace read-traces) trace)
+(define-operative (get-current-read-traces subforms env addr trace read-traces) read-traces)
 
 (define-integrable (operative-form form win lose)
   (if (pair? form)
