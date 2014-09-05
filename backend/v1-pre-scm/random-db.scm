@@ -81,7 +81,6 @@
   (let ((new (rdb-extend (rdb-parent orig)))
         (log-weight 0))
     (define (add-weight w)
-      (pp w)
       (set! log-weight (+ log-weight w)))
     (define (regeneration-hook exp env addr read-traces answer)
       (define new-value)
@@ -166,7 +165,6 @@
    (lambda () (error "What?"))))
 
 (define (enforce-constraints trace)
-  (pp 'enforcing)
   (receive (new-trace weight) (rebuild-rdb trace (rdb-constraints trace))
      (rdb-trace-commit! new-trace trace)))
 
@@ -174,15 +172,11 @@
   (let* ((target-addr (select-uniformly (random-choices trace)))
          (proposed-value (prior-resimulate target-addr trace))
          (replacements (cons `(,target-addr . ,proposed-value) (rdb-constraints trace))))
-    (pp `(proposing ,target-addr ,proposed-value))
     (receive (new-trace weight) (rebuild-rdb trace replacements)
       (let ((correction (- (log (length (random-choices trace)))
                            (log (length (random-choices new-trace))))))
         (if (< (log (random 1.0)) (+ weight correction))
-            (begin
-              (pp 'accept)
-              (rdb-trace-commit! new-trace trace))
-            (pp 'reject))))))
+            (rdb-trace-commit! new-trace trace))))))
 
 (define (rdb-trace-commit! from to)
   (set-rdb-addresses! to (rdb-addresses from))
