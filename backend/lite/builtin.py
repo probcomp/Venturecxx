@@ -155,8 +155,6 @@ builtInSPsList = [
            [ "add",  naryNum(lambda *args: sum(args),
                              sim_grad=lambda args, direction: [direction for _ in args],
                              descr="add returns the sum of all its arguments") ],
-           [ "line",  naryNum(lambda x1, y1, x2, xnew: (xnew - x2) / float(x1 - x2) * y1,
-                             descr="line computes line prediction") ],
            [ "sub", binaryNum(lambda x,y: x - y,
                               sim_grad=lambda args, direction: [direction, -direction],
                               descr="sub returns the difference between its first and second arguments") ],
