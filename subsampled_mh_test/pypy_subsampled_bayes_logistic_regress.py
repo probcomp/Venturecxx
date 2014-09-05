@@ -113,7 +113,7 @@ def main(data_source_, epsilon_):
     if not use_austerity:
       v.infer('(mh_kernel_update w all true %s false %d)' % (repr(sig_prop), Tthin))
     else:
-      v.infer('(subsampled_mh w all %d %d %s true %s false %d)' % (Nbatch, k0, repr(epsilon), repr(sig_prop)), Tthin)
+      v.infer('(subsampled_mh w all %d %d %s true %s false %d)' % (Nbatch, k0, repr(epsilon), repr(sig_prop), Tthin))
 
     # Record.
     rst['ts'].append(time.clock() - t_start)

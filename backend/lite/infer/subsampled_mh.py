@@ -2,6 +2,7 @@ import warnings
 import random
 import math
 import numpy as np
+import venture.lite.stats_utils as su
 from ..exception import (SubsampledScaffoldError,
                          SubsampledScaffoldNotEffectiveWarning,
                          SubsampledScaffoldNotApplicableWarning,
@@ -78,7 +79,8 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
     assert N > 1
 
     mu_0 = (log_u - alpha) / N
-    perm_local_roots = np.random.permutation(global_index.local_roots)
+    perm = np.random.permutation(range(int(N)))
+    perm_local_roots = [global_index.local_roots[i] for i in perm]
 
     accept, n, _ = sequentialTest(mu_0, k0, Nbatch, N, epsilon,
         lambda i: operator.evalOneLocalSection(indexer, perm_local_roots[i]))
@@ -137,7 +139,7 @@ def sequentialTest(mu_0, k0, Nbatch, N, epsilon, fun_dllh):
       else:
         tstat = (mx - mu_0) / sx
         # Compute q: p-value
-        q = su.C.student_cdf(n - 1, tstat) # p-value
+        q = su.C.student_cdf(int(n) - 1, tstat) # p-value
       # If epsilon = 0, keep drawing until n reaches N even if sx = 0.
       if q < epsilon:
         accept = False
