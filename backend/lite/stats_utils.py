@@ -7,7 +7,6 @@ if not 'ffi' in locals():
   ffi.cdef("""
     double gammaln(double x);
     double student_cdf(int df, double t);
-    void print_array(double *x, int N, double *y);
     """)
-  C = ffi.dlopen(expanduser('~') + '/lib/libutil.so')
+  C = ffi.dlopen(expanduser('~') + '/lib/pypy_lib.so')
 
