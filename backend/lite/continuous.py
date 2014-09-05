@@ -40,7 +40,7 @@ class MVDNormalOutputPSP(RandomPSP):
   def getDeltaKernel(self,*args): return MVDNormalRandomWalkKernel(*args)
 
   def description(self,name):
-    return "  (%s mean covariance) samples a vector according to the given multivariate Gaussian distribution with a diagonal covariance matrix.  It is an error if the dimensionalities of the arguments do not line up." % name
+    return "  (%s mean std) samples a vector according to the multivariate Gaussian distribution with a diagonal covariance matrix. It is an error if the vector arguments of mean and standard deviation do not have the same size." % name
 
   @staticmethod
   def __parse_args__(args):
