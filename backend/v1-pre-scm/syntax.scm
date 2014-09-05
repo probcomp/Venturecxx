@@ -43,3 +43,12 @@
     (if (and (pair? thing) (null? (cdr thing)) (eq? tag (car thing)))
         (win)
         (lose))))
+
+(define operatives '())
+
+(define (operative-form form win lose)
+  (if (pair? form)
+      (aif (assq (car form) operatives)
+           (win (cdr it) (cdr form))
+           (lose))
+      (lose)))

@@ -101,6 +101,8 @@
         forms
         (iota (length forms)))
        result))
+    ((operative-form operative subforms)
+     ((operative-procedure operative) subforms env trace addr read-traces))
     (_ ;; Application
      (let ((subaddrs (map (lambda (e i)
                             (let ((addr* (extend-address addr `(app-sub ,i))))
