@@ -1,8 +1,7 @@
 import math
 import scipy.stats as stats
-from nose import SkipTest
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling
+from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, skipWhenSubSampling
 
 @statisticalTest
 def testVentureNormalHMM1():
@@ -46,6 +45,7 @@ def testVentureNormalHMM1():
   return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
 
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
+@skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
 @statisticalTest
 def testVentureBinaryHMM1():
   ripl = get_ripl()
