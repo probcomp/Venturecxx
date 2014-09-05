@@ -17,6 +17,7 @@ import random
 import pickle
 import time
 import queue
+import sys
 import multiprocessing as mp
 from multiprocessing import dummy as mpd
 from abc import ABCMeta
@@ -58,25 +59,22 @@ class Engine(object):
 
   def assume(self,id,datum):
     baseAddr = self.nextBaseAddr()
-
     exp = datum
 
-    for trace in self.traces:
-      trace.eval(baseAddr,exp)
-      trace.bindInGlobalEnv(id,baseAddr)
+    value = self.trace_handler.assume(baseAddr, id, exp)
 
     self.directives[self.directiveCounter] = ["assume",id,datum]
 
-    return (self.directiveCounter,self.getDistinguishedTrace().extractValue(baseAddr))
+    return (self.directiveCounter,value)
 
   def predict_all(self,datum):
     baseAddr = self.nextBaseAddr()
-    for trace in self.traces:
-      trace.eval(baseAddr,datum)
+
+    value = self.trace_handler.predict_all(baseAddr, datum)
 
     self.directives[self.directiveCounter] = ["predict",datum]
 
-    return (self.directiveCounter,[t.extractValue(baseAddr) for t in self.traces])
+    return (self.directiveCounter,value)
 
   def predict(self, datum):
     (did, answers) = self.predict_all(datum)
@@ -85,14 +83,7 @@ class Engine(object):
   def observe(self,datum,val):
     baseAddr = self.nextBaseAddr()
 
-    for trace in self.traces:
-      trace.eval(baseAddr,datum)
-      logDensity = trace.observe(baseAddr,val)
-
-      # TODO check for -infinity? Throw an exception?
-      if logDensity == float("-inf"):
-        raise VentureException("invalid_constraint", "Observe failed to constrain",
-                               expression=datum, value=val)
+    self.trace_handler.observe(baseAddr, datum, val)
 
     self.directives[self.directiveCounter] = ["observe",datum,val]
     return self.directiveCounter
@@ -102,10 +93,8 @@ class Engine(object):
       raise VentureException("invalid_argument", "Cannot forget a non-existent directive id",
                              argument="directive_id", directive_id=directiveId)
     directive = self.directives[directiveId]
-    for trace in self.traces:
-      if directive[0] == "observe": trace.unobserve(directiveId)
-      trace.uneval(directiveId)
-      if directive[0] == "assume": trace.unbindInGlobalEnv(directive[1])
+
+    self.trace_handler.forget(directive, directiveId)
 
     del self.directives[directiveId]
 
@@ -132,8 +121,7 @@ class Engine(object):
     # TODO Record frozen state for reinit_inference_problem?  What if
     # the replay is done with a different number of particles than the
     # original?  Where do the extra values come from?
-    for trace in self.traces:
-      trace.freeze(directiveId)
+    self.trace_handler.freeze(directiveId)
 
   def report_value(self,directiveId):
     if directiveId not in self.directives:
@@ -149,11 +137,10 @@ class Engine(object):
     return self.getDistinguishedTrace().extractRaw(directiveId)
 
   def clear(self):
-    for trace in self.traces: del trace
+    del self.trace_handler
     self.directiveCounter = 0
     self.directives = {}
-    self.traces = [self.Trace()]
-    self.weights = [1]
+    self.trace_handler = TraceHandler()
     self.ensure_rng_seeded_decently()
 
   def ensure_rng_seeded_decently(self):
@@ -168,8 +155,8 @@ class Engine(object):
       # wrap it for backend translation
       import venture.lite.foreign as f
       sp = f.ForeignLiteSP(sp)
-    for trace in self.traces:
-      trace.bindPrimitiveSP(name, sp)
+
+    self.trace_handler.bind_foreign_sp(name, sp)
 
   # TODO There should also be capture_inference_problem and
   # restore_inference_problem (Analytics seems to use something like
@@ -280,14 +267,7 @@ effect of renumbering the directives, if some had been forgotten."""
       next_trace.bindInGlobalEnv(name, did)
 
   def primitive_infer(self, exp):
-    for trace in self.traces:
-      if hasattr(trace, "infer_exp"):
-        # The trace can handle the inference primitive syntax natively
-        trace.infer_exp(exp)
-      else:
-        # The trace cannot handle the inference primitive syntax
-        # natively, so translate.
-        trace.infer(expToDict(exp))
+    self.trace_handler.primitive_infer(exp)
 
   def get_logscore(self, did): return self.getDistinguishedTrace().getDirectiveLogScore(did)
   def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()
@@ -441,6 +421,7 @@ class TraceHandler(object):
   def __init__(self, N, parallel):
     self.traces = []
     self.pipes = []
+    self.weights = []
     if parallel:
       Pipe = mp.Pipe
       TraceProcess = ParallelTraceProcess
@@ -452,6 +433,11 @@ class TraceHandler(object):
       trace = TraceProcess(Trace(), child)
       self.pipes.append(parent)
       self.traces.append(trace)
+      self.weights.append(1)
+
+  def __del__(self):
+    # stop child processes
+    for trace in self.traces: trace.stop()
 
   def delegate(self, cmd, **kwargs):
     # send command
@@ -477,15 +463,51 @@ class TraceHandler(object):
       Process = mp.Process if issubclass(self. mp.Process) else mpd.Process
       Process.__init__(self)
 
+    def stop(self):
+      sys.exit()
+
     def run(self):
       while True:
         cmd, kwargs = self.pipe.recv()
-        if cmd == 'stop':
-          sys.exit()
         res = getatrr(self, cmd)(**kwargs)
         pipe.send(res)
 
+    def assume(self, baseAddr, id, exp):
+      self.trace.eval(baesAddr, exp)
+      self.trace.bindInGlobalEnv(id, baseAddr)
+      return self.trace.extractValue(baseAddr)
 
+    def predict_all(self, baseAddr, datum):
+      self.trace.eval(baseAddr,datum)
+      return self.t.extractValue(baseAddr)
+
+    def observe(self, baseAddr, datum, val):
+      trace.eval(baseAddr, datum)
+      logDensity = trace.observe(baseAddr,val)
+      # TODO check for -infinity? Throw an exception?
+      if logDensity == float("-inf"):
+        raise VentureException("invalid_constraint", "Observe failed to constrain",
+                               expression=datum, value=val)
+
+    def forget(self, directive, directiveId):
+      if directive[0] == "observe": trace.unobserve(directiveId)
+      trace.uneval(directiveId)
+      if directive[0] == "assume": trace.unbindInGlobalEnv(directive[1])
+
+    def freeze(self, directiveId):
+      self.trace.freeze(directiveId)
+
+    def bind_foreign_sp(self, name, sp):
+      self.trace.bindPrimitiveSP(name, sp)
+
+    def primitive_infer(self, exp):
+      if hasattr(self.trace, "infer_exp"):
+        # The trace can handle the inference primitive syntax natively
+        self.trace.infer_exp(exp)
+      else:
+        # The trace cannot handle the inference primitive syntax
+        # natively, so translate.
+        self.trace.infer(expToDict(exp))
 
 class ParallelTraceProcess(ProcessBase, mp.Process):
   '''Multiprocessing-based paralleism by inheritance'''
