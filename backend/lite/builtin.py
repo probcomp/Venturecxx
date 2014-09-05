@@ -147,6 +147,10 @@ def vector_dot(v1, v2):
   else:
     return 0
 
+def grad_vector_dot(args, direction):
+  unscaled = [v.VentureArray(args[1]), v.VentureArray(args[0])]
+  return [direction.getNumber() * x for x in unscaled]
+
 builtInSPsList = [
            [ "add",  naryNum(lambda *args: sum(args),
                              sim_grad=lambda args, direction: [direction for _ in args],
@@ -162,8 +166,7 @@ builtInSPsList = [
            [ "div",   binaryNum(lambda x,y: x / y,
                                 sim_grad=grad_div,
                                 descr="div returns the quotient of its first argument by its second") ],
-           [ "min",   binaryNum(min,
-                                "min returns the min of its arguments") ],
+           [ "min",   binaryNum(min, descr="min returns the minimum value of its arguments") ],
            [ "eq",    binaryPred(lambda x,y: x.compare(y) == 0,
                                  descr="eq compares its two arguments for equality") ],
            [ "gt",    binaryPred(lambda x,y: x.compare(y) >  0,
@@ -196,19 +199,10 @@ builtInSPsList = [
                              descr="Returns the log of its argument") ],
            [ "pow", binaryNum(math.pow, sim_grad=grad_pow, descr="pow returns its first argument raised to the power of its second argument") ],
            [ "sqrt", unaryNum(math.sqrt, sim_grad=grad_sqrt, descr="Returns the sqrt of its argument") ],
-           [ "logistic", unaryNum(lambda x: 1/(1+math.exp(-x)), "Returns the %s of its argument") ],
-           [ "linear_logistic", deterministic_typed(lambda w,x: 1/(1+math.exp(-(w[0] + np.dot(w[1:], x)))),
-                                                    [v.HomogeneousArrayType(v.NumberType()), v.HomogeneousArrayType(v.NumberType())], v.NumberType(),
-                                                    descr="%s returns the output of logistic regression with weight and input") ],
 
            [ "not", deterministic_typed(lambda x: not x, [v.BoolType()], v.BoolType(),
                                         descr="not returns the logical negation of its argument") ],
 
-           [ "dot_product", deterministic_typed(np.dot, [v.HomogeneousArrayType(v.NumberType()), v.HomogeneousArrayType(v.NumberType())], v.NumberType(),
-                                                descr="%s returns the dot product of its arguments") ],
-           [ "scalar_product", deterministic_typed(lambda x,y: x * np.array(y), [v.NumberType(), v.HomogeneousArrayType(v.NumberType())],
-                                                   v.HomogeneousArrayType(v.NumberType()),
-                                                   descr="%s returns the scalar product between the first scalar argument and the second array argument") ],
            [ "is_symbol", type_test(v.SymbolType()) ],
            [ "is_atom", type_test(v.AtomType()) ],
 
@@ -228,15 +222,9 @@ builtInSPsList = [
                                            descr="second returns the first component of the second component of its argument") ],
 
 
-           [ "array", deterministic_typed(lambda *args: np.array(args), [v.NumberType()], v.HomogeneousArrayType(v.NumberType()), variadic=True,
+           [ "array", deterministic_typed(lambda *args: np.array(args), [v.AnyType()], v.ArrayType(), variadic=True,
                                           sim_grad=lambda args, direction: direction.getArray(),
                                           descr="array returns an array initialized with its arguments") ],
-           [ "cat_array", deterministic_typed(lambda *args: np.concatenate(args), [v.ArrayType()], v.ArrayType(), variadic=True,
-                                              descr="%s concates its arguments") ],
-           [ "ones_array", deterministic_typed(lambda n: np.ones(int(n)), [v.NumberType()], v.HomogeneousArrayType(v.NumberType()),
-                                               descr="%s returns an array of ones with the number given by its argument") ],
-           [ "zeros_array", deterministic_typed(lambda n: np.zeros(int(n)), [v.NumberType()], v.HomogeneousArrayType(v.NumberType()),
-                                                descr="%s returns an array of zeros with the number given by its argument") ],
 
            [ "vector", deterministic_typed(lambda *args: np.array(args), [v.NumberType()], v.ArrayUnboxedType(v.NumberType()), variadic=True,
                                           sim_grad=lambda args, direction: direction.getArray(),
@@ -254,10 +242,6 @@ builtInSPsList = [
                                            [v.HomogeneousListType(v.HomogeneousListType(v.NumberType()))],
                                            v.MatrixType(),
                                            descr="matrix returns a matrix formed from the given list of rows.  It is an error if the given list is not rectangular.") ],
-           [ "diagonal_matrix", deterministic_typed(lambda x: np.mat(np.diag(x)),
-                                           [v.HomogeneousListType(v.NumberType())],
-                                           v.MatrixType(),
-                                           "%s returns a diagonal matrix formed from the given list.") ],
            [ "is_matrix", type_test(v.MatrixType()) ],
            [ "simplex", deterministic_typed(lambda *nums: np.array(nums), [v.ProbabilityType()], v.SimplexType(), variadic=True,
                                             descr="simplex returns the simplex point given by its argument coordinates.") ],
@@ -311,6 +295,7 @@ builtInSPsList = [
            [ "vector_dot", deterministic_typed(vector_dot,
                                                [v.ArrayUnboxedType(v.NumberType()), v.ArrayUnboxedType(v.NumberType())],
                                                v.NumberType(),
+                                               sim_grad=grad_vector_dot,
                                                descr="(%s x y) returns the dot product of vectors x and y.") ],
 
            [ "matrix_mul", deterministic_typed(np.dot,
@@ -328,6 +313,9 @@ builtInSPsList = [
                                          v.HomogeneousArrayType(v.AnyType("a"))],
                                         v.RequestType("<array b>"))),
                         functional.ESRArrayOutputPSP()) ],
+
+           [ "zip", deterministic_typed(lambda *args: zip(*args), [v.ListType()], v.HomogeneousListType(v.ListType()), variadic=True,
+                                         descr="zip returns a list of lists, where the i-th nested list contains the i-th element from each of the input arguments") ],
 
            [ "branch", esr_output(conditionals.branch_request_psp()) ],
            [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [v.BoolType(), v.AnyType(), v.AnyType()], v.AnyType(),

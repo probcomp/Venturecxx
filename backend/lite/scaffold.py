@@ -1,4 +1,4 @@
-from node import ConstantNode, LookupNode, RequestNode, OutputNode
+from node import LookupNode, RequestNode, OutputNode
 from value import SPRef
 from omegadb import OmegaDB
 from detach import unapplyPSP
@@ -49,201 +49,99 @@ class Scaffold(object):
     print "borders: " + str(self.border)
     print "lkernels: " + str(self.lkernels)
 
-"""
-When subsampled_mh is called, there will exist broken deterministic relationships in the trace.
-For example, in the program:
-[assume mu (normal 0 1)]
-[assume x (lambda () (normal mu 1))]
-[observe (x) 0.1]
-[observe (x) 0.2]
-...
-N observations
-...
-After mu is updated. If a subsampled scaffold only include the first n observations,
-the lookup nodes for mu in the remaining N-n observations will have a stale value.
-At a second call to infer, these inconsistency may cause a problem.
-
-updateValuesAtScaffold updates all the nodes in a newly constructed scaffold by
-calling updateValueAtNode for each node. The main idea is that:
-Assume all the random output nodes have the latest values and the problem is in
-the nodes with determnistic dependency on their parents.
-For every node that cannot absorb, update the value of all its parents, and then
-unapplyPSP and apply PSP. For a request node, compare its old Request with the new
-request. If they are different, unevalRequests and evalRequests to generate new
-ESRs. When a new ESR is generated, return True. Otherwise return false.
-"""
-#FIXME(Yutian): At regen phase in proposal, value should also be updated. This will
-#involve changing the regen method.
+# Calling subsampled_mh may create broken deterministic
+# relationships in the trace.  For example, consider updating mu in the
+# program:
+#
+# [assume mu (normal 0 1)]
+# [assume x (lambda () (normal mu 1))]
+# [observe (x) 0.1]
+# [observe (x) 0.2]
+# ...
+# N observations
+# ...
+#
+# If the subsampled scaffold only included the first n observations, the
+# lookup nodes for mu in the remaining N-n observations will have a
+# stale value.  At a second call to infer, these inconsistencies may cause
+# a problem.
+#
+# updateValuesAtScaffold updates all the nodes in a newly constructed
+# scaffold by calling updateValueAtNode for each node. The main idea is:
+# - Assume all the random output nodes have the latest values and the
+#   problem is in the nodes with deterministic dependence on their
+#   parents.
+# - For every node that cannot absorb, update the value of all its
+#   parents, and then unapplyPSP and applyPSP.
+#
+# Assumptions/Limitations:
+# Currently we assume the stale values do not change the structure of
+# the trace (the existence of ESRs) and the value of the request node is
+# always up to date.  Also, we assume the values of brush/border nodes
+# and their parents are up to date.  As a result, we only update the
+# application and lookup nodes in the DRG.
 def updateValuesAtScaffold(trace,scaffold,updatedNodes):
-  # for every node in the scaffold (resampling, brush, border) update values.
-  # return true if any node gets a new value.
-  hasNewEsr = False
-  #for node in scaffold.brush:
-  #  hasNewEsr |= updateValueAtNode(trace, scaffold, node, updatedNodes)
   for node in scaffold.regenCounts:
-    hasNewEsr |= updateValueAtNode(trace, scaffold, node, updatedNodes)
-  #for borderList in scaffold.border:
-  #  for node in borderList:
-  #    hasNewEsr |= updateValueAtNode(trace, scaffold, node, updatedNodes)
-
-  return hasNewEsr
+    updateValueAtNode(trace, scaffold, node, updatedNodes)
 
 def updateValueAtNode(trace, scaffold, node, updatedNodes):
-  # Return True if a new value is assigned.
-  if node in updatedNodes:
-    return False
-
   # Strong assumption! Only consider resampling nodes in the scaffold.
-  if not scaffold.isResampling(node):
-    return False
+  if node not in updatedNodes and scaffold.isResampling(node):
+    if isinstance(node, LookupNode):
+      updateValueAtNode(trace, scaffold, node.sourceNode, updatedNodes)
+      trace.setValueAt(node, trace.valueAt(node.sourceNode))
+    elif isinstance(node, OutputNode):
+      # Assume SPRef and AAA nodes are always updated.
+      psp = trace.pspAt(node)
+      if not isinstance(trace.valueAt(node), SPRef) and not psp.childrenCanAAA():
+        canAbsorb = True
+        for parent in trace.parentsAt(node):
+          if not psp.canAbsorb(trace, node, parent):
+            updateValueAtNode(trace, scaffold, parent, updatedNodes)
+            canAbsorb = False
+        if not canAbsorb:
+          update(trace, node)
+    updatedNodes.add(node)
 
-  hasNewEsr = False
-  if isinstance(node, ConstantNode):
-    return False
-  elif isinstance(node, LookupNode):
-    hasNewEsr |= updateValueAtNode(trace, scaffold, node.sourceNode, updatedNodes)
-    trace.setValueAt(node, trace.valueAt(node.sourceNode))
-  elif isinstance(node, RequestNode):
-    return False
-  else: # OutputNode.
-    # Assume SPRef and AAA nodes are always updated.
-    psp = trace.pspAt(node)
-    if isinstance(trace.valueAt(node), SPRef) or psp.childrenCanAAA():
-      pass
-
-    canAbsorb = True
-    for parent in trace.parentsAt(node):
-      if not psp.canAbsorb(trace, node, parent):
-        hasNewEsr |= updateValueAtNode(trace, scaffold, parent, updatedNodes)
-        canAbsorb = False
-
-    # Assume AAA node is always updated
-    if not canAbsorb:
-      #DEBUG
-      #scaffold = Scaffold()
-      #omegaDB = OmegaDB()
-      #oldValue = trace.valueAt(node)
-      # DEBUG
-      #unapplyPSP(trace, node, scaffold, omegaDB)
-      #applyPSP(trace,node,scaffold,False,omegaDB,{})
-      updateValue(trace, node)
-      #print "Regen output node", oldValue, trace.valueAt(node), psp
-
-  #hasNewEsr = False
-  #if isinstance(node, ConstantNode):
-  #  pass
-  #elif isinstance(node, LookupNode):
-  #  hasNewEsr |= updateValueAtNode(trace, scaffold, node.sourceNode, updatedNodes)
-  #  trace.setValueAt(node, trace.valueAt(node.sourceNode))
-  #else: # Application Node.
-  #  psp = trace.pspAt(node)
-  #  canAbsorb = True
-  #  for parent in trace.parentsAt(node):
-  #    canAbsorb &= psp.canAbsorb(trace, node, parent)
-  #  # Assume AAA node is always updated
-  #  if not canAbsorb and not psp.childrenCanAAA():
-  #    # psp can not absorb for all the paretns
-  #    for parent in trace.definiteParentsAt(node):
-  #      hasNewEsr |= updateValueAtNode(trace, scaffold, parent, updatedNodes)
-
-  #    # Update esrParent value after update the value of the request node.
-  #    if isinstance(node, OutputNode):
-  #      for esrParent in trace.esrParentsAt(node):
-  #        hasNewEsr |= updateValueAtNode(trace, scaffold, esrParent, updatedNodes)
-
-  #    # Regen value.
-  #    if isinstance(node, RequestNode):
-  #      # FIXME: only checked the value of esrs (in string)
-  #      # FIXME: psp is unapplied before unevalRequests, and the args of psp may not be the same as they were used for applyPSP. Problem for AAA?
-  #      #DEBUG
-  #      #print "Regen request node", psp
-
-  #      #scaffold = Scaffold()
-  #      #omegaDB = OmegaDB()
-  #      #old_request = trace.valueAt(node)
-  #      ##DEBUG
-  #      #spf = trace.spFamiliesAt(node)
-  #      #for esr in old_request.esrs:
-  #      #  if esr.id not in spf.families:
-  #      #    print "strange"
-
-  #      #unapplyPSP(trace, node, scaffold, omegaDB)
-  #      #applyPSP(trace,node,scaffold,False,omegaDB,{})
-  #      #new_request = trace.valueAt(node)
-
-  #      ##DEBUG
-  #      #spf = trace.spFamiliesAt(node)
-  #      #for esr in new_request.esrs:
-  #      #  if esr.id not in spf.families:
-  #      #    print "strange"
-
-  #      #eq_request = len(old_request.esrs) == len(new_request.esrs)
-  #      #if eq_request:
-  #      #  for i in range(len(old_request.esrs)):
-  #      #    if not old_request.esrs[i].id == new_request.esrs[i].id:
-  #      #      eq_request = False
-  #      #      break
-  #      #if not eq_request:
-  #      #  #DEBUG
-  #      #  old_request_str = str(old_request.esrs)
-  #      #  new_request_str = str(new_request.esrs)
-  #      #  print "not equal request", old_request_str, new_request_str
-  #      #  trace.setValueAt(node, old_request)
-  #      #  unevalRequests(trace, node, scaffold, omegaDB, compute_gradient)
-  #      #  trace.setValueAt(node, new_request)
-  #      #  evalRequests(trace,requestNode,scaffold,shouldRestore,omegaDB,gradients)
-  #      #  hasNewEsr |= True
-  #      pass
-  #    else: # OutputNode
-  #      if not isinstance(trace.valueAt(node), SPRef):
-  #        #DEBUG
-  #        scaffold = Scaffold()
-  #        omegaDB = OmegaDB()
-  #        #oldValue = trace.valueAt(node)
-  #        # DEBUG
-  #        #unapplyPSP(trace, node, scaffold, omegaDB)
-  #        #applyPSP(trace,node,scaffold,False,omegaDB,{})
-  #        updateValue(trace, node, scaffold, omegaDB)
-  #        #print "Regen output node", oldValue, trace.valueAt(node), psp
-
-  updatedNodes.add(node)
-  return hasNewEsr
-
-# DEBUG, for cprofiler only
-def updateValue(trace, node):
+def update(trace, node):
   scaffold = Scaffold()
   omegaDB = OmegaDB()
   unapplyPSP(trace, node, scaffold, omegaDB)
   applyPSP(trace,node,scaffold,False,omegaDB,{})
 
 
-def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False, deltaKernelArgs = None, updateValue = False, updatedNodes = None):
-  if updatedNodes is None:
-    updatedNodes = set()
-  while True:
-    cDRG,cAbsorbing,cAAA = set(),set(),set()
-    indexAssignments = {}
-    assert isinstance(setsOfPNodes,list)
-    for i in range(len(setsOfPNodes)):
-      assert isinstance(setsOfPNodes[i],set)
-      extendCandidateScaffold(trace,setsOfPNodes[i],cDRG,cAbsorbing,cAAA,indexAssignments,i)
+def constructScaffold(trace, setsOfPNodes, useDeltaKernels=False, deltaKernelArgs=None, hardBorder=None, updateValues=False):
+  if hardBorder is None:
+    hardBorder = []
+  assert len(hardBorder) <= 1
 
-    brush = findBrush(trace,cDRG)
-    drg,absorbing,aaa = removeBrush(cDRG,cAbsorbing,cAAA,brush)
-    border = findBorder(trace,drg,absorbing,aaa)
-    regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
-    lkernels = loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs)
-    borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
-    scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
-    if not updateValue or not updateValuesAtScaffold(trace,scaffold,updatedNodes):
-      break
+  cDRG,cAbsorbing,cAAA = set(),set(),set()
+  indexAssignments = {}
+  assert isinstance(setsOfPNodes,list)
+  for i in range(len(setsOfPNodes)):
+    assert isinstance(setsOfPNodes[i],set)
+    extendCandidateScaffold(trace,setsOfPNodes[i],cDRG,cAbsorbing,cAAA,indexAssignments,i,hardBorder)
+
+  brush = findBrush(trace,cDRG)
+  drg,absorbing,aaa = removeBrush(cDRG,cAbsorbing,cAAA,brush)
+  border = findBorder(trace,drg,absorbing,aaa)
+  regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush,hardBorder)
+  for node in hardBorder: assert node in border
+  lkernels = loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs)
+  borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
+  scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
+
+  if updateValues:
+    updateValuesAtScaffold(trace,scaffold,set())
+
   return scaffold
 
-def addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i):
+def addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder):
   if node in absorbing: absorbing.remove(node)
   if node in aaa: aaa.remove(node)
   drg.add(node)
-  q.extend([(n,False,node) for n in trace.childrenAt(node)])
+  if node not in hardBorder:
+    q.extend([(n,False,node) for n in trace.childrenAt(node)])
   indexAssignments[node] = i
 
 def addAbsorbingNode(drg,absorbing,aaa,node,indexAssignments,i):
@@ -259,15 +157,15 @@ def addAAANode(drg,aaa,absorbing,node,indexAssignments,i):
   indexAssignments[node] = i
 
 
-def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i):
+def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i,hardBorder):
   q = [(pnode,True,None) for pnode in pnodes]
 
   while q:
     node,isPrincipal,parentNode = q.pop()
     if node in drg and not node in aaa:
-      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder)
     elif isinstance(node,LookupNode) or node.operatorNode in drg:
-      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder)
     # TODO temporary: once we put all uncollapsed AAA procs into AEKernels, this line won't be necessary
     elif node in aaa:
       addAAANode(drg,aaa,absorbing,node,indexAssignments,i)      
@@ -276,8 +174,7 @@ def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i):
     elif trace.pspAt(node).childrenCanAAA(): 
       addAAANode(drg,aaa,absorbing,node,indexAssignments,i)
     else: 
-      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
-
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder)
 
 def findBrush(trace,cDRG):
   disableCounts = {}
@@ -330,16 +227,19 @@ def maybeIncrementAAARegenCount(trace,regenCounts,aaa,node):
   if isinstance(value,SPRef) and value.makerNode in aaa: 
     regenCounts[value.makerNode] += 1
 
-def computeRegenCounts(trace,drg,absorbing,aaa,border,brush):
+def computeRegenCounts(trace,drg,absorbing,aaa,border,brush,hardBorder):
   regenCounts = {}
   for node in drg:
     if node in aaa:
       regenCounts[node] = 1 # will be added to shortly
+    elif node in hardBorder:
+      # hardBorder nodes will regenerate despite the number of children.
+      regenCounts[node] = 1
     elif node in border:
       regenCounts[node] = len(trace.childrenAt(node)) + 1
     else:
       regenCounts[node] = len(trace.childrenAt(node))
-  
+
   if aaa:
     for node in drg.union(absorbing):
       for parent in trace.parentsAt(node):
@@ -370,3 +270,4 @@ def assignBorderSequnce(border,indexAssignments,numIndices):
   for node in border:
     borderSequence[indexAssignments[node]].append(node)
   return borderSequence
+

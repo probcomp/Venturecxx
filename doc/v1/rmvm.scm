@@ -1,25 +1,34 @@
 (declare (usual-integrations))
 
+;;; Exploratory programming on the subject of the essence of a
+;;; computation being able to reflect on and modify its own value
+;;; history.
+
+;; A value history; maybe this should be called "store" since it does
+;; not retain any information about what the value is about.
 (define-structure (trace (safe-accessors #t))
   parent
   addresses
-  values) ; Parallel lists mapping addresses to values, and possible metadata
+  values) ; Parallel lists mapping addresses to values
 
+;; A standard lexical environment structure; holds addresses into
+;; traces rather than values.
 (define-structure (env-frame (safe-accessors #t))
   parent
   symbols
   addresses) ; Parallel lists mapping symbols to addresses
 
+;; Compound procedures
 (define-structure (compound (safe-accessors #t))
   formals
   body
   env
-  trace
+  trace ; Empirically, they want to close over their traces
   read-traces)
 
 (define-structure primitive) ; What's in primitive procedures?
 
-(define-structure address) ; Contentless structure with only identity
+(define-structure address) ; Contentless structure with only identity for addressing traces
 (define (fresh-address) (make-address))
 
 (define (at-address trace addr thunk)
@@ -32,6 +41,16 @@
        (trace-store! trace addr answer)
        answer))))
 
+;; The evaluation context includes a current trace (into which
+;; evaluation is being recorded) and a set of additional traces
+;; (whence values are read).  The additional traces arise because the
+;; trace a closure holds needs to be available when evaluating its
+;; body, even if that evaluation occurs in a different trace from the
+;; one(s) captured by the closure.  Perhaps these extras can be stored
+;; in the new lexical enviornment frame to good effect.
+
+;; One might enforce the discipline that the traces eval reads from
+;; are not to be written to even reflectively.  Or not.
 (define (eval exp env trace addr read-traces)
   (at-address trace addr
    (lambda ()
@@ -53,12 +72,18 @@
           env
           trace
           read-traces))
+        ;; Interesting new operation: evaluate in a subtrace.  Adding
+        ;; a new trace frame like this hides the nested evaluation
+        ;; from appearing in the current trace, and can shield the
+        ;; current trace from reflective changes made to the nexted
+        ;; one if the trace modification policy enforces that.
         ((extend? exp)
          (let ((subtrace (trace-extend trace))
                (addr (fresh-address)))
            ;; Could add trace to read-traces here instead of stashing
            ;; it in the parent pointer
            (eval (ext-subexp exp) env subtrace addr read-traces)))
+        ;; Permit reflection on the evaluation context
         ((nullary? 'get-current-environment exp) env)
         ((nullary? 'get-current-trace exp) trace)
         ((nullary? 'get-current-read-traces exp) read-traces)
@@ -260,6 +285,7 @@
    (ext (frobnicate t))
    x) ; => 3
 
+#;
 `(begin
    ,map-defn
    ,frobnicate-defn
@@ -270,7 +296,7 @@
             (define t (get-current-trace))
             (ext (frobnicate t))
             y)))
-   (* x y2))
+   (* x y2)) ; => 15
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; VKM's pronouncements:

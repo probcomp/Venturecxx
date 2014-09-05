@@ -61,12 +61,6 @@ class CRPOutputPSP(RandomPSP):
   #   aux = args.spaux
   #   if index in aux.tableCounts:
 
-  def enumerateValues(self,args):
-    aux = args.spaux
-    old_indices = [i for i in aux.tableCounts]
-    indices = old_indices + [aux.nextIndex]
-    return indices
-
   def incorporate(self,index,args):
     aux = args.spaux
     aux.numCustomers += 1

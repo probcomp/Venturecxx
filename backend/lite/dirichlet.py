@@ -118,7 +118,7 @@ class CDirMultOutputPSP(RandomPSP):
     args.spaux.counts.decrement(index)
     assert args.spaux.counts[index] >= 0
         
-  def enumerateValues(self,args):
+  def enumerateValues(self, _args):
     return self.os
 
   def logDensityOfCounts(self,aux):
@@ -158,7 +158,7 @@ class MakerUDirMultOutputPSP(RandomPSP):
     return "  %s is an uncollapsed variant of make_dir_mult." % name
 
 class UDirMultAAALKernel(LKernel):
-  def simulate(self,trace,oldValue,args):
+  def simulate(self, _trace, _oldValue, args):
     alpha = args.operandValues[0]
     os = args.operandValues[1] if len(args.operandValues) > 1 else [VentureAtom(i) for i in range(len(alpha))]
     assert isinstance(args.madeSPAux,DirMultSPAux)
@@ -175,7 +175,7 @@ class UDirMultOutputPSP(RandomPSP):
     self.os = os
     self.index = dict((val, i) for (i, val) in enumerate(os))
 
-  def simulate(self,args):
+  def simulate(self, _args):
     index = sample(self.theta)
     return self.os[index]
 
@@ -195,7 +195,7 @@ class UDirMultOutputPSP(RandomPSP):
     args.spaux.counts.decrement(index)
     assert args.spaux.counts[index] >= 0
 
-  def enumerateValues(self,args):
+  def enumerateValues(self, _args):
     return self.os
 
 #### Collapsed symmetric dirichlet multinomial
@@ -263,7 +263,7 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
     return "  %s is an uncollapsed symmetric variant of make_dir_mult." % name
 
 class USymDirMultAAALKernel(LKernel):
-  def simulate(self,trace,oldValue,args):
+  def simulate(self, _trace, _oldValue, args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
     os = args.operandValues[2] if len(args.operandValues) > 2 else [VentureAtom(i) for i in range(n)]
     assert isinstance(args.madeSPAux,DirMultSPAux)

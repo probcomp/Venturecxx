@@ -49,11 +49,6 @@ struct GteOutputPSP : PSP
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };
 
-struct MinOutputPSP : PSP
-{ 
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-};
-
 struct LtOutputPSP : PSP
 { 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;

@@ -101,9 +101,9 @@ class FrameSpec(object):
     ans = {}
     for (key, stream) in zip(["x", "y", "color"], self.streams):
       if stream == "c":
-        ans[key] = "sweeps"
+        ans[key] = "sweep count"
       elif stream == "r":
-        ans[key] = "particle"
+        ans[key] = "particle id"
       elif stream == "t":
         ans[key] = "time (s)"
       elif stream == "s":

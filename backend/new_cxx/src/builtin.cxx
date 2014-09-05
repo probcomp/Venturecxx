@@ -39,7 +39,6 @@ map<string,SP*> initBuiltInSPs()
   m["eq"] = new SP(new NullRequestPSP(), new EqOutputPSP());
   m["gt"] = new SP(new NullRequestPSP(), new GtOutputPSP());
   m["gte"] = new SP(new NullRequestPSP(), new GteOutputPSP());
-  m["min"] = new SP(new NullRequestPSP(), new MinOutputPSP());
   m["lt"] = new SP(new NullRequestPSP(), new LtOutputPSP());
   m["lte"] = new SP(new NullRequestPSP(), new LteOutputPSP());
   m["sin"] = new SP(new NullRequestPSP(), new SinOutputPSP());

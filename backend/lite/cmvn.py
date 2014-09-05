@@ -2,10 +2,9 @@ from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, VentureSPRecord, SPType
 import math
 import stats_utils as su
-from utils import simulateCategorical, MVNormalRnd, matDet2D, matInv2D
-from value import AtomType, ArrayType, HomogeneousArrayType, NumberType # The type names are metaprogrammed pylint: disable=no-name-in-module
+from utils import MVNormalRnd, matDet2D, matInv2D
+from value import HomogeneousArrayType, NumberType # The type names are metaprogrammed pylint: disable=no-name-in-module
 import numpy as np
-import pdb
 
 def logGenGamma(d,x):
   term1 = float(d * (d - 1)) / 4 * math.log(math.pi)

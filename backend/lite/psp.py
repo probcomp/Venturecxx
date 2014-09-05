@@ -262,6 +262,10 @@ class TypedPSP(PSP):
   def simulate(self,args):
     return self.f_type.wrap_return(self.psp.simulate(self.f_type.unwrap_args(args)))
   def gradientOfSimulate(self, args, value, direction):
+    # TODO Should gradientOfSimulate unwrap the direction and wrap the
+    # answers using the gradient_type, like gradientOfLogDensity does?
+    # Or do I want to use the vector space structure of gradients
+    # given by the Venture values inside the Python methods?
     return self.psp.gradientOfSimulate(self.f_type.unwrap_args(args), self.f_type.unwrap_return(value), direction)
   def logDensity(self,value,args):
     return self.psp.logDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
