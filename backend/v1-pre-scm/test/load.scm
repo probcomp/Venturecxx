@@ -45,5 +45,8 @@
   ((lambda (items)
      (and (boolean? (car items))
           (boolean? (cadr items)))) (top-eval inference-smoke-test-2-defn))
+  (equal? (top-eval '(model-in (rdb-extend (get-current-trace))
+                               (assume x 4)
+                               (predict x))) 4)
   )
 

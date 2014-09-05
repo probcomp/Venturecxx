@@ -40,6 +40,14 @@
 ;;; Special forms Kernel-style
 (define-structure (operative (safe-accessors #t)) procedure)
 (define operatives '())
+
+(define-integrable (operative-form form win lose)
+  (if (pair? form)
+      (aif (assq (car form) operatives)
+           (win (cdr it) (cdr form))
+           (lose))
+      (lose)))
+
 (define (register-operative! name operative)
   (set! operatives (cons (cons name operative) operatives)))
 
@@ -53,9 +61,21 @@
 (define-operative (get-current-trace subforms env addr trace read-traces) trace)
 (define-operative (get-current-read-traces subforms env addr trace read-traces) read-traces)
 
-(define-integrable (operative-form form win lose)
-  (if (pair? form)
-      (aif (assq (car form) operatives)
-           (win (cdr it) (cdr form))
-           (lose))
-      (lose)))
+(define *the-model-trace* #f)
+
+(define-operative (model-in subforms env trace addr read-traces)
+  (let ((trace-subform (car subforms))
+        (body-forms (cdr subforms)))
+    ;; Can I get away with using MIT Scheme's native fluid-let here,
+    ;; or do I need to do this in the object language?
+    (fluid-let ((*the-model-trace*
+                 (eval trace-subform env trace (extend-address addr 'model-in) read-traces)))
+      (eval `(begin ,@body-forms) env trace (extend-address addr 'model-in-body) read-traces))))
+
+(define-operative (assume subforms env trace addr read-traces)
+  (eval `(trace-in ,*the-model-trace* (define ,(car subforms) ,(cadr subforms)))
+        env trace addr read-traces))
+
+(define-operative (predict subforms env trace addr read-traces)
+  (eval `(trace-in ,*the-model-trace* ,(car subforms))
+        env trace addr read-traces))
