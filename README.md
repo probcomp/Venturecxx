@@ -42,6 +42,9 @@ Here is what we install on a clean Ubuntu (works best in 14.04 or higher).
     # Note: on older versions of Ubuntu, install them via pip (see "Install ggplot" below)
     sudo apt-get install -y python-pandas python-patsy
 
+    # [Optional] Get dependencies for networkx (needed for some scaffold debugging facilities)
+    sudo apt-get install -y libgraphviz-dev
+
 Dependencies (OSX, Homebrew)
 ----------------------------
 
