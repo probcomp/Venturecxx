@@ -57,9 +57,9 @@
      (register-operative! 'name (make-operative (lambda (arg ...) body ...))))))
 
 ;; Permit reflection on the evaluation context
-(define-operative (get-current-environment subforms env addr trace read-traces) env)
-(define-operative (get-current-trace subforms env addr trace read-traces) trace)
-(define-operative (get-current-read-traces subforms env addr trace read-traces) read-traces)
+(define-operative (get-current-environment subforms env trace addr read-traces) env)
+(define-operative (get-current-trace subforms env trace addr read-traces) trace)
+(define-operative (get-current-read-traces subforms env trace addr read-traces) read-traces)
 
 (define *the-model-trace* #f)
 
@@ -74,6 +74,14 @@
 
 (define-operative (assume subforms env trace addr read-traces)
   (eval `(trace-in ,*the-model-trace* (define ,(car subforms) ,(cadr subforms)))
+        env trace addr read-traces))
+
+(define-operative (observe subforms env trace addr read-traces)
+  (eval `(trace-in ,*the-model-trace* ($observe ,(car subforms) ,(cadr subforms)))
+        env trace addr read-traces))
+
+(define-operative (infer subforms env trace addr read-traces)
+  (eval `(,(car subforms) ,*the-model-trace*)
         env trace addr read-traces))
 
 (define-operative (predict subforms env trace addr read-traces)

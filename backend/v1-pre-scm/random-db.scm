@@ -251,3 +251,23 @@
 ;;; a) Old choices stick around and may come back
 ;;; b) Proposals to shadow choices are made (and always accepted
 ;;;    because there is no likelihood)
+
+(define trick-coin-example-syntax
+  `(begin
+     ,observe-defn
+     ,map-defn
+     (define mcmc-20
+       (lambda (t)
+         (enforce-constraints t)
+         (map (lambda (i) (mcmc-step t))
+              '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))))
+     (model-in (rdb-extend (get-current-trace))
+       (assume is-trick? (flip 0.5))
+       (assume weight (if is-trick? (uniform 0 1) 0.5))
+       (observe (flip weight) #t)
+       (observe (flip weight) #t)
+       (observe (flip weight) #t)
+       (observe (flip weight) #t)
+       (observe (flip weight) #t)
+       (infer mcmc-20)
+       (predict (list is-trick? weight)))))
