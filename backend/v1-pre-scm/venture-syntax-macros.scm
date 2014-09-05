@@ -44,4 +44,7 @@
    (observe (normal (infer-param 10 variance_used) 0.5) 10)
    (infer <something horrible>) ; traced completely outside
    (predict variance_used))
+;; Note: Assume is now different than define, and predict is different
+;; than nothing at all.
 
+;;; VKM says: This is excellent!  Make it actually run!
