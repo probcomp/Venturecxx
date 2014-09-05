@@ -33,12 +33,11 @@ class Engine(object):
   def __init__(self, name="phony", Trace=None):
     self.name = name
     self.Trace = Trace
-    self.traces = [Trace()]
     self.weights = [0]
     self.directiveCounter = 0
     self.directives = {}
     self.inferrer = None
-    self.trace_handler = None
+    self.trace_handler = SequentialTraceHandler([Trace()])
     import venture.lite.inference_sps as inf
     self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
@@ -415,35 +414,31 @@ class ContinuousInferrer(object):
     inferrer.join()
 
 # Classes to handle parallelization
-
-class TraceHandler(object):
+class HandlerBase(object):
+  '''Base class to delegate handling of parallel traces'''
+  __metaclass__ = ABCMeta
   '''Parent process to delegate handling of parallel traces'''
-  def __init__(self, N, parallel):
-    self.traces = []
+  def __init__(self, traces):
     self.pipes = []
+    self.processes = []
     self.weights = []
-    if parallel:
-      Pipe = mp.Pipe
-      TraceProcess = ParallelTraceProcess
-    else:
-      Pipe = mpd.Pipe
-      TraceProcess = SequentialTraceProcess
-    for i in range(N):
+    Pipe, TraceProcess = self._setup()
+    for trace in traces:
       parent, child = Pipe()
-      trace = TraceProcess(Trace(), child)
+      trace = TraceProcess(trace, child)
       self.pipes.append(parent)
-      self.traces.append(trace)
-      self.weights.append(1)
+      self.processes.append(trace)
+      self.weights.append(0)
 
   def __del__(self):
     # stop child processes
-    for trace in self.traces: trace.stop()
+    for process in self.processes: process.stop()
 
   def delegate(self, cmd, **kwargs):
     # send command
     for pipe in self.pipes: pipe.send((cmd, kwargs))
     # wait for traces to finish
-    for trace in self.traces: trace.join()
+    for process in self.processes: process.join()
 
   def receive(self):
     # retrieve results from all traces
@@ -451,68 +446,75 @@ class TraceHandler(object):
     for pipe in self.pipes:
       res.append(pipe.recv())
 
-  class ProcessBase(object):
-    '''
-    Base class providing the methods used by both ParallelTraceProcess and
-    SequentialTraceProcess. This uniformizes the inferface.
-    '''
-    __metaclass__ = ABCMeta
-    def __init__(self, trace, pipe):
-      self.trace = trace
-      self.pipe = pipe
-      Process = mp.Process if issubclass(self. mp.Process) else mpd.Process
-      Process.__init__(self)
+class ParallelTraceHandler(HandlerBase):
+  def _setup():
+    return mp.Pipe, ParallelTraceProcess
 
-    def stop(self):
-      sys.exit()
+class SequentialTraceHandler(HandlerBase):
+  def _setup():
+    return mpd.Pipe, SequentialTraceProcess
 
-    def run(self):
-      while True:
-        cmd, kwargs = self.pipe.recv()
-        res = getatrr(self, cmd)(**kwargs)
-        pipe.send(res)
+class ProcessBase(object):
+  '''
+  Base class providing the methods used by both ParallelTraceProcess and
+  SequentialTraceProcess. This uniformizes the inferface.
+  '''
+  __metaclass__ = ABCMeta
+  def __init__(self, trace, pipe):
+    self.trace = trace
+    self.pipe = pipe
+    Process = mp.Process if issubclass(self. mp.Process) else mpd.Process
+    Process.__init__(self)
 
-    def assume(self, baseAddr, id, exp):
-      self.trace.eval(baesAddr, exp)
-      self.trace.bindInGlobalEnv(id, baseAddr)
-      return self.trace.extractValue(baseAddr)
+  def stop(self):
+    sys.exit()
 
-    def predict_all(self, baseAddr, datum):
-      self.trace.eval(baseAddr,datum)
-      return self.t.extractValue(baseAddr)
+  def run(self):
+    while True:
+      cmd, kwargs = self.pipe.recv()
+      res = getatrr(self, cmd)(**kwargs)
+      pipe.send(res)
 
-    def observe(self, baseAddr, datum, val):
-      trace.eval(baseAddr, datum)
-      logDensity = trace.observe(baseAddr,val)
-      # TODO check for -infinity? Throw an exception?
-      if logDensity == float("-inf"):
-        raise VentureException("invalid_constraint", "Observe failed to constrain",
-                               expression=datum, value=val)
+  def assume(self, baseAddr, id, exp):
+    self.trace.eval(baesAddr, exp)
+    self.trace.bindInGlobalEnv(id, baseAddr)
+    return self.trace.extractValue(baseAddr)
 
-    def forget(self, directive, directiveId):
-      if directive[0] == "observe": trace.unobserve(directiveId)
-      trace.uneval(directiveId)
-      if directive[0] == "assume": trace.unbindInGlobalEnv(directive[1])
+  def predict_all(self, baseAddr, datum):
+    self.trace.eval(baseAddr,datum)
+    return self.t.extractValue(baseAddr)
 
-    def freeze(self, directiveId):
-      self.trace.freeze(directiveId)
+  def observe(self, baseAddr, datum, val):
+    trace.eval(baseAddr, datum)
+    logDensity = trace.observe(baseAddr,val)
+    # TODO check for -infinity? Throw an exception?
+    if logDensity == float("-inf"):
+      raise VentureException("invalid_constraint", "Observe failed to constrain",
+                             expression=datum, value=val)
 
-    def bind_foreign_sp(self, name, sp):
-      self.trace.bindPrimitiveSP(name, sp)
+  def forget(self, directive, directiveId):
+    if directive[0] == "observe": trace.unobserve(directiveId)
+    trace.uneval(directiveId)
+    if directive[0] == "assume": trace.unbindInGlobalEnv(directive[1])
 
-    def primitive_infer(self, exp):
-      if hasattr(self.trace, "infer_exp"):
-        # The trace can handle the inference primitive syntax natively
-        self.trace.infer_exp(exp)
-      else:
-        # The trace cannot handle the inference primitive syntax
-        # natively, so translate.
-        self.trace.infer(expToDict(exp))
+  def freeze(self, directiveId):
+    self.trace.freeze(directiveId)
+
+  def bind_foreign_sp(self, name, sp):
+    self.trace.bindPrimitiveSP(name, sp)
+
+  def primitive_infer(self, exp):
+    if hasattr(self.trace, "infer_exp"):
+      # The trace can handle the inference primitive syntax natively
+      self.trace.infer_exp(exp)
+    else:
+      # The trace cannot handle the inference primitive syntax
+      # natively, so translate.
+      self.trace.infer(expToDict(exp))
 
 class ParallelTraceProcess(ProcessBase, mp.Process):
   '''Multiprocessing-based paralleism by inheritance'''
   pass
-
 
 class SequentialTraceProcess(ProcessBase, mpd.Process):
   '''Sequential execution by inheritance'''
