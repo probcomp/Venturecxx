@@ -1,5 +1,8 @@
 from node import LookupNode, RequestNode, OutputNode
 from value import SPRef
+from omegadb import OmegaDB
+from detach import unapplyPSP
+from regen import applyPSP
 
 class Scaffold(object):
   def __init__(self,setsOfPNodes=None,regenCounts=None,absorbing=None,aaa=None,border=None,lkernels=None,brush=None):
@@ -46,27 +49,99 @@ class Scaffold(object):
     print "borders: " + str(self.border)
     print "lkernels: " + str(self.lkernels)
 
-def constructScaffold(trace,setsOfPNodes,useDeltaKernels = False):
+# Calling subsampled_mh may create broken deterministic
+# relationships in the trace.  For example, consider updating mu in the
+# program:
+#
+# [assume mu (normal 0 1)]
+# [assume x (lambda () (normal mu 1))]
+# [observe (x) 0.1]
+# [observe (x) 0.2]
+# ...
+# N observations
+# ...
+#
+# If the subsampled scaffold only included the first n observations, the
+# lookup nodes for mu in the remaining N-n observations will have a
+# stale value.  At a second call to infer, these inconsistencies may cause
+# a problem.
+#
+# updateValuesAtScaffold updates all the nodes in a newly constructed
+# scaffold by calling updateValueAtNode for each node. The main idea is:
+# - Assume all the random output nodes have the latest values and the
+#   problem is in the nodes with deterministic dependence on their
+#   parents.
+# - For every node that cannot absorb, update the value of all its
+#   parents, and then unapplyPSP and applyPSP.
+#
+# Assumptions/Limitations:
+# Currently we assume the stale values do not change the structure of
+# the trace (the existence of ESRs) and the value of the request node is
+# always up to date.  Also, we assume the values of brush/border nodes
+# and their parents are up to date.  As a result, we only update the
+# application and lookup nodes in the DRG.
+def updateValuesAtScaffold(trace,scaffold,updatedNodes):
+  for node in scaffold.regenCounts:
+    updateValueAtNode(trace, scaffold, node, updatedNodes)
+
+def updateValueAtNode(trace, scaffold, node, updatedNodes):
+  # Strong assumption! Only consider resampling nodes in the scaffold.
+  if node not in updatedNodes and scaffold.isResampling(node):
+    if isinstance(node, LookupNode):
+      updateValueAtNode(trace, scaffold, node.sourceNode, updatedNodes)
+      trace.setValueAt(node, trace.valueAt(node.sourceNode))
+    elif isinstance(node, OutputNode):
+      # Assume SPRef and AAA nodes are always updated.
+      psp = trace.pspAt(node)
+      if not isinstance(trace.valueAt(node), SPRef) and not psp.childrenCanAAA():
+        canAbsorb = True
+        for parent in trace.parentsAt(node):
+          if not psp.canAbsorb(trace, node, parent):
+            updateValueAtNode(trace, scaffold, parent, updatedNodes)
+            canAbsorb = False
+        if not canAbsorb:
+          update(trace, node)
+    updatedNodes.add(node)
+
+def update(trace, node):
+  scaffold = Scaffold()
+  omegaDB = OmegaDB()
+  unapplyPSP(trace, node, scaffold, omegaDB)
+  applyPSP(trace,node,scaffold,False,omegaDB,{})
+
+
+def constructScaffold(trace, setsOfPNodes, useDeltaKernels=False, deltaKernelArgs=None, hardBorder=None, updateValues=False):
+  if hardBorder is None:
+    hardBorder = []
+  assert len(hardBorder) <= 1
+
   cDRG,cAbsorbing,cAAA = set(),set(),set()
   indexAssignments = {}
   assert isinstance(setsOfPNodes,list)
   for i in range(len(setsOfPNodes)):
     assert isinstance(setsOfPNodes[i],set)
-    extendCandidateScaffold(trace,setsOfPNodes[i],cDRG,cAbsorbing,cAAA,indexAssignments,i)
+    extendCandidateScaffold(trace,setsOfPNodes[i],cDRG,cAbsorbing,cAAA,indexAssignments,i,hardBorder)
 
   brush = findBrush(trace,cDRG)
   drg,absorbing,aaa = removeBrush(cDRG,cAbsorbing,cAAA,brush)
   border = findBorder(trace,drg,absorbing,aaa)
-  regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush)
-  lkernels = loadKernels(trace,drg,aaa,useDeltaKernels)
+  regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush,hardBorder)
+  for node in hardBorder: assert node in border
+  lkernels = loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs)
   borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
-  return Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
+  scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
 
-def addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i):
+  if updateValues:
+    updateValuesAtScaffold(trace,scaffold,set())
+
+  return scaffold
+
+def addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder):
   if node in absorbing: absorbing.remove(node)
   if node in aaa: aaa.remove(node)
   drg.add(node)
-  q.extend([(n,False,node) for n in trace.childrenAt(node)])
+  if node not in hardBorder:
+    q.extend([(n,False,node) for n in trace.childrenAt(node)])
   indexAssignments[node] = i
 
 def addAbsorbingNode(drg,absorbing,aaa,node,indexAssignments,i):
@@ -82,15 +157,15 @@ def addAAANode(drg,aaa,absorbing,node,indexAssignments,i):
   indexAssignments[node] = i
 
 
-def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i):
+def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i,hardBorder):
   q = [(pnode,True,None) for pnode in pnodes]
 
   while q:
     node,isPrincipal,parentNode = q.pop()
     if node in drg and not node in aaa:
-      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder)
     elif isinstance(node,LookupNode) or node.operatorNode in drg:
-      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder)
     # TODO temporary: once we put all uncollapsed AAA procs into AEKernels, this line won't be necessary
     elif node in aaa:
       addAAANode(drg,aaa,absorbing,node,indexAssignments,i)      
@@ -99,8 +174,7 @@ def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i):
     elif trace.pspAt(node).childrenCanAAA(): 
       addAAANode(drg,aaa,absorbing,node,indexAssignments,i)
     else: 
-      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i)
-
+      addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder)
 
 def findBrush(trace,cDRG):
   disableCounts = {}
@@ -153,16 +227,19 @@ def maybeIncrementAAARegenCount(trace,regenCounts,aaa,node):
   if isinstance(value,SPRef) and value.makerNode in aaa: 
     regenCounts[value.makerNode] += 1
 
-def computeRegenCounts(trace,drg,absorbing,aaa,border,brush):
+def computeRegenCounts(trace,drg,absorbing,aaa,border,brush,hardBorder):
   regenCounts = {}
   for node in drg:
     if node in aaa:
       regenCounts[node] = 1 # will be added to shortly
+    elif node in hardBorder:
+      # hardBorder nodes will regenerate despite the number of children.
+      regenCounts[node] = 1
     elif node in border:
       regenCounts[node] = len(trace.childrenAt(node)) + 1
     else:
       regenCounts[node] = len(trace.childrenAt(node))
-  
+
   if aaa:
     for node in drg.union(absorbing):
       for parent in trace.parentsAt(node):
@@ -177,7 +254,7 @@ def computeRegenCounts(trace,drg,absorbing,aaa,border,brush):
 
   return regenCounts
 
-def loadKernels(trace,drg,aaa,useDeltaKernels):
+def loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs):
   lkernels = { node : trace.pspAt(node).getAAALKernel() for node in aaa}
   if useDeltaKernels:
     for node in drg - aaa:
@@ -185,7 +262,7 @@ def loadKernels(trace,drg,aaa,useDeltaKernels):
       if node.operatorNode in drg: continue
       for o in node.operandNodes:
         if o in drg: continue
-      if trace.pspAt(node).hasDeltaKernel(): lkernels[node] = trace.pspAt(node).getDeltaKernel()
+      if trace.pspAt(node).hasDeltaKernel(): lkernels[node] = trace.pspAt(node).getDeltaKernel(deltaKernelArgs)
   return lkernels
 
 def assignBorderSequnce(border,indexAssignments,numIndices):
@@ -193,3 +270,4 @@ def assignBorderSequnce(border,indexAssignments,numIndices):
   for node in border:
     borderSequence[indexAssignments[node]].append(node)
   return borderSequence
+

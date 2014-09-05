@@ -32,3 +32,7 @@ scipy>=0.13
 patsy # Because ggplot needs this installed first ??
 pandas>=0.14 # TODO Is the dependency on pandas actually optional?
 # ggplot
+
+# Drawing scaffolds for debugging (optional)
+pygraphviz
+networkx
