@@ -298,47 +298,13 @@ effect of renumbering the directives, if some had been forgotten."""
       self.inferrer.stop()
       self.inferrer = None
 
-  def dump_trace(self, trace, skipStackDictConversion=False):
-    db = trace.makeSerializationDB()
-
-    for did, directive in sorted(self.directives.items(), reverse=True):
-      if directive[0] == "observe":
-        trace.unobserve(did)
-      trace.unevalAndExtract(did, db)
-
-    for did, directive in sorted(self.directives.items()):
-      trace.restore(did, db)
-      if directive[0] == "observe":
-        trace.observe(did, directive[2])
-
-    return trace.dumpSerializationDB(db, skipStackDictConversion)
-
-  def restore_trace(self, values, skipStackDictConversion=False):
-    trace = self.Trace()
-    db = trace.makeSerializationDB(values, skipStackDictConversion)
-
-    for did, directive in sorted(self.directives.items()):
-        if directive[0] == "assume":
-            name, datum = directive[1], directive[2]
-            trace.evalAndRestore(did, datum, db)
-            trace.bindInGlobalEnv(name, did)
-        elif directive[0] == "observe":
-            datum, val = directive[1], directive[2]
-            trace.evalAndRestore(did, datum, db)
-            trace.observe(did, val)
-        elif directive[0] == "predict":
-            datum = directive[1]
-            trace.evalAndRestore(did, datum, db)
-
-    return trace
-
   def copy_trace(self, trace):
-    values = self.dump_trace(trace, skipStackDictConversion=True)
-    return self.restore_trace(values, skipStackDictConversion=True)
+    values = dump_trace(self, trace, skipStackDictConversion=True)
+    return restore_trace(self, values, skipStackDictConversion=True)
 
   def save(self, fname, extra=None):
     data = {}
-    data['traces'] = [self.dump_trace(trace) for trace in self.traces]
+    data['traces'] = [dump_trace(self, trace) for trace in self.traces]
     data['weights'] = self.weights
     data['directives'] = self.directives
     data['directiveCounter'] = self.directiveCounter
@@ -353,7 +319,7 @@ effect of renumbering the directives, if some had been forgotten."""
     assert version == '0.2', "Incompatible version or unrecognized object"
     self.directiveCounter = data['directiveCounter']
     self.directives = data['directives']
-    self.traces = [self.restore_trace(trace) for trace in data['traces']]
+    self.traces = [restore_trace(self, trace) for trace in data['traces']]
     self.weights = data['weights']
     return data['extra']
 
@@ -363,8 +329,8 @@ effect of renumbering the directives, if some had been forgotten."""
     engine.directives = self.directives
     engine.traces = []
     for trace in self.traces:
-      values = self.dump_trace(trace)
-      engine.traces.append(engine.restore_trace(values))
+      values = dump_trace(self, trace)
+      engine.traces.append(restore_trace(engine, values))
     engine.weights = self.weights
     return engine
 
@@ -387,6 +353,41 @@ effect of renumbering the directives, if some had been forgotten."""
     print ans
     return ans
 
+# Methods for trace serialization
+
+def dump_trace(engine, trace, skipStackDictConversion=False):
+  db = trace.makeSerializationDB()
+
+  for did, directive in sorted(engine.directives.items(), reverse=True):
+    if directive[0] == "observe":
+      trace.unobserve(did)
+    trace.unevalAndExtract(did, db)
+
+  for did, directive in sorted(engine.directives.items()):
+    trace.restore(did, db)
+    if directive[0] == "observe":
+      trace.observe(did, directive[2])
+
+  return trace.dumpSerializationDB(db, skipStackDictConversion)
+
+def restore_trace(engine, values, skipStackDictConversion=False):
+  trace = engine.Trace()
+  db = trace.makeSerializationDB(values, skipStackDictConversion)
+
+  for did, directive in sorted(engine.directives.items()):
+      if directive[0] == "assume":
+          name, datum = directive[1], directive[2]
+          trace.evalAndRestore(did, datum, db)
+          trace.bindInGlobalEnv(name, did)
+      elif directive[0] == "observe":
+          datum, val = directive[1], directive[2]
+          trace.evalAndRestore(did, datum, db)
+          trace.observe(did, val)
+      elif directive[0] == "predict":
+          datum = directive[1]
+          trace.evalAndRestore(did, datum, db)
+
+  return trace
 
   # TODO: Add methods to inspect/manipulate the trace for debugging and profiling
 
