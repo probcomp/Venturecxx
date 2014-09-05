@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
-from pandas import DataFrame, Index
 
 from venture.lite.value import (ExpressionType, VentureArray, VentureSymbol,
                                 VentureInteger)
@@ -250,6 +249,7 @@ class InferResult(object):
     print
 
   def dataset(self):
+    from pandas import DataFrame, Index
     ds = DataFrame.from_dict(strip_types_from_dict_values(self.data))
     cols = ds.columns
     first_cols = Index(['sweep count', 'particle id', 'time (s)', 'log score'])

@@ -2,7 +2,6 @@ import warnings
 import random
 import math
 import numpy as np
-import scipy.stats as stats
 from ..exception import (SubsampledScaffoldError,
                          SubsampledScaffoldNotEffectiveWarning,
                          SubsampledScaffoldNotApplicableWarning,

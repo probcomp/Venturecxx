@@ -6,6 +6,7 @@ sys.path += ['/usr/lib/python2.7/dist-packages', '/usr/local/lib/python2.7/dist-
 import numpy as np
 import time
 from pypy_io_utils import loadData, saveObj
+import subsampled_mh_utils
 from venture.shortcuts import make_lite_church_prime_ripl
 make_ripl = make_lite_church_prime_ripl
 
@@ -76,14 +77,15 @@ def main(data_source_, epsilon_):
   ##########################################
   #### Initialization
   prog = """
-  [clear]
   [assume D %d]
-  [assume mu (zeros_array (+ D 1))]
-  [assume Sigma (scalar_product 0.1 (ones_array (+ D 1)))]
-  [assume w (scope_include (quote w) 0 (multivariate_diag_normal mu Sigma))]
+  [assume mu (repeat 0 (+ D 1))]
+  [assume sigma (repeat (sqrt 0.1) (+ D 1))]
+  [assume w (scope_include (quote w) 0 (multivariate_diag_normal mu sigma))]
   [assume y_x (lambda (x) (bernoulli (linear_logistic w x)))]
   """ % D
   v = make_ripl()
+  v.clear()
+  subsampled_mh_utils.loadUtilSPs(v)
   v.execute_program(prog);
 
   ## Load observations.
@@ -91,7 +93,7 @@ def main(data_source_, epsilon_):
   for n in xrange(N):
     if (n + 1) % round(N / 10) == 0:
       print "Processing %d/%d observations." % (n + 1, N)
-    v.observe('(y_x (array %s))' \
+    v.observe('(y_x (vector %s))' \
               % ' '.join(['%f' % x for x in X[n]]), y[n])
   t_obs = time.clock() - tic
   print "It takes", t_obs, "seconds to load observations."
