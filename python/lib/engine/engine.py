@@ -476,6 +476,10 @@ class ProcessBase(object):
       res = getatrr(self, cmd)(**kwargs)
       pipe.send(res)
 
+  def send_trace(self, engine):
+    dumped = dump_trace(engine, self.trace)
+    return dumped
+
   def assume(self, baseAddr, id, exp):
     self.trace.eval(baesAddr, exp)
     self.trace.bindInGlobalEnv(id, baseAddr)
