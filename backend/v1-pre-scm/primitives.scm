@@ -34,7 +34,7 @@
          (ext (prog t))))))
 
 (define observe-defn
-  '(define observe
+  '(define $observe
      (lambda (found desired)
        (begin
          (define t (get-current-trace))

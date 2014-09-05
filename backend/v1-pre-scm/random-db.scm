@@ -226,11 +226,11 @@
                (begin
                  (define is-trick? (flip 0.5))
                  (define weight (if is-trick? (uniform 0 1) 0.5))
-                 (observe (flip weight) #t)
-                 (observe (flip weight) #t)
-                 (observe (flip weight) #t)
-                 (observe (flip weight) #t)
-                 (observe (flip weight) #t)
+                 ($observe (flip weight) #t)
+                 ($observe (flip weight) #t)
+                 ($observe (flip weight) #t)
+                 ($observe (flip weight) #t)
+                 ($observe (flip weight) #t)
                  (define answer (list is-trick? weight))))
      (pp (trace-in (store-extend model-trace) answer))
      ,map-defn
