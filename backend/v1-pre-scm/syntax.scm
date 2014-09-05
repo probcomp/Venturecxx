@@ -37,16 +37,16 @@
 (define extend-form? (tagged-list? 'ext))
 (define-algebraic-matcher extend-form extend-form? cadr)
 
-(define-integrable (nullary-magic tag)
-  ;; TODO Festoon this with all the needful integrable declarations
-  (lambda (thing win lose)
-    (if (and (pair? thing) (null? (cdr thing)) (eq? tag (car thing)))
-        (win)
-        (lose))))
+(define-structure (operative (safe-accessors #t))
+  procedure)
 
-(define operatives '())
+(define operatives
+  ;; Permit reflection on the evaluation context
+  `((get-current-environment . ,(make-operative (lambda (subforms env addr trace read-traces) env)))
+    (get-current-trace . ,(make-operative (lambda (subforms env addr trace read-traces) trace)))
+    (get-current-read-traces . ,(make-operative (lambda (subforms env addr trace read-traces) read-traces)))))
 
-(define (operative-form form win lose)
+(define-integrable (operative-form form win lose)
   (if (pair? form)
       (aif (assq (car form) operatives)
            (win (cdr it) (cdr form))

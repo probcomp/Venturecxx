@@ -79,10 +79,6 @@
        ;; Could add trace to read-traces here instead of stashing
        ;; it in the parent pointer
        (eval subform env subtrace addr* read-traces)))
-    ;; Permit reflection on the evaluation context
-    (((nullary-magic 'get-current-environment)) env)
-    (((nullary-magic 'get-current-trace)) trace)
-    (((nullary-magic 'get-current-read-traces)) read-traces)
     ((definition x subexp)
      (let ((addr* (extend-address addr 'defn)))
        (eval subexp env trace addr* read-traces)
