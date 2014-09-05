@@ -1,6 +1,6 @@
 from nose import SkipTest
 from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, rejectionSampling
+from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, rejectionSampling, skipWhenSubSampling
 
 def testMakeBetaBernoulli1():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
@@ -51,6 +51,7 @@ def testMakeBetaBernoulli3():
     yield checkMakeBetaBernoulli3,maker
 
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
+@skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
 @statisticalTest
 def checkMakeBetaBernoulli3(maker):
   ripl = get_ripl()
@@ -74,6 +75,7 @@ def testMakeBetaBernoulli4():
     yield checkMakeBetaBernoulli4,maker
 
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
+@skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
 @statisticalTest
 def checkMakeBetaBernoulli4(maker):
   ripl = get_ripl()

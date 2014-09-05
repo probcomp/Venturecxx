@@ -68,15 +68,6 @@ VentureValuePtr GteOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
   return shared_ptr<VentureBool>(new VentureBool(args->operandValues[0] >= args->operandValues[1]));
 }
 
-VentureValuePtr MinOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
-{
-  checkArgsLength("min", args, 2);
-  double a = args->operandValues[0]->getDouble();
-  double b = args->operandValues[1]->getDouble();
-  double m = a < b ? a : b;
-  return shared_ptr<VentureNumber>(new VentureNumber(m));
-}
-
 VentureValuePtr LtOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("<", args, 2);

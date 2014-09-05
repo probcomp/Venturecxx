@@ -2,11 +2,8 @@ from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, VentureSPRecord, SPType
 import math
 from scipy.special import gammaln
-import scipy.stats
-from utils import simulateCategorical
-from value import AtomType, ArrayType, HomogeneousArrayType, NumberType # The type names are metaprogrammed pylint: disable=no-name-in-module
+from value import HomogeneousArrayType, NumberType # The type names are metaprogrammed pylint: disable=no-name-in-module
 import numpy as np
-import pdb
 
 def logGenGamma(d,x):
   term1 = float(d * (d - 1)) / 4 * math.log(math.pi)

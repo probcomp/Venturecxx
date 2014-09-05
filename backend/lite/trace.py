@@ -11,8 +11,8 @@ from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
                    RejectionOperator, MissingEsrParentError, NoSPRefError,
                    HamiltonianMonteCarloOperator, MAPOperator, StepOutSliceOperator,
                    DoublingSliceOperator, NesterovAcceleratedGradientAscentOperator,
-                   drawScaffoldKernel, drawSubsampledScaffoldKernel, subsampledMixMH,
-                   SubsampledMHOperator,SubsampledBlockScaffoldIndexer)
+                   drawScaffold, subsampledMixMH, SubsampledMHOperator,
+                   SubsampledBlockScaffoldIndexer)
 from omegadb import OmegaDB
 from smap import SMap
 from sp import SPFamilies, VentureSPRecord
@@ -20,12 +20,9 @@ from scope import isScopeIncludeOutputPSP, isScopeExcludeOutputPSP
 from regen import regenAndAttach
 from detach import detachAndExtract
 from scaffold import constructScaffold
-from consistency import assertTorus
 from lkernel import DeterministicLKernel
 from psp import ESRRefOutputPSP
 from serialize import OrderedOmegaDB
-import random
-import numpy.random
 
 class Trace(object):
   def __init__(self):
@@ -406,19 +403,18 @@ class Trace(object):
       if operator == "mh":
         mixMH(self, BlockScaffoldIndexer(scope, block), MHOperator())
       elif operator == "draw_scaffold":
-        drawScaffoldKernel(self, BlockScaffoldIndexer(scope, block))
-      elif operator == "draw_subsampled_scaffold":
-        scope_to_subsample = exp[3]
-        drawSubsampledScaffoldKernel(self, BlockScaffoldIndexer(scope, block), scope_to_subsample)
+        drawScaffold(self, BlockScaffoldIndexer(scope, block))
       elif operator == "mh_kernel_update":
-        (useDeltaKernels, deltaKernelArgs, updateValue) = exp[3:6]
-        mixMH(self, BlockScaffoldIndexer(scope, block, useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs, updateValue=updateValue), MHOperator())
+        (useDeltaKernels, deltaKernelArgs, updateValues) = exp[3:6]
+        mixMH(self, BlockScaffoldIndexer(scope, block, useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs, updateValues=updateValues), MHOperator())
       elif operator == "subsampled_mh":
-        (Nbatch, k0, epsilon, useDeltaKernels, deltaKernelArgs, updateValue) = exp[3:9]
-        subsampledMixMH(self, SubsampledBlockScaffoldIndexer(scope, block, useDeltaKernels, deltaKernelArgs, updateValue), SubsampledMHOperator(), Nbatch, k0, epsilon)
+        (Nbatch, k0, epsilon, useDeltaKernels, deltaKernelArgs, updateValues) = exp[3:9]
+        subsampledMixMH(self, SubsampledBlockScaffoldIndexer(scope, block, useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs, updateValues=updateValues), SubsampledMHOperator(), Nbatch, k0, epsilon)
+      elif operator == "subsampled_mh_check_applicability":
+        SubsampledBlockScaffoldIndexer(scope, block).checkApplicability(self)
       elif operator == "subsampled_mh_make_consistent":
-        (useDeltaKernels, deltaKernelArgs, updateValue) = exp[3:6]
-        SubsampledMHOperator().makeConsistent(self,SubsampledBlockScaffoldIndexer(scope, block, useDeltaKernels, deltaKernelArgs, updateValue))
+        (useDeltaKernels, deltaKernelArgs, updateValues) = exp[3:6]
+        SubsampledMHOperator().makeConsistent(self,SubsampledBlockScaffoldIndexer(scope, block, useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs, updateValues=updateValues))
       elif operator == "meanfield":
         steps = int(exp[3])
         mixMH(self, BlockScaffoldIndexer(scope, block), MeanfieldOperator(steps, 0.0001))
@@ -428,7 +424,7 @@ class Trace(object):
       elif operator == "gibbs":
         mixMH(self, BlockScaffoldIndexer(scope, block), EnumerativeGibbsOperator())
       elif operator == "gibbs_update":
-        mixMH(self, BlockScaffoldIndexer(scope, block, updateValue=True), EnumerativeGibbsOperator())
+        mixMH(self, BlockScaffoldIndexer(scope, block, updateValues=True), EnumerativeGibbsOperator())
       elif operator == "slice":
         (w, m) = exp[3:5]
         mixMH(self, BlockScaffoldIndexer(scope, block), StepOutSliceOperator(w, m))
@@ -446,9 +442,9 @@ class Trace(object):
         particles = int(exp[3])
         if isinstance(block, list): # Ordered range
           (_, min_block, max_block) = block
-          mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block), updateValue=True), PGibbsOperator(particles))
+          mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block), updateValues=True), PGibbsOperator(particles))
         else:
-          mixMH(self, BlockScaffoldIndexer(scope, block, updateValue=True), PGibbsOperator(particles))
+          mixMH(self, BlockScaffoldIndexer(scope, block, updateValues=True), PGibbsOperator(particles))
       elif operator == "func_pgibbs":
         particles = int(exp[3])
         if isinstance(block, list): # Ordered range

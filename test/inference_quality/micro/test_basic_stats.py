@@ -3,7 +3,7 @@ import scipy.stats as stats
 from nose import SkipTest
 
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownMeanVariance, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, collect_iid_samples, skipWhenRejectionSampling
+from venture.test.config import get_ripl, collectSamples, collect_iid_samples, skipWhenRejectionSampling, skipWhenSubSampling
 
 @statisticalTest
 def testBernoulliIfNormal1():
@@ -132,6 +132,7 @@ def testStudentT2():
 
 
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
+@skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
 @statisticalTest
 def testSprinkler1():
   "Classic Bayes-net example, with no absorbing when proposing to 'rain'"
@@ -150,6 +151,7 @@ def testSprinkler1():
   return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
+@skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
 def testSprinkler2():
   "Classic Bayes-net example, absorbing at 'sprinkler' when proposing to 'rain'"
   # this test needs more iterations than most others, because it mixes badly

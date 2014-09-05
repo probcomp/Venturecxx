@@ -1,6 +1,6 @@
 from nose import SkipTest
 from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, rejectionSampling
+from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, rejectionSampling, skipWhenSubSampling
 
 # TODO this whole file will need to be parameterized.
 # Most of these will become "check" functions instead of "test"
@@ -46,6 +46,7 @@ def testMakeSymDirMultFlip():
       yield checkMakeSymDirMultFlip,maker_1,maker_2
   
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
+@skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
 @statisticalTest
 def checkMakeSymDirMultFlip(maker_1,maker_2):
   ripl = get_ripl()
@@ -63,6 +64,7 @@ def testMakeSymDirMultBrushObserves():
       yield checkMakeSymDirMultBrushObserves,maker_1,maker_2
 
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
+@skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
 @statisticalTest
 def checkMakeSymDirMultBrushObserves(maker_1,maker_2):
   ripl = get_ripl()
@@ -74,6 +76,7 @@ def checkMakeSymDirMultBrushObserves(maker_1,maker_2):
   return checkDirichletMultinomialBrush(ripl,"pid")
 
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
+@skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
 @statisticalTest
 def testMakeSymDirMultNative():
   """AAA where the SP flips between collapsed, uncollapsed, and native"""
