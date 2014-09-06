@@ -185,10 +185,6 @@ effect of renumbering the directives, if some had been forgotten."""
     else:
       assert False, "Unkown directive type found %r" % directive
 
-  def incorporate(self):
-    for i,trace in enumerate(self.traces):
-      self.weights[i] += trace.makeConsistent()
-
   def resample(self, P):
     P = int(P)
     newTraces = [None for p in range(P)]
@@ -202,7 +198,7 @@ effect of renumbering the directives, if some had been forgotten."""
     self.weights = [1 for p in range(P)]
 
   def infer(self, program):
-    self.incorporate()
+    self.trace_handler.incorporate()
     if isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop":
       assert len(program) == 2
       prog = [v.sym("cycle"), program[1], v.number(1)]
@@ -458,6 +454,11 @@ class HandlerBase(object):
     # stop child processes
     for process in self.processes: process.stop()
 
+  def incorporate(self):
+    weight_increments = self.delegate('makeConsistent')
+    for weight, increment in zip(self.weights, weight_increments):
+      weight += increment
+
   # NOTE: I could metaprogram all the methods that delegate passes on,
   # but it feels cleaner just call the delegator than to add another level
   # of wrapping
@@ -522,7 +523,6 @@ class ProcessBase(object):
       res = getatrr(self, cmd)(*args, **kwargs)
       pipe.send(res)
 
-  @catch_process
   def send_trace(self, directives):
     dumped = dump_trace(directives, self.trace)
     return dumped
@@ -570,6 +570,10 @@ class ProcessBase(object):
       # The trace cannot handle the inference primitive syntax
       # natively, so translate.
       self.trace.infer(expToDict(exp))
+
+  @catch_process
+  def makeConsistent(self):
+    return self.trace.makeConsistent()
 
 class ParallelTraceProcess(ProcessBase, mp.Process):
   '''Multiprocessing-based paralleism by inheritance'''
