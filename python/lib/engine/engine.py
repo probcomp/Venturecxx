@@ -265,18 +265,18 @@ effect of renumbering the directives, if some had been forgotten."""
   def primitive_infer(self, exp):
     self.trace_handler.delegate('primitive_infer', exp)
 
-  def get_logscore(self, did): return self.getDistinguishedTrace().getDirectiveLogScore(did)
-  def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()
-  def logscore_all(self): return [t.getGlobalLogScore() for t in self.traces]
+  def get_logscore(self, did): return self.trace_handler.delegate_distinguished('getDirectiveLogScore', did)
+  def logscore(self): return self.trace_handler.delegate_distinguished('getDirectiveLogScore')
+  def logscore_all(self): return self.trace_handler.delegate('getGlobalLogScore')
 
   def get_entropy_info(self):
-    return { 'unconstrained_random_choices' : self.getDistinguishedTrace().numRandomChoices() }
+    return { 'unconstrained_random_choices' : self.delegate_distinguished('numRandomChoices') }
 
   def get_seed(self):
-    return self.getDistinguishedTrace().get_seed() # TODO is this what we want?
+    return self.delegate_distinguished('get_seed') # TODO is this what we want?
 
   def set_seed(self, seed):
-    self.getDistinguishedTrace().set_seed(seed) # TODO is this what we want?
+    self.delegate_distinguished('set_seed', seed) # TODO is this what we want?
 
   def continuous_inference_status(self):
     if self.inferrer is not None:
@@ -411,7 +411,7 @@ class ContinuousInferrer(object):
     self.inferrer = None # Grab the semaphore
     inferrer.join()
 
-def catch_process(f):
+def safely(f):
   # catches all exceptions that happen in the worker processes, so that they
   # can be passed back up to the handler and raised there
   def wrapped(*args, **kwargs):
@@ -479,7 +479,7 @@ class HandlerBase(object):
     # issue a command only to the first worker process
     distinguished_pipe = self.pipes[0]
     distinguished_process = self.processes[0]
-    distinguished_pipe.send((cmd, kwarsgs))
+    distinguished_pipe.send((cmd, kwargs))
     distinguished_process.join()
     res = distinguished_pipe.recv()
     if isinstance(res, Exception):
@@ -527,18 +527,18 @@ class ProcessBase(object):
     dumped = dump_trace(directives, self.trace)
     return dumped
 
-  @catch_process
+  @safely
   def assume(self, baseAddr, id, exp):
     self.trace.eval(baesAddr, exp)
     self.trace.bindInGlobalEnv(id, baseAddr)
     return self.trace.extractValue(baseAddr)
 
-  @catch_process
+  @safely
   def predict_all(self, baseAddr, datum):
     self.trace.eval(baseAddr,datum)
     return self.t.extractValue(baseAddr)
 
-  @catch_process
+  @safely
   def observe(self, baseAddr, datum, val):
     trace.eval(baseAddr, datum)
     logDensity = trace.observe(baseAddr,val)
@@ -547,21 +547,21 @@ class ProcessBase(object):
       raise VentureException("invalid_constraint", "Observe failed to constrain",
                              expression=datum, value=val)
 
-  @catch_process
+  @safely
   def forget(self, directive, directiveId):
     if directive[0] == "observe": trace.unobserve(directiveId)
     trace.uneval(directiveId)
     if directive[0] == "assume": trace.unbindInGlobalEnv(directive[1])
 
-  @catch_process
+  @safely
   def freeze(self, directiveId):
     self.trace.freeze(directiveId)
 
-  @catch_process
+  @safely
   def bind_foreign_sp(self, name, sp):
     self.trace.bindPrimitiveSP(name, sp)
 
-  @catch_process
+  @safely
   def primitive_infer(self, exp):
     if hasattr(self.trace, "infer_exp"):
       # The trace can handle the inference primitive syntax natively
@@ -571,9 +571,19 @@ class ProcessBase(object):
       # natively, so translate.
       self.trace.infer(expToDict(exp))
 
-  @catch_process
+  @safely
   def makeConsistent(self):
     return self.trace.makeConsistent()
+
+  @safely
+  def getDirectiveLogScore(did):
+    return self.trace.getDirectiveLogScore(did)
+
+  @safely
+  def getGlobalLogScore(did):
+    return self.trace.getGlobalLogScore(did)
+
+
 
 class ParallelTraceProcess(ProcessBase, mp.Process):
   '''Multiprocessing-based paralleism by inheritance'''
