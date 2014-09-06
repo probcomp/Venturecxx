@@ -33,7 +33,7 @@ class Engine(object):
   def __init__(self, name="phony", Trace=None):
     self.name = name
     self.Trace = Trace
-    self.weights = [0]
+    self.weights = [1]
     self.directiveCounter = 0
     self.directives = {}
     self.inferrer = None
@@ -198,7 +198,7 @@ effect of renumbering the directives, if some had been forgotten."""
       if self.name != "lite":
         newTraces[p].set_seed(random.randint(1,2**31-1))
     self.traces = newTraces
-    self.weights = [0 for p in range(P)]
+    self.weights = [1 for p in range(P)]
 
   def infer(self, program):
     self.incorporate()
@@ -414,6 +414,28 @@ class ContinuousInferrer(object):
     self.inferrer = None # Grab the semaphore
     inferrer.join()
 
+def catch_process(f):
+  # catches all exceptions that happen in the worker processes, so that they
+  # can be passed back up to the handler and raised there
+  def wrapped(*args, **kwargs):
+    try:
+      res = f(*args, **kwargs)
+    except Exception as exception:
+      return exception
+    else:
+      return res
+  return wrapped
+
+def check_process_results(res):
+  n_exceptions = sum([isinstance(entry, Exception) for entry in res])
+  if n_exceptions:
+    errstr = ('{0} workers returned exceptions. The exception  messages are listed below\n'.
+              format(n_exceptions))
+    for i, entry in res:
+      if isinstance(entry, Exception):
+        errstr.append('{0} : {1}\n'.format(i, entry.message))
+    raise VentureException(errstr)
+
 # Classes to handle parallelization
 class HandlerBase(object):
   '''Base class to delegate handling of parallel traces'''
@@ -428,7 +450,7 @@ class HandlerBase(object):
       process = TraceProcess(trace, child)
       self.pipes.append(parent)
       self.processes.append(process)
-      self.weights.append(0)
+      self.weights.append(1)
 
   def __del__(self):
     # stop child processes
@@ -443,6 +465,8 @@ class HandlerBase(object):
     res = []
     for pipe in self.pipes:
       res.append(pipe.recv())
+    # check for exceptions
+    check_process_results(res)
     return res
 
   def delegate_distinguished(self, cmd, **kwargs):
@@ -452,6 +476,9 @@ class HandlerBase(object):
     distinguished_pipe.send((cmd, kwarsgs))
     distinguished_process.join()
     res = distinguished_pipe.recv()
+    if isinstance(res, Exception):
+      errstr = 'The distinguished worker returned the following exception: {0}'.format(res.message)
+      raise VentureException(errstr)
     return res
 
   def retrieve_trace(self, trace, directives, i):
@@ -490,19 +517,23 @@ class ProcessBase(object):
       res = getatrr(self, cmd)(**kwargs)
       pipe.send(res)
 
+  @catch_process
   def send_trace(self, directives):
     dumped = dump_trace(directives, self.trace)
     return dumped
 
+  @catch_process
   def assume(self, baseAddr, id, exp):
     self.trace.eval(baesAddr, exp)
     self.trace.bindInGlobalEnv(id, baseAddr)
     return self.trace.extractValue(baseAddr)
 
+  @catch_process
   def predict_all(self, baseAddr, datum):
     self.trace.eval(baseAddr,datum)
     return self.t.extractValue(baseAddr)
 
+  @catch_process
   def observe(self, baseAddr, datum, val):
     trace.eval(baseAddr, datum)
     logDensity = trace.observe(baseAddr,val)
@@ -511,17 +542,21 @@ class ProcessBase(object):
       raise VentureException("invalid_constraint", "Observe failed to constrain",
                              expression=datum, value=val)
 
+  @catch_process
   def forget(self, directive, directiveId):
     if directive[0] == "observe": trace.unobserve(directiveId)
     trace.uneval(directiveId)
     if directive[0] == "assume": trace.unbindInGlobalEnv(directive[1])
 
+  @catch_process
   def freeze(self, directiveId):
     self.trace.freeze(directiveId)
 
+  @catch_process
   def bind_foreign_sp(self, name, sp):
     self.trace.bindPrimitiveSP(name, sp)
 
+  @catch_process
   def primitive_infer(self, exp):
     if hasattr(self.trace, "infer_exp"):
       # The trace can handle the inference primitive syntax natively
