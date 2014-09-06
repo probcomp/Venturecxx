@@ -299,12 +299,13 @@ effect of renumbering the directives, if some had been forgotten."""
       self.inferrer = None
 
   def copy_trace(self, trace):
-    values = dump_trace(self, trace, skipStackDictConversion=True)
-    return restore_trace(self, values, skipStackDictConversion=True)
+    values = dump_trace(self.directives, trace, skipStackDictConversion=True)
+    return restore_trace(self.Trace(), self.directives,
+                         values, skipStackDictConversion=True)
 
   def save(self, fname, extra=None):
     data = {}
-    data['traces'] = [dump_trace(self, trace) for trace in self.traces]
+    data['traces'] = [dump_trace(self.directives, trace) for trace in self.traces]
     data['weights'] = self.weights
     data['directives'] = self.directives
     data['directiveCounter'] = self.directiveCounter
@@ -319,7 +320,7 @@ effect of renumbering the directives, if some had been forgotten."""
     assert version == '0.2', "Incompatible version or unrecognized object"
     self.directiveCounter = data['directiveCounter']
     self.directives = data['directives']
-    self.traces = [restore_trace(self, trace) for trace in data['traces']]
+    self.traces = [restore_trace(self.Trace(), self.directives, trace) for trace in data['traces']]
     self.weights = data['weights']
     return data['extra']
 
@@ -329,8 +330,8 @@ effect of renumbering the directives, if some had been forgotten."""
     engine.directives = self.directives
     engine.traces = []
     for trace in self.traces:
-      values = dump_trace(self, trace)
-      engine.traces.append(restore_trace(engine, values))
+      values = dump_trace(self.directives, trace)
+      engine.traces.append(restore_trace(self.Trace(), self.directives, values))
     engine.weights = self.weights
     return engine
 
@@ -355,26 +356,25 @@ effect of renumbering the directives, if some had been forgotten."""
 
 # Methods for trace serialization
 
-def dump_trace(engine, trace, skipStackDictConversion=False):
+def dump_trace(directives, trace, skipStackDictConversion=False):
   db = trace.makeSerializationDB()
 
-  for did, directive in sorted(engine.directives.items(), reverse=True):
+  for did, directive in sorted(directives.items(), reverse=True):
     if directive[0] == "observe":
       trace.unobserve(did)
     trace.unevalAndExtract(did, db)
 
-  for did, directive in sorted(engine.directives.items()):
+  for did, directive in sorted(directives.items()):
     trace.restore(did, db)
     if directive[0] == "observe":
       trace.observe(did, directive[2])
 
   return trace.dumpSerializationDB(db, skipStackDictConversion)
 
-def restore_trace(engine, values, skipStackDictConversion=False):
-  trace = engine.Trace()
+def restore_trace(trace, directives, values, skipStackDictConversion=False):
   db = trace.makeSerializationDB(values, skipStackDictConversion)
 
-  for did, directive in sorted(engine.directives.items()):
+  for did, directive in sorted(directives.items()):
       if directive[0] == "assume":
           name, datum = directive[1], directive[2]
           trace.evalAndRestore(did, datum, db)
@@ -425,9 +425,9 @@ class HandlerBase(object):
     Pipe, TraceProcess = self._setup()
     for trace in traces:
       parent, child = Pipe()
-      trace = TraceProcess(trace, child)
+      process = TraceProcess(trace, child)
       self.pipes.append(parent)
-      self.processes.append(trace)
+      self.processes.append(process)
       self.weights.append(0)
 
   def __del__(self):
@@ -439,12 +439,27 @@ class HandlerBase(object):
     for pipe in self.pipes: pipe.send((cmd, kwargs))
     # wait for traces to finish
     for process in self.processes: process.join()
-
-  def receive(self):
-    # retrieve results from all traces
+    # retrieve results
     res = []
     for pipe in self.pipes:
       res.append(pipe.recv())
+    return res
+
+  def delegate_distinguished(self, cmd, **kwargs):
+    # issue a command only to the first worker process
+    distinguished_pipe = self.pipes[0]
+    distinguished_process = self.processes[0]
+    distinguished_pipe.send((cmd, kwarsgs))
+    distinguished_process.join()
+    res = distinguished_pipe.recv()
+    return res
+
+  def retrieve_trace(self, trace, directives, i):
+    # retrieve the trace attached to the ith process
+    process = self.processes[i]
+    dumped = process.send_trace(directives)
+    restored = restore_trace(trace, directives, dumped)
+    return restored
 
 class ParallelTraceHandler(HandlerBase):
   def _setup(self):
@@ -475,8 +490,8 @@ class ProcessBase(object):
       res = getatrr(self, cmd)(**kwargs)
       pipe.send(res)
 
-  def send_trace(self, engine):
-    dumped = dump_trace(engine, self.trace)
+  def send_trace(self, directives):
+    dumped = dump_trace(directives, self.trace)
     return dumped
 
   def assume(self, baseAddr, id, exp):
