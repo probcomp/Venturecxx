@@ -186,16 +186,21 @@ effect of renumbering the directives, if some had been forgotten."""
       assert False, "Unkown directive type found %r" % directive
 
   def resample(self, P):
+    self.trace_handler = SequentialTraceHandler(self._resample_traces(P))
+
+  def resample_parallel(self, P):
+    del self.trace_handler = ParallelTraceHandler(self._resample_traces(P))
+
+  def _resample_traces(self, P):
     P = int(P)
     newTraces = [None for p in range(P)]
     for p in range(P):
       parent = sampleLogCategorical(self.trace_handler.weights) # will need to include or rewrite
-      newTrace = self.copy_trace(self.traces[parent])
+      newTrace = self.copy_trace(self.trace_handler.retrieve_trace(self.Trace(), self.directives, i))
       newTraces[p] = newTrace
       if self.name != "lite":
         newTraces[p].set_seed(random.randint(1,2**31-1))
-    self.traces = newTraces
-    self.weights = [1 for p in range(P)]
+    return newTraces
 
   def infer(self, program):
     self.trace_handler.incorporate()
