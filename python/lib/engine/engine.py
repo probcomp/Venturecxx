@@ -416,6 +416,8 @@ class ContinuousInferrer(object):
     self.inferrer = None # Grab the semaphore
     inferrer.join()
 
+# Code to handle parallelization of traces
+
 def safely(f):
   # catches all exceptions that happen in the worker processes, so that they
   # can be passed back up to the handler and raised there
@@ -438,7 +440,6 @@ def check_process_results(res):
         errstr.append('{0} : {1}\n'.format(i, entry.message))
     raise VentureException(errstr)
 
-# Classes to handle parallelization
 class HandlerBase(object):
   '''Base class to delegate handling of parallel traces'''
   __metaclass__ = ABCMeta
@@ -470,13 +471,10 @@ class HandlerBase(object):
   def delegate(self, cmd, *args, **kwargs):
     # send command
     for pipe in self.pipes: pipe.send((cmd, args, kwargs))
-    # wait for traces to finish
     for process in self.processes: process.join()
-    # retrieve results
     res = []
     for pipe in self.pipes:
       res.append(pipe.recv())
-    # check for exceptions
     check_process_results(res)
     return res
 
@@ -500,11 +498,13 @@ class HandlerBase(object):
     return restored
 
 class ParallelTraceHandler(HandlerBase):
-  def _setup(self):
+  @staticmethod
+  def _setup():
     return mp.Pipe, ParallelTraceProcess
 
 class SequentialTraceHandler(HandlerBase):
-  def _setup(self):
+  @staticmethod
+  def _setup():
     return mpd.Pipe, SequentialTraceProcess
 
 class ProcessBase(object):
@@ -516,13 +516,8 @@ class ProcessBase(object):
   def __init__(self, trace, pipe):
     self.trace = trace
     self.pipe = pipe
-    Process = mp.Process if issubclass(self. mp.Process) else mpd.Process
+    Process = self._setup()
     Process.__init__(self)
-
-  @safely
-  def __getattr__(self, attrname):
-    # if attrname isn't attribute of ProcessBase, look for the attribute on the trace
-    return getarr(self.trace, attrname)
 
   def stop(self):
     sys.exit()
@@ -536,6 +531,11 @@ class ProcessBase(object):
   def send_trace(self, directives):
     dumped = dump_trace(directives, self.trace)
     return dumped
+
+  @safely
+  def __getattr__(self, attrname):
+    # if attrname isn't attribute of ProcessBase, look for the attribute on the trace
+    return getarr(self.trace, attrname)
 
   @safely
   def assume(self, baseAddr, id, exp):
@@ -583,13 +583,17 @@ class ProcessBase(object):
 
 class ParallelTraceProcess(ProcessBase, mp.Process):
   '''Multiprocessing-based paralleism by inheritance'''
-  pass
+  @staticmethod
+  def _setup():
+    return mp.Process
 
 class SequentialTraceProcess(ProcessBase, mpd.Process):
   '''Sequential execution by inheritance'''
-  pass
+  @staticmethod
+  def _setup():
+    return mpd.Process
 
-
+# inference prelude
 
 the_prelude = None
 
