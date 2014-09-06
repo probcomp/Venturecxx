@@ -192,7 +192,7 @@ effect of renumbering the directives, if some had been forgotten."""
     P = int(P)
     newTraces = [None for p in range(P)]
     for p in range(P):
-      parent = sampleLogCategorical(self.weights) # will need to include or rewrite
+      parent = sampleLogCategorical(self.trace_handler.weights) # will need to include or rewrite
       newTrace = self.copy_trace(self.traces[parent])
       newTraces[p] = newTrace
       if self.name != "lite":
@@ -418,7 +418,6 @@ class ContinuousInferrer(object):
 class HandlerBase(object):
   '''Base class to delegate handling of parallel traces'''
   __metaclass__ = ABCMeta
-  '''Parent process to delegate handling of parallel traces'''
   def __init__(self, traces):
     self.pipes = []
     self.processes = []
@@ -448,11 +447,11 @@ class HandlerBase(object):
       res.append(pipe.recv())
 
 class ParallelTraceHandler(HandlerBase):
-  def _setup():
+  def _setup(self):
     return mp.Pipe, ParallelTraceProcess
 
 class SequentialTraceHandler(HandlerBase):
-  def _setup():
+  def _setup(self):
     return mpd.Pipe, SequentialTraceProcess
 
 class ProcessBase(object):
