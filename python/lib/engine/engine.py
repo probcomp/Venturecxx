@@ -431,11 +431,11 @@ def safely(f):
 def check_process_results(res):
   n_exceptions = sum([isinstance(entry, Exception) for entry in res])
   if n_exceptions:
-    errstr = ('{0} workers returned exceptions. The exception  messages are listed below\n'.
+    errstr = ('{0} workers returned exceptions. The exceptions are listed below:\n'.
               format(n_exceptions))
     for i, entry in enumerate(res):
       if isinstance(entry, Exception):
-        errstr.append('{0} : {1}\n'.format(i, entry.message))
+        errstr += '{0} : {1}\n'.format(i, entry.message)
     raise VentureException(errstr)
 
 class HandlerBase(object):
@@ -542,12 +542,12 @@ class ProcessBase(object):
   @safely
   def predict_all(self, baseAddr, datum):
     self.trace.eval(baseAddr,datum)
-    return self.t.extractValue(baseAddr)
+    return self.trace.extractValue(baseAddr)
 
   @safely
   def observe(self, baseAddr, datum, val):
-    trace.eval(baseAddr, datum)
-    logDensity = trace.observe(baseAddr,val)
+    self.trace.eval(baseAddr, datum)
+    logDensity = self.trace.observe(baseAddr,val)
     # TODO check for -infinity? Throw an exception?
     if logDensity == float("-inf"):
       raise VentureException("invalid_constraint", "Observe failed to constrain",
@@ -555,9 +555,9 @@ class ProcessBase(object):
 
   @safely
   def forget(self, directive, directiveId):
-    if directive[0] == "observe": trace.unobserve(directiveId)
-    trace.uneval(directiveId)
-    if directive[0] == "assume": trace.unbindInGlobalEnv(directive[1])
+    if directive[0] == "observe": self.trace.unobserve(directiveId)
+    self.trace.uneval(directiveId)
+    if directive[0] == "assume": self.trace.unbindInGlobalEnv(directive[1])
 
   @safely
   def freeze(self, directiveId):
