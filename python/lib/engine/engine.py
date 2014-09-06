@@ -475,11 +475,11 @@ class HandlerBase(object):
     check_process_results(res)
     return res
 
-  def delegate_distinguished(self, cmd, **kwargs):
+  def delegate_distinguished(self, cmd, *args, **kwargs):
     # issue a command only to the first worker process
     distinguished_pipe = self.pipes[0]
     distinguished_process = self.processes[0]
-    distinguished_pipe.send((cmd, kwargs))
+    distinguished_pipe.send((cmd, args, kwargs))
     distinguished_process.join()
     res = distinguished_pipe.recv()
     if isinstance(res, Exception):
@@ -513,6 +513,11 @@ class ProcessBase(object):
     self.pipe = pipe
     Process = mp.Process if issubclass(self. mp.Process) else mpd.Process
     Process.__init__(self)
+
+  @safely
+  def __getattr__(self, attrname):
+    # if attrname isn't attribute of ProcessBase, look for the attribute on the trace
+    return getarr(self.trace, attrname)
 
   def stop(self):
     sys.exit()
@@ -570,20 +575,6 @@ class ProcessBase(object):
       # The trace cannot handle the inference primitive syntax
       # natively, so translate.
       self.trace.infer(expToDict(exp))
-
-  @safely
-  def makeConsistent(self):
-    return self.trace.makeConsistent()
-
-  @safely
-  def getDirectiveLogScore(did):
-    return self.trace.getDirectiveLogScore(did)
-
-  @safely
-  def getGlobalLogScore(did):
-    return self.trace.getGlobalLogScore(did)
-
-
 
 class ParallelTraceProcess(ProcessBase, mp.Process):
   '''Multiprocessing-based paralleism by inheritance'''
