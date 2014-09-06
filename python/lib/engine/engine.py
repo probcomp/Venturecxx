@@ -37,6 +37,7 @@ class Engine(object):
     self.directives = {}
     self.inferrer = None
     self.trace_handler = SequentialTraceHandler([Trace()])
+    self.n_traces = 1
     import venture.lite.inference_sps as inf
     self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
@@ -191,6 +192,7 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def _resample_traces(self, P):
     P = int(P)
+    self.n_traces = P
     newTraces = [None for p in range(P)]
     for p in range(P):
       parent = sampleLogCategorical(self.trace_handler.weights) # will need to include or rewrite

@@ -218,9 +218,9 @@ class InferResult(object):
 
   def _collect_default_streams(self, engine):
     the_time = time.time() - self.time
-    self._this_iter_data['sweep count'] = [self.sweep] * len(engine.traces)
-    self._this_iter_data['particle id'] = range(len(engine.traces))
-    self._this_iter_data['time (s)'] = [the_time] * len(engine.traces)
+    self._this_iter_data['sweep count'] = [self.sweep] * engine.n_traces
+    self._this_iter_data['particle id'] = range(engine.n_traces)
+    self._this_iter_data['time (s)'] = [the_time] * engine.n_traces
     self._this_iter_data['log score'] = engine.logscore_all()
 
   def _collect_requested_streams(self, engine, command):
