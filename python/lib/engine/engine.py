@@ -360,7 +360,6 @@ effect of renumbering the directives, if some had been forgotten."""
 
 def dump_trace(directives, trace, skipStackDictConversion=False):
   db = trace.makeSerializationDB()
-
   for did, directive in sorted(directives.items(), reverse=True):
     if directive[0] == "observe":
       trace.unobserve(did)
@@ -483,7 +482,6 @@ class HandlerBase(object):
   def delegate_distinguished(self, cmd, *args, **kwargs):
     # issue a command only to the first worker process
     distinguished_pipe = self.pipes[0]
-    distinguished_process = self.processes[0]
     distinguished_pipe.send((cmd, args, kwargs))
     res = distinguished_pipe.recv()
     if isinstance(res, Exception):
