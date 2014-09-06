@@ -194,7 +194,7 @@ effect of renumbering the directives, if some had been forgotten."""
     newTraces = [None for p in range(P)]
     for p in range(P):
       parent = sampleLogCategorical(self.trace_handler.weights) # will need to include or rewrite
-      newTrace = self.copy_trace(self.trace_handler.retrieve_trace(self.Trace(), self.directives, i))
+      newTrace = self.copy_trace(self.trace_handler.retrieve_trace(self.Trace(), self.directives, parent))
       newTraces[p] = newTrace
       if self.name != "lite":
         newTraces[p].set_seed(random.randint(1,2**31-1))
