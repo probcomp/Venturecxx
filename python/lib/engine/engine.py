@@ -469,7 +469,6 @@ class HandlerBase(object):
   def delegate(self, cmd, *args, **kwargs):
     # send command
     for pipe in self.pipes: pipe.send((cmd, args, kwargs))
-    for process in self.processes: process.join()
     res = []
     for pipe in self.pipes:
       res.append(pipe.recv())
@@ -481,7 +480,6 @@ class HandlerBase(object):
     distinguished_pipe = self.pipes[0]
     distinguished_process = self.processes[0]
     distinguished_pipe.send((cmd, args, kwargs))
-    distinguished_process.join()
     res = distinguished_pipe.recv()
     if isinstance(res, Exception):
       errstr = 'The distinguished worker returned the following exception: {0}'.format(res.message)
@@ -523,8 +521,8 @@ class ProcessBase(object):
   def run(self):
     while True:
       cmd, args, kwargs = self.pipe.recv()
-      res = getatrr(self, cmd)(*args, **kwargs)
-      pipe.send(res)
+      res = getattr(self, cmd)(*args, **kwargs)
+      self.pipe.send(res)
 
   def send_trace(self, directives):
     dumped = dump_trace(directives, self.trace)
@@ -533,7 +531,7 @@ class ProcessBase(object):
   @safely
   def __getattr__(self, attrname):
     # if attrname isn't attribute of ProcessBase, look for the attribute on the trace
-    return getarr(self.trace, attrname)
+    return getattr(self.trace, attrname)
 
   @safely
   def assume(self, baseAddr, id, exp):
