@@ -16,9 +16,7 @@
 import random
 import pickle
 import time
-import queue
 import sys
-from functools import partial
 import multiprocessing as mp
 from multiprocessing import dummy as mpd
 from abc import ABCMeta
@@ -189,7 +187,7 @@ effect of renumbering the directives, if some had been forgotten."""
     self.trace_handler = SequentialTraceHandler(self._resample_traces(P))
 
   def resample_parallel(self, P):
-    del self.trace_handler = ParallelTraceHandler(self._resample_traces(P))
+    self.trace_handler = ParallelTraceHandler(self._resample_traces(P))
 
   def _resample_traces(self, P):
     P = int(P)
