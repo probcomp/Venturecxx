@@ -18,6 +18,7 @@ import pickle
 import time
 import queue
 import sys
+from functools import partial
 import multiprocessing as mp
 from multiprocessing import dummy as mpd
 from abc import ABCMeta
@@ -60,7 +61,7 @@ class Engine(object):
     baseAddr = self.nextBaseAddr()
     exp = datum
 
-    value = self.trace_handler.assume(baseAddr, id, exp)
+    value = self.trace_handler.delegate('assume', baseAddr, id, exp)
 
     self.directives[self.directiveCounter] = ["assume",id,datum]
 
@@ -69,7 +70,7 @@ class Engine(object):
   def predict_all(self,datum):
     baseAddr = self.nextBaseAddr()
 
-    value = self.trace_handler.predict_all(baseAddr, datum)
+    value = self.trace_handler.delegate('predict_all', baseAddr, datum)
 
     self.directives[self.directiveCounter] = ["predict",datum]
 
@@ -82,7 +83,7 @@ class Engine(object):
   def observe(self,datum,val):
     baseAddr = self.nextBaseAddr()
 
-    self.trace_handler.observe(baseAddr, datum, val)
+    self.trace_handler.delegate('observe', baseAddr, datum, val)
 
     self.directives[self.directiveCounter] = ["observe",datum,val]
     return self.directiveCounter
@@ -93,7 +94,7 @@ class Engine(object):
                              argument="directive_id", directive_id=directiveId)
     directive = self.directives[directiveId]
 
-    self.trace_handler.forget(directive, directiveId)
+    self.trace_handler.delegate('forget', directive, directiveId)
 
     del self.directives[directiveId]
 
@@ -120,7 +121,7 @@ class Engine(object):
     # TODO Record frozen state for reinit_inference_problem?  What if
     # the replay is done with a different number of particles than the
     # original?  Where do the extra values come from?
-    self.trace_handler.freeze(directiveId)
+    self.trace_handler.delegate('freeze', directiveId)
 
   def report_value(self,directiveId):
     if directiveId not in self.directives:
@@ -155,7 +156,7 @@ class Engine(object):
       import venture.lite.foreign as f
       sp = f.ForeignLiteSP(sp)
 
-    self.trace_handler.bind_foreign_sp(name, sp)
+    self.trace_handler.delegate('bind_foreign_sp', name, sp)
 
   # TODO There should also be capture_inference_problem and
   # restore_inference_problem (Analytics seems to use something like
@@ -266,7 +267,7 @@ effect of renumbering the directives, if some had been forgotten."""
       next_trace.bindInGlobalEnv(name, did)
 
   def primitive_infer(self, exp):
-    self.trace_handler.primitive_infer(exp)
+    self.trace_handler.delegate('primitive_infer', exp)
 
   def get_logscore(self, did): return self.getDistinguishedTrace().getDirectiveLogScore(did)
   def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()
@@ -451,14 +452,18 @@ class HandlerBase(object):
       self.pipes.append(parent)
       self.processes.append(process)
       self.weights.append(1)
+    self._create_delegated_methods()
 
   def __del__(self):
     # stop child processes
     for process in self.processes: process.stop()
 
-  def delegate(self, cmd, **kwargs):
+  # NOTE: I could metaprogram all the methods that delegate passes on,
+  # but it feels cleaner just call the delegator than to add another level
+  # of wrapping
+  def delegate(self, cmd, *args, **kwargs):
     # send command
-    for pipe in self.pipes: pipe.send((cmd, kwargs))
+    for pipe in self.pipes: pipe.send((cmd, args, kwargs))
     # wait for traces to finish
     for process in self.processes: process.join()
     # retrieve results
@@ -513,8 +518,8 @@ class ProcessBase(object):
 
   def run(self):
     while True:
-      cmd, kwargs = self.pipe.recv()
-      res = getatrr(self, cmd)(**kwargs)
+      cmd, args, kwargs = self.pipe.recv()
+      res = getatrr(self, cmd)(*args, **kwargs)
       pipe.send(res)
 
   @catch_process
