@@ -449,10 +449,10 @@ class HandlerBase(object):
     for trace in traces:
       parent, child = Pipe()
       process = TraceProcess(trace, child)
+      process.start()
       self.pipes.append(parent)
       self.processes.append(process)
       self.weights.append(1)
-    self._create_delegated_methods()
 
   def __del__(self):
     # stop child processes
