@@ -458,7 +458,7 @@ class HandlerBase(object):
 
   def __del__(self):
     # stop child processes
-    for process in self.processes: process.stop()
+    for pipe in self.pipes: pipe.send(('stop', [], {}))
 
   def incorporate(self):
     weight_increments = self.delegate('makeConsistent')
@@ -520,12 +520,11 @@ class ProcessBase(object):
     Process = self._setup()
     Process.__init__(self)
 
-  def stop(self):
-    sys.exit()
-
   def run(self):
     while True:
       cmd, args, kwargs = self.pipe.recv()
+      if cmd == 'stop':
+        return
       res = getattr(self, cmd)(*args, **kwargs)
       self.pipe.send(res)
 
