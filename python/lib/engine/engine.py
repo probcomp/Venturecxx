@@ -473,7 +473,10 @@ class HandlerBase(object):
     for pipe in self.pipes:
       res.append(pipe.recv())
     check_process_results(res)
-    return res
+    if cmd == 'assume':
+      return res[0]
+    else:
+      return res
 
   def delegate_distinguished(self, cmd, *args, **kwargs):
     # issue a command only to the first worker process
