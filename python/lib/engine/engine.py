@@ -433,7 +433,7 @@ def check_process_results(res):
   if n_exceptions:
     errstr = ('{0} workers returned exceptions. The exception  messages are listed below\n'.
               format(n_exceptions))
-    for i, entry in res:
+    for i, entry in enumerate(res):
       if isinstance(entry, Exception):
         errstr.append('{0} : {1}\n'.format(i, entry.message))
     raise VentureException(errstr)
@@ -535,7 +535,7 @@ class ProcessBase(object):
 
   @safely
   def assume(self, baseAddr, id, exp):
-    self.trace.eval(baesAddr, exp)
+    self.trace.eval(baseAddr, exp)
     self.trace.bindInGlobalEnv(id, baseAddr)
     return self.trace.extractValue(baseAddr)
 
