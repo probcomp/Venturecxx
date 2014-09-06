@@ -48,8 +48,8 @@ class Engine(object):
     self.inference_sps[name] = sp
 
   def getDistinguishedTrace(self):
-    assert self.traces
-    return self.traces[0]
+    assert self.trace_handler
+    return self.trace_handler.retrieve_trace(self.Trace(), self.directives, 0)
 
   def nextBaseAddr(self):
     self.directiveCounter += 1
@@ -125,14 +125,14 @@ class Engine(object):
     if directiveId not in self.directives:
       raise VentureException("invalid_argument", "Cannot report a non-existent directive id",
                              argument=directiveId)
-    return self.getDistinguishedTrace().extractValue(directiveId)
+    return self.trace_handler.delegate_distinguished('extractValue', directiveId)
 
   def report_raw(self,directiveId):
     if directiveId not in self.directives:
       raise VentureException("invalid_argument",
                              "Cannot report raw value of a non-existent directive id",
                              argument=directiveId)
-    return self.getDistinguishedTrace().extractRaw(directiveId)
+    return self.trace_handler.delegate_distinguished('extractRaw', directiveId)
 
   def clear(self):
     del self.trace_handler
