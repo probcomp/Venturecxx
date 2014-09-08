@@ -1,4 +1,6 @@
 import json
+import platform
+isPyPy = platform.python_implementation() == "PyPy"
 
 def saveDict(x, file_base_name):
   f = open(file_base_name + '.json', 'w')
@@ -12,28 +14,28 @@ def loadDict(file_base_name):
   return x
 
 def loadData(file_base_name):
-  data = loadDict(file_base_name + '.json')
+  data = loadDict(file_base_name)
   return data['N'], data['D'], data['X'], data['Y'], data['Ntst'], data['Xtst'], data['Ytst']
 
 def loadSeqData(file_base_name):
-  data = loadDict(file_base_name + '.json')
+  data = loadDict(file_base_name)
   return data['N'], data['X']
 
 def loadSSMData(file_base_name):
-  data = loadDict(file_base_name + '.json')
+  data = loadDict(file_base_name)
   return data['N'], data['X'], data['sig_noise']
 
 def convertMatToJson(file_base_name):
+  assert not isPyPy
   import io_utils
-  assert not io_utils.isPyPy
   N, D, X, Y, Ntst, Xtst, Ytst = io_utils.loadData(file_base_name+'.mat')
   data = {'N':N, 'D':D, 'X':X, 'Y':Y, 'Ntst':Ntst, 'Xtst':Xtst, 'Ytst':Ytst}
-  saveDict(data, file_base_name+'.json')
+  saveDict(data, file_base_name)
 
 def convertSSMMatToJson(file_base_name):
+  assert not isPyPy
   import io_utils
-  assert not io_utils.isPyPy
   N, X, sig_noise = io_utils.loadSSMData(file_base_name+'.mat')
   data = {'N':N, 'X':X, 'sig_noise':sig_noise}
-  saveDict(data, file_base_name+'.json')
+  saveDict(data, file_base_name)
 

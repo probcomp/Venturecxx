@@ -5,6 +5,7 @@ if isPyPy:
   sys.path += ['/usr/lib/python2.7/dist-packages', '/usr/local/lib/python2.7/dist-packages']
 
 import numpy as np
+import random
 import time
 from venture.shortcuts import make_lite_church_prime_ripl
 from utils import loadUtilSPs
@@ -17,6 +18,10 @@ def main(data_source_, epsilon_):
   print "data_source:", data_source_
   print "epsilon:", epsilon_
 
+  rand_seed = 101
+  random.seed(rand_seed)
+  np.random.seed(rand_seed)
+
   ## Data
   data_source = data_source_ # "mnist" # "synthetic"
 
@@ -25,7 +30,6 @@ def main(data_source_, epsilon_):
 
   ## Load data
   if data_source == "synthetic":
-
     ##### Synthetic Data
     D = 2
     N = 100
@@ -35,22 +39,18 @@ def main(data_source_, epsilon_):
     y = np.random.random(N) < 1 / (1 + np.exp(-f))
     X = X.tolist()
     y = y.tolist()
-
   elif data_source == "mnist":
-
     ##### MNIST Data
     data_file = input_dir + '/mnist_D50_7_9'
     N, D, X, y, _, _, _ = loadData(data_file)
     print "N:", N, "D:", D
-
-
   elif data_source == "four_cluster":
-
     ##### One cluster in four_cluster_data2
     data_file = input_dir + '/four_cluster_data2_one'
     N, D, X, y, _, _, _ = loadData(data_file)
     print "N:", N, "D:", D
-
+  else:
+    assert False
 
   ## Sampler
   time_max = 5e5
@@ -77,6 +77,7 @@ def main(data_source_, epsilon_):
     tag += '_pypy'
 
   stage_file = output_dir + '/stage_'+tag
+  print "stage_file:", stage_file
 
   ##########################################
   #### Initialization
@@ -92,7 +93,8 @@ def main(data_source_, epsilon_):
   loadUtilSPs(v)
   v.execute_program(prog);
 
-  ## Load observations.
+  ##########################################
+  #### Load observations.
   tic = time.clock()
   for n in xrange(N):
     if (n + 1) % round(N / 10) == 0:
@@ -146,6 +148,7 @@ def main(data_source_, epsilon_):
     import shelve
     from cPickle import PicklingError
     result_file = output_dir + '/result_'+tag
+    print "result_file:", result_file
     my_shelf = shelve.open(result_file,'n') # 'n' for new
     for key in dir():
       try:

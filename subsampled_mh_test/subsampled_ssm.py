@@ -1,10 +1,14 @@
 ## Subsampled MH for Joint DP Mixture of Logistic Regression Experts
+from io_utils import loadSSMData, saveDict, isPyPy
+if isPyPy:
+  import sys
+  sys.path += ['/usr/lib/python2.7/dist-packages', '/usr/local/lib/python2.7/dist-packages']
 
 import numpy as np
-import scipy.io
+import random
 import time
-import shelve
 from venture.shortcuts import make_lite_church_prime_ripl
+from utils import loadUtilSPs
 make_ripl = make_lite_church_prime_ripl
 
 def main(data_source_, epsilon_, N_):
@@ -16,33 +20,24 @@ def main(data_source_, epsilon_, N_):
   print "N_:", N_
 
   rand_seed = 101
+  random.seed(rand_seed)
+  np.random.seed(rand_seed)
 
   ## Data
   data_source = data_source_ # "ssm"
 
+  input_dir = "data/input"
+  output_dir = "data/output/ssm"
+
   ## Load data
-  if data_source == "ssm":
+  if data_source == "ssm3":
     ##### SSM Data
-    from load_data import loadSSMData
-    data_file = 'data/input/ssm.mat'
-    N, X, sig_noise = loadSSMData(data_file)
-    print "N:", N, "sig_noise:", sig_noise
-  elif data_source == "ssm2":
-    ##### SSM Data
-    from load_data import loadSSMData
-    data_file = 'data/input/ssm2.mat'
-    N, X, sig_noise = loadSSMData(data_file)
-    print "N:", N, "sig_noise:", sig_noise
-  elif data_source == "ssm3":
-    ##### SSM Data
-    from load_data import loadSSMData
-    data_file = 'data/input/ssm3.mat'
+    data_file = input_dir + '/ssm3'
     N, X, sig_noise = loadSSMData(data_file)
     print "N:", N, "sig_noise:", sig_noise
   elif data_source == "ssm4":
     ##### SSM Data
-    from load_data import loadSSMData
-    data_file = 'data/input/ssm4.mat'
+    data_file = input_dir + '/ssm4'
     N, X, sig_noise = loadSSMData(data_file)
     print "N:", N, "sig_noise:", sig_noise
   else:
@@ -50,7 +45,7 @@ def main(data_source_, epsilon_, N_):
 
   if N_ != 0:
     N = min(N, N_)
-    print "N:", N
+    print "Actual N:", N
   tag_N = "N%d" % N
 
   ## Model
@@ -91,16 +86,15 @@ def main(data_source_, epsilon_, N_):
 
   # jointdplr_mnist_mh or jointdplr_mnist_submh
   tag = "_".join(["ssm_init", data_source, tag_N, tag_austerity])
+  if isPyPy:
+    tag += '_pypy'
 
-  stage_file = 'data/output/ssm/stage_'+tag
-  result_file = 'data/output/ssm/result_'+tag
+  stage_file = output_dir + '/stage_'+tag
   print "stage_file:", stage_file
-  print "result_file:", result_file
 
   ##########################################
   #### Initialization
   prog = """
-  [clear]
   [assume a (scope_include (quote a) 0 (uniform_continuous 0 1))]
   [assume sig (scope_include (quote sig) 0 (gamma {al_sig} {bt_sig}))]
   [assume a_i (mem (lambda (i) a))]
@@ -112,10 +106,12 @@ def main(data_source_, epsilon_, N_):
   [assume x (lambda (i) (normal (pow (h i) 2) {sig_noise}))]
   """.format(b = b, al_sig = al_sig, bt_sig = bt_sig, sig_noise = sig_noise)
   v = make_ripl()
-  v.set_seed(rand_seed)
+  v.clear()
+  loadUtilSPs(v)
   v.execute_program(prog);
 
-  ## Load observations.
+  ##########################################
+  #### Load observations.
   tic = time.clock()
   for n in xrange(N):
     if (n + 1) % round(N / 10) == 0:
@@ -128,7 +124,7 @@ def main(data_source_, epsilon_, N_):
       if not use_austerity:
         infer_str = '(pgibbs h (ordered_range {start} {end}) {P} 1)'.format(start = start, end = end, P = P)
       else:
-        infer_str = '(pgibbs h (ordered_range {start} {end}) {P} 1 true true)'.format(start = start, end = end, P = P)
+        infer_str = '(pgibbs_update h (ordered_range {start} {end}) {P} 1)'.format(start = start, end = end, P = P)
       v.infer(infer_str)
 
   t_obs = time.clock() - tic
@@ -213,7 +209,7 @@ def main(data_source_, epsilon_, N_):
         infer_str = '(pgibbs h (ordered_range {start} {end}) {P} 1)'.format(start = start, end = end, P = P)
       else:
         #infer_str = '(pgibbs h ordered {P} 1 true true)'.format(P = P)
-        infer_str = '(pgibbs h (ordered_range {start} {end}) {P} 1 true true)'.format(start = start, end = end, P = P)
+        infer_str = '(pgibbs_update h (ordered_range {start} {end}) {P} 1)'.format(start = start, end = end, P = P)
       start += pLen
       if start >= N:
         start = 1
@@ -227,8 +223,8 @@ def main(data_source_, epsilon_, N_):
       infer_str = '(cycle ((mh a 0 1) (mh sig 0 1)) {step_a})'.format(step_a = step_a)
     else:
       infer_str = ('(cycle ( ' + \
-                   '(subsampled_mh a   0 1 {Nbatch} {k0} {epsilon}) ' + \
-                   '(subsampled_mh sig 0 1 {Nbatch} {k0} {epsilon})) {step_a})').format(
+                   '(subsampled_mh a   0 {Nbatch} {k0} {epsilon} false 0 false 1) ' + \
+                   '(subsampled_mh sig 0 {Nbatch} {k0} {epsilon} false 0 false 1)) {step_a})').format(
                     Nbatch = Nbatch, k0 = k0, epsilon = epsilon, step_a = step_a)
     t_sample_start = time.clock()
     v.infer(infer_str)
@@ -254,10 +250,9 @@ def main(data_source_, epsilon_, N_):
       rst['iters_h'].append(i)
       rst['ts_h'].append(t_h_cum)
 
-
     # Save temporary results.
     if (i + 1) % Tsave == 0:
-      scipy.io.savemat(stage_file, rst)
+      saveDict(rst, stage_file)
       i_save = i
 
     time_run = time.clock() - t_start
@@ -265,28 +260,32 @@ def main(data_source_, epsilon_, N_):
     if time_run > time_max:
       break
 
-  # If savemat is not called at the last iteration, call it now.
+  # If saveDict is not called at the last iteration, call it now.
   if i_save != i:
-    scipy.io.savemat(stage_file, rst)
+    saveDict(rst, stage_file)
 
   ##########################################
   #### Save workspace
-  from cPickle import PicklingError
-  my_shelf = shelve.open(result_file,'n') # 'n' for new
-  for key in dir():
-    try:
-      my_shelf[key] = locals()[key]
-    except (TypeError, PicklingError):
-      #
-      # __builtins__, my_shelf, and imported modules can not be shelved.
-      #
-      print('Not shelved: {0}'.format(key))
-  my_shelf.close()
+  if not isPyPy:
+    import shelve
+    from cPickle import PicklingError
+    result_file = output_dir + '/result_'+tag
+    print "result_file:", result_file
+    my_shelf = shelve.open(result_file,'n') # 'n' for new
+    for key in dir():
+      try:
+        my_shelf[key] = locals()[key]
+      except (TypeError, PicklingError):
+        #
+        # __builtins__, my_shelf, and imported modules can not be shelved.
+        #
+        print('Not shelved: {0}'.format(key))
+    my_shelf.close()
 
 if __name__ == '__main__':
   import argparse
   parser = argparse.ArgumentParser()
-  parser.add_argument('--data', dest='data_source_', default='ssm2', help='data file')
+  parser.add_argument('--data', dest='data_source_', default='ssm3', help='data file')
   parser.add_argument('--eps',dest='epsilon_', default=0.0, type=float, help='Epsilon')
   parser.add_argument('--N',dest='N_', default=0, type=int, help='N')
   args = vars(parser.parse_args())

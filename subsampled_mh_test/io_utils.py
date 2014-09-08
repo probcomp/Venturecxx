@@ -1,5 +1,4 @@
-import platform
-isPyPy = platform.python_implementation() == "PyPy"
+from pypy_io_utils import isPyPy
 if not isPyPy:
   import scipy.io
 
