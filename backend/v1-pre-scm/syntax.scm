@@ -57,9 +57,12 @@
      (register-operative! 'name (make-operative (lambda (arg ...) body ...))))))
 
 ;; Permit reflection on the evaluation context
+
 (define-operative (get-current-environment subforms env trace addr read-traces) env)
 (define-operative (get-current-trace subforms env trace addr read-traces) trace)
 (define-operative (get-current-read-traces subforms env trace addr read-traces) read-traces)
+
+;; Macros for model-inference style (i.e., Venture v0)
 
 (define *the-model-trace* #f)
 
@@ -86,4 +89,14 @@
 
 (define-operative (predict subforms env trace addr read-traces)
   (eval `(trace-in ,*the-model-trace* ,(car subforms))
+        env trace addr read-traces))
+
+;; Other syntax
+
+(define-operative (atomically subforms env trace addr read-traces)
+  ;; Hm.  It seems a little redundant to eval a trace-in form in the
+  ;; current trace.  Maybe I should actually abstract the notion of a
+  ;; macro, instead of slavishly adhering to a coding style to expose
+  ;; macroness.
+  (eval `(trace-in ,(store-extend trace) ,(car subforms))
         env trace addr read-traces))
