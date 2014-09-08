@@ -30,13 +30,6 @@
           (- (log (- high low)))
           minus-inf)))))
 
-(define infer-defn
-  '(define infer
-     (lambda (prog)
-       (begin
-         (define t (get-current-trace))
-         (ext (prog t))))))
-
 (define observe-defn
   '(define $observe
      (lambda (found desired)

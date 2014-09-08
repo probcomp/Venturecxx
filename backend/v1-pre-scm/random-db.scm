@@ -214,7 +214,6 @@
 
 (define trick-coin-example
   `(begin
-     ,infer-defn
      ,observe-defn
      (define model-trace (rdb-extend (get-current-trace)))
      (trace-in model-trace
