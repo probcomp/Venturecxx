@@ -32,7 +32,6 @@ class Engine(object):
   def __init__(self, name="phony", Trace=None):
     self.name = name
     self.Trace = Trace
-    self.weights = [1]
     self.directiveCounter = 0
     self.directives = {}
     self.inferrer = None
@@ -139,7 +138,7 @@ class Engine(object):
     del self.trace_handler
     self.directiveCounter = 0
     self.directives = {}
-    self.trace_handler = TraceHandler()
+    self.trace_handler = TraceHandler([self.Trace()])
     self.ensure_rng_seeded_decently()
 
   def ensure_rng_seeded_decently(self):
@@ -185,10 +184,14 @@ effect of renumbering the directives, if some had been forgotten."""
       assert False, "Unkown directive type found %r" % directive
 
   def resample(self, P):
-    self.trace_handler = SequentialTraceHandler(self._resample_traces(P))
+    newTraces = self._resample_traces(P)
+    del self.trace_handler
+    self.trace_handler = SequentialTraceHandler(newTraces)
 
   def resample_parallel(self, P):
-    self.trace_handler = ParallelTraceHandler(self._resample_traces(P))
+    newTraces = self._resample_traces(P)
+    del self.trace_handler
+    self.trace_handler = ParallelTraceHandler(snewTraces)
 
   def _resample_traces(self, P):
     P = int(P)
@@ -470,6 +473,7 @@ class HandlerBase(object):
   def delegate(self, cmd, *args, **kwargs):
     # send command
     for pipe in self.pipes: pipe.send((cmd, args, kwargs))
+    if cmd == 'stop': return
     res = []
     for pipe in self.pipes:
       res.append(pipe.recv())
@@ -517,6 +521,7 @@ class ProcessBase(object):
     self.pipe = pipe
     Process = self._setup()
     Process.__init__(self)
+    self.daemon = True
 
   def run(self):
     while True:
