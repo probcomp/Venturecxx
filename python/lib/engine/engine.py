@@ -301,13 +301,13 @@ effect of renumbering the directives, if some had been forgotten."""
       self.inferrer = None
 
   def copy_trace(self, trace):
-    values = dump_trace(self.directives, trace, skipStackDictConversion=True)
+    values = dump_trace(trace, self.directives, skipStackDictConversion=True)
     return restore_trace(self.Trace(), self.directives,
                          values, skipStackDictConversion=True)
 
   def save(self, fname, extra=None):
     data = {}
-    data['traces'] = [dump_trace(self.directives, trace) for trace in self.traces]
+    data['traces'] = [dump_trace(trace, self.directives) for trace in self.traces]
     data['weights'] = self.weights
     data['directives'] = self.directives
     data['directiveCounter'] = self.directiveCounter
@@ -332,7 +332,7 @@ effect of renumbering the directives, if some had been forgotten."""
     engine.directives = self.directives
     engine.traces = []
     for trace in self.traces:
-      values = dump_trace(self.directives, trace)
+      values = dump_trace(trace, self.directives)
       engine.traces.append(restore_trace(self.Trace(), self.directives, values))
     engine.weights = self.weights
     return engine
@@ -358,7 +358,7 @@ effect of renumbering the directives, if some had been forgotten."""
 
 # Methods for trace serialization
 
-def dump_trace(directives, trace, skipStackDictConversion=False):
+def dump_trace(trace, directives, skipStackDictConversion=False):
   db = trace.makeSerializationDB()
   for did, directive in sorted(directives.items(), reverse=True):
     if directive[0] == "observe":
@@ -527,7 +527,7 @@ class ProcessBase(object):
       self.pipe.send(res)
 
   def send_trace(self, directives):
-    dumped = dump_trace(directives, self.trace)
+    dumped = dump_trace(self.trace, directives)
     return dumped
 
   @safely
