@@ -24,19 +24,34 @@
   symbols
   addresses) ; Parallel lists mapping symbols to addresses
 
-;; Compound procedures
+;;; The notion of procedures
+
+; data BasicProcedure = Compound | Primitive
+; data Procedure = Basic BasicProcedure
+;                | Full (Maybe BasicProcedure) -- simulator
+;                       (Maybe BasicProcedure) -- assessor
+;
+; There is a funny use case of assessors that are Full rather than
+; Basic Procedures.  To wit, if exact assessment is infeasible, it may
+; be approximate, in which case it may be stochastic, in which case it
+; may be interesting to itself assess.  However, a Compound Basic
+; Procedure can consist of a call to a (closed-over) Full Procedure,
+; so we handle that use case.
+
+; However, it is easy to code the slightly type-looser version, namely
+; Full Procedures containing optional Procedures.  That way, apply
+; recurs into itself.
+
+(define-structure (sp (safe-accessors #t)) simulator assessor)
+
+(define-structure (primitive (safe-accessors #t)) simulate)
+
 (define-structure (compound (safe-accessors #t))
   formals
   body
   env
   trace
   read-traces)
-
-;; Eventually, primmitive procedures will have optional densities and
-;; such, but I don't need any yet.
-(define-structure (primitive (safe-accessors #t))
-  simulate
-  (log-density #f))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -106,36 +121,43 @@
                               addr*))
                           exp ; The subforms
                           (iota (length exp)))))
-       (apply (car subaddrs) (cdr subaddrs) addr trace read-traces)))))
+       (apply (trace-lookup trace (car subaddrs)) (cdr subaddrs) addr trace read-traces)))))
 
-(define (apply oper opands addr cur-trace read-traces)
-  (let ((oper (trace-lookup cur-trace oper)))
-    (cond ((primitive? oper)
-           (let ((sim (primitive-simulate oper)))
-             (let ((arguments (map (lambda (o)
+;; Takes the operator, the addresses of the operands, the address of
+;; the application itself, the current trace, and the list of readable
+;; traces.
+(define (apply oper opand-addrs addr cur-trace read-traces)
+  (cond ((primitive? oper)
+         (let ((sim (primitive-simulate oper)))
+           (let ((arguments (map (lambda (o)
                                    (traces-lookup (cons cur-trace read-traces) o))
-                                 opands)))
-               ;; TODO Density
-               ((access apply system-global-environment) sim arguments))))
-          ((compound? oper)
-           (let ((formals (compound-formals oper))
-                 (body (compound-body oper))
-                 (env (compound-env oper))
-                 (trace (compound-trace oper))
-                 (read-traces (compound-read-traces oper)))
-             (let ((env* (extend-env env formals opands))
-                   (trace* cur-trace)
-                   ;; Hm.  This strategy means that addresses do not
-                   ;; directly depend on which compound got applied,
-                   ;; so if the operator changes, I will still have
-                   ;; the same addresses in the new body (until the
-                   ;; evaluation structure of the bodies diverges).
-                   (addr* (extend-address addr 'app))
-                   ;; This way, a compound procedure does not carry
-                   ;; write permission to the trace in which it was
-                   ;; created
-                   (read-traces* (cons trace read-traces)))
-               (eval body env* trace* addr* read-traces*)))))))
+                                 opand-addrs)))
+             ;; TODO Density
+             ((access apply system-global-environment) sim arguments))))
+        ((compound? oper)
+         (let ((formals (compound-formals oper))
+               (body (compound-body oper))
+               (env (compound-env oper))
+               (trace (compound-trace oper))
+               (read-traces (compound-read-traces oper)))
+           (let ((env* (extend-env env formals opand-addrs))
+                 (trace* cur-trace)
+                 ;; Hm.  This strategy means that addresses do not
+                 ;; directly depend on which compound got applied,
+                 ;; so if the operator changes, I will still have
+                 ;; the same addresses in the new body (until the
+                 ;; evaluation structure of the bodies diverges).
+                 (addr* (extend-address addr 'app))
+                 ;; This way, a compound procedure does not carry
+                 ;; write permission to the trace in which it was
+                 ;; created
+                 (read-traces* (cons trace read-traces)))
+             (eval body env* trace* addr* read-traces*))))
+        ((sp? oper)
+         ;; This way, I elide recording the identity function that
+         ;; transports the result of the simulator to the result of
+         ;; the whole SP.
+         (apply (sp-simulator oper) opand-addrs addr cur-trace read-traces))))
 
 (define (top-eval exp)
   (eval exp (make-env-frame #f '() '()) (store-extend #f) (toplevel-address) '()))
@@ -229,5 +251,5 @@
 
 (define (scheme->venture thing)
   (if (procedure? thing)
-      (make-primitive thing #f) ; Don't know the density
+      (make-primitive thing)
       thing)) ; Represent everything else by itself

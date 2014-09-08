@@ -6,25 +6,29 @@
        (flo:/ -1. 0.))))
 
 (define flip
-  (make-primitive (lambda (#!optional weight)
-                    (< (random 1.0)
-                       (if (default-object? weight)
-                           0.5
-                           weight)))
-                  (lambda (val #!optional weight)
-                    (log (if (default-object? weight)
-                             0.5
-                             (if val weight (- 1 weight)))))))
+  (make-sp
+   (make-primitive
+    (lambda (#!optional weight)
+      (< (random 1.0)
+         (if (default-object? weight)
+             0.5
+             weight))))
+   (make-primitive
+    (lambda (val #!optional weight)
+      (log (if (default-object? weight)
+               0.5
+               (if val weight (- 1 weight))))))))
 
 (define uniform
-  (make-primitive
-   (lambda (low high)
-     (+ low (random (exact->inexact (- high low)))))
-   (lambda (val low high)
-     (if (< low val high)
-         (- (log (- high low)))
-         minus-inf
-         ))))
+  (make-sp
+   (make-primitive
+    (lambda (low high)
+      (+ low (random (exact->inexact (- high low))))))
+   (make-primitive
+    (lambda (val low high)
+      (if (< low val high)
+          (- (log (- high low)))
+          minus-inf)))))
 
 (define infer-defn
   '(define infer

@@ -51,17 +51,26 @@
    (lambda () (error "Trying to compute weight for a value that isn't there" addr))))
 
 (define (weight-for-at val addr exp trace read-traces)
-  ;; Expect exp for be an application
+  ;; Expect exp to be an application
   ;; Do not look for it in the trace itself because it may not have been recorded yet.
-  (let ((sub-vals (map (lambda (i)
-                         (traces-lookup (cons trace read-traces) (extend-address addr `(app-sub ,i))))
-                       (iota (length exp)))))
-    (if (not (primitive? (car sub-vals)))
+  (let* ((subaddrs (map (lambda (i)
+                          (extend-address addr `(app-sub ,i)))
+                        (iota (length exp))))
+         (sub-vals (map (lambda (a)
+                          (traces-lookup (cons trace read-traces) a))
+                        subaddrs)))
+    (if (not (sp? (car sub-vals)))
         (error "What!?"))
-    (if (not (primitive-log-density (car sub-vals)))
+    (if (not (sp-assessor (car sub-vals)))
         (error "What?!?"))
-    ((access apply system-global-environment)
-     (primitive-log-density (car sub-vals)) val (cdr sub-vals))))
+    ;; Apply the assessor, but do not record it in the same trace.
+    ;; I need to bind the value to an address, for uniformity
+    (let* ((val-addr (extend-address addr 'value-to-assess))
+           (assess-trace (store-extend trace)))
+      (eval `(quote ,val) #f assess-trace val-addr '()) ; Put the value in as a constant
+      (apply (sp-assessor (car sub-vals)) (cons val-addr (cdr subaddrs))
+             (extend-address addr 'assessment)
+             assess-trace read-traces))))
 
 (define (compatible-operators-for? addr new-trace old-trace)
   (let ((op-addr (extend-address addr '(app-sub 0))))
@@ -72,8 +81,8 @@
         old-trace op-addr
         (lambda (old-op)
           (and (eqv? new-op old-op)
-               (primitive? new-op)
-               (primitive-log-density new-op)))
+               (sp? new-op)
+               (sp-assessor new-op)))
         (lambda () #f)))
      (lambda () #f))))
 
@@ -129,12 +138,10 @@
     (values new log-weight)))
 
 (define (random-choice? addr trace)
-  ;; TODO Ignores possibility of constraints induced by observations.
+  ;; Ignores possibility of constraints induced by observations.
   (rdb-trace-search-one
    trace (extend-address addr '(app-sub 0))
-   (lambda (op)
-     (and (primitive? op)
-          (primitive-log-density op)))
+   (lambda (op) (and (sp? op) (sp-assessor op)))
    (lambda () #f)))
 
 (define (unconstrained-random-choice? addr trace)
@@ -148,20 +155,14 @@
   (let ((index (random (length items))))
     (list-ref items index)))
 
-(define (prior-resimulate-exp addr exp trace)
-  (let ((sub-vals (map (lambda (i)
-                         (traces-lookup (list trace) (extend-address addr `(app-sub ,i))))
-                       (iota (length exp)))))
-    (if (not (primitive? (car sub-vals)))
-        (error "What!?"))
-    ((access apply system-global-environment)
-     (primitive-simulate (car sub-vals)) (cdr sub-vals))))
-
 (define (prior-resimulate addr trace)
   (rdb-trace-search-one-record
    trace addr
    (lambda (rec)
-     (prior-resimulate-exp addr (car rec) trace))
+     (let ((exp (car rec)) (env (cadr rec)) (addr (caddr rec)) (read-traces (cadddr rec)))
+       ;; do-eval here circumvents the trace recording machinery (both
+       ;; read and write)
+       (do-eval exp env trace addr read-traces)))
    (lambda () (error "What?"))))
 
 (define (enforce-constraints trace)
