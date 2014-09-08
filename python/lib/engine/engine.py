@@ -191,7 +191,7 @@ effect of renumbering the directives, if some had been forgotten."""
   def resample_parallel(self, P):
     newTraces = self._resample_traces(P)
     del self.trace_handler
-    self.trace_handler = ParallelTraceHandler(snewTraces)
+    self.trace_handler = ParallelTraceHandler(newTraces)
 
   def _resample_traces(self, P):
     P = int(P)
