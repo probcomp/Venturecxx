@@ -83,17 +83,6 @@
     ((trace-in-form trace-form subform)
      (let ((subtrace (eval trace-form env trace (extend-address addr '(trace-in trace)) read-traces)))
        (eval subform env subtrace (extend-address addr '(trace-in form)) read-traces)))
-    ;; Interesting new operation: evaluate in a subtrace.  Adding a
-    ;; new trace frame like this hides the nested evaluation from
-    ;; appearing in the current trace, and can shield the current
-    ;; trace from reflective changes made to the nested one if the
-    ;; trace modification policy enforces that.
-    ((extend-form subform)
-     (let ((subtrace (trace-extend trace))
-           (addr* (extend-address addr 'ext)))
-       ;; Could add trace to read-traces here instead of stashing
-       ;; it in the parent pointer
-       (eval subform env subtrace addr* read-traces)))
     ((definition x subexp)
      (let ((addr* (extend-address addr 'defn)))
        (eval subexp env trace addr* read-traces)
@@ -218,15 +207,6 @@
          (rdb-record-constraint! trace addr value))
         ((store? trace)
          (store-record-constraint! trace addr value))
-        (else (error "Unknown trace type" trace))))
-
-;; TODO This notion of extend is a little silly now, because it does
-;; not admit changing the trace type.
-(define (trace-extend trace)
-  (cond ((rdb? trace)
-         (rdb-extend trace))
-        ((store? trace)
-         (store-extend trace))
         (else (error "Unknown trace type" trace))))
 
 ;;; One hack: allow PETs but do not allow them to be extended.  Then

@@ -34,9 +34,6 @@
 (define trace-in-form? (tagged-list? 'trace-in))
 (define-algebraic-matcher trace-in-form trace-in-form? cadr caddr)
 
-(define extend-form? (tagged-list? 'ext))
-(define-algebraic-matcher extend-form extend-form? cadr)
-
 ;;; Special forms Kernel-style
 (define-structure (operative (safe-accessors #t)) procedure)
 (define operatives '())
