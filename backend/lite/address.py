@@ -62,3 +62,5 @@ class Address(List):
   def asList(self):
     """Converts to nested lists."""
     return map(list, list(self))
+
+emptyAddress = Address(emptyList)
