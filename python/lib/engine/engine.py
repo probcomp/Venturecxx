@@ -55,7 +55,7 @@ class Engine(object):
     self.inference_sps[name] = sp
 
   def getDistinguishedTrace(self):
-    return self.trace_handler.retrieve_trace(0, self.Trace, self.directives)
+    return self.retrieve_trace(0)
 
   def nextBaseAddr(self):
     self.directiveCounter += 1
@@ -208,7 +208,7 @@ effect of renumbering the directives, if some had been forgotten."""
     newTraces = [None for p in range(P)]
     for p in range(P):
       parent = sampleLogCategorical(self.trace_handler.weights) # will need to include or rewrite
-      newTrace = self.copy_trace(self.trace_handler.retrieve_trace(parent, self.Trace, self.directives))
+      newTrace = self.copy_trace(self.retrieve_trace(parent))
       newTraces[p] = newTrace
       if self.name != "lite":
         newTraces[p].set_seed(random.randint(1,2**31-1))
@@ -312,6 +312,20 @@ effect of renumbering the directives, if some had been forgotten."""
       self.inferrer.stop()
       self.inferrer = None
 
+  def retrieve_dump(self, ix):
+    return self.trace_handler.delegate_one(ix, 'send_trace', self.directives)
+
+  def retrieve_dumps(self):
+    return self.trace_handler.delegate('send_trace', self.directives)
+
+  def retrieve_trace(self, ix):
+    dumped = self.retrieve_dump(ix)
+    return self.restore_trace(dumped)
+
+  def retrieve_traces(self):
+    dumped_all = self.retrieve_dumps()
+    return [self.restore_trace(dumped) for dumped in dumped_all]
+
   # class methods that call the corresponding functions, with arguments filled in
   def dump_trace(self, trace, skipStackDictConversion=False):
     return dump_trace(trace, self.directives, skipStackDictConversion)
@@ -325,7 +339,7 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def save(self, fname, extra=None):
     data = {}
-    data['traces'] = self.trace_handler.retrieve_traces(self.Trace, self.directives)
+    data['traces'] = self.retrieve_dumps()
     data['weights'] = self.trace_handler.weights
     data['directives'] = self.directives
     data['directiveCounter'] = self.directiveCounter
@@ -354,7 +368,7 @@ effect of renumbering the directives, if some had been forgotten."""
     engine.directives = self.directives
     engine.n_traces = self.n_traces
     engine.is_parallel = self.is_parallel
-    traces = self.trace_handler.retrieve_traces(self.Trace, self.directives)
+    traces = self.retrieve_traces()
     del self.trace_handler
     TraceHandler = engine.get_handler()
     engine.trace_handler = TraceHandler(traces)
@@ -372,7 +386,7 @@ effect of renumbering the directives, if some had been forgotten."""
   def profile_data(self):
     from pandas import DataFrame
     rows = []
-    for (pid, trace) in enumerate([t for t in self.trace_handler.retrieve_traces(self.Trace, self.directives)
+    for (pid, trace) in enumerate([t for t in self.trace_handler.retrieve_traces()
                                    if hasattr(t, "stats")]):
       for (name, attempts) in trace.stats.iteritems():
         for (t, accepted) in attempts:
@@ -518,19 +532,6 @@ class HandlerBase(object):
 
   def delegate_distinguished(self, cmd, *args, **kwargs):
     return self.delegate_one(0, cmd, *args, **kwargs)
-
-  def retrieve_trace(self, ix, Trace, directives):
-    # retrieve the trace attached to the ixth process
-    # Trace is the callable used to generate the trace, not the trace itself.
-    dumped = self.delegate_one(ix, 'send_trace', directives)
-    restored = restore_trace(Trace(), directives, dumped)
-    return restored
-
-  def retrieve_traces(self, Trace, directives):
-    # retrieve all traces by requesting from workers in parallel
-    dumped_all = self.delegate('send_trace', directives)
-    restored = [restore_trace(Trace(), directives, dumped) for dumped in dumped_all]
-    return restored
 
 class ParallelTraceHandler(HandlerBase):
   @staticmethod
