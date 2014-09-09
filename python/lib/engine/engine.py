@@ -144,6 +144,7 @@ class Engine(object):
     del self.trace_handler
     self.directiveCounter = 0
     self.directives = {}
+    TraceHandler = self.get_handler()
     self.trace_handler = TraceHandler([self.Trace()])
     self.ensure_rng_seeded_decently()
 
@@ -286,7 +287,7 @@ effect of renumbering the directives, if some had been forgotten."""
   def logscore_all(self): return self.trace_handler.delegate('getGlobalLogScore')
 
   def get_entropy_info(self):
-    return { 'unconstrained_random_choices' : self.delegate_distinguished('numRandomChoices') }
+    return { 'unconstrained_random_choices' : self.trace_handler.delegate_distinguished('numRandomChoices') }
 
   def get_seed(self):
     return self.trace_handler.delegate_distinguished('get_seed') # TODO is this what we want?
