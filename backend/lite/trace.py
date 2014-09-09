@@ -24,6 +24,8 @@ from scaffold import constructScaffold
 from lkernel import DeterministicLKernel
 from psp import ESRRefOutputPSP
 from serialize import OrderedOmegaDB
+from exception import VentureError
+from venture.exception import VentureException
 
 class Trace(object):
   def __init__(self):
@@ -322,7 +324,12 @@ class Trace(object):
     assert not id in self.families
     (_,self.families[id]) = evalFamily(self,Address(List(id)),self.unboxExpression(exp),self.globalEnv,Scaffold(),False,OmegaDB(),{})
 
-  def bindInGlobalEnv(self,sym,id): self.globalEnv.addBinding(sym,self.families[id])
+  def bindInGlobalEnv(self,sym,id):
+    try:
+      self.globalEnv.addBinding(sym,self.families[id])
+    except VentureError as e:
+      raise VentureException("invalid_argument", message=e.message, argument="symbol")
+  
   def unbindInGlobalEnv(self,sym): self.globalEnv.removeBinding(sym)
 
   def extractValue(self,id): return self.boxValue(self.valueAt(self.families[id]))
