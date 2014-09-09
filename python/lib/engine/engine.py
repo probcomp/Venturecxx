@@ -319,7 +319,7 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def save(self, fname, extra=None):
     data = {}
-    data['traces'] = [dump_trace(trace, self.directives) for trace in self.traces]
+    data['traces'] = [trace for trace in self.trace_handler.retrieve_traces(self.Trace(), self.directives)]
     data['weights'] = self.trace_handler.weights
     data['directives'] = self.directives
     data['directiveCounter'] = self.directiveCounter
@@ -525,7 +525,7 @@ class HandlerBase(object):
   def retrieve_traces(self, trace, directives):
     # since this could be expensive, yield one at a time instead of all at once
     for i in range(len(self.processes)):
-      yield retrieve_trace(i, trace, directives)
+      yield self.retrieve_trace(i, trace, directives)
 
 class ParallelTraceHandler(HandlerBase):
   @staticmethod
