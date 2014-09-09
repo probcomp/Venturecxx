@@ -142,3 +142,6 @@ def run_analytics():
   history, ripl = model.runFromConditional(sweeps = 10,
                                            infer = '(mh deafault one 10)')
   return history, ripl
+
+if __name__ == '__main__':
+  run_ripl()
