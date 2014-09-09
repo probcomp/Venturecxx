@@ -1,5 +1,5 @@
 from nose import SkipTest
-from nose.tools import eq_
+from nose.tools import eq_, assert_almost_equal
 from testconfig import config
 import math
 from numpy.testing import assert_allclose
@@ -30,11 +30,16 @@ def testLiteToStack():
 def propLiteToStack(val):
   assert val.equal(VentureValue.fromStackDict(val.asStackDict()))
 
+blacklist = ['make_csp']
+
+# Select particular SPs to test thus:
+# nosetests --tc=relevant:'["foo", "bar", "baz"]'
 def relevantSPs():
   for (name,sp) in builtInSPsList:
     if isinstance(sp.requestPSP, NullRequestPSP):
-      if name not in ['make_csp']: # Placeholder for selecting SPs to do or not do
-        yield name, sp
+      if "relevant" not in config or config["relevant"] is None or name in config["relevant"]:
+        if name not in blacklist: # Placeholder for selecting SPs to do or not do
+          yield name, sp
 
 @gen_in_backend("none")
 def testTypes():
@@ -89,7 +94,7 @@ fully uncurried)."""
       raise SkipTest("Putatively deterministic sp %s returned a requesting SP" % name)
   else:
     for _ in range(5):
-      eq_(answer, carefully(sp.outputPSP.simulate, args))
+      assert_almost_equal(answer, carefully(sp.outputPSP.simulate, args), places = 10)
 
 @gen_in_backend("none")
 def testRandom():
@@ -194,6 +199,7 @@ def testRiplSimulate():
         "matrix_mul", # Not implemented
         "repeat", # Not implemented
         "vector_dot", # Not implemented
+        "zip", # Not implemented
     ]:
       continue
     if not sp.outputPSP.isRandom():

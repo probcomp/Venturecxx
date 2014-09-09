@@ -1,11 +1,12 @@
 from unittest import TestCase
 import nose.tools as nose
-from venture.test.config import get_ripl, on_inf_prim
 import numpy as np
 import random
 import string
 import operator
 from numpy.testing import assert_equal
+
+from venture.test.config import get_ripl, on_inf_prim, broken_in
 
 # TODO: Sampling (uniform_discrete) returns atoms, not ints. This breaks things.
 # I hack it by doing (assume foo (* 1 (uniform_discrete ...))). Ideally, make
@@ -295,3 +296,22 @@ class TestPrelude(TestCase):
       self.assertTrue(self.r.sample('(is_array {0})'.format(varname)))
     elif in_type == 'vector':
       self.assertFalse(self.r.sample('(or (is_array {0}) (is_pair {0}))'.format(varname)))
+
+  def build_accuracy_tester(self):
+    self.reset_ripl()
+    prog = '''
+    [ASSUME data (list (pair (vector 1 2 3) 6.5)
+                       (pair (vector 4 5 6) 13.8)
+                       (pair (vector 7 8 9) 26.3))]
+    [ASSUME f_predict (lambda (features) (sum features))]'''
+    res = self.r.execute_program(prog)
+    data = [(x['value'][0][0]['value'], x['value'][1]['value'])
+            for x in res[0]['value']['value']]
+    return data
+
+  @broken_in("puma", "Relies on builtin sp's (e.g. mapv) not implemented in Puma")
+  def test_rmse_accuracy(self):
+    data = self.build_accuracy_tester()
+    rmse_ven = self.r.sample('(rmse_accuracy data f_predict)')
+    rmse_py = np.sqrt(np.mean([(x[0].sum() - x[1]) ** 2 for x in data]))
+    self.assertEqual(rmse_ven, rmse_py)
