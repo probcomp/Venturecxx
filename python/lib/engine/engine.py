@@ -558,6 +558,7 @@ class ProcessBase(object):
       res = getattr(self, cmd)(*args, **kwargs)
       self.pipe.send(res)
 
+  @safely
   def send_trace(self, directives):
     dumped = dump_trace(self.trace, directives)
     return dumped
