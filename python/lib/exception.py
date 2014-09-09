@@ -1,17 +1,17 @@
 # Copyright (c) 2013, MIT Probabilistic Computing Project.
-# 
+#
 # This file is part of Venture.
-# 	
+#
 # Venture is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 	
+#
 # Venture is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 	
+#
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
@@ -53,7 +53,20 @@ class VentureException(Exception):
         else:
           s += '\n' + str(self.data)
         return s
-    
+
     __unicode__ = __str__
     __repr__ = __str__
 
+def exception_eq(ex1, ex2):
+    '''Returns True if two exceptions are of same type and have same message'''
+    return (type(ex1) == type(ex2)) and (ex1.args == ex2.args)
+
+def exception_all_eq(ex_list):
+    '''Returns True if all exceptions in a list are equal'''
+    same = [exception_eq(ex_list[0], ex) for ex in ex_list[1:]]
+    return all(same)
+
+def exception_type_eq(ex_list):
+    '''Returns True if all exceptions in list are of same type, else False'''
+    same = [type(ex_list[0]) is type(ex) for ex in ex_list[1:]]
+    return all(same)
