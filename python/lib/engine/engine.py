@@ -483,8 +483,8 @@ class HandlerBase(object):
 
   def incorporate(self):
     weight_increments = self.delegate('makeConsistent')
-    for weight, increment in zip(self.weights, weight_increments):
-      weight += increment
+    for i, increment in enumerate(weight_increments):
+      self.weights[i] += increment
 
   # NOTE: I could metaprogram all the methods that delegate passes on,
   # but it feels cleaner just call the delegator than to add another level
