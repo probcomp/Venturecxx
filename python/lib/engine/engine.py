@@ -22,6 +22,7 @@ from multiprocessing import dummy as mpd
 from abc import ABCMeta
 
 from venture.exception import VentureException
+from venture.lite.exception import VentureError
 from venture.lite.utils import sampleLogCategorical
 from venture.engine.inference import Infer
 from venture.engine.utils import expToDict
@@ -455,11 +456,9 @@ class ContinuousInferrer(object):
     self.inferrer = None # Grab the semaphore
     inferrer.join()
 
-# Code to handle parallelization of traces
-
 def safely(f):
-  # catches all exceptions that happen in the worker processes, so that they
-  # can be passed back up to the handler and raised there
+  # pylint: disable=broad-except
+  # in this use case, we want to catch all exceptions to avoid hanging
   def wrapped(*args, **kwargs):
     try:
       res = f(*args, **kwargs)
@@ -468,16 +467,6 @@ def safely(f):
     else:
       return res
   return wrapped
-
-def check_process_results(res):
-  n_exceptions = sum([isinstance(entry, Exception) for entry in res])
-  if n_exceptions:
-    errstr = ('{0} workers returned exceptions. The exceptions are listed below:\n'.
-              format(n_exceptions))
-    for i, entry in enumerate(res):
-      if isinstance(entry, Exception):
-        errstr += '{0} : {1}\n'.format(i, entry.message)
-    raise VentureException(errstr)
 
 class HandlerBase(object):
   '''Base class to delegate handling of parallel traces'''
@@ -499,6 +488,18 @@ class HandlerBase(object):
     # stop child processes
     self.delegate('stop')
 
+  @staticmethod
+  def _check_process_results(res):
+    n_exceptions = sum([isinstance(entry, Exception) for entry in res])
+    if n_exceptions:
+      from dw_utils.debug import set_trace; set_trace()
+      errstr = ('{0} workers returned exceptions. The exceptions are listed below:\n'.
+                format(n_exceptions))
+      for i, entry in enumerate(res):
+        if isinstance(entry, Exception):
+          errstr += '{0} : {1}\n'.format(i, entry.message)
+      raise VentureException(errstr)
+
   def incorporate(self):
     weight_increments = self.delegate('makeConsistent')
     for i, increment in enumerate(weight_increments):
@@ -515,7 +516,7 @@ class HandlerBase(object):
     res = []
     for pipe in self.pipes:
       res.append(pipe.recv())
-    check_process_results(res)
+    self._check_process_results(res)
     if cmd == 'assume':
       return res[0]
     else:
