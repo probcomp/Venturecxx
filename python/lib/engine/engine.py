@@ -48,8 +48,7 @@ class Engine(object):
     self.inference_sps[name] = sp
 
   def getDistinguishedTrace(self):
-    assert self.trace_handler
-    return self.trace_handler.retrieve_trace(self.Trace(), self.directives, 0)
+    return self.trace_handler.retrieve_trace(0, self.Trace(), self.directives)
 
   def nextBaseAddr(self):
     self.directiveCounter += 1
@@ -199,7 +198,7 @@ effect of renumbering the directives, if some had been forgotten."""
     newTraces = [None for p in range(P)]
     for p in range(P):
       parent = sampleLogCategorical(self.trace_handler.weights) # will need to include or rewrite
-      newTrace = self.copy_trace(self.trace_handler.retrieve_trace(self.Trace(), self.directives, parent))
+      newTrace = self.copy_trace(self.trace_handler.retrieve_trace(parent, self.Trace(), self.directives))
       newTraces[p] = newTrace
       if self.name != "lite":
         newTraces[p].set_seed(random.randint(1,2**31-1))
@@ -471,6 +470,7 @@ class HandlerBase(object):
   # but it feels cleaner just call the delegator than to add another level
   # of wrapping
   def delegate(self, cmd, *args, **kwargs):
+    '''Delegate command to all workers'''
     # send command
     for pipe in self.pipes: pipe.send((cmd, args, kwargs))
     if cmd == 'stop': return
@@ -483,20 +483,22 @@ class HandlerBase(object):
     else:
       return res
 
-  def delegate_distinguished(self, cmd, *args, **kwargs):
-    # issue a command only to the first worker process
-    distinguished_pipe = self.pipes[0]
-    distinguished_pipe.send((cmd, args, kwargs))
-    res = distinguished_pipe.recv()
+  def delegate_one(self, ix, cmd, *args, **kwargs):
+    '''Delegate command to a single worker, indexed by ix'''
+    pipe = self.pipes[ix]
+    pipe.send((cmd, args, kwargs))
+    res = pipe.recv()
     if isinstance(res, Exception):
       errstr = 'The distinguished worker returned the following exception: {0}'.format(res.message)
       raise VentureException(errstr)
     return res
 
-  def retrieve_trace(self, trace, directives, i):
-    # retrieve the trace attached to the ith process
-    process = self.processes[i]
-    dumped = process.send_trace(directives)
+  def delegate_distinguished(self, cmd, *args, **kwargs):
+    return delegate_one(0, cmd, *args, **kwargs)
+
+  def retrieve_trace(self, ix, trace, directives):
+    # retrieve the trace attached to the ixth process
+    dumped = self.delegate_one(ix, 'send_trace', directives)
     restored = restore_trace(trace, directives, dumped)
     return restored
 
@@ -542,6 +544,7 @@ class ProcessBase(object):
 
   @safely
   def assume(self, baseAddr, id, exp):
+    print self.trace.families
     self.trace.eval(baseAddr, exp)
     self.trace.bindInGlobalEnv(id, baseAddr)
     return self.trace.extractValue(baseAddr)
