@@ -273,7 +273,7 @@ effect of renumbering the directives, if some had been forgotten."""
     self.trace_handler.delegate('primitive_infer', exp)
 
   def get_logscore(self, did): return self.trace_handler.delegate_distinguished('getDirectiveLogScore', did)
-  def logscore(self): return self.trace_handler.delegate_distinguished('getDirectiveLogScore')
+  def logscore(self): return self.trace_handler.delegate_distinguished('getGlobalLogScore')
   def logscore_all(self): return self.trace_handler.delegate('getGlobalLogScore')
 
   def get_entropy_info(self):
@@ -459,7 +459,7 @@ class HandlerBase(object):
 
   def __del__(self):
     # stop child processes
-    for pipe in self.pipes: pipe.send(('stop', [], {}))
+    self.delegate('stop')
 
   def incorporate(self):
     weight_increments = self.delegate('makeConsistent')
@@ -494,7 +494,7 @@ class HandlerBase(object):
     return res
 
   def delegate_distinguished(self, cmd, *args, **kwargs):
-    return delegate_one(0, cmd, *args, **kwargs)
+    return self.delegate_one(0, cmd, *args, **kwargs)
 
   def retrieve_trace(self, ix, trace, directives):
     # retrieve the trace attached to the ixth process
