@@ -499,15 +499,15 @@ def showParameters(parameters):
     plt.text(0, 1, text, transform=plt.axes().transAxes, va='top', size='small', linespacing=1.0)
 
 def seriesBounds(seriesList):
-    vmin = min([min(series.values) for series in seriesList])
-    vmax = max([max(series.values) for series in seriesList])
+    vmin = min([np.min(series.values) for series in seriesList])
+    vmax = max([np.max(series.values) for series in seriesList])
     offset = 0.1 * max([(vmax - vmin), 1.0])
     return (vmin - offset, vmax + offset)
 
 def setYBounds(seriesList, ybounds=None):
     if ybounds is None:
         (ylow, yhigh) = seriesBounds(seriesList)
-        if not any([any([np.isinf(v) for v in series.values]) for series in seriesList]):
+        if not any([np.any([np.isinf(v) for v in series.values]) for series in seriesList]):
             plt.ylim([ylow, yhigh])
     else:
         [ylow,yhigh] = ybounds # Silly pylint not noticing case on maybe type pylint:disable=unpacking-non-sequence

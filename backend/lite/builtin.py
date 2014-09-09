@@ -164,6 +164,7 @@ builtInSPsList = [
            [ "div",   binaryNum(lambda x,y: x / y,
                                 sim_grad=grad_div,
                                 descr="div returns the quotient of its first argument by its second") ],
+           [ "min",   binaryNum(min, descr="min returns the minimum value of its arguments") ],
            [ "eq",    binaryPred(lambda x,y: x.compare(y) == 0,
                                  descr="eq compares its two arguments for equality") ],
            [ "gt",    binaryPred(lambda x,y: x.compare(y) >  0,
@@ -380,7 +381,7 @@ builtInSPsList = [
            [ "make_crp",typed_nr(crp.MakeCRPOutputPSP(), [v.NumberType(),v.NumberType()], SPType([], v.AtomType()), min_req_args = 1) ],
            [ "make_cmvn",typed_nr(cmvn.MakeCMVNOutputPSP(),
                                   [v.HomogeneousArrayType(v.NumberType()),v.NumberType(),v.NumberType(),v.MatrixType()],
-                                  SPType([], v.MatrixType())) ],
+                                  SPType([], v.HomogeneousArrayType(v.NumberType()))) ],
 
            [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [v.SimplexType(), v.MatrixType(), v.MatrixType()], SPType([v.CountType()], v.AtomType())) ],
 ]

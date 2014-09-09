@@ -5,6 +5,7 @@ import numpy.linalg as npla
 import scipy.special as spsp
 import numpy as np
 from utils import logDensityMVNormal, numpy_force_number
+from utils import override
 from exception import VentureValueError, GradientWarning
 import warnings
 
@@ -25,7 +26,20 @@ class NormalDriftKernel(LKernel):
     term3 = self.epsilon * nu
     return term1 + term2 + term3
 
+class MVNormalRandomWalkKernel(LKernel):
+  def __init__(self, epsilon = 0.7):
+    self.epsilon = epsilon if epsilon is not None else 0.7
 
+  def simulate(self, _trace, oldValue, args):
+    (mu, _) = MVNormalOutputPSP.__parse_args__(args)
+    nu = scipy.stats.norm.rvs(0,self.epsilon,mu.shape)
+    return oldValue + nu
+
+  @override(LKernel)
+  def weight(self, _trace, _newValue, _oldValue, _args):
+    # log P(_newValue --> _oldValue) == log P(_oldValue --> _newValue)
+    (mu, sigma) = MVNormalOutputPSP.__parse_args__(_args)
+    return logDensityMVNormal(_newValue, mu, sigma)
 
 class MVNormalOutputPSP(RandomPSP):
   def simulate(self, args):
@@ -44,6 +58,9 @@ class MVNormalOutputPSP(RandomPSP):
     gradSigma = .5*np.dot(np.dot(isigma, xvar),isigma)-.5*isigma
     return np.array(gradX).tolist(), [np.array(gradMu).tolist(), gradSigma]
 
+  def hasDeltaKernel(self): return True
+  def getDeltaKernel(self,*args): return MVNormalRandomWalkKernel(*args)
+
   def logDensityBound(self, x, args):
     (mu, sigma) = self.__parse_args__(args)
     if sigma is not None:
@@ -57,7 +74,8 @@ class MVNormalOutputPSP(RandomPSP):
   def description(self,name):
     return "  (%s mean covariance) samples a vector according to the given multivariate Gaussian distribution.  It is an error if the dimensionalities of the arguments do not line up." % name
 
-  def __parse_args__(self, args):
+  @staticmethod
+  def __parse_args__(args):
     return (np.array(args.operandValues[0]), np.array(args.operandValues[1]))
 
 class InverseWishartPSP(RandomPSP):
@@ -198,7 +216,7 @@ class NormalOutputPSP(RandomPSP):
   def logDensityBound(self, x, args): return self.logDensityBoundNumeric(x, *args.operandValues)
 
   def hasDeltaKernel(self): return False # have each gkernel control whether it is delta or not
-  def getDeltaKernel(self): return NormalDriftKernel()
+  def getDeltaKernel(self,args): return NormalDriftKernel(args)
 
   def hasVariationalLKernel(self): return True
   def getParameterScopes(self): return ["REAL","POSITIVE_REAL"]
