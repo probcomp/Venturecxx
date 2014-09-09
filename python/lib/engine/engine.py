@@ -355,6 +355,7 @@ effect of renumbering the directives, if some had been forgotten."""
     assert version == '0.2', "Incompatible version or unrecognized object"
     self.directiveCounter = data['directiveCounter']
     self.directives = data['directives']
+    self.is_parallel = data['is_parallel']
     traces = [self.restore_trace(trace) for trace in data['traces']]
     del self.trace_handler
     TraceHandler = self.get_handler()
