@@ -368,7 +368,8 @@ effect of renumbering the directives, if some had been forgotten."""
   def profile_data(self):
     from pandas import DataFrame
     rows = []
-    for (pid, trace) in enumerate([t for t in self.traces if hasattr(t, "stats")]):
+    for (pid, trace) in enumerate([t for t in self.trace_handler.retrieve_traces(self.Trace(), self.directives)
+                                   if hasattr(t, "stats")]):
       for (name, attempts) in trace.stats.iteritems():
         for (t, accepted) in attempts:
           rows.append({"name":str(name), "particle":pid, "time":t, "accepted":accepted})
@@ -519,6 +520,11 @@ class HandlerBase(object):
     dumped = self.delegate_one(ix, 'send_trace', directives)
     restored = restore_trace(trace, directives, dumped)
     return restored
+
+  def retrieve_traces(self, trace, directives):
+    # since this could be expensive, yield one at a time instead of all at once
+    for i in range(len(self.processes)):
+      yield retrieve_trace(i, trace, directives)
 
 class ParallelTraceHandler(HandlerBase):
   @staticmethod
