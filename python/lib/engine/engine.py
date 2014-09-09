@@ -312,10 +312,16 @@ effect of renumbering the directives, if some had been forgotten."""
       self.inferrer.stop()
       self.inferrer = None
 
+  # class methods that call the corresponding functions, with arguments filled in
+  def dump_trace(self, trace, skipStackDictConversion=False):
+    return dump_trace(trace, self.directives, skipStackDictConversion)
+
+  def restore_trace(self, values, skipStackDictConversion=False):
+    return restore_trace(self.Trace(), self.directives, values, skipStackDictConversion)
+
   def copy_trace(self, trace):
-    values = dump_trace(trace, self.directives, skipStackDictConversion=True)
-    return restore_trace(self.Trace(), self.directives,
-                         values, skipStackDictConversion=True)
+    values = self.dump_trace(trace, skipStackDictConversion=True)
+    return self.restore_trace(values, skipStackDictConversion=True)
 
   def save(self, fname, extra=None):
     data = {}
@@ -335,7 +341,7 @@ effect of renumbering the directives, if some had been forgotten."""
     assert version == '0.2', "Incompatible version or unrecognized object"
     self.directiveCounter = data['directiveCounter']
     self.directives = data['directives']
-    traces = [restore_trace(self.Trace(), self.directives, trace) for trace in data['traces']]
+    traces = [self.restore_trace(trace) for trace in data['traces']]
     del self.trace_handler
     TraceHandler = self.get_handler()
     self.trace_handler = TraceHandler(traces)
@@ -349,9 +355,9 @@ effect of renumbering the directives, if some had been forgotten."""
     engine.n_traces = self.n_traces
     engine.is_parallel = self.is_parallel
     traces = []
-    for trace in self.traces:
-      values = dump_trace(trace, self.directives)
-      traces.append(restore_trace(self.Trace(), self.directives, values))
+    for trace in self.trace_handler.retrieve_traces(self.Trace(), self.directives):
+      values = self.dump_trace(trace)
+      traces.append(self.restore_trace(values))
     del self.trace_handler
     TraceHandler = engine.get_handler()
     engine.trace_handler = TraceHandler(traces)
