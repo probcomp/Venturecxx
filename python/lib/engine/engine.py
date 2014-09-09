@@ -237,12 +237,9 @@ effect of renumbering the directives, if some had been forgotten."""
         weights.append(weighted_ks[j])
         subkernels.append(weighted_ks[k])
       return [program[0], [v.sym("simplex")] + weights, [v.sym("array")] + subkernels, transitions]
-    elif type(program) is list and type(program[0]) is dict and program[0]["value"] in ["peek", "peek_all"]:
-      assert 2 <= len(program) and len(program) <= 3
-      if len(program) == 2:
-        return [program[0], v.quote(program[1])]
-      else:
-        return [program[0], v.quote(program[1]), v.quote(program[2])]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == 'peek':
+      assert len(program) >= 2
+      return [program[0]] + [v.quote(e) for e in program[1:]]
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "printf":
       assert len(program) >= 2
       return [program[0]] + [v.quote(e) for e in program[1:]]

@@ -155,12 +155,20 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Useful math functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ; Take the negative of a number.
 ; Parameters
 ;   x : number
 [assume negative
   (lambda (x)
     (* x -1))]
+
+; Take absolute value of a number
+; Parameters
+;   x : number
+[assume abs
+  (lambda (x)
+    (if (gte x 0) x (negative x)))]
 
 ; The logistic (sigmoid) function
 ; Parameters

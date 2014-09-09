@@ -146,7 +146,7 @@ class VentureUnit(object):
         if parameters is None: parameters = {}
         self.ripl = ripl
 
-        # FIXME: make consistent with analytics
+        # FIXME: make consistent with Analytics
         self.parameters = parameters.copy()
         if 'venture_random_seed' not in self.parameters:
             self.parameters['venture_random_seed'] = self.ripl.get_seed()
@@ -292,7 +292,7 @@ class Analytics(object):
             self.updateQueryExps()
 
 
-        # mutate ripl/mripl
+        # Initialization for mutable ripl or MRipl
 
         if mutateRipl:
             self.muRipl = True
@@ -323,7 +323,7 @@ class Analytics(object):
         '''Extend list of observes or empty it.
            Input: newObserves :: [(exp,literal)], removeAllObserves :: bool.'''
 
-        # add assert here and to query exps (about getting form of input right)
+        # add assert about getting form of input right
 
         if removeAllObserves:
             self.observes = []
@@ -776,6 +776,7 @@ class Analytics(object):
 
 
     def testFromPrior(self,noDatasets,sweeps,**kwargs):
+        ## TODO implement this. currently buggy. 
 
         randRipl = np.random.randint(0,self.mripl.no_ripls)
         force={}

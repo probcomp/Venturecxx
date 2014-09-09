@@ -30,10 +30,12 @@ def testLiteToStack():
 def propLiteToStack(val):
   assert val.equal(VentureValue.fromStackDict(val.asStackDict()))
 
+# Select particular SPs to test thus:
+# nosetests --tc=relevant:'["foo", "bar", "baz"]'
 def relevantSPs():
   for (name,sp) in builtInSPsList:
     if isinstance(sp.requestPSP, NullRequestPSP):
-      if name not in []: # Placeholder for selecting SPs to do or not do
+      if "relevant" not in config or config["relevant"] is None or name in config["relevant"]:
         yield name, sp
 
 @gen_in_backend("none")
@@ -178,28 +180,33 @@ def testRiplSimulate():
         "matrix", # Because rows must be the same length
         "lookup", # Because the key must be an integer for sequence lookups
         "get_empty_environment", # Environments can't be rendered to stack dicts
-        ## Incompatibilities with Puma
-        "eq", # Not implemented for matrices
-        "gt", # Not implemented for matrices
-        "gte",
-        "lt",
-        "lte",
-        "real", # Not implemented
-        "atom_eq", # Not implemented
-        "contains", # Not implemented for sequences
-        "arange", # Not implemented
-        "linspace", # Not implemented
-        "diag_matrix", # Not implemented
-        "ravel", # Not implemented
-        "matrix_mul", # Not implemented
-        "repeat", # Not implemented
-        "vector_dot", # Not implemented
     ]:
       continue
     if not sp.outputPSP.isRandom():
       yield checkRiplAgreesWithDeterministicSimulate, name, sp
 
 def checkRiplAgreesWithDeterministicSimulate(name, sp):
+  if config["get_ripl"] != "lite" and name in [
+    ## Incompatibilities with Puma
+    "eq", # Not implemented for matrices
+    "gt", # Not implemented for matrices
+    "gte",
+    "lt",
+    "lte",
+    "min", # Not implemented
+    "real", # Not implemented
+    "atom_eq", # Not implemented
+    "contains", # Not implemented for sequences
+    "arange", # Not implemented
+    "linspace", # Not implemented
+    "diag_matrix", # Not implemented
+    "ravel", # Not implemented
+    "matrix_mul", # Not implemented
+    "repeat", # Not implemented
+    "vector_dot", # Not implemented
+    "zip", # Not implemented
+  ]:
+    raise SkipTest("%s in Puma not implemented compatibly with Lite" % name)
   checkTypedProperty(propRiplAgreesWithDeterministicSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)
 
 def propRiplAgreesWithDeterministicSimulate(args_lists, name, sp):

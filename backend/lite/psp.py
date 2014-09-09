@@ -298,6 +298,7 @@ class TypedPSP(PSP):
 
   def hasSimulationKernel(self): return self.psp.hasSimulationKernel()
   def hasDeltaKernel(self): return self.psp.hasDeltaKernel()
+  def getDeltaKernel(self,args): return TypedLKernel(self.psp.getDeltaKernel(args),self.f_type)
   # TODO Wrap the simulation and delta kernels properly (once those are tested)
 
   def description(self,name):

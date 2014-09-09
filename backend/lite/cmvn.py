@@ -2,7 +2,7 @@ from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, VentureSPRecord, SPType
 import math
 from scipy.special import gammaln
-from value import ArrayType, MatrixType # The type names are metaprogrammed pylint: disable=no-name-in-module
+from value import HomogeneousArrayType, NumberType # The type names are metaprogrammed pylint: disable=no-name-in-module
 import numpy as np
 
 def logGenGamma(d,x):
@@ -15,7 +15,7 @@ def mvtLogDensity(x,mu,Sigma,v):
   pterm1 = gammaln(float(v + p) / 2)
   nterm1 = gammaln(float(v) / 2)
   nterm2 = (float(p)/2) * math.log(v * math.pi)
-  nterm3 = (float(1)/2) * np.linalg.slogdet(Sigma)[1] 
+  nterm3 = (float(1)/2) * np.linalg.slogdet(Sigma)[1]
   nterm4 = (float(v + p)/2) * math.log(1 + (float(1)/v) * (x - mu).T * np.linalg.inv(Sigma) * (x - mu))
   return pterm1 - (nterm1 + nterm2 + nterm3 + nterm4)
 
@@ -75,9 +75,9 @@ class MakeCMVNOutputPSP(DeterministicPSP):
     m0 = np.mat(m0).transpose()
 
     d = np.size(m0)
-    output = TypedPSP(CMVNOutputPSP(d,m0,k0,v0,S0), SPType([], MatrixType()))
+    output = TypedPSP(CMVNOutputPSP(d,m0,k0,v0,S0), SPType([], HomogeneousArrayType(NumberType())))
     return VentureSPRecord(CMVNSP(NullRequestPSP(),output,d))
-    
+
   def childrenCanAAA(self): return True
 
   def description(self,name):
@@ -97,9 +97,9 @@ class CMVNOutputPSP(RandomPSP):
     kN = self.k0 + spaux.N
     vN = self.v0 + spaux.N
     SN = self.S0 + spaux.STotal + (self.k0 * self.m0 * self.m0.T) - (kN * mN * mN.T)
-    
+
     return (mN,kN,vN,SN)
-  
+
   def mvtParams(self,mN,kN,vN,SN):
     mArg = mN
     SArg = (float(kN + 1) / (kN * (vN - self.d + 1))) * SN
@@ -110,26 +110,27 @@ class CMVNOutputPSP(RandomPSP):
     (mN,kN,vN,SN) = self.updatedParams(args.spaux)
     params = self.mvtParams(mN,kN,vN,SN)
     x = mvtSample(*params)
-    return x
+    return np.squeeze(np.array(x))
 
   def logDensity(self,x,args):
+    x = np.mat(x).reshape((self.d,1))
     (mN,kN,vN,SN) = self.updatedParams(args.spaux)
     return mvtLogDensity(x, *self.mvtParams(mN,kN,vN,SN))
 
   def incorporate(self,x,args):
-    x = np.mat(x)
+    x = np.mat(x).reshape((self.d,1))
     args.spaux.N += 1
     args.spaux.xTotal += x
     args.spaux.STotal += x * x.T
 
   def unincorporate(self,x,args):
-    x = np.mat(x)
+    x = np.mat(x).reshape((self.d,1))
     args.spaux.N -= 1
     args.spaux.xTotal -= x
     args.spaux.STotal -= x * x.T
 
   def logDensityOfCounts(self,aux):
-    (_mN,kN,vN,SN) = self.updatedParams(aux)
+    (mN,kN,vN,SN) = self.updatedParams(aux)
     term1 = - (aux.N * self.d * math.log(math.pi)) / 2
     term2 = logGenGamma(self.d,float(vN) / 2)
     term3 = - logGenGamma(self.d,float(self.v0) / 2)

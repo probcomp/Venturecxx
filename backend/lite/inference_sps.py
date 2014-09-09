@@ -53,9 +53,19 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
   SPsListEntry("slice", [v.ExpressionType(), v.ExpressionType(), v.NumberType(), v.IntegerType(), v.IntegerType()]),
   SPsListEntry("slice_doubling", [v.ExpressionType(), v.ExpressionType(), v.NumberType(), v.IntegerType(), v.IntegerType()]),
   SPsListEntry("resample", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
+  SPsListEntry("draw_scaffold", [v.ExpressionType(), v.ExpressionType(), v.IntegerType()], min_req_args=3),
+  # (subsampled_mh scope block Nbatch k0 epsilon useDeltaKernels deltaKernelArgs updateValues transitions)
+  SPsListEntry("subsampled_mh", [v.ExpressionType(), v.ExpressionType(), v.IntegerType(), v.IntegerType(), v.NumberType(), v.BoolType(), v.NumberType(), v.BoolType(), v.IntegerType()], min_req_args=9),
+  # (mh_kernel scope block useDeltaKernels deltaKernelArgs transitions)
+  SPsListEntry("mh_kernel_update", [v.ExpressionType(), v.ExpressionType(), v.BoolType(), v.NumberType(), v.BoolType(), v.IntegerType()], min_req_args=6),
+  SPsListEntry("gibbs_update", [v.ExpressionType(), v.ExpressionType(), v.IntegerType(), v.BoolType()], min_req_args=3),
+  SPsListEntry("pgibbs_update", [v.ExpressionType(), v.ExpressionType(), v.IntegerType(), v.IntegerType(), v.BoolType()], min_req_args=4),
+  # (subsampled_mh_check_applicability scope block transitions)
+  SPsListEntry("subsampled_mh_check_applicability", [v.ExpressionType(), v.ExpressionType(), v.IntegerType()], min_req_args=3),
+  # (subsampled_mh_make_consistent scope block useDeltaKernels deltaKernelArgs updateValues transitions)
+  SPsListEntry("subsampled_mh_make_consistent", [v.ExpressionType(), v.ExpressionType(), v.BoolType(), v.NumberType(), v.BoolType(), v.IntegerType()], min_req_args=6),
   SPsListEntry("incorporate", [], klass=MadeEngineMethodInferOutputPSP),
-  SPsListEntry("peek", [v.AnyType(), v.SymbolType()], klass=MadeEngineMethodInferOutputPSP, min_req_args=1),
-  SPsListEntry("peek_all", [v.AnyType(), v.SymbolType()], klass=MadeEngineMethodInferOutputPSP, min_req_args=1),
+  SPsListEntry("peek", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
   SPsListEntry("plotf", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
   SPsListEntry("printf", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
 
