@@ -37,9 +37,16 @@ class Engine(object):
     self.inferrer = None
     self.trace_handler = SequentialTraceHandler([Trace()])
     self.n_traces = 1
+    self.is_parallel = False
     import venture.lite.inference_sps as inf
     self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
+
+  def get_handler(self):
+    if self.is_parallel:
+      return ParallelTraceHandler
+    else:
+      return SequentialTraceHandler
 
   def inferenceSPsList(self):
     return self.inference_sps.iteritems()
@@ -183,11 +190,13 @@ effect of renumbering the directives, if some had been forgotten."""
       assert False, "Unkown directive type found %r" % directive
 
   def resample(self, P):
+    self.is_parallel = False
     newTraces = self._resample_traces(P)
     del self.trace_handler
     self.trace_handler = SequentialTraceHandler(newTraces)
 
   def resample_parallel(self, P):
+    self.is_parallel = True
     newTraces = self._resample_traces(P)
     del self.trace_handler
     self.trace_handler = ParallelTraceHandler(newTraces)
@@ -280,10 +289,10 @@ effect of renumbering the directives, if some had been forgotten."""
     return { 'unconstrained_random_choices' : self.delegate_distinguished('numRandomChoices') }
 
   def get_seed(self):
-    return self.delegate_distinguished('get_seed') # TODO is this what we want?
+    return self.trace_handler.delegate_distinguished('get_seed') # TODO is this what we want?
 
   def set_seed(self, seed):
-    self.delegate_distinguished('set_seed', seed) # TODO is this what we want?
+    self.trace_handler.delegate_distinguished('set_seed', seed) # TODO is this what we want?
 
   def continuous_inference_status(self):
     if self.inferrer is not None:
@@ -310,9 +319,10 @@ effect of renumbering the directives, if some had been forgotten."""
   def save(self, fname, extra=None):
     data = {}
     data['traces'] = [dump_trace(trace, self.directives) for trace in self.traces]
-    data['weights'] = self.weights
+    data['weights'] = self.trace_handler.weights
     data['directives'] = self.directives
     data['directiveCounter'] = self.directiveCounter
+    data['is_parallel'] = self.is_parallel
     data['extra'] = extra
     version = '0.2'
     with open(fname, 'w') as fp:
@@ -324,19 +334,27 @@ effect of renumbering the directives, if some had been forgotten."""
     assert version == '0.2', "Incompatible version or unrecognized object"
     self.directiveCounter = data['directiveCounter']
     self.directives = data['directives']
-    self.traces = [restore_trace(self.Trace(), self.directives, trace) for trace in data['traces']]
-    self.weights = data['weights']
+    traces = [restore_trace(self.Trace(), self.directives, trace) for trace in data['traces']]
+    del self.trace_handler
+    TraceHandler = self.get_handler()
+    self.trace_handler = TraceHandler(traces)
+    self.trace_handler.weights = data['weights']
     return data['extra']
 
   def convert(self, EngineClass):
     engine = EngineClass()
     engine.directiveCounter = self.directiveCounter
     engine.directives = self.directives
-    engine.traces = []
+    engine.n_traces = self.n_traces
+    engine.is_parallel = self.is_parallel
+    traces = []
     for trace in self.traces:
       values = dump_trace(trace, self.directives)
-      engine.traces.append(restore_trace(self.Trace(), self.directives, values))
-    engine.weights = self.weights
+      traces.append(restore_trace(self.Trace(), self.directives, values))
+    del self.trace_handler
+    TraceHandler = engine.get_handler()
+    engine.trace_handler = TraceHandler(traces)
+    engine.trace_handler.weights = self.weights
     return engine
 
   def to_lite(self):
