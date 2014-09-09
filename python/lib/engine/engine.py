@@ -544,7 +544,6 @@ class ProcessBase(object):
 
   @safely
   def assume(self, baseAddr, id, exp):
-    print self.trace.families
     self.trace.eval(baseAddr, exp)
     self.trace.bindInGlobalEnv(id, baseAddr)
     return self.trace.extractValue(baseAddr)
