@@ -30,13 +30,16 @@ def testLiteToStack():
 def propLiteToStack(val):
   assert val.equal(VentureValue.fromStackDict(val.asStackDict()))
 
+blacklist = ['make_csp']
+
 # Select particular SPs to test thus:
 # nosetests --tc=relevant:'["foo", "bar", "baz"]'
 def relevantSPs():
   for (name,sp) in builtInSPsList:
     if isinstance(sp.requestPSP, NullRequestPSP):
       if "relevant" not in config or config["relevant"] is None or name in config["relevant"]:
-        yield name, sp
+        if name not in blacklist: # Placeholder for selecting SPs to do or not do
+          yield name, sp
 
 @gen_in_backend("none")
 def testTypes():

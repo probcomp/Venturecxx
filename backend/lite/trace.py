@@ -1,3 +1,4 @@
+from address import Address, List
 from builtin import builtInValues, builtInSPs
 from env import VentureEnvironment
 from node import Node,ConstantNode,LookupNode,RequestNode,OutputNode,Args
@@ -23,6 +24,8 @@ from scaffold import constructScaffold
 from lkernel import DeterministicLKernel
 from psp import ESRRefOutputPSP
 from serialize import OrderedOmegaDB
+from exception import VentureError
+from venture.exception import VentureException
 
 class Trace(object):
   def __init__(self):
@@ -49,10 +52,10 @@ class Trace(object):
     return self.scopes.keys()
 
   def bindPrimitiveName(self, name, val):
-    self.globalEnv.addBinding(name,ConstantNode(val))
+    self.globalEnv.addBinding(name,self.createConstantNode(None, val))
 
   def bindPrimitiveSP(self, name, sp):
-    spNode = self.createConstantNode(VentureSPRecord(sp))
+    spNode = self.createConstantNode(None, VentureSPRecord(sp))
     processMadeSP(self,spNode,False)
     assert isinstance(self.valueAt(spNode), SPRef)
     self.globalEnv.addBinding(name,spNode)
@@ -118,16 +121,16 @@ class Trace(object):
     self.ccs.remove(node)
     if self.pspAt(node).isRandom(): self.registerRandomChoice(node)
 
-  def createConstantNode(self,val): return ConstantNode(val)
-  def createLookupNode(self,sourceNode):
-    lookupNode = LookupNode(sourceNode)
+  def createConstantNode(self,address,val): return ConstantNode(address,val)
+  def createLookupNode(self,address,sourceNode):
+    lookupNode = LookupNode(address,sourceNode)
     self.setValueAt(lookupNode,self.valueAt(sourceNode))
     self.addChildAt(sourceNode,lookupNode)
     return lookupNode
 
-  def createApplicationNodes(self,operatorNode,operandNodes,env):
-    requestNode = RequestNode(operatorNode,operandNodes,env)
-    outputNode = OutputNode(operatorNode,operandNodes,requestNode,env)
+  def createApplicationNodes(self,address,operatorNode,operandNodes,env):
+    requestNode = RequestNode(address,operatorNode,operandNodes,env)
+    outputNode = OutputNode(address,operatorNode,operandNodes,requestNode,env)
     self.addChildAt(operatorNode,requestNode)
     self.addChildAt(operatorNode,outputNode)
     for operandNode in operandNodes:
@@ -319,9 +322,14 @@ class Trace(object):
   #### External interface to engine.py
   def eval(self,id,exp):
     assert not id in self.families
-    (_,self.families[id]) = evalFamily(self,self.unboxExpression(exp),self.globalEnv,Scaffold(),False,OmegaDB(),{})
+    (_,self.families[id]) = evalFamily(self,Address(List(id)),self.unboxExpression(exp),self.globalEnv,Scaffold(),False,OmegaDB(),{})
 
-  def bindInGlobalEnv(self,sym,id): self.globalEnv.addBinding(sym,self.families[id])
+  def bindInGlobalEnv(self,sym,id):
+    try:
+      self.globalEnv.addBinding(sym,self.families[id])
+    except VentureError as e:
+      raise VentureException("invalid_argument", message=e.message, argument="symbol")
+  
   def unbindInGlobalEnv(self,sym): self.globalEnv.removeBinding(sym)
 
   def extractValue(self,id): return self.boxValue(self.valueAt(self.families[id]))
@@ -507,7 +515,7 @@ class Trace(object):
 
   def evalAndRestore(self,id,exp,db):
     assert id not in self.families
-    (_,self.families[id]) = evalFamily(self,self.unboxExpression(exp),self.globalEnv,Scaffold(),True,db,{})
+    (_,self.families[id]) = evalFamily(self,Address(List(id)),self.unboxExpression(exp),self.globalEnv,Scaffold(),True,db,{})
 
   #### Helpers (shouldn't be class methods)
 

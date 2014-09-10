@@ -6,7 +6,9 @@ class EvalRequestPSP(DeterministicPSP):
   def simulate(self,args):
     exp = args.operandValues[0]
     env = args.operandValues[1]
-    return Request([ESR(args.node,exp,env)])
+    # point to the desugared source code location of lambda body
+    addr = args.operandNodes[0].address.last.append(1)    
+    return Request([ESR(args.node,exp,addr,env)])
   def description(self,name):
     return "%s evaluates the given expression in the given environment and returns the result.  Is itself deterministic, but the given expression may involve a stochasitc computation." % name
 

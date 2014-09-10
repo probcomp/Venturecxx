@@ -28,6 +28,8 @@ class VentureSivm(object):
         self.core_sivm = core_sivm
         self._clear()
         self._init_continuous_inference()
+    
+    dicts = [s + '_dict' for s in ['breakpoint', 'label', 'did', 'sugar', 'directive']]
 
     # list of all instructions supported by venture sivm
     _extra_instructions = {'labeled_assume','labeled_observe',
@@ -72,6 +74,7 @@ class VentureSivm(object):
         self.label_dict = {}
         self.did_dict = {}
         self.directive_dict = {}
+        self.sugar_dict = {}
         self._debugger_clear()
         self.state = 'default'
 
@@ -85,18 +88,14 @@ class VentureSivm(object):
     def save(self, fname, extra=None):
         if extra is None:
             extra = {}
-        extra['label_dict'] = self.label_dict
-        extra['did_dict'] = self.did_dict
-        extra['directive_dict'] = self.directive_dict
-        extra['breakpoint_dict'] = self.breakpoint_dict
+        for d in self.dicts:
+            extra[d] = getattr(self, d)
         return self.core_sivm.save(fname, extra)
 
     def load(self, fname):
         extra = self.core_sivm.load(fname)
-        self.label_dict = extra['label_dict']
-        self.did_dict = extra['did_dict']
-        self.directive_dict = extra['directive_dict']
-        self.breakpoint_dict = extra['breakpoint_dict']
+        for d in self.dicts:
+            setattr(self, d, extra[d])
         return extra
 
     ###############################
@@ -107,12 +106,15 @@ class VentureSivm(object):
     def _call_core_sivm_instruction(self,instruction):
         desugared_instruction = copy.deepcopy(instruction)
         instruction_type = instruction['instruction']
+        sugar = None
         # desugar the expression
         if instruction_type in ['assume','observe','predict']:
             exp = utils.validate_arg(instruction,'expression',
                     utils.validate_expression, wrap_exception=False)
-            new_exp = macro.desugar_expression(exp)
-            desugared_instruction['expression'] = new_exp
+            sugar = macro.expand(exp)
+            desugared_instruction['expression'] = sugar.desugared()
+            # for error handling
+            self.attempted = (exp, sugar)
         # desugar the expression index
         if instruction_type == 'debugger_set_breakpoint_source_code_location':
             desugared_src_location = desugared_instruction['source_code_location']
@@ -126,6 +128,11 @@ class VentureSivm(object):
         except VentureException as e:
             if e.exception == "evaluation":
                 self.state='exception'
+                
+                address = e.data['address'].asList()
+                del e.data['address']
+                e.data['stack_trace'] = [self._resugar(index) for index in address]
+                
                 self.current_exception = e.to_json_object()
             if e.exception == "breakpoint":
                 self.state='paused'
@@ -152,6 +159,7 @@ class VentureSivm(object):
         if instruction_type == 'forget':
             did = instruction['directive_id']
             del self.directive_dict[did]
+            del self.sugar_dict[did]
             if did in self.did_dict:
                 del self.label_dict[self.did_dict[did]]
                 del self.did_dict[did]
@@ -164,6 +172,7 @@ class VentureSivm(object):
                 if key in instruction:
                     tmp_instruction[key] = copy.deepcopy(instruction[key])
             self.directive_dict[did] = tmp_instruction
+            self.sugar_dict[did] = self.attempted
         # save the breakpoint if the instruction sets the breakpoint
         if instruction_type in ['debugger_set_breakpoint_address',
                 'debugger_set_breakpoint_source_code_location']:
@@ -173,8 +182,18 @@ class VentureSivm(object):
             del tmp_instruction['instruction']
             self.breakpoint_dict[bid] = tmp_instruction
         return response
-
-
+    
+    def _get_sugar(self, did):
+        if did in self.sugar_dict:
+            return self.sugar_dict[did]
+        return self.attempted
+    
+    def _resugar(self, index):
+        did = index[0]
+        exp, sugar = self._get_sugar(did)
+        index = index[1:]
+        return (exp, sugar.resugar_index(index))
+    
     ###############################
     # Continuous Inference Pauser
     ###############################

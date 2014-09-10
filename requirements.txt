@@ -27,6 +27,7 @@ pyzmq>=13
 
 # lite
 scipy>=0.13
+dill
 
 # Plotting (optional)
 patsy # Because ggplot needs this installed first ??

@@ -50,6 +50,12 @@ class VentureException(Exception):
           offset = self.data['text_index'][0]
           length = self.data['text_index'][1] - offset + 1
           s += '\n' + ''.join([' '] * offset + ['^'] * length)
+        if self.exception is 'evaluation':
+          for stack_frame in self.data['stack_trace']:
+            s += '\n' + stack_frame['expression_string']
+            offset = stack_frame['text_index'][0]
+            length = stack_frame['text_index'][1] - offset + 1
+            s += '\n' + ''.join([' '] * offset + ['^'] * length)
         else:
           s += '\n' + str(self.data)
         return s

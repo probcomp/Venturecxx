@@ -287,18 +287,23 @@ def value_to_string(v):
         if (not 'type' in v) or (not 'value' in v):
             raise VentureException('fatal',
                     'Value should take the form {"type":<type>, "value":<value>}.')
-        if v['type'] == "boolean":
+        if v['type'] is "boolean":
             if v['value'] == True:
                 return 'true'
             if v['value'] == False:
                 return 'true'
             raise VentureException('fatal',
                     'Invalid boolean value')
-        if v['type'] == "number":
+        if v['type'] is "number":
             if not isinstance(v['value'], (int, float)):
                 raise VentureException('fatal',
                         'Invalid number value')
             return "{0}".format(v['value'])
+        if v['type'] is "symbol":
+            if not isinstance(v['value'], basestring):
+                raise VentureException('fatal',
+                        'Invalid symbol value')
+            return v['value']
         try:
             return "{0}<{1}>".format(
                     v['type'],
