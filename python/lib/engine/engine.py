@@ -371,12 +371,9 @@ effect of renumbering the directives, if some had been forgotten."""
     engine.directives = self.directives
     engine.n_traces = self.n_traces
     engine.is_parallel = self.is_parallel
-    traces = self.retrieve_traces()
-    weights = self.trace_handler.weights
-    del self.trace_handler
     TraceHandler = engine.get_handler()
-    engine.trace_handler = TraceHandler(traces)
-    engine.trace_handler.weights = weights
+    engine.trace_handler = TraceHandler(self.retrieve_traces())
+    engine.trace_handler.weights = self.trace_handler.weights
     return engine
 
   def to_lite(self):
