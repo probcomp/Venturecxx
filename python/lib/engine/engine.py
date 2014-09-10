@@ -515,7 +515,6 @@ class HandlerBase(object):
   def _check_process_results(res):
     exceptions = [entry for entry in res if isinstance(entry, Exception)]
     if exceptions:
-      from dw_utils.debug import set_trace; set_trace()
       # if all exceptions are same, raise the first one
       if exception_all_eq(exceptions):
         raise exceptions[0]
