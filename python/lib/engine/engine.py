@@ -21,7 +21,8 @@ import multiprocessing as mp
 from multiprocessing import dummy as mpd
 from abc import ABCMeta
 
-from venture.exception import VentureException
+from venture.exception import (TraceProcessException, exception_type_eq,
+                               exception_all_eq)
 from venture.lite.exception import VentureError
 from venture.lite.utils import sampleLogCategorical
 from venture.engine.inference import Infer
@@ -488,18 +489,6 @@ class HandlerBase(object):
     # stop child processes
     self.delegate('stop')
 
-  @staticmethod
-  def _check_process_results(res):
-    n_exceptions = sum([isinstance(entry, Exception) for entry in res])
-    if n_exceptions:
-      from dw_utils.debug import set_trace; set_trace()
-      errstr = ('{0} workers returned exceptions. The exceptions are listed below:\n'.
-                format(n_exceptions))
-      for i, entry in enumerate(res):
-        if isinstance(entry, Exception):
-          errstr += '{0} : {1}\n'.format(i, entry.message)
-      raise VentureException(errstr)
-
   def incorporate(self):
     weight_increments = self.delegate('makeConsistent')
     for i, increment in enumerate(weight_increments):
@@ -521,6 +510,28 @@ class HandlerBase(object):
       return res[0]
     else:
       return res
+
+  @staticmethod
+  def _check_process_results(res):
+    exceptions = [entry for entry in res if isinstance(entry, Exception)]
+    if exceptions:
+      from dw_utils.debug import set_trace; set_trace()
+      # if all exceptions are same, raise the first one
+      if exception_all_eq(exceptions):
+        raise exceptions[0]
+      # if all exceptions are same type, raise exception of that type
+      elif exception_type_eq(exceptions):
+        raise self._format_exceptions(exceptions)
+      # otherwise, raise a generic error message
+      else:
+        raise TraceProcessException(exceptions)
+
+  @staticmethod
+  def _format_exceptions(exceptions):
+    exception_type = type(exceptions[0])
+    message = 'The following exception messages were returned by the workers:\n'
+    message += '\n'.join(sorted(set([exception.message for exception in exceptions])))
+    return exception_type(message)
 
   def delegate_one(self, ix, cmd, *args, **kwargs):
     '''Delegate command to a single worker, indexed by ix'''
