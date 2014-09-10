@@ -21,8 +21,8 @@ import multiprocessing as mp
 from multiprocessing import dummy as mpd
 from abc import ABCMeta
 
-from venture.exception import (TraceProcessException, exception_type_eq,
-                               exception_all_eq)
+from venture.exception import (TraceProcessException, VentureException,
+                               exception_type_eq, exception_all_eq)
 from venture.lite.exception import VentureError
 from venture.lite.utils import sampleLogCategorical
 from venture.engine.inference import Infer
