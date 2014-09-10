@@ -537,9 +537,7 @@ class HandlerBase(object):
     pipe = self.pipes[ix]
     pipe.send((cmd, args, kwargs))
     res = pipe.recv()
-    if isinstance(res, Exception):
-      errstr = 'The distinguished worker returned the following exception: {0}'.format(res.message)
-      raise VentureException(errstr)
+    if isinstance(res, Exception): raise res
     return res
 
   def delegate_distinguished(self, cmd, *args, **kwargs):
