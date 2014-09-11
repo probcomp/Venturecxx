@@ -84,7 +84,7 @@ def test_serialize_closure():
 def test_serialize_aaa():
     def check_beta_bernoulli(maker, action):
         if maker == "make_uc_beta_bernoulli" and action in ['serialize', 'convert_lite', 'convert_puma']:
-            raise SkipTest("Cannot convert BetaBernoulliSP to a stack dictionary. Issue: https://app.asana.com/0/13001976276959/13001976276981")
+            raise SkipTest("Cannot convert BetaBernoulliSP to a stack dictionary. Issue: https://app.asana.com/0/9277420529946/16149214487233")
         elif action == 'copy' and config['get_ripl'] == 'puma':
             raise SkipTest("Fails due to a mystery bug in Puma stop_and_copy. Issue: https://app.asana.com/0/11127829865276/13039650533872")
         v = get_ripl()
