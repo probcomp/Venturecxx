@@ -10,11 +10,10 @@ from venture.shortcuts import make_lite_church_prime_ripl
 from venture.lite.builtin import deterministic_typed
 from time import time
 
-def get_data(ntrain = None, ntest = None):
+def get_data(ntrain = None, ntest = None, data_path = 'pmf-example-data'):
   '''
   If ntrain and ntest given, truncate the data sets to contain ntrain, ntest rows.
   '''
-  data_path = path.expanduser('~/Google Drive/probcomp/pmf/ml-100k/')
   train = pd.read_table(path.join(data_path, 'ua.base'), header = 0,
                         names = ['user_id', 'item_id', 'rating', 'timestamp'])
   del train['timestamp']
