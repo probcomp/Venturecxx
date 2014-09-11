@@ -1,6 +1,7 @@
 from value import VentureValue, registerVentureType, VentureType
 import copy
 from exception import VentureError
+import venture.value.dicts as v
 
 class SPFamilies(object):
   def __init__(self, families=None):
@@ -65,6 +66,9 @@ class VentureSPRecord(VentureValue):
 
   def show(self):
     return self.sp.show(self.spAux)
+
+  def asStackDict(self, _trace=None):
+    return v.val("sp", self.show())
 
 registerVentureType(VentureSPRecord)
 
