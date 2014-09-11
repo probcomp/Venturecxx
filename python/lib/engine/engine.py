@@ -387,7 +387,7 @@ effect of renumbering the directives, if some had been forgotten."""
   def profile_data(self):
     from pandas import DataFrame
     rows = []
-    for (pid, trace) in enumerate([t for t in self.trace_handler.retrieve_traces()
+    for (pid, trace) in enumerate([t for t in self.retrieve_traces()
                                    if hasattr(t, "stats")]):
       for (name, attempts) in trace.stats.iteritems():
         for (t, accepted) in attempts:
