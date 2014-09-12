@@ -17,6 +17,8 @@
 import multiprocessing as mp
 from multiprocessing import dummy as mpd
 from abc import ABCMeta, abstractmethod
+from sys import exc_info
+from traceback import format_exc
 
 from venture.exception import (TraceProcessException, VentureException,
                                exception_type_eq, exception_all_eq)
@@ -64,11 +66,16 @@ def safely(f):
   def wrapped(*args, **kwargs):
     try:
       res = f(*args, **kwargs)
-    except Exception as exception:
-      return exception
+    except Exception:
+      return exc_info()
     else:
       return res
   return wrapped
+
+def is_exc_info(entry):
+  return (isinstance(entry, tuple) and
+          (len(entry) == 3) and
+          issubclass(entry[0], Exception))
 
 # The trace handlers; allow communication between the engine and the traces
 
@@ -115,20 +122,26 @@ class HandlerBase(object):
       return res
 
   def _check_process_results(self, res):
-    exceptions = [entry for entry in res if isinstance(entry, Exception)]
-    if exceptions:
+    info = [entry for entry in res if is_exc_info(entry)]
+    if info:
+      _, values, tracebacks = zip(*info)
       # if all exceptions are same, raise the first one
-      if exception_all_eq(exceptions):
-        raise exceptions[0]
+      if exception_all_eq(values):
+       raise self._format_same_exception(values[0], tracebacks[0])
       # if all exceptions are same type, raise exception of that type
-      elif exception_type_eq(exceptions):
-        raise self._format_exceptions(exceptions)
+      elif exception_type_eq(values):
+        raise self._format_different_exceptions(values)
       # otherwise, raise a generic error message
       else:
-        raise TraceProcessException(exceptions)
+        raise TraceProcessException(values)
 
   @staticmethod
-  def _format_exceptions(exceptions):
+  def _format_same_exception(exception, traceback):
+    exception.message += '\n' * 3 + 'Original stack trace:\n' + format_exc(traceback)
+    return exception
+
+  @staticmethod
+  def _format_different_exceptions(exceptions):
     exception_type = type(exceptions[0])
     message = 'The following exception messages were returned by the workers:\n'
     message += '\n'.join(sorted(set([exception.message for exception in exceptions])))
