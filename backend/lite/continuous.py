@@ -397,3 +397,28 @@ class InvGammaOutputPSP(RandomPSP):
     return "(%s alpha beta) returns a sample from an inverse gamma distribution with shape parameter alpha and scale parameter beta" % name
 
   # TODO InvGamma presumably has a variational kernel too?
+
+class LaplaceOutputPSP(RandomPSP):
+  # a is the location, b is the scale; parametrization is same as Wikipedia
+  def simulateNumeric(self,a,b): return scipy.stats.laplace.rvs(a,b)
+  def logDensityNumeric(self,x,a,b): return scipy.stats.laplace.logpdf(x,a,b)
+
+  def simulate(self, args): return self.simulateNumeric(*args.operandValues)
+  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
+
+  def gradientOfLogDensity(self,x,args):
+    a = args.operandValues[0]
+    b = args.operandValues[1]
+    # if we're at the cusp point, play it safe and go undefined
+    if x == a:
+      gradX = np.nan
+      gradA = np.nan
+    else:
+      xgta = float(np.sign(x - a))
+      gradX = -xgta / b
+      gradA = xgta / b
+    gradB = (-1. / b) + abs(x - float(a)) / (b ** 2)
+    return (gradX,[gradA,gradB])
+
+  def description(self,name):
+    return "(%s a b) returns a sample from a laplace (double exponential) distribution with shape parameter a and scale parameter b" % name
