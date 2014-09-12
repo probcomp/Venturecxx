@@ -110,6 +110,7 @@ class Infer(object):
 
   def primitive_infer(self, exp): self.engine.primitive_infer(exp)
   def resample(self, ct): self.engine.resample(ct)
+  def resample_emulating(self, ct): self.engine.resample_emulating(ct)
   def resample_parallel(self, ct): self.engine.resample_parallel(ct)
   def incorporate(self): pass # Since we incorporate at the beginning anyway
   def peek(self, *exprs):
