@@ -215,10 +215,10 @@ class ProcessBase(object):
       res = getattr(self, cmd)(*args, **kwargs)
       self.pipe.send(res)
 
-  @safely
   def __getattr__(self, attrname):
-    # if attrname isn't attribute of ProcessBase, look for the attribute on the trace
-    return getattr(self.trace, attrname)
+    # if attrname isn't attribute of ProcessBase, look for it as a method on the trace
+    # safely doesn't work as a decorator here; do it this way.
+    return safely(getattr(self.trace, attrname))
 
   @safely
   def send_dump(self, directives):
