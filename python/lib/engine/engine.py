@@ -565,7 +565,7 @@ class ParallelHandlerArchitecture(HandlerBase):
     return self.delegate('send_trace', engine.directives)
 
   def retrieve_trace(self, ix, engine):
-    dumped = self.retrieve_dump(engine, ix)
+    dumped = self.retrieve_dump(ix, engine)
     return engine.restore_trace(dumped)
 
   def retrieve_traces(self, engine):
