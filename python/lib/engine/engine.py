@@ -19,7 +19,7 @@ import time
 import sys
 import multiprocessing as mp
 from multiprocessing import dummy as mpd
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 
 from venture.exception import (TraceProcessException, VentureException,
                                exception_type_eq, exception_all_eq)
@@ -39,14 +39,16 @@ class Engine(object):
     self.inferrer = None
     self.trace_handler = SequentialTraceHandler([Trace()])
     self.n_traces = 1
-    self.is_parallel = False
+    self.mode = 'sequential'
     import venture.lite.inference_sps as inf
     self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
 
   def get_handler(self):
-    if self.is_parallel:
+    if self.mode == 'parallel':
       return ParallelTraceHandler
+    elif self.mode == 'emulating':
+      return EmulatingTraceHandler
     else:
       return SequentialTraceHandler
 
@@ -193,16 +195,21 @@ effect of renumbering the directives, if some had been forgotten."""
       assert False, "Unkown directive type found %r" % directive
 
   def resample(self, P):
-    self.is_parallel = False
-    newTraces = self._resample_traces(P)
-    del self.trace_handler
-    self.trace_handler = SequentialTraceHandler(newTraces)
+    self.mode = 'sequential'
+    self.trace_handler = SequentialTraceHandler(self._resample_setup(P))
+
+  def resample_emulating(self, P):
+    self.mode = 'emulating'
+    self.trace_handler = EmulatingTraceHandler(self._resample_setup(P))
 
   def resample_parallel(self, P):
-    self.is_parallel = True
+    self.mode = 'parallel'
+    self.trace_handler = ParallelTraceHandler(self._resample_setup(P))
+
+  def _resample_setup(self, P):
     newTraces = self._resample_traces(P)
     del self.trace_handler
-    self.trace_handler = ParallelTraceHandler(newTraces)
+    return newTraces
 
   def _resample_traces(self, P):
     P = int(P)
@@ -315,18 +322,16 @@ effect of renumbering the directives, if some had been forgotten."""
       self.inferrer = None
 
   def retrieve_dump(self, ix):
-    return self.trace_handler.delegate_one(ix, 'send_trace', self.directives)
+    return self.trace_handler.retrieve_dump(ix, self)
 
   def retrieve_dumps(self):
-    return self.trace_handler.delegate('send_trace', self.directives)
+    return self.trace_handler.retrieve_dumps(self)
 
   def retrieve_trace(self, ix):
-    dumped = self.retrieve_dump(ix)
-    return self.restore_trace(dumped)
+    return self.trace_handler.retrieve_trace(ix, self)
 
   def retrieve_traces(self):
-    dumped_all = self.retrieve_dumps()
-    return [self.restore_trace(dumped) for dumped in dumped_all]
+    return self.trace_handler.retrieve_traces(self)
 
   # class methods that call the corresponding functions, with arguments filled in
   def dump_trace(self, trace, skipStackDictConversion=False):
@@ -345,7 +350,7 @@ effect of renumbering the directives, if some had been forgotten."""
     data['weights'] = self.trace_handler.weights
     data['directives'] = self.directives
     data['directiveCounter'] = self.directiveCounter
-    data['is_parallel'] = self.is_parallel
+    data['mode'] = self.mode
     data['extra'] = extra
     version = '0.2'
     with open(fname, 'w') as fp:
@@ -357,7 +362,7 @@ effect of renumbering the directives, if some had been forgotten."""
     assert version == '0.2', "Incompatible version or unrecognized object"
     self.directiveCounter = data['directiveCounter']
     self.directives = data['directives']
-    self.is_parallel = data['is_parallel']
+    self.mode = data['mode']
     traces = [self.restore_trace(trace) for trace in data['traces']]
     del self.trace_handler
     TraceHandler = self.get_handler()
@@ -370,7 +375,7 @@ effect of renumbering the directives, if some had been forgotten."""
     engine.directiveCounter = self.directiveCounter
     engine.directives = self.directives
     engine.n_traces = self.n_traces
-    engine.is_parallel = self.is_parallel
+    engine.mode = self.mode
     TraceHandler = engine.get_handler()
     engine.trace_handler = TraceHandler(self.retrieve_traces())
     engine.trace_handler.weights = self.trace_handler.weights
@@ -509,8 +514,7 @@ class HandlerBase(object):
     else:
       return res
 
-  @staticmethod
-  def _check_process_results(res):
+  def _check_process_results(self, res):
     exceptions = [entry for entry in res if isinstance(entry, Exception)]
     if exceptions:
       # if all exceptions are same, raise the first one
@@ -541,12 +545,59 @@ class HandlerBase(object):
   def delegate_distinguished(self, cmd, *args, **kwargs):
     return self.delegate_one(0, cmd, *args, **kwargs)
 
-class ParallelTraceHandler(HandlerBase):
+  @abstractmethod
+  def retrieve_dump(self, ix, engine): pass
+
+  @abstractmethod
+  def retrieve_dumps(self, engine): pass
+
+  @abstractmethod
+  def retrieve_trace(self, ix, engine): pass
+
+  @abstractmethod
+  def retrieve_traces(self, engine): pass
+
+class ParallelHandlerArchitecture(HandlerBase):
+  def retrieve_dump(self, ix, engine):
+    return self.delegate_one(ix, 'send_trace', engine.directives)
+
+  def retrieve_dumps(self, engine):
+    return self.delegate('send_trace', engine.directives)
+
+  def retrieve_trace(self, ix, engine):
+    dumped = self.retrieve_dump(engine, ix)
+    return engine.restore_trace(dumped)
+
+  def retrieve_traces(self, engine):
+    dumped_all = self.retrieve_dumps(engine)
+    return [engine.restore_trace(dumped) for dumped in dumped_all]
+
+class SequentialHandlerArchitecture(HandlerBase):
+  def retrieve_dump(self, ix, engine):
+    trace = self.delegate_one(ix, 'send_trace')
+    return engine.dump_trace(trace)
+
+  def retrieve_dumps(self, engine):
+    traces = self.delegate('send_trace')
+    return [engine.dump_trace(trace) for trace in traces]
+
+  def retrieve_trace(self, ix, engine):
+    return self.delegate_one(ix, 'send_trace')
+
+  def retrieve_traces(self, engine):
+    return self.delegate('send_trace')
+
+class ParallelTraceHandler(ParallelHandlerArchitecture):
   @staticmethod
   def _setup():
     return mp.Pipe, ParallelTraceProcess
 
-class SequentialTraceHandler(HandlerBase):
+class EmulatingTraceHandler(ParallelHandlerArchitecture):
+  @staticmethod
+  def _setup():
+    return mpd.Pipe, EmulatingTraceProcess
+
+class SequentialTraceHandler(SequentialHandlerArchitecture):
   @staticmethod
   def _setup():
     return mpd.Pipe, SequentialTraceProcess
@@ -573,14 +624,12 @@ class ProcessBase(object):
       self.pipe.send(res)
 
   @safely
-  def send_trace(self, directives):
-    dumped = dump_trace(self.trace, directives)
-    return dumped
-
-  @safely
   def __getattr__(self, attrname):
     # if attrname isn't attribute of ProcessBase, look for the attribute on the trace
     return getattr(self.trace, attrname)
+
+  @abstractmethod
+  def send_trace(self): pass
 
   @safely
   def assume(self, baseAddr, id, exp):
@@ -626,17 +675,38 @@ class ProcessBase(object):
       # natively, so translate.
       self.trace.infer(expToDict(exp))
 
-class ParallelTraceProcess(ProcessBase, mp.Process):
-  '''Multiprocessing-based paralleism by inheritance'''
+class ParallelProcessArchitecture(ProcessBase):
+  @safely
+  def send_trace(self, directives):
+    dumped = dump_trace(self.trace, directives)
+    return dumped
+
+class SequentialProcessArchitecture(ProcessBase):
+  @safely
+  def send_trace(self):
+    return self.trace
+
+class MultiprocessBase(mp.Process):
   @staticmethod
   def _setup():
     return mp.Process
 
-class SequentialTraceProcess(ProcessBase, mpd.Process):
-  '''Sequential execution by inheritance'''
+class DummyBase(mpd.Process):
   @staticmethod
   def _setup():
     return mpd.Process
+
+class ParallelTraceProcess(ParallelProcessArchitecture, MultiprocessBase):
+  '''Multiprocessing-based paralleism by inheritance'''
+  pass
+
+class EmulatingTraceProcess(ParallelProcessArchitecture, DummyBase):
+  '''Emulates multiprocessing by serializing traces before sending'''
+  pass
+
+class SequentialTraceProcess(SequentialProcessArchitecture, DummyBase):
+  '''Does not serialize traces before sending'''
+  pass
 
 # inference prelude
 
