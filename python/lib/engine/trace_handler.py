@@ -173,6 +173,8 @@ class SequentialHandlerArchitecture(HandlerBase):
   def retrieve_traces(self, engine):
     return self.delegate('send_trace')
 
+# These are the classes we actually use
+
 class ParallelTraceHandler(ParallelHandlerArchitecture):
   @staticmethod
   def _setup():
@@ -286,12 +288,13 @@ class DummyBase(mpd.Process):
   def _setup():
     return mpd.Process
 
+# The actual classes we used are defined via inheritance
+# pylint: disable=too-many-ancestors
+# this is the cleanest way to do it
 class ParallelTraceProcess(ParallelProcessArchitecture, MultiprocessBase):
   '''Multiprocessing-based paralleism by inheritance'''
   pass
 
-# pylint: disable=too-many-ancestors
-# this is the cleanest way to do it
 class EmulatingTraceProcess(ParallelProcessArchitecture, DummyBase):
   '''Emulates multiprocessing by serializing traces before sending'''
   pass
