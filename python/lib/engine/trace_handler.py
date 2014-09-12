@@ -20,8 +20,7 @@ from abc import ABCMeta, abstractmethod
 from sys import exc_info
 from traceback import format_exc
 
-from venture.exception import (TraceProcessException, VentureException,
-                               exception_type_eq, exception_all_eq)
+from venture.exception import VentureException
 from venture.engine.utils import expToDict
 
 # Methods for trace serialization
@@ -82,7 +81,6 @@ def threw_error(entry):
           isinstance(entry[0], Exception))
 
 # The trace handlers; allow communication between the engine and the traces
-
 class HandlerBase(object):
   '''Base class to delegate handling of parallel traces'''
   __metaclass__ = ABCMeta
@@ -119,41 +117,13 @@ class HandlerBase(object):
     res = []
     for pipe in self.pipes:
       res.append(pipe.recv())
-    self._check_process_results(res)
+    if any([threw_error(entry) for entry in res]):
+      exception_handler = TraceProcessExceptionHandler(res)
+      exception_handler.reraise()
     if cmd == 'assume':
       return res[0]
     else:
       return res
-
-  def _check_process_results(self, res):
-    info = [entry for entry in res if threw_error(entry)]
-    if info:
-      values, traces = zip(*info)
-      # if all exceptions are same, raise the first one
-      if exception_all_eq(values):
-       raise self._format_same_exception(values, traces)
-      # if all exceptions are same type, raise exception of that type
-      elif exception_type_eq(values):
-        raise self._format_different_exceptions(values)
-      # otherwise, raise a generic error message
-      else:
-        raise TraceProcessException(values)
-
-  @staticmethod
-  def _format_same_exception(exceptions, traces):
-    msg = '''An identical exception occured in {0} of the workers.
-The original stack trace is printed below,
-followed by the exception raised by the trace handler:\n\n'''.format(len(exceptions))
-    msg += traces[0] + '\n' + '*' * 50 + '\n'
-    print msg
-    return exceptions[0]
-
-  @staticmethod
-  def _format_different_exceptions(exceptions):
-    exception_type = type(exceptions[0])
-    message = 'The following exception messages were returned by the workers:\n'
-    message += '\n'.join(sorted(set([exception.message for exception in exceptions])))
-    return exception_type(message)
 
   def delegate_one(self, ix, cmd, *args, **kwargs):
     '''Delegate command to a single worker, indexed by ix'''
@@ -323,3 +293,26 @@ class EmulatingTraceProcess(ParallelProcessArchitecture, DummyBase):
 class SequentialTraceProcess(SequentialProcessArchitecture, DummyBase):
   '''Does not serialize traces before sending'''
   pass
+
+# Class to handle exceptions in the workers
+class TraceProcessExceptionHandler(object):
+  '''
+  Stores information on exceptions from the workers. By default, just finds
+  the first exception, prints its original stack trace, and then re-raises.
+  However, more information is kept around for inspection by the user during
+  debugging.
+  '''
+  def __init__(self, res):
+    self.info = [entry for entry in res if threw_error(entry)]
+    self.values, self.traces = zip(*self.info)
+    self.n_processes = len(res)
+    self.n_errors = len(self.info)
+
+  def reraise(self):
+    msg = 'Errors occured in {0} of the {1} workers. The first will be re-raised.'
+    msg = msg.format(self.n_errors, self.n_processes)
+    print msg
+    msg = ('\n' + 'Original stack trace:\n' + '*' * 50 +
+           '\n' + self.traces[0] + '*' * 50 + '\n'* 2)
+    print msg
+    raise self.values[0]

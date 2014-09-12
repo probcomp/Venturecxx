@@ -62,33 +62,3 @@ class VentureException(Exception):
 
     __unicode__ = __str__
     __repr__ = __str__
-
-class TraceProcessException(Exception):
-    def __init__(self, exceptions):
-        self.exceptions = exceptions
-
-    def __str__(self):
-        '''Print all the messages from the children, and their classes'''
-        exceptions = sorted(set([(type(exception), exception.message) for exception in self.exceptions]))
-        message = 'The following exception types and messages were returned by the workers:\n'
-        for exception in exceptions:
-            message += '{0}: {1}\n'.format(exception[0], exception[1])
-        return message
-
-    __unicode__ = __str__
-    __repr__ = __str__
-
-
-def exception_eq(ex1, ex2):
-    '''Returns True if two exceptions are of same type and have same message'''
-    return (type(ex1) == type(ex2)) and (ex1.args == ex2.args)
-
-def exception_all_eq(ex_list):
-    '''Returns True if all exceptions in a list are equal'''
-    same = [exception_eq(ex_list[0], ex) for ex in ex_list[1:]]
-    return all(same)
-
-def exception_type_eq(ex_list):
-    '''Returns True if all exceptions in list are of same type, else False'''
-    same = [type(ex_list[0]) is type(ex) for ex in ex_list[1:]]
-    return all(same)
