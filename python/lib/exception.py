@@ -18,47 +18,51 @@
 
 
 class VentureException(Exception):
-    def __init__(self, exception, message=None, **kwargs):
-        if message is None: # Only one argument version
-            message = exception
-            exception = ""
-        self.exception = exception
-        self.message = message
-        self.data = kwargs
+  def __init__(self, exception, message=None, **kwargs):
+    if message is None: # Only one argument version
+      message = exception
+      exception = ""
+    self.exception = exception
+    self.message = message
+    self.data = kwargs
+    self.worker_trace = None
 
-    def to_json_object(self):
-        d = {
-                "exception" : self.exception,
-                "message" : self.message,
-                }
-        d.update(self.data)
-        return d
+  def to_json_object(self):
+    d = {
+         "exception" : self.exception,
+         "message" : self.message,
+         }
+    d.update(self.data)
+    return d
 
-    @classmethod
-    def from_json_object(cls, json_object):
-        data = json_object.copy()
-        exception = data.pop('exception')
-        message = data.pop('message')
-        return cls(exception,message,**data)
+  @classmethod
+  def from_json_object(cls, json_object):
+    data = json_object.copy()
+    exception = data.pop('exception')
+    message = data.pop('message')
+    return cls(exception,message,**data)
 
-    def __str__(self):
-        s = "*** " + self.exception + ": " + self.message
-        # TODO exceptions need to be annotated to get an 'instruction_string'
-        # perhaps this should not be done in the ripl but in the parser itself?
-        if self.exception in ['parse', 'text_parse', 'invalid_argument'] and 'instruction_string' in self.data:
-          s += '\n' + self.data['instruction_string']
-          offset = self.data['text_index'][0]
-          length = self.data['text_index'][1] - offset + 1
-          s += '\n' + ''.join([' '] * offset + ['^'] * length)
-        if self.exception is 'evaluation':
-          for stack_frame in self.data['stack_trace']:
-            s += '\n' + stack_frame['expression_string']
-            offset = stack_frame['text_index'][0]
-            length = stack_frame['text_index'][1] - offset + 1
-            s += '\n' + ''.join([' '] * offset + ['^'] * length)
-        else:
-          s += '\n' + str(self.data)
-        return s
+  def __str__(self):
+    s = "*** " + self.exception + ": " + self.message
+    # TODO exceptions need to be annotated to get an 'instruction_string'
+    # perhaps this should not be done in the ripl but in the parser itself?
+    if self.exception in ['parse', 'text_parse', 'invalid_argument'] and 'instruction_string' in self.data:
+      s += '\n' + self.data['instruction_string']
+      offset = self.data['text_index'][0]
+      length = self.data['text_index'][1] - offset + 1
+      s += '\n' + ''.join([' '] * offset + ['^'] * length)
+    if self.exception is 'evaluation':
+      for stack_frame in self.data['stack_trace']:
+        s += '\n' + stack_frame['expression_string']
+        offset = stack_frame['text_index'][0]
+        length = stack_frame['text_index'][1] - offset + 1
+        s += '\n' + ''.join([' '] * offset + ['^'] * length)
+    else:
+      s += '\n' + str(self.data)
+    if self.worker_trace is not None:
+      s += ('\n' + '*' * 50 + '\nStack trace from worker:\n' +
+            '*' * 50 + '\n' + self.worker_trace + '*' * 50)
+    return s
 
-    __unicode__ = __str__
-    __repr__ = __str__
+  __unicode__ = __str__
+  __repr__ = __str__
