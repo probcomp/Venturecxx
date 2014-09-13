@@ -66,3 +66,4 @@ class VentureException(Exception):
 
   __unicode__ = __str__
   __repr__ = __str__
+
