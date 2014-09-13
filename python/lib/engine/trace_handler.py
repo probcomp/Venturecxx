@@ -20,7 +20,7 @@ from abc import ABCMeta, abstractmethod
 from sys import exc_info
 from traceback import format_exc
 
-from venture.exception import VentureException
+from venture.exception import VentureException, format_worker_trace
 from venture.engine.utils import expToDict
 
 # Methods for trace serialization
@@ -68,17 +68,20 @@ def safely(f):
     except Exception:
       # If I return the traceback object and try to format it
       # higher up, it's just None. So, format it here.
-      _, value, traceback = exc_info()
+      exc_type, value, traceback = exc_info()
       trace = format_exc(traceback)
-      return value, trace
+      # If it's a VentureException, need to convert to JSON to send over pipe
+      if isinstance(value, VentureException):
+        value = value.to_json_object()
+      return exc_type, value, trace
     else:
       return res
   return wrapped
 
 def threw_error(entry):
   return (isinstance(entry, tuple) and
-          (len(entry) == 2) and
-          isinstance(entry[0], Exception))
+          (len(entry) == 3) and
+          issubclass(entry[0], Exception))
 
 # The trace handlers; allow communication between the engine and the traces
 class HandlerBase(object):
@@ -119,7 +122,7 @@ class HandlerBase(object):
       res.append(pipe.recv())
     if any([threw_error(entry) for entry in res]):
       exception_handler = TraceProcessExceptionHandler(res)
-      exception_handler.reraise()
+      raise exception_handler.gen_exception()
     if cmd == 'assume':
       return res[0]
     else:
@@ -130,7 +133,9 @@ class HandlerBase(object):
     pipe = self.pipes[ix]
     pipe.send((cmd, args, kwargs))
     res = pipe.recv()
-    if isinstance(res, Exception): raise res
+    if threw_error(res):
+      exception_handler = TraceProcessExceptionHandler([res])
+      raise exception_handler.gen_exception()
     return res
 
   def delegate_distinguished(self, cmd, *args, **kwargs):
@@ -303,16 +308,26 @@ class TraceProcessExceptionHandler(object):
   debugging.
   '''
   def __init__(self, res):
-    self.info = [entry for entry in res if threw_error(entry)]
-    self.values, self.traces = zip(*self.info)
+    self.info = [self._format_results(entry) for entry in res if threw_error(entry)]
+    self.exc_types, self.values, self.traces = zip(*self.info)
     self.n_processes = len(res)
     self.n_errors = len(self.info)
 
-  def reraise(self):
-    msg = 'Errors occured in {0} of the {1} workers. The first will be re-raised.'
-    msg = msg.format(self.n_errors, self.n_processes)
-    print msg
-    msg = ('\n' + 'Original stack trace:\n' + '*' * 50 +
-           '\n' + self.traces[0] + '*' * 50 + '\n'* 2)
-    print msg
-    raise self.values[0]
+  def gen_exception(self):
+    # hack. https://app.asana.com/0/11127829865276/16165669227326
+    Exc = self.exc_types[0]
+    if issubclass(Exc, VentureException):
+      exc = self.values[0]
+      exc.worker_trace = self.traces[0]
+      return exc
+    else:
+      msg = (self.values[0].message + format_worker_trace(self.traces[0]))
+      return Exc(msg)
+
+  @staticmethod
+  def _format_results(entry):
+    if issubclass(entry[0], VentureException):
+      value = VentureException.from_json_object(entry[1])
+    else:
+      value = entry[1]
+    return (entry[0], value, entry[2])

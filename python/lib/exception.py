@@ -60,10 +60,13 @@ class VentureException(Exception):
     else:
       s += '\n' + str(self.data)
     if self.worker_trace is not None:
-      s += ('\n' + '*' * 50 + '\nStack trace from worker:\n' +
-            '*' * 50 + '\n' + self.worker_trace + '*' * 50)
+      s += format_worker_trace(self.worker_trace)
     return s
 
   __unicode__ = __str__
   __repr__ = __str__
 
+def format_worker_trace(trace):
+  # ugly hack. see this issue: https://app.asana.com/0/11127829865276/16165669227326
+  return ('\n' + '*' * 50 + '\nStack trace from worker:\n' +
+          '*' * 50 + '\n' + trace)
