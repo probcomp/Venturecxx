@@ -1,8 +1,9 @@
 from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import get_ripl, collectSamples, broken_in
 from scipy.stats import laplace
 
 @statisticalTest
+@broken_in('puma', "Laplace distribution not implemented in Puma")
 def testLaplace1():
   "Test that laplace distribution does what it should"
   ripl = get_ripl()
