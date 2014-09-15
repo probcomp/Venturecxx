@@ -19,6 +19,7 @@ from multiprocessing import dummy as mpd
 from abc import ABCMeta, abstractmethod
 from sys import exc_info
 from traceback import format_exc
+import random
 
 from venture.exception import VentureException, format_worker_trace
 from venture.engine.utils import expToDict
@@ -95,7 +96,7 @@ class HandlerBase(object):
     Pipe, TraceProcess = self._setup()
     for trace in traces:
       parent, child = Pipe()
-      process = TraceProcess(trace, child)
+      process = TraceProcess(trace, child, self.backend)
       process.start()
       self.pipes.append(parent)
       self.processes.append(process)
@@ -109,6 +110,11 @@ class HandlerBase(object):
     weight_increments = self.delegate('makeConsistent')
     for i, increment in enumerate(weight_increments):
       self.weights[i] += increment
+
+  def reset_seeds(self):
+    # if we're in puma or we're truly parallel, set the seed; else don't.
+    for i in range(len(self.processes)):
+      self.delegate_distinguished(i, 'set_seed', random.randint(1,2**31-1))
 
   # NOTE: I could metaprogram all the methods that delegate passes on,
   # but it feels cleaner just call the delegator than to add another level
@@ -197,9 +203,10 @@ class ProcessBase(object):
   SequentialTraceProcess. This uniformizes the inferface.
   '''
   __metaclass__ = ABCMeta
-  def __init__(self, trace, pipe):
+  def __init__(self, trace, pipe, backend):
     self.trace = trace
     self.pipe = pipe
+    self.backend = backend
     Process = self._setup()
     Process.__init__(self)
     self.daemon = True
