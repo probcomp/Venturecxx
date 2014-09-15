@@ -105,8 +105,23 @@ def testRandom():
 
 def checkRandom(_name, sp):
   # I take the name because I want it to appear in the nose arg list
+
+  # Generate five approprite input/output pairs for the sp
   args_type = fully_uncurried_sp_type(sp.venture_type())
-  checkTypedProperty(propRandom, [args_type for _ in range(5)] , sp)
+  def f(args_lists): return evaluate_fully_uncurried(sp, args_lists)
+  answers = [findAppropriateArguments(f, args_type, 30) for _ in range(5)]
+
+  # Check that it returns different results on repeat applications to
+  # at least one of the inputs.
+  for answer in answers:
+    if answer is None: continue # Appropriate input was not found; skip
+    [args, ans, _] = answer
+    for _ in range(10):
+      ans2 = evaluate_fully_uncurried(sp, args)
+      if not ans2 == ans:
+        return True # Output differed on some input: pass
+
+  assert False, "SP deterministically gave i/o pairs %s" % answers
 
 def evaluate_fully_uncurried(sp, args_lists):
   if isinstance(sp, VentureSPRecord):
@@ -119,29 +134,6 @@ def evaluate_fully_uncurried(sp, args_lists):
     return answer
   else:
     return evaluate_fully_uncurried(answer, args_lists[1:])
-
-def propRandom(args_listss, sp):
-  """Check that the given SP is random on at least one set of arguments."""
-  answers = []
-  for args_lists in args_listss:
-    try:
-      answer = evaluate_fully_uncurried(sp, args_lists)
-      answers.append(answer)
-      for _ in range(10):
-        ans2 = evaluate_fully_uncurried(sp, args_lists)
-        if not ans2 == answer:
-          return True
-    except ArgumentsNotAppropriate:
-      # This complication serves the purpose of not decreasing the
-      # acceptance rate of the search of appropriate arguments to the
-      # SP, while allowing the SP to redeem its claims of randomness
-      # on additional arguments if they are available.
-      if answers == []:
-        raise
-      else:
-        answers.append("Inappropriate arguments")
-        continue
-  assert False, "SP deterministically returned %s (parallel to arguments)" % answers
 
 @on_inf_prim("none")
 def testExpressionFor():
