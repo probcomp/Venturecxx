@@ -372,7 +372,7 @@ effect of renumbering the directives, if some had been forgotten."""
     engine.mode = self.mode
     traces = [engine.restore_trace(dump) for dump in self.retrieve_dumps()]
     TraceHandler = engine.get_handler()
-    engine.trace_handler = TraceHandler(traces, engine.backend)
+    engine.trace_handler = TraceHandler(traces, engine.name)
     engine.trace_handler.weights = self.trace_handler.weights
     return engine
 
