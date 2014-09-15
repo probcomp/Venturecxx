@@ -193,6 +193,7 @@ effect of renumbering the directives, if some had been forgotten."""
     self.mode = 'sequential'
     self.trace_handler = SequentialTraceHandler(self._resample_setup(P),
                                                 self.name)
+    self.trace_handler.reset_seeds()
 
   def resample_emulating(self, P):
     self.mode = 'emulating'
@@ -217,8 +218,6 @@ effect of renumbering the directives, if some had been forgotten."""
       parent = sampleLogCategorical(self.trace_handler.weights) # will need to include or rewrite
       newTrace = self.copy_trace(self.retrieve_trace(parent))
       newTraces[p] = newTrace
-      if self.name != "lite":
-        newTraces[p].set_seed(random.randint(1,2**31-1))
     return newTraces
 
   def infer(self, program):

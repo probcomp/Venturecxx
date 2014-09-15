@@ -225,6 +225,11 @@ class ProcessBase(object):
     return safely(getattr(self.trace, attrname))
 
   @safely
+  def set_seed(self, seed):
+    if self.backend == 'puma':
+      self.trace.set_seed(seed)
+
+  @safely
   def send_dump(self, directives):
     dumped = dump_trace(self.trace, directives)
     return dumped
@@ -297,7 +302,12 @@ class DummyBase(mpd.Process):
 # this is the cleanest way to do it
 class ParallelTraceProcess(ParallelProcessArchitecture, MultiprocessBase):
   '''Multiprocessing-based paralleism by inheritance'''
-  pass
+  @safely
+  def set_seed(self, seed):
+    if self.backend == 'lite':
+      random.seed(seed)
+    else:
+      ProcessBase.set_seed(self, seed)
 
 class EmulatingTraceProcess(ParallelProcessArchitecture, DummyBase):
   '''Emulates multiprocessing by serializing traces before sending'''
