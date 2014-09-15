@@ -229,7 +229,7 @@ class ProcessBase(object):
     if self.backend == 'puma':
       self.trace.set_seed(seed)
     else:
-      pass
+      return
 
   @safely
   def send_dump(self, directives):
