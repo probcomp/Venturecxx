@@ -32,7 +32,7 @@ class Engine(object):
     self.directiveCounter = 0
     self.directives = {}
     self.inferrer = None
-    self.trace_handler = SequentialTraceHandler([Trace()])
+    self.trace_handler = SequentialTraceHandler([Trace()], backend = self.name)
     self.n_traces = 1
     self.mode = 'sequential'
     import venture.lite.inference_sps as inf
@@ -144,7 +144,7 @@ class Engine(object):
     self.directiveCounter = 0
     self.directives = {}
     TraceHandler = self.get_handler()
-    self.trace_handler = TraceHandler([self.Trace()])
+    self.trace_handler = TraceHandler([self.Trace()], backend = self.name)
     self.ensure_rng_seeded_decently()
 
   def ensure_rng_seeded_decently(self):
@@ -191,15 +191,18 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def resample(self, P):
     self.mode = 'sequential'
-    self.trace_handler = SequentialTraceHandler(self._resample_setup(P))
+    self.trace_handler = SequentialTraceHandler(self._resample_setup(P),
+                                                self.name)
 
   def resample_emulating(self, P):
     self.mode = 'emulating'
-    self.trace_handler = EmulatingTraceHandler(self._resample_setup(P))
+    self.trace_handler = EmulatingTraceHandler(self._resample_setup(P),
+                                               self.name)
 
   def resample_parallel(self, P):
     self.mode = 'parallel'
-    self.trace_handler = ParallelTraceHandler(self._resample_setup(P))
+    self.trace_handler = ParallelTraceHandler(self._resample_setup(P),
+                                              self.name)
 
   def _resample_setup(self, P):
     newTraces = self._resample_traces(P)
@@ -357,7 +360,7 @@ effect of renumbering the directives, if some had been forgotten."""
     traces = [self.restore_trace(trace) for trace in data['traces']]
     del self.trace_handler
     TraceHandler = self.get_handler()
-    self.trace_handler = TraceHandler(traces)
+    self.trace_handler = TraceHandler(traces, self.name)
     self.trace_handler.weights = data['weights']
     return data['extra']
 
@@ -369,7 +372,7 @@ effect of renumbering the directives, if some had been forgotten."""
     engine.mode = self.mode
     traces = [engine.restore_trace(dump) for dump in self.retrieve_dumps()]
     TraceHandler = engine.get_handler()
-    engine.trace_handler = TraceHandler(traces)
+    engine.trace_handler = TraceHandler(traces, engine.backend)
     engine.trace_handler.weights = self.trace_handler.weights
     return engine
 

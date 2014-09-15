@@ -87,7 +87,8 @@ def threw_error(entry):
 class HandlerBase(object):
   '''Base class to delegate handling of parallel traces'''
   __metaclass__ = ABCMeta
-  def __init__(self, traces):
+  def __init__(self, traces, backend):
+    self.backend = backend
     self.pipes = []
     self.processes = []
     self.weights = []
