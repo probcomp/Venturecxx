@@ -67,6 +67,7 @@ class VentureException(Exception):
   __repr__ = __str__
 
 def format_worker_trace(trace):
-  # ugly hack. see this issue: https://app.asana.com/0/11127829865276/16165669227326
+  # This is a hack to accomodate handling of errors in parallel workers. See
+  # long comment at end of trace_handler.py module.
   return ('\n' + '*' * 50 + '\nStack trace from worker:\n' +
           '*' * 50 + '\n' + trace)

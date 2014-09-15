@@ -314,7 +314,7 @@ class TraceProcessExceptionHandler(object):
     self.n_errors = len(self.info)
 
   def gen_exception(self):
-    # hack. https://app.asana.com/0/11127829865276/16165669227326
+    # This is a hack of sorts; see long comment below.
     Exc = self.exc_types[0]
     if issubclass(Exc, VentureException):
       exc = self.values[0]
@@ -331,3 +331,16 @@ class TraceProcessExceptionHandler(object):
     else:
       value = entry[1]
     return (entry[0], value, entry[2])
+
+# Concerning the hack above: In designing engines that handle parallel traces,
+# we'd like errors in the child trace process to be passed back up to the engine.
+# We'd then like the error from the child to be re-raised, displaying both the
+# stack trace from the child and the parent.
+# There is no easy way to do this in Python, so I made two hacks.
+#   If the child exception is of type VentureException, store the child stack
+#   trace as a string on the instance. Have the __str__ method print the child
+#   stack trace along with the parent.
+# If the child exception is of some other type, introspect to get the type and
+#   the error message. Append the child stack trace as a string to the error
+#   message. Raise another exception of the same type, with the appended error
+#   message.
