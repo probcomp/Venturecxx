@@ -114,7 +114,7 @@ class HandlerBase(object):
   def reset_seeds(self):
     # if we're in puma or we're truly parallel, set the seed; else don't.
     for i in range(len(self.processes)):
-      self.delegate(i, 'set_seed', random.randint(1,2**31-1))
+      self.delegate_one(i, 'set_seed', random.randint(1,2**31-1))
 
   # NOTE: I could metaprogram all the methods that delegate passes on,
   # but it feels cleaner just call the delegator than to add another level
