@@ -39,13 +39,14 @@ class Engine(object):
     self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
 
-  def get_handler(self):
+  def create_handler(self, traces):
     if self.mode == 'parallel':
-      return ParallelTraceHandler
+      Handler = ParallelTraceHandler
     elif self.mode == 'emulating':
-      return EmulatingTraceHandler
+      Handler = EmulatingTraceHandler
     else:
-      return SequentialTraceHandler
+      Handler = SequentialTraceHandler
+    return Handler(traces, self.name)
 
   def inferenceSPsList(self):
     return self.inference_sps.iteritems()
@@ -143,8 +144,7 @@ class Engine(object):
     del self.trace_handler
     self.directiveCounter = 0
     self.directives = {}
-    TraceHandler = self.get_handler()
-    self.trace_handler = TraceHandler([self.Trace()], backend = self.name)
+    self.trace_handler = self.create_handler([self.Trace()])
     self.ensure_rng_seeded_decently()
 
   def ensure_rng_seeded_decently(self):
@@ -357,8 +357,7 @@ effect of renumbering the directives, if some had been forgotten."""
     self.mode = data['mode']
     traces = [self.restore_trace(trace) for trace in data['traces']]
     del self.trace_handler
-    TraceHandler = self.get_handler()
-    self.trace_handler = TraceHandler(traces, self.name)
+    self.trace_handler = self.create_handler(traces)
     self.trace_handler.weights = data['weights']
     return data['extra']
 
@@ -369,8 +368,7 @@ effect of renumbering the directives, if some had been forgotten."""
     engine.n_traces = self.n_traces
     engine.mode = self.mode
     traces = [engine.restore_trace(dump) for dump in self.retrieve_dumps()]
-    TraceHandler = engine.get_handler()
-    engine.trace_handler = TraceHandler(traces, engine.name)
+    engine.trace_handler = engine.create_handler(traces)
     engine.trace_handler.weights = self.trace_handler.weights
     return engine
 
