@@ -20,6 +20,7 @@ from abc import ABCMeta, abstractmethod
 from sys import exc_info
 from traceback import format_exc
 import random
+import numpy as np
 
 from venture.exception import VentureException, format_worker_trace
 from venture.engine.utils import expToDict
@@ -101,6 +102,7 @@ class HandlerBase(object):
       self.pipes.append(parent)
       self.processes.append(process)
       self.weights.append(1)
+    self.reset_seeds()
 
   def __del__(self):
     # stop child processes
@@ -306,6 +308,7 @@ class ParallelTraceProcess(ParallelProcessArchitecture, MultiprocessBase):
   def set_seed(self, seed):
     if self.backend == 'lite':
       random.seed(seed)
+      np.random.seed(seed)
     else:
       ProcessBase.set_seed(self, seed)
 

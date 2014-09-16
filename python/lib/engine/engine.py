@@ -193,7 +193,6 @@ effect of renumbering the directives, if some had been forgotten."""
     self.mode = 'sequential'
     self.trace_handler = SequentialTraceHandler(self._resample_setup(P),
                                                 self.name)
-    self.trace_handler.reset_seeds()
 
   def resample_emulating(self, P):
     self.mode = 'emulating'
