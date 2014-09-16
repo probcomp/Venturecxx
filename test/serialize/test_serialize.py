@@ -33,10 +33,10 @@ def _test_serialize_program(v, label, action):
         assert False
 
     infer = "(mh default one %s)" % default_num_transitions_per_sample()
-    engine.trace_handler = engine.get_handler()([trace2])
+    engine.trace_handler = engine.get_handler()([trace2], engine.name)
     r2 = collectStateSequence(v, label, infer=infer)
 
-    engine.trace_handler = engine.get_handler()([trace1])
+    engine.trace_handler = engine.get_handler()([trace1], engine.name)
     r1 = collectStateSequence(v, label, infer=infer)
 
     return reportSameDiscrete(r1, r2)
