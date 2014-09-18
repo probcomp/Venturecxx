@@ -291,7 +291,7 @@ def value_to_string(v):
             if v['value'] == True:
                 return 'true'
             if v['value'] == False:
-                return 'true'
+                return 'false'
             raise VentureException('fatal',
                     'Invalid boolean value')
         if v['type'] is "number":
