@@ -266,3 +266,18 @@
        (observe (flip weight) #t)
        (infer mcmc-20)
        (predict (list is-trick? weight)))))
+
+;;; Checking mu
+
+(define mu-should-rerun-once
+  ;; Should print once for the initial run, and once for rerunning the
+  ;; application of the mu, but not for rerunning the pp in the body
+  `(begin
+     (model-in (rdb-extend (get-current-trace))
+       (assume f (make-sp
+                  (lambda ()
+                    (pp 'running)
+                    1)
+                  (lambda (val) 0)))
+       (predict (f))
+       (infer mcmc-step))))
