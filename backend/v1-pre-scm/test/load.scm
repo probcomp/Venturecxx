@@ -17,6 +17,7 @@
    (lambda (n)
      (environment-link-name client-environment test-environment n))
    '( define-each-check
+      define-test
       register-test
       make-single-test
       detect-docstring
@@ -51,3 +52,12 @@
                                (assume x 4)
                                (predict x))) 4)
   )
+
+(define-test (trick-coin-dist)
+  (let ()
+    (define samples (map (lambda (i)
+                           (pp i)
+                           (top-eval trick-coin-example-syntax))
+                         (iota 20)))
+    (define tricks (map car samples))
+    5))
