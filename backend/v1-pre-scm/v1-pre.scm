@@ -143,10 +143,17 @@
                  (read-traces* (cons trace read-traces)))
              (eval body env* trace* addr* read-traces*))))
         ((sp? oper)
-         ;; This way, I elide recording the identity function that
-         ;; transports the result of the simulator to the result of
-         ;; the whole SP.
-         (apply (sp-simulator oper) opand-addrs addr cur-trace read-traces))))
+         ;; There is a choice between store-extending the current
+         ;; trace and not extending it.  Extending effectively makes
+         ;; all assessable objects hide their internals from the
+         ;; caller (of course, this does not prevent said internals
+         ;; from tracing something if they want, by further
+         ;; extending).
+         (let ((sub-trace (store-extend cur-trace)))
+           ;; By calling apply rather than eval, I elide recording the
+           ;; identity function that transports the result of the
+           ;; simulator to the result of the whole SP.
+           (apply (sp-simulator oper) opand-addrs addr sub-trace read-traces)))))
 
 (define (top-eval exp)
   (eval exp (make-env-frame #f '() '()) (store-extend #f) (toplevel-address) '()))
