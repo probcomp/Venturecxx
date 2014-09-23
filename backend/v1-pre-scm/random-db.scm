@@ -246,16 +246,20 @@
 ;;; b) Proposals to shadow choices are made (and always accepted
 ;;;    because there is no likelihood)
 
-(define trick-coin-example-syntax
-  `(begin
-     ,observe-defn
-     ,map-defn
-     (define mcmc-20
+(define mcmc-defn
+  '(define mcmc
+     (lambda (steps)
        (lambda (t)
          (begin
            (enforce-constraints t)
            (map (lambda (i) (mcmc-step t))
-                '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20)))))
+                (iota steps)))))))
+
+(define trick-coin-example-syntax
+  `(begin
+     ,observe-defn
+     ,map-defn
+     ,mcmc-defn
      (model-in (rdb-extend (get-current-trace))
        (assume is-trick? (flip 0.5))
        (assume weight (if is-trick? (uniform 0 1) 0.5))
@@ -264,7 +268,7 @@
        (observe (flip weight) #t)
        (observe (flip weight) #t)
        (observe (flip weight) #t)
-       (infer mcmc-20)
+       (infer (mcmc 20))
        (predict (list is-trick? weight)))))
 
 ;;; Checking mu
