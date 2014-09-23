@@ -79,4 +79,4 @@
                            (top-eval gaussian-example))
                          (iota *num-samples*)))
     (pp (sort samples <))
-    (check (> (k-s-test samples (lambda (x) (gaussian-cdf x 1 (/ 1 (sqrt 2)))))))))
+    (check (> (k-s-test samples (lambda (x) (gaussian-cdf x 1 (/ 1 (sqrt 2))))) 0.001))))
