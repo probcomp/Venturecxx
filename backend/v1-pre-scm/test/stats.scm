@@ -38,7 +38,8 @@
 (define (k-s-test data cdf)
   (let ((n (length data))
         (D-stat (k-s-D-stat data cdf)))
-    (list D-stat (kolmogorov-survivor-function-by-series-one (* D-stat (sqrt n))))))
+    (pp D-stat)
+    (kolmogorov-survivor-function-by-series-one (* D-stat (sqrt n)))))
 
 #|
 
