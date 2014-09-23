@@ -76,7 +76,7 @@
         (traces-lookup (cons trace read-traces) addr))
       (lambda ()
         (scheme->venture
-         ((access eval system-global-environment) x user-initial-environment)))))
+         (environment-lookup user-initial-environment x)))))
     ((lambda-form formals body)
      ;; Do I need to close over the maker address?
      (make-compound formals body env trace read-traces))
