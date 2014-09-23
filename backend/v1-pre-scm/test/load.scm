@@ -54,12 +54,14 @@
                                (predict x))) 4)
   )
 
+(define *num-samples* 20)
+
 (define-test (two-coin-dist)
   (let ()
     (define samples (map (lambda (i)
                            (pp i)
                            (top-eval two-coin-flipping-example))
-                         (iota 20)))
+                         (iota *num-samples*)))
     (check (> (chi-sq-test samples '((#t . 2/3) (#f . 1/3))) 0.001))))
 
 (define-test (two-coin-brush-dist)
@@ -67,7 +69,7 @@
     (define samples (map (lambda (i)
                            (pp i)
                            (top-eval two-coins-with-brush-example))
-                         (iota 20)))
+                         (iota *num-samples*)))
     (check (> (chi-sq-test samples '((#t . 2/3) (#f . 1/3))) 0.001))))
 
 (define-test (observed-normal-dist)
@@ -75,5 +77,5 @@
     (define samples (map (lambda (i)
                            (pp i)
                            (top-eval gaussian-example))
-                         (iota 20)))
+                         (iota *num-samples*)))
     (pp (sort samples <))))
