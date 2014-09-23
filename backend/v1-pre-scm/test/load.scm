@@ -61,3 +61,11 @@
                            (top-eval two-coin-flipping-example))
                          (iota 20)))
     (check (> (chi-sq-test samples '((#t . 2/3) (#f . 1/3))) 0.001))))
+
+(define-test (two-coin-brush-dist)
+  (let ()
+    (define samples (map (lambda (i)
+                           (pp i)
+                           (top-eval two-coins-with-brush-example))
+                         (iota 20)))
+    (check (> (chi-sq-test samples '((#t . 2/3) (#f . 1/3))) 0.001))))
