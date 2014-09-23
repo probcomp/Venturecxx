@@ -83,3 +83,18 @@
 
 1 ]=> 
 |#
+
+;;; Chisq
+
+(define-syntax ucode-primitive
+  (sc-macro-transformer
+   (lambda (form environment)
+     environment
+     (apply make-primitive-procedure (cdr form)))))
+
+(load-library-object-file (merge-pathnames "chisq.so") #f)
+
+(define (gsl-cdf-chisq-q x nu)
+  ((ucode-primitive GSL_CDF_CHISQ_Q 2)
+   (->flonum x) (->flonum nu)))
+

@@ -12,4 +12,7 @@ test:
 	  --eval '(set! load/suppress-loading-message? #t)' \
 	  --eval '(begin (load "load") (load "test/load") (run-tests-and-exit))'
 
+chisq.so: chisq.c Makefile
+	gcc -I/home/axch/mit-scheme-9.2/src/microcode/ `gsl-config --cflags` -shared -o chisq.so chisq.c `gsl-config --libs` -Wall -Wextra -Werror -O2 -fPIC -DCOMPILE_AS_MODULE
+
 .PHONY: test
