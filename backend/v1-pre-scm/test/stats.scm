@@ -132,3 +132,10 @@
 ;Value 16: (5. .02534731867746824)
 
 |#
+
+(define (gsl-cdf-gaussian-p x sigma)
+  ((ucode-primitive GSL_CDF_GAUSSIAN_P 2)
+   (->flonum x) (->flonum sigma)))
+
+(define (gaussian-cdf x mu sigma)
+  (gsl-cdf-gaussian-p (- x mu) sigma))
