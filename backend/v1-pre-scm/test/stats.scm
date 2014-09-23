@@ -36,10 +36,11 @@
     (max (abs D+) (abs D-))))
 
 (define (k-s-test data cdf)
-  (let ((n (length data))
-        (D-stat (k-s-D-stat data cdf)))
-    (pp D-stat)
-    (kolmogorov-survivor-function-by-series-one (* D-stat (sqrt n)))))
+  (let* ((n (length data))
+         (D-stat (k-s-D-stat data cdf))
+         (p-value (kolmogorov-survivor-function-by-series-one (* D-stat (sqrt n)))))
+    (pp (list D-stat p-value))
+    p-value))
 
 #|
 
