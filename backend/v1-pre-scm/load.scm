@@ -15,3 +15,4 @@
 (load-relative "primitives")
 (load-relative "random-db")
 (load-relative "store")
+(load-relative "gaussian")
