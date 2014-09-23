@@ -93,7 +93,7 @@
      ((access apply system-global-environment)
       make-primitive-procedure (cdr form)))))
 
-(load-library-object-file (merge-pathnames "chisq.so") #f)
+(load-library-object-file (merge-pathnames "c-stats.so") #f)
 
 (define (gsl-cdf-chisq-q x nu)
   ((ucode-primitive GSL_CDF_CHISQ_Q 2)
