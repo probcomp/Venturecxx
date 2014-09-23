@@ -116,7 +116,7 @@
 (define (chi-sq-test data frequencies)
   (let ((n (length frequencies))
         (stat (chi-sq-stat data frequencies)))
-    (list stat (gsl-cdf-chisq-q stat (- n 1)))))
+    (gsl-cdf-chisq-q stat (- n 1))))
 
 #|
 1 ]=> (chi-sq-test '(#t #t #t #f #f) '((#t . 0.5) (#f . 0.5)))

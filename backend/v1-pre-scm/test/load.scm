@@ -18,6 +18,7 @@
      (environment-link-name client-environment test-environment n))
    '( define-each-check
       define-test
+      check
       register-test
       make-single-test
       detect-docstring
@@ -59,5 +60,4 @@
                            (pp i)
                            (top-eval two-coin-flipping-example))
                          (iota 20)))
-    (pp samples)
-    (pp (chi-sq-test samples '((#t . 2/3) (#f . 1/3))))))
+    (check (> (chi-sq-test samples '((#t . 2/3) (#f . 1/3))) 0.001))))
