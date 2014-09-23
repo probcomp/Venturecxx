@@ -98,3 +98,36 @@
   ((ucode-primitive GSL_CDF_CHISQ_Q 2)
    (->flonum x) (->flonum nu)))
 
+(define (chi-sq-stat data frequencies)
+  (let* ((n (length data))
+         (expected-counts (map (lambda (freq) (* n freq))
+                               (map cdr frequencies)))
+         (actual-counts (map (lambda (item)
+                               (count-matching-items data (lambda (d) (equal? d item))))
+                             (map car frequencies))))
+    ((access apply system-global-environment)
+     + (map (lambda (actual expected)
+              (/ (expt (- actual expected) 2)
+                 expected))
+            actual-counts
+            expected-counts))))
+
+(define (chi-sq-test data frequencies)
+  (let ((n (length frequencies))
+        (stat (chi-sq-stat data frequencies)))
+    (list stat (gsl-cdf-chisq-q stat (- n 1)))))
+
+#|
+1 ]=> (chi-sq-test '(#t #t #t #f #f) '((#t . 0.5) (#f . 0.5)))
+
+;Value 18: (.2 .6547208460185772)
+
+1 ]=> (chi-sq-test '(#t #t #t #f) '((#t . 0.5) (#f . 0.5)))
+
+;Value 17: (1. .3173105078629138)
+
+1 ]=> (chi-sq-test '(#t #t #t #f #t #t #t #f #t #t #t #f #t #t #t #f #t #t #t #f) '((#t . 0.5) (#f . 0.5)))
+
+;Value 16: (5. .02534731867746824)
+
+|#
