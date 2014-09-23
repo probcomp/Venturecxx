@@ -90,7 +90,8 @@
   (sc-macro-transformer
    (lambda (form environment)
      environment
-     (apply make-primitive-procedure (cdr form)))))
+     ((access apply system-global-environment)
+      make-primitive-procedure (cdr form)))))
 
 (load-library-object-file (merge-pathnames "chisq.so") #f)
 

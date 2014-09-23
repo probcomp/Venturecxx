@@ -25,6 +25,8 @@
       assert-proc
       run-tests-and-exit)))
 
+(load-relative "stats")
+
 (define-each-check
   (equal? (top-eval 1) 1)
   (equal? (top-eval '((lambda () 1))) 1)
@@ -49,4 +51,3 @@
                                (assume x 4)
                                (predict x))) 4)
   )
-
