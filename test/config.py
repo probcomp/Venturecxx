@@ -54,7 +54,7 @@ def get_ripl():
   assert not disable_get_ripl, "Trying to get the configured ripl in a test marked as not ripl-agnostic."
   global ct_get_ripl_called
   ct_get_ripl_called += 1
-  return s.backend(config["get_ripl"]).make_church_prime_ripl()
+  return s.backend(config["get_ripl"]).make_combined_ripl()
 
 def get_mripl(no_ripls=2,local_mode=None,**kwargs):
    # NB: there is also global "get_mripl_backend" for having special-case backend
