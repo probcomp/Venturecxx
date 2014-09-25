@@ -156,7 +156,8 @@ class Ripl():
         p = self._cur_parser()
         # all exceptions raised by the Sivm get augmented with a
         # text index (which defaults to the entire instruction)
-        e.data['text_index'] = [0,len(instruction_string)-1]
+        if 'text_index' not in e.data:
+            e.data['text_index'] = [0,len(instruction_string)-1]
         
         # in the case of a parse exception, the text_index gets narrowed
         # down to the exact expression/atom that caused the error
@@ -172,6 +173,7 @@ class Ripl():
                 if e2.exception == 'no_text_index': text_index = None
                 else: raise
             e.data['text_index'] = text_index
+        
         # for "text_parse" exceptions, even trying to split the instruction
         # results in an exception
         if e.exception == 'text_parse':
@@ -180,6 +182,7 @@ class Ripl():
             except VentureException as e2:
                 assert e2.exception == 'text_parse'
                 e = e2
+            
         # in case of invalid argument exception, the text index
         # refers to the argument's location in the string
         if e.exception == 'invalid_argument':
@@ -188,6 +191,7 @@ class Ripl():
             arg = e.data['argument']
             text_index = arg_ranges[arg]
             e.data['text_index'] = text_index
+        
         a = e.data['text_index'][0]
         b = e.data['text_index'][1]+1
         e.data['text_snippet'] = instruction_string[a:b]
