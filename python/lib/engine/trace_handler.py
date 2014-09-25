@@ -85,7 +85,10 @@ def dump_trace(trace, directives, skipStackDictConversion=False):
 
   return trace.dumpSerializationDB(db, skipStackDictConversion)
 
-def restore_trace(trace, directives, values, skipStackDictConversion=False):
+def restore_trace(trace, directives, values, foreign_sps, skipStackDictConversion=False):
+  for name, sp in foreign_sps.items():
+    trace.bindPrimitiveSP(name, sp)
+
   db = trace.makeSerializationDB(values, skipStackDictConversion)
 
   for did, directive in sorted(directives.items()):
