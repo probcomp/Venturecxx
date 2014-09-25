@@ -14,7 +14,8 @@
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import random
-import pickle as pkl
+import dill
+import pickle
 import time
 
 from venture.exception import VentureException
@@ -26,7 +27,7 @@ import venture.value.dicts as v
 
 def is_picklable(obj):
   try:
-    res = pkl.dumps(obj)
+    res = pickle.dumps(obj)
   except TypeError:
     return False
   else:
@@ -362,11 +363,11 @@ effect of renumbering the directives, if some had been forgotten."""
     data['extra'] = extra
     version = '0.2'
     with open(fname, 'w') as fp:
-      pickle.dump((data, version), fp)
+      dill.dump((data, version), fp)
 
   def load(self, fname):
     with open(fname) as fp:
-      (data, version) = pickle.load(fp)
+      (data, version) = dill.load(fp)
     assert version == '0.2', "Incompatible version or unrecognized object"
     self.directiveCounter = data['directiveCounter']
     self.directives = data['directives']
