@@ -14,7 +14,7 @@ failure if that p-value is small enough to be noteworthy.
 This module supplies facilities for testing in that style.  Of note:
 - statisticalTest is an annotation that tags a test as being
   statistical in this way, and arranges for duly suspicious execution
-- Every test annotated by as a statisticalTest must return a
+- Every test annotated as a statisticalTest must return a
   TestResult object, which represents the p-value.
 - The reportKnownFoo functions encapsulate standard statistical
   tests and return TestResult objects.
@@ -31,6 +31,9 @@ For example, here is one way to test a coin flipping device:
     observed = ... # Flip a bunch of coins and count the heads and tails
     expected = [("heads", 0.5), ("tails", 0.5)]
     return reportKnownDiscrete(expected, observed)
+
+Note: When using the nose test generator feature, annotate the yielded
+test function as @statisticalTest, not the generator.
 
 """
 
