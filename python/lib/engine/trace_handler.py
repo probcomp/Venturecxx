@@ -72,6 +72,10 @@ from venture.engine.utils import expToDict
 ######################################################################
 
 def dump_trace(trace, directives, skipStackDictConversion=False):
+  # TODO: It would be good to pass foreign_sps to this function as well,
+  # and then check that the passed foreign_sps match up with the foreign
+  # SP's bound in the trace's global environment. However, in the Puma backend
+  # there is currently no way to access this global environment.
   db = trace.makeSerializationDB()
   for did, directive in sorted(directives.items(), reverse=True):
     if directive[0] == "observe":
