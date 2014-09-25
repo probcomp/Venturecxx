@@ -19,6 +19,7 @@
 from pyparsing import Literal,Optional,ZeroOrMore,OneOrMore,Forward,\
     ParseException,Keyword,MatchFirst
 from venture.parser import utils
+import venture.value.dicts as vv
 
 #shortcuts
 lw = utils.lw
@@ -173,7 +174,7 @@ class VentureScriptParser(object):
                 return list(toks)
             l = combine_locs(toks)
             v = [
-                    {"loc":l, 'value':'let'},
+                    {"loc":l, 'value':vv.symbol('let')},
                     toks[0],
                     toks[1],
                     ]
@@ -188,7 +189,7 @@ class VentureScriptParser(object):
         def process_identity(s, loc, toks):
             l = combine_locs(toks)
             v = [
-                    {"loc":l, 'value':'identity'},
+                    {"loc":l, 'value':vv.symbol('identity')},
                     toks[1],
                     ]
             return [{"loc":l, "value":v}]
@@ -202,7 +203,7 @@ class VentureScriptParser(object):
         def process_if_else(s, loc, toks):
             l = combine_locs(toks)
             v = [
-                    {"loc":toks[0]['loc'], 'value':'if'},
+                    {"loc":toks[0]['loc'], 'value':vv.symbol('if')},
                     toks[2],
                     toks[5],
                     toks[9]
@@ -222,7 +223,7 @@ class VentureScriptParser(object):
         def process_proc(s, loc, toks):
             l = combine_locs(toks)
             v = [
-                    {"loc":toks[0]['loc'], 'value':'lambda'},
+                    {"loc":toks[0]['loc'], 'value':vv.symbol('lambda')},
                     toks[1],
                     toks[3],
                     ]
@@ -239,7 +240,7 @@ class VentureScriptParser(object):
         def process_let(s, loc, toks):
             l = combine_locs(toks)
             v = [
-                    {"loc":l, 'value':'let'},
+                    {"loc":l, 'value':vv.symbol('let')},
                     toks[1],
                     toks[2],
                     ]
