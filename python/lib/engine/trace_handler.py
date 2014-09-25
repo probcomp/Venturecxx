@@ -299,7 +299,7 @@ class ProcessBase(object):
   def __getattr__(self, attrname):
     # if attrname isn't attribute of ProcessBase, look for it as a method on the trace
     # safely doesn't work as a decorator here; do it this way.
-    return safely(getattr(self.trace, attrname))
+    return safely(safely(getattr)(self.trace, attrname))
 
   @abstractmethod
   def send_trace(self): pass
