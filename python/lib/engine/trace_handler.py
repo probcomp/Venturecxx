@@ -222,6 +222,9 @@ class ProcessBase(object):
     # safely doesn't work as a decorator here; do it this way.
     return safely(getattr(self.trace, attrname))
 
+  @abstractmethod
+  def send_trace(self): pass
+
   @safely
   def set_seed(self, seed):
     # if we're in puma or we're truly parallel, set the seed; else don't.
@@ -279,7 +282,10 @@ class ProcessBase(object):
 
 class ParallelProcessArchitecture(ProcessBase):
   # Nothing new; just declared for explicitness
-  pass
+  @safely
+  def send_trace(self):
+    raise VentureException("fatal",
+                           "Must serialize traces before sending in parallel architecture")
 
 class SequentialProcessArchitecture(ProcessBase):
   @safely
