@@ -99,7 +99,9 @@ class Ripl():
     ############################################
     # Execution
     ############################################
-
+    
+    
+    
     def execute_instruction(self, instruction=None, params=None):
         p = self._cur_parser()
         try: # execute instruction, and handle possible exception
@@ -124,7 +126,7 @@ class Ripl():
                 print "Trying to annotate an exception led to:"
                 import traceback
                 print traceback.format_exc()
-                e.exception += " (unannotated)"
+                e.annotated = False
                 raise e, None, info[2]
             raise annotated, None, info[2]
         # if directive, then save the text string
@@ -134,8 +136,10 @@ class Ripl():
             self.directive_id_to_stringable_instruction[did] = stringable_instruction
             self.directive_id_to_mode[did] = self.mode
         return ret_value
-
+    
     def _annotated_error(self, e, instruction):
+        e.annotated = True
+        
         if e.exception is 'evaluation':
             p = self._cur_parser()
             for i, (exp, index) in enumerate(e.data['stack_trace']):
