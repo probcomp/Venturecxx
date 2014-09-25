@@ -122,8 +122,8 @@ class Ripl():
                 annotated = self._annotated_error(e, instruction)
             except Exception as e2:
                 print "Trying to annotate an exception led to:"
-                #import traceback
-                #print traceback.format_exc()
+                import traceback
+                print traceback.format_exc()
                 e.exception += " (unannotated)"
                 raise e, None, info[2]
             raise annotated, None, info[2]
