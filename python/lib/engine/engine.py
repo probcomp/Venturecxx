@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import random
-import dill as pickle
+import pickle as pkl
 import time
 
 from venture.exception import VentureException
@@ -23,6 +23,14 @@ from trace_handler import (dump_trace, restore_trace, SequentialTraceHandler,
 from venture.lite.utils import sampleLogCategorical
 from venture.engine.inference import Infer
 import venture.value.dicts as v
+
+def is_picklable(obj):
+  try:
+    res = pkl.dumps(obj)
+  except TypeError:
+    return False
+  else:
+    return True
 
 class Engine(object):
 
@@ -160,6 +168,12 @@ class Engine(object):
       # wrap it for backend translation
       import venture.lite.foreign as f
       sp = f.ForeignLiteSP(sp)
+
+    # check that we can pickle it
+    if (not is_picklable(sp)) and (self.mode != 'sequential'):
+      errstr = '''SP not picklable. To bind it, call (infer sequential [ n_cores ]),
+      bind the sp, then switch back to parallel.'''
+      raise VentureException("invalid_argument", errstr)
 
     self.trace_handler.delegate('bind_foreign_sp', name, sp)
 
