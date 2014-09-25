@@ -114,7 +114,6 @@ class HandlerBase(object):
       self.weights[i] += increment
 
   def reset_seeds(self):
-    # if we're in puma or we're truly parallel, set the seed; else don't.
     for i in range(len(self.processes)):
       self.delegate_one(i, 'set_seed', random.randint(1,2**31-1))
 
@@ -225,6 +224,7 @@ class ProcessBase(object):
 
   @safely
   def set_seed(self, seed):
+    # if we're in puma or we're truly parallel, set the seed; else don't.
     if self.backend == 'puma':
       self.trace.set_seed(seed)
 
@@ -303,6 +303,8 @@ class ParallelTraceProcess(ParallelProcessArchitecture, MultiprocessBase):
   '''Multiprocessing-based paralleism by inheritance'''
   @safely
   def set_seed(self, seed):
+    # override the default set_seed method; if we're in parallel Python,
+    # reset the global random seeds.
     if self.backend == 'lite':
       random.seed(seed)
       np.random.seed(seed)
