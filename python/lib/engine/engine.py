@@ -65,7 +65,8 @@ class Engine(object):
     baseAddr = self.nextBaseAddr()
     exp = datum
 
-    value = self.trace_handler.delegate('assume', baseAddr, id, exp)
+    values = self.trace_handler.delegate('assume', baseAddr, id, exp)
+    value = values[0]
 
     self.directives[self.directiveCounter] = ["assume",id,datum]
 

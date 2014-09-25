@@ -132,10 +132,7 @@ class HandlerBase(object):
     if any([threw_error(entry) for entry in res]):
       exception_handler = TraceProcessExceptionHandler(res)
       raise exception_handler.gen_exception()
-    if cmd == 'assume':
-      return res[0]
-    else:
-      return res
+    return res
 
   def delegate_one(self, ix, cmd, *args, **kwargs):
     '''Delegate command to a single worker, indexed by ix'''
