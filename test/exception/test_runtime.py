@@ -54,3 +54,12 @@ def testTooManyArgs():
   ripl = get_ripl()
   ripl.predict('(- 1 1 1)')
 
+@broken_in('puma')
+@on_inf_prim("none")
+def testExceptionAnnotated():
+  ripl = get_ripl()
+  try:
+    ripl.predict('a')
+  except VentureException as e:
+    assert(hasattr(e, 'annotated') and e.annotated)
+

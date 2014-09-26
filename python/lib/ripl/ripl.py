@@ -138,8 +138,6 @@ class Ripl():
         return ret_value
     
     def _annotated_error(self, e, instruction):
-        e.annotated = True
-        
         if e.exception is 'evaluation':
             p = self._cur_parser()
             for i, (exp, index) in enumerate(e.data['stack_trace']):
@@ -149,6 +147,7 @@ class Ripl():
                     'expression_string' : exp,
                     'text_index' : text_index,
                 }
+            e.annotated = True
             return e
 
         # TODO This error reporting is broken for ripl methods,
@@ -201,6 +200,7 @@ class Ripl():
         e.data['text_snippet'] = instruction_string[a:b]
         e.data['instruction_string'] = instruction_string
         
+        e.annotated = True
         return e
 
     def parse_program(self, program_string, params=None):
