@@ -1,10 +1,5 @@
 (declare (usual-integrations))
 
-(define minus-inf
-  (flo:with-exceptions-untrapped (flo:exception:divide-by-zero)
-     (lambda ()
-       (flo:/ -1. 0.))))
-
 (define flip
   (make-sp
    (make-primitive

@@ -1,4 +1,6 @@
-(declare (usual-integrations))
+(declare (usual-integrations apply eval))
+(declare (integrate-external "syntax"))
+(declare (integrate-external "pattern-case/pattern-case"))
 
 ;; TODO First writing a version that just forward simulates to make
 ;; sure the rest works.

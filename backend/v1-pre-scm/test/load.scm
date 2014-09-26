@@ -25,7 +25,8 @@
       generate-test-name
       better-message
       assert-proc
-      run-tests-and-exit)))
+      run-tests-and-exit
+      run-registered-tests)))
 
 (load-relative "stats")
 

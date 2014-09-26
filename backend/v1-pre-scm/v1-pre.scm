@@ -1,4 +1,4 @@
-(declare (usual-integrations))
+(declare (usual-integrations eval apply))
 (declare (integrate-external "syntax"))
 (declare (integrate-external "pattern-case/pattern-case"))
 

@@ -1,3 +1,5 @@
+(declare (usual-integrations))
+
 (define gaussian-defn
   `(begin
      (define box-muller-xform
