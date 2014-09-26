@@ -14,7 +14,8 @@
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import random
-import dill as pickle
+import dill
+import pickle
 import time
 
 from venture.exception import VentureException
@@ -23,6 +24,14 @@ from trace_handler import (dump_trace, restore_trace, SequentialTraceHandler,
 from venture.lite.utils import sampleLogCategorical
 from venture.engine.inference import Infer
 import venture.value.dicts as v
+
+def is_picklable(obj):
+  try:
+    res = pickle.dumps(obj)
+  except TypeError:
+    return False
+  else:
+    return True
 
 class Engine(object):
 
@@ -160,6 +169,12 @@ class Engine(object):
       # wrap it for backend translation
       import venture.lite.foreign as f
       sp = f.ForeignLiteSP(sp)
+
+    # check that we can pickle it
+    if (not is_picklable(sp)) and (self.mode != 'sequential'):
+      errstr = '''SP not picklable. To bind it, call (infer sequential [ n_cores ]),
+      bind the sp, then switch back to parallel.'''
+      raise VentureException("invalid_argument", errstr)
 
     self.trace_handler.delegate('bind_foreign_sp', name, sp)
 
@@ -331,7 +346,8 @@ effect of renumbering the directives, if some had been forgotten."""
     return dump_trace(trace, self.directives, skipStackDictConversion)
 
   def restore_trace(self, values, skipStackDictConversion=False):
-    return restore_trace(self.Trace(), self.directives, values, skipStackDictConversion)
+    return restore_trace(self.Trace(), self.directives, values,
+                         self.foreign_sps, skipStackDictConversion)
 
   def copy_trace(self, trace):
     values = self.dump_trace(trace, skipStackDictConversion=True)
@@ -347,11 +363,11 @@ effect of renumbering the directives, if some had been forgotten."""
     data['extra'] = extra
     version = '0.2'
     with open(fname, 'w') as fp:
-      pickle.dump((data, version), fp)
+      dill.dump((data, version), fp)
 
   def load(self, fname):
     with open(fname) as fp:
-      (data, version) = pickle.load(fp)
+      (data, version) = dill.load(fp)
     assert version == '0.2', "Incompatible version or unrecognized object"
     self.directiveCounter = data['directiveCounter']
     self.directives = data['directives']
