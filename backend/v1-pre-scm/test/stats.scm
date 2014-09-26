@@ -39,7 +39,7 @@
   (let* ((n (length data))
          (D-stat (k-s-D-stat data cdf))
          (p-value (kolmogorov-survivor-function-by-series-one (* D-stat (sqrt n)))))
-    (pp (list D-stat p-value))
+    (pp (list 'D-stat D-stat 'p-value p-value))
     p-value))
 
 #|
