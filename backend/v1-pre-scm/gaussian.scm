@@ -26,5 +26,5 @@
      (model-in (rdb-extend (get-current-trace))
        (assume mu (normal 0 1))
        (observe (normal mu 1) 2)
-       (infer (mcmc 20))
+       (infer (mcmc 200))
        (predict mu))))

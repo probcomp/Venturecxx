@@ -57,6 +57,10 @@
 
 (define *num-samples* 20)
 
+(define (collect-samples prog #!optional count)
+  (map (lambda (i) (top-eval prog)) (iota (if (default-object? count)
+                                              *num-samples* count))))
+
 (define two-coin-flipping-example
   `(begin
      ,observe-defn
@@ -71,10 +75,8 @@
 
 (define-test (two-coin-dist)
   (let ()
-    (define samples (map (lambda (i)
-                           (top-eval two-coin-flipping-example))
-                         (iota *num-samples*)))
-    (check (> (chi-sq-test samples '((#t . 2/3) (#f . 1/3))) 0.001))))
+    (check (> (chi-sq-test (collect-samples two-coin-flipping-example)
+                           '((#t . 2/3) (#f . 1/3))) 0.001))))
 
 (define two-coins-with-brush-example
   `(begin
@@ -90,25 +92,43 @@
 
 (define-test (two-coin-brush-dist)
   (let ()
-    (define samples (map (lambda (i)
-                           (top-eval two-coins-with-brush-example))
-                         (iota *num-samples*)))
-    (check (> (chi-sq-test samples '((#t . 2/3) (#f . 1/3))) 0.001))))
+    (check (> (chi-sq-test (collect-samples two-coins-with-brush-example)
+                           '((#t . 2/3) (#f . 1/3))) 0.001))))
 
 (define-test (forward-normal-dist)
   (let ()
-    (define samples (map (lambda (i)
-                           (pp i)
-                           (top-eval `(begin ,gaussian-defn (normal 0 1))))
-                         (iota *num-samples*)))
+    (define samples (collect-samples `(begin ,gaussian-defn (normal 0 1))))
+    (pp (list 'program-samples (sort samples <)))
+    (check (> (k-s-test samples (lambda (x) (gaussian-cdf x 0 1))) 0.001))))
+
+(define-test (forward-2-normal-dist)
+  (let ()
+    (define samples
+      (collect-samples
+       `(begin
+          ,gaussian-defn
+          (normal (normal 0 1) 1))))
+    (pp (list 'program-samples (sort samples <)))
+    (check (> (k-s-test samples (lambda (x) (gaussian-cdf x 0 2))) 0.001))))
+
+(define-test (unrestricted-infer-normal-dist)
+  (let ()
+    (define samples
+      (collect-samples
+       `(begin
+          ,map-defn
+          ,mcmc-defn
+          ,gaussian-defn
+          (model-in (rdb-extend (get-current-trace))
+            (assume mu (normal 0 1))
+            (assume y (normal mu 1))
+            (infer (mcmc 10))
+            (predict mu)))))
     (pp (list 'program-samples (sort samples <)))
     (check (> (k-s-test samples (lambda (x) (gaussian-cdf x 0 1))) 0.001))))
 
 (define-test (observed-normal-dist)
   (let ()
-    (define samples (map (lambda (i)
-                           (pp i)
-                           (top-eval gaussian-example))
-                         (iota *num-samples*)))
+    (define samples (collect-samples gaussian-example))
     (pp (list 'program-samples (sort samples <)))
     (check (> (k-s-test samples (lambda (x) (gaussian-cdf x 1 (/ 1 (sqrt 2))))) 0.001))))
