@@ -56,6 +56,18 @@
 
 (define *num-samples* 20)
 
+(define two-coin-flipping-example
+  `(begin
+     ,observe-defn
+     ,map-defn
+     ,mcmc-defn
+     (model-in (rdb-extend (get-current-trace))
+       (assume c1 (flip 0.5))
+       (assume c2 (flip 0.5))
+       (observe (flip (if (boolean/or c1 c2) 1 0.0001)) #t)
+       (infer (mcmc 20))
+       (predict c1))))
+
 (define-test (two-coin-dist)
   (let ()
     (define samples (map (lambda (i)
@@ -63,6 +75,18 @@
                            (top-eval two-coin-flipping-example))
                          (iota *num-samples*)))
     (check (> (chi-sq-test samples '((#t . 2/3) (#f . 1/3))) 0.001))))
+
+(define two-coins-with-brush-example
+  `(begin
+     ,observe-defn
+     ,map-defn
+     ,mcmc-defn
+     (model-in (rdb-extend (get-current-trace))
+       (assume c1 (flip 0.5))
+       (assume c2 (if c1 #t (flip 0.5)))
+       (observe (flip (if (boolean/or c1 c2) 1 0.0001)) #t)
+       (infer (mcmc 20))
+       (predict c1))))
 
 (define-test (two-coin-brush-dist)
   (let ()
