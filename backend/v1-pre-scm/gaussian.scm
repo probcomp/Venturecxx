@@ -5,7 +5,7 @@
      (define box-muller-xform
        (lambda (u1 u2)
          (* (sqrt (* -2 (log u1)))
-            (cos (* 2 3.14159265 u2)))))
+            (cos (* 2 3.1415926535897932846 u2)))))
      (define simulate-normal
        (lambda (mu sig)
          (+ mu (* sig (box-muller-xform (uniform 0 1) (uniform 0 1))))))
@@ -14,7 +14,7 @@
          (- (/ (* -1 (expt (- x mu) 2))
                (* 2 (expt sig 2)))
             (+ (log sig)
-               (* 1/2 (+ (log 2) (log 3.14159265)))))))
+               (* 1/2 (+ (log 2) (log 3.1415926535897932846)))))))
      (define normal (make-sp simulate-normal normal-log-density))))
 
 (define gaussian-example
