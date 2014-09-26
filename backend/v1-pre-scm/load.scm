@@ -17,6 +17,8 @@
      (lambda ()
        (flo:/ -1. 0.))))
 
+(define scheme-apply (access apply system-global-environment))
+
 (load-relative "pattern-case/load")
 (load-relative-compiled "utils")
 (load-relative-compiled "syntax")

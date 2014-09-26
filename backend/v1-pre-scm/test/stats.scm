@@ -25,11 +25,11 @@
   (let* ((data (sort data <))
          (n (length data))
          (cdfvals (map cdf data))
-         (D+ ((access apply system-global-environment)
+         (D+ (scheme-apply
               max (map (lambda (i cdfval)
                          (- (/ (+ i 1) n) cdfval))
                        (iota n) cdfvals)))
-         (D- ((access apply system-global-environment)
+         (D- (scheme-apply
               min (map (lambda (i cdfval)
                          (- (/ i n) cdfval))
                        (iota n) cdfvals))))
@@ -108,7 +108,7 @@
          (actual-counts (map (lambda (item)
                                (count-matching-items data (lambda (d) (equal? d item))))
                              (map car frequencies))))
-    ((access apply system-global-environment)
+    (scheme-apply
      + (map (lambda (actual expected)
               (/ (expt (- actual expected) 2)
                  expected))

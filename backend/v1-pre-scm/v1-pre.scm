@@ -122,7 +122,7 @@
                                    (traces-lookup (cons cur-trace read-traces) o))
                                  opand-addrs)))
              ;; TODO Density
-             ((access apply system-global-environment) sim arguments))))
+             (scheme-apply sim arguments))))
         ((compound? oper)
          (let ((formals (compound-formals oper))
                (body (compound-body oper))
