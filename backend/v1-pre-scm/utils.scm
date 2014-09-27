@@ -32,3 +32,6 @@
           ((= (car ks) item)
            (win (car vs)))
           (else (loop (cdr ks) (cdr vs))))))
+
+(define (histogram-test-data data)
+  (gnuplot-histogram-alist (map (lambda (x) (cons x 0.2)) data) "test data" 0.2))

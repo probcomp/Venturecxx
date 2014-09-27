@@ -21,6 +21,7 @@
 
 (load-relative "pattern-case/load")
 (load-relative-compiled "utils")
+(load-relative-compiled "gnuplot")
 (load-relative-compiled "syntax")
 (load-relative-compiled "v1-pre")
 (load-relative-compiled "primitives")
