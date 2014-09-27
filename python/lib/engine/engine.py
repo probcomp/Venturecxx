@@ -174,7 +174,7 @@ class Engine(object):
     if (not is_picklable(sp)) and (self.mode != 'sequential'):
       errstr = '''SP not picklable. To bind it, call (infer sequential [ n_cores ]),
       bind the sp, then switch back to parallel.'''
-      raise VentureException("invalid_argument", errstr)
+      raise TypeError(errstr)
 
     self.trace_handler.delegate('bind_foreign_sp', name, sp)
 
