@@ -57,9 +57,19 @@
   (let* ((title (if (default-object? title)
                     "empirical CDF"
                     (string-append title " empirical CDF")))
-         (title-command (string-append "title \"" title "\"")))
+         (command (string-append "title \"" title "\"")))
     (gnuplot-alist-plot
-     (samples->empirical-cdf-alist samples) `(commanding ,title-command))))
+     (samples->empirical-cdf-alist samples) `(commanding ,command))))
+
+(define (gnuplot-empirical-kde-plot samples #!optional title)
+  (let* ((title (if (default-object? title)
+                    "empirical kernel density"
+                    (string-append title " empirical kernel density")))
+         (command (string-append "title \"" title "\" smooth kdensity"))
+         (n (length samples)))
+    (gnuplot-alist-plot
+     (map (lambda (x) (cons x (/ 1 n))) samples)
+     `(commanding ,command))))
 
 (define (gnuplot-function-plot-near f data . adverbs)
   (let* ((n (length data))
@@ -78,14 +88,11 @@
     (gnuplot-function-plot-near analytic samples '(commanding "title \"analytic CDF\"")))))
 
 (define (compare-kdensity-to-pdf samples analytic)
-  (let ((n (length samples)))
-    (gnuplot-multiple
-     (list
-      (gnuplot-alist-plot
-       (map (lambda (x) (cons x (/ 1 n))) samples)
-       '(commanding "title \"empirical kernel density\" smooth kdensity"))
-      (gnuplot-function-plot-near
-       analytic samples '(commanding "title \"analytic density\""))))))
+  (gnuplot-multiple
+   (list
+    (gnuplot-empirical-kde-plot samples)
+    (gnuplot-function-plot-near
+     analytic samples '(commanding "title \"analytic density\"")))))
 
 (define (compare-histogram-to-pdf samples analytic)
   (let ((n (length samples)))
@@ -101,3 +108,9 @@
    (list
     (gnuplot-empirical-cdf-plot observed "observed")
     (gnuplot-empirical-cdf-plot expected "expected"))))
+
+(define (compare-empirical-kdes observed expected)
+  (gnuplot-multiple
+   (list
+    (gnuplot-empirical-kde-plot observed "observed")
+    (gnuplot-empirical-kde-plot expected "expected"))))
