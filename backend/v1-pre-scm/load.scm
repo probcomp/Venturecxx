@@ -17,10 +17,13 @@
      (lambda ()
        (flo:/ -1. 0.))))
 
+(define scheme-apply (access apply system-global-environment))
+
+(load-relative "adaptive-plot/load")
+
+;; The gnuplot code uses apply so needs protection
 (define gnuplot-environment (make-top-level-environment))
-
 (load-relative-compiled "gnuplot" gnuplot-environment)
-
 (let ((client-environment (the-environment)))
   (for-each
    (lambda (n)
@@ -31,8 +34,6 @@
       gnuplot-histogram-alist
       gnuplot-histogram-alist-plot
       )))
-
-(define scheme-apply (access apply system-global-environment))
 
 (load-relative "pattern-case/load")
 (load-relative-compiled "utils")
