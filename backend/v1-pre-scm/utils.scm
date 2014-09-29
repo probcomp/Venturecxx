@@ -53,6 +53,10 @@
      (map (lambda (x) (cons x (/ 1 n))) data)
      '(commanding "title \"data\" smooth kdensity") )))
 
+(define (gnuplot-empirial-cdf-plot samples)
+  (gnuplot-alist-plot
+   (samples->empirical-cdf-alist samples) '(commanding "title \"empirical CDF\"")))
+
 (define (gnuplot-function-plot-near f data . adverbs)
   (let* ((n (length data))
          (xlow (scheme-apply min data))
@@ -64,11 +68,10 @@
     (scheme-apply gnuplot-alist-plot (plot-relevant-points-alist cdf-plot) adverbs)))
 
 (define (compare-data-to-cdf samples analytic . adverbs)
-  (let ((empirical (samples->empirical-cdf-alist samples)))
-    (gnuplot-multiple
-     (list
-      (gnuplot-alist-plot empirical '(commanding "title \"empirical CDF\""))
-      (gnuplot-function-plot-near analytic samples '(commanding "title \"analytic CDF\""))))))
+  (gnuplot-multiple
+   (list
+    (gnuplot-empirial-cdf-plot samples)
+    (gnuplot-function-plot-near analytic samples '(commanding "title \"analytic CDF\"")))))
 
 (define (compare-kdensity-to-pdf samples analytic)
   (let ((n (length samples)))
