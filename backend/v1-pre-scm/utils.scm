@@ -50,19 +50,7 @@
                      (lambda (x i)
                        (list (cons x (/ i n)) (cons x (/ (+ i 1) n))))
                      samples (iota n))))
-    (call-with-temporary-file-pathname
-     (lambda (empirical-pathname)
-       (call-with-temporary-file-pathname
-        (lambda (analytic-pathname)
-          (gnuplot-write-alist empirical empirical-pathname)
-          (gnuplot-write-alist (plot-relevant-points-alist cdf-plot) analytic-pathname)
-          (let ((command (string-append
-                          "gnuplot -p -e \'"
-                          "set style data lines; "
-                          "set key noautotitles; "
-                          "plot \"" (->namestring empirical-pathname) "\" title \"empirical\""
-                          ", \"" (->namestring analytic-pathname) "\" title \"analytic\""
-                          "'")))
-            (display command)
-            (newline)
-            (run-shell-command command))))))))
+    (gnuplot-multiple
+     (list
+      (gnuplot-alist-plot empirical '(commanding "title \"empirical\""))
+      (gnuplot-alist-plot (plot-relevant-points-alist cdf-plot) '(commanding "title \"analytic\""))))))

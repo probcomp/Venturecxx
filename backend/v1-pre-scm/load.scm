@@ -27,7 +27,10 @@
      (environment-link-name client-environment gnuplot-environment n))
    '( gnuplot-multiple
       gnuplot-alist
-      gnuplot-histogram-alist)))
+      gnuplot-alist-plot
+      gnuplot-histogram-alist
+      gnuplot-histogram-alist-plot
+      )))
 
 (define scheme-apply (access apply system-global-environment))
 
