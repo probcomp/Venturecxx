@@ -35,6 +35,14 @@
 
 (define *binwidth* 0.2)
 
+(define (samples->empirical-cdf-alist samples)
+  (let ((samples (sort samples <))
+        (n (length samples)))
+    (append-map
+     (lambda (x i)
+       (list (cons x (/ i n)) (cons x (/ (+ i 1) n))))
+     samples (iota n))))
+
 (define (histogram-test-data data)
   (gnuplot-histogram-alist
    (map (lambda (x) (cons x *binwidth*)) data) "test data" *binwidth*))
@@ -56,12 +64,7 @@
     (scheme-apply gnuplot-alist-plot (plot-relevant-points-alist cdf-plot) adverbs)))
 
 (define (compare-data-to-cdf samples analytic . adverbs)
-  (let* ((samples (sort samples <))
-         (n (length samples))
-         (empirical (append-map
-                     (lambda (x i)
-                       (list (cons x (/ i n)) (cons x (/ (+ i 1) n))))
-                     samples (iota n))))
+  (let ((empirical (samples->empirical-cdf-alist samples)))
     (gnuplot-multiple
      (list
       (gnuplot-alist-plot empirical '(commanding "title \"empirical CDF\""))
