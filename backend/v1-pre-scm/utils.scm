@@ -103,7 +103,7 @@
       (gnuplot-function-plot-near
        analytic samples '(commanding "title \"analytic density\""))))))
 
-(define (compare-empirical-dists observed expected)
+(define (compare-empirical-cdfs observed expected)
   (gnuplot-multiple
    (list
     (gnuplot-empirical-cdf-plot observed "observed")
