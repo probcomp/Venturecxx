@@ -38,14 +38,22 @@
 (define (histogram-test-data data)
   (gnuplot-histogram-alist (map (lambda (x) (cons x *binwidth*)) data) "test data" *binwidth*))
 
+(define (kdensity-test-data data)
+  (let ((n (length data)))
+    (gnuplot-alist (map (lambda (x) (cons x (/ 1 n))) data) '(commanding "title \"data\" smooth kdensity") )))
+
+(define (gnuplot-function-plot-near f data)
+  (let* ((n (length data))
+         (xlow (scheme-apply min data))
+         (xhigh (scheme-apply max data))
+         (padding (* 0.1 (- xhigh xlow)))
+         (cdf-plot (plot-stop-drawing!
+                    (replot (new-plot f (- xlow padding) (+ xhigh padding)) 'invisibly))))
+    (gnuplot-alist-plot (plot-relevant-points-alist cdf-plot) '(commanding "title \"analytic\""))))
+
 (define (compare-data-to-cdf samples analytic . adverbs)
   (let* ((samples (sort samples <))
          (n (length samples))
-         (xlow (scheme-apply min samples))
-         (xhigh (scheme-apply max samples))
-         (padding (* 0.1 (- xhigh xlow)))
-         (cdf-plot (plot-stop-drawing!
-                    (scheme-apply replot (new-plot analytic (- xlow padding) (+ xhigh padding)) 'invisibly adverbs)))
          (empirical (append-map
                      (lambda (x i)
                        (list (cons x (/ i n)) (cons x (/ (+ i 1) n))))
@@ -53,4 +61,12 @@
     (gnuplot-multiple
      (list
       (gnuplot-alist-plot empirical '(commanding "title \"empirical\""))
-      (gnuplot-alist-plot (plot-relevant-points-alist cdf-plot) '(commanding "title \"analytic\""))))))
+      (gnuplot-function-plot-near analytic samples)))))
+
+(define (compare-kdensity-to-pdf samples analytic)
+  (let ((n (length samples)))
+    (gnuplot-multiple
+     (list
+      (gnuplot-alist-plot (map (lambda (x) (cons x (/ 1 n))) samples)
+                          '(commanding "title \"empirical kernel density\" smooth kdensity"))
+      (gnuplot-function-plot-near analytic samples)))))
