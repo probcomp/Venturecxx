@@ -4,3 +4,6 @@
 [submodule "backend/v1-pre-scm/pattern-case"]
 	path = backend/v1-pre-scm/pattern-case
 	url = git@github.com:axch/pattern-case.git
+[submodule "backend/v1-pre-scm/adaptive-plot"]
+	path = backend/v1-pre-scm/adaptive-plot
+	url = git@github.com:axch/adaptive-plot.git
