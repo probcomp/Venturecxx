@@ -53,9 +53,13 @@
      (map (lambda (x) (cons x (/ 1 n))) data)
      '(commanding "title \"data\" smooth kdensity") )))
 
-(define (gnuplot-empirial-cdf-plot samples)
-  (gnuplot-alist-plot
-   (samples->empirical-cdf-alist samples) '(commanding "title \"empirical CDF\"")))
+(define (gnuplot-empirical-cdf-plot samples #!optional title)
+  (let* ((title (if (default-object? title)
+                    "empirical CDF"
+                    (string-append title " empirical CDF")))
+         (title-command (string-append "title \"" title "\"")))
+    (gnuplot-alist-plot
+     (samples->empirical-cdf-alist samples) `(commanding ,title-command))))
 
 (define (gnuplot-function-plot-near f data . adverbs)
   (let* ((n (length data))
@@ -70,7 +74,7 @@
 (define (compare-data-to-cdf samples analytic . adverbs)
   (gnuplot-multiple
    (list
-    (gnuplot-empirial-cdf-plot samples)
+    (gnuplot-empirical-cdf-plot samples)
     (gnuplot-function-plot-near analytic samples '(commanding "title \"analytic CDF\"")))))
 
 (define (compare-kdensity-to-pdf samples analytic)
@@ -91,3 +95,9 @@
        (map (lambda (x) (cons x (/ 1 n))) samples) "empirical histogram" *binwidth*)
       (gnuplot-function-plot-near
        analytic samples '(commanding "title \"analytic density\""))))))
+
+(define (compare-empirical-dists observed expected)
+  (gnuplot-multiple
+   (list
+    (gnuplot-empirical-cdf-plot observed "observed")
+    (gnuplot-empirical-cdf-plot expected "expected"))))
