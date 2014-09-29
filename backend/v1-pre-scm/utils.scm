@@ -36,11 +36,14 @@
 (define *binwidth* 0.2)
 
 (define (histogram-test-data data)
-  (gnuplot-histogram-alist (map (lambda (x) (cons x *binwidth*)) data) "test data" *binwidth*))
+  (gnuplot-histogram-alist
+   (map (lambda (x) (cons x *binwidth*)) data) "test data" *binwidth*))
 
 (define (kdensity-test-data data)
   (let ((n (length data)))
-    (gnuplot-alist (map (lambda (x) (cons x (/ 1 n))) data) '(commanding "title \"data\" smooth kdensity") )))
+    (gnuplot-alist
+     (map (lambda (x) (cons x (/ 1 n))) data)
+     '(commanding "title \"data\" smooth kdensity") )))
 
 (define (gnuplot-function-plot-near f data . adverbs)
   (let* ((n (length data))
@@ -48,7 +51,8 @@
          (xhigh (scheme-apply max data))
          (padding (* 0.1 (- xhigh xlow)))
          (cdf-plot (plot-stop-drawing!
-                    (scheme-apply replot (new-plot f (- xlow padding) (+ xhigh padding)) 'invisibly adverbs))))
+                    (scheme-apply replot (new-plot f (- xlow padding) (+ xhigh padding))
+                                  'invisibly adverbs))))
     (scheme-apply gnuplot-alist-plot (plot-relevant-points-alist cdf-plot) adverbs)))
 
 (define (compare-data-to-cdf samples analytic . adverbs)
@@ -67,14 +71,17 @@
   (let ((n (length samples)))
     (gnuplot-multiple
      (list
-      (gnuplot-alist-plot (map (lambda (x) (cons x (/ 1 n))) samples)
-                          '(commanding "title \"empirical kernel density\" smooth kdensity"))
-      (gnuplot-function-plot-near analytic samples '(commanding "title \"analytic density\""))))))
+      (gnuplot-alist-plot
+       (map (lambda (x) (cons x (/ 1 n))) samples)
+       '(commanding "title \"empirical kernel density\" smooth kdensity"))
+      (gnuplot-function-plot-near
+       analytic samples '(commanding "title \"analytic density\""))))))
 
 (define (compare-histogram-to-pdf samples analytic)
   (let ((n (length samples)))
     (gnuplot-multiple
      (list
-      (gnuplot-histogram-alist-plot (map (lambda (x) (cons x (/ 1 n))) samples)
-                                    "empirical histogram" *binwidth*)
-      (gnuplot-function-plot-near analytic samples '(commanding "title \"analytic density\""))))))
+      (gnuplot-histogram-alist-plot
+       (map (lambda (x) (cons x (/ 1 n))) samples) "empirical histogram" *binwidth*)
+      (gnuplot-function-plot-near
+       analytic samples '(commanding "title \"analytic density\""))))))
