@@ -17,11 +17,22 @@
      (lambda ()
        (flo:/ -1. 0.))))
 
+(define gnuplot-environment (make-top-level-environment))
+
+(load-relative-compiled "gnuplot" gnuplot-environment)
+
+(let ((client-environment (the-environment)))
+  (for-each
+   (lambda (n)
+     (environment-link-name client-environment gnuplot-environment n))
+   '( gnuplot-multiple
+      gnuplot-alist
+      gnuplot-histogram-alist)))
+
 (define scheme-apply (access apply system-global-environment))
 
 (load-relative "pattern-case/load")
 (load-relative-compiled "utils")
-(load-relative-compiled "gnuplot")
 (load-relative-compiled "syntax")
 (load-relative-compiled "v1-pre")
 (load-relative-compiled "primitives")
