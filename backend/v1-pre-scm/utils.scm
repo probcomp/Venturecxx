@@ -70,3 +70,11 @@
       (gnuplot-alist-plot (map (lambda (x) (cons x (/ 1 n))) samples)
                           '(commanding "title \"empirical kernel density\" smooth kdensity"))
       (gnuplot-function-plot-near analytic samples '(commanding "title \"analytic density\""))))))
+
+(define (compare-histogram-to-pdf samples analytic)
+  (let ((n (length samples)))
+    (gnuplot-multiple
+     (list
+      (gnuplot-histogram-alist-plot (map (lambda (x) (cons x (/ 1 n))) samples)
+                                    "empirical histogram" *binwidth*)
+      (gnuplot-function-plot-near analytic samples '(commanding "title \"analytic density\""))))))
