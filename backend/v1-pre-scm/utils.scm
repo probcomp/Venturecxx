@@ -71,6 +71,14 @@
      (map (lambda (x) (cons x (/ 1 n))) samples)
      `(commanding ,command))))
 
+(define (gnuplot-empirical-histogram-plot samples #!optional title)
+  (let* ((title (if (default-object? title)
+                    "empirical histogram"
+                    (string-append title " empirical histogram")))
+         (n (length samples)))
+    (gnuplot-histogram-alist-plot
+     (map (lambda (x) (cons x (/ 1 n))) samples) title *binwidth*)))
+
 (define (gnuplot-function-plot-near f data . adverbs)
   (let* ((n (length data))
          (xlow (scheme-apply min data))
@@ -95,13 +103,11 @@
      analytic samples '(commanding "title \"analytic density\"")))))
 
 (define (compare-histogram-to-pdf samples analytic)
-  (let ((n (length samples)))
-    (gnuplot-multiple
-     (list
-      (gnuplot-histogram-alist-plot
-       (map (lambda (x) (cons x (/ 1 n))) samples) "empirical histogram" *binwidth*)
-      (gnuplot-function-plot-near
-       analytic samples '(commanding "title \"analytic density\""))))))
+  (gnuplot-multiple
+   (list
+    (gnuplot-empirical-histogram-plot samples)
+    (gnuplot-function-plot-near
+     analytic samples '(commanding "title \"analytic density\"")))))
 
 (define (compare-empirical-cdfs observed expected)
   (gnuplot-multiple
