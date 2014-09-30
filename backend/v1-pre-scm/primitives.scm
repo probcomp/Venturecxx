@@ -42,3 +42,14 @@
        (if (pair? lst)
            (cons (f (car lst)) (map f (cdr lst)))
            lst))))
+
+(define mu-flip-defn
+  `(begin
+     (define simulate-flip
+       (lambda (weight)
+         (< (random 1.0) weight)))
+     (define flip-log-density
+       (lambda (b weight)
+         (log (if b weight (- 1 weight)))))
+     (define mu-flip
+       (make-sp simulate-flip flip-log-density))))

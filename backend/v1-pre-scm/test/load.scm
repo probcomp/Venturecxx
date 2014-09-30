@@ -26,7 +26,8 @@
       better-message
       assert-proc
       run-tests-and-exit
-      run-registered-tests)))
+      run-registered-tests
+      run-test)))
 
 (load-relative "stats")
 
@@ -93,6 +94,24 @@
 (define-test (two-coin-brush-dist)
   (let ()
     (check (> (chi-sq-test (collect-samples two-coins-with-brush-example)
+                           '((#t . 2/3) (#f . 1/3))) 0.001))))
+
+(define two-mu-coins-with-brush-example
+  `(begin
+     ,observe-defn
+     ,mu-flip-defn
+     ,map-defn
+     ,mcmc-defn
+     (model-in (rdb-extend (get-current-trace))
+       (assume c1 (mu-flip 0.5))
+       (assume c2 (if c1 #t (mu-flip 0.5)))
+       (observe (mu-flip (if (boolean/or c1 c2) 1 0.0001)) #t)
+       (infer (mcmc 20))
+       (predict c1))))
+
+(define-test (two-mu-coin-brush-dist)
+  (let ()
+    (check (> (chi-sq-test (collect-samples two-mu-coins-with-brush-example)
                            '((#t . 2/3) (#f . 1/3))) 0.001))))
 
 (define-test (forward-normal-dist)
