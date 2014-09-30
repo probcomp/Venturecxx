@@ -63,6 +63,7 @@ from sys import exc_info
 from traceback import format_exc
 import random
 import numpy as np
+from tblib.pickling_support import pickle_traceback
 
 from venture.exception import VentureException, format_worker_trace
 from venture.engine.utils import expToDict
@@ -119,10 +120,9 @@ def safely(f):
     try:
       res = f(*args, **kwargs)
     except Exception:
-      # If I return the traceback object and try to format it
-      # higher up, it's just None. So, format it here.
       exc_type, value, traceback = exc_info()
-      trace = format_exc(traceback)
+      # need to pickle the traceback to send it back through the pipe
+      trace = pickle_traceback(traceback)
       # If it's a VentureException, need to convert to JSON to send over pipe
       if isinstance(value, VentureException):
         value = value.to_json_object()
