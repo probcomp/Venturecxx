@@ -29,6 +29,9 @@ pyzmq>=13
 scipy>=0.13
 dill
 
+# parallel exception traceback handling
+tblib>=0.1.0
+
 # Plotting (optional)
 patsy # Because ggplot needs this installed first ??
 pandas>=0.14 # TODO Is the dependency on pandas actually optional?
