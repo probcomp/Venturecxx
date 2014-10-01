@@ -148,6 +148,6 @@
 
 (define-test (observed-normal-dist)
   (let ()
-    (define samples (collect-samples gaussian-example))
+    (define samples (collect-samples (gaussian-example 20)))
     (pp (list 'program-samples (sort samples <)))
     (check (> (k-s-test samples (lambda (x) (gaussian-cdf x 1 (/ 1 (sqrt 2))))) 0.001))))

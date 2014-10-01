@@ -17,7 +17,7 @@
                (* 1/2 (+ (log 2) (log 3.1415926535897932846)))))))
      (define normal (make-sp simulate-normal normal-log-density))))
 
-(define gaussian-example
+(define (gaussian-example iterations)
   `(begin
      ,observe-defn
      ,map-defn
@@ -26,5 +26,25 @@
      (model-in (rdb-extend (get-current-trace))
        (assume mu (normal 0 1))
        (observe (normal mu 1) 2)
-       (infer (mcmc 200))
+       ,@(if (= 0 iterations)
+             '()
+             `((infer (mcmc ,iterations))))
        (predict mu))))
+
+(define gaussian-example-prior-cdf
+  (lambda (x) (gaussian-cdf x 0 1)))
+
+(define gaussian-example-posterior-cdf
+  (lambda (x) (gaussian-cdf x 1 (/ 1 (sqrt 2)))))
+
+(define (gaussian-example-plots iter-counts)
+  (let* ((sample-sets (map collect-samples (map gaussian-example iter-counts)))
+         (bounds (lset-union (car sample-sets) (last sample-sets))))
+    (gnuplot-multiple
+     `(,(gnuplot-function-plot-near
+         gaussian-example-prior-cdf bounds '(commanding "title \"analytic prior CDF\""))
+       ,@(map (lambda (samples i)
+                (gnuplot-empirical-cdf-plot samples (string-append "after " (number->string i) " iterations")))
+              sample-sets iter-counts)
+       ,(gnuplot-function-plot-near
+         gaussian-example-posterior-cdf bounds '(commanding "title \"analytic posterior CDF\""))))))
