@@ -127,3 +127,15 @@
    (list
     (gnuplot-empirical-histogram-plot observed "observed")
     (gnuplot-empirical-histogram-plot expected "expected"))))
+
+(define (samples->inverse-cdf samples)
+  (let ((n (length samples))
+        (samples (list->vector samples)))
+    (lambda (quantile)
+      (let ((index (* n quantile)))
+        (cond ((< index 1)
+               minus-inf)
+              ((and (<= 1 index) (< index n))
+               (vector-ref samples (inexact->exact (floor (- index 1)))))
+              (else
+               (- minus-inf)))))))
