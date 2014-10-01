@@ -56,7 +56,7 @@
                                (predict x))) 4)
   )
 
-(define *num-samples* 20)
+(define *num-samples* 50)
 
 (define (collect-samples prog #!optional count)
   (map (lambda (i) (top-eval prog)) (iota (if (default-object? count)
