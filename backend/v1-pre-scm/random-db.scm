@@ -2,6 +2,15 @@
 (declare (integrate-external "syntax"))
 (declare (integrate-external "pattern-case/pattern-case"))
 
+(define (has-assessor? thing)
+  (and (sp? thing)
+       (sp-assessor thing)))
+
+(define (assessor-of thing)
+  (aif (has-assessor? thing)
+       it
+       (error "No assessor!" thing)))
+
 ;; TODO First writing a version that just forward simulates to make
 ;; sure the rest works.
 (define-structure (rdb (safe-accessors #t))
@@ -63,14 +72,14 @@
                         subaddrs)))
     (if (not (sp? (car sub-vals)))
         (error "What!?"))
-    (if (not (sp-assessor (car sub-vals)))
+    (if (not (has-assessor? (car sub-vals)))
         (error "What?!?"))
     ;; Apply the assessor, but do not record it in the same trace.
     ;; I need to bind the value to an address, for uniformity
     (let* ((val-addr (extend-address addr 'value-to-assess))
            (assess-trace (store-extend trace)))
       (eval `(quote ,val) #f assess-trace val-addr '()) ; Put the value in as a constant
-      (apply (sp-assessor (car sub-vals)) (cons val-addr (cdr subaddrs))
+      (apply (assessor-of (car sub-vals)) (cons val-addr (cdr subaddrs))
              (extend-address addr 'assessment)
              assess-trace read-traces))))
 
@@ -83,8 +92,7 @@
         old-trace op-addr
         (lambda (old-op)
           (and (eqv? new-op old-op)
-               (sp? new-op)
-               (sp-assessor new-op)))
+               (has-assessor? new-op)))
         (lambda () #f)))
      (lambda () #f))))
 
@@ -143,7 +151,7 @@
   ;; Ignores possibility of constraints induced by observations.
   (rdb-trace-search-one
    trace (extend-address addr '(app-sub 0))
-   (lambda (op) (and (sp? op) (sp-assessor op)))
+   has-assessor?
    (lambda () #f)))
 
 (define (unconstrained-random-choice? addr trace)
