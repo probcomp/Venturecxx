@@ -170,26 +170,3 @@
 (define (rdb-trace-commit! from to)
   (set-rdb-addresses! to (rdb-addresses from))
   (set-rdb-records! to (rdb-records from)))
-
-;;; Checking mu
-
-(define mu-should-rerun-once
-  ;; Should print thrice: once for the initial run, once for rerunning
-  ;; the mu to generate a proposal, and once for rerunning the
-  ;; application of the mu when building a full candidate from the
-  ;; proposal, but not for explicitly rerunning the pp in the body.
-  ;; Assessment should print twice, afterward: once for assessing the
-  ;; old value and once for assessing the new one.
-  `(begin
-     (model-in (rdb-extend (get-current-trace))
-       (assume f (make-sp
-                  (lambda ()
-                    (begin
-                      (pp 'running)
-                      1))
-                  (lambda (val)
-                    (begin
-                      (pp 'assessing)
-                      0))))
-       (predict (f))
-       (infer mcmc-step))))
