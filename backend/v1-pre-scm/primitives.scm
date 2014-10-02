@@ -1,5 +1,28 @@
 (declare (usual-integrations))
 
+;;; The notion of procedures
+
+; data BasicProcedure = Compound | Primitive
+; data Procedure = Basic BasicProcedure
+;                | Full (Maybe BasicProcedure) -- simulator
+;                       (Maybe BasicProcedure) -- assessor
+;
+; There is a funny use case of assessors that are Full rather than
+; Basic Procedures.  To wit, if exact assessment is infeasible, it may
+; be approximate, in which case it may be stochastic, in which case it
+; may be interesting to itself assess.  However, a Compound Basic
+; Procedure can consist of a call to a (closed-over) Full Procedure,
+; so we handle that use case.
+
+; However, it is easy to code the slightly type-looser version, namely
+; Full Procedures containing optional Procedures.  That way, apply
+; recurs into itself.
+
+(define assessor-tag (make-annotation-tag))
+
+(define (make-sp simulator assessor)
+  (make-annotated simulator `((,assessor-tag . ,assessor))))
+
 (define flip
   (make-sp
    (make-primitive

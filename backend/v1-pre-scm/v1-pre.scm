@@ -24,23 +24,18 @@
   symbols
   addresses) ; Parallel lists mapping symbols to addresses
 
-;;; The notion of procedures
+(define-structure (primitive (safe-accessors #t)) simulate)
 
-; data BasicProcedure = Compound | Primitive
-; data Procedure = Basic BasicProcedure
-;                | Full (Maybe BasicProcedure) -- simulator
-;                       (Maybe BasicProcedure) -- assessor
-;
-; There is a funny use case of assessors that are Full rather than
-; Basic Procedures.  To wit, if exact assessment is infeasible, it may
-; be approximate, in which case it may be stochastic, in which case it
-; may be interesting to itself assess.  However, a Compound Basic
-; Procedure can consist of a call to a (closed-over) Full Procedure,
-; so we handle that use case.
+(define-structure (compound (safe-accessors #t))
+  formals
+  body
+  env
+  trace
+  read-traces)
 
-; However, it is easy to code the slightly type-looser version, namely
-; Full Procedures containing optional Procedures.  That way, apply
-; recurs into itself.
+;;; Data with metadata
+
+;; Annotated val ann = Annotated val [(Tag, ann)]
 
 ;; TODO Do I want to enforce the invariant that all annotated objects
 ;; are flattened, to wit that the base of any annotated thing is not
@@ -59,20 +54,6 @@
   (aif ((has-annotation? tag) thing)
        (cdr it)
        (error "No annotation on" thing tag)))
-
-(define assessor-tag (make-annotation-tag))
-
-(define (make-sp simulator assessor)
-  (make-annotated simulator `((,assessor-tag . ,assessor))))
-
-(define-structure (primitive (safe-accessors #t)) simulate)
-
-(define-structure (compound (safe-accessors #t))
-  formals
-  body
-  env
-  trace
-  read-traces)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
