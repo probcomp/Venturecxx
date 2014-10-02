@@ -347,7 +347,7 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def restore_trace(self, values, skipStackDictConversion=False):
     return restore_trace(self.Trace(), self.directives, values,
-                         self.foreign_sps, skipStackDictConversion)
+                         self.foreign_sps, self.name, skipStackDictConversion)
 
   def copy_trace(self, trace):
     values = self.dump_trace(trace, skipStackDictConversion=True)
