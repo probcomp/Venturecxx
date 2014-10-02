@@ -9,7 +9,7 @@ endif
 
 test: test/c-stats.so
 	mit-scheme --compiler --heap $(HEAP) --stack 2000 --batch-mode --no-init-file \
-	  --eval '(set! load/suppress-loading-message? #f)' \
+	  --eval '(set! load/suppress-loading-message? #t)' \
 	  --eval '(begin (load "load") (load "test/load") (run-tests-and-exit))'
 
 test/c-stats.so: test/c-stats.c Makefile
