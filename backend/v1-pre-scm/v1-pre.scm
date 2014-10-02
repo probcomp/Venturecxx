@@ -149,6 +149,14 @@
          ;; caller (of course, this does not prevent said internals
          ;; from tracing something if they want, by further
          ;; extending).
+
+         ;; In principle, this could be written not to extend, and
+         ;; "mu" could be written to insert a request to store-extend
+         ;; the bodies of assessable procedures.  The natural way to
+         ;; do that is impeded because variadic lambdas seem to be a
+         ;; pain to provide in this language (except maybe with a
+         ;; restriction that the only thing one can do with an
+         ;; argument list is apply something else to it?).
          (let ((sub-trace (store-extend cur-trace)))
            ;; By calling apply rather than eval, I elide recording the
            ;; identity function that transports the result of the
