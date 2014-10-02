@@ -21,7 +21,7 @@
 (define assessor-tag (make-annotation-tag))
 
 (define (make-sp simulator assessor)
-  (make-annotated simulator `((,assessor-tag . ,assessor))))
+  (annotate simulator assessor-tag assessor))
 
 (define flip
   (make-sp

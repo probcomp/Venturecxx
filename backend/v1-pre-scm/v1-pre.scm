@@ -55,6 +55,11 @@
        (cdr it)
        (error "No annotation on" thing tag)))
 
+(define (annotate thing tag value)
+  (if (annotated? thing)
+      (make-annotated (annotated-base thing) (cons (cons tag value) (annotated-annotations thing)))
+      (make-annotated thing `((,tag . ,value)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Essential evaluation
