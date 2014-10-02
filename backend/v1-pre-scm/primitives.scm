@@ -23,6 +23,8 @@
 (define (make-sp simulator assessor)
   (annotate simulator assessor-tag assessor))
 
+(define value-bound-tag (make-annotation-tag))
+
 (define flip
   (make-sp
    (make-primitive
@@ -31,11 +33,18 @@
          (if (default-object? weight)
              0.5
              weight))))
-   (make-primitive
-    (lambda (val #!optional weight)
-      (log (if (default-object? weight)
-               0.5
-               (if val weight (- 1 weight))))))))
+   (annotate
+    (make-primitive
+     (lambda (val #!optional weight)
+       (log (if (default-object? weight)
+                0.5
+                (if val weight (- 1 weight))))))
+    value-bound-tag
+    (make-primitive
+     (lambda (val #!optional weight)
+       (if (default-object? weight)
+           (log 0.5)
+           0))))))
 
 (define uniform
   (make-sp
