@@ -1,0 +1,20 @@
+(declare (usual-integrations apply eval))
+(declare (integrate-external "syntax"))
+(declare (integrate-external "pattern-case/pattern-case"))
+
+(define (enforce-constraints trace)
+  (receive (new-trace weight) (rebuild-rdb trace (rdb-constraints trace))
+     (rdb-trace-commit! new-trace trace)))
+
+(define (mcmc-step trace)
+  (let* ((target-addr (select-uniformly (random-choices trace)))
+         (proposed-value (prior-resimulate target-addr trace))
+         (replacements (cons `(,target-addr . ,proposed-value) (rdb-constraints trace))))
+    ;; (pp (list target-addr proposed-value))
+    ;; (rdb-trace-search-one-record trace target-addr pp (lambda () (error "What?")))
+    (receive (new-trace weight) (rebuild-rdb trace replacements)
+      (let ((correction (- (log (length (random-choices trace)))
+                           (log (length (random-choices new-trace))))))
+        (if (< (log (random 1.0)) (+ weight correction))
+            (rdb-trace-commit! new-trace trace))))))
+
