@@ -2,17 +2,9 @@
 (declare (integrate-external "syntax"))
 (declare (integrate-external "pattern-case/pattern-case"))
 
-(define (has-assessor? thing)
-  (and (sp? thing)
-       (sp-assessor thing)))
+(define has-assessor? (has-annotation? assessor-tag))
+(define assessor-of (annotation-of assessor-tag))
 
-(define (assessor-of thing)
-  (aif (has-assessor? thing)
-       it
-       (error "No assessor!" thing)))
-
-;; TODO First writing a version that just forward simulates to make
-;; sure the rest works.
 (define-structure (rdb (safe-accessors #t))
   parent
   addresses
@@ -70,7 +62,7 @@
          (sub-vals (map (lambda (a)
                           (traces-lookup (cons trace read-traces) a))
                         subaddrs)))
-    (if (not (sp? (car sub-vals)))
+    (if (not (annotated? (car sub-vals)))
         (error "What!?"))
     (if (not (has-assessor? (car sub-vals)))
         (error "What?!?"))

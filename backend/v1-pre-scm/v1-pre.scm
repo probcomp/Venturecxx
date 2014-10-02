@@ -42,7 +42,28 @@
 ; Full Procedures containing optional Procedures.  That way, apply
 ; recurs into itself.
 
-(define-structure (sp (safe-accessors #t)) simulator assessor)
+;; TODO Do I want to enforce the invariant that all annotated objects
+;; are flattened, to wit that the base of any annotated thing is not
+;; itself annotated?  Do I want to pretend that's so by abstraction
+;; barriers?
+(define-structure (annotated (safe-accessors #t)) base annotations)
+
+(define-structure annotation-tag) ; Opaque, unique
+
+(define ((has-annotation? tag) thing)
+  (and (annotated? thing)
+       (or (assq tag (annotated-annotations thing))
+           ((has-annotation? tag) (annotated-base thing)))))
+
+(define ((annotation-of tag) thing)
+  (aif ((has-annotation? tag) thing)
+       (cdr it)
+       (error "No annotation on" thing tag)))
+
+(define assessor-tag (make-annotation-tag))
+
+(define (make-sp simulator assessor)
+  (make-annotated simulator `((,assessor-tag . ,assessor))))
 
 (define-structure (primitive (safe-accessors #t)) simulate)
 
@@ -142,7 +163,7 @@
                  ;; created
                  (read-traces* (cons trace read-traces)))
              (eval body env* trace* addr* read-traces*))))
-        ((sp? oper)
+        ((annotated? oper)
          ;; There is a choice between store-extending the current
          ;; trace and not extending it.  Extending effectively makes
          ;; all assessable objects hide their internals from the
@@ -161,7 +182,7 @@
            ;; By calling apply rather than eval, I elide recording the
            ;; identity function that transports the result of the
            ;; simulator to the result of the whole SP.
-           (apply (sp-simulator oper) opand-addrs addr sub-trace read-traces)))))
+           (apply (annotated-base oper) opand-addrs addr sub-trace read-traces)))))
 
 (define (top-eval exp)
   (eval exp (make-env-frame #f '() '()) (store-extend #f) (toplevel-address) '()))
