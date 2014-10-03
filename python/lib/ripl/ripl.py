@@ -656,7 +656,7 @@ Open issues:
         return self.sivm.core_sivm.engine.trace_handler.get_worker_traces()
 
     def print_worker_tb(self, *args, **kwargs):
-        self.sivm.core_sivm.engine.trace_handler.print_tb(*args, **kwargs)
+        self.sivm.core_sivm.engine.trace_handler.print_worker_tb(*args, **kwargs)
 
     ############################################
     # Profiler methods (stubs)
