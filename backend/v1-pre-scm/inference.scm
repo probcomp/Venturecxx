@@ -138,6 +138,10 @@
         (error "What?!"))))))
 
 ;; TODO Abstract commonalities between this and weight-for-at
+;; This attempts to implement constant-detection for RandomDB traces.
+;; The resulting interface to the bounding procedure is
+;; that the argument will evaluate to #f if it is not known to be constant,
+;; and to (make-just <value>) if it is.
 (define (bound-for-at val addr exp trace read-traces)
   ;; Expect exp to be an application
   ;; Do not look for it in the trace itself because it may not have been recorded yet.

@@ -23,6 +23,14 @@
 (define (make-sp simulator assessor)
   (annotate simulator assessor-tag assessor))
 
+;; Tag for annotating procedures with ordered outputs with metadata
+;; indicating upper bounds.  This is used to compute the bound for
+;; rejection sampling.
+;; TODO Add support for rejection sampling where assessment and
+;; bounding are not possible separately but where the ratio can
+;; nonetheless be computed (does that ever happen?).  Implementation
+;; strategy: another tag, intended for annotating the simulator, and
+;; another clause in bound-for-at.
 (define value-bound-tag (make-annotation-tag))
 
 (define flip
