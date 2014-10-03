@@ -8,6 +8,9 @@
        (predict c1))))
 
 (define-test (resimulation-should-always-accept-unconstrained-proposals)
+  ;; This manifested as a bug because I wasn't canceling the
+  ;; probability of proposing from the prior against the prior's
+  ;; contribution to the posterior.
   (fluid-let ((*resimulation-mh-reject-hook* (lambda () (assert-true #f))))
     (top-eval weighted-coin-flipping-example)))
 
