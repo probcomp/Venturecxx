@@ -38,7 +38,7 @@
       'ok
       (error "Invariant violation" test args)))
 
-(define (or/p . predicates)
+(define (or/c . predicates)
   (lambda args
     (let loop ((predicates predicates))
       (if (null? predicates)

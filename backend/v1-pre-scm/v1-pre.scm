@@ -67,7 +67,7 @@
 (define (eval exp env trace addr read-traces)
   ;; TODO What happens if this address is recorded, but not in the
   ;; current trace?
-  (ensure (or/p env-frame? false?) env)
+  (ensure (or/c env-frame? false?) env)
   (ensure address? addr)
   (trace-search trace addr (lambda (v) v)
    (lambda ()
