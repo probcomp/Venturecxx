@@ -3,8 +3,9 @@
 (declare (integrate-external "pattern-case/pattern-case"))
 
 (define (enforce-constraints trace)
-  (receive (new-trace weight) (rebuild-rdb trace (rdb-constraints trace))
-     (rdb-trace-commit! new-trace trace)))
+  (receive (new-trace weight)
+    (rebuild-rdb trace (propose-minimal-resimulation-with-deterministic-overrides (rdb-constraints trace)))
+    (rdb-trace-commit! new-trace trace)))
 
 (define (mcmc-step trace)
   (let* ((target-addr (select-uniformly (random-choices trace)))
@@ -12,7 +13,8 @@
          (replacements (cons `(,target-addr . ,proposed-value) (rdb-constraints trace))))
     ;; (pp (list target-addr proposed-value))
     ;; (rdb-trace-search-one-record trace target-addr pp (lambda () (error "What?")))
-    (receive (new-trace weight) (rebuild-rdb trace replacements)
+    (receive (new-trace weight)
+      (rebuild-rdb trace (propose-minimal-resimulation-with-deterministic-overrides replacements))
       (let ((correction (- (log (length (random-choices trace)))
                            (log (length (random-choices new-trace))))))
         (if (< (log (random 1.0)) (+ weight correction))
@@ -187,7 +189,8 @@
   (let ((bound (rejection-bound trace)))
     (let loop ((tries 0))
       (pp `("Trying rejection" ,trace ,(rdb-constraints trace)))
-      (receive (new-trace weight) (rebuild-rdb trace (rdb-constraints trace))
+      (receive (new-trace weight)
+        (rebuild-rdb trace (propose-minimal-resimulation-with-deterministic-overrides (rdb-constraints trace)))
         ;; TODO I'm pretty sure I want the density of the new state,
         ;; without subtracting the density of the old state.  Oops.
         (pp `(got ,weight with bound ,bound))

@@ -91,7 +91,8 @@
         (lambda () #f)))
      (lambda () #f))))
 
-(define ((propose-resimulation-with-deterministic-overrides replacements)
+;; "Minimal" in the sense that it absorbs wherever it can
+(define ((propose-minimal-resimulation-with-deterministic-overrides replacements)
          exp env addr new orig read-traces answer)
   (define (resampled)
     (values answer 0)) ; No weight
@@ -127,7 +128,7 @@
 ;;   if they are conditioned on the current state
 ;; but may be computable with cancellations (e.g., for resimulation proposals)
 
-(define (%rebuild-rdb orig proposal)
+(define (rebuild-rdb orig proposal)
   (let ((new (rdb-extend (rdb-parent orig)))
         (log-weight 0))
     (define (add-weight w)
@@ -156,9 +157,6 @@
      (reverse (rdb-addresses orig))
      (reverse (rdb-records orig)))
     (values new log-weight)))
-
-(define (rebuild-rdb orig replacements)
-  (%rebuild-rdb orig (propose-resimulation-with-deterministic-overrides replacements)))
 
 (define (random-choice? addr trace)
   ;; Ignores possibility of constraints induced by observations.
