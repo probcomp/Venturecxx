@@ -12,7 +12,7 @@
           ,gaussian-defn
           (normal (normal 0 1) 1))))
     (pp (list 'program-samples (sort samples <)))
-    (check (> (k-s-test samples (lambda (x) (gaussian-cdf x 0 2))) 0.001))))
+    (check (> (k-s-test samples (lambda (x) (gaussian-cdf x 0 (sqrt 2)))) 0.001))))
 
 (define-test (unrestricted-infer-normal-dist)
   (let ()
