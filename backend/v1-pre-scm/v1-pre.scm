@@ -60,6 +60,20 @@
       (make-annotated (annotated-base thing) (cons (cons tag value) (annotated-annotations thing)))
       (make-annotated thing `((,tag . ,value)))))
 
+(define (ensure test . args)
+  (if (scheme-apply test args)
+      'ok
+      (error "Invariant violation" test args)))
+
+(define (or/p . predicates)
+  (lambda args
+    (let loop ((predicates predicates))
+      (if (null? predicates)
+          #f
+          (if (scheme-apply (car predicates) args)
+              #t
+              (loop (cdr predicates)))))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Essential evaluation
@@ -67,6 +81,8 @@
 (define (eval exp env trace addr read-traces)
   ;; TODO What happens if this address is recorded, but not in the
   ;; current trace?
+  (ensure (or/p env-frame? false?) env)
+  (ensure address? addr)
   (trace-search trace addr (lambda (v) v)
    (lambda ()
      (let ((answer (do-eval exp env trace addr read-traces)))
