@@ -461,6 +461,15 @@ class TraceProcessExceptionHandler(object):
     transmission over the Pipe).
     Stores all worker stack traces and provides methods to print them.
   '''
+  # Note about the design of this class: Stack traces from workers are stored
+  # here, and NOT on VentureException objects. The reasoning is that the
+  # VentureExceptions are designed for end users, for whom the Venture language
+  # stack trace should suffice.
+  # For developers, access to worker stack traces may help explain where bugs
+  # occurred. Therefore, these tracebacks are stored on the
+  # TraceProcessExceptionHandler object, and methods are provided to access
+  # the traces at the level of the RIPL for convenience.
+
   def __init__(self, res):
     self.info = [self._format_results(entry) for entry in res if threw_error(entry)]
     self.exc_types, self.values, traces = zip(*self.info)
