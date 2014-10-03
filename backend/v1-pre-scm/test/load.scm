@@ -40,6 +40,8 @@
          (top-eval prog))
        (iota (if (default-object? count) *num-samples* count))))
 
+(define *p-value-tolerance* 0.01)
+
 (load-relative "sanity")
 (load-relative "discrete")
 (load-relative "continuous")

@@ -2,7 +2,7 @@
   (let ()
     (define samples (collect-samples `(begin ,gaussian-defn (normal 0 1))))
     (pp (list 'program-samples (sort samples <)))
-    (check (> (k-s-test samples (lambda (x) (gaussian-cdf x 0 1))) 0.001))))
+    (check (> (k-s-test samples (lambda (x) (gaussian-cdf x 0 1))) *p-value-tolerance*))))
 
 (define-test (forward-2-normal-dist)
   (let ()
@@ -12,7 +12,7 @@
           ,gaussian-defn
           (normal (normal 0 1) 1))))
     (pp (list 'program-samples (sort samples <)))
-    (check (> (k-s-test samples (lambda (x) (gaussian-cdf x 0 (sqrt 2)))) 0.001))))
+    (check (> (k-s-test samples (lambda (x) (gaussian-cdf x 0 (sqrt 2)))) *p-value-tolerance*))))
 
 (define-test (unrestricted-infer-normal-dist)
   (let ()
@@ -28,10 +28,10 @@
             (infer (mcmc 10))
             (predict mu)))))
     (pp (list 'program-samples (sort samples <)))
-    (check (> (k-s-test samples (lambda (x) (gaussian-cdf x 0 1))) 0.001))))
+    (check (> (k-s-test samples (lambda (x) (gaussian-cdf x 0 1))) *p-value-tolerance*))))
 
 (define-test (observed-normal-dist)
   (let ()
     (define samples (collect-samples (gaussian-example 20)))
     (pp (list 'program-samples (sort samples <)))
-    (check (> (k-s-test samples (lambda (x) (gaussian-cdf x 1 (/ 1 (sqrt 2))))) 0.001))))
+    (check (> (k-s-test samples (lambda (x) (gaussian-cdf x 1 (/ 1 (sqrt 2))))) *p-value-tolerance*))))
