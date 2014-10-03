@@ -1,3 +1,16 @@
+(define weighted-coin-flipping-example
+  `(begin
+     ,map-defn
+     ,mcmc-defn
+     (model-in (rdb-extend (get-current-trace))
+       (assume c1 (flip 0.2))
+       (infer (mcmc 100))
+       (predict c1))))
+
+(define-test (resimulation-should-always-accept-unconstrained-proposals)
+  (fluid-let ((*resimulation-mh-reject-hook* (lambda () (assert-true #f))))
+    (top-eval weighted-coin-flipping-example)))
+
 (define two-coin-flipping-example
   `(begin
      ,observe-defn

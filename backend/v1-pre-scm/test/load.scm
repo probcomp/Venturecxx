@@ -27,7 +27,8 @@
       assert-proc
       run-tests-and-exit
       run-registered-tests
-      run-test)))
+      run-test
+      assert-true)))
 
 (load-relative "stats")
 
