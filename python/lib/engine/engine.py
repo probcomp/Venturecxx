@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import random
 import dill
-import pickle
+import cPickle as pickle
 import time
 
 from venture.exception import VentureException
@@ -174,7 +174,7 @@ class Engine(object):
     if (not is_picklable(sp)) and (self.mode != 'sequential'):
       errstr = '''SP not picklable. To bind it, call (infer sequential [ n_cores ]),
       bind the sp, then switch back to parallel.'''
-      raise VentureException("invalid_argument", errstr)
+      raise TypeError(errstr)
 
     self.trace_handler.delegate('bind_foreign_sp', name, sp)
 
@@ -347,7 +347,7 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def restore_trace(self, values, skipStackDictConversion=False):
     return restore_trace(self.Trace(), self.directives, values,
-                         self.foreign_sps, skipStackDictConversion)
+                         self.foreign_sps, self.name, skipStackDictConversion)
 
   def copy_trace(self, trace):
     values = self.dump_trace(trace, skipStackDictConversion=True)

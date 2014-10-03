@@ -1,8 +1,10 @@
 from venture.test.config import get_ripl, defaultInfer, skipWhenInParallel, collectSamples
 from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.lite import builtin
+from venture.lite.builtin import binaryNum
 
 import numpy as np
+from nose.tools import assert_raises_regexp
 
 def test_foreign_aaa():
     builtins = builtin.builtInSPs()
@@ -110,3 +112,27 @@ def test_foreign_latents_infer():
     predictions = collectSamples(ripl,"pid")
     ans = [(0,0.6528), (1,0.3472)]
     return reportKnownDiscrete(ans, predictions)
+
+def test_unpicklable_sp_sequential():
+    'If we attempt to bind an unpicklable SP in sequential mode, should work'
+    ripl = get_ripl()
+    ripl.infer('(resample 2)')
+    ripl.bind_foreign_sp('f', binaryNum(lambda x, y: 10*x + y))
+
+def test_unpicklable_sp_parallel():
+    '''
+    If we attempt to bind an unpicklable SP and the engine is in parallel
+    or emulating mode, check that we get the proper warning.
+    '''
+    for mode in ['emulating', 'parallel']:
+        yield check_unpicklable_sp_parallel, mode
+
+def check_unpicklable_sp_parallel(mode):
+    ripl = get_ripl()
+    resample = '[INFER (resample_{0} 2)]'.format(mode)
+    ripl.execute_instruction(resample)
+    regexp = 'SP not picklable.'
+    with assert_raises_regexp(TypeError, regexp):
+        ripl.bind_foreign_sp('f', binaryNum(lambda x, y: 10*x + y))
+
+
