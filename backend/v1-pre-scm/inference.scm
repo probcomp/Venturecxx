@@ -156,7 +156,7 @@
                                  (iota (length exp))))
                  (constancies (map (lambda (sub-addr sub-val)
                                      (if (is-constant? trace sub-addr)
-                                         (just sub-val)
+                                         (make-just sub-val)
                                          #f))
                                    subaddrs sub-vals)))
             (eval `(quote ,val) #f bound-trace val-addr '()) ; Put the value in as a constant
@@ -165,7 +165,7 @@
                         (eval `(quote ,sub-c) #f bound-trace sub-a '()))
                       arg-addrs constancies)
             (apply ((annotation-of value-bound-tag) assessor)
-                   (cons val-addr arg-addrs)
+                   (cons val-addr (cdr arg-addrs)) ; cdr because I don't pass the operator itself
                    (extend-address addr 'bound-computation)
                    bound-trace read-traces))))))
 
