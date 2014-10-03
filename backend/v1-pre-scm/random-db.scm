@@ -8,8 +8,8 @@
 (define-structure (rdb (safe-accessors #t))
   parent
   addresses
-  records
-  constraints
+  records ; list of (exp env addr read-traces answer)
+  constraints ; alist of addr and value
   record-hook)
 
 (define (rdb-trace-search trace addr win lose)

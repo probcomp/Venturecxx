@@ -101,3 +101,94 @@
                       0))))
        (predict (f))
        (infer mcmc-step))))
+
+(define-structure (just (safe-accessors #t))
+  >)
+
+(define (is-constant? trace addr)
+  (rdb-trace-search-one-record trace addr
+   (lambda (rec)
+     (let ((exp (car rec))
+           (env (cadr rec)))
+       (case* exp
+         ((constant val) #t)
+         ((var x)
+          (env-search env x
+           (lambda (addr*)
+             (is-constant? trace addr*))
+           ;; Values that come in from Scheme are presumed constant
+           (lambda () #t)))
+         (_ #f)))) ;; TODO More constants?
+   (lambda ()
+     (rdb-trace-search trace addr
+      (lambda (v) #t) ; External values are constant
+      (lambda ()
+        ;; TODO Actually, it's still constant if it appears in any of
+        ;; the read traces, even if it doesn't appear in parents of
+        ;; this trace.
+        (error "What?!"))))))
+
+;; TODO Abstract commonalities between this and weight-for-at
+(define (bound-for-at val addr exp trace read-traces)
+  ;; Expect exp to be an application
+  ;; Do not look for it in the trace itself because it may not have been recorded yet.
+  (let* ((subaddrs (map (lambda (i)
+                          (extend-address addr `(app-sub ,i)))
+                        (iota (length exp))))
+         (sub-vals (map (lambda (a)
+                          (traces-lookup (cons trace read-traces) a))
+                        subaddrs)))
+    (if (not (annotated? (car sub-vals)))
+        (error "What!?"))
+    (if (not (has-assessor? (car sub-vals)))
+        (error "What?!?"))
+    (let ((assessor (assessor-of (car sub-vals))))
+      (if (not ((has-annotation? value-bound-tag) assessor))
+          (error "Cannot absorb rejection at" val addr exp trace read-traces)
+          ;; Apply the bound computation procedure, but do not record
+          ;; it in the same trace.
+          ;; I need to bind the value and the constancy indicators to
+          ;; addresses.
+          (let* ((val-addr (extend-address addr 'value-to-bound))
+                 (bound-trace (store-extend trace))
+                 (arg-addrs (map (lambda (i)
+                                   (extend-address addr `(constancy ,i)))
+                                 (iota (length exp))))
+                 (constancies (map (lambda (sub-addr sub-val)
+                                     (if (is-constant? trace sub-addr)
+                                         (just sub-val)
+                                         #f))
+                                   subaddrs sub-vals)))
+            (eval `(quote ,val) #f bound-trace val-addr '()) ; Put the value in as a constant
+            (for-each (lambda (sub-a sub-c)
+                        ;; Put all the constancy indicators in as constants
+                        (eval `(quote ,sub-c) #f bound-trace sub-a '()))
+                      arg-addrs constancies)
+            (apply ((annotation-of value-bound-tag) assessor)
+                   (cons val-addr arg-addrs)
+                   (extend-address addr 'bound-computation)
+                   bound-trace read-traces))))))
+
+(define (sum items)
+  (scheme-apply + items))
+
+(define (rejection-bound trace)
+  (sum
+   (map (lambda (addr val)
+          (rdb-trace-search-one-record trace addr
+            (lambda (rec)
+              (bound-for-at val addr (car rec) trace (cadddr rec)))
+            (lambda ()
+              (error "What!!?"))))
+        (map car (rdb-constraints trace))
+        (map cdr (rdb-constraints trace)))))
+
+(define (rejection trace)
+  (let ((bound (rejection-bound trace)))
+    (let loop ()
+      (receive (new-trace weight) (rebuild-rdb trace (rdb-constraints trace))
+        ;; TODO I'm pretty sure I want the density of the new state,
+        ;; without subtracting the density of the old state.  Oops.
+        (if (< weight (+ bound (log (random 1.0))))
+            new-trace
+            (loop))))))
