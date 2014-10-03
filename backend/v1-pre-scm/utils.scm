@@ -47,6 +47,16 @@
               #t
               (loop (cdr predicates)))))))
 
+(define (list-of/c test)
+  (lambda (item)
+    (let loop ((item item))
+      (cond ((null? item)
+             #t)
+            ((pair? item)
+             (and (test (car item))
+                  (loop (cdr item))))
+            (else #f)))))
+
 (define *binwidth* 0.2)
 
 (define (samples->empirical-cdf-alist samples)

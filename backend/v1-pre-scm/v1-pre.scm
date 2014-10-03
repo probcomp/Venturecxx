@@ -189,11 +189,20 @@
                (win (car as)))
               (else (loop (cdr ss) (cdr as)))))
       (lose)))
-(define extend-env make-env-frame)
+(define (extend-env parent symbols addresses)
+  (ensure (or/c env-frame? false?) parent)
+  (ensure (list-of/c symbol?) symbols)
+  (ensure (list-of/c address?) addresses)
+  (make-env-frame parent symbols addresses))
 (define (env-bind! env sym addr)
+  (ensure env-frame? env)
+  (ensure symbol? sym)
+  (ensure address? addr)
   (set-env-frame-symbols! env (cons sym (env-frame-symbols env)))
   (set-env-frame-addresses! env (cons addr (env-frame-addresses env))))
 (define (env-lookup env symbol)
+  (ensure (or/c env-frame? false?) env)
+  (ensure symbol? symbol)
   (env-search env symbol (lambda (a) a) (lambda () #f)))
 
 ;;; Traces
@@ -212,6 +221,7 @@
 ;;; Pluggable trace interface
 
 (define (trace-search trace addr win lose)
+  (ensure address? addr)
   (cond ((rdb? trace)
          (rdb-trace-search trace addr win lose))
         ;; Poor man's dynamic dispatch system
