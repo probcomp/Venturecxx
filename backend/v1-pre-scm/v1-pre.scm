@@ -60,20 +60,6 @@
       (make-annotated (annotated-base thing) (cons (cons tag value) (annotated-annotations thing)))
       (make-annotated thing `((,tag . ,value)))))
 
-(define (ensure test . args)
-  (if (scheme-apply test args)
-      'ok
-      (error "Invariant violation" test args)))
-
-(define (or/p . predicates)
-  (lambda args
-    (let loop ((predicates predicates))
-      (if (null? predicates)
-          #f
-          (if (scheme-apply (car predicates) args)
-              #t
-              (loop (cdr predicates)))))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Essential evaluation

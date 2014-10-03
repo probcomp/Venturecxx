@@ -33,6 +33,20 @@
            (win (car vs)))
           (else (loop (cdr ks) (cdr vs))))))
 
+(define (ensure test . args)
+  (if (scheme-apply test args)
+      'ok
+      (error "Invariant violation" test args)))
+
+(define (or/p . predicates)
+  (lambda args
+    (let loop ((predicates predicates))
+      (if (null? predicates)
+          #f
+          (if (scheme-apply (car predicates) args)
+              #t
+              (loop (cdr predicates)))))))
+
 (define *binwidth* 0.2)
 
 (define (samples->empirical-cdf-alist samples)
