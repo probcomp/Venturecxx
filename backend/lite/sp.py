@@ -55,7 +55,7 @@ class SP(object):
   # otherwise
 
   def reifyLatents(self):
-    return requestPSP.reifyLatent(), outputPSP.reifyLatent()
+    return self.requestPSP.reifyLatent(), self.outputPSP.reifyLatent()
 
 class VentureSPRecord(VentureValue):
   def __init__(self, sp, spAux=None, spFamilies=None):
