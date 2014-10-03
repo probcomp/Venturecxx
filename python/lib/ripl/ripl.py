@@ -651,6 +651,7 @@ Open issues:
     ############################################
     # Worker stack trace retrieval
     ############################################
+    # see corresponding methods in trace_handler.py for more info
     def get_worker_traces(self):
         return self.sivm.core_sivm.engine.trace_handler.get_worker_traces()
 

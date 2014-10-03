@@ -456,10 +456,10 @@ class SequentialTraceProcess(SequentialProcessArchitecture, DummyBase):
 
 class TraceProcessExceptionHandler(object):
   '''
-  Stores information on exceptions from the workers. By default, just finds
-  the first exception, prints its original stack trace, and then re-raises.
-  However, more information is kept around for inspection by the user during
-  debugging.
+  Stores information on exceptions from the workers.
+    Converts VentureExcpetions back from JSON (they are JSON-ified for
+    transmission over the Pipe).
+    Stores all worker stack traces and provides methods to print them.
   '''
   def __init__(self, res):
     self.info = [self._format_results(entry) for entry in res if threw_error(entry)]
@@ -479,16 +479,3 @@ class TraceProcessExceptionHandler(object):
     else:
       value = entry[1]
     return (entry[0], value, entry[2])
-
-# Concerning the hack above: In designing engines that handle parallel traces,
-# we'd like errors in the child trace process to be passed back up to the engine.
-# We'd then like the error from the child to be re-raised, displaying both the
-# stack trace from the child and the parent.
-# There is no easy way to do this in Python, so I made two hacks.
-#   If the child exception is of type VentureException, store the child stack
-#   trace as a string on the instance. Have the __str__ method print the child
-#   stack trace along with the parent.
-# If the child exception is of some other type, introspect to get the type and
-#   the error message. Append the child stack trace as a string to the error
-#   message. Raise another exception of the same type, with the appended error
-#   message.
