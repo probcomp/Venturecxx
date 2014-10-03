@@ -131,8 +131,9 @@
     (values new log-weight)))
 
 ;; "Minimal" in the sense that it absorbs wherever it can
-(define ((propose-minimal-resimulation-with-deterministic-overrides replacements)
+(define ((propose-minimal-resimulation-with-deterministic-overrides target replacements)
          exp env addr new orig read-traces answer)
+  (ensure (or/c address? false?) target)
   (define (resampled)
     (values answer 0)) ; No weight
   (define (absorbed val)
@@ -141,17 +142,19 @@
             ;; the parameters did not change.
             (- (weight-for-at val addr exp new read-traces)
                (weight-at addr orig read-traces))))
-  ;; Assume that replacements are added judiciously, namely to
-  ;; random choices from the original trace (whose operators
-  ;; didn't change due to other replacements?)
-  (aif (assq addr replacements)
-       (if (random-choice? addr new)
-           (absorbed (cdr it))
-           (error "Trying to replace the value of a deterministic computation"))
-       (if (compatible-operators-for? addr new orig)
-           ;; One?  Should be one...
-           (rdb-trace-search-one orig addr absorbed resampled)
-           (resampled)))
+  (if (eq? addr target)
+      (resampled) ; The point was to resimulate the target address
+      ;; Assume that replacements are added judiciously, namely to
+      ;; random choices from the original trace (whose operators
+      ;; didn't change due to other replacements?)
+      (aif (assq addr replacements)
+           (if (random-choice? addr new)
+               (absorbed (cdr it))
+               (error "Trying to replace the value of a deterministic computation"))
+           (if (compatible-operators-for? addr new orig)
+               ;; One?  Should be one...
+               (rdb-trace-search-one orig addr absorbed resampled)
+               (resampled))))
   ;; TODO I believe the fresh and stale log likelihoods
   ;; mentioned in Wingate, Stuhlmuller, Goodman 2008 are
   ;; actually a distraction, in that they always cancel against

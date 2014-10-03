@@ -4,20 +4,18 @@
 
 (define (enforce-constraints trace)
   (receive (new-trace weight)
-    (rebuild-rdb trace (propose-minimal-resimulation-with-deterministic-overrides (rdb-constraints trace)))
+    (rebuild-rdb trace (propose-minimal-resimulation-with-deterministic-overrides #f (rdb-constraints trace)))
     (rdb-trace-commit! new-trace trace)))
 
 (define *resimulation-mh-accept-hook* (lambda () 'ok))
 (define *resimulation-mh-reject-hook* (lambda () 'ok))
 
 (define (mcmc-step trace)
-  (let* ((target-addr (select-uniformly (random-choices trace)))
-         (proposed-value (prior-resimulate target-addr trace))
-         (replacements (cons `(,target-addr . ,proposed-value) (rdb-constraints trace))))
-    ;; (pp (list target-addr proposed-value))
+  (let ((target-addr (select-uniformly (random-choices trace))))
     ;; (rdb-trace-search-one-record trace target-addr pp (lambda () (error "What?")))
     (receive (new-trace weight)
-      (rebuild-rdb trace (propose-minimal-resimulation-with-deterministic-overrides replacements))
+      (rebuild-rdb trace (propose-minimal-resimulation-with-deterministic-overrides
+                          target-addr (rdb-constraints trace)))
       (let ((correction (- (log (length (random-choices trace)))
                            (log (length (random-choices new-trace))))))
         (if (< (log (random 1.0)) (+ weight correction))
@@ -199,7 +197,7 @@
     (let loop ((tries 0))
       (pp `("Trying rejection" ,trace ,(rdb-constraints trace)))
       (receive (new-trace weight)
-        (rebuild-rdb trace (propose-minimal-resimulation-with-deterministic-overrides (rdb-constraints trace)))
+        (rebuild-rdb trace (propose-minimal-resimulation-with-deterministic-overrides #f (rdb-constraints trace)))
         ;; TODO I'm pretty sure I want the density of the new state,
         ;; without subtracting the density of the old state.  Oops.
         (pp `(got ,weight with bound ,bound))
