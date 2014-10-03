@@ -47,7 +47,7 @@
               #t
               (loop (cdr predicates)))))))
 
-(define (list-of/c test)
+(define (listof test)
   (lambda (item)
     (let loop ((item item))
       (cond ((null? item)
