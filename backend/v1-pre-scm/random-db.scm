@@ -48,12 +48,14 @@
 ;;; Translation of the Lightweight MCMC algorithm to the present context
 
 (define (weight-at addr trace read-traces)
+  (ensure address? addr)
   (rdb-trace-search-one-record trace addr
    (lambda (rec)
      (weight-for-at (car (cddddr rec)) addr (car rec) trace read-traces))
    (lambda () (error "Trying to compute weight for a value that isn't there" addr))))
 
 (define (weight-for-at val addr exp trace read-traces)
+  (ensure address? addr)
   ;; Expect exp to be an application
   ;; Do not look for it in the trace itself because it may not have been recorded yet.
   (let* ((subaddrs (map (lambda (i)
@@ -76,6 +78,7 @@
              assess-trace read-traces))))
 
 (define (compatible-operators-for? addr new-trace old-trace)
+  (ensure address? addr)
   (let ((op-addr (extend-address addr '(app-sub 0))))
     (rdb-trace-search-one
      new-trace op-addr
