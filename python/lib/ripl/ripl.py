@@ -652,10 +652,10 @@ Open issues:
     # Worker stack trace retrieval
     ############################################
     def get_worker_traces(self):
-        return self.sivm.core_sivm.engine.trace_handler.exception_handler.traces
+        return self.sivm.core_sivm.engine.trace_handler.get_worker_traces()
 
-    def print_worker_tb(self, i):
-        self.sivm.core_sivm.engine.trace_handler.exception_handler.print_tb(i)
+    def print_worker_tb(self, *args, **kwargs):
+        self.sivm.core_sivm.engine.trace_handler.print_tb(*args, **kwargs)
 
     ############################################
     # Profiler methods (stubs)

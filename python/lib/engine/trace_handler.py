@@ -66,7 +66,7 @@ import numpy as np
 from traceback import print_tb
 from tblib.pickling_support import pickle_traceback
 
-from venture.exception import VentureException, format_worker_trace
+from venture.exception import VentureException
 from venture.engine.utils import expToDict
 import venture.lite.foreign as f
 
@@ -158,6 +158,7 @@ class HandlerBase(object):
     self.pipes = []
     self.processes = []
     self.weights = []
+    self.exception_handler = None
     Pipe, TraceProcess = self._setup()
     for trace in traces:
       parent, child = Pipe()
@@ -215,6 +216,14 @@ class HandlerBase(object):
 
   def retrieve_dumps(self, engine):
     return self.delegate('send_dump', engine.directives)
+
+  def get_worker_traces(self):
+    if self.exception_handler is not None:
+      return self.exception_handler.traces
+
+  def print_worker_tb(self, *args, **kwargs):
+    if self.exception_handler is not None:
+      self.exception_handler.print_tb(*args, **kwargs)
 
   @abstractmethod
   def retrieve_trace(self, ix, engine): pass
