@@ -91,15 +91,6 @@
         (lambda () #f)))
      (lambda () #f))))
 
-;; The type of the proposal is
-;; (exp env addr new-trace orig-trace read-traces resimulation-answer) -> (value weight)
-;; where the weight has to be
-;;   (assess new-value wrt resimulation in the new-trace) - (assess new-value wrt proposal distribution)
-;;   - [(assess orig-value wrt resimulation in orig-trace) - (assess orig-trace wrt proposal distribution)]
-;;   where the proposal distributions may be different in the two cases
-;;   if they are conditioned on the current state
-;; but may be computable with cancellations (e.g., for resimulation proposals)
-
 (define ((propose-resimulation-with-deterministic-overrides replacements)
          exp env addr new orig read-traces answer)
   (define (resampled)
@@ -126,6 +117,15 @@
   ;; actually a distraction, in that they always cancel against
   ;; the log likelihood of newly sampled randomness.
   )
+
+;; The type of the proposal is
+;; (exp env addr new-trace orig-trace read-traces resimulation-answer) -> (value weight)
+;; where the weight has to be
+;;   (assess new-value wrt resimulation in the new-trace) - (assess new-value wrt proposal distribution)
+;;   - [(assess orig-value wrt resimulation in orig-trace) - (assess orig-trace wrt proposal distribution)]
+;;   where the proposal distributions may be different in the two cases
+;;   if they are conditioned on the current state
+;; but may be computable with cancellations (e.g., for resimulation proposals)
 
 (define (%rebuild-rdb orig proposal)
   (let ((new (rdb-extend (rdb-parent orig)))
