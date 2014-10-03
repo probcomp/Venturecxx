@@ -91,34 +91,6 @@
         (lambda () #f)))
      (lambda () #f))))
 
-;; "Minimal" in the sense that it absorbs wherever it can
-(define ((propose-minimal-resimulation-with-deterministic-overrides replacements)
-         exp env addr new orig read-traces answer)
-  (define (resampled)
-    (values answer 0)) ; No weight
-  (define (absorbed val)
-    (values val 
-            ;; TODO Could optimize this not to recompute weights if
-            ;; the parameters did not change.
-            (- (weight-for-at val addr exp new read-traces)
-               (weight-at addr orig read-traces))))
-  ;; Assume that replacements are added judiciously, namely to
-  ;; random choices from the original trace (whose operators
-  ;; didn't change due to other replacements?)
-  (aif (assq addr replacements)
-       (if (random-choice? addr new)
-           (absorbed (cdr it))
-           (error "Trying to replace the value of a deterministic computation"))
-       (if (compatible-operators-for? addr new orig)
-           ;; One?  Should be one...
-           (rdb-trace-search-one orig addr absorbed resampled)
-           (resampled)))
-  ;; TODO I believe the fresh and stale log likelihoods
-  ;; mentioned in Wingate, Stuhlmuller, Goodman 2008 are
-  ;; actually a distraction, in that they always cancel against
-  ;; the log likelihood of newly sampled randomness.
-  )
-
 ;; The type of the proposal is
 ;; (exp env addr new-trace orig-trace read-traces resimulation-answer) -> (value weight)
 ;; where the weight has to be
@@ -157,6 +129,34 @@
      (reverse (rdb-addresses orig))
      (reverse (rdb-records orig)))
     (values new log-weight)))
+
+;; "Minimal" in the sense that it absorbs wherever it can
+(define ((propose-minimal-resimulation-with-deterministic-overrides replacements)
+         exp env addr new orig read-traces answer)
+  (define (resampled)
+    (values answer 0)) ; No weight
+  (define (absorbed val)
+    (values val
+            ;; TODO Could optimize this not to recompute weights if
+            ;; the parameters did not change.
+            (- (weight-for-at val addr exp new read-traces)
+               (weight-at addr orig read-traces))))
+  ;; Assume that replacements are added judiciously, namely to
+  ;; random choices from the original trace (whose operators
+  ;; didn't change due to other replacements?)
+  (aif (assq addr replacements)
+       (if (random-choice? addr new)
+           (absorbed (cdr it))
+           (error "Trying to replace the value of a deterministic computation"))
+       (if (compatible-operators-for? addr new orig)
+           ;; One?  Should be one...
+           (rdb-trace-search-one orig addr absorbed resampled)
+           (resampled)))
+  ;; TODO I believe the fresh and stale log likelihoods
+  ;; mentioned in Wingate, Stuhlmuller, Goodman 2008 are
+  ;; actually a distraction, in that they always cancel against
+  ;; the log likelihood of newly sampled randomness.
+  )
 
 (define (random-choice? addr trace)
   ;; Ignores possibility of constraints induced by observations.
