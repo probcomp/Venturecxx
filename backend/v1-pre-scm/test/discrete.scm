@@ -61,7 +61,7 @@
      (model-in (rdb-extend (get-current-trace))
        (assume c1 (flip 0.5))
        (assume c2 (if c1 #t (flip 0.5)))
-;       (predict (pp (list c1 c2)))
+       ; (predict (pp (list c1 c2)))
        (observe (flip (if (boolean/or c1 c2) 1 0.0001)) #t)
        (infer ,inference)
        (predict c1))))
@@ -69,6 +69,11 @@
 (define-test (two-coin-brush-dist)
   (let ()
     (check (> (chi-sq-test (collect-samples (two-coins-with-brush-example '(mcmc 20)))
+                           '((#t . 2/3) (#f . 1/3))) 0.001))))
+
+(define-test (two-coin-brush-dist-rejection)
+  (let ()
+    (check (> (chi-sq-test (collect-samples (two-coins-with-brush-example 'rejection))
                            '((#t . 2/3) (#f . 1/3))) 0.001))))
 
 (define two-mu-coins-with-brush-example
