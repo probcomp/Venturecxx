@@ -76,7 +76,7 @@
     (check (> (chi-sq-test (collect-samples (two-coins-with-brush-example 'rejection))
                            '((#t . 2/3) (#f . 1/3))) *p-value-tolerance*))))
 
-(define two-mu-coins-with-brush-example
+(define (two-mu-coins-with-brush-example inference)
   `(begin
      ,observe-defn
      ,mu-flip-defn
@@ -86,10 +86,15 @@
        (assume c1 (mu-flip 0.5))
        (assume c2 (if c1 #t (mu-flip 0.5)))
        (observe (mu-flip (if (boolean/or c1 c2) 1 0.0001)) #t)
-       (infer (mcmc 20))
+       (infer ,inference)
        (predict c1))))
 
 (define-test (two-mu-coin-brush-dist)
   (let ()
-    (check (> (chi-sq-test (collect-samples two-mu-coins-with-brush-example)
+    (check (> (chi-sq-test (collect-samples (two-mu-coins-with-brush-example '(mcmc 20)))
+                           '((#t . 2/3) (#f . 1/3))) *p-value-tolerance*))))
+
+(define-test (two-mu-coin-brush-dist-rejection)
+  (let ()
+    (check (> (chi-sq-test (collect-samples (two-mu-coins-with-brush-example 'rejection))
                            '((#t . 2/3) (#f . 1/3))) *p-value-tolerance*))))

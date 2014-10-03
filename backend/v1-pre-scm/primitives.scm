@@ -83,5 +83,7 @@
      (define flip-log-density
        (lambda (b weight)
          (log (if b weight (- 1 weight)))))
+     (define flip-log-density-bound
+       (lambda (b weight) 0))
      (define mu-flip
-       (make-sp simulate-flip flip-log-density))))
+       (make-sp simulate-flip (annotate flip-log-density value-bound-tag flip-log-density-bound)))))
