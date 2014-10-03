@@ -168,8 +168,8 @@
 ;; "Maximal" in the sense that it absorbs only when it must.  Returns
 ;; the density of the new trace, without subtracting off the density
 ;; of the old trace.  This is suitable for rejection sampling.
-(define ((propose-maximal-resimulation-with-deterministic-overrides replacements))
-  (ensure (or/c address? false?) target)
+(define ((propose-maximal-resimulation-with-deterministic-overrides replacements)
+         exp env addr new orig read-traces answer)
   (define (resampled)
     (values answer 0)) ; No weight
   (define (absorbed val)
