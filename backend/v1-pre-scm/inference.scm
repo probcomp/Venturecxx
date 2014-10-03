@@ -7,6 +7,9 @@
     (rebuild-rdb trace (propose-minimal-resimulation-with-deterministic-overrides (rdb-constraints trace)))
     (rdb-trace-commit! new-trace trace)))
 
+(define *resimulation-mh-accept-hook* (lambda () 'ok))
+(define *resimulation-mh-reject-hook* (lambda () 'ok))
+
 (define (mcmc-step trace)
   (let* ((target-addr (select-uniformly (random-choices trace)))
          (proposed-value (prior-resimulate target-addr trace))
@@ -18,7 +21,13 @@
       (let ((correction (- (log (length (random-choices trace)))
                            (log (length (random-choices new-trace))))))
         (if (< (log (random 1.0)) (+ weight correction))
-            (rdb-trace-commit! new-trace trace))))))
+            (begin
+              ; (display ".")
+              (*resimulation-mh-accept-hook*)
+              (rdb-trace-commit! new-trace trace))
+            (begin
+              ; (display "!")
+              (*resimulation-mh-reject-hook*)))))))
 
 (define mcmc-defn
   '(define mcmc
