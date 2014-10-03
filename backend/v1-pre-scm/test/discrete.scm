@@ -51,7 +51,7 @@
 (define-test (two-coin-dist)
   (let ()
     (check (> (chi-sq-test (collect-samples two-coin-flipping-example)
-                           '((#t . 2/3) (#f . 1/3))) 0.001))))
+                           '((#t . 2/3) (#f . 1/3))) *p-value-tolerance*))))
 
 (define (two-coins-with-brush-example inference)
   `(begin
@@ -69,12 +69,12 @@
 (define-test (two-coin-brush-dist)
   (let ()
     (check (> (chi-sq-test (collect-samples (two-coins-with-brush-example '(mcmc 20)))
-                           '((#t . 2/3) (#f . 1/3))) 0.001))))
+                           '((#t . 2/3) (#f . 1/3))) *p-value-tolerance*))))
 
 (define-test (two-coin-brush-dist-rejection)
   (let ()
     (check (> (chi-sq-test (collect-samples (two-coins-with-brush-example 'rejection))
-                           '((#t . 2/3) (#f . 1/3))) 0.001))))
+                           '((#t . 2/3) (#f . 1/3))) *p-value-tolerance*))))
 
 (define two-mu-coins-with-brush-example
   `(begin
@@ -92,4 +92,4 @@
 (define-test (two-mu-coin-brush-dist)
   (let ()
     (check (> (chi-sq-test (collect-samples two-mu-coins-with-brush-example)
-                           '((#t . 2/3) (#f . 1/3))) 0.001))))
+                           '((#t . 2/3) (#f . 1/3))) *p-value-tolerance*))))
