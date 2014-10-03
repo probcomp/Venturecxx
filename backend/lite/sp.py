@@ -54,6 +54,9 @@ class SP(object):
   # VentureSPs are intentionally not comparable until we decide
   # otherwise
 
+  def reifyLatents(self):
+    return requestPSP.reifyLatent(), outputPSP.reifyLatent()
+
 class VentureSPRecord(VentureValue):
   def __init__(self, sp, spAux=None, spFamilies=None):
     if spAux is None:
@@ -83,9 +86,11 @@ used in the implementation of TypedPSP and TypedLKernel."""
     return None
   def __contains__(self, vthing): return isinstance(vthing, VentureSPRecord)
 
-  def __init__(self, args_types, return_type, variadic=False, min_req_args=None):
+  def __init__(self, args_types, return_type, latent_type,
+               variadic=False, min_req_args=None):
     self.args_types = args_types
     self.return_type = return_type
+    self.latent_type = latent_type
     self.variadic = variadic
     if variadic:
       assert len(args_types) == 1 # TODO Support non-homogeneous variadics later
@@ -125,6 +130,9 @@ used in the implementation of TypedPSP and TypedLKernel."""
       return [self.args_types[i].asVentureValue(v) for (i,v) in enumerate(lst)]
     else:
       return [self.args_types[0].asVentureValue(v) for v in lst]
+
+  def wrap_latent(self, latent):
+    return self.latent_type.asVentureValue(latent)
 
   def _name_for_fixed_arity(self, args_types):
     args_spec = " ".join([t.name() for t in args_types])

@@ -187,6 +187,15 @@ class PSP(object):
     """
     raise VentureBuiltinSPMethodError("Cannot enumerate")
 
+  def reifyLatent(self):
+    """
+    Return latent state of PSP. Applies to uncollapsed PSP's, e.g.
+    make_beta_bernoulli, for which the latent state is the value of the
+    beta random variable.
+    For PSP's with no latent state (the majority), simple return None.
+    """
+    return None
+
   def description(self, _name):
     """Return a string describing this PSP.  The string may include the
     name argument, which is the symbol that the enclosing SP is bound
@@ -300,6 +309,10 @@ class TypedPSP(PSP):
   def hasDeltaKernel(self): return self.psp.hasDeltaKernel()
   def getDeltaKernel(self,args): return TypedLKernel(self.psp.getDeltaKernel(args),self.f_type)
   # TODO Wrap the simulation and delta kernels properly (once those are tested)
+
+  def reifyLatent(self):
+    latent = self.psp.reifyLatent()
+    return self.f_type.wrap_latent(latent)
 
   def description(self,name):
     type_names = self.f_type.names()
