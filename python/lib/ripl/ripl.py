@@ -99,9 +99,9 @@ class Ripl():
     ############################################
     # Execution
     ############################################
-    
-    
-    
+
+
+
     def execute_instruction(self, instruction=None, params=None):
         p = self._cur_parser()
         try: # execute instruction, and handle possible exception
@@ -136,7 +136,7 @@ class Ripl():
             self.directive_id_to_stringable_instruction[did] = stringable_instruction
             self.directive_id_to_mode[did] = self.mode
         return ret_value
-    
+
     def _annotated_error(self, e, instruction):
         if e.exception is 'evaluation':
             p = self._cur_parser()
@@ -161,7 +161,7 @@ class Ripl():
         # text index (which defaults to the entire instruction)
         if 'text_index' not in e.data:
             e.data['text_index'] = [0,len(instruction_string)-1]
-        
+
         # in the case of a parse exception, the text_index gets narrowed
         # down to the exact expression/atom that caused the error
         if e.exception == 'parse':
@@ -176,7 +176,7 @@ class Ripl():
                 if e2.exception == 'no_text_index': text_index = None
                 else: raise
             e.data['text_index'] = text_index
-        
+
         # for "text_parse" exceptions, even trying to split the instruction
         # results in an exception
         if e.exception == 'text_parse':
@@ -185,7 +185,7 @@ class Ripl():
             except VentureException as e2:
                 assert e2.exception == 'text_parse'
                 e = e2
-            
+
         # in case of invalid argument exception, the text index
         # refers to the argument's location in the string
         if e.exception == 'invalid_argument':
@@ -194,12 +194,12 @@ class Ripl():
             arg = e.data['argument']
             text_index = arg_ranges[arg]
             e.data['text_index'] = text_index
-        
+
         a = e.data['text_index'][0]
         b = e.data['text_index'][1]+1
         e.data['text_snippet'] = instruction_string[a:b]
         e.data['instruction_string'] = instruction_string
-        
+
         e.annotated = True
         return e
 
@@ -558,14 +558,14 @@ Open issues:
             if len(instructions) > 0:
                 directives = [d for d in directives if d['instruction'] in instructions]
             return directives
-    
+
     def print_directives(self, *instructions, **kwargs):
         for directive in self.list_directives(instructions = instructions, **kwargs):
             dir_id = int(directive['directive_id'])
             dir_val = str(directive['value'])
             dir_type = directive['instruction']
             dir_text = self._get_raw_text(dir_id)
-            
+
             if dir_type == "assume":
                 print "%d: %s:\t%s" % (dir_id, dir_text, dir_val)
             elif dir_type == "observe":
@@ -574,7 +574,7 @@ Open issues:
                 print "%d: %s:\t %s" % (dir_id, dir_text, dir_val)
             else:
                 assert False, "Unknown directive type found: %s" % str(directive)
-      
+
     def get_directive(self, label_or_did):
         if isinstance(label_or_did,int):
             i = {'instruction':'get_directive', 'directive_id':label_or_did}
@@ -647,6 +647,15 @@ Open issues:
         extra = self.sivm.load(fname)
         self.directive_id_to_stringable_instruction = extra['directive_id_to_stringable_instruction']
         self.directive_id_to_mode = extra['directive_id_to_mode']
+
+    ############################################
+    # Worker stack trace retrieval
+    ############################################
+    def get_worker_traces(self):
+        return self.sivm.core_sivm.engine.trace_handler.exception_handler.traces
+
+    def print_worker_tb(self, i):
+        self.sivm.core_sivm.engine.trace_handler.exception_handler.print_tb(i)
 
     ############################################
     # Profiler methods (stubs)

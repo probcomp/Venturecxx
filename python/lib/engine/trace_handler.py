@@ -63,6 +63,7 @@ from sys import exc_info
 from traceback import format_exc
 import random
 import numpy as np
+from traceback import print_tb
 from tblib.pickling_support import pickle_traceback
 
 from venture.exception import VentureException, format_worker_trace
@@ -125,8 +126,8 @@ def safely(f):
     try:
       res = f(*args, **kwargs)
     except Exception:
+      # Pickle the traceback object so I can return it
       exc_type, value, traceback = exc_info()
-      # need to pickle the traceback to send it back through the pipe
       trace = pickle_traceback(traceback)
       # If it's a VentureException, need to convert to JSON to send over pipe
       if isinstance(value, VentureException):
@@ -192,8 +193,8 @@ class HandlerBase(object):
     for pipe in self.pipes:
       res.append(pipe.recv())
     if any([threw_error(entry) for entry in res]):
-      exception_handler = TraceProcessExceptionHandler(res)
-      raise exception_handler.gen_exception()
+      self.exception_handler = TraceProcessExceptionHandler(res)
+      raise self.exception_handler.values[0]
     return res
 
   def delegate_one(self, ix, cmd, *args, **kwargs):
@@ -202,8 +203,8 @@ class HandlerBase(object):
     pipe.send((cmd, args, kwargs))
     res = pipe.recv()
     if threw_error(res):
-      exception_handler = TraceProcessExceptionHandler([res])
-      raise exception_handler.gen_exception()
+      self.exception_handler = TraceProcessExceptionHandler([res])
+      raise self.exception_handler.values[0]
     return res
 
   def delegate_distinguished(self, cmd, *args, **kwargs):
@@ -453,20 +454,14 @@ class TraceProcessExceptionHandler(object):
   '''
   def __init__(self, res):
     self.info = [self._format_results(entry) for entry in res if threw_error(entry)]
-    self.exc_types, self.values, self.traces = zip(*self.info)
+    self.exc_types, self.values, traces = zip(*self.info)
+    self.traces = [trace[0](*trace[1]) for trace in traces]
     self.n_processes = len(res)
     self.n_errors = len(self.info)
 
-  def gen_exception(self):
-    # This is a hack of sorts; see long comment below.
-    Exc = self.exc_types[0]
-    if issubclass(Exc, VentureException):
-      exc = self.values[0]
-      exc.worker_trace = self.traces[0]
-      return exc
-    else:
-      msg = (self.values[0].message + format_worker_trace(self.traces[0]))
-      return Exc(msg)
+  def print_tb(self, i = 0):
+    '''Print the traceback of the ith worker that failed'''
+    print_tb(self.traces[i])
 
   @staticmethod
   def _format_results(entry):
