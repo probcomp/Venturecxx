@@ -23,6 +23,7 @@
      (model-in (rdb-extend (get-current-trace))
        (assume c1 (flip 0.5))
        (assume c2 (if c1 #t (flip 0.5)))
+;       (predict (pp (list c1 c2)))
        (observe (flip (if (boolean/or c1 c2) 1 0.0001)) #t)
        (infer ,inference)
        (predict c1))))

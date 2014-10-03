@@ -34,8 +34,10 @@
 (define *num-samples* 50)
 
 (define (collect-samples prog #!optional count)
-  (map (lambda (i) (top-eval prog)) (iota (if (default-object? count)
-                                              *num-samples* count))))
+  (map (lambda (i)
+         ; (pp `(running ,i))
+         (top-eval prog))
+       (iota (if (default-object? count) *num-samples* count))))
 
 (load-relative "sanity")
 (load-relative "discrete")
