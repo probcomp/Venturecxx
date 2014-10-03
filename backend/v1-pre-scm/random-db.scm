@@ -92,8 +92,11 @@
      (lambda () #f))))
 
 ;; The type of the proposal is
-;; (exp env addr new-trace orig-trace read-traces resimulation-answer) -> (value weight)
-;; where the weight has to be
+;;   (exp env addr new-trace orig-trace read-traces resimulation-answer) -> (value weight)
+;; Rebuild-rdb will return a trace built with the supplied values,
+;; together with the sum of the given weights.
+
+;; For a Metropolis-Hastings proposal, the weight has to be
 ;;   (assess new-value wrt resimulation in the new-trace) - (assess new-value wrt proposal distribution)
 ;;   - [(assess orig-value wrt resimulation in orig-trace) - (assess orig-trace wrt proposal distribution)]
 ;;   where the proposal distributions may be different in the two cases
@@ -131,6 +134,7 @@
     (values new log-weight)))
 
 ;; "Minimal" in the sense that it absorbs wherever it can
+;; Returns an M-H style weight
 (define ((propose-minimal-resimulation-with-deterministic-overrides target replacements)
          exp env addr new orig read-traces answer)
   (ensure (or/c address? false?) target)
@@ -160,6 +164,24 @@
   ;; actually a distraction, in that they always cancel against
   ;; the log likelihood of newly sampled randomness.
   )
+
+;; "Maximal" in the sense that it absorbs only when it must.  Returns
+;; the density of the new trace, without subtracting off the density
+;; of the old trace.  This is suitable for rejection sampling.
+(define ((propose-maximal-resimulation-with-deterministic-overrides replacements))
+  (ensure (or/c address? false?) target)
+  (define (resampled)
+    (values answer 0)) ; No weight
+  (define (absorbed val)
+    (values val (weight-for-at val addr exp new read-traces)))
+  ;; Assume that replacements are added judiciously, namely to
+  ;; random choices from the original trace (whose operators
+  ;; didn't change due to other replacements?)
+  (aif (assq addr replacements)
+       (if (random-choice? addr new)
+           (absorbed (cdr it))
+           (error "Trying to replace the value of a deterministic computation"))
+       (resampled)))
 
 (define (random-choice? addr trace)
   ;; Ignores possibility of constraints induced by observations.

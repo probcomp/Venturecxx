@@ -197,7 +197,7 @@
     (let loop ((tries 0))
       (pp `("Trying rejection" ,trace ,(rdb-constraints trace)))
       (receive (new-trace weight)
-        (rebuild-rdb trace (propose-minimal-resimulation-with-deterministic-overrides #f (rdb-constraints trace)))
+        (rebuild-rdb trace (propose-maximal-resimulation-with-deterministic-overrides (rdb-constraints trace)))
         ;; TODO I'm pretty sure I want the density of the new state,
         ;; without subtracting the density of the old state.  Oops.
         (pp `(got ,weight with bound ,bound))
