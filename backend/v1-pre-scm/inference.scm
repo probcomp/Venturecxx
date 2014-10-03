@@ -189,6 +189,7 @@
       (receive (new-trace weight) (rebuild-rdb trace (rdb-constraints trace))
         ;; TODO I'm pretty sure I want the density of the new state,
         ;; without subtracting the density of the old state.  Oops.
-        (if (< weight (+ bound (log (random 1.0))))
+        ; (pp `(got ,weight with bound ,bound))
+        (if (< (log (random 1.0)) (- weight bound))
             new-trace
             (loop))))))
