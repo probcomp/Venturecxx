@@ -14,6 +14,7 @@ test: test/c-stats.so
 
 test/c-stats.so: test/c-stats.c Makefile
 	gcc -I/home/axch/mit-scheme-9.2/src/microcode/ \
+	  -I/home/axch/mit-scheme-9.1.1/src/microcode/ \
 	  `gsl-config --cflags` -shared \
 	  -o test/c-stats.so test/c-stats.c \
 	   `gsl-config --libs` -Wall -Wextra -Werror -O2 -fPIC -DCOMPILE_AS_MODULE
