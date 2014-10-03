@@ -185,11 +185,14 @@
 
 (define (rejection trace)
   (let ((bound (rejection-bound trace)))
-    (let loop ()
+    (let loop ((tries 0))
+      (pp `("Trying rejection" ,trace ,(rdb-constraints trace)))
       (receive (new-trace weight) (rebuild-rdb trace (rdb-constraints trace))
         ;; TODO I'm pretty sure I want the density of the new state,
         ;; without subtracting the density of the old state.  Oops.
-        ; (pp `(got ,weight with bound ,bound))
+        (pp `(got ,weight with bound ,bound))
         (if (< (log (random 1.0)) (- weight bound))
             new-trace
-            (loop))))))
+            (if (< tries 50)
+                (loop (+ tries 1))
+                (error "Rejected")))))))
