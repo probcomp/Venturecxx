@@ -13,6 +13,9 @@ test: test/c-stats.so
 	  --eval '(begin (load "load") (load "test/load") (run-tests-and-exit))'
 
 test/c-stats.so: test/c-stats.c Makefile
-	gcc -I/home/axch/mit-scheme-9.2/src/microcode/ `gsl-config --cflags` -shared -o test/c-stats.so test/c-stats.c `gsl-config --libs` -Wall -Wextra -Werror -O2 -fPIC -DCOMPILE_AS_MODULE
+	gcc -I/home/axch/mit-scheme-9.2/src/microcode/ \
+	  `gsl-config --cflags` -shared \
+	  -o test/c-stats.so test/c-stats.c \
+	   `gsl-config --libs` -Wall -Wextra -Werror -O2 -fPIC -DCOMPILE_AS_MODULE
 
 .PHONY: test
