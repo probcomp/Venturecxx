@@ -46,7 +46,10 @@ class VentureValue(object):
       # TODO Arrays or lists?
       return VentureArray([VentureValue.fromStackDict(val) for val in thing])
     else:
-      return stackable_types[thing["type"]].fromStackDict(thing)
+      t = thing["type"]
+      if t not in stackable_types:
+        raise VentureTypeError('Invalid type "%s"' % t)
+      return stackable_types[t].fromStackDict(thing)
 
   ### Comparison
   def compare(self, other):
