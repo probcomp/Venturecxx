@@ -7,7 +7,8 @@ from value import SPRef
 from lkernel import VariationalLKernel
 from scope import isScopeIncludeOutputPSP
 from consistency import assertTorus, assertTrace
-from exception import VentureError, StackFrame
+from exception import VentureError
+from venture.exception import VentureException
 
 def regenAndAttach(trace,scaffold,shouldRestore,omegaDB,gradients):
   assertTorus(scaffold)
@@ -102,37 +103,30 @@ def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   assert isinstance(weight, numbers.Number)
   return weight
 
-def evalFamily(trace,exp,env,scaffold,shouldRestore,omegaDB,gradients):
+def evalFamily(trace,address,exp,env,scaffold,shouldRestore,omegaDB,gradients):
   if e.isVariable(exp):
     try:
       sourceNode = env.findSymbol(exp)
     except VentureError as err:
-      err.stack_frame = StackFrame(exp, [])
-      raise err
+      raise VentureException("evaluation", err.message, address=address)
     weight = regen(trace,sourceNode,scaffold,shouldRestore,omegaDB,gradients)
-    return (weight,trace.createLookupNode(sourceNode))
-  elif e.isSelfEvaluating(exp): return (0,trace.createConstantNode(exp))
-  elif e.isQuotation(exp): return (0,trace.createConstantNode(e.textOfQuotation(exp)))
+    return (weight,trace.createLookupNode(address,sourceNode))
+  elif e.isSelfEvaluating(exp): return (0,trace.createConstantNode(address,exp))
+  elif e.isQuotation(exp): return (0,trace.createConstantNode(address,e.textOfQuotation(exp)))
   else:
     weight = 0
     nodes = []
     for index, subexp in enumerate(exp):
-      try:
-        w, n = evalFamily(trace,subexp,env,scaffold,shouldRestore,omegaDB,gradients)
-        weight += w
-        nodes.append(n)
-      except VentureError as err:
-        # here we flatten nested expressions
-        err.stack_frame.exp = exp
-        err.stack_frame.index.append(index)
-        raise err
+      addr = address.extend(index)
+      w, n = evalFamily(trace,addr,subexp,env,scaffold,shouldRestore,omegaDB,gradients)
+      weight += w
+      nodes.append(n)
 
-    (requestNode,outputNode) = trace.createApplicationNodes(nodes[0],nodes[1:],env)
+    (requestNode,outputNode) = trace.createApplicationNodes(address,nodes[0],nodes[1:],env)
     try:
       weight += apply(trace,requestNode,outputNode,scaffold,shouldRestore,omegaDB,gradients)
     except VentureError as err:
-      err.stack_frame = StackFrame(exp, [], err.stack_frame)
-      raise err
+      raise VentureException("evaluation", err.message, address=address)
     assert isinstance(weight, numbers.Number)
     return weight,outputNode
 
@@ -197,7 +191,8 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
         esrParent = omegaDB.getESRParent(trace.spAt(node),esr.id)
         weight += restore(trace,esrParent,scaffold,omegaDB,gradients)
       else:
-        (w,esrParent) = evalFamily(trace,esr.exp,esr.env,scaffold,shouldRestore,omegaDB,gradients)
+        address = node.address.request(esr.addr)
+        (w,esrParent) = evalFamily(trace,address,esr.exp,esr.env,scaffold,shouldRestore,omegaDB,gradients)
         weight += w
       trace.registerFamilyAt(node,esr.id,esrParent)
 

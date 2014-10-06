@@ -46,7 +46,10 @@ class VentureValue(object):
       # TODO Arrays or lists?
       return VentureArray([VentureValue.fromStackDict(val) for val in thing])
     else:
-      return stackable_types[thing["type"]].fromStackDict(thing)
+      t = thing["type"]
+      if t not in stackable_types:
+        raise VentureTypeError('Invalid type "%s"' % t)
+      return stackable_types[t].fromStackDict(thing)
 
   ### Comparison
   def compare(self, other):
@@ -93,7 +96,7 @@ class VentureValue(object):
   def expressionFor(self):
     return v.quote(self.asStackDict(None))
 
-  def isProperList(self): return False
+  def isValidCompoundForm(self): return False
 
 def vv_dot_product(v1, v2):
   """Dot product of venture values taking into account that either may be
@@ -352,7 +355,7 @@ class VentureNil(VentureValue):
   def expressionFor(self):
     return [v.symbol("list")]
 
-  def isProperList(self): return True
+  def isValidCompoundForm(self): return True
   def asPossiblyImproperList(self): return ([], None)
   def asPythonList(self, _elt_type=None): return []
 
@@ -467,8 +470,8 @@ class VenturePair(VentureValue):
   def expressionFor(self):
     return [v.symbol("pair"), self.first.expressionFor(), self.rest.expressionFor()]
 
-  def isProperList(self):
-    return self.rest.isProperList()
+  def isValidCompoundForm(self):
+    return self.rest.isValidCompoundForm()
   def asPythonList(self, elt_type=None):
     if elt_type is not None:
       return [elt_type.asPython(self.first)] + self.rest.asPythonList(elt_type)
@@ -561,7 +564,7 @@ class VentureArray(VentureValue):
   def expressionFor(self):
     return [v.symbol("array")] + [val.expressionFor() for val in self.array]
 
-  def isProperList(self): return True
+  def isValidCompoundForm(self): return True
   def asPythonList(self, elt_type=None):
     return self.getArray(elt_type)
 
@@ -655,7 +658,7 @@ class VentureArrayUnboxed(VentureValue):
     new_data = [new_type.asPython(self.elt_type.asVentureValue(val).map_real(f)) for val in self.array]
     return VentureArrayUnboxed(new_data, new_type)
 
-  def isProperList(self): return True
+  def isValidCompoundForm(self): return False
   def asPythonList(self, elt_type=None):
     return self.getArray(elt_type)
 
@@ -1164,7 +1167,7 @@ data Expression = Bool | Number | Integer | Atom | Symbol | Array Expression
       return thing # Atoms are valid elements of expressions
     if isinstance(thing, VentureSymbol):
       return thing.getSymbol()
-    if thing.isProperList():
+    if thing.isValidCompoundForm():
       # Leave quoted data as they are, on the grounds that (quote
       # <thing>) should evaluate to exactly that <thing>, even if
       # constructed programmatically from a <thing> that does not

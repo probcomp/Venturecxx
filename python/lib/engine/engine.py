@@ -14,28 +14,48 @@
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import random
-import pickle
+import dill
+import cPickle as pickle
 import time
 
 from venture.exception import VentureException
+from trace_handler import (dump_trace, restore_trace, SequentialTraceHandler,
+                           EmulatingTraceHandler, ParallelTraceHandler)
 from venture.lite.utils import sampleLogCategorical
 from venture.engine.inference import Infer
-from venture.engine.utils import expToDict
 import venture.value.dicts as v
+
+def is_picklable(obj):
+  try:
+    res = pickle.dumps(obj)
+  except TypeError:
+    return False
+  else:
+    return True
 
 class Engine(object):
 
   def __init__(self, name="phony", Trace=None):
     self.name = name
     self.Trace = Trace
-    self.traces = [Trace()]
-    self.weights = [0]
     self.directiveCounter = 0
     self.directives = {}
     self.inferrer = None
+    self.trace_handler = SequentialTraceHandler([Trace()], backend = self.name)
+    self.n_traces = 1
+    self.mode = 'sequential'
     import venture.lite.inference_sps as inf
     self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
+
+  def create_handler(self, traces):
+    if self.mode == 'parallel':
+      Handler = ParallelTraceHandler
+    elif self.mode == 'emulating':
+      Handler = EmulatingTraceHandler
+    else:
+      Handler = SequentialTraceHandler
+    return Handler(traces, self.name)
 
   def inferenceSPsList(self):
     return self.inference_sps.iteritems()
@@ -44,8 +64,7 @@ class Engine(object):
     self.inference_sps[name] = sp
 
   def getDistinguishedTrace(self):
-    assert self.traces
-    return self.traces[0]
+    return self.retrieve_trace(0)
 
   def nextBaseAddr(self):
     self.directiveCounter += 1
@@ -53,25 +72,23 @@ class Engine(object):
 
   def assume(self,id,datum):
     baseAddr = self.nextBaseAddr()
-
     exp = datum
 
-    for trace in self.traces:
-      trace.eval(baseAddr,exp)
-      trace.bindInGlobalEnv(id,baseAddr)
+    values = self.trace_handler.delegate('assume', baseAddr, id, exp)
+    value = values[0]
 
     self.directives[self.directiveCounter] = ["assume",id,datum]
 
-    return (self.directiveCounter,self.getDistinguishedTrace().extractValue(baseAddr))
+    return (self.directiveCounter,value)
 
   def predict_all(self,datum):
     baseAddr = self.nextBaseAddr()
-    for trace in self.traces:
-      trace.eval(baseAddr,datum)
+
+    value = self.trace_handler.delegate('predict_all', baseAddr, datum)
 
     self.directives[self.directiveCounter] = ["predict",datum]
 
-    return (self.directiveCounter,[t.extractValue(baseAddr) for t in self.traces])
+    return (self.directiveCounter,value)
 
   def predict(self, datum):
     (did, answers) = self.predict_all(datum)
@@ -80,14 +97,7 @@ class Engine(object):
   def observe(self,datum,val):
     baseAddr = self.nextBaseAddr()
 
-    for trace in self.traces:
-      trace.eval(baseAddr,datum)
-      logDensity = trace.observe(baseAddr,val)
-
-      # TODO check for -infinity? Throw an exception?
-      if logDensity == float("-inf"):
-        raise VentureException("invalid_constraint", "Observe failed to constrain",
-                               expression=datum, value=val)
+    self.trace_handler.delegate('observe', baseAddr, datum, val)
 
     self.directives[self.directiveCounter] = ["observe",datum,val]
     return self.directiveCounter
@@ -97,10 +107,8 @@ class Engine(object):
       raise VentureException("invalid_argument", "Cannot forget a non-existent directive id",
                              argument="directive_id", directive_id=directiveId)
     directive = self.directives[directiveId]
-    for trace in self.traces:
-      if directive[0] == "observe": trace.unobserve(directiveId)
-      trace.uneval(directiveId)
-      if directive[0] == "assume": trace.unbindInGlobalEnv(directive[1])
+
+    self.trace_handler.delegate('forget', directive, directiveId)
 
     del self.directives[directiveId]
 
@@ -127,28 +135,26 @@ class Engine(object):
     # TODO Record frozen state for reinit_inference_problem?  What if
     # the replay is done with a different number of particles than the
     # original?  Where do the extra values come from?
-    for trace in self.traces:
-      trace.freeze(directiveId)
+    self.trace_handler.delegate('freeze', directiveId)
 
   def report_value(self,directiveId):
     if directiveId not in self.directives:
       raise VentureException("invalid_argument", "Cannot report a non-existent directive id",
                              argument=directiveId)
-    return self.getDistinguishedTrace().extractValue(directiveId)
+    return self.trace_handler.delegate_distinguished('extractValue', directiveId)
 
   def report_raw(self,directiveId):
     if directiveId not in self.directives:
       raise VentureException("invalid_argument",
                              "Cannot report raw value of a non-existent directive id",
                              argument=directiveId)
-    return self.getDistinguishedTrace().extractRaw(directiveId)
+    return self.trace_handler.delegate_distinguished('extractRaw', directiveId)
 
   def clear(self):
-    for trace in self.traces: del trace
+    del self.trace_handler
     self.directiveCounter = 0
     self.directives = {}
-    self.traces = [self.Trace()]
-    self.weights = [1]
+    self.trace_handler = self.create_handler([self.Trace()])
     self.ensure_rng_seeded_decently()
 
   def ensure_rng_seeded_decently(self):
@@ -163,8 +169,14 @@ class Engine(object):
       # wrap it for backend translation
       import venture.lite.foreign as f
       sp = f.ForeignLiteSP(sp)
-    for trace in self.traces:
-      trace.bindPrimitiveSP(name, sp)
+
+    # check that we can pickle it
+    if (not is_picklable(sp)) and (self.mode != 'sequential'):
+      errstr = '''SP not picklable. To bind it, call (infer sequential [ n_cores ]),
+      bind the sp, then switch back to parallel.'''
+      raise TypeError(errstr)
+
+    self.trace_handler.delegate('bind_foreign_sp', name, sp)
 
   # TODO There should also be capture_inference_problem and
   # restore_inference_problem (Analytics seems to use something like
@@ -193,24 +205,38 @@ effect of renumbering the directives, if some had been forgotten."""
     else:
       assert False, "Unkown directive type found %r" % directive
 
-  def incorporate(self):
-    for i,trace in enumerate(self.traces):
-      self.weights[i] += trace.makeConsistent()
-
   def resample(self, P):
+    self.mode = 'sequential'
+    self.trace_handler = SequentialTraceHandler(self._resample_setup(P),
+                                                self.name)
+
+  def resample_emulating(self, P):
+    self.mode = 'emulating'
+    self.trace_handler = EmulatingTraceHandler(self._resample_setup(P),
+                                               self.name)
+
+  def resample_parallel(self, P):
+    self.mode = 'parallel'
+    self.trace_handler = ParallelTraceHandler(self._resample_setup(P),
+                                              self.name)
+
+  def _resample_setup(self, P):
+    newTraces = self._resample_traces(P)
+    del self.trace_handler
+    return newTraces
+
+  def _resample_traces(self, P):
     P = int(P)
+    self.n_traces = P
     newTraces = [None for p in range(P)]
     for p in range(P):
-      parent = sampleLogCategorical(self.weights) # will need to include or rewrite
-      newTrace = self.copy_trace(self.traces[parent])
+      parent = sampleLogCategorical(self.trace_handler.weights) # will need to include or rewrite
+      newTrace = self.copy_trace(self.retrieve_trace(parent))
       newTraces[p] = newTrace
-      if self.name != "lite":
-        newTraces[p].set_seed(random.randint(1,2**31-1))
-    self.traces = newTraces
-    self.weights = [0 for p in range(P)]
+    return newTraces
 
   def infer(self, program):
-    self.incorporate()
+    self.trace_handler.incorporate()
     if isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop":
       assert len(program) == 2
       prog = [v.sym("cycle"), program[1], v.number(1)]
@@ -237,12 +263,9 @@ effect of renumbering the directives, if some had been forgotten."""
         weights.append(weighted_ks[j])
         subkernels.append(weighted_ks[k])
       return [program[0], [v.sym("simplex")] + weights, [v.sym("array")] + subkernels, transitions]
-    elif type(program) is list and type(program[0]) is dict and program[0]["value"] in ["peek", "peek_all"]:
-      assert 2 <= len(program) and len(program) <= 3
-      if len(program) == 2:
-        return [program[0], v.quote(program[1])]
-      else:
-        return [program[0], v.quote(program[1]), v.quote(program[2])]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == 'peek':
+      assert len(program) >= 2
+      return [program[0]] + [v.quote(e) for e in program[1:]]
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "printf":
       assert len(program) >= 2
       return [program[0]] + [v.quote(e) for e in program[1:]]
@@ -278,27 +301,20 @@ effect of renumbering the directives, if some had been forgotten."""
       next_trace.bindInGlobalEnv(name, did)
 
   def primitive_infer(self, exp):
-    for trace in self.traces:
-      if hasattr(trace, "infer_exp"):
-        # The trace can handle the inference primitive syntax natively
-        trace.infer_exp(exp)
-      else:
-        # The trace cannot handle the inference primitive syntax
-        # natively, so translate.
-        trace.infer(expToDict(exp))
+    self.trace_handler.delegate('primitive_infer', exp)
 
-  def get_logscore(self, did): return self.getDistinguishedTrace().getDirectiveLogScore(did)
-  def logscore(self): return self.getDistinguishedTrace().getGlobalLogScore()
-  def logscore_all(self): return [t.getGlobalLogScore() for t in self.traces]
+  def get_logscore(self, did): return self.trace_handler.delegate_distinguished('getDirectiveLogScore', did)
+  def logscore(self): return self.trace_handler.delegate_distinguished('getGlobalLogScore')
+  def logscore_all(self): return self.trace_handler.delegate('getGlobalLogScore')
 
   def get_entropy_info(self):
-    return { 'unconstrained_random_choices' : self.getDistinguishedTrace().numRandomChoices() }
+    return { 'unconstrained_random_choices' : self.trace_handler.delegate_distinguished('numRandomChoices') }
 
   def get_seed(self):
-    return self.getDistinguishedTrace().get_seed() # TODO is this what we want?
+    return self.trace_handler.delegate_distinguished('get_seed') # TODO is this what we want?
 
   def set_seed(self, seed):
-    self.getDistinguishedTrace().set_seed(seed) # TODO is this what we want?
+    self.trace_handler.delegate_distinguished('set_seed', seed) # TODO is this what we want?
 
   def continuous_inference_status(self):
     if self.inferrer is not None:
@@ -317,39 +333,21 @@ effect of renumbering the directives, if some had been forgotten."""
       self.inferrer.stop()
       self.inferrer = None
 
+  def retrieve_dump(self, ix): return self.trace_handler.retrieve_dump(ix, self)
+
+  def retrieve_dumps(self): return self.trace_handler.retrieve_dumps(self)
+
+  def retrieve_trace(self, ix): return self.trace_handler.retrieve_trace(ix, self)
+
+  def retrieve_traces(self): return self.trace_handler.retrieve_traces(self)
+
+  # class methods that call the corresponding functions, with arguments filled in
   def dump_trace(self, trace, skipStackDictConversion=False):
-    db = trace.makeSerializationDB()
-
-    for did, directive in sorted(self.directives.items(), reverse=True):
-      if directive[0] == "observe":
-        trace.unobserve(did)
-      trace.unevalAndExtract(did, db)
-
-    for did, directive in sorted(self.directives.items()):
-      trace.restore(did, db)
-      if directive[0] == "observe":
-        trace.observe(did, directive[2])
-
-    return trace.dumpSerializationDB(db, skipStackDictConversion)
+    return dump_trace(trace, self.directives, skipStackDictConversion)
 
   def restore_trace(self, values, skipStackDictConversion=False):
-    trace = self.Trace()
-    db = trace.makeSerializationDB(values, skipStackDictConversion)
-
-    for did, directive in sorted(self.directives.items()):
-        if directive[0] == "assume":
-            name, datum = directive[1], directive[2]
-            trace.evalAndRestore(did, datum, db)
-            trace.bindInGlobalEnv(name, did)
-        elif directive[0] == "observe":
-            datum, val = directive[1], directive[2]
-            trace.evalAndRestore(did, datum, db)
-            trace.observe(did, val)
-        elif directive[0] == "predict":
-            datum = directive[1]
-            trace.evalAndRestore(did, datum, db)
-
-    return trace
+    return restore_trace(self.Trace(), self.directives, values,
+                         self.foreign_sps, self.name, skipStackDictConversion)
 
   def copy_trace(self, trace):
     values = self.dump_trace(trace, skipStackDictConversion=True)
@@ -357,34 +355,38 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def save(self, fname, extra=None):
     data = {}
-    data['traces'] = [self.dump_trace(trace) for trace in self.traces]
-    data['weights'] = self.weights
+    data['traces'] = self.retrieve_dumps()
+    data['weights'] = self.trace_handler.weights
     data['directives'] = self.directives
     data['directiveCounter'] = self.directiveCounter
+    data['mode'] = self.mode
     data['extra'] = extra
     version = '0.2'
     with open(fname, 'w') as fp:
-      pickle.dump((data, version), fp)
+      dill.dump((data, version), fp)
 
   def load(self, fname):
     with open(fname) as fp:
-      (data, version) = pickle.load(fp)
+      (data, version) = dill.load(fp)
     assert version == '0.2', "Incompatible version or unrecognized object"
     self.directiveCounter = data['directiveCounter']
     self.directives = data['directives']
-    self.traces = [self.restore_trace(trace) for trace in data['traces']]
-    self.weights = data['weights']
+    self.mode = data['mode']
+    traces = [self.restore_trace(trace) for trace in data['traces']]
+    del self.trace_handler
+    self.trace_handler = self.create_handler(traces)
+    self.trace_handler.weights = data['weights']
     return data['extra']
 
   def convert(self, EngineClass):
     engine = EngineClass()
     engine.directiveCounter = self.directiveCounter
     engine.directives = self.directives
-    engine.traces = []
-    for trace in self.traces:
-      values = self.dump_trace(trace)
-      engine.traces.append(engine.restore_trace(values))
-    engine.weights = self.weights
+    engine.n_traces = self.n_traces
+    engine.mode = self.mode
+    traces = [engine.restore_trace(dump) for dump in self.retrieve_dumps()]
+    engine.trace_handler = engine.create_handler(traces)
+    engine.trace_handler.weights = self.trace_handler.weights
     return engine
 
   def to_lite(self):
@@ -398,16 +400,14 @@ effect of renumbering the directives, if some had been forgotten."""
   def profile_data(self):
     from pandas import DataFrame
     rows = []
-    for (pid, trace) in enumerate([t for t in self.traces if hasattr(t, "stats")]):
+    for (pid, trace) in enumerate([t for t in self.retrieve_traces()
+                                   if hasattr(t, "stats")]):
       for (name, attempts) in trace.stats.iteritems():
         for (t, accepted) in attempts:
           rows.append({"name":str(name), "particle":pid, "time":t, "accepted":accepted})
     ans = DataFrame.from_records(rows)
     print ans
     return ans
-
-
-  # TODO: Add methods to inspect/manipulate the trace for debugging and profiling
 
 class ContinuousInferrer(object):
   def __init__(self, engine, program):
@@ -431,6 +431,8 @@ class ContinuousInferrer(object):
     inferrer = self.inferrer
     self.inferrer = None # Grab the semaphore
     inferrer.join()
+
+# inference prelude
 
 the_prelude = None
 

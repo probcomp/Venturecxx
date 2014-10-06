@@ -17,5 +17,5 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from venture import shortcuts
-ripl = shortcuts.make_church_prime_ripl()
+ripl = shortcuts.make_lite_church_prime_ripl()
 print "Venture RIPL handle in `ripl' variable"

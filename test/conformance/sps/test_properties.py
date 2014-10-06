@@ -30,13 +30,16 @@ def testLiteToStack():
 def propLiteToStack(val):
   assert val.equal(VentureValue.fromStackDict(val.asStackDict()))
 
+blacklist = ['make_csp']
+
 # Select particular SPs to test thus:
 # nosetests --tc=relevant:'["foo", "bar", "baz"]'
 def relevantSPs():
   for (name,sp) in builtInSPsList:
     if isinstance(sp.requestPSP, NullRequestPSP):
       if "relevant" not in config or config["relevant"] is None or name in config["relevant"]:
-        yield name, sp
+        if name not in blacklist: # Placeholder for selecting SPs to do or not do
+          yield name, sp
 
 @gen_in_backend("none")
 def testTypes():
@@ -102,8 +105,23 @@ def testRandom():
 
 def checkRandom(_name, sp):
   # I take the name because I want it to appear in the nose arg list
+
+  # Generate five approprite input/output pairs for the sp
   args_type = fully_uncurried_sp_type(sp.venture_type())
-  checkTypedProperty(propRandom, [args_type for _ in range(5)] , sp)
+  def f(args_lists): return evaluate_fully_uncurried(sp, args_lists)
+  answers = [findAppropriateArguments(f, args_type, 30) for _ in range(5)]
+
+  # Check that it returns different results on repeat applications to
+  # at least one of the inputs.
+  for answer in answers:
+    if answer is None: continue # Appropriate input was not found; skip
+    [args, ans, _] = answer
+    for _ in range(10):
+      ans2 = evaluate_fully_uncurried(sp, args)
+      if not ans2 == ans:
+        return True # Output differed on some input: pass
+
+  assert False, "SP deterministically gave i/o pairs %s" % answers
 
 def evaluate_fully_uncurried(sp, args_lists):
   if isinstance(sp, VentureSPRecord):
@@ -116,29 +134,6 @@ def evaluate_fully_uncurried(sp, args_lists):
     return answer
   else:
     return evaluate_fully_uncurried(answer, args_lists[1:])
-
-def propRandom(args_listss, sp):
-  """Check that the given SP is random on at least one set of arguments."""
-  answers = []
-  for args_lists in args_listss:
-    try:
-      answer = evaluate_fully_uncurried(sp, args_lists)
-      answers.append(answer)
-      for _ in range(10):
-        ans2 = evaluate_fully_uncurried(sp, args_lists)
-        if not ans2 == answer:
-          return True
-    except ArgumentsNotAppropriate:
-      # This complication serves the purpose of not decreasing the
-      # acceptance rate of the search of appropriate arguments to the
-      # SP, while allowing the SP to redeem its claims of randomness
-      # on additional arguments if they are available.
-      if answers == []:
-        raise
-      else:
-        answers.append("Inappropriate arguments")
-        continue
-  assert False, "SP deterministically returned %s (parallel to arguments)" % answers
 
 @on_inf_prim("none")
 def testExpressionFor():
@@ -180,29 +175,33 @@ def testRiplSimulate():
         "matrix", # Because rows must be the same length
         "lookup", # Because the key must be an integer for sequence lookups
         "get_empty_environment", # Environments can't be rendered to stack dicts
-        ## Incompatibilities with Puma
-        "eq", # Not implemented for matrices
-        "gt", # Not implemented for matrices
-        "gte",
-        "lt",
-        "lte",
-        "real", # Not implemented
-        "atom_eq", # Not implemented
-        "contains", # Not implemented for sequences
-        "arange", # Not implemented
-        "linspace", # Not implemented
-        "diag_matrix", # Not implemented
-        "ravel", # Not implemented
-        "matrix_mul", # Not implemented
-        "repeat", # Not implemented
-        "vector_dot", # Not implemented
-        "zip", # Not implemented
     ]:
       continue
     if not sp.outputPSP.isRandom():
       yield checkRiplAgreesWithDeterministicSimulate, name, sp
 
 def checkRiplAgreesWithDeterministicSimulate(name, sp):
+  if config["get_ripl"] != "lite" and name in [
+    ## Incompatibilities with Puma
+    "eq", # Not implemented for matrices
+    "gt", # Not implemented for matrices
+    "gte",
+    "lt",
+    "lte",
+    "min", # Not implemented
+    "real", # Not implemented
+    "atom_eq", # Not implemented
+    "contains", # Not implemented for sequences
+    "arange", # Not implemented
+    "linspace", # Not implemented
+    "diag_matrix", # Not implemented
+    "ravel", # Not implemented
+    "matrix_mul", # Not implemented
+    "repeat", # Not implemented
+    "vector_dot", # Not implemented
+    "zip", # Not implemented
+  ]:
+    raise SkipTest("%s in Puma not implemented compatibly with Lite" % name)
   checkTypedProperty(propRiplAgreesWithDeterministicSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)
 
 def propRiplAgreesWithDeterministicSimulate(args_lists, name, sp):

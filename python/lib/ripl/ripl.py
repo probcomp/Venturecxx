@@ -99,7 +99,9 @@ class Ripl():
     ############################################
     # Execution
     ############################################
-
+    
+    
+    
     def execute_instruction(self, instruction=None, params=None):
         p = self._cur_parser()
         try: # execute instruction, and handle possible exception
@@ -121,7 +123,10 @@ class Ripl():
             try:
                 annotated = self._annotated_error(e, instruction)
             except Exception as e2:
-                print "Trying to annotate an exception led to %r" % e2
+                print "Trying to annotate an exception led to:"
+                import traceback
+                print traceback.format_exc()
+                e.annotated = False
                 raise e, None, info[2]
             raise annotated, None, info[2]
         # if directive, then save the text string
@@ -131,8 +136,20 @@ class Ripl():
             self.directive_id_to_stringable_instruction[did] = stringable_instruction
             self.directive_id_to_mode[did] = self.mode
         return ret_value
-
+    
     def _annotated_error(self, e, instruction):
+        if e.exception is 'evaluation':
+            p = self._cur_parser()
+            for i, (exp, index) in enumerate(e.data['stack_trace']):
+                exp = p.unparse_expression(exp)
+                text_index = p.expression_index_to_text_index(exp, index)
+                e.data['stack_trace'][i] = {
+                    'expression_string' : exp,
+                    'text_index' : text_index,
+                }
+            e.annotated = True
+            return e
+
         # TODO This error reporting is broken for ripl methods,
         # because the computed text chunks refer to the synthetic
         # instruction string instead of the actual data the caller
@@ -142,7 +159,8 @@ class Ripl():
         p = self._cur_parser()
         # all exceptions raised by the Sivm get augmented with a
         # text index (which defaults to the entire instruction)
-        e.data['text_index'] = [0,len(instruction_string)-1]
+        if 'text_index' not in e.data:
+            e.data['text_index'] = [0,len(instruction_string)-1]
         
         # in the case of a parse exception, the text_index gets narrowed
         # down to the exact expression/atom that caused the error
@@ -158,6 +176,7 @@ class Ripl():
                 if e2.exception == 'no_text_index': text_index = None
                 else: raise
             e.data['text_index'] = text_index
+        
         # for "text_parse" exceptions, even trying to split the instruction
         # results in an exception
         if e.exception == 'text_parse':
@@ -166,6 +185,7 @@ class Ripl():
             except VentureException as e2:
                 assert e2.exception == 'text_parse'
                 e = e2
+            
         # in case of invalid argument exception, the text index
         # refers to the argument's location in the string
         if e.exception == 'invalid_argument':
@@ -174,10 +194,13 @@ class Ripl():
             arg = e.data['argument']
             text_index = arg_ranges[arg]
             e.data['text_index'] = text_index
+        
         a = e.data['text_index'][0]
         b = e.data['text_index'][1]+1
         e.data['text_snippet'] = instruction_string[a:b]
         e.data['instruction_string'] = instruction_string
+        
+        e.annotated = True
         return e
 
     def parse_program(self, program_string, params=None):

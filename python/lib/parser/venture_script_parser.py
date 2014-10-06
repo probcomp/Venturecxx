@@ -19,13 +19,12 @@
 from pyparsing import Literal,Optional,ZeroOrMore,OneOrMore,Forward,\
     ParseException,Keyword,MatchFirst
 from venture.parser import utils
+import venture.value.dicts as vv
+from venture.exception import VentureException
 
 #shortcuts
 lw = utils.lw
 combine_locs = utils.combine_locs
-
-
-
 
 def _collapse_identity(toks, operators):
     """
@@ -50,11 +49,11 @@ def _collapse_identity(toks, operators):
     """
     if not isinstance(toks['value'], (list, tuple)):
         return toks
-    if not toks['value'][0]['value'] == 'identity':
+    if not toks['value'][0]['value'] == vv.sym('identity'):
         return toks
     if not isinstance(toks['value'][1]['value'], (list, tuple)):
         return toks
-    if toks['value'][1]['value'][0]['value'] == 'identity':
+    if toks['value'][1]['value'][0]['value'] == vv.sym('identity'):
         return {"loc":toks['loc'], "value":[
             toks['value'][0],
             _collapse_identity(toks['value'][1], operators)]}
@@ -167,13 +166,13 @@ class VentureScriptParser(object):
         def process_optional_let(s, loc, toks):
             if len(toks) == 1:
                 if isinstance(toks[0]['value'], (list, tuple))\
-                        and toks[0]['value'][0]['value'] == 'let':
+                        and toks[0]['value'][0]['value'] == vv.sym('let'):
                     raise ParseException(s, loc,
                         "New scope is not allowed here", self)
                 return list(toks)
             l = combine_locs(toks)
             v = [
-                    {"loc":l, 'value':'let'},
+                    {"loc":l, 'value':vv.sym('let')},
                     toks[0],
                     toks[1],
                     ]
@@ -188,7 +187,7 @@ class VentureScriptParser(object):
         def process_identity(s, loc, toks):
             l = combine_locs(toks)
             v = [
-                    {"loc":l, 'value':'identity'},
+                    {"loc":l, 'value':vv.sym('identity')},
                     toks[1],
                     ]
             return [{"loc":l, "value":v}]
@@ -202,7 +201,7 @@ class VentureScriptParser(object):
         def process_if_else(s, loc, toks):
             l = combine_locs(toks)
             v = [
-                    {"loc":toks[0]['loc'], 'value':'if'},
+                    {"loc":toks[0]['loc'], 'value':vv.sym('if')},
                     toks[2],
                     toks[5],
                     toks[9]
@@ -222,7 +221,7 @@ class VentureScriptParser(object):
         def process_proc(s, loc, toks):
             l = combine_locs(toks)
             v = [
-                    {"loc":toks[0]['loc'], 'value':'lambda'},
+                    {"loc":toks[0]['loc'], 'value':vv.sym('lambda')},
                     toks[1],
                     toks[3],
                     ]
@@ -239,7 +238,7 @@ class VentureScriptParser(object):
         def process_let(s, loc, toks):
             l = combine_locs(toks)
             v = [
-                    {"loc":l, 'value':'let'},
+                    {"loc":l, 'value':vv.sym('let')},
                     toks[1],
                     toks[2],
                     ]
@@ -455,7 +454,8 @@ class VentureScriptParser(object):
             utils.apply_parser(self.expression, expression_string)[0])
 
     def unparse_expression(self, _expression):
-        return None # TODO What is the syntax to unparse to?
+        # FIXME: implementation
+        raise VentureException("VentureScript can't unparse expressions :(")
 
     def parse_number(self, number_string):
         return utils.apply_parser(self.literal, number_string)[0]

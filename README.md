@@ -42,6 +42,9 @@ Here is what we install on a clean Ubuntu (works best in 14.04 or higher).
     # Note: on older versions of Ubuntu, install them via pip (see "Install ggplot" below)
     sudo apt-get install -y python-pandas python-patsy
 
+    # [Optional] Get dependencies for networkx (needed for some scaffold debugging facilities)
+    sudo apt-get install -y libgraphviz-dev
+
 Dependencies (OSX, Homebrew)
 ----------------------------
 
@@ -57,9 +60,10 @@ This is the best-supported and best-tested method for building Venture on Mac.
     # Install libraries using homebrew
     brew install python ccache gsl
 
-The one slightly tricky step is installing Boost. The difficulty comes from the fact that GNU c++ compilers use the standard library libstdc++, while Mac's c++ compiler on Mavericks uses libc++. In order for Venture to build, you must build Boost using libstdc++, and then build Venture using the same. This can be accomplished by building both Boost and Venture using Homebrew (GNU) gcc / g++ instead of Mac's compiler. The correct version of gcc is set for Venture installation in the setup.py file. The install Boost with the correct library, call:
+The one slightly tricky step is installing Boost and Boost.Python. The difficulty comes from the fact that GNU c++ compilers use the standard library libstdc++, while Mac's c++ compiler on Mavericks uses libc++. In order for Venture to build, you must build Boost using libstdc++, and then build Venture using the same. This can be accomplished by building both Boost and Venture using GNU gcc (installed via Homebrew) instead of Mac's compiler. The correct version of gcc is set for Venture installation in the setup.py file. To install Boost with the correct library, call:
 
-    brew install boost --with-python --cc=gcc-4.9
+    brew install boost --cc=gcc-4.9
+    brew install boost-python --cc=gcc-4.9
 
 Finally, install Python dependencies:
 
@@ -71,7 +75,7 @@ Finally, install Python dependencies:
 Dependencies (OSX, macports)
 ----------------------------
 
-This installation method is not as well-tested as Homebrew. It may break.
+This installation method is not as well-tested as Homebrew. It may break. At this point the best advice we can offer is to use Homebrew instead.
 
 For macports installation instructions see: [https://www.macports.org/install.php](https://www.macports.org/install.php)
 

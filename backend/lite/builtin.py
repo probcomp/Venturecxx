@@ -36,31 +36,30 @@ def esr_output(request): return SP(request, ESRRefOutputPSP())
 def typed_nr(output, args_types, return_type, **kwargs):
   return no_request(TypedPSP(output, SPType(args_types, return_type, **kwargs)))
 
-def func_psp(f, descr=None, sim_grad=None):
-  class FunctionPSP(DeterministicPSP):
-    def __init__(self, descr):
-      self.descr = descr
-      self.sim_grad = sim_grad
-      if self.descr is None:
-        self.descr = "deterministic %s"
-    def simulate(self,args):
-      return f(args)
-    def gradientOfSimulate(self, args, _value, direction):
-      # Don't need the value if the function is deterministic, because
-      # it consumes no randomness.
-      if self.sim_grad:
-        return self.sim_grad(args, direction)
-      else:
-        raise VentureBuiltinSPMethodError("Cannot compute simulation gradient of '%s'" % self.description("<unknown name>"))
-    def description(self,name):
-      if '%s' in self.descr:
-        return self.descr % name
-      else:
-        return self.descr
-  return FunctionPSP(descr)
+class FunctionPSP(DeterministicPSP):
+  def __init__(self, f, descr=None, sim_grad=None):
+    self.f = f
+    self.descr = descr
+    self.sim_grad = sim_grad
+    if self.descr is None:
+      self.descr = "deterministic %s"
+  def simulate(self,args):
+    return self.f(args)
+  def gradientOfSimulate(self, args, _value, direction):
+    # Don't need the value if the function is deterministic, because
+    # it consumes no randomness.
+    if self.sim_grad:
+      return self.sim_grad(args, direction)
+    else:
+      raise VentureBuiltinSPMethodError("Cannot compute simulation gradient of '%s'" % self.description("<unknown name>"))
+  def description(self,name):
+    if '%s' in self.descr:
+      return self.descr % name
+    else:
+      return self.descr
 
 def typed_func_psp(f, args_types, return_type, descr=None, sim_grad=None, **kwargs):
-  return TypedPSP(func_psp(f, descr, sim_grad), SPType(args_types, return_type, **kwargs))
+  return TypedPSP(FunctionPSP(f, descr, sim_grad), SPType(args_types, return_type, **kwargs))
 
 def typed_func(*args, **kwargs):
   return no_request(typed_func_psp(*args, **kwargs))
@@ -71,7 +70,7 @@ def typed_func(*args, **kwargs):
 def deterministic_psp(f, descr=None, sim_grad=None):
   def new_grad(args, direction):
     return sim_grad(args.operandValues, direction)
-  return func_psp(lambda args: f(*args.operandValues), descr, sim_grad=(new_grad if sim_grad else None))
+  return FunctionPSP(lambda args: f(*args.operandValues), descr, sim_grad=(new_grad if sim_grad else None))
 
 def deterministic_typed_psp(f, args_types, return_type, descr=None, sim_grad=None, **kwargs):
   return TypedPSP(deterministic_psp(f, descr, sim_grad), SPType(args_types, return_type, **kwargs))
@@ -164,6 +163,7 @@ builtInSPsList = [
            [ "div",   binaryNum(lambda x,y: x / y,
                                 sim_grad=grad_div,
                                 descr="div returns the quotient of its first argument by its second") ],
+           [ "min",   binaryNum(min, descr="min returns the minimum value of its arguments") ],
            [ "eq",    binaryPred(lambda x,y: x.compare(y) == 0,
                                  descr="eq compares its two arguments for equality") ],
            [ "gt",    binaryPred(lambda x,y: x.compare(y) >  0,
@@ -360,6 +360,7 @@ builtInSPsList = [
            [ "gamma", typed_nr(continuous.GammaOutputPSP(), [v.PositiveType(), v.PositiveType()], v.PositiveType()) ],
            [ "student_t", typed_nr(continuous.StudentTOutputPSP(), [v.PositiveType(), v.NumberType(), v.NumberType()], v.NumberType(), min_req_args=1 ) ],
            [ "inv_gamma", typed_nr(continuous.InvGammaOutputPSP(), [v.PositiveType(), v.PositiveType()], v.PositiveType()) ],
+           [ "laplace", typed_nr(continuous.LaplaceOutputPSP(), [v.NumberType(), v.PositiveType()], v.NumberType()) ],
 
            [ "multivariate_normal", typed_nr(continuous.MVNormalOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.SymmetricMatrixType()], v.HomogeneousArrayType(v.NumberType())) ],
            [ "inv_wishart", typed_nr(continuous.InverseWishartPSP(), [v.SymmetricMatrixType(), v.PositiveType()], v.SymmetricMatrixType())],
@@ -380,7 +381,7 @@ builtInSPsList = [
            [ "make_crp",typed_nr(crp.MakeCRPOutputPSP(), [v.NumberType(),v.NumberType()], SPType([], v.AtomType()), min_req_args = 1) ],
            [ "make_cmvn",typed_nr(cmvn.MakeCMVNOutputPSP(),
                                   [v.HomogeneousArrayType(v.NumberType()),v.NumberType(),v.NumberType(),v.MatrixType()],
-                                  SPType([], v.MatrixType())) ],
+                                  SPType([], v.HomogeneousArrayType(v.NumberType()))) ],
 
            [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [v.SimplexType(), v.MatrixType(), v.MatrixType()], SPType([v.CountType()], v.AtomType())) ],
 ]

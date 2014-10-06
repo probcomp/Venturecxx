@@ -22,7 +22,6 @@ from functools import wraps
 import os
 
 from venture.exception import VentureException
-from venture.lite.exception import VentureError
 from utils import strip_types
 
 def getValue(directive):
@@ -36,8 +35,6 @@ def catchesVentureException(f):
       return f(*args, **kwargs)
     except VentureException as e:
       print e
-    except VentureError as err:
-      print err
     except Exception:
       print "Your query has generated an error:"
       traceback.print_exc()

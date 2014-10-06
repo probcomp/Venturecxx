@@ -34,25 +34,31 @@ def mixMH(trace,indexer,operator):
   trace.recordProposal([operator.name()] + indexer.name(), time.time() - start, accepted)
 
 class BlockScaffoldIndexer(object):
-  def __init__(self,scope,block,interval=None):
+  def __init__(self,scope,block,interval=None,useDeltaKernels=False,deltaKernelArgs=None,updateValues=False):
     if scope == "default" and not (block == "all" or block == "one" or block == "ordered"):
         raise Exception("INFER default scope does not admit custom blocks (%r)" % block)
     self.scope = scope
     self.block = block
     self.interval = interval
+    self.useDeltaKernels = useDeltaKernels
+    self.deltaKernelArgs = deltaKernelArgs
+    self.updateValues = updateValues
 
-  def sampleIndex(self,trace):
+  def getSetsOfPNodes(self,trace):
     if self.block == "one":
       self.true_block = trace.sampleBlock(self.scope)
-      return constructScaffold(trace,[trace.getNodesInBlock(self.scope,self.true_block)])
-    elif self.block == "all":
-      return constructScaffold(trace,[trace.getAllNodesInScope(self.scope)])
-    elif self.block == "ordered":
-      return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope))
+      setsOfPNodes = [trace.getNodesInBlock(self.scope,self.true_block)]
+    elif self.block == "all": setsOfPNodes = [trace.getAllNodesInScope(self.scope)]
+    elif self.block == "ordered": setsOfPNodes = trace.getOrderedSetsInScope(self.scope)
     elif self.block == "ordered_range":
       assert self.interval
-      return constructScaffold(trace,trace.getOrderedSetsInScope(self.scope,self.interval))
-    else: return constructScaffold(trace,[trace.getNodesInBlock(self.scope,self.block)])
+      setsOfPNodes = trace.getOrderedSetsInScope(self.scope,self.interval)
+    else: setsOfPNodes = [trace.getNodesInBlock(self.scope,self.block)]
+    return setsOfPNodes
+
+  def sampleIndex(self,trace):
+    setsOfPNodes = self.getSetsOfPNodes(trace)
+    return constructScaffold(trace,setsOfPNodes,useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs,updateValues=self.updateValues)
 
   def logDensityOfIndex(self,trace,_):
     if self.block == "one": return trace.logDensityOfBlock(self.scope)

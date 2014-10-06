@@ -136,7 +136,7 @@ class ChurchPrimeParser(object):
         if isinstance(expression, dict):
             # Should be a leaf value
             return utils.value_to_string(expression)
-        elif isinstance(expression, basestring): # Symbol
+        elif isinstance(expression, (basestring, int, float)): # literal
             return expression
         elif isinstance(expression, list):
             return '(' + ' '.join([self.unparse_expression(e) for e in expression]) + ')'

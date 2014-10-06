@@ -1,8 +1,11 @@
 from nose import SkipTest
+from nose.tools import eq_
 from testconfig import config
 
 from venture.test.stats import statisticalTest, reportKnownDiscrete, reportSameDiscrete
 from venture.test.config import get_ripl, collectStateSequence, on_inf_prim, default_num_transitions_per_sample, gen_on_inf_prim
+from venture.lite import builtin
+from venture.lite.builtin import binaryNum
 
 @statisticalTest
 def _test_serialize_program(v, label, action):
@@ -33,10 +36,10 @@ def _test_serialize_program(v, label, action):
         assert False
 
     infer = "(mh default one %s)" % default_num_transitions_per_sample()
-    engine.traces = [trace2]
+    engine.trace_handler = engine.create_handler([trace2])
     r2 = collectStateSequence(v, label, infer=infer)
 
-    engine.traces = [trace1]
+    engine.trace_handler = engine.create_handler([trace1])
     r1 = collectStateSequence(v, label, infer=infer)
 
     return reportSameDiscrete(r1, r2)
@@ -84,7 +87,7 @@ def test_serialize_closure():
 def test_serialize_aaa():
     def check_beta_bernoulli(maker, action):
         if maker == "make_uc_beta_bernoulli" and action in ['serialize', 'convert_lite', 'convert_puma']:
-            raise SkipTest("Cannot convert BetaBernoulliSP to a stack dictionary. Issue: https://app.asana.com/0/13001976276959/13001976276981")
+            raise SkipTest("Cannot convert BetaBernoulliSP to a stack dictionary. Issue: https://app.asana.com/0/9277420529946/16149214487233")
         elif action == 'copy' and config['get_ripl'] == 'puma':
             raise SkipTest("Fails due to a mystery bug in Puma stop_and_copy. Issue: https://app.asana.com/0/11127829865276/13039650533872")
         v = get_ripl()
@@ -229,3 +232,28 @@ def test_serialize_repeatedly():
     # just make sure this doesn't crash
     v.save('/tmp/serialized.ripl')
     v.save('/tmp/serialized.ripl')
+
+def test_foreign_sp():
+    # make sure that foreign SP's are retained through serialization
+    for mode in ['sequential', 'emulating', 'parallel']:
+        yield check_foreign_sp, mode
+
+def check_foreign_sp(mode):
+    v = get_ripl()
+    builtins = builtin.builtInSPs()
+    fmt = {'sequential' : '', 'emulating' : '_emulating', 'parallel' : '_parallel'}
+    resample = '[INFER (resample{0} 1)]'.format(fmt[mode])
+    v.execute_instruction(resample)
+    v.bind_foreign_sp('test_binomial', builtins['binomial'])
+    v.bind_foreign_sp('test_sym_dir_mult', builtins['make_sym_dir_mult'])
+    test_binomial_result = 1
+    test_sym_dir_result = {'alpha': 1.0, 'counts': [0], 'n': 1, 'type': 'sym_dir_mult'}
+    eq_(v.sample('(test_binomial 1 1)'), test_binomial_result)
+    eq_(v.sample('(test_sym_dir_mult 1 1)'), test_sym_dir_result)
+    engine = v.sivm.core_sivm.engine
+    dumped = engine.retrieve_dump(0)
+    restored = engine.restore_trace(dumped)
+    engine.trace_handler = engine.create_handler([restored])
+    # Make sure that the restored trace still has the foreign SP's
+    eq_(v.sample('(test_binomial 1 1)'), test_binomial_result)
+    eq_(v.sample('(test_sym_dir_mult 1 1)'), test_sym_dir_result)

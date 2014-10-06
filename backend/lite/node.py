@@ -2,7 +2,8 @@ from value import VentureValue, ExpressionType
 from request import Request
 
 class Node(object):
-  def __init__(self):
+  def __init__(self, address):
+    self.address = address
     self.value = None
     self.children = set()
     self.isObservation = False
@@ -10,7 +11,6 @@ class Node(object):
     self.aaaMadeSPAux = None
     self.numRequests = 0
     self.esrParents = []
-    self.isObservation = False
     self.esrParents = []
 
   def observe(self,val):
@@ -27,8 +27,8 @@ class Node(object):
 
 
 class ConstantNode(Node):
-  def __init__(self,value):
-    super(ConstantNode,self).__init__()
+  def __init__(self,address,value):
+    super(ConstantNode,self).__init__(address)
     if isinstance(value, VentureValue):
       # Possible for programmatic construction, e.g. builtin.py
       # Will also occur for literal atoms, since there's no other way
@@ -41,23 +41,23 @@ class ConstantNode(Node):
 
 
 class LookupNode(Node):
-  def __init__(self,sourceNode):
-    super(LookupNode,self).__init__()
+  def __init__(self,address,sourceNode):
+    super(LookupNode,self).__init__(address)
     self.sourceNode = sourceNode
 
   def definiteParents(self): return [self.sourceNode]
 
 
 class ApplicationNode(Node):
-  def __init__(self, operatorNode, operandNodes):
-    super(ApplicationNode, self).__init__()
+  def __init__(self, address, operatorNode, operandNodes):
+    super(ApplicationNode, self).__init__(address)
     self.operatorNode = operatorNode
     self.operandNodes = operandNodes
 
 
 class RequestNode(ApplicationNode):
-  def __init__(self,operatorNode,operandNodes,env):
-    super(RequestNode,self).__init__(operatorNode, operandNodes)
+  def __init__(self,address,operatorNode,operandNodes,env):
+    super(RequestNode,self).__init__(address, operatorNode, operandNodes)
     self.env = env
     self.outputNode = None
 
@@ -72,8 +72,8 @@ class RequestNode(ApplicationNode):
 
 
 class OutputNode(ApplicationNode):
-  def __init__(self,operatorNode,operandNodes,requestNode,env):
-    super(OutputNode,self).__init__(operatorNode, operandNodes)
+  def __init__(self,address,operatorNode,operandNodes,requestNode,env):
+    super(OutputNode,self).__init__(address, operatorNode, operandNodes)
     self.requestNode = requestNode
     self.env = env
 
