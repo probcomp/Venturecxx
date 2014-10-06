@@ -5,9 +5,10 @@ cat <<EOF
 Test:
   $0
 Expectation:
-  An error should produce a nice user-level error description (in this
-  case, double-definition of a variable), without excess noise that
-  a user would not be able to interpret anyway.
+  An error at the Venture console should produce a nice user-level
+  error description (in this case, double-definition of a variable),
+  without excess noise that a user would not be able to interpret
+  anyway.
 ----------------------------------------------------------------------
 
 EOF
