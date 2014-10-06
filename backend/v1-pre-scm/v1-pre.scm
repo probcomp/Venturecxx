@@ -130,7 +130,6 @@
            (let ((arguments (map (lambda (o)
                                    (traces-lookup (cons cur-trace read-traces) o))
                                  opand-addrs)))
-             ;; TODO Density
              (scheme-apply sim arguments))))
         ((compound? oper)
          (let ((formals (compound-formals oper))
