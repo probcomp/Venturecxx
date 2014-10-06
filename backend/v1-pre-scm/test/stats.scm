@@ -116,7 +116,11 @@
                        actual-counts
                        expected-counts)))
          (p-value (gsl-cdf-chisq-q stat (- dof 1))))
-    (pp `(expected ,expected-counts actual ,actual-counts chi-sq ,stat p-value ,p-value))
+    (fluid-let ((flonum-unparser-cutoff '(relative 5 normal)))
+      (pp `( expected ,(map exact->inexact expected-counts)
+             actual ,actual-counts
+             chi-sq ,(exact->inexact stat)
+             p-value ,p-value)))
     p-value))
 
 #|
