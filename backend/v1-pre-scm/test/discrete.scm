@@ -36,7 +36,7 @@
   (fluid-let ((*resimulation-mh-reject-hook* (lambda () (assert-true #f))))
     (top-eval weighted-coin-flipping-example-with-spurious-observations)))
 
-(define two-coin-flipping-example
+(define (two-coin-flipping-example inference)
   `(begin
      ,observe-defn
      ,map-defn
@@ -45,12 +45,17 @@
        (assume c1 (flip 0.5))
        (assume c2 (flip 0.5))
        (observe (flip (if (boolean/or c1 c2) 1 0.0001)) #t)
-       (infer (mcmc 20))
+       (infer ,inference)
        (predict c1))))
 
 (define-test (two-coin-dist)
   (let ()
-    (check (> (chi-sq-test (collect-samples two-coin-flipping-example)
+    (check (> (chi-sq-test (collect-samples (two-coin-flipping-example '(mcmc 20)))
+                           '((#t . 2/3) (#f . 1/3))) *p-value-tolerance*))))
+
+(define-test (two-coin-dist-rejection)
+  (let ()
+    (check (> (chi-sq-test (collect-samples (two-coin-flipping-example 'rejection))
                            '((#t . 2/3) (#f . 1/3))) *p-value-tolerance*))))
 
 (define (two-coins-with-brush-example inference)
