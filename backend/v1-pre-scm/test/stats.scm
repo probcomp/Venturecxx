@@ -101,24 +101,23 @@
   ((ucode-primitive GSL_CDF_CHISQ_Q 2)
    (->flonum x) (->flonum nu)))
 
-(define (chi-sq-stat data frequencies)
-  (let* ((n (length data))
+(define (chi-sq-test data frequencies)
+  (let* ((dof (length frequencies))
+         (n (length data))
          (expected-counts (map (lambda (freq) (* n freq))
                                (map cdr frequencies)))
          (actual-counts (map (lambda (item)
                                (count-matching-items data (lambda (d) (equal? d item))))
-                             (map car frequencies))))
-    (scheme-apply
-     + (map (lambda (actual expected)
-              (/ (expt (- actual expected) 2)
-                 expected))
-            actual-counts
-            expected-counts))))
-
-(define (chi-sq-test data frequencies)
-  (let ((n (length frequencies))
-        (stat (chi-sq-stat data frequencies)))
-    (gsl-cdf-chisq-q stat (- n 1))))
+                             (map car frequencies)))
+         (stat (scheme-apply
+                + (map (lambda (actual expected)
+                         (/ (expt (- actual expected) 2)
+                            expected))
+                       actual-counts
+                       expected-counts)))
+         (p-value (gsl-cdf-chisq-q stat (- dof 1))))
+    (pp `(expected ,expected-counts actual ,actual-counts chi-sq ,stat p-value ,p-value))
+    p-value))
 
 #|
 1 ]=> (chi-sq-test '(#t #t #t #f #f) '((#t . 0.5) (#f . 0.5)))
