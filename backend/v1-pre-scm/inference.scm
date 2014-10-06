@@ -206,7 +206,7 @@
         ;; without subtracting the density of the old state.  Oops.
         ; (pp `(got ,weight with bound ,bound))
         (if (< (log (random 1.0)) (- weight bound))
-            new-trace
+            (rdb-trace-commit! new-trace trace)
             (if (< tries 50)
                 (loop (+ tries 1))
                 (error "Rejected")))))))
