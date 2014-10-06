@@ -98,8 +98,10 @@
 (load-library-object-file (merge-pathnames "c-stats.so") #f)
 
 (define (gsl-cdf-chisq-q x nu)
-  ((ucode-primitive GSL_CDF_CHISQ_Q 2)
-   (->flonum x) (->flonum nu)))
+  (if (> x 1e4)
+      0 ; TODO Poor man's underflow guard
+      ((ucode-primitive GSL_CDF_CHISQ_Q 2)
+       (->flonum x) (->flonum nu))))
 
 (define (chi-sq-test data frequencies)
   (let* ((dof (length frequencies))
