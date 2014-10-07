@@ -32,6 +32,9 @@ RUN         apt-get install -y libboost-all-dev libgsl0-dev python-pip ccache li
 RUN         pip install -U distribute
 RUN         apt-get install -y python-pyparsing python-flask python-requests python-numpy python-matplotlib python-scipy python-zmq ipython ipython-notebook
 
+# Install VNC (for graphical plotting) and other useful utilities
+RUN         apt-get install -y x11vnc xvfb
+RUN         apt-get install -y vim screen git 
 
 # Add source code repository 
 # Moved this after dependency install to leverage build process caching
@@ -40,7 +43,8 @@ WORKDIR     /root/Venturecxx/
 
 RUN         pip install -r requirements.txt
 RUN         apt-get install -y python-pandas python-patsy
- 
+RUN         pip install ipython --upgrade
+
 # Install Venture
 RUN         python setup.py install
 
@@ -50,8 +54,11 @@ RUN         echo "c.NotebookApp.ip = '0.0.0.0'" >> /.ipython/profile_default/ipy
 RUN         echo "c.NotebookApp.port = 8888" >> /.ipython/profile_default/ipython_notebook_config.py
 RUN         echo "c.NotebookManager.notebook_dir = u'/root/Venturecxx/examples/tutorial/'" >> /.ipython/profile_default/ipython_notebook_config.py
 EXPOSE      8888
+# Further configuration of container enviroment
+echo "defshell -bash      # Set screen login shell to bash" >> ~/.screenrc
+cp -f ./profile/matplotlibrc /etc/matplotlibrc # Changing backend to Agg
 
-# Install VNC (for graphical plotting)
-RUN         apt-get install -y x11vnc xvfb
 
+#Start x11 vnc server
+CMD         x11vnc -forever -create
 CMD         /bin/bash
