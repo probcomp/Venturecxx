@@ -7,7 +7,7 @@ from lkernel import LKernel
 from sp import SP, VentureSPRecord, SPAux, SPType
 from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from utils import simulateDirichlet, logDensityDirichlet
-from value import AnyType, VentureAtom
+from value import AnyType, VentureAtom, SimplexType
 from exception import VentureValueError
 from range_tree import Node, sample
 
@@ -18,7 +18,7 @@ class DirichletOutputPSP(RandomPSP):
   def simulate(self,args):
     alpha = args.operandValues[0]
     return simulateDirichlet(alpha)
-    
+
   def logDensity(self,val,args):
     alpha = args.operandValues[0]
     return logDensityDirichlet(val,alpha)
@@ -31,7 +31,7 @@ class SymmetricDirichletOutputPSP(RandomPSP):
   def simulate(self,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
     return simulateDirichlet([alpha for _ in range(n)])
-    
+
   def logDensity(self,val,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
     return logDensityDirichlet(val,[alpha for _ in range(n)])
@@ -43,7 +43,7 @@ class SymmetricDirichletOutputPSP(RandomPSP):
 
 class DirMultSPAux(SPAux):
   def __init__(self,n=None,counts=None):
-    if counts is not None: 
+    if counts is not None:
       self.counts = counts
     elif n is not None:
       self.counts = Node([0]*n)
@@ -72,7 +72,7 @@ class DirMultSP(SP):
       'n': self.n,
       'counts': spaux.counts.leaves()
     }
-    
+
 
 #### Collapsed dirichlet multinomial
 
@@ -99,7 +99,7 @@ class CDirMultOutputPSP(RandomPSP):
   def simulate(self,args):
     index = sample(self.alpha, args.spaux.counts)
     return self.os[index]
-      
+
   def logDensity(self,val,args):
     index = self.index[val]
     num = args.spaux.counts[index] + self.alpha[index]
@@ -111,13 +111,13 @@ class CDirMultOutputPSP(RandomPSP):
     index = self.index[val]
     assert args.spaux.counts[index] >= 0
     args.spaux.counts.increment(index)
-    
+
   def unincorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
     index = self.index[val]
     args.spaux.counts.decrement(index)
     assert args.spaux.counts[index] >= 0
-        
+
   def enumerateValues(self, _args):
     return self.os
 
@@ -143,7 +143,7 @@ class MakerUDirMultOutputPSP(RandomPSP):
     if not len(os) == n:
       raise VentureValueError("Set of objects to choose from is the wrong length")
     theta = npr.dirichlet(alpha)
-    output = TypedPSP(UDirMultOutputPSP(theta,os), SPType([], AnyType()))
+    output = TypedPSP(UDirMultOutputPSP(theta,os), SPType([], AnyType(), SimplexType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,n))
 
   def logDensity(self,value,args):
@@ -188,7 +188,7 @@ class UDirMultOutputPSP(RandomPSP):
     index = self.index[val]
     assert args.spaux.counts[index] >= 0
     args.spaux.counts.increment(index)
-    
+
   def unincorporate(self,val,args):
     assert isinstance(args.spaux,DirMultSPAux)
     index = self.index[val]
@@ -197,6 +197,9 @@ class UDirMultOutputPSP(RandomPSP):
 
   def enumerateValues(self, _args):
     return self.os
+
+  def reifyLatent(self):
+    return self.theta
 
 #### Collapsed symmetric dirichlet multinomial
 
@@ -248,7 +251,7 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
     if not len(os) == n:
       raise VentureValueError("Set of objects to choose from is the wrong length")
     theta = npr.dirichlet([alpha for _ in range(n)])
-    output = TypedPSP(USymDirMultOutputPSP(theta,os), SPType([], AnyType()))
+    output = TypedPSP(USymDirMultOutputPSP(theta,os), SPType([], AnyType(), SimplexType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,n))
 
   def logDensity(self,value,args):
