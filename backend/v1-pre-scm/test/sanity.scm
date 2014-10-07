@@ -48,5 +48,6 @@
   (equal? (top-eval '(model-in (rdb-extend (get-current-trace))
                                (assume x 4)
                                (predict x))) 4)
+  (equal? (top-eval `((,(lambda () (lambda () 5))))) 5) ;; Foreign procedures returning procedures
   )
 
