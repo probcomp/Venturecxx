@@ -2,6 +2,7 @@ from value import VentureValue, registerVentureType, VentureType
 import copy
 from exception import VentureError
 import venture.value.dicts as v
+from venture.lite.value import NilType
 
 class SPFamilies(object):
   def __init__(self, families=None):
@@ -86,7 +87,7 @@ used in the implementation of TypedPSP and TypedLKernel."""
     return None
   def __contains__(self, vthing): return isinstance(vthing, VentureSPRecord)
 
-  def __init__(self, args_types, return_type, latent_type,
+  def __init__(self, args_types, return_type, latent_type=NilType(),
                variadic=False, min_req_args=None):
     self.args_types = args_types
     self.return_type = return_type
