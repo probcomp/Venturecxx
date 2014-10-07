@@ -59,6 +59,5 @@ echo "defshell -bash      # Set screen login shell to bash" >> ~/.screenrc
 cp -f ./profile/matplotlibrc /etc/matplotlibrc # Changing backend to Agg
 
 
-#Start x11 vnc server
-CMD         x11vnc -forever -create
-CMD         /bin/bash
+#Start ipython notebook in examples directory and the x11 vnc server
+CMD         ./script/container_init.sh
