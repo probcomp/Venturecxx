@@ -6,7 +6,7 @@ from utils import extendedLog, simulateCategorical, logDensityCategorical
 from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, SPAux, VentureSPRecord, SPType
 from lkernel import LKernel
-from value import VentureAtom, BoolType # BoolType is metaprogrammed pylint:disable=no-name-in-module
+from value import VentureAtom, BoolType, ProbabilityType # BoolType is metaprogrammed pylint:disable=no-name-in-module
 from exception import VentureValueError
 
 class DiscretePSP(RandomPSP):
@@ -16,7 +16,7 @@ class BernoulliOutputPSP(DiscretePSP):
   def simulate(self,args):
     p = args.operandValues[0] if args.operandValues else 0.5
     return random.random() < p
-    
+
   def logDensity(self,val,args):
     p = args.operandValues[0] if args.operandValues else 0.5
     if val: return extendedLog(p)
@@ -40,7 +40,7 @@ class BinomialOutputPSP(DiscretePSP):
   def simulate(self,args):
     (n,p) = args.operandValues
     return scipy.stats.binom.rvs(n,p)
-    
+
   def logDensity(self,val,args):
     (n,p) = args.operandValues
     return scipy.stats.binom.logpmf(val,n,p)
@@ -70,12 +70,12 @@ class CategoricalOutputPSP(DiscretePSP):
       return logDensityCategorical(val, args.operandValues[0], [VentureAtom(i) for i in range(len(args.operandValues[0]))])
     else:
       return logDensityCategorical(val,*args.operandValues)
-  
+
   def enumerateValues(self,args):
     indexes = [i for i, p in enumerate(args.operandValues[0]) if p > 0]
     if len(args.operandValues) == 1: return indexes
     else: return [args.operandValues[1][i] for i in indexes]
-  
+
   def description(self,name):
     return "  (%s weights objects) samples a categorical with the given weights.  In the one argument case, returns the index of the chosen option as an atom; in the two argument case returns the item at that index in the second argument.  It is an error if the two arguments have different length." % name
 
@@ -108,7 +108,7 @@ class BetaBernoulliSPAux(SPAux):
     self.yes = 0.0
     self.no = 0.0
 
-  def copy(self): 
+  def copy(self):
     aux = BetaBernoulliSPAux()
     aux.yes = self.yes
     aux.no = self.no
@@ -185,7 +185,7 @@ class MakerUBetaBernoulliOutputPSP(DiscretePSP):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
     weight = scipy.stats.beta.rvs(alpha, beta)
-    output = TypedPSP(UBetaBernoulliOutputPSP(weight), SPType([], BoolType()))
+    output = TypedPSP(UBetaBernoulliOutputPSP(weight), SPType([], BoolType(), ProbabilityType()))
     return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output))
 
   def logDensity(self,value,args):
@@ -236,3 +236,6 @@ class UBetaBernoulliOutputPSP(DiscretePSP):
       return math.log(self.weight)
     else:
       return math.log(1-self.weight)
+
+  def reifyLatent(self):
+    return self.weight
