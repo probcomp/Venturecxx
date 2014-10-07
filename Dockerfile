@@ -26,19 +26,21 @@ FROM        ubuntu:14.04
 
 MAINTAINER  MIT Probabilistic Computing Project
 
-# Add source code repository (assumed to be in parent directory)
-ADD         ./venture-0.2.tgz /root/
-WORKDIR     /root/Venturecxx/
-
 # Install dependencies
 RUN         apt-get update
 RUN         apt-get install -y libboost-all-dev libgsl0-dev python-pip ccache libfreetype6-dev
 RUN         pip install -U distribute
 RUN         apt-get install -y python-pyparsing python-flask python-requests python-numpy python-matplotlib python-scipy python-zmq ipython ipython-notebook
+
+
+# Add source code repository 
+# Moved this after dependency install to leverage build process caching
+ADD         . /root/Venturecxx
+WORKDIR     /root/Venturecxx/
+
 RUN         pip install -r requirements.txt
 RUN         apt-get install -y python-pandas python-patsy
-RUN         pip install ggplot
-
+ 
 # Install Venture
 RUN         python setup.py install
 
