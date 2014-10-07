@@ -73,7 +73,11 @@ class VentureSPRecord(VentureValue):
 registerVentureType(VentureSPRecord)
 
 class VentureFunction(VentureSPRecord):
-  def __init__(self, f, args_types=None, return_type=None, **kwargs):
+  def __init__(self, f, args_types=None, return_type=None, sp_type=None, **kwargs):
+    if sp_type is not None:
+      args_types = sp_type.args_types
+      return_type = sp_type.return_type
+    
     from builtin import deterministic_typed
     super(VentureFunction, self).__init__(deterministic_typed(f, args_types, return_type, **kwargs))
     self.f = f
