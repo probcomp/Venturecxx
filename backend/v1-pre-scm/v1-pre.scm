@@ -24,7 +24,7 @@
   symbols
   addresses) ; Parallel lists mapping symbols to addresses
 
-(define-structure (primitive (safe-accessors #t)) simulate)
+(define-structure (foreign (safe-accessors #t)) simulate)
 
 (define-structure (compound (safe-accessors #t))
   formals
@@ -125,8 +125,8 @@
 ;; the application itself, the current trace, and the list of readable
 ;; traces.
 (define (apply oper opand-addrs addr cur-trace read-traces)
-  (cond ((primitive? oper)
-         ((primitive-simulate oper) oper opand-addrs addr cur-trace read-traces))
+  (cond ((foreign? oper)
+         ((foreign-simulate oper) oper opand-addrs addr cur-trace read-traces))
         ((compound? oper)
          (apply-compound oper opand-addrs addr cur-trace read-traces))
         ((annotated? oper)
@@ -272,7 +272,7 @@
       thing)) ; Represent everything else by itself
 
 (define (simple-scheme-procedure->v1-foreign sim)
-  (make-primitive
+  (make-foreign
    (lambda (oper opand-addrs addr cur-trace read-traces)
      (let ((arguments (map (lambda (o)
                              (traces-lookup (cons cur-trace read-traces) o))

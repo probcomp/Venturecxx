@@ -116,7 +116,7 @@
     (set-rdb-record-hook! new regeneration-hook)
     (for-each
      (lambda (addr record)
-       ;; Order (not counting issues with coupled primitives) will be
+       ;; Order (not counting issues with coupled foreign procedures) will be
        ;; enforced by evaluation recursion regardless of the order in
        ;; which the available expressions are traversed, provided the
        ;; replacement caches results.
