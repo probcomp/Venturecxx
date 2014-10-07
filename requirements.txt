@@ -33,6 +33,7 @@ dill
 patsy # Because ggplot needs this installed first ??
 pandas>=0.14 # TODO Is the dependency on pandas actually optional?
 # ggplot
+bokeh  # Only required for interactive bokeh demos, currently under examples/interactive_demos
 
 # Drawing scaffolds for debugging (optional)
 pygraphviz
