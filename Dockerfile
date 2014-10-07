@@ -40,6 +40,7 @@ RUN         apt-get install -y vim screen git
 # Moved this after dependency install to leverage build process caching
 ADD         . /root/Venturecxx
 WORKDIR     /root/Venturecxx/
+RUN         mkdir /root/bokeh_data
 
 RUN         sudo pip install -r requirements.txt
 RUN         apt-get install -y python-pandas python-patsy
