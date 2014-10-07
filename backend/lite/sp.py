@@ -72,6 +72,31 @@ class VentureSPRecord(VentureValue):
 
 registerVentureType(VentureSPRecord)
 
+class VentureFunction(VentureSPRecord):
+  def __init__(self, f, args_types=None, return_type=None, **kwargs):
+    from builtin import deterministic_typed
+    super(VentureFunction, self).__init__(deterministic_typed(f, args_types, return_type, **kwargs))
+    self.f = f
+    self.args_types = args_types
+    self.return_type = return_type
+    self.stuff = kwargs
+  
+  @staticmethod
+  def fromStackDict(thing):
+    return VentureFunction(thing['value'], **thing)
+  
+  def asStackDict(self, _trace=None):
+    val = v.val("function", self.f)
+    val["args_types"] = self.args_types
+    val["return_type"] = self.return_type
+    val.update(self.stuff)
+    return val
+  
+  def __call__(self, *args):
+    return self.f(*args)
+
+registerVentureType(VentureFunction, "function")
+
 class SPType(VentureType):
   """An object representing a Venture function type.  It knows
 the types expected for the arguments and the return, and thus knows
@@ -83,7 +108,7 @@ used in the implementation of TypedPSP and TypedLKernel."""
     return None
   def __contains__(self, vthing): return isinstance(vthing, VentureSPRecord)
 
-  def __init__(self, args_types, return_type, variadic=False, min_req_args=None):
+  def __init__(self, args_types, return_type, variadic=False, min_req_args=None, **kwargs):
     self.args_types = args_types
     self.return_type = return_type
     self.variadic = variadic
