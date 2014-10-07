@@ -26,18 +26,24 @@ FROM        ubuntu:14.04
 
 MAINTAINER  MIT Probabilistic Computing Project
 
-# Add source code repository (assumed to be in parent directory)
-ADD         ./venture-0.2.tgz /root/
-WORKDIR     /root/Venturecxx/
-
 # Install dependencies
 RUN         apt-get update
 RUN         apt-get install -y libboost-all-dev libgsl0-dev python-pip ccache libfreetype6-dev
 RUN         pip install -U distribute
 RUN         apt-get install -y python-pyparsing python-flask python-requests python-numpy python-matplotlib python-scipy python-zmq ipython ipython-notebook
-RUN         pip install -r requirements.txt
+
+# Install VNC (for graphical plotting) and other useful utilities
+RUN         apt-get install -y x11vnc xvfb
+RUN         apt-get install -y vim screen git 
+
+# Add source code repository 
+# Moved this after dependency install to leverage build process caching
+ADD         . /root/Venturecxx
+WORKDIR     /root/Venturecxx/
+
+RUN         sudo pip install -r requirements.txt
 RUN         apt-get install -y python-pandas python-patsy
-RUN         pip install ggplot
+RUN         sudo pip install ipython --upgrade
 
 # Install Venture
 RUN         python setup.py install
@@ -46,10 +52,12 @@ RUN         python setup.py install
 RUN         ipython profile create --profile-dir=/.ipython/profile_default/
 RUN         echo "c.NotebookApp.ip = '0.0.0.0'" >> /.ipython/profile_default/ipython_notebook_config.py
 RUN         echo "c.NotebookApp.port = 8888" >> /.ipython/profile_default/ipython_notebook_config.py
-RUN         echo "c.NotebookManager.notebook_dir = u'/root/Venturecxx/examples/tutorial/'" >> /.ipython/profile_default/ipython_notebook_config.py
 EXPOSE      8888
+ 
+# Further configuration of container enviroment
+RUN     echo "defshell -bash      # Set screen login shell to bash" >> ~/.screenrc
+RUN     cp -f ./profile/matplotlibrc /etc/matplotlibrc # Changing backend to Agg
 
-# Install VNC (for graphical plotting)
-RUN         apt-get install -y x11vnc xvfb
 
-CMD         /bin/bash
+#Start ipython notebook in examples directory and the x11 vnc server
+CMD         ./script/container_init.sh

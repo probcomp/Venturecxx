@@ -36,5 +36,5 @@ pandas>=0.14 # TODO Is the dependency on pandas actually optional?
 bokeh  # Only required for interactive bokeh demos, currently under examples/interactive_demos
 
 # Drawing scaffolds for debugging (optional)
-pygraphviz
+#pygraphviz  # Was preventing docker build...   not needed?
 networkx
