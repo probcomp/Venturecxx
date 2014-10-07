@@ -132,49 +132,52 @@
                                  opand-addrs)))
              (scheme-apply sim arguments))))
         ((compound? oper)
-         (let ((formals (compound-formals oper))
-               (body (compound-body oper))
-               (env (compound-env oper))
-               (trace (compound-trace oper))
-               (read-traces (compound-read-traces oper)))
-           (let ((env* (extend-env env formals opand-addrs))
-                 (trace* cur-trace)
-                 ;; Hm.  This strategy means that addresses do not
-                 ;; directly depend on which compound got applied,
-                 ;; so if the operator changes, I will still have
-                 ;; the same addresses in the new body (until the
-                 ;; evaluation structure of the bodies diverges).
-                 (addr* (extend-address addr 'app))
-                 ;; This way, a compound procedure does not carry
-                 ;; write permission to the trace in which it was
-                 ;; created
-
-                 ;; TODO Include the read-traces passed to apply?  Why
-                 ;; not?  Is there an invariant that nothing from the
-                 ;; closure's body can ever refer to any trace that
-                 ;; the closure is not closed over?
-                 (read-traces* (cons trace read-traces)))
-             (eval body env* trace* addr* read-traces*))))
+         (apply-compound oper opand-addrs addr cur-trace read-traces))
         ((annotated? oper)
-         ;; There is a choice between store-extending the current
-         ;; trace and not extending it.  Extending effectively makes
-         ;; all assessable objects hide their internals from the
-         ;; caller (of course, this does not prevent said internals
-         ;; from tracing something if they want, by further
-         ;; extending).
+         (apply-annotated oper opand-addrs addr cur-trace read-traces))))
 
-         ;; In principle, this could be written not to extend, and
-         ;; "mu" could be written to insert a request to store-extend
-         ;; the bodies of assessable procedures.  The natural way to
-         ;; do that is impeded because variadic lambdas seem to be a
-         ;; pain to provide in this language (except maybe with a
-         ;; restriction that the only thing one can do with an
-         ;; argument list is apply something else to it?).
-         (let ((sub-trace (store-extend cur-trace)))
-           ;; By calling apply rather than eval, I elide recording the
-           ;; identity function that transports the result of the
-           ;; simulator to the result of the whole SP.
-           (apply (annotated-base oper) opand-addrs addr sub-trace read-traces)))))
+(define (apply-compound oper opand-addrs addr cur-trace read-traces)
+  (let ((formals (compound-formals oper))
+        (body (compound-body oper))
+        (env (compound-env oper))
+        (trace (compound-trace oper))
+        (read-traces (compound-read-traces oper)))
+    (let ((env* (extend-env env formals opand-addrs))
+          (trace* cur-trace)
+          ;; Hm.  This strategy means that addresses do not directly
+          ;; depend on which compound got applied, so if the operator
+          ;; changes, I will still have the same addresses in the new
+          ;; body (until the evaluation structure of the bodies
+          ;; diverges).
+          (addr* (extend-address addr 'app))
+          ;; This way, a compound procedure does not carry write
+          ;; permission to the trace in which it was created
+
+          ;; TODO Include the read-traces passed to apply?  Why not?
+          ;; Is there an invariant that nothing from the closure's
+          ;; body can ever refer to any trace that the closure is not
+          ;; closed over?
+          (read-traces* (cons trace read-traces)))
+      (eval body env* trace* addr* read-traces*))))
+
+(define (apply-annotated oper opand-addrs addr cur-trace read-traces)
+  ;; There is a choice between store-extending the current trace and
+  ;; not extending it.  Extending effectively makes all assessable
+  ;; objects hide their internals from the caller (of course, this
+  ;; does not prevent said internals from tracing something if they
+  ;; want, by further extending).
+
+  ;; In principle, this could be written not to extend, and "mu" could
+  ;; be written to insert a request to store-extend the bodies of
+  ;; assessable procedures.  The natural way to do that is impeded
+  ;; because variadic lambdas seem to be a pain to provide in this
+  ;; language (except maybe with a restriction that the only thing one
+  ;; can do with an argument list is apply something else to it?).
+  (let ((sub-trace (store-extend cur-trace)))
+    ;; By calling apply rather than eval, I elide recording the
+    ;; identity function that transports the result of the simulator
+    ;; to the result of the whole SP.
+    (apply (annotated-base oper) opand-addrs addr sub-trace read-traces)))
 
 (define (top-eval exp)
   (eval exp (make-env-frame #f '() '()) (store-extend #f) (toplevel-address) '()))
