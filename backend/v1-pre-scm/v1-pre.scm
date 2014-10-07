@@ -130,7 +130,9 @@
         ((compound? oper)
          (apply-compound oper opand-addrs addr cur-trace read-traces))
         ((annotated? oper)
-         (apply-annotated oper opand-addrs addr cur-trace read-traces))))
+         (apply-annotated oper opand-addrs addr cur-trace read-traces))
+        (else
+         (error "Inapplicable object" oper))))
 
 (define (apply-compound oper opand-addrs addr cur-trace read-traces)
   (let ((formals (compound-formals oper))
