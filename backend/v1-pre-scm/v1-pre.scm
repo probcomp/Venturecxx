@@ -148,6 +148,8 @@
                  ;; This way, a compound procedure does not carry
                  ;; write permission to the trace in which it was
                  ;; created
+                 ;; TODO Include the read-traces passed to apply?  Why
+                 ;; not?
                  (read-traces* (cons trace read-traces)))
              (eval body env* trace* addr* read-traces*))))
         ((annotated? oper)
