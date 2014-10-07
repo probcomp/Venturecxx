@@ -41,9 +41,9 @@ RUN         apt-get install -y vim screen git
 ADD         . /root/Venturecxx
 WORKDIR     /root/Venturecxx/
 
-RUN         pip install -r requirements.txt
+RUN         sudo pip install -r requirements.txt
 RUN         apt-get install -y python-pandas python-patsy
-RUN         pip install ipython --upgrade
+RUN         sudo pip install ipython --upgrade
 
 # Install Venture
 RUN         python setup.py install
@@ -52,11 +52,11 @@ RUN         python setup.py install
 RUN         ipython profile create --profile-dir=/.ipython/profile_default/
 RUN         echo "c.NotebookApp.ip = '0.0.0.0'" >> /.ipython/profile_default/ipython_notebook_config.py
 RUN         echo "c.NotebookApp.port = 8888" >> /.ipython/profile_default/ipython_notebook_config.py
-RUN         echo "c.NotebookManager.notebook_dir = u'/root/Venturecxx/examples/tutorial/'" >> /.ipython/profile_default/ipython_notebook_config.py
 EXPOSE      8888
+ 
 # Further configuration of container enviroment
-echo "defshell -bash      # Set screen login shell to bash" >> ~/.screenrc
-cp -f ./profile/matplotlibrc /etc/matplotlibrc # Changing backend to Agg
+RUN     echo "defshell -bash      # Set screen login shell to bash" >> ~/.screenrc
+RUN     cp -f ./profile/matplotlibrc /etc/matplotlibrc # Changing backend to Agg
 
 
 #Start ipython notebook in examples directory and the x11 vnc server
