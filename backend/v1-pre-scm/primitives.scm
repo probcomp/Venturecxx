@@ -35,20 +35,20 @@
 
 (define flip
   (make-sp
-   (simple-scheme-procedure->v1-foreign
+   (scheme-procedure-over-values->v1-foreign
     (lambda (#!optional weight)
       (< (random 1.0)
          (if (default-object? weight)
              0.5
              weight))))
    (annotate
-    (simple-scheme-procedure->v1-foreign
+    (scheme-procedure-over-values->v1-foreign
      (lambda (val #!optional weight)
        (log (if (default-object? weight)
                 0.5
                 (if val weight (- 1 weight))))))
     value-bound-tag
-    (simple-scheme-procedure->v1-foreign
+    (scheme-procedure-over-values->v1-foreign
      (lambda (val #!optional weight)
        (if (default-object? weight)
            (log 0.5)
@@ -56,10 +56,10 @@
 
 (define uniform
   (make-sp
-   (simple-scheme-procedure->v1-foreign
+   (scheme-procedure-over-values->v1-foreign
     (lambda (low high)
       (+ low (random (exact->inexact (- high low))))))
-   (simple-scheme-procedure->v1-foreign
+   (scheme-procedure-over-values->v1-foreign
     (lambda (val low high)
       (if (< low val high)
           (- (log (- high low)))

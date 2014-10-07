@@ -270,15 +270,20 @@
 
 (define (scheme->venture thing)
   (if (procedure? thing)
-      (simple-scheme-procedure->v1-foreign thing)
+      (scheme-procedure-over-values->v1-foreign thing)
       ;; TODO Actually, I should recur on containers, to catch any
       ;; procedures hiding in them
       thing)) ; Represent everything else by itself
 
-(define (simple-scheme-procedure->v1-foreign sim)
+(define (scheme-procedure-over-values->v1-foreign sim)
   (make-foreign
    (lambda (oper opand-addrs addr cur-trace read-traces)
      (let ((arguments (map (lambda (o)
                              (traces-lookup (cons cur-trace read-traces) o))
                            opand-addrs)))
        (scheme->venture (scheme-apply sim arguments))))))
+
+(define (scheme-procedure-over-addresses->v1-foreign sim)
+  (make-foreign
+   (lambda (oper opand-addrs addr cur-trace read-traces)
+     (scheme->venture (scheme-apply sim opand-addrs)))))
