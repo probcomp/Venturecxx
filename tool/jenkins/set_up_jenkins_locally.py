@@ -134,11 +134,17 @@ def ensure_jobs():
             print "Creating job " + job
             jenkins_create_job(job)
 
+def save_jobs():
+    remote_jobs = queryit(jenkins_ssh_command("list-jobs")).split()
+    for job in remote_jobs:
+        jenkins_get_job(job)
+
 def main():
     install_jenkins_if_needed()
     ensure_plugins()
     restart_jenkins_if_needed()
     ensure_headless_matplotlib()
+    ensure_jobs()
 
 if __name__ == '__main__':
     ensure_jobs()
