@@ -53,7 +53,7 @@ EXPOSE      8888
 # Further configuration of container enviroment
 RUN     echo "defshell -bash      # Set screen login shell to bash" >> ~/.screenrc
 RUN     cp -f ./profile/matplotlibrc /etc/matplotlibrc # Changing backend to Agg
-
+RUN     chmod 777 /var/run/screen
 
 #Start ipython notebook in examples directory and the x11 vnc server
 CMD         ./script/container_init.sh
