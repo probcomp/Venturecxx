@@ -47,6 +47,9 @@ def wait_for_web_response(url):
         time.sleep(2)
         status = tryit(cmd)
 
+# TODO Add code for detecting whether Jenkins is controllable by ssh,
+# and instructing the human user to make it so if not.
+
 # It seems the Java client has no facilities for setting up security
 # settings or authentication :(
 
@@ -144,11 +147,18 @@ def save_jobs():
 
 def main():
     install_jenkins_if_needed()
+    # TODO ensure security settings are correct
+    # TODO ensure executor count is corrent
     ensure_plugins()
     restart_jenkins_if_needed()
     ensure_jenkins_trusts_github()
     ensure_headless_matplotlib()
+    # TODO ensure github trusts jenkins
+    give_jenkins_virtualenv_if_needed()
     ensure_jobs()
+
+# TODO Add code for detecting whether Jenkins knows the credentials
+# for accessing github, and instructing the user to add them if not.
 
 # sudo cat /var/lib/jenkins/.ssh/id_rsa.pub
 # Upload it to github as an authorized key for mit-pcp-jenkins
@@ -160,7 +170,21 @@ def replace_credential_id_locally(new_id_string):
     for name in queryit("ls *.config.xml | cut -f 1 -d '.'").split():
         doit("sed --in-place='' --expression='s/<credentialsId>.*<\\/credentialsId>/" + new_id_string + "/' " + name + ".config.xml")
 
+def give_jenkins_virtualenv():
+    doit("cd /var/lib/jenkins; sudo -u jenkins virtualenv env")
+
+def jenkins_has_virtualenv():
+    return len(queryit("ls /var/lib/jenkins/ | grep env")) > 0
+
+def give_jenkins_virtualenv_if_needed():
+    if not jenkins_has_virtualenv():
+        print "Set up virtualenv for Jenkins"
+        give_jenkins_virtualenv()
+    else:
+        print "Found Jenkins virtualenv named 'env'"
+
 if __name__ == '__main__':
     # print discover_credential_id("venture-crashes")
     # replace_credential_id_locally("<credentialsId>2fd68a05-da40-45e1-a59c-32e795448dd5<\\/credentialsId>")
-    ensure_jobs()
+    # ensure_jobs()
+    give_jenkins_virtualenv_if_needed()
