@@ -8,7 +8,7 @@
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
         <url>git@github.com:mit-probabilistic-computing-project/Venturecxx.git</url>
-        <credentialsId>1c508caa-8c1f-4b4c-b385-22cf8500e65c</credentialsId>
+        <credentialsId>2fd68a05-da40-45e1-a59c-32e795448dd5</credentialsId>
       </hudson.plugins.git.UserRemoteConfig>
     </userRemoteConfigs>
     <branches>
