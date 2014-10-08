@@ -107,7 +107,8 @@ this."""
 
 class VentureNumber(VentureValue):
   def __init__(self,number):
-    assert isinstance(number, Number)
+    if not isinstance(number, Number):
+      raise VentureTypeError("%s is of %s, not Number" % (str(number), type(number)))
     self.number = float(number)
   def __repr__(self):
     if hasattr(self, "number"):
