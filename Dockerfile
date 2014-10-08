@@ -34,9 +34,9 @@ RUN         apt-get install -y python-pyparsing python-flask python-requests pyt
 
 # Install VNC (for graphical plotting) and other useful utilities
 RUN         apt-get install -y x11vnc xvfb
-RUN         apt-get install -y vim screen git 
+RUN         apt-get install -y vim screen git
 
-# Add source code repository 
+# Add source code repository
 # Moved this after dependency install to leverage build process caching
 ADD         . /root/Venturecxx
 WORKDIR     /root/Venturecxx/
@@ -53,7 +53,7 @@ RUN         ipython profile create --profile-dir=/.ipython/profile_default/
 RUN         echo "c.NotebookApp.ip = '0.0.0.0'" >> /.ipython/profile_default/ipython_notebook_config.py
 RUN         echo "c.NotebookApp.port = 8888" >> /.ipython/profile_default/ipython_notebook_config.py
 EXPOSE      8888
- 
+
 # Further configuration of container enviroment
 RUN     echo "defshell -bash      # Set screen login shell to bash" >> ~/.screenrc
 RUN     cp -f ./profile/matplotlibrc /etc/matplotlibrc # Changing backend to Agg
