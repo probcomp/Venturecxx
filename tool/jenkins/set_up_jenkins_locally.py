@@ -150,5 +150,17 @@ def main():
     ensure_headless_matplotlib()
     ensure_jobs()
 
+# sudo cat /var/lib/jenkins/.ssh/id_rsa.pub
+# Upload it to github as an authorized key for mit-pcp-jenkins
+
+def discover_credential_id(job):
+    return queryit(jenkins_ssh_command("get-job " + job) + " | grep credentialsId")
+
+def replace_credential_id_locally(new_id_string):
+    for name in queryit("ls *.config.xml | cut -f 1 -d '.'").split():
+        doit("sed --in-place='' --expression='s/<credentialsId>.*<\\/credentialsId>/" + new_id_string + "/' " + name + ".config.xml")
+
 if __name__ == '__main__':
-    ensure_jenkins_trusts_github()
+    # print discover_credential_id("venture-crashes")
+    # replace_credential_id_locally("<credentialsId>2fd68a05-da40-45e1-a59c-32e795448dd5<\\/credentialsId>")
+    ensure_jobs()
