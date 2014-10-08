@@ -114,6 +114,9 @@ def ensure_headless_matplotlib():
     doit("echo 'backend: Agg' | sudo tee " + jenkins_home + ".matplotlib/matplotlibrc")
     doit("sudo chown -R jenkins " + jenkins_home + ".matplotlib")
 
+def ensure_jenkins_trusts_github():
+    doit("sudo -u jenkins ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no github.com exit || true")
+
 def jenkins_create_job(name):
     doit("cat " + name + ".config.xml | " + jenkins_ssh_command("create-job " + name))
 
@@ -143,8 +146,9 @@ def main():
     install_jenkins_if_needed()
     ensure_plugins()
     restart_jenkins_if_needed()
+    ensure_jenkins_trusts_github()
     ensure_headless_matplotlib()
     ensure_jobs()
 
 if __name__ == '__main__':
-    ensure_jobs()
+    ensure_jenkins_trusts_github()
