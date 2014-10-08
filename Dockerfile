@@ -4,23 +4,19 @@
 # install Docker:
 # https://docs.docker.com/installation/#installation
 #
-# to generate the docker image (from this directory, must run script/release-tarball first):
-# sudo docker build -t probcomp/venture .
-#
-# to save/load the image to/from a tarball:
-# sudo docker save probcomp/venture > venture-0.2-docker.tar
-# cat venture-0.2-docker.tar | sudo docker load
+# to generate the docker image (from this directory)
+#   script/build_docker_image
+# (which runs sudo docker build -t venture .)
 #
 # to start a container with an interactive shell (after generating or loading the image):
-# sudo docker run -t -i probcomp/venture
+#   script/run_docker_container
+# - IPython notebook server is exposed on port 8888
+# - VNC server is exposed on port 5900
+# See script/run_docker_container to configure
 #
-# in order to use IPython notebook, expose port 8888:
-# sudo docker run -t -i -p 8888:8888 probcomp/venture
-# (then run "ipcluster & ipython notebook" inside the container)
-#
-# in order to do graphical plotting, use VNC and expose port 5900:
-# sudo docker run -t -i -p 5900:5900 probcomp/venture
-# (then run "x11vnc -forever -create" inside the container, and point a VNC client to localhost:5900)
+# to save/load the image to/from a tarball:
+#   sudo docker save venture > venture-0.2-docker.tar
+#   cat venture-0.2-docker.tar | sudo docker load
 
 FROM        ubuntu:14.04
 
