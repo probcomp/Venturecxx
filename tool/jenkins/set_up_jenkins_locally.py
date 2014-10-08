@@ -90,6 +90,7 @@ def ensure_plugins():
     plugins = jenkins_installed_plugins()
     for p in ["git", "github", "jenkins-flowdock-plugin", "greenballs"]:
         if p not in plugins:
+            print "Installing Jenkins plugin " + p
             doit(jenkins_ssh_command("install-plugin " + p))
             need_jenkins_restart = True
         else:
@@ -106,19 +107,22 @@ def restart_jenkins():
 def restart_jenkins_if_needed():
     global need_jenkins_restart
     if need_jenkins_restart:
+        print "Restarting Jenkins"
         restart_jenkins()
     else:
         print "No need to restart Jenkins"
 
+def ensure_jenkins_trusts_github():
+    print "Ensuring that Jenkins trusts github"
+    doit("sudo -u jenkins ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no github.com exit || true")
+
 jenkins_home = "/var/lib/jenkins/"
 
 def ensure_headless_matplotlib():
+    print "Ensuring that Jenkins's matplotlib works headless"
     doit("sudo mkdir -p " + jenkins_home + ".matplotlib")
     doit("echo 'backend: Agg' | sudo tee " + jenkins_home + ".matplotlib/matplotlibrc")
     doit("sudo chown -R jenkins " + jenkins_home + ".matplotlib")
-
-def ensure_jenkins_trusts_github():
-    doit("sudo -u jenkins ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no github.com exit || true")
 
 def jenkins_create_job(name):
     doit("cat " + name + ".config.xml | " + jenkins_ssh_command("create-job " + name))
@@ -178,7 +182,7 @@ def jenkins_has_virtualenv():
 
 def give_jenkins_virtualenv_if_needed():
     if not jenkins_has_virtualenv():
-        print "Set up virtualenv for Jenkins"
+        print "Setting up virtualenv for Jenkins"
         give_jenkins_virtualenv()
     else:
         print "Found Jenkins virtualenv named 'env'"
