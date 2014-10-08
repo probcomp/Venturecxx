@@ -1,7 +1,6 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<project>
+<?xml version="1.0" encoding="UTF-8"?><project>
   <actions/>
-  <description></description>
+  <description/>
   <keepDependencies>false</keepDependencies>
   <properties/>
   <scm class="hudson.plugins.git.GitSCM" plugin="git@2.0.1">
@@ -32,7 +31,7 @@
       <command>#!/bin/bash -xe
 
 source ~/env/bin/activate
-nosetests -c inference-quality.cfg --tc=get_ripl:lite --tc=infer:&quot;(func_pgibbs default ordered 4 5)&quot; --eval-attr=&quot;(not backend or backend in [&apos;lite&apos;, &apos;any&apos;]) and (not inf_prim or inf_prim in [&apos;func_pgibbs&apos;, &apos;any&apos;])&quot;</command>
+nosetests -c inference-quality.cfg --tc=get_ripl:lite --tc=infer:"(func_pgibbs default ordered 4 5)" --eval-attr="(not backend or backend in ['lite', 'any']) and (not inf_prim or inf_prim in ['func_pgibbs', 'any'])"</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>

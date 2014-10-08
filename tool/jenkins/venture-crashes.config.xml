@@ -1,5 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<project>
+<?xml version="1.0" encoding="UTF-8"?><project>
   <actions/>
   <description>Crash testing Venture</description>
   <keepDependencies>false</keepDependencies>
@@ -27,7 +26,7 @@
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
   <triggers>
     <com.cloudbees.jenkins.GitHubPushTrigger plugin="github@1.8">
-      <spec></spec>
+      <spec/>
     </com.cloudbees.jenkins.GitHubPushTrigger>
     <hudson.triggers.SCMTrigger>
       <spec>H */3 * * *</spec>
@@ -40,9 +39,9 @@
       <command>#!/bin/bash -xe
 
 source ~/env/bin/activate
-pip install &quot;distribute&gt;=0.6.28&quot; # Because the distribute executable has to be there for the rest of it
+pip install "distribute&gt;=0.6.28" # Because the distribute executable has to be there for the rest of it
 pip install -r requirements.txt
-CC=&quot;ccache gcc&quot; python setup.py install
+CC="ccache gcc" python setup.py install
 ./all-crashes
 </command>
     </hudson.tasks.Shell>
@@ -50,7 +49,7 @@ CC=&quot;ccache gcc&quot; python setup.py install
   <publishers>
     <com.flowdock.jenkins.FlowdockNotifier plugin="jenkins-flowdock-plugin@1.1.3">
       <flowToken>4ba54df08a18416dd5b8ff6324689f9f</flowToken>
-      <notificationTags></notificationTags>
+      <notificationTags/>
       <chatNotification>false</chatNotification>
       <notifyMap>
         <entry>
