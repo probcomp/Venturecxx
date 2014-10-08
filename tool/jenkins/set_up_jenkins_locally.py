@@ -72,13 +72,13 @@ def jenkins_ssh_port():
     return cached_port
 
 def jenkins_ssh_command(command):
-    doit("ssh -p " + jenkins_ssh_port() + " localhost " + command)
+    return "ssh -p " + jenkins_ssh_port() + " localhost " + command
 
 def jenkins_ssh_query(command):
     return queryit("ssh -p " + jenkins_ssh_port() + " localhost " + command).strip()
 
 def jenkins_installed_plugins():
-    return jenkins_ssh_query("list-plugins | cut -f 1 -d ' '").split()
+    return queryit(jenkins_ssh_command("list-plugins | cut -f 1 -d ' '")).split()
 
 need_jenkins_restart = False
 
@@ -87,7 +87,7 @@ def ensure_plugins():
     plugins = jenkins_installed_plugins()
     for p in ["git", "github", "jenkins-flowdock-plugin", "greenballs"]:
         if p not in plugins:
-            jenkins_ssh_command("install-plugin " + p)
+            doit(jenkins_ssh_command("install-plugin " + p))
             need_jenkins_restart = True
         else:
             print "Found Jenkins plugin " + p
@@ -95,7 +95,7 @@ def ensure_plugins():
 def restart_jenkins():
     global cached_port
     global need_jenkins_restart
-    jenkins_ssh_command("safe-restart")
+    doit(jenkins_ssh_command("safe-restart"))
     wait_for_web_response("http://probcomp-3.csail.mit.edu:8080")
     cached_port = None
     need_jenkins_restart = False
@@ -114,8 +114,31 @@ def ensure_headless_matplotlib():
     doit("echo 'backend: Agg' | sudo tee " + jenkins_home + ".matplotlib/matplotlibrc")
     doit("sudo chown -R jenkins " + jenkins_home + ".matplotlib")
 
-if __name__ == '__main__':
+def jenkins_create_job(name):
+    doit("cat " + name + ".config.xml | " + jenkins_ssh_command("create-job " + name))
+
+def jenkins_update_job(name):
+    doit("cat " + name + ".config.xml | " + jenkins_ssh_command("update-job " + name))
+
+def jenkins_get_job(name):
+    doit(jenkins_ssh_command("get-job " + name) + " > " + name + ".config.xml")
+
+def ensure_jobs():
+    local_jobs = queryit("ls *.config.xml | cut -f 1 -d '.'").split()
+    remote_jobs = queryit(jenkins_ssh_command("list-jobs")).split()
+    for job in local_jobs:
+        if job in remote_jobs:
+            print "Found job " + job + ", updating"
+            jenkins_update_job(job)
+        else:
+            print "Creating job " + job
+            jenkins_create_job(job)
+
+def main():
     install_jenkins_if_needed()
     ensure_plugins()
     restart_jenkins_if_needed()
     ensure_headless_matplotlib()
+
+if __name__ == '__main__':
+    ensure_jobs()
