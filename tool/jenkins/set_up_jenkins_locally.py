@@ -1,9 +1,33 @@
 #!/usr/bin/python
 
+"""Script for constructing a Jenkins setup on the local machine.
+
+If you need to rebuild a Jenkins config, just run this script and
+follow any instructions.  It's idempotent.
+
+If you need to save a Jenkins config for future rebuilding, edit the
+file to call save_jobs().
+"""
+
 import sys
 import os
 import time
 import subprocess
+
+#### The process
+
+def main():
+    install_jenkins_if_needed()
+    ensure_jenkins_accessible_by_ssh()
+    ensure_plugins()
+    restart_jenkins_if_needed()
+    ensure_jenkins_trusts_github()
+    ensure_headless_matplotlib()
+    give_jenkins_virtualenv_if_needed()
+    ensure_jobs()
+    ensure_github_trusts_jenkins()
+
+#### General helpers
 
 def tryit(command):
     print command
@@ -22,6 +46,8 @@ def is_exe(fpath):
 
 def is_read(fpath):
     return os.path.isfile(fpath) and os.access(fpath, os.R_OK)
+
+#### Installation
 
 def is_jenkins_installed():
     return is_exe("/etc/init.d/jenkins")
@@ -47,21 +73,7 @@ def wait_for_web_response(url):
         time.sleep(2)
         status = tryit(cmd)
 
-# TODO Add code for detecting whether Jenkins is controllable by ssh,
-# and instructing the human user to make it so if not.
-
-# It seems the Java client has no facilities for setting up security
-# settings or authentication :(
-
-# Configure Global Security
-# - Jenkins' own user database
-#   - Do not allow users to sign up
-# - Logged-in users can do anything
-# - Prevent cross-site request forgery
-# Yes, you can create the first user account afterward
-
-# People -> yourself -> configure -> upload ssh public key
-# - Pay attention to possible copy-paste problems caused by line-wrapping
+#### SSH access
 
 def discover_jenkins_ssh_port():
     return queryit('curl -s -I http://probcomp-3.csail.mit.edu:8080 | grep "X-SSH-Endpoint" | cut -f 3 -d ":"')
@@ -119,6 +131,8 @@ to do it automatically.
 """
         exit(1)
 
+#### Plugins
+
 def jenkins_installed_plugins():
     return queryit(jenkins_ssh_command("list-plugins | cut -f 1 -d ' '")).split()
 
@@ -134,6 +148,8 @@ def ensure_plugins():
             need_jenkins_restart = True
         else:
             print "Found Jenkins plugin " + p
+
+#### Restarting
 
 def restart_jenkins():
     global cached_port
@@ -151,9 +167,13 @@ def restart_jenkins_if_needed():
     else:
         print "No need to restart Jenkins"
 
+#### Github's host key
+
 def ensure_jenkins_trusts_github():
     print "Ensuring that Jenkins trusts github"
     doit("sudo -u jenkins ssh -o PasswordAuthentication=no -o StrictHostKeyChecking=no github.com exit || true")
+
+#### Headless matplotlib
 
 jenkins_home = "/var/lib/jenkins/"
 
@@ -168,6 +188,50 @@ def ensure_headless_matplotlib():
     doit("sudo chown -R jenkins " + jenkins_home + ".matplotlib")
     doit("echo 'backend: Agg' | sudo tee " + jenkins_home + ".matplotlibrc")
     doit("sudo chown jenkins " + jenkins_home + ".matplotlibrc")
+
+#### Virtualenv
+
+def give_jenkins_virtualenv():
+    doit("cd /var/lib/jenkins; sudo -u jenkins virtualenv env")
+
+def jenkins_has_virtualenv():
+    return len(queryit("ls /var/lib/jenkins/ | grep env")) > 0
+
+def give_jenkins_virtualenv_if_needed():
+    if not jenkins_has_virtualenv():
+        print "Setting up virtualenv for Jenkins"
+        give_jenkins_virtualenv()
+    else:
+        print "Found Jenkins virtualenv named 'env'"
+
+#### Jobs configurations
+
+def jenkins_create_job(name):
+    doit("cat " + name + ".config.xml | " + jenkins_ssh_command("create-job " + name))
+
+def jenkins_update_job(name):
+    doit("cat " + name + ".config.xml | " + jenkins_ssh_command("update-job " + name))
+
+def jenkins_get_job(name):
+    doit(jenkins_ssh_command("get-job " + name) + " > " + name + ".config.xml")
+
+def ensure_jobs():
+    local_jobs = queryit("ls *.config.xml | cut -f 1 -d '.'").split()
+    remote_jobs = queryit(jenkins_ssh_command("list-jobs")).split()
+    for job in local_jobs:
+        if job in remote_jobs:
+            print "Found job " + job + ", updating"
+            jenkins_update_job(job)
+        else:
+            print "Creating job " + job
+            jenkins_create_job(job)
+
+def save_jobs():
+    remote_jobs = queryit(jenkins_ssh_command("list-jobs")).split()
+    for job in remote_jobs:
+        jenkins_get_job(job)
+
+#### Access to the repository
 
 def github_trusts_jenkins():
     return len(queryit("git ls-remote git@github.com:mit-probabilistic-computing-project/Venturecxx.git | grep HEAD")) > 0
@@ -207,41 +271,7 @@ Please set up ssh access for Jenkins to Github:
      definitions.
 """
 
-def jenkins_create_job(name):
-    doit("cat " + name + ".config.xml | " + jenkins_ssh_command("create-job " + name))
-
-def jenkins_update_job(name):
-    doit("cat " + name + ".config.xml | " + jenkins_ssh_command("update-job " + name))
-
-def jenkins_get_job(name):
-    doit(jenkins_ssh_command("get-job " + name) + " > " + name + ".config.xml")
-
-def ensure_jobs():
-    local_jobs = queryit("ls *.config.xml | cut -f 1 -d '.'").split()
-    remote_jobs = queryit(jenkins_ssh_command("list-jobs")).split()
-    for job in local_jobs:
-        if job in remote_jobs:
-            print "Found job " + job + ", updating"
-            jenkins_update_job(job)
-        else:
-            print "Creating job " + job
-            jenkins_create_job(job)
-
-def save_jobs():
-    remote_jobs = queryit(jenkins_ssh_command("list-jobs")).split()
-    for job in remote_jobs:
-        jenkins_get_job(job)
-
-def main():
-    install_jenkins_if_needed()
-    ensure_jenkins_accessible_by_ssh()
-    ensure_plugins()
-    restart_jenkins_if_needed()
-    ensure_jenkins_trusts_github()
-    ensure_headless_matplotlib()
-    give_jenkins_virtualenv_if_needed()
-    ensure_jobs()
-    ensure_github_trusts_jenkins()
+#### Helpers for messing with ids
 
 def discover_credential_id(job):
     return queryit(jenkins_ssh_command("get-job " + job) + " | grep credentialsId")
@@ -250,21 +280,9 @@ def replace_credential_id_locally(new_id_string):
     for name in queryit("ls *.config.xml | cut -f 1 -d '.'").split():
         doit("sed --in-place='' --expression='s/<credentialsId>.*<\\/credentialsId>/" + new_id_string + "/' " + name + ".config.xml")
 
-def give_jenkins_virtualenv():
-    doit("cd /var/lib/jenkins; sudo -u jenkins virtualenv env")
-
-def jenkins_has_virtualenv():
-    return len(queryit("ls /var/lib/jenkins/ | grep env")) > 0
-
-def give_jenkins_virtualenv_if_needed():
-    if not jenkins_has_virtualenv():
-        print "Setting up virtualenv for Jenkins"
-        give_jenkins_virtualenv()
-    else:
-        print "Found Jenkins virtualenv named 'env'"
-
 if __name__ == '__main__':
     # print discover_credential_id("venture-crashes")
     # replace_credential_id_locally("<credentialsId>2fd68a05-da40-45e1-a59c-32e795448dd5<\\/credentialsId>")
     # ensure_jobs()
     main()
+    # save_jobs()
