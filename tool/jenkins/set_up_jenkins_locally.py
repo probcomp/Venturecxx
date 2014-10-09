@@ -159,9 +159,15 @@ jenkins_home = "/var/lib/jenkins/"
 
 def ensure_headless_matplotlib():
     print "Ensuring that Jenkins's matplotlib works headless"
+    # Put the config in all the places where matplotlib might look for it
+    doit("sudo mkdir -p " + jenkins_home + ".config/matplotlib")
+    doit("echo 'backend: Agg' | sudo tee " + jenkins_home + ".config/matplotlib/matplotlibrc")
+    doit("sudo chown -R jenkins " + jenkins_home + ".config")
     doit("sudo mkdir -p " + jenkins_home + ".matplotlib")
     doit("echo 'backend: Agg' | sudo tee " + jenkins_home + ".matplotlib/matplotlibrc")
     doit("sudo chown -R jenkins " + jenkins_home + ".matplotlib")
+    doit("echo 'backend: Agg' | sudo tee " + jenkins_home + ".matplotlibrc")
+    doit("sudo chown jenkins " + jenkins_home + ".matplotlibrc")
 
 def github_trusts_jenkins():
     return len(queryit("git ls-remote git@github.com:mit-probabilistic-computing-project/Venturecxx.git | grep HEAD")) > 0
