@@ -13,7 +13,7 @@ rather than silently not following it.
 - We use [Starcluster](http://star.mit.edu/cluster/) (which is backed by EC2) for cloud compute.
 
 - We use [Jenkins](http://jenkins-ci.org/) for the continuous build.  As of this writing, the
-  server listens to http://ec2-54-84-30-252.compute-1.amazonaws.com:8080/
+  server listens to http://probcomp-3.csail.mit.edu:8080/
 
 - We use [pylint](http://www.pylint.org/) to maintain our Python code style.  The normative
   pylint configuration file is in `tool/pylintrc`.

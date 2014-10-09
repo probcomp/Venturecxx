@@ -51,7 +51,7 @@ Workflow for a contribution
   helps us maintain the quality of our software.  Eventually, a core
   developer will merge your branch into master.
 - After your contribution is merged, it's good to monitor
-  [Jenkins](http://ec2-54-84-30-252.compute-1.amazonaws.com:8080/) a
+  [Jenkins](http://probcomp3.csail.mit.edu:8080/) a
   bit, because the testing it's doing is likely to be more thorough
   than yours, and it may be running in a different environment.  If
   the venture-crashes build fails, we will be after you to produce a
