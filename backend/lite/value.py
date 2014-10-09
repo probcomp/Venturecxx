@@ -572,7 +572,8 @@ class VentureArray(VentureValue):
 class VentureArrayUnboxed(VentureValue):
   """Venture arrays of unboxed objects are homogeneous, with O(1) access and O(n) copy."""
   def __init__(self, array, elt_type):
-    assert isinstance(elt_type, VentureType)
+    if not isinstance(elt_type, VentureType):
+      raise VentureTypeError("%s of %s is not a VentureType" % (elt_type, type(elt_type)))
     self.elt_type = elt_type
     self.array = enp.ensure_numpy_if_possible(elt_type, array)
   def __repr__(self):
