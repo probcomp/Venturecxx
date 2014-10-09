@@ -11,6 +11,8 @@ import continuous
 import csp
 import crp
 import cmvn
+import function
+import gp
 import msp
 import hmm
 import conditionals
@@ -384,6 +386,8 @@ builtInSPsList = [
                                   SPType([], v.HomogeneousArrayType(v.NumberType()))) ],
 
            [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [v.SimplexType(), v.MatrixType(), v.MatrixType()], SPType([v.CountType()], v.AtomType())) ],
+           [ "make_gp", gp.makeGPSP ],
+           [ "apply_function", function.applyFunctionSP]
 ]
 
 def builtInSPs():

@@ -72,35 +72,6 @@ class VentureSPRecord(VentureValue):
 
 registerVentureType(VentureSPRecord)
 
-class VentureFunction(VentureSPRecord):
-  def __init__(self, f, args_types=None, return_type=None, sp_type=None, **kwargs):
-    if sp_type is not None:
-      args_types = sp_type.args_types
-      return_type = sp_type.return_type
-    
-    from builtin import deterministic_typed
-    super(VentureFunction, self).__init__(deterministic_typed(f, args_types, return_type, **kwargs))
-    self.f = f
-    self.args_types = args_types
-    self.return_type = return_type
-    self.stuff = kwargs
-  
-  @staticmethod
-  def fromStackDict(thing):
-    return VentureFunction(thing['value'], **thing)
-  
-  def asStackDict(self, _trace=None):
-    val = v.val("function", self.f)
-    val["args_types"] = self.args_types
-    val["return_type"] = self.return_type
-    val.update(self.stuff)
-    return val
-  
-  def __call__(self, *args):
-    return self.f(*args)
-
-registerVentureType(VentureFunction, "function")
-
 class SPType(VentureType):
   """An object representing a Venture function type.  It knows
 the types expected for the arguments and the return, and thus knows
@@ -121,7 +92,11 @@ used in the implementation of TypedPSP and TypedLKernel."""
     self.min_req_args = len(args_types) if min_req_args is None else min_req_args
 
   def wrap_return(self, value):
-    return self.return_type.asVentureValue(value)
+    try:
+      return self.return_type.asVentureValue(value)
+    except VentureError as e:
+      e.message = "Wrong return type: " + e.message
+      raise e
   def unwrap_return(self, value):
     # value could be None for e.g. a "delta kernel" that is expected,
     # by e.g. pgibbs, to actually be a simulation kernel; also when
