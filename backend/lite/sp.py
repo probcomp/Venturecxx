@@ -55,8 +55,14 @@ class SP(object):
   # VentureSPs are intentionally not comparable until we decide
   # otherwise
 
-  def reifyLatents(self):
-    return self.requestPSP.reifyLatent(), self.outputPSP.reifyLatent()
+  def reifyLatent(self):
+    # TODO: this method, and venture_type above, do not work for the class
+    # UncollapsedHMMSP, which is the output of make_lazy_hmm. That class
+    # has typed PSP's for both it's request and its output.
+    if hasattr(self.outputPSP, "f_type"):
+      return self.outputPSP.reifyLatent()
+    else:
+      return self.requestPSP.reifyLatent()
 
 class VentureSPRecord(VentureValue):
   def __init__(self, sp, spAux=None, spFamilies=None):
