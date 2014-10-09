@@ -77,8 +77,47 @@ def jenkins_ssh_port():
 def jenkins_ssh_command(command):
     return "ssh -p " + jenkins_ssh_port() + " localhost " + command
 
-def jenkins_ssh_query(command):
-    return queryit("ssh -p " + jenkins_ssh_port() + " localhost " + command).strip()
+def is_jenkins_accessible_by_ssh():
+    return len(queryit(jenkins_ssh_command("who-am-i") + " | grep authenticated")) > 0
+
+def ensure_jenkins_accessible_by_ssh():
+    if is_jenkins_accessible_by_ssh():
+        print "Found Jenkins to be accessible by ssh"
+    else:
+        print """
+Jenkins security appears not to be set up, and this script is too dumb
+to do it automatically.
+
+1) Please set up Jenkins security:
+   - Browse http://probcomp-3.csail.mit.edu:8080
+   - Navigate "Manage Jenkins" -> "Configure Global Security"
+     - Check "Enable security"
+     - Select "Jenkins' own user database"
+     - Uncheck "Allow users to sign up"
+     - Select "Logged-in users can do anything"
+     - Your option on "Prevent Cross Site Request Forgery exploits"
+    - Click "Save"
+
+2) Please create a user account for youself with Jenkins:
+   - I think any sort of clicking around should give an account
+     creation screen
+
+3) Please upload your ssh public key to your Jenkins user account:
+   - Browse http://probcomp-3.csail.mit.edu:8080
+   - Navigate "People" -> your user name -> "Configure"
+     - Paste in the public key, taking care of any copying artifacts
+   - Click "Save"
+
+4) While you're at it, please configure the proper number of
+   executors:
+   - Browse http://probcomp-3.csail.mit.edu:8080
+   - Navigate "Manage Jenkins" -> "Configure System"
+     - Fill in the form
+   - Click "Save"
+
+5) Run this script again when done
+"""
+        exit(1)
 
 def jenkins_installed_plugins():
     return queryit(jenkins_ssh_command("list-plugins | cut -f 1 -d ' '")).split()
@@ -151,8 +190,7 @@ def save_jobs():
 
 def main():
     install_jenkins_if_needed()
-    # TODO ensure security settings are correct
-    # TODO ensure executor count is corrent
+    ensure_jenkins_accessible_by_ssh()
     ensure_plugins()
     restart_jenkins_if_needed()
     ensure_jenkins_trusts_github()
@@ -191,4 +229,4 @@ if __name__ == '__main__':
     # print discover_credential_id("venture-crashes")
     # replace_credential_id_locally("<credentialsId>2fd68a05-da40-45e1-a59c-32e795448dd5<\\/credentialsId>")
     # ensure_jobs()
-    give_jenkins_virtualenv_if_needed()
+    main()
