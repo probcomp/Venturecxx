@@ -15,6 +15,7 @@ import venture.test.numerical as num
 from venture.lite.exception import VentureBuiltinSPMethodError
 from venture.lite.utils import FixedRandomness
 import venture.value.dicts as v
+from venture.lite.sp import SPType
 
 @in_backend("none")
 def testEquality():
@@ -48,9 +49,10 @@ def testTypes():
 
 def checkTypeCorrect(_name, sp):
   type_ = sp.venture_type()
-  checkTypedProperty(propTypeCorrect, fully_uncurried_sp_type(type_), sp, type_)
+  propLatentCorrect(sp, type_)
+  checkTypedProperty(propTypeCorrect, fully_uncurried_sp_type(type_), sp, type_, _name)
 
-def propTypeCorrect(args_lists, sp, type_):
+def propTypeCorrect(args_lists, sp, type_, _name):
   """Check that the successive return values of the given SP (when
 applied fully uncurried) match the expected types."""
   if len(args_lists) == 0:
@@ -63,7 +65,32 @@ applied fully uncurried) match the expected types."""
     args = BogusArgs(args_lists[0], aux)
     answer = carefully(sp.outputPSP.simulate, args)
     assert answer in type_.return_type
-    propTypeCorrect(args_lists[1:], answer, type_.return_type)
+    # if the SP itself returns another SP, check the latent type of the returned SP
+    if isinstance(type_.return_type, SPType):
+      if isinstance(answer, VentureSPRecord):
+        answer = answer.sp
+      if _name != 'make_lazy_hmm':
+        propLatentCorrect(answer, answer.venture_type())
+      else:
+        propHMMLatentCorrect(answer)
+    propTypeCorrect(args_lists[1:], answer, type_.return_type, _name)
+
+def propLatentCorrect(sp, type_):
+  '''Check that the sp returns the expected latent type'''
+  # make sure that latent is of correct type
+  assert sp.reifyLatent() in type_.latent_type
+  # make sure that the PSP that is not typed returns None when reifyLatent() is called
+  if hasattr(sp.outputPSP, "f_type"):
+    assert sp.requestPSP.reifyLatent() is None
+  else:
+    assert sp.outputPSP.reifyLatent() is None
+
+def propHMMLatentCorrect(sp):
+  # Hidden Markov model is a weird edge case because both its request and output
+  # PSP's are typed. See comment in reifyLatent definition of sp.py
+  assert sp.outputPSP.reifyLatent() in sp.outputPSP.f_type.latent_type
+  assert sp.requestPSP.reifyLatent() in sp.requestPSP.f_type.latent_type
+  assert sp.reifyLatent() in sp.venture_type().latent_type
 
 @gen_in_backend("none")
 def testDeterministic():
