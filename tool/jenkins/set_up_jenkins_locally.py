@@ -163,6 +163,44 @@ def ensure_headless_matplotlib():
     doit("echo 'backend: Agg' | sudo tee " + jenkins_home + ".matplotlib/matplotlibrc")
     doit("sudo chown -R jenkins " + jenkins_home + ".matplotlib")
 
+def github_trusts_jenkins():
+    return len(queryit("git ls-remote git@github.com:mit-probabilistic-computing-project/Venturecxx.git | grep HEAD")) > 0
+
+def ensure_github_trusts_jenkins():
+    if github_trusts_jenkins():
+        print "Found that Github trusts Jenkins"
+    else:
+        print """
+Jenkins does not appear to have credentials to pull from Github,
+and this script is too dumb to provide them automatically.
+
+Please set up ssh access for Jenkins to Github:
+
+1) Create a public-private key pair for the jenkins user if needed,
+   e.g. with
+     sudo -u jenkins ssh-keygen
+
+2) Log in to the mit-pcp-jenkins account on github.com and upload
+   the public key
+
+3) Teach Jenkins to use the public key
+   - Browse http://probcomp-3.csail.mit.edu:8080
+   - Navigate "Credentials" -> "Global credentials" -> "Add Credentials"
+     - Select "SSH Username with private key" in the "Kind dropdown"
+     - The username is mit-pcp-jenkins
+     - The private key is whereever you created it
+       - If you supplied an encryption phrase for the key, it's under
+         the "Advanced" button
+   - Click "OK"
+
+4) Make the jobs use that credential to access the repository
+   - Either configure all of them individually, OR
+   - Configure one, then use the functions discover_credential_id and
+     replace_credential_id_locally from this file to edit the config
+     files of the others, then rerun this script to upload the new job
+     definitions.
+"""
+
 def jenkins_create_job(name):
     doit("cat " + name + ".config.xml | " + jenkins_ssh_command("create-job " + name))
 
@@ -195,15 +233,9 @@ def main():
     restart_jenkins_if_needed()
     ensure_jenkins_trusts_github()
     ensure_headless_matplotlib()
-    # TODO ensure github trusts jenkins
     give_jenkins_virtualenv_if_needed()
     ensure_jobs()
-
-# TODO Add code for detecting whether Jenkins knows the credentials
-# for accessing github, and instructing the user to add them if not.
-
-# sudo cat /var/lib/jenkins/.ssh/id_rsa.pub
-# Upload it to github as an authorized key for mit-pcp-jenkins
+    ensure_github_trusts_jenkins()
 
 def discover_credential_id(job):
     return queryit(jenkins_ssh_command("get-job " + job) + " | grep credentialsId")
