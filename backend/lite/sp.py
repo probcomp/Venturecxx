@@ -144,6 +144,9 @@ used in the implementation of TypedPSP and TypedLKernel."""
   def wrap_latent(self, latent):
     return self.latent_type.asVentureValue(latent)
 
+  def unwrap_latent(self, latent):
+    return self.latent_type.asPythonNoneable(latent)
+
   def _name_for_fixed_arity(self, args_types):
     args_spec = " ".join([t.name() for t in args_types])
     variadicity_mark = " ..." if self.variadic else ""

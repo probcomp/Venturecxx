@@ -196,6 +196,14 @@ class PSP(object):
     """
     return None
 
+  @classmethod
+  def restoreFromReifiedLatent(cls, latent):
+    """
+    Create a new PSP of the appropriate class, with the latent value given.
+    """
+    # By default, we just ignore the latent. pylint: disable=unused-argument
+    return cls()
+
   def description(self, _name):
     """Return a string describing this PSP.  The string may include the
     name argument, which is the symbol that the enclosing SP is bound
@@ -313,6 +321,11 @@ class TypedPSP(PSP):
   def reifyLatent(self):
     latent = self.psp.reifyLatent()
     return self.f_type.wrap_latent(latent)
+
+  def restoreFromReifiedLatent(self, latent):
+    unwrapped = self.f_type.unwrap_latent(latent)
+    psp = self.psp.restoreFromReifiedLatent(unwrapped)
+    return self.__class__(psp, self.f_type)
 
   def description(self,name):
     type_names = self.f_type.names()
