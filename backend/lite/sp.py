@@ -56,9 +56,12 @@ class SP(object):
   # otherwise
 
   def reifyLatent(self):
-    # TODO: this method, and venture_type above, do not work for the class
+    # TODO: this method, and venture_type above, have strange behavior for
     # UncollapsedHMMSP, which is the output of make_lazy_hmm. That class
     # has typed PSP's for both it's request and its output.
+    # But, since UncollapsedHMMSP does not have latent state, this behavior
+    # does not end up mattering. If in the future we have SP's containing two
+    # PSP's each of which has its own latent state, this code will need to change.
     if hasattr(self.outputPSP, "f_type"):
       return self.outputPSP.reifyLatent()
     else:
