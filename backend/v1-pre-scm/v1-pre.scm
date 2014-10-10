@@ -24,6 +24,8 @@
   symbols
   addresses) ; Parallel lists mapping symbols to addresses
 
+;;; Procedures
+
 (define-structure (foreign (safe-accessors #t)) simulate)
 
 (define-structure (compound (safe-accessors #t))
@@ -32,6 +34,17 @@
   env
   trace
   read-traces)
+
+;;; Requests
+
+;; Requests are an evaluation trampoline available to allow foreign
+;; procedures (and incidentally everything else in the language) to
+;; call Venture procedures in the foreign procedure's call site's
+;; evaluation context.
+
+(define-structure (application-request (safe-accessors #t))
+  operator-addr
+  operand-addrs)
 
 ;;; Data with metadata
 
@@ -69,12 +82,14 @@
   ;; current trace?
   (ensure (or/c env-frame? false?) env)
   (ensure address? addr)
-  (trace-search trace addr (lambda (v) v)
-   (lambda ()
-     (let ((answer (do-eval exp env trace addr read-traces)))
-       ;; The trace can substitute the return value as well as
-       ;; recording
-       (record! trace exp env addr read-traces answer)))))
+  (resolve-request
+   (trace-search trace addr (lambda (v) v)
+    (lambda ()
+      (let ((answer (do-eval exp env trace addr read-traces)))
+        ;; The trace can substitute the return value as well as
+        ;; recording
+        (record! trace exp env addr read-traces answer))))
+   trace addr read-traces))
 
 (define (do-eval exp env trace addr read-traces)
   (case* exp
@@ -176,6 +191,16 @@
     ;; identity function that transports the result of the simulator
     ;; to the result of the whole SP.
     (apply (annotated-base oper) opand-addrs addr sub-trace read-traces)))
+
+(define (resolve-request maybe-request trace requester-addr read-traces)
+  (cond ((application-request? maybe-request)
+         (apply (application-request-operator-addr maybe-request)
+                (application-request-operand-addrs maybe-request)
+                (extend-address requester-addr 'request)
+                trace
+                read-traces))
+        (else ; Wasn't a request
+         maybe-request)))
 
 (define (top-eval exp)
   (eval exp (make-env-frame #f '() '()) (store-extend #f) (toplevel-address) '()))
