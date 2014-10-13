@@ -7,7 +7,7 @@ def col_vec(xs):
   return np.matrix([xs]).T
 
 class GP(object):
-  """Immutable GP object."""
+  """An immutable GP object."""
   def __init__(self, mean, covariance, samples={}):
     self.mean = mean
     self.covariance = covariance
@@ -20,6 +20,7 @@ class GP(object):
     return np.matrix([[self.covariance(x1, x2) for x2 in x2s] for x1 in x1s])
   
   def getNormal(self, xs):
+    """Returns the mean and covariance matrices at a set of points."""
     if len(self.samples) == 0:
       mu = self.mean_array(xs)
       sigma = self.cov_matrix(xs, xs)
@@ -43,15 +44,18 @@ class GP(object):
     return mu.A1, sigma
 
   def sample(self, *xs):
+    """Sample at a (set of) point(s)."""
     mu, sigma = self.getNormal(xs)
     os = npr.multivariate_normal(mu, sigma)
     return os
 
   def logDensity(self, xs, os):
+    """Log density of a set of samples."""
     mu, sigma = self.getNormal(xs)
     return multivariate_normal.logpdf(os, mu, sigma)
 
   def logDensityOfCounts(self):
+    """Log density of the current samples."""
     if len(self.samples) == 0:
       return 0
     
