@@ -201,11 +201,9 @@ class UDirMultOutputPSP(RandomPSP):
   def reifyLatent(self):
     return self.theta
 
-  @classmethod
-  def restoreFromReifiedLatent(cls, latent):
-    n = len(latent)
-    os = [VentureAtom(i) for i in range(n)]
-    return cls(latent, os)
+  # pylint: disable=arguments-differ
+  def setLatent(self, latent):
+    self.alpha = latent
 
 #### Collapsed symmetric dirichlet multinomial
 

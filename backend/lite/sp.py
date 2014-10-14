@@ -67,6 +67,13 @@ class SP(object):
     else:
       return self.requestPSP.reifyLatent()
 
+  def setLatent(self, latent):
+    # TODO: this method has the same edge cases as the one above.
+    if hasattr(self.outputPSP, "f_type"):
+      return self.outputPSP.setLatent(latent)
+    else:
+      return self.requestPSP.setLatent(latent)
+
 class VentureSPRecord(VentureValue):
   def __init__(self, sp, spAux=None, spFamilies=None):
     if spAux is None:
