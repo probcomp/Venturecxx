@@ -203,7 +203,7 @@ class UDirMultOutputPSP(RandomPSP):
 
   @classmethod
   def restoreFromReifiedLatent(cls, latent):
-    n = len(theta)
+    n = len(latent)
     os = [VentureAtom(i) for i in range(n)]
     return cls(latent, os)
 
