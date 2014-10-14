@@ -207,23 +207,24 @@
         read-traces))
 
 (define (resolve-request maybe-request trace requester-addr read-traces)
+  (define (continue k results)
+    (eval-application
+     k results
+     ;; TODO This means the address does not depend on the
+     ;; continuation of the request.  Is that a problem?
+     (extend-address requester-addr 'continue)
+     trace read-traces))
   (cond ((evaluation-request? maybe-request)
-         (let ((result
-                (eval (evaluation-request-exp maybe-request)
-                      (evaluation-request-env maybe-request)
-                      trace
-                      ;; TODO This means the address does not depend
-                      ;; on the content of the request.  Is that a
-                      ;; problem?
-                      (extend-address requester-addr 'request)
-                      read-traces)))
-           (eval-application
-            (evaluation-request-cont maybe-request)
-            (list result)
-            ;; TODO This means the address does not depend on the
-            ;; continuation of the request.  Is that a problem?
-            (extend-address requester-addr 'continue)
-            trace read-traces)))
+         (continue
+          (evaluation-request-cont maybe-request)
+          (list
+           (eval (evaluation-request-exp maybe-request)
+                 (evaluation-request-env maybe-request)
+                 trace
+                 ;; TODO This means the address does not depend on the
+                 ;; content of the request.  Is that a problem?
+                 (extend-address requester-addr 'request)
+                 read-traces))))
         ;; TODO Record the request evaluation?
         ;; TODO Continue?
         ((application-request? maybe-request)
