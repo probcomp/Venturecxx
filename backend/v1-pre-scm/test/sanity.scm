@@ -41,6 +41,7 @@
               ,map-defn
               (map (lambda (x) (+ x 1)) (list 1 2 3))))
           '(2 3 4))
+  (equal? (top-eval '(prim-map (lambda (x) (+ x 1)) '(1 2 3 4))) '(2 3 4 5))
   (boolean? (top-eval inference-smoke-test-defn))
   ((lambda (items)
      (and (boolean? (car items))
