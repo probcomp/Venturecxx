@@ -196,6 +196,16 @@
     ;; to the result of the whole SP.
     (apply (annotated-base oper) opand-addrs addr sub-trace read-traces)))
 
+;; This is different from "apply" because it records the evaluation in
+;; the trace.
+(define (eval-application operator operands addr trace read-traces)
+  (eval `(,@(map (lambda (thing) `(quote ,thing))
+                 (cons operator operands)))
+        #f ; Env of an application with pre-evaluated parts should be ignored anyway
+        trace
+        addr
+        read-traces))
+
 (define (resolve-request maybe-request trace requester-addr read-traces)
   (cond ((evaluation-request? maybe-request)
          (let ((result
@@ -207,13 +217,13 @@
                       ;; problem?
                       (extend-address requester-addr 'request)
                       read-traces)))
-           (eval `((quote ,(evaluation-request-cont maybe-request)) (quote ,result))
-                 #f ; Env of an application with pre-evaluated parts should be ignored anyway
-                 trace
-                 ;; TODO This means the address does not depend on the
-                 ;; continuation of the request.  Is that a problem?
-                 (extend-address requester-addr 'continue)
-                 read-traces)))
+           (eval-application
+            (evaluation-request-cont maybe-request)
+            (list result)
+            ;; TODO This means the address does not depend on the
+            ;; continuation of the request.  Is that a problem?
+            (extend-address requester-addr 'continue)
+            trace read-traces)))
         ;; TODO Record the request evaluation?
         ;; TODO Continue?
         ((application-request? maybe-request)
