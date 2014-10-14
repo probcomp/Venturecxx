@@ -322,11 +322,6 @@ class TypedPSP(PSP):
     latent = self.psp.reifyLatent()
     return self.f_type.wrap_latent(latent)
 
-  def restoreFromReifiedLatent(self, latent):
-    unwrapped = self.f_type.unwrap_latent(latent)
-    psp = self.psp.restoreFromReifiedLatent(unwrapped)
-    return self.__class__(psp, self.f_type)
-
   def description(self,name):
     type_names = self.f_type.names()
     signature = "\n".join(["%s :: %s" % (name, variant) for variant in type_names])
