@@ -58,10 +58,7 @@ applied fully uncurried) match the expected types."""
   if len(args_lists) == 0:
     pass # OK
   else:
-    if isinstance(sp, VentureSPRecord):
-      sp, aux = sp.sp, sp.spAux
-    else:
-      aux = carefully(sp.constructSPAux)
+    sp, aux = extractSP(sp)
     args = BogusArgs(args_lists[0], aux)
     answer = carefully(sp.outputPSP.simulate, args)
     assert answer in type_.return_type
@@ -74,6 +71,13 @@ applied fully uncurried) match the expected types."""
       else:
         propHMMLatentCorrect(answer)
     propTypeCorrect(args_lists[1:], answer, type_.return_type, _name)
+
+def extractSP(sp):
+  if isinstance(sp, VentureSPRecord):
+    sp, aux = sp.sp, sp.spAux
+  else:
+    aux = carefully(sp.constructSPAux)
+  return sp, aux
 
 def propLatentCorrect(sp, type_):
   '''Check that the sp returns the expected latent type'''
@@ -457,3 +461,48 @@ def propGradientOfSimulate(args_lists, name, sp):
     return vv_dot_product(direction, asGradient(ans))
   numerical_gradient = carefully(num.gradient_from_lenses, sim_displacement_func, real_lenses(args_lists[0]))
   assert_gradients_close(numerical_gradient, computed_gradient)
+
+def testReifyLatent():
+  """Test that the behavior of an SP after reifying latent and restoring is
+  same as original behavior."""
+  for (name, sp) in relevantSPs():
+    yield checkLatent, sp
+
+def checkLatent(original):
+  type_ = original.venture_type()
+  if not isinstance (type_.return_type, SPType):
+    latent = original.reifyLatent()
+    restored = original.restoreFromReifiedLatent(latent)
+    checkTypedProperty(propReifyLatent, fully_uncurried_sp_type(type_),
+                       original, restored)
+  else:
+    checkTypedProperty(propReifyLatentOutput, fully_uncurried_sp_type(type_),
+                       original)
+
+def propReifyLatent(args_lists, original, restored):
+  """Check that simulating with original SP always gives same output as with
+  restored SP"""
+  args = BogusArgs(args_lists[0], original.constructSPAux())
+  randomness = FixedRandomness()
+  with randomness:
+    original_answer = carefully(original.outputPSP.simulate, args)
+  with randomness:
+    restored_answer = carefully(restored.outputPSP.simulate, args)
+  eq_(original_answer, restored_answer)
+
+def propReifyLatentOutput(args_lists, sp):
+  """For SP's that return SP's - construct args to simulate the new SP,
+  the restore it and feed back into function above."""
+  args = BogusArgs(args_lists[0], sp.constructSPAux())
+  original, _ = extractSP(carefully(sp.outputPSP.simulate, args))
+  type_ = original.venture_type()
+  latent = original.reifyLatent()
+  restored = original.restoreFromReifiedLatent(latent)
+  checkTypedProperty(propReifyLatent, fully_uncurried_sp_type(type_),
+                     original, restored)
+
+
+
+
+
+
