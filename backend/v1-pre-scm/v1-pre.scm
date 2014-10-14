@@ -46,8 +46,7 @@
   exp env cont)
 
 (define-structure (application-request (safe-accessors #t))
-  operator-addr
-  operand-addrs)
+  operator operands cont)
 
 ;;; Data with metadata
 
@@ -225,14 +224,17 @@
                  ;; content of the request.  Is that a problem?
                  (extend-address requester-addr 'request)
                  read-traces))))
-        ;; TODO Record the request evaluation?
-        ;; TODO Continue?
         ((application-request? maybe-request)
-         (apply (application-request-operator-addr maybe-request)
-                (application-request-operand-addrs maybe-request)
-                (extend-address requester-addr 'request)
-                trace
-                read-traces))
+         (continue
+          (application-request-cont maybe-request)
+          (list
+           (eval-application
+            (application-request-operator maybe-request)
+            (application-request-operands maybe-request)
+            ;; TODO This means the address does not depend on the
+            ;; content of the request.  Is that a problem?
+            (extend-address requester-addr 'request)
+            trace read-traces))))
         (else ; Wasn't a request
          maybe-request)))
 
