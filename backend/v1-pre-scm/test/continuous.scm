@@ -31,3 +31,8 @@
   (let ()
     (define samples (collect-samples (gaussian-example 20)))
     (check (> (k-s-test samples (lambda (x) (gaussian-cdf x 1 (/ 1 (sqrt 2))))) *p-value-tolerance*))))
+
+(define-test (modelling-by-inference-smoke)
+  (check (> (k-s-test (collect-samples `(begin ,gaussian-by-inference-defn (my-normal 0 1)))
+                      (lambda (x) (gaussian-cdf x 0 1)))
+            *p-value-tolerance*)))

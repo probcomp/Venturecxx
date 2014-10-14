@@ -17,6 +17,24 @@
                (* 1/2 (+ (log 2) (log 3.1415926535897932846)))))))
      (define normal (make-sp simulate-normal normal-log-density))))
 
+(define gaussian-by-inference-defn
+  `(begin
+     ,gaussian-defn
+     ,map-defn
+     ,mcmc-defn
+     ,observe-defn
+     (define my-normal
+       (make-sp
+        (lambda (mu sig)
+          (model-in (rdb-extend (get-current-trace))
+            (assume x (normal 0 (* (sqrt 2) sig)))
+            ;; TODO Do I need to compute the observation mean in the external trace?
+            ;; How?  Let-bind?  Introduce an unquote for model-in?  Tweak observe?
+            (observe (normal x (* (sqrt 2) sig)) (* 2 mu))
+            (infer (mcmc 10))
+            (predict x)))
+        normal-log-density))))
+
 (define (gaussian-example iterations)
   `(begin
      ,observe-defn
