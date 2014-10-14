@@ -36,3 +36,14 @@
   (check (> (k-s-test (collect-samples `(begin ,gaussian-by-inference-defn (my-normal 0 1)))
                       (lambda (x) (gaussian-cdf x 0 1)))
             *p-value-tolerance*)))
+
+(define-test (modelling-by-inference)
+  (check (> (k-s-test (collect-samples `(begin
+                                          ,gaussian-by-inference-defn
+                                          (model-in (rdb-extend (get-current-trace))
+                                            (assume x (my-normal 0 1))
+                                            (observe (my-normal x 1) 2)
+                                            (infer (mcmc 20))
+                                            (predict x))))
+                      (lambda (x) (gaussian-cdf x 1 (/ 1 (sqrt 2)))))
+            *p-value-tolerance*)))
