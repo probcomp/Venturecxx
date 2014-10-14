@@ -196,13 +196,12 @@ class PSP(object):
     """
     return None
 
-  @classmethod
-  def restoreFromReifiedLatent(cls, latent):
+  def restoreFromReifiedLatent(self, latent):
     """
     Set the value of the latent variable for the sp.
     """
     # pylint: disable=unused-argument
-    return cls()
+    return self.__class__()
 
   def description(self, _name):
     """Return a string describing this PSP.  The string may include the

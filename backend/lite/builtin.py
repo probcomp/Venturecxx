@@ -57,6 +57,9 @@ class FunctionPSP(DeterministicPSP):
       return self.descr % name
     else:
       return self.descr
+  def restoreFromReifiedLatent(self, latent):
+    # by default, just make another object of the same class
+    return self.__class__(self.f, self.descr, self.sim_grad)
 
 def typed_func_psp(f, args_types, return_type, descr=None, sim_grad=None, **kwargs):
   return TypedPSP(FunctionPSP(f, descr, sim_grad), SPType(args_types, return_type, **kwargs))
