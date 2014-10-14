@@ -62,7 +62,7 @@ class UncollapsedHMMSP(SP):
 
     assert len(aux.xs) > lsr
     return 0
-    
+
   def detachLatents(self,aux,lsr,latentDB):
     if len(aux.xs) == lsr + 1 and not lsr in aux.os:
       if not aux.os:
@@ -87,7 +87,7 @@ class UncollapsedHMMSP(SP):
       if i in aux.os:
         for o in aux.os[i]:
           f = np.dot(f, npMakeDiag(self.O[:,o]))
-        
+
       fs.append(npNormalizeVector(f))
 
     # backwards sampling
@@ -98,14 +98,16 @@ class UncollapsedHMMSP(SP):
       gamma = npNormalizeVector(fs[i] * T_i)
       aux.xs[i] = npSampleVector(gamma)
 
+  def restoreFromReifiedLatent(self, latent):
+    return self.__class__(self.p0, self.T, self.O)
 
 class UncollapsedHMMOutputPSP(RandomPSP):
 
-  def __init__(self,O): 
+  def __init__(self,O):
     super(UncollapsedHMMOutputPSP,self).__init__()
     self.O = O
 
-  def simulate(self,args): 
+  def simulate(self,args):
     n = args.operandValues[0]
     if 0 <= n and n < len(args.spaux.xs):
       return npIndexOfOne(npSampleVector(args.spaux.xs[n] * self.O))
@@ -127,6 +129,9 @@ class UncollapsedHMMOutputPSP(RandomPSP):
     n = args.operandValues[0]
     del args.spaux.os[n][args.spaux.os[n].index(value)]
     if not args.spaux.os[n]: del args.spaux.os[n]
+
+  def restoreFromReifiedLatent(self, latent):
+    return self.__class__(self.O)
 
 class UncollapsedHMMRequestPSP(DeterministicPSP):
   def simulate(self,args): return Request([],[args.operandValues[0]])

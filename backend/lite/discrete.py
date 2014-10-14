@@ -175,6 +175,9 @@ class CBetaBernoulliOutputPSP(DiscretePSP):
     denominator = scipy.special.betaln(self.alpha,self.beta)
     return math.log(numCombinations) + numerator - denominator
 
+  def restoreFromReifiedLatent(self, latent):
+    return self.__class__(self.alpha, self.beta)
+
 #### Uncollapsed AAA Beta Bernoulli
 
 class MakerUBetaBernoulliOutputPSP(DiscretePSP):

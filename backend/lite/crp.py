@@ -91,3 +91,6 @@ class CRPOutputPSP(RandomPSP):
     old_indices = [i for i in aux.tableCounts]
     indices = old_indices + [aux.nextIndex]
     return indices
+
+  def restoreFromReifiedLatent(self, latent):
+    return self.__class__(self.alpha, self.d)

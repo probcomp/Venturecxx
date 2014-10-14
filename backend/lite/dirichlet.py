@@ -73,6 +73,11 @@ class DirMultSP(SP):
       'counts': spaux.counts.leaves()
     }
 
+  def restoreFromReifiedLatent(self, latent):
+    return self.__class__(self.requestPSP,
+                          self.outputPSP.restoreFromReifiedLatent(latent),
+                          self.alpha, self.n)
+
 
 #### Collapsed dirichlet multinomial
 
@@ -129,6 +134,9 @@ class CDirMultOutputPSP(RandomPSP):
     term1 = scipy.special.gammaln(A) - scipy.special.gammaln(N + A)
     term2 = sum([scipy.special.gammaln(alpha + count) - scipy.special.gammaln(alpha) for (alpha,count) in zip(self.alpha,aux.counts)])
     return term1 + term2
+
+  def restoreFromReifiedLatent(self, latent):
+    return self.__class__(self.alpha.leaves(), self.os)
 
 #### Uncollapsed dirichlet multinomial
 
@@ -199,12 +207,10 @@ class UDirMultOutputPSP(RandomPSP):
     return self.os
 
   def reifyLatent(self):
-    return self.theta
+    return self.theta.leaves()
 
   def restoreFromReifiedLatent(self, latent):
-    n = len(latent)
-    os = [VentureAtom(i) for i in range(n)]
-    return self.__class__(latent, os)
+    return self.__class__(latent, self.os)
 
 #### Collapsed symmetric dirichlet multinomial
 
@@ -243,6 +249,10 @@ class MakerCSymDirMultOutputPSP(DeterministicPSP):
 class CSymDirMultOutputPSP(CDirMultOutputPSP):
   def __init__(self,alpha,n,os):
     super(CSymDirMultOutputPSP, self).__init__([alpha] * n, os)
+
+  def restoreFromReifiedLatent(self, latent):
+    alpha = self.alpha.leaves()
+    return self.__class__(alpha[0], len(alpha), self.os)
 
 #### Uncollapsed symmetric dirichlet multinomial
 

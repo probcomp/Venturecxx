@@ -323,7 +323,7 @@ class TypedPSP(PSP):
 
   def restoreFromReifiedLatent(self,latent):
     unwrapped = self.f_type.unwrap_latent(latent)
-    psp = self.psp.restoreFromReifiedLatent(latent)
+    psp = self.psp.restoreFromReifiedLatent(unwrapped)
     return self.__class__(psp, self.f_type)
 
   def description(self,name):

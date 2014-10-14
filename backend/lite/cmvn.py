@@ -69,6 +69,11 @@ class CMVNSP(SP):
   def constructSPAux(self): return CMVNSPAux(self.d)
   def show(self,spaux): return (spaux.xTotal,spaux.STotal,spaux.N)
 
+  def restoreFromReifiedLatent(self, latent):
+    return self.__class__(self.requestPSP,
+                          self.outputPSP.restoreFromReifiedLatent(latent),
+                          self.d)
+
 class MakeCMVNOutputPSP(DeterministicPSP):
   def simulate(self,args):
     (m0,k0,v0,S0) = args.operandValues
@@ -138,4 +143,7 @@ class CMVNOutputPSP(RandomPSP):
     term5 = -(float(vN) / 2) * np.linalg.slogdet(SN)[1]
     term6 = (float(self.d) / 2) * math.log(float(self.k0) / kN)
     return term1 + term2 + term3 + term4 + term5 + term6
+
+  def restoreFromReifiedLatent(self, latent):
+    return self.__class__(self.d, self.m0, self.k0, self.v0, self.S0)
 
