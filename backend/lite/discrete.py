@@ -240,5 +240,6 @@ class UBetaBernoulliOutputPSP(DiscretePSP):
   def reifyLatent(self):
     return self.weight
 
-  def setLatent(self, latent):
-    self.weight = latent
+  @classmethod
+  def restoreFromReifiedLatent(cls, latent):
+    return cls(latent)

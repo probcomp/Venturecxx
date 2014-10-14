@@ -67,12 +67,14 @@ class SP(object):
     else:
       return self.requestPSP.reifyLatent()
 
-  def setLatent(self, latent):
-    # TODO: this method has the same edge cases as the one above.
+  def restoreFromReifiedLatent(self,latent):
+    # TODO: same pattern as above. Same edge case.
     if hasattr(self.outputPSP, "f_type"):
-      return self.outputPSP.setLatent(latent)
+      new = self.outputPSP.restoreFromReifiedLatent(latent)
+      return self.__class__(self.requestPSP, new)
     else:
-      return self.requestPSP.setLatent(latent)
+      new = self.requestPSP.restoreFromReifiedLatent(latent)
+      return self.__class__(new, self.outputPSP)
 
 class VentureSPRecord(VentureValue):
   def __init__(self, sp, spAux=None, spFamilies=None):
