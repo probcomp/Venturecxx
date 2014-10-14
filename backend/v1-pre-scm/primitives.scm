@@ -95,3 +95,17 @@
        (lambda (b weight) 0))
      (define mu-flip
        (make-sp simulate-flip (annotate flip-log-density value-bound-tag flip-log-density-bound)))))
+
+(define prim-map
+  (scheme-procedure-over-values->v1-foreign
+   (lambda (f lst)
+     (let loop ((lst lst)
+                (results '()))
+       (if (pair? lst)
+           (make-evaluation-request
+            `((quote ,f) (quote ,(car lst)))
+            #f
+            (scheme-procedure-over-values->v1-foreign
+             (lambda (res)
+               (loop (cdr lst) (cons res results)))))
+           (reverse results))))))
