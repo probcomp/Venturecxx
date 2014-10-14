@@ -42,6 +42,9 @@
 ;; call Venture procedures in the foreign procedure's call site's
 ;; evaluation context.
 
+(define-structure (evaluation-request (safe-accessors #t))
+  exp env cont)
+
 (define-structure (application-request (safe-accessors #t))
   operator-addr
   operand-addrs)
@@ -162,6 +165,7 @@
           ;; changes, I will still have the same addresses in the new
           ;; body (until the evaluation structure of the bodies
           ;; diverges).
+          ;; TODO Is that actually a bug, where old values preempt new?
           (addr* (extend-address addr 'app))
           ;; This way, a compound procedure does not carry write
           ;; permission to the trace in which it was created
@@ -193,7 +197,26 @@
     (apply (annotated-base oper) opand-addrs addr sub-trace read-traces)))
 
 (define (resolve-request maybe-request trace requester-addr read-traces)
-  (cond ((application-request? maybe-request)
+  (cond ((evaluation-request? maybe-request)
+         (let ((result
+                (eval (evaluation-request-exp maybe-request)
+                      (evaluation-request-env maybe-request)
+                      trace
+                      ;; TODO This means the address does not depend
+                      ;; on the content of the request.  Is that a
+                      ;; problem?
+                      (extend-address requester-addr 'request)
+                      read-traces)))
+           (eval `((quote ,(evaluation-request-cont maybe-request)) (quote ,result))
+                 #f ; Env of an application with pre-evaluated parts should be ignored anyway
+                 trace
+                 ;; TODO This means the address does not depend on the
+                 ;; continuation of the request.  Is that a problem?
+                 (extend-address requester-addr 'continue)
+                 read-traces)))
+        ;; TODO Record the request evaluation?
+        ;; TODO Continue?
+        ((application-request? maybe-request)
          (apply (application-request-operator-addr maybe-request)
                 (application-request-operand-addrs maybe-request)
                 (extend-address requester-addr 'request)
