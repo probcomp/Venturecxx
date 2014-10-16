@@ -185,6 +185,7 @@
 
 (define (random-choice? addr trace)
   ;; Ignores possibility of constraints induced by observations.
+  ;; TODO allow assessable procedures from contextual traces?
   (rdb-trace-search-one
    trace (extend-address addr '(app-sub 0))
    has-assessor?
