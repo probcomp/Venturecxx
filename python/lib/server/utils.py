@@ -45,6 +45,12 @@ class RestClient(object):
             bound_function = new.instancemethod(unbound_function,self,self.__class__)
             setattr(self,name,bound_function)
 
+class NumpyAwareJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        import numpy
+        if isinstance(obj, numpy.ndarray) and obj.ndim == 1:
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
 
 class RestServer(Flask):
     def __init__(self, obj, args):
@@ -74,6 +80,6 @@ class RestServer(Flask):
         return request.get_json()
 
     def _json_response(self, j, status):
-        s = json.dumps(j)
+        s = json.dumps(j, cls=NumpyAwareJSONEncoder)
         h = {'Content-Type':'application/json', 'Access-Control-Allow-Origin':'*'}
         return s,status,h
