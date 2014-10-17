@@ -30,10 +30,12 @@
             (lose)
             (win result))))))
 
-(define (ensure test . args)
-  (if (scheme-apply test args)
-      'ok
-      (error "Invariant violation" test args)))
+(define-syntax ensure
+  (syntax-rules ()
+    ((_ test arg ...)
+     (if (test arg ...)
+         'ok
+         (error "Invariant violation" test arg ...)))))
 
 (define (or/c . predicates)
   (lambda args

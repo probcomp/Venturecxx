@@ -19,4 +19,7 @@ test/c-stats.so: test/c-stats.c Makefile
 	  -o test/c-stats.so test/c-stats.c \
 	   `gsl-config --libs` -Wall -Wextra -Werror -O2 -fPIC -DCOMPILE_AS_MODULE
 
+clean:
+	rm *.bci *.com *.bin *.ext
+
 .PHONY: test
