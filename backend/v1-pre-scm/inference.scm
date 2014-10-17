@@ -127,7 +127,14 @@
              (is-constant? trace addr*))
            ;; Values that come in from Scheme are presumed constant
            (lambda () #t)))
-         (_ #f)))) ;; TODO More constants?
+         ;; TODO Additional possible constants:
+         ;; - Results of applications of constant deterministic
+         ;;   procedures on constant arguments
+         ;; - Lambda expressions that only close over constant things
+         ;; - There is a different sense of constant, namely constant-body
+         ;;   compounds, which admits all lambda expressions as constant
+         ;; - Constant tail positions of begin forms
+         (_ #f))))
    (lambda ()
      (rdb-trace-search trace addr
       (lambda (v) #t) ; External values are constant
