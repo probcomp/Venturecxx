@@ -1,3 +1,12 @@
+function valueToString(value) {
+    if (value instanceof Number) {
+        return value.toFixed(2);
+    } else if (value instanceof Array) {
+        return String(value.map(valueToString));
+    }
+    return String(value)
+}
+
 function exprToString(expr, display_scopes) {
     //console.log(typeof expr);
     if (expr instanceof Array) {
@@ -6,10 +15,10 @@ function exprToString(expr, display_scopes) {
         } else {
             return "(" + expr.map(function (e) { return exprToString(e, display_scopes) }).join(" ") + ")";
         }
-    } else if (typeof expr === "string") {
+    } else if (expr instanceof String) {
         return expr;
     } else {
-        return expr.value.toString();
+        return valueToString(expr.value);
     }
 }
 
@@ -23,7 +32,7 @@ function directiveToString(directive, display_scopes) {
     directive_str += exprToString(directive.expression, display_scopes);
     
     if (directive.instruction === "observe") {
-        directive_str += " " + directive.value.toFixed(2);
+        directive_str += " " + valueToString(directive.value);
     }
     
     directive_str += "]";
