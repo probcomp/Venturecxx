@@ -4,7 +4,7 @@ function InitializeDemo() {
 
     var demo_id = 3;
 
-    var inference_program = "(mh default one 5)"
+    var inference_program = "(mh default one 1)"
 
     /* This is awkward because it looks like an array but requires some subtleties,
      * like calling .length() instead of .length. This is all because javascript
@@ -286,11 +286,29 @@ function InitializeDemo() {
         }
     };
     
+    var toDict = function(type, value) {
+        return {
+            type: type,
+            value: value
+        };
+    };
+    
+    var toNumber = function(x) {
+        return toDict("number", x);
+    };
+    
+    var toArray = function(xs) {
+        return {
+            type: "array",
+            value: xs.map(toNumber)
+        };
+    };
+    
     var ObservePoint = function(obs_id, x, y) {
         obs_str = 'points_' + obs_id;
 
         ripl.predict(x, obs_str + '_x');
-        ripl.observe(['obs_fn', obs_id, ['array', String(x)]], String(y), obs_str + '_y');
+        ripl.observe(['obs_fn', obs_id, ['quote', [x]]], toArray([y]), obs_str + '_y');
         if (!model_variables.use_outliers) {
             ripl.predict('false', obs_str + '_outlier');
         } else {
@@ -652,8 +670,7 @@ function InitializeDemo() {
         
         var loop = function() {
             ripl.method("list_directives", [false, false, ["predict", "observe"]], RenderAll);
-            //ripl.method("sample", ["(flip)"])
-            ripl.method("sample", [['gp', ['array'].concat(xs)]], DrawLines);
+            ripl.method("sample", [['gp', ['quote', xs]]], DrawLines);
             setTimeout(loop, 75);
         };
         
