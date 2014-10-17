@@ -115,6 +115,7 @@
 (define-structure (just (safe-accessors #t))
   >)
 
+;; TODO Abstract commonalities between this and has-constant-shape?
 (define (is-constant? trace addr)
   (rdb-trace-search-one-record trace addr
    (lambda (rec)
@@ -132,8 +133,6 @@
          ;; - Results of applications of constant deterministic
          ;;   procedures on constant arguments
          ;; - Lambda expressions that only close over constant things
-         ;; - There is a different sense of constant, namely constant-body
-         ;;   compounds, which admits all lambda expressions as constant
          ;; - Constant tail positions of begin forms
          (_ #f))))
    (lambda ()

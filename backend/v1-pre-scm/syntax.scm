@@ -34,6 +34,18 @@
 (define trace-in-form? (tagged-list? 'trace-in))
 (define-algebraic-matcher trace-in-form trace-in-form? cadr caddr)
 
+(define (application-form? thing)
+  (and (pair? thing)
+       (not (or (constant? thing)
+                (begin-form? thing)
+                (definition? thing)
+                (var? thing)
+                (if-form? thing)
+                (lambda-form? thing)
+                (trace-in-form? thing)
+                (operative-form? thing)))))
+(define-algebraic-matcher application-form application-form? car cdr)
+
 ;;; Special forms Kernel-style
 (define-structure (operative (safe-accessors #t)) procedure)
 (define operatives '())
@@ -44,6 +56,9 @@
            (win (cdr it) (cdr form))
            (lose))
       (lose)))
+
+(define (operative-form? form)
+  (operative-form form (lambda (oper opands) #t) (lambda () #f)))
 
 (define (register-operative! name operative)
   (set! operatives (cons (cons name operative) operatives)))
