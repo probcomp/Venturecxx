@@ -33,6 +33,14 @@
            (win (car vs)))
           (else (loop (cdr ks) (cdr vs))))))
 
+(define search-wt-tree
+  (let ((unique (list 0)))
+    (lambda (tree key win lose)
+      (let ((result (wt-tree/lookup tree key unique)))
+        (if (eq? unique result)
+            (lose)
+            (win result))))))
+
 (define (ensure test . args)
   (if (scheme-apply test args)
       'ok

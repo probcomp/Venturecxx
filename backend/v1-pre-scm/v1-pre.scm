@@ -24,6 +24,11 @@
 (define (make-address)
   (set! next-address (+ next-address 1))
   (%make-address next-address))
+(define (address<? a1 a2)
+  (< (address-index a1) (address-index a2)))
+(define address-wt-tree-type (make-wt-tree-type address<?))
+(define (make-address-wt-tree)
+  (make-wt-tree address-wt-tree-type))
 
 ;; A standard lexical environment structure; holds addresses into
 ;; traces rather than values.

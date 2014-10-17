@@ -5,7 +5,6 @@
 
 (define-structure (store (safe-accessors #t))
   parent
-  addresses
   values)
 
 ;; TODO Make parent fetching generic, and implement trace-search
@@ -17,16 +16,14 @@
       (lose)))
 
 (define (store-trace-search-one trace addr win lose)
-  (search-parallel-lists
-   addr (store-addresses trace) (store-values trace) win lose))
+  (search-wt-tree (store-values trace) addr win lose))
 
 (define (store-record! trace exp env addr read-traces answer)
-  (set-store-addresses! trace (cons addr (store-addresses trace)))
-  (set-store-values! trace (cons answer (store-values trace)))
+  (set-store-values! trace (wt-tree/add (store-values trace) addr answer))
   answer)
 
 (define (store-record-constraint! trace addr value)
   (error "Forward execution does not support constraining; did you mean to use mutation?" trace addr value))
 
 (define (store-extend trace)
-  (make-store trace '() '()))
+  (make-store trace (make-address-wt-tree)))
