@@ -71,6 +71,8 @@ function jripl() {
             ajax_execute_post(URL,data_in,on_success);
         }
     };
+    
+    this.method = ajax_post_in_sequence
 
     /* Perform the actual AJAX request. */
     var ajax_execute_post = function(URL,data_in,on_success) {
