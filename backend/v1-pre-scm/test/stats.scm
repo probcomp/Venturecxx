@@ -39,7 +39,7 @@
   (let* ((n (length data))
          (D-stat (k-s-D-stat data cdf))
          (p-value (kolmogorov-survivor-function-by-series-one (* D-stat (sqrt n)))))
-    (pp (list 'program-samples (sort data <) 'D-stat D-stat 'p-value p-value))
+    ; (pp (list 'program-samples (sort data <) 'D-stat D-stat 'p-value p-value))
     p-value))
 
 #|
@@ -118,7 +118,6 @@
                        actual-counts
                        expected-counts)))
          (p-value (gsl-cdf-chisq-q stat (- dof 1))))
-    #;
     (fluid-let ((flonum-unparser-cutoff '(relative 5 normal)))
       (pp `( expected ,(map exact->inexact expected-counts)
              actual ,actual-counts
