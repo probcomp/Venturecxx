@@ -5,7 +5,8 @@
 
 (define-structure (store (safe-accessors #t))
   parent
-  values)
+  values ; wt-tree mapping addresses to values
+  )
 
 ;; TODO Make parent fetching generic, and implement trace-search
 ;; uniformly over all trace types

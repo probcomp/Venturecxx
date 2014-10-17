@@ -9,6 +9,10 @@
   parent
   addresses
   records ; list of (exp env addr read-traces answer)
+  record-map ; wt-tree mapping addresses to records
+  ;; The info in addresses and records is duplicated because the
+  ;; former two fields preserve insertion order, which I rely on in
+  ;; rebuild-rdb.
   constraints ; alist of addr and value
   record-hook)
 
@@ -19,15 +23,15 @@
       (lose)))
 
 (define (rdb-trace-search-one-record trace addr win lose)
-  (search-parallel-lists
-   addr (rdb-addresses trace) (rdb-records trace) win lose))
+  (search-wt-tree (rdb-record-map trace) addr win lose))
 
 (define (rdb-trace-search-one trace addr win lose)
   (rdb-trace-search-one-record trace addr (lambda (rec) (win (car (cddddr rec)))) lose))
 
 (define (rdb-trace-store! trace addr thing)
   (set-rdb-addresses! trace (cons addr (rdb-addresses trace)))
-  (set-rdb-records! trace (cons thing (rdb-records trace))))
+  (set-rdb-records! trace (cons thing (rdb-records trace)))
+  (set-rdb-record-map! trace (wt-tree/add (rdb-record-map trace) addr thing)))
 
 (define (rdb-record! trace exp env addr read-traces answer)
   (let ((real-answer
@@ -41,7 +45,7 @@
   (set-rdb-constraints! trace (cons (cons addr value) (rdb-constraints trace))))
 
 (define (rdb-extend trace)
-  (make-rdb trace '() '() '() #f))
+  (make-rdb trace '() '() (make-address-wt-tree) '() #f))
 
 (define (rdb-empty) (rdb-extend #f))
 
@@ -214,4 +218,5 @@
 
 (define (rdb-trace-commit! from to)
   (set-rdb-addresses! to (rdb-addresses from))
-  (set-rdb-records! to (rdb-records from)))
+  (set-rdb-records! to (rdb-records from))
+  (set-rdb-record-map! to (rdb-record-map from)))
