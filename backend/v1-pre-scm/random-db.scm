@@ -13,7 +13,7 @@
   ;; The info in addresses and records is duplicated because the
   ;; former two fields preserve insertion order, which I rely on in
   ;; rebuild-rdb.
-  constraints ; alist of addr and value
+  constraints ; wt-tree mapping addresses to values
   record-hook)
 
 (define (rdb-trace-search trace addr win lose)
@@ -42,10 +42,10 @@
     real-answer))
 
 (define (rdb-record-constraint! trace addr value)
-  (set-rdb-constraints! trace (cons (cons addr value) (rdb-constraints trace))))
+  (set-rdb-constraints! trace (wt-tree/add (rdb-constraints trace) addr value)))
 
 (define (rdb-extend trace)
-  (make-rdb trace '() '() (make-address-wt-tree) '() #f))
+  (make-rdb trace '() '() (make-address-wt-tree) (make-address-wt-tree) #f))
 
 (define (rdb-empty) (rdb-extend #f))
 
@@ -155,14 +155,16 @@
       ;; Assume that replacements are added judiciously, namely to
       ;; random choices from the original trace (whose operators
       ;; didn't change due to other replacements?)
-      (aif (assq addr replacements)
-           (if (random-choice? addr new)
-               (absorbed (cdr it))
-               (error "Trying to replace the value of a deterministic computation"))
-           (if (compatible-operators-for? addr new orig)
-               ;; One?  Should be one...
-               (rdb-trace-search-one orig addr absorbed resampled)
-               (resampled))))
+      (search-wt-tree replacements addr
+        (lambda (it)
+          (if (random-choice? addr new)
+              (absorbed it)
+              (error "Trying to replace the value of a deterministic computation")))
+        (lambda ()
+          (if (compatible-operators-for? addr new orig)
+              ;; One?  Should be one...
+              (rdb-trace-search-one orig addr absorbed resampled)
+              (resampled)))))
   ;; TODO I believe the fresh and stale log likelihoods
   ;; mentioned in Wingate, Stuhlmuller, Goodman 2008 are
   ;; actually a distraction, in that they always cancel against
@@ -181,11 +183,12 @@
   ;; Assume that replacements are added judiciously, namely to
   ;; random choices from the original trace (whose operators
   ;; didn't change due to other replacements?)
-  (aif (assq addr replacements)
-       (if (random-choice? addr new)
-           (absorbed (cdr it))
-           (error "Trying to replace the value of a deterministic computation"))
-       (resampled)))
+  (search-wt-tree replacements addr
+    (lambda (it)
+      (if (random-choice? addr new)
+          (absorbed it)
+          (error "Trying to replace the value of a deterministic computation")))
+    resampled))
 
 (define (random-choice? addr trace)
   ;; Ignores possibility of constraints induced by observations.
@@ -197,7 +200,7 @@
 
 (define (unconstrained-random-choice? addr trace)
   (and (random-choice? addr trace)
-       (not (assq addr (rdb-constraints trace)))))
+       (not (wt-tree/member? addr (rdb-constraints trace)))))
 
 (define (random-choices trace)
   (filter (lambda (a) (unconstrained-random-choice? a trace)) (rdb-addresses trace)))

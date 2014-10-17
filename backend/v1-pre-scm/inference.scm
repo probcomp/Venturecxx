@@ -193,15 +193,16 @@
   (scheme-apply + items))
 
 (define (rejection-bound trace)
-  (sum
-   (map (lambda (addr val)
-          (rdb-trace-search-one-record trace addr
-            (lambda (rec)
-              (bound-for-at val addr (car rec) trace (cadddr rec)))
-            (lambda ()
-              (error "What!!?"))))
-        (map car (rdb-constraints trace))
-        (map cdr (rdb-constraints trace)))))
+  (wt-tree/fold
+   (lambda (addr val accum)
+     (+ accum
+        (rdb-trace-search-one-record trace addr
+          (lambda (rec)
+            (bound-for-at val addr (car rec) trace (cadddr rec)))
+          (lambda ()
+            (error "What!!?")))))
+   0
+   (rdb-constraints trace)))
 
 (define (rejection trace)
   (let ((bound (rejection-bound trace)))
