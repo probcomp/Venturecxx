@@ -82,6 +82,7 @@
              assess-trace read-traces))))
 
 (define (compatible-operators-for? addr new-trace old-trace)
+  ;; Could generalize to admit different addresses in the two traces
   (ensure address? addr)
   (let ((op-addr (extend-address addr '(app-sub 0))))
     (rdb-trace-search-one
@@ -90,6 +91,16 @@
        (rdb-trace-search-one
         old-trace op-addr
         (lambda (old-op)
+          ;; Well, actually, they need only be assessed against the
+          ;; same base measure (which I could perhaps detect with an
+          ;; additional annotation (in fact, the base measure objects
+          ;; could be opaque, since I only want to compare their
+          ;; identities)) and with normalization constants with known
+          ;; difference.  The latter will automatically hold of
+          ;; procedures (e.g., primitives) whose assessors are
+          ;; normalized.
+          ;; - Being able to switch operators could even be useful,
+          ;;   e.g. for clustering against clusters of variable shapes.
           (and (eqv? new-op old-op)
                (has-assessor? new-op)))
         (lambda () #f)))
