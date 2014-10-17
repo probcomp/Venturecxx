@@ -279,6 +279,13 @@
       (rdb-trace-search-one-record trace addr
         (lambda (rec)
           (case* (car rec)
+            ((var x)
+             (env-search (cadr rec) x
+              (lambda (addr*)
+                (rdb-backpropagate-constraint addr* value trace))
+              (lambda ()
+                ;; TODO Check for exact equality?
+                (error "Can't constraint Scheme value" rec))))
             ((begin-form forms)
              (rdb-backpropagate-constraint
               (extend-address addr `(begin ,(- (length forms) 1)))
