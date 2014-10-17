@@ -15,7 +15,15 @@
   trace
   read-traces)
 
-(define-structure address) ; Opaque
+(define-structure (address
+                   (safe-accessors #t)
+                   (constructor %make-address))
+  index) ;; Sortable by creation time
+
+(define next-address 0)
+(define (make-address)
+  (set! next-address (+ next-address 1))
+  (%make-address next-address))
 
 ;; A standard lexical environment structure; holds addresses into
 ;; traces rather than values.
