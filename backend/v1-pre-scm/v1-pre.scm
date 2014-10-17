@@ -15,16 +15,14 @@
   trace
   read-traces)
 
-(define-structure (address
-                   (safe-accessors #t)
-                   (constructor %make-address))
+(define-structure (address (constructor %make-address))
   index) ;; Sortable by creation time
 
 (define next-address 0)
 (define (make-address)
   (set! next-address (+ next-address 1))
   (%make-address next-address))
-(define (address<? a1 a2)
+(define-integrable (address<? a1 a2)
   (< (address-index a1) (address-index a2)))
 (define address-wt-tree-type (make-wt-tree-type address<?))
 (define (make-address-wt-tree)
