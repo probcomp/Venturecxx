@@ -191,7 +191,8 @@
     resampled))
 
 (define (random-choice? addr trace)
-  ;; Ignores possibility of constraints induced by observations.
+  ;; Ignores possibility of constraints induced by observations (for
+  ;; that, use unconstrained-random-choice?).
   ;; TODO allow assessable procedures from contextual traces?
   (rdb-trace-search-one
    trace (extend-address addr '(app-sub 0))
