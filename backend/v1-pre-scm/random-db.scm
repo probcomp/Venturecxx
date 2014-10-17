@@ -224,3 +224,35 @@
   (set-rdb-addresses! to (rdb-addresses from))
   (set-rdb-records! to (rdb-records from))
   (set-rdb-record-map! to (rdb-record-map from)))
+
+(define (rdb-backpropagate-constraints! trace)
+  (define (foldee addr value accum)
+    (receive (addr* value*)
+      (rdb-backpropagate-constraint addr value trace)
+      (if (wt-tree/member? addr* accum)
+          ;; TODO Check for exact equality?
+          (error "Can't double-constrain" addr*)
+          (wt-tree/add accum addr* value*))))
+  (set-rdb-constraints! trace
+   (wt-tree/fold foldee (make-address-wt-tree) (rdb-constraints trace))))
+
+(define (rdb-backpropagate-constraint addr value trace)
+  ;; Accepts and returns both address and value because it may later
+  ;; want to
+  ;; - allow constraining constants to be themselves
+  ;; - allow backpropagating constraints through constant invertible
+  ;;   functions (which would change the value)
+  (if (random-choice? addr trace)
+      (values addr value)
+      (rdb-trace-search-one-record trace addr
+        (lambda (rec)
+          (case* (car rec)
+            ((begin-form forms)
+             (rdb-backpropagate-constraint
+              (extend-address addr `(begin ,(- (length forms) 1)))
+              value trace))
+            (_
+             (error "Cannot constrain non-random" (car rec)))))
+        (lambda ()
+          ;; TODO Check for exact equality?
+          (error "Can't constrain external address" addr)))))

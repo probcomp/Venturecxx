@@ -32,6 +32,23 @@
     (define samples (collect-samples (gaussian-example 20)))
     (check (> (k-s-test samples (lambda (x) (gaussian-cdf x 1 (/ 1 (sqrt 2))))) *p-value-tolerance*))))
 
+(define-test (observing-begin-form)
+  (let ()
+    (define program
+      `(begin
+         ,map-defn
+         ,mcmc-defn
+         ,observe-defn
+         ,gaussian-defn
+         (model-in (rdb-extend (get-current-trace))
+           (assume my-normal (lambda (mu sig) (normal mu sig)))
+           (assume x (my-normal 0 1))
+           (observe (begin (normal x 1)) 2)
+           (infer (mcmc 10))
+           (predict x))))
+    (define samples (collect-samples program))
+    (check (> (k-s-test samples (lambda (x) (gaussian-cdf x 1 (/ 1 (sqrt 2))))) *p-value-tolerance*))))
+
 (define-test (modelling-by-inference-smoke)
   (check (> (k-s-test (collect-samples `(begin ,gaussian-by-inference-defn (my-normal 0 1)))
                       (lambda (x) (gaussian-cdf x 0 1)))
