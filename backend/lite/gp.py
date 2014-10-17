@@ -13,6 +13,9 @@ class GP(object):
     self.covariance = covariance
     self.samples = samples
   
+  def toJSON(self):
+    return self.samples
+  
   def mean_array(self, xs):
     return col_vec(map(self.mean, xs))
   

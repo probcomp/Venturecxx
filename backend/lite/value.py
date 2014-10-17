@@ -920,6 +920,9 @@ class VentureType(object):
   def gradient_type(self):
     "The type of the cotangent space of the space represented by this type."
     return self
+  
+  def toJSON(self):
+    return self.__class__.__name__
 
 # TODO Is there any way to make these guys be proper singleton
 # objects?
