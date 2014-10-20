@@ -187,3 +187,32 @@
            (predict (coin)))))
     (check (> (chi-sq-test (collect-samples program)
                            '((#t . 4/5) (#f . 1/5))) *p-value-tolerance*))))
+
+(define-test (uncollapsed-beta-bernoulli-explicitly-assessable)
+  (let ()
+    (define program
+      `(begin
+         ,map-defn
+         ,mcmc-defn
+         ,observe-defn
+         (model-in (rdb-extend (get-current-trace))
+           (assume make-uncollapsed-uniform-bernoulli
+             (lambda ()
+               ((lambda (weight)
+                  (make-sp
+                   (lambda ()
+                     (flip weight))
+                   (lambda (val)
+                     ((assessor-of flip) val weight))))
+                (uniform 0 1))))
+           (assume coin (make-uncollapsed-uniform-bernoulli))
+           (observe (coin) #t)
+           (observe (coin) #t)
+           (observe (coin) #t)
+           (assume predictive (coin))
+           ;; Works with and without propagating constraints
+           ;; (infer rdb-backpropagate-constraints!)
+           (infer (mcmc 20))
+           (predict predictive))))
+    (check (> (chi-sq-test (collect-samples program)
+                           '((#t . 4/5) (#f . 1/5))) *p-value-tolerance*))))
