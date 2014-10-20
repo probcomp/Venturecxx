@@ -177,9 +177,13 @@
            (observe (coin) #t)
            (observe (coin) #t)
            (observe (coin) #t)
-           (assume predictive (coin))
            (infer rdb-backpropagate-constraints!)
-           (infer enforce-constraints)
-           (predict predictive))))
+           (infer enforce-constraints) ; Note: no mcmc
+           ;; Predicting (coin) instead of (assume prediction (coin))
+           ;; (infer...) (predict prediction) because
+           ;; enforce-constraints respects the originally-sampled
+           ;; values, and I want to emphasize that MCMC is not needed
+           ;; for a collapsed model.
+           (predict (coin)))))
     (check (> (chi-sq-test (collect-samples program)
                            '((#t . 4/5) (#f . 1/5))) *p-value-tolerance*))))
