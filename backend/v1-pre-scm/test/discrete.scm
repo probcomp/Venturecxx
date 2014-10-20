@@ -216,3 +216,56 @@
            (predict predictive))))
     (check (> (chi-sq-test (collect-samples program)
                            '((#t . 4/5) (#f . 1/5))) *p-value-tolerance*))))
+
+(define-test (collapsed-beta-bernoulli-explicit-assessor)
+  (let ()
+    (define program
+      `(begin
+         ,observe-defn
+         (model-in (rdb-extend (get-current-trace))
+           (assume make-uniform-bernoulli
+             (lambda ()
+               ((lambda (aux-box)
+                  ;; TODO This version is broken because declaring a
+                  ;; (full) assessor effectively prevents the body
+                  ;; from incorporating the answer.  (In the current
+                  ;; RandomDB, the body runs unconstrained and has its
+                  ;; side-effect).
+                  (make-sp
+                   (lambda ()
+                     ((lambda (weight)
+                        (begin
+                          ((lambda (answer)
+                             (begin
+                               (pp answer)
+                               (trace-in (store-extend (get-current-trace))
+                                 (if answer
+                                     (set-car! aux-box (+ (car aux-box) 1))
+                                     (set-cdr! aux-box (+ (cdr aux-box) 1))))
+                               (pp aux-box)
+                               answer))
+                           (flip weight))))
+                      (/ (+ (car aux-box) 1)
+                         (+ (car aux-box) (cdr aux-box) 2))))
+                   (lambda (val)
+                     ((lambda (weight)
+                        (begin
+                          (pp (list 'assessment aux-box))
+                          ((assessor-of flip) val weight)))
+                      (/ (+ (car aux-box) 1)
+                         (+ (car aux-box) (cdr aux-box) 2))))))
+                (cons 0 0))))
+           (assume coin (make-uniform-bernoulli))
+           (observe (coin) #t)
+           (observe (coin) #t)
+           (observe (coin) #t)
+           (infer rdb-backpropagate-constraints!)
+           (infer enforce-constraints) ; Note: no mcmc
+           ;; Predicting (coin) instead of (assume prediction (coin))
+           ;; (infer...) (predict prediction) because
+           ;; enforce-constraints respects the originally-sampled
+           ;; values, and I want to emphasize that MCMC is not needed
+           ;; for a collapsed model.
+           (predict (coin)))))
+    (check (> (chi-sq-test (collect-samples program)
+                           '((#t . 4/5) (#f . 1/5))) *p-value-tolerance*))))
