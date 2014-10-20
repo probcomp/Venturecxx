@@ -41,6 +41,7 @@
 (load-relative-compiled "v1-pre")
 (load-relative-compiled "primitives")
 (load-relative-compiled "random-db")
+(load-relative-compiled "rdb-constraint-propagation")
 (load-relative-compiled "inference")
 (load-relative-compiled "store")
 (load-relative-compiled "gaussian")

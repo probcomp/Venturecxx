@@ -3,7 +3,6 @@
 (declare (integrate-external "pattern-case/pattern-case"))
 
 (define (enforce-constraints trace)
-  (rdb-backpropagate-constraints! trace)
   (receive (new-trace weight)
     (rebuild-rdb trace (propose-minimal-resimulation-with-deterministic-overrides #f (rdb-constraints trace)))
     (rdb-trace-commit! new-trace trace)))
