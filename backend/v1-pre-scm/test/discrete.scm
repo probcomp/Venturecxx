@@ -161,13 +161,15 @@
                ((lambda (aux-box)
                   (lambda ()
                     ((lambda (weight)
-                       ((lambda (answer)
-                          (begin
-                            (if answer
-                               (set-car! aux-box (+ (car aux-box) 1))
-                               (set-cdr! aux-box (+ (cdr aux-box) 1)))
-                            answer))
-                        (flip weight)))
+                       (begin
+                         ((lambda (answer)
+                            (begin
+                              (trace-in (store-extend (get-current-trace))
+                                (if answer
+                                    (set-car! aux-box (+ (car aux-box) 1))
+                                    (set-cdr! aux-box (+ (cdr aux-box) 1))))
+                              answer))
+                          (flip weight))))
                      (/ (+ (car aux-box) 1)
                         (+ (car aux-box) (cdr aux-box) 2)))))
                 (cons 0 0))))
