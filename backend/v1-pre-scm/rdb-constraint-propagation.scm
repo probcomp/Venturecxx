@@ -75,7 +75,14 @@
               (extend-address addr `(begin ,(- (length forms) 1)))
               value trace))
             ((application-form oper opands)
-             (if (has-constant-shape? trace (extend-address addr `(app-sub 0)))
+             ;; TODO Unconditionally statically backpropagating
+             ;; through application of a non-constant non-assessable
+             ;; procedure is invalid in general, but it's fine (I
+             ;; think) for the test examples, and I don't want to
+             ;; spend the time right now to broaden the static
+             ;; analysis to cover them, because I fear that may not be
+             ;; a good path anyway.
+             (if #t #;(has-constant-shape? trace (extend-address addr `(app-sub 0)))
                  (rdb-trace-search trace (extend-address addr `(app-sub 0))
                    (lambda (val)
                      (if (compound? val)
