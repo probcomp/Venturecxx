@@ -112,7 +112,11 @@ used in the implementation of TypedPSP and TypedLKernel."""
     return None
   def __contains__(self, vthing): return isinstance(vthing, VentureSPRecord)
 
-  def __init__(self, args_types, return_type, variadic=False, min_req_args=None, **kwargs):
+  def __init__(self, args_types, return_type, variadic=False, min_req_args=None):
+    """args_types is expected to be a Python list of instances of venture.lite.sp.VentureType,
+    and return_type is expected to be one instance of same.
+
+    See also the "Types" section of doc/type-system.md."""
     self.args_types = args_types
     self.return_type = return_type
     self.variadic = variadic

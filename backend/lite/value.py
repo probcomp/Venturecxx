@@ -1,7 +1,6 @@
 """Venture values.
 
-The design currently lives at
-https://docs.google.com/document/d/1URnJh5hNJ___-dwzIpca5Y2h-Mku1n5zjpGCiFBcUHM/edit
+The design currently lives in doc/type-system.md
 """
 import operator
 from numbers import Number
@@ -18,6 +17,7 @@ import venture.value.dicts as v
 # values and all the types.
 
 class VentureValue(object):
+  """Base class of all Venture values."""
   ### "natural" representation and conversions
   def getNumber(self): raise VentureTypeError("Cannot convert %s to number" % type(self))
   def getInteger(self): raise VentureTypeError("Cannot convert %s to integer" % type(self))
@@ -906,6 +906,7 @@ def registerVentureType(t, name = None):
 ### Venture Types
 
 class VentureType(object):
+  """Base class of all Venture types.  See the "Types" section of doc/type-system.md."""
   def asPythonNoneable(self, vthing):
     if vthing is None:
       return None
