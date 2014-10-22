@@ -49,6 +49,24 @@ A trace, on the other hand, is more swappable than the interpreter:
   - Even within a style, there seem to be local tradeoffs, choices,
     and variants, such that it is not clear which to choose.
 
+Q: What's with the metadata facility?
+
+A: Different inference techniques may want to know all sorts of
+interesting information about a stochastic process.  For example,
+M-H-based inference techniques tend to be interested in assessing the
+probability (density) of a given output for given inputs; rejection
+sampling additionally needs an upper bound on that density; gradient
+methods want derivatives (of simulators and assessors); enumeration or
+quadrature methods want to be able to systematically traverse the
+output space of a procedure; and given how long this list already is,
+it's almost certainly actually an open set.  So a generic metadata
+facility seems to be the only way to permit the system to implement
+various inference algorithms, without precommitting to a particular
+list of metadata (and contracts for it).
+
+We had considered declaring assessors special and baking support for
+them into the system, but that turned out not to be necessary.
+
 Q: From the perspective of a trace (author), what is the interpreter
 actually good for?  After all, since a trace gets the full context, it
 can easily reimplement the whole thing, adjusting it as desired for it

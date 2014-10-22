@@ -191,3 +191,7 @@ rely on the whole model being tail-assessable on the observations?
 
 Is giving foreign procedures the ability to expose tail-assessability
 structure what LSRs in Venture v0.2 are all about?
+
+Claim: For LDA (and every other standard statistical model we care
+about) we just know what the decomposition into f^x and f^out is.
+- So, can we take any additional advantage of this decomposition?
