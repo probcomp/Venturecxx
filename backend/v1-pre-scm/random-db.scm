@@ -41,6 +41,9 @@
     (rdb-trace-store! trace addr (list exp env addr read-traces real-answer))
     real-answer))
 
+(define (rdb-trace-eval! trace exp env addr read-traces continue)
+  (rdb-record! trace exp env addr read-traces (continue)))
+
 (define (rdb-record-constraint! trace addr value)
   (set-rdb-constraints! trace (wt-tree/add (rdb-constraints trace) addr value)))
 

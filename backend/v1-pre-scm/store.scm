@@ -19,9 +19,10 @@
 (define (store-trace-search-one trace addr win lose)
   (search-wt-tree (store-values trace) addr win lose))
 
-(define (store-record! trace exp env addr read-traces answer)
-  (set-store-values! trace (wt-tree/add (store-values trace) addr answer))
-  answer)
+(define (store-trace-eval! trace exp env addr read-traces continue)
+  (let ((answer (continue)))
+    (set-store-values! trace (wt-tree/add (store-values trace) addr answer))
+    answer))
 
 (define (store-record-constraint! trace addr value)
   (error "Forward execution does not support constraining; did you mean to use mutation?" trace addr value))

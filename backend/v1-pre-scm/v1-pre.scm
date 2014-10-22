@@ -98,10 +98,13 @@
   (resolve-request
    (trace-search trace addr (lambda (v) v)
     (lambda ()
-      (let ((answer (do-eval exp env trace addr read-traces)))
-        ;; The trace can substitute the return value as well as
-        ;; recording
-        (record! trace exp env addr read-traces answer))))
+      ;; The trace can decide whether to invoke the "evaluate
+      ;; normally" continuation, and if so, can intercept and modify
+      ;; the answer.  The trace is expected to record said result at
+      ;; the address (so it can be looked up from environments).
+      (trace-eval! trace exp env addr read-traces
+        (lambda ()
+          (do-eval exp env trace addr read-traces)))))
    trace addr read-traces))
 
 (define (do-eval exp env trace addr read-traces)
@@ -306,11 +309,11 @@
          (store-trace-search trace addr win lose))
         (else (lose))))
 
-(define (record! trace exp env addr read-traces answer)
+(define (trace-eval! trace exp env addr read-traces continue)
   (cond ((rdb? trace)
-         (rdb-record! trace exp env addr read-traces answer))
+         (rdb-trace-eval! trace exp env addr read-traces continue))
         ((store? trace)
-         (store-record! trace exp env addr read-traces answer))
+         (store-trace-eval! trace exp env addr read-traces continue))
         (else (error "Unknown trace type" trace))))
 
 (define (record-constraint! trace addr value)
