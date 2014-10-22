@@ -44,6 +44,9 @@
 (define (rdb-trace-eval! trace exp env addr read-traces continue)
   (rdb-record! trace exp env addr read-traces (continue)))
 
+(define (rdb-trace-apply! trace oper opand-addrs addr read-traces continue)
+  (continue))
+
 (define (rdb-record-constraint! trace addr value)
   (set-rdb-constraints! trace (wt-tree/add (rdb-constraints trace) addr value)))
 

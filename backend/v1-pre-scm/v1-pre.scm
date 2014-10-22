@@ -156,6 +156,15 @@
 ;; the application itself, the current trace, and the list of readable
 ;; traces.
 (define (apply oper opand-addrs addr cur-trace read-traces)
+  ;; The trace can decide whether to invoke the "apply normally"
+  ;; continuation, and if so, can intercept and modify the answer.
+  ;; The trace is NOT expected to record said result at the address,
+  ;; because that will presumably happen in the eval hook.
+  (trace-apply! cur-trace oper opand-addrs addr read-traces
+    (lambda ()
+      (do-apply oper opand-addrs addr cur-trace read-traces))))
+
+(define (do-apply oper opand-addrs addr cur-trace read-traces)
   (cond ((foreign? oper)
          ((foreign-simulate oper) oper opand-addrs addr cur-trace read-traces))
         ((compound? oper)
@@ -315,6 +324,13 @@
         ((store? trace)
          (store-trace-eval! trace exp env addr read-traces continue))
         (else (error "Unknown trace type" trace))))
+
+(define (trace-apply! cur-trace oper opand-addrs addr read-traces continue)
+  (cond ((rdb? cur-trace)
+         (rdb-trace-apply! cur-trace oper opand-addrs addr read-traces continue))
+        ((store? cur-trace)
+         (store-trace-apply! cur-trace oper opand-addrs addr read-traces continue))
+        (else (error "Unknown trace type" cur-trace))))
 
 (define (record-constraint! trace addr value)
   (cond ((rdb? trace)

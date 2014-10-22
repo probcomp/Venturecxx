@@ -24,6 +24,9 @@
     (set-store-values! trace (wt-tree/add (store-values trace) addr answer))
     answer))
 
+(define (store-trace-apply! trace oper opand-addrs addr read-traces continue)
+  (continue))
+
 (define (store-record-constraint! trace addr value)
   (error "Forward execution does not support constraining; did you mean to use mutation?" trace addr value))
 
