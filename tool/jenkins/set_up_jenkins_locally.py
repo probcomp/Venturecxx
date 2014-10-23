@@ -120,14 +120,17 @@ to do it automatically.
      - Paste in the public key, taking care of any copying artifacts
    - Click "Save"
 
-4) While you're at it, please configure the proper number of
+4) Note: Adding more users can be done in this setup by navigating
+   "Manage Jenkins" -> "Manage Users" -> "Create User"
+
+5) While you're at it, please configure the proper number of
    executors:
    - Browse http://probcomp-3.csail.mit.edu:8080
    - Navigate "Manage Jenkins" -> "Configure System"
      - Fill in the form
    - Click "Save"
 
-5) Run this script again when done
+6) Run this script again when done
 """
         exit(1)
 
