@@ -49,9 +49,9 @@ RUN         sudo pip install ipython --upgrade
 RUN         python setup.py install
 
 # IPython notebook configuration
-RUN         ipython profile create --profile-dir=/.ipython/profile_default/
-RUN         echo "c.NotebookApp.ip = '0.0.0.0'" >> /.ipython/profile_default/ipython_notebook_config.py
-RUN         echo "c.NotebookApp.port = 8888" >> /.ipython/profile_default/ipython_notebook_config.py
+RUN         ipython profile create --profile-dir=/root/.ipython/profile_default/
+RUN         echo "c.NotebookApp.ip = '0.0.0.0'" >> /root/.ipython/profile_default/ipython_notebook_config.py
+RUN         echo "c.NotebookApp.port = 8888" >> /root/.ipython/profile_default/ipython_notebook_config.py
 EXPOSE      8888
  
 # Further configuration of container enviroment
