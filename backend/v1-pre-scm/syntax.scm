@@ -112,3 +112,11 @@
   ;; macroness.
   (eval `(trace-in ,(store-extend trace) ,(car subforms))
         env trace addr read-traces))
+
+(define-operative (let subforms env trace addr read-traces)
+  (let ((bindings (car subforms))
+        (body (cdr subforms)))
+    (eval `((lambda (,@(map car bindings))
+              ,@body)
+            ,@(map cadr bindings))
+          env trace addr read-traces)))

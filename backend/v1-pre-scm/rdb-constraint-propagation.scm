@@ -132,6 +132,12 @@ Determining constancy and determinism can be a static analysis:
              (rdb-backpropagate-constraint
               (extend-address addr `(begin ,(- (length forms) 1)))
               value trace))
+            ;; TODO Well, nuts.  Operative forms are recorded, even when they are "just macros".
+            ((operative-form operative subforms)
+             (if (eq? operative (cdr (assq 'let operatives)))
+                 (rdb-backpropagate-constraint
+                  (extend-address addr 'app) value trace)
+                 (error "Cannot constrain non-random operative" (evaluation-record-exp rec))))
             ((application-form oper opands)
              ;; TODO Unconditionally statically backpropagating
              ;; through application of a non-constant non-assessable
