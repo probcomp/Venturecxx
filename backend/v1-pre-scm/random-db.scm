@@ -134,12 +134,12 @@
         (log-weight 0))
     (define (add-weight w)
       (set! log-weight (+ log-weight w)))
-    (define (regeneration-hook exp env addr read-traces answer)
+    (define (regeneration-hook exp env addr read-traces continue)
       (receive (value weight)
-        (proposal exp env addr new orig read-traces answer)
+        (proposal exp env addr new orig read-traces (continue))
         (add-weight weight)
         value))
-    (set-rdb-record-hook! new regeneration-hook)
+    (set-rdb-eval-hook! new regeneration-hook)
     (for-each
      (lambda (addr record)
        ;; Order (not counting issues with coupled foreign procedures) will be
