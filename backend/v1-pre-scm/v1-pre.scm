@@ -197,7 +197,7 @@
           ;; body can ever refer to any trace that the closure is not
           ;; closed over?
           (read-traces* (cons trace read-traces)))
-      (eval body env* trace* addr* read-traces*))))
+      (eval `(begin ,@body) env* trace* addr* read-traces*))))
 
 (define (apply-annotated oper opand-addrs addr cur-trace read-traces)
   ;; There is a choice between store-extending the current trace and

@@ -160,12 +160,11 @@
           (let ((weight (/ (+ (car aux-box) 1)
                            (+ (car aux-box) (cdr aux-box) 2))))
             (let ((answer (flip weight)))
-              (begin
-                (trace-in (store-extend (get-current-trace))
-                          (if answer
-                              (set-car! aux-box (+ (car aux-box) 1))
-                              (set-cdr! aux-box (+ (cdr aux-box) 1))))
-                answer))))))
+              (trace-in (store-extend (get-current-trace))
+                        (if answer
+                            (set-car! aux-box (+ (car aux-box) 1))
+                            (set-cdr! aux-box (+ (cdr aux-box) 1))))
+              answer)))))
    '((infer rdb-backpropagate-constraints!)
      (infer enforce-constraints) ; Note: no mcmc
      ;; Predicting (coin) instead of (assume prediction (coin))
@@ -203,15 +202,13 @@
          (lambda ()
            (let ((weight (/ (+ (car aux-box) 1)
                             (+ (car aux-box) (cdr aux-box) 2))))
-             (begin
-               ((lambda (answer)
-                  (begin
-                    (atomically
-                     (if answer
-                         (set-car! aux-box (+ (car aux-box) 1))
-                         (set-cdr! aux-box (+ (cdr aux-box) 1))))
-                    answer))
-                (flip weight)))))
+             ((lambda (answer)
+                (trace-in (store-extend (get-current-trace))
+                          (if answer
+                              (set-car! aux-box (+ (car aux-box) 1))
+                              (set-cdr! aux-box (+ (cdr aux-box) 1))))
+                answer)
+              (flip weight))))
          coupled-assessor-tag
          (make-coupled-assessor
           (lambda () (cons (car aux-box) (cdr aux-box)))

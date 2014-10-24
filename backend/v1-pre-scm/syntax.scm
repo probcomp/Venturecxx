@@ -29,7 +29,7 @@
 (define-algebraic-matcher if-form if-form? cadr caddr cadddr)
 
 (define lambda-form? (tagged-list? 'lambda))
-(define-algebraic-matcher lambda-form lambda-form? cadr caddr)
+(define-algebraic-matcher lambda-form lambda-form? cadr cddr)
 
 (define trace-in-form? (tagged-list? 'trace-in))
 (define-algebraic-matcher trace-in-form trace-in-form? cadr caddr)
