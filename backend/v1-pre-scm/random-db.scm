@@ -33,16 +33,13 @@
   (set-rdb-records! trace (cons thing (rdb-records trace)))
   (set-rdb-record-map! trace (wt-tree/add (rdb-record-map trace) addr thing)))
 
-(define (rdb-record! trace exp env addr read-traces answer)
-  (rdb-trace-store! trace addr (list exp env addr read-traces answer))
-  answer)
-
 (define (rdb-trace-eval! trace exp env addr read-traces continue)
   (let ((real-answer
          (aif (rdb-eval-hook trace)
               (it exp env addr read-traces continue)
               (continue))))
-    (rdb-record! trace exp env addr read-traces real-answer)))
+    (rdb-trace-store! trace addr (list exp env addr read-traces real-answer))
+    real-answer))
 
 (define (rdb-trace-apply! trace oper opand-addrs addr read-traces continue)
   (continue))
