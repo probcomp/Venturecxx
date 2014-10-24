@@ -191,7 +191,7 @@
 
 (define-test (collapsed-beta-bernoulli-explicit-assessor)
   (check-beta-bernoulli
-   '(lambda ()
+   `(lambda ()
       (let ((aux-box (cons 0 0)))
         ;; TODO This version is broken because declaring a
         ;; (full) assessor effectively prevents the body
@@ -202,13 +202,12 @@
          (lambda ()
            (let ((weight (/ (+ (car aux-box) 1)
                             (+ (car aux-box) (cdr aux-box) 2))))
-             ((lambda (answer)
-                (trace-in (store-extend (get-current-trace))
-                          (if answer
-                              (set-car! aux-box (+ (car aux-box) 1))
-                              (set-cdr! aux-box (+ (cdr aux-box) 1))))
-                answer)
-              (flip weight))))
+             (let ((answer (flip weight)))
+               (trace-in (store-extend (get-current-trace))
+                         (if answer
+                             (set-car! aux-box (+ (car aux-box) 1))
+                             (set-cdr! aux-box (+ (cdr aux-box) 1))))
+               answer)))
          coupled-assessor-tag
          (make-coupled-assessor
           (lambda () (cons (car aux-box) (cdr aux-box)))
