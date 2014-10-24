@@ -1,6 +1,6 @@
 import random
 
-class SMap(object):
+class SamplableMap(object):
   def __init__(self):
     self.d = {}
     self.a = []
@@ -30,8 +30,8 @@ class SMap(object):
   def __contains__(self,k): return k in self.d
   def __len__(self): return len(self.a)
 
-  def __str__(self): return "SMap: " + self._as_dict().__str__()
-  def __repr__(self): return "SMap: " + self._as_dict().__repr__()
+  def __str__(self): return "SamplableMap: " + self._as_dict().__str__()
+  def __repr__(self): return "SamplableMap: " + self._as_dict().__repr__()
 
   def _as_dict(self):
     return {k:self[k] for k in self.d}

@@ -15,7 +15,7 @@ from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
                    drawScaffold, subsampledMixMH, SubsampledMHOperator,
                    SubsampledBlockScaffoldIndexer)
 from omegadb import OmegaDB
-from smap import SMap
+from smap import SamplableMap
 from sp import SPFamilies, VentureSPRecord
 from scope import isScopeIncludeOutputPSP, isScopeExcludeOutputPSP
 from regen import regenAndAttach
@@ -70,7 +70,7 @@ class Trace(object):
 
   def registerRandomChoiceInScope(self,scope,block,node,unboxed=False):
     if not unboxed: (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
-    if not scope in self.scopes: self.scopes[scope] = SMap()
+    if not scope in self.scopes: self.scopes[scope] = SamplableMap()
     if not block in self.scopes[scope]: self.scopes[scope][block] = set()
     assert not node in self.scopes[scope][block]
     self.scopes[scope][block].add(node)
