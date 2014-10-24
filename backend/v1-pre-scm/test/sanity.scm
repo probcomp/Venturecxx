@@ -53,7 +53,8 @@
   )
 
 (define-test (absorption-suppresses-resimulation)
-  (let ((resim-count (list 0)))
+  (let ((resim-count (list 0))
+        (assess-count (list 0)))
     (top-eval
      `(begin
         ,map-defn
@@ -62,12 +63,18 @@
           (make-sp
            (lambda ()
              (set-car! ',resim-count (+ (car ',resim-count) 1))
-             0)
-           (lambda (val) 0)))
+             1)
+           (lambda (val)
+             (set-car! ',assess-count (+ (car ',assess-count) 1))
+             0)))
         (model-in (rdb-extend (get-current-trace))
           (assume x (my-sim))
           (assume y (my-sim))
           (infer (mcmc 5)))))
     ;; Two simulations for the initial forward run, zero when
     ;; enforcing constraints, plus one (not two) per mcmc step.
-    (check (= (car resim-count) 7))))
+    (check (= (car resim-count) 7))
+    ;; Two assessments for each non-resimulated application during
+    ;; inference (one in the new trace and one in the old), and two
+    ;; assessments for each application during constraint enforcement.
+    (check (= (car assess-count) 14))))
