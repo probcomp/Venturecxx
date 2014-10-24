@@ -14,7 +14,8 @@
   ;; former two fields preserve insertion order, which I rely on in
   ;; rebuild-rdb.
   constraints ; wt-tree mapping addresses to values
-  record-hook)
+  record-hook
+  eval-hook)
 
 (define (rdb-trace-search trace addr win lose)
   (if (rdb? trace)
@@ -42,7 +43,11 @@
     real-answer))
 
 (define (rdb-trace-eval! trace exp env addr read-traces continue)
-  (rdb-record! trace exp env addr read-traces (continue)))
+  (let ((real-answer
+         (aif (rdb-eval-hook trace)
+              (it exp env addr read-traces continue)
+              (continue))))
+    (rdb-record! trace exp env addr read-traces real-answer)))
 
 (define (rdb-trace-apply! trace oper opand-addrs addr read-traces continue)
   (continue))
@@ -51,7 +56,7 @@
   (set-rdb-constraints! trace (wt-tree/add (rdb-constraints trace) addr value)))
 
 (define (rdb-extend trace)
-  (make-rdb trace '() '() (make-address-wt-tree) (make-address-wt-tree) #f))
+  (make-rdb trace '() '() (make-address-wt-tree) (make-address-wt-tree) #f #f))
 
 (define (rdb-empty) (rdb-extend #f))
 
