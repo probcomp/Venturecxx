@@ -104,12 +104,7 @@
   ;; Apply the assessor, but do not record it in the same trace.
   ;; I need to bind the value to an address, for uniformity
   (values
-   (let* ((val-addr (extend-address addr 'value-to-assess))
-          (assess-trace (store-extend trace)))
-     (eval `(quote ,val) #f assess-trace val-addr '()) ; Put the value in as a constant
-     (apply (assessor-of operator) (cons val-addr (cdr subaddrs))
-            (extend-address addr 'assessment)
-            assess-trace read-traces))
+   (apply-in-void-subtrace (assessor-of operator) (list val) (cdr subaddrs) addr trace read-traces)
    (lambda () 'ok)))
 
 (define (do-coupled-assess operator val subaddrs addr trace read-traces)
@@ -117,15 +112,10 @@
     ((coupled-assessor get set assess)
      ;; Apply the assessor, but do not record it in the same trace.
      ;; I need to bind the value to an address, for uniformity
-     (let* ((cur-state (apply get '() (extend-address addr 'state-collection) (store-extend trace) read-traces))
-            (val-addr (extend-address addr 'value-to-assess))
-            (state-addr (extend-address addr 'state-for-assessment))
-            (assess-trace (store-extend trace)))
-       (eval `(quote ,val) #f assess-trace val-addr '()) ; Put the value in as a constant
-       (eval `(quote ,cur-state) #f assess-trace state-addr '()) ; Put the state in as a constant
-       (case* (apply assess (cons val-addr (cons state-addr (cdr subaddrs)))
-                     (extend-address addr 'assessment)
-                     assess-trace read-traces)
+     (let ((cur-state (apply-in-void-subtrace get '() '() addr trace read-traces)))
+       (case* (apply-in-void-subtrace
+               assess (list val cur-state) (cdr subaddrs)
+               addr trace read-traces)
          ((pair assessment new-state)
           (values assessment
                   (lambda () (apply set .....)))))))))

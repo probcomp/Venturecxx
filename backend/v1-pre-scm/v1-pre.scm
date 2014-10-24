@@ -218,6 +218,30 @@
     ;; to the result of the whole SP.
     (apply (annotated-base oper) opand-addrs addr sub-trace read-traces)))
 
+;; This guy is a convenience function that I found myself using
+;; extensively for RandomDB, though it's not really
+;; trace-type-specific.  It's for executing Venture procedures (e.g.,
+;; extracted from metadata annotations) on computed arguments without
+;; tracing them.
+;; The arguments are:
+;; - operator: the procedure to apply
+;; - value-args: a prefix of its arguments, which you have as explicit values
+;; - addr-args: the rest of its arguments, which you has as addresses
+;; - addr: the address relative to which to name parts of the application
+;; - trace: the trace to extend with the void subtrace
+;; - read-traces: other traces that should be readable to the operator's body
+(define (apply-in-void-subtrace operator value-args addr-args addr trace read-traces)
+  (let ((value-addrs (map (lambda (i)
+                            (extend-address addr `(subtrace-val ,i)))
+                          (iota (length value-args))))
+        (subtrace (store-extend trace)))
+    (for-each (lambda (value addr)
+                (eval `(quote ,value) #f subtrace addr '())) ; Put the value in as a constant
+              value-args
+              value-addrs)
+    (apply operator (append value-addrs addr-args) (extend-address addr 'subtrace-apply)
+           subtrace read-traces)))
+
 ;; This is different from "apply" because it records the evaluation in
 ;; the trace.
 (define (eval-application operator operands addr trace read-traces)
