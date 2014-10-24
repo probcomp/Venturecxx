@@ -117,23 +117,22 @@
 ;; TODO Abstract commonalities between this and has-constant-shape?
 (define (is-constant? trace addr)
   (rdb-trace-search-one-record trace addr
-   (lambda (rec)
-     (case* rec
-       ((evaluation-record exp env _ _ _)
-        (case* exp
-          ((constant val) #t)
-          ((var x)
-           (env-search env x
-             (lambda (addr*)
-               (is-constant? trace addr*))
-             ;; Values that come in from Scheme are presumed constant
-             (lambda () #t)))
-          ;; TODO Additional possible constants:
-          ;; - Results of applications of constant deterministic
-          ;;   procedures on constant arguments
-          ;; - Lambda expressions that only close over constant things
-          ;; - Constant tail positions of begin forms
-          (_ #f)))))
+   (lambda-case*
+    ((evaluation-record exp env _ _ _)
+     (case* exp
+       ((constant val) #t)
+       ((var x)
+        (env-search env x
+          (lambda (addr*)
+            (is-constant? trace addr*))
+          ;; Values that come in from Scheme are presumed constant
+          (lambda () #t)))
+       ;; TODO Additional possible constants:
+       ;; - Results of applications of constant deterministic
+       ;;   procedures on constant arguments
+       ;; - Lambda expressions that only close over constant things
+       ;; - Constant tail positions of begin forms
+       (_ #f))))
    (lambda ()
      (rdb-trace-search trace addr
       (lambda (v) #t) ; External values are constant
