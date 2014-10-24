@@ -231,16 +231,6 @@
   (let ((index (random (length items))))
     (list-ref items index)))
 
-(define (prior-resimulate addr trace)
-  (rdb-trace-search-one-record
-   trace addr
-   (lambda (rec)
-     (let ((exp (car rec)) (env (cadr rec)) (addr (caddr rec)) (read-traces (cadddr rec)))
-       ;; do-eval here circumvents the trace recording machinery (both
-       ;; read and write)
-       (do-eval exp env trace addr read-traces)))
-   (lambda () (error "What?"))))
-
 (define (rdb-trace-commit! from to)
   (set-rdb-addresses! to (rdb-addresses from))
   (set-rdb-records! to (rdb-records from))
