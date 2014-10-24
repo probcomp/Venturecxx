@@ -52,3 +52,22 @@
   (equal? (top-eval `((,(lambda () (lambda () 5))))) 5) ;; Foreign procedures returning procedures
   )
 
+(define-test (absorption-suppresses-resimulation)
+  (let ((resim-count (list 0)))
+    (top-eval
+     `(begin
+        ,map-defn
+        ,mcmc-defn
+        (define my-sim
+          (make-sp
+           (lambda ()
+             (set-car! ',resim-count (+ (car ',resim-count) 1))
+             0)
+           (lambda (val) 0)))
+        (model-in (rdb-extend (get-current-trace))
+          (assume x (my-sim))
+          (assume y (my-sim))
+          (infer (mcmc 5)))))
+    ;; Two simulations for the initial forward run, zero when
+    ;; enforcing constraints, plus one (not two) per mcmc step.
+    (check (= (car resim-count) 7))))

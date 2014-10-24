@@ -128,7 +128,7 @@
       (set! log-weight (+ log-weight w)))
     (define (regeneration-hook exp env addr read-traces continue)
       (receive (value weight)
-        (proposal exp env addr new orig read-traces (continue))
+        (proposal exp env addr new orig read-traces continue)
         (add-weight weight)
         value))
     (set-rdb-eval-hook! new regeneration-hook)
@@ -154,11 +154,16 @@
 ;; "Minimal" in the sense that it absorbs wherever it can
 ;; Returns an M-H style weight
 (define ((propose-minimal-resimulation-with-deterministic-overrides target replacements)
-         exp env addr new orig read-traces answer)
+         exp env addr new orig read-traces continue)
   (ensure (or/c address? false?) target)
   (define (resampled)
-    (values answer 0)) ; No weight
+    (values (continue) 0))              ; No weight
   (define (absorbed val)
+    ;; Not re-executing the application expression.  Technically, the
+    ;; only thing I am trying to avoid re-executing is the application
+    ;; part, but I think the evaluation of the arguments gets
+    ;; re-executed (in the proper order!) anyway, because they are
+    ;; recorded expressions in their own right.
     (values val
             ;; TODO Could optimize this not to recompute weights if
             ;; the parameters did not change.
@@ -189,9 +194,9 @@
 ;; the density of the new trace, without subtracting off the density
 ;; of the old trace.  This is suitable for rejection sampling.
 (define ((propose-maximal-resimulation-with-deterministic-overrides replacements)
-         exp env addr new orig read-traces answer)
+         exp env addr new orig read-traces continue)
   (define (resampled)
-    (values answer 0)) ; No weight
+    (values (continue) 0)) ; No weight
   (define (absorbed val)
     (values val (weight-for-at val addr exp new read-traces)))
   ;; Assume that replacements are added judiciously, namely to
