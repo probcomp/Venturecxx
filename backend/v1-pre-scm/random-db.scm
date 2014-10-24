@@ -2,8 +2,17 @@
 (declare (integrate-external "syntax"))
 (declare (integrate-external "pattern-case/pattern-case"))
 
-(define has-assessor? (has-annotation? assessor-tag))
-(define assessor-of (annotation-of assessor-tag))
+(define-integrable has-assessor? (has-annotation? assessor-tag))
+(define-integrable assessor-of (annotation-of assessor-tag))
+
+(define coupled-assessor-tag (make-annotation-tag))
+(define-integrable has-coupled-assessor? (has-annotation? coupled-assessor-tag))
+(define-integrable coupled-assessor-of (annotation-of coupled-assessor-tag))
+
+(define-structure (coupled-assessor (safe-accessors #t))
+  get
+  set
+  assess)
 
 (define-structure (evaluation-record (safe-accessors #t))
   exp

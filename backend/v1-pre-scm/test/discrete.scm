@@ -231,7 +231,7 @@
                   ;; from incorporating the answer.  (In the current
                   ;; RandomDB, the body runs unconstrained and has its
                   ;; side-effect).
-                  (make-sp
+                  (annotate
                    (lambda ()
                      ((lambda (weight)
                         (begin
@@ -245,12 +245,21 @@
                            (flip weight))))
                       (/ (+ (car aux-box) 1)
                          (+ (car aux-box) (cdr aux-box) 2))))
-                   (lambda (val)
-                     ((lambda (weight)
-                        (begin
-                          ((assessor-of flip) val weight)))
-                      (/ (+ (car aux-box) 1)
-                         (+ (car aux-box) (cdr aux-box) 2))))))
+                   coupled-assessor-tag
+                   (make-coupled-assessor
+                    (lambda () (cons (car aux-box) (cdr aux-box)))
+                    (lambda (new-box)
+                      (set-car! aux-box (car new-box))
+                      (set-cdr! aux-box (cdr new-box)))
+                    (lambda (val aux)
+                      ((lambda (weight)
+                         (cons
+                          ((assessor-of flip) val weight)
+                          (if val
+                              (cons (+ (car aux) 1) (cdr aux))
+                              (cons (car aux) (+ (cdr aux) 1)))))
+                       (/ (+ (car aux) 1)
+                          (+ (car aux) (cdr aux) 2)))))))
                 (cons 0 0))))
            (assume coin (make-uniform-bernoulli))
            (observe (coin) #t)
