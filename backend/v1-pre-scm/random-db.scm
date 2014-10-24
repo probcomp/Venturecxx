@@ -68,19 +68,17 @@
   (let* ((subaddrs (map (lambda (i)
                           (extend-address addr `(app-sub ,i)))
                         (iota (length exp))))
-         (sub-vals (map (lambda (a)
-                          (traces-lookup (cons trace read-traces) a))
-                        subaddrs)))
-    (if (not (annotated? (car sub-vals)))
+         (operator (traces-lookup (cons trace read-traces) (car subaddrs))))
+    (if (not (annotated? operator))
         (error "What!?"))
-    (if (not (has-assessor? (car sub-vals)))
+    (if (not (has-assessor? operator))
         (error "What?!?"))
     ;; Apply the assessor, but do not record it in the same trace.
     ;; I need to bind the value to an address, for uniformity
     (let* ((val-addr (extend-address addr 'value-to-assess))
            (assess-trace (store-extend trace)))
       (eval `(quote ,val) #f assess-trace val-addr '()) ; Put the value in as a constant
-      (apply (assessor-of (car sub-vals)) (cons val-addr (cdr subaddrs))
+      (apply (assessor-of operator) (cons val-addr (cdr subaddrs))
              (extend-address addr 'assessment)
              assess-trace read-traces))))
 
