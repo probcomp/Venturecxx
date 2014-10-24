@@ -118,22 +118,22 @@
 (define (is-constant? trace addr)
   (rdb-trace-search-one-record trace addr
    (lambda (rec)
-     (let ((exp (car rec))
-           (env (cadr rec)))
-       (case* exp
-         ((constant val) #t)
-         ((var x)
-          (env-search env x
-           (lambda (addr*)
-             (is-constant? trace addr*))
-           ;; Values that come in from Scheme are presumed constant
-           (lambda () #t)))
-         ;; TODO Additional possible constants:
-         ;; - Results of applications of constant deterministic
-         ;;   procedures on constant arguments
-         ;; - Lambda expressions that only close over constant things
-         ;; - Constant tail positions of begin forms
-         (_ #f))))
+     (case* rec
+       ((evaluation-record exp env _ _ _)
+        (case* exp
+          ((constant val) #t)
+          ((var x)
+           (env-search env x
+             (lambda (addr*)
+               (is-constant? trace addr*))
+             ;; Values that come in from Scheme are presumed constant
+             (lambda () #t)))
+          ;; TODO Additional possible constants:
+          ;; - Results of applications of constant deterministic
+          ;;   procedures on constant arguments
+          ;; - Lambda expressions that only close over constant things
+          ;; - Constant tail positions of begin forms
+          (_ #f)))))
    (lambda ()
      (rdb-trace-search trace addr
       (lambda (v) #t) ; External values are constant
@@ -197,7 +197,9 @@
      (+ accum
         (rdb-trace-search-one-record trace addr
           (lambda (rec)
-            (bound-for-at val addr (car rec) trace (cadddr rec)))
+            (case* rec
+              ((evaluation-record exp _ _ read-traces _)
+               (bound-for-at val addr exp trace read-traces))))
           (lambda ()
             (error "What!!?")))))
    0

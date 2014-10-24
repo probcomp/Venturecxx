@@ -5,10 +5,18 @@
 (define has-assessor? (has-annotation? assessor-tag))
 (define assessor-of (annotation-of assessor-tag))
 
+(define-structure (evaluation-record (safe-accessors #t))
+  exp
+  env
+  addr
+  read-traces
+  answer)
+(define-algebraic-matcher evaluation-record evaluation-record? evaluation-record-exp evaluation-record-env evaluation-record-addr evaluation-record-read-traces evaluation-record-answer)
+
 (define-structure (rdb (safe-accessors #t))
   parent
   addresses
-  records ; list of (exp env addr read-traces answer)
+  records ; list of evaluation-records
   record-map ; wt-tree mapping addresses to records
   ;; The info in addresses and records is duplicated because the
   ;; former two fields preserve insertion order, which I rely on in
@@ -26,7 +34,7 @@
   (search-wt-tree (rdb-record-map trace) addr win lose))
 
 (define (rdb-trace-search-one trace addr win lose)
-  (rdb-trace-search-one-record trace addr (lambda (rec) (win (car (cddddr rec)))) lose))
+  (rdb-trace-search-one-record trace addr (lambda (rec) (win (evaluation-record-answer rec))) lose))
 
 (define (rdb-trace-store! trace addr thing)
   (set-rdb-addresses! trace (cons addr (rdb-addresses trace)))
@@ -38,7 +46,7 @@
          (aif (rdb-eval-hook trace)
               (it exp env addr read-traces continue)
               (continue))))
-    (rdb-trace-store! trace addr (list exp env addr read-traces real-answer))
+    (rdb-trace-store! trace addr (make-evaluation-record exp env addr read-traces real-answer))
     real-answer))
 
 (define (rdb-trace-apply! trace oper opand-addrs addr read-traces continue)
@@ -58,7 +66,9 @@
   (ensure address? addr)
   (rdb-trace-search-one-record trace addr
    (lambda (rec)
-     (weight-for-at (car (cddddr rec)) addr (car rec) trace (cadddr rec)))
+     (case* rec
+       ((evaluation-record exp _ _ read-traces answer)
+        (weight-for-at answer addr exp trace read-traces))))
    (lambda () (error "Trying to compute weight for a value that isn't there" addr))))
 
 (define (weight-for-at val addr exp trace read-traces)
@@ -140,7 +150,7 @@
        ;; before lookups of those symbols.
        ;; TODO: Mutation problem: define changes the evaluation environment!
        (case* record
-         ((pair exp (pair env (pair addr (pair read-traces (pair answer null)))))
+         ((evaluation-record exp env addr read-traces answer)
           (eval exp env new addr read-traces))))
      ;; Walking over exactly the expressions already recorded is the
      ;; right thing, because it will not attempt to rerun the extend
