@@ -54,11 +54,11 @@
 
 ;;; Translation of the Lightweight MCMC algorithm to the present context
 
-(define (weight-at addr trace read-traces)
+(define (weight-at addr trace)
   (ensure address? addr)
   (rdb-trace-search-one-record trace addr
    (lambda (rec)
-     (weight-for-at (car (cddddr rec)) addr (car rec) trace read-traces))
+     (weight-for-at (car (cddddr rec)) addr (car rec) trace (cadddr rec)))
    (lambda () (error "Trying to compute weight for a value that isn't there" addr))))
 
 (define (weight-for-at val addr exp trace read-traces)
@@ -166,7 +166,7 @@
             ;; TODO Could optimize this not to recompute weights if
             ;; the parameters did not change.
             (- (weight-for-at val addr exp new read-traces)
-               (weight-at addr orig read-traces))))
+               (weight-at addr orig))))
   (if (eq? addr target)
       (resampled) ; The point was to resimulate the target address
       ;; Assume that replacements are added judiciously, namely to
