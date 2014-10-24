@@ -13,6 +13,7 @@
   get
   set
   assess)
+(define-algebraic-matcher coupled-assessor coupled-assessor? coupled-assessor-get coupled-assessor-set coupled-assessor-assess)
 
 (define-structure (evaluation-record (safe-accessors #t))
   exp
@@ -77,7 +78,9 @@
    (lambda (rec)
      (case* rec
        ((evaluation-record exp _ _ read-traces answer)
-        (weight-for-at answer addr exp trace read-traces))))
+        (receive (weight commit-state)
+          (weight-for-at answer addr exp trace read-traces)
+          weight))))
    (lambda () (error "Trying to compute weight for a value that isn't there" addr))))
 
 (define (weight-for-at val addr exp trace read-traces)
@@ -90,16 +93,42 @@
          (operator (traces-lookup (cons trace read-traces) (car subaddrs))))
     (if (not (annotated? operator))
         (error "What!?"))
-    (if (not (has-assessor? operator))
-        (error "What?!?"))
-    ;; Apply the assessor, but do not record it in the same trace.
-    ;; I need to bind the value to an address, for uniformity
-    (let* ((val-addr (extend-address addr 'value-to-assess))
-           (assess-trace (store-extend trace)))
-      (eval `(quote ,val) #f assess-trace val-addr '()) ; Put the value in as a constant
-      (apply (assessor-of operator) (cons val-addr (cdr subaddrs))
-             (extend-address addr 'assessment)
-             assess-trace read-traces))))
+    (cond ((has-assessor? operator)
+           (do-assess operator val subaddrs addr trace read-traces))
+          ((has-coupled-assessor? operator)
+           (do-coupled-assess operator val subaddrs addr trace read-traces))
+          (else
+           (error "What?!?")))))
+
+(define (do-assess operator val subaddrs addr trace read-traces)
+  ;; Apply the assessor, but do not record it in the same trace.
+  ;; I need to bind the value to an address, for uniformity
+  (values
+   (let* ((val-addr (extend-address addr 'value-to-assess))
+          (assess-trace (store-extend trace)))
+     (eval `(quote ,val) #f assess-trace val-addr '()) ; Put the value in as a constant
+     (apply (assessor-of operator) (cons val-addr (cdr subaddrs))
+            (extend-address addr 'assessment)
+            assess-trace read-traces))
+   (lambda () 'ok)))
+
+(define (do-coupled-assess operator val subaddrs addr trace read-traces)
+  (case* (coupled-assessor-of operator)
+    ((coupled-assessor get set assess)
+     ;; Apply the assessor, but do not record it in the same trace.
+     ;; I need to bind the value to an address, for uniformity
+     (let* ((cur-state (apply get '() (extend-address addr 'state-collection) (store-extend trace) read-traces))
+            (val-addr (extend-address addr 'value-to-assess))
+            (state-addr (extend-address addr 'state-for-assessment))
+            (assess-trace (store-extend trace)))
+       (eval `(quote ,val) #f assess-trace val-addr '()) ; Put the value in as a constant
+       (eval `(quote ,cur-state) #f assess-trace state-addr '()) ; Put the state in as a constant
+       (case* (apply assess (cons val-addr (cons state-addr (cdr subaddrs)))
+                     (extend-address addr 'assessment)
+                     assess-trace read-traces)
+         ((pair assessment new-state)
+          (values assessment
+                  (lambda () (apply set .....)))))))))
 
 (define (compatible-operators-for? addr new-trace old-trace)
   ;; Could generalize to admit different addresses in the two traces
@@ -181,11 +210,14 @@
     ;; part, but I think the evaluation of the arguments gets
     ;; re-executed (in the proper order!) anyway, because they are
     ;; recorded expressions in their own right.
-    (values val
-            ;; TODO Could optimize this not to recompute weights if
-            ;; the parameters did not change.
-            (- (weight-for-at val addr exp new read-traces)
-               (weight-at addr orig))))
+    (receive (new-weight commit-state)
+      (weight-for-at val addr exp new read-traces)
+      (commit-state)
+      (values val
+              ;; TODO Could optimize this not to recompute weights if
+              ;; the parameters did not change.
+              (- new-weight
+                 (weight-at addr orig)))))
   (if (eq? addr target)
       (resampled) ; The point was to resimulate the target address
       ;; Assume that replacements are added judiciously, namely to
@@ -215,7 +247,10 @@
   (define (resampled)
     (values (continue) 0)) ; No weight
   (define (absorbed val)
-    (values val (weight-for-at val addr exp new read-traces)))
+    (receive (weight commit-state)
+      (weight-for-at val addr exp new read-traces)
+      (commit-state)
+      (values val weight)))
   ;; Assume that replacements are added judiciously, namely to
   ;; random choices from the original trace (whose operators
   ;; didn't change due to other replacements?)
@@ -234,7 +269,9 @@
   ;; must be in the same trace as the original.
   (rdb-trace-search-one
    trace (extend-address addr '(app-sub 0))
-   has-assessor?
+   (lambda (op)
+     (or (has-assessor? op)
+         (has-coupled-assessor? op)))
    (lambda () #f)))
 
 (define (unconstrained-random-choice? addr trace)
