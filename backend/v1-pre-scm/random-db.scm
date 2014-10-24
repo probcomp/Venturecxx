@@ -118,7 +118,8 @@
                addr trace read-traces)
          ((pair assessment new-state)
           (values assessment
-                  (lambda () (apply set .....)))))))))
+                  (lambda ()
+                    (apply-in-void-subtrace set (list new-state) '() addr trace read-traces)))))))))
 
 (define (compatible-operators-for? addr new-trace old-trace)
   ;; Could generalize to admit different addresses in the two traces
