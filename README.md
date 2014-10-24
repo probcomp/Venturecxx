@@ -13,6 +13,27 @@ published. We are making Venture available at this early stage
 primarily to facilitate collaboration and support the emerging
 probabilistic programming community.
 
+Running Venture's Docker Container (Linux)
+==========================================
+
+The easiest way to get Venture is to run it inside a [Docker
+container](http://www.docker.com).
+
+    sudo apt-get install docker.io   # Install Docker
+    script/build_docker_image        # Requires sudo, network, and a while
+    script/run_docker_container      # Requires sudo
+
+    venture                          # Inside the container
+
+    firefox localhost:8888           # For example IPython notebooks
+
+You get
+- A shell inside the container to do whatever
+- The source directory mapped into the container so you can edit from
+  outside
+- a VNC server listening on localhost port 5900
+- an IPython notebook server listening on port 8888
+
 Installing Venture from Source
 ==============================
 

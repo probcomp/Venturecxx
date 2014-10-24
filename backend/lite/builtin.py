@@ -202,8 +202,12 @@ builtInSPsList = [
            [ "not", deterministic_typed(lambda x: not x, [v.BoolType()], v.BoolType(),
                                         descr="not returns the logical negation of its argument") ],
 
-           [ "is_symbol", type_test(v.SymbolType()) ],
+           [ "is_number", type_test(v.NumberType()) ],
+           [ "is_integer", type_test(v.IntegerType()) ],
+           [ "is_probability", type_test(v.ProbabilityType()) ],
            [ "is_atom", type_test(v.AtomType()) ],
+           [ "is_boolean", type_test(v.BoolType()) ],
+           [ "is_symbol", type_test(v.SymbolType()) ],
 
            [ "list", deterministic_typed(lambda *args: args, [v.AnyType()], v.ListType(), variadic=True,
                                          sim_grad=grad_list,

@@ -329,7 +329,7 @@ class Trace(object):
       self.globalEnv.addBinding(sym,self.families[id])
     except VentureError as e:
       raise VentureException("invalid_argument", message=e.message, argument="symbol")
-  
+
   def unbindInGlobalEnv(self,sym): self.globalEnv.removeBinding(sym)
 
   def extractValue(self,id): return self.boxValue(self.valueAt(self.families[id]))
@@ -519,8 +519,6 @@ class Trace(object):
 
   #### Helpers (shouldn't be class methods)
 
-  # TODO temporary, probably need an extra layer of boxing for VentureValues
-  # as in CXX
   def boxValue(self,val): return val.asStackDict(self)
   @staticmethod
   def unboxValue(val): return VentureValue.fromStackDict(val)
