@@ -237,12 +237,10 @@
                         (begin
                           ((lambda (answer)
                              (begin
-                               (pp answer)
                                (trace-in (store-extend (get-current-trace))
                                  (if answer
                                      (set-car! aux-box (+ (car aux-box) 1))
                                      (set-cdr! aux-box (+ (cdr aux-box) 1))))
-                               (pp aux-box)
                                answer))
                            (flip weight))))
                       (/ (+ (car aux-box) 1)
@@ -250,7 +248,6 @@
                    (lambda (val)
                      ((lambda (weight)
                         (begin
-                          (pp (list 'assessment aux-box))
                           ((assessor-of flip) val weight)))
                       (/ (+ (car aux-box) 1)
                          (+ (car aux-box) (cdr aux-box) 2))))))
