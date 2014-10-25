@@ -141,21 +141,43 @@
   (check (> (chi-sq-test (collect-samples program) '((#t . 4/5) (#f . 1/5)))
             *p-value-tolerance*)))
 
-(define-test (uncollapsed-beta-bernoulli)
-  (check-beta-bernoulli
-   '(lambda ()
-      (let ((weight (uniform 0 1)))
-        (lambda ()
-          (flip weight))))
-   '((assume predictive (coin))
-     (infer rdb-backpropagate-constraints!)
-     (infer (mcmc 20))
-     (predict predictive))))
+(define uncollapsed-beta-bernoulli-maker
+  '(lambda ()
+     (let ((weight (uniform 0 1)))
+       (lambda ()
+         (flip weight)))))
 
-(define-test (collapsed-beta-bernoulli)
-  (check-beta-bernoulli
-   '(lambda ()
-      (let ((aux-box (cons 0 0)))
+(define collapsed-beta-bernoulli-maker
+  '(lambda ()
+     (let ((aux-box (cons 0 0)))
+       (lambda ()
+         (let ((weight (/ (+ (car aux-box) 1)
+                          (+ (car aux-box) (cdr aux-box) 2))))
+           (let ((answer (flip weight)))
+             (trace-in (store-extend (get-current-trace))
+                       (if answer
+                           (set-car! aux-box (+ (car aux-box) 1))
+                           (set-cdr! aux-box (+ (cdr aux-box) 1))))
+             answer))))))
+
+(define uncollapsed-assessable-beta-bernoulli-maker
+  '(lambda ()
+     (let ((weight (uniform 0 1)))
+       (make-sp
+        (lambda ()
+          (flip weight))
+        (lambda (val)
+          ((assessor-of flip) val weight))))))
+
+(define collapsed-assessable-beta-bernoulli-maker
+  '(lambda ()
+     (let ((aux-box (cons 0 0)))
+       ;; TODO This version is broken because declaring a
+       ;; (full) assessor effectively prevents the body
+       ;; from incorporating the answer.  (In the current
+       ;; RandomDB, the body runs unconstrained and has its
+       ;; side-effect).
+       (annotate
         (lambda ()
           (let ((weight (/ (+ (car aux-box) 1)
                            (+ (car aux-box) (cdr aux-box) 2))))
@@ -164,7 +186,33 @@
                         (if answer
                             (set-car! aux-box (+ (car aux-box) 1))
                             (set-cdr! aux-box (+ (cdr aux-box) 1))))
-              answer)))))
+              answer)))
+        coupled-assessor-tag
+        (make-coupled-assessor
+         (lambda () (cons (car aux-box) (cdr aux-box)))
+         (lambda (new-box)
+           (set-car! aux-box (car new-box))
+           (set-cdr! aux-box (cdr new-box)))
+         (lambda (val aux)
+           (let ((weight (/ (+ (car aux) 1)
+                            (+ (car aux) (cdr aux) 2))))
+             (cons
+              ((assessor-of flip) val weight)
+              (if val
+                  (cons (+ (car aux) 1) (cdr aux))
+                  (cons (car aux) (+ (cdr aux) 1)))))))))))
+
+(define-test (uncollapsed-beta-bernoulli)
+  (check-beta-bernoulli
+   uncollapsed-beta-bernoulli-maker
+   '((assume predictive (coin))
+     (infer rdb-backpropagate-constraints!)
+     (infer (mcmc 20))
+     (predict predictive))))
+
+(define-test (collapsed-beta-bernoulli)
+  (check-beta-bernoulli
+   collapsed-beta-bernoulli-maker
    '((infer rdb-backpropagate-constraints!)
      (infer enforce-constraints) ; Note: no mcmc
      ;; Predicting (coin) instead of (assume prediction (coin))
@@ -176,13 +224,7 @@
 
 (define-test (uncollapsed-beta-bernoulli-explicitly-assessable)
   (check-beta-bernoulli
-   '(lambda ()
-      (let ((weight (uniform 0 1)))
-        (make-sp
-         (lambda ()
-           (flip weight))
-         (lambda (val)
-           ((assessor-of flip) val weight)))))
+   uncollapsed-assessable-beta-bernoulli-maker
    '((assume predictive (coin))
      ;; Works with and without propagating constraints
      ;; (infer rdb-backpropagate-constraints!)
@@ -191,37 +233,7 @@
 
 (define-test (collapsed-beta-bernoulli-explicit-assessor)
   (check-beta-bernoulli
-   `(lambda ()
-      (let ((aux-box (cons 0 0)))
-        ;; TODO This version is broken because declaring a
-        ;; (full) assessor effectively prevents the body
-        ;; from incorporating the answer.  (In the current
-        ;; RandomDB, the body runs unconstrained and has its
-        ;; side-effect).
-        (annotate
-         (lambda ()
-           (let ((weight (/ (+ (car aux-box) 1)
-                            (+ (car aux-box) (cdr aux-box) 2))))
-             (let ((answer (flip weight)))
-               (trace-in (store-extend (get-current-trace))
-                         (if answer
-                             (set-car! aux-box (+ (car aux-box) 1))
-                             (set-cdr! aux-box (+ (cdr aux-box) 1))))
-               answer)))
-         coupled-assessor-tag
-         (make-coupled-assessor
-          (lambda () (cons (car aux-box) (cdr aux-box)))
-          (lambda (new-box)
-            (set-car! aux-box (car new-box))
-            (set-cdr! aux-box (cdr new-box)))
-          (lambda (val aux)
-            (let ((weight (/ (+ (car aux) 1)
-                             (+ (car aux) (cdr aux) 2))))
-              (cons
-               ((assessor-of flip) val weight)
-               (if val
-                   (cons (+ (car aux) 1) (cdr aux))
-                   (cons (car aux) (+ (cdr aux) 1))))))))))
+   collapsed-assessable-beta-bernoulli-maker
    '((infer rdb-backpropagate-constraints!)
      (infer enforce-constraints) ; Note: no mcmc
      ;; Predicting (coin) instead of (assume prediction (coin))
