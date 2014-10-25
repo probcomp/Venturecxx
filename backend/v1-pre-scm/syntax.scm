@@ -1,5 +1,7 @@
 (declare (usual-integrations))
 
+;;; Syntax
+
 (define ((tagged-list? tag) thing)
   (and (pair? thing)
        (eq? (car thing) tag)))
@@ -47,6 +49,7 @@
 (define-algebraic-matcher application-form application-form? car cdr)
 
 ;;; Special forms Kernel-style
+
 (define-structure (operative (safe-accessors #t)) procedure)
 (define operatives '())
 

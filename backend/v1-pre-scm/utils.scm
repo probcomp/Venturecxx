@@ -144,7 +144,8 @@
     (gnuplot-empirical-kde-plot observed "observed")
     (gnuplot-empirical-kde-plot expected "expected"))))
 
-;; TODO This one is not actually very useful because the histograms overlap.
+;; This one is not actually very useful, written this way, because the
+;; histograms overlap.
 (define (compare-empirical-histograms observed expected)
   (gnuplot-multiple
    (list

@@ -3,9 +3,13 @@
 (declare (integrate-external "pattern-case/pattern-case"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Types                                                          ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;; Types
+;;; Evaluation contexts
 
+;; Right now this definition is purely advisory, because eval actually
+;; carries around its components directly.
 (define-structure (evaluation-context
                    (safe-accessors #t)
                    (conc-name evc-))
@@ -14,6 +18,8 @@
   addr
   trace
   read-traces)
+
+;;; Addresses
 
 (define-structure (address (constructor %make-address))
   index) ;; Sortable by creation time
@@ -27,6 +33,8 @@
 (define address-wt-tree-type (make-wt-tree-type address<?))
 (define (make-address-wt-tree)
   (make-wt-tree address-wt-tree-type))
+
+;;; Environments
 
 ;; A standard lexical environment structure; holds addresses into
 ;; traces rather than values.
@@ -46,7 +54,8 @@
   env
   trace
   read-traces)
-(define-algebraic-matcher compound compound? compound-formals compound-body compound-env compound-trace compound-read-traces)
+(define-algebraic-matcher compound
+  compound? compound-formals compound-body compound-env compound-trace compound-read-traces)
 
 ;;; Requests
 
@@ -65,10 +74,10 @@
 
 ;; Annotated val ann = Annotated val [(Tag, ann)]
 
-;; TODO Do I want to enforce the invariant that all annotated objects
-;; are flattened, to wit that the base of any annotated thing is not
-;; itself annotated?  Do I want to pretend that's so by abstraction
-;; barriers?
+;; I enforce the invariant that all annotated objects are flattened,
+;; to wit that the base of any annotated thing is not itself
+;; annotated.
+
 (define-structure (annotated (safe-accessors #t)) base annotations)
 (define-algebraic-matcher annotated annotated? annotated-base annotated-annotations)
 
@@ -90,15 +99,15 @@
       (make-annotated thing `((,tag . ,value)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;; Essential evaluation
+;;; Essential evaluation                                           ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (eval exp env trace addr read-traces)
-  ;; TODO What happens if this address is recorded, but not in the
-  ;; current trace?
   (ensure (or/c env-frame? false?) env)
   (ensure address? addr)
   (resolve-request
+   ;; CONSIDER what should happen if this address is recorded, but not
+   ;; in the current trace?
    (trace-search trace addr (lambda (v) v)
     (lambda ()
       ;; The trace can decide whether to invoke the "evaluate
@@ -121,7 +130,7 @@
         (scheme->venture
          (environment-lookup user-initial-environment x)))))
     ((lambda-form formals body)
-     ;; Do I need to close over the maker address?
+     ;; CONSIDER Does a compound need to close over its maker address?
      (make-compound formals body env trace read-traces))
     ((trace-in-form trace-form subform)
      (let ((subtrace (eval trace-form env trace (extend-address addr '(trace-in trace)) read-traces)))
@@ -190,24 +199,27 @@
           ;; changes, I will still have the same addresses in the new
           ;; body (until the evaluation structure of the bodies
           ;; diverges).
-          ;; TODO Is that actually a bug, where old values preempt new?
+          ;; CONSIDER this is almost certainly a severe bug in
+          ;; addressing scheme, where old values preempt new.  Why
+          ;; have I not been bitten by it yet?
           (addr* (extend-address addr 'app))
           ;; This way, a compound procedure does not carry write
           ;; permission to the trace in which it was created
 
-          ;; TODO Include the read-traces passed to apply?  Why not?
-          ;; Is there an invariant that nothing from the closure's
-          ;; body can ever refer to any trace that the closure is not
-          ;; closed over?
+          ;; CONSIDER whether to include the read-traces passed to
+          ;; apply, or why not?  Is there an invariant that nothing
+          ;; from the closure's body can ever refer to any trace that
+          ;; the closure is not closed over?
           (read-traces* (cons trace read-traces)))
       (eval `(begin ,@body) env* trace* addr* read-traces*))))
 
 (define (apply-annotated oper opand-addrs addr cur-trace read-traces)
-  ;; There is a choice between store-extending the current trace and
-  ;; not extending it.  Extending effectively makes all assessable
-  ;; objects hide their internals from the caller (of course, this
-  ;; does not prevent said internals from tracing something if they
-  ;; want, by further extending).
+  ;; CONSIDER There is a choice between store-extending the current
+  ;; trace and not extending it when applying an annotated procedure.
+  ;; Extending effectively makes all assessable objects hide their
+  ;; internals from the caller (of course, this does not prevent said
+  ;; internals from tracing something if they want, by further
+  ;; extending).
 
   ;; In principle, this could be written not to extend, and "mu" could
   ;; be written to insert a request to store-extend the bodies of
@@ -215,6 +227,10 @@
   ;; because variadic lambdas seem to be a pain to provide in this
   ;; language (except maybe with a restriction that the only thing one
   ;; can do with an argument list is apply something else to it?).
+
+  ;; It is also possible in principle to migrate the extension into
+  ;; the trace, by appropriate use of the pre-eval and pre-apply
+  ;; hooks.
   (let ((sub-trace (store-extend cur-trace)))
     ;; By calling apply rather than eval, I elide recording the
     ;; identity function that transports the result of the simulator
@@ -259,8 +275,9 @@
   (define (continue k results)
     (eval-application
      k results
-     ;; TODO This means the address does not depend on the
-     ;; continuation of the request.  Is that a problem?
+     ;; CONSIDER this means the address at which the requested stuff
+     ;; is evaluated does not depend on the continuation of the
+     ;; request.  Is that a problem?
      (extend-address requester-addr 'continue)
      trace read-traces))
   (cond ((evaluation-request? maybe-request)
@@ -270,8 +287,8 @@
            (eval (evaluation-request-exp maybe-request)
                  (evaluation-request-env maybe-request)
                  trace
-                 ;; TODO This means the address does not depend on the
-                 ;; content of the request.  Is that a problem?
+                 ;; CONSIDER this means the address does not depend on
+                 ;; the content of the request.  Is that a problem?
                  (extend-address requester-addr 'request)
                  read-traces))))
         ((application-request? maybe-request)
@@ -281,7 +298,7 @@
            (eval-application
             (application-request-operator maybe-request)
             (application-request-operands maybe-request)
-            ;; TODO This means the address does not depend on the
+            ;; CONSIDER this means the address does not depend on the
             ;; content of the request.  Is that a problem?
             (extend-address requester-addr 'request)
             trace read-traces))))
@@ -291,6 +308,8 @@
 (define (top-eval exp)
   (eval exp (make-env-frame #f '() '()) (store-extend #f) (toplevel-address) '()))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Support Structures                                             ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Environments
@@ -305,17 +324,20 @@
                (win (car as)))
               (else (loop (cdr ss) (cdr as)))))
       (lose)))
+
 (define (extend-env parent symbols addresses)
   (ensure (or/c env-frame? false?) parent)
   (ensure (listof symbol?) symbols)
   (ensure (listof address?) addresses)
   (make-env-frame parent symbols addresses))
+
 (define (env-bind! env sym addr)
   (ensure env-frame? env)
   (ensure symbol? sym)
   (ensure address? addr)
   (set-env-frame-symbols! env (cons sym (env-frame-symbols env)))
   (set-env-frame-addresses! env (cons addr (env-frame-addresses env))))
+
 (define (env-lookup env symbol)
   (ensure (or/c env-frame? false?) env)
   (ensure symbol? symbol)
@@ -366,9 +388,6 @@
          (store-record-constraint! trace addr value))
         (else (error "Unknown trace type" trace))))
 
-;;; One hack: allow PETs but do not allow them to be extended.  Then
-;;; we should be able to grandfather in all our old code.
-
 ;;; Addresses
 
 (define (toplevel-address) (make-address))
@@ -390,7 +409,7 @@
   (if (procedure? thing)
       (scheme-procedure-over-values->v1-foreign thing)
       ;; TODO Actually, I should recur on containers, to catch any
-      ;; procedures hiding in them
+      ;; procedures hiding in them.
       thing)) ; Represent everything else by itself
 
 (define (scheme-procedure-over-values->v1-foreign sim)
