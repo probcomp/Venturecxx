@@ -119,7 +119,7 @@
         ;; this trace.
         (error "What?!"))))))
 
-;; TODO Abstract commonalities between this and weight-for-at
+;; TODO Abstract commonalities between this and assessment+effect-at
 ;; This attempts to implement constant-detection for RandomDB traces.
 ;; The resulting interface to the bounding procedure is
 ;; that the argument will evaluate to #f if it is not known to be constant,

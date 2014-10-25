@@ -80,11 +80,11 @@
      (case* rec
        ((evaluation-record exp _ _ read-traces answer)
         (receive (weight commit-state)
-          (weight-for-at answer addr exp trace read-traces)
+          (assessment+effect-at answer addr exp trace read-traces)
           weight))))
    (lambda () (error "Trying to compute weight for a value that isn't there" addr))))
 
-(define (weight-for-at val addr exp trace read-traces)
+(define (assessment+effect-at val addr exp trace read-traces)
   (ensure address? addr)
   ;; Expect exp to be an application
   ;; Do not look for it in the trace itself because it may not have been recorded yet.
@@ -226,7 +226,7 @@
     ;; re-executed (in the proper order!) anyway, because they are
     ;; recorded expressions in their own right.
     (receive (new-weight commit-state)
-      (weight-for-at val addr exp new read-traces)
+      (assessment+effect-at val addr exp new read-traces)
       (commit-state)
       (values val
               ;; TODO Could optimize this not to recompute weights if
@@ -263,7 +263,7 @@
     (values (continue) 0)) ; No weight
   (define (absorbed val)
     (receive (weight commit-state)
-      (weight-for-at val addr exp new read-traces)
+      (assessment+effect-at val addr exp new read-traces)
       (commit-state)
       (values val weight)))
   ;; Assume that replacements are added judiciously, namely to
