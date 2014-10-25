@@ -31,8 +31,6 @@
             ;; The (* 2 mu) expression is computed in the model trace,
             ;; and its value is recorded as the desired constraint.
             ;; In this case, this is OK, because said value is constant.
-            ;; TODO Rewrite observe to compute the constraint in the
-            ;; enclosing trace?
             (observe (normal x (* (sqrt 2) sig)) (* 2 mu))
             (infer (mcmc 10))
             (predict x)))

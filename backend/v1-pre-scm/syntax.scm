@@ -106,6 +106,44 @@
   (eval `(trace-in ,*the-model-trace* ,(car subforms))
         env trace addr read-traces))
 
+;; Example of using the argument language syntax
+
+(define (trick-coin-example-raw)
+  `(begin
+     ,observe-defn
+     ,map-defn
+     (define model-trace (rdb-extend (get-current-trace)))
+     (trace-in model-trace
+               (begin
+                 (define is-trick? (flip 0.5))
+                 (define weight (if is-trick? (uniform 0 1) 0.5))
+                 ($observe (flip weight) #t)
+                 ($observe (flip weight) #t)
+                 ($observe (flip weight) #t)
+                 ($observe (flip weight) #t)
+                 ($observe (flip weight) #t)
+                 (define answer (list is-trick? weight))))
+     (enforce-constraints model-trace)
+     (map (lambda (i) (mcmc-step model-trace))
+          '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))
+     (trace-in (store-extend model-trace) answer)))
+
+(define (trick-coin-example-syntax)
+  `(begin
+     ,observe-defn
+     ,map-defn
+     ,mcmc-defn
+     (model-in (rdb-extend (get-current-trace))
+       (assume is-trick? (flip 0.5))
+       (assume weight (if is-trick? (uniform 0 1) 0.5))
+       (observe (flip weight) #t)
+       (observe (flip weight) #t)
+       (observe (flip weight) #t)
+       (observe (flip weight) #t)
+       (observe (flip weight) #t)
+       (infer (mcmc 20))
+       (predict (list is-trick? weight)))))
+
 ;; Other syntax
 
 (define-operative (atomically subforms env trace addr read-traces)

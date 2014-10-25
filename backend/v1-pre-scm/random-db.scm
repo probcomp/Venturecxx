@@ -227,7 +227,7 @@
   (define (absorbed val)
     ;; Not re-executing the application expression.  Technically, the
     ;; only thing I am trying to avoid re-executing is the application
-    ;; part, but I think the evaluation of the arguments gets
+    ;; part, but I ASSUME the evaluation of the arguments gets
     ;; re-executed (in the proper order!) anyway, because they are
     ;; recorded expressions in their own right.
     (receive (new-weight commit-state)
@@ -240,7 +240,7 @@
                  (weight-at addr orig)))))
   (if (eq? addr target)
       (resampled) ; The point was to resimulate the target address
-      ;; Assume that replacements are added judiciously, namely to
+      ;; ASSUME that replacements are added judiciously, namely to
       ;; random choices from the original trace (whose operators
       ;; didn't change due to other replacements?)
       (search-wt-tree replacements addr

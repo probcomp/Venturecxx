@@ -182,11 +182,6 @@
 (define collapsed-assessable-beta-bernoulli-maker
   '(lambda ()
      (let ((aux-box (cons 0 0)))
-       ;; TODO This version is broken because declaring a
-       ;; (full) assessor effectively prevents the body
-       ;; from incorporating the answer.  (In the current
-       ;; RandomDB, the body runs unconstrained and has its
-       ;; side-effect).
        (annotate
         (lambda ()
           (let ((weight (/ (+ (car aux-box) 1)

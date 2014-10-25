@@ -2,6 +2,8 @@
 (declare (integrate-external "syntax"))
 (declare (integrate-external "pattern-case/pattern-case"))
 
+;;; Local resimulation-MH
+
 (define (enforce-constraints trace)
   (receive (new-trace weight)
     (rebuild-rdb trace (propose-minimal-resimulation-with-deterministic-overrides #f (rdb-constraints trace)))
@@ -36,57 +38,7 @@
            (map (lambda (i) (mcmc-step t))
                 (iota steps)))))))
 
-;; Trick coin
-
-(define trick-coin-example
-  `(begin
-     ,observe-defn
-     (define model-trace (rdb-extend (get-current-trace)))
-     (trace-in model-trace
-               (begin
-                 (define is-trick? (flip 0.5))
-                 (define weight (if is-trick? (uniform 0 1) 0.5))
-                 ($observe (flip weight) #t)
-                 ($observe (flip weight) #t)
-                 ($observe (flip weight) #t)
-                 ($observe (flip weight) #t)
-                 ($observe (flip weight) #t)
-                 (define answer (list is-trick? weight))))
-     (pp (trace-in (store-extend model-trace) answer))
-     ,map-defn
-     (enforce-constraints model-trace)
-     (map (lambda (i) (mcmc-step model-trace))
-          '(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20))
-     (trace-in (store-extend model-trace) answer)))
-
-;;; On observations: VKM argues that requiring observe to accept only
-;;; a constant (!) (wrt current trace) procedure that has a density as
-;;; the top expression is fine, for deep philosophical reasons.  The
-;;; extra flexibility afforded by nesting and inference programming
-;;; may go a long way to alleviating the trouble that causes.
-
-;;; Hm.  The way I wrote this program, it never actually garbage
-;;; collects old addresses from the trace, which has the two funny
-;;; effects that
-;;; a) Old choices stick around and may come back
-;;; b) Proposals to shadow choices are made (and always accepted
-;;;    because there is no likelihood)
-
-(define trick-coin-example-syntax
-  `(begin
-     ,observe-defn
-     ,map-defn
-     ,mcmc-defn
-     (model-in (rdb-extend (get-current-trace))
-       (assume is-trick? (flip 0.5))
-       (assume weight (if is-trick? (uniform 0 1) 0.5))
-       (observe (flip weight) #t)
-       (observe (flip weight) #t)
-       (observe (flip weight) #t)
-       (observe (flip weight) #t)
-       (observe (flip weight) #t)
-       (infer (mcmc 20))
-       (predict (list is-trick? weight)))))
+;;; Global rejection
 
 (define-structure (just (safe-accessors #t))
   >)
@@ -188,7 +140,7 @@
       (let ((bound (bound-for-at val addr exp new read-traces)))
         (commit-state)
         (values val (cons weight bound)))))
-  ;; Assume that replacements are added judiciously, namely to
+  ;; ASSUME that replacements are added judiciously, namely to
   ;; random choices from the original trace (whose operators
   ;; didn't change due to other replacements?)
   (search-wt-tree replacements addr
@@ -211,7 +163,7 @@
       (assessment+effect-at val addr exp new read-traces)
       (commit-state)
       (values val weight)))
-  ;; Assume that replacements are added judiciously, namely to
+  ;; ASSUME that replacements are added judiciously, namely to
   ;; random choices from the original trace (whose operators
   ;; didn't change due to other replacements?)
   (search-wt-tree replacements addr
