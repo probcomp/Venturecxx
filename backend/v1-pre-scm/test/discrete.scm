@@ -210,6 +210,14 @@
      (infer (mcmc 20))
      (predict predictive))))
 
+(define-test (uncollapsed-beta-bernoulli-rejection)
+  (check-beta-bernoulli
+   uncollapsed-beta-bernoulli-maker
+   '((assume predictive (coin))
+     (infer rdb-backpropagate-constraints!)
+     (infer rejection)
+     (predict predictive))))
+
 (define-test (collapsed-beta-bernoulli)
   (check-beta-bernoulli
    collapsed-beta-bernoulli-maker
