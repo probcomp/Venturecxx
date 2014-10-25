@@ -40,6 +40,15 @@
 
 ;;; Global rejection
 
+;; The interface to providing bounds is to annotate the assessor
+;; (coupled or otherwise) with a bounder procedure at value-bound-tag.
+;; The bounder procedure gets the value, (the state if it's a coupled
+;; assessor), and constancy marks for the arguments, and should return
+;; an upper bound on the assessment.
+
+;; A constancy mark is either #f to indicate the value may vary, or a
+;; "just" record holding the constant value.
+
 (define-structure (just (safe-accessors #t))
   >)
 

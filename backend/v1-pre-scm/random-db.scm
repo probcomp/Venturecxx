@@ -5,6 +5,19 @@
 
 ;;; Assessors for SPs that have internal state
 
+;; The interface for assessing simulators that mutate state (and whose
+;; applications are therefore coupled) is to annotate them with a
+;; coupled-assessor record at the coupled-assessor-tag.  This record
+;; has three fields:
+;; - get, which is a nullary procedure that reads the state
+;; - set, which is a unary procedure that writes the state
+;; - assess, which is a (pure) procedure of type
+;;     a -> b -> x1 -> ... -> xn -> (Assessment, b)
+;;   for a simulator of type
+;;     x1 -> ... -> xn -> Random a
+;;   that contains an internal state of type b whose changes are
+;;   deterministically determined by the inputs and the chosen output a.
+
 (define coupled-assessor-tag (make-annotation-tag))
 (define-integrable has-coupled-assessor? (has-annotation? coupled-assessor-tag))
 (define-integrable coupled-assessor-of (annotation-of coupled-assessor-tag))
