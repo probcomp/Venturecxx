@@ -279,7 +279,22 @@
          (infer enforce-constraints)
          (assume x (coin))
          (let ((pre-inf (predict x)))
-           (infer (mcmc 10))
+           (infer (mcmc 10)) ; 10 rather than 1 because of the constraint propagation and mcmc correction bug
+           (cons pre-inf (predict x))))))
+    (define answer
+      (square-discrete standard-beta-bernoulli-posterior))
+    (check (> (chi-sq-test (collect-samples program 200) answer)
+              *p-value-tolerance*))))
+
+(define-test (assessable-collapsed-beta-bernoulli-mixes)
+  (let ()
+    (define program
+      (standard-beta-bernoulli-test-program
+       collapsed-assessable-beta-bernoulli-maker
+       '((infer enforce-constraints)
+         (assume x (coin))
+         (let ((pre-inf (predict x)))
+           (infer (mcmc 1))
            (cons pre-inf (predict x))))))
     (define answer
       (square-discrete standard-beta-bernoulli-posterior))
