@@ -258,6 +258,15 @@
      (infer rejection)
      (predict predictive))))
 
+(define-test (uncollapsed-beta-bernoulli-explicitly-assessable-rejection)
+  (check-beta-bernoulli
+   uncollapsed-assessable-beta-bernoulli-maker
+   '((assume predictive (coin))
+     ;; Works with and without propagating constraints
+     ;; (infer rdb-backpropagate-constraints!)
+     (infer rejection)
+     (predict predictive))))
+
 (define-test (collapsed-beta-bernoulli-explicit-assessor)
   (check-beta-bernoulli
    collapsed-assessable-beta-bernoulli-maker
