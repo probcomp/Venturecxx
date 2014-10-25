@@ -136,6 +136,6 @@ invoked with (infer rdb-propagate-constraints!), but to grok the cases
 it handles you currently have no recourse but to read the source.  One
 particularity: if the unannotated compounds you are observing are all
 constant (recursively), the right thing will happen.  Warning: misuse
-may lead to incorrect answers (see TODOs in source,
+may lead to incorrect answers (see TODOs/CONSDIERs in source,
 rdb-constraint-propagation.scm).
 
