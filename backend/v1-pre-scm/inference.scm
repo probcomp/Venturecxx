@@ -142,13 +142,15 @@
         (error "What!?"))
     (if (not (has-assessor? (car sub-vals)))
         (error "What?!?"))
-    (let ((assessor (assessor-of (car sub-vals))))
-      (if (not ((has-annotation? value-bound-tag) assessor))
-          (error "Cannot absorb rejection at" val addr exp trace read-traces)
-          (apply-in-void-subtrace
-           ((annotation-of value-bound-tag) assessor)
-           (cons val (cdr constancies)) ; cdr because I don't pass the operator itself
-           '() addr trace read-traces)))))
+    (do-bound (assessor-of (car sub-vals)) val constancies addr trace read-traces)))
+
+(define (do-bound assessor val constancies addr trace read-traces)
+  (if (not ((has-annotation? value-bound-tag) assessor))
+      (error "Cannot absorb rejection at" val addr exp trace read-traces)
+      (apply-in-void-subtrace
+       ((annotation-of value-bound-tag) assessor)
+       (cons val (cdr constancies)) ; cdr because I don't pass the operator itself
+       '() addr trace read-traces)))
 
 ;; "Maximal" in the sense that it absorbs only when it must.  Returns
 ;; the density of the new trace, without subtracting off the density
