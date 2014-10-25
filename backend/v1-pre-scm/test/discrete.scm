@@ -261,8 +261,7 @@
 (define-test (collapsed-beta-bernoulli-explicit-assessor)
   (check-beta-bernoulli
    collapsed-assessable-beta-bernoulli-maker
-   '((infer rdb-backpropagate-constraints!)
-     (infer enforce-constraints) ; Note: no mcmc
+   '((infer enforce-constraints) ; Note: no mcmc
      ;; Predicting (coin) instead of (assume prediction (coin))
      ;; (infer...) (predict prediction) because
      ;; enforce-constraints respects the originally-sampled
