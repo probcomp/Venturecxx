@@ -1,36 +1,19 @@
 (declare (usual-integrations))
 
-;;; The notion of procedures
+;;; Procedures
 
-; data BasicProcedure = Compound | Primitive
-; data Procedure = Basic BasicProcedure
-;                | Full (Maybe BasicProcedure) -- simulator
-;                       (Maybe BasicProcedure) -- assessor
-;
-; There is a funny use case of assessors that are Full rather than
-; Basic Procedures.  To wit, if exact assessment is infeasible, it may
-; be approximate, in which case it may be stochastic, in which case it
-; may be interesting to itself assess.  However, a Compound Basic
-; Procedure can consist of a call to a (closed-over) Full Procedure,
-; so we handle that use case.
-
-; However, it is easy to code the slightly type-looser version, namely
-; Full Procedures containing optional Procedures.  That way, apply
-; recurs into itself.
-
+;; Tag for annotating procedures with assessors.
 (define assessor-tag (make-annotation-tag))
 
+;; Assessors are so common that I abstract tagging with them.
 (define (make-sp simulator assessor)
   (annotate simulator assessor-tag assessor))
+(define-integrable has-assessor? (has-annotation? assessor-tag))
+(define-integrable assessor-of (annotation-of assessor-tag))
 
 ;; Tag for annotating procedures with ordered outputs with metadata
-;; indicating upper bounds.  This is used to compute the bound for
-;; rejection sampling.
-;; TODO Add support for rejection sampling where assessment and
-;; bounding are not possible separately but where the ratio can
-;; nonetheless be computed (does that ever happen?).  Implementation
-;; strategy: another tag, intended for annotating the simulator, and
-;; another clause in bound-for-at.
+;; indicating upper bounds.  Annotating assessors with this is used to
+;; compute the bound for rejection sampling.
 (define value-bound-tag (make-annotation-tag))
 
 (define flip

@@ -6,8 +6,8 @@
 ;;; observations toward their assessability points, and so avoid
 ;;; trouble with constraining deterministic computations.
 
-;;; I now think there may be a runtime solution to the same problem
-;;; that's more general.
+;;; It is possible that there may be a runtime solution to the same
+;;; problem that's more general.
 
 ;;; This program is motivated in part by the following set of
 ;;; observations (though it does not fully implement them):
@@ -132,14 +132,15 @@ Determining constancy and determinism can be a static analysis:
              (rdb-backpropagate-constraint
               (extend-address addr `(begin ,(- (length forms) 1)))
               value trace))
-            ;; TODO Well, nuts.  Operative forms are recorded, even when they are "just macros".
+            ;; Well, nuts.  Operative forms are recorded, even when
+            ;; they are "just macros".
             ((operative-form operative subforms)
              (if (eq? operative (cdr (assq 'let operatives)))
                  (rdb-backpropagate-constraint
                   (extend-address addr 'app) value trace)
                  (error "Cannot constrain non-random operative" (evaluation-record-exp rec))))
             ((application-form oper opands)
-             ;; TODO Unconditionally statically backpropagating
+             ;; CONSIDER Unconditionally statically backpropagating
              ;; through application of a non-constant non-assessable
              ;; procedure is invalid in general, but it's fine (I
              ;; think) for the test examples, and I don't want to

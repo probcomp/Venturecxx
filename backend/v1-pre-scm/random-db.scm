@@ -3,8 +3,7 @@
 (declare (integrate-external "v1-pre"))
 (declare (integrate-external "pattern-case/pattern-case"))
 
-(define-integrable has-assessor? (has-annotation? assessor-tag))
-(define-integrable assessor-of (annotation-of assessor-tag))
+;;; Assessors for SPs that have internal state
 
 (define coupled-assessor-tag (make-annotation-tag))
 (define-integrable has-coupled-assessor? (has-annotation? coupled-assessor-tag))
@@ -15,6 +14,8 @@
   set
   assess)
 (define-algebraic-matcher coupled-assessor coupled-assessor? coupled-assessor-get coupled-assessor-set coupled-assessor-assess)
+
+;;; RandomDB representation
 
 (define-structure (evaluation-record (safe-accessors #t))
   exp
@@ -110,11 +111,6 @@
 (define (do-coupled-assess op-coupled-assessor val subaddrs addr trace read-traces)
   (case* (annotated-base op-coupled-assessor)
     ((coupled-assessor get set assess)
-     ;; TODO Do I even need the current state?  Should I just assume
-     ;; it varies across samples and not pass it?  In that case, maybe
-     ;; the old rejection bound algorithm (just mapping over the
-     ;; constraints without rebuilding) is fine, if all the bounder
-     ;; procedures ignore the auxiliary state anyway?
      (let ((cur-state (apply-in-void-subtrace get '() '() addr trace read-traces)))
        (case* (apply-in-void-subtrace
                assess (list val cur-state) (cdr subaddrs)
@@ -183,8 +179,9 @@
 ;;   (assess new-value wrt resimulation in the new-trace) - (assess new-value wrt proposal distribution)
 ;;   - [(assess orig-value wrt resimulation in orig-trace) - (assess orig-trace wrt proposal distribution)]
 ;;   where the proposal distributions may be different in the two cases
-;;   if they are conditioned on the current state
-;; but may be computable with cancellations (e.g., for resimulation proposals)
+;;   if they are conditioned on the current state.
+;; The weight may be computable with cancellations (e.g., for
+;; resimulation proposals).
 
 (define (rebuild-rdb orig proposal #!optional accum init)
   (if (default-object? accum)
@@ -207,9 +204,9 @@
        ;; enforced by evaluation recursion regardless of the order in
        ;; which the available expressions are traversed, provided the
        ;; replacement caches results.
-       ;; However, I do need to order things so that defines get executed
-       ;; before lookups of those symbols.
-       ;; TODO: Mutation problem: define changes the evaluation environment!
+       ;; However, I do need to order things so that defines get
+       ;; executed before lookups of those symbols, because define
+       ;; changes the evaluation environment.
        (case* record
          ((evaluation-record exp env addr read-traces answer)
           (eval exp env new addr read-traces))))
@@ -256,7 +253,7 @@
               ;; One?  Should be one...
               (rdb-trace-search-one orig addr absorbed resampled)
               (resampled)))))
-  ;; TODO I believe the fresh and stale log likelihoods
+  ;; CONSIDER I believe the fresh and stale log likelihoods
   ;; mentioned in Wingate, Stuhlmuller, Goodman 2008 are
   ;; actually a distraction, in that they always cancel against
   ;; the log likelihood of newly sampled randomness.

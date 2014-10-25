@@ -161,6 +161,13 @@
       (error "Cannot absorb rejection at" val addr exp trace read-traces)
       (case* (annotated-base op-coupled-assessor)
         ((coupled-assessor get _ _)
+         ;; CONSIDER whether computing the bound for rejection
+         ;; sampling a coupled assessable procedure even needs the
+         ;; current state?  Should I just assume it varies across
+         ;; samples and not pass it?  In that case, maybe the old
+         ;; rejection bound algorithm (just mapping over the
+         ;; constraints without rebuilding) is fine, if all the
+         ;; bounder procedures ignore the auxiliary state anyway?
          (let ((cur-state (apply-in-void-subtrace get '() '() addr trace read-traces)))
            (apply-in-void-subtrace
             ((annotation-of value-bound-tag) op-coupled-assessor)
