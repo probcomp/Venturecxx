@@ -254,28 +254,6 @@
   ;; the log likelihood of newly sampled randomness.
   )
 
-;; "Maximal" in the sense that it absorbs only when it must.  Returns
-;; the density of the new trace, without subtracting off the density
-;; of the old trace.  This is suitable for rejection sampling.
-(define ((propose-maximal-resimulation-with-deterministic-overrides replacements)
-         exp env addr new orig read-traces continue)
-  (define (resampled)
-    (values (continue) 0)) ; No weight
-  (define (absorbed val)
-    (receive (weight commit-state)
-      (assessment+effect-at val addr exp new read-traces)
-      (commit-state)
-      (values val weight)))
-  ;; Assume that replacements are added judiciously, namely to
-  ;; random choices from the original trace (whose operators
-  ;; didn't change due to other replacements?)
-  (search-wt-tree replacements addr
-    (lambda (it)
-      (if (random-choice? addr new)
-          (absorbed it)
-          (error "Trying to replace the value of a deterministic computation")))
-    resampled))
-
 (define (random-choice? addr trace)
   ;; Ignores possibility of constraints induced by observations (for
   ;; that, use unconstrained-random-choice?).
