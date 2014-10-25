@@ -294,6 +294,22 @@
     (check (> (chi-sq-test (collect-samples program 200) answer)
               *p-value-tolerance*))))
 
+(define-test (collapsed-beta-bernoulli-mixes-rejection)
+  (let ()
+    (define program
+      (standard-beta-bernoulli-test-program
+       collapsed-beta-bernoulli-maker
+       '((infer rdb-backpropagate-constraints!)
+         (infer enforce-constraints)
+         (assume x (coin))
+         (let ((pre-inf (predict x)))
+           (infer rejection)
+           (cons pre-inf (predict x))))))
+    (define answer
+      (square-discrete standard-beta-bernoulli-posterior))
+    (check (> (chi-sq-test (collect-samples program 200) answer)
+              *p-value-tolerance*))))
+
 (define-test (assessable-collapsed-beta-bernoulli-mixes)
   (let ()
     (define program
