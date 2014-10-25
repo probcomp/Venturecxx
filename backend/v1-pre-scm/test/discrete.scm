@@ -166,8 +166,13 @@
        (make-sp
         (lambda ()
           (flip weight))
-        (lambda (val)
-          ((assessor-of flip) val weight))))))
+        (annotate
+         (lambda (val)
+           ((assessor-of flip) val weight))
+         value-bound-tag
+         (lambda (val)
+           (((annotation-of value-bound-tag) (assessor-of flip))
+            val weight)))))))
 
 (define collapsed-assessable-beta-bernoulli-maker
   '(lambda ()
@@ -237,6 +242,15 @@
      ;; Works with and without propagating constraints
      ;; (infer rdb-backpropagate-constraints!)
      (infer (mcmc 20))
+     (predict predictive))))
+
+(define-test (uncollapsed-beta-bernoulli-explicitly-assessable-rejection)
+  (check-beta-bernoulli
+   uncollapsed-assessable-beta-bernoulli-maker
+   '((assume predictive (coin))
+     ;; Works with and without propagating constraints
+     ;; (infer rdb-backpropagate-constraints!)
+     (infer rejection)
      (predict predictive))))
 
 (define-test (collapsed-beta-bernoulli-explicit-assessor)
