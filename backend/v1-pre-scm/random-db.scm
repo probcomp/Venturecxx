@@ -102,8 +102,6 @@
            (error "What?!?")))))
 
 (define (do-assess assessor val subaddrs addr trace read-traces)
-  ;; Apply the assessor, but do not record it in the same trace.
-  ;; I need to bind the value to an address, for uniformity
   (values
    (apply-in-void-subtrace
     assessor (list val) (cdr subaddrs) addr trace read-traces)
@@ -112,8 +110,11 @@
 (define (do-coupled-assess op-coupled-assessor val subaddrs addr trace read-traces)
   (case* (annotated-base op-coupled-assessor)
     ((coupled-assessor get set assess)
-     ;; Apply the assessor, but do not record it in the same trace.
-     ;; I need to bind the value to an address, for uniformity
+     ;; TODO Do I even need the current state?  Should I just assume
+     ;; it varies across samples and not pass it?  In that case, maybe
+     ;; the old rejection bound algorithm (just mapping over the
+     ;; constraints without rebuilding) is fine, if all the bounder
+     ;; procedures ignore the auxiliary state anyway?
      (let ((cur-state (apply-in-void-subtrace get '() '() addr trace read-traces)))
        (case* (apply-in-void-subtrace
                assess (list val cur-state) (cdr subaddrs)
