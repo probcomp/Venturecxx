@@ -166,7 +166,32 @@
 
 ;; "Maximal" in the sense that it absorbs only when it must.  Returns
 ;; the density of the new trace, without subtracting off the density
-;; of the old trace.  This is suitable for rejection sampling.
+;; of the old trace, together with the computed upper bound on
+;; possible densities.  This is useful for rejection sampling.
+(define ((propose-maximal-resimulation-with-deterministic-overrides+bound replacements)
+         exp env addr new orig read-traces continue)
+  (define (resampled)
+    (values (continue) (cons 0 0)))            ; No weight, no bound
+  (define (absorbed val)
+    (receive (weight commit-state)
+      (assessment+effect-at val addr exp new read-traces)
+      (let ((bound (bound-for-at val addr exp new read-traces)))
+        (commit-state)
+        (values val (cons weight bound)))))
+  ;; Assume that replacements are added judiciously, namely to
+  ;; random choices from the original trace (whose operators
+  ;; didn't change due to other replacements?)
+  (search-wt-tree replacements addr
+    (lambda (it)
+      (if (random-choice? addr new)
+          (absorbed it)
+          (error "Trying to replace the value of a deterministic computation")))
+    resampled))
+
+;; "Maximal" in the sense that it absorbs only when it must.  Returns
+;; the density of the new trace, without subtracting off the density
+;; of the old trace.  This is suitable for rejection sampling once the
+;; bound has been computed.
 (define ((propose-maximal-resimulation-with-deterministic-overrides replacements)
          exp env addr new orig read-traces continue)
   (define (resampled)
@@ -186,32 +211,20 @@
           (error "Trying to replace the value of a deterministic computation")))
     resampled))
 
-(define (sum items)
-  (scheme-apply + items))
-
-(define (rejection-bound trace)
-  (wt-tree/fold
-   (lambda (addr val accum)
-     (+ accum
-        (rdb-trace-search-one-record trace addr
-          (lambda (rec)
-            (case* rec
-              ((evaluation-record exp _ _ read-traces _)
-               (bound-for-at val addr exp trace read-traces))))
-          (lambda ()
-            (error "What!!?")))))
-   0
-   (rdb-constraints trace)))
-
 (define (rejection trace)
-  (let ((bound (rejection-bound trace)))
-    (let loop ((tries 0))
-      ; (pp `("Trying rejection" ,trace ,(rdb-constraints trace)))
-      (receive (new-trace weight)
-        (rebuild-rdb trace (propose-maximal-resimulation-with-deterministic-overrides (rdb-constraints trace)))
-        ; (pp `(got ,weight with bound ,bound))
-        (if (< (log (random 1.0)) (- weight bound))
-            (rdb-trace-commit! new-trace trace)
-            (if (< tries 50)
-                (loop (+ tries 1))
-                (error "Rejected")))))))
+  (receive (new-trace weight+bound)
+    (rebuild-rdb trace (propose-maximal-resimulation-with-deterministic-overrides+bound (rdb-constraints trace)) (lambda (w+b total)
+                                                                                                                   (cons (+ (car w+b) (car total))
+                                                                                                                         (+ (cdr w+b) (cdr total)))) (cons 0 0))
+    ;; TODO Could use new-trace as a sample for a little bit of efficiency
+    (let ((bound (cdr weight+bound)))
+      (let loop ((tries 0))
+        ; (pp `("Trying rejection" ,trace ,(rdb-constraints trace)))
+        (receive (new-trace weight)
+          (rebuild-rdb trace (propose-maximal-resimulation-with-deterministic-overrides (rdb-constraints trace)))
+          ; (pp `(got ,weight with bound ,bound))
+          (if (< (log (random 1.0)) (- weight bound))
+              (rdb-trace-commit! new-trace trace)
+              (if (< tries 50)
+                  (loop (+ tries 1))
+                  (error "Rejected"))))))))
