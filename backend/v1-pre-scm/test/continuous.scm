@@ -90,7 +90,7 @@
   (check (> (k-s-test (collect-samples `(begin ,gaussian-by-inference-defn (my-normal 0 1)))
                       (lambda (x) (gaussian-cdf x 0 1)))
             *p-value-tolerance*)))
-
+#;
 (define-test (modelling-by-inference)
   (check (> (k-s-test (collect-samples `(begin
                                           ,gaussian-by-inference-defn

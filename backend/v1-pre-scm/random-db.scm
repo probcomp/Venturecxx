@@ -1,5 +1,6 @@
 (declare (usual-integrations apply eval))
 (declare (integrate-external "syntax"))
+(declare (integrate-external "v1-pre"))
 (declare (integrate-external "pattern-case/pattern-case"))
 
 (define-integrable has-assessor? (has-annotation? assessor-tag))
@@ -121,6 +122,29 @@
                   (lambda ()
                     (apply-in-void-subtrace set (list new-state) '() addr trace read-traces)))))))))
 
+(define (same-operators? new-op old-op)
+  (case* (cons new-op old-op)
+    ((pair (annotated new-base _)
+           (annotated old-base _))
+     ;; TODO Compare metadata?
+     (same-operators? new-base old-base))
+    ((pair (compound new-formals new-body new-env new-trace new-read-traces)
+           (compound old-formals old-body old-env old-trace old-read-traces))
+     ;; TODO Is this coarse enough?
+     (and (eqv? new-formals old-formals)
+          (eqv? new-body old-body)
+          (eqv? new-env old-env)
+          ; (eqv? new-trace old-trace) ; Might want to check compatibility of closed values, but the actual trace objects are different, of course.
+          (equal? new-read-traces old-read-traces)))
+    ((pair (foreign new-sim)
+           (foreign old-sim))
+     ;; One might think this would not work for foreign procedures
+     ;; generated dynamically by scheme-procedure-on-foo->v1-foreign,
+     ;; and one would be right; but those aren't assessable anyway, so
+     ;; it doesn't matter.
+     (eqv? new-sim old-sim))
+    (_  #f)))
+
 (define (compatible-operators-for? addr new-trace old-trace)
   ;; Could generalize to admit different addresses in the two traces
   (ensure address? addr)
@@ -141,7 +165,7 @@
           ;; normalized.
           ;; - Being able to switch operators could even be useful,
           ;;   e.g. for clustering against clusters of variable shapes.
-          (and (eqv? new-op old-op)
+          (and (same-operators? new-op old-op)
                (has-assessor? new-op)))
         (lambda () #f)))
      (lambda () #f))))

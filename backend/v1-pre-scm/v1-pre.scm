@@ -38,6 +38,7 @@
 ;;; Procedures
 
 (define-structure (foreign (safe-accessors #t)) simulate)
+(define-algebraic-matcher foreign foreign? foreign-simulate)
 
 (define-structure (compound (safe-accessors #t))
   formals
@@ -45,6 +46,7 @@
   env
   trace
   read-traces)
+(define-algebraic-matcher compound compound? compound-formals compound-body compound-env compound-trace compound-read-traces)
 
 ;;; Requests
 
@@ -68,6 +70,7 @@
 ;; itself annotated?  Do I want to pretend that's so by abstraction
 ;; barriers?
 (define-structure (annotated (safe-accessors #t)) base annotations)
+(define-algebraic-matcher annotated annotated? annotated-base annotated-annotations)
 
 (define-structure annotation-tag) ; Opaque, unique
 
