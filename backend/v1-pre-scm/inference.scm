@@ -199,9 +199,12 @@
 
 (define (rejection trace)
   (receive (new-trace weight+bound)
-    (rebuild-rdb trace (propose-maximal-resimulation-with-deterministic-overrides+bound (rdb-constraints trace)) (lambda (w+b total)
-                                                                                                                   (cons (+ (car w+b) (car total))
-                                                                                                                         (+ (cdr w+b) (cdr total)))) (cons 0 0))
+    (rebuild-rdb trace
+     (propose-maximal-resimulation-with-deterministic-overrides+bound (rdb-constraints trace))
+     (lambda (w+b total)
+       (cons (+ (car w+b) (car total))
+             (+ (cdr w+b) (cdr total))))
+     (cons 0 0))
     ;; TODO Could use new-trace as a sample for a little bit of efficiency
     (let ((bound (cdr weight+bound)))
       (let loop ((tries 0))
