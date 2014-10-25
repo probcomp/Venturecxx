@@ -140,29 +140,15 @@
     (let ((assessor (assessor-of (car sub-vals))))
       (if (not ((has-annotation? value-bound-tag) assessor))
           (error "Cannot absorb rejection at" val addr exp trace read-traces)
-          ;; Apply the bound computation procedure, but do not record
-          ;; it in the same trace.
-          ;; I need to bind the value and the constancy indicators to
-          ;; addresses.
-          (let* ((val-addr (extend-address addr 'value-to-bound))
-                 (bound-trace (store-extend trace))
-                 (arg-addrs (map (lambda (i)
-                                   (extend-address addr `(constancy ,i)))
-                                 (iota (length exp))))
-                 (constancies (map (lambda (sub-addr sub-val)
-                                     (if (is-constant? trace sub-addr)
-                                         (make-just sub-val)
-                                         #f))
-                                   subaddrs sub-vals)))
-            (eval `(quote ,val) #f bound-trace val-addr '()) ; Put the value in as a constant
-            (for-each (lambda (sub-a sub-c)
-                        ;; Put all the constancy indicators in as constants
-                        (eval `(quote ,sub-c) #f bound-trace sub-a '()))
-                      arg-addrs constancies)
-            (apply ((annotation-of value-bound-tag) assessor)
-                   (cons val-addr (cdr arg-addrs)) ; cdr because I don't pass the operator itself
-                   (extend-address addr 'bound-computation)
-                   bound-trace read-traces))))))
+          (let ((constancies (map (lambda (sub-addr sub-val)
+                                    (if (is-constant? trace sub-addr)
+                                        (make-just sub-val)
+                                        #f))
+                                  subaddrs sub-vals)))
+            (apply-in-void-subtrace
+             ((annotation-of value-bound-tag) assessor)
+             (cons val (cdr constancies)) ; cdr because I don't pass the operator itself
+             '() addr trace read-traces))))))
 
 ;; "Maximal" in the sense that it absorbs only when it must.  Returns
 ;; the density of the new trace, without subtracting off the density
