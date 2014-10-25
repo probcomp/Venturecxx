@@ -174,6 +174,8 @@
 ;;   (exp env addr new-trace orig-trace read-traces resimulation-answer) -> (value weight)
 ;; Rebuild-rdb will return a trace built with the supplied values,
 ;; together with the sum of the given weights.
+;; The user can control the type of the data accumulated by supplying the
+;; optional accum and init arguments, by analogy with fold.
 
 ;; For a Metropolis-Hastings proposal, the weight has to be
 ;;   (assess new-value wrt resimulation in the new-trace) - (assess new-value wrt proposal distribution)
@@ -182,15 +184,19 @@
 ;;   if they are conditioned on the current state
 ;; but may be computable with cancellations (e.g., for resimulation proposals)
 
-(define (rebuild-rdb orig proposal)
+(define (rebuild-rdb orig proposal #!optional accum init)
+  (if (default-object? accum)
+      (set! accum +))
+  (if (default-object? init)
+      (set! init 0))
   (let ((new (rdb-extend (rdb-parent orig)))
-        (log-weight 0))
-    (define (add-weight w)
-      (set! log-weight (+ log-weight w)))
+        (total init))
+    (define (count w)
+      (set! total (accum w total)))
     (define (regeneration-hook exp env addr read-traces continue)
       (receive (value weight)
         (proposal exp env addr new orig read-traces continue)
-        (add-weight weight)
+        (count weight)
         value))
     (set-rdb-eval-hook! new regeneration-hook)
     (for-each
@@ -210,7 +216,7 @@
      ;; node that contains the executing inference program itself.
      (reverse (rdb-addresses orig))
      (reverse (rdb-records orig)))
-    (values new log-weight)))
+    (values new total)))
 
 ;; "Minimal" in the sense that it absorbs wherever it can
 ;; Returns an M-H style weight
