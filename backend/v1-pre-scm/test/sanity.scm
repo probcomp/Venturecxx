@@ -105,3 +105,19 @@
     ;; inference (one in the new trace and one in the old), and two
     ;; assessments for each application during constraint enforcement.
     (check (= (car assess-count) 14))))
+
+(define-test (inference-mixing-smoke)
+  (let ()
+    (define program
+      `(begin
+         ,map-defn
+         ,mcmc-defn
+         (model-in (rdb-extend (get-current-trace))
+           (assume x (flip 1/2))
+           (let ((pre-inf (predict x)))
+             (infer (mcmc 1))
+             (cons pre-inf (predict x))))))
+    (check (> (chi-sq-test (collect-samples program)
+                           '(((#t . #t) . 1/4) ((#t . #f) . 1/4)
+                             ((#f . #t) . 1/4) ((#f . #f) . 1/4)))
+              *p-value-tolerance*))))
