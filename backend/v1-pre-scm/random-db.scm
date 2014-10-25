@@ -105,7 +105,8 @@
   ;; Apply the assessor, but do not record it in the same trace.
   ;; I need to bind the value to an address, for uniformity
   (values
-   (apply-in-void-subtrace (assessor-of operator) (list val) (cdr subaddrs) addr trace read-traces)
+   (apply-in-void-subtrace
+    (assessor-of operator) (list val) (cdr subaddrs) addr trace read-traces)
    (lambda () 'ok)))
 
 (define (do-coupled-assess operator val subaddrs addr trace read-traces)
@@ -119,8 +120,8 @@
                addr trace read-traces)
          ((pair assessment new-state)
           (values assessment
-                  (lambda ()
-                    (apply-in-void-subtrace set (list new-state) '() addr trace read-traces)))))))))
+            (lambda ()
+              (apply-in-void-subtrace set (list new-state) '() addr trace read-traces)))))))))
 
 (define (same-operators? new-op old-op)
   (case* (cons new-op old-op)
