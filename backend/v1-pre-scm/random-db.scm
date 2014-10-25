@@ -95,22 +95,22 @@
     (if (not (annotated? operator))
         (error "What!?"))
     (cond ((has-assessor? operator)
-           (do-assess operator val subaddrs addr trace read-traces))
+           (do-assess (assessor-of operator) val subaddrs addr trace read-traces))
           ((has-coupled-assessor? operator)
-           (do-coupled-assess operator val subaddrs addr trace read-traces))
+           (do-coupled-assess (coupled-assessor-of operator) val subaddrs addr trace read-traces))
           (else
            (error "What?!?")))))
 
-(define (do-assess operator val subaddrs addr trace read-traces)
+(define (do-assess assessor val subaddrs addr trace read-traces)
   ;; Apply the assessor, but do not record it in the same trace.
   ;; I need to bind the value to an address, for uniformity
   (values
    (apply-in-void-subtrace
-    (assessor-of operator) (list val) (cdr subaddrs) addr trace read-traces)
+    assessor (list val) (cdr subaddrs) addr trace read-traces)
    (lambda () 'ok)))
 
-(define (do-coupled-assess operator val subaddrs addr trace read-traces)
-  (case* (coupled-assessor-of operator)
+(define (do-coupled-assess op-coupled-assessor val subaddrs addr trace read-traces)
+  (case* op-coupled-assessor
     ((coupled-assessor get set assess)
      ;; Apply the assessor, but do not record it in the same trace.
      ;; I need to bind the value to an address, for uniformity
