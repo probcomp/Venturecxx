@@ -132,7 +132,12 @@
                         (iota (length exp))))
          (sub-vals (map (lambda (a)
                           (traces-lookup (cons trace read-traces) a))
-                        subaddrs)))
+                        subaddrs))
+         (constancies (map (lambda (sub-addr sub-val)
+                             (if (is-constant? trace sub-addr)
+                                 (make-just sub-val)
+                                 #f))
+                           subaddrs sub-vals)))
     (if (not (annotated? (car sub-vals)))
         (error "What!?"))
     (if (not (has-assessor? (car sub-vals)))
@@ -140,15 +145,10 @@
     (let ((assessor (assessor-of (car sub-vals))))
       (if (not ((has-annotation? value-bound-tag) assessor))
           (error "Cannot absorb rejection at" val addr exp trace read-traces)
-          (let ((constancies (map (lambda (sub-addr sub-val)
-                                    (if (is-constant? trace sub-addr)
-                                        (make-just sub-val)
-                                        #f))
-                                  subaddrs sub-vals)))
-            (apply-in-void-subtrace
-             ((annotation-of value-bound-tag) assessor)
-             (cons val (cdr constancies)) ; cdr because I don't pass the operator itself
-             '() addr trace read-traces))))))
+          (apply-in-void-subtrace
+           ((annotation-of value-bound-tag) assessor)
+           (cons val (cdr constancies)) ; cdr because I don't pass the operator itself
+           '() addr trace read-traces)))))
 
 ;; "Maximal" in the sense that it absorbs only when it must.  Returns
 ;; the density of the new trace, without subtracting off the density
