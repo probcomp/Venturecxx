@@ -140,9 +140,13 @@
                            subaddrs sub-vals)))
     (if (not (annotated? (car sub-vals)))
         (error "What!?"))
-    (if (not (has-assessor? (car sub-vals)))
-        (error "What?!?"))
-    (do-bound (assessor-of (car sub-vals)) val constancies addr trace read-traces)))
+    (cond ((has-assessor? (car sub-vals))
+           (do-bound (assessor-of (car sub-vals)) val constancies addr trace read-traces))
+          ((has-coupled-assessor? (car sub-vals))
+           (do-bound-coupled (coupled-assessor-of (car sub-vals))
+                             val constancies addr trace read-traces))
+          (else
+           (error "What?!?")))))
 
 (define (do-bound assessor val constancies addr trace read-traces)
   (if (not ((has-annotation? value-bound-tag) assessor))
@@ -151,6 +155,17 @@
        ((annotation-of value-bound-tag) assessor)
        (cons val (cdr constancies)) ; cdr because I don't pass the operator itself
        '() addr trace read-traces)))
+
+(define (do-bound-coupled op-coupled-assessor val constancies addr trace read-traces)
+  (if (not ((has-annotation? value-bound-tag) op-coupled-assessor))
+      (error "Cannot absorb rejection at" val addr exp trace read-traces)
+      (case* (annotated-base op-coupled-assessor)
+        ((coupled-assessor get _ _)
+         (let ((cur-state (apply-in-void-subtrace get '() '() addr trace read-traces)))
+           (apply-in-void-subtrace
+            ((annotation-of value-bound-tag) op-coupled-assessor)
+            (cons val (cons cur-state (cdr constancies))) ; cdr because I don't pass the operator itself
+            '() addr trace read-traces))))))
 
 ;; "Maximal" in the sense that it absorbs only when it must.  Returns
 ;; the density of the new trace, without subtracting off the density
