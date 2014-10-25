@@ -198,19 +198,26 @@
                             (set-cdr! aux-box (+ (cdr aux-box) 1))))
               answer)))
         coupled-assessor-tag
-        (make-coupled-assessor
-         (lambda () (cons (car aux-box) (cdr aux-box)))
-         (lambda (new-box)
-           (set-car! aux-box (car new-box))
-           (set-cdr! aux-box (cdr new-box)))
+        (annotate
+         (make-coupled-assessor
+          (lambda () (cons (car aux-box) (cdr aux-box)))
+          (lambda (new-box)
+            (set-car! aux-box (car new-box))
+            (set-cdr! aux-box (cdr new-box)))
+          (lambda (val aux)
+            (let ((weight (/ (+ (car aux) 1)
+                             (+ (car aux) (cdr aux) 2))))
+              (cons
+               ((assessor-of flip) val weight)
+               (if val
+                   (cons (+ (car aux) 1) (cdr aux))
+                   (cons (car aux) (+ (cdr aux) 1)))))))
+         value-bound-tag
          (lambda (val aux)
            (let ((weight (/ (+ (car aux) 1)
                             (+ (car aux) (cdr aux) 2))))
-             (cons
-              ((assessor-of flip) val weight)
-              (if val
-                  (cons (+ (car aux) 1) (cdr aux))
-                  (cons (car aux) (+ (cdr aux) 1)))))))))))
+             (((annotation-of value-bound-tag) (assessor-of flip))
+              val weight))))))))
 
 (define-test (uncollapsed-beta-bernoulli)
   (check-beta-bernoulli
@@ -319,6 +326,21 @@
          (assume x (coin))
          (let ((pre-inf (predict x)))
            (infer (mcmc 1))
+           (cons pre-inf (predict x))))))
+    (define answer
+      (square-discrete standard-beta-bernoulli-posterior))
+    (check (> (chi-sq-test (collect-samples program 200) answer)
+              *p-value-tolerance*))))
+
+(define-test (assessable-collapsed-beta-bernoulli-mixes-rejection)
+  (let ()
+    (define program
+      (standard-beta-bernoulli-test-program
+       collapsed-assessable-beta-bernoulli-maker
+       '((infer enforce-constraints)
+         (assume x (coin))
+         (let ((pre-inf (predict x)))
+           (infer rejection)
            (cons pre-inf (predict x))))))
     (define answer
       (square-discrete standard-beta-bernoulli-posterior))

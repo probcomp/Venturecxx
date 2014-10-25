@@ -110,7 +110,7 @@
    (lambda () 'ok)))
 
 (define (do-coupled-assess op-coupled-assessor val subaddrs addr trace read-traces)
-  (case* op-coupled-assessor
+  (case* (annotated-base op-coupled-assessor)
     ((coupled-assessor get set assess)
      ;; Apply the assessor, but do not record it in the same trace.
      ;; I need to bind the value to an address, for uniformity
