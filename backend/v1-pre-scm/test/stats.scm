@@ -125,6 +125,15 @@
              p-value ,p-value)))
     p-value))
 
+(define (discrete-iid-map f d1 d2)
+  (append-map (lambda (p1)
+                (map (lambda (p2)
+                       (cons (f (car p1) (car p2))
+                             (* (cdr p1) (cdr p2))))
+                     d2))
+              d1))
+(define (square-discrete d) (discrete-iid-map cons d d))
+
 #|
 1 ]=> (chi-sq-test '(#t #t #t #f #f) '((#t . 0.5) (#f . 0.5)))
 

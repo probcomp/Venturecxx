@@ -125,20 +125,25 @@
     (check (> (chi-sq-test (collect-samples (two-mu-coins-with-brush-example 'rejection))
                            '((#t . 2/3) (#f . 1/3))) *p-value-tolerance*))))
 
+(define (standard-beta-bernoulli-test-program maker-form prediction-program)
+  `(begin
+     ,map-defn
+     ,mcmc-defn
+     ,observe-defn
+     (model-in (rdb-extend (get-current-trace))
+       (assume make-uniform-bernoulli ,maker-form)
+       (assume coin (make-uniform-bernoulli))
+       (observe (coin) #t)
+       (observe (coin) #t)
+       (observe (coin) #t)
+       ,@prediction-program)))
+(define standard-beta-bernoulli-posterior '((#t . 4/5) (#f . 1/5)))
+
 (define (check-beta-bernoulli maker-form prediction-program)
-  (define program
-    `(begin
-       ,map-defn
-       ,mcmc-defn
-       ,observe-defn
-       (model-in (rdb-extend (get-current-trace))
-         (assume make-uniform-bernoulli ,maker-form)
-         (assume coin (make-uniform-bernoulli))
-         (observe (coin) #t)
-         (observe (coin) #t)
-         (observe (coin) #t)
-         ,@prediction-program)))
-  (check (> (chi-sq-test (collect-samples program) '((#t . 4/5) (#f . 1/5)))
+  (check (> (chi-sq-test
+             (collect-samples
+              (standard-beta-bernoulli-test-program maker-form prediction-program))
+             standard-beta-bernoulli-posterior)
             *p-value-tolerance*)))
 
 (define uncollapsed-beta-bernoulli-maker
@@ -264,3 +269,19 @@
      ;; values, and I want to emphasize that MCMC is not needed
      ;; for a collapsed model.
      (predict (coin)))))
+
+(define-test (collapsed-beta-bernoulli-mixes)
+  (let ()
+    (define program
+      (standard-beta-bernoulli-test-program
+       collapsed-beta-bernoulli-maker
+       '((infer rdb-backpropagate-constraints!)
+         (infer enforce-constraints)
+         (assume x (coin))
+         (let ((pre-inf (predict x)))
+           (infer (mcmc 10))
+           (cons pre-inf (predict x))))))
+    (define answer
+      (square-discrete standard-beta-bernoulli-posterior))
+    (check (> (chi-sq-test (collect-samples program 200) answer)
+              *p-value-tolerance*))))
