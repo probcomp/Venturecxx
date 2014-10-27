@@ -122,7 +122,7 @@
    (lambda () 'ok)))
 
 (define (do-coupled-assess op-coupled-assessor val subaddrs addr trace read-traces)
-  (case* (annotated-base op-coupled-assessor)
+  (case* (annotated-base* op-coupled-assessor)
     ((coupled-assessor get set assess)
      (let ((cur-state (apply-in-void-subtrace get '() '() addr trace read-traces)))
        (case* (apply-in-void-subtrace
@@ -177,7 +177,8 @@
           ;; - Being able to switch operators could even be useful,
           ;;   e.g. for clustering against clusters of variable shapes.
           (and (same-operators? new-op old-op)
-               (has-assessor? new-op)))
+               (or (has-assessor? new-op)
+                   (has-coupled-assessor? new-op))))
         (lambda () #f)))
      (lambda () #f))))
 

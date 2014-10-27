@@ -121,3 +121,34 @@
                            '(((#t . #t) . 1/4) ((#t . #f) . 1/4)
                              ((#f . #t) . 1/4) ((#f . #f) . 1/4)))
               *p-value-tolerance*))))
+
+(define-test (coupled-assessability-leads-to-absorption)
+  (let ((sim-count (list 0))
+        (assess-count (list 0)))
+    (top-eval
+      `(begin
+         ,map-defn
+         ,mcmc-defn
+         (define my-sim
+           (annotate
+            (lambda ()
+              (set-car! ',sim-count (+ (car ',sim-count) 1))
+              1)
+            coupled-assessor-tag
+            (make-coupled-assessor
+             (lambda () '())
+             (lambda (x) 'ok)
+             (lambda (val state)
+               (set-car! ',assess-count (+ (car ',assess-count) 1))
+               (cons 0 '())))))
+         (model-in (rdb-extend (get-current-trace))
+           (assume x (my-sim))
+           (assume y (my-sim))
+           (infer (mcmc 5)))))
+    ;; Two simulations for the initial forward run, zero when
+    ;; enforcing constraints, plus one (not two) per mcmc step.
+    (check (= (car sim-count) 7))
+    ;; Two assessments for each non-resimulated application during
+    ;; inference (one in the new trace and one in the old), and two
+    ;; assessments for each application during constraint enforcement.
+    (check (= (car assess-count) 14))))

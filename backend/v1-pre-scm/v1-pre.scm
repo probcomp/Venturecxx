@@ -98,6 +98,11 @@
       (make-annotated (annotated-base thing) (cons (cons tag value) (annotated-annotations thing)))
       (make-annotated thing `((,tag . ,value)))))
 
+(define (annotated-base* thing)
+  (if (annotated? thing)
+      (annotated-base thing)
+      thing))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Essential evaluation                                           ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
