@@ -5,7 +5,7 @@ from node import Node,ConstantNode,LookupNode,RequestNode,OutputNode,Args
 import math
 from regen import constrain, processMadeSP, evalFamily, restore
 from detach import unconstrain, unevalFamily
-from value import SPRef, ExpressionType, VentureValue, VentureSymbol
+from value import SPRef, ExpressionType, VentureValue, VentureSymbol, VentureNumber
 from scaffold import Scaffold
 from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
                    EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,
@@ -88,28 +88,30 @@ class Trace(object):
     if len(self.scopes[scope][block]) == 0: del self.scopes[scope][block]
     if len(self.scopes[scope]) == 0: del self.scopes[scope]
 
+  def _normalizeEvaluatedScopeOrBlock(self, val):
+    if isinstance(val, VentureNumber):
+      return val.getNumber()
+    elif isinstance(val, VentureSymbol):
+      return val.getSymbol()
+    return val
+
   # [FIXME] repetitive, but not sure why these exist at all
   def _normalizeEvaluatedScope(self, scope):
-    if scope == "default": return scope
-    else:
-      assert isinstance(scope, VentureValue)
-      if isinstance(scope, VentureSymbol): return scope.getSymbol()
-      else: return scope.getNumber()
+    return self._normalizeEvaluatedScopeOrBlock(scope)
 
   def _normalizeEvaluatedScopeAndBlock(self, scope, block):
+    #import pdb; pdb.set_trace()
     if scope == "default":
-      assert isinstance(block, Node)
+      #assert isinstance(block, Node)
       return (scope, block)
     else:
-      assert isinstance(scope, VentureValue)
-      assert isinstance(block, VentureValue)
-      # TODO probably want to allow arbitrary values as scopes and
-      # blocks; but this requires converting them from the inference
-      # program.
-      if isinstance(scope, VentureSymbol):
-        return (scope.getSymbol(), block.getNumber())
-      else:
-        return (scope.getNumber(), block.getNumber())
+      #assert isinstance(scope, VentureValue)
+      #assert isinstance(block, VentureValue)
+      
+      scope = self._normalizeEvaluatedScopeOrBlock(scope)
+      block = self._normalizeEvaluatedScopeOrBlock(block)
+      
+      return (scope, block)
 
   def registerConstrainedChoice(self,node):
     assert node not in self.ccs, "Cannot constrain the same random choice twice."
@@ -256,26 +258,31 @@ class Trace(object):
   def isConstrainedAt(self,node): return node in self.ccs
 
   #### For kernels
-  def sampleBlock(self,scope): return self.scopes[scope].sample()[0]
+  def getScope(self, scope): return self.scopes[self._normalizeEvaluatedScopeOrBlock(scope)]
+  
+  def sampleBlock(self,scope): return self.getScope(scope).sample()[0]
   def logDensityOfBlock(self,scope): return -1 * math.log(self.numBlocksInScope(scope))
-  def blocksInScope(self,scope): return self.scopes[scope].keys()
+  def blocksInScope(self,scope): return self.getScope(scope).keys()
   def numBlocksInScope(self,scope):
-    if scope in self.scopes: return len(self.scopes[scope].keys())
+    scope = self._normalizeEvaluatedScopeOrBlock(scope)
+    if scope in self.scopes: return len(self.getScope(scope).keys())
     else: return 0
 
   def getAllNodesInScope(self,scope):
-    return set.union(*[self.getNodesInBlock(scope,block) for block in self.scopes[scope].keys()])
+    return set.union(*[self.getNodesInBlock(scope,block) for block in self.getScope(scope).keys()])
 
   def getOrderedSetsInScope(self,scope,interval=None):
     if interval is None:
-      return [self.getNodesInBlock(scope,block) for block in sorted(self.scopes[scope].keys())]
+      return [self.getNodesInBlock(scope,block) for block in sorted(self.getScope(scope).keys())]
     else:
-      blocks = [b for b in self.scopes[scope].keys() if b >= interval[0] if b <= interval[1]]
+      blocks = [b for b in self.getScope(scope).keys() if b >= interval[0] if b <= interval[1]]
       return [self.getNodesInBlock(scope,block) for block in sorted(blocks)]
 
   def numNodesInBlock(self,scope,block): return len(self.getNodesInBlock(scope,block))
 
   def getNodesInBlock(self,scope,block):
+    #import pdb; pdb.set_trace()
+    #scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
     nodes = self.scopes[scope][block]
     if scope == "default": return nodes
     else:
@@ -311,7 +318,7 @@ class Trace(object):
 
   def scopeHasEntropy(self,scope):
     # right now scope in self.scopes iff it has entropy
-    return scope in self.scopes and self.numBlocksInScope(scope) > 0
+    return self.numBlocksInScope(scope) > 0
 
   def recordProposal(self, name, time, accepted):
     name = str(name)
@@ -399,6 +406,7 @@ class Trace(object):
   def infer_exp(self,exp):
     assert len(exp) >= 4
     (operator, scope, block) = exp[0:3]
+    scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
     maybe_transitions = exp[-1]
     if isinstance(maybe_transitions, bool):
       # The last item was the parallelism indicator
