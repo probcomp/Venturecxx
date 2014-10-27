@@ -190,7 +190,7 @@
 
 ;; For a Metropolis-Hastings proposal, the weight has to be
 ;;   (assess new-value wrt resimulation in the new-trace) - (assess new-value wrt proposal distribution)
-;;   - [(assess orig-value wrt resimulation in orig-trace) - (assess orig-trace wrt proposal distribution)]
+;;   - [(assess orig-value wrt resimulation in orig-trace) - (assess orig-value wrt proposal distribution)]
 ;;   where the proposal distributions may be different in the two cases
 ;;   if they are conditioned on the current state.
 ;; The weight may be computable with cancellations (e.g., for
@@ -236,7 +236,13 @@
          exp env addr new orig read-traces continue)
   (ensure (or/c address? false?) target)
   (define (resampled)
-    (values (continue) 0))              ; No weight
+    ;; No weight, b/c of two cancellations for the final acceptance ratio:
+    ;; - assessment of new value cancels against the probability of proposing it
+    ;;   - since we are proposing from the prior
+    ;; - assessment of old value cancels against the probability of proposing it back
+    ;;   - since we are proposing from the prior, AND
+    ;;   - all the arguments are the same because the target is unique
+    (values (continue) 0))
   (define (absorbed val)
     ;; Not re-executing the application expression.  Technically, the
     ;; only thing I am trying to avoid re-executing is the application
