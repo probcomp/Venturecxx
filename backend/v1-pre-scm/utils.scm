@@ -30,6 +30,32 @@
             (lose)
             (win result))))))
 
+(define (wt-tree->alist tree)
+  (let ((answer '()))
+    (wt-tree/for-each (lambda (k v) (set! answer (cons (cons k v) answer))) tree)
+    (reverse answer)))
+
+(define (data< d1 d2)
+  ;; Dammit, how many times have I written this program?
+  (cond ((null? d1)
+         (if (null? d2) #f #t))
+        ((boolean? d1)
+         (if (boolean? d2)
+             (and d1 (not d2))
+             #t))
+        ((number? d1)
+         (if (number? d2)
+             (< d1 d2)
+             #t))
+        ((pair? d1)
+         (if (pair? d2)
+             (cond ((data< (car d1) (car d2)) #t)
+                   ((equal? (car d1) (car d2))
+                    (data< (cdr d1) (cdr d2)))
+                   (else #f))
+             #f))
+        (else (error "Unsupported data" d1 d2))))
+
 (define-syntax ensure
   (syntax-rules ()
     ((_ test arg ...)
