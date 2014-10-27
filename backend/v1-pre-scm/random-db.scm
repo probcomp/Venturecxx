@@ -129,9 +129,11 @@
                assess (list val cur-state) (cdr subaddrs)
                addr trace read-traces)
          ((pair assessment new-state)
-          (values assessment
-            (lambda ()
-              (apply-in-void-subtrace set (list new-state) '() addr trace read-traces)))))))))
+          (begin
+            ; (pp `(assess-result ,assess ,assessment ,new-state))
+            (values assessment
+                    (lambda ()
+                      (apply-in-void-subtrace set (list new-state) '() addr trace read-traces))))))))))
 
 (define (same-operators? new-op old-op)
   (case* (cons new-op old-op)
@@ -253,11 +255,12 @@
     (receive (new-weight commit-state)
       (assessment+effect-at val addr exp new read-traces)
       (commit-state)
-      (values val
-              ;; TODO Could optimize this not to recompute weights if
-              ;; the parameters did not change.
-              (- new-weight
-                 (weight-at addr orig)))))
+      (let ((old-weight (weight-at addr orig)))
+        ; (pp `(,new-weight ,old-weight))
+        (values val
+                ;; TODO Could optimize this not to recompute weights if
+                ;; the parameters did not change.
+                (- new-weight old-weight)))))
   (if (eq? addr target)
       (resampled) ; The point was to resimulate the target address
       ;; ASSUME that replacements are added judiciously, namely to

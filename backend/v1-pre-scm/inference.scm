@@ -13,6 +13,7 @@
 (define *resimulation-mh-reject-hook* (lambda () 'ok))
 
 (define (mcmc-step trace)
+  ; (pp 'stepping)
   (let ((target-addr (select-uniformly (random-choices trace))))
     ;; (rdb-trace-search-one-record trace target-addr pp (lambda () (error "What?")))
     (receive (new-trace weight)
@@ -20,6 +21,7 @@
                           target-addr (rdb-constraints trace)))
       (let ((correction (- (log (length (random-choices trace)))
                            (log (length (random-choices new-trace))))))
+        ; (pp `(step ,target-addr ,weight ,correction))
         (if (< (log (random 1.0)) (+ weight correction))
             (begin
               ; (display ".")

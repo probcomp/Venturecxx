@@ -187,6 +187,7 @@
           (let ((weight (/ (+ (car aux-box) 1)
                            (+ (car aux-box) (cdr aux-box) 2))))
             (let ((answer (flip weight)))
+              ; (pp (list 'simulated answer 'from aux-box weight))
               (trace-in (store-extend (get-current-trace))
                         (if answer
                             (set-car! aux-box (+ (car aux-box) 1))
@@ -202,11 +203,13 @@
           (lambda (val aux)
             (let ((weight (/ (+ (car aux) 1)
                              (+ (car aux) (cdr aux) 2))))
-              (cons
-               ((assessor-of flip) val weight)
-               (if val
-                   (cons (+ (car aux) 1) (cdr aux))
-                   (cons (car aux) (+ (cdr aux) 1)))))))
+              (begin
+                ; (pp (list 'assessing val aux weight))
+                (cons
+                 ((assessor-of flip) val weight)
+                 (if val
+                     (cons (+ (car aux) 1) (cdr aux))
+                     (cons (car aux) (+ (cdr aux) 1))))))))
          value-bound-tag
          (lambda (val aux)
            (let ((weight (/ (+ (car aux) 1)
