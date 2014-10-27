@@ -716,12 +716,11 @@ class VentureDict(VentureValue):
   def getDict(self): return self.dict
 
   def asStackDict(self, _trace=None):
-    # TODO Difficult to reflect as a Python dict because the keys
-    # would presumably need to be converted to stack dicts too, which
-    # is a problem because they need to be hashable.
-    return v.dict(self)
+    return v.dict([(key.asStackDict(_trace), val.asStackDict(_trace)) for (key, val) in self.dict.items()])
   @staticmethod
-  def fromStackDict(thing): return thing["value"]
+  def fromStackDict(thing):
+    f = VentureValue.fromStackDict
+    return VentureDict({f(key):f(val) for (key, val) in thing["value"]})
 
   def equalSameType(self, other):
     return len(set(self.dict.iteritems()) ^ set(other.dict.iteritems())) == 0

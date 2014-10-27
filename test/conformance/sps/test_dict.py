@@ -1,6 +1,7 @@
 from venture.test.stats import statisticalTest, reportKnownContinuous
 from venture.test.config import get_ripl, collectSamples, on_inf_prim
 import scipy.stats as stats
+import venture.value.dicts as v
 
 # TODO
 # This file contains one possibility for the Dictionary interface
@@ -73,3 +74,10 @@ def testDict3():
   assert ripl.report("p1")
   assert ripl.report("p2")
   assert not ripl.report("p3")
+
+@on_inf_prim("none")
+def testStack():
+  ripl = get_ripl()
+  val = ripl.sample("(dict (array 1 2) (array 3 4))")
+  assert val == ripl.sample(v.dict(val))
+  
