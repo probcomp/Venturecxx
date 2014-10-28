@@ -30,7 +30,7 @@ def testLiteToStack():
 def propLiteToStack(val):
   assert val.equal(VentureValue.fromStackDict(val.asStackDict()))
 
-blacklist = ['make_csp']
+blacklist = ['make_csp', 'apply_function', 'make_gp']
 
 # Select particular SPs to test thus:
 # nosetests --tc=relevant:'["foo", "bar", "baz"]'
