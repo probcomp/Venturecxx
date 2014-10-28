@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 # -*- coding: utf-8 -*-
 
+import venture.value.dicts as v
+
 def expToDict(exp):
   if isinstance(exp, int):
     return {"kernel":"mh", "scope":"default", "block":"one", "transitions": exp}
@@ -94,3 +96,7 @@ def expToDict(exp):
       return {"kernel":"rejection","scope":exp[1],"block":exp[2],"transitions":1}
   else:
     raise Exception("Cannot parse infer instruction")
+
+def expToStackDict(exp):
+  d = expToDict(exp)
+  return v.dict(d.items())

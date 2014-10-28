@@ -65,7 +65,7 @@ import random
 import numpy as np
 
 from venture.exception import VentureException, format_worker_trace
-from venture.engine.utils import expToDict
+from venture.engine.utils import expToStackDict
 import venture.lite.foreign as f
 
 ######################################################################
@@ -373,7 +373,9 @@ class ProcessBase(object):
     else:
       # The trace cannot handle the inference primitive syntax
       # natively, so translate.
-      self.trace.infer(expToDict(exp))
+      d = expToStackDict(exp)
+      print d
+      self.trace.infer(d)
 
 ######################################################################
 
