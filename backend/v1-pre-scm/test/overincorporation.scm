@@ -134,4 +134,13 @@
        ;; We want enough statistical strength to be confident that
        ;; system does not have the assess bug
        (check (< vs-assess-bug (* *p-value-tolerance* 0.1))))))
-)
+
+ (define-test (result-distribution)
+   (let* ((samples (map cadr (collect-samples program (* 6 500))))
+          (vs-truth (chi-sq-test samples initial-dist))
+          (assess-bug-dist (freqs-normalize (freqs-bind initial-dist assess-bug-post-infer-dist) data<))
+          (vs-assess-bug (chi-sq-test samples assess-bug-dist)))
+     (check (> vs-truth *p-value-tolerance*))
+     (check (< vs-assess-bug (* *p-value-tolerance* 0.1)))))
+
+ )
