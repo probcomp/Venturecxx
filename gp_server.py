@@ -44,8 +44,10 @@ ripl.assume('make_squared_exponential', VentureFunction(makeSquaredExponential, 
 
 program = """
   [assume mu (normal 0 5)]
-  [assume a (inv_gamma 1 1)]
-  [assume l (inv_gamma 1 1)]
+;  [assume a (inv_gamma 2 5)]
+  [assume a 1]
+  [assume l (inv_gamma 5 100)]
+;  [assume l (uniform_continuous 10 100)]
   
   [assume mean (app make_const_func mu)]
   [assume cov (app make_squared_exponential a l)]
