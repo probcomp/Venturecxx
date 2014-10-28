@@ -230,6 +230,7 @@ VentureValuePtr fromPython(object o)
 VentureValuePtr parseValue(dict d)
 {
   string type = extract<string>(d["type"]);
+  
   object value = d["value"];
 
   if (type == "number") { return VentureValuePtr(new VentureNumber(extract<double>(value))); }

@@ -174,8 +174,6 @@ boost::python::dict VentureDictionary::toPython(Trace * trace) const
     items.append(boost::python::make_tuple(key, val));
   }
   
-  cout << ("" + boost::python::str(items)) << endl;
-  
   value["value"] = items;
   return value;
 }

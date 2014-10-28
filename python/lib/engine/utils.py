@@ -16,10 +16,19 @@
 # -*- coding: utf-8 -*-
 
 import venture.value.dicts as v
+from venture.lite.value import VentureValue
+
+def unwrapVentureValue(val):
+  if isinstance(val, VentureValue):
+    return val.asStackDict(None)["value"]
+  return val
 
 def expToDict(exp):
   if isinstance(exp, int):
     return {"kernel":"mh", "scope":"default", "block":"one", "transitions": exp}
+  
+  exp = map(unwrapVentureValue, exp)
+  
   tag = exp[0]
   if tag == "mh":
     assert len(exp) == 4
@@ -97,6 +106,3 @@ def expToDict(exp):
   else:
     raise Exception("Cannot parse infer instruction")
 
-def expToStackDict(exp):
-  d = expToDict(exp)
-  return v.dict(d.items())
