@@ -78,6 +78,6 @@ def testDict3():
 @on_inf_prim("none")
 def testStack():
   ripl = get_ripl()
-  val = ripl.sample("(dict (array 1 2) (array 3 4))")
+  val = ripl.sample("(dict (array 1) (array 4))")
   assert val == ripl.sample(v.dict(val))
   
