@@ -18,6 +18,9 @@
      (environment-link-name client-environment test-environment n))
    '( define-each-check
       define-test
+      in-test-group
+      *current-test-group* ; pulled in by macro
+      tg:find-or-make-subgroup ; pulled in by macro
       check
       register-test
       make-single-test
@@ -45,3 +48,4 @@
 (load-relative "sanity")
 (load-relative "discrete")
 (load-relative "continuous")
+(load-relative "overincorporation")
