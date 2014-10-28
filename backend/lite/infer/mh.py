@@ -16,6 +16,13 @@ def registerDeterministicLKernels(trace,scaffold,pnodes,currentValues):
 def mixMH(trace,indexer,operator):
   start = time.time()
   index = indexer.sampleIndex(trace)
+  
+  # read out some node addresses
+  getAddr = lambda node: node.address
+  principle = map(getAddr, index.getPrincipalNodes())
+  absorbing = map(getAddr, index.absorbing)
+  aaa = map(getAddr, index.aaa)
+  
   rhoMix = indexer.logDensityOfIndex(trace,index)
   # May mutate trace and possibly operator, proposedTrace is the mutated trace
   # Returning the trace is necessary for the non-mutating versions
@@ -31,7 +38,15 @@ def mixMH(trace,indexer,operator):
 #    sys.stdout.write("!")
     operator.reject() # May mutate trace
     accepted = False
-  trace.recordProposal([operator.name()] + indexer.name(), time.time() - start, accepted)
+  
+  trace.recordProposal(
+    name = [operator.name()] + indexer.name(),
+    time = time.time() - start,
+    accepted = accepted,
+    principle = principle,
+    absorbing = absorbing,
+    aaa = aaa
+  )
 
 class BlockScaffoldIndexer(object):
   def __init__(self,scope,block,interval=None,useDeltaKernels=False,deltaKernelArgs=None,updateValues=False):

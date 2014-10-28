@@ -44,7 +44,7 @@ class Trace(object):
     self.families = {}
     self.scopes = {} # :: {scope-name:smap{block-id:set(node)}}
 
-    self.stats = {} # :: {name:[(time taken, was accepted?)]}
+    self.stats = []
 
   def scope_keys(self):
     # A hack for allowing scope names not to be quoted in inference
@@ -320,11 +320,8 @@ class Trace(object):
     # right now scope in self.scopes iff it has entropy
     return self.numBlocksInScope(scope) > 0
 
-  def recordProposal(self, name, time, accepted):
-    name = str(name)
-    if name not in self.stats:
-      self.stats[name] = []
-    self.stats[name].append((time, accepted))
+  def recordProposal(self, **kwargs):
+    self.stats.append(kwargs)
 
   #### External interface to engine.py
   def eval(self,id,exp):
