@@ -37,6 +37,7 @@
 
 (load-relative "pattern-case/load")
 (load-relative-compiled "utils")
+(load-relative-compiled "small-exact")
 (load-relative-compiled "syntax")
 (load-relative-compiled "v1-pre")
 (load-relative-compiled "primitives")
