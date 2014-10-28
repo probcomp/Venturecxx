@@ -56,6 +56,19 @@
              #f))
         (else (error "Unsupported data" d1 d2))))
 
+;; This is Haskell's do notation, taking the bind function as an
+;; argument.  Caution: will re-evaluate the expression for bind many
+;; times (which is fine if it's a variable reference, but not so fine
+;; if it's a complicated computation).
+(define-syntax chain-with
+  (syntax-rules (<- <=)
+    ((chain-with bind (var <- exp) stmt ...)
+     (bind exp (lambda (var) (chain-with bind stmt ...))))
+    ((chain-with bind (var <= exp) stmt ...)
+     (let ((var exp)) (chain-with bind stmt ...)))
+    ((chain-with bind stmt)
+     stmt)))
+
 (define-syntax ensure
   (syntax-rules ()
     ((_ test arg ...)
