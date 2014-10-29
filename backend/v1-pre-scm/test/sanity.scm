@@ -75,9 +75,10 @@
     ;; enforcing constraints, plus one (not two) per mcmc step.
     (check (= (car resim-count) 7))
     ;; Two assessments for each non-resimulated application during
-    ;; inference (one in the new trace and one in the old), and two
-    ;; assessments for each application during constraint enforcement.
-    (check (= (car assess-count) 14))))
+    ;; inference (one in the new trace and one in the old), and one
+    ;; assessment for each application during constraint enforcement
+    ;; (because we do not compare against the old weight).
+    (check (= (car assess-count) 12))))
 
 (define-test (absorption-suppresses-resimulation-traced-sp)
   (let ((resim-count (list 0))
@@ -102,9 +103,10 @@
     ;; enforcing constraints, plus one (not two) per mcmc step.
     (check (= (car resim-count) 7))
     ;; Two assessments for each non-resimulated application during
-    ;; inference (one in the new trace and one in the old), and two
-    ;; assessments for each application during constraint enforcement.
-    (check (= (car assess-count) 14))))
+    ;; inference (one in the new trace and one in the old), and one
+    ;; assessment for each application during constraint enforcement
+    ;; (because we do not compare against the old weight).
+    (check (= (car assess-count) 12))))
 
 (define-test (inference-mixing-smoke)
   (let ()
@@ -149,6 +151,7 @@
     ;; enforcing constraints, plus one (not two) per mcmc step.
     (check (= (car sim-count) 7))
     ;; Two assessments for each non-resimulated application during
-    ;; inference (one in the new trace and one in the old), and two
-    ;; assessments for each application during constraint enforcement.
-    (check (= (car assess-count) 14))))
+    ;; inference (one in the new trace and one in the old), and one
+    ;; assessment for each application during constraint enforcement
+    ;; (because we do not compare against the old weight).
+    (check (= (car assess-count) 12))))

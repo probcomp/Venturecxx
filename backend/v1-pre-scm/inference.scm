@@ -16,13 +16,15 @@
   ; (pp 'stepping)
   (let ((target-addr (select-uniformly (random-choices trace))))
     ;; (rdb-trace-search-one-record trace target-addr pp (lambda () (error "What?")))
-    (receive (new-trace weight)
-      (detach+regen/copy trace (minimal-resimulation-scaffold/one-target+deterministic-overrides
-                                target-addr (rdb-constraints trace)))
+    (receive (new-trace weight+difference)
+      (detach+regen/copy trace
+        (minimal-resimulation-scaffold/one-target+deterministic-overrides
+         target-addr (rdb-constraints trace))
+        compute-weight-difference + 0)
       (let ((correction (- (log (length (random-choices trace)))
                            (log (length (random-choices new-trace))))))
-        ; (pp `(step ,target-addr ,weight ,correction))
-        (if (< (log (random 1.0)) (+ weight correction))
+        ; (pp `(step ,target-addr ,(cdr weight+difference) ,correction))
+        (if (< (log (random 1.0)) (+ (cdr weight+difference) correction))
             (begin
               ; (display ".")
               (*resimulation-mh-accept-hook*)
@@ -138,7 +140,7 @@
             '() addr trace read-traces))))))
 
 (define-structure (resimulated (safe-accessors #t)) value)
-(define-structure (absorbed (safe-accessors #t)) value)
+(define-structure (absorbed (safe-accessors #t)) value weight)
 
 ;; "Maximal" in the sense that it absorbs only when it must.  Returns
 ;; the density of the new trace, without subtracting off the density
@@ -165,7 +167,7 @@
           (begin
             (commit-state)
             (values val weight))
-          (let ((computed (compute exp env addr new orig read-traces (make-absorbed val))))
+          (let ((computed (compute exp env addr new orig read-traces (make-absorbed val weight))))
             (commit-state)
             (values val (cons weight computed))))))
   ;; ASSUME that replacements are added judiciously, namely to
