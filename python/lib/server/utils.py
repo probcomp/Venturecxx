@@ -49,7 +49,7 @@ class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         
         import numpy
-        if isinstance(obj, numpy.ndarray) and obj.ndim == 1:
+        if isinstance(obj, numpy.ndarray):
             return obj.tolist()
         
         if hasattr(obj, 'toJSON'):
