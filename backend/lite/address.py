@@ -21,6 +21,9 @@ class EmptyList(object):
   def __contains__(self, x):
     return False
   
+  def remove(self, x):
+    return self
+  
 emptyList = EmptyList()
 
 class List(object):
@@ -59,6 +62,11 @@ class List(object):
     if x == self.last:
       return True
     return x in self.rest
+  
+  def remove(self, x):
+    if x == self.last:
+      return self.rest
+    return self.rest.remove(x).append(self.last)
 
 class Address(List):
   """Maintains a call stack."""
