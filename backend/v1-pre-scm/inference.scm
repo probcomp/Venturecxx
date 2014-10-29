@@ -6,7 +6,7 @@
 
 (define (enforce-constraints trace)
   (receive (new-trace weight)
-    (detach+regen/copy trace (minimal-resimulation-scaffold/one-target+deterministic-overrides #f (rdb-constraints trace)))
+    (regen/copy trace (minimal-resimulation-scaffold/one-target+deterministic-overrides #f (rdb-constraints trace)))
     (rdb-trace-commit! new-trace trace)))
 
 (define *resimulation-mh-accept-hook* (lambda () 'ok))
@@ -17,7 +17,7 @@
   (let ((target-addr (select-uniformly (random-choices trace))))
     ;; (rdb-trace-search-one-record trace target-addr pp (lambda () (error "What?")))
     (receive (new-trace weight+difference)
-      (detach+regen/copy trace
+      (regen/copy trace
         (minimal-resimulation-scaffold/one-target+deterministic-overrides
          target-addr (rdb-constraints trace))
         compute-weight-difference + 0)
@@ -185,7 +185,7 @@
       0
       (bound-for-at (absorbed-value answer) addr exp new read-traces)))
 
-(define (detach+regen/copy trace scaffold #!optional compute combine init)
+(define (regen/copy trace scaffold #!optional compute combine init)
   (rebuild-rdb trace (scaffold compute)
     (if (default-object? combine)
         #!default
@@ -198,7 +198,7 @@
 
 (define (rejection trace)
   (receive (new-trace weight+bound)
-    (detach+regen/copy trace
+    (regen/copy trace
       (maximal-resimulation-scaffold/deterministic-overrides (rdb-constraints trace))
       compute-bound + 0)
     ;; TODO Could use new-trace as a sample for a little bit of efficiency
@@ -206,7 +206,7 @@
       (let loop ((tries 0))
         ; (pp `("Trying rejection" ,trace ,(rdb-constraints trace)))
         (receive (new-trace weight)
-          (detach+regen/copy trace (maximal-resimulation-scaffold/deterministic-overrides (rdb-constraints trace)))
+          (regen/copy trace (maximal-resimulation-scaffold/deterministic-overrides (rdb-constraints trace)))
           ; (pp `(got ,weight with bound ,bound))
           (if (< (log (random 1.0)) (- weight bound))
               (rdb-trace-commit! new-trace trace)
