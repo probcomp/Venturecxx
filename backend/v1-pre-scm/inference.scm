@@ -137,20 +137,37 @@
             (cons val (cons cur-state (cdr constancies))) ; cdr because I don't pass the operator itself
             '() addr trace read-traces))))))
 
+(define-structure (resimulated (safe-accessors #t)) value)
+(define-structure (absorbed (safe-accessors #t)) value)
+
 ;; "Maximal" in the sense that it absorbs only when it must.  Returns
 ;; the density of the new trace, without subtracting off the density
-;; of the old trace, together with the computed upper bound on
-;; possible densities.  This is useful for rejection sampling.
-(define ((propose-maximal-resimulation-with-deterministic-overrides+bound replacements)
+;; of the old trace.  This is suitable for rejection sampling once the
+;; bound has been computed.
+
+;; If the optional compute argument is supplied, calls it at every
+;; node and returns the pair of the density in the new trace with the
+;; result of compute.  With an appropriate choice of the compute
+;; function (and corresponding accumulator for rebuild-rdb), this
+;; facility can be useful for computing the bound for rejection.
+(define (((propose-maximal-resimulation-with-deterministic-overrides* replacements)
+          #!optional compute)
          exp env addr new orig read-traces continue)
   (define (resampled)
-    (values (continue) (cons 0 0)))            ; No weight, no bound
+    (if (default-object? compute)
+        (values (continue) 0)            ; No weight
+        (let ((answer (continue)))
+          (values answer (cons 0 (compute exp env addr new orig read-traces (make-resimulated answer)))))))
   (define (absorbed val)
     (receive (weight commit-state)
       (assessment+effect-at val addr exp new read-traces)
-      (let ((bound (bound-for-at val addr exp new read-traces)))
-        (commit-state)
-        (values val (cons weight bound)))))
+      (if (default-object? compute)
+          (begin
+            (commit-state)
+            (values val weight))
+          (let ((computed (compute exp env addr new orig read-traces (make-absorbed val))))
+            (commit-state)
+            (values val (cons weight computed))))))
   ;; ASSUME that replacements are added judiciously, namely to
   ;; random choices from the original trace (whose operators
   ;; didn't change due to other replacements?)
@@ -161,28 +178,16 @@
           (error "Trying to replace the value of a deterministic computation")))
     resampled))
 
-;; "Maximal" in the sense that it absorbs only when it must.  Returns
-;; the density of the new trace, without subtracting off the density
-;; of the old trace.  This is suitable for rejection sampling once the
-;; bound has been computed.
-(define ((propose-maximal-resimulation-with-deterministic-overrides replacements)
-         exp env addr new orig read-traces continue)
-  (define (resampled)
-    (values (continue) 0)) ; No weight
-  (define (absorbed val)
-    (receive (weight commit-state)
-      (assessment+effect-at val addr exp new read-traces)
-      (commit-state)
-      (values val weight)))
-  ;; ASSUME that replacements are added judiciously, namely to
-  ;; random choices from the original trace (whose operators
-  ;; didn't change due to other replacements?)
-  (search-wt-tree replacements addr
-    (lambda (it)
-      (if (random-choice? addr new)
-          (absorbed it)
-          (error "Trying to replace the value of a deterministic computation")))
-    resampled))
+(define (propose-maximal-resimulation-with-deterministic-overrides replacements)
+  ((propose-maximal-resimulation-with-deterministic-overrides* replacements))) ; no extra computation
+
+(define (compute-bound exp env addr new orig read-traces answer)
+  (if (resimulated? answer)
+      0
+      (bound-for-at (absorbed-value answer) addr exp new read-traces)))
+
+(define (propose-maximal-resimulation-with-deterministic-overrides+bound replacements)
+  ((propose-maximal-resimulation-with-deterministic-overrides* replacements) compute-bound))
 
 (define (rejection trace)
   (receive (new-trace weight+bound)
