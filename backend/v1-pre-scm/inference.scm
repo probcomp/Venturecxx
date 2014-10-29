@@ -6,7 +6,7 @@
 
 (define (enforce-constraints trace)
   (receive (new-trace weight)
-    (rebuild-rdb trace (propose-minimal-resimulation-with-deterministic-overrides #f (rdb-constraints trace)))
+    (detach+regen/copy trace (minimal-resimulation-scaffold/one-target+deterministic-overrides #f (rdb-constraints trace)))
     (rdb-trace-commit! new-trace trace)))
 
 (define *resimulation-mh-accept-hook* (lambda () 'ok))
@@ -17,8 +17,8 @@
   (let ((target-addr (select-uniformly (random-choices trace))))
     ;; (rdb-trace-search-one-record trace target-addr pp (lambda () (error "What?")))
     (receive (new-trace weight)
-      (rebuild-rdb trace (propose-minimal-resimulation-with-deterministic-overrides
-                          target-addr (rdb-constraints trace)))
+      (detach+regen/copy trace (minimal-resimulation-scaffold/one-target+deterministic-overrides
+                                target-addr (rdb-constraints trace)))
       (let ((correction (- (log (length (random-choices trace)))
                            (log (length (random-choices new-trace))))))
         ; (pp `(step ,target-addr ,weight ,correction))

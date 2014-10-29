@@ -235,7 +235,8 @@
 
 ;; "Minimal" in the sense that it absorbs wherever it can
 ;; Returns an M-H style weight
-(define ((propose-minimal-resimulation-with-deterministic-overrides target replacements)
+(define (((minimal-resimulation-scaffold/one-target+deterministic-overrides target replacements)
+          #!optional compute)
          exp env addr new orig read-traces continue)
   (ensure (or/c address? false?) target)
   (define (resampled)
