@@ -150,7 +150,7 @@
 ;; result of compute.  With an appropriate choice of the compute
 ;; function (and corresponding accumulator for rebuild-rdb), this
 ;; facility can be useful for computing the bound for rejection.
-(define (((propose-maximal-resimulation-with-deterministic-overrides* replacements)
+(define (((maximal-resimulation-scaffold/deterministic-overrides replacements)
           #!optional compute)
          exp env addr new orig read-traces continue)
   (define (resampled)
@@ -178,31 +178,33 @@
           (error "Trying to replace the value of a deterministic computation")))
     resampled))
 
-(define (propose-maximal-resimulation-with-deterministic-overrides replacements)
-  ((propose-maximal-resimulation-with-deterministic-overrides* replacements))) ; no extra computation
-
 (define (compute-bound exp env addr new orig read-traces answer)
   (if (resimulated? answer)
       0
       (bound-for-at (absorbed-value answer) addr exp new read-traces)))
 
-(define (propose-maximal-resimulation-with-deterministic-overrides+bound replacements)
-  ((propose-maximal-resimulation-with-deterministic-overrides* replacements) compute-bound))
+(define (detach+regen/copy trace scaffold #!optional compute combine init)
+  (rebuild-rdb trace (scaffold compute)
+    (if (default-object? combine)
+        #!default
+        (lambda (increment total)
+          (cons (+ (car increment) (car total))
+                (combine (cdr increment) (cdr total)))))
+    (if (default-object? init)
+        #!default
+        (cons 0 init))))
 
 (define (rejection trace)
   (receive (new-trace weight+bound)
-    (rebuild-rdb trace
-     (propose-maximal-resimulation-with-deterministic-overrides+bound (rdb-constraints trace))
-     (lambda (w+b total)
-       (cons (+ (car w+b) (car total))
-             (+ (cdr w+b) (cdr total))))
-     (cons 0 0))
+    (detach+regen/copy trace
+      (maximal-resimulation-scaffold/deterministic-overrides (rdb-constraints trace))
+      compute-bound + 0)
     ;; TODO Could use new-trace as a sample for a little bit of efficiency
     (let ((bound (cdr weight+bound)))
       (let loop ((tries 0))
         ; (pp `("Trying rejection" ,trace ,(rdb-constraints trace)))
         (receive (new-trace weight)
-          (rebuild-rdb trace (propose-maximal-resimulation-with-deterministic-overrides (rdb-constraints trace)))
+          (detach+regen/copy trace (maximal-resimulation-scaffold/deterministic-overrides (rdb-constraints trace)))
           ; (pp `(got ,weight with bound ,bound))
           (if (< (log (random 1.0)) (- weight bound))
               (rdb-trace-commit! new-trace trace)
