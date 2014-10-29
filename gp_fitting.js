@@ -286,24 +286,6 @@ function InitializeDemo() {
         }
     };
     
-    var toDict = function(type, value) {
-        return {
-            type: type,
-            value: value
-        };
-    };
-    
-    var toNumber = function(x) {
-        return toDict("number", x);
-    };
-    
-    var toArray = function(xs) {
-        return {
-            type: "array",
-            value: xs.map(toNumber)
-        };
-    };
-    
     var ObservePoint = function(obs_id, x, y) {
         obs_str = 'points_' + obs_id;
 

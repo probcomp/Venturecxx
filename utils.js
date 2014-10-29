@@ -65,3 +65,19 @@ function VentureCodeHTML(directives, display_scopes) {
     return venture_code_str;
 }
 
+    
+function toDict(type, value) {
+    return {
+        type: type,
+        value: value
+    };
+}
+
+function toNumber(x) {
+    return toDict("number", x);
+}
+
+function toArray(xs) {
+    return toDict("array", xs.map(toNumber));
+}
+
