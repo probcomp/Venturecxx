@@ -2,6 +2,12 @@
 (declare (integrate-external "syntax"))
 (declare (integrate-external "pattern-case/pattern-case"))
 
+;; Returns a proposed trace and the importance weight of proposing
+;; that trace vs the local posterior on the subproblem defined by the
+;; scaffold.  If the optional compute, combine, and init arguments are
+;; supplied, calls the given compute function on every traversed node,
+;; and also returns the result of accumulating the values returned
+;; thereby with combine, starting from init.
 (define (regen/copy trace scaffold #!optional compute combine init)
   (define (proposal exp env addr new orig read-traces continue)
     (define (resampled)
@@ -52,8 +58,7 @@
 (define-structure (resimulated (safe-accessors #t)) value)
 (define-structure (absorbed (safe-accessors #t)) value weight)
 
-;; "Minimal" in the sense that it absorbs wherever it can
-;; Returns an M-H style weight
+;; "Minimal" in the sense that it absorbs wherever it can.
 (define ((minimal-resimulation-scaffold/one-target+deterministic-overrides target replacements)
          exp env addr new orig read-traces resampled absorbed)
   (ensure (or/c address? false?) target)
@@ -80,16 +85,7 @@
   ;; the log likelihood of newly sampled randomness.
   )
 
-;; "Maximal" in the sense that it absorbs only when it must.  Returns
-;; the density of the new trace, without subtracting off the density
-;; of the old trace.  This is suitable for rejection sampling once the
-;; bound has been computed.
-
-;; If the optional compute argument is supplied, calls it at every
-;; node and returns the pair of the density in the new trace with the
-;; result of compute.  With an appropriate choice of the compute
-;; function (and corresponding accumulator for rebuild-rdb), this
-;; facility can be useful for computing the bound for rejection.
+;; "Maximal" in the sense that it absorbs only when it must.
 (define ((maximal-resimulation-scaffold/deterministic-overrides replacements)
          exp env addr new orig read-traces resampled absorbed)
   ;; ASSUME that replacements are added judiciously, namely to
