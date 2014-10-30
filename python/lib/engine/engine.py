@@ -397,6 +397,12 @@ effect of renumbering the directives, if some had been forgotten."""
     from venture.puma.engine import Engine as PumaEngine
     return self.convert(PumaEngine)
 
+  def set_profiling(self, enabled=True):
+    self.trace_handler.delegate('set_profiling', enabled)
+  
+  def clear_profiling(self):
+    self.trace_handler.delegate('clear_profiling', enabled)
+  
   def profile_data(self):
     rows = []
     for (pid, trace) in enumerate([t for t in self.retrieve_traces()
