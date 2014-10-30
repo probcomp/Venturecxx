@@ -4,17 +4,36 @@
 
 ;; Returns a proposed trace and the importance weight of proposing
 ;; that trace vs the local posterior on the subproblem defined by the
-;; scaffold.  If the optional compute, combine, and init arguments are
-;; supplied, calls the given compute function on every traversed node,
-;; and also returns the result of accumulating the values returned
-;; thereby with combine, starting from init.
-(define (regen/copy trace scaffold #!optional compute combine init)
+;; scaffold.
+
+;; If the optional propose argument is supplied, it is called for
+;; every node whose value is to change, and is to return a new value
+;; and a weight for that value.  The weight returned by regen is the
+;; sum of the weights returned by propose, together with the
+;; importance weights computed at the absorbing nodes.  If each call
+;; to propose returns the importance weight of the value it returns
+;; against the prior at that node, then that sum will be the
+;; importance weight of proposing the trace regen returns against the
+;; local posterior on the subproblem defined by the scaffold.
+
+;; If the optional compute, combine, and init arguments are supplied,
+;; calls the given compute function on every traversed node, and also
+;; returns the result of accumulating the values returned thereby with
+;; combine, starting from init.
+(define (regen/copy trace scaffold #!optional propose compute combine init)
   (define (proposal exp env addr new orig read-traces continue)
     (define (resampled)
+      (values (continue) 0)) ; No weight
+    (define (propose-base)
+      (if (default-object? propose)
+          (resampled)
+          (propose exp env addr new orig read-traces continue)))
+    (define (proposed)
       (if (default-object? compute)
-          (values (continue) 0)            ; No weight
-          (let ((answer (continue)))
-            (values answer (cons 0 (compute exp env addr new orig read-traces (make-resimulated answer)))))))
+          (propose-base)
+          (receive (answer weight)
+            (propose-base)
+            (values answer (cons weight (compute exp env addr new orig read-traces (make-resimulated answer)))))))
     (define (absorbed val)
       ;; Not re-executing the application expression.  Technically, the
       ;; only thing I am trying to avoid re-executing is the application
@@ -30,7 +49,7 @@
             (let ((computed (compute exp env addr new orig read-traces (make-absorbed val weight))))
               (commit-state)
               (values val (cons weight computed))))))
-    (scaffold exp env addr new orig read-traces resampled absorbed))
+    (scaffold exp env addr new orig read-traces proposed absorbed))
   (rebuild-rdb trace proposal
     (if (default-object? combine)
         #!default
@@ -52,7 +71,7 @@
         0
         (- (weight-at addr orig))))
   (receive (new-trace weight+former-weight)
-    (regen/copy trace scaffold former-weight + 0)
+    (regen/copy trace scaffold #!default former-weight + 0)
     (values new-trace (cdr weight+former-weight))))
 
 (define-structure (resimulated (safe-accessors #t)) value)

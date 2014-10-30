@@ -32,7 +32,7 @@
       (regen/copy trace
         (minimal-resimulation-scaffold/one-target+deterministic-overrides
          target-addr (rdb-constraints trace))
-        compute-weight-difference + 0)
+        #!default compute-weight-difference + 0)
       (let ((correction (- (log (length (random-choices trace)))
                            (log (length (random-choices new-trace))))))
         ; (pp `(step ,target-addr ,(cdr weight+difference) ,correction))
@@ -160,7 +160,7 @@
   (receive (new-trace weight+bound)
     (regen/copy trace
       (maximal-resimulation-scaffold/deterministic-overrides (rdb-constraints trace))
-      compute-bound + 0)
+      #!default compute-bound + 0)
     ;; TODO Could use new-trace as a sample for a little bit of efficiency
     (let ((bound (cdr weight+bound)))
       (let loop ((tries 0))
