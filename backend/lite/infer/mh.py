@@ -19,7 +19,7 @@ def mixMH(trace,indexer,operator):
   
   # read out some node addresses
   getAddr = lambda node: node.address
-  principle = map(getAddr, index.getPrincipalNodes())
+  principal = map(getAddr, index.getPrincipalNodes())
   absorbing = map(getAddr, index.absorbing)
   aaa = map(getAddr, index.aaa)
   
@@ -43,7 +43,7 @@ def mixMH(trace,indexer,operator):
     name = [operator.name()] + indexer.name(),
     time = time.time() - start,
     accepted = accepted,
-    principle = principle,
+    principal = principal,
     absorbing = absorbing,
     aaa = aaa
   )
