@@ -49,7 +49,7 @@
             (let ((computed (compute exp env addr new orig read-traces (make-absorbed val weight))))
               (commit-state)
               (values val (cons weight computed))))))
-    (scaffold exp env addr new orig read-traces proposed absorbed))
+    (scaffold exp env addr new read-traces proposed absorbed))
   (rebuild-rdb trace proposal
     (if (default-object? combine)
         #!default
@@ -84,18 +84,21 @@
 
 ;; "Maximal" in the sense that it absorbs only when it must.
 (define ((maximal-resimulation-scaffold/deterministic-overrides replacements)
-         exp env addr new orig read-traces resampled absorbed)
+         exp env addr trace read-traces resampled absorbed)
   ;; ASSUME that replacements are added judiciously, namely to
   ;; random choices from the original trace (whose operators
   ;; didn't change due to other replacements?)
   (search-wt-tree replacements addr
     (lambda (it)
-      (if (random-choice? addr new)
+      (if (random-choice? addr trace)
           (absorbed it)
           (error "Trying to replace the value of a deterministic computation")))
     resampled))
 
-;; "Minimal" in the sense that it absorbs wherever it can.
+;; "Minimal resimulation" in the sense that it absorbs wherever it can.
+;; "Maximal reexecution" in the sense that it does not mark any nodes
+;; "ignored", so a future detach that paid attention to that would
+;; unincorporate everything.
 (define (minimal-resimulation-maximal-reexecution-scaffold/one-target+deterministic-overrides trace target replacements)
   (ensure (or/c address? false?) target)
   (let ((statuses (make-wt-tree address-wt-tree-type)))
@@ -130,7 +133,7 @@
                   (rdb-trace-search-one orig addr absorbed resampled)
                   (resampled))))))
     (rebuild-rdb trace proposal)
-    (lambda (exp env addr new orig read-traces resampled absorbed)
+    (lambda (exp env addr trace read-traces resampled absorbed)
       (search-wt-tree statuses addr
         (lambda (it)
           (cond ((resimulated? it)
