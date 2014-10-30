@@ -30,8 +30,8 @@
     ;; (rdb-trace-search-one-record trace target-addr pp (lambda () (error "What?")))
     (receive (new-trace weight+difference)
       (regen/copy trace
-        (minimal-resimulation-scaffold/one-target+deterministic-overrides
-         target-addr (rdb-constraints trace))
+        (minimal-resimulation-maximal-reexecution-scaffold/one-target+deterministic-overrides
+         trace target-addr (rdb-constraints trace))
         #!default compute-weight-difference + 0)
       (let ((correction (- (log (length (random-choices trace)))
                            (log (length (random-choices new-trace))))))

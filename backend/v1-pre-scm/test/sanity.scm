@@ -72,8 +72,9 @@
           (assume y (my-sim))
           (infer (mcmc 5)))))
     ;; Two simulations for the initial forward run, zero when
-    ;; enforcing constraints, plus one (not two) per mcmc step.
-    (check (= (car resim-count) 7))
+    ;; enforcing constraints, plus two per mcmc step (one when
+    ;; constructing the scaffold and one when actually proposing).
+    (check (= (car resim-count) 12))
     ;; Two assessments for each non-resimulated application during
     ;; inference (one in the new trace and one in the old), and one
     ;; assessment for each application during constraint enforcement
@@ -100,8 +101,9 @@
           (assume y (my-sim))
           (infer (mcmc 5)))))
     ;; Two simulations for the initial forward run, zero when
-    ;; enforcing constraints, plus one (not two) per mcmc step.
-    (check (= (car resim-count) 7))
+    ;; enforcing constraints, plus two per mcmc step (one when
+    ;; constructing the scaffold and one when actually proposing).
+    (check (= (car resim-count) 12))
     ;; Two assessments for each non-resimulated application during
     ;; inference (one in the new trace and one in the old), and one
     ;; assessment for each application during constraint enforcement
@@ -148,8 +150,9 @@
            (assume y (my-sim))
            (infer (mcmc 5)))))
     ;; Two simulations for the initial forward run, zero when
-    ;; enforcing constraints, plus one (not two) per mcmc step.
-    (check (= (car sim-count) 7))
+    ;; enforcing constraints, plus two per mcmc step (one when
+    ;; constructing the scaffold and one when actually proposing).
+    (check (= (car sim-count) 12))
     ;; Two assessments for each non-resimulated application during
     ;; inference (one in the new trace and one in the old), and one
     ;; assessment for each application during constraint enforcement

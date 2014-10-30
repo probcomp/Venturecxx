@@ -117,3 +117,47 @@
           (error "Trying to replace the value of a deterministic computation")))
     resampled))
 
+(define (minimal-resimulation-maximal-reexecution-scaffold/one-target+deterministic-overrides trace target replacements)
+  (ensure (or/c address? false?) target)
+  (let ((statuses (make-wt-tree address-wt-tree-type)))
+    (define (proposal exp env addr new orig read-traces continue)
+      (define resim-tag (make-resimulated #f))
+      (define (resampled)
+        (set! statuses (wt-tree/add statuses addr resim-tag))
+        ;; TODO: To re-trace the execution history properly, this
+        ;; needs to be the old value.  However, right now the only
+        ;; effect of getting it wrong can be mistaking some new or
+        ;; brush nodes for resimulated nodes and vice versa, which is
+        ;; a non-issue because they are both resimulated anyway.
+        (values (continue) 0))
+      (define (absorbed val)
+        (set! statuses (wt-tree/add statuses addr (make-absorbed val #f)))
+        (values val 0))
+      (if (eq? addr target)
+          (resampled) ; The point was to resimulate the target address
+          ;; ASSUME that replacements are added judiciously, namely to
+          ;; random choices from the original trace (whose operators
+          ;; didn't change due to other replacements?)
+          (search-wt-tree replacements addr
+            (lambda (it)
+              (if (random-choice? addr new)
+                  (absorbed it)
+                  (error "Trying to replace the value of a deterministic computation")))
+            (lambda ()
+              ;; TODO Could optimize (including reducing scaffold size
+              ;; further) if the parameters did not change.
+              (if (compatible-operators-for? addr new orig)
+                  ;; One?  Should be one...
+                  (rdb-trace-search-one orig addr absorbed resampled)
+                  (resampled))))))
+    (rebuild-rdb trace proposal)
+    (lambda (exp env addr new orig read-traces resampled absorbed)
+      (search-wt-tree statuses addr
+        (lambda (it)
+          (cond ((resimulated? it)
+                 (resampled))
+                ((absorbed? it)
+                 (absorbed (absorbed-value it)))
+                (error "Unknown status" it)))
+        ;; New node
+        resampled))))
