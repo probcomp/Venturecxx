@@ -74,7 +74,7 @@
   (define (former-weight exp env addr new orig read-traces answer)
     (if (resimulated? answer)
         0
-        (- (weight-at addr orig))))
+        (- (weight-at addr trace))))
   (receive (new-trace weight+former-weight)
     (regen/copy trace scaffold #!default former-weight + 0)
     (values new-trace (cdr weight+former-weight))))
