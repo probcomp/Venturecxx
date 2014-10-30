@@ -12,18 +12,6 @@
 (define *resimulation-mh-accept-hook* (lambda () 'ok))
 (define *resimulation-mh-reject-hook* (lambda () 'ok))
 
-(define (compute-weight-difference exp env addr new orig read-traces answer)
-  (if (resimulated? answer)
-      ;; No weight, b/c of two cancellations for the final acceptance ratio:
-      ;; - assessment of new value cancels against the probability of proposing it
-      ;;   - since we are proposing from the prior
-      ;; - assessment of old value cancels against the probability of
-      ;;   proposing it back
-      ;;   - since we are proposing from the prior, AND
-      ;;   - all the arguments are the same because the target is unique
-      0
-      (- (absorbed-weight answer) (weight-at addr orig))))
-
 (define (mcmc-step trace)
   ; (pp 'stepping)
   (let* ((target-addr (select-uniformly (random-choices trace)))

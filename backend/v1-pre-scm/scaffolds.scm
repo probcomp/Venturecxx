@@ -23,6 +23,9 @@
 (define (regen/copy trace scaffold #!optional propose compute combine init)
   (define (proposal exp env addr new orig read-traces continue)
     (define (resampled)
+      ;; No weight, because assessment of new value cancels against
+      ;; the probability of proposing it
+      ;; - since we are proposing from the prior
       (values (continue) 0)) ; No weight
     (define (propose-base)
       (if (default-object? propose)
@@ -73,6 +76,10 @@
 (define (detach/copy trace scaffold)
   (define (former-weight exp env addr new orig read-traces answer)
     (if (resimulated? answer)
+        ;; No weight, because assessment of old value cancels against
+        ;; the probability of proposing it back
+        ;; - since we are proposing from the prior, AND
+        ;; - all the arguments are the same because the target is unique
         0
         (- (weight-at addr trace))))
   (receive (new-trace weight+former-weight)
