@@ -76,11 +76,12 @@
     ;; constructing the scaffold, one when detaching, and one when
     ;; actually proposing).
     (check (= (car resim-count) 17))
-    ;; Two assessments for each non-resimulated application during
-    ;; inference (one in the new trace and one in the old), and one
-    ;; assessment for each application during constraint enforcement
-    ;; (because we do not compare against the old weight).
-    (check (= (car assess-count) 12))))
+    ;; Three assessments for each non-resimulated application during
+    ;; inference (one in construct-scaffold, one in detach, one in
+    ;; regen), and one assessment for each application during
+    ;; constraint enforcement (because we do not compare against the
+    ;; old weight).
+    (check (= (car assess-count) 17))))
 
 (define-test (absorption-suppresses-resimulation-traced-sp)
   (let ((resim-count (list 0))
@@ -106,11 +107,12 @@
     ;; constructing the scaffold, one when detaching, and one when
     ;; actually proposing).
     (check (= (car resim-count) 17))
-    ;; Two assessments for each non-resimulated application during
-    ;; inference (one in the new trace and one in the old), and one
-    ;; assessment for each application during constraint enforcement
-    ;; (because we do not compare against the old weight).
-    (check (= (car assess-count) 12))))
+    ;; Three assessments for each non-resimulated application during
+    ;; inference (one in construct-scaffold, one in detach, one in
+    ;; regen), and one assessment for each application during
+    ;; constraint enforcement (because we do not compare against the
+    ;; old weight).
+    (check (= (car assess-count) 17))))
 
 (define-test (inference-mixing-smoke)
   (let ()
@@ -156,8 +158,9 @@
     ;; constructing the scaffold, one when detaching, and one when
     ;; actually proposing).
     (check (= (car resim-count) 17))
-    ;; Two assessments for each non-resimulated application during
-    ;; inference (one in the new trace and one in the old), and one
-    ;; assessment for each application during constraint enforcement
-    ;; (because we do not compare against the old weight).
-    (check (= (car assess-count) 12))))
+    ;; Three assessments for each non-resimulated application during
+    ;; inference (one in construct-scaffold, one in detach, one in
+    ;; regen), and one assessment for each application during
+    ;; constraint enforcement (because we do not compare against the
+    ;; old weight).
+    (check (= (car assess-count) 17))))
