@@ -233,67 +233,6 @@
      (reverse (rdb-records orig)))
     (values new total)))
 
-(define (compute-weight-difference exp env addr new orig read-traces answer)
-  (if (resimulated? answer)
-      ;; No weight, b/c of two cancellations for the final acceptance ratio:
-      ;; - assessment of new value cancels against the probability of proposing it
-      ;;   - since we are proposing from the prior
-      ;; - assessment of old value cancels against the probability of
-      ;;   proposing it back
-      ;;   - since we are proposing from the prior, AND
-      ;;   - all the arguments are the same because the target is unique
-      0
-      (- (absorbed-weight answer) (weight-at addr orig))))
-
-;; "Minimal" in the sense that it absorbs wherever it can
-;; Returns an M-H style weight
-(define (((minimal-resimulation-scaffold/one-target+deterministic-overrides target replacements)
-          #!optional compute)
-         exp env addr new orig read-traces continue)
-  (ensure (or/c address? false?) target)
-  (define (resampled)
-    (if (default-object? compute)
-        (values (continue) 0)            ; No weight
-        (let ((answer (continue)))
-          (values answer (cons 0 (compute exp env addr new orig read-traces (make-resimulated answer)))))))
-  (define (absorbed val)
-    ;; Not re-executing the application expression.  Technically, the
-    ;; only thing I am trying to avoid re-executing is the application
-    ;; part, but I ASSUME the evaluation of the arguments gets
-    ;; re-executed (in the proper order!) anyway, because they are
-    ;; recorded expressions in their own right.
-    (receive (weight commit-state)
-      (assessment+effect-at val addr exp new read-traces)
-      (if (default-object? compute)
-          (begin
-            (commit-state)
-            (values val weight))
-          (let ((computed (compute exp env addr new orig read-traces (make-absorbed val weight))))
-            (commit-state)
-            (values val (cons weight computed))))))
-  (if (eq? addr target)
-      (resampled) ; The point was to resimulate the target address
-      ;; ASSUME that replacements are added judiciously, namely to
-      ;; random choices from the original trace (whose operators
-      ;; didn't change due to other replacements?)
-      (search-wt-tree replacements addr
-        (lambda (it)
-          (if (random-choice? addr new)
-              (absorbed it)
-              (error "Trying to replace the value of a deterministic computation")))
-        (lambda ()
-          ;; TODO Could optimize (including reducing scaffold size
-          ;; further) if the parameters did not change.
-          (if (compatible-operators-for? addr new orig)
-              ;; One?  Should be one...
-              (rdb-trace-search-one orig addr absorbed resampled)
-              (resampled)))))
-  ;; CONSIDER I believe the fresh and stale log likelihoods
-  ;; mentioned in Wingate, Stuhlmuller, Goodman 2008 are
-  ;; actually a distraction, in that they always cancel against
-  ;; the log likelihood of newly sampled randomness.
-  )
-
 (define (random-choice? addr trace)
   ;; Ignores possibility of constraints induced by observations (for
   ;; that, use unconstrained-random-choice?).

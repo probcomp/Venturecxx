@@ -43,6 +43,7 @@
 (load-relative-compiled "primitives")
 (load-relative-compiled "random-db")
 (load-relative-compiled "rdb-constraint-propagation")
+(load-relative-compiled "scaffolds")
 (load-relative-compiled "inference")
 (load-relative-compiled "store")
 (load-relative-compiled "gaussian")
