@@ -12,6 +12,20 @@
 (define *resimulation-mh-accept-hook* (lambda () 'ok))
 (define *resimulation-mh-reject-hook* (lambda () 'ok))
 
+;; Here's a way to make a detach that
+;; - Does not produce a trace with a hole in it, as such,
+;; - Returns the proper detach weight, and
+;; - If instrumented, would be noticed to evaluate incorporators in
+;;   regen order, not reverse regen order.
+(define (detach/copy trace scaffold)
+  (define (former-weight exp env addr new orig read-traces answer)
+    (if (resimulated? answer)
+        0
+        (- (weight-at addr orig))))
+  (receive (new-trace weight+former-weight)
+    (regen/copy trace scaffold former-weight + 0)
+    (values new-trace (cdr weight+former-weight))))
+
 (define (mcmc-step trace)
   ; (pp 'stepping)
   (let ((target-addr (select-uniformly (random-choices trace))))
