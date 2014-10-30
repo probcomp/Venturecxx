@@ -58,7 +58,12 @@
                 (combine (cdr increment) (cdr total)))))
     (if (default-object? init)
         #!default
-        (cons 0 init))))
+        (cons 0 init)))
+  ;; CONSIDER I believe the fresh and stale log likelihoods
+  ;; mentioned in Wingate, Stuhlmuller, Goodman 2008 are
+  ;; actually a distraction, in that they always cancel against
+  ;; the log likelihood of newly sampled randomness.
+  )
 
 ;; Here's a way to make a detach that
 ;; - Does not produce a trace with a hole in it, as such,
@@ -77,33 +82,6 @@
 (define-structure (resimulated (safe-accessors #t)) value)
 (define-structure (absorbed (safe-accessors #t)) value weight)
 
-;; "Minimal" in the sense that it absorbs wherever it can.
-(define ((minimal-resimulation-scaffold/one-target+deterministic-overrides target replacements)
-         exp env addr new orig read-traces resampled absorbed)
-  (ensure (or/c address? false?) target)
-  (if (eq? addr target)
-      (resampled) ; The point was to resimulate the target address
-      ;; ASSUME that replacements are added judiciously, namely to
-      ;; random choices from the original trace (whose operators
-      ;; didn't change due to other replacements?)
-      (search-wt-tree replacements addr
-        (lambda (it)
-          (if (random-choice? addr new)
-              (absorbed it)
-              (error "Trying to replace the value of a deterministic computation")))
-        (lambda ()
-          ;; TODO Could optimize (including reducing scaffold size
-          ;; further) if the parameters did not change.
-          (if (compatible-operators-for? addr new orig)
-              ;; One?  Should be one...
-              (rdb-trace-search-one orig addr absorbed resampled)
-              (resampled)))))
-  ;; CONSIDER I believe the fresh and stale log likelihoods
-  ;; mentioned in Wingate, Stuhlmuller, Goodman 2008 are
-  ;; actually a distraction, in that they always cancel against
-  ;; the log likelihood of newly sampled randomness.
-  )
-
 ;; "Maximal" in the sense that it absorbs only when it must.
 (define ((maximal-resimulation-scaffold/deterministic-overrides replacements)
          exp env addr new orig read-traces resampled absorbed)
@@ -117,6 +95,7 @@
           (error "Trying to replace the value of a deterministic computation")))
     resampled))
 
+;; "Minimal" in the sense that it absorbs wherever it can.
 (define (minimal-resimulation-maximal-reexecution-scaffold/one-target+deterministic-overrides trace target replacements)
   (ensure (or/c address? false?) target)
   (let ((statuses (make-wt-tree address-wt-tree-type)))

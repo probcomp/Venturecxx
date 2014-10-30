@@ -6,7 +6,7 @@
 
 (define (enforce-constraints trace)
   (receive (new-trace weight)
-    (regen/copy trace (minimal-resimulation-scaffold/one-target+deterministic-overrides #f (rdb-constraints trace)))
+    (regen/copy trace (minimal-resimulation-maximal-reexecution-scaffold/one-target+deterministic-overrides trace #f (rdb-constraints trace)))
     (rdb-trace-commit! new-trace trace)))
 
 (define *resimulation-mh-accept-hook* (lambda () 'ok))
