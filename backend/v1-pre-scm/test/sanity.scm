@@ -72,9 +72,10 @@
           (assume y (my-sim))
           (infer (mcmc 5)))))
     ;; Two simulations for the initial forward run, zero when
-    ;; enforcing constraints, plus two per mcmc step (one when
-    ;; constructing the scaffold and one when actually proposing).
-    (check (= (car resim-count) 12))
+    ;; enforcing constraints, plus three per mcmc step (one when
+    ;; constructing the scaffold, one when detaching, and one when
+    ;; actually proposing).
+    (check (= (car resim-count) 17))
     ;; Two assessments for each non-resimulated application during
     ;; inference (one in the new trace and one in the old), and one
     ;; assessment for each application during constraint enforcement
@@ -101,9 +102,10 @@
           (assume y (my-sim))
           (infer (mcmc 5)))))
     ;; Two simulations for the initial forward run, zero when
-    ;; enforcing constraints, plus two per mcmc step (one when
-    ;; constructing the scaffold and one when actually proposing).
-    (check (= (car resim-count) 12))
+    ;; enforcing constraints, plus three per mcmc step (one when
+    ;; constructing the scaffold, one when detaching, and one when
+    ;; actually proposing).
+    (check (= (car resim-count) 17))
     ;; Two assessments for each non-resimulated application during
     ;; inference (one in the new trace and one in the old), and one
     ;; assessment for each application during constraint enforcement
@@ -150,9 +152,10 @@
            (assume y (my-sim))
            (infer (mcmc 5)))))
     ;; Two simulations for the initial forward run, zero when
-    ;; enforcing constraints, plus two per mcmc step (one when
-    ;; constructing the scaffold and one when actually proposing).
-    (check (= (car sim-count) 12))
+    ;; enforcing constraints, plus three per mcmc step (one when
+    ;; constructing the scaffold, one when detaching, and one when
+    ;; actually proposing).
+    (check (= (car sim-count) 17))
     ;; Two assessments for each non-resimulated application during
     ;; inference (one in the new trace and one in the old), and one
     ;; assessment for each application during constraint enforcement

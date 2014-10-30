@@ -26,24 +26,25 @@
 
 (define (mcmc-step trace)
   ; (pp 'stepping)
-  (let ((target-addr (select-uniformly (random-choices trace))))
+  (let* ((target-addr (select-uniformly (random-choices trace)))
+         (scaffold (minimal-resimulation-maximal-reexecution-scaffold/one-target+deterministic-overrides
+                    trace target-addr (rdb-constraints trace))))
     ;; (rdb-trace-search-one-record trace target-addr pp (lambda () (error "What?")))
-    (receive (new-trace weight+difference)
-      (regen/copy trace
-        (minimal-resimulation-maximal-reexecution-scaffold/one-target+deterministic-overrides
-         trace target-addr (rdb-constraints trace))
-        #!default compute-weight-difference + 0)
-      (let ((correction (- (log (length (random-choices trace)))
-                           (log (length (random-choices new-trace))))))
-        ; (pp `(step ,target-addr ,(cdr weight+difference) ,correction))
-        (if (< (log (random 1.0)) (+ (cdr weight+difference) correction))
-            (begin
-              ; (display ".")
-              (*resimulation-mh-accept-hook*)
-              (rdb-trace-commit! new-trace trace))
-            (begin
-              ; (display "!")
-              (*resimulation-mh-reject-hook*)))))))
+    (receive (torus detach-weight)
+      (detach/copy trace scaffold)
+      (receive (new-trace weight+difference)
+        (regen/copy trace scaffold #!default compute-weight-difference + 0)
+        (let ((correction (- (log (length (random-choices trace)))
+                             (log (length (random-choices new-trace))))))
+          ; (pp `(step ,target-addr ,(cdr weight+difference) ,correction))
+          (if (< (log (random 1.0)) (+ (car weight+difference) detach-weight correction))
+              (begin
+                ; (display ".")
+                (*resimulation-mh-accept-hook*)
+                (rdb-trace-commit! new-trace trace))
+              (begin
+                ; (display "!")
+                (*resimulation-mh-reject-hook*))))))))
 
 (define mcmc-defn
   '(define mcmc
