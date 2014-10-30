@@ -140,7 +140,7 @@
             (cons val (cons cur-state (cdr constancies))) ; cdr because I don't pass the operator itself
             '() addr trace read-traces))))))
 
-(define (compute-bound exp env addr new orig read-traces answer)
+(define (compute-bound exp env addr new read-traces answer)
   (if (resimulated? answer)
       0
       (bound-for-at (absorbed-value answer) addr exp new read-traces)))

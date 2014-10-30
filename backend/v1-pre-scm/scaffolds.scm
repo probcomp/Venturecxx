@@ -30,13 +30,13 @@
     (define (propose-base)
       (if (default-object? propose)
           (resampled)
-          (propose exp env addr new orig read-traces continue)))
+          (propose exp env addr new read-traces continue)))
     (define (proposed)
       (if (default-object? compute)
           (propose-base)
           (receive (answer weight)
             (propose-base)
-            (values answer (cons weight (compute exp env addr new orig read-traces (make-resimulated answer)))))))
+            (values answer (cons weight (compute exp env addr new read-traces (make-resimulated answer)))))))
     (define (absorbed val)
       ;; Not re-executing the application expression.  Technically, the
       ;; only thing I am trying to avoid re-executing is the application
@@ -49,7 +49,7 @@
             (begin
               (commit-state)
               (values val weight))
-            (let ((computed (compute exp env addr new orig read-traces (make-absorbed val weight))))
+            (let ((computed (compute exp env addr new read-traces (make-absorbed val weight))))
               (commit-state)
               (values val (cons weight computed))))))
     (scaffold exp env addr new read-traces proposed absorbed))
@@ -74,7 +74,7 @@
 ;; - If instrumented, would be noticed to evaluate incorporators in
 ;;   regen order, not reverse regen order.
 (define (detach/copy trace scaffold)
-  (define (former-weight exp env addr new orig read-traces answer)
+  (define (former-weight exp env addr new read-traces answer)
     (if (resimulated? answer)
         ;; No weight, because assessment of old value cancels against
         ;; the probability of proposing it back
