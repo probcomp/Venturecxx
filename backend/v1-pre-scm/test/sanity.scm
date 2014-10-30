@@ -129,7 +129,7 @@
               *p-value-tolerance*))))
 
 (define-test (coupled-assessability-leads-to-absorption)
-  (let ((sim-count (list 0))
+  (let ((resim-count (list 0))
         (assess-count (list 0)))
     (top-eval
       `(begin
@@ -138,7 +138,7 @@
          (define my-sim
            (annotate
             (lambda ()
-              (set-car! ',sim-count (+ (car ',sim-count) 1))
+              (set-car! ',resim-count (+ (car ',resim-count) 1))
               1)
             coupled-assessor-tag
             (make-coupled-assessor
@@ -155,7 +155,7 @@
     ;; enforcing constraints, plus three per mcmc step (one when
     ;; constructing the scaffold, one when detaching, and one when
     ;; actually proposing).
-    (check (= (car sim-count) 17))
+    (check (= (car resim-count) 17))
     ;; Two assessments for each non-resimulated application during
     ;; inference (one in the new trace and one in the old), and one
     ;; assessment for each application during constraint enforcement
