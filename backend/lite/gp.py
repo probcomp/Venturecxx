@@ -1,7 +1,12 @@
 import numpy as np
 import numpy.linalg as la
 import numpy.random as npr
-from scipy.stats import multivariate_normal
+
+# XXX Replace by scipy.stats.multivariate_normal.logpdf when we
+# upgrade to scipy 0.14.
+def multivariate_normal_logpdf(x, mu, sigma):
+  return -.5*np.dot(np.dot(x-mu, la.inv(sigma)), np.transpose(x-mu)) \
+         -.5*len(sigma)*np.log(2 * np.pi)-.5*np.log(abs(la.det(sigma)))
 
 def col_vec(xs):
   return np.matrix([xs]).T
@@ -55,7 +60,7 @@ class GP(object):
   def logDensity(self, xs, os):
     """Log density of a set of samples."""
     mu, sigma = self.getNormal(xs)
-    return multivariate_normal.logpdf(os, mu, sigma)
+    return multivariate_normal_logpdf(os, mu, sigma)
 
   def logDensityOfCounts(self):
     """Log density of the current samples."""
@@ -68,7 +73,7 @@ class GP(object):
     mu = map(self.mean, xs)
     sigma = self.cov_matrix(xs, xs)
     
-    return multivariate_normal.logpdf(os, mu, sigma)
+    return multivariate_normal_logpdf(os, mu, sigma)
   
 from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, VentureSPRecord, SPType
