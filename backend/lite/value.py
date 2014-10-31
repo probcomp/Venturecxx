@@ -1,7 +1,6 @@
 """Venture values.
 
-The design currently lives at
-https://docs.google.com/document/d/1URnJh5hNJ___-dwzIpca5Y2h-Mku1n5zjpGCiFBcUHM/edit
+The design currently lives in doc/type-system.md
 """
 import operator
 from numbers import Number
@@ -18,6 +17,7 @@ import venture.value.dicts as v
 # values and all the types.
 
 class VentureValue(object):
+  """Base class of all Venture values."""
   ### "natural" representation and conversions
   def getNumber(self): raise VentureTypeError("Cannot convert %s to number" % type(self))
   def getInteger(self): raise VentureTypeError("Cannot convert %s to integer" % type(self))
@@ -107,7 +107,8 @@ this."""
 
 class VentureNumber(VentureValue):
   def __init__(self,number):
-    assert isinstance(number, Number)
+    if not isinstance(number, Number):
+      raise VentureTypeError("%s is of %s, not Number" % (str(number), type(number)))
     self.number = float(number)
   def __repr__(self):
     if hasattr(self, "number"):
@@ -571,7 +572,8 @@ class VentureArray(VentureValue):
 class VentureArrayUnboxed(VentureValue):
   """Venture arrays of unboxed objects are homogeneous, with O(1) access and O(n) copy."""
   def __init__(self, array, elt_type):
-    assert isinstance(elt_type, VentureType)
+    if not isinstance(elt_type, VentureType):
+      raise VentureTypeError("%s of %s is not a VentureType" % (elt_type, type(elt_type)))
     self.elt_type = elt_type
     self.array = enp.ensure_numpy_if_possible(elt_type, array)
   def __repr__(self):
@@ -714,12 +716,11 @@ class VentureDict(VentureValue):
   def getDict(self): return self.dict
 
   def asStackDict(self, _trace=None):
-    # TODO Difficult to reflect as a Python dict because the keys
-    # would presumably need to be converted to stack dicts too, which
-    # is a problem because they need to be hashable.
-    return v.dict(self)
+    return v.dict([(key.asStackDict(_trace), val.asStackDict(_trace)) for (key, val) in self.dict.items()])
   @staticmethod
-  def fromStackDict(thing): return thing["value"]
+  def fromStackDict(thing):
+    f = VentureValue.fromStackDict
+    return VentureDict({f(key):f(val) for (key, val) in thing["value"]})
 
   def equalSameType(self, other):
     return len(set(self.dict.iteritems()) ^ set(other.dict.iteritems())) == 0
@@ -905,6 +906,7 @@ def registerVentureType(t, name = None):
 ### Venture Types
 
 class VentureType(object):
+  """Base class of all Venture types.  See the "Types" section of doc/type-system.md."""
   def asPythonNoneable(self, vthing):
     if vthing is None:
       return None
@@ -918,6 +920,9 @@ class VentureType(object):
   def gradient_type(self):
     "The type of the cotangent space of the space represented by this type."
     return self
+  
+  def toJSON(self):
+    return self.__class__.__name__
 
 # TODO Is there any way to make these guys be proper singleton
 # objects?

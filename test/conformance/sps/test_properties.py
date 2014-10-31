@@ -30,7 +30,7 @@ def testLiteToStack():
 def propLiteToStack(val):
   assert val.equal(VentureValue.fromStackDict(val.asStackDict()))
 
-blacklist = ['make_csp']
+blacklist = ['make_csp', 'apply_function', 'make_gp']
 
 # Select particular SPs to test thus:
 # nosetests --tc=relevant:'["foo", "bar", "baz"]'
@@ -200,6 +200,10 @@ def checkRiplAgreesWithDeterministicSimulate(name, sp):
     "repeat", # Not implemented
     "vector_dot", # Not implemented
     "zip", # Not implemented
+    "is_number", # Not implemented
+    "is_integer", # Not implemented
+    "is_probability", # Not implemented
+    "is_boolean", # Not implemented
   ]:
     raise SkipTest("%s in Puma not implemented compatibly with Lite" % name)
   checkTypedProperty(propRiplAgreesWithDeterministicSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)

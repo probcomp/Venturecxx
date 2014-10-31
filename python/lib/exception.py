@@ -55,9 +55,7 @@ class VentureException(Exception):
     if self.exception is 'evaluation' and self.annotated:
       for stack_frame in self.data['stack_trace']:
         s += '\n' + stack_frame['expression_string']
-        offset = stack_frame['text_index'][0]
-        length = stack_frame['text_index'][1] - offset + 1
-        s += '\n' + ''.join([' '] * offset + ['^'] * length)
+        s += '\n' + underline(stack_frame['text_index'])
     else:
       s += '\n' + str(self.data)
     if self.worker_trace is not None:
@@ -66,6 +64,11 @@ class VentureException(Exception):
 
   __unicode__ = __str__
   __repr__ = __str__
+
+def underline(text_index):
+  offset = text_index[0]
+  length = text_index[1] - offset + 1
+  return ''.join([' '] * offset + ['^'] * length)
 
 def format_worker_trace(trace):
   # This is a hack to accomodate handling of errors in parallel workers. See

@@ -194,6 +194,7 @@ class CoreSivm(object):
         e = utils.validate_arg(d, 'profiler_enabled', utils.validate_boolean, required=False)
         if e != None:
             self.profiler_enabled = e
+            self.engine.set_profiling(e)
         return {'options': {'profiler_enabled': self.profiler_enabled}}
 
 ###############################

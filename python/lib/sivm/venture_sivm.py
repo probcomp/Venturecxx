@@ -188,11 +188,19 @@ class VentureSivm(object):
             return self.sugar_dict[did]
         return self.attempted
     
+    def _get_exp(self, did):
+        return self._get_sugar(did)[0]
+    
     def _resugar(self, index):
         did = index[0]
         exp, sugar = self._get_sugar(did)
         index = index[1:]
-        return (exp, sugar.resugar_index(index))
+        
+        return dict(
+          exp = exp,
+          did = did,
+          index = sugar.resugar_index(index)
+        )
     
     ###############################
     # Continuous Inference Pauser

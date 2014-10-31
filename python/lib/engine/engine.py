@@ -397,17 +397,20 @@ effect of renumbering the directives, if some had been forgotten."""
     from venture.puma.engine import Engine as PumaEngine
     return self.convert(PumaEngine)
 
+  def set_profiling(self, enabled=True):
+    self.trace_handler.delegate('set_profiling', enabled)
+  
+  def clear_profiling(self):
+    self.trace_handler.delegate('clear_profiling', enabled)
+  
   def profile_data(self):
-    from pandas import DataFrame
     rows = []
     for (pid, trace) in enumerate([t for t in self.retrieve_traces()
                                    if hasattr(t, "stats")]):
-      for (name, attempts) in trace.stats.iteritems():
-        for (t, accepted) in attempts:
-          rows.append({"name":str(name), "particle":pid, "time":t, "accepted":accepted})
-    ans = DataFrame.from_records(rows)
-    print ans
-    return ans
+      for stat in trace.stats:
+        rows.append(dict(stat, particle = pid))
+    
+    return rows
 
 class ContinuousInferrer(object):
   def __init__(self, engine, program):

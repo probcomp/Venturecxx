@@ -166,7 +166,15 @@ boost::python::dict VentureDictionary::toPython(Trace * trace) const
 {
   boost::python::dict value;
   value["type"] = "dict";
-  value["value"] = "opaque";
+  boost::python::list items;
+  
+  BOOST_FOREACH(const MapVVPtrVVPtr::value_type& item, dict) {
+    boost::python::object key = item.first->toPython(trace);
+    boost::python::object val = item.second->toPython(trace);
+    items.append(boost::python::make_tuple(key, val));
+  }
+  
+  value["value"] = items;
   return value;
 }
 

@@ -77,12 +77,16 @@ def dump_trace(trace, directives, skipStackDictConversion=False):
   # and then check that the passed foreign_sps match up with the foreign
   # SP's bound in the trace's global environment. However, in the Puma backend
   # there is currently no way to access this global environment.
+  # This block mutates the trace
   db = trace.makeSerializationDB()
   for did, directive in sorted(directives.items(), reverse=True):
     if directive[0] == "observe":
       trace.unobserve(did)
     trace.unevalAndExtract(did, db)
 
+  # This block undoes the mutation on the trace done by the previous block; but
+  # it does not destroy the value stack because the actual OmegaDB (superclass
+  # of OrderedOmegaDB) has the values.
   for did, directive in sorted(directives.items()):
     trace.restore(did, db)
     if directive[0] == "observe":
@@ -369,7 +373,9 @@ class ProcessBase(object):
     else:
       # The trace cannot handle the inference primitive syntax
       # natively, so translate.
-      self.trace.infer(expToDict(exp))
+      d = expToDict(exp)
+      #import pdb; pdb.set_trace()
+      self.trace.infer(d)
 
 ######################################################################
 

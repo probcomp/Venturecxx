@@ -39,6 +39,18 @@ class PSP(object):
   stochastic process is applied to, but it also has a bunch of
   additional contextual information that can be useful for special
   PSPs.  See node.py for the definition of Args.
+
+  The data members of the Args struct will generally be represented as
+  Venture values (instances of the venture.lite.value.VentureValue
+  class).  The data returned from psp methods should generally also be
+  instances of the VentureValue class, except methods that yield
+  information for direct consumption by the engine itself (such as the
+  isRandom method).  See doc/type-system.md for the design.
+
+  Most of the time, the requisite marshalling between VentureValues
+  and corresponding Python representations is mechanical boilerplate,
+  which can be taken care of for you by the TypedPSP class, which see.
+
   """
 
   def simulate(self, _args):
@@ -255,7 +267,31 @@ class RandomPSP(PSP):
   def canAbsorb(self, _trace, _appNode, _parentNode): return True
 
 class TypedPSP(PSP):
+  """Wrapper that implements the PSP interface by marshalling and
+  unmarshalling according to a type signature, delegating to an
+  internal PSP.
+
+  The interface offered to the delegate of this class has all the same
+  methods as the PSP interface, with all the same semantics, except
+  that the values being operated upon and returned are native Python
+  objects rather than Venture Values.
+  TODO: Perhaps delegates of TypedPSP should not be subclasses of PSP,
+  but of another base class named something like PythonPSP.
+
+  """
+
   def __init__(self, psp, f_type):
+    """The first argument is the PSP-like delegate, that is expected to
+    all the work, operating on Python representations of the data.
+
+    The second argument is the type signature, which controls the
+    marshalling and unmarshalling.  The type signature itself must be
+    an instance of venture.lite.sp.SPType, and those are built
+    predominantly out of instances of (subclasses of)
+    venture.lite.value.VentureType.  See also the "Types" section
+    of doc/type-system.md.
+
+    """
     self.f_type = f_type
     self.psp = psp
 
