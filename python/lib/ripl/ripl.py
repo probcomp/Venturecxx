@@ -717,7 +717,7 @@ Open issues:
 
     def profile_data(self):
         rows = self.sivm.core_sivm.engine.profile_data()
-
+        
         def replace(d, name, f):
             if name in d:
                 d[name] = f(d[name])
@@ -727,7 +727,7 @@ Open issues:
             return (stuff['did'], stuff['index'])
         
         for row in rows:
-            for name in ['principle', 'absorbing', 'aaa']:
+            for name in ['principal', 'absorbing', 'aaa']:
                 replace(row, name, lambda addrs: map(resugar, addrs))
         
         from pandas import DataFrame
