@@ -56,7 +56,9 @@ class LiteralSugar(Sugar):
     assert(len(index) == 0)
     return index
   def resugar_index(self, index):
-    assert(len(index) == 0)
+    if len(index) != 0:
+      print "Warning: bad literal resugar index."
+      return []
     return index
 
 class ListMacro(Macro):
