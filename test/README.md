@@ -59,7 +59,7 @@ manifest only sporadically and are difficult to diagnose.
 
 Therefore, axch for one tends not to run the inference quality test
 suite much locally, relying instead on the [continuous integration
-server](http://ec2-54-84-30-252.compute-1.amazonaws.com:8080/) to
+server](http://probcomp3.csail.mit.edu:8080/) to
 notice problems.  If you are working on something related, however,
 `nosetests -c inference-quality.cfg` is your friend.
 
@@ -127,7 +127,7 @@ claims to be".
 Jenkins Continuous Build
 ------------------------
 
-The continuous build server lives at http://ec2-54-84-30-252.compute-1.amazonaws.com:8080/
+The continuous build server lives at http://probcomp3.csail.mit.edu:8080/
 
 The build structure is as follows:
 

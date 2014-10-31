@@ -23,3 +23,4 @@ from venture.ripl.utils import _RIPL_FUNCTIONS
 class RiplRestServer(utils.RestServer):
     def __init__(self,ripl):
         super(RiplRestServer,self).__init__(ripl,_RIPL_FUNCTIONS)
+

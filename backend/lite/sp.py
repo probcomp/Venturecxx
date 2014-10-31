@@ -84,6 +84,10 @@ used in the implementation of TypedPSP and TypedLKernel."""
   def __contains__(self, vthing): return isinstance(vthing, VentureSPRecord)
 
   def __init__(self, args_types, return_type, variadic=False, min_req_args=None):
+    """args_types is expected to be a Python list of instances of venture.lite.sp.VentureType,
+    and return_type is expected to be one instance of same.
+
+    See also the "Types" section of doc/type-system.md."""
     self.args_types = args_types
     self.return_type = return_type
     self.variadic = variadic
@@ -92,7 +96,11 @@ used in the implementation of TypedPSP and TypedLKernel."""
     self.min_req_args = len(args_types) if min_req_args is None else min_req_args
 
   def wrap_return(self, value):
-    return self.return_type.asVentureValue(value)
+    try:
+      return self.return_type.asVentureValue(value)
+    except VentureError as e:
+      e.message = "Wrong return type: " + e.message
+      raise e
   def unwrap_return(self, value):
     # value could be None for e.g. a "delta kernel" that is expected,
     # by e.g. pgibbs, to actually be a simulation kernel; also when

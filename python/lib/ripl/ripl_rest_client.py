@@ -23,3 +23,21 @@ from venture.ripl.utils import _RIPL_FUNCTIONS
 class RiplRestClient(RestClient):
     def __init__(self, base_url):
         super(RiplRestClient, self).__init__(base_url, _RIPL_FUNCTIONS)
+
+    # TODO: Somehow share this with ripl.py
+    def print_directives(self, *args):
+        for directive in self.list_directives(*args):
+            dir_id = int(directive['directive_id'])
+            dir_val = str(directive['value'])
+            dir_type = directive['instruction']
+            dir_text = self._get_raw_text(dir_id)
+            
+            if dir_type == "assume":
+                print "%d: %s:\t%s" % (dir_id, dir_text, dir_val)
+            elif dir_type == "observe":
+                print "%d: %s" % (dir_id, dir_text)
+            elif dir_type == "predict":
+                print "%d: %s:\t %s" % (dir_id, dir_text, dir_val)
+            else:
+                assert False, "Unknown directive type found: %s" % str(directive)
+

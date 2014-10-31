@@ -38,7 +38,7 @@ def SPsListEntry(name, args_types, klass=MadeInferPrimitiveOutputPSP, **kwargs):
                           **kwargs) ]
 
 def basicInfer(name):
-  return SPsListEntry(name, [v.ExpressionType(), v.ExpressionType(), v.IntegerType()])
+  return SPsListEntry(name, [v.AnyType(), v.AnyType(), v.IntegerType()])
 
 inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]] + [
   SPsListEntry("gibbs", [v.ExpressionType(), v.ExpressionType(), v.IntegerType(), v.BoolType()], min_req_args=3),

@@ -15,9 +15,20 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 # -*- coding: utf-8 -*-
 
+import venture.value.dicts as v
+from venture.lite.value import VentureValue
+
+def unwrapVentureValue(val):
+  if isinstance(val, VentureValue):
+    return val.asStackDict(None)["value"]
+  return val
+
 def expToDict(exp):
   if isinstance(exp, int):
     return {"kernel":"mh", "scope":"default", "block":"one", "transitions": exp}
+  
+  exp = map(unwrapVentureValue, exp)
+  
   tag = exp[0]
   if tag == "mh":
     assert len(exp) == 4
@@ -94,3 +105,4 @@ def expToDict(exp):
       return {"kernel":"rejection","scope":exp[1],"block":exp[2],"transitions":1}
   else:
     raise Exception("Cannot parse infer instruction")
+

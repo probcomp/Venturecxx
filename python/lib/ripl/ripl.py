@@ -140,9 +140,8 @@ class Ripl():
     def _annotated_error(self, e, instruction):
         if e.exception is 'evaluation':
             p = self._cur_parser()
-            for i, (exp, index) in enumerate(e.data['stack_trace']):
-                exp = p.unparse_expression(exp)
-                text_index = p.expression_index_to_text_index(exp, index)
+            for i, frame in enumerate(e.data['stack_trace']):
+                exp, text_index = self.humanReadable(**frame)
                 e.data['stack_trace'][i] = {
                     'expression_string' : exp,
                     'text_index' : text_index,
@@ -337,7 +336,22 @@ class Ripl():
         tmp = p.expression_index_to_text_index(expression, expression_index)
         return [x+offset for x in tmp]
 
-
+    def addr2Source(self, addr):
+        """Takes an address and gives the corresponding (unparsed)
+        source code and expression index."""
+        
+        return self.sivm._resugar(list(addr.last))
+    
+    def humanReadable(self, exp=None, did=None, index=None, **kwargs):
+        """Take a parsed expression and index and turn it into
+        unparsed form with text indeces."""
+        
+        p = self._cur_parser()
+        exp = p.unparse_expression(exp)
+        text_index = p.expression_index_to_text_index(exp, index)
+        return exp, text_index
+    
+    
     ############################################
     # Directives
     ############################################
@@ -702,8 +716,23 @@ Open issues:
     ############################################
 
     def profile_data(self):
-        return self.sivm.core_sivm.engine.profile_data()
-
+        rows = self.sivm.core_sivm.engine.profile_data()
+        
+        def replace(d, name, f):
+            if name in d:
+                d[name] = f(d[name])
+        
+        def resugar(addr):
+            stuff = self.addr2Source(addr)
+            return (stuff['did'], stuff['index'])
+        
+        for row in rows:
+            for name in ['principal', 'absorbing', 'aaa']:
+                replace(row, name, lambda addrs: map(resugar, addrs))
+        
+        from pandas import DataFrame
+        return DataFrame.from_records(rows)
+        
     _parsed_prelude = None
 
     ############################################
