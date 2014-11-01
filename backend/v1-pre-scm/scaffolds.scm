@@ -212,7 +212,7 @@
                   (error "Trying to replace the value of a deterministic computation")))
             (lambda ()
               (rdb-trace-search-one-record orig addr
-                (case-lambda*
+                (lambda-case*
                  ((evaluation-record exp env _ read-traces answer)
                   (case* exp
                     ((constant _) ;; Don't need to continue
@@ -302,7 +302,7 @@
                               (continue)
                               (resampled) ; Brush is always resampled; the output of the application propagates that
                              (else (error "What??"))))))))
-                 (_ (error "What?")))
+                 (_ (error "What?!?")))
                 (lambda ()
                   (error "This should never happen if values are being replayed properly")))))))
     (rebuild-rdb trace proposal)
