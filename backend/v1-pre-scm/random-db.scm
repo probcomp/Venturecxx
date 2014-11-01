@@ -135,7 +135,7 @@
                     (lambda ()
                       (apply-in-void-subtrace set (list new-state) '() addr trace read-traces))))))))))
 
-(define (simulation-effect-at val addr exp trace read-traces)
+(define (simulation-effect-at val addr exp trace read-traces continue)
   (ensure address? addr)
   ;; Expect exp to be an application
   ;; Do not look for it in the trace itself because it may not have been recorded yet.
@@ -143,10 +143,10 @@
                           (extend-address addr `(app-sub ,i)))
                         (iota (length exp))))
          (operator (traces-lookup (cons trace read-traces) (car subaddrs))))
-    (if (not (annotated? operator))
-        (error "What!?"))
     (cond ((not (annotated? operator))
            ;; Assume a pure simulator
+           (if (compound? operator)
+               (continue))
            (lambda () 'ok))
           ((has-assessor? operator)
            ;; Now I know the simulator is pure

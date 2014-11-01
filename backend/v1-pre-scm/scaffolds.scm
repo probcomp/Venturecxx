@@ -38,14 +38,6 @@
             (propose-base)
             (values answer (cons weight (compute exp env addr new read-traces (make-resimulated answer)))))))
     (define (unchanged val)
-      ;; Note: I expect this to only happen to "primitive" unchanged
-      ;; nodes (i.e., ones that either are primitive or are annotated
-      ;; with appropriate metadata).  Compounds that are unchanged by
-      ;; derivation can be resimulated.
-      ;; TODO: Actually, there is a difference between calling
-      ;; compounds unchanged or resimulated, because it affects
-      ;; absorption downstream of them; perhaps this should be
-      ;; broadened to always rerun compounds.
       (let ((commit-state (simulation-effect-at val addr exp new read-traces continue)))
         (if (default-object? compute)
             (begin
@@ -69,7 +61,7 @@
             (let ((computed (compute exp env addr new read-traces (make-absorbed val weight))))
               (commit-state)
               (values val (cons weight computed))))))
-    (scaffold exp env addr new read-traces proposed absorbed))
+    (scaffold exp env addr new read-traces proposed absorbed unchanged))
   (rebuild-rdb trace proposal
     (if (default-object? combine)
         #!default
@@ -109,7 +101,7 @@
 
 ;; "Maximal" in the sense that it absorbs only when it must.
 (define ((maximal-resimulation-scaffold/deterministic-overrides replacements)
-         exp env addr trace read-traces resampled absorbed)
+         exp env addr trace read-traces resampled absorbed unchanged)
   ;; ASSUME that replacements are added judiciously, namely to
   ;; random choices from the original trace (whose operators
   ;; didn't change due to other replacements?)
@@ -159,7 +151,7 @@
                   (rdb-trace-search-one orig addr absorbed resampled)
                   (resampled))))))
     (rebuild-rdb trace proposal)
-    (lambda (exp env addr trace read-traces resampled absorbed)
+    (lambda (exp env addr trace read-traces resampled absorbed unchanged)
       (search-wt-tree statuses addr
         (lambda (it)
           (cond ((resimulated? it)
@@ -314,13 +306,15 @@
                 (lambda ()
                   (error "This should never happen if values are being replayed properly")))))))
     (rebuild-rdb trace proposal)
-    (lambda (exp env addr trace read-traces resampled absorbed)
+    (lambda (exp env addr trace read-traces resampled absorbed unchanged)
       (search-wt-tree statuses addr
         (lambda (it)
           (cond ((resimulated? it)
                  (resampled))
                 ((absorbed? it)
                  (absorbed (absorbed-value it)))
+                ((unchanged? it)
+                 (unchanged (unchanged-value it)))
                 (error "Unknown status" it)))
         ;; New node
         resampled))))
