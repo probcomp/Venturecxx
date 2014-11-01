@@ -190,7 +190,7 @@
         ;; TODO Ditto about rerunning side-effects
         (values old-val 0))
       (define (propagate-status addr*)
-        (let ((parent-status ((wt-tree/lookup statuses addr* #f))))
+        (let ((parent-status (wt-tree/lookup statuses addr* #f)))
           (cond ((unchanged? parent-status)
                  (unchanged))
                 ((resimulated? parent-status)
