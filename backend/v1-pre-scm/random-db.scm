@@ -135,6 +135,31 @@
                     (lambda ()
                       (apply-in-void-subtrace set (list new-state) '() addr trace read-traces))))))))))
 
+(define (simulation-effect-at val addr exp trace read-traces)
+  (ensure address? addr)
+  ;; Expect exp to be an application
+  ;; Do not look for it in the trace itself because it may not have been recorded yet.
+  (let* ((subaddrs (map (lambda (i)
+                          (extend-address addr `(app-sub ,i)))
+                        (iota (length exp))))
+         (operator (traces-lookup (cons trace read-traces) (car subaddrs))))
+    (if (not (annotated? operator))
+        (error "What!?"))
+    (cond ((not (annotated? operator))
+           ;; Assume a pure simulator
+           (lambda () 'ok))
+          ((has-assessor? operator)
+           ;; Now I know the simulator is pure
+           (lambda () 'ok))
+          ((has-coupled-assessor? operator)
+           (receive (assessment commit-state)
+             (do-coupled-assess (coupled-assessor-of operator) val subaddrs addr trace read-traces)
+             commit-state))
+          ;; TODO Add a clause for likelihood-free simulators with
+          ;; characterized effects (incorporators)
+          (else
+           (error "What?!?")))))
+
 (define (same-operators? new-op old-op)
   (case* (cons new-op old-op)
     ((pair (annotated new-base _)
