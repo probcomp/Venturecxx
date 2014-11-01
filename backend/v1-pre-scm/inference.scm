@@ -12,10 +12,10 @@
 (define *resimulation-mh-accept-hook* (lambda () 'ok))
 (define *resimulation-mh-reject-hook* (lambda () 'ok))
 
-(define (mcmc-step trace)
+(define ((mcmc-step* scaffolder) trace)
   ; (pp 'stepping)
   (let* ((target-addr (select-uniformly (random-choices trace)))
-         (scaffold (minimal-resimulation-maximal-reexecution-scaffold/one-target+deterministic-overrides
+         (scaffold (scaffolder
                     trace target-addr (rdb-constraints trace))))
     ;; (rdb-trace-search-one-record trace target-addr pp (lambda () (error "What?")))
     (receive (torus detach-weight)
@@ -33,6 +33,8 @@
               (begin
                 ; (display "!")
                 (*resimulation-mh-reject-hook*))))))))
+
+(define mcmc-step (mcmc-step* minimal-resimulation-maximal-reexecution-scaffold/one-target+deterministic-overrides))
 
 (define mcmc-defn
   '(define mcmc
