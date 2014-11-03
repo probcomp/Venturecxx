@@ -193,7 +193,7 @@
         (set! statuses (wt-tree/add statuses addr (make-unchanged old-val)))
         (values old-val 0))
       (define (absorbed)
-        (set! statuses (wt-tree/add statuses addr (make-absorbed val #f)))
+        (set! statuses (wt-tree/add statuses addr (make-absorbed old-val #f)))
         ;; TODO Ditto about rerunning side-effects
         (values old-val 0))
       (define (propagate-status addr*)
