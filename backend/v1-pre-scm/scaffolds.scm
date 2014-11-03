@@ -38,14 +38,21 @@
             (propose-base)
             (values answer (cons weight (compute exp env addr new read-traces (make-resimulated answer)))))))
     (define (unchanged val)
-      (let ((commit-state (simulation-effect-at val addr exp new read-traces continue)))
-        (if (default-object? compute)
-            (begin
-              (commit-state)
-              (values val 0))
-            (let ((computed (compute exp env addr new read-traces (make-unchanged val))))
-              (commit-state)
-              (values val (cons 0 computed))))))
+      (if (application-form? exp)
+          (let ((commit-state (simulation-effect-at val addr exp new read-traces continue)))
+            (if (default-object? compute)
+                (begin
+                  (commit-state)
+                  (values val 0))
+                (let ((computed (compute exp env addr new read-traces (make-unchanged val))))
+                  (commit-state)
+                  (values val (cons 0 computed)))))
+          (if (default-object? compute)
+              (values (continue) 0)
+              (begin
+                (continue)
+                (let ((computed (compute exp env addr new read-traces (make-unchanged val))))
+                  (values val (cons 0 computed)))))))
     (define (absorbed val)
       ;; Not re-executing the application expression.  Technically, the
       ;; only thing I am trying to avoid re-executing is the application
