@@ -220,8 +220,15 @@
                     ((var x) ;; Don't need to continue
                      (env-search env x
                        (lambda (addr*)
-                         ;; TODO What about values that come in from enclosing traces?
-                         (propagate-status addr*))
+                         (rdb-trace-search-one orig addr*
+                           (lambda (v) (propagate-status addr*))
+                           (lambda ()
+                             ;; External addresses are unchanged
+                             ;; CONSIDER What happens if the address
+                             ;; is actually from a read-trace that was
+                             ;; created by this trace?  Does that make
+                             ;; it changeable?
+                             (unchanged))))
                        (lambda ()
                          ;; Assume Scheme value, which are taken to be constant
                          (unchanged))))
