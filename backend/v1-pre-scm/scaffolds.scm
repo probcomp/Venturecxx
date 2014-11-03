@@ -308,7 +308,7 @@
                               ;; arguments), e.g. with a fluid let?
                               (continue)
                               (resampled) ; Brush is always resampled; the output of the application propagates that
-                             (else (error "What??"))))))))
+                             (else (error "What ??"))))))))
                  (_ (error "What?!?")))
                 (lambda ()
                   (error "This should never happen if values are being replayed properly")))))))
