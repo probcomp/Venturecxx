@@ -1,6 +1,7 @@
 (declare (usual-integrations eval apply))
 (declare (integrate-external "syntax"))
 (declare (integrate-external "pattern-case/pattern-case"))
+(declare (integrate-external "address"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Types                                                          ;;;
@@ -21,16 +22,11 @@
 
 ;;; Addresses
 
-(define-structure (address (constructor %make-address))
-  index) ;; Sortable by creation time
-
 (define next-address 0)
 (define (make-address)
-  (set! next-address (+ next-address 1))
+  (assert (fix:< next-address (largest-fixnum)))
+  (set! next-address (fix:+ next-address 1))
   (%make-address next-address))
-(define-integrable (address<? a1 a2)
-  (< (address-index a1) (address-index a2)))
-(define address-wt-tree-type (make-wt-tree-type address<?))
 (define (make-address-wt-tree)
   (make-wt-tree address-wt-tree-type))
 
