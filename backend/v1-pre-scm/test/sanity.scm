@@ -76,12 +76,16 @@
     ;; constructing the scaffold, one when detaching, and one when
     ;; actually proposing).
     (check (= (car resim-count) 17))
-    ;; Three assessments for each non-resimulated application during
-    ;; inference (one in construct-scaffold, one in detach, one in
-    ;; regen), and one assessment for each application during
-    ;; constraint enforcement (because we do not compare against the
-    ;; old weight).
-    (check (= (car assess-count) 17))))
+    (if (eq? mcmc-defn mcmc-min/max-defn)
+        ;; Three assessments for each non-resimulated application during
+        ;; inference (one in construct-scaffold, one in detach, one in
+        ;; regen), and one assessment for each application during
+        ;; constraint enforcement (because we do not compare against the
+        ;; old weight).
+        (check (= (car assess-count) 17))
+        ;; With a minimal reexecution scaffold, the un-resimulated
+        ;; choice registers as unchanged and is not assessed
+        (check (= (car assess-count) 2)))))
 
 (define-test (absorption-suppresses-resimulation-traced-sp)
   (let ((resim-count (list 0))
@@ -107,12 +111,16 @@
     ;; constructing the scaffold, one when detaching, and one when
     ;; actually proposing).
     (check (= (car resim-count) 17))
-    ;; Three assessments for each non-resimulated application during
-    ;; inference (one in construct-scaffold, one in detach, one in
-    ;; regen), and one assessment for each application during
-    ;; constraint enforcement (because we do not compare against the
-    ;; old weight).
-    (check (= (car assess-count) 17))))
+    (if (eq? mcmc-defn mcmc-min/max-defn)
+        ;; Three assessments for each non-resimulated application during
+        ;; inference (one in construct-scaffold, one in detach, one in
+        ;; regen), and one assessment for each application during
+        ;; constraint enforcement (because we do not compare against the
+        ;; old weight).
+        (check (= (car assess-count) 17))
+        ;; With a minimal reexecution scaffold, the un-resimulated
+        ;; choice registers as unchanged and is not assessed
+        (check (= (car assess-count) 2)))))
 
 (define-test (inference-mixing-smoke)
   (let ()
@@ -158,9 +166,15 @@
     ;; constructing the scaffold, one when detaching, and one when
     ;; actually proposing).
     (check (= (car resim-count) 17))
-    ;; Three assessments for each non-resimulated application during
-    ;; inference (one in construct-scaffold, one in detach, one in
-    ;; regen), and one assessment for each application during
-    ;; constraint enforcement (because we do not compare against the
-    ;; old weight).
-    (check (= (car assess-count) 17))))
+    (if (eq? mcmc-defn mcmc-min/max-defn)
+        ;; Three assessments for each non-resimulated application during
+        ;; inference (one in construct-scaffold, one in detach, one in
+        ;; regen), and one assessment for each application during
+        ;; constraint enforcement (because we do not compare against the
+        ;; old weight).
+        (check (= (car assess-count) 17))
+        ;; With a minimal reexecution scaffold, the un-resimulated
+        ;; choice registers as unchanged, but, being coupled, is
+        ;; assessed (for effect) twice during the
+        ;; scaffold/detach/regen cycle
+        (check (= (car assess-count) 12)))))
