@@ -124,7 +124,7 @@
 ;; "unchanged", so a future detach that paid attention to that would
 ;; unincorporate everything.
 (define (minimal-resimulation-maximal-reexecution-scaffold/one-target+deterministic-overrides trace target replacements)
-  (ensure (or/c address? false?) target)
+  (ensure (or/c1 address? false?) target)
   (let ((statuses (make-wt-tree address-wt-tree-type)))
     (define (proposal exp env addr new orig read-traces continue)
       (define resim-tag (make-resimulated #f))
@@ -174,7 +174,7 @@
 ;; it can, so a future detach that paid attention to that would
 ;; unincorporate as little as possible.
 (define (minimal-resimulation-minimal-reexecution-scaffold/one-target+deterministic-overrides trace target replacements)
-  (ensure (or/c address? false?) target)
+  (ensure (or/c1 address? false?) target)
   (let ((statuses (make-wt-tree address-wt-tree-type)))
     (define (proposal exp env addr new orig read-traces continue)
       (define old-val

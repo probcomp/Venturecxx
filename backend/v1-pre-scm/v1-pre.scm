@@ -108,7 +108,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (eval exp env trace addr read-traces)
-  (ensure (or/c env-frame? false?) env)
+  (ensure (or/c1 env-frame? false?) env)
   (ensure address? addr)
   (resolve-request
    ;; CONSIDER what should happen if this address is recorded, but not
@@ -331,7 +331,7 @@
       (lose)))
 
 (define (extend-env parent symbols addresses)
-  (ensure (or/c env-frame? false?) parent)
+  (ensure (or/c1 env-frame? false?) parent)
   (ensure (listof symbol?) symbols)
   (ensure (listof address?) addresses)
   (make-env-frame parent symbols addresses))
@@ -344,7 +344,7 @@
   (set-env-frame-addresses! env (cons addr (env-frame-addresses env))))
 
 (define (env-lookup env symbol)
-  (ensure (or/c env-frame? false?) env)
+  (ensure (or/c1 env-frame? false?) env)
   (ensure symbol? symbol)
   (env-search env symbol (lambda (a) a) (lambda () #f)))
 
