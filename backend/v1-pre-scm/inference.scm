@@ -36,14 +36,21 @@
 
 (define mcmc-step (mcmc-step* minimal-resimulation-maximal-reexecution-scaffold/one-target+deterministic-overrides))
 
-(define mcmc-defn
-  '(define mcmc
+(define (mcmc-defn* stepper)
+  `(define mcmc
      (lambda (steps)
        (lambda (t)
          (begin
            (enforce-constraints t)
-           (map (lambda (i) (mcmc-step t))
+           (map (lambda (i) (,stepper t))
                 (iota steps)))))))
+
+(define mcmc-min/max-defn (mcmc-defn* 'mcmc-step))
+
+(define mcmc-min/min-defn
+  (mcmc-defn* (mcmc-step* minimal-resimulation-minimal-reexecution-scaffold/one-target+deterministic-overrides)))
+
+(define mcmc-defn mcmc-min/max-defn)
 
 ;;; Global rejection
 
