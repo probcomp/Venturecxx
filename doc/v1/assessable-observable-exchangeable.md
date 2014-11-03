@@ -108,6 +108,14 @@ RandomDB, and imposes fewer style rules on the user:
 Plan: See whether the code for that interface emerges naturally, and
 maybe add it under a third tag.
 
+Further note: The minimal/minimal scaffold for RandomDB does actually
+rely on mutation (and the output's dependence on it) being
+exchangeable, though it does not need the inverse procedure needed by
+PETs (below).  In principle, I should probably separate exchangeable
+from non-exchangeable mutation by using different annotation tags, but
+for now I will permit the expected meaning of coupled-assessor-tag to
+depend upon the choice of scaffold constructor.
+
 PETs
 ====
 
