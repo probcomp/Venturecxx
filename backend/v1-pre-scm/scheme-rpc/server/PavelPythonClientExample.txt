@@ -1,0 +1,25 @@
+Date: Tue, 17 Jul 2012 15:26:22 -0400
+From: Gerald Jay Sussman <gjs@csail.mit.edu>
+To: gjs@mit.edu, pavpan@mit.edu
+Subject: example
+
+
+gjs@binah:/usr/local/scmutils/src/server/PavelPythonClient$ python
+Python 2.6.5 (r265:79063, Apr 16 2010, 13:57:41)
+[GCC 4.4.3] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import slrpc.client
+>>> from slrpc.sexp import Symbol as s
+>>> cl = slrpc.client.RPCClient((<host>, <port>))
+>>> reval = cl.call("access-thing",s("eval"),<password>)
+>>> env = cl.call("access-thing",s("new-env"),<password>)()
+>>> 
+>>> reval(s("(simplify ((D (lambda (x y) (* (sin x) (square y)))) 'a 'b))"), env)
+[Symbol(name='down'), [Symbol(name='*'), [Symbol(name='expt'), Symbol(name='b'), 2],
+[Symbol(name='cos'), Symbol(name='a')]], [Symbol(name='*'), 2, Symbol(name='b'), [Symbol(name='sin'),
+Symbol(name='a')]]]
+>>> reval(s("(factorial 100)"), env)
+93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000L
+>>> reval([s("factorial"), 100], env)
+93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000L
+>>> 
