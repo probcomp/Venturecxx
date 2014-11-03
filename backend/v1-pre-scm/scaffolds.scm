@@ -277,7 +277,7 @@
                        (unchanged)))
                     (_ ;; Application
                      (let* ((substati (map (lambda (i)
-                                             (wt-tree/lookup statuses (extend-address addr `(app-sub ,i))))
+                                             (wt-tree/lookup statuses (extend-address addr `(app-sub ,i)) #f))
                                            (iota (length exp))))
                             (operator-status (car substati))
                             (operand-stati (cdr substati))
