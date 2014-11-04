@@ -66,6 +66,20 @@
            (cons (f (car lst)) (map f (cdr lst)))
            lst))))
 
+;; The deterministic identity function, cast as assessable.  Useful
+;; for rejection sampling with discrete observations.
+(define exactly-defn
+  '(define exactly
+     (make-sp
+      (lambda (x) x)
+      (annotate
+       (lambda (val x)
+         (if (equal? val x)
+             0
+             minus-inf))
+       value-bound-tag
+       (lambda (val x) 0)))))
+
 (define mu-flip-defn
   `(begin
      (define simulate-flip
