@@ -6,8 +6,8 @@
 (define (run-venture-server service)
   (call-with-tcp-server-socket service
     (lambda (server-socket)
-      ((let loop ()
-	 (call-with-accept-socket server-socket
+      (let loop ()
+	((call-with-accept-socket server-socket
 	   (lambda (socket)
 	     (let ((id (ignore-errors (lambda () (network-read socket)))))
 	       (case id
