@@ -79,11 +79,13 @@ def _testHistory(riplThunk):
 
 @gen_on_inf_prim("none")
 def testLoadModel():
+#    raise SkipTest('Venture types make it tricky to remove types from list_directives to get identical strings')
     for riplThunk in [get_ripl, lambda:get_mripl(no_ripls=3)]:
         yield _testLoadModel, riplThunk
 
 @gen_on_inf_prim("mh")
 def testModelHistory():
+#    raise SkipTest('Venture types make it tricky to remove types from list_directives to get identical strings')
     for riplThunk in [get_ripl, lambda:get_mripl(no_ripls=3)]:
         yield _testHistory, riplThunk
 
@@ -300,3 +302,18 @@ def _testGewekeTest():
         results.append(res)
 
     return results
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
