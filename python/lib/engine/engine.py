@@ -398,7 +398,9 @@ effect of renumbering the directives, if some had been forgotten."""
     return self.convert(PumaEngine)
 
   def set_profiling(self, enabled=True):
-    self.trace_handler.delegate('set_profiling', enabled)
+    # TODO: do this by introspection on the trace 
+    if self.trace_handler.backend == 'lite':
+      self.trace_handler.delegate('set_profiling', enabled)
   
   def clear_profiling(self):
     self.trace_handler.delegate('clear_profiling', enabled)
