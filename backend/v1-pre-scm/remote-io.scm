@@ -7,8 +7,9 @@
 
 (define (call-with-tcp-server-socket service receiver)
   (let ((socket (open-tcp-server-socket service)))
+    (listen-tcp-server-socket socket)
     (begin0 (receiver socket)
-      (close-port socket))))
+      (close-tcp-server-socket socket))))
 
 (define (call-with-tcp-stream-socket host service receiver)
   (let ((socket (open-tcp-stream-socket host service)))
@@ -16,7 +17,8 @@
       (close-port socket))))
 
 (define (call-with-accept-socket server-socket receiver)
-  (let ((socket (listen-tcp-server-socket server-socket)))
+  (let ((socket (tcp-server-connection-accept server-socket #t #f)))
+    (assert (port? socket))
     (begin0 (receiver socket)
       (close-port socket))))
 
@@ -51,9 +53,6 @@
 		  (h (string-ref hex-digits (bitwise-and s #xf))))
 	      (string-set! size-buf i h)
 	      (loop i (shift-right s 4)))))
-      (let ((size-n (write-substring size-buf 0 6 socket)))
-	(if (not (eqv? size-n 6))
-	    (network-error))))
-    (let ((n (write-substring buf 0 size socket)))
-      (if (not (eqv? n size))
-	  (network-error)))))
+      (write-substring size-buf 0 6 socket))
+    (write-substring buf 0 size socket))
+  (flush-output socket))
