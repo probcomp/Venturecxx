@@ -56,3 +56,8 @@
       (write-substring size-buf 0 6 socket))
     (write-substring buf 0 size socket))
   (flush-output socket))
+
+(define (condition->string condition)
+  (call-with-output-string
+    (lambda (port)
+      (write-condition-report condition port))))

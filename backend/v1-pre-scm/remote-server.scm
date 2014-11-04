@@ -31,8 +31,3 @@
 		  loop)
 		 ((TERMINATE) (lambda () 0))
 		 (else loop))))))))))
-
-(define (condition->string condition)
-  (call-with-output-string
-    (lambda (port)
-      (write-condition-report condition port))))
