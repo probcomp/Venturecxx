@@ -14,25 +14,20 @@
 		 ((CLIENT)
 		  (match (ignore-errors (lambda () (network-read socket)))
 		    (`(EVAL ,program)
-		     ((call-with-current-continuation
-		       (lambda (abort)
+		     ((lambda (result)
+			(ignore-errors
+			 (lambda () (network-write socket result))))
+		      (call-with-current-continuation
+		       (lambda (return)
 			 (bind-condition-handler (list condition-type:error)
 			     (lambda (condition)
-			       (abort
-				(lambda ()
-				  (ignore-errors
-				   (lambda ()
-				     (network-write
-				      socket
-				      `(FAIL
-					,(condition->string condition))))))))
+			       (return
+				(ignore-errors
+				 (lambda ()
+				   `(FAIL ,(condition->string condition)))
+				 (lambda (condition*) condition* '(FAIL)))))
 			   (lambda ()
-			     (let ((result (top-eval program)))
-			       (lambda ()
-				 (ignore-errors
-				  (lambda ()
-				    (network-write socket
-						   `(OK ,result)))))))))))))
+			     `(OK ,(top-eval program)))))))))
 		  loop)
 		 ((TERMINATE) (lambda () 0))
 		 (else loop))))))))))
