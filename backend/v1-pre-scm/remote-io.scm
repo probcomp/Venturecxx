@@ -15,6 +15,11 @@
     (begin0 (receiver socket)
       (close-port socket))))
 
+(define (call-with-accept-socket server-socket receiver)
+  (let ((socket (listen-tcp-server-socket server-socket)))
+    (begin0 (receiver socket)
+      (close-port socket))))
+
 (define hex-digits "0123456789abcdef")
 (define char-set:hex (string->char-set hex-digits))
 
