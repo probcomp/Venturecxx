@@ -5,13 +5,15 @@
 (declare (usual-integrations))
 
 (define (venture-remote-eval host service program)
-  (call-with-tcp-stream-socket host service
-    (lambda (socket)
-      (network-write socket 'CLIENT)
-      (network-write socket `(EVAL ,program))
-      (match (network-read socket)
-	(`(OK ,result) result)
- 	(else (network-error))))))
+  ((call-with-tcp-stream-socket host service
+     (lambda (socket)
+       (network-write socket 'CLIENT)
+       (network-write socket `(EVAL ,program))
+       (match (network-read socket)
+	 (`(OK ,result)                 (lambda () result))
+	 (`(FAIL ,(? string? message))  (lambda ()
+					  (error "Eval failed:" message)))
+	 (else                          (lambda () (network-error))))))))
 
 (define (venture-remote-terminate host service)
   (call-with-tcp-stream-socket host service
