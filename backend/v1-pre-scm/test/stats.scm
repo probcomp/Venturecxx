@@ -147,6 +147,11 @@
 (define (gaussian-cdf x mu sigma)
   (gsl-cdf-gaussian-p (- x mu) sigma))
 
+(define (gsl-sf-lngamma x)
+  ((ucode-primitive GSL_SF_LNGAMMA 1) (->flonum x)))
+
+(define log-gamma gsl-sf-lngamma)
+
 (define (gsl-ran-gamma-pdf x shape theta)
   ((ucode-primitive GSL_RAN_GAMMA_PDF 3)
    (->flonum x) (->flonum shape) (->flonum theta)))
