@@ -19,9 +19,10 @@ def mixMH(trace,indexer,operator):
   
   # read out some node addresses
   getAddr = lambda node: node.address
-  principle = map(getAddr, index.getPrincipalNodes())
+  principal = map(getAddr, index.getPrincipalNodes())
   absorbing = map(getAddr, index.absorbing)
   aaa = map(getAddr, index.aaa)
+  brush = len(index.brush)
   
   rhoMix = indexer.logDensityOfIndex(trace,index)
   # May mutate trace and possibly operator, proposedTrace is the mutated trace
@@ -40,12 +41,15 @@ def mixMH(trace,indexer,operator):
     accepted = False
   
   trace.recordProposal(
-    name = [operator.name()] + indexer.name(),
+    operator = operator.name(),
+    indexer = indexer.name(),
     time = time.time() - start,
     accepted = accepted,
-    principle = principle,
+    principal = principal,
     absorbing = absorbing,
-    aaa = aaa
+    aaa = aaa,
+    alpha = alpha,
+    brush = brush
   )
 
 class BlockScaffoldIndexer(object):

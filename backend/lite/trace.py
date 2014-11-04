@@ -44,6 +44,7 @@ class Trace(object):
     self.families = {}
     self.scopes = {} # :: {scope-name:smap{block-id:set(node)}}
 
+    self.profiling_enabled = False
     self.stats = []
 
   def scope_keys(self):
@@ -321,7 +322,8 @@ class Trace(object):
     return self.numBlocksInScope(scope) > 0
 
   def recordProposal(self, **kwargs):
-    self.stats.append(kwargs)
+    if self.profiling_enabled:
+      self.stats.append(kwargs)
 
   #### External interface to engine.py
   def eval(self,id,exp):
@@ -540,6 +542,10 @@ class Trace(object):
     for child in newChildren:
       node.children.add(child)
 
+  #### Configuration
+  
+  def set_profiling(self, enabled=True):
+    self.profiling_enabled = enabled
 
-
-
+  def clear_profiling(self):
+    self.stats = []

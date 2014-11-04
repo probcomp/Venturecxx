@@ -15,6 +15,15 @@ class EmptyList(object):
   def map(self, f):
     return self
   
+  def isEmpty(self):
+    return True
+  
+  def __contains__(self, x):
+    return False
+  
+  def remove(self, x):
+    return self
+  
 emptyList = EmptyList()
 
 class List(object):
@@ -45,6 +54,19 @@ class List(object):
 
   def map(self, f):
     return self.rest.map(f).append(f(self.last))
+  
+  def isEmpty(self):
+    return False
+  
+  def __contains__(self, x):
+    if x == self.last:
+      return True
+    return x in self.rest
+  
+  def remove(self, x):
+    if x == self.last:
+      return self.rest
+    return self.rest.remove(x).append(self.last)
 
 class Address(List):
   """Maintains a call stack."""

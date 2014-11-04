@@ -141,7 +141,7 @@ class Ripl():
         if e.exception is 'evaluation':
             p = self._cur_parser()
             for i, frame in enumerate(e.data['stack_trace']):
-                exp, text_index = self.humanReadable(frame)
+                exp, text_index = self.humanReadable(**frame)
                 e.data['stack_trace'][i] = {
                     'expression_string' : exp,
                     'text_index' : text_index,
@@ -338,11 +338,11 @@ class Ripl():
 
     def addr2Source(self, addr):
         """Takes an address and gives the corresponding (unparsed)
-        source code and index."""
+        source code and expression index."""
         
         return self.sivm._resugar(list(addr.last))
     
-    def humanReadable(self, (exp, index)):
+    def humanReadable(self, exp=None, did=None, index=None, **kwargs):
         """Take a parsed expression and index and turn it into
         unparsed form with text indeces."""
         
@@ -717,14 +717,18 @@ Open issues:
 
     def profile_data(self):
         rows = self.sivm.core_sivm.engine.profile_data()
-
+        
         def replace(d, name, f):
             if name in d:
                 d[name] = f(d[name])
         
+        def resugar(addr):
+            stuff = self.addr2Source(addr)
+            return (stuff['did'], stuff['index'])
+        
         for row in rows:
-            for name in ['principle', 'absorbing', 'aaa']:
-                replace(row, name, lambda addrs: map(self.addr2Source, addrs))
+            for name in ['principal', 'absorbing', 'aaa']:
+                replace(row, name, lambda addrs: map(resugar, addrs))
         
         from pandas import DataFrame
         return DataFrame.from_records(rows)
