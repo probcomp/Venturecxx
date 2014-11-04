@@ -3,10 +3,13 @@
 ;;; Run one load balancer.  Run n workers pointed at it.  When you
 ;;; point a client at the load balancer, it will dispatch the request
 ;;; to one of the workers and return a result.
+;;;
+;;; XXX Maybe it should be called `dispatcher' instead of `load
+;;; balancer.'
 
 (declare (usual-integrations))
 
-(define-structure load-balancer
+(define-structure (load-balancer (constructor make-load-balancer ()))
   (lock (make-thread-mutex))
   (condvar (make-condition-variable "venture-load-balancer"))
   (dying? #f)
@@ -15,23 +18,28 @@
 (define-structure (work (constructor make-work (program/result)))
   (lock (make-thread-mutex))
   (condvar (make-condition-variable "venture-work"))
-  (state work:pending)
+  (done? #f)
   program/result)
 
-(define work:pending 0)
-(define work:done 1)
-(define work:failed -1)
+(define (work-done! work result)
+  (with-thread-mutex-locked (work-lock work)
+    (lambda ()
+      (set-work-program/result! work result)
+      (set-work-done?! work #t)
+      (condition-variable-broadcast! (work-condvar work)))))
 
 (define (run-venture-load-balancer service)
-  (let ((server-socket (open-tcp-server-socket service)))
-    (let loop ()
-      (let* ((socket (listen-tcp-server-socket server-socket))
-	     (id (ignore-errors (lambda () (network-read socket)))))
-	(case id
-	  ((CLIENT) (lbr:server-thread lbr:serve-client lbr socket) (loop))
-	  ((WORKER) (lbr:server-thread lbr:serve-worker lbr socket) (loop))
-	  ((TERMINATE) (lbr:terminate lbr) (close-port socket))
-	  (else (close-port socket) (loop)))))))
+  (let ((lbr (make-load-balancer)))
+    (call-with-tcp-server-socket service
+      (lambda (server-socket)
+	(let loop ()
+	  (let* ((socket (tcp-server-connection-accept server-socket #t #f))
+		 (id (ignore-errors (lambda () (network-read socket)))))
+	    (case id
+	      ((CLIENT) (lbr:serve-thread lbr:serve-client lbr socket) (loop))
+	      ((WORKER) (lbr:serve-thread lbr:serve-worker lbr socket) (loop))
+	      ((TERMINATE) (lbr:terminate lbr) (close-port socket))
+	      (else (close-port socket) (loop)))))))))
 
 (define (lbr:terminate lbr)
   ((with-thread-mutex-locked (load-balancer-lock lbr)
@@ -47,22 +55,18 @@
 		 (let loop ()
 		   (if (not (queue-empty? queue))
 		       (begin
-			 (let ((work (dequeue! queue)))
-			   (with-thread-mutex-locked (work-lock work)
-			     (lambda ()
-			       (set-work-state! work work:failed)
-			       (condition-variable-broadcast!
-				(work-condvar work)))))
+			 (work-done! (dequeue! queue) '(FAIL))
 			 (loop))))))))))))
 
-(define (lbr:server-thread run lbr socket)
+(define (lbr:serve-thread serve lbr socket)
   (create-thread #f
     (lambda ()
+      ;; XXX Log errors somewhere.
       (dynamic-wind
        (lambda () 0)
-       (lambda () (run lbr socket))
-       (lambda () (close-socket socket))))))
-
+       (lambda () (serve lbr socket))
+       (lambda () (close-port socket))))))
+
 (define (lbr:serve-client lbr socket)
   (match (network-read socket)
     (`(EVAL ,program)
@@ -71,19 +75,17 @@
 	  (if (load-balancer-dying? lbr)
 	      (lambda ()
 		(network-write socket '(FAIL)))
-	      (begin
+	      (let ((work (make-work program)))
 		(enqueue! (load-balancer-workqueue lbr) work)
+		(condition-variable-signal! (load-balancer-condvar lbr))
 		(lambda ()
 		  (with-thread-mutex-locked (work-lock work)
 		    (lambda ()
-		      (do () ((eqv? (work-state work) work:pending))
+		      (do () ((work-done? work))
 			;; XXX Simultaneously wait for a nack on the network.
 			(condition-variable-wait! (work-condvar work)
 						  (work-lock work)))))
-		  (network-write socket
-				 (if (eqv? (work-state work) work:done)
-				     `(OK ,(work-program/result work))
-				     '(FAIL))))))))))))
+		  (network-write socket (work-program/result work)))))))))))
 
 (define (lbr:serve-worker lbr socket)
   (let loop ()
@@ -91,7 +93,7 @@
        (lambda ()
 	 (cond ((load-balancer-dying? lbr)
 		(lambda ()
-		  (network-write socket '(FAIL))
+		  (network-write socket '(TERMINATE))
 		  0))
 	       ((queue-empty? (load-balancer-workqueue lbr))
 		(condition-variable-wait! (load-balancer-condvar lbr)
@@ -101,20 +103,18 @@
 	       (else
 		(let ((work (dequeue! (load-balancer-workqueue lbr))))
 		  (lambda ()
-		    (network-write socket `(EVAL ,(work-program/result work)))
-		    (match (network-read socket)
-		      (`(OK ,result)
-		       (with-thread-mutex-locked (work-lock work)
-			 (lambda ()
-			   (set-work-program/result! work result)
-			   (set-work-state! work work:done)
-			   (condition-variable-broadcast!
-			    (work-condvar work)))))
-		      (else
-		       (with-thread-mutex-locked (work-lock work)
-			 (lambda ()
-			   (set-work-program/result! work 0)
-			   (set-work-state! work work:failed)
-			   (condition-variable-broadcast!
-			    (work-condvar work))))))
+		    (work-done!
+		     work
+		     (call-with-current-continuation
+		      (lambda (return)
+			(bind-condition-handler (list condition-type:error)
+			    (lambda (condition)
+			      condition
+			      (return '(FAIL)))
+			  (lambda ()
+			    (network-write
+			     socket
+			     `(EVAL ,(work-program/result work)))
+			    ;; XXX Sanitize the answer?
+			    (network-read socket))))))
 		    (loop))))))))))

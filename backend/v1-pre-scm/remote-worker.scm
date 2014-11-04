@@ -10,5 +10,17 @@
       (let loop ()
 	(match (network-read socket)
 	  (`(EVAL ,program)
-	   (network-write socket `(OK ,(top-eval program)))
-	   (loop)))))))
+	   (network-write
+	    socket
+	    (call-with-current-continuation
+	     (lambda (return)
+	       (bind-condition-handler (list condition-type:error)
+		   (lambda (condition)
+		     (return
+		      (ignore-errors
+		       (lambda () `(FAIL ,(condition->string condition)))
+		       (lambda (condition*) condition* '(FAIL)))))
+		 (lambda ()
+		   `(OK ,(top-eval program)))))))
+	   (loop))
+	  (else 0))))))
