@@ -1,11 +1,11 @@
 (in-test-group
  show-off
 
- (define-test (generate-gamma)
+ (define-test (generate-truncated-gamma)
    (define program
      `(begin
         ,observe-defn
-        (define gamma-base
+        (define standard-truncated-gamma
           (lambda (alpha)
             (model-in (rdb-extend (get-current-trace))
               (assume V (uniform 0 1))
@@ -13,10 +13,11 @@
               (observe (flip (exp (- X))) #t)
               (infer rejection)
               (predict X))))
-        (define gamma
+        (define truncated-gamma
           (lambda (alpha beta)
-            (/ (gamma-base alpha) beta)))
-        (gamma 2 1)))
+            (/ (standard-truncated-gamma alpha) beta)))
+        (truncated-gamma 2 1)))
    (check (> (k-s-test (collect-samples program)
-                       (gamma-cdf 2 1))
+                       (lambda (x)
+                         (/ ((gamma-cdf 2 1) x) ((gamma-cdf 2 1) 1))))
              *p-value-tolerance*))))
