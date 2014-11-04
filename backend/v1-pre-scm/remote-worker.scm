@@ -2,8 +2,8 @@
 
 (declare (usual-integrations))
 
-(define (run-venture-worker host service)
-  (call-with-tcp-stream-socket host service
+(define (run-venture-worker service)
+  (call-with-local-tcp-stream-socket service
     (lambda (socket)
       ;; This is worker, hello!
       (network-write socket 'WORKER)

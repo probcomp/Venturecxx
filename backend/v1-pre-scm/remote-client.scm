@@ -4,8 +4,8 @@
 
 (declare (usual-integrations))
 
-(define (venture-remote-eval host service program)
-  ((call-with-tcp-stream-socket host service
+(define (venture-remote-eval service program)
+  ((call-with-local-tcp-stream-socket service
      (lambda (socket)
        (network-write socket 'CLIENT)
        (network-write socket `(EVAL ,program))
@@ -16,12 +16,12 @@
 					  (error "Eval failed:" message)))
 	 (else                          (lambda () (network-error))))))))
 
-(define (venture-remote-terminate host service)
-  (call-with-tcp-stream-socket host service
+(define (venture-remote-terminate service)
+  (call-with-local-tcp-stream-socket service
     (lambda (socket)
       (network-write socket 'TERMINATE))))
 
-(define (venture-remote-eval* host service programs)
+(define (venture-remote-eval* service programs)
   (let ((n (length programs))
 	(lock (make-thread-mutex))
 	(condvar (make-condition-variable "venture-eval")))
@@ -49,7 +49,7 @@
 		   (lambda (condition)
 		     (finish #t condition))
 		 (lambda ()
-		   (venture-remote-eval host service program))))))))
+		   (venture-remote-eval service program))))))))
       (with-thread-mutex-locked lock
 	(lambda ()
 	  (do () ((zero? n))

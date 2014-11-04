@@ -4,7 +4,7 @@
 (declare (usual-integrations))
 
 (define (run-venture-server service)
-  (call-with-tcp-server-socket service
+  (call-with-local-tcp-server-socket service
     (lambda (server-socket)
       (let loop ()
 	((call-with-accept-socket server-socket

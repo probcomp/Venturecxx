@@ -5,14 +5,14 @@
 (define (network-error)
   (error "Network error!"))
 
-(define (call-with-tcp-server-socket service receiver)
-  (let ((socket (open-tcp-server-socket service)))
+(define (call-with-local-tcp-server-socket service receiver)
+  (let ((socket (open-tcp-server-socket service (host-address-loopback))))
     (listen-tcp-server-socket socket)
     (begin0 (receiver socket)
       (close-tcp-server-socket socket))))
 
-(define (call-with-tcp-stream-socket host service receiver)
-  (let ((socket (open-tcp-stream-socket host service)))
+(define (call-with-local-tcp-stream-socket service receiver)
+  (let ((socket (open-tcp-stream-socket "127.0.0.1" service)))
     (begin0 (receiver socket)
       (close-port socket))))
 

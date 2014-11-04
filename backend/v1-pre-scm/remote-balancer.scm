@@ -30,7 +30,7 @@
 
 (define (run-venture-load-balancer service)
   (let ((lbr (make-load-balancer)))
-    (call-with-tcp-server-socket service
+    (call-with-local-tcp-server-socket service
       (lambda (server-socket)
 	(let loop ()
 	  (let* ((socket (tcp-server-connection-accept server-socket #t #f))
