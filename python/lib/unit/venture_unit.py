@@ -255,14 +255,39 @@ class Analytics(object):
 
         directives_list = ripl.list_directives(type=True)
 
+
+
+        
         if assumes is not None:
             self.assumes = assumes
             self.observes = list(observes) if observes is not None else []
         else:
+            
             assumes = [d for d in directives_list if d['instruction']=='assume']
             self.assumes = map(directive_split,assumes)
             observes = [d for d in directives_list if d['instruction']=='observe']
             self.observes = map(directive_split,observes)
+
+            # if REMOVE_SOME_TYPES_FROM_SYMBOLS:
+            #   clean_assumes = []
+            #   clean_observes = []
+              
+            #   for sym,exp in self.assumes:
+            #       if isinstance(sym,dict) and 'value' in sym:
+            #           clean_assumes.append( (sym['value'], exp) )
+            #       else:
+            #           clean_assumes.append( (sym, exp) )
+    
+            #   # for exp,value in self.observes:
+            #   #     if isinstance(value,dict) and 'value' in value:
+            #   #         clean_observes.append( (exp, value['value']) )
+            #   #     else:
+            #   #         clean_observes.append( (exp, value) )
+
+            #   self.assumes = clean_assumes
+            #   #self.observes = clean_observes
+
+        
 
         self.queryExps=[] if queryExps is None else list(queryExps)
 
