@@ -1,0 +1,19 @@
+infer resample(40)
+assume is_tricky = bernoulli(0.1)
+assume weight = if (is_tricky) {
+  uniform_continuous(0, 1)
+} else {
+  0.5
+}
+infer plotf(p0r, is_tricky)
+observe bernoulli(weight) = 1
+observe bernoulli(weight) = 1
+observe bernoulli(weight) = 1
+infer plotf(p0r, is_tricky)
+infer rejection(default, all, 1)
+infer plotf(p0r, is_tricky)
+observe bernoulli(weight) = 1
+observe bernoulli(weight) = 1
+observe bernoulli(weight) = 1
+infer rejection(default, all, 1)
+infer plotf(p0r, is_tricky)
