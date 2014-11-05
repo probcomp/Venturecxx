@@ -1,3 +1,4 @@
+// Run me with venture puma -f trickiness-concrete.vnts
 infer resample(40)
 assume is_tricky = bernoulli(0.1)
 assume weight = if (is_tricky) {
