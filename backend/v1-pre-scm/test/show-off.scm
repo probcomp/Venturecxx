@@ -87,4 +87,45 @@
           (predict weight))))
    ;; Check that it runs, but I have no idea what the distribution on
    ;; weights should be.
-   (top-eval program)))
+   (top-eval program))
+
+ (define-test (convincability)
+   (define library
+     `(begin
+        ,observe-defn
+        ,map-defn
+        ,mcmc-defn
+        (define convincedness-sample-by-monte-carlo
+          (lambda (prior trials steps)
+            (model-in (rdb-extend (get-current-trace))
+              (assume is-trick? (flip prior))
+              (assume weight (if is-trick? (uniform 0 1) 0.5))
+              (map (lambda (t)
+                     (observe (flip weight) #t))
+                   (iota trials))
+              (infer (mcmc steps))
+              (predict is-trick?))))
+        (define convincedness-by-monte-carlo
+          (lambda (prior trials steps)
+            (define trues-ct (list 0))
+            (map (lambda (t)
+                   (if (convincedness-sample-by-monte-carlo prior trials steps)
+                       (set-car! trues-ct (+ 1 (car trues-ct)))
+                       'ok))
+                 (iota 10))
+            (/ (car trues-ct) 10)))))
+   (define (analytical-posterior prior trials)
+     (let ((p+ (/ prior (+ trials 1)))
+           (p- (/ (- 1 prior) (expt 2 trials))))
+       (/ p+ (+ p+ p-))))
+   (define (prop-convincedness-correct prior trials)
+     (let ((posterior (analytical-posterior prior trials)))
+       (check (> (chi-sq-test
+                  (collect-samples
+                   `(begin ,library
+                           (convincedness-sample-by-monte-carlo ,prior ,trials ,(* 5 trials))))
+                  `((#t . ,posterior) (#f . ,(- 1 posterior))))
+                 *p-value-tolerance*))))
+   (prop-convincedness-correct 0.1 4)
+   (prop-convincedness-correct 0.1 8)
+   (prop-convincedness-correct 0.3 2)))
