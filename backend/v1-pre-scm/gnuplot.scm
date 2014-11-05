@@ -62,6 +62,9 @@
         (cadr binding)
         default)))
 
+(define (gnuplot-direct-to-file filename)
+  (make-gnu-plot #f (string-append "set term png; set output \"" filename "\"") #f))
+
 (define-structure (gnu-plot (safe-accessors #t))
   data
   prefix
@@ -85,9 +88,13 @@
                  (prefix (gnu-plot-prefix (car plots)))
                  (control (gnu-plot-control (car plots)))
                  (control-separator (if (null? (cdr plots)) "" ", ")))
-             (call-with-temporary-file-pathname
-              (lambda (pathname)
-                (gnuplot-write-alist data pathname)
-                (loop (cdr plots)
-                      (cons (string-append prefix "; ") prefixes)
-                      (cons (string-append "\"" (->namestring pathname) "\" " control control-separator) plot-lines)))))))))
+             (if data
+                 (call-with-temporary-file-pathname
+                  (lambda (pathname)
+                    (gnuplot-write-alist data pathname)
+                    (loop (cdr plots)
+                          (cons (string-append prefix "; ") prefixes)
+                          (cons (string-append "\"" (->namestring pathname) "\" " control control-separator) plot-lines))))
+                 (loop (cdr plots)
+                       (cons (string-append (gnu-plot-prefix (car plots)) "; ") prefixes)
+                       plot-lines)))))))

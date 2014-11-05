@@ -33,6 +33,7 @@
       gnuplot-alist-plot
       gnuplot-histogram-alist
       gnuplot-histogram-alist-plot
+      gnuplot-direct-to-file
       )))
 
 (load-relative "pattern-case/load")
