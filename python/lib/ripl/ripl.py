@@ -724,11 +724,11 @@ Open issues:
         
         def resugar(addr):
             stuff = self.addr2Source(addr)
-            return (stuff['did'], stuff['index'])
+            return (stuff['did'], tuple(stuff['index']))
         
         for row in rows:
             for name in ['principal', 'absorbing', 'aaa']:
-                replace(row, name, lambda addrs: map(resugar, addrs))
+                replace(row, name, lambda addrs: frozenset(map(resugar, addrs)))
         
         from pandas import DataFrame
         return DataFrame.from_records(rows)
