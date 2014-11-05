@@ -44,7 +44,7 @@ class LogBernoulliOutputPSP(DiscretePSP):
   def logDensity(self,val,args):
     logp = args.operandValues[0]
     if val: return logp
-    else: return extendedLog(1 - math.exp(p))
+    else: return extendedLog(1 - math.exp(logp))
 
   def gradientOfLogDensity(self, val, args):
     p = args.operandValues[0] if args.operandValues else 0.5
