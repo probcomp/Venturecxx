@@ -73,9 +73,9 @@ def local_ripl(args, backend):
 
 def add_local_args(parser):
     parser.add_argument('--prelude', action='store_true',
-                        help = 'Load prelude on startup. Applies only to local sessions.')
-    parser.add_argument('-f', '--file', default=None, help="a file to execute")
-    parser.add_argument('-i', '--interactive', action='store_true', help="Enter interactive interpreter after completing script file")
+                        help = 'load prelude on startup')
+    parser.add_argument('-f', '--file', default=None, help="execute the given file")
+    parser.add_argument('-i', '--interactive', action='store_true', help="enter interactive interpreter after completing script file")
     return parser
 
 parser = argparse.ArgumentParser(description='An interactive, Turing-complete probabilistic programming platform')
