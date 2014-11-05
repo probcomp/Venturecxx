@@ -105,15 +105,21 @@
                    (iota trials))
               (infer (mcmc steps))
               (predict is-trick?))))
-        (define convincedness-by-monte-carlo
-          (lambda (prior trials steps)
+        (define estimate-truth-prob
+          (lambda (thunk trials)
             (define trues-ct (list 0))
             (map (lambda (t)
-                   (if (convincedness-sample-by-monte-carlo prior trials steps)
+                   (if (thunk)
                        (set-car! trues-ct (+ 1 (car trues-ct)))
                        'ok))
-                 (iota 10))
-            (/ (car trues-ct) 10)))))
+                 (iota trials))
+            (/ (car trues-ct) trials)))
+        (define convincedness-by-monte-carlo
+          (lambda (prior trials steps trials*)
+            (estimate-truth-prob
+             (lambda ()
+               (convincedness-sample-by-monte-carlo prior trials steps))
+             trials*)))))
    (define (analytical-posterior prior trials)
      (let ((p+ (/ prior (+ trials 1)))
            (p- (/ (- 1 prior) (expt 2 trials))))
