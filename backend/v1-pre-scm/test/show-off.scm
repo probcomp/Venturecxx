@@ -36,6 +36,10 @@
                   (assume x (normal 0 1))
                   (assume v (expt (+ 1 (* c x)) 3))
                   (observe (exactly (> v 0)) #t)
+                  ;; Unless I use a short-circuit and between these
+                  ;; two tests, this reject step is necessary to
+                  ;; ensure that the next observation will not crash
+                  ;; when forward-simulating for the first time.
                   (infer rejection)
                   (observe (exactly (< (log (uniform 0 1)) (+ (* 0.5 x x) (* d (+ 1 (- v) (log v)))))) #t)
                   (infer rejection)
