@@ -23,7 +23,7 @@
              *p-value-tolerance*)))
 
  (define-test (marsaglia-tsang-gamma)
-   (define (program shape)
+   (define (marsaglia-tsang-gamma-program shape)
      `(begin
         ,exactly-defn
         ,observe-defn
@@ -45,7 +45,7 @@
                   (infer rejection)
                   (predict (* d v)))))))
         (marsaglia-standard-gamma-for-shape>1 ,shape)))
-   (check (> (k-s-test (collect-samples (program 2)) (gamma-cdf 2 1))
+   (check (> (k-s-test (collect-samples (marsaglia-tsang-gamma-program 2)) (gamma-cdf 2 1))
              *p-value-tolerance*)))
 
  (define-test (gamma-assess)
