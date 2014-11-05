@@ -426,6 +426,8 @@ class VentureScriptParser(object):
             ['get_logscore', '<!get> <!logscore> <directive_id:int>'],
             ['labeled_get_logscore', '<!get> <!logscore> <label:sym>'],
             ['get_global_logscore', '<!get> <!global> <!logscore>'],
+            # Ripl
+            ['load', '<!load> <file:json>'] # json, a poor man's quoted string
             ]
 
         self.instruction = utils.make_instruction_parser(instruction_list,patterns)

@@ -106,7 +106,9 @@ class ChurchPrimeParser(object):
             # Profiler
             ['profiler_configure','[ <!profiler_configure> <options:json> ]'],
             ['profiler_clear','[ <!profiler_configure> ]'],
-            ['profiler_list_random_choices', '[ <!profiler_list_random> <!choices> ]']
+            ['profiler_list_random_choices', '[ <!profiler_list_random> <!choices> ]'],
+            # Ripl
+            ['load', '[ <!load> <file:json> ]'] # json, a poor man's quoted string
         ]
 
         self.instruction = utils.make_instruction_parser(instruction_list,patterns)

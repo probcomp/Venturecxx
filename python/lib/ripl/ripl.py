@@ -230,7 +230,10 @@ class Ripl():
     def execute_parsed_program(self, instructions, _positions):
         vals = []
         for instruction in instructions:
-            vals.append(self.execute_instruction(instruction))
+            if instruction['instruction'] == "load":
+                vals.append(self.execute_program_from_file(instruction["file"]))
+            else:
+                vals.append(self.execute_instruction(instruction))
         return vals
 
     def execute_program_from_file(self, filename):
