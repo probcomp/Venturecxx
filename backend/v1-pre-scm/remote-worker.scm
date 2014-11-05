@@ -2,9 +2,10 @@
 
 (declare (usual-integrations))
 
-(define (run-venture-worker service)
+(define (run-venture-worker service when-ready)
   (call-with-local-tcp-stream-socket service
     (lambda (socket)
+      (when-ready)
       ;; This is worker, hello!
       (network-write socket 'WORKER)
       (let loop ()

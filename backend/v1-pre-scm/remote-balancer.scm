@@ -28,10 +28,11 @@
       (set-work-done?! work #t)
       (condition-variable-broadcast! (work-condvar work)))))
 
-(define (run-venture-load-balancer service)
+(define (run-venture-load-balancer service when-ready)
   (let ((lbr (make-load-balancer)))
     (call-with-local-tcp-server-socket service
       (lambda (server-socket)
+	(when-ready service)
 	(let loop ()
 	  (let* ((socket (tcp-server-connection-accept server-socket #t #f))
 		 (id (ignore-errors (lambda () (network-read socket)))))

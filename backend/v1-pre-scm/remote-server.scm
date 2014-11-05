@@ -3,9 +3,10 @@
 
 (declare (usual-integrations))
 
-(define (run-venture-server service)
+(define (run-venture-server service when-ready)
   (call-with-local-tcp-server-socket service
     (lambda (server-socket)
+      (when-ready service)
       (let loop ()
 	((call-with-accept-socket server-socket
 	   (lambda (socket)
