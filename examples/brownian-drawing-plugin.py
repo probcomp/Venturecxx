@@ -18,7 +18,6 @@
 
 import venture.lite.psp as psp
 import venture.lite.value as v
-import venture.value.dicts as val
 from venture.lite.builtin import typed_nr
 
 import pygame
@@ -95,9 +94,11 @@ class DrawFramePSP(psp.RandomPSP):
     return inferrer
 
   def ys_at(self, inferrer, var):
+    import venture.value.dicts as val
     return [self.y_to_pixels(y["value"]) for y in inferrer.engine.sample_all(val.sym(var))]
 
   def points_at(self, inferrer, i):
+    import venture.value.dicts as val
     return [(self.x_to_pixels(i), self.y_to_pixels(y["value"])) for y in inferrer.engine.sample_all([val.sym("position"), val.num(i)])]
 
   def y_to_pixels(self, model_y):
