@@ -59,4 +59,32 @@
                                     ((gamma-pdf 1.2 2) x))
                                  1))
                          1e-10)))
-             (map (lambda (x) (* 0.3 x)) (cdr (iota 100))))))
+             (map (lambda (x) (* 0.3 x)) (cdr (iota 100)))))
+
+ (define-test (add-data-and-predict)
+   (define program
+     `(begin
+        ,observe-defn
+        ,map-defn
+        ,mcmc-defn
+        (model-in (rdb-extend (get-current-trace))
+          (assume is-trick? (flip 0.1))
+          (assume weight (if is-trick? (uniform 0 1) 0.5))
+          (define add-data-and-infer
+            (lambda ()
+              ;; The trace in which this observe is run is
+              ;; dynamically scoped right now
+              (observe (flip weight) #t)
+              (infer (mcmc 10))))
+          (define find-trick
+            (lambda ()
+              (if (not (predict is-trick?))
+                  (begin
+                    (add-data-and-infer)
+                    (find-trick))
+                  'ok)))
+          (find-trick)
+          (predict weight))))
+   ;; Check that it runs, but I have no idea what the distribution on
+   ;; weights should be.
+   (top-eval program)))
