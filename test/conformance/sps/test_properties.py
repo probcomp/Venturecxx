@@ -100,7 +100,8 @@ fully uncurried)."""
 def testRandom():
   for (name,sp) in relevantSPs():
     if sp.outputPSP.isRandom():
-      if not name in ["make_uc_dir_mult", "categorical", "make_uc_sym_dir_mult"]:
+      if not name in ["make_uc_dir_mult", "categorical", "make_uc_sym_dir_mult",
+                      "log_bernoulli"]: # Because the default distribution does a bad job of picking arguments at which log_bernoulli's output actually varies.
         yield checkRandom, name, sp
 
 def checkRandom(_name, sp):
