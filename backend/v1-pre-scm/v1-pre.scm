@@ -1,6 +1,7 @@
 (declare (usual-integrations eval apply))
 (declare (integrate-external "syntax"))
 (declare (integrate-external "pattern-case/pattern-case"))
+(declare (integrate-external "address"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Types                                                          ;;;
@@ -21,16 +22,11 @@
 
 ;;; Addresses
 
-(define-structure (address (constructor %make-address))
-  index) ;; Sortable by creation time
-
 (define next-address 0)
 (define (make-address)
-  (set! next-address (+ next-address 1))
+  (assert (fix:< next-address (largest-fixnum)))
+  (set! next-address (fix:+ next-address 1))
   (%make-address next-address))
-(define-integrable (address<? a1 a2)
-  (< (address-index a1) (address-index a2)))
-(define address-wt-tree-type (make-wt-tree-type address<?))
 (define (make-address-wt-tree)
   (make-wt-tree address-wt-tree-type))
 
@@ -108,7 +104,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (eval exp env trace addr read-traces)
-  (ensure (or/c env-frame? false?) env)
+  (ensure (or/c1 env-frame? false?) env)
   (ensure address? addr)
   (resolve-request
    ;; CONSIDER what should happen if this address is recorded, but not
@@ -331,7 +327,7 @@
       (lose)))
 
 (define (extend-env parent symbols addresses)
-  (ensure (or/c env-frame? false?) parent)
+  (ensure (or/c1 env-frame? false?) parent)
   (ensure (listof symbol?) symbols)
   (ensure (listof address?) addresses)
   (make-env-frame parent symbols addresses))
@@ -344,7 +340,7 @@
   (set-env-frame-addresses! env (cons addr (env-frame-addresses env))))
 
 (define (env-lookup env symbol)
-  (ensure (or/c env-frame? false?) env)
+  (ensure (or/c1 env-frame? false?) env)
   (ensure symbol? symbol)
   (env-search env symbol (lambda (a) a) (lambda () #f)))
 

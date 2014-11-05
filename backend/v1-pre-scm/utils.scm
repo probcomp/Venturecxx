@@ -76,6 +76,11 @@
          'ok
          (error "Invariant violation" test arg ...)))))
 
+(define-syntax or/c1
+  (syntax-rules ()
+    ((OR/C f) f)
+    ((OR/C f g ...) (LAMBDA (X) (OR (f X) ((OR/C g ...) X))))))
+
 (define (or/c . predicates)
   (lambda args
     (let loop ((predicates predicates))

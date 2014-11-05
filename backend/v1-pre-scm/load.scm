@@ -40,6 +40,7 @@
 (load-relative-compiled "utils")
 (load-relative-compiled "small-exact")
 (load-relative-compiled "syntax")
+(load-relative-compiled "address")
 (load-relative-compiled "v1-pre")
 (load-relative-compiled "primitives")
 (load-relative-compiled "random-db")
