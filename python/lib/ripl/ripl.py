@@ -102,7 +102,7 @@ class Ripl():
     
     
     
-    def execute_instruction(self, instruction=None, params=None):
+    def execute_instruction(self, instruction=None, params=None, suppress_drawing_plots=False):
         p = self._cur_parser()
         try: # execute instruction, and handle possible exception
             # perform parameter substitution if necessary
@@ -135,6 +135,12 @@ class Ripl():
             did = ret_value['directive_id']
             self.directive_id_to_stringable_instruction[did] = stringable_instruction
             self.directive_id_to_mode[did] = self.mode
+        # This IF is a terrible hack for allowing plotf to actually
+        # draw its plots when run by execute_instruction (e.g., via
+        # execute_program) and also allowing programmatic access to
+        # the plot data by calling ripl.infer without drawing it.
+        if not suppress_drawing_plots and parsed_instruction['instruction'] is 'infer' and ret_value["value"] is not None and not isinstance(ret_value["value"], dict):
+            print ret_value["value"]
         return ret_value
     
     def _annotated_error(self, e, instruction):
@@ -535,7 +541,7 @@ Open issues:
             return program
 
     def infer(self, params=None, type=False):
-        o = self.execute_instruction({'instruction':'infer', 'expression': self.defaultInferProgram(params)})
+        o = self.execute_instruction({'instruction':'infer', 'expression': self.defaultInferProgram(params)}, suppress_drawing_plots = True)
         ans = o["value"]
         if type:
             return ans
