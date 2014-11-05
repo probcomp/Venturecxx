@@ -124,6 +124,11 @@
      (let ((p+ (/ prior (+ trials 1)))
            (p- (/ (- 1 prior) (expt 2 trials))))
        (/ p+ (+ p+ p-))))
+   (define (num-trials-to-convince prior level)
+     (let loop ((answer 2))
+       (if (> (analytical-posterior prior answer) level)
+           answer
+           (loop (+ answer 1)))))
    (define (prop-convincedness-correct prior trials)
      (let ((posterior (analytical-posterior prior trials)))
        (check (> (chi-sq-test
