@@ -57,13 +57,18 @@ def lite(args):
     local_ripl(args, v.Lite())
 
 def local_ripl(args, backend):
+    interactive = True
     r = backend.make_church_prime_ripl()
     if args is not None:
         if args.prelude: r.load_prelude()
         if args.file:
+            interactive = False
             with open(args.file) as f:
                 r.execute_program(f.read())
-    run_venture_console(r)
+        if args.interactive:
+            interactive = True
+    if interactive:
+        run_venture_console(r)
     return r
 
 def add_prelude_flag(parser):
@@ -75,6 +80,10 @@ def add_file_arg(parser):
     parser.add_argument('-f', '--file', default=None, help="a file to execute")
     return parser
 
+def add_interactivity_arg(parser):
+    parser.add_argument('-i', '--interactive', action='store_true', help="Enter interactive interpreter after completing script file")
+    return parser
+
 parser = argparse.ArgumentParser(description='An interactive, Turing-complete probabilistic programming platform')
 parser.add_argument('--version', action='version', version='Venture, version 0.2.1')
 subparsers = parser.add_subparsers(title="optional mode")
@@ -82,17 +91,17 @@ subparsers = parser.add_subparsers(title="optional mode")
 parser_local = subparsers.add_parser("puma", help="[default] Start a local Venture Puma session",
                                      description="Start a local Venture Puma session")
 parser_local.set_defaults(func=puma)
-add_file_arg(add_prelude_flag(parser_local))
+add_interactivity_arg(add_file_arg(add_prelude_flag(parser_local)))
 
 parser_local = subparsers.add_parser("cxx", help="Start a local Venture CXX session",
                                      description="Start a local Venture CXX session")
 parser_local.set_defaults(func=cxx)
-add_file_arg(add_prelude_flag(parser_local))
+add_interactivity_arg(add_file_arg(add_prelude_flag(parser_local)))
 
 parser_local = subparsers.add_parser("lite", help="Start a local Venture Lite session",
                                      description="Start a local Venture Lite session")
 parser_local.set_defaults(func=lite)
-add_file_arg(add_prelude_flag(parser_local))
+add_interactivity_arg(add_file_arg(add_prelude_flag(parser_local)))
 
 default_port = 8082
 
