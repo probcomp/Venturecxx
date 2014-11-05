@@ -10,14 +10,14 @@
 (declare (usual-integrations))
 
 (define-structure (load-balancer (constructor make-load-balancer ()))
-  (lock (make-thread-mutex))
-  (condvar (make-condition-variable "venture-load-balancer"))
+  (lock (make-thread-mutex) read-only #t)
+  (condvar (make-condition-variable "venture-load-balancer") read-only #t)
   (dying? #f)
   (workqueue (make-queue)))
 
 (define-structure (work (constructor make-work (program/result)))
-  (lock (make-thread-mutex))
-  (condvar (make-condition-variable "venture-work"))
+  (lock (make-thread-mutex) read-only #t)
+  (condvar (make-condition-variable "venture-work") read-only #t)
   (done? #f)
   program/result)
 
