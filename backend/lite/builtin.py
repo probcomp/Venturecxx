@@ -357,6 +357,8 @@ builtInSPsList = [
            [ "binomial", typed_nr(discrete.BinomialOutputPSP(), [v.CountType(), v.ProbabilityType()], v.CountType()) ],
            [ "flip", typed_nr(discrete.BernoulliOutputPSP(), [v.ProbabilityType()], v.BoolType(), min_req_args=0) ],
            [ "bernoulli", typed_nr(discrete.BernoulliOutputPSP(), [v.ProbabilityType()], v.IntegerType(), min_req_args=0) ],
+           [ "log_flip", typed_nr(discrete.LogBernoulliOutputPSP(), [v.NumberType()], v.BoolType()) ],
+           [ "log_bernoulli", typed_nr(discrete.LogBernoulliOutputPSP(), [v.NumberType()], v.BoolType()) ],
            [ "categorical", typed_nr(discrete.CategoricalOutputPSP(), [v.SimplexType(), v.ArrayType()], v.AnyType(), min_req_args=1) ],
            [ "uniform_discrete", typed_nr(discrete.UniformDiscreteOutputPSP(), [v.IntegerType(), v.IntegerType()], v.IntegerType()) ],
            [ "poisson", typed_nr(discrete.PoissonOutputPSP(), [v.PositiveType()], v.CountType()) ],

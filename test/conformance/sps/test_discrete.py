@@ -1,5 +1,6 @@
 from nose.tools import eq_
-from venture.test.config import get_ripl, on_inf_prim, gen_on_inf_prim
+from venture.test.config import get_ripl, on_inf_prim, gen_on_inf_prim, broken_in, collectSamples
+from venture.test.stats import statisticalTest, reportKnownDiscrete
 
 @gen_on_inf_prim("none")
 def testDirSmoke():
@@ -17,3 +18,15 @@ def checkDirSmoke2(form):
 @on_inf_prim("none")
 def testDirichletComparisonRegression():
   eq_(get_ripl().predict("(= (symmetric_dirichlet 3 2) (simplex 0.01 0.99))"), False) # As opposed to crashing
+
+@broken_in('puma')
+@statisticalTest
+def testLogFlip():
+  ripl = get_ripl()
+  
+  ripl.predict('(log_flip (log 0.5))', label='pid')
+  
+  predictions = collectSamples(ripl,'pid')
+  ans = [(False,0.5),(True,0.5)]
+  return reportKnownDiscrete(ans, predictions)
+
