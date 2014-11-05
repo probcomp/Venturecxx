@@ -58,7 +58,7 @@ def lite(args):
 
 def local_ripl(args, backend):
     interactive = True
-    r = backend.make_church_prime_ripl()
+    r = backend.make_combined_ripl()
     if args is not None:
         if args.prelude: r.load_prelude()
         if args.file:

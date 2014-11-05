@@ -228,8 +228,17 @@ class Ripl():
         return vals
 
     def execute_program_from_file(self, filename):
-        with open(filename) as f:
-            self.execute_program(f.read())
+        _, ext = path.splitext(filename)
+        old_mode = self.get_mode()
+        if ext == ".vnts":
+            self.set_mode("venture_script")
+        else:
+            self.set_mode("church_prime")
+        try:
+            with open(filename) as f:
+                self.execute_program(f.read())
+        finally:
+            self.set_mode(old_mode)
 
     ############################################
     # Text manipulation
