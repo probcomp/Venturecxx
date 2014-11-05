@@ -17,7 +17,7 @@ def testExecuteSmoke():
     ripl.clear()
     ripl.execute_program("""[assume x (normal 0 1)]
 ;; An observation
-[observe (normal x 1) 2]
+[observe (normal x 1) 2] ; with an end-of-line comment
 [infer (mh default one %s)]""" % default_num_transitions_per_sample())
     predictions.append(ripl.sample("x"))
   cdf = scipy.stats.norm(loc=1, scale=math.sqrt(0.5)).cdf

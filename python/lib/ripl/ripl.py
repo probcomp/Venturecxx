@@ -214,7 +214,13 @@ class Ripl():
         if params != None:
             program_string = self.substitute_params(program_string,params)
         # TODO the right thing is to make "comment" a valid instruction type.
-        no_comments = '\n'.join(x for x in program_string.split('\n') if not re.match('^;', x))
+        if self.get_mode() == "church_prime":
+            start_comment_regex = ";"
+        elif self.get_mode() == "venture_script":
+            start_comment_regex = "//"
+        else:
+            raise Exception("Do not know comment syntax for mode {}".format(self.get_mode()))
+        no_comments = '\n'.join(re.split(start_comment_regex, x)[0] for x in program_string.split('\n'))
         instructions, positions = p.split_program(no_comments)
         return [self._ensure_parsed(i) for i in instructions], positions
 
