@@ -227,6 +227,9 @@ class Ripl():
             vals.append(self.execute_instruction(instruction))
         return vals
 
+    def execute_program_from_file(self, filename):
+        with open(filename) as f:
+            self.execute_program(f.read())
 
     ############################################
     # Text manipulation

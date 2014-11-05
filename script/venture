@@ -63,8 +63,7 @@ def local_ripl(args, backend):
         if args.prelude: r.load_prelude()
         if args.file:
             interactive = False
-            with open(args.file) as f:
-                r.execute_program(f.read())
+            r.execute_program_from_file(args.file)
         if args.interactive:
             interactive = True
     if interactive:

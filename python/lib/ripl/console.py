@@ -164,8 +164,7 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def do_load(self, s):
     '''Load the given Venture file.'''
-    with open(s) as fp:
-      self.ripl.execute_program(fp.read())
+    self.ripl.execute_program_from_file(s)
 
 def run_venture_console(ripl):
   RiplCmd(ripl).cmdloop()
