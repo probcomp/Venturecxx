@@ -64,6 +64,7 @@ def draw(inferrer):
       pr_i = int(datum[1]["value"])
       plot_range = max(plot_range, pr_i + 1)
 
+  # Draw the actual trajectories
   point_lists = [points_at(inferrer, i) for i in range(plot_range)]
   from pygame.locals import BLEND_ADD
   for p in range(len(point_lists[0])):
@@ -75,11 +76,6 @@ def draw(inferrer):
       pygame.draw.line(path, pygame.Color(0, 0, 255, alpha_level), (x_p, y_p), (x_n, y_n), 3)
     window.blit(path, (0,0))
 
-  # for i in range(1, plot_range):
-  #   old_ps = points_at(inferrer, i-1)
-  #   new_ps = points_at(inferrer, i)
-  #   for ((x_p, y_p), (x_n, y_n)) in zip(old_ps, new_ps):
-  #     pygame.draw.line(window, pygame.Color(255, 0, 0, 1), (x_p, y_p), (x_n, y_n), 3)
   pygame.display.update()
 
 def ys_at(inferrer, var):
