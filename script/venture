@@ -71,8 +71,9 @@ def local_ripl(args, backend):
             if hasattr(m, "__venture_start__"):
                 m.__venture_start__(r)
         if args.file:
-            interactive = False
-            r.execute_program_from_file(args.file)
+            for f in args.file:
+                interactive = False
+                r.execute_program_from_file(f)
         if args.interactive:
             interactive = True
         if args.lang:
@@ -84,7 +85,7 @@ def local_ripl(args, backend):
 def add_local_args(parser):
     parser.add_argument('--prelude', action='store_true',
                         help = 'load prelude on startup')
-    parser.add_argument('-f', '--file', default=None, help="execute the given file")
+    parser.add_argument('-f', '--file', action='append', help="execute the given file")
     parser.add_argument('-i', '--interactive', action='store_true', help="enter interactive interpreter after completing script file")
     parser.add_argument('-l', '--lang', default="church_prime",
                         help="the syntax to interpret in the console (valid values: are \"church_prime\" (default) and \"venture_script\")")
