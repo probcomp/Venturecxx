@@ -61,3 +61,9 @@
   (call-with-output-string
     (lambda (port)
       (write-condition-report condition port))))
+
+(define (spawn-thread procedure)
+  (let ((root-continuation (create-thread-continuation)))
+    (create-thread root-continuation
+      (lambda ()
+	(with-create-thread-continuation root-continuation procedure)))))
