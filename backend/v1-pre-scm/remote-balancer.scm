@@ -66,7 +66,7 @@
       (dynamic-wind
        (lambda () 0)
        (lambda () (serve lbr socket))
-       (lambda () (close-port socket))))))
+       (lambda () (ignore-errors (lambda () (close-port socket))))))))
 
 (define (lbr:serve-client lbr socket)
   (match (network-read socket)
