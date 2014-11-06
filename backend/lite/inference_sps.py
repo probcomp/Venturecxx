@@ -69,6 +69,7 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
   SPsListEntry("incorporate", [], klass=MadeEngineMethodInferOutputPSP),
   SPsListEntry("peek", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
   SPsListEntry("plotf", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
+  SPsListEntry("plotf_to_file", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
   SPsListEntry("printf", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
 
   # Hackety hack hack backward compatibility

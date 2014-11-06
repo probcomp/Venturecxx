@@ -17,7 +17,7 @@
 import time
 from pandas import DataFrame, Index
 
-from venture.lite.value import (ExpressionType, VentureArray, VentureSymbol,
+from venture.lite.value import (ExpressionType, SymbolType, VentureArray, VentureSymbol,
                                 VentureInteger)
 from venture.ripl.utils import strip_types_from_dict_values
 from plot_spec import PlotSpec
@@ -60,9 +60,13 @@ class Infer(object):
     else:
       raise Exception("Cannot issue multiple printf commands in same inference program")
 
-  def _init_plot(self, spec, names, exprs, stack_dicts):
+  def _init_plot(self, spec, names, exprs, stack_dicts, filename=None):
     if self.result is None:
-      self.result = InferResult(first_command = 'plotf')
+      if filename is None:
+        cmd = 'plotf'
+      else:
+        cmd = 'plotf_to_file'
+      self.result = InferResult(first_command = cmd, filename = filename)
     if self.result.spec_plot is None:
       self.result._init_plot(spec, names, exprs, stack_dicts)
     elif (spec == self.result.spec_plot.spec_string and
@@ -127,6 +131,13 @@ class Infer(object):
     names, stack_dicts = self.parse_exprs(exprs, 'plotf')
     self._init_plot(spec, names, exprs, stack_dicts)
     self.result._add_data(self.engine, 'plotf')
+  def plotf_to_file(self, basename, spec, *exprs): # This one only works from the "plotf_to_file" SP.
+    basename = SymbolType().asPython(basename)
+    filename = basename + ".png" # TODO Parsers cannot accept full filenames :(
+    spec = ExpressionType().asPython(spec)
+    names, stack_dicts = self.parse_exprs(exprs, 'plotf')
+    self._init_plot(spec, names, exprs, stack_dicts, filename=filename)
+    self.result._add_data(self.engine, 'plotf_to_file')
 
 class InferResult(object):
   '''
@@ -171,7 +182,7 @@ class InferResult(object):
   Calling print will generate all plots stored in the spec_plot attribute. This
   attribute in turn is a SpecPlot object.
   '''
-  def __init__(self, first_command):
+  def __init__(self, first_command, filename = None):
     self.sweep = 0
     self.time = time.time()
     self._first_command = first_command
@@ -182,6 +193,7 @@ class InferResult(object):
     self._print_exprs = None
     self._print_stack_dicts = None
     self.spec_plot = None
+    self.filename = filename
 
   def _init_peek(self, names, exprs, stack_dicts):
     self._peek_names = names
@@ -272,7 +284,7 @@ class InferResult(object):
     return self.spec_plot.draw(self.dataset())
 
   def plot(self):
-    self.spec_plot.plot(self.dataset())
+    self.spec_plot.plot(self.dataset(), self.filename)
 
   def __str__(self):
     "Not really a string method, but does get itself displayed when printed."
@@ -280,7 +292,10 @@ class InferResult(object):
       return self.__repr__()
     else:
       self.plot()
-      return "a plot"
+      if self.filename is None:
+        return "a plot"
+      else:
+        return "plot saved to {}".format(self.filename)
 
 class SpecPlot(object):
   """(plotf spec exp0 ...) -- Generate a plot according to a format specification.
@@ -358,8 +373,8 @@ class SpecPlot(object):
     else:
       return self.spec.draw(data, self.names)
 
-  def plot(self, data):
+  def plot(self, data, filename=None):
     if self.spec is None:
       pass
     else:
-      return self.spec.plot(data, self.names)
+      return self.spec.plot(data, self.names, filename)

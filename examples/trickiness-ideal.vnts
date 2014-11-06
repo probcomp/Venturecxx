@@ -7,15 +7,15 @@ assume weight = if (is_tricky) {
 } else {
   0.5
 }
-infer plotf(h0, weight)
+infer plotf_to_file(prior, h0, weight)
 observe bernoulli(weight) = 1
 observe bernoulli(weight) = 1
 observe bernoulli(weight) = 1
-infer plotf(h0, weight)
+infer plotf_to_file(obs_no_inf, h0, weight)
 infer rejection(default, all, 1)
-infer plotf(h0, weight)
+infer plotf_to_file(ideal, h0, weight)
 observe bernoulli(weight) = 1
 observe bernoulli(weight) = 1
 observe bernoulli(weight) = 1
 infer rejection(default, all, 1)
-infer plotf(h0, weight)
+infer plotf_to_file(ideal_more_data, h0, weight)

@@ -272,6 +272,9 @@ effect of renumbering the directives, if some had been forgotten."""
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "plotf":
       assert len(program) >= 2
       return [program[0]] + [v.quote(e) for e in program[1:]]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "plotf_to_file":
+      assert len(program) >= 2
+      return [program[0]] + [v.quote(e) for e in program[1:]]
     elif type(program) is list: return [self.macroexpand_inference(p) for p in program]
     else: return program
 

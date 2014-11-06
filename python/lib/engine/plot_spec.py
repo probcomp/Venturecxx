@@ -30,10 +30,13 @@ class PlotSpec(object):
       figs.append(plot.draw())
     return figs
 
-  def plot(self, dataset, names):
+  def plot(self, dataset, names, filename=None):
     import matplotlib.pylab as plt
     self.draw(dataset, names)
-    plt.show()
+    if filename is None:
+      plt.show()
+    else:
+      plt.savefig(filename)
     # FIXME: add something to track names of frames here
 
   def streams(self):
