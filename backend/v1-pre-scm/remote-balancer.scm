@@ -104,18 +104,24 @@
 	       (else
 		(let ((work (dequeue! (load-balancer-workqueue lbr))))
 		  (lambda ()
-		    (work-done!
-		     work
-		     (call-with-current-continuation
-		      (lambda (return)
-			(bind-condition-handler (list condition-type:error)
-			    (lambda (condition)
-			      condition
-			      (return '(FAIL)))
-			  (lambda ()
-			    (network-write
-			     socket
-			     `(EVAL ,(work-program/result work)))
-			    ;; XXX Sanitize the answer?
-			    (network-read socket))))))
-		    (loop))))))))))
+		    (call-with-current-continuation
+		     (lambda (abort)
+		       (bind-condition-handler (list condition-type:error)
+			   (lambda (condition)
+			     condition	;XXX Log this.
+			     ;; Worker has died.  Let another one
+			     ;; take it instead, and give up on
+			     ;; running this one.
+			     (with-thread-mutex-locked
+				 (load-balancer-lock lbr)
+			       (lambda ()
+				 (enqueue! (load-balancer-workqueue lbr) work)
+				 (condition-variable-signal!
+				  (load-balancer-condvar lbr))))
+			     (abort 0))
+			 (lambda ()
+			   (network-write
+			    socket
+			    `(EVAL ,(work-program/result work)))
+			   (work-done! work (network-read socket))))
+		       (loop))))))))))))
