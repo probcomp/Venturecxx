@@ -142,7 +142,7 @@ class Infer(object):
     name = SymbolType().asPython(name)
     if name not in self.engine.callbacks:
       raise "Unregistered callback {}".format(name)
-    self.engine.callbacks[name](*args)
+    self.engine.callbacks[name](self, *args)
 
 class InferResult(object):
   '''

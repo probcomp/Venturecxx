@@ -1,8 +1,8 @@
 ;; Run me with venture puma -f brownian-pic.vnt -L brownian-drawing-plugin.py
-[infer (resample 6)]
+[infer (resample 3)]
 [load "brownian-model.vnt"]
 [observe (obs_fun 4) 2]
 [observe (obs_fun 5) 2.5]
 [observe (obs_fun 6) 3]
 [observe (obs_fun 7) 3.5]
-[infer (cycle ((nesterov exp all 0.03 1 1) draw) 50)]
+[infer (cycle ((nesterov exp all 0.01 1 1) (call_back (quote draw))) 50)]
