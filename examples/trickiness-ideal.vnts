@@ -7,15 +7,15 @@ assume weight = if (is_tricky) {
 } else {
   0.5
 }
-infer plotf(p0r, is_tricky)
+infer plotf(h0, weight)
 observe bernoulli(weight) = 1
 observe bernoulli(weight) = 1
 observe bernoulli(weight) = 1
-infer plotf(p0r, is_tricky)
+infer plotf(h0, weight)
 infer rejection(default, all, 1)
-infer plotf(p0r, is_tricky)
+infer plotf(h0, weight)
 observe bernoulli(weight) = 1
 observe bernoulli(weight) = 1
 observe bernoulli(weight) = 1
 infer rejection(default, all, 1)
-infer plotf(p0r, is_tricky)
+infer plotf(h0, weight)
