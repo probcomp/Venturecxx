@@ -190,6 +190,10 @@
       (let ((threads
 	     (make-initialized-list 1000
 	       (lambda (i)
+		 ;; XXX ARGH!  Something is broken in MIT Scheme
+		 ;; necessitating this.  Fortunately it shouldn't
+		 ;; affect the parallelism capacity.
+		 (yield-current-thread)
 		 (spawn-thread
 		  (lambda ()
 		    (venture-remote-eval service `(* ,i (expt 2 42)))))))))
