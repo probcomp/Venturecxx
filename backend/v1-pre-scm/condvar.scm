@@ -29,6 +29,7 @@
   (thread-mutex (make-thread-mutex) read-only #t))
 
 (define-guarantee condition-variable "condition variable")
+(define-guarantee thread-mutex "thread mutex") ;XXX !@*#&@!
 
 (define (make-condition-variable #!optional name)
   (let ((name (if (default-object? name) unspecific name))
