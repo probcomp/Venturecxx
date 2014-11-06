@@ -96,7 +96,7 @@ def add_local_args(parser):
     parser.add_argument('-l', '--lang', default="church_prime",
                         help="the syntax to interpret in the console (valid values: are \"church_prime\" (default) and \"venture_script\")")
     parser.add_argument('-L', '--library', action='append',
-                        help="a Python file in the local directory to load on startup.  If the file defines a __venture_start__ function, that is called with the ripl to initialize the library.")
+                        help="load a Python file in the local directory.  If the file defines a __venture_start__ function, call it with the ripl to initialize the library.")
     return parser
 
 parser = argparse.ArgumentParser(description='An interactive, Turing-complete probabilistic programming platform')
