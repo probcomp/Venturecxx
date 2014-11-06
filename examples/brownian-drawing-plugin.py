@@ -18,6 +18,7 @@
 #   infer (cycle ((call_back (quote draw))) 10)
 
 import pygame
+import pygame.image
 pygame.init()
 window = pygame.display.set_mode((640, 400))
 pygame.display.update()
@@ -94,6 +95,12 @@ def x_to_pixels(model_x):
 def stop_drawing(_inferrer):
   pygame.quit()
 
+def draw_to_disk(inferrer):
+  draw(inferrer)
+  pygame.image.save(window, "trajectories.png")
+  print "Saved to trajectories.png"
+
 def __venture_start__(ripl):
   ripl.bind_callback("draw", draw)
+  ripl.bind_callback("draw_to_disk", draw_to_disk)
   ripl.bind_callback("stop_drawing", stop_drawing)

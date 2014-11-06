@@ -1,8 +1,10 @@
-;; Run me with venture puma -f brownian-pic.vnt -L brownian-drawing-plugin.py
+;; Run me with venture puma -f brownian-pic.vnt -L brownian-drawing-plugin.py -e 'inference'
+;; e.g. venture puma -f brownian-pic.vnt -L brownian-drawing-plugin.py -e '[infer (call_back draw_to_disk)]'
+;; or   venture lite -f brownian-pic.vnt -L brownian-drawing-plugin.py -e '[infer (loop ((nesterov exp all 0.01 1 1) (call_back draw)))]'
 [infer (resample 3)]
 [load "brownian-model.vnt"]
 [observe (obs_fun 4) 2]
 [observe (obs_fun 5) 2.5]
 [observe (obs_fun 6) 3]
 [observe (obs_fun 7) 3.5]
-[infer (loop ((nesterov exp all 0.01 1 1) (call_back draw)))]
+; [infer (loop ((nesterov exp all 0.01 1 1) (call_back draw)))]
