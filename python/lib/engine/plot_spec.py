@@ -19,6 +19,7 @@ class PlotSpec(object):
     index = 0
     figs = []
     for spec in self.frames:
+      spec.initialize()
       (aes, index) = spec.aes_dict_at(index, names)
       plot = g.ggplot(dataset, g.aes(**aes))
       for geom in spec.get_geoms():
@@ -58,6 +59,10 @@ class PlotSpec(object):
 
 class FrameSpec(object):
   def __init__(self, spec):
+    self.spec_string = spec
+
+  def initialize(self):
+    spec = self.spec_string
     self.two_d_only = True
     top = re.match(toplevel_rx, spec)
     if not top:
@@ -66,6 +71,7 @@ class FrameSpec(object):
     dims = top.group(2)
     if len(dims) == 0:
       raise Exception("Invalid plot spec %s; must supply at least one dimension to plot")
+    self._interp_geoms(self.geoms) # To set the self.two_d_only bit
     self._interp_dimensions(dims)
 
   def get_geoms(self):
