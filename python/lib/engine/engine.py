@@ -47,6 +47,7 @@ class Engine(object):
     import venture.lite.inference_sps as inf
     self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
+    self.callbacks = {}
 
   def create_handler(self, traces):
     if self.mode == 'parallel':
@@ -62,6 +63,9 @@ class Engine(object):
 
   def bind_foreign_inference_sp(self, name, sp):
     self.inference_sps[name] = sp
+
+  def bind_callback(self, name, callback):
+    self.callbacks[name] = callback
 
   def getDistinguishedTrace(self):
     return self.retrieve_trace(0)
@@ -273,6 +277,9 @@ effect of renumbering the directives, if some had been forgotten."""
       assert len(program) >= 2
       return [program[0]] + [v.quote(e) for e in program[1:]]
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "plotf_to_file":
+      assert len(program) >= 2
+      return [program[0]] + [v.quote(e) for e in program[1:]]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "call_back":
       assert len(program) >= 2
       return [program[0]] + [v.quote(e) for e in program[1:]]
     elif type(program) is list: return [self.macroexpand_inference(p) for p in program]

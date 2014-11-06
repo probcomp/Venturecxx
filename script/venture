@@ -56,11 +56,20 @@ def lite(args):
     banner()
     local_ripl(args, v.Lite())
 
+def load_library(name):
+    import imp
+    with open(name, 'rb') as f:
+        return imp.load_source(name, name, f)
+
 def local_ripl(args, backend):
     interactive = True
     r = backend.make_combined_ripl()
     if args is not None:
         if args.prelude: r.load_prelude()
+        if args.library:
+            m = load_library(args.library)
+            if hasattr(m, "__venture_start__"):
+                m.__venture_start__(r)
         if args.file:
             interactive = False
             r.execute_program_from_file(args.file)
@@ -79,6 +88,8 @@ def add_local_args(parser):
     parser.add_argument('-i', '--interactive', action='store_true', help="enter interactive interpreter after completing script file")
     parser.add_argument('-l', '--lang', default="church_prime",
                         help="the syntax to interpret in the console (valid values: are \"church_prime\" (default) and \"venture_script\")")
+    parser.add_argument('-L', '--library', default=None,
+                        help="a Python file in the local directory to load on startup.  If the file defines a __venture_start__ function, that is called with the ripl to initialize the library.")
     return parser
 
 parser = argparse.ArgumentParser(description='An interactive, Turing-complete probabilistic programming platform')

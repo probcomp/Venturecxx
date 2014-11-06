@@ -674,6 +674,9 @@ Open issues:
     def bind_foreign_inference_sp(self, name, sp):
         self.sivm.core_sivm.engine.bind_foreign_inference_sp(name, sp)
 
+    def bind_callback(self, name, callback):
+        self.sivm.core_sivm.engine.bind_callback(name, callback)
+
     ############################################
     # Serialization
     ############################################
