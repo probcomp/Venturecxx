@@ -5,4 +5,4 @@
 [observe (obs_fun 5) 2.5]
 [observe (obs_fun 6) 3]
 [observe (obs_fun 7) 3.5]
-[infer (cycle ((nesterov exp all 0.01 1 1) (call_back draw)) 50)]
+[infer (loop ((nesterov exp all 0.01 1 1) (call_back draw)))]
