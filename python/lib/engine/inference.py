@@ -138,11 +138,11 @@ class Infer(object):
     names, stack_dicts = self.parse_exprs(exprs, 'plotf')
     self._init_plot(spec, names, exprs, stack_dicts, filename=filename)
     self.result._add_data(self.engine, 'plotf_to_file')
-  def call_back(self, name, *args):
+  def call_back(self, name, *exprs):
     name = SymbolType().asPython(name)
     if name not in self.engine.callbacks:
       raise "Unregistered callback {}".format(name)
-    self.engine.callbacks[name](self, *args)
+    self.engine.callbacks[name](self, *[self.engine.sample_all(e.asStackDict()) for e in exprs])
 
 class InferResult(object):
   '''
