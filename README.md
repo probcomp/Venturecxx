@@ -34,6 +34,31 @@ You get
 - a VNC server listening on localhost port 5900
 - an IPython notebook server listening on port 8888
 
+Running Venture's Docker Container (Windows)
+==========================================
+
+On Windows and MacOS, you can easily run docker containers with the boot2docker tool.
+Boot2docker is a VM interface and lightweight Linux distribution specifically intended 
+to run [Docker containers](http://www.docker.com).
+It runs completely from RAM, weighs ~27MB and boots in ~5s.
+
+    Install latest boot2docker for Windows
+        https://docs.docker.com/installation/windows/   # Installation Instructions
+    script/windows/1_initialize_boot2docker.sh          # Update boot2docker image
+    script/windows/2_build_docker_image.sh              # Build image (large download + build) 
+    script/windows/3_run_container.sh                   # Launch application
+
+    venture                          # Inside the container
+
+    firefox localhost:8888           # For example IPython notebooks
+
+You get
+- A shell inside the container to do whatever
+- The source directory mapped into the container so you can edit from
+  outside
+- a VNC server listening on localhost port 5900
+- an IPython notebook server listening on port 8888
+
 Installing Venture from Source
 ==============================
 

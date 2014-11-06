@@ -1,7 +1,5 @@
-screen -S x11vnc -d -m x11vnc -forever -create
-
-cd /root/Venturecxx/examples
-
-screen -S ipython_nb -d -m ipython notebook
-
+#!/bin/bash
+# To modify what runs in your container, see /script/supervisord.conf
+cp ./script/supervisord.conf /etc/supervisor/conf.d/supervisord.conf  # Define processes to run
+/usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf # Start supervisor daemon
 /bin/bash 

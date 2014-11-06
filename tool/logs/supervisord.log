@@ -1,0 +1,8 @@
+2014-11-06 06:45:39,406 CRIT Supervisor running as root (no user in config file)
+2014-11-06 06:45:39,436 CRIT Server 'inet_http_server' running without any HTTP authentication checking
+2014-11-06 06:45:39,437 INFO daemonizing the supervisord process
+2014-11-06 06:45:39,440 INFO supervisord started with pid 13
+2014-11-06 06:45:40,447 INFO spawned: 'ipython_notebook' with pid 24
+2014-11-06 06:45:40,453 INFO spawned: 'x11vnc' with pid 25
+2014-11-06 06:45:41,477 INFO success: ipython_notebook entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2014-11-06 06:45:41,478 INFO success: x11vnc entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)

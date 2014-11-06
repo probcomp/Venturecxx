@@ -32,7 +32,7 @@ RUN         apt-get install -y python-pyparsing python-flask python-requests pyt
 RUN         apt-get install -y x11vnc xvfb
 RUN         apt-get install -y vim screen git supervisor
 RUN 		mkdir -p /var/log/supervisor
-ADD 		/script/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+#supervisord configuration file added in container_init.sh
 
 # Add source code repository
 # Moved this after dependency install to leverage build process caching
@@ -57,5 +57,5 @@ RUN     echo "defshell -bash      # Set screen login shell to bash" >> ~/.screen
 RUN     cp -f ./profile/matplotlibrc /etc/matplotlibrc # Changing backend to Agg
 RUN     chmod 777 /var/run/screen
 
-#Start supervisor to manage processes as defined in /scripts/supervisord.conf
-CMD		["/usr/bin/supervisord"]
+# Start processes as per /script/supervisord.conf and an interactive shell
+CMD         ./script/container_init.sh
