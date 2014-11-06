@@ -79,3 +79,21 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
 ]
 
 inferenceKeywords = [ "default", "all", "one", "ordered" ]
+
+# Documentation of call_back (for lack of any better place to put it):
+
+# (call_back <symbol> <expression>...)    Inference special form
+#   Invokes the Python function registered under the name <symbol>
+#   (see bind_callback) with
+#   - First, the Infer instance in which the present inference program
+#     is being run
+#   - Then, for each expression in the call_back form, a list of
+#     values for that expression, represented as stack dicts, sampled
+#     across all extant particles.  The lists are parallel to each
+#     other.
+#
+# ripl.bind_callback(<name>, <callable>)  RIPL method
+#   Bind the given callable as a callback function that can be
+#   referred to by "call_back" by the given name (which is a string).
+
+# There is an example in test/inference_language/test_callback.py
