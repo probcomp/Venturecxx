@@ -12,7 +12,7 @@
 # [predict (position 10)]
 
 # To use the drawing plugin, install it at the Venture prompt with
-#   eval execfile("examples/brownian-motion-plugin.py")
+#   eval execfile("examples/brownian-drawing-plugin.py")
 # Then enjoy with
 #   infer (cycle (draw) 10)
 
