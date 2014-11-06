@@ -179,6 +179,22 @@
     (with ((service (setup)))
       (venture-remote-eval* service programs))))
 
+(define (test-multiple-workers)
+  (let ((service 12345))
+    (with ((balancer (balancer service))
+	   (worker0 (worker service))
+	   (worker1 (worker service))
+	   (worker2 (worker service))
+	   (worker3 (worker service)))
+      balancer worker0 worker1 worker2 worker3 ;ignore
+      (let ((threads
+	     (make-initialized-list 1000
+	       (lambda (i)
+		 (spawn-thread
+		  (lambda ()
+		    (venture-remote-eval service `(* ,i (expt 2 42)))))))))
+	(for-each join-thread-sync threads)))))
+
 ((lambda (checkem)
    (for-each (lambda (setup)
 	       (for-each (lambda (test)
