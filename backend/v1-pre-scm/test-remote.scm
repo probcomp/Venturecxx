@@ -98,35 +98,58 @@
 (test-network-read/write '(0 1 foo "bar"))
 (test-network-read/write '())
 
+(define (server service body)
+  (temporary-thread
+      (lambda (when-ready)
+	(run-venture-server service
+	  (lambda (service*)
+	    (assert (eqv? service service*))
+	    (when-ready))))
+    body))
+
+(define (balancer service body)
+  (temporary-thread
+      (lambda (when-ready)
+	(run-venture-load-balancer service
+	  (lambda (service*)
+	    (assert (eqv? service service*))
+	    (when-ready))))
+    body))
+
+(define (worker service body)
+  (temporary-thread
+      (lambda (when-ready)
+	(run-venture-worker service when-ready))
+    body))
+
+(define (join-thread-sync thread)
+  (let ((done? #f)
+	(value))
+    (join-thread thread
+		 (lambda (thread result)
+		   thread		;ignore
+		   (lambda ()
+		     (set! done? #t)
+		     (set! value result))))
+    (do () (done?)
+      (suspend-current-thread))
+    value))
+
 (define (client/server body)
   (let ((service 12345))
-    (with ((thread
-	    (temporary-thread
-	     (lambda (when-ready)
-	       (run-venture-server service
-		 (lambda (service*)
-		   (assert (eqv? service service*))
-		   (when-ready)))))))
-      thread				;ignore
+    (with ((server (server service)))
       (begin0 (body service)
-	(venture-remote-terminate service)))))
+	(venture-remote-terminate service)
+	(join-thread-sync server)))))
 
 (define (client/balancer/worker body)
   (let ((service 12345))
-    (with ((balancer
-	    (temporary-thread
-	     (lambda (when-ready)
-	       (run-venture-load-balancer service
-		 (lambda (service*)
-		   (assert (eqv? service service*))
-		   (when-ready))))))
-	   (worker
-	    (temporary-thread
-	     (lambda (when-ready)
-	       (run-venture-worker service when-ready)))))
-     balancer worker			;ignore
-     (begin0 (body service)
-       (venture-remote-terminate service)))))
+    (with ((balancer (balancer service))
+	   (worker (worker service)))
+      (begin0 (body service)
+	(venture-remote-terminate service)
+	(join-thread-sync balancer)
+	(join-thread-sync worker)))))
 
 (define (test-null setup)
   (with ((service (setup)))
