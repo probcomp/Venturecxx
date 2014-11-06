@@ -32,7 +32,7 @@
 	  ((not (pair? programs)))
 	(assert (< i n))
 	(let ((program (car programs)))
-	  (create-thread #f
+	  (spawn-thread
 	    (lambda ()
 	      (define (finish error? result)
 		(with-thread-mutex-locked lock

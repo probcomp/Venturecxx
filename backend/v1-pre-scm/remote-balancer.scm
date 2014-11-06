@@ -60,7 +60,7 @@
 			 (loop))))))))))))
 
 (define (lbr:serve-thread serve lbr socket)
-  (create-thread #f
+  (spawn-thread
     (lambda ()
       ;; XXX Log errors somewhere.
       (dynamic-wind

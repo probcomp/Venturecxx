@@ -56,7 +56,7 @@
 (define (temporary-thread procedure body)
   (let* ((barrier (make-thread-barrier 2))
 	 (thread
-	  (create-thread #f
+	  (spawn-thread
             (lambda ()
 	      (procedure (lambda () (thread-barrier-wait barrier)))))))
     (dynamic-wind
