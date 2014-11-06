@@ -70,6 +70,8 @@ def local_ripl(args, backend):
             m = load_library(args.library)
             if hasattr(m, "__venture_start__"):
                 m.__venture_start__(r)
+        if args.lang:
+            r.set_mode(args.lang)
         if args.file:
             for f in args.file:
                 interactive = False
@@ -80,8 +82,6 @@ def local_ripl(args, backend):
                 r.execute_program(e)
         if args.interactive:
             interactive = True
-        if args.lang:
-            r.set_mode(args.lang)
     if interactive:
         run_venture_console(r)
     return r
