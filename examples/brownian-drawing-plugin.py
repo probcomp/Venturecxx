@@ -11,8 +11,9 @@
 # [assume obs_fun (lambda (t) (normal (position t) obs_noise))]
 # [predict (position 10)]
 
-# To use the drawing plugin, install it at the Venture prompt with
-#   eval execfile("examples/brownian-drawing-plugin.py")
+# To use the drawing plugin, install it in the Venture interpreter by
+# calling it with
+#   -L brownian-drawing-plugin.py
 # Then enjoy with
 #   infer (cycle (draw) 10)
 
@@ -106,8 +107,6 @@ class DrawFramePSP(psp.RandomPSP):
   def x_to_pixels(self, model_x):
     return int(60 + 30 * model_x)
 
-draw_sp = typed_nr(DrawFramePSP(window), [v.ForeignBlobType()], v.ForeignBlobType())
-
 class QuitPSP(psp.RandomPSP):
   "In the inference language, this will be usable as a raw symbol (no parameters)"
   def __init__(self): pass
@@ -118,7 +117,8 @@ class QuitPSP(psp.RandomPSP):
     pygame.quit()
     return inferrer
 
-quit_sp = typed_nr(QuitPSP(), [v.ForeignBlobType()], v.ForeignBlobType())
-
-self.ripl.bind_foreign_inference_sp("draw", draw_sp)
-self.ripl.bind_foreign_inference_sp("stop", quit_sp)
+def __venture_start__(ripl):
+  draw_sp = typed_nr(DrawFramePSP(window), [v.ForeignBlobType()], v.ForeignBlobType())
+  quit_sp = typed_nr(QuitPSP(), [v.ForeignBlobType()], v.ForeignBlobType())
+  ripl.bind_foreign_inference_sp("draw", draw_sp)
+  ripl.bind_foreign_inference_sp("stop", quit_sp)
