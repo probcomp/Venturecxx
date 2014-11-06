@@ -47,6 +47,7 @@ class Engine(object):
     import venture.lite.inference_sps as inf
     self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
+    self.callbacks = {}
 
   def create_handler(self, traces):
     if self.mode == 'parallel':
@@ -62,6 +63,9 @@ class Engine(object):
 
   def bind_foreign_inference_sp(self, name, sp):
     self.inference_sps[name] = sp
+
+  def bind_callback(self, name, callback):
+    self.callbacks[name] = callback
 
   def getDistinguishedTrace(self):
     return self.retrieve_trace(0)
