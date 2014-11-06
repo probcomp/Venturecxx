@@ -30,7 +30,9 @@ RUN         apt-get install -y python-pyparsing python-flask python-requests pyt
 
 # Install VNC (for graphical plotting) and other useful utilities
 RUN         apt-get install -y x11vnc xvfb
-RUN         apt-get install -y vim screen git
+RUN         apt-get install -y vim screen git supervisor
+RUN 		mkdir -p /var/log/supervisor
+ADD 		/script/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Add source code repository
 # Moved this after dependency install to leverage build process caching
@@ -55,5 +57,5 @@ RUN     echo "defshell -bash      # Set screen login shell to bash" >> ~/.screen
 RUN     cp -f ./profile/matplotlibrc /etc/matplotlibrc # Changing backend to Agg
 RUN     chmod 777 /var/run/screen
 
-#Start ipython notebook in examples directory and the x11 vnc server
-CMD         ./script/container_init.sh
+#Start supervisor to manage processes as defined in /scripts/supervisord.conf
+CMD		["/usr/bin/supervisord"]
