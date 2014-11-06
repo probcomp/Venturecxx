@@ -4,6 +4,7 @@ import os
 import copy
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 from utils import cartesianProduct, makeIterable
 
@@ -482,8 +483,6 @@ class Series(object):
             return self._xvals
         else:
             return range(len(self.values)) # Should be the same as plotting just the values
-
-import matplotlib.pyplot as plt
 
 # Displays parameters in top-left corner of the graph.
 def showParameters(parameters):
