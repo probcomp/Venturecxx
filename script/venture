@@ -67,9 +67,10 @@ def local_ripl(args, backend):
     if args is not None:
         if args.prelude: r.load_prelude()
         if args.library:
-            m = load_library(args.library)
-            if hasattr(m, "__venture_start__"):
-                m.__venture_start__(r)
+            for l in args.library:
+                m = load_library(l)
+                if hasattr(m, "__venture_start__"):
+                    m.__venture_start__(r)
         if args.lang:
             r.set_mode(args.lang)
         if args.file:
@@ -94,7 +95,7 @@ def add_local_args(parser):
     parser.add_argument('-i', '--interactive', action='store_true', help="enter interactive interpreter after completing script file")
     parser.add_argument('-l', '--lang', default="church_prime",
                         help="the syntax to interpret in the console (valid values: are \"church_prime\" (default) and \"venture_script\")")
-    parser.add_argument('-L', '--library', default=None,
+    parser.add_argument('-L', '--library', action='append',
                         help="a Python file in the local directory to load on startup.  If the file defines a __venture_start__ function, that is called with the ripl to initialize the library.")
     return parser
 
