@@ -68,7 +68,7 @@ def _make_infix_token(previous_token, operator_map, lower_precedence, left_to_ri
     operator_dict = dict(operator_map)
     operator_key_list = list(x[0] for x in operator_map)
     operator_value_list = list(x[1] for x in operator_map)
-    def f(s, loc, toks):
+    def f(_s, _loc, toks):
         """
         generates a function that processes a list of infix tokens into
         the proper binary tree based on certain operator precedence rules
@@ -122,7 +122,7 @@ class VentureScriptParser(object):
         # <symbol_args>
         #
         # evaluates to a list: [<expression>*]
-        def process_symbol_args(s, loc, toks):
+        def process_symbol_args(_s, _loc, toks):
             v = toks[1:-1:2]
             l = combine_locs(toks)
             return [{"loc":l, "value":v}]
@@ -135,7 +135,7 @@ class VentureScriptParser(object):
         # <expression_args>
         #
         # evaluates to a list: [<expression>*]
-        def process_expression_args(s, loc, toks):
+        def process_expression_args(_s, _loc, toks):
             v = toks[1:-1:2]
             l = combine_locs(toks)
             return [{"loc":l, "value":v}]
@@ -148,7 +148,7 @@ class VentureScriptParser(object):
         # <assignments>
         #
         # evaluates to a list of [[<expression>,<expression>]*]
-        def process_assignments(s, loc, toks):
+        def process_assignments(_s, _loc, toks):
             symbols = toks[:-2:3]
             expressions = toks[2::3]
             v = [{"loc":combine_locs(x), "value":list(x)} for x in zip(symbols, expressions)]
@@ -184,7 +184,7 @@ class VentureScriptParser(object):
         # <identity>
         #
         # evaluates to ["identity", <expression>]
-        def process_identity(s, loc, toks):
+        def process_identity(_s, _loc, toks):
             l = combine_locs(toks)
             v = [
                     {"loc":l, 'value':vv.sym('identity')},
@@ -198,7 +198,7 @@ class VentureScriptParser(object):
         # <if_else>
         #
         # evaluates to ["if", <expression>, <expression>, <expression>]
-        def process_if_else(s, loc, toks):
+        def process_if_else(_s, _loc, toks):
             l = combine_locs(toks)
             v = [
                     {"loc":toks[0]['loc'], 'value':vv.sym('if')},
@@ -218,7 +218,7 @@ class VentureScriptParser(object):
         # <proc>
         #
         # evaluates to ['lambda', <symbol_args>, <expression>]
-        def process_proc(s, loc, toks):
+        def process_proc(_s, _loc, toks):
             l = combine_locs(toks)
             v = [
                     {"loc":toks[0]['loc'], 'value':vv.sym('lambda')},
@@ -235,7 +235,7 @@ class VentureScriptParser(object):
         # <let>
         #
         # evaluates to ['let', <assignments>, <expression>]
-        def process_let(s, loc, toks):
+        def process_let(_s, _loc, toks):
             l = combine_locs(toks)
             v = [
                     {"loc":l, 'value':vv.sym('let')},
@@ -250,7 +250,7 @@ class VentureScriptParser(object):
         # <non_fn_expression>
         #
         # evaluates to itself
-        def process_non_fn_expression(s, loc, toks):
+        def process_non_fn_expression(_s, _loc, toks):
             return [toks[0]]
         self.non_fn_expression = (
                 self.identity |
@@ -266,7 +266,7 @@ class VentureScriptParser(object):
         #
         # evaluates to [ .. [[<non_fn_expression>, *<args1>], *<args2>] .. , *<argsn>]
         # or <non_fn_expression> if no args provided
-        def process_fn_application(s, loc, toks):
+        def process_fn_application(_s, _loc, toks):
             if len(toks) == 1:
                 return [toks[0]]
             #collapse possible infix identities
@@ -365,9 +365,9 @@ class VentureScriptParser(object):
         # <expression>
         #
         # evaluates to itself
-        def process_expression(s, loc, toks):
+        def process_expression(_s, _loc, toks):
             return [toks[0]]
-        self.expression << self.boolean_or
+        self.expression << self.boolean_or # pylint:disable=W0104
         self.expression.setParseAction(process_expression)
 
 
@@ -486,7 +486,7 @@ class VentureScriptParser(object):
 
     @staticmethod
     def instance():
-        global the_parser
+        global the_parser # Is a static cache.  How else than globals?  pylint:disable=global-statement
         if the_parser is None:
             the_parser = VentureScriptParser()
         return the_parser

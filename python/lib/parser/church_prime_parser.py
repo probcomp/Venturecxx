@@ -36,14 +36,14 @@ class ChurchPrimeParser(object):
         self.combination =  utils.lw(Literal("("))\
                 + ZeroOrMore(self.expression)\
                 + utils.lw(Literal(")"))
-        def process_combination(s, loc, toks):
+        def process_combination(_s, _loc, toks):
             v = toks[1:-1]
             l = utils.combine_locs(toks)
             return [{"loc":l, "value":v}]
         self.combination.setParseAction(process_combination)
 
-        self.expression << (self.combination | self.literal | self.symbol)
-        def process_expression(s, loc, toks):
+        self.expression << (self.combination | self.literal | self.symbol) # pylint:disable=W0104
+        def process_expression(_s, _loc, toks):
             return list(toks)
         self.expression.setParseAction(process_expression)
 
@@ -172,7 +172,7 @@ class ChurchPrimeParser(object):
 
     @staticmethod
     def instance():
-        global the_parser
+        global the_parser # Is a static cache.  How else than globals?  pylint:disable=global-statement
         if the_parser is None:
             the_parser = ChurchPrimeParser()
         return the_parser
