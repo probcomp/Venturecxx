@@ -60,7 +60,11 @@ class RiplCmd(Cmd, object):
   do_EOF = do_quit
 
   def _do_instruction(self, instruction, s):
-    return self.ripl.execute_instruction('[%s %s]' % (instruction, s))
+    if self.ripl.get_mode() == "church_prime":
+      r_inst = '[%s %s]' % (instruction, s)
+    else:
+      r_inst = '%s %s' % (instruction, s)
+    return self.ripl.execute_instruction(r_inst)
 
   def precmd(self, line):
     line = line.strip()

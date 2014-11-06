@@ -66,6 +66,8 @@ def local_ripl(args, backend):
             r.execute_program_from_file(args.file)
         if args.interactive:
             interactive = True
+        if args.lang:
+            r.set_mode(args.lang)
     if interactive:
         run_venture_console(r)
     return r
@@ -75,6 +77,8 @@ def add_local_args(parser):
                         help = 'load prelude on startup')
     parser.add_argument('-f', '--file', default=None, help="execute the given file")
     parser.add_argument('-i', '--interactive', action='store_true', help="enter interactive interpreter after completing script file")
+    parser.add_argument('-l', '--lang', default="church_prime",
+                        help="the syntax to interpret in the console (valid values: are \"church_prime\" (default) and \"venture_script\")")
     return parser
 
 parser = argparse.ArgumentParser(description='An interactive, Turing-complete probabilistic programming platform')
