@@ -8,7 +8,7 @@ from detach import unconstrain, unevalFamily
 from value import SPRef, ExpressionType, VentureValue, VentureSymbol, VentureNumber
 from scaffold import Scaffold
 from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
-                   EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,
+                   EnumerativeGibbsOperator,EnumerativeMAPOperator,PGibbsOperator,ParticlePGibbsOperator,
                    RejectionOperator, MissingEsrParentError, NoSPRefError,
                    HamiltonianMonteCarloOperator, MAPOperator, StepOutSliceOperator,
                    DoublingSliceOperator, NesterovAcceleratedGradientAscentOperator,
@@ -438,6 +438,8 @@ class Trace(object):
         mixMH(self, BlockScaffoldIndexer(scope, block), HamiltonianMonteCarloOperator(epsilon, int(L)))
       elif operator == "gibbs":
         mixMH(self, BlockScaffoldIndexer(scope, block), EnumerativeGibbsOperator())
+      elif operator == "emap":
+        mixMH(self, BlockScaffoldIndexer(scope, block), EnumerativeMAPOperator())
       elif operator == "gibbs_update":
         mixMH(self, BlockScaffoldIndexer(scope, block, updateValues=True), EnumerativeGibbsOperator())
       elif operator == "slice":

@@ -36,10 +36,18 @@ class EnumerativeGibbsOperator(object):
       xiWeights.append(regenAndAttach(xiParticle,scaffold,False,OmegaDB(),{}))
 
     # Now sample a NEW particle in proportion to its weight
-    finalIndex = sampleLogCategorical(xiWeights)
+    finalIndex = self.chooseProposalParticle(xiWeights)
     self.finalParticle = xiParticles[finalIndex]
     return self.finalParticle,0
+
+  def chooseProposalParticle(self, xiWeights):
+    return sampleLogCategorical(xiWeights)
 
   def accept(self): self.finalParticle.commit()
   def reject(self): assert False
   def name(self): return "enumerative gibbs"
+
+class EnumerativeMAPOperator(EnumerativeGibbsOperator):
+  def chooseProposalParticle(self, xiWeights):
+    m = max(xiWeights)
+    return [i for i, j in enumerate(xiWeights) if j == m][0]
