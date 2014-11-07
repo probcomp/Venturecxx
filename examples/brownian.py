@@ -16,4 +16,3 @@ def build_brownian_model(step_form, noise_form):
   (normal (position t) obs_noise))]
 
 [predict (position 10)]""".format(step_form, noise_form)
-
