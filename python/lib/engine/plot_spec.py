@@ -35,8 +35,10 @@ class PlotSpec(object):
     self.draw(dataset, names)
     if filename is None:
       plt.show()
+      plt.close()
     else:
       plt.savefig(filename)
+      plt.close()
     # FIXME: add something to track names of frames here
 
   def streams(self):
