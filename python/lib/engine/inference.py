@@ -144,6 +144,9 @@ class Infer(object):
       raise "Unregistered callback {}".format(name)
     self.engine.callbacks[name](self, *[self.engine.sample_all(e.asStackDict()) for e in exprs])
 
+  def particle_weights(self):
+    return self.engine.trace_handler.weights
+
 class InferResult(object):
   '''
   Returned if any of "peek", "plotf", "printf" issued in an "infer" command.
