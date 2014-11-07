@@ -6,6 +6,7 @@ import brownian_measurement_plugin as measure
 
 def main():
   r = s.Lite().make_church_prime_ripl()
+  measure.set_answer(1)
   measure.__venture_start__(r)
   r.infer("(resample 6)")
   r.execute_program(build_brownian_model("(gamma 1 1)", "(gamma 1 1)"))
