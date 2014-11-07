@@ -60,13 +60,17 @@ class Infer(object):
     else:
       raise Exception("Cannot issue multiple printf commands in same inference program")
 
-  def _init_plot(self, spec, names, exprs, stack_dicts, filename=None):
+  def _init_plot(self, spec, names, exprs, stack_dicts, filename=None, callback=None):
     if self.result is None:
-      if filename is None:
+      if filename is None and callback is None:
         cmd = 'plotf'
-      else:
+      elif filename is not None and callback is None:
         cmd = 'plotf_to_file'
-      self.result = InferResult(first_command = cmd, filename = filename)
+      elif filename is None and callback is not None:
+        cmd = 'call_back_accum'
+      else:
+        raise Exception("Accumulating and saving to file not supported at once in Infer._init_plot.")
+      self.result = InferResult(first_command = cmd, filename = filename, callback = callback)
     if self.result.spec_plot is None:
       self.result._init_plot(spec, names, exprs, stack_dicts)
     elif (spec == self.result.spec_plot.spec_string and
@@ -143,6 +147,13 @@ class Infer(object):
     if name not in self.engine.callbacks:
       raise "Unregistered callback {}".format(name)
     self.engine.callbacks[name](self, *[self.engine.sample_all(e.asStackDict()) for e in exprs])
+  def call_back_accum(self, name, *exprs):
+    name = SymbolType().asPython(name)
+    if name not in self.engine.callbacks:
+      raise "Unregistered callback {}".format(name)
+    names, stack_dicts = self.parse_exprs(exprs, 'plotf')
+    self._init_plot(None, names, exprs, stack_dicts, callback=self.engine.callbacks[name])
+    self.result._add_data(self.engine, 'call_back_accum')
 
   def particle_weights(self):
     return self.engine.trace_handler.weights
@@ -190,7 +201,7 @@ class InferResult(object):
   Calling print will generate all plots stored in the spec_plot attribute. This
   attribute in turn is a SpecPlot object.
   '''
-  def __init__(self, first_command, filename = None):
+  def __init__(self, first_command, filename = None, callback=None):
     self.sweep = 0
     self.time = time.time()
     self._first_command = first_command
@@ -202,6 +213,7 @@ class InferResult(object):
     self._print_stack_dicts = None
     self.spec_plot = None
     self.filename = filename
+    self.callback = callback
 
   def _init_peek(self, names, exprs, stack_dicts):
     self._peek_names = names
@@ -296,14 +308,17 @@ class InferResult(object):
 
   def __str__(self):
     "Not really a string method, but does get itself displayed when printed."
-    if self.spec_plot is None:
+    if self.spec_plot is None and self.callback is None:
       return self.__repr__()
-    else:
+    elif self.spec_plot is not None and self.callback is None:
       self.plot()
       if self.filename is None:
         return "a plot"
       else:
         return "plot saved to {}".format(self.filename)
+    else:
+      self.callback(self.dataset())
+      return ""
 
 class SpecPlot(object):
   """(plotf spec exp0 ...) -- Generate a plot according to a format specification.
@@ -370,7 +385,8 @@ class SpecPlot(object):
   """
   def __init__(self, spec, names, exprs, stack_dicts):
     self.spec_string = spec
-    self.spec = PlotSpec(spec)
+    if spec is not None:
+      self.spec = PlotSpec(spec)
     self.names = names
     self.exprs = exprs
     self.stack_dicts = stack_dicts
