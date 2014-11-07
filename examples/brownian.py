@@ -1,8 +1,10 @@
+def build_brownian_model(step_form, noise_form):
+  return """
 [assume brown_step
-  (scope_include (quote param) 0 (gamma 1 1))]
+  (scope_include (quote param) 0 {})]
 
 [assume obs_noise
-  (scope_include (quote param) 1 (gamma 1 1))]
+  (scope_include (quote param) 1 {})]
 
 [assume position (mem (lambda (t)
   (scope_include (quote exp) t
@@ -13,4 +15,4 @@
 [assume obs_fun (lambda (t)
   (normal (position t) obs_noise))]
 
-[predict (position 10)]
+[predict (position 10)]""".format(step_form, noise_form)
