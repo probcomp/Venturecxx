@@ -44,11 +44,12 @@ def mixMH(trace,indexer,operator):
     operator = operator.name(),
     indexer = indexer.name(),
     time = time.time() - start,
+    logscore = trace.getGlobalLogScore(),
     accepted = accepted,
+    alpha = alpha,
     principal = principal,
     absorbing = absorbing,
     aaa = aaa,
-    alpha = alpha,
     brush = brush
   )
 
