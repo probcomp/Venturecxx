@@ -30,6 +30,8 @@ def is_picklable(obj):
     res = pickle.dumps(obj)
   except TypeError:
     return False
+  except pickle.PicklingError:
+    return False
   else:
     return True
 
