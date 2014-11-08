@@ -23,14 +23,12 @@ pygame.init()
 window = pygame.display.set_mode((640, 400))
 pygame.display.update()
 
-def draw(inferrer):
-  window.fill(pygame.Color(255, 255, 255))
+param_sidebar = False
 
+def draw_param_sidebar(inferrer, alpha_level):
   # Draw the axis ticks
   for tick in [-8, -6, -4, -2, 0, 2, 4, 6, 8]:
     pygame.draw.line(window, pygame.Color(0, 0, 0), (0, y_to_pixels(tick)), (50, y_to_pixels(tick)), 1)
-
-  alpha_level = 100
 
   # TODO Consider indicating the log score
 
@@ -49,6 +47,14 @@ def draw(inferrer):
     dot.fill(pygame.Color(255, 255, 255, 0))
     pygame.draw.rect(dot, pygame.Color(255, 0, 0, alpha_level), (15, obs_y - 5, 10, 10), 2)
     window.blit(dot, (0,0))
+
+def draw(inferrer):
+  window.fill(pygame.Color(255, 255, 255))
+
+  alpha_level = 100
+
+  if param_sidebar:
+    draw_param_sidebar(inferrer, alpha_level)
 
   # Plot the observations and decide how far to plot the trajectory
   plot_range = 2
