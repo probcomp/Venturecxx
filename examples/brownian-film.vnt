@@ -1,0 +1,9 @@
+;; Run me with venture lite -L brownian-drawing-plugin.py -f brownian-film.vnt
+[load "brownian-pic.vnt"]
+[infer (call_back draw_to_disk (quote prior_trajectories))]
+[infer (nesterov exp all 0.01 5 1)]
+[infer (call_back draw_to_disk (quote converging_trajectories))]
+[infer (nesterov exp all 0.01 20 1)]
+[infer (call_back draw_to_disk (quote optimal_trajectories))]
+[infer (mh default one 20)]
+[infer (call_back draw_to_disk (quote subsequent_trajectories))]

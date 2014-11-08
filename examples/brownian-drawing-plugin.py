@@ -95,10 +95,11 @@ def x_to_pixels(model_x):
 def stop_drawing(_inferrer):
   pygame.quit()
 
-def draw_to_disk(inferrer):
+def draw_to_disk(inferrer, filename):
   draw(inferrer)
-  pygame.image.save(window, "trajectories.png")
-  print "Saved to trajectories.png"
+  filename = filename[0]["value"]
+  pygame.image.save(window, filename + ".png")
+  print "Saved to %s.png" % filename
 
 def __venture_start__(ripl):
   ripl.bind_callback("draw", draw)
