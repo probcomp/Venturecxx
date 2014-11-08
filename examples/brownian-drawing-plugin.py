@@ -48,6 +48,8 @@ def draw_param_sidebar(inferrer, alpha_level):
     pygame.draw.rect(dot, pygame.Color(255, 0, 0, alpha_level), (15, obs_y - 5, 10, 10), 2)
     window.blit(dot, (0,0))
 
+x_scale = 30
+
 def draw(inferrer):
   window.fill(pygame.Color(255, 255, 255))
 
@@ -56,8 +58,24 @@ def draw(inferrer):
   if param_sidebar:
     draw_param_sidebar(inferrer, alpha_level)
 
-  # Plot the observations and decide how far to plot the trajectory
+  # Decide how far to plot the trajectory
   plot_range = 2
+  for (_did, directive) in inferrer.engine.directives.items():
+    if directive[0] == "observe":
+      (_, datum, val) = directive
+      obs_i = int(datum[1]["value"])
+      plot_range = max(plot_range, obs_i + 1)
+    if directive[0] == "predict":
+      (_, datum) = directive
+      pr_i = int(datum[1]["value"])
+      plot_range = max(plot_range, pr_i + 1)
+
+  # Decide the x scale based on the length of the trajectory being plotted
+  # so that the rightmost point is at the edge of the window
+  global x_scale
+  x_scale = (640.0 - 60)/plot_range
+
+  # Plot the observations
   for (_did, directive) in inferrer.engine.directives.items():
     if directive[0] == "observe":
       (_, datum, val) = directive
@@ -65,11 +83,6 @@ def draw(inferrer):
       x = x_to_pixels(obs_i)
       y = y_to_pixels(val["value"])
       pygame.draw.circle(window, pygame.Color(255, 0, 0), (x, y), 4, 0)
-      plot_range = max(plot_range, obs_i + 1)
-    if directive[0] == "predict":
-      (_, datum) = directive
-      pr_i = int(datum[1]["value"])
-      plot_range = max(plot_range, pr_i + 1)
 
   # Draw the actual trajectories
   point_lists = [points_at(inferrer, i) for i in range(plot_range)]
@@ -96,7 +109,7 @@ def points_at(inferrer, i):
 def y_to_pixels(model_y):
   return int(200 - 30 * model_y)
 def x_to_pixels(model_x):
-  return int(60 + 30 * model_x)
+  return int(60 + x_scale * model_x)
 
 def stop_drawing(_inferrer):
   pygame.quit()
