@@ -49,3 +49,5 @@
 (load-relative-compiled "inference")
 (load-relative-compiled "store")
 (load-relative-compiled "gaussian")
+
+(define (re-run-test test) (load "load") (load "test/load") (run-test test))
