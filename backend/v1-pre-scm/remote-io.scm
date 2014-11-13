@@ -67,3 +67,6 @@
     (create-thread root-continuation
       (lambda ()
 	(with-create-thread-continuation root-continuation procedure)))))
+
+(define (thread-mutex-owned? mutex)
+  (eq? (current-thread) (thread-mutex-owner mutex)))
