@@ -40,18 +40,19 @@ def mixMH(trace,indexer,operator):
     operator.reject() # May mutate trace
     accepted = False
   
-  trace.recordProposal(
-    operator = operator.name(),
-    indexer = indexer.name(),
-    time = time.time() - start,
-    logscore = trace.getGlobalLogScore(),
-    accepted = accepted,
-    alpha = alpha,
-    principal = principal,
-    absorbing = absorbing,
-    aaa = aaa,
-    brush = brush
-  )
+  if trace.profiling_enabled:
+    trace.recordProposal(
+      operator = operator.name(),
+      indexer = indexer.name(),
+      time = time.time() - start,
+      logscore = trace.getGlobalLogScore(),
+      accepted = accepted,
+      alpha = alpha,
+      principal = principal,
+      absorbing = absorbing,
+      aaa = aaa,
+      brush = brush
+    )
 
 class BlockScaffoldIndexer(object):
   def __init__(self,scope,block,interval=None,useDeltaKernels=False,deltaKernelArgs=None,updateValues=False):
