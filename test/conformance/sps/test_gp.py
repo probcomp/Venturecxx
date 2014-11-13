@@ -86,6 +86,11 @@ def testGPMean2():
 
 @broken_in('puma')
 def testGPLogscore1():
+  """Is this actually a valid test? The real solution to this problem
+  (and to the corresponding bug with unincorporate) is to wrap the gp
+  in a mem. This could be done automatically I suppose, or better
+  through a library function."""
+   
   raise SkipTest("GP logDensity is broken for multiple samples of the same input.")
 
   ripl = get_ripl()
