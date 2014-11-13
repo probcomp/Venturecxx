@@ -1,3 +1,4 @@
+from nose import SkipTest
 from venture.test.config import get_ripl, collectSamples, broken_in
 from venture.test.stats import statisticalTest, reportKnownMean, reportKnownMeanVariance
 
@@ -82,4 +83,15 @@ def testGPMean2():
   
   # TODO: variance
   return reportKnownMean(0, xs)
+
+@broken_in('puma')
+def testGPLogscore1():
+  raise SkipTest("GP logDensity is broken for multiple samples of the same input.")
+
+  ripl = get_ripl()
+  prep_ripl(ripl)
+  
+  ripl.assume('gp', '(make_gp zero sq_exp)')
+  ripl.predict('(gp (array 0 0))')
+  ripl.get_global_logscore()
 
