@@ -51,3 +51,16 @@
 (load-relative-compiled "gaussian")
 
 (define (re-run-test test) (load "load") (load "test/load") (run-test test))
+
+#|
+Instructions from Taylor on how to use the multiprocess parallelism:
+
+# Run the server.
+scheme --batch-mode --load match --load condvar --load remote-io --load remote-balancer --eval '(run-venture-load-balancer 12345 (lambda (service) (pp `(server "127.0.0.1:12345" ,(unix/current-pid)))))' &
+
+# Start some workers.
+for i in 0 1 2 4 5 6 7; do scheme --batch-mode --load load --load match --load condvar --load remote-io --load remote-worker --eval '(run-venture-worker 12345 (lambda () (pp `(worker ,(unix/current-pid)))))' & done
+
+# Now load it up and try it.
+scheme --batch-mode --load match --load condvar --load remote-io --load remote-client --eval '(begin (pp (venture-remote-eval* 12345 (map (lambda (i) `(expt 2 ,i)) (iota 60)))) (%exit 0))'
+|#
