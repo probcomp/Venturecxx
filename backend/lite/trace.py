@@ -497,6 +497,7 @@ class Trace(object):
     return self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node))
 
   def getGlobalLogScore(self):
+    # TODO This algorithm is totally wrong: https://app.asana.com/0/16653194948424/20100308871203
     return sum([self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node)) for node in self.rcs.union(self.ccs)])
 
   #### Serialization interface

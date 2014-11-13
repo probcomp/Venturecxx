@@ -26,9 +26,9 @@ def main():
     give_jenkins_virtualenv_if_needed()
     ensure_jobs()
     ensure_github_trusts_jenkins()
-    print disk_space_reminder
+    print final_reminder
 
-disk_space_reminder = '''Done.
+final_reminder = '''Done.
 
 Please make sure /var/lib/jenkins has plenty of disk space.
 If it doesn't, find somewhere that does, say /scratch, and run
@@ -36,7 +36,12 @@ If it doesn't, find somewhere that does, say /scratch, and run
 /etc/init.d/jenkins stop
 mv /var/lib/jenkins /scratch/jenkins
 ln -s /scratch/jenkins /var/lib/jenkins
-/etc/init.d/jenkins start'''
+/etc/init.d/jenkins start
+
+You may also want to make sure GitHub pushes commit notifications to
+Jenkins.  To do so, visit the settings page of the Venturecxx github
+repository and make sure there is a Jenkins (Git plugin) service
+active, and pointing to the url that Jenkins listens to.'''
 
 #### General helpers
 
