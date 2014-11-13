@@ -217,3 +217,5 @@
   (lambda (setup) (test-eval-error setup 'an-undefined-variable))
   (lambda (setup)
     (test-eval*-error setup '((+ 1 2) an-undefined-variable (* 3 4))))))
+
+(test-multiple-workers)
