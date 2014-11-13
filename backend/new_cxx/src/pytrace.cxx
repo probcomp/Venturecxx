@@ -115,6 +115,7 @@ double PyTrace::getDirectiveLogScore(DirectiveID did)
 
 double PyTrace::getGlobalLogScore()
 {
+  // TODO This algorithm is totally wrong: https://app.asana.com/0/16653194948424/20100308871203
   double ls = 0.0;
   for (set<Node*>::iterator iter = trace->unconstrainedChoices.begin();
        iter != trace->unconstrainedChoices.end();
