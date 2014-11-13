@@ -19,15 +19,42 @@
   (lock (make-thread-mutex) read-only #t)
   (condvar (make-condition-variable "venture-work") read-only #t)
   (done? #f)
+  (retries 3)				;XXX Make configurable.
   program/result)
 
 (define (work-done! work result)
   (with-thread-mutex-locked (work-lock work)
     (lambda ()
-      (set-work-program/result! work result)
-      (set-work-done?! work #t)
-      (condition-variable-broadcast! (work-condvar work)))))
+      (%work-done! work result))))
 
+(define (%work-done! work result)
+  (assert (thread-mutex-owned? (work-lock work)))
+  (set-work-program/result! work result)
+  (set-work-done?! work #t)
+  (condition-variable-broadcast! (work-condvar work)))
+
+(define (queue-work! work lbr)
+  (with-thread-mutex-locked (load-balancer-lock lbr)
+    (lambda ()
+      (%queue-work! work lbr))))
+
+(define (%queue-work! work lbr)
+  (assert (thread-mutex-owned? (load-balancer-lock lbr)))
+  (enqueue! (load-balancer-workqueue lbr) work)
+  (condition-variable-signal! (load-balancer-condvar lbr)))
+
+(define (retry-work! work lbr)
+  ((with-thread-mutex-locked (work-lock work)
+     (lambda ()
+       (if (zero? (work-retries work))
+	   (begin
+	     (%work-done! work '(FAIL))
+	     (lambda () 0))
+	   (begin
+	     (set-work-retries! work (- (work-retries work) 1))
+	     (lambda ()
+	       (queue-work! work lbr))))))))
+
 (define (run-venture-load-balancer service when-ready)
   (let ((lbr (make-load-balancer)))
     (call-with-local-tcp-server-socket service
@@ -77,8 +104,7 @@
 	      (lambda ()
 		(network-write socket '(FAIL)))
 	      (let ((work (make-work program)))
-		(enqueue! (load-balancer-workqueue lbr) work)
-		(condition-variable-signal! (load-balancer-condvar lbr))
+		(%queue-work! work lbr)
 		(lambda ()
 		  (with-thread-mutex-locked (work-lock work)
 		    (lambda ()
@@ -112,12 +138,7 @@
 			     ;; Worker has died.  Let another one
 			     ;; take it instead, and give up on
 			     ;; running this one.
-			     (with-thread-mutex-locked
-				 (load-balancer-lock lbr)
-			       (lambda ()
-				 (enqueue! (load-balancer-workqueue lbr) work)
-				 (condition-variable-signal!
-				  (load-balancer-condvar lbr))))
+			     (retry-work! work lbr)
 			     (abort 0))
 			 (lambda ()
 			   (network-write
