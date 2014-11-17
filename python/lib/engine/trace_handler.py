@@ -302,7 +302,7 @@ class ProcessBase(object):
     self.trace = trace
     self.pipe = pipe
     self.backend = backend
-    Process = self._setup()
+    Process = self._process_type()
     Process.__init__(self)
     self.daemon = True
 
@@ -406,7 +406,7 @@ class MultiprocessBase(mp.Process):
   Specifies parallel implementation; inherited by ParallelTraceProcess.
   '''
   @staticmethod
-  def _setup():
+  def _process_type():
     return mp.Process
 
 class DummyBase(mpd.Process):
@@ -415,7 +415,7 @@ class DummyBase(mpd.Process):
   and SequentialTraceProcess.
   '''
   @staticmethod
-  def _setup():
+  def _process_type():
     return mpd.Process
 
 ######################################################################
