@@ -305,12 +305,14 @@ class ProcessBase(object):
     self._initialize()
 
   def run(self):
-    while True:
-      cmd, args, kwargs = self.pipe.recv()
-      if cmd == 'stop':
-        return
-      res = getattr(self, cmd)(*args, **kwargs)
-      self.pipe.send(res)
+    while True: self.poll()
+
+  def poll(self):
+    cmd, args, kwargs = self.pipe.recv()
+    if cmd == 'stop':
+      return
+    res = getattr(self, cmd)(*args, **kwargs)
+    self.pipe.send(res)
 
   def __getattr__(self, attrname):
     # if attrname isn't attribute of ProcessBase, look for it as a method on the trace
