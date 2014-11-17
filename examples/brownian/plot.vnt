@@ -1,3 +1,4 @@
+;; Run with venture lite -f plot.vnt
 [infer (resample_multiprocess 6)]
 [load "model.vnt"]
 [observe (obs_fun 4) 4]
