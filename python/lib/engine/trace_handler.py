@@ -48,7 +48,7 @@ of the program when all results have been returned. It then checks for
 exceptions; if any are found, it re-raises the first one. Else it passes its
 result back to the Engine.
 The TraceHandler also has methods to retrieve serialized traces from the
-individual TraceProcesses and reconstruct them. For the ParallelTraceHandler,
+individual TraceProcesses and reconstruct them. For the MultiprocessingTraceHandler,
 Traces must be serialized before being sent from TraceProcesses back to the
 Handler. This is the case since Trace objects are not picklable and hence
 cannot be sent over Pipes directly.
@@ -153,7 +153,7 @@ class HandlerBase(object):
   '''
   Base class for all TraceHandlers; defines the majority of the methods to
   interact with the TraceHandlers and reserves abstract methods with different
-  behavior in parallel and sequential modes to be defined by subclasses.
+  behavior in parallel, threaded, and sequential modes to be defined by subclasses.
   '''
   __metaclass__ = ABCMeta
   def __init__(self, traces, backend):
@@ -228,11 +228,11 @@ class HandlerBase(object):
 ######################################################################
 # Base classes serializing traces properly
 
-class ParallelHandlerArchitecture(HandlerBase):
+class SerializingHandlerArchitecture(HandlerBase):
   '''
   Retrieves traces by requesting dumps from workers and reconstructing on
-  other end of Pipe. Inherited by ParallelTraceHandler (for which this mode
-  of communication is required) and EmulatingTraceHandler (which is sequential
+  other end of Pipe. Inherited by MultiprocessingTraceHandler (for which this mode
+  of communication is required) and ThreadedSerializingTraceHandler (which is sequential
   but mimics the API of the Parallel version).
   '''
   def retrieve_trace(self, ix, engine):
@@ -243,12 +243,12 @@ class ParallelHandlerArchitecture(HandlerBase):
     dumped_all = self.retrieve_dumps(engine)
     return [engine.restore_trace(dumped) for dumped in dumped_all]
 
-class SequentialHandlerArchitecture(HandlerBase):
+class SharedMemoryHandlerArchitecture(HandlerBase):
   '''
   Retrieves traces by requesting the traces themselves directly. Since
   multiprocessing.dummy is actually just a wrapper around Threading, there is
   no problem with sending arbitrary Python objects over dummy.Pipes. Inherited
-  by SequentialTraceHandler.
+  by ThreadedTraceHandler.
   '''
   def retrieve_trace(self, ix, engine):
     return self.delegate_one(ix, 'send_trace')
@@ -259,7 +259,7 @@ class SequentialHandlerArchitecture(HandlerBase):
 ######################################################################
 # Concrete trace handlers
 
-class ParallelTraceHandler(ParallelHandlerArchitecture):
+class MultiprocessingTraceHandler(SerializingHandlerArchitecture):
   '''
   Controls ParallelTraceProcesses. Communicates with workers via
   multiprocessing.Pipe. Truly parallel implementation.
@@ -268,18 +268,18 @@ class ParallelTraceHandler(ParallelHandlerArchitecture):
   def _pipe_and_process_types():
     return mp.Pipe, ParallelTraceProcess
 
-class EmulatingTraceHandler(ParallelHandlerArchitecture):
+class ThreadedSerializingTraceHandler(SerializingHandlerArchitecture):
   '''
   Controls EmulatingTraceProcesses. Communicates with workers via
   multiprocessing.dummy.Pipe. Do not use for actual modeling. Rather,
-  intended for debugging; API mimics ParallelTraceHandler, but implementation
+  intended for debugging; API mimics MultiprocessingTraceHandler, but implementation
   is sequential.
   '''
   @staticmethod
   def _pipe_and_process_types():
     return mpd.Pipe, EmulatingTraceProcess
 
-class SequentialTraceHandler(SequentialHandlerArchitecture):
+class ThreadedTraceHandler(SharedMemoryHandlerArchitecture):
   '''
   Controls SequentialTraceProcess. Default TraceHandler. Communicates via
   multiprocessing.dummy.Pipe.
@@ -424,7 +424,7 @@ class DummyBase(mpd.Process):
 # pylint: disable=too-many-ancestors
 class ParallelTraceProcess(ParallelProcessArchitecture, MultiprocessBase):
   '''
-  True parallel traces via multiprocessing. Controlled by ParallelTraceHandler.
+  True parallel traces via multiprocessing. Controlled by MultiprocessingTraceHandler.
   '''
   @safely
   def set_seed(self, seed):
@@ -439,14 +439,14 @@ class ParallelTraceProcess(ParallelProcessArchitecture, MultiprocessBase):
 class EmulatingTraceProcess(ParallelProcessArchitecture, DummyBase):
   '''
   Emulates ParallelTraceProcess but is implemented sequentially. Use for
-  debugging. Controlled by EmulatingTraceHandler.
+  debugging. Controlled by ThreadedSerializingTraceHandler.
   '''
   pass
 
 class SequentialTraceProcess(SequentialProcessArchitecture, DummyBase):
   '''
   Default class for interacting with Traces. Controlled by
-  SequentialTraceHandler.
+  ThreadedTraceHandler.
   '''
   pass
 

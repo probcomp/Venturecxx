@@ -19,8 +19,8 @@ import cPickle as pickle
 import time
 
 from venture.exception import VentureException
-from trace_handler import (dump_trace, restore_trace, SequentialTraceHandler,
-                           EmulatingTraceHandler, ParallelTraceHandler)
+from trace_handler import (dump_trace, restore_trace, ThreadedTraceHandler,
+                           ThreadedSerializingTraceHandler, MultiprocessingTraceHandler)
 from venture.lite.utils import sampleLogCategorical
 from venture.engine.inference import Infer
 import venture.value.dicts as v
@@ -43,7 +43,7 @@ class Engine(object):
     self.directiveCounter = 0
     self.directives = {}
     self.inferrer = None
-    self.trace_handler = SequentialTraceHandler([Trace()], backend = self.name)
+    self.trace_handler = ThreadedTraceHandler([Trace()], backend = self.name)
     self.n_traces = 1
     self.mode = 'sequential'
     import venture.lite.inference_sps as inf
@@ -53,11 +53,11 @@ class Engine(object):
 
   def create_handler(self, traces):
     if self.mode == 'parallel':
-      Handler = ParallelTraceHandler
+      Handler = MultiprocessingTraceHandler
     elif self.mode == 'emulating':
-      Handler = EmulatingTraceHandler
+      Handler = ThreadedSerializingTraceHandler
     else:
-      Handler = SequentialTraceHandler
+      Handler = ThreadedTraceHandler
     return Handler(traces, self.name)
 
   def inferenceSPsList(self):
@@ -213,18 +213,18 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def resample(self, P):
     self.mode = 'sequential'
-    self.trace_handler = SequentialTraceHandler(self._resample_setup(P),
-                                                self.name)
+    self.trace_handler = ThreadedTraceHandler(self._resample_setup(P),
+                                              self.name)
 
   def resample_emulating(self, P):
     self.mode = 'emulating'
-    self.trace_handler = EmulatingTraceHandler(self._resample_setup(P),
-                                               self.name)
+    self.trace_handler = ThreadedSerializingTraceHandler(self._resample_setup(P),
+                                                         self.name)
 
   def resample_parallel(self, P):
     self.mode = 'parallel'
-    self.trace_handler = ParallelTraceHandler(self._resample_setup(P),
-                                              self.name)
+    self.trace_handler = MultiprocessingTraceHandler(self._resample_setup(P),
+                                                     self.name)
 
   def _resample_setup(self, P):
     newTraces = self._resample_traces(P)
