@@ -1,6 +1,6 @@
-;; Run with venture lite -L brownian_measurement_plugin.py -f brownian-graph.vnt
+;; Run with venture lite -L measurement_plugin.py -f graph.vnt
 [infer (resample 6)]
-[load "brownian-model.vnt"]
+[load "model.vnt"]
 [infer (call_back collect brown_step)]
 [observe (obs_fun 4) 2]
 [infer (resample 6)]

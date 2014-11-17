@@ -1,8 +1,8 @@
 import sys
 
 import venture.shortcuts as s
-from brownian import build_brownian_model
-import brownian_measurement_plugin as measure
+from model import build_brownian_model
+import measurement_plugin as measure
 
 def main():
   r = s.Lite().make_church_prime_ripl()

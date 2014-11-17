@@ -1,7 +1,7 @@
 import sys
 
 import venture.shortcuts as s
-from brownian import build_brownian_model
+from model import build_brownian_model
 
 def main():
   step = float(sys.argv[1])

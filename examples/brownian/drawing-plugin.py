@@ -13,7 +13,7 @@
 
 # To use the drawing plugin, install it in the Venture interpreter by
 # calling it with
-#   -L brownian-drawing-plugin.py
+#   -L drawing-plugin.py
 # Then enjoy with
 #   infer (cycle ((call_back (quote draw))) 10)
 
