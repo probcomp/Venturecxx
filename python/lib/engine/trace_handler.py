@@ -281,12 +281,21 @@ class ThreadedSerializingTraceHandler(SerializingHandlerArchitecture):
 
 class ThreadedTraceHandler(SharedMemoryHandlerArchitecture):
   '''
-  Controls ThreadedTraceProcess. Default TraceHandler. Communicates via
+  Controls ThreadedTraceProcesses. Communicates via
   multiprocessing.dummy.Pipe.
   '''
   @staticmethod
   def _pipe_and_process_types():
     return mpd.Pipe, ThreadedTraceProcess
+
+class SynchronousTraceHandler(SharedMemoryHandlerArchitecture):
+  '''
+  Controls SynchronousTraceProcesses. Default TraceHandler. Communicates via
+  SynchronousPipe.
+  '''
+  @staticmethod
+  def _pipe_and_process_types():
+    return SynchronousPipe, SynchronousTraceProcess
 
 ######################################################################
 # Trace processes; interact with individual traces
@@ -418,11 +427,21 @@ class ThreadingBase(mpd.Process):
     mpd.Process.__init__(self)
     self.daemon = True
 
+class SynchronousBase(object):
+  '''Specifies synchronous implementation; inherited by
+  SynchronousSerializingTraceProcess and SynchronousTraceProcess.
+  '''
+  def _initialize(self):
+    self.pipe.register_callback(self.poll)
+
+  def start(self): pass
+
 ######################################################################
 # Concrete process classes
 
 # pylint: disable=too-many-ancestors
 class MultiprocessingTraceProcess(SerializingProcessArchitecture, MultiprocessBase):
+
   '''
   True parallel traces via multiprocessing. Controlled by MultiprocessingTraceHandler.
   '''
@@ -445,8 +464,14 @@ class ThreadedSerializingTraceProcess(SerializingProcessArchitecture, ThreadingB
 
 class ThreadedTraceProcess(SharedMemoryProcessArchitecture, ThreadingBase):
   '''
+  Controlled by ThreadedTraceHandler.
+  '''
+  pass
+
+class SynchronousTraceProcess(SharedMemoryProcessArchitecture, SynchronousBase):
+  '''
   Default class for interacting with Traces. Controlled by
-  ThreadedTraceHandler.
+  SynchronousTraceHandler.
   '''
   pass
 
@@ -498,3 +523,39 @@ class TraceProcessExceptionHandler(object):
 #   the error message. Append the child stack trace as a string to the error
 #   message. Raise another exception of the same type, with the appended error
 #   message.
+
+######################################################################
+# Fake Pipes that actually just use one thread
+######################################################################
+
+class SynchronousOneWayPipe(object):
+  def __init__(self):
+    self.other = None
+    self.objs = []
+    self.cbs = []
+
+  def register_callback(self, cb):
+    self.cbs.append(cb)
+
+  def send(self, obj):
+    self.other.emplace(obj)
+
+  def emplace(self, obj):
+    self.objs.append(obj)
+    for cb in self.cbs:
+      cb()
+
+  def recv(self):
+    ans = self.objs[0]
+    self.objs = self.objs[1:]
+    return ans
+
+def SynchronousPipe():
+  parent = SynchronousOneWayPipe()
+  child = SynchronousOneWayPipe()
+  parent.other = child
+  child.other = parent
+  return (parent, child)
+
+class SynchronousProcess(object):
+  pass

@@ -19,7 +19,7 @@ import cPickle as pickle
 import time
 
 from venture.exception import VentureException
-from trace_handler import (dump_trace, restore_trace, ThreadedTraceHandler,
+from trace_handler import (dump_trace, restore_trace, SynchronousTraceHandler,
                            ThreadedSerializingTraceHandler, MultiprocessingTraceHandler)
 from venture.lite.utils import sampleLogCategorical
 from venture.engine.inference import Infer
@@ -43,7 +43,7 @@ class Engine(object):
     self.directiveCounter = 0
     self.directives = {}
     self.inferrer = None
-    self.trace_handler = ThreadedTraceHandler([Trace()], backend = self.name)
+    self.trace_handler = SynchronousTraceHandler([Trace()], backend = self.name)
     self.n_traces = 1
     self.mode = 'sequential'
     import venture.lite.inference_sps as inf
@@ -57,7 +57,7 @@ class Engine(object):
     elif self.mode == 'emulating':
       Handler = ThreadedSerializingTraceHandler
     else:
-      Handler = ThreadedTraceHandler
+      Handler = SynchronousTraceHandler
     return Handler(traces, self.name)
 
   def inferenceSPsList(self):
@@ -213,8 +213,8 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def resample(self, P):
     self.mode = 'sequential'
-    self.trace_handler = ThreadedTraceHandler(self._resample_setup(P),
-                                              self.name)
+    self.trace_handler = SynchronousTraceHandler(self._resample_setup(P),
+                                                 self.name)
 
   def resample_emulating(self, P):
     self.mode = 'emulating'
