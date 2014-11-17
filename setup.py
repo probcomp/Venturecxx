@@ -185,7 +185,7 @@ if ON_LINUX:
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
         libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread'],
-        extra_compile_args = ["-Wall", "-g", "-O0", "-fPIC"],
+                     extra_compile_args = ["-Wall", "-g", "-O0", "-fPIC", "-fno-omit-frame-pointer"],
         #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
         include_dirs = puma_inc_dirs,
         sources = puma_src_files)
@@ -195,7 +195,7 @@ if ON_MAC:
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
         libraries = ['gsl', 'gslcblas', 'boost_python-mt', 'boost_system-mt', 'boost_thread-mt'],
-        extra_compile_args = ["-Wall", "-g", "-O0", "-fPIC"],
+        extra_compile_args = ["-Wall", "-g", "-O0", "-fPIC", "-fno-omit-frame-pointer"],
         #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
         include_dirs = puma_inc_dirs,
         sources = puma_src_files)
