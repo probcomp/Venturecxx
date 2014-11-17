@@ -302,9 +302,7 @@ class ProcessBase(object):
     self.trace = trace
     self.pipe = pipe
     self.backend = backend
-    Process = self._process_type()
-    Process.__init__(self)
-    self.daemon = True
+    self._initialize()
 
   def run(self):
     while True:
@@ -403,20 +401,20 @@ class SharedMemoryProcessArchitecture(ProcessBase):
 
 class MultiprocessBase(mp.Process):
   '''
-  Specifies parallel implementation; inherited by MultiprocessingTraceProcess.
+  Specifies multiprocess implementation; inherited by MultiprocessingTraceProcess.
   '''
-  @staticmethod
-  def _process_type():
-    return mp.Process
+  def _initialize(self):
+    mp.Process.__init__(self)
+    self.daemon = True
 
 class ThreadingBase(mpd.Process):
   '''
-  Specifies sequential implementation; inherited by ThreadedSerializingTraceProcess
+  Specifies threaded implementation; inherited by ThreadedSerializingTraceProcess
   and ThreadedTraceProcess.
   '''
-  @staticmethod
-  def _process_type():
-    return mpd.Process
+  def _initialize(self):
+    mpd.Process.__init__(self)
+    self.daemon = True
 
 ######################################################################
 # Concrete process classes
