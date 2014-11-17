@@ -226,6 +226,7 @@ class HandlerBase(object):
   def retrieve_traces(self, engine): pass
 
 ######################################################################
+# Base classes serializing traces properly
 
 class ParallelHandlerArchitecture(HandlerBase):
   '''
@@ -256,6 +257,7 @@ class SequentialHandlerArchitecture(HandlerBase):
     return self.delegate('send_trace')
 
 ######################################################################
+# Concrete trace handlers
 
 class ParallelTraceHandler(ParallelHandlerArchitecture):
   '''
@@ -378,6 +380,7 @@ class ProcessBase(object):
       self.trace.infer(d)
 
 ######################################################################
+# Base classes defining how to send traces, and process types
 
 class ParallelProcessArchitecture(ProcessBase):
   '''
@@ -416,6 +419,7 @@ class DummyBase(mpd.Process):
     return mpd.Process
 
 ######################################################################
+# Concrete process classes
 
 # pylint: disable=too-many-ancestors
 class ParallelTraceProcess(ParallelProcessArchitecture, MultiprocessBase):
