@@ -260,38 +260,52 @@ class SharedMemoryHandlerArchitecture(HandlerBase):
 # Concrete trace handlers
 
 class MultiprocessingTraceHandler(SerializingHandlerArchitecture):
-  '''
-  Controls MultiprocessingTraceProcesses. Communicates with workers via
-  multiprocessing.Pipe. Truly parallel implementation.
+  '''Controls MultiprocessingTraceProcesses. Communicates with workers
+  via multiprocessing.Pipe. Truly multiprocess implementation.
+
   '''
   @staticmethod
   def _pipe_and_process_types():
     return mp.Pipe, MultiprocessingTraceProcess
 
 class ThreadedSerializingTraceHandler(SerializingHandlerArchitecture):
-  '''
-  Controls ThreadedSerializingTraceProcesses. Communicates with workers via
-  multiprocessing.dummy.Pipe. Do not use for actual modeling. Rather,
-  intended for debugging; API mimics MultiprocessingTraceHandler, but implementation
-  is sequential.
+  '''Controls ThreadedSerializingTraceProcesses. Communicates with
+  workers via multiprocessing.dummy.Pipe. Do not use for actual
+  modeling. Rather, intended for debugging; API mimics
+  MultiprocessingTraceHandler, but implementation is multithreaded.
+
   '''
   @staticmethod
   def _pipe_and_process_types():
     return mpd.Pipe, ThreadedSerializingTraceProcess
 
 class ThreadedTraceHandler(SharedMemoryHandlerArchitecture):
-  '''
-  Controls ThreadedTraceProcesses. Communicates via
-  multiprocessing.dummy.Pipe.
+  '''Controls ThreadedTraceProcesses. Communicates via
+  multiprocessing.dummy.Pipe. Do not use for actual modeling. Rather,
+  intended for debugging multithreading; API mimics
+  ThreadedSerializingTraceHandler, but does not serialize the traces.
+
   '''
   @staticmethod
   def _pipe_and_process_types():
     return mpd.Pipe, ThreadedTraceProcess
 
-class SynchronousTraceHandler(SharedMemoryHandlerArchitecture):
+class SynchronousSerializingTraceHandler(SerializingHandlerArchitecture):
+  '''Controls SynchronousSerializingTraceProcesses. Communicates via
+  SynchronousPipe. Do not use for actual modeling. Rather, intended
+  for debugging multithreading; API mimics
+  MultiprocessingTraceHandler, but runs synchronously in one thread.
+
   '''
-  Controls SynchronousTraceProcesses. Default TraceHandler. Communicates via
-  SynchronousPipe.
+  @staticmethod
+  def _pipe_and_process_types():
+    return SynchronousPipe, SynchronousTraceProcess
+
+class SynchronousTraceHandler(SharedMemoryHandlerArchitecture):
+  '''Controls SynchronousTraceProcesses. Default
+  TraceHandler. Communicates via SynchronousPipe.  This is what you
+  want if you don't want to pay for parallelism.
+
   '''
   @staticmethod
   def _pipe_and_process_types():
@@ -441,7 +455,6 @@ class SynchronousBase(object):
 
 # pylint: disable=too-many-ancestors
 class MultiprocessingTraceProcess(SerializingProcessArchitecture, MultiprocessBase):
-
   '''
   True parallel traces via multiprocessing. Controlled by MultiprocessingTraceHandler.
   '''
@@ -456,15 +469,26 @@ class MultiprocessingTraceProcess(SerializingProcessArchitecture, MultiprocessBa
       ProcessBase.set_seed(self, seed)
 
 class ThreadedSerializingTraceProcess(SerializingProcessArchitecture, ThreadingBase):
-  '''
-  Emulates MultiprocessingTraceProcess but is implemented sequentially. Use for
-  debugging. Controlled by ThreadedSerializingTraceHandler.
+  '''Emulates MultiprocessingTraceProcess by serializing the traces, but
+  is implemented with threading. Could be useful for debugging?
+  Controlled by ThreadedSerializingTraceHandler.
+
   '''
   pass
 
 class ThreadedTraceProcess(SharedMemoryProcessArchitecture, ThreadingBase):
-  '''
+  '''Emulates MultiprocessingTraceProcess by running multithreaded but
+  without serializing traces.  Could be useful for debugging?
   Controlled by ThreadedTraceHandler.
+
+  '''
+  pass
+
+class SynchronousSerializingTraceProcess(SerializingProcessArchitecture, SynchronousBase):
+  '''Emulates MultiprocessingTraceProcess by serializing the traces as
+  it would, while still running in one thread.  Use for debugging.
+  Controlled by SynchronousSerializingTraceHandler.
+
   '''
   pass
 
