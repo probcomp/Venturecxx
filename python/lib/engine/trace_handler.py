@@ -161,7 +161,7 @@ class HandlerBase(object):
     self.pipes = []
     self.processes = []
     self.weights = []
-    Pipe, TraceProcess = self._setup()
+    Pipe, TraceProcess = self._pipe_and_process_types()
     for trace in traces:
       parent, child = Pipe()
       process = TraceProcess(trace, child, self.backend)
@@ -263,7 +263,7 @@ class ParallelTraceHandler(ParallelHandlerArchitecture):
   multiprocessing.Pipe. Truly parallel implementation.
   '''
   @staticmethod
-  def _setup():
+  def _pipe_and_process_types():
     return mp.Pipe, ParallelTraceProcess
 
 class EmulatingTraceHandler(ParallelHandlerArchitecture):
@@ -274,7 +274,7 @@ class EmulatingTraceHandler(ParallelHandlerArchitecture):
   is sequential.
   '''
   @staticmethod
-  def _setup():
+  def _pipe_and_process_types():
     return mpd.Pipe, EmulatingTraceProcess
 
 class SequentialTraceHandler(SequentialHandlerArchitecture):
@@ -283,7 +283,7 @@ class SequentialTraceHandler(SequentialHandlerArchitecture):
   multiprocessing.dummy.Pipe.
   '''
   @staticmethod
-  def _setup():
+  def _pipe_and_process_types():
     return mpd.Pipe, SequentialTraceProcess
 
 ######################################################################
