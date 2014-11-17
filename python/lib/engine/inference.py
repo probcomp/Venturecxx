@@ -118,8 +118,10 @@ class Infer(object):
 
   def primitive_infer(self, exp): self.engine.primitive_infer(exp)
   def resample(self, ct): self.engine.resample(ct)
-  def resample_emulating(self, ct): self.engine.resample_emulating(ct)
-  def resample_parallel(self, ct): self.engine.resample_parallel(ct)
+  def resample_serializing(self, ct): self.engine.resample_serializing(ct)
+  def resample_threaded(self, ct): self.engine.resample_threaded(ct)
+  def resample_thread_ser(self, ct): self.engine.resample_thread_ser(ct)
+  def resample_multiprocess(self, ct): self.engine.resample_multiprocess(ct)
   def incorporate(self): pass # Since we incorporate at the beginning anyway
   def peek(self, *exprs):
     names, stack_dicts = self.parse_exprs(exprs, 'peek')

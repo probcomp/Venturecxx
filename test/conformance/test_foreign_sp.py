@@ -124,7 +124,7 @@ def test_unpicklable_sp_parallel():
     If we attempt to bind an unpicklable SP and the engine is in parallel
     or emulating mode, check that we get the proper warning.
     '''
-    for mode in ['emulating', 'parallel']:
+    for mode in ['serializing', 'thread_ser', 'multiprocess']:
         yield check_unpicklable_sp_parallel, mode
 
 def check_unpicklable_sp_parallel(mode):

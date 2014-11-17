@@ -20,6 +20,7 @@ import time
 
 from venture.exception import VentureException
 from trace_handler import (dump_trace, restore_trace, SynchronousTraceHandler,
+                           SynchronousSerializingTraceHandler, ThreadedTraceHandler,
                            ThreadedSerializingTraceHandler, MultiprocessingTraceHandler)
 from venture.lite.utils import sampleLogCategorical
 from venture.engine.inference import Infer
@@ -52,10 +53,14 @@ class Engine(object):
     self.callbacks = {}
 
   def create_handler(self, traces):
-    if self.mode == 'parallel':
+    if self.mode == 'multiprocess':
       Handler = MultiprocessingTraceHandler
-    elif self.mode == 'emulating':
+    elif self.mode == 'thread_ser':
       Handler = ThreadedSerializingTraceHandler
+    elif self.mode == 'threaded':
+      Handler = ThreadedTraceHandler
+    elif self.mode == 'serializing':
+      Handler = SynchronousSerializingTraceHandler
     else:
       Handler = SynchronousTraceHandler
     return Handler(traces, self.name)
@@ -179,7 +184,7 @@ class Engine(object):
     # check that we can pickle it
     if (not is_picklable(sp)) and (self.mode != 'sequential'):
       errstr = '''SP not picklable. To bind it, call (infer sequential [ n_cores ]),
-      bind the sp, then switch back to parallel.'''
+      bind the sp, then switch back to multiprocess.'''
       raise TypeError(errstr)
 
     self.trace_handler.delegate('bind_foreign_sp', name, sp)
@@ -216,13 +221,21 @@ effect of renumbering the directives, if some had been forgotten."""
     self.trace_handler = SynchronousTraceHandler(self._resample_setup(P),
                                                  self.name)
 
-  def resample_emulating(self, P):
-    self.mode = 'emulating'
+  def resample_serializing(self, P):
+    self.mode = 'serializing'
+    self.trace_handler = SynchronousSerializingTraceHandler(self._resample_setup(P),
+                                                            self.name)
+  def resample_threaded(self, P):
+    self.mode = 'threaded'
+    self.trace_handler = ThreadedTraceHandler(self._resample_setup(P),
+                                              self.name)
+  def resample_thread_ser(self, P):
+    self.mode = 'thread_ser'
     self.trace_handler = ThreadedSerializingTraceHandler(self._resample_setup(P),
                                                          self.name)
 
-  def resample_parallel(self, P):
-    self.mode = 'parallel'
+  def resample_multiprocess(self, P):
+    self.mode = 'multiprocess'
     self.trace_handler = MultiprocessingTraceHandler(self._resample_setup(P),
                                                      self.name)
 

@@ -1,4 +1,4 @@
-[infer (resample_parallel 6)]
+[infer (resample_multiprocess 6)]
 [load "brownian-model.vnt"]
 [observe (obs_fun 4) 4]
 [observe (obs_fun 5) 5]
