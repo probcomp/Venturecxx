@@ -44,26 +44,28 @@ class Engine(object):
     self.directiveCounter = 0
     self.directives = {}
     self.inferrer = None
-    self.trace_handler = SynchronousTraceHandler([Trace()], backend = self.name)
     self.n_traces = 1
     self.mode = 'sequential'
+    self.trace_handler = self.create_handler([Trace()])
     import venture.lite.inference_sps as inf
     self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
     self.callbacks = {}
 
-  def create_handler(self, traces):
-    if self.mode == 'multiprocess':
-      Handler = MultiprocessingTraceHandler
-    elif self.mode == 'thread_ser':
-      Handler = ThreadedSerializingTraceHandler
-    elif self.mode == 'threaded':
-      Handler = ThreadedTraceHandler
-    elif self.mode == 'serializing':
-      Handler = SynchronousSerializingTraceHandler
+  def trace_handler_constructor(self, mode):
+    if mode == 'multiprocess':
+      return MultiprocessingTraceHandler
+    elif mode == 'thread_ser':
+      return ThreadedSerializingTraceHandler
+    elif mode == 'threaded':
+      return ThreadedTraceHandler
+    elif mode == 'serializing':
+      return SynchronousSerializingTraceHandler
     else:
-      Handler = SynchronousTraceHandler
-    return Handler(traces, self.name)
+      return SynchronousTraceHandler
+
+  def create_handler(self, traces):
+    return self.trace_handler_constructor(self.mode)(traces, self.name)
 
   def inferenceSPsList(self):
     return self.inference_sps.iteritems()
@@ -216,28 +218,9 @@ effect of renumbering the directives, if some had been forgotten."""
     else:
       assert False, "Unkown directive type found %r" % directive
 
-  def resample(self, P):
-    self.mode = 'sequential'
-    self.trace_handler = SynchronousTraceHandler(self._resample_setup(P),
-                                                 self.name)
-
-  def resample_serializing(self, P):
-    self.mode = 'serializing'
-    self.trace_handler = SynchronousSerializingTraceHandler(self._resample_setup(P),
-                                                            self.name)
-  def resample_threaded(self, P):
-    self.mode = 'threaded'
-    self.trace_handler = ThreadedTraceHandler(self._resample_setup(P),
-                                              self.name)
-  def resample_thread_ser(self, P):
-    self.mode = 'thread_ser'
-    self.trace_handler = ThreadedSerializingTraceHandler(self._resample_setup(P),
-                                                         self.name)
-
-  def resample_multiprocess(self, P):
-    self.mode = 'multiprocess'
-    self.trace_handler = MultiprocessingTraceHandler(self._resample_setup(P),
-                                                     self.name)
+  def resample(self, P, mode = 'sequential'):
+    self.mode = mode
+    self.trace_handler = self.create_handler(self._resample_setup(P))
 
   def _resample_setup(self, P):
     newTraces = self._resample_traces(P)
