@@ -11,11 +11,11 @@ def testSynchronousIsSerial():
   yield checkSynchronousIsSerial, "resample_serializing"
 
 def checkSynchronousIsSerial(mode):
-  eq_(1, threading.active_count())
+  numthreads = threading.active_count()
   r = get_ripl()
-  eq_(1, threading.active_count())
+  eq_(numthreads, threading.active_count())
   r.infer("(%s 2)" % mode)
-  eq_(1, threading.active_count())
+  eq_(numthreads, threading.active_count())
 
 @gen_on_inf_prim("resample")
 def testResamplingSmoke():
