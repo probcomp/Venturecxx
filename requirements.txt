@@ -26,7 +26,7 @@ ipython>=1.2
 pyzmq>=13
 
 # lite
-scipy>=0.14
+scipy>=0.13
 dill
 
 # Plotting (optional)

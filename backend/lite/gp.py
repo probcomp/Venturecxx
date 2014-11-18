@@ -1,7 +1,16 @@
 import numpy as np
 import numpy.linalg as la
 import numpy.random as npr
-from scipy.stats import multivariate_normal
+
+# XXX Replace by scipy.stats.multivariate_normal.logpdf when we
+# upgrade to scipy 0.14.
+def multivariate_normal_logpdf(x, mu, sigma):
+  dev = x - mu
+  ans = 0
+  ans += (-.5*(x-mu).transpose() * la.inv(sigma) * (x-mu))[0, 0]
+  ans += -.5*len(sigma)*np.log(2 * np.pi)
+  ans += -.5*np.log(la.det(sigma))
+  return ans
 
 def col_vec(xs):
   return np.matrix([xs]).T
@@ -23,7 +32,7 @@ class GP(object):
     return np.matrix([[self.covariance(x1, x2) for x2 in x2s] for x1 in x1s])
   
   def getNormal(self, xs):
-    """Returns the mean and covariance matrices at a set of points."""
+    """Returns the mean and covariance matrices at a set of input points."""
     if len(self.samples) == 0:
       mu = self.mean_array(xs)
       sigma = self.cov_matrix(xs, xs)
@@ -44,18 +53,18 @@ class GP(object):
       mu = mu1 + sigma12 * (inv22 * (a2 - mu2))
       sigma = sigma11 - sigma12 * inv22 * sigma21
     
-    return mu.A1, sigma
+    return mu, sigma
 
   def sample(self, *xs):
     """Sample at a (set of) point(s)."""
     mu, sigma = self.getNormal(xs)
-    os = npr.multivariate_normal(mu, sigma)
+    os = npr.multivariate_normal(mu.A1, sigma)
     return os
 
   def logDensity(self, xs, os):
     """Log density of a set of samples."""
     mu, sigma = self.getNormal(xs)
-    return multivariate_normal.logpdf(os, mu, sigma)
+    return multivariate_normal_logpdf(col_vec(os), mu, sigma)
 
   def logDensityOfCounts(self):
     """Log density of the current samples."""
@@ -65,10 +74,10 @@ class GP(object):
     xs = self.samples.keys()
     os = self.samples.values()
     
-    mu = map(self.mean, xs)
+    mu = self.mean_array(xs)
     sigma = self.cov_matrix(xs, xs)
     
-    return multivariate_normal.logpdf(os, mu, sigma)
+    return multivariate_normal_logpdf(col_vec(os), mu, sigma)
   
 from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, VentureSPRecord, SPType

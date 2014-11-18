@@ -1,6 +1,7 @@
 build
 env.d
 
+tool/logs/*
 # python
 *.pyc
 

@@ -5,5 +5,8 @@ sudo docker run \
   -i                         `# Interactive` \
   -p 8888:8888               `# Expose IPython notebook server` \
   -p 5900:5900               `# Expose VNC server` \
+  -p 9001:9001				 `# Expose supervisor web interface` \
+  -p 5006:5006				 `# Expose Bokeh server web interface port` \
+  -p 5007:5007				 `# Expose Bokeh websocket port` \
   -v `pwd`:/root/Venturecxx  `# Map source directory into the container` \
   venture

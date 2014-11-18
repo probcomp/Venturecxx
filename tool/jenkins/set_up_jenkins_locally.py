@@ -26,6 +26,17 @@ def main():
     give_jenkins_virtualenv_if_needed()
     ensure_jobs()
     ensure_github_trusts_jenkins()
+    print disk_space_reminder
+
+disk_space_reminder = '''Done.
+
+Please make sure /var/lib/jenkins has plenty of disk space.
+If it doesn't, find somewhere that does, say /scratch, and run
+
+/etc/init.d/jenkins stop
+mv /var/lib/jenkins /scratch/jenkins
+ln -s /scratch/jenkins /var/lib/jenkins
+/etc/init.d/jenkins start'''
 
 #### General helpers
 
