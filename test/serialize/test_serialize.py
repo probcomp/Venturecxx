@@ -235,14 +235,13 @@ def test_serialize_repeatedly():
 
 def test_foreign_sp():
     # make sure that foreign SP's are retained through serialization
-    for mode in ['sequential', 'emulating', 'parallel']:
+    for mode in ['', '_serializing', '_threaded', '_thread_ser', '_multiprocess']:
         yield check_foreign_sp, mode
 
 def check_foreign_sp(mode):
     v = get_ripl()
     builtins = builtin.builtInSPs()
-    fmt = {'sequential' : '', 'emulating' : '_emulating', 'parallel' : '_parallel'}
-    resample = '[INFER (resample{0} 1)]'.format(fmt[mode])
+    resample = '[INFER (resample{0} 1)]'.format(mode)
     v.execute_instruction(resample)
     v.bind_foreign_sp('test_binomial', builtins['binomial'])
     v.bind_foreign_sp('test_sym_dir_mult', builtins['make_sym_dir_mult'])
