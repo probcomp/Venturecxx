@@ -1,12 +1,6 @@
-screen -S x11vnc -d -m x11vnc -forever -create
-
-mkdir /root/bokeh_data
-cd /root/bokeh_data
-screen -S bokeh -d -m bokeh-server --ip=0.0.0.0 --ws-port=5007 -D=/root/bokeh_data/
-
-cd /root/Venturecxx/examples
-screen -S ipy_nb -d -m ipython notebook
-
-cd /root/Venturecxx
-
-/bin/bash
+#!/bin/bash
+# To modify what runs in your container, see /script/supervisord.conf
+mkdir /root/bokeh_data  # Create directory for Bokeh-server data
+cp ./script/supervisord.conf /etc/supervisor/conf.d/supervisord.conf  # Define processes to run
+/usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf # Start supervisor daemon
+/bin/bash 
