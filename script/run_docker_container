@@ -5,5 +5,6 @@ sudo docker run \
   -i                         `# Interactive` \
   -p 8888:8888               `# Expose IPython notebook server` \
   -p 5900:5900               `# Expose VNC server` \
+  -p 9001:9001				 `# Expose supervisor web interface` \
   -v `pwd`:/root/Venturecxx  `# Map source directory into the container` \
   venture
