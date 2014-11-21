@@ -20,8 +20,8 @@ The easiest way to get Venture is to run it inside a [Docker
 container](http://www.docker.com).
 
     sudo apt-get install docker.io   # Install Docker
-    script/build_docker_image        # Requires sudo, network, and a while
-    script/run_docker_container      # Requires sudo
+    sudo script/build_docker_image   # Requires network, and a while
+    sudo script/run_docker_container
 
     venture                          # Inside the container
 
@@ -45,7 +45,7 @@ It runs completely from RAM, weighs ~27MB and boots in ~5s.
     Install latest boot2docker for Windows
         https://docs.docker.com/installation/windows/   # Installation Instructions
     script/windows/1_initialize_boot2docker.sh          # Update boot2docker image
-    script/windows/2_build_docker_image.sh              # Build image (large download + build) 
+    script/windows/2_build_image.sh                     # Build image (large download + build)
     script/windows/3_run_container.sh                   # Launch application
 
     venture                          # Inside the container

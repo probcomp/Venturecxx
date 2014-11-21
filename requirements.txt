@@ -37,3 +37,6 @@ pandas>=0.14 # TODO Is the dependency on pandas actually optional?
 # Drawing scaffolds for debugging (optional)
 #pygraphviz  # Was preventing docker build...   not needed?
 networkx
+
+# Integration testing
+pexpect
