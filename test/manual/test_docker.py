@@ -4,8 +4,6 @@ import requests as r
 import pexpect
 import sys
 
-from venture.test.config import in_backend, on_inf_prim
-
 def available_containers():
   p = s.Popen(["docker", "ps"], stdout=s.PIPE)
   (out, _) = p.communicate()
@@ -17,8 +15,6 @@ def available_containers():
   containers = [l.split() for l in lines[1:]]
   return containers
 
-@in_backend("puma") # Just to avoid repeating it
-@on_inf_prim("none")
 def test_docker_install():
   assert len(available_containers()) == 0
 
@@ -45,3 +41,6 @@ def test_docker_install():
   finally:
     for c in available_containers():
       s.check_call(["docker", "stop", c[0]])
+
+if __name__ == '__main__':
+  test_docker_install()
