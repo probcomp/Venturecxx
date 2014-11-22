@@ -282,6 +282,23 @@ class BetaOutputPSP(RandomPSP):
 
   # TODO Beta presumably has a variational kernel too?
 
+class ExponOutputPSP(RandomPSP):
+  # TODO don't need to be class methods
+  def simulateNumeric(self,gamma): return scipy.stats.expon.rvs(scale=1.0/gamma)
+  def logDensityNumeric(self,x,gamma): return scipy.stats.expon.logpdf(x,scale=1.0/gamma)
+
+  def simulate(self,args): return self.simulateNumeric(*args.operandValues)
+  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
+
+  def gradientOfLogDensity(self,x,args):
+    gamma = args.operandValues[0]
+    gradX = -gamma
+    gradGamma = 1. / gamma - x
+    return (gradX,[gradGamma])
+
+  def description(self,name):
+    return "  (%s gamma) returns a sample from an exponential distribution with rate (inverse scale) parameter gamma." % name
+
 class GammaOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self,alpha,beta): return scipy.stats.gamma.rvs(alpha,scale=1.0/beta)
