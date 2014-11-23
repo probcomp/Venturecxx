@@ -38,7 +38,7 @@ Running Venture's Docker Container (Windows)
 ==========================================
 
 On Windows and MacOS, you can easily run docker containers with the boot2docker tool.
-Boot2docker is a VM interface and lightweight Linux distribution specifically intended 
+Boot2docker is a VM interface and lightweight Linux distribution specifically intended
 to run [Docker containers](http://www.docker.com).
 It runs completely from RAM, weighs ~27MB and boots in ~5s.
 
@@ -71,7 +71,9 @@ what's going on will be to ask us or to read the source code.
 Dependencies (Ubuntu)
 ---------------------
 
-Here is what we install on a clean Ubuntu (works best in 14.04 or higher).
+Here is what we install on a clean Ubuntu (works best in 14.04 or
+higher).  This dependency installation is replicated as
+[script/provision_ubuntu_dependencies](script/provision_ubuntu_dependencies)
 
     # Get system dependencies
     sudo apt-get install -y libboost-all-dev libgsl0-dev python-pip ccache libfreetype6-dev
@@ -95,7 +97,7 @@ Dependencies (OSX, Homebrew)
 ----------------------------
 
 This is the best-supported and best-tested method for building Venture on Mac.
-    
+
     # Install Packet Manager "Homebrew"
     http://brew.sh/
 
