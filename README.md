@@ -182,23 +182,25 @@ On OSX with Macports, run
 Local Installation
 ------------------
 
-In order to install locally, download and install python "virtualenv" onto your computer. [https://pypi.python.org/pypi/virtualenv](https://pypi.python.org/pypi/virtualenv)
+In order to install locally, make sure you have python
+[virtualenv](https://pypi.python.org/pypi/virtualenv).
 
-Create a new virtual environment to install the requirements:
+    sudo pip install virtualenv
 
+Then prepare your virtual environment (replicated as
+[script/prepare_virtualenv](script/prepare_virtualenv)):
+
+    # Create a new virtual environment to install Venture (and its Python dependencies):
     virtualenv env.d
 
-If Python dependencies were pre-installed these can be used by typing
-
+    # If (some) Python dependencies were pre-installed these can be used by typing
     virtualenv --system-site-packages env.d
 
-Activate the environment, and install any remaining dependencies
-
+    # Activate the environment, and install any remaining dependencies
     source env.d/bin/activate
     pip install -r requirements.txt
 
-[Optional] Install ggplot (needed for the built-in plotting facilities)
-
+    # [Optional] Install ggplot (needed for the built-in plotting facilities)
     pip install ggplot
 
 On Linux and OSX with Homebrew, now install by typing

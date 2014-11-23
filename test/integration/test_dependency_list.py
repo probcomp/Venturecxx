@@ -40,14 +40,14 @@ class CodeBlocksInReadme(object):
 def code_blocks_in_readme():
   return CodeBlocksInReadme()()
 
-def code_of_provision_script():
-  with open(os.path.dirname(__file__) + "/../../script/provision_ubuntu_dependencies") as f:
+def code_of_script(name):
+  with open(os.path.dirname(__file__) + "/../../script/" + name) as f:
     return f.read()
 
-def test_readme_agrees_with_provision_script():
-  target = code_of_provision_script()
+def check_readme_agrees_with_script(name):
+  target = code_of_script(name)
   for block in code_blocks_in_readme():
-    if "#!/bin/bash\n\n" + block == target:
+    if "#!/bin/bash -xe\n\n" + block == target:
       return # Success.
 
   # Failure; produce a nice explanation of it.
@@ -56,4 +56,8 @@ def test_readme_agrees_with_provision_script():
     print "-----"
   sys.stdout.write(target)
 
-  assert False, "None of the code blocks in the README (repeated above) look like the provision script (also repeated above)."
+  assert False, "None of the code blocks in the README (repeated above) look like the %s script (also repeated above)." % name
+
+def test_readme_agreements():
+  yield check_readme_agrees_with_script, "provision_ubuntu_dependencies"
+  yield check_readme_agrees_with_script, "prepare_virtualenv"

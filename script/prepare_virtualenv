@@ -1,0 +1,14 @@
+#!/bin/bash -xe
+
+# Create a new virtual environment to install Venture (and its Python dependencies):
+virtualenv env.d
+
+# If (some) Python dependencies were pre-installed these can be used by typing
+virtualenv --system-site-packages env.d
+
+# Activate the environment, and install any remaining dependencies
+source env.d/bin/activate
+pip install -r requirements.txt
+
+# [Optional] Install ggplot (needed for the built-in plotting facilities)
+pip install ggplot

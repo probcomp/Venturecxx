@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -xe
 
 # Get system dependencies
 sudo apt-get install -y libboost-all-dev libgsl0-dev python-pip ccache libfreetype6-dev
