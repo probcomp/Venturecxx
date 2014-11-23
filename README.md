@@ -197,7 +197,7 @@ Activate the environment, and install any remaining dependencies
 
 [Optional] Install ggplot (needed for the built-in plotting facilities)
 
-    sudo pip install ggplot
+    pip install ggplot
 
 On Linux and OSX with Homebrew, now install by typing
 
