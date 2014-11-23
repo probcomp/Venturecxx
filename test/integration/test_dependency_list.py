@@ -49,6 +49,8 @@ def test_readme_agrees_with_provision_script():
   for block in code_blocks_in_readme():
     if "#!/bin/bash\n\n" + block == target:
       return # Success.
+
+  # Failure; produce a nice explanation of it.
   for block in code_blocks_in_readme():
     sys.stdout.write(block)
     print "-----"
