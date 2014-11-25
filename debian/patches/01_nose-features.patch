@@ -1,0 +1,174 @@
+Index: venture-20141125/all.cfg
+===================================================================
+--- venture-20141125.orig/all.cfg	2014-11-25 22:00:03.849739611 +0000
++++ venture-20141125/all.cfg	2014-11-25 22:00:13.921739676 +0000
+@@ -5,4 +5,4 @@
+ tc-file=test/lite-config.py
+ tc-format=python
+ 
+-with-ignore-docstrings=1 # From sudo pip install nose-ignore-docstring
++#with-ignore-docstrings=1 # From sudo pip install nose-ignore-docstring
+Index: venture-20141125/base.cfg
+===================================================================
+--- venture-20141125.orig/base.cfg	2014-11-25 22:00:03.853739611 +0000
++++ venture-20141125/base.cfg	2014-11-25 22:00:13.921739676 +0000
+@@ -3,7 +3,7 @@
+ detailed-errors=1
+ nocapture=1
+ 
+-with-ignore-docstrings=1 # From sudo pip install nose-ignore-docstring
++#with-ignore-docstrings=1 # From sudo pip install nose-ignore-docstring
+ 
+ tc-file=test/lite-config.py
+ tc-format=python
+@@ -13,9 +13,9 @@
+ # tc=ignore_inference_quality:true
+ 
+ # Turn on code coverage reports
+-# with-cov=1
+-# cov=venture
+-# cov-report=html
++## with-cov=1
++## cov=venture
++## cov-report=html
+ 
+ # Exclude test directories that do not have statistically-sensitive
+ # tests
+Index: venture-20141125/crashes-base.cfg
+===================================================================
+--- venture-20141125.orig/crashes-base.cfg	2014-11-25 22:00:03.853739611 +0000
++++ venture-20141125/crashes-base.cfg	2014-11-25 22:00:13.921739676 +0000
+@@ -3,7 +3,7 @@
+ detailed-errors=1
+ nocapture=1
+ 
+-with-ignore-docstrings=1 # From sudo pip install nose-ignore-docstring
++#with-ignore-docstrings=1 # From sudo pip install nose-ignore-docstring
+ 
+ tc-file=test/lite-config.py
+ tc-format=python
+@@ -13,6 +13,6 @@
+ # For code coverage with coverage.py and nose-cov:
+ # sudo pip install coverage
+ # sudo pip install nose-cov
+-with-cov=1
+-cov=venture
+-cov-report=html
++#with-cov=1
++#cov=venture
++#cov-report=html
+Index: venture-20141125/crashes.cfg
+===================================================================
+--- venture-20141125.orig/crashes.cfg	2014-11-25 22:00:03.853739611 +0000
++++ venture-20141125/crashes.cfg	2014-11-25 22:00:13.921739676 +0000
+@@ -3,7 +3,7 @@
+ detailed-errors=1
+ nocapture=1
+ 
+-with-ignore-docstrings=1 # From sudo pip install nose-ignore-docstring
++#with-ignore-docstrings=1 # From sudo pip install nose-ignore-docstring
+ 
+ tc-file=test/lite-config.py
+ tc-format=python
+@@ -13,8 +13,8 @@
+ # For code coverage with coverage.py and nose-cov:
+ # sudo pip install coverage
+ # sudo pip install nose-cov
+-with-cov=1
+-cov=venture
+-cov-report=html
++#with-cov=1
++#cov=venture
++#cov-report=html
+ 
+ attr=!slow
+Index: venture-20141125/inference-quality.cfg
+===================================================================
+--- venture-20141125.orig/inference-quality.cfg	2014-11-25 22:00:03.849739611 +0000
++++ venture-20141125/inference-quality.cfg	2014-11-25 22:00:13.921739676 +0000
+@@ -3,7 +3,7 @@
+ detailed-errors=1
+ nocapture=1
+ 
+-with-ignore-docstrings=1 # From sudo pip install nose-ignore-docstring
++#with-ignore-docstrings=1 # From sudo pip install nose-ignore-docstring
+ 
+ tc-file=test/lite-config.py
+ tc-format=python
+Index: venture-20141125/lite-crashes.cfg
+===================================================================
+--- venture-20141125.orig/lite-crashes.cfg	2014-11-25 22:00:03.849739611 +0000
++++ venture-20141125/lite-crashes.cfg	2014-11-25 22:00:13.921739676 +0000
+@@ -3,7 +3,7 @@
+ detailed-errors=1
+ nocapture=1
+ 
+-with-ignore-docstrings=1 # From sudo pip install nose-ignore-docstring
++#with-ignore-docstrings=1 # From sudo pip install nose-ignore-docstring
+ 
+ tc-file=test/lite-config.py
+ tc-format=python
+@@ -13,9 +13,9 @@
+ # For code coverage with coverage.py and nose-cov:
+ # sudo pip install coverage
+ # sudo pip install nose-cov
+-with-cov=1
+-cov=venture
+-cov-report=html
++#with-cov=1
++#cov=venture
++#cov-report=html
+ 
+ eval-attr=not slow and (not backend or backend in ['lite', 'any', 'all'])
+ 
+Index: venture-20141125/mripl-ipy-parallel.cfg
+===================================================================
+--- venture-20141125.orig/mripl-ipy-parallel.cfg	2014-11-25 22:00:03.853739611 +0000
++++ venture-20141125/mripl-ipy-parallel.cfg	2014-11-25 22:00:13.921739676 +0000
+@@ -3,7 +3,7 @@
+ detailed-errors=1
+ nocapture=1
+ 
+-with-ignore-docstrings=1 # From sudo pip install nose-ignore-docstring
++#with-ignore-docstrings=1 # From sudo pip install nose-ignore-docstring
+ 
+ tc-file=test/puma-config.py
+ tc-format=python
+Index: venture-20141125/performance.cfg
+===================================================================
+--- venture-20141125.orig/performance.cfg	2014-11-25 22:00:03.853739611 +0000
++++ venture-20141125/performance.cfg	2014-11-25 22:00:13.921739676 +0000
+@@ -3,7 +3,7 @@
+ detailed-errors=1
+ nocapture=1
+ 
+-with-ignore-docstrings=1 # From sudo pip install nose-ignore-docstring
++#with-ignore-docstrings=1 # From sudo pip install nose-ignore-docstring
+ 
+ tc-file=test/puma-config.py
+ tc-format=python
+Index: venture-20141125/puma-crashes.cfg
+===================================================================
+--- venture-20141125.orig/puma-crashes.cfg	2014-11-25 22:00:03.849739611 +0000
++++ venture-20141125/puma-crashes.cfg	2014-11-25 22:00:13.921739676 +0000
+@@ -3,7 +3,7 @@
+ detailed-errors=1
+ nocapture=1
+ 
+-with-ignore-docstrings=1 # From sudo pip install nose-ignore-docstring
++#with-ignore-docstrings=1 # From sudo pip install nose-ignore-docstring
+ 
+ tc-file=test/puma-config.py
+ tc-format=python
+@@ -13,8 +13,8 @@
+ # For code coverage with coverage.py and nose-cov:
+ # sudo pip install coverage
+ # sudo pip install nose-cov
+-with-cov=1
+-cov=venture
+-cov-report=html
++#with-cov=1
++#cov=venture
++#cov-report=html
+ 
+ eval-attr=not slow and (not backend or backend in ['puma', 'any', 'all'])
