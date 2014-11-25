@@ -1,0 +1,33 @@
+Source: venture
+Maintainer: Taylor R Campbell <riastradh+probcomp@csail.mit.edu>
+Section: misc
+Priority: optional
+Standards-Version: 3.9.5
+Build-Depends: debhelper (>= 9),
+	ccache,
+	libfreetype6-dev,
+	libgsl0-dev,
+	python,
+	python-setuptools,
+	libboost-all-dev
+X-Python-Version: >= 2.6
+
+# XXX The Python dependencies should be listed in setup.py, not here.
+
+Package: venture
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends},
+	ipython (>= 1.2),
+	python-flask,
+	python-matplotlib (>= 1.1),
+	python-nose (>= 1.3),
+	python-nose-testconfig (>= 0.9),
+	python-numpy (>= 1.8),
+	python-pandas (>= 0.13),
+	python-requests (>= 1.2),
+	python-scipy (>= 0.13),
+	python-zmq (>= 13)
+Description: Higher-order probabilistic programming platform.
+	Venture is a higher-order probabilistic programming platform
+	that aims to be sufficiently expressive, extensible, and
+	efficient for general-purpose use.
