@@ -6,10 +6,16 @@ root_dirname=$(dirname $(dirname $my_abs_path))
 echo "$root_dirname"
 cd $root_dirname
 
-release=0.2.1
+release=`grep "version_str=" script/venture | cut -d '"' -f 2`
 if [[ ! -z $1 ]]; then
     release=$1
 fi
+if [[ -z $release ]]; then
+    echo Could not determine a release number, exiting
+    exit 1
+fi
+
+echo Making a tarball marked version $release
 
 tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=.git \
