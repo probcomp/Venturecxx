@@ -43,6 +43,7 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=tool/logs \
     --exclude=doc/v1 \
     --exclude=backend/v1-pre-scm \
+    --exclude=script/release-tarball \
     --exclude=venture-*.tgz \
     --exclude=venture-*.tar.gz \
     --exclude=venture-*.tar \
