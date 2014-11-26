@@ -38,6 +38,7 @@ def logDensityCategorical(val,ps,os=None):
     if os[i] == val: 
       p = ps[i]
       break
+  assert p is not None
   if p == 0:
     return float('-inf')
   return math.log(p)
