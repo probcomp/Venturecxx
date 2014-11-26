@@ -260,11 +260,16 @@ class ESRRefOutputPSP(DeterministicPSP):
     return parentNode != trace.esrParentsAt(appNode)[0] and parentNode != appNode.requestNode
 
 class RandomPSP(PSP):
-  """Provides good default implementations of (two) PSP methods for stochastic PSPs."""
+  """Provides good default implementations of (two) PSP methods for (assessable) stochastic PSPs."""
   @override(PSP)
   def isRandom(self): return True
   @override(PSP)
   def canAbsorb(self, _trace, _appNode, _parentNode): return True
+
+class LikelihoodFreePSP(RandomPSP):
+  """Provides good default implementations of (two) PSP methods for likelihood-free stochastic PSPs."""
+  @override(PSP)
+  def canAbsorb(self, _trace, _appNode, _parentNode): return False
 
 class TypedPSP(PSP):
   """Wrapper that implements the PSP interface by marshalling and
