@@ -38,7 +38,8 @@ def logDensityCategorical(val,ps,os=None):
     if os[i] == val: 
       p = ps[i]
       break
-  assert p
+  if p == 0:
+    return float('-inf')
   return math.log(p)
 
 def simulateDirichlet(alpha): return npr.dirichlet(alpha)
