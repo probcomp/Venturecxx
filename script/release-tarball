@@ -33,6 +33,10 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=CP1-Quad-Rotor \
     --exclude=.coverage \
     --exclude=.idea \
+    --exclude=.ipynb_checkpoints \
+    --exclude=tool/logs \
+    --exclude=doc/v1 \
+    --exclude=backend/v1-pre-scm \
     --exclude=venture-*.tgz \
     --exclude=venture-*.tar.gz \
     --exclude=venture-*.tar \
