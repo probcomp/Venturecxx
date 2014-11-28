@@ -54,3 +54,22 @@ def testInlineSMCSmoke():
 """)
   for i in range(20):
     eq_(i, r.report(i+1))
+
+def testInlineSMCSmoke2():
+  r = get_ripl(persistent_inference_trace=True)
+  r.execute_program("""
+[assume frob (mem (lambda (i) (uniform_continuous -100 100)))]
+[define go
+  (lambda (ct)
+    (if (< ct 20)
+        (begin
+          (observe (frob (unquote ct)) ct)
+          (resample 1)
+          (go (+ ct 1)))
+        pass))]
+
+[infer (go 0)]
+[infer (incorporate)]
+""")
+  for i in range(20):
+    eq_(i, r.sample("(frob %s)" % i))
