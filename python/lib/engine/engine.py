@@ -38,7 +38,7 @@ def is_picklable(obj):
 
 class Engine(object):
 
-  def __init__(self, name="phony", Trace=None):
+  def __init__(self, name="phony", Trace=None, persistent_inference_trace=False):
     self.name = name
     self.Trace = Trace
     self.directiveCounter = 0
@@ -51,6 +51,9 @@ class Engine(object):
     self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
     self.callbacks = {}
+    self.persistent_inference_trace = persistent_inference_trace
+    if self.persistent_inference_trace:
+      (self.infer_trace, self.last_did) = self.init_inference_trace()
 
   def trace_handler_constructor(self, mode):
     if mode == 'multiprocess':
@@ -82,6 +85,13 @@ class Engine(object):
   def nextBaseAddr(self):
     self.directiveCounter += 1
     return self.directiveCounter
+
+  def define(self, id, datum):
+    assert self.persistent_inference_trace, "Define only works if the inference trace is persistent"
+    self.last_did += 1
+    self.infer_trace.eval(self.last_did, self.macroexpand_inference(datum))
+    self.infer_trace.bindInGlobalEnv(id, self.last_did)
+    return self.infer_trace.extractValue(self.last_did)
 
   def assume(self,id,datum):
     baseAddr = self.nextBaseAddr()
@@ -248,7 +258,9 @@ effect of renumbering the directives, if some had been forgotten."""
       return self.infer_v1_pre_t(exp, Infer(self))
 
   def macroexpand_inference(self, program):
-    if type(program) is list and type(program[0]) is dict and program[0]["value"] == "cycle":
+    if type(program) is list and len(program) == 0:
+      return program
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "cycle":
       assert len(program) == 3
       subkernels = self.macroexpand_inference(program[1])
       transitions = self.macroexpand_inference(program[2])
@@ -283,33 +295,65 @@ effect of renumbering the directives, if some had been forgotten."""
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "call_back_accum":
       assert len(program) >= 2
       return [program[0]] + [v.quote(e) for e in program[1:]]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "observe":
+      assert len(program) == 3
+      return [program[0], v.quote(program[1]), program[2]]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "begin":
+      assert len(program) >= 2
+      return [v.sym("sequence"), [v.sym("list")] + [self.macroexpand_inference(e) for e in program[1:]]]
     elif type(program) is list: return [self.macroexpand_inference(p) for p in program]
     else: return program
 
   def infer_v1_pre_t(self, program, target):
+    if not self.persistent_inference_trace:
+      (self.infer_trace, self.last_did) = self.init_inference_trace()
+    self.install_self_evaluating_scope_hack(self.infer_trace, target)
+    try:
+      self.last_did += 1
+      self.infer_trace.eval(self.last_did, [program, v.blob(target)])
+      ans = self.infer_trace.extractValue(self.last_did)
+      assert isinstance(ans, dict)
+      assert ans["type"] is "blob"
+      assert isinstance(ans["value"], Infer)
+      return ans["value"].final_data()
+    finally:
+      if self.persistent_inference_trace:
+        self.remove_self_evaluating_scope_hack(self.infer_trace, target)
+      else:
+        self.infer_trace = None
+        self.last_did = None
+
+  def init_inference_trace(self):
     import venture.lite.trace as lite
-    next_trace = lite.Trace()
-    # TODO Import the enclosing lexical environment into the new trace?
-    import venture.lite.inference_sps as inf
-    import venture.lite.value as val
+    ans = lite.Trace()
+    for name,sp in self.inferenceSPsList():
+      ans.bindPrimitiveSP(name, sp)
+    free_did = self.install_inference_prelude(ans)
+    return (ans, free_did)
+
+  def symbol_scopes(self, target):
     all_scopes = [s for s in target.engine.getDistinguishedTrace().scope_keys()]
     symbol_scopes = [s for s in all_scopes if isinstance(s, basestring) and not s.startswith("default")]
+    return symbol_scopes
+
+  def install_self_evaluating_scope_hack(self, next_trace, target):
+    import venture.lite.inference_sps as inf
+    import venture.lite.value as val
+    symbol_scopes = self.symbol_scopes(target)
     for hack in inf.inferenceKeywords + symbol_scopes:
       next_trace.bindPrimitiveName(hack, val.VentureSymbol(hack))
-    for name,sp in self.inferenceSPsList():
-      next_trace.bindPrimitiveSP(name, sp)
-    self.install_inference_prelude(next_trace)
-    next_trace.eval(4, [program, v.blob(target)])
-    ans = next_trace.extractValue(4)
-    assert isinstance(ans, dict)
-    assert ans["type"] is "blob"
-    assert isinstance(ans["value"], Infer)
-    return ans["value"].final_data()
+
+  def remove_self_evaluating_scope_hack(self, next_trace, target):
+    import venture.lite.inference_sps as inf
+    symbol_scopes = self.symbol_scopes(target)
+    for hack in inf.inferenceKeywords + symbol_scopes:
+      next_trace.unbindInGlobalEnv(hack)
 
   def install_inference_prelude(self, next_trace):
     for did, (name, exp) in enumerate(_inference_prelude()):
       next_trace.eval(did, exp)
       next_trace.bindInGlobalEnv(name, did)
+    return len(_inference_prelude())
 
   def primitive_infer(self, exp):
     self.trace_handler.delegate('primitive_infer', exp)
@@ -471,8 +515,10 @@ def _compute_inference_prelude():
   (if (is_pair ks)
       (lambda (t) ((sequence (rest ks)) ((first ks) t)))
       (lambda (t) t)))"""],
+        ["begin", "sequence"],
         ["mixture", """(lambda (weights kernels transitions)
-  (iterate (lambda (t) ((categorical weights kernels) t)) transitions))"""]]:
+  (iterate (lambda (t) ((categorical weights kernels) t)) transitions))"""],
+        ["pass", "(lambda (t) t)"]]:
     from venture.parser.church_prime_parser import ChurchPrimeParser
     from venture.sivm.macro import desugar_expression
     from venture.sivm.core_sivm import _modify_expression

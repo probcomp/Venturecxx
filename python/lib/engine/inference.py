@@ -156,6 +156,8 @@ class Infer(object):
     names, stack_dicts = self.parse_exprs(exprs, 'plotf')
     self._init_plot(None, names, exprs, stack_dicts, callback=self.engine.callbacks[name])
     self.result._add_data(self.engine, 'call_back_accum')
+  def observe(self, exp, val):
+    self.engine.observe(exp.asStackDict(), val.asStackDict())
 
   def particle_weights(self):
     return self.engine.trace_handler.weights
