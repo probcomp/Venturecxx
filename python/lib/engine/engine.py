@@ -51,6 +51,7 @@ class Engine(object):
     self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
     self.callbacks = {}
+    (self.infer_trace, self.last_did) = self.init_inference_trace()
 
   def trace_handler_constructor(self, mode):
     if mode == 'multiprocess':
@@ -287,18 +288,17 @@ effect of renumbering the directives, if some had been forgotten."""
     else: return program
 
   def infer_v1_pre_t(self, program, target):
-    (next_trace, free_did) = self.init_inference_trace()
-    # TODO Import the enclosing lexical environment into the new trace?
-    self.install_self_evaluating_scope_hack(next_trace, target)
+    self.install_self_evaluating_scope_hack(self.infer_trace, target)
     try:
-      next_trace.eval(free_did, [program, v.blob(target)])
-      ans = next_trace.extractValue(free_did)
+      self.last_did += 1
+      self.infer_trace.eval(self.last_did, [program, v.blob(target)])
+      ans = self.infer_trace.extractValue(self.last_did)
       assert isinstance(ans, dict)
       assert ans["type"] is "blob"
       assert isinstance(ans["value"], Infer)
       return ans["value"].final_data()
     finally:
-      self.remove_self_evaluating_scope_hack(next_trace, target)
+      self.remove_self_evaluating_scope_hack(self.infer_trace, target)
 
   def init_inference_trace(self):
     import venture.lite.trace as lite
