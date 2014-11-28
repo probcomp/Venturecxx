@@ -89,7 +89,7 @@ class Engine(object):
   def define(self, id, datum):
     assert self.persistent_inference_trace, "Define only works if the inference trace is persistent"
     self.last_did += 1
-    self.infer_trace.eval(self.last_did, datum)
+    self.infer_trace.eval(self.last_did, self.macroexpand_inference(datum))
     self.infer_trace.bindInGlobalEnv(id, self.last_did)
     return self.infer_trace.extractValue(self.last_did)
 
@@ -258,7 +258,9 @@ effect of renumbering the directives, if some had been forgotten."""
       return self.infer_v1_pre_t(exp, Infer(self))
 
   def macroexpand_inference(self, program):
-    if type(program) is list and type(program[0]) is dict and program[0]["value"] == "cycle":
+    if type(program) is list and len(program) == 0:
+      return program
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "cycle":
       assert len(program) == 3
       subkernels = self.macroexpand_inference(program[1])
       transitions = self.macroexpand_inference(program[2])
@@ -296,6 +298,9 @@ effect of renumbering the directives, if some had been forgotten."""
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "observe":
       assert len(program) == 3
       return [program[0], v.quote(program[1]), program[2]]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "begin":
+      assert len(program) >= 2
+      return [v.sym("sequence"), [v.sym("list")] + [self.macroexpand_inference(e) for e in program[1:]]]
     elif type(program) is list: return [self.macroexpand_inference(p) for p in program]
     else: return program
 
@@ -510,8 +515,10 @@ def _compute_inference_prelude():
   (if (is_pair ks)
       (lambda (t) ((sequence (rest ks)) ((first ks) t)))
       (lambda (t) t)))"""],
+        ["begin", "sequence"],
         ["mixture", """(lambda (weights kernels transitions)
-  (iterate (lambda (t) ((categorical weights kernels) t)) transitions))"""]]:
+  (iterate (lambda (t) ((categorical weights kernels) t)) transitions))"""],
+        ["pass", "(lambda (t) t)"]]:
     from venture.parser.church_prime_parser import ChurchPrimeParser
     from venture.sivm.macro import desugar_expression
     from venture.sivm.core_sivm import _modify_expression

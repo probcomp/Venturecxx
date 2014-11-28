@@ -108,7 +108,7 @@ class VentureSivm(object):
         instruction_type = instruction['instruction']
         sugar = None
         # desugar the expression
-        if instruction_type in ['assume','observe','predict']:
+        if instruction_type in ['define','assume','observe','predict']:
             exp = utils.validate_arg(instruction,'expression',
                     utils.validate_expression, wrap_exception=False)
             sugar = macro.expand(exp)
@@ -126,13 +126,14 @@ class VentureSivm(object):
         try:
             response = self.core_sivm.execute_instruction(desugared_instruction)
         except VentureException as e:
+            # raise # One can suppress error annotation by uncommenting this
             if e.exception == "evaluation":
                 self.state='exception'
                 
                 address = e.data['address'].asList()
                 del e.data['address']
                 e.data['stack_trace'] = [self._resugar(index) for index in address]
-                
+
                 self.current_exception = e.to_json_object()
             if e.exception == "breakpoint":
                 self.state='paused'

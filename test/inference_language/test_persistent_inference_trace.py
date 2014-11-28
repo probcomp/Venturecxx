@@ -36,3 +36,21 @@ def testInferObserveSmoke2():
   r.infer("(observe (normal 0 1) 3)")
   r.infer("(incorporate)")
   eq_(3, r.report(1))
+
+def testInlineSMCSmoke():
+  r = get_ripl(persistent_inference_trace=True)
+  r.execute_program("""
+[define go
+  (lambda (ct)
+    (if (< ct 20)
+        (begin
+          (observe (normal 0 1) ct)
+          (resample 1)
+          (go (+ ct 1)))
+        pass))]
+
+[infer (go 0)]
+[infer (incorporate)]
+""")
+  for i in range(20):
+    eq_(i, r.report(i+1))
