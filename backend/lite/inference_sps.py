@@ -75,6 +75,7 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
   SPsListEntry("printf", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
   SPsListEntry("call_back", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
   SPsListEntry("call_back_accum", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
+  SPsListEntry("observe", [v.AnyType(), v.AnyType()], klass=MadeEngineMethodInferOutputPSP),
 
   # Hackety hack hack backward compatibility
   ["ordered_range", deterministic_typed(lambda *args: (v.VentureSymbol("ordered_range"),) + args,

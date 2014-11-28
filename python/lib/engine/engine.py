@@ -293,6 +293,9 @@ effect of renumbering the directives, if some had been forgotten."""
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "call_back_accum":
       assert len(program) >= 2
       return [program[0]] + [v.quote(e) for e in program[1:]]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "observe":
+      assert len(program) == 3
+      return [program[0], v.quote(program[1]), program[2]]
     elif type(program) is list: return [self.macroexpand_inference(p) for p in program]
     else: return program
 
