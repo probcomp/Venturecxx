@@ -86,6 +86,13 @@ class Engine(object):
     self.directiveCounter += 1
     return self.directiveCounter
 
+  def define(self, id, datum):
+    assert self.persistent_inference_trace, "Define only works if the inference trace is persistent"
+    self.last_did += 1
+    self.infer_trace.eval(self.last_did, datum)
+    self.infer_trace.bindInGlobalEnv(id, self.last_did)
+    return self.infer_trace.extractValue(self.last_did)
+
   def assume(self,id,datum):
     baseAddr = self.nextBaseAddr()
     exp = datum

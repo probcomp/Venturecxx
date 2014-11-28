@@ -383,6 +383,11 @@ class Ripl():
     # Directives
     ############################################
 
+    def define(self, name, expression, type=False):
+        i = {'instruction':'define', 'symbol':name, 'expression':expression}
+        value = self.execute_instruction(i)['value']
+        return value if type else u.strip_types(value)
+
     def assume(self, name, expression, label=None, type=False):
         '''Declare a Venture variable and initialize it by evaluating the
 given expression.  Return its value.

@@ -37,7 +37,7 @@ class VentureSivm(object):
             'list_directives','get_directive','labeled_get_directive',
             'force','sample','get_current_exception',
             'get_state', 'reset', 'debugger_list_breakpoints','debugger_get_breakpoint'}
-    _core_instructions = {"assume","observe","predict",
+    _core_instructions = {"define","assume","observe","predict",
             "configure","forget","freeze","report","infer","start_continuous_inference",
             "stop_continuous_inference","continuous_inference_status",
             "clear","rollback","get_logscore","get_global_logscore",

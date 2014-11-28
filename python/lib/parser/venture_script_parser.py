@@ -399,6 +399,7 @@ class VentureScriptParser(object):
         # grammar is located in the utils.py file
         instruction_list = [
             # Directives
+            ['define','<!define> <symbol:sym> = <expression:exp>'],
             ['assume','<!assume> <symbol:sym> = <expression:exp>'],
             ['labeled_assume','<label:sym> : <!assume> <symbol:sym> = <expression:exp>'],
             ['observe','<!observe> <expression:exp> = <value:lit>'],
