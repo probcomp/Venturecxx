@@ -38,7 +38,7 @@ def is_picklable(obj):
 
 class Engine(object):
 
-  def __init__(self, name="phony", Trace=None):
+  def __init__(self, name="phony", Trace=None, persistent_inference_trace=False):
     self.name = name
     self.Trace = Trace
     self.directiveCounter = 0
@@ -51,7 +51,9 @@ class Engine(object):
     self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
     self.callbacks = {}
-    (self.infer_trace, self.last_did) = self.init_inference_trace()
+    self.persistent_inference_trace = persistent_inference_trace
+    if self.persistent_inference_trace:
+      (self.infer_trace, self.last_did) = self.init_inference_trace()
 
   def trace_handler_constructor(self, mode):
     if mode == 'multiprocess':
@@ -288,6 +290,8 @@ effect of renumbering the directives, if some had been forgotten."""
     else: return program
 
   def infer_v1_pre_t(self, program, target):
+    if not self.persistent_inference_trace:
+      (self.infer_trace, self.last_did) = self.init_inference_trace()
     self.install_self_evaluating_scope_hack(self.infer_trace, target)
     try:
       self.last_did += 1
@@ -298,7 +302,11 @@ effect of renumbering the directives, if some had been forgotten."""
       assert isinstance(ans["value"], Infer)
       return ans["value"].final_data()
     finally:
-      self.remove_self_evaluating_scope_hack(self.infer_trace, target)
+      if self.persistent_inference_trace:
+        self.remove_self_evaluating_scope_hack(self.infer_trace, target)
+      else:
+        self.infer_trace = None
+        self.last_did = None
 
   def init_inference_trace(self):
     import venture.lite.trace as lite

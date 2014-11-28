@@ -18,5 +18,5 @@ from libtrace import Trace
 
 class Engine(engine.Engine):
 
-  def __init__(self):
-    super(Engine, self).__init__(name="cxx", Trace=Trace)
+  def __init__(self, persistent_inference_trace=False):
+    super(Engine, self).__init__(name="cxx", Trace=Trace, persistent_inference_trace=persistent_inference_trace)
