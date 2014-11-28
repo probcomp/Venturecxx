@@ -65,7 +65,10 @@ def load_library(name):
 
 def local_ripl(args, backend):
     interactive = True
-    r = backend.make_combined_ripl()
+    if args is not None and args.persistent_inference_trace:
+        r = backend.make_combined_ripl(persistent_inference_trace = True)
+    else:
+        r = backend.make_combined_ripl()
     if args is not None:
         if args.prelude: r.load_prelude()
         if args.library:
@@ -99,6 +102,7 @@ def add_local_args(parser):
                         help="the syntax to interpret in the console (valid values: are \"church_prime\" (default) and \"venture_script\")")
     parser.add_argument('-L', '--library', action='append',
                         help="load a Python file in the local directory.  If the file defines a __venture_start__ function, call it with the ripl to initialize the library.")
+    parser.add_argument('-P', '--persistent-inference-trace', action='store_true', help="Run with a persistent inference trace (enables 'define' directive; may cost more memory)")
     return parser
 
 parser = argparse.ArgumentParser(description='An interactive, Turing-complete probabilistic programming platform')
