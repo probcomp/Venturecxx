@@ -290,12 +290,15 @@ effect of renumbering the directives, if some had been forgotten."""
     (next_trace, free_did) = self.init_inference_trace()
     # TODO Import the enclosing lexical environment into the new trace?
     self.install_self_evaluating_scope_hack(next_trace, target)
-    next_trace.eval(free_did, [program, v.blob(target)])
-    ans = next_trace.extractValue(free_did)
-    assert isinstance(ans, dict)
-    assert ans["type"] is "blob"
-    assert isinstance(ans["value"], Infer)
-    return ans["value"].final_data()
+    try:
+      next_trace.eval(free_did, [program, v.blob(target)])
+      ans = next_trace.extractValue(free_did)
+      assert isinstance(ans, dict)
+      assert ans["type"] is "blob"
+      assert isinstance(ans["value"], Infer)
+      return ans["value"].final_data()
+    finally:
+      self.remove_self_evaluating_scope_hack(next_trace, target)
 
   def init_inference_trace(self):
     import venture.lite.trace as lite
@@ -305,13 +308,23 @@ effect of renumbering the directives, if some had been forgotten."""
     free_did = self.install_inference_prelude(ans)
     return (ans, free_did)
 
+  def symbol_scopes(self, target):
+    all_scopes = [s for s in target.engine.getDistinguishedTrace().scope_keys()]
+    symbol_scopes = [s for s in all_scopes if isinstance(s, basestring) and not s.startswith("default")]
+    return symbol_scopes
+
   def install_self_evaluating_scope_hack(self, next_trace, target):
     import venture.lite.inference_sps as inf
     import venture.lite.value as val
-    all_scopes = [s for s in target.engine.getDistinguishedTrace().scope_keys()]
-    symbol_scopes = [s for s in all_scopes if isinstance(s, basestring) and not s.startswith("default")]
+    symbol_scopes = self.symbol_scopes(target)
     for hack in inf.inferenceKeywords + symbol_scopes:
       next_trace.bindPrimitiveName(hack, val.VentureSymbol(hack))
+
+  def remove_self_evaluating_scope_hack(self, next_trace, target):
+    import venture.lite.inference_sps as inf
+    symbol_scopes = self.symbol_scopes(target)
+    for hack in inf.inferenceKeywords + symbol_scopes:
+      next_trace.unbindInGlobalEnv(hack)
 
   def install_inference_prelude(self, next_trace):
     for did, (name, exp) in enumerate(_inference_prelude()):
