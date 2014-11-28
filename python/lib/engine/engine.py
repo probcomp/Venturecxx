@@ -287,29 +287,37 @@ effect of renumbering the directives, if some had been forgotten."""
     else: return program
 
   def infer_v1_pre_t(self, program, target):
-    import venture.lite.trace as lite
-    next_trace = lite.Trace()
+    (next_trace, free_did) = self.init_inference_trace()
     # TODO Import the enclosing lexical environment into the new trace?
+    self.install_self_evaluating_scope_hack(next_trace, target)
+    next_trace.eval(free_did, [program, v.blob(target)])
+    ans = next_trace.extractValue(free_did)
+    assert isinstance(ans, dict)
+    assert ans["type"] is "blob"
+    assert isinstance(ans["value"], Infer)
+    return ans["value"].final_data()
+
+  def init_inference_trace(self):
+    import venture.lite.trace as lite
+    ans = lite.Trace()
+    for name,sp in self.inferenceSPsList():
+      ans.bindPrimitiveSP(name, sp)
+    free_did = self.install_inference_prelude(ans)
+    return (ans, free_did)
+
+  def install_self_evaluating_scope_hack(self, next_trace, target):
     import venture.lite.inference_sps as inf
     import venture.lite.value as val
     all_scopes = [s for s in target.engine.getDistinguishedTrace().scope_keys()]
     symbol_scopes = [s for s in all_scopes if isinstance(s, basestring) and not s.startswith("default")]
     for hack in inf.inferenceKeywords + symbol_scopes:
       next_trace.bindPrimitiveName(hack, val.VentureSymbol(hack))
-    for name,sp in self.inferenceSPsList():
-      next_trace.bindPrimitiveSP(name, sp)
-    self.install_inference_prelude(next_trace)
-    next_trace.eval(4, [program, v.blob(target)])
-    ans = next_trace.extractValue(4)
-    assert isinstance(ans, dict)
-    assert ans["type"] is "blob"
-    assert isinstance(ans["value"], Infer)
-    return ans["value"].final_data()
 
   def install_inference_prelude(self, next_trace):
     for did, (name, exp) in enumerate(_inference_prelude()):
       next_trace.eval(did, exp)
       next_trace.bindInGlobalEnv(name, did)
+    return len(_inference_prelude())
 
   def primitive_infer(self, exp):
     self.trace_handler.delegate('primitive_infer', exp)
