@@ -83,3 +83,27 @@ def symmetric_matrix(vs):
 def quote(v):
     return [symbol("quote"), v]
 
+def quasiquote(v):
+    import collections
+    # TODO Nested quasiquotation
+    def quotify(exp, to_quote):
+        if to_quote:
+            return quote(exp)
+        else:
+            return exp
+    def quasiquoterecur(v):
+        """Returns either (v, True), if quasiquotation reduces to quotation on
+v, or (v', False), where v' is a directly evaluable expression that
+will produce the term that the quasiquotation body v means."""
+        if hasattr(v, "__iter__") and not isinstance(v, collections.Mapping):
+            if len(v) > 0 and isinstance(v[0], collections.Mapping) and v[0]["type"] == "symbol" and v[0]["value"] == "unquote":
+                return (v[1], False)
+            else:
+                answers = [quasiquoterecur(vi) for vi in v]
+                if all([ans[1] for ans in answers]):
+                    return (v, True)
+                else:
+                    return ([sym("list")] + [quotify(*ansi) for ansi in answers], False)
+        else:
+            return (v, True)
+    return quotify(*quasiquoterecur(v))
