@@ -19,6 +19,7 @@ from pandas import DataFrame, Index
 
 from venture.lite.value import (ExpressionType, SymbolType, VentureArray, VentureSymbol,
                                 VentureInteger)
+from venture.lite.utils import logWeightsToNormalizedDirect
 from venture.ripl.utils import strip_types_from_dict_values
 from plot_spec import PlotSpec
 
@@ -161,6 +162,8 @@ class Infer(object):
 
   def particle_log_weights(self):
     return self.engine.trace_handler.log_weights
+  def particle_normalized_probs(self):
+    return logWeightsToNormalizedDirect(self.particle_log_weights())
 
 class InferResult(object):
   '''

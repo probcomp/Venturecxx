@@ -65,6 +65,11 @@ def logaddexp(items):
   the_max = max(items)
   return the_max + math.log(sum(math.exp(item - the_max) for item in items))
 
+def logWeightsToNormalizedDirect(logs):
+  "Converts an unnormalized categorical distribution given in logspace to a normalized one given in direct space"
+  the_max = max(logs)
+  return normalizeList([math.exp(log - the_max) for log in logs])
+
 def sampleLogCategorical(logs):
   "Samples from an unnormalized categorical distribution given in logspace."
   the_max = max(logs)
