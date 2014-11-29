@@ -44,7 +44,6 @@ class Engine(object):
     self.directiveCounter = 0
     self.directives = {}
     self.inferrer = None
-    self.n_traces = 1
     self.mode = 'sequential'
     self.trace_handler = self.create_handler([Trace()])
     import venture.lite.inference_sps as inf
@@ -69,6 +68,9 @@ class Engine(object):
 
   def create_handler(self, traces):
     return self.trace_handler_constructor(self.mode)(traces, self.name)
+
+  def num_traces(self):
+    return len(self.trace_handler.log_weights)
 
   def inferenceSPsList(self):
     return self.inference_sps.iteritems()
@@ -236,7 +238,6 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def _resample_traces(self, P):
     P = int(P)
-    self.n_traces = P
     newTraces = [None for p in range(P)]
     for p in range(P):
       parent = sampleLogCategorical(self.trace_handler.log_weights) # will need to include or rewrite
@@ -434,7 +435,6 @@ effect of renumbering the directives, if some had been forgotten."""
     engine = EngineClass()
     engine.directiveCounter = self.directiveCounter
     engine.directives = self.directives
-    engine.n_traces = self.n_traces
     engine.mode = self.mode
     traces = [engine.restore_trace(dump) for dump in self.retrieve_dumps()]
     engine.trace_handler = engine.create_handler(traces)
