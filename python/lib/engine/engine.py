@@ -66,8 +66,11 @@ class Engine(object):
     else:
       return SynchronousTraceHandler
 
-  def create_handler(self, traces):
-    return self.trace_handler_constructor(self.mode)(traces, self.name)
+  def create_handler(self, traces, weights=None):
+    ans = self.trace_handler_constructor(self.mode)(traces, self.name)
+    if weights is not None:
+      ans.log_weights = weights
+    return ans
 
   def num_traces(self):
     return len(self.trace_handler.log_weights)
@@ -427,8 +430,7 @@ effect of renumbering the directives, if some had been forgotten."""
     self.mode = data['mode']
     traces = [self.restore_trace(trace) for trace in data['traces']]
     del self.trace_handler
-    self.trace_handler = self.create_handler(traces)
-    self.trace_handler.log_weights = data['log_weights']
+    self.trace_handler = self.create_handler(traces, data['log_weights'])
     return data['extra']
 
   def convert(self, EngineClass):
@@ -437,8 +439,7 @@ effect of renumbering the directives, if some had been forgotten."""
     engine.directives = self.directives
     engine.mode = self.mode
     traces = [engine.restore_trace(dump) for dump in self.retrieve_dumps()]
-    engine.trace_handler = engine.create_handler(traces)
-    engine.trace_handler.log_weights = self.trace_handler.log_weights
+    engine.trace_handler = engine.create_handler(traces, self.trace_handler.log_weights)
     return engine
 
   def to_lite(self):
