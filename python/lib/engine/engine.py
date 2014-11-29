@@ -230,12 +230,9 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def resample(self, P, mode = 'sequential'):
     self.mode = mode
-    self.trace_handler = self.create_handler(self._resample_setup(P))
-
-  def _resample_setup(self, P):
     newTraces = self._resample_traces(P)
     del self.trace_handler
-    return newTraces
+    self.trace_handler = self.create_handler(newTraces)
 
   def _resample_traces(self, P):
     P = int(P)
