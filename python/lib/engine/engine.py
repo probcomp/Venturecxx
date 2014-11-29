@@ -342,13 +342,15 @@ effect of renumbering the directives, if some had been forgotten."""
     import venture.lite.value as val
     symbol_scopes = self.symbol_scopes(target)
     for hack in inf.inferenceKeywords + symbol_scopes:
-      next_trace.bindPrimitiveName(hack, val.VentureSymbol(hack))
+      if not next_trace.globalEnv.symbolBound(hack):
+        next_trace.bindPrimitiveName(hack, val.VentureSymbol(hack))
 
   def remove_self_evaluating_scope_hack(self, next_trace, target):
     import venture.lite.inference_sps as inf
     symbol_scopes = self.symbol_scopes(target)
     for hack in inf.inferenceKeywords + symbol_scopes:
-      next_trace.unbindInGlobalEnv(hack)
+      if next_trace.globalEnv.symbolBound(hack):
+        next_trace.unbindInGlobalEnv(hack)
 
   def install_inference_prelude(self, next_trace):
     for did, (name, exp) in enumerate(_inference_prelude()):
