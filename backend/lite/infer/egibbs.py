@@ -6,9 +6,7 @@ from ..consistency import assertTrace, assertTorus
 from mh import getCurrentValues, registerDeterministicLKernels
 
 def getCartesianProductOfEnumeratedValues(trace,pnodes):
-  assert len(pnodes) > 0
   enumeratedValues = [trace.pspAt(pnode).enumerateValues(trace.argsAt(pnode)) for pnode in pnodes]
-  assert len(enumeratedValues) > 0
   return cartesianProduct(enumeratedValues)
 
 class EnumerativeGibbsOperator(object):

@@ -51,9 +51,9 @@ def logDensityDirichlet(theta, alpha):
 
   return ss.gammaln(sum(alpha)) - sum(ss.gammaln(alpha)) + np.dot((alpha - 1).T, np.log(theta).T)
 
-# why not use itertools.prod?
+# CONSIDER why not use itertools.prod?
 def cartesianProduct(original):
-  if len(original) == 0: return []
+  if len(original) == 0: return [[]]
   elif len(original) == 1: return [[x] for x in original[0]]
   else:
     firstGroup = original[0]
