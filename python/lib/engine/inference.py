@@ -159,8 +159,8 @@ class Infer(object):
   def observe(self, exp, val):
     self.engine.observe(exp.asStackDict(), val.asStackDict())
 
-  def particle_weights(self):
-    return self.engine.trace_handler.weights
+  def particle_log_weights(self):
+    return self.engine.trace_handler.log_weights
 
 class InferResult(object):
   '''

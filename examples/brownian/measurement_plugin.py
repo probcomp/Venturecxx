@@ -19,7 +19,7 @@ def collect(inferrer, step_speed):
   if start_time is None:
     start_time = time.time()
   times.append(time.time() - start_time)
-  speed_est = log_weighted_avg(inferrer.particle_weights(), step_speed)
+  speed_est = log_weighted_avg(inferrer.particle_log_weights(), step_speed)
   errors.append((speed_est - true_speed) * (speed_est - true_speed))
 
 def emit(_inferrer):

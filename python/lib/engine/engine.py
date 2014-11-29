@@ -242,7 +242,7 @@ effect of renumbering the directives, if some had been forgotten."""
     self.n_traces = P
     newTraces = [None for p in range(P)]
     for p in range(P):
-      parent = sampleLogCategorical(self.trace_handler.weights) # will need to include or rewrite
+      parent = sampleLogCategorical(self.trace_handler.log_weights) # will need to include or rewrite
       newTrace = self.copy_trace(self.retrieve_trace(parent))
       newTraces[p] = newTrace
     return newTraces
@@ -411,7 +411,7 @@ effect of renumbering the directives, if some had been forgotten."""
   def save(self, fname, extra=None):
     data = {}
     data['traces'] = self.retrieve_dumps()
-    data['weights'] = self.trace_handler.weights
+    data['log_weights'] = self.trace_handler.log_weights
     data['directives'] = self.directives
     data['directiveCounter'] = self.directiveCounter
     data['mode'] = self.mode
@@ -430,7 +430,7 @@ effect of renumbering the directives, if some had been forgotten."""
     traces = [self.restore_trace(trace) for trace in data['traces']]
     del self.trace_handler
     self.trace_handler = self.create_handler(traces)
-    self.trace_handler.weights = data['weights']
+    self.trace_handler.log_weights = data['log_weights']
     return data['extra']
 
   def convert(self, EngineClass):
@@ -441,7 +441,7 @@ effect of renumbering the directives, if some had been forgotten."""
     engine.mode = self.mode
     traces = [engine.restore_trace(dump) for dump in self.retrieve_dumps()]
     engine.trace_handler = engine.create_handler(traces)
-    engine.trace_handler.weights = self.trace_handler.weights
+    engine.trace_handler.log_weights = self.trace_handler.log_weights
     return engine
 
   def to_lite(self):

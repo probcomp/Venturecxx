@@ -160,7 +160,7 @@ class HandlerBase(object):
     self.backend = backend
     self.pipes = []
     self.processes = []
-    self.weights = []
+    self.log_weights = []
     Pipe, TraceProcess = self._pipe_and_process_types()
     for trace in traces:
       parent, child = Pipe()
@@ -168,7 +168,7 @@ class HandlerBase(object):
       process.start()
       self.pipes.append(parent)
       self.processes.append(process)
-      self.weights.append(1)
+      self.log_weights.append(0)
     self.reset_seeds()
 
   def __del__(self):
@@ -178,7 +178,7 @@ class HandlerBase(object):
   def incorporate(self):
     weight_increments = self.delegate('makeConsistent')
     for i, increment in enumerate(weight_increments):
-      self.weights[i] += increment
+      self.log_weights[i] += increment
 
   def reset_seeds(self):
     for i in range(len(self.processes)):
