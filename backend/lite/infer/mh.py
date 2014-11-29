@@ -17,7 +17,7 @@ def mixMH(trace,indexer,operator):
   start = time.time()
   index = indexer.sampleIndex(trace)
   
-  # read out some node addresses
+  # read out some node addresses for the benefit of the profiler
   getAddr = lambda node: node.address
   principal = map(getAddr, index.getPrincipalNodes())
   absorbing = map(getAddr, index.absorbing)
