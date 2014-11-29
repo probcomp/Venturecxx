@@ -13,9 +13,7 @@ def getCartesianProductOfEnumeratedValues(trace,pnodes):
 
 class EnumerativeGibbsOperator(object):
 
-  def propose(self,trace,scaffold):
-    from ..particle import Particle
-
+  def compute_particles(self,trace,scaffold):
     assertTrace(trace,scaffold)
 
     pnodes = scaffold.getPrincipalNodes()
@@ -29,16 +27,23 @@ class EnumerativeGibbsOperator(object):
 
     for p in range(len(allSetsOfValues)):
       newValues = allSetsOfValues[p]
-      xiParticle = Particle(trace)
+      xiParticle = self.copy_trace(trace)
       assertTorus(scaffold)
       registerDeterministicLKernels(trace,scaffold,pnodes,newValues)
       xiParticles.append(xiParticle)
       xiWeights.append(regenAndAttach(xiParticle,scaffold,False,OmegaDB(),{}))
+    return (xiParticles, xiWeights)
 
+  def propose(self, trace, scaffold):
+    (xiParticles, xiWeights) = self.compute_particles(trace, scaffold)
     # Now sample a NEW particle in proportion to its weight
     finalIndex = self.chooseProposalParticle(xiWeights)
     self.finalParticle = xiParticles[finalIndex]
     return self.finalParticle,0
+
+  def copy_trace(self, trace):
+    from ..particle import Particle
+    return Particle(trace)
 
   def chooseProposalParticle(self, xiWeights):
     return sampleLogCategorical(xiWeights)
