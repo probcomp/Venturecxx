@@ -51,3 +51,4 @@ class EnumerativeMAPOperator(EnumerativeGibbsOperator):
   def chooseProposalParticle(self, xiWeights):
     m = max(xiWeights)
     return [i for i, j in enumerate(xiWeights) if j == m][0]
+  def name(self): return "enumerative max a-posteriori"
