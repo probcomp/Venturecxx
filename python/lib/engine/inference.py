@@ -122,7 +122,7 @@ class Infer(object):
   def resample_threaded(self, ct): self.engine.resample(ct, 'threaded')
   def resample_thread_ser(self, ct): self.engine.resample(ct, 'thread_ser')
   def resample_multiprocess(self, ct): self.engine.resample(ct, 'multiprocess')
-  def incorporate(self): pass # Since we incorporate at the beginning anyway
+  def incorporate(self): self.engine.trace_handler.incorporate()
   def peek(self, *exprs):
     names, stack_dicts = self.parse_exprs(exprs, 'peek')
     self._init_peek(names, exprs, stack_dicts)
