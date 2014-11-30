@@ -496,6 +496,13 @@ function.
       return EnumerativeDiversify(copy_trace)(self, BlockScaffoldIndexer(scope, block))
     else: raise Exception("DIVERSIFY %s is not implemented" % operator)
 
+  def block_values(self, scope, block):
+    """Return a map between the addresses and values of principal nodes in
+the scaffold determined by the given expression."""
+    scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
+    scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
+    return dict([(node.address, self.valueAt(node)) for node in scaffold.getPrincipalNodes()])
+
   def get_seed(self):
     # TODO Trace does not support seed control because it uses
     # Python's native randomness.

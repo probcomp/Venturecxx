@@ -58,6 +58,7 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
   SPsListEntry("resample_thread_ser", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
   SPsListEntry("resample_multiprocess", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
   SPsListEntry("enumerative_diversify", [v.ExpressionType(), v.ExpressionType()], klass=MadeEngineMethodInferOutputPSP),
+  SPsListEntry("collapse_equal", [v.ExpressionType(), v.ExpressionType()], klass=MadeEngineMethodInferOutputPSP),
   SPsListEntry("draw_scaffold", [v.ExpressionType(), v.ExpressionType(), v.IntegerType()], min_req_args=3),
   # (subsampled_mh scope block Nbatch k0 epsilon useDeltaKernels deltaKernelArgs updateValues transitions)
   SPsListEntry("subsampled_mh", [v.ExpressionType(), v.ExpressionType(), v.IntegerType(), v.IntegerType(), v.NumberType(), v.BoolType(), v.NumberType(), v.BoolType(), v.IntegerType()], min_req_args=9),

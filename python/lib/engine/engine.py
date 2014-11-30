@@ -22,7 +22,7 @@ from venture.exception import VentureException
 from trace_handler import (dump_trace, restore_trace, SynchronousTraceHandler,
                            SynchronousSerializingTraceHandler, ThreadedTraceHandler,
                            ThreadedSerializingTraceHandler, MultiprocessingTraceHandler)
-from venture.lite.utils import sampleLogCategorical
+from venture.lite.utils import sampleLogCategorical, logaddexp
 from venture.engine.inference import Infer
 import venture.value.dicts as v
 
@@ -257,7 +257,35 @@ effect of renumbering the directives, if some had been forgotten."""
       for (res_t, res_w) in zip(*(t.diversify(program, self.copy_trace))):
         new_traces.append(res_t)
         new_weights.append(w + res_w)
+    del self.trace_handler
     self.trace_handler = self.create_handler(new_traces, new_weights)
+
+  def collapse(self, scope, block):
+    traces = self.retrieve_traces()
+    weights = self.trace_handler.log_weights
+    fingerprints = [t.block_values(scope, block) for t in traces]
+    def grouping():
+      "Because sorting doesn't do what I want on dicts, so itertools.groupby is not useful"
+      groups = [] # :: [(fingerprint, [trace], [weight])]  Not a dict because the fingerprints are not hashable
+      for (t, w, f) in zip(traces, weights, fingerprints):
+        try:
+          place = [g[0] for g in groups].index(f)
+        except ValueError:
+          place = len(groups)
+          groups.append((f, [], []))
+        groups[place][1].append(t)
+        groups[place][2].append(w)
+      return groups
+    groups = grouping()
+    new_ts = []
+    new_ws = []
+    for (f, ts, ws) in groups:
+      print "Collapsing", f, ts, ws
+      index = sampleLogCategorical(ws)
+      new_ts.append(self.copy_trace(ts[index]))
+      new_ws.append(logaddexp(ws))
+    del self.trace_handler
+    self.trace_handler = self.create_handler(new_ts, new_ws)
 
   def infer(self, program):
     self.trace_handler.incorporate()
