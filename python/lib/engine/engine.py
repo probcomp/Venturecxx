@@ -279,8 +279,7 @@ effect of renumbering the directives, if some had been forgotten."""
     groups = grouping()
     new_ts = []
     new_ws = []
-    for (f, ts, ws) in groups:
-      print "Collapsing", f, ts, ws
+    for (_, ts, ws) in groups:
       index = sampleLogCategorical(ws)
       new_ts.append(self.copy_trace(ts[index]))
       new_ws.append(logaddexp(ws))
