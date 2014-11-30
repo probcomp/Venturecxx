@@ -582,7 +582,7 @@ class TraceProcessExceptionHandler(object):
       exc.worker_trace = self.traces[0]
       return exc
     else:
-      msg = (self.values[0].message + format_worker_trace(self.traces[0]))
+      msg = (str(self.values[0].message) + format_worker_trace(self.traces[0]))
       return Exc(msg)
 
   @staticmethod
