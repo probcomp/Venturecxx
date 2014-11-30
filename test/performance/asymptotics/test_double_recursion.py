@@ -1,6 +1,10 @@
-from venture.test.config import get_ripl
+from nose.plugins.attrib import attr
+
+from venture.test.config import get_ripl, on_inf_prim
 import venture.test.timing as timing
 
+@attr('slow')
+@on_inf_prim("mh")
 def test_double_recursion():
   def test(n):
     ripl = get_ripl()
