@@ -123,6 +123,7 @@ class Infer(object):
   def resample_threaded(self, ct): self.engine.resample(ct, 'threaded')
   def resample_thread_ser(self, ct): self.engine.resample(ct, 'thread_ser')
   def resample_multiprocess(self, ct): self.engine.resample(ct, 'multiprocess')
+  def enumerative_diversify(self, scope, block): self.engine.diversify(["enumerative", scope, block])
   def incorporate(self): self.engine.trace_handler.incorporate()
   def peek(self, *exprs):
     names, stack_dicts = self.parse_exprs(exprs, 'peek')

@@ -17,6 +17,7 @@ class EnumerativeGibbsOperator(object):
     pnodes = scaffold.getPrincipalNodes()
     currentValues = getCurrentValues(trace,pnodes)
     allSetsOfValues = getCartesianProductOfEnumeratedValues(trace,pnodes)
+
     registerDeterministicLKernels(trace,scaffold,pnodes,currentValues)
 
     detachAndExtract(trace,scaffold)
@@ -55,3 +56,39 @@ class EnumerativeMAPOperator(EnumerativeGibbsOperator):
     m = max(xiWeights)
     return [i for i, j in enumerate(xiWeights) if j == m][0]
   def name(self): return "enumerative max a-posteriori"
+
+class EnumerativeDiversify(EnumerativeGibbsOperator):
+  def __init__(self, copy_trace):
+    super(EnumerativeDiversify, self).__init__()
+    self.copy_trace = copy_trace
+
+  def __call__(self, trace, scaffolder):
+    # CONSDIER how to unify this code with EnumerativeGibbsOperator.
+    # Problems:
+    # - a torus cannot be copied by copy_trace
+    # - a particle cannot be copied by copy_trace either
+
+    scaffold = scaffolder.sampleIndex(trace)
+    assertTrace(trace,scaffold)
+
+    pnodes = scaffold.getPrincipalNodes()
+    allSetsOfValues = getCartesianProductOfEnumeratedValues(trace,pnodes)
+
+    xiWeights = []
+    xiParticles = []
+
+    for newValues in allSetsOfValues:
+      xiParticle = self.copy_trace(trace)
+      # ASSUME the scaffolder is deterministic. Have to make the
+      # scaffold again b/c detach mutates it, and b/c it may not work
+      # across copies of the trace.
+      scaffold = scaffolder.sampleIndex(xiParticle)
+      detachAndExtract(xiParticle, scaffold)
+      assertTorus(scaffold)
+      registerDeterministicLKernels(xiParticle,scaffold,scaffold.getPrincipalNodes(),newValues)
+      xiWeight = regenAndAttach(xiParticle,scaffold,False,OmegaDB(),{})
+      xiParticles.append(xiParticle)
+      xiWeights.append(xiWeight)
+    return (xiParticles, xiWeights)
+
+  def name(self): return "enumerative diversify"

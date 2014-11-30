@@ -8,7 +8,8 @@ from detach import unconstrain, unevalFamily
 from value import SPRef, ExpressionType, VentureValue, VentureSymbol, VentureNumber
 from scaffold import Scaffold
 from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
-                   EnumerativeGibbsOperator,EnumerativeMAPOperator,PGibbsOperator,ParticlePGibbsOperator,
+                   EnumerativeGibbsOperator,EnumerativeMAPOperator,EnumerativeDiversify,
+                   PGibbsOperator,ParticlePGibbsOperator,
                    RejectionOperator, MissingEsrParentError, NoSPRefError,
                    HamiltonianMonteCarloOperator, MAPOperator, StepOutSliceOperator,
                    DoublingSliceOperator, NesterovAcceleratedGradientAscentOperator,
@@ -480,6 +481,20 @@ class Trace(object):
       else: raise Exception("INFER %s is not implemented" % operator)
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
+
+  def diversify(self, exp, copy_trace):
+    """Return the pair of parallel lists of traces and weights that
+results from applying the given expression as a diversification
+operator.  Duplicate self if necessary with the provided copy_trace
+function.
+
+    """
+    assert len(exp) >= 3
+    (operator, scope, block) = exp[0:3]
+    scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
+    if operator == "enumerative":
+      return EnumerativeDiversify(copy_trace)(self, BlockScaffoldIndexer(scope, block))
+    else: raise Exception("DIVERSIFY %s is not implemented" % operator)
 
   def get_seed(self):
     # TODO Trace does not support seed control because it uses

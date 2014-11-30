@@ -248,6 +248,17 @@ effect of renumbering the directives, if some had been forgotten."""
       newTraces[p] = newTrace
     return newTraces
 
+  def diversify(self, program):
+    traces = self.retrieve_traces()
+    weights = self.trace_handler.log_weights
+    new_traces = []
+    new_weights = []
+    for (t, w) in zip(traces, weights):
+      for (res_t, res_w) in zip(*(t.diversify(program, self.copy_trace))):
+        new_traces.append(res_t)
+        new_weights.append(w + res_w)
+    self.trace_handler = self.create_handler(new_traces, new_weights)
+
   def infer(self, program):
     self.trace_handler.incorporate()
     if isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop":
