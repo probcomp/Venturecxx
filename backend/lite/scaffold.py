@@ -137,11 +137,11 @@ def constructScaffold(trace, setsOfPNodes, useDeltaKernels=False, deltaKernelArg
   return scaffold
 
 def addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder):
+  if node not in hardBorder:
+    if node not in drg or node not in indexAssignments or indexAssignments[node] is not i or node in absorbing or node in aaa:
+      q.extend([(n,False,node) for n in trace.childrenAt(node)])
   if node in absorbing: absorbing.remove(node)
   if node in aaa: aaa.remove(node)
-  if node not in hardBorder:
-    if node not in drg or node not in indexAssignments or indexAssignments[node] is not i:
-      q.extend([(n,False,node) for n in trace.childrenAt(node)])
   drg.add(node)
   indexAssignments[node] = i
 
