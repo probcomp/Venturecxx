@@ -107,3 +107,6 @@ will produce the term that the quasiquotation body v means."""
     else:
       return (v, True)
   return quotify(*quasiquoterecur(v))
+
+def app(*items):
+  return items # Application is a Python list
