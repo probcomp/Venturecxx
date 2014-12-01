@@ -85,7 +85,7 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
                                         [v.AnyType()], v.ListType(), variadic=True)]
 ]
 
-inferenceKeywords = [ "default", "all", "one", "ordered" ]
+inferenceKeywords = [ "default", "all", "none", "one", "ordered" ]
 
 # Documentation of call_back (for lack of any better place to put it):
 
