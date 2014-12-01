@@ -260,7 +260,7 @@ effect of renumbering the directives, if some had been forgotten."""
     del self.trace_handler
     self.trace_handler = self.create_handler(new_traces, new_weights)
 
-  def collapse(self, scope, block):
+  def _collapse_help(self, scope, block, select_keeper):
     traces = self.retrieve_traces()
     weights = self.trace_handler.log_weights
     fingerprints = [t.block_values(scope, block) for t in traces]
@@ -280,11 +280,19 @@ effect of renumbering the directives, if some had been forgotten."""
     new_ts = []
     new_ws = []
     for (_, ts, ws) in groups:
-      index = sampleLogCategorical(ws)
+      index = select_keeper(ws)
       new_ts.append(self.copy_trace(ts[index]))
       new_ws.append(logaddexp(ws))
     del self.trace_handler
     self.trace_handler = self.create_handler(new_ts, new_ws)
+
+  def collapse(self, scope, block):
+    self._collapse_help(scope, block, sampleLogCategorical)
+
+  def collapse_map(self, scope, block):
+    def max_ind(lst):
+      return lst.index(max(lst))
+    self._collapse_help(scope, block, max_ind)
 
   def infer(self, program):
     self.trace_handler.incorporate()

@@ -125,6 +125,7 @@ class Infer(object):
   def resample_multiprocess(self, ct): self.engine.resample(ct, 'multiprocess')
   def enumerative_diversify(self, scope, block): self.engine.diversify(["enumerative", scope, block])
   def collapse_equal(self, scope, block): self.engine.collapse(scope, block)
+  def collapse_equal_map(self, scope, block): self.engine.collapse_map(scope, block)
   def incorporate(self): self.engine.trace_handler.incorporate()
   def peek(self, *exprs):
     names, stack_dicts = self.parse_exprs(exprs, 'peek')
