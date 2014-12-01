@@ -158,11 +158,23 @@ puma_inc_dirs = ['inc/', 'inc/sps/', 'inc/infer/', 'inc/Eigen']
 puma_inc_dirs = ["backend/new_cxx/" + d for d in puma_inc_dirs]
 
 ext_modules = []
-packages=["venture","venture.value","venture.sivm","venture.ripl", "venture.engine",
-          "venture.parser","venture.server","venture.shortcuts",
-          "venture.unit", "venture.test", "venture.cxx", "venture.puma",
-          "venture.lite", "venture.lite.infer",
-          "venture.venturemagics"]
+packages = [
+    "venture",
+    "venture.value",
+    "venture.sivm",
+    "venture.ripl",
+    "venture.engine",
+    "venture.parser",
+    "venture.server",
+    "venture.shortcuts",
+    "venture.unit",
+    "venture.test",
+    "venture.cxx",
+    "venture.puma",
+    "venture.lite",
+    "venture.lite.infer",
+    "venture.venturemagics",
+]
 
 cxx = Extension("venture.cxx.libtrace",
     define_macros = [('MAJOR_VERSION', '0'),
@@ -243,9 +255,13 @@ setup (
     url = 'TBA',
     long_description = 'TBA.',
     packages = packages,
-    package_dir={"venture":"python/lib/", "venture.test":"test/",
-                 "venture.cxx":"backend/cxx",
-        "venture.puma":"backend/new_cxx/", "venture.lite":"backend/lite/"},
+    package_dir = {
+        "venture": "python/lib/",
+        "venture.test": "test/",
+        "venture.cxx": "backend/cxx",
+        "venture.puma": "backend/new_cxx/",
+        "venture.lite": "backend/lite/",
+    },
     package_data = {'':['*.vnt']},
     ext_modules = ext_modules,
     scripts = ['script/venture']
