@@ -169,9 +169,7 @@ class ParticlePGibbsOperator(object):
       particles = newParticles
       particleWeights = newParticleWeights
 
-    # Now sample a NEW particle in proportion to its weight
-    finalIndex = sampleLogCategorical(particleWeights[0:-1])
-    assert finalIndex < P
+    finalIndex = self.select_final_particle_index(particleWeights)
 
     self.finalIndex = finalIndex
     self.particles = particles
@@ -190,6 +188,10 @@ class ParticlePGibbsOperator(object):
     weightMinusRho = logaddexp(particleWeights[0:-1])
     alpha = weightMinusRho - weightMinusXi
     return alpha
+
+  def select_final_particle_index(self, particleWeights):
+    # Sample a new particle in proportion to its weight
+    return sampleLogCategorical(particleWeights[0:-1])
 
   def accept(self):
     self.particles[self.finalIndex].commit()
