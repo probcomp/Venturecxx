@@ -202,3 +202,14 @@ class ParticlePGibbsOperator(object):
     assertTrace(self.trace,self.scaffold)
 
   def name(self): return "particle gibbs (functional)"
+
+## CONSIDER Whether this operator actually finds the MAP or the maximum likelihood.
+class ParticlePMAPOperator(ParticlePGibbsOperator):
+
+  def select_final_particle_index(self, particleWeights):
+    return particleWeights.index(max(particleWeights))
+
+  def _compute_alpha(self, particleWeights, finalIndex):
+    return 0 # This operator is not supposed to be M-H compliant
+
+  def name(self): return "particle map (functional)"
