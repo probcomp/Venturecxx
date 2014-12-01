@@ -83,12 +83,18 @@ class EnumerativeDiversify(EnumerativeGibbsOperator):
       # scaffold again b/c detach mutates it, and b/c it may not work
       # across copies of the trace.
       scaffold = scaffolder.sampleIndex(xiParticle)
-      detachAndExtract(xiParticle, scaffold)
+      (rhoWeight, _) = detachAndExtract(xiParticle, scaffold)
       assertTorus(scaffold)
       registerDeterministicLKernels(xiParticle,scaffold,scaffold.getPrincipalNodes(),newValues)
       xiWeight = regenAndAttach(xiParticle,scaffold,False,OmegaDB(),{})
       xiParticles.append(xiParticle)
-      xiWeights.append(xiWeight)
+      # CONSIDER What to do with the rhoWeight.  Subtract off the
+      # likelihood?  Subtract off the prior and the likelihood?  Do
+      # nothing?  Subtracting off the likelihood makes
+      # hmm-approx-filter.vnt from ppaml-cps/cp4/p3_hmm be
+      # deterministic (except roundoff effects), but that may be an
+      # artifact of the way that program is written.
+      xiWeights.append(xiWeight - rhoWeight)
     return (xiParticles, xiWeights)
 
   def name(self): return "enumerative diversify"
