@@ -80,11 +80,12 @@ class Semantics(object):
     def p_venture_e(self, exp):
         self.answer = ('expression', exp)
 
-    # instructions: Return located list of instructions.
+    # instructions: Return list of instructions.
     def p_instructions_one(self, inst):
-        return locunit(inst)
+        return [inst]
     def p_instructions_many(self, insts, inst):
-        return locappend(insts, inst)
+        insts.append(inst)
+        return insts
 
     # instruction: Return located { 'instruction': 'foo', ... }.
     def p_instruction_labelled(self, l, open, d, close):
@@ -175,11 +176,12 @@ class Semantics(object):
     def p_expression_comb_error(self, open, es, close):
         return 'error'
 
-    # expressions: Return located list of expressions, or None.
+    # expressions: Return list of expressions, or None.
     def p_expressions_none(self):
-        return None
+        return []
     def p_expressions_some(self, es, e):
-        return locunit(e) if es is None else locappend(es, e)
+        es.append(e)
+        return es
 
     # literal: Return located `val'.
     def p_literal_true(self, t):
@@ -191,9 +193,11 @@ class Semantics(object):
     def p_literal_real(self, v):
         return locmap(loctoken(v), val.number)
     def p_literal_json(self, type, open, value, close):
+        type, _start, _end = type
         if type == 'number' or type == 'boolean':
             raise SyntaxError('Write numbers and booleans without JSON!')
-        return loc2(type, loctoken(close), { 'type': t, 'value': v })
+        return loc2(loctoken(open), loctoken(close),
+            { 'type': type, 'value': value })
 
     # json: Return json object.
     def p_json_string(self, v):                 return v
