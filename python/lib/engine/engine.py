@@ -238,6 +238,7 @@ effect of renumbering the directives, if some had been forgotten."""
     newTraces = self._resample_traces(P)
     del self.trace_handler
     self.trace_handler = self.create_handler(newTraces)
+    self.trace_handler.incorporate()
 
   def _resample_traces(self, P):
     P = int(P)

@@ -17,18 +17,11 @@ def testScopeObservedThroughMem1():
 
 @broken_in("puma") # Because no introspection on blocks in scope
 def testScopeObservedThroughMem2():
-  r = get_ripl()
-  r.assume("frob", "(mem (lambda (x) (flip 0.5)))")
-  r.observe("(frob 1)", True)
-  trace = r.sivm.core_sivm.engine.getDistinguishedTrace()
-  scope = trace._normalizeEvaluatedScopeOrBlock(val.VentureSymbol("foo")) # pylint:disable=protected-access
-  eq_(0, trace.numBlocksInScope(scope))
-  r.infer("(incorporate)")
-  r.predict("(scope_include (quote foo) 0 (frob 1))")
-  eq_(0, len(trace.getAllNodesInScope(scope)))
+  """The way resample happened to be implemented in Lite when I wrote
+this test, it had the effect of undoing [infer (incorporate)] for all
+observations.  This was detected through a horrible mess involving mem.
 
-@broken_in("puma") # Because no introspection on blocks in scope
-def testScopeObservedThroughMem3():
+  """
   r = get_ripl()
   r.assume("frob", "(mem (lambda (x) (flip 0.5)))")
   r.observe("(frob 1)", True)
@@ -41,3 +34,17 @@ def testScopeObservedThroughMem3():
   r.predict("(scope_include (quote foo) 0 (frob 1))")
   trace = r.sivm.core_sivm.engine.getDistinguishedTrace()
   eq_(0, len(trace.getAllNodesInScope(scope)))
+
+def testResamplingObservations():
+  """The way resample happened to be implemented in Lite when I wrote
+this test, it had the effect of undoing [infer (incorporate)] for all
+observations.
+
+  """
+  r = get_ripl()
+  r.assume("x", "(normal 0 1)")
+  r.observe("x", 1)
+  r.infer("(incorporate)")
+  eq_(1, r.sample("x"))
+  r.infer("(cycle ((resample 1) (mh default all 1)) 1)")
+  eq_(1, r.sample("x"))
