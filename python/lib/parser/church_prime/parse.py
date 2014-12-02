@@ -186,14 +186,6 @@ class Semantics(object):
     def p_directive_ref_labelled(self, label):
         return ('label', loctoken(label))
 
-    # top_expression: Return located expression.
-    def p_top_expression_literal(self, value):
-        return value
-    def p_top_expression_combination(self, open, es, close):
-        return locbracket(open, close, es or [])
-    def p_top_expression_comb_error(self, open, es, close):
-        return 'error'
-
     # expression: Return located expression.
     def p_expression_symbol(self, name):
         return locmap(loctoken(name), val.symbol)

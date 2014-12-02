@@ -33,7 +33,7 @@
 
 venture(empty)		::= .
 venture(i)		::= instructions(insts).
-venture(e)		::= top_expression(exp).
+venture(e)		::= expression(exp).
 
 instructions(one)	::= instruction(inst).
 instructions(many)	::= instructions(insts) instruction(inst).
@@ -92,16 +92,6 @@ command(load)			::= K_LOAD(k) json(pathname).
 
 directive_ref(numbered)	::= L_INTEGER(number).
 directive_ref(labelled)	::= L_NAME(label).
-
-/*
- * Can't write names at the top level -- they would be confused with
- * labels.  (XXX Can we work around this?)
- */
-top_expression(literal)		::= literal(value).
-top_expression(combination)	::= T_LROUND(open) expressions(es)
-					T_RROUND(close).
-top_expression(comb_error)	::= T_LROUND(open) expressions(es) error
-					T_RROUND(close).
 
 expression(symbol)	::= L_NAME(name).
 expression(literal)	::= literal(value).
