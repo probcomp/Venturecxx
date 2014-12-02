@@ -37,5 +37,7 @@ def testScopeObservedThroughMem3():
   eq_(0, trace.numBlocksInScope(scope))
   r.infer("(incorporate)")
   r.predict("(frob 1)")
+  r.infer("(resample 1)")
   r.predict("(scope_include (quote foo) 0 (frob 1))")
+  trace = r.sivm.core_sivm.engine.getDistinguishedTrace()
   eq_(0, len(trace.getAllNodesInScope(scope)))
