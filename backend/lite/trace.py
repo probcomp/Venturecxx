@@ -9,7 +9,7 @@ from value import SPRef, ExpressionType, VentureValue, VentureSymbol, VentureNum
 from scaffold import Scaffold
 from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
                    EnumerativeGibbsOperator,EnumerativeMAPOperator,EnumerativeDiversify,
-                   PGibbsOperator,ParticlePGibbsOperator,
+                   PGibbsOperator,ParticlePGibbsOperator,ParticlePMAPOperator,
                    RejectionOperator, MissingEsrParentError, NoSPRefError,
                    HamiltonianMonteCarloOperator, MAPOperator, StepOutSliceOperator,
                    DoublingSliceOperator, NesterovAcceleratedGradientAscentOperator,
@@ -470,6 +470,13 @@ class Trace(object):
           mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block)), ParticlePGibbsOperator(particles))
         else:
           mixMH(self, BlockScaffoldIndexer(scope, block), ParticlePGibbsOperator(particles))
+      elif operator == "func_pmap":
+        particles = int(exp[3])
+        if isinstance(block, list): # Ordered range
+          (_, min_block, max_block) = block
+          mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block)), ParticlePMAPOperator(particles))
+        else:
+          mixMH(self, BlockScaffoldIndexer(scope, block), ParticlePMAPOperator(particles))
       elif operator == "map":
         (rate, steps) = exp[3:5]
         mixMH(self, BlockScaffoldIndexer(scope, block), MAPOperator(rate, int(steps)))
