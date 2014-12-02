@@ -695,113 +695,137 @@ class Parser(object):
     def action_012(self):
         # directive ::= K_ASSUME L_NAME expression
         return self.delegate.p_directive_assume(
+            k = self.yystack[-3].minor,
             n = self.yystack[-2].minor,
             e = self.yystack[-1].minor,
             )
     def action_013(self):
         # directive ::= K_OBSERVE expression literal
         return self.delegate.p_directive_observe(
+            k = self.yystack[-3].minor,
             e = self.yystack[-2].minor,
             v = self.yystack[-1].minor,
             )
     def action_014(self):
         # directive ::= K_PREDICT expression
         return self.delegate.p_directive_predict(
+            k = self.yystack[-2].minor,
             e = self.yystack[-1].minor,
             )
     def action_015(self):
         # command ::= K_CONFIGURE json
         return self.delegate.p_command_configure(
+            k = self.yystack[-2].minor,
             options = self.yystack[-1].minor,
             )
     def action_016(self):
         # command ::= K_FORGET directive_ref
         return self.delegate.p_command_forget(
+            k = self.yystack[-2].minor,
             dr = self.yystack[-1].minor,
             )
     def action_017(self):
         # command ::= K_REPORT directive_ref
         return self.delegate.p_command_report(
+            k = self.yystack[-2].minor,
             dr = self.yystack[-1].minor,
             )
     def action_018(self):
         # command ::= K_INFER expression
         return self.delegate.p_command_infer(
+            k = self.yystack[-2].minor,
             e = self.yystack[-1].minor,
             )
     def action_019(self):
         # command ::= K_CLEAR
         return self.delegate.p_command_clear(
+            k = self.yystack[-1].minor,
             )
     def action_020(self):
         # command ::= K_ROLLBACK
         return self.delegate.p_command_rollback(
+            k = self.yystack[-1].minor,
             )
     def action_021(self):
         # command ::= K_LIST_DIRECTIVES
         return self.delegate.p_command_list_directives(
+            k = self.yystack[-1].minor,
             )
     def action_022(self):
         # command ::= K_GET_DIRECTIVE directive_ref
         return self.delegate.p_command_get_directive(
+            k = self.yystack[-2].minor,
             dr = self.yystack[-1].minor,
             )
     def action_023(self):
         # command ::= K_FORCE expression literal
         return self.delegate.p_command_force(
+            k = self.yystack[-3].minor,
             e = self.yystack[-2].minor,
             v = self.yystack[-1].minor,
             )
     def action_024(self):
         # command ::= K_SAMPLE expression
         return self.delegate.p_command_sample(
+            k = self.yystack[-2].minor,
             e = self.yystack[-1].minor,
             )
     def action_025(self):
         # command ::= K_CONTINUOUS_INFERENCE_STATUS
         return self.delegate.p_command_continuous_inference_status(
+            k = self.yystack[-1].minor,
             )
     def action_026(self):
         # command ::= K_START_CONTINUOUS_INFERENCE
         return self.delegate.p_command_start_continuous_inference(
+            k = self.yystack[-1].minor,
             )
     def action_027(self):
         # command ::= K_STOP_CONTINUOUS_INFERENCE
         return self.delegate.p_command_stop_continuous_inference(
+            k = self.yystack[-1].minor,
             )
     def action_028(self):
         # command ::= K_GET_CURRENT_EXCEPTION
         return self.delegate.p_command_get_current_exception(
+            k = self.yystack[-1].minor,
             )
     def action_029(self):
         # command ::= K_GET_STATE
         return self.delegate.p_command_get_state(
+            k = self.yystack[-1].minor,
             )
     def action_030(self):
         # command ::= K_GET_LOGSCORE directive_ref
         return self.delegate.p_command_get_logscore(
+            k = self.yystack[-2].minor,
             d = self.yystack[-1].minor,
             )
     def action_031(self):
         # command ::= K_GET_GLOBAL_LOGSCORE
         return self.delegate.p_command_get_global_logscore(
+            k = self.yystack[-1].minor,
             )
     def action_032(self):
         # command ::= K_PROFILER_CONFIGURE json
         return self.delegate.p_command_profiler_configure(
+            k = self.yystack[-2].minor,
             options = self.yystack[-1].minor,
             )
     def action_033(self):
         # command ::= K_PROFILER_CLEAR
         return self.delegate.p_command_profiler_clear(
+            k = self.yystack[-1].minor,
             )
     def action_034(self):
         # command ::= K_PROFILER_LIST_RANDOM K_CHOICES
         return self.delegate.p_command_profiler_list_random(
+            k = self.yystack[-2].minor,
             )
     def action_035(self):
         # command ::= K_LOAD json
         return self.delegate.p_command_load(
+            k = self.yystack[-2].minor,
             pathname = self.yystack[-1].minor,
             )
     def action_036(self):

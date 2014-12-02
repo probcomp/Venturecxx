@@ -64,31 +64,31 @@ instruction(error)	::= T_LSQUARE(open) error T_RSQUARE(close).
  * won't worry too much about it just yet.
  */
 
-directive(assume)	::= K_ASSUME L_NAME(n) expression(e).
-directive(observe)	::= K_OBSERVE expression(e) literal(v).
-directive(predict)	::= K_PREDICT expression(e).
+directive(assume)	::= K_ASSUME(k) L_NAME(n) expression(e).
+directive(observe)	::= K_OBSERVE(k) expression(e) literal(v).
+directive(predict)	::= K_PREDICT(k) expression(e).
 
-command(configure)	::= K_CONFIGURE json(options).
-command(forget)		::= K_FORGET directive_ref(dr).
-command(report)		::= K_REPORT directive_ref(dr).
-command(infer)		::= K_INFER expression(e).
-command(clear)		::= K_CLEAR.
-command(rollback)	::= K_ROLLBACK.
-command(list_directives)::= K_LIST_DIRECTIVES.
-command(get_directive)	::= K_GET_DIRECTIVE directive_ref(dr).
-command(force)		::= K_FORCE expression(e) literal(v).
-command(sample)		::= K_SAMPLE expression(e).
-command(continuous_inference_status)	::= K_CONTINUOUS_INFERENCE_STATUS.
-command(start_continuous_inference)	::= K_START_CONTINUOUS_INFERENCE.
-command(stop_continuous_inference)	::= K_STOP_CONTINUOUS_INFERENCE.
-command(get_current_exception)		::= K_GET_CURRENT_EXCEPTION.
-command(get_state)		::= K_GET_STATE.
-command(get_logscore)		::= K_GET_LOGSCORE directive_ref(d).
-command(get_global_logscore)	::= K_GET_GLOBAL_LOGSCORE.
-command(profiler_configure)	::= K_PROFILER_CONFIGURE json(options).
-command(profiler_clear)		::= K_PROFILER_CLEAR.
-command(profiler_list_random)	::= K_PROFILER_LIST_RANDOM K_CHOICES.
-command(load)			::= K_LOAD json(pathname).
+command(configure)	::= K_CONFIGURE(k) json(options).
+command(forget)		::= K_FORGET(k) directive_ref(dr).
+command(report)		::= K_REPORT(k) directive_ref(dr).
+command(infer)		::= K_INFER(k) expression(e).
+command(clear)		::= K_CLEAR(k).
+command(rollback)	::= K_ROLLBACK(k).
+command(list_directives)::= K_LIST_DIRECTIVES(k).
+command(get_directive)	::= K_GET_DIRECTIVE(k) directive_ref(dr).
+command(force)		::= K_FORCE(k) expression(e) literal(v).
+command(sample)		::= K_SAMPLE(k) expression(e).
+command(continuous_inference_status)	::= K_CONTINUOUS_INFERENCE_STATUS(k).
+command(start_continuous_inference)	::= K_START_CONTINUOUS_INFERENCE(k).
+command(stop_continuous_inference)	::= K_STOP_CONTINUOUS_INFERENCE(k).
+command(get_current_exception)		::= K_GET_CURRENT_EXCEPTION(k).
+command(get_state)		::= K_GET_STATE(k).
+command(get_logscore)		::= K_GET_LOGSCORE(k) directive_ref(d).
+command(get_global_logscore)	::= K_GET_GLOBAL_LOGSCORE(k).
+command(profiler_configure)	::= K_PROFILER_CONFIGURE(k) json(options).
+command(profiler_clear)		::= K_PROFILER_CLEAR(k).
+command(profiler_list_random)	::= K_PROFILER_LIST_RANDOM(k) K_CHOICES.
+command(load)			::= K_LOAD(k) json(pathname).
 
 directive_ref(numbered)	::= L_INTEGER(number).
 directive_ref(labelled)	::= L_NAME(label).
