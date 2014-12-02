@@ -203,4 +203,4 @@ class Scanner(Plex.Scanner):
             text = self.text
         end = self.cur_pos
         start = end - len(self.text)
-        Plex.Scanner.produce(self, token, (text, start, end))
+        Plex.Scanner.produce(self, token, (text, start, end - 1))
