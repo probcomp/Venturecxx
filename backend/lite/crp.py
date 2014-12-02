@@ -11,7 +11,7 @@ class CRPSPAux(object):
   def __init__(self):
     self.tableCounts = {}
     self.nextIndex = 1
-    self.freeIndeces = set()
+    self.freeIndices = set()
     self.numTables = 0
     self.numCustomers = 0
 
@@ -19,7 +19,7 @@ class CRPSPAux(object):
     crp = CRPSPAux()
     crp.tableCounts = deepcopy(self.tableCounts)
     crp.nextIndex = self.nextIndex
-    crp.freeIndeces = self.freeIndeces.copy()
+    crp.freeIndices = self.freeIndices.copy()
     crp.numTables = self.numTables
     crp.numCustomers = self.numCustomers
     return crp
@@ -50,7 +50,7 @@ class CRPOutputPSP(RandomPSP):
     aux = args.spaux
     old_indices = [i for i in aux.tableCounts]
     counts = [aux.tableCounts[i] - self.d for i in old_indices] + [self.alpha + (aux.numTables * self.d)]
-    nextIndex = aux.nextIndex if len(aux.freeIndeces) == 0 else aux.freeIndeces.__iter__().next()
+    nextIndex = aux.nextIndex if len(aux.freeIndices) == 0 else aux.freeIndices.__iter__().next()
     indices = old_indices + [nextIndex]
     return simulateCategorical(counts,indices)
 
@@ -73,8 +73,8 @@ class CRPOutputPSP(RandomPSP):
     else:
       aux.tableCounts[index] = 1
       aux.numTables += 1
-      if index in aux.freeIndeces:
-        aux.freeIndeces.discard(index)
+      if index in aux.freeIndices:
+        aux.freeIndices.discard(index)
       else:
         aux.nextIndex = max(index+1, aux.nextIndex)
 
@@ -85,7 +85,7 @@ class CRPOutputPSP(RandomPSP):
     if aux.tableCounts[index] == 0:
       aux.numTables -= 1
       del aux.tableCounts[index]
-      aux.freeIndeces.add(index)
+      aux.freeIndices.add(index)
 
   def logDensityOfCounts(self,aux):
     term1 = scipy.special.gammaln(self.alpha) - scipy.special.gammaln(self.alpha + aux.numCustomers)
