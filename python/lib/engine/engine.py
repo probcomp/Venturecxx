@@ -342,9 +342,15 @@ effect of renumbering the directives, if some had been forgotten."""
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "call_back_accum":
       assert len(program) >= 2
       return [program[0]] + [v.quasiquote(e) for e in program[1:]]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "assume":
+      assert len(program) == 3
+      return [program[0], v.quote(program[1]), v.quasiquote(program[2])]
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "observe":
       assert len(program) == 3
       return [program[0], v.quasiquote(program[1]), program[2]]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "predict":
+      assert len(program) == 2
+      return [program[0], v.quasiquote(program[1])]
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "begin":
       assert len(program) >= 2
       return [v.sym("sequence"), [v.sym("list")] + [self.macroexpand_inference(e) for e in program[1:]]]

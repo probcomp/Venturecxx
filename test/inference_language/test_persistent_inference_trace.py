@@ -73,3 +73,13 @@ def testInlineSMCSmoke2():
 """)
   for i in range(20):
     eq_(i, r.sample("(frob %s)" % i))
+
+def testDirectivesInInfer1():
+  r = get_ripl()
+  r.infer("(assume x 5)")
+  eq_(5, r.sample("x"))
+
+def testDirectivesInInfer2():
+  r = get_ripl()
+  r.infer("(predict (+ 5 2))")
+  eq_(7.0, r.report(1))
