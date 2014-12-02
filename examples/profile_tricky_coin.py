@@ -27,3 +27,14 @@ data = ripl.profile_data()
 
 map(lambda addrs: map(printAddr, addrs), data.principal)
 
+# plot profile data:
+# group by principal, operator
+# get: mean time, prob accepted, etc.
+
+grouped = data.groupby(['principal', 'operator'], sort=False)
+
+#grouped.alpha.hist(legend=True)
+#grouped.alpha.value_counts().plot(kind='hist', legend=True, alpha=0.5)
+#import pylab as pl
+#pl.show()
+
