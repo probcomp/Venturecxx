@@ -13,6 +13,8 @@ def drawScaffold(trace, indexer):
     warnings.warn('Failed to import module networkx.')
   else:
     index = indexer.sampleIndex(trace)
+    print "Drawing a scaffold with stats"
+    index.show()
     G = traverseScaffold(trace, index)
     drawScaffoldGraph(trace, G)
 
