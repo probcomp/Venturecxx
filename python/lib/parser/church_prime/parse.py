@@ -108,7 +108,7 @@ class Semantics(object):
 
     # Venture start symbol: store result in self.answer, return none.
     def p_venture_empty(self):
-        self.answer = []
+        self.answer = ('instructions', [])
     def p_venture_i(self, insts):
         self.answer = ('instructions', insts)
     def p_venture_e(self, exp):
