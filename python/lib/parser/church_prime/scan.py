@@ -38,33 +38,33 @@ END {
 }'
 '''
 keywords = {                    # XXX Use a perfect hash.
-    "assume": grammar.K_ASSUME,
-    "choices": grammar.K_CHOICES,
-    "clear": grammar.K_CLEAR,
-    "configure": grammar.K_CONFIGURE,
-    "continuous_inference_status": grammar.K_CONTINUOUS_INFERENCE_STATUS,
-    "define": grammar.K_DEFINE,
-    "force": grammar.K_FORCE,
-    "forget": grammar.K_FORGET,
-    "get_current_exception": grammar.K_GET_CURRENT_EXCEPTION,
-    "get_directive": grammar.K_GET_DIRECTIVE,
-    "get_global_logscore": grammar.K_GET_GLOBAL_LOGSCORE,
-    "get_logscore": grammar.K_GET_LOGSCORE,
-    "get_state": grammar.K_GET_STATE,
-    "infer": grammar.K_INFER,
-    "list_directives": grammar.K_LIST_DIRECTIVES,
-    "observe": grammar.K_OBSERVE,
-    "predict": grammar.K_PREDICT,
-    "profiler_clear": grammar.K_PROFILER_CLEAR,
-    "profiler_configure": grammar.K_PROFILER_CONFIGURE,
-    "profiler_list_random": grammar.K_PROFILER_LIST_RANDOM,
-    "report": grammar.K_REPORT,
-    "rollback": grammar.K_ROLLBACK,
-    "sample": grammar.K_SAMPLE,
-    "start_continuous_inference": grammar.K_START_CONTINUOUS_INFERENCE,
-    "stop_continuous_inference": grammar.K_STOP_CONTINUOUS_INFERENCE,
-    "true": grammar.T_TRUE,
-    "false": grammar.T_FALSE,
+    'assume': grammar.K_ASSUME,
+    'choices': grammar.K_CHOICES,
+    'clear': grammar.K_CLEAR,
+    'configure': grammar.K_CONFIGURE,
+    'continuous_inference_status': grammar.K_CONTINUOUS_INFERENCE_STATUS,
+    'define': grammar.K_DEFINE,
+    'force': grammar.K_FORCE,
+    'forget': grammar.K_FORGET,
+    'get_current_exception': grammar.K_GET_CURRENT_EXCEPTION,
+    'get_directive': grammar.K_GET_DIRECTIVE,
+    'get_global_logscore': grammar.K_GET_GLOBAL_LOGSCORE,
+    'get_logscore': grammar.K_GET_LOGSCORE,
+    'get_state': grammar.K_GET_STATE,
+    'infer': grammar.K_INFER,
+    'list_directives': grammar.K_LIST_DIRECTIVES,
+    'observe': grammar.K_OBSERVE,
+    'predict': grammar.K_PREDICT,
+    'profiler_clear': grammar.K_PROFILER_CLEAR,
+    'profiler_configure': grammar.K_PROFILER_CONFIGURE,
+    'profiler_list_random': grammar.K_PROFILER_LIST_RANDOM,
+    'report': grammar.K_REPORT,
+    'rollback': grammar.K_ROLLBACK,
+    'sample': grammar.K_SAMPLE,
+    'start_continuous_inference': grammar.K_START_CONTINUOUS_INFERENCE,
+    'stop_continuous_inference': grammar.K_STOP_CONTINUOUS_INFERENCE,
+    'true': grammar.T_TRUE,
+    'false': grammar.T_FALSE,
 }
 def scan_name(_scanner, text):
     return keywords.get(text) or keywords.get(text.lower()) or grammar.L_NAME;
@@ -76,44 +76,44 @@ def scan_real(scanner, text):
     scanner.produce(grammar.L_REAL, float(text))
 
 def scan_bad(scanner, text):
-    print "Syntax error: %s" % (text,)
+    print 'Syntax error: %s' % (text,)
 
 def scan_string(scanner, text):
     assert scanner.stringio is None
     scanner.stringio = StringIO.StringIO()
-    scanner.begin("STRING")
+    scanner.begin('STRING')
 
 def scan_string_text(scanner, text):
     assert scanner.stringio is not None
     scanner.stringio.write(text)
 
 escapes = {
-    "/":        "/",
-    "\"":       "\"",
-    "\\":       "\\",
-    "b":        "\b",           # Backspace
-    "f":        "\f",           # Form feed
-    "n":        "\n",           # Line feed
-    "r":        "\r",           # Carriage return
-    "t":        "\t",           # Horizontal tab
+    '/':        '/',
+    '\"':       '\"',
+    '\\':       '\\',
+    'b':        '\b',           # Backspace
+    'f':        '\f',           # Form feed
+    'n':        '\n',           # Line feed
+    'r':        '\r',           # Carriage return
+    't':        '\t',           # Horizontal tab
 }
 def scan_string_escape(scanner, text):
     assert scanner.stringio is not None
-    assert text[0] == "\\"
+    assert text[0] == '\\'
     assert text[1] in escapes
     scanner.stringio.write(escapes[text[1]])
 
 def scan_string_escerror(scanner, text):
     assert scanner.stringio is not None
     # XXX Report error.
-    scanner.stringio.write("?error?")
+    scanner.stringio.write('?error?')
 
 def scan_string_octal(scanner, text):
     assert scanner.stringio is not None
-    assert text[0] == "\\"
+    assert text[0] == '\\'
     n = int(text[1:], 8)
     # XXX Report error.
-    scanner.stringio.write(chr(n) if n < 128 else "?error?")
+    scanner.stringio.write(chr(n) if n < 128 else '?error?')
 
 def scan_string_end(scanner, text):
     assert scanner.stringio is not None
@@ -122,50 +122,50 @@ def scan_string_end(scanner, text):
     scanner.stringio.close()
     scanner.stringio = None
     scanner.produce(grammar.L_STRING, string)
-    scanner.begin("")
+    scanner.begin('')
 
 class Scanner(Plex.Scanner):
-    line_comment = Plex.Str(";") + Plex.Rep(Plex.AnyBut("\n"))
-    whitespace = Plex.Any("\f\n\r\t ")
-    letter = Plex.Range("azAZ")
-    digit = Plex.Range("09")
-    octit = Plex.Range("07")
-    underscore = Plex.Str("_")
-    optsign = Plex.Opt(Plex.Any("+-"))
+    line_comment = Plex.Str(';') + Plex.Rep(Plex.AnyBut('\n'))
+    whitespace = Plex.Any('\f\n\r\t ')
+    letter = Plex.Range('azAZ')
+    digit = Plex.Range('09')
+    octit = Plex.Range('07')
+    underscore = Plex.Str('_')
+    optsign = Plex.Opt(Plex.Any('+-'))
     name = (letter | underscore) + Plex.Rep(letter | underscore | digit)
     # < and > are angle-brackets, which fall back to operators in grammar.y.
-    operator = Plex.Str("+", "-", "*", "/", "<=", ">=", "=", "!=")
+    operator = Plex.Str('+', '-', '*', '/', '<=', '>=', '=', '!=')
     # XXX Hexadecimal, octal, binary?
     integer = optsign + Plex.Rep1(digit)                # [+/-]NNNN
-    fractional = Plex.Str(".") + Plex.Rep(digit)        # .NNNN
+    fractional = Plex.Str('.') + Plex.Rep(digit)        # .NNNN
     integerfractional = integer + Plex.Opt(fractional)  # NNN[.NNNN]
-    expmark = Plex.Any("eE")
+    expmark = Plex.Any('eE')
     exponent = expmark + optsign + Plex.Rep1(digit)     # (e/E)[+/-]NNN
     real = optsign + (integerfractional | fractional) + Plex.Opt(exponent)
-    esc = Plex.Str("\\")
+    esc = Plex.Str('\\')
     escchar = Plex.Str(*escapes.keys())
     octal3 = octit + octit + octit
 
     lexicon = Plex.Lexicon([
         (whitespace,    Plex.IGNORE),
         (line_comment,  Plex.IGNORE),
-        (Plex.Str("["), grammar.T_LSQUARE),
-        (Plex.Str("]"), grammar.T_RSQUARE),
-        (Plex.Str("("), grammar.T_LROUND),
-        (Plex.Str(")"), grammar.T_RROUND),
-        (Plex.Str("{"), grammar.T_LCURLY),
-        (Plex.Str("}"), grammar.T_RCURLY),
-        (Plex.Str("<"), grammar.T_LANGLE),
-        (Plex.Str(">"), grammar.T_RANGLE),
-        (Plex.Str(":"), grammar.T_COLON),
-        (Plex.Str(","), grammar.T_COMMA),
+        (Plex.Str('['), grammar.T_LSQUARE),
+        (Plex.Str(']'), grammar.T_RSQUARE),
+        (Plex.Str('('), grammar.T_LROUND),
+        (Plex.Str(')'), grammar.T_RROUND),
+        (Plex.Str('{'), grammar.T_LCURLY),
+        (Plex.Str('}'), grammar.T_RCURLY),
+        (Plex.Str('<'), grammar.T_LANGLE),
+        (Plex.Str('>'), grammar.T_RANGLE),
+        (Plex.Str(':'), grammar.T_COLON),
+        (Plex.Str(','), grammar.T_COMMA),
         (operator,      grammar.L_OPERATOR),
         (name,          scan_name),
         (integer,       scan_integer),
         (real,          scan_real),
         (Plex.Str('"'), scan_string),
         (Plex.AnyChar,  scan_bad),
-        Plex.State("STRING", [
+        Plex.State('STRING', [
             (Plex.Str('"'),                     scan_string_end),
             (esc + octal3,                      scan_string_octal),
             (esc + escchar,                     scan_string_escape),
