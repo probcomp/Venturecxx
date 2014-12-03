@@ -13,3 +13,6 @@ class NoisyIdentityOutputPSP(RandomPSP):
   
   def logDensityBound(self, _y, _args):
     return 0
+
+  def description(self, name):
+    return name
