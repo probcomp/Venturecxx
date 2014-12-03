@@ -26,7 +26,11 @@ class CRPSPAux(object):
 
 class CRPSP(SP):
   def constructSPAux(self): return CRPSPAux()
-  def show(self,spaux): return spaux.tableCounts
+  def show(self,spaux):
+    return {
+      'type' : 'crp',
+      'counts': spaux.tableCounts,
+    }
 
 class MakeCRPOutputPSP(DeterministicPSP):
   def simulate(self,args):
