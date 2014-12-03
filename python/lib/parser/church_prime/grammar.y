@@ -64,6 +64,7 @@ instruction(error)	::= T_LSQUARE(open) error T_RSQUARE(close).
  * won't worry too much about it just yet.
  */
 
+directive(define)	::= K_DEFINE(k) L_NAME(n) expression(e).
 directive(assume)	::= K_ASSUME(k) L_NAME(n) expression(e).
 directive(observe)	::= K_OBSERVE(k) expression(e) literal(v).
 directive(predict)	::= K_PREDICT(k) expression(e).
