@@ -94,6 +94,7 @@ directive_ref(numbered)	::= L_INTEGER(number).
 directive_ref(labelled)	::= L_NAME(label).
 
 expression(symbol)	::= L_NAME(name).
+expression(operator)	::= L_OPERATOR(op).
 expression(literal)	::= literal(value).
 expression(combination)	::= T_LROUND(open) expressions(es) T_RROUND(close).
 expression(comb_error)	::= T_LROUND(open) expressions(es) error
@@ -132,6 +133,15 @@ json_dict_entries(many)	::= json_dict_entries(es) T_COMMA json_dict_entry(e).
 json_dict_entries(error)::= error T_COMMA json_dict_entry(e).
 json_dict_entry(e)	::= L_STRING(key) T_COLON json(value).
 json_dict_entry(error)	::= error T_COLON json(value).
+
+/*
+ * Treat < and > as operators rather than angle-brackets where
+ * unambiguous.
+ */
+%fallback L_OPERATOR
+	T_LANGLE
+	T_RANGLE
+	.
 
 /*
  * Allow all keywords to be treated as names where unambiguous.

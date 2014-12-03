@@ -79,6 +79,19 @@ class Error(Exception):
     def __str__(self):
         return '[%s, %s]: %s' % (self.start, self.end, self.message)
 
+operators = {
+    "+":        "add",
+    "-":        "sub",
+    "*":        "mul",
+    "/":        "div",
+    "<":        "lt",
+    ">":        "gt",
+    "<=":       "lte",
+    ">=":       "gte",
+    "=":        "eq",
+    "!=":       "neq",
+}
+
 class Semantics(object):
     def __init__(self):
         self.answer = None
@@ -189,6 +202,9 @@ class Semantics(object):
     # expression: Return located expression.
     def p_expression_symbol(self, name):
         return locmap(loctoken(name), val.symbol)
+    def p_expression_operator(self, op):
+        assert op[0] in operators
+        return locmap(loctoken(op), lambda op: val.symbol(operators[op]))
     def p_expression_literal(self, value):
         return value
     def p_expression_combination(self, open, es, close):

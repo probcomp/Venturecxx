@@ -68,22 +68,6 @@ keywords = {                    # XXX Use a perfect hash.
 def scan_name(_scanner, text):
     return keywords.get(text) or keywords.get(text.lower()) or grammar.L_NAME;
 
-operators = {
-    "+":        "add",
-    "-":        "sub",
-    "*":        "mul",
-    "/":        "div",
-    "<":        "lt",
-    ">":        "gt",
-    "<=":       "lte",
-    ">=":       "gte",
-    "=":        "eq",
-    "!=":       "neq",
-}
-def scan_operator(scanner, text):
-    assert text in operators
-    scanner.produce(grammar.L_NAME, operators[text])
-
 def scan_integer(scanner, text):
     scanner.produce(grammar.L_INTEGER, int(text, 10))
 
@@ -148,7 +132,8 @@ class Scanner(Plex.Scanner):
     underscore = Plex.Str("_")
     optsign = Plex.Opt(Plex.Any("+-"))
     name = (letter | underscore) + Plex.Rep(letter | underscore | digit)
-    operator = Plex.Str(*operators.keys())
+    # < and > are angle-brackets, which fall back to operators in grammar.y.
+    operator = Plex.Str("+", "-", "*", "/", "<=", ">=", "=", "!=")
     # XXX Hexadecimal, octal, binary?
     integer = optsign + Plex.Rep1(digit)                # [+/-]NNNN
     fractional = Plex.Str(".") + Plex.Rep(digit)        # .NNNN
@@ -173,8 +158,8 @@ class Scanner(Plex.Scanner):
         (Plex.Str(">"), grammar.T_RANGLE),
         (Plex.Str(":"), grammar.T_COLON),
         (Plex.Str(","), grammar.T_COMMA),
+        (operator,      grammar.L_OPERATOR),
         (name,          scan_name),
-        (operator,      scan_operator),
         (integer,       scan_integer),
         (real,          scan_real),
         (Plex.Str('"'), scan_string),

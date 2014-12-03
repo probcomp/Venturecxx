@@ -40,17 +40,18 @@ K_PROFILER_LIST_RANDOM         = 27
 K_CHOICES                      = 28
 K_LOAD                         = 29
 L_INTEGER                      = 30
-T_LROUND                       = 31
-T_RROUND                       = 32
-T_TRUE                         = 33
-T_FALSE                        = 34
-L_REAL                         = 35
-T_LANGLE                       = 36
-T_RANGLE                       = 37
-L_STRING                       = 38
-T_COMMA                        = 39
-T_LCURLY                       = 40
-T_RCURLY                       = 41
+L_OPERATOR                     = 31
+T_LROUND                       = 32
+T_RROUND                       = 33
+T_TRUE                         = 34
+T_FALSE                        = 35
+L_REAL                         = 36
+T_LANGLE                       = 37
+T_RANGLE                       = 38
+L_STRING                       = 39
+T_COMMA                        = 40
+T_LCURLY                       = 41
+T_RCURLY                       = 42
 
 # The state of the parser is completely contained in an instance of
 # the following class.
@@ -72,10 +73,10 @@ class Parser(object):
     #    YYERRORSYMBOL      is the code number of the error symbol.  If not
     #                       defined, then do no error processing.
 
-    YYNOCODE = 59
-    YYNSTATE = 124
-    YYNRULE = 70
-    YYERRORSYMBOL = 42
+    YYNOCODE = 60
+    YYNSTATE = 125
+    YYNRULE = 71
+    YYERRORSYMBOL = 43
     YY_NO_ACTION     = YYNSTATE + YYNRULE + 2
     YY_ACCEPT_ACTION = YYNSTATE + YYNRULE + 1
     YY_ERROR_ACTION  = YYNSTATE + YYNRULE
@@ -129,79 +130,79 @@ class Parser(object):
     #  yy_default[]       Default action for each state.
 
     yy_action = [
-           40,   14,   15,    9,   28,   29,   16,  104,  105,  106, #     0
-           30,   17,   18,  110,  111,  112,  113,  114,   31,  116, #    10
-           10,  118,   53,   46,  124,   35,   74,    3,   54,  195, #    20
-           19,   58,  123,    1,   70,   85,   34,    1,   73,   54, #    30
-           46,   68,   69,   59,   84,   52,   49,   68,   69,   26, #    40
-           50,   51,   44,   93,   91,   32,   41,   89,   90,   92, #    50
-           66,  108,   41,   78,   66,   67,   68,   69,   65,   67, #    60
-           12,   45,   65,   79,   12,   91,   68,   69,   89,   90, #    70
-           92,  125,   36,  101,    3,   91,   32,   86,   89,   90, #    80
-           92,   91,   32,   62,   89,   90,   92,   85,   43,   47, #    90
-           48,   83,    4,   88,   68,   69,   42,   85,   71,   68, #   100
-           69,   33,  100,   98,   77,  117,   68,   69,   68,   69, #   110
-          120,    7,   39,   68,   69,   27,   80,   38,   24,   40, #   120
-           14,   15,   85,   94,  103,   25,  109,   85,   85,   85, #   130
-           85,   57,   47,    5,   82,   22,   56,   75,   37,   99, #   140
-           37,   60,  102,  107,   20,   13,  115,   81,   23,   61, #   150
-           63,    2,   72,   64,    6,    7,   87,  119,   76,   95, #   160
-           96,   97,   55,  121,   21,  126,  122,  196,  196,    8, #   170
-          196,  196,    2, #   180
+           40,   14,   15,    9,   28,   29,   16,  105,  106,  107, #     0
+           30,   17,   18,  111,  112,  113,  114,  115,   31,  117, #    10
+           10,  119,   53,   46,  125,   35,   74,    3,   54,  197, #    20
+           19,   58,  124,   34,   62,   86,    1,   70,   86,   43, #    30
+            1,   84,   46,   94,   68,   69,   26,   42,   49,   73, #    40
+           68,   69,   68,   69,   92,   85,   32,   41,   90,   91, #    50
+           93,   48,   24,   66,   89,   52,   86,   66,   86,   67, #    60
+           50,   51,   65,   67,   12,   95,   65,   92,   12,   86, #    70
+          104,   90,   91,   93,   86,  109,   92,   85,   32,   87, #    80
+           90,   91,   93,   41,  126,   36,   78,    3,   54,   68, #    90
+           69,   79,   59,   83,   68,   69,   68,   69,   99,   71, #   100
+          118,   68,   69,   68,   69,  121,   33,   25,   68,   69, #   110
+           47,   86,   92,   85,   32,  110,   90,   91,   93,   86, #   120
+           27,   80,   40,   14,   15,   77,   39,  102,   57,   47, #   130
+           22,   38,   75,   56,    7,    5,   37,   82,   37,   44, #   140
+           45,  100,   20,  103,   81,  108,  116,   60,   61,   13, #   150
+            2,    4,   63,   64,   72,    6,  101,    7,   76,  120, #   160
+           88,   96,   97,   98,   55,  122,   21,  127,  123,  198, #   170
+          198,    2,   23,    8, #   180
         ]
     yy_lookahead = [
             5,    6,    7,    8,    9,   10,   11,   12,   13,   14, #     0
            15,   16,   17,   18,   19,   20,   21,   22,   23,   24, #    10
-           25,   26,   27,   38,    0,    1,   41,    3,   42,   43, #    20
-           44,   45,   46,    3,    4,   49,   42,    3,   50,   42, #    30
-           38,   53,   54,   46,   50,   42,    1,   53,   54,   55, #    40
-           47,   48,   42,   49,   30,   31,    1,   33,   34,   35, #    50
-           30,   49,    1,   50,   30,   35,   53,   54,   38,   35, #    60
-           40,   42,   38,   50,   40,   30,   53,   54,   33,   34, #    70
-           35,    0,    1,    1,    3,   30,   31,   32,   33,   34, #    80
-           35,   30,   31,   45,   33,   34,   35,   49,   42,   42, #    90
-           42,   50,   52,   45,   53,   54,   50,   49,    4,   53, #   100
-           54,   42,   30,   50,   57,   50,   53,   54,   53,   54, #   110
-           50,    2,   42,   53,   54,   56,   57,   47,   45,    5, #   120
-            6,    7,   49,   45,   45,   45,   45,   49,   49,   49, #   130
-           49,   42,   42,   39,    4,   39,   47,   41,    2,   51, #   140
-            2,    4,   51,   51,    3,    1,   51,   57,   39,    4, #   150
-           37,   36,    4,   37,    2,    2,   32,   28,   41,    4, #   160
-            4,    4,    2,    4,    3,    0,    4,   58,   58,   39, #   170
-           58,   58,   36, #   180
+           25,   26,   27,   39,    0,    1,   42,    3,   43,   44, #    20
+           45,   46,   47,   43,   46,   50,    3,    4,   50,   43, #    30
+            3,   51,   39,   50,   54,   55,   56,   51,    1,   51, #    40
+           54,   55,   54,   55,   30,   31,   32,    1,   34,   35, #    50
+           36,   43,   46,   30,   46,   43,   50,   30,   50,   36, #    60
+           48,   49,   39,   36,   41,   46,   39,   30,   41,   50, #    70
+           46,   34,   35,   36,   50,   50,   30,   31,   32,   33, #    80
+           34,   35,   36,    1,    0,    1,   51,    3,   43,   54, #    90
+           55,   51,   47,   51,   54,   55,   54,   55,   51,    4, #   100
+           51,   54,   55,   54,   55,   51,   43,   46,   54,   55, #   110
+           43,   50,   30,   31,   32,   46,   34,   35,   36,   50, #   120
+           57,   58,    5,    6,    7,   58,   43,    1,   43,   43, #   130
+           40,   48,   42,   48,    2,   40,    2,    4,    2,   43, #   140
+           43,   52,    3,   52,   58,   52,   52,    4,    4,    1, #   150
+           37,   53,   38,   38,    4,    2,   30,    2,   42,   28, #   160
+           33,    4,    4,    4,    2,    4,    3,    0,    4,   59, #   170
+           59,   37,   40,   40, #   180
         ]
-    YY_SHIFT_USE_DFLT = -16
+    YY_SHIFT_USE_DFLT = -17
     YY_SHIFT_MAX = 58
     yy_shift_ofst = [
-           24,   30,   34,   -5,   55,   34,   34,   34,   34,   34, #     0
-           34,   34,  -15,   61,   61,   61,   61,   61,   61,   81, #    10
-          124,  124,    2,    2,   45,   45,  104,  106,   82,   82, #    20
-           82,   82,  -16,  119,  140,  146,  148,  151,  147,  155, #    30
-          154,  125,  123,  126,  158,  127,  162,  163,  134,  125, #    40
-          165,  166,  167,  139,  170,  171,  169,  172,  175, #    50
+           24,   33,   37,   -5,   56,   37,   37,   37,   37,   37, #     0
+           37,   37,  -16,   92,   92,   92,   92,   92,   92,   94, #    10
+          127,  127,    3,    3,   47,   47,  105,  100,  136,  136, #    20
+          136,  136,  -17,  142,  143,  144,  146,  149,  153,  154, #    30
+          158,  123,  124,  125,  160,  126,  163,  165,  137,  123, #    40
+          167,  168,  169,  141,  172,  173,  171,  174,  177, #    50
         ]
-    YY_REDUCE_USE_DFLT = -15
+    YY_REDUCE_USE_DFLT = -16
     YY_REDUCE_MAX = 32
     yy_reduce_ofst = [
-          -14,   -6,   56,    3,   58,  -12,   13,   23,   51,   63, #     0
-           65,   70,   69,   48,   83,   88,   89,   90,   91,   -3, #    10
-           80,   99,   57,  100,    4,   12,   10,   29,   98,  101, #    20
-          102,  105,   50, #    30
+          -15,  -10,   -4,   22,   18,   -2,   45,   50,   52,   57, #     0
+           59,   64,   73,  -12,   16,   29,   34,   71,   79,   55, #    10
+           93,   95,   77,   96,   -7,   35,  106,  107,   99,  101, #    20
+          103,  104,  108, #    30
         ]
     yy_default = [
-          194,  194,  194,  194,  194,  194,  194,  194,  194,  194, #     0
-          194,  194,  194,  194,  194,  194,  194,  194,  194,  194, #    10
-          194,  194,  194,  194,  194,  194,  194,  194,  194,  194, #    20
-          194,  194,  166,  194,  194,  162,  194,  194,  194,  194, #    30
-          194,  162,  194,  194,  194,  194,  194,  194,  194,  194, #    40
-          194,  194,  194,  194,  194,  194,  194,  194,  194,  128, #    50
-          129,  133,  136,  172,  173,  174,  175,  176,  177,  178, #    60
-          179,  180,  181,  184,  186,  187,  188,  190,  192,  193, #    70
-          189,  191,  182,  185,  183,  163,  164,  165,  167,  168, #    80
-          169,  170,  171,  137,  138,  130,  131,  135,  139,  140, #    90
-          160,  161,  141,  142,  143,  144,  145,  146,  147,  148, #   100
+          196,  196,  196,  196,  196,  196,  196,  196,  196,  196, #     0
+          196,  196,  196,  196,  196,  196,  196,  196,  196,  196, #    10
+          196,  196,  196,  196,  196,  196,  196,  196,  196,  196, #    20
+          196,  196,  168,  196,  196,  163,  196,  196,  196,  196, #    30
+          196,  163,  196,  196,  196,  196,  196,  196,  196,  196, #    40
+          196,  196,  196,  196,  196,  196,  196,  196,  196,  129, #    50
+          130,  134,  137,  174,  175,  176,  177,  178,  179,  180, #    60
+          181,  182,  183,  186,  188,  189,  190,  192,  194,  195, #    70
+          191,  193,  184,  187,  185,  164,  165,  166,  167,  169, #    80
+          170,  171,  172,  173,  138,  139,  131,  132,  136,  140, #    90
+          141,  161,  162,  142,  143,  144,  145,  146,  147,  148, #   100
           149,  150,  151,  152,  153,  154,  155,  156,  157,  158, #   110
-          159,  132,  134,  127, #   120
+          159,  160,  133,  135,  128, #   120
         ]
     YY_SZ_ACTTAB = len(yy_action)
 
@@ -248,13 +249,14 @@ class Parser(object):
           1,  #  K_CHOICES => L_NAME
           1,  #     K_LOAD => L_NAME
           0,  #  L_INTEGER => nothing
+          0,  # L_OPERATOR => nothing
           0,  #   T_LROUND => nothing
           0,  #   T_RROUND => nothing
           0,  #     T_TRUE => nothing
           0,  #    T_FALSE => nothing
           0,  #     L_REAL => nothing
-          0,  #   T_LANGLE => nothing
-          0,  #   T_RANGLE => nothing
+         31,  #   T_LANGLE => L_OPERATOR
+         31,  #   T_RANGLE => L_OPERATOR
           0,  #   L_STRING => nothing
           0,  #    T_COMMA => nothing
           0,  #   T_LCURLY => nothing
@@ -316,14 +318,14 @@ class Parser(object):
         "K_FORCE",             "K_SAMPLE",            "K_CONTINUOUS_INFERENCE_STATUS",        "K_START_CONTINUOUS_INFERENCE",
         "K_STOP_CONTINUOUS_INFERENCE",        "K_GET_CURRENT_EXCEPTION",        "K_GET_STATE",         "K_GET_LOGSCORE",
         "K_GET_GLOBAL_LOGSCORE",        "K_PROFILER_CONFIGURE",        "K_PROFILER_CLEAR",        "K_PROFILER_LIST_RANDOM",
-        "K_CHOICES",           "K_LOAD",              "L_INTEGER",           "T_LROUND",    
-        "T_RROUND",            "T_TRUE",              "T_FALSE",             "L_REAL",      
-        "T_LANGLE",            "T_RANGLE",            "L_STRING",            "T_COMMA",     
-        "T_LCURLY",            "T_RCURLY",            "error",               "venture",     
-        "instructions",        "expression",          "instruction",         "directive",   
-        "command",             "literal",             "json",                "directive_ref",
-        "expressions",         "json_list",           "json_dict",           "json_list_terms",
-        "json_dict_entries",        "json_dict_entry",
+        "K_CHOICES",           "K_LOAD",              "L_INTEGER",           "L_OPERATOR",  
+        "T_LROUND",            "T_RROUND",            "T_TRUE",              "T_FALSE",     
+        "L_REAL",              "T_LANGLE",            "T_RANGLE",            "L_STRING",    
+        "T_COMMA",             "T_LCURLY",            "T_RCURLY",            "error",       
+        "venture",             "instructions",        "expression",          "instruction", 
+        "directive",           "command",             "literal",             "json",        
+        "directive_ref",        "expressions",         "json_list",           "json_dict",   
+        "json_list_terms",        "json_dict_entries",        "json_dict_entry",
         ]
 
     # For tracing reduce actions, the names of all rules are required.
@@ -367,37 +369,38 @@ class Parser(object):
         "directive_ref ::= L_INTEGER", #  36
         "directive_ref ::= L_NAME", #  37
         "expression ::= L_NAME", #  38
-        "expression ::= literal", #  39
-        "expression ::= T_LROUND expressions T_RROUND", #  40
-        "expression ::= T_LROUND expressions error T_RROUND", #  41
-        "expressions ::=", #  42
-        "expressions ::= expressions expression", #  43
-        "literal ::= T_TRUE", #  44
-        "literal ::= T_FALSE", #  45
-        "literal ::= L_INTEGER", #  46
-        "literal ::= L_REAL", #  47
-        "literal ::= L_NAME T_LANGLE json T_RANGLE", #  48
-        "literal ::= L_NAME T_LANGLE error T_RANGLE", #  49
-        "json ::= L_STRING", #  50
-        "json ::= L_INTEGER", #  51
-        "json ::= L_REAL", #  52
-        "json ::= json_list", #  53
-        "json ::= json_dict", #  54
-        "json_list ::= T_LSQUARE T_RSQUARE", #  55
-        "json_list ::= T_LSQUARE json_list_terms T_RSQUARE", #  56
-        "json_list ::= T_LSQUARE json_list_terms error T_RSQUARE", #  57
-        "json_list ::= T_LSQUARE error T_RSQUARE", #  58
-        "json_list_terms ::= json", #  59
-        "json_list_terms ::= json_list_terms T_COMMA json", #  60
-        "json_list_terms ::= error T_COMMA json", #  61
-        "json_dict ::= T_LCURLY T_RCURLY", #  62
-        "json_dict ::= T_LCURLY json_dict_entries T_RCURLY", #  63
-        "json_dict ::= T_LCURLY json_dict_entries error T_RCURLY", #  64
-        "json_dict_entries ::= json_dict_entry", #  65
-        "json_dict_entries ::= json_dict_entries T_COMMA json_dict_entry", #  66
-        "json_dict_entries ::= error T_COMMA json_dict_entry", #  67
-        "json_dict_entry ::= L_STRING T_COLON json", #  68
-        "json_dict_entry ::= error T_COLON json", #  69
+        "expression ::= L_OPERATOR", #  39
+        "expression ::= literal", #  40
+        "expression ::= T_LROUND expressions T_RROUND", #  41
+        "expression ::= T_LROUND expressions error T_RROUND", #  42
+        "expressions ::=", #  43
+        "expressions ::= expressions expression", #  44
+        "literal ::= T_TRUE", #  45
+        "literal ::= T_FALSE", #  46
+        "literal ::= L_INTEGER", #  47
+        "literal ::= L_REAL", #  48
+        "literal ::= L_NAME T_LANGLE json T_RANGLE", #  49
+        "literal ::= L_NAME T_LANGLE error T_RANGLE", #  50
+        "json ::= L_STRING", #  51
+        "json ::= L_INTEGER", #  52
+        "json ::= L_REAL", #  53
+        "json ::= json_list", #  54
+        "json ::= json_dict", #  55
+        "json_list ::= T_LSQUARE T_RSQUARE", #  56
+        "json_list ::= T_LSQUARE json_list_terms T_RSQUARE", #  57
+        "json_list ::= T_LSQUARE json_list_terms error T_RSQUARE", #  58
+        "json_list ::= T_LSQUARE error T_RSQUARE", #  59
+        "json_list_terms ::= json", #  60
+        "json_list_terms ::= json_list_terms T_COMMA json", #  61
+        "json_list_terms ::= error T_COMMA json", #  62
+        "json_dict ::= T_LCURLY T_RCURLY", #  63
+        "json_dict ::= T_LCURLY json_dict_entries T_RCURLY", #  64
+        "json_dict ::= T_LCURLY json_dict_entries error T_RCURLY", #  65
+        "json_dict_entries ::= json_dict_entry", #  66
+        "json_dict_entries ::= json_dict_entries T_COMMA json_dict_entry", #  67
+        "json_dict_entries ::= error T_COMMA json_dict_entry", #  68
+        "json_dict_entry ::= L_STRING T_COLON json", #  69
+        "json_dict_entry ::= error T_COLON json", #  70
         ]
 
 
@@ -533,76 +536,77 @@ class Parser(object):
          'nrhs', # Number of right-hand side symbols in the rule
          ))
     yyRuleInfo = [
-        yyRuleInfoEntry( 43, 0 ),
-        yyRuleInfoEntry( 43, 1 ),
-        yyRuleInfoEntry( 43, 1 ),
+        yyRuleInfoEntry( 44, 0 ),
         yyRuleInfoEntry( 44, 1 ),
-        yyRuleInfoEntry( 44, 2 ),
-        yyRuleInfoEntry( 46, 5 ),
-        yyRuleInfoEntry( 46, 3 ),
-        yyRuleInfoEntry( 46, 3 ),
-        yyRuleInfoEntry( 46, 5 ),
-        yyRuleInfoEntry( 46, 5 ),
-        yyRuleInfoEntry( 46, 5 ),
-        yyRuleInfoEntry( 46, 3 ),
+        yyRuleInfoEntry( 44, 1 ),
+        yyRuleInfoEntry( 45, 1 ),
+        yyRuleInfoEntry( 45, 2 ),
+        yyRuleInfoEntry( 47, 5 ),
         yyRuleInfoEntry( 47, 3 ),
         yyRuleInfoEntry( 47, 3 ),
-        yyRuleInfoEntry( 47, 2 ),
-        yyRuleInfoEntry( 48, 2 ),
-        yyRuleInfoEntry( 48, 2 ),
-        yyRuleInfoEntry( 48, 2 ),
-        yyRuleInfoEntry( 48, 2 ),
-        yyRuleInfoEntry( 48, 1 ),
-        yyRuleInfoEntry( 48, 1 ),
-        yyRuleInfoEntry( 48, 1 ),
-        yyRuleInfoEntry( 48, 2 ),
+        yyRuleInfoEntry( 47, 5 ),
+        yyRuleInfoEntry( 47, 5 ),
+        yyRuleInfoEntry( 47, 5 ),
+        yyRuleInfoEntry( 47, 3 ),
+        yyRuleInfoEntry( 48, 3 ),
         yyRuleInfoEntry( 48, 3 ),
         yyRuleInfoEntry( 48, 2 ),
-        yyRuleInfoEntry( 48, 1 ),
-        yyRuleInfoEntry( 48, 1 ),
-        yyRuleInfoEntry( 48, 1 ),
-        yyRuleInfoEntry( 48, 1 ),
-        yyRuleInfoEntry( 48, 1 ),
-        yyRuleInfoEntry( 48, 2 ),
-        yyRuleInfoEntry( 48, 1 ),
-        yyRuleInfoEntry( 48, 2 ),
-        yyRuleInfoEntry( 48, 1 ),
-        yyRuleInfoEntry( 48, 2 ),
-        yyRuleInfoEntry( 48, 2 ),
-        yyRuleInfoEntry( 51, 1 ),
-        yyRuleInfoEntry( 51, 1 ),
-        yyRuleInfoEntry( 45, 1 ),
-        yyRuleInfoEntry( 45, 1 ),
-        yyRuleInfoEntry( 45, 3 ),
-        yyRuleInfoEntry( 45, 4 ),
-        yyRuleInfoEntry( 52, 0 ),
-        yyRuleInfoEntry( 52, 2 ),
+        yyRuleInfoEntry( 49, 2 ),
+        yyRuleInfoEntry( 49, 2 ),
+        yyRuleInfoEntry( 49, 2 ),
+        yyRuleInfoEntry( 49, 2 ),
+        yyRuleInfoEntry( 49, 1 ),
+        yyRuleInfoEntry( 49, 1 ),
+        yyRuleInfoEntry( 49, 1 ),
+        yyRuleInfoEntry( 49, 2 ),
+        yyRuleInfoEntry( 49, 3 ),
+        yyRuleInfoEntry( 49, 2 ),
         yyRuleInfoEntry( 49, 1 ),
         yyRuleInfoEntry( 49, 1 ),
         yyRuleInfoEntry( 49, 1 ),
         yyRuleInfoEntry( 49, 1 ),
-        yyRuleInfoEntry( 49, 4 ),
-        yyRuleInfoEntry( 49, 4 ),
-        yyRuleInfoEntry( 50, 1 ),
-        yyRuleInfoEntry( 50, 1 ),
-        yyRuleInfoEntry( 50, 1 ),
-        yyRuleInfoEntry( 50, 1 ),
-        yyRuleInfoEntry( 50, 1 ),
+        yyRuleInfoEntry( 49, 1 ),
+        yyRuleInfoEntry( 49, 2 ),
+        yyRuleInfoEntry( 49, 1 ),
+        yyRuleInfoEntry( 49, 2 ),
+        yyRuleInfoEntry( 49, 1 ),
+        yyRuleInfoEntry( 49, 2 ),
+        yyRuleInfoEntry( 49, 2 ),
+        yyRuleInfoEntry( 52, 1 ),
+        yyRuleInfoEntry( 52, 1 ),
+        yyRuleInfoEntry( 46, 1 ),
+        yyRuleInfoEntry( 46, 1 ),
+        yyRuleInfoEntry( 46, 1 ),
+        yyRuleInfoEntry( 46, 3 ),
+        yyRuleInfoEntry( 46, 4 ),
+        yyRuleInfoEntry( 53, 0 ),
         yyRuleInfoEntry( 53, 2 ),
-        yyRuleInfoEntry( 53, 3 ),
-        yyRuleInfoEntry( 53, 4 ),
-        yyRuleInfoEntry( 53, 3 ),
-        yyRuleInfoEntry( 55, 1 ),
-        yyRuleInfoEntry( 55, 3 ),
-        yyRuleInfoEntry( 55, 3 ),
+        yyRuleInfoEntry( 50, 1 ),
+        yyRuleInfoEntry( 50, 1 ),
+        yyRuleInfoEntry( 50, 1 ),
+        yyRuleInfoEntry( 50, 1 ),
+        yyRuleInfoEntry( 50, 4 ),
+        yyRuleInfoEntry( 50, 4 ),
+        yyRuleInfoEntry( 51, 1 ),
+        yyRuleInfoEntry( 51, 1 ),
+        yyRuleInfoEntry( 51, 1 ),
+        yyRuleInfoEntry( 51, 1 ),
+        yyRuleInfoEntry( 51, 1 ),
         yyRuleInfoEntry( 54, 2 ),
         yyRuleInfoEntry( 54, 3 ),
         yyRuleInfoEntry( 54, 4 ),
+        yyRuleInfoEntry( 54, 3 ),
         yyRuleInfoEntry( 56, 1 ),
         yyRuleInfoEntry( 56, 3 ),
         yyRuleInfoEntry( 56, 3 ),
+        yyRuleInfoEntry( 55, 2 ),
+        yyRuleInfoEntry( 55, 3 ),
+        yyRuleInfoEntry( 55, 4 ),
+        yyRuleInfoEntry( 57, 1 ),
         yyRuleInfoEntry( 57, 3 ),
         yyRuleInfoEntry( 57, 3 ),
+        yyRuleInfoEntry( 58, 3 ),
+        yyRuleInfoEntry( 58, 3 ),
         ]
 
 
@@ -835,55 +839,60 @@ class Parser(object):
             name = self.yystack[-1].minor,
             )
     def action_039(self):
+        # expression ::= L_OPERATOR
+        return self.delegate.p_expression_operator(
+            op = self.yystack[-1].minor,
+            )
+    def action_040(self):
         # expression ::= literal
         return self.delegate.p_expression_literal(
             value = self.yystack[-1].minor,
             )
-    def action_040(self):
+    def action_041(self):
         # expression ::= T_LROUND expressions T_RROUND
         return self.delegate.p_expression_combination(
             open = self.yystack[-3].minor,
             es = self.yystack[-2].minor,
             close = self.yystack[-1].minor,
             )
-    def action_041(self):
+    def action_042(self):
         # expression ::= T_LROUND expressions error T_RROUND
         return self.delegate.p_expression_comb_error(
             open = self.yystack[-4].minor,
             es = self.yystack[-3].minor,
             close = self.yystack[-1].minor,
             )
-    def action_042(self):
+    def action_043(self):
         # expressions ::=
         return self.delegate.p_expressions_none(
             )
-    def action_043(self):
+    def action_044(self):
         # expressions ::= expressions expression
         return self.delegate.p_expressions_some(
             es = self.yystack[-2].minor,
             e = self.yystack[-1].minor,
             )
-    def action_044(self):
+    def action_045(self):
         # literal ::= T_TRUE
         return self.delegate.p_literal_true(
             t = self.yystack[-1].minor,
             )
-    def action_045(self):
+    def action_046(self):
         # literal ::= T_FALSE
         return self.delegate.p_literal_false(
             f = self.yystack[-1].minor,
             )
-    def action_046(self):
+    def action_047(self):
         # literal ::= L_INTEGER
         return self.delegate.p_literal_integer(
             v = self.yystack[-1].minor,
             )
-    def action_047(self):
+    def action_048(self):
         # literal ::= L_REAL
         return self.delegate.p_literal_real(
             v = self.yystack[-1].minor,
             )
-    def action_048(self):
+    def action_049(self):
         # literal ::= L_NAME T_LANGLE json T_RANGLE
         return self.delegate.p_literal_json(
             type = self.yystack[-4].minor,
@@ -891,109 +900,109 @@ class Parser(object):
             value = self.yystack[-2].minor,
             close = self.yystack[-1].minor,
             )
-    def action_049(self):
+    def action_050(self):
         # literal ::= L_NAME T_LANGLE error T_RANGLE
         return self.delegate.p_literal_json_error(
             type = self.yystack[-4].minor,
             open = self.yystack[-3].minor,
             close = self.yystack[-1].minor,
             )
-    def action_050(self):
+    def action_051(self):
         # json ::= L_STRING
         return self.delegate.p_json_string(
             v = self.yystack[-1].minor,
             )
-    def action_051(self):
+    def action_052(self):
         # json ::= L_INTEGER
         return self.delegate.p_json_integer(
             v = self.yystack[-1].minor,
             )
-    def action_052(self):
+    def action_053(self):
         # json ::= L_REAL
         return self.delegate.p_json_real(
             v = self.yystack[-1].minor,
             )
-    def action_053(self):
+    def action_054(self):
         # json ::= json_list
         return self.delegate.p_json_list(
             l = self.yystack[-1].minor,
             )
-    def action_054(self):
+    def action_055(self):
         # json ::= json_dict
         return self.delegate.p_json_dict(
             d = self.yystack[-1].minor,
             )
-    def action_055(self):
+    def action_056(self):
         # json_list ::= T_LSQUARE T_RSQUARE
         return self.delegate.p_json_list_empty(
             )
-    def action_056(self):
+    def action_057(self):
         # json_list ::= T_LSQUARE json_list_terms T_RSQUARE
         return self.delegate.p_json_list_nonempty(
             ts = self.yystack[-2].minor,
             )
-    def action_057(self):
+    def action_058(self):
         # json_list ::= T_LSQUARE json_list_terms error T_RSQUARE
         return self.delegate.p_json_list_error1(
             ts = self.yystack[-3].minor,
             )
-    def action_058(self):
+    def action_059(self):
         # json_list ::= T_LSQUARE error T_RSQUARE
         return self.delegate.p_json_list_error(
             )
-    def action_059(self):
+    def action_060(self):
         # json_list_terms ::= json
         return self.delegate.p_json_list_terms_one(
             t = self.yystack[-1].minor,
             )
-    def action_060(self):
+    def action_061(self):
         # json_list_terms ::= json_list_terms T_COMMA json
         return self.delegate.p_json_list_terms_many(
             ts = self.yystack[-3].minor,
             t = self.yystack[-1].minor,
             )
-    def action_061(self):
+    def action_062(self):
         # json_list_terms ::= error T_COMMA json
         return self.delegate.p_json_list_terms_error(
             t = self.yystack[-1].minor,
             )
-    def action_062(self):
+    def action_063(self):
         # json_dict ::= T_LCURLY T_RCURLY
         return self.delegate.p_json_dict_empty(
             )
-    def action_063(self):
+    def action_064(self):
         # json_dict ::= T_LCURLY json_dict_entries T_RCURLY
         return self.delegate.p_json_dict_nonempty(
             es = self.yystack[-2].minor,
             )
-    def action_064(self):
+    def action_065(self):
         # json_dict ::= T_LCURLY json_dict_entries error T_RCURLY
         return self.delegate.p_json_dict_error(
             es = self.yystack[-3].minor,
             )
-    def action_065(self):
+    def action_066(self):
         # json_dict_entries ::= json_dict_entry
         return self.delegate.p_json_dict_entries_one(
             e = self.yystack[-1].minor,
             )
-    def action_066(self):
+    def action_067(self):
         # json_dict_entries ::= json_dict_entries T_COMMA json_dict_entry
         return self.delegate.p_json_dict_entries_many(
             es = self.yystack[-3].minor,
             e = self.yystack[-1].minor,
             )
-    def action_067(self):
+    def action_068(self):
         # json_dict_entries ::= error T_COMMA json_dict_entry
         return self.delegate.p_json_dict_entries_error(
             e = self.yystack[-1].minor,
             )
-    def action_068(self):
+    def action_069(self):
         # json_dict_entry ::= L_STRING T_COLON json
         return self.delegate.p_json_dict_entry_e(
             key = self.yystack[-3].minor,
             value = self.yystack[-1].minor,
             )
-    def action_069(self):
+    def action_070(self):
         # json_dict_entry ::= error T_COLON json
         return self.delegate.p_json_dict_entry_error(
             value = self.yystack[-1].minor,
@@ -1069,6 +1078,7 @@ class Parser(object):
         action_067,
         action_068,
         action_069,
+        action_070,
     ]
 
 
