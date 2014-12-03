@@ -131,6 +131,9 @@ class ChurchPrimeParser(object):
         return utils.simplify_instruction_parse_tree(
                 utils.apply_parser(self.instruction, instruction_string)[0])
 
+    def parse_locexpression(self, expression_string):
+        return utils.apply_parser(self.expression, expression_string)[0]
+
     def parse_expression(self, expression_string):
         return utils.simplify_expression_parse_tree(
             utils.apply_parser(self.expression, expression_string)[0])
