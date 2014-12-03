@@ -15,4 +15,5 @@ class NoisyIdentityOutputPSP(RandomPSP):
     return 0
 
   def description(self, name):
-    return name
+    return '(%s epsilon x) -> x\n  Identity function that can be observed to induce noisy equality between input and output. log(epsilon) is the penalty for mismatch.' % name
+
