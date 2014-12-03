@@ -235,11 +235,11 @@ class Semantics(object):
     def p_literal_real(self, v):
         return locmap(loctoken(v), val.number)
     def p_literal_json(self, type, open, value, close):
-        type = tokval(type)
-        if type == 'number' or type == 'boolean':
-            raise SyntaxError('Write numbers and booleans without JSON!')
-        return loc2(loctoken(open), loctoken(close),
-            { 'type': type, 'value': value })
+        t, start, end = type
+        if t == 'number' or t == 'boolean':
+            raise Error('Don\'t write %ss with JSON!' % (t,), start, end)
+        return loc2(loctoken(type), loctoken(close),
+            { 'type': t, 'value': value })
 
     # json: Return json object.
     def p_json_string(self, v):                 return tokval(v)
