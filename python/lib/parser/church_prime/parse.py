@@ -462,7 +462,7 @@ class ChurchPrimeParser(object):
         return dict((k, delocust(v)) for k, v in l['value'].iteritems())
 
     def parse_locexpression(self, string):
-        '''Parse STRINg as an expression, and include location records.'''
+        '''Parse STRING as an expression, and include location records.'''
         return parse_expression(string)
 
     def parse_expression(self, string):
