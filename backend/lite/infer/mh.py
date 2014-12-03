@@ -13,6 +13,16 @@ def registerDeterministicLKernels(trace,scaffold,pnodes,currentValues):
     assert not isinstance(currentValue,list)
     scaffold.lkernels[pnode] = DeterministicLKernel(trace.pspAt(pnode),currentValue)
 
+def getCurrentValuesWithAddresses(trace,pnodes): return [(pnode.address, trace.valueAt(pnode)) for pnode in pnodes]
+
+def registerDeterministicLKernelsByAddress(trace,scaffold,addressesAndValues):
+  nodes = dict([(node.address, node) for node in scaffold.getPrincipalNodes()])
+  for (addr,currentValue) in addressesAndValues:
+    assert not isinstance(currentValue,list)
+    assert addr in nodes
+    node = nodes[addr]
+    scaffold.lkernels[node] = DeterministicLKernel(trace.pspAt(node),currentValue)
+
 def mixMH(trace,indexer,operator):
   start = time.time()
   index = indexer.sampleIndex(trace)

@@ -3,10 +3,14 @@ from ..regen import regenAndAttach
 from ..detach import detachAndExtract
 from ..utils import sampleLogCategorical, cartesianProduct
 from ..consistency import assertTrace, assertTorus
-from mh import getCurrentValues, registerDeterministicLKernels
+from mh import getCurrentValues, registerDeterministicLKernels, registerDeterministicLKernelsByAddress
 
 def getCartesianProductOfEnumeratedValues(trace,pnodes):
   enumeratedValues = [trace.pspAt(pnode).enumerateValues(trace.argsAt(pnode)) for pnode in pnodes]
+  return cartesianProduct(enumeratedValues)
+
+def getCartesianProductOfEnumeratedValuesWithAddresses(trace,pnodes):
+  enumeratedValues = [[(pnode.address, v) for v in trace.pspAt(pnode).enumerateValues(trace.argsAt(pnode))] for pnode in pnodes]
   return cartesianProduct(enumeratedValues)
 
 class EnumerativeGibbsOperator(object):
@@ -73,12 +77,12 @@ class EnumerativeDiversify(EnumerativeGibbsOperator):
     assertTrace(trace,scaffold)
 
     pnodes = scaffold.getPrincipalNodes()
-    allSetsOfValues = getCartesianProductOfEnumeratedValues(trace,pnodes)
+    allSetsOfValues = getCartesianProductOfEnumeratedValuesWithAddresses(trace,pnodes)
 
     xiWeights = []
     xiParticles = []
 
-    for newValues in allSetsOfValues:
+    for newValuesWithAddresses in allSetsOfValues:
       xiParticle = self.copy_trace(trace)
       xiParticle.makeConsistent() # CONSIDER what to do with the weight from this
       # ASSUME the scaffolder is deterministic. Have to make the
@@ -87,7 +91,7 @@ class EnumerativeDiversify(EnumerativeGibbsOperator):
       scaffold = scaffolder.sampleIndex(xiParticle)
       (rhoWeight, _) = detachAndExtract(xiParticle, scaffold)
       assertTorus(scaffold)
-      registerDeterministicLKernels(xiParticle,scaffold,scaffold.getPrincipalNodes(),newValues)
+      registerDeterministicLKernelsByAddress(xiParticle,scaffold,newValuesWithAddresses)
       xiWeight = regenAndAttach(xiParticle,scaffold,False,OmegaDB(),{})
       xiParticles.append(xiParticle)
       # CONSIDER What to do with the rhoWeight.  Subtract off the
