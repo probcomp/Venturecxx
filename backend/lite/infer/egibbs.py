@@ -67,6 +67,7 @@ class EnumerativeDiversify(EnumerativeGibbsOperator):
     # Problems:
     # - a torus cannot be copied by copy_trace
     # - a particle cannot be copied by copy_trace either
+    # - copy_trace undoes incorporation (on Lite traces)
 
     scaffold = scaffolder.sampleIndex(trace)
     assertTrace(trace,scaffold)
@@ -79,6 +80,7 @@ class EnumerativeDiversify(EnumerativeGibbsOperator):
 
     for newValues in allSetsOfValues:
       xiParticle = self.copy_trace(trace)
+      xiParticle.makeConsistent() # CONSIDER what to do with the weight from this
       # ASSUME the scaffolder is deterministic. Have to make the
       # scaffold again b/c detach mutates it, and b/c it may not work
       # across copies of the trace.
