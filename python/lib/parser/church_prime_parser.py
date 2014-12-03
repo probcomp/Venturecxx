@@ -146,6 +146,13 @@ class ChurchPrimeParser(object):
         else:
             raise Exception("Don't know how to unparse %s" % expression)
 
+    def unparse_instruction(self, instruction):
+        def unparse(k, v):
+            return self.unparse_expression(v) if k == 'expression' else v
+        template = self.instruction_strings[instruction['instruction']]
+        param = dict((k, unparse(k, v)) for k, v in instruction.iteritems())
+        return self.substitute_params(template, param)
+
     def parse_number(self, number_string):
         return utils.apply_parser(self.literal, number_string)[0]
         
