@@ -165,6 +165,7 @@ packages = [
     "venture.lite",
     "venture.lite.infer",
     "venture.parser",
+    "venture.parser.church_prime",
     "venture.plex",
     "venture.puma",
     "venture.ripl",
