@@ -131,7 +131,7 @@ class Semantics(object):
     def p_instruction_labelled(self, l, open, d, close):
         d['label'] = loctoken(l)
         d['instruction'] = locmap(d['instruction'], lambda i: 'labeled_' + i)
-        return loc2(loctoken(l), loctoken(close), d)
+        return locbracket(l, close, d)
     def p_instruction_unlabelled(self, open, d, close):
         return locbracket(open, close, d)
     def p_instruction_command(self, open, c, close):
@@ -246,8 +246,7 @@ class Semantics(object):
         t, start, end = type
         if t == 'number' or t == 'boolean':
             raise Error('Don\'t write %ss with JSON!' % (t,), start, end)
-        return loc2(loctoken(type), loctoken(close),
-            { 'type': t, 'value': value })
+        return locbracket(type, close, { 'type': t, 'value': value })
 
     # json: Return json object.
     def p_json_string(self, v):                 return tokval(v)
