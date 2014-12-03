@@ -68,16 +68,16 @@ class Error(VentureException):
             return '[%s, %s]: %s' % (self.start, self.end, self.message)
 
 operators = {
-    "+":        "add",
-    "-":        "sub",
-    "*":        "mul",
-    "/":        "div",
-    "<":        "lt",
-    ">":        "gt",
-    "<=":       "lte",
-    ">=":       "gte",
-    "=":        "eq",
-    "!=":       "neq",
+    '+':        'add',
+    '-':        'sub',
+    '*':        'mul',
+    '/':        'div',
+    '<':        'lt',
+    '>':        'gt',
+    '<=':       'lte',
+    '>=':       'gte',
+    '=':        'eq',
+    '!=':       'neq',
 }
 
 class Semantics(object):
