@@ -104,7 +104,7 @@ class VentureSivm(object):
     ###############################
 
     def _call_core_sivm_instruction(self,instruction):
-        desugared_instruction = copy.deepcopy(instruction)
+        desugared_instruction = copy.copy(instruction)
         instruction_type = instruction['instruction']
         sugar = None
         # desugar the expression
