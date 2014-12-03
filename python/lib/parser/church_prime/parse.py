@@ -37,18 +37,6 @@ def located(loc, value):
 def locmap(l, f):
     return { 'loc': l['loc'], 'value': f(l['value']) }
 
-def loc1(l, v):
-    return located(l['loc'], v)
-
-def loc2(a, b, value):
-    [start_a, end_a] = a['loc']
-    [start_b, end_b] = b['loc']
-    loc = [min(start_a, start_b), max(end_a, end_b)]
-    return located(loc, value)
-
-def locmerge(a, b, f):
-    return loc2(a, b, f(a['value'], b['value']))
-
 def loctoken((value, start, end)):
     return located([start, end], value)
 
@@ -60,14 +48,6 @@ def locbracket((ovalue, ostart, oend), (cvalue, cstart, cend), value):
     assert oend < cstart
     assert cstart <= cend
     return located([ostart, cend], value)
-
-def locunit(l):
-    return loc1(l, [l])
-
-def locappend(l, x):
-    l1 = l['value']
-    l1.append(x)
-    return loc2(l, x, l1)
 
 def delocust(l):
     # XXX Why do we bother with tuples in the first place?
