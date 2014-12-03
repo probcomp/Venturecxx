@@ -15,4 +15,4 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.parser.church_prime.parse import parse_venture
+from venture.parser.church_prime.parse import ChurchPrimeParser
