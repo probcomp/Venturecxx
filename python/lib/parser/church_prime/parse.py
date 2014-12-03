@@ -56,6 +56,9 @@ def loctoken1((_value, start, end), value):
     return located([start, end], value)
 
 def locbracket((ovalue, ostart, oend), (cvalue, cstart, cend), value):
+    assert ostart <= oend
+    assert oend < cstart
+    assert cstart <= cend
     return located([ostart, cend], value)
 
 def locunit(l):
