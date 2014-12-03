@@ -21,6 +21,7 @@ import StringIO
 import collections
 import json
 
+from venture.exception import VentureException
 import venture.value.dicts as val
 
 from venture.parser.church_prime import grammar
@@ -72,7 +73,7 @@ def delocust(l):
     else:
         return l['value']
 
-class Error(Exception):
+class Error(VentureException):
     def __init__(self, message, start, end):
         self.message = message
         self.start = start
@@ -291,27 +292,36 @@ def parse_church_prime_string(string):
     except Error as e:
         start = e.start
         end = e.end
-        spaces = ' ' * start
+        lstart = string.rfind('\n', 0, start)
+        if lstart == -1:
+            lstart = 0
+        else:
+            lstart += 1
+        lend = string.find('\n', end + 1)
+        if lend == -1:
+            lend = len(string)
+        line = string[lstart : lend]
+        spaces = ' ' * (start - lstart)
         carets = '^' * (end + 1 - start)
-        message = '%s\n    %s\n    %s%s' % (e.message, string, spaces, carets)
+        message = '%s\n%s\n%s%s' % (e.message, line, spaces, carets)
         raise Error(message, e.start, e.end)
 
 def parse_instructions(string):
     t, ls = parse_church_prime_string(string)
     if t != 'instructions':
-        raise Exception('Syntax error -- not instructions: %s' % (string,))
+        raise Error('Not instructions:\n%s' % (string,))
     return ls
 
 def parse_instruction(string):
     ls = parse_instructions(string)
     if len(ls) != 1:
-        raise Exception('Syntax error -- not one instruction: %s' % (string,))
+        raise Error('Not a single instruction:\n%s' % (string,))
     return ls[0]
 
 def parse_expression(string):
     t, l = parse_church_prime_string(string)
     if t != 'expression':
-        raise Exception('Syntax error -- not expression: %s' % (string,))
+        raise Error('Not expression:\n%s' % (string,))
     return l
 
 def value_to_string(v):
