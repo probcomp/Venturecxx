@@ -138,10 +138,10 @@ class Semantics(object):
     # directive: Return { 'instruction': located(..., 'foo'), ... }.
     def p_directive_define(self, k, n, e):
         return { 'instruction': loctoken1(k, 'define'),
-                 'symbol': loctoken(n), 'expression': e }
+                 'symbol': locmap(loctoken(n), val.symbol), 'expression': e }
     def p_directive_assume(self, k, n, e):
         return { 'instruction': loctoken1(k, 'assume'),
-                 'symbol': loctoken(n), 'expression': e }
+                 'symbol': locmap(loctoken(n), val.symbol), 'expression': e }
     def p_directive_observe(self, k, e, v):
         return { 'instruction': loctoken1(k, 'observe'),
                  'expression': e, 'value': v }
