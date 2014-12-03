@@ -74,12 +74,15 @@ def delocust(l):
         return l['value']
 
 class Error(VentureException):
-    def __init__(self, message, start, end):
+    def __init__(self, message, start=None, end=None):
         self.message = message
         self.start = start
         self.end = end
     def __str__(self):
-        return '[%s, %s]: %s' % (self.start, self.end, self.message)
+        if start is None or end is None:
+            return self.message
+        else:
+            return '[%s, %s]: %s' % (self.start, self.end, self.message)
 
 operators = {
     "+":        "add",
