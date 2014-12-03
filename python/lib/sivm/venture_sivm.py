@@ -171,14 +171,14 @@ class VentureSivm(object):
             tmp_instruction['directive_id'] = did
             for key in ('instruction', 'expression', 'symbol', 'value'):
                 if key in instruction:
-                    tmp_instruction[key] = copy.deepcopy(instruction[key])
+                    tmp_instruction[key] = copy.copy(instruction[key])
             self.directive_dict[did] = tmp_instruction
             self.sugar_dict[did] = self.attempted
         # save the breakpoint if the instruction sets the breakpoint
         if instruction_type in ['debugger_set_breakpoint_address',
                 'debugger_set_breakpoint_source_code_location']:
             bid = response['breakpoint_id']
-            tmp_instruction = copy.deepcopy(instruction)
+            tmp_instruction = copy.copy(instruction)
             tmp_instruction['breakpoint_id'] = bid
             del tmp_instruction['instruction']
             self.breakpoint_dict[bid] = tmp_instruction
