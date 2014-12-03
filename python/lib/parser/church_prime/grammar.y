@@ -80,7 +80,8 @@ command(get_directive)	::= K_GET_DIRECTIVE(k) directive_ref(dr).
 command(force)		::= K_FORCE(k) expression(e) literal(v).
 command(sample)		::= K_SAMPLE(k) expression(e).
 command(continuous_inference_status)	::= K_CONTINUOUS_INFERENCE_STATUS(k).
-command(start_continuous_inference)	::= K_START_CONTINUOUS_INFERENCE(k).
+command(start_continuous_inference)	::= K_START_CONTINUOUS_INFERENCE(k)
+						expression(e).
 command(stop_continuous_inference)	::= K_STOP_CONTINUOUS_INFERENCE(k).
 command(get_current_exception)		::= K_GET_CURRENT_EXCEPTION(k).
 command(get_state)		::= K_GET_STATE(k).

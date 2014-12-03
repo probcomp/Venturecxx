@@ -175,6 +175,9 @@ class Semantics(object):
         return { 'instruction': loctoken1(k, 'sample'), 'expression': e }
     def p_command_continuous_inference_status(self, k):
         return { 'instruction': loctoken1(k, 'continuous_inference_status') }
+    def p_command_start_continuous_inference(self, k, e):
+        return { 'instruction': loctoken1(k, 'start_continuous_inference'),
+                 'expression': e }
     def p_command_stop_continuous_inference(self, k):
         return { 'instruction': loctoken1(k, 'stop_continuous_inference') }
     def p_command_get_current_exception(self, k):
@@ -386,7 +389,7 @@ class ChurchPrimeParser(object):
         'force': [('expression', unparse_expression), ('value', unparse_value)],
         'sample': [('expression', unparse_expression)],
         'continuous_inference_status': [],
-        'start_continuous_inference': [],
+        'start_continuous_inference': [('expression', unparse_expression)],
         'stop_continuous_inference': [],
         'get_current_exception': [],
         'get_state': [],
