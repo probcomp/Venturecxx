@@ -527,18 +527,19 @@ class ChurchPrimeParser(object):
     }
     def unparse_instruction(self, instruction):
         '''Unparse INSTRUCTION into a string.'''
-        # XXX This is not correct.  But it might do for now.
+        # XXX Urgh.  Whattakludge!
+        i = instruction['instruction']
+        unparsers = self.unparsers[i]
         chunks = []
-        if 'label' in instruction:
+        if 'label' in instruction and 'label' not in (k for k,_u in unparsers):
             chunks.append(instruction['label'])
             chunks.append(': ')
         chunks.append('[')
-        i = instruction['instruction']
         if i[0 : len('labeled_')] == 'labeled_':
             chunks.append(i[len('labeled_'):])
         else:
             chunks.append(i)
-        for key, unparser in self.unparsers[i]:
+        for key, unparser in unparsers:
             chunks.append(' ')
             chunks.append(unparser(self, instruction[key]))
         chunks.append(']')
