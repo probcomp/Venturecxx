@@ -19,6 +19,7 @@
 
 import StringIO
 import collections
+import json
 
 import venture.value.dicts as val
 
@@ -313,6 +314,112 @@ def parse_expression(string):
         raise Exception('Syntax error -- not expression: %s' % (string,))
     return l
 
+def value_to_string(v):
+    if isinstance(v, dict):
+        return tagged_value_to_string(v)
+    elif isinstance(v, bool):
+        return 'true' if v else 'false'
+    elif isinstance(v, basestring):
+        return v
+    else:
+        raise TypeError('Invalid Venture value: %s' % (repr(v),))
+
+def tagged_value_to_string(v):
+    assert 'type' in v
+    assert 'value' in v
+    if v['type'] == 'boolean':
+        assert v['value'] in set(True, False)
+        return True if v['value'] else False
+    elif v['type'] == 'number':
+        assert isinstance(v['value'], int) or isinstance(v['value'], float)
+        return str(v['value'])
+    elif v['type'] == 'symbol':
+        assert isinstance(v['value'], basestring)
+        return v['value']
+    else:
+        return '%s<%s>' % (v['type'], json.dumps(v['value']))
+
+# XXX Ugh, whattakludge.  If we can get rid of substitute_params, we
+# can get rid of this.
+def value_or_number_to_string(v):
+    if isinstance(v, int) or isinstance(v, float):
+        return str(v)
+    else:
+        return value_to_string(v)
+
+formatters = {
+    's': str,
+    'v': value_or_number_to_string,
+    'j': json.dumps,
+}
+
+def substitute_params(string, params):
+    if isinstance(params, tuple) or isinstance(params, list):
+        return substitute_params_indexed(string, params)
+    elif isinstance(params, dict):
+        return substitute_params_named(string, params)
+    else:
+        raise TypeError('Invalid parameter set: %s' % (params,))
+
+def substitute_params_indexed(string, params):
+    out = StringIO.StringIO()
+    i = 0
+    n = 0
+    while i < len(string):
+        j = string.find('%', i)
+        if j == -1:
+            j = len(string)     # Silly indexing convention.
+        if i < j:
+            out.write(buffer(string, i, j - i))
+        if j == len(string):
+            break
+        j += 1
+        if j == len(string):
+            raise ValueError('Dangling escape: %s' % (repr(string),))
+        d = string[j]
+        if d == '%':
+            out.write('%')
+        else:
+            if d not in formatters:
+                raise ValueError('Unknown formatting directive: %s' % (d,))
+            if n == len(params):
+                raise ValueError('Not enough parameters %d: %s' %
+                    (n, repr(string)))
+            out.write(formatters[d](params[n]))
+            n += 1
+        i = j + 1
+    return out.getvalue()
+
+def substitute_params_named(string, params):
+    out = StringIO.StringIO()
+    i = 0
+    n = 0
+    while i < len(string):
+        j = string.find('%', i)
+        if j == -1:
+            j = len(string)     # Silly indexing convention.
+        if i < j:
+            out.write(buffer(string, i, j - i))
+        if j == len(string):
+            break
+        j += 1
+        if j == len(string):
+            raise ValueError('Dangling escape: %s' % (repr(string),))
+        if string[j] == '%':
+            out.write('%')
+        elif string[j] == '(':
+            k = string.find(')', j + 1)
+            if k == -1 or k + 1 == len(string):
+                raise ValueError('Dangling escape: %s' % (repr(string),))
+            key = string[j + 1 : k]
+            if key not in params:
+                raise ValueError('Missing parameter: %s' % (key,))
+            out.write(formatters[string[k + 1]](params[key]))
+        else:
+            raise ValueError('Invalid formatting directive: %%%s' %
+                (string[j],))
+    return out.getvalue()
+
 the_parser = None
 
 class ChurchPrimeParser(object):
@@ -329,7 +436,15 @@ class ChurchPrimeParser(object):
     # XXX Doesn't really belong here.
     def substitute_params(self, string, params):
         '''Return STRING with %-directives formatted using PARAMS.'''
-        return subst.substitute_params(string, params)
+        return substitute_params(string, params)
+
+    # XXX Make the tests pass, nobody else calls this.
+    def get_instruction_string(self, i):
+        d = {
+            'observe': '[ observe %(expression)s %(value)v ]',
+            'infer': '[ infer %(expression)s ]',
+        }
+        return d[i]
 
     def parse_instruction(self, string):
         '''Parse STRING as a single instruction.'''
