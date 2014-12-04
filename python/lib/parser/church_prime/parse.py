@@ -261,11 +261,14 @@ def parse_church_prime(f, context):
     parser = grammar.Parser(semantics)
     while True:
         token = scanner.read()
-        if token[0] is None:
+        if token[0] == -1:
+            semantics.syntax_error(token)
+        elif token[0] is None:
             # XXX Should not touch scanner internal variables like this.
             parser.feed((0, ('', scanner.cur_pos, scanner.cur_pos - 1)))
             break
-        parser.feed(token)
+        else:
+            parser.feed(token)
     return semantics.answer
 
 def parse_church_prime_string(string):

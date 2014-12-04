@@ -75,9 +75,6 @@ def scan_integer(scanner, text):
 def scan_real(scanner, text):
     scanner.produce(grammar.L_REAL, float(text))
 
-def scan_bad(scanner, text):
-    print 'Syntax error: %s' % (text,)
-
 def scan_string(scanner, text):
     assert scanner.stringio is None
     scanner.stringio = StringIO.StringIO()
@@ -164,7 +161,7 @@ class Scanner(Plex.Scanner):
         (integer,       scan_integer),
         (real,          scan_real),
         (Plex.Str('"'), scan_string),
-        (Plex.AnyChar,  scan_bad),
+        (Plex.AnyChar,  -1),    # Invalid.
         Plex.State('STRING', [
             (Plex.Str('"'),                     scan_string_end),
             (esc + octal3,                      scan_string_octal),
