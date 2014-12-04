@@ -78,6 +78,7 @@ def scan_real(scanner, text):
 def scan_string(scanner, text):
     assert scanner.stringio is None
     scanner.stringio = StringIO.StringIO()
+    scanner.string_start = scanner.cur_pos - len(text)
     scanner.begin('STRING')
 
 def scan_string_text(scanner, text):
@@ -118,7 +119,9 @@ def scan_string_end(scanner, text):
     string = scanner.stringio.getvalue()
     scanner.stringio.close()
     scanner.stringio = None
-    scanner.produce(grammar.L_STRING, string)
+    length = scanner.cur_pos - scanner.string_start
+    scanner.string_start = None
+    scanner.produce(grammar.L_STRING, string, length)
     scanner.begin('')
 
 class Scanner(Plex.Scanner):
@@ -174,6 +177,7 @@ class Scanner(Plex.Scanner):
     def __init__(self, file, name):
         Plex.Scanner.__init__(self, self.lexicon, file, name)
         self.stringio = None
+        self.string_start = None
 
     # Override produce so we can consistently record a position with
     # each token, and use the position as character offset from the
@@ -181,9 +185,11 @@ class Scanner(Plex.Scanner):
     # Plex's position() method yields.
     #
     # XXX No reason to do this other than hysterical raisins.  Fix!
-    def produce(self, token, text=None):
-        if text is None:
-            text = self.text
+    def produce(self, token, value=None, length=None):
+        if value is None:
+            value = self.text
+        if length is None:
+            length = len(self.text)
         end = self.cur_pos
-        start = end - len(self.text)
-        Plex.Scanner.produce(self, token, (text, start, end - 1))
+        start = end - length
+        Plex.Scanner.produce(self, token, (value, start, end - 1))
