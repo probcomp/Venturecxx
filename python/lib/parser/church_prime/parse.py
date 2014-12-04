@@ -56,17 +56,6 @@ def delocust(l):
     else:
         return l['value']
 
-class Error(VentureException):
-    def __init__(self, message, start=None, end=None):
-        self.message = message
-        self.start = start
-        self.end = end
-    def __str__(self):
-        if start is None or end is None:
-            return self.message
-        else:
-            return '[%s, %s]: %s' % (self.start, self.end, self.message)
-
 operators = {
     '+':        'add',
     '-':        'sub',
@@ -88,9 +77,16 @@ class Semantics(object):
         assert self.answer is not None
     def parse_failed(self):
         assert self.answer is None
+        raise VentureException('parse', 'Syntax error!')
     def syntax_error(self, (_number, (text, start, end))):
-        # XXX Kinda kludgey!
-        raise Error('Syntax error near %s' % (text,), start, end)
+        # XXX Should not raise here -- should accumulate errors and
+        # report them all at the end.
+        #
+        # XXX Should adapt lemonade to support passing a message, and
+        # make the generated parser say which tokens (and, ideally,
+        # nonterminals) it was expecting instead.
+        raise VentureException('parse', ('Syntax error at %s' % (repr(text,))),
+            text_index=[start, end])
 
     # Venture start symbol: store result in self.answer, return none.
     def p_venture_empty(self):
@@ -225,7 +221,8 @@ class Semantics(object):
     def p_literal_json(self, type, open, value, close):
         t, start, end = type
         if t == 'number' or t == 'boolean':
-            raise Error('Don\'t write %ss with JSON!' % (t,), start, end)
+            raise VentureException('parse', ('JSON not allowed for %s' % (t,)),
+                text_index=[start, end])
         return locbracket(type, close, { 'type': t, 'value': value })
 
     # json: Return json object.
@@ -274,39 +271,37 @@ def parse_church_prime(f, context):
 def parse_church_prime_string(string):
     try:
         return parse_church_prime(StringIO.StringIO(string), '(string)')
-    except Error as e:
-        start = e.start
-        end = e.end
-        lstart = string.rfind('\n', 0, start)
-        if lstart == -1:
-            lstart = 0
-        else:
-            lstart += 1
-        lend = string.find('\n', end + 1)
-        if lend == -1:
-            lend = len(string)
-        line = string[lstart : lend]
-        spaces = ' ' * (start - lstart)
-        carets = '^' * (end + 1 - start)
-        message = '%s\n%s\n%s%s' % (e.message, line, spaces, carets)
-        raise Error(message, e.start, e.end)
+    except VentureException as e:
+        assert 'instruction_string' not in e.data
+        if 'text_index' in e.data:
+            [start, end] = e.data['text_index']
+            lstart = string.rfind('\n', 0, start)
+            if lstart == -1:
+                lstart = 0
+            else:
+                lstart += 1
+            lend = string.find('\n', end + 1)
+            if lend == -1:
+                lend = len(string)
+            e.data['instruction_string'] = string[lstart : lend]
+        raise e
 
 def parse_instructions(string):
     t, ls = parse_church_prime_string(string)
     if t != 'instructions':
-        raise Error('Not instructions:\n%s' % (string,))
+        raise VentureException('parse', 'Expected instructions')
     return ls
 
 def parse_instruction(string):
     ls = parse_instructions(string)
     if len(ls) != 1:
-        raise Error('Not a single instruction:\n%s' % (string,))
+        raise VentureException('parse', 'Expected a single instruction')
     return ls[0]
 
 def parse_expression(string):
     t, l = parse_church_prime_string(string)
     if t != 'expression':
-        raise Error('Not expression:\n%s' % (string,))
+        raise VentureException('parse', 'Expected an expression')
     return l
 
 def value_to_string(v):
