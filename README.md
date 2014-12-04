@@ -200,6 +200,9 @@ Then prepare your virtual environment (replicated as
     source env.d/bin/activate
     pip install -r requirements.txt
 
+    # Be sure to put nose into the virtualenv, so it can find its packages
+    pip install --ignore-installed nose
+
     # [Optional] Install ggplot (needed for the built-in plotting facilities)
     pip install ggplot
 
