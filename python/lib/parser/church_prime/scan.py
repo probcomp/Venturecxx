@@ -171,6 +171,7 @@ class Scanner(Plex.Scanner):
             (esc + escchar,                     scan_string_escape),
             (esc + Plex.AnyChar,                scan_string_escerror),
             (Plex.Rep1(Plex.AnyBut('\\"')),     scan_string_text),
+            # XXX Report EOF inside string.
         ]),
     ])
 
