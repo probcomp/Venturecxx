@@ -47,15 +47,12 @@ def client(args):
     run_venture_console(v.make_ripl_rest_client(url))
 
 def puma(args):
-    banner()
     local_ripl(args, v.Puma())
 
 def cxx(args):
-    banner()
     local_ripl(args, v.CXX())
 
 def lite(args):
-    banner()
     local_ripl(args, v.Lite())
 
 def load_library(name):
@@ -89,6 +86,7 @@ def local_ripl(args, backend):
         if args.interactive:
             interactive = True
     if interactive:
+        banner()
         run_venture_console(r)
     return r
 
