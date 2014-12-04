@@ -186,6 +186,8 @@ class Scanner(Plex.Scanner):
     #
     # XXX No reason to do this other than hysterical raisins.  Fix!
     def produce(self, token, value=None, length=None):
+        if token is None:       # EOF
+            token = 0
         if value is None:
             value = self.text
         if length is None:
