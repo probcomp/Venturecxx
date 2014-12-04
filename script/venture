@@ -57,8 +57,12 @@ def lite(args):
 
 def load_library(name):
     import imp
-    with open(name, 'rb') as f:
-        return imp.load_source(name, name, f)
+    # XXX Why don't we use imp.find_module and imp.load_module?
+    pathname = name
+    if name.endswith('.py'):
+        name = name[0 : len(name) - len('.py')]
+    with open(pathname, 'rb') as f:
+        return imp.load_source(name, pathname, f)
 
 def local_ripl(args, backend):
     interactive = True
