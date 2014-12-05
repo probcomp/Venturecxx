@@ -1,0 +1,38 @@
+Venture is a higher-order probabilistic programming platform that aims
+to be sufficiently expressive, extensible, and efficient for
+general-purpose use.  We intend Venture to be useful in all domains
+and areas where software must deal with uncertainty or potentially
+incomplete models.  This includes the traditional fields of machine
+learning, statistcs, and artifical intelligence; traditional domains
+where those methods have found fruit, such as robotics, finance,
+economics, computer vision, scientific simulation, political science,
+and natural language processing; and potential applications in new
+domains where probabilistic modeling has not yet been applied
+successfully.
+
+To this end, we are designing Venture to
+
+- be able to express any probabilistic process as a model and
+
+- be able to carry out any inference strategy on any model to which it
+  applies,
+
+- including nesting modeling inside inference and inference inside
+  modeling,
+
+- supporting a separation of concerns that permits implementing
+  generic inference strategies as reusable library procedures,
+
+- while retaining all the efficiency of custom implementations,
+  including opportunities for parallelism, and
+
+- interfacing smoothly with foreign or legacy model or inference
+  programs.
+
+In pursuit of this ambitious set of goals we have, to date, sacrificed
+constant factors of performance (both execution time and memory
+usage), devoting our effort to finding and validating a robust design
+that admits all the necessary freedoms and asymptotically scales
+correctly in all dimensions.
+
+http://probcomp.csail.mit.edu/venture/
