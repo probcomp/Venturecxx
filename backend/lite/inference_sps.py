@@ -45,6 +45,7 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
   SPsListEntry("emap", [v.ExpressionType(), v.ExpressionType(), v.IntegerType(), v.BoolType()], min_req_args=3),
   SPsListEntry("pgibbs", [v.ExpressionType(), v.ExpressionType(), v.IntegerType(), v.IntegerType(), v.BoolType()], min_req_args=4),
   SPsListEntry("func_pgibbs", [v.ExpressionType(), v.ExpressionType(), v.IntegerType(), v.IntegerType(), v.BoolType()], min_req_args=4),
+  SPsListEntry("func_pmap", [v.ExpressionType(), v.ExpressionType(), v.IntegerType(), v.IntegerType(), v.BoolType()], min_req_args=4),
   SPsListEntry("meanfield", [v.ExpressionType(), v.ExpressionType(), v.IntegerType(), v.IntegerType()]),
   SPsListEntry("hmc", [v.ExpressionType(), v.ExpressionType(), v.NumberType(), v.IntegerType(), v.IntegerType()]),
   SPsListEntry("map", [v.ExpressionType(), v.ExpressionType(), v.NumberType(), v.IntegerType(), v.IntegerType()]),
@@ -57,6 +58,9 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
   SPsListEntry("resample_threaded", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
   SPsListEntry("resample_thread_ser", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
   SPsListEntry("resample_multiprocess", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
+  SPsListEntry("enumerative_diversify", [v.ExpressionType(), v.ExpressionType()], klass=MadeEngineMethodInferOutputPSP),
+  SPsListEntry("collapse_equal", [v.ExpressionType(), v.ExpressionType()], klass=MadeEngineMethodInferOutputPSP),
+  SPsListEntry("collapse_equal_map", [v.ExpressionType(), v.ExpressionType()], klass=MadeEngineMethodInferOutputPSP),
   SPsListEntry("draw_scaffold", [v.ExpressionType(), v.ExpressionType(), v.IntegerType()], min_req_args=3),
   # (subsampled_mh scope block Nbatch k0 epsilon useDeltaKernels deltaKernelArgs updateValues transitions)
   SPsListEntry("subsampled_mh", [v.ExpressionType(), v.ExpressionType(), v.IntegerType(), v.IntegerType(), v.NumberType(), v.BoolType(), v.NumberType(), v.BoolType(), v.IntegerType()], min_req_args=9),
@@ -75,13 +79,16 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
   SPsListEntry("printf", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
   SPsListEntry("call_back", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
   SPsListEntry("call_back_accum", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
+  SPsListEntry("assume", [v.AnyType(), v.AnyType()], klass=MadeEngineMethodInferOutputPSP),
+  SPsListEntry("observe", [v.AnyType(), v.AnyType()], klass=MadeEngineMethodInferOutputPSP),
+  SPsListEntry("predict", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP),
 
   # Hackety hack hack backward compatibility
   ["ordered_range", deterministic_typed(lambda *args: (v.VentureSymbol("ordered_range"),) + args,
                                         [v.AnyType()], v.ListType(), variadic=True)]
 ]
 
-inferenceKeywords = [ "default", "all", "one", "ordered" ]
+inferenceKeywords = [ "default", "all", "none", "one", "ordered" ]
 
 # Documentation of call_back (for lack of any better place to put it):
 

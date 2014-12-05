@@ -15,8 +15,10 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import unittest
 from nose.plugins.attrib import attr
 
+from venture.exception import VentureException
 from venture.parser import ChurchPrimeParser
 from venture.test.test_helpers import ParserTestCase
 import venture.value.dicts as v
@@ -24,25 +26,22 @@ import venture.value.dicts as v
 # Almost the same effect as @venture.test.config.in_backend("none"),
 # but works on the whole class
 @attr(backend="none")
-class TestChurchPrimeParser(ParserTestCase):
+class TestChurchPrimeParser(unittest.TestCase):
     _multiprocess_can_split_ = True
     def setUp(self):
         self.p = ChurchPrimeParser.instance()
         self.expression = None
 
     def test_expression(self):
-        self.expression = self.p.expression
-        self.run_test( "",
-                None)
-        #self.run_test( "()",
-        #        None)
-        self.run_test( "(a b (c real<1>))",
-                [{'loc': [0,16], 'value':[
+        with self.assertRaises(VentureException):
+            self.p.parse_locexpression("")
+        self.assertEqual(self.p.parse_locexpression("(a b (c real<1>))"),
+                {'loc': [0,16], 'value':[
                     {'loc': [1,1], 'value': v.sym('a')},
                     {'loc': [3,3], 'value': v.sym('b')},
                     {'loc': [5,15], 'value': [
                         {'loc': [6,6], 'value': v.sym('c')},
-                        {'loc': [8,14], 'value': v.real(1.0)}]}]}])
+                        {'loc': [8,14], 'value': v.real(1.0)}]}]})
 
     def test_parse_instruction(self):
         output = self.p.parse_instruction('[assume a (b c d)]')

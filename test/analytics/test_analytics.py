@@ -5,6 +5,7 @@ import math
 
 from nose import SkipTest
 from nose.tools import eq_, assert_almost_equal
+from nose.plugins.attrib import attr
 
 from venture.venturemagics.ip_parallel import MRipl
 from venture.unit import *
@@ -245,6 +246,7 @@ def _testCompareSnapshots(riplThunk):
     return report.statsDict['p']['KSSameContinuous']
 
 @gen_on_inf_prim("mh")
+@attr("graphical") # Tcl complains about no display if this is run too headless
 def testCompareSnapshots():
     riplThunks = (get_ripl, lambda: get_mripl(no_ripls=4))
     for riplThunk in riplThunks:

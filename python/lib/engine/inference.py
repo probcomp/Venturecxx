@@ -19,6 +19,7 @@ from pandas import DataFrame, Index
 
 from venture.lite.value import (ExpressionType, SymbolType, VentureArray, VentureSymbol,
                                 VentureInteger)
+from venture.lite.utils import logWeightsToNormalizedDirect
 from venture.ripl.utils import strip_types_from_dict_values
 from plot_spec import PlotSpec
 
@@ -122,7 +123,10 @@ class Infer(object):
   def resample_threaded(self, ct): self.engine.resample(ct, 'threaded')
   def resample_thread_ser(self, ct): self.engine.resample(ct, 'thread_ser')
   def resample_multiprocess(self, ct): self.engine.resample(ct, 'multiprocess')
-  def incorporate(self): pass # Since we incorporate at the beginning anyway
+  def enumerative_diversify(self, scope, block): self.engine.diversify(["enumerative", scope, block])
+  def collapse_equal(self, scope, block): self.engine.collapse(scope, block)
+  def collapse_equal_map(self, scope, block): self.engine.collapse_map(scope, block)
+  def incorporate(self): self.engine.trace_handler.incorporate()
   def peek(self, *exprs):
     names, stack_dicts = self.parse_exprs(exprs, 'peek')
     self._init_peek(names, exprs, stack_dicts)
@@ -156,9 +160,17 @@ class Infer(object):
     names, stack_dicts = self.parse_exprs(exprs, 'plotf')
     self._init_plot(None, names, exprs, stack_dicts, callback=self.engine.callbacks[name])
     self.result._add_data(self.engine, 'call_back_accum')
+  def assume(self, sym, exp):
+    self.engine.assume(SymbolType().asPython(sym), exp.asStackDict())
+  def observe(self, exp, val):
+    self.engine.observe(exp.asStackDict(), val.asStackDict())
+  def predict(self, exp):
+    self.engine.predict(exp.asStackDict())
 
-  def particle_weights(self):
-    return self.engine.trace_handler.weights
+  def particle_log_weights(self):
+    return self.engine.trace_handler.log_weights
+  def particle_normalized_probs(self):
+    return logWeightsToNormalizedDirect(self.particle_log_weights())
 
 class InferResult(object):
   '''
@@ -253,9 +265,9 @@ class InferResult(object):
 
   def _collect_default_streams(self, engine):
     the_time = time.time() - self.time
-    self._this_iter_data['sweep count'] = [self.sweep] * engine.n_traces
-    self._this_iter_data['particle id'] = range(engine.n_traces)
-    self._this_iter_data['time (s)'] = [the_time] * engine.n_traces
+    self._this_iter_data['sweep count'] = [self.sweep] * engine.num_traces()
+    self._this_iter_data['particle id'] = range(engine.num_traces())
+    self._this_iter_data['time (s)'] = [the_time] * engine.num_traces()
     self._this_iter_data['log score'] = engine.logscore_all()
 
   def _collect_requested_streams(self, engine, command):

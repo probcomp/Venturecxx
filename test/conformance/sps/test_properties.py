@@ -101,7 +101,9 @@ def testRandom():
   for (name,sp) in relevantSPs():
     if sp.outputPSP.isRandom():
       if not name in ["make_uc_dir_mult", "categorical", "make_uc_sym_dir_mult",
-                      "log_bernoulli", "log_flip"]: # Because the default distribution does a bad job of picking arguments at which log_bernoulli's output actually varies.
+                      "log_bernoulli", "log_flip",  # Because the default distribution does a bad job of picking arguments at which log_bernoulli's output actually varies.
+                      "noisy_id" # Because it intentionally pretends to be random even though it's not.
+      ]:
         yield checkRandom, name, sp
 
 def checkRandom(_name, sp):

@@ -399,6 +399,7 @@ class VentureScriptParser(object):
         # grammar is located in the utils.py file
         instruction_list = [
             # Directives
+            ['define','<!define> <symbol:sym> = <expression:exp>'],
             ['assume','<!assume> <symbol:sym> = <expression:exp>'],
             ['labeled_assume','<label:sym> : <!assume> <symbol:sym> = <expression:exp>'],
             ['observe','<!observe> <expression:exp> = <value:lit>'],
@@ -458,6 +459,13 @@ class VentureScriptParser(object):
     def unparse_expression(self, _expression):
         # FIXME: implementation
         raise VentureException("VentureScript can't unparse expressions :(")
+
+    def unparse_instruction(self, instruction):
+        def unparse(k, v):
+            return self.unparse_expression(v) if k == 'expression' else v
+        template = self.instruction_strings[instruction['instruction']]
+        param = dict((k, unparse(k, v)) for k, v in instruction.iteritems())
+        return self.substitute_params(template, param)
 
     def parse_number(self, number_string):
         return utils.apply_parser(self.literal, number_string)[0]

@@ -13,11 +13,21 @@ def registerDeterministicLKernels(trace,scaffold,pnodes,currentValues):
     assert not isinstance(currentValue,list)
     scaffold.lkernels[pnode] = DeterministicLKernel(trace.pspAt(pnode),currentValue)
 
+def getCurrentValuesWithAddresses(trace,pnodes): return [(pnode.address, trace.valueAt(pnode)) for pnode in pnodes]
+
+def registerDeterministicLKernelsByAddress(trace,scaffold,addressesAndValues):
+  nodes = dict([(node.address, node) for node in scaffold.getPrincipalNodes()])
+  for (addr,currentValue) in addressesAndValues:
+    assert not isinstance(currentValue,list)
+    assert addr in nodes
+    node = nodes[addr]
+    scaffold.lkernels[node] = DeterministicLKernel(trace.pspAt(node),currentValue)
+
 def mixMH(trace,indexer,operator):
   start = time.time()
   index = indexer.sampleIndex(trace)
   
-  # read out some node addresses
+  # read out some node addresses for the benefit of the profiler
   getAddr = lambda node: node.address
   principal = map(getAddr, index.getPrincipalNodes())
   absorbing = map(getAddr, index.absorbing)
@@ -56,7 +66,7 @@ def mixMH(trace,indexer,operator):
 
 class BlockScaffoldIndexer(object):
   def __init__(self,scope,block,interval=None,useDeltaKernels=False,deltaKernelArgs=None,updateValues=False):
-    if scope == "default" and not (block == "all" or block == "one" or block == "ordered"):
+    if scope == "default" and not (block == "all" or block == "none" or block == "one" or block == "ordered"):
         raise Exception("INFER default scope does not admit custom blocks (%r)" % block)
     self.scope = scope
     self.block = block
@@ -70,6 +80,7 @@ class BlockScaffoldIndexer(object):
       self.true_block = trace.sampleBlock(self.scope)
       setsOfPNodes = [trace.getNodesInBlock(self.scope,self.true_block)]
     elif self.block == "all": setsOfPNodes = [trace.getAllNodesInScope(self.scope)]
+    elif self.block == "none": setsOfPNodes = [set()]
     elif self.block == "ordered": setsOfPNodes = trace.getOrderedSetsInScope(self.scope)
     elif self.block == "ordered_range":
       assert self.interval
@@ -84,6 +95,7 @@ class BlockScaffoldIndexer(object):
   def logDensityOfIndex(self,trace,_):
     if self.block == "one": return trace.logDensityOfBlock(self.scope)
     elif self.block == "all": return 0
+    elif self.block == "none": return 0
     elif self.block == "ordered": return 0
     elif self.block == "ordered_range": return 0
     else: return 0

@@ -30,6 +30,12 @@ class VentureEnvironment(VentureValue):
     if sym in self.frame: return self.frame[sym]
     elif not self.outerEnv: raise VentureError("Cannot find symbol '%s'" % sym)
     else: return self.outerEnv.findSymbol(sym)
+
+  def symbolBound(self, sym):
+    if sym in self.frame: return True
+    elif not self.outerEnv: return False
+    else: return self.outerEnv.symbolBound(sym)
+
   # VentureEnvironments are intentionally not comparable until we
   # decide otherwise
 

@@ -12,7 +12,7 @@ class EmptyList(object):
   def append(self, last):
     return List(last, self)
 
-  def map(self, f):
+  def map(self, _f):
     return self
   
   def isEmpty(self):
@@ -21,7 +21,7 @@ class EmptyList(object):
   def __contains__(self, x):
     return False
   
-  def remove(self, x):
+  def remove(self, _x):
     return self
   
 emptyList = EmptyList()
@@ -84,5 +84,16 @@ class Address(List):
   def asList(self):
     """Converts to nested lists."""
     return map(list, list(self))
+
+  def asFrozenList(self):
+    return tuple(map(tuple, list(self)))
+
+  def __eq__(self, other):
+    if not isinstance(other, Address):
+      return False
+    return self.asFrozenList() == other.asFrozenList()
+
+  def __hash__(self):
+    return hash(self.asFrozenList())
 
 emptyAddress = Address(emptyList)

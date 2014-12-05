@@ -7,4 +7,4 @@ cd "$my_dirname"
 
 set -xe
 venture lite -e '[infer (printf (normal 0 1))]'
-./sanity_tests.sh
+nosetests -c unattended.cfg

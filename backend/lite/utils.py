@@ -51,9 +51,9 @@ def logDensityDirichlet(theta, alpha):
 
   return ss.gammaln(sum(alpha)) - sum(ss.gammaln(alpha)) + np.dot((alpha - 1).T, np.log(theta).T)
 
-# why not use itertools.prod?
+# CONSIDER why not use itertools.prod?
 def cartesianProduct(original):
-  if len(original) == 0: return []
+  if len(original) == 0: return [[]]
   elif len(original) == 1: return [[x] for x in original[0]]
   else:
     firstGroup = original[0]
@@ -64,6 +64,11 @@ def logaddexp(items):
   "Apparently this was added to scipy in a later version than the one installed on my machine.  Sigh."
   the_max = max(items)
   return the_max + math.log(sum(math.exp(item - the_max) for item in items))
+
+def logWeightsToNormalizedDirect(logs):
+  "Converts an unnormalized categorical distribution given in logspace to a normalized one given in direct space"
+  the_max = max(logs)
+  return normalizeList([math.exp(log - the_max) for log in logs])
 
 def sampleLogCategorical(logs):
   "Samples from an unnormalized categorical distribution given in logspace."

@@ -22,7 +22,7 @@ from venture.exception import VentureException
 from trace_handler import (dump_trace, restore_trace, SynchronousTraceHandler,
                            SynchronousSerializingTraceHandler, ThreadedTraceHandler,
                            ThreadedSerializingTraceHandler, MultiprocessingTraceHandler)
-from venture.lite.utils import sampleLogCategorical
+from venture.lite.utils import sampleLogCategorical, logaddexp
 from venture.engine.inference import Infer
 import venture.value.dicts as v
 
@@ -38,19 +38,21 @@ def is_picklable(obj):
 
 class Engine(object):
 
-  def __init__(self, name="phony", Trace=None):
+  def __init__(self, name="phony", Trace=None, persistent_inference_trace=False):
     self.name = name
     self.Trace = Trace
     self.directiveCounter = 0
     self.directives = {}
     self.inferrer = None
-    self.n_traces = 1
     self.mode = 'sequential'
     self.trace_handler = self.create_handler([Trace()])
     import venture.lite.inference_sps as inf
     self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
     self.callbacks = {}
+    self.persistent_inference_trace = persistent_inference_trace
+    if self.persistent_inference_trace:
+      (self.infer_trace, self.last_did) = self.init_inference_trace()
 
   def trace_handler_constructor(self, mode):
     if mode == 'multiprocess':
@@ -64,8 +66,14 @@ class Engine(object):
     else:
       return SynchronousTraceHandler
 
-  def create_handler(self, traces):
-    return self.trace_handler_constructor(self.mode)(traces, self.name)
+  def create_handler(self, traces, weights=None):
+    ans = self.trace_handler_constructor(self.mode)(traces, self.name)
+    if weights is not None:
+      ans.log_weights = weights
+    return ans
+
+  def num_traces(self):
+    return len(self.trace_handler.log_weights)
 
   def inferenceSPsList(self):
     return self.inference_sps.iteritems()
@@ -82,6 +90,13 @@ class Engine(object):
   def nextBaseAddr(self):
     self.directiveCounter += 1
     return self.directiveCounter
+
+  def define(self, id, datum):
+    assert self.persistent_inference_trace, "Define only works if the inference trace is persistent"
+    self.last_did += 1
+    self.infer_trace.eval(self.last_did, self.macroexpand_inference(datum))
+    self.infer_trace.bindInGlobalEnv(id, self.last_did)
+    return self.infer_trace.extractValue(self.last_did)
 
   def assume(self,id,datum):
     baseAddr = self.nextBaseAddr()
@@ -220,22 +235,66 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def resample(self, P, mode = 'sequential'):
     self.mode = mode
-    self.trace_handler = self.create_handler(self._resample_setup(P))
-
-  def _resample_setup(self, P):
     newTraces = self._resample_traces(P)
     del self.trace_handler
-    return newTraces
+    self.trace_handler = self.create_handler(newTraces)
+    self.trace_handler.incorporate()
 
   def _resample_traces(self, P):
     P = int(P)
-    self.n_traces = P
     newTraces = [None for p in range(P)]
     for p in range(P):
-      parent = sampleLogCategorical(self.trace_handler.weights) # will need to include or rewrite
+      parent = sampleLogCategorical(self.trace_handler.log_weights) # will need to include or rewrite
       newTrace = self.copy_trace(self.retrieve_trace(parent))
       newTraces[p] = newTrace
     return newTraces
+
+  def diversify(self, program):
+    traces = self.retrieve_traces()
+    weights = self.trace_handler.log_weights
+    new_traces = []
+    new_weights = []
+    for (t, w) in zip(traces, weights):
+      for (res_t, res_w) in zip(*(t.diversify(program, self.copy_trace))):
+        new_traces.append(res_t)
+        new_weights.append(w + res_w)
+    del self.trace_handler
+    self.trace_handler = self.create_handler(new_traces, new_weights)
+
+  def _collapse_help(self, scope, block, select_keeper):
+    traces = self.retrieve_traces()
+    weights = self.trace_handler.log_weights
+    fingerprints = [t.block_values(scope, block) for t in traces]
+    def grouping():
+      "Because sorting doesn't do what I want on dicts, so itertools.groupby is not useful"
+      groups = [] # :: [(fingerprint, [trace], [weight])]  Not a dict because the fingerprints are not hashable
+      for (t, w, f) in zip(traces, weights, fingerprints):
+        try:
+          place = [g[0] for g in groups].index(f)
+        except ValueError:
+          place = len(groups)
+          groups.append((f, [], []))
+        groups[place][1].append(t)
+        groups[place][2].append(w)
+      return groups
+    groups = grouping()
+    new_ts = []
+    new_ws = []
+    for (_, ts, ws) in groups:
+      index = select_keeper(ws)
+      new_ts.append(self.copy_trace(ts[index]))
+      new_ts[-1].makeConsistent()
+      new_ws.append(logaddexp(ws))
+    del self.trace_handler
+    self.trace_handler = self.create_handler(new_ts, new_ws)
+
+  def collapse(self, scope, block):
+    self._collapse_help(scope, block, sampleLogCategorical)
+
+  def collapse_map(self, scope, block):
+    def max_ind(lst):
+      return lst.index(max(lst))
+    self._collapse_help(scope, block, max_ind)
 
   def infer(self, program):
     self.trace_handler.incorporate()
@@ -248,7 +307,9 @@ effect of renumbering the directives, if some had been forgotten."""
       return self.infer_v1_pre_t(exp, Infer(self))
 
   def macroexpand_inference(self, program):
-    if type(program) is list and type(program[0]) is dict and program[0]["value"] == "cycle":
+    if type(program) is list and len(program) == 0:
+      return program
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "cycle":
       assert len(program) == 3
       subkernels = self.macroexpand_inference(program[1])
       transitions = self.macroexpand_inference(program[2])
@@ -267,49 +328,89 @@ effect of renumbering the directives, if some had been forgotten."""
       return [program[0], [v.sym("simplex")] + weights, [v.sym("array")] + subkernels, transitions]
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == 'peek':
       assert len(program) >= 2
-      return [program[0]] + [v.quote(e) for e in program[1:]]
+      return [program[0]] + [v.quasiquote(e) for e in program[1:]]
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "printf":
       assert len(program) >= 2
-      return [program[0]] + [v.quote(e) for e in program[1:]]
+      return [program[0]] + [v.quasiquote(e) for e in program[1:]]
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "plotf":
       assert len(program) >= 2
-      return [program[0]] + [v.quote(e) for e in program[1:]]
+      return [program[0]] + [v.quasiquote(e) for e in program[1:]]
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "plotf_to_file":
       assert len(program) >= 2
-      return [program[0]] + [v.quote(e) for e in program[1:]]
+      return [program[0]] + [v.quasiquote(e) for e in program[1:]]
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "call_back":
       assert len(program) >= 2
-      return [program[0]] + [v.quote(e) for e in program[1:]]
+      return [program[0]] + [v.quasiquote(e) for e in program[1:]]
     elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "call_back_accum":
       assert len(program) >= 2
-      return [program[0]] + [v.quote(e) for e in program[1:]]
+      return [program[0]] + [v.quasiquote(e) for e in program[1:]]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "assume":
+      assert len(program) == 3
+      return [program[0], v.quote(program[1]), v.quasiquote(program[2])]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "observe":
+      assert len(program) == 3
+      return [program[0], v.quasiquote(program[1]), program[2]]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "predict":
+      assert len(program) == 2
+      return [program[0], v.quasiquote(program[1])]
+    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "begin":
+      assert len(program) >= 2
+      return [v.sym("sequence"), [v.sym("list")] + [self.macroexpand_inference(e) for e in program[1:]]]
     elif type(program) is list: return [self.macroexpand_inference(p) for p in program]
     else: return program
 
   def infer_v1_pre_t(self, program, target):
+    if not self.persistent_inference_trace:
+      (self.infer_trace, self.last_did) = self.init_inference_trace()
+    self.install_self_evaluating_scope_hack(self.infer_trace, target)
+    try:
+      self.last_did += 1
+      self.infer_trace.eval(self.last_did, [program, v.blob(target)])
+      ans = self.infer_trace.extractValue(self.last_did)
+      assert isinstance(ans, dict)
+      assert ans["type"] is "blob"
+      assert isinstance(ans["value"], Infer)
+      return ans["value"].final_data()
+    finally:
+      if self.persistent_inference_trace:
+        self.remove_self_evaluating_scope_hack(self.infer_trace, target)
+      else:
+        self.infer_trace = None
+        self.last_did = None
+
+  def init_inference_trace(self):
     import venture.lite.trace as lite
-    next_trace = lite.Trace()
-    # TODO Import the enclosing lexical environment into the new trace?
-    import venture.lite.inference_sps as inf
-    import venture.lite.value as val
+    ans = lite.Trace()
+    for name,sp in self.inferenceSPsList():
+      ans.bindPrimitiveSP(name, sp)
+    free_did = self.install_inference_prelude(ans)
+    return (ans, free_did)
+
+  def symbol_scopes(self, target):
     all_scopes = [s for s in target.engine.getDistinguishedTrace().scope_keys()]
     symbol_scopes = [s for s in all_scopes if isinstance(s, basestring) and not s.startswith("default")]
+    return symbol_scopes
+
+  def install_self_evaluating_scope_hack(self, next_trace, target):
+    import venture.lite.inference_sps as inf
+    import venture.lite.value as val
+    symbol_scopes = self.symbol_scopes(target)
     for hack in inf.inferenceKeywords + symbol_scopes:
-      next_trace.bindPrimitiveName(hack, val.VentureSymbol(hack))
-    for name,sp in self.inferenceSPsList():
-      next_trace.bindPrimitiveSP(name, sp)
-    self.install_inference_prelude(next_trace)
-    next_trace.eval(4, [program, v.blob(target)])
-    ans = next_trace.extractValue(4)
-    assert isinstance(ans, dict)
-    assert ans["type"] is "blob"
-    assert isinstance(ans["value"], Infer)
-    return ans["value"].final_data()
+      if not next_trace.globalEnv.symbolBound(hack):
+        next_trace.bindPrimitiveName(hack, val.VentureSymbol(hack))
+
+  def remove_self_evaluating_scope_hack(self, next_trace, target):
+    import venture.lite.inference_sps as inf
+    symbol_scopes = self.symbol_scopes(target)
+    for hack in inf.inferenceKeywords + symbol_scopes:
+      if next_trace.globalEnv.symbolBound(hack):
+        next_trace.unbindInGlobalEnv(hack)
 
   def install_inference_prelude(self, next_trace):
     for did, (name, exp) in enumerate(_inference_prelude()):
       next_trace.eval(did, exp)
       next_trace.bindInGlobalEnv(name, did)
+    return len(_inference_prelude())
 
   def primitive_infer(self, exp):
     self.trace_handler.delegate('primitive_infer', exp)
@@ -367,7 +468,7 @@ effect of renumbering the directives, if some had been forgotten."""
   def save(self, fname, extra=None):
     data = {}
     data['traces'] = self.retrieve_dumps()
-    data['weights'] = self.trace_handler.weights
+    data['log_weights'] = self.trace_handler.log_weights
     data['directives'] = self.directives
     data['directiveCounter'] = self.directiveCounter
     data['mode'] = self.mode
@@ -385,19 +486,16 @@ effect of renumbering the directives, if some had been forgotten."""
     self.mode = data['mode']
     traces = [self.restore_trace(trace) for trace in data['traces']]
     del self.trace_handler
-    self.trace_handler = self.create_handler(traces)
-    self.trace_handler.weights = data['weights']
+    self.trace_handler = self.create_handler(traces, data['log_weights'])
     return data['extra']
 
   def convert(self, EngineClass):
     engine = EngineClass()
     engine.directiveCounter = self.directiveCounter
     engine.directives = self.directives
-    engine.n_traces = self.n_traces
     engine.mode = self.mode
     traces = [engine.restore_trace(dump) for dump in self.retrieve_dumps()]
-    engine.trace_handler = engine.create_handler(traces)
-    engine.trace_handler.weights = self.trace_handler.weights
+    engine.trace_handler = engine.create_handler(traces, self.trace_handler.log_weights)
     return engine
 
   def to_lite(self):
@@ -471,8 +569,10 @@ def _compute_inference_prelude():
   (if (is_pair ks)
       (lambda (t) ((sequence (rest ks)) ((first ks) t)))
       (lambda (t) t)))"""],
+        ["begin", "sequence"],
         ["mixture", """(lambda (weights kernels transitions)
-  (iterate (lambda (t) ((categorical weights kernels) t)) transitions))"""]]:
+  (iterate (lambda (t) ((categorical weights kernels) t)) transitions))"""],
+        ["pass", "(lambda (t) t)"]]:
     from venture.parser.church_prime_parser import ChurchPrimeParser
     from venture.sivm.macro import desugar_expression
     from venture.sivm.core_sivm import _modify_expression

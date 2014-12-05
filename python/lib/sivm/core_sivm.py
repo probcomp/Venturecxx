@@ -33,7 +33,7 @@ class CoreSivm(object):
         self.observe_dict = {}
         self.profiler_enabled = False
     
-    _implemented_instructions = {"assume","observe","predict",
+    _implemented_instructions = {"define","assume","observe","predict",
             "configure","forget","freeze","report","infer",
             "clear","rollback","get_logscore","get_global_logscore",
             "start_continuous_inference","stop_continuous_inference",
@@ -62,6 +62,15 @@ class CoreSivm(object):
     ###############################
     # Instruction implementations
     ###############################
+
+    def _do_define(self,instruction):
+        utils.require_state(self.state,'default')
+        exp = utils.validate_arg(instruction,'expression',
+                utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
+        sym = utils.validate_arg(instruction,'symbol',
+                utils.validate_symbol)
+        val = self.engine.define(sym,exp)
+        return {"value":val}
 
     #FIXME: remove the modifier arguments in new implementation
     def _do_assume(self,instruction):

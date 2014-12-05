@@ -37,7 +37,7 @@ class VentureSivm(object):
             'list_directives','get_directive','labeled_get_directive',
             'force','sample','get_current_exception',
             'get_state', 'reset', 'debugger_list_breakpoints','debugger_get_breakpoint'}
-    _core_instructions = {"assume","observe","predict",
+    _core_instructions = {"define","assume","observe","predict",
             "configure","forget","freeze","report","infer","start_continuous_inference",
             "stop_continuous_inference","continuous_inference_status",
             "clear","rollback","get_logscore","get_global_logscore",
@@ -104,11 +104,11 @@ class VentureSivm(object):
     ###############################
 
     def _call_core_sivm_instruction(self,instruction):
-        desugared_instruction = copy.deepcopy(instruction)
+        desugared_instruction = copy.copy(instruction)
         instruction_type = instruction['instruction']
         sugar = None
         # desugar the expression
-        if instruction_type in ['assume','observe','predict']:
+        if instruction_type in ['define','assume','observe','predict']:
             exp = utils.validate_arg(instruction,'expression',
                     utils.validate_expression, wrap_exception=False)
             sugar = macro.expand(exp)
@@ -126,13 +126,14 @@ class VentureSivm(object):
         try:
             response = self.core_sivm.execute_instruction(desugared_instruction)
         except VentureException as e:
+            # raise # One can suppress error annotation by uncommenting this
             if e.exception == "evaluation":
                 self.state='exception'
                 
                 address = e.data['address'].asList()
                 del e.data['address']
                 e.data['stack_trace'] = [self._resugar(index) for index in address]
-                
+
                 self.current_exception = e.to_json_object()
             if e.exception == "breakpoint":
                 self.state='paused'
@@ -170,14 +171,14 @@ class VentureSivm(object):
             tmp_instruction['directive_id'] = did
             for key in ('instruction', 'expression', 'symbol', 'value'):
                 if key in instruction:
-                    tmp_instruction[key] = copy.deepcopy(instruction[key])
+                    tmp_instruction[key] = copy.copy(instruction[key])
             self.directive_dict[did] = tmp_instruction
             self.sugar_dict[did] = self.attempted
         # save the breakpoint if the instruction sets the breakpoint
         if instruction_type in ['debugger_set_breakpoint_address',
                 'debugger_set_breakpoint_source_code_location']:
             bid = response['breakpoint_id']
-            tmp_instruction = copy.deepcopy(instruction)
+            tmp_instruction = copy.copy(instruction)
             tmp_instruction['breakpoint_id'] = bid
             del tmp_instruction['instruction']
             self.breakpoint_dict[bid] = tmp_instruction

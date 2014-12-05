@@ -8,7 +8,8 @@ from detach import unconstrain, unevalFamily
 from value import SPRef, ExpressionType, VentureValue, VentureSymbol, VentureNumber
 from scaffold import Scaffold
 from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
-                   EnumerativeGibbsOperator,EnumerativeMAPOperator,PGibbsOperator,ParticlePGibbsOperator,
+                   EnumerativeGibbsOperator,EnumerativeMAPOperator,EnumerativeDiversify,
+                   PGibbsOperator,ParticlePGibbsOperator,ParticlePMAPOperator,
                    RejectionOperator, MissingEsrParentError, NoSPRefError,
                    HamiltonianMonteCarloOperator, MAPOperator, StepOutSliceOperator,
                    DoublingSliceOperator, NesterovAcceleratedGradientAscentOperator,
@@ -469,6 +470,13 @@ class Trace(object):
           mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block)), ParticlePGibbsOperator(particles))
         else:
           mixMH(self, BlockScaffoldIndexer(scope, block), ParticlePGibbsOperator(particles))
+      elif operator == "func_pmap":
+        particles = int(exp[3])
+        if isinstance(block, list): # Ordered range
+          (_, min_block, max_block) = block
+          mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block)), ParticlePMAPOperator(particles))
+        else:
+          mixMH(self, BlockScaffoldIndexer(scope, block), ParticlePMAPOperator(particles))
       elif operator == "map":
         (rate, steps) = exp[3:5]
         mixMH(self, BlockScaffoldIndexer(scope, block), MAPOperator(rate, int(steps)))
@@ -480,6 +488,27 @@ class Trace(object):
       else: raise Exception("INFER %s is not implemented" % operator)
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
+
+  def diversify(self, exp, copy_trace):
+    """Return the pair of parallel lists of traces and weights that
+results from applying the given expression as a diversification
+operator.  Duplicate self if necessary with the provided copy_trace
+function.
+
+    """
+    assert len(exp) >= 3
+    (operator, scope, block) = exp[0:3]
+    scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
+    if operator == "enumerative":
+      return EnumerativeDiversify(copy_trace)(self, BlockScaffoldIndexer(scope, block))
+    else: raise Exception("DIVERSIFY %s is not implemented" % operator)
+
+  def block_values(self, scope, block):
+    """Return a map between the addresses and values of principal nodes in
+the scaffold determined by the given expression."""
+    scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
+    scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
+    return dict([(node.address, self.valueAt(node)) for node in scaffold.getPrincipalNodes()])
 
   def get_seed(self):
     # TODO Trace does not support seed control because it uses
