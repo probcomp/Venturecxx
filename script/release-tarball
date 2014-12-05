@@ -50,4 +50,4 @@ tar --create --verbose -j --file ../venture-$release.tar.bz2 --directory .. \
     --exclude=venture-*.tar \
     Venturecxx/
 
-md5sum ../venture-$release.tgz
+md5sum ../venture-$release.tar.bz2
