@@ -83,6 +83,18 @@ VentureValuePtr ArrayOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) c
   return VentureValuePtr(new VentureArray(args->operandValues));
 }
 
+VentureValuePtr ToArrayOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  vector<VentureValuePtr> a;
+
+  BOOST_FOREACH(VentureValuePtr v, args->operandValues[0]->getArray())
+  {
+    a.push_back(v);
+  }
+
+  return VentureValuePtr(new VentureArray(a));
+}
+
 VentureValuePtr PrependOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("prepend", args, 2);
