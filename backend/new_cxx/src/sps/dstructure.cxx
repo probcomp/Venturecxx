@@ -17,18 +17,18 @@ VentureValuePtr ToSimplexOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rn
 {
   Simplex s;
   double sum = 0;
-  
+
   BOOST_FOREACH(VentureValuePtr v, args->operandValues[0]->getArray())
   {
     s.push_back(v->getDouble());
     sum += s.back();
   }
-  
+
   for (size_t i = 0; i < s.size(); ++i)
   {
     s[i] /= sum;
   }
-  
+
   return VentureValuePtr(new VentureSimplex(s));
 }
 
