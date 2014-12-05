@@ -461,7 +461,8 @@ def plot_xgiveny(mr,y,no_transitions=100):
     obs_label = [di for di in mr.list_directives()[0] if di['instruction']=='observe' and di.get('label')]
     # labels should have form 'y1','y2', etc.
     if obs_label:
-        y_nums = [int(di['label'][1:]) for di in obs_label if di['label'].startswith('y')]
+        y_nums = [int(di['label']['value'][1:]) for di in obs_label
+            if di['label']['value'].startswith('y')]
         next_label = max(y_nums)+1
     else:
         next_label = int(np.random.randint(1000,10**8))

@@ -295,7 +295,7 @@ class VentureSivm(object):
     def get_directive(self, did):
         tmp = copy.deepcopy(self.directive_dict[did])
         if did in self.did_dict:
-            tmp['label'] = self.did_dict[did]
+            tmp['label'] = v.symbol(self.did_dict[did])
             #tmp['instruction'] = 'labeled_' + tmp['instruction']
         return tmp
     
@@ -414,6 +414,7 @@ class VentureSivm(object):
         if label==None:
             d = {'instruction': 'assume', 'symbol':name, 'expression':expression}
         else:
+            label = v.symbol(label)
             d = {'instruction': 'labeled_assume', 'symbol':name, 'expression':expression,'label':label}
         return self.execute_instruction(d)
 
@@ -421,28 +422,29 @@ class VentureSivm(object):
         if label==None:
             d = {'instruction': 'predict', 'expression':expression}
         else:
-            d = {'instruction': 'labeled_predict', 'expression':expression,'label':label}
+            d = {'instruction': 'labeled_predict', 'expression':expression,'label':v.symbol(label)}
         return self.execute_instruction(d)
 
     def observe(self, expression, value, label=None):
         if label==None:
             d = {'instruction': 'observe', 'expression':expression, 'value':value}
         else:
-            d = {'instruction': 'labeled_observe', 'expression':expression, 'value':value, 'label':label}
+            label = v.symbol(label)
+            d = {'instruction': 'labeled_observe', 'expression':expression, 'value':value, 'label':v.symbol(label)}
         return self.execute_instruction(d)
 
     def forget(self, label_or_did):
         if isinstance(label_or_did,int):
             d = {'instruction':'forget','directive_id':label_or_did}
         else:
-            d = {'instruction':'labeled_forget','label':label_or_did}
+            d = {'instruction':'labeled_forget','label':v.symbol(label_or_did)}
         return self.execute_instruction(d)
 
     def report(self, label_or_did):
         if isinstance(label_or_did,int):
             d = {'instruction':'report','directive_id':label_or_did}
         else:
-            d = {'instruction':'labeled_report','label':label_or_did}
+            d = {'instruction':'labeled_report','label':v.symbol(label_or_did)}
         return self.execute_instruction(d)
 
     def infer(self, params=None):

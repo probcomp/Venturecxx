@@ -395,6 +395,7 @@ value to be returned as a dict annotating its Venture type.
         if label==None:
             i = {'instruction':'assume', 'symbol':name, 'expression':expression}
         else:
+            label = v.symbol(label)
             i = {'instruction':'labeled_assume',
                   'symbol':name, 'expression':expression, 'label':label}
         value = self.execute_instruction(i)['value']
@@ -404,6 +405,7 @@ value to be returned as a dict annotating its Venture type.
         if label==None:
             i = {'instruction':'predict', 'expression':expression}
         else:
+            label = v.symbol(label)
             i = {'instruction':'labeled_predict', 'expression':expression, 'label':label}
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
@@ -412,6 +414,7 @@ value to be returned as a dict annotating its Venture type.
         if label==None:
             i = {'instruction':'observe', 'expression':expression, 'value':value}
         else:
+            label = v.symbol(label)
             i = {'instruction':'labeled_observe', 'expression':expression, 'value':value, 'label':label}
         self.execute_instruction(i)
         return None
@@ -522,7 +525,8 @@ Open issues:
                 self._n_prelude -= 1
         else:
             # assume that prelude instructions don't have labels
-            i = {'instruction':'labeled_forget', 'label':label_or_did}
+            i = {'instruction':'labeled_forget',
+                 'label':v.symbol(label_or_did)}
         self.execute_instruction(i)
         return None
 
@@ -530,7 +534,8 @@ Open issues:
         if isinstance(label_or_did,int):
             i = {'instruction':'freeze', 'directive_id':label_or_did}
         else:
-            i = {'instruction':'labeled_freeze', 'label':label_or_did}
+            i = {'instruction':'labeled_freeze',
+                 'label':v.symbol(label_or_did)}
         self.execute_instruction(i)
         return None
 
@@ -538,7 +543,8 @@ Open issues:
         if isinstance(label_or_did,int):
             i = {'instruction':'report', 'directive_id':label_or_did}
         else:
-            i = {'instruction':'labeled_report', 'label':label_or_did}
+            i = {'instruction':'labeled_report',
+                 'label':v.symbol(label_or_did)}
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 
@@ -618,7 +624,8 @@ Open issues:
         if isinstance(label_or_did,int):
             i = {'instruction':'get_directive', 'directive_id':label_or_did}
         else:
-            i = {'instruction':'labeled_get_directive', 'label':label_or_did}
+            i = {'instruction':'labeled_get_directive',
+                 'label':v.symbol(label_or_did)}
         return self.execute_instruction(i)['directive']
 
     def force(self, expression, value):
@@ -658,7 +665,8 @@ Open issues:
         if isinstance(label_or_did,int):
             i = {'instruction':'get_logscore', 'directive_id':label_or_did}
         else:
-            i = {'instruction':'labeled_get_logscore', 'label':label_or_did}
+            i = {'instruction':'labeled_get_logscore',
+                 'label':v.symbol(label_or_did)}
         return self.execute_instruction(i)['logscore']
 
     def get_global_logscore(self):
