@@ -3,7 +3,7 @@ to be sufficiently expressive, extensible, and efficient for
 general-purpose use.  We intend Venture to be useful in all domains
 and areas where software must deal with uncertainty or potentially
 incomplete models.  This includes the traditional fields of machine
-learning, statistcs, and artifical intelligence; traditional domains
+learning, statistics, and artificial intelligence; traditional domains
 where those methods have found fruit, such as robotics, finance,
 economics, computer vision, scientific simulation, political science,
 and natural language processing; and potential applications in new
