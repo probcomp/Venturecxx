@@ -375,6 +375,7 @@ class Ripl():
     ############################################
 
     def define(self, name, expression, type=False):
+        name = v.symbol(name)
         i = {'instruction':'define', 'symbol':name, 'expression':expression}
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
@@ -390,6 +391,7 @@ The `type` argument, if supplied and given a true value, causes the
 value to be returned as a dict annotating its Venture type.
 
         '''
+        name = v.symbol(name)
         if label==None:
             i = {'instruction':'assume', 'symbol':name, 'expression':expression}
         else:
