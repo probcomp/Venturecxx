@@ -466,7 +466,10 @@ class ChurchPrimeParser(object):
     def unparse_integer(self, integer):
         return str(integer)
     def unparse_symbol(self, symbol):
-        return str(symbol)
+        assert isinstance(symbol, dict)
+        assert 'type' in symbol
+        assert symbol['type'] == 'symbol'
+        return tagged_value_to_string(symbol)
     def unparse_value(self, value):
         return value_to_string(value)
     def unparse_json(self, obj):
