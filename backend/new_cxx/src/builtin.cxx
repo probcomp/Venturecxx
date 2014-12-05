@@ -101,6 +101,7 @@ map<string,SP*> initBuiltInSPs()
   m["id_matrix"] = new SP(new NullRequestPSP(), new IdentityMatrixOutputPSP());
   m["vector"] = new SP(new NullRequestPSP(), new VectorOutputPSP());
   m["is_vector"] = new SP(new NullRequestPSP(), new IsVectorOutputPSP());
+  m["to_vector"] = new SP(new NullRequestPSP(), new ToVectorOutputPSP());
 
   /* Scoping */
   m["scope_include"] = new SP(new NullRequestPSP(), new ScopeIncludeOutputPSP());

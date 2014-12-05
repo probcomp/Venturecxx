@@ -29,5 +29,10 @@ struct IsVectorOutputPSP : PSP
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };
 
+struct ToVectorOutputPSP : PSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
 
 #endif
