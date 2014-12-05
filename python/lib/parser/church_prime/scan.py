@@ -136,12 +136,15 @@ class Scanner(Plex.Scanner):
     # < and > are angle-brackets, which fall back to operators in grammar.y.
     operator = Plex.Str('+', '-', '*', '/', '<=', '>=', '=', '!=')
     # XXX Hexadecimal, octal, binary?
-    integer = optsign + Plex.Rep1(digit)                # [+/-]NNNN
-    fractional = Plex.Str('.') + Plex.Rep(digit)        # .NNNN
-    integerfractional = integer + Plex.Opt(fractional)  # NNN[.NNNN]
+    digits = Plex.Rep(digit)
+    digits1 = Plex.Rep1(digit)
+    dot = Plex.Str('.')
+    integer = optsign + digits1                         # [+/-]NNNN
+    intfrac = integer + Plex.Opt(dot + digits)          # [+/-]NNN[.[NNNN]]
+    fraconly = optsign + dot + digits1                  # [+/-].NNNN
     expmark = Plex.Any('eE')
     exponent = expmark + optsign + Plex.Rep1(digit)     # (e/E)[+/-]NNN
-    real = optsign + (integerfractional | fractional) + Plex.Opt(exponent)
+    real = (intfrac | fraconly) + Plex.Opt(exponent)
     esc = Plex.Str('\\')
     escchar = Plex.Str(*escapes.keys())
     octal3 = octit + octit + octit
