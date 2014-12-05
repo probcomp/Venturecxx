@@ -320,7 +320,7 @@ def tagged_value_to_string(v):
     assert 'value' in v
     if v['type'] == 'boolean':
         assert v['value'] in set([True, False])
-        return True if v['value'] else False
+        return 'true' if v['value'] else 'false'
     elif v['type'] == 'number':
         assert isinstance(v['value'], int) or isinstance(v['value'], float)
         return str(v['value'])
