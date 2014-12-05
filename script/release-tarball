@@ -46,5 +46,8 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=script/release-tarball \
     --exclude=venture-*.tgz \
     --exclude=venture-*.tar.gz \
+    --exclude=venture-*.tar.bz2 \
     --exclude=venture-*.tar \
     Venturecxx/
+
+md5sum ../venture-$release.tgz
