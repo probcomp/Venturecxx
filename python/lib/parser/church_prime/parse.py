@@ -285,6 +285,7 @@ def parse_church_prime_string(string):
             if lend == -1:
                 lend = len(string)
             e.data['instruction_string'] = string[lstart : lend]
+            e.data['text_index'] = [start - lstart, end - lstart]
         raise e
 
 def parse_instructions(string):
