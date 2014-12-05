@@ -135,6 +135,10 @@ class Scanner(Plex.Scanner):
     name = (letter | underscore) + Plex.Rep(letter | underscore | digit)
     # < and > are angle-brackets, which fall back to operators in grammar.y.
     operator = Plex.Str('+', '-', '*', '/', '<=', '>=', '=', '!=')
+    # `foo<x>' is OK, but not a name, so we don't reject it here.
+    # This fails to helpfully reject 'foo<', but that's OK -- it
+    # doesn't fail to accept valid syntax.
+    badname = Plex.Rep1(letter | underscore | digit | Plex.Any('-+*/=!?.'))
     # XXX Hexadecimal, octal, binary?
     digits = Plex.Rep(digit)
     digits1 = Plex.Rep1(digit)
@@ -167,6 +171,7 @@ class Scanner(Plex.Scanner):
         (integer,       scan_integer),
         (real,          scan_real),
         (Plex.Str('"'), scan_string),
+        (badname,       -1),    # Invalid.
         (Plex.AnyChar,  -1),    # Invalid.
         Plex.State('STRING', [
             (Plex.Str('"'),                     scan_string_end),
