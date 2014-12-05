@@ -1123,6 +1123,31 @@ class ArrayUnboxedType(VentureType):
   def distribution(self, base, **kwargs):
     return base("array_unboxed", elt_type=self.subtype, **kwargs)
 
+class HomogeneousSequenceType(VentureType):
+  """Type objects for homogeneous sequences of any persuasion (lists,
+  arrays, vectors, simplexes).  Right now, the homogeneity is not
+  captured in the implementation, in that on the Venture side such
+  data is still stored as heterogenous Venture arrays.  This type is
+  purely advisory and does not do any conversion.
+
+  """
+  def __init__(self, subtype):
+    assert isinstance(subtype, VentureType)
+    self.subtype = subtype
+  def asVentureValue(self, thing):
+    return thing
+  def asPython(self, vthing):
+    return vthing
+  def __contains__(self, vthing):
+    return (isinstance(vthing, VentureArray) or isinstance(vthing, VentureSimplex) or isinstance(vthing, VentureArrayUnboxed) or vthing in ListType()) and all([val in self.subtype for val in vthing.getArray()])
+  def __eq__(self, other):
+    return type(self) == type(other) and self.subtype == other.subtype
+  def name(self): return "<sequence %s>" % self.subtype.name()
+  def distribution(self, base, **kwargs):
+    # TODO Other types of sequences?
+    return base("array", elt_dist=self.subtype.distribution(base, **kwargs), **kwargs)
+
+
 class ExpressionType(VentureType):
   """A Venture expression is either a Venture self-evaluating object
 (bool, number, integer, atom), or a Venture symbol, or a Venture array of
