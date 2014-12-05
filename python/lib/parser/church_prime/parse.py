@@ -319,8 +319,8 @@ def tagged_value_to_string(v):
     assert 'type' in v
     assert 'value' in v
     if v['type'] == 'boolean':
-        assert v['value'] in set(True, False)
-        return True if v['value'] else False
+        assert v['value'] in set([True, False])
+        return 'true' if v['value'] else 'false'
     elif v['type'] == 'number':
         assert isinstance(v['value'], int) or isinstance(v['value'], float)
         return str(v['value'])
@@ -466,7 +466,10 @@ class ChurchPrimeParser(object):
     def unparse_integer(self, integer):
         return str(integer)
     def unparse_symbol(self, symbol):
-        return str(symbol)
+        assert isinstance(symbol, dict)
+        assert 'type' in symbol
+        assert symbol['type'] == 'symbol'
+        return tagged_value_to_string(symbol)
     def unparse_value(self, value):
         return value_to_string(value)
     def unparse_json(self, obj):
