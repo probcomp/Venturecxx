@@ -373,12 +373,20 @@ effect of renumbering the directives, if some had been forgotten."""
       assert ans["type"] is "blob"
       assert isinstance(ans["value"], Infer)
       return ans["value"].final_data()
-    finally:
+    except VentureException:
       if self.persistent_inference_trace:
         self.remove_self_evaluating_scope_hack(self.infer_trace, target)
       else:
         self.infer_trace = None
         self.last_did = None
+      raise
+    else:
+      if self.persistent_inference_trace:
+        self.remove_self_evaluating_scope_hack(self.infer_trace, target)
+      else:
+        self.infer_trace = None
+        self.last_did = None
+      raise
 
   def init_inference_trace(self):
     import venture.lite.trace as lite
