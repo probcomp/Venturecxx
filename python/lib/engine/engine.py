@@ -45,6 +45,7 @@ class Engine(object):
     self.directives = {}
     self.inferrer = None
     self.mode = 'sequential'
+    self.process_cap = None
     self.trace_handler = self.create_handler([Trace()])
     import venture.lite.inference_sps as inf
     self.foreign_sps = {}
@@ -67,7 +68,7 @@ class Engine(object):
       return SynchronousTraceHandler
 
   def create_handler(self, traces, weights=None):
-    ans = self.trace_handler_constructor(self.mode)(traces, self.name)
+    ans = self.trace_handler_constructor(self.mode)(traces, self.name, self.process_cap)
     if weights is not None:
       ans.log_weights = weights
     return ans
@@ -233,8 +234,9 @@ effect of renumbering the directives, if some had been forgotten."""
     else:
       assert False, "Unkown directive type found %r" % directive
 
-  def resample(self, P, mode = 'sequential'):
+  def resample(self, P, mode = 'sequential', process_cap = None):
     self.mode = mode
+    self.process_cap = process_cap
     newTraces = self._resample_traces(P)
     del self.trace_handler
     self.trace_handler = self.create_handler(newTraces)

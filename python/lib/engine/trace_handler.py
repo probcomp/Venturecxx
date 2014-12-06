@@ -156,7 +156,7 @@ class HandlerBase(object):
   behavior in parallel, threaded, and sequential modes to be defined by subclasses.
   '''
   __metaclass__ = ABCMeta
-  def __init__(self, traces, backend):
+  def __init__(self, traces, backend, process_cap):
     """A TraceHandler maintains:
 
     - An array of (logspace) weights of the traces being managed.  (It
@@ -177,26 +177,40 @@ class HandlerBase(object):
 
     """
     self.backend = backend
+    self.process_cap = process_cap
     self.processes = []
     self.pipes = []  # Parallel to processes
     self.log_weights = []
     self.chunk_indexes = [] # Parallel to log_weights
     self.chunk_offsets = [] # Parallel to chunk_indexes
-    Pipe, TraceProcess = self._pipe_and_process_types()
-    for (i, trace) in enumerate(traces):
-      parent, child = Pipe()
-      process = TraceProcess([trace], child, self.backend)
-      process.start()
-      self.pipes.append(parent)
-      self.processes.append(process)
-      self.log_weights.append(0)
-      self.chunk_indexes.append(i)
-      self.chunk_offsets.append(0)
+    self._create_processes(traces)
     self.reset_seeds()
 
   def __del__(self):
     # stop child processes
     self.delegate('stop')
+
+  def _create_processes(self, traces):
+    Pipe, TraceProcess = self._pipe_and_process_types()
+    if self.process_cap is None:
+      chunk_size = 1
+      chunk_ct = len(traces)
+    else:
+      chunk_size = (len(traces) / self.process_cap) + 1
+      chunk_ct = min(self.process_cap, len(traces))
+    for chunk in range(chunk_ct):
+      parent, child = Pipe()
+      chunk_start = chunk * chunk_size
+      assert chunk_start < len(traces) # I think I wrote this code to ensure this
+      chunk_end = min((chunk + 1) * chunk_size, len(traces))
+      process = TraceProcess(traces[chunk_start:chunk_end], child, self.backend)
+      process.start()
+      self.pipes.append(parent)
+      self.processes.append(process)
+      for i in range (chunk_end - chunk_start):
+        self.log_weights.append(0)
+        self.chunk_indexes.append(chunk)
+        self.chunk_offsets.append(i)
 
   def incorporate(self):
     weight_increments = self.delegate('makeConsistent')
