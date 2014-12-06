@@ -57,7 +57,7 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
   SPsListEntry("resample_serializing", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
   SPsListEntry("resample_threaded", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
   SPsListEntry("resample_thread_ser", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
-  SPsListEntry("resample_multiprocess", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
+  SPsListEntry("resample_multiprocess", [v.IntegerType(), v.IntegerType()], klass=MadeEngineMethodInferOutputPSP, min_req_args=1),
   SPsListEntry("enumerative_diversify", [v.ExpressionType(), v.ExpressionType()], klass=MadeEngineMethodInferOutputPSP),
   SPsListEntry("collapse_equal", [v.ExpressionType(), v.ExpressionType()], klass=MadeEngineMethodInferOutputPSP),
   SPsListEntry("collapse_equal_map", [v.ExpressionType(), v.ExpressionType()], klass=MadeEngineMethodInferOutputPSP),
