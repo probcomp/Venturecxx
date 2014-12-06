@@ -193,16 +193,21 @@ class HandlerBase(object):
   def _create_processes(self, traces):
     Pipe, TraceProcess = self._pipe_and_process_types()
     if self.process_cap is None:
-      chunk_size = 1
+      base_size = 1
+      extras = 0
       chunk_ct = len(traces)
     else:
-      chunk_size = (len(traces) / self.process_cap) + 1
+      (base_size, extras) = divmod(len(traces), self.process_cap)
       chunk_ct = min(self.process_cap, len(traces))
     for chunk in range(chunk_ct):
       parent, child = Pipe()
-      chunk_start = chunk * chunk_size
-      assert chunk_start < len(traces) # I think I wrote this code to ensure this
-      chunk_end = min((chunk + 1) * chunk_size, len(traces))
+      if chunk < extras:
+        chunk_start = chunk * (base_size + 1)
+        chunk_end = chunk_start + base_size + 1
+      else:
+        chunk_start = extras + chunk * base_size
+        chunk_end = chunk_start + base_size
+      assert chunk_end <= len(traces) # I think I wrote this code to ensure this
       process = TraceProcess(traces[chunk_start:chunk_end], child, self.backend)
       process.start()
       self.pipes.append(parent)

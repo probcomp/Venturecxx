@@ -37,8 +37,14 @@ def testResamplingSmoke2():
   # TODO How can I check that the number of processes was actually limited?
   r.predict("(normal 0 1)") # Check that the resulting configuration doesn't blow up instantly
 
-@statisticalTest
 def testResamplingSmoke3():
+  r = get_ripl()
+  r.infer("(resample_multiprocess 3 3)") # Limit the number of processes
+  # TODO How can I check that the number of processes was actually limited?
+  r.predict("(normal 0 1)") # Check that the resulting configuration doesn't blow up instantly
+
+@statisticalTest
+def testResamplingSmoke4():
   "Check that limiting the number of processes doesn't screw up inference too much."
   n = default_num_samples()
   r = get_ripl()
