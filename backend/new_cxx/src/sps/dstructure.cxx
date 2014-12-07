@@ -1,6 +1,7 @@
 #include "sps/dstructure.h"
 #include "values.h"
 #include "utils.h"
+#include "env.h" // For the request in ArrayMapRequestPSP
 #include <boost/foreach.hpp>
 
 VentureValuePtr SimplexOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
@@ -167,4 +168,31 @@ VentureValuePtr SecondOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
 VentureValuePtr RestOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   return args->operandValues[0]->getRest();
+}
+
+
+/* Functional */
+
+VentureValuePtr ArrayMapRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  VentureValuePtr optor = args->operandValues[0];
+  VentureValuePtr opands = args->operandValues[1];
+
+  shared_ptr<VentureEnvironment> env = shared_ptr<VentureEnvironment>(new VentureEnvironment());
+
+  vector<ESR> esrs;
+  BOOST_FOREACH(VentureValuePtr opand, opands->getArray())
+  {
+    vector<VentureValuePtr> parts;
+    parts.push_back(optor);
+    parts.push_back(opand);
+    VentureValuePtr expression = VentureValuePtr(new VentureArray(parts));
+    esrs.push_back(ESR(VentureValuePtr(new VentureID()), expression, env));
+  }
+  return VentureValuePtr(new VentureRequest(esrs, vector<shared_ptr<LSR> >()));
+}
+
+VentureValuePtr ESRArrayOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  return VentureValuePtr(new VentureArray(args->esrParentValues));
 }

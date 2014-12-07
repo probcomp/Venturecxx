@@ -81,7 +81,7 @@ map<string,SP*> initBuiltInSPs()
   m["dirichlet"] = new SP(new NullRequestPSP(), new DirichletOutputPSP());
   m["poisson"] = new SP(new NullRequestPSP(), new PoissonOutputPSP());
 
-  /* Conditiionals */
+  /* Conditionals */
   m["branch"] = new SP(new BranchRequestPSP(), new ESRRefOutputPSP());
   m["biplex"] = new SP(new NullRequestPSP(), new BiplexOutputPSP());
 
@@ -129,6 +129,7 @@ map<string,SP*> initBuiltInSPs()
   m["first"] = new SP(new NullRequestPSP(), new FirstOutputPSP());
   m["second"] = new SP(new NullRequestPSP(), new SecondOutputPSP());
   m["rest"] = new SP(new NullRequestPSP(), new RestOutputPSP());
+  m["mapv"] = new SP(new ArrayMapRequestPSP(), new ESRArrayOutputPSP());
 
   m["make_csp"] = new SP(new NullRequestPSP(), new MakeCSPOutputPSP());
   m["mem"] = new SP(new NullRequestPSP(), new MakeMSPOutputPSP());
