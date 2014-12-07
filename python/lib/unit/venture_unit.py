@@ -96,7 +96,7 @@ def directive_split(d):
     'Splits directive from *list_directives* into components'
     ## FIXME: replace Python values with strings for Venture.
     if d['instruction']=='assume':
-        return (d['symbol'], build_exp(d['expression']) )
+        return (d['symbol']['value'], build_exp(d['expression']) )
     elif d['instruction']=='observe':
         return (build_exp(d['expression']), d['value'])
     elif d['instruction']=='predict':

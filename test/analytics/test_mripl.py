@@ -149,7 +149,7 @@ def testDirectivesListDirectives():
         di_list = out[0]
     else:
         di_list = out
-    eq_(di_list[0]['symbol'],'x')
+    eq_(di_list[0]['symbol']['value'],'x')
     eq_(di_list[0]['value'],20.)
 
 

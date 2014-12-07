@@ -46,7 +46,7 @@ class TestCoreSivm(unittest.TestCase):
         try:
             self.sivm.execute_instruction({
                 "instruction":"assume",
-                "symbol":"MOO"
+                "symbol":v.symbol("MOO")
                 })
         except VentureException as e:
             self.assertEqual(e.exception,'missing_argument')
@@ -55,7 +55,7 @@ class TestCoreSivm(unittest.TestCase):
         try:
             self.sivm.execute_instruction({
                 "instruction":"assume",
-                "symbol":"9,d",
+                "symbol":v.symbol("9,d"),
                 "expression":['a','b',['c']]
                 })
         except VentureException as e:
@@ -81,7 +81,7 @@ class TestCoreSivm(unittest.TestCase):
         inst = {
                 'instruction':'assume',
                 'expression': ['add',v.number(1),v.number(2)],
-                'symbol': 'moo'
+                'symbol': v.symbol('moo')
                 }
         val = v.number(3)
         o = self.sivm.execute_instruction(inst)

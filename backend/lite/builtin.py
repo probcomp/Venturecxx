@@ -237,6 +237,11 @@ builtInSPsList = [
            [ "is_array", type_test(v.ArrayType()) ],
            [ "is_vector", type_test(v.ArrayUnboxedType(v.NumberType())) ],
 
+           [ "to_array", deterministic_typed(lambda seq: seq.getArray(), [v.HomogeneousSequenceType(v.AnyType())], v.HomogeneousArrayType(v.AnyType()),
+                                             descr="to_array converts its argument sequence to an array") ],
+           [ "to_vector", deterministic_typed(lambda seq: np.array(seq.getArray(v.NumberType())), [v.HomogeneousSequenceType(v.NumberType())], v.ArrayUnboxedType(v.NumberType()),
+                                             descr="to_vector converts its argument sequence to a vector") ],
+
            [ "dict", deterministic_typed(lambda keys, vals: dict(zip(keys, vals)),
                                          [v.HomogeneousListType(v.AnyType("k")), v.HomogeneousListType(v.AnyType("v"))],
                                          v.HomogeneousDictType(v.AnyType("k"), v.AnyType("v")),

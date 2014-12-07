@@ -116,7 +116,8 @@ class Trace(object):
       return (scope, block)
 
   def registerConstrainedChoice(self,node):
-    assert node not in self.ccs, "Cannot constrain the same random choice twice."
+    if node in self.ccs:
+      raise VentureException("evaluation", "Cannot constrain the same random choice twice.", address = node.address)
     self.ccs.add(node)
     self.unregisterRandomChoice(node)
 

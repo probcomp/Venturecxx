@@ -135,13 +135,20 @@ class Scanner(Plex.Scanner):
     name = (letter | underscore) + Plex.Rep(letter | underscore | digit)
     # < and > are angle-brackets, which fall back to operators in grammar.y.
     operator = Plex.Str('+', '-', '*', '/', '<=', '>=', '=', '!=')
+    # `foo<x>' is OK, but not a name, so we don't reject it here.
+    # This fails to helpfully reject 'foo<', but that's OK -- it
+    # doesn't fail to accept valid syntax.
+    badname = Plex.Rep1(letter | underscore | digit | Plex.Any('-+*/=!?.'))
     # XXX Hexadecimal, octal, binary?
-    integer = optsign + Plex.Rep1(digit)                # [+/-]NNNN
-    fractional = Plex.Str('.') + Plex.Rep(digit)        # .NNNN
-    integerfractional = integer + Plex.Opt(fractional)  # NNN[.NNNN]
+    digits = Plex.Rep(digit)
+    digits1 = Plex.Rep1(digit)
+    dot = Plex.Str('.')
+    integer = optsign + digits1                         # [+/-]NNNN
+    intfrac = integer + Plex.Opt(dot + digits)          # [+/-]NNN[.[NNNN]]
+    fraconly = optsign + dot + digits1                  # [+/-].NNNN
     expmark = Plex.Any('eE')
     exponent = expmark + optsign + Plex.Rep1(digit)     # (e/E)[+/-]NNN
-    real = optsign + (integerfractional | fractional) + Plex.Opt(exponent)
+    real = (intfrac | fraconly) + Plex.Opt(exponent)
     esc = Plex.Str('\\')
     escchar = Plex.Str(*escapes.keys())
     octal3 = octit + octit + octit
@@ -164,6 +171,7 @@ class Scanner(Plex.Scanner):
         (integer,       scan_integer),
         (real,          scan_real),
         (Plex.Str('"'), scan_string),
+        (badname,       -1),    # Invalid.
         (Plex.AnyChar,  -1),    # Invalid.
         Plex.State('STRING', [
             (Plex.Str('"'),                     scan_string_end),

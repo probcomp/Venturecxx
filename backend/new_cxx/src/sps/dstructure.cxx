@@ -1,6 +1,7 @@
 #include "sps/dstructure.h"
 #include "values.h"
 #include "utils.h"
+#include "env.h" // For the request in ArrayMapRequestPSP
 #include <boost/foreach.hpp>
 
 VentureValuePtr SimplexOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
@@ -17,18 +18,18 @@ VentureValuePtr ToSimplexOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rn
 {
   Simplex s;
   double sum = 0;
-  
+
   BOOST_FOREACH(VentureValuePtr v, args->operandValues[0]->getArray())
   {
     s.push_back(v->getDouble());
     sum += s.back();
   }
-  
+
   for (size_t i = 0; i < s.size(); ++i)
   {
     s[i] /= sum;
   }
-  
+
   return VentureValuePtr(new VentureSimplex(s));
 }
 
@@ -81,6 +82,18 @@ VentureValuePtr IsDictOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
 VentureValuePtr ArrayOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   return VentureValuePtr(new VentureArray(args->operandValues));
+}
+
+VentureValuePtr ToArrayOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  vector<VentureValuePtr> a;
+
+  BOOST_FOREACH(VentureValuePtr v, args->operandValues[0]->getArray())
+  {
+    a.push_back(v);
+  }
+
+  return VentureValuePtr(new VentureArray(a));
 }
 
 VentureValuePtr PrependOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
@@ -155,4 +168,42 @@ VentureValuePtr SecondOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
 VentureValuePtr RestOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   return args->operandValues[0]->getRest();
+}
+
+
+/* Functional */
+
+VentureValuePtr ArrayMapRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  VentureValuePtr optor = args->operandValues[0];
+  VentureValuePtr opands = args->operandValues[1];
+
+  shared_ptr<VentureEnvironment> env = shared_ptr<VentureEnvironment>(new VentureEnvironment());
+
+  vector<ESR> esrs;
+  BOOST_FOREACH(VentureValuePtr opand, opands->getArray())
+  {
+    vector<VentureValuePtr> parts;
+    parts.push_back(optor);
+    parts.push_back(opand);
+    VentureValuePtr expression = VentureValuePtr(new VentureArray(parts));
+    esrs.push_back(ESR(VentureValuePtr(new VentureID()), expression, env));
+  }
+  return VentureValuePtr(new VentureRequest(esrs, vector<shared_ptr<LSR> >()));
+}
+
+VentureValuePtr ESRArrayOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  return VentureValuePtr(new VentureArray(args->esrParentValues));
+}
+
+VentureValuePtr ArangeOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  long start = args->operandValues[0]->getInt();
+  long end = args->operandValues[1]->getInt();
+  vector<VentureValuePtr> items;
+  for (long i = start; i < end; i++) {
+    items.push_back(VentureValuePtr(new VentureInteger(i)));
+  }
+  return VentureValuePtr(new VentureArray(items));
 }

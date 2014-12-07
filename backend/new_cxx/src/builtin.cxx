@@ -81,7 +81,7 @@ map<string,SP*> initBuiltInSPs()
   m["dirichlet"] = new SP(new NullRequestPSP(), new DirichletOutputPSP());
   m["poisson"] = new SP(new NullRequestPSP(), new PoissonOutputPSP());
 
-  /* Conditiionals */
+  /* Conditionals */
   m["branch"] = new SP(new BranchRequestPSP(), new ESRRefOutputPSP());
   m["biplex"] = new SP(new NullRequestPSP(), new BiplexOutputPSP());
 
@@ -101,6 +101,7 @@ map<string,SP*> initBuiltInSPs()
   m["id_matrix"] = new SP(new NullRequestPSP(), new IdentityMatrixOutputPSP());
   m["vector"] = new SP(new NullRequestPSP(), new VectorOutputPSP());
   m["is_vector"] = new SP(new NullRequestPSP(), new IsVectorOutputPSP());
+  m["to_vector"] = new SP(new NullRequestPSP(), new ToVectorOutputPSP());
 
   /* Scoping */
   m["scope_include"] = new SP(new NullRequestPSP(), new ScopeIncludeOutputPSP());
@@ -121,12 +122,15 @@ map<string,SP*> initBuiltInSPs()
   m["append"] = new SP(new NullRequestPSP(), new AppendOutputPSP());
   m["concat"] = new SP(new NullRequestPSP(), new ConcatOutputPSP());
   m["is_array"] = new SP(new NullRequestPSP(), new IsArrayOutputPSP());
+  m["to_array"] = new SP(new NullRequestPSP(), new ToArrayOutputPSP());
   m["pair"] = new SP(new NullRequestPSP(), new PairOutputPSP());
   m["is_pair"] = new SP(new NullRequestPSP(), new IsPairOutputPSP());
   m["list"] = new SP(new NullRequestPSP(), new ListOutputPSP());
   m["first"] = new SP(new NullRequestPSP(), new FirstOutputPSP());
   m["second"] = new SP(new NullRequestPSP(), new SecondOutputPSP());
   m["rest"] = new SP(new NullRequestPSP(), new RestOutputPSP());
+  m["mapv"] = new SP(new ArrayMapRequestPSP(), new ESRArrayOutputPSP());
+  m["arange"] = new SP(new NullRequestPSP(), new ArangeOutputPSP());
 
   m["make_csp"] = new SP(new NullRequestPSP(), new MakeCSPOutputPSP());
   m["mem"] = new SP(new NullRequestPSP(), new MakeMSPOutputPSP());

@@ -39,27 +39,6 @@
         (lookup v idx)
         (_to_list_helper v (+ 1 idx) n))))]
 
-; Convert a list to an array
-; Parameters
-;   v : list
-[assume to_array
-  (lambda (v)
-    (if (is_array v)
-      v
-      (eval
-        (pair (quote array) v)
-        (get_current_environment))))]
-
-; Convert a list to a vector
-; Parameters
-;   v : list
-; TODO : if we get is_vector, use that to check
-[assume to_vector
-  (lambda (v)
-    (eval
-      (pair (quote vector) v)
-      (get_current_environment)))]
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Support for functional programming
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

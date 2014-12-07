@@ -156,7 +156,7 @@ class HandlerBase(object):
   behavior in parallel, threaded, and sequential modes to be defined by subclasses.
   '''
   __metaclass__ = ABCMeta
-  def __init__(self, traces, backend):
+  def __init__(self, traces, backend, process_cap):
     """A TraceHandler maintains:
 
     - An array of (logspace) weights of the traces being managed.  (It
@@ -177,26 +177,47 @@ class HandlerBase(object):
 
     """
     self.backend = backend
+    self.process_cap = process_cap
     self.processes = []
     self.pipes = []  # Parallel to processes
+    self.chunk_sizes = [] # Parallel to processes
     self.log_weights = []
     self.chunk_indexes = [] # Parallel to log_weights
     self.chunk_offsets = [] # Parallel to chunk_indexes
-    Pipe, TraceProcess = self._pipe_and_process_types()
-    for (i, trace) in enumerate(traces):
-      parent, child = Pipe()
-      process = TraceProcess([trace], child, self.backend)
-      process.start()
-      self.pipes.append(parent)
-      self.processes.append(process)
-      self.log_weights.append(0)
-      self.chunk_indexes.append(i)
-      self.chunk_offsets.append(0)
+    self._create_processes(traces)
     self.reset_seeds()
 
   def __del__(self):
     # stop child processes
     self.delegate('stop')
+
+  def _create_processes(self, traces):
+    Pipe, TraceProcess = self._pipe_and_process_types()
+    if self.process_cap is None:
+      base_size = 1
+      extras = 0
+      chunk_ct = len(traces)
+    else:
+      (base_size, extras) = divmod(len(traces), self.process_cap)
+      chunk_ct = min(self.process_cap, len(traces))
+    for chunk in range(chunk_ct):
+      parent, child = Pipe()
+      if chunk < extras:
+        chunk_start = chunk * (base_size + 1)
+        chunk_end = chunk_start + base_size + 1
+      else:
+        chunk_start = extras + chunk * base_size
+        chunk_end = chunk_start + base_size
+      assert chunk_end <= len(traces) # I think I wrote this code to ensure this
+      process = TraceProcess(traces[chunk_start:chunk_end], child, self.backend)
+      process.start()
+      self.pipes.append(parent)
+      self.processes.append(process)
+      self.chunk_sizes.append(chunk_end - chunk_start)
+      for i in range (chunk_end - chunk_start):
+        self.log_weights.append(0)
+        self.chunk_indexes.append(chunk)
+        self.chunk_offsets.append(i)
 
   def incorporate(self):
     weight_increments = self.delegate('makeConsistent')
@@ -205,8 +226,7 @@ class HandlerBase(object):
 
   def reset_seeds(self):
     for i in range(len(self.processes)):
-      # TODO Actually give every trace its own seed.
-      self.delegate_one_chunk(i, 'set_seeds', [random.randint(1,2**31-1)])
+      self.delegate_one_chunk(i, 'set_seeds', [random.randint(1,2**31-1) for _ in range(self.chunk_sizes[i])])
 
   # NOTE: I could metaprogram all the methods that delegate passes on,
   # but it feels cleaner just call the delegator than to add another level

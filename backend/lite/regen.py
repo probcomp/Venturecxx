@@ -194,6 +194,13 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
         address = node.address.request(esr.addr)
         (w,esrParent) = evalFamily(trace,address,esr.exp,esr.env,scaffold,shouldRestore,omegaDB,gradients)
         weight += w
+      if trace.containsSPFamilyAt(node,esr.id):
+        # evalFamily already registered a family with this id for the
+        # operator being applied here, which means a recursive call to
+        # the operator issued a request for the same id.  Currently,
+        # the only way for that it happen is for a recursive memmed
+        # function to call itself with the same arguments.
+        raise VentureException("evaluation", "Recursive mem argument loop detected.", address = node.address)
       trace.registerFamilyAt(node,esr.id,esrParent)
 
     esrParent = trace.spFamilyAt(node,esr.id)
