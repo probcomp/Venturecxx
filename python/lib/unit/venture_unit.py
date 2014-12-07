@@ -316,6 +316,10 @@ class Analytics(object):
                 self.mripl.dview.execute('from venture.unit import Analytics')
             self.updateQueryExps()
 
+        if self.ripl:
+            # TODO Does this apply to mripls too?
+            for (name, sp) in ripl.sivm.core_sivm.engine.foreign_sps.iteritems():
+                self.ripl.bind_foreign_sp(name, sp)
 
         # Initialization for mutable ripl or MRipl
 
