@@ -196,3 +196,14 @@ VentureValuePtr ESRArrayOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng
 {
   return VentureValuePtr(new VentureArray(args->esrParentValues));
 }
+
+VentureValuePtr ArangeOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  long start = args->operandValues[0]->getInt();
+  long end = args->operandValues[1]->getInt();
+  vector<VentureValuePtr> items;
+  for (long i = start; i < end; i++) {
+    items.push_back(VentureValuePtr(new VentureInteger(i)));
+  }
+  return VentureValuePtr(new VentureArray(items));
+}
