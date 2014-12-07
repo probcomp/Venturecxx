@@ -29,10 +29,35 @@ To this end, we are designing Venture to
 - interfacing smoothly with foreign or legacy model or inference
   programs.
 
-In pursuit of this ambitious set of goals we have, to date, sacrificed
-constant factors of performance (both execution time and memory
-usage), devoting our effort to finding and validating a robust design
-that admits all the necessary freedoms and asymptotically scales
-correctly in all dimensions.
+In Venture, inference is programmable. Venture programmers can
+implement custom inference strategies without modifying the code that
+represents modeling assumptions, observed data, and queries. Venture
+provides a standard inference library that includes a broad class of
+exact and approximate techniques as well as inference combinators that
+make it possible to assemble complex inference strategies out of
+reusable components. Some inference strategies, such as single-site
+Metropolis Hastings and likelihood weighting, require only a single
+inference instruction, yet apply to all programs and have strong
+convergence guarantees. These can be thought of as "automatic". Other
+strategies, such as blocked Gibbs sampling, will reflect the details
+of individual problem instances. Many of these strategies are far
+easier to customize (given a standard inference library) than write
+from scratch.
+
+This approach leads to different expressiveness, scalability, and
+constant-factor performance desiderata than approaches based on
+machine-assisted choice among a set of black-box solvers. For example,
+greater modeling expressiveness can improve tractability in this
+setting, by making it possible for programmers to express alternative
+"inference-optimized" versions of their models that are more amenable
+to efficient inference. Constant-factor performance can be achieved by
+improving the runtime system and writing a compiler, or by making it
+easy for users to incrementally migrate performance-sensitive regions
+of their model, query, dataset and/or inference strategy into
+optimized foreign code.
+
+In pursuit of our ambitious set of goals we have, to date, deferred
+improving the constant factors of performance (both execution time and
+memory usage) of the Venture platform.
 
 http://probcomp.csail.mit.edu/venture/
