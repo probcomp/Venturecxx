@@ -1249,7 +1249,7 @@ class HomogeneousMappingType(VentureType):
   def asVentureValue(self, thing):
     return thing
   def asPython(self, vthing):
-    if not isinstance(vthing, (VentureArray, VentureArrayUnboxed, VentureNil, VenturePair, VentureMatrix)):
+    if not isinstance(vthing, (VentureArray, VentureArrayUnboxed, VentureNil, VenturePair, VentureMatrix, VentureDict, VentureSimplex)):
       raise VentureTypeError(str(vthing) + " is not a HomogeneousMappingType!")
     return vthing
   def name(self): return "<mapping %s %s>" % (self.keytype.name(), self.valtype.name())
