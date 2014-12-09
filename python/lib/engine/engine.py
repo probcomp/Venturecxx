@@ -81,6 +81,8 @@ class Engine(object):
 
   def bind_foreign_inference_sp(self, name, sp):
     self.inference_sps[name] = sp
+    if self.persistent_inference_trace:
+      self.infer_trace.bindPrimitiveSP(name, sp)
 
   def bind_callback(self, name, callback):
     self.callbacks[name] = callback
