@@ -389,11 +389,17 @@ class Analytics(object):
 
 
     def _clearRipl(self):
+	# Record the foreign sps
+        sps = [(name, sp) for name, sp in self.ripl.sivm.core_sivm.engine.foreign_sps.iteritems()]
+
         if self.muRipl:
             assert False,'Attempt to clear mutable ripl/mripl'
         else:
             self.ripl.clear()
 
+	# Reload them
+        for (name, sp) in sps:
+            self.ripl.bind_foreign_sp(name, sp)
 
     def _loadAssumes(self, prune=True):
 
