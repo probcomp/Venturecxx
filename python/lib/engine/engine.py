@@ -285,19 +285,24 @@ effect of renumbering the directives, if some had been forgotten."""
     new_ts = []
     new_ws = []
     for (_, ts, ws) in groups:
-      index = select_keeper(ws)
+      (index, total) = select_keeper(ws)
       new_ts.append(self.copy_trace(ts[index]))
       new_ts[-1].makeConsistent()
-      new_ws.append(logaddexp(ws))
+      new_ws.append(total)
     del self.trace_handler
     self.trace_handler = self.create_handler(new_ts, new_ws)
 
   def collapse(self, scope, block):
-    self._collapse_help(scope, block, sampleLogCategorical)
+    def sample(weights):
+      return (sampleLogCategorical(weights), logaddexp(weights))
+    self._collapse_help(scope, block, sample)
 
   def collapse_map(self, scope, block):
+    # The proper behavior in the Viterbi algorithm is to weight the
+    # max particle by its own weight, not by the total weight of its
+    # whole bucket.
     def max_ind(lst):
-      return lst.index(max(lst))
+      return (lst.index(max(lst)), max(lst))
     self._collapse_help(scope, block, max_ind)
 
   def infer(self, program):
