@@ -367,9 +367,10 @@ class Trace(object):
 
   def getConstrainableNode(self, node):
     candidate = self.getOutermostNonReferenceNode(node)
-    if isinstance(candidate,ConstantNode): raise Exception("Cannot constrain a constant value.")
+    if isinstance(candidate,ConstantNode):
+      raise VentureException("evaluation", "Cannot constrain a constant value.", address = node.address)
     if not self.pspAt(candidate).isRandom():
-      raise Exception("Cannot constrain a deterministic value.")
+      raise VentureException("evaluation", "Cannot constrain a deterministic value.", address = node.address)
     return candidate
 
   def getOutermostNonReferenceNode(self,node):
