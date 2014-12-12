@@ -209,6 +209,7 @@ builtInSPsList = [
            [ "is_atom", type_test(v.AtomType()) ],
            [ "is_boolean", type_test(v.BoolType()) ],
            [ "is_symbol", type_test(v.SymbolType()) ],
+           [ "is_procedure", type_test(SPType([v.AnyType()], v.AnyType(), variadic=True)) ],
 
            [ "list", deterministic_typed(lambda *args: args, [v.AnyType()], v.ListType(), variadic=True,
                                          sim_grad=grad_list,

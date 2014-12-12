@@ -207,6 +207,7 @@ def checkRiplAgreesWithDeterministicSimulate(name, sp):
     "is_integer", # Not implemented
     "is_probability", # Not implemented
     "is_boolean", # Not implemented
+    "is_procedure", # Not implemented
   ]:
     raise SkipTest("%s in Puma not implemented compatibly with Lite" % name)
   checkTypedProperty(propRiplAgreesWithDeterministicSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)

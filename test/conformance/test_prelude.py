@@ -315,7 +315,7 @@ class TestPrelude(TestCase):
             for x in res[0]['value']['value']]
     return data
 
-  @broken_in("puma", "Relies on builtin sp's (e.g. mapv) not implemented in Puma")
+  @broken_in("puma", "TODO Some mysterious type discrepancy between Puma and Lite")
   def test_rmse_accuracy(self):
     data = self.build_accuracy_tester()
     rmse_ven = self.r.sample('(rmse_accuracy data f_predict)')

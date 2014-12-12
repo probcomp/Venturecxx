@@ -27,6 +27,17 @@ class TestArrayExtended(object):
   def testSize(self):
     assert self.ripl.predict("(size xs)") == 3
 
+  @on_inf_prim("none")
+  def testMapv(self):
+    assert self.ripl.sample("(mapv (lambda (x) (+ x 1)) xs)") == [12, 23, 34]
+
+@on_inf_prim("none")
+def testArange():
+  ans = get_ripl().sample("(arange 1 3)")
+  assert len(ans) == 2 # This style is agnostic to numpy or non-numpy returned arrays
+  assert ans[0] == 1
+  assert ans[1] == 2
+
 @gen_on_inf_prim("none")
 def testMatrix():
   for form in ["(matrix (array))", "(matrix (array (array) (array)))",
