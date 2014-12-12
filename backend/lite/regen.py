@@ -217,6 +217,7 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 
 def restore(trace,node,scaffold,omegaDB,gradients):
   if isinstance(node,ConstantNode): return 0
+  if isinstance(node,OutputNode) and node.isFrozen: return 0
   if isinstance(node,LookupNode):
     weight = regenParents(trace,node,scaffold,True,omegaDB,gradients)
     trace.reconnectLookup(node)

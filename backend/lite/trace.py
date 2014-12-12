@@ -491,6 +491,21 @@ class Trace(object):
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
 
+  def freeze(self, id):
+    assert id in self.families
+    node = self.families[id]
+    assert isinstance(node,OutputNode)
+    value = self.valueAt(node)
+    unevalFamily(self,node,Scaffold(),OmegaDB())
+    # XXX It looks like we kinda want to replace the identity of this
+    # node by a constant node, but we don't have a nice way to do that
+    # so we fake it by dropping the components and marking it frozen.
+    node.isFrozen = True
+    self.setValueAt(node, value)
+    node.requestNode = None
+    node.operandNodes = None
+    node.operatorNode = None
+
   def diversify(self, exp, copy_trace):
     """Return the pair of parallel lists of traces and weights that
 results from applying the given expression as a diversification
