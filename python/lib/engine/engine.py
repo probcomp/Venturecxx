@@ -167,6 +167,11 @@ class Engine(object):
     # the replay is done with a different number of particles than the
     # original?  Where do the extra values come from?
     self.trace_handler.delegate('freeze', directiveId)
+    # XXX OOPS!  We need to remember, in self.directives, that this
+    # node is frozen at its current values, so that when we copy the
+    # trace we don't make random choices afresh here.  But there's no
+    # obvious way to record that.
+    #self.directives[directiveId] = ["assume", directiveId, XXX]
 
   def report_value(self,directiveId):
     if directiveId not in self.directives:
