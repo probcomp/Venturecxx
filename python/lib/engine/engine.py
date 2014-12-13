@@ -81,6 +81,8 @@ class Engine(object):
 
   def bind_foreign_inference_sp(self, name, sp):
     self.inference_sps[name] = sp
+    if self.persistent_inference_trace:
+      self.infer_trace.bindPrimitiveSP(name, sp)
 
   def bind_callback(self, name, callback):
     self.callbacks[name] = callback
@@ -165,6 +167,11 @@ class Engine(object):
     # the replay is done with a different number of particles than the
     # original?  Where do the extra values come from?
     self.trace_handler.delegate('freeze', directiveId)
+    # XXX OOPS!  We need to remember, in self.directives, that this
+    # node is frozen at its current values, so that when we copy the
+    # trace we don't make random choices afresh here.  But there's no
+    # obvious way to record that.
+    #self.directives[directiveId] = ["assume", directiveId, XXX]
 
   def report_value(self,directiveId):
     if directiveId not in self.directives:
@@ -283,19 +290,24 @@ effect of renumbering the directives, if some had been forgotten."""
     new_ts = []
     new_ws = []
     for (_, ts, ws) in groups:
-      index = select_keeper(ws)
+      (index, total) = select_keeper(ws)
       new_ts.append(self.copy_trace(ts[index]))
       new_ts[-1].makeConsistent()
-      new_ws.append(logaddexp(ws))
+      new_ws.append(total)
     del self.trace_handler
     self.trace_handler = self.create_handler(new_ts, new_ws)
 
   def collapse(self, scope, block):
-    self._collapse_help(scope, block, sampleLogCategorical)
+    def sample(weights):
+      return (sampleLogCategorical(weights), logaddexp(weights))
+    self._collapse_help(scope, block, sample)
 
   def collapse_map(self, scope, block):
+    # The proper behavior in the Viterbi algorithm is to weight the
+    # max particle by its own weight, not by the total weight of its
+    # whole bucket.
     def max_ind(lst):
-      return lst.index(max(lst))
+      return (lst.index(max(lst)), max(lst))
     self._collapse_help(scope, block, max_ind)
 
   def infer(self, program):

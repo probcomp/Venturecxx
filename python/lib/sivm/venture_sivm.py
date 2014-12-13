@@ -108,7 +108,7 @@ class VentureSivm(object):
         instruction_type = instruction['instruction']
         sugar = None
         # desugar the expression
-        if instruction_type in ['define','assume','observe','predict']:
+        if instruction_type in ['define','assume','observe','predict','infer']:
             exp = utils.validate_arg(instruction,'expression',
                     utils.validate_expression, wrap_exception=False)
             sugar = macro.expand(exp)

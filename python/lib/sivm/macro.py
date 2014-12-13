@@ -110,16 +110,21 @@ def sub(bindings, template):
     return bindings[template]
   return template
 
-def verify(pattern, exp):
+def verify(pattern, exp, context):
   """Verifies that the given expression matches the pattern in form."""
   if isinstance(pattern, list):
     if not isinstance(exp, list):
-      raise VentureException('parse', 'Invalid expression -- expected list!', expression_index=[])
+      raise VentureException('parse',
+        'Invalid expression in %s -- expected list!' % (context,),
+        expression_index=[])
     if len(exp) != len(pattern):
-      raise VentureException('parse', 'Invalid expression -- expected length %d' % len(pattern), expression_index=[])
+      raise VentureException('parse',
+        'Invalid expression in %s -- expected length %d' %
+          (context, len(pattern)),
+        expression_index=[])
     for index, (p, e) in enumerate(zip(pattern, exp)):
       try:
-        verify(p, e)
+        verify(p, e, context)
       except VentureException as e:
         e.data['expression_index'].insert(0, index)
         raise
@@ -141,7 +146,7 @@ class SyntaxRule(Macro):
     return isinstance(exp, list) and len(exp) > 0 and getSym(exp[0]) == self.name
   
   def expand(self, exp):
-    verify(self.pattern, exp)
+    verify(self.pattern, exp, self.pattern[0])
     try:
       bindings = bind(self.pattern, exp)
       subbed = sub(bindings, self.template)
@@ -267,7 +272,8 @@ def testLet():
 
 def testVerify():
   try:
-    verify(['let', [['__sym0__', '__val0__']], 'body'], ['let', ['a'], 'b'])
+    verify(['let', [['__sym0__', '__val0__']], 'body'], ['let', ['a'], 'b'],
+      'let')
     print "testVerify() failed!"
   except VentureException as e:
     print e.data['expression_index']

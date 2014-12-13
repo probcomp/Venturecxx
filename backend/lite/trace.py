@@ -367,9 +367,10 @@ class Trace(object):
 
   def getConstrainableNode(self, node):
     candidate = self.getOutermostNonReferenceNode(node)
-    if isinstance(candidate,ConstantNode): raise Exception("Cannot constrain a constant value.")
+    if isinstance(candidate,ConstantNode):
+      raise VentureException("evaluation", "Cannot constrain a constant value.", address = node.address)
     if not self.pspAt(candidate).isRandom():
-      raise Exception("Cannot constrain a deterministic value.")
+      raise VentureException("evaluation", "Cannot constrain a deterministic value.", address = node.address)
     return candidate
 
   def getOutermostNonReferenceNode(self,node):
@@ -489,6 +490,21 @@ class Trace(object):
       else: raise Exception("INFER %s is not implemented" % operator)
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
+
+  def freeze(self, id):
+    assert id in self.families
+    node = self.families[id]
+    assert isinstance(node,OutputNode)
+    value = self.valueAt(node)
+    unevalFamily(self,node,Scaffold(),OmegaDB())
+    # XXX It looks like we kinda want to replace the identity of this
+    # node by a constant node, but we don't have a nice way to do that
+    # so we fake it by dropping the components and marking it frozen.
+    node.isFrozen = True
+    self.setValueAt(node, value)
+    node.requestNode = None
+    node.operandNodes = None
+    node.operatorNode = None
 
   def diversify(self, exp, copy_trace):
     """Return the pair of parallel lists of traces and weights that

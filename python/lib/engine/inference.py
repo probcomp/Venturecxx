@@ -151,12 +151,12 @@ class Infer(object):
   def call_back(self, name, *exprs):
     name = SymbolType().asPython(name)
     if name not in self.engine.callbacks:
-      raise "Unregistered callback {}".format(name)
+      raise Exception("Unregistered callback {}".format(name))
     self.engine.callbacks[name](self, *[self.engine.sample_all(e.asStackDict()) for e in exprs])
   def call_back_accum(self, name, *exprs):
     name = SymbolType().asPython(name)
     if name not in self.engine.callbacks:
-      raise "Unregistered callback {}".format(name)
+      raise Exception("Unregistered callback {}".format(name))
     names, stack_dicts = self.parse_exprs(exprs, 'plotf')
     self._init_plot(None, names, exprs, stack_dicts, callback=self.engine.callbacks[name])
     self.result._add_data(self.engine, 'call_back_accum')
