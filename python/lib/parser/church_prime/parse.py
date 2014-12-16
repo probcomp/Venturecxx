@@ -42,7 +42,7 @@ def loctoken((value, start, end)):
 def loctoken1((_value, start, end), value):
     return located([start, end], value)
 
-def locbracket((ovalue, ostart, oend), (cvalue, cstart, cend), value):
+def locbracket((_ovalue, ostart, oend), (_cvalue, cstart, cend), value):
     assert ostart <= oend
     assert oend < cstart
     assert cstart <= cend
