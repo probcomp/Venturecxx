@@ -18,7 +18,6 @@
 # Venture parser (`Church prime', Lisp-style notation).
 
 import StringIO
-import collections
 import json
 
 from venture.exception import VentureException
