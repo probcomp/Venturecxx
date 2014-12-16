@@ -384,7 +384,6 @@ def substitute_params_indexed(string, params):
 def substitute_params_named(string, params):
     out = StringIO.StringIO()
     i = 0
-    n = 0
     while i < len(string):
         j = string.find('%', i)
         if j == -1:
