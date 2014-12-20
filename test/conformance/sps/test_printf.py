@@ -3,7 +3,7 @@ from nose.tools import eq_
 import sys
 from re import search
 
-from venture.test.config import get_ripl
+from venture.test.config import get_ripl, broken_in
 
 def capture_output(ripl, program):
   'Capture stdout; return the string headed for stdout and the result of the computation'
@@ -19,6 +19,7 @@ def extract_integer(captured):
   res = search('VentureInteger\((.*)\)', captured) #pylint: disable=W1401
   return int(res.group(1))
 
+@broken_in("puma", "TODO: implement in PUMA")
 def test_printf1():
   'Make sure that printf prints the correct values by intercepting output'
   ripl = get_ripl()
@@ -32,6 +33,7 @@ def test_printf1():
   eq_(y, captured_y)
   eq_(res_value, captured_x + captured_y)
 
+@broken_in("puma", "TODO: implement in PUMA")
 def test_printf2():
   'Another test for consistency by intercepting output'
   ripl = get_ripl()
