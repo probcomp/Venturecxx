@@ -57,7 +57,7 @@ class TestVentureScriptParserAtoms(ParserTestCase):
                 {'loc':[1,5], 'value':[
                     {'loc':[1,5], 'value':v.sym('identity')},
                     {'loc':[2,4], 'value':[
-                        {'loc':[2,2], 'value':'+'},
+                        {'loc':[2,2], 'value':v.sym('+')},
                         {'loc':[3,3], 'value':'a'},
                         {'loc':[4,4], 'value':'b'},
                         ]}
@@ -66,7 +66,7 @@ class TestVentureScriptParserAtoms(ParserTestCase):
         b = {'loc':[0,6],'value':[
                 {'loc':[0,6], 'value':v.sym('identity')},
                 {'loc':[1,5], 'value':[
-                    {'loc':[2,2], 'value':'+'},
+                    {'loc':[2,2], 'value':v.sym('+')},
                     {'loc':[3,3], 'value':'a'},
                     {'loc':[4,4], 'value':'b'},
                     ]}
@@ -75,7 +75,7 @@ class TestVentureScriptParserAtoms(ParserTestCase):
         self.assertEqual(output,b)
         # ' a+b'
         a = {'loc':[1,3], 'value':[
-                {'loc':[1,1], 'value':'+'},
+                {'loc':[1,1], 'value':v.sym('+')},
                 {'loc':[2,2], 'value':'a'},
                 {'loc':[3,3], 'value':'b'},
                 ]}
@@ -165,7 +165,7 @@ class TestVentureScriptParserAtoms(ParserTestCase):
     def test_infix_locations(self):
         self.expression = self.p.expression
         self.run_test( 'a+(b+c)',
-                r(0,7,r(1,1,'add',0,1,v.sym('a'),2,5,r(4,1,'add',3,1,v.sym('b'),5,1,v.sym('c'))))
+                r(0,7,r(1,1,v.sym('add'),0,1,v.sym('a'),2,5,r(4,1,v.sym('add'),3,1,v.sym('b'),5,1,v.sym('c'))))
                 )
 
 
@@ -186,38 +186,38 @@ class TestVentureScriptParserAtoms(ParserTestCase):
         # Function application has precedence over all infix operators
         for x, y in boolean_and_ops + boolean_or_ops + comparison_ops + add_sub_ops + mul_div_ops + exponent_ops:
             self.run_legacy_test( 'a' + x + 'b()',
-                    [[y, v.sym('a'), [v.sym('b')]]],
+                    [[v.sym(y), v.sym('a'), [v.sym('b')]]],
                     'expression')
         # Collapse identities with lesser precedence
         for x, y in boolean_and_ops + boolean_or_ops + comparison_ops + add_sub_ops + mul_div_ops + exponent_ops:
             self.run_legacy_test( '(a' + x + 'b)()',
-                    [[[y, v.sym('a'), v.sym('b')]]],
+                    [[[v.sym(y), v.sym('a'), v.sym('b')]]],
                     'fn_application')
         # Collapse nested identities
         self.run_legacy_test( '((a+b))()',
-                [[[v.sym('identity'),['add', v.sym('a'), v.sym('b')]]]],
+                [[[v.sym('identity'),[v.sym('add'), v.sym('a'), v.sym('b')]]]],
                 'fn_application')
 
 
     def test_the_rest_of_the_shizzle(self):
         self.run_legacy_test( 'a**b**c',
-                [['pow', v.sym('a'), ['pow', v.sym('b'), v.sym('c')]]],
+                [[v.sym('pow'), v.sym('a'), [v.sym('pow'), v.sym('b'), v.sym('c')]]],
                 'exponent')
         # Don't collapse redundant identities
         self.run_legacy_test( 'a**(b**c)',
-                [['pow', v.sym('a'), [v.sym('identity'), ['pow', v.sym('b'), v.sym('c')]]]],
+                [[v.sym('pow'), v.sym('a'), [v.sym('identity'), [v.sym('pow'), v.sym('b'), v.sym('c')]]]],
                 'exponent')
         # Collapse non-redundant identities
         self.run_legacy_test( '(a**b)**c',
-                [['pow', ['pow', v.sym('a'), v.sym('b')], v.sym('c')]],
+                [[v.sym('pow'), [v.sym('pow'), v.sym('a'), v.sym('b')], v.sym('c')]],
                 'exponent')
         self.run_legacy_test( '((a**b))**c',
-                [['pow', [v.sym('identity'), ['pow', v.sym('a'), v.sym('b')]], v.sym('c')]],
+                [[v.sym('pow'), [v.sym('identity'), [v.sym('pow'), v.sym('a'), v.sym('b')]], v.sym('c')]],
                 'exponent')
         # Collapse identities with lesser precedence
         for x, y in boolean_and_ops + boolean_or_ops + comparison_ops + equality_ops + add_sub_ops + mul_div_ops:
             self.run_legacy_test( '(a' + x + 'b)**c',
-                    [['pow',[y, v.sym('a'), v.sym('b')], v.sym('c')]],
+                    [[v.sym('pow'),[v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'exponent')
 
 
@@ -228,46 +228,46 @@ class TestVentureScriptParserAtoms(ParserTestCase):
                 None,
                 'mul_div')
         self.run_legacy_test( 'a*b/c',
-                [['div',['mul', v.sym('a'), v.sym('b')], v.sym('c')]],
+                [[v.sym('div'),[v.sym('mul'), v.sym('a'), v.sym('b')], v.sym('c')]],
                 'mul_div')
         self.run_legacy_test( 'a/b*c',
-                [['mul',['div', v.sym('a'), v.sym('b')], v.sym('c')]],
+                [[v.sym('mul'),[v.sym('div'), v.sym('a'), v.sym('b')], v.sym('c')]],
                 'mul_div')
         # Don't collapse redundant identities
         self.run_legacy_test( '(a*b)/c',
-                [['div',[v.sym('identity'), ['mul', v.sym('a'), v.sym('b')]], v.sym('c')]],
+                [[v.sym('div'),[v.sym('identity'), [v.sym('mul'), v.sym('a'), v.sym('b')]], v.sym('c')]],
                 'mul_div')
         self.run_legacy_test( '(a/b)*c',
-                [['mul',[v.sym('identity'), ['div', v.sym('a'), v.sym('b')]], v.sym('c')]],
+                [[v.sym('mul'),[v.sym('identity'), [v.sym('div'), v.sym('a'), v.sym('b')]], v.sym('c')]],
                 'mul_div')
         # Collapse identities with equal precedence
         self.run_legacy_test( 'a*(b/c)',
-                [['mul', v.sym('a'), ['div', v.sym('b'), v.sym('c')]]],
+                [[v.sym('mul'), v.sym('a'), [v.sym('div'), v.sym('b'), v.sym('c')]]],
                 'mul_div')
         self.run_legacy_test( 'a/(b*c)',
-                [['div', v.sym('a'), ['mul', v.sym('b'), v.sym('c')]]],
+                [[v.sym('div'), v.sym('a'), [v.sym('mul'), v.sym('b'), v.sym('c')]]],
                 'mul_div')
         # Collapse nested identies
         self.run_legacy_test( 'a/((b/c))',
-                [['div', v.sym('a'), [v.sym('identity'), ['div', v.sym('b'), v.sym('c')]]]],
+                [[v.sym('div'), v.sym('a'), [v.sym('identity'), [v.sym('div'), v.sym('b'), v.sym('c')]]]],
                 'mul_div')
         self.run_legacy_test( 'a*(((b*c)))',
-                [['mul', v.sym('a'), [v.sym('identity'), [v.sym('identity'), ['mul', v.sym('b'), v.sym('c')]]]]],
+                [[v.sym('mul'), v.sym('a'), [v.sym('identity'), [v.sym('identity'), [v.sym('mul'), v.sym('b'), v.sym('c')]]]]],
                 'mul_div')
         # Test that mul_div has medium precedence
         for x, y in exponent_ops:
             self.run_legacy_test( 'a' + x + 'b*c',
-                    [['mul', [y, v.sym('a'), v.sym('b')], v.sym('c')]],
+                    [[v.sym('mul'), [v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'mul_div')
         # Collapse identities with lesser precedence
         for x, y in boolean_and_ops + boolean_or_ops + equality_ops + comparison_ops + add_sub_ops:
             self.run_legacy_test( '(a' + x + 'b)*c',
-                    [['mul',[y, v.sym('a'), v.sym('b')], v.sym('c')]],
+                    [[v.sym('mul'),[v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'mul_div')
         # Don't collapse identities with greater precedence
         for x, y in exponent_ops:
             self.run_legacy_test( '(a' + x + 'b)*c',
-                    [['mul',[v.sym('identity'),[y, v.sym('a'), v.sym('b')]], v.sym('c')]],
+                    [[v.sym('mul'),[v.sym('identity'),[v.sym(y), v.sym('a'), v.sym('b')]], v.sym('c')]],
                     'mul_div')
 
 
@@ -278,46 +278,46 @@ class TestVentureScriptParserAtoms(ParserTestCase):
                 None,
                 'add_sub')
         self.run_legacy_test( 'a+b-c',
-                [['sub',['add', v.sym('a'), v.sym('b')], v.sym('c')]],
+                [[v.sym('sub'),[v.sym('add'), v.sym('a'), v.sym('b')], v.sym('c')]],
                 'add_sub')
         self.run_legacy_test( 'a-b+c',
-                [['add',['sub', v.sym('a'), v.sym('b')], v.sym('c')]],
+                [[v.sym('add'),[v.sym('sub'), v.sym('a'), v.sym('b')], v.sym('c')]],
                 'add_sub')
         # Don't collapse redundant identities
         self.run_legacy_test( '(a+b)-c',
-                [['sub',[v.sym('identity'), ['add', v.sym('a'), v.sym('b')]], v.sym('c')]],
+                [[v.sym('sub'),[v.sym('identity'), [v.sym('add'), v.sym('a'), v.sym('b')]], v.sym('c')]],
                 'add_sub')
         self.run_legacy_test( '(a-b)+c',
-                [['add',[v.sym('identity'), ['sub', v.sym('a'), v.sym('b')]], v.sym('c')]],
+                [[v.sym('add'),[v.sym('identity'), [v.sym('sub'), v.sym('a'), v.sym('b')]], v.sym('c')]],
                 'add_sub')
         # Collapse identities with equal precedence
         self.run_legacy_test( 'a+(b-c)',
-                [['add', v.sym('a'), ['sub', v.sym('b'), v.sym('c')]]],
+                [[v.sym('add'), v.sym('a'), [v.sym('sub'), v.sym('b'), v.sym('c')]]],
                 'add_sub')
         self.run_legacy_test( 'a-(b+c)',
-                [['sub', v.sym('a'), ['add', v.sym('b'), v.sym('c')]]],
+                [[v.sym('sub'), v.sym('a'), [v.sym('add'), v.sym('b'), v.sym('c')]]],
                 'add_sub')
         # Collapse nested identies
         self.run_legacy_test( 'a-((b-c))',
-                [['sub', v.sym('a'), [v.sym('identity'), ['sub', v.sym('b'), v.sym('c')]]]],
+                [[v.sym('sub'), v.sym('a'), [v.sym('identity'), [v.sym('sub'), v.sym('b'), v.sym('c')]]]],
                 'add_sub')
         self.run_legacy_test( 'a+(((b+c)))',
-                [['add', v.sym('a'), [v.sym('identity'), [v.sym('identity'), ['add', v.sym('b'), v.sym('c')]]]]],
+                [[v.sym('add'), v.sym('a'), [v.sym('identity'), [v.sym('identity'), [v.sym('add'), v.sym('b'), v.sym('c')]]]]],
                 'add_sub')
         # Test that add_sub has medium precedence
         for x, y in exponent_ops + mul_div_ops:
             self.run_legacy_test( 'a' + x + 'b+c',
-                    [['add', [y, v.sym('a'), v.sym('b')], v.sym('c')]],
+                    [[v.sym('add'), [v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'add_sub')
         # Collapse identities with lesser precedence
         for x, y in boolean_and_ops + boolean_or_ops + equality_ops + comparison_ops:
             self.run_legacy_test( '(a' + x + 'b)+c',
-                    [['add',[y, v.sym('a'), v.sym('b')], v.sym('c')]],
+                    [[v.sym('add'),[v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'add_sub')
         # Don't collapse identities with greater precedence
         for x, y in exponent_ops + mul_div_ops:
             self.run_legacy_test( '(a' + x + 'b)+c',
-                    [['add',[v.sym('identity'),[y, v.sym('a'), v.sym('b')]], v.sym('c')]],
+                    [[v.sym('add'),[v.sym('identity'),[v.sym(y), v.sym('a'), v.sym('b')]], v.sym('c')]],
                     'add_sub')
 
         # Comparison
@@ -326,35 +326,35 @@ class TestVentureScriptParserAtoms(ParserTestCase):
                 None,
                 'comparison')
         self.run_legacy_test( 'a<b<c',
-                [['lt',['lt', v.sym('a'), v.sym('b')],v.sym('c')]],
+                [[v.sym('lt'),[v.sym('lt'), v.sym('a'), v.sym('b')],v.sym('c')]],
                 'comparison')
         # Test all operators
         for x, y in comparison_ops:
             self.run_legacy_test( 'a' + x + 'b',
-                    [[y, v.sym('a'), v.sym('b')]],
+                    [[v.sym(y), v.sym('a'), v.sym('b')]],
                     'comparison')
         # Test that comparison has low precedence
         for x, y in add_sub_ops + mul_div_ops + exponent_ops:
             self.run_legacy_test( 'a' + x + 'b<c',
-                    [['lt', [y, v.sym('a'), v.sym('b')], v.sym('c')]],
+                    [[v.sym('lt'), [v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'comparison')
         # Collapse identities with lesser precedence
         for x, y in boolean_and_ops + boolean_or_ops + equality_ops:
             self.run_legacy_test( '(a' + x + 'b)<c',
-                    [['lt',[y, v.sym('a'), v.sym('b')], v.sym('c')]],
+                    [[v.sym('lt'),[v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'comparison')
         # Don't collapse identities with greater precedence
         for x, y in mul_div_ops + exponent_ops + add_sub_ops:
             self.run_legacy_test( '(a' + x + 'b)<c',
-                    [['lt',[v.sym('identity'),[y, v.sym('a'), v.sym('b')]], v.sym('c')]],
+                    [[v.sym('lt'),[v.sym('identity'),[v.sym(y), v.sym('a'), v.sym('b')]], v.sym('c')]],
                     'comparison')
         # Collapse identities of equal precedence
         self.run_legacy_test( '(a>b)<(c>d)',
-                [['lt',[v.sym('identity'),['gt', v.sym('a'), v.sym('b')]], ['gt', v.sym('c'), v.sym('d')]]],
+                [[v.sym('lt'),[v.sym('identity'),[v.sym('gt'), v.sym('a'), v.sym('b')]], [v.sym('gt'), v.sym('c'), v.sym('d')]]],
                 'comparison')
         # Collapse nested identities
         self.run_legacy_test( 'a<((b>c))',
-                [['lt', v.sym('a'), [v.sym('identity'), ['gt', v.sym('b'), v.sym('c')]]]],
+                [[v.sym('lt'), v.sym('a'), [v.sym('identity'), [v.sym('gt'), v.sym('b'), v.sym('c')]]]],
                 'comparison')
 
         # Equality
@@ -363,35 +363,35 @@ class TestVentureScriptParserAtoms(ParserTestCase):
                 None,
                 'equality')
         self.run_legacy_test( 'a==b==c',
-                [['eq',['eq', v.sym('a'), v.sym('b')],v.sym('c')]],
+                [[v.sym('eq'),[v.sym('eq'), v.sym('a'), v.sym('b')],v.sym('c')]],
                 'equality')
         # Test all operators
         for x, y in equality_ops:
             self.run_legacy_test( 'a' + x + 'b',
-                    [[y, v.sym('a'), v.sym('b')]],
+                    [[v.sym(y), v.sym('a'), v.sym('b')]],
                     'equality')
         # Test that equality has low precedence
         for x, y in add_sub_ops + mul_div_ops + exponent_ops + comparison_ops:
             self.run_legacy_test( 'a' + x + 'b==c',
-                    [['eq', [y, v.sym('a'), v.sym('b')], v.sym('c')]],
+                    [[v.sym('eq'), [v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'equality')
         # Collapse identities with lesser precedence
         for x, y in boolean_and_ops + boolean_or_ops:
             self.run_legacy_test( '(a' + x + 'b)==c',
-                    [['eq',[y, v.sym('a'), v.sym('b')], v.sym('c')]],
+                    [[v.sym('eq'),[v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'equality')
         # Don't collapse identities with greater precedence
         for x, y in mul_div_ops + exponent_ops + add_sub_ops + comparison_ops:
             self.run_legacy_test( '(a' + x + 'b)==c',
-                    [['eq',[v.sym('identity'),[y, v.sym('a'), v.sym('b')]], v.sym('c')]],
+                    [[v.sym('eq'),[v.sym('identity'),[v.sym(y), v.sym('a'), v.sym('b')]], v.sym('c')]],
                     'equality')
         # Collapse identities of equal precedence
         self.run_legacy_test( '(a!=b)==(c!=d)',
-                [['eq',[v.sym('identity'),['neq', v.sym('a'), v.sym('b')]], ['neq', v.sym('c'), v.sym('d')]]],
+                [[v.sym('eq'),[v.sym('identity'),[v.sym('neq'), v.sym('a'), v.sym('b')]], [v.sym('neq'), v.sym('c'), v.sym('d')]]],
                 'equality')
         # Collapse nested identities
         self.run_legacy_test( 'a==((b!=c))',
-                [['eq', v.sym('a'), [v.sym('identity'), ['neq', v.sym('b'), v.sym('c')]]]],
+                [[v.sym('eq'), v.sym('a'), [v.sym('identity'), [v.sym('neq'), v.sym('b'), v.sym('c')]]]],
                 'equality')
 
 
@@ -401,34 +401,34 @@ class TestVentureScriptParserAtoms(ParserTestCase):
                 None,
                 'boolean_and')
         self.run_legacy_test( 'a && b && c',
-                [['and', ['and', v.sym('a'), v.sym('b')], v.sym('c')]],
+                [[v.sym('and'), [v.sym('and'), v.sym('a'), v.sym('b')], v.sym('c')]],
                 'boolean_and')
         # Don't collapse redundant identities
         self.run_legacy_test( '(a&&b)&&c',
-                [['and', [v.sym('identity'), ['and', v.sym('a'), v.sym('b')]], v.sym('c')]],
+                [[v.sym('and'), [v.sym('identity'), [v.sym('and'), v.sym('a'), v.sym('b')]], v.sym('c')]],
                 'boolean_and')
         # Collapse non-redundant identities
         self.run_legacy_test( 'a&&(b&&c)',
-                [['and', v.sym('a'), ['and', v.sym('b'), v.sym('c')]]],
+                [[v.sym('and'), v.sym('a'), [v.sym('and'), v.sym('b'), v.sym('c')]]],
                 'boolean_and')
         # Collapse nested identities
         self.run_legacy_test( 'a&&((b&&c))',
-                [['and', v.sym('a'), [v.sym('identity'), ['and', v.sym('b'), v.sym('c')]]]],
+                [[v.sym('and'), v.sym('a'), [v.sym('identity'), [v.sym('and'), v.sym('b'), v.sym('c')]]]],
                 'boolean_and')
         # Test that and has low precedence
         for x, y in comparison_ops + equality_ops + add_sub_ops + mul_div_ops + exponent_ops:
             self.run_legacy_test( 'a' + x + 'b&&c',
-                    [['and', [y, v.sym('a'), v.sym('b')], v.sym('c')]],
+                    [[v.sym('and'), [v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'boolean_and')
         # Collapse identities with lesser precedence
         for x, y in boolean_or_ops:
             self.run_legacy_test( '(a' + x + 'b)&&c',
-                    [['and',[y, v.sym('a'), v.sym('b')], v.sym('c')]],
+                    [[v.sym('and'),[v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'boolean_and')
         # Don't collapse identities with greater precedence
         for x, y in comparison_ops + equality_ops + mul_div_ops + exponent_ops + add_sub_ops:
             self.run_legacy_test( '(a' + x + 'b)&&c',
-                    [['and',[v.sym('identity'),[y, v.sym('a'), v.sym('b')]], v.sym('c')]],
+                    [[v.sym('and'),[v.sym('identity'),[v.sym(y), v.sym('a'), v.sym('b')]], v.sym('c')]],
                     'boolean_and')
 
         # Or
@@ -437,29 +437,29 @@ class TestVentureScriptParserAtoms(ParserTestCase):
                 None,
                 'boolean_or')
         self.run_legacy_test( 'a || b || c',
-                [['or', ['or', v.sym('a'), v.sym('b')], v.sym('c')]],
+                [[v.sym('or'), [v.sym('or'), v.sym('a'), v.sym('b')], v.sym('c')]],
                 'boolean_or')
         # Don't collapse redundant identities
         self.run_legacy_test( '(a||b)||c',
-                [['or', [v.sym('identity'), ['or', v.sym('a'), v.sym('b')]], v.sym('c')]],
+                [[v.sym('or'), [v.sym('identity'), [v.sym('or'), v.sym('a'), v.sym('b')]], v.sym('c')]],
                 'boolean_or')
         # Collapse non-redundant identities
         self.run_legacy_test( 'a||(b||c)',
-                [['or', v.sym('a'), ['or', v.sym('b'), v.sym('c')]]],
+                [[v.sym('or'), v.sym('a'), [v.sym('or'), v.sym('b'), v.sym('c')]]],
                 'boolean_or')
         # Collapse nested identities
         self.run_legacy_test( 'a||((b||c))',
-                [['or', v.sym('a'), [v.sym('identity'), ['or', v.sym('b'), v.sym('c')]]]],
+                [[v.sym('or'), v.sym('a'), [v.sym('identity'), [v.sym('or'), v.sym('b'), v.sym('c')]]]],
                 'boolean_or')
         # Test that or has low precedence
         for x, y in comparison_ops + equality_ops + add_sub_ops + mul_div_ops + exponent_ops:
             self.run_legacy_test( 'a' + x + 'b||c',
-                    [['or', [y, v.sym('a'), v.sym('b')], v.sym('c')]],
+                    [[v.sym('or'), [v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'boolean_or')
         # Don't collapse identities with greater precedence
         for x, y in comparison_ops + equality_ops + mul_div_ops + exponent_ops + add_sub_ops:
             self.run_legacy_test( '(a' + x + 'b)||c',
-                    [['or',[v.sym('identity'),[y, v.sym('a'), v.sym('b')]], v.sym('c')]],
+                    [[v.sym('or'),[v.sym('identity'),[v.sym(y), v.sym('a'), v.sym('b')]], v.sym('c')]],
                     'boolean_or')
 
 
@@ -498,23 +498,23 @@ class TestVentureScriptParserAtoms(ParserTestCase):
                 'expression')
         #exponentiation
         self.run_legacy_test( 'a**b**c',
-                [['pow', v.sym('a'), ['pow', v.sym('b'), v.sym('c')]]],
+                [[v.sym('pow'), v.sym('a'), [v.sym('pow'), v.sym('b'), v.sym('c')]]],
                 'expression')
         #mul_div
         self.run_legacy_test( 'a*b/c',
-                [['div',['mul', v.sym('a'), v.sym('b')], v.sym('c')]],
+                [[v.sym('div'),[v.sym('mul'), v.sym('a'), v.sym('b')], v.sym('c')]],
                 'expression')
         #add_sub
         self.run_legacy_test( 'a+b-c',
-                [['sub',['add', v.sym('a'), v.sym('b')], v.sym('c')]],
+                [[v.sym('sub'),[v.sym('add'), v.sym('a'), v.sym('b')], v.sym('c')]],
                 'expression')
         #comparision
         self.run_legacy_test( 'a==b==c',
-                [['eq', ['eq', v.sym('a'), v.sym('b')], v.sym('c')]],
+                [[v.sym('eq'), [v.sym('eq'), v.sym('a'), v.sym('b')], v.sym('c')]],
                 'expression')
         #boolean
         self.run_legacy_test( 'true && true || true',
-                [['or', ['and', v.boolean(True), v.boolean(True)], v.boolean(True)]],
+                [[v.sym('or'), [v.sym('and'), v.boolean(True), v.boolean(True)], v.boolean(True)]],
                 'expression')
 
 
@@ -522,10 +522,10 @@ class TestVentureScriptParserAtoms(ParserTestCase):
         self.run_legacy_test( '''
         (1 + 4)/3**5.11 + 32*4-2
         ''',
-                [['sub',
-                            ['add',
-                                ['div',['add',v.number(1.0),v.number(4.0)],['pow',v.number(3.0),v.number(5.11)]],
-                                ['mul',v.number(32.0),v.number(4.0)],
+                [[v.sym('sub'),
+                            [v.sym('add'),
+                                [v.sym('div'),[v.sym('add'),v.number(1.0),v.number(4.0)],[v.sym('pow'),v.number(3.0),v.number(5.11)]],
+                                [v.sym('mul'),v.number(32.0),v.number(4.0)],
                                 ],
                             v.number(2.0)]],
                 'expression')
