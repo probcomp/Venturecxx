@@ -142,8 +142,8 @@ def grad_list(args, direction):
     tails = [0 for _ in range(len(args) - len(list_))]
     return list_ + tails
 
-def printf(value, label):
-  print 'printf ' + label + ': ' + str(value)
+def print_(value, label):
+  print 'print ' + label + ': ' + str(value)
   return value
 
 def vector_dot(v1, v2):
@@ -317,7 +317,7 @@ builtInSPsList = [
                                                v.MatrixType(),
                                                descr="(%s x y) returns the product of matrices x and y.") ],
 
-           [ "printf", deterministic_typed(printf,
+           [ "print", deterministic_typed(print_,
                                            [v.AnyType("k"), v.SymbolType()],
                                            v.AnyType("k"),
                                            descr = "Print the value of the result of any other SP, labeled by a Symbol.") ],
