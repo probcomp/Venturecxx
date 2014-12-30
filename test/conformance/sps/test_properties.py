@@ -189,7 +189,6 @@ def checkRiplAgreesWithDeterministicSimulate(name, sp):
     "min", # Not implemented
     "real", # Not implemented
     "atom_eq", # Not implemented
-    "contains", # Not implemented for sequences
     "arange", # Not implemented
     "linspace", # Not implemented
     "diag_matrix", # Not implemented

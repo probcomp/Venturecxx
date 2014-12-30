@@ -150,6 +150,7 @@ struct VentureNil : VentureValue
   size_t hash() const;
 
   VentureValuePtr lookup(VentureValuePtr index) const { throw "Tried to lookup in nil or list index out of range"; }
+  bool contains(VentureValuePtr index) const { return false; }
   int size() const { return 0; }
 
   string toString() const;
@@ -173,6 +174,7 @@ struct VenturePair : VentureValue
   size_t hash() const;
 
   VentureValuePtr lookup(VentureValuePtr index) const;
+  bool contains(VentureValuePtr index) const;
   int size() const { return 1 + getRest()->size(); }
 
   string toString() const;
@@ -194,6 +196,7 @@ struct VentureArray : VentureValue
   boost::python::dict toPython(Trace * trace) const;
 
   VentureValuePtr lookup(VentureValuePtr index) const { return xs[index->getInt()]; }
+  bool contains(VentureValuePtr index) const;
   int size() const { return xs.size(); }
 
   int getValueTypeRank() const;
@@ -225,6 +228,7 @@ struct VentureSimplex : VentureValue
   size_t hash() const;
 
   VentureValuePtr lookup(VentureValuePtr index) const { return VentureValuePtr(new VentureProbability(ps[index->getInt()])); }
+  bool contains(VentureValuePtr index) const;
   int size() const { return ps.size(); }
 
   string toString() const;
@@ -300,6 +304,7 @@ struct VentureVector : VentureValue
   bool equalsSameType(const VentureValuePtr & other) const;
 
   VentureValuePtr lookup(VentureValuePtr index) const { return VentureValuePtr(new VentureNumber(v(index->getInt()))); }
+  bool contains(VentureValuePtr index) const;
   int size() const { return v.size(); }
 
   string toString() const;

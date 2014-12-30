@@ -643,3 +643,43 @@ VentureValuePtr VentureDictionary::lookup(VentureValuePtr index) const
   throw "Key " + index->toString() + " not found in VentureDictionary.";
 }
 
+///// Contains methods
+
+bool VenturePair::contains(VentureValuePtr item) const
+{
+  if (car->equals(item))
+  {
+    return true;
+  } else {
+    return cdr->contains(item);
+  }
+}
+
+bool VentureArray::contains(VentureValuePtr item) const
+{
+  for (size_t i = 0; i < xs.size(); ++i)
+  {
+    if (xs[i]->equals(item)) { return true; }
+  }
+  return false;
+}
+
+bool VentureSimplex::contains(VentureValuePtr item) const
+{
+  double target = item->getDouble();
+  for (size_t i = 0; i < ps.size(); ++i)
+  {
+    if (ps[i] == target) { return true; }
+  }
+  return false;
+}
+
+bool VentureVector::contains(VentureValuePtr item) const
+{
+  double target = item->getDouble();
+  for (int i = 0; i < v.size(); ++i)
+  {
+    if (v[i] == target) { return true; }
+  }
+  return false;
+}
