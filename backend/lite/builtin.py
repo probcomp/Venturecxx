@@ -142,6 +142,10 @@ def grad_list(args, direction):
     tails = [0 for _ in range(len(args) - len(list_))]
     return list_ + tails
 
+def print_(value, label):
+  print 'print ' + label + ': ' + str(value)
+  return value
+
 def vector_dot(v1, v2):
   candidate = np.dot(v1, v2)
   if isinstance(candidate, Number):  # Numpy! WTF?
@@ -312,6 +316,11 @@ builtInSPsList = [
                                                [v.MatrixType(), v.MatrixType()],
                                                v.MatrixType(),
                                                descr="(%s x y) returns the product of matrices x and y.") ],
+
+           [ "print", deterministic_typed(print_,
+                                           [v.AnyType("k"), v.SymbolType()],
+                                           v.AnyType("k"),
+                                           descr = "Print the value of the result of any other SP, labeled by a Symbol.") ],
 
            [ "apply", esr_output(TypedPSP(functional.ApplyRequestPSP(),
                                           SPType([SPType([v.AnyType("a")], v.AnyType("b"), variadic=True),

@@ -57,7 +57,7 @@ def _collapse_identity(toks, operators):
         return {"loc":toks['loc'], "value":[
             toks['value'][0],
             _collapse_identity(toks['value'][1], operators)]}
-    if toks['value'][1]['value'][0]['value'] in operators:
+    if toks['value'][1]['value'][0]['value']['value'] in operators:
         return {"loc":toks['loc'], "value":toks['value'][1]['value']}
     return toks
 
@@ -88,7 +88,7 @@ def _make_infix_token(previous_token, operator_map, lower_precedence, left_to_ri
         exp = toks[0]
         for operator, operand in zip(*(iter(toks[1:]),)*2):
             l = combine_locs([operator, operand, exp])
-            operator['value'] = operator_dict[operator['value']]
+            operator['value'] = vv.sym(operator_dict[operator['value']])
             if swap_order:
                 v = [operator, operand, exp]
             else:

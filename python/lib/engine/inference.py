@@ -15,12 +15,14 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
+import numpy as np
 from pandas import DataFrame, Index
 
 from venture.lite.value import (ExpressionType, SymbolType, VentureArray, VentureSymbol,
                                 VentureInteger)
 from venture.lite.utils import logWeightsToNormalizedDirect
 from venture.ripl.utils import strip_types_from_dict_values
+from venture.lite.exception import VentureBuiltinSPMethodError
 from plot_spec import PlotSpec
 
 class Infer(object):
@@ -263,12 +265,25 @@ class InferResult(object):
     # reset the data to record the current iteration
     self._this_iter_data = {}
 
+  @staticmethod
+  def _safe_logscore_all(engine):
+    '''
+    There are situations where we can't actually compute a global logscore
+    (e.g. in the presence of likelihood-free SP's). These situations shouldn't
+    totally crash the program.
+    '''
+    try:
+      logscore_all = engine.logscore_all()
+    except VentureBuiltinSPMethodError:
+      logscore_all = [np.nan] * engine.num_traces()
+    return logscore_all
+
   def _collect_default_streams(self, engine):
     the_time = time.time() - self.time
     self._this_iter_data['sweep count'] = [self.sweep] * engine.num_traces()
     self._this_iter_data['particle id'] = range(engine.num_traces())
     self._this_iter_data['time (s)'] = [the_time] * engine.num_traces()
-    self._this_iter_data['log score'] = engine.logscore_all()
+    self._this_iter_data['log score'] = self._safe_logscore_all(engine)
 
   def _collect_requested_streams(self, engine, command):
     if command == 'peek':
