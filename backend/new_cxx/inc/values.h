@@ -264,6 +264,8 @@ struct VentureMatrix : VentureValue
   boost::python::dict toPython(Trace * trace) const;
 
   int getValueTypeRank() const;
+  bool ltSameType(const VentureValuePtr & other) const;
+  bool equalsSameType(const VentureValuePtr & other) const;
 
   string toString() const;
 
@@ -292,6 +294,10 @@ struct VentureVector : VentureValue
   vector<VentureValuePtr> getArray() const;
 
   boost::python::dict toPython(Trace * trace) const;
+
+  int getValueTypeRank() const;
+  bool ltSameType(const VentureValuePtr & other) const;
+  bool equalsSameType(const VentureValuePtr & other) const;
 
   VentureValuePtr lookup(VentureValuePtr index) const { return VentureValuePtr(new VentureNumber(v(index->getInt()))); }
   int size() const { return v.size(); }

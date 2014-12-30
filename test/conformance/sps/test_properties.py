@@ -186,11 +186,6 @@ def testRiplSimulate():
 def checkRiplAgreesWithDeterministicSimulate(name, sp):
   if config["get_ripl"] != "lite" and name in [
     ## Incompatibilities with Puma
-    "eq", # Not implemented for matrices
-    "gt", # Not implemented for matrices
-    "gte",
-    "lt",
-    "lte",
     "min", # Not implemented
     "real", # Not implemented
     "atom_eq", # Not implemented
