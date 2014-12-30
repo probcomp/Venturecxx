@@ -249,6 +249,39 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
 import distutils.ccompiler
 distutils.ccompiler.CCompiler.compile=parallelCCompile
 
+# XXX This is a mega-kludge.  Since distutils/setuptools has no way to
+# order dependencies (what kind of brain-dead build system can't do
+# this?), we just always regenerate the grammar.  Could hack
+# distutils.command.build to include a dependency mechanism, but this
+# is more expedient for now.
+grammars = [
+    'python/lib/parser/church_prime/grammar.y',
+]
+
+import distutils.spawn
+import errno
+import os
+import os.path
+root = os.path.dirname(os.path.abspath(__file__))
+lemonade = root + '/external/lemonade/dist'
+for grammar in grammars:
+    parser = os.path.splitext(grammar)[0] + '.py'
+    parser_mtime = None
+    try:
+        parser_mtime = os.path.getmtime(parser)
+    except OSError as e:
+        if e.errno != errno.ENOENT:
+            raise
+    if parser_mtime is not None:
+        if os.path.getmtime(grammar) < parser_mtime:
+            continue
+    print 'generating %s -> %s' % (grammar, parser)
+    distutils.spawn.spawn([
+        '/usr/bin/env', 'PYTHONPATH=' + lemonade,
+        lemonade + '/bin/lemonade',
+        '-s',                   # Write statistics to stdout.
+        grammar,
+    ])
 
 setup (
     name = 'Venture CXX',
