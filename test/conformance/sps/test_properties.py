@@ -197,10 +197,6 @@ def checkRiplAgreesWithDeterministicSimulate(name, sp):
     "repeat", # Not implemented
     "vector_dot", # Not implemented
     "zip", # Not implemented
-    "is_number", # Not implemented
-    "is_integer", # Not implemented
-    "is_probability", # Not implemented
-    "is_boolean", # Not implemented
     "is_procedure", # Not implemented
     "print", # Not implemented
   ]:

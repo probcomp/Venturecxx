@@ -104,6 +104,21 @@ struct NotOutputPSP : PSP
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };
 
+struct IsNumberOutputPSP : PSP
+{ 
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
+struct IsIntegerOutputPSP : PSP
+{ 
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
+struct IsBoolOutputPSP : PSP
+{ 
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
 struct IsSymbolOutputPSP : PSP
 { 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
@@ -121,6 +136,11 @@ struct IsAtomOutputPSP : PSP
 
 struct ProbabilityOutputPSP : PSP
 {
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
+struct IsProbabilityOutputPSP : PSP
+{ 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };
 

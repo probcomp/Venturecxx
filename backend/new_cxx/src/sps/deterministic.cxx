@@ -138,6 +138,24 @@ VentureValuePtr NotOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
   return shared_ptr<VentureBool>(new VentureBool(!args->operandValues[0]->getBool()));
 }
 
+VentureValuePtr IsNumberOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("is_number", args, 1);
+  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureNumber>(args->operandValues[0]) != NULL));
+}
+
+VentureValuePtr IsIntegerOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("is_integer", args, 1);
+  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureInteger>(args->operandValues[0]) != NULL));
+}
+
+VentureValuePtr IsBoolOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("is_boolean", args, 1);
+  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureBool>(args->operandValues[0]) != NULL));
+}
+
 VentureValuePtr IsSymbolOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("is_symbol", args, 1);
@@ -160,4 +178,10 @@ VentureValuePtr ProbabilityOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * 
 {
   checkArgsLength("probability", args, 1);
   return VentureValuePtr(new VentureProbability(args->operandValues[0]->getProbability()));
+}
+
+VentureValuePtr IsProbabilityOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("is_probability", args, 1);
+  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureProbability>(args->operandValues[0]) != NULL));
 }
