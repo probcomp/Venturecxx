@@ -324,7 +324,7 @@ bool VentureVector::ltSameType(const VentureValuePtr & other) const
   shared_ptr<VentureVector> other_v = dynamic_pointer_cast<VentureVector>(other);
   assert(other_v);
   if (v.size() != other_v->v.size()) { return v.size() < other_v->v.size(); }
-  for (size_t i = 0; i < v.size(); ++i)
+  for (int i = 0; i < v.size(); ++i)
     {
       if (v[i] < other_v->v[i]) { return true; }
       if (other_v->v[i] < v[i]) { return false; }
@@ -338,9 +338,9 @@ bool VentureMatrix::ltSameType(const VentureValuePtr & other) const
   assert(other_m);
   if (m.rows() != other_m->m.rows()) { return m.rows() < other_m->m.rows(); }
   if (m.cols() != other_m->m.cols()) { return m.cols() < other_m->m.cols(); }
-  for (size_t i = 0; i < m.rows(); ++i)
+  for (int i = 0; i < m.rows(); ++i)
     {
-      for (size_t j = 0; j < m.cols(); ++j)
+      for (int j = 0; j < m.cols(); ++j)
         {
           if (m(i, j) < other_m->m(i, j)) { return true; }
           if (other_m->m(i, j) < m(i, j)) { return false; }
@@ -442,7 +442,7 @@ bool VentureVector::equalsSameType(const VentureValuePtr & other) const
   shared_ptr<VentureVector> other_v = dynamic_pointer_cast<VentureVector>(other);
   assert(other_v);
   if (v.size() != other_v->v.size()) { return false; }
-  for (size_t i = 0; i < v.size(); ++i) { if (v[i] != other_v->v[i]) { return false; } }
+  for (int i = 0; i < v.size(); ++i) { if (v[i] != other_v->v[i]) { return false; } }
   return true;
 }
 
@@ -452,9 +452,9 @@ bool VentureMatrix::equalsSameType(const VentureValuePtr & other) const
   assert(other_m);
   if (m.rows() != other_m->m.rows()) { return false; }
   if (m.cols() != other_m->m.cols()) { return false; }
-  for (size_t i = 0; i < m.rows(); ++i)
+  for (int i = 0; i < m.rows(); ++i)
     {
-      for (size_t j = 0; j < m.cols(); ++j)
+      for (int j = 0; j < m.cols(); ++j)
         {
           if (other_m->m(i, j) != m(i, j)) { return false; }
         }
