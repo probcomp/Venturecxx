@@ -1,8 +1,10 @@
+import warnings
 from address import Address, List
 from builtin import builtInValues, builtInSPs
 from env import VentureEnvironment
 from node import Node,ConstantNode,LookupNode,RequestNode,OutputNode,Args
 import math
+from numpy import nan
 from regen import constrain, processMadeSP, evalFamily, restore
 from detach import unconstrain, unevalFamily
 from value import SPRef, ExpressionType, VentureValue, VentureSymbol, VentureNumber
@@ -23,9 +25,9 @@ from regen import regenAndAttach
 from detach import detachAndExtract
 from scaffold import constructScaffold
 from lkernel import DeterministicLKernel
-from psp import ESRRefOutputPSP
+from psp import ESRRefOutputPSP, TypedPSP, LikelihoodFreePSP
 from serialize import OrderedOmegaDB
-from exception import VentureError
+from exception import VentureError, LogScoreWarning
 from venture.exception import VentureException
 
 class Trace(object):
@@ -109,10 +111,10 @@ class Trace(object):
     else:
       #assert isinstance(scope, VentureValue)
       #assert isinstance(block, VentureValue)
-      
+
       scope = self._normalizeEvaluatedScopeOrBlock(scope)
       block = self._normalizeEvaluatedScopeOrBlock(block)
-      
+
       return (scope, block)
 
   def registerConstrainedChoice(self,node):
@@ -262,7 +264,7 @@ class Trace(object):
 
   #### For kernels
   def getScope(self, scope): return self.scopes[self._normalizeEvaluatedScopeOrBlock(scope)]
-  
+
   def sampleBlock(self,scope): return self.getScope(scope).sample()[0]
   def logDensityOfBlock(self,scope): return -1 * math.log(self.numBlocksInScope(scope))
   def blocksInScope(self,scope): return self.getScope(scope).keys()
@@ -544,7 +546,22 @@ the scaffold determined by the given expression."""
 
   def getGlobalLogScore(self):
     # TODO This algorithm is totally wrong: https://app.asana.com/0/16653194948424/20100308871203
-    return sum([self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node)) for node in self.rcs.union(self.ccs)])
+    scores, isLikelihoodFree = zip(*[self._getOneLogScore(node) for node in self.rcs.union(self.ccs)])
+    if any(isLikelihoodFree):
+      n = sum(isLikelihoodFree)
+      warnstr = "There are {0} likelihood-free SP's. These are not included in the logscore.".format(n)
+      warnings.warn(warnstr, LogScoreWarning)
+    return sum(scores)
+
+  def _getOneLogScore(self, node):
+    # Hack: likelihood-free PSP's contribute 0 to global logscore.
+    # This is incorrect, but better than the function breaking entirely.
+    wrapped = self.pspAt(node)
+    psp = wrapped.psp if isinstance(wrapped, TypedPSP) else wrapped
+    if isinstance(psp, LikelihoodFreePSP):
+      return (0.0, True)
+    else:
+      return (wrapped.logDensity(self.groundValueAt(node),self.argsAt(node)), False)
 
   #### Serialization interface
 
@@ -592,7 +609,7 @@ the scaffold determined by the given expression."""
       node.children.add(child)
 
   #### Configuration
-  
+
   def set_profiling(self, enabled=True):
     self.profiling_enabled = enabled
 
