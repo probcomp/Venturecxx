@@ -147,7 +147,7 @@ class Scanner(Plex.Scanner):
     intfrac = integer + Plex.Opt(dot + digits)          # [+/-]NNN[.[NNNN]]
     fraconly = optsign + dot + digits1                  # [+/-].NNNN
     expmark = Plex.Any('eE')
-    exponent = expmark + optsign + Plex.Rep1(digit)     # (e/E)[+/-]NNN
+    exponent = expmark + optsign + digits1              # (e/E)[+/-]NNN
     real = (intfrac | fraconly) + Plex.Opt(exponent)
     esc = Plex.Str('\\')
     escchar = Plex.Str(*escapes.keys())
