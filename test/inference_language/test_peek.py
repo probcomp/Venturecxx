@@ -109,7 +109,7 @@ def testPrintf():
   res = result.getvalue()
   assert pattern.match(res) is not None
 
-def testGlobalLogscore():
+def testPeekLogscore():
   '''In the presence of likelihood-free SP's, the calling "peek" or "printf"
   should not crash the program.'''
   class TestPSP(LikelihoodFreePSP):
