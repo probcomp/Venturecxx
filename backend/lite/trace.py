@@ -549,7 +549,7 @@ the scaffold determined by the given expression."""
     scores, isLikelihoodFree = zip(*[self._getOneLogScore(node) for node in self.rcs.union(self.ccs)])
     if any(isLikelihoodFree):
       n = sum(isLikelihoodFree)
-      warnstr = "There are {0} likelihood-free SP's. These are not included in the logscore.".format(n)
+      warnstr = "There are {0} likelihood-free SP's in the trace. These are not included in the logscore.".format(n)
       warnings.warn(warnstr, LogScoreWarning)
     return sum(scores)
 
