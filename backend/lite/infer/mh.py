@@ -26,19 +26,25 @@ def registerDeterministicLKernelsByAddress(trace,scaffold,addressesAndValues):
 def mixMH(trace,indexer,operator):
   start = time.time()
   index = indexer.sampleIndex(trace)
-  
+  # record the principal nodes and current values, for the benefit of the profiler
+  nodes = index.getPrincipalNodes()
+  current = [trace.valueAt(node) for node in nodes]
+
   # read out some node addresses for the benefit of the profiler
   getAddr = lambda node: node.address
   principal = map(getAddr, index.getPrincipalNodes())
   absorbing = map(getAddr, index.absorbing)
   aaa = map(getAddr, index.aaa)
   brush = len(index.brush)
-  
+
   rhoMix = indexer.logDensityOfIndex(trace,index)
   # May mutate trace and possibly operator, proposedTrace is the mutated trace
   # Returning the trace is necessary for the non-mutating versions
   proposedTrace,logAlpha = operator.propose(trace,index)
   xiMix = indexer.logDensityOfIndex(proposedTrace,index)
+
+  # record the proposed values for the profiler
+  proposed = [trace.valueAt(node) for node in nodes]
 
   alpha = xiMix + logAlpha - rhoMix
   if math.log(random.random()) < alpha:
@@ -49,13 +55,15 @@ def mixMH(trace,indexer,operator):
 #    sys.stdout.write("!")
     operator.reject() # May mutate trace
     accepted = False
-  
+
   if trace.profiling_enabled:
     trace.recordProposal(
       operator = operator.name(),
       indexer = indexer.name(),
       time = time.time() - start,
       logscore = trace.getGlobalLogScore(),
+      current = current,
+      proposed = proposed,
       accepted = accepted,
       alpha = alpha,
       principal = principal,

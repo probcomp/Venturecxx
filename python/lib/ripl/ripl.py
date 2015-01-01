@@ -99,9 +99,9 @@ class Ripl():
     ############################################
     # Execution
     ############################################
-    
-    
-    
+
+
+
     def execute_instruction(self, instruction=None, params=None, suppress_drawing_plots=False):
         p = self._cur_parser()
         try: # execute instruction, and handle possible exception
@@ -142,7 +142,7 @@ class Ripl():
         if not suppress_drawing_plots and parsed_instruction['instruction'] is 'infer' and ret_value["value"] is not None and not isinstance(ret_value["value"], dict):
             print ret_value["value"]
         return ret_value
-    
+
     def _annotated_error(self, e, instruction):
         if e.exception is 'evaluation':
             p = self._cur_parser()
@@ -166,7 +166,7 @@ class Ripl():
         # text index (which defaults to the entire instruction)
         if 'text_index' not in e.data:
             e.data['text_index'] = [0,len(instruction_string)-1]
-        
+
         # in the case of a parse exception, the text_index gets narrowed
         # down to the exact expression/atom that caused the error
         if e.exception == 'parse':
@@ -181,7 +181,7 @@ class Ripl():
                 if e2.exception == 'no_text_index': text_index = None
                 else: raise
             e.data['text_index'] = text_index
-        
+
         # for "text_parse" exceptions, even trying to split the instruction
         # results in an exception
         if e.exception == 'text_parse':
@@ -190,7 +190,7 @@ class Ripl():
             except VentureException as e2:
                 assert e2.exception == 'text_parse'
                 e = e2
-            
+
         # in case of invalid argument exception, the text index
         # refers to the argument's location in the string
         if e.exception == 'invalid_argument':
@@ -199,12 +199,12 @@ class Ripl():
             arg = e.data['argument']
             text_index = arg_ranges[arg]
             e.data['text_index'] = text_index
-        
+
         a = e.data['text_index'][0]
         b = e.data['text_index'][1]+1
         e.data['text_snippet'] = instruction_string[a:b]
         e.data['instruction_string'] = instruction_string
-        
+
         e.annotated = True
         return e
 
@@ -357,19 +357,19 @@ class Ripl():
     def addr2Source(self, addr):
         """Takes an address and gives the corresponding (unparsed)
         source code and expression index."""
-        
+
         return self.sivm._resugar(list(addr.last))
-    
+
     def humanReadable(self, exp=None, did=None, index=None, **kwargs):
         """Take a parsed expression and index and turn it into
         unparsed form with text indeces."""
-        
+
         p = self._cur_parser()
         exp = p.unparse_expression(exp)
         text_index = p.expression_index_to_text_index(exp, index)
         return exp, text_index
-    
-    
+
+
     ############################################
     # Directives
     ############################################
@@ -603,14 +603,14 @@ Open issues:
             if len(instructions) > 0:
                 directives = [d for d in directives if d['instruction'] in instructions]
             return directives
-    
+
     def print_directives(self, *instructions, **kwargs):
         for directive in self.list_directives(instructions = instructions, **kwargs):
             dir_id = int(directive['directive_id'])
             dir_val = str(directive['value'])
             dir_type = directive['instruction']
             dir_text = self._get_raw_text(dir_id)
-            
+
             if dir_type == "assume":
                 print "%d: %s:\t%s" % (dir_id, dir_text, dir_val)
             elif dir_type == "observe":
@@ -619,7 +619,7 @@ Open issues:
                 print "%d: %s:\t %s" % (dir_id, dir_text, dir_val)
             else:
                 assert False, "Unknown directive type found: %s" % str(directive)
-      
+
     def get_directive(self, label_or_did):
         if isinstance(label_or_did,int):
             i = {'instruction':'get_directive', 'directive_id':label_or_did}
@@ -753,22 +753,29 @@ Open issues:
 
     def profile_data(self):
         rows = self.sivm.core_sivm.engine.profile_data()
-        
+
         def replace(d, name, f):
             if name in d:
                 d[name] = f(d[name])
-        
+
         def resugar(addr):
             stuff = self.addr2Source(addr)
             return (stuff['did'], tuple(stuff['index']))
-        
+
+        def getaddr((did, index)):
+            from venture.exception import underline
+            exp = self.sivm._get_exp(did) #pylint: disable=protected-access
+            text, indyces = self.humanReadable(exp, did, index)
+            return text + '\n' + underline(indyces)
+
         for row in rows:
             for name in ['principal', 'absorbing', 'aaa']:
                 replace(row, name, lambda addrs: frozenset(map(resugar, addrs)))
-        
+            row['address'] = [getaddr(x) for x in row['principal']]
+
         from pandas import DataFrame
         return DataFrame.from_records(rows)
-        
+
     _parsed_prelude = None
 
     ############################################
