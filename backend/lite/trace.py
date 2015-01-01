@@ -547,7 +547,7 @@ the scaffold determined by the given expression."""
   def getGlobalLogScore(self):
     # TODO This algorithm is totally wrong: https://app.asana.com/0/16653194948424/20100308871203
     all_scores = [self._getOneLogScore(node) for node in self.rcs.union(self.ccs)]
-    scores, isLikelihoodFree = zip(*all_scores) if all_scores else (), ()
+    scores, isLikelihoodFree = zip(*all_scores) if all_scores else [(), ()]
     if any(isLikelihoodFree):
       n = sum(isLikelihoodFree)
       warnstr = "There are {0} likelihood-free SP's in the trace. These are not included in the logscore.".format(n)
