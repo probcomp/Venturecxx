@@ -80,6 +80,7 @@ inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]
   SPsListEntry("assume", [v.AnyType(), v.AnyType()], klass=MadeEngineMethodInferOutputPSP),
   SPsListEntry("observe", [v.AnyType(), v.AnyType()], klass=MadeEngineMethodInferOutputPSP),
   SPsListEntry("predict", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP),
+  SPsListEntry("load_plugin", [v.SymbolType()], klass=MadeEngineMethodInferOutputPSP),
 
   # Hackety hack hack backward compatibility
   ["ordered_range", deterministic_typed(lambda *args: (v.VentureSymbol("ordered_range"),) + args,

@@ -68,7 +68,14 @@ class Ripl():
         self._n_prelude = 0
         # TODO Loading the prelude currently (6/26/14) slows the test suite to a crawl
         # self.load_prelude()
-
+        r = self.sivm.core_sivm.engine.ripl
+        if r is None:
+            self.sivm.core_sivm.engine.ripl = self
+        elif r is self:
+            # OK
+            pass
+        else:
+            print "Wrapping sivm %s in a new ripl but it already has one: %s.  Engine to ripl references may be incorrect." % (self.sivm, r)
 
 
     ############################################
