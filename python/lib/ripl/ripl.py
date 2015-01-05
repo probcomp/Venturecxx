@@ -66,7 +66,7 @@ class Ripl():
         self.directive_id_to_mode = {}
         self.mode = parsers.keys()[0]
         self._n_prelude = 0
-        # TODO Loading the prelude currently (6/26) slows the test suite to a crawl
+        # TODO Loading the prelude currently (6/26/14) slows the test suite to a crawl
         # self.load_prelude()
 
 
