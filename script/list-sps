@@ -38,13 +38,18 @@ def flags(psp):
   # Simulation kernels and delta kernels are unused right now
   return ans
 
-for (name,sp) in builtInSPsList:
-  print ""
-  desc_lines = sp.description(name).split("\n")
+def wrap_description(desc):
+  desc_lines = desc.split("\n")
   if len(desc_lines) == 1:
-    print desc_lines[0]
+    return desc_lines[0]
   else:
-    for line in desc_lines[0:-1]:
-      print line
-    print textwrap.fill(desc_lines[-1],70)
-  print "  " + string.capitalize(string.join(flags(sp.outputPSP), ", "))
+    return string.join(desc_lines[0:-1], "\n") + "\n" + textwrap.fill(desc_lines[-1],70)
+
+def main():
+  for (name,sp) in builtInSPsList:
+    print ""
+    print wrap_description(sp.description(name))
+    print "  " + string.capitalize(string.join(flags(sp.outputPSP), ", "))
+
+if __name__ == "__main__":
+  main()
