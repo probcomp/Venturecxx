@@ -16,6 +16,7 @@
 # 	
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys
 import string
 import textwrap
 from venture.lite.builtin import builtInSPsList
@@ -51,7 +52,7 @@ def main():
     print wrap_description(sp.description(name))
     print "  " + string.capitalize(string.join(flags(sp.outputPSP), ", "))
 
-def main2():
+def main_rst_format():
   for (name,sp) in builtInSPsList:
     print ""
     print wrap_description(sp.description_rst_format(name))
@@ -59,4 +60,8 @@ def main2():
     print string.capitalize(string.join(flags(sp.outputPSP), ", "))
 
 if __name__ == "__main__":
-  main()
+  if len(sys.argv) > 1:
+    assert sys.argv[1] == "--rst"
+    main_rst_format()
+  else:
+    main()
