@@ -46,6 +46,13 @@ def wrap_description(desc):
   else:
     return string.join(desc_lines[0:-1], "\n") + "\n" + textwrap.fill(desc_lines[-1],70)
 
+def wrap_description_rst_format(desc):
+  desc_lines = desc.split("\n")
+  if len(desc_lines) == 1:
+    return "   " + desc_lines[0]
+  else:
+    return string.join(desc_lines[0:-1], "\n") + "\n" + "\n".join(["   " + line for line in textwrap.wrap(desc_lines[-1].strip(),67)])
+
 def main():
   for (name,sp) in builtInSPsList:
     print ""
@@ -55,9 +62,9 @@ def main():
 def main_rst_format():
   for (name,sp) in builtInSPsList:
     print ""
-    print wrap_description(sp.description_rst_format(name))
+    print wrap_description_rst_format(sp.description_rst_format(name))
     print
-    print string.capitalize(string.join(flags(sp.outputPSP), ", "))
+    print "   " + string.capitalize(string.join(flags(sp.outputPSP), ", "))
 
 if __name__ == "__main__":
   if len(sys.argv) > 1:

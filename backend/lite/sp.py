@@ -170,7 +170,12 @@ used in the implementation of TypedPSP and TypedLKernel."""
         result += ", "
       result += subtype_name(arg)
     result += "]" * (len(self.args_types) - self.min_req_args)
-    result += ") -> " + subtype_name(self.return_type)
+    result += ")"
+    if name != "proc":
+      # Top-level
+      result += "\n\n   :rtype: " + subtype_name(self.return_type)
+    else:
+      result += " -> " + subtype_name(self.return_type)
     return result
 
   def gradient_type(self):
