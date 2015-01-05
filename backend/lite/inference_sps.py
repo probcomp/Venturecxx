@@ -12,19 +12,17 @@ class InferPrimitiveOutputPSP(psp.DeterministicPSP):
                                     psp.TypedPSP(self.klass(self.name, args.operandValues),
                                                  sp.SPType([v.ForeignBlobType()], v.ForeignBlobType()))))
 
-class MadeInferPrimitiveOutputPSP(psp.RandomPSP):
+class MadeInferPrimitiveOutputPSP(psp.LikelihoodFreePSP):
   def __init__(self, name, exp):
     self.exp = [name] + exp
-  def canAbsorb(self, _trace, _appNode, _parentNode): return False
   def simulate(self, args):
     args.operandValues[0].primitive_infer(self.exp)
     return args.operandValues[0]
 
-class MadeEngineMethodInferOutputPSP(psp.RandomPSP):
+class MadeEngineMethodInferOutputPSP(psp.LikelihoodFreePSP):
   def __init__(self, name, operands):
     self.name = name
     self.operands = operands
-  def canAbsorb(self, _trace, _appNode, _parentNode): return False
   def simulate(self, args):
     getattr(args.operandValues[0], self.name)(*self.operands)
     return args.operandValues[0]
