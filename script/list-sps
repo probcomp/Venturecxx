@@ -51,5 +51,12 @@ def main():
     print wrap_description(sp.description(name))
     print "  " + string.capitalize(string.join(flags(sp.outputPSP), ", "))
 
+def main2():
+  for (name,sp) in builtInSPsList:
+    print ""
+    print wrap_description(sp.description_rst_format(name))
+    print
+    print string.capitalize(string.join(flags(sp.outputPSP), ", "))
+
 if __name__ == "__main__":
   main()
