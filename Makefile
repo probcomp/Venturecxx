@@ -177,7 +177,10 @@ pseudoxml: generated
 	@echo
 	@echo "Build finished. The pseudo-XML files are in $(BUILDDIR)/pseudoxml."
 
-generated: modeling.gen
+generated: modeling.gen inference-proc.gen
 
 modeling.gen:
 	vendoc --rst > modeling.gen
+
+inference-proc.gen:
+	vendoc inf > inference-proc.gen
