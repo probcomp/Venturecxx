@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+
+# Copyright (c) 2013, MIT Probabilistic Computing Project.
+# 
+# This file is part of Venture.
+# 	
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 	
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 	
+# You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
+import sys
+import string
+import textwrap
+from venture.lite.builtin import builtInSPsList
+
+def flags(psp):
+  ans = []
+  if psp.isRandom():
+    ans += ["stochastic"]
+  else:
+    ans += ["deterministic"]
+  # TODO Absorbing is very context-sensitive now; how do we handle this?
+  # if psp.canAbsorb():
+  #   ans += ["constrainable"]
+  if psp.childrenCanAAA():
+    ans += ["children can absorb at applications"]
+  if psp.canEnumerate():
+    ans += ["enumerable"]
+  if psp.hasVariationalLKernel():
+    ans += ["variationable"]
+  # Simulation kernels and delta kernels are unused right now
+  return ans
+
+def wrap_description(desc):
+  desc_lines = desc.split("\n")
+  if len(desc_lines) == 1:
+    return desc_lines[0]
+  else:
+    return string.join(desc_lines[0:-1], "\n") + "\n" + textwrap.fill(desc_lines[-1],70)
+
+def wrap_description_rst_format(desc):
+  desc_lines = desc.split("\n")
+  if len(desc_lines) == 1:
+    return "   " + desc_lines[0]
+  else:
+    return string.join(desc_lines[0:-1], "\n") + "\n" + "\n".join(["   " + line for line in textwrap.wrap(desc_lines[-1].strip(),67)])
+
+def main():
+  for (name,sp) in builtInSPsList:
+    print ""
+    print wrap_description(sp.description(name))
+    print "  " + string.capitalize(string.join(flags(sp.outputPSP), ", "))
+
+def main_rst_format():
+  for (name,sp) in builtInSPsList:
+    print ""
+    print wrap_description_rst_format(sp.description_rst_format(name))
+    print
+    print "   " + string.capitalize(string.join(flags(sp.outputPSP), ", "))
+
+if __name__ == "__main__":
+  if len(sys.argv) > 1:
+    assert sys.argv[1] == "--rst"
+    main_rst_format()
+  else:
+    main()
