@@ -61,9 +61,10 @@ The special forms in VenChurch are as follows:
 Built-in Procedures
 -------------------
 
-You can see what built-in procedures Venture supports by running
-``script/list-sps`` in the distribution.  The output of that script is
-replicated here for convenience
+The following modeling procedures are built in to Venture (as of the
+generation date of this manual):
 
 .. include:: modeling.gen
 
+You can ask your Venture installation for a current version of this
+list by running the ``vendoc`` program (with no arguments).
