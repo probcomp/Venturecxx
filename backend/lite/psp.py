@@ -352,7 +352,7 @@ class TypedPSP(PSP):
 
   def description_rst_format(self, name):
     signature = ".. function:: " + self.f_type.name_rst_format(name)
-    return signature + "\n\n" + self.psp.description(name)
+    return (signature, self.psp.description(name))
 
   # TODO Is this method part of the psp interface?
   def logDensityOfCounts(self,aux):

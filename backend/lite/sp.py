@@ -53,7 +53,7 @@ class SP(object):
     candidate = self.requestPSP.description_rst_format(name)
     if candidate:
       return candidate
-    return name
+    return (".. function:: %s" % name, name)
   def venture_type(self):
     if hasattr(self.outputPSP, "f_type"):
       return self.outputPSP.f_type
