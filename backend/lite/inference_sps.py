@@ -42,7 +42,7 @@ def typed_inf_sp2(name, tp, klass=MadeEngineMethodInferOutputPSP, desc=""):
 
 def transition_oper_args_types(extra_args = None):
   # ExpressionType reasonably approximates the mapping I want for scope and block IDs.
-  return [v.ExpressionType("scope : object"), v.ExpressionType("block : object")] + (extra_args if extra_args is not None else []) + [v.IntegerType("transitions : int")]
+  return [v.AnyType("scope : object"), v.AnyType("block : object")] + (extra_args if extra_args is not None else []) + [v.IntegerType("transitions : int")]
 
 def transition_oper_type(extra_args = None, **kwargs):
   return infer_action_type(transition_oper_args_types(extra_args), **kwargs)
