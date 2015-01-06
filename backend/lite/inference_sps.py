@@ -40,9 +40,6 @@ def typed_inf_sp(name, tp, klass=MadeInferPrimitiveOutputPSP, desc=""):
 def typed_inf_sp2(name, tp, klass=MadeEngineMethodInferOutputPSP, desc=""):
   return typed_inf_sp(name, tp, klass, desc)
 
-def SPsListEntry(name, args_types, klass=MadeInferPrimitiveOutputPSP, desc="", **kwargs):
-  return typed_inf_sp(name, infer_action_type(args_types, **kwargs), klass=klass, desc=desc)
-
 def transition_oper_args_types(extra_args = None):
   # ExpressionType reasonably approximates the mapping I want for scope and block IDs.
   return [v.ExpressionType("scope : object"), v.ExpressionType("block : object")] + (extra_args if extra_args is not None else []) + [v.IntegerType("transitions : int")]
@@ -70,36 +67,33 @@ inferenceSPsList = [
   typed_inf_sp("rejection", transition_oper_type(min_req_args=2)),
   typed_inf_sp("slice", transition_oper_type([v.NumberType("w : number"), v.IntegerType("m : int")])),
   typed_inf_sp("slice_doubling", transition_oper_type([v.NumberType("w : number"), v.IntegerType("p : int")])),
-  SPsListEntry("resample", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
-  SPsListEntry("resample_serializing", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
-  SPsListEntry("resample_threaded", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
-  SPsListEntry("resample_thread_ser", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
-  SPsListEntry("resample_multiprocess", [v.IntegerType(), v.IntegerType()], klass=MadeEngineMethodInferOutputPSP, min_req_args=1),
-  SPsListEntry("enumerative_diversify", [v.ExpressionType(), v.ExpressionType()], klass=MadeEngineMethodInferOutputPSP),
-  SPsListEntry("collapse_equal", [v.ExpressionType(), v.ExpressionType()], klass=MadeEngineMethodInferOutputPSP),
-  SPsListEntry("collapse_equal_map", [v.ExpressionType(), v.ExpressionType()], klass=MadeEngineMethodInferOutputPSP),
-  SPsListEntry("draw_scaffold", [v.ExpressionType(), v.ExpressionType(), v.IntegerType()], min_req_args=3),
-  # (subsampled_mh scope block Nbatch k0 epsilon useDeltaKernels deltaKernelArgs updateValues transitions)
-  SPsListEntry("subsampled_mh", [v.ExpressionType(), v.ExpressionType(), v.IntegerType(), v.IntegerType(), v.NumberType(), v.BoolType(), v.NumberType(), v.BoolType(), v.IntegerType()], min_req_args=9),
-  # (mh_kernel scope block useDeltaKernels deltaKernelArgs transitions)
-  SPsListEntry("mh_kernel_update", [v.ExpressionType(), v.ExpressionType(), v.BoolType(), v.NumberType(), v.BoolType(), v.IntegerType()], min_req_args=6),
-  SPsListEntry("gibbs_update", [v.ExpressionType(), v.ExpressionType(), v.IntegerType(), v.BoolType()], min_req_args=3),
-  SPsListEntry("pgibbs_update", [v.ExpressionType(), v.ExpressionType(), v.IntegerType(), v.IntegerType(), v.BoolType()], min_req_args=4),
-  # (subsampled_mh_check_applicability scope block transitions)
-  SPsListEntry("subsampled_mh_check_applicability", [v.ExpressionType(), v.ExpressionType(), v.IntegerType()], min_req_args=3),
-  # (subsampled_mh_make_consistent scope block useDeltaKernels deltaKernelArgs updateValues transitions)
-  SPsListEntry("subsampled_mh_make_consistent", [v.ExpressionType(), v.ExpressionType(), v.BoolType(), v.NumberType(), v.BoolType(), v.IntegerType()], min_req_args=6),
-  SPsListEntry("incorporate", [], klass=MadeEngineMethodInferOutputPSP),
-  SPsListEntry("peek", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
-  SPsListEntry("plotf", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
-  SPsListEntry("plotf_to_file", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
-  SPsListEntry("printf", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
-  SPsListEntry("call_back", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
-  SPsListEntry("call_back_accum", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP, variadic=True),
-  SPsListEntry("assume", [v.AnyType(), v.AnyType()], klass=MadeEngineMethodInferOutputPSP),
-  SPsListEntry("observe", [v.AnyType(), v.AnyType()], klass=MadeEngineMethodInferOutputPSP),
-  SPsListEntry("predict", [v.AnyType()], klass=MadeEngineMethodInferOutputPSP),
-  SPsListEntry("load_plugin", [v.SymbolType()], klass=MadeEngineMethodInferOutputPSP),
+  typed_inf_sp2("resample", infer_action_type([v.IntegerType("particles : int")])),
+  typed_inf_sp2("resample_serializing", infer_action_type([v.IntegerType("particles : int")])),
+  typed_inf_sp2("resample_threaded", infer_action_type([v.IntegerType("particles : int")])),
+  typed_inf_sp2("resample_thread_ser", infer_action_type([v.IntegerType("particles : int")])),
+  typed_inf_sp2("resample_multiprocess", infer_action_type([v.IntegerType("particles : int"), v.IntegerType("max_processes : int")], min_req_args=1)),
+  typed_inf_sp2("enumerative_diversify", infer_action_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")])),
+  typed_inf_sp2("collapse_equal", infer_action_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")])),
+  typed_inf_sp2("collapse_equal_map", infer_action_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")])),
+  typed_inf_sp("draw_scaffold", transition_oper_type()),
+  typed_inf_sp("subsampled_mh", transition_oper_type([v.IntegerType("Nbatch : int"), v.IntegerType("k0 : int"), v.NumberType("epsilon : number"),
+                                                      v.BoolType("useDeltaKernels : bool"), v.NumberType("deltaKernelArgs : number"), v.BoolType("updateValues : bool")])),
+  typed_inf_sp("mh_kernel_update", transition_oper_type([v.BoolType("useDeltaKernels : bool"), v.NumberType("deltaKernelArgs : number"), v.BoolType("updateValues : bool")])),
+  typed_inf_sp("gibbs_update", par_transition_oper_type()),
+  typed_inf_sp("pgibbs_update", par_transition_oper_type([v.IntegerType("particles : int")])),
+  typed_inf_sp("subsampled_mh_check_applicability", transition_oper_type()),
+  typed_inf_sp("subsampled_mh_make_consistent", transition_oper_type([v.BoolType("useDeltaKernels : bool"), v.NumberType("deltaKernelArgs : number"), v.BoolType("updateValues : bool")])),
+  typed_inf_sp2("incorporate", infer_action_type([])),
+  typed_inf_sp2("peek", infer_action_type([v.AnyType()], variadic=True)),
+  typed_inf_sp2("plotf", infer_action_type([v.AnyType()], variadic=True)),
+  typed_inf_sp2("plotf_to_file", infer_action_type([v.AnyType()], variadic=True)),
+  typed_inf_sp2("printf", infer_action_type([v.AnyType()], variadic=True)),
+  typed_inf_sp2("call_back", infer_action_type([v.AnyType()], variadic=True)),
+  typed_inf_sp2("call_back_accum", infer_action_type([v.AnyType()], variadic=True)),
+  typed_inf_sp2("assume", infer_action_type([v.AnyType("<symbol>"), v.AnyType("<expression>")])),
+  typed_inf_sp2("observe", infer_action_type([v.AnyType("<expression>"), v.AnyType()])),
+  typed_inf_sp2("predict", infer_action_type([v.AnyType("<expression>")])),
+  typed_inf_sp2("load_plugin", infer_action_type([v.SymbolType("filename")])),
 
   # Hackety hack hack backward compatibility
   ["ordered_range", deterministic_typed(lambda *args: (v.VentureSymbol("ordered_range"),) + args,
