@@ -169,6 +169,7 @@ used in the implementation of TypedPSP and TypedLKernel."""
       if i > 0:
         result += ", "
       result += subtype_name(arg)
+    if self.variadic: result += ", ..."
     result += "]" * (len(self.args_types) - self.min_req_args)
     result += ")"
     if name != "proc":
