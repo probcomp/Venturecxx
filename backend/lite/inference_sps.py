@@ -1,7 +1,7 @@
 import sp
 import psp
 import value as v
-from builtin import typed_nr, deterministic_typed
+from builtin import no_request, deterministic_typed
 
 class InferPrimitiveOutputPSP(psp.DeterministicPSP):
   def __init__(self, name, klass, desc):
@@ -30,16 +30,29 @@ class MadeEngineMethodInferOutputPSP(psp.LikelihoodFreePSP):
     getattr(args.operandValues[0], self.name)(*self.operands)
     return args.operandValues[0]
 
+def infer_action_type(args_types, **kwargs):
+  # Represent the underlying trace as a ForeignBlob for now.
+  return sp.SPType(args_types, sp.SPType([v.ForeignBlobType()], v.ForeignBlobType()), **kwargs)
+
+def typed_inf_sp(name, tp, klass=MadeInferPrimitiveOutputPSP, desc=""):
+  return [ name, no_request(psp.TypedPSP(InferPrimitiveOutputPSP(name, klass=klass, desc=desc), tp)) ]
 
 def SPsListEntry(name, args_types, klass=MadeInferPrimitiveOutputPSP, desc="", **kwargs):
+  return typed_inf_sp(name, infer_action_type(args_types, **kwargs), klass=klass, desc=desc)
+
+def transition_oper_args_types(extra_args = None):
   # ExpressionType reasonably approximates the mapping I want for scope and block IDs.
-  # Represent the underlying trace as a ForeignBlob for now.
-  return [ name, typed_nr(InferPrimitiveOutputPSP(name, klass=klass, desc=desc), args_types,
-                          sp.SPType([v.ForeignBlobType()], v.ForeignBlobType()),
-                          **kwargs) ]
+  return [v.ExpressionType("scope : object"), v.ExpressionType("block : object")] + (extra_args if extra_args is not None else []) + [v.IntegerType("transitions : int")]
+
+def transition_oper_type(extra_args = None, **kwargs):
+  return infer_action_type(transition_oper_args_types(extra_args), **kwargs)
+
+def par_transition_oper_type(extra_args = None, **kwargs):
+  other_args = transition_oper_args_types(extra_args)
+  return infer_action_type(other_args + [v.BoolType("in_parallel : bool")], min_req_args=len(other_args), **kwargs)
 
 def basicInfer(name):
-  return SPsListEntry(name, [v.ExpressionType(), v.ExpressionType(), v.IntegerType()])
+  return SPsListEntry(name, transition_oper_args_types())
 
 inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]] + [
   SPsListEntry("gibbs", [v.ExpressionType(), v.ExpressionType(), v.IntegerType(), v.BoolType()], min_req_args=3),
