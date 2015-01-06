@@ -52,22 +52,182 @@ def par_transition_oper_type(extra_args = None, **kwargs):
   return infer_action_type(other_args + [v.BoolType("in_parallel : bool")], min_req_args=len(other_args), **kwargs)
 
 inferenceSPsList = [
-  typed_inf_sp("mh", transition_oper_type()),
+  typed_inf_sp("mh", transition_oper_type(),
+               desc="""Run a Metropolis-Hastings kernel, proposing by resimulating the prior.
+
+The `transitions` argument specifies how many transitions of the chain
+to run."""),
+
   typed_inf_sp("func_mh", transition_oper_type()),
   typed_inf_sp("latents", transition_oper_type()),
-  typed_inf_sp("gibbs", par_transition_oper_type()),
-  typed_inf_sp("emap", par_transition_oper_type()),
-  typed_inf_sp("pgibbs", par_transition_oper_type([v.IntegerType("particles : int")])),
-  typed_inf_sp("func_pgibbs", par_transition_oper_type([v.IntegerType("particles : int")])),
+
+  typed_inf_sp("gibbs", par_transition_oper_type(),
+               desc="""Run a Gibbs sampler that computes the local posterior by enumeration.
+
+All the random choices identified by the scope-block pair must be
+discrete.
+
+The `transitions` argument specifies how many transitions of the
+chain to run.
+
+The `in-parallel` argument, if supplied, toggles parallel evaluation
+of the local posterior.  Parallel evaluation is only available in the
+Puma backend, and is on by default."""),
+
+  typed_inf_sp("emap", par_transition_oper_type(),
+               desc="""\
+Deterministically move to the local posterior maximum (computed by
+enumeration).
+
+All the random choices identified by the scope-block pair must be
+discrete.
+
+The `transitions` argument specifies how many times to do this.
+Specifying more than one transition is redundant unless the `block`
+is ``one``.
+
+The `in-parallel` argument, if supplied, toggles parallel evaluation
+of the local posterior.  Parallel evaluation is only available in
+the Puma backend, and is on by default."""),
+
+  typed_inf_sp("func_pgibbs", par_transition_oper_type([v.IntegerType("particles : int")]),
+               desc="""\
+Move to a sample of the local posterior computed by particle Gibbs.
+
+The `block` must indicate a sequential grouping of the random
+choices in the `scope`.  This can be done by supplying the keyword
+``ordered`` as the block, or the value of calling ``ordered_range``.
+
+The `particles` argument specifies how many particles to use in the
+particle Gibbs filter.
+
+The `transitions` argument specifies how many times to do this.
+
+The `in-parallel` argument, if supplied, toggles per-particle
+parallelism.  Parallel evaluation is only available in the Puma
+backend, and is on by default. """),
+
+  typed_inf_sp("pgibbs", par_transition_oper_type([v.IntegerType("particles : int")]),
+               desc="""\
+Like ``func_pgibbs`` but reuse a single trace instead of having several.
+
+The performance is asymptotically worse in the sequence length, but
+does not rely on stochastic procedures being able to functionally
+clone their auxiliary state.
+
+The only reason to use this is if you know you want to. """),
+
   typed_inf_sp("func_pmap", par_transition_oper_type([v.IntegerType("particles : int")])),
-  typed_inf_sp("meanfield", transition_oper_type([v.IntegerType("steps : int")])),
-  typed_inf_sp("hmc", transition_oper_type([v.NumberType("step_size : number"), v.IntegerType("steps : int")])),
-  typed_inf_sp("map", transition_oper_type([v.NumberType("step_size : number"), v.IntegerType("steps : int")])),
-  typed_inf_sp("nesterov", transition_oper_type([v.NumberType("step_size : number"), v.IntegerType("steps : int")])),
-  typed_inf_sp("rejection", transition_oper_type(min_req_args=2)),
-  typed_inf_sp("slice", transition_oper_type([v.NumberType("w : number"), v.IntegerType("m : int")])),
-  typed_inf_sp("slice_doubling", transition_oper_type([v.NumberType("w : number"), v.IntegerType("p : int")])),
-  typed_inf_sp2("resample", infer_action_type([v.IntegerType("particles : int")])),
+
+  typed_inf_sp("meanfield", transition_oper_type([v.IntegerType("training_steps : int")]),
+               desc="""Sample from a mean-field variational approximation of the local posterior.
+
+The mean-field approximation is optimized with gradient ascent.  The
+`training_steps` argument specifies how many steps to take.
+
+The `transitions` argument specifies how many times to do this.
+
+Note: There is currently no way to save the result of training the
+variational approximation to be able to sample from it many times. """),
+
+  typed_inf_sp("nesterov", transition_oper_type([v.NumberType("step_size : number"), v.IntegerType("steps : int")]),
+               desc="""Move
+deterministically toward the maximum of the local posterior by
+Nesterov-accelerated gradient ascent.
+
+Not available in the Puma backend.  Not all the builtin procedures
+support all the gradient information necessary for this.
+
+The gradient is of the log posterior.
+
+The presence of discrete random choices in the scope-block pair will
+not prevent this inference strategy, but none of the discrete
+choices will be moved by the gradient steps.
+
+The `step_size` argument gives how far to move along the gradient at
+each point.
+
+The `steps` argument gives how many steps to take.
+
+The `transitions` argument specifies how many times to do this.
+
+Note: the Nesterov acceleration is applied across steps within one
+transition, not across transitions."""),
+
+  typed_inf_sp("map", transition_oper_type([v.NumberType("step_size : number"), v.IntegerType("steps : int")]),
+               desc="""Move
+deterministically toward the maximum of the local posterior by
+gradient ascent.
+
+Not available in the Puma backend.  Not all the builtin procedures
+support all the gradient information necessary for this.
+
+This is just like ``nesterov``, except without the Nesterov
+correction. """),
+
+  typed_inf_sp("hmc", transition_oper_type([v.NumberType("step_size : number"), v.IntegerType("steps : int")]),
+               desc="""Run a Hamiltonian Monte Carlo transition kernel.
+
+Not available in the Puma backend.  Not all the builtin procedures
+support all the gradient information necessary for this.
+
+The presence of discrete random choices in the scope-block pair will
+not prevent this inference strategy, but none of the discrete
+choices will be moved.
+
+The `step_size` argument gives the step size of the integrator used
+by HMC.
+
+The `steps` argument gives how many steps to take in each HMC
+trajectory.
+
+The `transitions` argument specifies how many times to do this."""),
+
+  typed_inf_sp("rejection", transition_oper_type(min_req_args=2),
+               desc="""Sample from the local
+posterior by rejection sampling.
+
+Not available in the Puma backend.  Not all the builtin procedures
+support all the density bound information necessary for this.
+
+The `transitions` argument specifies how many times to do this.
+Specifying more than 1 transition is redundant if the `block` is
+anything other than ``one``. """),
+
+  typed_inf_sp("slice", transition_oper_type([v.NumberType("w : number"), v.IntegerType("m : int")]),
+               desc="""Slice sample from the local posterior of the selected random choice.
+
+The scope-block pair must identify a single random choice, which
+must be continuous and one-dimensional.
+
+This kernel uses the stepping-out procedure to find the slice.  The
+`w` and `m` arguments parameterize the slice sampler in the standard
+way.
+
+The `transitions` argument specifies how many transitions of the chain
+to run."""),
+
+  typed_inf_sp("slice_doubling", transition_oper_type([v.NumberType("w : number"), v.IntegerType("p : int")]),
+               desc="""Slice sample from the local posterior of the selected random choice.
+
+The scope-block pair must identify a single random choice, which
+must be continuous and one-dimensional.
+
+This kernel uses the interval-doubling procedure to find the slice.
+The `w` and `p` arguments parameterize the slice sampler in the
+standard way.
+
+The `transitions` argument specifies how many transitions of the chain
+to run."""),
+
+  typed_inf_sp2("resample", infer_action_type([v.IntegerType("particles : int")]),
+                desc="""Perform a resampling step.
+
+The `particles` argument gives the number of particles to make.
+Subsequent modeling and inference commands will be applied to each
+result particle independently.  Data reporting commands will talk to
+one distinguished particle, except ``peek_all``."""),
+
   typed_inf_sp2("resample_serializing", infer_action_type([v.IntegerType("particles : int")])),
   typed_inf_sp2("resample_threaded", infer_action_type([v.IntegerType("particles : int")])),
   typed_inf_sp2("resample_thread_ser", infer_action_type([v.IntegerType("particles : int")])),
@@ -83,7 +243,14 @@ inferenceSPsList = [
   typed_inf_sp("pgibbs_update", par_transition_oper_type([v.IntegerType("particles : int")])),
   typed_inf_sp("subsampled_mh_check_applicability", transition_oper_type()),
   typed_inf_sp("subsampled_mh_make_consistent", transition_oper_type([v.BoolType("useDeltaKernels : bool"), v.NumberType("deltaKernelArgs : number"), v.BoolType("updateValues : bool")])),
-  typed_inf_sp2("incorporate", infer_action_type([])),
+
+  typed_inf_sp2("incorporate", infer_action_type([]),
+                desc="""Make the history consistent with observations.
+
+This is done at the beginning of every `infer` command, but is also
+provided explicitly because it may be appropriate to invoke in complex
+inference programs that introduce new observations."""),
+
   typed_inf_sp2("peek", infer_action_type([v.AnyType()], variadic=True)),
   typed_inf_sp2("plotf", infer_action_type([v.AnyType()], variadic=True)),
   typed_inf_sp2("plotf_to_file", infer_action_type([v.AnyType()], variadic=True)),
