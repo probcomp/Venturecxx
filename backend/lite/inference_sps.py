@@ -37,6 +37,9 @@ def infer_action_type(args_types, **kwargs):
 def typed_inf_sp(name, tp, klass=MadeInferPrimitiveOutputPSP, desc=""):
   return [ name, no_request(psp.TypedPSP(InferPrimitiveOutputPSP(name, klass=klass, desc=desc), tp)) ]
 
+def typed_inf_sp2(name, tp, klass=MadeEngineMethodInferOutputPSP, desc=""):
+  return typed_inf_sp(name, tp, klass, desc)
+
 def SPsListEntry(name, args_types, klass=MadeInferPrimitiveOutputPSP, desc="", **kwargs):
   return typed_inf_sp(name, infer_action_type(args_types, **kwargs), klass=klass, desc=desc)
 
@@ -51,22 +54,22 @@ def par_transition_oper_type(extra_args = None, **kwargs):
   other_args = transition_oper_args_types(extra_args)
   return infer_action_type(other_args + [v.BoolType("in_parallel : bool")], min_req_args=len(other_args), **kwargs)
 
-def basicInfer(name):
-  return SPsListEntry(name, transition_oper_args_types())
-
-inferenceSPsList = [basicInfer(n) for n in ["mh", "func_mh", "slice", "latents"]] + [
-  SPsListEntry("gibbs", [v.ExpressionType(), v.ExpressionType(), v.IntegerType(), v.BoolType()], min_req_args=3),
-  SPsListEntry("emap", [v.ExpressionType(), v.ExpressionType(), v.IntegerType(), v.BoolType()], min_req_args=3),
-  SPsListEntry("pgibbs", [v.ExpressionType(), v.ExpressionType(), v.IntegerType(), v.IntegerType(), v.BoolType()], min_req_args=4),
-  SPsListEntry("func_pgibbs", [v.ExpressionType(), v.ExpressionType(), v.IntegerType(), v.IntegerType(), v.BoolType()], min_req_args=4),
-  SPsListEntry("func_pmap", [v.ExpressionType(), v.ExpressionType(), v.IntegerType(), v.IntegerType(), v.BoolType()], min_req_args=4),
-  SPsListEntry("meanfield", [v.ExpressionType(), v.ExpressionType(), v.IntegerType(), v.IntegerType()]),
-  SPsListEntry("hmc", [v.ExpressionType(), v.ExpressionType(), v.NumberType(), v.IntegerType(), v.IntegerType()]),
-  SPsListEntry("map", [v.ExpressionType(), v.ExpressionType(), v.NumberType(), v.IntegerType(), v.IntegerType()]),
-  SPsListEntry("nesterov", [v.ExpressionType(), v.ExpressionType(), v.NumberType(), v.IntegerType(), v.IntegerType()]),
-  SPsListEntry("rejection", [v.ExpressionType(), v.ExpressionType(), v.IntegerType()], min_req_args=2),
-  SPsListEntry("slice", [v.ExpressionType(), v.ExpressionType(), v.NumberType(), v.IntegerType(), v.IntegerType()]),
-  SPsListEntry("slice_doubling", [v.ExpressionType(), v.ExpressionType(), v.NumberType(), v.IntegerType(), v.IntegerType()]),
+inferenceSPsList = [
+  typed_inf_sp("mh", transition_oper_type()),
+  typed_inf_sp("func_mh", transition_oper_type()),
+  typed_inf_sp("latents", transition_oper_type()),
+  typed_inf_sp("gibbs", par_transition_oper_type()),
+  typed_inf_sp("emap", par_transition_oper_type()),
+  typed_inf_sp("pgibbs", par_transition_oper_type([v.IntegerType("particles : int")])),
+  typed_inf_sp("func_pgibbs", par_transition_oper_type([v.IntegerType("particles : int")])),
+  typed_inf_sp("func_pmap", par_transition_oper_type([v.IntegerType("particles : int")])),
+  typed_inf_sp("meanfield", transition_oper_type([v.IntegerType("steps : int")])),
+  typed_inf_sp("hmc", transition_oper_type([v.NumberType("step_size : number"), v.IntegerType("steps : int")])),
+  typed_inf_sp("map", transition_oper_type([v.NumberType("step_size : number"), v.IntegerType("steps : int")])),
+  typed_inf_sp("nesterov", transition_oper_type([v.NumberType("step_size : number"), v.IntegerType("steps : int")])),
+  typed_inf_sp("rejection", transition_oper_type(min_req_args=2)),
+  typed_inf_sp("slice", transition_oper_type([v.NumberType("w : number"), v.IntegerType("m : int")])),
+  typed_inf_sp("slice_doubling", transition_oper_type([v.NumberType("w : number"), v.IntegerType("p : int")])),
   SPsListEntry("resample", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
   SPsListEntry("resample_serializing", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
   SPsListEntry("resample_threaded", [v.IntegerType()], klass=MadeEngineMethodInferOutputPSP),
