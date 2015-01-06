@@ -4,13 +4,16 @@ import value as v
 from builtin import typed_nr, deterministic_typed
 
 class InferPrimitiveOutputPSP(psp.DeterministicPSP):
-  def __init__(self, name, klass):
+  def __init__(self, name, klass, desc):
     self.name = name
     self.klass = klass
+    self.desc = desc
   def simulate(self, args):
     return sp.VentureSPRecord(sp.SP(psp.NullRequestPSP(),
                                     psp.TypedPSP(self.klass(self.name, args.operandValues),
                                                  sp.SPType([v.ForeignBlobType()], v.ForeignBlobType()))))
+  def description(self, _name):
+    return self.desc
 
 class MadeInferPrimitiveOutputPSP(psp.LikelihoodFreePSP):
   def __init__(self, name, exp):
@@ -28,10 +31,10 @@ class MadeEngineMethodInferOutputPSP(psp.LikelihoodFreePSP):
     return args.operandValues[0]
 
 
-def SPsListEntry(name, args_types, klass=MadeInferPrimitiveOutputPSP, **kwargs):
+def SPsListEntry(name, args_types, klass=MadeInferPrimitiveOutputPSP, desc="", **kwargs):
   # ExpressionType reasonably approximates the mapping I want for scope and block IDs.
   # Represent the underlying trace as a ForeignBlob for now.
-  return [ name, typed_nr(InferPrimitiveOutputPSP(name, klass=klass), args_types,
+  return [ name, typed_nr(InferPrimitiveOutputPSP(name, klass=klass, desc=desc), args_types,
                           sp.SPType([v.ForeignBlobType()], v.ForeignBlobType()),
                           **kwargs) ]
 

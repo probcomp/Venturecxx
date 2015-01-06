@@ -20,6 +20,7 @@ import sys
 import string
 import textwrap
 from venture.lite.builtin import builtInSPsList
+from venture.lite.inference_sps import inferenceSPsList
 
 def flags(psp):
   ans = []
@@ -66,9 +67,18 @@ def main_rst_format():
     print
     print "   " + string.capitalize(string.join(flags(sp.outputPSP), ", "))
 
+def main_inf():
+  for (name,sp) in inferenceSPsList:
+    print ""
+    print wrap_description_rst_format(sp.description_rst_format(name))
+    print
+    print "   " + string.capitalize(string.join(flags(sp.outputPSP), ", "))
+
 if __name__ == "__main__":
   if len(sys.argv) > 1:
-    assert sys.argv[1] == "--rst"
-    main_rst_format()
+    if sys.argv[1] == "--rst":
+      main_rst_format()
+    else:
+      main_inf()
   else:
     main()
