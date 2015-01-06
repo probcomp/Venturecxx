@@ -62,9 +62,10 @@ def expToDict(exp):
   elif tag == "pgibbs":
     assert 5 <= len(exp) and len(exp) <= 6
     if type(exp[2]) is list:
-      assert exp[2][0] == "ordered_range"
+      range_spec = [d["value"] for d in exp[2]]
+      assert range_spec[0] == "ordered_range"
       ans = {"kernel":"pgibbs","scope":exp[1],"block":"ordered_range",
-            "min_block":exp[2][1],"max_block":exp[2][2],
+            "min_block":range_spec[1],"max_block":range_spec[2],
             "particles":int(exp[3]),"transitions":int(exp[4])}
     else:
       ans = {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":int(exp[3]),"transitions":int(exp[4])}
