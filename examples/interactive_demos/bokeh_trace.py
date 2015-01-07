@@ -1,5 +1,6 @@
 from IPython.html.widgets import interact
 import numpy as np
+import pandas as pd
 from bokeh import load_notebook
 import bokeh.plotting as bk
 from bokeh.models import (ColumnDataSource, DataRange1d, Plot, LinearAxis,
@@ -9,6 +10,67 @@ from bokeh.models.widgets import (VBox, DataTable, TableColumn, StringFormatter,
                                   NumberEditor, SelectEditor)
 
 
+
+def wrap_string_in_list(item):
+    if isinstance(item, basestring):  # Test six.string_types for py3 compat
+        return [item]
+    else:
+        return item
+
+def predict_to_df(mripl, parameter_list):
+    """ Returns a dataframe with one column per parameter,
+    one row per Ripl.  Should work with either MRipl or Ripl"""
+    from collections import OrderedDict 
+    series_dict = OrderedDict()
+    param_list = wrap_string_in_list(parameter_list)
+    
+    for param in param_list:
+        series_dict[param] = mripl.predict(param)
+                
+    try:  # Return dataframe, with special case to handle non-mripl
+        return pd.DataFrame(series_dict)
+    except ValueError, e: 
+        if "must pass an index" in e.message:
+            return pd.DataFrame(series_dict, index=[0])
+        else:
+            raise
+
+def setup_datasource(venture_mripl, parameters):
+    """ Create datasource for Bokeh plot. 
+    Accepts either venture mripl or ripl.
+    """
+    # Create datasource class to record parameters 
+    param_dsource = ColumnDataSource()
+    
+    pred_df = predict_to_df(venture_mripl, parameters)
+    
+    # Index for plotting purposes
+    pred_index_list = [0]
+    param_dsource.add(data=pred_index_list, name='pred_index')
+
+    # Flatten prediction dataframe into column datasource
+    # One column for each parameter for each Ripl (one column = one lines)
+    for idx, prediction_set in pred_df.iterrows():
+        for parameter, value in prediction_set.iteritems():
+            value_list = [value]
+            param_dsource.add(data=value_list, name=(parameter + '_' + str(idx)))
+
+    return param_dsource
+
+def append_update_to_datasource(venture_mripl, datasource, parameters):
+    """Predicts current parameters and appends to datasource in-place
+    Returns DataFrame containing latest predictions"""
+    
+    pred_df = predict_to_df(venture_mripl, parameters)
+    
+    last_pred_index = datasource.data['pred_index'][-1]
+    datasource.data['pred_index'].append(last_pred_index + 1)
+    
+    for idx, prediction_set in pred_df.iterrows():
+        for parameter, value in prediction_set.iteritems():
+            datasource.data[parameter + '_' + str(idx)].append(value)
+    
+    return pred_df  # Latest predicted values
 
 def setup_dsource(venture_ripl):
     # Create datasource class to record parameters 
@@ -23,6 +85,8 @@ def setup_dsource(venture_ripl):
     param_dsource.add(data=noise_list, name='noise') 
 
     return param_dsource
+
+
 
 def trace_grid(param_dsource):
     """Return bokeh grid of vertical traces for given ripl"""
@@ -71,9 +135,9 @@ def display_plots(grid):
 
 def interactive_trace(ven_ripl,
                       inference_program=["(mh default one 1)",
-                                        "(mh default one 10)",
-                                        "(pgibbs default one 10 3)",
-                                        ], loops=20):
+                                         "(mh default one 10)",
+                                         "(pgibbs default one 10 3)"],
+                      loops=20):
     param_dsource = setup_dsource(ven_ripl)
     gd = trace_grid(param_dsource)
     display_plots(gd)
