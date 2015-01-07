@@ -68,8 +68,6 @@ Up to log factors, there is no asymptotic difference between this and
 `mh`, but the distinction is exposed for those who know what they are
 doing."""),
 
-  typed_inf_sp("latents", transition_oper_type()),
-
   typed_inf_sp("gibbs", par_transition_oper_type(),
                desc="""Run a Gibbs sampler that computes the local posterior by enumeration.
 
