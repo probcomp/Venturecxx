@@ -124,7 +124,12 @@ clone their auxiliary state.
 
 The only reason to use this is if you know you want to. """),
 
-  typed_inf_sp("func_pmap", par_transition_oper_type([v.IntegerType("particles : int")])),
+  typed_inf_sp("func_pmap", par_transition_oper_type([v.IntegerType("particles : int")]),
+               desc="""Like func_pgibbs, but deterministically
+select the maximum-likelihood particle at the end instead of sampling.
+
+Iterated applications of func_pmap are guaranteed to grow in likelihood
+(and therefore do not converge to the posterior)."""),
 
   typed_inf_sp("meanfield", transition_oper_type([v.IntegerType("training_steps : int")]),
                desc="""Sample from a mean-field variational approximation of the local posterior.
@@ -228,20 +233,111 @@ The `transitions` argument specifies how many transitions of the chain
 to run."""),
 
   typed_inf_sp2("resample", infer_action_type([v.IntegerType("particles : int")]),
-                desc="""Perform a resampling step.
+                desc="""Perform an SMC-style resampling step.
 
 The `particles` argument gives the number of particles to make.
 Subsequent modeling and inference commands will be applied to each
 result particle independently.  Data reporting commands will talk to
-one distinguished particle, except ``peek_all``."""),
+one distinguished particle, except ``peek_all``.
 
-  typed_inf_sp2("resample_serializing", infer_action_type([v.IntegerType("particles : int")])),
-  typed_inf_sp2("resample_threaded", infer_action_type([v.IntegerType("particles : int")])),
-  typed_inf_sp2("resample_thread_ser", infer_action_type([v.IntegerType("particles : int")])),
-  typed_inf_sp2("resample_multiprocess", infer_action_type([v.IntegerType("particles : int"), v.IntegerType("max_processes : int")], min_req_args=1)),
-  typed_inf_sp2("enumerative_diversify", infer_action_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")])),
-  typed_inf_sp2("collapse_equal", infer_action_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")])),
-  typed_inf_sp2("collapse_equal_map", infer_action_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")])),
+Future observations will have the effect of weighting the particles
+relative to each other by the relative likelihoods of observing those
+values in those particles.  The resampling step respects those
+weights.
+
+The new particles will be handled in series.  See the next procedures
+for alternatives."""),
+
+  typed_inf_sp2("resample_multiprocess", infer_action_type([v.IntegerType("particles : int"), v.IntegerType("max_processes : int")], min_req_args=1),
+                desc="""\
+Like ``resample``, but fork multiple OS processes to simulate the
+resulting particles in parallel.
+
+The `max_processes` argument, if supplied, puts a cap on the number of
+processes to make.  The particles are distributed evenly among the
+processes.  If no cap is given, fork one process per particle.
+
+Subtlety: Collecting results (and especially performing further
+resampling steps) requires inter-process communication, and therefore
+requires serializing and deserializing any state that needs
+transmitting.  ``resample_multiprocess`` is therefore not a drop-in
+replacement for ``resample``, as the former will handle internal
+states that cannot be serialized, whereas the latter will not.  """),
+
+  typed_inf_sp2("resample_serializing", infer_action_type([v.IntegerType("particles : int")]),
+                desc="""\
+Like ``resample``, but performs serialization the same way ``resample_multiprocess`` does.
+
+Use this to debug serialization problems without messing with actually
+spawning multiple processes.  """),
+
+  typed_inf_sp2("resample_threaded", infer_action_type([v.IntegerType("particles : int")]),
+                desc="""Like ``resample_multiprocess`` but uses threads rather than actual processes, and does not serialize, transmitting objects in shared memory instead.
+
+Python's global interpreter lock is likely to prevent any speed gains
+this might have produced.
+
+Might be useful for debugging concurrency problems without messing
+with serialization and multiprocessing, but we expect such problems to
+be rare. """),
+
+  typed_inf_sp2("resample_thread_ser", infer_action_type([v.IntegerType("particles : int")]),
+                desc="""Like ``resample_threaded``, but serializes the same way ``resample_multiprocess`` does.
+
+Python's global interpreter lock is likely to prevent any speed gains
+this might have produced.
+
+Might be useful for debugging concurrency+serialization problems
+without messing with actual multiprocessing, but then one is messing
+with multithreading."""),
+
+  typed_inf_sp2("enumerative_diversify", infer_action_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")]),
+                desc="""Diversify the current particle set to represent the local posterior exactly.
+
+Specifically:
+
+1) Compute the local posterior by enumeration of all possible values
+   in the given scope and block
+
+2) Fork every extant particle as many times are there are values
+
+3) Give each new particle a relative weight proportional to the
+   relative weight of its ancestor particle times the posterior
+   probability of the chosen value.
+
+Unlike most inference SPs, this transformation is deterministic.
+
+This is useful together with ``collapse_equal`` and
+``collapse_equal_map`` for implementing certain kinds of dynamic
+programs in Venture. """),
+
+  typed_inf_sp2("collapse_equal", infer_action_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")]),
+                desc="""Collapse the current particle set to represent the local posterior less redundantly.
+
+Specifically:
+
+1) Bin all extant particles by the (joint) values they exhibit on all
+   random variables in the given scope and block (specify a block of
+   "none" to have one bin)
+
+2) Resample by relative weight within each bin, retaining one particle
+
+3) Set the relative weight of the retained particle to the sum of the
+   weights of the particles that formed the bin
+
+Viewed as an operation on only the random variables in the given scope
+and block, this is deterministic (the randomness only affects other
+values).
+
+This is useful together with ``enumerative_diversify`` for
+implementing certain kinds of dynamic programs in Venture. """),
+
+  typed_inf_sp2("collapse_equal_map", infer_action_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")]),
+                desc="""Like ``collapse_equal`` but deterministically retain the max-weight particle.
+
+And leave its weight unaltered, instead of adding in the weights of
+all the other particles in the bin. """),
+
   typed_inf_sp("draw_scaffold", transition_oper_type()),
   typed_inf_sp("subsampled_mh", transition_oper_type([v.IntegerType("Nbatch : int"), v.IntegerType("k0 : int"), v.NumberType("epsilon : number"),
                                                       v.BoolType("useDeltaKernels : bool"), v.NumberType("deltaKernelArgs : number"), v.BoolType("updateValues : bool")])),
