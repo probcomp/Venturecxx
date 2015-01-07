@@ -58,7 +58,16 @@ inferenceSPsList = [
 The `transitions` argument specifies how many transitions of the chain
 to run."""),
 
-  typed_inf_sp("func_mh", transition_oper_type()),
+  typed_inf_sp("func_mh", transition_oper_type(),
+               desc="""Like mh, but functional.
+
+To wit, represent the proposal with a new trace (sharing common
+structure) instead of modifying the existing particle in place.
+
+Up to log factors, there is no asymptotic difference between this and
+`mh`, but the distinction is exposed for those who know what they are
+doing."""),
+
   typed_inf_sp("latents", transition_oper_type()),
 
   typed_inf_sp("gibbs", par_transition_oper_type(),
