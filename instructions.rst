@@ -138,8 +138,11 @@ problem-specific insights.  The inference expressions are described
 
 - `[start_continuous_inference expression]`: begin inferring continuously.
 
+  Start_continuous_inference is deprecated in favor of the equivalent
+  ``[infer (loop ...)]`` idiom.
+
   Start_continuous_inference evaluates an inference expression and
-  starts executing the specified inference strategy continuously in
+  starts repeatedly executing the specified inference strategy continuously in
   the background. Values can be queried (e.g. with `report`) while
   inference is in progress.
 
