@@ -67,8 +67,9 @@ def main_inf():
   for (name,sp) in inferenceSPsList:
     print ""
     print wrap_description_rst_format(*sp.description_rst_format(name))
-    print
-    print "   " + string.capitalize(string.join(flags(sp.outputPSP), ", "))
+    # The modeling-relevant tags do not help much with inference procedures
+    # print
+    # print "   " + string.capitalize(string.join(flags(sp.outputPSP), ", "))
 
 if __name__ == "__main__":
   if len(sys.argv) > 1:
