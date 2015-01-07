@@ -157,6 +157,27 @@ problem-specific insights.  The inference expressions are described
   continuous inference is currently running, and if so with what
   inference program.
 
+- `[define symbol expression]`: define a reusable inference subroutine.
+
+  A typical use case would be::
+
+    [define proc (lambda (a b)
+      (begin
+        (some inference commmand)
+        (some other inference commmand)
+        ...))]
+
+  whereupon a later ``infer`` instruction can invoke ``proc`` like any
+  other inference procedure::
+
+    [infer (proc 1 4)]
+
+  *Note*: ``define`` is only available if one enables the
+  still-experimental "persistent inference trace" extension.  This
+  extension can be enabled at the command line by passing
+  ``--persistent-inference-trace`` or ``-P`` to ``venture``, or programmatically
+  by passing ``persistent_inference_trace=True`` to ``make_foo_ripl``.
+
 Miscellaneous Instructions
 --------------------------
 
