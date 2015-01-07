@@ -338,21 +338,67 @@ implementing certain kinds of dynamic programs in Venture. """),
 And leave its weight unaltered, instead of adding in the weights of
 all the other particles in the bin. """),
 
-  typed_inf_sp("draw_scaffold", transition_oper_type()),
+  typed_inf_sp("draw_scaffold", transition_oper_type(),
+               desc="""Draw a visual representation of the scaffold indicated by the given scope and block.
+
+This is useful for debugging.  You probably do not want to specify more than 1 transition."""),
+
   typed_inf_sp("subsampled_mh", transition_oper_type([v.IntegerType("Nbatch : int"), v.IntegerType("k0 : int"), v.NumberType("epsilon : number"),
-                                                      v.BoolType("useDeltaKernels : bool"), v.NumberType("deltaKernelArgs : number"), v.BoolType("updateValues : bool")])),
-  typed_inf_sp("mh_kernel_update", transition_oper_type([v.BoolType("useDeltaKernels : bool"), v.NumberType("deltaKernelArgs : number"), v.BoolType("updateValues : bool")])),
-  typed_inf_sp("gibbs_update", par_transition_oper_type()),
-  typed_inf_sp("pgibbs_update", par_transition_oper_type([v.IntegerType("particles : int")])),
-  typed_inf_sp("subsampled_mh_check_applicability", transition_oper_type()),
-  typed_inf_sp("subsampled_mh_make_consistent", transition_oper_type([v.BoolType("useDeltaKernels : bool"), v.NumberType("deltaKernelArgs : number"), v.BoolType("updateValues : bool")])),
+                                                      v.BoolType("useDeltaKernels : bool"), v.NumberType("deltaKernelArgs : number"), v.BoolType("updateValues : bool")]),
+               desc="""Run a subsampled Metropolis-Hastings kernel
+
+per the Austerity MCMC paper.
+
+Note: not all dependency structures that might occur in a scaffold are supported.  See ``subsampled_mh_check_applicability``.
+
+Note: the resulting execution history may not actually be possible, so
+may confuse other transition kernels.  See ``subsampled_mh_make_consistent``
+and ``*_update``.  """),
+
+  typed_inf_sp("subsampled_mh_check_applicability", transition_oper_type(),
+               desc="""Raise a warning if the given scope and block obviously do not admit subsampled MH
+
+From the source::
+
+   # Raise three types of warnings:
+   # - SubsampledScaffoldNotEffectiveWarning: calling subsampled_mh will be the
+   #   same as calling mh.
+   # - SubsampledScaffoldNotApplicableWarning: calling subsampled_mh will cause
+   #   incorrect behavior.
+   # - SubsampledScaffoldStaleNodesWarning: stale node will affect the
+   #   inference of other random variables. This is not a critical
+   #   problem but requires one to call makeConsistent before other
+   #   random nodes are selected as principal nodes.
+   #
+   # This method cannot check all potential problems caused by stale nodes.
+
+"""),
+
+  typed_inf_sp("subsampled_mh_make_consistent", transition_oper_type([v.BoolType("useDeltaKernels : bool"), v.NumberType("deltaKernelArgs : number"), v.BoolType("updateValues : bool")]),
+               desc="""Fix inconsistencies introduced by subsampled MH."""),
+
+  typed_inf_sp("mh_kernel_update", transition_oper_type([v.BoolType("useDeltaKernels : bool"), v.NumberType("deltaKernelArgs : number"), v.BoolType("updateValues : bool")]),
+               desc="""Run a normal ``mh`` kernel, tolerating inconsistencies introduced by previous subsampled MH."""),
+
+  typed_inf_sp("gibbs_update", par_transition_oper_type(),
+               desc="""Run a normal ``gibbs`` kernel, tolerating inconsistencies introduced by previous subsampled MH. """),
+
+  typed_inf_sp("pgibbs_update", par_transition_oper_type([v.IntegerType("particles : int")]),
+               desc="""Run a normal ``pgibbs`` kernel, tolerating inconsistencies introduced by previous subsampled MH."""),
 
   typed_inf_sp2("incorporate", infer_action_type([]),
                 desc="""Make the history consistent with observations.
 
-This is done at the beginning of every `infer` command, but is also
-provided explicitly because it may be appropriate to invoke in complex
-inference programs that introduce new observations."""),
+Specifically, modify the execution history so that the values of
+variables that have been observed since the last ``incorporate`` match
+the given observations.  If there are multiple particles, also adjust
+their relative weights by the relative likelihoods of the
+observations being incorporated.
+
+This is done automatically at the beginning of every `infer` command,
+but is also provided explicitly because it may be appropriate to
+invoke in the middle of complex inference programs that introduce new
+observations."""),
 
   typed_inf_sp2("peek", infer_action_type([v.AnyType()], variadic=True)),
   typed_inf_sp2("plotf", infer_action_type([v.AnyType()], variadic=True)),
