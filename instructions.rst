@@ -124,8 +124,12 @@ instruction) and continuous (with `start_continuous_inference` and
 
 Both `infer` and `start_continuous_inference` take an *inference
 program*, which is an expression that specifies what inference
-strategy and what parameters (e.g. number of iterations) to use. The
-inference expressions are described [below](#inference-expressions).
+strategy to use.  In simple cases, this will just amount to a
+transition count and some parameter settings for some generic
+inference strategy.  For more complex cases, Venture supports
+user-programmable inference that can capture arbitrarily complex
+problem-specific insights.  The inference expressions are described
+[below](#inference-expressions).
 
 - `[infer expression]`: execute batch inference.
 
