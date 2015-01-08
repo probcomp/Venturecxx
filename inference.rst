@@ -88,6 +88,39 @@ Special Forms
 
 .. include:: inference-macros.gen
 
+- `(unquote <object>)`: Programmatically construct part of a model expression.
+
+  All the ``<model-expression>`` s in the above special forms may be
+  constructed programmatically.  An undecorated expression is taken
+  literally, but if ``(unquote ...)`` appears in such an expression,
+  the code inside the unquote is executed `in the inference program`,
+  and its result is spliced in to the model program.
+
+  For example, suppose one wanted to observe every value in a data
+  set, but allow the model to know the index of the observation (e.g.,
+  to select observation models).  For this, every observed model
+  expression needs to be different, but in a programmable manner.
+  Here is a way to do that::
+
+    [define data ...]
+    [define (observe_after i)
+      (lambda (i)
+        (if (< i (length data))
+            (begin
+              (observe (obs_fun (unquote i)) (lookup data i)) ; (*)
+              (observe_after (+ i 1)))
+            pass))]
+    [infer (observe_after 0)]
+
+  Note the use of unquote on the like marked ``(*)`` to construct
+  different observe expressions for each data element.  To the
+  underlying model, this will look like::
+
+    [observe (obs_fun 0) <val0>]
+    [observe (obs_fun 1) <val1>]
+    [observe (obs_fun 2) <val2>]
+    ...
+
 .. rubric:: Footnotes
 
 .. [#] For the interested, the way this is actually done is that each
