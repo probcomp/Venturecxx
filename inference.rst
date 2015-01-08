@@ -129,3 +129,12 @@ Special Forms
    relevant if you wish to define additional inference abstractions in
    Venture, or more complex combinations of them than the provided
    ones.
+
+   For those readers for whom this is helpful, you can think of the
+   inference program as being run in the ``State Engine`` monad
+   (though, more like ``ST Engine`` because the system's state is
+   actually mutated underneath), with the restriction (as of the
+   present writing) that actions cannot return values.  On this
+   interpretation, ``begin`` is ``do``, but without any provision for
+   actions returning values.  As of this writing, there are no
+   analogues to ``get``, ``put``, or ``runState``.
