@@ -105,8 +105,8 @@ parser_local = subparsers.add_parser("puma", help="[default] Start a local Ventu
 parser_local.set_defaults(func=puma)
 add_local_args(parser_local)
 
-parser_local = subparsers.add_parser("cxx", help="Start a local Venture CXX session",
-                                     description="Start a local Venture CXX session")
+parser_local = subparsers.add_parser("cxx", help="[Deprecated in favor of Puma] Start a local Venture CXX session",
+                                     description="[Deprecated in favor of Puma] Start a local Venture CXX session")
 parser_local.set_defaults(func=cxx)
 add_local_args(parser_local)
 
