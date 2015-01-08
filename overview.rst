@@ -1,47 +1,37 @@
 Overview
 --------
 
-Venture programs consist of a series of instructions which are
-executed by the Venture SIVM (Stochastic Inference Virtual
-Machine).  These instructions
+VentureScript is a probabilistic programming language for the Venture
+platform that aims to be sufficiently simple, clear, concise, and
+expressive for general-purpose use. VentureScript programs specify
+sequences of modeling assumptions, observations, queries, and
+inference instructions. Data, queries, and other constraints can be
+added and removed incrementally, and these operations can be freely
+interleaved with inference.
+VentureScript is designed to make common modeling and inference tasks
+easy, whether or not they are typically formulated in a
+probabilistically coherent way.
 
-- Build up a generative model for some phenomenon of interest
-  (`assume`),
+Intuition
+=========
 
-- Include events on which that model is to be conditioned (`observe`),
+VentureScript programs have multiple meanings:
 
-- Specify queries against that model (`predict`),
+- The `declarative semantics` is the full Bayesian posterior
+  on executions of the program's modeling instructions, conditioned on
+  all observations being satisfied. Many distinct programs have the
+  same declarative semantics, i.e.  encode the same idealized Bayesian
+  inference problem. This distribution will often be intractable to sample from.
 
-- Invoke inference to explore the space of explanations of the events
-  that the model judges as plausible (`infer`), and
+- The `procedural semantics` is the distribution over model
+  execution histories the full program, including inference
+  instructions, actually induces. This distribution is sampled from by
+  running the program.
 
-- Preform various additional and supporting functions (the others).
-
-The "meaning" of a Venture program is the (joint) distribution on
-model variables and predictions that executing the program induces.
-The major instructions affect the meaning as follows:
-
-- `assume` and `predict` extend the state space of the
-  distribution with additional variables or predictions, respectively.
-  The marginal of the extended distribution with respect to the
-  previously extant variables and predictions remains unchanged.
-
-- `observe` records an event as having occurred, but *does not alter
-  the current distribution*.  Instead, `observe` sets up an **implicit
-  conditional** distribution.  The implicit conditional is obtained
-  from the distribution given by all `assume` s and `predict` s,
-  ignoring `infer` s, by conditioning on all `observe` s.  The implicit
-  conditional only affects the meaning of a Venture program through
-  the invocation of `infer` instructions.
-
-- `infer` mutates the distribution by executing the inference program
-  given to it.  Typical inference programs move the distribution
-  nearer (in KL-divergence) to the implicit conditional given by all
-  executed `observe` s.  For example, `[infer (mh default one 100)]`
-  mutates the distribution by taking 100 steps of a certain standard
-  Markov chain, whose stationary distribution is the implicit
-  conditional given by the preceding `assume` s, `predict` s, and
-  `observe` s.
+- Various `intermediate semantics`, each defining equivalences
+  between programs that ignore some execution details but retain
+  others. Some correspond to standard non-Bayesian theories of
+  inference, e.g. global joint density optimization semantics.
 
 For a more extensive conceptual introduction to Venture, see the
 `draft Venture paper <http://arxiv.org/abs/1404.0099>`_.

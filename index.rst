@@ -13,6 +13,7 @@ Contents:
 
    overview.rst
    usage.rst
+   programming-model.rst
    instructions.rst
    modeling.rst
    inference.rst

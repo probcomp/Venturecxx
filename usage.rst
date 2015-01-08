@@ -33,7 +33,12 @@ Python library (batch invocation)::
         [observe (normal x 1) 2]
     """)
 
-There are also two syntaxes for expressions: Venchurch
+The expressive power of the two methods is equivalent, because the
+standalone language can be extended with plugins and callbacks written
+in Python, which can then manipulate the Venture system
+programmatically.
+
+There are two syntaxes for expressions: Venchurch
 (Scheme/Church-like) and VentureScript (Javascript-like). The
 reference manual will use the Venchurch syntax.
 

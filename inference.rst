@@ -4,10 +4,11 @@ Inference Syntax Reference (VenChurch)
 Introduction
 ------------
 
-The Venture inference language is the language in which arguments to
-`infer` are written.  It is actually the same language as the Venture
-modeling language, except with a few additional predefined procedures
-and special forms.
+The Venture inference language is the language in which the toplevel
+Venture program, and particularly arguments to the `infer`
+instruction, are written.  It is actually the same language as the
+Venture modeling language, except with a few additional predefined
+procedures and special forms.
 
 Venture inference programs are effectively evaluated in a context
 where the underlying model trace is available as a reified object, on
@@ -125,16 +126,15 @@ Special Forms
 
 .. [#] For the interested, the way this is actually done is that each
    of the primitives documented here actually returns a procedure that
-   accepts a reified Trace, affects it, and returns it.  This is
+   accepts a reified object representing the sampled execution history
+   of the model program, affects it, and returns it.  This is
    relevant if you wish to define additional inference abstractions in
    Venture, or more complex combinations of them than the provided
    ones.
 
-   For those readers for whom this is helpful, you can think of the
-   inference program as being run in the ``State Engine`` monad
-   (though, more like ``ST Engine`` because the system's state is
-   actually mutated underneath), with the restriction (as of the
-   present writing) that actions cannot return values.  On this
+   For those readers for whom this analogy is helpful, the above is
+   exactly the type signature one would get by implementing a
+   ``State`` monad whose actions cannot return values.  On this
    interpretation, ``begin`` is ``do``, but without any provision for
    actions returning values.  As of this writing, there are no
    analogues to ``get``, ``put``, or ``runState``.
