@@ -22,6 +22,7 @@ import textwrap
 from venture.lite.builtin import builtInSPsList
 from venture.lite.inference_sps import inferenceSPsList
 from venture.sivm.macro import macros
+from venture.engine.macro import macro_list
 
 def flags(psp):
   ans = []
@@ -79,6 +80,14 @@ def model_macros():
       continue
     print macro.desc
 
+def inference_macros():
+  for (name, _func, desc) in macro_list:
+    if desc is not None:
+      print desc
+    else:
+      print "- TODO " + name
+    print ""
+
 if __name__ == "__main__":
   if len(sys.argv) > 1:
     if sys.argv[1] == "--rst":
@@ -87,6 +96,8 @@ if __name__ == "__main__":
       inference_SPs_rst_format()
     elif sys.argv[1] == "macros":
       model_macros()
+    elif sys.argv[1] == "inf-macros":
+      inference_macros()
     else:
       raise Exception("Unknown object type %s" % (sys.argv[1],))
   else:

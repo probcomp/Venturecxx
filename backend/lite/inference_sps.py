@@ -238,7 +238,7 @@ to run."""),
 The `particles` argument gives the number of particles to make.
 Subsequent modeling and inference commands will be applied to each
 result particle independently.  Data reporting commands will talk to
-one distinguished particle, except ``peek_all``.
+one distinguished particle, except ``peek``.
 
 Future observations will have the effect of weighting the particles
 relative to each other by the relative likelihoods of observing those
