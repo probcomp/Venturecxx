@@ -59,6 +59,12 @@ Built-in Helpers
   If given as a block keyword, `all` causes the inference procedure to
   apply to all random choices in the scope.
 
+- `none`: Affect no choices in the scope.
+
+  If given as a block keyword, `none` causes the inference procedure to
+  apply to no random choices.  This is useful only for ``collapse_equal``
+  and ``collapse_equal_map``.
+
 - `ordered`: Make particle Gibbs operate on all blocks in order of block ID.
 
 - `(ordered_range <block> <block>)`: Make particle Gibbs operate on a
