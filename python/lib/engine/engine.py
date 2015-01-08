@@ -54,6 +54,7 @@ class Engine(object):
     self.persistent_inference_trace = persistent_inference_trace
     if self.persistent_inference_trace:
       (self.infer_trace, self.last_did) = self.init_inference_trace()
+    self.ripl = None
 
   def trace_handler_constructor(self, mode):
     if mode == 'multiprocess':

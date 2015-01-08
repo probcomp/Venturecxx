@@ -7,7 +7,7 @@ import math
 from numpy import nan
 from regen import constrain, processMadeSP, evalFamily, restore
 from detach import unconstrain, unevalFamily
-from value import SPRef, ExpressionType, VentureValue, VentureSymbol, VentureNumber
+from value import SPRef, ExpressionType, VentureValue, VentureSymbol, VentureNumber, VenturePair
 from scaffold import Scaffold
 from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
                    EnumerativeGibbsOperator,EnumerativeMAPOperator,EnumerativeDiversify,
@@ -97,6 +97,8 @@ class Trace(object):
       return val.getNumber()
     elif isinstance(val, VentureSymbol):
       return val.getSymbol()
+    elif isinstance(val, VenturePair): # I hope this means it's an ordered range
+      return ExpressionType().asPython(val)
     return val
 
   # [FIXME] repetitive, but not sure why these exist at all

@@ -171,8 +171,8 @@ class Scanner(Plex.Scanner):
         (integer,       scan_integer),
         (real,          scan_real),
         (Plex.Str('"'), scan_string),
-        (badname,       -1),    # Invalid.
-        (Plex.AnyChar,  -1),    # Invalid.
+        (badname,       -1),    # Invalid -- error.
+        (Plex.AnyChar,  -1),    # Invalid -- error.
         Plex.State('STRING', [
             (Plex.Str('"'),                     scan_string_end),
             (esc + octal3,                      scan_string_octal),

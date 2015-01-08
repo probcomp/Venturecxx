@@ -207,6 +207,9 @@ class PSP(object):
     """
     return None
 
+  def description_rst_format(self, _name):
+    return None
+
   def childrenCanAAA(self): return False
   def getAAALKernel(self): return DefaultAAALKernel(self)
 
@@ -346,6 +349,10 @@ class TypedPSP(PSP):
     type_names = self.f_type.names()
     signature = "\n".join(["%s :: %s" % (name, variant) for variant in type_names])
     return signature + "\n" + self.psp.description(name)
+
+  def description_rst_format(self, name):
+    signature = ".. function:: " + self.f_type.name_rst_format(name)
+    return (signature, self.psp.description(name))
 
   # TODO Is this method part of the psp interface?
   def logDensityOfCounts(self,aux):

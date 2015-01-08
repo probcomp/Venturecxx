@@ -66,9 +66,16 @@ class Ripl():
         self.directive_id_to_mode = {}
         self.mode = parsers.keys()[0]
         self._n_prelude = 0
-        # TODO Loading the prelude currently (6/26) slows the test suite to a crawl
+        # TODO Loading the prelude currently (6/26/14) slows the test suite to a crawl
         # self.load_prelude()
-
+        r = self.sivm.core_sivm.engine.ripl
+        if r is None:
+            self.sivm.core_sivm.engine.ripl = self
+        elif r is self:
+            # OK
+            pass
+        else:
+            print "Wrapping sivm %s in a new ripl but it already has one: %s.  Engine to ripl references may be incorrect." % (self.sivm, r)
 
 
     ############################################
@@ -791,6 +798,11 @@ Open issues:
                 Ripl._parsed_prelude = self.parse_program(f.read())
             self.load_prelude()
 
+    def load_plugin(self, name):
+        m = load_library(name)
+        if hasattr(m, "__venture_start__"):
+            m.__venture_start__(self)
+
     ############################################
     # Private methods
     ############################################
@@ -804,4 +816,34 @@ Open issues:
         p = self.parsers[mode]
         args, arg_ranges = p.split_instruction(text)
         return args['expression'], arg_ranges['expression'][0]
+
+def load_library(name):
+    import imp
+    pathname = name
+    if name.endswith('.py'):
+        name = name[0 : len(name) - len('.py')]
+    with open(pathname, 'rb') as f:
+        return imp.load_source(name, pathname, f)
+
+    # XXX Why don't we use imp.find_module and imp.load_module?
+    # Desiderata:
+    # - Be able to import things relative to either the working
+    #   directory or the location of the .vnt file.
+    # - Permit those to import relative to themselves, if possible.
+    #
+    # None of the methods below achieve both of these things.  The
+    # latter, and the implement option, permit a loaded plugin to load
+    # other relative modules by sys.path hacking.
+
+    # exec("import %s as plugin_mod" % name)
+    # return plugin_mod
+
+    # import importlib
+    # return importlib.import_module(name)
+
+    # return __import__("import %s" % name)
+
+    # (file, pathname, description) = imp.find_module(name, ["."] + sys.path)
+    # print (file, pathname, description)
+    # return imp.load_module(name, file, pathname, description)
 
