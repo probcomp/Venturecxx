@@ -25,7 +25,9 @@ def register_macro(name, func, desc=None):
 def begin_macro(program):
   assert len(program) >= 2
   return [v.sym("sequence"), [v.sym("list")] + [macroexpand_inference(e) for e in program[1:]]]
-register_macro("begin", begin_macro)
+register_macro("begin", begin_macro, """\
+- `(begin <kernel> ...)`: Perform the given kernels in sequence.
+""")
 
 def cycle_macro(program):
   assert len(program) == 3
@@ -71,7 +73,7 @@ def quasiquotation_macro(min_size = None, max_size = None):
   return the_macro
 
 register_macro("peek", quasiquotation_macro(2), """\
-- `(peek <expression> ...)`: Extract data from the underlying
+- `(peek <model-expression> ...)`: Extract data from the underlying
   model during inference.
 
   Every time a `peek` inference command is executed, the given
@@ -80,18 +82,33 @@ register_macro("peek", quasiquotation_macro(2), """\
   being used as a library, or printed, if from the interactive
   console.
 
-  Each <expression> may optionally be given in the form (labelled
-  <expression> <name>), in which case the given `name` serves as the
+  Each <model-expression> may optionally be given in the form (labelled
+  <model-expression> <name>), in which case the given `name` serves as the
   key in the returned table of peek data.  Otherwise, the key defaults
   to a string representation of the given `expression`.
+
+  *Note:* The <model-expression>s are sampled in the _model_, not the
+  inference program.  For example, they may refer to variables
+  ``assume`` d in the model, but may not refer to variables ``define`` d
+  in the inference program.  The <model-expression>s may be constructed
+  programmatically: see ``unquote``.
+
 """)
 
-register_macro("printf", quasiquotation_macro(2))
+register_macro("printf", quasiquotation_macro(2), """\
+- `(printf <model-expression> ...)`: Print model values.
+
+  Every time a `printf` command is executed, the given model
+  expressions are sampled and their values printed to standard output.
+  This is a basic debugging facility.
+
+  See the note about model expressions from ``peek``.
+""")
 
 register_macro("plotf", quasiquotation_macro(2), """\
-- `(plotf <spec> <expression> ...)`: Accumulate data for plotting.
+- `(plotf <spec> <model-expression> ...)`: Accumulate data for plotting.
 
-  Every time a `plotf` command is executed, the given expressions are
+  Every time a `plotf` command is executed, the given model expressions are
   sampled and their values are stored.  When inference completes, the
   data extracted is either returned as a ``SpecPlot`` object, if
   Venture is being used as a library, or plotted on the screen, if
@@ -150,14 +167,82 @@ register_macro("plotf", quasiquotation_macro(2), """\
       If the given specification is a list, make all those plots at once.
 
   The expressions can optionally be labelled in the same way as for ``peek``.
+  See also the note about them being model expressions there.
 """)
-register_macro("plotf_to_file", quasiquotation_macro(2))
-register_macro("call_back", quasiquotation_macro(2))
-register_macro("call_back_accum", quasiquotation_macro(2))
-register_macro("assume", quasiquotation_macro(3, 3))
-register_macro("predict", quasiquotation_macro(2, 2))
+
+register_macro("plotf_to_file", quasiquotation_macro(3), """\
+- `(plotf_to_file <basename> <spec> <model-expression> ...)`: Accumulate data for plotting to a file.
+
+  Like ``plotf``, but save the resulting plot as the file named
+  "`basename`.png" instead of displaying it on the screen.
+""")
+
+register_macro("call_back", quasiquotation_macro(2), """\
+- `(call_back <name> <model-expression> ...)`: Invoke a user-defined callback.
+
+  Locate the callback registered under the name `name` and invoke it with
+
+  - First, the Infer instance in which the present inference program
+    is being run
+
+  - Then, for each expression in the call_back form, a list of
+    values for that expression, represented as stack dicts, sampled
+    across all extant particles.  The lists are parallel to each
+    other.
+
+  To bind a callback, call the ``bind_callback`` method on the Ripl object::
+
+      ripl.bind_callback(<name>, <callable>):
+
+      Bind the given Python callable as a callback function that can be
+      referred to by `call_back` by the given name (which is a string).
+
+  There is an example in test/inference_language/test_callback.py.
+""")
+
+register_macro("call_back_accum", quasiquotation_macro(2), """\
+- `(call_back_accum <name> <model-expression> ...)`: Accumulate data for a user-defined callback.
+
+  Like ``call_back``, but accumulates the data during the inference
+  program, and calls the callback with a Pandas DataFrame containing
+  it once enclosing the ``infer`` instruction completes.
+
+""")
+
+register_macro("assume", quasiquotation_macro(3, 3), """\
+- `(assume <symbol> <model-expression>)`: Programmatically add an assumption.
+
+  Extend the underlying model by adding a new generative random
+  variable, like the ``assume`` directive.  The given model expression
+  may be constructed programmatically -- see ``unquote``.
+
+""")
 
 def observe_macro(program):
   assert len(program) == 3
   return [program[0], v.quasiquote(program[1]), macroexpand_inference(program[2])]
-register_macro("observe", observe_macro)
+register_macro("observe", observe_macro, """\
+- `(observe <model-expression> <value>)`: Programmatically add an observation.
+
+  Condition the underlying model by adding a new observation, like the
+  ``observe`` directive.  The given model expression may be
+  constructed programmatically -- see ``unquote``.  The given value is
+  computed in the inference program, and may be stochastic.  This
+  corresponds to conditioning a model on randomly chosen data.
+
+  *Note:* Observations are buffered by Venture, and do not take effect
+  immediately.  Call ``incorporate`` when you want them to.
+  ``incorporate`` is called automatically before every toplevel
+  ``infer`` instruction, but if you are using ``observe`` inside a
+  compound inference program, you may not execute another toplevel
+  ``infer`` instruction for a while.
+
+""")
+
+register_macro("predict", quasiquotation_macro(2, 2), """\
+- `(predict <model-expression>)`: Programmatically add a prediction.
+
+  Extend the underlying model by adding a new generative random
+  variable, like the ``predict`` directive.  The given model expression
+  may be constructed programmatically -- see ``unquote``.
+""")
