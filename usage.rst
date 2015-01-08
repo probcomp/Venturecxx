@@ -38,7 +38,24 @@ standalone language can be extended with plugins and callbacks written
 in Python, which can then manipulate the Venture system
 programmatically.
 
-There are two syntaxes for expressions: Venchurch
-(Scheme/Church-like) and VentureScript (Javascript-like). The
-reference manual will use the Venchurch syntax.
+Standalone Invocation
+=====================
 
+The Venture program is self-documenting as to its invocation pattern.
+We reproduce here the help messages for representative invocation
+modes.
+
+.. include:: venture-command-help.gen
+
+Library Invocation
+==================
+
+TODO
+
+::
+
+   import venture.shortcuts as ven
+   ripl = ven.Lite().make_combined_ripl()
+   ripl.assume ...
+   ripl.observe ...
+   ripl.infer ...

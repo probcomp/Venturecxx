@@ -39,3 +39,7 @@ inference program as being run in the ``State ModelHistory`` monad (though,
 more like ``ST ModelHistory`` because the system's state is actually mutated
 underneath), with the restriction (as of the present writing) that
 actions cannot return values.
+
+There are two syntaxes for expressions: Venchurch
+(Scheme/Church-like) and VentureScript (Javascript-like). The
+reference manual will use the Venchurch syntax.
