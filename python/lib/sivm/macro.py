@@ -1,5 +1,37 @@
 # Framework for writing macros that resugar errors.
 
+# This code uses terminology that is slightly non-standard from the
+# point of view of traditional macro systems.  Specifically:
+#
+# - a "macro" is an object that may transform an expression to a
+#   "sugar" object.  Spiritually:
+#
+#     type Macro = Expression -> Maybe Sugar
+#
+# - a "sugar" is an object that can emit a macroexpanded expression,
+#   and implements an isomorphism between indexes on the expanded and
+#   unexpanded versions of the expression.  Spiritually:
+#
+#     type Sugar = (Expression, Index -> Index, Index -> Index)
+#
+# - an "index" is a path through an expression that indicates a
+#   subexpression of interest (used for error reporting).
+#   Spiritually:
+#
+#     type Index = Expression -> Expression
+#
+#   but they are represented explicitly, and transformed by sugars.
+#
+# Note that there is no notional separation between "macroexpand-1"
+# and "macroexpand" (to use vocabulary from Common Lisp): the "sugar"
+# object produced by one invocation of a "macro" is responsible for
+# producing a fully macroexpanded expression.  This is accomplished by
+# recursively invoking macroexpansion on subexpressions.
+#
+# Given that, macroexpansion proceeds simply by trying all known
+# macros in order, using the result of the first that produces
+# something -- see the top-level function `expand`.
+
 from venture.exception import VentureException
 import venture.value.dicts as v
 

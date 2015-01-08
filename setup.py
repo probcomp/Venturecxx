@@ -300,5 +300,5 @@ setup (
     },
     package_data = {'':['*.vnt']},
     ext_modules = ext_modules,
-    scripts = ['script/venture']
+    scripts = ['script/venture', 'script/vendoc']
 )

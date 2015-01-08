@@ -46,6 +46,14 @@ class SP(object):
     if candidate:
       return candidate
     return name
+  def description_rst_format(self,name):
+    candidate = self.outputPSP.description_rst_format(name)
+    if candidate:
+      return candidate
+    candidate = self.requestPSP.description_rst_format(name)
+    if candidate:
+      return candidate
+    return (".. function:: %s" % name, name)
   def venture_type(self):
     if hasattr(self.outputPSP, "f_type"):
       return self.outputPSP.f_type
@@ -147,6 +155,29 @@ used in the implementation of TypedPSP and TypedLKernel."""
   def name(self):
     """A default name for when there is only room for one name."""
     return self._name_for_fixed_arity(self.args_types)
+
+  def name_rst_format(self, name):
+    def subtype_name(tp):
+      if hasattr(tp, "name_rst_format"):
+        return tp.name_rst_format("proc")
+      else:
+        return tp.name()
+    result = name + "("
+    for (i, arg) in enumerate(self.args_types):
+      if i >= self.min_req_args:
+        result += "["
+      if i > 0:
+        result += ", "
+      result += subtype_name(arg)
+    if self.variadic: result += ", ..."
+    result += "]" * (len(self.args_types) - self.min_req_args)
+    result += ")"
+    if name != "proc":
+      # Top-level
+      result += "\n\n   :rtype: " + subtype_name(self.return_type)
+    else:
+      result += " -> " + subtype_name(self.return_type)
+    return result
 
   def gradient_type(self):
     return SPType([t.gradient_type() for t in self.args_types], self.return_type.gradient_type(), self.variadic, self.min_req_args)

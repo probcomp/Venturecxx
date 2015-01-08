@@ -139,9 +139,7 @@ class MakeGPOutputPSP(DeterministicPSP):
   def childrenCanAAA(self): return True
 
   def description(self, _name=None):
-    return """Constructs a Gaussian Process with the given mean and covariance functions.
-Wrap the gp in a mem if input points might be sampled multiple times.
-Global Logscore is broken with GPs, as it is with all SPs that have auxen."""
+    return """Constructs a Gaussian Process with the given mean and covariance functions. Wrap the gp in a mem if input points might be sampled multiple times. Global Logscore is broken with GPs, as it is with all SPs that have auxen."""
 
 makeGPType = SPType([v.AnyType("mean function"), v.AnyType("covariance function")], gpType)
 makeGPSP = SP(NullRequestPSP(), TypedPSP(MakeGPOutputPSP(), makeGPType))
