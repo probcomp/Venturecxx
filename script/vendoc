@@ -19,6 +19,7 @@
 import sys
 import string
 import textwrap
+import subprocess
 from venture.lite.builtin import builtInSPsList
 from venture.lite.inference_sps import inferenceSPsList
 from venture.sivm.macro import macros
@@ -88,6 +89,14 @@ def inference_macros():
       print "- TODO " + name
     print ""
 
+def invocation():
+  for mode in ["", "lite ", "server ", "remote "]:
+    print "\n::"
+    cmd = "venture %s-h" % (mode,)
+    print "\n   $ " + cmd
+    sys.stdout.flush()
+    subprocess.check_call(cmd + "| sed 's/^/   /'", shell=True)
+
 if __name__ == "__main__":
   if len(sys.argv) > 1:
     if sys.argv[1] == "--rst":
@@ -98,6 +107,8 @@ if __name__ == "__main__":
       model_macros()
     elif sys.argv[1] == "inf-macros":
       inference_macros()
+    elif sys.argv[1] == "invocation":
+      invocation()
     else:
       raise Exception("Unknown object type %s" % (sys.argv[1],))
   else:
