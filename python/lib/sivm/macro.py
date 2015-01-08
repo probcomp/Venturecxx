@@ -36,9 +36,10 @@ from venture.exception import VentureException
 import venture.value.dicts as v
 
 class Macro(object):
-  def __init__(self, predicate=None, expander=None):
+  def __init__(self, predicate=None, expander=None, desc=None):
     self.predicate = predicate
     self.expander = expander
+    self.desc = desc
 
   def applies(self, exp):
     return self.predicate(exp)
@@ -51,11 +52,11 @@ class Sugar(object):
     """The desugared expression."""
     raise Exception("Not implemented!")
   
-  def desugar_index(self, index):
+  def desugar_index(self, _index):
     """Desugar an expression index."""
     raise Exception("Not implemented!")
   
-  def resugar_index(self, index):
+  def resugar_index(self, _index):
     """Transform the desugared expression index back into a sugared one."""
     raise Exception("Not implemented!")
 
@@ -85,7 +86,7 @@ class LiteralSugar(Sugar):
   def desugared(self):
     return self.literal
   def desugar_index(self, index):
-    assert(len(index) == 0)
+    assert len(index) == 0
     return index
   def resugar_index(self, index):
     if len(index) != 0:
@@ -163,10 +164,11 @@ def verify(pattern, exp, context):
 
 class SyntaxRule(Macro):
   """Tries to be scheme's define-syntax-rule."""
-  def __init__(self, pattern, template):
+  def __init__(self, pattern, template, desc=None):
     self.name = pattern[0]
     self.pattern = pattern
     self.template = template
+    self.desc = desc
     
     patternIndeces = {sym: index for index, sym in traverse(pattern) if isSym(sym)}
     templateIndeces = {sym: index for index, sym in traverse(template) if isSym(sym)}

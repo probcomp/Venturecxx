@@ -21,6 +21,7 @@ import string
 import textwrap
 from venture.lite.builtin import builtInSPsList
 from venture.lite.inference_sps import inferenceSPsList
+from venture.sivm.macro import macros
 
 def flags(psp):
   ans = []
@@ -50,20 +51,20 @@ def wrap_description(desc):
 def wrap_description_rst_format(header, body):
   return header + "\n\n" + "\n".join(["   " + line for line in body.strip().split("\n")])
 
-def main():
+def model_SPs():
   for (name,sp) in builtInSPsList:
     print ""
     print wrap_description(sp.description(name))
     print "  " + string.capitalize(string.join(flags(sp.outputPSP), ", "))
 
-def main_rst_format():
+def model_SPs_rst_format():
   for (name,sp) in builtInSPsList:
     print ""
     print wrap_description_rst_format(*sp.description_rst_format(name))
     print
     print "   " + string.capitalize(string.join(flags(sp.outputPSP), ", "))
 
-def main_inf():
+def inference_SPs_rst_format():
   for (name,sp) in inferenceSPsList:
     print ""
     print wrap_description_rst_format(*sp.description_rst_format(name))
@@ -71,11 +72,22 @@ def main_inf():
     # print
     # print "   " + string.capitalize(string.join(flags(sp.outputPSP), ", "))
 
+def model_macros():
+  for macro in macros:
+    if macro.desc is None:
+      sys.stderr.write("Skipping undesribed macro %s\n" % (macro,))
+      continue
+    print macro.desc
+
 if __name__ == "__main__":
   if len(sys.argv) > 1:
     if sys.argv[1] == "--rst":
-      main_rst_format()
+      model_SPs_rst_format()
+    elif sys.argv[1] == "inf":
+      inference_SPs_rst_format()
+    elif sys.argv[1] == "macros":
+      model_macros()
     else:
-      main_inf()
+      raise Exception("Unknown object type %s" % (sys.argv[1],))
   else:
-    main()
+    model_SPs()
