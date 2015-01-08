@@ -17,3 +17,4 @@ Contents:
    instructions.rst
    modeling.rst
    inference.rst
+   plugins.rst
