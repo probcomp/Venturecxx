@@ -12,7 +12,12 @@ from venture.sivm.macro import macros
 from venture.engine.macro import macro_list
 
 def main(arg):
-  'Fill template file with Venture keywords'
+  if arg == 'syntax':
+    get_syntax()
+  elif arg == 'indent':
+    get_indent()
+
+def get_syntax():
   with open('tmLanguage-template') as f:
     template = Template(f.read())
   subs = dict(model_sps = model_sps(),
@@ -20,15 +25,12 @@ def main(arg):
               model_macros = model_macros(),
               inference_macros = inference_macros())
   subs.update(parse_grammar())
-  if arg == 'syntax':
-    subs_pretty = dict([(k, prettify(v)) for k, v in subs.iteritems()])
-    spec = template.substitute(**subs_pretty)
-    print spec
-  elif arg == 'indent':
-    del subs['literals']
-    nested = subs.values()
-    flattened = [x for xs in nested for x in xs]
-    print '"(' + prettify(sorted(set(flattened))) + ')$"'
+  subs_pretty = dict([(k, prettify(v)) for k, v in subs.iteritems()])
+  spec = template.substitute(**subs_pretty)
+  print spec
+
+def get_indent():
+  print '"(' + prettify(sorted(set(model_macros() + inference_macros()))) + ')$"'
 
 def model_sps():
   return [x[0] for x in builtInSPsList]
