@@ -27,7 +27,7 @@ from scaffold import constructScaffold
 from lkernel import DeterministicLKernel
 from psp import ESRRefOutputPSP, TypedPSP, LikelihoodFreePSP
 from serialize import OrderedOmegaDB
-from exception import VentureError, LogScoreWarning
+from exception import VentureError, LogScoreWarning, VentureBuiltinSPMethodError
 from venture.exception import VentureException
 
 class Trace(object):
@@ -559,12 +559,10 @@ the scaffold determined by the given expression."""
   def _getOneLogScore(self, node):
     # Hack: likelihood-free PSP's contribute 0 to global logscore.
     # This is incorrect, but better than the function breaking entirely.
-    wrapped = self.pspAt(node)
-    psp = wrapped.psp if isinstance(wrapped, TypedPSP) else wrapped
-    if isinstance(psp, LikelihoodFreePSP):
+    try:
+      return (self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node)), False)
+    except VentureBuiltinSPMethodError:
       return (0.0, True)
-    else:
-      return (wrapped.logDensity(self.groundValueAt(node),self.argsAt(node)), False)
 
   #### Serialization interface
 
