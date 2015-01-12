@@ -48,6 +48,7 @@ venture.shortcuts module:
 import numbers
 import re
 from os import path
+import numpy as np
 
 from venture.exception import VentureException
 from venture.lite.value import VentureValue
@@ -775,10 +776,20 @@ Open issues:
             text, indyces = self.humanReadable(exp, did, index)
             return text + '\n' + underline(indyces)
 
+        def sort_as(initial, final, xs):
+            'Given xs in order "initial", re-sort in order "final"'
+            ix = np.argsort([final.index(x) for x in initial])
+            return np.array(xs)[ix].tolist()
+
         for row in rows:
+            initial_order = map(resugar, row['principal'])
             for name in ['principal', 'absorbing', 'aaa']:
                 replace(row, name, lambda addrs: frozenset(map(resugar, addrs)))
+            # reorder the human-readable addresses, current and proposed values
+            final_order = list(row['principal'])
             row['address'] = [getaddr(x) for x in row['principal']]
+            for name in ['current', 'proposed']:
+                row[name] = sort_as(initial_order, final_order, row[name])
 
         from pandas import DataFrame
         return DataFrame.from_records(rows)
