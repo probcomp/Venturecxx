@@ -51,6 +51,12 @@ def par_transition_oper_type(extra_args = None, **kwargs):
   other_args = transition_oper_args_types(extra_args)
   return infer_action_type(other_args + [v.BoolType("in_parallel : bool")], min_req_args=len(other_args), **kwargs)
 
+def macro_helper(name, tp):
+  return typed_inf_sp2(name, tp, desc="""\
+A helper function for implementing the eponymous inference macro.
+
+Calling it directly is likely to be difficult and unproductive. """)
+
 inferenceSPsList = [
   typed_inf_sp("mh", transition_oper_type(),
                desc="""Run a Metropolis-Hastings kernel, proposing by resimulating the prior.
@@ -238,7 +244,7 @@ to run."""),
 The `particles` argument gives the number of particles to make.
 Subsequent modeling and inference commands will be applied to each
 result particle independently.  Data reporting commands will talk to
-one distinguished particle, except ``peek_all``.
+one distinguished particle, except ``peek``.
 
 Future observations will have the effect of weighting the particles
 relative to each other by the relative likelihoods of observing those
@@ -400,16 +406,17 @@ but is also provided explicitly because it may be appropriate to
 invoke in the middle of complex inference programs that introduce new
 observations."""),
 
-  typed_inf_sp2("peek", infer_action_type([v.AnyType()], variadic=True)),
-  typed_inf_sp2("plotf", infer_action_type([v.AnyType()], variadic=True)),
-  typed_inf_sp2("plotf_to_file", infer_action_type([v.AnyType()], variadic=True)),
-  typed_inf_sp2("printf", infer_action_type([v.AnyType()], variadic=True)),
-  typed_inf_sp2("call_back", infer_action_type([v.AnyType()], variadic=True)),
-  typed_inf_sp2("call_back_accum", infer_action_type([v.AnyType()], variadic=True)),
-  typed_inf_sp2("assume", infer_action_type([v.AnyType("<symbol>"), v.AnyType("<expression>")])),
-  typed_inf_sp2("observe", infer_action_type([v.AnyType("<expression>"), v.AnyType()])),
-  typed_inf_sp2("predict", infer_action_type([v.AnyType("<expression>")])),
   typed_inf_sp2("load_plugin", infer_action_type([v.SymbolType("filename")])),
+
+  macro_helper("peek", infer_action_type([v.AnyType()], variadic=True)),
+  macro_helper("plotf", infer_action_type([v.AnyType()], variadic=True)),
+  macro_helper("plotf_to_file", infer_action_type([v.AnyType()], variadic=True)),
+  macro_helper("printf", infer_action_type([v.AnyType()], variadic=True)),
+  macro_helper("call_back", infer_action_type([v.AnyType()], variadic=True)),
+  macro_helper("call_back_accum", infer_action_type([v.AnyType()], variadic=True)),
+  macro_helper("assume", infer_action_type([v.AnyType("<symbol>"), v.AnyType("<expression>")])),
+  macro_helper("observe", infer_action_type([v.AnyType("<expression>"), v.AnyType()])),
+  macro_helper("predict", infer_action_type([v.AnyType("<expression>")])),
 
   # Hackety hack hack backward compatibility
   ["ordered_range", deterministic_typed(lambda *args: (v.VentureSymbol("ordered_range"),) + args,
@@ -417,21 +424,3 @@ observations."""),
 ]
 
 inferenceKeywords = [ "default", "all", "none", "one", "ordered" ]
-
-# Documentation of call_back (for lack of any better place to put it):
-
-# (call_back <symbol> <expression>...)    Inference special form
-#   Invokes the Python function registered under the name <symbol>
-#   (see bind_callback) with
-#   - First, the Infer instance in which the present inference program
-#     is being run
-#   - Then, for each expression in the call_back form, a list of
-#     values for that expression, represented as stack dicts, sampled
-#     across all extant particles.  The lists are parallel to each
-#     other.
-#
-# ripl.bind_callback(<name>, <callable>)  RIPL method
-#   Bind the given callable as a callback function that can be
-#   referred to by "call_back" by the given name (which is a string).
-
-# There is an example in test/inference_language/test_callback.py

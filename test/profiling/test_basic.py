@@ -1,5 +1,10 @@
+from scipy import stats
+
 from venture.test.config import get_ripl, broken_in
 from venture.exception import underline
+from venture.lite.psp import LikelihoodFreePSP
+from venture.lite import value as v
+from venture.lite.builtin import typed_nr
 
 @broken_in('puma')
 def test_profiling1():
@@ -25,7 +30,24 @@ def test_profiling1():
     print underline(indyces)
 
   data = ripl.profile_data()
-  
+
   assert(len(data) == 11)
-  
+
   map(lambda addrs: map(printAddr, addrs), data.principal)
+
+@broken_in('puma')
+def test_profiling_likelihoodfree():
+  "Make sure profiling doesn't break with likelihood-free SP's"
+  class TestPSP(LikelihoodFreePSP):
+    def simulate(self, args):
+      x = args.operandValues[0]
+      return x + stats.distributions.norm.rvs()
+  tester = typed_nr(TestPSP(), [v.NumberType()], v.NumberType())
+  ripl = get_ripl()
+  ripl.bind_foreign_sp('test', tester)
+  prog = '''
+  [ASSUME x (test 0)]
+  [INFER (mh default one 10)]'''
+  ripl.profiler_enable()
+  ripl.execute_program(prog)
+
