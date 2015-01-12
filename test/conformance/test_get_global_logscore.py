@@ -4,7 +4,7 @@ from nose.tools import assert_almost_equal, eq_
 import numpy as np
 from scipy import stats
 
-from venture.test.config import get_ripl, on_inf_prim
+from venture.test.config import get_ripl, on_inf_prim, broken_in
 from venture.lite.psp import LikelihoodFreePSP
 from venture.lite import value as v
 from venture.lite.builtin import typed_nr
@@ -33,6 +33,7 @@ def test_global_logscore_coupled():
     assert_almost_equal(logscore, logscore_true)
 
 @on_inf_prim("none")
+@broken_in("puma", "TODO: fix getGlobalLogScore in PUMA. Issue: https://app.asana.com/0/12610813584901/23899154336705")
 def test_logscore_likelihood_free():
     "Should warn user that there are likelihood-free SP's"
     ripl = setup_likelihood_free()
