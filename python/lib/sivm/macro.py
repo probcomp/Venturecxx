@@ -36,9 +36,10 @@ from venture.exception import VentureException
 import venture.value.dicts as v
 
 class Macro(object):
-  def __init__(self, predicate=None, expander=None):
+  def __init__(self, predicate=None, expander=None, desc=None):
     self.predicate = predicate
     self.expander = expander
+    self.desc = desc
 
   def applies(self, exp):
     return self.predicate(exp)
@@ -51,11 +52,11 @@ class Sugar(object):
     """The desugared expression."""
     raise Exception("Not implemented!")
   
-  def desugar_index(self, index):
+  def desugar_index(self, _index):
     """Desugar an expression index."""
     raise Exception("Not implemented!")
   
-  def resugar_index(self, index):
+  def resugar_index(self, _index):
     """Transform the desugared expression index back into a sugared one."""
     raise Exception("Not implemented!")
 
@@ -85,7 +86,7 @@ class LiteralSugar(Sugar):
   def desugared(self):
     return self.literal
   def desugar_index(self, index):
-    assert(len(index) == 0)
+    assert len(index) == 0
     return index
   def resugar_index(self, index):
     if len(index) != 0:
@@ -163,10 +164,11 @@ def verify(pattern, exp, context):
 
 class SyntaxRule(Macro):
   """Tries to be scheme's define-syntax-rule."""
-  def __init__(self, pattern, template):
+  def __init__(self, pattern, template, desc=None):
     self.name = pattern[0]
     self.pattern = pattern
     self.template = template
+    self.desc = desc
     
     patternIndeces = {sym: index for index, sym in traverse(pattern) if isSym(sym)}
     templateIndeces = {sym: index for index, sym in traverse(template) if isSym(sym)}
@@ -238,11 +240,45 @@ def arg0(name):
   return applies
   
 identityMacro = SyntaxRule(['identity', 'exp'], ['lambda', [], 'exp'])
-lambdaMacro = SyntaxRule(['lambda', 'args', 'body'], ['make_csp', ['quote', 'args'], ['quote', 'body']])
-ifMacro = SyntaxRule(['if', 'predicate', 'consequent', 'alternative'], [['biplex', 'predicate', ['lambda', [], 'consequent'], ['lambda', [], 'alternative']]])
-andMacro = SyntaxRule(['and', 'exp1', 'exp2'], ['if', 'exp1', 'exp2', v.boolean(False)])
-orMacro = SyntaxRule(['or', 'exp1', 'exp2'], ['if', 'exp1', v.boolean(True), 'exp2'])
-letMacro = Macro(arg0("let"), LetExpand)
+lambdaMacro = SyntaxRule(['lambda', 'args', 'body'],
+                         ['make_csp', ['quote', 'args'], ['quote', 'body']],
+                         desc="""\
+- `(lambda (param ...) body)`: Construct a procedure.
+
+  The formal parameters must be Venture symbols.
+  The body must be a Venture expression.
+  The semantics are as in Scheme or Church.  Unlike Scheme, the body
+  must be a single expression, and creation of variable arity
+  procedures is not supported.
+""")
+
+ifMacro = SyntaxRule(['if', 'predicate', 'consequent', 'alternative'],
+                     [['biplex', 'predicate', ['lambda', [], 'consequent'], ['lambda', [], 'alternative']]],
+                     desc="""\
+- `(if predicate consequent alternate)`: Branch control.
+
+  The predicate, consequent, and alternate must be Venture expressions.
+""")
+
+andMacro = SyntaxRule(['and', 'exp1', 'exp2'],
+                      ['if', 'exp1', 'exp2', v.boolean(False)],
+                      desc="""- `(and exp1 exp2)`: Short-circuiting and. """)
+
+orMacro = SyntaxRule(['or', 'exp1', 'exp2'],
+                     ['if', 'exp1', v.boolean(True), 'exp2'],
+                     desc="""- `(or exp1 exp2)`: Short-circuiting or. """)
+
+letMacro = Macro(arg0("let"), LetExpand,
+                 desc="""\
+- `(let ((param exp) ...) body)`: Evaluation with local scope.
+
+  Each parameter must be a Venture symbol.
+  Each exp must be a Venture expression.
+  The body must be a Venture expression.
+  The semantics are as Scheme's `let*`: each `exp` is evaluated in turn,
+  its result is bound to the `param`, and made available to subsequent
+  `exp` s and the `body`.
+""")
 
 macros = [identityMacro, lambdaMacro, ifMacro, andMacro, orMacro, letMacro, ListMacro(), LiteralMacro()]
 
