@@ -171,7 +171,7 @@ register_macro("plotf", quasiquotation_macro(2), """\
 """)
 
 register_macro("plotf_to_file", quasiquotation_macro(3), """\
-- `(plotf_to_file <basename> <spec> <model-expression> ...)`: Accumulate data for plotting to a file.
+- `(plotf_to_file <basenames> <spec> <model-expression> ...)`: Accumulate data for plotting to files.
 
   Like ``plotf``, but save the resulting plot as the file named
   "`basename`.png" instead of displaying it on the screen.

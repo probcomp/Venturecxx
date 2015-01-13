@@ -1,6 +1,8 @@
 import re
 from itertools import chain
 
+from venture.lite.exception import VentureValueError
+
 stream_rx = r"([rcts%]|[0-9]+)"
 scale_rx = r"([dl])"
 geom_rx = r"[plbah]"
@@ -30,15 +32,18 @@ class PlotSpec(object):
       figs.append(plot.draw())
     return figs
 
-  def plot(self, dataset, names, filename=None):
+  def plot(self, dataset, names, filenames=None):
     import matplotlib.pylab as plt
-    self.draw(dataset, names)
-    if filename is None:
+    figs = self.draw(dataset, names)
+    if filenames is None:
       plt.show()
       plt.close()
     else:
-      plt.savefig(filename)
-      plt.close()
+      if len(figs) != len(filenames):
+        raise VentureValueError('The number of specs must match the number of filenames.')
+      for fig, filename in zip(figs, filenames):
+        fig.savefig(filename)
+      plt.close('all')
     # FIXME: add something to track names of frames here
 
   def streams(self):
