@@ -1,6 +1,8 @@
 import re
 from itertools import chain
 
+from venture.lite.exception import VentureValueError
+
 stream_rx = r"([rcts%]|[0-9]+)"
 scale_rx = r"([dl])"
 geom_rx = r"[plbah]"
@@ -24,25 +26,41 @@ class PlotSpec(object):
       plot = g.ggplot(dataset, g.aes(**aes))
       for geom in spec.get_geoms():
         plot += geom
+      # add the wall time
+      title = self._format_title(dataset)
+      plot += g.ggtitle(title)
       for (dim, scale) in zip(["x", "y", "color"], spec.scales):
         obj = self._interp_scale(dim, scale)
         if obj: plot += obj
       figs.append(plot.draw())
     return figs
 
-  def plot(self, dataset, names, filename=None):
+  def plot(self, dataset, names, filenames=None):
     import matplotlib.pylab as plt
-    self.draw(dataset, names)
-    if filename is None:
+    figs = self.draw(dataset, names)
+    if filenames is None:
       plt.show()
       plt.close()
     else:
-      plt.savefig(filename)
-      plt.close()
+      if len(figs) != len(filenames):
+        raise VentureValueError('The number of specs must match the number of filenames.')
+      for fig, filename in zip(figs, filenames):
+        fig.suptitle(filename.replace('.png', ''))
+        fig.savefig(filename)
+      plt.close('all')
     # FIXME: add something to track names of frames here
 
   def streams(self):
     return chain(*[frame.streams for frame in self.frames])
+
+  @staticmethod
+  def _format_title(dataset):
+    walltime = dataset['time (s)'].max()
+    nsweeps = dataset['sweep count'].max()
+    nparticles = dataset['particle id'].max() + 1
+    title = 'Wall time: {0}m, {1:0.2f}s. Sweeps: {2}. Particles: {3}'
+    title = title.format(int(walltime // 60), walltime % 60, nsweeps, nparticles)
+    return title
 
   def _interp_scale(self, dim, scale):
     import ggplot as g
