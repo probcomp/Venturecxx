@@ -42,6 +42,7 @@ class PlotSpec(object):
       if len(figs) != len(filenames):
         raise VentureValueError('The number of specs must match the number of filenames.')
       for fig, filename in zip(figs, filenames):
+        fig.suptitle(filename.replace('.png', ''))
         fig.savefig(filename)
       plt.close('all')
     # FIXME: add something to track names of frames here
