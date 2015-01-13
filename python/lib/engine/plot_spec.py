@@ -27,8 +27,8 @@ class PlotSpec(object):
       for geom in spec.get_geoms():
         plot += geom
       # add the wall time
-      walltime = dataset.iloc[-1]['time (s)']
-      plot += g.ggtitle('Wall time: {0:0.2f}s'.format(walltime))
+      title = self._format_title(dataset.iloc[-1]['time (s)'], len(dataset))
+      plot += g.ggtitle(title)
       for (dim, scale) in zip(["x", "y", "color"], spec.scales):
         obj = self._interp_scale(dim, scale)
         if obj: plot += obj
@@ -52,6 +52,12 @@ class PlotSpec(object):
 
   def streams(self):
     return chain(*[frame.streams for frame in self.frames])
+
+  @staticmethod
+  def _format_title(walltime, nsamples):
+    title = 'Wall time: {0}m, {1:0.2f}s. # samples: {2}'
+    title = title.format(int(walltime // 60), walltime % 60, nsamples)
+    return title
 
   def _interp_scale(self, dim, scale):
     import ggplot as g
