@@ -27,7 +27,7 @@ class PlotSpec(object):
       for geom in spec.get_geoms():
         plot += geom
       # add the wall time
-      title = self._format_title(dataset.iloc[-1]['time (s)'], len(dataset))
+      title = self._format_title(dataset)
       plot += g.ggtitle(title)
       for (dim, scale) in zip(["x", "y", "color"], spec.scales):
         obj = self._interp_scale(dim, scale)
@@ -54,9 +54,12 @@ class PlotSpec(object):
     return chain(*[frame.streams for frame in self.frames])
 
   @staticmethod
-  def _format_title(walltime, nsamples):
-    title = 'Wall time: {0}m, {1:0.2f}s. # samples: {2}'
-    title = title.format(int(walltime // 60), walltime % 60, nsamples)
+  def _format_title(dataset):
+    walltime = dataset['time (s)'].max()
+    nsweeps = dataset['sweep count'].max()
+    nparticles = dataset['particle id'].max() + 1
+    title = 'Wall time: {0}m, {1:0.2f}s. Sweeps: {2}. Particles: {3}'
+    title = title.format(int(walltime // 60), walltime % 60, nsweeps, nparticles)
     return title
 
   def _interp_scale(self, dim, scale):
