@@ -26,6 +26,9 @@ class PlotSpec(object):
       plot = g.ggplot(dataset, g.aes(**aes))
       for geom in spec.get_geoms():
         plot += geom
+      # add the wall time
+      walltime = dataset.iloc[-1]['time (s)']
+      plot += g.ggtitle('Wall time: {0:0.2f}s'.format(walltime))
       for (dim, scale) in zip(["x", "y", "color"], spec.scales):
         obj = self._interp_scale(dim, scale)
         if obj: plot += obj
