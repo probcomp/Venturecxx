@@ -406,7 +406,7 @@ but is also provided explicitly because it may be appropriate to
 invoke in the middle of complex inference programs that introduce new
 observations."""),
 
-  typed_inf_sp2("load_plugin", infer_action_type([v.SymbolType("filename")])),
+  typed_inf_sp2("load_plugin", infer_action_type([v.SymbolType("filename")], variadic=True)),
 
   macro_helper("peek", infer_action_type([v.AnyType()], variadic=True)),
   macro_helper("plotf", infer_action_type([v.AnyType()], variadic=True)),

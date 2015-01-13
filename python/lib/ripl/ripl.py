@@ -798,10 +798,10 @@ Open issues:
                 Ripl._parsed_prelude = self.parse_program(f.read())
             self.load_prelude()
 
-    def load_plugin(self, name):
+    def load_plugin(self, name, *args, **kwargs):
         m = load_library(name)
         if hasattr(m, "__venture_start__"):
-            m.__venture_start__(self)
+            m.__venture_start__(self, *args, **kwargs)
 
     ############################################
     # Private methods
