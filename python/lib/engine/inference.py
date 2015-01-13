@@ -171,8 +171,8 @@ class Infer(object):
     self.engine.observe(exp.asStackDict(), val.asStackDict())
   def predict(self, exp):
     self.engine.predict(exp.asStackDict())
-  def load_plugin(self, name):
-    self.engine.ripl.load_plugin(name)
+  def load_plugin(self, name, *args):
+    self.engine.ripl.load_plugin(name, *args)
 
   def particle_log_weights(self):
     return self.engine.trace_handler.log_weights
