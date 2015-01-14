@@ -181,6 +181,7 @@ builtInSPsList = [
                                  descr="lt returns true if its first argument compares less than its second") ],
            [ "lte",   binaryPred(lambda x,y: x.compare(y) <= 0,
                                  descr="lte returns true if its first argument compares less than or equal to its second") ],
+           [ "floor", unaryNum(math.floor, sim_grad=zero_gradient, descr="floor returns the largest integer less than or equal to its argument (as a VentureNumber)") ],
            # Only makes sense with VentureAtom/VentureNumber distinction
            [ "real",  deterministic_typed(lambda x:x, [v.AtomType()], v.NumberType(),
                                           descr="real returns the identity of its argument atom as a number") ],
