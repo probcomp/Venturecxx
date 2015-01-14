@@ -33,9 +33,9 @@ def test_global_logscore_coupled():
     assert_almost_equal(logscore, logscore_true)
 
 @on_inf_prim("none")
-@broken_in("puma", "TODO: fix getGlobalLogScore in PUMA. Issue: https://app.asana.com/0/12610813584901/23899154336705")
-def test_logscore_likelihood_free():
-    "Should warn user that there are likelihood-free SP's"
+@broken_in("puma", "No warning issued in PUMA. https://app.asana.com/0/12610813584901/23899154336705")
+def test__warn_logscore_likelihood_free():
+    "Lite should warn user that there are likelihood-free SP's"
     ripl = setup_likelihood_free()
     for _ in range(100):
         ripl.observe('(flip)', 'true')
@@ -54,6 +54,18 @@ def test_logscore_likelihood_free():
             "There are 2 likelihood-free SP's in the trace. These are not included in the logscore.")
     logscore_true = -100*np.log(2)
     assert_almost_equal(logscore, logscore_true)
+
+@on_inf_prim("none")
+@broken_in("lite", "Lite issues a warning. Tested above. https://app.asana.com/0/12610813584901/23899154336705")
+def test_logscore_likelihood_free():
+    "Puma shouldn't break in the presence of likelihood-free SP's"
+    ripl = setup_likelihood_free()
+    for _ in range(100):
+        ripl.observe('(flip)', 'true')
+    ripl.infer('(incorporate)')
+    ripl.predict('(test1 0)')
+    ripl.predict('(test2 0)')
+    logscore = ripl.get_global_logscore()
 
 def setup_likelihood_free():
     class TestPSP1(LikelihoodFreePSP):
