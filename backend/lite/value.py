@@ -762,6 +762,15 @@ class VentureMatrix(VentureValue):
   @staticmethod
   def fromStackDict(thing): return VentureMatrix(thing["value"])
 
+  def lookup(self, index):
+    try:
+      (vind1, vind2) = index.getPair()
+      ind1 = vind1.getNumber()
+      ind2 = vind2.getNumber()
+    except VentureTypeError:
+      raise VentureValueError("Looking up non-pair-of-numbers %r in a matrix" % index)
+    return NumberType().asVentureValue(self.matrix[int(ind1), int(ind2)])
+
   def __add__(self, other):
     if other == 0:
       return self

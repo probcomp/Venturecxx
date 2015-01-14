@@ -187,6 +187,7 @@ def checkRiplAgreesWithDeterministicSimulate(name, sp):
   if config["get_ripl"] != "lite" and name in [
     ## Incompatibilities with Puma
     "min", # Not implemented
+    "floor", # Not implemented
     "real", # Not implemented
     "atom_eq", # Not implemented
     "arange", # Not implemented
