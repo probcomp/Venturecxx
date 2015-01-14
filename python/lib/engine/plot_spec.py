@@ -1,5 +1,6 @@
 import re
 from itertools import chain
+from time import strftime
 
 from venture.lite.exception import VentureValueError
 
@@ -32,7 +33,7 @@ class PlotSpec(object):
       for (dim, scale) in zip(["x", "y", "color"], spec.scales):
         obj = self._interp_scale(dim, scale)
         if obj: plot += obj
-      figs.append(plot.draw())
+      figs.append(self._add_date(plot.draw()))
     return figs
 
   def plot(self, dataset, names, filenames=None):
@@ -61,6 +62,12 @@ class PlotSpec(object):
     title = 'Wall time: {0}m, {1:0.2f}s. Sweeps: {2}. Particles: {3}'
     title = title.format(int(walltime // 60), walltime % 60, nsweeps, nparticles)
     return title
+
+  @staticmethod
+  def _add_date(fig):
+    fig.text(0.975, 0.025, strftime("%c"),
+             horizontalalignment='right',
+             verticalalignment='bottom')
 
   def _interp_scale(self, dim, scale):
     import ggplot as g
