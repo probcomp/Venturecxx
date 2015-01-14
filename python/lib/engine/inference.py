@@ -63,17 +63,17 @@ class Infer(object):
     else:
       raise Exception("Cannot issue multiple printf commands in same inference program")
 
-  def _init_plot(self, spec, names, exprs, stack_dicts, filename=None, callback=None):
+  def _init_plot(self, spec, names, exprs, stack_dicts, filenames=None, callback=None):
     if self.result is None:
-      if filename is None and callback is None:
+      if filenames is None and callback is None:
         cmd = 'plotf'
-      elif filename is not None and callback is None:
+      elif filenames is not None and callback is None:
         cmd = 'plotf_to_file'
-      elif filename is None and callback is not None:
+      elif filenames is None and callback is not None:
         cmd = 'call_back_accum'
       else:
         raise Exception("Accumulating and saving to file not supported at once in Infer._init_plot.")
-      self.result = InferResult(first_command = cmd, filename = filename, callback = callback)
+      self.result = InferResult(first_command = cmd, filenames = filenames, callback = callback)
     if self.result.spec_plot is None:
       self.result._init_plot(spec, names, exprs, stack_dicts)
     elif (spec == self.result.spec_plot.spec_string and
@@ -143,12 +143,15 @@ class Infer(object):
     names, stack_dicts = self.parse_exprs(exprs, 'plotf')
     self._init_plot(spec, names, exprs, stack_dicts)
     self.result._add_data(self.engine, 'plotf')
-  def plotf_to_file(self, basename, spec, *exprs): # This one only works from the "plotf_to_file" SP.
-    basename = SymbolType().asPython(basename)
-    filename = basename + ".png" # TODO Parsers cannot accept full filenames :(
+  def plotf_to_file(self, basenames, spec, *exprs): # This one only works from the "plotf_to_file" SP.
+    basenames = ExpressionType().asPython(basenames)
+    if isinstance(basenames, basestring):
+      filenames = [basenames + ".png"]
+    else:
+      filenames = [basename + ".png" for basename in basenames] # TODO Parsers cannot accept full filenames :(
     spec = ExpressionType().asPython(spec)
     names, stack_dicts = self.parse_exprs(exprs, 'plotf')
-    self._init_plot(spec, names, exprs, stack_dicts, filename=filename)
+    self._init_plot(spec, names, exprs, stack_dicts, filenames=filenames)
     self.result._add_data(self.engine, 'plotf_to_file')
   def call_back(self, name, *exprs):
     name = SymbolType().asPython(name)
@@ -168,8 +171,8 @@ class Infer(object):
     self.engine.observe(exp.asStackDict(), val.asStackDict())
   def predict(self, exp):
     self.engine.predict(exp.asStackDict())
-  def load_plugin(self, name):
-    self.engine.ripl.load_plugin(name)
+  def load_plugin(self, name, *args):
+    self.engine.ripl.load_plugin(name, *args)
 
   def particle_log_weights(self):
     return self.engine.trace_handler.log_weights
@@ -219,7 +222,7 @@ class InferResult(object):
   Calling print will generate all plots stored in the spec_plot attribute. This
   attribute in turn is a SpecPlot object.
   '''
-  def __init__(self, first_command, filename = None, callback=None):
+  def __init__(self, first_command, filenames = None, callback=None):
     self.sweep = 0
     self.time = time.time()
     self._first_command = first_command
@@ -230,7 +233,7 @@ class InferResult(object):
     self._print_exprs = None
     self._print_stack_dicts = None
     self.spec_plot = None
-    self.filename = filename
+    self.filenames = filenames
     self.callback = callback
 
   def _init_peek(self, names, exprs, stack_dicts):
@@ -322,7 +325,7 @@ class InferResult(object):
     return self.spec_plot.draw(self.dataset())
 
   def plot(self):
-    self.spec_plot.plot(self.dataset(), self.filename)
+    self.spec_plot.plot(self.dataset(), self.filenames)
 
   def __str__(self):
     "Not really a string method, but does get itself displayed when printed."
@@ -330,10 +333,10 @@ class InferResult(object):
       return self.__repr__()
     elif self.spec_plot is not None and self.callback is None:
       self.plot()
-      if self.filename is None:
+      if self.filenames is None:
         return "a plot"
       else:
-        return "plot saved to {}".format(self.filename)
+        return "plots saved to {}.".format(', '.join(self.filenames))
     else:
       self.callback(self.dataset())
       return ""
@@ -415,8 +418,8 @@ class SpecPlot(object):
     else:
       return self.spec.draw(data, self.names)
 
-  def plot(self, data, filename=None):
+  def plot(self, data, filenames=None):
     if self.spec is None:
       pass
     else:
-      return self.spec.plot(data, self.names, filename)
+      return self.spec.plot(data, self.names, filenames)
