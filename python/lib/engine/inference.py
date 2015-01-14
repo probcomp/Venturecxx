@@ -269,11 +269,6 @@ class InferResult(object):
 
   @staticmethod
   def _safe_logscore_all(engine):
-    '''
-    There are situations where we can't actually compute a global logscore
-    (e.g. in the presence of likelihood-free SP's). These situations shouldn't
-    totally crash the program.
-    '''
     try:
       logscore_all = engine.logscore_all()
     except VentureBuiltinSPMethodError:
