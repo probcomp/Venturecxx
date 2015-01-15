@@ -41,6 +41,7 @@ map<string,SP*> initBuiltInSPs()
   m["gte"] = new SP(new NullRequestPSP(), new GteOutputPSP());
   m["lt"] = new SP(new NullRequestPSP(), new LtOutputPSP());
   m["lte"] = new SP(new NullRequestPSP(), new LteOutputPSP());
+  m["floor"] = new SP(new NullRequestPSP(), new FloorOutputPSP());
   m["sin"] = new SP(new NullRequestPSP(), new SinOutputPSP());
   m["cos"] = new SP(new NullRequestPSP(), new CosOutputPSP());
   m["tan"] = new SP(new NullRequestPSP(), new TanOutputPSP());

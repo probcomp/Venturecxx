@@ -80,6 +80,12 @@ VentureValuePtr LteOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
   return shared_ptr<VentureBool>(new VentureBool(args->operandValues[0] <= args->operandValues[1]));
 }
 
+VentureValuePtr FloorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("floor", args, 1);
+  return shared_ptr<VentureNumber>(new VentureNumber(floor(args->operandValues[0]->getDouble())));
+}
+
 
 VentureValuePtr SinOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
