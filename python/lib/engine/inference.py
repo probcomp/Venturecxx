@@ -22,7 +22,7 @@ from venture.lite.value import (ExpressionType, SymbolType, VentureArray, Ventur
                                 VentureInteger)
 from venture.lite.utils import logWeightsToNormalizedDirect
 from venture.ripl.utils import strip_types_from_dict_values
-from venture.lite.exception import VentureBuiltinSPMethodError
+from venture.lite.exception import VentureBuiltinSPMethodError, VentureValueError
 from plot_spec import PlotSpec
 
 class Infer(object):
@@ -69,6 +69,8 @@ class Infer(object):
         cmd = 'plotf'
       elif filenames is not None and callback is None:
         cmd = 'plotf_to_file'
+        filenames = self._format_filenames(filenames, spec)
+        from dw_utils.debug import set_trace; set_trace()
       elif filenames is None and callback is not None:
         cmd = 'call_back_accum'
       else:
@@ -82,6 +84,19 @@ class Infer(object):
       pass
     else:
       raise Exception("Cannot plot with different specs in the same inference program")
+
+  @staticmethod
+  def _format_filenames(filenames,spec):
+    if isinstance(filenames, basestring):
+      if isinstance(spec, basestring):
+        return [filenames + '.png']
+      else:
+        raise VentureValueError('The number of specs must match the number of filenames.')
+    else:
+      if isinstance(spec, list) and len(spec) == len(filenames):
+        return [filename + '.png' for filename in filenames]
+      else:
+        raise VentureValueError('The number of specs must match the number of filenames.')
 
   def default_name_for_exp(self,exp):
     if isinstance(exp, basestring):
@@ -144,11 +159,7 @@ class Infer(object):
     self._init_plot(spec, names, exprs, stack_dicts)
     self.result._add_data(self.engine, 'plotf')
   def plotf_to_file(self, basenames, spec, *exprs): # This one only works from the "plotf_to_file" SP.
-    basenames = ExpressionType().asPython(basenames)
-    if isinstance(basenames, basestring):
-      filenames = [basenames + ".png"]
-    else:
-      filenames = [basename + ".png" for basename in basenames] # TODO Parsers cannot accept full filenames :(
+    filenames = ExpressionType().asPython(basenames)
     spec = ExpressionType().asPython(spec)
     names, stack_dicts = self.parse_exprs(exprs, 'plotf')
     self._init_plot(spec, names, exprs, stack_dicts, filenames=filenames)
