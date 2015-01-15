@@ -50,7 +50,7 @@ class Infer(object):
           exprs == self.result._peek_exprs):
       pass
     else:
-      raise Exception("Cannot issue multiple peek commands in the same inference program")
+      raise VentureValueError("Cannot issue multiple peek commands in the same inference program")
 
   def _init_print(self, names, exprs, stack_dicts):
     if self.result is None:
@@ -61,7 +61,7 @@ class Infer(object):
           exprs == self.result._print_exprs):
       pass
     else:
-      raise Exception("Cannot issue multiple printf commands in same inference program")
+      raise VentureValueError("Cannot issue multiple printf commands in same inference program")
 
   def _init_plot(self, spec, names, exprs, stack_dicts, filenames=None, callback=None):
     if self.result is None:
@@ -73,7 +73,7 @@ class Infer(object):
       elif filenames is None and callback is not None:
         cmd = 'call_back_accum'
       else:
-        raise Exception("Accumulating and saving to file not supported at once in Infer._init_plot.")
+        raise VentureValueError("Accumulating and saving to file not supported at once in Infer._init_plot.")
       self.result = InferResult(first_command = cmd, filenames = filenames, callback = callback)
     if self.result.spec_plot is None:
       self.result._init_plot(spec, names, exprs, stack_dicts)
@@ -82,7 +82,7 @@ class Infer(object):
           exprs == self.result.spec_plot.exprs):
       pass
     else:
-      raise Exception("Cannot plot with different specs in the same inference program")
+      raise VentureValueError("Cannot plot with different specs in the same inference program")
 
   @staticmethod
   def _format_filenames(filenames,spec):
@@ -166,12 +166,12 @@ class Infer(object):
   def call_back(self, name, *exprs):
     name = SymbolType().asPython(name)
     if name not in self.engine.callbacks:
-      raise Exception("Unregistered callback {}".format(name))
+      raise VentureValueError("Unregistered callback {}".format(name))
     self.engine.callbacks[name](self, *[self.engine.sample_all(e.asStackDict()) for e in exprs])
   def call_back_accum(self, name, *exprs):
     name = SymbolType().asPython(name)
     if name not in self.engine.callbacks:
-      raise Exception("Unregistered callback {}".format(name))
+      raise VentureValueError("Unregistered callback {}".format(name))
     names, stack_dicts = self.parse_exprs(exprs, 'plotf')
     self._init_plot(None, names, exprs, stack_dicts, callback=self.engine.callbacks[name])
     self.result._add_data(self.engine, 'call_back_accum')
