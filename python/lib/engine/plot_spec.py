@@ -68,6 +68,7 @@ class PlotSpec(object):
     fig.text(0.975, 0.025, strftime("%c"),
              horizontalalignment='right',
              verticalalignment='bottom')
+    return fig
 
   def _interp_scale(self, dim, scale):
     import ggplot as g
