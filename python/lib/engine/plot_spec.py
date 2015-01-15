@@ -43,8 +43,6 @@ class PlotSpec(object):
       plt.show()
       plt.close()
     else:
-      if len(figs) != len(filenames):
-        raise VentureValueError('The number of specs must match the number of filenames.')
       for fig, filename in zip(figs, filenames):
         fig.suptitle(filename.replace('.png', ''))
         fig.savefig(filename)
