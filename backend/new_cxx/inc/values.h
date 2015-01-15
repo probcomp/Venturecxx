@@ -271,6 +271,8 @@ struct VentureMatrix : VentureValue
   bool ltSameType(const VentureValuePtr & other) const;
   bool equalsSameType(const VentureValuePtr & other) const;
 
+  VentureValuePtr lookup(VentureValuePtr index) const;
+
   string toString() const;
 
   MatrixXd m;

@@ -643,6 +643,11 @@ VentureValuePtr VentureDictionary::lookup(VentureValuePtr index) const
   throw "Key " + index->toString() + " not found in VentureDictionary.";
 }
 
+VentureValuePtr VentureMatrix::lookup(VentureValuePtr index) const
+{
+  return VentureValuePtr(new VentureNumber(m(index->getFirst()->getInt(), index->getRest()->getInt())));
+}
+
 ///// Contains methods
 
 bool VenturePair::contains(VentureValuePtr item) const
