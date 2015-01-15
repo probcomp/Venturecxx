@@ -385,6 +385,10 @@ def testGradientOfSimulate():
                     # The gradients of biplex and lookup have sporadic
                     # symbolic zeroes.
                     "biplex", "lookup",
+                    # TODO The gradient of floor is a symbolic zero
+                    # with a continuous-looking output space, which
+                    # confuses this code
+                    "floor",
                     # For some reason, the gradient is too often large
                     # enough to confuse the numerical approximation
                     "tan"
