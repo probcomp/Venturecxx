@@ -294,7 +294,7 @@ effect of renumbering the directives, if some had been forgotten."""
     for (_, ts, ws) in groups:
       (index, total) = select_keeper(ws)
       new_ts.append(self.copy_trace(ts[index]))
-      new_ts[-1].makeConsistent()
+      new_ts[-1].makeConsistent() # Even impossible states ok
       new_ws.append(total)
     del self.trace_handler
     self.trace_handler = self.create_handler(new_ts, new_ws)

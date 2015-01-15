@@ -461,13 +461,22 @@ double ConcreteTrace::makeConsistent()
     shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(appNode))->getPSP(appNode);
     scaffold->lkernels[appNode] = shared_ptr<DeterministicLKernel>(new DeterministicLKernel(iter->second,psp));
     double xiWeight = regenAndAttach(this,scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),shared_ptr<map<Node*,Gradient> >());
-    if (std::isinf(xiWeight)) { throw "Unable to propagate constraint"; }
+    // If xiWeight is -inf, we are in an impossible state, but that might be ok.
+    // Finish constraining, to avoid downstream invariant violations.
     observeNode(iter->first,iter->second);
     constrain(this,appNode,getObservedValue(iter->first));
     weight = weight + xiWeight - rhoWeight;
   }
   unpropagatedObservations.clear();
-  return weight;
+  if (std::isfinite(weight)) {
+    return weight;
+  } else {
+    // If one observation made the state inconsistent, the rhoWeight
+    // of another might conceivably be infinite, possibly leading to
+    // a nan weight.  I want to normalize these to indicating that
+    // the resulting state is impossible.
+    return -INFINITY;
+  }
 }
 
 int ConcreteTrace::numUnconstrainedChoices() { return unconstrainedChoices.size(); }

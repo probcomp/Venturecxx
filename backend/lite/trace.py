@@ -361,13 +361,21 @@ class Trace(object):
       rhoWeight,_ = detachAndExtract(self,scaffold)
       scaffold.lkernels[appNode] = DeterministicLKernel(self.pspAt(appNode),val)
       xiWeight = regenAndAttach(self,scaffold,False,OmegaDB(),{})
-      if xiWeight == float("-inf"): raise Exception("Unable to propagate constraint")
+      # If xiWeight is -inf, we are in an impossible state, but that might be ok.
+      # Finish constraining, to avoid downstream invariant violations.
       node.observe(val)
       constrain(self,appNode,node.observedValue)
       weight += xiWeight
       weight -= rhoWeight
     self.unpropagatedObservations.clear()
-    return weight
+    if not math.isinf(weight) and not math.isnan(weight):
+      return weight
+    else:
+      # If one observation made the state inconsistent, the rhoWeight
+      # of another might conceivably be infinite, possibly leading to
+      # a nan weight.  I want to normalize these to indicating that
+      # the resulting state is impossible.
+      return float("-inf")
 
   def getConstrainableNode(self, node):
     candidate = self.getOutermostNonReferenceNode(node)

@@ -85,6 +85,7 @@ class EnumerativeDiversify(EnumerativeGibbsOperator):
     for newValuesWithAddresses in allSetsOfValues:
       xiParticle = self.copy_trace(trace)
       xiParticle.makeConsistent() # CONSIDER what to do with the weight from this
+      # Impossible original state is probably fine
       # ASSUME the scaffolder is deterministic. Have to make the
       # scaffold again b/c detach mutates it, and b/c it may not work
       # across copies of the trace.
