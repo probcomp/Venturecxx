@@ -19,6 +19,7 @@ def normalizeList(seq):
   denom = sum(seq)
   if denom > 0: return [ float(x)/denom for x in seq]
   else: 
+    # Treat all impossible options as equally impossible.
     n = float(len(seq))
     return [1.0/n for x in seq]
 
@@ -73,7 +74,16 @@ def logWeightsToNormalizedDirect(logs):
 def sampleLogCategorical(logs):
   "Samples from an unnormalized categorical distribution given in logspace."
   the_max = max(logs)
-  return simulateCategorical([math.exp(log - the_max) for log in logs])
+  if the_max > float("-inf"):
+    # Even if the logs include some -inf values, math.exp will produce
+    # zeros there and it will be fine.
+    return simulateCategorical([math.exp(log - the_max) for log in logs])
+  else:
+    # If all the logs are -inf, force 0 instead of NaN.
+    # normalizeList, as written above, will actually do the right
+    # thing with this, namely treat all impossible options as equally
+    # impossible.
+    return simulateCategorical([0 for _ in logs])
 
 def numpy_force_number(answer):
   if isinstance(answer, numbers.Number):
