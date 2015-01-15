@@ -70,7 +70,6 @@ class Infer(object):
       elif filenames is not None and callback is None:
         cmd = 'plotf_to_file'
         filenames = self._format_filenames(filenames, spec)
-        from dw_utils.debug import set_trace; set_trace()
       elif filenames is None and callback is not None:
         cmd = 'call_back_accum'
       else:
