@@ -297,6 +297,12 @@ Might be useful for debugging concurrency+serialization problems
 without messing with actual multiprocessing, but then one is messing
 with multithreading."""),
 
+  typed_inf_sp2("likelihood_weight", infer_action_type([]),
+                desc="""Likelihood-weight the full particle set.
+
+Resample all particles in the current set from the prior and reset
+their weights to the likelihood."""),
+
   typed_inf_sp2("enumerative_diversify", infer_action_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")]),
                 desc="""Diversify the current particle set to represent the local posterior exactly.
 

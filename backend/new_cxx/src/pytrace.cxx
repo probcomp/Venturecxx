@@ -255,6 +255,11 @@ double PyTrace::makeConsistent()
   return trace->makeConsistent();
 }
 
+double PyTrace::likelihoodWeight()
+{
+  return trace->likelihoodWeight();
+}
+
 int PyTrace::numNodesInBlock(boost::python::object scope, boost::python::object block)
 {
   return trace->getNodesInBlock(fromPython(scope), fromPython(block)).size();
@@ -356,6 +361,7 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("infer", &PyTrace::infer)
     .def("dot_trace", &PyTrace::dotTrace)
     .def("makeConsistent", &PyTrace::makeConsistent)
+    .def("likelihood_weight", &PyTrace::likelihoodWeight)
     .def("numNodesInBlock", &PyTrace::numNodesInBlock)
     .def("numFamilies", &PyTrace::numFamilies)
     .def("freeze", &PyTrace::freeze)

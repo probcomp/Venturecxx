@@ -503,6 +503,15 @@ class Trace(object):
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
 
+  def likelihood_weight(self):
+    # TODO This is a different control path from infer_exp because it
+    # needs to return the new weight
+    scaffold = BlockScaffoldIndexer("default", "all").sampleIndex(self)
+    (_rhoWeight,rhoDB) = detachAndExtract(self, scaffold)
+    xiWeight = regenAndAttach(self, scaffold, False, rhoDB, {})
+    # Always "accept"
+    return xiWeight
+
   def freeze(self, id):
     assert id in self.families
     node = self.families[id]

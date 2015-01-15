@@ -8,6 +8,7 @@
 #include "regen.h"
 #include "sp.h"
 #include "db.h"
+#include "indexer.h"
 #include "sps/scope.h"
 #include "math.h"
 
@@ -480,6 +481,19 @@ double ConcreteTrace::makeConsistent()
 }
 
 int ConcreteTrace::numUnconstrainedChoices() { return unconstrainedChoices.size(); }
+
+double ConcreteTrace::likelihoodWeight() {
+  // TODO This is a different code path from normal infer commands
+  // because it needs to return the new weight
+  ScopeID scope = VentureValuePtr(new VentureSymbol("default"));
+  BlockID block = VentureValuePtr(new VentureSymbol("all"));
+  shared_ptr<ScaffoldIndexer> scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
+  shared_ptr<Scaffold> scaffold = scaffoldIndexer->sampleIndex(this);
+  pair<double,shared_ptr<DB> > p = detachAndExtract(this,scaffold->border[0],scaffold);
+  double xiWeight = regenAndAttach(this, scaffold->border[0], scaffold, false, shared_ptr<DB>(new DB()), shared_ptr<map<Node*,Gradient> >());
+  // Always "accept"
+  return xiWeight;
+}
 
 int ConcreteTrace::getSeed() { assert(false); }
 double ConcreteTrace::getGlobalLogScore() { assert(false); }

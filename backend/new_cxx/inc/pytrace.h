@@ -42,6 +42,8 @@ struct PyTrace
 
   double makeConsistent();
 
+  double likelihoodWeight();
+
   boost::python::list dotTrace(bool colorIgnored);
 
   // for testing
