@@ -148,6 +148,14 @@ The `transitions` argument specifies how many times to do this.
 Note: There is currently no way to save the result of training the
 variational approximation to be able to sample from it many times. """),
 
+  typed_inf_sp("print_scaffold_stats", transition_oper_type(),
+               desc="""Print some statistics about the requested scaffold.
+
+This may be useful as a diagnostic.
+
+The `transitions` argument specifies how many times to do this;
+this is not redundant if the `block` argument is ``one``."""),
+
   typed_inf_sp("nesterov", transition_oper_type([v.NumberType("step_size : number"), v.IntegerType("steps : int")]),
                desc="""Move
 deterministically toward the maximum of the local posterior by

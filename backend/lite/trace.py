@@ -499,6 +499,8 @@ class Trace(object):
         mixMH(self, BlockScaffoldIndexer(scope, block), NesterovAcceleratedGradientAscentOperator(rate, int(steps)))
       elif operator == "rejection":
         mixMH(self, BlockScaffoldIndexer(scope, block), RejectionOperator())
+      elif operator == "print_scaffold_stats":
+        BlockScaffoldIndexer(scope, block).sampleIndex(self).show()
       else: raise Exception("INFER %s is not implemented" % operator)
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
