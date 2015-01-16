@@ -220,6 +220,32 @@ The `transitions` argument specifies how many times to do this.
 Specifying more than 1 transition is redundant if the `block` is
 anything other than ``one``. """),
 
+  typed_inf_sp("bogo_possibilize", transition_oper_type(min_req_args=2),
+               desc="""Initialize the local inference problem
+to a possible state.
+
+If the current local likelihood is 0, resimulate the local prior until
+a non-zero likelihood state is found.
+
+Notes:
+
+- If the current state is possible, do nothing.
+
+- This is different from rejection sampling because the distribution
+  on results is not the posterior, but the prior conditioned on the
+  likelihood being non-zero.  As such, it is likely to complete
+  faster.
+
+- This is different from likelihood weighting because a) it keeps
+  trying automatically until it finds a possible state, and b) it does
+  not modify the weight of the particle it is applied to (because if
+  the scope and block are other than ``default all`` it is not clear
+  what the weight should become).
+
+The `transitions` argument specifies how many times to do this.
+Specifying more than 1 transition is redundant if the `block` is
+anything other than ``one``. """),
+
   typed_inf_sp("slice", transition_oper_type([v.NumberType("w : number"), v.IntegerType("m : int")]),
                desc="""Slice sample from the local posterior of the selected random choice.
 

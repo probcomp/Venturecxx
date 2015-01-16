@@ -12,7 +12,7 @@ from scaffold import Scaffold
 from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
                    EnumerativeGibbsOperator,EnumerativeMAPOperator,EnumerativeDiversify,
                    PGibbsOperator,ParticlePGibbsOperator,ParticlePMAPOperator,
-                   RejectionOperator, MissingEsrParentError, NoSPRefError,
+                   RejectionOperator, BogoPossibilizeOperator, MissingEsrParentError, NoSPRefError,
                    HamiltonianMonteCarloOperator, MAPOperator, StepOutSliceOperator,
                    DoublingSliceOperator, NesterovAcceleratedGradientAscentOperator,
                    drawScaffold, subsampledMixMH, SubsampledMHOperator,
@@ -499,6 +499,8 @@ class Trace(object):
         mixMH(self, BlockScaffoldIndexer(scope, block), NesterovAcceleratedGradientAscentOperator(rate, int(steps)))
       elif operator == "rejection":
         mixMH(self, BlockScaffoldIndexer(scope, block), RejectionOperator())
+      elif operator == "bogo_possibilize":
+        mixMH(self, BlockScaffoldIndexer(scope, block), BogoPossibilizeOperator())
       elif operator == "print_scaffold_stats":
         BlockScaffoldIndexer(scope, block).sampleIndex(self).show()
       else: raise Exception("INFER %s is not implemented" % operator)
