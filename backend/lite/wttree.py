@@ -9,7 +9,7 @@ This program is based on
 but only implements the operations that are useful for Venture Lite.
 The actual implementation is cribbed close to verbatim from wt-trees
 in MIT Scheme, which were written by Stephen Adams and modified by
-Chris Hansen and Taylor Campbell.'''
+Chris Hanson and Taylor Campbell.'''
 
 # TODO I imagine much memory can be saved by representing the
 # node structure with just a tuple and None, manely
