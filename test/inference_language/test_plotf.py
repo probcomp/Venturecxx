@@ -1,10 +1,13 @@
 from os import remove
 from os.path import exists
+from nose import SkipTest
 from nose.tools import assert_raises_regexp
 
-from venture.test.config import get_ripl, on_inf_prim, gen_on_inf_prim
+from venture.test.config import (get_ripl, on_inf_prim, gen_on_inf_prim,
+                                 needs_ggplot, gen_needs_ggplot)
 from venture.exception import VentureException
 
+@needs_ggplot
 @on_inf_prim("plotf_to_file")
 def testPlotfToFile1():
   'Test that plotf_to_file dumps file of correct name'
@@ -16,6 +19,7 @@ def testPlotfToFile1():
   assert exists(testfile)
   remove(testfile)
 
+@needs_ggplot
 @on_inf_prim("plotf_to_file")
 def testPlotfToFile2():
   'Test that plotf_to_file handles multiple files correctly'
@@ -28,6 +32,7 @@ def testPlotfToFile2():
     assert exists(testfile)
     remove(testfile)
 
+@gen_needs_ggplot
 @gen_on_inf_prim("plotf_to_file")
 def testPlotfToFileBadArgs():
   'Test that an error occurs if the number of basenames != the number of plot specs'
