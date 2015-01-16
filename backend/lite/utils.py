@@ -64,22 +64,28 @@ def cartesianProduct(original):
 def logaddexp(items):
   "Apparently this was added to scipy in a later version than the one installed on my machine.  Sigh."
   the_max = max(items)
-  return the_max + math.log(sum(math.exp(item - the_max) for item in items))
+  if the_max > float("-inf"):
+    return the_max + math.log(sum(math.exp(item - the_max) for item in items))
+  else:
+    return the_max # Don't want NaNs from trying to correct from the maximum
 
 def logWeightsToNormalizedDirect(logs):
   "Converts an unnormalized categorical distribution given in logspace to a normalized one given in direct space"
   the_max = max(logs)
-  return normalizeList([math.exp(log - the_max) for log in logs])
+  if the_max > float("-inf"):
+    # Even if the logs include some -inf values, math.exp will produce
+    # zeros there and it will be fine.
+    return normalizeList([math.exp(log - the_max) for log in logs])
+  else:
+    # If all the logs are -inf, force 0 instead of NaN.
+    return [0 for _ in logs]
 
 def sampleLogCategorical(logs):
   "Samples from an unnormalized categorical distribution given in logspace."
   the_max = max(logs)
   if the_max > float("-inf"):
-    # Even if the logs include some -inf values, math.exp will produce
-    # zeros there and it will be fine.
     return simulateCategorical([math.exp(log - the_max) for log in logs])
   else:
-    # If all the logs are -inf, force 0 instead of NaN.
     # normalizeList, as written above, will actually do the right
     # thing with this, namely treat all impossible options as equally
     # impossible.
