@@ -33,6 +33,9 @@ def expToDict(exp):
   if tag == "mh":
     assert len(exp) == 4
     return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}
+  elif tag == "bogo_possibilize":
+    assert len(exp) == 4
+    return {"kernel":"bogo_possibilize","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}
   elif tag == "func_mh":
     assert len(exp) == 4
     return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}

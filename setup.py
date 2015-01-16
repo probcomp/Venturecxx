@@ -128,6 +128,7 @@ puma_src_files = [
 
     "src/gkernels/func_mh.cxx",
     "src/gkernels/mh.cxx",
+    "src/gkernels/rejection.cxx",
     "src/gkernels/pgibbs.cxx",
     "src/gkernels/egibbs.cxx",
     "src/gkernels/slice.cxx",

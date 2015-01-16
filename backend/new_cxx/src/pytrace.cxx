@@ -12,6 +12,7 @@
 #include "indexer.h"
 #include "gkernel.h"
 #include "gkernels/mh.h"
+#include "gkernels/rejection.h"
 #include "gkernels/func_mh.h"
 #include "gkernels/pgibbs.h"
 #include "gkernels/egibbs.h"
@@ -160,6 +161,10 @@ struct Inferer
     if (kernel == "mh")
     {
       gKernel = shared_ptr<GKernel>(new MHGKernel);
+    }
+    else if (kernel == "bogo_possibilize")
+    {
+      gKernel = shared_ptr<GKernel>(new BogoPossibilizeGKernel);
     }
     else if (kernel == "func_mh")
     {
