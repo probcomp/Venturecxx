@@ -81,6 +81,6 @@ If the start state is already possible, don't move."""
         # possible; force accepting the transition
         return trace, float("+inf")
       else:
-        continue
+        self.reject() # To restore everything to its proper state TODO use particles?
 
   def name(self): return "bogo_possibilize"

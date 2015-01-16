@@ -20,6 +20,7 @@ pair<Trace*,double> BogoPossibilizeGKernel::propose(ConcreteTrace * trace,shared
     assertTorus(scaffold);
 
     double xiWeight = regenAndAttach(trace,scaffold->border[0],scaffold,false,rhoDB,shared_ptr<map<Node*,Gradient> >());
+    cout << rhoWeight << ", " << xiWeight << endl;
     if (rhoWeight > -INFINITY) {
       // The original state was possible; force rejecting the transition
       return make_pair(trace, -INFINITY);
@@ -27,6 +28,8 @@ pair<Trace*,double> BogoPossibilizeGKernel::propose(ConcreteTrace * trace,shared
       // Moving from impossible to possible state; force accepting the
       // transition
       return make_pair(trace, INFINITY);
+    } else {
+      this->reject(); // To restore everything to its proper state TODO use particles?
     }
   }
 }
