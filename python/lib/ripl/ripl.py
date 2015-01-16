@@ -52,6 +52,7 @@ import numpy as np
 
 from venture.exception import VentureException
 from venture.lite.value import VentureValue
+import plugins
 import utils as u
 import venture.value.dicts as v
 
@@ -77,6 +78,7 @@ class Ripl():
             pass
         else:
             print "Wrapping sivm %s in a new ripl but it already has one: %s.  Engine to ripl references may be incorrect." % (self.sivm, r)
+        plugins.__venture_start__(self)
 
 
     ############################################
