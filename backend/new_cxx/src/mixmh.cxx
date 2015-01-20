@@ -28,7 +28,14 @@ void mixMH(ConcreteTrace * trace,
   double logU = log(gsl_ran_flat(trace->getRNG(),0.0,1.0));
 
   
-  if (logU < alpha) { gKernel->accept(); }
-  else { gKernel->reject(); }
+  if (logU < alpha) {
+    // cout << ".";
+    gKernel->accept();
+  }
+  else
+  {
+    // cout << "!";
+    gKernel->reject();
+  }
 
 }

@@ -12,6 +12,7 @@
 #include "indexer.h"
 #include "gkernel.h"
 #include "gkernels/mh.h"
+#include "gkernels/rejection.h"
 #include "gkernels/func_mh.h"
 #include "gkernels/pgibbs.h"
 #include "gkernels/egibbs.h"
@@ -124,7 +125,10 @@ double PyTrace::getGlobalLogScore()
     ApplicationNode * node = dynamic_cast<ApplicationNode*>(*iter);
     shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
     shared_ptr<Args> args = trace->getArgs(node);
-    ls += psp->logDensity(trace->getValue(node),args);
+    if (psp->canAbsorb(trace.get(), node, NULL))
+    {
+      ls += psp->logDensity(trace->getValue(node),args);
+    }
   }
   for (set<Node*>::iterator iter = trace->constrainedChoices.begin();
        iter != trace->constrainedChoices.end();
@@ -157,6 +161,10 @@ struct Inferer
     if (kernel == "mh")
     {
       gKernel = shared_ptr<GKernel>(new MHGKernel);
+    }
+    else if (kernel == "bogo_possibilize")
+    {
+      gKernel = shared_ptr<GKernel>(new BogoPossibilizeGKernel);
     }
     else if (kernel == "func_mh")
     {
@@ -250,6 +258,11 @@ void translateCStringException(const char* err) {
 double PyTrace::makeConsistent()
 {
   return trace->makeConsistent();
+}
+
+double PyTrace::likelihoodWeight()
+{
+  return trace->likelihoodWeight();
 }
 
 int PyTrace::numNodesInBlock(boost::python::object scope, boost::python::object block)
@@ -353,6 +366,7 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("infer", &PyTrace::infer)
     .def("dot_trace", &PyTrace::dotTrace)
     .def("makeConsistent", &PyTrace::makeConsistent)
+    .def("likelihood_weight", &PyTrace::likelihoodWeight)
     .def("numNodesInBlock", &PyTrace::numNodesInBlock)
     .def("numFamilies", &PyTrace::numFamilies)
     .def("freeze", &PyTrace::freeze)

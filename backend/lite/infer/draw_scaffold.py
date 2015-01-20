@@ -17,6 +17,8 @@ def drawScaffold(trace, indexer):
     index.show()
     G = traverseScaffold(trace, index)
     drawScaffoldGraph(trace, G)
+    import matplotlib.pyplot as plt
+    plt.show()
 
 def traverseScaffold(trace, scaffold):
   G = nx.DiGraph()

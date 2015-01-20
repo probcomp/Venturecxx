@@ -13,7 +13,7 @@ good next point for improvement.
 
 There are also no good facilities for automatically checking whether a
 property fails stochastically or deterministically, or combinators for
-decising whether "sporadic fail" should be treated as "fail" or
+deciding whether "sporadic fail" should be treated as "fail" or
 "pass"."""
 
 import numpy.random as npr

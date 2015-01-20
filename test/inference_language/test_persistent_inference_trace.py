@@ -1,6 +1,7 @@
 from nose.tools import eq_
 
 from venture.test.config import get_ripl
+from venture.lite import builtin
 
 def testPersistenceSmoke1():
   r = get_ripl(persistent_inference_trace=True)
@@ -83,3 +84,8 @@ def testDirectivesInInfer2():
   r = get_ripl()
   r.infer("(predict (+ 5 2))")
   eq_(7.0, r.report(1))
+
+def testForeignInfSPs():
+  r = get_ripl(persistent_inference_trace = True)
+  r.bind_foreign_inference_sp("my_bernoulli", builtin.builtInSPs()["bernoulli"])
+  r.infer("(mh default one (+ (my_bernoulli 0.5) 1))")

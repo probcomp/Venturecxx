@@ -123,6 +123,8 @@ struct ConcreteTrace : Trace
 
   int numUnconstrainedChoices();
 
+  double likelihoodWeight();
+
   int getSeed();
   double getGlobalLogScore();
 

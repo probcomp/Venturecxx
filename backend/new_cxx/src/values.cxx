@@ -227,6 +227,7 @@ int VentureSymbol::getValueTypeRank() const { return 50; }
 int VentureNil::getValueTypeRank() const { return 60; }
 int VenturePair::getValueTypeRank() const { return 70; }
 int VentureArray::getValueTypeRank() const { return 80; }
+int VentureVector::getValueTypeRank() const { return 90; }
 
 int VentureSimplex::getValueTypeRank() const { return 100; }
 int VentureDictionary::getValueTypeRank() const { return 110; }
@@ -318,6 +319,36 @@ bool VentureSimplex::ltSameType(const VentureValuePtr & other) const
   return false;
 }
 
+bool VentureVector::ltSameType(const VentureValuePtr & other) const
+{
+  shared_ptr<VentureVector> other_v = dynamic_pointer_cast<VentureVector>(other);
+  assert(other_v);
+  if (v.size() != other_v->v.size()) { return v.size() < other_v->v.size(); }
+  for (int i = 0; i < v.size(); ++i)
+    {
+      if (v[i] < other_v->v[i]) { return true; }
+      if (other_v->v[i] < v[i]) { return false; }
+    }
+  return false;
+}
+
+bool VentureMatrix::ltSameType(const VentureValuePtr & other) const
+{
+  shared_ptr<VentureMatrix> other_m = dynamic_pointer_cast<VentureMatrix>(other);
+  assert(other_m);
+  if (m.rows() != other_m->m.rows()) { return m.rows() < other_m->m.rows(); }
+  if (m.cols() != other_m->m.cols()) { return m.cols() < other_m->m.cols(); }
+  for (int i = 0; i < m.rows(); ++i)
+    {
+      for (int j = 0; j < m.cols(); ++j)
+        {
+          if (m(i, j) < other_m->m(i, j)) { return true; }
+          if (other_m->m(i, j) < m(i, j)) { return false; }
+        }
+    }
+  return false;
+}
+
 bool VentureNode::ltSameType(const VentureValuePtr & other) const
 {
   shared_ptr<VentureNode> other_v = dynamic_pointer_cast<VentureNode>(other);
@@ -403,6 +434,31 @@ bool VentureSimplex::equalsSameType(const VentureValuePtr & other) const
   assert(other_v);
   if (ps.size() != other_v->ps.size()) { return false; }
   for (size_t i = 0; i < ps.size(); ++i) { if (ps[i] != other_v->ps[i]) { return false; } }
+  return true;
+}
+
+bool VentureVector::equalsSameType(const VentureValuePtr & other) const
+{
+  shared_ptr<VentureVector> other_v = dynamic_pointer_cast<VentureVector>(other);
+  assert(other_v);
+  if (v.size() != other_v->v.size()) { return false; }
+  for (int i = 0; i < v.size(); ++i) { if (v[i] != other_v->v[i]) { return false; } }
+  return true;
+}
+
+bool VentureMatrix::equalsSameType(const VentureValuePtr & other) const
+{
+  shared_ptr<VentureMatrix> other_m = dynamic_pointer_cast<VentureMatrix>(other);
+  assert(other_m);
+  if (m.rows() != other_m->m.rows()) { return false; }
+  if (m.cols() != other_m->m.cols()) { return false; }
+  for (int i = 0; i < m.rows(); ++i)
+    {
+      for (int j = 0; j < m.cols(); ++j)
+        {
+          if (other_m->m(i, j) != m(i, j)) { return false; }
+        }
+    }
   return true;
 }
 
@@ -587,3 +643,48 @@ VentureValuePtr VentureDictionary::lookup(VentureValuePtr index) const
   throw "Key " + index->toString() + " not found in VentureDictionary.";
 }
 
+VentureValuePtr VentureMatrix::lookup(VentureValuePtr index) const
+{
+  return VentureValuePtr(new VentureNumber(m(index->getFirst()->getInt(), index->getRest()->getInt())));
+}
+
+///// Contains methods
+
+bool VenturePair::contains(VentureValuePtr item) const
+{
+  if (car->equals(item))
+  {
+    return true;
+  } else {
+    return cdr->contains(item);
+  }
+}
+
+bool VentureArray::contains(VentureValuePtr item) const
+{
+  for (size_t i = 0; i < xs.size(); ++i)
+  {
+    if (xs[i]->equals(item)) { return true; }
+  }
+  return false;
+}
+
+bool VentureSimplex::contains(VentureValuePtr item) const
+{
+  double target = item->getDouble();
+  for (size_t i = 0; i < ps.size(); ++i)
+  {
+    if (ps[i] == target) { return true; }
+  }
+  return false;
+}
+
+bool VentureVector::contains(VentureValuePtr item) const
+{
+  double target = item->getDouble();
+  for (int i = 0; i < v.size(); ++i)
+  {
+    if (v[i] == target) { return true; }
+  }
+  return false;
+}

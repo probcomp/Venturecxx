@@ -55,15 +55,6 @@ def cxx(args):
 def lite(args):
     local_ripl(args, v.Lite())
 
-def load_library(name):
-    import imp
-    # XXX Why don't we use imp.find_module and imp.load_module?
-    pathname = name
-    if name.endswith('.py'):
-        name = name[0 : len(name) - len('.py')]
-    with open(pathname, 'rb') as f:
-        return imp.load_source(name, pathname, f)
-
 def local_ripl(args, backend):
     interactive = True
     if args is not None and args.persistent_inference_trace:
@@ -74,9 +65,7 @@ def local_ripl(args, backend):
         if args.prelude: r.load_prelude()
         if args.library:
             for l in args.library:
-                m = load_library(l)
-                if hasattr(m, "__venture_start__"):
-                    m.__venture_start__(r)
+                r.load_plugin(l)
         if args.lang:
             r.set_mode(args.lang)
         if args.file:
@@ -116,8 +105,8 @@ parser_local = subparsers.add_parser("puma", help="[default] Start a local Ventu
 parser_local.set_defaults(func=puma)
 add_local_args(parser_local)
 
-parser_local = subparsers.add_parser("cxx", help="Start a local Venture CXX session",
-                                     description="Start a local Venture CXX session")
+parser_local = subparsers.add_parser("cxx", help="[Deprecated in favor of Puma] Start a local Venture CXX session",
+                                     description="[Deprecated in favor of Puma] Start a local Venture CXX session")
 parser_local.set_defaults(func=cxx)
 add_local_args(parser_local)
 

@@ -34,6 +34,8 @@ import sys
 ON_LINUX = 'linux' in sys.platform
 ON_MAC = 'darwin' in sys.platform
 
+cflags = os.getenv("CFLAGS", "").split()
+
 if ON_LINUX:
     os.environ['CC'] = 'ccache gcc '
 if ON_MAC:
@@ -128,6 +130,7 @@ puma_src_files = [
 
     "src/gkernels/func_mh.cxx",
     "src/gkernels/mh.cxx",
+    "src/gkernels/rejection.cxx",
     "src/gkernels/pgibbs.cxx",
     "src/gkernels/egibbs.cxx",
     "src/gkernels/slice.cxx",
@@ -183,7 +186,7 @@ cxx = Extension("venture.cxx.libtrace",
                      ('MINOR_VERSION', '1'),
                      ('REVISION', '1')],
     libraries = ['gsl', 'gslcblas', 'boost_python'],
-    extra_compile_args = ["-std=c++11", "-Wall", "-g", "-O0", "-fPIC"],
+    extra_compile_args = ["-std=c++11", "-Wall", "-g", "-O2", "-fPIC"] + cflags,
     undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
     include_dirs = inc_dirs,
     sources = src_files)
@@ -199,7 +202,7 @@ if ON_LINUX:
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
         libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread'],
-                     extra_compile_args = ["-Wall", "-g", "-O0", "-fPIC", "-fno-omit-frame-pointer"],
+        extra_compile_args = ["-Wall", "-g", "-O2", "-fPIC", "-fno-omit-frame-pointer"] + cflags,
         #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
         include_dirs = puma_inc_dirs,
         sources = puma_src_files)
@@ -209,7 +212,7 @@ if ON_MAC:
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
         libraries = ['gsl', 'gslcblas', 'boost_python-mt', 'boost_system-mt', 'boost_thread-mt'],
-        extra_compile_args = ["-Wall", "-g", "-O0", "-fPIC", "-fno-omit-frame-pointer"],
+        extra_compile_args = ["-Wall", "-g", "-O2", "-fPIC", "-fno-omit-frame-pointer"] + cflags,
         #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
         include_dirs = puma_inc_dirs,
         sources = puma_src_files)
@@ -249,6 +252,39 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
 import distutils.ccompiler
 distutils.ccompiler.CCompiler.compile=parallelCCompile
 
+# XXX This is a mega-kludge.  Since distutils/setuptools has no way to
+# order dependencies (what kind of brain-dead build system can't do
+# this?), we just always regenerate the grammar.  Could hack
+# distutils.command.build to include a dependency mechanism, but this
+# is more expedient for now.
+grammars = [
+    'python/lib/parser/church_prime/grammar.y',
+]
+
+import distutils.spawn
+import errno
+import os
+import os.path
+root = os.path.dirname(os.path.abspath(__file__))
+lemonade = root + '/external/lemonade/dist'
+for grammar in grammars:
+    parser = os.path.splitext(grammar)[0] + '.py'
+    parser_mtime = None
+    try:
+        parser_mtime = os.path.getmtime(parser)
+    except OSError as e:
+        if e.errno != errno.ENOENT:
+            raise
+    if parser_mtime is not None:
+        if os.path.getmtime(grammar) < parser_mtime:
+            continue
+    print 'generating %s -> %s' % (grammar, parser)
+    distutils.spawn.spawn([
+        '/usr/bin/env', 'PYTHONPATH=' + lemonade,
+        lemonade + '/bin/lemonade',
+        '-s',                   # Write statistics to stdout.
+        grammar,
+    ])
 
 setup (
     name = 'Venture CXX',
@@ -267,5 +303,5 @@ setup (
     },
     package_data = {'':['*.vnt']},
     ext_modules = ext_modules,
-    scripts = ['script/venture']
+    scripts = ['script/venture', 'script/vendoc']
 )

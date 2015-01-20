@@ -23,5 +23,5 @@ from subsampled_mh import (subsampledMixMH, SubsampledMHOperator,
                            SubsampledBlockScaffoldIndexer)
 from draw_scaffold import drawScaffold
 from pgibbs import PGibbsOperator,ParticlePGibbsOperator,ParticlePMAPOperator
-from rejection import RejectionOperator, MissingEsrParentError, NoSPRefError
+from rejection import RejectionOperator, BogoPossibilizeOperator, MissingEsrParentError, NoSPRefError
 from slice_sample import StepOutSliceOperator, DoublingSliceOperator

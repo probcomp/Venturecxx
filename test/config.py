@@ -450,3 +450,25 @@ def inParallel():
     if config["infer"].startswith("(" + operator) and not config["infer"].endswith("false)"):
       return True
   return False
+
+def needs_ggplot(f):
+  assert not isgeneratorfunction(f), "Use gen_needs_ggplot for generator test %s" % f.__name__
+  @nose.make_decorator(f)
+  def wrapped(*args):
+    try:
+      import ggplot             # pylint: disable=unused-variable
+      return f(*args)
+    except ImportError:
+      raise SkipTest("ggplot not installed on this machine")
+  return wrapped
+
+def gen_needs_ggplot(f):
+  assert isgeneratorfunction(f), "Use needs_ggplot for non-generator test %s" % f.__name__
+  @nose.make_decorator(f)
+  def wrapped(*args):
+    try:
+      import ggplot
+      for t in f(*args): yield t
+    except ImportError:
+      raise SkipTest("ggplot not installed on this machine")
+  return wrapped

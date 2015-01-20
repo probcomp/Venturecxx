@@ -142,6 +142,10 @@ def grad_list(args, direction):
     tails = [0 for _ in range(len(args) - len(list_))]
     return list_ + tails
 
+def print_(value, label):
+  print 'print ' + label + ': ' + str(value)
+  return value
+
 def vector_dot(v1, v2):
   candidate = np.dot(v1, v2)
   if isinstance(candidate, Number):  # Numpy! WTF?
@@ -177,6 +181,7 @@ builtInSPsList = [
                                  descr="lt returns true if its first argument compares less than its second") ],
            [ "lte",   binaryPred(lambda x,y: x.compare(y) <= 0,
                                  descr="lte returns true if its first argument compares less than or equal to its second") ],
+           [ "floor", unaryNum(math.floor, sim_grad=zero_gradient, descr="floor returns the largest integer less than or equal to its argument (as a VentureNumber)") ],
            # Only makes sense with VentureAtom/VentureNumber distinction
            [ "real",  deterministic_typed(lambda x:x, [v.AtomType()], v.NumberType(),
                                           descr="real returns the identity of its argument atom as a number") ],
@@ -209,6 +214,7 @@ builtInSPsList = [
            [ "is_atom", type_test(v.AtomType()) ],
            [ "is_boolean", type_test(v.BoolType()) ],
            [ "is_symbol", type_test(v.SymbolType()) ],
+           [ "is_procedure", type_test(SPType([v.AnyType()], v.AnyType(), variadic=True)) ],
 
            [ "list", deterministic_typed(lambda *args: args, [v.AnyType()], v.ListType(), variadic=True,
                                          sim_grad=grad_list,
@@ -311,6 +317,11 @@ builtInSPsList = [
                                                [v.MatrixType(), v.MatrixType()],
                                                v.MatrixType(),
                                                descr="(%s x y) returns the product of matrices x and y.") ],
+
+           [ "print", deterministic_typed(print_,
+                                           [v.AnyType("k"), v.SymbolType()],
+                                           v.AnyType("k"),
+                                           descr = "Print the value of the result of any other SP, labeled by a Symbol.") ],
 
            [ "apply", esr_output(TypedPSP(functional.ApplyRequestPSP(),
                                           SPType([SPType([v.AnyType("a")], v.AnyType("b"), variadic=True),

@@ -15,12 +15,14 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
+import numpy as np
 from pandas import DataFrame, Index
 
 from venture.lite.value import (ExpressionType, SymbolType, VentureArray, VentureSymbol,
                                 VentureInteger)
 from venture.lite.utils import logWeightsToNormalizedDirect
 from venture.ripl.utils import strip_types_from_dict_values
+from venture.lite.exception import VentureBuiltinSPMethodError, VentureValueError
 from plot_spec import PlotSpec
 
 class Infer(object):
@@ -48,7 +50,7 @@ class Infer(object):
           exprs == self.result._peek_exprs):
       pass
     else:
-      raise Exception("Cannot issue multiple peek commands in the same inference program")
+      raise VentureValueError("Cannot issue multiple peek commands in the same inference program")
 
   def _init_print(self, names, exprs, stack_dicts):
     if self.result is None:
@@ -59,19 +61,20 @@ class Infer(object):
           exprs == self.result._print_exprs):
       pass
     else:
-      raise Exception("Cannot issue multiple printf commands in same inference program")
+      raise VentureValueError("Cannot issue multiple printf commands in same inference program")
 
-  def _init_plot(self, spec, names, exprs, stack_dicts, filename=None, callback=None):
+  def _init_plot(self, spec, names, exprs, stack_dicts, filenames=None, callback=None):
     if self.result is None:
-      if filename is None and callback is None:
+      if filenames is None and callback is None:
         cmd = 'plotf'
-      elif filename is not None and callback is None:
+      elif filenames is not None and callback is None:
         cmd = 'plotf_to_file'
-      elif filename is None and callback is not None:
+        filenames = self._format_filenames(filenames, spec)
+      elif filenames is None and callback is not None:
         cmd = 'call_back_accum'
       else:
-        raise Exception("Accumulating and saving to file not supported at once in Infer._init_plot.")
-      self.result = InferResult(first_command = cmd, filename = filename, callback = callback)
+        raise VentureValueError("Accumulating and saving to file not supported at once in Infer._init_plot.")
+      self.result = InferResult(first_command = cmd, filenames = filenames, callback = callback)
     if self.result.spec_plot is None:
       self.result._init_plot(spec, names, exprs, stack_dicts)
     elif (spec == self.result.spec_plot.spec_string and
@@ -79,7 +82,20 @@ class Infer(object):
           exprs == self.result.spec_plot.exprs):
       pass
     else:
-      raise Exception("Cannot plot with different specs in the same inference program")
+      raise VentureValueError("Cannot plot with different specs in the same inference program")
+
+  @staticmethod
+  def _format_filenames(filenames,spec):
+    if isinstance(filenames, basestring):
+      if isinstance(spec, basestring):
+        return [filenames + '.png']
+      else:
+        raise VentureValueError('The number of specs must match the number of filenames.')
+    else:
+      if isinstance(spec, list) and len(spec) == len(filenames):
+        return [filename + '.png' for filename in filenames]
+      else:
+        raise VentureValueError('The number of specs must match the number of filenames.')
 
   def default_name_for_exp(self,exp):
     if isinstance(exp, basestring):
@@ -123,6 +139,7 @@ class Infer(object):
   def resample_threaded(self, ct): self.engine.resample(ct, 'threaded')
   def resample_thread_ser(self, ct): self.engine.resample(ct, 'thread_ser')
   def resample_multiprocess(self, ct, process_cap = None): self.engine.resample(ct, 'multiprocess', process_cap)
+  def likelihood_weight(self): self.engine.trace_handler.likelihood_weight()
   def enumerative_diversify(self, scope, block): self.engine.diversify(["enumerative", scope, block])
   def collapse_equal(self, scope, block): self.engine.collapse(scope, block)
   def collapse_equal_map(self, scope, block): self.engine.collapse_map(scope, block)
@@ -141,22 +158,21 @@ class Infer(object):
     names, stack_dicts = self.parse_exprs(exprs, 'plotf')
     self._init_plot(spec, names, exprs, stack_dicts)
     self.result._add_data(self.engine, 'plotf')
-  def plotf_to_file(self, basename, spec, *exprs): # This one only works from the "plotf_to_file" SP.
-    basename = SymbolType().asPython(basename)
-    filename = basename + ".png" # TODO Parsers cannot accept full filenames :(
+  def plotf_to_file(self, basenames, spec, *exprs): # This one only works from the "plotf_to_file" SP.
+    filenames = ExpressionType().asPython(basenames)
     spec = ExpressionType().asPython(spec)
     names, stack_dicts = self.parse_exprs(exprs, 'plotf')
-    self._init_plot(spec, names, exprs, stack_dicts, filename=filename)
+    self._init_plot(spec, names, exprs, stack_dicts, filenames=filenames)
     self.result._add_data(self.engine, 'plotf_to_file')
   def call_back(self, name, *exprs):
     name = SymbolType().asPython(name)
     if name not in self.engine.callbacks:
-      raise "Unregistered callback {}".format(name)
+      raise VentureValueError("Unregistered callback {}".format(name))
     self.engine.callbacks[name](self, *[self.engine.sample_all(e.asStackDict()) for e in exprs])
   def call_back_accum(self, name, *exprs):
     name = SymbolType().asPython(name)
     if name not in self.engine.callbacks:
-      raise "Unregistered callback {}".format(name)
+      raise VentureValueError("Unregistered callback {}".format(name))
     names, stack_dicts = self.parse_exprs(exprs, 'plotf')
     self._init_plot(None, names, exprs, stack_dicts, callback=self.engine.callbacks[name])
     self.result._add_data(self.engine, 'call_back_accum')
@@ -166,6 +182,8 @@ class Infer(object):
     self.engine.observe(exp.asStackDict(), val.asStackDict())
   def predict(self, exp):
     self.engine.predict(exp.asStackDict())
+  def load_plugin(self, name, *args):
+    self.engine.ripl.load_plugin(name, *args)
 
   def particle_log_weights(self):
     return self.engine.trace_handler.log_weights
@@ -215,7 +233,7 @@ class InferResult(object):
   Calling print will generate all plots stored in the spec_plot attribute. This
   attribute in turn is a SpecPlot object.
   '''
-  def __init__(self, first_command, filename = None, callback=None):
+  def __init__(self, first_command, filenames = None, callback=None):
     self.sweep = 0
     self.time = time.time()
     self._first_command = first_command
@@ -226,7 +244,7 @@ class InferResult(object):
     self._print_exprs = None
     self._print_stack_dicts = None
     self.spec_plot = None
-    self.filename = filename
+    self.filenames = filenames
     self.callback = callback
 
   def _init_peek(self, names, exprs, stack_dicts):
@@ -318,7 +336,7 @@ class InferResult(object):
     return self.spec_plot.draw(self.dataset())
 
   def plot(self):
-    self.spec_plot.plot(self.dataset(), self.filename)
+    self.spec_plot.plot(self.dataset(), self.filenames)
 
   def __str__(self):
     "Not really a string method, but does get itself displayed when printed."
@@ -326,10 +344,10 @@ class InferResult(object):
       return self.__repr__()
     elif self.spec_plot is not None and self.callback is None:
       self.plot()
-      if self.filename is None:
+      if self.filenames is None:
         return "a plot"
       else:
-        return "plot saved to {}".format(self.filename)
+        return "plots saved to {}.".format(', '.join(self.filenames))
     else:
       self.callback(self.dataset())
       return ""
@@ -411,8 +429,8 @@ class SpecPlot(object):
     else:
       return self.spec.draw(data, self.names)
 
-  def plot(self, data, filename=None):
+  def plot(self, data, filenames=None):
     if self.spec is None:
       pass
     else:
-      return self.spec.plot(data, self.names, filename)
+      return self.spec.plot(data, self.names, filenames)

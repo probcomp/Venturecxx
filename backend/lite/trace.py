@@ -1,16 +1,18 @@
+import warnings
 from address import Address, List
 from builtin import builtInValues, builtInSPs
 from env import VentureEnvironment
 from node import Node,ConstantNode,LookupNode,RequestNode,OutputNode,Args
 import math
+from numpy import nan
 from regen import constrain, processMadeSP, evalFamily, restore
 from detach import unconstrain, unevalFamily
-from value import SPRef, ExpressionType, VentureValue, VentureSymbol, VentureNumber
+from value import SPRef, ExpressionType, VentureValue, VentureSymbol, VentureNumber, VenturePair
 from scaffold import Scaffold
 from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
                    EnumerativeGibbsOperator,EnumerativeMAPOperator,EnumerativeDiversify,
                    PGibbsOperator,ParticlePGibbsOperator,ParticlePMAPOperator,
-                   RejectionOperator, MissingEsrParentError, NoSPRefError,
+                   RejectionOperator, BogoPossibilizeOperator, MissingEsrParentError, NoSPRefError,
                    HamiltonianMonteCarloOperator, MAPOperator, StepOutSliceOperator,
                    DoublingSliceOperator, NesterovAcceleratedGradientAscentOperator,
                    drawScaffold, subsampledMixMH, SubsampledMHOperator,
@@ -23,9 +25,9 @@ from regen import regenAndAttach
 from detach import detachAndExtract
 from scaffold import constructScaffold
 from lkernel import DeterministicLKernel
-from psp import ESRRefOutputPSP
+from psp import ESRRefOutputPSP, TypedPSP, LikelihoodFreePSP
 from serialize import OrderedOmegaDB
-from exception import VentureError
+from exception import VentureError, LogScoreWarning, VentureBuiltinSPMethodError
 from venture.exception import VentureException
 
 class Trace(object):
@@ -95,6 +97,8 @@ class Trace(object):
       return val.getNumber()
     elif isinstance(val, VentureSymbol):
       return val.getSymbol()
+    elif isinstance(val, VenturePair): # I hope this means it's an ordered range
+      return ExpressionType().asPython(val)
     return val
 
   # [FIXME] repetitive, but not sure why these exist at all
@@ -109,10 +113,10 @@ class Trace(object):
     else:
       #assert isinstance(scope, VentureValue)
       #assert isinstance(block, VentureValue)
-      
+
       scope = self._normalizeEvaluatedScopeOrBlock(scope)
       block = self._normalizeEvaluatedScopeOrBlock(block)
-      
+
       return (scope, block)
 
   def registerConstrainedChoice(self,node):
@@ -262,7 +266,7 @@ class Trace(object):
 
   #### For kernels
   def getScope(self, scope): return self.scopes[self._normalizeEvaluatedScopeOrBlock(scope)]
-  
+
   def sampleBlock(self,scope): return self.getScope(scope).sample()[0]
   def logDensityOfBlock(self,scope): return -1 * math.log(self.numBlocksInScope(scope))
   def blocksInScope(self,scope): return self.getScope(scope).keys()
@@ -357,19 +361,28 @@ class Trace(object):
       rhoWeight,_ = detachAndExtract(self,scaffold)
       scaffold.lkernels[appNode] = DeterministicLKernel(self.pspAt(appNode),val)
       xiWeight = regenAndAttach(self,scaffold,False,OmegaDB(),{})
-      if xiWeight == float("-inf"): raise Exception("Unable to propagate constraint")
+      # If xiWeight is -inf, we are in an impossible state, but that might be ok.
+      # Finish constraining, to avoid downstream invariant violations.
       node.observe(val)
       constrain(self,appNode,node.observedValue)
       weight += xiWeight
       weight -= rhoWeight
     self.unpropagatedObservations.clear()
-    return weight
+    if not math.isinf(weight) and not math.isnan(weight):
+      return weight
+    else:
+      # If one observation made the state inconsistent, the rhoWeight
+      # of another might conceivably be infinite, possibly leading to
+      # a nan weight.  I want to normalize these to indicating that
+      # the resulting state is impossible.
+      return float("-inf")
 
   def getConstrainableNode(self, node):
     candidate = self.getOutermostNonReferenceNode(node)
-    if isinstance(candidate,ConstantNode): raise Exception("Cannot constrain a constant value.")
+    if isinstance(candidate,ConstantNode):
+      raise VentureException("evaluation", "Cannot constrain a constant value.", address = node.address)
     if not self.pspAt(candidate).isRandom():
-      raise Exception("Cannot constrain a deterministic value.")
+      raise VentureException("evaluation", "Cannot constrain a deterministic value.", address = node.address)
     return candidate
 
   def getOutermostNonReferenceNode(self,node):
@@ -486,9 +499,37 @@ class Trace(object):
         mixMH(self, BlockScaffoldIndexer(scope, block), NesterovAcceleratedGradientAscentOperator(rate, int(steps)))
       elif operator == "rejection":
         mixMH(self, BlockScaffoldIndexer(scope, block), RejectionOperator())
+      elif operator == "bogo_possibilize":
+        mixMH(self, BlockScaffoldIndexer(scope, block), BogoPossibilizeOperator())
+      elif operator == "print_scaffold_stats":
+        BlockScaffoldIndexer(scope, block).sampleIndex(self).show()
       else: raise Exception("INFER %s is not implemented" % operator)
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
+
+  def likelihood_weight(self):
+    # TODO This is a different control path from infer_exp because it
+    # needs to return the new weight
+    scaffold = BlockScaffoldIndexer("default", "all").sampleIndex(self)
+    (_rhoWeight,rhoDB) = detachAndExtract(self, scaffold)
+    xiWeight = regenAndAttach(self, scaffold, False, rhoDB, {})
+    # Always "accept"
+    return xiWeight
+
+  def freeze(self, id):
+    assert id in self.families
+    node = self.families[id]
+    assert isinstance(node,OutputNode)
+    value = self.valueAt(node)
+    unevalFamily(self,node,Scaffold(),OmegaDB())
+    # XXX It looks like we kinda want to replace the identity of this
+    # node by a constant node, but we don't have a nice way to do that
+    # so we fake it by dropping the components and marking it frozen.
+    node.isFrozen = True
+    self.setValueAt(node, value)
+    node.requestNode = None
+    node.operandNodes = None
+    node.operatorNode = None
 
   def diversify(self, exp, copy_trace):
     """Return the pair of parallel lists of traces and weights that
@@ -528,7 +569,21 @@ the scaffold determined by the given expression."""
 
   def getGlobalLogScore(self):
     # TODO This algorithm is totally wrong: https://app.asana.com/0/16653194948424/20100308871203
-    return sum([self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node)) for node in self.rcs.union(self.ccs)])
+    all_scores = [self._getOneLogScore(node) for node in self.rcs.union(self.ccs)]
+    scores, isLikelihoodFree = zip(*all_scores) if all_scores else [(), ()]
+    if any(isLikelihoodFree):
+      n = sum(isLikelihoodFree)
+      warnstr = "There are {0} likelihood-free SP's in the trace. These are not included in the logscore.".format(n)
+      warnings.warn(warnstr, LogScoreWarning)
+    return sum(scores)
+
+  def _getOneLogScore(self, node):
+    # Hack: likelihood-free PSP's contribute 0 to global logscore.
+    # This is incorrect, but better than the function breaking entirely.
+    try:
+      return (self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node)), False)
+    except VentureBuiltinSPMethodError:
+      return (0.0, True)
 
   #### Serialization interface
 
@@ -576,7 +631,7 @@ the scaffold determined by the given expression."""
       node.children.add(child)
 
   #### Configuration
-  
+
   def set_profiling(self, enabled=True):
     self.profiling_enabled = enabled
 

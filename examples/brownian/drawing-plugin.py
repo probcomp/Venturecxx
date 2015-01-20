@@ -15,7 +15,7 @@
 # calling it with
 #   -L drawing-plugin.py
 # Then enjoy with
-#   infer (cycle ((call_back (quote draw))) 10)
+#   infer (cycle ((call_back draw)) 10)
 
 import pygame
 import pygame.image

@@ -74,6 +74,11 @@ class RiplCmd(Cmd, object):
     return line
 
   @catchesVentureException
+  def do_define(self, s):
+    '''Define a variable in the inference program.'''
+    print getValue(self._do_instruction('define', s))
+
+  @catchesVentureException
   def do_assume(self, s):
     '''Add a named variable to the model.'''
     print getValue(self._do_instruction('assume', s))

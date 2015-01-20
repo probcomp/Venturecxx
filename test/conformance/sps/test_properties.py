@@ -186,15 +186,9 @@ def testRiplSimulate():
 def checkRiplAgreesWithDeterministicSimulate(name, sp):
   if config["get_ripl"] != "lite" and name in [
     ## Incompatibilities with Puma
-    "eq", # Not implemented for matrices
-    "gt", # Not implemented for matrices
-    "gte",
-    "lt",
-    "lte",
     "min", # Not implemented
     "real", # Not implemented
     "atom_eq", # Not implemented
-    "contains", # Not implemented for sequences
     "arange", # Not implemented
     "linspace", # Not implemented
     "diag_matrix", # Not implemented
@@ -203,10 +197,8 @@ def checkRiplAgreesWithDeterministicSimulate(name, sp):
     "repeat", # Not implemented
     "vector_dot", # Not implemented
     "zip", # Not implemented
-    "is_number", # Not implemented
-    "is_integer", # Not implemented
-    "is_probability", # Not implemented
-    "is_boolean", # Not implemented
+    "is_procedure", # Not implemented
+    "print", # Not implemented
   ]:
     raise SkipTest("%s in Puma not implemented compatibly with Lite" % name)
   checkTypedProperty(propRiplAgreesWithDeterministicSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)
@@ -392,6 +384,10 @@ def testGradientOfSimulate():
                     # The gradients of biplex and lookup have sporadic
                     # symbolic zeroes.
                     "biplex", "lookup",
+                    # TODO The gradient of floor is a symbolic zero
+                    # with a continuous-looking output space, which
+                    # confuses this code
+                    "floor",
                     # For some reason, the gradient is too often large
                     # enough to confuse the numerical approximation
                     "tan"

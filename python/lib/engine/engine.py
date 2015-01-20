@@ -24,6 +24,7 @@ from trace_handler import (dump_trace, restore_trace, SynchronousTraceHandler,
                            ThreadedSerializingTraceHandler, MultiprocessingTraceHandler)
 from venture.lite.utils import sampleLogCategorical, logaddexp
 from venture.engine.inference import Infer
+from venture.engine.macro import macroexpand_inference
 import venture.value.dicts as v
 
 def is_picklable(obj):
@@ -54,6 +55,7 @@ class Engine(object):
     self.persistent_inference_trace = persistent_inference_trace
     if self.persistent_inference_trace:
       (self.infer_trace, self.last_did) = self.init_inference_trace()
+    self.ripl = None
 
   def trace_handler_constructor(self, mode):
     if mode == 'multiprocess':
@@ -81,6 +83,8 @@ class Engine(object):
 
   def bind_foreign_inference_sp(self, name, sp):
     self.inference_sps[name] = sp
+    if self.persistent_inference_trace:
+      self.infer_trace.bindPrimitiveSP(name, sp)
 
   def bind_callback(self, name, callback):
     self.callbacks[name] = callback
@@ -95,7 +99,7 @@ class Engine(object):
   def define(self, id, datum):
     assert self.persistent_inference_trace, "Define only works if the inference trace is persistent"
     self.last_did += 1
-    self.infer_trace.eval(self.last_did, self.macroexpand_inference(datum))
+    self.infer_trace.eval(self.last_did, macroexpand_inference(datum))
     self.infer_trace.bindInGlobalEnv(id, self.last_did)
     return self.infer_trace.extractValue(self.last_did)
 
@@ -165,6 +169,11 @@ class Engine(object):
     # the replay is done with a different number of particles than the
     # original?  Where do the extra values come from?
     self.trace_handler.delegate('freeze', directiveId)
+    # XXX OOPS!  We need to remember, in self.directives, that this
+    # node is frozen at its current values, so that when we copy the
+    # trace we don't make random choices afresh here.  But there's no
+    # obvious way to record that.
+    #self.directives[directiveId] = ["assume", directiveId, XXX]
 
   def report_value(self,directiveId):
     if directiveId not in self.directives:
@@ -283,19 +292,24 @@ effect of renumbering the directives, if some had been forgotten."""
     new_ts = []
     new_ws = []
     for (_, ts, ws) in groups:
-      index = select_keeper(ws)
+      (index, total) = select_keeper(ws)
       new_ts.append(self.copy_trace(ts[index]))
-      new_ts[-1].makeConsistent()
-      new_ws.append(logaddexp(ws))
+      new_ts[-1].makeConsistent() # Even impossible states ok
+      new_ws.append(total)
     del self.trace_handler
     self.trace_handler = self.create_handler(new_ts, new_ws)
 
   def collapse(self, scope, block):
-    self._collapse_help(scope, block, sampleLogCategorical)
+    def sample(weights):
+      return (sampleLogCategorical(weights), logaddexp(weights))
+    self._collapse_help(scope, block, sample)
 
   def collapse_map(self, scope, block):
+    # The proper behavior in the Viterbi algorithm is to weight the
+    # max particle by its own weight, not by the total weight of its
+    # whole bucket.
     def max_ind(lst):
-      return lst.index(max(lst))
+      return (lst.index(max(lst)), max(lst))
     self._collapse_help(scope, block, max_ind)
 
   def infer(self, program):
@@ -305,61 +319,8 @@ effect of renumbering the directives, if some had been forgotten."""
       prog = [v.sym("cycle"), program[1], v.number(1)]
       self.start_continuous_inference(prog)
     else:
-      exp = self.macroexpand_inference(program)
+      exp = macroexpand_inference(program)
       return self.infer_v1_pre_t(exp, Infer(self))
-
-  def macroexpand_inference(self, program):
-    if type(program) is list and len(program) == 0:
-      return program
-    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "cycle":
-      assert len(program) == 3
-      subkernels = self.macroexpand_inference(program[1])
-      transitions = self.macroexpand_inference(program[2])
-      return [program[0], [v.sym("list")] + subkernels, transitions]
-    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "mixture":
-      assert len(program) == 3
-      weights = []
-      subkernels = []
-      weighted_ks = self.macroexpand_inference(program[1])
-      transitions = self.macroexpand_inference(program[2])
-      for i in range(len(weighted_ks)/2):
-        j = 2*i
-        k = j + 1
-        weights.append(weighted_ks[j])
-        subkernels.append(weighted_ks[k])
-      return [program[0], [v.sym("simplex")] + weights, [v.sym("array")] + subkernels, transitions]
-    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == 'peek':
-      assert len(program) >= 2
-      return [program[0]] + [v.quasiquote(e) for e in program[1:]]
-    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "printf":
-      assert len(program) >= 2
-      return [program[0]] + [v.quasiquote(e) for e in program[1:]]
-    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "plotf":
-      assert len(program) >= 2
-      return [program[0]] + [v.quasiquote(e) for e in program[1:]]
-    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "plotf_to_file":
-      assert len(program) >= 2
-      return [program[0]] + [v.quasiquote(e) for e in program[1:]]
-    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "call_back":
-      assert len(program) >= 2
-      return [program[0]] + [v.quasiquote(e) for e in program[1:]]
-    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "call_back_accum":
-      assert len(program) >= 2
-      return [program[0]] + [v.quasiquote(e) for e in program[1:]]
-    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "assume":
-      assert len(program) == 3
-      return [program[0], v.quote(program[1]), v.quasiquote(program[2])]
-    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "observe":
-      assert len(program) == 3
-      return [program[0], v.quasiquote(program[1]), program[2]]
-    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "predict":
-      assert len(program) == 2
-      return [program[0], v.quasiquote(program[1])]
-    elif type(program) is list and type(program[0]) is dict and program[0]["value"] == "begin":
-      assert len(program) >= 2
-      return [v.sym("sequence"), [v.sym("list")] + [self.macroexpand_inference(e) for e in program[1:]]]
-    elif type(program) is list: return [self.macroexpand_inference(p) for p in program]
-    else: return program
 
   def infer_v1_pre_t(self, program, target):
     if not self.persistent_inference_trace:

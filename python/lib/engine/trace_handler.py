@@ -224,6 +224,9 @@ class HandlerBase(object):
     for i, increment in enumerate(weight_increments):
       self.log_weights[i] += increment
 
+  def likelihood_weight(self):
+    self.log_weights = self.delegate('likelihood_weight')
+
   def reset_seeds(self):
     for i in range(len(self.processes)):
       self.delegate_one_chunk(i, 'set_seeds', [random.randint(1,2**31-1) for _ in range(self.chunk_sizes[i])])

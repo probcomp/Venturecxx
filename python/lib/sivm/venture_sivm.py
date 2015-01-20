@@ -108,7 +108,7 @@ class VentureSivm(object):
         instruction_type = instruction['instruction']
         sugar = None
         # desugar the expression
-        if instruction_type in ['define','assume','observe','predict']:
+        if instruction_type in ['define','assume','observe','predict','infer']:
             exp = utils.validate_arg(instruction,'expression',
                     utils.validate_expression, wrap_exception=False)
             sugar = macro.expand(exp)
@@ -127,32 +127,16 @@ class VentureSivm(object):
             response = self.core_sivm.execute_instruction(desugared_instruction)
         except VentureException as e:
             # raise # One can suppress error annotation by uncommenting this
-            if e.exception == "evaluation":
-                self.state='exception'
-                
-                address = e.data['address'].asList()
-                del e.data['address']
-                e.data['stack_trace'] = [self._resugar(index) for index in address]
-
-                self.current_exception = e.to_json_object()
-            if e.exception == "breakpoint":
-                self.state='paused'
-                self.current_exception = e.to_json_object()
-            # re-sugar the expression index
-            if e.exception == 'parse':
-                i = e.data['expression_index']
-                exp = instruction['expression']
-                i = macro.sugar_expression_index(exp,i)
-                e.data['expression_index'] = i
-            # turn directive_id into label
-            if e.exception == 'invalid_argument':
-                if e.data['argument'] == 'directive_id':
-                    did = e.data['directive_id']
-                    if did in self.did_dict:
-                        e.data['label'] = self.did_dict[did]
-                        e.data['argument'] = 'label'
-                        del e.data['directive_id']
-            raise
+            import sys
+            info = sys.exc_info()
+            try:
+                e = self._annotate(e, instruction)
+            except Exception as e2:
+                print "Trying to annotate an exception at SIVM level led to:"
+                import traceback
+                print traceback.format_exc()
+                raise e, None, info[2]
+            raise e, None, info[2]
         # clear the dicts on the "clear" command
         if instruction_type == 'clear':
             self._clear()
@@ -183,7 +167,35 @@ class VentureSivm(object):
             del tmp_instruction['instruction']
             self.breakpoint_dict[bid] = tmp_instruction
         return response
-    
+
+    def _annotate(self, e, instruction):
+        if e.exception == "evaluation":
+            self.state='exception'
+
+            address = e.data['address'].asList()
+            e.data['stack_trace'] = [self._resugar(index) for index in address]
+            del e.data['address']
+
+            self.current_exception = e.to_json_object()
+        if e.exception == "breakpoint":
+            self.state='paused'
+            self.current_exception = e.to_json_object()
+        # re-sugar the expression index
+        if e.exception == 'parse':
+            i = e.data['expression_index']
+            exp = instruction['expression']
+            i = macro.sugar_expression_index(exp,i)
+            e.data['expression_index'] = i
+        # turn directive_id into label
+        if e.exception == 'invalid_argument':
+            if e.data['argument'] == 'directive_id':
+                did = e.data['directive_id']
+                if did in self.did_dict:
+                    e.data['label'] = self.did_dict[did]
+                    e.data['argument'] = 'label'
+                    del e.data['directive_id']
+        return e
+
     def _get_sugar(self, did):
         if did in self.sugar_dict:
             return self.sugar_dict[did]
