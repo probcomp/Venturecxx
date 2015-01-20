@@ -36,9 +36,9 @@ class Timer(object):
     self.start_time = time()
     self.downtime = 0
   def time(self, _=None):
-    now = time()
     if self.start_time is None or self.downtime is None:
       raise VentureTimerError('Timer has not been started.')
+    now = time()
     if self.downtime_start is not None:
       extra_downtime = now - self.downtime_start
     else:
