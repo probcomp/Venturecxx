@@ -34,6 +34,8 @@ import sys
 ON_LINUX = 'linux' in sys.platform
 ON_MAC = 'darwin' in sys.platform
 
+cflags = os.getenv("CFLAGS", "").split()
+
 if ON_LINUX:
     os.environ['CC'] = 'ccache gcc '
 if ON_MAC:
@@ -184,7 +186,7 @@ cxx = Extension("venture.cxx.libtrace",
                      ('MINOR_VERSION', '1'),
                      ('REVISION', '1')],
     libraries = ['gsl', 'gslcblas', 'boost_python'],
-    extra_compile_args = ["-std=c++11", "-Wall", "-g", "-O0", "-fPIC"],
+    extra_compile_args = ["-std=c++11", "-Wall", "-g", "-O2", "-fPIC"] + cflags,
     undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
     include_dirs = inc_dirs,
     sources = src_files)
@@ -200,7 +202,7 @@ if ON_LINUX:
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
         libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread'],
-                     extra_compile_args = ["-Wall", "-g", "-O0", "-fPIC", "-fno-omit-frame-pointer"],
+        extra_compile_args = ["-Wall", "-g", "-O2", "-fPIC", "-fno-omit-frame-pointer"] + cflags,
         #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
         include_dirs = puma_inc_dirs,
         sources = puma_src_files)
@@ -210,7 +212,7 @@ if ON_MAC:
                          ('MINOR_VERSION', '1'),
                          ('REVISION', '1')],
         libraries = ['gsl', 'gslcblas', 'boost_python-mt', 'boost_system-mt', 'boost_thread-mt'],
-        extra_compile_args = ["-Wall", "-g", "-O0", "-fPIC", "-fno-omit-frame-pointer"],
+        extra_compile_args = ["-Wall", "-g", "-O2", "-fPIC", "-fno-omit-frame-pointer"] + cflags,
         #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
         include_dirs = puma_inc_dirs,
         sources = puma_src_files)
