@@ -127,14 +127,16 @@ Special Forms
 .. [#] For the interested, the way this is actually done is that each
    of the primitives documented here actually returns a procedure that
    accepts a reified object representing the sampled execution history
-   of the model program, affects it, and returns it.  This is
-   relevant if you wish to define additional inference abstractions in
-   Venture, or more complex combinations of them than the provided
-   ones.
+   of the model program, affects it, and returns a pair consisting of
+   whatever value it wishes to return in the first slot, and the
+   reified execution history in the second.  This is relevant if you
+   wish to define additional inference abstractions in Venture, or
+   more complex combinations of them than the provided ones.
 
    For those readers for whom this analogy is helpful, the above is
    exactly the type signature one would get by implementing a
-   ``State`` monad whose actions cannot return values.  On this
-   interpretation, ``begin`` is ``do``, but without any provision for
-   actions returning values.  As of this writing, there are no
-   analogues to ``get``, ``put``, or ``runState``.
+   ``State`` monad on execution histories.  This is why the ``do``
+   form is called ``do``.  The ``begin`` form is a simplification of
+   ``do`` that drops all intermediate return values.  As of this
+   writing, there are no analogues to ``get``, ``put``, or
+   ``runState``.
