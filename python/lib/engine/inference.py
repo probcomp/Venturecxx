@@ -17,6 +17,7 @@
 import time
 import numpy as np
 from pandas import DataFrame, Index
+from copy import copy
 
 from venture.lite.value import (ExpressionType, SymbolType, VentureArray, VentureSymbol,
                                 VentureInteger)
@@ -287,6 +288,9 @@ class InferResult(object):
     self._this_iter_data['particle id'] = range(engine.num_traces())
     self._this_iter_data['time (s)'] = [the_time] * engine.num_traces()
     self._this_iter_data['log score'] = engine.logscore_all()
+    log_weights = copy(engine.trace_handler.log_weights)
+    self._this_iter_data['particle log weight'] = log_weights
+    self._this_iter_data['particle normalized prob'] = logWeightsToNormalizedDirect(log_weights)
 
   def _collect_requested_streams(self, engine, command):
     if command == 'peek':
@@ -318,7 +322,8 @@ class InferResult(object):
   def dataset(self):
     ds = DataFrame.from_dict(strip_types_from_dict_values(self.data))
     cols = ds.columns
-    first_cols = Index(['sweep count', 'particle id', 'time (s)', 'log score'])
+    first_cols = Index(['sweep count', 'particle id', 'time (s)', 'log score',
+                        'particle log weight', 'particle normalized prob'])
     rest_cols = cols - first_cols
     order = first_cols.tolist() + rest_cols.tolist()
     return ds[order]
