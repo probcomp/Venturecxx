@@ -558,13 +558,13 @@ def _compute_inference_prelude():
       ["bind", """(lambda (act next)
   (lambda (t)
     (let ((res (act t)))
-      ((next (first res)) (second res)))))"""],
+      ((next (first res)) (rest res)))))"""],
       # bind_ :: State a b -> State a c -> State a c
       # drop the value of type b but perform both actions
       ["bind_", """(lambda (act next)
   (lambda (t)
     (let ((res (act t)))
-      (next (second res)))))"""],
+      (next (rest res)))))"""],
       # return :: b -> State a b
       ["return", """(lambda (val) (lambda (t) (pair val t)))"""]
   ]:
