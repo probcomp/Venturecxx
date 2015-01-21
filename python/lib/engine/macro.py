@@ -51,49 +51,49 @@ def do_macro(program):
 register_macro("do", do_macro, """\
 - `(do <stmt> <stmt> ...)`: Sequence actions that may return results.
 
-Each <stmt> except the last may either be
+  Each <stmt> except the last may either be
 
-  - a kernel, in which case it is performed and any value it returns
-    is dropped, or
+    - a kernel, in which case it is performed and any value it returns
+      is dropped, or
 
-  - a binder of the form ``(<variable> <- <kernel>)`` in which case the
-    kernel is performed and its value is made available to the remainder
-    of the ``do`` form by being bound to the variable.
+    - a binder of the form ``(<variable> <- <kernel>)`` in which case the
+      kernel is performed and its value is made available to the remainder
+      of the ``do`` form by being bound to the variable.
 
-The last <stmt> may not be a binder and must be a kernel.  The whole
-``do`` expression is then a single compound heterogeneous kernel,
-whose value is the value returned by the last <stmt>.
+  The last <stmt> may not be a binder and must be a kernel.  The whole
+  ``do`` expression is then a single compound heterogeneous kernel,
+  whose value is the value returned by the last <stmt>.
 
-If you need a kernel that prodices a value without doing anything, use
-``(return <value>)``.  If you need a kernel that does nothing and
-produces no useful value, you can use ``pass``.
+  If you need a kernel that prodices a value without doing anything, use
+  ``(return <value>)``.  If you need a kernel that does nothing and
+  produces no useful value, you can use ``pass``.
 
-For example, to make a kernel that does inference until some variable
-in the model becomes "true" (why would anyone want to do that?), you
-can write
+  For example, to make a kernel that does inference until some variable
+  in the model becomes "true" (why would anyone want to do that?), you
+  can write::
 
-    1 [define my_strange_kernel (lambda ()
-    2   (do
-    3     (finish <- (sample something_from_the_model))
-    4     (if finish
-    5         pass
-    6         (do
-    7           (mh default one 1)
-    8           (my_strange_kernel)))))]
+      1 [define my_strange_kernel (lambda ()
+      2   (do
+      3     (finish <- (sample something_from_the_model))
+      4     (if finish
+      5         pass
+      6         (do
+      7           (mh default one 1)
+      8           (my_strange_kernel)))))]
 
-Line 3 is a binder for the ``do`` started on line 2, which makes
-``finish`` a variable usable by the remainder of the procedure.  The
-``if`` starting on line 4 is a kernel, and is the last statement of
-the outer ``do``.  Line 7 is a non-binder statement for the inner
-``do``.
+  Line 3 is a binder for the ``do`` started on line 2, which makes
+  ``finish`` a variable usable by the remainder of the procedure.  The
+  ``if`` starting on line 4 is a kernel, and is the last statement of
+  the outer ``do``.  Line 7 is a non-binder statement for the inner
+  ``do``.
 
-The nomenclature is borrowed from the (in)famous ``do`` notation of
-Haskell.  If this helps you think about it, Venture's ``do`` is
-exactly Haskell ``do``, except there is only one monad, which is
-essentially ``ST TheModel``.  Randomness and actual i/o are not
-treated monadically, but just executed, which we can get away with
-because Venture is strict and doesn't aspire to complete functional
-purity.""")
+  The nomenclature is borrowed from the (in)famous ``do`` notation of
+  Haskell.  If this helps you think about it, Venture's ``do`` is
+  exactly Haskell ``do``, except there is only one monad, which is
+  essentially ``ST TheModel``.  Randomness and actual i/o are not
+  treated monadically, but just executed, which we can get away with
+  because Venture is strict and doesn't aspire to complete functional
+  purity.""")
 
 def cycle_macro(program):
   assert len(program) == 3
