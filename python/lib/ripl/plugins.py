@@ -72,5 +72,3 @@ def save_dataset(inferrer, basename):
   basename = strip_types(basename)[0]
   ds.to_csv(basename + '.txt', sep = '\t',
             index = False, float_format = '%0.4f')
-
-
