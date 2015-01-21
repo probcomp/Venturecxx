@@ -7,7 +7,7 @@ def testMonadicSmoke():
   (lambda ()
     (do
       (x symbol<"<-"> (sample (flip)))
-      (if (first x)
+      (if x
           (assume y true)
           (assume y false))))]
 """)

@@ -182,6 +182,8 @@ class Infer(object):
   def predict(self, exp):
     self.engine.predict(exp.asStackDict())
   def sample(self, exp):
+    return VentureValue.fromStackDict(self.engine.sample(exp.asStackDict()))
+  def sample_all(self, exp):
     return [VentureValue.fromStackDict(val) for val in self.engine.sample_all(exp.asStackDict())]
   def load_plugin(self, name, *args):
     self.engine.ripl.load_plugin(name, *args)
