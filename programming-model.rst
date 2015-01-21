@@ -36,10 +36,10 @@ we also call the `inference language`.
 
 For those readers for whom this is helpful, you can think of the
 inference program as being run in the ``State ModelHistory`` monad
-(though, more like ``ST ModelHistory`` because the system's state is
-actually mutated underneath).  There are ``do``, ``bind``, and
-``return``, as one would expect, except that they are specialized to
-this one monad.
+(though, more like ``ST`` with a single implicit ``STRef
+ModelHistory``, because the system's state is actually mutated
+underneath).  There are ``do``, ``bind``, and ``return``, as one would
+expect, except that they are specialized to this one monad.
 
 There are two syntaxes for expressions: Venchurch
 (Scheme/Church-like) and VentureScript (Javascript-like). The
