@@ -7,7 +7,8 @@ from venture.lite.exception import VentureValueError
 stream_rx = r"([rcts%]|[0-9]+)"
 scale_rx = r"([dl])"
 geom_rx = r"[plbah]"
-toplevel_rx = "(" + geom_rx + "*)" + "((" + stream_rx + "?" + scale_rx + "?){1,3})$"
+weight_rx = r"w?"
+toplevel_rx = "(" + weight_rx + ")" + "(" + geom_rx + "*)" + "((" + stream_rx + "?" + scale_rx + "?){1,3})$"
 dimension_rx = stream_rx + "?" + scale_rx + "?"
 
 class PlotSpec(object):
@@ -96,8 +97,9 @@ class FrameSpec(object):
     top = re.match(toplevel_rx, spec)
     if not top:
       raise Exception("Invalid plot spec %s; must match %s" % (spec, toplevel_rx))
-    self.geoms = top.group(1)
-    dims = top.group(2)
+    self.weighted = top.group(1)
+    self.geoms = top.group(2)
+    dims = top.group(3)
     if len(dims) == 0:
       raise Exception("Invalid plot spec %s; must supply at least one dimension to plot")
     self._interp_geoms(self.geoms) # To set the self.two_d_only bit
