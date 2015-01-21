@@ -460,6 +460,7 @@ observations."""),
   macro_helper("assume", infer_action_type([v.AnyType("<symbol>"), v.AnyType("<expression>")])),
   macro_helper("observe", infer_action_type([v.AnyType("<expression>"), v.AnyType()])),
   macro_helper("predict", infer_action_type([v.AnyType("<expression>")])),
+  macro_helper("sample", infer_action_type([v.AnyType("<expression>")], return_type=v.ListType())),
 
   # Hackety hack hack backward compatibility
   ["ordered_range", deterministic_typed(lambda *args: (v.VentureSymbol("ordered_range"),) + args,

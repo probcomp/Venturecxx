@@ -15,14 +15,13 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
-import numpy as np
 from pandas import DataFrame, Index
 
 from venture.lite.value import (ExpressionType, SymbolType, VentureArray, VentureSymbol,
-                                VentureInteger)
+                                VentureInteger, VentureValue)
 from venture.lite.utils import logWeightsToNormalizedDirect
 from venture.ripl.utils import strip_types_from_dict_values
-from venture.lite.exception import VentureBuiltinSPMethodError, VentureValueError
+from venture.lite.exception import VentureValueError
 from plot_spec import PlotSpec
 
 class Infer(object):
@@ -182,6 +181,8 @@ class Infer(object):
     self.engine.observe(exp.asStackDict(), val.asStackDict())
   def predict(self, exp):
     self.engine.predict(exp.asStackDict())
+  def sample(self, exp):
+    return [VentureValue.fromStackDict(val) for val in self.engine.sample_all(exp.asStackDict())]
   def load_plugin(self, name, *args):
     self.engine.ripl.load_plugin(name, *args)
 

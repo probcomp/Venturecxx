@@ -320,3 +320,16 @@ register_macro("predict", quasiquotation_macro(2, 2), """\
   variable, like the ``predict`` directive.  The given model expression
   may be constructed programmatically -- see ``unquote``.
 """)
+
+register_macro("sample", quasiquotation_macro(2, 2), """\
+- `(sample <model-expression>)`: Programmatically sample from the model.
+
+  Sample an expression from the underlying model by simulating a new
+  generative random variable without adding it to the model, like the
+  ``sample`` directive.
+
+  Unlike the ``sample`` directive, interacts with all the particles,
+  and returns values from all of them as a list.
+
+  The given model expression may be constructed programmatically --
+  see ``unquote``.  """)
