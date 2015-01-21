@@ -64,7 +64,7 @@ register_macro("do", do_macro, """\
   ``do`` expression is then a single compound heterogeneous kernel,
   whose value is the value returned by the last <stmt>.
 
-  If you need a kernel that prodices a value without doing anything, use
+  If you need a kernel that produces a value without doing anything, use
   ``(return <value>)``.  If you need a kernel that does nothing and
   produces no useful value, you can use ``pass``.
 
