@@ -330,10 +330,16 @@ effect of renumbering the directives, if some had been forgotten."""
       self.last_did += 1
       self.infer_trace.eval(self.last_did, [program, v.blob(target)])
       ans = self.infer_trace.extractValue(self.last_did)
+      # Expect the result to be a Venture pair of the "value" of the
+      # inference action together with the mutated Infer object.
       assert isinstance(ans, dict)
-      assert ans["type"] is "blob"
-      assert isinstance(ans["value"], Infer)
-      return ans["value"].final_data()
+      assert ans["type"] is "improper_list"
+      (_vs, tail) = ans["value"]
+      # TODO Refactor to return the value instead of the horrible hack
+      # on top of Infer.
+      assert tail["type"] is "blob"
+      assert isinstance(tail["value"], Infer)
+      return tail["value"].final_data()
     except VentureException:
       if self.persistent_inference_trace:
         self.remove_self_evaluating_scope_hack(self.infer_trace, target)
@@ -532,18 +538,22 @@ def _compute_inference_prelude():
   for (name, form) in [
         ["cycle", """(lambda (ks iter)
   (iterate (sequence ks) iter))"""],
+      # Repeatedly apply the given action, discarding the values
         ["iterate", """(lambda (f iter)
   (if (<= iter 1)
       f
-      (lambda (t) (f ((iterate f (- iter 1)) t)))))"""],
+      (lambda (t) (f (rest ((iterate f (- iter 1)) t))))))"""],
+      # Apply the given list of actions in sequence, discarding the values.
+      # This is Haskell's sequence_
         ["sequence", """(lambda (ks)
   (if (is_pair ks)
-      (lambda (t) ((sequence (rest ks)) ((first ks) t)))
-      (lambda (t) t)))"""],
+      (lambda (t) ((sequence (rest ks)) (rest ((first ks) t))))
+      (lambda (t) (pair nil t))))"""],
         ["begin", "sequence"],
         ["mixture", """(lambda (weights kernels transitions)
   (iterate (lambda (t) ((categorical weights kernels) t)) transitions))"""],
-        ["pass", "(lambda (t) t)"]]:
+      # pass :: State a ()  pass = return ()
+        ["pass", "(lambda (t) (pair nil t))"]]:
     from venture.parser.church_prime_parser import ChurchPrimeParser
     from venture.sivm.macro import desugar_expression
     from venture.sivm.core_sivm import _modify_expression

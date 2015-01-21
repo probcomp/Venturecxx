@@ -228,7 +228,7 @@ builtInSPsList = [
            [ "rest", deterministic_typed(lambda p: p[1], [v.PairType()], v.AnyType(),
                                          sim_grad=lambda args, direction: [v.VenturePair((0, direction))],
                                          descr="rest returns the second component of its argument pair") ],
-           [ "second", deterministic_typed(lambda p: p[1].first, [v.PairType(second_type=v.PairType())], v.AnyType(),
+           [ "second", deterministic_typed(lambda p: p[1][0], [v.PairType(second_type=v.PairType())], v.AnyType(),
                                            descr="second returns the first component of the second component of its argument") ],
 
 
