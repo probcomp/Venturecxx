@@ -90,7 +90,7 @@ register_macro("do", do_macro, """\
   The nomenclature is borrowed from the (in)famous ``do`` notation of
   Haskell.  If this helps you think about it, Venture's ``do`` is
   exactly Haskell ``do``, except there is only one monad, which is
-  essentially ``ST TheModel``.  Randomness and actual i/o are not
+  essentially ``State ModelHistory``.  Randomness and actual i/o are not
   treated monadically, but just executed, which we can get away with
   because Venture is strict and doesn't aspire to complete functional
   purity.""")
