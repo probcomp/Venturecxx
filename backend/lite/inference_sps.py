@@ -11,7 +11,7 @@ class InferPrimitiveOutputPSP(psp.DeterministicPSP):
   def simulate(self, args):
     return sp.VentureSPRecord(sp.SP(psp.NullRequestPSP(),
                                     psp.TypedPSP(self.klass(self.name, args.operandValues),
-                                                 sp.SPType([v.ForeignBlobType()], v.ForeignBlobType()))))
+                                                 sp.SPType([v.ForeignBlobType()], v.PairType(v.NilType(), v.ForeignBlobType())))))
   def description(self, _name):
     return self.desc
 
@@ -19,20 +19,21 @@ class MadeInferPrimitiveOutputPSP(psp.LikelihoodFreePSP):
   def __init__(self, name, exp):
     self.exp = [name] + exp
   def simulate(self, args):
-    args.operandValues[0].primitive_infer(self.exp)
-    return args.operandValues[0]
+    ans = args.operandValues[0].primitive_infer(self.exp)
+    return (ans, args.operandValues[0])
 
 class MadeEngineMethodInferOutputPSP(psp.LikelihoodFreePSP):
   def __init__(self, name, operands):
     self.name = name
     self.operands = operands
   def simulate(self, args):
-    getattr(args.operandValues[0], self.name)(*self.operands)
-    return args.operandValues[0]
+    ans = getattr(args.operandValues[0], self.name)(*self.operands)
+    return (ans, args.operandValues[0])
 
 def infer_action_type(args_types, **kwargs):
   # Represent the underlying trace as a ForeignBlob for now.
-  return sp.SPType(args_types, sp.SPType([v.ForeignBlobType()], v.ForeignBlobType()), **kwargs)
+  # TODO Take a type to use to convert the return value
+  return sp.SPType(args_types, sp.SPType([v.ForeignBlobType()], v.PairType(v.NilType(), v.ForeignBlobType())), **kwargs)
 
 def typed_inf_sp(name, tp, klass=MadeInferPrimitiveOutputPSP, desc=""):
   return [ name, no_request(psp.TypedPSP(InferPrimitiveOutputPSP(name, klass=klass, desc=desc), tp)) ]
