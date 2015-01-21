@@ -1046,13 +1046,15 @@ class NilType(VentureType):
 
 class PairType(VentureType):
   def __init__(self, first_type=None, second_type=None, name=None):
-    # TODO Do I want to do automatic conversions if the types are
-    # given, or not?
-    self.first_type = first_type
-    self.second_type = second_type
+    self.first_type = first_type if first_type is not None else AnyType()
+    self.second_type = second_type if second_type is not None else AnyType()
     self._name = name
-  def asVentureValue(self, thing): return VenturePair(thing)
-  def asPython(self, vthing): return vthing.getPair()
+  def asVentureValue(self, thing):
+    (f, r) = thing
+    return VenturePair((self.first_type.asVentureValue(f), self.second_type.asVentureValue(r)))
+  def asPython(self, vthing):
+    (vf, vr) = vthing.getPair()
+    return (self.first_type.asPython(vf), self.second_type.asPython(vr))
   def __contains__(self, vthing): return isinstance(vthing, VenturePair)
   def name(self):
     if self._name is not None:
