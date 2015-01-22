@@ -196,7 +196,7 @@ class Infer(object):
   def sample_all(self, exp):
     return [VentureValue.fromStackDict(val) for val in self.engine.sample_all(exp.asStackDict())]
   def load_plugin(self, name, *args):
-    self.engine.ripl.load_plugin(name, *args)
+    return self.convert_none(self.engine.ripl.load_plugin(name, *args))
 
   def particle_log_weights(self):
     return self.engine.trace_handler.log_weights

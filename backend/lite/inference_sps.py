@@ -544,7 +544,7 @@ Return the weights of all extant particles as an array of numbers (in log space)
                    desc="""\
 Set the weights of the particles to the given array.  It is an error if the length of the array differs from the number of particles. """),
 
-  engine_method_sp("load_plugin", infer_action_maker_type([v.SymbolType("filename")], variadic=True)),
+  engine_method_sp("load_plugin", infer_action_maker_type([v.SymbolType("filename")], return_type=v.AnyType(), variadic=True)),
 
   macro_helper("peek", infer_action_maker_type([v.AnyType()], variadic=True)),
   macro_helper("plotf", infer_action_maker_type([v.AnyType()], variadic=True)),

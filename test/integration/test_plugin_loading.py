@@ -12,3 +12,9 @@ def testPluginsLoad2():
   r = get_ripl()
   r.infer("(load_plugin (quote symbol<\"" + plugin_name + "\">))")
   r.infer("(call_back foo)")
+
+def testPluginsLoad3():
+  r = get_ripl()
+  r.infer("""(do
+  (seven <- (load_plugin (quote symbol<"%s">)))
+  (assert (eq 7 seven)))""" % (plugin_name,))
