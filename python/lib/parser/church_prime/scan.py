@@ -28,13 +28,16 @@ from venture.parser.church_prime import grammar
 
 '''
 grep -o -E 'K_[A-Z0-9_]+' < grammar.y | sort -u | awk '
+BEGIN {
+    q = "'\''"
+}
 {
     sub("^K_", "", $1)
-    printf("    \"%s\": grammar.K_%s,\n", tolower($1), $1)
+    printf("    %c%s%c: grammar.K_%s,\n", q, tolower($1), q, $1)
 }
 END {
-    printf("    \"true\": grammar.T_TRUE,\n");
-    printf("    \"false\": grammar.T_FALSE,\n");
+    printf("    %ctrue%c: grammar.T_TRUE,\n", q, q);
+    printf("    %cfalse%c: grammar.T_FALSE,\n", q, q);
 }'
 '''
 keywords = {                    # XXX Use a perfect hash.
