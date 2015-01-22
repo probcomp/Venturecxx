@@ -496,7 +496,13 @@ observations."""),
 Compute and return the value of the local log likelihood at the given scope and block.
 
 If there are stochastic nodes in the conditional regeneration graph,
-returns a one-sample estimate of the local likelihood.
+reuses their current values.  This could be viewed as a one-sample
+estimate of the local likelihood.
+
+(likelihood_at default all) is not the same as getGlobalLogScore
+because it does not count the scores of any nodes that cannot report
+likelihoods, or whose existence is conditional.  likelihood_at also
+treats exchangeably coupled nodes correctly.
 
 Compare posterior_at."""),
 
@@ -505,11 +511,9 @@ Compare posterior_at."""),
                    desc="""\
 Compute and return the value of the local log posterior at the given scope and block.
 
-The principal nodes must be able to assess.  If there are stochastic
-nodes in the conditional regeneration graph, returns a one-sample
-estimate of the local posterior.
-
-Compare likelihood_at."""),
+The principal nodes must be able to assess.  Otherwise behaves like
+likelihood_at, except that it includes the log densities of
+non-observed stochastic nodes."""),
 
   [ "particle_log_weights", no_request(psp.TypedPSP(MadeEngineMethodInferOutputPSP("particle_log_weights", [], desc="""\
 Return the weights of all extant particles as an array of numbers (in log space).
