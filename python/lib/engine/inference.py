@@ -190,6 +190,9 @@ class Infer(object):
 
   def particle_log_weights(self):
     return self.engine.trace_handler.log_weights
+  def set_particle_log_weights(self, new_weights):
+    assert len(new_weights) == len(self.engine.trace_handler.log_weights)
+    self.engine.trace_handler.log_weights = new_weights
   def particle_normalized_probs(self):
     return logWeightsToNormalizedDirect(self.particle_log_weights())
 

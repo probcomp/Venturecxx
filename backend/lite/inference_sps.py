@@ -459,6 +459,9 @@ observations."""),
 Return the weights of all extant particles as an array of numbers (in log space).
 """), infer_action_type2(v.ArrayUnboxedType(v.NumberType())))) ],
 
+  typed_inf_sp2("set_particle_log_weights", infer_action_type([v.ArrayUnboxedType(v.NumberType())]),
+                desc="""Set the weights of the particles to the given array.  It is an error if the length of the array differs from the number of particles. """),
+
   typed_inf_sp2("load_plugin", infer_action_type([v.SymbolType("filename")], variadic=True)),
 
   macro_helper("peek", infer_action_type([v.AnyType()], variadic=True)),
