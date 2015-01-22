@@ -566,7 +566,9 @@ def _compute_inference_prelude():
     (let ((res (act t)))
       (next (rest res)))))"""],
       # return :: b -> State a b
-      ["return", """(lambda (val) (lambda (t) (pair val t)))"""]
+      ["return", """(lambda (val) (lambda (t) (pair val t)))"""],
+      ["global_likelihood", "(likelihood_at (quote default) (quote all))"],
+      ["global_posterior", "(posterior_at (quote default) (quote all))"],
   ]:
     from venture.parser.church_prime.parse import ChurchPrimeParser
     from venture.sivm.macro import desugar_expression
