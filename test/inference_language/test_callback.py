@@ -2,6 +2,7 @@ import numbers
 from nose.tools import eq_
 from pandas import DataFrame
 
+import venture.lite.value as v
 from venture.test.config import get_ripl
 from venture.engine.inference import Infer
 
@@ -48,3 +49,9 @@ def testAccumulatingCallbackSmoke():
 [assume x (normal 0 1)]
 [infer (cycle ((call_back_accum foo x (gamma 1 1))) 3)]""")
   eq_(my_callback.call_ct, 1)
+
+
+def testCallbackReturns():
+  ripl = get_ripl()
+  ripl.bind_callback("three", lambda _inferrer: v.VentureNumber(3))
+  ripl.infer("(do (x <- (call_back three)) (assert (eq 3 x)))")

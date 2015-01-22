@@ -507,6 +507,30 @@ class Trace(object):
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
 
+  def likelihood_at(self, scope, block):
+    # TODO This is a different control path from infer_exp because it
+    # needs to return the weight
+    scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
+    scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
+    (_rhoWeight,rhoDB) = detachAndExtract(self, scaffold)
+    xiWeight = regenAndAttach(self, scaffold, True, rhoDB, {})
+    # Old state restored, don't need to do anything else
+    return xiWeight
+
+  def posterior_at(self, scope, block):
+    # TODO This is a different control path from infer_exp because it
+    # needs to return the weight
+    scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
+    scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
+    pnodes = scaffold.getPrincipalNodes()
+    from infer.mh import getCurrentValues, registerDeterministicLKernels
+    currentValues = getCurrentValues(self, pnodes)
+    registerDeterministicLKernels(self, scaffold, pnodes, currentValues)
+    (_rhoWeight,rhoDB) = detachAndExtract(self, scaffold)
+    xiWeight = regenAndAttach(self, scaffold, True, rhoDB, {})
+    # Old state restored, don't need to do anything else
+    return xiWeight
+
   def likelihood_weight(self):
     # TODO This is a different control path from infer_exp because it
     # needs to return the new weight

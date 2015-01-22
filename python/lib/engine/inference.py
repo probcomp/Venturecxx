@@ -15,15 +15,14 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
-import numpy as np
 from pandas import DataFrame, Index
 from copy import copy
 
 from venture.lite.value import (ExpressionType, SymbolType, VentureArray, VentureSymbol,
-                                VentureInteger)
+                                VentureInteger, VentureValue, VentureNil)
 from venture.lite.utils import logWeightsToNormalizedDirect
 from venture.ripl.utils import strip_types_from_dict_values
-from venture.lite.exception import VentureBuiltinSPMethodError, VentureValueError
+from venture.lite.exception import VentureValueError
 from plot_spec import PlotSpec
 
 class Infer(object):
@@ -134,6 +133,12 @@ class Infer(object):
       name = self.default_name_for_exp(ExpressionType().asPython(expr))
     return name, stack_dict
 
+  def convert_none(self, item):
+    if item is None:
+      return VentureNil()
+    else:
+      return item
+
   def primitive_infer(self, exp): self.engine.primitive_infer(exp)
   def resample(self, ct): self.engine.resample(ct, 'sequential')
   def resample_serializing(self, ct): self.engine.resample(ct, 'serializing')
@@ -141,6 +146,10 @@ class Infer(object):
   def resample_thread_ser(self, ct): self.engine.resample(ct, 'thread_ser')
   def resample_multiprocess(self, ct, process_cap = None): self.engine.resample(ct, 'multiprocess', process_cap)
   def likelihood_weight(self): self.engine.trace_handler.likelihood_weight()
+  def likelihood_at(self, scope, block):
+    return self.engine.trace_handler.delegate('likelihood_at', scope.getSymbol(), block.getSymbol())
+  def posterior_at(self, scope, block):
+    return self.engine.trace_handler.delegate('posterior_at', scope.getSymbol(), block.getSymbol())
   def enumerative_diversify(self, scope, block): self.engine.diversify(["enumerative", scope, block])
   def collapse_equal(self, scope, block): self.engine.collapse(scope, block)
   def collapse_equal_map(self, scope, block): self.engine.collapse_map(scope, block)
@@ -169,7 +178,7 @@ class Infer(object):
     name = SymbolType().asPython(name)
     if name not in self.engine.callbacks:
       raise VentureValueError("Unregistered callback {}".format(name))
-    self.engine.callbacks[name](self, *[self.engine.sample_all(e.asStackDict()) for e in exprs])
+    return self.convert_none(self.engine.callbacks[name](self, *[self.engine.sample_all(e.asStackDict()) for e in exprs]))
   def call_back_accum(self, name, *exprs):
     name = SymbolType().asPython(name)
     if name not in self.engine.callbacks:
@@ -183,11 +192,18 @@ class Infer(object):
     self.engine.observe(exp.asStackDict(), val.asStackDict())
   def predict(self, exp):
     self.engine.predict(exp.asStackDict())
+  def sample(self, exp):
+    return VentureValue.fromStackDict(self.engine.sample(exp.asStackDict()))
+  def sample_all(self, exp):
+    return [VentureValue.fromStackDict(val) for val in self.engine.sample_all(exp.asStackDict())]
   def load_plugin(self, name, *args):
     self.engine.ripl.load_plugin(name, *args)
 
   def particle_log_weights(self):
     return self.engine.trace_handler.log_weights
+  def set_particle_log_weights(self, new_weights):
+    assert len(new_weights) == len(self.engine.trace_handler.log_weights)
+    self.engine.trace_handler.log_weights = new_weights
   def particle_normalized_probs(self):
     return logWeightsToNormalizedDirect(self.particle_log_weights())
 

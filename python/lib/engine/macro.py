@@ -29,6 +29,83 @@ register_macro("begin", begin_macro, """\
 - `(begin <kernel> ...)`: Perform the given kernels in sequence.
 """)
 
+def do_macro(program):
+  def bind_statement_var(statement):
+    if (type(statement) is list and len(statement) == 3 and type(statement[1]) is dict and
+        statement[1]["value"] == "<-"):
+      # Regular form
+      return statement[0]
+    if (type(statement) is list and len(statement) == 3 and type(statement[0]) is dict and
+        statement[0]["value"] == "<-"):
+      # Venturescript parser produces this
+      return statement[1]
+    # Not a bind statement
+    return None
+  if len(program) == 2:
+    # Do statement with one statement
+    return macroexpand_inference(program[1])
+  else:
+    assert len(program) > 2
+    (do, statement, rest) = (program[0], program[1], program[2:])
+    var = bind_statement_var(statement)
+    if var:
+      # Bind a variable
+      assert type(var) is dict and statement[0]["type"] is "symbol" # Only bind variables
+      rest_body = [do] + rest
+      rest_expanded = [v.sym("make_csp"), v.quote([var]),
+                       v.quote(macroexpand_inference(rest_body))]
+      return [v.sym("bind"), macroexpand_inference(statement[2]), rest_expanded]
+    else:
+      # Sequence actions
+      rest_body = [do] + rest
+      return [v.sym("bind_"), macroexpand_inference(statement), macroexpand_inference(rest_body)]
+register_macro("do", do_macro, """\
+- `(do <stmt> <stmt> ...)`: Sequence actions that may return results.
+
+  Each <stmt> except the last may either be
+
+    - a kernel, in which case it is performed and any value it returns
+      is dropped, or
+
+    - a binder of the form ``(<variable> <- <kernel>)`` in which case the
+      kernel is performed and its value is made available to the remainder
+      of the ``do`` form by being bound to the variable.
+
+  The last <stmt> may not be a binder and must be a kernel.  The whole
+  ``do`` expression is then a single compound heterogeneous kernel,
+  whose value is the value returned by the last <stmt>.
+
+  If you need a kernel that produces a value without doing anything, use
+  ``(return <value>)``.  If you need a kernel that does nothing and
+  produces no useful value, you can use ``pass``.
+
+  For example, to make a kernel that does inference until some variable
+  in the model becomes "true" (why would anyone want to do that?), you
+  can write::
+
+      1 [define my_strange_kernel (lambda ()
+      2   (do
+      3     (finish <- (sample something_from_the_model))
+      4     (if finish
+      5         pass
+      6         (do
+      7           (mh default one 1)
+      8           (my_strange_kernel)))))]
+
+  Line 3 is a binder for the ``do`` started on line 2, which makes
+  ``finish`` a variable usable by the remainder of the procedure.  The
+  ``if`` starting on line 4 is a kernel, and is the last statement of
+  the outer ``do``.  Line 7 is a non-binder statement for the inner
+  ``do``.
+
+  The nomenclature is borrowed from the (in)famous ``do`` notation of
+  Haskell.  If this helps you think about it, Venture's ``do`` is
+  exactly Haskell ``do``, except there is only one monad, which is
+  essentially ``State ModelHistory``.  Randomness and actual i/o are not
+  treated monadically, but just executed, which we can get away with
+  because Venture is strict and doesn't aspire to complete functional
+  purity.""")
+
 def cycle_macro(program):
   assert len(program) == 3
   subkernels = macroexpand_inference(program[1])
@@ -198,6 +275,9 @@ register_macro("call_back", quasiquotation_macro(2), """\
     across all extant particles.  The lists are parallel to each
     other.
 
+  Return the value returned by the callback, or Nil if the callback
+  returned None.
+
   To bind a callback, call the ``bind_callback`` method on the Ripl object::
 
       ripl.bind_callback(<name>, <callable>):
@@ -254,3 +334,27 @@ register_macro("predict", quasiquotation_macro(2, 2), """\
   variable, like the ``predict`` directive.  The given model expression
   may be constructed programmatically -- see ``unquote``.
 """)
+
+register_macro("sample", quasiquotation_macro(2, 2), """\
+- `(sample <model-expression>)`: Programmatically sample from the model.
+
+  Sample an expression from the underlying model by simulating a new
+  generative random variable without adding it to the model, like the
+  ``sample`` directive.  If there are multiple particles, refers to
+  the distinguished one.
+
+  The given model expression may be constructed programmatically --
+  see ``unquote``.  """)
+
+register_macro("sample_all", quasiquotation_macro(2, 2), """\
+- `(sample_all <model-expression>)`: Programmatically sample from the model in all particles.
+
+  Sample an expression from the underlying model by simulating a new
+  generative random variable without adding it to the model, like the
+  ``sample`` directive.
+
+  Unlike the ``sample`` directive, interacts with all the particles,
+  and returns values from all of them as a list.
+
+  The given model expression may be constructed programmatically --
+  see ``unquote``.  """)

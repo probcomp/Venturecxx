@@ -28,13 +28,16 @@ from venture.parser.church_prime import grammar
 
 '''
 grep -o -E 'K_[A-Z0-9_]+' < grammar.y | sort -u | awk '
+BEGIN {
+    q = "'\''"
+}
 {
     sub("^K_", "", $1)
-    printf("    \"%s\": grammar.K_%s,\n", tolower($1), $1)
+    printf("    %c%s%c: grammar.K_%s,\n", q, tolower($1), q, $1)
 }
 END {
-    printf("    \"true\": grammar.T_TRUE,\n");
-    printf("    \"false\": grammar.T_FALSE,\n");
+    printf("    %ctrue%c: grammar.T_TRUE,\n", q, q);
+    printf("    %cfalse%c: grammar.T_FALSE,\n", q, q);
 }'
 '''
 keywords = {                    # XXX Use a perfect hash.
@@ -53,6 +56,7 @@ keywords = {                    # XXX Use a perfect hash.
     'get_state': grammar.K_GET_STATE,
     'infer': grammar.K_INFER,
     'list_directives': grammar.K_LIST_DIRECTIVES,
+    'load': grammar.K_LOAD,
     'observe': grammar.K_OBSERVE,
     'predict': grammar.K_PREDICT,
     'profiler_clear': grammar.K_PROFILER_CLEAR,
@@ -134,7 +138,7 @@ class Scanner(Plex.Scanner):
     optsign = Plex.Opt(Plex.Any('+-'))
     name = (letter | underscore) + Plex.Rep(letter | underscore | digit)
     # < and > are angle-brackets, which fall back to operators in grammar.y.
-    operator = Plex.Str('+', '-', '*', '/', '<=', '>=', '=', '!=')
+    operator = Plex.Str('+', '-', '*', '/', '<=', '>=', '=', '!=', '<-')
     # `foo<x>' is OK, but not a name, so we don't reject it here.
     # This fails to helpfully reject 'foo<', but that's OK -- it
     # doesn't fail to accept valid syntax.

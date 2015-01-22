@@ -260,6 +260,18 @@ double PyTrace::makeConsistent()
   return trace->makeConsistent();
 }
 
+double PyTrace::likelihoodAt(boost::python::object pyscope, boost::python::object pyblock) {
+  ScopeID scope = fromPython(pyscope);
+  ScopeID block = fromPython(pyblock);
+  return trace->likelihoodAt(scope, block);
+}
+
+double PyTrace::posteriorAt(boost::python::object pyscope, boost::python::object pyblock) {
+  ScopeID scope = fromPython(pyscope);
+  ScopeID block = fromPython(pyblock);
+  return trace->posteriorAt(scope, block);
+}
+
 double PyTrace::likelihoodWeight()
 {
   return trace->likelihoodWeight();
@@ -366,6 +378,8 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("infer", &PyTrace::infer)
     .def("dot_trace", &PyTrace::dotTrace)
     .def("makeConsistent", &PyTrace::makeConsistent)
+    .def("likelihood_at", &PyTrace::likelihoodAt)
+    .def("posterior_at", &PyTrace::posteriorAt)
     .def("likelihood_weight", &PyTrace::likelihoodWeight)
     .def("numNodesInBlock", &PyTrace::numNodesInBlock)
     .def("numFamilies", &PyTrace::numFamilies)

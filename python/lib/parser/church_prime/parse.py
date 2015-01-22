@@ -66,6 +66,7 @@ operators = {
     '>=':       'gte',
     '=':        'eq',
     '!=':       'neq',
+    '<-':       '<-',
 }
 
 class Semantics(object):
@@ -180,7 +181,8 @@ class Semantics(object):
     def p_command_list_random(self, k):
         return { 'instruction': loctoken1(k, 'profiler_list_random_choices') }
     def p_command_load(self, k, pathname):
-        return { 'instruction': loctoken1(k, 'load'), 'file': pathname }
+        return { 'instruction': loctoken1(k, 'load'),
+                 'file': loctoken(pathname) }
 
     # directive_ref: Return (reftype, located value) tuple.
     def p_directive_ref_numbered(self, number):

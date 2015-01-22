@@ -123,6 +123,8 @@ struct ConcreteTrace : Trace
 
   int numUnconstrainedChoices();
 
+  double likelihoodAt(ScopeID pyscope, BlockID pyblock);
+  double posteriorAt(ScopeID pyscope, BlockID pyblock);
   double likelihoodWeight();
 
   int getSeed();
