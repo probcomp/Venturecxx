@@ -32,14 +32,14 @@ def test_timer4():
   ripl.infer('(call_back timer_start)')
   ripl.infer('(call_back timer_time)')
 
-def test_save_dataset():
+def test_dataset_to_file():
   # TODO: FIX THE PLUGIN SO WE GET THE LAST SWEEP
   ripl = get_ripl()
   ripl.assume('x', '(normal 0 1)')
   infer = '''(begin
                 (resample 2)
                 (cycle ((mh default one 1) (peek x)) 5)
-                (call_back save_dataset (quote test_dataset)))'''
+                (call_back dataset_to_file (quote test_dataset)))'''
   res = ripl.infer(infer)
   assert path.exists('test_dataset.txt')
   ds = pd.read_table('test_dataset.txt')

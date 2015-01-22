@@ -27,7 +27,7 @@ def __venture_start__(ripl):
   ripl.bind_callback('timer_time', timer.print_time)
   ripl.bind_callback('timer_pause', timer.pause)
   ripl.bind_callback('timer_resume', timer.resume)
-  ripl.bind_callback('save_dataset', save_dataset)
+  ripl.bind_callback('dataset_to_file', dataset_to_file)
 
 class Timer(object):
   'Timer object, whose methods will be used as inference callbacks.'
@@ -63,7 +63,7 @@ class Timer(object):
     self.downtime += time() - self.downtime_start
     self.downtime_start = None
 
-def save_dataset(inferrer, basename):
+def dataset_to_file(inferrer, basename):
   '''
   Save all data recorded by inferrer to file "basename" in current directory.
   The basename must be quoted.
