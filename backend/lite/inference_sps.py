@@ -4,14 +4,14 @@ import value as v
 from builtin import no_request, deterministic_typed
 
 class InferPrimitiveOutputPSP(psp.DeterministicPSP):
-  def __init__(self, name, klass, desc, tp):
-    self.name = name
+  def __init__(self, val, klass, desc, tp):
+    self.val = val
     self.klass = klass
     self.desc = desc
     self.tp = tp
   def simulate(self, args):
     return sp.VentureSPRecord(sp.SP(psp.NullRequestPSP(),
-                                    psp.TypedPSP(self.klass(self.name, args.operandValues), self.tp)))
+                                    psp.TypedPSP(self.klass(self.val, args.operandValues), self.tp)))
   def description(self, _name):
     return self.desc
 
@@ -29,6 +29,17 @@ class MadeEngineMethodInferOutputPSP(psp.LikelihoodFreePSP):
     self.desc = desc
   def simulate(self, args):
     ans = getattr(args.operandValues[0], self.name)(*self.operands)
+    return (ans, args.operandValues[0])
+  def description(self, _name):
+    return self.desc
+
+class MadeActionOutputPSP(psp.DeterministicPSP):
+  def __init__(self, f, operands, desc=None):
+    self.f = f
+    self.operands = operands
+    self.desc = desc
+  def simulate(self, args):
+    ans = self.f(*self.operands)
     return (ans, args.operandValues[0])
   def description(self, _name):
     return self.desc
@@ -51,6 +62,11 @@ def trace_method_sp(name, tp, desc=""):
 def engine_method_sp(name, tp, desc=""):
   return typed_inf_sp(name, tp, MadeEngineMethodInferOutputPSP, desc)
 
+def sequenced_sp(name, f, tp, desc=""):
+  "This is for SPs that should be able to participate in do blocks but don't actually read the state (e.g., for doing IO)"
+  # TODO Assume they are all deterministic, for now.
+  return [ name, no_request(psp.TypedPSP(InferPrimitiveOutputPSP(f, klass=MadeActionOutputPSP, desc=desc, tp=tp.return_type), tp)) ]
+
 def transition_oper_args_types(extra_args = None):
   # ExpressionType reasonably approximates the mapping I want for scope and block IDs.
   return [v.AnyType("scope : object"), v.AnyType("block : object")] + (extra_args if extra_args is not None else []) + [v.IntegerType("transitions : int")]
@@ -67,6 +83,10 @@ def macro_helper(name, tp):
 A helper function for implementing the eponymous inference macro.
 
 Calling it directly is likely to be difficult and unproductive. """)
+
+def assert_fun(test, msg=""):
+  # TODO Raise an appropriate Venture exception instead of crashing Python
+  assert test, msg
 
 inferenceSPsList = [
   trace_method_sp("mh", transition_oper_type(), desc="""\
@@ -540,7 +560,11 @@ Set the weights of the particles to the given array.  It is an error if the leng
 
   # Hackety hack hack backward compatibility
   ["ordered_range", deterministic_typed(lambda *args: (v.VentureSymbol("ordered_range"),) + args,
-                                        [v.AnyType()], v.ListType(), variadic=True)]
+                                        [v.AnyType()], v.ListType(), variadic=True)],
+
+  sequenced_sp("assert", assert_fun, infer_action_maker_type([v.BoolType(), v.SymbolType("message")], min_req_args=1), desc="""\
+Check the given boolean condition and raise an error if it fails.
+"""),
 ]
 
 inferenceKeywords = [ "default", "all", "none", "one", "ordered" ]
