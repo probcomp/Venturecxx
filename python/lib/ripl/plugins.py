@@ -68,7 +68,9 @@ def save_dataset(inferrer, basename):
   Save all data recorded by inferrer to file "basename" in current directory.
   The basename must be quoted.
   '''
+  # TODO: FIX THE PLUGIN SO WE GET THE LAST SWEEP
   ds = inferrer.result.dataset()
   basename = strip_types(basename)[0]
   ds.to_csv(basename + '.txt', sep = '\t',
             index = False, float_format = '%0.4f')
+  print 'Dataset saved to ' + basename + '.txt'

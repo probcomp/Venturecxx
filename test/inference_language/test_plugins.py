@@ -1,4 +1,5 @@
 from nose.tools import assert_raises
+from numpy.testing import assert_array_almost_equal
 from os import path
 import os
 import pandas as pd
@@ -32,11 +33,15 @@ def test_timer4():
   ripl.infer('(call_back timer_time)')
 
 def test_save_dataset():
+  # TODO: FIX THE PLUGIN SO WE GET THE LAST SWEEP
   ripl = get_ripl()
   ripl.assume('x', '(normal 0 1)')
   infer = '''(begin
+                (resample 2)
                 (cycle ((mh default one 1) (peek x)) 5)
                 (call_back save_dataset (quote test_dataset)))'''
   res = ripl.infer(infer)
-  from dw_utils.debug import set_trace; set_trace()
   assert path.exists('test_dataset.txt')
+  ds = pd.read_table('test_dataset.txt')
+  assert_array_almost_equal(res.dataset(), ds, decimal = 3)
+  os.remove('test_dataset.txt')
