@@ -455,6 +455,23 @@ but is also provided explicitly because it may be appropriate to
 invoke in the middle of complex inference programs that introduce new
 observations."""),
 
+  typed_inf_sp2("likelihood_at", infer_action_type([v.AnyType("scope : object"), v.AnyType("block : object")], return_type=v.ArrayUnboxedType(v.NumberType())),
+                desc="""Compute and return the value of the local log likelihood at the given scope and block.
+
+If there are stochastic nodes in the conditional regeneration graph,
+returns a one-sample estimate of the local likelihood.
+
+Compare posterior_at."""),
+
+  typed_inf_sp2("posterior_at", infer_action_type([v.AnyType("scope : object"), v.AnyType("block : object")], return_type=v.ArrayUnboxedType(v.NumberType())),
+                desc="""Compute and return the value of the local log posterior at the given scope and block.
+
+The principal nodes must be able to assess.  If there are stochastic
+nodes in the conditional regeneration graph, returns a one-sample
+estimate of the local posterior.
+
+Compare likelihood_at."""),
+
   [ "particle_log_weights", no_request(psp.TypedPSP(MadeEngineMethodInferOutputPSP("particle_log_weights", [], desc="""\
 Return the weights of all extant particles as an array of numbers (in log space).
 """), infer_action_type2(v.ArrayUnboxedType(v.NumberType())))) ],
