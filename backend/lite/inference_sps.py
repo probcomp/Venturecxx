@@ -69,14 +69,14 @@ A helper function for implementing the eponymous inference macro.
 Calling it directly is likely to be difficult and unproductive. """)
 
 inferenceSPsList = [
-  trace_method_sp("mh", transition_oper_type(),
-               desc="""Run a Metropolis-Hastings kernel, proposing by resimulating the prior.
+  trace_method_sp("mh", transition_oper_type(), desc="""\
+Run a Metropolis-Hastings kernel, proposing by resimulating the prior.
 
 The `transitions` argument specifies how many transitions of the chain
 to run."""),
 
-  trace_method_sp("func_mh", transition_oper_type(),
-               desc="""Like mh, but functional.
+  trace_method_sp("func_mh", transition_oper_type(), desc="""\
+Like mh, but functional.
 
 To wit, represent the proposal with a new trace (sharing common
 structure) instead of modifying the existing particle in place.
@@ -85,8 +85,8 @@ Up to log factors, there is no asymptotic difference between this and
 `mh`, but the distinction is exposed for those who know what they are
 doing."""),
 
-  trace_method_sp("gibbs", par_transition_oper_type(),
-               desc="""Run a Gibbs sampler that computes the local posterior by enumeration.
+  trace_method_sp("gibbs", par_transition_oper_type(), desc="""\
+Run a Gibbs sampler that computes the local posterior by enumeration.
 
 All the random choices identified by the scope-block pair must be
 discrete.
@@ -98,8 +98,7 @@ The `in-parallel` argument, if supplied, toggles parallel evaluation
 of the local posterior.  Parallel evaluation is only available in the
 Puma backend, and is on by default."""),
 
-  trace_method_sp("emap", par_transition_oper_type(),
-               desc="""\
+  trace_method_sp("emap", par_transition_oper_type(), desc="""\
 Deterministically move to the local posterior maximum (computed by
 enumeration).
 
@@ -114,8 +113,9 @@ The `in-parallel` argument, if supplied, toggles parallel evaluation
 of the local posterior.  Parallel evaluation is only available in
 the Puma backend, and is on by default."""),
 
-  trace_method_sp("func_pgibbs", par_transition_oper_type([v.IntegerType("particles : int")]),
-               desc="""\
+  trace_method_sp("func_pgibbs",
+                  par_transition_oper_type([v.IntegerType("particles : int")]),
+                  desc="""\
 Move to a sample of the local posterior computed by particle Gibbs.
 
 The `block` must indicate a sequential grouping of the random
@@ -131,8 +131,9 @@ The `in-parallel` argument, if supplied, toggles per-particle
 parallelism.  Parallel evaluation is only available in the Puma
 backend, and is on by default. """),
 
-  trace_method_sp("pgibbs", par_transition_oper_type([v.IntegerType("particles : int")]),
-               desc="""\
+  trace_method_sp("pgibbs",
+                  par_transition_oper_type([v.IntegerType("particles : int")]),
+                  desc="""\
 Like ``func_pgibbs`` but reuse a single trace instead of having several.
 
 The performance is asymptotically worse in the sequence length, but
@@ -141,15 +142,19 @@ clone their auxiliary state.
 
 The only reason to use this is if you know you want to. """),
 
-  trace_method_sp("func_pmap", par_transition_oper_type([v.IntegerType("particles : int")]),
-               desc="""Like func_pgibbs, but deterministically
+  trace_method_sp("func_pmap",
+                  par_transition_oper_type([v.IntegerType("particles : int")]),
+                  desc="""\
+Like func_pgibbs, but deterministically
 select the maximum-likelihood particle at the end instead of sampling.
 
 Iterated applications of func_pmap are guaranteed to grow in likelihood
 (and therefore do not converge to the posterior)."""),
 
-  trace_method_sp("meanfield", transition_oper_type([v.IntegerType("training_steps : int")]),
-               desc="""Sample from a mean-field variational approximation of the local posterior.
+  trace_method_sp("meanfield",
+                  transition_oper_type([v.IntegerType("training_steps : int")]),
+                  desc="""\
+Sample from a mean-field variational approximation of the local posterior.
 
 The mean-field approximation is optimized with gradient ascent.  The
 `training_steps` argument specifies how many steps to take.
@@ -159,17 +164,18 @@ The `transitions` argument specifies how many times to do this.
 Note: There is currently no way to save the result of training the
 variational approximation to be able to sample from it many times. """),
 
-  trace_method_sp("print_scaffold_stats", transition_oper_type(),
-               desc="""Print some statistics about the requested scaffold.
+  trace_method_sp("print_scaffold_stats", transition_oper_type(), desc="""\
+Print some statistics about the requested scaffold.
 
 This may be useful as a diagnostic.
 
 The `transitions` argument specifies how many times to do this;
 this is not redundant if the `block` argument is ``one``."""),
 
-  trace_method_sp("nesterov", transition_oper_type([v.NumberType("step_size : number"), v.IntegerType("steps : int")]),
-               desc="""Move
-deterministically toward the maximum of the local posterior by
+  trace_method_sp("nesterov",
+                  transition_oper_type([v.NumberType("step_size : number"), v.IntegerType("steps : int")]),
+                  desc="""\
+Move deterministically toward the maximum of the local posterior by
 Nesterov-accelerated gradient ascent.
 
 Not available in the Puma backend.  Not all the builtin procedures
@@ -191,9 +197,10 @@ The `transitions` argument specifies how many times to do this.
 Note: the Nesterov acceleration is applied across steps within one
 transition, not across transitions."""),
 
-  trace_method_sp("map", transition_oper_type([v.NumberType("step_size : number"), v.IntegerType("steps : int")]),
-               desc="""Move
-deterministically toward the maximum of the local posterior by
+  trace_method_sp("map",
+                  transition_oper_type([v.NumberType("step_size : number"), v.IntegerType("steps : int")]),
+                  desc="""\
+Move deterministically toward the maximum of the local posterior by
 gradient ascent.
 
 Not available in the Puma backend.  Not all the builtin procedures
@@ -202,8 +209,10 @@ support all the gradient information necessary for this.
 This is just like ``nesterov``, except without the Nesterov
 correction. """),
 
-  trace_method_sp("hmc", transition_oper_type([v.NumberType("step_size : number"), v.IntegerType("steps : int")]),
-               desc="""Run a Hamiltonian Monte Carlo transition kernel.
+  trace_method_sp("hmc",
+                  transition_oper_type([v.NumberType("step_size : number"), v.IntegerType("steps : int")]),
+                  desc="""\
+Run a Hamiltonian Monte Carlo transition kernel.
 
 Not available in the Puma backend.  Not all the builtin procedures
 support all the gradient information necessary for this.
@@ -220,9 +229,8 @@ trajectory.
 
 The `transitions` argument specifies how many times to do this."""),
 
-  trace_method_sp("rejection", transition_oper_type(min_req_args=2),
-               desc="""Sample from the local
-posterior by rejection sampling.
+  trace_method_sp("rejection", transition_oper_type(min_req_args=2), desc="""\
+Sample from the local posterior by rejection sampling.
 
 Not available in the Puma backend.  Not all the builtin procedures
 support all the density bound information necessary for this.
@@ -231,9 +239,8 @@ The `transitions` argument specifies how many times to do this.
 Specifying more than 1 transition is redundant if the `block` is
 anything other than ``one``. """),
 
-  trace_method_sp("bogo_possibilize", transition_oper_type(min_req_args=2),
-               desc="""Initialize the local inference problem
-to a possible state.
+  trace_method_sp("bogo_possibilize", transition_oper_type(min_req_args=2), desc="""\
+Initialize the local inference problem to a possible state.
 
 If the current local likelihood is 0, resimulate the local prior until
 a non-zero likelihood state is found.
@@ -257,8 +264,10 @@ The `transitions` argument specifies how many times to do this.
 Specifying more than 1 transition is redundant if the `block` is
 anything other than ``one``. """),
 
-  trace_method_sp("slice", transition_oper_type([v.NumberType("w : number"), v.IntegerType("m : int")]),
-               desc="""Slice sample from the local posterior of the selected random choice.
+  trace_method_sp("slice",
+                  transition_oper_type([v.NumberType("w : number"), v.IntegerType("m : int")]),
+                  desc="""\
+Slice sample from the local posterior of the selected random choice.
 
 The scope-block pair must identify a single random choice, which
 must be continuous and one-dimensional.
@@ -270,8 +279,10 @@ way.
 The `transitions` argument specifies how many transitions of the chain
 to run."""),
 
-  trace_method_sp("slice_doubling", transition_oper_type([v.NumberType("w : number"), v.IntegerType("p : int")]),
-               desc="""Slice sample from the local posterior of the selected random choice.
+  trace_method_sp("slice_doubling",
+                  transition_oper_type([v.NumberType("w : number"), v.IntegerType("p : int")]),
+                  desc="""\
+Slice sample from the local posterior of the selected random choice.
 
 The scope-block pair must identify a single random choice, which
 must be continuous and one-dimensional.
@@ -283,8 +294,10 @@ standard way.
 The `transitions` argument specifies how many transitions of the chain
 to run."""),
 
-  engine_method_sp("resample", infer_action_maker_type([v.IntegerType("particles : int")]),
-                desc="""Perform an SMC-style resampling step.
+  engine_method_sp("resample",
+                   infer_action_maker_type([v.IntegerType("particles : int")]),
+                   desc="""\
+Perform an SMC-style resampling step.
 
 The `particles` argument gives the number of particles to make.
 Subsequent modeling and inference commands will be applied to each
@@ -299,8 +312,9 @@ weights.
 The new particles will be handled in series.  See the next procedures
 for alternatives."""),
 
-  engine_method_sp("resample_multiprocess", infer_action_maker_type([v.IntegerType("particles : int"), v.IntegerType("max_processes : int")], min_req_args=1),
-                desc="""\
+  engine_method_sp("resample_multiprocess",
+                   infer_action_maker_type([v.IntegerType("particles : int"), v.IntegerType("max_processes : int")], min_req_args=1),
+                   desc="""\
 Like ``resample``, but fork multiple OS processes to simulate the
 resulting particles in parallel.
 
@@ -315,15 +329,18 @@ transmitting.  ``resample_multiprocess`` is therefore not a drop-in
 replacement for ``resample``, as the former will handle internal
 states that cannot be serialized, whereas the latter will not.  """),
 
-  engine_method_sp("resample_serializing", infer_action_maker_type([v.IntegerType("particles : int")]),
-                desc="""\
+  engine_method_sp("resample_serializing",
+                   infer_action_maker_type([v.IntegerType("particles : int")]),
+                   desc="""\
 Like ``resample``, but performs serialization the same way ``resample_multiprocess`` does.
 
 Use this to debug serialization problems without messing with actually
 spawning multiple processes.  """),
 
-  engine_method_sp("resample_threaded", infer_action_maker_type([v.IntegerType("particles : int")]),
-                desc="""Like ``resample_multiprocess`` but uses threads rather than actual processes, and does not serialize, transmitting objects in shared memory instead.
+  engine_method_sp("resample_threaded",
+                   infer_action_maker_type([v.IntegerType("particles : int")]),
+                   desc="""\
+Like ``resample_multiprocess`` but uses threads rather than actual processes, and does not serialize, transmitting objects in shared memory instead.
 
 Python's global interpreter lock is likely to prevent any speed gains
 this might have produced.
@@ -332,8 +349,10 @@ Might be useful for debugging concurrency problems without messing
 with serialization and multiprocessing, but we expect such problems to
 be rare. """),
 
-  engine_method_sp("resample_thread_ser", infer_action_maker_type([v.IntegerType("particles : int")]),
-                desc="""Like ``resample_threaded``, but serializes the same way ``resample_multiprocess`` does.
+  engine_method_sp("resample_thread_ser",
+                   infer_action_maker_type([v.IntegerType("particles : int")]),
+                   desc="""\
+Like ``resample_threaded``, but serializes the same way ``resample_multiprocess`` does.
 
 Python's global interpreter lock is likely to prevent any speed gains
 this might have produced.
@@ -342,14 +361,16 @@ Might be useful for debugging concurrency+serialization problems
 without messing with actual multiprocessing, but then one is messing
 with multithreading."""),
 
-  engine_method_sp("likelihood_weight", infer_action_maker_type([]),
-                desc="""Likelihood-weight the full particle set.
+  engine_method_sp("likelihood_weight", infer_action_maker_type([]), desc="""\
+Likelihood-weight the full particle set.
 
 Resample all particles in the current set from the prior and reset
 their weights to the likelihood."""),
 
-  engine_method_sp("enumerative_diversify", infer_action_maker_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")]),
-                desc="""Diversify the current particle set to represent the local posterior exactly.
+  engine_method_sp("enumerative_diversify",
+                   infer_action_maker_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")]),
+                   desc="""\
+Diversify the current particle set to represent the local posterior exactly.
 
 Specifically:
 
@@ -368,8 +389,10 @@ This is useful together with ``collapse_equal`` and
 ``collapse_equal_map`` for implementing certain kinds of dynamic
 programs in Venture. """),
 
-  engine_method_sp("collapse_equal", infer_action_maker_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")]),
-                desc="""Collapse the current particle set to represent the local posterior less redundantly.
+  engine_method_sp("collapse_equal",
+                   infer_action_maker_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")]),
+                   desc="""\
+Collapse the current particle set to represent the local posterior less redundantly.
 
 Specifically:
 
@@ -389,20 +412,24 @@ values).
 This is useful together with ``enumerative_diversify`` for
 implementing certain kinds of dynamic programs in Venture. """),
 
-  engine_method_sp("collapse_equal_map", infer_action_maker_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")]),
-                desc="""Like ``collapse_equal`` but deterministically retain the max-weight particle.
+  engine_method_sp("collapse_equal_map",
+                   infer_action_maker_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")]),
+                   desc="""\
+Like ``collapse_equal`` but deterministically retain the max-weight particle.
 
 And leave its weight unaltered, instead of adding in the weights of
 all the other particles in the bin. """),
 
-  trace_method_sp("draw_scaffold", transition_oper_type(),
-               desc="""Draw a visual representation of the scaffold indicated by the given scope and block.
+  trace_method_sp("draw_scaffold", transition_oper_type(), desc="""\
+Draw a visual representation of the scaffold indicated by the given scope and block.
 
 This is useful for debugging.  You probably do not want to specify more than 1 transition."""),
 
-  trace_method_sp("subsampled_mh", transition_oper_type([v.IntegerType("Nbatch : int"), v.IntegerType("k0 : int"), v.NumberType("epsilon : number"),
-                                                      v.BoolType("useDeltaKernels : bool"), v.NumberType("deltaKernelArgs : number"), v.BoolType("updateValues : bool")]),
-               desc="""Run a subsampled Metropolis-Hastings kernel
+  trace_method_sp("subsampled_mh",
+                  transition_oper_type([v.IntegerType("Nbatch : int"), v.IntegerType("k0 : int"), v.NumberType("epsilon : number"),
+                                        v.BoolType("useDeltaKernels : bool"), v.NumberType("deltaKernelArgs : number"), v.BoolType("updateValues : bool")]),
+                  desc="""\
+Run a subsampled Metropolis-Hastings kernel
 
 per the Austerity MCMC paper.
 
@@ -412,8 +439,8 @@ Note: the resulting execution history may not actually be possible, so
 may confuse other transition kernels.  See ``subsampled_mh_make_consistent``
 and ``*_update``.  """),
 
-  trace_method_sp("subsampled_mh_check_applicability", transition_oper_type(),
-               desc="""Raise a warning if the given scope and block obviously do not admit subsampled MH
+  trace_method_sp("subsampled_mh_check_applicability", transition_oper_type(), desc="""\
+Raise a warning if the given scope and block obviously do not admit subsampled MH
 
 From the source::
 
@@ -431,20 +458,26 @@ From the source::
 
 """),
 
-  trace_method_sp("subsampled_mh_make_consistent", transition_oper_type([v.BoolType("useDeltaKernels : bool"), v.NumberType("deltaKernelArgs : number"), v.BoolType("updateValues : bool")]),
-               desc="""Fix inconsistencies introduced by subsampled MH."""),
+  trace_method_sp("subsampled_mh_make_consistent",
+                  transition_oper_type([v.BoolType("useDeltaKernels : bool"), v.NumberType("deltaKernelArgs : number"), v.BoolType("updateValues : bool")]),
+                  desc="""\
+Fix inconsistencies introduced by subsampled MH."""),
 
-  trace_method_sp("mh_kernel_update", transition_oper_type([v.BoolType("useDeltaKernels : bool"), v.NumberType("deltaKernelArgs : number"), v.BoolType("updateValues : bool")]),
-               desc="""Run a normal ``mh`` kernel, tolerating inconsistencies introduced by previous subsampled MH."""),
+  trace_method_sp("mh_kernel_update",
+                  transition_oper_type([v.BoolType("useDeltaKernels : bool"), v.NumberType("deltaKernelArgs : number"), v.BoolType("updateValues : bool")]),
+                  desc="""\
+Run a normal ``mh`` kernel, tolerating inconsistencies introduced by previous subsampled MH."""),
 
-  trace_method_sp("gibbs_update", par_transition_oper_type(),
-               desc="""Run a normal ``gibbs`` kernel, tolerating inconsistencies introduced by previous subsampled MH. """),
+  trace_method_sp("gibbs_update", par_transition_oper_type(), desc="""\
+Run a normal ``gibbs`` kernel, tolerating inconsistencies introduced by previous subsampled MH. """),
 
-  trace_method_sp("pgibbs_update", par_transition_oper_type([v.IntegerType("particles : int")]),
-               desc="""Run a normal ``pgibbs`` kernel, tolerating inconsistencies introduced by previous subsampled MH."""),
+  trace_method_sp("pgibbs_update",
+                  par_transition_oper_type([v.IntegerType("particles : int")]),
+                  desc="""\
+Run a normal ``pgibbs`` kernel, tolerating inconsistencies introduced by previous subsampled MH."""),
 
-  engine_method_sp("incorporate", infer_action_maker_type([]),
-                desc="""Make the history consistent with observations.
+  engine_method_sp("incorporate", infer_action_maker_type([]), desc="""\
+Make the history consistent with observations.
 
 Specifically, modify the execution history so that the values of
 variables that have been observed since the last ``incorporate`` match
@@ -457,16 +490,20 @@ but is also provided explicitly because it may be appropriate to
 invoke in the middle of complex inference programs that introduce new
 observations."""),
 
-  engine_method_sp("likelihood_at", infer_action_maker_type([v.AnyType("scope : object"), v.AnyType("block : object")], return_type=v.ArrayUnboxedType(v.NumberType())),
-                desc="""Compute and return the value of the local log likelihood at the given scope and block.
+  engine_method_sp("likelihood_at",
+                   infer_action_maker_type([v.AnyType("scope : object"), v.AnyType("block : object")], return_type=v.ArrayUnboxedType(v.NumberType())),
+                   desc="""\
+Compute and return the value of the local log likelihood at the given scope and block.
 
 If there are stochastic nodes in the conditional regeneration graph,
 returns a one-sample estimate of the local likelihood.
 
 Compare posterior_at."""),
 
-  engine_method_sp("posterior_at", infer_action_maker_type([v.AnyType("scope : object"), v.AnyType("block : object")], return_type=v.ArrayUnboxedType(v.NumberType())),
-                desc="""Compute and return the value of the local log posterior at the given scope and block.
+  engine_method_sp("posterior_at",
+                   infer_action_maker_type([v.AnyType("scope : object"), v.AnyType("block : object")], return_type=v.ArrayUnboxedType(v.NumberType())),
+                   desc="""\
+Compute and return the value of the local log posterior at the given scope and block.
 
 The principal nodes must be able to assess.  If there are stochastic
 nodes in the conditional regeneration graph, returns a one-sample
@@ -478,8 +515,10 @@ Compare likelihood_at."""),
 Return the weights of all extant particles as an array of numbers (in log space).
 """), infer_action_type(v.ArrayUnboxedType(v.NumberType())))) ],
 
-  engine_method_sp("set_particle_log_weights", infer_action_maker_type([v.ArrayUnboxedType(v.NumberType())]),
-                desc="""Set the weights of the particles to the given array.  It is an error if the length of the array differs from the number of particles. """),
+  engine_method_sp("set_particle_log_weights",
+                   infer_action_maker_type([v.ArrayUnboxedType(v.NumberType())]),
+                   desc="""\
+Set the weights of the particles to the given array.  It is an error if the length of the array differs from the number of particles. """),
 
   engine_method_sp("load_plugin", infer_action_maker_type([v.SymbolType("filename")], variadic=True)),
 
