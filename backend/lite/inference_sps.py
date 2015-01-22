@@ -33,15 +33,14 @@ class MadeEngineMethodInferOutputPSP(psp.LikelihoodFreePSP):
   def description(self, _name):
     return self.desc
 
-def infer_action_type2(return_type):
+def infer_action_type(return_type):
   return sp.SPType([v.ForeignBlobType()], v.PairType(return_type, v.ForeignBlobType()))
 
-def infer_action_type(args_types, return_type=None, **kwargs):
+def infer_action_maker_type(args_types, return_type=None, **kwargs):
   # Represent the underlying trace as a ForeignBlob for now.
-  # TODO Rename to infer_action_maker_type
   if return_type is None:
     return_type = v.NilType()
-  return sp.SPType(args_types, infer_action_type2(return_type), **kwargs)
+  return sp.SPType(args_types, infer_action_type(return_type), **kwargs)
 
 def typed_inf_sp(name, tp, klass=MadeInferPrimitiveOutputPSP, desc=""):
   return [ name, no_request(psp.TypedPSP(InferPrimitiveOutputPSP(name, klass=klass, desc=desc, tp=tp.return_type), tp)) ]
@@ -54,11 +53,11 @@ def transition_oper_args_types(extra_args = None):
   return [v.AnyType("scope : object"), v.AnyType("block : object")] + (extra_args if extra_args is not None else []) + [v.IntegerType("transitions : int")]
 
 def transition_oper_type(extra_args = None, **kwargs):
-  return infer_action_type(transition_oper_args_types(extra_args), **kwargs)
+  return infer_action_maker_type(transition_oper_args_types(extra_args), **kwargs)
 
 def par_transition_oper_type(extra_args = None, **kwargs):
   other_args = transition_oper_args_types(extra_args)
-  return infer_action_type(other_args + [v.BoolType("in_parallel : bool")], min_req_args=len(other_args), **kwargs)
+  return infer_action_maker_type(other_args + [v.BoolType("in_parallel : bool")], min_req_args=len(other_args), **kwargs)
 
 def macro_helper(name, tp):
   return typed_inf_sp2(name, tp, desc="""\
@@ -281,7 +280,7 @@ standard way.
 The `transitions` argument specifies how many transitions of the chain
 to run."""),
 
-  typed_inf_sp2("resample", infer_action_type([v.IntegerType("particles : int")]),
+  typed_inf_sp2("resample", infer_action_maker_type([v.IntegerType("particles : int")]),
                 desc="""Perform an SMC-style resampling step.
 
 The `particles` argument gives the number of particles to make.
@@ -297,7 +296,7 @@ weights.
 The new particles will be handled in series.  See the next procedures
 for alternatives."""),
 
-  typed_inf_sp2("resample_multiprocess", infer_action_type([v.IntegerType("particles : int"), v.IntegerType("max_processes : int")], min_req_args=1),
+  typed_inf_sp2("resample_multiprocess", infer_action_maker_type([v.IntegerType("particles : int"), v.IntegerType("max_processes : int")], min_req_args=1),
                 desc="""\
 Like ``resample``, but fork multiple OS processes to simulate the
 resulting particles in parallel.
@@ -313,14 +312,14 @@ transmitting.  ``resample_multiprocess`` is therefore not a drop-in
 replacement for ``resample``, as the former will handle internal
 states that cannot be serialized, whereas the latter will not.  """),
 
-  typed_inf_sp2("resample_serializing", infer_action_type([v.IntegerType("particles : int")]),
+  typed_inf_sp2("resample_serializing", infer_action_maker_type([v.IntegerType("particles : int")]),
                 desc="""\
 Like ``resample``, but performs serialization the same way ``resample_multiprocess`` does.
 
 Use this to debug serialization problems without messing with actually
 spawning multiple processes.  """),
 
-  typed_inf_sp2("resample_threaded", infer_action_type([v.IntegerType("particles : int")]),
+  typed_inf_sp2("resample_threaded", infer_action_maker_type([v.IntegerType("particles : int")]),
                 desc="""Like ``resample_multiprocess`` but uses threads rather than actual processes, and does not serialize, transmitting objects in shared memory instead.
 
 Python's global interpreter lock is likely to prevent any speed gains
@@ -330,7 +329,7 @@ Might be useful for debugging concurrency problems without messing
 with serialization and multiprocessing, but we expect such problems to
 be rare. """),
 
-  typed_inf_sp2("resample_thread_ser", infer_action_type([v.IntegerType("particles : int")]),
+  typed_inf_sp2("resample_thread_ser", infer_action_maker_type([v.IntegerType("particles : int")]),
                 desc="""Like ``resample_threaded``, but serializes the same way ``resample_multiprocess`` does.
 
 Python's global interpreter lock is likely to prevent any speed gains
@@ -340,13 +339,13 @@ Might be useful for debugging concurrency+serialization problems
 without messing with actual multiprocessing, but then one is messing
 with multithreading."""),
 
-  typed_inf_sp2("likelihood_weight", infer_action_type([]),
+  typed_inf_sp2("likelihood_weight", infer_action_maker_type([]),
                 desc="""Likelihood-weight the full particle set.
 
 Resample all particles in the current set from the prior and reset
 their weights to the likelihood."""),
 
-  typed_inf_sp2("enumerative_diversify", infer_action_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")]),
+  typed_inf_sp2("enumerative_diversify", infer_action_maker_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")]),
                 desc="""Diversify the current particle set to represent the local posterior exactly.
 
 Specifically:
@@ -366,7 +365,7 @@ This is useful together with ``collapse_equal`` and
 ``collapse_equal_map`` for implementing certain kinds of dynamic
 programs in Venture. """),
 
-  typed_inf_sp2("collapse_equal", infer_action_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")]),
+  typed_inf_sp2("collapse_equal", infer_action_maker_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")]),
                 desc="""Collapse the current particle set to represent the local posterior less redundantly.
 
 Specifically:
@@ -387,7 +386,7 @@ values).
 This is useful together with ``enumerative_diversify`` for
 implementing certain kinds of dynamic programs in Venture. """),
 
-  typed_inf_sp2("collapse_equal_map", infer_action_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")]),
+  typed_inf_sp2("collapse_equal_map", infer_action_maker_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")]),
                 desc="""Like ``collapse_equal`` but deterministically retain the max-weight particle.
 
 And leave its weight unaltered, instead of adding in the weights of
@@ -441,7 +440,7 @@ From the source::
   typed_inf_sp("pgibbs_update", par_transition_oper_type([v.IntegerType("particles : int")]),
                desc="""Run a normal ``pgibbs`` kernel, tolerating inconsistencies introduced by previous subsampled MH."""),
 
-  typed_inf_sp2("incorporate", infer_action_type([]),
+  typed_inf_sp2("incorporate", infer_action_maker_type([]),
                 desc="""Make the history consistent with observations.
 
 Specifically, modify the execution history so that the values of
@@ -455,7 +454,7 @@ but is also provided explicitly because it may be appropriate to
 invoke in the middle of complex inference programs that introduce new
 observations."""),
 
-  typed_inf_sp2("likelihood_at", infer_action_type([v.AnyType("scope : object"), v.AnyType("block : object")], return_type=v.ArrayUnboxedType(v.NumberType())),
+  typed_inf_sp2("likelihood_at", infer_action_maker_type([v.AnyType("scope : object"), v.AnyType("block : object")], return_type=v.ArrayUnboxedType(v.NumberType())),
                 desc="""Compute and return the value of the local log likelihood at the given scope and block.
 
 If there are stochastic nodes in the conditional regeneration graph,
@@ -463,7 +462,7 @@ returns a one-sample estimate of the local likelihood.
 
 Compare posterior_at."""),
 
-  typed_inf_sp2("posterior_at", infer_action_type([v.AnyType("scope : object"), v.AnyType("block : object")], return_type=v.ArrayUnboxedType(v.NumberType())),
+  typed_inf_sp2("posterior_at", infer_action_maker_type([v.AnyType("scope : object"), v.AnyType("block : object")], return_type=v.ArrayUnboxedType(v.NumberType())),
                 desc="""Compute and return the value of the local log posterior at the given scope and block.
 
 The principal nodes must be able to assess.  If there are stochastic
@@ -474,24 +473,24 @@ Compare likelihood_at."""),
 
   [ "particle_log_weights", no_request(psp.TypedPSP(MadeEngineMethodInferOutputPSP("particle_log_weights", [], desc="""\
 Return the weights of all extant particles as an array of numbers (in log space).
-"""), infer_action_type2(v.ArrayUnboxedType(v.NumberType())))) ],
+"""), infer_action_type(v.ArrayUnboxedType(v.NumberType())))) ],
 
-  typed_inf_sp2("set_particle_log_weights", infer_action_type([v.ArrayUnboxedType(v.NumberType())]),
+  typed_inf_sp2("set_particle_log_weights", infer_action_maker_type([v.ArrayUnboxedType(v.NumberType())]),
                 desc="""Set the weights of the particles to the given array.  It is an error if the length of the array differs from the number of particles. """),
 
-  typed_inf_sp2("load_plugin", infer_action_type([v.SymbolType("filename")], variadic=True)),
+  typed_inf_sp2("load_plugin", infer_action_maker_type([v.SymbolType("filename")], variadic=True)),
 
-  macro_helper("peek", infer_action_type([v.AnyType()], variadic=True)),
-  macro_helper("plotf", infer_action_type([v.AnyType()], variadic=True)),
-  macro_helper("plotf_to_file", infer_action_type([v.AnyType()], variadic=True)),
-  macro_helper("printf", infer_action_type([v.AnyType()], variadic=True)),
-  macro_helper("call_back", infer_action_type([v.AnyType()], variadic=True)),
-  macro_helper("call_back_accum", infer_action_type([v.AnyType()], variadic=True)),
-  macro_helper("assume", infer_action_type([v.AnyType("<symbol>"), v.AnyType("<expression>")])),
-  macro_helper("observe", infer_action_type([v.AnyType("<expression>"), v.AnyType()])),
-  macro_helper("predict", infer_action_type([v.AnyType("<expression>")])),
-  macro_helper("sample", infer_action_type([v.AnyType("<expression>")], return_type=v.AnyType())),
-  macro_helper("sample_all", infer_action_type([v.AnyType("<expression>")], return_type=v.ListType())),
+  macro_helper("peek", infer_action_maker_type([v.AnyType()], variadic=True)),
+  macro_helper("plotf", infer_action_maker_type([v.AnyType()], variadic=True)),
+  macro_helper("plotf_to_file", infer_action_maker_type([v.AnyType()], variadic=True)),
+  macro_helper("printf", infer_action_maker_type([v.AnyType()], variadic=True)),
+  macro_helper("call_back", infer_action_maker_type([v.AnyType()], variadic=True)),
+  macro_helper("call_back_accum", infer_action_maker_type([v.AnyType()], variadic=True)),
+  macro_helper("assume", infer_action_maker_type([v.AnyType("<symbol>"), v.AnyType("<expression>")])),
+  macro_helper("observe", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType()])),
+  macro_helper("predict", infer_action_maker_type([v.AnyType("<expression>")])),
+  macro_helper("sample", infer_action_maker_type([v.AnyType("<expression>")], return_type=v.AnyType())),
+  macro_helper("sample_all", infer_action_maker_type([v.AnyType("<expression>")], return_type=v.ListType())),
 
   # Hackety hack hack backward compatibility
   ["ordered_range", deterministic_typed(lambda *args: (v.VentureSymbol("ordered_range"),) + args,
