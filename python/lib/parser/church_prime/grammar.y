@@ -69,7 +69,7 @@ directive(assume)	::= K_ASSUME(k) L_NAME(n) expression(e).
 directive(observe)	::= K_OBSERVE(k) expression(e) literal(v).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
-command(load)		::= K_LOAD(k) json(pathname).
+command(load)		::= K_LOAD(k) L_STRING(pathname).
 command(configure)	::= K_CONFIGURE(k) json(options).
 command(forget)		::= K_FORGET(k) directive_ref(dr).
 command(report)		::= K_REPORT(k) directive_ref(dr).
