@@ -508,6 +508,8 @@ class Trace(object):
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
 
   def likelihood_at(self, scope, block):
+    # TODO This is a different control path from infer_exp because it
+    # needs to return the weight
     scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
     scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
     (_rhoWeight,rhoDB) = detachAndExtract(self, scaffold)
@@ -516,6 +518,8 @@ class Trace(object):
     return xiWeight
 
   def posterior_at(self, scope, block):
+    # TODO This is a different control path from infer_exp because it
+    # needs to return the weight
     scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
     scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
     pnodes = scaffold.getPrincipalNodes()
