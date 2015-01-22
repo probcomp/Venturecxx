@@ -6,6 +6,14 @@ if [[ -z $1 ]]; then
 Print changes to files that have significant impact on the reference
 manual since the specified commit.
 
+A good commit to choose might be the one that occurred on the date
+of the last update to the online edition of the reference manual,
+which can be ascertained by invoking
+
+  ls -l /afs/csail.mit.edu/proj/probcomp/www/data/venture/edge/reference/
+
+at any CSAIL machine.
+
 Must be invoked from the root of the Venture checkout."
     exit 1
 fi
