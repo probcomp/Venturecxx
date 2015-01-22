@@ -88,6 +88,9 @@ def assert_fun(test, msg=""):
   # TODO Raise an appropriate Venture exception instead of crashing Python
   assert test, msg
 
+def print_fun(*args):
+  print args
+
 inferenceSPsList = [
   trace_method_sp("mh", transition_oper_type(), desc="""\
 Run a Metropolis-Hastings kernel, proposing by resimulating the prior.
@@ -564,6 +567,10 @@ Set the weights of the particles to the given array.  It is an error if the leng
 
   sequenced_sp("assert", assert_fun, infer_action_maker_type([v.BoolType(), v.SymbolType("message")], min_req_args=1), desc="""\
 Check the given boolean condition and raise an error if it fails.
+"""),
+
+  sequenced_sp("print", print_fun, infer_action_maker_type([v.AnyType()], variadic=True), desc="""\
+Print the given values to the terminal.
 """),
 ]
 
