@@ -14,10 +14,21 @@ function called ``__venture_start__``.
 - To load a plugin when using Venture as a Python library,
   call ``ripl.load_plugin(filename)``.
 
-Either will load the plugin in the given file, and call its
+- To load a plugin from a Venture inference program, use the
+  ``load_plugin`` action (which see).
+
+Any of these will load the plugin in the given file, and call its
 ``__venture_start__`` function with one argument, namely the Ripl
 object representing the current Venture session.
 The plugin is then free to invoke what methods it will on that Ripl.
+
+If extra arguments are passed to either the ripl method
+``load_plugin`` or the inference action ``load_plugin``, those will be
+forwarded to the plugin's ``__venture_start`` function.  If
+``__venture_start`` returns a value, that value will be returned by
+``load_plugin``.  There is currently no way to pass arguments to a
+plugin loaded from the command line, nor to capture any value that it
+might return.
 
 Useful ripl methods to call from a plugin's ``__venture_start__``:
 
@@ -32,7 +43,3 @@ Useful ripl methods to call from a plugin's ``__venture_start__``:
 - ``bind_foreign_inference_sp(name, SP)`` to bind a foreign stochastic
   procedure for the inference language
   TODO: Document the stochastic inference procedure interface in this reference manual
-
-After the ``__venture_start__`` function returns, initialization and
-execution will continue (or, in the ``ripl.load_plugin`` case, the
-``load_plugin`` method will return).
