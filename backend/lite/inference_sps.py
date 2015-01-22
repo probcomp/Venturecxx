@@ -526,7 +526,7 @@ Set the weights of the particles to the given array.  It is an error if the leng
   macro_helper("plotf", infer_action_maker_type([v.AnyType()], variadic=True)),
   macro_helper("plotf_to_file", infer_action_maker_type([v.AnyType()], variadic=True)),
   macro_helper("printf", infer_action_maker_type([v.AnyType()], variadic=True)),
-  macro_helper("call_back", infer_action_maker_type([v.AnyType()], variadic=True)),
+  macro_helper("call_back", infer_action_maker_type([v.AnyType()], return_type=v.AnyType(), variadic=True)),
   macro_helper("call_back_accum", infer_action_maker_type([v.AnyType()], variadic=True)),
   macro_helper("assume", infer_action_maker_type([v.AnyType("<symbol>"), v.AnyType("<expression>")])),
   macro_helper("observe", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType()])),

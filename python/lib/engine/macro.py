@@ -275,6 +275,9 @@ register_macro("call_back", quasiquotation_macro(2), """\
     across all extant particles.  The lists are parallel to each
     other.
 
+  Return the value returned by the callback, or Nil if the callback
+  returned None.
+
   To bind a callback, call the ``bind_callback`` method on the Ripl object::
 
       ripl.bind_callback(<name>, <callable>):

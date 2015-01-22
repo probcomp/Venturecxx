@@ -18,7 +18,7 @@ import time
 from pandas import DataFrame, Index
 
 from venture.lite.value import (ExpressionType, SymbolType, VentureArray, VentureSymbol,
-                                VentureInteger, VentureValue)
+                                VentureInteger, VentureValue, VentureNil)
 from venture.lite.utils import logWeightsToNormalizedDirect
 from venture.ripl.utils import strip_types_from_dict_values
 from venture.lite.exception import VentureValueError
@@ -132,6 +132,12 @@ class Infer(object):
       name = self.default_name_for_exp(ExpressionType().asPython(expr))
     return name, stack_dict
 
+  def convert_none(self, item):
+    if item is None:
+      return VentureNil()
+    else:
+      return item
+
   def primitive_infer(self, exp): self.engine.primitive_infer(exp)
   def resample(self, ct): self.engine.resample(ct, 'sequential')
   def resample_serializing(self, ct): self.engine.resample(ct, 'serializing')
@@ -171,7 +177,7 @@ class Infer(object):
     name = SymbolType().asPython(name)
     if name not in self.engine.callbacks:
       raise VentureValueError("Unregistered callback {}".format(name))
-    self.engine.callbacks[name](self, *[self.engine.sample_all(e.asStackDict()) for e in exprs])
+    return self.convert_none(self.engine.callbacks[name](self, *[self.engine.sample_all(e.asStackDict()) for e in exprs]))
   def call_back_accum(self, name, *exprs):
     name = SymbolType().asPython(name)
     if name not in self.engine.callbacks:
