@@ -568,7 +568,7 @@ def _compute_inference_prelude():
       # return :: b -> State a b
       ["return", """(lambda (val) (lambda (t) (pair val t)))"""]
   ]:
-    from venture.parser.church_prime_parser import ChurchPrimeParser
+    from venture.parser.church_prime.parse import ChurchPrimeParser
     from venture.sivm.macro import desugar_expression
     from venture.sivm.core_sivm import _modify_expression
     exp = _modify_expression(desugar_expression(ChurchPrimeParser.instance().parse_expression(form)))
