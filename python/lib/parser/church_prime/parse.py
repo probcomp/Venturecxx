@@ -66,6 +66,7 @@ operators = {
     '>=':       'gte',
     '=':        'eq',
     '!=':       'neq',
+    '<-':       '<-',
 }
 
 class Semantics(object):

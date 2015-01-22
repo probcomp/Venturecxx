@@ -6,7 +6,7 @@ def testMonadicSmoke():
 [define foo
   (lambda ()
     (do
-      (x symbol<"<-"> (sample (flip)))
+      (x <- (sample (flip)))
       (if x
           (assume y true)
           (assume y false))))]

@@ -138,7 +138,7 @@ class Scanner(Plex.Scanner):
     optsign = Plex.Opt(Plex.Any('+-'))
     name = (letter | underscore) + Plex.Rep(letter | underscore | digit)
     # < and > are angle-brackets, which fall back to operators in grammar.y.
-    operator = Plex.Str('+', '-', '*', '/', '<=', '>=', '=', '!=')
+    operator = Plex.Str('+', '-', '*', '/', '<=', '>=', '=', '!=', '<-')
     # `foo<x>' is OK, but not a name, so we don't reject it here.
     # This fails to helpfully reject 'foo<', but that's OK -- it
     # doesn't fail to accept valid syntax.
