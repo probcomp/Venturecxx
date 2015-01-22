@@ -23,19 +23,25 @@ class MadeInferPrimitiveOutputPSP(psp.LikelihoodFreePSP):
     return (ans, args.operandValues[0])
 
 class MadeEngineMethodInferOutputPSP(psp.LikelihoodFreePSP):
-  def __init__(self, name, operands):
+  def __init__(self, name, operands, desc=None):
     self.name = name
     self.operands = operands
+    self.desc = desc
   def simulate(self, args):
     ans = getattr(args.operandValues[0], self.name)(*self.operands)
     return (ans, args.operandValues[0])
+  def description(self, _name):
+    return self.desc
+
+def infer_action_type2(return_type):
+  return sp.SPType([v.ForeignBlobType()], v.PairType(return_type, v.ForeignBlobType()))
 
 def infer_action_type(args_types, return_type=None, **kwargs):
   # Represent the underlying trace as a ForeignBlob for now.
-  # TODO Take a type to use to convert the return value
+  # TODO Rename to infer_action_maker_type
   if return_type is None:
     return_type = v.NilType()
-  return sp.SPType(args_types, sp.SPType([v.ForeignBlobType()], v.PairType(return_type, v.ForeignBlobType())), **kwargs)
+  return sp.SPType(args_types, infer_action_type2(return_type), **kwargs)
 
 def typed_inf_sp(name, tp, klass=MadeInferPrimitiveOutputPSP, desc=""):
   return [ name, no_request(psp.TypedPSP(InferPrimitiveOutputPSP(name, klass=klass, desc=desc, tp=tp.return_type), tp)) ]
@@ -448,6 +454,10 @@ This is done automatically at the beginning of every `infer` command,
 but is also provided explicitly because it may be appropriate to
 invoke in the middle of complex inference programs that introduce new
 observations."""),
+
+  [ "particle_log_weights", no_request(psp.TypedPSP(MadeEngineMethodInferOutputPSP("particle_log_weights", [], desc="""\
+Return the weights of all extant particles as an array of numbers (in log space).
+"""), infer_action_type2(v.ArrayUnboxedType(v.NumberType())))) ],
 
   typed_inf_sp2("load_plugin", infer_action_type([v.SymbolType("filename")], variadic=True)),
 
