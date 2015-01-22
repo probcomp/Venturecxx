@@ -271,7 +271,7 @@ class VentureScriptParser(object):
                 return [toks[0]]
             #collapse possible infix identities
             exp = [_collapse_identity(toks[0], ('pow', 'add', 'sub', 'mul', 'div',
-                'eq', 'neq', 'lte', 'gte', 'gt', 'lt', 'and', 'or'))]
+                                                'eq', 'neq', 'lte', 'gte', 'gt', 'lt', 'and', 'or', '<-'))]
             for args in toks[1:]:
                 v = exp+args['value']
                 l = combine_locs(exp + [args])
@@ -288,7 +288,7 @@ class VentureScriptParser(object):
         self.exponent = _make_infix_token(
                 previous_token = self.fn_application,
                 operator_map = (('**','pow'),),
-                lower_precedence = ('add', 'sub', 'mul', 'div', 'eq', 'neq', 'lte', 'gte', 'gt', 'lt', 'and', 'or'),
+                lower_precedence = ('add', 'sub', 'mul', 'div', 'eq', 'neq', 'lte', 'gte', 'gt', 'lt', 'and', 'or', '<-'),
                 left_to_right = False,
                 swap_order = True,
                 )
@@ -301,7 +301,7 @@ class VentureScriptParser(object):
         self.mul_div = _make_infix_token(
                 previous_token = self.exponent,
                 operator_map = (('*','mul'),('/','div')),
-                lower_precedence = ('add', 'sub', 'eq', 'neq', 'lte', 'gte', 'gt', 'lt', 'and', 'or'),
+                lower_precedence = ('add', 'sub', 'eq', 'neq', 'lte', 'gte', 'gt', 'lt', 'and', 'or', '<-'),
                 )
 
 
@@ -313,7 +313,7 @@ class VentureScriptParser(object):
         self.add_sub = _make_infix_token(
                 previous_token = self.mul_div,
                 operator_map = (('+','add'),('-','sub')),
-                lower_precedence = ('eq', 'neq', 'lte', 'gte', 'gt', 'lt', 'and', 'or'),
+                lower_precedence = ('eq', 'neq', 'lte', 'gte', 'gt', 'lt', 'and', 'or', '<-'),
                 )
 
 
@@ -324,7 +324,7 @@ class VentureScriptParser(object):
         self.comparison = _make_infix_token(
                 previous_token = self.add_sub,
                 operator_map = (('<=','lte'),('>=','gte'),('<','lt'),('>','gt')),
-                lower_precedence = ('eq', 'neq', 'and', 'or'),
+                lower_precedence = ('eq', 'neq', 'and', 'or', '<-'),
                 )
 
 
@@ -335,7 +335,7 @@ class VentureScriptParser(object):
         self.equality = _make_infix_token(
                 previous_token = self.comparison,
                 operator_map = (('==','eq'),('!=','neq')),
-                lower_precedence = ('and', 'or'),
+                lower_precedence = ('and', 'or', '<-'),
                 )
 
 
@@ -346,7 +346,7 @@ class VentureScriptParser(object):
         self.boolean_and = _make_infix_token(
                 previous_token = self.equality,
                 operator_map = (('&&','and'),),
-                lower_precedence = ('or'),
+                lower_precedence = ('or', '<-'),
                 )
 
 
@@ -358,8 +358,14 @@ class VentureScriptParser(object):
         self.boolean_or = _make_infix_token(
                 previous_token = self.boolean_and,
                 operator_map = (('||','or'),),
-                lower_precedence = (),
+                lower_precedence = ('<-'),
                 )
+
+        self.do_bind = _make_infix_token(
+            previous_token = self.boolean_or,
+            operator_map = (('<-','<-'),),
+            lower_precedence = (),
+        )
 
 
         # <expression>
@@ -367,7 +373,7 @@ class VentureScriptParser(object):
         # evaluates to itself
         def process_expression(_s, _loc, toks):
             return [toks[0]]
-        self.expression << self.boolean_or # pylint:disable=W0104
+        self.expression << self.do_bind # pylint:disable=W0104
         self.expression.setParseAction(process_expression)
 
 

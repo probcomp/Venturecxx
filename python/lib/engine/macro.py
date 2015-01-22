@@ -30,18 +30,29 @@ register_macro("begin", begin_macro, """\
 """)
 
 def do_macro(program):
+  def bind_statement_var(statement):
+    if (type(statement) is list and len(statement) == 3 and type(statement[1]) is dict and
+        statement[1]["value"] == "<-"):
+      # Regular form
+      return statement[0]
+    if (type(statement) is list and len(statement) == 3 and type(statement[0]) is dict and
+        statement[0]["value"] == "<-"):
+      # Venturescript parser produces this
+      return statement[1]
+    # Not a bind statement
+    return None
   if len(program) == 2:
     # Do statement with one statement
     return macroexpand_inference(program[1])
   else:
     assert len(program) > 2
     (do, statement, rest) = (program[0], program[1], program[2:])
-    if (type(statement) is list and len(statement) == 3 and type(statement[1]) is dict and
-        statement[1]["value"] == "<-"):
+    var = bind_statement_var(statement)
+    if var:
       # Bind a variable
-      assert type(statement[0]) is dict and statement[0]["type"] is "symbol" # Only bind variables
+      assert type(var) is dict and statement[0]["type"] is "symbol" # Only bind variables
       rest_body = [do] + rest
-      rest_expanded = [v.sym("make_csp"), v.quote([statement[0]]),
+      rest_expanded = [v.sym("make_csp"), v.quote([var]),
                        v.quote(macroexpand_inference(rest_body))]
       return [v.sym("bind"), macroexpand_inference(statement[2]), rest_expanded]
     else:
