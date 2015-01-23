@@ -4,6 +4,7 @@ from time import strftime
 import numpy as np
 
 from venture.lite.exception import VentureValueError
+from venture.lite.utils import logWeightsToNormalizedDirect
 
 stream_rx = r"([rcts%]|[0-9]+)"
 scale_rx = r"([dl])"
@@ -26,7 +27,7 @@ class PlotSpec(object):
     for spec in self.frames:
       spec.initialize()
       if spec.weighted:
-        dataset['particle weight'] = dataset['particle log weight'].apply(np.exp)
+        dataset['particle weight'] = logWeightsToNormalizedDirect(dataset['particle log weight'])
       (aes, index) = spec.aes_dict_at(index, names, spec.get_geoms())
       plot = g.ggplot(dataset, g.aes(**aes))
       for geom in spec.get_geoms():
