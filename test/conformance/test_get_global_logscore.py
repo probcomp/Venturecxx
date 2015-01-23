@@ -8,7 +8,6 @@ from venture.test.config import get_ripl, on_inf_prim, broken_in
 from venture.lite.psp import LikelihoodFreePSP
 from venture.lite import value as v
 from venture.lite.builtin import typed_nr
-from venture.lite.exception import LogScoreWarning
 
 @on_inf_prim("none")
 def test_global_logscore():
@@ -33,32 +32,8 @@ def test_global_logscore_coupled():
     assert_almost_equal(logscore, logscore_true)
 
 @on_inf_prim("none")
-@broken_in("puma", "No warning issued in PUMA. https://app.asana.com/0/12610813584901/23899154336705")
-def test__warn_logscore_likelihood_free():
-    "Lite should warn user that there are likelihood-free SP's"
-    ripl = setup_likelihood_free()
-    for _ in range(100):
-        ripl.observe('(flip)', 'true')
-    ripl.infer('(incorporate)')
-    ripl.predict('(test1 0)')
-    ripl.predict('(test2 0)')
-    # make sure the user is warned when attempting to retrieve global logscore
-    with warnings.catch_warnings(record=True) as w:
-        warnings.simplefilter("always")
-        logscore = ripl.get_global_logscore()
-        # Verify some things
-        assert len(w) == 1
-        w = w[0]
-        assert w.category is LogScoreWarning
-        eq_(w.message.message,
-            "There are 2 likelihood-free SP's in the trace. These are not included in the logscore.")
-    logscore_true = -100*np.log(2)
-    assert_almost_equal(logscore, logscore_true)
-
-@on_inf_prim("none")
-@broken_in("lite", "Lite issues a warning. Tested above. https://app.asana.com/0/12610813584901/23899154336705")
 def test_logscore_likelihood_free():
-    "Puma shouldn't break in the presence of likelihood-free SP's"
+    "Shouldn't break in the presence of likelihood-free SP's"
     ripl = setup_likelihood_free()
     for _ in range(100):
         ripl.observe('(flip)', 'true')

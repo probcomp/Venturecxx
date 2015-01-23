@@ -36,8 +36,3 @@ class SubsampledScaffoldNotApplicableWarning(VentureWarning):
 class SubsampledScaffoldStaleNodesWarning(VentureWarning):
   '''This warning means that the stale nodes may cause incorrect behavior.'''
   pass
-
-class LogScoreWarning(VentureWarning):
-  '''This warning means that the global log score was requested of a ripl
-  with a likelihood-free SP'''
-  pass
