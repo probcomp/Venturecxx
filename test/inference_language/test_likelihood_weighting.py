@@ -31,9 +31,20 @@ def collectLikelihoodWeighted(ripl, address):
     wts.append(ripl.sivm.core_sivm.engine.trace_handler.log_weights[0])
   return (vs, wts)
 
-def testMultiprocessing():
-  "Checking for a strange but in likelihood_weight when using parallel particles"
-  raise SkipTest("Currently broken. See asana issue https://app.asana.com/0/9277420529946/24666934712712")
+def testMultiprocessingRegression():
+  """Checking for a strange bug in likelihood_weight when using parallel particles.
+
+The bug manifested as likelihood_weight producing a zero weight for
+the distinguished particle every time.
+
+The problem actually was that dump_trace in trace_handler.py had the
+side-effect of unincorporating all observations from the trace being
+dumped.  This would happen to the distinguished trace at the beginning
+of every infer command, because the Engine would request the
+distinguished trace in order to perpetrate the self-evaluating scope
+hack.
+
+  """
   ripl = get_ripl()
   ripl.infer('(resample_multiprocess 2)')
   ripl.assume('x', '(normal 0 1)')
