@@ -1,6 +1,7 @@
 import re
 from itertools import chain
 from time import strftime
+import numpy as np
 
 from venture.lite.exception import VentureValueError
 
@@ -24,6 +25,8 @@ class PlotSpec(object):
     figs = []
     for spec in self.frames:
       spec.initialize()
+      if spec.weighted:
+        dataset['particle weight'] = dataset['particle log weight'].apply(np.exp)
       (aes, index) = spec.aes_dict_at(index, names, spec.get_geoms())
       plot = g.ggplot(dataset, g.aes(**aes))
       for geom in spec.get_geoms():
@@ -155,7 +158,7 @@ class FrameSpec(object):
       from ggplot import geoms as g
       for geom in geoms:
         if isinstance(geom, g.geom_line) or isinstance(geom, g.geom_point):
-          ans['alpha'] = 'particle normalized prob'
+          ans['alpha'] = 'particle weight'
         elif isinstance(geom, g.geom_histogram) or isinstance(geom, g.geom_bar):
-          ans['weight'] = 'particle normalized prob'
+          ans['weight'] = 'particle weight'
     return (ans, next_index)
