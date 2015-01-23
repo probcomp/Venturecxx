@@ -283,6 +283,15 @@ Notes:
   the scope and block are other than ``default all`` it is not clear
   what the weight should become).
 
+- Does not change the particle weight, because the right one is not
+  obvious for general scaffolds, or for the case where the state was
+  possible to begin with.  If you're using ``(bogo_possibilize default
+  all)`` for pure initialization from the prior, consider following it
+  with::
+
+    (do (l <- global_likelihood)
+        (set_particle_log_weights l))
+
 The `transitions` argument specifies how many times to do this.
 Specifying more than 1 transition is redundant if the `block` is
 anything other than ``one``. """),
