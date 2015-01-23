@@ -92,6 +92,13 @@ def dump_trace(trace, directives, skipStackDictConversion=False):
     if directive[0] == "observe":
       trace.observe(did, directive[2])
 
+  # TODO Actually, I should restore the degree of incorporation the
+  # original trace had.  In the absence of tracking that, this
+  # heuristically makes the trace fully incorporated.  Hopefully,
+  # mistakes will be rarer than in the past (which will make them even
+  # harder to detect).
+  trace.makeConsistent()
+
   return trace.dumpSerializationDB(db, skipStackDictConversion)
 
 def restore_trace(trace, directives, values, foreign_sps,
@@ -241,7 +248,8 @@ class HandlerBase(object):
     if cmd == 'stop': return
     res = []
     for pipe in self.pipes:
-      res.extend(pipe.recv())
+      ans = pipe.recv()
+      res.extend(ans)
     if any([threw_error(entry) for entry in res]):
       exception_handler = TraceProcessExceptionHandler(res)
       raise exception_handler.gen_exception()
