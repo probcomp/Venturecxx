@@ -90,7 +90,7 @@ command(get_global_logscore)	::= K_GET_GLOBAL_LOGSCORE(k).
 command(profiler_configure)	::= K_PROFILER_CONFIGURE(k) json(options).
 command(profiler_clear)		::= K_PROFILER_CLEAR(k).
 command(profiler_list_random)	::= K_PROFILER_LIST_RANDOM(k) K_CHOICES.
-command(load)		::= K_LOAD(k) L_STRING(pathname).
+command(load)		::= K_LOAD(k) json(pathname).
 
 directive_ref(numbered)	::= L_INTEGER(number).
 directive_ref(labelled)	::= L_NAME(label).
