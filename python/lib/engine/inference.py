@@ -37,8 +37,9 @@ class Infer(object):
 
   def final_data(self):
     # add the last data point if result isn't None
-    if self.result is not None:
+    if self.result is not None and not self.result._final_appended:
       self.result._save_previous_iter(self.result.sweep + 1)
+      self.result._final_appended = True
     return self.result
 
   def _init_peek(self, names, exprs, stack_dicts):
@@ -260,6 +261,7 @@ class InferResult(object):
     self._print_names = None
     self._print_exprs = None
     self._print_stack_dicts = None
+    self._final_appended = False
     self.spec_plot = None
     self.filenames = filenames
     self.callback = callback

@@ -67,8 +67,14 @@ def dataset_to_file(inferrer, basename):
   '''
   Save all data recorded by inferrer to file "basename" in current directory.
   The basename must be quoted.
+  Do not call this plugin as part of a (cycle) command with other inference
+  statements that record data. Rather, use a (begin) and call this plugin
+  after the cycle statement.
   '''
-  # TODO: FIX THE PLUGIN SO WE GET THE LAST SWEEP
+  # pylint:disable=protected-access
+  # Hack so that the dataset gets the data from the last sweep
+  inferrer.result._save_previous_iter(inferrer.result.sweep + 1)
+  inferrer.result._final_appended = True
   ds = inferrer.result.dataset()
   basename = strip_types(basename)[0]
   ds.to_csv(basename + '.txt', sep = '\t',
