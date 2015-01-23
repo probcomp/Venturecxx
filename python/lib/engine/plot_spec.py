@@ -7,7 +7,8 @@ from venture.lite.exception import VentureValueError
 stream_rx = r"([rcts%]|[0-9]+)"
 scale_rx = r"([dl])"
 geom_rx = r"[plbah]"
-toplevel_rx = "(" + geom_rx + "*)" + "((" + stream_rx + "?" + scale_rx + "?){1,3})$"
+weight_rx = r"w?"
+toplevel_rx = "(" + weight_rx + ")" + "(" + geom_rx + "*)" + "((" + stream_rx + "?" + scale_rx + "?){1,3})$"
 dimension_rx = stream_rx + "?" + scale_rx + "?"
 
 class PlotSpec(object):
@@ -23,7 +24,7 @@ class PlotSpec(object):
     figs = []
     for spec in self.frames:
       spec.initialize()
-      (aes, index) = spec.aes_dict_at(index, names)
+      (aes, index) = spec.aes_dict_at(index, names, spec.get_geoms())
       plot = g.ggplot(dataset, g.aes(**aes))
       for geom in spec.get_geoms():
         plot += geom
@@ -96,8 +97,9 @@ class FrameSpec(object):
     top = re.match(toplevel_rx, spec)
     if not top:
       raise Exception("Invalid plot spec %s; must match %s" % (spec, toplevel_rx))
-    self.geoms = top.group(1)
-    dims = top.group(2)
+    self.weighted = top.group(1)
+    self.geoms = top.group(2)
+    dims = top.group(3)
     if len(dims) == 0:
       raise Exception("Invalid plot spec %s; must supply at least one dimension to plot")
     self._interp_geoms(self.geoms) # To set the self.two_d_only bit
@@ -131,7 +133,7 @@ class FrameSpec(object):
       self.two_d_only = False
     return {"p":g.geom_point, "l":g.geom_line, "b":g.geom_bar, "h":g.geom_histogram}[ge]()
 
-  def aes_dict_at(self, next_index, names):
+  def aes_dict_at(self, next_index, names, geoms):
     next_index = next_index
     ans = {}
     for (key, stream) in zip(["x", "y", "color"], self.streams):
@@ -149,4 +151,11 @@ class FrameSpec(object):
       else:
         ans[key] = names[int(stream)]
         next_index = int(stream) + 1
+    if self.weighted:
+      from ggplot import geoms as g
+      for geom in geoms:
+        if isinstance(geom, g.geom_line) or isinstance(geom, g.geom_point):
+          ans['alpha'] = 'particle normalized prob'
+        elif isinstance(geom, g.geom_histogram) or isinstance(geom, g.geom_bar):
+          ans['weight'] = 'particle normalized prob'
     return (ans, next_index)
