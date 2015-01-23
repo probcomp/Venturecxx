@@ -88,6 +88,9 @@ def assert_fun(test, msg=""):
   # TODO Raise an appropriate Venture exception instead of crashing Python
   assert test, msg
 
+def print_fun(*args):
+  print args
+
 inferenceSPsList = [
   trace_method_sp("mh", transition_oper_type(), desc="""\
 Run a Metropolis-Hastings kernel, proposing by resimulating the prior.
@@ -544,7 +547,15 @@ Return the weights of all extant particles as an array of numbers (in log space)
                    desc="""\
 Set the weights of the particles to the given array.  It is an error if the length of the array differs from the number of particles. """),
 
-  engine_method_sp("load_plugin", infer_action_maker_type([v.SymbolType("filename")], variadic=True)),
+  engine_method_sp("load_plugin", infer_action_maker_type([v.SymbolType("filename")], return_type=v.AnyType(), variadic=True), desc="""\
+Load the plugin located at <filename>.
+
+Any additional arguments to ``load_plugin`` are passed to the plugin's
+``__venture_start__`` function, whose result is returned.
+
+XXX: Currently, extra arguments must be VentureSymbols, which are
+unwrapped to Python strings for the plugin.
+"""),
 
   macro_helper("peek", infer_action_maker_type([v.AnyType()], variadic=True)),
   macro_helper("plotf", infer_action_maker_type([v.AnyType()], variadic=True)),
@@ -564,6 +575,10 @@ Set the weights of the particles to the given array.  It is an error if the leng
 
   sequenced_sp("assert", assert_fun, infer_action_maker_type([v.BoolType(), v.SymbolType("message")], min_req_args=1), desc="""\
 Check the given boolean condition and raise an error if it fails.
+"""),
+
+  sequenced_sp("print", print_fun, infer_action_maker_type([v.AnyType()], variadic=True), desc="""\
+Print the given values to the terminal.
 """),
 ]
 

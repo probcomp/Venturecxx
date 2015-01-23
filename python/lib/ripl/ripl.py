@@ -821,7 +821,7 @@ Open issues:
     def load_plugin(self, name, *args, **kwargs):
         m = load_library(name)
         if hasattr(m, "__venture_start__"):
-            m.__venture_start__(self, *args, **kwargs)
+            return m.__venture_start__(self, *args, **kwargs)
 
     ############################################
     # Private methods
