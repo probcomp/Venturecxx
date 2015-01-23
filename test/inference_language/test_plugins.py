@@ -33,7 +33,6 @@ def test_timer4():
   ripl.infer('(call_back timer_time)')
 
 def test_dataset_to_file():
-  # TODO: FIX THE PLUGIN SO WE GET THE LAST SWEEP
   ripl = get_ripl()
   ripl.assume('x', '(normal 0 1)')
   infer = '''(begin
