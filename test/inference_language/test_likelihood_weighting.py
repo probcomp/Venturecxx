@@ -1,6 +1,7 @@
 import math
 import scipy.stats as stats
 from nose.tools import assert_almost_equal
+from nose import SkipTest
 
 from venture.test.stats import statisticalTest, reportKnownContinuous
 from venture.test.config import get_ripl, default_num_samples
@@ -29,3 +30,14 @@ def collectLikelihoodWeighted(ripl, address):
     vs.append(ripl.report(address))
     wts.append(ripl.sivm.core_sivm.engine.trace_handler.log_weights[0])
   return (vs, wts)
+
+def testMultiprocessing():
+  "Checking for a strange but in likelihood_weight when using parallel particles"
+  raise SkipTest("Currently broken. See asana issue https://app.asana.com/0/9277420529946/24666934712712")
+  ripl = get_ripl()
+  ripl.infer('(resample_multiprocess 2)')
+  ripl.assume('x', '(normal 0 1)')
+  ripl.observe('(normal x 1)', 5)
+  ripl.infer('(likelihood_weight)')
+  log_weights = ripl.sivm.core_sivm.engine.trace_handler.log_weights
+  assert log_weights[0] != 0
