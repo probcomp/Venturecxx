@@ -48,8 +48,10 @@ cabal-version:       >=1.10
 
 library
   -- Modules exported by the library.
-  exposed-modules:     Examples, Utils, Language, Inference, Trace, Unique, Detach, SP, Regen, InsertionOrderedSet
-  
+  exposed-modules:     Examples, Utils, Language, Inference, Trace, Unique, Detach, SP, Regen, InsertionOrderedSet,
+                       -- The HS-V1 attempt is in TraceView.hs
+                       TraceView
+
   -- Modules included in this library but not exported.
   -- other-modules:       
   
