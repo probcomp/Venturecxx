@@ -57,7 +57,7 @@ class TestVentureSivm(unittest.TestCase):
         try:
             self.sivm.execute_instruction({
                 "instruction":"assume",
-                "symbol":"9,d",
+                "symbol":v.symbol("9,d"),
                 "expression":['a','b',['c']]
                 })
         except VentureException as e:
@@ -67,8 +67,8 @@ class TestVentureSivm(unittest.TestCase):
         inst = {
                 'instruction':'labeled_assume',
                 'expression': ['add',v.number(1),v.number(2)],
-                'symbol': 'moo',
-                'label': '123moo'
+                'symbol': v.symbol('moo'),
+                'label': v.symbol('123moo')
                 }
         try:
             self.sivm.execute_instruction(inst)
@@ -79,8 +79,8 @@ class TestVentureSivm(unittest.TestCase):
         inst = {
                 'instruction':'labeled_assume',
                 'expression': ['add',v.number(1),v.number(2)],
-                'symbol': 'moo',
-                'label': 'moo'
+                'symbol': v.symbol('moo'),
+                'label': v.symbol('moo')
                 }
         self.sivm.execute_instruction(inst)
         try:
@@ -134,8 +134,8 @@ class TestVentureSivm(unittest.TestCase):
         inst = {
                 'instruction':'labeled_assume',
                 'expression': ['add',v.number(1),v.number(2)],
-                'symbol': 'moo',
-                'label' : 'moo'
+                'symbol': v.symbol('moo'),
+                'label' : v.symbol('moo')
                 }
         val = v.number(3)
         o = self.sivm.execute_instruction(inst)
@@ -146,7 +146,7 @@ class TestVentureSivm(unittest.TestCase):
                 'instruction':'labeled_observe',
                 'expression': ['normal',v.number(1),v.number(2)],
                 'value': v.real(3),
-                'label' : 'moo'
+                'label' : v.symbol('moo')
                 }
         o = self.sivm.execute_instruction(inst)
         self.assertIsInstance(o['directive_id'],(int,float))
@@ -154,7 +154,7 @@ class TestVentureSivm(unittest.TestCase):
         inst = {
                 'instruction':'labeled_predict',
                 'expression': ['add',v.number(1),v.number(2)],
-                'label' : 'moo'
+                'label' : v.symbol('moo')
                 }
         val = v.number(3)
         o = self.sivm.execute_instruction(inst)
@@ -164,12 +164,12 @@ class TestVentureSivm(unittest.TestCase):
         inst1 = {
                 'instruction':'labeled_predict',
                 'expression': ['add',v.number(1),v.number(2)],
-                'label' : 'moo',
+                'label' : v.symbol('moo'),
                 }
         self.sivm.execute_instruction(inst1)
         inst2 = {
                 'instruction':'labeled_forget',
-                'label' : 'moo',
+                'label' : v.symbol('moo'),
                 }
         self.sivm.execute_instruction(inst2)
         try:
@@ -190,7 +190,7 @@ class TestVentureSivm(unittest.TestCase):
         self.sivm.execute_instruction(inst1)
         inst2 = {
                 'instruction':'labeled_report',
-                'label' : 'moo',
+                'label' : v.symbol('moo'),
                 }
         o2 = self.sivm.execute_instruction(inst2)
         self.assertEquals(o2['value'], v.number(3))
@@ -203,7 +203,7 @@ class TestVentureSivm(unittest.TestCase):
         self.sivm.execute_instruction(inst1)
         inst2 = {
                 'instruction':'labeled_get_logscore',
-                'label' : 'moo',
+                'label' : v.symbol('moo'),
                 }
         o2 = self.sivm.execute_instruction(inst2)
         self.assertEquals(o2['logscore'],0.0)
@@ -236,20 +236,20 @@ class TestVentureSivm(unittest.TestCase):
         inst1 = {
                 'instruction':'labeled_predict',
                 'expression': ['add',v.number(1),v.number(2)],
-                'label': 'moo',
+                'label': v.symbol('moo'),
                 }
         o1 = self.sivm.execute_instruction(inst1)
         del inst1['label']
         inst2 = {
                 'instruction':'labeled_get_directive',
-                'label': 'moo',
+                'label': v.symbol('moo'),
                 }
         o2 = self.sivm.execute_instruction(inst2)
         output = {
                 'directive_id': o1['directive_id'],
                 'instruction': 'predict',
                 'expression': ['add',v.number(1),v.number(2)],
-                'label': 'moo',
+                'label': v.symbol('moo'),
                 }
         self.assertEquals(o2['directive'], output)
     def test_force(self):

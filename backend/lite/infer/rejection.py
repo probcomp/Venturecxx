@@ -61,3 +61,26 @@ class RejectionOperator(InPlaceOperator):
     return trace, 0
 
   def name(self): return "rejection"
+
+class BogoPossibilizeOperator(InPlaceOperator):
+  """Find a possible state by rejection.
+
+If the start state is already possible, don't move."""
+
+  def propose(self, trace, scaffold):
+    while True:
+      rhoWeight = self.prepare(trace, scaffold)
+      xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, {})
+      print rhoWeight, xiWeight
+      if rhoWeight > float("-inf"):
+        # The original state was possible; force rejecting the
+        # transition
+        return trace, float("-inf")
+      elif xiWeight > float("-inf"):
+        # The original state was impossible, and the new state is
+        # possible; force accepting the transition
+        return trace, float("+inf")
+      else:
+        self.reject() # To restore everything to its proper state TODO use particles?
+
+  def name(self): return "bogo_possibilize"

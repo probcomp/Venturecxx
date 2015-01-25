@@ -6,10 +6,16 @@ root_dirname=$(dirname $(dirname $my_abs_path))
 echo "$root_dirname"
 cd $root_dirname
 
-release=0.2.1
+release=`grep "version_str=" script/venture | cut -d '"' -f 2`
 if [[ ! -z $1 ]]; then
     release=$1
 fi
+if [[ -z $release ]]; then
+    echo Could not determine a release number, exiting
+    exit 1
+fi
+
+echo Making a tarball marked version $release
 
 tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=.git \
@@ -33,7 +39,15 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=CP1-Quad-Rotor \
     --exclude=.coverage \
     --exclude=.idea \
+    --exclude=.ipynb_checkpoints \
+    --exclude=tool/logs \
+    --exclude=doc/v1 \
+    --exclude=backend/v1-pre-scm \
+    --exclude=script/release-tarball \
     --exclude=venture-*.tgz \
     --exclude=venture-*.tar.gz \
+    --exclude=venture-*.tar.bz2 \
     --exclude=venture-*.tar \
     Venturecxx/
+
+md5sum ../venture-$release.tgz

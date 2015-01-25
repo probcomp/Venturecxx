@@ -1,6 +1,7 @@
 build
 env.d
 
+tool/logs/*
 # python
 *.pyc
 
@@ -21,3 +22,7 @@ a.out
 venture-*.tgz
 venture-*.tar
 venture-*.tar.gz
+
+# Lemonade parser generator output
+python/lib/parser/church_prime/grammar.out
+python/lib/parser/church_prime/grammar.py

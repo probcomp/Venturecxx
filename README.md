@@ -13,6 +13,52 @@ published. We are making Venture available at this early stage
 primarily to facilitate collaboration and support the emerging
 probabilistic programming community.
 
+Running Venture's Docker Container (Linux)
+==========================================
+
+The easiest way to get Venture is to run it inside a [Docker
+container](http://www.docker.com).
+
+    sudo apt-get install docker.io   # Install Docker
+    sudo script/build_docker_image   # Requires network, and a while
+    sudo script/run_docker_container
+
+    venture                          # Inside the container
+
+    firefox localhost:8888           # For example IPython notebooks
+
+You get
+- A shell inside the container to do whatever
+- The source directory mapped into the container so you can edit from
+  outside
+- a VNC server listening on localhost port 5900
+- an IPython notebook server listening on port 8888
+
+Running Venture's Docker Container (Windows)
+==========================================
+
+On Windows and MacOS, you can easily run docker containers with the boot2docker tool.
+Boot2docker is a VM interface and lightweight Linux distribution specifically intended
+to run [Docker containers](http://www.docker.com).
+It runs completely from RAM, weighs ~27MB and boots in ~5s.
+
+    Install latest boot2docker for Windows
+        https://docs.docker.com/installation/windows/   # Installation Instructions
+    script/windows/1_initialize_boot2docker.sh          # Update boot2docker image
+    script/windows/2_build_image.sh                     # Build image (large download + build)
+    script/windows/3_run_container.sh                   # Launch application
+
+    venture                          # Inside the container
+
+    firefox localhost:8888           # For example IPython notebooks
+
+You get
+- A shell inside the container to do whatever
+- The source directory mapped into the container so you can edit from
+  outside
+- a VNC server listening on localhost port 5900
+- an IPython notebook server listening on port 8888
+
 Installing Venture from Source
 ==============================
 
@@ -25,7 +71,9 @@ what's going on will be to ask us or to read the source code.
 Dependencies (Ubuntu)
 ---------------------
 
-Here is what we install on a clean Ubuntu (works best in 14.04 or higher).
+Here is what we install on a clean Ubuntu (works best in 14.04 or
+higher).  This dependency installation is replicated as
+[script/provision_ubuntu_dependencies](script/provision_ubuntu_dependencies)
 
     # Get system dependencies
     sudo apt-get install -y libboost-all-dev libgsl0-dev python-pip ccache libfreetype6-dev
@@ -42,44 +90,30 @@ Here is what we install on a clean Ubuntu (works best in 14.04 or higher).
     # Note: on older versions of Ubuntu, install them via pip (see "Install ggplot" below)
     sudo apt-get install -y python-pandas python-patsy
 
+    # [Optional] Get dependencies for networkx (needed for some scaffold debugging facilities)
+    sudo apt-get install -y libgraphviz-dev
+
 Dependencies (OSX, Homebrew)
 ----------------------------
 
-Here is what we install on a clean Mac OS X 10.9 (or higher).
+This is the best-supported and best-tested method for building Venture on Mac.
+
     # Install Packet Manager "Homebrew"
     http://brew.sh/
 
-    # Install g++-4.8 using homebrew.
+    # Install the current Homebrew version of gcc / g++ (4.9 at time of writing)
     # see this thread: http://apple.stackexchange.com/questions/38222/how-do-i-install-gcc-via-homebrew
-    brew install gcc48
+    brew install gcc
 
     # Install libraries using homebrew
     brew install python ccache gsl
 
-The tricky step is installing the correct version of the Boost library. The current Homebrew version of Boost is 1.55, but the puma backend breaks if Venture is built under this version. Instead, Boost 1.49 must be installed. These instructions assume that no versions of Boost are currently installed. If 1.55 and 1.49 are already installed on the machine, simply follow the instructions in part 1 of this thread: <http://stackoverflow.com/questions/3987683/homebrew-install-specific-version-of-formula> to switch to version 1.49.
+The one slightly tricky step is installing Boost and Boost.Python. The difficulty comes from the fact that GNU c++ compilers use the standard library libstdc++, while Mac's c++ compiler on Mavericks uses libc++. In order for Venture to build, you must build Boost using libstdc++, and then build Venture using the same. This can be accomplished by building both Boost and Venture using GNU gcc (installed via Homebrew) instead of Mac's compiler. The correct version of gcc is set for Venture installation in the setup.py file. To install Boost with the correct library, call:
 
-    # First, install the current version
-    brew install --without-python boost
-    # Install an old version of gcc; Boost 1.49 breaks with clang on OS X 10.9
-    # (try "brew search gcc" to find gcc42)
-    brew install apple-gcc42
-    # Install the old Boost
-    brew tap homebrew/versions
-    brew install boost149 --cc=gcc-4.2
-    # Symlink boost 1.49 into boost folder, switch versions
-    ln -s /usr/local/Cellar/boost149/1.49.0/ /usr/local/Cellar/boost/1.49.0
-    brew switch boost 1.49.0
+    brew install boost --cc=gcc-4.9
+    brew install boost-python --cc=gcc-4.9
 
-With this version of Boost in place, simply call the install script in the Venturecxx directory:
-
-	./install_osx_homebrew.sh
-
-If desired, clean up by removing symlinks and switching back to default Boost:
-
-	brew switch boost 1.55.0_1
-	rm /usr/local/Cellar/boost/1.49.0
-
-Finally, Python dependendencies:
+Finally, install Python dependencies:
 
     # [Optional] Get Python dependencies (faster to install prepackaged than via pip)
     # Also pulls in required external libraries
@@ -89,12 +123,14 @@ Finally, Python dependendencies:
 Dependencies (OSX, macports)
 ----------------------------
 
+This installation method is not as well-tested as Homebrew. It may break. At this point the best advice we can offer is to use Homebrew instead.
+
 For macports installation instructions see: [https://www.macports.org/install.php](https://www.macports.org/install.php)
 
 ```
 # System dependencies
 sudo port install \
-    gcc_select gcc48 ccache \
+    gcc_select gcc49 ccache \
     python_select python27 \
     pip_select py27-pip \
     virtualenv_select virtualenv \
@@ -116,7 +152,7 @@ sudo port install \
 
 Macports allows side-by-side installation of multiple versions of gcc, python, ipython, etc. In order to set the default versions of each of these, do
 
-    sudo port select gcc mp-gcc48
+    sudo port select gcc mp-gcc49
     sudo port select python python27
     sudo port select ipython ipython27
     sudo port select pip pip27
@@ -134,13 +170,9 @@ Install any remaining dependencies by doing
 
     sudo pip install ggplot
 
-On Linux systems now simply do
+On Linux systems and OSX with Homebrew, now simply do
 
     sudo python setup.py install
-
-On OSX with Homebrew, run the helper script
-
-    ./global_install_osx_homebrew.sh
 
 On OSX with Macports, run
 
@@ -150,32 +182,33 @@ On OSX with Macports, run
 Local Installation
 ------------------
 
-In order to install locally, download and install python "virtualenv" onto your computer. [https://pypi.python.org/pypi/virtualenv](https://pypi.python.org/pypi/virtualenv)
+In order to install locally, make sure you have python
+[virtualenv](https://pypi.python.org/pypi/virtualenv).
 
-Create a new virtual environment to install the requirements:
+    sudo pip install virtualenv
 
+Then prepare your virtual environment (replicated as
+[script/prepare_virtualenv](script/prepare_virtualenv)):
+
+    # Create a new virtual environment to install Venture (and its Python dependencies):
     virtualenv env.d
 
-If Python dependencies were pre-installed these can be used by typing
-
+    # If (some) Python dependencies were pre-installed these can be used by typing
     virtualenv --system-site-packages env.d
 
-Activate the environment, and install any remaining dependencies
-
+    # Activate the environment, and install any remaining dependencies
     source env.d/bin/activate
     pip install -r requirements.txt
 
-[Optional] Install ggplot (needed for the built-in plotting facilities)
+    # Be sure to put nose into the virtualenv, so it can find its packages
+    pip install --ignore-installed nose
 
-    sudo pip install ggplot
+    # [Optional] Install ggplot (needed for the built-in plotting facilities)
+    pip install ggplot
 
-On Linux, now install by typing
+On Linux and OSX with Homebrew, now install by typing
 
     python setup.py install
-
-On OSX, using Homebrew, run the helper script
-
-    ./install_osx_homebrew.sh
 
 If using macports, run
 
@@ -187,10 +220,6 @@ Checking that your installation was successful
 ----------------------------------------------
 
     ./sanity_tests.sh
-
-If you are interested in improving Venture, you can also run
-
-    ./list_known_issues.sh
 
 Getting Started
 ---------------
@@ -222,21 +251,28 @@ Developing Venture
 ==================
 
 The interesting parts of the code are:
-- The stack (including SIVM, RIPL, VentureUnit, server, and Python client) in `python/`
-- The C++11 engine (plus a thin Python driver) in `backend/cxx/`
-- The actual entry points are in `script/`
-- Advanced example programs live in `examples/`
+- There is a live tutorial in `examples/tutorial/part*` (run an
+  ipython notebook server in that directory)
+- The frontend stack (including SIVM, RIPL, VentureUnit, server, and Python client) in `python/`.
+- The pure-Python, clearer, normative Lite backend in `backend/lite/`.
+- The C++, faster Puma backend (plus a thin Python driver) in `backend/puma/`.
+- The test suite lives under `test/`.
+- The actual entry points are in `script/`, notably `script/venture`.
+- Advanced example programs live in `examples/`.
+- There are some developer tools available in `tool/`.
+- There is a stale C++11 backend in `backend/cxx/`.
 - The Javascript client and web demos are actually in the
   [VentureJSRIPL](https://github.com/mit-probabilistic-computing-project/VentureJSRIPL)
   repository.
 - There are language-level benchmarks (and correctness tests) in the
   [VentureBenchmarksAndTests](https://github.com/mit-probabilistic-computing-project/VentureBenchmarksAndTests)
-  repository.
+  repository, but they may have bit rotted by now.
 
 Python Development
 ------------------
 
-We recommend using ipython for Venture development; you can obtain it via
+We recommend using ipython for Venture development; you can obtain it
+via
 
     pip install ipython
 

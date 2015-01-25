@@ -22,3 +22,4 @@ fi
 echo "Sanity-checking the $backend backend.  This may take several minutes"
 nosetests -c crashes.cfg --tc=get_ripl:$backend
 abort_on_error "$backend backend self-checking"
+echo "Sanity-checked $backend backend.  You may wish to try the other one by supplying an appropriate argument to this script."

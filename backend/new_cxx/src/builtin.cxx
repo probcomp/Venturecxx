@@ -41,6 +41,7 @@ map<string,SP*> initBuiltInSPs()
   m["gte"] = new SP(new NullRequestPSP(), new GteOutputPSP());
   m["lt"] = new SP(new NullRequestPSP(), new LtOutputPSP());
   m["lte"] = new SP(new NullRequestPSP(), new LteOutputPSP());
+  m["floor"] = new SP(new NullRequestPSP(), new FloorOutputPSP());
   m["sin"] = new SP(new NullRequestPSP(), new SinOutputPSP());
   m["cos"] = new SP(new NullRequestPSP(), new CosOutputPSP());
   m["tan"] = new SP(new NullRequestPSP(), new TanOutputPSP());
@@ -50,12 +51,16 @@ map<string,SP*> initBuiltInSPs()
   m["pow"] = new SP(new NullRequestPSP(), new PowOutputPSP());
   m["sqrt"] = new SP(new NullRequestPSP(), new SqrtOutputPSP());
   m["not"] = new SP(new NullRequestPSP(), new NotOutputPSP());
+  m["is_number"] = new SP(new NullRequestPSP(), new IsNumberOutputPSP());
+  m["is_integer"] = new SP(new NullRequestPSP(), new IsIntegerOutputPSP());
+  m["is_boolean"] = new SP(new NullRequestPSP(), new IsBoolOutputPSP());
   m["is_symbol"] = new SP(new NullRequestPSP(), new IsSymbolOutputPSP());
   
   m["to_atom"] = new SP(new NullRequestPSP(), new ToAtomOutputPSP());
   m["is_atom"] = new SP(new NullRequestPSP(), new IsAtomOutputPSP());
 
   m["probability"] = new SP(new NullRequestPSP(), new ProbabilityOutputPSP());
+  m["is_probability"] = new SP(new NullRequestPSP(), new IsProbabilityOutputPSP());
   
   /* Continuous SPs */
   m["normal"] = new SP(new NullRequestPSP(), new NormalPSP());
@@ -81,7 +86,7 @@ map<string,SP*> initBuiltInSPs()
   m["dirichlet"] = new SP(new NullRequestPSP(), new DirichletOutputPSP());
   m["poisson"] = new SP(new NullRequestPSP(), new PoissonOutputPSP());
 
-  /* Conditiionals */
+  /* Conditionals */
   m["branch"] = new SP(new BranchRequestPSP(), new ESRRefOutputPSP());
   m["biplex"] = new SP(new NullRequestPSP(), new BiplexOutputPSP());
 
@@ -101,6 +106,7 @@ map<string,SP*> initBuiltInSPs()
   m["id_matrix"] = new SP(new NullRequestPSP(), new IdentityMatrixOutputPSP());
   m["vector"] = new SP(new NullRequestPSP(), new VectorOutputPSP());
   m["is_vector"] = new SP(new NullRequestPSP(), new IsVectorOutputPSP());
+  m["to_vector"] = new SP(new NullRequestPSP(), new ToVectorOutputPSP());
 
   /* Scoping */
   m["scope_include"] = new SP(new NullRequestPSP(), new ScopeIncludeOutputPSP());
@@ -121,12 +127,15 @@ map<string,SP*> initBuiltInSPs()
   m["append"] = new SP(new NullRequestPSP(), new AppendOutputPSP());
   m["concat"] = new SP(new NullRequestPSP(), new ConcatOutputPSP());
   m["is_array"] = new SP(new NullRequestPSP(), new IsArrayOutputPSP());
+  m["to_array"] = new SP(new NullRequestPSP(), new ToArrayOutputPSP());
   m["pair"] = new SP(new NullRequestPSP(), new PairOutputPSP());
   m["is_pair"] = new SP(new NullRequestPSP(), new IsPairOutputPSP());
   m["list"] = new SP(new NullRequestPSP(), new ListOutputPSP());
   m["first"] = new SP(new NullRequestPSP(), new FirstOutputPSP());
   m["second"] = new SP(new NullRequestPSP(), new SecondOutputPSP());
   m["rest"] = new SP(new NullRequestPSP(), new RestOutputPSP());
+  m["mapv"] = new SP(new ArrayMapRequestPSP(), new ESRArrayOutputPSP());
+  m["arange"] = new SP(new NullRequestPSP(), new ArangeOutputPSP());
 
   m["make_csp"] = new SP(new NullRequestPSP(), new MakeCSPOutputPSP());
   m["mem"] = new SP(new NullRequestPSP(), new MakeMSPOutputPSP());

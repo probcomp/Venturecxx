@@ -8,8 +8,10 @@
 #include "regen.h"
 #include "sp.h"
 #include "db.h"
+#include "indexer.h"
 #include "sps/scope.h"
 #include "math.h"
+#include "gkernel.h" // For registerDeterministicLKernels
 
 #include <time.h>
 #include <boost/foreach.hpp>
@@ -461,16 +463,79 @@ double ConcreteTrace::makeConsistent()
     shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(appNode))->getPSP(appNode);
     scaffold->lkernels[appNode] = shared_ptr<DeterministicLKernel>(new DeterministicLKernel(iter->second,psp));
     double xiWeight = regenAndAttach(this,scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),shared_ptr<map<Node*,Gradient> >());
-    if (std::isinf(xiWeight)) { throw "Unable to propagate constraint"; }
+    // If xiWeight is -inf, we are in an impossible state, but that might be ok.
+    // Finish constraining, to avoid downstream invariant violations.
     observeNode(iter->first,iter->second);
     constrain(this,appNode,getObservedValue(iter->first));
     weight = weight + xiWeight - rhoWeight;
   }
   unpropagatedObservations.clear();
-  return weight;
+  if (std::isfinite(weight)) {
+    return weight;
+  } else {
+    // If one observation made the state inconsistent, the rhoWeight
+    // of another might conceivably be infinite, possibly leading to
+    // a nan weight.  I want to normalize these to indicating that
+    // the resulting state is impossible.
+    return -INFINITY;
+  }
 }
 
 int ConcreteTrace::numUnconstrainedChoices() { return unconstrainedChoices.size(); }
+
+double ConcreteTrace::likelihoodAt(ScopeID scope, BlockID block) {
+  // TODO This is a different code path from normal infer commands
+  // because it needs to return the weight
+  shared_ptr<ScaffoldIndexer> scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
+  shared_ptr<Scaffold> scaffold = scaffoldIndexer->sampleIndex(this);
+  pair<double,shared_ptr<DB> > p = detachAndExtract(this,scaffold->border[0],scaffold);
+  double xiWeight = regenAndAttach(this, scaffold->border[0], scaffold, true, p.second, shared_ptr<map<Node*,Gradient> >());
+  // Old state restored, don't need to do anything else
+  return xiWeight;
+}
+
+double ConcreteTrace::posteriorAt(ScopeID scope, BlockID block) {
+  // TODO This is a different code path from normal infer commands
+  // because it needs to return the weight
+  shared_ptr<ScaffoldIndexer> scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
+  shared_ptr<Scaffold> scaffold = scaffoldIndexer->sampleIndex(this);
+  set<Node*> pNodes = scaffold->getPrincipalNodes();
+
+  // TODO Abstract this conversion between set<Node*> and vector<ApplicationNode*>
+  vector<ApplicationNode*> appNodes;
+  BOOST_FOREACH(Node * node, pNodes)
+  {
+    ApplicationNode * applicationNode = dynamic_cast<ApplicationNode*>(node);
+    assert(applicationNode);
+    appNodes.push_back(applicationNode);
+  }
+
+  // TODO Abstract this collection of current values
+  vector<VentureValuePtr> currentValues;
+  BOOST_FOREACH(Node * node, pNodes)
+  {
+    currentValues.push_back(this->getValue(node));
+  }
+
+  registerDeterministicLKernels(this, scaffold, appNodes, currentValues);
+  pair<double,shared_ptr<DB> > p = detachAndExtract(this,scaffold->border[0],scaffold);
+  double xiWeight = regenAndAttach(this, scaffold->border[0], scaffold, true, p.second, shared_ptr<map<Node*,Gradient> >());
+  // Old state restored, don't need to do anything else
+  return xiWeight;
+}
+
+double ConcreteTrace::likelihoodWeight() {
+  // TODO This is a different code path from normal infer commands
+  // because it needs to return the new weight
+  ScopeID scope = VentureValuePtr(new VentureSymbol("default"));
+  BlockID block = VentureValuePtr(new VentureSymbol("all"));
+  shared_ptr<ScaffoldIndexer> scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
+  shared_ptr<Scaffold> scaffold = scaffoldIndexer->sampleIndex(this);
+  pair<double,shared_ptr<DB> > p = detachAndExtract(this,scaffold->border[0],scaffold);
+  double xiWeight = regenAndAttach(this, scaffold->border[0], scaffold, false, shared_ptr<DB>(new DB()), shared_ptr<map<Node*,Gradient> >());
+  // Always "accept"
+  return xiWeight;
+}
 
 int ConcreteTrace::getSeed() { assert(false); }
 double ConcreteTrace::getGlobalLogScore() { assert(false); }

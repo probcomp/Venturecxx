@@ -13,7 +13,7 @@ good next point for improvement.
 
 There are also no good facilities for automatically checking whether a
 property fails stochastically or deterministically, or combinators for
-decising whether "sporadic fail" should be treated as "fail" or
+deciding whether "sporadic fail" should be treated as "fail" or
 "pass"."""
 
 import numpy.random as npr
@@ -45,24 +45,17 @@ def checkTypedProperty(prop, type_, *args, **kwargs):
     counter-example.
 
   """
-  app_ct = 0
-  for _ in range(20):
-    try:
-      synth_args = synthesize_for(type_)
-    except ArgumentsNotAppropriate: continue
-    try:
-      prop(synth_args, *args, **kwargs)
-      app_ct += 1
-    except ArgumentsNotAppropriate: continue
-    except SkipTest: raise
-    except Exception:
-      # Reraise the exception with an indication of the argument that caused it.
-      # Also arrange for a reasonable backtrace, per
-      # http://nedbatchelder.com/blog/200711/rethrowing_exceptions_in_python.html
-      import sys
-      info = sys.exc_info()
-      raise info[0]("%s led to %s" % (synth_args, info[1])), None, info[2]
-  if app_ct == 0:
+
+  # Try at most 20 times, but record a pass if even one passes (as
+  # long as none fail).
+  pass_ct = 0
+  try_budget = 20
+  while try_budget > 0:
+    attempt = findAppropriateArguments(prop, type_, try_budget, *args, **kwargs)
+    if attempt is None: break
+    pass_ct += 1
+    try_budget -= attempt[2]
+  if pass_ct == 0:
     raise SkipTest("Could not find appropriate args for %s" % prop)
 
 class ArgumentsNotAppropriate(Exception):
@@ -81,6 +74,35 @@ list, makes that many things of those types, recursively."""
       raise ArgumentsNotAppropriate("Cannot generate arguments for %s" % type_)
   else:
     return [synthesize_for(t) for t in type_]
+
+def findAppropriateArguments(f, type_, max_tries, *args, **kwargs):
+  """Finds a set arguments from type_ that f deems appropriate.
+
+  Returns the arguments, the return value, and the number of attempts.
+
+  Gives up if none are discovered in max_tries tries (set this if you
+  are worried that the type might be too loose).
+
+  """
+  tried = 0
+  for _ in range(max_tries):
+    tried += 1
+    try:
+      synth_args = synthesize_for(type_)
+    except ArgumentsNotAppropriate: continue
+    try:
+      ans = f(synth_args, *args, **kwargs)
+      return [synth_args, ans, tried]
+    except ArgumentsNotAppropriate: continue
+    except SkipTest: raise
+    except Exception:
+      # Reraise the exception with an indication of the argument that caused it.
+      # Also arrange for a reasonable backtrace, per
+      # http://nedbatchelder.com/blog/200711/rethrowing_exceptions_in_python.html
+      import sys
+      info = sys.exc_info()
+      raise info[0]("%s led to %s" % (synth_args, info[1])), None, info[2]
+  return None
 
 def carefully(f, *args, **kwargs):
   """Calls f with the given arguments, converting ValueError and

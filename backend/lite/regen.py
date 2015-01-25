@@ -7,7 +7,8 @@ from value import SPRef
 from lkernel import VariationalLKernel
 from scope import isScopeIncludeOutputPSP
 from consistency import assertTorus, assertTrace
-from exception import VentureError, StackFrame
+from exception import VentureError
+from venture.exception import VentureException
 
 def regenAndAttach(trace,scaffold,shouldRestore,omegaDB,gradients):
   assertTorus(scaffold)
@@ -50,13 +51,13 @@ def propagateConstraint(trace,node,value):
   if isinstance(node,LookupNode): trace.setValueAt(node,value)
   elif isinstance(node,RequestNode):
     if not isinstance(trace.pspAt(node),NullRequestPSP):
-      raise Exception("Cannot make requests downstream of a node that gets constrained during regen")
+      raise VentureException("evaluation", "Cannot make requests downstream of a node that gets constrained during regen", address = node.address)
   else:
     # TODO there may be more cases to ban here.
     # e.g. certain kinds of deterministic coupling through mutation.
     assert isinstance(node,OutputNode)
     if trace.pspAt(node).isRandom():
-      raise Exception("Cannot make random choices downstream of a node that gets constrained during regen")
+      raise VentureException("evaluation", "Cannot make random choices downstream of a node that gets constrained during regen", address = node.address)
     # TODO Is it necessary to unincorporate and incorporate here?  If
     # not, why not?
     trace.setValueAt(node,trace.pspAt(node).simulate(trace.argsAt(node)))
@@ -102,37 +103,30 @@ def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   assert isinstance(weight, numbers.Number)
   return weight
 
-def evalFamily(trace,exp,env,scaffold,shouldRestore,omegaDB,gradients):
+def evalFamily(trace,address,exp,env,scaffold,shouldRestore,omegaDB,gradients):
   if e.isVariable(exp):
     try:
       sourceNode = env.findSymbol(exp)
     except VentureError as err:
-      err.stack_frame = StackFrame(exp, [])
-      raise err
+      raise VentureException("evaluation", err.message, address=address)
     weight = regen(trace,sourceNode,scaffold,shouldRestore,omegaDB,gradients)
-    return (weight,trace.createLookupNode(sourceNode))
-  elif e.isSelfEvaluating(exp): return (0,trace.createConstantNode(exp))
-  elif e.isQuotation(exp): return (0,trace.createConstantNode(e.textOfQuotation(exp)))
+    return (weight,trace.createLookupNode(address,sourceNode))
+  elif e.isSelfEvaluating(exp): return (0,trace.createConstantNode(address,exp))
+  elif e.isQuotation(exp): return (0,trace.createConstantNode(address,e.textOfQuotation(exp)))
   else:
     weight = 0
     nodes = []
     for index, subexp in enumerate(exp):
-      try:
-        w, n = evalFamily(trace,subexp,env,scaffold,shouldRestore,omegaDB,gradients)
-        weight += w
-        nodes.append(n)
-      except VentureError as err:
-        # here we flatten nested expressions
-        err.stack_frame.exp = exp
-        err.stack_frame.index.append(index)
-        raise err
+      addr = address.extend(index)
+      w, n = evalFamily(trace,addr,subexp,env,scaffold,shouldRestore,omegaDB,gradients)
+      weight += w
+      nodes.append(n)
 
-    (requestNode,outputNode) = trace.createApplicationNodes(nodes[0],nodes[1:],env)
+    (requestNode,outputNode) = trace.createApplicationNodes(address,nodes[0],nodes[1:],env)
     try:
       weight += apply(trace,requestNode,outputNode,scaffold,shouldRestore,omegaDB,gradients)
     except VentureError as err:
-      err.stack_frame = StackFrame(exp, [], err.stack_frame)
-      raise err
+      raise VentureException("evaluation", err.message, address=address)
     assert isinstance(weight, numbers.Number)
     return weight,outputNode
 
@@ -197,8 +191,16 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
         esrParent = omegaDB.getESRParent(trace.spAt(node),esr.id)
         weight += restore(trace,esrParent,scaffold,omegaDB,gradients)
       else:
-        (w,esrParent) = evalFamily(trace,esr.exp,esr.env,scaffold,shouldRestore,omegaDB,gradients)
+        address = node.address.request(esr.addr)
+        (w,esrParent) = evalFamily(trace,address,esr.exp,esr.env,scaffold,shouldRestore,omegaDB,gradients)
         weight += w
+      if trace.containsSPFamilyAt(node,esr.id):
+        # evalFamily already registered a family with this id for the
+        # operator being applied here, which means a recursive call to
+        # the operator issued a request for the same id.  Currently,
+        # the only way for that it happen is for a recursive memmed
+        # function to call itself with the same arguments.
+        raise VentureException("evaluation", "Recursive mem argument loop detected.", address = node.address)
       trace.registerFamilyAt(node,esr.id,esrParent)
 
     esrParent = trace.spFamilyAt(node,esr.id)
@@ -215,6 +217,7 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 
 def restore(trace,node,scaffold,omegaDB,gradients):
   if isinstance(node,ConstantNode): return 0
+  if isinstance(node,OutputNode) and node.isFrozen: return 0
   if isinstance(node,LookupNode):
     weight = regenParents(trace,node,scaffold,True,omegaDB,gradients)
     trace.reconnectLookup(node)

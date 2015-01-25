@@ -40,7 +40,7 @@ class Node(object):
     self.delta(index, -1)
 
   def __setitem__(self, index, value):
-    self.delta(self, index, value - self[index])
+    self.delta(index, value - self[index])
 
   def __iter__(self):
     if self.leaf:

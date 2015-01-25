@@ -1,6 +1,7 @@
-from value import VentureValue, registerVentureType, VentureType, PositiveType, NumberType, ProbabilityType, MatrixType, SymmetricMatrixType, BoolType, ZeroType
+from value import VentureValue, registerVentureType, VentureType
 import copy
 from exception import VentureError
+import venture.value.dicts as v
 
 class SPFamilies(object):
   def __init__(self, families=None):
@@ -45,6 +46,14 @@ class SP(object):
     if candidate:
       return candidate
     return name
+  def description_rst_format(self,name):
+    candidate = self.outputPSP.description_rst_format(name)
+    if candidate:
+      return candidate
+    candidate = self.requestPSP.description_rst_format(name)
+    if candidate:
+      return candidate
+    return (".. function:: %s" % name, name)
   def venture_type(self):
     if hasattr(self.outputPSP, "f_type"):
       return self.outputPSP.f_type
@@ -66,6 +75,9 @@ class VentureSPRecord(VentureValue):
   def show(self):
     return self.sp.show(self.spAux)
 
+  def asStackDict(self, _trace=None):
+    return v.val("sp", self.show())
+
 registerVentureType(VentureSPRecord)
 
 class SPType(VentureType):
@@ -80,6 +92,10 @@ used in the implementation of TypedPSP and TypedLKernel."""
   def __contains__(self, vthing): return isinstance(vthing, VentureSPRecord)
 
   def __init__(self, args_types, return_type, variadic=False, min_req_args=None):
+    """args_types is expected to be a Python list of instances of venture.lite.sp.VentureType,
+    and return_type is expected to be one instance of same.
+
+    See also the "Types" section of doc/type-system.md."""
     self.args_types = args_types
     self.return_type = return_type
     self.variadic = variadic
@@ -88,7 +104,11 @@ used in the implementation of TypedPSP and TypedLKernel."""
     self.min_req_args = len(args_types) if min_req_args is None else min_req_args
 
   def wrap_return(self, value):
-    return self.return_type.asVentureValue(value)
+    try:
+      return self.return_type.asVentureValue(value)
+    except VentureError as e:
+      e.message = "Wrong return type: " + e.message
+      raise e
   def unwrap_return(self, value):
     # value could be None for e.g. a "delta kernel" that is expected,
     # by e.g. pgibbs, to actually be a simulation kernel; also when
@@ -135,6 +155,29 @@ used in the implementation of TypedPSP and TypedLKernel."""
   def name(self):
     """A default name for when there is only room for one name."""
     return self._name_for_fixed_arity(self.args_types)
+
+  def name_rst_format(self, name):
+    def subtype_name(tp):
+      if hasattr(tp, "name_rst_format"):
+        return tp.name_rst_format("proc")
+      else:
+        return tp.name()
+    result = name + "("
+    for (i, arg) in enumerate(self.args_types):
+      if i >= self.min_req_args:
+        result += "["
+      if i > 0:
+        result += ", "
+      result += subtype_name(arg)
+    if self.variadic: result += ", ..."
+    result += "]" * (len(self.args_types) - self.min_req_args)
+    result += ")"
+    if name != "proc":
+      # Top-level
+      result += "\n\n   :rtype: " + subtype_name(self.return_type)
+    else:
+      result += " -> " + subtype_name(self.return_type)
+    return result
 
   def gradient_type(self):
     return SPType([t.gradient_type() for t in self.args_types], self.return_type.gradient_type(), self.variadic, self.min_req_args)

@@ -36,6 +36,30 @@ class BernoulliOutputPSP(DiscretePSP):
   def description(self,name):
     return "  (%s p) returns true with probability p and false otherwise.  If omitted, p is taken to be 0.5." % name
 
+class LogBernoulliOutputPSP(DiscretePSP):
+  def simulate(self,args):
+    logp = args.operandValues[0]
+    return math.log(random.random()) < logp
+    
+  def logDensity(self,val,args):
+    logp = args.operandValues[0]
+    if val: return logp
+    else: return extendedLog(1 - math.exp(logp))
+
+  def gradientOfLogDensity(self, val, args):
+    logp = args.operandValues[0]
+    deriv = 1 if val else 1 / (1 - math.exp(-logp))
+    return (0, [deriv])
+
+  def enumerateValues(self,args):
+    logp = args.operandValues[0]
+    if p == 0: return [True]
+    elif p == float('-inf'): return [False]
+    else: return [True,False]
+
+  def description(self,name):
+    return "  (%s p) returns true with probability exp(p) and false otherwise." % name
+
 class BinomialOutputPSP(DiscretePSP):
   def simulate(self,args):
     (n,p) = args.operandValues
@@ -200,7 +224,7 @@ class MakerUBetaBernoulliOutputPSP(DiscretePSP):
     return "  (%s alpha beta) returns an uncollapsed beta bernoulli sampler with pseudocounts alpha (for true) and beta (for false)." % name
 
 class UBetaBernoulliAAALKernel(LKernel):
-  def simulate(self,trace,oldValue,args):
+  def simulate(self, _trace, _oldValue, args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
     [ctY,ctN] = args.madeSPAux.cts()
@@ -229,7 +253,7 @@ class UBetaBernoulliOutputPSP(DiscretePSP):
     else: # I produced false
       spaux.no -= 1
 
-  def simulate(self,args): return random.random() < self.weight
+  def simulate(self, _args): return random.random() < self.weight
 
   def logDensity(self, value, _args):
     if value == True:

@@ -1,3 +1,54 @@
+"""Customizations of the Venture test suite.
+
+The Venture test suite has more structure than a typical "unit test"
+suite for a typical software system.  Notably, there is a chunk of
+tests of the form "This model should be solved by this inference
+method", and another chunk of the form "This model should be solved by
+any reasonable inference method."
+
+A problem we have is that testing inference quality tends to be
+relatively expensive -- one needs several samples, and typically the
+inference methods one is testing need to run for several iterations.
+That's two nested loops that hardly add anything from the perspective
+of looking for crash bugs; yet, we want to be able to reuse those
+tests as crash tests in addition to inference quality tests.
+
+That is the main problem this module solves, as well as the problem
+that most models are runnable in any backend.
+
+To write a new test:
+
+- If your test should be generic across backends, use get_ripl or
+  get_mripl from this module instead of venture.shortcuts
+
+- If not, please decorate it with @in_backend (or @gen_in_backend)
+  to keep Jenkins from running it redundantly
+
+- If your test wants samples from a distribution produced by a single
+  inference program over a model with a single (relevant) predict
+  statement, try to use collectSamples, collectStateSequence, or
+  collectIidSamples rather than calling ripl.infer directly, because
+  they are sensitive to whether the test is being run for inference
+  quality
+
+  - If your test is agnostic to the inference program, do not pass an
+    infer argument to collectSamples
+
+  - If not, please decorate it with @on_inf_prim or @gen_on_inf_prim
+
+- If your test checks properties of distributions, see whether you
+  can use @statisticalTest from the stats module
+
+- If your test is known to fail in a particular backend or under other
+  particular modes, and you are not currently fixing it, consider
+  annotating it with @broken_in, @gen_broken_in, or
+  @skipWhenRejectionSampling, @skipWhenInParallel
+
+- If your test is known to fail in other circumstances, and you are
+  not fixing it, raise a SkipTest exception from the nose module
+
+"""
+
 import nose.tools as nose
 from nose import SkipTest
 from testconfig import config
@@ -50,11 +101,11 @@ def default_num_transitions_per_sample():
 disable_get_ripl = False
 ct_get_ripl_called = 0
 
-def get_ripl():
+def get_ripl(persistent_inference_trace=False):
   assert not disable_get_ripl, "Trying to get the configured ripl in a test marked as not ripl-agnostic."
   global ct_get_ripl_called
   ct_get_ripl_called += 1
-  return s.backend(config["get_ripl"]).make_church_prime_ripl()
+  return s.backend(config["get_ripl"]).make_combined_ripl(persistent_inference_trace=persistent_inference_trace)
 
 def get_mripl(no_ripls=2,local_mode=None,**kwargs):
    # NB: there is also global "get_mripl_backend" for having special-case backend
@@ -62,19 +113,49 @@ def get_mripl(no_ripls=2,local_mode=None,**kwargs):
   backend = config["get_ripl"]
   local_mode = config["get_mripl_local_mode"] if local_mode is None else local_mode
   return ip_parallel.MRipl(no_ripls,backend=backend,local_mode=local_mode,**kwargs)
-  
+
 
 def get_core_sivm():
   return s.backend(config["get_ripl"]).make_core_sivm()
 
 
 def collectSamples(*args, **kwargs):
+  """Repeatedly run inference on a ripl and query a directive, and return the list of values.
+
+  The first argument gives the ripl against which to do this
+
+  The second argument gives the number or label of the directive to
+  query (by the ripl 'report' method)
+
+  The inference program is given by the 'infer' keyword argument;
+  default to the configured default inference
+
+  The number of samples is given by the 'num_samples' keyword
+  argument; default to the configured default number of samples
+
+  There are two natural versions of what this means: The returned
+  sample list should be either:
+
+  - IID samples from the distribution that arises from running the
+    infer command once (obtained by resetting the ripl between
+    sampling)
+
+  - A (dependent) sequence given by running inference repeatedly
+    without resetting the ripl and querying between runs
+
+  Which one you get from collectSamples depends on a configuration
+  parameter (which defaults to IID).  If you want to force this issue,
+  use collectIidSamples or collectStateSequence.
+
+  """
   return _collectData(collect_iid_samples(), *args, **kwargs)
 
 def collectStateSequence(*args, **kwargs):
+  """collectSamples but pegged to continuing inference (no resetting)"""
   return _collectData(False, *args, **kwargs)
 
 def collectIidSamples(*args, **kwargs):
+  """collectSamples but pegged to IID samples (resetting the ripl)"""
   return _collectData(True, *args, **kwargs)
 
 def _collectData(iid,ripl,address,num_samples=None,infer=None):
@@ -223,7 +304,7 @@ values are:
 
   "mh", "func_mh", "gibbs", "emap", "pgibbs", "func_pgibbs",
   "meanfield", "hmc", "map", "nesterov", "rejection", "slice", or
-  "slice_doubling", "resample", "peek", "peek_all", "plotf"
+  "slice_doubling", "resample", "peek", "plotf"
          for that inference primitive
   "none" for a primitive-independent test (i.e., does not test inference meaningfully)
   "any"  for a primitive-agnostic test (i.e., should work the same for
@@ -273,7 +354,7 @@ Possible values are:
 
   "mh", "func_mh", "gibbs", "emap", "pgibbs", "func_pgibbs",
   "meanfield", "hmc", "map", "nesterov", "rejection", "slice", or
-  "slice_doubling", "resample", "peek", "peek_all", "plotf"
+  "slice_doubling", "resample", "peek", "plotf"
          for that inference primitive
   "none" for primitive-independent tests (i.e., do not test inference meaningfully)
   "any"  for primitive-agnostic tests (i.e., should work the same for
@@ -322,7 +403,7 @@ general-purpose inference programs except rejection sampling.
     @nose.make_decorator(f)
     def wrapped(*args):
       if not rejectionSampling():
-        f(*args)
+        return f(*args)
       else:
         raise SkipTest(reason)
     wrapped.skip_when_rejection_sampling = True # TODO Skip by these tags in all-crashes & co
@@ -332,12 +413,32 @@ general-purpose inference programs except rejection sampling.
 def rejectionSampling():
   return config["infer"].startswith("(rejection default all")
 
+# TODO Abstract commonalities with the rejection skipper
+def skipWhenSubSampling(reason):
+  """Annotate a test function as being suitable for testing all
+general-purpose inference programs except sub-sampled MH.
+
+  """
+  def wrap(f):
+    @nose.make_decorator(f)
+    def wrapped(*args):
+      if not subSampling():
+        return f(*args)
+      else:
+        raise SkipTest(reason)
+    wrapped.skip_when_sub_sampling = True # TODO Skip by these tags in all-crashes & co
+    return wrapped
+  return wrap
+
+def subSampling():
+  return config["infer"].startswith("(subsampled_mh")
+
 def skipWhenInParallel(reason):
   def wrap(f):
     @nose.make_decorator(f)
     def wrapped(*args):
       if not inParallel():
-        f(*args)
+        return f(*args)
       else:
         raise SkipTest(reason)
     wrapped.skip_when_in_parallel = True # TODO Skip by these tags in all-crashes & co
@@ -349,3 +450,25 @@ def inParallel():
     if config["infer"].startswith("(" + operator) and not config["infer"].endswith("false)"):
       return True
   return False
+
+def needs_ggplot(f):
+  assert not isgeneratorfunction(f), "Use gen_needs_ggplot for generator test %s" % f.__name__
+  @nose.make_decorator(f)
+  def wrapped(*args):
+    try:
+      import ggplot             # pylint: disable=unused-variable
+      return f(*args)
+    except ImportError:
+      raise SkipTest("ggplot not installed on this machine")
+  return wrapped
+
+def gen_needs_ggplot(f):
+  assert isgeneratorfunction(f), "Use needs_ggplot for non-generator test %s" % f.__name__
+  @nose.make_decorator(f)
+  def wrapped(*args):
+    try:
+      import ggplot
+      for t in f(*args): yield t
+    except ImportError:
+      raise SkipTest("ggplot not installed on this machine")
+  return wrapped

@@ -169,9 +169,7 @@ class ParticlePGibbsOperator(object):
       particles = newParticles
       particleWeights = newParticleWeights
 
-    # Now sample a NEW particle in proportion to its weight
-    finalIndex = sampleLogCategorical(particleWeights[0:-1])
-    assert finalIndex < P
+    finalIndex = self.select_final_particle_index(particleWeights)
 
     self.finalIndex = finalIndex
     self.particles = particles
@@ -191,6 +189,10 @@ class ParticlePGibbsOperator(object):
     alpha = weightMinusRho - weightMinusXi
     return alpha
 
+  def select_final_particle_index(self, particleWeights):
+    # Sample a new particle in proportion to its weight
+    return sampleLogCategorical(particleWeights[0:-1])
+
   def accept(self):
     self.particles[self.finalIndex].commit()
     assertTrace(self.trace,self.scaffold)
@@ -200,3 +202,14 @@ class ParticlePGibbsOperator(object):
     assertTrace(self.trace,self.scaffold)
 
   def name(self): return "particle gibbs (functional)"
+
+## CONSIDER Whether this operator actually finds the MAP or the maximum likelihood.
+class ParticlePMAPOperator(ParticlePGibbsOperator):
+
+  def select_final_particle_index(self, particleWeights):
+    return particleWeights.index(max(particleWeights))
+
+  def _compute_alpha(self, particleWeights, finalIndex):
+    return 0 # This operator is not supposed to be M-H compliant
+
+  def name(self): return "particle map (functional)"

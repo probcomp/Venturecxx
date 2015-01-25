@@ -5,6 +5,7 @@ import numpy.linalg as npla
 import scipy.special as spsp
 import numpy as np
 from utils import logDensityMVNormal, numpy_force_number
+from utils import override
 from exception import VentureValueError, GradientWarning
 import warnings
 
@@ -25,7 +26,20 @@ class NormalDriftKernel(LKernel):
     term3 = self.epsilon * nu
     return term1 + term2 + term3
 
+class MVNormalRandomWalkKernel(LKernel):
+  def __init__(self, epsilon = 0.7):
+    self.epsilon = epsilon if epsilon is not None else 0.7
 
+  def simulate(self, _trace, oldValue, args):
+    (mu, _) = MVNormalOutputPSP.__parse_args__(args)
+    nu = scipy.stats.norm.rvs(0,self.epsilon,mu.shape)
+    return oldValue + nu
+
+  @override(LKernel)
+  def weight(self, _trace, _newValue, _oldValue, _args):
+    # log P(_newValue --> _oldValue) == log P(_oldValue --> _newValue)
+    (mu, sigma) = MVNormalOutputPSP.__parse_args__(_args)
+    return logDensityMVNormal(_newValue, mu, sigma)
 
 class MVNormalOutputPSP(RandomPSP):
   def simulate(self, args):
@@ -44,6 +58,9 @@ class MVNormalOutputPSP(RandomPSP):
     gradSigma = .5*np.dot(np.dot(isigma, xvar),isigma)-.5*isigma
     return np.array(gradX).tolist(), [np.array(gradMu).tolist(), gradSigma]
 
+  def hasDeltaKernel(self): return True
+  def getDeltaKernel(self,*args): return MVNormalRandomWalkKernel(*args)
+
   def logDensityBound(self, x, args):
     (mu, sigma) = self.__parse_args__(args)
     if sigma is not None:
@@ -57,7 +74,8 @@ class MVNormalOutputPSP(RandomPSP):
   def description(self,name):
     return "  (%s mean covariance) samples a vector according to the given multivariate Gaussian distribution.  It is an error if the dimensionalities of the arguments do not line up." % name
 
-  def __parse_args__(self, args):
+  @staticmethod
+  def __parse_args__(args):
     return (np.array(args.operandValues[0]), np.array(args.operandValues[1]))
 
 class InverseWishartPSP(RandomPSP):
@@ -198,7 +216,7 @@ class NormalOutputPSP(RandomPSP):
   def logDensityBound(self, x, args): return self.logDensityBoundNumeric(x, *args.operandValues)
 
   def hasDeltaKernel(self): return False # have each gkernel control whether it is delta or not
-  def getDeltaKernel(self): return NormalDriftKernel()
+  def getDeltaKernel(self,args): return NormalDriftKernel(args)
 
   def hasVariationalLKernel(self): return True
   def getParameterScopes(self): return ["REAL","POSITIVE_REAL"]
@@ -263,6 +281,23 @@ class BetaOutputPSP(RandomPSP):
     return "  (%s alpha beta) returns a sample from a beta distribution with shape parameters alpha and beta." % name
 
   # TODO Beta presumably has a variational kernel too?
+
+class ExponOutputPSP(RandomPSP):
+  # TODO don't need to be class methods
+  def simulateNumeric(self,gamma): return scipy.stats.expon.rvs(scale=1.0/gamma)
+  def logDensityNumeric(self,x,gamma): return scipy.stats.expon.logpdf(x,scale=1.0/gamma)
+
+  def simulate(self,args): return self.simulateNumeric(*args.operandValues)
+  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
+
+  def gradientOfLogDensity(self,x,args):
+    gamma = args.operandValues[0]
+    gradX = -gamma
+    gradGamma = 1. / gamma - x
+    return (gradX,[gradGamma])
+
+  def description(self,name):
+    return "  (%s gamma) returns a sample from an exponential distribution with rate (inverse scale) parameter gamma." % name
 
 class GammaOutputPSP(RandomPSP):
   # TODO don't need to be class methods
@@ -379,3 +414,28 @@ class InvGammaOutputPSP(RandomPSP):
     return "(%s alpha beta) returns a sample from an inverse gamma distribution with shape parameter alpha and scale parameter beta" % name
 
   # TODO InvGamma presumably has a variational kernel too?
+
+class LaplaceOutputPSP(RandomPSP):
+  # a is the location, b is the scale; parametrization is same as Wikipedia
+  def simulateNumeric(self,a,b): return scipy.stats.laplace.rvs(a,b)
+  def logDensityNumeric(self,x,a,b): return scipy.stats.laplace.logpdf(x,a,b)
+
+  def simulate(self, args): return self.simulateNumeric(*args.operandValues)
+  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
+
+  def gradientOfLogDensity(self,x,args):
+    a = args.operandValues[0]
+    b = args.operandValues[1]
+    # if we're at the cusp point, play it safe and go undefined
+    if x == a:
+      gradX = np.nan
+      gradA = np.nan
+    else:
+      xgta = float(np.sign(x - a))
+      gradX = -xgta / b
+      gradA = xgta / b
+    gradB = (-1. / b) + abs(x - float(a)) / (b ** 2)
+    return (gradX,[gradA,gradB])
+
+  def description(self,name):
+    return "(%s a b) returns a sample from a laplace (double exponential) distribution with shape parameter a and scale parameter b" % name

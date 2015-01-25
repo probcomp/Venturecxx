@@ -1,5 +1,5 @@
 from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, on_inf_prim, defaultInfer
+from venture.test.config import get_ripl, collectSamples, on_inf_prim, defaultInfer, skipWhenSubSampling
 from nose.tools import eq_
 
 @on_inf_prim("none")
@@ -7,6 +7,7 @@ def testMemSmoke1():
   "Mem should be a noop on deterministic procedures (only memoizing)."
   eq_(get_ripl().predict("((mem (lambda (x) 3)) 1)"), 3.0)
 
+@skipWhenSubSampling("Subsampling the consequences causes them to become stale")
 def testMemBasic1():
   "MSPs should always give the same answer when called on the same arguments"
   ripl = get_ripl()
@@ -16,6 +17,7 @@ def testMemBasic1():
     assert reduce(lambda x,y: x == y,[ripl.report("p%d" % i) for i in range(10)])
     ripl.infer(defaultInfer())
 
+@skipWhenSubSampling("Subsampling the consequences causes them to become stale")
 def testMemBasic2():
   "MSPs should always give the same answer when called on the same arguments"
   ripl = get_ripl()
@@ -25,6 +27,7 @@ def testMemBasic2():
     assert reduce(lambda x,y: x == y,[ripl.report("p%d" % i) for i in range(10)])
     ripl.infer(defaultInfer())
 
+@skipWhenSubSampling("Subsampling the consequences causes them to become stale")
 def testMemBasic3():
   "MSPs should always give the same answer when called on the same arguments"
   ripl = get_ripl()

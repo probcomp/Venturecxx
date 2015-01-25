@@ -2,20 +2,20 @@ from psp import DeterministicPSP, ESRRefOutputPSP
 from sp import SP, VentureSPRecord
 from env import VentureEnvironment
 from request import Request,ESR
-import value as v
 from exception import VentureError
 
 class CSPRequestPSP(DeterministicPSP):
-  def __init__(self,ids,exp,env):
+  def __init__(self,ids,exp,addr,env):
     self.ids = ids
     self.exp = exp
+    self.addr = addr
     self.env = env
 
   def simulate(self,args):
     if len(self.ids) != len(args.operandNodes):
       raise VentureError("Wrong number of arguments: compound takes exactly %d arguments, got %d." % (len(self.ids), len(args.operandNodes)))
     extendedEnv = VentureEnvironment(self.env,self.ids,args.operandNodes)
-    return Request([ESR(args.node,self.exp,extendedEnv)])
+    return Request([ESR(args.node,self.exp,self.addr,extendedEnv)])
 
   def gradientOfSimulate(self, args, _value, _direction):
     # TODO Collect derivatives with respect to constants in the body
@@ -29,7 +29,9 @@ class MakeCSPOutputPSP(DeterministicPSP):
   def simulate(self,args):
     ids = args.operandValues[0]
     exp = args.operandValues[1]
-    return VentureSPRecord(SP(CSPRequestPSP(ids,exp,args.env),ESRRefOutputPSP()))
+    # point to the desugared source code location of lambda body
+    addr = args.operandNodes[1].address.last.append(1)
+    return VentureSPRecord(SP(CSPRequestPSP(ids,exp,addr,args.env),ESRRefOutputPSP()))
 
   def gradientOfSimulate(self, args, _value, _direction):
     # A lambda is a constant.  I may need to do some plumbing here,

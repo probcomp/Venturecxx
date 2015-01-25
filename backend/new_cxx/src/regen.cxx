@@ -387,6 +387,16 @@ double evalRequests(Trace * trace,
         weight += p.first;
         esrRoot = shared_ptr<Node>(p.second);
       }
+      if (trace->containsMadeSPFamily(trace->getOperatorSPMakerNode(requestNode),esr.id))
+      {
+        // evalFamily already registered a family with this id for the
+        // operator being applied here, which means a recursive call
+        // to the operator issued a request for the same id.
+        // Currently, the only way for that it happen is for a
+        // recursive memmed function to call itself with the same
+        // arguments.
+        throw "Recursive mem argument loop detected.";
+      }
       trace->registerMadeSPFamily(trace->getOperatorSPMakerNode(requestNode),esr.id,esrRoot);
     }
     RootOfFamily esrRoot = trace->getMadeSPFamilyRoot(trace->getOperatorSPMakerNode(requestNode),esr.id);

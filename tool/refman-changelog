@@ -1,0 +1,29 @@
+#!/bin/bash
+
+if [[ -z $1 ]]; then
+    echo "Usage: refman-changelog commit
+
+Print changes to files that have significant impact on the reference
+manual since the specified commit.
+
+A good commit to choose might be the one that occurred on the date
+of the last update to the online edition of the reference manual,
+which can be ascertained by invoking
+
+  ls -l /afs/csail.mit.edu/proj/probcomp/www/data/venture/edge/reference/
+
+at any CSAIL machine.
+
+Must be invoked from the root of the Venture checkout."
+    exit 1
+fi
+
+commit=$1
+
+git diff $commit..HEAD -- backend/lite/builtin.py             # Lite modeling SPs
+git diff $commit..HEAD -- backend/lite/inference_sps.py       # Inference SPs
+git diff $commit..HEAD -- python/lib/sivm/macro.py            # Macros
+git diff $commit..HEAD -- python/lib/engine/macro.py          # Inference-only macros
+git diff $commit..HEAD -- backend/new_cxx/src/builtin.cxx     # Puma modeling SPs
+git diff $commit..HEAD -- script/venture                      # Invocation
+echo "Don't forget to check the reference manual repository"

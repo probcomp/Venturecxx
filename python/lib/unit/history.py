@@ -4,6 +4,7 @@ import os
 import copy
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 from utils import cartesianProduct, makeIterable
 
@@ -33,7 +34,7 @@ typically also tracked."""
         self.label = label # :: string
         self.parameters = parameters # :: {string: a}  the model parameters leading to the data stored here
         self.nameToSeries = {} # :: {string: [Series]} the list is over multiple runs
-        self.data = [] 
+        self.data = []
 
         self.nameToType = {}
 
@@ -45,7 +46,7 @@ typically also tracked."""
             answer = History(runs[0].label, runs[0].parameters)
             for r in runs: answer.addRun(r)
             return answer
-        
+
     def addSeries(self, name, type, label, values, hist=True):
         self._addSeries(name, type, Series(label, values, hist))
 
@@ -84,12 +85,12 @@ typically also tracked."""
             self.addSeries(exp,type,'gTruth',values)
 
         ## FIXME GroundTruth Series must be removed from snapshots
-        
+
     def sampleRuns(self,numSamples):
         '''Returns new History with pointers to *numSamples* randomly
         sampled Runs from self'''
         newHistory=History(label= self.label+'_sampled', parameters=self.parameters)
-    
+
         noRuns = len(self.nameToSeries.items()[0][1])
         indices = random.sample(xrange(noRuns),numSamples)
 
@@ -116,7 +117,7 @@ typically also tracked."""
         Snapshot of values across series for each time-step.
         Created by copying scalar values from nameToSeries.
         Output = {name:[ snapshot_i ] }, where snapshot_i
-        is [series.value[i] for series in nameToSeries[name]]''' 
+        is [series.value[i] for series in nameToSeries[name]]'''
         snapshots={}
         # always ignore sweep time for snapshots
         ignore=('sweep time','sweep_iters')
@@ -124,7 +125,7 @@ typically also tracked."""
             if any([s in name.lower() for s in ignore]):
                 continue
             arrayValues = np.array( [s.values for s in listSeries] )
-            snapshots[name] = map(list,arrayValues.T) 
+            snapshots[name] = map(list,arrayValues.T)
         return snapshots
 
 
@@ -133,7 +134,7 @@ typically also tracked."""
         Compare samples across runs at two different probe points
         in History. Defaults to comparing all names and probes =
         (midPoint,lastPoint).'''
-    
+
         allSnapshots = self.historyToSnapshots()
         samples = len(allSnapshots.items()[0][1])
 
@@ -204,7 +205,7 @@ typically also tracked."""
 
            Show time-series plot of series in self.nameToSeries[name]
            with default labeling and formatting.
-    
+
            Arguments
            ---------
            name :: string
@@ -214,7 +215,7 @@ typically also tracked."""
            limitLegend :: int
              Limit how many series are listed on the legend. (To limit
              how many series are plotted, use self.sampleRuns).
-        
+
            '''
         self._plotOne(plotSeries, name, save=False, show=True, **kwargs)
 
@@ -300,7 +301,7 @@ def qqPlotAll(dicts,labels):
     # FIXME do interpolation where samples have different lengths
     exps = intersectKeys(dicts)
     fig,ax = plt.subplots( len(exps),2,figsize=(12,4*len(exps)) )
-    
+
     for i,exp in enumerate(exps):
         s1,s2 = (dicts[0][exp],dicts[1][exp])
         assert len(s1)==len(s2)
@@ -318,7 +319,7 @@ def qqPlotAll(dicts,labels):
             ax.set_title('QQ Plot %s'%exp)
             xr = np.linspace(min(s1),max(s1),30)
             ax.plot(xr,xr)
-            
+
         if len(exps)==1:
             makeHists(ax[0])
             makeQQ(ax[1])
@@ -363,28 +364,28 @@ class CompareSamplesReport(object):
             self.statsDict = statsDict
         if compareFig:
             self.compareFig = compareFig
-    
+
 
 def compareSampleDicts(dicts_hists,labels,plot=False):
     '''Input: dicts_hists :: ({exp:values}) | (History)
      where the first Series in History is used as values. History objects
-     are converted to dicts. Flatten History to include all Series.''' 
+     are converted to dicts. Flatten History to include all Series.'''
     if not isinstance(dicts_hists[0],dict):
         dicts = [historyNameToValues(h,seriesInd=0) for h in dicts_hists]
     else:
         dicts = dicts_hists
-        
+
     dicts = map(filterScalar,dicts) # could skip for Analytics
-    
+
     stats = (np.mean,scipy.stats.sem,np.median,len)
     statsString = ' '.join(['mean','std_err','median','N'])
     statsDict = {}
     report = ['compareSampleDicts: %s vs. %s \n'%(labels[0],labels[1])]
-    
+
     for exp in intersectKeys(dicts):
         report.append( '\n---------\n Name:  %s \n'%exp )
         statsDict[exp] = {}
-        
+
         for dict_i,label_i in zip(dicts,labels):
             samples=dict_i[exp]
             s_stats = tuple([s(samples) for s in stats])
@@ -396,7 +397,7 @@ def compareSampleDicts(dicts_hists,labels,plot=False):
         ksOut='KS Test:   '+ '  '.join(testResult.report.split('\n')[-2:])
         report.append( ksOut )
         statsDict[exp]['KSSameContinuous']=testResult
-        
+
     repSt = ' '.join(report)
     compareFig = qqPlotAll(dicts,labels) if plot else None
     return CompareSamplesReport(labels,repSt,statsDict,compareFig)
@@ -414,13 +415,13 @@ def historyNameToValues(history,seriesInd=0,flatten=False):
         nameToValues[name]=values
     return nameToValues
 
-# 
+#
 # TODO Parameters have to agree for now
 # FIXME does nameToType work with histOverlay?
 # TODO have a sensible default naming (for convenience)
 def historyOverlay(name, named_hists):
     ''':: string -> [(string,History)] -> History containing all those
-    time series overlaid'''  
+    time series overlaid'''
     answer = History(label=name, parameters=named_hists[0][1].parameters)
     for (subname,subhist) in named_hists:
         for (seriesname,seriesSet) in subhist.nameToSeries.iteritems():
@@ -429,7 +430,7 @@ def historyOverlay(name, named_hists):
                 answer.addSeries( seriesname, seriesType,
                                   subname+"_"+subseries.label,
                                   subseries.values, hist=subseries.hist)
-        
+
     for (subname,subhist) in named_hists:
         answer.addDataset(subhist.data)
     return answer
@@ -483,12 +484,6 @@ class Series(object):
         else:
             return range(len(self.values)) # Should be the same as plotting just the values
 
-import matplotlib
-#matplotlib.use('pdf')
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-#from matplotlib.backends.backend_pdf import PdfPages
-
 # Displays parameters in top-left corner of the graph.
 def showParameters(parameters):
     if len(parameters) == 0: return
@@ -497,21 +492,21 @@ def showParameters(parameters):
 
     text = items[0][0] + ' = ' + str(items[0][1])
     for (name, value) in items[1:]:
-        # TODO: something more principled to truncate overly long parameter values            
+        # TODO: something more principled to truncate overly long parameter values
         text += '\n' + name + ' = ' + str(value)[:20]
 
     plt.text(0, 1, text, transform=plt.axes().transAxes, va='top', size='small', linespacing=1.0)
 
 def seriesBounds(seriesList):
-    vmin = min([min(series.values) for series in seriesList])
-    vmax = max([max(series.values) for series in seriesList])
+    vmin = min([np.min(series.values) for series in seriesList])
+    vmax = max([np.max(series.values) for series in seriesList])
     offset = 0.1 * max([(vmax - vmin), 1.0])
     return (vmin - offset, vmax + offset)
 
 def setYBounds(seriesList, ybounds=None):
     if ybounds is None:
         (ylow, yhigh) = seriesBounds(seriesList)
-        if not any([any([np.isinf(v) for v in series.values]) for series in seriesList]):
+        if not any([np.any([np.isinf(v) for v in series.values]) for series in seriesList]):
             plt.ylim([ylow, yhigh])
     else:
         [ylow,yhigh] = ybounds # Silly pylint not noticing case on maybe type pylint:disable=unpacking-non-sequence
@@ -552,7 +547,7 @@ def _doScatterPlot(data, style=' o', ybounds=None, contour_func=None, contour_de
         plt.plot(xs.values, ys.values, style,label=xs.label) # Assume ys labels are the same
                  #marker='+',
                  #lw=.2,markersize=.4,
-                 
+
         setYBounds(ySeries, ybounds)
     if contour_func is not None:
         [xmin, xmax] = seriesBounds(xSeries)
@@ -583,7 +578,7 @@ def _plotPrettily(f, name, data, title="", parameters=None, filesuffix='',
     f(data, **kwargs)
 
     legend_outside(**kwargs)
-    
+
 
     if save:
         ensure_directory(directory)
@@ -604,7 +599,7 @@ def addToDict(dictionary, key, value):
 
 #TODO probably bit-rotted
 # is meant to work with *parameters* dict from VentureUnit object
-# need to adjust Unit/Analytics or function below to make 
+# need to adjust Unit/Analytics or function below to make
 # it easy to plot e.g. number of observes vs. runtime.
 
 # Produces plots for a given variable over a set of runs.
@@ -698,7 +693,7 @@ def legend_outside(ax=None, bbox_to_anchor=(0.5, -.05), loc='upper center',
     if ax is None:
         ax = pylab.gca()
     handles, labels = ax.get_legend_handles_labels()
-    
+
     if len(handles)>limitLegend:
         title='(%i data-series of %i not shown on legend)'%( (len(handles)-limitLegend),len(handles) )
     else:

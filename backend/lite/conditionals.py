@@ -13,7 +13,9 @@ class BranchRequestPSP(DeterministicPSP):
     else:
       expIndex = 2
     exp = args.operandValues[expIndex]
-    return Request([ESR(args.node,exp,args.env)])
+    # point to the source code location of the expression
+    addr = args.operandNodes[expIndex].address.last.append(1)
+    return Request([ESR(args.node,exp,addr,args.env)])
 
   def description(self,name):
     return "%s evaluates either exp1 or exp2 in the current environment and returns the result.  Is itself deterministic, but the chosen expression may involve a stochastic computation." % name

@@ -14,11 +14,14 @@
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from egibbs import EnumerativeGibbsOperator
+from egibbs import EnumerativeGibbsOperator, EnumerativeMAPOperator, EnumerativeDiversify
 from hmc import HamiltonianMonteCarloOperator
 from map_gradient import MAPOperator, NesterovAcceleratedGradientAscentOperator
 from meanfield import MeanfieldOperator
 from mh import mixMH,MHOperator,BlockScaffoldIndexer
-from pgibbs import PGibbsOperator,ParticlePGibbsOperator
-from rejection import RejectionOperator, MissingEsrParentError, NoSPRefError
+from subsampled_mh import (subsampledMixMH, SubsampledMHOperator,
+                           SubsampledBlockScaffoldIndexer)
+from draw_scaffold import drawScaffold
+from pgibbs import PGibbsOperator,ParticlePGibbsOperator,ParticlePMAPOperator
+from rejection import RejectionOperator, BogoPossibilizeOperator, MissingEsrParentError, NoSPRefError
 from slice_sample import StepOutSliceOperator, DoublingSliceOperator

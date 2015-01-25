@@ -6,9 +6,10 @@ class Request(object):
     self.lsrs = lsrs
 
 class ESR(object):
-  def __init__(self,id,exp,env,block=None,subBlock=None):
+  def __init__(self,id,exp,addr,env,block=None,subBlock=None):
     self.id = id
     self.exp = exp
+    self.addr = addr
     self.env = env
     self.block = block
     self.subBlock = subBlock

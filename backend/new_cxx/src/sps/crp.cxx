@@ -152,4 +152,16 @@ double CRPOutputPSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
   return sum;
 }
 
+vector<VentureValuePtr> CRPOutputPSP::enumerateValues(shared_ptr<Args> args) const
+{
+  shared_ptr<CRPSPAux> aux = dynamic_pointer_cast<CRPSPAux>(args->spAux);
+  vector<VentureValuePtr> vs;
+
+  BOOST_FOREACH (tableCountPair p, aux->tableCounts) {
+    vs.push_back(VentureValuePtr(new VentureAtom(p.first)));
+  }
+  vs.push_back(VentureValuePtr(new VentureAtom(aux->nextIndex)));
+  
+  return vs;
+}
 

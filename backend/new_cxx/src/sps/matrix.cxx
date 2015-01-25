@@ -76,3 +76,17 @@ VentureValuePtr IsVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng
 {
   return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureVector>(args->operandValues[0])));
 }
+
+VentureValuePtr ToVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  vector<VentureValuePtr> row = args->operandValues[0]->getArray();
+
+  if (row.size() == 0) { return VentureValuePtr(new VentureVector(VectorXd())); }
+  else
+  {
+    VectorXd v(row.size());
+
+    for (size_t i = 0; i < row.size(); ++i) { v(i) = row[i]->getDouble(); }
+    return VentureValuePtr(new VentureVector(v));
+  }
+}

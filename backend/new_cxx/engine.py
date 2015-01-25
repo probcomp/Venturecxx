@@ -18,8 +18,8 @@ from libpumatrace import Trace
 
 class Engine(engine.Engine):
 
-  def __init__(self):
-    super(Engine, self).__init__(name="puma", Trace=Trace)
+  def __init__(self, persistent_inference_trace=False):
+    super(Engine, self).__init__(name="puma", Trace=Trace, persistent_inference_trace=persistent_inference_trace)
 
   def copy_trace(self, trace):
     return trace.stop_and_copy()

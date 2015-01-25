@@ -42,6 +42,10 @@ struct PyTrace
 
   double makeConsistent();
 
+  double likelihoodAt(boost::python::object pyscope, boost::python::object pyblock);
+  double posteriorAt(boost::python::object pyscope, boost::python::object pyblock);
+  double likelihoodWeight();
+
   boost::python::list dotTrace(bool colorIgnored);
 
   // for testing

@@ -22,15 +22,17 @@ import argparse
 from venture.ripl.console import run_venture_console
 import venture.shortcuts as v
 
+version_str="0.2.1"
+
 def banner(help=True):
     help_ad = "  `help' for help"
     if not(help):
         help_ad = ""
     print '''
-Venture, version 0.2.1  http://probcomp.csail.mit.edu/venture/{0}
+Venture, version {0}  http://probcomp.csail.mit.edu/venture/{1}
 Venture is *alpha quality* software.
 Expect occasional crashes that wipe out your Venture session.
-'''.format(help_ad).strip()
+'''.format(version_str, help_ad).strip()
 
 def server(args):
     banner(False)
@@ -45,45 +47,73 @@ def client(args):
     run_venture_console(v.make_ripl_rest_client(url))
 
 def puma(args):
-    banner()
-    run_venture_console(local_ripl(args, v.Puma()))
+    local_ripl(args, v.Puma())
 
 def cxx(args):
-    banner()
-    run_venture_console(local_ripl(args, v.CXX()))
+    local_ripl(args, v.CXX())
 
 def lite(args):
-    banner()
-    run_venture_console(local_ripl(args, v.Lite()))
+    local_ripl(args, v.Lite())
 
 def local_ripl(args, backend):
-    r = backend.make_church_prime_ripl()
-    if (len(sys.argv) > 1) and args.prelude: r.load_prelude()
+    interactive = True
+    if args is not None and args.persistent_inference_trace:
+        r = backend.make_combined_ripl(persistent_inference_trace = True)
+    else:
+        r = backend.make_combined_ripl()
+    if args is not None:
+        if args.prelude: r.load_prelude()
+        if args.library:
+            for l in args.library:
+                r.load_plugin(l)
+        if args.lang:
+            r.set_mode(args.lang)
+        if args.file:
+            for f in args.file:
+                interactive = False
+                r.execute_program_from_file(f)
+        if args.eval:
+            for e in args.eval:
+                interactive = False
+                r.execute_program(e)
+        if args.interactive:
+            interactive = True
+    if interactive:
+        banner()
+        run_venture_console(r)
     return r
 
-def add_prelude(parser_local):
-    parser_local.add_argument('--prelude', action='store_true',
-                              help = 'Load prelude on startup. Applies only to local sessions.')
-    return parser_local
+def add_local_args(parser):
+    parser.add_argument('--prelude', action='store_true',
+                        help = 'load prelude on startup')
+    parser.add_argument('-f', '--file', action='append', help="execute the given file")
+    parser.add_argument('-e', '--eval', action='append', help="execute the given program")
+    parser.add_argument('-i', '--interactive', action='store_true', help="enter interactive interpreter after completing script file")
+    parser.add_argument('-l', '--lang', default="church_prime",
+                        help="the syntax to interpret in the console (valid values: are \"church_prime\" (default) and \"venture_script\")")
+    parser.add_argument('-L', '--library', action='append',
+                        help="load a Python file in the local directory.  If the file defines a __venture_start__ function, call it with the ripl to initialize the library.")
+    parser.add_argument('-P', '--persistent-inference-trace', action='store_true', help="Run with a persistent inference trace (enables 'define' directive; may cost more memory)")
+    return parser
 
 parser = argparse.ArgumentParser(description='An interactive, Turing-complete probabilistic programming platform')
-parser.add_argument('--version', action='version', version='Venture, version 0.2.1')
+parser.add_argument('--version', action='version', version='Venture, version %s' % version_str)
 subparsers = parser.add_subparsers(title="optional mode")
 
 parser_local = subparsers.add_parser("puma", help="[default] Start a local Venture Puma session",
                                      description="Start a local Venture Puma session")
 parser_local.set_defaults(func=puma)
-parsers_local = add_prelude(parser_local)
+add_local_args(parser_local)
 
-parser_local = subparsers.add_parser("cxx", help="Start a local Venture CXX session",
-                                     description="Start a local Venture CXX session")
+parser_local = subparsers.add_parser("cxx", help="[Deprecated in favor of Puma] Start a local Venture CXX session",
+                                     description="[Deprecated in favor of Puma] Start a local Venture CXX session")
 parser_local.set_defaults(func=cxx)
-parsers_local = add_prelude(parser_local)
+add_local_args(parser_local)
 
 parser_local = subparsers.add_parser("lite", help="Start a local Venture Lite session",
                                      description="Start a local Venture Lite session")
 parser_local.set_defaults(func=lite)
-parser_local = add_prelude(parser_local)
+add_local_args(parser_local)
 
 default_port = 8082
 

@@ -218,11 +218,14 @@ def plot_conditional(ripl, data=(), x_range=(), number_xs=40, number_reps=30, re
     
     # sample f on xr and add noise (if noise is a float)
     f_xr = [ripl.sample('(f %f)' % x) for x in xr]
-    if "'symbol': 'noise'" in str(ripl.list_directives()):
+    # hack: check whether noise has been defined within the Venture program
+    if "'type': 'symbol', 'value': 'noise'" in str(ripl.list_directives()):
         noise=ripl.sample('noise')
         fixed_noise = isinstance(noise,float)
         if fixed_noise:
             f_u = [fx+noise for fx in f_xr]; f_l = [fx-noise for fx in f_xr]
+    else:
+        fixed_noise = False
     
     # sample (y_x x) for x in xr and compute 1sd intervals
     xys=[]; ymean=[]; ystd=[]
@@ -458,7 +461,8 @@ def plot_xgiveny(mr,y,no_transitions=100):
     obs_label = [di for di in mr.list_directives()[0] if di['instruction']=='observe' and di.get('label')]
     # labels should have form 'y1','y2', etc.
     if obs_label:
-        y_nums = [int(di['label'][1:]) for di in obs_label if di['label'].startswith('y')]
+        y_nums = [int(di['label']['value'][1:]) for di in obs_label
+            if di['label']['value'].startswith('y')]
         next_label = max(y_nums)+1
     else:
         next_label = int(np.random.randint(1000,10**8))

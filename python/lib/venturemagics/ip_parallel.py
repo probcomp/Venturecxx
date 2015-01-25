@@ -1073,7 +1073,7 @@ def display_directives(ripl_mripl,instruction='observe'):
 
 def directive_to_string(d):
     if d['instruction']=='assume':
-        return '[assume %s %s]' %( d['symbol'], build_exp(d['expression']) )
+        return '[assume %s %s]' %( d['symbol']['value'], build_exp(d['expression']) )
     elif d['instruction']=='observe':
         return '[observe %s %s]' %( build_exp(d['expression']), d['value'])
     elif d['instruction']=='predict':

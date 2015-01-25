@@ -39,6 +39,18 @@ class PSP(object):
   stochastic process is applied to, but it also has a bunch of
   additional contextual information that can be useful for special
   PSPs.  See node.py for the definition of Args.
+
+  The data members of the Args struct will generally be represented as
+  Venture values (instances of the venture.lite.value.VentureValue
+  class).  The data returned from psp methods should generally also be
+  instances of the VentureValue class, except methods that yield
+  information for direct consumption by the engine itself (such as the
+  isRandom method).  See doc/type-system.md for the design.
+
+  Most of the time, the requisite marshalling between VentureValues
+  and corresponding Python representations is mechanical boilerplate,
+  which can be taken care of for you by the TypedPSP class, which see.
+
   """
 
   def simulate(self, _args):
@@ -195,6 +207,9 @@ class PSP(object):
     """
     return None
 
+  def description_rst_format(self, _name):
+    return None
+
   def childrenCanAAA(self): return False
   def getAAALKernel(self): return DefaultAAALKernel(self)
 
@@ -248,20 +263,53 @@ class ESRRefOutputPSP(DeterministicPSP):
     return parentNode != trace.esrParentsAt(appNode)[0] and parentNode != appNode.requestNode
 
 class RandomPSP(PSP):
-  """Provides good default implementations of (two) PSP methods for stochastic PSPs."""
+  """Provides good default implementations of (two) PSP methods for (assessable) stochastic PSPs."""
   @override(PSP)
   def isRandom(self): return True
   @override(PSP)
   def canAbsorb(self, _trace, _appNode, _parentNode): return True
 
+class LikelihoodFreePSP(RandomPSP):
+  """Provides good default implementations of (two) PSP methods for likelihood-free stochastic PSPs."""
+  @override(PSP)
+  def canAbsorb(self, _trace, _appNode, _parentNode): return False
+
 class TypedPSP(PSP):
+  """Wrapper that implements the PSP interface by marshalling and
+  unmarshalling according to a type signature, delegating to an
+  internal PSP.
+
+  The interface offered to the delegate of this class has all the same
+  methods as the PSP interface, with all the same semantics, except
+  that the values being operated upon and returned are native Python
+  objects rather than Venture Values.
+  TODO: Perhaps delegates of TypedPSP should not be subclasses of PSP,
+  but of another base class named something like PythonPSP.
+
+  """
+
   def __init__(self, psp, f_type):
+    """The first argument is the PSP-like delegate, that is expected to
+    all the work, operating on Python representations of the data.
+
+    The second argument is the type signature, which controls the
+    marshalling and unmarshalling.  The type signature itself must be
+    an instance of venture.lite.sp.SPType, and those are built
+    predominantly out of instances of (subclasses of)
+    venture.lite.value.VentureType.  See also the "Types" section
+    of doc/type-system.md.
+
+    """
     self.f_type = f_type
     self.psp = psp
 
   def simulate(self,args):
     return self.f_type.wrap_return(self.psp.simulate(self.f_type.unwrap_args(args)))
   def gradientOfSimulate(self, args, value, direction):
+    # TODO Should gradientOfSimulate unwrap the direction and wrap the
+    # answers using the gradient_type, like gradientOfLogDensity does?
+    # Or do I want to use the vector space structure of gradients
+    # given by the Venture values inside the Python methods?
     return self.psp.gradientOfSimulate(self.f_type.unwrap_args(args), self.f_type.unwrap_return(value), direction)
   def logDensity(self,value,args):
     return self.psp.logDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
@@ -294,12 +342,17 @@ class TypedPSP(PSP):
 
   def hasSimulationKernel(self): return self.psp.hasSimulationKernel()
   def hasDeltaKernel(self): return self.psp.hasDeltaKernel()
+  def getDeltaKernel(self,args): return TypedLKernel(self.psp.getDeltaKernel(args),self.f_type)
   # TODO Wrap the simulation and delta kernels properly (once those are tested)
 
   def description(self,name):
     type_names = self.f_type.names()
     signature = "\n".join(["%s :: %s" % (name, variant) for variant in type_names])
     return signature + "\n" + self.psp.description(name)
+
+  def description_rst_format(self, name):
+    signature = ".. function:: " + self.f_type.name_rst_format(name)
+    return (signature, self.psp.description(name))
 
   # TODO Is this method part of the psp interface?
   def logDensityOfCounts(self,aux):
