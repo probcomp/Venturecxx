@@ -7,7 +7,7 @@ import Test.HUnit
 
 import Language hiding (Value)
 import Examples
-import Engine
+import InferenceInterpreter
 import Trace (Valuable, fromValue, Value)
 
 import qualified Statistical as Stat

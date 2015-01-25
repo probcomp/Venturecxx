@@ -21,8 +21,9 @@ import Control.Monad.State.Lazy
 import qualified Data.ByteString.Lazy as B
 
 import Language hiding (Value)
-import Trace
-import Engine hiding (execute)
+import InferenceInterpreter hiding (execute)
+import qualified Trace as T
+import qualified Engine as E
 import qualified VentureGrammar as G
 
 -- The Venture wire protocol is to request a url whose path is the
@@ -51,7 +52,7 @@ error_response err = responseLBS status500 [("Content-Type", "text/plain")] $ en
   json :: M.Map String String
   json = M.fromList [("exception", "fatal"), ("message", err)]
 
-application :: MVar (Engine IO) -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
+application :: MVar (E.Engine IO) -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
 application engineMVar req k = do
   parsed <- off_the_wire req
   case parsed of
@@ -64,7 +65,7 @@ interpret "assume" [var, expr] = Right $ Assume var $ G.parse expr
 interpret "assume" args = Left $ "Incorrect number of arguments to assume " ++ show args
 interpret m _ = Left $ "Unknown directive " ++ m
 
-execute :: MVar (Engine IO) -> String -> [String] -> IO Response
+execute :: MVar (E.Engine IO) -> String -> [String] -> IO Response
 execute engineMVar method args =
   case interpret method args of
     Left err -> return $ error_response err
@@ -73,15 +74,15 @@ execute engineMVar method args =
       value <- onMVar engineMVar $ runDirective d
       return $ responseLBS status200 [("Content-Type", "text/plain")] $ encodeMaybeValue value
 
-encodeMaybeValue :: Maybe Value -> B.ByteString
+encodeMaybeValue :: Maybe T.Value -> B.ByteString
 encodeMaybeValue Nothing = "null"
 encodeMaybeValue (Just v) = encodeValue v
 
-encodeValue :: Value -> B.ByteString
+encodeValue :: T.Value -> B.ByteString
 encodeValue (Number x) = encode x
 encodeValue (Symbol s) = encode s
 encodeValue (List vs) = "[" `B.append` (B.intercalate ", " $ map encodeValue vs) `B.append` "]"
-encodeValue (Procedure p) = "An SP"
+encodeValue (Procedure _) = "An SP"
 encodeValue (Boolean True) = "true"
 encodeValue (Boolean False) = "false"
 
@@ -98,6 +99,6 @@ onMVar var act = do
 
 main :: IO ()
 main = do
-  engineMVar <- newMVar initial :: IO (MVar (Engine IO))
+  engineMVar <- newMVar E.initial :: IO (MVar (E.Engine IO))
   putStrLn "Venture listening on 3000"
   run 3000 (application engineMVar)

@@ -9,6 +9,7 @@ import Language hiding (Exp, Value, Env)
 import Trace
 import Utils
 import Engine hiding (empty)
+import InferenceInterpreter
 
 -- Expects the directives to contain exactly one Predict
 simulation :: (MonadRandom m) => Int -> [Directive] -> StateT (Engine m) m [Value]

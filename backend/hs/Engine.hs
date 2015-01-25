@@ -3,7 +3,6 @@
 
 module Engine where
 
-import Data.Maybe hiding (fromJust)
 import qualified Data.Map as M
 import Control.Monad.Reader
 import Control.Monad.Trans.State.Lazy
@@ -72,21 +71,6 @@ predict exp = do
   (Engine e _) <- get
   trace `zoom` (eval exp e)
 
-data Directive = Assume String Exp
-               | Observe Exp Value
-               | Predict Exp
-  deriving Show
-
--- Return Just the address of the directive if it's a predict, otherwise Nothing
-executeDirective :: (MonadRandom m) => Directive -> StateT (Engine m) m (Maybe Address)
-executeDirective (Assume s e) = assume s e >> return Nothing
-executeDirective (Observe e v) = observe e v >> return Nothing
-executeDirective (Predict e) = predict e >>= return . Just
-
--- Returns the list of addresses the model wants watched (to wit, the predicts)
-execute :: (MonadRandom m) => [Directive] -> StateT (Engine m) m [Address]
-execute ds = liftM catMaybes $ mapM executeDirective ds
-
 watching_infer' :: (MonadRandom m) => Address -> Int -> StateT (Trace m) m [Value]
 watching_infer' address ct = replicateM ct (do
   modifyM $ metropolis_hastings principal_node_mh
@@ -95,18 +79,6 @@ watching_infer' address ct = replicateM ct (do
 
 watching_infer :: (MonadRandom m) => Address -> Int -> StateT (Engine m) m [Value]
 watching_infer address ct = trace `zoom` (watching_infer' address ct)
-
-runDirective' :: (MonadRandom m) => Directive -> StateT (Engine m) m (Maybe Address)
-runDirective' (Assume s e) = assume s e >>= return . Just
-runDirective' (Observe e v) = observe e v >> return Nothing
-runDirective' (Predict e) = predict e >>= return . Just
-
-runDirective :: (MonadRandom m) => Directive -> StateT (Engine m) m (Maybe Value)
-runDirective d = do
-  addr <- runDirective' d
-  case addr of
-    Nothing -> return Nothing
-    Just a -> gets (Just . (lookupValue a))
 
 -- TODO Understand the set of layers of abstraction of trace operations:
 -- - what invariants does each layer preserve?
