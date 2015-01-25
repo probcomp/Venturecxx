@@ -115,6 +115,7 @@ runDirective d = do
 --     preconditions and throw errors?
 --     - e.g., deleteNode can probably do so at an additive log cost
 --       by checking whether the node to be deleted is referenced.
+--   - consider LiquidHaskell as a proof language
 -- - find complete sets of operations at each level, so that a higher
 --   level does not need to circumvent the level below it
 -- - enforce by module export lists that clients do not circumvent
