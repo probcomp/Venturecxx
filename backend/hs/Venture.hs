@@ -36,13 +36,17 @@ lookupValue a (Model _ t) =
     fromJust "No value at address" $ valueOf
     $ fromJust "Invalid address" $ lookupNode a t
 
+topeval :: (MonadRandom m) => Exp -> (StateT (Model m) m) Address
+topeval exp = do
+  (Model e _) <- get
+  trace `zoom` (eval exp e)
+
 assume :: (MonadRandom m) => String -> Exp -> (StateT (Model m) m) Address
 assume var exp = do
   -- TODO This implementation of assume does not permit recursive
   -- functions, because of insufficient indirection to the
   -- environment.
-  (Model e _) <- get
-  address <- trace `zoom` (eval exp e)
+  address <- topeval exp
   env %= Frame (M.fromList [(var, address)])
   return address
 
@@ -53,8 +57,7 @@ assume var exp = do
 -- node from the list of random choices.
 observe :: (MonadRandom m) => Exp -> Value -> (StateT (Model m) m) ()
 observe exp v = do
-  (Model e _) <- get
-  address <- trace `zoom` (eval exp e)
+  address <- topeval exp
   -- TODO What should happen if one observes a value that had
   -- (deterministic) consequences, e.g.
   -- (assume x (normal 1 1))
@@ -67,15 +70,12 @@ observe exp v = do
   trace `zoom` (constrain address v)
 
 predict :: (MonadRandom m) => Exp -> (StateT (Model m) m) Address
-predict exp = do
-  (Model e _) <- get
-  trace `zoom` (eval exp e)
+predict = topeval
 
 sample :: (MonadRandom m) => Exp -> (Model m) -> m Value
 sample exp model = evalStateT action model where
     action = do
-      (Model e _) <- get
-      addr <- trace `zoom` (eval exp e)
+      addr <- topeval exp
       gets $ lookupValue addr
 
 sampleM :: (MonadRandom m) => Exp -> (StateT (Model m) m) Value
