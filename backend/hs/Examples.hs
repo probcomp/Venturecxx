@@ -8,7 +8,7 @@ import Control.Lens  -- from cabal install lens
 import Language hiding (Exp, Value, Env)
 import Trace
 import Utils
-import Engine hiding (empty)
+import Venture hiding (empty)
 import Inference
 import InferenceInterpreter
 

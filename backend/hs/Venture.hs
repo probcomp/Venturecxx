@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Engine where
+module Venture where
 
 import qualified Data.Map as M
 import Control.Monad.Trans.State.Lazy

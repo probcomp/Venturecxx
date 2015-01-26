@@ -23,7 +23,7 @@ import qualified Data.ByteString.Lazy as B
 import Language hiding (Value)
 import InferenceInterpreter hiding (execute)
 import qualified Trace as T
-import qualified Engine as E
+import qualified Venture as V
 import qualified VentureGrammar as G
 
 -- The Venture wire protocol is to request a url whose path is the
@@ -52,7 +52,7 @@ error_response err = responseLBS status500 [("Content-Type", "text/plain")] $ en
   json :: M.Map String String
   json = M.fromList [("exception", "fatal"), ("message", err)]
 
-application :: MVar (E.Model IO) -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
+application :: MVar (V.Model IO) -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
 application engineMVar req k = do
   parsed <- off_the_wire req
   case parsed of
@@ -65,7 +65,7 @@ interpret "assume" [var, expr] = Right $ Assume var $ G.parse expr
 interpret "assume" args = Left $ "Incorrect number of arguments to assume " ++ show args
 interpret m _ = Left $ "Unknown directive " ++ m
 
-execute :: MVar (E.Model IO) -> String -> [String] -> IO Response
+execute :: MVar (V.Model IO) -> String -> [String] -> IO Response
 execute engineMVar method args =
   case interpret method args of
     Left err -> return $ error_response err
@@ -99,6 +99,6 @@ onMVar var act = do
 
 main :: IO ()
 main = do
-  engineMVar <- newMVar E.initial :: IO (MVar (E.Model IO))
+  engineMVar <- newMVar V.initial :: IO (MVar (V.Model IO))
   putStrLn "Venture listening on 3000"
   run 3000 (application engineMVar)
