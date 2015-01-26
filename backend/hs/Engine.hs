@@ -4,7 +4,6 @@
 module Engine where
 
 import qualified Data.Map as M
-import Control.Monad.Reader
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 import Control.Lens  -- from cabal install lens
@@ -15,7 +14,6 @@ import Trace hiding (empty)
 import qualified Trace as T
 import Regen
 import SP
-import Inference
 
 data Engine m =
     Engine { _env :: Env
@@ -70,15 +68,6 @@ predict :: (MonadRandom m) => Exp -> (StateT (Engine m) m) Address
 predict exp = do
   (Engine e _) <- get
   trace `zoom` (eval exp e)
-
-watching_infer' :: (MonadRandom m) => Address -> Int -> StateT (Trace m) m [Value]
-watching_infer' address ct = replicateM ct (do
-  modifyM $ metropolis_hastings principal_node_mh
-  gets $ fromJust "Value was not restored by inference" . valueOf
-         . fromJust "Address became invalid after inference" . (lookupNode address))
-
-watching_infer :: (MonadRandom m) => Address -> Int -> StateT (Engine m) m [Value]
-watching_infer address ct = trace `zoom` (watching_infer' address ct)
 
 -- TODO Understand the set of layers of abstraction of trace operations:
 -- - what invariants does each layer preserve?
