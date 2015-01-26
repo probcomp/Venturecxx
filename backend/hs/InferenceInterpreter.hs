@@ -18,22 +18,22 @@ data Directive = Assume String T.Exp
   deriving Show
 
 -- Return Just the address of the directive if it's a predict, otherwise Nothing
-executeDirective :: (MonadRandom m) => Directive -> StateT (E.Engine m) m (Maybe T.Address)
+executeDirective :: (MonadRandom m) => Directive -> StateT (E.Model m) m (Maybe T.Address)
 executeDirective (Assume s e) = E.assume s e >> return Nothing
 executeDirective (Observe e v) = E.observe e v >> return Nothing
 executeDirective (Predict e) = E.predict e >>= return . Just
 
 -- Returns the list of addresses the model wants watched (to wit, the predicts)
-execute :: (MonadRandom m) => [Directive] -> StateT (E.Engine m) m [T.Address]
+execute :: (MonadRandom m) => [Directive] -> StateT (E.Model m) m [T.Address]
 execute ds = liftM catMaybes $ mapM executeDirective ds
 
 
-runDirective' :: (MonadRandom m) => Directive -> StateT (E.Engine m) m (Maybe T.Address)
+runDirective' :: (MonadRandom m) => Directive -> StateT (E.Model m) m (Maybe T.Address)
 runDirective' (Assume s e) = E.assume s e >>= return . Just
 runDirective' (Observe e v) = E.observe e v >> return Nothing
 runDirective' (Predict e) = E.predict e >>= return . Just
 
-runDirective :: (MonadRandom m) => Directive -> StateT (E.Engine m) m (Maybe T.Value)
+runDirective :: (MonadRandom m) => Directive -> StateT (E.Model m) m (Maybe T.Value)
 runDirective d = do
   addr <- runDirective' d
   case addr of

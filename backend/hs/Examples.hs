@@ -18,11 +18,11 @@ watching_infer' address ct = replicateM ct (do
   gets $ fromJust "Value was not restored by inference" . valueOf
          . fromJust "Address became invalid after inference" . (lookupNode address))
 
-watching_infer :: (MonadRandom m) => Address -> Int -> StateT (Engine m) m [Value]
+watching_infer :: (MonadRandom m) => Address -> Int -> StateT (Model m) m [Value]
 watching_infer address ct = trace `zoom` (watching_infer' address ct)
 
 -- Expects the directives to contain exactly one Predict
-simulation :: (MonadRandom m) => Int -> [Directive] -> StateT (Engine m) m [Value]
+simulation :: (MonadRandom m) => Int -> [Directive] -> StateT (Model m) m [Value]
 simulation ct ds = do
   target <- liftM head (execute ds)
   watching_infer target ct

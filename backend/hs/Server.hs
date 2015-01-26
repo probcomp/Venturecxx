@@ -52,7 +52,7 @@ error_response err = responseLBS status500 [("Content-Type", "text/plain")] $ en
   json :: M.Map String String
   json = M.fromList [("exception", "fatal"), ("message", err)]
 
-application :: MVar (E.Engine IO) -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
+application :: MVar (E.Model IO) -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
 application engineMVar req k = do
   parsed <- off_the_wire req
   case parsed of
@@ -65,7 +65,7 @@ interpret "assume" [var, expr] = Right $ Assume var $ G.parse expr
 interpret "assume" args = Left $ "Incorrect number of arguments to assume " ++ show args
 interpret m _ = Left $ "Unknown directive " ++ m
 
-execute :: MVar (E.Engine IO) -> String -> [String] -> IO Response
+execute :: MVar (E.Model IO) -> String -> [String] -> IO Response
 execute engineMVar method args =
   case interpret method args of
     Left err -> return $ error_response err
@@ -99,6 +99,6 @@ onMVar var act = do
 
 main :: IO ()
 main = do
-  engineMVar <- newMVar E.initial :: IO (MVar (E.Engine IO))
+  engineMVar <- newMVar E.initial :: IO (MVar (E.Model IO))
   putStrLn "Venture listening on 3000"
   run 3000 (application engineMVar)

@@ -15,31 +15,31 @@ import qualified Trace as T
 import Regen
 import SP
 
-data Engine m =
-    Engine { _env :: Env
+data Model m =
+    Model { _env :: Env
            , _trace :: (Trace m)
            }
 
-makeLenses ''Engine
+makeLenses ''Model
 
-empty :: Engine m
-empty = Engine Toplevel T.empty
+empty :: Model m
+empty = Model Toplevel T.empty
 
-initial :: (MonadRandom m) => Engine m
-initial = Engine e t where
+initial :: (MonadRandom m) => Model m
+initial = Model e t where
   (e, t) = runState (initializeBuiltins Toplevel) T.empty
 
-lookupValue :: Address -> Engine m -> Value
-lookupValue a (Engine _ t) =
+lookupValue :: Address -> Model m -> Value
+lookupValue a (Model _ t) =
     fromJust "No value at address" $ valueOf
     $ fromJust "Invalid address" $ lookupNode a t
 
-assume :: (MonadRandom m) => String -> Exp -> (StateT (Engine m) m) Address
+assume :: (MonadRandom m) => String -> Exp -> (StateT (Model m) m) Address
 assume var exp = do
   -- TODO This implementation of assume does not permit recursive
   -- functions, because of insufficient indirection to the
   -- environment.
-  (Engine e _) <- get
+  (Model e _) <- get
   address <- trace `zoom` (eval exp e)
   env %= Frame (M.fromList [(var, address)])
   return address
@@ -49,9 +49,9 @@ assume var exp = do
 -- value (up to chasing down references until a random choice is
 -- found).  The constraining appears to consist only in removing that
 -- node from the list of random choices.
-observe :: (MonadRandom m) => Exp -> Value -> (StateT (Engine m) m) ()
+observe :: (MonadRandom m) => Exp -> Value -> (StateT (Model m) m) ()
 observe exp v = do
-  (Engine e _) <- get
+  (Model e _) <- get
   address <- trace `zoom` (eval exp e)
   -- TODO What should happen if one observes a value that had
   -- (deterministic) consequences, e.g.
@@ -64,9 +64,9 @@ observe exp v = do
   -- address it here.
   trace `zoom` (constrain address v)
 
-predict :: (MonadRandom m) => Exp -> (StateT (Engine m) m) Address
+predict :: (MonadRandom m) => Exp -> (StateT (Model m) m) Address
 predict exp = do
-  (Engine e _) <- get
+  (Model e _) <- get
   trace `zoom` (eval exp e)
 
 -- TODO Understand the set of layers of abstraction of trace operations:
