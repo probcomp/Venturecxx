@@ -4,6 +4,7 @@ module Inference where
 
 import qualified Data.Set as S
 import Control.Monad.Reader
+import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 import Control.Lens -- From cabal install lens
@@ -55,3 +56,7 @@ principal_node_mh = mix_mh_kernels sample log_density scaffold_mh_kernel where
 
     log_density :: Trace m -> a -> LogDensity
     log_density t _ = LogDensity $ -log(fromIntegral $ t^.randoms.to S.size)
+
+
+resimulation_mh :: (MonadRandom m) => StateT (Trace m) m ()
+resimulation_mh = modifyM $ metropolis_hastings principal_node_mh

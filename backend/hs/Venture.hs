@@ -4,6 +4,7 @@
 module Venture where
 
 import qualified Data.Map as M
+import Control.Monad.Trans.Class
 import Control.Monad.Trans.State.Lazy
 import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 import Control.Lens  -- from cabal install lens
@@ -14,6 +15,7 @@ import Trace hiding (empty)
 import qualified Trace as T
 import Regen
 import SP
+import qualified Inference as I (resimulation_mh)
 
 data Model m =
     Model { _env :: Env
@@ -69,6 +71,19 @@ predict exp = do
   (Model e _) <- get
   trace `zoom` (eval exp e)
 
+sample :: (MonadRandom m) => Exp -> (Model m) -> m Value
+sample exp model = evalStateT action model where
+    action = do
+      (Model e _) <- get
+      addr <- trace `zoom` (eval exp e)
+      gets $ lookupValue addr
+
+sampleM :: (MonadRandom m) => Exp -> (StateT (Model m) m) Value
+sampleM exp = do
+  model <- get
+  val <- lift $ sample exp model
+  return val
+
 -- TODO Understand the set of layers of abstraction of trace operations:
 -- - what invariants does each layer preserve?
 -- - quickcheck and/or prove preservation of those invariants
@@ -93,3 +108,6 @@ predict exp = do
 -- Daniel says that complexities arise when, e.g., resampling the
 -- hyperparameter also causes the set of applications of the made SP to
 -- change.
+
+resimulation_mh :: (MonadRandom m) => StateT (Model m) m ()
+resimulation_mh = trace `zoom` I.resimulation_mh
