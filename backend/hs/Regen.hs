@@ -2,6 +2,8 @@
 
 module Regen where
 
+import Data.Map (Map)
+import qualified Data.Map as Map
 import Data.Maybe hiding (fromJust)
 import Control.Monad
 import Control.Monad.Trans.Writer.Strict
@@ -123,3 +125,16 @@ prior a t =
   case t ^. nodes . hardix "Regenerating value for nonexistent node" a of
     (Output _ _ opa ps rs) -> return $ outputFor addr ps rs t where
       addr = fromJust "Regenerating value for an output with no operator" $ fromValueAt opa t
+
+withDeterministic :: (Monad m) => Proposal m -> Map Address Value -> Proposal m
+withDeterministic base as a t =
+    case Map.lookup a as of
+      (Just v) -> writer (Left $ return v, LogDensity $ absorbVal node sp) where
+        -- TODO Abstract commonality between this nonsense and absorbAt
+        node = t ^. nodes . hardix "Absorbing at a nonexistent node" a
+        sp = fromJust "Absorbing at a node with no operator" $ operator node t
+        absorbVal (Output _ _ _ args reqs) SP{log_d_out = (Just f), current = a} =
+            f a args' reqs' v where
+              args' = map (fromJust "absorb" . flip lookupNode t) args
+              reqs' = map (fromJust "absorb" . flip lookupNode t) reqs
+      Nothing  -> base a t
