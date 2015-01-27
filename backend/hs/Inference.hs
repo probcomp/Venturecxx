@@ -60,5 +60,10 @@ default_one = (Assessable sample log_density) where
     log_density :: Trace m -> Sub.Scaffold -> LogDensity
     log_density t _ = LogDensity $ -log(fromIntegral $ t^.randoms.to S.size)
 
+default_all :: (Monad m) => Selector m
+default_all = (Assessable sample log_density) where
+    sample trace = return $ runReader (Sub.scaffold_from_principal_nodes (trace ^. randoms . to S.toList)) trace
+    log_density _ _ = LogDensity 0
+
 resimulation_mh :: (MonadRandom m) => Selector m -> StateT (Trace m) m ()
 resimulation_mh select = modifyM $ metropolis_hastings $ mix_mh select scaffold_resimulation_mh
