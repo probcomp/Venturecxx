@@ -6,6 +6,7 @@ module Venture where
 import qualified Data.Map as M
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State.Lazy
+import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 import Control.Lens  -- from cabal install lens
 
@@ -14,8 +15,9 @@ import Language hiding (Exp, Value, Env)
 import Trace hiding (empty)
 import qualified Trace as T
 import Regen
+import qualified Detach
 import SP
-import qualified Inference as I (resimulation_mh, Selector)
+import qualified Inference as I (resimulation_mh, Selector, Assessable(..))
 
 data Model m =
     Model { _env :: Env
@@ -108,6 +110,33 @@ sampleM exp = do
 -- Daniel says that complexities arise when, e.g., resampling the
 -- hyperparameter also causes the set of applications of the made SP to
 -- change.
+
+-- TODO: These two words feel overly specific.  What am I actually
+-- trying to accomplish by exposing the parts of a selector like this?
+select :: (Monad m) => I.Selector m -> StateT (Model m) m Detach.Scaffold
+select (I.Assessable sel _) = trace `zoom` do
+                                t <- get
+                                s <- lift $ sel t
+                                return s
+
+assess :: (Monad m) => I.Selector m -> Detach.Scaffold -> StateT (Model m) m LogDensity
+assess (I.Assessable _ do_assess) scaffold = trace `zoom` do
+                                               t <- get
+                                               return $ do_assess t scaffold
+
+detach :: (MonadRandom m) => Detach.Scaffold -> StateT (Model m) m LogDensity
+detach scaffold = trace `zoom` do
+  t <- get
+  let (t', logd) = runWriter $ Detach.detach scaffold t
+  put t'
+  return logd
+
+regen :: (MonadRandom m) => Detach.Scaffold -> StateT (Model m) m LogDensity
+regen scaffold = trace `zoom` do
+  t <- get
+  (t', logd) <- lift $ runWriterT $ Regen.regen scaffold t
+  put t'
+  return logd
 
 resimulation_mh :: (MonadRandom m) => I.Selector m -> StateT (Model m) m ()
 resimulation_mh select = trace `zoom` I.resimulation_mh select
