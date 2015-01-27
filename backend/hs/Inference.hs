@@ -16,20 +16,11 @@ import Regen
 import Detach hiding (empty)
 import qualified Detach as D (empty)
 
-type Kernel m a = a -> WriterT LogDensity m a
+type MHAble m a = a -> WriterT LogDensity m a
 
-mix_mh_kernels :: (Monad m) => (a -> m ind) -> (a -> ind -> LogDensity) ->
-                  (ind -> Kernel m a) -> (Kernel m a)
-mix_mh_kernels sampleIndex measureIndex paramK x = do
-  ind <- lift $ sampleIndex x
-  let ldRho = measureIndex x ind
-  tell $ log_density_negate ldRho
-  x' <- paramK ind x
-  let ldXi = measureIndex x' ind
-  tell ldXi
-  return x'
+data Assessable m a b = Assessable (a -> m b) (a -> b -> LogDensity)
 
-metropolis_hastings :: (MonadRandom m) => Kernel m a -> a -> m a
+metropolis_hastings :: (MonadRandom m) => MHAble m a -> a -> m a
 metropolis_hastings propose x = do
   (x', (LogDensity alpha)) <- runWriterT $ propose x
   u <- getRandomR (0.0,1.0)
@@ -38,13 +29,23 @@ metropolis_hastings propose x = do
   else
       return x
 
-scaffold_mh_kernel :: (MonadRandom m) => Scaffold -> Kernel m (Trace m)
-scaffold_mh_kernel scaffold trace = do
+mix_mh :: (Monad m) => (Assessable m a ind) -> (ind -> MHAble m a) -> (MHAble m a)
+mix_mh (Assessable sample measure) param_propose x = do
+  ind <- lift $ sample x
+  let ldRho = measure x ind
+  tell $ log_density_negate ldRho
+  x' <- param_propose ind x
+  let ldXi = measure x' ind
+  tell ldXi
+  return x'
+
+scaffold_resimulation_mh :: (MonadRandom m) => Scaffold -> MHAble m (Trace m)
+scaffold_resimulation_mh scaffold trace = do
   torus <- censor log_density_negate $ returnT $ detach scaffold trace
   regen scaffold torus
 
-principal_node_mh :: (MonadRandom m) => Kernel m (Trace m)
-principal_node_mh = mix_mh_kernels sample log_density scaffold_mh_kernel where
+default_one :: (MonadRandom m) => Assessable m (Trace m) Scaffold
+default_one = (Assessable sample log_density) where
     sample :: (MonadRandom m) => Trace m -> m Scaffold
     sample trace =
         if trace^.randoms.to S.size == 0 then return D.empty
@@ -54,9 +55,8 @@ principal_node_mh = mix_mh_kernels sample log_density scaffold_mh_kernel where
           let scaffold = runReader (scaffold_from_principal_node addr) trace
           return $ scaffold
 
-    log_density :: Trace m -> a -> LogDensity
+    log_density :: Trace m -> Scaffold -> LogDensity
     log_density t _ = LogDensity $ -log(fromIntegral $ t^.randoms.to S.size)
 
-
 resimulation_mh :: (MonadRandom m) => StateT (Trace m) m ()
-resimulation_mh = modifyM $ metropolis_hastings principal_node_mh
+resimulation_mh = modifyM $ metropolis_hastings $ mix_mh default_one scaffold_resimulation_mh
