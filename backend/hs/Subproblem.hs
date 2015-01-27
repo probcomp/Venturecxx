@@ -1,4 +1,5 @@
-{-# Language TemplateHaskell, DoAndIfThenElse #-}
+{-# LANGUAGE TemplateHaskell, DoAndIfThenElse #-}
+{-# LANGUAGE TupleSections #-}
 
 module Subproblem where
 
@@ -32,9 +33,9 @@ instance Pretty Scaffold where
              hang (text "Absorbers") 1 (pp $ s^.absorbers) $$
              hang (text "Brush") 1 (pp $ s^.brush)
 
-scaffold_from_principal_node :: Address -> Reader (Trace m) Scaffold
-scaffold_from_principal_node a = do
-  scaffold <- execStateT (collectERG [(a,Nothing)]) empty
+scaffold_from_principal_nodes :: [Address] -> Reader (Trace m) Scaffold
+scaffold_from_principal_nodes as = do
+  scaffold <- execStateT (collectERG (map (,Nothing) as)) empty
   (_, scaffold', _) <- execStateT (collectBrush $ O.toList $ scaffold ^. drg) (M.empty, scaffold, S.empty)
   return $ scaffold'
 

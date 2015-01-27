@@ -54,7 +54,7 @@ default_one = (Assessable sample log_density) where
         else do
           index <- getRandomR (0, trace^.randoms.to S.size - 1)
           let addr = (trace^.randoms.to S.toList) !! index
-          let scaffold = runReader (Sub.scaffold_from_principal_node addr) trace
+          let scaffold = runReader (Sub.scaffold_from_principal_nodes [addr]) trace
           return $ scaffold
 
     log_density :: Trace m -> Sub.Scaffold -> LogDensity
