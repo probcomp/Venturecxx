@@ -500,24 +500,30 @@ runRequester spaddr args = do
   sprs . ix spaddr .= spr{ srid_seed = seed' }
   return reqs
 
--- Given that the state is a valid Trace, and the inputs are an
+-- Given that the Trace argument is valid, and the inputs are an
 -- SPAddress that occurs in it and two lists of Addresses that also
 -- occur in it, returns the value this SP produces when its args and
--- fulfilments are nodes at these Addresses (in order).  The Trace in
--- the state may change, but remains valid.  Fails if the call is
--- ill-typed with respect to the SP.
-runOutputter :: (Monad m, MonadTrans t, MonadState (Trace m) (t m)) =>
-                SPAddress -> [Address] -> [Address] -> t m Value
-runOutputter spaddr argAs resultAs = do
-  SP{ outputter = out, current = st }
-    <- uses (sprs . hardix "Running the outputter of a non-SP" spaddr) sp
-  t <- get
-  let result = asRandomO' out st argAs resultAs t
-  v <- case result of
-         (Left vact) -> lift vact
-         (Right sp) -> do spAddr <- state $ addFreshSP sp
-                          return $ Procedure spAddr
-  return v
+-- fulfilments are nodes at these Addresses (in order).  The produced
+-- value is returned as (Either (m Value) (SP m)) because SPs require
+-- an adjustment to the Trace to convert them into Values (namely the
+-- allocation of an SPRecord).  Fails if the call is ill-typed with
+-- respect to the SP.
+-- TODO Allow the SP branch to be random
+outputFor :: (Monad m) =>
+             SPAddress -> [Address] -> [Address] -> Trace m -> (Either (m Value) (SP m))
+outputFor spaddr argAs resultAs t =
+    case t ^. (sprs . hardix "Running the outputter of a non-SP" spaddr) . to sp of
+      SP{ outputter = out, current = st } -> asRandomO' out st argAs resultAs t
+
+-- Given that the Trace in the state is valid, process the given
+-- output result.  The Trace in the state may change, but remains
+-- valid.
+processOutput :: (Monad m, MonadTrans t, MonadState (Trace m) (t m)) =>
+       (Either (m Value) (SP m)) -> t m Value
+processOutput result = case result of
+                         (Left vact) -> lift vact
+                         (Right sp) -> do spAddr <- state $ addFreshSP sp
+                                          return $ Procedure spAddr
 
 fulfilments :: Address -> Trace m -> [Address]
 -- The addresses of the responses to the requests made by the Request
