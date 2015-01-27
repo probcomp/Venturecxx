@@ -154,4 +154,4 @@ detach' Scaffold { _drg = d, _absorbers = abs, _dead_reqs = reqs, _brush = bru }
           modify $ deleteNode a
 
 detach :: Scaffold -> (Trace m) -> Writer LogDensity (Trace m)
-detach s t = liftM snd $ runStateT (detach' s) t
+detach s = execStateT (detach' s)
