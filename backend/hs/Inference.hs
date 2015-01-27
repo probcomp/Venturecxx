@@ -13,7 +13,7 @@ import Utils
 import Language hiding (Exp, Value, Env)
 import Trace
 import Regen
-import Detach hiding (empty)
+import Detach
 import qualified Subproblem as Sub
 
 type MHAble m a = a -> WriterT LogDensity m a
