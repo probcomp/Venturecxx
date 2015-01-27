@@ -15,7 +15,7 @@ import Trace hiding (empty)
 import qualified Trace as T
 import Regen
 import SP
-import qualified Inference as I (resimulation_mh)
+import qualified Inference as I (resimulation_mh, Selector)
 
 data Model m =
     Model { _env :: Env
@@ -109,5 +109,5 @@ sampleM exp = do
 -- hyperparameter also causes the set of applications of the made SP to
 -- change.
 
-resimulation_mh :: (MonadRandom m) => StateT (Model m) m ()
-resimulation_mh = trace `zoom` I.resimulation_mh
+resimulation_mh :: (MonadRandom m) => I.Selector m -> StateT (Model m) m ()
+resimulation_mh select = trace `zoom` I.resimulation_mh select

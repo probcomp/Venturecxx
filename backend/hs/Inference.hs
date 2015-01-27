@@ -44,7 +44,9 @@ scaffold_resimulation_mh scaffold trace = do
   torus <- censor log_density_negate $ returnT $ detach scaffold trace
   regen scaffold torus
 
-default_one :: (MonadRandom m) => Assessable m (Trace m) Scaffold
+type Selector m = Assessable m (Trace m) Scaffold
+
+default_one :: (MonadRandom m) => Selector m
 default_one = (Assessable sample log_density) where
     sample :: (MonadRandom m) => Trace m -> m Scaffold
     sample trace =
@@ -58,5 +60,5 @@ default_one = (Assessable sample log_density) where
     log_density :: Trace m -> Scaffold -> LogDensity
     log_density t _ = LogDensity $ -log(fromIntegral $ t^.randoms.to S.size)
 
-resimulation_mh :: (MonadRandom m) => StateT (Trace m) m ()
-resimulation_mh = modifyM $ metropolis_hastings $ mix_mh default_one scaffold_resimulation_mh
+resimulation_mh :: (MonadRandom m) => Selector m -> StateT (Trace m) m ()
+resimulation_mh select = modifyM $ metropolis_hastings $ mix_mh select scaffold_resimulation_mh
