@@ -42,7 +42,7 @@ lookupValue a (Model _ t) =
 topeval :: (MonadRandom m) => Exp -> (StateT (Model m) m) Address
 topeval exp = do
   (Model e _) <- get
-  trace `zoom` (eval exp e)
+  trace `zoom` (eval prior exp e)
 
 assume :: (MonadRandom m) => String -> Exp -> (StateT (Model m) m) Address
 assume var exp = do
@@ -135,7 +135,7 @@ detach scaffold = trace `zoom` do
 regen :: (MonadRandom m) => Subproblem.Scaffold -> StateT (Model m) m LogDensity
 regen scaffold = trace `zoom` do
   t <- get
-  (t', logd) <- lift $ runWriterT $ Regen.regen scaffold t
+  (t', logd) <- lift $ runWriterT $ Regen.regen scaffold prior t -- TODO Expose choice of proposal distribution?
   put t'
   return logd
 

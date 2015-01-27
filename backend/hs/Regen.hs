@@ -5,7 +5,7 @@ module Regen where
 import Data.Maybe hiding (fromJust)
 import Control.Monad
 import Control.Monad.Trans.Writer.Strict
-import Control.Monad.Trans.State.Lazy hiding (state, gets, modify)
+import Control.Monad.Trans.State.Lazy hiding (state, get, gets, modify)
 import Control.Monad.Trans.Class
 import Control.Monad.State.Class
 import Control.Monad.Random -- From cabal install MonadRandom
@@ -20,84 +20,106 @@ import qualified InsertionOrderedSet as O
 import Utils
 import SP (compoundSP)
 
-regen :: (MonadRandom m) => Scaffold -> Trace m -> WriterT LogDensity m (Trace m)
-regen s t = do
-  ((_, w), t') <- lift $ runStateT (runWriterT (regen' s)) t
+-- If the emitted LogDensity is the importance weight of the returned
+-- proposal against the prior at each node, then regen will return the
+-- importance weight of the whole proposal against the local
+-- posterior.
+-- Separate the SP case in the type because SPs require special
+-- handling (namely, making SP records).  This is a crock.
+type Proposal m = Address -> Trace m -> Writer LogDensity (Either (m Value) (SP m))
+
+regen :: (MonadRandom m) => Scaffold -> Proposal m -> Trace m -> WriterT LogDensity m (Trace m)
+regen s propose t = do
+  ((_, w), t') <- lift $ runStateT (runWriterT (regen' s propose)) t
   tell w
   return t'
 
-regen' :: (MonadRandom m) => Scaffold -> WriterT LogDensity (StateT (Trace m) m) ()
-regen' Scaffold { _drg = d, _absorbers = abs } = do
-  mapM_ regenNode $ O.toList d
+regen' :: (MonadRandom m) => Scaffold -> Proposal m -> WriterT LogDensity (StateT (Trace m) m) ()
+regen' Scaffold { _drg = d, _absorbers = abs } propose = do
+  mapM_ (regenNode propose) $ O.toList d
   mapM_ absorbAt $ O.toList abs
 
-regenNode :: (MonadRandom m, MonadTrans t, MonadState (Trace m) (t m)) => Address -> WriterT LogDensity (t m) ()
-regenNode a = do
+regenNode :: (MonadRandom m, MonadTrans t, MonadState (Trace m) (t m)) =>
+             Proposal m -> Address -> WriterT LogDensity (t m) ()
+regenNode propose a = do
   node <- use $ nodes . hardix "Regenerating a nonexistent node" a
   if isRegenerated node then return ()
   else do
-    mapM_ regenNode (parentAddrs node) -- Note that this may change the node at address a
-    regenValue a
+    -- Note that this may change the node at address a
+    mapM_ (regenNode propose) (parentAddrs node)
+    regenValue propose a
 
-regenValue :: (MonadRandom m, MonadTrans t, MonadState (Trace m) (t m)) => Address -> WriterT LogDensity (t m) ()
-regenValue a = lift (do
+regenValue :: (MonadRandom m, MonadTrans t, MonadState (Trace m) (t m)) =>
+              Proposal m -> Address -> WriterT LogDensity (t m) ()
+regenValue propose a = do
   node <- use $ nodes . hardix "Regenerating value for nonexistent node" a
   case node of
     (Constant _) -> return ()
-    (Reference _ a') -> do
+    (Reference _ a') -> lift (do
       node' <- use $ nodes . hardix "Dangling reference found in regenValue" a'
       let v = fromJust "Regenerating value for a reference with non-regenerated referent" $ node' ^. value
-      nodes . ix a . value .= Just v
-    (Request _ outA opa ps) -> do
+      nodes . ix a . value .= Just v)
+    (Request _ outA opa ps) -> lift (do
       addr <- gets $ fromJust "Regenerating value for a request with no operator" . (fromValueAt opa)
-      reqs <- runRequester addr ps
+      reqs <- runRequester addr ps -- TODO allow proposals to tweak requests?
       nodes . ix a . sim_reqs .= Just reqs
-      resps <- evalRequests addr reqs
+      resps <- evalRequests propose addr reqs
       do_incorporateR a
       case outA of
         Nothing -> return ()
-        (Just outA') -> responsesAt outA' .= resps
-    (Output _ _ opa ps rs) -> do
-      addr <- gets $ fromJust "Regenerating value for an output with no operator" . (fromValueAt opa)
-      v <- runOutputter addr ps rs
+        (Just outA') -> responsesAt outA' .= resps)
+    (Output _ _ _ _ _) -> do
+      t <- get
+      let (val, d) = runWriter $ propose a t
+      tell d
+      v <- lift $ processOutput val
       nodes . ix a . value .= Just v
-      do_incorporate a)
+      do_incorporate a
 
-evalRequests :: (MonadRandom m, MonadTrans t, MonadState (Trace m) (t m)) => SPAddress -> [SimulationRequest] -> t m [Address]
-evalRequests a srs = mapM evalRequest srs where
+evalRequests :: (MonadRandom m, MonadTrans t, MonadState (Trace m) (t m)) =>
+                Proposal m -> SPAddress -> [SimulationRequest] -> t m [Address]
+evalRequests propose a srs = mapM evalRequest srs where
     evalRequest (SimulationRequest id exp env) = do
       cached <- gets $ lookupResponse a id
       case cached of
         (Just addr) -> return addr
         Nothing -> do
-          addr <- eval exp env
+          addr <- eval propose exp env
           modify $ insertResponse a id addr
           return addr
 
 -- Returns the address of the fresh node holding the result of the
 -- evaluation.
-eval :: (MonadRandom m, MonadTrans t, MonadState (Trace m) (t m)) => Exp -> Env -> t m Address
-eval (Datum v) _ = state $ addFreshNode $ Constant v
-eval (Var n) e = do
+-- TODO In the presence of nontrivial proposals, eval can return weights
+eval :: (MonadRandom m, MonadTrans t, MonadState (Trace m) (t m)) =>
+        Proposal m -> Exp -> Env -> t m Address
+eval _ (Datum v) _ = state $ addFreshNode $ Constant v
+eval propose (Var n) e = do
   let answer = case L.lookup n e of
                  Nothing -> error $ "Unbound variable " ++ show n
                  (Just a) -> Reference Nothing a
   addr <- state $ addFreshNode answer
   -- Is there a good reason why I don't care about the log density of this regenNode?
-  _ <- runWriterT $ regenNode addr
+  _ <- runWriterT $ regenNode propose addr
   return addr
-eval (Lam vs exp) e = do
+eval _ (Lam vs exp) e = do
   spAddr <- state $ addFreshSP $ compoundSP vs exp e
   state $ addFreshNode $ Constant $ Procedure spAddr
-eval (App op args) env = do
-  op' <- eval op env
-  args' <- sequence $ map (flip eval env) args
+eval propose (App op args) env = do
+  op' <- eval propose op env
+  args' <- sequence $ map (flip (eval propose) env) args
   addr <- state $ addFreshNode (Request Nothing Nothing op' args')
   -- Is there a good reason why I don't care about the log density of this regenNode?
-  _ <- runWriterT $ regenNode addr
+  _ <- runWriterT $ regenNode propose addr
   reqAddrs <- gets $ fulfilments addr
   addr' <- state $ addFreshNode (Output Nothing addr op' args' reqAddrs)
   nodes . ix addr . out_node .= Just addr'
   -- Is there a good reason why I don't care about the log density of this regenNode?
-  _ <- runWriterT $ regenNode addr'
+  _ <- runWriterT $ regenNode propose addr'
   return addr'
+
+prior :: (MonadRandom m) => Proposal m
+prior a t =
+  case t ^. nodes . hardix "Regenerating value for nonexistent node" a of
+    (Output _ _ opa ps rs) -> return $ outputFor addr ps rs t where
+      addr = fromJust "Regenerating value for an output with no operator" $ fromValueAt opa t

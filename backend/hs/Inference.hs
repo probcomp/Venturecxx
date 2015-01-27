@@ -42,7 +42,7 @@ mix_mh (Assessable sample measure) param_propose x = do
 scaffold_resimulation_mh :: (MonadRandom m) => Sub.Scaffold -> MHAble m (Trace m)
 scaffold_resimulation_mh scaffold trace = do
   torus <- censor log_density_negate $ returnT $ detach scaffold trace
-  regen scaffold torus
+  regen scaffold prior torus
 
 type Selector m = Assessable m (Trace m) Sub.Scaffold
 
