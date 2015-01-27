@@ -14,7 +14,8 @@ import Utils
 import qualified InsertionOrderedSet as O
 import Trace hiding (empty)
 
-data Scaffold = Scaffold { _drg :: O.Set Address
+data Scaffold = Scaffold { _principal :: [Address]
+                         , _drg :: O.Set Address -- Includes the principal nodes
                          , _absorbers :: O.Set Address
                          , _dead_reqs :: [(SPAddress, [SRId])]
                          , _brush :: S.Set Address
@@ -23,8 +24,8 @@ data Scaffold = Scaffold { _drg :: O.Set Address
 
 makeLenses ''Scaffold
 
-empty :: Scaffold
-empty = Scaffold O.empty O.empty [] S.empty
+empty :: [Address] -> Scaffold
+empty as = Scaffold as O.empty O.empty [] S.empty
 
 instance Pretty Scaffold where
     pp s = hang (text "Scaffold") 1 $
@@ -34,7 +35,7 @@ instance Pretty Scaffold where
 
 scaffold_from_principal_nodes :: [Address] -> Reader (Trace m) Scaffold
 scaffold_from_principal_nodes as = do
-  scaffold <- execStateT (collectERG (map (,Nothing) as)) empty
+  scaffold <- execStateT (collectERG (map (,Nothing) as)) $ empty as
   (_, scaffold', _) <- execStateT (collectBrush $ O.toList $ scaffold ^. drg)
                                   (M.empty, scaffold, S.empty)
   return $ scaffold'

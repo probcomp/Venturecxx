@@ -50,7 +50,7 @@ default_one :: (MonadRandom m) => Selector m
 default_one = (Assessable sample log_density) where
     sample :: (MonadRandom m) => Trace m -> m Sub.Scaffold
     sample trace =
-        if trace^.randoms.to S.size == 0 then return Sub.empty
+        if trace^.randoms.to S.size == 0 then return $ Sub.empty []
         else do
           index <- getRandomR (0, trace^.randoms.to S.size - 1)
           let addr = (trace^.randoms.to S.toList) !! index
