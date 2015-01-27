@@ -39,11 +39,6 @@ mix_mh (Assessable sample measure) param_propose x = do
   tell ldXi
   return x'
 
-scaffold_resimulation_mh :: (MonadRandom m) => Sub.Scaffold -> MHAble m (Trace m)
-scaffold_resimulation_mh scaffold trace = do
-  torus <- censor log_density_negate $ returnT $ detach scaffold trace
-  regen scaffold prior torus
-
 type Selector m = Assessable m (Trace m) Sub.Scaffold
 
 default_one :: (MonadRandom m) => Selector m
@@ -64,6 +59,11 @@ default_all :: (Monad m) => Selector m
 default_all = (Assessable sample log_density) where
     sample trace = return $ runReader (Sub.scaffold_from_principal_nodes (trace ^. randoms . to S.toList)) trace
     log_density _ _ = LogDensity 0
+
+scaffold_resimulation_mh :: (MonadRandom m) => Sub.Scaffold -> MHAble m (Trace m)
+scaffold_resimulation_mh scaffold trace = do
+  torus <- censor log_density_negate $ returnT $ detach scaffold trace
+  regen scaffold prior torus
 
 resimulation_mh :: (MonadRandom m) => Selector m -> StateT (Trace m) m ()
 resimulation_mh select = modifyM $ metropolis_hastings $ mix_mh select scaffold_resimulation_mh
