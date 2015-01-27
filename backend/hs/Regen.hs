@@ -15,7 +15,7 @@ import Control.Lens -- From cabal install lens
 import Language hiding (Value, Exp, Env, lookup)
 import qualified Language as L
 import Trace
-import Detach (Scaffold(..))
+import Subproblem (Scaffold(..))
 import qualified InsertionOrderedSet as O
 import Utils
 import SP (compoundSP)

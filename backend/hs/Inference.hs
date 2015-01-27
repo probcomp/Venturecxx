@@ -14,7 +14,7 @@ import Language hiding (Exp, Value, Env)
 import Trace
 import Regen
 import Detach hiding (empty)
-import qualified Detach as D (empty)
+import qualified Subproblem as Sub
 
 type MHAble m a = a -> WriterT LogDensity m a
 
@@ -39,25 +39,25 @@ mix_mh (Assessable sample measure) param_propose x = do
   tell ldXi
   return x'
 
-scaffold_resimulation_mh :: (MonadRandom m) => Scaffold -> MHAble m (Trace m)
+scaffold_resimulation_mh :: (MonadRandom m) => Sub.Scaffold -> MHAble m (Trace m)
 scaffold_resimulation_mh scaffold trace = do
   torus <- censor log_density_negate $ returnT $ detach scaffold trace
   regen scaffold torus
 
-type Selector m = Assessable m (Trace m) Scaffold
+type Selector m = Assessable m (Trace m) Sub.Scaffold
 
 default_one :: (MonadRandom m) => Selector m
 default_one = (Assessable sample log_density) where
-    sample :: (MonadRandom m) => Trace m -> m Scaffold
+    sample :: (MonadRandom m) => Trace m -> m Sub.Scaffold
     sample trace =
-        if trace^.randoms.to S.size == 0 then return D.empty
+        if trace^.randoms.to S.size == 0 then return Sub.empty
         else do
           index <- getRandomR (0, trace^.randoms.to S.size - 1)
           let addr = (trace^.randoms.to S.toList) !! index
-          let scaffold = runReader (scaffold_from_principal_node addr) trace
+          let scaffold = runReader (Sub.scaffold_from_principal_node addr) trace
           return $ scaffold
 
-    log_density :: Trace m -> Scaffold -> LogDensity
+    log_density :: Trace m -> Sub.Scaffold -> LogDensity
     log_density t _ = LogDensity $ -log(fromIntegral $ t^.randoms.to S.size)
 
 resimulation_mh :: (MonadRandom m) => Selector m -> StateT (Trace m) m ()

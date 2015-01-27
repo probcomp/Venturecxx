@@ -16,6 +16,7 @@ import Trace hiding (empty)
 import qualified Trace as T
 import Regen
 import qualified Detach
+import qualified Subproblem
 import SP
 import qualified Inference as I (resimulation_mh, Selector, Assessable(..))
 
@@ -113,25 +114,25 @@ sampleM exp = do
 
 -- TODO: These two words feel overly specific.  What am I actually
 -- trying to accomplish by exposing the parts of a selector like this?
-select :: (Monad m) => I.Selector m -> StateT (Model m) m Detach.Scaffold
+select :: (Monad m) => I.Selector m -> StateT (Model m) m Subproblem.Scaffold
 select (I.Assessable sel _) = trace `zoom` do
                                 t <- get
                                 s <- lift $ sel t
                                 return s
 
-assess :: (Monad m) => I.Selector m -> Detach.Scaffold -> StateT (Model m) m LogDensity
+assess :: (Monad m) => I.Selector m -> Subproblem.Scaffold -> StateT (Model m) m LogDensity
 assess (I.Assessable _ do_assess) scaffold = trace `zoom` do
                                                t <- get
                                                return $ do_assess t scaffold
 
-detach :: (MonadRandom m) => Detach.Scaffold -> StateT (Model m) m LogDensity
+detach :: (MonadRandom m) => Subproblem.Scaffold -> StateT (Model m) m LogDensity
 detach scaffold = trace `zoom` do
   t <- get
   let (t', logd) = runWriter $ Detach.detach scaffold t
   put t'
   return logd
 
-regen :: (MonadRandom m) => Detach.Scaffold -> StateT (Model m) m LogDensity
+regen :: (MonadRandom m) => Subproblem.Scaffold -> StateT (Model m) m LogDensity
 regen scaffold = trace `zoom` do
   t <- get
   (t', logd) <- lift $ runWriterT $ Regen.regen scaffold t
