@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module InterpretationTest where
 
 import Control.Monad
@@ -31,14 +33,14 @@ downsample :: Int -> [a] -> [a]
 downsample _ [] = []
 downsample n (x:xs) = x:(downsample n $ drop (n-1) xs)
 
-samples :: (MonadRandom m, Valuable a) => [Directive] -> m [a]
+samples :: (MonadRandom m, Valuable Double a) => [Directive Double] -> m [a]
 samples prog = liftM (downsample 20) $ liftM (map $ fromJust . fromValue) $ venture_main 1000 prog
 
 more :: (MonadRandom m) => [m Assertion]
 more = map (liftM report)
   [ liftM (Stat.knownDiscrete [(Boolean True, 0.5), (Boolean False, 0.5)]) $ venture_main 100 flip_one_coin
   , liftM (Stat.knownDiscrete [(1, 0.5), (2, 0.5)]) $ venture_main 100 condition_on_flip
-  , liftM (Stat.knownContinuous (Normal 0.0 2.0 :: Normal Double)) $ liftM (map $ fromJust . fromValue) $ venture_main 100 single_normal
+  , liftM (Stat.knownContinuous (Normal 0.0 2.0 :: Normal Double)) $ liftM (map $ fromJust . fromValue) $ venture_main 100 (single_normal :: [Directive Double])
   , liftM (Stat.knownContinuous (Normal 0.0 (sqrt 8.0) :: Normal Double)) $ samples chained_normals
   , liftM (Stat.knownContinuous (Normal 2.0 (sqrt 2.0) :: Normal Double)) $ samples observed_chained_normals
   , liftM (Stat.knownContinuous (Normal 2.0 (sqrt 2.0) :: Normal Double)) $ samples observed_chained_normals_lam
@@ -52,7 +54,7 @@ more = map (liftM report)
   , liftM (Stat.knownDiscrete [(True, 0.5), (False, 0.5)]) $ liftM (map checkList) $ samples conditional_and_coupled
   , liftM (Stat.knownDiscrete [(True, 0.75), (False, 0.25)]) $ samples whether_a_node_is_random_can_change
   ]
-    where checkList :: Value -> Bool
+    where checkList :: Value Double -> Bool
           checkList (List _) = True
           checkList (Boolean False) = False
           checkList _ = error "What?"
