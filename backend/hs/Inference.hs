@@ -1,4 +1,5 @@
 {-# LANGUAGE DoAndIfThenElse #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Inference where
 
@@ -16,20 +17,21 @@ import Regen
 import Detach
 import qualified Subproblem as Sub
 
-type MHAble m a = a -> WriterT LogDensity m a
+type MHAble m a num = a -> WriterT (LogDensity num) m a
 
-data Assessable m a b = Assessable (a -> m b) (a -> b -> LogDensity)
+data Assessable m a b num = Assessable (a -> m b) (a -> b -> LogDensity num)
 
-metropolis_hastings :: (MonadRandom m) => MHAble m a -> a -> m a
+metropolis_hastings :: (MonadRandom m, Real num) => MHAble m a num -> a -> m a
 metropolis_hastings propose x = do
   (x', (LogDensity alpha)) <- runWriterT $ propose x
-  u <- getRandomR (0.0,1.0)
-  if (log u < alpha) then
+  (u :: Double) <- getRandomR (0.0,1.0)
+  if (log u < realToFrac alpha) then
       return x'
   else
       return x
 
-mix_mh :: (Monad m) => (Assessable m a ind) -> (ind -> MHAble m a) -> (MHAble m a)
+mix_mh :: (Monad m, Num num) =>
+          (Assessable m a ind num) -> (ind -> MHAble m a num) -> (MHAble m a num)
 mix_mh (Assessable sample measure) param_propose x = do
   ind <- lift $ sample x
   let ldRho = measure x ind
@@ -39,11 +41,11 @@ mix_mh (Assessable sample measure) param_propose x = do
   tell ldXi
   return x'
 
-type Selector m = Assessable m (Trace m) Sub.Scaffold
+type Selector m num = Assessable m (Trace m num) Sub.Scaffold num
 
-default_one :: (MonadRandom m) => Selector m
+default_one :: (MonadRandom m, Floating num) => Selector m num
 default_one = (Assessable sample log_density) where
-    sample :: (MonadRandom m) => Trace m -> m Sub.Scaffold
+    sample :: (MonadRandom m) => Trace m num -> m Sub.Scaffold
     sample trace =
         if trace^.randoms.to S.size == 0 then return $ Sub.empty []
         else do
@@ -52,18 +54,19 @@ default_one = (Assessable sample log_density) where
           let scaffold = runReader (Sub.scaffold_from_principal_nodes [addr]) trace
           return $ scaffold
 
-    log_density :: Trace m -> Sub.Scaffold -> LogDensity
+    log_density :: (Floating num) => Trace m num -> Sub.Scaffold -> LogDensity num
     log_density t _ = LogDensity $ -log(fromIntegral $ t^.randoms.to S.size)
 
-default_all :: (Monad m) => Selector m
+default_all :: (Monad m, Num num) => Selector m num
 default_all = (Assessable sample log_density) where
     sample trace = return $ runReader (Sub.scaffold_from_principal_nodes (trace ^. randoms . to S.toList)) trace
     log_density _ _ = LogDensity 0
 
-scaffold_resimulation_mh :: (MonadRandom m) => Sub.Scaffold -> MHAble m (Trace m)
+scaffold_resimulation_mh :: (MonadRandom m, Num num) =>
+                            Sub.Scaffold -> MHAble m (Trace m num) num
 scaffold_resimulation_mh scaffold trace = do
   torus <- censor log_density_negate $ returnT $ detach scaffold trace
   regen scaffold prior torus
 
-resimulation_mh :: (MonadRandom m) => Selector m -> StateT (Trace m) m ()
+resimulation_mh :: (MonadRandom m, Real num) => Selector m num -> StateT (Trace m num) m ()
 resimulation_mh select = modifyM $ metropolis_hastings $ mix_mh select scaffold_resimulation_mh
