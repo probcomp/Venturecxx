@@ -129,8 +129,8 @@ execList :: [Value num] -> [b] -> Value num
 execList vs [] = List vs
 execList _ _ = error "List SP given fulfilments"
 
-list :: (Monad m, Num num) => SP m num
-list = no_state_sp NoStateSP
+list :: (Monad m, Num num) => NoStateSP m num
+list = NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
   , outputter = DeterministicO $ on_values execList
@@ -140,8 +140,8 @@ list = no_state_sp NoStateSP
 bernoulli_flip :: (MonadRandom m) => m (Value num)
 bernoulli_flip = liftM Boolean $ getRandomR (False,True)
 
-bernoulli :: forall m num. (MonadRandom m, Floating num) => SP m num
-bernoulli = no_state_sp NoStateSP
+bernoulli :: forall m num. (MonadRandom m, Floating num) => NoStateSP m num
+bernoulli = NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
   , outputter = RandomO $ nullary bernoulli_flip
@@ -157,8 +157,8 @@ log_d_weight :: (Floating num) => num -> Bool -> num
 log_d_weight weight True = log weight
 log_d_weight weight False = log (1 - weight)
 
-weighted :: (MonadRandom m, Floating num, Ord num) => SP m num
-weighted = no_state_sp NoStateSP
+weighted :: (MonadRandom m, Floating num, Ord num) => NoStateSP m num
+weighted = NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
   , outputter = RandomO $ on_values $ unary $ typed weighted_flip
@@ -181,8 +181,8 @@ log_d_normal :: (Floating num) => num -> num -> num -> num
 log_d_normal mean sigma x = - (x - mean)^^(2::Int) / (2 * sigma^^(2::Int)) - scale where
     scale = log sigma + (log pi)/2
 
-normal :: (MonadRandom m, Floating num) => SP m num
-normal = no_state_sp NoStateSP
+normal :: (MonadRandom m, Floating num) => NoStateSP m num
+normal = NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
   , outputter = RandomO $ on_values $ binary $ typed2 normal_flip
@@ -213,8 +213,8 @@ betaO alpha beta = do
 log_denisty_beta :: (Floating num, Real num) => num -> num -> num -> num
 log_denisty_beta a b x = (a-1)*log x + (b-1)*log (1-x) - xxxFakeGenericity2 logBeta a b
 
-beta :: (MonadRandom m, Floating num, Real num) => SP m num
-beta = no_state_sp NoStateSP
+beta :: (MonadRandom m, Floating num, Real num) => NoStateSP m num
+beta = NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
   , outputter = RandomO $ on_values $ binary $ typed2 betaO
@@ -258,8 +258,8 @@ selectO [p,c,a] [] = if fromJust "Predicate was not a boolean" $ fromValue p the
                      else a
 selectO _ _ = error "Wrong number of arguments to SELECT"
 
-select :: (Num num) => SP m num
-select = no_state_sp NoStateSP
+select :: (Num num) => NoStateSP m num
+select = NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req
   , outputter = DeterministicO $ on_values selectO
@@ -321,12 +321,12 @@ initializeBuiltins env = do
   spaddrs <- mapM (state . addFreshSP) sps
   addrs <- mapM (state . addFreshNode . Constant . Procedure) spaddrs
   return $ Frame (M.fromList $ zip names addrs) env
-      where namedSps = [ ("bernoulli", bernoulli)
-                       , ("normal", normal)
-                       , ("beta", beta)
-                       , ("select", select)
-                       , ("list", list)
-                       , ("weighted", weighted)
+      where namedSps = [ ("bernoulli", no_state_sp bernoulli)
+                       , ("normal", no_state_sp normal)
+                       , ("beta", no_state_sp beta)
+                       , ("select", no_state_sp select)
+                       , ("list", no_state_sp list)
+                       , ("weighted", no_state_sp weighted)
                        , ("make-cbeta-bernoulli", make_cbeta_bernoulli)
                        , ("mem", mem)]
             names = map fst namedSps
