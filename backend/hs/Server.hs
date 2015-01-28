@@ -52,7 +52,7 @@ error_response err = responseLBS status500 [("Content-Type", "text/plain")] $ en
   json :: M.Map String String
   json = M.fromList [("exception", "fatal"), ("message", err)]
 
-application :: MVar (V.Model IO) -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
+application :: MVar (V.Model IO Double) -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
 application engineMVar req k = do
   parsed <- off_the_wire req
   case parsed of
@@ -60,12 +60,12 @@ application engineMVar req k = do
     Right (method, args) -> do resp <- execute engineMVar method args
                                k resp
 
-interpret :: String -> [String] -> Either String Directive
+interpret :: String -> [String] -> Either String (Directive Double)
 interpret "assume" [var, expr] = Right $ Assume var $ G.parse expr
 interpret "assume" args = Left $ "Incorrect number of arguments to assume " ++ show args
 interpret m _ = Left $ "Unknown directive " ++ m
 
-execute :: MVar (V.Model IO) -> String -> [String] -> IO Response
+execute :: MVar (V.Model IO Double) -> String -> [String] -> IO Response
 execute engineMVar method args =
   case interpret method args of
     Left err -> return $ error_response err
@@ -74,11 +74,11 @@ execute engineMVar method args =
       value <- onMVar engineMVar $ runDirective d
       return $ responseLBS status200 [("Content-Type", "text/plain")] $ encodeMaybeValue value
 
-encodeMaybeValue :: Maybe T.Value -> B.ByteString
+encodeMaybeValue :: Maybe (T.Value Double) -> B.ByteString
 encodeMaybeValue Nothing = "null"
 encodeMaybeValue (Just v) = encodeValue v
 
-encodeValue :: T.Value -> B.ByteString
+encodeValue :: T.Value Double -> B.ByteString
 encodeValue (Number x) = encode x
 encodeValue (Symbol s) = encode s
 encodeValue (List vs) = "[" `B.append` (B.intercalate ", " $ map encodeValue vs) `B.append` "]"
@@ -99,6 +99,6 @@ onMVar var act = do
 
 main :: IO ()
 main = do
-  engineMVar <- newMVar V.initial :: IO (MVar (V.Model IO))
+  engineMVar <- newMVar V.initial :: IO (MVar (V.Model IO Double))
   putStrLn "Venture listening on 3000"
   run 3000 (application engineMVar)
