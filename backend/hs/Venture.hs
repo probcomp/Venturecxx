@@ -20,31 +20,31 @@ import qualified Subproblem
 import SP
 import qualified Inference as I (resimulation_mh, Selector, Assessable(..))
 
-data Model m =
+data Model m num =
     Model { _env :: Env
-           , _trace :: (Trace m)
+           , _trace :: (Trace m num)
            }
 
 makeLenses ''Model
 
-empty :: Model m
+empty :: Model m num
 empty = Model Toplevel T.empty
 
-initial :: (MonadRandom m) => Model m
+initial :: (MonadRandom m, Show num, Real num, Floating num, Enum num) => Model m num
 initial = Model e t where
   (e, t) = runState (initializeBuiltins Toplevel) T.empty
 
-lookupValue :: Address -> Model m -> Value
+lookupValue :: Address -> Model m num -> Value num
 lookupValue a (Model _ t) =
     fromJust "No value at address" $ valueOf
     $ fromJust "Invalid address" $ lookupNode a t
 
-topeval :: (MonadRandom m) => Exp -> (StateT (Model m) m) Address
+topeval :: (MonadRandom m, Num num) => Exp num -> (StateT (Model m num) m) Address
 topeval exp = do
   (Model e _) <- get
   trace `zoom` (eval prior exp e)
 
-assume :: (MonadRandom m) => String -> Exp -> (StateT (Model m) m) Address
+assume :: (MonadRandom m, Num num) => String -> Exp num -> (StateT (Model m num) m) Address
 assume var exp = do
   -- TODO This implementation of assume does not permit recursive
   -- functions, because of insufficient indirection to the
@@ -58,7 +58,7 @@ assume var exp = do
 -- value (up to chasing down references until a random choice is
 -- found).  The constraining appears to consist only in removing that
 -- node from the list of random choices.
-observe :: (MonadRandom m) => Exp -> Value -> (StateT (Model m) m) ()
+observe :: (MonadRandom m, Num num) => Exp num -> Value num -> (StateT (Model m num) m) ()
 observe exp v = do
   address <- topeval exp
   -- TODO What should happen if one observes a value that had
@@ -72,16 +72,16 @@ observe exp v = do
   -- address it here.
   trace `zoom` (constrain address v)
 
-predict :: (MonadRandom m) => Exp -> (StateT (Model m) m) Address
+predict :: (MonadRandom m, Num num) => Exp num -> (StateT (Model m num) m) Address
 predict = topeval
 
-sample :: (MonadRandom m) => Exp -> (Model m) -> m Value
+sample :: (MonadRandom m, Num num) => Exp num -> (Model m num) -> m (Value num)
 sample exp model = evalStateT action model where
     action = do
       addr <- topeval exp
       gets $ lookupValue addr
 
-sampleM :: (MonadRandom m) => Exp -> (StateT (Model m) m) Value
+sampleM :: (MonadRandom m, Num num) => Exp num -> (StateT (Model m num) m) (Value num)
 sampleM exp = do
   model <- get
   val <- lift $ sample exp model
@@ -114,30 +114,32 @@ sampleM exp = do
 
 -- TODO: These two words feel overly specific.  What am I actually
 -- trying to accomplish by exposing the parts of a selector like this?
-select :: (Monad m) => I.Selector m -> StateT (Model m) m Subproblem.Scaffold
+select :: (Monad m) => I.Selector m num -> StateT (Model m num) m Subproblem.Scaffold
 select (I.Assessable sel _) = trace `zoom` do
                                 t <- get
                                 s <- lift $ sel t
                                 return s
 
-assess :: (Monad m) => I.Selector m -> Subproblem.Scaffold -> StateT (Model m) m LogDensity
+assess :: (Monad m) => I.Selector m num -> Subproblem.Scaffold -> StateT (Model m num) m (LogDensity num)
 assess (I.Assessable _ do_assess) scaffold = trace `zoom` do
                                                t <- get
                                                return $ do_assess t scaffold
 
-detach :: (MonadRandom m) => Subproblem.Scaffold -> StateT (Model m) m LogDensity
+detach :: (MonadRandom m, Num num) =>
+          Subproblem.Scaffold -> StateT (Model m num) m (LogDensity num)
 detach scaffold = trace `zoom` do
   t <- get
   let (t', logd) = runWriter $ Detach.detach scaffold t
   put t'
   return logd
 
-regen :: (MonadRandom m) => Subproblem.Scaffold -> StateT (Model m) m LogDensity
+regen :: (MonadRandom m, Num num) =>
+         Subproblem.Scaffold -> StateT (Model m num) m (LogDensity num)
 regen scaffold = trace `zoom` do
   t <- get
   (t', logd) <- lift $ runWriterT $ Regen.regen scaffold prior t -- TODO Expose choice of proposal distribution?
   put t'
   return logd
 
-resimulation_mh :: (MonadRandom m) => I.Selector m -> StateT (Model m) m ()
+resimulation_mh :: (MonadRandom m, Real num) => I.Selector m num -> StateT (Model m num) m ()
 resimulation_mh select = trace `zoom` I.resimulation_mh select
