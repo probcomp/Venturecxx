@@ -7,25 +7,32 @@ import qualified Data.Map as M
 import Data.Monoid
 import Control.Monad.Random -- From cabal install MonadRandom
 
-data Value proc = Number Double
-                | Symbol String
-                | List [Value proc]
-                | Procedure proc
-                | Boolean Bool
+-- The "proc" type variable is the type of representations of
+-- procedures, which I am allowing to vary because it will be
+-- specified in a module that imports this one.
+-- The "num" type variable is the type of representations of real
+-- numbers, which I am allowing to vary because I want to use AD.
+data Value proc real = Number real
+                     | Symbol String
+                     | List [Value proc real]
+                     | Procedure proc
+                     | Boolean Bool
   deriving (Eq, Ord, Show)
 
-instance Num (Value a) where
+instance (Num num) => Num (Value a num) where
     -- Only for fromInteger
     fromInteger = Number . fromInteger
 
-newtype LogDensity = LogDensity Double
+-- The "num" type variable is the type of representations of real
+-- numbers, which I am allowing to vary because I want to use AD.
+newtype LogDensity num = LogDensity num
     deriving Random
 
-instance Monoid LogDensity where
-    mempty = LogDensity 0.0
+instance (Num num) => Monoid (LogDensity num) where
+    mempty = LogDensity 0
     (LogDensity x) `mappend` (LogDensity y) = LogDensity $ x + y
 
-log_density_negate :: LogDensity -> LogDensity
+log_density_negate :: (Num num) => LogDensity num -> LogDensity num
 log_density_negate (LogDensity x) = LogDensity $ -x
 
 data Exp v = Datum v
