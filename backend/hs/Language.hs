@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleInstances #-}
+{-# LANGUAGE DeriveFunctor #-}
 
 module Language where
 
@@ -23,10 +24,18 @@ instance (Num num) => Num (Value a num) where
     -- Only for fromInteger
     fromInteger = Number . fromInteger
 
+-- A functor over the number types, to facilitate AD.
+instance Functor (Value proc) where
+    f `fmap` (Number d) = Number $ f d
+    _ `fmap` (Symbol s) = Symbol s
+    f `fmap` (List vs) = List $ map (fmap f) vs
+    _ `fmap` (Procedure p) = Procedure p
+    _ `fmap` (Boolean b) = Boolean b
+
 -- The "num" type variable is the type of representations of real
 -- numbers, which I am allowing to vary because I want to use AD.
 newtype LogDensity num = LogDensity num
-    deriving Random
+    deriving (Random, Functor)
 
 instance (Num num) => Monoid (LogDensity num) where
     mempty = LogDensity 0
