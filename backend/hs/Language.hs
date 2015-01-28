@@ -18,19 +18,11 @@ data Value proc real = Number real
                      | List [Value proc real]
                      | Procedure proc
                      | Boolean Bool
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Functor)
 
 instance (Num num) => Num (Value a num) where
     -- Only for fromInteger
     fromInteger = Number . fromInteger
-
--- A functor over the number types, to facilitate AD.
-instance Functor (Value proc) where
-    f `fmap` (Number d) = Number $ f d
-    _ `fmap` (Symbol s) = Symbol s
-    f `fmap` (List vs) = List $ map (fmap f) vs
-    _ `fmap` (Procedure p) = Procedure p
-    _ `fmap` (Boolean b) = Boolean b
 
 -- The "num" type variable is the type of representations of real
 -- numbers, which I am allowing to vary because I want to use AD.
