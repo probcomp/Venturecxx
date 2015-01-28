@@ -10,10 +10,10 @@ import Venture
 import qualified Inference as I
 import Examples (v_if, v_let1)
 
-flip_one_coin :: (MonadRandom m) => m T.Value
+flip_one_coin :: (MonadRandom m) => m (T.Value Double)
 flip_one_coin = sample (L.App (L.Var "bernoulli") []) initial
 
-mh_flip_one_coin :: (MonadRandom m) => Int -> m T.Value
+mh_flip_one_coin :: (MonadRandom m) => Int -> m (T.Value Double)
 mh_flip_one_coin ct = evalStateT prog initial where
     -- prog :: (StateT (Model m) m) T.Value
     prog = do
@@ -21,7 +21,7 @@ mh_flip_one_coin ct = evalStateT prog initial where
       replicateM_ ct $ resimulation_mh I.default_one
       sampleM (L.Var "c")
 
-observed_chained_normals :: (MonadRandom m) => Int -> m T.Value
+observed_chained_normals :: (MonadRandom m) => Int -> m (T.Value Double)
 observed_chained_normals ct = evalStateT prog initial where
     prog = do
       _ <- assume "x" $ L.App (L.Var "normal") [0, 2]
