@@ -6,7 +6,6 @@ module Language where
 import Prelude hiding (lookup)
 import qualified Data.Map as M
 import Data.Monoid
-import Control.Monad.Random -- From cabal install MonadRandom
 
 -- The "proc" type variable is the type of representations of
 -- procedures, which I am allowing to vary because it will be
@@ -27,7 +26,7 @@ instance (Num num) => Num (Value a num) where
 -- The "num" type variable is the type of representations of real
 -- numbers, which I am allowing to vary because I want to use AD.
 newtype LogDensity num = LogDensity num
-    deriving (Random, Functor)
+    deriving Functor
 
 instance (Num num) => Monoid (LogDensity num) where
     mempty = LogDensity 0
