@@ -1,5 +1,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE RankNTypes #-}
+
 
 -- The purpose of this module is to check what GHC's type inference
 -- can and can't do with the types that appear in Kmett's ad package.
@@ -75,3 +77,18 @@ answer6 = do
   box_3 <- return $ Box inc
   return $ grad (head . fmap (unBox $ xxx box_3)) [0] where
   xxx = id -- ???
+
+-- Ed Kmett suggests making the number type inside the box
+-- existential:
+data Box2 = Box2 { unBox2 :: forall a. (Num a) => (a -> a) }
+
+-- The analogous thing to answer5 still works.
+answer7 :: (Num a) => [a]
+answer7 = let box = Box2 inc
+          in grad (head . fmap (unBox2 $ box)) [0]
+
+-- The analogous thing to answer6 now works.
+answer8 :: (Monad m, Num a) => m [a]
+answer8 = do
+  box_4 <- return $ Box2 inc
+  return $ grad (head . fmap (unBox2 $ box_4)) [0]
