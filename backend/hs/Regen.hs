@@ -28,21 +28,24 @@ import SP (compoundSP)
 -- posterior.
 -- Separate the SP case in the type because SPs require special
 -- handling (namely, making SP records).  This is a crock.
-type Proposal m = Address -> Trace m -> Writer LogDensity (Either (m Value) (SP m))
+type Proposal m num = Address -> Trace m num ->
+    Writer (LogDensity num) (Either (m (Value num)) (SP m num))
 
-regen :: (MonadRandom m) => Scaffold -> Proposal m -> Trace m -> WriterT LogDensity m (Trace m)
+regen :: (MonadRandom m, Num num) => Scaffold -> Proposal m num -> Trace m num ->
+         WriterT (LogDensity num) m (Trace m num)
 regen s propose t = do
   ((_, w), t') <- lift $ runStateT (runWriterT (regen' s propose)) t
   tell w
   return t'
 
-regen' :: (MonadRandom m) => Scaffold -> Proposal m -> WriterT LogDensity (StateT (Trace m) m) ()
+regen' :: (MonadRandom m, Num num) => Scaffold -> Proposal m num ->
+          WriterT (LogDensity num) (StateT (Trace m num) m) ()
 regen' Scaffold { _drg = d, _absorbers = abs } propose = do
   mapM_ (regenNode propose) $ O.toList d
   mapM_ absorbAt $ O.toList abs
 
-regenNode :: (MonadRandom m, MonadTrans t, MonadState (Trace m) (t m)) =>
-             Proposal m -> Address -> WriterT LogDensity (t m) ()
+regenNode :: (MonadRandom m, MonadTrans t, MonadState (Trace m num) (t m), Num num) =>
+             Proposal m num -> Address -> WriterT (LogDensity num) (t m) ()
 regenNode propose a = do
   node <- use $ nodes . hardix "Regenerating a nonexistent node" a
   if isRegenerated node then return ()
@@ -51,8 +54,8 @@ regenNode propose a = do
     mapM_ (regenNode propose) (parentAddrs node)
     regenValue propose a
 
-regenValue :: (MonadRandom m, MonadTrans t, MonadState (Trace m) (t m)) =>
-              Proposal m -> Address -> WriterT LogDensity (t m) ()
+regenValue :: (MonadRandom m, MonadTrans t, MonadState (Trace m num) (t m), Num num) =>
+              Proposal m num -> Address -> WriterT (LogDensity num) (t m) ()
 regenValue propose a = do
   node <- use $ nodes . hardix "Regenerating value for nonexistent node" a
   case node of
@@ -78,8 +81,8 @@ regenValue propose a = do
       nodes . ix a . value .= Just v
       do_incorporate a
 
-evalRequests :: (MonadRandom m, MonadTrans t, MonadState (Trace m) (t m)) =>
-                Proposal m -> SPAddress -> [SimulationRequest] -> t m [Address]
+evalRequests :: (MonadRandom m, MonadTrans t, MonadState (Trace m num) (t m), Num num) =>
+                Proposal m num -> SPAddress -> [SimulationRequest num] -> t m [Address]
 evalRequests propose a srs = mapM evalRequest srs where
     evalRequest (SimulationRequest id exp env) = do
       cached <- gets $ lookupResponse a id
@@ -93,8 +96,8 @@ evalRequests propose a srs = mapM evalRequest srs where
 -- Returns the address of the fresh node holding the result of the
 -- evaluation.
 -- TODO In the presence of nontrivial proposals, eval can return weights
-eval :: (MonadRandom m, MonadTrans t, MonadState (Trace m) (t m)) =>
-        Proposal m -> Exp -> Env -> t m Address
+eval :: (MonadRandom m, MonadTrans t, MonadState (Trace m num) (t m), Num num) =>
+        Proposal m num -> Exp num -> Env -> t m Address
 eval _ (Datum v) _ = state $ addFreshNode $ Constant v
 eval propose (Var n) e = do
   let answer = case L.lookup n e of
@@ -120,13 +123,13 @@ eval propose (App op args) env = do
   _ <- runWriterT $ regenNode propose addr'
   return addr'
 
-prior :: (MonadRandom m) => Proposal m
+prior :: (MonadRandom m, Num num) => Proposal m num
 prior a t =
   case t ^. nodes . hardix "Regenerating value for nonexistent node" a of
     (Output _ _ opa ps rs) -> return $ outputFor addr ps rs t where
       addr = fromJust "Regenerating value for an output with no operator" $ fromValueAt opa t
 
-withDeterministic :: (Monad m) => Proposal m -> Map Address Value -> Proposal m
+withDeterministic :: (Monad m) => Proposal m num -> Map Address (Value num) -> Proposal m num
 withDeterministic base as a t =
     case Map.lookup a as of
       (Just v) -> writer (Left $ return v, LogDensity $ absorbVal node sp) where

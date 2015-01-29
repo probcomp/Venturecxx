@@ -62,10 +62,10 @@ library
   
   -- Other library packages from which modules are imported.
   build-depends:       base >=4.5, containers >=0.4,
-                       lens >=3.10, pretty >=1.1,
+                       lens >=3.10, pretty >=1.1, random,
                        MonadRandom >=0.1, transformers >=0.3,
                        math-functions >=0.1, mtl, mmorph, monad-coroutine,
-                       random-fu
+                       random-fu, reflection, ad
   
   -- Directories containing source files.
   -- hs-source-dirs:      
@@ -79,10 +79,10 @@ Test-suite tests
   Type:                exitcode-stdio-1.0
   Main-is:             VentureTest.hs
   build-depends:       base >=4.5, containers >=0.4,
-                       lens >=3.10, pretty >=1.1,
+                       lens >=3.10, pretty >=1.1, random,
                        MonadRandom >=0.1, transformers >=0.3,
                        math-functions >=0.1, mtl, mmorph, HUnit, monad-coroutine,
-                       random-fu, ks-test
+                       random-fu, ks-test, ad
   default-language:    Haskell2010
   Ghc-options:         -Wall -fno-warn-name-shadowing
 

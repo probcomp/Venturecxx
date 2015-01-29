@@ -33,14 +33,14 @@ instance Pretty Scaffold where
              hang (text "Absorbers") 1 (pp $ s^.absorbers) $$
              hang (text "Brush") 1 (pp $ s^.brush)
 
-scaffold_from_principal_nodes :: [Address] -> Reader (Trace m) Scaffold
+scaffold_from_principal_nodes :: [Address] -> Reader (Trace m num) Scaffold
 scaffold_from_principal_nodes as = do
   scaffold <- execStateT (collectERG (map (,Nothing) as)) $ empty as
   (_, scaffold', _) <- execStateT (collectBrush $ O.toList $ scaffold ^. drg)
                                   (M.empty, scaffold, S.empty)
   return $ scaffold'
 
-collectERG :: [(Address,Maybe Address)] -> StateT Scaffold (Reader (Trace m)) ()
+collectERG :: [(Address,Maybe Address)] -> StateT Scaffold (Reader (Trace m num)) ()
 collectERG [] = return ()
 collectERG ((a,erg_parent):as) = do
   -- erg_parent == Nothing means this is a principal node
@@ -60,13 +60,13 @@ collectERG ((a,erg_parent):as) = do
                               . fromJust "ERGing application node with no operator" . operator node
                if opCanAbsorb then absorbing a
                else resampling a
-  where resampling :: Address -> StateT Scaffold (Reader (Trace m)) ()
+  where resampling :: Address -> StateT Scaffold (Reader (Trace m num)) ()
         resampling a = do
           absorbers %= O.delete a
           drg %= O.insert a
           as' <- asks $ children a
           collectERG $ (zip as' $ repeat $ Just a) ++ as
-        absorbing :: Address -> StateT Scaffold (Reader (Trace m)) ()
+        absorbing :: Address -> StateT Scaffold (Reader (Trace m num)) ()
         absorbing a = do
           absorbers %= O.insert a
           collectERG as
@@ -82,13 +82,13 @@ collectERG ((a,erg_parent):as) = do
 -- is the set addresses the disablement of whose outgoing requests is
 -- already under way.
 collectBrush :: [Address] -> StateT ((M.Map Address Int), Scaffold, S.Set Address)
-                                    (Reader (Trace m)) ()
+                                    (Reader (Trace m num)) ()
 collectBrush = mapM_ disableRequests where
     -- Given the address of an ERG node, account for the fact that it
     -- ceases making any requests it may have been making (only
     -- relevant to Requester nodes).
     disableRequests :: Address -> StateT ((M.Map Address Int), Scaffold, S.Set Address)
-                                         (Reader (Trace m)) ()
+                                         (Reader (Trace m num)) ()
     disableRequests a = do
       member <- use $ _3 . contains a
       if member then return ()
@@ -107,7 +107,7 @@ collectBrush = mapM_ disableRequests where
     -- requested one time less.
     disableRequestFor :: SPAddress -> SRId -> Address ->
                          StateT ((M.Map Address Int), Scaffold, S.Set Address)
-                                (Reader (Trace m)) ()
+                                (Reader (Trace m num)) ()
     disableRequestFor spaddr srid a = do
       _1 . at a %= maybeSucc
       disabled <- use $ _1 . hardix "Disabling request for a node that has never been disabled" a
@@ -122,7 +122,7 @@ collectBrush = mapM_ disableRequests where
     -- Given the address of a node that is no longer requested, put it
     -- and its entire family in the brush.
     disableFamily :: Address -> StateT ((M.Map Address Int), Scaffold, S.Set Address)
-                                       (Reader (Trace m)) ()
+                                       (Reader (Trace m num)) ()
     disableFamily a = do
       markBrush a
       node <- view $ nodes . hardix "Disabling nonexistent family" a

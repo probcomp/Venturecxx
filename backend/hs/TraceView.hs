@@ -24,7 +24,7 @@ import Data.Monoid
 import qualified Data.Set as S
 
 import Utils
-import Trace (SP, SPRecord)
+import qualified Trace (SP, SPRecord)
 
 ----------------------------------------------------------------------
 -- Small objects                                                    --
@@ -100,6 +100,12 @@ data SimulationRequest m = SimulationRequest SRId (Exp m) Env
 
 srid :: SimulationRequest m -> SRId
 srid (SimulationRequest id _ _) = id
+
+-- XXX Concretize the generic number types inherited from Trace
+-- because I do not want to swap this code in enough to adapt it to
+-- admit generic numbers.
+type SP m = Trace.SP m Double
+type SPRecord m = Trace.SPRecord m Double
 
 ----------------------------------------------------------------------
 -- Nodes                                                            --

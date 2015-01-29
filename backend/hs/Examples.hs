@@ -12,48 +12,52 @@ import Venture hiding (empty)
 import Inference
 import InferenceInterpreter
 
-watching_infer' :: (MonadRandom m) => Address -> Int -> StateT (Trace m) m [Value]
+watching_infer' :: (MonadRandom m, Real num, Floating num) =>
+                   Address -> Int -> StateT (Trace m num) m [Value num]
 watching_infer' address ct = replicateM ct (do
   Inference.resimulation_mh default_one
   gets $ fromJust "Value was not restored by inference" . valueOf
          . fromJust "Address became invalid after inference" . (lookupNode address))
 
-watching_infer :: (MonadRandom m) => Address -> Int -> StateT (Model m) m [Value]
+watching_infer :: (MonadRandom m, Real num, Floating num) =>
+                  Address -> Int -> StateT (Model m num) m [Value num]
 watching_infer address ct = trace `zoom` (watching_infer' address ct)
 
 -- Expects the directives to contain exactly one Predict
-simulation :: (MonadRandom m) => Int -> [Directive] -> StateT (Model m) m [Value]
+simulation :: (MonadRandom m, Real num, Floating num) =>
+              Int -> [Directive num] -> StateT (Model m num) m [Value num]
 simulation ct ds = do
   target <- liftM head (execute ds)
   watching_infer target ct
 
-venture_main :: (MonadRandom m) => Int -> [Directive] -> m [Value]
+venture_main :: (MonadRandom m, Real num, Show num, Floating num, Enum num) =>
+                Int -> [Directive num] -> m [Value num]
 venture_main ct ds = do
   vs <- evalStateT (simulation ct ds) initial
   return $ vs
 
-v_if :: Exp -> Exp -> Exp -> Exp
+v_if :: Exp num -> Exp num -> Exp num -> Exp num
 v_if p c a = App (App (Var "select") [p, (Lam [] c), (Lam [] a)]) []
 
-v_let1 :: String -> Exp -> Exp -> Exp
+v_let1 :: String -> Exp num -> Exp num -> Exp num
 v_let1 name val body = App (Lam [name] body) [val]
 
-flip_one_coin :: [Directive]
+flip_one_coin :: [Directive num]
 flip_one_coin = [Predict $ App (Var "bernoulli") []]
 -- venture_main 10 flip_one_coin
 -- liftM discreteHistogram $ venture_main 100 flip_one_coin
 
-single_normal :: [Directive]
+single_normal :: (Num num) => [Directive num]
 single_normal = [Predict $ App (Var "normal") [0, 2]]
 -- venture_main 10 single_normal
 -- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . fromValue) $ venture_main 500 $ single_normal) >>= printHistogram
 
-condition_on_flip :: [Directive]
+condition_on_flip :: (Num num) => [Directive num]
 condition_on_flip = [Predict $ v_if (App (Var "bernoulli") []) 1 2]
 -- venture_main 10 $ condition_on_flip
 -- liftM discreteHistogram $ venture_main 100 condition_on_flip
 
-chained_normals :: [Directive]
+chained_normals :: (Num num) => [Directive num]
 chained_normals =
     [ Assume "x" $ App (Var "normal") [0, 2]
     , Assume "y" $ App (Var "normal") [(Var "x"), 2]
@@ -62,7 +66,7 @@ chained_normals =
 -- venture_main 10 $ chained_normals
 -- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . fromValue) $ venture_main 500 $ chained_normals) >>= printHistogram
 
-observed_chained_normals :: [Directive]
+observed_chained_normals :: (Num num) => [Directive num]
 observed_chained_normals =
     [ Assume "x" $ App (Var "normal") [0, 2]
     , Assume "y" $ App (Var "normal") [(Var "x"), 2]
@@ -75,7 +79,7 @@ observed_chained_normals =
 -- This example forces propagation of constraints backwards through
 -- forwarding outputs.  Predicting "y" should yield 4, and predicting
 -- "x" should look like observed_chained_normals.
-observed_chained_normals_lam :: [Directive]
+observed_chained_normals_lam :: (Num num) => [Directive num]
 observed_chained_normals_lam =
     [ Assume "x" $ App (Var "normal") [0, 2]
     , Assume "y" $ App (Var "normal") [(Var "x"), 2]
@@ -86,7 +90,7 @@ observed_chained_normals_lam =
 -- venture_main 10 $ observed_chained_normals_lam
 -- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . fromValue) $ venture_main 500 $ observed_chained_normals_lam) >>= printHistogram
 
-list_of_coins :: [Directive]
+list_of_coins :: [Directive num]
 list_of_coins = [Predict $ App (Var "list") [flip, flip, flip]] where
     flip = App (Var "bernoulli") []
 -- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ venture_main 10 list_of_coins
@@ -101,7 +105,7 @@ list_of_coins = [Predict $ App (Var "list") [flip, flip, flip]] where
 --  (observe (coin) true)
 --  (observe (coin) true)
 --  (predict (coin))
-beta_binomial :: [Directive]
+beta_binomial :: (Num num) => [Directive num]
 beta_binomial =
     [ Assume "make-coin" $ Lam ["weight"] $ Lam [] $ App (Var "weighted") [Var "weight"]
     , Assume "coin" $ App (Var "make-coin") [App (Var "beta") [1, 1]]
@@ -118,7 +122,7 @@ beta_binomial =
 --  (observe (coin) true)
 --  (observe (coin) true)
 --  (predict (coin))
-cbeta_binomial :: [Directive]
+cbeta_binomial :: (Num num) => [Directive num]
 cbeta_binomial =
     [ Assume "coin" $ App (Var "make-cbeta-bernoulli") [1, 1]
     , Observe (App (Var "coin") []) (Boolean True)
@@ -131,7 +135,7 @@ cbeta_binomial =
 
 -- (assume x (flip))
 -- (predict (if x x false))
-self_select_1 :: [Directive]
+self_select_1 :: [Directive num]
 self_select_1 =
     [ Assume "x" $ App (Var "bernoulli") []
     , Predict $ v_if (Var "x") (Var "x") (Datum $ Boolean False)
@@ -140,14 +144,14 @@ self_select_1 =
 
 -- (assume x (flip))
 -- (predict (if x (if x x 1.0) 0.0))
-self_select_2 :: [Directive]
+self_select_2 :: (Num num) => [Directive num]
 self_select_2 =
     [ Assume "x" $ App (Var "bernoulli") []
     , Predict $ v_if (Var "x") (v_if (Var "x") (Var "x") 1) 0
     ]
 -- liftM discreteHistogram $ venture_main 100 self_select_2
 
-mem_1 :: [Directive]
+mem_1 :: (Num num) => [Directive num]
 mem_1 =
     [ Assume "coins" $ App (Var "mem") [Lam ["i"] (App (Var "bernoulli") [])]
     , Predict $ App (Var "list") [flip 1, flip 1, flip 1, flip 2, flip 2, flip 2, flip 3, flip 3, flip 3]
@@ -156,7 +160,7 @@ mem_1 =
 -- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ venture_main 10 mem_1
 -- Each triple should have the same value in each output, but vary across outputs
 
-mem_2 :: [Directive]
+mem_2 :: (Num num) => [Directive num]
 mem_2 =
     [ Assume "coins_p" $ App (Var "mem") [Lam ["i"] (App (Var "bernoulli") [])]
     , Assume "coins" $ v_if (App (Var "bernoulli") []) (Var "coins_p") (Var "coins_p")
@@ -165,7 +169,7 @@ mem_2 =
     flip k = App (Var "coins") [k]
 -- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ venture_main 10 mem_2
 
-uncollapsed_conditional_and_coupled :: [Directive]
+uncollapsed_conditional_and_coupled :: (Num num) => [Directive num]
 uncollapsed_conditional_and_coupled =
     [ Assume "weight" $ App (Var "beta") [1,1]
     , Assume "coin" $ Lam [] (App (Var "weighted") [Var "weight"])
@@ -176,7 +180,7 @@ uncollapsed_conditional_and_coupled =
 -- This should see "false" (rather than a list) about 50% of the time
 -- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ liftM M.toList $ liftM discreteHistogram $ venture_main 500 uncollapsed_conditional_and_coupled
 
-conditional_and_coupled :: [Directive]
+conditional_and_coupled :: (Num num) => [Directive num]
 conditional_and_coupled =
     [ Assume "coin" $ App (Var "make-cbeta-bernoulli") [1, 1]
     , Predict $ v_if coin
@@ -186,7 +190,7 @@ conditional_and_coupled =
 -- This should be equivalent to the uncollapsed one
 -- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ liftM M.toList $ liftM discreteHistogram $ venture_main 500 conditional_and_coupled
 
-whether_a_node_is_random_can_change :: [Directive]
+whether_a_node_is_random_can_change :: [Directive num]
 whether_a_node_is_random_can_change =
     [ Assume "coin" $ v_if (App (Var "bernoulli") [])
              (Lam [] $ Datum $ Boolean True)
