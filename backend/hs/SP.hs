@@ -148,16 +148,16 @@ bernoulli = NoStateSP
   , log_d_out = Just $ nullary $ typed (const $ -log 2.0 :: Bool -> num)
   }
 
-weighted_flip :: (MonadRandom m, Fractional num, Ord num) => num -> m (Value num)
+weighted_flip :: (MonadRandom m, Real num) => num -> m (Value num)
 weighted_flip weight = do
   (toss :: Double) <- getRandomR (0.0,1.0)
-  return $ Boolean $ realToFrac toss < weight
+  return $ Boolean $ toss < realToFrac weight
 
 log_d_weight :: (Floating num) => num -> Bool -> num
 log_d_weight weight True = log weight
 log_d_weight weight False = log (1 - weight)
 
-weighted :: (MonadRandom m, Floating num, Ord num) => NoStateSP m num
+weighted :: (MonadRandom m, Real num, Floating num) => NoStateSP m num
 weighted = NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
@@ -221,7 +221,7 @@ beta = NoStateSP
   , log_d_out = Just $ on_values $ binary $ typed3 log_denisty_beta
   }
 
-cbeta_bernoulli_flip :: (MonadRandom m, Fractional num, Ord num) => (num,num) -> m (Value num)
+cbeta_bernoulli_flip :: (MonadRandom m, Real num, Fractional num) => (num,num) -> m (Value num)
 cbeta_bernoulli_flip (ctYes, ctNo) = weighted_flip $ ctYes / (ctYes + ctNo)
 
 cbeta_bernoulli_log_d :: (Floating num) => (num,num) -> Bool -> num
@@ -231,7 +231,7 @@ cbeta_bernoulli_frob :: (num -> num) -> Bool -> (num,num) -> (num,num)
 cbeta_bernoulli_frob f True  s = s & _1 %~ f
 cbeta_bernoulli_frob f False s = s & _2 %~ f
 
-cbeta_bernoulli :: (MonadRandom m, Show num, Floating num, Ord num, Enum num) =>
+cbeta_bernoulli :: (MonadRandom m, Show num, Floating num, Real num, Enum num) =>
                    num -> num -> SP m num
 cbeta_bernoulli ctYes ctNo = T.SP
   { T.requester = no_state_r nullReq
@@ -245,7 +245,7 @@ cbeta_bernoulli ctYes ctNo = T.SP
   , T.unincorporateR = const $ const id
   }
 
-make_cbeta_bernoulli :: (MonadRandom m, Show num, Floating num, Ord num, Enum num) => SP m num
+make_cbeta_bernoulli :: (MonadRandom m, Show num, Floating num, Real num, Enum num) => SP m num
 make_cbeta_bernoulli = no_state_sp NoStateSP
   { requester = nullReq
   , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
