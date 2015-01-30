@@ -4,6 +4,7 @@
 double NormalDistributionLogLikelihood(double sampled_value, double average, double sigma);
 double GammaDistributionLogLikelihood(double sampled_value, double alpha, double beta);
 double InvGammaDistributionLogLikelihood(double sampled_value, double alpha, double beta);
+double ExponentialDistributionLogLikelihood(double sampled_value, double theta);
 double BetaDistributionLogLikelihood(double sampled_value, double alpha, double beta);
 double ChiSquaredDistributionLogLikelihood(double sampled_value, double nu);
 double InvChiSquaredDistributionLogLikelihood(double sampled_value, double nu);

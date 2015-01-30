@@ -16,7 +16,7 @@
 #include "sps/mvn.h"
 #include "sps/scope.h"
 
-map<string,VentureValuePtr> initBuiltInValues() 
+map<string,VentureValuePtr> initBuiltInValues()
 {
   map<string,VentureValuePtr> m;
   m["true"] = shared_ptr<VentureBool>(new VentureBool(true));
@@ -55,17 +55,18 @@ map<string,SP*> initBuiltInSPs()
   m["is_integer"] = new SP(new NullRequestPSP(), new IsIntegerOutputPSP());
   m["is_boolean"] = new SP(new NullRequestPSP(), new IsBoolOutputPSP());
   m["is_symbol"] = new SP(new NullRequestPSP(), new IsSymbolOutputPSP());
-  
+
   m["to_atom"] = new SP(new NullRequestPSP(), new ToAtomOutputPSP());
   m["is_atom"] = new SP(new NullRequestPSP(), new IsAtomOutputPSP());
 
   m["probability"] = new SP(new NullRequestPSP(), new ProbabilityOutputPSP());
   m["is_probability"] = new SP(new NullRequestPSP(), new IsProbabilityOutputPSP());
-  
+
   /* Continuous SPs */
   m["normal"] = new SP(new NullRequestPSP(), new NormalPSP());
   m["gamma"] = new SP(new NullRequestPSP(), new GammaPSP());
   m["inv_gamma"] = new SP(new NullRequestPSP(), new InvGammaPSP());
+  m["expon"] = new SP(new NullRequestPSP(), new ExponentialPSP());
   m["uniform_continuous"] = new SP(new NullRequestPSP(), new UniformContinuousPSP());
   m["beta"] = new SP(new NullRequestPSP(), new BetaPSP());
   m["student_t"] = new SP(new NullRequestPSP(), new StudentTPSP());
@@ -152,6 +153,6 @@ map<string,SP*> initBuiltInSPs()
 
   /* Non parametrics */
   m["make_crp"] = new SP(new NullRequestPSP(), new MakeCRPOutputPSP());
-  
+
   return m;
 }
