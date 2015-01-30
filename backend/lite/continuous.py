@@ -284,20 +284,20 @@ class BetaOutputPSP(RandomPSP):
 
 class ExponOutputPSP(RandomPSP):
   # TODO don't need to be class methods
-  def simulateNumeric(self,gamma): return scipy.stats.expon.rvs(scale=1.0/gamma)
-  def logDensityNumeric(self,x,gamma): return scipy.stats.expon.logpdf(x,scale=1.0/gamma)
+  def simulateNumeric(self,theta): return scipy.stats.expon.rvs(scale=1.0/theta)
+  def logDensityNumeric(self,x,theta): return scipy.stats.expon.logpdf(x,scale=1.0/theta)
 
   def simulate(self,args): return self.simulateNumeric(*args.operandValues)
   def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
 
   def gradientOfLogDensity(self,x,args):
-    gamma = args.operandValues[0]
-    gradX = -gamma
-    gradGamma = 1. / gamma - x
-    return (gradX,[gradGamma])
+    theta = args.operandValues[0]
+    gradX = -theta
+    gradTheta = 1. / theta - x
+    return (gradX,[gradTheta])
 
   def description(self,name):
-    return "  (%s gamma) returns a sample from an exponential distribution with rate (inverse scale) parameter gamma." % name
+    return "  (%s theta) returns a sample from an exponential distribution with rate (inverse scale) parameter theta." % name
 
 class GammaOutputPSP(RandomPSP):
   # TODO don't need to be class methods
