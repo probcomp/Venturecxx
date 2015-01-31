@@ -155,7 +155,7 @@ data SPOutputter m a
     | DeterministicO (forall num. a -> [Node num] -> [Node num] -> Value num)
     | RandomO (forall num. (Numerical num) => a -> [Node num] -> [Node num] -> m (Value num))
     -- Are these ever random? Do they ever change the number representation of their SP?
-    | SPMaker (forall num. a -> [Node num] -> [Node num] -> SP m)
+    | SPMaker (forall num. (Numerical num) => a -> [Node num] -> [Node num] -> SP m)
     | ReferringSPMaker (a -> [Address] -> [Address] -> SP m)
 
 asRandomR :: (Monad m, Numerical num) => SPRequester m a -> a -> [Address]

@@ -59,7 +59,7 @@ data SPOutputterNS m
     = Trivial
     | DeterministicO (forall num. [Node num] -> [Node num] -> Value num)
     | RandomO (forall num. (T.Numerical num) => [Node num] -> [Node num] -> m (Value num))
-    | SPMaker (forall num. [Node num] -> [Node num] -> SP m) -- Are these ever random?
+    | SPMaker (forall num. (T.Numerical num) => [Node num] -> [Node num] -> SP m) -- Are these ever random?
     | ReferringSPMaker ([Address] -> [Address] -> SP m)
 
 no_state_sp :: NoStateSP m -> SP m
