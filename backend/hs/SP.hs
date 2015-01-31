@@ -191,9 +191,9 @@ log_d_normal mean sigma x = - (x - mean)^^(2::Int) / (2 * sigma^^(2::Int)) - sca
 normal :: (MonadRandom m) => NoStateSP m
 normal = NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
+  , log_d_req = Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
   , outputter = RandomO $ on_values $ binary $ typed2 normal_flip
-  , log_d_out = Just $ on_values $ binary $ typed3 log_d_normal
+  , log_d_out = Just $ LogDOutNS $ on_values $ binary $ typed3 log_d_normal
   }
 
 xxxFakeGenericity2 :: (Real num, Fractional num) =>
@@ -223,9 +223,9 @@ log_denisty_beta a b x = (a-1)*log x + (b-1)*log (1-x) - xxxFakeGenericity2 logB
 beta :: (MonadRandom m) => NoStateSP m
 beta = NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
+  , log_d_req = Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
   , outputter = RandomO $ on_values $ binary $ typed2 betaO
-  , log_d_out = Just $ on_values $ binary $ typed3 log_denisty_beta
+  , log_d_out = Just $ LogDOutNS $ on_values $ binary $ typed3 log_denisty_beta
   }
 
 cbeta_bernoulli_flip :: (MonadRandom m, Real num, Fractional num) => (num,num) -> m (Value num)
