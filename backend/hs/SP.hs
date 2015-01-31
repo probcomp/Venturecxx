@@ -40,7 +40,7 @@ trivial_log_d_req = const $ const $ 0
 newtype LogDReqNS =
     LogDReqNS (forall num. (Num num) => [Address] -> [SimulationRequest num] -> num)
 newtype LogDOutNS =
-    LogDOutNS (forall num. (Floating num, Fractional num) => [Node num] -> [Node num] -> Value num -> num)
+    LogDOutNS (forall num. (Floating num, Real num) => [Node num] -> [Node num] -> Value num -> num)
 
 data NoStateSP m = NoStateSP
     { requester :: SPRequesterNS m
@@ -238,7 +238,7 @@ cbeta_bernoulli_frob :: (num -> num) -> Bool -> (num,num) -> (num,num)
 cbeta_bernoulli_frob f True  s = s & _1 %~ f
 cbeta_bernoulli_frob f False s = s & _2 %~ f
 
-cbeta_bernoulli :: (MonadRandom m, Show num, Floating num, Real num, Enum num) =>
+cbeta_bernoulli :: (MonadRandom m, Show num, Floating num, Real num) =>
                    num -> num -> SP m
 cbeta_bernoulli ctYes ctNo = T.SP
   { T.requester = no_state_r nullReq
@@ -246,8 +246,8 @@ cbeta_bernoulli ctYes ctNo = T.SP
   , T.outputter = T.RandomO $ nullary . cbeta_bernoulli_flip
   , T.log_d_out = Just $ nullary . typed . cbeta_bernoulli_log_d
   , T.current = (ctYes, ctNo)
-  , T.incorporate = typed $ cbeta_bernoulli_frob succ
-  , T.unincorporate = typed $ cbeta_bernoulli_frob pred
+  , T.incorporate = typed $ cbeta_bernoulli_frob (+1)
+  , T.unincorporate = typed $ cbeta_bernoulli_frob (+ (-1))
   , T.incorporateR = const $ const id
   , T.unincorporateR = const $ const id
   }
@@ -255,10 +255,14 @@ cbeta_bernoulli ctYes ctNo = T.SP
 make_cbeta_bernoulli :: (MonadRandom m) => SP m
 make_cbeta_bernoulli = no_state_sp NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-  , outputter = SPMaker $ on_values $ binary $ typed2 cbeta_bernoulli
+  , log_d_req = Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
+  , outputter = SPMaker $ on_values $ binary $ f -- typed2 cbeta_bernoulli
   , log_d_out = Nothing
-  }
+  } where
+    f :: (MonadRandom m, Show num, Floating num, Real num) =>
+         Value num -> Value num -> SP m
+    f (Number n1) (Number n2) = cbeta_bernoulli n1 n2
+    f _ _ = error "Wrong type argument to make_cbeta_bernoulli"
 
 selectO :: [Value num] -> [b] -> Value num
 selectO [p,c,a] [] = if fromJust "Predicate was not a boolean" $ fromValue p then c
@@ -268,7 +272,7 @@ selectO _ _ = error "Wrong number of arguments to SELECT"
 select :: NoStateSP m
 select = NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ trivial_log_d_req
+  , log_d_req = Just $ LogDReqNS trivial_log_d_req
   , outputter = DeterministicO $ on_values selectO
   , log_d_out = Nothing -- Or Just (0 if it's right, -inf if not?)
   }
@@ -277,7 +281,7 @@ select = NoStateSP
 mem :: (Monad m) => SP m
 mem = no_state_sp NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ trivial_log_d_req
+  , log_d_req = Just $ LogDReqNS trivial_log_d_req
   , outputter = ReferringSPMaker $ unary $ memoized_sp
   , log_d_out = Nothing
   }
