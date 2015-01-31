@@ -148,7 +148,8 @@ data SPRequester m a
     = DeterministicR (forall num. (Numerical num) =>
                       a -> [Address] -> UniqueSource [SimulationRequest num])
     | RandomR (forall num. a -> [Address] -> UniqueSourceT m [SimulationRequest num])
-    | ReaderR (forall num. a -> [Address] -> ReaderT (Trace m num) UniqueSource [SimulationRequest num])
+    | ReaderR (forall num. (Numerical num) =>
+               a -> [Address] -> ReaderT (Trace m num) UniqueSource [SimulationRequest num])
 
 data SPOutputter m a
     = Trivial
