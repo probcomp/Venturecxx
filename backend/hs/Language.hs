@@ -39,7 +39,7 @@ data Exp v = Datum v
            | Var String
            | App (Exp v) [Exp v]
            | Lam [String] (Exp v)
-    deriving Show
+    deriving (Show, Functor)
 
 instance (Num a) => Num (Exp a) where
     -- Only for fromInteger

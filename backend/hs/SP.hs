@@ -51,7 +51,7 @@ data NoStateSP m = NoStateSP
     }
 
 data SPRequesterNS m
-    = DeterministicR (forall num. [Address] -> UniqueSource [SimulationRequest num])
+    = DeterministicR (forall num. (Fractional num) => [Address] -> UniqueSource [SimulationRequest num])
     | RandomR (forall num. [Address] -> UniqueSourceT m [SimulationRequest num])
     | ReaderR (forall num. [Address] -> ReaderT (Trace m num) UniqueSource [SimulationRequest num])
 
@@ -87,7 +87,7 @@ no_state_o (RandomO f) = T.RandomO $ const f
 no_state_o (SPMaker f) = T.SPMaker $ const f
 no_state_o (ReferringSPMaker f) = T.ReferringSPMaker $ const f
 
-compoundSP :: (Monad m, Num num) => [String] -> Exp num -> Env -> SP m
+compoundSP :: (Monad m, Fractional num, Real num) => [String] -> Exp num -> Env -> SP m
 compoundSP formals exp env = no_state_sp NoStateSP
   { requester = DeterministicR req
   , log_d_req = Just $ LogDReqNS trivial_log_d_req
@@ -96,7 +96,7 @@ compoundSP formals exp env = no_state_sp NoStateSP
   } where
     req args = do
       freshId <- liftM SRId fresh
-      let r = SimulationRequest freshId exp $ Frame (M.fromList $ zip formals args) env
+      let r = SimulationRequest freshId (fmap realToFrac exp) $ Frame (M.fromList $ zip formals args) env
       return [r]
 
 -- It would be nice if these combinators admitted a nice way to pass
