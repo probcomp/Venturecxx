@@ -231,11 +231,11 @@ beta = NoStateSP
   , log_d_out = Just $ LogDOutNS $ on_values $ binary $ typed3 log_denisty_beta
   }
 
-cbeta_bernoulli_flip :: (MonadRandom m, Real num, Fractional num) => (num,num) -> m (Value num)
-cbeta_bernoulli_flip (ctYes, ctNo) = weighted_flip $ ctYes / (ctYes + ctNo)
+cbeta_bernoulli_flip :: (MonadRandom m, Numerical num, Numerical num2) => (num,num) -> m (Value num2)
+cbeta_bernoulli_flip (ctYes, ctNo) = weighted_flip $ realToFrac $ ctYes / (ctYes + ctNo)
 
-cbeta_bernoulli_log_d :: (Floating num) => (num,num) -> Bool -> num
-cbeta_bernoulli_log_d (ctYes, ctNo) = log_d_weight $ ctYes / (ctYes + ctNo)
+cbeta_bernoulli_log_d :: (Numerical num1, Numerical num2) => (num1,num1) -> Bool -> num2
+cbeta_bernoulli_log_d (ctYes, ctNo) = log_d_weight $ realToFrac $ ctYes / (ctYes + ctNo)
 
 cbeta_bernoulli_frob :: (num -> num) -> Bool -> (num,num) -> (num,num)
 cbeta_bernoulli_frob f True  s = s & _1 %~ f
@@ -245,9 +245,9 @@ cbeta_bernoulli :: (MonadRandom m, Show num, Floating num, Real num) =>
                    num -> num -> SP m
 cbeta_bernoulli ctYes ctNo = T.SP
   { T.requester = no_state_r nullReq
-  , T.log_d_req = Just $ const trivial_log_d_req -- Only right for requests it actually made
+  , T.log_d_req = Just $ T.LogDReq $ const trivial_log_d_req -- Only right for requests it actually made
   , T.outputter = T.RandomO $ nullary . cbeta_bernoulli_flip
-  , T.log_d_out = Just $ nullary . typed . cbeta_bernoulli_log_d
+  , T.log_d_out = Just $ T.LogDOut $ nullary . typed . cbeta_bernoulli_log_d
   , T.current = (ctYes, ctNo)
   , T.incorporate = typed $ cbeta_bernoulli_frob (+1)
   , T.unincorporate = typed $ cbeta_bernoulli_frob (+ (-1))
