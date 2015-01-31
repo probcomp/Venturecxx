@@ -33,7 +33,7 @@ import qualified Language as L
 -- Small objects                                                    --
 ----------------------------------------------------------------------
 
-type Numerical a = (Floating a, Real a)
+type Numerical a = (Show a, Floating a, Real a)
 
 type Value num = L.Value SPAddress num
 type Exp num = Compose L.Exp (L.Value SPAddress) num
