@@ -152,7 +152,7 @@ bernoulli = NoStateSP
   { requester = nullReq
   , log_d_req = Just $ LogDReqNS $ trivial_log_d_req -- Only right for requests it actually made
   , outputter = RandomO $ nullary bernoulli_flip
-  , log_d_out = Just $ LogDOutNS $ nullary $ typed (const $ -log 2.0)
+  , log_d_out = Just $ LogDOutNS $ nullary $ const (-log 2.0)
   }
 
 weighted_flip :: (MonadRandom m, Real num) => num -> m (Value num)
