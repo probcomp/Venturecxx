@@ -167,9 +167,9 @@ log_d_weight weight False = log (1 - weight)
 weighted :: (MonadRandom m) => NoStateSP m
 weighted = NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
+  , log_d_req = Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
   , outputter = RandomO $ on_values $ unary $ typed weighted_flip
-  , log_d_out = Just $ on_values $ unary $ typed2 log_d_weight
+  , log_d_out = Just $ LogDOutNS $ on_values $ unary $ typed2 log_d_weight
   }
 
 box_muller_cos :: Double -> Double -> Double
