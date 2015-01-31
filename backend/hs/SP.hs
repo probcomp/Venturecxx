@@ -89,7 +89,7 @@ no_state_o (ReferringSPMaker f) = T.ReferringSPMaker $ const f
 compoundSP :: (Monad m, Num num) => [String] -> Exp num -> Env -> SP m
 compoundSP formals exp env = no_state_sp NoStateSP
   { requester = DeterministicR req
-  , log_d_req = Just $ trivial_log_d_req
+  , log_d_req = Just $ LogDReqNS trivial_log_d_req
   , outputter = Trivial
   , log_d_out = Nothing -- Or Just (0 if it's right, -inf if not?)
   } where
