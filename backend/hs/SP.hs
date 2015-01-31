@@ -65,15 +65,17 @@ data SPOutputterNS m
 no_state_sp :: NoStateSP m -> SP m
 no_state_sp NoStateSP { requester = req, log_d_req = ldr, outputter = out, log_d_out = ldo } =
     T.SP { T.requester = no_state_r req
-         , T.log_d_req = liftM const ldr
+         , T.log_d_req = liftM convert1 ldr
          , T.outputter = no_state_o out
-         , T.log_d_out = liftM const ldo
+         , T.log_d_out = liftM convert2 ldo
          , T.current = ()
          , T.incorporate = const id
          , T.unincorporate = const id
          , T.incorporateR = const $ const id
          , T.unincorporateR = const $ const id
-         }
+         } where
+        convert1 (LogDReqNS f) = T.LogDReq $ const f
+        convert2 (LogDOutNS f) = T.LogDOut $ const f
 
 no_state_r :: SPRequesterNS m -> T.SPRequester m a
 no_state_r (DeterministicR f) = T.DeterministicR $ const f

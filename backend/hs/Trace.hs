@@ -103,11 +103,17 @@ srid (SimulationRequest id _ _) = id
 -- expected to form an _Abelian_ group acting on a (except for v on
 -- which they error out).  Further, for any given v, (unincorporate v)
 -- and (incorporate v) are expected to be inverses.
+
+newtype LogDReq a = LogDReq
+    (forall num. (Numerical num) => a -> [Address] -> [SimulationRequest num] -> num)
+newtype LogDOut a = LogDOut
+    (forall num. (Numerical num) => a -> [Node num] -> [Node num] -> Value num -> num)
+
 data SP m = forall a. (Show a) => SP 
     { requester :: SPRequester m a
-    , log_d_req :: Maybe (forall num. (Num num) => a -> [Address] -> [SimulationRequest num] -> num)
+    , log_d_req :: Maybe (LogDReq a)
     , outputter :: SPOutputter m a
-    , log_d_out :: Maybe (forall num. (Num num) => a -> [Node num] -> [Node num] -> Value num -> num)
+    , log_d_out :: Maybe (LogDOut a)
     , current :: a
     -- These guys may need to accept the argument lists, but I have
     -- not yet seen an example that forces this.
@@ -566,16 +572,16 @@ fulfilments a t = map (fromJust "Unfulfilled request" . flip M.lookup reqs) $ re
     node = t ^. nodes . hardix "Asking for fulfilments of a missing node" a
     SPRecord { requests = reqs } = fromJust "Asking for fulfilments of a node with no operator record" $ operatorRecord node t
 
-absorb :: (Num num) => Node num -> SP m -> Trace m num -> num
-absorb (Request (Just reqs) _ _ args) SP{log_d_req = (Just f), current = a} _ = f a args reqs
+absorb :: (Numerical num) => Node num -> SP m -> Trace m num -> num
+absorb (Request (Just reqs) _ _ args) SP{log_d_req = (Just (LogDReq f)), current = a} _ = f a args reqs
 -- This clause is only right if canAbsorb returned True on all changed parents
 absorb (Output _ _ _ _ _) SP { outputter = Trivial } _ = 0
-absorb (Output (Just v) _ _ args reqs) SP{log_d_out = (Just f), current = a} t = f a args' reqs' v where
+absorb (Output (Just v) _ _ args reqs) SP{log_d_out = (Just (LogDOut f)), current = a} t = f a args' reqs' v where
     args' = map (fromJust "absorb" . flip lookupNode t) args
     reqs' = map (fromJust "absorb" . flip lookupNode t) reqs
 absorb _ _ _ = error "Inappropriate absorb attempt"
 
-absorbAt :: (Num num, MonadState (Trace m1 num) m, MonadWriter (LogDensity num) m) => Address -> m ()
+absorbAt :: (Numerical num, MonadState (Trace m1 num) m, MonadWriter (LogDensity num) m) => Address -> m ()
 absorbAt a = do
   node <- use $ nodes . hardix "Absorbing at a nonexistent node" a
   sp <- gets $ fromJust "Absorbing at a node with no operator" . operator node
