@@ -5,6 +5,7 @@
 
 module SP where
 
+import Data.Functor.Compose
 import qualified Data.Map as M
 import Control.Monad.State.Lazy hiding (state)
 import Control.Monad.State.Class
@@ -306,13 +307,13 @@ memoized_sp proc = T.SP
           vs = map (fromJust "Memoized SP given valueless argument node" . valueOf) ns
       let cachedSRId = M.lookup vs cache
       case cachedSRId of
-        (Just (id,_)) -> return [SimulationRequest id (Var "unaccessed") Toplevel]
+        (Just (id,_)) -> return [SimulationRequest id (Compose $ Var "unaccessed") Toplevel]
         Nothing -> do
           newId <- liftM SRId fresh
           let names = take (length args) $ map show $ ([1..] :: [Int])
               exp = App (Var "memoized-sp") $ map Var names
               env = Frame (M.fromList $ ("memoized-sp",proc):(zip names args)) Toplevel
-          return [SimulationRequest newId exp env]
+          return [SimulationRequest newId (Compose exp) env]
     inc vs [req] cache = M.alter incr vs cache where
         incr Nothing = Just (srid req, 1)
         incr (Just (srid', k)) | srid' == srid req = Just (srid', k+1)

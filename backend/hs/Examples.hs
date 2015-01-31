@@ -37,41 +37,41 @@ venture_main ct ds = do
   return $ vs
 
 v_if :: Exp num -> Exp num -> Exp num -> Exp num
-v_if p c a = App (App (Var "select") [p, (Lam [] c), (Lam [] a)]) []
+v_if p c a = app (app (var "select") [p, (lam [] c), (lam [] a)]) []
 
 v_let1 :: String -> Exp num -> Exp num -> Exp num
-v_let1 name val body = App (Lam [name] body) [val]
+v_let1 name val body = app (lam [name] body) [val]
 
 flip_one_coin :: [Directive num]
-flip_one_coin = [Predict $ App (Var "bernoulli") []]
+flip_one_coin = [Predict $ app (var "bernoulli") []]
 -- venture_main 10 flip_one_coin
 -- liftM discreteHistogram $ venture_main 100 flip_one_coin
 
 single_normal :: (Num num) => [Directive num]
-single_normal = [Predict $ App (Var "normal") [0, 2]]
+single_normal = [Predict $ app (var "normal") [0, 2]]
 -- venture_main 10 single_normal
 -- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . fromValue) $ venture_main 500 $ single_normal) >>= printHistogram
 
 condition_on_flip :: (Num num) => [Directive num]
-condition_on_flip = [Predict $ v_if (App (Var "bernoulli") []) 1 2]
+condition_on_flip = [Predict $ v_if (app (var "bernoulli") []) 1 2]
 -- venture_main 10 $ condition_on_flip
 -- liftM discreteHistogram $ venture_main 100 condition_on_flip
 
 chained_normals :: (Num num) => [Directive num]
 chained_normals =
-    [ Assume "x" $ App (Var "normal") [0, 2]
-    , Assume "y" $ App (Var "normal") [(Var "x"), 2]
-    , Predict $ Var "y"
+    [ Assume "x" $ app (var "normal") [0, 2]
+    , Assume "y" $ app (var "normal") [(var "x"), 2]
+    , Predict $ var "y"
     ]
 -- venture_main 10 $ chained_normals
 -- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . fromValue) $ venture_main 500 $ chained_normals) >>= printHistogram
 
 observed_chained_normals :: (Num num) => [Directive num]
 observed_chained_normals =
-    [ Assume "x" $ App (Var "normal") [0, 2]
-    , Assume "y" $ App (Var "normal") [(Var "x"), 2]
-    , Observe (Var "y") 4
-    , Predict $ Var "x"
+    [ Assume "x" $ app (var "normal") [0, 2]
+    , Assume "y" $ app (var "normal") [(var "x"), 2]
+    , Observe (var "y") 4
+    , Predict $ var "x"
     ]
 -- venture_main 10 $ observed_chained_normals
 -- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . fromValue) $ venture_main 500 $ observed_chained_normals) >>= printHistogram
@@ -81,22 +81,22 @@ observed_chained_normals =
 -- "x" should look like observed_chained_normals.
 observed_chained_normals_lam :: (Num num) => [Directive num]
 observed_chained_normals_lam =
-    [ Assume "x" $ App (Var "normal") [0, 2]
-    , Assume "y" $ App (Var "normal") [(Var "x"), 2]
-    , Assume "z" $ App (Lam ["q"] (Var "q")) [(Var "y")]
-    , Observe (Var "z") 4
-    , Predict $ Var "x"
+    [ Assume "x" $ app (var "normal") [0, 2]
+    , Assume "y" $ app (var "normal") [(var "x"), 2]
+    , Assume "z" $ app (lam ["q"] (var "q")) [(var "y")]
+    , Observe (var "z") 4
+    , Predict $ var "x"
     ]
 -- venture_main 10 $ observed_chained_normals_lam
 -- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . fromValue) $ venture_main 500 $ observed_chained_normals_lam) >>= printHistogram
 
 list_of_coins :: [Directive num]
-list_of_coins = [Predict $ App (Var "list") [flip, flip, flip]] where
-    flip = App (Var "bernoulli") []
+list_of_coins = [Predict $ app (var "list") [flip, flip, flip]] where
+    flip = app (var "bernoulli") []
 -- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ venture_main 10 list_of_coins
 
 -- Weighted coins
--- liftM discreteHistogram $ venture_main 100 [Predict $ App (Var "weighted") [Datum $ Number 0.8]]
+-- liftM discreteHistogram $ venture_main 100 [Predict $ app (var "weighted") [0.8]]
 
 -- Beta Bernoulli (uncollapsed).  In Lisp syntax:
 --  (assume make_coin (lambda (weight) (lambda () (weighted weight))))
@@ -107,12 +107,12 @@ list_of_coins = [Predict $ App (Var "list") [flip, flip, flip]] where
 --  (predict (coin))
 beta_binomial :: (Num num) => [Directive num]
 beta_binomial =
-    [ Assume "make-coin" $ Lam ["weight"] $ Lam [] $ App (Var "weighted") [Var "weight"]
-    , Assume "coin" $ App (Var "make-coin") [App (Var "beta") [1, 1]]
-    , Observe (App (Var "coin") []) (Boolean True)
-    , Observe (App (Var "coin") []) (Boolean True)
-    , Observe (App (Var "coin") []) (Boolean True)
-    , Predict (App (Var "coin") [])
+    [ Assume "make-coin" $ lam ["weight"] $ lam [] $ app (var "weighted") [var "weight"]
+    , Assume "coin" $ app (var "make-coin") [app (var "beta") [1, 1]]
+    , Observe (app (var "coin") []) (Boolean True)
+    , Observe (app (var "coin") []) (Boolean True)
+    , Observe (app (var "coin") []) (Boolean True)
+    , Predict (app (var "coin") [])
     ]
 -- liftM discreteHistogram $ venture_main 100 beta_binomial
 
@@ -124,11 +124,11 @@ beta_binomial =
 --  (predict (coin))
 cbeta_binomial :: (Num num) => [Directive num]
 cbeta_binomial =
-    [ Assume "coin" $ App (Var "make-cbeta-bernoulli") [1, 1]
-    , Observe (App (Var "coin") []) (Boolean True)
-    , Observe (App (Var "coin") []) (Boolean True)
-    , Observe (App (Var "coin") []) (Boolean True)
-    , Predict (App (Var "coin") [])
+    [ Assume "coin" $ app (var "make-cbeta-bernoulli") [1, 1]
+    , Observe (app (var "coin") []) (Boolean True)
+    , Observe (app (var "coin") []) (Boolean True)
+    , Observe (app (var "coin") []) (Boolean True)
+    , Predict (app (var "coin") [])
     ]
 
 -- liftM discreteHistogram $ venture_main 100 cbeta_binomial
@@ -137,8 +137,8 @@ cbeta_binomial =
 -- (predict (if x x false))
 self_select_1 :: [Directive num]
 self_select_1 =
-    [ Assume "x" $ App (Var "bernoulli") []
-    , Predict $ v_if (Var "x") (Var "x") (Datum $ Boolean False)
+    [ Assume "x" $ app (var "bernoulli") []
+    , Predict $ v_if (var "x") (var "x") false
     ]
 -- liftM discreteHistogram $ venture_main 100 self_select_1
 
@@ -146,56 +146,56 @@ self_select_1 =
 -- (predict (if x (if x x 1.0) 0.0))
 self_select_2 :: (Num num) => [Directive num]
 self_select_2 =
-    [ Assume "x" $ App (Var "bernoulli") []
-    , Predict $ v_if (Var "x") (v_if (Var "x") (Var "x") 1) 0
+    [ Assume "x" $ app (var "bernoulli") []
+    , Predict $ v_if (var "x") (v_if (var "x") (var "x") 1) 0
     ]
 -- liftM discreteHistogram $ venture_main 100 self_select_2
 
 mem_1 :: (Num num) => [Directive num]
 mem_1 =
-    [ Assume "coins" $ App (Var "mem") [Lam ["i"] (App (Var "bernoulli") [])]
-    , Predict $ App (Var "list") [flip 1, flip 1, flip 1, flip 2, flip 2, flip 2, flip 3, flip 3, flip 3]
+    [ Assume "coins" $ app (var "mem") [lam ["i"] (app (var "bernoulli") [])]
+    , Predict $ app (var "list") [flip 1, flip 1, flip 1, flip 2, flip 2, flip 2, flip 3, flip 3, flip 3]
     ] where
-    flip k = App (Var "coins") [k]
+    flip k = app (var "coins") [k]
 -- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ venture_main 10 mem_1
 -- Each triple should have the same value in each output, but vary across outputs
 
 mem_2 :: (Num num) => [Directive num]
 mem_2 =
-    [ Assume "coins_p" $ App (Var "mem") [Lam ["i"] (App (Var "bernoulli") [])]
-    , Assume "coins" $ v_if (App (Var "bernoulli") []) (Var "coins_p") (Var "coins_p")
-    , Predict $ App (Var "list") [flip 1, flip 1, flip 1, flip 2, flip 2, flip 2, flip 3, flip 3, flip 3]
+    [ Assume "coins_p" $ app (var "mem") [lam ["i"] (app (var "bernoulli") [])]
+    , Assume "coins" $ v_if (app (var "bernoulli") []) (var "coins_p") (var "coins_p")
+    , Predict $ app (var "list") [flip 1, flip 1, flip 1, flip 2, flip 2, flip 2, flip 3, flip 3, flip 3]
     ] where
-    flip k = App (Var "coins") [k]
+    flip k = app (var "coins") [k]
 -- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ venture_main 10 mem_2
 
 uncollapsed_conditional_and_coupled :: (Num num) => [Directive num]
 uncollapsed_conditional_and_coupled =
-    [ Assume "weight" $ App (Var "beta") [1,1]
-    , Assume "coin" $ Lam [] (App (Var "weighted") [Var "weight"])
+    [ Assume "weight" $ app (var "beta") [1,1]
+    , Assume "coin" $ lam [] (app (var "weighted") [var "weight"])
     , Predict $ v_if coin
-              (App (Var "list") [coin, coin, coin])
-              (Datum $ Boolean False)
-    ] where coin = (App (Var "coin") [])
+              (app (var "list") [coin, coin, coin])
+              false
+    ] where coin = (app (var "coin") [])
 -- This should see "false" (rather than a list) about 50% of the time
 -- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ liftM M.toList $ liftM discreteHistogram $ venture_main 500 uncollapsed_conditional_and_coupled
 
 conditional_and_coupled :: (Num num) => [Directive num]
 conditional_and_coupled =
-    [ Assume "coin" $ App (Var "make-cbeta-bernoulli") [1, 1]
+    [ Assume "coin" $ app (var "make-cbeta-bernoulli") [1, 1]
     , Predict $ v_if coin
-              (App (Var "list") [coin, coin, coin])
-              (Datum $ Boolean False)
-    ] where coin = (App (Var "coin") [])
+              (app (var "list") [coin, coin, coin])
+              false
+    ] where coin = (app (var "coin") [])
 -- This should be equivalent to the uncollapsed one
 -- join $ liftM sequence_ $ liftM (map $ putStrLn . show) $ liftM M.toList $ liftM discreteHistogram $ venture_main 500 conditional_and_coupled
 
 whether_a_node_is_random_can_change :: [Directive num]
 whether_a_node_is_random_can_change =
-    [ Assume "coin" $ v_if (App (Var "bernoulli") [])
-             (Lam [] $ Datum $ Boolean True)
-             (Var "bernoulli")
-    , Predict $ App (Var "coin") []
+    [ Assume "coin" $ v_if (app (var "bernoulli") [])
+             (lam [] true)
+             (var "bernoulli")
+    , Predict $ app (var "coin") []
     ]
 -- venture_main 10 whether_a_node_is_random_can_change
 -- liftM discreteHistogram $ venture_main 100 whether_a_node_is_random_can_change

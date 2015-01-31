@@ -11,7 +11,7 @@ import Test.HUnit
 import Language hiding (Value)
 import Examples
 import InferenceInterpreter
-import Trace (Valuable, fromValue, Value)
+import Trace (Valuable, fromValue, Value, var, lam, app)
 
 import qualified Statistical as Stat
 
@@ -21,13 +21,13 @@ report (Stat.Result (pval, msg)) = when (pval < 0.001) $ assertFailure $ show ms
 basics :: Test
 basics = test
   [ venture_main 1 [Predict 1] >>= (@?= [1])
-  , venture_main 1 [Predict $ App v_id [1]] >>= (@?= [1])
-  , venture_main 1 [Predict $ v_let1 "id" v_id (App (Var "id") [1])] >>= (@?= [1])
+  , venture_main 1 [Predict $ app v_id [1]] >>= (@?= [1])
+  , venture_main 1 [Predict $ v_let1 "id" v_id (app (var "id") [1])] >>= (@?= [1])
   -- K combinator
-  , venture_main 1 [Predict $ App (App v_k [1]) [2]] >>= (@?= [1])
+  , venture_main 1 [Predict $ app (app v_k [1]) [2]] >>= (@?= [1])
   ]
-    where v_id = (Lam ["x"] (Var "x"))
-          v_k = (Lam ["x"] (Lam ["y"] (Var "x")))
+    where v_id = (lam ["x"] (var "x"))
+          v_k = (lam ["x"] (lam ["y"] (var "x")))
 
 downsample :: Int -> [a] -> [a]
 downsample _ [] = []

@@ -2,6 +2,7 @@
 
 module Regen where
 
+import Data.Functor.Compose
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe hiding (fromJust)
@@ -98,8 +99,8 @@ evalRequests propose a srs = mapM evalRequest srs where
 -- TODO In the presence of nontrivial proposals, eval can return weights
 eval :: (MonadRandom m, MonadTrans t, MonadState (Trace m num) (t m), Num num) =>
         Proposal m num -> Exp num -> Env -> t m Address
-eval _ (Datum v) _ = state $ addFreshNode $ Constant v
-eval propose (Var n) e = do
+eval _ (Compose (Datum v)) _ = state $ addFreshNode $ Constant v
+eval propose (Compose (Var n)) e = do
   let answer = case L.lookup n e of
                  Nothing -> error $ "Unbound variable " ++ show n
                  (Just a) -> Reference Nothing a
@@ -107,12 +108,12 @@ eval propose (Var n) e = do
   -- Is there a good reason why I don't care about the log density of this regenNode?
   _ <- runWriterT $ regenNode propose addr
   return addr
-eval _ (Lam vs exp) e = do
-  spAddr <- state $ addFreshSP $ compoundSP vs exp e
+eval _ (Compose (Lam vs exp)) e = do
+  spAddr <- state $ addFreshSP $ compoundSP vs (Compose exp) e
   state $ addFreshNode $ Constant $ Procedure spAddr
-eval propose (App op args) env = do
-  op' <- eval propose op env
-  args' <- sequence $ map (flip (eval propose) env) args
+eval propose (Compose (App op args)) env = do
+  op' <- eval propose (Compose op) env
+  args' <- sequence $ map (flip (eval propose) env) $ map Compose args
   addr <- state $ addFreshNode (Request Nothing Nothing op' args')
   -- Is there a good reason why I don't care about the log density of this regenNode?
   _ <- runWriterT $ regenNode propose addr
