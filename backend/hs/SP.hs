@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module SP where
 
@@ -38,9 +39,9 @@ trivial_log_d_req :: (Num num) => a -> b -> num
 trivial_log_d_req = const $ const $ 0
 
 newtype LogDReqNS =
-    LogDReqNS (forall num. (Num num) => [Address] -> [SimulationRequest num] -> num)
+    LogDReqNS (forall num. (T.Numerical num) => [Address] -> [SimulationRequest num] -> num)
 newtype LogDOutNS =
-    LogDOutNS (forall num. (Floating num, Real num) => [Node num] -> [Node num] -> Value num -> num)
+    LogDOutNS (forall num. (T.Numerical num) => [Node num] -> [Node num] -> Value num -> num)
 
 data NoStateSP m = NoStateSP
     { requester :: SPRequesterNS m
@@ -50,14 +51,14 @@ data NoStateSP m = NoStateSP
     }
 
 data SPRequesterNS m
-    = DeterministicR (forall num. (Fractional num) => [Address] -> UniqueSource [SimulationRequest num])
+    = DeterministicR (forall num. (T.Numerical num) => [Address] -> UniqueSource [SimulationRequest num])
     | RandomR (forall num. [Address] -> UniqueSourceT m [SimulationRequest num])
     | ReaderR (forall num. [Address] -> ReaderT (Trace m num) UniqueSource [SimulationRequest num])
 
 data SPOutputterNS m
     = Trivial
     | DeterministicO (forall num. [Node num] -> [Node num] -> Value num)
-    | RandomO (forall num. (Real num, Fractional num) => [Node num] -> [Node num] -> m (Value num))
+    | RandomO (forall num. (T.Numerical num) => [Node num] -> [Node num] -> m (Value num))
     | SPMaker (forall num. [Node num] -> [Node num] -> SP m) -- Are these ever random?
     | ReferringSPMaker ([Address] -> [Address] -> SP m)
 
