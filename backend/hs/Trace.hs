@@ -6,6 +6,7 @@
 module Trace where
 
 import Debug.Trace
+import Data.Functor.Compose
 import Data.Maybe hiding (fromJust)
 import qualified Data.Map as M
 import qualified Data.Set as S
@@ -26,8 +27,22 @@ import qualified Language as L
 ----------------------------------------------------------------------
 
 type Value num = L.Value SPAddress num
-type Exp num = L.Exp (Value num)
+type Exp num = Compose L.Exp (L.Value SPAddress) num
 type Env = L.Env String Address
+
+instance (Show num) => Show (Exp num) where
+    show (Compose e) = show e
+
+instance (Num num) => Num (Exp num) where
+    -- Only for fromInteger
+    fromInteger = Compose . fromInteger
+
+datum = Compose . L.Datum
+var = Compose . L.Var
+app (Compose op) args = Compose $ L.App op $ map getCompose args
+lam formals (Compose body) = Compose $ L.Lam formals body
+true = Compose $ L.Datum $ L.Boolean True
+false = Compose $ L.Datum $ L.Boolean False
 
 class Valuable num b where
     fromValue :: Value num -> Maybe b

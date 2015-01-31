@@ -10,6 +10,7 @@
 -- - Overview http://www.yesodweb.com/book/web-application-interface
 -- - Network.Wai package http://hackage.haskell.org/package/wai-2.1.0.1/docs/Network-Wai.html
 
+import Data.Functor.Compose
 import qualified Data.Map as M
 import Network.Wai
 import Network.HTTP.Types (status200, status500)
@@ -61,7 +62,7 @@ application engineMVar req k = do
                                k resp
 
 interpret :: String -> [String] -> Either String (Directive Double)
-interpret "assume" [var, expr] = Right $ Assume var $ G.parse expr
+interpret "assume" [var, expr] = Right $ Assume var $ Compose $ G.parse expr
 interpret "assume" args = Left $ "Incorrect number of arguments to assume " ++ show args
 interpret m _ = Left $ "Unknown directive " ++ m
 
