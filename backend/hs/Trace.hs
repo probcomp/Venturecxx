@@ -145,19 +145,20 @@ instance Show (SP m) where
     show SP{current = s} = "A stochastic procedure with state " ++ show s
 
 data SPRequester m a
-    = DeterministicR (forall num. a -> [Address] -> UniqueSource [SimulationRequest num])
+    = DeterministicR (forall num. (Numerical num) =>
+                      a -> [Address] -> UniqueSource [SimulationRequest num])
     | RandomR (forall num. a -> [Address] -> UniqueSourceT m [SimulationRequest num])
     | ReaderR (forall num. a -> [Address] -> ReaderT (Trace m num) UniqueSource [SimulationRequest num])
 
 data SPOutputter m a
     = Trivial
     | DeterministicO (forall num. a -> [Node num] -> [Node num] -> Value num)
-    | RandomO (forall num. a -> [Node num] -> [Node num] -> m (Value num))
+    | RandomO (forall num. (Numerical num) => a -> [Node num] -> [Node num] -> m (Value num))
     -- Are these ever random? Do they ever change the number representation of their SP?
     | SPMaker (forall num. a -> [Node num] -> [Node num] -> SP m)
     | ReferringSPMaker (a -> [Address] -> [Address] -> SP m)
 
-asRandomR :: (Monad m) => SPRequester m a -> a -> [Address]
+asRandomR :: (Monad m, Numerical num) => SPRequester m a -> a -> [Address]
           -> ReaderT (Trace m num) (UniqueSourceT m) [SimulationRequest num]
 asRandomR (RandomR f) st as = lift $ f st as
 asRandomR (DeterministicR f) st as = lift $ returnT $ f st as
@@ -168,7 +169,7 @@ isRandomR (RandomR _) = True
 isRandomR (DeterministicR _) = False
 isRandomR (ReaderR _) = False
 
-asRandomO :: (Monad m) => SPOutputter m a -> a -> [Node num] -> [Node num]
+asRandomO :: (Monad m, Numerical num) => SPOutputter m a -> a -> [Node num] -> [Node num]
           -> Either (m (Value num)) (SP m)
 asRandomO Trivial _ _ (r0:_) = Left $ return $ fromJust "Trivial outputter node had no value" $ valueOf r0
 asRandomO Trivial _ _ _ = error "Trivial outputter requires one response"
@@ -177,7 +178,7 @@ asRandomO (DeterministicO f) st args reqs = Left $ return $ f st args reqs
 asRandomO (SPMaker f) st args reqs = Right $ f st args reqs
 asRandomO _ _ _ _ = error "Should never pass ReferringSPMaker to asRandomO"
 
-asRandomO' :: (Monad m) => SPOutputter m a -> a -> [Address] -> [Address] -> Trace m num
+asRandomO' :: (Monad m, Numerical num) => SPOutputter m a -> a -> [Address] -> [Address] -> Trace m num
            -> Either (m (Value num)) (SP m)
 asRandomO' (ReferringSPMaker f) a argAs resultAs _ = Right $ f a argAs resultAs
 asRandomO' out a argAs resultAs Trace{ _nodes = ns} = asRandomO out a args results where
@@ -530,7 +531,7 @@ responsesAt a = lens _responses addResponses where
 -- when its args are nodes at these Addresses (in order).  The Trace
 -- in the state may change, but remains valid.  Fails if the call is
 -- ill-typed with respect to the SP.
-runRequester :: (Monad m, MonadTrans t, MonadState (Trace m num) (t m)) =>
+runRequester :: (Monad m, Numerical num, MonadTrans t, MonadState (Trace m num) (t m)) =>
                 SPAddress -> [Address] -> t m [SimulationRequest num]
 runRequester spaddr args = do
   t <- get
@@ -549,7 +550,7 @@ runRequester spaddr args = do
 -- allocation of an SPRecord).  Fails if the call is ill-typed with
 -- respect to the SP.
 -- TODO Allow the SP branch to be random
-outputFor :: (Monad m) => SPAddress -> [Address] -> [Address] -> Trace m num
+outputFor :: (Monad m, Numerical num) => SPAddress -> [Address] -> [Address] -> Trace m num
           -> (Either (m (Value num)) (SP m))
 outputFor spaddr argAs resultAs t =
     case t ^. (sprs . hardix "Running the outputter of a non-SP" spaddr) . to sp of
