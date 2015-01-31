@@ -117,10 +117,10 @@ data SP m = forall a. (Show a) => SP
     , current :: a
     -- These guys may need to accept the argument lists, but I have
     -- not yet seen an example that forces this.
-    , incorporate :: forall num. (Num num) => Value num -> a -> a
-    , unincorporate :: forall num. (Num num) => Value num -> a -> a
-    , incorporateR :: forall num. (Num num) => [Value num] -> [SimulationRequest num] -> a -> a
-    , unincorporateR :: forall num. (Num num) => [Value num] -> [SimulationRequest num] -> a -> a
+    , incorporate :: forall num. (Numerical num) => Value num -> a -> a
+    , unincorporate :: forall num. (Numerical num) => Value num -> a -> a
+    , incorporateR :: forall num. (Numerical num) => [Value num] -> [SimulationRequest num] -> a -> a
+    , unincorporateR :: forall num. (Numerical num) => [Value num] -> [SimulationRequest num] -> a -> a
     }
 -- TODO Can I refactor this data type to capture the fact that
 -- deterministic requesters and outputters never have meaningful log_d
@@ -129,16 +129,16 @@ data SP m = forall a. (Show a) => SP
 -- These functions appear to be necessary to avoid a bizarre compile
 -- error in GHC, per
 -- http://breaks.for.alienz.org/blog/2011/10/21/record-update-for-insufficiently-polymorphic-field/
-do_inc :: (Num num) => Value num -> SP m -> SP m
+do_inc :: (Numerical num) => Value num -> SP m -> SP m
 do_inc v SP{..} = SP{ current = incorporate v current, ..}
 
-do_uninc :: (Num num) => Value num -> SP m -> SP m
+do_uninc :: (Numerical num) => Value num -> SP m -> SP m
 do_uninc v SP{..} = SP{ current = unincorporate v current, ..}
 
-do_incR :: (Num num) => [Value num] -> [SimulationRequest num] -> SP m -> SP m
+do_incR :: (Numerical num) => [Value num] -> [SimulationRequest num] -> SP m -> SP m
 do_incR vs rs SP{..} = SP{ current = incorporateR vs rs current, ..}
 
-do_unincR :: (Num num) => [Value num] -> [SimulationRequest num] -> SP m -> SP m
+do_unincR :: (Numerical num) => [Value num] -> [SimulationRequest num] -> SP m -> SP m
 do_unincR vs rs SP{..} = SP{ current = unincorporateR vs rs current, ..}
 
 instance Show (SP m) where
@@ -604,9 +604,9 @@ corporate name f a = do
       sprs . ix spaddr %= \r -> r{sp = f v sp}
     _ -> return ()
 
-do_unincorporate :: (Num num, MonadState (Trace m num) m1) => Address -> m1 ()
+do_unincorporate :: (Numerical num, MonadState (Trace m num) m1) => Address -> m1 ()
 do_unincorporate = corporate "Uni" do_uninc
-do_incorporate :: (Num num, MonadState (Trace m num) m1) => Address -> m1 ()
+do_incorporate :: (Numerical num, MonadState (Trace m num) m1) => Address -> m1 ()
 do_incorporate = corporate "I" do_inc
 
 -- TODO Can I abstract the commonalities between this for requests and
@@ -627,12 +627,12 @@ corporateR name f a = do
       sprs . ix spaddr %= \r -> r{sp = f vs rs sp}
     _ -> return ()
 
-do_unincorporateR :: (Num num, MonadState (Trace m num) m1) => Address -> m1 ()
+do_unincorporateR :: (Numerical num, MonadState (Trace m num) m1) => Address -> m1 ()
 do_unincorporateR = corporateR "Uni" do_unincR
-do_incorporateR :: (Num num, MonadState (Trace m num) m1) => Address -> m1 ()
+do_incorporateR :: (Numerical num, MonadState (Trace m num) m1) => Address -> m1 ()
 do_incorporateR = corporateR "I" do_incR
 
-constrain :: (Num num, MonadState (Trace m num) m1) => Address -> Value num -> m1 ()
+constrain :: (Numerical num, MonadState (Trace m num) m1) => Address -> Value num -> m1 ()
 constrain a v = do
   do_unincorporate a
   nodes . ix a . value .= Just v
@@ -642,7 +642,7 @@ constrain a v = do
   randoms %= S.delete a
   maybe_constrain_parents a v
 
-maybe_constrain_parents :: (Num num, MonadState (Trace m num) m1) => Address -> Value num -> m1 ()
+maybe_constrain_parents :: (Numerical num, MonadState (Trace m num) m1) => Address -> Value num -> m1 ()
 maybe_constrain_parents a v = do
   node <- use $ nodes . hardix "Trying to constrain a non-existent node" a
   case node of
