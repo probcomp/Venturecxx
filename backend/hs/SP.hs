@@ -57,7 +57,7 @@ data SPRequesterNS m
 data SPOutputterNS m
     = Trivial
     | DeterministicO (forall num. [Node num] -> [Node num] -> Value num)
-    | RandomO (forall num. (Real num) => [Node num] -> [Node num] -> m (Value num))
+    | RandomO (forall num. (Real num, Fractional num) => [Node num] -> [Node num] -> m (Value num))
     | SPMaker (forall num. [Node num] -> [Node num] -> SP m) -- Are these ever random?
     | ReferringSPMaker ([Address] -> [Address] -> SP m)
 
