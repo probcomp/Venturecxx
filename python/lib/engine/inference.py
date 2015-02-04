@@ -187,6 +187,25 @@ class Infer(object):
     names, stack_dicts = self.parse_exprs(exprs, 'plotf')
     self._init_plot(None, names, exprs, stack_dicts, callback=self.engine.callbacks[name])
     self.result._add_data(self.engine, 'call_back_accum')
+  def collect(self, *exprs):
+    names, stack_dicts = self.parse_exprs(exprs, None)
+    answer = {} # Map from column name to list of values; the values
+                # are parallel to the particles
+    std_names = ['sweep count', 'particle id', 'time (s)', 'particle log weight', 'particle normalized prob']
+    def collect_std_streams(engine):
+      the_time = time.time()
+      answer['sweep count'] = [0] * engine.num_traces()
+      answer['particle id'] = range(engine.num_traces())
+      answer['time (s)'] = [the_time] * engine.num_traces()
+      log_weights = copy(engine.trace_handler.log_weights)
+      answer['particle log weight'] = log_weights
+      answer['particle normalized prob'] = logWeightsToNormalizedDirect(log_weights)
+    collect_std_streams(self.engine)
+    for name, stack_dict in zip(names, stack_dicts):
+      if stack_dict is not None:
+        answer[name] = self.engine.sample_all(stack_dict)
+    return Dataset(names, std_names, answer)
+
   def assume(self, sym, exp):
     self.engine.assume(SymbolType().asPython(sym), exp.asStackDict())
   def observe(self, exp, val):
@@ -207,6 +226,15 @@ class Infer(object):
     self.engine.trace_handler.log_weights = new_weights
   def particle_normalized_probs(self):
     return logWeightsToNormalizedDirect(self.particle_log_weights())
+
+class Dataset(object):
+  def __init__(self, ind_names, std_names, data):
+    self.ind_names = ind_names # :: [String]
+    self.std_names = std_names # :: [String]
+    self.data = data   # :: {String, [value]}
+    # The keys of data are the strings that appear in ind_names and std_names
+    # The values of data are all parallel (by particle)
+    # Column indexing is resolved by position in ind_names (hence the name)
 
 class InferResult(object):
   '''
