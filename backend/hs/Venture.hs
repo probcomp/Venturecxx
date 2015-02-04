@@ -1,5 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module Venture where
 
@@ -39,12 +40,12 @@ lookupValue a (Model _ t) =
     fromJust "No value at address" $ valueOf
     $ fromJust "Invalid address" $ lookupNode a t
 
-topeval :: (MonadRandom m, Num num) => Exp num -> (StateT (Model m num) m) Address
+topeval :: (MonadRandom m, Numerical num) => Exp num -> (StateT (Model m num) m) Address
 topeval exp = do
   (Model e _) <- get
   trace `zoom` (eval prior exp e)
 
-assume :: (MonadRandom m, Num num) => String -> Exp num -> (StateT (Model m num) m) Address
+assume :: (MonadRandom m, Numerical num) => String -> Exp num -> (StateT (Model m num) m) Address
 assume var exp = do
   -- TODO This implementation of assume does not permit recursive
   -- functions, because of insufficient indirection to the
@@ -58,7 +59,7 @@ assume var exp = do
 -- value (up to chasing down references until a random choice is
 -- found).  The constraining appears to consist only in removing that
 -- node from the list of random choices.
-observe :: (MonadRandom m, Num num) => Exp num -> Value num -> (StateT (Model m num) m) ()
+observe :: (MonadRandom m, Numerical num) => Exp num -> Value num -> (StateT (Model m num) m) ()
 observe exp v = do
   address <- topeval exp
   -- TODO What should happen if one observes a value that had
@@ -72,16 +73,16 @@ observe exp v = do
   -- address it here.
   trace `zoom` (constrain address v)
 
-predict :: (MonadRandom m, Num num) => Exp num -> (StateT (Model m num) m) Address
+predict :: (MonadRandom m, Numerical num) => Exp num -> (StateT (Model m num) m) Address
 predict = topeval
 
-sample :: (MonadRandom m, Num num) => Exp num -> (Model m num) -> m (Value num)
+sample :: (MonadRandom m, Numerical num) => Exp num -> (Model m num) -> m (Value num)
 sample exp model = evalStateT action model where
     action = do
       addr <- topeval exp
       gets $ lookupValue addr
 
-sampleM :: (MonadRandom m, Num num) => Exp num -> (StateT (Model m num) m) (Value num)
+sampleM :: (MonadRandom m, Numerical num) => Exp num -> (StateT (Model m num) m) (Value num)
 sampleM exp = do
   model <- get
   val <- lift $ sample exp model
@@ -125,7 +126,7 @@ assess (I.Assessable _ do_assess) scaffold = trace `zoom` do
                                                t <- get
                                                return $ do_assess t scaffold
 
-detach :: (MonadRandom m, Num num) =>
+detach :: (MonadRandom m, Numerical num) =>
           Subproblem.Scaffold -> StateT (Model m num) m (LogDensity num)
 detach scaffold = trace `zoom` do
   t <- get
@@ -133,7 +134,7 @@ detach scaffold = trace `zoom` do
   put t'
   return logd
 
-regen :: (MonadRandom m, Num num) =>
+regen :: (MonadRandom m, Numerical num) =>
          Subproblem.Scaffold -> StateT (Model m num) m (LogDensity num)
 regen scaffold = trace `zoom` do
   t <- get
@@ -141,5 +142,5 @@ regen scaffold = trace `zoom` do
   put t'
   return logd
 
-resimulation_mh :: (MonadRandom m, Real num) => I.Selector m num -> StateT (Model m num) m ()
+resimulation_mh :: (MonadRandom m, Numerical num) => I.Selector m num -> StateT (Model m num) m ()
 resimulation_mh select = trace `zoom` I.resimulation_mh select

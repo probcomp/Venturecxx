@@ -1,3 +1,5 @@
+{-# LANGUAGE ConstraintKinds #-}
+
 -- An interpreter for the inference language, to be used for
 -- implementing Venture-as-a-web-server (and maybe a standalone
 -- language).
@@ -18,24 +20,24 @@ data Directive num = Assume String (T.Exp num)
   deriving Show
 
 -- Return Just the address of the directive if it's a predict, otherwise Nothing
-executeDirective :: (MonadRandom m, Num num) =>
+executeDirective :: (MonadRandom m, T.Numerical num) =>
                     Directive num -> StateT (V.Model m num) m (Maybe T.Address)
 executeDirective (Assume s e) = V.assume s e >> return Nothing
 executeDirective (Observe e v) = V.observe e v >> return Nothing
 executeDirective (Predict e) = V.predict e >>= return . Just
 
 -- Returns the list of addresses the model wants watched (to wit, the predicts)
-execute :: (MonadRandom m, Num num) => [Directive num] -> StateT (V.Model m num) m [T.Address]
+execute :: (MonadRandom m, T.Numerical num) => [Directive num] -> StateT (V.Model m num) m [T.Address]
 execute ds = liftM catMaybes $ mapM executeDirective ds
 
 
-runDirective' :: (MonadRandom m, Num num) =>
+runDirective' :: (MonadRandom m, T.Numerical num) =>
                  Directive num -> StateT (V.Model m num) m (Maybe T.Address)
 runDirective' (Assume s e) = V.assume s e >>= return . Just
 runDirective' (Observe e v) = V.observe e v >> return Nothing
 runDirective' (Predict e) = V.predict e >>= return . Just
 
-runDirective :: (MonadRandom m, Num num) =>
+runDirective :: (MonadRandom m, T.Numerical num) =>
                 Directive num -> StateT (V.Model m num) m (Maybe (T.Value num))
 runDirective d = do
   addr <- runDirective' d
