@@ -17,7 +17,7 @@ import GradientMethods
 test_grad :: IO (Values Double)
 test_grad = evalStateT prog initial where
   prog = do
-    _ <- assume "x" $ L.App (L.Var "normal") [0, 1]
+    _ <- assume "x" $ Trace.app (Trace.var "normal") [0, 1]
     scaffold <- select default_all
     m <- get
     let current = principal_values scaffold m
