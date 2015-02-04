@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts, DoAndIfThenElse #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module Regen where
 
@@ -30,22 +31,22 @@ import SP (compoundSP)
 -- Separate the SP case in the type because SPs require special
 -- handling (namely, making SP records).  This is a crock.
 type Proposal m num = Address -> Trace m num ->
-    Writer (LogDensity num) (Either (m (Value num)) (SP m num))
+    Writer (LogDensity num) (Either (m (Value num)) (SP m))
 
-regen :: (MonadRandom m, Num num) => Scaffold -> Proposal m num -> Trace m num ->
+regen :: (MonadRandom m, Numerical num) => Scaffold -> Proposal m num -> Trace m num ->
          WriterT (LogDensity num) m (Trace m num)
 regen s propose t = do
   ((_, w), t') <- lift $ runStateT (runWriterT (regen' s propose)) t
   tell w
   return t'
 
-regen' :: (MonadRandom m, Num num) => Scaffold -> Proposal m num ->
+regen' :: (MonadRandom m, Numerical num) => Scaffold -> Proposal m num ->
           WriterT (LogDensity num) (StateT (Trace m num) m) ()
 regen' Scaffold { _drg = d, _absorbers = abs } propose = do
   mapM_ (regenNode propose) $ O.toList d
   mapM_ absorbAt $ O.toList abs
 
-regenNode :: (MonadRandom m, MonadTrans t, MonadState (Trace m num) (t m), Num num) =>
+regenNode :: (MonadRandom m, MonadTrans t, MonadState (Trace m num) (t m), Numerical num) =>
              Proposal m num -> Address -> WriterT (LogDensity num) (t m) ()
 regenNode propose a = do
   node <- use $ nodes . hardix "Regenerating a nonexistent node" a
@@ -55,7 +56,7 @@ regenNode propose a = do
     mapM_ (regenNode propose) (parentAddrs node)
     regenValue propose a
 
-regenValue :: (MonadRandom m, MonadTrans t, MonadState (Trace m num) (t m), Num num) =>
+regenValue :: (MonadRandom m, MonadTrans t, MonadState (Trace m num) (t m), Numerical num) =>
               Proposal m num -> Address -> WriterT (LogDensity num) (t m) ()
 regenValue propose a = do
   node <- use $ nodes . hardix "Regenerating value for nonexistent node" a
@@ -82,7 +83,7 @@ regenValue propose a = do
       nodes . ix a . value .= Just v
       do_incorporate a
 
-evalRequests :: (MonadRandom m, MonadTrans t, MonadState (Trace m num) (t m), Num num) =>
+evalRequests :: (MonadRandom m, MonadTrans t, MonadState (Trace m num) (t m), Numerical num) =>
                 Proposal m num -> SPAddress -> [SimulationRequest num] -> t m [Address]
 evalRequests propose a srs = mapM evalRequest srs where
     evalRequest (SimulationRequest id exp env) = do
@@ -97,7 +98,7 @@ evalRequests propose a srs = mapM evalRequest srs where
 -- Returns the address of the fresh node holding the result of the
 -- evaluation.
 -- TODO In the presence of nontrivial proposals, eval can return weights
-eval :: (MonadRandom m, MonadTrans t, MonadState (Trace m num) (t m), Num num) =>
+eval :: (MonadRandom m, MonadTrans t, MonadState (Trace m num) (t m), Numerical num) =>
         Proposal m num -> Exp num -> Env -> t m Address
 eval _ (Compose (Datum v)) _ = state $ addFreshNode $ Constant v
 eval propose (Compose (Var n)) e = do
@@ -124,20 +125,20 @@ eval propose (Compose (App op args)) env = do
   _ <- runWriterT $ regenNode propose addr'
   return addr'
 
-prior :: (MonadRandom m, Num num) => Proposal m num
+prior :: (MonadRandom m, Numerical num) => Proposal m num
 prior a t =
   case t ^. nodes . hardix "Regenerating value for nonexistent node" a of
     (Output _ _ opa ps rs) -> return $ outputFor addr ps rs t where
       addr = fromJust "Regenerating value for an output with no operator" $ fromValueAt opa t
 
-withDeterministic :: (Monad m) => Proposal m num -> Map Address (Value num) -> Proposal m num
+withDeterministic :: (Monad m, Numerical num) => Proposal m num -> Map Address (Value num) -> Proposal m num
 withDeterministic base as a t =
     case Map.lookup a as of
       (Just v) -> writer (Left $ return v, LogDensity $ absorbVal node sp) where
         -- TODO Abstract commonality between this nonsense and absorbAt
         node = t ^. nodes . hardix "Absorbing at a nonexistent node" a
         sp = fromJust "Absorbing at a node with no operator" $ operator node t
-        absorbVal (Output _ _ _ args reqs) SP{log_d_out = (Just f), current = a} =
+        absorbVal (Output _ _ _ args reqs) SP{log_d_out = (Just (LogDOut f)), current = a} =
             f a args' reqs' v where
               args' = map (fromJust "absorb" . flip lookupNode t) args
               reqs' = map (fromJust "absorb" . flip lookupNode t) reqs
