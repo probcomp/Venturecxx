@@ -1,11 +1,15 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleInstances #-}
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveTraversable #-}
 
 module Language where
 
 import Prelude hiding (lookup)
+import Data.Foldable
 import qualified Data.Map as M
 import Data.Monoid
+import Data.Traversable
 
 -- The "proc" type variable is the type of representations of
 -- procedures, which I am allowing to vary because it will be
@@ -17,7 +21,7 @@ data Value proc real = Number real
                      | List [Value proc real]
                      | Procedure proc
                      | Boolean Bool
-  deriving (Eq, Ord, Show, Functor)
+  deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
 
 instance (Num num) => Num (Value a num) where
     -- Only for fromInteger

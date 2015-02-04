@@ -9,6 +9,7 @@
 {-# LANGUAGE IncoherentInstances #-} -- TODO Valuable num num overlaps with Valueable num Bool
 {-# LANGUAGE ImpredicativeTypes #-}
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE DeriveFunctor #-}
 
 module Trace where
 
@@ -81,7 +82,7 @@ newtype SRId = SRId Unique
     deriving (Eq, Ord, Show)
 
 data SimulationRequest num = SimulationRequest SRId (Exp num) Env
-    deriving Show
+    deriving (Show, Functor)
 
 srid :: SimulationRequest num -> SRId
 srid (SimulationRequest id _ _) = id
@@ -201,7 +202,7 @@ data Node num = Constant (Value num)
               | Reference (Maybe (Value num)) Address
               | Request (Maybe [SimulationRequest num]) (Maybe Address) Address [Address]
               | Output (Maybe (Value num)) Address Address [Address] [Address]
-    deriving Show
+    deriving (Show, Functor)
 
 valueOf :: Node num -> Maybe (Value num)
 valueOf (Constant v) = Just v
@@ -296,7 +297,7 @@ data Trace rand num =
           , _addr_seed :: UniqueSeed
           , _spaddr_seed :: UniqueSeed
           }
-    deriving Show
+    deriving (Show, Functor)
 
 data SPRecord m = SPRecord { sp :: (SP m)
                            , srid_seed :: UniqueSeed
