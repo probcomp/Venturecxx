@@ -2,4 +2,10 @@
 [assume x (normal 0 1)]
 [assume y (normal x 1)]
 [assume abs (lambda (x) (if (< x 0) (- 0 x) x))]
-[infer (cycle ((mh default all 1) (plotf (ltsr lctl pc0r h0 h1 p0s2 p0d1ds) x y (abs (- y x)))) 100)]
+[infer
+ (let ((d (empty)))
+   (do (cycle ((do (mh default all 1)
+                   (d2 <- (collect x y (abs (- y x))))
+                 (into d d2)))
+              100)
+       (plotf_new (ltsr lctl pc0r h0 h1 p0s2 p0d1ds) d)))]
