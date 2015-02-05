@@ -2,6 +2,7 @@ import sp
 import psp
 import value as v
 from builtin import no_request, deterministic_typed
+from venture.engine.inference import Dataset
 
 class InferPrimitiveOutputPSP(psp.DeterministicPSP):
   def __init__(self, val, klass, desc, tp):
@@ -581,6 +582,17 @@ unwrapped to Python strings for the plugin.
   macro_helper("predict", infer_action_maker_type([v.AnyType("<expression>")])),
   macro_helper("sample", infer_action_maker_type([v.AnyType("<expression>")], return_type=v.AnyType())),
   macro_helper("sample_all", infer_action_maker_type([v.AnyType("<expression>")], return_type=v.ListType())),
+
+  ["empty", deterministic_typed(lambda *args: Dataset(), [], v.ForeignBlobType(), descr="""\
+Create and empty dataset ``into`` which further ``collect``ed stuff may be merged.
+  """)],
+
+  sequenced_sp("into", lambda orig, new: orig.merge_bang(new), infer_action_maker_type([v.ForeignBlobType(), v.ForeignBlobType()]), desc="""\
+Destructively merge the contents of the second argument into the
+first.
+
+Right now only implemented on datasets created by ``empty`` and
+``collect``, but in principle generalizable to any monoid.  """),
 
   # Hackety hack hack backward compatibility
   ["ordered_range", deterministic_typed(lambda *args: (v.VentureSymbol("ordered_range"),) + args,
