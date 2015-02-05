@@ -216,6 +216,8 @@ class Infer(object):
     self.engine.assume(SymbolType().asPython(sym), exp.asStackDict())
   def observe(self, exp, val):
     self.engine.observe(exp.asStackDict(), val.asStackDict())
+  def force(self, exp, val):
+    self.engine.force(exp.asStackDict(), val.asStackDict())
   def predict(self, exp):
     self.engine.predict(exp.asStackDict())
   def sample(self, exp):

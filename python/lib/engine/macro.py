@@ -331,6 +331,14 @@ register_macro("observe", quasiquote_first_macro, """\
 
 """)
 
+register_macro("force", observe_macro, """\
+- `(force <model-expression> <value>)`: Programatically force the state of the model.
+
+  Force the model to set the requested variable to the given value. Implemented
+  as an ``observe`` followed by a ``forget``.
+
+""")
+
 register_macro("predict", quasiquotation_macro(2, 2), """\
 - `(predict <model-expression>)`: Programmatically add a prediction.
 

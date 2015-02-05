@@ -392,7 +392,7 @@ class TraceWrapper(object):
     # method on the trace.  Safely doesn't work as a decorator here;
     # do it this way.
     return safely(safely(getattr)(self.trace, attrname))
-  
+
   @safely
   def assume(self, baseAddr, id, exp):
     self.trace.eval(baseAddr, exp)

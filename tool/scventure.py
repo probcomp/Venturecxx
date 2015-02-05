@@ -1,5 +1,8 @@
 """A StarCluster plugin for Venture.
 
+DEPRECATED; has not been maintained since around the 0.1.1 release;
+officially abandoned 1/29/15.
+
 Installs Venture (including development sources) on all nodes.
 
 Minimal setup:
@@ -36,6 +39,7 @@ Additional option:
     for versions of Venture that support it, saves time by not
     installing the dependencies for the CXX backend of Venture, and by
     not compiling the backend itself.
+
 """
 from starcluster.clustersetup import ClusterSetup
 from starcluster.logger import log
