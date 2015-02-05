@@ -135,6 +135,15 @@ class Engine(object):
     self.directives[self.directiveCounter] = ["observe",datum,val]
     return self.directiveCounter
 
+  def force(self,datum,val):
+    # TODO: The directive counter increments, but the "force" isn't added
+    # to the list of directives
+    # This mirrors the implementation in the core_sivm, but could be changed?
+    did = self.observe(datum, val)
+    self.trace_handler.incorporate()
+    self.forget(did)
+    return self.directiveCounter
+
   def forget(self,directiveId):
     if directiveId not in self.directives:
       raise VentureException("invalid_argument", "Cannot forget a non-existent directive id",
@@ -484,20 +493,20 @@ effect of renumbering the directives, if some had been forgotten."""
     return self.convert(PumaEngine)
 
   def set_profiling(self, enabled=True):
-    # TODO: do this by introspection on the trace 
+    # TODO: do this by introspection on the trace
     if self.trace_handler.backend == 'lite':
       self.trace_handler.delegate('set_profiling', enabled)
-  
+
   def clear_profiling(self):
     self.trace_handler.delegate('clear_profiling', enabled)
-  
+
   def profile_data(self):
     rows = []
     for (pid, trace) in enumerate([t for t in self.retrieve_traces()
                                    if hasattr(t, "stats")]):
       for stat in trace.stats:
         rows.append(dict(stat, particle = pid))
-    
+
     return rows
 
 class ContinuousInferrer(object):

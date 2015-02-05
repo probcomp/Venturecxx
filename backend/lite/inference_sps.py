@@ -574,6 +574,7 @@ unwrapped to Python strings for the plugin.
   macro_helper("call_back_accum", infer_action_maker_type([v.AnyType()], variadic=True)),
   macro_helper("assume", infer_action_maker_type([v.AnyType("<symbol>"), v.AnyType("<expression>")])),
   macro_helper("observe", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType()])),
+  macro_helper("force", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType()])),
   macro_helper("predict", infer_action_maker_type([v.AnyType("<expression>")])),
   macro_helper("sample", infer_action_maker_type([v.AnyType("<expression>")], return_type=v.AnyType())),
   macro_helper("sample_all", infer_action_maker_type([v.AnyType("<expression>")], return_type=v.ListType())),
