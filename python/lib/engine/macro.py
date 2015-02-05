@@ -331,7 +331,7 @@ register_macro("observe", quasiquote_first_macro, """\
 
 """)
 
-register_macro("force", observe_macro, """\
+register_macro("force", quasiquote_first_macro, """\
 - `(force <model-expression> <value>)`: Programatically force the state of the model.
 
   Force the model to set the requested variable to the given value. Implemented
