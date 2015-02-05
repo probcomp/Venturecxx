@@ -194,7 +194,7 @@ class Infer(object):
     std_names = ['sweep count', 'particle id', 'time (s)', 'log score',
                  'particle log weight', 'particle normalized prob']
     def collect_std_streams(engine):
-      the_time = time.time()
+      the_time = time.time() - engine.creation_time
       answer['sweep count'] = [0] * engine.num_traces()
       answer['particle id'] = range(engine.num_traces())
       answer['time (s)'] = [the_time] * engine.num_traces()
