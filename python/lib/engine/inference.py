@@ -228,13 +228,46 @@ class Infer(object):
     return logWeightsToNormalizedDirect(self.particle_log_weights())
 
 class Dataset(object):
-  def __init__(self, ind_names, std_names, data):
+  """Explain to me how exactly this class is different from a Pandas DataFrame?"""
+  def __init__(self, ind_names=None, std_names=None, data=None):
     self.ind_names = ind_names # :: [String]
     self.std_names = std_names # :: [String]
     self.data = data   # :: {String, [value]}
     # The keys of data are the strings that appear in ind_names and std_names
     # The values of data are all parallel (by particle)
     # Column indexing is resolved by position in ind_names (hence the name)
+
+  def merge(self, other):
+    """Functional merge of two datasets.  Returns a newly allocated
+Dataset which is the result of the merge. """
+    if self.ind_names is None:
+      return other
+    if other.ind_names is None:
+      return self
+    self._check_compat(other)
+    answer = {}
+    for (key, vals) in self.data.iteritems():
+      answer[key] = vals + other.data[key]
+    return Dataset(self.ind_names, self.std_names, answer)
+
+  def merge_bang(self, other):
+    "Imperative merge of two datasets.  Returns self after merging other into it."
+    if other.ind_names is None:
+      return self
+    if self.ind_names is None:
+      self.ind_names = other.ind_names
+      self.std_names = other.std_names
+      self.data = dict([name, []] for name in self.ind_names + self.std_names)
+    self._check_compat(other)
+    for key in self.data.keys():
+      self.data[key].extend(other.data[key])
+    return self
+
+  def _check_compat(self, other):
+    if not self.ind_names == other.ind_names:
+      raise Exception("Cannot merge datasets with different contents %s %s" % (self.ind_names, other.ind_names))
+    if not self.std_names == other.std_names:
+      raise Exception("Cannot merge datasets with different contents %s %s" % (self.std_names, other.std_names))
 
 class InferResult(object):
   '''
