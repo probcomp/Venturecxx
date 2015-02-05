@@ -205,6 +205,11 @@ class Infer(object):
       if stack_dict is not None:
         answer[name] = self.engine.sample_all(stack_dict)
     return Dataset(names, std_names, answer)
+  def plotf_new(self, spec, dataset):
+    # TODO I hope ind_names is right for the names of the spec plot;
+    # not specifying the exprs and stack dicts should be fine.
+    plot = SpecPlot(spec, dataset.ind_names, None, None)
+    plot.plot(dataset.asPandas())
 
   def assume(self, sym, exp):
     self.engine.assume(SymbolType().asPython(sym), exp.asStackDict())
@@ -268,6 +273,12 @@ Dataset which is the result of the merge. """
       raise Exception("Cannot merge datasets with different contents %s %s" % (self.ind_names, other.ind_names))
     if not self.std_names == other.std_names:
       raise Exception("Cannot merge datasets with different contents %s %s" % (self.std_names, other.std_names))
+
+  def asPandas(self):
+    ds = DataFrame.from_dict(strip_types_from_dict_values(self.data))
+    order = self.std_names + self.ind_names
+    return ds[order]
+
 
 class InferResult(object):
   '''
