@@ -6,7 +6,6 @@ from numpy.testing import assert_array_equal
 
 from venture.test.config import get_ripl, default_num_samples, default_num_transitions_per_sample, on_inf_prim
 from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.engine.inference import SpecPlot
 
 @on_inf_prim("mh")
 @statisticalTest
