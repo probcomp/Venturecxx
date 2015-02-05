@@ -327,11 +327,8 @@ register_macro("observe", observe_macro, """\
 
 """)
 
-def force_macro(program):
-  assert len(program) == 3
-  return [program[0], v.quasiquote(program[1]), macroexpand_inference(program[2])]
 register_macro("force", observe_macro, """\
-- `(observe <model-expression> <value>)`: Programmatically add an observation.
+- `(force <model-expression> <value>)`: Programatically force the state of the model.
 
   Force the model to set the requested variable to the given value. Implemented
   as an ``observe`` followed by a ``forget``.
