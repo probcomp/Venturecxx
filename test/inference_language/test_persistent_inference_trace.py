@@ -90,7 +90,7 @@ def testForeignInfSPs():
   r.bind_foreign_inference_sp("my_bernoulli", builtin.builtInSPs()["bernoulli"])
   r.infer("(mh default one (+ (my_bernoulli 0.5) 1))")
 
-def testForceSmoke():
+def testForceSmoke1():
   r = get_ripl(persistent_inference_trace=True)
   r.execute_program("""
 [assume x (normal 0 1)]
@@ -98,3 +98,15 @@ def testForceSmoke():
 [infer (go)]""")
   x = r.sample('x')
   eq_(x, 5)
+
+def testForceSmoke2():
+  r = get_ripl(persistent_inference_trace=True)
+  r.execute_program("""
+[assume x (normal 0 1)]
+[define go (lambda (y) (force x y))]""")
+  r.infer("(go 2)")
+  x = r.sample('x')
+  eq_(x,2)
+  r.infer("(go -3)")
+  x = r.sample('x')
+  eq_(x, -3)
