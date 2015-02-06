@@ -297,7 +297,27 @@ register_macro("call_back_accum", quasiquotation_macro(2), """\
 
 """)
 
-register_macro("collect", quasiquotation_macro(2), "")
+register_macro("collect", quasiquotation_macro(2), """\
+- `(collect <model-expression> ...)`: Extract data from the underlying
+  model during inference.
+
+  When a `collect` inference command is executed, the given
+  expressions are sampled and their values are returned in a
+  ``Dataset`` object.  This is the way to get data into datasets; see
+  ``into`` for accumulating datasets, and ``printf``, ``plotf``, and
+  ``plotf_to_file`` for using them.
+
+  Each <model-expression> may optionally be given in the form (labelled
+  <model-expression> <name>), in which case the given `name` serves as the
+  key in the returned table of data.  Otherwise, the key defaults
+  to a string representation of the given `expression`.
+
+  *Note:* The <model-expression>s are sampled in the _model_, not the
+  inference program.  For example, they may refer to variables
+  ``assume`` d in the model, but may not refer to variables ``define`` d
+  in the inference program.  The <model-expression>s may be constructed
+  programmatically: see ``unquote``.
+""")
 
 register_macro("assume", quasiquotation_macro(3, 3), """\
 - `(assume <symbol> <model-expression>)`: Programmatically add an assumption.
