@@ -6,5 +6,5 @@ my_dirname=$(dirname $my_abs_path)
 cd "$my_dirname"
 
 set -xe
-venture lite -e '[infer (printf (normal 0 1))]'
+venture lite -e '[infer (bind (collect (normal 0 1)) printf)]'
 nosetests -c unattended.cfg
