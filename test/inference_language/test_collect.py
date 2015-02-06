@@ -87,13 +87,13 @@ def testCollectSmoke4():
 def testPrintf():
   '''Intercept stdout and make sure the message read what we expect'''
   ripl = get_ripl()
-  pattern = make_pattern(ripl.backend())
+  pattern = make_pattern()
   ripl.infer('(resample 2)')
   ripl.assume('x', 2.1)
   old_stdout = sys.stdout
   result = StringIO()
   sys.stdout = result
-  ripl.infer('(cycle ((mh default one 1) (printf x score (labelled 3.1 foo) sweep time)) 2)')
+  ripl.infer('(cycle ((mh default one 1) (bind (collect x (labelled 3.1 foo)) printf)) 2)')
   sys.stdout = old_stdout
   res = result.getvalue()
   assert pattern.match(res) is not None
@@ -114,23 +114,7 @@ def testCollectLogScore():
   [infer (collect x)]'''
   ripl.execute_program(prog)
 
-def make_pattern(backend):
-  if backend == 'lite':
-    logscore_pattern = '\[0, 0\]'
-  else:
-    logscore_pattern = '\[0\.0, 0\.0\]'
-  pattern = '''x: \[2.1, 2.1\]
-Global log score: {0}
-foo: \[3.1, 3.1\]
-Sweep count: 1
-Wall time: .*\... s
-
-x: \[2.1, 2.1\]
-Global log score: {0}
-foo: \[3.1, 3.1\]
-Sweep count: 2
-Wall time: .*\... s
-
-'''.format(logscore_pattern)
-  return re.compile(pattern)
+def make_pattern():
+  sweep = r".*x.*foo.*\n.*2.1.*3.1.*\n.*2.1.*3.1.*"
+  return re.compile(sweep + sweep, re.DOTALL)
 
