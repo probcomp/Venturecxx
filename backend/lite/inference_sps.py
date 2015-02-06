@@ -334,8 +334,7 @@ Perform an SMC-style resampling step.
 
 The `particles` argument gives the number of particles to make.
 Subsequent modeling and inference commands will be applied to each
-result particle independently.  Data reporting commands will talk to
-one distinguished particle, except ``peek``.
+result particle independently.
 
 Future observations will have the effect of weighting the particles
 relative to each other by the relative likelihoods of observing those
@@ -567,7 +566,6 @@ XXX: Currently, extra arguments must be VentureSymbols, which are
 unwrapped to Python strings for the plugin.
 """),
 
-  macro_helper("peek", infer_action_maker_type([v.AnyType()], variadic=True)),
   macro_helper("printf", infer_action_maker_type([v.AnyType()], variadic=True)),
   macro_helper("call_back", infer_action_maker_type([v.AnyType()], return_type=v.AnyType(), variadic=True)),
   macro_helper("call_back_accum", infer_action_maker_type([v.AnyType()], variadic=True)),

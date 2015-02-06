@@ -42,17 +42,6 @@ class Infer(object):
       self.result._final_appended = True
     return self.result
 
-  def _init_peek(self, names, exprs, stack_dicts):
-    if self.result is None:
-      self.result = InferResult(first_command = 'peek')
-    if self.result._peek_names is None:
-      self.result._init_peek(names, exprs, stack_dicts)
-    elif (names == self.result._peek_names and
-          exprs == self.result._peek_exprs):
-      pass
-    else:
-      raise VentureValueError("Cannot issue multiple peek commands in the same inference program")
-
   def _init_print(self, names, exprs, stack_dicts):
     if self.result is None:
       self.result = InferResult(first_command = 'printf')
@@ -155,10 +144,6 @@ class Infer(object):
   def collapse_equal(self, scope, block): self.engine.collapse(scope, block)
   def collapse_equal_map(self, scope, block): self.engine.collapse_map(scope, block)
   def incorporate(self): self.engine.trace_handler.incorporate()
-  def peek(self, *exprs):
-    names, stack_dicts = self.parse_exprs(exprs, 'peek')
-    self._init_peek(names, exprs, stack_dicts)
-    self.result._add_data(self.engine, 'peek')
   def printf(self, *exprs):
     names, stack_dicts = self.parse_exprs(exprs, 'printf')
     self._init_print(names, exprs, stack_dicts)
@@ -344,11 +329,6 @@ class InferResult(object):
     self.spec_plot = None
     self.filenames = filenames
     self.callback = callback
-
-  def _init_peek(self, names, exprs, stack_dicts):
-    self._peek_names = names
-    self._peek_exprs = exprs
-    self._peek_stack_dicts = stack_dicts
 
   def _init_print(self, names, exprs, stack_dicts):
     self._print_names = names

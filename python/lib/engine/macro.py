@@ -149,29 +149,6 @@ def quasiquotation_macro(min_size = None, max_size = None):
     return [program[0]] + [v.quasiquote(e) for e in program[1:]]
   return the_macro
 
-register_macro("peek", quasiquotation_macro(2), """\
-- `(peek <model-expression> ...)`: Extract data from the underlying
-  model during inference.
-
-  Every time a `peek` inference command is executed, the given
-  expressions are sampled and their values are stored.  When inference
-  completes, the data extracted is either returned, if Venture is
-  being used as a library, or printed, if from the interactive
-  console.
-
-  Each <model-expression> may optionally be given in the form (labelled
-  <model-expression> <name>), in which case the given `name` serves as the
-  key in the returned table of peek data.  Otherwise, the key defaults
-  to a string representation of the given `expression`.
-
-  *Note:* The <model-expression>s are sampled in the _model_, not the
-  inference program.  For example, they may refer to variables
-  ``assume`` d in the model, but may not refer to variables ``define`` d
-  in the inference program.  The <model-expression>s may be constructed
-  programmatically: see ``unquote``.
-
-""")
-
 register_macro("printf", quasiquotation_macro(2), """\
 - `(printf <model-expression> ...)`: Print model values.
 
@@ -179,7 +156,7 @@ register_macro("printf", quasiquotation_macro(2), """\
   expressions are sampled and their values printed to standard output.
   This is a basic debugging facility.
 
-  See the note about model expressions from ``peek``.
+  See the note about model expressions from ``collect``.
 """)
 
 register_macro("call_back", quasiquotation_macro(2), """\
