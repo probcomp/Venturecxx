@@ -27,7 +27,6 @@ def __venture_start__(ripl):
   ripl.bind_callback('timer_time', timer.print_time)
   ripl.bind_callback('timer_pause', timer.pause)
   ripl.bind_callback('timer_resume', timer.resume)
-  ripl.bind_callback('dataset_to_file', dataset_to_file)
 
 class Timer(object):
   'Timer object, whose methods will be used as inference callbacks.'
@@ -62,21 +61,3 @@ class Timer(object):
       raise VentureTimerError('Timer is already running.')
     self.downtime += time() - self.downtime_start
     self.downtime_start = None
-
-def dataset_to_file(inferrer, basename):
-  '''
-  Save all data recorded by inferrer to file "basename" in current directory.
-  The basename must be quoted.
-  Do not call this plugin as part of a (cycle) command with other inference
-  statements that record data. Rather, use a (begin) and call this plugin
-  after the cycle statement.
-  '''
-  # pylint:disable=protected-access
-  # Hack so that the dataset gets the data from the last sweep
-  inferrer.result._save_previous_iter(inferrer.result.sweep + 1)
-  inferrer.result._final_appended = True
-  ds = inferrer.result.dataset()
-  basename = strip_types(basename)[0]
-  ds.to_csv(basename + '.txt', sep = '\t',
-            index = False, float_format = '%0.4f')
-  print 'Dataset saved to ' + basename + '.txt'
