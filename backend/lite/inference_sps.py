@@ -587,7 +587,8 @@ Example::
 will do 1000 iterations of MH collecting some standard data and
 the value of x, and then show a plot of the x variable (which
 should be a scalar) against the sweep number (from 1 to 1000),
-colored according to the global log score.
+colored according to the global log score.  See ``collect``
+for details on collecting and labeling data to be plotted.
 
 The format specifications are inspired loosely by the classic
 printf.  To wit, each individual plot that appears on a page is

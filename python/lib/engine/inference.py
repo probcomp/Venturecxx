@@ -222,67 +222,9 @@ Dataset which is the result of the merge. """
     return ds[order]
 
 class SpecPlot(object):
-  """(plotf spec exp0 ...) -- Generate a plot according to a format specification.
+  """A plot controlled by a spec.
 
-  Example:
-    [INFER (cycle ((mh default one 1) (plotf c0s x)) 1000)]
-  will do 1000 iterations of MH and then show a plot of the x variable
-  (which should be a scalar) against the sweep number (from 1 to
-  1000), colored according to the global log score.
-
-  By passing a "labelled" statement to the format spec, Venture statements can
-  be assigned labels (see InferResult documentation for more details):
-    [INFER (cycle ((mh default one 1) (plotf c0s (labelled (normal 0 1) foo))) 1000)]
-  will plot a draw from a normal distribution against the sweep number, and label
-  the x axis as "foo".
-
-  Example library use:
-    ripl.infer("(cycle ((mh default one 1) (plotf c0s x)) 1000)")
-  will return an object representing that same plot that will draw it
-  if `print`ed.  The collected dataset can also be extracted from the
-  object for more flexible custom plotting.
-
-  The format specifications are inspired loosely by the classic
-  printf.  To wit, each individual plot that appears on a page is
-  specified by some line noise consisting of format characters
-  matching the following regex
-
-  [<geom>]*(<stream>?<scale>?){1,3}
-
-  specifying
-  - the geometric objects to draw the plot with
-  - for each dimension (x, y, and color, respectively)
-    - the data stream to use
-    - the scale
-
-  Each requested data stream is sampled once every time the inference
-  program executes the plotf instruction, and the plot shows all of
-  the samples after inference completes.
-
-  The possible geometric objects are:
-    _p_oint, _l_ine, _b_ar, and _h_istogram
-  The possible data streams are:
-    _<an integer>_ that expression, 0-indexed,
-    _%_ the next expression after the last used one
-    sweep _c_ounter, _t_ime (wall clock), log _s_core, and pa_r_ticle
-  The possible scales are:
-    _d_irect, _l_og
-
-  TODO: Modifiers for how to treat multiple particles: distinguished
-  (current implementation, good default), mean, median, all (what
-  exactly would all mean?  2-D table? Splice and hope?)
-
-  TODO: Modifiers for how to treat overplotting?  (Exactly identical
-  discrete samples; continuous samples that are close enough for the
-  points to overlap; control or good choice of point size?; 2D kernel
-  density nonsense?)
-
-  If one stream is indicated for a 2-D plot (points or lines), the x
-  axis is filled in with the sweep counter.  If three streams are
-  indicated, the third is mapped to color.
-
-  If the given specification is a list, make all those plots at once.
-
+  See the documentation of plotf for the meanings of the specs.
   """
   def __init__(self, spec, names, exprs, stack_dicts):
     self.spec_string = spec
