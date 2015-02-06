@@ -18,82 +18,71 @@ def extract_from_panel(infer_result, names):
   '''Extract trace for desired variable(s) from InferResult panel'''
   return infer_result.panel().loc[:,:,names]
 
+def extract_from_dataset(result, names):
+  return result.asPandas()[names]
+
 @statisticalTest
-@on_inf_prim("peek") # Technically also MH, but not testing it
-def testPeekSmoke1():
+@on_inf_prim("collect") # Technically also MH, but not testing it
+def testCollectSmoke1():
   ripl = get_ripl()
   ripl.assume("x", "(normal 0 1)")
-  predictions = extract_from_frame(ripl.infer("(cycle ((mh default one 1) (peek x)) %s)" % default_num_samples()), 'x')
+  prog = """
+(let ((d (empty)))
+  (do (cycle ((mh default one 1)
+              (bind (collect x) (curry into d))) %s)
+      (return d)))""" % default_num_samples()
+  predictions = extract_from_dataset(ripl.infer(prog), 'x')
   cdf = stats.norm(loc=0.0, scale=1.0).cdf
   return reportKnownContinuous(cdf, predictions, "N(0,1)")
 
 @statisticalTest
-@on_inf_prim("peek")
-def testPeekSmoke2():
+@on_inf_prim("collect")
+def testCollectSmoke2():
   ripl = get_ripl()
-  predictions = extract_from_frame(ripl.infer("(cycle ((peek (normal 0 1))) %s)" % default_num_samples()), '(normal 0.0 1.0)')
+  prog = """
+(let ((d (empty)))
+  (do (cycle ((bind (collect (normal 0 1)) (curry into d))) %s)
+      (return d)))""" % default_num_samples()
+  predictions = extract_from_dataset(ripl.infer(prog), '(normal 0.0 1.0)')
   cdf = stats.norm(loc=0.0, scale=1.0).cdf
   return reportKnownContinuous(cdf, predictions, "N(0,1)")
 
-def testPeekSmoke3():
+@statisticalTest
+@on_inf_prim("collect")
+def testCollectSmoke3():
   ripl = get_ripl()
-  predictions = extract_from_frame(ripl.infer("(cycle ((peek (labelled (normal 0 1) label))) %s)" % default_num_samples()), 'label')
+  prog = """
+(let ((d (empty)))
+  (do (cycle ((bind (collect (labelled (normal 0 1) label)) (curry into d))) %s)
+      (return d)))""" % default_num_samples()
+  predictions = extract_from_dataset(ripl.infer(prog), 'label')
   cdf = stats.norm(loc=0.0, scale=1.0).cdf
   return reportKnownContinuous(cdf, predictions, "N(0,1)")
 
 @statisticalTest
-@on_inf_prim("peek") # Technically also resample and MH, but not testing them
-def testPeekAllSmoke1():
-  ripl = get_ripl()
-  ripl.infer("(resample 2)")
-  ripl.assume("x", "(normal 0 1)")
-  predictionss = extract_from_panel(ripl.infer("(cycle ((mh default one 1) (peek x)) %s)" % default_num_samples()), 'x')
-  eq_(predictionss.shape, (default_num_samples(),2))
-  cdf = stats.norm(loc=0.0, scale=1.0).cdf
-  return reportKnownContinuous(cdf, predictionss.values.ravel(), "N(0,1)")
-
-@statisticalTest
-@on_inf_prim("peek") # Technically also resample, but not testing it
-def testPeekAllSmoke2():
-  ripl = get_ripl()
-  ripl.infer("(resample 2)")
-  predictionss = extract_from_panel(ripl.infer("(cycle ((peek (labelled (normal 0 1) x))) %s)" % default_num_samples()), 'x')
-  eq_(predictionss.shape, (default_num_samples(),2))
-  cdf = stats.norm(loc=0.0, scale=1.0).cdf
-  return reportKnownContinuous(cdf, predictionss.values.ravel(), "N(0,1)")
-
-@statisticalTest
-@on_inf_prim("plotf") # Technically also resample and MH, but not testing them
-def testPlotfSmoke():
+@on_inf_prim("collect") # Technically also resample and MH, but not testing them
+def testCollectSmoke4():
   # This is the example from examples/normal_plot.vnt
   ripl = get_ripl()
   ripl.infer("(resample 10)")
   ripl.assume("x", "(normal 0 1)")
   ripl.assume("y", "(normal x 1)")
   ripl.assume("abs", "(lambda (x) (if (< x 0) (- 0 x) x))")
-  out = ripl.infer("(cycle ((mh default all 1) (plotf (ltsr lctl pc0r h0 h1 p0s2 p0d1ds) x y (abs (- y x)) (labelled (abs x) abs_x))) 3)")
+  out = ripl.infer("""
+(let ((d (empty)))
+  (do (cycle ((mh default all 1)
+              (bind (collect x y (abs (- y x)) (labelled (abs x) abs_x)) (curry into d)))
+             3)
+      (return d)))""")
   cdf = stats.norm(loc=0.0, scale=2.0).cdf
-  result = out.dataset()
+  result = out.asPandas()
   for k in ["x", "y", "sweep count", "time (s)", "log score", "particle id", "(abs (sub y x))", "abs_x"]:
     assert k in result
     assert len(result[k]) == 30
   # Check that the dataset can be extracted again
-  (result == out.dataset()).all()
+  (result == out.asPandas()).all()
   # TODO Also check the distributions of x and the difference
   return reportKnownContinuous(cdf, result["y"], "N(0,1)")
-
-@on_inf_prim("plotf") # Technically also MH, but not testing it
-def testPlotfDataset():
-  # make sure that calling dataset multiple times works
-  ripl = get_ripl()
-  ripl.assume('x', '(normal 0 1)')
-  out = ripl.infer('(cycle ((mh default one 1) (plotf h0 x)) 1)')
-  ds = out.dataset()
-  # using try-except make sure we get a failure instead of an error
-  try:
-    ds = out.dataset()
-  except KeyError:
-    assert False
 
 def testPrintf():
   '''Intercept stdout and make sure the message read what we expect'''
