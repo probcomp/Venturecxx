@@ -217,28 +217,3 @@ Dataset which is the result of the merge. """
     ds = DataFrame.from_dict(strip_types_from_dict_values(self.data))
     order = self.std_names + self.ind_names
     return ds[order]
-
-class SpecPlot(object):
-  """A plot controlled by a spec.
-
-  See the documentation of plotf for the meanings of the specs.
-  """
-  def __init__(self, spec, names, exprs, stack_dicts):
-    self.spec_string = spec
-    if spec is not None:
-      self.spec = PlotSpec(spec)
-    self.names = names
-    self.exprs = exprs
-    self.stack_dicts = stack_dicts
-
-  def draw(self, data):
-    if self.spec is None:
-      pass
-    else:
-      return self.spec.draw(data, self.names)
-
-  def plot(self, data, filenames=None):
-    if self.spec is None:
-      pass
-    else:
-      return self.spec.plot(data, self.names, filenames)
