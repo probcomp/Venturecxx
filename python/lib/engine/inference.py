@@ -53,27 +53,6 @@ class Infer(object):
     else:
       raise VentureValueError("Cannot issue multiple printf commands in same inference program")
 
-  def _init_plot(self, spec, names, exprs, stack_dicts, filenames=None, callback=None):
-    if self.result is None:
-      if filenames is None and callback is None:
-        cmd = 'plotf'
-      elif filenames is not None and callback is None:
-        cmd = 'plotf_to_file'
-        filenames = self._format_filenames(filenames, spec)
-      elif filenames is None and callback is not None:
-        cmd = 'call_back_accum'
-      else:
-        raise VentureValueError("Accumulating and saving to file not supported at once in Infer._init_plot.")
-      self.result = InferResult(first_command = cmd, filenames = filenames, callback = callback)
-    if self.result.spec_plot is None:
-      self.result._init_plot(spec, names, exprs, stack_dicts)
-    elif (spec == self.result.spec_plot.spec_string and
-          names == self.result.spec_plot.names and
-          exprs == self.result.spec_plot.exprs):
-      pass
-    else:
-      raise VentureValueError("Cannot plot with different specs in the same inference program")
-
   @staticmethod
   def _format_filenames(filenames,spec):
     if isinstance(filenames, basestring):
@@ -327,9 +306,6 @@ class InferResult(object):
     self._print_names = names
     self._print_exprs = exprs
     self._print_stack_dicts = stack_dicts
-
-  def _init_plot(self, spec, names, exprs, stack_dicts):
-    self.spec_plot = SpecPlot(spec, names, exprs, stack_dicts)
 
   def _add_data(self, engine, command):
     # if it's the first command, add all the default fields and increment the counter
