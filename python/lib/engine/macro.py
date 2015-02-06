@@ -299,11 +299,6 @@ register_macro("call_back_accum", quasiquotation_macro(2), """\
 
 register_macro("collect", quasiquotation_macro(2), "")
 
-def quasiquote_first_macro(program):
-  assert len(program) == 3
-  return [program[0], v.quasiquote(program[1]), macroexpand_inference(program[2])]
-register_macro("plotf_new", quasiquote_first_macro, "")
-
 register_macro("assume", quasiquotation_macro(3, 3), """\
 - `(assume <symbol> <model-expression>)`: Programmatically add an assumption.
 
@@ -312,6 +307,10 @@ register_macro("assume", quasiquotation_macro(3, 3), """\
   may be constructed programmatically -- see ``unquote``.
 
 """)
+
+def quasiquote_first_macro(program):
+  assert len(program) == 3
+  return [program[0], v.quasiquote(program[1]), macroexpand_inference(program[2])]
 
 register_macro("observe", quasiquote_first_macro, """\
 - `(observe <model-expression> <value>)`: Programmatically add an observation.

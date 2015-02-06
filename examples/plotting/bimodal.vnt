@@ -16,4 +16,4 @@
 [infer (do
   (mh default one 1)
   (d <- (collect x y))
-  (plotf_new p0d1dr d))]
+  (plotf_new (quote p0d1dr) d))]

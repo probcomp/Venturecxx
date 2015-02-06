@@ -8,4 +8,4 @@
                    (d2 <- (collect x y (abs (- y x))))
                  (into d d2)))
               100)
-       (plotf_new (ltsr lctl pc0r h0 h1 p0s2 p0d1ds) d)))]
+       (plotf_new (quote (ltsr lctl pc0r h0 h1 p0s2 p0d1ds)) d)))]
