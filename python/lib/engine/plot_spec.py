@@ -14,6 +14,10 @@ toplevel_rx = "(" + weight_rx + ")" + "(" + geom_rx + "*)" + "((" + stream_rx + 
 dimension_rx = stream_rx + "?" + scale_rx + "?"
 
 class PlotSpec(object):
+  """A plot specification.
+
+  See the documentation of plotf for the meanings of the possible specifiers.
+  """
   def __init__(self, spec):
     if isinstance(spec, basestring):
       self.frames = [FrameSpec(spec)]
