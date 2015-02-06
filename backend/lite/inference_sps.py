@@ -569,7 +569,6 @@ unwrapped to Python strings for the plugin.
 
   macro_helper("peek", infer_action_maker_type([v.AnyType()], variadic=True)),
   macro_helper("plotf", infer_action_maker_type([v.AnyType()], variadic=True)),
-  macro_helper("plotf_to_file", infer_action_maker_type([v.AnyType()], variadic=True)),
   macro_helper("printf", infer_action_maker_type([v.AnyType()], variadic=True)),
   macro_helper("call_back", infer_action_maker_type([v.AnyType()], return_type=v.AnyType(), variadic=True)),
   macro_helper("call_back_accum", infer_action_maker_type([v.AnyType()], variadic=True)),
@@ -630,6 +629,21 @@ axis is filled in with the sweep counter.  If three streams are
 indicated, the third is mapped to color.
 
 If the given specification is a list, make all those plots at once.
+"""),
+
+  engine_method_sp("plotf_to_file", infer_action_maker_type([v.AnyType("<basename>"), v.AnyType("<spec>"), v.ForeignBlobType("<dataset>")]), desc="""\
+Save plot(s) to file(s).
+
+  Like ``plotf``, but save the resulting plot(s) instead of displaying on screen.
+  Just as <spec> may be either a single expression or a list, <basenames> may
+  either be a single symbol or a list of symbols. The number of basenames must
+  be the same as the number of specifications.
+
+  Examples:
+    (plotf_to_file (quote basename) (quote spec) <expression> ...) saves the plot specified by
+      the spec in the file "basename.png"
+    (plotf_to_file (quote (basename1 basename2)) (quote (spec1 spec2)) <expression> ...) saves
+      the spec1 plot in the file basename1.png, and the spec2 plot in basename2.png.
 """),
 
   macro_helper("assume", infer_action_maker_type([v.AnyType("<symbol>"), v.AnyType("<expression>")])),

@@ -577,6 +577,7 @@ def _compute_inference_prelude():
       # return :: b -> State a b
       ["return", """(lambda (val) (lambda (t) (pair val t)))"""],
       ["curry", """(lambda (f arg) (lambda (arg2) (f arg arg2)))"""],
+      ["curry3", """(lambda (f arg1 arg2) (lambda (arg3) (f arg1 arg2 arg3)))"""],
       ["global_likelihood", "(likelihood_at (quote default) (quote all))"],
       ["global_posterior", "(posterior_at (quote default) (quote all))"],
   ]:

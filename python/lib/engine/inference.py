@@ -169,12 +169,11 @@ class Infer(object):
     names, stack_dicts = self.parse_exprs(exprs, 'plotf')
     self._init_plot(spec, names, exprs, stack_dicts)
     self.result._add_data(self.engine, 'plotf')
-  def plotf_to_file(self, basenames, spec, *exprs): # This one only works from the "plotf_to_file" SP.
+  def plotf_to_file(self, basenames, spec, dataset):
     filenames = ExpressionType().asPython(basenames)
     spec = ExpressionType().asPython(spec)
-    names, stack_dicts = self.parse_exprs(exprs, 'plotf')
-    self._init_plot(spec, names, exprs, stack_dicts, filenames=filenames)
-    self.result._add_data(self.engine, 'plotf_to_file')
+    plot = SpecPlot(spec, dataset.ind_names, None, None)
+    plot.plot(dataset.asPandas(), filenames = self._format_filenames(filenames, spec))
   def call_back(self, name, *exprs):
     name = SymbolType().asPython(name)
     if name not in self.engine.callbacks:
