@@ -10,14 +10,6 @@ from venture.lite.psp import LikelihoodFreePSP
 import venture.lite.value as v
 from venture.lite.builtin import typed_nr
 
-def extract_from_frame(infer_result, names):
-  '''Extract trace for desired variable(s) from InferResult'''
-  return infer_result.dataset()[names]
-
-def extract_from_panel(infer_result, names):
-  '''Extract trace for desired variable(s) from InferResult panel'''
-  return infer_result.panel().loc[:,:,names]
-
 def extract_from_dataset(result, names):
   return result.asPandas()[names]
 

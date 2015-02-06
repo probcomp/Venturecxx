@@ -35,24 +35,6 @@ class Infer(object):
     self.out = {}
     self.result = None
 
-  def final_data(self):
-    # add the last data point if result isn't None
-    if self.result is not None and not self.result._final_appended:
-      self.result._save_previous_iter(self.result.sweep + 1)
-      self.result._final_appended = True
-    return self.result
-
-  def _init_print(self, names, exprs, stack_dicts):
-    if self.result is None:
-      self.result = InferResult(first_command = 'printf')
-    if self.result._print_names is None:
-      self.result._init_print(names, exprs, stack_dicts)
-    elif (names == self.result._print_names and
-          exprs == self.result._print_exprs):
-      pass
-    else:
-      raise VentureValueError("Cannot issue multiple printf commands in same inference program")
-
   @staticmethod
   def _format_filenames(filenames,spec):
     if isinstance(filenames, basestring):
@@ -297,69 +279,6 @@ class InferResult(object):
     self.spec_plot = None
     self.filenames = filenames
     self.callback = callback
-
-  def _init_print(self, names, exprs, stack_dicts):
-    self._print_names = names
-    self._print_exprs = exprs
-    self._print_stack_dicts = stack_dicts
-
-  def _add_data(self, engine, command):
-    # if it's the first command, add all the default fields and increment the counter
-    if command == self._first_command:
-      self.sweep += 1
-      self._save_previous_iter(self.sweep)
-      self._collect_default_streams(engine)
-    self._collect_requested_streams(engine, command)
-
-  def _save_previous_iter(self, sweep):
-    # self._this_iter_data always defined on sweep 1
-    # pylint: disable=access-member-before-definition
-    if sweep == 1:
-      pass
-    elif sweep == 2:
-      self.data = self._this_iter_data
-    else:
-      for field in self.data:
-        self.data[field].extend(self._this_iter_data[field])
-    # reset the data to record the current iteration
-    self._this_iter_data = {}
-
-  def _collect_default_streams(self, engine):
-    the_time = time.time() - self.time
-    self._this_iter_data['sweep count'] = [self.sweep] * engine.num_traces()
-    self._this_iter_data['particle id'] = range(engine.num_traces())
-    self._this_iter_data['time (s)'] = [the_time] * engine.num_traces()
-    self._this_iter_data['log score'] = engine.logscore_all()
-    log_weights = copy(engine.trace_handler.log_weights)
-    self._this_iter_data['particle log weight'] = log_weights
-    self._this_iter_data['particle normalized prob'] = logWeightsToNormalizedDirect(log_weights)
-
-  def _collect_requested_streams(self, engine, command):
-    if command == 'peek':
-      names = self._peek_names
-      stack_dicts = self._peek_stack_dicts
-    elif command == 'printf':
-      names = self._print_names
-      stack_dicts = self._print_stack_dicts
-    else:
-      names = self.spec_plot.names
-      stack_dicts = self.spec_plot.stack_dicts
-    for name, stack_dict in zip(names, stack_dicts):
-      if name not in self._this_iter_data and stack_dict is not None:
-        self._this_iter_data[name] = engine.sample_all(stack_dict)
-
-  def _print_data(self):
-    for name in self._print_names:
-      if name == 'sweep':
-        print 'Sweep count: {0}'.format(self.sweep)
-      elif name == 'time':
-        print 'Wall time: {0:0.2f} s'.format(self._this_iter_data['time (s)'][0])
-      elif name == 'score':
-        print 'Global log score: {0}'.format(self._this_iter_data['log score'])
-      else:
-        # TODO: support for pretty-printing of floats
-        print '{0}: {1}'.format(name, strip_types_from_dict_values(self._this_iter_data)[name])
-    print
 
   def dataset(self):
     ds = DataFrame.from_dict(strip_types_from_dict_values(self.data))
