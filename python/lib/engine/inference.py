@@ -109,8 +109,7 @@ class Infer(object):
   def plotf_to_file(self, basenames, spec, dataset):
     filenames = ExpressionType().asPython(basenames)
     spec = ExpressionType().asPython(spec)
-    plot = SpecPlot(spec, dataset.ind_names, None, None)
-    plot.plot(dataset.asPandas(), filenames = self._format_filenames(filenames, spec))
+    PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names, self._format_filenames(filenames, spec))
   def call_back(self, name, *exprs):
     name = SymbolType().asPython(name)
     if name not in self.engine.callbacks:
@@ -138,10 +137,8 @@ class Infer(object):
     return Dataset(names, std_names, answer)
   def plotf(self, spec, dataset):
     spec = ExpressionType().asPython(spec)
-    # TODO I hope ind_names is right for the names of the spec plot;
-    # not specifying the exprs and stack dicts should be fine.
-    plot = SpecPlot(spec, dataset.ind_names, None, None)
-    plot.plot(dataset.asPandas())
+    # TODO I hope ind_names is right for the names of the spec plot
+    PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names)
 
   def assume(self, sym, exp):
     self.engine.assume(SymbolType().asPython(sym), exp.asStackDict())
