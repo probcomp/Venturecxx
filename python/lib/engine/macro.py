@@ -247,21 +247,6 @@ register_macro("plotf", quasiquotation_macro(2), """\
   See also the note about them being model expressions there.
 """)
 
-register_macro("plotf_to_file", quasiquotation_macro(3), """\
-- `(plotf_to_file <basenames> <spec> <model-expression> ...)`: Accumulate data for plotting to files.
-
-  Like ``plotf``, but save the resulting plot(s) instead of displaying on screen.
-  Just as <spec> may be either a single expression or a list, <basenames> may
-  either be a single symbol or a list of symbols. The number of basenames must
-  be the same as the number of specifications.
-
-  Examples:
-    (plotf_to_file basename spec <expression> ...) saves the plot specified by
-      the spec in the file "basename.png"
-    (plotf_to_file (basename1 basename2) (spec1 spec2) <expression> ...) saves
-      the spec1 plot in the file basename1.png, and the spec2 plot in basename2.png.
-""")
-
 register_macro("call_back", quasiquotation_macro(2), """\
 - `(call_back <name> <model-expression> ...)`: Invoke a user-defined callback.
 

@@ -8,4 +8,4 @@
 [infer (mh default one 50)]
 ;[infer (hmc exp all 0.1 10 5)]
 ;[infer (rejection default all 1)]
-[infer (plotf_to_file brown p0d1dr (position 8) (position 9))]
+[infer (bind (collect (position 8) (position 9)) (curry3 plotf_to_file (quote brown) (quote p0d1dr)))]
