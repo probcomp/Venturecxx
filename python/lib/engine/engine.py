@@ -158,8 +158,8 @@ class Engine(object):
   def sample(self,datum):
     # TODO Officially this is taken care of by the Venture SIVM level,
     # but I want it here because it is used in the interpretation of
-    # the "peek" infer command.  Design clarification time?
-    # TODO With this definition of "sample", "peek" will pump the
+    # the "collect" infer command.  Design clarification time?
+    # TODO With this definition of "sample", "collect" will pump the
     # directive counter of the engine.  That is likely to make us at
     # least somewhat sad.
     (did, value) = self.predict(datum)
@@ -522,7 +522,7 @@ class ContinuousInferrer(object):
     # Can use the storage of the thread object itself as the semaphore
     # controlling whether continuous inference proceeds.
     while self.inferrer is not None:
-      # TODO React somehow to peeks and plotfs in the inference program
+      # TODO React somehow to values returned by the inference action?
       # Currently suppressed for fear of clobbering the prompt
       self.engine.infer(program)
       time.sleep(0.0001) # Yield to be a good citizen
