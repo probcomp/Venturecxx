@@ -566,7 +566,11 @@ XXX: Currently, extra arguments must be VentureSymbols, which are
 unwrapped to Python strings for the plugin.
 """),
 
-  macro_helper("printf", infer_action_maker_type([v.AnyType()], variadic=True)),
+  engine_method_sp("printf", infer_action_maker_type([v.ForeignBlobType("<dataset>")]), desc="""\
+Print model values collected in a dataset.
+
+This is a basic debugging facility."""),
+
   macro_helper("call_back", infer_action_maker_type([v.AnyType()], return_type=v.AnyType(), variadic=True)),
   macro_helper("collect", infer_action_maker_type([v.AnyType()], return_type=v.ForeignBlobType("<dataset>"), variadic=True)),
 

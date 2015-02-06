@@ -149,16 +149,6 @@ def quasiquotation_macro(min_size = None, max_size = None):
     return [program[0]] + [v.quasiquote(e) for e in program[1:]]
   return the_macro
 
-register_macro("printf", quasiquotation_macro(2), """\
-- `(printf <model-expression> ...)`: Print model values.
-
-  Every time a `printf` command is executed, the given model
-  expressions are sampled and their values printed to standard output.
-  This is a basic debugging facility.
-
-  See the note about model expressions from ``collect``.
-""")
-
 register_macro("call_back", quasiquotation_macro(2), """\
 - `(call_back <name> <model-expression> ...)`: Invoke a user-defined callback.
 
