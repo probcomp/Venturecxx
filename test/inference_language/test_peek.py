@@ -98,8 +98,8 @@ def testPrintf():
   res = result.getvalue()
   assert pattern.match(res) is not None
 
-def testPeekLogScore():
-  '''In the presence of likelihood-free SP's, the calling "peek" or "printf"
+def testCollectLogScore():
+  '''In the presence of likelihood-free SP's, the calling "collect" or "printf"
   should not crash the program.'''
   class TestPSP(LikelihoodFreePSP):
     def simulate(self, args):
@@ -111,7 +111,7 @@ def testPeekLogScore():
   prog = '''
   [ASSUME x (test 0)]
   [ASSUME y (normal x 1)]
-  [infer (peek x)]'''
+  [infer (collect x)]'''
   ripl.execute_program(prog)
 
 def make_pattern(backend):

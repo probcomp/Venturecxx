@@ -39,13 +39,13 @@ def testInferReturn():
   res = ripl.execute_program(prog)[-1]['value']
   eq_(res, v.number(8.0))
 
-def testPeekFunction():
+def testCollectFunction():
   '''
-  Make sure that calling peek on a function evaluation doesn't break
+  Make sure that calling collect on a function evaluation doesn't break
   '''
   ripl = get_ripl()
   ripl.assume('x', '(lambda() 2)')
-  _ = ripl.infer('(cycle ((mh default one 1) (peek (x))) 1)')
+  _ = ripl.infer('(cycle ((mh default one 1) (collect (x))) 1)')
 
 def programString(infer):
   prog = '''
