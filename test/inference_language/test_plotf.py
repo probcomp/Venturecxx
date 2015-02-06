@@ -18,10 +18,13 @@ def testPlotfToFile1():
   (do (cycle ((mh default one 10)
               (bind (collect x) (curry into d))) 10)
       (plotf_to_file (quote test1) (quote h0) d)))"""
-  ripl.infer(prog)
-  testfile = 'test1.png'
-  assert exists(testfile)
-  remove(testfile)
+  try:
+    ripl.infer(prog)
+    testfile = 'test1.png'
+    assert exists(testfile)
+  finally:
+    if exists(testfile):
+      remove(testfile)
 
 @needs_ggplot
 @on_inf_prim("plotf_to_file")
@@ -34,11 +37,15 @@ def testPlotfToFile2():
   (do (cycle ((mh default one 10)
               (bind (collect x) (curry into d))) 10)
       (plotf_to_file (quote (test1 test2)) (quote (h0 lcd0d)) d)))"""
-  ripl.infer(prog)
-  testfiles = ['test1.png', 'test2.png']
-  for testfile in testfiles:
-    assert exists(testfile)
-    remove(testfile)
+  try:
+    ripl.infer(prog)
+    testfiles = ['test1.png', 'test2.png']
+    for testfile in testfiles:
+      assert exists(testfile)
+  finally:
+    for testfile in testfiles:
+      if exists(testfile):
+        remove(testfile)
 
 @gen_needs_ggplot
 @gen_on_inf_prim("plotf_to_file")
