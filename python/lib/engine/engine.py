@@ -344,12 +344,11 @@ effect of renumbering the directives, if some had been forgotten."""
       # inference action together with the mutated Infer object.
       assert isinstance(ans, dict)
       assert ans["type"] is "improper_list"
-      (_vs, tail) = ans["value"]
-      # TODO Refactor to return the value instead of the horrible hack
-      # on top of Infer.
+      (vs, tail) = ans["value"]
       assert tail["type"] is "blob"
       assert isinstance(tail["value"], Infer)
-      return tail["value"].final_data()
+      assert len(vs) == 1
+      return vs[0]
     except VentureException:
       if self.persistent_inference_trace:
         self.remove_self_evaluating_scope_hack(self.infer_trace, target)
