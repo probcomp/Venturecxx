@@ -164,11 +164,6 @@ class Infer(object):
     self._init_print(names, exprs, stack_dicts)
     self.result._add_data(self.engine, 'printf')
     self.result._print_data()
-  def plotf(self, spec, *exprs): # This one only works from the "plotf" SP.
-    spec = ExpressionType().asPython(spec)
-    names, stack_dicts = self.parse_exprs(exprs, 'plotf')
-    self._init_plot(spec, names, exprs, stack_dicts)
-    self.result._add_data(self.engine, 'plotf')
   def plotf_to_file(self, basenames, spec, dataset):
     filenames = ExpressionType().asPython(basenames)
     spec = ExpressionType().asPython(spec)

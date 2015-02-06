@@ -568,7 +568,6 @@ unwrapped to Python strings for the plugin.
 """),
 
   macro_helper("peek", infer_action_maker_type([v.AnyType()], variadic=True)),
-  macro_helper("plotf", infer_action_maker_type([v.AnyType()], variadic=True)),
   macro_helper("printf", infer_action_maker_type([v.AnyType()], variadic=True)),
   macro_helper("call_back", infer_action_maker_type([v.AnyType()], return_type=v.AnyType(), variadic=True)),
   macro_helper("call_back_accum", infer_action_maker_type([v.AnyType()], variadic=True)),
