@@ -583,8 +583,8 @@ unwrapped to Python strings for the plugin.
   macro_helper("sample", infer_action_maker_type([v.AnyType("<expression>")], return_type=v.AnyType())),
   macro_helper("sample_all", infer_action_maker_type([v.AnyType("<expression>")], return_type=v.ListType())),
 
-  ["empty", deterministic_typed(lambda *args: Dataset(), [], v.ForeignBlobType(), descr="""\
-Create and empty dataset ``into`` which further ``collect``ed stuff may be merged.
+  ["empty", deterministic_typed(lambda *args: Dataset(), [], v.ForeignBlobType("<dataset>"), descr="""\
+Create an empty dataset ``into`` which further ``collect``ed stuff may be merged.
   """)],
 
   sequenced_sp("into", lambda orig, new: orig.merge_bang(new), infer_action_maker_type([v.ForeignBlobType(), v.ForeignBlobType()]), desc="""\
