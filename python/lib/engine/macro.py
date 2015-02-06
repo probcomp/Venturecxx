@@ -195,6 +195,12 @@ register_macro("collect", quasiquotation_macro(2), """\
   ``assume`` d in the model, but may not refer to variables ``define`` d
   in the inference program.  The <model-expression>s may be constructed
   programmatically: see ``unquote``.
+
+  ``collect`` also automatically collects some standard items: the
+  sweep count (maintained by merging datasets), the particle id, the
+  wall clock time that passed since the Venture program began, the
+  global log score, the particle weights in log space, and the
+  normalized weights of the particles in direct space.
 """)
 
 register_macro("assume", quasiquotation_macro(3, 3), """\
