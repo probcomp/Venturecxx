@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
-from pandas import DataFrame, Index
+from pandas import DataFrame
 from copy import copy
 
 from venture.lite.value import (ExpressionType, SymbolType, VentureArray, VentureSymbol,
@@ -26,10 +26,6 @@ from venture.lite.exception import VentureValueError
 from plot_spec import PlotSpec
 
 class Infer(object):
-  # In order to count iterations, can only have one call to each of printf, peek, plotf
-  # This will still multi-count interations if you enter the identical printf command multiple times
-  # I don't want these methods accessible to other modules, but Infer needs to access them
-  # pylint:disable=protected-access
   def __init__(self, engine):
     self.engine = engine
     self.out = {}

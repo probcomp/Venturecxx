@@ -1,9 +1,7 @@
 import re
 from itertools import chain
 from time import strftime
-import numpy as np
 
-from venture.lite.exception import VentureValueError
 from venture.lite.utils import logWeightsToNormalizedDirect
 
 stream_rx = r"([rcts%]|[0-9]+)"
