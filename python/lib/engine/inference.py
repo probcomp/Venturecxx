@@ -123,11 +123,7 @@ class Infer(object):
   def collapse_equal(self, scope, block): self.engine.collapse(scope, block)
   def collapse_equal_map(self, scope, block): self.engine.collapse_map(scope, block)
   def incorporate(self): self.engine.trace_handler.incorporate()
-  def printf(self, *exprs):
-    names, stack_dicts = self.parse_exprs(exprs, 'printf')
-    self._init_print(names, exprs, stack_dicts)
-    self.result._add_data(self.engine, 'printf')
-    self.result._print_data()
+  def printf(self, dataset): print dataset.asPandas()
   def plotf_to_file(self, basenames, spec, dataset):
     filenames = ExpressionType().asPython(basenames)
     spec = ExpressionType().asPython(spec)
