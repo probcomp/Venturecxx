@@ -7,4 +7,4 @@
    (do (cycle ((mh 0 one 1)
                (bind (collect a b c (+ a b c)) (curry into d)))
               100)
-       (plotf_new (quote (p0d1d2 p0d1dt c3 cs)) d)))]
+       (plotf (quote (p0d1d2 p0d1dt c3 cs)) d)))]

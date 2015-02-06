@@ -201,7 +201,7 @@ class Infer(object):
       if stack_dict is not None:
         answer[name] = self.engine.sample_all(stack_dict)
     return Dataset(names, std_names, answer)
-  def plotf_new(self, spec, dataset):
+  def plotf(self, spec, dataset):
     spec = ExpressionType().asPython(spec)
     # TODO I hope ind_names is right for the names of the spec plot;
     # not specifying the exprs and stack dicts should be fine.

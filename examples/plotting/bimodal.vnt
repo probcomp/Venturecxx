@@ -15,4 +15,4 @@
 
 [infer (do
   (mh default one 1)
-  (bind (collect x y) (curry plotf_new (quote p0d1dr))))]
+  (bind (collect x y) (curry plotf (quote p0d1dr))))]
