@@ -185,15 +185,6 @@ register_macro("call_back", quasiquotation_macro(2), """\
   There is an example in test/inference_language/test_callback.py.
 """)
 
-register_macro("call_back_accum", quasiquotation_macro(2), """\
-- `(call_back_accum <name> <model-expression> ...)`: Accumulate data for a user-defined callback.
-
-  Like ``call_back``, but accumulates the data during the inference
-  program, and calls the callback with a Pandas DataFrame containing
-  it once enclosing the ``infer`` instruction completes.
-
-""")
-
 register_macro("collect", quasiquotation_macro(2), """\
 - `(collect <model-expression> ...)`: Extract data from the underlying
   model during inference.

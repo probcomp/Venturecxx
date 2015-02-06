@@ -159,13 +159,6 @@ class Infer(object):
     if name not in self.engine.callbacks:
       raise VentureValueError("Unregistered callback {}".format(name))
     return self.convert_none(self.engine.callbacks[name](self, *[self.engine.sample_all(e.asStackDict()) for e in exprs]))
-  def call_back_accum(self, name, *exprs):
-    name = SymbolType().asPython(name)
-    if name not in self.engine.callbacks:
-      raise VentureValueError("Unregistered callback {}".format(name))
-    names, stack_dicts = self.parse_exprs(exprs, 'plotf')
-    self._init_plot(None, names, exprs, stack_dicts, callback=self.engine.callbacks[name])
-    self.result._add_data(self.engine, 'call_back_accum')
   def collect(self, *exprs):
     names, stack_dicts = self.parse_exprs(exprs, None)
     answer = {} # Map from column name to list of values; the values

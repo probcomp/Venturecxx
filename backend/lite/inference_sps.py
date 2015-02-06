@@ -568,7 +568,6 @@ unwrapped to Python strings for the plugin.
 
   macro_helper("printf", infer_action_maker_type([v.AnyType()], variadic=True)),
   macro_helper("call_back", infer_action_maker_type([v.AnyType()], return_type=v.AnyType(), variadic=True)),
-  macro_helper("call_back_accum", infer_action_maker_type([v.AnyType()], variadic=True)),
   macro_helper("collect", infer_action_maker_type([v.AnyType()], return_type=v.ForeignBlobType("<dataset>"), variadic=True)),
 
   engine_method_sp("plotf", infer_action_maker_type([v.AnyType("<spec>"), v.ForeignBlobType("<dataset>")]), desc="""\
