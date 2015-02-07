@@ -28,8 +28,6 @@ from plot_spec import PlotSpec
 class Infer(object):
   def __init__(self, engine):
     self.engine = engine
-    self.out = {}
-    self.result = None
 
   @staticmethod
   def _format_filenames(filenames,spec):
