@@ -14,16 +14,16 @@ import Venture
 import Inference
 import GradientMethods
     
-test_grad :: IO (Values Double)
+test_grad :: IO (Values Double, Values Double)
 test_grad = evalStateT prog initial where
   prog = do
-    _ <- assume "x" $ L.App (L.Var "normal") [0, 1]
+    _ <- assume "x" $ Trace.app (Trace.var "normal") [0, 1]
     scaffold <- select default_all
     m <- get
     let current = principal_values scaffold m
     _ <- detach scaffold
     t <- use trace
-    return $ getCompose $ grad (unlog . (local_posterior t scaffold) . getCompose) (Compose current)
+    return (getCompose $ grad (unlog . (local_posterior t scaffold) . getCompose) (Compose current), current)
   unlog (L.LogDensity x) = x
 
 principal_values :: Scaffold -> Model m num -> Map.Map Trace.Address (Trace.Value num)

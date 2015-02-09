@@ -1,5 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module SP where
 
@@ -30,66 +32,73 @@ import Trace (SP)
 -- collapsed beta bernoulli  forces AAA under proposing to the hyperparameters
 -- make-lazy-hmm             forces latent simulation requests; advanced version forces AEKernels
 
-nullReq :: SPRequesterNS m num
+nullReq :: SPRequesterNS m
 nullReq = DeterministicR $ \_ -> return []
 
 trivial_log_d_req :: (Num num) => a -> b -> num
 trivial_log_d_req = const $ const $ 0
 
-data NoStateSP m num = NoStateSP
-    { requester :: SPRequesterNS m num
-    , log_d_req :: Maybe ([Address] -> [SimulationRequest num] -> num)
-    , outputter :: SPOutputterNS m num
-    , log_d_out :: Maybe ([Node num] -> [Node num] -> Value num -> num)
+newtype LogDReqNS =
+    LogDReqNS (forall num. (T.Numerical num) => [Address] -> [SimulationRequest num] -> num)
+newtype LogDOutNS =
+    LogDOutNS (forall num. (T.Numerical num) => [Node num] -> [Node num] -> Value num -> num)
+
+data NoStateSP m = NoStateSP
+    { requester :: SPRequesterNS m
+    , log_d_req :: Maybe LogDReqNS
+    , outputter :: SPOutputterNS m
+    , log_d_out :: Maybe LogDOutNS
     }
 
-data SPRequesterNS m num
-    = DeterministicR ([Address] -> UniqueSource [SimulationRequest num])
-    | RandomR ([Address] -> UniqueSourceT m [SimulationRequest num])
-    | ReaderR ([Address] -> ReaderT (Trace m num) UniqueSource [SimulationRequest num])
+data SPRequesterNS m
+    = DeterministicR (forall num. (T.Numerical num) => [Address] -> UniqueSource [SimulationRequest num])
+    | RandomR (forall num. [Address] -> UniqueSourceT m [SimulationRequest num])
+    | ReaderR (forall num. [Address] -> ReaderT (Trace m num) UniqueSource [SimulationRequest num])
 
-data SPOutputterNS m num
+data SPOutputterNS m
     = Trivial
-    | DeterministicO ([Node num] -> [Node num] -> Value num)
-    | RandomO ([Node num] -> [Node num] -> m (Value num))
-    | SPMaker ([Node num] -> [Node num] -> SP m num) -- Are these ever random?
-    | ReferringSPMaker ([Address] -> [Address] -> SP m num)
+    | DeterministicO (forall num. [Node num] -> [Node num] -> Value num)
+    | RandomO (forall num. (T.Numerical num) => [Node num] -> [Node num] -> m (Value num))
+    | SPMaker (forall num. (T.Numerical num) => [Node num] -> [Node num] -> SP m) -- Are these ever random?
+    | ReferringSPMaker ([Address] -> [Address] -> SP m)
 
-no_state_sp :: NoStateSP m num -> SP m num
+no_state_sp :: NoStateSP m -> SP m
 no_state_sp NoStateSP { requester = req, log_d_req = ldr, outputter = out, log_d_out = ldo } =
     T.SP { T.requester = no_state_r req
-         , T.log_d_req = liftM const ldr
+         , T.log_d_req = liftM convert1 ldr
          , T.outputter = no_state_o out
-         , T.log_d_out = liftM const ldo
+         , T.log_d_out = liftM convert2 ldo
          , T.current = ()
          , T.incorporate = const id
          , T.unincorporate = const id
          , T.incorporateR = const $ const id
          , T.unincorporateR = const $ const id
-         }
+         } where
+        convert1 (LogDReqNS f) = T.LogDReq $ const f
+        convert2 (LogDOutNS f) = T.LogDOut $ const f
 
-no_state_r :: SPRequesterNS m num -> T.SPRequester m num a
+no_state_r :: SPRequesterNS m -> T.SPRequester m a
 no_state_r (DeterministicR f) = T.DeterministicR $ const f
 no_state_r (RandomR f) = T.RandomR $ const f
 no_state_r (ReaderR f) = T.ReaderR $ const f
 
-no_state_o :: SPOutputterNS m num -> T.SPOutputter m num a
+no_state_o :: SPOutputterNS m -> T.SPOutputter m a
 no_state_o Trivial = T.Trivial
 no_state_o (DeterministicO f) = T.DeterministicO $ const f
 no_state_o (RandomO f) = T.RandomO $ const f
 no_state_o (SPMaker f) = T.SPMaker $ const f
 no_state_o (ReferringSPMaker f) = T.ReferringSPMaker $ const f
 
-compoundSP :: (Monad m, Num num) => [String] -> Exp num -> Env -> SP m num
+compoundSP :: (Monad m, Fractional num, Real num) => [String] -> Exp num -> Env -> SP m
 compoundSP formals exp env = no_state_sp NoStateSP
   { requester = DeterministicR req
-  , log_d_req = Just $ trivial_log_d_req
+  , log_d_req = Just $ LogDReqNS trivial_log_d_req
   , outputter = Trivial
   , log_d_out = Nothing -- Or Just (0 if it's right, -inf if not?)
   } where
     req args = do
       freshId <- liftM SRId fresh
-      let r = SimulationRequest freshId exp $ Frame (M.fromList $ zip formals args) env
+      let r = SimulationRequest freshId (fmap realToFrac exp) $ Frame (M.fromList $ zip formals args) env
       return [r]
 
 -- It would be nice if these combinators admitted a nice way to pass
@@ -130,10 +139,10 @@ execList :: [Value num] -> [b] -> Value num
 execList vs [] = List vs
 execList _ _ = error "List SP given fulfilments"
 
-list :: (Monad m, Num num) => NoStateSP m num
+list :: (Monad m) => NoStateSP m
 list = NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
+  , log_d_req = Just $ LogDReqNS $ trivial_log_d_req -- Only right for requests it actually made
   , outputter = DeterministicO $ on_values execList
   , log_d_out = Nothing
   }
@@ -141,12 +150,12 @@ list = NoStateSP
 bernoulli_flip :: (MonadRandom m) => m (Value num)
 bernoulli_flip = liftM Boolean $ getRandomR (False,True)
 
-bernoulli :: forall m num. (MonadRandom m, Floating num) => NoStateSP m num
+bernoulli :: (MonadRandom m) => NoStateSP m
 bernoulli = NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
+  , log_d_req = Just $ LogDReqNS $ trivial_log_d_req -- Only right for requests it actually made
   , outputter = RandomO $ nullary bernoulli_flip
-  , log_d_out = Just $ nullary $ typed (const $ -log 2.0 :: Bool -> num)
+  , log_d_out = Just $ LogDOutNS $ nullary $ const (-log 2.0)
   }
 
 weighted_flip :: (MonadRandom m, Real num) => num -> m (Value num)
@@ -158,12 +167,12 @@ log_d_weight :: (Floating num) => num -> Bool -> num
 log_d_weight weight True = log weight
 log_d_weight weight False = log (1 - weight)
 
-weighted :: (MonadRandom m, Real num, Floating num) => NoStateSP m num
+weighted :: (MonadRandom m) => NoStateSP m
 weighted = NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
+  , log_d_req = Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
   , outputter = RandomO $ on_values $ unary $ typed weighted_flip
-  , log_d_out = Just $ on_values $ unary $ typed2 log_d_weight
+  , log_d_out = Just $ LogDOutNS $ on_values $ unary $ typed2 log_d_weight
   }
 
 box_muller_cos :: Double -> Double -> Double
@@ -182,12 +191,12 @@ log_d_normal :: (Floating num) => num -> num -> num -> num
 log_d_normal mean sigma x = - (x - mean)^^(2::Int) / (2 * sigma^^(2::Int)) - scale where
     scale = log sigma + (log pi)/2
 
-normal :: (MonadRandom m, Floating num) => NoStateSP m num
+normal :: (MonadRandom m) => NoStateSP m
 normal = NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
+  , log_d_req = Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
   , outputter = RandomO $ on_values $ binary $ typed2 normal_flip
-  , log_d_out = Just $ on_values $ binary $ typed3 log_d_normal
+  , log_d_out = Just $ LogDOutNS $ on_values $ binary $ typed3 log_d_normal
   }
 
 xxxFakeGenericity2 :: (Real num, Fractional num) =>
@@ -214,77 +223,84 @@ betaO alpha beta = do
 log_denisty_beta :: (Floating num, Real num) => num -> num -> num -> num
 log_denisty_beta a b x = (a-1)*log x + (b-1)*log (1-x) - xxxFakeGenericity2 logBeta a b
 
-beta :: (MonadRandom m, Floating num, Real num) => NoStateSP m num
+beta :: (MonadRandom m) => NoStateSP m
 beta = NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
+  , log_d_req = Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
   , outputter = RandomO $ on_values $ binary $ typed2 betaO
-  , log_d_out = Just $ on_values $ binary $ typed3 log_denisty_beta
+  , log_d_out = Just $ LogDOutNS $ on_values $ binary $ typed3 log_denisty_beta
   }
 
-cbeta_bernoulli_flip :: (MonadRandom m, Real num, Fractional num) => (num,num) -> m (Value num)
-cbeta_bernoulli_flip (ctYes, ctNo) = weighted_flip $ ctYes / (ctYes + ctNo)
+cbeta_bernoulli_flip :: (MonadRandom m, Numerical num, Numerical num2) => (num,num) -> m (Value num2)
+cbeta_bernoulli_flip (ctYes, ctNo) = weighted_flip $ realToFrac $ ctYes / (ctYes + ctNo)
 
-cbeta_bernoulli_log_d :: (Floating num) => (num,num) -> Bool -> num
-cbeta_bernoulli_log_d (ctYes, ctNo) = log_d_weight $ ctYes / (ctYes + ctNo)
+cbeta_bernoulli_log_d :: (Numerical num1, Numerical num2) => (num1,num1) -> Bool -> num2
+cbeta_bernoulli_log_d (ctYes, ctNo) = log_d_weight $ realToFrac $ ctYes / (ctYes + ctNo)
 
 cbeta_bernoulli_frob :: (num -> num) -> Bool -> (num,num) -> (num,num)
 cbeta_bernoulli_frob f True  s = s & _1 %~ f
 cbeta_bernoulli_frob f False s = s & _2 %~ f
 
-cbeta_bernoulli :: (MonadRandom m, Show num, Floating num, Real num, Enum num) =>
-                   num -> num -> SP m num
+cbeta_bernoulli :: (MonadRandom m, Show num, Floating num, Real num) =>
+                   num -> num -> SP m
 cbeta_bernoulli ctYes ctNo = T.SP
   { T.requester = no_state_r nullReq
-  , T.log_d_req = Just $ const trivial_log_d_req -- Only right for requests it actually made
+  , T.log_d_req = Just $ T.LogDReq $ const trivial_log_d_req -- Only right for requests it actually made
   , T.outputter = T.RandomO $ nullary . cbeta_bernoulli_flip
-  , T.log_d_out = Just $ nullary . typed . cbeta_bernoulli_log_d
+  , T.log_d_out = Just $ T.LogDOut $ nullary . typed . cbeta_bernoulli_log_d
   , T.current = (ctYes, ctNo)
-  , T.incorporate = typed $ cbeta_bernoulli_frob succ
-  , T.unincorporate = typed $ cbeta_bernoulli_frob pred
+  , T.incorporate = typed $ cbeta_bernoulli_frob (+1)
+  , T.unincorporate = typed $ cbeta_bernoulli_frob (+ (-1))
   , T.incorporateR = const $ const id
   , T.unincorporateR = const $ const id
   }
 
-make_cbeta_bernoulli :: (MonadRandom m, Show num, Floating num, Real num, Enum num) => SP m num
+make_cbeta_bernoulli :: (MonadRandom m) => SP m
 make_cbeta_bernoulli = no_state_sp NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ trivial_log_d_req -- Only right for requests it actually made
-  , outputter = SPMaker $ on_values $ binary $ typed2 cbeta_bernoulli
+  , log_d_req = Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
+  , outputter = SPMaker $ on_values $ binary $ f -- typed2 cbeta_bernoulli
   , log_d_out = Nothing
-  }
+  } where
+    f :: (MonadRandom m, Show num, Floating num, Real num) =>
+         Value num -> Value num -> SP m
+    f (Number n1) (Number n2) = cbeta_bernoulli n1 n2
+    f _ _ = error "Wrong type argument to make_cbeta_bernoulli"
 
 selectO :: [Value num] -> [b] -> Value num
 selectO [p,c,a] [] = if fromJust "Predicate was not a boolean" $ fromValue p then c
                      else a
 selectO _ _ = error "Wrong number of arguments to SELECT"
 
-select :: (Num num) => NoStateSP m num
+select :: NoStateSP m
 select = NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ trivial_log_d_req
+  , log_d_req = Just $ LogDReqNS trivial_log_d_req
   , outputter = DeterministicO $ on_values selectO
   , log_d_out = Nothing -- Or Just (0 if it's right, -inf if not?)
   }
 
 -- Here the Ord is because of the Ord constraint on memoized_sp
-mem :: (Monad m, Num num, Show num, Ord num) => SP m num
+mem :: (Monad m) => SP m
 mem = no_state_sp NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ trivial_log_d_req
+  , log_d_req = Just $ LogDReqNS trivial_log_d_req
   , outputter = ReferringSPMaker $ unary $ memoized_sp
   , log_d_out = Nothing
   }
 
--- The Ord is for using the derived Ord instance for Value, which is
--- needful for using the Values as keys in the memoization cache.
-memoized_sp :: (Monad m, Num num, Show num, Ord num) => Address -> SP m num
+-- The memoization cache always stores objects of type Value Double,
+-- and converts any other Numerical Value num to them for comparison.
+-- This is safe in the use cases I envision, because the keys in the
+-- mem cache do not have any interesting derivative information in
+-- them anyway.
+memoized_sp :: (Monad m) => Address -> SP m
 memoized_sp proc = T.SP
   { T.requester = T.ReaderR req
-  , T.log_d_req = Just $ const $ trivial_log_d_req
+  , T.log_d_req = Just $ T.LogDReq $ const $ trivial_log_d_req
   , T.outputter = T.Trivial
   , T.log_d_out = Nothing
-  , T.current = (M.empty :: M.Map [Value num] (SRId,Int))
+  , T.current = (M.empty :: M.Map [Value Double] (SRId,Int))
   , T.incorporate = const $ id
   , T.unincorporate = const $ id
   , T.incorporateR = inc
@@ -294,7 +310,7 @@ memoized_sp proc = T.SP
       t <- ask
       let ns = map (fromJust "Memoized SP given dangling address" . flip M.lookup (t^.nodes)) args
           vs = map (fromJust "Memoized SP given valueless argument node" . valueOf) ns
-      let cachedSRId = M.lookup vs cache
+      let cachedSRId = M.lookup (fmap (fmap realToFrac) vs) cache
       case cachedSRId of
         (Just (id,_)) -> return [SimulationRequest id (Compose $ Var "unaccessed") Toplevel]
         Nothing -> do
@@ -303,12 +319,16 @@ memoized_sp proc = T.SP
               exp = App (Var "memoized-sp") $ map Var names
               env = Frame (M.fromList $ ("memoized-sp",proc):(zip names args)) Toplevel
           return [SimulationRequest newId (Compose exp) env]
-    inc vs [req] cache = M.alter incr vs cache where
+    inc :: (T.Numerical num1, T.Numerical num) => [Value num1] -> [SimulationRequest num1] -> M.Map [Value num] (SRId, Int) -> M.Map [Value num] (SRId, Int)
+    inc vs [req] cache = M.alter incr (fmap (fmap realToFrac) vs) cache where
+        incr :: Maybe (SRId, Int) -> Maybe (SRId, Int)
         incr Nothing = Just (srid req, 1)
         incr (Just (srid', k)) | srid' == srid req = Just (srid', k+1)
                                | otherwise = error "Memoized procedure incorporating different requests for the same values"
     inc _ _ _ = error "Memoized procedure expects to incorporate exactly one request"
-    dec vs [req] cache = M.alter decr vs cache where
+    dec :: (T.Numerical num1, T.Numerical num) => [Value num1] -> [SimulationRequest num1] -> M.Map [Value num] (SRId, Int) -> M.Map [Value num] (SRId, Int)
+    dec vs [req] cache = M.alter decr (fmap (fmap realToFrac) vs) cache where
+        decr :: Maybe (SRId, Int) -> Maybe (SRId, Int)
         decr Nothing = error "Memoized procedure unincorporating a request it did not make"
         decr (Just (srid', k)) | srid' == srid req = if (k==1) then Nothing
                                                      else Just (srid', k-1)

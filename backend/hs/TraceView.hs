@@ -101,11 +101,8 @@ data SimulationRequest m = SimulationRequest SRId (Exp m) Env
 srid :: SimulationRequest m -> SRId
 srid (SimulationRequest id _ _) = id
 
--- XXX Concretize the generic number types inherited from Trace
--- because I do not want to swap this code in enough to adapt it to
--- admit generic numbers.
-type SP m = Trace.SP m Double
-type SPRecord m = Trace.SPRecord m Double
+type SP m = Trace.SP m
+type SPRecord m = Trace.SPRecord m
 
 ----------------------------------------------------------------------
 -- Nodes                                                            --

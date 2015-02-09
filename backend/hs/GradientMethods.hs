@@ -1,3 +1,5 @@
+{-# LANGUAGE ConstraintKinds #-}
+
 module GradientMethods where
 
 import Control.Monad.Trans.Writer.Strict
@@ -29,7 +31,7 @@ derandomize gen = unsafePerformIO . with_random_source gen
 -- TODO Refactor the types in the rest of the program to allow the
 -- fixed randomness phenomenon without having to resort to this
 -- nonsense:
-local_posterior :: (Real num1, Fractional num2) => Trace IO num1 -> Scaffold -> Values num2 -> LogDensity num2
+local_posterior :: (Numerical num1, Numerical num2) => Trace IO num1 -> Scaffold -> Values num2 -> LogDensity num2
 local_posterior trace scaffold = unsafePerformIO (do
   gen <- new_random_source
   return (\values -> derandomize gen (do

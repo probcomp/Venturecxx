@@ -1,3 +1,5 @@
+{-# LANGUAGE ConstraintKinds #-}
+
 module Detach where
 
 import Control.Lens hiding (children)
@@ -11,13 +13,13 @@ import qualified InsertionOrderedSet as O
 import Trace hiding (empty)
 import Subproblem
 
-detach' :: (Num num) => Scaffold -> StateT (Trace m num) (Writer (LogDensity num)) ()
+detach' :: (Numerical num) => Scaffold -> StateT (Trace m num) (Writer (LogDensity num)) ()
 detach' Scaffold { _drg = d, _absorbers = abs, _dead_reqs = reqs, _brush = bru } = do
   mapM_ absorbAt $ reverse $ O.toList abs
   mapM_ (returnT . eraseValue) $ reverse $ O.toList d
   mapM_ (returnT . forgetRequest) reqs
   mapM_ (returnT . forgetNode) $ reverse $ S.toList bru
-  where eraseValue :: Address -> State (Trace m num) ()
+  where eraseValue :: (Numerical num) => Address -> State (Trace m num) ()
         eraseValue a = do
           node <- use $ nodes . hardix "Erasing the value of a nonexistent node" a
           do_unincorporate a -- Effective if a is an Output node
@@ -28,11 +30,11 @@ detach' Scaffold { _drg = d, _absorbers = abs, _dead_reqs = reqs, _brush = bru }
             _ -> return ()
         forgetRequest :: (SPAddress, [SRId]) -> State (Trace m num) ()
         forgetRequest x = modify $ forgetResponses x
-        forgetNode :: Address -> State (Trace m num) ()
+        forgetNode :: (Numerical num) => Address -> State (Trace m num) ()
         forgetNode a = do
           do_unincorporate a
           do_unincorporateR a
           modify $ deleteNode a
 
-detach :: (Num num) => Scaffold -> (Trace m num) -> Writer (LogDensity num) (Trace m num)
+detach :: (Numerical num) => Scaffold -> (Trace m num) -> Writer (LogDensity num) (Trace m num)
 detach s = execStateT (detach' s)

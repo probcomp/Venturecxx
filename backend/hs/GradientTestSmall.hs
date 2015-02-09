@@ -1,4 +1,3 @@
-{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE RankNTypes #-}
 
@@ -20,12 +19,14 @@ myfunc :: Num a => Thing a -> [a] -> a
 myfunc (Thing thing) [x] = x + thing
 
 -- Use pattern 1: Works.
--- I think the only reason this works is because "thing" ends up typed
--- as (Num a) => Thing a, and computed separately at each call site
--- (with different Num instances).  Turning on the monomorphism
--- restriction breaks this example.
+-- One needs either the explicit type signature on thing or turning
+-- off the monomorphism restriction.  I think the only reason this
+-- works is because "thing", being typed as (Num a) => Thing a, gets
+-- computed separately at each call site (with different Num
+-- instances).
 answer :: Num a => [a]
-answer = let thing = Thing 0 in
+answer = let thing :: Num x => Thing x
+             thing = Thing 0 in
          grad (myfunc $ thing) [fromThing thing]
 
 -- Use pattern 2: Also works.
@@ -37,14 +38,15 @@ answer2 = do
   thing <- return $ Thing 0
   return $ grad (myfunc $ realToFrac `fmap` thing) [fromThing thing]
 
--- Use pattern 3: Fails mysteriously.
--- For some reason, GHC 7.6.3 completely fails to infer a type for func
--- here, impeding attempts to abstract over calling grad.
+-- Use pattern 3: Works (after Taylor's help).
+-- Without the type signature on frob, GHC 7.6.3 completely fails to
+-- infer a type for func here, with a very unhelpful error message.
+frob :: (Monad m, Fractional a, Real a) => (forall x. (Num x) => Thing x -> [x] -> x) -> m [a]
 frob func = do
   thing <- return $ Thing 0
   return $ grad (func $ realToFrac `fmap` thing) [fromThing thing]
 
-answer3 :: (Monad m, Real a) => m [a]
+answer3 :: (Monad m, Fractional a, Real a) => m [a]
 answer3 = frob myfunc
 
 ----------------------------------------------------------------------
@@ -63,16 +65,19 @@ answer4 = grad (head . fmap inc) [0]
 data Box a = Box { unBox :: (a -> a) }
 
 -- Use pattern 4: Works.
--- I think this is analogous to answer (also breaks if I remove
--- NoMonomorphismRestriction).
+-- This is analogous to answer (also breaks if I remove the type
+-- annotation from box and don't turn off the monomorphism
+-- restriction).
 answer5 :: (Num a) => [a]
-answer5 = let box = Box inc
+answer5 = let box :: (Num a) => Box a
+              box = Box inc
           in grad (head . fmap (unBox $ box)) [0]
 
 -- Use pattern 5: ???
 -- This situation should be analogous to answer2, but how do I change
 -- the Num instance with which the function inside the box is
 -- interpreted?
+answer6 :: (Monad m, Num a) => m [a]
 answer6 = do
   box_3 <- return $ Box inc
   return $ grad (head . fmap (unBox $ xxx box_3)) [0] where

@@ -1,7 +1,15 @@
-{-# LANGUAGE FlexibleContexts, TemplateHaskell, TypeSynonymInstances, FlexibleInstances, ExistentialQuantification, RecordWildCards, TupleSections #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE IncoherentInstances #-} -- TODO Valuable num num overlaps with Valueable num Bool
+{-# LANGUAGE ImpredicativeTypes #-}
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE DeriveFunctor #-}
 
 module Trace where
 
@@ -25,6 +33,8 @@ import qualified Language as L
 ----------------------------------------------------------------------
 -- Small objects                                                    --
 ----------------------------------------------------------------------
+
+type Numerical a = (Show a, Floating a, Real a)
 
 type Value num = L.Value SPAddress num
 type Exp num = Compose L.Exp (L.Value SPAddress) num
@@ -72,7 +82,7 @@ newtype SRId = SRId Unique
     deriving (Eq, Ord, Show)
 
 data SimulationRequest num = SimulationRequest SRId (Exp num) Env
-    deriving Show
+    deriving (Show, Functor)
 
 srid :: SimulationRequest num -> SRId
 srid (SimulationRequest id _ _) = id
@@ -94,18 +104,24 @@ srid (SimulationRequest id _ _) = id
 -- expected to form an _Abelian_ group acting on a (except for v on
 -- which they error out).  Further, for any given v, (unincorporate v)
 -- and (incorporate v) are expected to be inverses.
-data SP m num = forall a. (Show a) => SP
-    { requester :: SPRequester m num a
-    , log_d_req :: Maybe (a -> [Address] -> [SimulationRequest num] -> num)
-    , outputter :: SPOutputter m num a
-    , log_d_out :: Maybe (a -> [Node num] -> [Node num] -> Value num -> num)
+
+newtype LogDReq a = LogDReq
+    (forall num. (Numerical num) => a -> [Address] -> [SimulationRequest num] -> num)
+newtype LogDOut a = LogDOut
+    (forall num. (Numerical num) => a -> [Node num] -> [Node num] -> Value num -> num)
+
+data SP m = forall a. (Show a) => SP 
+    { requester :: SPRequester m a
+    , log_d_req :: Maybe (LogDReq a)
+    , outputter :: SPOutputter m a
+    , log_d_out :: Maybe (LogDOut a)
     , current :: a
     -- These guys may need to accept the argument lists, but I have
     -- not yet seen an example that forces this.
-    , incorporate :: Value num -> a -> a
-    , unincorporate :: Value num -> a -> a
-    , incorporateR :: [Value num] -> [SimulationRequest num] -> a -> a
-    , unincorporateR :: [Value num] -> [SimulationRequest num] -> a -> a
+    , incorporate :: forall num. (Numerical num) => Value num -> a -> a
+    , unincorporate :: forall num. (Numerical num) => Value num -> a -> a
+    , incorporateR :: forall num. (Numerical num) => [Value num] -> [SimulationRequest num] -> a -> a
+    , unincorporateR :: forall num. (Numerical num) => [Value num] -> [SimulationRequest num] -> a -> a
     }
 -- TODO Can I refactor this data type to capture the fact that
 -- deterministic requesters and outputters never have meaningful log_d
@@ -114,47 +130,49 @@ data SP m num = forall a. (Show a) => SP
 -- These functions appear to be necessary to avoid a bizarre compile
 -- error in GHC, per
 -- http://breaks.for.alienz.org/blog/2011/10/21/record-update-for-insufficiently-polymorphic-field/
-do_inc :: Value num -> SP m num -> SP m num
+do_inc :: (Numerical num) => Value num -> SP m -> SP m
 do_inc v SP{..} = SP{ current = incorporate v current, ..}
 
-do_uninc :: Value num -> SP m num -> SP m num
+do_uninc :: (Numerical num) => Value num -> SP m -> SP m
 do_uninc v SP{..} = SP{ current = unincorporate v current, ..}
 
-do_incR :: [Value num] -> [SimulationRequest num] -> SP m num -> SP m num
+do_incR :: (Numerical num) => [Value num] -> [SimulationRequest num] -> SP m -> SP m
 do_incR vs rs SP{..} = SP{ current = incorporateR vs rs current, ..}
 
-do_unincR :: [Value num] -> [SimulationRequest num] -> SP m num -> SP m num
+do_unincR :: (Numerical num) => [Value num] -> [SimulationRequest num] -> SP m -> SP m
 do_unincR vs rs SP{..} = SP{ current = unincorporateR vs rs current, ..}
 
-instance Show (SP m num) where
+instance Show (SP m) where
     show SP{current = s} = "A stochastic procedure with state " ++ show s
 
-data SPRequester m num a
-    = DeterministicR (a -> [Address] -> UniqueSource [SimulationRequest num])
-    | RandomR (a -> [Address] -> UniqueSourceT m [SimulationRequest num])
-    | ReaderR (a -> [Address] -> ReaderT (Trace m num) UniqueSource [SimulationRequest num])
+data SPRequester m a
+    = DeterministicR (forall num. (Numerical num) =>
+                      a -> [Address] -> UniqueSource [SimulationRequest num])
+    | RandomR (forall num. a -> [Address] -> UniqueSourceT m [SimulationRequest num])
+    | ReaderR (forall num. (Numerical num) =>
+               a -> [Address] -> ReaderT (Trace m num) UniqueSource [SimulationRequest num])
 
-data SPOutputter m num a
+data SPOutputter m a
     = Trivial
-    | DeterministicO (a -> [Node num] -> [Node num] -> Value num)
-    | RandomO (a -> [Node num] -> [Node num] -> m (Value num))
+    | DeterministicO (forall num. a -> [Node num] -> [Node num] -> Value num)
+    | RandomO (forall num. (Numerical num) => a -> [Node num] -> [Node num] -> m (Value num))
     -- Are these ever random? Do they ever change the number representation of their SP?
-    | SPMaker (a -> [Node num] -> [Node num] -> SP m num)
-    | ReferringSPMaker (a -> [Address] -> [Address] -> SP m num)
+    | SPMaker (forall num. (Numerical num) => a -> [Node num] -> [Node num] -> SP m)
+    | ReferringSPMaker (a -> [Address] -> [Address] -> SP m)
 
-asRandomR :: (Monad m) => SPRequester m num a -> a -> [Address]
+asRandomR :: (Monad m, Numerical num) => SPRequester m a -> a -> [Address]
           -> ReaderT (Trace m num) (UniqueSourceT m) [SimulationRequest num]
 asRandomR (RandomR f) st as = lift $ f st as
 asRandomR (DeterministicR f) st as = lift $ returnT $ f st as
 asRandomR (ReaderR f) st as = hoist returnT $ f st as
 
-isRandomR :: SPRequester m num a -> Bool
+isRandomR :: SPRequester m a -> Bool
 isRandomR (RandomR _) = True
 isRandomR (DeterministicR _) = False
 isRandomR (ReaderR _) = False
 
-asRandomO :: (Monad m) => SPOutputter m num a -> a -> [Node num] -> [Node num]
-          -> Either (m (Value num)) (SP m num)
+asRandomO :: (Monad m, Numerical num) => SPOutputter m a -> a -> [Node num] -> [Node num]
+          -> Either (m (Value num)) (SP m)
 asRandomO Trivial _ _ (r0:_) = Left $ return $ fromJust "Trivial outputter node had no value" $ valueOf r0
 asRandomO Trivial _ _ _ = error "Trivial outputter requires one response"
 asRandomO (RandomO f) st args reqs = Left $ f st args reqs
@@ -162,14 +180,14 @@ asRandomO (DeterministicO f) st args reqs = Left $ return $ f st args reqs
 asRandomO (SPMaker f) st args reqs = Right $ f st args reqs
 asRandomO _ _ _ _ = error "Should never pass ReferringSPMaker to asRandomO"
 
-asRandomO' :: (Monad m) => SPOutputter m num a -> a -> [Address] -> [Address] -> Trace m num
-           -> Either (m (Value num)) (SP m num)
+asRandomO' :: (Monad m, Numerical num) => SPOutputter m a -> a -> [Address] -> [Address] -> Trace m num
+           -> Either (m (Value num)) (SP m)
 asRandomO' (ReferringSPMaker f) a argAs resultAs _ = Right $ f a argAs resultAs
 asRandomO' out a argAs resultAs Trace{ _nodes = ns} = asRandomO out a args results where
   args = map (fromJust "Running outputter for an output with a missing parent" . flip M.lookup ns) argAs
   results = map (fromJust "Running outputter for an output with a missing request result" . flip M.lookup ns) resultAs
 
-isRandomO :: SPOutputter m num a -> Bool
+isRandomO :: SPOutputter m a -> Bool
 isRandomO Trivial = False
 isRandomO (RandomO _) = True
 isRandomO (DeterministicO _) = False
@@ -184,7 +202,7 @@ data Node num = Constant (Value num)
               | Reference (Maybe (Value num)) Address
               | Request (Maybe [SimulationRequest num]) (Maybe Address) Address [Address]
               | Output (Maybe (Value num)) Address Address [Address] [Address]
-    deriving Show
+    deriving (Show, Functor)
 
 valueOf :: Node num -> Maybe (Value num)
 valueOf (Constant v) = Just v
@@ -254,7 +272,7 @@ responses = lens _responses addResponses where
 -- Can the given node, which is an application of the given SP, absorb
 -- a change to the given address (which is expected to be one of its
 -- parents).
-canAbsorb :: Node num -> Address -> SP m num -> Bool
+canAbsorb :: Node num -> Address -> SP m -> Bool
 canAbsorb (Request _ _ opA _)      a _                        | opA  == a = False
 canAbsorb (Request _ _ _ _)        _ SP{log_d_req = (Just _)}             = True
 canAbsorb (Output _ reqA _ _ _)    a _                        | reqA == a = False
@@ -275,19 +293,19 @@ data Trace rand num =
     Trace { _nodes :: (M.Map Address (Node num))
           , _randoms :: S.Set Address
           , _node_children :: M.Map Address (S.Set Address)
-          , _sprs :: (M.Map SPAddress (SPRecord rand num))
+          , _sprs :: (M.Map SPAddress (SPRecord rand))
           , _addr_seed :: UniqueSeed
           , _spaddr_seed :: UniqueSeed
           }
+    deriving (Show, Functor)
+
+data SPRecord m = SPRecord { sp :: (SP m)
+                           , srid_seed :: UniqueSeed
+                           , requests :: M.Map SRId Address
+                           }
     deriving Show
 
-data SPRecord m num = SPRecord { sp :: (SP m num)
-                               , srid_seed :: UniqueSeed
-                               , requests :: M.Map SRId Address
-                               }
-    deriving Show
-
-spRecord :: SP m num -> SPRecord m num
+spRecord :: SP m -> SPRecord m
 spRecord sp = SPRecord sp uniqueSeed M.empty
 
 ----------------------------------------------------------------------
@@ -305,10 +323,10 @@ empty = Trace M.empty S.empty M.empty M.empty uniqueSeed uniqueSeed
 fromValueAt :: Valuable num b => Address -> Trace m num -> Maybe b
 fromValueAt a t = (t^. nodes . at a) >>= valueOf >>= fromValue
 
-operatorRecord :: Node num -> Trace m num -> Maybe (SPRecord m num)
+operatorRecord :: Node num -> Trace m num -> Maybe (SPRecord m)
 operatorRecord n t = opAddr n >>= (flip fromValueAt t) >>= (\addr -> t ^. sprs . at addr)
 
-operator :: Node num -> Trace m num -> Maybe (SP m num)
+operator :: Node num -> Trace m num -> Maybe (SP m)
 operator n = liftM sp . operatorRecord n
 
 isRandomNode :: Node num -> Trace m num -> Bool
@@ -417,7 +435,7 @@ children a t = t ^. node_children . at a & fromJust "Loooking up the children of
 -- If the given Trace is valid, returns a unique SPAddress (distinct
 -- from every other SPAddress in the trace) and a valid Trace with the
 -- an SPRecord for the given SP added at that SPAddress.
-addFreshSP :: SP m num -> Trace m num -> (SPAddress, Trace m num)
+addFreshSP :: SP m -> Trace m num -> (SPAddress, Trace m num)
 addFreshSP sp t@Trace{ _sprs = ss, _spaddr_seed = seed } = (a, t{ _sprs = ss', _spaddr_seed = seed'}) where
     (a, seed') = runUniqueSource (liftM SPAddress fresh) seed
     ss' = M.insert a (spRecord sp) ss
@@ -515,7 +533,7 @@ responsesAt a = lens _responses addResponses where
 -- when its args are nodes at these Addresses (in order).  The Trace
 -- in the state may change, but remains valid.  Fails if the call is
 -- ill-typed with respect to the SP.
-runRequester :: (Monad m, MonadTrans t, MonadState (Trace m num) (t m)) =>
+runRequester :: (Monad m, Numerical num, MonadTrans t, MonadState (Trace m num) (t m)) =>
                 SPAddress -> [Address] -> t m [SimulationRequest num]
 runRequester spaddr args = do
   t <- get
@@ -534,8 +552,8 @@ runRequester spaddr args = do
 -- allocation of an SPRecord).  Fails if the call is ill-typed with
 -- respect to the SP.
 -- TODO Allow the SP branch to be random
-outputFor :: (Monad m) => SPAddress -> [Address] -> [Address] -> Trace m num
-          -> (Either (m (Value num)) (SP m num))
+outputFor :: (Monad m, Numerical num) => SPAddress -> [Address] -> [Address] -> Trace m num
+          -> (Either (m (Value num)) (SP m))
 outputFor spaddr argAs resultAs t =
     case t ^. (sprs . hardix "Running the outputter of a non-SP" spaddr) . to sp of
       SP{ outputter = out, current = st } -> asRandomO' out st argAs resultAs t
@@ -544,7 +562,7 @@ outputFor spaddr argAs resultAs t =
 -- output result.  The Trace in the state may change, but remains
 -- valid.
 processOutput :: (Monad m, MonadTrans t, MonadState (Trace m num) (t m)) =>
-       (Either (m (Value num)) (SP m num)) -> t m (Value num)
+       (Either (m (Value num)) (SP m)) -> t m (Value num)
 processOutput result = case result of
                          (Left vact) -> lift vact
                          (Right sp) -> do spAddr <- state $ addFreshSP sp
@@ -557,16 +575,16 @@ fulfilments a t = map (fromJust "Unfulfilled request" . flip M.lookup reqs) $ re
     node = t ^. nodes . hardix "Asking for fulfilments of a missing node" a
     SPRecord { requests = reqs } = fromJust "Asking for fulfilments of a node with no operator record" $ operatorRecord node t
 
-absorb :: (Num num) => Node num -> SP m num -> Trace m num -> num
-absorb (Request (Just reqs) _ _ args) SP{log_d_req = (Just f), current = a} _ = f a args reqs
+absorb :: (Numerical num) => Node num -> SP m -> Trace m num -> num
+absorb (Request (Just reqs) _ _ args) SP{log_d_req = (Just (LogDReq f)), current = a} _ = f a args reqs
 -- This clause is only right if canAbsorb returned True on all changed parents
 absorb (Output _ _ _ _ _) SP { outputter = Trivial } _ = 0
-absorb (Output (Just v) _ _ args reqs) SP{log_d_out = (Just f), current = a} t = f a args' reqs' v where
+absorb (Output (Just v) _ _ args reqs) SP{log_d_out = (Just (LogDOut f)), current = a} t = f a args' reqs' v where
     args' = map (fromJust "absorb" . flip lookupNode t) args
     reqs' = map (fromJust "absorb" . flip lookupNode t) reqs
 absorb _ _ _ = error "Inappropriate absorb attempt"
 
-absorbAt :: (Num num, MonadState (Trace m1 num) m, MonadWriter (LogDensity num) m) => Address -> m ()
+absorbAt :: (Numerical num, MonadState (Trace m1 num) m, MonadWriter (LogDensity num) m) => Address -> m ()
 absorbAt a = do
   node <- use $ nodes . hardix "Absorbing at a nonexistent node" a
   sp <- gets $ fromJust "Absorbing at a node with no operator" . operator node
@@ -577,7 +595,7 @@ absorbAt a = do
 -- its operator using the supplied function (which is expected to be
 -- either do_inc or do_uninc).  Only applies to Output nodes.
 corporate :: (MonadState (Trace m num) m1) =>
-             String -> (Value num -> SP m num -> SP m num) -> Address -> m1 ()
+             String -> (Value num -> SP m -> SP m) -> Address -> m1 ()
 corporate name f a = do
   node <- use $ nodes . hardix (name ++ "ncorporating the value of a nonexistent node") a
   case node of
@@ -588,15 +606,15 @@ corporate name f a = do
       sprs . ix spaddr %= \r -> r{sp = f v sp}
     _ -> return ()
 
-do_unincorporate :: (MonadState (Trace m num) m1) => Address -> m1 ()
+do_unincorporate :: (Numerical num, MonadState (Trace m num) m1) => Address -> m1 ()
 do_unincorporate = corporate "Uni" do_uninc
-do_incorporate :: (MonadState (Trace m num) m1) => Address -> m1 ()
+do_incorporate :: (Numerical num, MonadState (Trace m num) m1) => Address -> m1 ()
 do_incorporate = corporate "I" do_inc
 
 -- TODO Can I abstract the commonalities between this for requests and
 -- the same thing for values?
 corporateR :: (MonadState (Trace m num) m1) =>
-              String -> ([Value num] -> [SimulationRequest num] -> SP m num -> SP m num)
+              String -> ([Value num] -> [SimulationRequest num] -> SP m -> SP m)
            -> Address -> m1 ()
 corporateR name f a = do
   node <- use $ nodes . hardix (name ++ "ncorporating the requests of a nonexistent node") a
@@ -611,12 +629,12 @@ corporateR name f a = do
       sprs . ix spaddr %= \r -> r{sp = f vs rs sp}
     _ -> return ()
 
-do_unincorporateR :: (MonadState (Trace m num) m1) => Address -> m1 ()
+do_unincorporateR :: (Numerical num, MonadState (Trace m num) m1) => Address -> m1 ()
 do_unincorporateR = corporateR "Uni" do_unincR
-do_incorporateR :: (MonadState (Trace m num) m1) => Address -> m1 ()
+do_incorporateR :: (Numerical num, MonadState (Trace m num) m1) => Address -> m1 ()
 do_incorporateR = corporateR "I" do_incR
 
-constrain :: (MonadState (Trace m num) m1) => Address -> Value num -> m1 ()
+constrain :: (Numerical num, MonadState (Trace m num) m1) => Address -> Value num -> m1 ()
 constrain a v = do
   do_unincorporate a
   nodes . ix a . value .= Just v
@@ -626,7 +644,7 @@ constrain a v = do
   randoms %= S.delete a
   maybe_constrain_parents a v
 
-maybe_constrain_parents :: (MonadState (Trace m num) m1) => Address -> Value num -> m1 ()
+maybe_constrain_parents :: (Numerical num, MonadState (Trace m num) m1) => Address -> Value num -> m1 ()
 maybe_constrain_parents a v = do
   node <- use $ nodes . hardix "Trying to constrain a non-existent node" a
   case node of
@@ -707,7 +725,7 @@ invalid_freshable trans as seed = if max < max' then Nothing else Just max where
     max = maximum as
     (max', _) = runUniqueSource (liftM trans fresh) seed
 
-invalid_srid :: SPRecord m num -> Maybe SRId
+invalid_srid :: SPRecord m -> Maybe SRId
 invalid_srid SPRecord{srid_seed = seed, requests = reqs} = invalid_freshable SRId (M.keys reqs) seed
 
 invalid_seeds :: Trace m num -> [TraceProblem]
@@ -795,7 +813,7 @@ ppDefault :: Pretty a => String -> Maybe a -> Doc
 ppDefault _ (Just a) = pp a
 ppDefault d Nothing = text d
 
-instance Pretty (SPRecord m num) where
+instance Pretty (SPRecord m) where
     pp SPRecord { sp = SP{current = s}, requests = rs } = text (show s) <+> requests where
       requests = brackets $ sep $ map entry $ M.toList rs
       entry (k,v) = pp k <> colon <> space <> pp v

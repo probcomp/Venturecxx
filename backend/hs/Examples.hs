@@ -1,3 +1,5 @@
+{-# LANGUAGE ConstraintKinds #-}
+
 module Examples where
 
 import Control.Monad.Reader
@@ -12,19 +14,19 @@ import Venture hiding (empty)
 import Inference
 import InferenceInterpreter
 
-watching_infer' :: (MonadRandom m, Real num, Floating num) =>
+watching_infer' :: (MonadRandom m, Numerical num) =>
                    Address -> Int -> StateT (Trace m num) m [Value num]
 watching_infer' address ct = replicateM ct (do
   Inference.resimulation_mh default_one
   gets $ fromJust "Value was not restored by inference" . valueOf
          . fromJust "Address became invalid after inference" . (lookupNode address))
 
-watching_infer :: (MonadRandom m, Real num, Floating num) =>
+watching_infer :: (MonadRandom m, Numerical num) =>
                   Address -> Int -> StateT (Model m num) m [Value num]
 watching_infer address ct = trace `zoom` (watching_infer' address ct)
 
 -- Expects the directives to contain exactly one Predict
-simulation :: (MonadRandom m, Real num, Floating num) =>
+simulation :: (MonadRandom m, Numerical num) =>
               Int -> [Directive num] -> StateT (Model m num) m [Value num]
 simulation ct ds = do
   target <- liftM head (execute ds)
