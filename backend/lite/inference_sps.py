@@ -655,7 +655,7 @@ Save plot(s) to file(s).
   macro_helper("sample_all", infer_action_maker_type([v.AnyType("<expression>")], return_type=v.ListType())),
 
   ["empty", deterministic_typed(lambda *args: Dataset(), [], v.ForeignBlobType("<dataset>"), descr="""\
-Create an empty dataset ``into`` which further ``collect``ed stuff may be merged.
+Create an empty dataset ``into`` which further ``collect`` ed stuff may be merged.
   """)],
 
   sequenced_sp("into", lambda orig, new: orig.merge_bang(new), infer_action_maker_type([v.ForeignBlobType(), v.ForeignBlobType()]), desc="""\
