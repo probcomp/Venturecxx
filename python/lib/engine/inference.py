@@ -102,7 +102,6 @@ class Infer(object):
   def printf(self, dataset): print dataset.asPandas()
   def plotf(self, spec, dataset):
     spec = ExpressionType().asPython(spec)
-    # TODO I hope ind_names is right for the names of the spec plot
     PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names)
   def plotf_to_file(self, basenames, spec, dataset):
     filenames = ExpressionType().asPython(basenames)
