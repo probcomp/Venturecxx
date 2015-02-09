@@ -297,7 +297,7 @@ memoized_sp proc = T.SP
   , T.log_d_req = Just $ T.LogDReq $ const $ trivial_log_d_req
   , T.outputter = T.Trivial
   , T.log_d_out = Nothing
-  , T.current = (M.empty :: M.Map [Value num] (SRId,Int))
+  , T.current = (M.empty :: M.Map [Value Double] (SRId,Int))
   , T.incorporate = const $ id
   , T.unincorporate = const $ id
   , T.incorporateR = inc
@@ -307,7 +307,7 @@ memoized_sp proc = T.SP
       t <- ask
       let ns = map (fromJust "Memoized SP given dangling address" . flip M.lookup (t^.nodes)) args
           vs = map (fromJust "Memoized SP given valueless argument node" . valueOf) ns
-      let cachedSRId = M.lookup vs cache
+      let cachedSRId = M.lookup (fmap (fmap realToFrac) vs) cache
       case cachedSRId of
         (Just (id,_)) -> return [SimulationRequest id (Compose $ Var "unaccessed") Toplevel]
         Nothing -> do
@@ -316,12 +316,16 @@ memoized_sp proc = T.SP
               exp = App (Var "memoized-sp") $ map Var names
               env = Frame (M.fromList $ ("memoized-sp",proc):(zip names args)) Toplevel
           return [SimulationRequest newId (Compose exp) env]
-    inc vs [req] cache = M.alter incr vs cache where
+    inc :: (T.Numerical num1, T.Numerical num) => [Value num1] -> [SimulationRequest num1] -> M.Map [Value num] (SRId, Int) -> M.Map [Value num] (SRId, Int)
+    inc vs [req] cache = M.alter incr (fmap (fmap realToFrac) vs) cache where
+        incr :: Maybe (SRId, Int) -> Maybe (SRId, Int)
         incr Nothing = Just (srid req, 1)
         incr (Just (srid', k)) | srid' == srid req = Just (srid', k+1)
                                | otherwise = error "Memoized procedure incorporating different requests for the same values"
     inc _ _ _ = error "Memoized procedure expects to incorporate exactly one request"
-    dec vs [req] cache = M.alter decr vs cache where
+    dec :: (T.Numerical num1, T.Numerical num) => [Value num1] -> [SimulationRequest num1] -> M.Map [Value num] (SRId, Int) -> M.Map [Value num] (SRId, Int)
+    dec vs [req] cache = M.alter decr (fmap (fmap realToFrac) vs) cache where
+        decr :: Maybe (SRId, Int) -> Maybe (SRId, Int)
         decr Nothing = error "Memoized procedure unincorporating a request it did not make"
         decr (Just (srid', k)) | srid' == srid req = if (k==1) then Nothing
                                                      else Just (srid', k-1)
