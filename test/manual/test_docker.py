@@ -35,7 +35,6 @@ def test_docker_install():
 
     # Smoketest commandline venture in the container
     child.sendline("venture puma -e '[infer (bind (collect (normal 0 1)) printf)]'")
-    child.expect("Venture, version 0.2.1")
     child.expect(r"\(normal 0.0 1.0\)")
     child.expect('root@.*:/root/Venturecxx# ')
   finally:
