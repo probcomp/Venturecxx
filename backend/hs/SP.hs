@@ -289,8 +289,11 @@ mem = no_state_sp NoStateSP
   , log_d_out = Nothing
   }
 
--- The Ord is for using the derived Ord instance for Value, which is
--- needful for using the Values as keys in the memoization cache.
+-- The memoization cache always stores objects of type Value Double,
+-- and converts any other Numerical Value num to them for comparison.
+-- This is safe in the use cases I envision, because the keys in the
+-- mem cache do not have any interesting derivative information in
+-- them anyway.
 memoized_sp :: (Monad m) => Address -> SP m
 memoized_sp proc = T.SP
   { T.requester = T.ReaderR req
