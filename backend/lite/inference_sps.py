@@ -63,10 +63,10 @@ def trace_method_sp(name, tp, desc=""):
 def engine_method_sp(name, tp, desc=""):
   return typed_inf_sp(name, tp, MadeEngineMethodInferOutputPSP, desc)
 
-def sequenced_sp(name, f, tp, desc=""):
+def sequenced_sp(f, tp, desc=""):
   "This is for SPs that should be able to participate in do blocks but don't actually read the state (e.g., for doing IO)"
   # TODO Assume they are all deterministic, for now.
-  return [ name, no_request(psp.TypedPSP(InferPrimitiveOutputPSP(f, klass=MadeActionOutputPSP, desc=desc, tp=tp.return_type), tp)) ]
+  return no_request(psp.TypedPSP(InferPrimitiveOutputPSP(f, klass=MadeActionOutputPSP, desc=desc, tp=tp.return_type), tp))
 
 def transition_oper_args_types(extra_args = None):
   # ExpressionType reasonably approximates the mapping I want for scope and block IDs.
@@ -658,24 +658,24 @@ Save plot(s) to file(s).
 Create an empty dataset ``into`` which further ``collect`` ed stuff may be merged.
   """)],
 
-  sequenced_sp("into", lambda orig, new: orig.merge_bang(new), infer_action_maker_type([v.ForeignBlobType(), v.ForeignBlobType()]), desc="""\
+  ["into", sequenced_sp(lambda orig, new: orig.merge_bang(new), infer_action_maker_type([v.ForeignBlobType(), v.ForeignBlobType()]), desc="""\
 Destructively merge the contents of the second argument into the
 first.
 
 Right now only implemented on datasets created by ``empty`` and
-``collect``, but in principle generalizable to any monoid.  """),
+``collect``, but in principle generalizable to any monoid.  """)],
 
   # Hackety hack hack backward compatibility
   ["ordered_range", deterministic_typed(lambda *args: (v.VentureSymbol("ordered_range"),) + args,
                                         [v.AnyType()], v.ListType(), variadic=True)],
 
-  sequenced_sp("assert", assert_fun, infer_action_maker_type([v.BoolType(), v.SymbolType("message")], min_req_args=1), desc="""\
+  ["assert", sequenced_sp(assert_fun, infer_action_maker_type([v.BoolType(), v.SymbolType("message")], min_req_args=1), desc="""\
 Check the given boolean condition and raise an error if it fails.
-"""),
+""")],
 
-  sequenced_sp("print", print_fun, infer_action_maker_type([v.AnyType()], variadic=True), desc="""\
+  ["print", sequenced_sp(print_fun, infer_action_maker_type([v.AnyType()], variadic=True), desc="""\
 Print the given values to the terminal.
-"""),
+""")],
 ]
 
 inferenceKeywords = [ "default", "all", "none", "one", "ordered" ]
