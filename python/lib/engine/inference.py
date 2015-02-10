@@ -210,3 +210,26 @@ Dataset which is the result of the merge. """
     ds = DataFrame.from_dict(strip_types_from_dict_values(self.data))
     order = self.std_names + self.ind_names
     return ds[order]
+
+# Design rationales for collect and the Dataset object
+#
+# Problem: How to define general merging of datasets?
+# - Cop out: require them to have identical specifications (including
+#   column order) for now.
+#
+# Problem: plotf specifications refer to fields to be plotted by index
+# in the data set specification.
+# - The merging cop out actually makes this a non-issue, because the
+#   columns can be stored by index also.
+#
+# Alternative considered: store the to be sampled expressions on the
+# data set, and have an "extend" operation that samples them again
+# without accepting new ones.  Rejected because not clear how this
+# would generalize to collecting inference values; maybe revisit when
+# that happens.
+# - Maybe just accept the macrology.
+#
+# Problem: It may be nice to be able to add columns to a dataset
+# dynamically, but the current merging story doesn't support that.
+# Solution: Defer.  For now, just merge on rows, holding columns
+# fixed.
