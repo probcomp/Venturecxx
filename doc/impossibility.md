@@ -33,7 +33,7 @@ inference program, as applicable).  In the interactive console, such
 an error ideally would not leave the system in a broken state, but
 currently it typically does (partially-regenerated trace; no way to
 recover).  It would also be nice to detect some classes of such
-problems statically.  One subtlety: standard Python emanating from
+problems statically.  One subtlety: standard Python exceptions emanating from
 user-supplied foreign SPs should be treated as bugs in the user
 program, not the implementation (except in cases where the
 implementation messed up their calling convention).
@@ -43,10 +43,10 @@ classes, namely concievable events that are supposed to have
 probability zero.  Possible stances are:
 
 - "You should arrange your program such that they are never even
-  contemplated"
-  - Operationally, this means escalating to "bug in user program"
+  contemplated".
+  - Operationally, this means escalating to "bug in user program".
   - I think this is untenable, especially in the face of
-    "approximately zero" probabilities
+    "approximately zero" probabilities.
 
 - "Probability-zero events have no inspectable structure, except
   for the fact of having probability zero".
@@ -65,14 +65,14 @@ probability zero.  Possible stances are:
 
 As of this writing, the actual implementation is somewhere between the
 "bug" and "no-structure" stances.  One reason for this is that
-implementing the "no-structure" stance by cathing exceptions at the
+implementing the "no-structure" stance by catching exceptions at the
 outer level basically doesn't work, because
 
 - one has to be very careful not to catch exceptions that indicate
   actual bugs.
 
 - the trace will typically be in an unrecoverable state after an
-  exception, if it permitted to propagate through regen.
+  exception, if it is permitted to propagate through regen.
 
 The former problem can be mostly solved by carefully segregating
 exception hierarchies, except for the issue of provenance of Python
@@ -85,9 +85,12 @@ default (possibly leaving in-place mutating ones as an option for
 advanced users that are willing to sacrifice error recovery), or by
 essentially implementing a custom condition system in the interpreter
 that unrolls failed operations in order to leave the trace in a
-recoverable state.
+recoverable state.  This is an instance of the famous PC lusering problem.
 - Maybe some clever hack with marking elements of an OmegaDB as "used"
   would make the latter relatively easy.
+
+Specific Case
+-------------
 
 The specific case prompting the above general worries is what to do
 when initialization from the prior produces a state whose likelihood
