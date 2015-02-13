@@ -63,6 +63,9 @@ fully uncurried)."""
   if isinstance(answer, VentureSPRecord):
     if isinstance(answer.sp.requestPSP, NullRequestPSP):
       if not answer.sp.outputPSP.isRandom():
+        # We don't currently have any curried SPs that are
+        # deterministic at both points, so this code never actually
+        # runs.
         args2 = BogusArgs(args_lists[1], answer.spAux)
         ans2 = carefully(answer.sp.outputPSP.simulate, args2)
         for _ in range(5):
