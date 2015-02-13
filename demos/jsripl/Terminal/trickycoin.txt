@@ -1,0 +1,5 @@
+assume istricky (bernoulli 0.1)
+assume mycoinweight (if istricky (beta 1.0 1.0) 0.5)
+assume mycoin (lambda () (bernoulli mycoinweight))
+infer 1000
+predict istricky
