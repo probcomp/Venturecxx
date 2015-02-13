@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script src="Plotter.js"></script>
+        <link rel="stylesheet" type="text/css" href="style.css">  
+    </head>
+
+    <body>
+    	<svg id='svg' width='900px' height='600px' style='border:1px solid #d3d3d3;'>
+    		Browser not supported
+    	</svg>
+
+        <table id='axesValues'>
+            <tr>
+                <td colspan='2'>Graph parameters:</td>
+            </tr>
+            <tr>
+                <td>Min X</td>
+                <td><input id='minX' value='0.0'></input></td>
+            </tr>
+            <tr>
+                <td>Max X</td>
+                <td><input id='maxX' value='10.0'></input></td>
+            </tr>
+            <tr>
+                <td>Step X</td>
+                <td><input id='stepX' value='2.0'></input></td>
+            </tr>
+            <tr>
+                <td>Min Y</td>
+                <td><input id='minY' value='0.0'></input></td>
+            </tr>
+            <tr>
+                <td>Max Y</td>
+                <td><input id='maxY' value='10.0'></input></td>
+            </tr>
+            <tr>
+                <td>Step Y</td>
+                <td><input id='stepY' value='2.0'></input></td>
+            </tr>
+            <tr>
+                <td><button id='updateAxes'>Update</button></td>
+            </tr>
+            <tr>
+                <td><br></td>
+            </tr>
+            <tr>
+                <td colspan='2'>Points:</td>
+            </tr>
+            <tr>
+                <td colspan='2'>
+                <select multiple id='pointSelect'></select>
+                </td>
+            </tr>
+            <tr>
+                <td><button id='addPoint'>Add</button></td>
+                <td><button id='removePoint'>Remove</button></td>
+            </tr>
+            <tr>
+                <td colspan='2'><input id='pointInput'></input></td>
+            </tr>
+            <tr>
+                <td><br></td>
+            </tr>
+            <tr>
+                <td colspan='2'>Server controls:</td>
+            </tr>
+            <tr>
+                <td><button id='startServer'>Start</button></td>
+                <td><button id='stopServer' disabled>Stop</button></td>
+            </tr>
+        </table>
+
+    	<script>
+    		$(document).ready(function() {
+                var p = new Plotter(document, document.getElementById('svg'), "http://www.w3.org/2000/svg");
+                var pointSelect = document.getElementById("pointSelect");
+                
+                var a, b = 0.0;
+                var f = p.addFunction(function(x) {return 0});
+                var updateID = -1;
+
+                var label = 0;
+                var updateCalls = [
+                    {method: "clear", args: []},
+                    {method: "assume", args: ["a", "(normal 0 10)"]},
+                    {method: "assume", args: ["b", "(normal 0 10)"]},
+                    {method: "assume", args: ["f", "(lambda (x) (+ b (* a x)))"]},
+                    {method: "assume", args: ["noise", "(normal 0 1)"]},
+                    {method: "assume", args: ["y", "(lambda (x) (normal (f x) noise))"]},
+                    {method: "start_continuous_inference", args: ["10"]},
+                    {method: "sample", args: ["a"], keep: true, success: function(result){
+                        a = result;
+                    }},
+                    {method: "sample", args: ["b"], keep: true, success: function(result){
+                        b = result;
+                        f.f = function(x) {return a * x + b};
+                        for(var i=0; i<f.points.length; i++) {
+                            var point = f.points[i];
+                            point.y = p.yGraphToSVG(f.f(p.xSVGToGraph(point.x)));
+                        }
+                    }}
+                ];
+
+                function updateServer() {
+                    if(updateCalls.length > 0) {
+                        $.ajax({
+                            url: "http://127.0.0.1:5000/venture",
+                            dataType: "json",
+                            type: "POST",
+                            data: JSON.stringify({calls: updateCalls}, function(key, value) {
+                                if(key == "keep") return undefined;
+                                return value;
+                            }),
+                            contentType:"application/json",
+                            success: function(data) {
+                                if(data.error != undefined) return;
+                                for(var i=0; i<updateCalls.length; i++) {
+                                    if(updateCalls[i].success != undefined) updateCalls[i].success(data.results[i].result);
+                                }
+                                updateCalls = updateCalls.filter(function(c){return c.keep != undefined && c.keep});
+                            }
+                        });
+                    }
+                }
+
+                function addPoint(cx, cy) {
+                    var point = p.addPoint(cx, cy);
+                    var option = document.createElement("option");
+                    option.text = point.gx.toFixed(3) + ", " + point.gy.toFixed(3);
+                    option.point = point;
+                    pointSelect.add(option);
+
+                    label++;
+                    point.label = "observation" + label;
+                    point.observeInstruction = {method: "observe", args: ["(y " + point.gx + ")", point.gy.toString(), point.label]};
+                    updateCalls.push(point.observeInstruction);
+                }
+
+                function tryRemovePoint(cx, cy) {
+                    var point = p.tryRemovePoint(cx, cy);
+                    if(point == null) return;
+                    for(var i=0; i<pointSelect.length; i++) {
+                        if(pointSelect[i].point == point){
+                            pointSelect.remove(i);
+                            break;
+                        }
+                    }
+                    var i = updateCalls.indexOf(point.observeInstruction);
+                    if(i >= 0) updateCalls.splice(i, 1);
+                    else updateCalls.push({method: "forget", args: [point.label]});
+                }
+
+                $('#svg').on('click', function(e){
+                    var rect = svg.getBoundingClientRect();
+                    var cx = e.clientX - rect.left;
+                    var cy = e.clientY - rect.top;
+
+                    if(e.altKey) tryRemovePoint(cx, cy);
+                    else addPoint(cx, cy);
+                });
+
+                $('#updateAxes').on('click', function(e){
+                    p.minX = parseFloat(document.getElementById('minX').value);
+                    p.maxX = parseFloat(document.getElementById('maxX').value);
+                    p.stepX = parseFloat(document.getElementById('stepX').value);
+                    p.minY = parseFloat(document.getElementById('minY').value);
+                    p.maxY = parseFloat(document.getElementById('maxY').value);
+                    p.stepY = parseFloat(document.getElementById('stepY').value);
+                    p.reDraw();
+                });
+
+                $("#pointInput").keyup(function(event){
+                    if(event.keyCode == 13){
+                        $("#addPoint").click();
+                    }
+                });
+
+                $('#addPoint').on('click', function(e){
+                    var xyText = document.getElementById('pointInput').value.split(",");
+                    var gx = parseFloat(xyText[0]);
+                    var gy = parseFloat(xyText[1]);
+                    if(isNaN(gx) || isNaN(gy)) return;
+                    document.getElementById('pointInput').value = "";
+                    addPoint(p.xGraphToSVG(gx), p.yGraphToSVG(gy));
+                });
+
+                $('#removePoint').on('click', function(e){
+                    while(pointSelect.selectedIndex >= 0) {
+                        var point = pointSelect[pointSelect.selectedIndex].point;
+                        tryRemovePoint(point.getAttribute("cx"), point.getAttribute("cy"));
+                    }
+                });
+
+                $('#startServer').on('click', function(e){
+                    updateID = setInterval(updateServer, 100);
+                    document.getElementById('startServer').disabled = true;
+                    document.getElementById('stopServer').disabled = false;
+                });
+
+                $('#stopServer').on('click', function(e){
+                    clearInterval(updateID);
+                    document.getElementById('startServer').disabled = false;
+                    document.getElementById('stopServer').disabled = true;
+                });
+    		});
+    	</script>
+        
+    </body>
+
+</html>

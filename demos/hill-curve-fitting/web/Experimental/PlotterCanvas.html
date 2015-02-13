@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="style.css">  
+    </head>
+
+    <body>
+    	<canvas id='canvas' width='900px' height='600px' style='border:1px solid #d3d3d3;'>
+    		Browser not supported
+    	</canvas>
+
+        <table id='axesValues'>
+            <tr>
+                <td>Min X</td>
+                <td><input id='minX' value='0.0'></input></td>
+            </tr>
+            <tr>
+                <td>Max X</td>
+                <td><input id='maxX' value='10.0'></input></td>
+            </tr>
+            <tr>
+                <td>Step X</td>
+                <td><input id='stepX' value='2.0'></input></td>
+            </tr>
+            <tr>
+                <td>Min Y</td>
+                <td><input id='minY' value='0.0'></input></td>
+            </tr>
+            <tr>
+                <td>Max Y</td>
+                <td><input id='maxY' value='10.0'></input></td>
+            </tr>
+            <tr>
+                <td>Step Y</td>
+                <td><input id='stepY' value='2.0'></input></td>
+            </tr>
+            <tr>
+                <td><button id='updateAxes'>Update</button></td>
+            </tr>
+        </table>
+
+    	<script>
+    		$(document).ready(function() { 
+    			var canvas = document.getElementById('canvas');
+                var ctx = canvas.getContext('2d');
+
+                var minX, maxX, stepX, minY, maxY, stepY = 0.0;
+                updateAxesValues();
+
+                var points = [];
+                var functions = [];
+
+                functions.push(function(x){return Math.sin(x) + 2});
+
+                function xCanvasToGraph(x) {
+                    return x * (maxX - minX) / canvas.width + minX;
+                }
+
+                function xGraphToCanvas(x) {
+                    return (x - minX) * canvas.width / (maxX - minX);
+                }
+
+                function yCanvasToGraph(y) {
+                    return (canvas.height - y) * (maxY - minY) / canvas.height + minY;
+                }
+
+                function yGraphToCanvas(y) {
+                    return canvas.height - (y - minY) * canvas.height / (maxY - minY);
+                }
+
+                function drawGrid() {
+                    ctx.lineWidth = 0.5;
+                    ctx.font = "15px Verdana";
+                    ctx.beginPath();
+                    for(var x = minX; x <= maxX; x += stepX) {
+                        var i = xGraphToCanvas(x);
+                        ctx.moveTo(i, 0);
+                        ctx.lineTo(i, canvas.height);
+                        ctx.fillText(parseFloat(x).toFixed(2), i + 3, canvas.height - 3);
+                    }
+                    for(var y = minY; y <= maxY; y += stepY) {
+                        var i = yGraphToCanvas(y);
+                        ctx.moveTo(0, i);
+                        ctx.lineTo(canvas.width, i);
+                        ctx.fillText(parseFloat(y).toFixed(2), 3, i - 3);
+                    }
+                    ctx.stroke();
+                }
+
+                function drawFunctions(step) {
+                    ctx.lineWidth = 1.0;
+                    for (var i = functions.length - 1; i >= 0; i--) {
+                        var f = functions[i];
+                        ctx.beginPath();
+                        ctx.moveTo(0, yGraphToCanvas(f(minX)));
+                        for(var cx = step; cx - step < canvas.width; cx += step) {
+                            var gx = xCanvasToGraph(cx);
+                            var gy = f(gx);
+                            var cy = yGraphToCanvas(gy);
+                            ctx.lineTo(cx, cy);
+                        }
+                        ctx.stroke();
+                    };
+                }
+
+                function drawPoints() {
+                    for(var i = points.length - 1; i >= 0; i--) {
+                        ctx.beginPath()
+                        var point = points[i];
+                        ctx.arc(point.cx, point.cy, 5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                function updateAxesValues() {
+                    minX = parseFloat(document.getElementById('minX').value);
+                    maxX = parseFloat(document.getElementById('maxX').value);
+                    stepX = parseFloat(document.getElementById('stepX').value);
+                    minY = parseFloat(document.getElementById('minY').value);
+                    maxY = parseFloat(document.getElementById('maxY').value);
+                    stepY = parseFloat(document.getElementById('stepY').value);
+                }
+
+    			$('#canvas').on('click', function(e){
+                    var rect = canvas.getBoundingClientRect();
+                    var point = {cx: e.clientX - rect.left,cy: e.clientY - rect.top};
+                    point.gx = xCanvasToGraph(point.cx);
+                    point.gy = yCanvasToGraph(point.cy);
+
+                    if(e.shiftKey) {
+                        //try to remove point
+                        var minIndex = -1;
+                        var minDist = 64;
+                        for (var i = points.length - 1; i >= 0; i--) {
+                            var otherPoint = points[i];
+                            var dist = Math.pow(otherPoint.cx - point.cx, 2) + Math.pow(otherPoint.cy - point.cy, 2);
+                            if(dist < minDist) {
+                                minIndex = i;
+                                minDist = dist;
+                            }
+                        }
+                        if(minDist < 64) {
+                            points.splice(minIndex, 1);
+                        }
+                    }
+                    else {  
+                        //add point
+                        points.push(point);
+                    }
+    			});
+
+                $('#updateAxes').on('click', updateAxesValues);
+
+    			function update(){
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    drawPoints();
+                    drawGrid();
+                    drawFunctions(3);
+    			}
+
+				setInterval(update, 25);
+    		});
+    	</script>
+        
+    </body>
+
+</html>
