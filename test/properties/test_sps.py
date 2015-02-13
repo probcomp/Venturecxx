@@ -147,26 +147,9 @@ def checkFixingRandomness(name, sp):
   checkTypedProperty(propDeterministicWhenFixed, fully_uncurried_sp_type(sp.venture_type()), name, sp)
 
 def propDeterministicWhenFixed(args_lists, name, sp):
-  # TODO Abstract out the similarities between this and propDeterministic
-  args = BogusArgs(args_lists[0], sp.constructSPAux())
   randomness = FixedRandomness()
   with randomness:
-    answer = carefully(sp.outputPSP.simulate, args)
-  if isinstance(answer, VentureSPRecord):
-    if isinstance(answer.sp.requestPSP, NullRequestPSP):
-      args2 = BogusArgs(args_lists[1], answer.spAux)
-      randomness2 = FixedRandomness()
-      with randomness2:
-        ans2 = carefully(answer.sp.outputPSP.simulate, args2)
-      for _ in range(5):
-        with randomness:
-          new_ans = carefully(sp.outputPSP.simulate, args)
-        with randomness2:
-          new_ans2 = carefully(new_ans.sp.outputPSP.simulate, args2)
-        eq_(ans2, new_ans2)
-    else:
-      raise SkipTest("SP %s returned a requesting SP" % name)
-  else:
-    for _ in range(5):
-      with randomness:
-        eq_(answer, carefully(sp.outputPSP.simulate, args))
+    answer = evaluate_fully_uncurried(name, sp, args_lists)
+  for _ in range(5):
+    with randomness:
+      eq_(answer, evaluate_fully_uncurried(name, sp, args_lists))
