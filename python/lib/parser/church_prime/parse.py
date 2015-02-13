@@ -181,7 +181,8 @@ class Semantics(object):
     def p_command_list_random(self, k):
         return { 'instruction': loctoken1(k, 'profiler_list_random_choices') }
     def p_command_load(self, k, pathname):
-        return { 'instruction': loctoken1(k, 'load'), 'file': pathname }
+        return { 'instruction': loctoken1(k, 'load'),
+                 'file': loctoken(pathname) }
 
     # directive_ref: Return (reftype, located value) tuple.
     def p_directive_ref_numbered(self, number):
@@ -463,8 +464,30 @@ class ChurchPrimeParser(object):
         else:
             raise TypeError('Invalid expression: %s' % (repr(expression),))
 
+    escapes = {
+        '/':    '/',
+        '\"':   '\"',
+        '\\':   '\\',
+        '\b':   'b',            # Backspace
+        '\f':   'f',            # Form feed
+        '\n':   'n',            # Line feed
+        '\r':   'r',            # Carriage return
+        '\t':   't',            # Horizontal tab
+    }
+
     def unparse_integer(self, integer):
         return str(integer)
+    def unparse_string(self, string):
+        out = StringIO.StringIO()
+        out.write('"')
+        for ch in string:
+            if ch in escapes:
+                out.write('\\')
+                out.write(escapes[ch])
+            else:
+                out.write(ch)
+        out.write('"')
+        return out.getvalue()
     def unparse_symbol(self, symbol):
         assert isinstance(symbol, dict)
         assert 'type' in symbol
@@ -511,7 +534,7 @@ class ChurchPrimeParser(object):
         'profiler_configure': [('options', unparse_json)],
         'profiler_clear': [],
         'profiler_list_random': [], # XXX Urk, extra keyword.
-        'load': [('file', unparse_json)],
+        'load': [('file', unparse_string)],
     }
     def unparse_instruction(self, instruction):
         '''Unparse INSTRUCTION into a string.'''
