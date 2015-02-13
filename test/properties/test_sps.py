@@ -122,24 +122,42 @@ def simulate_fully_uncurried(name, sp, args_lists):
   else:
     return simulate_fully_uncurried(name, answer, args_lists[1:])
 
+def log_density_fully_uncurried(name, sp, args_lists, value):
+  if isinstance(sp, VentureSPRecord):
+    sp, aux = sp.sp, sp.spAux
+  else:
+    aux = carefully(sp.constructSPAux)
+  if not isinstance(sp.requestPSP, NullRequestPSP):
+    raise SkipTest("SP %s returned a requesting SP" % name)
+  args = BogusArgs(args_lists[0], aux)
+  if len(args_lists) == 1:
+    return carefully(sp.outputPSP.logDensity, value, args)
+  else:
+    # TODO Is there a good general interface to
+    # log_density_fully_uncurried that would let the client put in
+    # this check?
+    if sp.outputPSP.isRandom():
+      raise SkipTest("The log density of the result of random curried SP %s is not actually deterministic" % name)
+    answer = carefully(sp.outputPSP.simulate, args)
+    return log_density_fully_uncurried(name, answer, args_lists[1:], value)
+
 @gen_in_backend("none")
 def testLogDensityDeterministic():
   for (name,sp) in relevantSPs():
-    if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart", "categorical"]: # TODO
+    if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart",  # TODO
+                    "categorical", "make_dir_mult"]: # Only interesting when the presented value was among the inputs
       yield checkLogDensityDeterministic, name, sp
 
-def checkLogDensityDeterministic(_name, sp):
-  checkTypedProperty(propLogDensityDeterministic, (fully_uncurried_sp_type(sp.venture_type()), final_return_type(sp.venture_type())), sp)
+def checkLogDensityDeterministic(name, sp):
+  checkTypedProperty(propLogDensityDeterministic, (fully_uncurried_sp_type(sp.venture_type()), final_return_type(sp.venture_type())), name, sp)
 
-def propLogDensityDeterministic(rnd, sp):
+def propLogDensityDeterministic(rnd, name, sp):
   (args_lists, value) = rnd
-  if not len(args_lists) == 1:
-    raise SkipTest("TODO: Write the code for measuring log density of curried SPs")
-  answer = carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux()))
+  answer = log_density_fully_uncurried(name, sp, args_lists, value)
   if math.isnan(answer):
     raise ArgumentsNotAppropriate("Log density turned out to be NaN")
   for _ in range(5):
-    eq_(answer, carefully(sp.outputPSP.logDensity, value, BogusArgs(args_lists[0], sp.constructSPAux())))
+    eq_(answer, log_density_fully_uncurried(name, sp, args_lists, value))
 
 @gen_in_backend("none")
 def testFixingRandomness():
