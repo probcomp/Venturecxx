@@ -93,7 +93,7 @@ def testRandom():
 def checkRandom(name, sp):
   # Generate five approprite input/output pairs for the sp
   args_type = fully_uncurried_sp_type(sp.venture_type())
-  def f(args_lists): return evaluate_fully_uncurried(name, sp, args_lists)
+  def f(args_lists): return simulate_fully_uncurried(name, sp, args_lists)
   answers = [findAppropriateArguments(f, args_type, 30) for _ in range(5)]
 
   # Check that it returns different results on repeat applications to
@@ -102,13 +102,13 @@ def checkRandom(name, sp):
     if answer is None: continue # Appropriate input was not found; skip
     [args, ans, _] = answer
     for _ in range(10):
-      ans2 = evaluate_fully_uncurried(name, sp, args)
+      ans2 = simulate_fully_uncurried(name, sp, args)
       if not ans2 == ans:
         return True # Output differed on some input: pass
 
   assert False, "SP deterministically gave i/o pairs %s" % answers
 
-def evaluate_fully_uncurried(name, sp, args_lists):
+def simulate_fully_uncurried(name, sp, args_lists):
   if isinstance(sp, VentureSPRecord):
     sp, aux = sp.sp, sp.spAux
   else:
@@ -120,7 +120,7 @@ def evaluate_fully_uncurried(name, sp, args_lists):
   if len(args_lists) == 1:
     return answer
   else:
-    return evaluate_fully_uncurried(name, answer, args_lists[1:])
+    return simulate_fully_uncurried(name, answer, args_lists[1:])
 
 @gen_in_backend("none")
 def testLogDensityDeterministic():
@@ -152,7 +152,7 @@ def checkFixingRandomness(name, sp):
 def propDeterministicWhenFixed(args_lists, name, sp):
   randomness = FixedRandomness()
   with randomness:
-    answer = evaluate_fully_uncurried(name, sp, args_lists)
+    answer = simulate_fully_uncurried(name, sp, args_lists)
   for _ in range(5):
     with randomness:
-      eq_(answer, evaluate_fully_uncurried(name, sp, args_lists))
+      eq_(answer, simulate_fully_uncurried(name, sp, args_lists))
