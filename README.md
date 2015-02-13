@@ -261,9 +261,11 @@ The interesting parts of the code are:
 - Advanced example programs live in `examples/`.
 - There are some developer tools available in `tool/`.
 - There is a stale C++11 backend in `backend/cxx/`.
-- The Javascript client and web demos are actually in the
-  [VentureJSRIPL](https://github.com/mit-probabilistic-computing-project/VentureJSRIPL)
-  repository.
+- The Javascript client and web demos are in `demos/`, subdivided by
+  architecture into `demos/jsripl` (which corresponds to the erstwile
+  VentureJSRIPL repository), `demos/elm` (an attempt to do demos in
+  Elm), and `demos/hill-curve-fitting`, which is a single demo that
+  exemplifies web sockets.
 - There are language-level benchmarks (and correctness tests) in the
   [VentureBenchmarksAndTests](https://github.com/mit-probabilistic-computing-project/VentureBenchmarksAndTests)
   repository, but they may have bit rotted by now.
