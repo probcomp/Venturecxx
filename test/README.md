@@ -27,6 +27,8 @@ The test suite lives in the `test/` directory.
 
 - `performance/` is testing performance, including asymptotics.
 
+- `properties/` are the randomized tests (see below).
+
 - `regressions/` is the bucket of regression tests.
 
 - `stack/` is tests of the stack (which are predominantly unit tests).
@@ -118,7 +120,7 @@ supports testing properties that are supposed to be true of all
 VentureValues (possibly restricted to some type).  The framework
 itself is in `test/randomized.py`, with a generator for random
 VentureValues in `test/random_values.py`.  The extant tests using the
-framework currently live in `test/conformance/sps/test_properties.py`,
+framework currently live in `test/properties/`,
 and check things like "This SP accepts VentureValues of the types it
 is annotated with and returns VentureValues of the types it is
 annotated with", or "This type-annotated SP is as deterministic as it
