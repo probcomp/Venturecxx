@@ -16,7 +16,7 @@ class BernoulliOutputPSP(DiscretePSP):
   def simulate(self,args):
     p = args.operandValues[0] if args.operandValues else 0.5
     return random.random() < p
-    
+
   def logDensity(self,val,args):
     p = args.operandValues[0] if args.operandValues else 0.5
     if val: return extendedLog(p)
@@ -40,7 +40,7 @@ class LogBernoulliOutputPSP(DiscretePSP):
   def simulate(self,args):
     logp = args.operandValues[0]
     return math.log(random.random()) < logp
-    
+
   def logDensity(self,val,args):
     logp = args.operandValues[0]
     if val: return logp
@@ -64,7 +64,7 @@ class BinomialOutputPSP(DiscretePSP):
   def simulate(self,args):
     (n,p) = args.operandValues
     return scipy.stats.binom.rvs(n,p)
-    
+
   def logDensity(self,val,args):
     (n,p) = args.operandValues
     return scipy.stats.binom.logpmf(val,n,p)
@@ -94,12 +94,12 @@ class CategoricalOutputPSP(DiscretePSP):
       return logDensityCategorical(val, args.operandValues[0], [VentureAtom(i) for i in range(len(args.operandValues[0]))])
     else:
       return logDensityCategorical(val,*args.operandValues)
-  
+
   def enumerateValues(self,args):
     indexes = [i for i, p in enumerate(args.operandValues[0]) if p > 0]
     if len(args.operandValues) == 1: return indexes
     else: return [args.operandValues[1][i] for i in indexes]
-  
+
   def description(self,name):
     return "  (%s weights objects) samples a categorical with the given weights.  In the one argument case, returns the index of the chosen option as an atom; in the two argument case returns the item at that index in the second argument.  It is an error if the two arguments have different length." % name
 
@@ -132,7 +132,7 @@ class BetaBernoulliSPAux(SPAux):
     self.yes = 0.0
     self.no = 0.0
 
-  def copy(self): 
+  def copy(self):
     aux = BetaBernoulliSPAux()
     aux.yes = self.yes
     aux.no = self.no
@@ -260,3 +260,25 @@ class UBetaBernoulliOutputPSP(DiscretePSP):
       return math.log(self.weight)
     else:
       return math.log(1-self.weight)
+
+class ExactlyOutputPSP(RandomPSP):
+  def simulate(self, args):
+    x, _epsilon = args.operandValues
+    return x
+
+  def logDensity(self, y, args):
+    x, epsilon = args.operandValues
+    if y is x: return 0
+    return epsilon
+
+  def logDensityBound(self, _y, _args):
+    return 0
+
+  def description(self, _name):
+    return """Force a variable to be treated as random even though its value is known.
+
+This deterministically returns the first argument when simulated, but
+is willing to pretend to be able to stochastically return any object.
+The second argument, if given, is the penalty (in log space) for a mismatch.
+If not given, taken to be -infinity. """
+
