@@ -698,6 +698,9 @@ class Analytics(object):
         sweepIters = []
         logscores = []
 
+        if verbose:
+            print "Using inference program"
+            print infer
         for sweep in range(sweeps):
             if verbose:
                 print "Running sweep " + str(sweep+1) + " of " + str(sweeps)
