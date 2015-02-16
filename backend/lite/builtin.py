@@ -411,7 +411,7 @@ builtInSPsList = [
            [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [v.SimplexType(), v.MatrixType(), v.MatrixType()], SPType([v.CountType()], v.AtomType())) ],
            [ "make_gp", gp.makeGPSP ],
            [ "apply_function", function.applyFunctionSP],
-           [ "noisy_id", typed_nr(discrete.NoisyIdentityOutputPSP(), [v.NumberType(), v.AnyType()], v.AnyType())],
+           [ "exactly", typed_nr(discrete.ExactlyOutputPSP(), [v.NumberType(), v.AnyType()], v.AnyType())],
 ]
 
 def builtInSPs():
