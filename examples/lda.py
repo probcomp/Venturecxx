@@ -41,7 +41,7 @@ class LDA(VentureUnit):
 
 
 if __name__ == '__main__':
-    ripl = shortcuts.Lite().make_church_prime_ripl()
+    ripl = shortcuts.Puma().make_church_prime_ripl()
     #parameters = {'topics' : 4, 'vocab' : 10, 'documents' : 8, 'words_per_document' : 12}
 
     #model = LDA(ripl, parameters)
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     #history = model.runFromConditional(50)
     #klHistory.plot(fmt='png')
 
-    parameters = {'topics' : [4], 'vocab' : [2**n for n in range(14)], 'documents' : [8], 'words_per_document' : [10]}
+    parameters = {'topics' : [2,4,6], 'vocab' : [2**(n+1) for n in range(3)], 'documents' : [4,8,12], 'words_per_document' : [4,8,12]}
     def runner(params):
         print params
         return LDA(ripl, params).runFromJoint(10, verbose=True, runs=1)
