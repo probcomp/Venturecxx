@@ -117,7 +117,8 @@
       ;; the address (so it can be looked up from environments).
       (trace-eval! trace exp env addr read-traces
         (lambda ()
-          (do-eval exp env trace addr read-traces)))))
+          (abegin1 (do-eval exp env trace addr read-traces)
+            (dangling-variables env trace read-traces))))))
    trace addr read-traces))
 
 (define (do-eval exp env trace addr read-traces)
@@ -425,3 +426,18 @@
   (make-foreign
    (lambda (oper opand-addrs addr cur-trace read-traces)
      (scheme->venture (scheme-apply sim opand-addrs)))))
+
+;;; Sanity checking
+
+(define (env-foreach f env)
+  (pp env)
+  (if (env-frame? env)
+      (begin
+        (for-each f (env-frame-symbols env) (env-frame-addresses env))
+        (env-foreach f (env-frame-parent env)))))
+
+(define (dangling-variables env trace read-traces)
+  (env-foreach (lambda (sym addr)
+                 (pp `(,sym ,addr))
+                 (traces-lookup (cons trace read-traces) addr))
+               env))
