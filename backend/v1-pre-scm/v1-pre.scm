@@ -140,8 +140,7 @@
       (lambda (addr)
         (traces-lookup (cons trace read-traces) addr))
       (lambda ()
-        (scheme->venture
-         (environment-lookup user-initial-environment x)))))
+        (look-in-the-scheme-environment x exp env trace addr read-traces))))
     ((lambda-form formals body)
      ;; CONSIDER Does a compound need to close over its maker address?
      (make-compound formals body env trace read-traces))
@@ -438,7 +437,22 @@
    (lambda (oper opand-addrs addr cur-trace read-traces)
      (scheme->venture (scheme-apply sim opand-addrs)))))
 
+(define (look-in-the-scheme-environment x exp env trace addr read-traces)
+  (let ((type (environment-reference-type user-initial-environment x)))
+    (cond ((or (eq? type 'unbound) (eq? type 'unassigned))
+           (user-error exp env trace addr read-traces "Unbound variable" x))
+          ((eq? type 'macro)
+           (user-error exp env trace addr read-traces "Unbound variable (cannot import Scheme macros)" x))
+          (else (scheme->venture (environment-lookup user-initial-environment x))))))
+
 ;;; Sanity checking
+
+(define (user-error exp env trace addr read-traces msg . irritants)
+  (scheme-apply
+   error
+   "Error while evaluating" exp
+   (error-irritant/noise " in context") env trace addr read-traces
+   (error-irritant/noise "\n;") (error-irritant/noise msg) irritants))
 
 (define (env-foreach f env)
   (if (env-frame? env)
