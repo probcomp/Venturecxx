@@ -138,7 +138,9 @@
     ((var x)
      (env-search env x
       (lambda (addr)
-        (traces-lookup (cons trace read-traces) addr))
+        (traces-search (cons trace read-traces) addr (lambda (v) v)
+         (lambda ()
+           (user-error exp env trace addr read-traces "Address not found" addr))))
       (lambda ()
         (look-in-the-scheme-environment x exp env trace addr read-traces))))
     ((lambda-form formals body)
