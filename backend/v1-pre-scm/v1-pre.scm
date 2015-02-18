@@ -361,12 +361,16 @@
   (trace-search trace addr (lambda (v) v)
    (lambda () (error "Address not found" addr))))
 
-(define (traces-lookup traces addr)
+(define (traces-search traces addr win lose)
   (let loop ((traces traces))
     (if (null? traces)
-        (error "Address not found" addr)
-        (trace-search (car traces) addr (lambda (v) v)
+        (lose)
+        (trace-search (car traces) addr win
          (lambda () (loop (cdr traces)))))))
+
+(define (traces-lookup traces addr)
+  (traces-search traces addr (lambda (v) v)
+   (lambda () (error "Address not found" addr))))
 
 ;;; Pluggable trace interface
 
