@@ -80,6 +80,7 @@
 ;; Macros for model-inference style (i.e., Venture v0)
 
 (define *the-model-trace* #f)
+(define *the-model-env* #f)
 
 (define-operative (model-in subforms env trace addr read-traces)
   (let ((trace-subform (car subforms))
@@ -87,16 +88,17 @@
     ;; Can I get away with using MIT Scheme's native fluid-let here,
     ;; or do I need to do this in the object language?
     (fluid-let ((*the-model-trace*
-                 (eval trace-subform env trace (extend-address addr 'model-in) read-traces)))
+                 (eval trace-subform env trace (extend-address addr 'model-in) read-traces))
+                (*the-model-env* (extend-env env '() '())))
       (eval `(begin ,@body-forms) env trace (extend-address addr 'model-in-body) read-traces))))
 
 (define-operative (assume subforms env trace addr read-traces)
   (eval `(trace-in ,*the-model-trace* (define ,(car subforms) ,(cadr subforms)))
-        env trace addr read-traces))
+        *the-model-env* trace addr read-traces))
 
 (define-operative (observe subforms env trace addr read-traces)
   (eval `(trace-in ,*the-model-trace* ($observe ,(car subforms) ,(cadr subforms)))
-        env trace addr read-traces))
+        *the-model-env* trace addr read-traces))
 
 (define-operative (infer subforms env trace addr read-traces)
   (eval `(,(car subforms) ,*the-model-trace*)
@@ -104,7 +106,7 @@
 
 (define-operative (predict subforms env trace addr read-traces)
   (eval `(trace-in ,*the-model-trace* ,(car subforms))
-        env trace addr read-traces))
+        *the-model-env* trace addr read-traces))
 
 ;; Example of using the argument language syntax
 
