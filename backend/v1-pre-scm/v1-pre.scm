@@ -118,7 +118,11 @@
       (trace-eval! trace exp env addr read-traces
         (lambda ()
           (abegin1 (do-eval exp env trace addr read-traces)
-            (dangling-variables env trace read-traces))))))
+            (if (not (or (constant? exp) (trace-in-form? exp)))
+                ;; The environment invariant maintained by model-in,
+                ;; assume, and co is temporarily violated by trace-in
+                ;; forms.
+                (dangling-variables env trace read-traces)))))))
    trace addr read-traces))
 
 (define (do-eval exp env trace addr read-traces)
