@@ -117,12 +117,19 @@
       ;; the address (so it can be looked up from environments).
       (trace-eval! trace exp env addr read-traces
         (lambda ()
-          (abegin1 (do-eval exp env trace addr read-traces)
-            (if (not (or (constant? exp) (trace-in-form? exp)))
-                ;; The environment invariant maintained by model-in,
-                ;; assume, and co is temporarily violated by trace-in
-                ;; forms.
-                (dangling-variables env trace read-traces)))))))
+          ; (pp exp)
+          ;; There are two (known) reasons why the dangling-variables
+          ;; check doesn't always pass.
+          ;; - The environment invariant maintained by model-in,
+          ;;   assume, and co is temporarily violated by trace-in
+          ;;   forms.  This is fixable by guarding with a (not (or
+          ;;   (constant? exp) (trace-in-form? exp))) check.
+          ;; - rebuild-rdb violates the invariant for long periods
+          ;;   because the env of an early record will include
+          ;;   (because of mutation) variables defined in (some) later
+          ;;   records.
+          #; (dangling-variables env trace read-traces)
+          (do-eval exp env trace addr read-traces)))))
    trace addr read-traces))
 
 (define (do-eval exp env trace addr read-traces)
@@ -434,14 +441,14 @@
 ;;; Sanity checking
 
 (define (env-foreach f env)
-  (pp env)
   (if (env-frame? env)
       (begin
         (for-each f (env-frame-symbols env) (env-frame-addresses env))
         (env-foreach f (env-frame-parent env)))))
 
 (define (dangling-variables env trace read-traces)
+  (pp env)
   (env-foreach (lambda (sym addr)
-                 (pp `(,sym ,addr))
+                 ; (pp `(,sym ,addr))
                  (traces-lookup (cons trace read-traces) addr))
                env))
