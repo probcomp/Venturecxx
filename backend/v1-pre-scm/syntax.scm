@@ -81,16 +81,19 @@
 
 (define *the-model-trace* #f)
 (define *the-model-env* #f)
+(define *associated-environments* (make-eq-hash-table))
 
 (define-operative (model-in subforms env trace addr read-traces)
   (let ((trace-subform (car subforms))
         (body-forms (cdr subforms)))
-    ;; Can I get away with using MIT Scheme's native fluid-let here,
-    ;; or do I need to do this in the object language?
-    (fluid-let ((*the-model-trace*
-                 (eval trace-subform env trace (extend-address addr 'model-in) read-traces))
-                (*the-model-env* (extend-env env '() '())))
-      (eval `(begin ,@body-forms) env trace (extend-address addr 'model-in-body) read-traces))))
+    (let* ((desired-model-trace (eval trace-subform env trace (extend-address addr 'model-in) read-traces))
+           (desired-model-env
+            (hash-table/intern! *associated-environments* trace (lambda () (extend-env env '() '())))))
+      ;; Can I get away with using MIT Scheme's native fluid-let here,
+      ;; or do I need to do this in the object language?
+      (fluid-let ((*the-model-trace* desired-model-trace)
+                  (*the-model-env* desired-model-env))
+        (eval `(begin ,@body-forms) env trace (extend-address addr 'model-in-body) read-traces)))))
 
 (define-operative (assume subforms env trace addr read-traces)
   (eval `(trace-in ,*the-model-trace* (define ,(car subforms) ,(cadr subforms)))
