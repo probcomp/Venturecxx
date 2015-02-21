@@ -13,14 +13,39 @@ def registerDeterministicLKernels(trace,scaffold,pnodes,currentValues):
     assert not isinstance(currentValue,list)
     scaffold.lkernels[pnode] = DeterministicLKernel(trace.pspAt(pnode),currentValue)
 
+def getCurrentValuesWithAddresses(trace,pnodes): return [(pnode.address, trace.valueAt(pnode)) for pnode in pnodes]
+
+def registerDeterministicLKernelsByAddress(trace,scaffold,addressesAndValues):
+  nodes = dict([(node.address, node) for node in scaffold.getPrincipalNodes()])
+  for (addr,currentValue) in addressesAndValues:
+    assert not isinstance(currentValue,list)
+    assert addr in nodes
+    node = nodes[addr]
+    scaffold.lkernels[node] = DeterministicLKernel(trace.pspAt(node),currentValue)
+
 def mixMH(trace,indexer,operator):
   start = time.time()
   index = indexer.sampleIndex(trace)
+
+  # record node addresses and values for the benefit of the profiler
+  if trace.profiling_enabled:
+    nodes = index.getPrincipalNodes()
+    current = [trace.valueAt(node) for node in nodes]
+    getAddr = lambda node: node.address
+    principal = map(getAddr, nodes)
+    absorbing = map(getAddr, index.absorbing)
+    aaa = map(getAddr, index.aaa)
+    brush = len(index.brush)
+
   rhoMix = indexer.logDensityOfIndex(trace,index)
   # May mutate trace and possibly operator, proposedTrace is the mutated trace
   # Returning the trace is necessary for the non-mutating versions
   proposedTrace,logAlpha = operator.propose(trace,index)
   xiMix = indexer.logDensityOfIndex(proposedTrace,index)
+
+  # record the proposed values for the profiler
+  if trace.profiling_enabled:
+    proposed = [trace.valueAt(node) for node in nodes]
 
   alpha = xiMix + logAlpha - rhoMix
   if math.log(random.random()) < alpha:
@@ -31,11 +56,26 @@ def mixMH(trace,indexer,operator):
 #    sys.stdout.write("!")
     operator.reject() # May mutate trace
     accepted = False
-  trace.recordProposal([operator.name()] + indexer.name(), time.time() - start, accepted)
+
+  if trace.profiling_enabled:
+    trace.recordProposal(
+      operator = operator.name(),
+      indexer = indexer.name(),
+      time = time.time() - start,
+      logscore = trace.getGlobalLogScore(),
+      current = current,
+      proposed = proposed,
+      accepted = accepted,
+      alpha = alpha,
+      principal = principal,
+      absorbing = absorbing,
+      aaa = aaa,
+      brush = brush
+    )
 
 class BlockScaffoldIndexer(object):
   def __init__(self,scope,block,interval=None,useDeltaKernels=False,deltaKernelArgs=None,updateValues=False):
-    if scope == "default" and not (block == "all" or block == "one" or block == "ordered"):
+    if scope == "default" and not (block == "all" or block == "none" or block == "one" or block == "ordered"):
         raise Exception("INFER default scope does not admit custom blocks (%r)" % block)
     self.scope = scope
     self.block = block
@@ -49,6 +89,7 @@ class BlockScaffoldIndexer(object):
       self.true_block = trace.sampleBlock(self.scope)
       setsOfPNodes = [trace.getNodesInBlock(self.scope,self.true_block)]
     elif self.block == "all": setsOfPNodes = [trace.getAllNodesInScope(self.scope)]
+    elif self.block == "none": setsOfPNodes = [set()]
     elif self.block == "ordered": setsOfPNodes = trace.getOrderedSetsInScope(self.scope)
     elif self.block == "ordered_range":
       assert self.interval
@@ -63,6 +104,7 @@ class BlockScaffoldIndexer(object):
   def logDensityOfIndex(self,trace,_):
     if self.block == "one": return trace.logDensityOfBlock(self.scope)
     elif self.block == "all": return 0
+    elif self.block == "none": return 0
     elif self.block == "ordered": return 0
     elif self.block == "ordered_range": return 0
     else: return 0

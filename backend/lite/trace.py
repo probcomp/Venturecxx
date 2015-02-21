@@ -1,30 +1,33 @@
+import warnings
 from address import Address, List
 from builtin import builtInValues, builtInSPs
 from env import VentureEnvironment
 from node import Node,ConstantNode,LookupNode,RequestNode,OutputNode,Args
 import math
+from numpy import nan
 from regen import constrain, processMadeSP, evalFamily, restore
 from detach import unconstrain, unevalFamily
-from value import SPRef, ExpressionType, VentureValue, VentureSymbol
+from value import SPRef, ExpressionType, VentureValue, VentureSymbol, VentureNumber, VenturePair
 from scaffold import Scaffold
 from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
-                   EnumerativeGibbsOperator,PGibbsOperator,ParticlePGibbsOperator,
-                   RejectionOperator, MissingEsrParentError, NoSPRefError,
+                   EnumerativeGibbsOperator,EnumerativeMAPOperator,EnumerativeDiversify,
+                   PGibbsOperator,ParticlePGibbsOperator,ParticlePMAPOperator,
+                   RejectionOperator, BogoPossibilizeOperator, MissingEsrParentError, NoSPRefError,
                    HamiltonianMonteCarloOperator, MAPOperator, StepOutSliceOperator,
                    DoublingSliceOperator, NesterovAcceleratedGradientAscentOperator,
                    drawScaffold, subsampledMixMH, SubsampledMHOperator,
                    SubsampledBlockScaffoldIndexer)
 from omegadb import OmegaDB
-from smap import SMap
+from smap import SamplableMap
 from sp import SPFamilies, VentureSPRecord
 from scope import isScopeIncludeOutputPSP, isScopeExcludeOutputPSP
 from regen import regenAndAttach
 from detach import detachAndExtract
 from scaffold import constructScaffold
 from lkernel import DeterministicLKernel
-from psp import ESRRefOutputPSP
+from psp import ESRRefOutputPSP, TypedPSP, LikelihoodFreePSP
 from serialize import OrderedOmegaDB
-from exception import VentureError
+from exception import VentureError, VentureBuiltinSPMethodError
 from venture.exception import VentureException
 
 class Trace(object):
@@ -44,7 +47,8 @@ class Trace(object):
     self.families = {}
     self.scopes = {} # :: {scope-name:smap{block-id:set(node)}}
 
-    self.stats = {} # :: {name:[(time taken, was accepted?)]}
+    self.profiling_enabled = False
+    self.stats = []
 
   def scope_keys(self):
     # A hack for allowing scope names not to be quoted in inference
@@ -70,7 +74,7 @@ class Trace(object):
 
   def registerRandomChoiceInScope(self,scope,block,node,unboxed=False):
     if not unboxed: (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
-    if not scope in self.scopes: self.scopes[scope] = SMap()
+    if not scope in self.scopes: self.scopes[scope] = SamplableMap()
     if not block in self.scopes[scope]: self.scopes[scope][block] = set()
     assert not node in self.scopes[scope][block]
     self.scopes[scope][block].add(node)
@@ -88,31 +92,36 @@ class Trace(object):
     if len(self.scopes[scope][block]) == 0: del self.scopes[scope][block]
     if len(self.scopes[scope]) == 0: del self.scopes[scope]
 
+  def _normalizeEvaluatedScopeOrBlock(self, val):
+    if isinstance(val, VentureNumber):
+      return val.getNumber()
+    elif isinstance(val, VentureSymbol):
+      return val.getSymbol()
+    elif isinstance(val, VenturePair): # I hope this means it's an ordered range
+      return ExpressionType().asPython(val)
+    return val
+
   # [FIXME] repetitive, but not sure why these exist at all
   def _normalizeEvaluatedScope(self, scope):
-    if scope == "default": return scope
-    else:
-      assert isinstance(scope, VentureValue)
-      if isinstance(scope, VentureSymbol): return scope.getSymbol()
-      else: return scope.getNumber()
+    return self._normalizeEvaluatedScopeOrBlock(scope)
 
   def _normalizeEvaluatedScopeAndBlock(self, scope, block):
+    #import pdb; pdb.set_trace()
     if scope == "default":
-      assert isinstance(block, Node)
+      #assert isinstance(block, Node)
       return (scope, block)
     else:
-      assert isinstance(scope, VentureValue)
-      assert isinstance(block, VentureValue)
-      # TODO probably want to allow arbitrary values as scopes and
-      # blocks; but this requires converting them from the inference
-      # program.
-      if isinstance(scope, VentureSymbol):
-        return (scope.getSymbol(), block.getNumber())
-      else:
-        return (scope.getNumber(), block.getNumber())
+      #assert isinstance(scope, VentureValue)
+      #assert isinstance(block, VentureValue)
+
+      scope = self._normalizeEvaluatedScopeOrBlock(scope)
+      block = self._normalizeEvaluatedScopeOrBlock(block)
+
+      return (scope, block)
 
   def registerConstrainedChoice(self,node):
-    assert node not in self.ccs, "Cannot constrain the same random choice twice."
+    if node in self.ccs:
+      raise VentureException("evaluation", "Cannot constrain the same random choice twice.", address = node.address)
     self.ccs.add(node)
     self.unregisterRandomChoice(node)
 
@@ -256,26 +265,31 @@ class Trace(object):
   def isConstrainedAt(self,node): return node in self.ccs
 
   #### For kernels
-  def sampleBlock(self,scope): return self.scopes[scope].sample()[0]
+  def getScope(self, scope): return self.scopes[self._normalizeEvaluatedScopeOrBlock(scope)]
+
+  def sampleBlock(self,scope): return self.getScope(scope).sample()[0]
   def logDensityOfBlock(self,scope): return -1 * math.log(self.numBlocksInScope(scope))
-  def blocksInScope(self,scope): return self.scopes[scope].keys()
+  def blocksInScope(self,scope): return self.getScope(scope).keys()
   def numBlocksInScope(self,scope):
-    if scope in self.scopes: return len(self.scopes[scope].keys())
+    scope = self._normalizeEvaluatedScopeOrBlock(scope)
+    if scope in self.scopes: return len(self.getScope(scope).keys())
     else: return 0
 
   def getAllNodesInScope(self,scope):
-    return set.union(*[self.getNodesInBlock(scope,block) for block in self.scopes[scope].keys()])
+    return set.union(*[self.getNodesInBlock(scope,block) for block in self.getScope(scope).keys()])
 
   def getOrderedSetsInScope(self,scope,interval=None):
     if interval is None:
-      return [self.getNodesInBlock(scope,block) for block in sorted(self.scopes[scope].keys())]
+      return [self.getNodesInBlock(scope,block) for block in sorted(self.getScope(scope).keys())]
     else:
-      blocks = [b for b in self.scopes[scope].keys() if b >= interval[0] if b <= interval[1]]
+      blocks = [b for b in self.getScope(scope).keys() if b >= interval[0] if b <= interval[1]]
       return [self.getNodesInBlock(scope,block) for block in sorted(blocks)]
 
   def numNodesInBlock(self,scope,block): return len(self.getNodesInBlock(scope,block))
 
   def getNodesInBlock(self,scope,block):
+    #import pdb; pdb.set_trace()
+    #scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
     nodes = self.scopes[scope][block]
     if scope == "default": return nodes
     else:
@@ -311,13 +325,11 @@ class Trace(object):
 
   def scopeHasEntropy(self,scope):
     # right now scope in self.scopes iff it has entropy
-    return scope in self.scopes and self.numBlocksInScope(scope) > 0
+    return self.numBlocksInScope(scope) > 0
 
-  def recordProposal(self, name, time, accepted):
-    name = str(name)
-    if name not in self.stats:
-      self.stats[name] = []
-    self.stats[name].append((time, accepted))
+  def recordProposal(self, **kwargs):
+    if self.profiling_enabled:
+      self.stats.append(kwargs)
 
   #### External interface to engine.py
   def eval(self,id,exp):
@@ -329,7 +341,7 @@ class Trace(object):
       self.globalEnv.addBinding(sym,self.families[id])
     except VentureError as e:
       raise VentureException("invalid_argument", message=e.message, argument="symbol")
-  
+
   def unbindInGlobalEnv(self,sym): self.globalEnv.removeBinding(sym)
 
   def extractValue(self,id): return self.boxValue(self.valueAt(self.families[id]))
@@ -349,19 +361,28 @@ class Trace(object):
       rhoWeight,_ = detachAndExtract(self,scaffold)
       scaffold.lkernels[appNode] = DeterministicLKernel(self.pspAt(appNode),val)
       xiWeight = regenAndAttach(self,scaffold,False,OmegaDB(),{})
-      if xiWeight == float("-inf"): raise Exception("Unable to propagate constraint")
+      # If xiWeight is -inf, we are in an impossible state, but that might be ok.
+      # Finish constraining, to avoid downstream invariant violations.
       node.observe(val)
       constrain(self,appNode,node.observedValue)
       weight += xiWeight
       weight -= rhoWeight
     self.unpropagatedObservations.clear()
-    return weight
+    if not math.isinf(weight) and not math.isnan(weight):
+      return weight
+    else:
+      # If one observation made the state inconsistent, the rhoWeight
+      # of another might conceivably be infinite, possibly leading to
+      # a nan weight.  I want to normalize these to indicating that
+      # the resulting state is impossible.
+      return float("-inf")
 
   def getConstrainableNode(self, node):
     candidate = self.getOutermostNonReferenceNode(node)
-    if isinstance(candidate,ConstantNode): raise Exception("Cannot constrain a constant value.")
+    if isinstance(candidate,ConstantNode):
+      raise VentureException("evaluation", "Cannot constrain a constant value.", address = node.address)
     if not self.pspAt(candidate).isRandom():
-      raise Exception("Cannot constrain a deterministic value.")
+      raise VentureException("evaluation", "Cannot constrain a deterministic value.", address = node.address)
     return candidate
 
   def getOutermostNonReferenceNode(self,node):
@@ -399,6 +420,7 @@ class Trace(object):
   def infer_exp(self,exp):
     assert len(exp) >= 4
     (operator, scope, block) = exp[0:3]
+    scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
     maybe_transitions = exp[-1]
     if isinstance(maybe_transitions, bool):
       # The last item was the parallelism indicator
@@ -431,6 +453,8 @@ class Trace(object):
         mixMH(self, BlockScaffoldIndexer(scope, block), HamiltonianMonteCarloOperator(epsilon, int(L)))
       elif operator == "gibbs":
         mixMH(self, BlockScaffoldIndexer(scope, block), EnumerativeGibbsOperator())
+      elif operator == "emap":
+        mixMH(self, BlockScaffoldIndexer(scope, block), EnumerativeMAPOperator())
       elif operator == "gibbs_update":
         mixMH(self, BlockScaffoldIndexer(scope, block, updateValues=True), EnumerativeGibbsOperator())
       elif operator == "slice":
@@ -460,6 +484,13 @@ class Trace(object):
           mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block)), ParticlePGibbsOperator(particles))
         else:
           mixMH(self, BlockScaffoldIndexer(scope, block), ParticlePGibbsOperator(particles))
+      elif operator == "func_pmap":
+        particles = int(exp[3])
+        if isinstance(block, list): # Ordered range
+          (_, min_block, max_block) = block
+          mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block)), ParticlePMAPOperator(particles))
+        else:
+          mixMH(self, BlockScaffoldIndexer(scope, block), ParticlePMAPOperator(particles))
       elif operator == "map":
         (rate, steps) = exp[3:5]
         mixMH(self, BlockScaffoldIndexer(scope, block), MAPOperator(rate, int(steps)))
@@ -468,9 +499,82 @@ class Trace(object):
         mixMH(self, BlockScaffoldIndexer(scope, block), NesterovAcceleratedGradientAscentOperator(rate, int(steps)))
       elif operator == "rejection":
         mixMH(self, BlockScaffoldIndexer(scope, block), RejectionOperator())
+      elif operator == "bogo_possibilize":
+        mixMH(self, BlockScaffoldIndexer(scope, block), BogoPossibilizeOperator())
+      elif operator == "print_scaffold_stats":
+        BlockScaffoldIndexer(scope, block).sampleIndex(self).show()
       else: raise Exception("INFER %s is not implemented" % operator)
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
+
+  def likelihood_at(self, scope, block):
+    # TODO This is a different control path from infer_exp because it
+    # needs to return the weight
+    scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
+    scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
+    (_rhoWeight,rhoDB) = detachAndExtract(self, scaffold)
+    xiWeight = regenAndAttach(self, scaffold, True, rhoDB, {})
+    # Old state restored, don't need to do anything else
+    return xiWeight
+
+  def posterior_at(self, scope, block):
+    # TODO This is a different control path from infer_exp because it
+    # needs to return the weight
+    scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
+    scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
+    pnodes = scaffold.getPrincipalNodes()
+    from infer.mh import getCurrentValues, registerDeterministicLKernels
+    currentValues = getCurrentValues(self, pnodes)
+    registerDeterministicLKernels(self, scaffold, pnodes, currentValues)
+    (_rhoWeight,rhoDB) = detachAndExtract(self, scaffold)
+    xiWeight = regenAndAttach(self, scaffold, True, rhoDB, {})
+    # Old state restored, don't need to do anything else
+    return xiWeight
+
+  def likelihood_weight(self):
+    # TODO This is a different control path from infer_exp because it
+    # needs to return the new weight
+    scaffold = BlockScaffoldIndexer("default", "all").sampleIndex(self)
+    (_rhoWeight,rhoDB) = detachAndExtract(self, scaffold)
+    xiWeight = regenAndAttach(self, scaffold, False, rhoDB, {})
+    # Always "accept"
+    return xiWeight
+
+  def freeze(self, id):
+    assert id in self.families
+    node = self.families[id]
+    assert isinstance(node,OutputNode)
+    value = self.valueAt(node)
+    unevalFamily(self,node,Scaffold(),OmegaDB())
+    # XXX It looks like we kinda want to replace the identity of this
+    # node by a constant node, but we don't have a nice way to do that
+    # so we fake it by dropping the components and marking it frozen.
+    node.isFrozen = True
+    self.setValueAt(node, value)
+    node.requestNode = None
+    node.operandNodes = None
+    node.operatorNode = None
+
+  def diversify(self, exp, copy_trace):
+    """Return the pair of parallel lists of traces and weights that
+results from applying the given expression as a diversification
+operator.  Duplicate self if necessary with the provided copy_trace
+function.
+
+    """
+    assert len(exp) >= 3
+    (operator, scope, block) = exp[0:3]
+    scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
+    if operator == "enumerative":
+      return EnumerativeDiversify(copy_trace)(self, BlockScaffoldIndexer(scope, block))
+    else: raise Exception("DIVERSIFY %s is not implemented" % operator)
+
+  def block_values(self, scope, block):
+    """Return a map between the addresses and values of principal nodes in
+the scaffold determined by the given expression."""
+    scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
+    scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
+    return dict([(node.address, self.valueAt(node)) for node in scaffold.getPrincipalNodes()])
 
   def get_seed(self):
     # TODO Trace does not support seed control because it uses
@@ -488,7 +592,18 @@ class Trace(object):
     return self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node))
 
   def getGlobalLogScore(self):
-    return sum([self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node)) for node in self.rcs.union(self.ccs)])
+    # TODO This algorithm is totally wrong: https://app.asana.com/0/16653194948424/20100308871203
+    all_scores = [self._getOneLogScore(node) for node in self.rcs.union(self.ccs)]
+    scores, isLikelihoodFree = zip(*all_scores) if all_scores else [(), ()]
+    return sum(scores)
+
+  def _getOneLogScore(self, node):
+    # Hack: likelihood-free PSP's contribute 0 to global logscore.
+    # This is incorrect, but better than the function breaking entirely.
+    try:
+      return (self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node)), False)
+    except VentureBuiltinSPMethodError:
+      return (0.0, True)
 
   #### Serialization interface
 
@@ -519,8 +634,6 @@ class Trace(object):
 
   #### Helpers (shouldn't be class methods)
 
-  # TODO temporary, probably need an extra layer of boxing for VentureValues
-  # as in CXX
   def boxValue(self,val): return val.asStackDict(self)
   @staticmethod
   def unboxValue(val): return VentureValue.fromStackDict(val)
@@ -537,6 +650,10 @@ class Trace(object):
     for child in newChildren:
       node.children.add(child)
 
+  #### Configuration
 
+  def set_profiling(self, enabled=True):
+    self.profiling_enabled = enabled
 
-
+  def clear_profiling(self):
+    self.stats = []

@@ -44,6 +44,13 @@ double InvGammaDistributionLogLikelihood(double sampled_value, double alpha, dou
   return loglikelihood;
 }
 
+double ExponentialDistributionLogLikelihood(double sampled_value, double theta) {
+  //theta * e^{-theta * x}
+  double loglikelihood = log(theta) - theta * sampled_value;
+  if (!isfinite(loglikelihood)) { loglikelihood = -DBL_MAX; }
+  return loglikelihood;
+}
+
 double BetaDistributionLogLikelihood(double sampled_value, double alpha, double beta) {
   //x^{a-1} * (1-x)^{b-1} / Beta(a, b)
   double loglikelihood = 0.0;

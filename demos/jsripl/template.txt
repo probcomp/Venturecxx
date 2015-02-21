@@ -1,0 +1,38 @@
+----- Informal template for building web demos -----
+
+var events_to_process = [];
+var raphael_objects = [];
+
+1. Insert HTML (application dependent? maybe want a shared Venture-y look)
+1. RenderInit():
+   a) All event callbacks add to events_to_process.
+
+2. LoadModel():
+   a) Send the generative model to RIPL.
+   b) Start with ripl.assume('test_number',unique_id)
+
+3. RenderAll():
+   a) Takes the directives as argument.
+   
+   b) Updates RAPHAEL_OBJECTS:
+      i) Removes from RAPHAEL_OBJECTS any object that no longer has a corresponding directive.
+      ii) Creates a raphael object for every directive (observation) for which no
+      	  object currently exists.
+
+   d) Processes the events:
+      i) Forgets any object with a FORGET-event in events_to_process.
+      ii) Adds to model (predict/observe) for every ASSUME-event in events_to_process.
+
+      Note: The corresponding objects will not be created/deleted until subsequent calls to RenderAll().
+      	    It very important to keep this 4 different steps conceptually distinct.
+
+   f) Updates the settings on all RAPHAEL_OBJECTS as appropriate.
+
+----------------------------
+
+What functionality will we almost always share?
+1. The two callbacks for showing progress and then removing the div.
+2. StartContinuousInference().
+3. Joining the existing Venture demo session if necessary.
+4. Updating the code on the RHS.
+5. RunDemo().

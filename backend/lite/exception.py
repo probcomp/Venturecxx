@@ -14,6 +14,9 @@ class VentureBuiltinSPMethodError(VentureError):
 class SubsampledScaffoldError(VentureError):
   """This exception means that the subsampled scaffold cannot be constructed."""
 
+class VentureTimerError(VentureError):
+  """This exception means that the inference callback timer was used incorrectly"""
+
 class VentureWarning(UserWarning):
   '''Base class for Venture warnings'''
   pass
@@ -33,4 +36,3 @@ class SubsampledScaffoldNotApplicableWarning(VentureWarning):
 class SubsampledScaffoldStaleNodesWarning(VentureWarning):
   '''This warning means that the stale nodes may cause incorrect behavior.'''
   pass
-

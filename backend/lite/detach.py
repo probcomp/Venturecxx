@@ -92,6 +92,7 @@ def extract(trace, node, scaffold, omegaDB, compute_gradient = False):
 def unevalFamily(trace, node, scaffold, omegaDB, compute_gradient = False):
   weight = 0
   if isinstance(node,ConstantNode): pass
+  elif isinstance(node,OutputNode) and node.isFrozen: pass
   elif isinstance(node,LookupNode):
     assert len(trace.parentsAt(node)) == 1
     if compute_gradient:

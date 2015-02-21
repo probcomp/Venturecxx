@@ -10,6 +10,10 @@ class OrderedOmegaDB(OmegaDB):
     into a different scaffold (consuming the value stack), provided
     they are equivalent.
 
+    This is used by serialization of traces.  Serializing proceeds by
+    calling detach on the trace, which ends up calling extractValue
+    here repeatedly; de-serializing proceeds by calling regen on the
+    trace, which ends up calling getValue here repeatedly.
     """
 
     def __init__(self, trace, values=None):

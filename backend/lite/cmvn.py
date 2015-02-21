@@ -67,7 +67,7 @@ class CMVNSP(SP):
     super(CMVNSP,self).__init__(requestPSP,outputPSP)
     self.d = d
   def constructSPAux(self): return CMVNSPAux(self.d)
-  def show(self,spaux): return (spaux.xTotal,spaux.STotal,spaux.N)
+  def show(self,spaux): return self.outputPSP.psp.getMVTParams(spaux)
 
 class MakeCMVNOutputPSP(DeterministicPSP):
   def simulate(self,args):
@@ -105,17 +105,18 @@ class CMVNOutputPSP(RandomPSP):
     SArg = (float(kN + 1) / (kN * (vN - self.d + 1))) * SN
     vArg = vN - self.d + 1
     return mArg,SArg,vArg
-
+  
+  def getMVTParams(self, spaux):
+    return self.mvtParams(*self.updatedParams(spaux))
+  
   def simulate(self,args):
-    (mN,kN,vN,SN) = self.updatedParams(args.spaux)
-    params = self.mvtParams(mN,kN,vN,SN)
+    params = self.getMVTParams(args.spaux)
     x = mvtSample(*params)
-    return np.squeeze(np.array(x))
+    return x.A1
 
   def logDensity(self,x,args):
     x = np.mat(x).reshape((self.d,1))
-    (mN,kN,vN,SN) = self.updatedParams(args.spaux)
-    return mvtLogDensity(x, *self.mvtParams(mN,kN,vN,SN))
+    return mvtLogDensity(x, *self.getMVTParams(args.spaux))
 
   def incorporate(self,x,args):
     x = np.mat(x).reshape((self.d,1))

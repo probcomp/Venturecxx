@@ -19,6 +19,7 @@ def normalizeList(seq):
   denom = sum(seq)
   if denom > 0: return [ float(x)/denom for x in seq]
   else: 
+    # Treat all impossible options as equally impossible.
     n = float(len(seq))
     return [1.0/n for x in seq]
 
@@ -38,7 +39,9 @@ def logDensityCategorical(val,ps,os=None):
     if os[i] == val: 
       p = ps[i]
       break
-  assert p
+  assert p is not None
+  if p == 0:
+    return float('-inf')
   return math.log(p)
 
 def simulateDirichlet(alpha): return npr.dirichlet(alpha)
@@ -49,9 +52,9 @@ def logDensityDirichlet(theta, alpha):
 
   return ss.gammaln(sum(alpha)) - sum(ss.gammaln(alpha)) + np.dot((alpha - 1).T, np.log(theta).T)
 
-# why not use itertools.prod?
+# CONSIDER why not use itertools.prod?
 def cartesianProduct(original):
-  if len(original) == 0: return []
+  if len(original) == 0: return [[]]
   elif len(original) == 1: return [[x] for x in original[0]]
   else:
     firstGroup = original[0]
@@ -61,12 +64,32 @@ def cartesianProduct(original):
 def logaddexp(items):
   "Apparently this was added to scipy in a later version than the one installed on my machine.  Sigh."
   the_max = max(items)
-  return the_max + math.log(sum(math.exp(item - the_max) for item in items))
+  if the_max > float("-inf"):
+    return the_max + math.log(sum(math.exp(item - the_max) for item in items))
+  else:
+    return the_max # Don't want NaNs from trying to correct from the maximum
+
+def logWeightsToNormalizedDirect(logs):
+  "Converts an unnormalized categorical distribution given in logspace to a normalized one given in direct space"
+  the_max = max(logs)
+  if the_max > float("-inf"):
+    # Even if the logs include some -inf values, math.exp will produce
+    # zeros there and it will be fine.
+    return normalizeList([math.exp(log - the_max) for log in logs])
+  else:
+    # If all the logs are -inf, force 0 instead of NaN.
+    return [0 for _ in logs]
 
 def sampleLogCategorical(logs):
   "Samples from an unnormalized categorical distribution given in logspace."
   the_max = max(logs)
-  return simulateCategorical([math.exp(log - the_max) for log in logs])
+  if the_max > float("-inf"):
+    return simulateCategorical([math.exp(log - the_max) for log in logs])
+  else:
+    # normalizeList, as written above, will actually do the right
+    # thing with this, namely treat all impossible options as equally
+    # impossible.
+    return simulateCategorical([0 for _ in logs])
 
 def numpy_force_number(answer):
   if isinstance(answer, numbers.Number):

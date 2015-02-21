@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script src="LogPlotter.js"></script>
+        <link rel="stylesheet" type="text/css" href="style.css">  
+    </head>
+
+    <body>
+    	<svg id='svg' width='900px' height='600px' style='border:1px solid #d3d3d3;'>
+    		Browser not supported
+    	</svg>
+
+        <table id='axesValues'>
+            <tr>
+                <td colspan='2'>Graph parameters:</td>
+            </tr>
+            <tr>
+                <td>Log Min X</td>
+                <td><input id='minX' value='-3'></input></td>
+            </tr>
+            <tr>
+                <td>Log Max X</td>
+                <td><input id='maxX' value='3'></input></td>
+            </tr>
+            <tr>
+                <td>Log Step X</td>
+                <td><input id='stepX' value='1'></input></td>
+            </tr>
+            <tr>
+                <td>Min Y</td>
+                <td><input id='minY' value='0.0'></input></td>
+            </tr>
+            <tr>
+                <td>Max Y</td>
+                <td><input id='maxY' value='1.0'></input></td>
+            </tr>
+            <tr>
+                <td>Step Y</td>
+                <td><input id='stepY' value='0.1'></input></td>
+            </tr>
+            <tr>
+                <td><button id='updateAxes'>Update</button></td>
+            </tr>
+            <tr>
+                <td><br></td>
+            </tr>
+            <tr>
+                <td colspan='2'>Points:</td>
+            </tr>
+            <tr>
+                <td colspan='2'>
+                <select multiple id='pointSelect'></select>
+                </td>
+            </tr>
+            <tr>
+                <td><button id='addPoint'>Add</button></td>
+                <td><button id='removePoint'>Remove</button></td>
+            </tr>
+            <tr>
+                <td colspan='2'><input id='pointInput'></input></td>
+            </tr>
+            <tr>
+                <td><br></td>
+            </tr>
+            <tr>
+                <td colspan='2'>Server controls:</td>
+            </tr>
+            <tr>
+                <td><button id='startServer'>Start</button></td>
+                <td><button id='stopServer' disabled>Stop</button></td>
+            </tr>
+        </table>
+
+    	<script>
+    		$(document).ready(function() {
+                var p = new Plotter(document, document.getElementById('svg'), "http://www.w3.org/2000/svg");
+                var pointSelect = document.getElementById("pointSelect");
+                
+                var ic50 = 1.0;
+                var min = 0.0;
+                var max = 1.0;
+                var slope = 1.0;
+                var f = p.addFunction(function(x) {
+                    var u = Math.pow(x / ic50, slope);
+                    return (max - min) * u / (1 + u) + min;
+                });
+                var updateID = -1;
+
+                var updateCalls = [
+                    {method: "initialize", args: []},
+                    {method: "startInference", args: ["10"]},
+                    {method: "sample", args: [], keep: true, success: function(r) {
+                        console.log(r);
+                        ic50 = r.ic50;
+                        min = r.min;
+                        max = r.max;
+                        slope = r.slope;
+                        for(var i=0; i<f.points.length; i++) {
+                            var point = f.points[i];
+                            point.y = p.yGraphToSVG(f.f(p.xSVGToGraph(point.x)));
+                        }
+                    }},
+                ];
+
+                /*var observeMinX = {method: "observe", args: ["gminx", "-3", "observation1"]};
+                var observeMaxX = {method: "observe", args: ["gmaxx", "3", "observation2"]};
+                var observeMinY = {method: "observe", args: ["gminy", "0", "observation3"]};
+                var observeMaxY = {method: "observe", args: ["gmaxy", "1", "observation4"]};
+                var label = 5;
+                var updateCalls = [
+                    {method: "clear", args: []},
+
+                    {method: "assume", args: ["gminx", "(normal -3 0.1)"]},
+                    {method: "assume", args: ["gmaxx", "(normal 3 0.1)"]},
+                    {method: "assume", args: ["gminy", "(normal 0 0.1)"]},
+                    {method: "assume", args: ["gmaxy", "(normal 1 0.1)"]},
+                    observeMinX, observeMaxX, observeMinY, observeMaxY,
+
+                    {method: "assume", args: ["logic50", "(normal (/ (+ gmaxx gminx) 2) (/ (- gmaxx gminx) 4))"]},
+                    {method: "assume", args: ["ic50", "(pow 10 logic50)"]},
+                    {method: "assume", args: ["ymid", "(normal (/ (+ gmaxy gminy) 2) (/ (- gmaxy gminy) 4))"]},
+                    {method: "assume", args: ["diff", "(sqrt (pow (normal (/ (- gmaxy gminy) 2) (/ (- gmaxy gminy) 4)) 2))"]},
+                    {method: "assume", args: ["ymax", "(+ ymid diff)"]},
+                    {method: "assume", args: ["ymin", "(- ymid diff)"]},
+                    {method: "assume", args: ["slope", "(normal 0 1)"]},
+                    {method: "assume", args: ["u", "(lambda (x) (pow (/ x ic50) slope))"]},
+                    {method: "assume", args: ["f", "(lambda (x) (+ (/ (* (- ymax ymin) (u x)) (+ (u x) 1)) ymin))"]},
+                    {method: "assume", args: ["noise", "(normal 0 0.1)"]},
+                    {method: "assume", args: ["y", "(lambda (x) (normal (f x) noise))"]},
+                    {method: "start_continuous_inference", args: ["10"]},
+                    {method: "sample", args: ["ic50"], keep: true, success: function(result){
+                        ic50 = result;
+                    }},
+                    {method: "sample", args: ["ymin"], keep: true, success: function(result){
+                        ymin = result;
+                    }},
+                    {method: "sample", args: ["ymax"], keep: true, success: function(result){
+                        ymax = result;
+                    }},
+                    {method: "sample", args: ["slope"], keep: true, success: function(result){
+                        slope = result;
+                        for(var i=0; i<f.points.length; i++) {
+                            var point = f.points[i];
+                            point.y = p.yGraphToSVG(f.f(p.xSVGToGraph(point.x)));
+                        }
+                    }}
+                ];*/
+
+                function updateServer() {
+                    if(updateCalls.length > 0) {
+                        $.ajax({
+                            url: "http://127.0.0.1:5000/venture",
+                            dataType: "json",
+                            type: "POST",
+                            data: JSON.stringify({calls: updateCalls}, function(key, value) {
+                                if(key == "keep") return undefined;
+                                return value;
+                            }),
+                            contentType:"application/json",
+                            success: function(data) {
+                                if(data.error != undefined) return;
+                                for(var i=0; i<updateCalls.length; i++) {
+                                    if(updateCalls[i].success != undefined) updateCalls[i].success(data.results[i]);
+                                }
+                                updateCalls = updateCalls.filter(function(c){return c.keep != undefined && c.keep});
+                            }
+                        });
+                    }
+                }
+
+                function addPoint(cx, cy) {
+                    var point = p.addPoint(cx, cy);
+                    var option = document.createElement("option");
+                    option.text = point.gx.toExponential(3) + ", " + point.gy.toFixed(3);
+                    option.point = point;
+                    pointSelect.add(option);
+
+                    /*label++;
+                    point.label = "observation" + label;
+                    point.observeInstruction = {method: "observe", args: ["(y " + point.gx + ")", point.gy.toString(), point.label]};*/
+                    updateCalls.push({method: "addPoint", args: [point.gx, point.gy]});
+                }
+
+                function tryRemovePoint(cx, cy) {
+                    var point = p.tryRemovePoint(cx, cy);
+                    if(point == null) return;
+                    for(var i=0; i<pointSelect.length; i++) {
+                        if(pointSelect[i].point == point){
+                            pointSelect.remove(i);
+                            break;
+                        }
+                    }
+                    /*var i = updateCalls.indexOf(point.observeInstruction);
+                    if(i >= 0) updateCalls.splice(i, 1);
+                    else updateCalls.push({method: "forget", args: [point.label]});*/
+                    updateCalls.push({method: "removePoint", args: [point.gx, point.gy]});
+                }
+
+                $('#svg').on('click', function(e){
+                    var rect = svg.getBoundingClientRect();
+                    var cx = e.clientX - rect.left;
+                    var cy = e.clientY - rect.top;
+
+                    if(e.altKey) tryRemovePoint(cx, cy);
+                    else addPoint(cx, cy);
+                });
+
+                $('#updateAxes').on('click', function(e){
+                    p.minX = parseFloat(document.getElementById('minX').value);
+                    p.maxX = parseFloat(document.getElementById('maxX').value);
+                    p.stepX = parseFloat(document.getElementById('stepX').value);
+                    p.minY = parseFloat(document.getElementById('minY').value);
+                    p.maxY = parseFloat(document.getElementById('maxY').value);
+                    p.stepY = parseFloat(document.getElementById('stepY').value);
+                    p.reDraw();
+
+                    updateCalls.push({method: "observeGrid", args: [p.minX, p.maxX, p.minY, p.maxY]});
+                });
+
+                $("#pointInput").keyup(function(event){
+                    if(event.keyCode == 13){
+                        $("#addPoint").click();
+                    }
+                });
+
+                $('#addPoint').on('click', function(e){
+                    var xyText = document.getElementById('pointInput').value.split(",");
+                    var gx = parseFloat(xyText[0]);
+                    var gy = parseFloat(xyText[1]);
+                    if(isNaN(gx) || isNaN(gy)) return;
+                    document.getElementById('pointInput').value = "";
+                    addPoint(p.xGraphToSVG(gx), p.yGraphToSVG(gy));
+                });
+
+                $('#removePoint').on('click', function(e){
+                    while(pointSelect.selectedIndex >= 0) {
+                        var point = pointSelect[pointSelect.selectedIndex].point;
+                        tryRemovePoint(point.getAttribute("cx"), point.getAttribute("cy"));
+                    }
+                });
+
+                $('#startServer').on('click', function(e){
+                    updateID = setInterval(updateServer, 1000);
+                    document.getElementById('startServer').disabled = true;
+                    document.getElementById('stopServer').disabled = false;
+                });
+
+                $('#stopServer').on('click', function(e){
+                    clearInterval(updateID);
+                    document.getElementById('startServer').disabled = false;
+                    document.getElementById('stopServer').disabled = true;
+                });
+    		});
+    	</script>
+        
+    </body>
+
+</html>

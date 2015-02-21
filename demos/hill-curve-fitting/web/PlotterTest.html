@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <link rel="stylesheet" href="http://code.jquery.com/qunit/qunit-1.16.0.css">
+        <script src="http://code.jquery.com/qunit/qunit-1.16.0.js"></script>
+        <script src="Plotter.js"></script>
+    </head>
+
+    <body>
+    	<svg id='svg' width='900px' height='600px' style='border:1px solid #d3d3d3;'>
+    		Browser not supported
+    	</svg>
+
+    	<script>
+    		$(document).ready(function() {
+                // Basic tests for Plotter.js
+                function plotterTest(f) {
+                    var p = new Plotter(document, document.getElementById('svg'), "http://www.w3.org/2000/svg");
+                    try {
+                        f(p);
+                    }
+                    finally {
+                        while(p.svg.hasChildNodes()) p.svg.removeChild(p.svg.firstChild);
+                    }
+                }
+
+                QUnit.test("function plotting", function(assert) {
+                    plotterTest(function(p){
+                        var f = function(x) {return 0.5 * x + 2};
+                        var polyline = p.addFunction(f);
+                        //returned polyline has the right function
+                        assert.equal(f, polyline.f);
+                        var points = polyline.points;
+                        for(var i=0; i<=900; i+=30) {
+                            //correct points (only checking every 30th point)
+                            assert.equal(points[i].x, i);
+                            assert.equal(points[i].y, 480 - i / 3);
+                        }
+                        //svg contains function
+                        assert.equal(p.svg.lastChild, polyline);
+                    });
+                });
+
+                QUnit.test("point plotting", function(assert) {
+                    plotterTest(function(p){
+                        var point = p.addPoint(675, 360);
+                        //point has correct graph and svg coordinates
+                        assert.equal(point.cx.baseVal.value, 675);
+                        assert.equal(point.cy.baseVal.value, 360);
+                        assert.equal(point.gx, 7.5);
+                        assert.equal(point.gy, 4);
+                        //svg contains point
+                        assert.equal(p.svg.lastChild, point);
+                    });
+                });
+
+                QUnit.test("grid drawing", function(assert) {
+                    plotterTest(function(p){
+                        assert.equal(p.gridElements.length, 24);
+                        for(var i=0; i<p.svg.childNodes.length; i++) {
+                            assert.ok(p.gridElements.indexOf(p.svg.childNodes[i]) >= 0);
+                        }
+                    });
+                });
+
+                QUnit.test("graph redraw with coordinate change", function(assert) {
+                    plotterTest(function(p){
+                        var polyline = p.addFunction(function(x) {return 0.5 * x + 2});
+                        var point = p.addPoint(675, 360);
+                        p.minX = -10.0;
+                        p.maxX = 20.0;
+                        p.minY = -5.0;
+                        p.maxY = 25.0;
+                        p.stepX = 5.0;
+                        p.stepY = 3.0;
+                        p.reDraw();
+                        var points = polyline.points;
+                        for(var i=0; i<=900; i+=30) {
+                            //function points are updated (only checking every 30th point)
+                            assert.equal(points[i].x, i);
+                            assert.equal(points[i].y, 560 - i / 3);
+                        }
+                        //point coordinates are updated
+                        assert.equal(point.cx.baseVal.value, 525);
+                        assert.equal(point.cy.baseVal.value, 420);
+                        //grid is redrawn
+                        assert.equal(p.gridElements.length, 36);
+                    });
+                });
+
+                QUnit.test("point removal", function(assert) {
+                    plotterTest(function(p){
+                        var point = p.addPoint(200, 200);
+                        //trying to remove a point too far away should do nothing
+                        assert.equal(p.tryRemovePoint(204, 207), null);
+                        assert.equal(p.svg.lastChild, point);
+                        assert.ok(p.points.indexOf(point) >= 0);
+                        //removing a point within the cutoff should work
+                        assert.equal(p.tryRemovePoint(203, 204), point);
+                        assert.notEqual(p.svg.lastChild, point);
+                        assert.ok(p.points.indexOf(point) < 0);
+                    });
+                });
+    		});
+    	</script>
+
+        <div id="qunit"></div>
+        
+    </body>
+
+</html>

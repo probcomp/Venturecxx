@@ -12,7 +12,16 @@ class EmptyList(object):
   def append(self, last):
     return List(last, self)
 
-  def map(self, f):
+  def map(self, _f):
+    return self
+  
+  def isEmpty(self):
+    return True
+  
+  def __contains__(self, x):
+    return False
+  
+  def remove(self, _x):
     return self
   
 emptyList = EmptyList()
@@ -45,6 +54,19 @@ class List(object):
 
   def map(self, f):
     return self.rest.map(f).append(f(self.last))
+  
+  def isEmpty(self):
+    return False
+  
+  def __contains__(self, x):
+    if x == self.last:
+      return True
+    return x in self.rest
+  
+  def remove(self, x):
+    if x == self.last:
+      return self.rest
+    return self.rest.remove(x).append(self.last)
 
 class Address(List):
   """Maintains a call stack."""
@@ -62,5 +84,16 @@ class Address(List):
   def asList(self):
     """Converts to nested lists."""
     return map(list, list(self))
+
+  def asFrozenList(self):
+    return tuple(map(tuple, list(self)))
+
+  def __eq__(self, other):
+    if not isinstance(other, Address):
+      return False
+    return self.asFrozenList() == other.asFrozenList()
+
+  def __hash__(self):
+    return hash(self.asFrozenList())
 
 emptyAddress = Address(emptyList)

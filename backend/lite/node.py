@@ -76,6 +76,7 @@ class OutputNode(ApplicationNode):
     super(OutputNode,self).__init__(address, operatorNode, operandNodes)
     self.requestNode = requestNode
     self.env = env
+    self.isFrozen = False
 
   def definiteParents(self): return [self.operatorNode] + self.operandNodes + [self.requestNode]
   def parents(self): return self.definiteParents() + self.esrParents

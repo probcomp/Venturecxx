@@ -1,0 +1,11 @@
+;; Run with venture lite -f plot.vnt
+[infer (resample_multiprocess 6)]
+[load "model.vnt"]
+[observe (obs_fun 4) 4]
+[observe (obs_fun 5) 5]
+[observe (obs_fun 6) 6]
+[observe (obs_fun 7) 7]
+[infer (mh default one 50)]
+;[infer (hmc exp all 0.1 10 5)]
+;[infer (rejection default all 1)]
+[infer (plotf_to_file brown p0d1dr (position 8) (position 9))]

@@ -1,10 +1,16 @@
 import re
 from itertools import chain
+from time import strftime
+import numpy as np
+
+from venture.lite.exception import VentureValueError
+from venture.lite.utils import logWeightsToNormalizedDirect
 
 stream_rx = r"([rcts%]|[0-9]+)"
 scale_rx = r"([dl])"
 geom_rx = r"[plbah]"
-toplevel_rx = "(" + geom_rx + "*)" + "((" + stream_rx + "?" + scale_rx + "?){1,3})$"
+weight_rx = r"w?"
+toplevel_rx = "(" + weight_rx + ")" + "(" + geom_rx + "*)" + "((" + stream_rx + "?" + scale_rx + "?){1,3})$"
 dimension_rx = stream_rx + "?" + scale_rx + "?"
 
 class PlotSpec(object):
@@ -19,24 +25,53 @@ class PlotSpec(object):
     index = 0
     figs = []
     for spec in self.frames:
-      (aes, index) = spec.aes_dict_at(index, names)
+      spec.initialize()
+      if spec.weighted:
+        dataset['particle weight'] = logWeightsToNormalizedDirect(dataset['particle log weight'])
+      (aes, index) = spec.aes_dict_at(index, names, spec.get_geoms())
       plot = g.ggplot(dataset, g.aes(**aes))
       for geom in spec.get_geoms():
         plot += geom
+      # add the wall time
+      title = self._format_title(dataset)
+      plot += g.ggtitle(title)
       for (dim, scale) in zip(["x", "y", "color"], spec.scales):
         obj = self._interp_scale(dim, scale)
         if obj: plot += obj
-      figs.append(plot.draw())
+      figs.append(self._add_date(plot.draw()))
     return figs
 
-  def plot(self, dataset, names):
+  def plot(self, dataset, names, filenames=None):
     import matplotlib.pylab as plt
-    self.draw(dataset, names)
-    plt.show()
+    figs = self.draw(dataset, names)
+    if filenames is None:
+      plt.show()
+      plt.close()
+    else:
+      for fig, filename in zip(figs, filenames):
+        fig.suptitle(filename.replace('.png', ''))
+        fig.savefig(filename)
+      plt.close('all')
     # FIXME: add something to track names of frames here
 
   def streams(self):
     return chain(*[frame.streams for frame in self.frames])
+
+  @staticmethod
+  def _format_title(dataset):
+    walltime = dataset['time (s)'].max()
+    nsweeps = dataset['sweep count'].max()
+    nparticles = dataset['particle id'].max() + 1
+    title = 'Wall time: {0}m, {1:0.2f}s. Sweeps: {2}. Particles: {3}'
+    title = title.format(int(walltime // 60), walltime % 60, nsweeps, nparticles)
+    return title
+
+  @staticmethod
+  def _add_date(fig):
+    fig.text(0.975, 0.025, strftime("%c"),
+             horizontalalignment='right',
+             verticalalignment='bottom')
+    return fig
 
   def _interp_scale(self, dim, scale):
     import ggplot as g
@@ -58,14 +93,20 @@ class PlotSpec(object):
 
 class FrameSpec(object):
   def __init__(self, spec):
+    self.spec_string = spec
+
+  def initialize(self):
+    spec = self.spec_string
     self.two_d_only = True
     top = re.match(toplevel_rx, spec)
     if not top:
       raise Exception("Invalid plot spec %s; must match %s" % (spec, toplevel_rx))
-    self.geoms = top.group(1)
-    dims = top.group(2)
+    self.weighted = top.group(1)
+    self.geoms = top.group(2)
+    dims = top.group(3)
     if len(dims) == 0:
       raise Exception("Invalid plot spec %s; must supply at least one dimension to plot")
+    self._interp_geoms(self.geoms) # To set the self.two_d_only bit
     self._interp_dimensions(dims)
 
   def get_geoms(self):
@@ -96,7 +137,7 @@ class FrameSpec(object):
       self.two_d_only = False
     return {"p":g.geom_point, "l":g.geom_line, "b":g.geom_bar, "h":g.geom_histogram}[ge]()
 
-  def aes_dict_at(self, next_index, names):
+  def aes_dict_at(self, next_index, names, geoms):
     next_index = next_index
     ans = {}
     for (key, stream) in zip(["x", "y", "color"], self.streams):
@@ -114,4 +155,11 @@ class FrameSpec(object):
       else:
         ans[key] = names[int(stream)]
         next_index = int(stream) + 1
+    if self.weighted:
+      from ggplot import geoms as g
+      for geom in geoms:
+        if isinstance(geom, g.geom_line) or isinstance(geom, g.geom_point):
+          ans['alpha'] = 'particle weight'
+        elif isinstance(geom, g.geom_histogram) or isinstance(geom, g.geom_bar):
+          ans['weight'] = 'particle weight'
     return (ans, next_index)

@@ -48,7 +48,7 @@ of the program when all results have been returned. It then checks for
 exceptions; if any are found, it re-raises the first one. Else it passes its
 result back to the Engine.
 The TraceHandler also has methods to retrieve serialized traces from the
-individual TraceProcesses and reconstruct them. For the ParallelTraceHandler,
+individual TraceProcesses and reconstruct them. For the MultiprocessingTraceHandler,
 Traces must be serialized before being sent from TraceProcesses back to the
 Handler. This is the case since Trace objects are not picklable and hence
 cannot be sent over Pipes directly.
@@ -77,16 +77,27 @@ def dump_trace(trace, directives, skipStackDictConversion=False):
   # and then check that the passed foreign_sps match up with the foreign
   # SP's bound in the trace's global environment. However, in the Puma backend
   # there is currently no way to access this global environment.
+  # This block mutates the trace
   db = trace.makeSerializationDB()
   for did, directive in sorted(directives.items(), reverse=True):
     if directive[0] == "observe":
       trace.unobserve(did)
     trace.unevalAndExtract(did, db)
 
+  # This block undoes the mutation on the trace done by the previous block; but
+  # it does not destroy the value stack because the actual OmegaDB (superclass
+  # of OrderedOmegaDB) has the values.
   for did, directive in sorted(directives.items()):
     trace.restore(did, db)
     if directive[0] == "observe":
       trace.observe(did, directive[2])
+
+  # TODO Actually, I should restore the degree of incorporation the
+  # original trace had.  In the absence of tracking that, this
+  # heuristically makes the trace fully incorporated.  Hopefully,
+  # mistakes will be rarer than in the past (which will make them even
+  # harder to detect).
+  trace.makeConsistent()
 
   return trace.dumpSerializationDB(db, skipStackDictConversion)
 
@@ -149,36 +160,83 @@ class HandlerBase(object):
   '''
   Base class for all TraceHandlers; defines the majority of the methods to
   interact with the TraceHandlers and reserves abstract methods with different
-  behavior in parallel and sequential modes to be defined by subclasses.
+  behavior in parallel, threaded, and sequential modes to be defined by subclasses.
   '''
   __metaclass__ = ABCMeta
-  def __init__(self, traces, backend):
+  def __init__(self, traces, backend, process_cap):
+    """A TraceHandler maintains:
+
+    - An array of (logspace) weights of the traces being managed.  (It
+      seems reasonable to keep the weights on the master process, for
+      ease of access.)
+
+    - Two parallel arrays: child process objects, and the local ends
+      of pipes for talking to them.
+
+    - Each child process manages a chunk of the traces.  The full set
+      of traces is notionally the concatenation of all the chunks, in
+      the order given by the array of child processes.
+
+    - To be able to interact with a single trace, the TraceHandler
+      also maintains a mapping between the index in the total trace
+      list and (the chunk that trace is part of and its offset in that
+      chunk).
+
+    """
     self.backend = backend
-    self.pipes = []
+    self.process_cap = process_cap
     self.processes = []
-    self.weights = []
-    Pipe, TraceProcess = self._setup()
-    for trace in traces:
-      parent, child = Pipe()
-      process = TraceProcess(trace, child, self.backend)
-      process.start()
-      self.pipes.append(parent)
-      self.processes.append(process)
-      self.weights.append(1)
+    self.pipes = []  # Parallel to processes
+    self.chunk_sizes = [] # Parallel to processes
+    self.log_weights = []
+    self.chunk_indexes = [] # Parallel to log_weights
+    self.chunk_offsets = [] # Parallel to chunk_indexes
+    self._create_processes(traces)
     self.reset_seeds()
 
   def __del__(self):
     # stop child processes
     self.delegate('stop')
 
+  def _create_processes(self, traces):
+    Pipe, TraceProcess = self._pipe_and_process_types()
+    if self.process_cap is None:
+      base_size = 1
+      extras = 0
+      chunk_ct = len(traces)
+    else:
+      (base_size, extras) = divmod(len(traces), self.process_cap)
+      chunk_ct = min(self.process_cap, len(traces))
+    for chunk in range(chunk_ct):
+      parent, child = Pipe()
+      if chunk < extras:
+        chunk_start = chunk * (base_size + 1)
+        chunk_end = chunk_start + base_size + 1
+      else:
+        chunk_start = extras + chunk * base_size
+        chunk_end = chunk_start + base_size
+      assert chunk_end <= len(traces) # I think I wrote this code to ensure this
+      process = TraceProcess(traces[chunk_start:chunk_end], child, self.backend)
+      process.start()
+      self.pipes.append(parent)
+      self.processes.append(process)
+      self.chunk_sizes.append(chunk_end - chunk_start)
+      for i in range (chunk_end - chunk_start):
+        self.log_weights.append(0)
+        self.chunk_indexes.append(chunk)
+        self.chunk_offsets.append(i)
+
   def incorporate(self):
     weight_increments = self.delegate('makeConsistent')
     for i, increment in enumerate(weight_increments):
-      self.weights[i] += increment
+      self.log_weights[i] += increment
+
+  def likelihood_weight(self):
+    self.log_weights = self.delegate('likelihood_weight')
 
   def reset_seeds(self):
     for i in range(len(self.processes)):
-      self.delegate_one(i, 'set_seed', random.randint(1,2**31-1))
+      self.delegate_one_chunk(i, 'set_seeds', [random.randint(1,2**31-1) for _ in range(self.chunk_sizes[i])])
 
   # NOTE: I could metaprogram all the methods that delegate passes on,
   # but it feels cleaner just call the delegator than to add another level
@@ -186,20 +244,31 @@ class HandlerBase(object):
   def delegate(self, cmd, *args, **kwargs):
     '''Delegate command to all workers'''
     # send command
-    for pipe in self.pipes: pipe.send((cmd, args, kwargs))
+    for pipe in self.pipes: pipe.send((cmd, args, kwargs, None))
     if cmd == 'stop': return
     res = []
     for pipe in self.pipes:
-      res.append(pipe.recv())
+      ans = pipe.recv()
+      res.extend(ans)
+    if any([threw_error(entry) for entry in res]):
+      exception_handler = TraceProcessExceptionHandler(res)
+      raise exception_handler.gen_exception()
+    return res
+
+  def delegate_one_chunk(self, ix, cmd, *args, **kwargs):
+    '''Delegate command to (all the traces of) a single worked, indexed by ix in the process list'''
+    pipe = self.pipes[ix]
+    pipe.send((cmd, args, kwargs, None))
+    res = pipe.recv()
     if any([threw_error(entry) for entry in res]):
       exception_handler = TraceProcessExceptionHandler(res)
       raise exception_handler.gen_exception()
     return res
 
   def delegate_one(self, ix, cmd, *args, **kwargs):
-    '''Delegate command to a single worker, indexed by ix'''
-    pipe = self.pipes[ix]
-    pipe.send((cmd, args, kwargs))
+    '''Delegate command to a single trace, indexed by ix in the trace list'''
+    pipe = self.pipes[self.chunk_indexes[ix]]
+    pipe.send((cmd, args, kwargs, self.chunk_offsets[ix]))
     res = pipe.recv()
     if threw_error(res):
       exception_handler = TraceProcessExceptionHandler([res])
@@ -222,12 +291,13 @@ class HandlerBase(object):
   def retrieve_traces(self, engine): pass
 
 ######################################################################
+# Base classes serializing traces properly
 
-class ParallelHandlerArchitecture(HandlerBase):
+class SerializingHandlerArchitecture(HandlerBase):
   '''
   Retrieves traces by requesting dumps from workers and reconstructing on
-  other end of Pipe. Inherited by ParallelTraceHandler (for which this mode
-  of communication is required) and EmulatingTraceHandler (which is sequential
+  other end of Pipe. Inherited by MultiprocessingTraceHandler (for which this mode
+  of communication is required) and ThreadedSerializingTraceHandler (which is sequential
   but mimics the API of the Parallel version).
   '''
   def retrieve_trace(self, ix, engine):
@@ -238,12 +308,12 @@ class ParallelHandlerArchitecture(HandlerBase):
     dumped_all = self.retrieve_dumps(engine)
     return [engine.restore_trace(dumped) for dumped in dumped_all]
 
-class SequentialHandlerArchitecture(HandlerBase):
+class SharedMemoryHandlerArchitecture(HandlerBase):
   '''
   Retrieves traces by requesting the traces themselves directly. Since
   multiprocessing.dummy is actually just a wrapper around Threading, there is
   no problem with sending arbitrary Python objects over dummy.Pipes. Inherited
-  by SequentialTraceHandler.
+  by ThreadedTraceHandler.
   '''
   def retrieve_trace(self, ix, engine):
     return self.delegate_one(ix, 'send_trace')
@@ -252,80 +322,76 @@ class SequentialHandlerArchitecture(HandlerBase):
     return self.delegate('send_trace')
 
 ######################################################################
+# Concrete trace handlers
 
-class ParallelTraceHandler(ParallelHandlerArchitecture):
-  '''
-  Controls ParallelTraceProcesses. Communicates with workers via
-  multiprocessing.Pipe. Truly parallel implementation.
+class MultiprocessingTraceHandler(SerializingHandlerArchitecture):
+  '''Controls MultiprocessingTraceProcesses. Communicates with workers
+  via multiprocessing.Pipe. Truly multiprocess implementation.
+
   '''
   @staticmethod
-  def _setup():
-    return mp.Pipe, ParallelTraceProcess
+  def _pipe_and_process_types():
+    return mp.Pipe, MultiprocessingTraceProcess
 
-class EmulatingTraceHandler(ParallelHandlerArchitecture):
+class ThreadedSerializingTraceHandler(SerializingHandlerArchitecture):
+  '''Controls ThreadedSerializingTraceProcesses. Communicates with
+  workers via multiprocessing.dummy.Pipe. Do not use for actual
+  modeling. Rather, intended for debugging; API mimics
+  MultiprocessingTraceHandler, but implementation is multithreaded.
+
   '''
-  Controls EmulatingTraceProcesses. Communicates with workers via
+  @staticmethod
+  def _pipe_and_process_types():
+    return mpd.Pipe, ThreadedSerializingTraceProcess
+
+class ThreadedTraceHandler(SharedMemoryHandlerArchitecture):
+  '''Controls ThreadedTraceProcesses. Communicates via
   multiprocessing.dummy.Pipe. Do not use for actual modeling. Rather,
-  intended for debugging; API mimics ParallelTraceHandler, but implementation
-  is sequential.
-  '''
-  @staticmethod
-  def _setup():
-    return mpd.Pipe, EmulatingTraceProcess
+  intended for debugging multithreading; API mimics
+  ThreadedSerializingTraceHandler, but does not serialize the traces.
 
-class SequentialTraceHandler(SequentialHandlerArchitecture):
-  '''
-  Controls SequentialTraceProcess. Default TraceHandler. Communicates via
-  multiprocessing.dummy.Pipe.
   '''
   @staticmethod
-  def _setup():
-    return mpd.Pipe, SequentialTraceProcess
+  def _pipe_and_process_types():
+    return mpd.Pipe, ThreadedTraceProcess
+
+class SynchronousSerializingTraceHandler(SerializingHandlerArchitecture):
+  '''Controls SynchronousSerializingTraceProcesses. Communicates via
+  SynchronousPipe. Do not use for actual modeling. Rather, intended
+  for debugging multithreading; API mimics
+  MultiprocessingTraceHandler, but runs synchronously in one thread.
+
+  '''
+  @staticmethod
+  def _pipe_and_process_types():
+    return SynchronousPipe, SynchronousTraceProcess
+
+class SynchronousTraceHandler(SharedMemoryHandlerArchitecture):
+  '''Controls SynchronousTraceProcesses. Default
+  TraceHandler. Communicates via SynchronousPipe.  This is what you
+  want if you don't want to pay for parallelism.
+
+  '''
+  @staticmethod
+  def _pipe_and_process_types():
+    return SynchronousPipe, SynchronousTraceProcess
 
 ######################################################################
 # Trace processes; interact with individual traces
 ######################################################################
 
-class ProcessBase(object):
-  '''
-  The base class is ProcessBase, which defines all the methods that do the
-  actual work of interacting with traces.
-  '''
-  __metaclass__ = ABCMeta
-  def __init__(self, trace, pipe, backend):
-    self.trace = trace
-    self.pipe = pipe
-    self.backend = backend
-    Process = self._setup()
-    Process.__init__(self)
-    self.daemon = True
+class TraceWrapper(object):
+  """Defines all the methods that do the actual work of interacting with
+  traces.
 
-  def run(self):
-    while True:
-      cmd, args, kwargs = self.pipe.recv()
-      if cmd == 'stop':
-        return
-      res = getattr(self, cmd)(*args, **kwargs)
-      self.pipe.send(res)
+  """
+  def __init__(self, trace): self.trace = trace
 
   def __getattr__(self, attrname):
-    # if attrname isn't attribute of ProcessBase, look for it as a method on the trace
-    # safely doesn't work as a decorator here; do it this way.
+    # if attrname isn't attribute of TraceWrapper, look for it as a
+    # method on the trace.  Safely doesn't work as a decorator here;
+    # do it this way.
     return safely(safely(getattr)(self.trace, attrname))
-
-  @abstractmethod
-  def send_trace(self): pass
-
-  @safely
-  def set_seed(self, seed):
-    # if we're in puma or we're truly parallel, set the seed; else don't.
-    if self.backend == 'puma':
-      self.trace.set_seed(seed)
-
-  @safely
-  def send_dump(self, directives):
-    dumped = dump_trace(self.trace, directives)
-    return dumped
 
   @safely
   def assume(self, baseAddr, id, exp):
@@ -369,74 +435,156 @@ class ProcessBase(object):
     else:
       # The trace cannot handle the inference primitive syntax
       # natively, so translate.
-      self.trace.infer(expToDict(exp))
+      d = expToDict(exp)
+      #import pdb; pdb.set_trace()
+      self.trace.infer(d)
+
+
+class ProcessBase(object):
+
+  '''The base class is ProcessBase, which manages a list of traces
+  (through TraceWrapper objects).
+
+  '''
+  __metaclass__ = ABCMeta
+  def __init__(self, traces, pipe, backend):
+    self.traces = [TraceWrapper(t) for t in traces]
+    self.pipe = pipe
+    self.backend = backend
+    self._initialize()
+
+  def run(self):
+    while True: self.poll()
+
+  def poll(self):
+    cmd, args, kwargs, index = self.pipe.recv()
+    if cmd == 'stop':
+      return
+    if hasattr(self, cmd):
+      res = getattr(self, cmd)(index, *args, **kwargs)
+    elif index is not None:
+      res = getattr(self.traces[index], cmd)(*args, **kwargs)
+    else:
+      res = [getattr(t, cmd)(*args, **kwargs) for t in self.traces]
+    self.pipe.send(res)
+
+  @safely
+  def set_seeds(self, _index, seeds):
+    # if we're in puma or we're truly parallel, set the seed; else don't.
+    if self.backend == 'puma':
+      for (t, s) in zip(self.traces, seeds):
+        t.set_seed(s)
+    return [None for _ in self.traces]
+
+  @abstractmethod
+  def send_trace(self, index): pass
+
+  @safely
+  def send_dump(self, index, directives):
+    if index is not None:
+      return dump_trace(self.traces[index].trace, directives)
+    else:
+      return [dump_trace(t.trace, directives) for t in self.traces]
 
 ######################################################################
+# Base classes defining how to send traces, and process types
 
-class ParallelProcessArchitecture(ProcessBase):
+class SerializingProcessArchitecture(ProcessBase):
   '''
   Attempting to send a trace without first serializing results in an exception.
-  Inherited by ParallelTraceProcess (for which this behavior is necessary) and
-  EmulatingTraceProcess (which mimics the API of the Parallel process).
+  Inherited by MultiprocessingTraceProcess (for which this behavior is necessary) and
+  ThreadedSerializingTraceProcess (which mimics the API of the Parallel process).
   '''
   @safely
-  def send_trace(self):
+  def send_trace(self, _index):
     raise VentureException("fatal",
                            "Must serialize traces before sending in parallel architecture")
 
-class SequentialProcessArchitecture(ProcessBase):
+class SharedMemoryProcessArchitecture(ProcessBase):
   '''
-  Sends traces directly. Inherited by SequentialTraceProcess.
+  Sends traces directly. Inherited by ThreadedTraceProcess.
   '''
   @safely
-  def send_trace(self):
-    return self.trace
+  def send_trace(self, index):
+    if index is not None:
+      return self.traces[index].trace
+    else:
+      return [t.trace for t in self.traces]
 
 class MultiprocessBase(mp.Process):
   '''
-  Specifies parallel implementation; inherited by ParallelTraceProcess.
+  Specifies multiprocess implementation; inherited by MultiprocessingTraceProcess.
   '''
-  @staticmethod
-  def _setup():
-    return mp.Process
+  def _initialize(self):
+    mp.Process.__init__(self)
+    self.daemon = True
 
-class DummyBase(mpd.Process):
+class ThreadingBase(mpd.Process):
   '''
-  Specifies sequential implementation; inherited by EmulatingTraceProcess
-  and SequentialTraceProcess.
+  Specifies threaded implementation; inherited by ThreadedSerializingTraceProcess
+  and ThreadedTraceProcess.
   '''
-  @staticmethod
-  def _setup():
-    return mpd.Process
+  def _initialize(self):
+    mpd.Process.__init__(self)
+    self.daemon = True
+
+class SynchronousBase(object):
+  '''Specifies synchronous implementation; inherited by
+  SynchronousSerializingTraceProcess and SynchronousTraceProcess.
+  '''
+  def _initialize(self):
+    self.pipe.register_callback(self.poll)
+
+  def start(self): pass
 
 ######################################################################
+# Concrete process classes
 
 # pylint: disable=too-many-ancestors
-class ParallelTraceProcess(ParallelProcessArchitecture, MultiprocessBase):
+class MultiprocessingTraceProcess(SerializingProcessArchitecture, MultiprocessBase):
   '''
-  True parallel traces via multiprocessing. Controlled by ParallelTraceHandler.
+  True parallel traces via multiprocessing. Controlled by MultiprocessingTraceHandler.
   '''
   @safely
-  def set_seed(self, seed):
-    # override the default set_seed method; if we're in parallel Python,
+  def set_seeds(self, index, seeds):
+    # override the default set_seeds method; if we're in parallel Python,
     # reset the global random seeds.
     if self.backend == 'lite':
-      random.seed(seed)
-      np.random.seed(seed)
+      # In Python the RNG is global; only need to set it once.
+      random.seed(seeds[0])
+      np.random.seed(seeds[0])
+      return [None for _ in self.traces]
     else:
-      ProcessBase.set_seed(self, seed)
+      return ProcessBase.set_seeds(self, index, seeds)
 
-class EmulatingTraceProcess(ParallelProcessArchitecture, DummyBase):
-  '''
-  Emulates ParallelTraceProcess but is implemented sequentially. Use for
-  debugging. Controlled by EmulatingTraceHandler.
+class ThreadedSerializingTraceProcess(SerializingProcessArchitecture, ThreadingBase):
+  '''Emulates MultiprocessingTraceProcess by serializing the traces, but
+  is implemented with threading. Could be useful for debugging?
+  Controlled by ThreadedSerializingTraceHandler.
+
   '''
   pass
 
-class SequentialTraceProcess(SequentialProcessArchitecture, DummyBase):
+class ThreadedTraceProcess(SharedMemoryProcessArchitecture, ThreadingBase):
+  '''Emulates MultiprocessingTraceProcess by running multithreaded but
+  without serializing traces.  Could be useful for debugging?
+  Controlled by ThreadedTraceHandler.
+
+  '''
+  pass
+
+class SynchronousSerializingTraceProcess(SerializingProcessArchitecture, SynchronousBase):
+  '''Emulates MultiprocessingTraceProcess by serializing the traces as
+  it would, while still running in one thread.  Use for debugging.
+  Controlled by SynchronousSerializingTraceHandler.
+
+  '''
+  pass
+
+class SynchronousTraceProcess(SharedMemoryProcessArchitecture, SynchronousBase):
   '''
   Default class for interacting with Traces. Controlled by
-  SequentialTraceHandler.
+  SynchronousTraceHandler.
   '''
   pass
 
@@ -465,7 +613,7 @@ class TraceProcessExceptionHandler(object):
       exc.worker_trace = self.traces[0]
       return exc
     else:
-      msg = (self.values[0].message + format_worker_trace(self.traces[0]))
+      msg = (str(self.values[0].message) + format_worker_trace(self.traces[0]))
       return Exc(msg)
 
   @staticmethod
@@ -488,3 +636,39 @@ class TraceProcessExceptionHandler(object):
 #   the error message. Append the child stack trace as a string to the error
 #   message. Raise another exception of the same type, with the appended error
 #   message.
+
+######################################################################
+# Fake Pipes that actually just use one thread
+######################################################################
+
+class SynchronousOneWayPipe(object):
+  def __init__(self):
+    self.other = None
+    self.objs = []
+    self.cbs = []
+
+  def register_callback(self, cb):
+    self.cbs.append(cb)
+
+  def send(self, obj):
+    self.other.emplace(obj)
+
+  def emplace(self, obj):
+    self.objs.append(obj)
+    for cb in self.cbs:
+      cb()
+
+  def recv(self):
+    ans = self.objs[0]
+    self.objs = self.objs[1:]
+    return ans
+
+def SynchronousPipe():
+  parent = SynchronousOneWayPipe()
+  child = SynchronousOneWayPipe()
+  parent.other = child
+  child.other = parent
+  return (parent, child)
+
+class SynchronousProcess(object):
+  pass

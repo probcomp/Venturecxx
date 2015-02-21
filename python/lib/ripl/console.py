@@ -60,7 +60,11 @@ class RiplCmd(Cmd, object):
   do_EOF = do_quit
 
   def _do_instruction(self, instruction, s):
-    return self.ripl.execute_instruction('[%s %s]' % (instruction, s))
+    if self.ripl.get_mode() == "church_prime":
+      r_inst = '[%s %s]' % (instruction, s)
+    else:
+      r_inst = '%s %s' % (instruction, s)
+    return self.ripl.execute_instruction(r_inst)
 
   def precmd(self, line):
     line = line.strip()
@@ -68,6 +72,11 @@ class RiplCmd(Cmd, object):
       if line[-1] == "]" or line[-1] == ")":
         return line[1:-1]
     return line
+
+  @catchesVentureException
+  def do_define(self, s):
+    '''Define a variable in the inference program.'''
+    print getValue(self._do_instruction('define', s))
 
   @catchesVentureException
   def do_assume(self, s):
@@ -164,8 +173,7 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def do_load(self, s):
     '''Load the given Venture file.'''
-    with open(s) as fp:
-      self.ripl.execute_program(fp.read())
+    self.ripl.execute_program_from_file(s)
 
 def run_venture_console(ripl):
   RiplCmd(ripl).cmdloop()

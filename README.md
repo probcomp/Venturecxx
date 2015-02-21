@@ -13,6 +13,52 @@ published. We are making Venture available at this early stage
 primarily to facilitate collaboration and support the emerging
 probabilistic programming community.
 
+Running Venture's Docker Container (Linux)
+==========================================
+
+The easiest way to get Venture is to run it inside a [Docker
+container](http://www.docker.com).
+
+    sudo apt-get install docker.io   # Install Docker
+    sudo script/build_docker_image   # Requires network, and a while
+    sudo script/run_docker_container
+
+    venture                          # Inside the container
+
+    firefox localhost:8888           # For example IPython notebooks
+
+You get
+- A shell inside the container to do whatever
+- The source directory mapped into the container so you can edit from
+  outside
+- a VNC server listening on localhost port 5900
+- an IPython notebook server listening on port 8888
+
+Running Venture's Docker Container (Windows)
+==========================================
+
+On Windows and MacOS, you can easily run docker containers with the boot2docker tool.
+Boot2docker is a VM interface and lightweight Linux distribution specifically intended
+to run [Docker containers](http://www.docker.com).
+It runs completely from RAM, weighs ~27MB and boots in ~5s.
+
+    Install latest boot2docker for Windows
+        https://docs.docker.com/installation/windows/   # Installation Instructions
+    script/windows/1_initialize_boot2docker.sh          # Update boot2docker image
+    script/windows/2_build_image.sh                     # Build image (large download + build)
+    script/windows/3_run_container.sh                   # Launch application
+
+    venture                          # Inside the container
+
+    firefox localhost:8888           # For example IPython notebooks
+
+You get
+- A shell inside the container to do whatever
+- The source directory mapped into the container so you can edit from
+  outside
+- a VNC server listening on localhost port 5900
+- an IPython notebook server listening on port 8888
+
 Installing Venture from Source
 ==============================
 
@@ -25,7 +71,9 @@ what's going on will be to ask us or to read the source code.
 Dependencies (Ubuntu)
 ---------------------
 
-Here is what we install on a clean Ubuntu (works best in 14.04 or higher).
+Here is what we install on a clean Ubuntu (works best in 14.04 or
+higher).  This dependency installation is replicated as
+[script/provision_ubuntu_dependencies](script/provision_ubuntu_dependencies)
 
     # Get system dependencies
     sudo apt-get install -y libboost-all-dev libgsl0-dev python-pip ccache libfreetype6-dev
@@ -49,7 +97,7 @@ Dependencies (OSX, Homebrew)
 ----------------------------
 
 This is the best-supported and best-tested method for building Venture on Mac.
-    
+
     # Install Packet Manager "Homebrew"
     http://brew.sh/
 
@@ -134,24 +182,29 @@ On OSX with Macports, run
 Local Installation
 ------------------
 
-In order to install locally, download and install python "virtualenv" onto your computer. [https://pypi.python.org/pypi/virtualenv](https://pypi.python.org/pypi/virtualenv)
+In order to install locally, make sure you have python
+[virtualenv](https://pypi.python.org/pypi/virtualenv).
 
-Create a new virtual environment to install the requirements:
+    sudo pip install virtualenv
 
+Then prepare your virtual environment (replicated as
+[script/prepare_virtualenv](script/prepare_virtualenv)):
+
+    # Create a new virtual environment to install Venture (and its Python dependencies):
     virtualenv env.d
 
-If Python dependencies were pre-installed these can be used by typing
-
+    # If (some) Python dependencies were pre-installed these can be used by typing
     virtualenv --system-site-packages env.d
 
-Activate the environment, and install any remaining dependencies
-
+    # Activate the environment, and install any remaining dependencies
     source env.d/bin/activate
     pip install -r requirements.txt
 
-[Optional] Install ggplot (needed for the built-in plotting facilities)
+    # Be sure to put nose into the virtualenv, so it can find its packages
+    pip install --ignore-installed nose
 
-    sudo pip install ggplot
+    # [Optional] Install ggplot (needed for the built-in plotting facilities)
+    pip install ggplot
 
 On Linux and OSX with Homebrew, now install by typing
 
@@ -167,10 +220,6 @@ Checking that your installation was successful
 ----------------------------------------------
 
     ./sanity_tests.sh
-
-If you are interested in improving Venture, you can also run
-
-    ./list_known_issues.sh
 
 Getting Started
 ---------------
@@ -212,9 +261,11 @@ The interesting parts of the code are:
 - Advanced example programs live in `examples/`.
 - There are some developer tools available in `tool/`.
 - There is a stale C++11 backend in `backend/cxx/`.
-- The Javascript client and web demos are actually in the
-  [VentureJSRIPL](https://github.com/mit-probabilistic-computing-project/VentureJSRIPL)
-  repository.
+- The Javascript client and web demos are in `demos/`, subdivided by
+  architecture into `demos/jsripl` (which corresponds to the erstwile
+  VentureJSRIPL repository), `demos/elm` (an attempt to do demos in
+  Elm), and `demos/hill-curve-fitting`, which is a single demo that
+  exemplifies web sockets.
 - There are language-level benchmarks (and correctness tests) in the
   [VentureBenchmarksAndTests](https://github.com/mit-probabilistic-computing-project/VentureBenchmarksAndTests)
   repository, but they may have bit rotted by now.

@@ -1,0 +1,29 @@
+// Run me with venture lite -f trickiness-ideal.vnts
+// (lite because Puma does not support rejection sampling)
+infer resample(40)
+assume is_tricky = bernoulli(0.1)
+assume weight = if (is_tricky) {
+  uniform_continuous(0, 1)
+} else {
+  0.5
+}
+infer plotf_to_file(ideal_prior_trick_mar,  h0, is_tricky)
+infer plotf_to_file(ideal_prior_weight_mar, h0, weight)
+infer plotf_to_file(ideal_prior_joint,   p0d1d, is_tricky, weight)
+observe bernoulli(weight) = 1
+observe bernoulli(weight) = 1
+observe bernoulli(weight) = 1
+infer plotf_to_file(ideal_obs_trick_mar,  h0, is_tricky)
+infer plotf_to_file(ideal_obs_weight_mar, h0, weight)
+infer plotf_to_file(ideal_obs_joint,   p0d1d, is_tricky, weight)
+infer rejection(default, all, 1)
+infer plotf_to_file(ideal_trick_mar,  h0, is_tricky)
+infer plotf_to_file(ideal_weight_mar, h0, weight)
+infer plotf_to_file(ideal_joint,   p0d1d, is_tricky, weight)
+observe bernoulli(weight) = 1
+observe bernoulli(weight) = 1
+observe bernoulli(weight) = 1
+infer rejection(default, all, 1)
+infer plotf_to_file(ideal_more_data_trick_mar,  h0, is_tricky)
+infer plotf_to_file(ideal_more_data_weight_mar, h0, weight)
+infer plotf_to_file(ideal_more_data_joint,   p0d1d, is_tricky, weight)

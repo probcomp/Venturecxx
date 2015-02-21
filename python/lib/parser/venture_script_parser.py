@@ -57,7 +57,7 @@ def _collapse_identity(toks, operators):
         return {"loc":toks['loc'], "value":[
             toks['value'][0],
             _collapse_identity(toks['value'][1], operators)]}
-    if toks['value'][1]['value'][0]['value'] in operators:
+    if toks['value'][1]['value'][0]['value']['value'] in operators:
         return {"loc":toks['loc'], "value":toks['value'][1]['value']}
     return toks
 
@@ -68,7 +68,7 @@ def _make_infix_token(previous_token, operator_map, lower_precedence, left_to_ri
     operator_dict = dict(operator_map)
     operator_key_list = list(x[0] for x in operator_map)
     operator_value_list = list(x[1] for x in operator_map)
-    def f(s, loc, toks):
+    def f(_s, _loc, toks):
         """
         generates a function that processes a list of infix tokens into
         the proper binary tree based on certain operator precedence rules
@@ -88,7 +88,7 @@ def _make_infix_token(previous_token, operator_map, lower_precedence, left_to_ri
         exp = toks[0]
         for operator, operand in zip(*(iter(toks[1:]),)*2):
             l = combine_locs([operator, operand, exp])
-            operator['value'] = operator_dict[operator['value']]
+            operator['value'] = vv.sym(operator_dict[operator['value']])
             if swap_order:
                 v = [operator, operand, exp]
             else:
@@ -122,7 +122,7 @@ class VentureScriptParser(object):
         # <symbol_args>
         #
         # evaluates to a list: [<expression>*]
-        def process_symbol_args(s, loc, toks):
+        def process_symbol_args(_s, _loc, toks):
             v = toks[1:-1:2]
             l = combine_locs(toks)
             return [{"loc":l, "value":v}]
@@ -135,7 +135,7 @@ class VentureScriptParser(object):
         # <expression_args>
         #
         # evaluates to a list: [<expression>*]
-        def process_expression_args(s, loc, toks):
+        def process_expression_args(_s, _loc, toks):
             v = toks[1:-1:2]
             l = combine_locs(toks)
             return [{"loc":l, "value":v}]
@@ -148,7 +148,7 @@ class VentureScriptParser(object):
         # <assignments>
         #
         # evaluates to a list of [[<expression>,<expression>]*]
-        def process_assignments(s, loc, toks):
+        def process_assignments(_s, _loc, toks):
             symbols = toks[:-2:3]
             expressions = toks[2::3]
             v = [{"loc":combine_locs(x), "value":list(x)} for x in zip(symbols, expressions)]
@@ -184,7 +184,7 @@ class VentureScriptParser(object):
         # <identity>
         #
         # evaluates to ["identity", <expression>]
-        def process_identity(s, loc, toks):
+        def process_identity(_s, _loc, toks):
             l = combine_locs(toks)
             v = [
                     {"loc":l, 'value':vv.sym('identity')},
@@ -198,7 +198,7 @@ class VentureScriptParser(object):
         # <if_else>
         #
         # evaluates to ["if", <expression>, <expression>, <expression>]
-        def process_if_else(s, loc, toks):
+        def process_if_else(_s, _loc, toks):
             l = combine_locs(toks)
             v = [
                     {"loc":toks[0]['loc'], 'value':vv.sym('if')},
@@ -218,7 +218,7 @@ class VentureScriptParser(object):
         # <proc>
         #
         # evaluates to ['lambda', <symbol_args>, <expression>]
-        def process_proc(s, loc, toks):
+        def process_proc(_s, _loc, toks):
             l = combine_locs(toks)
             v = [
                     {"loc":toks[0]['loc'], 'value':vv.sym('lambda')},
@@ -235,7 +235,7 @@ class VentureScriptParser(object):
         # <let>
         #
         # evaluates to ['let', <assignments>, <expression>]
-        def process_let(s, loc, toks):
+        def process_let(_s, _loc, toks):
             l = combine_locs(toks)
             v = [
                     {"loc":l, 'value':vv.sym('let')},
@@ -250,7 +250,7 @@ class VentureScriptParser(object):
         # <non_fn_expression>
         #
         # evaluates to itself
-        def process_non_fn_expression(s, loc, toks):
+        def process_non_fn_expression(_s, _loc, toks):
             return [toks[0]]
         self.non_fn_expression = (
                 self.identity |
@@ -266,12 +266,12 @@ class VentureScriptParser(object):
         #
         # evaluates to [ .. [[<non_fn_expression>, *<args1>], *<args2>] .. , *<argsn>]
         # or <non_fn_expression> if no args provided
-        def process_fn_application(s, loc, toks):
+        def process_fn_application(_s, _loc, toks):
             if len(toks) == 1:
                 return [toks[0]]
             #collapse possible infix identities
             exp = [_collapse_identity(toks[0], ('pow', 'add', 'sub', 'mul', 'div',
-                'eq', 'neq', 'lte', 'gte', 'gt', 'lt', 'and', 'or'))]
+                                                'eq', 'neq', 'lte', 'gte', 'gt', 'lt', 'and', 'or', '<-'))]
             for args in toks[1:]:
                 v = exp+args['value']
                 l = combine_locs(exp + [args])
@@ -288,7 +288,7 @@ class VentureScriptParser(object):
         self.exponent = _make_infix_token(
                 previous_token = self.fn_application,
                 operator_map = (('**','pow'),),
-                lower_precedence = ('add', 'sub', 'mul', 'div', 'eq', 'neq', 'lte', 'gte', 'gt', 'lt', 'and', 'or'),
+                lower_precedence = ('add', 'sub', 'mul', 'div', 'eq', 'neq', 'lte', 'gte', 'gt', 'lt', 'and', 'or', '<-'),
                 left_to_right = False,
                 swap_order = True,
                 )
@@ -301,7 +301,7 @@ class VentureScriptParser(object):
         self.mul_div = _make_infix_token(
                 previous_token = self.exponent,
                 operator_map = (('*','mul'),('/','div')),
-                lower_precedence = ('add', 'sub', 'eq', 'neq', 'lte', 'gte', 'gt', 'lt', 'and', 'or'),
+                lower_precedence = ('add', 'sub', 'eq', 'neq', 'lte', 'gte', 'gt', 'lt', 'and', 'or', '<-'),
                 )
 
 
@@ -313,7 +313,7 @@ class VentureScriptParser(object):
         self.add_sub = _make_infix_token(
                 previous_token = self.mul_div,
                 operator_map = (('+','add'),('-','sub')),
-                lower_precedence = ('eq', 'neq', 'lte', 'gte', 'gt', 'lt', 'and', 'or'),
+                lower_precedence = ('eq', 'neq', 'lte', 'gte', 'gt', 'lt', 'and', 'or', '<-'),
                 )
 
 
@@ -324,7 +324,7 @@ class VentureScriptParser(object):
         self.comparison = _make_infix_token(
                 previous_token = self.add_sub,
                 operator_map = (('<=','lte'),('>=','gte'),('<','lt'),('>','gt')),
-                lower_precedence = ('eq', 'neq', 'and', 'or'),
+                lower_precedence = ('eq', 'neq', 'and', 'or', '<-'),
                 )
 
 
@@ -335,7 +335,7 @@ class VentureScriptParser(object):
         self.equality = _make_infix_token(
                 previous_token = self.comparison,
                 operator_map = (('==','eq'),('!=','neq')),
-                lower_precedence = ('and', 'or'),
+                lower_precedence = ('and', 'or', '<-'),
                 )
 
 
@@ -346,7 +346,7 @@ class VentureScriptParser(object):
         self.boolean_and = _make_infix_token(
                 previous_token = self.equality,
                 operator_map = (('&&','and'),),
-                lower_precedence = ('or'),
+                lower_precedence = ('or', '<-'),
                 )
 
 
@@ -358,16 +358,22 @@ class VentureScriptParser(object):
         self.boolean_or = _make_infix_token(
                 previous_token = self.boolean_and,
                 operator_map = (('||','or'),),
-                lower_precedence = (),
+                lower_precedence = ('<-'),
                 )
+
+        self.do_bind = _make_infix_token(
+            previous_token = self.boolean_or,
+            operator_map = (('<-','<-'),),
+            lower_precedence = (),
+        )
 
 
         # <expression>
         #
         # evaluates to itself
-        def process_expression(s, loc, toks):
+        def process_expression(_s, _loc, toks):
             return [toks[0]]
-        self.expression << self.boolean_or
+        self.expression << self.do_bind # pylint:disable=W0104
         self.expression.setParseAction(process_expression)
 
 
@@ -399,6 +405,7 @@ class VentureScriptParser(object):
         # grammar is located in the utils.py file
         instruction_list = [
             # Directives
+            ['define','<!define> <symbol:sym> = <expression:exp>'],
             ['assume','<!assume> <symbol:sym> = <expression:exp>'],
             ['labeled_assume','<label:sym> : <!assume> <symbol:sym> = <expression:exp>'],
             ['observe','<!observe> <expression:exp> = <value:lit>'],
@@ -426,6 +433,8 @@ class VentureScriptParser(object):
             ['get_logscore', '<!get> <!logscore> <directive_id:int>'],
             ['labeled_get_logscore', '<!get> <!logscore> <label:sym>'],
             ['get_global_logscore', '<!get> <!global> <!logscore>'],
+            # Ripl
+            ['load', '<!load> <file:json>'] # json, a poor man's quoted string
             ]
 
         self.instruction = utils.make_instruction_parser(instruction_list,patterns)
@@ -457,6 +466,13 @@ class VentureScriptParser(object):
         # FIXME: implementation
         raise VentureException("VentureScript can't unparse expressions :(")
 
+    def unparse_instruction(self, instruction):
+        def unparse(k, v):
+            return self.unparse_expression(v) if k == 'expression' else v
+        template = self.instruction_strings[instruction['instruction']]
+        param = dict((k, unparse(k, v)) for k, v in instruction.iteritems())
+        return self.substitute_params(template, param)
+
     def parse_number(self, number_string):
         return utils.apply_parser(self.literal, number_string)[0]
 
@@ -484,7 +500,7 @@ class VentureScriptParser(object):
 
     @staticmethod
     def instance():
-        global the_parser
+        global the_parser # Is a static cache.  How else than globals?  pylint:disable=global-statement
         if the_parser is None:
             the_parser = VentureScriptParser()
         return the_parser

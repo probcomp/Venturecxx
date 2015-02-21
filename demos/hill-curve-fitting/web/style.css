@@ -1,0 +1,19 @@
+#inputs{
+	display: inline-block;
+	vertical-align: top;
+	font-family: Verdana;
+	font-size: 12px;
+}
+
+#svg{
+	display: inline-block;
+}
+
+#pointSelect {
+	width: 100%;
+	height: 80px;
+}
+
+#pointInput{
+	width: 100%;
+}

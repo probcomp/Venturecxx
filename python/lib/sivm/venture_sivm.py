@@ -37,7 +37,7 @@ class VentureSivm(object):
             'list_directives','get_directive','labeled_get_directive',
             'force','sample','get_current_exception',
             'get_state', 'reset', 'debugger_list_breakpoints','debugger_get_breakpoint'}
-    _core_instructions = {"assume","observe","predict",
+    _core_instructions = {"define","assume","observe","predict",
             "configure","forget","freeze","report","infer","start_continuous_inference",
             "stop_continuous_inference","continuous_inference_status",
             "clear","rollback","get_logscore","get_global_logscore",
@@ -104,11 +104,11 @@ class VentureSivm(object):
     ###############################
 
     def _call_core_sivm_instruction(self,instruction):
-        desugared_instruction = copy.deepcopy(instruction)
+        desugared_instruction = copy.copy(instruction)
         instruction_type = instruction['instruction']
         sugar = None
         # desugar the expression
-        if instruction_type in ['assume','observe','predict']:
+        if instruction_type in ['define','assume','observe','predict','infer']:
             exp = utils.validate_arg(instruction,'expression',
                     utils.validate_expression, wrap_exception=False)
             sugar = macro.expand(exp)
@@ -126,32 +126,17 @@ class VentureSivm(object):
         try:
             response = self.core_sivm.execute_instruction(desugared_instruction)
         except VentureException as e:
-            if e.exception == "evaluation":
-                self.state='exception'
-                
-                address = e.data['address'].asList()
-                del e.data['address']
-                e.data['stack_trace'] = [self._resugar(index) for index in address]
-                
-                self.current_exception = e.to_json_object()
-            if e.exception == "breakpoint":
-                self.state='paused'
-                self.current_exception = e.to_json_object()
-            # re-sugar the expression index
-            if e.exception == 'parse':
-                i = e.data['expression_index']
-                exp = instruction['expression']
-                i = macro.sugar_expression_index(exp,i)
-                e.data['expression_index'] = i
-            # turn directive_id into label
-            if e.exception == 'invalid_argument':
-                if e.data['argument'] == 'directive_id':
-                    did = e.data['directive_id']
-                    if did in self.did_dict:
-                        e.data['label'] = self.did_dict[did]
-                        e.data['argument'] = 'label'
-                        del e.data['directive_id']
-            raise
+            # raise # One can suppress error annotation by uncommenting this
+            import sys
+            info = sys.exc_info()
+            try:
+                e = self._annotate(e, instruction)
+            except Exception as e2:
+                print "Trying to annotate an exception at SIVM level led to:"
+                import traceback
+                print traceback.format_exc()
+                raise e, None, info[2]
+            raise e, None, info[2]
         # clear the dicts on the "clear" command
         if instruction_type == 'clear':
             self._clear()
@@ -170,29 +155,65 @@ class VentureSivm(object):
             tmp_instruction['directive_id'] = did
             for key in ('instruction', 'expression', 'symbol', 'value'):
                 if key in instruction:
-                    tmp_instruction[key] = copy.deepcopy(instruction[key])
+                    tmp_instruction[key] = copy.copy(instruction[key])
             self.directive_dict[did] = tmp_instruction
             self.sugar_dict[did] = self.attempted
         # save the breakpoint if the instruction sets the breakpoint
         if instruction_type in ['debugger_set_breakpoint_address',
                 'debugger_set_breakpoint_source_code_location']:
             bid = response['breakpoint_id']
-            tmp_instruction = copy.deepcopy(instruction)
+            tmp_instruction = copy.copy(instruction)
             tmp_instruction['breakpoint_id'] = bid
             del tmp_instruction['instruction']
             self.breakpoint_dict[bid] = tmp_instruction
         return response
-    
+
+    def _annotate(self, e, instruction):
+        if e.exception == "evaluation":
+            self.state='exception'
+
+            address = e.data['address'].asList()
+            e.data['stack_trace'] = [self._resugar(index) for index in address]
+            del e.data['address']
+
+            self.current_exception = e.to_json_object()
+        if e.exception == "breakpoint":
+            self.state='paused'
+            self.current_exception = e.to_json_object()
+        # re-sugar the expression index
+        if e.exception == 'parse':
+            i = e.data['expression_index']
+            exp = instruction['expression']
+            i = macro.sugar_expression_index(exp,i)
+            e.data['expression_index'] = i
+        # turn directive_id into label
+        if e.exception == 'invalid_argument':
+            if e.data['argument'] == 'directive_id':
+                did = e.data['directive_id']
+                if did in self.did_dict:
+                    e.data['label'] = self.did_dict[did]
+                    e.data['argument'] = 'label'
+                    del e.data['directive_id']
+        return e
+
     def _get_sugar(self, did):
         if did in self.sugar_dict:
             return self.sugar_dict[did]
         return self.attempted
     
+    def _get_exp(self, did):
+        return self._get_sugar(did)[0]
+    
     def _resugar(self, index):
         did = index[0]
         exp, sugar = self._get_sugar(did)
         index = index[1:]
-        return (exp, sugar.resugar_index(index))
+        
+        return dict(
+          exp = exp,
+          did = did,
+          index = sugar.resugar_index(index)
+        )
     
     ###############################
     # Continuous Inference Pauser
@@ -286,7 +307,7 @@ class VentureSivm(object):
     def get_directive(self, did):
         tmp = copy.deepcopy(self.directive_dict[did])
         if did in self.did_dict:
-            tmp['label'] = self.did_dict[did]
+            tmp['label'] = v.symbol(self.did_dict[did])
             #tmp['instruction'] = 'labeled_' + tmp['instruction']
         return tmp
     
@@ -405,6 +426,7 @@ class VentureSivm(object):
         if label==None:
             d = {'instruction': 'assume', 'symbol':name, 'expression':expression}
         else:
+            label = v.symbol(label)
             d = {'instruction': 'labeled_assume', 'symbol':name, 'expression':expression,'label':label}
         return self.execute_instruction(d)
 
@@ -412,28 +434,29 @@ class VentureSivm(object):
         if label==None:
             d = {'instruction': 'predict', 'expression':expression}
         else:
-            d = {'instruction': 'labeled_predict', 'expression':expression,'label':label}
+            d = {'instruction': 'labeled_predict', 'expression':expression,'label':v.symbol(label)}
         return self.execute_instruction(d)
 
     def observe(self, expression, value, label=None):
         if label==None:
             d = {'instruction': 'observe', 'expression':expression, 'value':value}
         else:
-            d = {'instruction': 'labeled_observe', 'expression':expression, 'value':value, 'label':label}
+            label = v.symbol(label)
+            d = {'instruction': 'labeled_observe', 'expression':expression, 'value':value, 'label':v.symbol(label)}
         return self.execute_instruction(d)
 
     def forget(self, label_or_did):
         if isinstance(label_or_did,int):
             d = {'instruction':'forget','directive_id':label_or_did}
         else:
-            d = {'instruction':'labeled_forget','label':label_or_did}
+            d = {'instruction':'labeled_forget','label':v.symbol(label_or_did)}
         return self.execute_instruction(d)
 
     def report(self, label_or_did):
         if isinstance(label_or_did,int):
             d = {'instruction':'report','directive_id':label_or_did}
         else:
-            d = {'instruction':'labeled_report','label':label_or_did}
+            d = {'instruction':'labeled_report','label':v.symbol(label_or_did)}
         return self.execute_instruction(d)
 
     def infer(self, params=None):

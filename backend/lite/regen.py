@@ -51,13 +51,13 @@ def propagateConstraint(trace,node,value):
   if isinstance(node,LookupNode): trace.setValueAt(node,value)
   elif isinstance(node,RequestNode):
     if not isinstance(trace.pspAt(node),NullRequestPSP):
-      raise Exception("Cannot make requests downstream of a node that gets constrained during regen")
+      raise VentureException("evaluation", "Cannot make requests downstream of a node that gets constrained during regen", address = node.address)
   else:
     # TODO there may be more cases to ban here.
     # e.g. certain kinds of deterministic coupling through mutation.
     assert isinstance(node,OutputNode)
     if trace.pspAt(node).isRandom():
-      raise Exception("Cannot make random choices downstream of a node that gets constrained during regen")
+      raise VentureException("evaluation", "Cannot make random choices downstream of a node that gets constrained during regen", address = node.address)
     # TODO Is it necessary to unincorporate and incorporate here?  If
     # not, why not?
     trace.setValueAt(node,trace.pspAt(node).simulate(trace.argsAt(node)))
@@ -194,6 +194,13 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
         address = node.address.request(esr.addr)
         (w,esrParent) = evalFamily(trace,address,esr.exp,esr.env,scaffold,shouldRestore,omegaDB,gradients)
         weight += w
+      if trace.containsSPFamilyAt(node,esr.id):
+        # evalFamily already registered a family with this id for the
+        # operator being applied here, which means a recursive call to
+        # the operator issued a request for the same id.  Currently,
+        # the only way for that it happen is for a recursive memmed
+        # function to call itself with the same arguments.
+        raise VentureException("evaluation", "Recursive mem argument loop detected.", address = node.address)
       trace.registerFamilyAt(node,esr.id,esrParent)
 
     esrParent = trace.spFamilyAt(node,esr.id)
@@ -210,6 +217,7 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 
 def restore(trace,node,scaffold,omegaDB,gradients):
   if isinstance(node,ConstantNode): return 0
+  if isinstance(node,OutputNode) and node.isFrozen: return 0
   if isinstance(node,LookupNode):
     weight = regenParents(trace,node,scaffold,True,omegaDB,gradients)
     trace.reconnectLookup(node)

@@ -16,10 +16,13 @@
 
 import time
 from pandas import DataFrame, Index
+from copy import copy
 
-from venture.lite.value import (ExpressionType, VentureArray, VentureSymbol,
-                                VentureInteger)
+from venture.lite.value import (ExpressionType, SymbolType, VentureArray, VentureSymbol,
+                                VentureInteger, VentureValue, VentureNil)
+from venture.lite.utils import logWeightsToNormalizedDirect
 from venture.ripl.utils import strip_types_from_dict_values
+from venture.lite.exception import VentureValueError
 from plot_spec import PlotSpec
 
 class Infer(object):
@@ -34,8 +37,9 @@ class Infer(object):
 
   def final_data(self):
     # add the last data point if result isn't None
-    if self.result is not None:
+    if self.result is not None and not self.result._final_appended:
       self.result._save_previous_iter(self.result.sweep + 1)
+      self.result._final_appended = True
     return self.result
 
   def _init_peek(self, names, exprs, stack_dicts):
@@ -47,7 +51,7 @@ class Infer(object):
           exprs == self.result._peek_exprs):
       pass
     else:
-      raise Exception("Cannot issue multiple peek commands in the same inference program")
+      raise VentureValueError("Cannot issue multiple peek commands in the same inference program")
 
   def _init_print(self, names, exprs, stack_dicts):
     if self.result is None:
@@ -58,11 +62,20 @@ class Infer(object):
           exprs == self.result._print_exprs):
       pass
     else:
-      raise Exception("Cannot issue multiple printf commands in same inference program")
+      raise VentureValueError("Cannot issue multiple printf commands in same inference program")
 
-  def _init_plot(self, spec, names, exprs, stack_dicts):
+  def _init_plot(self, spec, names, exprs, stack_dicts, filenames=None, callback=None):
     if self.result is None:
-      self.result = InferResult(first_command = 'plotf')
+      if filenames is None and callback is None:
+        cmd = 'plotf'
+      elif filenames is not None and callback is None:
+        cmd = 'plotf_to_file'
+        filenames = self._format_filenames(filenames, spec)
+      elif filenames is None and callback is not None:
+        cmd = 'call_back_accum'
+      else:
+        raise VentureValueError("Accumulating and saving to file not supported at once in Infer._init_plot.")
+      self.result = InferResult(first_command = cmd, filenames = filenames, callback = callback)
     if self.result.spec_plot is None:
       self.result._init_plot(spec, names, exprs, stack_dicts)
     elif (spec == self.result.spec_plot.spec_string and
@@ -70,7 +83,20 @@ class Infer(object):
           exprs == self.result.spec_plot.exprs):
       pass
     else:
-      raise Exception("Cannot plot with different specs in the same inference program")
+      raise VentureValueError("Cannot plot with different specs in the same inference program")
+
+  @staticmethod
+  def _format_filenames(filenames,spec):
+    if isinstance(filenames, basestring):
+      if isinstance(spec, basestring):
+        return [filenames + '.png']
+      else:
+        raise VentureValueError('The number of specs must match the number of filenames.')
+    else:
+      if isinstance(spec, list) and len(spec) == len(filenames):
+        return [filename + '.png' for filename in filenames]
+      else:
+        raise VentureValueError('The number of specs must match the number of filenames.')
 
   def default_name_for_exp(self,exp):
     if isinstance(exp, basestring):
@@ -108,11 +134,27 @@ class Infer(object):
       name = self.default_name_for_exp(ExpressionType().asPython(expr))
     return name, stack_dict
 
+  def convert_none(self, item):
+    if item is None:
+      return VentureNil()
+    else:
+      return item
+
   def primitive_infer(self, exp): self.engine.primitive_infer(exp)
-  def resample(self, ct): self.engine.resample(ct)
-  def resample_emulating(self, ct): self.engine.resample_emulating(ct)
-  def resample_parallel(self, ct): self.engine.resample_parallel(ct)
-  def incorporate(self): pass # Since we incorporate at the beginning anyway
+  def resample(self, ct): self.engine.resample(ct, 'sequential')
+  def resample_serializing(self, ct): self.engine.resample(ct, 'serializing')
+  def resample_threaded(self, ct): self.engine.resample(ct, 'threaded')
+  def resample_thread_ser(self, ct): self.engine.resample(ct, 'thread_ser')
+  def resample_multiprocess(self, ct, process_cap = None): self.engine.resample(ct, 'multiprocess', process_cap)
+  def likelihood_weight(self): self.engine.trace_handler.likelihood_weight()
+  def likelihood_at(self, scope, block):
+    return self.engine.trace_handler.delegate('likelihood_at', scope.getSymbol(), block.getSymbol())
+  def posterior_at(self, scope, block):
+    return self.engine.trace_handler.delegate('posterior_at', scope.getSymbol(), block.getSymbol())
+  def enumerative_diversify(self, scope, block): self.engine.diversify(["enumerative", scope, block])
+  def collapse_equal(self, scope, block): self.engine.collapse(scope, block)
+  def collapse_equal_map(self, scope, block): self.engine.collapse_map(scope, block)
+  def incorporate(self): self.engine.trace_handler.incorporate()
   def peek(self, *exprs):
     names, stack_dicts = self.parse_exprs(exprs, 'peek')
     self._init_peek(names, exprs, stack_dicts)
@@ -127,6 +169,46 @@ class Infer(object):
     names, stack_dicts = self.parse_exprs(exprs, 'plotf')
     self._init_plot(spec, names, exprs, stack_dicts)
     self.result._add_data(self.engine, 'plotf')
+  def plotf_to_file(self, basenames, spec, *exprs): # This one only works from the "plotf_to_file" SP.
+    filenames = ExpressionType().asPython(basenames)
+    spec = ExpressionType().asPython(spec)
+    names, stack_dicts = self.parse_exprs(exprs, 'plotf')
+    self._init_plot(spec, names, exprs, stack_dicts, filenames=filenames)
+    self.result._add_data(self.engine, 'plotf_to_file')
+  def call_back(self, name, *exprs):
+    name = SymbolType().asPython(name)
+    if name not in self.engine.callbacks:
+      raise VentureValueError("Unregistered callback {}".format(name))
+    return self.convert_none(self.engine.callbacks[name](self, *[self.engine.sample_all(e.asStackDict()) for e in exprs]))
+  def call_back_accum(self, name, *exprs):
+    name = SymbolType().asPython(name)
+    if name not in self.engine.callbacks:
+      raise VentureValueError("Unregistered callback {}".format(name))
+    names, stack_dicts = self.parse_exprs(exprs, 'plotf')
+    self._init_plot(None, names, exprs, stack_dicts, callback=self.engine.callbacks[name])
+    self.result._add_data(self.engine, 'call_back_accum')
+  def assume(self, sym, exp):
+    self.engine.assume(SymbolType().asPython(sym), exp.asStackDict())
+  def observe(self, exp, val):
+    self.engine.observe(exp.asStackDict(), val.asStackDict())
+  def force(self, exp, val):
+    self.engine.force(exp.asStackDict(), val.asStackDict())
+  def predict(self, exp):
+    self.engine.predict(exp.asStackDict())
+  def sample(self, exp):
+    return VentureValue.fromStackDict(self.engine.sample(exp.asStackDict()))
+  def sample_all(self, exp):
+    return [VentureValue.fromStackDict(val) for val in self.engine.sample_all(exp.asStackDict())]
+  def load_plugin(self, name, *args):
+    return self.convert_none(self.engine.ripl.load_plugin(name, *args))
+
+  def particle_log_weights(self):
+    return self.engine.trace_handler.log_weights
+  def set_particle_log_weights(self, new_weights):
+    assert len(new_weights) == len(self.engine.trace_handler.log_weights)
+    self.engine.trace_handler.log_weights = new_weights
+  def particle_normalized_probs(self):
+    return logWeightsToNormalizedDirect(self.particle_log_weights())
 
 class InferResult(object):
   '''
@@ -171,7 +253,7 @@ class InferResult(object):
   Calling print will generate all plots stored in the spec_plot attribute. This
   attribute in turn is a SpecPlot object.
   '''
-  def __init__(self, first_command):
+  def __init__(self, first_command, filenames = None, callback=None):
     self.sweep = 0
     self.time = time.time()
     self._first_command = first_command
@@ -181,7 +263,10 @@ class InferResult(object):
     self._print_names = None
     self._print_exprs = None
     self._print_stack_dicts = None
+    self._final_appended = False
     self.spec_plot = None
+    self.filenames = filenames
+    self.callback = callback
 
   def _init_peek(self, names, exprs, stack_dicts):
     self._peek_names = names
@@ -219,10 +304,13 @@ class InferResult(object):
 
   def _collect_default_streams(self, engine):
     the_time = time.time() - self.time
-    self._this_iter_data['sweep count'] = [self.sweep] * engine.n_traces
-    self._this_iter_data['particle id'] = range(engine.n_traces)
-    self._this_iter_data['time (s)'] = [the_time] * engine.n_traces
+    self._this_iter_data['sweep count'] = [self.sweep] * engine.num_traces()
+    self._this_iter_data['particle id'] = range(engine.num_traces())
+    self._this_iter_data['time (s)'] = [the_time] * engine.num_traces()
     self._this_iter_data['log score'] = engine.logscore_all()
+    log_weights = copy(engine.trace_handler.log_weights)
+    self._this_iter_data['particle log weight'] = log_weights
+    self._this_iter_data['particle normalized prob'] = logWeightsToNormalizedDirect(log_weights)
 
   def _collect_requested_streams(self, engine, command):
     if command == 'peek':
@@ -254,7 +342,8 @@ class InferResult(object):
   def dataset(self):
     ds = DataFrame.from_dict(strip_types_from_dict_values(self.data))
     cols = ds.columns
-    first_cols = Index(['sweep count', 'particle id', 'time (s)', 'log score'])
+    first_cols = Index(['sweep count', 'particle id', 'time (s)', 'log score',
+                        'particle log weight', 'particle normalized prob'])
     rest_cols = cols - first_cols
     order = first_cols.tolist() + rest_cols.tolist()
     return ds[order]
@@ -272,15 +361,21 @@ class InferResult(object):
     return self.spec_plot.draw(self.dataset())
 
   def plot(self):
-    self.spec_plot.plot(self.dataset())
+    self.spec_plot.plot(self.dataset(), self.filenames)
 
   def __str__(self):
     "Not really a string method, but does get itself displayed when printed."
-    if self.spec_plot is None:
+    if self.spec_plot is None and self.callback is None:
       return self.__repr__()
-    else:
+    elif self.spec_plot is not None and self.callback is None:
       self.plot()
-      return "a plot"
+      if self.filenames is None:
+        return "a plot"
+      else:
+        return "plots saved to {}.".format(', '.join(self.filenames))
+    else:
+      self.callback(self.dataset())
+      return ""
 
 class SpecPlot(object):
   """(plotf spec exp0 ...) -- Generate a plot according to a format specification.
@@ -347,7 +442,8 @@ class SpecPlot(object):
   """
   def __init__(self, spec, names, exprs, stack_dicts):
     self.spec_string = spec
-    self.spec = PlotSpec(spec)
+    if spec is not None:
+      self.spec = PlotSpec(spec)
     self.names = names
     self.exprs = exprs
     self.stack_dicts = stack_dicts
@@ -358,8 +454,8 @@ class SpecPlot(object):
     else:
       return self.spec.draw(data, self.names)
 
-  def plot(self, data):
+  def plot(self, data, filenames=None):
     if self.spec is None:
       pass
     else:
-      return self.spec.plot(data, self.names)
+      return self.spec.plot(data, self.names, filenames)

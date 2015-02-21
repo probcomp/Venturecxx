@@ -6,6 +6,9 @@ import sys
 
 from venture.test.stats import statisticalTest, reportKnownContinuous
 from venture.test.config import get_ripl, default_num_samples, on_inf_prim
+from venture.lite.psp import LikelihoodFreePSP
+import venture.lite.value as v
+from venture.lite.builtin import typed_nr
 
 def extract_from_frame(infer_result, names):
   '''Extract trace for desired variable(s) from InferResult'''
@@ -105,6 +108,22 @@ def testPrintf():
   sys.stdout = old_stdout
   res = result.getvalue()
   assert pattern.match(res) is not None
+
+def testPeekLogScore():
+  '''In the presence of likelihood-free SP's, the calling "peek" or "printf"
+  should not crash the program.'''
+  class TestPSP(LikelihoodFreePSP):
+    def simulate(self, args):
+      x = args.operandValues[0]
+      return x + stats.distributions.norm.rvs()
+  tester = typed_nr(TestPSP(), [v.NumberType()], v.NumberType())
+  ripl = get_ripl()
+  ripl.bind_foreign_sp('test', tester)
+  prog = '''
+  [ASSUME x (test 0)]
+  [ASSUME y (normal x 1)]
+  [infer (peek x)]'''
+  ripl.execute_program(prog)
 
 def make_pattern(backend):
   if backend == 'lite':

@@ -1,0 +1,13 @@
+Index: venture-20141125/python/lib/engine/engine.py
+===================================================================
+--- venture-20141125.orig/python/lib/engine/engine.py	2014-11-25 22:21:36.000000000 +0000
++++ venture-20141125/python/lib/engine/engine.py	2014-11-25 22:33:36.315871333 +0000
+@@ -14,7 +14,7 @@
+ #
+ # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+ import random
+-import dill
++import cPickle as dill                  # XXX WILL NOT WORK.
+ import cPickle as pickle
+ import time
+ 

@@ -101,11 +101,11 @@ def default_num_transitions_per_sample():
 disable_get_ripl = False
 ct_get_ripl_called = 0
 
-def get_ripl():
+def get_ripl(persistent_inference_trace=False):
   assert not disable_get_ripl, "Trying to get the configured ripl in a test marked as not ripl-agnostic."
   global ct_get_ripl_called
   ct_get_ripl_called += 1
-  return s.backend(config["get_ripl"]).make_combined_ripl()
+  return s.backend(config["get_ripl"]).make_combined_ripl(persistent_inference_trace=persistent_inference_trace)
 
 def get_mripl(no_ripls=2,local_mode=None,**kwargs):
    # NB: there is also global "get_mripl_backend" for having special-case backend
@@ -450,3 +450,25 @@ def inParallel():
     if config["infer"].startswith("(" + operator) and not config["infer"].endswith("false)"):
       return True
   return False
+
+def needs_ggplot(f):
+  assert not isgeneratorfunction(f), "Use gen_needs_ggplot for generator test %s" % f.__name__
+  @nose.make_decorator(f)
+  def wrapped(*args):
+    try:
+      import ggplot             # pylint: disable=unused-variable
+      return f(*args)
+    except ImportError:
+      raise SkipTest("ggplot not installed on this machine")
+  return wrapped
+
+def gen_needs_ggplot(f):
+  assert isgeneratorfunction(f), "Use needs_ggplot for non-generator test %s" % f.__name__
+  @nose.make_decorator(f)
+  def wrapped(*args):
+    try:
+      import ggplot
+      for t in f(*args): yield t
+    except ImportError:
+      raise SkipTest("ggplot not installed on this machine")
+  return wrapped

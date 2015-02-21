@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <script src="raphael-min.js"></script>
+    <script src="../jripl.js"></script>
+    <script src="lispy.js"></script>
+
+   <!-- Le styles -->
+    <link href="assets/css/bootstrap.css" rel="stylesheet">
+    <link href="jquery-terminal/css/jquery.terminal.css" rel="stylesheet"/>
+    <link href="assets/css/fontstyles.css" rel="stylesheet" type="text/css">
+    <link href="assets/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="assets/css/slider.css" rel="sylesheet" type="text/css">
+
+        
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="assets/ico/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="assets/ico/apple-touch-icon-57-precomposed.png">
+    
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js"></script>
+    <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+    <script type="text/javascript" src="jqwidgets/jqxcore.js"></script>
+    <script type="text/javascript" src="jqwidgets/jqxlistbox.js"></script>
+    <script type="text/javascript" src="jqwidgets/jqxscrollbar.js"></script>
+    <script type="text/javascript" src="jqwidgets/jqxbuttons.js"></script> 
+    <script src="assets/js/jquery.js"></script>
+    
+    <script src="jquery-terminal/js/jquery-1.7.1.min.js"></script>
+    <script src="jquery-terminal/js/jquery.mousewheel-min.js"></script>
+    <script src="jquery-terminal/js/jquery.terminal-min.js"></script>
+    <script src="jqwidgets/jquery.tinyscrollbar.min.js"></script>
+    <script src="raphael-min.js"></script>
+    <script src="common-scripts.js"></script>
+    <script src="spin.min.js"></script>
+    <script src="Base.js"></script>
+        
+    <!-- Mine -->
+    <link href="assets/css/jqx.base.css" rel="stylesheet">
+    <script src="terminal-management.js"></script> 
+    <script src="index-load.js"></script>
+    <script type="text/javascript" src="jquery.cookie.js"></script>
+   
+  </head>
+  <body onLoad="omit_errors = true;$('#terminalWindow').attr('style','width: 650px; height:400px;');">
+    <table width="100%"><tr><td align="right"><div id="ripl_address_info">... Loading ...</div></td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr></table>
+    <div class="vis-holder" style="margin-left:30px;margin-top:-30px;">
+      <table>
+	<tr>
+	  <td style="width:175px;" valign="top" halign="left"></td>
+	  <td>    <h3>Venture Terminal</h3><br></td>
+	</tr><br><br>
+      </table>
+     <h4>Load example file:</h4><input type="file" id="examplefile" /><br><br>
+      <table>
+     	<tr>
+	  <td><button onclick="riplOBJ.loadExample();">Load Example</button></td>
+	  <td><button onclick="riplOBJ.sendCommandToRIPLServer('start_continuous_inference',false, term);">Start Inference</button></td>
+	  <td><button onclick="riplOBJ.sendCommandToRIPLServer('stop_continuous_inference',false, term);">Stop Inference</button></td>
+	  <td><button onclick="riplOBJ.sendCommandToRIPLServer('clear', false, term);">Clear</button></td>
+	  <td><button onclick="riplOBJ.sendCommandToRIPLServer('list_directives', false, term);">List Directives</button></td>
+	</tr>
+	<table>
+	  
+	  <div id="myDiv"></div>
+	  <table>
+	    <tr><td style="vertical-align: top;">
+		<div id="terminalWindow"></div>
+		
+	      </td><br><br>
+	      <td style="vertical-align: top;"><div id="metaContainer" style="padding-left:80px;"></td>
+	    </tr>
+	  </table>
+	</table>
+	
+	<div id="examplecode" style="padding-left:20px;"></div>
+	<br><br><br>
+	<div id="forced_disconnection" style="display: none;">
+	  Oh, no, you have been disconnected from the SimpleInterpreter cloud.<br>
+	  Apologies!.<br>
+	  Please, contact Saee Paliwal (<a href="mailto:saee.paliwal@gmail.com">saee.paliwal@gmail.com</a>)
+	  about this issue.
+	</div>
+	</div>
+  </body>
+</html>

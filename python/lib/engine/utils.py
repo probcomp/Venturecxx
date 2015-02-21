@@ -15,13 +15,27 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 # -*- coding: utf-8 -*-
 
+import venture.value.dicts as v
+from venture.lite.value import VentureValue
+
+def unwrapVentureValue(val):
+  if isinstance(val, VentureValue):
+    return val.asStackDict(None)["value"]
+  return val
+
 def expToDict(exp):
   if isinstance(exp, int):
     return {"kernel":"mh", "scope":"default", "block":"one", "transitions": exp}
+  
+  exp = map(unwrapVentureValue, exp)
+  
   tag = exp[0]
   if tag == "mh":
     assert len(exp) == 4
     return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}
+  elif tag == "bogo_possibilize":
+    assert len(exp) == 4
+    return {"kernel":"bogo_possibilize","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}
   elif tag == "func_mh":
     assert len(exp) == 4
     return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}
@@ -51,9 +65,10 @@ def expToDict(exp):
   elif tag == "pgibbs":
     assert 5 <= len(exp) and len(exp) <= 6
     if type(exp[2]) is list:
-      assert exp[2][0] == "ordered_range"
+      range_spec = [d["value"] for d in exp[2]]
+      assert range_spec[0] == "ordered_range"
       ans = {"kernel":"pgibbs","scope":exp[1],"block":"ordered_range",
-            "min_block":exp[2][1],"max_block":exp[2][2],
+            "min_block":range_spec[1],"max_block":range_spec[2],
             "particles":int(exp[3]),"transitions":int(exp[4])}
     else:
       ans = {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":int(exp[3]),"transitions":int(exp[4])}
@@ -94,3 +109,4 @@ def expToDict(exp):
       return {"kernel":"rejection","scope":exp[1],"block":exp[2],"transitions":1}
   else:
     raise Exception("Cannot parse infer instruction")
+

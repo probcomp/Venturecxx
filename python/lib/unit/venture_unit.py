@@ -29,7 +29,7 @@ parseValue = strip_types
 # 0. FIXME: If Analytics is given a ripl with assumes/observes, it uses list_directives
 # to extract them. This leads to the Python dict form of Venture values. For example,
 # the symbol for an assume will be {'type':'symbol','value':'theta'}. Analytics then
-# tries to build dicts that have these dicts as keys. Unit tests don't catch this 
+# tries to build dicts that have these dicts as keys. Unit tests don't catch this
 # because they specify *assumes* as an argument to Analytics, rather than implicitly
 # by handing it a ripl and no *assumes* optional keyword argument.
 # Fix is to switch from using list_directives to using the same unparsing as print_directive
@@ -37,12 +37,12 @@ parseValue = strip_types
 
 
 # 1. simpleInfer option for runFromConditional avoids using sweeps
-# and so gives fine-grained control of inference transitions. 
+# and so gives fine-grained control of inference transitions.
 # Currently this is only documented in runFromConditional doc-string.
 # It doesn't have unit tests.
 
 # 2. Proper integration of persistent/mutable mripl with all analytics
-# options. 
+# options.
 
 # 3. More tests for unit/analytics interaction.
 
@@ -82,7 +82,7 @@ parseValue = strip_types
 # Done a crude implementation that works for runFromConditional. Currently
 
 # prevents Analytics from ever clearing the ripl, which prevents runConditionalFromPrior. Whole point of this
-# is to allow filtering/incremental inference with Analytics. 
+# is to allow filtering/incremental inference with Analytics.
 # So running on synthetic data from prior wouldn't in any case be doing the same
 
 # prevent Analytics from ever clearing the ripl, which prevents run from prior. Whole point of this
@@ -96,7 +96,7 @@ def directive_split(d):
     'Splits directive from *list_directives* into components'
     ## FIXME: replace Python values with strings for Venture.
     if d['instruction']=='assume':
-        return (d['symbol'], build_exp(d['expression']) )
+        return (d['symbol']['value'], build_exp(d['expression']) )
     elif d['instruction']=='observe':
         return (build_exp(d['expression']), d['value'])
     elif d['instruction']=='predict':
@@ -239,7 +239,7 @@ class Analytics(object):
 
         assert not(assumes is None and observes is not None),'No *observes* without *assumes*.'
         assert queryExps is None or isinstance(queryExps,(list,tuple)), 'QueryExps must be list or tuple'
-        
+
 
         if hasattr(ripl_mripl,'no_ripls'): # test for ripl vs. MRipl
             ripl=ripl_mripl.local_ripls[0] # only needed because of set_seed
@@ -255,14 +255,39 @@ class Analytics(object):
 
         directives_list = ripl.list_directives(type=True)
 
+
+
+
         if assumes is not None:
             self.assumes = assumes
             self.observes = list(observes) if observes is not None else []
         else:
+
             assumes = [d for d in directives_list if d['instruction']=='assume']
             self.assumes = map(directive_split,assumes)
             observes = [d for d in directives_list if d['instruction']=='observe']
             self.observes = map(directive_split,observes)
+
+            # if REMOVE_SOME_TYPES_FROM_SYMBOLS:
+            #   clean_assumes = []
+            #   clean_observes = []
+
+            #   for sym,exp in self.assumes:
+            #       if isinstance(sym,dict) and 'value' in sym:
+            #           clean_assumes.append( (sym['value'], exp) )
+            #       else:
+            #           clean_assumes.append( (sym, exp) )
+
+            #   # for exp,value in self.observes:
+            #   #     if isinstance(value,dict) and 'value' in value:
+            #   #         clean_observes.append( (exp, value['value']) )
+            #   #     else:
+            #   #         clean_observes.append( (exp, value) )
+
+            #   self.assumes = clean_assumes
+            #   #self.observes = clean_observes
+
+
 
         self.queryExps=[] if queryExps is None else list(queryExps)
 
@@ -279,6 +304,7 @@ class Analytics(object):
 
         ## FIXME: should have an attribute for *mripl_mode* and then an
         ## attribute pointing to actual mripl
+
         if self.mripl:
             self.mripl = MRipl(ripl_mripl.no_ripls,
                                backend = ripl_mripl.backend,
@@ -291,6 +317,10 @@ class Analytics(object):
                 self.mripl.dview.execute('from venture.unit import Analytics')
             self.updateQueryExps()
 
+        if self.ripl:
+            # TODO Does this apply to mripls too?
+            for (name, sp) in ripl.sivm.core_sivm.engine.foreign_sps.iteritems():
+                self.ripl.bind_foreign_sp(name, sp)
 
         # Initialization for mutable ripl or MRipl
 
@@ -328,7 +358,7 @@ class Analytics(object):
         if removeAllObserves:
             self.observes = []
         if newObserves is not None:
-            assert not isinstance(newObserves,str), '*newObserves* is set of strings, not string' 
+            assert not isinstance(newObserves,str), '*newObserves* is set of strings, not string'
             self.observes.extend( Observes )
 
         if self.muRipl:
@@ -343,7 +373,7 @@ class Analytics(object):
         if removeAllQueryExps:
             self.queryExps = []
         if newQueryExps is not None:
-            assert not isinstance(newObserves,str), '*newQueryExps* should be a set of strings, not a string' 
+            assert not isinstance(newObserves,str), '*newQueryExps* should be a set of strings, not a string'
             self.queryExps.extend( newQueryExps )
         # always update mripl engines with whatever is current self.queryExps
         if self.mripl and self.mripl.local_mode is False:
@@ -360,11 +390,17 @@ class Analytics(object):
 
 
     def _clearRipl(self):
+	# Record the foreign sps
+        sps = [(name, sp) for name, sp in self.ripl.sivm.core_sivm.engine.foreign_sps.iteritems()]
+
         if self.muRipl:
             assert False,'Attempt to clear mutable ripl/mripl'
         else:
             self.ripl.clear()
 
+	# Reload them
+        for (name, sp) in sps:
+            self.ripl.bind_foreign_sp(name, sp)
 
     def _loadAssumes(self, prune=True):
 
@@ -662,6 +698,9 @@ class Analytics(object):
         sweepIters = []
         logscores = []
 
+        if verbose:
+            print "Using inference program"
+            print infer
         for sweep in range(sweeps):
             if verbose:
                 print "Running sweep " + str(sweep+1) + " of " + str(sweeps)
@@ -776,7 +815,7 @@ class Analytics(object):
 
 
     def testFromPrior(self,noDatasets,sweeps,**kwargs):
-        ## TODO implement this. currently buggy. 
+        ## TODO implement this. currently buggy.
 
         randRipl = np.random.randint(0,self.mripl.no_ripls)
         force={}

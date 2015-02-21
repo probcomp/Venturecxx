@@ -1,50 +1,7 @@
-#!/usr/bin/env python
+#!/bin/sh
 
-# Copyright (c) 2013, MIT Probabilistic Computing Project.
-# 
-# This file is part of Venture.
-# 	
-# Venture is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 	
-# Venture is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 	
-# You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+# This deprecation notice installed 1/6/14.
 
-import string
-import textwrap
-from venture.lite.builtin import builtInSPsList
+echo The program that was once called \"list-sps\" is now called \"vendoc\".  Please use that.
 
-def flags(psp):
-  ans = []
-  if psp.isRandom():
-    ans += ["stochastic"]
-  else:
-    ans += ["deterministic"]
-  # TODO Absorbing is very context-sensitive now; how do we handle this?
-  # if psp.canAbsorb():
-  #   ans += ["constrainable"]
-  if psp.childrenCanAAA():
-    ans += ["children can absorb at applications"]
-  if psp.canEnumerate():
-    ans += ["enumerable"]
-  if psp.hasVariationalLKernel():
-    ans += ["variationable"]
-  # Simulation kernels and delta kernels are unused right now
-  return ans
-
-for (name,sp) in builtInSPsList:
-  print ""
-  desc_lines = sp.description(name).split("\n")
-  if len(desc_lines) == 1:
-    print desc_lines[0]
-  else:
-    for line in desc_lines[0:-1]:
-      print line
-    print textwrap.fill(desc_lines[-1],70)
-  print "  " + string.capitalize(string.join(flags(sp.outputPSP), ", "))
+exit 1

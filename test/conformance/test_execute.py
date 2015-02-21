@@ -17,7 +17,7 @@ def testExecuteSmoke():
     ripl.clear()
     ripl.execute_program("""[assume x (normal 0 1)]
 ;; An observation
-[observe (normal x 1) 2]
+[observe (normal x 1) 2] ; with an end-of-line comment
 [infer (mh default one %s)]""" % default_num_transitions_per_sample())
     predictions.append(ripl.sample("x"))
   cdf = scipy.stats.norm(loc=1, scale=math.sqrt(0.5)).cdf
@@ -44,21 +44,11 @@ def testPeekOutput():
 
 def testPeekFunction():
   '''
-  Make sure that calling peak on a function evaluation doesn't break
+  Make sure that calling peek on a function evaluation doesn't break
   '''
   ripl = get_ripl()
   ripl.assume('x', '(lambda() 2)')
   _ = ripl.infer('(cycle ((mh default one 1) (peek (x))) 1)')
-
-def testPlotfOutput():
-  '''Make sure that execute_program returns result form plotf commands'''
-  ripl = get_ripl()
-  prog = programString('[INFER (cycle ((plotf p0d1d mu sigma) (mh default one 5)) 5)]')
-  res = ripl.execute_program(prog)[-1]['value']
-  assert type(res.spec_plot) is SpecPlot
-  assert 'mu' in res.dataset()
-  assert 'sigma' in res.dataset()
-  eq_(res.dataset().shape[0], 5)
 
 def programString(infer):
   prog = '''

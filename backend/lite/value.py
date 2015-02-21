@@ -1,7 +1,6 @@
 """Venture values.
 
-The design currently lives at
-https://docs.google.com/document/d/1URnJh5hNJ___-dwzIpca5Y2h-Mku1n5zjpGCiFBcUHM/edit
+The design currently lives in doc/type-system.md
 """
 import operator
 from numbers import Number
@@ -18,6 +17,7 @@ import venture.value.dicts as v
 # values and all the types.
 
 class VentureValue(object):
+  """Base class of all Venture values."""
   ### "natural" representation and conversions
   def getNumber(self): raise VentureTypeError("Cannot convert %s to number" % type(self))
   def getInteger(self): raise VentureTypeError("Cannot convert %s to integer" % type(self))
@@ -107,7 +107,8 @@ this."""
 
 class VentureNumber(VentureValue):
   def __init__(self,number):
-    assert isinstance(number, Number)
+    if not isinstance(number, Number):
+      raise VentureTypeError("%s is of %s, not Number" % (str(number), type(number)))
     self.number = float(number)
   def __repr__(self):
     if hasattr(self, "number"):
@@ -571,7 +572,8 @@ class VentureArray(VentureValue):
 class VentureArrayUnboxed(VentureValue):
   """Venture arrays of unboxed objects are homogeneous, with O(1) access and O(n) copy."""
   def __init__(self, array, elt_type):
-    assert isinstance(elt_type, VentureType)
+    if not isinstance(elt_type, VentureType):
+      raise VentureTypeError("%s of %s is not a VentureType" % (elt_type, type(elt_type)))
     self.elt_type = elt_type
     self.array = enp.ensure_numpy_if_possible(elt_type, array)
   def __repr__(self):
@@ -714,12 +716,11 @@ class VentureDict(VentureValue):
   def getDict(self): return self.dict
 
   def asStackDict(self, _trace=None):
-    # TODO Difficult to reflect as a Python dict because the keys
-    # would presumably need to be converted to stack dicts too, which
-    # is a problem because they need to be hashable.
-    return v.dict(self)
+    return v.dict([(key.asStackDict(_trace), val.asStackDict(_trace)) for (key, val) in self.dict.items()])
   @staticmethod
-  def fromStackDict(thing): return thing["value"]
+  def fromStackDict(thing):
+    f = VentureValue.fromStackDict
+    return VentureDict({f(key):f(val) for (key, val) in thing["value"]})
 
   def equalSameType(self, other):
     return len(set(self.dict.iteritems()) ^ set(other.dict.iteritems())) == 0
@@ -760,6 +761,15 @@ class VentureMatrix(VentureValue):
     return v.matrix(self.matrix)
   @staticmethod
   def fromStackDict(thing): return VentureMatrix(thing["value"])
+
+  def lookup(self, index):
+    try:
+      (vind1, vind2) = index.getPair()
+      ind1 = vind1.getNumber()
+      ind2 = vind2.getNumber()
+    except VentureTypeError:
+      raise VentureValueError("Looking up non-pair-of-numbers %r in a matrix" % index)
+    return NumberType().asVentureValue(self.matrix[int(ind1), int(ind2)])
 
   def __add__(self, other):
     if other == 0:
@@ -905,6 +915,7 @@ def registerVentureType(t, name = None):
 ### Venture Types
 
 class VentureType(object):
+  """Base class of all Venture types.  See the "Types" section of doc/type-system.md."""
   def asPythonNoneable(self, vthing):
     if vthing is None:
       return None
@@ -918,6 +929,9 @@ class VentureType(object):
   def gradient_type(self):
     "The type of the cotangent space of the space represented by this type."
     return self
+  
+  def toJSON(self):
+    return self.__class__.__name__
 
 # TODO Is there any way to make these guys be proper singleton
 # objects?
@@ -946,20 +960,24 @@ class AnyType(VentureType):
 # below, for legibility.  I could have removed this and added "Number"
 # to the list in the for.
 class NumberType(VentureType):
+  def __init__(self, name=None):
+    self._name = name
   def asVentureValue(self, thing): return VentureNumber(thing)
   def asPython(self, vthing): return vthing.getNumber()
   def __contains__(self, vthing): return isinstance(vthing, VentureNumber)
-  def name(self): return "<number>"
+  def name(self): return self._name or "<number>"
 
 def standard_venture_type(typename, gradient_typename=None):
   if gradient_typename is None:
     gradient_typename = typename
   return """
 class %sType(VentureType):
+  def __init__(self, name=None):
+    self._name = name
   def asVentureValue(self, thing): return Venture%s(thing)
   def asPython(self, vthing): return vthing.get%s()
   def __contains__(self, vthing): return isinstance(vthing, Venture%s)
-  def name(self): return "<%s>"
+  def name(self): return self._name or "<%s>"
   def gradient_type(self): return %sType()
 """ % (typename, typename, typename, typename, typename.lower(), gradient_typename)
 
@@ -978,6 +996,8 @@ for typename in ["Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix"]:
 exec(standard_venture_type("Probability", gradient_typename="Number"))
 
 class CountType(VentureType):
+  def __init__(self, name=None):
+    self._name = name
   def asVentureValue(self, thing):
     assert 0 <= thing
     return VentureInteger(thing)
@@ -990,9 +1010,11 @@ class CountType(VentureType):
       raise VentureTypeError("Count is not positive %s" % self.number)
   def __contains__(self, vthing):
     return isinstance(vthing, VentureInteger) and 0 <= vthing.getInteger()
-  def name(self): return "<count>"
+  def name(self): return self._name or "<count>"
 
 class PositiveType(VentureType):
+  def __init__(self, name=None):
+    self._name = name
   def asVentureValue(self, thing):
     assert 0 < thing
     return VentureNumber(thing)
@@ -1005,10 +1027,12 @@ class PositiveType(VentureType):
       raise VentureTypeError("Number is not positive %s" % ans)
   def __contains__(self, vthing):
     return isinstance(vthing, VentureNumber) and 0 < vthing.getNumber()
-  def name(self): return "<positive>"
+  def name(self): return self._name or "<positive>"
   def gradient_type(self): return NumberType()
 
 class NilType(VentureType):
+  def __init__(self, name=None):
+    self._name = name
   def asVentureValue(self, _thing):
     # TODO Throw an error if not null-like?
     return VentureNil()
@@ -1016,20 +1040,25 @@ class NilType(VentureType):
     # TODO Throw an error if not nil?
     return []
   def __contains__(self, vthing): return isinstance(vthing, VentureNil)
-  def name(self): return "()"
+  def name(self): return self._name or "()"
   def distribution(self, base, **kwargs):
     return base("nil", **kwargs)
 
 class PairType(VentureType):
-  def __init__(self, first_type=None, second_type=None):
-    # TODO Do I want to do automatic conversions if the types are
-    # given, or not?
-    self.first_type = first_type
-    self.second_type = second_type
-  def asVentureValue(self, thing): return VenturePair(thing)
-  def asPython(self, vthing): return vthing.getPair()
+  def __init__(self, first_type=None, second_type=None, name=None):
+    self.first_type = first_type if first_type is not None else AnyType()
+    self.second_type = second_type if second_type is not None else AnyType()
+    self._name = name
+  def asVentureValue(self, thing):
+    (f, r) = thing
+    return VenturePair((self.first_type.asVentureValue(f), self.second_type.asVentureValue(r)))
+  def asPython(self, vthing):
+    (vf, vr) = vthing.getPair()
+    return (self.first_type.asPython(vf), self.second_type.asPython(vr))
   def __contains__(self, vthing): return isinstance(vthing, VenturePair)
   def name(self):
+    if self._name is not None:
+      return self._name
     if self.first_type is None and self.second_type is None:
       return "<pair>"
     first_name = self.first_type.name() if self.first_type else "<object>"
@@ -1050,22 +1079,25 @@ In Haskell type notation:
 
 data List = Nil | Pair Any List
 """
+  def __init__(self, name=None):
+    self._name = name
   def asVentureValue(self, thing):
     return pythonListToVentureList(*thing)
   def asPython(self, thing):
     return thing.asPythonList()
   def __contains__(self, vthing):
     return isinstance(vthing, VentureNil) or (isinstance(vthing, VenturePair) and vthing.rest in self)
-  def name(self): return "<list>"
+  def name(self): return self._name or "<list>"
 
 class HomogeneousListType(VentureType):
   """Type objects for homogeneous lists.  Right now, the homogeneity
   is not captured in the implementation, in that on the Venture side
   such data is still stored as heterogenous Venture lists.  This type
   does, however, encapsulate the necessary wrapping and unwrapping."""
-  def __init__(self, subtype):
+  def __init__(self, subtype, name = None):
     assert isinstance(subtype, VentureType)
     self.subtype = subtype
+    self._name = name
   def asVentureValue(self, thing):
     return pythonListToVentureList(*[self.subtype.asVentureValue(t) for t in thing])
   def asPython(self, vthing):
@@ -1074,7 +1106,7 @@ class HomogeneousListType(VentureType):
     return vthing in ListType() and all([val in self.subtype for val in vthing.asPythonList()])
   def __eq__(self, other):
     return type(self) == type(other) and self.subtype == other.subtype
-  def name(self): return "<list %s>" % self.subtype.name()
+  def name(self): return self._name or "<list %s>" % self.subtype.name()
   def distribution(self, base, **kwargs):
     # TODO Is this splitting what I want?
     return base("list", elt_dist=self.subtype.distribution(base, **kwargs), **kwargs)
@@ -1084,9 +1116,10 @@ class HomogeneousArrayType(VentureType):
   is not captured in the implementation, in that on the Venture side
   such data is still stored as heterogenous Venture arrays.  This type
   does, however, encapsulate the necessary wrapping and unwrapping."""
-  def __init__(self, subtype):
+  def __init__(self, subtype, name = None):
     assert isinstance(subtype, VentureType)
     self.subtype = subtype
+    self._name = name
   def asVentureValue(self, thing):
     return VentureArray([self.subtype.asVentureValue(val) for val in thing])
   def asPython(self, vthing):
@@ -1095,16 +1128,17 @@ class HomogeneousArrayType(VentureType):
     return isinstance(vthing, VentureArray) and all([val in self.subtype for val in vthing.getArray()])
   def __eq__(self, other):
     return type(self) == type(other) and self.subtype == other.subtype
-  def name(self): return "<array %s>" % self.subtype.name()
+  def name(self): return self._name or "<array %s>" % self.subtype.name()
   def distribution(self, base, **kwargs):
     # TODO Is this splitting what I want?
     return base("array", elt_dist=self.subtype.distribution(base, **kwargs), **kwargs)
 
 class ArrayUnboxedType(VentureType):
   """Type objects for arrays of unboxed values.  Perforce homogeneous."""
-  def __init__(self, subtype):
+  def __init__(self, subtype, name = None):
     assert isinstance(subtype, VentureType)
     self.subtype = subtype
+    self._name = name
   def asVentureValue(self, thing):
     return VentureArrayUnboxed(thing, self.subtype)
   def asPython(self, vthing):
@@ -1114,9 +1148,35 @@ class ArrayUnboxedType(VentureType):
     return isinstance(vthing, VentureArrayUnboxed) and vthing.elt_type == self.subtype
   def __eq__(self, other):
     return type(self) == type(other) and self.subtype == other.subtype
-  def name(self): return "<array %s>" % self.subtype.name()
+  def name(self): return self._name or "<array %s>" % self.subtype.name()
   def distribution(self, base, **kwargs):
     return base("array_unboxed", elt_type=self.subtype, **kwargs)
+
+class HomogeneousSequenceType(VentureType):
+  """Type objects for homogeneous sequences of any persuasion (lists,
+  arrays, vectors, simplexes).  Right now, the homogeneity is not
+  captured in the implementation, in that on the Venture side such
+  data is still stored as heterogenous Venture arrays.  This type is
+  purely advisory and does not do any conversion.
+
+  """
+  def __init__(self, subtype, name = None):
+    assert isinstance(subtype, VentureType)
+    self.subtype = subtype
+    self._name = name
+  def asVentureValue(self, thing):
+    return thing
+  def asPython(self, vthing):
+    return vthing
+  def __contains__(self, vthing):
+    return (isinstance(vthing, VentureArray) or isinstance(vthing, VentureSimplex) or isinstance(vthing, VentureArrayUnboxed) or vthing in ListType()) and all([val in self.subtype for val in vthing.getArray()])
+  def __eq__(self, other):
+    return type(self) == type(other) and self.subtype == other.subtype
+  def name(self): return self._name or "<sequence %s>" % self.subtype.name()
+  def distribution(self, base, **kwargs):
+    # TODO Other types of sequences?
+    return base("array", elt_dist=self.subtype.distribution(base, **kwargs), **kwargs)
+
 
 class ExpressionType(VentureType):
   """A Venture expression is either a Venture self-evaluating object
@@ -1138,6 +1198,9 @@ In Haskell type notation:
 
 data Expression = Bool | Number | Integer | Atom | Symbol | Array Expression
 """
+  def __init__(self, name=None):
+    self._name = name
+
   def asVentureValue(self, thing):
     if isinstance(thing, bool) or isinstance(thing, np.bool_):
       return VentureBool(thing)
@@ -1179,18 +1242,19 @@ data Expression = Bool | Number | Integer | Atom | Symbol | Array Expression
     # Most other things are represented as themselves.
     return thing
 
-  def name(self): return "<exp>"
+  def name(self): return self._name or "<exp>"
 
 class HomogeneousDictType(VentureType):
   """Type objects for homogeneous dicts.  Right now, the homogeneity
   is not captured in the implementation, in that on the Venture side
   such data is still stored as heterogenous Venture dicts.  This type
   does, however, encapsulate the necessary wrapping and unwrapping."""
-  def __init__(self, keytype, valtype):
+  def __init__(self, keytype, valtype, name = None):
     assert isinstance(keytype, VentureType)
     assert isinstance(valtype, VentureType)
     self.keytype = keytype
     self.valtype = valtype
+    self._name = name
   def asVentureValue(self, thing):
     return VentureDict(dict([(self.keytype.asVentureValue(key), self.valtype.asVentureValue(val)) for (key, val) in thing.iteritems()]))
   def asPython(self, vthing):
@@ -1199,7 +1263,7 @@ class HomogeneousDictType(VentureType):
     return isinstance(vthing, VentureDict) and all([key in self.keytype and val in self.valtype for (key,val) in vthing.getDict().iteritems()])
   def __eq__(self, other):
     return type(self) == type(other) and self.keytype == other.keytype and self.valtype == other.valtype
-  def name(self): return "<dict %s %s>" % (self.keytype.name(), self.valtype.name())
+  def name(self): return self._name or "<dict %s %s>" % (self.keytype.name(), self.valtype.name())
   def distribution(self, base, **kwargs):
     # TODO Is this splitting what I want?
     return base("dict", key_dist=self.keytype.distribution(base, **kwargs),
@@ -1211,16 +1275,19 @@ class HomogeneousMappingType(VentureType):
   mappings from integers to values, and environments as mappings from
   symbols to values.  This type is purely advisory and does not do any
   conversion."""
-  def __init__(self, keytype, valtype):
+  def __init__(self, keytype, valtype, name = None):
     assert isinstance(keytype, VentureType)
     assert isinstance(valtype, VentureType)
     self.keytype = keytype
     self.valtype = valtype
+    self._name = name
   def asVentureValue(self, thing):
     return thing
   def asPython(self, vthing):
+    if not isinstance(vthing, (VentureArray, VentureArrayUnboxed, VentureNil, VenturePair, VentureMatrix, VentureDict, VentureSimplex)):
+      raise VentureTypeError(str(vthing) + " is not a HomogeneousMappingType!")
     return vthing
-  def name(self): return "<mapping %s %s>" % (self.keytype.name(), self.valtype.name())
+  def name(self): return self._name or "<mapping %s %s>" % (self.keytype.name(), self.valtype.name())
   def distribution(self, base, **kwargs):
     # TODO Is this splitting what I want?
     return base("mapping", key_dist=self.keytype.distribution(base, **kwargs),
@@ -1248,11 +1315,12 @@ class ZeroType(VentureType):
   """A type object representing elements of the zero-dimensional vector
 space.  This is needed only to serve as the gradient type of discrete
 types like BoolType."""
-  def __init__(self): pass
+  def __init__(self, name=None):
+    self._name = name
   def asVentureValue(self, thing):
     assert thing == 0
     return thing
   def asPython(self, thing):
     assert thing == 0
     return thing
-  def name(self): return "<zero>"
+  def name(self): return self._name or "<zero>"

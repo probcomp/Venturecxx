@@ -5,6 +5,7 @@ import math
 
 from nose import SkipTest
 from nose.tools import eq_, assert_almost_equal
+from nose.plugins.attrib import attr
 
 from venture.venturemagics.ip_parallel import MRipl
 from venture.unit import *
@@ -79,11 +80,13 @@ def _testHistory(riplThunk):
 
 @gen_on_inf_prim("none")
 def testLoadModel():
+#    raise SkipTest('Venture types make it tricky to remove types from list_directives to get identical strings')
     for riplThunk in [get_ripl, lambda:get_mripl(no_ripls=3)]:
         yield _testLoadModel, riplThunk
 
 @gen_on_inf_prim("mh")
 def testModelHistory():
+#    raise SkipTest('Venture types make it tricky to remove types from list_directives to get identical strings')
     for riplThunk in [get_ripl, lambda:get_mripl(no_ripls=3)]:
         yield _testHistory, riplThunk
 
@@ -243,6 +246,7 @@ def _testCompareSnapshots(riplThunk):
     return report.statsDict['p']['KSSameContinuous']
 
 @gen_on_inf_prim("mh")
+@attr("graphical") # Tcl complains about no display if this is run too headless
 def testCompareSnapshots():
     riplThunks = (get_ripl, lambda: get_mripl(no_ripls=4))
     for riplThunk in riplThunks:
@@ -300,3 +304,18 @@ def _testGewekeTest():
         results.append(res)
 
     return results
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -22,9 +22,12 @@ class LDA(VentureUnit):
         self.assume("vocab", self.parameters['vocab'])
         self.assume("alpha_document_topic", "(gamma 1.0 1.0)")
         self.assume("alpha_topic_word", "1.0")
-        self.assume("get_document_topic_sampler", "(mem (lambda (doc) (make_sym_dir_mult alpha_document_topic topics)))")
-        self.assume("get_topic_word_sampler", "(mem (lambda (topic) (make_sym_dir_mult alpha_topic_word vocab)))")
-        self.assume("get_word", "(mem (lambda (doc pos) ((get_topic_word_sampler ((get_document_topic_sampler doc))))))")
+        self.assume("get_document_topic_sampler",
+                    "(mem (lambda (doc) (make_sym_dir_mult alpha_document_topic topics)))")
+        self.assume("get_topic_word_sampler",
+                    "(mem (lambda (topic) (make_sym_dir_mult alpha_topic_word vocab)))")
+        self.assume("get_word",
+                    "(mem (lambda (doc pos) ((get_topic_word_sampler ((get_document_topic_sampler doc))))))")
         return
 
 
@@ -38,7 +41,7 @@ class LDA(VentureUnit):
 
 
 if __name__ == '__main__':
-    ripl = shortcuts.Lite().make_church_prime_ripl()
+    ripl = shortcuts.Puma().make_church_prime_ripl()
     #parameters = {'topics' : 4, 'vocab' : 10, 'documents' : 8, 'words_per_document' : 12}
 
     #model = LDA(ripl, parameters)
@@ -49,7 +52,7 @@ if __name__ == '__main__':
     #history = model.runFromConditional(50)
     #klHistory.plot(fmt='png')
 
-    parameters = {'topics' : [4], 'vocab' : [2**n for n in range(14)], 'documents' : [8], 'words_per_document' : [10]}
+    parameters = {'topics' : [2,4,6], 'vocab' : [2**(n+1) for n in range(3)], 'documents' : [4,8,12], 'words_per_document' : [4,8,12]}
     def runner(params):
         print params
         return LDA(ripl, params).runFromJoint(10, verbose=True, runs=1)
