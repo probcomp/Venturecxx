@@ -283,6 +283,7 @@
     (list-ref items index)))
 
 (define (rdb-trace-commit! from to)
+  ; (pp `(committing from ,from to ,to))
   (set-rdb-addresses! to (rdb-addresses from))
   (set-rdb-records! to (rdb-records from))
   (set-rdb-record-map! to (rdb-record-map from)))

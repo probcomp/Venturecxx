@@ -155,6 +155,7 @@
       (bound-for-at (absorbed-value answer) addr exp new read-traces)))
 
 (define (rejection trace)
+  ; (pp `("Starting rejection" ,trace ,(rdb-constraints trace)))
   (receive (new-trace weight+bound)
     (regen/copy trace
       (maximal-resimulation-scaffold/deterministic-overrides (rdb-constraints trace))
