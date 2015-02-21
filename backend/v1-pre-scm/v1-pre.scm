@@ -137,10 +137,10 @@
     ((constant val) (scheme->venture val))
     ((var x)
      (env-search env x
-      (lambda (addr)
-        (traces-search (cons trace read-traces) addr (lambda (v) v)
+      (lambda (wanted-addr)
+        (traces-search (cons trace read-traces) wanted-addr (lambda (v) v)
          (lambda ()
-           (user-error exp env trace addr read-traces "Address not found" addr))))
+           (user-error exp env trace addr read-traces "Address not found" wanted-addr))))
       (lambda ()
         (look-in-the-scheme-environment x exp env trace addr read-traces))))
     ((lambda-form formals body)
