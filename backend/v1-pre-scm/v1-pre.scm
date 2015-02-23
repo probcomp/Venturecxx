@@ -468,6 +468,8 @@
 
 (define (dangling-variables env trace read-traces)
   (pp env)
+  (pp trace)
+  (pp read-traces)
   (env-foreach (lambda (sym addr)
                  ; (pp `(,sym ,addr))
                  (traces-lookup (cons trace read-traces) addr))

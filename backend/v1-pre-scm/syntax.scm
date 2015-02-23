@@ -108,6 +108,7 @@
         env trace addr read-traces))
 
 (define-operative (predict subforms env trace addr read-traces)
+  ; (dangling-variables *the-model-env* *the-model-trace* (cons trace read-traces))
   (eval `(trace-in ,*the-model-trace* ,(car subforms))
         *the-model-env* trace addr read-traces))
 
