@@ -47,7 +47,7 @@ class HMMDemo(VentureUnit):
 """
     commands = [command_str.split("]")[0].split(" ", 1) for command_str in program.strip().split("[ASSUME ") if command_str]
     for (var, exp) in commands:
-      self.assume(var, exp)
+      self.assume(var.strip(), exp)
 
   def makeObserves(self):
     xs = [4.17811131241034, 3.8207451562269097, 3.8695630629179485,
