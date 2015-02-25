@@ -22,5 +22,5 @@ def checkExample(example):
 
 @gen_in_backend("none")
 def testExamples():
-  for ex in ["lda.py", "crosscat.py"]:
+  for ex in ["venture-unit/lda.py", "venture-unit/crosscat.py"]:
     yield checkExample, ex
