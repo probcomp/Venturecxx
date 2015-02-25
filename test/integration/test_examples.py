@@ -22,5 +22,7 @@ def checkExample(example):
 
 @gen_in_backend("none")
 def testExamples():
-  for ex in ["venture-unit/lda.py", "venture-unit/crosscat.py"]:
+  for ex in ["venture-unit/lda.py", "venture-unit/crosscat.py", "venture-unit/analytics_gaussian_geweke.py",
+             "venture-unit/crp-demo.py", "venture-unit/crp-2d-demo.py", "venture-unit/hmc-demo.py",
+             "venture-unit/hmm-demo.py"]:
     yield checkExample, ex
