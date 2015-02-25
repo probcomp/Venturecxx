@@ -4,9 +4,9 @@ import scipy.stats
 import numpy as np
 from numpy.testing import assert_array_equal
 
+import venture.value.dicts as v
 from venture.test.config import get_ripl, default_num_samples, default_num_transitions_per_sample, on_inf_prim
 from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.engine.inference import SpecPlot
 
 @on_inf_prim("mh")
 @statisticalTest
@@ -23,32 +23,29 @@ def testExecuteSmoke():
   cdf = scipy.stats.norm(loc=1, scale=math.sqrt(0.5)).cdf
   return reportKnownContinuous(cdf, predictions, "N(1, sqrt(1/2))")
 
-def testForget():
-  '''Run this to make sure it doesn't break'''
+def testForgetSmoke():
+  '''Check that execute_program does not break on labels and forgets'''
   ripl = get_ripl()
   prog = '''
   label : [ASSUME x 1]
   [FORGET label]'''
   ripl.execute_program(prog)
 
-def testPeekOutput():
-  '''Make sure that execute_program returns results from peek commands'''
+def testInferReturn():
+  '''Make sure that execute_program returns results from infer commands'''
   ripl = get_ripl()
-  prog = programString('[INFER (cycle ((peek mu sigma) (mh default one 5)) 5)]')
+  prog = '[INFER (return (+ 5 3))]'
   ripl.infer('(resample 3)')
   res = ripl.execute_program(prog)[-1]['value']
-  assert 'mu' in res.dataset()
-  assert 'sigma' in res.dataset()
-  eq_(res.dataset().shape[0], 15)
-  assert_array_equal(res.dataset()['particle id'].unique(), np.arange(3))
+  eq_(res, v.number(8.0))
 
-def testPeekFunction():
+def testCollectFunction():
   '''
-  Make sure that calling peek on a function evaluation doesn't break
+  Make sure that calling collect on a function evaluation doesn't break
   '''
   ripl = get_ripl()
   ripl.assume('x', '(lambda() 2)')
-  _ = ripl.infer('(cycle ((mh default one 1) (peek (x))) 1)')
+  _ = ripl.infer('(cycle ((mh default one 1) (collect (x))) 1)')
 
 def programString(infer):
   prog = '''

@@ -2,6 +2,7 @@ import sp
 import psp
 import value as v
 from builtin import no_request, deterministic_typed
+from venture.engine.inference import Dataset
 
 class InferPrimitiveOutputPSP(psp.DeterministicPSP):
   def __init__(self, val, klass, desc, tp):
@@ -62,10 +63,10 @@ def trace_method_sp(name, tp, desc=""):
 def engine_method_sp(name, tp, desc=""):
   return typed_inf_sp(name, tp, MadeEngineMethodInferOutputPSP, desc)
 
-def sequenced_sp(name, f, tp, desc=""):
+def sequenced_sp(f, tp, desc=""):
   "This is for SPs that should be able to participate in do blocks but don't actually read the state (e.g., for doing IO)"
   # TODO Assume they are all deterministic, for now.
-  return [ name, no_request(psp.TypedPSP(InferPrimitiveOutputPSP(f, klass=MadeActionOutputPSP, desc=desc, tp=tp.return_type), tp)) ]
+  return no_request(psp.TypedPSP(InferPrimitiveOutputPSP(f, klass=MadeActionOutputPSP, desc=desc, tp=tp.return_type), tp))
 
 def transition_oper_args_types(extra_args = None):
   # ExpressionType reasonably approximates the mapping I want for scope and block IDs.
@@ -333,8 +334,7 @@ Perform an SMC-style resampling step.
 
 The `particles` argument gives the number of particles to make.
 Subsequent modeling and inference commands will be applied to each
-result particle independently.  Data reporting commands will talk to
-one distinguished particle, except ``peek``.
+result particle independently.
 
 Future observations will have the effect of weighting the particles
 relative to each other by the relative likelihoods of observing those
@@ -566,12 +566,87 @@ XXX: Currently, extra arguments must be VentureSymbols, which are
 unwrapped to Python strings for the plugin.
 """),
 
-  macro_helper("peek", infer_action_maker_type([v.AnyType()], variadic=True)),
-  macro_helper("plotf", infer_action_maker_type([v.AnyType()], variadic=True)),
-  macro_helper("plotf_to_file", infer_action_maker_type([v.AnyType()], variadic=True)),
-  macro_helper("printf", infer_action_maker_type([v.AnyType()], variadic=True)),
   macro_helper("call_back", infer_action_maker_type([v.AnyType()], return_type=v.AnyType(), variadic=True)),
-  macro_helper("call_back_accum", infer_action_maker_type([v.AnyType()], variadic=True)),
+  macro_helper("collect", infer_action_maker_type([v.AnyType()], return_type=v.ForeignBlobType("<dataset>"), variadic=True)),
+
+  engine_method_sp("printf", infer_action_maker_type([v.ForeignBlobType("<dataset>")]), desc="""\
+Print model values collected in a dataset.
+
+This is a basic debugging facility."""),
+
+  engine_method_sp("plotf", infer_action_maker_type([v.AnyType("<spec>"), v.ForeignBlobType("<dataset>")]), desc="""\
+Plot a data set according to a plot specification.
+
+Example::
+
+    [INFER (do (d <- (empty))
+               (cycle ((mh default one 1)
+                       (bind (collect x) (curry into d))) 1000)
+               (plotf (quote c0s) d)) ]
+
+will do 1000 iterations of MH collecting some standard data and
+the value of x, and then show a plot of the x variable (which
+should be a scalar) against the sweep number (from 1 to 1000),
+colored according to the global log score.  See ``collect``
+for details on collecting and labeling data to be plotted.
+
+The format specifications are inspired loosely by the classic
+printf.  To wit, each individual plot that appears on a page is
+specified by some line noise consisting of format characters
+matching the following regex::
+
+    [<geom>]*(<stream>?<scale>?){1,3}
+
+specifying
+
+- the geometric objects to draw the plot with, and
+- for each dimension (x, y, and color, respectively)
+    - the data stream to use
+    - the scale
+
+The possible geometric objects are:
+
+- _p_oint,
+- _l_ine,
+- _b_ar, and
+- _h_istogram
+
+The possible data streams are:
+
+- _<an integer>_ that column in the data set, 0-indexed,
+- _%_ the next column after the last used one
+- sweep _c_ounter,
+- _t_ime (wall clock, since the beginning of the Venture program),
+- log _s_core, and
+- pa_r_ticle
+
+The possible scales are:
+
+- _d_irect, and
+- _l_ogarithmic
+
+If one stream is indicated for a 2-D plot (points or lines), the x
+axis is filled in with the sweep counter.  If three streams are
+indicated, the third is mapped to color.
+
+If the given specification is a list, make all those plots at once.
+"""),
+
+  engine_method_sp("plotf_to_file", infer_action_maker_type([v.AnyType("<basename>"), v.AnyType("<spec>"), v.ForeignBlobType("<dataset>")]), desc="""\
+Save plot(s) to file(s).
+
+  Like ``plotf``, but save the resulting plot(s) instead of displaying on screen.
+  Just as <spec> may be either a single expression or a list, <basenames> may
+  either be a single symbol or a list of symbols. The number of basenames must
+  be the same as the number of specifications.
+
+  Examples:
+    (plotf_to_file (quote basename) (quote spec) <expression> ...) saves the plot specified by
+      the spec in the file "basename.png"
+    (plotf_to_file (quote (basename1 basename2)) (quote (spec1 spec2)) <expression> ...) saves
+      the spec1 plot in the file basename1.png, and the spec2 plot in basename2.png.
+"""),
+
   macro_helper("assume", infer_action_maker_type([v.AnyType("<symbol>"), v.AnyType("<expression>")])),
   macro_helper("observe", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType()])),
   macro_helper("force", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType()])),
@@ -579,17 +654,28 @@ unwrapped to Python strings for the plugin.
   macro_helper("sample", infer_action_maker_type([v.AnyType("<expression>")], return_type=v.AnyType())),
   macro_helper("sample_all", infer_action_maker_type([v.AnyType("<expression>")], return_type=v.ListType())),
 
+  ["empty", deterministic_typed(lambda *args: Dataset(), [], v.ForeignBlobType("<dataset>"), descr="""\
+Create an empty dataset ``into`` which further ``collect`` ed stuff may be merged.
+  """)],
+
+  ["into", sequenced_sp(lambda orig, new: orig.merge_bang(new), infer_action_maker_type([v.ForeignBlobType(), v.ForeignBlobType()]), desc="""\
+Destructively merge the contents of the second argument into the
+first.
+
+Right now only implemented on datasets created by ``empty`` and
+``collect``, but in principle generalizable to any monoid.  """)],
+
   # Hackety hack hack backward compatibility
   ["ordered_range", deterministic_typed(lambda *args: (v.VentureSymbol("ordered_range"),) + args,
                                         [v.AnyType()], v.ListType(), variadic=True)],
 
-  sequenced_sp("assert", assert_fun, infer_action_maker_type([v.BoolType(), v.SymbolType("message")], min_req_args=1), desc="""\
+  ["assert", sequenced_sp(assert_fun, infer_action_maker_type([v.BoolType(), v.SymbolType("message")], min_req_args=1), desc="""\
 Check the given boolean condition and raise an error if it fails.
-"""),
+""")],
 
-  sequenced_sp("print", print_fun, infer_action_maker_type([v.AnyType()], variadic=True), desc="""\
+  ["print", sequenced_sp(print_fun, infer_action_maker_type([v.AnyType()], variadic=True), desc="""\
 Print the given values to the terminal.
-"""),
+""")],
 ]
 
 inferenceKeywords = [ "default", "all", "none", "one", "ordered" ]

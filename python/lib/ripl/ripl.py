@@ -145,12 +145,6 @@ class Ripl():
             did = ret_value['directive_id']
             self.directive_id_to_stringable_instruction[did] = stringable_instruction
             self.directive_id_to_mode[did] = self.mode
-        # This IF is a terrible hack for allowing plotf to actually
-        # draw its plots when run by execute_instruction (e.g., via
-        # execute_program) and also allowing programmatic access to
-        # the plot data by calling ripl.infer without drawing it.
-        if not suppress_drawing_plots and parsed_instruction['instruction'] is 'infer' and ret_value["value"] is not None and not isinstance(ret_value["value"], dict):
-            print ret_value["value"]
         return ret_value
 
     def _annotated_error(self, e, instruction):
@@ -577,13 +571,8 @@ Open issues:
 
     def infer(self, params=None, type=False):
         o = self.execute_instruction({'instruction':'infer', 'expression': self.defaultInferProgram(params)}, suppress_drawing_plots = True)
-        ans = o["value"]
-        if type:
-            return ans
-        elif isinstance(ans, dict): # Presume this is peek output
-            return u.strip_types_from_dict_values(ans)
-        else: # Presume this is plotf output
-            return ans
+        value = o["value"]
+        return value if type else u.strip_types(value)
 
     def clear(self):
         self.execute_instruction({'instruction':'clear'})

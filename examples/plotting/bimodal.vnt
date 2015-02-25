@@ -13,4 +13,6 @@
 
 [list_directives]
 
-[infer (cycle ((mh default one 1) (plotf p0d1dr x y)) 1)]
+[infer (do
+  (mh default one 1)
+  (bind (collect x y) (curry plotf (quote p0d1dr))))]

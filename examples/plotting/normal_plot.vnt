@@ -1,0 +1,10 @@
+[infer (resample 10)]
+[assume x (normal 0 1)]
+[assume y (normal x 1)]
+[assume abs (lambda (x) (if (< x 0) (- 0 x) x))]
+[infer
+ (let ((d (empty)))
+   (do (cycle ((mh default all 1)
+               (bind (collect x y (abs (- y x))) (curry into d)))
+              100)
+       (plotf (quote (ltsr lctl pc0r h0 h1 p0s2 p0d1ds)) d)))]

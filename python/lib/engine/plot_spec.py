@@ -1,9 +1,7 @@
 import re
 from itertools import chain
 from time import strftime
-import numpy as np
 
-from venture.lite.exception import VentureValueError
 from venture.lite.utils import logWeightsToNormalizedDirect
 
 stream_rx = r"([rcts%]|[0-9]+)"
@@ -14,6 +12,10 @@ toplevel_rx = "(" + weight_rx + ")" + "(" + geom_rx + "*)" + "((" + stream_rx + 
 dimension_rx = stream_rx + "?" + scale_rx + "?"
 
 class PlotSpec(object):
+  """A plot specification.
+
+  See the documentation of plotf for the meanings of the possible specifiers.
+  """
   def __init__(self, spec):
     if isinstance(spec, basestring):
       self.frames = [FrameSpec(spec)]

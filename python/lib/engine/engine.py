@@ -56,6 +56,7 @@ class Engine(object):
     if self.persistent_inference_trace:
       (self.infer_trace, self.last_did) = self.init_inference_trace()
     self.ripl = None
+    self.creation_time = time.time()
 
   def trace_handler_constructor(self, mode):
     if mode == 'multiprocess':
@@ -157,8 +158,8 @@ class Engine(object):
   def sample(self,datum):
     # TODO Officially this is taken care of by the Venture SIVM level,
     # but I want it here because it is used in the interpretation of
-    # the "peek" infer command.  Design clarification time?
-    # TODO With this definition of "sample", "peek" will pump the
+    # the "collect" infer command.  Design clarification time?
+    # TODO With this definition of "sample", "collect" will pump the
     # directive counter of the engine.  That is likely to make us at
     # least somewhat sad.
     (did, value) = self.predict(datum)
@@ -343,12 +344,11 @@ effect of renumbering the directives, if some had been forgotten."""
       # inference action together with the mutated Infer object.
       assert isinstance(ans, dict)
       assert ans["type"] is "improper_list"
-      (_vs, tail) = ans["value"]
-      # TODO Refactor to return the value instead of the horrible hack
-      # on top of Infer.
+      (vs, tail) = ans["value"]
       assert tail["type"] is "blob"
       assert isinstance(tail["value"], Infer)
-      return tail["value"].final_data()
+      assert len(vs) == 1
+      return vs[0]
     except VentureException:
       if self.persistent_inference_trace:
         self.remove_self_evaluating_scope_hack(self.infer_trace, target)
@@ -522,7 +522,7 @@ class ContinuousInferrer(object):
     # Can use the storage of the thread object itself as the semaphore
     # controlling whether continuous inference proceeds.
     while self.inferrer is not None:
-      # TODO React somehow to peeks and plotfs in the inference program
+      # TODO React somehow to values returned by the inference action?
       # Currently suppressed for fear of clobbering the prompt
       self.engine.infer(program)
       time.sleep(0.0001) # Yield to be a good citizen
@@ -576,6 +576,8 @@ def _compute_inference_prelude():
       (next (rest res)))))"""],
       # return :: b -> State a b
       ["return", """(lambda (val) (lambda (t) (pair val t)))"""],
+      ["curry", """(lambda (f arg) (lambda (arg2) (f arg arg2)))"""],
+      ["curry3", """(lambda (f arg1 arg2) (lambda (arg3) (f arg1 arg2 arg3)))"""],
       ["global_likelihood", "(likelihood_at (quote default) (quote all))"],
       ["global_posterior", "(posterior_at (quote default) (quote all))"],
   ]:

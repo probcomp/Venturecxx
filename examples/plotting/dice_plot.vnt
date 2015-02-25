@@ -2,4 +2,9 @@
 [assume b (scope_include 0 2 (normal (uniform_discrete 1 6) 1))]
 [assume c (scope_include 0 3 (normal (uniform_discrete 1 6) 1))]
 [observe (scope_include 0 4 (normal (+ a b c) 0.2)) 7]
-[infer (cycle ((mh 0 one 1) (plotf (p0d1d2 p0d1dt c3 cs) a b c (+ a b c))) 100)]
+[infer
+ (let ((d (empty)))
+   (do (cycle ((mh 0 one 1)
+               (bind (collect a b c (+ a b c)) (curry into d)))
+              100)
+       (plotf (quote (p0d1d2 p0d1dt c3 cs)) d)))]
