@@ -145,7 +145,7 @@ def log_density_fully_uncurried(name, sp, args_lists, value):
 def testLogDensityDeterministic():
   for (name,sp) in relevantSPs():
     if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart",  # TODO
-                    "categorical", "make_dir_mult"]: # Only interesting when the presented value was among the inputs
+                    "categorical", "make_dir_mult", "make_sym_dir_mult"]: # Only interesting when the presented value was among the inputs
       yield checkLogDensityDeterministic, name, sp
 
 def checkLogDensityDeterministic(name, sp):
