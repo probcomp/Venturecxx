@@ -36,6 +36,9 @@ def testVentureExamples():
   for ex in ["venture puma -f examples/bimodal.vnt",
              "venture puma -f examples/cont_plot.vnt",
              "venture puma -f examples/dice_plot.vnt",
-             "venture puma -f examples/normal_plot.vnt"
+             "venture puma -f examples/normal_plot.vnt",
+             "venture lite -f trickiness-ideal.vnts",
+             "venture puma -f trickiness-concrete.vnts",
+             "venture puma -f trickiness-concrete-2.vnts",
   ]:
     yield checkVentureExample, ex
