@@ -26,3 +26,16 @@ def testExamples():
              "venture-unit/crp-demo.py", "venture-unit/crp-2d-demo.py", "venture-unit/hmc-demo.py",
              "venture-unit/hmm-demo.py"]:
     yield checkExample, ex
+
+def checkVentureExample(command):
+  timeout = findTimeout()
+  assert s.call("%s 1.5s %s" % (timeout, command), shell=True) == 124
+
+@gen_in_backend("none")
+def testVentureExamples():
+  for ex in ["venture puma -f examples/bimodal.vnt",
+             "venture puma -f examples/cont_plot.vnt",
+             "venture puma -f examples/dice_plot.vnt",
+             "venture puma -f examples/normal_plot.vnt"
+  ]:
+    yield checkVentureExample, ex
