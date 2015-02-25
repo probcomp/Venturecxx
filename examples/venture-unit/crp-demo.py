@@ -62,6 +62,19 @@ class CRPMixtureDemo(VentureUnit):
       self.observe("(get_datapoint %d)" % (len(c1) + i), c2[i])
       self.observe("(get_datapoint %d)" % (len(c1) + len(c2) + i), c3[i])
 
+def run(arg):
+  name = arg[0]
+  inference = arg[1]
+
+  # history = model.runFromConditional(100, runs=10, verbose=True, name=name, infer=inference)[0]
+  history = model.runFromConditional(5, runs=3, verbose=True, name=name, infer=inference)[0]
+  history.plot(fmt='png')
+  # (sampled, inferred, kl) = model.computeJointKL(5, 200, runs=3, verbose=True, name=name, infer=inference)
+  # (sampled, inferred, kl) = model.computeJointKL(3, 20, runs=1, verbose=True, name=name, infer=inference)
+  # sampled.plot(fmt='png')
+  # inferred.plot(fmt='png')
+  # kl.plot(fmt='png')
+
 if __name__ == '__main__':
   model = CRPMixtureDemo(shortcuts.make_lite_church_prime_ripl())
   def statisticsInfer(ripl, _):
@@ -70,22 +83,14 @@ if __name__ == '__main__':
   def pGibbsInfer(ripl, _):
     # ripl.infer("(cycle ((mh hypers one 5) (mh parameters one 20) (pgibbs clustering ordered 2 1)) 10)")
     ripl.infer("(cycle ((mh hypers one 2) (mh parameters one 3) (pgibbs clustering ordered 2 1)) 3)")
-
-def run(arg):
-  name = arg[0]
-  inference = arg[1]
-
-  # history = model.runFromConditional(100, runs=10, verbose=True, name=name, infer=inference)
-  history = model.runFromConditional(5, runs=3, verbose=True, name=name, infer=inference)
-  history.plot(fmt='png')
-  # (sampled, inferred, kl) = model.computeJointKL(5, 200, runs=3, verbose=True, name=name, infer=inference)
-  # (sampled, inferred, kl) = model.computeJointKL(3, 20, runs=1, verbose=True, name=name, infer=inference)
-  # sampled.plot(fmt='png')
-  # inferred.plot(fmt='png')
-  # kl.plot(fmt='png')
-
-from multiprocessing import Pool
-pool = Pool(30)
-pool.map(run, [("crp_defaultMH", None), 
-               ("crp_statisticsInfer", statisticsInfer),
-               ("crp_pGibbsInfer",pGibbsInfer)])
+  multiprocess = False
+  if multiprocess:
+    from multiprocessing import Pool
+    pool = Pool(30)
+    pool.map(run, [("crp_defaultMH", None),
+                   ("crp_statisticsInfer", statisticsInfer),
+                   ("crp_pGibbsInfer",pGibbsInfer)])
+  else:
+    map(run, [("crp_defaultMH", None),
+              ("crp_statisticsInfer", statisticsInfer),
+              ("crp_pGibbsInfer",pGibbsInfer)])
