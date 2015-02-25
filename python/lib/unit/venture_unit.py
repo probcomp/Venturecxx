@@ -200,6 +200,10 @@ class VentureUnit(object):
         a = Analytics(*self.analyticsArgs, **self.analyticsKwargs)
         return a.runConditionedFromPrior(*args,**kwargs)
 
+    def generateDataFromPrior(self, *args, **kwargs):
+        a = Analytics(*self.analyticsArgs, **self.analyticsKwargs)
+        return a.generateDataFromPrior(*args,**kwargs)
+
 
 class Analytics(object):
 

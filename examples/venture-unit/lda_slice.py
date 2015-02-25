@@ -46,7 +46,7 @@ if __name__ == '__main__':
     iters = 50
     runs = 2
     
-    data, prior = model.generateDataFromPrior(iters, verbose=True)
+    data, prior = model.generateDataFromPrior(verbose=True)
     
     infer_mh = "(mh default one 620)"
     history_mh = model.runFromConditional(iters,runs=runs,verbose=True,data=data, infer=infer_mh)
