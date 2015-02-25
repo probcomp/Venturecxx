@@ -33,13 +33,12 @@ def checkVentureExample(command):
 
 @gen_in_backend("none")
 def testVentureExamples():
-  for ex in ["venture puma -f examples/bimodal.vnt",
-             "venture puma -f examples/cont_plot.vnt",
-             "venture puma -f examples/dice_plot.vnt",
-             "venture puma -f examples/normal_plot.vnt",
-             "venture lite -f trickiness-ideal.vnts",
-             "venture puma -f trickiness-concrete.vnts",
-             "venture puma -f trickiness-concrete-2.vnts",
-             "venture lite -L hmm_plugin.py -f hmm.vnt -P -e '[infer (exact_filtering)]'",
+  for ex in ["venture puma -f examples/plotting/bimodal.vnt",
+             "venture puma -f examples/plotting/dice_plot.vnt",
+             "venture puma -f examples/plotting/normal_plot.vnt",
+             "venture lite -f examples/trickiness-ideal.vnts",
+             "venture puma -f examples/trickiness-concrete.vnts",
+             "venture puma -f examples/trickiness-concrete-2.vnts",
+             "venture lite -L examples/hmm_plugin.py -f examples/hmm.vnt -P -e '[infer (exact_filtering)]'",
   ]:
     yield checkVentureExample, ex
