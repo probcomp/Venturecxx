@@ -40,5 +40,6 @@ def testVentureExamples():
              "venture lite -f trickiness-ideal.vnts",
              "venture puma -f trickiness-concrete.vnts",
              "venture puma -f trickiness-concrete-2.vnts",
+             "venture lite -L hmm_plugin.py -f hmm.vnt -P -e '[infer (exact_filtering)]'",
   ]:
     yield checkVentureExample, ex
