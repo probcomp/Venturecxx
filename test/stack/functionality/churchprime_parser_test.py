@@ -49,6 +49,10 @@ class TestChurchPrimeParser(unittest.TestCase):
                     'expression':[v.sym('b'),v.sym('c'),v.sym('d')]}
         self.assertEqual(output,expected)
 
+    def test_parse_and_unparse_instruction(self):
+        for instruction in ["[assume a (b c d)]", "foo: [assume a (b c d)]"]:
+            self.assertEqual(self.p.unparse_instruction(self.p.parse_instruction(instruction)), instruction)
+
     # detects bug where '>=' is parsed as '> =' (because '>' is its own symbol)
     def test_double_symbol(self):
         output = self.p.parse_instruction('[predict (>= 1 1)]')
