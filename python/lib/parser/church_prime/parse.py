@@ -105,7 +105,7 @@ class Semantics(object):
 
     # instruction: Return located { 'instruction': 'foo', ... }.
     def p_instruction_labelled(self, l, open, d, close):
-        d['label'] = loctoken(l)
+        d['label'] = locmap(loctoken(l), val.symbol)
         d['instruction'] = locmap(d['instruction'], lambda i: 'labeled_' + i)
         return locbracket(l, close, d)
     def p_instruction_unlabelled(self, open, d, close):
@@ -543,7 +543,7 @@ class ChurchPrimeParser(object):
         unparsers = self.unparsers[i]
         chunks = []
         if 'label' in instruction and 'label' not in (k for k,_u in unparsers):
-            chunks.append(instruction['label'])
+            chunks.append(instruction['label']['value'])
             chunks.append(': ')
         chunks.append('[')
         if i[0 : len('labeled_')] == 'labeled_':
