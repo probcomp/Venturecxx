@@ -71,6 +71,7 @@ directive(predict)	::= K_PREDICT(k) expression(e).
 
 command(configure)	::= K_CONFIGURE(k) json(options).
 command(forget)		::= K_FORGET(k) directive_ref(dr).
+command(freeze)		::= K_FREEZE(k) directive_ref(dr).
 command(report)		::= K_REPORT(k) directive_ref(dr).
 command(infer)		::= K_INFER(k) expression(e).
 command(clear)		::= K_CLEAR(k).
@@ -158,6 +159,7 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_CONTINUOUS_INFERENCE_STATUS
 	K_FORCE
 	K_FORGET
+	K_FREEZE
 	K_GET_CURRENT_EXCEPTION
 	K_GET_DIRECTIVE
 	K_GET_GLOBAL_LOGSCORE

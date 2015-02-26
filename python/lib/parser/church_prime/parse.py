@@ -138,6 +138,9 @@ class Semantics(object):
     def p_command_forget(self, k, dr):
         i = 'labeled_forget' if dr[0] == 'label' else 'forget'
         return { 'instruction': loctoken1(k, i), dr[0]: dr[1] }
+    def p_command_freeze(self, k, dr):
+        i = 'labeled_freeze' if dr[0] == 'label' else 'freeze'
+        return { 'instruction': loctoken1(k, i), dr[0]: dr[1] }
     def p_command_report(self, k, dr):
         i = 'labeled_report' if dr[0] == 'label' else 'report'
         return { 'instruction': loctoken1(k, i), dr[0]: dr[1] }
@@ -514,6 +517,8 @@ class ChurchPrimeParser(object):
         'configure': [('options', unparse_json)],
         'forget': [('directive_id', unparse_integer)],
         'labeled_forget': [('label', unparse_symbol)],
+        'freeze': [('directive_id', unparse_integer)],
+        'labeled_freeze': [('label', unparse_symbol)],
         'report': [('directive_id', unparse_integer)],
         'labeled_report': [('label', unparse_symbol)],
         'infer': [('expression', unparse_expression)],

@@ -415,6 +415,8 @@ class VentureScriptParser(object):
             # Core
             ['forget','<!forget> <directive_id:int>'],
             ['labeled_forget','<!forget> <label:sym>'],
+            ['freeze','<!freeze> <directive_id:int>'],
+            ['labeled_freeze','<!freeze> <label:sym>'],
             ['report','<!report> <directive_id:int>'],
             ['labeled_report','<!report> <label:sym>'],
             ['infer','<!infer> <expression:exp>'],
