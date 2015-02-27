@@ -573,7 +573,7 @@ def _compute_inference_prelude():
       ["bind_", """(lambda (act next)
   (lambda (t)
     (let ((res (act t)))
-      (next (rest res)))))"""],
+      ((next) (rest res)))))"""],
       # return :: b -> State a b
       ["return", """(lambda (val) (lambda (t) (pair val t)))"""],
       ["curry", """(lambda (f arg) (lambda (arg2) (f arg arg2)))"""],

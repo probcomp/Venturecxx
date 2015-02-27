@@ -58,7 +58,9 @@ def do_macro(program):
     else:
       # Sequence actions
       rest_body = [do] + rest
-      return [v.sym("bind_"), macroexpand_inference(statement), macroexpand_inference(rest_body)]
+      rest_expanded = [v.sym("make_csp"), v.quote([]),
+                       v.quote(macroexpand_inference(rest_body))]
+      return [v.sym("bind_"), macroexpand_inference(statement), rest_expanded]
 register_macro("do", do_macro, """\
 - `(do <stmt> <stmt> ...)`: Sequence actions that may return results.
 
