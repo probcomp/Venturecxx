@@ -83,6 +83,9 @@ def symmetric_matrix(vs):
 def quote(v):
   return [symbol("quote"), v]
 
+def unquote(v):
+  return [symbol("unquote"), v]
+
 def quasiquote(v):
   import collections
   # TODO Nested quasiquotation

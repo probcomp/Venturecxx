@@ -42,6 +42,12 @@ def loctoken((value, start, end)):
 def loctoken1((_value, start, end), value):
     return located([start, end], value)
 
+def locquoted((_value, start, _end), located_value, f):
+    (_vstart, vend) = located_value['loc']
+    value = located_value['value']
+    assert start < _vstart
+    return located([start, vend], f(value))
+
 def locbracket((_ovalue, ostart, oend), (_cvalue, cstart, cend), value):
     assert ostart <= oend
     assert oend < cstart
@@ -201,6 +207,10 @@ class Semantics(object):
         return locmap(loctoken(op), lambda op: val.symbol(operators[op]))
     def p_expression_literal(self, value):
         return value
+    def p_expression_quote(self, quote, e):
+        return locquoted(quote, e, val.quote)
+    def p_expression_unquote(self, unquote, e):
+        return locquoted(unquote, e, val.unquote)
     def p_expression_combination(self, open, es, close):
         return locbracket(open, close, es or [])
     def p_expression_comb_error(self, open, es, close):
