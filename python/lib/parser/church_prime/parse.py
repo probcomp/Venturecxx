@@ -44,9 +44,8 @@ def loctoken1((_value, start, end), value):
 
 def locquoted((_value, start, _end), located_value, f):
     (_vstart, vend) = located_value['loc']
-    value = located_value['value']
     assert start < _vstart
-    return located([start, vend], f(value))
+    return located([start, vend], f(located_value))
 
 def locbracket((_ovalue, ostart, oend), (_cvalue, cstart, cend), value):
     assert ostart <= oend
