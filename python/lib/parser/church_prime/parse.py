@@ -247,8 +247,8 @@ class Semantics(object):
 
     # json_list: Return list.
     def p_json_list_l(self, b):                 return b
-    def p_json_list_body_none(self):            return []
-    def p_json_list_body_some(self, ts):        return ts
+    def p_json_list_empty(self):                return []
+    def p_json_list_nonempty(self, ts):         return ts
     def p_json_list_terms_one(self, t):         return [t]
     def p_json_list_terms_many(self, ts, t):    ts.append(t); return ts
     def p_json_list_terms_error(self, t):       return ['error']
