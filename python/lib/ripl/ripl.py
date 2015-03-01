@@ -403,11 +403,11 @@ value to be returned as a dict annotating its Venture type.
         '''
         name = _symbolize(name)
         if label==None:
-            i = {'instruction':'assume', 'symbol':name, 'expression':expression}
+            label = name
         else:
             label = _symbolize(label)
-            i = {'instruction':'labeled_assume',
-                  'symbol':name, 'expression':expression, 'label':label}
+        i = {'instruction':'labeled_assume',
+             'symbol':name, 'expression':expression, 'label':label}
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 

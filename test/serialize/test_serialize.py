@@ -163,13 +163,13 @@ def test_serialize_ripl():
     v1.observe('(flip_coin)', 'true')
 
     v1.infer(1)
-    result1 = v1.predict('theta', label='theta')
+    result1 = v1.predict('theta', label='theta_prediction')
 
     v1.save('/tmp/serialized.ripl')
 
     v2 = get_ripl()
     v2.load('/tmp/serialized.ripl')
-    result2 = v2.report('theta')
+    result2 = v2.report('theta_prediction')
     result3 = v2.predict('theta')
 
     assert result1 == result2 and result1 == result3
