@@ -551,8 +551,20 @@ void ConcreteTrace::freezeDirectiveID(DirectiveID did)
 {
   RootOfFamily root = families[did];
   OutputNode * outputNode = dynamic_cast<OutputNode*>(root.get());
-  assert(outputNode);
-  freezeOutputNode(outputNode);
+  if (outputNode) {
+    if (outputNode->isFrozen) {
+      // OK
+    } else {
+      freezeOutputNode(outputNode);
+    }
+  } else {
+    ConstantNode * constantNode = dynamic_cast<ConstantNode*>(root.get());
+    if (constantNode) {
+      // OK
+    } else {
+      assert(false);
+    }
+  }
 }
 
 void ConcreteTrace::freezeOutputNode(OutputNode * outputNode)
