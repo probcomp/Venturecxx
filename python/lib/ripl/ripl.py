@@ -345,7 +345,13 @@ class Ripl():
         if isinstance(instruction, basestring):
             return instruction
         else:
-            return self._unparse(instruction)
+            # If it didn't come in as a string, do the normalization
+            # the parser does before trying to generate a textual
+            # representation.  This mitigates possible problems with
+            # programmatically generated instructions (as from the
+            # assume inference SP). This may lose if the partially
+            # parsed instruction has a large string in it.
+            return self._unparse(self._ensure_parsed(instruction))
 
     def character_index_to_expression_index(self, directive_id, character_index):
         p = self._cur_parser()
