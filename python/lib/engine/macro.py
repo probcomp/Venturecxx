@@ -205,7 +205,7 @@ register_macro("collect", quasiquotation_macro(2), """\
   normalized weights of the particles in direct space.
 """)
 
-register_macro("assume", quasiquotation_macro(3, 3), """\
+register_macro("assume", quasiquotation_macro(3, 4), """\
 - `(assume <symbol> <model-expression>)`: Programmatically add an assumption.
 
   Extend the underlying model by adding a new generative random

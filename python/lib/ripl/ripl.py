@@ -395,13 +395,11 @@ The `type` argument, if supplied and given a true value, causes the
 value to be returned as a dict annotating its Venture type.
 
         '''
-        if isinstance(name, basestring):
-            name = v.symbol(name)
-            # Otherwise assume the name is a valid stack dict for a name
+        name = _symbolize(name)
         if label==None:
             i = {'instruction':'assume', 'symbol':name, 'expression':expression}
         else:
-            label = v.symbol(label)
+            label = _symbolize(label)
             i = {'instruction':'labeled_assume',
                   'symbol':name, 'expression':expression, 'label':label}
         value = self.execute_instruction(i)['value']
@@ -858,3 +856,8 @@ def load_library(name):
     # print (file, pathname, description)
     # return imp.load_module(name, file, pathname, description)
 
+def _symbolize(thing):
+    if isinstance(thing, basestring):
+        return v.symbol(thing)
+    else:
+        return thing # Assume it's already the proper stack dict

@@ -669,7 +669,7 @@ Save plot(s) to file(s).
       the spec1 plot in the file basename1.png, and the spec2 plot in basename2.png.
 """),
 
-  ripl_macro_helper("assume", infer_action_maker_type([v.AnyType("<symbol>"), v.AnyType("<expression>")])),
+  ripl_macro_helper("assume", infer_action_maker_type([v.AnyType("<symbol>"), v.AnyType("<expression>"), v.AnyType("<label>")], min_req_args=2)),
   ripl_macro_helper("observe", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType()])),
   macro_helper("force", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType()])),
   ripl_macro_helper("predict", infer_action_maker_type([v.AnyType("<expression>")])),
