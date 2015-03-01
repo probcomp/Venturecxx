@@ -474,7 +474,7 @@ class ChurchPrimeParser(object):
             terms = (self.unparse_expression(e) for e in expression)
             return '(' + ' '.join(terms) + ')'
         else:
-            raise TypeError('Invalid expression: %s' % (repr(expression),))
+            raise TypeError('Invalid expression: %s of type %s' % (repr(expression),type(expression)))
 
     escapes = {
         '/':    '/',
