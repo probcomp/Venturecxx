@@ -521,7 +521,7 @@ Open issues:
         self.configure({'inference_timeout': inference_timeout})
         return None
 
-    def forget(self, label_or_did):
+    def forget(self, label_or_did, type=False):
         if isinstance(label_or_did,int):
             i = {'instruction':'forget', 'directive_id':label_or_did}
             # if asked to forget prelude instruction, decrement _n_prelude
@@ -530,7 +530,7 @@ Open issues:
         else:
             # assume that prelude instructions don't have labels
             i = {'instruction':'labeled_forget',
-                 'label':v.symbol(label_or_did)}
+                 'label':_symbolize(label_or_did)}
         self.execute_instruction(i)
         return None
 

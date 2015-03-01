@@ -676,6 +676,16 @@ Save plot(s) to file(s).
   macro_helper("sample", infer_action_maker_type([v.AnyType("<expression>")], return_type=v.AnyType())),
   macro_helper("sample_all", infer_action_maker_type([v.AnyType("<expression>")], return_type=v.ListType())),
 
+  ripl_method_sp("forget", infer_action_maker_type([v.AnyType("<label>")]), desc="""\
+  Forget an observation, prediction, or unused assumption.
+
+  Removes the directive indicated by the label argument from the
+  model.  If an assumption is forgotten, the symbol it binds
+  disappears from scope; the behavior if that symbol was still
+  referenced is unspecified.
+
+"""),
+
   ["empty", deterministic_typed(lambda *args: Dataset(), [], v.ForeignBlobType("<dataset>"), descr="""\
 Create an empty dataset ``into`` which further ``collect`` ed stuff may be merged.
   """)],

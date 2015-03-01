@@ -140,3 +140,33 @@ def testLabelingDirectives():
   eq_(5, ripl.report("foo"))
   eq_(2, ripl.report("bar"))
   eq_(6, ripl.report("baz"))
+
+@on_inf_prim("forget")
+def testDirectivesForgettable():
+  ripl = get_ripl(persistent_inference_trace=True)
+  ripl.infer("(assume x 5 foo)")
+  ripl.infer("(observe (normal x 1) 2 bar)")
+  ripl.infer("(predict (+ x 1) baz)")
+  assert len(ripl.list_directives()) == 3
+  ripl.forget("bar")
+  directives = ripl.list_directives()
+  assert len(directives) == 2
+  assert directives[0]["instruction"] == "assume"
+  assert directives[1]["instruction"] == "predict"
+
+@on_inf_prim("forget")
+def testDirectivesForgettableFromInference():
+  ripl = get_ripl(persistent_inference_trace=True)
+  ripl.infer("(assume x 5 foo)")
+  ripl.infer("(observe (normal x 1) 2 bar)")
+  ripl.infer("(predict (+ x 1) baz)")
+  assert len(ripl.list_directives()) == 3
+  ripl.infer("(forget 'bar)")
+  directives = ripl.list_directives()
+  assert len(directives) == 2
+  assert directives[0]["instruction"] == "assume"
+  assert directives[1]["instruction"] == "predict"
+  ripl.infer("(forget 'baz)")
+  assert len(ripl.list_directives()) == 1
+  ripl.infer("(forget 'foo)")
+  assert len(ripl.list_directives()) == 0
