@@ -17,31 +17,39 @@
 
 # Abstraction barrier for the Python dict representation of Venture values.
 
+import numbers
 
 def val(t,v):
   return {"type":t,"value":v}
 
 def number(v):
+  assert isinstance(v, numbers.Number)
   return val("number",v)
 
 num = number
 
 def real(v):
+  assert isinstance(v, numbers.Number)
   return val("real",v)
 
 def integer(v):
+  assert isinstance(v, numbers.Number)
   return val("integer",v)
 
 def probability(v):
+  assert isinstance(v, numbers.Number)
   return val("probability",v)
 
 def atom(v):
+  assert isinstance(v, numbers.Number)
   return val("atom",v)
 
 def boolean(v):
+  assert isinstance(v, bool)
   return val("boolean",v)
 
 def symbol(s):
+  assert isinstance(s, basestring)
   return val("symbol",s)
 
 sym = symbol
