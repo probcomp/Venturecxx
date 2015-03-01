@@ -335,6 +335,12 @@ builtInSPsList = [
                                         v.RequestType("<array b>"))),
                         functional.ESRArrayOutputPSP()) ],
 
+           [ "imapv", SP(TypedPSP(functional.IndexedArrayMapRequestPSP(),
+                                  SPType([SPType([v.AnyType("index"), v.AnyType("a")], v.AnyType("b")),
+                                          v.HomogeneousArrayType(v.AnyType("a"))],
+                                         v.RequestType("<array b>"))),
+                         functional.ESRArrayOutputPSP()) ],
+
            [ "zip", deterministic_typed(lambda *args: zip(*args), [v.ListType()], v.HomogeneousListType(v.ListType()), variadic=True,
                                          descr="zip returns a list of lists, where the i-th nested list contains the i-th element from each of the input arguments") ],
 

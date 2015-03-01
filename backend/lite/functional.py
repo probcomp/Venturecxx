@@ -26,6 +26,17 @@ class ArrayMapRequestPSP(DeterministicPSP):
     def description(self, name):
         return "(%s func vals) returns the results of applying a function to each value in an array" % name
 
+class IndexedArrayMapRequestPSP(DeterministicPSP):
+    def simulate(self, args):
+        operator = args.operandValues[0]
+        operands = args.operandValues[1]
+        exps = [[operator, index, operand] for (index, operand) in enumerate(operands)]
+        env = VentureEnvironment()
+        return Request([ESR((args.node, i), exp, emptyAddress, env) for i, exp in enumerate(exps)])
+
+    def description(self, name):
+        return "(%s func vals) returns the results of applying a function to each value in an array, together with its index" % name
+
 class ESRArrayOutputPSP(DeterministicPSP):
     def simulate(self, args):
         return VentureArray(args.esrValues)
