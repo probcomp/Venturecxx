@@ -409,7 +409,7 @@ value to be returned as a dict annotating its Venture type.
         if label==None:
             i = {'instruction':'predict', 'expression':expression}
         else:
-            label = v.symbol(label)
+            label = _symbolize(label)
             i = {'instruction':'labeled_predict', 'expression':expression, 'label':label}
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
@@ -418,7 +418,7 @@ value to be returned as a dict annotating its Venture type.
         if label==None:
             i = {'instruction':'observe', 'expression':expression, 'value':value}
         else:
-            label = v.symbol(label)
+            label = _symbolize(label)
             i = {'instruction':'labeled_observe', 'expression':expression, 'value':value, 'label':label}
         self.execute_instruction(i)
         return None

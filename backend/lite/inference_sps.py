@@ -670,9 +670,9 @@ Save plot(s) to file(s).
 """),
 
   ripl_macro_helper("assume", infer_action_maker_type([v.AnyType("<symbol>"), v.AnyType("<expression>"), v.AnyType("<label>")], min_req_args=2)),
-  ripl_macro_helper("observe", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType()])),
+  ripl_macro_helper("observe", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType(), v.AnyType("<label>")], min_req_args=2)),
   macro_helper("force", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType()])),
-  ripl_macro_helper("predict", infer_action_maker_type([v.AnyType("<expression>")])),
+  ripl_macro_helper("predict", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType("<label>")], min_req_args=1)),
   macro_helper("sample", infer_action_maker_type([v.AnyType("<expression>")], return_type=v.AnyType())),
   macro_helper("sample_all", infer_action_maker_type([v.AnyType("<expression>")], return_type=v.ListType())),
 

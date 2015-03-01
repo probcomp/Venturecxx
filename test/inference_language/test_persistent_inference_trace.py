@@ -132,7 +132,11 @@ def testDirectivesTracked():
   assert directives[2]["instruction"] == "predict"
 
 @on_inf_prim("assume")
-def testLabelingAssume():
+def testLabelingDirectives():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.infer("(assume x 5 foo)")
+  ripl.infer("(observe (normal x 1) 2 bar)")
+  ripl.infer("(predict (+ x 1) baz)")
   eq_(5, ripl.report("foo"))
+  eq_(2, ripl.report("bar"))
+  eq_(6, ripl.report("baz"))

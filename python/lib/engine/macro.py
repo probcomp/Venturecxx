@@ -206,26 +206,36 @@ register_macro("collect", quasiquotation_macro(2), """\
 """)
 
 register_macro("assume", quasiquotation_macro(3, 4), """\
-- `(assume <symbol> <model-expression>)`: Programmatically add an assumption.
+- `(assume <symbol> <model-expression> [<label>])`: Programmatically add an assumption.
 
   Extend the underlying model by adding a new generative random
   variable, like the ``assume`` directive.  The given model expression
   may be constructed programmatically -- see ``unquote``.
 
+  The <label>, if supplied, may be used to ``freeze`` or ``forget``
+  this directive.
+
 """)
 
 def quasiquote_first_macro(program):
-  assert len(program) == 3
-  return [program[0], v.quasiquote(program[1]), macroexpand_inference(program[2])]
+  assert len(program) == 3 or len(program) == 4
+  if len(program) == 4:
+    # A label was supplied
+    tail = [v.quasiquote(program[3])]
+  else:
+    tail = []
+  return [program[0], v.quasiquote(program[1]), macroexpand_inference(program[2])] + tail
 
 register_macro("observe", quasiquote_first_macro, """\
-- `(observe <model-expression> <value>)`: Programmatically add an observation.
+- `(observe <model-expression> <value> [<label>])`: Programmatically add an observation.
 
   Condition the underlying model by adding a new observation, like the
   ``observe`` directive.  The given model expression may be
   constructed programmatically -- see ``unquote``.  The given value is
   computed in the inference program, and may be stochastic.  This
   corresponds to conditioning a model on randomly chosen data.
+
+  The <label>, if supplied, may be used to ``forget`` this observation.
 
   *Note:* Observations are buffered by Venture, and do not take effect
   immediately.  Call ``incorporate`` when you want them to.
@@ -244,13 +254,15 @@ register_macro("force", quasiquote_first_macro, """\
 
 """)
 
-register_macro("predict", quasiquotation_macro(2, 2), """\
-- `(predict <model-expression>)`: Programmatically add a prediction.
+register_macro("predict", quasiquotation_macro(2, 3), """\
+- `(predict <model-expression> [<label>])`: Programmatically add a prediction.
 
   Extend the underlying model by adding a new generative random
   variable, like the ``predict`` directive.  The given model expression
   may be constructed programmatically -- see ``unquote``.
-""")
+
+  The <label>, if supplied, may be used to ``freeze`` or ``forget``
+  this directive. """)
 
 register_macro("sample", quasiquotation_macro(2, 2), """\
 - `(sample <model-expression>)`: Programmatically sample from the model.
