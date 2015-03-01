@@ -1,6 +1,6 @@
 from nose.tools import eq_
 
-from venture.test.config import get_ripl
+from venture.test.config import get_ripl, on_inf_prim
 from venture.lite import builtin
 
 def testPersistenceSmoke1():
@@ -110,3 +110,11 @@ def testForceSmoke2():
   r.infer("(go -3)")
   x = r.sample('x')
   eq_(x, -3)
+
+@on_inf_prim("assume")
+def testAssumeTracked():
+  ripl = get_ripl(persistent_inference_trace=True)
+  ripl.infer("(assume x (normal 0 1))")
+  directives = ripl.list_directives()
+  assert len(directives) == 1
+  assert directives[0]["instruction"] == "assume"

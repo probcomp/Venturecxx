@@ -34,6 +34,18 @@ class MadeEngineMethodInferOutputPSP(psp.LikelihoodFreePSP):
   def description(self, _name):
     return self.desc
 
+class MadeRiplMethodInferOutputPSP(psp.LikelihoodFreePSP):
+  def __init__(self, name, operands, desc=None):
+    self.name = name
+    self.operands = operands
+    self.desc = desc
+  def simulate(self, args):
+    ripl = args.operandValues[0].engine.ripl
+    ans = getattr(ripl, self.name)(*[o.asStackDict() for o in self.operands], type=True) # Keep the stack dict
+    return (v.VentureValue.fromStackDict(ans), args.operandValues[0])
+  def description(self, _name):
+    return self.desc
+
 class MadeActionOutputPSP(psp.DeterministicPSP):
   def __init__(self, f, operands, desc=None):
     self.f = f
@@ -63,6 +75,9 @@ def trace_method_sp(name, tp, desc=""):
 def engine_method_sp(name, tp, desc=""):
   return typed_inf_sp(name, tp, MadeEngineMethodInferOutputPSP, desc)
 
+def ripl_method_sp(name, tp, desc=""):
+  return typed_inf_sp(name, tp, MadeRiplMethodInferOutputPSP, desc)
+
 def sequenced_sp(f, tp, desc=""):
   "This is for SPs that should be able to participate in do blocks but don't actually read the state (e.g., for doing IO)"
   # TODO Assume they are all deterministic, for now.
@@ -81,6 +96,12 @@ def par_transition_oper_type(extra_args = None, **kwargs):
 
 def macro_helper(name, tp):
   return engine_method_sp(name, tp, desc="""\
+A helper function for implementing the eponymous inference macro.
+
+Calling it directly is likely to be difficult and unproductive. """)
+
+def ripl_macro_helper(name, tp):
+  return ripl_method_sp(name, tp, desc="""\
 A helper function for implementing the eponymous inference macro.
 
 Calling it directly is likely to be difficult and unproductive. """)
@@ -647,7 +668,7 @@ Save plot(s) to file(s).
       the spec1 plot in the file basename1.png, and the spec2 plot in basename2.png.
 """),
 
-  macro_helper("assume", infer_action_maker_type([v.AnyType("<symbol>"), v.AnyType("<expression>")])),
+  ripl_macro_helper("assume", infer_action_maker_type([v.AnyType("<symbol>"), v.AnyType("<expression>")])),
   macro_helper("observe", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType()])),
   macro_helper("force", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType()])),
   macro_helper("predict", infer_action_maker_type([v.AnyType("<expression>")])),

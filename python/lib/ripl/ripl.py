@@ -395,7 +395,9 @@ The `type` argument, if supplied and given a true value, causes the
 value to be returned as a dict annotating its Venture type.
 
         '''
-        name = v.symbol(name)
+        if isinstance(name, basestring):
+            name = v.symbol(name)
+            # Otherwise assume the name is a valid stack dict for a name
         if label==None:
             i = {'instruction':'assume', 'symbol':name, 'expression':expression}
         else:
