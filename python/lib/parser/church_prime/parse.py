@@ -465,8 +465,13 @@ class ChurchPrimeParser(object):
 
     def unparse_expression(self, expression):
         '''Unparse EXPRESSION into a string.'''
-        if isinstance(expression, dict):        # Leaf.
-            return value_to_string(expression)
+        if isinstance(expression, dict):
+            if expression["type"] == "list":
+                # Could expand this to cover arrays, but then need to
+                # be careful not to do that in quoted expressions.
+                return self.unparse_expression(expression["value"])
+            else: # Leaf
+                return value_to_string(expression)
         elif isinstance(expression, basestring):
             # XXX This is due to &@!#^&$@!^$&@#!^%&*.
             return expression
