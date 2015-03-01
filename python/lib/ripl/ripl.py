@@ -416,7 +416,7 @@ value to be returned as a dict annotating its Venture type.
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 
-    def observe(self, expression, value, label=None):
+    def observe(self, expression, value, label=None, type=False):
         if label==None:
             i = {'instruction':'observe', 'expression':expression, 'value':value}
         else:

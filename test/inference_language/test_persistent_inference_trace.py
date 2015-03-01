@@ -118,3 +118,15 @@ def testAssumeTracked():
   directives = ripl.list_directives()
   assert len(directives) == 1
   assert directives[0]["instruction"] == "assume"
+
+@on_inf_prim("assume")
+def testDirectivesTracked():
+  ripl = get_ripl(persistent_inference_trace=True)
+  ripl.infer("(assume x (normal 0 1))")
+  ripl.infer("(observe (normal x 1) 2)")
+  ripl.infer("(predict (normal x 1))")
+  directives = ripl.list_directives()
+  assert len(directives) == 3
+  assert directives[0]["instruction"] == "assume"
+  assert directives[1]["instruction"] == "observe"
+  assert directives[2]["instruction"] == "predict"

@@ -42,7 +42,8 @@ class MadeRiplMethodInferOutputPSP(psp.LikelihoodFreePSP):
   def simulate(self, args):
     ripl = args.operandValues[0].engine.ripl
     ans = getattr(ripl, self.name)(*[o.asStackDict() for o in self.operands], type=True) # Keep the stack dict
-    return (v.VentureValue.fromStackDict(ans), args.operandValues[0])
+    ans_vv = v.VentureValue.fromStackDict(ans) if ans is not None else v.VentureNil()
+    return (ans_vv, args.operandValues[0])
   def description(self, _name):
     return self.desc
 
@@ -669,9 +670,9 @@ Save plot(s) to file(s).
 """),
 
   ripl_macro_helper("assume", infer_action_maker_type([v.AnyType("<symbol>"), v.AnyType("<expression>")])),
-  macro_helper("observe", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType()])),
+  ripl_macro_helper("observe", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType()])),
   macro_helper("force", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType()])),
-  macro_helper("predict", infer_action_maker_type([v.AnyType("<expression>")])),
+  ripl_macro_helper("predict", infer_action_maker_type([v.AnyType("<expression>")])),
   macro_helper("sample", infer_action_maker_type([v.AnyType("<expression>")], return_type=v.AnyType())),
   macro_helper("sample_all", infer_action_maker_type([v.AnyType("<expression>")], return_type=v.ListType())),
 
