@@ -2,6 +2,7 @@ import sp
 import psp
 import value as v
 from builtin import no_request, deterministic_typed
+from exception import VentureTypeError
 from venture.engine.inference import Dataset
 
 class InferPrimitiveOutputPSP(psp.DeterministicPSP):
@@ -42,7 +43,12 @@ class MadeRiplMethodInferOutputPSP(psp.LikelihoodFreePSP):
   def simulate(self, args):
     ripl = args.operandValues[0].engine.ripl
     ans = getattr(ripl, self.name)(*[o.asStackDict() for o in self.operands], type=True) # Keep the stack dict
-    ans_vv = v.VentureValue.fromStackDict(ans) if ans is not None else v.VentureNil()
+    try:
+      ans_vv = v.VentureValue.fromStackDict(ans) if ans is not None else v.VentureNil()
+    except VentureTypeError:
+      # Do not return values that cannot be reconstructed from stack
+      # dicts (e.g., SPs)
+      ans_vv = v.VentureNil()
     return (ans_vv, args.operandValues[0])
   def description(self, _name):
     return self.desc
