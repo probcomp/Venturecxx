@@ -686,6 +686,21 @@ Save plot(s) to file(s).
 
 """),
 
+  ripl_method_sp("freeze", infer_action_maker_type([v.AnyType("<label>")]), desc="""\
+  Freeze an assumption to its current sample.
+
+  Replaces the assumption indicated by the label argument with a
+  constant whose value is that assumption's current value (which may
+  differ across particles).  This has the effect of preventing future
+  inference on that assumption, and decoupling it from its (former)
+  dependecies, as well as reclaiming any memory of random choices
+  that can no longer influence any toplevel value.
+
+  Together with forget, freeze makes it possible for particle filters
+  in Venture to use model memory independent of the sequence length.
+
+"""),
+
   ["empty", deterministic_typed(lambda *args: Dataset(), [], v.ForeignBlobType("<dataset>"), descr="""\
 Create an empty dataset ``into`` which further ``collect`` ed stuff may be merged.
   """)],

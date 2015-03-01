@@ -534,12 +534,12 @@ Open issues:
         self.execute_instruction(i)
         return None
 
-    def freeze(self, label_or_did):
+    def freeze(self, label_or_did, type=False):
         if isinstance(label_or_did,int):
             i = {'instruction':'freeze', 'directive_id':label_or_did}
         else:
             i = {'instruction':'labeled_freeze',
-                 'label':v.symbol(label_or_did)}
+                 'label':_symbolize(label_or_did)}
         self.execute_instruction(i)
         return None
 

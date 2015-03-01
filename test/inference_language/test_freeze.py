@@ -41,4 +41,4 @@ though unfrozen ones do."""
   ripl.freeze(1)
   ripl.infer(100)
   eq_(xval, ripl.sample("x"))
-  assert not yval == ripl.sample("x")
+  assert not yval == ripl.sample("y")

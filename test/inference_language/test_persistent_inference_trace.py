@@ -170,3 +170,20 @@ def testDirectivesForgettableFromInference():
   assert len(ripl.list_directives()) == 1
   ripl.infer("(forget 'foo)")
   assert len(ripl.list_directives()) == 0
+
+@on_inf_prim("freeze")
+def testDirectivesFreezableFromInference():
+  ripl = get_ripl(persistent_inference_trace=True)
+  ripl.infer("(assume x (normal 0 1) foo)")
+  ripl.infer("(assume y (normal x 1) bar)")
+
+  xval = ripl.sample("x")
+  yval = ripl.sample("y")
+  engine = ripl.sivm.core_sivm.engine
+  eq_(engine.get_entropy_info()["unconstrained_random_choices"],2)
+
+  ripl.infer("(freeze 'bar)")
+  eq_(engine.get_entropy_info()["unconstrained_random_choices"],1)
+  ripl.infer(30)
+  assert not xval == ripl.sample("x")
+  eq_(yval, ripl.sample("y"))
