@@ -469,6 +469,8 @@ class ChurchPrimeParser(object):
             if expression["type"] == "list":
                 # Could expand this to cover arrays, but then need to
                 # be careful not to do that in quoted expressions.
+                # Except for quoted expressions that actually end up
+                # being code, such as the arguments of make_csp !
                 return self.unparse_expression(expression["value"])
             else: # Leaf
                 return value_to_string(expression)
