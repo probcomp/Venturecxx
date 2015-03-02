@@ -1,3 +1,8 @@
+'''
+DISCLAIMER: This code relied on an older version of plotf, and so will no
+longer run as written.
+'''
+
 from venture.shortcuts import (make_puma_church_prime_ripl,
                                make_lite_church_prime_ripl)
 import numpy as np, scipy as sp, pandas as pd
@@ -28,9 +33,12 @@ def format_results_marginal(res):
 def collect_marginal_conditional(ripl):
   'Take draws from priors for mu and sigma'
   infer_statement = '''
-  [INFER (cycle
-           ((peek mu) (peek sigma)
-            (mh (quote parameters) all 1)) {0})]'''.format(NSAMPLE)
+  [INFER
+    (let ((ds (empty)))
+      (do
+        (cycle ((bind (collect mu sigma) (curry into ds))
+                (mh (quote parameters) all 1))
+          {0})))]'''.format(NSAMPLE)
   res = format_results_marginal(ripl.execute_program(infer_statement))
   return res
 
