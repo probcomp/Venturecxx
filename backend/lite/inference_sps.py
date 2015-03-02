@@ -675,6 +675,16 @@ Save plot(s) to file(s).
       the spec1 plot in the file basename1.png, and the spec2 plot in basename2.png.
 """),
 
+  engine_method_sp("sweep", infer_action_maker_type([v.ForeignBlobType("<dataset>")]), desc="""\
+Print the sweep count.
+
+  Extracts the last row of the supplied inference Dataset and prints its sweep count.
+
+  Examples:
+    (sweep d)
+
+"""),
+
   ripl_macro_helper("assume", infer_action_maker_type([v.AnyType("<symbol>"), v.AnyType("<expression>"), v.AnyType("<label>")], min_req_args=2)),
   ripl_macro_helper("observe", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType(), v.AnyType("<label>")], min_req_args=2)),
   macro_helper("force", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType()])),
