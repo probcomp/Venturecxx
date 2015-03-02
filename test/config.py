@@ -53,6 +53,8 @@ import nose.tools as nose
 from nose import SkipTest
 from testconfig import config
 from inspect import isgeneratorfunction
+import sys
+from StringIO import StringIO
 
 import venture.shortcuts as s
 import venture.venturemagics.ip_parallel as ip_parallel
@@ -472,3 +474,12 @@ def gen_needs_ggplot(f):
     except ImportError:
       raise SkipTest("ggplot not installed on this machine")
   return wrapped
+
+def capture_output(ripl, program):
+  'Capture stdout; return the string headed for stdout and the result of the computation'
+  old_stdout = sys.stdout
+  captured = StringIO()
+  sys.stdout = captured
+  res = ripl.execute_program(program)
+  sys.stdout = old_stdout
+  return res, captured.getvalue()
