@@ -107,6 +107,8 @@ class Infer(object):
     filenames = ExpressionType().asPython(basenames)
     spec = ExpressionType().asPython(spec)
     PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names, self._format_filenames(filenames, spec))
+  def sweep(self, dataset):
+    print 'Sweep count: ' + str(dataset.asPandas()['sweep count'].values[-1])
   def call_back(self, name, *exprs):
     name = SymbolType().asPython(name)
     if name not in self.engine.callbacks:

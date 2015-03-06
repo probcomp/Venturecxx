@@ -4,7 +4,8 @@ from nose import SkipTest
 from nose.tools import assert_raises_regexp
 
 from venture.test.config import (get_ripl, on_inf_prim, gen_on_inf_prim,
-                                 needs_ggplot, gen_needs_ggplot)
+                                 needs_ggplot, gen_needs_ggplot,
+                                 capture_output)
 from venture.exception import VentureException
 
 @needs_ggplot
@@ -67,3 +68,15 @@ def checkPlotfToFileBadArgs(basenames, specs):
   infer = infer.format(basenames, specs)
   with assert_raises_regexp(VentureException, 'evaluation: The number of specs must match the number of filenames.'):
     ripl.infer(infer)
+
+def testSweep():
+  'Check that the sweep counter prints correctly'
+  ripl = get_ripl()
+  ripl.assume('x', '(normal 0 1)')
+  program = """[infer
+(let ((d (empty)))
+  (cycle ((mh default one 10)
+          (bind (collect x) (curry into d))
+          (sweep d)) 5))]"""
+  res, captured = capture_output(ripl, program)
+  assert captured == '\n'.join(['Sweep count: ' + str(x) for x in range(1,6)]) + '\n'

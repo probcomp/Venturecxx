@@ -1,18 +1,7 @@
-from StringIO import StringIO
 from nose.tools import eq_
-import sys
 from re import search
 
-from venture.test.config import get_ripl, broken_in
-
-def capture_output(ripl, program):
-  'Capture stdout; return the string headed for stdout and the result of the computation'
-  old_stdout = sys.stdout
-  captured = StringIO()
-  sys.stdout = captured
-  res = ripl.execute_program(program)
-  sys.stdout = old_stdout
-  return res, captured.getvalue()
+from venture.test.config import get_ripl, broken_in, capture_output
 
 def extract_integer(captured):
   'Extract the Venture integer from a captured print'

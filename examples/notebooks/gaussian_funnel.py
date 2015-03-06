@@ -1,6 +1,11 @@
 '''
 Code to build the Gaussian funnel from Neal's "Slice Sampling" paper.
-Demos with the model built here are in the similarly named iPython notebook.
+
+Provides a diagnostic for the speed with which different inference methods
+explore a complicated posterior distribution.
+
+DISCLAIMER: This code relied on an older version of plotf, and so will no
+longer run as written.
 '''
 
 from venture.shortcuts import make_lite_church_prime_ripl
@@ -130,10 +135,17 @@ def assemble_infer_statement(infer_type, infer_method, infer_args_v,
     infer_cycle = '({0} (quote data) all{1}{2})'.format(infer_method, make_str_args(infer_args_v), nupdate)
   else:
     raise Exception('Give a valid infer type.')
-  infer_statement = '(cycle ((printf counter time) (plotf (lct pcd0d) v) {0}) {1})'.format(infer_cycle, niter)
+  infer_statement = '''(let ((ds (empty)))
+  (do
+    (cycle ((bind (collect v) (curry into ds))
+            {0})
+      {1})
+    (plotf (quote (lct pcd0d)) ds)))'''.format(infer_cycle, niter)
+  # infer_statement = '(cycle ((printf counter time) (plotf (lct pcd0d) v) {0}) {1})'.format(infer_cycle, niter)
   return infer_statement
 
 def annotate_plotf(plotf_output, elapsed, niter):
+  from IPython.core.debugger import Pdb; import sys; Pdb('Linux').set_trace(sys._getframe().f_back)
   timefig, vfig = plotf_output.draw()
   tax = timefig.axes[0]
   tax.set_xlim([0,niter])
@@ -183,7 +195,8 @@ def run_experiment(backend, model, method, infer_type, infer_method, infer_args_
   print 'Finished model {0}, infer_method {1}.'.format(model, infer_method)
 
 def make_parser():
-  parser = argparse.ArgumentParser()
+  descr = 'Example usage: python gaussian_funnel.py lite correct direct univariate mh none none 5 10'
+  parser = argparse.ArgumentParser(description = descr)
   for field in ['backend', 'model', 'method', 'infer_type', 'infer_method',
                 'infer_args_v', 'infer_args_x']:
     parser.add_argument(field, type = str)
@@ -198,4 +211,6 @@ def make_parser():
 if __name__ == '__main__':
   kwargs = make_parser()
   run_experiment(**kwargs)
+
+
 
