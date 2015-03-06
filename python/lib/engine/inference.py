@@ -157,7 +157,13 @@ class Infer(object):
     return logWeightsToNormalizedDirect(self.particle_log_weights())
 
 class Dataset(object):
-  """Explain to me how exactly this class is different from a Pandas DataFrame?"""
+  """Basically a wrapper for a Pandas Dataframe that knows about a few
+special columns (like the sweep count).  If you are a Venture user and
+find yourself dealing with one of these, you probably want the
+asPandas() method.
+
+  """
+
   def __init__(self, ind_names=None, std_names=None, data=None):
     self.ind_names = ind_names # :: [String]
     self.std_names = std_names # :: [String]
@@ -207,6 +213,7 @@ Dataset which is the result of the merge. """
       raise Exception("Cannot merge datasets with different contents %s %s" % (self.std_names, other.std_names))
 
   def asPandas(self):
+    """Return a freshly allocated Pandas DataFrame containing the data in this Dataset."""
     ds = DataFrame.from_dict(strip_types_from_dict_values(self.data))
     order = self.std_names + self.ind_names
     return ds[order]

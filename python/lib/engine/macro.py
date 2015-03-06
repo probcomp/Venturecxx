@@ -203,6 +203,10 @@ register_macro("collect", quasiquotation_macro(2), """\
   wall clock time that passed since the Venture program began, the
   global log score, the particle weights in log space, and the
   normalized weights of the particles in direct space.
+
+  If you want to do something custom with the data, you will want to
+  use the asPandas() method of the Dataset object from your callback
+  or foreign inference sp.
 """)
 
 register_macro("assume", quasiquotation_macro(3, 4), """\
