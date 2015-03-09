@@ -545,7 +545,7 @@ def _inference_prelude():
 def _compute_inference_prelude():
   ans = []
   import inference_prelude
-  for (name, form) in inference_prelude.prelude:
+  for (name, _desc, form) in inference_prelude.prelude:
     from venture.parser.church_prime.parse import ChurchPrimeParser
     from venture.sivm.macro import desugar_expression
     from venture.sivm.core_sivm import _modify_expression

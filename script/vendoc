@@ -20,10 +20,12 @@ import sys
 import string
 import textwrap
 import subprocess
+
 from venture.lite.builtin import builtInSPsList
 from venture.lite.inference_sps import inferenceSPsList
 from venture.sivm.macro import macros
 from venture.engine.macro import macro_list
+import venture.engine.inference_prelude
 
 def flags(psp):
   ans = []
@@ -74,6 +76,11 @@ def inference_SPs_rst_format():
     # print
     # print "   " + string.capitalize(string.join(flags(sp.outputPSP), ", "))
 
+def inference_prelude_SPs():
+  for (_name, desc, _body) in venture.engine.inference_prelude.prelude:
+    print ""
+    print desc
+
 def model_macros():
   for macro in macros:
     if macro.desc is None:
@@ -103,6 +110,7 @@ if __name__ == "__main__":
       model_SPs_rst_format()
     elif sys.argv[1] == "inf":
       inference_SPs_rst_format()
+      inference_prelude_SPs()
     elif sys.argv[1] == "macros":
       model_macros()
     elif sys.argv[1] == "inf-macros":
