@@ -30,6 +30,9 @@ class Timer(object):
     self._downtime = None
     self._downtime_start = None
   def start(self, _=None):
+    """Start a timer.
+
+Resets any currently running timer that was started using ``timer_start``."""
     self._start_time = time()
     self._downtime = 0
   def _time(self, _=None):
@@ -43,15 +46,23 @@ class Timer(object):
     elapsed = now - self._start_time - self._downtime - extra_downtime
     return elapsed
   def time(self, _=None):
+    """Print the time that has elapsed since the timer was started by ``timer_start``."""
     elapsed = self._time()
     mins = elapsed // 60
     secs = elapsed % 60
     print 'Elapsed time: {0} m, {1:0.2f} s'.format(int(mins), secs)
   def pause(self, _=None):
+    """Pause the timer started by ``timer_start``.
+
+This is mainly for cumulative measurements (e.g. benchmarking) where
+some sections should be excluded.
+
+    """
     if self._downtime_start is not None:
       raise VentureTimerError('Timer is already paused.')
     self._downtime_start = time()
   def resume(self, _=None):
+    """Resume a timer paused by ``timer_pause``."""
     if self._downtime_start is None:
       raise VentureTimerError('Timer is already running.')
     self._downtime += time() - self._downtime_start

@@ -33,8 +33,7 @@ might return.
 Useful ripl methods to call from a plugin's ``__venture_start__``:
 
 - ``bind_callback(name, callable)`` to bind a given Python function as
-  a call back that can be invoked with ``call_back`` and
-  ``call_back_accum`` (which see)
+  a call back that can be invoked with ``call_back`` (which see)
 
 - ``bind_foreign_sp(name, SP)`` to bind a foreign stochastic procedure
   for the model language
@@ -43,3 +42,8 @@ Useful ripl methods to call from a plugin's ``__venture_start__``:
 - ``bind_foreign_inference_sp(name, SP)`` to bind a foreign stochastic
   procedure for the inference language
   TODO: Document the stochastic inference procedure interface in this reference manual
+
+Built-in Callbacks
+==================
+
+.. include:: callbacks.gen

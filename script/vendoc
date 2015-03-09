@@ -26,6 +26,7 @@ from venture.lite.inference_sps import inferenceSPsList
 from venture.sivm.macro import macros
 from venture.engine.macro import macro_list
 import venture.engine.inference_prelude
+from venture.shortcuts import Lite
 
 def flags(psp):
   ans = []
@@ -45,6 +46,9 @@ def flags(psp):
   # Simulation kernels and delta kernels are unused right now
   return ans
 
+def indent(string, prefix):
+  return "\n".join([prefix + line for line in string.strip().split("\n")])
+
 def wrap_description(desc):
   desc_lines = desc.split("\n")
   if len(desc_lines) == 1:
@@ -53,7 +57,7 @@ def wrap_description(desc):
     return string.join(desc_lines[0:-1], "\n") + "\n" + textwrap.fill(desc_lines[-1],70)
 
 def wrap_description_rst_format(header, body):
-  return header + "\n\n" + "\n".join(["   " + line for line in body.strip().split("\n")])
+  return header + "\n\n" + indent(body, "   ")
 
 def model_SPs():
   for (name,sp) in builtInSPsList:
@@ -96,6 +100,14 @@ def inference_macros():
       print "- TODO " + name
     print ""
 
+def callbacks():
+  ripl = Lite().make_church_prime_ripl()
+  import inspect
+  for (name, f) in ripl.sivm.core_sivm.engine.callbacks.iteritems():
+    print ""
+    print "- Callback ``%s``" % (name,)
+    print indent(inspect.getdoc(f), "   ")
+
 def invocation():
   for mode in ["", "lite ", "server ", "remote "]:
     print "\n::"
@@ -115,6 +127,8 @@ if __name__ == "__main__":
       model_macros()
     elif sys.argv[1] == "inf-macros":
       inference_macros()
+    elif sys.argv[1] == "callbacks":
+      callbacks()
     elif sys.argv[1] == "invocation":
       invocation()
     else:
