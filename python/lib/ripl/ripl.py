@@ -688,6 +688,11 @@ Open issues:
     def bind_callback(self, name, callback):
         self.sivm.core_sivm.engine.bind_callback(name, callback)
 
+    def bind_methods_as_callbacks(self, obj, prefix=""):
+        """Bind every public method of the given object as a callback of the same name."""
+        for name in (name for name in dir(obj) if not name.startswith("_")):
+            self.bind_callback(prefix + name, getattr(obj, name))
+
     ############################################
     # Serialization
     ############################################

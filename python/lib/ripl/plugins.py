@@ -19,14 +19,9 @@
 from time import time
 
 from venture.lite.exception import VentureTimerError
-from venture.ripl.utils import strip_types
 
 def __venture_start__(ripl):
-  timer = Timer()
-  ripl.bind_callback('timer_start', timer.start)
-  ripl.bind_callback('timer_time', timer.print_time)
-  ripl.bind_callback('timer_pause', timer.pause)
-  ripl.bind_callback('timer_resume', timer.resume)
+  ripl.bind_methods_as_callbacks(Timer(), prefix="timer_")
 
 class Timer(object):
   'Timer object, whose methods will be used as inference callbacks.'
@@ -37,7 +32,7 @@ class Timer(object):
   def start(self, _=None):
     self.start_time = time()
     self.downtime = 0
-  def time(self, _=None):
+  def _time(self, _=None):
     if self.start_time is None or self.downtime is None:
       raise VentureTimerError('Timer has not been started.')
     now = time()
@@ -47,8 +42,8 @@ class Timer(object):
       extra_downtime = 0
     elapsed = now - self.start_time - self.downtime - extra_downtime
     return elapsed
-  def print_time(self, _=None):
-    elapsed = self.time()
+  def time(self, _=None):
+    elapsed = self._time()
     mins = elapsed // 60
     secs = elapsed % 60
     print 'Elapsed time: {0} m, {1:0.2f} s'.format(int(mins), secs)
