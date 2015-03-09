@@ -45,3 +45,10 @@ generation date of this manual):
 
 You can ask your Venture installation for a current version of this
 list by running the ``vendoc`` program (with no arguments).
+
+Built-in Helpers
+----------------
+
+- `true`: The boolean True value.
+
+- `false`: The boolean False value.
