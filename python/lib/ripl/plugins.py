@@ -26,21 +26,21 @@ def __venture_start__(ripl):
 class Timer(object):
   'Timer object, whose methods will be used as inference callbacks.'
   def __init__(self):
-    self.start_time = None
-    self.downtime = None
-    self.downtime_start = None
+    self._start_time = None
+    self._downtime = None
+    self._downtime_start = None
   def start(self, _=None):
-    self.start_time = time()
-    self.downtime = 0
+    self._start_time = time()
+    self._downtime = 0
   def _time(self, _=None):
-    if self.start_time is None or self.downtime is None:
+    if self._start_time is None or self._downtime is None:
       raise VentureTimerError('Timer has not been started.')
     now = time()
-    if self.downtime_start is not None:
-      extra_downtime = now - self.downtime_start
+    if self._downtime_start is not None:
+      extra_downtime = now - self._downtime_start
     else:
       extra_downtime = 0
-    elapsed = now - self.start_time - self.downtime - extra_downtime
+    elapsed = now - self._start_time - self._downtime - extra_downtime
     return elapsed
   def time(self, _=None):
     elapsed = self._time()
@@ -48,11 +48,11 @@ class Timer(object):
     secs = elapsed % 60
     print 'Elapsed time: {0} m, {1:0.2f} s'.format(int(mins), secs)
   def pause(self, _=None):
-    if self.downtime_start is not None:
+    if self._downtime_start is not None:
       raise VentureTimerError('Timer is already paused.')
-    self.downtime_start = time()
+    self._downtime_start = time()
   def resume(self, _=None):
-    if self.downtime_start is None:
+    if self._downtime_start is None:
       raise VentureTimerError('Timer is already running.')
-    self.downtime += time() - self.downtime_start
-    self.downtime_start = None
+    self._downtime += time() - self._downtime_start
+    self._downtime_start = None
