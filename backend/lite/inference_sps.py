@@ -2,8 +2,9 @@ import sp
 import psp
 import value as v
 from builtin import no_request, deterministic_typed
-from exception import VentureTypeError
+from exception import VentureError, VentureTypeError
 from venture.engine.inference import Dataset
+from venture.exception import VentureException
 
 class InferPrimitiveOutputPSP(psp.DeterministicPSP):
   def __init__(self, val, klass, desc, tp):
@@ -35,6 +36,12 @@ class MadeEngineMethodInferOutputPSP(psp.LikelihoodFreePSP):
   def description(self, _name):
     return self.desc
 
+class VentureNestedRiplMethodError(VentureError):
+  """This exception means that this SP attempted a recursive Ripl operation which failed."""
+  def __init__(self, message, *irritants):
+    super(VentureNestedRiplMethodError, self).__init__(message)
+    self.irritants = irritants
+
 class MadeRiplMethodInferOutputPSP(psp.LikelihoodFreePSP):
   def __init__(self, name, operands, desc=None):
     self.name = name
@@ -42,7 +49,13 @@ class MadeRiplMethodInferOutputPSP(psp.LikelihoodFreePSP):
     self.desc = desc
   def simulate(self, args):
     ripl = args.operandValues[0].engine.ripl
-    ans = getattr(ripl, self.name)(*[o.asStackDict() for o in self.operands], type=True) # Keep the stack dict
+    args = [o.asStackDict() for o in self.operands]
+    try:
+      ans = getattr(ripl, self.name)(*args, type=True) # Keep the stack dict
+    except VentureException as err:
+      import sys
+      info = sys.exc_info()
+      raise VentureNestedRiplMethodError("Nested ripl operation signalled an error", err, info), None, info[2]
     try:
       ans_vv = v.VentureValue.fromStackDict(ans) if ans is not None else v.VentureNil()
     except VentureTypeError:
