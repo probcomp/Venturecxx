@@ -106,7 +106,6 @@ class VentureSivm(object):
     def _call_core_sivm_instruction(self,instruction):
         desugared_instruction = copy.copy(instruction)
         instruction_type = instruction['instruction']
-        sugar = None
         # desugar the expression
         if instruction_type in ['define','assume','observe','predict','infer']:
             exp = utils.validate_arg(instruction,'expression',
