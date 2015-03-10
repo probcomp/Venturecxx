@@ -77,6 +77,7 @@ class VentureSivm(object):
         self.sugar_dict = {}
         self._debugger_clear()
         self.state = 'default'
+        self.attempted = []
 
     def _debugger_clear(self):
         self.breakpoint_dict = {}
@@ -113,7 +114,7 @@ class VentureSivm(object):
             sugar = macro.expand(exp)
             desugared_instruction['expression'] = sugar.desugared()
             # for error handling
-            self.attempted = (exp, sugar)
+            self.attempted.append((exp, sugar))
         # desugar the expression index
         if instruction_type == 'debugger_set_breakpoint_source_code_location':
             desugared_src_location = desugared_instruction['source_code_location']
@@ -168,9 +169,9 @@ class VentureSivm(object):
         return e
 
     def _get_sugar(self, did):
-        if did in self.sugar_dict:
-            return self.sugar_dict[did]
-        return self.attempted
+        if did not in self.sugar_dict:
+            self.sugar_dict[did] = self.attempted.pop()
+        return self.sugar_dict[did]
     
     def _get_exp(self, did):
         return self._get_sugar(did)[0]
@@ -208,7 +209,7 @@ class VentureSivm(object):
                 if key in instruction:
                     tmp_instruction[key] = copy.copy(instruction[key])
             self.directive_dict[did] = tmp_instruction
-            self.sugar_dict[did] = self.attempted
+            self.sugar_dict[did] = self.attempted.pop()
         # save the breakpoint if the instruction sets the breakpoint
         if instruction_type in ['debugger_set_breakpoint_address',
                 'debugger_set_breakpoint_source_code_location']:
