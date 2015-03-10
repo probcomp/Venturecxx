@@ -57,6 +57,7 @@ sym = symbol
 def blob(v):
   return val("blob",v)
 
+python_list = list
 def list(vs):
   return val("list", vs)
 
@@ -120,4 +121,4 @@ will produce the term that the quasiquotation body v means."""
   return quotify(*quasiquoterecur(v))
 
 def app(*items):
-  return items # Application is a Python list
+  return python_list(items) # Application is a Python list
