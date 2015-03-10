@@ -137,35 +137,7 @@ class VentureSivm(object):
                 print traceback.format_exc()
                 raise e, None, info[2]
             raise e, None, info[2]
-        # clear the dicts on the "clear" command
-        if instruction_type == 'clear':
-            self._clear()
-        # forget directive mappings on the "forget" command
-        if instruction_type == 'forget':
-            did = instruction['directive_id']
-            del self.directive_dict[did]
-            del self.sugar_dict[did]
-            if did in self.did_dict:
-                del self.label_dict[self.did_dict[did]]
-                del self.did_dict[did]
-        # save the directive if the instruction is a directive
-        if instruction_type in ['assume','observe','predict']:
-            did = response['directive_id']
-            tmp_instruction = {}
-            tmp_instruction['directive_id'] = did
-            for key in ('instruction', 'expression', 'symbol', 'value'):
-                if key in instruction:
-                    tmp_instruction[key] = copy.copy(instruction[key])
-            self.directive_dict[did] = tmp_instruction
-            self.sugar_dict[did] = self.attempted
-        # save the breakpoint if the instruction sets the breakpoint
-        if instruction_type in ['debugger_set_breakpoint_address',
-                'debugger_set_breakpoint_source_code_location']:
-            bid = response['breakpoint_id']
-            tmp_instruction = copy.copy(instruction)
-            tmp_instruction['breakpoint_id'] = bid
-            del tmp_instruction['instruction']
-            self.breakpoint_dict[bid] = tmp_instruction
+        self._register_executed_instruction(instruction, response)
         return response
 
     def _annotate(self, e, instruction):
@@ -214,7 +186,39 @@ class VentureSivm(object):
           did = did,
           index = sugar.resugar_index(index)
         )
-    
+
+    def _register_executed_instruction(self, instruction, response):
+        instruction_type = instruction['instruction']
+        # clear the dicts on the "clear" command
+        if instruction_type == 'clear':
+            self._clear()
+        # forget directive mappings on the "forget" command
+        if instruction_type == 'forget':
+            did = instruction['directive_id']
+            del self.directive_dict[did]
+            del self.sugar_dict[did]
+            if did in self.did_dict:
+                del self.label_dict[self.did_dict[did]]
+                del self.did_dict[did]
+        # save the directive if the instruction is a directive
+        if instruction_type in ['assume','observe','predict']:
+            did = response['directive_id']
+            tmp_instruction = {}
+            tmp_instruction['directive_id'] = did
+            for key in ('instruction', 'expression', 'symbol', 'value'):
+                if key in instruction:
+                    tmp_instruction[key] = copy.copy(instruction[key])
+            self.directive_dict[did] = tmp_instruction
+            self.sugar_dict[did] = self.attempted
+        # save the breakpoint if the instruction sets the breakpoint
+        if instruction_type in ['debugger_set_breakpoint_address',
+                'debugger_set_breakpoint_source_code_location']:
+            bid = response['breakpoint_id']
+            tmp_instruction = copy.copy(instruction)
+            tmp_instruction['breakpoint_id'] = bid
+            del tmp_instruction['instruction']
+            self.breakpoint_dict[bid] = tmp_instruction
+
     ###############################
     # Continuous Inference Pauser
     ###############################
