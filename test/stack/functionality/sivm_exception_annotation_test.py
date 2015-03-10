@@ -10,6 +10,7 @@ def assert_annotation_succeeds(f, *args, **kwargs):
   assert "stack_trace" in cm.exception.data
 
 def assert_error_message_contains(text, f, *args, **kwargs):
+  text = text.strip()
   with assert_raises(VentureException) as cm:
     f(*args, **kwargs)
   message = str(cm.exception)
@@ -49,3 +50,11 @@ def testAnnotateErrorTriggeredByInference():
               ^^^^^^^
 """,
   ripl.infer, "(mh default one 50)")
+
+def testAnnotateProgrammaticAssume():
+  ripl = get_ripl()
+  assert_error_message_contains("""\
+(assume x (add 1 foo))
+^^^^^^^^^^^^^^^^^^^^^^
+""",
+  ripl.infer, "(assume x (+ 1 foo))")
