@@ -60,6 +60,9 @@ class VentureException(Exception):
       s += '\n' + str(self.data)
     if self.worker_trace is not None:
       s += format_worker_trace(self.worker_trace)
+    if 'cause' in self.data:
+      s += '\nCaused by\n'
+      s += str(self.data['cause'])
     return s
 
   __unicode__ = __str__

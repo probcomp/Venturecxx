@@ -38,9 +38,13 @@ class MadeEngineMethodInferOutputPSP(psp.LikelihoodFreePSP):
 
 class VentureNestedRiplMethodError(VentureError):
   """This exception means that this SP attempted a recursive Ripl operation which failed."""
-  def __init__(self, message, *irritants):
+  def __init__(self, message, cause, stack):
     super(VentureNestedRiplMethodError, self).__init__(message)
-    self.irritants = irritants
+    self.cause = cause
+    self.stack = stack
+
+  def __str__(self):
+    return str(self.cause)
 
 class MadeRiplMethodInferOutputPSP(psp.LikelihoodFreePSP):
   def __init__(self, name, operands, desc=None):

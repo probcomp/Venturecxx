@@ -130,7 +130,7 @@ def evalFamily(trace,address,exp,env,scaffold,shouldRestore,omegaDB,gradients):
     except VentureError as err:
       import sys
       info = sys.exc_info()
-      raise VentureException("evaluation", err.message, address=address), None, info[2]
+      raise VentureException("evaluation", err.message, address=address, cause=err), None, info[2]
     assert isinstance(weight, numbers.Number)
     return weight,outputNode
 
