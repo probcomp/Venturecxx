@@ -466,11 +466,9 @@ class ChurchPrimeParser(object):
     def unparse_expression(self, expression):
         '''Unparse EXPRESSION into a string.'''
         if isinstance(expression, dict):
-            if expression["type"] == "list":
-                # Could expand this to cover arrays, but then need to
-                # be careful not to do that in quoted expressions.
-                # Except for quoted expressions that actually end up
-                # being code, such as the arguments of make_csp !
+            if expression["type"] == "array":
+                # Because combinations actually parse as arrays too,
+                # and I want the canonical form to be that.
                 return self.unparse_expression(expression["value"])
             else: # Leaf
                 return value_to_string(expression)

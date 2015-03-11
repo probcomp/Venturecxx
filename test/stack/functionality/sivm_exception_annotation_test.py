@@ -58,3 +58,8 @@ def testAnnotateProgrammaticAssume():
 ^^^^^^^^^^^^^^^^^^^^^^
 """,
   ripl.infer, "(assume x (+ 1 foo))")
+  assert_error_message_contains("""\
+(add 1.0 foo)
+^^^^^^^^^^^^^
+""",
+  ripl.infer, "(assume x (+ 1 foo))")
