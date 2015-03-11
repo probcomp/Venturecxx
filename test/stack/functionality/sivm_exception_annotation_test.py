@@ -110,3 +110,14 @@ def testAnnotateInferenceProgramErrorInDefinition():
                              ^^^
 """,
   ripl.define, "badness", "(observe (normal 0 1) (+ 1 foo))")
+
+def testAnnotateDefinedInferenceProgramError():
+  ripl = get_ripl(persistent_inference_trace=True)
+  ripl.define("badness", "(lambda () (observe (normal 0 1) (+ 1 foo)))")
+  assert_error_message_contains("""\
+((badness) <the model>)
+ ^^^^^^^^^
+(lambda () (observe (normal 0 1) (add 1 foo)))
+                                        ^^^
+""",
+  ripl.infer, "(badness)")

@@ -102,7 +102,7 @@ class Engine(object):
     self.last_did += 1
     self.infer_trace.eval(self.last_did, macroexpand_inference(datum))
     self.infer_trace.bindInGlobalEnv(id, self.last_did)
-    return self.infer_trace.extractValue(self.last_did)
+    return (self.last_did,self.infer_trace.extractValue(self.last_did))
 
   def assume(self,id,datum):
     baseAddr = self.nextBaseAddr()

@@ -212,7 +212,7 @@ class VentureSivm(object):
                 del self.label_dict[self.did_dict[did]]
                 del self.did_dict[did]
         # save the directive if the instruction is a directive
-        if instruction_type in ['assume','observe','predict']:
+        if instruction_type in ['assume','observe','predict','define']:
             did = response['directive_id']
             tmp_instruction = {}
             tmp_instruction['directive_id'] = did

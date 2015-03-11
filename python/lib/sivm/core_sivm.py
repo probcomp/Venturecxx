@@ -69,8 +69,8 @@ class CoreSivm(object):
                 utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
         sym = utils.validate_arg(instruction,'symbol',
                 utils.validate_symbol)
-        val = self.engine.define(sym,exp)
-        return {"value":val}
+        (did, val) = self.engine.define(sym,exp)
+        return {"directive_id":did, "value":val}
 
     #FIXME: remove the modifier arguments in new implementation
     def _do_assume(self,instruction):
