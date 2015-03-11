@@ -19,8 +19,25 @@
 
 import numbers
 
+python_list = list
+python_dict = dict
+
 def val(t,v):
   return {"type":t,"value":v}
+
+def is_val(obj):
+  """Checks whether the outermost layer of obj looks like it could
+validly be a stack dict representation of something.
+
+(That is, Python lists are ok, because those represent arrays.)"""
+  return is_stack_dict(obj) or isinstance(obj, list)
+
+def is_stack_dict(obj):
+  """Checks whether the outermost layer of obj looks like an actual stack dict."""
+  return isinstance(obj, python_dict) and "type" in obj and "value" in obj
+
+def is_stack_dict_of_type(tp, obj):
+  return is_stack_dict(obj) and obj["type"] is tp
 
 def number(v):
   assert isinstance(v, numbers.Number)
@@ -57,7 +74,6 @@ sym = symbol
 def blob(v):
   return val("blob",v)
 
-python_list = list
 def list(vs):
   return val("list", vs)
 

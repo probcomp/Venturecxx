@@ -96,8 +96,9 @@ class LiteralSugar(Sugar):
 
 class ListMacro(Macro):
   def applies(self, exp):
-    return isinstance(exp, list)
+    return isinstance(exp, list) or v.is_stack_dict_of_type("array", exp)
   def expand(self, exp):
+    exp = self._canonicalize(exp)
     expanded = []
     for i, s in enumerate(exp):
       try:
@@ -106,6 +107,11 @@ class ListMacro(Macro):
         e.data['expression_index'].insert(0, i)
         raise
     return ListSugar(expanded)
+  def _canonicalize(self, exp):
+    if isinstance(exp, list):
+      return exp
+    else:
+      return exp["value"] # Should always be an array literal
 
 class ListSugar(Sugar):
   def __init__(self, exp):

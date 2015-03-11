@@ -60,6 +60,21 @@ def testAnnotateProgrammaticAssume():
   ripl.infer, "(assume x (+ 1 foo))")
   assert_error_message_contains("""\
 (add 1.0 foo)
-^^^^^^^^^^^^^
+         ^^^
 """,
   ripl.infer, "(assume x (+ 1 foo))")
+
+def testAnnotateErrorTriggeredByInferenceOverProgrammaticAssume():
+  # No do macro yet
+  ripl = get_ripl()
+  ripl.infer("(assume control (flip))")
+  ripl.infer("(force control true)")
+  ripl.infer("(predict (if control 1 badness))")
+  # TODO Solve the double macroexpansion problem
+  assert_error_message_contains("""\
+((biplex control (make_csp (quote ()) (quote 1.0)) (make_csp (quote ()) (quote badness))))
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+((biplex control (make_csp (quote ()) (quote 1.0)) (make_csp (quote ()) (quote badness))))
+                                                                               ^^^^^^^
+""",
+  ripl.infer, "(mh default one 50)")
