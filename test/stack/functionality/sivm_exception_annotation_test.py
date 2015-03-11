@@ -94,3 +94,11 @@ def testAnnotateDefinedProgrammaticAssume():
          ^^^
 """,
   ripl.infer, "(action)")
+
+def testAnnotateInferenceProgramError():
+  ripl = get_ripl()
+  assert_error_message_contains("""\
+((observe (normal 0 1) (add 1 foo)) <the model>)
+                              ^^^
+""",
+  ripl.infer, "(observe (normal 0 1) (+ 1 foo))")

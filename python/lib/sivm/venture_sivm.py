@@ -114,6 +114,8 @@ class VentureSivm(object):
             sugar = macro.expand(exp)
             desugared_instruction['expression'] = sugar.desugared()
             # for error handling
+            if instruction_type is 'infer':
+                (exp, sugar) = self._hack_infer_expression_structure(exp, sugar)
             self.attempted.append((exp, sugar))
         # desugar the expression index
         if instruction_type == 'debugger_set_breakpoint_source_code_location':
@@ -139,6 +141,15 @@ class VentureSivm(object):
             raise e, None, info[2]
         self._register_executed_instruction(instruction, response)
         return response
+
+    def _hack_infer_expression_structure(self, exp, sugar):
+        # The engine actuall executes an application form around the
+        # passed inference program.  Storing this will align the
+        # indexes correctly.
+        symbol = v.symbol("<the model>")
+        hacked_exp = [exp, symbol]
+        hacked_sugar = macro.ListSugar([sugar, macro.LiteralSugar(symbol)])
+        return (hacked_exp, hacked_sugar)
 
     def _annotate(self, e, instruction):
         if e.exception == "evaluation":
