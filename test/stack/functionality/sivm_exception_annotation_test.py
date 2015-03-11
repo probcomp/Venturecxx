@@ -78,3 +78,19 @@ def testAnnotateErrorTriggeredByInferenceOverProgrammaticAssume():
                                                                                ^^^^^^^
 """,
   ripl.infer, "(mh default one 50)")
+
+def testAnnotateDefinedProgrammaticAssume():
+  ripl = get_ripl(persistent_inference_trace=True)
+  ripl.define("action", "(lambda () (assume x (+ 1 foo)))")
+  # TODO Solve the problem of blaming makers of inference actions
+  # rather than the actions themselves.
+#   assert_error_message_contains("""\
+# (assume x (add 1 foo))
+# ^^^^^^^^^^^^^^^^^^^^^^
+# """,
+#   ripl.infer, "(action)")
+  assert_error_message_contains("""\
+(add 1.0 foo)
+         ^^^
+""",
+  ripl.infer, "(action)")
