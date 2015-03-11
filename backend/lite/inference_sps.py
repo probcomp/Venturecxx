@@ -53,9 +53,9 @@ class MadeRiplMethodInferOutputPSP(psp.LikelihoodFreePSP):
     self.desc = desc
   def simulate(self, args):
     ripl = args.operandValues[0].engine.ripl
-    args = [o.asStackDict() for o in self.operands]
+    arguments = [o.asStackDict() for o in self.operands]
     try:
-      ans = getattr(ripl, self.name)(*args, type=True) # Keep the stack dict
+      ans = getattr(ripl, self.name)(*arguments, type=True) # Keep the stack dict
     except VentureException as err:
       import sys
       info = sys.exc_info()
