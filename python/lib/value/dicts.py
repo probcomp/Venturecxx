@@ -131,7 +131,7 @@ will produce the term that the quasiquotation body v means."""
         if all([ans[1] for ans in answers]):
           return (v, True)
         else:
-          return ([sym("list")] + [quotify(*ansi) for ansi in answers], False)
+          return ([sym("array")] + [quotify(*ansi) for ansi in answers], False)
     else:
       return (v, True)
   return quotify(*quasiquoterecur(v))

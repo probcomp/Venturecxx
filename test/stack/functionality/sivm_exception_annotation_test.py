@@ -121,3 +121,21 @@ def testAnnotateDefinedInferenceProgramError():
                                         ^^^
 """,
   ripl.infer, "(badness)")
+
+def testAnnotateDefinedQuasiquotedProgrammaticAssume():
+  ripl = get_ripl(persistent_inference_trace=True)
+  ripl.define("action", "(lambda (name) (assume x (+ 1 ,name)))")
+  # TODO Solve the problem of blaming makers of inference actions
+  # rather than the actions themselves.
+#   assert_error_message_contains("""\
+# ((action (quote foo)) <the model>)
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# (assume x (add 1 (unquote name)))
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# """,
+#   ripl.infer, "(action 'foo)")
+  assert_error_message_contains("""\
+(add 1.0 foo)
+         ^^^
+""",
+  ripl.infer, "(action 'foo)")
