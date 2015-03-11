@@ -54,8 +54,8 @@ def testAnnotateErrorTriggeredByInference():
 def testAnnotateProgrammaticAssume():
   ripl = get_ripl()
   assert_error_message_contains("""\
-(assume x (add 1 foo))
-^^^^^^^^^^^^^^^^^^^^^^
+((assume x (add 1 foo)) <the model>)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 """,
   ripl.infer, "(assume x (+ 1 foo))")
   assert_error_message_contains("""\
