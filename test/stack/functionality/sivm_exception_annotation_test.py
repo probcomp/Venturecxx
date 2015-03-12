@@ -1,4 +1,4 @@
-from nose.tools import assert_raises
+from nose.tools import assert_raises, eq_
 
 from venture.test.config import get_ripl
 from venture.exception import VentureException
@@ -139,3 +139,11 @@ def testAnnotateDefinedQuasiquotedProgrammaticAssume():
          ^^^
 """,
   ripl.infer, "(action 'foo)")
+
+def testAssignedDidUniqueness():
+  ripl = get_ripl(persistent_inference_trace=True)
+  for i in range(20):
+    ripl.define("foo%d" % i, "(predict (normal 0 1))")
+    ripl.infer("foo%d" % i)
+  # Or maybe 60 if I start recording the infer statements too.
+  eq_(40, len(ripl.sivm.sugar_dict.items()))

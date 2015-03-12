@@ -34,9 +34,9 @@ def testInferObserveSmoke1():
 
 def testInferObserveSmoke2():
   r = get_ripl()
-  r.infer("(observe (normal 0 1) 3)")
+  r.infer("(observe (normal 0 1) 3 label)")
   r.infer("(incorporate)")
-  eq_(3, r.report(1))
+  eq_(3, r.report("label"))
 
 def testInlineSMCSmoke():
   r = get_ripl(persistent_inference_trace=True)
@@ -54,7 +54,7 @@ def testInlineSMCSmoke():
 [infer (incorporate)]
 """)
   for i in range(20):
-    eq_(i, r.report(i+1))
+    eq_(i, r.report(i+16)) # Brittle offset depends on size of inference prelude.
 
 def testInlineSMCSmoke2():
   r = get_ripl(persistent_inference_trace=True)
@@ -82,8 +82,8 @@ def testDirectivesInInfer1():
 
 def testDirectivesInInfer2():
   r = get_ripl()
-  r.infer("(predict (+ 5 2))")
-  eq_(7.0, r.report(1))
+  r.infer("(predict (+ 5 2) foo)")
+  eq_(7.0, r.report("foo"))
 
 def testForeignInfSPs():
   r = get_ripl(persistent_inference_trace = True)

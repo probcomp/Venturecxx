@@ -54,7 +54,7 @@ class Engine(object):
     self.callbacks = {}
     self.persistent_inference_trace = persistent_inference_trace
     if self.persistent_inference_trace:
-      (self.infer_trace, self.last_did) = self.init_inference_trace()
+      self.infer_trace = self.init_inference_trace()
     self.ripl = None
     self.creation_time = time.time()
 
@@ -99,10 +99,16 @@ class Engine(object):
 
   def define(self, id, datum):
     assert self.persistent_inference_trace, "Define only works if the inference trace is persistent"
-    self.last_did += 1
-    self.infer_trace.eval(self.last_did, macroexpand_inference(datum))
-    self.infer_trace.bindInGlobalEnv(id, self.last_did)
-    return (self.last_did,self.infer_trace.extractValue(self.last_did))
+    return self._define_in(id, datum, self.infer_trace)
+
+  def _define_in(self, id, datum, trace, suppress_inference_macro_expansion=False):
+    self.directiveCounter += 1
+    did = self.directiveCounter # Might be changed by reentrant execution
+    if not suppress_inference_macro_expansion:
+      datum = macroexpand_inference(datum)
+    trace.eval(did, datum)
+    trace.bindInGlobalEnv(id, did)
+    return (did,trace.extractValue(did))
 
   def assume(self,id,datum):
     baseAddr = self.nextBaseAddr()
@@ -334,12 +340,13 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def infer_v1_pre_t(self, program, target):
     if not self.persistent_inference_trace:
-      (self.infer_trace, self.last_did) = self.init_inference_trace()
+      self.infer_trace = self.init_inference_trace()
     self.install_self_evaluating_scope_hack(self.infer_trace, target)
     try:
-      self.last_did += 1
-      self.infer_trace.eval(self.last_did, [program, v.blob(target)])
-      ans = self.infer_trace.extractValue(self.last_did)
+      self.directiveCounter += 1
+      did = self.directiveCounter # Might be mutated by reentrant execution
+      self.infer_trace.eval(did, [program, v.blob(target)])
+      ans = self.infer_trace.extractValue(did)
       # Expect the result to be a Venture pair of the "value" of the
       # inference action together with the mutated Infer object.
       assert isinstance(ans, dict)
@@ -354,14 +361,12 @@ effect of renumbering the directives, if some had been forgotten."""
         self.remove_self_evaluating_scope_hack(self.infer_trace, target)
       else:
         self.infer_trace = None
-        self.last_did = None
       raise
     else:
       if self.persistent_inference_trace:
         self.remove_self_evaluating_scope_hack(self.infer_trace, target)
       else:
         self.infer_trace = None
-        self.last_did = None
       raise
 
   def init_inference_trace(self):
@@ -369,8 +374,8 @@ effect of renumbering the directives, if some had been forgotten."""
     ans = lite.Trace()
     for name,sp in self.inferenceSPsList():
       ans.bindPrimitiveSP(name, sp)
-    free_did = self.install_inference_prelude(ans)
-    return (ans, free_did)
+    self.install_inference_prelude(ans)
+    return ans
 
   def symbol_scopes(self, target):
     all_scopes = [s for s in target.engine.getDistinguishedTrace().scope_keys()]
@@ -393,10 +398,8 @@ effect of renumbering the directives, if some had been forgotten."""
         next_trace.unbindInGlobalEnv(hack)
 
   def install_inference_prelude(self, next_trace):
-    for did, (name, exp) in enumerate(_inference_prelude()):
-      next_trace.eval(did, exp)
-      next_trace.bindInGlobalEnv(name, did)
-    return len(_inference_prelude())
+    for name, exp in _inference_prelude():
+      self._define_in(name, exp, next_trace, suppress_inference_macro_expansion=True)
 
   def primitive_infer(self, exp):
     self.trace_handler.delegate('primitive_infer', exp)

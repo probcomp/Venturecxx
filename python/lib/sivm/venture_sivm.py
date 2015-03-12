@@ -214,6 +214,7 @@ class VentureSivm(object):
         # save the directive if the instruction is a directive
         if instruction_type in ['assume','observe','predict','define']:
             did = response['directive_id']
+            assert did not in self.sugar_dict
             tmp_instruction = {}
             tmp_instruction['directive_id'] = did
             for key in ('instruction', 'expression', 'symbol', 'value'):
@@ -327,7 +328,7 @@ class VentureSivm(object):
         return tmp
     
     def _do_list_directives(self, _):
-        return { "directives" : [self.get_directive(did) for did in self.directive_dict.keys()] }
+        return { "directives" : [self.get_directive(did) for did in sorted(self.directive_dict.keys())] }
     
     def _do_get_directive(self, instruction):
         did = utils.validate_arg(instruction, 'directive_id', utils.validate_positive_integer)
