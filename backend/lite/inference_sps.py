@@ -13,8 +13,13 @@ class InferPrimitiveOutputPSP(psp.DeterministicPSP):
     self.desc = desc
     self.tp = tp
   def simulate(self, args):
+    result = self.klass(self.val, args.operandValues)
+    if self.klass is MadeRiplMethodInferOutputPSP:
+      # Hack to allow MadeRiplMethodInferOutputPSP s to blame the
+      # maker application for errors.
+      result.addr = args.node.address
     return sp.VentureSPRecord(sp.SP(psp.NullRequestPSP(),
-                                    psp.TypedPSP(self.klass(self.val, args.operandValues), self.tp)))
+                                    psp.TypedPSP(result, self.tp)))
   def description(self, _name):
     return self.desc
 
@@ -38,10 +43,11 @@ class MadeEngineMethodInferOutputPSP(psp.LikelihoodFreePSP):
 
 class VentureNestedRiplMethodError(VentureError):
   """This exception means that this SP attempted a recursive Ripl operation which failed."""
-  def __init__(self, message, cause, stack):
+  def __init__(self, message, cause, stack, addr):
     super(VentureNestedRiplMethodError, self).__init__(message)
     self.cause = cause
     self.stack = stack
+    self.addr = addr
 
   def __str__(self):
     return str(self.cause)
@@ -59,7 +65,7 @@ class MadeRiplMethodInferOutputPSP(psp.LikelihoodFreePSP):
     except VentureException as err:
       import sys
       info = sys.exc_info()
-      raise VentureNestedRiplMethodError("Nested ripl operation signalled an error", err, info), None, info[2]
+      raise VentureNestedRiplMethodError("Nested ripl operation signalled an error", err, info, self.addr), None, info[2]
     try:
       ans_vv = v.VentureValue.fromStackDict(ans) if ans is not None else v.VentureNil()
     except VentureTypeError:

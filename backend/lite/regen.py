@@ -9,6 +9,7 @@ from scope import isScopeIncludeOutputPSP
 from consistency import assertTorus, assertTrace
 from exception import VentureError
 from venture.exception import VentureException
+from venture.lite.inference_sps import VentureNestedRiplMethodError # TODO Ugh.
 
 def regenAndAttach(trace,scaffold,shouldRestore,omegaDB,gradients):
   assertTorus(scaffold)
@@ -127,6 +128,15 @@ def evalFamily(trace,address,exp,env,scaffold,shouldRestore,omegaDB,gradients):
     (requestNode,outputNode) = trace.createApplicationNodes(address,nodes[0],nodes[1:],env)
     try:
       weight += apply(trace,requestNode,outputNode,scaffold,shouldRestore,omegaDB,gradients)
+    except VentureNestedRiplMethodError as err:
+      # This is a hack to allow errors raised by inference SP actions
+      # that are ripl actions to blame the address of the maker of the
+      # action rather than the current address, which is the
+      # application of that action (which is where the mistake is
+      # detected).
+      import sys
+      info = sys.exc_info()
+      raise VentureException("evaluation", err.message, address=err.addr, cause=err), None, info[2]
     except VentureError as err:
       import sys
       info = sys.exc_info()

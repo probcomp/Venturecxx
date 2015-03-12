@@ -55,7 +55,7 @@ def testAnnotateProgrammaticAssume():
   ripl = get_ripl()
   assert_error_message_contains("""\
 ((assume x (add 1 foo)) <the model>)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ ^^^^^^^^^^^^^^^^^^^^^^
 """,
   ripl.infer, "(assume x (+ 1 foo))")
   assert_error_message_contains("""\
@@ -82,13 +82,17 @@ def testAnnotateErrorTriggeredByInferenceOverProgrammaticAssume():
 def testAnnotateDefinedProgrammaticAssume():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.define("action", "(lambda () (assume x (+ 1 foo)))")
-  # TODO Solve the problem of blaming makers of inference actions
-  # rather than the actions themselves.
-#   assert_error_message_contains("""\
-# (assume x (add 1 foo))
-# ^^^^^^^^^^^^^^^^^^^^^^
-# """,
-#   ripl.infer, "(action)")
+  # Hm.  Blaming makers of inference actions rather than the actions
+  # themselves produces this; which does point to the culprit.
+  # However, the top stack frame is somewhat misleading as to when the
+  # problem was identified.  I might be able to live with that.
+  assert_error_message_contains("""\
+((action) <the model>)
+ ^^^^^^^^
+(lambda () (assume x (add 1 foo)))
+           ^^^^^^^^^^^^^^^^^^^^^^
+""",
+  ripl.infer, "(action)")
   assert_error_message_contains("""\
 (add 1.0 foo)
          ^^^
@@ -125,15 +129,17 @@ def testAnnotateDefinedInferenceProgramError():
 def testAnnotateDefinedQuasiquotedProgrammaticAssume():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.define("action", "(lambda (name) (assume x (+ 1 ,name)))")
-  # TODO Solve the problem of blaming makers of inference actions
-  # rather than the actions themselves.
-#   assert_error_message_contains("""\
-# ((action (quote foo)) <the model>)
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# (assume x (add 1 (unquote name)))
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# """,
-#   ripl.infer, "(action 'foo)")
+  # Hm.  Blaming makers of inference actions rather than the actions
+  # themselves produces this; which does point to the culprit.
+  # However, the top stack frame is somewhat misleading as to when the
+  # problem was identified.  I might be able to live with that.
+  assert_error_message_contains("""\
+((action (quote foo)) <the model>)
+ ^^^^^^^^^^^^^^^^^^^^
+(lambda (name) (assume x (add 1 (unquote name))))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+""",
+  ripl.infer, "(action 'foo)")
   assert_error_message_contains("""\
 (add 1.0 foo)
          ^^^
