@@ -156,7 +156,7 @@ class VentureSivm(object):
             self.state='exception'
 
             address = e.data['address'].asList()
-            e.data['stack_trace'] = [self._resugar(index) for index in address]
+            e.data['stack_trace'] = [frame for frame in [self._resugar(index) for index in address] if frame is not None]
             del e.data['address']
 
             self.current_exception = e.to_json_object()
@@ -189,14 +189,23 @@ class VentureSivm(object):
     
     def _resugar(self, index):
         did = index[0]
+        if self._hack_skip_inference_prelude_entry(did):
+            # The reason to skip is to avoid popping the
+            # self.attempted stack even though the did is not there.
+            print "Warning: skipping did %s assumed to be from the inference prelude" % did
+            return None
         exp, sugar = self._get_sugar(did)
         index = index[1:]
-        
+
         return dict(
           exp = exp,
           did = did,
           index = sugar.resugar_index(index)
         )
+
+    def _hack_skip_inference_prelude_entry(self, did):
+        import venture.engine.engine as e
+        return self.core_sivm.engine.persistent_inference_trace and did < len(e._inference_prelude())
 
     def _register_executed_instruction(self, instruction, response):
         instruction_type = instruction['instruction']
