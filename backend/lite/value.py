@@ -398,7 +398,7 @@ class VenturePair(VentureValue):
       return pythonListToImproperVentureList(VentureValue.fromStackDict(tail),
                                              *[VentureValue.fromStackDict(val) for val in list_])
     else:
-      return pythonListToVentureList(*[VentureValue.fromStackDict(val) for val in thing["value"]])
+      return pythonListToVentureList([VentureValue.fromStackDict(val) for val in thing["value"]])
 
   def compareSameType(self, other):
     fstcmp = self.first.compare(other.first)
@@ -487,7 +487,7 @@ class VenturePair(VentureValue):
     else:
       return ([self.first], self.rest)
 
-def pythonListToVentureList(*l):
+def pythonListToVentureList(l):
   return reduce(lambda t, h: VenturePair((h, t)), reversed(l), VentureNil())
 
 def pythonListToImproperVentureList(tail, *l):
@@ -1082,7 +1082,7 @@ data List = Nil | Pair Any List
   def __init__(self, name=None):
     self._name = name
   def asVentureValue(self, thing):
-    return pythonListToVentureList(*thing)
+    return pythonListToVentureList(thing)
   def asPython(self, thing):
     return thing.asPythonList()
   def __contains__(self, vthing):
@@ -1099,7 +1099,7 @@ class HomogeneousListType(VentureType):
     self.subtype = subtype
     self._name = name
   def asVentureValue(self, thing):
-    return pythonListToVentureList(*[self.subtype.asVentureValue(t) for t in thing])
+    return pythonListToVentureList([self.subtype.asVentureValue(t) for t in thing])
   def asPython(self, vthing):
     return vthing.asPythonList(self.subtype)
   def __contains__(self, vthing):
