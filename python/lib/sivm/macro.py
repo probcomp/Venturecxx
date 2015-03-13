@@ -302,14 +302,3 @@ def sugar_expression_index(exp, index):
 
 def desugar_expression_index(exp, index):
   return expand(exp).desugar_index(index)
-
-def testVerify():
-  try:
-    verify(['let', [['__sym0__', '__val0__']], 'body'], ['let', ['a'], 'b'],
-      'let')
-    print "testVerify() failed!"
-  except VentureException as e:
-    print e.data['expression_index']
-
-if __name__ == '__main__':
-  testVerify()
