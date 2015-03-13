@@ -91,7 +91,7 @@ class DefaultRandomVentureValue(object):
       length = npr.randint(0, 10)
     if elt_dist is None:
       elt_dist = DefaultRandomVentureValue("object") # TODO reuse class of self
-    return v.pythonListToVentureList(*[elt_dist.generate(**kwargs) for _ in range(length)])
+    return v.pythonListToVentureList([elt_dist.generate(**kwargs) for _ in range(length)])
   def exp(self, **_kwargs):
     # TODO Synthesizing interesting expressions is the fun part!
     return self.list(length=0)
