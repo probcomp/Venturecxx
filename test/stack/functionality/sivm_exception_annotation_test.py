@@ -152,4 +152,4 @@ def testAssignedDidUniqueness():
     ripl.define("foo%d" % i, "(predict (normal 0 1))")
     ripl.infer("foo%d" % i)
   # Or maybe 60 if I start recording the infer statements too.
-  eq_(40, len(ripl.sivm.sugar_dict.items()))
+  eq_(40, len(ripl.sivm.syntax_dict.items()))

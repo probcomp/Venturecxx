@@ -29,7 +29,7 @@ class VentureSivm(object):
         self._clear()
         self._init_continuous_inference()
     
-    dicts = [s + '_dict' for s in ['breakpoint', 'label', 'did', 'sugar', 'directive']]
+    dicts = [s + '_dict' for s in ['breakpoint', 'label', 'did', 'syntax', 'directive']]
 
     # list of all instructions supported by venture sivm
     _extra_instructions = {'labeled_assume','labeled_observe',
@@ -74,7 +74,7 @@ class VentureSivm(object):
         self.label_dict = {}
         self.did_dict = {}
         self.directive_dict = {}
-        self.sugar_dict = {}
+        self.syntax_dict = {}
         self._debugger_clear()
         self.state = 'default'
         self.attempted = []
@@ -111,12 +111,12 @@ class VentureSivm(object):
         if instruction_type in ['define','assume','observe','predict','infer']:
             exp = utils.validate_arg(instruction,'expression',
                     utils.validate_expression, wrap_exception=False)
-            sugar = macro.expand(exp)
-            desugared_instruction['expression'] = sugar.desugared()
+            syntax = macro.expand(exp)
+            desugared_instruction['expression'] = syntax.desugared()
             # for error handling
             if instruction_type is 'infer':
-                (exp, sugar) = self._hack_infer_expression_structure(exp, sugar)
-            self.attempted.append((exp, sugar))
+                (exp, syntax) = self._hack_infer_expression_structure(exp, syntax)
+            self.attempted.append((exp, syntax))
         # desugar the expression index
         if instruction_type == 'debugger_set_breakpoint_source_code_location':
             desugared_src_location = desugared_instruction['source_code_location']
@@ -142,14 +142,14 @@ class VentureSivm(object):
         self._register_executed_instruction(instruction, response)
         return response
 
-    def _hack_infer_expression_structure(self, exp, sugar):
+    def _hack_infer_expression_structure(self, exp, syntax):
         # The engine actually executes an application form around the
         # passed inference program.  Storing this will align the
         # indexes correctly.
         symbol = v.symbol("<the model>")
         hacked_exp = [exp, symbol]
-        hacked_sugar = macro.ListSyntax([sugar, macro.LiteralSyntax(symbol)])
-        return (hacked_exp, hacked_sugar)
+        hacked_syntax = macro.ListSyntax([syntax, macro.LiteralSyntax(symbol)])
+        return (hacked_exp, hacked_syntax)
 
     def _annotate(self, e, instruction):
         if e.exception == "evaluation":
@@ -179,13 +179,13 @@ class VentureSivm(object):
                     del e.data['directive_id']
         return e
 
-    def _get_sugar(self, did):
-        if did not in self.sugar_dict:
-            self.sugar_dict[did] = self.attempted.pop()
-        return self.sugar_dict[did]
+    def _get_syntax_record(self, did):
+        if did not in self.syntax_dict:
+            self.syntax_dict[did] = self.attempted.pop()
+        return self.syntax_dict[did]
     
     def _get_exp(self, did):
-        return self._get_sugar(did)[0]
+        return self._get_syntax_record(did)[0]
     
     def _resugar(self, index):
         did = index[0]
@@ -194,13 +194,13 @@ class VentureSivm(object):
             # self.attempted stack even though the did is not there.
             print "Warning: skipping did %s assumed to be from the inference prelude" % did
             return None
-        exp, sugar = self._get_sugar(did)
+        exp, syntax = self._get_syntax_record(did)
         index = index[1:]
 
         return dict(
           exp = exp,
           did = did,
-          index = sugar.resugar_index(index)
+          index = syntax.resugar_index(index)
         )
 
     def _hack_skip_inference_prelude_entry(self, did):
@@ -216,21 +216,21 @@ class VentureSivm(object):
         if instruction_type == 'forget':
             did = instruction['directive_id']
             del self.directive_dict[did]
-            del self.sugar_dict[did]
+            del self.syntax_dict[did]
             if did in self.did_dict:
                 del self.label_dict[self.did_dict[did]]
                 del self.did_dict[did]
         # save the directive if the instruction is a directive
         if instruction_type in ['assume','observe','predict','define']:
             did = response['directive_id']
-            assert did not in self.sugar_dict
+            assert did not in self.syntax_dict
             tmp_instruction = {}
             tmp_instruction['directive_id'] = did
             for key in ('instruction', 'expression', 'symbol', 'value'):
                 if key in instruction:
                     tmp_instruction[key] = copy.copy(instruction[key])
             self.directive_dict[did] = tmp_instruction
-            self.sugar_dict[did] = self.attempted.pop()
+            self.syntax_dict[did] = self.attempted.pop()
         # save the breakpoint if the instruction sets the breakpoint
         if instruction_type in ['debugger_set_breakpoint_address',
                 'debugger_set_breakpoint_source_code_location']:
