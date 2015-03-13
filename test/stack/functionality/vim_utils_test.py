@@ -1,17 +1,17 @@
 # Copyright (c) 2013, MIT Probabilistic Computing Project.
-# 
+#
 # This file is part of Venture.
-# 	
+#
 # Venture is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 	
+#
 # Venture is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 	
+#
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 from nose.plugins.attrib import attr
 import unittest
@@ -39,6 +39,32 @@ class TestSivmUtils(unittest.TestCase):
     # desugar_expression
     ######################################
 
+    def test_desugar_expression_literal(self):
+        a = '0'
+        b = '0'
+        self.assertEqual(macro.desugar_expression(a),b)
+
+    def test_desugar_expression_list(self):
+        a = [['+', '1', ['*', '2', '3']]]
+        syntax = macro.expand(a)
+        b = [['+', '1', ['*', '2', '3']]]
+        self.assertEqual(syntax.desugared(),b)
+        self.assertEqual(syntax.resugar_index([0, 2, 0]),[0, 2, 0])
+
+    def test_desugar_expression_lambda(self):
+        a = ['lambda', ['x'], ['+', 'x', 'x']]
+        syntax = macro.expand(a)
+        b = ['make_csp', ['quote', ['x']], ['quote', ['+', 'x', 'x']]]
+        self.assertEqual(syntax.desugared(),b)
+        self.assertEqual(syntax.resugar_index([2, 1, 2]),[2,2])
+
+    def test_desugar_expression_if_easy(self):
+        a = ['if', ['flip'], '0', '1']
+        syntax = macro.expand(a)
+        b = [['biplex', ['flip'], ['make_csp', ['quote', []], ['quote', '0']], ['make_csp', ['quote', []], ['quote', '1']]]]
+        self.assertEqual(syntax.desugared(),b)
+        self.assertEqual(syntax.resugar_index([0, 3, 2, 1]),[3])
+
     def test_desugar_expression_if(self):
         a = ['if','a','b',['if','c','d','e']]
         b = [['biplex','a',['make_csp',['quote', []],['quote', 'b']],['make_csp',['quote', []],['quote',
@@ -55,9 +81,12 @@ class TestSivmUtils(unittest.TestCase):
 
     def test_desugar_expression_and(self):
         a = ['and','a','b']
+        syntax = macro.expand(a)
         b = [['biplex','a',['make_csp',['quote', []],['quote', 'b']],['make_csp',['quote', []],['quote', v.boolean(False)]]]]
-        self.assertEqual(macro.desugar_expression(a),b)
-    
+        self.assertEqual(syntax.desugared(),b)
+        self.assertEqual(syntax.resugar_index([0,1]),[1])
+        self.assertEqual(syntax.resugar_index([0,2,2,1]),[2])
+
     def test_desugar_expression_nested(self):
         a = [['and','a','b']]
         b = [[['biplex','a',['make_csp',['quote', []],['quote', 'b']],['make_csp',['quote', []],['quote', v.boolean(False)]]]]]
@@ -65,8 +94,11 @@ class TestSivmUtils(unittest.TestCase):
 
     def test_desugar_expression_or(self):
         a = ['or','a','b']
+        syntax = macro.expand(a)
         b = [['biplex','a',['make_csp',['quote', []],['quote', v.boolean(True)]],['make_csp',['quote', []],['quote', 'b']]]]
-        self.assertEqual(macro.desugar_expression(a),b)
+        self.assertEqual(syntax.desugared(),b)
+        self.assertEqual(syntax.resugar_index([0,1]),[1])
+        self.assertEqual(syntax.resugar_index([0,3,2,1]),[2])
 
     def test_desugar_expression_let_1(self):
         a = ['let',[],'b']
@@ -80,6 +112,16 @@ class TestSivmUtils(unittest.TestCase):
         a = ['let',[['a','b'],['c','d']],'e']
         b = [['make_csp',['quote', ['a']],['quote', [['make_csp',['quote', ['c']],['quote', 'e']],'d']]],'b']
         self.assertEqual(macro.desugar_expression(a),b)
+    def test_desugar_expression_let_4(self):
+        a = ['let', [['a', '1'], ['b', '2']], ['+', 'a', 'b']]
+        syntax = macro.expand(a)
+        b = [['make_csp', ['quote', ['a']], ['quote', [['make_csp', ['quote', ['b']], ['quote', ['+', 'a', 'b']]], '2']]], '1']
+        self.assertEqual(syntax.desugared(),b)
+        self.assertEqual(syntax.resugar_index([0,1,1,0]),[1,0,0])
+        self.assertEqual(syntax.resugar_index([1]),[1,0,1])
+        self.assertEqual(syntax.resugar_index([0, 2, 1, 0, 1, 1, 0]),[1,1,0])
+        self.assertEqual(syntax.resugar_index([0, 2, 1, 1]),[1,1,1])
+        self.assertEqual(syntax.resugar_index([0, 2, 1, 0, 2, 1]),[2])
     def test_desugar_expression_let_failure_1(self):
         a = ['let','a','b']
         try:
@@ -126,10 +168,10 @@ class TestSivmUtils(unittest.TestCase):
                 j = self.find_sym(e,sym)
                 if j != None:
                     return [i]+j
-        
+
         if sym == exp:
             return []
-        
+
         return None
 
     def test_find_sym(self):

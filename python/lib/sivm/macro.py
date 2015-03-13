@@ -303,47 +303,6 @@ def sugar_expression_index(exp, index):
 def desugar_expression_index(exp, index):
   return expand(exp).desugar_index(index)
 
-def testLiteral():
-  syntax = expand('0')
-  print syntax.desugared()
-
-def testList():
-  syntax = expand([['+', '1', ['*', '2', '3']]])
-  print syntax.desugared()
-  print syntax.resugar_index([0, 2, 0])
-
-def testLambda():
-  syntax = expand(['lambda', ['x'], ['+', 'x', 'x']])
-  print syntax.desugared()
-  print syntax.resugar_index([2, 1, 2])
-
-def testIf():
-  syntax = expand(['if', ['flip'], '0', '1'])
-  print syntax.desugared()
-  print syntax.resugar_index([0, 3, 2, 1])
-
-def testAnd():
-  syntax = expand(['and', '1', '2'])
-  print syntax.desugared()
-  print syntax.resugar_index([0, 1])
-  print syntax.resugar_index([0, 2, 2, 1])
-
-def testOr():
-  syntax = expand(['or', '1', '2'])
-  print syntax.desugared()
-  print syntax.resugar_index([0, 1])
-  print syntax.resugar_index([0, 3, 2, 1])
-
-def testLet():
-  syntax = expand(['let', [['a', '1'], ['b', '2']], ['+', 'a', 'b']])
-  print syntax.desugared()
-  print syntax.resugar_index([0, 1, 1, 0])
-  print syntax.resugar_index([1])
-  print syntax.resugar_index([0, 2, 1, 0, 1, 1, 0])
-  print syntax.resugar_index([0, 2, 1, 1])
-  
-  print syntax.resugar_index([0, 2, 1, 0, 2, 1])
-
 def testVerify():
   try:
     verify(['let', [['__sym0__', '__val0__']], 'body'], ['let', ['a'], 'b'],
@@ -353,11 +312,4 @@ def testVerify():
     print e.data['expression_index']
 
 if __name__ == '__main__':
-  testLiteral()
-  testList()
-  testLambda()
-  testIf()
-  testAnd()
-  testOr()
-  testLet()
   testVerify()
