@@ -143,12 +143,12 @@ class VentureSivm(object):
         return response
 
     def _hack_infer_expression_structure(self, exp, sugar):
-        # The engine actuall executes an application form around the
+        # The engine actually executes an application form around the
         # passed inference program.  Storing this will align the
         # indexes correctly.
         symbol = v.symbol("<the model>")
         hacked_exp = [exp, symbol]
-        hacked_sugar = macro.ListSugar([sugar, macro.LiteralSugar(symbol)])
+        hacked_sugar = macro.ListSyntax([sugar, macro.LiteralSyntax(symbol)])
         return (hacked_exp, hacked_sugar)
 
     def _annotate(self, e, instruction):

@@ -1,18 +1,18 @@
-# Framework for writing macros that resugar errors.
+# Framework for writing macros that resyntax errors.
 
 # This code uses terminology that is slightly non-standard from the
 # point of view of traditional macro systems.  Specifically:
 #
 # - a "macro" is an object that may transform an expression to a
-#   "sugar" object.  Spiritually:
+#   "syntax" object.  Spiritually:
 #
-#     type Macro = Expression -> Maybe Sugar
+#     type Macro = Expression -> Maybe Syntax
 #
-# - a "sugar" is an object that can emit a macroexpanded expression,
+# - a "syntax" is an object that can emit a macroexpanded expression,
 #   and implements an isomorphism between indexes on the expanded and
 #   unexpanded versions of the expression.  Spiritually:
 #
-#     type Sugar = (Expression, Index -> Index, Index -> Index)
+#     type Syntax = (Expression, Index -> Index, Index -> Index)
 #
 # - an "index" is a path through an expression that indicates a
 #   subexpression of interest (used for error reporting).
@@ -20,10 +20,10 @@
 #
 #     type Index = Expression -> Expression
 #
-#   but they are represented explicitly, and transformed by sugars.
+#   but they are represented explicitly, and transformed by syntaxs.
 #
 # Note that there is no notional separation between "macroexpand-1"
-# and "macroexpand" (to use vocabulary from Common Lisp): the "sugar"
+# and "macroexpand" (to use vocabulary from Common Lisp): the "syntax"
 # object produced by one invocation of a "macro" is responsible for
 # producing a fully macroexpanded expression.  This is accomplished by
 # recursively invoking macroexpansion on subexpressions.
@@ -47,7 +47,7 @@ class Macro(object):
   def expand(self, exp):
     return self.expander(exp)
 
-class Sugar(object):
+class Syntax(object):
   def desugared(self):
     """The desugared expression."""
     raise Exception("Not implemented!")
@@ -78,9 +78,9 @@ class LiteralMacro(Macro):
   def applies(self, exp):
     return isLiteral(exp)
   def expand(self, exp):
-    return LiteralSugar(exp)
+    return LiteralSyntax(exp)
 
-class LiteralSugar(Sugar):
+class LiteralSyntax(Syntax):
   def __init__(self, literal):
     self.literal = literal
   def desugared(self):
@@ -106,14 +106,14 @@ class ListMacro(Macro):
       except VentureException as e:
         e.data['expression_index'].insert(0, i)
         raise
-    return ListSugar(expanded)
+    return ListSyntax(expanded)
   def _canonicalize(self, exp):
     if isinstance(exp, list):
       return exp
     else:
       return exp["value"] # Should always be an array literal
 
-class ListSugar(Sugar):
+class ListSyntax(Syntax):
   def __init__(self, exp):
     self.exp = exp
   def desugared(self):
@@ -191,7 +191,7 @@ class SyntaxRule(Macro):
       bindings = bind(self.pattern, exp)
       subbed = sub(bindings, self.template)
       expanded = expand(subbed)
-      return SubSugar(expanded, self.desugar, self.resugar)
+      return SubSyntax(expanded, self.desugar, self.resugar)
     except VentureException as e:
       e.data['expression_index'] = self.resugar(e.data['expression_index'])
       raise
@@ -209,18 +209,18 @@ def replace(exp, indexMap, index):
   
   return []
 
-class SubSugar(Sugar):
-  def __init__(self, sugar, desugar, resugar):
-    self.sugar = sugar
+class SubSyntax(Syntax):
+  def __init__(self, syntax, desugar, resugar):
+    self.syntax = syntax
     self.desugar = desugar
     self.resugar = resugar
   def desugared(self):
-    return self.sugar.desugared()
+    return self.syntax.desugared()
   def desugar_index(self, index):
     index = self.desugar(index)
-    return self.sugar.desugar_index(index)
+    return self.syntax.desugar_index(index)
   def resugar_index(self, index):
-    index = self.sugar.resugar_index(index)
+    index = self.syntax.resugar_index(index)
     return self.resugar(index)
 
 def LetExpand(exp):
@@ -304,45 +304,45 @@ def desugar_expression_index(exp, index):
   return expand(exp).desugar_index(index)
 
 def testLiteral():
-  sugar = expand('0')
-  print sugar.desugared()
+  syntax = expand('0')
+  print syntax.desugared()
 
 def testList():
-  sugar = expand([['+', '1', ['*', '2', '3']]])
-  print sugar.desugared()
-  print sugar.resugar_index([0, 2, 0])
+  syntax = expand([['+', '1', ['*', '2', '3']]])
+  print syntax.desugared()
+  print syntax.resugar_index([0, 2, 0])
 
 def testLambda():
-  sugar = expand(['lambda', ['x'], ['+', 'x', 'x']])
-  print sugar.desugared()
-  print sugar.resugar_index([2, 1, 2])
+  syntax = expand(['lambda', ['x'], ['+', 'x', 'x']])
+  print syntax.desugared()
+  print syntax.resugar_index([2, 1, 2])
 
 def testIf():
-  sugar = expand(['if', ['flip'], '0', '1'])
-  print sugar.desugared()
-  print sugar.resugar_index([0, 3, 2, 1])
+  syntax = expand(['if', ['flip'], '0', '1'])
+  print syntax.desugared()
+  print syntax.resugar_index([0, 3, 2, 1])
 
 def testAnd():
-  sugar = expand(['and', '1', '2'])
-  print sugar.desugared()
-  print sugar.resugar_index([0, 1])
-  print sugar.resugar_index([0, 2, 2, 1])
+  syntax = expand(['and', '1', '2'])
+  print syntax.desugared()
+  print syntax.resugar_index([0, 1])
+  print syntax.resugar_index([0, 2, 2, 1])
 
 def testOr():
-  sugar = expand(['or', '1', '2'])
-  print sugar.desugared()
-  print sugar.resugar_index([0, 1])
-  print sugar.resugar_index([0, 3, 2, 1])
+  syntax = expand(['or', '1', '2'])
+  print syntax.desugared()
+  print syntax.resugar_index([0, 1])
+  print syntax.resugar_index([0, 3, 2, 1])
 
 def testLet():
-  sugar = expand(['let', [['a', '1'], ['b', '2']], ['+', 'a', 'b']])
-  print sugar.desugared()
-  print sugar.resugar_index([0, 1, 1, 0])
-  print sugar.resugar_index([1])
-  print sugar.resugar_index([0, 2, 1, 0, 1, 1, 0])
-  print sugar.resugar_index([0, 2, 1, 1])
+  syntax = expand(['let', [['a', '1'], ['b', '2']], ['+', 'a', 'b']])
+  print syntax.desugared()
+  print syntax.resugar_index([0, 1, 1, 0])
+  print syntax.resugar_index([1])
+  print syntax.resugar_index([0, 2, 1, 0, 1, 1, 0])
+  print syntax.resugar_index([0, 2, 1, 1])
   
-  print sugar.resugar_index([0, 2, 1, 0, 2, 1])
+  print syntax.resugar_index([0, 2, 1, 0, 2, 1])
 
 def testVerify():
   try:
