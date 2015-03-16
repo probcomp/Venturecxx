@@ -153,3 +153,18 @@ def testAssignedDidUniqueness():
     ripl.infer("foo%d" % i)
   # Or maybe 60 if I start recording the infer statements too.
   eq_(40, len(ripl.sivm.syntax_dict.items()))
+
+def testAnnotateInferenceErrorInDo():
+  # TODO I need the inference trace to be persistent to trigger the
+  # inference prelude did skipping hack :(
+  ripl = get_ripl(persistent_inference_trace=True)
+  expression = """\
+(do (assume x (normal 0 1))
+    (observe x (+ 1 badness)))"""
+  assert_error_message_contains("""\
+((do (assume x (normal 0 1)) (observe x (add 1 badness))) <the model>)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+((do (assume x (normal 0 1)) (observe x (add 1 badness))) <the model>)
+                                               ^^^^^^^
+""",
+  ripl.infer, expression)

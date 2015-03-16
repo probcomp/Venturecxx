@@ -149,6 +149,14 @@ class TestSivmUtils(unittest.TestCase):
         else:
             self.fail()
 
+    def test_desugar_expression_do(self):
+        a = ['do', ['+', 'a', 'b'], ['*', 'c', 'd']]
+        syntax = macro_system.expand(a)
+        b = ['bind_', ['+', 'a', 'b'], ['make_csp', ['quote', []], ['quote', ['*', 'c', 'd']]]]
+        self.assertEqual(syntax.desugared(),b)
+        self.assertEqual(syntax.resugar_index([1,1]),[1,1])
+        self.assertEqual(syntax.resugar_index([2,2,1,1]),[2,1])
+
     def test_desugar_expression_identity(self):
         a = ['identity','b']
         b = ['make_csp', ['quote', []], ['quote', 'b']]
