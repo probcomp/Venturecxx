@@ -47,6 +47,24 @@ def register_macro(name, func, desc=None):
   macro_list.append((name, func, desc))
   macros[name] = func
 
+def quasiquote_macro(program):
+  assert len(program) == 2
+  return quasiquote(program[1])
+register_macro("quasiquote", quasiquote_macro, desc="""\
+- `(quasiquote <datum>)`: Data constructed by template instantiation.
+
+  If the datum contains no ``unquote`` expressions, ``quasiquote`` is
+  the same as ``quote``.  Otherwise, the unquoted expressions are
+  evaluated and their results spliced in.  This is particularly useful
+  for constructing model program fragments -- so much so, that the
+  modeling inference SPs automatically quasiquote their model
+  arguments.
+
+  TODO: Nested quasiquotation does not work properly: all unquoted
+  expressions are evaluated regardless of quasiquotation level.
+
+ """)
+
 def begin_macro(program):
   assert len(program) >= 2
   return [v.sym("sequence"), [v.sym("list")] + [macroexpand_inference(e) for e in program[1:]]]
