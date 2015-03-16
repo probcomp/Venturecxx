@@ -169,7 +169,28 @@ def verify(pattern, exp, context):
         raise
 
 class SyntaxRule(Macro):
-  """Tries to be scheme's define-syntax-rule."""
+  """A poor man's version of Scheme's syntax-rules pattern language for defining macros.
+
+Does not support:
+- literal tokens in patterns
+- multiple alternate pattern-template pairs for the same macro
+- pattern repetition notation (the ellipses "..." that novice
+  syntax-rules users find so wonderfully confusing)
+- hygiene (operates on expressions with symbols, which are eventually
+  interpreted in the macro use site environment)
+
+What's left?
+- Patterns are (nested) lists of symbols.
+  - pattern[0] must be a symbol and is taken to be the name of the
+    macro
+  - all other pattern symbols bind the corresponding code fragments at
+    the use site
+- Templates are nested lists of symbols.
+- The output is the template, except that symbols bound in the pattern
+  are replaced by those code fragments from the use site (symbols that
+  are not bound are inserted as is).
+
+  """
   def __init__(self, pattern, template, desc=None):
     self.name = pattern[0]
     self.pattern = pattern
@@ -274,6 +295,10 @@ orMacro = SyntaxRule(['or', 'exp1', 'exp2'],
                      ['if', 'exp1', v.boolean(True), 'exp2'],
                      desc="""- `(or exp1 exp2)`: Short-circuiting or. """)
 
+# Let is not directly a SyntaxRule because the pattern language does
+# not support repetition.  Instead, expansion of a let form computes a
+# ground pattern and template pair of the right size and dynamically
+# forms and uses a SyntaxRule out of that.
 letMacro = Macro(arg0("let"), LetExpand,
                  desc="""\
 - `(let ((param exp) ...) body)`: Evaluation with local scope.
