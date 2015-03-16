@@ -54,7 +54,7 @@ def testAnnotateErrorTriggeredByInference():
 def testAnnotateProgrammaticAssume():
   ripl = get_ripl()
   assert_error_message_contains("""\
-((assume x (add 1 foo)) <the model>)
+((assume x (add 1 foo)) model)
  ^^^^^^^^^^^^^^^^^^^^^^
 """,
   ripl.infer, "(assume x (+ 1 foo))")
@@ -87,7 +87,7 @@ def testAnnotateDefinedProgrammaticAssume():
   # However, the top stack frame is somewhat misleading as to when the
   # problem was identified.  I might be able to live with that.
   assert_error_message_contains("""\
-((action) <the model>)
+((action) model)
  ^^^^^^^^
 (lambda () (assume x (add 1 foo)))
            ^^^^^^^^^^^^^^^^^^^^^^
@@ -102,7 +102,7 @@ def testAnnotateDefinedProgrammaticAssume():
 def testAnnotateInferenceProgramError():
   ripl = get_ripl()
   assert_error_message_contains("""\
-((observe (normal 0 1) (add 1 foo)) <the model>)
+((observe (normal 0 1) (add 1 foo)) model)
                               ^^^
 """,
   ripl.infer, "(observe (normal 0 1) (+ 1 foo))")
@@ -119,7 +119,7 @@ def testAnnotateDefinedInferenceProgramError():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.define("badness", "(lambda () (observe (normal 0 1) (+ 1 foo)))")
   assert_error_message_contains("""\
-((badness) <the model>)
+((badness) model)
  ^^^^^^^^^
 (lambda () (observe (normal 0 1) (add 1 foo)))
                                         ^^^
@@ -134,7 +134,7 @@ def testAnnotateDefinedQuasiquotedProgrammaticAssume():
   # However, the top stack frame is somewhat misleading as to when the
   # problem was identified.  I might be able to live with that.
   assert_error_message_contains("""\
-((action (quote foo)) <the model>)
+((action (quote foo)) model)
  ^^^^^^^^^^^^^^^^^^^^
 (lambda (name) (assume x (add 1 (unquote name))))
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -162,9 +162,23 @@ def testAnnotateInferenceErrorInDo():
 (do (assume x (normal 0 1))
     (observe x (+ 1 badness)))"""
   assert_error_message_contains("""\
-((do (assume x (normal 0 1)) (observe x (add 1 badness))) <the model>)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-((do (assume x (normal 0 1)) (observe x (add 1 badness))) <the model>)
+((do (assume x (normal 0 1)) (observe x (add 1 badness))) model)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+((do (assume x (normal 0 1)) (observe x (add 1 badness))) model)
                                                ^^^^^^^
 """,
   ripl.infer, expression)
+
+def testAnnotateInferenceErrorInDefinedDo():
+  ripl = get_ripl(persistent_inference_trace=True)
+  ripl.define("action", """\
+(do (assume x (normal 0 1))
+    (y <- (sample x))
+    (observe x (+ 1 badness)))""")
+  assert_error_message_contains("""\
+(action model)
+^^^^^^^^^^^^^^
+(do (assume x (normal 0 1)) (y <- (sample x)) (observe x (add 1 badness)))
+                                                                ^^^^^^^
+""",
+  ripl.infer, "action")
