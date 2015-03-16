@@ -169,6 +169,7 @@ class Scanner(Plex.Scanner):
         (Plex.Str('>'), grammar.T_RANGLE),
         (Plex.Str('['), grammar.T_LSQUARE),
         (Plex.Str('\''), grammar.T_QUOTE),
+        (Plex.Str('`'), grammar.T_BACKTICK),
         (Plex.Str(']'), grammar.T_RSQUARE),
         (Plex.Str('{'), grammar.T_LCURLY),
         (Plex.Str('}'), grammar.T_RCURLY),

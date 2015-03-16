@@ -100,6 +100,7 @@ expression(symbol)	::= L_NAME(name).
 expression(operator)	::= L_OPERATOR(op).
 expression(literal)	::= literal(value).
 expression(quote)       ::= T_QUOTE(quote) expression(e).
+expression(qquote)      ::= T_BACKTICK(qquote) expression(e).
 expression(unquote)     ::= T_COMMA(unquote) expression(e).
 expression(combination)	::= T_LROUND(open) expressions(es) T_RROUND(close).
 expression(comb_error)	::= T_LROUND(open) expressions(es) error

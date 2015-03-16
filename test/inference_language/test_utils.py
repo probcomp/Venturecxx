@@ -46,3 +46,7 @@ def testPosteriorSmoke():
 @on_inf_prim("quasiquote")
 def testExplicitQuasiquotation():
   eq_(3, get_ripl().infer("(lambda (t) (pair (lookup (quasiquote ((unquote (+ 1 2)) 5)) 0) t))"))
+
+@on_inf_prim("quasiquote")
+def testExplicitQuasiquotation2():
+  eq_(3, get_ripl().infer("(lambda (t) (pair (lookup `(,(+ 1 2) 5) 0) t))"))

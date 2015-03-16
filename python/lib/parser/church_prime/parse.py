@@ -208,6 +208,8 @@ class Semantics(object):
         return value
     def p_expression_quote(self, quote, e):
         return locquoted(quote, e, val.quote)
+    def p_expression_qquote(self, qquote, e):
+        return locquoted(qquote, e, val.quasiquote)
     def p_expression_unquote(self, unquote, e):
         return locquoted(unquote, e, val.unquote)
     def p_expression_combination(self, open, es, close):

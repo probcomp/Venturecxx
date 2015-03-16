@@ -108,6 +108,9 @@ def symmetric_matrix(vs):
 def quote(v):
   return [symbol("quote"), v]
 
+def quasiquote(v):
+  return [symbol("quasiquote"), v]
+
 def unquote(v):
   return [symbol("unquote"), v]
 
