@@ -83,7 +83,31 @@ def arg0(name):
   def applies(exp):
     return isinstance(exp, list) and len(exp) > 0 and getSym(exp[0]) == name
   return applies
-  
+
+def DoExpand(exp):
+  if len(exp) == 2:
+    # One statement
+    pattern = ["do", "stmt"]
+    template = "stmt"
+  else:
+    (_do, statement, rest) = (exp[0], exp[1], exp[2:])
+    rest_vars = ["rest_%d" % i for i in range(len(rest))]
+    if (type(statement) is list and len(statement) == 3 and type(statement[1]) is dict and
+        statement[1]["value"] == "<-"):
+      # Binding statement, regular form
+      pattern = ["do", ["var", "<-", "expr"]] + rest_vars
+      template = ["bind", "expr", ["lambda", ["var"], ["do"] + rest_vars]]
+    elif (type(statement) is list and len(statement) == 3 and type(statement[0]) is dict and
+        statement[0]["value"] == "<-"):
+      # Binding statement, venturescript form
+      pattern = ["do", ["<-", "var", "expr"]] + rest_vars
+      template = ["bind", "expr", ["lambda", ["var"], ["do"] + rest_vars]]
+    else:
+      # Non-binding statement
+      pattern = ["do", "stmt"] + rest_vars
+      template = ["bind_", "stmt", ["lambda", [], ["do"] + rest_vars]]
+  return SyntaxRule(pattern, template).expand(exp)
+
 identityMacro = SyntaxRule(['identity', 'exp'], ['lambda', [], 'exp'])
 lambdaMacro = SyntaxRule(['lambda', 'args', 'body'],
                          ['make_csp', ['quote', 'args'], ['quote', 'body']],
@@ -129,5 +153,57 @@ letMacro = Macro(arg0("let"), LetExpand,
   `exp` s and the `body`.
 """)
 
-for m in [identityMacro, lambdaMacro, ifMacro, andMacro, orMacro, letMacro, ListMacro(), LiteralMacro()]:
+# Do is not directly a SyntaxRule because the pattern language does
+# not support repetition or alternatives.  Instead, expansion of a do
+# form computes a ground pattern and template pair of the right shape
+# and size and dynamically forms and uses a SyntaxRule out of that.
+doMacro = Macro(arg0("do"), DoExpand,
+                desc="""\
+- `(do <stmt> <stmt> ...)`: Sequence actions that may return results.
+
+  Each <stmt> except the last may either be
+
+    - a kernel, in which case it is performed and any value it returns
+      is dropped, or
+
+    - a binder of the form ``(<variable> <- <kernel>)`` in which case the
+      kernel is performed and its value is made available to the remainder
+      of the ``do`` form by being bound to the variable.
+
+  The last <stmt> may not be a binder and must be a kernel.  The whole
+  ``do`` expression is then a single compound heterogeneous kernel,
+  whose value is the value returned by the last <stmt>.
+
+  If you need a kernel that produces a value without doing anything, use
+  ``(return <value>)``.  If you need a kernel that does nothing and
+  produces no useful value, you can use ``pass``.
+
+  For example, to make a kernel that does inference until some variable
+  in the model becomes "true" (why would anyone want to do that?), you
+  can write::
+
+      1 [define my_strange_kernel (lambda ()
+      2   (do
+      3     (finish <- (sample something_from_the_model))
+      4     (if finish
+      5         pass
+      6         (do
+      7           (mh default one 1)
+      8           (my_strange_kernel)))))]
+
+  Line 3 is a binder for the ``do`` started on line 2, which makes
+  ``finish`` a variable usable by the remainder of the procedure.  The
+  ``if`` starting on line 4 is a kernel, and is the last statement of
+  the outer ``do``.  Line 7 is a non-binder statement for the inner
+  ``do``.
+
+  The nomenclature is borrowed from the (in)famous ``do`` notation of
+  Haskell.  If this helps you think about it, Venture's ``do`` is
+  exactly Haskell ``do``, except there is only one monad, which is
+  essentially ``State ModelHistory``.  Randomness and actual i/o are not
+  treated monadically, but just executed, which we can get away with
+  because Venture is strict and doesn't aspire to complete functional
+  purity.""")
+
+for m in [identityMacro, lambdaMacro, ifMacro, andMacro, orMacro, letMacro, doMacro, ListMacro(), LiteralMacro()]:
   register_macro(m)
