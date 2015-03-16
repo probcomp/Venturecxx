@@ -19,7 +19,7 @@
 import copy
 
 from venture.exception import VentureException
-from venture.sivm import utils, macro
+from venture.sivm import utils, macro, macro_system
 import venture.value.dicts as v
 
 class VentureSivm(object):
@@ -111,7 +111,7 @@ class VentureSivm(object):
         if instruction_type in ['define','assume','observe','predict','infer']:
             exp = utils.validate_arg(instruction,'expression',
                     utils.validate_expression, wrap_exception=False)
-            syntax = macro.expand(exp)
+            syntax = macro_system.expand(exp)
             desugared_instruction['expression'] = syntax.desugared()
             # for error handling
             if instruction_type is 'infer':
@@ -123,7 +123,7 @@ class VentureSivm(object):
             did = desugared_src_location['directive_id']
             old_index = desugared_src_location['expression_index']
             exp = self.directive_dict[did]['expression']
-            new_index = macro.desugar_expression_index(exp, old_index)
+            new_index = macro_system.desugar_expression_index(exp, old_index)
             desugared_src_location['expression_index'] = new_index
         try:
             response = self.core_sivm.execute_instruction(desugared_instruction)
@@ -167,7 +167,7 @@ class VentureSivm(object):
         if e.exception == 'parse':
             i = e.data['expression_index']
             exp = instruction['expression']
-            i = macro.sugar_expression_index(exp,i)
+            i = macro_system.sugar_expression_index(exp,i)
             e.data['expression_index'] = i
         # turn directive_id into label
         if e.exception == 'invalid_argument':

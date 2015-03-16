@@ -550,7 +550,7 @@ def _compute_inference_prelude():
   import inference_prelude
   for (name, _desc, form) in inference_prelude.prelude:
     from venture.parser.church_prime.parse import ChurchPrimeParser
-    from venture.sivm.macro import desugar_expression
+    from venture.sivm.macro_system import desugar_expression
     from venture.sivm.core_sivm import _modify_expression
     exp = _modify_expression(desugar_expression(ChurchPrimeParser.instance().parse_expression(form)))
     ans.append((name, exp))

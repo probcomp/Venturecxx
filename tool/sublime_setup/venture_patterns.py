@@ -8,7 +8,8 @@ from sys import argv
 
 from venture.lite.builtin import builtInSPsList
 from venture.lite.inference_sps import inferenceSPsList
-from venture.sivm.macro import macros
+import venture.sivm.macro # To register the macros
+from venture.sivm.macro_system import macros
 from venture.engine.macro import macro_list
 
 def main(arg):
