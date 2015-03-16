@@ -86,7 +86,7 @@ What's left?
       bindings = bind(self.pattern, exp)
       subbed = sub(bindings, self.template)
       expanded = expand(subbed)
-      return SubSyntax(expanded, self.desugar, self.resugar)
+      return SubstitutionSyntax(expanded, self.desugar, self.resugar)
     except VentureException as e:
       e.data['expression_index'] = self.resugar(e.data['expression_index'])
       raise
@@ -104,7 +104,7 @@ def replace(exp, indexMap, index):
   
   return []
 
-class SubSyntax(Syntax):
+class SubstitutionSyntax(Syntax):
   def __init__(self, syntax, desugar, resugar):
     self.syntax = syntax
     self.desugar = desugar
