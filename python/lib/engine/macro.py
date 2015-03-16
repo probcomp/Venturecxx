@@ -7,6 +7,31 @@
 
 import venture.value.dicts as v
 
+def quasiquote(exp):
+  import collections
+  # TODO Nested quasiquotation
+  def quotify(exp, to_quote):
+    if to_quote:
+      return v.quote(exp)
+    else:
+      return exp
+  def quasiquoterecur(exp):
+    """Returns either (exp, True), if quasiquotation reduces to quotation on
+exp, or (exp', False), where exp' is a directly evaluable expression that
+will produce the term that the quasiquotation body exp means."""
+    if hasattr(exp, "__iter__") and not isinstance(exp, collections.Mapping):
+      if len(exp) > 0 and isinstance(exp[0], collections.Mapping) and exp[0]["type"] == "symbol" and exp[0]["value"] == "unquote":
+        return (exp[1], False)
+      else:
+        answers = [quasiquoterecur(expi) for expi in exp]
+        if all([ans[1] for ans in answers]):
+          return (exp, True)
+        else:
+          return ([v.sym("array")] + [quotify(*ansi) for ansi in answers], False)
+    else:
+      return (exp, True)
+  return quotify(*quasiquoterecur(exp))
+
 def macroexpand_inference(program):
   if type(program) is list and len(program) == 0:
     return program
@@ -69,7 +94,7 @@ def quasiquotation_macro(min_size = None, max_size = None):
       assert len(program) >= min_size
     if max_size is not None:
       assert len(program) <= max_size
-    return [program[0]] + [v.quasiquote(e) for e in program[1:]]
+    return [program[0]] + [quasiquote(e) for e in program[1:]]
   return the_macro
 
 register_macro("call_back", quasiquotation_macro(2), """\
@@ -146,10 +171,10 @@ def quasiquote_first_macro(program):
   assert len(program) == 3 or len(program) == 4
   if len(program) == 4:
     # A label was supplied
-    tail = [v.quasiquote(program[3])]
+    tail = [quasiquote(program[3])]
   else:
     tail = []
-  return [program[0], v.quasiquote(program[1]), macroexpand_inference(program[2])] + tail
+  return [program[0], quasiquote(program[1]), macroexpand_inference(program[2])] + tail
 
 register_macro("observe", quasiquote_first_macro, """\
 - `(observe <model-expression> <value> [<label>])`: Programmatically add an observation.
