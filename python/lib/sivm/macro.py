@@ -108,6 +108,44 @@ def DoExpand(exp):
       template = ["bind_", "stmt", ["lambda", [], ["do"] + rest_vars]]
   return SyntaxRule(pattern, template).expand(exp)
 
+def QuasiquoteExpand(exp):
+  import collections
+  name_ct = [0] # Explicit box because Python can't mutate locals from closures
+  def unique_name(prefix):
+    name_ct[0] += 1
+    return "%s-%d" % (prefix, name_ct[0])
+  def quote_result():
+    datum_name = unique_name("datum")
+    return (datum_name, ["quote", datum_name], True)
+  def qqrecur(exp):
+    """Returns a tuple (pattern, template, bool) explaining how to macroexpand this (sub-)expression.
+
+The pattern and template may be used to construct a SyntaxRule object
+that will do the right thing (but are returned seprately because
+SyntaxRule objects are not directly composable).
+
+The bool is an optimization.  It indicates whether quasiquote reduces
+to quote on this expression; if that turns out to be true for all
+subexpressions, their expansion can be short-circuited.
+
+    """
+    if hasattr(exp, "__iter__") and not isinstance(exp, collections.Mapping):
+      if len(exp) > 0 and getSym(exp[0]) == "unquote":
+        datum_name = unique_name("datum")
+        return ([unique_name("unquote"), datum_name], datum_name, False)
+      else:
+        answers = [qqrecur(expi) for expi in exp]
+        if all([ans[2] for ans in answers]):
+          return quote_result()
+        else:
+          pattern = [answer[0] for answer in answers]
+          template = [v.sym("array")] + [answer[1] for answer in answers]
+          return (pattern, template, False)
+    else:
+      return quote_result()
+  (pattern, template, _) = qqrecur(exp[1])
+  return SyntaxRule(["quasiquote", pattern], template).expand(exp)
+
 identityMacro = SyntaxRule(['identity', 'exp'], ['lambda', [], 'exp'])
 lambdaMacro = SyntaxRule(['lambda', 'args', 'body'],
                          ['make_csp', ['quote', 'args'], ['quote', 'body']],
@@ -141,8 +179,7 @@ orMacro = SyntaxRule(['or', 'exp1', 'exp2'],
 # not support repetition.  Instead, expansion of a let form computes a
 # ground pattern and template pair of the right size and dynamically
 # forms and uses a SyntaxRule out of that.
-letMacro = Macro(arg0("let"), LetExpand,
-                 desc="""\
+letMacro = Macro(arg0("let"), LetExpand, desc="""\
 - `(let ((param exp) ...) body)`: Evaluation with local scope.
 
   Each parameter must be a Venture symbol.
@@ -157,8 +194,7 @@ letMacro = Macro(arg0("let"), LetExpand,
 # not support repetition or alternatives.  Instead, expansion of a do
 # form computes a ground pattern and template pair of the right shape
 # and size and dynamically forms and uses a SyntaxRule out of that.
-doMacro = Macro(arg0("do"), DoExpand,
-                desc="""\
+doMacro = Macro(arg0("do"), DoExpand, desc="""\
 - `(do <stmt> <stmt> ...)`: Sequence actions that may return results.
 
   Each <stmt> except the last may either be
@@ -205,5 +241,20 @@ doMacro = Macro(arg0("do"), DoExpand,
   because Venture is strict and doesn't aspire to complete functional
   purity.""")
 
-for m in [identityMacro, lambdaMacro, ifMacro, andMacro, orMacro, letMacro, doMacro, ListMacro(), LiteralMacro()]:
+qqMacro = Macro(arg0("quasiquote"), QuasiquoteExpand, desc="""\
+- `(quasiquote <datum>)`: Data constructed by template instantiation.
+
+  If the datum contains no ``unquote`` expressions, ``quasiquote`` is
+  the same as ``quote``.  Otherwise, the unquoted expressions are
+  evaluated and their results spliced in.  This is particularly useful
+  for constructing model program fragments -- so much so, that the
+  modeling inference SPs automatically quasiquote their model
+  arguments.
+
+  TODO: Nested quasiquotation does not work properly: all unquoted
+  expressions are evaluated regardless of quasiquotation level.
+
+ """)
+
+for m in [identityMacro, lambdaMacro, ifMacro, andMacro, orMacro, letMacro, doMacro, qqMacro, ListMacro(), LiteralMacro()]:
   register_macro(m)
