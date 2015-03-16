@@ -58,7 +58,7 @@ def cycle_macro(program):
   assert len(program) == 3
   subkernels = macroexpand_inference(program[1])
   transitions = macroexpand_inference(program[2])
-  return [program[0], [v.sym("list")] + subkernels, transitions]
+  return [v.sym("_cycle"), [v.sym("list")] + subkernels, transitions]
 register_macro("cycle", cycle_macro, """\
 - `(cycle (<kernel> ...) <transitions>)`: Run a cycle kernel.
 
@@ -78,7 +78,7 @@ def mixture_macro(program):
     k = j + 1
     weights.append(weighted_ks[j])
     subkernels.append(weighted_ks[k])
-  return [program[0], [v.sym("simplex")] + weights, [v.sym("array")] + subkernels, transitions]
+  return [v.sym("_mixture"), [v.sym("simplex")] + weights, [v.sym("array")] + subkernels, transitions]
 register_macro("mixture", mixture_macro, """\
 - `(mixture (<weight> <kernel> ...) <transitions>)`: Run a mixture kernel.
 

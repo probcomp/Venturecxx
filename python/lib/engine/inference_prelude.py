@@ -1,7 +1,7 @@
 # A list of lists: name, description, code
 prelude = [
-["cycle", """\
-.. function:: cycle(ks : list<inference action>, iterations : int)
+["_cycle", """\
+.. function:: _cycle(ks : list<inference action>, iterations : int)
 
   :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
 
@@ -38,18 +38,8 @@ prelude = [
       (lambda (t) ((sequence (rest ks)) (rest ((first ks) t))))
       (lambda (t) (pair nil t))))"""],
 
-["begin", """\
-.. function:: begin(ks : list<inference action>)
-
-  :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
-
-   A helper function for implementing the eponymous inference macro.
-
-   Calling it directly is likely to be difficult and unproductive.
-""", "sequence"],
-
-["mixture", """\
-.. function:: mixture(weights : list<probability>, ks : list<inference action>, iterations : int)
+["_mixture", """\
+.. function:: _mixture(weights : list<probability>, ks : list<inference action>, iterations : int)
 
   :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
 
