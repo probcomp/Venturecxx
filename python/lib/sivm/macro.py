@@ -164,6 +164,17 @@ def quasiquotation_macro(name, desc="", min_size = None, max_size = None):
     return SyntaxRule(pattern, template).expand(program)
   return Macro(arg0(name), expander, desc=desc)
 
+def ObserveExpand(program):
+  assert len(program) == 3 or len(program) == 4
+  if len(program) == 4:
+    # A label was supplied
+    pattern = ["observe", "exp", "val", "label"]
+    template = ["_observe", ["quasiquote", "exp"], "val", ["quasiquote", "label"]]
+  else:
+    pattern = ["observe", "exp", "val"]
+    template = ["_observe", ["quasiquote", "exp"], "val"]
+  return SyntaxRule(pattern, template).expand(program)
+
 identityMacro = SyntaxRule(['identity', 'exp'], ['lambda', [], 'exp'])
 lambdaMacro = SyntaxRule(['lambda', 'args', 'body'],
                          ['make_csp', ['quote', 'args'], ['quote', 'body']],
@@ -343,6 +354,37 @@ assumeMacro = quasiquotation_macro("assume", min_size = 3, max_size = 4, desc=""
   this directive.
 """)
 
+observeMacro = Macro(arg0("observe"), ObserveExpand, desc="""\
+- `(observe <model-expression> <value> [<label>])`: Programmatically add an observation.
+
+  Condition the underlying model by adding a new observation, like the
+  ``observe`` directive.  The given model expression may be
+  constructed programmatically -- see ``unquote``.  The given value is
+  computed in the inference program, and may be stochastic.  This
+  corresponds to conditioning a model on randomly chosen data.
+
+  The <label>, if supplied, may be used to ``forget`` this observation.
+
+  *Note:* Observations are buffered by Venture, and do not take effect
+  immediately.  Call ``incorporate`` when you want them to.
+  ``incorporate`` is called automatically before every toplevel
+  ``infer`` instruction, but if you are using ``observe`` inside a
+  compound inference program, you may not execute another toplevel
+  ``infer`` instruction for a while.
+
+""")
+
+forceMacro = SyntaxRule(["force", "exp", "val"],
+                        ["_force", ["quasiquote", "exp"], "val"],
+                        desc="""\
+- `(force <model-expression> <value>)`: Programatically force the state of the model.
+
+  Force the model to set the requested variable to the given value,
+  without constraining it to stay that way. Implemented as an
+  ``observe`` followed by a ``forget``.
+
+""")
+
 predictMacro = quasiquotation_macro("predict", min_size = 2, max_size = 3, desc="""\
 - `(predict <model-expression> [<label>])`: Programmatically add a prediction.
 
@@ -379,6 +421,6 @@ sampleAllMacro = quasiquotation_macro("sample_all", min_size = 2, max_size = 2, 
 
 for m in [identityMacro, lambdaMacro, ifMacro, andMacro, orMacro, letMacro, doMacro, qqMacro,
           callBackMacro, collectMacro,
-          assumeMacro, predictMacro, sampleMacro, sampleAllMacro,
+          assumeMacro, observeMacro, predictMacro, forceMacro, sampleMacro, sampleAllMacro,
           ListMacro(), LiteralMacro()]:
   register_macro(m)
