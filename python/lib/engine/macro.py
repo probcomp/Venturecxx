@@ -65,24 +65,3 @@ register_macro("cycle", cycle_macro, """\
 
   The `transitions` argument specifies how many times to do this.
 """)
-
-def mixture_macro(program):
-  assert len(program) == 3
-  weights = []
-  subkernels = []
-  weighted_ks = macroexpand_inference(program[1])
-  transitions = macroexpand_inference(program[2])
-  for i in range(len(weighted_ks)/2):
-    j = 2*i
-    k = j + 1
-    weights.append(weighted_ks[j])
-    subkernels.append(weighted_ks[k])
-  return [v.sym("_mixture"), [v.sym("simplex")] + weights, [v.sym("array")] + subkernels, transitions]
-register_macro("mixture", mixture_macro, """\
-- `(mixture (<weight> <kernel> ...) <transitions>)`: Run a mixture kernel.
-
-  Choose one of the given subkernels according to its weight and
-  execute it.
-
-  The `transitions` argument specifies how many times to do this.
-""")

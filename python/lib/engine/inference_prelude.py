@@ -38,18 +38,6 @@ prelude = [
       (lambda (t) ((sequence (rest ks)) (rest ((first ks) t))))
       (lambda (t) (pair nil t))))"""],
 
-["_mixture", """\
-.. function:: _mixture(weights : list<probability>, ks : list<inference action>, iterations : int)
-
-  :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
-
-   A helper function for implementing the eponymous inference macro.
-
-   Calling it directly is likely to be difficult and unproductive.
-""",
-"""(lambda (weights kernels transitions)
-  (iterate (lambda (t) ((categorical weights kernels) t)) transitions))"""],
-
 # pass :: State a ()  pass = return ()
 ["pass", """\
 .. function:: pass(<foreignblob>)
