@@ -37,28 +37,28 @@ The current (somewhat baroque) error management architecture is this:
 1. The outermost layer (ripl) parses string source expressions into
    list and dict structured expressions.
 
-       - Any parse errors are reported by source location in the
-         string fragment being parsed, which may be slightly wierd if
-         the expression came in through the API.
+   - Any parse errors are reported by source location in the
+     string fragment being parsed, which may be slightly wierd if
+     the expression came in through the API.
 
-       - After a successful parse, the mapping between the original
-         text position and the structured parse result is lost.
+   - After a successful parse, the mapping between the original
+     text position and the structured parse result is lost.
 
 2. The next layer (sivm) expands macros, and stores a table mapping
    directive ids to the information it needs to invert macro expansion
    for error reporting.
 
-       - The information in question is a) the original expression,
-         and b) the Syntax object returned by the macro expander.  The
-         Syntax knows how to transform structured pointers to and from
-         the macroexpanded form, but may not in general be able to
-         reconstruct the original expression.  See
-         (macro_system.py)[../python/lib/sivm/macro_system.py] and
-         (pattern_language.py)[../python/lib/sivm/pattern_language.py].
+   - The information in question is a) the original expression,
+     and b) the Syntax object returned by the macro expander.  The
+     Syntax knows how to transform structured pointers to and from
+     the macroexpanded form, but may not in general be able to
+     reconstruct the original expression.  See
+     (macro_system.py)[../python/lib/sivm/macro_system.py] and
+     (pattern_language.py)[../python/lib/sivm/pattern_language.py].
 
-       - Complication: directive ids are actually assigned by the
-         Engine, so the sivm maintains a stack of macro expansions of
-         directives currently in progress.
+   - Complication: directive ids are actually assigned by the
+     Engine, so the sivm maintains a stack of macro expansions of
+     directives currently in progress.
 
 3. The next layer (engine) actually executes the desired computation
    in either the inference or the model trace.
