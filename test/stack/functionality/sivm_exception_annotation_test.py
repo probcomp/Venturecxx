@@ -1,6 +1,6 @@
 from nose.tools import assert_raises, eq_
 
-from venture.test.config import get_ripl
+from venture.test.config import get_ripl, broken_in, on_inf_prim
 from venture.exception import VentureException
 import venture.value.dicts as v
 
@@ -25,11 +25,15 @@ def assert_error_message_contains(text, f, *args, **kwargs):
     print cm.exception
     assert text in message
 
+@broken_in("puma", "Puma does not report error addresses")
+@on_inf_prim("none")
 def testBasicAnnotation():
   sivm = get_ripl().sivm
   expr = v.app(v.sym("add"), v.num(1), v.sym("foo"))
   assert_annotation_succeeds(sivm.assume, v.sym("x"), expr)
 
+@broken_in("puma", "Puma does not report error addresses")
+@on_inf_prim("none")
 def testBasicAnnotation2():
   ripl = get_ripl()
   assert_error_message_contains("""\
@@ -38,6 +42,8 @@ def testBasicAnnotation2():
 """,
   ripl.assume, "x", "(+ 1 foo)")
 
+@broken_in("puma", "Puma does not report error addresses")
+@on_inf_prim("none")
 def testAnnotateErrorTriggeredByInference():
   ripl = get_ripl()
   ripl.assume("control", "(flip)")
@@ -51,6 +57,8 @@ def testAnnotateErrorTriggeredByInference():
 """,
   ripl.infer, "(mh default one 50)")
 
+@broken_in("puma", "Puma does not report error addresses")
+@on_inf_prim("none")
 def testAnnotateProgrammaticAssume():
   ripl = get_ripl()
   assert_error_message_contains("""\
@@ -64,8 +72,10 @@ def testAnnotateProgrammaticAssume():
 """,
   ripl.infer, "(assume x (+ 1 foo))")
 
+@broken_in("puma", "Puma does not report error addresses")
+@on_inf_prim("none")
 def testAnnotateErrorTriggeredByInferenceOverProgrammaticAssume():
-  # No do macro yet
+  # Do not use the do macro yet
   ripl = get_ripl()
   ripl.infer("(assume control (flip))")
   ripl.infer("(force control true)")
@@ -79,6 +89,8 @@ def testAnnotateErrorTriggeredByInferenceOverProgrammaticAssume():
 """,
   ripl.infer, "(mh default one 50)")
 
+@broken_in("puma", "Puma does not report error addresses")
+@on_inf_prim("none")
 def testAnnotateDefinedProgrammaticAssume():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.define("action", "(lambda () (assume x (+ 1 foo)))")
@@ -99,6 +111,8 @@ def testAnnotateDefinedProgrammaticAssume():
 """,
   ripl.infer, "(action)")
 
+@broken_in("puma", "Puma does not report error addresses")
+@on_inf_prim("none")
 def testAnnotateInferenceProgramError():
   ripl = get_ripl()
   assert_error_message_contains("""\
@@ -107,6 +121,8 @@ def testAnnotateInferenceProgramError():
 """,
   ripl.infer, "(observe (normal 0 1) (+ 1 foo))")
 
+@broken_in("puma", "Puma does not report error addresses")
+@on_inf_prim("none")
 def testAnnotateInferenceProgramErrorInDefinition():
   ripl = get_ripl(persistent_inference_trace=True)
   assert_error_message_contains("""\
@@ -115,6 +131,8 @@ def testAnnotateInferenceProgramErrorInDefinition():
 """,
   ripl.define, "badness", "(observe (normal 0 1) (+ 1 foo))")
 
+@broken_in("puma", "Puma does not report error addresses")
+@on_inf_prim("none")
 def testAnnotateDefinedInferenceProgramError():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.define("badness", "(lambda () (observe (normal 0 1) (+ 1 foo)))")
@@ -126,6 +144,8 @@ def testAnnotateDefinedInferenceProgramError():
 """,
   ripl.infer, "(badness)")
 
+@broken_in("puma", "Puma does not report error addresses")
+@on_inf_prim("none")
 def testAnnotateDefinedQuasiquotedProgrammaticAssume():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.define("action", "(lambda (name) (assume x (+ 1 ,name)))")
@@ -146,6 +166,8 @@ def testAnnotateDefinedQuasiquotedProgrammaticAssume():
 """,
   ripl.infer, "(action 'foo)")
 
+@broken_in("puma", "Puma does not report error addresses")
+@on_inf_prim("none")
 def testAssignedDidUniqueness():
   ripl = get_ripl(persistent_inference_trace=True)
   for i in range(20):
@@ -154,6 +176,8 @@ def testAssignedDidUniqueness():
   # Or maybe 60 if I start recording the infer statements too.
   eq_(40, len(ripl.sivm.syntax_dict.items()))
 
+@broken_in("puma", "Puma does not report error addresses")
+@on_inf_prim("none")
 def testAnnotateInferenceErrorInDo():
   # TODO I need the inference trace to be persistent to trigger the
   # inference prelude did skipping hack :(
@@ -169,6 +193,8 @@ def testAnnotateInferenceErrorInDo():
 """,
   ripl.infer, expression)
 
+@broken_in("puma", "Puma does not report error addresses")
+@on_inf_prim("none")
 def testAnnotateInferenceErrorInDefinedDo():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.define("action", """\
@@ -183,6 +209,8 @@ def testAnnotateInferenceErrorInDefinedDo():
 """,
   ripl.infer, "action")
 
+@broken_in("puma", "Puma does not report error addresses")
+@on_inf_prim("none")
 def testAnnotateInferenceErrorInQuasiquote():
   ripl = get_ripl()
   expression = """\
@@ -196,6 +224,8 @@ def testAnnotateInferenceErrorInQuasiquote():
 """,
   ripl.infer, expression)
 
+@broken_in("puma", "Puma does not report error addresses")
+@on_inf_prim("none")
 def testAnnotateInferenceErrorInImplicitQuasiquote():
   ripl = get_ripl()
   expression = """\
