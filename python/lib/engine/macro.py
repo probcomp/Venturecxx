@@ -161,18 +161,6 @@ register_macro("collect", quasiquotation_macro(2), """\
   or foreign inference sp.
 """)
 
-register_macro("assume", quasiquotation_macro(3, 4), """\
-- `(assume <symbol> <model-expression> [<label>])`: Programmatically add an assumption.
-
-  Extend the underlying model by adding a new generative random
-  variable, like the ``assume`` directive.  The given model expression
-  may be constructed programmatically -- see ``unquote``.
-
-  The <label>, if supplied, may be used to ``freeze`` or ``forget``
-  this directive.
-
-""")
-
 def quasiquote_first_macro(program):
   assert len(program) == 3 or len(program) == 4
   if len(program) == 4:

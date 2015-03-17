@@ -146,6 +146,24 @@ subexpressions, their expansion can be short-circuited.
   (pattern, template, _) = qqrecur(exp[1])
   return SyntaxRule(["quasiquote", pattern], template).expand(exp)
 
+def symbol_prepend(prefix, symbol):
+  if isinstance(symbol, basestring):
+    return prefix + symbol
+  else:
+    return v.symbol(prefix + symbol["value"])
+
+def quasiquotation_macro(name, desc="", min_size = None, max_size = None):
+  def expander(program):
+    if min_size is not None:
+      assert len(program) >= min_size
+    if max_size is not None:
+      assert len(program) <= max_size
+    pat_names = ["datum-%d" % i for i in range(len(program))]
+    pattern = [name] + pat_names[1:]
+    template = ["_" + name] + [["quasiquote", pn] for pn in pat_names[1:]]
+    return SyntaxRule(pattern, template).expand(program)
+  return Macro(arg0(name), expander, desc=desc)
+
 identityMacro = SyntaxRule(['identity', 'exp'], ['lambda', [], 'exp'])
 lambdaMacro = SyntaxRule(['lambda', 'args', 'body'],
                          ['make_csp', ['quote', 'args'], ['quote', 'body']],
@@ -256,5 +274,18 @@ qqMacro = Macro(arg0("quasiquote"), QuasiquoteExpand, desc="""\
 
  """)
 
-for m in [identityMacro, lambdaMacro, ifMacro, andMacro, orMacro, letMacro, doMacro, qqMacro, ListMacro(), LiteralMacro()]:
+assumeMacro = quasiquotation_macro("assume", min_size = 3, max_size = 4, desc="""\
+- `(assume <symbol> <model-expression> [<label>])`: Programmatically add an assumption.
+
+  Extend the underlying model by adding a new generative random
+  variable, like the ``assume`` directive.  The given model expression
+  may be constructed programmatically -- see ``unquote``.
+
+  The <label>, if supplied, may be used to ``freeze`` or ``forget``
+  this directive.
+""")
+
+for m in [identityMacro, lambdaMacro, ifMacro, andMacro, orMacro, letMacro, doMacro, qqMacro,
+          assumeMacro,
+          ListMacro(), LiteralMacro()]:
   register_macro(m)
