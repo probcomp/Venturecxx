@@ -53,8 +53,8 @@ The current (somewhat baroque) error management architecture is this:
      Syntax knows how to transform structured pointers to and from
      the macroexpanded form, but may not in general be able to
      reconstruct the original expression.  See
-     (macro_system.py)[../python/lib/sivm/macro_system.py] and
-     (pattern_language.py)[../python/lib/sivm/pattern_language.py].
+     [macro_system.py](../python/lib/sivm/macro_system.py) and
+     [pattern_language.py](../python/lib/sivm/pattern_language.py).
 
    - Complication: directive ids are actually assigned by the
      Engine, so the sivm maintains a stack of macro expansions of
