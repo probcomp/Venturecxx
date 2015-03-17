@@ -181,6 +181,7 @@ class VentureSivm(object):
 
     def _get_syntax_record(self, did):
         if did not in self.syntax_dict:
+            # Presume that the desired did is currently being evaluated
             self.syntax_dict[did] = self.attempted.pop()
         return self.syntax_dict[did]
     
@@ -192,7 +193,7 @@ class VentureSivm(object):
         if self._hack_skip_inference_prelude_entry(did):
             # The reason to skip is to avoid popping the
             # self.attempted stack even though the did is not there.
-            print "Warning: skipping did %s assumed to be from the inference prelude" % did
+            print "Warning: skipping annotating did %s, assumed to be from the inference prelude" % did
             return None
         exp, syntax = self._get_syntax_record(did)
         index = index[1:]
