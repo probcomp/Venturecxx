@@ -268,7 +268,7 @@ class ExactlyOutputPSP(RandomPSP):
 
   def logDensity(self, y, args):
     x, epsilon = args.operandValues
-    if y is x: return 0
+    if y.equal(x): return 0
     return epsilon
 
   def logDensityBound(self, _y, _args):
