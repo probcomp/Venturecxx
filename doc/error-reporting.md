@@ -1,5 +1,5 @@
 Notes on Venture error reporting
---------------------------------
+================================
 
 Alexey Radul, 3/17/15
 
@@ -9,7 +9,7 @@ hopes that they may help the next person (likely me again later) to
 regain context.
 
 Overview
-========
+--------
 
 Error reporting is a pain because errors are generally detected when
 operating on some machine-oriented representation, but in order to be
@@ -106,7 +106,7 @@ error reporting pipeline again and acquire an inference-level error
 description as well as the model-level one.
 
 Further Facts
-=============
+-------------
 
 - There's all this nonsesnse involving a non-existent debugger and
   states system cluttering up the venture sivm code.
@@ -153,7 +153,7 @@ Further Facts
   They are unexercised, and I have likely to broken them further.
 
 Explanations
-============
+------------
 
 - Venture sivm error annotation code was written assuming there is
   just one model trace, and there is a mapping between directive ids
@@ -201,7 +201,7 @@ Explanations
   A: No good reason.
 
 Outstanding Problems
-====================
+--------------------
 
 - [double macroexpansion] Directives that are made programmatically
   will be macroexpanded due to their participation in the inference
@@ -224,7 +224,7 @@ Outstanding Problems
   too long to fit on one line for the underlining to work.
 
 Approaches to the double-macroexpansion problem
-===============================================
+-----------------------------------------------
 
 - Could define "quote" to be "data-quote".  If so:
 
@@ -255,7 +255,7 @@ Approaches to the double-macroexpansion problem
 
 
 Anticipated Future Problems
-===========================
+---------------------------
 
 - In errors that happen during actual inference, I expect to lose the
   information of where in the inference program a given programmatic
@@ -305,7 +305,7 @@ Anticipated Future Problems
   expressions?  Is that going to ever be a problem?
 
 Milestones
-==========
+----------
 
 (+ means "done", - means "to do")
 
