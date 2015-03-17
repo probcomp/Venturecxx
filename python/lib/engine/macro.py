@@ -103,64 +103,6 @@ def quasiquotation_macro(min_size = None, max_size = None):
     return [symbol_prepend("_", program[0])] + [quasiquote(e) for e in program[1:]]
   return the_macro
 
-register_macro("call_back", quasiquotation_macro(2), """\
-- `(call_back <name> <model-expression> ...)`: Invoke a user-defined callback.
-
-  Locate the callback registered under the name `name` and invoke it with
-
-  - First, the Infer instance in which the present inference program
-    is being run
-
-  - Then, for each expression in the call_back form, a list of
-    values for that expression, represented as stack dicts, sampled
-    across all extant particles.  The lists are parallel to each
-    other.
-
-  Return the value returned by the callback, or Nil if the callback
-  returned None.
-
-  To bind a callback, call the ``bind_callback`` method on the Ripl object::
-
-      ripl.bind_callback(<name>, <callable>):
-
-      Bind the given Python callable as a callback function that can be
-      referred to by `call_back` by the given name (which is a string).
-
-  There is an example in test/inference_language/test_callback.py.
-""")
-
-register_macro("collect", quasiquotation_macro(2), """\
-- `(collect <model-expression> ...)`: Extract data from the underlying
-  model during inference.
-
-  When a `collect` inference command is executed, the given
-  expressions are sampled and their values are returned in a
-  ``Dataset`` object.  This is the way to get data into datasets; see
-  ``into`` for accumulating datasets, and ``printf``, ``plotf``, and
-  ``plotf_to_file`` for using them.
-
-  Each <model-expression> may optionally be given in the form (labelled
-  <model-expression> <name>), in which case the given `name` serves as the
-  key in the returned table of data.  Otherwise, the key defaults
-  to a string representation of the given `expression`.
-
-  *Note:* The <model-expression>s are sampled in the _model_, not the
-  inference program.  For example, they may refer to variables
-  ``assume`` d in the model, but may not refer to variables ``define`` d
-  in the inference program.  The <model-expression>s may be constructed
-  programmatically: see ``unquote``.
-
-  ``collect`` also automatically collects some standard items: the
-  sweep count (maintained by merging datasets), the particle id, the
-  wall clock time that passed since the Venture program began, the
-  global log score, the particle weights in log space, and the
-  normalized weights of the particles in direct space.
-
-  If you want to do something custom with the data, you will want to
-  use the asPandas() method of the Dataset object from your callback
-  or foreign inference sp.
-""")
-
 def quasiquote_first_macro(program):
   assert len(program) == 3 or len(program) == 4
   if len(program) == 4:
