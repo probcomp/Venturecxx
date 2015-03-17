@@ -102,11 +102,15 @@ def typed_inf_sp(name, tp, klass, desc=""):
 def trace_method_sp(name, tp, desc=""):
   return [ name, typed_inf_sp(name, tp, MadeInferPrimitiveOutputPSP, desc) ]
 
-def engine_method_sp(name, tp, desc=""):
-  return [ name, typed_inf_sp(name, tp, MadeEngineMethodInferOutputPSP, desc) ]
+def engine_method_sp(name, tp, desc="", method_name=None):
+  if method_name is None:
+    method_name = name
+  return [ name, typed_inf_sp(method_name, tp, MadeEngineMethodInferOutputPSP, desc) ]
 
-def ripl_method_sp(name, tp, desc=""):
-  return [ name, typed_inf_sp(name, tp, MadeRiplMethodInferOutputPSP, desc) ]
+def ripl_method_sp(name, tp, desc="", method_name=None):
+  if method_name is None:
+    method_name = name
+  return [ name, typed_inf_sp(method_name, tp, MadeRiplMethodInferOutputPSP, desc) ]
 
 def sequenced_sp(f, tp, desc=""):
   "This is for SPs that should be able to participate in do blocks but don't actually read the state (e.g., for doing IO)"
@@ -125,13 +129,13 @@ def par_transition_oper_type(extra_args = None, **kwargs):
   return infer_action_maker_type(other_args + [v.BoolType("in_parallel : bool")], min_req_args=len(other_args), **kwargs)
 
 def macro_helper(name, tp):
-  return engine_method_sp(name, tp, desc="""\
+  return engine_method_sp("_" + name, tp, method_name=name, desc="""\
 A helper function for implementing the eponymous inference macro.
 
 Calling it directly is likely to be difficult and unproductive. """)
 
 def ripl_macro_helper(name, tp):
-  return ripl_method_sp(name, tp, desc="""\
+  return ripl_method_sp("_" + name, tp, method_name=name, desc="""\
 A helper function for implementing the eponymous inference macro.
 
 Calling it directly is likely to be difficult and unproductive. """)

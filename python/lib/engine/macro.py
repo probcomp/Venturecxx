@@ -32,6 +32,12 @@ will produce the term that the quasiquotation body exp means."""
       return (exp, True)
   return quotify(*quasiquoterecur(exp))
 
+def symbol_prepend(prefix, symbol):
+  if isinstance(symbol, basestring):
+    return prefix + symbol
+  else:
+    return v.symbol(prefix + symbol["value"])
+
 def macroexpand_inference(program):
   if type(program) is list and len(program) == 0:
     return program
@@ -94,7 +100,7 @@ def quasiquotation_macro(min_size = None, max_size = None):
       assert len(program) >= min_size
     if max_size is not None:
       assert len(program) <= max_size
-    return [program[0]] + [quasiquote(e) for e in program[1:]]
+    return [symbol_prepend("_", program[0])] + [quasiquote(e) for e in program[1:]]
   return the_macro
 
 register_macro("call_back", quasiquotation_macro(2), """\
@@ -174,7 +180,7 @@ def quasiquote_first_macro(program):
     tail = [quasiquote(program[3])]
   else:
     tail = []
-  return [program[0], quasiquote(program[1]), macroexpand_inference(program[2])] + tail
+  return [symbol_prepend("_", program[0]), quasiquote(program[1]), macroexpand_inference(program[2])] + tail
 
 register_macro("observe", quasiquote_first_macro, """\
 - `(observe <model-expression> <value> [<label>])`: Programmatically add an observation.
