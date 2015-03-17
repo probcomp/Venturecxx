@@ -304,6 +304,10 @@ Anticipated Future Problems
   (as opposed to stack-dict-wrapped symbols) into the result
   expressions?  Is that going to ever be a problem?
 
+- The sivm (and ripl?) do not adjust their models of what's going on
+  under them when freeze is invoked, in part because it's not clear
+  what to adjust the model to.
+
 Milestones
 ----------
 
