@@ -97,16 +97,16 @@ def infer_action_maker_type(args_types, return_type=None, **kwargs):
   return sp.SPType(args_types, infer_action_type(return_type), **kwargs)
 
 def typed_inf_sp(name, tp, klass, desc=""):
-  return [ name, no_request(psp.TypedPSP(InferPrimitiveOutputPSP(name, klass=klass, desc=desc, tp=tp.return_type), tp)) ]
+  return no_request(psp.TypedPSP(InferPrimitiveOutputPSP(name, klass=klass, desc=desc, tp=tp.return_type), tp))
 
 def trace_method_sp(name, tp, desc=""):
-  return typed_inf_sp(name, tp, MadeInferPrimitiveOutputPSP, desc)
+  return [ name, typed_inf_sp(name, tp, MadeInferPrimitiveOutputPSP, desc) ]
 
 def engine_method_sp(name, tp, desc=""):
-  return typed_inf_sp(name, tp, MadeEngineMethodInferOutputPSP, desc)
+  return [ name, typed_inf_sp(name, tp, MadeEngineMethodInferOutputPSP, desc) ]
 
 def ripl_method_sp(name, tp, desc=""):
-  return typed_inf_sp(name, tp, MadeRiplMethodInferOutputPSP, desc)
+  return [ name, typed_inf_sp(name, tp, MadeRiplMethodInferOutputPSP, desc) ]
 
 def sequenced_sp(f, tp, desc=""):
   "This is for SPs that should be able to participate in do blocks but don't actually read the state (e.g., for doing IO)"
