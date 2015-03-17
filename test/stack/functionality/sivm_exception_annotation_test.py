@@ -195,3 +195,14 @@ def testAnnotateInferenceErrorInQuasiquote():
                                                         ^^^^^^^
 """,
   ripl.infer, expression)
+
+def testAnnotateInferenceErrorInImplicitQuasiquote():
+  ripl = get_ripl()
+  expression = """\
+(assume x (normal ,(+ 1 badness) 1))
+"""
+  assert_error_message_contains("""\
+((assume x (normal (unquote (add 1 badness)) 1)) model)
+                                   ^^^^^^^
+""",
+  ripl.infer, expression)
