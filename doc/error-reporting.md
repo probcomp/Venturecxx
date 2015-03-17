@@ -309,63 +309,63 @@ Milestones
 
 (+ means "done", - means "to do")
 
-+ A bad assume directive gives an accurate error
-- An infer that triggers badness in an assume gives an accurate error
-  + to the model program
-  - to the inference program
-+ A bad assume inference action gives an accurate error to the model
-  and the inference program
-- An infer that triggers badness in an assume made by an action gives
-  an accurate error
-  + to the model program (if macroexpanded)
-  - to the model program without spurious macro expansion
-  - to the inference program
-+ A bad assume inside a define gives an accurate error
-  + to the model program
-  + to the inference action in the define
-- Same for infer action over such
-+ A bad inference expression (that fails without interacting with the
-  model) gives an accurate error
-+ Same if it occurs in a define
-+ Same if it occurs in a do block
-+ Same if it occurs in a do block in a define
-+ Same if it occurs in a quasiquotation
-+ Same if it occurs in a (quasiquoted) assume form
-- A model-bad quasiquoted assume gives an accurate error
-  + to the model
-  - to the model program without spurious macro expansion
-  + to the inference program
-- Same for infer action over such
-- Can I get a situation where I need a stack trace into a
-  later-executed piece of inference code that was introduced in a
-  lambda inside of a non-define infer command?  (This should tickle
-  recording the macroexpansions of infer directives).
-+ Error reporting should not get screwed up even if separately-counted
-  did streams would overlap.
-- Should get an accurate error even if some stack frames go through the
-  model prelude
-- Should get an accurate error even if some stack frames go through the
-  inference prelude
-- All the above in the body of every macro in the book
-  - But, may be able to get away with unit testing the index
-    resugarers of the macros.
-- All the above for venture -f, typing at the console,
-  ripl.execute_instruction, and programmatic use (in the case of
-  programmatic use, ideally would include the Python trace to the
-  point that called the method that triggered the problem).
-- Ideally, "accurate error" includes the Python stack into the
-  primitive that was being evaluated, in case it's a foreign
-  procedure.
-  - Actually, for developers, the full Python stack might not be
-    unreasonable either (as in "this user program triggered this
-    system crash").
-- Ideally, Puma would also participate in the error reporting
-  protocol.  (My trivial example did not yield the desired stack trace
-  when I ran it in Puma)
-- It is important to make sure that attempts to annotate or describe
-  errors do not mask them if they themselves fail.
-- Theoretically, I would test all the above with a generator that made
-  errors of many different kinds, but perhaps one will do for
-  starters.
-- Test that the kinds of errors I was getting in slam actually get
-  good messages now.
+    + A bad assume directive gives an accurate error
+    - An infer that triggers badness in an assume gives an accurate error
+      + to the model program
+      - to the inference program
+    + A bad assume inference action gives an accurate error to the model
+      and the inference program
+    - An infer that triggers badness in an assume made by an action gives
+      an accurate error
+      + to the model program (if macroexpanded)
+      - to the model program without spurious macro expansion
+      - to the inference program
+    + A bad assume inside a define gives an accurate error
+      + to the model program
+      + to the inference action in the define
+    - Same for infer action over such
+    + A bad inference expression (that fails without interacting with the
+      model) gives an accurate error
+    + Same if it occurs in a define
+    + Same if it occurs in a do block
+    + Same if it occurs in a do block in a define
+    + Same if it occurs in a quasiquotation
+    + Same if it occurs in a (quasiquoted) assume form
+    - A model-bad quasiquoted assume gives an accurate error
+      + to the model
+      - to the model program without spurious macro expansion
+      + to the inference program
+    - Same for infer action over such
+    - Can I get a situation where I need a stack trace into a
+      later-executed piece of inference code that was introduced in a
+      lambda inside of a non-define infer command?  (This should tickle
+      recording the macroexpansions of infer directives).
+    + Error reporting should not get screwed up even if separately-counted
+      did streams would overlap.
+    - Should get an accurate error even if some stack frames go through the
+      model prelude
+    - Should get an accurate error even if some stack frames go through the
+      inference prelude
+    - All the above in the body of every macro in the book
+      - But, may be able to get away with unit testing the index
+        resugarers of the macros.
+    - All the above for venture -f, typing at the console,
+      ripl.execute_instruction, and programmatic use (in the case of
+      programmatic use, ideally would include the Python trace to the
+      point that called the method that triggered the problem).
+    - Ideally, "accurate error" includes the Python stack into the
+      primitive that was being evaluated, in case it's a foreign
+      procedure.
+      - Actually, for developers, the full Python stack might not be
+        unreasonable either (as in "this user program triggered this
+        system crash").
+    - Ideally, Puma would also participate in the error reporting
+      protocol.  (My trivial example did not yield the desired stack trace
+      when I ran it in Puma)
+    - It is important to make sure that attempts to annotate or describe
+      errors do not mask them if they themselves fail.
+    - Theoretically, I would test all the above with a generator that made
+      errors of many different kinds, but perhaps one will do for
+      starters.
+    - Test that the kinds of errors I was getting in slam actually get
+      good messages now.
