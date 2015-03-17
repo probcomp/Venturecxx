@@ -197,37 +197,3 @@ register_macro("force", quasiquote_first_macro, """\
   as an ``observe`` followed by a ``forget``.
 
 """)
-
-register_macro("predict", quasiquotation_macro(2, 3), """\
-- `(predict <model-expression> [<label>])`: Programmatically add a prediction.
-
-  Extend the underlying model by adding a new generative random
-  variable, like the ``predict`` directive.  The given model expression
-  may be constructed programmatically -- see ``unquote``.
-
-  The <label>, if supplied, may be used to ``freeze`` or ``forget``
-  this directive. """)
-
-register_macro("sample", quasiquotation_macro(2, 2), """\
-- `(sample <model-expression>)`: Programmatically sample from the model.
-
-  Sample an expression from the underlying model by simulating a new
-  generative random variable without adding it to the model, like the
-  ``sample`` directive.  If there are multiple particles, refers to
-  the distinguished one.
-
-  The given model expression may be constructed programmatically --
-  see ``unquote``.  """)
-
-register_macro("sample_all", quasiquotation_macro(2, 2), """\
-- `(sample_all <model-expression>)`: Programmatically sample from the model in all particles.
-
-  Sample an expression from the underlying model by simulating a new
-  generative random variable without adding it to the model, like the
-  ``sample`` directive.
-
-  Unlike the ``sample`` directive, interacts with all the particles,
-  and returns values from all of them as a list.
-
-  The given model expression may be constructed programmatically --
-  see ``unquote``.  """)

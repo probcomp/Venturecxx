@@ -285,7 +285,41 @@ assumeMacro = quasiquotation_macro("assume", min_size = 3, max_size = 4, desc=""
   this directive.
 """)
 
+predictMacro = quasiquotation_macro("predict", min_size = 2, max_size = 3, desc="""\
+- `(predict <model-expression> [<label>])`: Programmatically add a prediction.
+
+  Extend the underlying model by adding a new generative random
+  variable, like the ``predict`` directive.  The given model expression
+  may be constructed programmatically -- see ``unquote``.
+
+  The <label>, if supplied, may be used to ``freeze`` or ``forget``
+  this directive. """)
+
+sampleMacro = quasiquotation_macro("sample", min_size = 2, max_size = 2, desc="""\
+- `(sample <model-expression>)`: Programmatically sample from the model.
+
+  Sample an expression from the underlying model by simulating a new
+  generative random variable without adding it to the model, like the
+  ``sample`` directive.  If there are multiple particles, refers to
+  the distinguished one.
+
+  The given model expression may be constructed programmatically --
+  see ``unquote``.  """)
+
+sampleAllMacro = quasiquotation_macro("sample_all", min_size = 2, max_size = 2, desc="""\
+- `(sample_all <model-expression>)`: Programmatically sample from the model in all particles.
+
+  Sample an expression from the underlying model by simulating a new
+  generative random variable without adding it to the model, like the
+  ``sample`` directive.
+
+  Unlike the ``sample`` directive, interacts with all the particles,
+  and returns values from all of them as a list.
+
+  The given model expression may be constructed programmatically --
+  see ``unquote``.  """)
+
 for m in [identityMacro, lambdaMacro, ifMacro, andMacro, orMacro, letMacro, doMacro, qqMacro,
-          assumeMacro,
+          assumeMacro, predictMacro, sampleMacro, sampleAllMacro,
           ListMacro(), LiteralMacro()]:
   register_macro(m)
