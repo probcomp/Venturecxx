@@ -53,13 +53,6 @@ def register_macro(name, func, desc=None):
   macro_list.append((name, func, desc))
   macros[name] = func
 
-def begin_macro(program):
-  assert len(program) >= 2
-  return [v.sym("sequence"), [v.sym("list")] + [macroexpand_inference(e) for e in program[1:]]]
-register_macro("begin", begin_macro, """\
-- `(begin <kernel> ...)`: Perform the given kernels in sequence.
-""")
-
 def cycle_macro(program):
   assert len(program) == 3
   subkernels = macroexpand_inference(program[1])

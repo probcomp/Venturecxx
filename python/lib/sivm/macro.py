@@ -108,6 +108,11 @@ def DoExpand(exp):
       template = ["bind_", "stmt", ["lambda", [], ["do"] + rest_vars]]
   return SyntaxRule(pattern, template).expand(exp)
 
+def BeginExpand(exp):
+  pattern = ["begin"] + ["form-%d" % form for form in range(len(exp)-1)]
+  template = ["do"] + ["form-%d" % form for form in range(len(exp)-1)]
+  return SyntaxRule(pattern, template).expand(exp)
+
 def QuasiquoteExpand(exp):
   import collections
   name_ct = [0] # Explicit box because Python can't mutate locals from closures
@@ -270,6 +275,10 @@ doMacro = Macro(arg0("do"), DoExpand, desc="""\
   because Venture is strict and doesn't aspire to complete functional
   purity.""")
 
+beginMacro = Macro(arg0("begin"), BeginExpand, desc="""\
+- `(begin <kernel> ...)`: Perform the given kernels in sequence.
+""")
+
 qqMacro = Macro(arg0("quasiquote"), QuasiquoteExpand, desc="""\
 - `(quasiquote <datum>)`: Data constructed by template instantiation.
 
@@ -419,7 +428,7 @@ sampleAllMacro = quasiquotation_macro("sample_all", min_size = 2, max_size = 2, 
   The given model expression may be constructed programmatically --
   see ``unquote``.  """)
 
-for m in [identityMacro, lambdaMacro, ifMacro, andMacro, orMacro, letMacro, doMacro, qqMacro,
+for m in [identityMacro, lambdaMacro, ifMacro, andMacro, orMacro, letMacro, doMacro, beginMacro, qqMacro,
           callBackMacro, collectMacro,
           assumeMacro, observeMacro, predictMacro, forceMacro, sampleMacro, sampleAllMacro,
           ListMacro(), LiteralMacro()]:
