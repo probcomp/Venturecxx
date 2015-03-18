@@ -34,15 +34,15 @@
 # # doesn't appear in *mean_scope*
 
 # # mem: every scope that calls a memoized proc will
-# # have the memoized random choice in it. e.g. if we 
-# # had multiple *mean* variables below, each using 
+# # have the memoized random choice in it. e.g. if we
+# # had multiple *mean* variables below, each using
 # # the same memoized *hyper_mean* value, then *hyper_mean*
 # # would appear in each scope. if the different *mean*
 # # variables were in different blocks, then we'd get
 # # an exception.
 
 # model1='''
-# [assume hyper_mean (scope_include (quote hyper_mean_scope) 
+# [assume hyper_mean (scope_include (quote hyper_mean_scope)
 #                          (lambda () (uniform_continuous -100 100) ))  ]
 # [assume mean (scope_include (quote mean_scope) 0 (normal (hyper_mean) 5) ) ]
 # [observe (normal mean 0.5) 10]
@@ -59,7 +59,7 @@
 # # for i in range(10):
 # #     print np.round( (v.sample('hyper_mean'), v.sample('mean')), 2)
 # #     v.infer('(mh mean_scope one 10)')
-    
+
 
 # # print 'one --- \n\n all'
 # v = mk_p_ripl()
@@ -117,7 +117,7 @@
 # print '\n\n'
 # for i in range(10):
 #     print np.round( map( v.sample, ('hyper_mean','mean0','mean1') ) )
-#     v.infer('(cycle ( (mh mean_scope one 10) (mh hyper_scope one 10)) 1 )')
+#     v.infer('(do (mh mean_scope one 10) (mh hyper_scope one 10))')
 
 # print '\n\n'
 # for i in range(10):
@@ -145,7 +145,7 @@
 #     print np.round( (v.sample('hyper_mean'), v.sample('mean')), 2)
 #     v.infer('(mh mean_scope one 1)')
 
-    
+
 # model5='''
 # [assume hyper_mean (scope_include (quote hyper_scope) 0 (uniform_continuous -100 100) )  ]
 # [assume my_flip (lambda () (if (flip .5) true (my_flip) ) ) ]
@@ -220,7 +220,7 @@ utils_string='''
                        (_simplex_list s (size s)) ) ]
 [assume _simplex_list (lambda (s d)
                          (if (= d 0) (list)
-                           (_append_list 
+                           (_append_list
                              (_simplex_list s (- d 1) )
                                (lookup s (- d 1)) ) ) ) ]
 
@@ -257,7 +257,7 @@ def test_funcs(model,backend='puma'):
     assert v.sample('(is_atom (t_color 0) )')
     assert v.sample('(is_atom (categorical (bag_prototype 0)))')
 
-    
+
 def load_ripl(model,observes=None,backend='puma'):
     v = mk_p_ripl() if backend=='puma' else mk_l_ripl()
     v.load_prelude()
@@ -283,13 +283,13 @@ def model_string(bags,colors):
                                  (sum (map (lambda (x)(if (= x color) 1 0))
                                              (bag_t_list bag t) ) ) ) ]
     [assume scale (lambda (lst)
-                   (map (lambda (x) (* 5 x)) lst) ) ] 
+                   (map (lambda (x) (* 5 x)) lst) ) ]
     [assume colors %i]
     [assume bags %i]
     [assume hyper_alpha_d (lambda ()
                             (scope_include (quote hyper_alpha_d) 0
                                 (scale
-                                  (simplex_list 
+                                  (simplex_list
                                     (dirichlet (ones colors) )))))]
 
     [assume hyper_alpha (scope_include (quote hyper_alpha) 0
@@ -303,8 +303,8 @@ def model_string(bags,colors):
                             (atom_number
                                 (uniform_discrete 0 bags) ) ) ))]
 
-    [assume t_color (mem (lambda (t) 
-                           (categorical 
+    [assume t_color (mem (lambda (t)
+                           (categorical
                              (bag_prototype (draw_bag t) ) ) )) ]
 
     '''%(colors,bags,prior)
@@ -329,8 +329,8 @@ def no_count_string(bags,colors):
                              (atom_number
                                (uniform_discrete 0 bags) ) )) )]
 
-    [assume t_color (mem (lambda (t) 
-                           (categorical 
+    [assume t_color (mem (lambda (t)
+                           (categorical
                              (bag_prototype (draw_bag t) ) ) )) ]
 
     '''%(bags,prior)
@@ -368,7 +368,7 @@ def uncollapsed_observes(bags,colors,latents,dataset,N,num_latents):
     if latents: observes.extend(latent_observes)
     return observes
 
-    
+
 def infer_loop(v,query_exps, infer_prog=10, limit=10):
   print '\n---\n query_exps: ',query_exps
   print 'infer_prog: ',infer_prog
@@ -377,33 +377,35 @@ def infer_loop(v,query_exps, infer_prog=10, limit=10):
     print np.round( map( v.sample, query_exps), 2 )
     v.infer( infer_prog )
 
-    
+
 def check(latents,num_latents):
     print 'dataset: ', dataset
     print 'hyper_alph: ', np.round(v.sample('hyper_alpha'),2)
     print 'ptypes: ', np.round( map(v.sample,['(bag_prototype %i)'%bag for bag in range(bags)]), 2)
 
     if latents:
-        latents_vals = [v.sample('(draw_bag %i)'%i) for i in range(num_latents)] 
+        latents_vals = [v.sample('(draw_bag %i)'%i) for i in range(num_latents)]
         print latents_vals
-        
-        
+
+
 def cycle_infer(repeats=5):
-    v.infer('''(cycle ( (mh hyper_alpha one 3)
-                      (mh prototypes one 10) ) %i)'''%repeats)
-    v.infer('''(cycle ( (mh hyper_alpha one 3)
-                      (mh prototypes one 10)
-                      (mh latents one 5) ) %i)'''%repeats)
-    
+    v.infer('''(repeat %i
+                (do (mh hyper_alpha one 3)
+                    (mh prototypes one 10)))'''%repeats)
+    v.infer('''(repeat %i
+                (do (mh hyper_alpha one 3)
+                    (mh prototypes one 10)
+                    (mh latents one 5)))'''%repeats)
+
 def pgibbs_infer( particles_reps=(10,5)):
-    v.infer('''(cycle ( (func_pgibbs hyper_alpha one 20 3)
-                        (func_pgibbs prototypes one 20 3) )
-                        5)''')
-    v.infer('''(cycle ( (func_pgibbs hyper_alpha one 20 3)
-                        (func_pgibbs prototypes one 20 3)
-                        (func_pgibbs latents one 30 3) )
-                        5)''')
-                  
+    v.infer('''(repeat 5
+                (do (func_pgibbs hyper_alpha one 20 3)
+                    (func_pgibbs prototypes one 20 3)))''')
+    v.infer('''(repeat 5
+                (do (func_pgibbs hyper_alpha one 20 3)
+                    (func_pgibbs prototypes one 20 3)
+                    (func_pgibbs latents one 30 3)))''')
+
 # tests
 bags,colors = 5,5
 backend = 'puma'
@@ -439,22 +441,22 @@ def query_exps(bags,colors,num_latents):
 transitions = 50
 inf_def = '(mh default one 15)'
 inf_sc = '''
-(cycle ( (mh hyper_alpha one 3)
-         (mh prototypes one 10)
-         (mh latents one 1) )   1)'''
-    
-inf_sc_gibbs='''
-(cycle ( (func_pgibbs hyper_alpha one 15 3)
-            (func_pgibbs prototypes one 20 3)
-            (func_pgibbs latents one 20 3) )   1)'''
+(do (mh hyper_alpha one 3)
+    (mh prototypes one 10)
+    (mh latents one 1))'''
 
 inf_sc_gibbs='''
-(cycle ( (func_pgibbs hyper_alpha one 20 3)
-            (func_pgibbs prototypes one 30 3) )  1)'''
+(do (func_pgibbs hyper_alpha one 15 3)
+    (func_pgibbs prototypes one 20 3)
+    (func_pgibbs latents one 20 3))'''
+
+inf_sc_gibbs='''
+(do (func_pgibbs hyper_alpha one 20 3)
+    (func_pgibbs prototypes one 30 3))'''
 
 
 infer_progs = (inf_def,inf_sc,inf_sc_gibbs)
-   
+
 def ana_infer_prog(infer_prog):
     start = time.time()
     h,_ = ana.runFromConditional(transitions, simpleInfer=True,
@@ -468,7 +470,7 @@ def ana_infer_prog(infer_prog):
     return h
 
 ana = Analytics(v,queryExps=query_exps(bags,colors,num_latents) )
-                                                   
+
 hists = [ana_infer_prog(prog) for prog in infer_progs]
 
 

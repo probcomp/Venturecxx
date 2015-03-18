@@ -91,8 +91,8 @@ def runner(params):
 
 def main2():
   parameters = {"length": [5,10,15,20,25,30,35,40,45,50,55],
-                "command": ["(cycle ((mh hypers one 3) (pgibbs state ordered 4 1)) 1)",
-                            "(cycle ((mh hypers one 3) (func_pgibbs state ordered 4 1)) 1)"]}
+                "command": ["(repeat 1 (do (mh hypers one 3) (pgibbs state ordered 4 1)))",
+                            "(repeat 1 (do (mh hypers one 3) (func_pgibbs state ordered 4 1)))"]}
   histories = productMap(parameters, runner)
   plotAsymptotics(parameters, histories, 'sweep time (s)', fmt='png', aggregate=True)
   plotAsymptotics(parameters, histories, 'sweep time (s)', fmt='png')

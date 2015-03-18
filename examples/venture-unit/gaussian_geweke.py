@@ -35,10 +35,9 @@ def collect_marginal_conditional(ripl):
   infer_statement = '''
   [INFER
     (let ((ds (empty)))
-      (do
-        (cycle ((bind (collect mu sigma) (curry into ds))
-                (mh (quote parameters) all 1))
-          {0})))]'''.format(NSAMPLE)
+      (repeat {0}
+       (do (bind (collect mu sigma) (curry into ds))
+           (mh (quote parameters) all 1))))]'''.format(NSAMPLE)
   res = format_results_marginal(ripl.execute_program(infer_statement))
   return res
 
@@ -53,22 +52,19 @@ def collect_succesive_conditional(ripl):
   'Simulate data, infer based on it, forget the simulation, repeat'
   # program = '''
   #   forgetme : [ASSUME dummy (x)]
-  #   [INFER (cycle
-  #            ((peek mu) (peek sigma) (peek dummy)
-  #             (hmc (quote parameters) all 0.05 10 1)) 1)]
+  #   [INFER (do (peek mu) (peek sigma) (peek dummy)
+  #              (hmc (quote parameters) all 0.05 10 1))]
   #   [FORGET forgetme]'''
   program = '''
     forgetme : [ASSUME dummy (x)]
-    [INFER (cycle
-             ((peek mu) (peek sigma) (peek dummy)
-              (mh (quote parameters) one 1)) 1)]
+    [INFER (do (peek mu) (peek sigma) (peek dummy)
+               (mh (quote parameters) one 1))]
     [FORGET forgetme]'''
   # program = '''
   #   forgetme : [ASSUME dummy (x)]
-  #   [INFER (cycle
-  #            ((peek mu) (peek sigma) (peek dummy)
-  #             (slice (quote params) 0 10 100 1)
-  #             (slice (quote params) 1 1 100 1)) 1)]
+  #   [INFER (do (peek mu) (peek sigma) (peek dummy)
+  #              (slice (quote params) 0 10 100 1)
+  #              (slice (quote params) 1 1 100 1))]
   #   [FORGET forgetme]'''
   res = []
   for i in range(BURN + NSAMPLE * THIN):

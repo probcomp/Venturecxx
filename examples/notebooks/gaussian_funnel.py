@@ -124,7 +124,7 @@ def assemble_infer_cycle(infer_method, infer_args_v, infer_args_x, nupdate):
                                             str(i), make_str_args(infer_args_x))
     x_cycle.append(x)
   x_cycle = ' '.join(x_cycle)
-  infer_cycle = '(cycle ({0}) {1})'.format(v_cycle + ' ' + x_cycle, nupdate)
+  infer_cycle = '(iterate (do {0}) {1})'.format(v_cycle + ' ' + x_cycle, nupdate)
   return infer_cycle
 
 def assemble_infer_statement(infer_type, infer_method, infer_args_v,
@@ -137,11 +137,11 @@ def assemble_infer_statement(infer_type, infer_method, infer_args_v,
     raise Exception('Give a valid infer type.')
   infer_statement = '''(let ((ds (empty)))
   (do
-    (cycle ((bind (collect v) (curry into ds))
-            {0})
+    (iterate (do (bind (collect v) (curry into ds))
+                 {0})
       {1})
     (plotf (quote (lct pcd0d)) ds)))'''.format(infer_cycle, niter)
-  # infer_statement = '(cycle ((printf counter time) (plotf (lct pcd0d) v) {0}) {1})'.format(infer_cycle, niter)
+  # infer_statement = '(iterate (do (printf counter time) (plotf (lct pcd0d) v) {0}) {1})'.format(infer_cycle, niter)
   return infer_statement
 
 def annotate_plotf(plotf_output, elapsed, niter):

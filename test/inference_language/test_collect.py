@@ -20,8 +20,9 @@ def testCollectSmoke1():
   ripl.assume("x", "(normal 0 1)")
   prog = """
 (let ((d (empty)))
-  (do (cycle ((mh default one 1)
-              (bind (collect x) (curry into d))) %s)
+  (do (repeat %s
+       (do (mh default one 1)
+           (bind (collect x) (curry into d))))
       (return d)))""" % default_num_samples()
   predictions = extract_from_dataset(ripl.infer(prog), 'x')
   cdf = stats.norm(loc=0.0, scale=1.0).cdf
@@ -33,7 +34,7 @@ def testCollectSmoke2():
   ripl = get_ripl()
   prog = """
 (let ((d (empty)))
-  (do (cycle ((bind (collect (normal 0 1)) (curry into d))) %s)
+  (do (repeat %s (bind (collect (normal 0 1)) (curry into d)))
       (return d)))""" % default_num_samples()
   predictions = extract_from_dataset(ripl.infer(prog), '(normal 0.0 1.0)')
   cdf = stats.norm(loc=0.0, scale=1.0).cdf
@@ -45,7 +46,7 @@ def testCollectSmoke3():
   ripl = get_ripl()
   prog = """
 (let ((d (empty)))
-  (do (cycle ((bind (collect (labelled (normal 0 1) label)) (curry into d))) %s)
+  (do (repeat %s (bind (collect (labelled (normal 0 1) label)) (curry into d)))
       (return d)))""" % default_num_samples()
   predictions = extract_from_dataset(ripl.infer(prog), 'label')
   cdf = stats.norm(loc=0.0, scale=1.0).cdf
@@ -62,9 +63,9 @@ def testCollectSmoke4():
   ripl.assume("abs", "(lambda (x) (if (< x 0) (- 0 x) x))")
   out = ripl.infer("""
 (let ((d (empty)))
-  (do (cycle ((mh default all 1)
-              (bind (collect x y (abs (- y x)) (labelled (abs x) abs_x)) (curry into d)))
-             3)
+  (do (repeat 3
+       (do (mh default all 1)
+           (bind (collect x y (abs (- y x)) (labelled (abs x) abs_x)) (curry into d))))
       (return d)))""")
   cdf = stats.norm(loc=0.0, scale=2.0).cdf
   result = out.asPandas()
@@ -85,7 +86,7 @@ def testPrintf():
   old_stdout = sys.stdout
   result = StringIO()
   sys.stdout = result
-  ripl.infer('(cycle ((mh default one 1) (bind (collect x (labelled 3.1 foo)) printf)) 2)')
+  ripl.infer('(repeat 2 (do (mh default one 1) (bind (collect x (labelled 3.1 foo)) printf)))')
   sys.stdout = old_stdout
   res = result.getvalue()
   assert pattern.match(res) is not None

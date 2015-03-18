@@ -59,8 +59,8 @@ if __name__ == '__main__':
   model.makeAssumes()
   model.makeObserves()
   def func(ripl, iter):
-    ripl.infer("(cycle ((mh hypers one 2) (mh parameters one 3) (pgibbs clustering ordered 2 1)) 3)")
-    # self.ripl.infer("(cycle ((mh hypers one 2) (mh parameters one 3) (mh clustering one 8)) 1)")
+    ripl.infer("(repeat 3 (do (mh hypers one 2) (mh parameters one 3) (pgibbs clustering ordered 2 1)))")
+    # self.ripl.infer("(repeat 1 (do (mh hypers one 2) (mh parameters one 3) (mh clustering one 8)))")
     # self.ripl.infer('(mh hypers one %d)'%iter)
     # self.ripl.infer('(mh clustering one %d)'%(iter))
     # self.ripl.infer('(mh parameters one %d)'%(iter))

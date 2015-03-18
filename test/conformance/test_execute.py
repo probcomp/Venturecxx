@@ -45,7 +45,7 @@ def testCollectFunction():
   '''
   ripl = get_ripl()
   ripl.assume('x', '(lambda() 2)')
-  _ = ripl.infer('(cycle ((mh default one 1) (collect (x))) 1)')
+  _ = ripl.infer('(do (mh default one 1) (collect (x)))')
 
 def programString(infer):
   prog = '''

@@ -4,7 +4,7 @@
 [observe (scope_include 0 4 (normal (+ a b c) 0.2)) 7]
 [infer
  (let ((d (empty)))
-   (do (cycle ((mh 0 one 1)
-               (bind (collect a b c (+ a b c)) (curry into d)))
-              100)
+   (do (repeat 100
+        (do (mh 0 one 1)
+            (bind (collect a b c (+ a b c)) (curry into d))))
        (plotf (quote (p0d1d2 p0d1dt c3 cs)) d)))]

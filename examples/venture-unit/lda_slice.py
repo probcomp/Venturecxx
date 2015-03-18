@@ -51,7 +51,7 @@ if __name__ == '__main__':
     infer_mh = "(mh default one 620)"
     history_mh = model.runFromConditional(iters,runs=runs,verbose=True,data=data, infer=infer_mh)
     
-    infer_slice = "(cycle ((slice 0 one 20) (mh default one 600)) 1)"
+    infer_slice = "(do (slice 0 one 20) (mh default one 600))"
     history_slice = model.runFromConditional(iters,runs=runs,verbose=True,data=data, infer=infer_slice)
     
     history_both = historyOverlay("demo", [("mh", history_mh), ("slice", history_slice)])

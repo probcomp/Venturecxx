@@ -26,7 +26,7 @@ def testCallbackSmoke():
   ripl.execute_program("""
 [infer (resample 4)]
 [assume x (normal 0 1)]
-[infer (cycle ((call_back foo x (gamma 1 1))) 3)]""")
+[infer (repeat 3 (call_back foo x (gamma 1 1)))]""")
   eq_(my_callback.call_ct, 3)
 
 def testCallbackReturns():

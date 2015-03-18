@@ -78,11 +78,11 @@ def run(arg):
 if __name__ == '__main__':
   model = CRPMixtureDemo(shortcuts.make_lite_church_prime_ripl())
   def statisticsInfer(ripl, _):
-    # ripl.infer("(cycle ((mh hypers one 5) (mh parameters one 20) (mh clustering one 80)) 10)")
-    ripl.infer("(cycle ((mh hypers one 2) (mh parameters one 3) (mh clustering one 8)) 1)")
+    # ripl.infer("(repeat 10 (do (mh hypers one 5) (mh parameters one 20) (mh clustering one 80)))")
+    ripl.infer("(repeat 1 (do (mh hypers one 2) (mh parameters one 3) (mh clustering one 8)))")
   def pGibbsInfer(ripl, _):
-    # ripl.infer("(cycle ((mh hypers one 5) (mh parameters one 20) (pgibbs clustering ordered 2 1)) 10)")
-    ripl.infer("(cycle ((mh hypers one 2) (mh parameters one 3) (pgibbs clustering ordered 2 1)) 3)")
+    # ripl.infer("(repeat 10 (do (mh hypers one 5) (mh parameters one 20) (pgibbs clustering ordered 2 1)))")
+    ripl.infer("(repeat 3 (do (mh hypers one 2) (mh parameters one 3) (pgibbs clustering ordered 2 1)))")
   multiprocess = False
   if multiprocess:
     from multiprocessing import Pool

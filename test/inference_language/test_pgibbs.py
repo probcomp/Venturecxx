@@ -144,7 +144,7 @@ def testPGibbsDynamicScopeInterval():
   P = 3 if ignore_inference_quality() else 8
   T = 2 if ignore_inference_quality() else 10
 
-  infer = "(cycle ((pgibbs 0 (ordered_range 0 3) %d %d) (pgibbs 0 (ordered_range 1 4) %d %d)) 1)" % (P,P,T,T)
+  infer = "(do (pgibbs 0 (ordered_range 0 3) %d %d) (pgibbs 0 (ordered_range 1 4) %d %d))" % (P,P,T,T)
 
   predictions = collectSamples(ripl,"pid",infer=infer)
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf

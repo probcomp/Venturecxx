@@ -169,7 +169,7 @@ def _collectData(iid,ripl,address,num_samples=None,infer=None):
     # TODO Replace this awful hack with proper adjustment of tests for difficulty
     infer = defaultInfer()
     if infer is not "(rejection default all 1)":
-      infer = "(cycle (%s) 4)" % infer
+      infer = "(repeat 4 (do %s))" % infer
 
   predictions = []
   for _ in range(num_samples):

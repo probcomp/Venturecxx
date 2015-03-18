@@ -120,8 +120,8 @@
       (for_each_observation pass_step)
       (assume int_to_float (lambda (x) (+ x 0)))
       (call_back hmm_smoothed_nw (mapv state (mapv int_to_float (arange 1 21))))
-      (cycle (;(func_pgibbs (quote seq) ordered 5 (/ nsweeps 5))
-              (mh default one (* 20 nsweeps))
-              (call_back hmm_smoothed_nw
-			 (mapv state (mapv int_to_float (arange 1 21)))))
-             niters)))]
+      (repeat niters
+       (do ;(func_pgibbs (quote seq) ordered 5 (/ nsweeps 5))
+           (mh default one (* 20 nsweeps))
+           (call_back hmm_smoothed_nw
+	     (mapv state (mapv int_to_float (arange 1 21))))))))]

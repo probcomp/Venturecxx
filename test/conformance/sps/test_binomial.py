@@ -50,7 +50,7 @@ def testBinomial3():
   ripl.assume("p","(scope_include 0 1 (if (flip %f) %f %f))" % (b,p1,p2))
   ripl.predict("(scope_include 0 0 (binomial %d p))" % n,label="pid")
 
-  predictions = collectSamples(ripl,"pid",infer="(cycle ((mh 0 1 1) (gibbs 0 0 1)) %s)" % default_num_transitions_per_sample())
+  predictions = collectSamples(ripl,"pid",infer="(repeat %s (do (mh 0 1 1) (gibbs 0 0 1)))" % default_num_transitions_per_sample())
 
   ans = [(x,b * scipy.stats.binom.pmf(x,n,p1) + (1 - b) * scipy.stats.binom.pmf(x,n,p2)) for x in range(n+1)]
   assert_almost_equal(sum([xx[1] for xx in ans]),1)

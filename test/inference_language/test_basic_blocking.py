@@ -117,7 +117,7 @@ def testCycleKernel():
   ripl.assume("b", "(scope_include 1 1 (normal a 1.0))")
   ripl.observe("(normal b 1.0)", 14.0)
 
-  infer = "(cycle ((mh 0 0 1) (mh 1 1 1)) %s)" % default_num_transitions_per_sample()
+  infer = "(repeat %s (do (mh 0 0 1) (mh 1 1 1)))" % default_num_transitions_per_sample()
 
   predictions = collectSamples(ripl,"pid",infer=infer)
   cdf = stats.norm(loc=34.0/3.0, scale=math.sqrt(2.0/3.0)).cdf

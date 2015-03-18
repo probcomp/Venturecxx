@@ -635,8 +635,9 @@ Plot a data set according to a plot specification.
 Example::
 
     [INFER (do (d <- (empty))
-               (cycle ((mh default one 1)
-                       (bind (collect x) (curry into d))) 1000)
+               (repeat 1000
+                (do (mh default one 1)
+                    (bind (collect x) (curry into d))))
                (plotf (quote c0s) d)) ]
 
 will do 1000 iterations of MH collecting some standard data and

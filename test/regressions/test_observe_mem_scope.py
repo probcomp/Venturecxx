@@ -46,5 +46,5 @@ observations.
   r.observe("x", 1)
   r.infer("(incorporate)")
   eq_(1, r.sample("x"))
-  r.infer("(cycle ((resample 1) (mh default all 1)) 1)")
+  r.infer("(do (resample 1) (mh default all 1))")
   eq_(1, r.sample("x"))

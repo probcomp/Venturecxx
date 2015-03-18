@@ -16,8 +16,9 @@ def testPlotfToFile1():
   ripl.assume('x', '(normal 0 1)')
   prog = """
 (let ((d (empty)))
-  (do (cycle ((mh default one 10)
-              (bind (collect x) (curry into d))) 10)
+  (do (repeat 10
+       (do (mh default one 10)
+           (bind (collect x) (curry into d))))
       (plotf_to_file (quote test1) (quote h0) d)))"""
   try:
     ripl.infer(prog)
@@ -35,8 +36,9 @@ def testPlotfToFile2():
   ripl.assume('x', '(normal 0 1)')
   prog = """
 (let ((d (empty)))
-  (do (cycle ((mh default one 10)
-              (bind (collect x) (curry into d))) 10)
+  (do (repeat 10
+       (do (mh default one 10)
+           (bind (collect x) (curry into d))))
       (plotf_to_file (quote (test1 test2)) (quote (h0 lcd0d)) d)))"""
   try:
     ripl.infer(prog)
@@ -62,8 +64,9 @@ def checkPlotfToFileBadArgs(basenames, specs):
   ripl.assume('x', '(normal 0 1)')
   infer = """
 (let ((d (empty)))
-  (do (cycle ((mh default one 10)
-              (bind (collect x) (curry into d))) 10)
+  (do (repeat 10
+       (do (mh default one 10)
+           (bind (collect x) (curry into d))))
       (plotf_to_file (quote {0}) (quote {1}) d)))"""
   infer = infer.format(basenames, specs)
   with assert_raises_regexp(VentureException, 'evaluation: The number of specs must match the number of filenames.'):
@@ -75,8 +78,9 @@ def testSweep():
   ripl.assume('x', '(normal 0 1)')
   program = """[infer
 (let ((d (empty)))
-  (cycle ((mh default one 10)
-          (bind (collect x) (curry into d))
-          (sweep d)) 5))]"""
+  (repeat 5
+   (do (mh default one 10)
+       (bind (collect x) (curry into d))
+       (sweep d))))]"""
   res, captured = capture_output(ripl, program)
   assert captured == '\n'.join(['Sweep count: ' + str(x) for x in range(1,6)]) + '\n'
