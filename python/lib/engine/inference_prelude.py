@@ -1,17 +1,5 @@
 # A list of lists: name, description, code
 prelude = [
-["_cycle", """\
-.. function:: _cycle(ks : list<inference action>, iterations : int)
-
-  :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
-
-   A helper function for implementing the eponymous inference macro.
-
-   Calling it directly is likely to be difficult and unproductive.
-""",
-"""(lambda (ks iter)
-  (iterate (sequence ks) iter))"""],
-
 ["iterate",
 """\
 .. function:: iterate(f : <inference action returning a>, iterations : int)

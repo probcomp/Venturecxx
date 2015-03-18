@@ -40,7 +40,7 @@ are (as of this writing) expanded in expressions of the modeling
 language as well.  The results are generally not useful, so it's
 appropriate to treat those as reserved words when writing models:
 
-- cycle, do, begin, call_back, collect, assume, observe, predict,
+- do, begin, call_back, collect, assume, observe, predict,
   force, sample, sample_all
 
 Built-in Procedures

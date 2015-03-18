@@ -108,7 +108,7 @@ def testBasicRejection3():
   return reportKnownContinuous(cdf, predictions, "beta(2,1)")
 
 @statisticalTest
-@on_inf_prim("mh") # Also cycle, but that's not a "primitive"
+@on_inf_prim("mh")
 def testCycleKernel():
   """Same example as testBlockingExample0, but a cycle kernel that covers everything should solve it"""
   ripl = get_ripl()

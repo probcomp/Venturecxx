@@ -52,16 +52,3 @@ macros = {}
 def register_macro(name, func, desc=None):
   macro_list.append((name, func, desc))
   macros[name] = func
-
-def cycle_macro(program):
-  assert len(program) == 3
-  subkernels = macroexpand_inference(program[1])
-  transitions = macroexpand_inference(program[2])
-  return [v.sym("_cycle"), [v.sym("list")] + subkernels, transitions]
-register_macro("cycle", cycle_macro, """\
-- `(cycle (<kernel> ...) <transitions>)`: Run a cycle kernel.
-
-  Execute each of the given subkernels in order.
-
-  The `transitions` argument specifies how many times to do this.
-""")
