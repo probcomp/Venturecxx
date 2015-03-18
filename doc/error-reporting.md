@@ -308,6 +308,13 @@ Anticipated Future Problems
   under them when freeze is invoked, in part because it's not clear
   what to adjust the model to.
 
+- The handling of [infer (loop ...)] is brittle.  Among other issues,
+  it is likely to be vulnerable to the double macroexpansion problem.
+  - Possible solution: handle [infer (loop ...)] at the sivm or ripl
+    level instead of the engine.
+  - It is also likely to leak records in the persistent inference
+    trace, and macroexpansion records in the sivm.
+
 Milestones
 ----------
 
