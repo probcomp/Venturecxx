@@ -208,6 +208,8 @@ class Semantics(object):
         return value
     def p_expression_quote(self, quote, e):
         return locquoted(quote, e, val.quote)
+    def p_expression_qquote(self, qquote, e):
+        return locquoted(qquote, e, val.quasiquote)
     def p_expression_unquote(self, unquote, e):
         return locquoted(unquote, e, val.unquote)
     def p_expression_combination(self, open, es, close):
@@ -466,11 +468,9 @@ class ChurchPrimeParser(object):
     def unparse_expression(self, expression):
         '''Unparse EXPRESSION into a string.'''
         if isinstance(expression, dict):
-            if expression["type"] == "list":
-                # Could expand this to cover arrays, but then need to
-                # be careful not to do that in quoted expressions.
-                # Except for quoted expressions that actually end up
-                # being code, such as the arguments of make_csp !
+            if expression["type"] == "array":
+                # Because combinations actually parse as arrays too,
+                # and I want the canonical form to be that.
                 return self.unparse_expression(expression["value"])
             else: # Leaf
                 return value_to_string(expression)

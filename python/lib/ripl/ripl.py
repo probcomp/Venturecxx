@@ -385,7 +385,7 @@ class Ripl():
     ############################################
 
     def define(self, name, expression, type=False):
-        name = v.symbol(name)
+        name = _symbolize(name)
         i = {'instruction':'define', 'symbol':name, 'expression':expression}
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)

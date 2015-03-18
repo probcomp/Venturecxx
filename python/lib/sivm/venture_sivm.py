@@ -19,7 +19,7 @@
 import copy
 
 from venture.exception import VentureException
-from venture.sivm import utils, macro
+from venture.sivm import utils, macro, macro_system
 import venture.value.dicts as v
 
 class VentureSivm(object):
@@ -29,7 +29,7 @@ class VentureSivm(object):
         self._clear()
         self._init_continuous_inference()
     
-    dicts = [s + '_dict' for s in ['breakpoint', 'label', 'did', 'sugar', 'directive']]
+    dicts = [s + '_dict' for s in ['breakpoint', 'label', 'did', 'syntax', 'directive']]
 
     # list of all instructions supported by venture sivm
     _extra_instructions = {'labeled_assume','labeled_observe',
@@ -74,9 +74,10 @@ class VentureSivm(object):
         self.label_dict = {}
         self.did_dict = {}
         self.directive_dict = {}
-        self.sugar_dict = {}
+        self.syntax_dict = {}
         self._debugger_clear()
         self.state = 'default'
+        self.attempted = []
 
     def _debugger_clear(self):
         self.breakpoint_dict = {}
@@ -106,22 +107,23 @@ class VentureSivm(object):
     def _call_core_sivm_instruction(self,instruction):
         desugared_instruction = copy.copy(instruction)
         instruction_type = instruction['instruction']
-        sugar = None
         # desugar the expression
         if instruction_type in ['define','assume','observe','predict','infer']:
             exp = utils.validate_arg(instruction,'expression',
                     utils.validate_expression, wrap_exception=False)
-            sugar = macro.expand(exp)
-            desugared_instruction['expression'] = sugar.desugared()
+            syntax = macro_system.expand(exp)
+            desugared_instruction['expression'] = syntax.desugared()
             # for error handling
-            self.attempted = (exp, sugar)
+            if instruction_type is 'infer':
+                (exp, syntax) = self._hack_infer_expression_structure(exp, syntax)
+            self.attempted.append((exp, syntax))
         # desugar the expression index
         if instruction_type == 'debugger_set_breakpoint_source_code_location':
             desugared_src_location = desugared_instruction['source_code_location']
             did = desugared_src_location['directive_id']
             old_index = desugared_src_location['expression_index']
             exp = self.directive_dict[did]['expression']
-            new_index = macro.desugar_expression_index(exp, old_index)
+            new_index = macro_system.desugar_expression_index(exp, old_index)
             desugared_src_location['expression_index'] = new_index
         try:
             response = self.core_sivm.execute_instruction(desugared_instruction)
@@ -137,43 +139,24 @@ class VentureSivm(object):
                 print traceback.format_exc()
                 raise e, None, info[2]
             raise e, None, info[2]
-        # clear the dicts on the "clear" command
-        if instruction_type == 'clear':
-            self._clear()
-        # forget directive mappings on the "forget" command
-        if instruction_type == 'forget':
-            did = instruction['directive_id']
-            del self.directive_dict[did]
-            del self.sugar_dict[did]
-            if did in self.did_dict:
-                del self.label_dict[self.did_dict[did]]
-                del self.did_dict[did]
-        # save the directive if the instruction is a directive
-        if instruction_type in ['assume','observe','predict']:
-            did = response['directive_id']
-            tmp_instruction = {}
-            tmp_instruction['directive_id'] = did
-            for key in ('instruction', 'expression', 'symbol', 'value'):
-                if key in instruction:
-                    tmp_instruction[key] = copy.copy(instruction[key])
-            self.directive_dict[did] = tmp_instruction
-            self.sugar_dict[did] = self.attempted
-        # save the breakpoint if the instruction sets the breakpoint
-        if instruction_type in ['debugger_set_breakpoint_address',
-                'debugger_set_breakpoint_source_code_location']:
-            bid = response['breakpoint_id']
-            tmp_instruction = copy.copy(instruction)
-            tmp_instruction['breakpoint_id'] = bid
-            del tmp_instruction['instruction']
-            self.breakpoint_dict[bid] = tmp_instruction
+        self._register_executed_instruction(instruction, response)
         return response
+
+    def _hack_infer_expression_structure(self, exp, syntax):
+        # The engine actually executes an application form around the
+        # passed inference program.  Storing this will align the
+        # indexes correctly.
+        symbol = v.symbol("model")
+        hacked_exp = [exp, symbol]
+        hacked_syntax = macro.ListSyntax([syntax, macro.LiteralSyntax(symbol)])
+        return (hacked_exp, hacked_syntax)
 
     def _annotate(self, e, instruction):
         if e.exception == "evaluation":
             self.state='exception'
 
             address = e.data['address'].asList()
-            e.data['stack_trace'] = [self._resugar(index) for index in address]
+            e.data['stack_trace'] = [frame for frame in [self._resugar(index) for index in address] if frame is not None]
             del e.data['address']
 
             self.current_exception = e.to_json_object()
@@ -184,7 +167,7 @@ class VentureSivm(object):
         if e.exception == 'parse':
             i = e.data['expression_index']
             exp = instruction['expression']
-            i = macro.sugar_expression_index(exp,i)
+            i = macro_system.sugar_expression_index(exp,i)
             e.data['expression_index'] = i
         # turn directive_id into label
         if e.exception == 'invalid_argument':
@@ -196,25 +179,78 @@ class VentureSivm(object):
                     del e.data['directive_id']
         return e
 
-    def _get_sugar(self, did):
-        if did in self.sugar_dict:
-            return self.sugar_dict[did]
-        return self.attempted
+    def _get_syntax_record(self, did):
+        if did not in self.syntax_dict:
+            # Presume that the desired did is currently being evaluated
+            self.syntax_dict[did] = self.attempted.pop()
+        return self.syntax_dict[did]
     
     def _get_exp(self, did):
-        return self._get_sugar(did)[0]
+        return self._get_syntax_record(did)[0]
     
     def _resugar(self, index):
         did = index[0]
-        exp, sugar = self._get_sugar(did)
+        if self._hack_skip_inference_prelude_entry(did):
+            # The reason to skip is to avoid popping the
+            # self.attempted stack even though the did is not there.
+            print "Warning: skipping annotating did %s, assumed to be from the inference prelude" % did
+            return None
+        exp, syntax = self._get_syntax_record(did)
         index = index[1:]
-        
+
         return dict(
           exp = exp,
           did = did,
-          index = sugar.resugar_index(index)
+          index = syntax.resugar_index(index)
         )
-    
+
+    def _hack_skip_inference_prelude_entry(self, did):
+        import venture.engine.engine as e
+        return self.core_sivm.engine.persistent_inference_trace and did < len(e._inference_prelude())
+
+    def _register_executed_instruction(self, instruction, response):
+        instruction_type = instruction['instruction']
+        # clear the dicts on the "clear" command
+        if instruction_type == 'clear':
+            self._clear()
+        # forget directive mappings on the "forget" command
+        if instruction_type == 'forget':
+            did = instruction['directive_id']
+            del self.directive_dict[did]
+            del self.syntax_dict[did]
+            if did in self.did_dict:
+                del self.label_dict[self.did_dict[did]]
+                del self.did_dict[did]
+        # save the directive if the instruction is a directive
+        if instruction_type in ['assume','observe','predict','define']:
+            # One might think 'infer' should be on this list.  As long
+            # as there is no mutation and SPs cannot roundtrip through
+            # the stack dict representation, I expect there to be no
+            # way for a stack trace to reference an 'infer' (rather
+            # than 'define') command directly (as opposed to model
+            # statements introduced thereby, which are handled
+            # separately) after the dynamic extent of that 'infer'.
+            # That means it's currently safe to leave it off, and
+            # putting it in would be more work, because the Engine
+            # does not report directive ids for infer responses.
+            did = response['directive_id']
+            assert did not in self.syntax_dict
+            tmp_instruction = {}
+            tmp_instruction['directive_id'] = did
+            for key in ('instruction', 'expression', 'symbol', 'value'):
+                if key in instruction:
+                    tmp_instruction[key] = copy.copy(instruction[key])
+            self.directive_dict[did] = tmp_instruction
+            self.syntax_dict[did] = self.attempted.pop()
+        # save the breakpoint if the instruction sets the breakpoint
+        if instruction_type in ['debugger_set_breakpoint_address',
+                'debugger_set_breakpoint_source_code_location']:
+            bid = response['breakpoint_id']
+            tmp_instruction = copy.copy(instruction)
+            tmp_instruction['breakpoint_id'] = bid
+            del tmp_instruction['instruction']
+            self.breakpoint_dict[bid] = tmp_instruction
+
     ###############################
     # Continuous Inference Pauser
     ###############################
@@ -312,7 +348,7 @@ class VentureSivm(object):
         return tmp
     
     def _do_list_directives(self, _):
-        return { "directives" : [self.get_directive(did) for did in self.directive_dict.keys()] }
+        return { "directives" : [self.get_directive(did) for did in sorted(self.directive_dict.keys())] }
     
     def _do_get_directive(self, instruction):
         did = utils.validate_arg(instruction, 'directive_id', utils.validate_positive_integer)

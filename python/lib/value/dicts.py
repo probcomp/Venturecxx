@@ -19,8 +19,25 @@
 
 import numbers
 
+python_list = list
+python_dict = dict
+
 def val(t,v):
   return {"type":t,"value":v}
+
+def is_val(obj):
+  """Checks whether the outermost layer of obj looks like it could
+validly be a stack dict representation of something.
+
+(That is, Python lists are ok, because those represent arrays.)"""
+  return is_stack_dict(obj) or isinstance(obj, list)
+
+def is_stack_dict(obj):
+  """Checks whether the outermost layer of obj looks like an actual stack dict."""
+  return isinstance(obj, python_dict) and "type" in obj and "value" in obj
+
+def is_stack_dict_of_type(tp, obj):
+  return is_stack_dict(obj) and obj["type"] is tp
 
 def number(v):
   assert isinstance(v, numbers.Number)
@@ -91,33 +108,11 @@ def symmetric_matrix(vs):
 def quote(v):
   return [symbol("quote"), v]
 
+def quasiquote(v):
+  return [symbol("quasiquote"), v]
+
 def unquote(v):
   return [symbol("unquote"), v]
 
-def quasiquote(v):
-  import collections
-  # TODO Nested quasiquotation
-  def quotify(exp, to_quote):
-    if to_quote:
-      return quote(exp)
-    else:
-      return exp
-  def quasiquoterecur(v):
-    """Returns either (v, True), if quasiquotation reduces to quotation on
-v, or (v', False), where v' is a directly evaluable expression that
-will produce the term that the quasiquotation body v means."""
-    if hasattr(v, "__iter__") and not isinstance(v, collections.Mapping):
-      if len(v) > 0 and isinstance(v[0], collections.Mapping) and v[0]["type"] == "symbol" and v[0]["value"] == "unquote":
-        return (v[1], False)
-      else:
-        answers = [quasiquoterecur(vi) for vi in v]
-        if all([ans[1] for ans in answers]):
-          return (v, True)
-        else:
-          return ([sym("list")] + [quotify(*ansi) for ansi in answers], False)
-    else:
-      return (v, True)
-  return quotify(*quasiquoterecur(v))
-
 def app(*items):
-  return items # Application is a Python list
+  return python_list(items) # Application is a Python list
