@@ -25,6 +25,18 @@ prelude = [
       f
       (lambda (t) (f (rest ((iterate f (- iter 1)) t))))))"""],
 
+["repeat",
+"""\
+.. function:: repeat(iterations : int, f : <inference action returning a>)
+
+  :rtype: proc(<foreignblob>) -> <pair a <foreignblob>>
+
+  Repeatedly apply the given action, returning the last value.
+  This is the same as ``iterate``, except for taking its arguments
+  in the opposite order, as a convenience.
+""",
+"""(lambda (iter f) (iterate f iter))"""],
+
 ["sequence", """\
 .. function:: sequence(ks : list<inference action>)
 

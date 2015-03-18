@@ -54,7 +54,7 @@ def testInlineSMCSmoke():
 [infer (incorporate)]
 """)
   for i in range(20):
-    eq_(i, r.report(i+14)) # Brittle offset depends on size of inference prelude.
+    eq_(i, r.report(i+15)) # Brittle offset depends on size of inference prelude.
 
 def testInlineSMCSmoke2():
   r = get_ripl(persistent_inference_trace=True)
