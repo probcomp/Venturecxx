@@ -272,7 +272,7 @@ Anticipated Future Problems
   functions.  [There is a hack for this in place wrt the inference
   prelude.]
 
-- The sivm is likely to leak sugar_dict entries in non-persistent
+- The sivm is likely to leak syntax_dict entries in non-persistent
   inference trace mode, if I start recording desugarings of infer
   instructions.
 
@@ -340,10 +340,6 @@ Milestones
       - to the model program without spurious macro expansion
       + to the inference program
     - Same for infer action over such
-    - Can I get a situation where I need a stack trace into a
-      later-executed piece of inference code that was introduced in a
-      lambda inside of a non-define infer command?  (This should tickle
-      recording the macroexpansions of infer directives).
     + Error reporting should not get screwed up even if separately-counted
       did streams would overlap.
     - Should get an accurate error even if some stack frames go through the

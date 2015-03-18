@@ -223,6 +223,16 @@ class VentureSivm(object):
                 del self.did_dict[did]
         # save the directive if the instruction is a directive
         if instruction_type in ['assume','observe','predict','define']:
+            # One might think 'infer' should be on this list.  As long
+            # as there is no mutation and SPs cannot roundtrip through
+            # the stack dict representation, I expect there to be no
+            # way for a stack trace to reference an 'infer' (rather
+            # than 'define') command directly (as opposed to model
+            # statements introduced thereby, which are handled
+            # separately) after the dynamic extent of that 'infer'.
+            # That means it's currently safe to leave it off, and
+            # putting it in would be more work, because the Engine
+            # does not report directive ids for infer responses.
             did = response['directive_id']
             assert did not in self.syntax_dict
             tmp_instruction = {}
