@@ -330,13 +330,16 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def infer(self, program):
     self.trace_handler.incorporate()
-    if isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop":
+    if self.is_infer_loop_program(program):
       assert len(program) == 2
-      prog = [v.sym("cycle"), program[1], v.number(1)]
+      prog = [v.sym("do")] + program[1]
       self.start_continuous_inference(prog)
     else:
       exp = macroexpand_inference(program)
       return self.infer_v1_pre_t(exp, Infer(self))
+
+  def is_infer_loop_program(self, program):
+    return isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop"
 
   def infer_v1_pre_t(self, program, target):
     if not self.persistent_inference_trace:
@@ -527,7 +530,7 @@ class ContinuousInferrer(object):
     while self.inferrer is not None:
       # TODO React somehow to values returned by the inference action?
       # Currently suppressed for fear of clobbering the prompt
-      self.engine.infer(program)
+      self.engine.ripl.infer(program)
       time.sleep(0.0001) # Yield to be a good citizen
 
   def stop(self):

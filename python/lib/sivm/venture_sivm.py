@@ -114,9 +114,7 @@ class VentureSivm(object):
             syntax = macro_system.expand(exp)
             desugared_instruction['expression'] = syntax.desugared()
             # for error handling
-            if instruction_type is 'infer':
-                (exp, syntax) = self._hack_infer_expression_structure(exp, syntax)
-            self.attempted.append((exp, syntax))
+            self._record_running_instruction(instruction_type, (exp, syntax))
         # desugar the expression index
         if instruction_type == 'debugger_set_breakpoint_source_code_location':
             desugared_src_location = desugared_instruction['source_code_location']
@@ -141,6 +139,22 @@ class VentureSivm(object):
             raise e, None, info[2]
         self._register_executed_instruction(instruction, response)
         return response
+
+    def _record_running_instruction(self, instruction_type, record):
+        # This is a crock.  I am trying to ballistically coordinate
+        # the expressions and Syntax objects I record here with the
+        # expressions the underlying Engine actually evaluates in its
+        # traces.
+        if instruction_type is 'infer':
+            if self.core_sivm.engine.is_infer_loop_program(record[0]):
+                # The engine does something funny with infer loop that
+                # has the effect that I should not store the loop
+                # infer program itself.
+                pass
+            else:
+                self.attempted.append(self._hack_infer_expression_structure(*record))
+        else:
+            self.attempted.append(record)
 
     def _hack_infer_expression_structure(self, exp, syntax):
         # The engine actually executes an application form around the

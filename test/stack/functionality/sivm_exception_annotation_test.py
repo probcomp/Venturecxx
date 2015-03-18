@@ -1,4 +1,7 @@
 from nose.tools import assert_raises, eq_
+from StringIO import StringIO
+import sys
+import time
 
 from venture.test.config import get_ripl, broken_in, on_inf_prim
 from venture.exception import VentureException
@@ -24,6 +27,16 @@ def assert_error_message_contains(text, f, *args, **kwargs):
     print traceback.format_exc()
     print cm.exception
     assert text in message
+
+def assert_print_output_contains(text, f, *args, **kwargs):
+  text = text.strip()
+  old_stderr = sys.stderr
+  result = StringIO()
+  sys.stderr = result
+  f(*args, **kwargs)
+  sys.stderr = old_stderr
+  ans = result.getvalue()
+  assert text in ans
 
 @broken_in("puma", "Puma does not report error addresses")
 @on_inf_prim("none")
@@ -236,3 +249,22 @@ def testAnnotateInferenceErrorInImplicitQuasiquote():
                                    ^^^^^^^
 """,
   ripl.infer, expression)
+
+@on_inf_prim("none")
+def testLoopErrorAnnotationSmoke():
+  import threading
+  numthreads = threading.active_count()
+
+  ripl = get_ripl()
+  expression = "(loop ((lambda (t) (pair (+ 1 badness) t))))"
+  def doit():
+    ripl.infer(expression)
+    time.sleep(0.01) # Give it time to start
+    ripl.stop_continuous_inference() # Join the other thread to make sure it errored
+  assert_print_output_contains("""\
+((do (make_csp (quote (t)) (quote (pair (add 1 badness) t)))) model)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+((do (make_csp (quote (t)) (quote (pair (add 1 badness) t)))) model)
+                                               ^^^^^^^
+""", doit)
+  eq_(numthreads, threading.active_count()) # Erroring out in loop does not leak active threads
