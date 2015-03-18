@@ -1,4 +1,6 @@
+from nose.tools import eq_
 import time
+import threading
 
 from venture.test.config import get_ripl, on_inf_prim
 
@@ -35,15 +37,21 @@ def testInferLoopSmoke():
 
 @on_inf_prim("mh") # Really loop, but that's very special
 def testStartStopInferLoop():
+  numthreads = threading.active_count()
   ripl = get_ripl()
+  eq_(numthreads, threading.active_count())
   ripl.assume("x", "(normal 0 1)")
   assertNotInferring(ripl)
+  eq_(numthreads, threading.active_count())
   try:
     ripl.infer("(loop ((mh default one 1)))")
     assertInferring(ripl)
+    eq_(numthreads+1, threading.active_count())
     with ripl.sivm._pause_continuous_inference():
       assertNotInferring(ripl)
+      eq_(numthreads, threading.active_count())
     assertInferring(ripl)
+    eq_(numthreads+1, threading.active_count())
   finally:
     ripl.stop_continuous_inference() # Don't want to leave active threads lying around
 
