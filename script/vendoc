@@ -25,7 +25,6 @@ from venture.lite.builtin import builtInSPsList
 from venture.lite.inference_sps import inferenceSPsList
 import venture.sivm.macro # To register the macros
 from venture.sivm.macro_system import macros
-from venture.engine.macro import macro_list
 import venture.engine.inference_prelude
 from venture.shortcuts import Lite
 
@@ -95,12 +94,6 @@ def model_macros():
     print macro.desc
 
 def inference_macros():
-  for (name, _func, desc) in macro_list:
-    if desc is not None:
-      print desc
-    else:
-      print "- TODO " + name
-    print ""
   for macro in macros:
     if not macro.intended_for_inference(): continue
     if macro.desc is None:

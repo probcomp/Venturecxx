@@ -24,7 +24,6 @@ from trace_handler import (dump_trace, restore_trace, SynchronousTraceHandler,
                            ThreadedSerializingTraceHandler, MultiprocessingTraceHandler)
 from venture.lite.utils import sampleLogCategorical, logaddexp
 from venture.engine.inference import Infer
-from venture.engine.macro import macroexpand_inference
 import venture.value.dicts as v
 
 def is_picklable(obj):
@@ -101,11 +100,9 @@ class Engine(object):
     assert self.persistent_inference_trace, "Define only works if the inference trace is persistent"
     return self._define_in(id, datum, self.infer_trace)
 
-  def _define_in(self, id, datum, trace, suppress_inference_macro_expansion=False):
+  def _define_in(self, id, datum, trace):
     self.directiveCounter += 1
     did = self.directiveCounter # Might be changed by reentrant execution
-    if not suppress_inference_macro_expansion:
-      datum = macroexpand_inference(datum)
     trace.eval(did, datum)
     trace.bindInGlobalEnv(id, did)
     return (did,trace.extractValue(did))
@@ -335,8 +332,7 @@ effect of renumbering the directives, if some had been forgotten."""
       prog = [v.sym("do")] + program[1]
       self.start_continuous_inference(prog)
     else:
-      exp = macroexpand_inference(program)
-      return self.infer_v1_pre_t(exp, Infer(self))
+      return self.infer_v1_pre_t(program, Infer(self))
 
   def is_infer_loop_program(self, program):
     return isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop"
@@ -402,7 +398,7 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def install_inference_prelude(self, next_trace):
     for name, exp in _inference_prelude():
-      self._define_in(name, exp, next_trace, suppress_inference_macro_expansion=True)
+      self._define_in(name, exp, next_trace)
 
   def primitive_infer(self, exp):
     self.trace_handler.delegate('primitive_infer', exp)

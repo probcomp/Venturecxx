@@ -10,7 +10,6 @@ from venture.lite.builtin import builtInSPsList
 from venture.lite.inference_sps import inferenceSPsList
 import venture.sivm.macro # To register the macros
 from venture.sivm.macro_system import macros
-from venture.engine.macro import macro_list
 
 def main(arg):
   if arg == 'syntax':
@@ -50,7 +49,9 @@ def model_macros():
   return names
 
 def inference_macros():
-  return [x[0] for x in macro_list]
+  # TODO The inference macros are now expanded by the sivm too, and
+  # distinguished by a flag.
+  return []
 
 def prettify(xs):
   return '|'.join(sorted(xs))
