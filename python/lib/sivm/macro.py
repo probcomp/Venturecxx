@@ -167,7 +167,7 @@ def quasiquotation_macro(name, desc="", min_size = None, max_size = None):
     pattern = [name] + pat_names[1:]
     template = ["_" + name] + [["quasiquote", pn] for pn in pat_names[1:]]
     return SyntaxRule(pattern, template).expand(program)
-  return Macro(arg0(name), expander, desc=desc)
+  return Macro(arg0(name), expander, desc=desc, intended_for_inference=True)
 
 def ObserveExpand(program):
   assert len(program) == 3 or len(program) == 4
@@ -273,11 +273,11 @@ doMacro = Macro(arg0("do"), DoExpand, desc="""\
   essentially ``State ModelHistory``.  Randomness and actual i/o are not
   treated monadically, but just executed, which we can get away with
   because Venture is strict and doesn't aspire to complete functional
-  purity.""")
+  purity.""", intended_for_inference=True)
 
 beginMacro = Macro(arg0("begin"), BeginExpand, desc="""\
 - `(begin <kernel> ...)`: Perform the given kernels in sequence.
-""")
+""", intended_for_inference=True)
 
 qqMacro = Macro(arg0("quasiquote"), QuasiquoteExpand, desc="""\
 - `(quasiquote <datum>)`: Data constructed by template instantiation.
@@ -285,9 +285,9 @@ qqMacro = Macro(arg0("quasiquote"), QuasiquoteExpand, desc="""\
   If the datum contains no ``unquote`` expressions, ``quasiquote`` is
   the same as ``quote``.  Otherwise, the unquoted expressions are
   evaluated and their results spliced in.  This is particularly useful
-  for constructing model program fragments -- so much so, that the
-  modeling inference SPs automatically quasiquote their model
-  arguments.
+  for constructing model program fragments in inference programs -- so
+  much so, that the modeling inference SPs automatically quasiquote
+  their model arguments.
 
   TODO: Nested quasiquotation does not work properly: all unquoted
   expressions are evaluated regardless of quasiquotation level.
@@ -381,7 +381,7 @@ observeMacro = Macro(arg0("observe"), ObserveExpand, desc="""\
   compound inference program, you may not execute another toplevel
   ``infer`` instruction for a while.
 
-""")
+""", intended_for_inference=True)
 
 forceMacro = SyntaxRule(["force", "exp", "val"],
                         ["_force", ["quasiquote", "exp"], "val"],
@@ -392,7 +392,7 @@ forceMacro = SyntaxRule(["force", "exp", "val"],
   without constraining it to stay that way. Implemented as an
   ``observe`` followed by a ``forget``.
 
-""")
+""", intended_for_inference=True)
 
 predictMacro = quasiquotation_macro("predict", min_size = 2, max_size = 3, desc="""\
 - `(predict <model-expression> [<label>])`: Programmatically add a prediction.

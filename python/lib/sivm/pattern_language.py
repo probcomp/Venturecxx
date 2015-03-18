@@ -74,7 +74,8 @@ function that computes the desired pattern-template pair, dynamically
 constructs a SyntaxRule object, and expands with that.
 
   """
-  def __init__(self, pattern, template, desc=None):
+  def __init__(self, pattern, template, desc=None, intended_for_inference=False):
+    super(SyntaxRule, self).__init__(desc=desc, intended_for_inference=intended_for_inference)
     self.name = pattern[0]
     self.pattern = pattern
     self.template = template

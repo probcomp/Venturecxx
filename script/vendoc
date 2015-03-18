@@ -88,6 +88,7 @@ def inference_prelude_SPs():
 
 def model_macros():
   for macro in macros:
+    if macro.intended_for_inference(): continue
     if macro.desc is None:
       sys.stderr.write("Skipping undesribed macro %s\n" % (macro,))
       continue
@@ -100,6 +101,12 @@ def inference_macros():
     else:
       print "- TODO " + name
     print ""
+  for macro in macros:
+    if not macro.intended_for_inference(): continue
+    if macro.desc is None:
+      sys.stderr.write("Skipping undesribed macro %s\n" % (macro,))
+      continue
+    print macro.desc
 
 def callbacks():
   ripl = Lite().make_church_prime_ripl()

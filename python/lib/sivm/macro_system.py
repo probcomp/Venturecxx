@@ -35,16 +35,20 @@
 from venture.exception import VentureException
 
 class Macro(object):
-  def __init__(self, predicate=None, expander=None, desc=None):
+  def __init__(self, predicate=None, expander=None, desc=None, intended_for_inference=False):
     self.predicate = predicate
     self.expander = expander
     self.desc = desc
+    self._intended_for_inference = intended_for_inference
 
   def applies(self, exp):
     return self.predicate(exp)
   
   def expand(self, exp):
     return self.expander(exp)
+
+  def intended_for_inference(self):
+    return self._intended_for_inference
 
 class Syntax(object):
   def desugared(self):
