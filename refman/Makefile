@@ -6,6 +6,7 @@ SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = _build
+VENDOC        = vendoc
 
 # User-friendly check for sphinx-build
 ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)
@@ -180,19 +181,19 @@ pseudoxml: generated
 generated: model-macros.gen modeling.gen inference-proc.gen inference-macros.gen venture-command-help.gen callbacks.gen
 
 model-macros.gen:
-	vendoc macros > model-macros.gen
+	$(VENDOC) macros > model-macros.gen
 
 modeling.gen:
-	vendoc --rst > modeling.gen
+	$(VENDOC) --rst > modeling.gen
 
 inference-macros.gen:
-	vendoc inf-macros > inference-macros.gen
+	$(VENDOC) inf-macros > inference-macros.gen
 
 inference-proc.gen:
-	vendoc inf > inference-proc.gen
+	$(VENDOC) inf > inference-proc.gen
 
 venture-command-help.gen:
-	vendoc invocation > venture-command-help.gen
+	$(VENDOC) invocation > venture-command-help.gen
 
 callbacks.gen:
-	vendoc callbacks > callbacks.gen
+	$(VENDOC) callbacks > callbacks.gen
