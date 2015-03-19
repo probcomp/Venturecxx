@@ -60,7 +60,9 @@ def testPlotfToFileBadArgs():
     yield checkPlotfToFileBadArgs, basenames, specs
 
 def checkPlotfToFileBadArgs(basenames, specs):
-  ripl = get_ripl()
+  # Enable the persistent_inference_trace in order to trigger the
+  # inference prelude entry skipping hack in error annotation
+  ripl = get_ripl(persistent_inference_trace=True)
   ripl.assume('x', '(normal 0 1)')
   infer = """
 (let ((d (empty)))
@@ -69,8 +71,9 @@ def checkPlotfToFileBadArgs(basenames, specs):
            (bind (collect x) (curry into d))))
       (plotf_to_file (quote {0}) (quote {1}) d)))"""
   infer = infer.format(basenames, specs)
-  with assert_raises_regexp(VentureException, 'evaluation: The number of specs must match the number of filenames.'):
+  with assert_raises_regexp(VentureException, 'evaluation: The number of specs must match the number of filenames.') as cm:
     ripl.infer(infer)
+  assert "stack_trace" in cm.exception.data # I.e., error annotation succeeded.
 
 def testSweep():
   'Check that the sweep counter prints correctly'
