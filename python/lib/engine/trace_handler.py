@@ -215,8 +215,7 @@ class HandlerBase(object):
     """In general, the short-circuit offered by SharedMemoryHandlerBase is not available."""
     return False
 
-######################################################################
-# Base classes serializing traces properly
+# Base class short-cutting around serialization if the memory is shared
 
 class SharedMemoryHandlerBase(HandlerBase):
   '''Offers the client a short-circuit for retrieving the managed
