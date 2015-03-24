@@ -223,6 +223,14 @@ class HandlerBase(object):
   @abstractmethod
   def retrieve_traces(self, engine): pass
 
+  def can_retrieve_state(self): return False
+
+  def retrieve_state(self, ix):
+    return self.delegate_one(ix, 'send_state')
+
+  def retrieve_states(self):
+    return self.delegate('send_state')
+
 ######################################################################
 # Base classes serializing traces properly
 
@@ -253,6 +261,8 @@ class SharedMemoryHandlerArchitecture(HandlerBase):
 
   def retrieve_traces(self, engine):
     return self.delegate('send_state')
+
+  def can_retrieve_state(self): return True
 
 ######################################################################
 # Concrete trace handlers
