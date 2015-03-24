@@ -375,13 +375,6 @@ class ProcessBase(object):
   @abstractmethod
   def send_trace(self, index): pass
 
-  @safely
-  def dump(self, index, directives):
-    if index is not None:
-      return self.traces[index].obj.dump(directives)
-    else:
-      return [t.obj.dump(directives) for t in self.traces]
-
 ######################################################################
 # Base classes defining how to send traces, and process types
 
