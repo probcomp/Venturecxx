@@ -69,7 +69,6 @@ import random
 import numpy as np
 
 from venture.exception import VentureException, format_worker_trace
-from venture.engine.trace import Trace
 
 ######################################################################
 # Auxiliary functions for safe function evaluation
