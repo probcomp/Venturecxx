@@ -263,11 +263,16 @@ class UBetaBernoulliOutputPSP(DiscretePSP):
 
 class ExactlyOutputPSP(RandomPSP):
   def simulate(self, args):
-    x, _epsilon = args.operandValues
+    x = args.operandValues[0]
+    # The optional second argument is the error rate
     return x
 
   def logDensity(self, y, args):
-    x, epsilon = args.operandValues
+    if len(args.operandValues) == 1:
+      x = args.operandValues[0]
+      epsilon = float("-inf")
+    else:
+      x, epsilon = args.operandValues
     if y.equal(x): return 0
     return epsilon
 
