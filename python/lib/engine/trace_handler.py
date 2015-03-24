@@ -126,7 +126,10 @@ class HandlerBase(object):
       chunk).
 
     """
-    self.backend = backend
+    if backend == "lite":
+      self.rng_style = "process"
+    else:
+      self.rng_style = "local"
     self.process_cap = process_cap
     self.processes = []
     self.pipes = []  # Parallel to processes
@@ -159,7 +162,7 @@ class HandlerBase(object):
         chunk_start = extras + chunk * base_size
         chunk_end = chunk_start + base_size
       assert chunk_end <= len(traces) # I think I wrote this code to ensure this
-      process = TraceProcess(traces[chunk_start:chunk_end], child, self.backend)
+      process = TraceProcess(traces[chunk_start:chunk_end], child, self.rng_style)
       process.start()
       self.pipes.append(parent)
       self.processes.append(process)
@@ -343,10 +346,10 @@ class ProcessBase(object):
 
   '''
   __metaclass__ = ABCMeta
-  def __init__(self, traces, pipe, backend):
+  def __init__(self, traces, pipe, rng_style):
     self.traces = [Safely(t) for t in traces]
     self.pipe = pipe
-    self.backend = backend
+    self.rng_style = rng_style
     self._initialize()
 
   def run(self):
@@ -367,7 +370,7 @@ class ProcessBase(object):
   @safely
   def set_seeds(self, _index, seeds):
     # if we're in puma or we're truly parallel, set the seed; else don't.
-    if self.backend == 'puma':
+    if self.rng_style == 'local':
       for (t, s) in zip(self.traces, seeds):
         t.set_seed(s)
     return [None for _ in self.traces]
@@ -437,7 +440,7 @@ class MultiprocessingTraceProcess(SerializingProcessArchitecture, MultiprocessBa
   def set_seeds(self, index, seeds):
     # override the default set_seeds method; if we're in parallel Python,
     # reset the global random seeds.
-    if self.backend == 'lite':
+    if self.rng_style == 'process':
       # In Python the RNG is global; only need to set it once.
       random.seed(seeds[0])
       np.random.seed(seeds[0])
