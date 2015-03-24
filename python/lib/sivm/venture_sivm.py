@@ -65,8 +65,9 @@ class VentureSivm(object):
             if instruction_type in self._extra_instructions:
                 f = getattr(self,'_do_'+instruction_type)
                 return f(instruction)
-            response = self._call_core_sivm_instruction(instruction)
-            return response
+            else:
+                response = self._call_core_sivm_instruction(instruction)
+                return response
 
     ###############################
     # Reset stuffs
