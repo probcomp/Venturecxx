@@ -323,7 +323,7 @@ class SynchronousTraceHandler(SharedMemoryHandlerArchitecture):
     return SynchronousPipe, SynchronousTraceProcess
 
 ######################################################################
-# Trace processes; interact with individual traces
+# Per-process workers; interact with individual instances of the state
 ######################################################################
 
 class Safely(object):
@@ -333,21 +333,19 @@ class Safely(object):
   def __init__(self, obj): self.obj = obj
 
   def __getattr__(self, attrname):
-    # if attrname isn't attribute of TraceWrapper, look for it as a
-    # method on the trace.  Safely doesn't work as a decorator here;
-    # do it this way.
+    # @safely doesn't work as a decorator here; do it this way.
     return safely(safely(getattr)(self.obj, attrname))
 
 
 class ProcessBase(object):
 
-  '''The base class is ProcessBase, which manages a list of traces
-  (through Safely objects).
+  '''The base class is ProcessBase, which manages a list of instances of
+  the state synchronously (using Safely objects to catch exceptions).
 
   '''
   __metaclass__ = ABCMeta
-  def __init__(self, traces, pipe, rng_style):
-    self.traces = [Safely(t) for t in traces]
+  def __init__(self, states, pipe, rng_style):
+    self.states = [Safely(s) for s in states]
     self.pipe = pipe
     self.rng_style = rng_style
     self._initialize()
@@ -362,24 +360,25 @@ class ProcessBase(object):
     if hasattr(self, cmd):
       res = getattr(self, cmd)(index, *args, **kwargs)
     elif index is not None:
-      res = getattr(self.traces[index], cmd)(*args, **kwargs)
+      res = getattr(self.states[index], cmd)(*args, **kwargs)
     else:
-      res = [getattr(t, cmd)(*args, **kwargs) for t in self.traces]
+      res = [getattr(s, cmd)(*args, **kwargs) for s in self.states]
     self.pipe.send(res)
 
   @safely
   def set_seeds(self, _index, seeds):
-    # if we're in puma or we're truly parallel, set the seed; else don't.
+    # If we're in puma, set the seed; else don't.
+    # The truly parallel case is handled by the subclass MultiprocessingTraceProcess.
     if self.rng_style == 'local':
-      for (t, s) in zip(self.traces, seeds):
-        t.set_seed(s)
-    return [None for _ in self.traces]
+      for (state, seed) in zip(self.states, seeds):
+        state.set_seed(seed)
+    return [None for _ in self.states]
 
   @abstractmethod
   def send_state(self, index): pass
 
 ######################################################################
-# Base classes defining how to send traces, and process types
+# Base classes defining how to send states, and process types
 
 class SerializingProcessArchitecture(ProcessBase):
   '''
@@ -398,9 +397,9 @@ class SharedMemoryProcessArchitecture(ProcessBase):
   @safely
   def send_state(self, index):
     if index is not None:
-      return self.traces[index].obj
+      return self.states[index].obj
     else:
-      return [t.obj for t in self.traces]
+      return [s.obj for s in self.states]
 
 class MultiprocessBase(mp.Process):
   '''
@@ -444,7 +443,7 @@ class MultiprocessingTraceProcess(SerializingProcessArchitecture, MultiprocessBa
       # In Python the RNG is global; only need to set it once.
       random.seed(seeds[0])
       np.random.seed(seeds[0])
-      return [None for _ in self.traces]
+      return [None for _ in self.states]
     else:
       return ProcessBase.set_seeds(self, index, seeds)
 
