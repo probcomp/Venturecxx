@@ -65,7 +65,7 @@ import random
 import numpy as np
 
 from venture.exception import VentureException, format_worker_trace
-from venture.engine.trace import Trace, dump_trace
+from venture.engine.trace import Trace
 
 ######################################################################
 # Auxiliary functions for safe function evaluation
@@ -344,7 +344,7 @@ class ProcessBase(object):
   '''
   __metaclass__ = ABCMeta
   def __init__(self, traces, pipe, backend):
-    self.traces = [Safely(Trace(t)) for t in traces]
+    self.traces = [Safely(t) for t in traces]
     self.pipe = pipe
     self.backend = backend
     self._initialize()
@@ -378,9 +378,9 @@ class ProcessBase(object):
   @safely
   def send_dump(self, index, directives):
     if index is not None:
-      return dump_trace(self.traces[index].obj.trace, directives)
+      return self.traces[index].obj.dump(directives)
     else:
-      return [dump_trace(t.obj.trace, directives) for t in self.traces]
+      return [t.obj.dump(directives) for t in self.traces]
 
 ######################################################################
 # Base classes defining how to send traces, and process types
@@ -403,9 +403,9 @@ class SharedMemoryProcessArchitecture(ProcessBase):
   @safely
   def send_trace(self, index):
     if index is not None:
-      return self.traces[index].obj.trace
+      return self.traces[index].obj
     else:
-      return [t.obj.trace for t in self.traces]
+      return [t.obj for t in self.traces]
 
 class MultiprocessBase(mp.Process):
   '''

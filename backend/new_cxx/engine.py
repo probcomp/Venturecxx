@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 from venture.engine import engine
+from venture.engine import trace as tr
 from libpumatrace import Trace
 
 class Engine(engine.Engine):
@@ -22,4 +23,4 @@ class Engine(engine.Engine):
     super(Engine, self).__init__(name="puma", Trace=Trace, persistent_inference_trace=persistent_inference_trace)
 
   def copy_trace(self, trace):
-    return trace.stop_and_copy()
+    return tr.Trace(trace.stop_and_copy())

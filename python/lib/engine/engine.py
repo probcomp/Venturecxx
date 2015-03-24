@@ -22,7 +22,7 @@ from venture.exception import VentureException
 from trace_handler import (SynchronousTraceHandler,
                            SynchronousSerializingTraceHandler, ThreadedTraceHandler,
                            ThreadedSerializingTraceHandler, MultiprocessingTraceHandler)
-from trace import dump_trace, restore_trace
+import trace as tr
 from venture.lite.utils import sampleLogCategorical, logaddexp
 from venture.engine.inference import Infer
 import venture.value.dicts as v
@@ -47,7 +47,7 @@ class Engine(object):
     self.inferrer = None
     self.mode = 'sequential'
     self.process_cap = None
-    self.trace_handler = self.create_handler([Trace()])
+    self.trace_handler = self.create_handler([tr.Trace(Trace())])
     import venture.lite.inference_sps as inf
     self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
@@ -206,7 +206,7 @@ class Engine(object):
     del self.trace_handler
     self.directiveCounter = 0
     self.directives = {}
-    self.trace_handler = self.create_handler([self.Trace()])
+    self.trace_handler = self.create_handler([tr.Trace(self.Trace())])
     self.ensure_rng_seeded_decently()
 
   def ensure_rng_seeded_decently(self):
@@ -443,11 +443,10 @@ effect of renumbering the directives, if some had been forgotten."""
 
   # class methods that call the corresponding functions, with arguments filled in
   def dump_trace(self, trace, skipStackDictConversion=False):
-    return dump_trace(trace, self.directives, skipStackDictConversion)
+    return trace.dump(self.directives, skipStackDictConversion)
 
   def restore_trace(self, values, skipStackDictConversion=False):
-    return restore_trace(self.Trace(), self.directives, values,
-                         self.foreign_sps, self.name, skipStackDictConversion)
+    return tr.Trace.restore(self, values, skipStackDictConversion)
 
   def copy_trace(self, trace):
     values = self.dump_trace(trace, skipStackDictConversion=True)

@@ -18,20 +18,22 @@ def _test_serialize_program(v, label, action):
         assert isinstance(serialized, list)
         assert all(isinstance(x, dict) for x in serialized)
         assert isinstance(trace2, type(trace1))
+        assert isinstance(trace2.trace, type(trace1.trace))
     elif action == 'copy':
         trace1 = engine.getDistinguishedTrace()
         trace2 = engine.copy_trace(trace1)
         assert isinstance(trace2, type(trace1))
+        assert isinstance(trace2.trace, type(trace1.trace))
     elif action == 'convert_puma':
         trace1 = engine.getDistinguishedTrace()
         engine = engine.to_puma()
         trace2 = engine.getDistinguishedTrace()
-        assert 'venture.puma' in trace2.__module__
+        assert 'venture.puma' in trace2.trace.__module__
     elif action == 'convert_lite':
         trace1 = engine.getDistinguishedTrace()
         engine = engine.to_lite()
         trace2 = engine.getDistinguishedTrace()
-        assert 'venture.lite' in trace2.__module__
+        assert 'venture.lite' in trace2.trace.__module__
     else:
         assert False
 
