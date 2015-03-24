@@ -222,10 +222,10 @@ class HandlerBase(object):
     return self.delegate_one(0, cmd, *args, **kwargs)
 
   def retrieve_dump(self, ix, engine):
-    return self.delegate_one(ix, 'send_dump', engine.directives)
+    return self.delegate_one(ix, 'dump', engine.directives)
 
   def retrieve_dumps(self, engine):
-    return self.delegate('send_dump', engine.directives)
+    return self.delegate('dump', engine.directives)
 
   @abstractmethod
   def retrieve_trace(self, ix, engine): pass
@@ -376,7 +376,7 @@ class ProcessBase(object):
   def send_trace(self, index): pass
 
   @safely
-  def send_dump(self, index, directives):
+  def dump(self, index, directives):
     if index is not None:
       return self.traces[index].obj.dump(directives)
     else:
