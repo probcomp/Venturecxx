@@ -253,14 +253,6 @@ class TestRipl(unittest.TestCase):
         output = self.ripl.get_state()
         self.assertEqual(output,'default')
 
-    def test_get_logscore(self):
-        raise SkipTest("Fix test after per-directive logscore is implemented.  https://app.asana.com/0/9277419963067/9940667562272")
-        ret_value = self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
-        output = self.ripl.get_logscore(ret_value['directive_id'])
-        self.assertEqual(output,0)
-        output = self.ripl.get_logscore('moo')
-        self.assertEqual(output,0)
-
     def test_get_global_logscore(self):
         self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
         output = self.ripl.get_global_logscore()

@@ -670,14 +670,6 @@ Open issues:
         # TODO Go through the actual stack?
         self.sivm.core_sivm.engine.reinit_inference_problem(num_particles)
 
-    def get_logscore(self, label_or_did):
-        if isinstance(label_or_did,int):
-            i = {'instruction':'get_logscore', 'directive_id':label_or_did}
-        else:
-            i = {'instruction':'labeled_get_logscore',
-                 'label':v.symbol(label_or_did)}
-        return self.execute_instruction(i)['logscore']
-
     def get_global_logscore(self):
         return self.execute_instruction({'instruction':'get_global_logscore'})['logscore']
 
