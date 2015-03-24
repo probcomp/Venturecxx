@@ -327,19 +327,19 @@ class Safely(object):
   """Wraps "safely" around all the methods of the argument.
 
   """
-  def __init__(self, trace): self.trace = trace
+  def __init__(self, obj): self.obj = obj
 
   def __getattr__(self, attrname):
     # if attrname isn't attribute of TraceWrapper, look for it as a
     # method on the trace.  Safely doesn't work as a decorator here;
     # do it this way.
-    return safely(safely(getattr)(self.trace, attrname))
+    return safely(safely(getattr)(self.obj, attrname))
 
 
 class ProcessBase(object):
 
   '''The base class is ProcessBase, which manages a list of traces
-  (through TraceWrapper objects).
+  (through Safely objects).
 
   '''
   __metaclass__ = ABCMeta
@@ -378,9 +378,9 @@ class ProcessBase(object):
   @safely
   def send_dump(self, index, directives):
     if index is not None:
-      return dump_trace(self.traces[index].trace.trace, directives)
+      return dump_trace(self.traces[index].obj.trace, directives)
     else:
-      return [dump_trace(t.trace.trace, directives) for t in self.traces]
+      return [dump_trace(t.obj.trace, directives) for t in self.traces]
 
 ######################################################################
 # Base classes defining how to send traces, and process types
@@ -403,9 +403,9 @@ class SharedMemoryProcessArchitecture(ProcessBase):
   @safely
   def send_trace(self, index):
     if index is not None:
-      return self.traces[index].trace.trace
+      return self.traces[index].obj.trace
     else:
-      return [t.trace.trace for t in self.traces]
+      return [t.obj.trace for t in self.traces]
 
 class MultiprocessBase(mp.Process):
   '''
