@@ -194,19 +194,6 @@ class TestVentureSivm(unittest.TestCase):
                 }
         o2 = self.sivm.execute_instruction(inst2)
         self.assertEquals(o2['value'], v.number(3))
-    def test_labeled_get_logscore(self):
-        inst1 = {
-                'instruction':'labeled_predict',
-                'expression': ['add',v.number(1),v.number(2)],
-                'label' : 'moo',
-                }
-        self.sivm.execute_instruction(inst1)
-        inst2 = {
-                'instruction':'labeled_get_logscore',
-                'label' : v.symbol('moo'),
-                }
-        o2 = self.sivm.execute_instruction(inst2)
-        self.assertEquals(o2['logscore'],0.0)
     def test_list_directives(self):
         inst1 = {
                 'instruction':'predict',

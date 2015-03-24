@@ -35,7 +35,7 @@ class CoreSivm(object):
     
     _implemented_instructions = {"define","assume","observe","predict",
             "configure","forget","freeze","report","infer",
-            "clear","rollback","get_logscore","get_global_logscore",
+            "clear","rollback","get_global_logscore",
             "start_continuous_inference","stop_continuous_inference",
             "continuous_inference_status", "profiler_configure"}
     
@@ -163,12 +163,6 @@ class CoreSivm(object):
         #rollback not implemented in C++
         self.state = 'default'
         return {}
-
-    def _do_get_logscore(self,instruction):
-        utils.require_state(self.state,'default')
-        did = utils.validate_arg(instruction,'directive_id',
-                utils.validate_nonnegative_integer)
-        return {"logscore":self.engine.get_logscore(did)}
 
     def _do_get_global_logscore(self,_):
         utils.require_state(self.state,'default')

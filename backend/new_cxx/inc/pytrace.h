@@ -36,7 +36,6 @@ struct PyTrace
   void setSeed(size_t seed);
   size_t getSeed();
 
-  double getDirectiveLogScore(DirectiveID did);
   double getGlobalLogScore();
   uint32_t numUnconstrainedChoices();
 

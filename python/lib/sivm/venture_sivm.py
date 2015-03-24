@@ -33,14 +33,14 @@ class VentureSivm(object):
 
     # list of all instructions supported by venture sivm
     _extra_instructions = {'labeled_assume','labeled_observe',
-            'labeled_predict','labeled_forget','labeled_freeze','labeled_report', 'labeled_get_logscore',
+            'labeled_predict','labeled_forget','labeled_freeze','labeled_report',
             'list_directives','get_directive','labeled_get_directive',
             'force','sample','get_current_exception',
             'get_state', 'reset', 'debugger_list_breakpoints','debugger_get_breakpoint'}
     _core_instructions = {"define","assume","observe","predict",
             "configure","forget","freeze","report","infer","start_continuous_inference",
             "stop_continuous_inference","continuous_inference_status",
-            "clear","rollback","get_logscore","get_global_logscore",
+            "clear","rollback","get_global_logscore",
             "debugger_configure","debugger_list_random_choices", "debugger_clear",
             "debugger_force_random_choice","debugger_report_address",
             "debugger_history","debugger_dependents","debugger_address_to_source_code_location",
@@ -349,7 +349,6 @@ class VentureSivm(object):
     _do_labeled_forget = _do_labeled_operation
     _do_labeled_freeze = _do_labeled_operation
     _do_labeled_report = _do_labeled_operation
-    _do_labeled_get_logscore = _do_labeled_operation
 
     ###############################
     # new instructions

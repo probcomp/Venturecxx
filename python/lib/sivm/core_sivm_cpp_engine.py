@@ -40,7 +40,7 @@ class CoreSivmCppEngine(object):
 
     _implemented_instructions = ["assume","observe","predict",
             "configure","forget","report","infer",
-            "clear","rollback","get_logscore","get_global_logscore",
+            "clear","rollback","get_global_logscore",
             "start_continuous_inference","stop_continuous_inference",
             "continuous_inference_status", "profiler_configure"]
     def execute_instruction(self, instruction):
@@ -158,23 +158,6 @@ class CoreSivmCppEngine(object):
         #rollback not implemented in C++
         self.state = 'default'
         return {}
-
-    def _do_get_logscore(self,instruction):
-        #TODO: this implementation is a phony
-        # it has the same args + state requirements as report,
-        # so that code was copy/pasted here just to verify
-        # that the directive exists for testing purposes
-        utils.require_state(self.state,'default')
-        did = utils.validate_arg(instruction,'directive_id',
-                utils.validate_positive_integer)
-        if did not in self.observe_dict:
-            try:
-                val = self.engine.report_value(did)
-            except Exception as e:
-                if e.message == 'Attempt to report value for non-existent directive.':
-                    raise VentureException('invalid_argument',e.message,argument='directive_id')
-                raise
-        return {"logscore":0}
 
     def _do_get_global_logscore(self,_):
         utils.require_state(self.state,'default')

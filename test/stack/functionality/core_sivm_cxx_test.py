@@ -228,20 +228,6 @@ class TestCoreSivm(unittest.TestCase):
                 }
         o2 = self.sivm.execute_instruction(inst2)
         self.assertEquals(o2['logscore'],-0.6931471805599453)
-    def test_get_logscore(self):
-        raise SkipTest("Per-directive logscore not implemented.  Issue: https://app.asana.com/0/9277419963067/9940667562272")
-        inst1 = {
-                'instruction':'observe',
-                'expression': ['flip'],
-                'value': v.boolean(True)
-                }
-        o1 = self.sivm.execute_instruction(inst1)
-        inst2 = {
-                'instruction':'get_logscore',
-                'directive_id':o1['directive_id'],
-                }
-        o2 = self.sivm.execute_instruction(inst2)
-        self.assertEquals(o2['logscore'],-0.6931471805599453)
     
     def test_continuous_inference(self):
         status = {'instruction':'continuous_inference_status'}
