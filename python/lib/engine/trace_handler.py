@@ -217,12 +217,6 @@ class HandlerBase(object):
   def retrieve_dumps(self, engine):
     return self.delegate('dump', engine.directives)
 
-  @abstractmethod
-  def retrieve_trace(self, ix, engine): pass
-
-  @abstractmethod
-  def retrieve_traces(self, engine): pass
-
   def can_retrieve_state(self): return False
 
   def retrieve_state(self, ix):
@@ -241,13 +235,6 @@ class SerializingHandlerArchitecture(HandlerBase):
   of communication is required), SynchronousSerializingTraceHandler (which is sequential
   but mimics the API of the Parallel version), and ThreadedSerializingTraceHandler.
   '''
-  def retrieve_trace(self, ix, engine):
-    dumped = self.retrieve_dump(ix, engine)
-    return engine.restore_trace(dumped)
-
-  def retrieve_traces(self, engine):
-    dumped_all = self.retrieve_dumps(engine)
-    return [engine.restore_trace(dumped) for dumped in dumped_all]
 
 class SharedMemoryHandlerArchitecture(HandlerBase):
   '''
@@ -256,11 +243,6 @@ class SharedMemoryHandlerArchitecture(HandlerBase):
   no problem with sending arbitrary Python objects over dummy.Pipes. Inherited
   by ThreadedTraceHandler and SynchronousTraceHandler.
   '''
-  def retrieve_trace(self, ix, engine):
-    return self.delegate_one(ix, 'send_state')
-
-  def retrieve_traces(self, engine):
-    return self.delegate('send_state')
 
   def can_retrieve_state(self): return True
 
