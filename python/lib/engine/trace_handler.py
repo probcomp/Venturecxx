@@ -297,7 +297,7 @@ class SynchronousSerializingTraceHandler(SerializingHandlerArchitecture):
   '''
   @staticmethod
   def _pipe_and_process_types():
-    return SynchronousPipe, SynchronousWorkerProcess
+    return SynchronousPipe, SynchronousSerializingWorkerProcess
 
 class SynchronousTraceHandler(SharedMemoryHandlerArchitecture):
   '''Controls SynchronousWorkerProcesses. Default
