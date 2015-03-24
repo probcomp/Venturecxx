@@ -238,10 +238,10 @@ class HandlerBase(object):
 
 class SerializingHandlerArchitecture(HandlerBase):
   '''
-  Retrieves traces by requesting dumps from workers and reconstructing on
-  other end of Pipe. Inherited by MultiprocessingTraceHandler (for which this mode
-  of communication is required) and ThreadedSerializingTraceHandler (which is sequential
-  but mimics the API of the Parallel version).
+  Retrieves states by requesting dumps from workers and reconstructing on this
+  end of the Pipe. Inherited by MultiprocessingTraceHandler (for which this mode
+  of communication is required), SynchronousSerializingTraceHandler (which is sequential
+  but mimics the API of the Parallel version), and ThreadedSerializingTraceHandler.
   '''
   def retrieve_trace(self, ix, engine):
     dumped = self.retrieve_dump(ix, engine)
@@ -253,16 +253,16 @@ class SerializingHandlerArchitecture(HandlerBase):
 
 class SharedMemoryHandlerArchitecture(HandlerBase):
   '''
-  Retrieves traces by requesting the traces themselves directly. Since
+  Retrieves states by requesting the states themselves directly. Since
   multiprocessing.dummy is actually just a wrapper around Threading, there is
   no problem with sending arbitrary Python objects over dummy.Pipes. Inherited
-  by ThreadedTraceHandler.
+  by ThreadedTraceHandler and SynchronousTraceHandler.
   '''
   def retrieve_trace(self, ix, engine):
-    return self.delegate_one(ix, 'send_trace')
+    return self.delegate_one(ix, 'send_state')
 
   def retrieve_traces(self, engine):
-    return self.delegate('send_trace')
+    return self.delegate('send_state')
 
 ######################################################################
 # Concrete trace handlers
@@ -373,28 +373,27 @@ class ProcessBase(object):
     return [None for _ in self.traces]
 
   @abstractmethod
-  def send_trace(self, index): pass
+  def send_state(self, index): pass
 
 ######################################################################
 # Base classes defining how to send traces, and process types
 
 class SerializingProcessArchitecture(ProcessBase):
   '''
-  Attempting to send a trace without first serializing results in an exception.
+  Attempting to send a state without first serializing results in an exception.
   Inherited by MultiprocessingTraceProcess (for which this behavior is necessary) and
   ThreadedSerializingTraceProcess (which mimics the API of the Parallel process).
   '''
   @safely
-  def send_trace(self, _index):
-    raise VentureException("fatal",
-                           "Must serialize traces before sending in parallel architecture")
+  def send_state(self, _index):
+    raise VentureException("fatal", "Must serialize before sending in parallel architecture")
 
 class SharedMemoryProcessArchitecture(ProcessBase):
   '''
-  Sends traces directly. Inherited by ThreadedTraceProcess.
+  Sends states directly. Inherited by ThreadedTraceProcess.
   '''
   @safely
-  def send_trace(self, index):
+  def send_state(self, index):
     if index is not None:
       return self.traces[index].obj
     else:
@@ -432,7 +431,7 @@ class SynchronousBase(object):
 # pylint: disable=too-many-ancestors
 class MultiprocessingTraceProcess(SerializingProcessArchitecture, MultiprocessBase):
   '''
-  True parallel traces via multiprocessing. Controlled by MultiprocessingTraceHandler.
+  True parallelism via multiprocessing. Controlled by MultiprocessingTraceHandler.
   '''
   @safely
   def set_seeds(self, index, seeds):
@@ -447,7 +446,7 @@ class MultiprocessingTraceProcess(SerializingProcessArchitecture, MultiprocessBa
       return ProcessBase.set_seeds(self, index, seeds)
 
 class ThreadedSerializingTraceProcess(SerializingProcessArchitecture, ThreadingBase):
-  '''Emulates MultiprocessingTraceProcess by serializing the traces, but
+  '''Emulates MultiprocessingTraceProcess by serializing the managed states, but
   is implemented with threading. Could be useful for debugging?
   Controlled by ThreadedSerializingTraceHandler.
 
@@ -456,14 +455,14 @@ class ThreadedSerializingTraceProcess(SerializingProcessArchitecture, ThreadingB
 
 class ThreadedTraceProcess(SharedMemoryProcessArchitecture, ThreadingBase):
   '''Emulates MultiprocessingTraceProcess by running multithreaded but
-  without serializing traces.  Could be useful for debugging?
+  without serializing states.  Could be useful for debugging?
   Controlled by ThreadedTraceHandler.
 
   '''
   pass
 
 class SynchronousSerializingTraceProcess(SerializingProcessArchitecture, SynchronousBase):
-  '''Emulates MultiprocessingTraceProcess by serializing the traces as
+  '''Emulates MultiprocessingTraceProcess by serializing the states as
   it would, while still running in one thread.  Use for debugging.
   Controlled by SynchronousSerializingTraceHandler.
 
@@ -472,7 +471,7 @@ class SynchronousSerializingTraceProcess(SerializingProcessArchitecture, Synchro
 
 class SynchronousTraceProcess(SharedMemoryProcessArchitecture, SynchronousBase):
   '''
-  Default class for interacting with Traces. Controlled by
+  Default. Keeps everything synchronous. Controlled by
   SynchronousTraceHandler.
   '''
   pass
