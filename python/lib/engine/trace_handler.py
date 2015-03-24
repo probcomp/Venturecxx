@@ -217,7 +217,25 @@ class HandlerBase(object):
   def retrieve_dumps(self, engine):
     return self.delegate('dump', engine.directives)
 
-  def can_retrieve_state(self): return False
+  def can_retrieve_state(self):
+    """In general, the short-circuit offered by SharedMemoryHandlerBase is not available."""
+    return False
+
+######################################################################
+# Base classes serializing traces properly
+
+class SharedMemoryHandlerBase(HandlerBase):
+  '''Offers the client a short-circuit for retrieving the managed
+  states without having to serialize them.
+
+  This harmlessly saves effort if the states are actually in a shared
+  memory space (i.e., multiprocessing.dummy or completely synchronous)
+  and we are not trying to debug serialization.  Inherited by
+  ThreadedTraceHandler and SynchronousTraceHandler.
+
+  '''
+
+  def can_retrieve_state(self): return True
 
   def retrieve_state(self, ix):
     return self.delegate_one(ix, 'send_state')
@@ -226,30 +244,9 @@ class HandlerBase(object):
     return self.delegate('send_state')
 
 ######################################################################
-# Base classes serializing traces properly
-
-class SerializingHandlerArchitecture(HandlerBase):
-  '''
-  Retrieves states by requesting dumps from workers and reconstructing on this
-  end of the Pipe. Inherited by MultiprocessingTraceHandler (for which this mode
-  of communication is required), SynchronousSerializingTraceHandler (which is sequential
-  but mimics the API of the Parallel version), and ThreadedSerializingTraceHandler.
-  '''
-
-class SharedMemoryHandlerArchitecture(HandlerBase):
-  '''
-  Retrieves states by requesting the states themselves directly. Since
-  multiprocessing.dummy is actually just a wrapper around Threading, there is
-  no problem with sending arbitrary Python objects over dummy.Pipes. Inherited
-  by ThreadedTraceHandler and SynchronousTraceHandler.
-  '''
-
-  def can_retrieve_state(self): return True
-
-######################################################################
 # Concrete trace handlers
 
-class MultiprocessingTraceHandler(SerializingHandlerArchitecture):
+class MultiprocessingTraceHandler(HandlerBase):
   '''Controls MultiprocessingWorkerProcesses. Communicates with workers
   via multiprocessing.Pipe. Truly multiprocess implementation.
 
@@ -258,7 +255,7 @@ class MultiprocessingTraceHandler(SerializingHandlerArchitecture):
   def _pipe_and_process_types():
     return mp.Pipe, MultiprocessingWorkerProcess
 
-class ThreadedSerializingTraceHandler(SerializingHandlerArchitecture):
+class ThreadedSerializingTraceHandler(HandlerBase):
   '''Controls ThreadedSerializingWorkerProcesses. Communicates with
   workers via multiprocessing.dummy.Pipe. Do not use for actual
   modeling. Rather, intended for debugging; API mimics
@@ -269,7 +266,7 @@ class ThreadedSerializingTraceHandler(SerializingHandlerArchitecture):
   def _pipe_and_process_types():
     return mpd.Pipe, ThreadedSerializingWorkerProcess
 
-class ThreadedTraceHandler(SharedMemoryHandlerArchitecture):
+class ThreadedTraceHandler(SharedMemoryHandlerBase):
   '''Controls ThreadedWorkerProcesses. Communicates via
   multiprocessing.dummy.Pipe. Do not use for actual modeling. Rather,
   intended for debugging multithreading; API mimics
@@ -280,7 +277,7 @@ class ThreadedTraceHandler(SharedMemoryHandlerArchitecture):
   def _pipe_and_process_types():
     return mpd.Pipe, ThreadedWorkerProcess
 
-class SynchronousSerializingTraceHandler(SerializingHandlerArchitecture):
+class SynchronousSerializingTraceHandler(HandlerBase):
   '''Controls SynchronousSerializingWorkerProcesses. Communicates via
   SynchronousPipe. Do not use for actual modeling. Rather, intended
   for debugging multithreading; API mimics
@@ -291,7 +288,7 @@ class SynchronousSerializingTraceHandler(SerializingHandlerArchitecture):
   def _pipe_and_process_types():
     return SynchronousPipe, SynchronousSerializingWorkerProcess
 
-class SynchronousTraceHandler(SharedMemoryHandlerArchitecture):
+class SynchronousTraceHandler(SharedMemoryHandlerBase):
   '''Controls SynchronousWorkerProcesses. Default
   TraceHandler. Communicates via SynchronousPipe.  This is what you
   want if you don't want to pay for parallelism.
