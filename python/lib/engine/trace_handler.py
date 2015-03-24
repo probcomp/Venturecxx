@@ -65,8 +65,8 @@ import random
 import numpy as np
 
 from venture.exception import VentureException, format_worker_trace
-from venture.engine.utils import expToDict
 import venture.lite.foreign as foreign
+from venture.engine.trace import Trace
 
 ######################################################################
 # Auxiliary functions for trace serialization and safe function evaluation
@@ -380,9 +380,8 @@ class SynchronousTraceHandler(SharedMemoryHandlerArchitecture):
 # Trace processes; interact with individual traces
 ######################################################################
 
-class TraceWrapper(object):
-  """Defines all the methods that do the actual work of interacting with
-  traces.
+class Safely(object):
+  """Wraps "safely" around all the methods of the argument.
 
   """
   def __init__(self, trace): self.trace = trace
@@ -393,52 +392,6 @@ class TraceWrapper(object):
     # do it this way.
     return safely(safely(getattr)(self.trace, attrname))
 
-  @safely
-  def assume(self, baseAddr, id, exp):
-    self.trace.eval(baseAddr, exp)
-    self.trace.bindInGlobalEnv(id, baseAddr)
-    return self.trace.extractValue(baseAddr)
-
-  @safely
-  def predict_all(self, baseAddr, datum):
-    self.trace.eval(baseAddr,datum)
-    return self.trace.extractValue(baseAddr)
-
-  @safely
-  def observe(self, baseAddr, datum, val):
-    self.trace.eval(baseAddr, datum)
-    logDensity = self.trace.observe(baseAddr,val)
-    # TODO check for -infinity? Throw an exception?
-    if logDensity == float("-inf"):
-      raise VentureException("invalid_constraint", "Observe failed to constrain",
-                             expression=datum, value=val)
-
-  @safely
-  def forget(self, directive, directiveId):
-    if directive[0] == "observe": self.trace.unobserve(directiveId)
-    self.trace.uneval(directiveId)
-    if directive[0] == "assume": self.trace.unbindInGlobalEnv(directive[1])
-
-  @safely
-  def freeze(self, directiveId):
-    self.trace.freeze(directiveId)
-
-  @safely
-  def bind_foreign_sp(self, name, sp):
-    self.trace.bindPrimitiveSP(name, sp)
-
-  @safely
-  def primitive_infer(self, exp):
-    if hasattr(self.trace, "infer_exp"):
-      # The trace can handle the inference primitive syntax natively
-      self.trace.infer_exp(exp)
-    else:
-      # The trace cannot handle the inference primitive syntax
-      # natively, so translate.
-      d = expToDict(exp)
-      #import pdb; pdb.set_trace()
-      self.trace.infer(d)
-
 
 class ProcessBase(object):
 
@@ -448,7 +401,7 @@ class ProcessBase(object):
   '''
   __metaclass__ = ABCMeta
   def __init__(self, traces, pipe, backend):
-    self.traces = [TraceWrapper(t) for t in traces]
+    self.traces = [Safely(Trace(t)) for t in traces]
     self.pipe = pipe
     self.backend = backend
     self._initialize()
