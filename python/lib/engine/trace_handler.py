@@ -343,25 +343,19 @@ class ProcessBase(object):
         state.set_seed(seed)
     return [None for _ in self.states]
 
-  @abstractmethod
-  def send_state(self, index): pass
+  def send_state(self, _index):
+    raise VentureException("fatal", "Cannot transmit state directly if memory is not shared")
 
 ######################################################################
 # Base classes defining how to send states, and process types
 
-class SerializingProcessArchitecture(ProcessBase):
-  '''
-  Attempting to send a state without first serializing results in an exception.
-  Inherited by MultiprocessingWorkerProcess (for which this behavior is necessary) and
-  ThreadedSerializingWorkerProcess (which mimics the API of the Parallel process).
-  '''
-  @safely
-  def send_state(self, _index):
-    raise VentureException("fatal", "Must serialize before sending in parallel architecture")
+class SharedMemoryProcessBase(ProcessBase):
+  '''Offers a short-cut around serialization by sending states directly.
 
-class SharedMemoryProcessArchitecture(ProcessBase):
-  '''
-  Sends states directly. Inherited by ThreadedWorkerProcess.
+  Only works if the memory space is shared between worker and master,
+  and we are not trying to emulate the separate-memory regime.
+  Inherited by ThreadedWorkerProcess and SynchronousWorkerProcess.
+
   '''
   @safely
   def send_state(self, index):
@@ -400,7 +394,7 @@ class SynchronousBase(object):
 # Concrete process classes
 
 # pylint: disable=too-many-ancestors
-class MultiprocessingWorkerProcess(SerializingProcessArchitecture, MultiprocessBase):
+class MultiprocessingWorkerProcess(ProcessBase, MultiprocessBase):
   '''
   True parallelism via multiprocessing. Controlled by MultiprocessingTraceHandler.
   '''
@@ -416,7 +410,7 @@ class MultiprocessingWorkerProcess(SerializingProcessArchitecture, MultiprocessB
     else:
       return ProcessBase.set_seeds(self, index, seeds)
 
-class ThreadedSerializingWorkerProcess(SerializingProcessArchitecture, ThreadingBase):
+class ThreadedSerializingWorkerProcess(ProcessBase, ThreadingBase):
   '''Emulates MultiprocessingWorkerProcess by serializing the managed states, but
   is implemented with threading. Could be useful for debugging?
   Controlled by ThreadedSerializingTraceHandler.
@@ -424,7 +418,7 @@ class ThreadedSerializingWorkerProcess(SerializingProcessArchitecture, Threading
   '''
   pass
 
-class ThreadedWorkerProcess(SharedMemoryProcessArchitecture, ThreadingBase):
+class ThreadedWorkerProcess(SharedMemoryProcessBase, ThreadingBase):
   '''Emulates MultiprocessingWorkerProcess by running multithreaded but
   without serializing states.  Could be useful for debugging?
   Controlled by ThreadedTraceHandler.
@@ -432,7 +426,7 @@ class ThreadedWorkerProcess(SharedMemoryProcessArchitecture, ThreadingBase):
   '''
   pass
 
-class SynchronousSerializingWorkerProcess(SerializingProcessArchitecture, SynchronousBase):
+class SynchronousSerializingWorkerProcess(ProcessBase, SynchronousBase):
   '''Emulates MultiprocessingWorkerProcess by serializing the states as
   it would, while still running in one thread.  Use for debugging.
   Controlled by SynchronousSerializingTraceHandler.
@@ -440,7 +434,7 @@ class SynchronousSerializingWorkerProcess(SerializingProcessArchitecture, Synchr
   '''
   pass
 
-class SynchronousWorkerProcess(SharedMemoryProcessArchitecture, SynchronousBase):
+class SynchronousWorkerProcess(SharedMemoryProcessBase, SynchronousBase):
   '''
   Default. Keeps everything synchronous. Controlled by
   SynchronousTraceHandler.
