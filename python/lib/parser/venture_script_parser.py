@@ -432,8 +432,6 @@ class VentureScriptParser(object):
             ['stop_continuous_inference','[ <!stop> <!continuous> <!inference> ]'],
             ['get_current_exception', '<!get> <!current> <!exception>'],
             ['get_state', '<!get> <!state>'],
-            ['get_logscore', '<!get> <!logscore> <directive_id:int>'],
-            ['labeled_get_logscore', '<!get> <!logscore> <label:sym>'],
             ['get_global_logscore', '<!get> <!global> <!logscore>'],
             # Ripl
             ['load', '<!load> <file:json>'] # json, a poor man's quoted string

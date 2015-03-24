@@ -176,9 +176,6 @@ class Semantics(object):
         return { 'instruction': loctoken1(k, 'get_current_exception') }
     def p_command_get_state(self, k):
         return { 'instruction': loctoken1(k, 'get_state') }
-    def p_command_get_logscore(self, k, dr):
-        i = 'labeled_get_logscore' if dr[0] == 'label' else 'get_logscore'
-        return { 'instruction': loctoken1(k, i), dr[0]: dr[1] }
     def p_command_get_global_logscore(self, k):
         return { 'instruction': loctoken1(k, 'get_global_logscore') }
     def p_command_profiler_configure(self, k, options):
@@ -550,8 +547,6 @@ class ChurchPrimeParser(object):
         'stop_continuous_inference': [],
         'get_current_exception': [],
         'get_state': [],
-        'get_logscore': [('directive_id', unparse_integer)],
-        'labeled_get_logscore': [('label', unparse_symbol)],
         'profiler_configure': [('options', unparse_json)],
         'profiler_clear': [],
         'profiler_list_random': [], # XXX Urk, extra keyword.

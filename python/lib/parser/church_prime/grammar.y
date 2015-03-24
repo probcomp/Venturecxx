@@ -86,7 +86,6 @@ command(start_continuous_inference)	::= K_START_CONTINUOUS_INFERENCE(k)
 command(stop_continuous_inference)	::= K_STOP_CONTINUOUS_INFERENCE(k).
 command(get_current_exception)		::= K_GET_CURRENT_EXCEPTION(k).
 command(get_state)		::= K_GET_STATE(k).
-command(get_logscore)		::= K_GET_LOGSCORE(k) directive_ref(d).
 command(get_global_logscore)	::= K_GET_GLOBAL_LOGSCORE(k).
 command(profiler_configure)	::= K_PROFILER_CONFIGURE(k) json(options).
 command(profiler_clear)		::= K_PROFILER_CLEAR(k).
@@ -166,7 +165,6 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_GET_CURRENT_EXCEPTION
 	K_GET_DIRECTIVE
 	K_GET_GLOBAL_LOGSCORE
-	K_GET_LOGSCORE
 	K_GET_STATE
 	K_INFER
 	K_LIST_DIRECTIVES

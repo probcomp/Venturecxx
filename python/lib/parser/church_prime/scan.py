@@ -53,7 +53,6 @@ keywords = {                    # XXX Use a perfect hash.
     'get_current_exception': grammar.K_GET_CURRENT_EXCEPTION,
     'get_directive': grammar.K_GET_DIRECTIVE,
     'get_global_logscore': grammar.K_GET_GLOBAL_LOGSCORE,
-    'get_logscore': grammar.K_GET_LOGSCORE,
     'get_state': grammar.K_GET_STATE,
     'infer': grammar.K_INFER,
     'list_directives': grammar.K_LIST_DIRECTIVES,
