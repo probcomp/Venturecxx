@@ -19,15 +19,19 @@ This module handles the interface between the Venture engine (which is part of
 the Venture stack), and the Venture traces (which are implemented in the
 Venture backends). The architecture is as follows:
 
-The TraceProcess classes are subclasses of either multiprocessing.Process, or
-multiprocessing.dummy.Process.
-Each instance of TraceProcess contains a single Trace as an attribute, and
-interacts with the Trace via method calls. As a subclass of Process, each
+The TraceProcess classes are subclasses of either multiprocessing.Process for
+multiprocessing, or multiprocessing.dummy.Process for threading, or
+SynchronousBase (this module) for synchronous operation.
+
+Each instance of TraceProcess contains a list of states (which are always
+Traces in this use case, but TraceProcess doesn't care), and
+interacts with the underlying object by forwarding method calls.
+As a subclass of Process, each
 instance has a run() method. The run() method is simply a listener; the
 TraceProcess waits for commands sent over the pipe from the TraceHandler
 (described below), calls the method associated with the command, and then
-returns the result to the  Handler over the pipe. All methods are wrapped in
-the @safely decorator, whose purpose is to cath all errors ocurring in workers
+returns the result to the Handler over the pipe. All methods are wrapped in
+the @safely decorator, whose purpose is to catch all errors occurring in workers
 and return them over the Pipe, to be raised by the Handler. This prevents
 exceptions in the child processes from hanging the program.
 The TraceProcess classes are daemonic; the TraceHandler need not wait for
