@@ -137,8 +137,7 @@ class HandlerBase(object):
     self.processes = []
     self.pipes = []  # Parallel to processes
     self.chunk_sizes = [] # Parallel to processes
-    self.log_weights = []
-    self.chunk_indexes = [] # Parallel to log_weights
+    self.chunk_indexes = [] # One per trace
     self.chunk_offsets = [] # Parallel to chunk_indexes
     self._create_processes(traces)
     self.reset_seeds()
@@ -171,17 +170,8 @@ class HandlerBase(object):
       self.processes.append(process)
       self.chunk_sizes.append(chunk_end - chunk_start)
       for i in range (chunk_end - chunk_start):
-        self.log_weights.append(0)
         self.chunk_indexes.append(chunk)
         self.chunk_offsets.append(i)
-
-  def incorporate(self):
-    weight_increments = self.delegate('makeConsistent')
-    for i, increment in enumerate(weight_increments):
-      self.log_weights[i] += increment
-
-  def likelihood_weight(self):
-    self.log_weights = self.delegate('likelihood_weight')
 
   def reset_seeds(self):
     for i in range(len(self.processes)):

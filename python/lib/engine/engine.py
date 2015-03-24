@@ -73,11 +73,13 @@ class Engine(object):
   def create_handler(self, traces, weights=None):
     ans = self.trace_handler_constructor(self.mode)(traces, self.name, self.process_cap)
     if weights is not None:
-      ans.log_weights = weights
+      self.log_weights = weights
+    else:
+      self.log_weights = [0 for _ in traces]
     return ans
 
   def num_traces(self):
-    return len(self.trace_handler.log_weights)
+    return len(self.log_weights)
 
   def inferenceSPsList(self):
     return self.inference_sps.iteritems()
@@ -145,7 +147,7 @@ class Engine(object):
     # to the list of directives
     # This mirrors the implementation in the core_sivm, but could be changed?
     did = self.observe(datum, val)
-    self.trace_handler.incorporate()
+    self.incorporate()
     self.forget(did)
     return self.directiveCounter
 
@@ -263,20 +265,20 @@ effect of renumbering the directives, if some had been forgotten."""
     newTraces = self._resample_traces(P)
     del self.trace_handler
     self.trace_handler = self.create_handler(newTraces)
-    self.trace_handler.incorporate()
+    self.incorporate()
 
   def _resample_traces(self, P):
     P = int(P)
     newTraces = [None for p in range(P)]
     for p in range(P):
-      parent = sampleLogCategorical(self.trace_handler.log_weights) # will need to include or rewrite
+      parent = sampleLogCategorical(self.log_weights) # will need to include or rewrite
       newTrace = self.copy_trace(self.retrieve_trace(parent))
       newTraces[p] = newTrace
     return newTraces
 
   def diversify(self, program):
     traces = self.retrieve_traces()
-    weights = self.trace_handler.log_weights
+    weights = self.log_weights
     new_traces = []
     new_weights = []
     for (t, w) in zip(traces, weights):
@@ -288,7 +290,7 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def _collapse_help(self, scope, block, select_keeper):
     traces = self.retrieve_traces()
-    weights = self.trace_handler.log_weights
+    weights = self.log_weights
     fingerprints = [t.block_values(scope, block) for t in traces]
     def grouping():
       "Because sorting doesn't do what I want on dicts, so itertools.groupby is not useful"
@@ -326,8 +328,16 @@ effect of renumbering the directives, if some had been forgotten."""
       return (lst.index(max(lst)), max(lst))
     self._collapse_help(scope, block, max_ind)
 
+  def likelihood_weight(self):
+    self.log_weights = self.trace_handler.delegate('likelihood_weight')
+
+  def incorporate(self):
+    weight_increments = self.trace_handler.delegate('makeConsistent')
+    for i, increment in enumerate(weight_increments):
+      self.log_weights[i] += increment
+
   def infer(self, program):
-    self.trace_handler.incorporate()
+    self.incorporate()
     if self.is_infer_loop_program(program):
       assert len(program) == 2
       prog = [v.sym("do")] + program[1]
@@ -455,7 +465,7 @@ effect of renumbering the directives, if some had been forgotten."""
   def save(self, fname, extra=None):
     data = {}
     data['traces'] = self.retrieve_dumps()
-    data['log_weights'] = self.trace_handler.log_weights
+    data['log_weights'] = self.log_weights
     data['directives'] = self.directives
     data['directiveCounter'] = self.directiveCounter
     data['mode'] = self.mode
@@ -482,7 +492,7 @@ effect of renumbering the directives, if some had been forgotten."""
     engine.directives = self.directives
     engine.mode = self.mode
     traces = [engine.restore_trace(dump) for dump in self.retrieve_dumps()]
-    engine.trace_handler = engine.create_handler(traces, self.trace_handler.log_weights)
+    engine.trace_handler = engine.create_handler(traces, self.log_weights)
     return engine
 
   def to_lite(self):
@@ -495,7 +505,7 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def set_profiling(self, enabled=True):
     # TODO: do this by introspection on the trace
-    if self.trace_handler.backend == 'lite':
+    if self.name == 'lite':
       self.trace_handler.delegate('set_profiling', enabled)
 
   def clear_profiling(self):

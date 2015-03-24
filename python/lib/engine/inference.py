@@ -90,7 +90,7 @@ class Infer(object):
   def resample_threaded(self, ct): self.engine.resample(ct, 'threaded')
   def resample_thread_ser(self, ct): self.engine.resample(ct, 'thread_ser')
   def resample_multiprocess(self, ct, process_cap = None): self.engine.resample(ct, 'multiprocess', process_cap)
-  def likelihood_weight(self): self.engine.trace_handler.likelihood_weight()
+  def likelihood_weight(self): self.engine.likelihood_weight()
   def likelihood_at(self, scope, block):
     return self.engine.trace_handler.delegate('likelihood_at', scope.getSymbol(), block.getSymbol())
   def posterior_at(self, scope, block):
@@ -98,7 +98,7 @@ class Infer(object):
   def enumerative_diversify(self, scope, block): self.engine.diversify(["enumerative", scope, block])
   def collapse_equal(self, scope, block): self.engine.collapse(scope, block)
   def collapse_equal_map(self, scope, block): self.engine.collapse_map(scope, block)
-  def incorporate(self): self.engine.trace_handler.incorporate()
+  def incorporate(self): self.engine.incorporate()
   def printf(self, dataset): print dataset.asPandas()
   def plotf(self, spec, dataset):
     spec = ExpressionType().asPython(spec)
@@ -126,7 +126,7 @@ class Infer(object):
       answer['particle id'] = range(engine.num_traces())
       answer['time (s)'] = [the_time] * engine.num_traces()
       answer['log score'] = engine.logscore_all() # TODO Replace this by explicit references to (global_likelihood), because the current implementation is wrong
-      log_weights = copy(engine.trace_handler.log_weights)
+      log_weights = copy(engine.log_weights)
       answer['particle log weight'] = log_weights
       answer['particle normalized prob'] = logWeightsToNormalizedDirect(log_weights)
     collect_std_streams(self.engine)
@@ -151,10 +151,10 @@ class Infer(object):
     return self.convert_none(self.engine.ripl.load_plugin(name, *args))
 
   def particle_log_weights(self):
-    return self.engine.trace_handler.log_weights
+    return self.engine.log_weights
   def set_particle_log_weights(self, new_weights):
-    assert len(new_weights) == len(self.engine.trace_handler.log_weights)
-    self.engine.trace_handler.log_weights = new_weights
+    assert len(new_weights) == len(self.engine.log_weights)
+    self.engine.log_weights = new_weights
   def particle_normalized_probs(self):
     return logWeightsToNormalizedDirect(self.particle_log_weights())
 
