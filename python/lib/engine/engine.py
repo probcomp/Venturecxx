@@ -455,14 +455,14 @@ effect of renumbering the directives, if some had been forgotten."""
     if self.trace_handler.can_retrieve_state():
       return self.trace_handler.retrieve_state(ix)
     else:
-      dumped = self.trace_handler.retrieve_dump(ix, self)
+      dumped = self.retrieve_dump(ix)
       return self.restore_trace(dumped)
 
   def retrieve_traces(self):
     if self.trace_handler.can_retrieve_state():
       return self.trace_handler.retrieve_states()
     else:
-      dumped_all = self.trace_handler.retrieve_dumps(self)
+      dumped_all = self.retrieve_dumps()
       return [self.restore_trace(dumped) for dumped in dumped_all]
 
   # class methods that call the corresponding functions, with arguments filled in
