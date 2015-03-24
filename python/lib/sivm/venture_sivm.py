@@ -73,13 +73,13 @@ class VentureSivm(object):
     ###############################
 
     def _clear(self):
-        self.label_dict = {}
-        self.did_dict = {}
-        self.directive_dict = {}
-        self.syntax_dict = {}
+        self.label_dict = {} # Maps labels to directive ids
+        self.did_dict = {} # Maps directive ids back to labels
+        self.directive_dict = {} # Maps directive ids to the actual instructions
+        self.syntax_dict = {} # Maps directive ids to the Syntax objects that record their macro expansion history
         self._debugger_clear()
         self.state = 'default'
-        self.attempted = []
+        self.attempted = [] # Stores Syntax objects of in-progress instructions (that do not have assigned directive IDs yet).
 
     def _debugger_clear(self):
         self.breakpoint_dict = {}
