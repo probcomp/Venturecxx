@@ -447,9 +447,11 @@ effect of renumbering the directives, if some had been forgotten."""
       self.inferrer.stop()
       self.inferrer = None
 
-  def retrieve_dump(self, ix): return self.trace_handler.retrieve_dump(ix, self)
+  def retrieve_dump(self, ix):
+    return self.trace_handler.delegate_one(ix, 'dump', self.directives)
 
-  def retrieve_dumps(self): return self.trace_handler.retrieve_dumps(self)
+  def retrieve_dumps(self):
+    return self.trace_handler.delegate('dump', self.directives)
 
   def retrieve_trace(self, ix):
     if self.trace_handler.can_retrieve_state():

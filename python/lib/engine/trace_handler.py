@@ -211,12 +211,6 @@ class HandlerBase(object):
   def delegate_distinguished(self, cmd, *args, **kwargs):
     return self.delegate_one(0, cmd, *args, **kwargs)
 
-  def retrieve_dump(self, ix, engine):
-    return self.delegate_one(ix, 'dump', engine.directives)
-
-  def retrieve_dumps(self, engine):
-    return self.delegate('dump', engine.directives)
-
   def can_retrieve_state(self):
     """In general, the short-circuit offered by SharedMemoryHandlerBase is not available."""
     return False
