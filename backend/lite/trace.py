@@ -590,11 +590,6 @@ the scaffold determined by the given expression."""
     # numpy.random.seed(seed)
     pass
 
-  def getDirectiveLogScore(self,id):
-    assert id in self.families
-    node = self.getOutermostNonReferenceNode(self.families[id])
-    return self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node))
-
   def getGlobalLogScore(self):
     # TODO This algorithm is totally wrong: https://app.asana.com/0/16653194948424/20100308871203
     all_scores = [self._getOneLogScore(node) for node in self.rcs.union(self.ccs)]
