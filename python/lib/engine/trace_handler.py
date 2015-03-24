@@ -378,9 +378,9 @@ class ProcessBase(object):
   @safely
   def send_dump(self, index, directives):
     if index is not None:
-      return dump_trace(self.traces[index].trace, directives)
+      return dump_trace(self.traces[index].trace.trace, directives)
     else:
-      return [dump_trace(t.trace, directives) for t in self.traces]
+      return [dump_trace(t.trace.trace, directives) for t in self.traces]
 
 ######################################################################
 # Base classes defining how to send traces, and process types
@@ -403,9 +403,9 @@ class SharedMemoryProcessArchitecture(ProcessBase):
   @safely
   def send_trace(self, index):
     if index is not None:
-      return self.traces[index].trace
+      return self.traces[index].trace.trace
     else:
-      return [t.trace for t in self.traces]
+      return [t.trace.trace for t in self.traces]
 
 class MultiprocessBase(mp.Process):
   '''
