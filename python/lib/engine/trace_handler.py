@@ -256,7 +256,7 @@ class HandlerBase(object):
     return res
 
   def delegate_one_chunk(self, ix, cmd, *args, **kwargs):
-    '''Delegate command to (all the traces of) a single worked, indexed by ix in the process list'''
+    '''Delegate command to (all the traces of) a single worker, indexed by ix in the process list'''
     pipe = self.pipes[ix]
     pipe.send((cmd, args, kwargs, None))
     res = pipe.recv()
