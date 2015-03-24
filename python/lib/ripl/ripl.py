@@ -112,7 +112,7 @@ class Ripl():
 
 
 
-    def execute_instruction(self, instruction=None, params=None, suppress_drawing_plots=False, suppress_pausing_continous_inference=False):
+    def execute_instruction(self, instruction=None, params=None, suppress_pausing_continous_inference=False):
         # The suppress_pausing_continous_inference flag is used by the
         # thread doing the continuous inference.
         p = self._cur_parser()
@@ -580,7 +580,7 @@ Open issues:
     def infer(self, params=None, type=False, suppress_pausing_continous_inference=False):
         # The suppress_pausing_continous_inference flag is used by the
         # thread doing the continuous inference.
-        o = self.execute_instruction({'instruction':'infer', 'expression': self.defaultInferProgram(params)}, suppress_drawing_plots = True, suppress_pausing_continous_inference=suppress_pausing_continous_inference)
+        o = self.execute_instruction({'instruction':'infer', 'expression': self.defaultInferProgram(params)}, suppress_pausing_continous_inference=suppress_pausing_continous_inference)
         value = o["value"]
         return value if type else u.strip_types(value)
 
