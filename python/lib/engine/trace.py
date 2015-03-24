@@ -1,3 +1,4 @@
+import venture.lite.foreign as foreign
 from venture.engine.utils import expToDict
 from venture.exception import VentureException
 
@@ -50,3 +51,61 @@ class Trace(object):
       d = expToDict(exp)
       #import pdb; pdb.set_trace()
       self.trace.infer(d)
+
+######################################################################
+# Auxiliary functions for dumping and loading backend-specific traces
+######################################################################
+
+def dump_trace(trace, directives, skipStackDictConversion=False):
+  # TODO: It would be good to pass foreign_sps to this function as well,
+  # and then check that the passed foreign_sps match up with the foreign
+  # SP's bound in the trace's global environment. However, in the Puma backend
+  # there is currently no way to access this global environment.
+  # This block mutates the trace
+  db = trace.makeSerializationDB()
+  for did, directive in sorted(directives.items(), reverse=True):
+    if directive[0] == "observe":
+      trace.unobserve(did)
+    trace.unevalAndExtract(did, db)
+
+  # This block undoes the mutation on the trace done by the previous block; but
+  # it does not destroy the value stack because the actual OmegaDB (superclass
+  # of OrderedOmegaDB) has the values.
+  for did, directive in sorted(directives.items()):
+    trace.restore(did, db)
+    if directive[0] == "observe":
+      trace.observe(did, directive[2])
+
+  # TODO Actually, I should restore the degree of incorporation the
+  # original trace had.  In the absence of tracking that, this
+  # heuristically makes the trace fully incorporated.  Hopefully,
+  # mistakes will be rarer than in the past (which will make them even
+  # harder to detect).
+  trace.makeConsistent()
+
+  return trace.dumpSerializationDB(db, skipStackDictConversion)
+
+def restore_trace(trace, directives, values, foreign_sps,
+                  backend, skipStackDictConversion=False):
+  # bind the foreign sp's; wrap if necessary
+  for name, sp in foreign_sps.items():
+    if backend != 'lite':
+      sp = foreign.ForeignLiteSP(sp)
+    trace.bindPrimitiveSP(name, sp)
+
+  db = trace.makeSerializationDB(values, skipStackDictConversion)
+
+  for did, directive in sorted(directives.items()):
+      if directive[0] == "assume":
+          name, datum = directive[1], directive[2]
+          trace.evalAndRestore(did, datum, db)
+          trace.bindInGlobalEnv(name, did)
+      elif directive[0] == "observe":
+          datum, val = directive[1], directive[2]
+          trace.evalAndRestore(did, datum, db)
+          trace.observe(did, val)
+      elif directive[0] == "predict":
+          datum = directive[1]
+          trace.evalAndRestore(did, datum, db)
+
+  return trace

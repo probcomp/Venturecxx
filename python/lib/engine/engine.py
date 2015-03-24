@@ -19,9 +19,10 @@ import cPickle as pickle
 import time
 
 from venture.exception import VentureException
-from trace_handler import (dump_trace, restore_trace, SynchronousTraceHandler,
+from trace_handler import (SynchronousTraceHandler,
                            SynchronousSerializingTraceHandler, ThreadedTraceHandler,
                            ThreadedSerializingTraceHandler, MultiprocessingTraceHandler)
+from trace import dump_trace, restore_trace
 from venture.lite.utils import sampleLogCategorical, logaddexp
 from venture.engine.inference import Infer
 import venture.value.dicts as v
