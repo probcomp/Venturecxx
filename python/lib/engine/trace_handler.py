@@ -66,7 +66,7 @@ import numpy as np
 
 from venture.exception import VentureException, format_worker_trace
 from venture.engine.utils import expToDict
-import venture.lite.foreign as f
+import venture.lite.foreign as foreign
 
 ######################################################################
 # Auxiliary functions for trace serialization and safe function evaluation
@@ -106,7 +106,7 @@ def restore_trace(trace, directives, values, foreign_sps,
   # bind the foreign sp's; wrap if necessary
   for name, sp in foreign_sps.items():
     if backend != 'lite':
-      sp = f.ForeignLiteSP(sp)
+      sp = foreign.ForeignLiteSP(sp)
     trace.bindPrimitiveSP(name, sp)
 
   db = trace.makeSerializationDB(values, skipStackDictConversion)
