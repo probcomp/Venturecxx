@@ -403,7 +403,6 @@ effect of renumbering the directives, if some had been forgotten."""
   def primitive_infer(self, exp):
     self.trace_handler.delegate('primitive_infer', exp)
 
-  def get_logscore(self, did): return self.trace_handler.delegate_distinguished('getDirectiveLogScore', did)
   def logscore(self): return self.trace_handler.delegate_distinguished('getGlobalLogScore')
   def logscore_all(self): return self.trace_handler.delegate('getGlobalLogScore')
 
