@@ -71,7 +71,11 @@ class Engine(object):
       return SynchronousTraceHandler
 
   def create_handler(self, traces, weights=None):
-    ans = self.trace_handler_constructor(self.mode)(traces, self.name, self.process_cap)
+    if self.name == "lite":
+      rng_style = "process"
+    else:
+      rng_style = "local"
+    ans = self.trace_handler_constructor(self.mode)(traces, rng_style, self.process_cap)
     if weights is not None:
       self.log_weights = weights
     else:

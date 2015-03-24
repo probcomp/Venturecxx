@@ -109,15 +109,12 @@ class HandlerBase(object):
   behavior in parallel, threaded, and sequential modes to be defined by subclasses.
   '''
   __metaclass__ = ABCMeta
-  def __init__(self, traces, backend, process_cap):
+  def __init__(self, traces, rng_style, process_cap):
     """A TraceHandler maintains:
 
-    - An array of (logspace) weights of the traces being managed.  (It
-      seems reasonable to keep the weights on the master process, for
-      ease of access.)
+    - An array of objects representing the worker processes.
 
-    - Two parallel arrays: child process objects, and the local ends
-      of pipes for talking to them.
+    - An array of the local ends of pipes for talking to them.
 
     - Each child process manages a chunk of the traces.  The full set
       of traces is notionally the concatenation of all the chunks, in
@@ -129,10 +126,7 @@ class HandlerBase(object):
       chunk).
 
     """
-    if backend == "lite":
-      self.rng_style = "process"
-    else:
-      self.rng_style = "local"
+    self.rng_style = rng_style
     self.process_cap = process_cap
     self.processes = []
     self.pipes = []  # Parallel to processes
