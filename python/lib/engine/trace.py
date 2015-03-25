@@ -8,6 +8,7 @@ class Trace(object):
 
   """
   def __init__(self, trace, directives=None):
+    assert not isinstance(trace, Trace) # I've had too many double-wrapping bugs
     self.trace = trace
     if directives is not None:
       self.directives = directives
