@@ -1,3 +1,5 @@
+import copy
+
 import venture.lite.foreign as foreign
 from venture.engine.utils import expToDict
 from venture.exception import VentureException
@@ -75,17 +77,18 @@ class Trace(object):
     return ([Trace(t) for t in traces], weights)
 
   def dump(self, directives, skipStackDictConversion=False):
-    return _dump_trace(self.trace, directives, skipStackDictConversion)
+    return _dump_trace(self.trace, directives, self.directives, skipStackDictConversion)
 
   @staticmethod
   def restore(engine, values, skipStackDictConversion=False):
-    return Trace(_restore_trace(engine.Trace(), engine.directives, values, engine.foreign_sps, engine.name, skipStackDictConversion))
+    (values, wr_directives) = values
+    return Trace(_restore_trace(engine.Trace(), engine.directives, values, engine.foreign_sps, engine.name, skipStackDictConversion), wr_directives)
 
 ######################################################################
 # Auxiliary functions for dumping and loading backend-specific traces
 ######################################################################
 
-def _dump_trace(trace, directives, skipStackDictConversion=False):
+def _dump_trace(trace, directives, wr_directives, skipStackDictConversion=False):
   # TODO: It would be good to pass foreign_sps to this function as well,
   # and then check that the passed foreign_sps match up with the foreign
   # SP's bound in the trace's global environment. However, in the Puma backend
@@ -112,7 +115,7 @@ def _dump_trace(trace, directives, skipStackDictConversion=False):
   # harder to detect).
   trace.makeConsistent()
 
-  return trace.dumpSerializationDB(db, skipStackDictConversion)
+  return (trace.dumpSerializationDB(db, skipStackDictConversion), wr_directives)
 
 def _restore_trace(trace, directives, values, foreign_sps,
                    backend, skipStackDictConversion=False):

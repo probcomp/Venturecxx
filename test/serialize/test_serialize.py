@@ -15,8 +15,14 @@ def _test_serialize_program(v, label, action):
         trace1 = engine.getDistinguishedTrace()
         serialized = engine.dump_trace(trace1)
         trace2 = engine.restore_trace(serialized)
-        assert isinstance(serialized, list)
-        assert all(isinstance(x, dict) for x in serialized)
+        assert isinstance(serialized, tuple)
+        assert len(serialized) == 2
+        assert isinstance(serialized[0], list)
+        assert all(isinstance(x, dict) for x in serialized[0])
+        assert isinstance(serialized[1], dict) # Mapping directive ids to directives
+        for (key,val) in serialized[1].iteritems():
+            assert isinstance(key, int)
+            assert isinstance(val, list)
         assert isinstance(trace2, type(trace1))
         assert isinstance(trace2.trace, type(trace1.trace))
     elif action == 'copy':
