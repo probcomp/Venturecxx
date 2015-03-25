@@ -62,7 +62,6 @@ below.
 
 import multiprocessing as mp
 from multiprocessing import dummy as mpd
-from abc import ABCMeta, abstractmethod
 from sys import exc_info
 from traceback import format_exc
 import random
@@ -108,7 +107,6 @@ class HandlerBase(object):
   interact with the TraceHandlers and reserves abstract methods with different
   behavior in parallel, threaded, and sequential modes to be defined by subclasses.
   '''
-  __metaclass__ = ABCMeta
   def __init__(self, traces, rng_style, process_cap):
     """A TraceHandler maintains:
 
@@ -312,7 +310,6 @@ class ProcessBase(object):
   the state synchronously (using Safely objects to catch exceptions).
 
   '''
-  __metaclass__ = ABCMeta
   def __init__(self, states, pipe, rng_style):
     self.states = [Safely(s) for s in states]
     self.pipe = pipe
