@@ -216,7 +216,7 @@ class MasterBase(object):
   def delegate_distinguished(self, cmd, *args, **kwargs):
     return self.delegate_one(0, cmd, *args, **kwargs)
 
-  def can_retrieve_state(self):
+  def can_shortcut_retrieval(self):
     """In general, the short-circuit offered by SharedMemoryMasterBase is not available."""
     return False
 
@@ -233,12 +233,12 @@ class SharedMemoryMasterBase(MasterBase):
 
   '''
 
-  def can_retrieve_state(self): return True
+  def can_shortcut_retrieval(self): return True
 
-  def retrieve_state(self, ix):
+  def retrieve(self, ix):
     return self.delegate_one(ix, 'send_object')
 
-  def retrieve_states(self):
+  def retrieve_all(self):
     return self.delegate('send_object')
 
 ######################################################################

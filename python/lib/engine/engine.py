@@ -454,15 +454,15 @@ effect of renumbering the directives, if some had been forgotten."""
     return self.trace_handler.delegate('dump', self.directives)
 
   def retrieve_trace(self, ix):
-    if self.trace_handler.can_retrieve_state():
-      return self.trace_handler.retrieve_state(ix)
+    if self.trace_handler.can_shortcut_retrieval():
+      return self.trace_handler.retrieve(ix)
     else:
       dumped = self.retrieve_dump(ix)
       return self.restore_trace(dumped)
 
   def retrieve_traces(self):
-    if self.trace_handler.can_retrieve_state():
-      return self.trace_handler.retrieve_states()
+    if self.trace_handler.can_shortcut_retrieval():
+      return self.trace_handler.retrieve_all()
     else:
       dumped_all = self.retrieve_dumps()
       return [self.restore_trace(dumped) for dumped in dumped_all]
