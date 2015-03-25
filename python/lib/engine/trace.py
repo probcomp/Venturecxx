@@ -84,6 +84,9 @@ class Trace(object):
     (values, wr_directives) = values
     return Trace(_restore_trace(engine.Trace(), engine.directives, values, engine.foreign_sps, engine.name, skipStackDictConversion), wr_directives)
 
+  def stop_and_copy(self):
+    return Trace(self.trace.stop_and_copy(), copy.copy(self.directives))
+
 ######################################################################
 # Auxiliary functions for dumping and loading backend-specific traces
 ######################################################################
