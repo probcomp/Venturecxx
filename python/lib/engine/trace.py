@@ -52,6 +52,13 @@ class Trace(object):
       #import pdb; pdb.set_trace()
       self.trace.infer(d)
 
+  def diversify(self, exp, copy_trace):
+    def copy_inner_trace(trace):
+      assert trace is self.trace
+      return copy_trace(self).trace
+    (traces, weights) = self.trace.diversify(exp, copy_inner_trace)
+    return ([Trace(t) for t in traces], weights)
+
   def dump(self, directives, skipStackDictConversion=False):
     return _dump_trace(self.trace, directives, skipStackDictConversion)
 
