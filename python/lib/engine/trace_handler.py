@@ -21,16 +21,16 @@ execution histories ("particles") of the model program.
 
 The architecture is as follows:
 
-The WorkerProcess classes are subclasses of either
+The Worker classes are subclasses of either
 multiprocessing.Process for multiprocessing, or
 multiprocessing.dummy.Process for threading, or SynchronousBase (in
 this module) for synchronous operation.
 
-Each instance of WorkerProcess contains a list of objects (which are
-always Traces in this use case, but WorkerProcess doesn't care), and
+Each instance of Worker contains a list of objects (which are
+always Traces in this use case, but Worker doesn't care), and
 interacts with each underlying object by forwarding method calls.  As
 a subclass of Process, each instance has a run() method. The run()
-method is simply a listener; the WorkerProcess waits for commands sent
+method is simply a listener; the Worker waits for commands sent
 over the pipe from the Master (described below), calls the method
 associated with the command, and then returns the result to the Master
 over the pipe. All methods are wrapped in the @safely decorator, whose
@@ -38,20 +38,20 @@ purpose is to catch all errors occurring in workers and return them
 over the Pipe, to be raised by the Master in the master process. This
 prevents exceptions in the child processes from hanging the program.
 
-The WorkerProcess classes are daemonic; the Master need not wait for
+The Worker classes are daemonic; the Master need not wait for
 the run() methods of its children to complete before regaining control
-of the program. Also as daemonic processes, all WorkerProcess
+of the program. Also as daemonic processes, all Worker
 instances will be terminated when the controlling Master is deleted.
-For more information on the WorkerProcess class hierarchy, see the
+For more information on the Worker class hierarchy, see the
 docstrings below.
 
 The Master classes facilitate communication between the client and the
-individual WorkerProcess instances. Each Master stores a list of
-WorkerProcesses, and also a list of Pipes interacting with those
-WorkerProcesses, as attributes.  When the client wants something done,
+individual Worker instances. Each Master stores a list of
+Workers, and also a list of Pipes interacting with those
+Workers, as attributes.  When the client wants something done,
 it calls "delegate" (or "delegate_one" for interacting with just one
 controlled object) on the Master. The Master then passes this command
-over the Pipes to the WorkerProcesses, and waits for results to be
+over the Pipes to the Workers, and waits for results to be
 returned from the workers. It regains control of the program when all
 results have been returned. It then checks for exceptions; if any are
 found, it re-raises the first one. Else it passes its result back to
@@ -149,7 +149,7 @@ class MasterBase(object):
     self.delegate('stop')
 
   def _create_processes(self, objects):
-    Pipe, WorkerProcess = self._pipe_and_process_types()
+    Pipe, Worker = self._pipe_and_process_types()
     if self.process_cap is None:
       base_size = 1
       extras = 0
@@ -166,7 +166,7 @@ class MasterBase(object):
         chunk_start = extras + chunk * base_size
         chunk_end = chunk_start + base_size
       assert chunk_end <= len(objects) # I think I wrote this code to ensure this
-      process = WorkerProcess(objects[chunk_start:chunk_end], child, self.rng_style)
+      process = Worker(objects[chunk_start:chunk_end], child, self.rng_style)
       process.start()
       self.pipes.append(parent)
       self.processes.append(process)
@@ -189,7 +189,7 @@ class MasterBase(object):
       ans = pipe.recv()
       res.extend(ans)
     if any([threw_error(entry) for entry in res]):
-      exception_handler = WorkerProcessExceptionHandler(res)
+      exception_handler = WorkerExceptionHandler(res)
       raise exception_handler.gen_exception()
     return res
 
@@ -199,7 +199,7 @@ class MasterBase(object):
     pipe.send((cmd, args, kwargs, None))
     res = pipe.recv()
     if any([threw_error(entry) for entry in res]):
-      exception_handler = WorkerProcessExceptionHandler(res)
+      exception_handler = WorkerExceptionHandler(res)
       raise exception_handler.gen_exception()
     return res
 
@@ -209,7 +209,7 @@ class MasterBase(object):
     pipe.send((cmd, args, kwargs, self.chunk_offsets[ix]))
     res = pipe.recv()
     if threw_error(res):
-      exception_handler = WorkerProcessExceptionHandler([res])
+      exception_handler = WorkerExceptionHandler([res])
       raise exception_handler.gen_exception()
     return res
 
@@ -245,16 +245,16 @@ class SharedMemoryMasterBase(MasterBase):
 # Concrete masters
 
 class MultiprocessingMaster(MasterBase):
-  '''Controls MultiprocessingWorkerProcesses. Communicates with workers
+  '''Controls MultiprocessingWorkers. Communicates with workers
   via multiprocessing.Pipe. Truly multiprocess implementation.
 
   '''
   @staticmethod
   def _pipe_and_process_types():
-    return mp.Pipe, MultiprocessingWorkerProcess
+    return mp.Pipe, MultiprocessingWorker
 
 class ThreadedSerializingMaster(MasterBase):
-  '''Controls ThreadedSerializingWorkerProcesses. Communicates with
+  '''Controls ThreadedSerializingWorkers. Communicates with
   workers via multiprocessing.dummy.Pipe. Do not use for actual
   modeling. Rather, intended for debugging; API mimics
   MultiprocessingMaster, but implementation is multithreaded.
@@ -262,10 +262,10 @@ class ThreadedSerializingMaster(MasterBase):
   '''
   @staticmethod
   def _pipe_and_process_types():
-    return mpd.Pipe, ThreadedSerializingWorkerProcess
+    return mpd.Pipe, ThreadedSerializingWorker
 
 class ThreadedMaster(SharedMemoryMasterBase):
-  '''Controls ThreadedWorkerProcesses. Communicates via
+  '''Controls ThreadedWorkers. Communicates via
   multiprocessing.dummy.Pipe. Do not use for actual modeling. Rather,
   intended for debugging multithreading; API mimics
   ThreadedSerializingMaster, but permits the shared-memory shortcut
@@ -274,10 +274,10 @@ class ThreadedMaster(SharedMemoryMasterBase):
   '''
   @staticmethod
   def _pipe_and_process_types():
-    return mpd.Pipe, ThreadedWorkerProcess
+    return mpd.Pipe, ThreadedWorker
 
 class SynchronousSerializingMaster(MasterBase):
-  '''Controls SynchronousSerializingWorkerProcesses. Communicates via
+  '''Controls SynchronousSerializingWorkers. Communicates via
   SynchronousPipe. Do not use for actual modeling. Rather, intended
   for debugging multiprocessing; API mimics
   MultiprocessingMaster, but runs synchronously in one thread.
@@ -285,17 +285,17 @@ class SynchronousSerializingMaster(MasterBase):
   '''
   @staticmethod
   def _pipe_and_process_types():
-    return SynchronousPipe, SynchronousSerializingWorkerProcess
+    return SynchronousPipe, SynchronousSerializingWorker
 
 class SynchronousMaster(SharedMemoryMasterBase):
-  '''Controls SynchronousWorkerProcesses. Default
+  '''Controls SynchronousWorkers. Default
   Master. Communicates via SynchronousPipe.  This is what you
   want if you don't want to pay for parallelism.
 
   '''
   @staticmethod
   def _pipe_and_process_types():
-    return SynchronousPipe, SynchronousWorkerProcess
+    return SynchronousPipe, SynchronousWorker
 
 ######################################################################
 # Per-process workers; interact with individual instances of the state
@@ -312,9 +312,9 @@ class Safely(object):
     return safely(safely(getattr)(self.obj, attrname))
 
 
-class ProcessBase(object):
+class WorkerBase(object):
 
-  '''The base class is ProcessBase, which manages a list of objects
+  '''The base class is WorkerBase, which manages a list of objects
   synchronously (using Safely objects to catch exceptions).
 
   '''
@@ -342,7 +342,7 @@ class ProcessBase(object):
   @safely
   def set_seeds(self, _index, seeds):
     # If we're in puma, set the seed; else don't.
-    # The truly parallel case is handled by the subclass MultiprocessingWorkerProcess.
+    # The truly parallel case is handled by the subclass MultiprocessingWorker.
     if self.rng_style == 'local':
       for (obj, seed) in zip(self.objs, seeds):
         obj.set_seed(seed)
@@ -354,12 +354,12 @@ class ProcessBase(object):
 ######################################################################
 # Base classes defining how to send states, and process types
 
-class SharedMemoryProcessBase(ProcessBase):
+class SharedMemoryWorkerBase(WorkerBase):
   '''Offers a short-cut around serialization by sending objects directly.
 
   Only works if the memory space is shared between worker and master,
   and we are not trying to emulate the separate-memory regime.
-  Inherited by ThreadedWorkerProcess and SynchronousWorkerProcess.
+  Inherited by ThreadedWorker and SynchronousWorker.
 
   '''
   @safely
@@ -371,7 +371,7 @@ class SharedMemoryProcessBase(ProcessBase):
 
 class MultiprocessBase(mp.Process):
   '''
-  Specifies multiprocess implementation; inherited by MultiprocessingWorkerProcess.
+  Specifies multiprocess implementation; inherited by MultiprocessingWorker.
   '''
   def _initialize(self):
     mp.Process.__init__(self)
@@ -379,8 +379,8 @@ class MultiprocessBase(mp.Process):
 
 class ThreadingBase(mpd.Process):
   '''
-  Specifies threaded implementation; inherited by ThreadedSerializingWorkerProcess
-  and ThreadedWorkerProcess.
+  Specifies threaded implementation; inherited by ThreadedSerializingWorker
+  and ThreadedWorker.
   '''
   def _initialize(self):
     mpd.Process.__init__(self)
@@ -388,7 +388,7 @@ class ThreadingBase(mpd.Process):
 
 class SynchronousBase(object):
   '''Specifies synchronous implementation; inherited by
-  SynchronousSerializingWorkerProcess and SynchronousWorkerProcess.
+  SynchronousSerializingWorker and SynchronousWorker.
   '''
   def _initialize(self):
     self.pipe.register_callback(self.poll)
@@ -399,7 +399,7 @@ class SynchronousBase(object):
 # Concrete process classes
 
 # pylint: disable=too-many-ancestors
-class MultiprocessingWorkerProcess(ProcessBase, MultiprocessBase):
+class MultiprocessingWorker(WorkerBase, MultiprocessBase):
   '''
   True parallelism via multiprocessing. Controlled by MultiprocessingMaster.
   '''
@@ -413,10 +413,10 @@ class MultiprocessingWorkerProcess(ProcessBase, MultiprocessBase):
       np.random.seed(seeds[0])
       return [None for _ in self.objs]
     else:
-      return ProcessBase.set_seeds(self, index, seeds)
+      return WorkerBase.set_seeds(self, index, seeds)
 
-class ThreadedSerializingWorkerProcess(ProcessBase, ThreadingBase):
-  '''Emulates MultiprocessingWorkerProcess by forbidding the short-cut
+class ThreadedSerializingWorker(WorkerBase, ThreadingBase):
+  '''Emulates MultiprocessingWorker by forbidding the short-cut
   around serializing the managed objects, but is implemented with
   threading. Could be useful for debugging?  Controlled by
   ThreadedSerializingMaster.
@@ -424,16 +424,16 @@ class ThreadedSerializingWorkerProcess(ProcessBase, ThreadingBase):
   '''
   pass
 
-class ThreadedWorkerProcess(SharedMemoryProcessBase, ThreadingBase):
-  '''Emulates MultiprocessingWorkerProcess by running multithreaded, but
+class ThreadedWorker(SharedMemoryWorkerBase, ThreadingBase):
+  '''Emulates MultiprocessingWorker by running multithreaded, but
   permits the shared-memory shortcut around serialization.  Could be
   useful for debugging?  Controlled by ThreadedMaster.
 
   '''
   pass
 
-class SynchronousSerializingWorkerProcess(ProcessBase, SynchronousBase):
-  '''Emulates MultiprocessingWorkerProcess by forbidding the
+class SynchronousSerializingWorker(WorkerBase, SynchronousBase):
+  '''Emulates MultiprocessingWorker by forbidding the
   serialization short-cut as it would, while still running in one
   thread.  Use for debugging.  Controlled by
   SynchronousSerializingMaster.
@@ -441,7 +441,7 @@ class SynchronousSerializingWorkerProcess(ProcessBase, SynchronousBase):
   '''
   pass
 
-class SynchronousWorkerProcess(SharedMemoryProcessBase, SynchronousBase):
+class SynchronousWorker(SharedMemoryWorkerBase, SynchronousBase):
   '''Default. Keeps everything synchronous, and short-cuts around
   serialization. Controlled by SynchronousMaster.
 
@@ -452,7 +452,7 @@ class SynchronousWorkerProcess(SharedMemoryProcessBase, SynchronousBase):
 # Code to handle exceptions in worker processes
 ######################################################################
 
-class WorkerProcessExceptionHandler(object):
+class WorkerExceptionHandler(object):
   '''
   Stores information on exceptions from the workers. By default, just finds
   the first exception, prints its original stack trace, and then re-raises.
