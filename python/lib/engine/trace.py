@@ -25,7 +25,6 @@ class Trace(object):
   def observe(self, baseAddr, datum, val):
     self.trace.eval(baseAddr, datum)
     logDensity = self.trace.observe(baseAddr,val)
-    # TODO check for -infinity? Throw an exception?
     if logDensity == float("-inf"):
       raise VentureException("invalid_constraint", "Observe failed to constrain",
                              expression=datum, value=val)
