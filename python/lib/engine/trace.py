@@ -13,7 +13,7 @@ class Trace(object):
     assert not isinstance(trace, Trace) # I've had too many double-wrapping bugs
     self.trace = trace
     if directives is not None:
-      self.directives = directives
+      self.directives = copy.copy(directives)
     else:
       self.directives = {}
 
@@ -85,7 +85,7 @@ class Trace(object):
     return Trace(_restore_trace(engine.Trace(), engine.directives, values, engine.foreign_sps, engine.name, skipStackDictConversion), wr_directives)
 
   def stop_and_copy(self):
-    return Trace(self.trace.stop_and_copy(), copy.copy(self.directives))
+    return Trace(self.trace.stop_and_copy(), self.directives)
 
 ######################################################################
 # Auxiliary functions for dumping and loading backend-specific traces
