@@ -19,9 +19,9 @@ import cPickle as pickle
 import time
 
 from venture.exception import VentureException
-from trace_handler import (SynchronousMaster,
-                           SynchronousSerializingMaster, ThreadedMaster,
-                           ThreadedSerializingMaster, MultiprocessingMaster)
+from ..multiprocess import (SynchronousMaster,
+                            SynchronousSerializingMaster, ThreadedMaster,
+                            ThreadedSerializingMaster, MultiprocessingMaster)
 import trace as tr
 from venture.lite.utils import sampleLogCategorical, logaddexp
 from venture.engine.inference import Infer
