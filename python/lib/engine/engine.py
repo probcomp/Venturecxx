@@ -208,19 +208,6 @@ class Engine(object):
                              argument=directiveId)
     return self.trace_handler.delegate_distinguished('extractRaw', directiveId)
 
-  def clear(self):
-    del self.trace_handler
-    self.directiveCounter = 0
-    self.directives = {}
-    self.trace_handler = self.create_handler([tr.Trace(self.Trace())])
-    self.ensure_rng_seeded_decently()
-
-  def ensure_rng_seeded_decently(self):
-    # Frobnicate the trace's random seed because Trace() resets the
-    # RNG seed from the current time, which sucks if one calls this
-    # method often.
-    self.set_seed(random.randint(1,2**31-1))
-
   def bind_foreign_sp(self, name, sp):
     self.foreign_sps[name] = sp
     if self.name != "lite":
@@ -235,6 +222,19 @@ class Engine(object):
       raise TypeError(errstr)
 
     self.trace_handler.delegate('bind_foreign_sp', name, sp)
+
+  def clear(self):
+    del self.trace_handler
+    self.directiveCounter = 0
+    self.directives = {}
+    self.trace_handler = self.create_handler([tr.Trace(self.Trace())])
+    self.ensure_rng_seeded_decently()
+
+  def ensure_rng_seeded_decently(self):
+    # Frobnicate the trace's random seed because Trace() resets the
+    # RNG seed from the current time, which sucks if one calls this
+    # method often.
+    self.set_seed(random.randint(1,2**31-1))
 
   # TODO There should also be capture_inference_problem and
   # restore_inference_problem (Analytics seems to use something like
