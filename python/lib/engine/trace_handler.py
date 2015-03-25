@@ -21,41 +21,41 @@ execution histories ("particles") of the model program.
 
 The architecture is as follows:
 
-The WorkerProcess classes are subclasses of either multiprocessing.Process for
-multiprocessing, or multiprocessing.dummy.Process for threading, or
-SynchronousBase (in this module) for synchronous operation.
+The WorkerProcess classes are subclasses of either
+multiprocessing.Process for multiprocessing, or
+multiprocessing.dummy.Process for threading, or SynchronousBase (in
+this module) for synchronous operation.
 
-Each instance of WorkerProcess contains a list of objects (which are always
-Traces in this use case, but WorkerProcess doesn't care), and
-interacts with each underlying object by forwarding method calls.
-As a subclass of Process, each
-instance has a run() method. The run() method is simply a listener; the
-WorkerProcess waits for commands sent over the pipe from the Master
-(described below), calls the method associated with the command, and then
-returns the result to the Master over the pipe. All methods are wrapped in
-the @safely decorator, whose purpose is to catch all errors occurring in workers
-and return them over the Pipe, to be raised by the Master in the master
-process. This prevents
-exceptions in the child processes from hanging the program.
+Each instance of WorkerProcess contains a list of objects (which are
+always Traces in this use case, but WorkerProcess doesn't care), and
+interacts with each underlying object by forwarding method calls.  As
+a subclass of Process, each instance has a run() method. The run()
+method is simply a listener; the WorkerProcess waits for commands sent
+over the pipe from the Master (described below), calls the method
+associated with the command, and then returns the result to the Master
+over the pipe. All methods are wrapped in the @safely decorator, whose
+purpose is to catch all errors occurring in workers and return them
+over the Pipe, to be raised by the Master in the master process. This
+prevents exceptions in the child processes from hanging the program.
+
 The WorkerProcess classes are daemonic; the Master need not wait for
-the run() methods of its children to complete before regaining control of
-the program. Also as daemonic processes, all WorkerProcess instances will
-be terminated when the controlling Master is deleted.
-For more information on the WorkerProcess class hierarchy, see the docstrings
-below.
+the run() methods of its children to complete before regaining control
+of the program. Also as daemonic processes, all WorkerProcess
+instances will be terminated when the controlling Master is deleted.
+For more information on the WorkerProcess class hierarchy, see the
+docstrings below.
 
 The Master classes facilitate communication between the client and the
 individual WorkerProcess instances. Each Master stores a list of
 WorkerProcesses, and also a list of Pipes interacting with those
-WorkerProcesses, as attributes.
-When the client wants something done, it calls "delegate" (or
-"delegate_one" for interacting with just one controlled object) on the
-Master. The Master then passes
-this command over the Pipes to the WorkerProcesses,
-and waits for results to be returned from the workers. It regains control
-of the program when all results have been returned. It then checks for
-exceptions; if any are found, it re-raises the first one. Else it passes its
-result back to the client.
+WorkerProcesses, as attributes.  When the client wants something done,
+it calls "delegate" (or "delegate_one" for interacting with just one
+controlled object) on the Master. The Master then passes this command
+over the Pipes to the WorkerProcesses, and waits for results to be
+returned from the workers. It regains control of the program when all
+results have been returned. It then checks for exceptions; if any are
+found, it re-raises the first one. Else it passes its result back to
+the client.
 
 This Master/Worker system has a facility for setting the random seeds
 on the workers.  This respects a flag for whether the objects being
