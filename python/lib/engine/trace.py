@@ -44,7 +44,9 @@ class Trace(object):
     self.directives[baseAddr] = ["observe", exp, val]
 
   def forget(self, directiveId):
-    assert directiveId in self.directives
+    if directiveId not in self.directives:
+      raise VentureException("invalid_argument", "Cannot forget a non-existent directive id",
+                             argument="directive_id", directive_id=directiveId)
     directive = self.directives[directiveId]
     if directive[0] == "observe": self.trace.unobserve(directiveId)
     self.trace.uneval(directiveId)
