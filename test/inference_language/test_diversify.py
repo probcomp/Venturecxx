@@ -12,4 +12,4 @@ def testEnumerativeSmoke():
   r.assume("x", "(categorical (simplex 0.1 0.2 0.3 0.4) (list 1 2 3 4))")
   r.infer("(enumerative_diversify default all)")
   assert np.allclose([1, 2, 3, 4], strip_types(r.sivm.core_sivm.engine.sample_all(v.sym("x"))))
-  assert np.allclose([0.1, 0.2, 0.3, 0.4], logWeightsToNormalizedDirect(r.sivm.core_sivm.engine.trace_handler.log_weights))
+  assert np.allclose([0.1, 0.2, 0.3, 0.4], logWeightsToNormalizedDirect(r.sivm.core_sivm.engine.log_weights))

@@ -19,9 +19,10 @@ import cPickle as pickle
 import time
 
 from venture.exception import VentureException
-from trace_handler import (dump_trace, restore_trace, SynchronousTraceHandler,
-                           SynchronousSerializingTraceHandler, ThreadedTraceHandler,
-                           ThreadedSerializingTraceHandler, MultiprocessingTraceHandler)
+from ..multiprocess import (SynchronousMaster,
+                            SynchronousSerializingMaster, ThreadedMaster,
+                            ThreadedSerializingMaster, MultiprocessingMaster)
+import trace as tr
 from venture.lite.utils import sampleLogCategorical, logaddexp
 from venture.engine.inference import Infer
 import venture.value.dicts as v
@@ -46,7 +47,7 @@ class Engine(object):
     self.inferrer = None
     self.mode = 'sequential'
     self.process_cap = None
-    self.trace_handler = self.create_handler([Trace()])
+    self.trace_handler = self.create_handler([tr.Trace(Trace())])
     import venture.lite.inference_sps as inf
     self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
@@ -59,24 +60,30 @@ class Engine(object):
 
   def trace_handler_constructor(self, mode):
     if mode == 'multiprocess':
-      return MultiprocessingTraceHandler
+      return MultiprocessingMaster
     elif mode == 'thread_ser':
-      return ThreadedSerializingTraceHandler
+      return ThreadedSerializingMaster
     elif mode == 'threaded':
-      return ThreadedTraceHandler
+      return ThreadedMaster
     elif mode == 'serializing':
-      return SynchronousSerializingTraceHandler
+      return SynchronousSerializingMaster
     else:
-      return SynchronousTraceHandler
+      return SynchronousMaster
 
   def create_handler(self, traces, weights=None):
-    ans = self.trace_handler_constructor(self.mode)(traces, self.name, self.process_cap)
+    if self.name == "lite":
+      local_rng = False
+    else:
+      local_rng = True
+    ans = self.trace_handler_constructor(self.mode)(traces, self.process_cap, local_rng)
     if weights is not None:
-      ans.log_weights = weights
+      self.log_weights = weights
+    else:
+      self.log_weights = [0 for _ in traces]
     return ans
 
   def num_traces(self):
-    return len(self.trace_handler.log_weights)
+    return len(self.log_weights)
 
   def inferenceSPsList(self):
     return self.inference_sps.iteritems()
@@ -144,7 +151,7 @@ class Engine(object):
     # to the list of directives
     # This mirrors the implementation in the core_sivm, but could be changed?
     did = self.observe(datum, val)
-    self.trace_handler.incorporate()
+    self.incorporate()
     self.forget(did)
     return self.directiveCounter
 
@@ -205,7 +212,7 @@ class Engine(object):
     del self.trace_handler
     self.directiveCounter = 0
     self.directives = {}
-    self.trace_handler = self.create_handler([self.Trace()])
+    self.trace_handler = self.create_handler([tr.Trace(self.Trace())])
     self.ensure_rng_seeded_decently()
 
   def ensure_rng_seeded_decently(self):
@@ -262,20 +269,20 @@ effect of renumbering the directives, if some had been forgotten."""
     newTraces = self._resample_traces(P)
     del self.trace_handler
     self.trace_handler = self.create_handler(newTraces)
-    self.trace_handler.incorporate()
+    self.incorporate()
 
   def _resample_traces(self, P):
     P = int(P)
     newTraces = [None for p in range(P)]
     for p in range(P):
-      parent = sampleLogCategorical(self.trace_handler.log_weights) # will need to include or rewrite
+      parent = sampleLogCategorical(self.log_weights) # will need to include or rewrite
       newTrace = self.copy_trace(self.retrieve_trace(parent))
       newTraces[p] = newTrace
     return newTraces
 
   def diversify(self, program):
     traces = self.retrieve_traces()
-    weights = self.trace_handler.log_weights
+    weights = self.log_weights
     new_traces = []
     new_weights = []
     for (t, w) in zip(traces, weights):
@@ -287,7 +294,7 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def _collapse_help(self, scope, block, select_keeper):
     traces = self.retrieve_traces()
-    weights = self.trace_handler.log_weights
+    weights = self.log_weights
     fingerprints = [t.block_values(scope, block) for t in traces]
     def grouping():
       "Because sorting doesn't do what I want on dicts, so itertools.groupby is not useful"
@@ -325,8 +332,16 @@ effect of renumbering the directives, if some had been forgotten."""
       return (lst.index(max(lst)), max(lst))
     self._collapse_help(scope, block, max_ind)
 
+  def likelihood_weight(self):
+    self.log_weights = self.trace_handler.delegate('likelihood_weight')
+
+  def incorporate(self):
+    weight_increments = self.trace_handler.delegate('makeConsistent')
+    for i, increment in enumerate(weight_increments):
+      self.log_weights[i] += increment
+
   def infer(self, program):
-    self.trace_handler.incorporate()
+    self.incorporate()
     if self.is_infer_loop_program(program):
       assert len(program) == 2
       prog = [v.sym("do")] + program[1]
@@ -432,21 +447,32 @@ effect of renumbering the directives, if some had been forgotten."""
       self.inferrer.stop()
       self.inferrer = None
 
-  def retrieve_dump(self, ix): return self.trace_handler.retrieve_dump(ix, self)
+  def retrieve_dump(self, ix):
+    return self.trace_handler.delegate_one(ix, 'dump', self.directives)
 
-  def retrieve_dumps(self): return self.trace_handler.retrieve_dumps(self)
+  def retrieve_dumps(self):
+    return self.trace_handler.delegate('dump', self.directives)
 
-  def retrieve_trace(self, ix): return self.trace_handler.retrieve_trace(ix, self)
+  def retrieve_trace(self, ix):
+    if self.trace_handler.can_shortcut_retrieval():
+      return self.trace_handler.retrieve(ix)
+    else:
+      dumped = self.retrieve_dump(ix)
+      return self.restore_trace(dumped)
 
-  def retrieve_traces(self): return self.trace_handler.retrieve_traces(self)
+  def retrieve_traces(self):
+    if self.trace_handler.can_shortcut_retrieval():
+      return self.trace_handler.retrieve_all()
+    else:
+      dumped_all = self.retrieve_dumps()
+      return [self.restore_trace(dumped) for dumped in dumped_all]
 
   # class methods that call the corresponding functions, with arguments filled in
   def dump_trace(self, trace, skipStackDictConversion=False):
-    return dump_trace(trace, self.directives, skipStackDictConversion)
+    return trace.dump(self.directives, skipStackDictConversion)
 
   def restore_trace(self, values, skipStackDictConversion=False):
-    return restore_trace(self.Trace(), self.directives, values,
-                         self.foreign_sps, self.name, skipStackDictConversion)
+    return tr.Trace.restore(self, values, skipStackDictConversion)
 
   def copy_trace(self, trace):
     values = self.dump_trace(trace, skipStackDictConversion=True)
@@ -455,7 +481,7 @@ effect of renumbering the directives, if some had been forgotten."""
   def save(self, fname, extra=None):
     data = {}
     data['traces'] = self.retrieve_dumps()
-    data['log_weights'] = self.trace_handler.log_weights
+    data['log_weights'] = self.log_weights
     data['directives'] = self.directives
     data['directiveCounter'] = self.directiveCounter
     data['mode'] = self.mode
@@ -482,7 +508,7 @@ effect of renumbering the directives, if some had been forgotten."""
     engine.directives = self.directives
     engine.mode = self.mode
     traces = [engine.restore_trace(dump) for dump in self.retrieve_dumps()]
-    engine.trace_handler = engine.create_handler(traces, self.trace_handler.log_weights)
+    engine.trace_handler = engine.create_handler(traces, self.log_weights)
     return engine
 
   def to_lite(self):
@@ -495,7 +521,7 @@ effect of renumbering the directives, if some had been forgotten."""
 
   def set_profiling(self, enabled=True):
     # TODO: do this by introspection on the trace
-    if self.trace_handler.backend == 'lite':
+    if self.name == 'lite':
       self.trace_handler.delegate('set_profiling', enabled)
 
   def clear_profiling(self):
