@@ -314,12 +314,12 @@ class Safely(object):
 
 class ProcessBase(object):
 
-  '''The base class is ProcessBase, which manages a list of instances of
-  the state synchronously (using Safely objects to catch exceptions).
+  '''The base class is ProcessBase, which manages a list of objects
+  synchronously (using Safely objects to catch exceptions).
 
   '''
-  def __init__(self, states, pipe, rng_style):
-    self.states = [Safely(s) for s in states]
+  def __init__(self, objs, pipe, rng_style):
+    self.objs = [Safely(o) for o in objs]
     self.pipe = pipe
     self.rng_style = rng_style
     self._initialize()
@@ -334,9 +334,9 @@ class ProcessBase(object):
     if hasattr(self, cmd):
       res = getattr(self, cmd)(index, *args, **kwargs)
     elif index is not None:
-      res = getattr(self.states[index], cmd)(*args, **kwargs)
+      res = getattr(self.objs[index], cmd)(*args, **kwargs)
     else:
-      res = [getattr(s, cmd)(*args, **kwargs) for s in self.states]
+      res = [getattr(o, cmd)(*args, **kwargs) for o in self.objs]
     self.pipe.send(res)
 
   @safely
@@ -344,18 +344,18 @@ class ProcessBase(object):
     # If we're in puma, set the seed; else don't.
     # The truly parallel case is handled by the subclass MultiprocessingWorkerProcess.
     if self.rng_style == 'local':
-      for (state, seed) in zip(self.states, seeds):
-        state.set_seed(seed)
-    return [None for _ in self.states]
+      for (obj, seed) in zip(self.objs, seeds):
+        obj.set_seed(seed)
+    return [None for _ in self.objs]
 
   def send_state(self, _index):
-    raise VentureException("fatal", "Cannot transmit state directly if memory is not shared")
+    raise VentureException("fatal", "Cannot transmit object directly if memory is not shared")
 
 ######################################################################
 # Base classes defining how to send states, and process types
 
 class SharedMemoryProcessBase(ProcessBase):
-  '''Offers a short-cut around serialization by sending states directly.
+  '''Offers a short-cut around serialization by sending objects directly.
 
   Only works if the memory space is shared between worker and master,
   and we are not trying to emulate the separate-memory regime.
@@ -365,9 +365,9 @@ class SharedMemoryProcessBase(ProcessBase):
   @safely
   def send_state(self, index):
     if index is not None:
-      return self.states[index].obj
+      return self.objs[index].obj
     else:
-      return [s.obj for s in self.states]
+      return [o.obj for o in self.objs]
 
 class MultiprocessBase(mp.Process):
   '''
@@ -411,38 +411,40 @@ class MultiprocessingWorkerProcess(ProcessBase, MultiprocessBase):
       # In Python the RNG is global; only need to set it once.
       random.seed(seeds[0])
       np.random.seed(seeds[0])
-      return [None for _ in self.states]
+      return [None for _ in self.objs]
     else:
       return ProcessBase.set_seeds(self, index, seeds)
 
 class ThreadedSerializingWorkerProcess(ProcessBase, ThreadingBase):
-  '''Emulates MultiprocessingWorkerProcess by serializing the managed states, but
-  is implemented with threading. Could be useful for debugging?
-  Controlled by ThreadedSerializingMaster.
+  '''Emulates MultiprocessingWorkerProcess by forbidding the short-cut
+  around serializing the managed objects, but is implemented with
+  threading. Could be useful for debugging?  Controlled by
+  ThreadedSerializingMaster.
 
   '''
   pass
 
 class ThreadedWorkerProcess(SharedMemoryProcessBase, ThreadingBase):
-  '''Emulates MultiprocessingWorkerProcess by running multithreaded but
-  without serializing states.  Could be useful for debugging?
-  Controlled by ThreadedMaster.
+  '''Emulates MultiprocessingWorkerProcess by running multithreaded, but
+  permits the shared-memory shortcut around serialization.  Could be
+  useful for debugging?  Controlled by ThreadedMaster.
 
   '''
   pass
 
 class SynchronousSerializingWorkerProcess(ProcessBase, SynchronousBase):
-  '''Emulates MultiprocessingWorkerProcess by serializing the states as
-  it would, while still running in one thread.  Use for debugging.
-  Controlled by SynchronousSerializingMaster.
+  '''Emulates MultiprocessingWorkerProcess by forbidding the
+  serialization short-cut as it would, while still running in one
+  thread.  Use for debugging.  Controlled by
+  SynchronousSerializingMaster.
 
   '''
   pass
 
 class SynchronousWorkerProcess(SharedMemoryProcessBase, SynchronousBase):
-  '''
-  Default. Keeps everything synchronous. Controlled by
-  SynchronousMaster.
+  '''Default. Keeps everything synchronous, and short-cuts around
+  serialization. Controlled by SynchronousMaster.
+
   '''
   pass
 
