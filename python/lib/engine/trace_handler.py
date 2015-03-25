@@ -484,8 +484,8 @@ class WorkerProcessExceptionHandler(object):
       value = entry[1]
     return (entry[0], value, entry[2])
 
-# Concerning the hack above: In designing engines that handle parallel traces,
-# we'd like errors in the child trace process to be passed back up to the engine.
+# Concerning the hack above: In designing masters that handle parallel objects,
+# we'd like errors in the child trace process to be passed back up to the master.
 # We'd then like the error from the child to be re-raised, displaying both the
 # stack trace from the child and the parent.
 # There is no easy way to do this in Python, so I made two hacks.
