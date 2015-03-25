@@ -261,11 +261,28 @@ if freeze has been used.
   def _resample_traces(self, P):
     P = int(P)
     newTraces = [None for p in range(P)]
+    used_parents = {}
     for p in range(P):
       parent = sampleLogCategorical(self.log_weights) # will need to include or rewrite
-      newTrace = self.copy_trace(self.retrieve_trace(parent))
+      newTrace = self._use_parent(used_parents, parent)
       newTraces[p] = newTrace
     return newTraces
+
+  def _use_parent(self, used_parents, index):
+    # All traces returned from calling this function with the same
+    # used_parents dict need to be unique (since they should be
+    # allowed to diverge in the future).
+    #
+    # Subject to that, minimize copying and retrieval (copying is
+    # currently always expensive, and retrieval can be if it involves
+    # serialization).  Invariant: never need to retrieve a trace more
+    # than once.
+    if index in used_parents:
+      return self.copy_trace(used_parents[index])
+    else:
+      parent = self.retrieve_trace(index)
+      used_parents[index] = parent
+      return parent
 
   def diversify(self, program):
     traces = self.retrieve_traces()
