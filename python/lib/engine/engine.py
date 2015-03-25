@@ -146,15 +146,6 @@ class Engine(object):
     self.directives[self.directiveCounter] = ["observe",datum,val]
     return self.directiveCounter
 
-  def force(self,datum,val):
-    # TODO: The directive counter increments, but the "force" isn't added
-    # to the list of directives
-    # This mirrors the implementation in the core_sivm, but could be changed?
-    did = self.observe(datum, val)
-    self.incorporate()
-    self.forget(did)
-    return self.directiveCounter
-
   def forget(self,directiveId):
     if directiveId not in self.directives:
       raise VentureException("invalid_argument", "Cannot forget a non-existent directive id",
@@ -164,6 +155,15 @@ class Engine(object):
     self.trace_handler.delegate('forget', directive, directiveId)
 
     del self.directives[directiveId]
+
+  def force(self,datum,val):
+    # TODO: The directive counter increments, but the "force" isn't added
+    # to the list of directives
+    # This mirrors the implementation in the core_sivm, but could be changed?
+    did = self.observe(datum, val)
+    self.incorporate()
+    self.forget(did)
+    return self.directiveCounter
 
   def sample(self,datum):
     # TODO Officially this is taken care of by the Venture SIVM level,
