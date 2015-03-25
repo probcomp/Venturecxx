@@ -7,35 +7,50 @@ class Trace(object):
   the backend-specific traces.
 
   """
-  def __init__(self, trace): self.trace = trace
+  def __init__(self, trace, directives=None):
+    self.trace = trace
+    if directives is not None:
+      self.directives = directives
+    else:
+      self.directives = {}
 
   def __getattr__(self, attrname):
     # Forward all other trace methods without modification
     return getattr(self.trace, attrname)
 
   def define(self, baseAddr, id, exp):
+    assert baseAddr not in self.directives
     self.trace.eval(baseAddr, exp)
     self.trace.bindInGlobalEnv(id, baseAddr)
+    self.directives[baseAddr] = ["define", id, exp]
     return self.trace.extractValue(baseAddr)
 
-  def evaluate(self, baseAddr, datum):
-    self.trace.eval(baseAddr,datum)
+  def evaluate(self, baseAddr, exp):
+    assert baseAddr not in self.directives
+    self.trace.eval(baseAddr,exp)
+    self.directives[baseAddr] = ["evaluate", exp]
     return self.trace.extractValue(baseAddr)
 
-  def observe(self, baseAddr, datum, val):
-    self.trace.eval(baseAddr, datum)
+  def observe(self, baseAddr, exp, val):
+    assert baseAddr not in self.directives
+    self.trace.eval(baseAddr, exp)
     logDensity = self.trace.observe(baseAddr,val)
     if logDensity == float("-inf"):
       raise VentureException("invalid_constraint", "Observe failed to constrain",
-                             expression=datum, value=val)
+                             expression=exp, value=val)
+    self.directives[baseAddr] = ["observe", exp, val]
 
   def forget(self, directive, directiveId):
+    assert directiveId in self.directives
     if directive[0] == "observe": self.trace.unobserve(directiveId)
     self.trace.uneval(directiveId)
     if directive[0] == "assume": self.trace.unbindInGlobalEnv(directive[1])
+    del self.directives[directiveId]
 
   def freeze(self, directiveId):
+    assert directiveId in self.directives
     self.trace.freeze(directiveId)
+    # TODO Adjust the directives map
 
   def bind_foreign_sp(self, name, sp):
     self.trace.bindPrimitiveSP(name, sp)
