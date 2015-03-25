@@ -76,6 +76,30 @@ class Trace(object):
   def bind_foreign_sp(self, name, sp):
     self.trace.bindPrimitiveSP(name, sp)
 
+  def reset_to_prior(self):
+    """Unincorporate all observations and return to the prior.
+
+(By forgetting and then replaying the stored directives with no
+inference.)
+
+    """
+    # Note: In principle it is possible to reset_to_prior by throwing
+    # the existing trace away bodily, creating an empty one, and
+    # replaying the directives, instead of keeping the existing trace
+    # but forgetting everything the way this does.  That would save
+    # work if there are more directives to forget than there would be
+    # global environment symbols to rebind.  However, implementing
+    # this requires self to have access to the backend-specific Trace
+    # constructor, and the bound foreign SPs, which is why I didn't do
+    # it that way.  Also, Puma trace reconstruction eits the RNG (as
+    # of this writing), so it would need to be reset; whereas the
+    # present approach doesn't have that problem.
+    worklist = sorted(self.directives.iteritems())
+    for (did, _) in reversed(worklist):
+      self.forget(did)
+    for (did, directive) in worklist:
+      getattr(self, directive[0])(did, *directive[1:])
+
   def primitive_infer(self, exp):
     if hasattr(self.trace, "infer_exp"):
       # The trace can handle the inference primitive syntax natively
