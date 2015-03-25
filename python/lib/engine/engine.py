@@ -236,29 +236,19 @@ class Engine(object):
   # TODO There should also be capture_inference_problem and
   # restore_inference_problem (Analytics seems to use something like
   # it)
-  def reinit_inference_problem(self, num_particles=None):
-    """Blow away all the traces and rebuild from the stored directives.
+  def reinit_inference_problem(self, num_particles=1):
+    """Unincorporate all observations and return to the prior.
 
-The goal is to resample from the prior.  May have the unfortunate
-effect of renumbering the directives, if some had been forgotten."""
-    worklist = sorted(self.directives.iteritems())
-    self.clear()
-    if num_particles is not None:
-      self.infer("(resample %d)" % num_particles)
-    for (name,sp) in self.foreign_sps.iteritems():
-      self.bind_foreign_sp(name,sp)
-    for (_,dir) in worklist:
-      self.replay(dir)
+First perform a resample with the specified number of particles
+(default 1).  The choice of which particles will be returned to the
+prior matters if the particles have different priors, as might happen
+if freeze has been used.
 
-  def replay(self,directive):
-    if directive[0] == "assume":
-      self.assume(directive[1], directive[2])
-    elif directive[0] == "observe":
-      self.observe(directive[1], directive[2])
-    elif directive[0] == "predict":
-      self.predict(directive[1])
-    else:
-      assert False, "Unkown directive type found %r" % directive
+    """
+    self.resample(num_particles)
+    # Resample currently reincorporates, so clear the weights again
+    self.log_weights = [0 for _ in range(num_particles)]
+    self.trace_handler.delegate('reset_to_prior')
 
   def resample(self, P, mode = 'sequential', process_cap = None):
     self.mode = mode
