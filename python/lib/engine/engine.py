@@ -118,7 +118,7 @@ class Engine(object):
     baseAddr = self.nextBaseAddr()
     exp = datum
 
-    values = self.trace_handler.delegate('assume', baseAddr, id, exp)
+    values = self.trace_handler.delegate('define', baseAddr, id, exp)
     value = values[0]
 
     self.directives[self.directiveCounter] = ["assume",id,datum]
@@ -128,7 +128,7 @@ class Engine(object):
   def predict_all(self,datum):
     baseAddr = self.nextBaseAddr()
 
-    value = self.trace_handler.delegate('predict_all', baseAddr, datum)
+    value = self.trace_handler.delegate('evaluate', baseAddr, datum)
 
     self.directives[self.directiveCounter] = ["predict",datum]
 

@@ -13,12 +13,12 @@ class Trace(object):
     # Forward all other trace methods without modification
     return getattr(self.trace, attrname)
 
-  def assume(self, baseAddr, id, exp):
+  def define(self, baseAddr, id, exp):
     self.trace.eval(baseAddr, exp)
     self.trace.bindInGlobalEnv(id, baseAddr)
     return self.trace.extractValue(baseAddr)
 
-  def predict_all(self, baseAddr, datum):
+  def evaluate(self, baseAddr, datum):
     self.trace.eval(baseAddr,datum)
     return self.trace.extractValue(baseAddr)
 
