@@ -162,9 +162,8 @@ class Engine(object):
     if directiveId not in self.directives:
       raise VentureException("invalid_argument", "Cannot forget a non-existent directive id",
                              argument="directive_id", directive_id=directiveId)
-    directive = self.directives[directiveId]
 
-    self.trace_handler.delegate('forget', directive, directiveId)
+    self.trace_handler.delegate('forget', directiveId)
 
     del self.directives[directiveId]
     self._check_consistency_of_directive_map()

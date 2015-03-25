@@ -43,11 +43,12 @@ class Trace(object):
                              expression=exp, value=val)
     self.directives[baseAddr] = ["observe", exp, val]
 
-  def forget(self, directive, directiveId):
+  def forget(self, directiveId):
     assert directiveId in self.directives
+    directive = self.directives[directiveId]
     if directive[0] == "observe": self.trace.unobserve(directiveId)
     self.trace.uneval(directiveId)
-    if directive[0] == "assume": self.trace.unbindInGlobalEnv(directive[1])
+    if directive[0] == "define": self.trace.unbindInGlobalEnv(directive[1])
     del self.directives[directiveId]
 
   def freeze(self, directiveId):
