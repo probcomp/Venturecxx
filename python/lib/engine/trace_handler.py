@@ -14,50 +14,58 @@
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
-This module handles the interface between the Venture engine (which is part of
-the Venture stack), and the Venture traces (which are implemented in the
-Venture backends). The architecture is as follows:
+'''Generic multiprocessing support for mapping methods over a set of (stateful) objects.
+
+In Venture, this is used to support parallelism across multiple
+execution histories ("particles") of the model program.
+
+The architecture is as follows:
 
 The WorkerProcess classes are subclasses of either multiprocessing.Process for
 multiprocessing, or multiprocessing.dummy.Process for threading, or
-SynchronousBase (this module) for synchronous operation.
+SynchronousBase (in this module) for synchronous operation.
 
-Each instance of WorkerProcess contains a list of states (which are always
+Each instance of WorkerProcess contains a list of objects (which are always
 Traces in this use case, but WorkerProcess doesn't care), and
-interacts with the underlying object by forwarding method calls.
+interacts with each underlying object by forwarding method calls.
 As a subclass of Process, each
 instance has a run() method. The run() method is simply a listener; the
 WorkerProcess waits for commands sent over the pipe from the Master
 (described below), calls the method associated with the command, and then
-returns the result to the Handler over the pipe. All methods are wrapped in
+returns the result to the Master over the pipe. All methods are wrapped in
 the @safely decorator, whose purpose is to catch all errors occurring in workers
-and return them over the Pipe, to be raised by the Handler. This prevents
+and return them over the Pipe, to be raised by the Master in the master
+process. This prevents
 exceptions in the child processes from hanging the program.
 The WorkerProcess classes are daemonic; the Master need not wait for
 the run() methods of its children to complete before regaining control of
 the program. Also as daemonic processes, all WorkerProcess instances will
-be terminated when the controlling Handler is deleted.
+be terminated when the controlling Master is deleted.
 For more information on the WorkerProcess class hierarchy, see the docstrings
 below.
 
-The Master classes facilitate communication between the Engine and the
+The Master classes facilitate communication between the client and the
 individual WorkerProcess instances. Each Master stores a list of
 WorkerProcesses, and also a list of Pipes interacting with those
 WorkerProcesses, as attributes.
-When the Engine calls a method (say, engine.assume()), the Master passes
-this command over the Pipes to the WorkerProcesses via its "delegate" method,
-and then waits for results to be returned from the workers. It regains control
+When the client wants something done, it calls "delegate" (or
+"delegate_one" for interacting with just one controlled object) on the
+Master. The Master then passes
+this command over the Pipes to the WorkerProcesses,
+and waits for results to be returned from the workers. It regains control
 of the program when all results have been returned. It then checks for
 exceptions; if any are found, it re-raises the first one. Else it passes its
-result back to the Engine.
-The Master also has methods to retrieve serialized traces from the
-individual WorkerProcesses and reconstruct them. For the MultiprocessingMaster,
-Traces must be serialized before being sent from WorkerProcesses back to the
-Handler. This is the case since Trace objects are not picklable and hence
-cannot be sent over Pipes directly.
+result back to the client.
+
+This Master/Worker system has a facility for setting the random seeds
+on the workers.  This respects a flag for whether the objects being
+managed have their own random states (which should then be settable
+with the set_seed method), or rely on the process-global Python PRNG
+available in each child process.
+
 For more information on the Master class hierarchy, see the docstrings
 below.
+
 '''
 
 import multiprocessing as mp
@@ -98,29 +106,31 @@ def threw_error(entry):
           issubclass(entry[0], Exception))
 
 ######################################################################
-# The trace handlers; allow communication between the engine and the traces
+# The masters; manage communication between the client and the objects
 ######################################################################
 
-class HandlerBase(object):
+class MasterBase(object):
+  '''Base class for all Masters.
+
+  Defines the majority of the methods to interact with the Masters.
+  Subclassed to generate different behavior in parallel, threaded, and
+  sequential modes.
+
   '''
-  Base class for all Masters; defines the majority of the methods to
-  interact with the Masters and reserves abstract methods with different
-  behavior in parallel, threaded, and sequential modes to be defined by subclasses.
-  '''
-  def __init__(self, traces, rng_style, process_cap):
+  def __init__(self, objects, rng_style, process_cap):
     """A Master maintains:
 
     - An array of objects representing the worker processes.
 
     - An array of the local ends of pipes for talking to them.
 
-    - Each child process manages a chunk of the traces.  The full set
-      of traces is notionally the concatenation of all the chunks, in
+    - Each child process manages a chunk of the objects.  The full set
+      of objects is notionally the concatenation of all the chunks, in
       the order given by the array of child processes.
 
-    - To be able to interact with a single trace, the Master
-      also maintains a mapping between the index in the total trace
-      list and (the chunk that trace is part of and its offset in that
+    - To be able to interact with a single object, the Master
+      also maintains a mapping between the index in the total object
+      list and (the chunk that object is part of and its offset in that
       chunk).
 
     """
@@ -129,24 +139,24 @@ class HandlerBase(object):
     self.processes = []
     self.pipes = []  # Parallel to processes
     self.chunk_sizes = [] # Parallel to processes
-    self.chunk_indexes = [] # One per trace
+    self.chunk_indexes = [] # One per object
     self.chunk_offsets = [] # Parallel to chunk_indexes
-    self._create_processes(traces)
+    self._create_processes(objects)
     self.reset_seeds()
 
   def __del__(self):
     # stop child processes
     self.delegate('stop')
 
-  def _create_processes(self, traces):
+  def _create_processes(self, objects):
     Pipe, WorkerProcess = self._pipe_and_process_types()
     if self.process_cap is None:
       base_size = 1
       extras = 0
-      chunk_ct = len(traces)
+      chunk_ct = len(objects)
     else:
-      (base_size, extras) = divmod(len(traces), self.process_cap)
-      chunk_ct = min(self.process_cap, len(traces))
+      (base_size, extras) = divmod(len(objects), self.process_cap)
+      chunk_ct = min(self.process_cap, len(objects))
     for chunk in range(chunk_ct):
       parent, child = Pipe()
       if chunk < extras:
@@ -155,8 +165,8 @@ class HandlerBase(object):
       else:
         chunk_start = extras + chunk * base_size
         chunk_end = chunk_start + base_size
-      assert chunk_end <= len(traces) # I think I wrote this code to ensure this
-      process = WorkerProcess(traces[chunk_start:chunk_end], child, self.rng_style)
+      assert chunk_end <= len(objects) # I think I wrote this code to ensure this
+      process = WorkerProcess(objects[chunk_start:chunk_end], child, self.rng_style)
       process.start()
       self.pipes.append(parent)
       self.processes.append(process)
@@ -169,9 +179,6 @@ class HandlerBase(object):
     for i in range(len(self.processes)):
       self.delegate_one_chunk(i, 'set_seeds', [random.randint(1,2**31-1) for _ in range(self.chunk_sizes[i])])
 
-  # NOTE: I could metaprogram all the methods that delegate passes on,
-  # but it feels cleaner just call the delegator than to add another level
-  # of wrapping
   def delegate(self, cmd, *args, **kwargs):
     '''Delegate command to all workers'''
     # send command
@@ -187,7 +194,7 @@ class HandlerBase(object):
     return res
 
   def delegate_one_chunk(self, ix, cmd, *args, **kwargs):
-    '''Delegate command to (all the traces of) a single worker, indexed by ix in the process list'''
+    '''Delegate command to (all the objects of) a single worker, indexed by ix in the process list'''
     pipe = self.pipes[ix]
     pipe.send((cmd, args, kwargs, None))
     res = pipe.recv()
@@ -197,7 +204,7 @@ class HandlerBase(object):
     return res
 
   def delegate_one(self, ix, cmd, *args, **kwargs):
-    '''Delegate command to a single trace, indexed by ix in the trace list'''
+    '''Delegate command to a single object, indexed by ix in the object list'''
     pipe = self.pipes[self.chunk_indexes[ix]]
     pipe.send((cmd, args, kwargs, self.chunk_offsets[ix]))
     res = pipe.recv()
@@ -210,16 +217,16 @@ class HandlerBase(object):
     return self.delegate_one(0, cmd, *args, **kwargs)
 
   def can_retrieve_state(self):
-    """In general, the short-circuit offered by SharedMemoryHandlerBase is not available."""
+    """In general, the short-circuit offered by SharedMemoryMasterBase is not available."""
     return False
 
 # Base class short-cutting around serialization if the memory is shared
 
-class SharedMemoryHandlerBase(HandlerBase):
+class SharedMemoryMasterBase(MasterBase):
   '''Offers the client a short-circuit for retrieving the managed
-  states without having to serialize them.
+  objects without having to serialize them.
 
-  This harmlessly saves effort if the states are actually in a shared
+  This harmlessly saves effort if the objects are actually in a shared
   memory space (i.e., multiprocessing.dummy or completely synchronous)
   and we are not trying to debug serialization.  Inherited by
   ThreadedMaster and SynchronousMaster.
@@ -235,9 +242,9 @@ class SharedMemoryHandlerBase(HandlerBase):
     return self.delegate('send_state')
 
 ######################################################################
-# Concrete trace handlers
+# Concrete masters
 
-class MultiprocessingMaster(HandlerBase):
+class MultiprocessingMaster(MasterBase):
   '''Controls MultiprocessingWorkerProcesses. Communicates with workers
   via multiprocessing.Pipe. Truly multiprocess implementation.
 
@@ -246,7 +253,7 @@ class MultiprocessingMaster(HandlerBase):
   def _pipe_and_process_types():
     return mp.Pipe, MultiprocessingWorkerProcess
 
-class ThreadedSerializingMaster(HandlerBase):
+class ThreadedSerializingMaster(MasterBase):
   '''Controls ThreadedSerializingWorkerProcesses. Communicates with
   workers via multiprocessing.dummy.Pipe. Do not use for actual
   modeling. Rather, intended for debugging; API mimics
@@ -257,21 +264,22 @@ class ThreadedSerializingMaster(HandlerBase):
   def _pipe_and_process_types():
     return mpd.Pipe, ThreadedSerializingWorkerProcess
 
-class ThreadedMaster(SharedMemoryHandlerBase):
+class ThreadedMaster(SharedMemoryMasterBase):
   '''Controls ThreadedWorkerProcesses. Communicates via
   multiprocessing.dummy.Pipe. Do not use for actual modeling. Rather,
   intended for debugging multithreading; API mimics
-  ThreadedSerializingMaster, but does not serialize the traces.
+  ThreadedSerializingMaster, but permits the shared-memory shortcut
+  around serialization.
 
   '''
   @staticmethod
   def _pipe_and_process_types():
     return mpd.Pipe, ThreadedWorkerProcess
 
-class SynchronousSerializingMaster(HandlerBase):
+class SynchronousSerializingMaster(MasterBase):
   '''Controls SynchronousSerializingWorkerProcesses. Communicates via
   SynchronousPipe. Do not use for actual modeling. Rather, intended
-  for debugging multithreading; API mimics
+  for debugging multiprocessing; API mimics
   MultiprocessingMaster, but runs synchronously in one thread.
 
   '''
@@ -279,7 +287,7 @@ class SynchronousSerializingMaster(HandlerBase):
   def _pipe_and_process_types():
     return SynchronousPipe, SynchronousSerializingWorkerProcess
 
-class SynchronousMaster(SharedMemoryHandlerBase):
+class SynchronousMaster(SharedMemoryMasterBase):
   '''Controls SynchronousWorkerProcesses. Default
   Master. Communicates via SynchronousPipe.  This is what you
   want if you don't want to pay for parallelism.
