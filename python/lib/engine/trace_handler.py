@@ -236,10 +236,10 @@ class SharedMemoryMasterBase(MasterBase):
   def can_retrieve_state(self): return True
 
   def retrieve_state(self, ix):
-    return self.delegate_one(ix, 'send_state')
+    return self.delegate_one(ix, 'send_object')
 
   def retrieve_states(self):
-    return self.delegate('send_state')
+    return self.delegate('send_object')
 
 ######################################################################
 # Concrete masters
@@ -298,7 +298,7 @@ class SynchronousMaster(SharedMemoryMasterBase):
     return SynchronousPipe, SynchronousWorker
 
 ######################################################################
-# Per-process workers; interact with individual instances of the state
+# Per-process workers; interact with individual objects
 ######################################################################
 
 class Safely(object):
@@ -348,11 +348,11 @@ class WorkerBase(object):
         obj.set_seed(seed)
     return [None for _ in self.objs]
 
-  def send_state(self, _index):
+  def send_object(self, _index):
     raise VentureException("fatal", "Cannot transmit object directly if memory is not shared")
 
 ######################################################################
-# Base classes defining how to send states, and process types
+# Base classes defining how to send objects, and process types
 
 class SharedMemoryWorkerBase(WorkerBase):
   '''Offers a short-cut around serialization by sending objects directly.
@@ -363,7 +363,7 @@ class SharedMemoryWorkerBase(WorkerBase):
 
   '''
   @safely
-  def send_state(self, index):
+  def send_object(self, index):
     if index is not None:
       return self.objs[index].obj
     else:
