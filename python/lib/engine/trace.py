@@ -55,6 +55,19 @@ class Trace(object):
     self.trace.freeze(directiveId)
     # TODO Adjust the directives map
 
+  def report_value(self,directiveId):
+    if directiveId not in self.directives:
+      raise VentureException("invalid_argument", "Cannot report a non-existent directive id",
+                             argument=directiveId)
+    return self.trace.extractValue(directiveId)
+
+  def report_raw(self,directiveId):
+    if directiveId not in self.directives:
+      raise VentureException("invalid_argument",
+                             "Cannot report raw value of a non-existent directive id",
+                             argument=directiveId)
+    return self.trace.extractRaw(directiveId)
+
   def bind_foreign_sp(self, name, sp):
     self.trace.bindPrimitiveSP(name, sp)
 

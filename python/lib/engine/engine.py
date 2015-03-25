@@ -209,17 +209,10 @@ class Engine(object):
     #self.directives[directiveId] = ["assume", directiveId, XXX]
 
   def report_value(self,directiveId):
-    if directiveId not in self.directives:
-      raise VentureException("invalid_argument", "Cannot report a non-existent directive id",
-                             argument=directiveId)
-    return self.trace_handler.delegate_distinguished('extractValue', directiveId)
+    return self.trace_handler.delegate_distinguished('report_value', directiveId)
 
   def report_raw(self,directiveId):
-    if directiveId not in self.directives:
-      raise VentureException("invalid_argument",
-                             "Cannot report raw value of a non-existent directive id",
-                             argument=directiveId)
-    return self.trace_handler.delegate_distinguished('extractRaw', directiveId)
+    return self.trace_handler.delegate_distinguished('report_raw', directiveId)
 
   def bind_foreign_sp(self, name, sp):
     self.foreign_sps[name] = sp
