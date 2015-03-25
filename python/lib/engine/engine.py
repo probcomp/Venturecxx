@@ -19,9 +19,9 @@ import cPickle as pickle
 import time
 
 from venture.exception import VentureException
-from trace_handler import (SynchronousTraceHandler,
-                           SynchronousSerializingTraceHandler, ThreadedTraceHandler,
-                           ThreadedSerializingTraceHandler, MultiprocessingTraceHandler)
+from trace_handler import (SynchronousMaster,
+                           SynchronousSerializingMaster, ThreadedMaster,
+                           ThreadedSerializingMaster, MultiprocessingMaster)
 import trace as tr
 from venture.lite.utils import sampleLogCategorical, logaddexp
 from venture.engine.inference import Infer
@@ -60,15 +60,15 @@ class Engine(object):
 
   def trace_handler_constructor(self, mode):
     if mode == 'multiprocess':
-      return MultiprocessingTraceHandler
+      return MultiprocessingMaster
     elif mode == 'thread_ser':
-      return ThreadedSerializingTraceHandler
+      return ThreadedSerializingMaster
     elif mode == 'threaded':
-      return ThreadedTraceHandler
+      return ThreadedMaster
     elif mode == 'serializing':
-      return SynchronousSerializingTraceHandler
+      return SynchronousSerializingMaster
     else:
-      return SynchronousTraceHandler
+      return SynchronousMaster
 
   def create_handler(self, traces, weights=None):
     if self.name == "lite":

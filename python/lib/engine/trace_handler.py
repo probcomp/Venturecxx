@@ -28,35 +28,35 @@ Traces in this use case, but WorkerProcess doesn't care), and
 interacts with the underlying object by forwarding method calls.
 As a subclass of Process, each
 instance has a run() method. The run() method is simply a listener; the
-WorkerProcess waits for commands sent over the pipe from the TraceHandler
+WorkerProcess waits for commands sent over the pipe from the Master
 (described below), calls the method associated with the command, and then
 returns the result to the Handler over the pipe. All methods are wrapped in
 the @safely decorator, whose purpose is to catch all errors occurring in workers
 and return them over the Pipe, to be raised by the Handler. This prevents
 exceptions in the child processes from hanging the program.
-The WorkerProcess classes are daemonic; the TraceHandler need not wait for
+The WorkerProcess classes are daemonic; the Master need not wait for
 the run() methods of its children to complete before regaining control of
 the program. Also as daemonic processes, all WorkerProcess instances will
 be terminated when the controlling Handler is deleted.
 For more information on the WorkerProcess class hierarchy, see the docstrings
 below.
 
-The TraceHandler classes facilitate communication between the Engine and the
-individual WorkerProcess instances. Each TraceHandler stores a list of
+The Master classes facilitate communication between the Engine and the
+individual WorkerProcess instances. Each Master stores a list of
 WorkerProcesses, and also a list of Pipes interacting with those
 WorkerProcesses, as attributes.
-When the Engine calls a method (say, engine.assume()), the TraceHandler passes
+When the Engine calls a method (say, engine.assume()), the Master passes
 this command over the Pipes to the WorkerProcesses via its "delegate" method,
 and then waits for results to be returned from the workers. It regains control
 of the program when all results have been returned. It then checks for
 exceptions; if any are found, it re-raises the first one. Else it passes its
 result back to the Engine.
-The TraceHandler also has methods to retrieve serialized traces from the
-individual WorkerProcesses and reconstruct them. For the MultiprocessingTraceHandler,
+The Master also has methods to retrieve serialized traces from the
+individual WorkerProcesses and reconstruct them. For the MultiprocessingMaster,
 Traces must be serialized before being sent from WorkerProcesses back to the
 Handler. This is the case since Trace objects are not picklable and hence
 cannot be sent over Pipes directly.
-For more information on the TraceHandler class hierarchy, see the docstrings
+For more information on the Master class hierarchy, see the docstrings
 below.
 '''
 
@@ -103,12 +103,12 @@ def threw_error(entry):
 
 class HandlerBase(object):
   '''
-  Base class for all TraceHandlers; defines the majority of the methods to
-  interact with the TraceHandlers and reserves abstract methods with different
+  Base class for all Masters; defines the majority of the methods to
+  interact with the Masters and reserves abstract methods with different
   behavior in parallel, threaded, and sequential modes to be defined by subclasses.
   '''
   def __init__(self, traces, rng_style, process_cap):
-    """A TraceHandler maintains:
+    """A Master maintains:
 
     - An array of objects representing the worker processes.
 
@@ -118,7 +118,7 @@ class HandlerBase(object):
       of traces is notionally the concatenation of all the chunks, in
       the order given by the array of child processes.
 
-    - To be able to interact with a single trace, the TraceHandler
+    - To be able to interact with a single trace, the Master
       also maintains a mapping between the index in the total trace
       list and (the chunk that trace is part of and its offset in that
       chunk).
@@ -222,7 +222,7 @@ class SharedMemoryHandlerBase(HandlerBase):
   This harmlessly saves effort if the states are actually in a shared
   memory space (i.e., multiprocessing.dummy or completely synchronous)
   and we are not trying to debug serialization.  Inherited by
-  ThreadedTraceHandler and SynchronousTraceHandler.
+  ThreadedMaster and SynchronousMaster.
 
   '''
 
@@ -237,7 +237,7 @@ class SharedMemoryHandlerBase(HandlerBase):
 ######################################################################
 # Concrete trace handlers
 
-class MultiprocessingTraceHandler(HandlerBase):
+class MultiprocessingMaster(HandlerBase):
   '''Controls MultiprocessingWorkerProcesses. Communicates with workers
   via multiprocessing.Pipe. Truly multiprocess implementation.
 
@@ -246,42 +246,42 @@ class MultiprocessingTraceHandler(HandlerBase):
   def _pipe_and_process_types():
     return mp.Pipe, MultiprocessingWorkerProcess
 
-class ThreadedSerializingTraceHandler(HandlerBase):
+class ThreadedSerializingMaster(HandlerBase):
   '''Controls ThreadedSerializingWorkerProcesses. Communicates with
   workers via multiprocessing.dummy.Pipe. Do not use for actual
   modeling. Rather, intended for debugging; API mimics
-  MultiprocessingTraceHandler, but implementation is multithreaded.
+  MultiprocessingMaster, but implementation is multithreaded.
 
   '''
   @staticmethod
   def _pipe_and_process_types():
     return mpd.Pipe, ThreadedSerializingWorkerProcess
 
-class ThreadedTraceHandler(SharedMemoryHandlerBase):
+class ThreadedMaster(SharedMemoryHandlerBase):
   '''Controls ThreadedWorkerProcesses. Communicates via
   multiprocessing.dummy.Pipe. Do not use for actual modeling. Rather,
   intended for debugging multithreading; API mimics
-  ThreadedSerializingTraceHandler, but does not serialize the traces.
+  ThreadedSerializingMaster, but does not serialize the traces.
 
   '''
   @staticmethod
   def _pipe_and_process_types():
     return mpd.Pipe, ThreadedWorkerProcess
 
-class SynchronousSerializingTraceHandler(HandlerBase):
+class SynchronousSerializingMaster(HandlerBase):
   '''Controls SynchronousSerializingWorkerProcesses. Communicates via
   SynchronousPipe. Do not use for actual modeling. Rather, intended
   for debugging multithreading; API mimics
-  MultiprocessingTraceHandler, but runs synchronously in one thread.
+  MultiprocessingMaster, but runs synchronously in one thread.
 
   '''
   @staticmethod
   def _pipe_and_process_types():
     return SynchronousPipe, SynchronousSerializingWorkerProcess
 
-class SynchronousTraceHandler(SharedMemoryHandlerBase):
+class SynchronousMaster(SharedMemoryHandlerBase):
   '''Controls SynchronousWorkerProcesses. Default
-  TraceHandler. Communicates via SynchronousPipe.  This is what you
+  Master. Communicates via SynchronousPipe.  This is what you
   want if you don't want to pay for parallelism.
 
   '''
@@ -393,7 +393,7 @@ class SynchronousBase(object):
 # pylint: disable=too-many-ancestors
 class MultiprocessingWorkerProcess(ProcessBase, MultiprocessBase):
   '''
-  True parallelism via multiprocessing. Controlled by MultiprocessingTraceHandler.
+  True parallelism via multiprocessing. Controlled by MultiprocessingMaster.
   '''
   @safely
   def set_seeds(self, index, seeds):
@@ -410,7 +410,7 @@ class MultiprocessingWorkerProcess(ProcessBase, MultiprocessBase):
 class ThreadedSerializingWorkerProcess(ProcessBase, ThreadingBase):
   '''Emulates MultiprocessingWorkerProcess by serializing the managed states, but
   is implemented with threading. Could be useful for debugging?
-  Controlled by ThreadedSerializingTraceHandler.
+  Controlled by ThreadedSerializingMaster.
 
   '''
   pass
@@ -418,7 +418,7 @@ class ThreadedSerializingWorkerProcess(ProcessBase, ThreadingBase):
 class ThreadedWorkerProcess(SharedMemoryProcessBase, ThreadingBase):
   '''Emulates MultiprocessingWorkerProcess by running multithreaded but
   without serializing states.  Could be useful for debugging?
-  Controlled by ThreadedTraceHandler.
+  Controlled by ThreadedMaster.
 
   '''
   pass
@@ -426,7 +426,7 @@ class ThreadedWorkerProcess(SharedMemoryProcessBase, ThreadingBase):
 class SynchronousSerializingWorkerProcess(ProcessBase, SynchronousBase):
   '''Emulates MultiprocessingWorkerProcess by serializing the states as
   it would, while still running in one thread.  Use for debugging.
-  Controlled by SynchronousSerializingTraceHandler.
+  Controlled by SynchronousSerializingMaster.
 
   '''
   pass
@@ -434,7 +434,7 @@ class SynchronousSerializingWorkerProcess(ProcessBase, SynchronousBase):
 class SynchronousWorkerProcess(SharedMemoryProcessBase, SynchronousBase):
   '''
   Default. Keeps everything synchronous. Controlled by
-  SynchronousTraceHandler.
+  SynchronousMaster.
   '''
   pass
 
