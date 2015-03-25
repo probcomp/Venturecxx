@@ -114,6 +114,16 @@ class Engine(object):
     trace.bindInGlobalEnv(id, did)
     return (did,trace.extractValue(did))
 
+  def _check_consistency_of_directive_map(self):
+    model_dirs = self.retrieve_trace(0).directives
+    for (k, v) in model_dirs.iteritems():
+      assert k in self.directives
+      assert self.directives[k][1:] == v[1:]
+    for (k, v) in self.directives.iteritems():
+      if v[0] in ["assume", "predict", "observe"]:
+        assert k in model_dirs
+        assert model_dirs[k][1:] == v[1:]
+
   def assume(self,id,datum):
     baseAddr = self.nextBaseAddr()
     exp = datum
@@ -122,7 +132,7 @@ class Engine(object):
     value = values[0]
 
     self.directives[self.directiveCounter] = ["assume",id,datum]
-
+    self._check_consistency_of_directive_map()
     return (self.directiveCounter,value)
 
   def predict_all(self,datum):
@@ -131,6 +141,7 @@ class Engine(object):
     value = self.trace_handler.delegate('evaluate', baseAddr, datum)
 
     self.directives[self.directiveCounter] = ["predict",datum]
+    self._check_consistency_of_directive_map()
 
     return (self.directiveCounter,value)
 
@@ -144,6 +155,7 @@ class Engine(object):
     self.trace_handler.delegate('observe', baseAddr, datum, val)
 
     self.directives[self.directiveCounter] = ["observe",datum,val]
+    self._check_consistency_of_directive_map()
     return self.directiveCounter
 
   def forget(self,directiveId):
@@ -155,6 +167,7 @@ class Engine(object):
     self.trace_handler.delegate('forget', directive, directiveId)
 
     del self.directives[directiveId]
+    self._check_consistency_of_directive_map()
 
   def force(self,datum,val):
     # TODO: The directive counter increments, but the "force" isn't added
