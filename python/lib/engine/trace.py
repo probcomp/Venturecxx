@@ -54,7 +54,9 @@ class Trace(object):
     del self.directives[directiveId]
 
   def freeze(self, directiveId):
-    assert directiveId in self.directives
+    if directiveId not in self.directives:
+      raise VentureException("invalid_argument", "Cannot freeze a non-existent directive id",
+                             argument="directive_id", directive_id=directiveId)
     self.trace.freeze(directiveId)
     # TODO Adjust the directives map
 

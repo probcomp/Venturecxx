@@ -189,9 +189,6 @@ class Engine(object):
     return values
 
   def freeze(self,directiveId):
-    if directiveId not in self.directives:
-      raise VentureException("invalid_argument", "Cannot freeze a non-existent directive id",
-                             argument="directive_id", directive_id=directiveId)
     # TODO Record frozen state for reinit_inference_problem?  What if
     # the replay is done with a different number of particles than the
     # original?  Where do the extra values come from?
