@@ -72,10 +72,10 @@ class Engine(object):
 
   def create_handler(self, traces, weights=None):
     if self.name == "lite":
-      rng_style = "process"
+      local_rng = False
     else:
-      rng_style = "local"
-    ans = self.trace_handler_constructor(self.mode)(traces, rng_style, self.process_cap)
+      local_rng = True
+    ans = self.trace_handler_constructor(self.mode)(traces, self.process_cap, local_rng)
     if weights is not None:
       self.log_weights = weights
     else:

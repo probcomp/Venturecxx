@@ -117,7 +117,7 @@ class MasterBase(object):
   sequential modes.
 
   '''
-  def __init__(self, objects, rng_style, process_cap):
+  def __init__(self, objects, process_cap, local_rng=False):
     """A Master maintains:
 
     - An array of objects representing the worker processes.
@@ -134,7 +134,7 @@ class MasterBase(object):
       chunk).
 
     """
-    self.rng_style = rng_style
+    self.local_rng = local_rng
     self.process_cap = process_cap
     self.processes = []
     self.pipes = []  # Parallel to processes
@@ -166,7 +166,7 @@ class MasterBase(object):
         chunk_start = extras + chunk * base_size
         chunk_end = chunk_start + base_size
       assert chunk_end <= len(objects) # I think I wrote this code to ensure this
-      process = Worker(objects[chunk_start:chunk_end], child, self.rng_style)
+      process = Worker(objects[chunk_start:chunk_end], child, self.local_rng)
       process.start()
       self.pipes.append(parent)
       self.processes.append(process)
@@ -318,10 +318,10 @@ class WorkerBase(object):
   synchronously (using Safely objects to catch exceptions).
 
   '''
-  def __init__(self, objs, pipe, rng_style):
+  def __init__(self, objs, pipe, local_rng=False):
     self.objs = [Safely(o) for o in objs]
     self.pipe = pipe
-    self.rng_style = rng_style
+    self.local_rng = local_rng
     self._initialize()
 
   def run(self):
@@ -343,7 +343,7 @@ class WorkerBase(object):
   def set_seeds(self, _index, seeds):
     # If we're in puma, set the seed; else don't.
     # The truly parallel case is handled by the subclass MultiprocessingWorker.
-    if self.rng_style == 'local':
+    if self.local_rng:
       for (obj, seed) in zip(self.objs, seeds):
         obj.set_seed(seed)
     return [None for _ in self.objs]
@@ -407,13 +407,13 @@ class MultiprocessingWorker(WorkerBase, MultiprocessBase):
   def set_seeds(self, index, seeds):
     # override the default set_seeds method; if we're in parallel Python,
     # reset the global random seeds.
-    if self.rng_style == 'process':
+    if self.local_rng:
+      return WorkerBase.set_seeds(self, index, seeds)
+    else:
       # In Python the RNG is global; only need to set it once.
       random.seed(seeds[0])
       np.random.seed(seeds[0])
       return [None for _ in self.objs]
-    else:
-      return WorkerBase.set_seeds(self, index, seeds)
 
 class ThreadedSerializingWorker(WorkerBase, ThreadingBase):
   '''Emulates MultiprocessingWorker by forbidding the short-cut
