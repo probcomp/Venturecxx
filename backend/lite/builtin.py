@@ -169,6 +169,8 @@ builtInSPsList = [
            [ "div",   binaryNum(lambda x,y: x / y,
                                 sim_grad=grad_div,
                                 descr="div returns the quotient of its first argument by its second") ],
+           [ "mod",   binaryNum(lambda x,y: x % y,
+                                descr="mod returns the modulus of its first argument by its second") ],
            [ "min",   binaryNum(min, descr="min returns the minimum value of its arguments") ],
            [ "eq",    binaryPred(lambda x,y: x.compare(y) == 0,
                                  descr="eq compares its two arguments for equality") ],

@@ -60,6 +60,7 @@ def checkRiplAgreesWithDeterministicSimulate(name, sp):
     ## Incompatibilities with Puma
     "to_list", # Not implemented
     "min", # Not implemented
+    "mod", # Not implemented
     "real", # Not implemented
     "atom_eq", # Not implemented
     "arange", # Not implemented
