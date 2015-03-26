@@ -119,12 +119,12 @@ inference.)
     return ([Trace(t) for t in traces], weights)
 
   def dump(self, directives, skipStackDictConversion=False):
-    return _dump_trace(self.trace, directives, self.directives, skipStackDictConversion)
+    return _dump_trace(self.trace, self.directives, skipStackDictConversion)
 
   @staticmethod
-  def restore(engine, values, skipStackDictConversion=False):
-    (values, wr_directives) = values
-    return Trace(_restore_trace(engine.Trace(), engine.directives, values, engine.foreign_sps, engine.name, skipStackDictConversion), wr_directives)
+  def restore(engine, serialized, skipStackDictConversion=False):
+    (values, directives) = serialized
+    return Trace(_restore_trace(engine.Trace(), directives, values, engine.foreign_sps, engine.name, skipStackDictConversion), directives)
 
   def stop_and_copy(self):
     return Trace(self.trace.stop_and_copy(), self.directives)
@@ -133,7 +133,7 @@ inference.)
 # Auxiliary functions for dumping and loading backend-specific traces
 ######################################################################
 
-def _dump_trace(trace, directives, wr_directives, skipStackDictConversion=False):
+def _dump_trace(trace, directives, skipStackDictConversion=False):
   # TODO: It would be good to pass foreign_sps to this function as well,
   # and then check that the passed foreign_sps match up with the foreign
   # SP's bound in the trace's global environment. However, in the Puma backend
@@ -160,7 +160,7 @@ def _dump_trace(trace, directives, wr_directives, skipStackDictConversion=False)
   # harder to detect).
   trace.makeConsistent()
 
-  return (trace.dumpSerializationDB(db, skipStackDictConversion), wr_directives)
+  return (trace.dumpSerializationDB(db, skipStackDictConversion), directives)
 
 def _restore_trace(trace, directives, values, foreign_sps,
                    backend, skipStackDictConversion=False):
@@ -173,7 +173,7 @@ def _restore_trace(trace, directives, values, foreign_sps,
   db = trace.makeSerializationDB(values, skipStackDictConversion)
 
   for did, directive in sorted(directives.items()):
-      if directive[0] == "assume":
+      if directive[0] == "define":
           name, datum = directive[1], directive[2]
           trace.evalAndRestore(did, datum, db)
           trace.bindInGlobalEnv(name, did)
@@ -181,7 +181,7 @@ def _restore_trace(trace, directives, values, foreign_sps,
           datum, val = directive[1], directive[2]
           trace.evalAndRestore(did, datum, db)
           trace.observe(did, val)
-      elif directive[0] == "predict":
+      elif directive[0] == "evaluate":
           datum = directive[1]
           trace.evalAndRestore(did, datum, db)
 
