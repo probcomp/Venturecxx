@@ -3,7 +3,7 @@ from nose.tools import eq_
 import venture.lite.value as val
 from venture.test.config import get_ripl, broken_in
 
-@broken_in("puma") # Because no introspection on blocks in scope
+@broken_in("puma", "No introspection on blocks in scope")
 def testScopeObservedThroughMem1():
   r = get_ripl()
   r.assume("frob", "(mem (lambda (x) (flip 0.5)))")
@@ -15,7 +15,7 @@ def testScopeObservedThroughMem1():
   r.infer("(incorporate)")
   eq_(0, len(trace.getAllNodesInScope(scope)))
 
-@broken_in("puma") # Because no introspection on blocks in scope
+@broken_in("puma", "No introspection on blocks in scope")
 def testScopeObservedThroughMem2():
   """The way resample happened to be implemented in Lite when I wrote
 this test, it had the effect of undoing [infer (incorporate)] for all

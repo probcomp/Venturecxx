@@ -19,7 +19,7 @@ def checkDirSmoke2(form):
 def testDirichletComparisonRegression():
   eq_(get_ripl().predict("(= (symmetric_dirichlet 3 2) (simplex 0.01 0.99))"), False) # As opposed to crashing
 
-@broken_in('puma')
+@broken_in('puma', "Puma does not define log_flip")
 @statisticalTest
 def testLogFlip():
   ripl = get_ripl()

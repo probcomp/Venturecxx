@@ -6,7 +6,7 @@ from venture.lite.psp import LikelihoodFreePSP
 from venture.lite import value as v
 from venture.lite.builtin import typed_nr
 
-@broken_in('puma')
+@broken_in('puma', "Profiler only implemented for Lite")
 def test_profiling1():
   ripl = get_ripl()
 
@@ -31,11 +31,11 @@ def test_profiling1():
 
   data = ripl.profile_data()
 
-  assert(len(data) == 11)
+  assert len(data) == 11
 
   map(lambda addrs: map(printAddr, addrs), data.principal)
 
-@broken_in('puma')
+@broken_in('puma', "Profiler only implemented for Lite")
 def test_profiling_likelihoodfree():
   "Make sure profiling doesn't break with likelihood-free SP's"
   class TestPSP(LikelihoodFreePSP):

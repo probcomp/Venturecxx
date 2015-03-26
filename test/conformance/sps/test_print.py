@@ -8,7 +8,7 @@ def extract_integer(captured):
   res = search('VentureInteger\((.*)\)', captured) #pylint: disable=W1401
   return int(res.group(1))
 
-@broken_in("puma", "TODO: implement in PUMA")
+@broken_in("puma", "TODO: implement in-model debug print in puma")
 def test_print1():
   'Make sure that print prints the correct values by intercepting output'
   ripl = get_ripl()
@@ -22,7 +22,7 @@ def test_print1():
   eq_(y, captured_y)
   eq_(res_value, captured_x + captured_y)
 
-@broken_in("puma", "TODO: implement in PUMA")
+@broken_in("puma", "TODO: implement in-model debug print in puma")
 def test_print2():
   'Another test for consistency by intercepting output'
   ripl = get_ripl()

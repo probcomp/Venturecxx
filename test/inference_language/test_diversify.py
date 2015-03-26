@@ -5,7 +5,7 @@ import venture.value.dicts as v
 from venture.ripl.utils import strip_types
 from venture.lite.utils import logWeightsToNormalizedDirect
 
-@broken_in("puma")
+@broken_in("puma", "enumerative_diversify not implemented in Puma")
 @on_inf_prim("enumerative_diversify")
 def testEnumerativeSmoke():
   r = get_ripl()
