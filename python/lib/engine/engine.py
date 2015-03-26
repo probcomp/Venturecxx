@@ -46,7 +46,7 @@ class Engine(object):
     self.inferrer = None
     self.mode = 'sequential'
     self.process_cap = None
-    self.trace_handler = self.create_handler([tr.Trace(Trace())])
+    self.model = self.create_handler([tr.Trace(Trace())])
     import venture.lite.inference_sps as inf
     self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
@@ -57,7 +57,7 @@ class Engine(object):
     self.ripl = None
     self.creation_time = time.time()
 
-  def trace_handler_constructor(self, mode):
+  def model_constructor(self, mode):
     if mode == 'multiprocess':
       return MultiprocessingMaster
     elif mode == 'thread_ser':
@@ -74,7 +74,7 @@ class Engine(object):
       local_rng = False
     else:
       local_rng = True
-    ans = self.trace_handler_constructor(self.mode)(traces, self.process_cap, local_rng)
+    ans = self.model_constructor(self.mode)(traces, self.process_cap, local_rng)
     if weights is not None:
       self.log_weights = weights
     else:
@@ -115,13 +115,13 @@ class Engine(object):
 
   def assume(self,id,datum):
     baseAddr = self.nextBaseAddr()
-    values = self.trace_handler.map('define', baseAddr, id, datum)
+    values = self.model.map('define', baseAddr, id, datum)
     value = values[0]
     return (self.directiveCounter,value)
 
   def predict_all(self,datum):
     baseAddr = self.nextBaseAddr()
-    values = self.trace_handler.map('evaluate', baseAddr, datum)
+    values = self.model.map('evaluate', baseAddr, datum)
     return (self.directiveCounter,values)
 
   def predict(self, datum):
@@ -130,11 +130,11 @@ class Engine(object):
 
   def observe(self,datum,val):
     baseAddr = self.nextBaseAddr()
-    self.trace_handler.map('observe', baseAddr, datum, val)
+    self.model.map('observe', baseAddr, datum, val)
     return self.directiveCounter
 
   def forget(self,directiveId):
-    self.trace_handler.map('forget', directiveId)
+    self.model.map('forget', directiveId)
 
   def force(self,datum,val):
     # TODO: The directive counter increments, but the "force" isn't added
@@ -162,13 +162,13 @@ class Engine(object):
     return values
 
   def freeze(self,directiveId):
-    self.trace_handler.map('freeze', directiveId)
+    self.model.map('freeze', directiveId)
 
   def report_value(self,directiveId):
-    return self.trace_handler.at_distinguished('report_value', directiveId)
+    return self.model.at_distinguished('report_value', directiveId)
 
   def report_raw(self,directiveId):
-    return self.trace_handler.at_distinguished('report_raw', directiveId)
+    return self.model.at_distinguished('report_raw', directiveId)
 
   def bind_foreign_sp(self, name, sp):
     self.foreign_sps[name] = sp
@@ -183,12 +183,12 @@ class Engine(object):
       bind the sp, then switch back to multiprocess.'''
       raise TypeError(errstr)
 
-    self.trace_handler.map('bind_foreign_sp', name, sp)
+    self.model.map('bind_foreign_sp', name, sp)
 
   def clear(self):
-    del self.trace_handler
+    del self.model
     self.directiveCounter = 0
-    self.trace_handler = self.create_handler([tr.Trace(self.Trace())])
+    self.model = self.create_handler([tr.Trace(self.Trace())])
     self.ensure_rng_seeded_decently()
 
   def ensure_rng_seeded_decently(self):
@@ -212,14 +212,14 @@ if freeze has been used.
     self.resample(num_particles)
     # Resample currently reincorporates, so clear the weights again
     self.log_weights = [0 for _ in range(num_particles)]
-    self.trace_handler.map('reset_to_prior')
+    self.model.map('reset_to_prior')
 
   def resample(self, P, mode = 'sequential', process_cap = None):
     self.mode = mode
     self.process_cap = process_cap
     newTraces = self._resample_traces(P)
-    del self.trace_handler
-    self.trace_handler = self.create_handler(newTraces)
+    del self.model
+    self.model = self.create_handler(newTraces)
     self.incorporate()
 
   def _resample_traces(self, P):
@@ -257,8 +257,8 @@ if freeze has been used.
       for (res_t, res_w) in zip(*(t.diversify(program, self.copy_trace))):
         new_traces.append(res_t)
         new_weights.append(w + res_w)
-    del self.trace_handler
-    self.trace_handler = self.create_handler(new_traces, new_weights)
+    del self.model
+    self.model = self.create_handler(new_traces, new_weights)
 
   def _collapse_help(self, scope, block, select_keeper):
     traces = self.retrieve_traces()
@@ -284,8 +284,8 @@ if freeze has been used.
       new_ts.append(self.copy_trace(ts[index]))
       new_ts[-1].makeConsistent() # Even impossible states ok
       new_ws.append(total)
-    del self.trace_handler
-    self.trace_handler = self.create_handler(new_ts, new_ws)
+    del self.model
+    self.model = self.create_handler(new_ts, new_ws)
 
   def collapse(self, scope, block):
     def sample(weights):
@@ -301,10 +301,10 @@ if freeze has been used.
     self._collapse_help(scope, block, max_ind)
 
   def likelihood_weight(self):
-    self.log_weights = self.trace_handler.map('likelihood_weight')
+    self.log_weights = self.model.map('likelihood_weight')
 
   def incorporate(self):
-    weight_increments = self.trace_handler.map('makeConsistent')
+    weight_increments = self.model.map('makeConsistent')
     for i, increment in enumerate(weight_increments):
       self.log_weights[i] += increment
 
@@ -384,19 +384,19 @@ if freeze has been used.
       self._define_in(name, exp, next_trace)
 
   def primitive_infer(self, exp):
-    self.trace_handler.map('primitive_infer', exp)
+    self.model.map('primitive_infer', exp)
 
-  def logscore(self): return self.trace_handler.at_distinguished('getGlobalLogScore')
-  def logscore_all(self): return self.trace_handler.map('getGlobalLogScore')
+  def logscore(self): return self.model.at_distinguished('getGlobalLogScore')
+  def logscore_all(self): return self.model.map('getGlobalLogScore')
 
   def get_entropy_info(self):
-    return { 'unconstrained_random_choices' : self.trace_handler.at_distinguished('numRandomChoices') }
+    return { 'unconstrained_random_choices' : self.model.at_distinguished('numRandomChoices') }
 
   def get_seed(self):
-    return self.trace_handler.at_distinguished('get_seed') # TODO is this what we want?
+    return self.model.at_distinguished('get_seed') # TODO is this what we want?
 
   def set_seed(self, seed):
-    self.trace_handler.at_distinguished('set_seed', seed) # TODO is this what we want?
+    self.model.at_distinguished('set_seed', seed) # TODO is this what we want?
 
   def continuous_inference_status(self):
     if self.inferrer is not None:
@@ -416,21 +416,21 @@ if freeze has been used.
       self.inferrer = None
 
   def retrieve_dump(self, ix):
-    return self.trace_handler.at(ix, 'dump')
+    return self.model.at(ix, 'dump')
 
   def retrieve_dumps(self):
-    return self.trace_handler.map('dump')
+    return self.model.map('dump')
 
   def retrieve_trace(self, ix):
-    if self.trace_handler.can_shortcut_retrieval():
-      return self.trace_handler.retrieve(ix)
+    if self.model.can_shortcut_retrieval():
+      return self.model.retrieve(ix)
     else:
       dumped = self.retrieve_dump(ix)
       return self.restore_trace(dumped)
 
   def retrieve_traces(self):
-    if self.trace_handler.can_shortcut_retrieval():
-      return self.trace_handler.retrieve_all()
+    if self.model.can_shortcut_retrieval():
+      return self.model.retrieve_all()
     else:
       dumped_all = self.retrieve_dumps()
       return [self.restore_trace(dumped) for dumped in dumped_all]
@@ -464,8 +464,8 @@ if freeze has been used.
     self.directiveCounter = data['directiveCounter']
     self.mode = data['mode']
     traces = [self.restore_trace(trace) for trace in data['traces']]
-    del self.trace_handler
-    self.trace_handler = self.create_handler(traces, data['log_weights'])
+    del self.model
+    self.model = self.create_handler(traces, data['log_weights'])
     return data['extra']
 
   def convert(self, EngineClass):
@@ -473,7 +473,7 @@ if freeze has been used.
     engine.directiveCounter = self.directiveCounter
     engine.mode = self.mode
     traces = [engine.restore_trace(dump) for dump in self.retrieve_dumps()]
-    engine.trace_handler = engine.create_handler(traces, self.log_weights)
+    engine.model = engine.create_handler(traces, self.log_weights)
     return engine
 
   def to_lite(self):
@@ -487,10 +487,10 @@ if freeze has been used.
   def set_profiling(self, enabled=True):
     # TODO: do this by introspection on the trace
     if self.name == 'lite':
-      self.trace_handler.map('set_profiling', enabled)
+      self.model.map('set_profiling', enabled)
 
   def clear_profiling(self):
-    self.trace_handler.map('clear_profiling')
+    self.model.map('clear_profiling')
 
   def profile_data(self):
     rows = []
