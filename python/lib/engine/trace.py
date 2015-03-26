@@ -118,7 +118,7 @@ inference.)
     (traces, weights) = self.trace.diversify(exp, copy_inner_trace)
     return ([Trace(t) for t in traces], weights)
 
-  def dump(self, directives, skipStackDictConversion=False):
+  def dump(self, skipStackDictConversion=False):
     return _dump_trace(self.trace, self.directives, skipStackDictConversion)
 
   @staticmethod

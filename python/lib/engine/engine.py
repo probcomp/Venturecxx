@@ -452,10 +452,10 @@ if freeze has been used.
       self.inferrer = None
 
   def retrieve_dump(self, ix):
-    return self.trace_handler.delegate_one(ix, 'dump', self.directives)
+    return self.trace_handler.delegate_one(ix, 'dump')
 
   def retrieve_dumps(self):
-    return self.trace_handler.delegate('dump', self.directives)
+    return self.trace_handler.delegate('dump')
 
   def retrieve_trace(self, ix):
     if self.trace_handler.can_shortcut_retrieval():
@@ -473,7 +473,7 @@ if freeze has been used.
 
   # class methods that call the corresponding functions, with arguments filled in
   def dump_trace(self, trace, skipStackDictConversion=False):
-    return trace.dump(self.directives, skipStackDictConversion)
+    return trace.dump(skipStackDictConversion)
 
   def restore_trace(self, values, skipStackDictConversion=False):
     return tr.Trace.restore(self, values, skipStackDictConversion)
