@@ -29,7 +29,7 @@ import venture.value.dicts as v
 
 def is_picklable(obj):
   try:
-    res = pickle.dumps(obj)
+    pickle.dumps(obj)
   except TypeError:
     return False
   except pickle.PicklingError:
@@ -115,15 +115,14 @@ class Engine(object):
 
   def assume(self,id,datum):
     baseAddr = self.nextBaseAddr()
-    exp = datum
-    values = self.trace_handler.delegate('define', baseAddr, id, exp)
+    values = self.trace_handler.delegate('define', baseAddr, id, datum)
     value = values[0]
     return (self.directiveCounter,value)
 
   def predict_all(self,datum):
     baseAddr = self.nextBaseAddr()
-    value = self.trace_handler.delegate('evaluate', baseAddr, datum)
-    return (self.directiveCounter,value)
+    values = self.trace_handler.delegate('evaluate', baseAddr, datum)
+    return (self.directiveCounter,values)
 
   def predict(self, datum):
     (did, answers) = self.predict_all(datum)
@@ -491,7 +490,7 @@ if freeze has been used.
       self.trace_handler.delegate('set_profiling', enabled)
 
   def clear_profiling(self):
-    self.trace_handler.delegate('clear_profiling', enabled)
+    self.trace_handler.delegate('clear_profiling')
 
   def profile_data(self):
     rows = []
@@ -530,7 +529,7 @@ class ContinuousInferrer(object):
 the_prelude = None
 
 def _inference_prelude():
-  global the_prelude
+  global the_prelude # Yes, I do mean to use a global variable. pylint:disable=global-statement
   if the_prelude is None:
     the_prelude = _compute_inference_prelude()
   return the_prelude
