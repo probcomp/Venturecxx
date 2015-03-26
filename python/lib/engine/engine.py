@@ -29,7 +29,7 @@ import venture.value.dicts as v
 
 def is_picklable(obj):
   try:
-    res = pickle.dumps(obj)
+    pickle.dumps(obj)
   except TypeError:
     return False
   except pickle.PicklingError:
@@ -43,7 +43,6 @@ class Engine(object):
     self.name = name
     self.Trace = Trace
     self.directiveCounter = 0
-    self.directives = {}
     self.inferrer = None
     self.mode = 'sequential'
     self.process_cap = None
@@ -116,23 +115,14 @@ class Engine(object):
 
   def assume(self,id,datum):
     baseAddr = self.nextBaseAddr()
-    exp = datum
-
-    values = self.trace_handler.delegate('assume', baseAddr, id, exp)
+    values = self.trace_handler.delegate('define', baseAddr, id, datum)
     value = values[0]
-
-    self.directives[self.directiveCounter] = ["assume",id,datum]
-
     return (self.directiveCounter,value)
 
   def predict_all(self,datum):
     baseAddr = self.nextBaseAddr()
-
-    value = self.trace_handler.delegate('predict_all', baseAddr, datum)
-
-    self.directives[self.directiveCounter] = ["predict",datum]
-
-    return (self.directiveCounter,value)
+    values = self.trace_handler.delegate('evaluate', baseAddr, datum)
+    return (self.directiveCounter,values)
 
   def predict(self, datum):
     (did, answers) = self.predict_all(datum)
@@ -140,11 +130,11 @@ class Engine(object):
 
   def observe(self,datum,val):
     baseAddr = self.nextBaseAddr()
-
     self.trace_handler.delegate('observe', baseAddr, datum, val)
-
-    self.directives[self.directiveCounter] = ["observe",datum,val]
     return self.directiveCounter
+
+  def forget(self,directiveId):
+    self.trace_handler.delegate('forget', directiveId)
 
   def force(self,datum,val):
     # TODO: The directive counter increments, but the "force" isn't added
@@ -154,16 +144,6 @@ class Engine(object):
     self.incorporate()
     self.forget(did)
     return self.directiveCounter
-
-  def forget(self,directiveId):
-    if directiveId not in self.directives:
-      raise VentureException("invalid_argument", "Cannot forget a non-existent directive id",
-                             argument="directive_id", directive_id=directiveId)
-    directive = self.directives[directiveId]
-
-    self.trace_handler.delegate('forget', directive, directiveId)
-
-    del self.directives[directiveId]
 
   def sample(self,datum):
     # TODO Officially this is taken care of by the Venture SIVM level,
@@ -182,44 +162,13 @@ class Engine(object):
     return values
 
   def freeze(self,directiveId):
-    if directiveId not in self.directives:
-      raise VentureException("invalid_argument", "Cannot freeze a non-existent directive id",
-                             argument="directive_id", directive_id=directiveId)
-    # TODO Record frozen state for reinit_inference_problem?  What if
-    # the replay is done with a different number of particles than the
-    # original?  Where do the extra values come from?
     self.trace_handler.delegate('freeze', directiveId)
-    # XXX OOPS!  We need to remember, in self.directives, that this
-    # node is frozen at its current values, so that when we copy the
-    # trace we don't make random choices afresh here.  But there's no
-    # obvious way to record that.
-    #self.directives[directiveId] = ["assume", directiveId, XXX]
 
   def report_value(self,directiveId):
-    if directiveId not in self.directives:
-      raise VentureException("invalid_argument", "Cannot report a non-existent directive id",
-                             argument=directiveId)
-    return self.trace_handler.delegate_distinguished('extractValue', directiveId)
+    return self.trace_handler.delegate_distinguished('report_value', directiveId)
 
   def report_raw(self,directiveId):
-    if directiveId not in self.directives:
-      raise VentureException("invalid_argument",
-                             "Cannot report raw value of a non-existent directive id",
-                             argument=directiveId)
-    return self.trace_handler.delegate_distinguished('extractRaw', directiveId)
-
-  def clear(self):
-    del self.trace_handler
-    self.directiveCounter = 0
-    self.directives = {}
-    self.trace_handler = self.create_handler([tr.Trace(self.Trace())])
-    self.ensure_rng_seeded_decently()
-
-  def ensure_rng_seeded_decently(self):
-    # Frobnicate the trace's random seed because Trace() resets the
-    # RNG seed from the current time, which sucks if one calls this
-    # method often.
-    self.set_seed(random.randint(1,2**31-1))
+    return self.trace_handler.delegate_distinguished('report_raw', directiveId)
 
   def bind_foreign_sp(self, name, sp):
     self.foreign_sps[name] = sp
@@ -230,38 +179,40 @@ class Engine(object):
 
     # check that we can pickle it
     if (not is_picklable(sp)) and (self.mode != 'sequential'):
-      errstr = '''SP not picklable. To bind it, call (infer sequential [ n_cores ]),
+      errstr = '''SP not picklable. To bind it, call [infer (resample_sequential <n_particles>)],
       bind the sp, then switch back to multiprocess.'''
       raise TypeError(errstr)
 
     self.trace_handler.delegate('bind_foreign_sp', name, sp)
 
+  def clear(self):
+    del self.trace_handler
+    self.directiveCounter = 0
+    self.trace_handler = self.create_handler([tr.Trace(self.Trace())])
+    self.ensure_rng_seeded_decently()
+
+  def ensure_rng_seeded_decently(self):
+    # Frobnicate the trace's random seed because Trace() resets the
+    # RNG seed from the current time, which sucks if one calls this
+    # method often.
+    self.set_seed(random.randint(1,2**31-1))
+
   # TODO There should also be capture_inference_problem and
   # restore_inference_problem (Analytics seems to use something like
   # it)
-  def reinit_inference_problem(self, num_particles=None):
-    """Blow away all the traces and rebuild from the stored directives.
+  def reinit_inference_problem(self, num_particles=1):
+    """Unincorporate all observations and return to the prior.
 
-The goal is to resample from the prior.  May have the unfortunate
-effect of renumbering the directives, if some had been forgotten."""
-    worklist = sorted(self.directives.iteritems())
-    self.clear()
-    if num_particles is not None:
-      self.infer("(resample %d)" % num_particles)
-    for (name,sp) in self.foreign_sps.iteritems():
-      self.bind_foreign_sp(name,sp)
-    for (_,dir) in worklist:
-      self.replay(dir)
+First perform a resample with the specified number of particles
+(default 1).  The choice of which particles will be returned to the
+prior matters if the particles have different priors, as might happen
+if freeze has been used.
 
-  def replay(self,directive):
-    if directive[0] == "assume":
-      self.assume(directive[1], directive[2])
-    elif directive[0] == "observe":
-      self.observe(directive[1], directive[2])
-    elif directive[0] == "predict":
-      self.predict(directive[1])
-    else:
-      assert False, "Unkown directive type found %r" % directive
+    """
+    self.resample(num_particles)
+    # Resample currently reincorporates, so clear the weights again
+    self.log_weights = [0 for _ in range(num_particles)]
+    self.trace_handler.delegate('reset_to_prior')
 
   def resample(self, P, mode = 'sequential', process_cap = None):
     self.mode = mode
@@ -274,11 +225,28 @@ effect of renumbering the directives, if some had been forgotten."""
   def _resample_traces(self, P):
     P = int(P)
     newTraces = [None for p in range(P)]
+    used_parents = {}
     for p in range(P):
       parent = sampleLogCategorical(self.log_weights) # will need to include or rewrite
-      newTrace = self.copy_trace(self.retrieve_trace(parent))
+      newTrace = self._use_parent(used_parents, parent)
       newTraces[p] = newTrace
     return newTraces
+
+  def _use_parent(self, used_parents, index):
+    # All traces returned from calling this function with the same
+    # used_parents dict need to be unique (since they should be
+    # allowed to diverge in the future).
+    #
+    # Subject to that, minimize copying and retrieval (copying is
+    # currently always expensive, and retrieval can be if it involves
+    # serialization).  Invariant: never need to retrieve a trace more
+    # than once.
+    if index in used_parents:
+      return self.copy_trace(used_parents[index])
+    else:
+      parent = self.retrieve_trace(index)
+      used_parents[index] = parent
+      return parent
 
   def diversify(self, program):
     traces = self.retrieve_traces()
@@ -448,10 +416,10 @@ effect of renumbering the directives, if some had been forgotten."""
       self.inferrer = None
 
   def retrieve_dump(self, ix):
-    return self.trace_handler.delegate_one(ix, 'dump', self.directives)
+    return self.trace_handler.delegate_one(ix, 'dump')
 
   def retrieve_dumps(self):
-    return self.trace_handler.delegate('dump', self.directives)
+    return self.trace_handler.delegate('dump')
 
   def retrieve_trace(self, ix):
     if self.trace_handler.can_shortcut_retrieval():
@@ -469,7 +437,7 @@ effect of renumbering the directives, if some had been forgotten."""
 
   # class methods that call the corresponding functions, with arguments filled in
   def dump_trace(self, trace, skipStackDictConversion=False):
-    return trace.dump(self.directives, skipStackDictConversion)
+    return trace.dump(skipStackDictConversion)
 
   def restore_trace(self, values, skipStackDictConversion=False):
     return tr.Trace.restore(self, values, skipStackDictConversion)
@@ -482,7 +450,6 @@ effect of renumbering the directives, if some had been forgotten."""
     data = {}
     data['traces'] = self.retrieve_dumps()
     data['log_weights'] = self.log_weights
-    data['directives'] = self.directives
     data['directiveCounter'] = self.directiveCounter
     data['mode'] = self.mode
     data['extra'] = extra
@@ -495,7 +462,6 @@ effect of renumbering the directives, if some had been forgotten."""
       (data, version) = dill.load(fp)
     assert version == '0.2', "Incompatible version or unrecognized object"
     self.directiveCounter = data['directiveCounter']
-    self.directives = data['directives']
     self.mode = data['mode']
     traces = [self.restore_trace(trace) for trace in data['traces']]
     del self.trace_handler
@@ -505,7 +471,6 @@ effect of renumbering the directives, if some had been forgotten."""
   def convert(self, EngineClass):
     engine = EngineClass()
     engine.directiveCounter = self.directiveCounter
-    engine.directives = self.directives
     engine.mode = self.mode
     traces = [engine.restore_trace(dump) for dump in self.retrieve_dumps()]
     engine.trace_handler = engine.create_handler(traces, self.log_weights)
@@ -525,7 +490,7 @@ effect of renumbering the directives, if some had been forgotten."""
       self.trace_handler.delegate('set_profiling', enabled)
 
   def clear_profiling(self):
-    self.trace_handler.delegate('clear_profiling', enabled)
+    self.trace_handler.delegate('clear_profiling')
 
   def profile_data(self):
     rows = []
@@ -564,7 +529,7 @@ class ContinuousInferrer(object):
 the_prelude = None
 
 def _inference_prelude():
-  global the_prelude
+  global the_prelude # Yes, I do mean to use a global variable. pylint:disable=global-statement
   if the_prelude is None:
     the_prelude = _compute_inference_prelude()
   return the_prelude

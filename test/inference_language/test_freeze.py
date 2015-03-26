@@ -1,6 +1,6 @@
 from nose.tools import eq_
 
-from venture.test.config import get_ripl, broken_in, on_inf_prim
+from venture.test.config import get_ripl, on_inf_prim
 
 @on_inf_prim("none")
 def testFreezeSanityCheck1():

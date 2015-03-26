@@ -60,12 +60,12 @@ def draw(inferrer):
 
   # Decide how far to plot the trajectory
   plot_range = 2
-  for (_did, directive) in inferrer.engine.directives.items():
+  for (_did, directive) in inferrer.engine.retrieve_trace(0).directives.items():
     if directive[0] == "observe":
       (_, datum, val) = directive
       obs_i = int(datum[1]["value"])
       plot_range = max(plot_range, obs_i + 1)
-    if directive[0] == "predict":
+    if directive[0] == "evaluate":
       (_, datum) = directive
       pr_i = int(datum[1]["value"])
       plot_range = max(plot_range, pr_i + 1)
@@ -76,7 +76,7 @@ def draw(inferrer):
   x_scale = (640.0 - 60)/plot_range
 
   # Plot the observations
-  for (_did, directive) in inferrer.engine.directives.items():
+  for (_did, directive) in inferrer.engine.retrieve_trace(0).directives.items():
     if directive[0] == "observe":
       (_, datum, val) = directive
       obs_i = int(datum[1]["value"])

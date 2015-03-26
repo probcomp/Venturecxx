@@ -37,7 +37,7 @@ def testMultiprocessingRegression():
 The bug manifested as likelihood_weight producing a zero weight for
 the distinguished particle every time.
 
-The problem actually was that dump_trace in trace_handler.py had the
+The problem actually was that the dump method of engine.trace.Trace had the
 side-effect of unincorporating all observations from the trace being
 dumped.  This would happen to the distinguished trace at the beginning
 of every infer command, because the Engine would request the
