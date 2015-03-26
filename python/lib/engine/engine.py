@@ -115,13 +115,13 @@ class Engine(object):
 
   def assume(self,id,datum):
     baseAddr = self.nextBaseAddr()
-    values = self.trace_handler.delegate('define', baseAddr, id, datum)
+    values = self.trace_handler.map('define', baseAddr, id, datum)
     value = values[0]
     return (self.directiveCounter,value)
 
   def predict_all(self,datum):
     baseAddr = self.nextBaseAddr()
-    values = self.trace_handler.delegate('evaluate', baseAddr, datum)
+    values = self.trace_handler.map('evaluate', baseAddr, datum)
     return (self.directiveCounter,values)
 
   def predict(self, datum):
@@ -130,11 +130,11 @@ class Engine(object):
 
   def observe(self,datum,val):
     baseAddr = self.nextBaseAddr()
-    self.trace_handler.delegate('observe', baseAddr, datum, val)
+    self.trace_handler.map('observe', baseAddr, datum, val)
     return self.directiveCounter
 
   def forget(self,directiveId):
-    self.trace_handler.delegate('forget', directiveId)
+    self.trace_handler.map('forget', directiveId)
 
   def force(self,datum,val):
     # TODO: The directive counter increments, but the "force" isn't added
@@ -162,13 +162,13 @@ class Engine(object):
     return values
 
   def freeze(self,directiveId):
-    self.trace_handler.delegate('freeze', directiveId)
+    self.trace_handler.map('freeze', directiveId)
 
   def report_value(self,directiveId):
-    return self.trace_handler.delegate_distinguished('report_value', directiveId)
+    return self.trace_handler.at_distinguished('report_value', directiveId)
 
   def report_raw(self,directiveId):
-    return self.trace_handler.delegate_distinguished('report_raw', directiveId)
+    return self.trace_handler.at_distinguished('report_raw', directiveId)
 
   def bind_foreign_sp(self, name, sp):
     self.foreign_sps[name] = sp
@@ -183,7 +183,7 @@ class Engine(object):
       bind the sp, then switch back to multiprocess.'''
       raise TypeError(errstr)
 
-    self.trace_handler.delegate('bind_foreign_sp', name, sp)
+    self.trace_handler.map('bind_foreign_sp', name, sp)
 
   def clear(self):
     del self.trace_handler
@@ -212,7 +212,7 @@ if freeze has been used.
     self.resample(num_particles)
     # Resample currently reincorporates, so clear the weights again
     self.log_weights = [0 for _ in range(num_particles)]
-    self.trace_handler.delegate('reset_to_prior')
+    self.trace_handler.map('reset_to_prior')
 
   def resample(self, P, mode = 'sequential', process_cap = None):
     self.mode = mode
@@ -301,10 +301,10 @@ if freeze has been used.
     self._collapse_help(scope, block, max_ind)
 
   def likelihood_weight(self):
-    self.log_weights = self.trace_handler.delegate('likelihood_weight')
+    self.log_weights = self.trace_handler.map('likelihood_weight')
 
   def incorporate(self):
-    weight_increments = self.trace_handler.delegate('makeConsistent')
+    weight_increments = self.trace_handler.map('makeConsistent')
     for i, increment in enumerate(weight_increments):
       self.log_weights[i] += increment
 
@@ -384,19 +384,19 @@ if freeze has been used.
       self._define_in(name, exp, next_trace)
 
   def primitive_infer(self, exp):
-    self.trace_handler.delegate('primitive_infer', exp)
+    self.trace_handler.map('primitive_infer', exp)
 
-  def logscore(self): return self.trace_handler.delegate_distinguished('getGlobalLogScore')
-  def logscore_all(self): return self.trace_handler.delegate('getGlobalLogScore')
+  def logscore(self): return self.trace_handler.at_distinguished('getGlobalLogScore')
+  def logscore_all(self): return self.trace_handler.map('getGlobalLogScore')
 
   def get_entropy_info(self):
-    return { 'unconstrained_random_choices' : self.trace_handler.delegate_distinguished('numRandomChoices') }
+    return { 'unconstrained_random_choices' : self.trace_handler.at_distinguished('numRandomChoices') }
 
   def get_seed(self):
-    return self.trace_handler.delegate_distinguished('get_seed') # TODO is this what we want?
+    return self.trace_handler.at_distinguished('get_seed') # TODO is this what we want?
 
   def set_seed(self, seed):
-    self.trace_handler.delegate_distinguished('set_seed', seed) # TODO is this what we want?
+    self.trace_handler.at_distinguished('set_seed', seed) # TODO is this what we want?
 
   def continuous_inference_status(self):
     if self.inferrer is not None:
@@ -416,10 +416,10 @@ if freeze has been used.
       self.inferrer = None
 
   def retrieve_dump(self, ix):
-    return self.trace_handler.delegate_one(ix, 'dump')
+    return self.trace_handler.at(ix, 'dump')
 
   def retrieve_dumps(self):
-    return self.trace_handler.delegate('dump')
+    return self.trace_handler.map('dump')
 
   def retrieve_trace(self, ix):
     if self.trace_handler.can_shortcut_retrieval():
@@ -487,10 +487,10 @@ if freeze has been used.
   def set_profiling(self, enabled=True):
     # TODO: do this by introspection on the trace
     if self.name == 'lite':
-      self.trace_handler.delegate('set_profiling', enabled)
+      self.trace_handler.map('set_profiling', enabled)
 
   def clear_profiling(self):
-    self.trace_handler.delegate('clear_profiling')
+    self.trace_handler.map('clear_profiling')
 
   def profile_data(self):
     rows = []

@@ -49,7 +49,7 @@ The Master classes facilitate communication between the client and the
 individual Worker instances. Each Master stores a list of
 Workers, and also a list of Pipes interacting with those
 Workers, as attributes.  When the client wants something done,
-it calls "delegate" (or "delegate_one" for interacting with just one
+it calls "map" (or "at" for interacting with just one
 controlled object) on the Master. The Master then passes this command
 over the Pipes to the Workers, and waits for results to be
 returned from the workers. It regains control of the program when all
@@ -146,7 +146,7 @@ class MasterBase(object):
 
   def __del__(self):
     # stop child processes
-    self.delegate('stop')
+    self.map('stop')
 
   def _create_processes(self, objects):
     Pipe, Worker = self._pipe_and_process_types()
@@ -177,9 +177,9 @@ class MasterBase(object):
 
   def reset_seeds(self):
     for i in range(len(self.processes)):
-      self.delegate_one_chunk(i, 'set_seeds', [random.randint(1,2**31-1) for _ in range(self.chunk_sizes[i])])
+      self.map_chunk(i, 'set_seeds', [random.randint(1,2**31-1) for _ in range(self.chunk_sizes[i])])
 
-  def delegate(self, cmd, *args, **kwargs):
+  def map(self, cmd, *args, **kwargs):
     '''Delegate command to all workers'''
     # send command
     for pipe in self.pipes: pipe.send((cmd, args, kwargs, None))
@@ -193,7 +193,7 @@ class MasterBase(object):
       raise exception_handler.gen_exception()
     return res
 
-  def delegate_one_chunk(self, ix, cmd, *args, **kwargs):
+  def map_chunk(self, ix, cmd, *args, **kwargs):
     '''Delegate command to (all the objects of) a single worker, indexed by ix in the process list'''
     pipe = self.pipes[ix]
     pipe.send((cmd, args, kwargs, None))
@@ -203,7 +203,7 @@ class MasterBase(object):
       raise exception_handler.gen_exception()
     return res
 
-  def delegate_one(self, ix, cmd, *args, **kwargs):
+  def at(self, ix, cmd, *args, **kwargs):
     '''Delegate command to a single object, indexed by ix in the object list'''
     pipe = self.pipes[self.chunk_indexes[ix]]
     pipe.send((cmd, args, kwargs, self.chunk_offsets[ix]))
@@ -213,8 +213,8 @@ class MasterBase(object):
       raise exception_handler.gen_exception()
     return res
 
-  def delegate_distinguished(self, cmd, *args, **kwargs):
-    return self.delegate_one(0, cmd, *args, **kwargs)
+  def at_distinguished(self, cmd, *args, **kwargs):
+    return self.at(0, cmd, *args, **kwargs)
 
   def can_shortcut_retrieval(self):
     """In general, the short-circuit offered by SharedMemoryMasterBase is not available."""
@@ -236,10 +236,10 @@ class SharedMemoryMasterBase(MasterBase):
   def can_shortcut_retrieval(self): return True
 
   def retrieve(self, ix):
-    return self.delegate_one(ix, 'send_object')
+    return self.at(ix, 'send_object')
 
   def retrieve_all(self):
-    return self.delegate('send_object')
+    return self.map('send_object')
 
 ######################################################################
 # Concrete masters
