@@ -187,16 +187,16 @@ def _restore_trace(trace, directives, values, foreign_sps,
   db = trace.makeSerializationDB(values, skipStackDictConversion)
 
   for did, directive in sorted(directives.items()):
-      if directive[0] == "define":
-          name, datum = directive[1], directive[2]
-          trace.evalAndRestore(did, datum, db)
-          trace.bindInGlobalEnv(name, did)
-      elif directive[0] == "observe":
-          datum, val = directive[1], directive[2]
-          trace.evalAndRestore(did, datum, db)
-          trace.observe(did, val)
-      elif directive[0] == "evaluate":
-          datum = directive[1]
-          trace.evalAndRestore(did, datum, db)
+    if directive[0] == "define":
+      name, datum = directive[1], directive[2]
+      trace.evalAndRestore(did, datum, db)
+      trace.bindInGlobalEnv(name, did)
+    elif directive[0] == "observe":
+      datum, val = directive[1], directive[2]
+      trace.evalAndRestore(did, datum, db)
+      trace.observe(did, val)
+    elif directive[0] == "evaluate":
+      datum = directive[1]
+      trace.evalAndRestore(did, datum, db)
 
   return trace
