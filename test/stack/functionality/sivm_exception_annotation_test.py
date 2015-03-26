@@ -11,7 +11,7 @@ import venture.value.dicts as v
 def testBasicAnnotation():
   sivm = get_ripl().sivm
   expr = v.app(v.sym("add"), v.num(1), v.sym("foo"))
-  err.assert_annotation_succeeds(sivm.assume, v.sym("x"), expr)
+  err.assert_sivm_annotation_succeeds(sivm.assume, v.sym("x"), expr)
 
 @broken_in("puma", "Puma does not report error addresses")
 @on_inf_prim("none")

@@ -7,9 +7,15 @@ from venture.exception import VentureException
 
 ansi_escape = re.compile(r'\x1b[^m]*m')
 
-def assert_annotation_succeeds(f, *args, **kwargs):
+def assert_sivm_annotation_succeeds(f, *args, **kwargs):
   with assert_raises(VentureException) as cm:
     f(*args, **kwargs)
+  assert "stack_trace" in cm.exception.data
+
+def assert_ripl_annotation_succeeds(f, *args, **kwargs):
+  with assert_raises(VentureException) as cm:
+    f(*args, **kwargs)
+  assert hasattr(cm.exception, 'annotated') and cm.exception.annotated
   assert "stack_trace" in cm.exception.data
 
 def assert_error_message_contains(text, f, *args, **kwargs):
