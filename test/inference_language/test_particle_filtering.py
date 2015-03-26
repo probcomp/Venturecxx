@@ -28,3 +28,6 @@ def testHMMParticleSmoke():
     if m > 1:
       ripl.forget("st%s" % (m-2))
     ripl.infer("(resample %s)" % num_particles)
+
+  # TODO What, actually, are the distributions we expect?  Can a
+  # version of this (with more particles?) be a statistical test?
