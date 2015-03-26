@@ -43,7 +43,6 @@ class Engine(object):
     self.name = name
     self.Trace = Trace
     self.directiveCounter = 0
-    self.directives = {}
     self.inferrer = None
     self.mode = 'sequential'
     self.process_cap = None
@@ -114,35 +113,16 @@ class Engine(object):
     trace.bindInGlobalEnv(id, did)
     return (did,trace.extractValue(did))
 
-  def _check_consistency_of_directive_map(self):
-    model_dirs = self.retrieve_trace(0).directives
-    for (k, v) in model_dirs.iteritems():
-      assert k in self.directives
-      assert self.directives[k][1:] == v[1:]
-    for (k, v) in self.directives.iteritems():
-      if v[0] in ["assume", "predict", "observe"]:
-        assert k in model_dirs
-        assert model_dirs[k][1:] == v[1:]
-
   def assume(self,id,datum):
     baseAddr = self.nextBaseAddr()
     exp = datum
-
     values = self.trace_handler.delegate('define', baseAddr, id, exp)
     value = values[0]
-
-    self.directives[self.directiveCounter] = ["assume",id,datum]
-    self._check_consistency_of_directive_map()
     return (self.directiveCounter,value)
 
   def predict_all(self,datum):
     baseAddr = self.nextBaseAddr()
-
     value = self.trace_handler.delegate('evaluate', baseAddr, datum)
-
-    self.directives[self.directiveCounter] = ["predict",datum]
-    self._check_consistency_of_directive_map()
-
     return (self.directiveCounter,value)
 
   def predict(self, datum):
@@ -151,17 +131,11 @@ class Engine(object):
 
   def observe(self,datum,val):
     baseAddr = self.nextBaseAddr()
-
     self.trace_handler.delegate('observe', baseAddr, datum, val)
-
-    self.directives[self.directiveCounter] = ["observe",datum,val]
-    self._check_consistency_of_directive_map()
     return self.directiveCounter
 
   def forget(self,directiveId):
     self.trace_handler.delegate('forget', directiveId)
-    del self.directives[directiveId]
-    self._check_consistency_of_directive_map()
 
   def force(self,datum,val):
     # TODO: The directive counter increments, but the "force" isn't added
@@ -189,15 +163,7 @@ class Engine(object):
     return values
 
   def freeze(self,directiveId):
-    # TODO Record frozen state for reinit_inference_problem?  What if
-    # the replay is done with a different number of particles than the
-    # original?  Where do the extra values come from?
     self.trace_handler.delegate('freeze', directiveId)
-    # XXX OOPS!  We need to remember, in self.directives, that this
-    # node is frozen at its current values, so that when we copy the
-    # trace we don't make random choices afresh here.  But there's no
-    # obvious way to record that.
-    #self.directives[directiveId] = ["assume", directiveId, XXX]
 
   def report_value(self,directiveId):
     return self.trace_handler.delegate_distinguished('report_value', directiveId)
@@ -223,7 +189,6 @@ class Engine(object):
   def clear(self):
     del self.trace_handler
     self.directiveCounter = 0
-    self.directives = {}
     self.trace_handler = self.create_handler([tr.Trace(self.Trace())])
     self.ensure_rng_seeded_decently()
 
@@ -486,7 +451,6 @@ if freeze has been used.
     data = {}
     data['traces'] = self.retrieve_dumps()
     data['log_weights'] = self.log_weights
-    data['directives'] = self.directives
     data['directiveCounter'] = self.directiveCounter
     data['mode'] = self.mode
     data['extra'] = extra
@@ -499,7 +463,6 @@ if freeze has been used.
       (data, version) = dill.load(fp)
     assert version == '0.2', "Incompatible version or unrecognized object"
     self.directiveCounter = data['directiveCounter']
-    self.directives = data['directives']
     self.mode = data['mode']
     traces = [self.restore_trace(trace) for trace in data['traces']]
     del self.trace_handler
@@ -509,7 +472,6 @@ if freeze has been used.
   def convert(self, EngineClass):
     engine = EngineClass()
     engine.directiveCounter = self.directiveCounter
-    engine.directives = self.directives
     engine.mode = self.mode
     traces = [engine.restore_trace(dump) for dump in self.retrieve_dumps()]
     engine.trace_handler = engine.create_handler(traces, self.log_weights)
