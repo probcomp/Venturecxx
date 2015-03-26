@@ -1,6 +1,7 @@
 import copy
 
 import venture.lite.foreign as foreign
+import venture.value.dicts as v
 from venture.engine.utils import expToDict
 from venture.exception import VentureException
 
@@ -58,7 +59,20 @@ class Trace(object):
       raise VentureException("invalid_argument", "Cannot freeze a non-existent directive id",
                              argument="directive_id", directive_id=directiveId)
     self.trace.freeze(directiveId)
-    # TODO Adjust the directives map
+    self._record_directive_frozen(directiveId)
+
+  def _record_directive_frozen(self, directiveId):
+    # TODO This update will needlessly prevent freezing procedure assumes.
+    value = self.trace.extractValue(directiveId)
+    directive = self.directives[directiveId]
+    if directive[0] == "define":
+      self.directives[directiveId] = ["define", directive[1], v.quote(value)]
+    elif directive[0] == "observe":
+      self.directive[directiveId] = ["observe", v.quote(value), directive[2]]
+    elif directive[0] == "evaluate":
+      self.directive[directiveId] = ["evaluate", v.quote(value)]
+    else:
+      assert False, "Impossible directive type %s detected" % directive[0]
 
   def report_value(self,directiveId):
     if directiveId not in self.directives:

@@ -1,12 +1,11 @@
 import scipy.stats
 
-from venture.test.config import get_ripl, broken_in, on_inf_prim
+from venture.test.config import get_ripl, on_inf_prim
 
 # TODO Rewrite this to use mem like one normally would.  Right now
 # it's metaprogrammed because freeze is only known to work on
 # directives.
 
-@broken_in('lite', "freeze is only implemented in Puma")
 @on_inf_prim("resample")
 def testHMMParticleSmoke():
   num_particles = 3
