@@ -1,4 +1,4 @@
-from venture.test.config import get_ripl, broken_in, on_inf_prim
+from venture.test.config import get_ripl, on_inf_prim
 
 @on_inf_prim("resample") # And MH, but it's testing resample more
 def testUnevalConstantAndForget():
@@ -12,7 +12,6 @@ copying of which would be invalid."""
   ripl.forget("pid")
   ripl.infer("(resample 5)")
 
-@broken_in('lite', "freeze is only implemented in Puma")
 @on_inf_prim("resample") # And MH, but it's testing resample more
 def testUnevalConstantAndFreeze():
   """Check that unevaling a constant node does not produce a trace the
@@ -25,7 +24,6 @@ copying of which would be invalid."""
   ripl.freeze("pid")
   ripl.infer("(resample 5)")
 
-@broken_in('lite', "freeze is only implemented in Puma")
 @on_inf_prim("resample") # And MH, but it's testing resample more
 def testUnevalConstantAndFreezeWithObservations():
   """Check that unevaling a constant node does not produce an invalid

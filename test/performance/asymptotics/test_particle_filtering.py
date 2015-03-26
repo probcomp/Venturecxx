@@ -1,7 +1,7 @@
 import scipy.stats
 from nose.plugins.attrib import attr
 
-from venture.test.config import get_ripl, broken_in, on_inf_prim
+from venture.test.config import get_ripl, on_inf_prim
 import venture.test.timing as timing
 
 # TODO Rewrite this to use mem like one normally would.  Right now
@@ -9,7 +9,6 @@ import venture.test.timing as timing
 # directives.
 
 @attr('slow')
-@broken_in('lite', "freeze is only implemented in Puma")
 @on_inf_prim("resample")
 def testHMMParticleAsymptotics1():
   num_particles = 5
