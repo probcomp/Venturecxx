@@ -378,8 +378,9 @@ class Ripl():
 
         p = self._cur_parser()
         exp = p.unparse_expression(exp)
-        text_index = p.expression_index_to_text_index(exp, index)
-        return exp, text_index
+        (start, end) = p.expression_index_to_text_index(exp, index)
+        ans = exp[0:start] + "\x1b[31m" + exp[start:end+1] + "\x1b[39;49m" + exp[end+1:]
+        return ans, (start, end)
 
 
     ############################################

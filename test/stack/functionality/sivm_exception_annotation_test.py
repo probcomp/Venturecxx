@@ -2,10 +2,13 @@ from nose.tools import assert_raises, eq_
 from StringIO import StringIO
 import sys
 import time
+import re
 
 from venture.test.config import get_ripl, broken_in, on_inf_prim
 from venture.exception import VentureException
 import venture.value.dicts as v
+
+ansi_escape = re.compile(r'\x1b[^m]*m')
 
 def assert_annotation_succeeds(f, *args, **kwargs):
   with assert_raises(VentureException) as cm:
@@ -16,7 +19,7 @@ def assert_error_message_contains(text, f, *args, **kwargs):
   text = text.strip()
   with assert_raises(VentureException) as cm:
     f(*args, **kwargs)
-  message = str(cm.exception)
+  message = ansi_escape.sub('', str(cm.exception))
   if text in message:
     pass # OK
   else:
@@ -36,7 +39,7 @@ def assert_print_output_contains(text, f, *args, **kwargs):
   f(*args, **kwargs)
   sys.stderr = old_stderr
   ans = result.getvalue()
-  assert text in ans
+  assert text in ansi_escape.sub('', ans)
 
 @broken_in("puma", "Puma does not report error addresses")
 @on_inf_prim("none")
