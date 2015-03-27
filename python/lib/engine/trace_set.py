@@ -13,7 +13,7 @@ class TraceSet(object):
     self.Trace = Trace
     self.mode = 'sequential'
     self.process_cap = None
-    self.model = self.create_handler([tr.Trace(Trace())])
+    self.traces = self.create_handler([tr.Trace(Trace())])
 
   def model_constructor(self, mode):
     if mode == 'multiprocess':
@@ -40,26 +40,26 @@ class TraceSet(object):
     return ans
 
   def define(self, baseAddr, id, datum):
-    values = self.model.map('define', baseAddr, id, datum)
+    values = self.traces.map('define', baseAddr, id, datum)
     return values[0]
 
   def evaluate(self, baseAddr, datum):
-    return self.model.map('evaluate', baseAddr, datum)
+    return self.traces.map('evaluate', baseAddr, datum)
 
   def observe(self, baseAddr, datum, val):
-    self.model.map('observe', baseAddr, datum, val)
+    self.traces.map('observe', baseAddr, datum, val)
 
   def forget(self, directiveId):
-    self.model.map('forget', directiveId)
+    self.traces.map('forget', directiveId)
 
   def freeze(self, directiveId):
-    self.model.map('freeze', directiveId)
+    self.traces.map('freeze', directiveId)
 
   def report_value(self,directiveId):
-    return self.model.at_distinguished('report_value', directiveId)
+    return self.traces.at_distinguished('report_value', directiveId)
 
   def report_raw(self,directiveId):
-    return self.model.at_distinguished('report_raw', directiveId)
+    return self.traces.at_distinguished('report_raw', directiveId)
 
   def bind_foreign_sp(self, name, sp):
     # check that we can pickle it
@@ -68,11 +68,11 @@ class TraceSet(object):
       bind the sp, then switch back to multiprocess.'''
       raise TypeError(errstr)
 
-    self.model.map('bind_foreign_sp', name, sp)
+    self.traces.map('bind_foreign_sp', name, sp)
 
   def clear(self):
-    del self.model
-    self.model = self.create_handler([tr.Trace(self.Trace())])
+    del self.traces
+    self.traces = self.create_handler([tr.Trace(self.Trace())])
 
   def reinit_inference_problem(self, num_particles=1):
     """Unincorporate all observations and return to the prior.
@@ -86,14 +86,14 @@ if freeze has been used.
     self.resample(num_particles)
     # Resample currently reincorporates, so clear the weights again
     self.log_weights = [0 for _ in range(num_particles)]
-    self.model.map('reset_to_prior')
+    self.traces.map('reset_to_prior')
 
   def resample(self, P, mode = 'sequential', process_cap = None):
     self.mode = mode
     self.process_cap = process_cap
     newTraces = self._resample_traces(P)
-    del self.model
-    self.model = self.create_handler(newTraces)
+    del self.traces
+    self.traces = self.create_handler(newTraces)
     self.incorporate()
 
   def _resample_traces(self, P):
@@ -131,8 +131,8 @@ if freeze has been used.
       for (res_t, res_w) in zip(*(t.diversify(program, self.copy_trace))):
         new_traces.append(res_t)
         new_weights.append(w + res_w)
-    del self.model
-    self.model = self.create_handler(new_traces, new_weights)
+    del self.traces
+    self.traces = self.create_handler(new_traces, new_weights)
 
   def _collapse_help(self, scope, block, select_keeper):
     traces = self.retrieve_traces()
@@ -158,8 +158,8 @@ if freeze has been used.
       new_ts.append(self.copy_trace(ts[index]))
       new_ts[-1].makeConsistent() # Even impossible states ok
       new_ws.append(total)
-    del self.model
-    self.model = self.create_handler(new_ts, new_ws)
+    del self.traces
+    self.traces = self.create_handler(new_ts, new_ws)
 
   def collapse(self, scope, block):
     def sample(weights):
@@ -175,38 +175,38 @@ if freeze has been used.
     self._collapse_help(scope, block, max_ind)
 
   def likelihood_weight(self):
-    self.log_weights = self.model.map('likelihood_weight')
+    self.log_weights = self.traces.map('likelihood_weight')
 
   def incorporate(self):
-    weight_increments = self.model.map('makeConsistent')
+    weight_increments = self.traces.map('makeConsistent')
     for i, increment in enumerate(weight_increments):
       self.log_weights[i] += increment
 
   def primitive_infer(self, exp):
-    self.model.map('primitive_infer', exp)
+    self.traces.map('primitive_infer', exp)
 
-  def logscore(self): return self.model.at_distinguished('getGlobalLogScore')
-  def logscore_all(self): return self.model.map('getGlobalLogScore')
+  def logscore(self): return self.traces.at_distinguished('getGlobalLogScore')
+  def logscore_all(self): return self.traces.map('getGlobalLogScore')
 
   def get_entropy_info(self):
-    return { 'unconstrained_random_choices' : self.model.at_distinguished('numRandomChoices') }
+    return { 'unconstrained_random_choices' : self.traces.at_distinguished('numRandomChoices') }
 
   def retrieve_dump(self, ix):
-    return self.model.at(ix, 'dump')
+    return self.traces.at(ix, 'dump')
 
   def retrieve_dumps(self):
-    return self.model.map('dump')
+    return self.traces.map('dump')
 
   def retrieve_trace(self, ix):
-    if self.model.can_shortcut_retrieval():
-      return self.model.retrieve(ix)
+    if self.traces.can_shortcut_retrieval():
+      return self.traces.retrieve(ix)
     else:
       dumped = self.retrieve_dump(ix)
       return self.restore_trace(dumped)
 
   def retrieve_traces(self):
-    if self.model.can_shortcut_retrieval():
-      return self.model.retrieve_all()
+    if self.traces.can_shortcut_retrieval():
+      return self.traces.retrieve_all()
     else:
       dumped_all = self.retrieve_dumps()
       return [self.restore_trace(dumped) for dumped in dumped_all]
@@ -229,20 +229,20 @@ if freeze has been used.
 
   def load(self, data):
     traces = [self.restore_trace(trace) for trace in data['traces']]
-    del self.model
-    self.model = self.create_handler(traces, data['log_weights'])
+    del self.traces
+    self.traces = self.create_handler(traces, data['log_weights'])
     self.mode = data['mode']
 
   def convertFrom(self, other):
     traces = [self.restore_trace(dump) for dump in other.retrieve_dumps()]
     self.mode = other.mode
-    self.model = self.create_handler(traces, other.log_weights)
+    self.traces = self.create_handler(traces, other.log_weights)
 
   def set_profiling(self, enabled=True): 
-      self.model.map('set_profiling', enabled)
+      self.traces.map('set_profiling', enabled)
 
   def clear_profiling(self):
-    self.model.map('clear_profiling')
+    self.traces.map('clear_profiling')
 
 def is_picklable(obj):
   try:

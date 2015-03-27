@@ -243,10 +243,10 @@ class Engine(object):
   def get_entropy_info(self): return self.modelz.get_entropy_info()
 
   def get_seed(self):
-    return self.modelz.model.at_distinguished('get_seed') # TODO is this what we want?
+    return self.modelz.traces.at_distinguished('get_seed') # TODO is this what we want?
 
   def set_seed(self, seed):
-    self.modelz.model.at_distinguished('set_seed', seed) # TODO is this what we want?
+    self.modelz.traces.at_distinguished('set_seed', seed) # TODO is this what we want?
 
   def continuous_inference_status(self):
     if self.inferrer is not None:
