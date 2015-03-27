@@ -92,9 +92,9 @@ class Infer(object):
   def resample_multiprocess(self, ct, process_cap = None): self.engine.resample(ct, 'multiprocess', process_cap)
   def likelihood_weight(self): self.engine.likelihood_weight()
   def likelihood_at(self, scope, block):
-    return self.engine.model.modelz.map('likelihood_at', scope.getSymbol(), block.getSymbol())
+    return self.engine.modelz.model.map('likelihood_at', scope.getSymbol(), block.getSymbol())
   def posterior_at(self, scope, block):
-    return self.engine.model.modelz.map('posterior_at', scope.getSymbol(), block.getSymbol())
+    return self.engine.modelz.model.map('posterior_at', scope.getSymbol(), block.getSymbol())
   def enumerative_diversify(self, scope, block): self.engine.diversify(["enumerative", scope, block])
   def collapse_equal(self, scope, block): self.engine.collapse(scope, block)
   def collapse_equal_map(self, scope, block): self.engine.collapse_map(scope, block)
@@ -126,7 +126,7 @@ class Infer(object):
       answer['particle id'] = range(engine.num_traces())
       answer['time (s)'] = [the_time] * engine.num_traces()
       answer['log score'] = engine.logscore_all() # TODO Replace this by explicit references to (global_likelihood), because the current implementation is wrong
-      log_weights = copy(engine.log_weights)
+      log_weights = copy(engine.modelz.log_weights)
       answer['particle log weight'] = log_weights
       answer['particle normalized prob'] = logWeightsToNormalizedDirect(log_weights)
     collect_std_streams(self.engine)
@@ -151,10 +151,10 @@ class Infer(object):
     return self.convert_none(self.engine.ripl.load_plugin(name, *args))
 
   def particle_log_weights(self):
-    return self.engine.log_weights
+    return self.engine.modelz.log_weights
   def set_particle_log_weights(self, new_weights):
-    assert len(new_weights) == len(self.engine.log_weights)
-    self.engine.log_weights = new_weights
+    assert len(new_weights) == len(self.engine.modelz.log_weights)
+    self.engine.modelz.log_weights = new_weights
   def particle_normalized_probs(self):
     return logWeightsToNormalizedDirect(self.particle_log_weights())
 
