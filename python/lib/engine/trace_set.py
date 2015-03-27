@@ -13,6 +13,7 @@ class TraceSet(object):
     self.Trace = Trace
     self.mode = 'sequential'
     self.process_cap = None
+    self.traces = None
     self.create_handler([tr.Trace(Trace())])
 
   def _trace_master(self, mode):
@@ -32,6 +33,7 @@ class TraceSet(object):
       local_rng = False
     else:
       local_rng = True
+    del self.traces # To (try and) force reaping any worker processes
     self.traces = self._trace_master(self.mode)(traces, self.process_cap, local_rng)
     if weights is not None:
       self.log_weights = weights
@@ -70,7 +72,6 @@ class TraceSet(object):
     self.traces.map('bind_foreign_sp', name, sp)
 
   def clear(self):
-    del self.traces
     self.create_handler([tr.Trace(self.Trace())])
 
   def reinit_inference_problem(self, num_particles=1):
@@ -91,7 +92,6 @@ if freeze has been used.
     self.mode = mode
     self.process_cap = process_cap
     newTraces = self._resample_traces(P)
-    del self.traces
     self.create_handler(newTraces)
     self.incorporate()
 
@@ -130,7 +130,6 @@ if freeze has been used.
       for (res_t, res_w) in zip(*(t.diversify(program, self.copy_trace))):
         new_traces.append(res_t)
         new_weights.append(w + res_w)
-    del self.traces
     self.create_handler(new_traces, new_weights)
 
   def _collapse_help(self, scope, block, select_keeper):
@@ -157,7 +156,6 @@ if freeze has been used.
       new_ts.append(self.copy_trace(ts[index]))
       new_ts[-1].makeConsistent() # Even impossible states ok
       new_ws.append(total)
-    del self.traces
     self.create_handler(new_ts, new_ws)
 
   def collapse(self, scope, block):
@@ -229,7 +227,6 @@ if freeze has been used.
   def load(self, data):
     traces = [self.restore_trace(trace) for trace in data['traces']]
     self.mode = data['mode']
-    del self.traces
     self.create_handler(traces, data['log_weights'])
 
   def convertFrom(self, other):
