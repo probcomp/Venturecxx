@@ -44,10 +44,10 @@ def _test_serialize_program(v, label, action):
         assert False
 
     infer = "(mh default one %s)" % default_num_transitions_per_sample()
-    engine.modelz.create_handler([trace2])
+    engine.modelz.create_trace_pool([trace2])
     r2 = collectStateSequence(v, label, infer=infer)
 
-    engine.modelz.create_handler([trace1])
+    engine.modelz.create_trace_pool([trace1])
     r1 = collectStateSequence(v, label, infer=infer)
 
     return reportSameDiscrete(r1, r2)
@@ -260,7 +260,7 @@ def check_foreign_sp(mode):
     engine = v.sivm.core_sivm.engine
     dumped = engine.retrieve_dump(0)
     restored = engine.restore_trace(dumped)
-    engine.modelz.create_handler([restored])
+    engine.modelz.create_trace_pool([restored])
     # Make sure that the restored trace still has the foreign SP's
     eq_(v.sample('(test_binomial 1 1)'), test_binomial_result)
     eq_(v.sample('(test_sym_dir_mult 1 1)'), test_sym_dir_result)

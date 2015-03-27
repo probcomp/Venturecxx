@@ -14,7 +14,7 @@ class TraceSet(object):
     self.mode = 'sequential'
     self.process_cap = None
     self.traces = None
-    self.create_handler([tr.Trace(Trace())])
+    self.create_trace_pool([tr.Trace(Trace())])
 
   def _trace_master(self, mode):
     if mode == 'multiprocess':
@@ -28,7 +28,7 @@ class TraceSet(object):
     else:
       return SynchronousMaster
 
-  def create_handler(self, traces, weights=None):
+  def create_trace_pool(self, traces, weights=None):
     if self.engine.name == "lite":
       local_rng = False
     else:
@@ -72,7 +72,7 @@ class TraceSet(object):
     self.traces.map('bind_foreign_sp', name, sp)
 
   def clear(self):
-    self.create_handler([tr.Trace(self.Trace())])
+    self.create_trace_pool([tr.Trace(self.Trace())])
 
   def reinit_inference_problem(self, num_particles=1):
     """Unincorporate all observations and return to the prior.
@@ -92,7 +92,7 @@ if freeze has been used.
     self.mode = mode
     self.process_cap = process_cap
     newTraces = self._resample_traces(P)
-    self.create_handler(newTraces)
+    self.create_trace_pool(newTraces)
     self.incorporate()
 
   def _resample_traces(self, P):
@@ -130,7 +130,7 @@ if freeze has been used.
       for (res_t, res_w) in zip(*(t.diversify(program, self.copy_trace))):
         new_traces.append(res_t)
         new_weights.append(w + res_w)
-    self.create_handler(new_traces, new_weights)
+    self.create_trace_pool(new_traces, new_weights)
 
   def _collapse_help(self, scope, block, select_keeper):
     traces = self.retrieve_traces()
@@ -156,7 +156,7 @@ if freeze has been used.
       new_ts.append(self.copy_trace(ts[index]))
       new_ts[-1].makeConsistent() # Even impossible states ok
       new_ws.append(total)
-    self.create_handler(new_ts, new_ws)
+    self.create_trace_pool(new_ts, new_ws)
 
   def collapse(self, scope, block):
     def sample(weights):
@@ -227,12 +227,12 @@ if freeze has been used.
   def load(self, data):
     traces = [self.restore_trace(trace) for trace in data['traces']]
     self.mode = data['mode']
-    self.create_handler(traces, data['log_weights'])
+    self.create_trace_pool(traces, data['log_weights'])
 
   def convertFrom(self, other):
     traces = [self.restore_trace(dump) for dump in other.retrieve_dumps()]
     self.mode = other.mode
-    self.create_handler(traces, other.log_weights)
+    self.create_trace_pool(traces, other.log_weights)
 
   def set_profiling(self, enabled=True): 
       self.traces.map('set_profiling', enabled)
