@@ -210,7 +210,7 @@ if freeze has been used.
 
   def dump_trace(self, trace, skipStackDictConversion=False):
     return trace.dump(skipStackDictConversion)
- 
+
   def restore_trace(self, values, skipStackDictConversion=False):
     return tr.Trace.restore(self.engine, values, skipStackDictConversion)
 
@@ -234,7 +234,7 @@ if freeze has been used.
     self.mode = other.mode
     self.create_trace_pool(traces, other.log_weights)
 
-  def set_profiling(self, enabled=True): 
+  def set_profiling(self, enabled=True):
       self.traces.map('set_profiling', enabled)
 
   def clear_profiling(self):
