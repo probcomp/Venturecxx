@@ -33,6 +33,8 @@ class Trace(object):
   def stop_and_copy(self):
     return Trace(self.trace.stop_and_copy())
 
+  def short_circuit_copyable(self): return True
+
   # Not intercepting the "diversify" method because Puma doesn't
   # support it.  If Puma does come to support it, will need to wrap it
   # here to drop the copy_trace argument (because presumably Puma will
@@ -45,6 +47,3 @@ class Engine(engine.Engine):
 
   def __init__(self, persistent_inference_trace=False):
     super(Engine, self).__init__(name="puma", Trace=Trace, persistent_inference_trace=persistent_inference_trace)
-
-  def copy_trace(self, trace):
-    return trace.stop_and_copy()

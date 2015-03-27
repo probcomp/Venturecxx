@@ -269,9 +269,11 @@ class Engine(object):
   def restore_trace(self, values, skipStackDictConversion=False):
     return self.model.restore_trace(values, skipStackDictConversion)
   def copy_trace(self, trace):
-    # Still in Engine in order to get properly overridden by venture.puma.engine.Engine.copy_trace
-    values = self.dump_trace(trace, skipStackDictConversion=True)
-    return self.restore_trace(values, skipStackDictConversion=True)
+    if trace.short_circuit_copyable():
+      return trace.stop_and_copy()
+    else:
+      values = self.dump_trace(trace, skipStackDictConversion=True)
+      return self.restore_trace(values, skipStackDictConversion=True)
 
 
   def save(self, fname, extra=None):
