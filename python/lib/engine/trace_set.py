@@ -13,7 +13,7 @@ class TraceSet(object):
     self.Trace = Trace
     self.mode = 'sequential'
     self.process_cap = None
-    self.traces = self.create_handler([tr.Trace(Trace())])
+    self.create_handler([tr.Trace(Trace())])
 
   def _trace_master(self, mode):
     if mode == 'multiprocess':
@@ -32,12 +32,11 @@ class TraceSet(object):
       local_rng = False
     else:
       local_rng = True
-    ans = self._trace_master(self.mode)(traces, self.process_cap, local_rng)
+    self.traces = self._trace_master(self.mode)(traces, self.process_cap, local_rng)
     if weights is not None:
       self.log_weights = weights
     else:
       self.log_weights = [0 for _ in traces]
-    return ans
 
   def define(self, baseAddr, id, datum):
     values = self.traces.map('define', baseAddr, id, datum)
@@ -72,7 +71,7 @@ class TraceSet(object):
 
   def clear(self):
     del self.traces
-    self.traces = self.create_handler([tr.Trace(self.Trace())])
+    self.create_handler([tr.Trace(self.Trace())])
 
   def reinit_inference_problem(self, num_particles=1):
     """Unincorporate all observations and return to the prior.
@@ -93,7 +92,7 @@ if freeze has been used.
     self.process_cap = process_cap
     newTraces = self._resample_traces(P)
     del self.traces
-    self.traces = self.create_handler(newTraces)
+    self.create_handler(newTraces)
     self.incorporate()
 
   def _resample_traces(self, P):
@@ -132,7 +131,7 @@ if freeze has been used.
         new_traces.append(res_t)
         new_weights.append(w + res_w)
     del self.traces
-    self.traces = self.create_handler(new_traces, new_weights)
+    self.create_handler(new_traces, new_weights)
 
   def _collapse_help(self, scope, block, select_keeper):
     traces = self.retrieve_traces()
@@ -159,7 +158,7 @@ if freeze has been used.
       new_ts[-1].makeConsistent() # Even impossible states ok
       new_ws.append(total)
     del self.traces
-    self.traces = self.create_handler(new_ts, new_ws)
+    self.create_handler(new_ts, new_ws)
 
   def collapse(self, scope, block):
     def sample(weights):
@@ -229,14 +228,14 @@ if freeze has been used.
 
   def load(self, data):
     traces = [self.restore_trace(trace) for trace in data['traces']]
-    del self.traces
-    self.traces = self.create_handler(traces, data['log_weights'])
     self.mode = data['mode']
+    del self.traces
+    self.create_handler(traces, data['log_weights'])
 
   def convertFrom(self, other):
     traces = [self.restore_trace(dump) for dump in other.retrieve_dumps()]
     self.mode = other.mode
-    self.traces = self.create_handler(traces, other.log_weights)
+    self.create_handler(traces, other.log_weights)
 
   def set_profiling(self, enabled=True): 
       self.traces.map('set_profiling', enabled)
