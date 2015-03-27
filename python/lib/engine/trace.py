@@ -125,7 +125,7 @@ inference.)
   @staticmethod
   def restore(engine, serialized, skipStackDictConversion=False):
     (values, directives) = serialized
-    return Trace(_restore_trace(engine.Trace(), directives, values, engine.foreign_sps, engine.name, skipStackDictConversion), directives)
+    return Trace(_restore_trace(engine.Trace(), directives, values, engine.foreign_sps, skipStackDictConversion), directives)
 
   def stop_and_copy(self):
     return Trace(self.trace.stop_and_copy(), self.directives)
@@ -163,8 +163,7 @@ def _dump_trace(trace, directives, skipStackDictConversion=False):
 
   return (trace.dumpSerializationDB(db, skipStackDictConversion), directives)
 
-def _restore_trace(trace, directives, values, foreign_sps,
-                   backend, skipStackDictConversion=False):
+def _restore_trace(trace, directives, values, foreign_sps, skipStackDictConversion=False):
   # bind the foreign sp's; wrap if necessary
   for name, sp in foreign_sps.items():
     trace.bindPrimitiveSP(name, sp)
