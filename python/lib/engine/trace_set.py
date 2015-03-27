@@ -218,8 +218,7 @@ if freeze has been used.
     return tr.Trace.restore(self.engine, values, skipStackDictConversion)
 
   def copy_trace(self, trace):
-    values = self.dump_trace(trace, skipStackDictConversion=True)
-    return self.restore_trace(values, skipStackDictConversion=True)
+    return self.engine.copy_trace(trace)
 
   def saveable(self):
     data = {}

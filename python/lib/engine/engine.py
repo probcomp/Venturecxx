@@ -273,7 +273,11 @@ class Engine(object):
     return self.modelz.dump_trace(trace, skipStackDictConversion)
   def restore_trace(self, values, skipStackDictConversion=False):
     return self.modelz.restore_trace(values, skipStackDictConversion)
-  def copy_trace(self, trace): return self.modelz.copy_trace(trace)
+  def copy_trace(self, trace):
+    # Still in Engine in order to get properly overridden by venture.puma.engine.Engine.copy_trace
+    values = self.dump_trace(trace, skipStackDictConversion=True)
+    return self.restore_trace(values, skipStackDictConversion=True)
+
 
   def save(self, fname, extra=None):
     data = self.modelz.saveable()
