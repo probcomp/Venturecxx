@@ -129,11 +129,6 @@ class Engine(object):
 
   def bind_foreign_sp(self, name, sp):
     self.foreign_sps[name] = sp
-    if self.name != "lite":
-      # wrap it for backend translation
-      import venture.lite.foreign as f
-      sp = f.ForeignLiteSP(sp)
-
     self.model.bind_foreign_sp(name, sp)
 
   def clear(self):

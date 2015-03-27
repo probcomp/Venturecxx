@@ -16,6 +16,8 @@
 from venture.engine import engine
 import libpumatrace as puma
 
+import venture.lite.foreign as foreign
+
 class Trace(object):
   def __init__(self, trace=None):
     if trace is None:
@@ -30,6 +32,9 @@ class Trace(object):
 
   def stop_and_copy(self):
     return Trace(self.trace.stop_and_copy())
+
+  def bindPrimitiveSP(self, name, sp):
+    self.trace.bindPrimitiveSP(name, foreign.ForeignLiteSP(sp))
 
 class Engine(engine.Engine):
 

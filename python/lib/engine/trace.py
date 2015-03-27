@@ -1,6 +1,5 @@
 import copy
 
-import venture.lite.foreign as foreign
 import venture.value.dicts as v
 from venture.engine.utils import expToDict
 from venture.exception import VentureException
@@ -180,8 +179,6 @@ def _restore_trace(trace, directives, values, foreign_sps,
                    backend, skipStackDictConversion=False):
   # bind the foreign sp's; wrap if necessary
   for name, sp in foreign_sps.items():
-    if backend != 'lite':
-      sp = foreign.ForeignLiteSP(sp)
     trace.bindPrimitiveSP(name, sp)
 
   db = trace.makeSerializationDB(values, skipStackDictConversion)
