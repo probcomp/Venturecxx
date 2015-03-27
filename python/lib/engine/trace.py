@@ -1,7 +1,6 @@
 import copy
 
 import venture.value.dicts as v
-from venture.engine.utils import expToDict
 from venture.exception import VentureException
 
 class Trace(object):
@@ -114,15 +113,7 @@ inference.)
       getattr(self, directive[0])(did, *directive[1:])
 
   def primitive_infer(self, exp):
-    if hasattr(self.trace, "infer_exp"):
-      # The trace can handle the inference primitive syntax natively
-      self.trace.infer_exp(exp)
-    else:
-      # The trace cannot handle the inference primitive syntax
-      # natively, so translate.
-      d = expToDict(exp)
-      #import pdb; pdb.set_trace()
-      self.trace.infer(d)
+    self.trace.infer_exp(exp)
 
   def diversify(self, exp, copy_trace):
     def copy_inner_trace(trace):
