@@ -20,8 +20,3 @@ class Engine(engine.Engine):
 
   def __init__(self, persistent_inference_trace=False):
     super(Engine, self).__init__(name="lite", Trace=trace.Trace, persistent_inference_trace=persistent_inference_trace)
-
-  def ensure_rng_seeded_decently(self):
-    # Do not frobnicate the random seed, because the Lite trace uses
-    # Python's rng rather than seeding its own from the system clock.
-    pass

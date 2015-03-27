@@ -13,7 +13,6 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-import random
 import dill
 import time
 
@@ -134,13 +133,6 @@ class Engine(object):
   def clear(self):
     self.model.clear()
     self.directiveCounter = 0
-    self.ensure_rng_seeded_decently()
-
-  def ensure_rng_seeded_decently(self):
-    # Frobnicate the trace's random seed because Trace() resets the
-    # RNG seed from the current time, which sucks if one calls this
-    # method often.
-    self.set_seed(random.randint(1,2**31-1))
 
   # TODO There should also be capture_inference_problem and
   # restore_inference_problem (Analytics seems to use something like

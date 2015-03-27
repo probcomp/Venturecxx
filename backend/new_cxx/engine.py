@@ -13,6 +13,8 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+import random
+
 from venture.engine import engine
 import libpumatrace as puma
 
@@ -22,6 +24,8 @@ class Trace(object):
   def __init__(self, trace=None):
     if trace is None:
       self.trace = puma.Trace()
+      # Poor Puma defaults its local RNG seed to the system time
+      self.trace.set_seed(random.randint(1,2**31-1))
     else:
       assert isinstance(trace, puma.Trace)
       self.trace = trace
