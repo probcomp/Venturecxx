@@ -14,7 +14,22 @@
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 from venture.engine import engine
-from libpumatrace import Trace
+import libpumatrace as puma
+
+class Trace(object):
+  def __init__(self, trace=None):
+    if trace is None:
+      self.trace = puma.Trace()
+    else:
+      assert isinstance(trace, puma.Trace)
+      self.trace = trace
+
+  def __getattr__(self, attrname):
+    # Forward all other trace methods without modification
+    return getattr(self.trace, attrname)
+
+  def stop_and_copy(self):
+    return Trace(self.trace.stop_and_copy())
 
 class Engine(engine.Engine):
 
