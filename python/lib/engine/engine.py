@@ -278,7 +278,6 @@ class Engine(object):
   def save(self, fname, extra=None):
     data = self.modelz.saveable()
     data['directiveCounter'] = self.directiveCounter
-    data['mode'] = self.mode
     data['extra'] = extra
     version = '0.2'
     with open(fname, 'w') as fp:
@@ -289,14 +288,12 @@ class Engine(object):
       (data, version) = dill.load(fp)
     assert version == '0.2', "Incompatible version or unrecognized object"
     self.directiveCounter = data['directiveCounter']
-    self.mode = data['mode']
     self.modelz.load(data)
     return data['extra']
 
   def convert(self, EngineClass):
     engine = EngineClass()
     engine.directiveCounter = self.directiveCounter
-    engine.mode = self.mode
     engine.modelz.convertFrom(self.modelz)
     return engine
 

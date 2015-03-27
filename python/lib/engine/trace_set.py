@@ -223,6 +223,7 @@ if freeze has been used.
 
   def saveable(self):
     data = {}
+    data['mode'] = self.mode
     data['traces'] = self.retrieve_dumps()
     data['log_weights'] = self.log_weights
     return data
@@ -231,9 +232,11 @@ if freeze has been used.
     traces = [self.restore_trace(trace) for trace in data['traces']]
     del self.model
     self.model = self.create_handler(traces, data['log_weights'])
+    self.mode = data['mode']
 
   def convertFrom(self, other):
     traces = [self.restore_trace(dump) for dump in other.retrieve_dumps()]
+    self.mode = other.mode
     self.model = self.create_handler(traces, other.log_weights)
 
   def set_profiling(self, enabled=True): 
