@@ -50,8 +50,8 @@ class Trace(object):
   def bindPrimitiveSP(self, name, sp):
     self.trace.bindPrimitiveSP(name, foreign.ForeignLiteSP(sp))
 
-  def infer_exp(self, exp):
-    self.trace.infer(_expToDict(exp))
+  def primitive_infer(self, exp):
+    self.trace.primitive_infer(_expToDict(exp))
 
 class Engine(engine.Engine):
 

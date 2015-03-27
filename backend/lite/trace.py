@@ -417,7 +417,7 @@ class Trace(object):
   def numRandomChoices(self):
     return len(self.rcs)
 
-  def infer_exp(self,exp):
+  def primitive_infer(self,exp):
     assert len(exp) >= 4
     (operator, scope, block) = exp[0:3]
     scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)

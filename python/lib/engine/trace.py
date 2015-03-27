@@ -112,9 +112,6 @@ inference.)
     for (did, directive) in worklist:
       getattr(self, directive[0])(did, *directive[1:])
 
-  def primitive_infer(self, exp):
-    self.trace.infer_exp(exp)
-
   def diversify(self, exp, copy_trace):
     def copy_inner_trace(trace):
       assert trace is self.trace
