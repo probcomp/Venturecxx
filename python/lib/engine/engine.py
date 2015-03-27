@@ -298,11 +298,7 @@ class Engine(object):
     from venture.puma.engine import Engine as PumaEngine
     return self.convert(PumaEngine)
 
-  def set_profiling(self, enabled=True):
-    # TODO: do this by introspection on the trace
-    if self.name == 'lite':
-      self.model.set_profiling(enabled)
-
+  def set_profiling(self, enabled=True): self.model.set_profiling(enabled)
   def clear_profiling(self): self.model.clear_profiling()
 
   def profile_data(self):
