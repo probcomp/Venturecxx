@@ -34,6 +34,8 @@ class Trace(object):
     # Forward all other trace methods without modification
     return getattr(self.trace, attrname)
 
+  def has_own_prng(self): return True
+
   def stop_and_copy(self):
     return Trace(self.trace.stop_and_copy())
 

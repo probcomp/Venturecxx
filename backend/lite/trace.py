@@ -631,6 +631,8 @@ the scaffold determined by the given expression."""
     assert id not in self.families
     (_,self.families[id]) = evalFamily(self,Address(List(id)),self.unboxExpression(exp),self.globalEnv,Scaffold(),True,db,{})
 
+  def has_own_prng(self): return False
+
   def short_circuit_copyable(self): return False
 
   #### Helpers (shouldn't be class methods)
