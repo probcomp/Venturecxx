@@ -33,6 +33,11 @@ class Trace(object):
   def stop_and_copy(self):
     return Trace(self.trace.stop_and_copy())
 
+  # Not intercepting the "diversify" method because Puma doesn't
+  # support it.  If Puma does come to support it, will need to wrap it
+  # here to drop the copy_trace argument (because presumably Puma will
+  # have no need of that, using stop_and_copy instead).
+
   def bindPrimitiveSP(self, name, sp):
     self.trace.bindPrimitiveSP(name, foreign.ForeignLiteSP(sp))
 
