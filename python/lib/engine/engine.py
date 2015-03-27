@@ -27,7 +27,7 @@ class Engine(object):
   def __init__(self, name="phony", Trace=None, persistent_inference_trace=False):
     self.name = name
     self.Trace = Trace
-    self.modelz = TraceSet(self, Trace)
+    self.model = TraceSet(self, Trace)
     self.directiveCounter = 0
     self.inferrer = None
     import venture.lite.inference_sps as inf
@@ -41,7 +41,7 @@ class Engine(object):
     self.creation_time = time.time()
 
   def num_traces(self):
-    return len(self.modelz.log_weights)
+    return len(self.model.log_weights)
 
   def inferenceSPsList(self):
     return self.inference_sps.iteritems()
@@ -55,7 +55,7 @@ class Engine(object):
     self.callbacks[name] = callback
 
   def getDistinguishedTrace(self):
-    return self.modelz.retrieve_trace(0)
+    return self.model.retrieve_trace(0)
 
   def nextBaseAddr(self):
     self.directiveCounter += 1
@@ -74,11 +74,11 @@ class Engine(object):
 
   def assume(self,id,datum):
     baseAddr = self.nextBaseAddr()
-    return (self.directiveCounter,self.modelz.define(baseAddr,id,datum))
+    return (self.directiveCounter,self.model.define(baseAddr,id,datum))
 
   def predict_all(self,datum):
     baseAddr = self.nextBaseAddr()
-    values = self.modelz.evaluate(baseAddr, datum)
+    values = self.model.evaluate(baseAddr, datum)
     return (self.directiveCounter,values)
 
   def predict(self, datum):
@@ -87,11 +87,11 @@ class Engine(object):
 
   def observe(self,datum,val):
     baseAddr = self.nextBaseAddr()
-    self.modelz.observe(baseAddr, datum, val)
+    self.model.observe(baseAddr, datum, val)
     return self.directiveCounter
 
   def forget(self,directiveId):
-    self.modelz.forget(directiveId)
+    self.model.forget(directiveId)
 
   def force(self,datum,val):
     # TODO: The directive counter increments, but the "force" isn't added
@@ -119,13 +119,13 @@ class Engine(object):
     return values
 
   def freeze(self,directiveId):
-    self.modelz.freeze(directiveId)
+    self.model.freeze(directiveId)
 
   def report_value(self,directiveId):
-    return self.modelz.report_value(directiveId)
+    return self.model.report_value(directiveId)
 
   def report_raw(self,directiveId):
-    return self.modelz.report_raw(directiveId)
+    return self.model.report_raw(directiveId)
 
   def bind_foreign_sp(self, name, sp):
     self.foreign_sps[name] = sp
@@ -134,10 +134,10 @@ class Engine(object):
       import venture.lite.foreign as f
       sp = f.ForeignLiteSP(sp)
 
-    self.modelz.bind_foreign_sp(name, sp)
+    self.model.bind_foreign_sp(name, sp)
 
   def clear(self):
-    self.modelz.clear()
+    self.model.clear()
     self.directiveCounter = 0
     self.ensure_rng_seeded_decently()
 
@@ -151,16 +151,16 @@ class Engine(object):
   # restore_inference_problem (Analytics seems to use something like
   # it)
   def reinit_inference_problem(self, num_particles=1):
-    self.modelz.reinit_inference_problem(num_particles)
+    self.model.reinit_inference_problem(num_particles)
 
   def resample(self, P, mode = 'sequential', process_cap = None):
-    self.modelz.resample(P, mode, process_cap)
+    self.model.resample(P, mode, process_cap)
 
-  def diversify(self, program): self.modelz.diversify(program)
-  def collapse(self, scope, block): self.modelz.collapse(scope, block)
-  def collapse_map(self, scope, block): self.modelz.collapse_map(scope, block)
-  def likelihood_weight(self): self.modelz.likelihood_weight()
-  def incorporate(self): self.modelz.incorporate()
+  def diversify(self, program): self.model.diversify(program)
+  def collapse(self, scope, block): self.model.collapse(scope, block)
+  def collapse_map(self, scope, block): self.model.collapse_map(scope, block)
+  def likelihood_weight(self): self.model.likelihood_weight()
+  def incorporate(self): self.model.incorporate()
 
   def infer(self, program):
     self.incorporate()
@@ -237,16 +237,16 @@ class Engine(object):
     for name, exp in _inference_prelude():
       self._define_in(name, exp, next_trace)
 
-  def primitive_infer(self, exp): self.modelz.primitive_infer(exp)
-  def logscore(self): return self.modelz.logscore()
-  def logscore_all(self): return self.modelz.logscore_all()
-  def get_entropy_info(self): return self.modelz.get_entropy_info()
+  def primitive_infer(self, exp): self.model.primitive_infer(exp)
+  def logscore(self): return self.model.logscore()
+  def logscore_all(self): return self.model.logscore_all()
+  def get_entropy_info(self): return self.model.get_entropy_info()
 
   def get_seed(self):
-    return self.modelz.traces.at_distinguished('get_seed') # TODO is this what we want?
+    return self.model.traces.at_distinguished('get_seed') # TODO is this what we want?
 
   def set_seed(self, seed):
-    self.modelz.traces.at_distinguished('set_seed', seed) # TODO is this what we want?
+    self.model.traces.at_distinguished('set_seed', seed) # TODO is this what we want?
 
   def continuous_inference_status(self):
     if self.inferrer is not None:
@@ -265,14 +265,14 @@ class Engine(object):
       self.inferrer.stop()
       self.inferrer = None
 
-  def retrieve_dump(self, ix): return self.modelz.retrieve_dump(ix)
-  def retrieve_dumps(self): return self.modelz.retrieve_dumps()
-  def retrieve_trace(self, ix): return self.modelz.retrieve_trace(ix)
-  def retrieve_traces(self): return self.modelz.retrieve_traces()
+  def retrieve_dump(self, ix): return self.model.retrieve_dump(ix)
+  def retrieve_dumps(self): return self.model.retrieve_dumps()
+  def retrieve_trace(self, ix): return self.model.retrieve_trace(ix)
+  def retrieve_traces(self): return self.model.retrieve_traces()
   def dump_trace(self, trace, skipStackDictConversion=False):
-    return self.modelz.dump_trace(trace, skipStackDictConversion)
+    return self.model.dump_trace(trace, skipStackDictConversion)
   def restore_trace(self, values, skipStackDictConversion=False):
-    return self.modelz.restore_trace(values, skipStackDictConversion)
+    return self.model.restore_trace(values, skipStackDictConversion)
   def copy_trace(self, trace):
     # Still in Engine in order to get properly overridden by venture.puma.engine.Engine.copy_trace
     values = self.dump_trace(trace, skipStackDictConversion=True)
@@ -280,7 +280,7 @@ class Engine(object):
 
 
   def save(self, fname, extra=None):
-    data = self.modelz.saveable()
+    data = self.model.saveable()
     data['directiveCounter'] = self.directiveCounter
     data['extra'] = extra
     version = '0.2'
@@ -292,13 +292,13 @@ class Engine(object):
       (data, version) = dill.load(fp)
     assert version == '0.2', "Incompatible version or unrecognized object"
     self.directiveCounter = data['directiveCounter']
-    self.modelz.load(data)
+    self.model.load(data)
     return data['extra']
 
   def convert(self, EngineClass):
     engine = EngineClass()
     engine.directiveCounter = self.directiveCounter
-    engine.modelz.convertFrom(self.modelz)
+    engine.model.convertFrom(self.model)
     return engine
 
   def to_lite(self):
@@ -312,9 +312,9 @@ class Engine(object):
   def set_profiling(self, enabled=True):
     # TODO: do this by introspection on the trace
     if self.name == 'lite':
-      self.modelz.set_profiling(enabled)
+      self.model.set_profiling(enabled)
 
-  def clear_profiling(self): self.modelz.clear_profiling()
+  def clear_profiling(self): self.model.clear_profiling()
 
   def profile_data(self):
     rows = []
