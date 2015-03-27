@@ -15,38 +15,21 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import random
 import dill
-import cPickle as pickle
 import time
 
 from venture.exception import VentureException
-from ..multiprocess import (SynchronousMaster,
-                            SynchronousSerializingMaster, ThreadedMaster,
-                            ThreadedSerializingMaster, MultiprocessingMaster)
-import trace as tr
-from venture.lite.utils import sampleLogCategorical, logaddexp
+from trace_set import TraceSet
 from venture.engine.inference import Infer
 import venture.value.dicts as v
-
-def is_picklable(obj):
-  try:
-    pickle.dumps(obj)
-  except TypeError:
-    return False
-  except pickle.PicklingError:
-    return False
-  else:
-    return True
 
 class Engine(object):
 
   def __init__(self, name="phony", Trace=None, persistent_inference_trace=False):
     self.name = name
     self.Trace = Trace
+    self.modelz = TraceSet(self, Trace)
     self.directiveCounter = 0
     self.inferrer = None
-    self.mode = 'sequential'
-    self.process_cap = None
-    self.model = self.create_handler([tr.Trace(Trace())])
     import venture.lite.inference_sps as inf
     self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
@@ -57,32 +40,8 @@ class Engine(object):
     self.ripl = None
     self.creation_time = time.time()
 
-  def model_constructor(self, mode):
-    if mode == 'multiprocess':
-      return MultiprocessingMaster
-    elif mode == 'thread_ser':
-      return ThreadedSerializingMaster
-    elif mode == 'threaded':
-      return ThreadedMaster
-    elif mode == 'serializing':
-      return SynchronousSerializingMaster
-    else:
-      return SynchronousMaster
-
-  def create_handler(self, traces, weights=None):
-    if self.name == "lite":
-      local_rng = False
-    else:
-      local_rng = True
-    ans = self.model_constructor(self.mode)(traces, self.process_cap, local_rng)
-    if weights is not None:
-      self.log_weights = weights
-    else:
-      self.log_weights = [0 for _ in traces]
-    return ans
-
   def num_traces(self):
-    return len(self.log_weights)
+    return len(self.modelz.log_weights)
 
   def inferenceSPsList(self):
     return self.inference_sps.iteritems()
@@ -96,7 +55,7 @@ class Engine(object):
     self.callbacks[name] = callback
 
   def getDistinguishedTrace(self):
-    return self.retrieve_trace(0)
+    return self.modelz.retrieve_trace(0)
 
   def nextBaseAddr(self):
     self.directiveCounter += 1
@@ -115,13 +74,11 @@ class Engine(object):
 
   def assume(self,id,datum):
     baseAddr = self.nextBaseAddr()
-    values = self.model.map('define', baseAddr, id, datum)
-    value = values[0]
-    return (self.directiveCounter,value)
+    return (self.directiveCounter,self.modelz.define(baseAddr,id,datum))
 
   def predict_all(self,datum):
     baseAddr = self.nextBaseAddr()
-    values = self.model.map('evaluate', baseAddr, datum)
+    values = self.modelz.evaluate(baseAddr, datum)
     return (self.directiveCounter,values)
 
   def predict(self, datum):
@@ -130,11 +87,11 @@ class Engine(object):
 
   def observe(self,datum,val):
     baseAddr = self.nextBaseAddr()
-    self.model.map('observe', baseAddr, datum, val)
+    self.modelz.observe(baseAddr, datum, val)
     return self.directiveCounter
 
   def forget(self,directiveId):
-    self.model.map('forget', directiveId)
+    self.modelz.forget(directiveId)
 
   def force(self,datum,val):
     # TODO: The directive counter increments, but the "force" isn't added
@@ -162,13 +119,13 @@ class Engine(object):
     return values
 
   def freeze(self,directiveId):
-    self.model.map('freeze', directiveId)
+    self.modelz.freeze(directiveId)
 
   def report_value(self,directiveId):
-    return self.model.at_distinguished('report_value', directiveId)
+    return self.modelz.report_value(directiveId)
 
   def report_raw(self,directiveId):
-    return self.model.at_distinguished('report_raw', directiveId)
+    return self.modelz.report_raw(directiveId)
 
   def bind_foreign_sp(self, name, sp):
     self.foreign_sps[name] = sp
@@ -177,18 +134,11 @@ class Engine(object):
       import venture.lite.foreign as f
       sp = f.ForeignLiteSP(sp)
 
-    # check that we can pickle it
-    if (not is_picklable(sp)) and (self.mode != 'sequential'):
-      errstr = '''SP not picklable. To bind it, call [infer (resample_sequential <n_particles>)],
-      bind the sp, then switch back to multiprocess.'''
-      raise TypeError(errstr)
-
-    self.model.map('bind_foreign_sp', name, sp)
+    self.modelz.bind_foreign_sp(name, sp)
 
   def clear(self):
-    del self.model
+    self.modelz.clear()
     self.directiveCounter = 0
-    self.model = self.create_handler([tr.Trace(self.Trace())])
     self.ensure_rng_seeded_decently()
 
   def ensure_rng_seeded_decently(self):
@@ -201,112 +151,16 @@ class Engine(object):
   # restore_inference_problem (Analytics seems to use something like
   # it)
   def reinit_inference_problem(self, num_particles=1):
-    """Unincorporate all observations and return to the prior.
-
-First perform a resample with the specified number of particles
-(default 1).  The choice of which particles will be returned to the
-prior matters if the particles have different priors, as might happen
-if freeze has been used.
-
-    """
-    self.resample(num_particles)
-    # Resample currently reincorporates, so clear the weights again
-    self.log_weights = [0 for _ in range(num_particles)]
-    self.model.map('reset_to_prior')
+    self.modelz.reinit_inference_problem(num_particles)
 
   def resample(self, P, mode = 'sequential', process_cap = None):
-    self.mode = mode
-    self.process_cap = process_cap
-    newTraces = self._resample_traces(P)
-    del self.model
-    self.model = self.create_handler(newTraces)
-    self.incorporate()
+    self.modelz.resample(P, mode, process_cap)
 
-  def _resample_traces(self, P):
-    P = int(P)
-    newTraces = [None for p in range(P)]
-    used_parents = {}
-    for p in range(P):
-      parent = sampleLogCategorical(self.log_weights) # will need to include or rewrite
-      newTrace = self._use_parent(used_parents, parent)
-      newTraces[p] = newTrace
-    return newTraces
-
-  def _use_parent(self, used_parents, index):
-    # All traces returned from calling this function with the same
-    # used_parents dict need to be unique (since they should be
-    # allowed to diverge in the future).
-    #
-    # Subject to that, minimize copying and retrieval (copying is
-    # currently always expensive, and retrieval can be if it involves
-    # serialization).  Invariant: never need to retrieve a trace more
-    # than once.
-    if index in used_parents:
-      return self.copy_trace(used_parents[index])
-    else:
-      parent = self.retrieve_trace(index)
-      used_parents[index] = parent
-      return parent
-
-  def diversify(self, program):
-    traces = self.retrieve_traces()
-    weights = self.log_weights
-    new_traces = []
-    new_weights = []
-    for (t, w) in zip(traces, weights):
-      for (res_t, res_w) in zip(*(t.diversify(program, self.copy_trace))):
-        new_traces.append(res_t)
-        new_weights.append(w + res_w)
-    del self.model
-    self.model = self.create_handler(new_traces, new_weights)
-
-  def _collapse_help(self, scope, block, select_keeper):
-    traces = self.retrieve_traces()
-    weights = self.log_weights
-    fingerprints = [t.block_values(scope, block) for t in traces]
-    def grouping():
-      "Because sorting doesn't do what I want on dicts, so itertools.groupby is not useful"
-      groups = [] # :: [(fingerprint, [trace], [weight])]  Not a dict because the fingerprints are not hashable
-      for (t, w, f) in zip(traces, weights, fingerprints):
-        try:
-          place = [g[0] for g in groups].index(f)
-        except ValueError:
-          place = len(groups)
-          groups.append((f, [], []))
-        groups[place][1].append(t)
-        groups[place][2].append(w)
-      return groups
-    groups = grouping()
-    new_ts = []
-    new_ws = []
-    for (_, ts, ws) in groups:
-      (index, total) = select_keeper(ws)
-      new_ts.append(self.copy_trace(ts[index]))
-      new_ts[-1].makeConsistent() # Even impossible states ok
-      new_ws.append(total)
-    del self.model
-    self.model = self.create_handler(new_ts, new_ws)
-
-  def collapse(self, scope, block):
-    def sample(weights):
-      return (sampleLogCategorical(weights), logaddexp(weights))
-    self._collapse_help(scope, block, sample)
-
-  def collapse_map(self, scope, block):
-    # The proper behavior in the Viterbi algorithm is to weight the
-    # max particle by its own weight, not by the total weight of its
-    # whole bucket.
-    def max_ind(lst):
-      return (lst.index(max(lst)), max(lst))
-    self._collapse_help(scope, block, max_ind)
-
-  def likelihood_weight(self):
-    self.log_weights = self.model.map('likelihood_weight')
-
-  def incorporate(self):
-    weight_increments = self.model.map('makeConsistent')
-    for i, increment in enumerate(weight_increments):
-      self.log_weights[i] += increment
+  def diversify(self, program): self.modelz.diversify(program)
+  def collapse(self, scope, block): self.modelz.collapse(scope, block)
+  def collapse_map(self, scope, block): self.modelz.collapse_map(scope, block)
+  def likelihood_weight(self): self.modelz.likelihood_weight()
+  def incorporate(self): self.modelz.incorporate()
 
   def infer(self, program):
     self.incorporate()
@@ -383,20 +237,16 @@ if freeze has been used.
     for name, exp in _inference_prelude():
       self._define_in(name, exp, next_trace)
 
-  def primitive_infer(self, exp):
-    self.model.map('primitive_infer', exp)
-
-  def logscore(self): return self.model.at_distinguished('getGlobalLogScore')
-  def logscore_all(self): return self.model.map('getGlobalLogScore')
-
-  def get_entropy_info(self):
-    return { 'unconstrained_random_choices' : self.model.at_distinguished('numRandomChoices') }
+  def primitive_infer(self, exp): self.modelz.primitive_infer(exp)
+  def logscore(self): return self.modelz.logscore()
+  def logscore_all(self): return self.modelz.logscore_all()
+  def get_entropy_info(self): return self.modelz.get_entropy_info()
 
   def get_seed(self):
-    return self.model.at_distinguished('get_seed') # TODO is this what we want?
+    return self.modelz.model.at_distinguished('get_seed') # TODO is this what we want?
 
   def set_seed(self, seed):
-    self.model.at_distinguished('set_seed', seed) # TODO is this what we want?
+    self.modelz.model.at_distinguished('set_seed', seed) # TODO is this what we want?
 
   def continuous_inference_status(self):
     if self.inferrer is not None:
@@ -415,41 +265,18 @@ if freeze has been used.
       self.inferrer.stop()
       self.inferrer = None
 
-  def retrieve_dump(self, ix):
-    return self.model.at(ix, 'dump')
-
-  def retrieve_dumps(self):
-    return self.model.map('dump')
-
-  def retrieve_trace(self, ix):
-    if self.model.can_shortcut_retrieval():
-      return self.model.retrieve(ix)
-    else:
-      dumped = self.retrieve_dump(ix)
-      return self.restore_trace(dumped)
-
-  def retrieve_traces(self):
-    if self.model.can_shortcut_retrieval():
-      return self.model.retrieve_all()
-    else:
-      dumped_all = self.retrieve_dumps()
-      return [self.restore_trace(dumped) for dumped in dumped_all]
-
-  # class methods that call the corresponding functions, with arguments filled in
+  def retrieve_dump(self, ix): return self.modelz.retrieve_dump(ix)
+  def retrieve_dumps(self): return self.modelz.retrieve_dumps()
+  def retrieve_trace(self, ix): return self.modelz.retrieve_trace(ix)
+  def retrieve_traces(self): return self.modelz.retrieve_traces()
   def dump_trace(self, trace, skipStackDictConversion=False):
-    return trace.dump(skipStackDictConversion)
-
+    return self.modelz.dump_trace(trace, skipStackDictConversion)
   def restore_trace(self, values, skipStackDictConversion=False):
-    return tr.Trace.restore(self, values, skipStackDictConversion)
-
-  def copy_trace(self, trace):
-    values = self.dump_trace(trace, skipStackDictConversion=True)
-    return self.restore_trace(values, skipStackDictConversion=True)
+    return self.modelz.restore_trace(values, skipStackDictConversion)
+  def copy_trace(self, trace): return self.modelz.copy_trace(trace)
 
   def save(self, fname, extra=None):
-    data = {}
-    data['traces'] = self.retrieve_dumps()
-    data['log_weights'] = self.log_weights
+    data = self.modelz.saveable()
     data['directiveCounter'] = self.directiveCounter
     data['mode'] = self.mode
     data['extra'] = extra
@@ -463,17 +290,14 @@ if freeze has been used.
     assert version == '0.2', "Incompatible version or unrecognized object"
     self.directiveCounter = data['directiveCounter']
     self.mode = data['mode']
-    traces = [self.restore_trace(trace) for trace in data['traces']]
-    del self.model
-    self.model = self.create_handler(traces, data['log_weights'])
+    self.modelz.load(data)
     return data['extra']
 
   def convert(self, EngineClass):
     engine = EngineClass()
     engine.directiveCounter = self.directiveCounter
     engine.mode = self.mode
-    traces = [engine.restore_trace(dump) for dump in self.retrieve_dumps()]
-    engine.model = engine.create_handler(traces, self.log_weights)
+    engine.modelz.convertFrom(self.modelz)
     return engine
 
   def to_lite(self):
@@ -487,10 +311,9 @@ if freeze has been used.
   def set_profiling(self, enabled=True):
     # TODO: do this by introspection on the trace
     if self.name == 'lite':
-      self.model.map('set_profiling', enabled)
+      self.modelz.set_profiling(enabled)
 
-  def clear_profiling(self):
-    self.model.map('clear_profiling')
+  def clear_profiling(self): self.modelz.clear_profiling()
 
   def profile_data(self):
     rows = []
