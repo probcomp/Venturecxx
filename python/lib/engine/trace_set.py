@@ -15,7 +15,7 @@ class TraceSet(object):
     self.process_cap = None
     self.traces = self.create_handler([tr.Trace(Trace())])
 
-  def model_constructor(self, mode):
+  def _trace_master(self, mode):
     if mode == 'multiprocess':
       return MultiprocessingMaster
     elif mode == 'thread_ser':
@@ -32,7 +32,7 @@ class TraceSet(object):
       local_rng = False
     else:
       local_rng = True
-    ans = self.model_constructor(self.mode)(traces, self.process_cap, local_rng)
+    ans = self._trace_master(self.mode)(traces, self.process_cap, local_rng)
     if weights is not None:
       self.log_weights = weights
     else:
