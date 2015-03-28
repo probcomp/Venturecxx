@@ -417,7 +417,7 @@ class Trace(object):
   def numRandomChoices(self):
     return len(self.rcs)
 
-  def infer_exp(self,exp):
+  def primitive_infer(self,exp):
     assert len(exp) >= 4
     (operator, scope, block) = exp[0:3]
     scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
@@ -630,6 +630,10 @@ the scaffold determined by the given expression."""
   def evalAndRestore(self,id,exp,db):
     assert id not in self.families
     (_,self.families[id]) = evalFamily(self,Address(List(id)),self.unboxExpression(exp),self.globalEnv,Scaffold(),True,db,{})
+
+  def has_own_prng(self): return False
+
+  def short_circuit_copyable(self): return False
 
   #### Helpers (shouldn't be class methods)
 

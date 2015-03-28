@@ -36,7 +36,12 @@ sys.setrecursionlimit(max(10**6, sys.getrecursionlimit()))
 from venture import parser, ripl, sivm, server
 
 class Backend(object):
-    def make_core_sivm(self, persistent_inference_trace=False): pass
+    def trace_constructor(self): pass
+    def make_engine(self, persistent_inference_trace=False):
+        from venture.engine import engine
+        return engine.Engine(self.name(), self.trace_constructor(), persistent_inference_trace)
+    def make_core_sivm(self, persistent_inference_trace=False):
+        return sivm.CoreSivm(self.make_engine(persistent_inference_trace))
     def make_venture_sivm(self, persistent_inference_trace=False):
         return sivm.VentureSivm(self.make_core_sivm(persistent_inference_trace))
     def make_church_prime_ripl(self, persistent_inference_trace=False):
@@ -61,21 +66,21 @@ class Backend(object):
         return server.RiplRestServer(self.make_combined_ripl())
 
 class CXX(Backend):
-    def make_core_sivm(self, persistent_inference_trace=False):
+    def make_engine(self, persistent_inference_trace=False):
         from venture.cxx import engine
-        return sivm.CoreSivm(engine.Engine(persistent_inference_trace))
+        return engine.Engine(persistent_inference_trace)
     def name(self): return "cxx"
 
 class Lite(Backend):
-    def make_core_sivm(self, persistent_inference_trace=False):
-        from venture.lite import engine
-        return sivm.CoreSivm(engine.Engine(persistent_inference_trace))
+    def trace_constructor(self):
+        from venture.lite import trace
+        return trace.Trace
     def name(self): return "lite"
 
 class Puma(Backend):
-    def make_core_sivm(self, persistent_inference_trace=False):
-        from venture.puma import engine
-        return sivm.CoreSivm(engine.Engine(persistent_inference_trace))
+    def trace_constructor(self):
+        from venture.puma import trace
+        return trace.Trace
     def name(self): return "puma"
 
 def backend(name = "puma"):

@@ -1,8 +1,6 @@
 import copy
 
-import venture.lite.foreign as foreign
 import venture.value.dicts as v
-from venture.engine.utils import expToDict
 from venture.exception import VentureException
 
 class Trace(object):
@@ -114,17 +112,6 @@ inference.)
     for (did, directive) in worklist:
       getattr(self, directive[0])(did, *directive[1:])
 
-  def primitive_infer(self, exp):
-    if hasattr(self.trace, "infer_exp"):
-      # The trace can handle the inference primitive syntax natively
-      self.trace.infer_exp(exp)
-    else:
-      # The trace cannot handle the inference primitive syntax
-      # natively, so translate.
-      d = expToDict(exp)
-      #import pdb; pdb.set_trace()
-      self.trace.infer(d)
-
   def diversify(self, exp, copy_trace):
     def copy_inner_trace(trace):
       assert trace is self.trace
@@ -136,9 +123,9 @@ inference.)
     return _dump_trace(self.trace, self.directives, skipStackDictConversion)
 
   @staticmethod
-  def restore(engine, serialized, skipStackDictConversion=False):
+  def restore(mk_trace, serialized, foreign_sps, skipStackDictConversion=False):
     (values, directives) = serialized
-    return Trace(_restore_trace(engine.Trace(), directives, values, engine.foreign_sps, engine.name, skipStackDictConversion), directives)
+    return Trace(_restore_trace(mk_trace(), directives, values, foreign_sps, skipStackDictConversion), directives)
 
   def stop_and_copy(self):
     return Trace(self.trace.stop_and_copy(), self.directives)
@@ -176,12 +163,9 @@ def _dump_trace(trace, directives, skipStackDictConversion=False):
 
   return (trace.dumpSerializationDB(db, skipStackDictConversion), directives)
 
-def _restore_trace(trace, directives, values, foreign_sps,
-                   backend, skipStackDictConversion=False):
+def _restore_trace(trace, directives, values, foreign_sps, skipStackDictConversion=False):
   # bind the foreign sp's; wrap if necessary
   for name, sp in foreign_sps.items():
-    if backend != 'lite':
-      sp = foreign.ForeignLiteSP(sp)
     trace.bindPrimitiveSP(name, sp)
 
   db = trace.makeSerializationDB(values, skipStackDictConversion)

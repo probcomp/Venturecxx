@@ -58,10 +58,12 @@ found, it re-raises the first one. Else it passes its result back to
 the client.
 
 This Master/Worker system has a facility for setting the random seeds
-on the workers.  This respects a flag for whether the objects being
-managed have their own random states (which should then be settable
-with the set_seed method), or rely on the process-global Python PRNG
-available in each child process.
+on the workers.  This respects the possibility that each object may
+have a local PRNG as follows: When the Master issues a seed reset, if
+an object defines a "has_own_prng" method, and that method returns
+"True", then the Worker will try to set its PRNG seed by calling its
+"set_seed" method.  If not, the Worker will assume the object relies
+on the process-global Python PRNG available in each child process.
 
 For more information on the Master class hierarchy, see the docstrings
 below.
@@ -117,7 +119,7 @@ class MasterBase(object):
   sequential modes.
 
   '''
-  def __init__(self, objects, process_cap, local_rng=False):
+  def __init__(self, objects, process_cap):
     """A Master maintains:
 
     - An array of objects representing the worker processes.
@@ -134,7 +136,6 @@ class MasterBase(object):
       chunk).
 
     """
-    self.local_rng = local_rng
     self.process_cap = process_cap
     self.processes = []
     self.pipes = []  # Parallel to processes
@@ -166,7 +167,7 @@ class MasterBase(object):
         chunk_start = extras + chunk * base_size
         chunk_end = chunk_start + base_size
       assert chunk_end <= len(objects) # I think I wrote this code to ensure this
-      process = Worker(objects[chunk_start:chunk_end], child, self.local_rng)
+      process = Worker(objects[chunk_start:chunk_end], child)
       process.start()
       self.pipes.append(parent)
       self.processes.append(process)
@@ -318,10 +319,9 @@ class WorkerBase(object):
   synchronously (using Safely objects to catch exceptions).
 
   '''
-  def __init__(self, objs, pipe, local_rng=False):
+  def __init__(self, objs, pipe):
     self.objs = [Safely(o) for o in objs]
     self.pipe = pipe
-    self.local_rng = local_rng
     self._initialize()
 
   def run(self):
@@ -343,10 +343,20 @@ class WorkerBase(object):
   def set_seeds(self, _index, seeds):
     # If we're in puma, set the seed; else don't.
     # The truly parallel case is handled by the subclass MultiprocessingWorker.
-    if self.local_rng:
-      for (obj, seed) in zip(self.objs, seeds):
+    did_set_global_prng = False
+    for (obj, seed) in zip(self.objs, seeds):
+      if hasattr(obj, "has_own_prng") and obj.has_own_prng():
         obj.set_seed(seed)
+      elif not did_set_global_prng and self.should_set_global_prng():
+        random.seed(seed)
+        np.random.seed(seed)
+        did_set_global_prng = True
     return [None for _ in self.objs]
+
+  # Except in the true multiprocessing case (which overrides this
+  # method), a Worker can just inherit the ambient PRNG from the
+  # controlling Python process.
+  def should_set_global_prng(self): return False
 
   def send_object(self, _index):
     raise VentureException("fatal", "Cannot transmit object directly if memory is not shared")
@@ -403,17 +413,10 @@ class MultiprocessingWorker(WorkerBase, MultiprocessBase):
   '''
   True parallelism via multiprocessing. Controlled by MultiprocessingMaster.
   '''
-  @safely
-  def set_seeds(self, index, seeds):
-    # override the default set_seeds method; if we're in parallel Python,
-    # reset the global random seeds.
-    if self.local_rng:
-      return WorkerBase.set_seeds(self, index, seeds)
-    else:
-      # In Python the RNG is global; only need to set it once.
-      random.seed(seeds[0])
-      np.random.seed(seeds[0])
-      return [None for _ in self.objs]
+
+  # Each MultiprocessingWorker is (implicitly) in charge of the PRNG
+  # of the process running it.
+  def should_set_global_prng(self): return True
 
 class ThreadedSerializingWorker(WorkerBase, ThreadingBase):
   '''Emulates MultiprocessingWorker by forbidding the short-cut

@@ -60,7 +60,7 @@ def draw(inferrer):
 
   # Decide how far to plot the trajectory
   plot_range = 2
-  for (_did, directive) in inferrer.engine.retrieve_trace(0).directives.items():
+  for (_did, directive) in inferrer.engine.getDistinguishedTrace().directives.items():
     if directive[0] == "observe":
       (_, datum, val) = directive
       obs_i = int(datum[1]["value"])
@@ -76,7 +76,7 @@ def draw(inferrer):
   x_scale = (640.0 - 60)/plot_range
 
   # Plot the observations
-  for (_did, directive) in inferrer.engine.retrieve_trace(0).directives.items():
+  for (_did, directive) in inferrer.engine.getDistinguishedTrace().directives.items():
     if directive[0] == "observe":
       (_, datum, val) = directive
       obs_i = int(datum[1]["value"])

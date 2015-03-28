@@ -28,7 +28,7 @@ def collectLikelihoodWeighted(ripl, address):
   for _ in range(default_num_samples()):
     ripl.infer("(likelihood_weight)")
     vs.append(ripl.report(address))
-    wts.append(ripl.sivm.core_sivm.engine.log_weights[0])
+    wts.append(ripl.sivm.core_sivm.engine.model.log_weights[0])
   return (vs, wts)
 
 def testMultiprocessingRegression():
@@ -50,5 +50,5 @@ hack.
   ripl.assume('x', '(normal 0 1)')
   ripl.observe('(normal x 1)', 5)
   ripl.infer('(likelihood_weight)')
-  log_weights = ripl.sivm.core_sivm.engine.log_weights
+  log_weights = ripl.sivm.core_sivm.engine.model.log_weights
   assert log_weights[0] != 0

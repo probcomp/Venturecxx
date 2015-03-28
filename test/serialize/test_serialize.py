@@ -13,8 +13,8 @@ def _test_serialize_program(v, label, action):
 
     if action == 'serialize':
         trace1 = engine.getDistinguishedTrace()
-        serialized = engine.dump_trace(trace1)
-        trace2 = engine.restore_trace(serialized)
+        serialized = trace1.dump()
+        trace2 = engine.model.restore_trace(serialized)
         assert isinstance(serialized, tuple)
         assert len(serialized) == 2
         assert isinstance(serialized[0], list)
@@ -27,7 +27,7 @@ def _test_serialize_program(v, label, action):
         assert isinstance(trace2.trace, type(trace1.trace))
     elif action == 'copy':
         trace1 = engine.getDistinguishedTrace()
-        trace2 = engine.copy_trace(trace1)
+        trace2 = engine.model.copy_trace(trace1)
         assert isinstance(trace2, type(trace1))
         assert isinstance(trace2.trace, type(trace1.trace))
     elif action == 'convert_puma':
@@ -44,10 +44,10 @@ def _test_serialize_program(v, label, action):
         assert False
 
     infer = "(mh default one %s)" % default_num_transitions_per_sample()
-    engine.model = engine.create_handler([trace2])
+    engine.model.create_trace_pool([trace2])
     r2 = collectStateSequence(v, label, infer=infer)
 
-    engine.model = engine.create_handler([trace1])
+    engine.model.create_trace_pool([trace1])
     r1 = collectStateSequence(v, label, infer=infer)
 
     return reportSameDiscrete(r1, r2)
@@ -258,9 +258,9 @@ def check_foreign_sp(mode):
     eq_(v.sample('(test_binomial 1 1)'), test_binomial_result)
     eq_(v.sample('(test_sym_dir_mult 1 1)'), test_sym_dir_result)
     engine = v.sivm.core_sivm.engine
-    dumped = engine.retrieve_dump(0)
-    restored = engine.restore_trace(dumped)
-    engine.model = engine.create_handler([restored])
+    dumped = engine.model.retrieve_dump(0)
+    restored = engine.model.restore_trace(dumped)
+    engine.model.create_trace_pool([restored])
     # Make sure that the restored trace still has the foreign SP's
     eq_(v.sample('(test_binomial 1 1)'), test_binomial_result)
     eq_(v.sample('(test_sym_dir_mult 1 1)'), test_sym_dir_result)
