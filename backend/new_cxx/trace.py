@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import random
 
-from venture.engine import engine
 import libpumatrace as puma
 
 from venture.lite.value import VentureValue

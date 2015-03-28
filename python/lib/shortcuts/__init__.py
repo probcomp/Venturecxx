@@ -79,8 +79,8 @@ class Lite(Backend):
 
 class Puma(Backend):
     def trace_constructor(self):
-        from venture.puma import engine
-        return engine.Trace
+        from venture.puma import trace
+        return trace.Trace
     def name(self): return "puma"
 
 def backend(name = "puma"):
