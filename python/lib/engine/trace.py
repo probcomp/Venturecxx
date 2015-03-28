@@ -123,9 +123,9 @@ inference.)
     return _dump_trace(self.trace, self.directives, skipStackDictConversion)
 
   @staticmethod
-  def restore(engine, serialized, skipStackDictConversion=False):
+  def restore(mk_trace, serialized, foreign_sps, skipStackDictConversion=False):
     (values, directives) = serialized
-    return Trace(_restore_trace(engine.Trace(), directives, values, engine.foreign_sps, skipStackDictConversion), directives)
+    return Trace(_restore_trace(mk_trace(), directives, values, foreign_sps, skipStackDictConversion), directives)
 
   def stop_and_copy(self):
     return Trace(self.trace.stop_and_copy(), self.directives)
