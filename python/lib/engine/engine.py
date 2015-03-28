@@ -251,11 +251,6 @@ class Engine(object):
       self.inferrer.stop()
       self.inferrer = None
 
-  def retrieve_dump(self, ix): return self.model.retrieve_dump(ix)
-  def retrieve_dumps(self): return self.model.retrieve_dumps()
-  def retrieve_trace(self, ix): return self.model.retrieve_trace(ix)
-  def retrieve_traces(self): return self.model.retrieve_traces()
-
   def save(self, fname, extra=None):
     data = self.model.saveable()
     data['directiveCounter'] = self.directiveCounter
@@ -293,7 +288,7 @@ class Engine(object):
 
   def profile_data(self):
     rows = []
-    for (pid, trace) in enumerate([t for t in self.retrieve_traces()
+    for (pid, trace) in enumerate([t for t in self.model.retrieve_traces()
                                    if hasattr(t, "stats")]):
       for stat in trace.stats:
         rows.append(dict(stat, particle = pid))

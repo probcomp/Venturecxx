@@ -258,7 +258,7 @@ def check_foreign_sp(mode):
     eq_(v.sample('(test_binomial 1 1)'), test_binomial_result)
     eq_(v.sample('(test_sym_dir_mult 1 1)'), test_sym_dir_result)
     engine = v.sivm.core_sivm.engine
-    dumped = engine.retrieve_dump(0)
+    dumped = engine.model.retrieve_dump(0)
     restored = engine.model.restore_trace(dumped)
     engine.model.create_trace_pool([restored])
     # Make sure that the restored trace still has the foreign SP's
