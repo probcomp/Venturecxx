@@ -16,7 +16,3 @@
 from venture.engine import engine
 from venture.lite import trace
 
-class Engine(engine.Engine):
-
-  def __init__(self, persistent_inference_trace=False):
-    super(Engine, self).__init__(name="lite", Trace=trace.Trace, persistent_inference_trace=persistent_inference_trace)

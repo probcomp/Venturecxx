@@ -56,11 +56,6 @@ class Trace(object):
   def set_profiling(self): pass # Puma can't be internally profiled (currently)
   def clear_profiling(self): pass
 
-class Engine(engine.Engine):
-
-  def __init__(self, persistent_inference_trace=False):
-    super(Engine, self).__init__(name="puma", Trace=Trace, persistent_inference_trace=persistent_inference_trace)
-
 def _unwrapVentureValue(val):
   if isinstance(val, VentureValue):
     return val.asStackDict(None)["value"]
