@@ -14,7 +14,7 @@ def _test_serialize_program(v, label, action):
     if action == 'serialize':
         trace1 = engine.getDistinguishedTrace()
         serialized = trace1.dump()
-        trace2 = engine.restore_trace(serialized)
+        trace2 = engine.model.restore_trace(serialized)
         assert isinstance(serialized, tuple)
         assert len(serialized) == 2
         assert isinstance(serialized[0], list)
@@ -259,7 +259,7 @@ def check_foreign_sp(mode):
     eq_(v.sample('(test_sym_dir_mult 1 1)'), test_sym_dir_result)
     engine = v.sivm.core_sivm.engine
     dumped = engine.retrieve_dump(0)
-    restored = engine.restore_trace(dumped)
+    restored = engine.model.restore_trace(dumped)
     engine.model.create_trace_pool([restored])
     # Make sure that the restored trace still has the foreign SP's
     eq_(v.sample('(test_binomial 1 1)'), test_binomial_result)
