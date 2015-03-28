@@ -13,7 +13,7 @@ def _test_serialize_program(v, label, action):
 
     if action == 'serialize':
         trace1 = engine.getDistinguishedTrace()
-        serialized = engine.dump_trace(trace1)
+        serialized = trace1.dump()
         trace2 = engine.restore_trace(serialized)
         assert isinstance(serialized, tuple)
         assert len(serialized) == 2

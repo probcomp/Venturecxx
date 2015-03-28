@@ -255,15 +255,13 @@ class Engine(object):
   def retrieve_dumps(self): return self.model.retrieve_dumps()
   def retrieve_trace(self, ix): return self.model.retrieve_trace(ix)
   def retrieve_traces(self): return self.model.retrieve_traces()
-  def dump_trace(self, trace, skipStackDictConversion=False):
-    return self.model.dump_trace(trace, skipStackDictConversion)
   def restore_trace(self, values, skipStackDictConversion=False):
     return self.model.restore_trace(values, skipStackDictConversion)
   def copy_trace(self, trace):
     if trace.short_circuit_copyable():
       return trace.stop_and_copy()
     else:
-      values = self.dump_trace(trace, skipStackDictConversion=True)
+      values = trace.dump(skipStackDictConversion=True)
       return self.restore_trace(values, skipStackDictConversion=True)
 
 

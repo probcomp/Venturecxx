@@ -204,9 +204,6 @@ if freeze has been used.
       dumped_all = self.retrieve_dumps()
       return [self.restore_trace(dumped) for dumped in dumped_all]
 
-  def dump_trace(self, trace, skipStackDictConversion=False):
-    return trace.dump(skipStackDictConversion)
-
   def restore_trace(self, values, skipStackDictConversion=False):
     return tr.Trace.restore(self.Trace, values, self.engine.foreign_sps, skipStackDictConversion)
 
