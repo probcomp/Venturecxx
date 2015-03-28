@@ -27,7 +27,7 @@ def _test_serialize_program(v, label, action):
         assert isinstance(trace2.trace, type(trace1.trace))
     elif action == 'copy':
         trace1 = engine.getDistinguishedTrace()
-        trace2 = engine.copy_trace(trace1)
+        trace2 = engine.model.copy_trace(trace1)
         assert isinstance(trace2, type(trace1))
         assert isinstance(trace2.trace, type(trace1.trace))
     elif action == 'convert_puma':

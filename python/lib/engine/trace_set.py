@@ -208,7 +208,11 @@ if freeze has been used.
     return tr.Trace.restore(self.Trace, values, self.engine.foreign_sps, skipStackDictConversion)
 
   def copy_trace(self, trace):
-    return self.engine.copy_trace(trace)
+    if trace.short_circuit_copyable():
+      return trace.stop_and_copy()
+    else:
+      values = trace.dump(skipStackDictConversion=True)
+      return self.restore_trace(values, skipStackDictConversion=True)
 
   def saveable(self):
     data = {}

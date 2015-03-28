@@ -255,13 +255,6 @@ class Engine(object):
   def retrieve_dumps(self): return self.model.retrieve_dumps()
   def retrieve_trace(self, ix): return self.model.retrieve_trace(ix)
   def retrieve_traces(self): return self.model.retrieve_traces()
-  def copy_trace(self, trace):
-    if trace.short_circuit_copyable():
-      return trace.stop_and_copy()
-    else:
-      values = trace.dump(skipStackDictConversion=True)
-      return self.model.restore_trace(values, skipStackDictConversion=True)
-
 
   def save(self, fname, extra=None):
     data = self.model.saveable()
@@ -282,7 +275,7 @@ class Engine(object):
   def convert(self, backend):
     engine = backend.make_engine(self.persistent_inference_trace)
     if self.persistent_inference_trace:
-      engine.infer_trace = self.copy_trace(self.infer_trace)
+      engine.infer_trace = self.infer_trace # TODO Copy?
     engine.directiveCounter = self.directiveCounter
     engine.model.convertFrom(self.model)
     return engine
