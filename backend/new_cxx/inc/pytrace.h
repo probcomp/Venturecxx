@@ -51,7 +51,7 @@ struct PyTrace
   int numNodesInBlock(boost::python::object scope, boost::python::object block);
   boost::python::list numFamilies();
 
-  void infer(boost::python::dict params);
+  void primitive_infer(boost::python::dict params);
   
   void freeze(DirectiveID did);
 

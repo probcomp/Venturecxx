@@ -224,7 +224,7 @@ struct Inferer
   }
 };
 
-void PyTrace::infer(boost::python::dict params)
+void PyTrace::primitive_infer(boost::python::dict params)
 {
   Inferer inferer(trace, params);
   inferer.infer();
@@ -357,7 +357,7 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("getGlobalLogScore", &PyTrace::getGlobalLogScore)
     .def("observe", &PyTrace::observe)
     .def("unobserve", &PyTrace::unobserve)
-    .def("infer", &PyTrace::infer)
+    .def("primitive_infer", &PyTrace::primitive_infer)
     .def("dot_trace", &PyTrace::dotTrace)
     .def("makeConsistent", &PyTrace::makeConsistent)
     .def("likelihood_at", &PyTrace::likelihoodAt)

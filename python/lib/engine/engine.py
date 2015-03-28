@@ -13,7 +13,6 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-import random
 import dill
 import time
 
@@ -129,23 +128,11 @@ class Engine(object):
 
   def bind_foreign_sp(self, name, sp):
     self.foreign_sps[name] = sp
-    if self.name != "lite":
-      # wrap it for backend translation
-      import venture.lite.foreign as f
-      sp = f.ForeignLiteSP(sp)
-
     self.model.bind_foreign_sp(name, sp)
 
   def clear(self):
     self.model.clear()
     self.directiveCounter = 0
-    self.ensure_rng_seeded_decently()
-
-  def ensure_rng_seeded_decently(self):
-    # Frobnicate the trace's random seed because Trace() resets the
-    # RNG seed from the current time, which sucks if one calls this
-    # method often.
-    self.set_seed(random.randint(1,2**31-1))
 
   # TODO There should also be capture_inference_problem and
   # restore_inference_problem (Analytics seems to use something like
@@ -274,9 +261,11 @@ class Engine(object):
   def restore_trace(self, values, skipStackDictConversion=False):
     return self.model.restore_trace(values, skipStackDictConversion)
   def copy_trace(self, trace):
-    # Still in Engine in order to get properly overridden by venture.puma.engine.Engine.copy_trace
-    values = self.dump_trace(trace, skipStackDictConversion=True)
-    return self.restore_trace(values, skipStackDictConversion=True)
+    if trace.short_circuit_copyable():
+      return trace.stop_and_copy()
+    else:
+      values = self.dump_trace(trace, skipStackDictConversion=True)
+      return self.restore_trace(values, skipStackDictConversion=True)
 
 
   def save(self, fname, extra=None):
@@ -295,25 +284,23 @@ class Engine(object):
     self.model.load(data)
     return data['extra']
 
-  def convert(self, EngineClass):
-    engine = EngineClass()
+  def convert(self, backend):
+    engine = backend.make_engine(self.persistent_inference_trace)
+    if self.persistent_inference_trace:
+      engine.infer_trace = self.copy_trace(self.infer_trace)
     engine.directiveCounter = self.directiveCounter
     engine.model.convertFrom(self.model)
     return engine
 
   def to_lite(self):
-    from venture.lite.engine import Engine as LiteEngine
-    return self.convert(LiteEngine)
+    from venture.shortcuts import Lite
+    return self.convert(Lite())
 
   def to_puma(self):
-    from venture.puma.engine import Engine as PumaEngine
-    return self.convert(PumaEngine)
+    from venture.shortcuts import Puma
+    return self.convert(Puma())
 
-  def set_profiling(self, enabled=True):
-    # TODO: do this by introspection on the trace
-    if self.name == 'lite':
-      self.model.set_profiling(enabled)
-
+  def set_profiling(self, enabled=True): self.model.set_profiling(enabled)
   def clear_profiling(self): self.model.clear_profiling()
 
   def profile_data(self):
