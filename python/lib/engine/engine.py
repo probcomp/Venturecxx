@@ -25,7 +25,6 @@ class Engine(object):
 
   def __init__(self, name="phony", Trace=None, persistent_inference_trace=False):
     self.name = name
-    self.Trace = Trace
     self.model = TraceSet(self, Trace)
     self.directiveCounter = 0
     self.inferrer = None
