@@ -284,19 +284,19 @@ class Engine(object):
     self.model.load(data)
     return data['extra']
 
-  def convert(self, EngineClass):
-    engine = EngineClass()
+  def convert(self, backend):
+    engine = backend.make_engine()
     engine.directiveCounter = self.directiveCounter
     engine.model.convertFrom(self.model)
     return engine
 
   def to_lite(self):
-    from venture.lite.engine import Engine as LiteEngine
-    return self.convert(LiteEngine)
+    from venture.shortcuts import Lite
+    return self.convert(Lite())
 
   def to_puma(self):
-    from venture.puma.engine import Engine as PumaEngine
-    return self.convert(PumaEngine)
+    from venture.shortcuts import Puma
+    return self.convert(Puma())
 
   def set_profiling(self, enabled=True): self.model.set_profiling(enabled)
   def clear_profiling(self): self.model.clear_profiling()
