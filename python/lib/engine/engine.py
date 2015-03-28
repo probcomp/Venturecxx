@@ -285,7 +285,9 @@ class Engine(object):
     return data['extra']
 
   def convert(self, backend):
-    engine = backend.make_engine()
+    engine = backend.make_engine(self.persistent_inference_trace)
+    if self.persistent_inference_trace:
+      engine.infer_trace = self.copy_trace(self.infer_trace)
     engine.directiveCounter = self.directiveCounter
     engine.model.convertFrom(self.model)
     return engine
