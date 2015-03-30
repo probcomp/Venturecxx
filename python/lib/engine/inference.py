@@ -23,6 +23,7 @@ from venture.lite.value import (ExpressionType, SymbolType, VentureArray, Ventur
 from venture.lite.utils import logWeightsToNormalizedDirect
 from venture.ripl.utils import strip_types_from_dict_values
 from venture.lite.exception import VentureValueError
+from trace_set import TraceSet
 from plot_spec import PlotSpec
 
 class Infer(object):
@@ -157,6 +158,9 @@ class Infer(object):
     self.engine.model.log_weights = new_weights
   def particle_normalized_probs(self):
     return logWeightsToNormalizedDirect(self.particle_log_weights())
+
+  def new_model(self):
+    return TraceSet(self.engine, self.engine.model.Trace)
 
 class Dataset(object):
   """Basically a wrapper for a Pandas Dataframe that knows about a few
