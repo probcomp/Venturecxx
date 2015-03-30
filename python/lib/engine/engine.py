@@ -20,6 +20,7 @@ from venture.exception import VentureException
 from trace_set import TraceSet
 from venture.engine.inference import Infer
 import venture.value.dicts as v
+import venture.lite.value as vv
 
 class Engine(object):
 
@@ -151,8 +152,14 @@ class Engine(object):
   def in_model(self, model, action):
     current_model = self.model
     self.model = model
+    # TODO asStackDict doesn't do the right thing because it tries to
+    # be politely printable.  Maybe I should change that.
+    stack_dict_action = {"type":"SP", "value":action}
     try:
-      return self.infer_v1_pre_t(v.quote(action), Infer(self))
+      ans = self.infer_v1_pre_t(v.quote(stack_dict_action), Infer(self))
+      print ans
+      return (vv.VentureValue.fromStackDict(ans), # TODO Avoid unwrap/wrap problem
+              model)
     finally:
       self.model = current_model
 
