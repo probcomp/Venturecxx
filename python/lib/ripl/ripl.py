@@ -405,12 +405,22 @@ value to be returned as a dict annotating its Venture type.
 
         '''
         name = _symbolize(name)
-        if label==None:
-            label = name
+        if self.sivm.core_sivm.engine.swapped_model:
+            # TODO Properly scope directive labels the models those
+            # directives are in.
+            # Failing that, this code just suppresses labeling
+            # directives in any except the main model.
+            if label==None:
+                i = {'instruction': 'assume', 'symbol':name, 'expression':expression}
+            else:
+                raise Exception("TODO Cannot label instructions inside in_model.")
         else:
-            label = _symbolize(label)
-        i = {'instruction':'labeled_assume',
-             'symbol':name, 'expression':expression, 'label':label}
+            if label==None:
+                label = name
+            else:
+                label = _symbolize(label)
+            i = {'instruction':'labeled_assume',
+                 'symbol':name, 'expression':expression, 'label':label}
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 

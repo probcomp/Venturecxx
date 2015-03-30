@@ -767,6 +767,27 @@ Check the given boolean condition and raise an error if it fails.
   ["print", sequenced_sp(print_fun, infer_action_maker_type([v.AnyType()], variadic=True), desc="""\
 Print the given values to the terminal.
 """)],
+
+  engine_method_sp("new_model", infer_action_maker_type([], v.ForeignBlobType("<model>")), desc="""\
+Create an new empty model.
+
+This is an inference action rather than a pure operation due to
+implementation accidents. [It reads the Engine to determine the
+backend to use (TODO could take that as an argument) and for the
+registry of bound foreign sps (TODO: Implicitly bind extant foreign
+sps into new models?)]
+
+ """),
+
+  engine_method_sp("in_model", infer_action_maker_type([v.ForeignBlobType("<model>"), v.AnyType("<action>")], v.PairType(v.AnyType(), v.ForeignBlobType("<model>"))), desc="""\
+Run the given inference action against the given model.
+
+Returns a pair consisting of the result of the action and the model, which is also mutated.
+
+This is itself an inference action rather than a pure operation due
+to implementation accidents. [It invokes a method on the Engine
+to actually run the given action].
+"""),
 ]
 
 inferenceKeywords = [ "default", "all", "none", "one", "ordered" ]

@@ -15,17 +15,20 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import dill
 import time
+from contextlib import contextmanager
 
 from venture.exception import VentureException
 from trace_set import TraceSet
 from venture.engine.inference import Infer
 import venture.value.dicts as v
+import venture.lite.value as vv
 
 class Engine(object):
 
   def __init__(self, name="phony", Trace=None, persistent_inference_trace=False):
     self.name = name
     self.model = TraceSet(self, Trace)
+    self.swapped_model = False
     self.directiveCounter = 0
     self.inferrer = None
     import venture.lite.inference_sps as inf
@@ -148,6 +151,21 @@ class Engine(object):
   def likelihood_weight(self): self.model.likelihood_weight()
   def incorporate(self): self.model.incorporate()
 
+  def in_model(self, model, action):
+    current_model = self.model
+    current_swapped_status = self.swapped_model
+    self.model = model
+    # TODO asStackDict doesn't do the right thing because it tries to
+    # be politely printable.  Maybe I should change that.
+    stack_dict_action = {"type":"SP", "value":action}
+    try:
+      self.swapped_model = True
+      with self.inference_trace():
+        return (self._extract_raw_infer_result(self._do_infer(v.quote(stack_dict_action))), model)
+    finally:
+      self.model = current_model
+      self.swapped_model = current_swapped_status
+
   def infer(self, program):
     self.incorporate()
     if self.is_infer_loop_program(program):
@@ -155,41 +173,47 @@ class Engine(object):
       prog = [v.sym("do")] + program[1]
       self.start_continuous_inference(prog)
     else:
-      return self.infer_v1_pre_t(program, Infer(self))
+      with self.inference_trace():
+        with self.self_evaluating_scope_hack():
+          return self._extract_infer_result(self._do_infer(program))
 
   def is_infer_loop_program(self, program):
     return isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop"
 
-  def infer_v1_pre_t(self, program, target):
+  def _do_infer(self, program):
+    self.directiveCounter += 1
+    did = self.directiveCounter # Might be mutated by reentrant execution
+    self.infer_trace.eval(did, [program, v.blob(Infer(self))])
+    return did
+
+  def _extract_infer_result(self, did):
+    ans = self.infer_trace.extractValue(did)
+    # Expect the result to be a Venture pair of the "value" of the
+    # inference action together with the mutated Infer object.
+    assert isinstance(ans, dict)
+    assert ans["type"] is "improper_list"
+    (vs, tail) = ans["value"]
+    assert tail["type"] is "blob"
+    assert isinstance(tail["value"], Infer)
+    assert len(vs) == 1
+    return vs[0]
+
+  def _extract_raw_infer_result(self, did):
+    ans = self.infer_trace.extractRaw(did)
+    # Expect the result to be a Venture pair of the "value" of the
+    # inference action together with the mutated Infer object.
+    assert isinstance(ans, vv.VenturePair)
+    return ans.first
+
+  @contextmanager
+  def inference_trace(self):
     if not self.persistent_inference_trace:
       self.infer_trace = self.init_inference_trace()
-    self.install_self_evaluating_scope_hack(self.infer_trace, target)
     try:
-      self.directiveCounter += 1
-      did = self.directiveCounter # Might be mutated by reentrant execution
-      self.infer_trace.eval(did, [program, v.blob(target)])
-      ans = self.infer_trace.extractValue(did)
-      # Expect the result to be a Venture pair of the "value" of the
-      # inference action together with the mutated Infer object.
-      assert isinstance(ans, dict)
-      assert ans["type"] is "improper_list"
-      (vs, tail) = ans["value"]
-      assert tail["type"] is "blob"
-      assert isinstance(tail["value"], Infer)
-      assert len(vs) == 1
-      return vs[0]
-    except VentureException:
-      if self.persistent_inference_trace:
-        self.remove_self_evaluating_scope_hack(self.infer_trace, target)
-      else:
+      yield
+    finally:
+      if not self.persistent_inference_trace:
         self.infer_trace = None
-      raise
-    else:
-      if self.persistent_inference_trace:
-        self.remove_self_evaluating_scope_hack(self.infer_trace, target)
-      else:
-        self.infer_trace = None
-      raise
 
   def init_inference_trace(self):
     import venture.lite.trace as lite
@@ -199,22 +223,34 @@ class Engine(object):
     self.install_inference_prelude(ans)
     return ans
 
-  def symbol_scopes(self, target):
-    all_scopes = [s for s in target.engine.getDistinguishedTrace().scope_keys()]
+  @contextmanager
+  def self_evaluating_scope_hack(self):
+    self.install_self_evaluating_scope_hack(self.infer_trace)
+    try:
+      yield
+    except VentureException:
+      if self.persistent_inference_trace:
+        self.remove_self_evaluating_scope_hack(self.infer_trace)
+      raise
+    else:
+      if self.persistent_inference_trace:
+        self.remove_self_evaluating_scope_hack(self.infer_trace)
+
+  def symbol_scopes(self):
+    all_scopes = [s for s in self.getDistinguishedTrace().scope_keys()]
     symbol_scopes = [s for s in all_scopes if isinstance(s, basestring) and not s.startswith("default")]
     return symbol_scopes
 
-  def install_self_evaluating_scope_hack(self, next_trace, target):
+  def install_self_evaluating_scope_hack(self, next_trace):
     import venture.lite.inference_sps as inf
-    import venture.lite.value as val
-    symbol_scopes = self.symbol_scopes(target)
+    symbol_scopes = self.symbol_scopes()
     for hack in inf.inferenceKeywords + symbol_scopes:
       if not next_trace.globalEnv.symbolBound(hack):
-        next_trace.bindPrimitiveName(hack, val.VentureSymbol(hack))
+        next_trace.bindPrimitiveName(hack, vv.VentureSymbol(hack))
 
-  def remove_self_evaluating_scope_hack(self, next_trace, target):
+  def remove_self_evaluating_scope_hack(self, next_trace):
     import venture.lite.inference_sps as inf
-    symbol_scopes = self.symbol_scopes(target)
+    symbol_scopes = self.symbol_scopes()
     for hack in inf.inferenceKeywords + symbol_scopes:
       if next_trace.globalEnv.symbolBound(hack):
         next_trace.unbindInGlobalEnv(hack)
@@ -295,6 +331,8 @@ class Engine(object):
 
     return rows
 
+# Support for continuous inference
+
 class ContinuousInferrer(object):
   def __init__(self, engine, program):
     self.engine = engine
@@ -318,7 +356,7 @@ class ContinuousInferrer(object):
     self.inferrer = None # Grab the semaphore
     inferrer.join()
 
-# inference prelude
+# Inference prelude
 
 the_prelude = None
 
