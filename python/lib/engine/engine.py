@@ -160,7 +160,8 @@ class Engine(object):
     stack_dict_action = {"type":"SP", "value":action}
     try:
       self.swapped_model = True
-      ans = self.infer_v1_pre_t(v.quote(stack_dict_action))
+      with self.inference_trace():
+        ans = self._do_infer(v.quote(stack_dict_action))
       return (vv.VentureValue.fromStackDict(ans), # TODO Avoid unwrap/wrap problem
               model)
     finally:
@@ -174,27 +175,27 @@ class Engine(object):
       prog = [v.sym("do")] + program[1]
       self.start_continuous_inference(prog)
     else:
-      return self.infer_v1_pre_t(program)
+      with self.inference_trace():
+        with self.self_evaluating_scope_hack():
+          return self._do_infer(program)
 
   def is_infer_loop_program(self, program):
     return isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop"
 
-  def infer_v1_pre_t(self, program):
-    with self.inference_trace():
-      with self.self_evaluating_scope_hack():
-        self.directiveCounter += 1
-        did = self.directiveCounter # Might be mutated by reentrant execution
-        self.infer_trace.eval(did, [program, v.blob(Infer(self))])
-        ans = self.infer_trace.extractValue(did)
-        # Expect the result to be a Venture pair of the "value" of the
-        # inference action together with the mutated Infer object.
-        assert isinstance(ans, dict)
-        assert ans["type"] is "improper_list"
-        (vs, tail) = ans["value"]
-        assert tail["type"] is "blob"
-        assert isinstance(tail["value"], Infer)
-        assert len(vs) == 1
-        return vs[0]
+  def _do_infer(self, program):
+    self.directiveCounter += 1
+    did = self.directiveCounter # Might be mutated by reentrant execution
+    self.infer_trace.eval(did, [program, v.blob(Infer(self))])
+    ans = self.infer_trace.extractValue(did)
+    # Expect the result to be a Venture pair of the "value" of the
+    # inference action together with the mutated Infer object.
+    assert isinstance(ans, dict)
+    assert ans["type"] is "improper_list"
+    (vs, tail) = ans["value"]
+    assert tail["type"] is "blob"
+    assert isinstance(tail["value"], Infer)
+    assert len(vs) == 1
+    return vs[0]
 
   @contextmanager
   def inference_trace(self):
