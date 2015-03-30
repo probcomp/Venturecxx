@@ -43,12 +43,13 @@ def testModelSwitchingSmoke():
 [define normal_through_model
   (lambda (mu sigma)
     (do (m <- (new_model))
-        (in_model m
+        (res <- (in_model m
           (do (assume x (normal 0 ,(* (sqrt 2) sigma)))
               (assume y (normal x ,(* (sqrt 2) sigma)))
               (observe y (* 2 mu))
               (mh default one %s)
-              (sample x)))))]
+              (sample x))))
+        (return (first res))))]
   """ % default_num_transitions_per_sample())
   predictions = [ripl.infer("(normal_through_model 0 1)") for _ in range(default_num_samples())]
   cdf = stats.norm(loc=0.0, scale=1.0).cdf

@@ -157,7 +157,6 @@ class Engine(object):
     stack_dict_action = {"type":"SP", "value":action}
     try:
       ans = self.infer_v1_pre_t(v.quote(stack_dict_action), Infer(self))
-      print ans
       return (vv.VentureValue.fromStackDict(ans), # TODO Avoid unwrap/wrap problem
               model)
     finally:
