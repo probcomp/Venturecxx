@@ -161,9 +161,7 @@ class Engine(object):
     try:
       self.swapped_model = True
       with self.inference_trace():
-        ans = self._do_infer(v.quote(stack_dict_action))
-      return (vv.VentureValue.fromStackDict(ans), # TODO Avoid unwrap/wrap problem
-              model)
+        return (self._extract_raw_infer_result(self._do_infer(v.quote(stack_dict_action))), model)
     finally:
       self.model = current_model
       self.swapped_model = current_swapped_status
@@ -177,7 +175,7 @@ class Engine(object):
     else:
       with self.inference_trace():
         with self.self_evaluating_scope_hack():
-          return self._do_infer(program)
+          return self._extract_infer_result(self._do_infer(program))
 
   def is_infer_loop_program(self, program):
     return isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop"
@@ -186,6 +184,9 @@ class Engine(object):
     self.directiveCounter += 1
     did = self.directiveCounter # Might be mutated by reentrant execution
     self.infer_trace.eval(did, [program, v.blob(Infer(self))])
+    return did
+
+  def _extract_infer_result(self, did):
     ans = self.infer_trace.extractValue(did)
     # Expect the result to be a Venture pair of the "value" of the
     # inference action together with the mutated Infer object.
@@ -196,6 +197,13 @@ class Engine(object):
     assert isinstance(tail["value"], Infer)
     assert len(vs) == 1
     return vs[0]
+
+  def _extract_raw_infer_result(self, did):
+    ans = self.infer_trace.extractRaw(did)
+    # Expect the result to be a Venture pair of the "value" of the
+    # inference action together with the mutated Infer object.
+    assert isinstance(ans, vv.VenturePair)
+    return ans.first
 
   @contextmanager
   def inference_trace(self):
