@@ -161,6 +161,8 @@ class Infer(object):
 
   def new_model(self):
     return TraceSet(self.engine, self.engine.model.Trace)
+  def in_model(self, model, action):
+    return self.engine.in_model(model, action)
 
 class Dataset(object):
   """Basically a wrapper for a Pandas Dataframe that knows about a few

@@ -148,6 +148,14 @@ class Engine(object):
   def likelihood_weight(self): self.model.likelihood_weight()
   def incorporate(self): self.model.incorporate()
 
+  def in_model(self, model, action):
+    current_model = self.model
+    self.model = model
+    try:
+      return self.infer_v1_pre_t(v.quote(action), Infer(self))
+    finally:
+      self.model = current_model
+
   def infer(self, program):
     self.incorporate()
     if self.is_infer_loop_program(program):
