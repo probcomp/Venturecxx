@@ -160,7 +160,7 @@ class Engine(object):
     stack_dict_action = {"type":"SP", "value":action}
     try:
       self.swapped_model = True
-      ans = self.infer_v1_pre_t(v.quote(stack_dict_action), Infer(self))
+      ans = self.infer_v1_pre_t(v.quote(stack_dict_action))
       return (vv.VentureValue.fromStackDict(ans), # TODO Avoid unwrap/wrap problem
               model)
     finally:
@@ -174,17 +174,17 @@ class Engine(object):
       prog = [v.sym("do")] + program[1]
       self.start_continuous_inference(prog)
     else:
-      return self.infer_v1_pre_t(program, Infer(self))
+      return self.infer_v1_pre_t(program)
 
   def is_infer_loop_program(self, program):
     return isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop"
 
-  def infer_v1_pre_t(self, program, target):
+  def infer_v1_pre_t(self, program):
     with self.inference_trace():
-      with self.self_evaluating_scope_hack(target):
+      with self.self_evaluating_scope_hack():
         self.directiveCounter += 1
         did = self.directiveCounter # Might be mutated by reentrant execution
-        self.infer_trace.eval(did, [program, v.blob(target)])
+        self.infer_trace.eval(did, [program, v.blob(Infer(self))])
         ans = self.infer_trace.extractValue(did)
         # Expect the result to be a Venture pair of the "value" of the
         # inference action together with the mutated Infer object.
@@ -215,33 +215,33 @@ class Engine(object):
     return ans
 
   @contextmanager
-  def self_evaluating_scope_hack(self, target):
-    self.install_self_evaluating_scope_hack(self.infer_trace, target)
+  def self_evaluating_scope_hack(self):
+    self.install_self_evaluating_scope_hack(self.infer_trace)
     try:
       yield
     except VentureException:
       if self.persistent_inference_trace:
-        self.remove_self_evaluating_scope_hack(self.infer_trace, target)
+        self.remove_self_evaluating_scope_hack(self.infer_trace)
       raise
     else:
       if self.persistent_inference_trace:
-        self.remove_self_evaluating_scope_hack(self.infer_trace, target)
+        self.remove_self_evaluating_scope_hack(self.infer_trace)
 
-  def symbol_scopes(self, target):
-    all_scopes = [s for s in target.engine.getDistinguishedTrace().scope_keys()]
+  def symbol_scopes(self):
+    all_scopes = [s for s in self.getDistinguishedTrace().scope_keys()]
     symbol_scopes = [s for s in all_scopes if isinstance(s, basestring) and not s.startswith("default")]
     return symbol_scopes
 
-  def install_self_evaluating_scope_hack(self, next_trace, target):
+  def install_self_evaluating_scope_hack(self, next_trace):
     import venture.lite.inference_sps as inf
-    symbol_scopes = self.symbol_scopes(target)
+    symbol_scopes = self.symbol_scopes()
     for hack in inf.inferenceKeywords + symbol_scopes:
       if not next_trace.globalEnv.symbolBound(hack):
         next_trace.bindPrimitiveName(hack, vv.VentureSymbol(hack))
 
-  def remove_self_evaluating_scope_hack(self, next_trace, target):
+  def remove_self_evaluating_scope_hack(self, next_trace):
     import venture.lite.inference_sps as inf
-    symbol_scopes = self.symbol_scopes(target)
+    symbol_scopes = self.symbol_scopes()
     for hack in inf.inferenceKeywords + symbol_scopes:
       if next_trace.globalEnv.symbolBound(hack):
         next_trace.unbindInGlobalEnv(hack)
