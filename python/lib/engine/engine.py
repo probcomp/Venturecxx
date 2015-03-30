@@ -180,9 +180,7 @@ class Engine(object):
     return isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop"
 
   def infer_v1_pre_t(self, program, target):
-    if not self.persistent_inference_trace:
-      self.infer_trace = self.init_inference_trace()
-    try:
+    with self.inference_trace():
       with self.self_evaluating_scope_hack(target):
         self.directiveCounter += 1
         did = self.directiveCounter # Might be mutated by reentrant execution
@@ -197,6 +195,13 @@ class Engine(object):
         assert isinstance(tail["value"], Infer)
         assert len(vs) == 1
         return vs[0]
+
+  @contextmanager
+  def inference_trace(self):
+    if not self.persistent_inference_trace:
+      self.infer_trace = self.init_inference_trace()
+    try:
+      yield
     finally:
       if not self.persistent_inference_trace:
         self.infer_trace = None
