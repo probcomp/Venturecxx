@@ -221,11 +221,10 @@ class Engine(object):
 
   def install_self_evaluating_scope_hack(self, next_trace, target):
     import venture.lite.inference_sps as inf
-    import venture.lite.value as val
     symbol_scopes = self.symbol_scopes(target)
     for hack in inf.inferenceKeywords + symbol_scopes:
       if not next_trace.globalEnv.symbolBound(hack):
-        next_trace.bindPrimitiveName(hack, val.VentureSymbol(hack))
+        next_trace.bindPrimitiveName(hack, vv.VentureSymbol(hack))
 
   def remove_self_evaluating_scope_hack(self, next_trace, target):
     import venture.lite.inference_sps as inf
