@@ -27,6 +27,7 @@ class Engine(object):
   def __init__(self, name="phony", Trace=None, persistent_inference_trace=False):
     self.name = name
     self.model = TraceSet(self, Trace)
+    self.swapped_model = False
     self.directiveCounter = 0
     self.inferrer = None
     import venture.lite.inference_sps as inf
@@ -151,16 +152,19 @@ class Engine(object):
 
   def in_model(self, model, action):
     current_model = self.model
+    current_swapped_status = self.swapped_model
     self.model = model
     # TODO asStackDict doesn't do the right thing because it tries to
     # be politely printable.  Maybe I should change that.
     stack_dict_action = {"type":"SP", "value":action}
     try:
+      self.swapped_model = True
       ans = self.infer_v1_pre_t(v.quote(stack_dict_action), Infer(self))
       return (vv.VentureValue.fromStackDict(ans), # TODO Avoid unwrap/wrap problem
               model)
     finally:
       self.model = current_model
+      self.swapped_model = current_swapped_status
 
   def infer(self, program):
     self.incorporate()
