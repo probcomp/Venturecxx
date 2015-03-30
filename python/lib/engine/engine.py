@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import dill
 import time
+from contextlib import contextmanager
 
 from venture.exception import VentureException
 from trace_set import TraceSet
@@ -181,33 +182,24 @@ class Engine(object):
   def infer_v1_pre_t(self, program, target):
     if not self.persistent_inference_trace:
       self.infer_trace = self.init_inference_trace()
-    self.install_self_evaluating_scope_hack(self.infer_trace, target)
     try:
-      self.directiveCounter += 1
-      did = self.directiveCounter # Might be mutated by reentrant execution
-      self.infer_trace.eval(did, [program, v.blob(target)])
-      ans = self.infer_trace.extractValue(did)
-      # Expect the result to be a Venture pair of the "value" of the
-      # inference action together with the mutated Infer object.
-      assert isinstance(ans, dict)
-      assert ans["type"] is "improper_list"
-      (vs, tail) = ans["value"]
-      assert tail["type"] is "blob"
-      assert isinstance(tail["value"], Infer)
-      assert len(vs) == 1
-      return vs[0]
-    except VentureException:
-      if self.persistent_inference_trace:
-        self.remove_self_evaluating_scope_hack(self.infer_trace, target)
-      else:
+      with self.self_evaluating_scope_hack(target):
+        self.directiveCounter += 1
+        did = self.directiveCounter # Might be mutated by reentrant execution
+        self.infer_trace.eval(did, [program, v.blob(target)])
+        ans = self.infer_trace.extractValue(did)
+        # Expect the result to be a Venture pair of the "value" of the
+        # inference action together with the mutated Infer object.
+        assert isinstance(ans, dict)
+        assert ans["type"] is "improper_list"
+        (vs, tail) = ans["value"]
+        assert tail["type"] is "blob"
+        assert isinstance(tail["value"], Infer)
+        assert len(vs) == 1
+        return vs[0]
+    finally:
+      if not self.persistent_inference_trace:
         self.infer_trace = None
-      raise
-    else:
-      if self.persistent_inference_trace:
-        self.remove_self_evaluating_scope_hack(self.infer_trace, target)
-      else:
-        self.infer_trace = None
-      raise
 
   def init_inference_trace(self):
     import venture.lite.trace as lite
@@ -216,6 +208,19 @@ class Engine(object):
       ans.bindPrimitiveSP(name, sp)
     self.install_inference_prelude(ans)
     return ans
+
+  @contextmanager
+  def self_evaluating_scope_hack(self, target):
+    self.install_self_evaluating_scope_hack(self.infer_trace, target)
+    try:
+      yield
+    except VentureException:
+      if self.persistent_inference_trace:
+        self.remove_self_evaluating_scope_hack(self.infer_trace, target)
+      raise
+    else:
+      if self.persistent_inference_trace:
+        self.remove_self_evaluating_scope_hack(self.infer_trace, target)
 
   def symbol_scopes(self, target):
     all_scopes = [s for s in target.engine.getDistinguishedTrace().scope_keys()]
@@ -312,6 +317,8 @@ class Engine(object):
 
     return rows
 
+# Support for continuous inference
+
 class ContinuousInferrer(object):
   def __init__(self, engine, program):
     self.engine = engine
@@ -335,7 +342,7 @@ class ContinuousInferrer(object):
     self.inferrer = None # Grab the semaphore
     inferrer.join()
 
-# inference prelude
+# Inference prelude
 
 the_prelude = None
 
