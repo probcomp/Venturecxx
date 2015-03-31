@@ -38,6 +38,21 @@ prelude = [
       (lambda (t) ((sequence (rest ks)) (rest ((first ks) t))))
       (lambda (t) (pair nil t))))"""],
 
+["mapM", """\
+.. function:: sequence(ks : list<inference action>)
+
+  :rtype: proc(<foreignblob>) -> <pair list<object> <foreignblob>>
+
+  Apply the given list of actions in sequence, returning a list of the
+  values.  The nomenclature is borrowed from Haskell.
+""",
+ """(lambda (act objs)
+  (if (is_pair objs)
+      (do (v <- (act (first objs)))
+          (vs <- (mapM act (rest objs)))
+          (return (pair v vs)))
+      (return nil)))"""],
+
 # pass :: State a ()  pass = return ()
 ["pass", """\
 .. function:: pass(<foreignblob>)
