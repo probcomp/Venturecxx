@@ -61,6 +61,7 @@ def checkRiplAgreesWithDeterministicSimulate(name, sp):
     "to_list", # Not implemented
     "min", # Not implemented
     "mod", # Not implemented
+    "atan2", # Not implemented
     "real", # Not implemented
     "atom_eq", # Not implemented
     "arange", # Not implemented

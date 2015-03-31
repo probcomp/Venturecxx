@@ -205,6 +205,8 @@ builtInSPsList = [
                              descr="Returns the log of its argument") ],
            [ "pow", binaryNum(math.pow, sim_grad=grad_pow, descr="pow returns its first argument raised to the power of its second argument") ],
            [ "sqrt", unaryNum(math.sqrt, sim_grad=grad_sqrt, descr="Returns the sqrt of its argument") ],
+           [ "atan2", binaryNum(math.atan2,
+                                descr="atan2(y,x) returns the angle from the positive x axis to the point x,y.  The order of arguments is conventional.") ],
 
            [ "not", deterministic_typed(lambda x: not x, [v.BoolType()], v.BoolType(),
                                         descr="not returns the logical negation of its argument") ],
