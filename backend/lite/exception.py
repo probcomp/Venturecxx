@@ -14,6 +14,14 @@ class VentureBuiltinSPMethodError(VentureError):
 class SubsampledScaffoldError(VentureError):
   """This exception means that the subsampled scaffold cannot be constructed."""
 
+class VentureCallbackError(VentureError):
+  """This exception means that some (presumably user) callback failed."""
+  def __init__(self, cause):
+    super(VentureCallbackError, self).__init__()
+    self.cause = cause
+  def __str__(self):
+    return "Callback failed:\n" + str(self.cause)
+
 class VentureTimerError(VentureError):
   """This exception means that the inference callback timer was used incorrectly"""
 

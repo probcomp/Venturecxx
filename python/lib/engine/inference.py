@@ -22,7 +22,7 @@ from venture.lite.value import (ExpressionType, SymbolType, VentureArray, Ventur
                                 VentureInteger, VentureValue, VentureNil)
 from venture.lite.utils import logWeightsToNormalizedDirect
 from venture.ripl.utils import strip_types_from_dict_values
-from venture.lite.exception import VentureValueError
+from venture.lite.exception import VentureValueError, VentureCallbackError
 from trace_set import TraceSet
 from plot_spec import PlotSpec
 
@@ -114,7 +114,14 @@ class Infer(object):
     name = SymbolType().asPython(name)
     if name not in self.engine.callbacks:
       raise VentureValueError("Unregistered callback {}".format(name))
-    return self.convert_none(self.engine.callbacks[name](self, *[self.engine.sample_all(e.asStackDict()) for e in exprs]))
+    args = [self.engine.sample_all(e.asStackDict()) for e in exprs]
+    try:
+      ans = self.engine.callbacks[name](self, *args)
+    except Exception as e:
+      import sys
+      info = sys.exc_info()
+      raise VentureCallbackError(e), None, info[2]
+    return self.convert_none(ans)
   def collect(self, *exprs):
     names, stack_dicts = self.parse_exprs(exprs, None)
     answer = {} # Map from column name to list of values; the values
