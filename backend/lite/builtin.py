@@ -132,6 +132,11 @@ def grad_pow(args, direction):
 def grad_sqrt(args, direction):
   return [direction * (0.5 / math.sqrt(args[0]))]
 
+def grad_atan2(args, direction):
+  (y,x) = args
+  denom = x*x + y*y
+  return [direction * (x / denom), direction * (-y / denom)]
+
 def grad_list(args, direction):
   if direction == 0:
     return [0 for _ in args]
@@ -206,6 +211,7 @@ builtInSPsList = [
            [ "pow", binaryNum(math.pow, sim_grad=grad_pow, descr="pow returns its first argument raised to the power of its second argument") ],
            [ "sqrt", unaryNum(math.sqrt, sim_grad=grad_sqrt, descr="Returns the sqrt of its argument") ],
            [ "atan2", binaryNum(math.atan2,
+                                sim_grad=grad_atan2,
                                 descr="atan2(y,x) returns the angle from the positive x axis to the point x,y.  The order of arguments is conventional.") ],
 
            [ "not", deterministic_typed(lambda x: not x, [v.BoolType()], v.BoolType(),
