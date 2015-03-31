@@ -232,6 +232,7 @@ builtInSPsList = [
                                          sim_grad=lambda args, direction: [v.VenturePair((0, direction))],
                                          descr="rest returns the second component of its argument pair") ],
            [ "second", deterministic_typed(lambda p: p[1][0], [v.PairType(second_type=v.PairType())], v.AnyType(),
+                                           sim_grad=lambda args, direction: [v.VenturePair((0, v.VenturePair((direction, 0))))],
                                            descr="second returns the first component of the second component of its argument") ],
            [ "to_list", deterministic_typed(lambda seq: seq.asPythonList(), [v.HomogeneousSequenceType(v.AnyType())], v.HomogeneousListType(v.AnyType()),
                                             descr="to_list converts its argument sequence to a list") ],
