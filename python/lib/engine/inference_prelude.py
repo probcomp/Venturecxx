@@ -2,15 +2,15 @@
 prelude = [
 ["iterate",
 """\
-.. function:: iterate(f : <inference action returning a>, iterations : int)
+.. function:: iterate(f : <inference action>, iterations : int)
 
-  :rtype: proc(<foreignblob>) -> <pair a <foreignblob>>
+  :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
 
-  Repeatedly apply the given action, returning the last value.
+  Repeatedly apply the given action, suppressing the returned vaues.
 """,
 """(lambda (f iter)
-  (if (<= iter 1)
-      f
+  (if (<= iter 0)
+      pass
       (lambda (t) (f (rest ((iterate f (- iter 1)) t))))))"""],
 
 ["repeat",
