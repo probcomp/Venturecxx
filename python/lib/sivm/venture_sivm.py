@@ -1,17 +1,17 @@
 # Copyright (c) 2013, MIT Probabilistic Computing Project.
-# 
+#
 # This file is part of Venture.
-# 	
+#
 # Venture is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 	
+#
 # Venture is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 	
+#
 # You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
@@ -28,7 +28,7 @@ class VentureSivm(object):
         self.core_sivm = core_sivm
         self._clear()
         self._init_continuous_inference()
-    
+
     dicts = [s + '_dict' for s in ['breakpoint', 'label', 'did', 'syntax', 'directive']]
 
     # list of all instructions supported by venture sivm
@@ -50,16 +50,16 @@ class VentureSivm(object):
             "profiler_address_to_source_code_location","profiler_get_random_choice_acceptance_rate",
             "profiler_get_global_acceptance_rate","profiler_get_random_choice_proposal_time",
             "profiler_get_global_proposal_time"}
-    
+
     _dont_pause_continuous_inference = {"start_continuous_inference",
             "stop_continuous_inference", "continuous_inference_status"}
-    
+
     def execute_instruction(self, instruction, suppress_pausing_continous_inference=False):
         # The suppress_pausing_continous_inference flag is used by the
         # thread doing the continuous inference.
         utils.validate_instruction(instruction,self._core_instructions | self._extra_instructions)
         instruction_type = instruction['instruction']
-        
+
         pause = instruction_type not in self._dont_pause_continuous_inference and not suppress_pausing_continous_inference
         with self._pause_continuous_inference(pause=pause):
             if instruction_type in self._extra_instructions:
@@ -201,10 +201,10 @@ class VentureSivm(object):
             # Presume that the desired did is currently being evaluated
             self.syntax_dict[did] = self.attempted.pop()
         return self.syntax_dict[did]
-    
+
     def _get_exp(self, did):
         return self._get_syntax_record(did)[0]
-    
+
     def _resugar(self, index):
         did = index[0]
         if self._hack_skip_inference_prelude_entry(did):
@@ -290,10 +290,10 @@ class VentureSivm(object):
     ###############################
     # Continuous Inference on/off
     ###############################
-    
+
     def _init_continuous_inference(self):
         pass
-    
+
     def _continuous_inference_status(self):
         return self._call_core_sivm_instruction({"instruction" : "continuous_inference_status"})
 
@@ -323,7 +323,7 @@ class VentureSivm(object):
     ###############################
     # labeled instruction wrappers
     ###############################
-    
+
     def _do_labeled_directive(self, instruction):
         label = self._validate_label(instruction, exists=False)
         tmp = instruction.copy()
@@ -333,20 +333,20 @@ class VentureSivm(object):
         did = response['directive_id']
         self.label_dict[label] = did
         self.did_dict[did] = label
-        return response    
-    
+        return response
+
     _do_labeled_assume = _do_labeled_directive
     _do_labeled_observe = _do_labeled_directive
-    _do_labeled_predict = _do_labeled_directive    
-    
+    _do_labeled_predict = _do_labeled_directive
+
     def _do_labeled_operation(self, instruction):
         label = self._validate_label(instruction, exists=True)
         tmp = instruction.copy()
         tmp['instruction'] = instruction['instruction'][len('labeled_'):]
         tmp['directive_id'] = self.label_dict[label]
         del tmp['label']
-        return self._call_core_sivm_instruction(tmp)        
-    
+        return self._call_core_sivm_instruction(tmp)
+
     _do_labeled_forget = _do_labeled_operation
     _do_labeled_freeze = _do_labeled_operation
     _do_labeled_report = _do_labeled_operation
@@ -354,7 +354,7 @@ class VentureSivm(object):
     ###############################
     # new instructions
     ###############################
-    
+
     # adds label back to directive
     def get_directive(self, did):
         tmp = copy.copy(self.directive_dict[did])
@@ -362,11 +362,11 @@ class VentureSivm(object):
             tmp['label'] = v.symbol(self.did_dict[did])
             #tmp['instruction'] = 'labeled_' + tmp['instruction']
         return tmp
-    
+
     def _do_list_directives(self, _):
         candidates = [self.get_directive(did) for did in sorted(self.directive_dict.keys())]
         return { "directives" : [c for c in candidates if c['instruction'] in ['assume', 'observe', 'predict']] }
-    
+
     def _do_get_directive(self, instruction):
         did = utils.validate_arg(instruction, 'directive_id', utils.validate_positive_integer)
         if not did in self.directive_dict:
@@ -374,12 +374,12 @@ class VentureSivm(object):
                     "Directive with directive_id = {} does not exist".format(did),
                     argument='directive_id')
         return {"directive": self.get_directive(did)}
-    
+
     def _do_labeled_get_directive(self, instruction):
         label = self._validate_label(instruction, exists=True)
         did = self.label_dict[label]
         return {"directive":self.get_directive(did)}
-    
+
     def _do_force(self, instruction):
         exp = utils.validate_arg(instruction,'expression',
                 utils.validate_expression, wrap_exception=False)
@@ -400,7 +400,7 @@ class VentureSivm(object):
                 }
         self._call_core_sivm_instruction(inst3)
         return {}
-    
+
     def _do_sample(self, instruction):
         exp = utils.validate_arg(instruction,'expression',
                 utils.validate_expression, wrap_exception=False)
@@ -415,7 +415,7 @@ class VentureSivm(object):
                 }
         self._call_core_sivm_instruction(inst2)
         return {"value":o1['value']}
-    
+
     # not used anymore?
     def _do_continuous_inference_configure(self, instruction):
         d = utils.validate_arg(instruction,'options',
@@ -430,18 +430,18 @@ class VentureSivm(object):
         return {"options":{
                 "continuous_inference_enable" : self._continuous_inference_enabled(),
                 }}
-    
+
     def _do_get_current_exception(self, _):
         utils.require_state(self.state,'exception','paused')
         return {
                 'exception': copy.deepcopy(self.current_exception),
                 }
-    
+
     def _do_get_state(self, _):
         return {
                 'state': self.state,
                 }
-    
+
     def _do_reset(self, instruction):
         if self.state != 'default':
             instruction = {
@@ -453,12 +453,12 @@ class VentureSivm(object):
                 }
         self._call_core_sivm_instruction(instruction)
         return {}
-    
+
     def _do_debugger_list_breakpoints(self, _):
         return {
                 "breakpoints" : copy.deepcopy(self.breakpoint_dict.values()),
                 }
-    
+
     def _do_debugger_get_breakpoint(self, instruction):
         bid = utils.validate_arg(instruction,'breakpoint_id',
                 utils.validate_positive_integer)
@@ -471,7 +471,7 @@ class VentureSivm(object):
 
     ###############################
     # Convenience wrappers some popular core instructions
-    # Currently supported wrappers: 
+    # Currently supported wrappers:
     # assume,observe,predict,forget,report,infer,force,sample,list_directives
     ###############################
 
