@@ -398,6 +398,7 @@ builtInSPsList = [
            [ "uniform_discrete", typed_nr(discrete.UniformDiscreteOutputPSP(), [v.IntegerType(), v.IntegerType()], v.IntegerType()) ],
            [ "poisson", typed_nr(discrete.PoissonOutputPSP(), [v.PositiveType()], v.CountType()) ],
            [ "normal", typed_nr(continuous.NormalOutputPSP(), [v.NumberType(), v.NumberType()], v.NumberType()) ], # TODO Sigma is really non-zero, but negative is OK by scaling
+           [ "vonmises", typed_nr(continuous.VonMisesOutputPSP(), [v.NumberType(), v.PositiveType()], v.NumberType()) ],
            [ "uniform_continuous",typed_nr(continuous.UniformOutputPSP(), [v.NumberType(), v.NumberType()], v.NumberType()) ],
            [ "beta", typed_nr(continuous.BetaOutputPSP(), [v.PositiveType(), v.PositiveType()], v.ProbabilityType()) ],
            [ "expon", typed_nr(continuous.ExponOutputPSP(), [v.PositiveType()], v.PositiveType()) ],
