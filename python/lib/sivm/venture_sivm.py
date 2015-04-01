@@ -281,7 +281,10 @@ class VentureSivm(object):
                 if self.ci_was_running:
                     sivm._stop_continuous_inference()
             def __exit__(self, type, value, traceback):
-                if self.ci_was_running:
+                if sivm._continuous_inference_status()["running"]:
+                    # The instruction started a new CI, so let it win
+                    pass
+                elif self.ci_was_running:
                     #print("restarting continuous inference")
                     sivm._start_continuous_inference(self.ci_status["expression"])
         return tmp()
