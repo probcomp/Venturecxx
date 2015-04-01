@@ -357,14 +357,15 @@ class VentureSivm(object):
     
     # adds label back to directive
     def get_directive(self, did):
-        tmp = copy.deepcopy(self.directive_dict[did])
+        tmp = copy.copy(self.directive_dict[did])
         if did in self.did_dict:
             tmp['label'] = v.symbol(self.did_dict[did])
             #tmp['instruction'] = 'labeled_' + tmp['instruction']
         return tmp
     
     def _do_list_directives(self, _):
-        return { "directives" : [self.get_directive(did) for did in sorted(self.directive_dict.keys())] }
+        candidates = [self.get_directive(did) for did in sorted(self.directive_dict.keys())]
+        return { "directives" : [c for c in candidates if c['instruction'] in ['assume', 'observe', 'predict']] }
     
     def _do_get_directive(self, instruction):
         did = utils.validate_arg(instruction, 'directive_id', utils.validate_positive_integer)
