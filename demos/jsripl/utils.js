@@ -26,7 +26,7 @@ function directiveToString(directive, display_scopes) {
     var directive_str = "[" + directive.instruction + " ";
     
     if (directive.instruction === "assume") {
-        directive_str += directive.symbol + " ";
+        directive_str += directive.symbol.value + " ";
     }
     
     directive_str += exprToString(directive.expression, display_scopes);
