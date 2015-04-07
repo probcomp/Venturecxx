@@ -258,7 +258,28 @@ class VentureSivm(object):
                 if key in instruction:
                     tmp_instruction[key] = copy.copy(instruction[key])
             self.directive_dict[did] = tmp_instruction
+            # TODO: Is this right if the attempt stack was popped by
+            # exception annotation?  Or will this section be skipped
+            # in that case?  Is _that_ right?
             self.syntax_dict[did] = self.attempted.pop()
+        if instruction_type in ['infer']:
+            # Don't build up "in-flight" records, even if "infer" is
+            # not recorded for posterity.
+            # TODO Is there a race condition here?  The continuous
+            # inference thread repeatedly calls ripl.infer, which will
+            # trigger both pushes to self.attempted and pops from it.
+            # If some other ripl instruction happens concurrently that
+            # also affects self.attempted, could there be a mix-up?
+            # Or does pausing continuous inference prevent that from
+            # happening?  Should I make the attempt stack thread-local
+            # defensively anyway?
+            exp = utils.validate_arg(instruction,'expression',
+                    utils.validate_expression, wrap_exception=False)
+            if self.core_sivm.engine.is_infer_loop_program(exp):
+                # We didn't save the infer loop thing
+                pass
+            else:
+                self.attempted.pop()
         # save the breakpoint if the instruction sets the breakpoint
         if instruction_type in ['debugger_set_breakpoint_address',
                 'debugger_set_breakpoint_source_code_location']:

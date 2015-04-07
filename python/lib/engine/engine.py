@@ -161,7 +161,10 @@ class Engine(object):
     try:
       self.swapped_model = True
       with self.inference_trace():
-        return (self._extract_raw_infer_result(self._do_infer(v.quote(stack_dict_action))), model)
+        did = self._do_infer(v.quote(stack_dict_action))
+        ans = self._extract_raw_infer_result(did)
+        self.infer_trace.uneval(did) # TODO This becomes "forget" after the engine.Trace wrapper
+        return (ans, model)
     finally:
       self.model = current_model
       self.swapped_model = current_swapped_status
@@ -175,7 +178,10 @@ class Engine(object):
     else:
       with self.inference_trace():
         with self.self_evaluating_scope_hack():
-          return self._extract_infer_result(self._do_infer(program))
+          did = self._do_infer(program)
+          ans = self._extract_infer_result(did)
+          self.infer_trace.uneval(did) # TODO This becomes "forget" after the engine.Trace wrapper
+          return ans
 
   def is_infer_loop_program(self, program):
     return isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop"
