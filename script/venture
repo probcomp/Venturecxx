@@ -19,7 +19,7 @@
 
 import sys
 import argparse
-from venture.ripl.console import run_venture_console
+from venture.ripl.console import run_venture_console, ripl_builder
 import venture.shortcuts as v
 
 version_str="0.2.1"
@@ -56,28 +56,7 @@ def lite(args):
     local_ripl(args, v.Lite())
 
 def local_ripl(args, backend):
-    interactive = True
-    if args is not None and args.persistent_inference_trace:
-        r = backend.make_combined_ripl(persistent_inference_trace = True)
-    else:
-        r = backend.make_combined_ripl()
-    if args is not None:
-        if args.prelude: r.load_prelude()
-        if args.library:
-            for l in args.library:
-                r.load_plugin(l)
-        if args.lang:
-            r.set_mode(args.lang)
-        if args.file:
-            for f in args.file:
-                interactive = False
-                r.execute_program_from_file(f)
-        if args.eval:
-            for e in args.eval:
-                interactive = False
-                r.execute_program(e)
-        if args.interactive:
-            interactive = True
+    (interactive, r) = ripl_builder(args, backend)()
     if interactive:
         banner()
         run_venture_console(r)

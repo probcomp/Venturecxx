@@ -122,7 +122,7 @@ class RiplCmd(Cmd, object):
   
   @catchesVentureException
   def do_clear(self, _):
-    '''Clear all directives.'''
+    '''Clear the console state.  (Replay the effects of command line arguments.)'''
     self.ripl.clear()
   
   @catchesVentureException
@@ -177,6 +177,33 @@ class RiplCmd(Cmd, object):
 
 def run_venture_console(ripl):
   RiplCmd(ripl).cmdloop()
+
+def ripl_builder(args, backend):
+  def build():
+    interactive = True
+    if args is not None and args.persistent_inference_trace:
+        r = backend.make_combined_ripl(persistent_inference_trace = True)
+    else:
+        r = backend.make_combined_ripl()
+    if args is not None:
+        if args.prelude: r.load_prelude()
+        if args.library:
+            for l in args.library:
+                r.load_plugin(l)
+        if args.lang:
+            r.set_mode(args.lang)
+        if args.file:
+            for f in args.file:
+                interactive = False
+                r.execute_program_from_file(f)
+        if args.eval:
+            for e in args.eval:
+                interactive = False
+                r.execute_program(e)
+        if args.interactive:
+            interactive = True
+    return (interactive, r)
+  return build
 
 def main():
   import venture.shortcuts as s
