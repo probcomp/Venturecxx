@@ -16,6 +16,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import copy
 import traceback
 from cmd import Cmd
 from functools import wraps
@@ -47,6 +48,7 @@ class RiplCmd(Cmd, object):
     self.ripl = ripl
     self.prompt = '>>> '
     self.rebuild = rebuild
+    self.files = []
 
   def emptyline(self):
     pass
@@ -125,7 +127,9 @@ class RiplCmd(Cmd, object):
   def do_clear(self, _):
     '''Clear the console state.  (Replay the effects of command line arguments.)'''
     self.ripl.stop_continuous_inference()
-    self.ripl = self.rebuild()
+    (_, self.ripl) = self.rebuild()
+    self.files = []
+    self._update_prompt()
   
   @catchesVentureException
   def do_infer(self, s):
@@ -176,6 +180,22 @@ class RiplCmd(Cmd, object):
   def do_load(self, s):
     '''Load the given Venture file.'''
     self.ripl.execute_program_from_file(s)
+    self.files.append(s)
+    self._update_prompt()
+
+  @catchesVentureException
+  def do_reload(self, _):
+    '''Reload all previously loaded Venture files.'''
+    files = copy.copy(self.files)
+    self.do_clear(None)
+    for f in files:
+      self.do_load(f)
+
+  def _update_prompt(self):
+    if len(self.files) == 0:
+      self.prompt = ">>> "
+    else:
+      self.prompt = " ".join(self.files) + " > "
 
 def run_venture_console(ripl, rebuild):
   RiplCmd(ripl, rebuild).cmdloop()
