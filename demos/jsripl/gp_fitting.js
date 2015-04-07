@@ -165,15 +165,6 @@ function InitializeDemo() {
 
     };
 
-    var LoadModel = function() {
-        num_directives_loaded = 0;
-        ripl.register_a_request_processed_callback(DirectiveLoadedCallback);
-        ripl.stop_continuous_inference();
-        loadGPModel();
-
-        ripl.register_all_requests_processed_callback(AllDirectivesLoadedCallback);
-    };
-
     var UpdateVentureCode = function(directives) {
         code = VentureCodeHTML(directives, getShowScopes());
         code += "[infer (loop " + inference_program + ")]";
@@ -324,86 +315,6 @@ function InitializeDemo() {
         local_point.noise_circle.attr("rx", 0.25 * Math.abs(xScale) * factor);
         local_point.noise_circle.attr("ry", 0.25 * Math.abs(yScale) * factor);
     };
-
-    var CheckModelVariables = function() {
-        var model_type = getModelType();
-        var use_outliers = getUseOutliers();
-        var infer_noise = getInferNoise();
-        var show_scopes = getShowScopes();
-
-        var changed = false;
-
-        if (model_variables.model_type != model_type) {
-            model_variables.model_type = model_type;
-            changed = true;
-        }
-
-        var simple = model_type === "simple";
-        document.getElementById("show_scopes").disabled = simple;
-        document.getElementById("enum").disabled = simple;
-        document.getElementById("slice").disabled = simple;
-        document.getElementById("nesterov_only").disabled = (getEnumRequested() || getSliceRequested() || getNesterovCycleRequested())
-
-        if (model_variables.use_outliers != use_outliers) {
-            model_variables.use_outliers = use_outliers;
-            changed = true;
-        }
-
-        if (model_variables.infer_noise != infer_noise) {
-            model_variables.infer_noise = infer_noise;
-            changed = true;
-        }
-
-        if (model_variables.show_scopes != show_scopes) {
-            model_variables.show_scopes = show_scopes;
-            changed = true;
-        }
-
-        var old_inf_prog = inference_program;
-        if ( getEnumRequested() &&  getSliceRequested() && !getNesterovCycleRequested()) {
-            inference_program = "(cycle ((mh default one 5) (gibbs structure one 1) (slice params one 0.5 100 1)) 1)";
-        }
-        if (!getEnumRequested() &&  getSliceRequested() && !getNesterovCycleRequested()) {
-            inference_program = "(cycle ((mh default one 5) (slice params one 0.5 100 1)) 1)";
-        }
-        if ( getEnumRequested() && !getSliceRequested() && !getNesterovCycleRequested()) {
-            inference_program = "(cycle ((mh default one 5) (gibbs structure one 1)) 1)";
-        }
-        if (!getEnumRequested() && !getSliceRequested() && !getNesterovCycleRequested()) {
-            inference_program = "(mh default one 50)";
-        }
-        if ( getEnumRequested() &&  getSliceRequested() && getNesterovCycleRequested()) {
-            inference_program = "(cycle ((mh default one 5) (gibbs structure one 1) (slice params one 0.5 100 1) (nesterov default all 0.03 5 1)) 1)";
-        }
-        if (!getEnumRequested() &&  getSliceRequested() && getNesterovCycleRequested()) {
-            inference_program = "(cycle ((mh default one 5) (slice params one 0.5 100 1) (nesterov default all 0.03 5 1)) 1)";
-        }
-        if ( getEnumRequested() && !getSliceRequested() && getNesterovCycleRequested()) {
-            inference_program = "(cycle ((mh default one 5) (gibbs structure one 1) (nesterov default all 0.03 5 1)) 1)";
-        }
-        if (!getEnumRequested() && !getSliceRequested() && getNesterovCycleRequested()) {
-            inference_program = "(cycle ((mh default one 10) (nesterov default all 0.03 5 1)) 1)";
-        }
-        if (getNesterovOnlyRequested()) {
-            inference_program = "(nesterov default all 0.03 5 1)"
-        }
-        if (old_inf_prog != inference_program) {
-            changed = true;
-        }
-
-        return changed;
-    };
-
-    var SwitchModel = function(directives) {
-        LoadModel();
-
-        // reload all of the observed points
-        for (obs_id in points) {
-            p = points[obs_id];
-            DeletePoint(obs_id);
-            ObservePoint(obs_id, p.x, p.y);
-        }
-    }
 
     /* This is the callback that we pass to GET_DIRECTIVES_CONTINUOUSLY. */
     var RenderAll = function(directives) {
