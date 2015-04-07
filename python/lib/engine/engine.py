@@ -135,6 +135,13 @@ class Engine(object):
   def clear(self):
     self.model.clear()
     self.directiveCounter = 0
+    # TODO The clear operation appears to be bit-rotten.  Problems include:
+    # - Doesn't reset the inference trace
+    # - Doesn't clean up the sivm's and ripl's per-directive records
+    # - Not clear what it should do with foreign SPs (remove the
+    #   dictionaries or rebind them in the new traces?)
+    # - Not clear what it should do with the parallelism mode and
+    #   other such auxiliary state.
 
   # TODO There should also be capture_inference_problem and
   # restore_inference_problem (Analytics seems to use something like
