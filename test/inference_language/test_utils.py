@@ -1,15 +1,18 @@
 from nose.tools import raises, eq_
 
 from venture.test.config import get_ripl, on_inf_prim
+import venture.test.errors as err
 
 @on_inf_prim("assert")
 def testAssertSmoke():
   get_ripl().infer("(assert true)")
 
 @on_inf_prim("assert")
-@raises(AssertionError)
 def testAssertSmoke2():
-  get_ripl().infer("(assert false)")
+  err.assert_error_message_contains("""\
+((assert false) model)
+^^^^^^^^^^^^^^^^^^^^^^
+""", get_ripl().infer, "(assert false)")
 
 @on_inf_prim("particle_log_weights")
 def testWeightsSmoke():
