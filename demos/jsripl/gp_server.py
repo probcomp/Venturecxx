@@ -2,13 +2,21 @@ import numpy as np
 import numpy.linalg as la
 import numpy.random as npr
 
-def linear(x1, x2):
-  return x1 * x2
+def linear(v, c):
+  def f(x1, x2):
+    return v * (x1-c) * (x2-c)
+  return f
 
 def squared_exponential(a, l):
   def f(x1, x2):
-    return a * np.exp(- la.norm((x1-x2)/l))
+    x = (x1-x2)/l
+    return a * np.exp(- np.dot(x, x))
   return f
+
+def lift_binary(op):
+  def lifted(f1, f2):
+    return lambda *xs: op(f1(*xs), f2(*xs))
+  return lifted
 
 from venture import shortcuts as s
 ripl = s.make_lite_church_prime_ripl()
@@ -18,9 +26,12 @@ from venture.lite.sp import SPType
 import venture.lite.value as v
 import venture.value.dicts as d
 
+fType = v.AnyType("VentureFunction")
+
 # input and output types for gp
 xType = v.NumberType()
 oType = v.NumberType()
+kernelType = SPType([xType, xType], oType)
 
 ripl.assume('app', 'apply_function')
 
@@ -33,14 +44,34 @@ ripl.assume('make_const_func', VentureFunction(makeConstFunc, [xType], constantT
 #ripl.assume('zero', "(app make_const_func 0)")
 #print ripl.predict('(app zero 1)')
 
-squaredExponentialType = SPType([xType, xType], oType)
 def makeSquaredExponential(a, l):
-  return VentureFunction(squared_exponential(a, l), sp_type=squaredExponentialType)
+  return VentureFunction(squared_exponential(a, l), sp_type=kernelType)
 
-ripl.assume('make_squared_exponential', VentureFunction(makeSquaredExponential, [v.NumberType(), xType], v.AnyType("VentureFunction")))
+ripl.assume('make_squared_exponential', VentureFunction(makeSquaredExponential, [v.NumberType(), xType], fType))
 
 #ripl.assume('sq_exp', '(app make_squared_exponential 1 1)')
 #print ripl.predict('(app sq_exp 0 1)')
+
+def makeLinear(v, c):
+  return VentureFunction(linear(v, c), sp_type=kernelType)
+
+ripl.assume('make_linear', VentureFunction(makeLinear, [v.NumberType(), xType], fType))
+#ripl.assume('linear', '(app make_linear 1 1)')
+#print ripl.predict('(app linear 2 3)')
+
+liftedBinaryType = SPType([v.AnyType(), v.AnyType()], v.AnyType())
+
+def makeLiftedBinary(op):
+  lifted_op = lift_binary(op)
+  def wrapped(f1, f2):
+    sp_type = f1.sp_type
+    assert(f2.sp_type == sp_type)
+    return VentureFunction(lifted_op(f1, f2), sp_type=sp_type)
+  return VentureFunction(wrapped, sp_type=liftedBinaryType)
+
+ripl.assume("func_plus", makeLiftedBinary(lambda x1, x2: x1+x2))
+#print ripl.predict('(app (app func_plus sq_exp sq_exp) 0 1)')
+ripl.assume("func_times", makeLiftedBinary(lambda x1, x2: x1*x2))
 
 program = """
   [assume mu (normal 0 5)]
@@ -51,10 +82,12 @@ program = """
   
   [assume mean (app make_const_func mu)]
   [assume cov (app make_squared_exponential a l)]
+;  [assume cov (app make_linear a 0)]
   
   gp : [assume gp (make_gp mean cov)]
   
   [assume obs_fn (lambda (obs_id x) (gp x))]
+;  [assume obs_fn (lambda (obs_id x) (normal x 1))]
 """
 
 ripl.execute_program(program)

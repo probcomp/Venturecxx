@@ -263,7 +263,8 @@ function InitializeDemo() {
         points = {};
 
         var extract = function(directive) {
-            var path = directive.label.split('_').slice(1);
+            //debugger;
+            var path = directive.label.value.split('_').slice(1);
             //console.log(path.join("."));
             record(points, path, directive.value);
 
@@ -360,28 +361,28 @@ function InitializeDemo() {
 
         var old_inf_prog = inference_program;
         if ( getEnumRequested() &&  getSliceRequested() && !getNesterovCycleRequested()) {
-            inference_program = "(do (mh default one 5) (gibbs structure one 1) (slice params one 0.5 100 1))";
+            inference_program = "(cycle ((mh default one 5) (gibbs structure one 1) (slice params one 0.5 100 1)) 1)";
         }
         if (!getEnumRequested() &&  getSliceRequested() && !getNesterovCycleRequested()) {
-            inference_program = "(do (mh default one 5) (slice params one 0.5 100 1))";
+            inference_program = "(cycle ((mh default one 5) (slice params one 0.5 100 1)) 1)";
         }
         if ( getEnumRequested() && !getSliceRequested() && !getNesterovCycleRequested()) {
-            inference_program = "(do (mh default one 5) (gibbs structure one 1))";
+            inference_program = "(cycle ((mh default one 5) (gibbs structure one 1)) 1)";
         }
         if (!getEnumRequested() && !getSliceRequested() && !getNesterovCycleRequested()) {
             inference_program = "(mh default one 50)";
         }
         if ( getEnumRequested() &&  getSliceRequested() && getNesterovCycleRequested()) {
-            inference_program = "(do (mh default one 5) (gibbs structure one 1) (slice params one 0.5 100 1) (nesterov default all 0.03 5 1))";
+            inference_program = "(cycle ((mh default one 5) (gibbs structure one 1) (slice params one 0.5 100 1) (nesterov default all 0.03 5 1)) 1)";
         }
         if (!getEnumRequested() &&  getSliceRequested() && getNesterovCycleRequested()) {
-            inference_program = "(do (mh default one 5) (slice params one 0.5 100 1) (nesterov default all 0.03 5 1))";
+            inference_program = "(cycle ((mh default one 5) (slice params one 0.5 100 1) (nesterov default all 0.03 5 1)) 1)";
         }
         if ( getEnumRequested() && !getSliceRequested() && getNesterovCycleRequested()) {
-            inference_program = "(do (mh default one 5) (gibbs structure one 1) (nesterov default all 0.03 5 1))";
+            inference_program = "(cycle ((mh default one 5) (gibbs structure one 1) (nesterov default all 0.03 5 1)) 1)";
         }
         if (!getEnumRequested() && !getSliceRequested() && getNesterovCycleRequested()) {
-            inference_program = "(do (mh default one 10) (nesterov default all 0.03 5 1))";
+            inference_program = "(cycle ((mh default one 10) (nesterov default all 0.03 5 1)) 1)";
         }
         if (getNesterovOnlyRequested()) {
             inference_program = "(nesterov default all 0.03 5 1)"
@@ -447,8 +448,10 @@ function InitializeDemo() {
         /* Remove nonexistent points and draw the rest. */
         for (obs_id in local_points) {
             if (!(obs_id in points)) {
+                //console.log("Deleting " + obs_id);
                 DeletePoint(obs_id);
             } else {
+                //console.log("Drawing " + obs_id);
                 DrawPoint(local_points[obs_id], points[obs_id]);
             }
         }
@@ -653,7 +656,7 @@ function InitializeDemo() {
         var loop = function() {
             ripl.method("list_directives", [false, false, ["predict", "observe"]], RenderAll);
             ripl.method("sample", [['gp', ['quote', xs]]], DrawLines);
-            setTimeout(loop, 75);
+            setTimeout(loop, 150);
         };
         
         loop();
