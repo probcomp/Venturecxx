@@ -42,10 +42,11 @@ def catchesVentureException(f):
   return try_f
 
 class RiplCmd(Cmd, object):
-  def __init__(self, ripl):
+  def __init__(self, ripl, rebuild):
     super(RiplCmd, self).__init__()
     self.ripl = ripl
     self.prompt = '>>> '
+    self.rebuild = rebuild
 
   def emptyline(self):
     pass
@@ -122,8 +123,9 @@ class RiplCmd(Cmd, object):
   
   @catchesVentureException
   def do_clear(self, _):
-    '''Clear all directives.'''
-    self.ripl.clear()
+    '''Clear the console state.  (Replay the effects of command line arguments.)'''
+    self.ripl.stop_continuous_inference()
+    self.ripl = self.rebuild()
   
   @catchesVentureException
   def do_infer(self, s):
@@ -175,12 +177,13 @@ class RiplCmd(Cmd, object):
     '''Load the given Venture file.'''
     self.ripl.execute_program_from_file(s)
 
-def run_venture_console(ripl):
-  RiplCmd(ripl).cmdloop()
+def run_venture_console(ripl, rebuild):
+  RiplCmd(ripl, rebuild).cmdloop()
 
 def main():
   import venture.shortcuts as s
-  ripl = s.make_puma_church_prime_ripl()
-  run_venture_console(ripl)
+  def build():
+    return s.make_puma_church_prime_ripl()
+  run_venture_console(build(), build)
 
 if __name__ == '__main__': main()

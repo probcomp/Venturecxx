@@ -56,6 +56,15 @@ def lite(args):
     local_ripl(args, v.Lite())
 
 def local_ripl(args, backend):
+    build = ripl_builder(args, backend)
+    (interactive, r) = build()
+    if interactive:
+        banner()
+        run_venture_console(r, build)
+    return r
+
+def ripl_builder(args, backend):
+  def build():
     interactive = True
     if args is not None and args.persistent_inference_trace:
         r = backend.make_combined_ripl(persistent_inference_trace = True)
@@ -78,10 +87,8 @@ def local_ripl(args, backend):
                 r.execute_program(e)
         if args.interactive:
             interactive = True
-    if interactive:
-        banner()
-        run_venture_console(r)
-    return r
+    return (interactive, r)
+  return build
 
 def add_local_args(parser):
     parser.add_argument('--prelude', action='store_true',
