@@ -124,7 +124,8 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def do_clear(self, _):
     '''Clear the console state.  (Replay the effects of command line arguments.)'''
-    self.ripl.clear()
+    self.ripl.stop_continuous_inference()
+    self.ripl = self.rebuild()
   
   @catchesVentureException
   def do_infer(self, s):
