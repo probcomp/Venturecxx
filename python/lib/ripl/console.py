@@ -42,10 +42,11 @@ def catchesVentureException(f):
   return try_f
 
 class RiplCmd(Cmd, object):
-  def __init__(self, ripl):
+  def __init__(self, ripl, rebuild):
     super(RiplCmd, self).__init__()
     self.ripl = ripl
     self.prompt = '>>> '
+    self.rebuild = rebuild
 
   def emptyline(self):
     pass
@@ -175,39 +176,13 @@ class RiplCmd(Cmd, object):
     '''Load the given Venture file.'''
     self.ripl.execute_program_from_file(s)
 
-def run_venture_console(ripl):
-  RiplCmd(ripl).cmdloop()
-
-def ripl_builder(args, backend):
-  def build():
-    interactive = True
-    if args is not None and args.persistent_inference_trace:
-        r = backend.make_combined_ripl(persistent_inference_trace = True)
-    else:
-        r = backend.make_combined_ripl()
-    if args is not None:
-        if args.prelude: r.load_prelude()
-        if args.library:
-            for l in args.library:
-                r.load_plugin(l)
-        if args.lang:
-            r.set_mode(args.lang)
-        if args.file:
-            for f in args.file:
-                interactive = False
-                r.execute_program_from_file(f)
-        if args.eval:
-            for e in args.eval:
-                interactive = False
-                r.execute_program(e)
-        if args.interactive:
-            interactive = True
-    return (interactive, r)
-  return build
+def run_venture_console(ripl, rebuild):
+  RiplCmd(ripl, rebuild).cmdloop()
 
 def main():
   import venture.shortcuts as s
-  ripl = s.make_puma_church_prime_ripl()
-  run_venture_console(ripl)
+  def build():
+    return s.make_puma_church_prime_ripl()
+  run_venture_console(build(), build)
 
 if __name__ == '__main__': main()
