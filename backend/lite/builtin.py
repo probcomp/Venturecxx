@@ -132,6 +132,11 @@ def grad_pow(args, direction):
 def grad_sqrt(args, direction):
   return [direction * (0.5 / math.sqrt(args[0]))]
 
+def grad_atan2(args, direction):
+  (y,x) = args
+  denom = x*x + y*y
+  return [direction * (x / denom), direction * (-y / denom)]
+
 def grad_list(args, direction):
   if direction == 0:
     return [0 for _ in args]
@@ -205,6 +210,9 @@ builtInSPsList = [
                              descr="Returns the log of its argument") ],
            [ "pow", binaryNum(math.pow, sim_grad=grad_pow, descr="pow returns its first argument raised to the power of its second argument") ],
            [ "sqrt", unaryNum(math.sqrt, sim_grad=grad_sqrt, descr="Returns the sqrt of its argument") ],
+           [ "atan2", binaryNum(math.atan2,
+                                sim_grad=grad_atan2,
+                                descr="atan2(y,x) returns the angle from the positive x axis to the point x,y.  The order of arguments is conventional.") ],
 
            [ "not", deterministic_typed(lambda x: not x, [v.BoolType()], v.BoolType(),
                                         descr="not returns the logical negation of its argument") ],
@@ -230,6 +238,7 @@ builtInSPsList = [
                                          sim_grad=lambda args, direction: [v.VenturePair((0, direction))],
                                          descr="rest returns the second component of its argument pair") ],
            [ "second", deterministic_typed(lambda p: p[1][0], [v.PairType(second_type=v.PairType())], v.AnyType(),
+                                           sim_grad=lambda args, direction: [v.VenturePair((0, v.VenturePair((direction, 0))))],
                                            descr="second returns the first component of the second component of its argument") ],
            [ "to_list", deterministic_typed(lambda seq: seq.asPythonList(), [v.HomogeneousSequenceType(v.AnyType())], v.HomogeneousListType(v.AnyType()),
                                             descr="to_list converts its argument sequence to a list") ],
@@ -389,6 +398,7 @@ builtInSPsList = [
            [ "uniform_discrete", typed_nr(discrete.UniformDiscreteOutputPSP(), [v.IntegerType(), v.IntegerType()], v.IntegerType()) ],
            [ "poisson", typed_nr(discrete.PoissonOutputPSP(), [v.PositiveType()], v.CountType()) ],
            [ "normal", typed_nr(continuous.NormalOutputPSP(), [v.NumberType(), v.NumberType()], v.NumberType()) ], # TODO Sigma is really non-zero, but negative is OK by scaling
+           [ "vonmises", typed_nr(continuous.VonMisesOutputPSP(), [v.NumberType(), v.PositiveType()], v.NumberType()) ],
            [ "uniform_continuous",typed_nr(continuous.UniformOutputPSP(), [v.NumberType(), v.NumberType()], v.NumberType()) ],
            [ "beta", typed_nr(continuous.BetaOutputPSP(), [v.PositiveType(), v.PositiveType()], v.ProbabilityType()) ],
            [ "expon", typed_nr(continuous.ExponOutputPSP(), [v.PositiveType()], v.PositiveType()) ],

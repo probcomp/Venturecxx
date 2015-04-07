@@ -40,6 +40,7 @@ def testInferObserveSmoke2():
 
 def testInlineSMCSmoke():
   r = get_ripl(persistent_inference_trace=True)
+  import venture.engine.inference_prelude as p
   r.execute_program("""
 [define go
   (lambda (ct)
@@ -54,7 +55,7 @@ def testInlineSMCSmoke():
 [infer (incorporate)]
 """)
   for i in range(20):
-    eq_(i, r.report(i+14)) # Brittle offset depends on size of inference prelude.
+    eq_(i, r.report(i+len(p.prelude)+3))
 
 def testInlineSMCSmoke2():
   r = get_ripl(persistent_inference_trace=True)

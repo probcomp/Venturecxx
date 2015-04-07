@@ -137,7 +137,9 @@ def evalFamily(trace,address,exp,env,scaffold,shouldRestore,omegaDB,gradients):
       import sys
       info = sys.exc_info()
       raise VentureException("evaluation", err.message, address=err.addr, cause=err), None, info[2]
-    except VentureError as err:
+    except VentureException:
+      raise # Avoid rewrapping with the below
+    except Exception as err:
       import sys
       info = sys.exc_info()
       raise VentureException("evaluation", err.message, address=address, cause=err), None, info[2]

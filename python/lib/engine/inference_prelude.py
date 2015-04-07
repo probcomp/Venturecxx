@@ -2,15 +2,15 @@
 prelude = [
 ["iterate",
 """\
-.. function:: iterate(f : <inference action returning a>, iterations : int)
+.. function:: iterate(f : <inference action>, iterations : int)
 
-  :rtype: proc(<foreignblob>) -> <pair a <foreignblob>>
+  :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
 
-  Repeatedly apply the given action, returning the last value.
+  Repeatedly apply the given action, suppressing the returned vaues.
 """,
 """(lambda (f iter)
-  (if (<= iter 1)
-      f
+  (if (<= iter 0)
+      pass
       (lambda (t) (f (rest ((iterate f (- iter 1)) t))))))"""],
 
 ["repeat",
@@ -37,6 +37,21 @@ prelude = [
   (if (is_pair ks)
       (lambda (t) ((sequence (rest ks)) (rest ((first ks) t))))
       (lambda (t) (pair nil t))))"""],
+
+["mapM", """\
+.. function:: sequence(ks : list<inference action>)
+
+  :rtype: proc(<foreignblob>) -> <pair list<object> <foreignblob>>
+
+  Apply the given list of actions in sequence, returning a list of the
+  values.  The nomenclature is borrowed from Haskell.
+""",
+ """(lambda (act objs)
+  (if (is_pair objs)
+      (do (v <- (act (first objs)))
+          (vs <- (mapM act (rest objs)))
+          (return (pair v vs)))
+      (return nil)))"""],
 
 # pass :: State a ()  pass = return ()
 ["pass", """\

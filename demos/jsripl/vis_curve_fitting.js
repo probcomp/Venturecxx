@@ -257,8 +257,8 @@ function InitializeDemo() {
         for(var i = 0; i < directives.length; ++i) {
             var dir = directives[i];
             if(dir.instruction === "assume") {
-                if(dir.symbol in model_variables) {
-                    model_variables[dir.symbol] = dir.value;
+                if(dir.symbol.value in model_variables) {
+                    model_variables[dir.symbol.value] = dir.value;
                 }
             }
         }
@@ -335,7 +335,7 @@ function InitializeDemo() {
         points = {};
 
         var extract = function(directive) {
-            var path = directive.label.split('_').slice(1);
+            var path = directive.label.value.split('_').slice(1);
             //console.log(path.join("."));
             record(points, path, directive.value);
 
@@ -750,7 +750,7 @@ function InitializeDemo() {
             // fresh Venture instance
             LoadModel();
             RunDemo();
-        } else if (directives[0].symbol == "demo_id" && directives[0].value == demo_id) {
+        } else if (directives[0].symbol.value == "demo_id" && directives[0].value == demo_id) {
             UpdateModelVariables(directives);
             RunDemo();
         } else {
