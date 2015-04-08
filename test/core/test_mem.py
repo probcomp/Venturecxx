@@ -154,11 +154,11 @@ def testMemSP():
          (10, 0.6 * 0.6 * 0.9)]
   return reportKnownDiscrete(ans, predictions)
 
-############ CXX mem tests
+############ Puma mem tests
 
 def testMemoizingOnAList1():
   """MSP.requestPSP.simulate() needs to quote the values to pass this.
-     In CXX, VentureList needs to override several VentureValue methods as well"""
+     In Puma, VentureList needs to override several VentureValue methods as well"""
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (x) (if (flip) 1 1)))")
   ripl.predict("(f (list 0))",label="pid")
@@ -167,7 +167,7 @@ def testMemoizingOnAList1():
 
 def testMemoizingOnASymbol1():
   """MSP.requestPSP.simulate() needs to quote the values to pass this.
-     In CXX, VentureSymbol needs to override several VentureValue methods as well"""
+     In Puma, VentureSymbol needs to override several VentureValue methods as well"""
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (x) (if (flip) 1 1)))")
   ripl.predict("(f (quote sym))",label="pid")
