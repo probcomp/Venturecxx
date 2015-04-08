@@ -20,6 +20,9 @@ HEAP = $$(case `uname -m` in x86_64) echo 100000;; *) echo 6000;; esac)
 test: test-remote
 test: test-statistical
 
+.PHONY: check
+check: test
+
 .PHONY: test-remote
 test-remote:
 	echo '(load "test-remote")' \
