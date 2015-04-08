@@ -76,7 +76,7 @@ def testDynamicScope8():
 @on_inf_prim("none")
 def testScopeExclude1():
   ripl = get_ripl()
-  ripl.assume("f", "(mem (lambda (x) (scope_exclude 0 (bernoulli))))")
+  ripl.assume("f", "(mem (lambda (x) (tag_exclude 0 (bernoulli))))")
   ripl.predict("(tag 0 0 (+ (f 0) (f 1) (f 2) (f 3)))")
   assert_equal(ripl.sivm.core_sivm.engine.getDistinguishedTrace().numNodesInBlock(0, 0), 0)
 
