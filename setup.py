@@ -98,7 +98,6 @@ puma_inc_dirs = ["backend/new_cxx/" + d for d in puma_inc_dirs]
 ext_modules = []
 packages = [
     "venture",
-    "venture.cxx",
     "venture.engine",
     "venture.lite",
     "venture.lite.infer",
