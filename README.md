@@ -262,7 +262,6 @@ The interesting parts of the code are:
 - Advanced example programs live in `examples/`.
 - There are some developer tools available in `tool/`.
 - The reference manual can be built from the `refman/` directory (requires Sphinx).
-- There is a stale C++11 backend in `backend/cxx/`.
 - The Javascript client and web demos are in `demos/`, subdivided by
   architecture into `demos/jsripl` (which corresponds to the erstwile
   VentureJSRIPL repository), `demos/elm` (an attempt to do demos in
