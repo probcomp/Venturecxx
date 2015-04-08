@@ -389,6 +389,16 @@ builtInSPsList = [
                                       [v.AnyType("<scope>"), v.AnyType()],
                                       v.AnyType()) ],
 
+           [ "tag", typed_nr(scope.ScopeIncludeOutputPSP(),
+                             # These are type-restricted in Venture, but the actual PSP doesn't care.
+                             [v.AnyType("<scope>"), v.AnyType("<block>"), v.AnyType()],
+                             v.AnyType()) ],
+
+           [ "tag_exclude", typed_nr(scope.ScopeExcludeOutputPSP(),
+                                     # These are type-restricted in Venture, but the actual PSP doesn't care.
+                                     [v.AnyType("<scope>"), v.AnyType()],
+                                     v.AnyType()) ],
+
            [ "binomial", typed_nr(discrete.BinomialOutputPSP(), [v.CountType(), v.ProbabilityType()], v.CountType()) ],
            [ "flip", typed_nr(discrete.BernoulliOutputPSP(), [v.ProbabilityType()], v.BoolType(), min_req_args=0) ],
            [ "bernoulli", typed_nr(discrete.BernoulliOutputPSP(), [v.ProbabilityType()], v.IntegerType(), min_req_args=0) ],
