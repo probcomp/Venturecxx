@@ -40,10 +40,12 @@ test-remote:
 
 .PHONY: test-statistical
 test-statistical: test/c-stats.so
-	$(MITSCHEME) --compiler --heap $(HEAP) --stack 2000 --batch-mode \
+	echo '(run-tests-and-exit)' \
+	| $(MITSCHEME) --compiler --heap $(HEAP) --stack 2000 --batch-mode \
 	  --no-init-file \
-	  --eval '(set! load/suppress-loading-message? #t)' \
-	  --eval '(begin (load "load") (load "test/load") (run-tests-and-exit))'
+	  --load load \
+	  --load test/load \
+	  # end of MIT Scheme options
 
 c_stats_CFLAGS = $(CFLAGS) $(MITSCHEME_MODULE_CFLAGS) $(GSL_CFLAGS)
 c_stats_LDFLAGS = $(LDFLAGS) $(MITSCHEME_MODULE_LDFLAGS) $(GSL_LDFLAGS)
