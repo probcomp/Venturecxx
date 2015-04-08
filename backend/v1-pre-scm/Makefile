@@ -14,7 +14,26 @@ GSL_LIBS = `gsl-config --libs`
 HEAP = $$(case `uname -m` in x86_64) echo 100000;; *) echo 6000;; esac)
 
 .PHONY: test
-test: test/c-stats.so
+test: test-remote
+test: test-statistical
+
+.PHONY: test-remote
+test-remote:
+	echo '(load "test-remote")' \
+	| $(MITSCHEME) --batch-mode --no-init-file \
+	  --eval '(define (top-eval e) (eval e (->environment (quote ()))))' \
+	  --load match \
+	  --load condvar \
+	  --load thread-barrier \
+	  --load remote-balancer \
+	  --load remote-client \
+	  --load remote-io \
+	  --load remote-server \
+	  --load remote-worker \
+	  # end of MIT Scheme options
+
+.PHONY: test-statistical
+test-statistical: test/c-stats.so
 	$(MITSCHEME) --compiler --heap $(HEAP) --stack 2000 --batch-mode \
 	  --no-init-file \
 	  --eval '(set! load/suppress-loading-message? #t)' \
