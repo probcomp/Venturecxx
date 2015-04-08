@@ -32,6 +32,13 @@ test/c-stats.so: $(c_stats_OBJS) Makefile
 	&& mv -f $@.tmp $@
 
 clean:
+	-rm -f *.bci
+	-rm -f *.bin
+	-rm -f *.com
+	-rm -f *.ext
+	-rm -f test/*.bci
+	-rm -f test/*.bin
+	-rm -f test/*.com
+	-rm -f test/*.ext
 	-rm -f test/c-stats.o
 	-rm -f test/c-stats.so
-	rm *.bci *.com *.bin *.ext
