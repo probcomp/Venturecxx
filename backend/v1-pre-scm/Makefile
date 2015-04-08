@@ -1,3 +1,13 @@
+CFLAGS = -Wall -Wextra -Werror -O2
+
+MITSCHEME_MODULE_SDK = /usr/src/mit-scheme/src/microcode
+MITSCHEME_MODULE_CFLAGS = -I$(MITSCHEME_MODULE_SDK) -fPIC -DCOMPILE_AS_MODULE
+MITSCHEME_MODULE_LDFLAGS = -shared -fPIC
+MITSCHEME_MODULE_LIBS =
+
+GSL_CFLAGS = `gsl-config --cflags`
+GSL_LDFLAGS =
+GSL_LIBS = `gsl-config --libs`
 
 ARCH = $(shell uname -m)
 
@@ -13,12 +23,18 @@ test: test/c-stats.so
 	  --eval '(set! load/suppress-loading-message? #t)' \
 	  --eval '(begin (load "load") (load "test/load") (run-tests-and-exit))'
 
-test/c-stats.so: test/c-stats.c Makefile
-	gcc -I/home/axch/mit-scheme-9.2/src/microcode/ \
-	  -I/home/axch/mit-scheme-9.1.1/src/microcode/ \
-	  `gsl-config --cflags` -shared \
-	  -o test/c-stats.so test/c-stats.c \
-	   `gsl-config --libs` -Wall -Wextra -Werror -O2 -fPIC -DCOMPILE_AS_MODULE
+c_stats_CFLAGS = $(CFLAGS) $(MITSCHEME_MODULE_CFLAGS) $(GSL_CFLAGS)
+c_stats_LDFLAGS = $(LDFLAGS) $(MITSCHEME_MODULE_LDFLAGS) $(GSL_LDFLAGS)
+c_stats_LIBS = $(LIBS) $(MITSCHEME_MODULE_LIBS) $(GSL_LIBS)
+c_stats_SRCS = test/c-stats.c
+c_stats_OBJS = $(c_stats_SRCS:.c=.o)
+test/c-stats.o: test/c-stats.c Makefile
+	$(CC) $(c_stats_CFLAGS) -o $@.tmp -c test/c-stats.c && mv -f $@.tmp $@
+test/c-stats.so: $(c_stats_OBJS) Makefile
+	$(CC) $(c_stats_LDFLAGS) -o $@.tmp $(c_stats_OBJS) $(c_stats_LIBS) \
+	&& mv -f $@.tmp $@
 
 clean:
+	-rm -f test/c-stats.o
+	-rm -f test/c-stats.so
 	rm *.bci *.com *.bin *.ext
