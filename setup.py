@@ -16,20 +16,8 @@
 #!/usr/bin/env python
 
 from distutils.core import setup, Extension
-from distutils import sysconfig
 import os
 import sys
-
-#src_dir = "backend/cxx/src"
-#src_files = []
-
-#def find_cxx(agg, dirname, fnames):
-#    for f in fnames:
-#        if f.endswith(".cxx"):
-#            agg.append(os.path.join(dirname, f))
-#
-#os.path.walk(src_dir, find_cxx, src_files)
-#print(src_files)
 
 ON_LINUX = 'linux' in sys.platform
 ON_MAC = 'darwin' in sys.platform
@@ -41,59 +29,6 @@ if ON_LINUX:
 if ON_MAC:
     os.environ['CC'] = 'ccache gcc-4.9'
     os.environ['CXX'] = 'ccache g++-4.9'
-
-src_files = [
-    "src/value.cxx",
-    "src/node.cxx",
-    "src/env.cxx",
-    "src/render.cxx",
-    "src/builtin.cxx",
-    "src/findsproots.cxx",
-    "src/trace.cxx",
-    "src/rcs.cxx",
-    "src/omegadb.cxx",
-    "src/regen.cxx",
-    "src/detach.cxx",
-    "src/flush.cxx",
-    "src/lkernel.cxx",
-    "src/infer/gkernel.cxx",
-    "src/infer/mh.cxx",
-    "src/infer/gibbs.cxx",
-    "src/infer/pgibbs.cxx",
-    "src/infer/meanfield.cxx",
-    "src/utils.cxx",
-    "src/check.cxx",
-    "src/sp.cxx",
-    "src/spaux.cxx",
-    "src/scaffold.cxx",
-    "src/sps/csp.cxx",
-    "src/sps/mem.cxx",
-    "src/sps/number.cxx",
-    "src/sps/sym.cxx",
-    "src/sps/trig.cxx",
-    #"src/sps/real.cxx",
-    #"src/sps/count.cxx",
-    "src/sps/bool.cxx",
-    "src/sps/continuous.cxx",
-    "src/sps/discrete.cxx",
-    "src/sps/cond.cxx",
-    "src/sps/vector.cxx",
-    "src/sps/list.cxx",
-    "src/sps/map.cxx",
-    "src/sps/envs.cxx",
-    "src/sps/eval.cxx",
-    "src/sps/pycrp.cxx",
-    "src/sps/makesymdirmult.cxx",
-    "src/sps/makedirmult.cxx",
-    "src/sps/makebetabernoulli.cxx",
-    "src/sps/makeucsymdirmult.cxx",
-    "src/sps/makelazyhmm.cxx",
-    "src/pytrace.cxx",
-]
-src_files = ["backend/cxx/" + f for f in src_files]
-
-inc_dirs = ['inc/', 'inc/sps/', 'inc/infer/', 'inc/Eigen']
-inc_dirs = ["backend/cxx/" + d for d in inc_dirs]
 
 puma_src_files = [
     "src/args.cxx",
@@ -180,21 +115,6 @@ packages = [
     "venture.value",
     "venture.venturemagics",
 ]
-
-cxx = Extension("venture.cxx.libtrace",
-    define_macros = [('MAJOR_VERSION', '0'),
-                     ('MINOR_VERSION', '1'),
-                     ('REVISION', '1')],
-    libraries = ['gsl', 'gslcblas', 'boost_python'],
-    extra_compile_args = ["-std=c++11", "-Wall", "-g", "-O2", "-fPIC"] + cflags,
-    undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
-    include_dirs = inc_dirs,
-    sources = src_files)
-
-if "COMPILE_CXX_BACKEND" in os.environ:
-    ext_modules.append(cxx)
-else:
-    print "Skipping old CXX backend. To include it, set the flag COMPILE_CXX_BACKEND"
 
 if ON_LINUX:
     puma = Extension("venture.puma.libpumatrace",
@@ -295,7 +215,6 @@ setup (
     packages = packages,
     package_dir = {
         "venture": "python/lib/",
-        "venture.cxx": "backend/cxx",
         "venture.lite": "backend/lite/",
         "venture.plex": "external/plex/dist/Plex/",
         "venture.puma": "backend/new_cxx/",
