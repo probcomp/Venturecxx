@@ -20,8 +20,8 @@ def testFreezeSanityCheck2():
   ripl = get_ripl()
 
   ripl.assume("x", "(normal 0.0 1.0)")
-  ripl.assume("y", "(scope_include 0 0 (normal (normal (normal (normal (normal x 1.0) 1.0) 1.0) 1.0) 1.0))")
-  ripl.assume("ringer", "(scope_include 0 0 (normal 0.0 1.0))")
+  ripl.assume("y", "(tag 0 0 (normal (normal (normal (normal (normal x 1.0) 1.0) 1.0) 1.0) 1.0))")
+  ripl.assume("ringer", "(tag 0 0 (normal 0.0 1.0))")
 
   engine = ripl.sivm.core_sivm.engine
   eq_(engine.getDistinguishedTrace().numNodesInBlock(0,0),6)

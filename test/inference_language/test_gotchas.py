@@ -80,7 +80,7 @@ def checkRejectNormal(incl_mu, incl_sigma, incl_out):
   # metaprogramming.
   def maybewrap(command, doit):
     if doit:
-      return "(scope_include (quote scaffold) 0 %s)" % command
+      return "(tag (quote scaffold) 0 %s)" % command
     else:
       return command
   ripl = get_ripl()

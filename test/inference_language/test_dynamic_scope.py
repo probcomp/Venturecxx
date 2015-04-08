@@ -88,7 +88,7 @@ def testScopeExcludeBaseline():
   assert_equal(ripl.sivm.core_sivm.engine.getDistinguishedTrace().numNodesInBlock(0, 0), 4)
 
 @on_inf_prim("none")
-@broken_in('puma', "puma can't handle arrays as blocks in a scope_include.")
+@broken_in('puma', "puma can't handle arrays as blocks in a tag.")
 def testArrayBlock():
   ripl = get_ripl()
 

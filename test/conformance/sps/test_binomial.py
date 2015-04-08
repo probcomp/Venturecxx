@@ -47,8 +47,8 @@ def testBinomial3():
   p1 = 0.3
   p2 = 0.4
   n = 4
-  ripl.assume("p","(scope_include 0 1 (if (flip %f) %f %f))" % (b,p1,p2))
-  ripl.predict("(scope_include 0 0 (binomial %d p))" % n,label="pid")
+  ripl.assume("p","(tag 0 1 (if (flip %f) %f %f))" % (b,p1,p2))
+  ripl.predict("(tag 0 0 (binomial %d p))" % n,label="pid")
 
   predictions = collectSamples(ripl,"pid",infer="(repeat %s (do (mh 0 1 1) (gibbs 0 0 1)))" % default_num_transitions_per_sample())
 

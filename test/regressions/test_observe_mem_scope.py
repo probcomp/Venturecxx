@@ -8,7 +8,7 @@ def testScopeObservedThroughMem1():
   r = get_ripl()
   r.assume("frob", "(mem (lambda (x) (flip 0.5)))")
   r.observe("(frob 1)", True)
-  r.predict("(scope_include (quote foo) 0 (frob 1))")
+  r.predict("(tag (quote foo) 0 (frob 1))")
   trace = r.sivm.core_sivm.engine.getDistinguishedTrace()
   scope = trace._normalizeEvaluatedScopeOrBlock(val.VentureSymbol("foo")) # pylint:disable=protected-access
   eq_(1, len(trace.getAllNodesInScope(scope)))
@@ -31,7 +31,7 @@ observations.  This was detected through a horrible mess involving mem.
   r.infer("(incorporate)")
   r.predict("(frob 1)")
   r.infer("(resample 1)")
-  r.predict("(scope_include (quote foo) 0 (frob 1))")
+  r.predict("(tag (quote foo) 0 (frob 1))")
   trace = r.sivm.core_sivm.engine.getDistinguishedTrace()
   eq_(0, len(trace.getAllNodesInScope(scope)))
 

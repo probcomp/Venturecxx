@@ -37,7 +37,7 @@ def initBasicPFripl1():
   ripl = get_ripl()
   ripl.assume("f","""
 (mem (lambda (i)
-  (scope_include 0 i 
+  (tag 0 i 
     (bernoulli (if (eq i 0) 0.5 
                    (if (f (- i 1)) 0.7 0.3))))))
 """)
@@ -81,7 +81,7 @@ def initBasicPFripl2():
   ripl = get_ripl()
   ripl.assume("f","""
 (mem (lambda (i)
-  (scope_include 0 i 
+  (tag 0 i 
     (normal (if (eq i 0) 0 (f (- i 1))) 1))))
 """)
 
