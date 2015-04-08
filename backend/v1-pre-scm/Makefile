@@ -7,6 +7,7 @@ else
   HEAP = 6000
 endif
 
+.PHONY: test
 test: test/c-stats.so
 	mit-scheme --compiler --heap $(HEAP) --stack 2000 --batch-mode --no-init-file \
 	  --eval '(set! load/suppress-loading-message? #t)' \
@@ -21,5 +22,3 @@ test/c-stats.so: test/c-stats.c Makefile
 
 clean:
 	rm *.bci *.com *.bin *.ext
-
-.PHONY: test
