@@ -36,9 +36,11 @@ clean:
 	-rm -f *.bin
 	-rm -f *.com
 	-rm -f *.ext
+	-rm -f *.tmp
 	-rm -f test/*.bci
 	-rm -f test/*.bin
 	-rm -f test/*.com
 	-rm -f test/*.ext
+	-rm -f test/*.tmp
 	-rm -f test/c-stats.o
 	-rm -f test/c-stats.so
