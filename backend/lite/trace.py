@@ -498,7 +498,11 @@ class Trace(object):
         (rate, steps) = exp[3:5]
         mixMH(self, BlockScaffoldIndexer(scope, block), NesterovAcceleratedGradientAscentOperator(rate, int(steps)))
       elif operator == "rejection":
-        mixMH(self, BlockScaffoldIndexer(scope, block), RejectionOperator())
+        if len(exp) == 5:
+          trials = int(exp[3])
+        else:
+          trials = None
+        mixMH(self, BlockScaffoldIndexer(scope, block), RejectionOperator(trials))
       elif operator == "bogo_possibilize":
         mixMH(self, BlockScaffoldIndexer(scope, block), BogoPossibilizeOperator())
       elif operator == "print_scaffold_stats":

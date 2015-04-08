@@ -308,11 +308,19 @@ trajectory.
 
 The `transitions` argument specifies how many times to do this."""),
 
-  trace_method_sp("rejection", transition_oper_type(min_req_args=2), desc="""\
+  trace_method_sp("rejection", transition_oper_type([v.NumberType("attempt_bound : number")], min_req_args=2), desc="""\
 Sample from the local posterior by rejection sampling.
 
 Not available in the Puma backend.  Not all the builtin procedures
 support all the density bound information necessary for this.
+
+The `attempt_bound` bound argument, if supplied, indicates how many
+attempts to make.  If no sample is accepted after that many trials,
+stop, and leave the local state as it was.  Warning: bounded rejection
+is not a Bayes-sound inference algorithm.  If `attempt_bound` is not
+given, keep trying until acceptance (possibly leaving the session
+unresponsive).  Note: if three arguments are supplied, the last one is
+taken to be the number of transitions, not the attempt bound.
 
 The `transitions` argument specifies how many times to do this.
 Specifying more than 1 transition is redundant if the `block` is
