@@ -9,13 +9,7 @@ GSL_CFLAGS = `gsl-config --cflags`
 GSL_LDFLAGS =
 GSL_LIBS = `gsl-config --libs`
 
-ARCH = $(shell uname -m)
-
-ifeq ($(ARCH), x86_64)
-  HEAP = 100000
-else
-  HEAP = 6000
-endif
+HEAP = $$(case `uname -m` in x86_64) echo 100000;; *) echo 6000;; esac)
 
 .PHONY: test
 test: test/c-stats.so
