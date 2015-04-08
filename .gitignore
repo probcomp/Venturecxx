@@ -1,5 +1,6 @@
 build
 env.d
+.idea/
 
 tool/logs/*
 # python
