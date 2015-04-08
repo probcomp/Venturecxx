@@ -1,5 +1,7 @@
 CFLAGS = -Wall -Wextra -Werror -O2
 
+MITSCHEME = mit-scheme
+
 MITSCHEME_MODULE_SDK = /usr/src/mit-scheme/src/microcode
 MITSCHEME_MODULE_CFLAGS = -I$(MITSCHEME_MODULE_SDK) -fPIC -DCOMPILE_AS_MODULE
 MITSCHEME_MODULE_LDFLAGS = -shared -fPIC
@@ -13,7 +15,8 @@ HEAP = $$(case `uname -m` in x86_64) echo 100000;; *) echo 6000;; esac)
 
 .PHONY: test
 test: test/c-stats.so
-	mit-scheme --compiler --heap $(HEAP) --stack 2000 --batch-mode --no-init-file \
+	$(MITSCHEME) --compiler --heap $(HEAP) --stack 2000 --batch-mode \
+	  --no-init-file \
 	  --eval '(set! load/suppress-loading-message? #t)' \
 	  --eval '(begin (load "load") (load "test/load") (run-tests-and-exit))'
 
