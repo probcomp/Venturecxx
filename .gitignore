@@ -12,6 +12,7 @@ tool/logs/*
 # Editor/OS temp files
 *~
 .idea/
+.DS_Store
 
 # Coverage reports
 htmlcov
