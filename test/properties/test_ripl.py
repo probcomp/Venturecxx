@@ -40,6 +40,7 @@ def testRiplSimulate():
                                  # misannotated as to the true
                                  # permissible types of scopes and
                                  # blocks
+                "tag",
                 "get_current_environment", # Because BogusArgs gives a bogus environment
                 "extend_environment", # Because BogusArgs gives a bogus environment
               ]:
@@ -112,6 +113,7 @@ def testForeignInterfaceSimulate():
                                  # misannotated as to the true
                                  # permissible types of scopes and
                                  # blocks
+                "tag",
                 "get_current_environment", # Because BogusArgs gives a bogus environment
                 "extend_environment", # Because BogusArgs gives a bogus environment
               ]:

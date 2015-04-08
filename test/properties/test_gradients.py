@@ -64,7 +64,7 @@ def testGradientOfSimulate():
                     # The gradients of scope_include and scope_exclude
                     # have weird shapes because scope_include and
                     # scope_exclude are weird.
-                    "scope_include", "scope_exclude",
+                    "scope_include", "scope_exclude", "tag", "tag_exclude",
                     # The gradients of biplex and lookup have sporadic
                     # symbolic zeroes.
                     "biplex", "lookup",

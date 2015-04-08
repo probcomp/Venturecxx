@@ -11,8 +11,8 @@ def loadHMMParticleAsymptoticProgram1(M):
   ripl.assume("f","""
 (mem (lambda (i)
   (if (eq i 0)
-    (scope_include (quote states) 0 (normal 0.0 1.0))
-    (scope_include (quote states) i (normal (f (- i 1)) 1.0)))))
+    (tag (quote states) 0 (normal 0.0 1.0))
+    (tag (quote states) i (normal (f (- i 1)) 1.0)))))
 """)
   ripl.assume("g","""
 (mem (lambda (i)

@@ -11,7 +11,7 @@ def test_profiling1():
   ripl = get_ripl()
 
   ripl.execute_program("""
-    [assume tricky (scope_include (quote tricky) 0 (flip 0.5))]
+    [assume tricky (tag (quote tricky) 0 (flip 0.5))]
     [assume weight (if tricky (uniform_continuous 0 1) 0.5)]
     [assume coin (lambda () (flip weight))]
     [observe (coin) true]

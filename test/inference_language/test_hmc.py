@@ -123,8 +123,8 @@ def testMoreElaborate():
   however, mess with the possibility that the principal nodes that HMC
   operates over may themselves be in the brush."""
   ripl = get_ripl()
-  ripl.assume("x", "(scope_include (quote param) 0 (uniform_continuous -10 10))")
-  ripl.assume("y", "(scope_include (quote param) 1 (uniform_continuous -10 10))",
+  ripl.assume("x", "(tag (quote param) 0 (uniform_continuous -10 10))")
+  ripl.assume("y", "(tag (quote param) 1 (uniform_continuous -10 10))",
               label="pid")
   ripl.assume("xout", """
 (if (< x 0)

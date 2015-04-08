@@ -48,11 +48,11 @@ def checkPGibbsBlockingMHHMM1(operator):
   """The point of this is that it should give reasonable results in very few transitions but with a large number of particles."""
   ripl = get_ripl()
 
-  ripl.assume("x0","(scope_include 0 0 (normal 0.0 1.0))")
-  ripl.assume("x1","(scope_include 0 1 (normal x0 1.0))")
-  ripl.assume("x2","(scope_include 0 2 (normal x1 1.0))")
-  ripl.assume("x3","(scope_include 0 3 (normal x2 1.0))")
-  ripl.assume("x4","(scope_include 0 4 (normal x3 1.0))")
+  ripl.assume("x0","(tag 0 0 (normal 0.0 1.0))")
+  ripl.assume("x1","(tag 0 1 (normal x0 1.0))")
+  ripl.assume("x2","(tag 0 2 (normal x1 1.0))")
+  ripl.assume("x3","(tag 0 3 (normal x2 1.0))")
+  ripl.assume("x4","(tag 0 4 (normal x3 1.0))")
 
   ripl.assume("y0","(normal x0 1.0)")
   ripl.assume("y1","(normal x1 1.0)")
@@ -95,7 +95,7 @@ def checkPGibbsDynamicScope1(operator):
   ripl.assume("initial_state_fn", "(lambda () (normal 0.0 1.0))")
   ripl.assume("f","""
 (mem (lambda (t)
-  (scope_include 0 t (if (= t 0) (initial_state_fn) (transition_fn (f (- t 1)))))))
+  (tag 0 t (if (= t 0) (initial_state_fn) (transition_fn (f (- t 1)))))))
 """)  
 
   ripl.assume("g","(mem (lambda (t) (observation_fn (f t))))")
@@ -128,7 +128,7 @@ def testPGibbsDynamicScopeInterval():
   ripl.assume("initial_state_fn", "(lambda () (normal 0.0 1.0))")
   ripl.assume("f","""
 (mem (lambda (t)
-  (scope_include 0 t (if (= t 0) (initial_state_fn) (transition_fn (f (- t 1)))))))
+  (tag 0 t (if (= t 0) (initial_state_fn) (transition_fn (f (- t 1)))))))
 """)  
 
   ripl.assume("g","(mem (lambda (t) (observation_fn (f t))))")
@@ -158,7 +158,7 @@ def testFunnyHMM():
 def checkFunnyHMM(in_parallel):
   ripl = get_ripl()
   
-  ripl.assume("hypers", "(mem (lambda (t) (scope_include 0 t (normal 0 1))))")
+  ripl.assume("hypers", "(mem (lambda (t) (tag 0 t (normal 0 1))))")
   ripl.assume("init", "0")
   ripl.assume("next", "(lambda (state delta) (+ state delta))")
   ripl.assume("get_state",
