@@ -25,6 +25,7 @@ check: test
 
 .PHONY: test-remote
 test-remote:
+	@echo '; run remote tests' && \
 	echo '(load "test-remote")' \
 	| $(MITSCHEME) --batch-mode --no-init-file \
 	  --eval '(define (top-eval e) (eval e (->environment (quote ()))))' \
@@ -40,6 +41,7 @@ test-remote:
 
 .PHONY: test-statistical
 test-statistical: test/c-stats.so
+	@echo '; run statistical tests' && \
 	echo '(run-tests-and-exit)' \
 	| $(MITSCHEME) --compiler --heap $(HEAP) --stack 2000 --batch-mode \
 	  --no-init-file \
