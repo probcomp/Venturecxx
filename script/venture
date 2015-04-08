@@ -49,9 +49,6 @@ def client(args):
 def puma(args):
     local_ripl(args, v.Puma())
 
-def cxx(args):
-    local_ripl(args, v.CXX())
-
 def lite(args):
     local_ripl(args, v.Lite())
 
@@ -110,11 +107,6 @@ subparsers = parser.add_subparsers(title="optional mode")
 parser_local = subparsers.add_parser("puma", help="[default] Start a local Venture Puma session",
                                      description="Start a local Venture Puma session")
 parser_local.set_defaults(func=puma)
-add_local_args(parser_local)
-
-parser_local = subparsers.add_parser("cxx", help="[Deprecated in favor of Puma] Start a local Venture CXX session",
-                                     description="[Deprecated in favor of Puma] Start a local Venture CXX session")
-parser_local.set_defaults(func=cxx)
 add_local_args(parser_local)
 
 parser_local = subparsers.add_parser("lite", help="Start a local Venture Lite session",

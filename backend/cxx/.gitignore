@@ -1,9 +1,0 @@
-testEigen
-libtrace.so
-*#
-
-# CMake files
-CMakeCache.txt
-CMakeFiles
-cmake_install.cmake
-Makefile

@@ -31,7 +31,7 @@ class MakeUncollapsedHMMOutputPSP(DeterministicPSP):
     (p0,T,O) = args.operandValues
     # p0 comes in as a simplex but needs to become a 1-row matrix
     p0 = np.mat([p0])
-    # Transposition for compatibility with CXX
+    # Transposition for compatibility with Puma
     return VentureSPRecord(UncollapsedHMMSP(p0,np.transpose(T),np.transpose(O)))
 
   def description(self, _name):

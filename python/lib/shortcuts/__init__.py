@@ -65,12 +65,6 @@ class Backend(object):
     def make_ripl_rest_server(self):
         return server.RiplRestServer(self.make_combined_ripl())
 
-class CXX(Backend):
-    def make_engine(self, persistent_inference_trace=False):
-        from venture.cxx import engine
-        return engine.Engine(persistent_inference_trace)
-    def name(self): return "cxx"
-
 class Lite(Backend):
     def trace_constructor(self):
         from venture.lite import trace
@@ -86,8 +80,6 @@ class Puma(Backend):
 def backend(name = "puma"):
     if name == "lite":
         return Lite()
-    if name == "cxx":
-        return CXX()
     if name == "puma":
         return Puma()
     raise Exception("Unknown backend %s" % name)
@@ -105,7 +97,7 @@ def %s():
 """ % (method, method)
     exec(string2)
 
-    for backend_name in ["lite", "puma", "cxx"]:
+    for backend_name in ["lite", "puma"]:
         function = prefix + backend_name + "_" + suffix
         string = """
 def %s():
