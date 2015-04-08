@@ -1,3 +1,6 @@
+.PHONY: default-target
+default-target: test
+
 CFLAGS = -Wall -Wextra -Werror -O2
 
 MITSCHEME = mit-scheme
