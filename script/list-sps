@@ -1,7 +1,0 @@
-#!/bin/sh
-
-# This deprecation notice installed 1/6/14.
-
-echo The program that was once called \"list-sps\" is now called \"vendoc\".  Please use that.
-
-exit 1
