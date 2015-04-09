@@ -63,14 +63,17 @@ def code_of_script(name):
 
 def check_readme_agrees_with_script(name):
   target = code_of_script(name)
+  target = target[731:] # Skip the shebang line and the copyright header
   for block in code_blocks_in_readme():
-    if "#!/bin/bash -xe\n\n" + block == target:
+    if block == target:
       return # Success.
 
   # Failure; produce a nice explanation of it.
+  print "Blocks of README:"
   for block in code_blocks_in_readme():
     sys.stdout.write(block)
     print "-----"
+  print "Looking for target %s:" % name
   sys.stdout.write(target)
 
   assert False, "None of the code blocks in the README (repeated above) look like the %s script (also repeated above)." % name
