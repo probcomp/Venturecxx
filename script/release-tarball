@@ -37,13 +37,21 @@ echo Making a tarball marked version $release
 tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=.git \
     --exclude=.gitignore \
+    --exclude=.gitmodules \
+    --exclude=.gitattributes \
     --exclude=*.pyc \
+    --exclude=*.bci \
+    --exclude=*.bin \
+    --exclude=*.com \
+    --exclude=*.ext \
+    --exclude=v1-pre-scm/**/todo.txt \
     --exclude=build \
     --exclude=CMakeCache.txt \
     --exclude=CMakeFiles \
     --exclude=cmake_install.cmake \
     --exclude=env.d \
     --exclude=*~ \
+    --exclude=.owainnotes.txt \
     --exclude=valgrind-python.supp \
     --exclude=Makefile \
     --exclude=CMakeLists.txt \
@@ -59,7 +67,6 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=.ipynb_checkpoints \
     --exclude=tool/logs \
     --exclude=doc/v1 \
-    --exclude=backend/v1-pre-scm \
     --exclude=script/release-tarball \
     --exclude=venture-*.tgz \
     --exclude=venture-*.tar.gz \
