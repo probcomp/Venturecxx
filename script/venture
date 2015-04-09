@@ -23,7 +23,7 @@ import argparse
 from venture.ripl.console import run_venture_console
 import venture.shortcuts as v
 
-version_str="0.2.1"
+version_str="0.3"
 
 def banner(help=True):
     help_ad = "  `help' for help"
