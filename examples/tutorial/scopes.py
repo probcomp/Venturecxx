@@ -1,3 +1,19 @@
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 # # - Have one "hierarchical Bayes" example, ala the Charles/Amy/Josh bags-of-coins stuff --- that is, a hierarchical model out of dirichlet/discrete componenets, with parameters, hyperparameters, and latents, for a few different groups. At least one group of data should have the die rolls be latent (but observe some counts), so there is "state estimation", as well as parameter estimation and hyperparameter estimation.
 
