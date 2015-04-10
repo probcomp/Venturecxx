@@ -75,6 +75,14 @@ MatrixXd VentureSimplex::getMatrix() const
   return v;
 }
 
+VectorXd VentureArray::getVector() const
+{
+  size_t len = xs.size();
+  VectorXd v(len);
+  for (size_t i = 0; i < len; ++i) { v(i) = xs[i]->getDouble(); }
+  return v;
+}
+
 //// toPython methods
 
 boost::python::dict VentureNumber::toPython(Trace * trace) const

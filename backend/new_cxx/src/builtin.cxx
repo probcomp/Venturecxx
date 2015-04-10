@@ -125,6 +125,7 @@ map<string,SP*> initBuiltInSPs()
   m["vector"] = new SP(new NullRequestPSP(), new VectorOutputPSP());
   m["is_vector"] = new SP(new NullRequestPSP(), new IsVectorOutputPSP());
   m["to_vector"] = new SP(new NullRequestPSP(), new ToVectorOutputPSP());
+  m["vector_dot"] = new SP(new NullRequestPSP(), new VectorDotOutputPSP());
 
   /* Scoping */
   m["scope_include"] = new SP(new NullRequestPSP(), new ScopeIncludeOutputPSP());

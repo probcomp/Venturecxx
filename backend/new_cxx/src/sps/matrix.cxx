@@ -107,3 +107,12 @@ VentureValuePtr ToVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng
     return VentureValuePtr(new VentureVector(v));
   }
 }
+
+VentureValuePtr VectorDotOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  VectorXd v1 = args->operandValues[0]->getVector();
+  VectorXd v2 = args->operandValues[1]->getVector();
+  double answer = 0;
+  for (size_t i = 0; i < v1.size(); ++i) { answer += v1(i) * v2(i); }
+  return VentureValuePtr(new VentureNumber(answer));
+}

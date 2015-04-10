@@ -88,7 +88,6 @@ def checkRiplAgreesWithDeterministicSimulate(name, sp):
     "ravel", # Not implemented
     "matrix_mul", # Not implemented
     "repeat", # Not implemented
-    "vector_dot", # Not implemented
     "zip", # Not implemented
     "is_procedure", # Not implemented
     "print", # Not implemented

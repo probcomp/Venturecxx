@@ -209,6 +209,7 @@ struct VentureArray : VentureValue
 
   bool hasArray() const { return true; }
   vector<VentureValuePtr> getArray() const { return xs; }
+  VectorXd getVector() const; // Only if it's homogeneous and all numbers
 
   boost::python::dict toPython(Trace * trace) const;
 
