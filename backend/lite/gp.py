@@ -1,16 +1,20 @@
 import numpy as np
 import numpy.linalg as la
 import numpy.random as npr
+from exception import VentureValueError
 
 # XXX Replace by scipy.stats.multivariate_normal.logpdf when we
 # upgrade to scipy 0.14.
 def multivariate_normal_logpdf(x, mu, sigma):
-  dev = x - mu
-  ans = 0
-  ans += (-.5*(x-mu).transpose() * la.inv(sigma) * (x-mu))[0, 0]
-  ans += -.5*len(sigma)*np.log(2 * np.pi)
-  ans += -.5*np.log(la.det(sigma))
-  return ans
+  try:
+    dev = x - mu
+    ans = 0
+    ans += (-.5*(x-mu).transpose() * la.inv(sigma) * (x-mu))[0, 0]
+    ans += -.5*len(sigma)*np.log(2 * np.pi)
+    ans += -.5*np.log(la.det(sigma))
+    return ans
+  except la.LinAlgError as e:
+    raise VentureValueError("Bad GP covariance matrix.")
 
 def col_vec(xs):
   return np.matrix([xs]).T
