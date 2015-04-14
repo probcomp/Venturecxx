@@ -1,3 +1,20 @@
+// Copyright (c) 2014 MIT Probabilistic Computing Project.
+//
+// This file is part of Venture.
+//
+// Venture is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Venture is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 #include "sps/matrix.h"
 #include "Eigen/Dense"
 
@@ -89,4 +106,13 @@ VentureValuePtr ToVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng
     for (size_t i = 0; i < row.size(); ++i) { v(i) = row[i]->getDouble(); }
     return VentureValuePtr(new VentureVector(v));
   }
+}
+
+VentureValuePtr VectorDotOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  VectorXd v1 = args->operandValues[0]->getVector();
+  VectorXd v2 = args->operandValues[1]->getVector();
+  double answer = 0;
+  for (size_t i = 0; i < v1.size(); ++i) { answer += v1(i) * v2(i); }
+  return VentureValuePtr(new VentureNumber(answer));
 }

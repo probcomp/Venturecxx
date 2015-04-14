@@ -1,3 +1,20 @@
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 import random
 import math
 from ..regen import regenAndAttach
@@ -49,15 +66,25 @@ class RejectionOperator(InPlaceOperator):
   Bayesian Statistics Without Tears: A Sampling-Resampling Perspective
   A.F.M. Smith, A.E. Gelfand The American Statistician 46(2), 1992, p 84-88
   http://faculty.chicagobooth.edu/hedibert.lopes/teaching/ccis2010/1992SmithGelfand.pdf"""
+  def __init__(self, trials):
+    super(RejectionOperator, self).__init__()
+    self.trials = trials
+
   def propose(self, trace, scaffold):
     self.prepare(trace, scaffold)
     logBound = computeRejectionBound(trace, scaffold, scaffold.border[0])
     accept = False
-    while not accept:
+    attempt = 0
+    while not accept and (self.trials is None or self.trials > attempt):
       xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, {})
       accept = random.random() < math.exp(xiWeight - logBound)
       if not accept:
         detachAndExtract(trace, scaffold)
+        attempt += 1
+    if not accept:
+      # Ran out of attempts
+      print "Warning: rejection hit attempt bound of %s" % self.trials
+      regenAndAttach(trace, scaffold, True, self.rhoDB, {})
     return trace, 0
 
   def name(self): return "rejection"

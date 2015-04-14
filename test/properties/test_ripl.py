@@ -1,3 +1,20 @@
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 from nose import SkipTest
 from testconfig import config
 
@@ -40,6 +57,7 @@ def testRiplSimulate():
                                  # misannotated as to the true
                                  # permissible types of scopes and
                                  # blocks
+                "tag",
                 "get_current_environment", # Because BogusArgs gives a bogus environment
                 "extend_environment", # Because BogusArgs gives a bogus environment
               ]:
@@ -70,7 +88,6 @@ def checkRiplAgreesWithDeterministicSimulate(name, sp):
     "ravel", # Not implemented
     "matrix_mul", # Not implemented
     "repeat", # Not implemented
-    "vector_dot", # Not implemented
     "zip", # Not implemented
     "is_procedure", # Not implemented
     "print", # Not implemented
@@ -112,6 +129,7 @@ def testForeignInterfaceSimulate():
                                  # misannotated as to the true
                                  # permissible types of scopes and
                                  # blocks
+                "tag",
                 "get_current_environment", # Because BogusArgs gives a bogus environment
                 "extend_environment", # Because BogusArgs gives a bogus environment
               ]:

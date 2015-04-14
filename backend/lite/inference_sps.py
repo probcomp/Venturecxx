@@ -1,3 +1,20 @@
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 import sp
 import psp
 import value as v
@@ -308,11 +325,19 @@ trajectory.
 
 The `transitions` argument specifies how many times to do this."""),
 
-  trace_method_sp("rejection", transition_oper_type(min_req_args=2), desc="""\
+  trace_method_sp("rejection", transition_oper_type([v.NumberType("attempt_bound : number")], min_req_args=2), desc="""\
 Sample from the local posterior by rejection sampling.
 
 Not available in the Puma backend.  Not all the builtin procedures
 support all the density bound information necessary for this.
+
+The `attempt_bound` bound argument, if supplied, indicates how many
+attempts to make.  If no sample is accepted after that many trials,
+stop, and leave the local state as it was.  Warning: bounded rejection
+is not a Bayes-sound inference algorithm.  If `attempt_bound` is not
+given, keep trying until acceptance (possibly leaving the session
+unresponsive).  Note: if three arguments are supplied, the last one is
+taken to be the number of transitions, not the attempt bound.
 
 The `transitions` argument specifies how many times to do this.
 Specifying more than 1 transition is redundant if the `block` is

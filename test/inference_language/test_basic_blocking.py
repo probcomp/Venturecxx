@@ -1,3 +1,20 @@
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 import math
 import scipy.stats as stats
 from nose import SkipTest
@@ -11,8 +28,8 @@ def testBlockingExample0():
   ripl = get_ripl()
   if not collect_iid_samples(): raise SkipTest("This test should not pass without reset.")
   
-  ripl.assume("a", "(scope_include 0 0 (normal 10.0 1.0))", label="pid")
-  ripl.assume("b", "(scope_include 1 1 (normal a 1.0))")
+  ripl.assume("a", "(tag 0 0 (normal 10.0 1.0))", label="pid")
+  ripl.assume("b", "(tag 1 1 (normal a 1.0))")
   ripl.observe("(normal b 1.0)", 14.0)
 
   # If inference only frobnicates b, then the distribution on a
@@ -24,8 +41,8 @@ def testBlockingExample0():
 @on_inf_prim("mh")
 def testBlockingExample1():
   ripl = get_ripl()
-  ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))",label="a")
-  ripl.assume("b", "(scope_include 0 0 (normal 1.0 1.0))",label="b")
+  ripl.assume("a", "(tag 0 0 (normal 0.0 1.0))",label="a")
+  ripl.assume("b", "(tag 0 0 (normal 1.0 1.0))",label="b")
   olda = ripl.report("a")
   oldb = ripl.report("b")
   # The point of block proposals is that both things change at once.
@@ -38,10 +55,10 @@ def testBlockingExample1():
 @on_inf_prim("mh")
 def testBlockingExample2():
   ripl = get_ripl()
-  ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))", label="a")
-  ripl.assume("b", "(scope_include 0 0 (normal 1.0 1.0))", label="b")
-  ripl.assume("c", "(scope_include 0 1 (normal 2.0 1.0))", label="c")
-  ripl.assume("d", "(scope_include 0 1 (normal 3.0 1.0))", label="d")
+  ripl.assume("a", "(tag 0 0 (normal 0.0 1.0))", label="a")
+  ripl.assume("b", "(tag 0 0 (normal 1.0 1.0))", label="b")
+  ripl.assume("c", "(tag 0 1 (normal 2.0 1.0))", label="c")
+  ripl.assume("d", "(tag 0 1 (normal 3.0 1.0))", label="d")
   olda = ripl.report("a")
   oldb = ripl.report("b")
   oldc = ripl.report("c")
@@ -64,8 +81,8 @@ def testBlockingExample2():
 @on_inf_prim("mh")
 def testBlockingExample3():
   ripl = get_ripl()
-  ripl.assume("a", "(scope_include 0 0 (normal 0.0 1.0))", label="a")
-  ripl.assume("b", "(scope_include 0 1 (normal 1.0 1.0))", label="b")
+  ripl.assume("a", "(tag 0 0 (normal 0.0 1.0))", label="a")
+  ripl.assume("b", "(tag 0 1 (normal 1.0 1.0))", label="b")
   olda = ripl.report("a")
   oldb = ripl.report("b")
   # The point of block proposals is that both things change at once.
@@ -113,8 +130,8 @@ def testCycleKernel():
   """Same example as testBlockingExample0, but a cycle kernel that covers everything should solve it"""
   ripl = get_ripl()
 
-  ripl.assume("a", "(scope_include 0 0 (normal 10.0 1.0))", label="pid")
-  ripl.assume("b", "(scope_include 1 1 (normal a 1.0))")
+  ripl.assume("a", "(tag 0 0 (normal 10.0 1.0))", label="pid")
+  ripl.assume("b", "(tag 1 1 (normal a 1.0))")
   ripl.observe("(normal b 1.0)", 14.0)
 
   infer = "(repeat %s (do (mh 0 0 1) (mh 1 1 1)))" % default_num_transitions_per_sample()

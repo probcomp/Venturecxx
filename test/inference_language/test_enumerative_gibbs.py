@@ -1,3 +1,20 @@
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples, default_num_transitions_per_sample, gen_on_inf_prim, on_inf_prim
 
@@ -96,8 +113,8 @@ def checkEnumerativeGibbsXOR1(in_parallel):
      The next test accounts for that."""
   ripl = get_ripl()
 
-  ripl.assume("x","(scope_include 0 0 (bernoulli 0.001))",label="pid")
-  ripl.assume("y","(scope_include 0 0 (bernoulli 0.001))")
+  ripl.assume("x","(tag 0 0 (bernoulli 0.001))",label="pid")
+  ripl.assume("y","(tag 0 0 (bernoulli 0.001))")
   ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
   ripl.observe("(noisy_true (= (+ x y) 1) .000001)","true")
   infer = "(gibbs 0 0 %s %s)" % (default_num_transitions_per_sample(), in_parallel)
@@ -115,8 +132,8 @@ def checkEnumerativeGibbsXOR2(in_parallel):
   """Tests that an XOR chain mixes with enumerative gibbs."""
   ripl = get_ripl()
 
-  ripl.assume("x","(scope_include 0 0 (bernoulli 0.0015))",label="pid")
-  ripl.assume("y","(scope_include 0 0 (bernoulli 0.0005))")
+  ripl.assume("x","(tag 0 0 (bernoulli 0.0015))",label="pid")
+  ripl.assume("y","(tag 0 0 (bernoulli 0.0005))")
   ripl.assume("noisy_true","(lambda (pred noise) (flip (if pred 1.0 noise)))")
   ripl.observe("(noisy_true (= (+ x y) 1) .000001)","true")
   infer = "(gibbs 0 0 %s %s)" % (default_num_transitions_per_sample(), in_parallel)
@@ -134,9 +151,9 @@ def checkEnumerativeGibbsXOR3(in_parallel):
   """A regression catching a mysterious math domain error."""
   ripl = get_ripl()
 
-  ripl.assume("x","(scope_include 0 0 (bernoulli 0.0015))",label="pid")
-  ripl.assume("y","(scope_include 0 0 (bernoulli 0.0005))")
-  ripl.assume("noisy_true","(lambda (pred noise) (scope_include 0 0 (flip (if pred 1.0 noise))))")
+  ripl.assume("x","(tag 0 0 (bernoulli 0.0015))",label="pid")
+  ripl.assume("y","(tag 0 0 (bernoulli 0.0005))")
+  ripl.assume("noisy_true","(lambda (pred noise) (tag 0 0 (flip (if pred 1.0 noise))))")
   # This predict is the different between this test and
   # testEnumerativeGibbsXOR2, and currently causes a mystery math
   # domain error.

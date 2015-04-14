@@ -1,3 +1,20 @@
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+//
+// This file is part of Venture.
+//
+// Venture is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Venture is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 #include "builtin.h"
 #include "sp.h"
 #include "sps/conditional.h"
@@ -108,10 +125,13 @@ map<string,SP*> initBuiltInSPs()
   m["vector"] = new SP(new NullRequestPSP(), new VectorOutputPSP());
   m["is_vector"] = new SP(new NullRequestPSP(), new IsVectorOutputPSP());
   m["to_vector"] = new SP(new NullRequestPSP(), new ToVectorOutputPSP());
+  m["vector_dot"] = new SP(new NullRequestPSP(), new VectorDotOutputPSP());
 
   /* Scoping */
   m["scope_include"] = new SP(new NullRequestPSP(), new ScopeIncludeOutputPSP());
   m["scope_exclude"] = new SP(new NullRequestPSP(), new ScopeExcludeOutputPSP());
+  m["tag"] = new SP(new NullRequestPSP(), new ScopeIncludeOutputPSP());
+  m["tag_exclude"] = new SP(new NullRequestPSP(), new ScopeExcludeOutputPSP());
 
   /* Data structures */
   m["simplex"] = new SP(new NullRequestPSP(), new SimplexOutputPSP());

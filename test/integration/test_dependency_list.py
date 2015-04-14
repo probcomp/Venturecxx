@@ -1,3 +1,20 @@
+# Copyright (c) 2014 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 import re
 import os.path
 import sys
@@ -46,14 +63,17 @@ def code_of_script(name):
 
 def check_readme_agrees_with_script(name):
   target = code_of_script(name)
+  target = target[731:] # Skip the shebang line and the copyright header
   for block in code_blocks_in_readme():
-    if "#!/bin/bash -xe\n\n" + block == target:
+    if block == target:
       return # Success.
 
   # Failure; produce a nice explanation of it.
+  print "Blocks of README:"
   for block in code_blocks_in_readme():
     sys.stdout.write(block)
     print "-----"
+  print "Looking for target %s:" % name
   sys.stdout.write(target)
 
   assert False, "None of the code blocks in the README (repeated above) look like the %s script (also repeated above)." % name

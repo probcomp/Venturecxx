@@ -1,18 +1,19 @@
-# Copyright (c) 2013, MIT Probabilistic Computing Project.
-# 
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+#
 # This file is part of Venture.
-# 	
+#
 # Venture is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 	
+#
 # Venture is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 	
-# You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
@@ -65,12 +66,6 @@ class Backend(object):
     def make_ripl_rest_server(self):
         return server.RiplRestServer(self.make_combined_ripl())
 
-class CXX(Backend):
-    def make_engine(self, persistent_inference_trace=False):
-        from venture.cxx import engine
-        return engine.Engine(persistent_inference_trace)
-    def name(self): return "cxx"
-
 class Lite(Backend):
     def trace_constructor(self):
         from venture.lite import trace
@@ -86,8 +81,6 @@ class Puma(Backend):
 def backend(name = "puma"):
     if name == "lite":
         return Lite()
-    if name == "cxx":
-        return CXX()
     if name == "puma":
         return Puma()
     raise Exception("Unknown backend %s" % name)
@@ -105,7 +98,7 @@ def %s():
 """ % (method, method)
     exec(string2)
 
-    for backend_name in ["lite", "puma", "cxx"]:
+    for backend_name in ["lite", "puma"]:
         function = prefix + backend_name + "_" + suffix
         string = """
 def %s():

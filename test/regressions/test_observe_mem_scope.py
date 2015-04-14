@@ -1,3 +1,20 @@
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 from nose.tools import eq_
 
 import venture.lite.value as val
@@ -8,7 +25,7 @@ def testScopeObservedThroughMem1():
   r = get_ripl()
   r.assume("frob", "(mem (lambda (x) (flip 0.5)))")
   r.observe("(frob 1)", True)
-  r.predict("(scope_include (quote foo) 0 (frob 1))")
+  r.predict("(tag (quote foo) 0 (frob 1))")
   trace = r.sivm.core_sivm.engine.getDistinguishedTrace()
   scope = trace._normalizeEvaluatedScopeOrBlock(val.VentureSymbol("foo")) # pylint:disable=protected-access
   eq_(1, len(trace.getAllNodesInScope(scope)))
@@ -31,7 +48,7 @@ observations.  This was detected through a horrible mess involving mem.
   r.infer("(incorporate)")
   r.predict("(frob 1)")
   r.infer("(resample 1)")
-  r.predict("(scope_include (quote foo) 0 (frob 1))")
+  r.predict("(tag (quote foo) 0 (frob 1))")
   trace = r.sivm.core_sivm.engine.getDistinguishedTrace()
   eq_(0, len(trace.getAllNodesInScope(scope)))
 

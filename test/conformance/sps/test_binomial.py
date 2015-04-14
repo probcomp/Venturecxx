@@ -1,3 +1,20 @@
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 import scipy.stats
 from nose.tools import assert_equal, assert_almost_equal
 
@@ -47,8 +64,8 @@ def testBinomial3():
   p1 = 0.3
   p2 = 0.4
   n = 4
-  ripl.assume("p","(scope_include 0 1 (if (flip %f) %f %f))" % (b,p1,p2))
-  ripl.predict("(scope_include 0 0 (binomial %d p))" % n,label="pid")
+  ripl.assume("p","(tag 0 1 (if (flip %f) %f %f))" % (b,p1,p2))
+  ripl.predict("(tag 0 0 (binomial %d p))" % n,label="pid")
 
   predictions = collectSamples(ripl,"pid",infer="(repeat %s (do (mh 0 1 1) (gibbs 0 0 1)))" % default_num_transitions_per_sample())
 

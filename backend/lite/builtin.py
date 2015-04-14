@@ -1,3 +1,20 @@
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 import math
 import numpy as np
 from numbers import Number
@@ -388,6 +405,16 @@ builtInSPsList = [
                                       # These are type-restricted in Venture, but the actual PSP doesn't care.
                                       [v.AnyType("<scope>"), v.AnyType()],
                                       v.AnyType()) ],
+
+           [ "tag", typed_nr(scope.ScopeIncludeOutputPSP(),
+                             # These are type-restricted in Venture, but the actual PSP doesn't care.
+                             [v.AnyType("<scope>"), v.AnyType("<block>"), v.AnyType()],
+                             v.AnyType()) ],
+
+           [ "tag_exclude", typed_nr(scope.ScopeExcludeOutputPSP(),
+                                     # These are type-restricted in Venture, but the actual PSP doesn't care.
+                                     [v.AnyType("<scope>"), v.AnyType()],
+                                     v.AnyType()) ],
 
            [ "binomial", typed_nr(discrete.BinomialOutputPSP(), [v.CountType(), v.ProbabilityType()], v.CountType()) ],
            [ "flip", typed_nr(discrete.BernoulliOutputPSP(), [v.ProbabilityType()], v.BoolType(), min_req_args=0) ],

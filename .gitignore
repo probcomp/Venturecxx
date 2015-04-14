@@ -1,21 +1,26 @@
+# Build artifacts
 build
 env.d
+a.out
 
+# Log location for dev tools
 tool/logs/*
-# python
+
+# Python compiled files
 *.pyc
 
-# gedit temp files
+# Editor/OS temp files
 *~
+.idea/
+.DS_Store
 
+# Coverage reports
 htmlcov
 .coverage
 .coverage.*
 
-# dev/testing
+# Dev/testing
 dump
-a.out
-
 .noseids
 
 # Release artifacts

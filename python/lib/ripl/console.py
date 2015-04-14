@@ -1,4 +1,4 @@
-# Copyright (c) 2013, MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -12,10 +12,12 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import copy
 import traceback
 from cmd import Cmd
 from functools import wraps
@@ -42,10 +44,12 @@ def catchesVentureException(f):
   return try_f
 
 class RiplCmd(Cmd, object):
-  def __init__(self, ripl):
+  def __init__(self, ripl, rebuild):
     super(RiplCmd, self).__init__()
     self.ripl = ripl
     self.prompt = '>>> '
+    self.rebuild = rebuild
+    self.files = []
 
   def emptyline(self):
     pass
@@ -122,8 +126,11 @@ class RiplCmd(Cmd, object):
   
   @catchesVentureException
   def do_clear(self, _):
-    '''Clear all directives.'''
-    self.ripl.clear()
+    '''Clear the console state.  (Replay the effects of command line arguments.)'''
+    self.ripl.stop_continuous_inference()
+    (_, self.ripl) = self.rebuild()
+    self.files = []
+    self._update_prompt()
   
   @catchesVentureException
   def do_infer(self, s):
@@ -174,13 +181,30 @@ class RiplCmd(Cmd, object):
   def do_load(self, s):
     '''Load the given Venture file.'''
     self.ripl.execute_program_from_file(s)
+    self.files.append(s)
+    self._update_prompt()
 
-def run_venture_console(ripl):
-  RiplCmd(ripl).cmdloop()
+  @catchesVentureException
+  def do_reload(self, _):
+    '''Reload all previously loaded Venture files.'''
+    files = copy.copy(self.files)
+    self.do_clear(None)
+    for f in files:
+      self.do_load(f)
+
+  def _update_prompt(self):
+    if len(self.files) == 0:
+      self.prompt = ">>> "
+    else:
+      self.prompt = " ".join(self.files) + " > "
+
+def run_venture_console(ripl, rebuild):
+  RiplCmd(ripl, rebuild).cmdloop()
 
 def main():
   import venture.shortcuts as s
-  ripl = s.make_puma_church_prime_ripl()
-  run_venture_console(ripl)
+  def build():
+    return s.make_puma_church_prime_ripl()
+  run_venture_console(build(), build)
 
 if __name__ == '__main__': main()

@@ -1,4 +1,4 @@
-# Copyright (c) 2013, MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -12,7 +12,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import dill
 import time
 from contextlib import contextmanager
@@ -135,6 +136,13 @@ class Engine(object):
   def clear(self):
     self.model.clear()
     self.directiveCounter = 0
+    # TODO The clear operation appears to be bit-rotten.  Problems include:
+    # - Doesn't reset the inference trace
+    # - Doesn't clean up the sivm's and ripl's per-directive records
+    # - Not clear what it should do with foreign SPs (remove the
+    #   dictionaries or rebind them in the new traces?)
+    # - Not clear what it should do with the parallelism mode and
+    #   other such auxiliary state.
 
   # TODO There should also be capture_inference_problem and
   # restore_inference_problem (Analytics seems to use something like
