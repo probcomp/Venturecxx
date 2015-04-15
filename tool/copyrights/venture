@@ -33,6 +33,9 @@ class VentureCopyCorrector(copyright.CopyCorrector):
 def venture_comment_syntax_convention(filename):
   (_, extension) = os.path.splitext(filename)
   if extension in [".cfg", ".cmake", ".supp"]:
+    # .cfg is nose configs
+    # .cmake is Cmake files (they are all third-party anyway)
+    # .supp is Valgrind suppression files (they are all third-party anyway)
     return copyright.repeated_character_comment_syntax('#', 1, 1)
   elif extension in [".vnt"]:
     return copyright.repeated_character_comment_syntax(';', 1, 3)
