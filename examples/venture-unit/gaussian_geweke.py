@@ -36,9 +36,9 @@ THIN = 100
 def build_ripl():
   ripl = make_lite_church_prime_ripl()
   program = '''
-  [ASSUME mu (scope_include (quote parameters) 0 (normal 0 10))]
-  [ASSUME sigma (scope_include (quote parameters) 1 (sqrt (inv_gamma 1 1)))]
-  [ASSUME x (scope_include (quote data) 0 (lambda () (normal mu sigma)))]
+  [ASSUME mu (tag (quote parameters) 0 (normal 0 10))]
+  [ASSUME sigma (tag (quote parameters) 1 (sqrt (inv_gamma 1 1)))]
+  [ASSUME x (tag (quote data) 0 (lambda () (normal mu sigma)))]
   '''
   ripl.execute_program(program)
   return ripl
@@ -171,8 +171,8 @@ def analytics_comparison():
   '''
   class GaussianModel(VentureUnit):
     def makeAssumes(self):
-      self.assume('mu', '(scope_include (quote params) 0 (normal 0 10))')
-      self.assume('sigma', '(scope_include (quote params) 1 (sqrt (inv_gamma 1 1)))')
+      self.assume('mu', '(tag (quote params) 0 (normal 0 10))')
+      self.assume('sigma', '(tag (quote params) 1 (sqrt (inv_gamma 1 1)))')
       self.assume('x', '(lambda () (normal mu sigma))')
 
     def makeObserves(self):

@@ -31,21 +31,21 @@ def toVentureMatrix(array):
 class CRP2dMixtureDemo():
   def makeAssumes(self):
     self.ripl = shortcuts.make_lite_church_prime_ripl()
-    self.ripl.assume('alpha', '(scope_include (quote hypers) 0 (gamma 1.0 1.0))')
-    self.ripl.assume('scale', '(scope_include (quote hypers) 1 (gamma 1.0 1.0))')
+    self.ripl.assume('alpha', '(tag (quote hypers) 0 (gamma 1.0 1.0))')
+    self.ripl.assume('scale', '(tag (quote hypers) 1 (gamma 1.0 1.0))')
     self.ripl.assume('crp', '(make_crp alpha)')
     self.ripl.assume('get_cluster', '''
       (mem (lambda (id)
-            (scope_include (quote clustering) id (crp))))
+            (tag (quote clustering) id (crp))))
       ''')
     self.ripl.assume('get_mean', '''
       (mem (lambda (cluster)
-            (scope_include (quote parameters) cluster (multivariate_normal %s %s))))
+            (tag (quote parameters) cluster (multivariate_normal %s %s))))
       '''%(toVentureArray(np.zeros((1,2))[0]), toVentureMatrix(np.eye(2)*10)))
     # TODO: Add Inverse-Wishart Prior.
     self.ripl.assume('get_variance', '''
       (mem (lambda (cluster)
-            (scope_include (quote parameters) cluster %s)))
+            (tag (quote parameters) cluster %s)))
       '''%toVentureMatrix(np.eye(2)))
     self.ripl.assume('get_component_model', '''
       (lambda (cluster)

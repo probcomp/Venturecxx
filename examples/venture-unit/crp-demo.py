@@ -23,19 +23,19 @@ from venture.unit import VentureUnit
 class CRPMixtureDemo(VentureUnit):
   def makeAssumes(self):
     program = """
-[ASSUME alpha (scope_include (quote hypers) 0 (gamma 1.0 1.0))]
-[ASSUME scale (scope_include (quote hypers) 1 (gamma 1.0 1.0))]
+[ASSUME alpha (tag (quote hypers) 0 (gamma 1.0 1.0))]
+[ASSUME scale (tag (quote hypers) 1 (gamma 1.0 1.0))]
 
 [ASSUME crp (make_crp alpha)]
 
 [ASSUME get_cluster (mem (lambda (id)
-  (scope_include (quote clustering) id (crp))))]
+  (tag (quote clustering) id (crp))))]
 
 [ASSUME get_mean (mem (lambda (cluster)
-  (scope_include (quote parameters) cluster (normal 0 10))))]
+  (tag (quote parameters) cluster (normal 0 10))))]
 
 [ASSUME get_variance (mem (lambda (cluster)
-  (scope_include (quote parameters) cluster (gamma 1 scale))))]
+  (tag (quote parameters) cluster (gamma 1 scale))))]
 
 [ASSUME get_component_model (lambda (cluster)
   (lambda () (normal (get_mean cluster) (get_variance cluster))))]

@@ -15,10 +15,10 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-[assume a (scope_include 0 1 (normal (uniform_discrete 1 6) 1))]
-[assume b (scope_include 0 2 (normal (uniform_discrete 1 6) 1))]
-[assume c (scope_include 0 3 (normal (uniform_discrete 1 6) 1))]
-[observe (scope_include 0 4 (normal (+ a b c) 0.2)) 7]
+[assume a (tag 0 1 (normal (uniform_discrete 1 6) 1))]
+[assume b (tag 0 2 (normal (uniform_discrete 1 6) 1))]
+[assume c (tag 0 3 (normal (uniform_discrete 1 6) 1))]
+[observe (tag 0 4 (normal (+ a b c) 0.2)) 7]
 [infer
  (let ((d (empty)))
    (do (repeat 100

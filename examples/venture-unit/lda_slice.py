@@ -23,8 +23,8 @@ class LDA(VentureUnit):
     def makeAssumes(self):
         self.assume("no_topics", self.parameters['no_topics'])
         self.assume("size_vocab", self.parameters['size_vocab'])
-        self.assume("alpha_document_topic", "(scope_include 0 0 (gamma 1.0 2.0))")
-        self.assume("alpha_topic_word", "(scope_include 0 1 (gamma 1.0 2.0))")
+        self.assume("alpha_document_topic", "(tag 0 0 (gamma 1.0 2.0))")
+        self.assume("alpha_topic_word", "(tag 0 1 (gamma 1.0 2.0))")
         self.assume("new_doc","(lambda () (make_sym_dir_mult alpha_document_topic no_topics))")
         
         self.assume("get_doc", "(mem (lambda (doc) (new_doc)))")

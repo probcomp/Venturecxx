@@ -20,8 +20,8 @@ from venture.venturemagics.ip_parallel import *
 import time
 # class GaussianModel(VentureUnit):
 #     def makeAssumes(self):
-#       self.assume('mu', '(scope_include (quote params) 0 (normal 0 10))')
-#       self.assume('sigma', '(scope_include (quote params) 1 (sqrt (inv_gamma 1 1)))')
+#       self.assume('mu', '(tag (quote params) 0 (normal 0 10))')
+#       self.assume('sigma', '(tag (quote params) 1 (sqrt (inv_gamma 1 1)))')
 #       self.assume('x', '(lambda () (normal mu sigma))')
 
 #     def makeObserves(self):
@@ -39,9 +39,9 @@ import time
 
 ## currently fails in Analytics because of problem extracting assumes from ripl
 program = '''
-  [ASSUME mu (scope_include (quote parameters) 0 (normal 0 10))]
-  [ASSUME sigma (scope_include (quote parameters) 1 (gamma 1 1) ) ]
-  [ASSUME x (scope_include (quote data) 0 (lambda () (normal mu sigma)))]
+  [ASSUME mu (tag (quote parameters) 0 (normal 0 10))]
+  [ASSUME sigma (tag (quote parameters) 1 (gamma 1 1) ) ]
+  [ASSUME x (tag (quote data) 0 (lambda () (normal mu sigma)))]
   '''
 ###
 
@@ -51,15 +51,15 @@ hmc = '(hmc default one .05 10 1)'
 
 # mu has high variance prior, sigma has low variance prior.
 # if x is close to mu, hard to change value of x.
-fail_assumes = [ ('mu', '(scope_include (quote params) 0 (normal 0 30))') ,
-            ('sigma', '(scope_include (quote params) 1 (gamma .1 1))'),
+fail_assumes = [ ('mu', '(tag (quote params) 0 (normal 0 30))') ,
+            ('sigma', '(tag (quote params) 1 (gamma .1 1))'),
             ('x', '(lambda () (normal mu sigma))') ]
 
 # variances are better matched and '(mh default one)' should move around prior well 
-pass_assumes = [ ('mu', '(scope_include (quote params) 0 (normal 0 1))') ,
-            ('sigma', '(scope_include (quote params) 1 (gamma 1 1))'),
+pass_assumes = [ ('mu', '(tag (quote params) 0 (normal 0 1))') ,
+            ('sigma', '(tag (quote params) 1 (gamma 1 1))'),
             ('x', '(lambda () (normal mu sigma))') ]
-hmc_assumes = [ ('mu', '(scope_include (quote params) 0 (normal 0 1))') ]
+hmc_assumes = [ ('mu', '(tag (quote params) 0 (normal 0 1))') ]
 
 observes = [('(x)','0')]
 hmc_observes = [('(normal mu .4)','0')]

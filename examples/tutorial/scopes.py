@@ -58,16 +58,16 @@
 # # an exception.
 
 # model1='''
-# [assume hyper_mean (scope_include (quote hyper_mean_scope)
+# [assume hyper_mean (tag (quote hyper_mean_scope)
 #                          (lambda () (uniform_continuous -100 100) ))  ]
-# [assume mean (scope_include (quote mean_scope) 0 (normal (hyper_mean) 5) ) ]
+# [assume mean (tag (quote mean_scope) 0 (normal (hyper_mean) 5) ) ]
 # [observe (normal mean 0.5) 10]
 # [observe (normal mean 0.5) 11]
 # '''
 
 # model2='''
 # [assume hyper_mean  (uniform_continuous -100 100)  ]
-# [assume mean (scope_include (quote mean_scope) 0 (normal hyper_mean 5) ) ]
+# [assume mean (tag (quote mean_scope) 0 (normal hyper_mean 5) ) ]
 # [observe (normal mean 0.5) 10]
 # [observe (normal mean 0.5) 11]'''
 # v = mk_p_ripl()
@@ -87,7 +87,7 @@
 
 
 # ## PROBLEM WITH ARRAY BLOCK NAMES
-# # v.assume('x','(scope_include (quote sc) (array 0 0) (normal 0 1) )')
+# # v.assume('x','(tag (quote sc) (array 0 0) (normal 0 1) )')
 # # print v.sample('x')
 # # #v.infer('(mh my_scope (array 0 0) 50)')
 # # block = {'type': 'array',
@@ -101,7 +101,7 @@
 # # illustrate: mean appears in two scopes
 # model2='''
 # [assume hyper_mean  (uniform_continuous -100 100)  ]
-# [assume mean (scope_include (quote mean_scope) 0 (normal hyper_mean 5) ) ]
+# [assume mean (tag (quote mean_scope) 0 (normal hyper_mean 5) ) ]
 # [observe (normal mean 0.5) 10]
 # [observe (normal mean 0.5) 11]'''
 # v = mk_p_ripl()
@@ -123,9 +123,9 @@
 
 # # illustrate different blocks but same scope
 # model3='''
-# [assume hyper_mean (scope_include (quote hyper_scope) 0 (uniform_continuous -100 100) )  ]
-# [assume mean0 (scope_include (quote mean_scope) 0 (normal hyper_mean 5) ) ]
-# [assume mean1 (scope_include (quote mean_scope) 1 (normal hyper_mean 5) ) ]
+# [assume hyper_mean (tag (quote hyper_scope) 0 (uniform_continuous -100 100) )  ]
+# [assume mean0 (tag (quote mean_scope) 0 (normal hyper_mean 5) ) ]
+# [assume mean1 (tag (quote mean_scope) 1 (normal hyper_mean 5) ) ]
 # [observe (normal mean0 10) 10]
 # [observe (normal mean1 10) 11]'''
 # v = mk_l_ripl()
@@ -144,9 +144,9 @@
 # # illustrate dynamic scope
 # ## COREDUMPS IF FLIP PROB TOO SMALL
 # model4='''
-# [assume hyper_mean (scope_include (quote hyper_scope) 0 (uniform_continuous -100 100) )  ]
+# [assume hyper_mean (tag (quote hyper_scope) 0 (uniform_continuous -100 100) )  ]
 # [assume my_flip (lambda () (if (flip .5) true (my_flip) ) ) ]
-# [assume mean (scope_include (quote mean_scope) 0
+# [assume mean (tag (quote mean_scope) 0
 #                (if (my_flip)
 #                  (normal hyper_mean 1)
 #                  (normal hyper_mean 10) ) ) ]
@@ -163,10 +163,10 @@
 
 
 # model5='''
-# [assume hyper_mean (scope_include (quote hyper_scope) 0 (uniform_continuous -100 100) )  ]
+# [assume hyper_mean (tag (quote hyper_scope) 0 (uniform_continuous -100 100) )  ]
 # [assume my_flip (lambda () (if (flip .5) true (my_flip) ) ) ]
-# [assume mean (scope_include (quote mean_scope) 0
-#                (if (scope_exclude (quote mean_scope) (my_flip) )
+# [assume mean (tag (quote mean_scope) 0
+#                (if (tag_exclude (quote mean_scope) (my_flip) )
 #                  (normal hyper_mean 1)
 #                  (normal hyper_mean 10) ) ) ]
 
@@ -187,28 +187,28 @@ dim = 3
 bags = 2
 alpha = ' '.join(['1']*dim)
 
-a= 'alpha', '(scope_include (quote alpha) 0 (array %s) )'%alpha
+a= 'alpha', '(tag (quote alpha) 0 (array %s) )'%alpha
 b = 'bag_prototype', '''(mem (lambda (bag)
-                              (scope_include (quote latents) bag
+                              (tag (quote latents) bag
                                (dirichlet alpha) ) ) )'''
 
 
 ones = ' '.join(['1']*dim)
 
 # doesn't work coz of simplex - how to make it work?
-a= 'hyper_alpha', '''(scope_include (quote hyper_alpha) 0
+a= 'hyper_alpha', '''(tag (quote hyper_alpha) 0
                         (map (lambda (x) (* 5 x)) (dirichlet (array %s )) ) )'''%ones
-a= 'hyper_alpha', '''(scope_include (quote hyper_alpha) 0
+a= 'hyper_alpha', '''(tag (quote hyper_alpha) 0
                         (dirichlet  (array %s) ))'''%ones
 b = 'bag_prototype', '''(mem (lambda (bag)
-                              (scope_include (quote latents) bag
+                              (tag (quote latents) bag
                               (dirichlet hyper_alpha) ) ) )'''
 
 m2='''
-[assume hyper_alpha (scope_include (quote hyper_alpha) 0
+[assume hyper_alpha (tag (quote hyper_alpha) 0
                         (array (+ 1 (poisson 2)) (+ 1 (poisson 2) )) )]
 [assume bag_prototype (mem (lambda (bag)
-                              (scope_include (quote latents) bag
+                              (tag (quote latents) bag
                                (beta (lookup hyper_alpha 0) (lookup hyper_alpha 1)) ) ) )]'''
 
 obs_beta = lambda bag,color: ('(flip (bag_prototype %i) )'%bag,'%s'%color)
@@ -303,19 +303,19 @@ def model_string(bags,colors):
     [assume colors %i]
     [assume bags %i]
     [assume hyper_alpha_d (lambda ()
-                            (scope_include (quote hyper_alpha_d) 0
+                            (tag (quote hyper_alpha_d) 0
                                 (scale
                                   (simplex_list
                                     (dirichlet (ones colors) )))))]
 
-    [assume hyper_alpha (scope_include (quote hyper_alpha) 0
+    [assume hyper_alpha (tag (quote hyper_alpha) 0
                             (array %s) )]
     [assume bag_prototype (mem (lambda (bag)
-                               (scope_include (quote prototypes) bag
+                               (tag (quote prototypes) bag
                                    (dirichlet hyper_alpha) ) ) )]
 
     [assume draw_bag (mem (lambda (t)
-                           (scope_include (quote latents) t
+                           (tag (quote latents) t
                             (atom_number
                                 (uniform_discrete 0 bags) ) ) ))]
 
@@ -333,15 +333,15 @@ def no_count_string(bags,colors):
 
     [assume bags %i]
 
-    [assume hyper_alpha (scope_include (quote hyper_alpha) 0
+    [assume hyper_alpha (tag (quote hyper_alpha) 0
                             (array %s) )]
 
     [assume bag_prototype (mem (lambda (bag)
-                               (scope_include (quote prototypes) bag
+                               (tag (quote prototypes) bag
                                    (dirichlet hyper_alpha) ) ) )]
 
     [assume draw_bag (mem (lambda (t)
-                           (scope_include (quote latents) t
+                           (tag (quote latents) t
                              (atom_number
                                (uniform_discrete 0 bags) ) )) )]
 
@@ -362,10 +362,10 @@ def dirmult_string(colors,bags):
     s='''
     [assume colors %i]
     [assume bags %i]
-    [assume hyper_alpha (scope_include (quote hyper_alpha) 0
+    [assume hyper_alpha (tag (quote hyper_alpha) 0
                             (array %s) )]
     [assume bag_dirmult (mem (lambda (bag)
-                               (scope_include (quote dirmults) bag
+                               (tag (quote dirmults) bag
                                    (make_dir_mult hyper_alpha))))]
     [assume bag_draw (lambda (bag) ( (bag_dirmult bag) ) ) ]'''
 

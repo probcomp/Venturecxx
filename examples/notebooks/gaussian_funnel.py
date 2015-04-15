@@ -73,7 +73,7 @@ class GaussianFunnel(RandomPSP):
 def assemble_x(i):
   instruction = {'symbol': 'x_' + str(i),
                  'instruction': 'assume',
-                 'expression': ['scope_include', ['quote', 'data'],
+                 'expression': ['tag', ['quote', 'data'],
                                 {'type': 'number', 'value': float(i)},
                                 ['uniform_continuous',
                                  ['mul', {'type': 'number', 'value': -1.0}, 'x_range'],
@@ -99,7 +99,7 @@ def initialize_funnel(ripl):
 def build_ripl(backend, model):
   # make v and the x's
   ripl = shortcuts.backend(backend).make_church_prime_ripl()
-  ripl.assume('v', '(scope_include (quote data) 0 (uniform_continuous -12 12))')
+  ripl.assume('v', '(tag (quote data) 0 (uniform_continuous -12 12))')
   ripl.force('v', 0.0)
   if model == 'correct':
     ripl.assume('x_range', '(* 4 (sqrt (exp 3)))')
@@ -118,11 +118,11 @@ def build_ripl(backend, model):
 
 def build_ripl_alt(backend, model):
   ripl = shortcuts.backend(backend).make_church_prime_ripl()
-  ripl.assume('v', '(scope_include (quote data) 0 (normal 0 3))')
+  ripl.assume('v', '(tag (quote data) 0 (normal 0 3))')
   ripl.force('v', 0.0)
   for i in range(1,10):
     ripl.assume('x_{0}'.format(str(i)),
-                '(scope_include (quote data) {1} (normal 0 (sqrt (exp v))))'.format('x_' + str(i), i))
+                '(tag (quote data) {1} (normal 0 (sqrt (exp v))))'.format('x_' + str(i), i))
     ripl.execute_instruction(force_x(i))
   return ripl
 

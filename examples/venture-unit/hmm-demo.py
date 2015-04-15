@@ -23,12 +23,12 @@ from venture.unit import VentureUnit, productMap, plotAsymptotics
 class HMMDemo(VentureUnit):
   def makeAssumes(self):
     program = """
-[ASSUME observation_noise (scope_include (quote hypers) 0 (gamma 1.0 1.0))]
+[ASSUME observation_noise (tag (quote hypers) 0 (gamma 1.0 1.0))]
 
 [ASSUME get_state
   (mem (lambda (t)
 	 (if (= t 0) 
-	     (scope_include (quote state) 0 (bernoulli 0.3))
+	     (tag (quote state) 0 (bernoulli 0.3))
 	     (transition_fn (get_state (- t 1)) t))))]
 
 [ASSUME get_observation
@@ -38,8 +38,8 @@ class HMMDemo(VentureUnit):
 [ASSUME transition_fn
   (lambda (state t)
     (if state
-        (scope_include (quote state) t (bernoulli 0.7))
-        (scope_include (quote state) t (bernoulli 0.3))))]
+        (tag (quote state) t (bernoulli 0.7))
+        (tag (quote state) t (bernoulli 0.3))))]
 
 [ASSUME observation_fn
   (lambda (state)

@@ -25,8 +25,8 @@ import venture.value.dicts as v
 class HMCDemo(u.VentureUnit):
   def makeAssumes(self):
     program = """
-[ASSUME x (scope_include (quote param) 0 (uniform_continuous -4 4))]
-[ASSUME y (scope_include (quote param) 1 (uniform_continuous -4 4))]
+[ASSUME x (tag (quote param) 0 (uniform_continuous -4 4))]
+[ASSUME y (tag (quote param) 1 (uniform_continuous -4 4))]
 [ASSUME xout (if (< x 0)
     (normal x 0.5)
     (normal x 4))]
