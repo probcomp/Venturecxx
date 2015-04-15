@@ -2,6 +2,14 @@ import numpy as np
 import numpy.linalg as la
 import numpy.random as npr
 
+def const(c):
+  def f(x1, x2):
+    return c
+  return f
+
+def delta(x1, x2):
+  return 1 if x1 == x2 else 0
+
 def linear(v, c):
   def f(x1, x2):
     return v * (x1-c) * (x2-c)
@@ -75,13 +83,27 @@ ripl.assume("func_times", makeLiftedBinary(lambda x1, x2: x1*x2))
 
 program = """
   [assume mu (normal 0 5)]
+  [assume mean (app make_const_func mu)]
+
 ;  [assume a (inv_gamma 2 5)]
   [assume a 1]
-  [assume l (inv_gamma 5 100)]
+;  [assume l (inv_gamma 5 50)]
 ;  [assume l (uniform_continuous 10 100)]
+  [assume l 10]
+
+;  [assume cov (app (if (flip) func_plus func_times) (app make_squared_exponential a l) (app make_linear 1 (normal 0 10)))]
   
-  [assume mean (app make_const_func mu)]
-  [assume cov (app make_squared_exponential a l)]
+;  [assume noise (inv_gamma 3 1)]
+  [assume noise 0.1]
+  [assume noise_func (app make_squared_exponential noise 0.1)]
+  
+  [assume is_linear (flip)]
+  [assume cov 
+    (app func_plus noise_func
+      (if is_linear
+        (app make_linear 1 (normal 0 10))
+        (app make_squared_exponential a l)))]
+
 ;  [assume cov (app make_linear a 0)]
   
   gp : [assume gp (make_gp mean cov)]
