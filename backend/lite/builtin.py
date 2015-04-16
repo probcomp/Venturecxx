@@ -401,7 +401,7 @@ builtInSPsList = [
                              [v.AnyType("<scope>"), v.AnyType("<block>"), v.AnyType()],
                              v.AnyType()) ],
 
-           [ "tag_exclude", typed_nr(scope.ScopeExcludeOutputPSP(),
+           [ "tag_exclude", typed_nr(scope.TagExcludeOutputPSP(),
                                      # These are type-restricted in Venture, but the actual PSP doesn't care.
                                      [v.AnyType("<scope>"), v.AnyType()],
                                      v.AnyType()) ],

@@ -129,7 +129,7 @@ map<string,SP*> initBuiltInSPs()
 
   /* Scoping */
   m["tag"] = new SP(new NullRequestPSP(), new TagOutputPSP());
-  m["tag_exclude"] = new SP(new NullRequestPSP(), new ScopeExcludeOutputPSP());
+  m["tag_exclude"] = new SP(new NullRequestPSP(), new TagExcludeOutputPSP());
 
   /* Data structures */
   m["simplex"] = new SP(new NullRequestPSP(), new SimplexOutputPSP());

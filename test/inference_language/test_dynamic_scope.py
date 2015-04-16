@@ -91,14 +91,14 @@ def testDynamicScope8():
   assert_equal(ripl.sivm.core_sivm.engine.getDistinguishedTrace().numNodesInBlock(0,0),9)
 
 @on_inf_prim("none")
-def testScopeExclude1():
+def testTagExclude1():
   ripl = get_ripl()
   ripl.assume("f", "(mem (lambda (x) (tag_exclude 0 (bernoulli))))")
   ripl.predict("(tag 0 0 (+ (f 0) (f 1) (f 2) (f 3)))")
   assert_equal(ripl.sivm.core_sivm.engine.getDistinguishedTrace().numNodesInBlock(0, 0), 0)
 
 @on_inf_prim("none")
-def testScopeExcludeBaseline():
+def testTagExcludeBaseline():
   ripl = get_ripl()
   ripl.assume("f", "(mem (lambda (x) (bernoulli)))")
   ripl.predict("(tag 0 0 (+ (f 0) (f 1) (f 2) (f 3)))")

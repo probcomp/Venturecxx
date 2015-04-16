@@ -34,7 +34,7 @@ def isTagOutputPSP(thing):
   return isinstance(thing, TagOutputPSP) or \
     (isinstance(thing, TypedPSP) and isTagOutputPSP(thing.psp))
 
-class ScopeExcludeOutputPSP(DeterministicPSP):
+class TagExcludeOutputPSP(DeterministicPSP):
   @override(DeterministicPSP)
   def simulate(self,args): return args.operandValues[1]
   @override(DeterministicPSP)
@@ -46,6 +46,6 @@ class ScopeExcludeOutputPSP(DeterministicPSP):
   def description(self,name):
     return "%s returns its second argument unchanged at runtime, but tags the subexpression creating the object as being outside the given scope." % name
 
-def isScopeExcludeOutputPSP(thing):
-  return isinstance(thing, ScopeExcludeOutputPSP) or \
-    (isinstance(thing, TypedPSP) and isScopeExcludeOutputPSP(thing.psp))
+def isTagExcludeOutputPSP(thing):
+  return isinstance(thing, TagExcludeOutputPSP) or \
+    (isinstance(thing, TypedPSP) and isTagExcludeOutputPSP(thing.psp))

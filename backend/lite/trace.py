@@ -37,7 +37,7 @@ from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
 from omegadb import OmegaDB
 from smap import SamplableMap
 from sp import SPFamilies, VentureSPRecord
-from scope import isTagOutputPSP, isScopeExcludeOutputPSP
+from scope import isTagOutputPSP, isTagExcludeOutputPSP
 from regen import regenAndAttach
 from detach import detachAndExtract
 from scaffold import constructScaffold
@@ -332,7 +332,7 @@ class Trace(object):
         (new_scope,new_block,_) = [self.valueAt(randNode) for randNode in node.operandNodes]
         (new_scope,new_block) = self._normalizeEvaluatedScopeAndBlock(new_scope, new_block)
         if scope != new_scope or block == new_block: self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
-      elif i == 1 and isScopeExcludeOutputPSP(self.pspAt(node)):
+      elif i == 1 and isTagExcludeOutputPSP(self.pspAt(node)):
         (excluded_scope,_) = [self.valueAt(randNode) for randNode in node.operandNodes]
         excluded_scope = self._normalizeEvaluatedScope(excluded_scope)
         if scope != excluded_scope: self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
