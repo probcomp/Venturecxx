@@ -128,8 +128,6 @@ map<string,SP*> initBuiltInSPs()
   m["vector_dot"] = new SP(new NullRequestPSP(), new VectorDotOutputPSP());
 
   /* Scoping */
-  m["scope_include"] = new SP(new NullRequestPSP(), new ScopeIncludeOutputPSP());
-  m["scope_exclude"] = new SP(new NullRequestPSP(), new ScopeExcludeOutputPSP());
   m["tag"] = new SP(new NullRequestPSP(), new ScopeIncludeOutputPSP());
   m["tag_exclude"] = new SP(new NullRequestPSP(), new ScopeExcludeOutputPSP());
 

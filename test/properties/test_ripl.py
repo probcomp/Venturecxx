@@ -53,11 +53,9 @@ def eval_in_ripl(expr):
 @gen_on_inf_prim("none")
 def testRiplSimulate():
   for (name,sp) in relevantSPs():
-    if name in ["scope_include", # Because scope_include is
-                                 # misannotated as to the true
-                                 # permissible types of scopes and
-                                 # blocks
-                "tag",
+    if name in [# Because tag is misannotated as to the true
+                # permissible types of scopes and blocks
+                "tag", "tag_exclude",
                 "get_current_environment", # Because BogusArgs gives a bogus environment
                 "extend_environment", # Because BogusArgs gives a bogus environment
               ]:

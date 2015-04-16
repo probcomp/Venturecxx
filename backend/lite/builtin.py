@@ -396,16 +396,6 @@ builtInSPsList = [
                             [SPType([v.AnyType("a")], v.AnyType("b"), variadic=True)],
                             SPType([v.AnyType("a")], v.AnyType("b"), variadic=True)) ],
 
-           [ "scope_include",typed_nr(scope.ScopeIncludeOutputPSP(),
-                                      # These are type-restricted in Venture, but the actual PSP doesn't care.
-                                      [v.AnyType("<scope>"), v.AnyType("<block>"), v.AnyType()],
-                                      v.AnyType()) ],
-
-           [ "scope_exclude",typed_nr(scope.ScopeExcludeOutputPSP(),
-                                      # These are type-restricted in Venture, but the actual PSP doesn't care.
-                                      [v.AnyType("<scope>"), v.AnyType()],
-                                      v.AnyType()) ],
-
            [ "tag", typed_nr(scope.ScopeIncludeOutputPSP(),
                              # These are type-restricted in Venture, but the actual PSP doesn't care.
                              [v.AnyType("<scope>"), v.AnyType("<block>"), v.AnyType()],
