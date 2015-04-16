@@ -211,17 +211,17 @@ function InitializeDemo() {
 
         /* Outliers */
         if (model_variables.use_outliers) {
-            ripl.assume('outlier_prob','(scope_include (quote params) 0 (uniform_continuous 0.001 0.3))'); //(beta 1 3)?
-            ripl.assume('outlier_sigma','(scope_include (quote params) 1 (uniform_continuous 0.001 100))'); //why random?
-            ripl.assume('is_outlier','(mem (lambda (obs_id) (scope_include (quote outliers) obs_id (flip outlier_prob))))');
+            ripl.assume('outlier_prob','(tag (quote params) 0 (uniform_continuous 0.001 0.3))'); //(beta 1 3)?
+            ripl.assume('outlier_sigma','(tag (quote params) 1 (uniform_continuous 0.001 100))'); //why random?
+            ripl.assume('is_outlier','(mem (lambda (obs_id) (tag (quote outliers) obs_id (flip outlier_prob))))');
         }
 
         /* Shared */
-        ripl.assume('a0_c0','(scope_include (quote params) 2 (normal 0.0 10.0))');
+        ripl.assume('a0_c0','(tag (quote params) 2 (normal 0.0 10.0))');
 
         /* Polynomial */
-        ripl.assume('poly_order','(scope_include (quote structure) 0 (uniform_discrete 0 5))');
-        ripl.assume('make_coefficient','(lambda (degree value) (if (>= poly_order degree) (scope_include (quote params) (+ 2 degree) (normal 0.0 value)) 0))');
+        ripl.assume('poly_order','(tag (quote structure) 0 (uniform_discrete 0 5))');
+        ripl.assume('make_coefficient','(lambda (degree value) (if (>= poly_order degree) (tag (quote params) (+ 2 degree) (normal 0.0 value)) 0))');
         ripl.assume('c1','(make_coefficient 1 3.0)');
         ripl.assume('c2','(make_coefficient 2 1.0)');
         ripl.assume('c3','(make_coefficient 3 0.3)');
@@ -231,19 +231,19 @@ function InitializeDemo() {
 
         /* Fourier */
         ripl.assume('pi','3.14159');
-        ripl.assume('fourier_a1','(scope_include (quote params) 7 (normal 0.0 5.0))');
-        ripl.assume('fourier_omega','(scope_include (quote params) 8 (uniform_continuous 0 pi))');
-        ripl.assume('fourier_theta1','(scope_include (quote params) 9 (uniform_continuous (- 0 pi) pi))');
+        ripl.assume('fourier_a1','(tag (quote params) 7 (normal 0.0 5.0))');
+        ripl.assume('fourier_omega','(tag (quote params) 8 (uniform_continuous 0 pi))');
+        ripl.assume('fourier_theta1','(tag (quote params) 9 (uniform_continuous (- 0 pi) pi))');
 
         ripl.assume('clean_fourier','(lambda (x) (* fourier_a1 (sin (+ (* fourier_omega x) fourier_theta1))))');
 
         /* For combination polynomial and Fourier */
-        ripl.assume('poly_fourier_mode','(scope_include (quote structure) 1 (uniform_discrete 0 3))');
-        ripl.assume('alpha','(if (= poly_fourier_mode 0) 1 (if (= poly_fourier_mode 1) 0 (scope_include (quote params) 10 (beta 1 1))))');
+        ripl.assume('poly_fourier_mode','(tag (quote structure) 1 (uniform_discrete 0 3))');
+        ripl.assume('alpha','(if (= poly_fourier_mode 0) 1 (if (= poly_fourier_mode 1) 0 (tag (quote params) 10 (beta 1 1))))');
         ripl.assume('clean_func','(lambda (x) (+ a0_c0 (* alpha (clean_poly x)) (* (- 1 alpha) (clean_fourier x))))');
 
         /* For observations */
-        ripl.assume('noise', model_variables.infer_noise ? '(sqrt (scope_include (quote params) 11 (inv_gamma 2.0 1.0)))' : '1.0');
+        ripl.assume('noise', model_variables.infer_noise ? '(sqrt (tag (quote params) 11 (inv_gamma 2.0 1.0)))' : '1.0');
         if (model_variables.use_outliers) {
             ripl.assume('obs_fn','(lambda (obs_id x) (normal (if (is_outlier obs_id) 0 (clean_func (normal x noise))) (if (is_outlier obs_id) outlier_sigma noise)))');
         } else {
