@@ -144,7 +144,7 @@ double attach(Trace * trace,
   weight += psp->logDensity(groundValue,args);
   psp->incorporate(groundValue,args);
 
-  if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
+  if (dynamic_pointer_cast<TagOutputPSP>(psp))
   {
     ScopeID scope = trace->getValue(node->operandNodes[0]);
     BlockID block = trace->getValue(node->operandNodes[1]);
@@ -362,7 +362,7 @@ double applyPSP(Trace * trace,
   if (dynamic_pointer_cast<VentureSPRecord>(newValue)) { processMadeSP(trace,node,scaffold->isAAA(node),shouldRestore,db); }
   if (psp->isRandom()) { trace->registerUnconstrainedChoice(node); }
 
-  if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
+  if (dynamic_pointer_cast<TagOutputPSP>(psp))
   {
     ScopeID scope = trace->getValue(node->operandNodes[0]);
     BlockID block = trace->getValue(node->operandNodes[1]);

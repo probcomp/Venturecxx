@@ -18,7 +18,7 @@
 from utils import override
 from psp import DeterministicPSP, TypedPSP
 
-class ScopeIncludeOutputPSP(DeterministicPSP):
+class TagOutputPSP(DeterministicPSP):
   @override(DeterministicPSP)
   def simulate(self,args): return args.operandValues[2]
   @override(DeterministicPSP)
@@ -30,9 +30,9 @@ class ScopeIncludeOutputPSP(DeterministicPSP):
   def description(self,name):
     return "%s returns its third argument unchanged at runtime, but tags the subexpression creating the object as being within the given scope and block." % name
 
-def isScopeIncludeOutputPSP(thing):
-  return isinstance(thing, ScopeIncludeOutputPSP) or \
-    (isinstance(thing, TypedPSP) and isScopeIncludeOutputPSP(thing.psp))
+def isTagOutputPSP(thing):
+  return isinstance(thing, TagOutputPSP) or \
+    (isinstance(thing, TypedPSP) and isTagOutputPSP(thing.psp))
 
 class ScopeExcludeOutputPSP(DeterministicPSP):
   @override(DeterministicPSP)

@@ -396,7 +396,7 @@ builtInSPsList = [
                             [SPType([v.AnyType("a")], v.AnyType("b"), variadic=True)],
                             SPType([v.AnyType("a")], v.AnyType("b"), variadic=True)) ],
 
-           [ "tag", typed_nr(scope.ScopeIncludeOutputPSP(),
+           [ "tag", typed_nr(scope.TagOutputPSP(),
                              # These are type-restricted in Venture, but the actual PSP doesn't care.
                              [v.AnyType("<scope>"), v.AnyType("<block>"), v.AnyType()],
                              v.AnyType()) ],

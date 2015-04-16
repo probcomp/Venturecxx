@@ -22,7 +22,7 @@ from sp import VentureSPRecord
 from psp import NullRequestPSP, PSP
 from value import SPRef
 from lkernel import VariationalLKernel
-from scope import isScopeIncludeOutputPSP
+from scope import isTagOutputPSP
 from consistency import assertTorus, assertTrace
 from exception import VentureError
 from venture.exception import VentureException
@@ -205,7 +205,7 @@ def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 
   if isinstance(newValue,VentureSPRecord): processMadeSP(trace,node,scaffold.isAAA(node))
   if psp.isRandom(): trace.registerRandomChoice(node)
-  if isScopeIncludeOutputPSP(psp):
+  if isTagOutputPSP(psp):
     scope,block = [trace.valueAt(n) for n in node.operandNodes[0:2]]
     blockNode = node.operandNodes[2]
     trace.registerRandomChoiceInScope(scope,block,blockNode)

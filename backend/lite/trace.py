@@ -37,7 +37,7 @@ from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
 from omegadb import OmegaDB
 from smap import SamplableMap
 from sp import SPFamilies, VentureSPRecord
-from scope import isScopeIncludeOutputPSP, isScopeExcludeOutputPSP
+from scope import isTagOutputPSP, isScopeExcludeOutputPSP
 from regen import regenAndAttach
 from detach import detachAndExtract
 from scaffold import constructScaffold
@@ -328,7 +328,7 @@ class Trace(object):
     self.addRandomChoicesInBlock(scope,block,pnodes,node.operatorNode)
 
     for i,operandNode in enumerate(node.operandNodes):
-      if i == 2 and isScopeIncludeOutputPSP(self.pspAt(node)):
+      if i == 2 and isTagOutputPSP(self.pspAt(node)):
         (new_scope,new_block,_) = [self.valueAt(randNode) for randNode in node.operandNodes]
         (new_scope,new_block) = self._normalizeEvaluatedScopeAndBlock(new_scope, new_block)
         if scope != new_scope or block == new_block: self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
@@ -412,7 +412,7 @@ class Trace(object):
       else:
         # Could happen if this method is called on a torus, e.g. for rejection sampling
         raise MissingEsrParentError()
-    elif isScopeIncludeOutputPSP(self.pspAt(node)):
+    elif isTagOutputPSP(self.pspAt(node)):
       return self.getOutermostNonReferenceNode(node.operandNodes[2])
     else: return node
 
