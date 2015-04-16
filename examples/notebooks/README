@@ -47,5 +47,10 @@ the following issues:
     less inference on fewer datapoints; some boilerplate hack in the
     notebook that reads the Unix environment?
 
+- Many (all?) of the notebooks generate plots, which are intended to
+  be rendered inline.  There is some invocation boilerplate that needs
+  to be either added to the notebook or to the ipython notebook server
+  command or some profile for this to work.
+
 - IPython 3 makes things nicer, but is not packaged for Ubuntu, even
   as of Vivid Vervet.
