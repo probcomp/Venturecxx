@@ -432,7 +432,7 @@ void ConcreteTrace::addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,
   for (size_t i = 0; i < outputNode->operandNodes.size(); ++i)
   {
     Node * operandNode = outputNode->operandNodes[i];
-    if (i == 2 && dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
+    if (i == 2 && dynamic_pointer_cast<TagOutputPSP>(psp))
     {
       ScopeID new_scope = getValue(outputNode->operandNodes[0]);
       BlockID new_block = getValue(outputNode->operandNodes[1]);
@@ -441,7 +441,7 @@ void ConcreteTrace::addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,
         addUnconstrainedChoicesInBlock(scope,block,pnodes,operandNode);
       }
     }
-    else if (i == 1 && dynamic_pointer_cast<ScopeExcludeOutputPSP>(psp))
+    else if (i == 1 && dynamic_pointer_cast<TagExcludeOutputPSP>(psp))
     {
       ScopeID new_scope = getValue(outputNode->operandNodes[0]);
       if (!scope->equals(new_scope))

@@ -18,7 +18,7 @@
 from node import ConstantNode, LookupNode, ApplicationNode, RequestNode, OutputNode
 from omegadb import OmegaDB
 from value import SPRef
-from scope import isScopeIncludeOutputPSP
+from scope import isTagOutputPSP
 from sp import VentureSPRecord
 from consistency import assertTorus, assertTrace
 
@@ -145,7 +145,7 @@ def teardownMadeSP(trace,node,isAAA):
 
 def unapplyPSP(trace, node, scaffold, omegaDB, compute_gradient = False):
   psp,args = trace.pspAt(node),trace.argsAt(node)
-  if isScopeIncludeOutputPSP(psp):
+  if isTagOutputPSP(psp):
     scope,block = [trace.valueAt(n) for n in node.operandNodes[0:2]]
     blockNode = node.operandNodes[2]
     trace.unregisterRandomChoiceInScope(scope,block,blockNode)

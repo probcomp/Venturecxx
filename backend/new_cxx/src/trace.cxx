@@ -131,7 +131,7 @@ Node * Trace::getOutermostNonReferenceNode(Node * node)
     assert(getESRParents(outputNode).size() == 1);
     return getOutermostNonReferenceNode(getESRParents(outputNode)[0].get());
   }
-  else if (dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
+  else if (dynamic_pointer_cast<TagOutputPSP>(psp))
   { 
     return getOutermostNonReferenceNode(outputNode->operandNodes[2]);
   }
