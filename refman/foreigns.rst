@@ -25,7 +25,7 @@ print whose effects may be repeated.
 However, a wide variety of other information about a model SP may be
 useful for various purposes:
 
-- Computing the (log) density of the output [*] permits
+- Computing the (log) density of the output [#]_ permits
 
   - Letting the SP define the absorbing border of an M-H proposal
 
@@ -40,7 +40,7 @@ useful for various purposes:
   gradient ascent) and letting the SP be a principal node in such
   methods.
 
-- Computing the partial derivatives of the simulation result [**]
+- Computing the partial derivatives of the simulation result [#]_
   permits using this SP internally in gradient-based methods (HMC,
   gradient ascent).
 
@@ -80,14 +80,16 @@ Technially, the Venture SP interface also has hooks for attaching
 custom proposal distributions and even entire custom inference
 programs to individual SPs, but we don't like to talk about that.
 
-[*] Density can be with respect to any base measure (usually Lebesgue
-or counting measure, giving pdf or pmf), as long as the base measure
-is constant across all values of the inputs.  Density can also be
-unnormalized, again as long as the normalization factor is constant
-across all values of the inputs.
+.. rubric:: Footnotes
 
-[**] Yes, this is an unusual thing to do with actually stochastic
-procedures.  See [TODO discussion of gradientOfSimulate].
+.. [#] Density can be with respect to any base measure (usually
+   Lebesgue or counting measure, giving pdf or pmf), as long as the
+   base measure is constant across all values of the inputs.  Density
+   can also be unnormalized, again as long as the normalization factor
+   is constant across all values of the inputs.
+
+.. [#] Yes, this is an unusual thing to do with actually stochastic
+   procedures.  See [TODO discussion of gradientOfSimulate].
 
 When should I write a foreign SP for Venture?
 =============================================
