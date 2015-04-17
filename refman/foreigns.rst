@@ -99,7 +99,7 @@ Writing foreign Venture SPs can accomplish several goals:
 - Link with existing foreign modeling or inference code
 
 - Take advantage of sufficient statistics and/or conjugacy (there is
-  currently no way to do that within Venture)
+  currently no way to do that with pure-Venture procedures)
 
 - Speed up a computation whose interior is not interesting to trace in
   Venture
@@ -109,3 +109,17 @@ Writing foreign Venture SPs can accomplish several goals:
 
 How do I write a foreign SP for Venture?
 ========================================
+
+Well, that depends on which SP interface features you want to take
+advantage of.
+
+TODO: They are all bound the same way, though: ripl.bind_foreign_sp(name, sp)
+or ripl.bind_foreign_inference_sp(name, sp); which you would typically
+do in a :ref:`Plugin <plugins-section>`.
+
+Just functions
+^^^^^^^^^^^^^^
+
+The easiest kind of foreign SP to add to Venture is just a function
+(deterministic or stochastic) that you don't know (or don't care
+about) any special properties of.
