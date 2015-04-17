@@ -181,8 +181,7 @@ class Engine(object):
     self.incorporate()
     if self.is_infer_loop_program(program):
       assert len(program) == 2
-      prog = [v.sym("do")] + program[1]
-      self.start_continuous_inference(prog)
+      self.start_continuous_inference(program[1])
     else:
       with self.inference_trace():
         with self.self_evaluating_scope_hack():

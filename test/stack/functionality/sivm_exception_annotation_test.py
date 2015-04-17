@@ -241,15 +241,15 @@ def testLoopErrorAnnotationSmoke():
   numthreads = threading.active_count()
 
   ripl = get_ripl()
-  expression = "(loop ((lambda (t) (pair (+ 1 badness) t))))"
+  expression = "(loop (lambda (t) (pair (+ 1 badness) t)))"
   def doit():
     ripl.infer(expression)
     time.sleep(0.01) # Give it time to start
     ripl.stop_continuous_inference() # Join the other thread to make sure it errored
   err.assert_print_output_contains("""\
-((do (make_csp (quote (t)) (quote (pair (add 1 badness) t)))) model)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-((do (make_csp (quote (t)) (quote (pair (add 1 badness) t)))) model)
-                                               ^^^^^^^
+((make_csp (quote (t)) (quote (pair (add 1 badness) t))) model)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+((make_csp (quote (t)) (quote (pair (add 1 badness) t))) model)
+                                           ^^^^^^^
 """, doit)
   eq_(numthreads, threading.active_count()) # Erroring out in loop does not leak active threads

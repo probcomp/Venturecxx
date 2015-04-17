@@ -153,7 +153,7 @@ function InitializeDemo() {
     var AllDirectivesLoadedCallback = function() {
         $("#loading-status").html("Demo loaded successfully!");
         $("#loading-status").remove();
-        ripl.infer("(loop (" + inference_program + "))");
+        ripl.infer("(loop " + inference_program + ")");
         ripl.register_a_request_processed_callback(function () {});
     };
     
@@ -578,7 +578,7 @@ function InitializeDemo() {
     var RunDemo = function() {
         //document.getElementById(model_variables.model_type).checked = true;
         document.getElementById("clear_ripl").onclick = ForgetPoints;
-        ripl.infer("(loop (" + inference_program + "))");
+        ripl.infer("(loop " + inference_program + ")");
         
         var loop = function() {
             ripl.method("list_directives", [false, false, ["predict", "observe"]], RenderAll);

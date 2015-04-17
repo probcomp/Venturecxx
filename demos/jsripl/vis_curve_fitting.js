@@ -167,7 +167,7 @@ function InitializeDemo() {
     var AllDirectivesLoadedCallback = function() {
         $("#loading-status").html("Demo loaded successfully!");
         $("#loading-status").remove();
-        ripl.infer("(loop (" + inference_program + "))");
+        ripl.infer("(loop " + inference_program + ")");
         ripl.register_a_request_processed_callback(function () {});
     };
 

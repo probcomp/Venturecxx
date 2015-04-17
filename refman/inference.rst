@@ -85,13 +85,13 @@ All the macros available in the modeling language can be used in the
 inference language, too.  In addition, the following inference macros
 are available.
 
-- `(loop (<kernel> ...))`: Run the given kernels in order continuously
-  in a background thread.
+- `(loop <kernel>)`: Run the given kernel continuously in a background
+  thread.
 
   Available in Lite and Puma.
 
   Can only be used as the top level of the `infer` instruction:
-  ``[infer (loop (stuff...))]``.
+  ``[infer (loop something)]``.
 
   Execute the ``[stop_continuous_inference]`` instruction to stop.
 
