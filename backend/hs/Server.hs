@@ -95,7 +95,7 @@ execute engineMVar c = do
       value <- onMVar engineMVar $ runDirective d
       return $ LBSResponse HTTP.status200 [("Content-Type", "text/plain")] $ encodeMaybeValue value
     ListDirectives -> do
-      directives <- liftM V._directives $ takeMVar engineMVar
+      directives <- liftM V._directives $ readMVar engineMVar
       return $ LBSResponse HTTP.status200 [("Content-Type", "text/plain")] $ Aeson.encode $ map (show . U.pp) $ directives
 
 encodeMaybeValue :: Maybe (T.Value Double) -> B.ByteString
