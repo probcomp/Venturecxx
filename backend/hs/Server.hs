@@ -11,16 +11,17 @@
 -- - Network.Wai package http://hackage.haskell.org/package/wai-2.1.0.1/docs/Network-Wai.html
 
 import Data.Functor.Compose
+import Control.Concurrent.MVar
+import Control.Monad.State.Lazy
+import qualified Data.ByteString.Lazy as B
 import qualified Data.Map as M
+import qualified Data.Text as T (unpack)
+
 import Network.Wai
 import Network.HTTP.Types (status200, status500)
 import qualified Network.HTTP.Types           as H
 import Network.Wai.Handler.Warp (run)
-import Data.Text (unpack)
 import qualified Data.Aeson as Aeson
-import Control.Concurrent.MVar
-import Control.Monad.State.Lazy
-import qualified Data.ByteString.Lazy as B
 
 import Language hiding (Value)
 import InferenceInterpreter hiding (execute)
@@ -43,7 +44,7 @@ off_the_wire r = do
 
 parse_method :: Request -> Maybe String
 parse_method r = parse $ pathInfo r where
-  parse [method] = Just $ unpack method
+  parse [method] = Just $ T.unpack method
   parse _ = Nothing
 
 -- This is meant to be interpreted by the client as a VentureException
