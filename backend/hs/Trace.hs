@@ -830,7 +830,12 @@ instance (Show num) => Pretty (SimulationRequest num) where
     pp (SimulationRequest id exp env) = pp id <+> pp exp $$ pp env
 
 instance (Show num) => Pretty (Exp num) where
-    pp = text . show
+    pp (Compose (Datum val)) = pp val
+    pp (Compose (Var var)) = text var
+    pp (Compose (App op opands)) = parens $ sep $ map (pp . Compose) (op:opands)
+    pp (Compose (Lam formals body)) = parens (text "lambda" <> space <> pp_formals <> space <> pp (Compose body))
+      where
+        pp_formals = parens $ sep $ map text formals
 
 instance Pretty Env where
     pp e = brackets $ sep $ map entry $ M.toList $ effectiveEnv e where
