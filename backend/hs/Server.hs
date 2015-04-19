@@ -59,6 +59,7 @@ data Command num = Directive (V.Directive num)
 interpret :: String -> [String] -> Either String (Command Double)
 interpret "assume" [var, expr] = Right $ Directive $ V.Assume var $ Compose $ G.parse expr
 interpret "assume" args = Left $ "Incorrect number of arguments to assume " ++ show args
+interpret "list_directives" _ = Right ListDirectives
 interpret m _ = Left $ "Unknown directive " ++ m
 
 -- This is meant to be interpreted by the client as a VentureException
@@ -92,7 +93,9 @@ execute engineMVar c = do
     (Directive d) -> do
       value <- onMVar engineMVar $ runDirective d
       return $ LBSResponse HTTP.status200 [("Content-Type", "text/plain")] $ encodeMaybeValue value
-    ListDirectives -> undefined
+    ListDirectives -> do
+      directives <- liftM V._directives $ takeMVar engineMVar
+      return $ LBSResponse HTTP.status200 [("Content-Type", "text/plain")] $ Aeson.encode $ undefined $ directives
 
 encodeMaybeValue :: Maybe (T.Value Double) -> B.ByteString
 encodeMaybeValue Nothing = "null"
