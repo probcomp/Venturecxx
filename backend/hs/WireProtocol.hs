@@ -39,6 +39,7 @@ off_the_wire :: Request -> IO (Either String (String, [String]))
 off_the_wire r = do
   let method = parse_method r
   body <- lazyRequestBody r
+  B.putStrLn body
   case decode_body body of
     Left err -> return $ Left err
     Right args -> case method of
@@ -109,8 +110,6 @@ logRequest :: Request -> IO ()
 logRequest req = do
   putStrLn $ show $ requestMethod req
   putStrLn $ (show $ rawPathInfo req) ++ " " ++ (show $ rawQueryString req)
-  body <- lazyRequestBody req
-  putStrLn $ show body
 
 -- I couldn't figure out how to log responses generically, so
 -- intercept.
