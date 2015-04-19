@@ -22,6 +22,7 @@ import qualified Network.HTTP.Types           as HTTP
 import           Network.Wai.Handler.Warp     (run)
 import qualified Data.Aeson                   as Aeson
 
+import qualified Utils                        as U
 import qualified Language                     as L
 import           InferenceInterpreter         hiding (execute)
 import qualified Trace                        as T
@@ -51,10 +52,15 @@ decode_body :: Aeson.FromJSON a => B.ByteString -> Either String [a]
 decode_body "" = Right []
 decode_body str = Aeson.eitherDecode str
 
+data Command num = Directive (V.Directive num)
+                 | ListDirectives
+  deriving Show
+
 -- So far, expect the method and arguments to lead to a directive
-interpret :: String -> [String] -> Either String (Directive Double)
-interpret "assume" [var, expr] = Right $ Assume var $ Compose $ G.parse expr
+interpret :: String -> [String] -> Either String (Command Double)
+interpret "assume" [var, expr] = Right $ Directive $ V.Assume var $ Compose $ G.parse expr
 interpret "assume" args = Left $ "Incorrect number of arguments to assume " ++ show args
+interpret "list_directives" _ = Right ListDirectives
 interpret m _ = Left $ "Unknown directive " ++ m
 
 -- This is meant to be interpreted by the client as a VentureException
@@ -81,11 +87,16 @@ application engineMVar req k = do
       logResponse resp
       k $ prepare resp
 
-execute :: MVar (V.Model IO Double) -> (Directive Double) -> IO LoggableResponse
-execute engineMVar d = do
-  putStrLn $ show d
-  value <- onMVar engineMVar $ runDirective d
-  return $ LBSResponse HTTP.status200 [("Content-Type", "text/plain")] $ encodeMaybeValue value
+execute :: MVar (V.Model IO Double) -> (Command Double) -> IO LoggableResponse
+execute engineMVar c = do
+  putStrLn $ show c
+  case c of
+    (Directive d) -> do
+      value <- onMVar engineMVar $ runDirective d
+      return $ LBSResponse HTTP.status200 [("Content-Type", "text/plain")] $ encodeMaybeValue value
+    ListDirectives -> do
+      directives <- liftM V._directives $ takeMVar engineMVar
+      return $ LBSResponse HTTP.status200 [("Content-Type", "text/plain")] $ Aeson.encode $ map (show . U.pp) $ directives
 
 encodeMaybeValue :: Maybe (T.Value Double) -> B.ByteString
 encodeMaybeValue Nothing = "null"
