@@ -74,14 +74,17 @@ error_response err = LBSResponse HTTP.status500 [("Content-Type", "text/plain")]
 application :: MVar (V.Model IO Double) -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
 application engineMVar req k = do
   logRequest req
-  parsed <- off_the_wire req
-  case parsed of
-    Left err -> send $ error_response err
-    Right (method, args) ->
-        case interpret method args of
-          Left err -> send $ error_response err
-          Right d -> do resp <- execute engineMVar d
-                        send resp
+  if (requestMethod req == "OPTIONS") then
+      undefined
+  else do
+      parsed <- off_the_wire req
+      case parsed of
+        Left err -> send $ error_response err
+        Right (method, args) ->
+            case interpret method args of
+              Left err -> send $ error_response err
+              Right d -> do resp <- execute engineMVar d
+                            send resp
   where
     send resp = do
       logResponse resp
@@ -131,6 +134,7 @@ main = do
 
 logRequest :: Request -> IO ()
 logRequest req = do
+  putStrLn $ show $ requestMethod req
   putStrLn $ (show $ rawPathInfo req) ++ " " ++ (show $ rawQueryString req)
   body <- lazyRequestBody req
   putStrLn $ show body
