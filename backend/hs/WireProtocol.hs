@@ -48,11 +48,11 @@ decode_body "" = Right []
 decode_body str = Aeson.eitherDecode str
 
 -- So far, expect the method and arguments to lead to a directive
-interpret :: String -> [String] -> Either String (Command Double)
-interpret "assume" [var, expr] = Right $ Directive $ V.Assume var $ Compose $ G.parse expr
-interpret "assume" args = Left $ "Incorrect number of arguments to assume " ++ show args
-interpret "list_directives" _ = Right ListDirectives
-interpret m _ = Left $ "Unknown directive " ++ m
+parse :: String -> [String] -> Either String (Command Double)
+parse "assume" [var, expr] = Right $ Directive $ V.Assume var $ Compose $ G.parse expr
+parse "assume" args = Left $ "Incorrect number of arguments to assume " ++ show args
+parse "list_directives" _ = Right ListDirectives
+parse m _ = Left $ "Unknown directive " ++ m
 
 -- This is meant to be interpreted by the client as a VentureException
 -- containing the error message.  The parallel code is
@@ -74,11 +74,11 @@ application act req k = do
   if (requestMethod req == "OPTIONS") then
       send $ allow_response
   else do
-      parsed <- off_the_wire req
-      case parsed of
+      strings <- off_the_wire req
+      case strings of
         Left err -> send $ error_response err
         Right (method, args) ->
-            case interpret method args of
+            case parse method args of
               Left err -> send $ error_response err
               Right d -> do body <- act d
                             send $ resp body
