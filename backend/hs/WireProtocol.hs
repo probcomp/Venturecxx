@@ -79,7 +79,7 @@ allow_response = LBSResponse HTTP.status200 header "" where
 -- containing the error message.  The parallel code is
 -- python/lib/server/utils.py RestServer
 error_response :: String -> LoggableResponse
-error_response err = LBSResponse HTTP.status500 [("Content-Type", "text/plain")] $ Aeson.encode json where
+error_response err = LBSResponse HTTP.status500 [("Content-Type", "application/json")] $ Aeson.encode json where
   json :: M.Map String String
   json = M.fromList [("exception", "fatal"), ("message", err)]
 
