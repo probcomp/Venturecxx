@@ -60,6 +60,7 @@ assume var exp = do
   -- environment.
   address <- topeval exp
   env %= Frame (M.fromList [(var, address)])
+  directives %= ((Assume var exp) :)
   return address
 
 -- Evaluate the expression in the environment (building appropriate
@@ -80,9 +81,12 @@ observe exp v = do
   -- writing, Venturecxx has this limitation as well, so I will not
   -- address it here.
   trace `zoom` (constrain address v)
+  directives %= ((Observe exp v) :)
 
 predict :: (MonadRandom m, Numerical num) => Exp num -> (StateT (Model m num) m) Address
-predict = topeval
+predict exp = do
+  directives %= ((Predict exp) :)
+  topeval exp
 
 sample :: (MonadRandom m, Numerical num) => Exp num -> (Model m num) -> m (Value num)
 sample exp model = evalStateT action model where
