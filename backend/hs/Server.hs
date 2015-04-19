@@ -18,8 +18,7 @@ import qualified Data.Map                     as M
 import qualified Data.Text                    as T (unpack)
 
 import           Network.Wai
-import           Network.HTTP.Types           (status200, status500)
-import qualified Network.HTTP.Types           as H
+import qualified Network.HTTP.Types           as HTTP
 import           Network.Wai.Handler.Warp     (run)
 import qualified Data.Aeson as Aeson
 
@@ -51,7 +50,7 @@ parse_method r = parse $ pathInfo r where
 -- containing the error message.  The parallel code is
 -- python/lib/server/utils.py RestServer
 error_response :: String -> LoggableResponse
-error_response err = LBSResponse status500 [("Content-Type", "text/plain")] $ Aeson.encode json where
+error_response err = LBSResponse HTTP.status500 [("Content-Type", "text/plain")] $ Aeson.encode json where
   json :: M.Map String String
   json = M.fromList [("exception", "fatal"), ("message", err)]
 
@@ -80,7 +79,7 @@ execute engineMVar method args =
     Right d -> do
       putStrLn $ show d
       value <- onMVar engineMVar $ runDirective d
-      return $ LBSResponse status200 [("Content-Type", "text/plain")] $ encodeMaybeValue value
+      return $ LBSResponse HTTP.status200 [("Content-Type", "text/plain")] $ encodeMaybeValue value
 
 encodeMaybeValue :: Maybe (T.Value Double) -> B.ByteString
 encodeMaybeValue Nothing = "null"
@@ -121,7 +120,7 @@ logRequest req = do
 
 -- I couldn't figure out how to log responses generically, so
 -- intercept.
-data LoggableResponse = LBSResponse H.Status H.ResponseHeaders B.ByteString
+data LoggableResponse = LBSResponse HTTP.Status HTTP.ResponseHeaders B.ByteString
   -- Only one constructor because I only use LBS responses now
 
 prepare :: LoggableResponse -> Response
