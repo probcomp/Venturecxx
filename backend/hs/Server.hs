@@ -51,6 +51,12 @@ decode_body :: Aeson.FromJSON a => B.ByteString -> Either String [a]
 decode_body "" = Right []
 decode_body str = Aeson.eitherDecode str
 
+-- So far, expect the method and arguments to lead to a directive
+interpret :: String -> [String] -> Either String (Directive Double)
+interpret "assume" [var, expr] = Right $ Assume var $ Compose $ G.parse expr
+interpret "assume" args = Left $ "Incorrect number of arguments to assume " ++ show args
+interpret m _ = Left $ "Unknown directive " ++ m
+
 -- This is meant to be interpreted by the client as a VentureException
 -- containing the error message.  The parallel code is
 -- python/lib/server/utils.py RestServer
@@ -65,26 +71,21 @@ application engineMVar req k = do
   parsed <- off_the_wire req
   case parsed of
     Left err -> send $ error_response err
-    Right (method, args) -> do resp <- execute engineMVar method args
-                               send resp
+    Right (method, args) ->
+        case interpret method args of
+          Left err -> send $ error_response err
+          Right d -> do resp <- execute engineMVar d
+                        send resp
   where
     send resp = do
       logResponse resp
       k $ prepare resp
 
-interpret :: String -> [String] -> Either String (Directive Double)
-interpret "assume" [var, expr] = Right $ Assume var $ Compose $ G.parse expr
-interpret "assume" args = Left $ "Incorrect number of arguments to assume " ++ show args
-interpret m _ = Left $ "Unknown directive " ++ m
-
-execute :: MVar (V.Model IO Double) -> String -> [String] -> IO LoggableResponse
-execute engineMVar method args =
-  case interpret method args of
-    Left err -> return $ error_response err
-    Right d -> do
-      putStrLn $ show d
-      value <- onMVar engineMVar $ runDirective d
-      return $ LBSResponse HTTP.status200 [("Content-Type", "text/plain")] $ encodeMaybeValue value
+execute :: MVar (V.Model IO Double) -> (Directive Double) -> IO LoggableResponse
+execute engineMVar d = do
+  putStrLn $ show d
+  value <- onMVar engineMVar $ runDirective d
+  return $ LBSResponse HTTP.status200 [("Content-Type", "text/plain")] $ encodeMaybeValue value
 
 encodeMaybeValue :: Maybe (T.Value Double) -> B.ByteString
 encodeMaybeValue Nothing = "null"
