@@ -28,7 +28,7 @@ data Directive num = Assume String (T.Exp num)
   deriving Show
 
 instance (Show num) => Pretty (Directive num) where
-    pp (Assume var exp) = text "assume" <> space <> text var <> pp exp
+    pp (Assume var exp) = text "assume" <> space <> text var <> space <> pp exp
     pp (Observe exp val) = text "observe" <> space <> pp exp <> space <> pp val
     pp (Predict exp) = text "predict" <> space <> pp exp
 
