@@ -28,26 +28,29 @@ data Directive num = Assume String (T.Exp num)
 
 data Model m num =
     Model { _env :: Env
-           , _trace :: (Trace m num)
-           }
+          , _trace :: (Trace m num)
+          -- Hm.  Do I actually need to explicitly track this, or can
+          -- it be deduced from the underlying Env and Trace?
+          , _directives :: [Directive num]
+          }
 
 makeLenses ''Model
 
 empty :: Model m num
-empty = Model Toplevel T.empty
+empty = Model Toplevel T.empty []
 
 initial :: (MonadRandom m, Show num, Real num, Floating num, Enum num) => Model m num
-initial = Model e t where
+initial = Model e t [] where
   (e, t) = runState (initializeBuiltins Toplevel) T.empty
 
 lookupValue :: Address -> Model m num -> Value num
-lookupValue a (Model _ t) =
+lookupValue a (Model _ t _) =
     fromJust "No value at address" $ valueOf
     $ fromJust "Invalid address" $ lookupNode a t
 
 topeval :: (MonadRandom m, Numerical num) => Exp num -> (StateT (Model m num) m) Address
 topeval exp = do
-  (Model e _) <- get
+  (Model e _ _) <- get
   trace `zoom` (eval prior exp e)
 
 assume :: (MonadRandom m, Numerical num) => String -> Exp num -> (StateT (Model m num) m) Address
