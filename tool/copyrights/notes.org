@@ -1,0 +1,65 @@
+Third-party software:
+- backend/new_cxx/inc/Eigen
+- external/ (plex, lemonade)
+- My Scheme libraries, as externals in backend/v1-pre-scm
+  (testing, adaptive-plot, pattern-case)
+- silva_mvn.h silva_mvn.cxx
+- auto-compilation.scm
+- match.scm
+- Solution for the copyright processing tool itself: Exclude it from
+  the release.  Then it doesn't matter that it's third-party.
+- demos/jsripl/vendor
+- jquery and any friends in demos/jsripl/Terminal [see below]
+- backend/new_cxx/cmake/Modules/FindGSL.cmake clearly came from the Internet
+- backend/new_cxx/valgrind-python.supp was seeded from the Internet, but we modified it
+- refman/Makefile is part of a Sphinx distribution, with custom modifications
+
+demos/jsripl/Terminal/ is a self-contained, unused, and probably
+bitrotten hack by Saee Paliwal (who did not contribute anything else?)
+for making a Venture console in a browser (I guess).  It is intermixed
+with various javascript libraries.
+- Resolution: remove it from the release until further notice.
+
+Find all files in the git tree:
+git ls-tree -r --full-tree --name-only HEAD
+
+Find all files in the git tree except Eigen and external/ (which are thrid party)
+git ls-tree -r --full-tree --name-only HEAD | \
+  grep -v "^backend/new_cxx/inc/Eigen/" | \
+  grep -v "^external/"
+
+Compute all file extensions in the git tree (except Eigen and external/)
+git ls-tree -r --full-tree --name-only HEAD | \
+  grep -v "^backend/new_cxx/inc/Eigen/" | \
+  grep -v "^external/" | \
+  while read line; do case $line in *.*) ;; *) continue;; esac; echo "${line##*.}"; done | \
+  sort -u 
+
+Find all extensionless files in the git tree except Eigen and external/
+git ls-tree -r --full-tree --name-only HEAD | \
+  grep -v "^backend/new_cxx/inc/Eigen/" | \
+  grep -v "^external/" | \
+  while read line; do case $line in *.*) continue ;; esac; echo "$line"; done
+
+Detect all instances of a particular extension
+git ls-tree -r --full-tree --name-only HEAD | \
+  grep -v "^backend/new_cxx/inc/Eigen/" | \
+  grep -v "^external/" | \
+  grep "\.ipy$"
+
+Compute all committers to a repository
+git log --all --pretty=short | grep "Author:" | sort -u
+
+Correct all the copyright headers in software that is known to be ours
+time git ls-tree -r --full-tree --name-only HEAD | \
+  grep -v "^backend/new_cxx/inc/Eigen/" | \
+  grep -v "^external/" | \
+  grep -v "^demos/jsripl/vendor/" | \
+  grep -v "^demos/jsripl/Terminal/" | \
+  grep -v "\.cmake$" | \
+  grep -v "\.supp$" | \
+  grep -v "^refman/Makefile$" | \
+  grep -v "silva_mvn.h$" | \
+  grep -v "silva_mvn.cxx$" | \
+  grep -v "match.scm$" | \
+  xargs -l tool/copyrights/venture

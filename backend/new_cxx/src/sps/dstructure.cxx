@@ -1,3 +1,20 @@
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+//
+// This file is part of Venture.
+//
+// Venture is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Venture is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 #include "sps/dstructure.h"
 #include "values.h"
 #include "utils.h"
@@ -185,6 +202,26 @@ VentureValuePtr ArrayMapRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rn
   {
     vector<VentureValuePtr> parts;
     parts.push_back(optor);
+    parts.push_back(opand);
+    VentureValuePtr expression = VentureValuePtr(new VentureArray(parts));
+    esrs.push_back(ESR(VentureValuePtr(new VentureID()), expression, env));
+  }
+  return VentureValuePtr(new VentureRequest(esrs, vector<shared_ptr<LSR> >()));
+}
+
+VentureValuePtr IndexedArrayMapRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  VentureValuePtr optor = args->operandValues[0];
+  VentureValuePtr opands = args->operandValues[1];
+
+  shared_ptr<VentureEnvironment> env = shared_ptr<VentureEnvironment>(new VentureEnvironment());
+
+  vector<ESR> esrs;
+  BOOST_FOREACH(VentureValuePtr opand, opands->getArray())
+  {
+    vector<VentureValuePtr> parts;
+    parts.push_back(optor);
+    parts.push_back(VentureValuePtr(new VentureNumber((double)esrs.size()))); // The index
     parts.push_back(opand);
     VentureValuePtr expression = VentureValuePtr(new VentureArray(parts));
     esrs.push_back(ESR(VentureValuePtr(new VentureID()), expression, env));

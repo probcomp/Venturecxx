@@ -1,18 +1,19 @@
-# Copyright (c) 2013, MIT Probabilistic Computing Project.
-# 
+# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+#
 # This file is part of Venture.
-# 	
+#
 # Venture is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 	
+#
 # Venture is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 	
-# You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 from nose.plugins.attrib import attr
 import unittest
 from nose import SkipTest
@@ -194,19 +195,6 @@ class TestVentureSivm(unittest.TestCase):
                 }
         o2 = self.sivm.execute_instruction(inst2)
         self.assertEquals(o2['value'], v.number(3))
-    def test_labeled_get_logscore(self):
-        inst1 = {
-                'instruction':'labeled_predict',
-                'expression': ['add',v.number(1),v.number(2)],
-                'label' : 'moo',
-                }
-        self.sivm.execute_instruction(inst1)
-        inst2 = {
-                'instruction':'labeled_get_logscore',
-                'label' : v.symbol('moo'),
-                }
-        o2 = self.sivm.execute_instruction(inst2)
-        self.assertEquals(o2['logscore'],0.0)
     def test_list_directives(self):
         inst1 = {
                 'instruction':'predict',

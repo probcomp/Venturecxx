@@ -1,7 +1,27 @@
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 import sp
 import psp
 import value as v
 from builtin import no_request, deterministic_typed
+from exception import VentureError, VentureTypeError
+from venture.engine.inference import Dataset
+from venture.exception import VentureException
 
 class InferPrimitiveOutputPSP(psp.DeterministicPSP):
   def __init__(self, val, klass, desc, tp):
@@ -10,8 +30,13 @@ class InferPrimitiveOutputPSP(psp.DeterministicPSP):
     self.desc = desc
     self.tp = tp
   def simulate(self, args):
+    result = self.klass(self.val, args.operandValues)
+    if self.klass is MadeRiplMethodInferOutputPSP:
+      # Hack to allow MadeRiplMethodInferOutputPSP s to blame the
+      # maker application for errors.
+      result.addr = args.node.address
     return sp.VentureSPRecord(sp.SP(psp.NullRequestPSP(),
-                                    psp.TypedPSP(self.klass(self.val, args.operandValues), self.tp)))
+                                    psp.TypedPSP(result, self.tp)))
   def description(self, _name):
     return self.desc
 
@@ -30,6 +55,41 @@ class MadeEngineMethodInferOutputPSP(psp.LikelihoodFreePSP):
   def simulate(self, args):
     ans = getattr(args.operandValues[0], self.name)(*self.operands)
     return (ans, args.operandValues[0])
+  def description(self, _name):
+    return self.desc
+
+class VentureNestedRiplMethodError(VentureError):
+  """This exception means that this SP attempted a recursive Ripl operation which failed."""
+  def __init__(self, message, cause, stack, addr):
+    super(VentureNestedRiplMethodError, self).__init__(message)
+    self.cause = cause
+    self.stack = stack
+    self.addr = addr
+
+  def __str__(self):
+    return str(self.cause)
+
+class MadeRiplMethodInferOutputPSP(psp.LikelihoodFreePSP):
+  def __init__(self, name, operands, desc=None):
+    self.name = name
+    self.operands = operands
+    self.desc = desc
+  def simulate(self, args):
+    ripl = args.operandValues[0].engine.ripl
+    arguments = [o.asStackDict() for o in self.operands]
+    try:
+      ans = getattr(ripl, self.name)(*arguments, type=True) # Keep the stack dict
+    except VentureException as err:
+      import sys
+      info = sys.exc_info()
+      raise VentureNestedRiplMethodError("Nested ripl operation signalled an error", err, info, self.addr), None, info[2]
+    try:
+      ans_vv = v.VentureValue.fromStackDict(ans) if ans is not None else v.VentureNil()
+    except VentureTypeError:
+      # Do not return values that cannot be reconstructed from stack
+      # dicts (e.g., SPs)
+      ans_vv = v.VentureNil()
+    return (ans_vv, args.operandValues[0])
   def description(self, _name):
     return self.desc
 
@@ -54,18 +114,25 @@ def infer_action_maker_type(args_types, return_type=None, **kwargs):
   return sp.SPType(args_types, infer_action_type(return_type), **kwargs)
 
 def typed_inf_sp(name, tp, klass, desc=""):
-  return [ name, no_request(psp.TypedPSP(InferPrimitiveOutputPSP(name, klass=klass, desc=desc, tp=tp.return_type), tp)) ]
+  return no_request(psp.TypedPSP(InferPrimitiveOutputPSP(name, klass=klass, desc=desc, tp=tp.return_type), tp))
 
 def trace_method_sp(name, tp, desc=""):
-  return typed_inf_sp(name, tp, MadeInferPrimitiveOutputPSP, desc)
+  return [ name, typed_inf_sp(name, tp, MadeInferPrimitiveOutputPSP, desc) ]
 
-def engine_method_sp(name, tp, desc=""):
-  return typed_inf_sp(name, tp, MadeEngineMethodInferOutputPSP, desc)
+def engine_method_sp(name, tp, desc="", method_name=None):
+  if method_name is None:
+    method_name = name
+  return [ name, typed_inf_sp(method_name, tp, MadeEngineMethodInferOutputPSP, desc) ]
 
-def sequenced_sp(name, f, tp, desc=""):
+def ripl_method_sp(name, tp, desc="", method_name=None):
+  if method_name is None:
+    method_name = name
+  return [ name, typed_inf_sp(method_name, tp, MadeRiplMethodInferOutputPSP, desc) ]
+
+def sequenced_sp(f, tp, desc=""):
   "This is for SPs that should be able to participate in do blocks but don't actually read the state (e.g., for doing IO)"
   # TODO Assume they are all deterministic, for now.
-  return [ name, no_request(psp.TypedPSP(InferPrimitiveOutputPSP(f, klass=MadeActionOutputPSP, desc=desc, tp=tp.return_type), tp)) ]
+  return no_request(psp.TypedPSP(InferPrimitiveOutputPSP(f, klass=MadeActionOutputPSP, desc=desc, tp=tp.return_type), tp))
 
 def transition_oper_args_types(extra_args = None):
   # ExpressionType reasonably approximates the mapping I want for scope and block IDs.
@@ -79,7 +146,13 @@ def par_transition_oper_type(extra_args = None, **kwargs):
   return infer_action_maker_type(other_args + [v.BoolType("in_parallel : bool")], min_req_args=len(other_args), **kwargs)
 
 def macro_helper(name, tp):
-  return engine_method_sp(name, tp, desc="""\
+  return engine_method_sp("_" + name, tp, method_name=name, desc="""\
+A helper function for implementing the eponymous inference macro.
+
+Calling it directly is likely to be difficult and unproductive. """)
+
+def ripl_macro_helper(name, tp):
+  return ripl_method_sp("_" + name, tp, method_name=name, desc="""\
 A helper function for implementing the eponymous inference macro.
 
 Calling it directly is likely to be difficult and unproductive. """)
@@ -252,11 +325,19 @@ trajectory.
 
 The `transitions` argument specifies how many times to do this."""),
 
-  trace_method_sp("rejection", transition_oper_type(min_req_args=2), desc="""\
+  trace_method_sp("rejection", transition_oper_type([v.NumberType("attempt_bound : number")], min_req_args=2), desc="""\
 Sample from the local posterior by rejection sampling.
 
 Not available in the Puma backend.  Not all the builtin procedures
 support all the density bound information necessary for this.
+
+The `attempt_bound` bound argument, if supplied, indicates how many
+attempts to make.  If no sample is accepted after that many trials,
+stop, and leave the local state as it was.  Warning: bounded rejection
+is not a Bayes-sound inference algorithm.  If `attempt_bound` is not
+given, keep trying until acceptance (possibly leaving the session
+unresponsive).  Note: if three arguments are supplied, the last one is
+taken to be the number of transitions, not the attempt bound.
 
 The `transitions` argument specifies how many times to do this.
 Specifying more than 1 transition is redundant if the `block` is
@@ -333,8 +414,7 @@ Perform an SMC-style resampling step.
 
 The `particles` argument gives the number of particles to make.
 Subsequent modeling and inference commands will be applied to each
-result particle independently.  Data reporting commands will talk to
-one distinguished particle, except ``peek``.
+result particle independently.
 
 Future observations will have the effect of weighting the particles
 relative to each other by the relative likelihoods of observing those
@@ -566,28 +646,172 @@ XXX: Currently, extra arguments must be VentureSymbols, which are
 unwrapped to Python strings for the plugin.
 """),
 
-  macro_helper("peek", infer_action_maker_type([v.AnyType()], variadic=True)),
-  macro_helper("plotf", infer_action_maker_type([v.AnyType()], variadic=True)),
-  macro_helper("plotf_to_file", infer_action_maker_type([v.AnyType()], variadic=True)),
-  macro_helper("printf", infer_action_maker_type([v.AnyType()], variadic=True)),
   macro_helper("call_back", infer_action_maker_type([v.AnyType()], return_type=v.AnyType(), variadic=True)),
-  macro_helper("call_back_accum", infer_action_maker_type([v.AnyType()], variadic=True)),
-  macro_helper("assume", infer_action_maker_type([v.AnyType("<symbol>"), v.AnyType("<expression>")])),
-  macro_helper("observe", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType()])),
-  macro_helper("predict", infer_action_maker_type([v.AnyType("<expression>")])),
+  macro_helper("collect", infer_action_maker_type([v.AnyType()], return_type=v.ForeignBlobType("<dataset>"), variadic=True)),
+
+  engine_method_sp("printf", infer_action_maker_type([v.ForeignBlobType("<dataset>")]), desc="""\
+Print model values collected in a dataset.
+
+This is a basic debugging facility."""),
+
+  engine_method_sp("plotf", infer_action_maker_type([v.AnyType("<spec>"), v.ForeignBlobType("<dataset>")]), desc="""\
+Plot a data set according to a plot specification.
+
+Example::
+
+    [INFER (do (d <- (empty))
+               (repeat 1000
+                (do (mh default one 1)
+                    (bind (collect x) (curry into d))))
+               (plotf (quote c0s) d)) ]
+
+will do 1000 iterations of MH collecting some standard data and
+the value of x, and then show a plot of the x variable (which
+should be a scalar) against the sweep number (from 1 to 1000),
+colored according to the global log score.  See ``collect``
+for details on collecting and labeling data to be plotted.
+
+The format specifications are inspired loosely by the classic
+printf.  To wit, each individual plot that appears on a page is
+specified by some line noise consisting of format characters
+matching the following regex::
+
+    [<geom>]*(<stream>?<scale>?){1,3}
+
+specifying
+
+- the geometric objects to draw the plot with, and
+- for each dimension (x, y, and color, respectively)
+    - the data stream to use
+    - the scale
+
+The possible geometric objects are:
+
+- _p_oint,
+- _l_ine,
+- _b_ar, and
+- _h_istogram
+
+The possible data streams are:
+
+- _<an integer>_ that column in the data set, 0-indexed,
+- _%_ the next column after the last used one
+- sweep _c_ounter,
+- _t_ime (wall clock, since the beginning of the Venture program),
+- log _s_core, and
+- pa_r_ticle
+
+The possible scales are:
+
+- _d_irect, and
+- _l_ogarithmic
+
+If one stream is indicated for a 2-D plot (points or lines), the x
+axis is filled in with the sweep counter.  If three streams are
+indicated, the third is mapped to color.
+
+If the given specification is a list, make all those plots at once.
+"""),
+
+  engine_method_sp("plotf_to_file", infer_action_maker_type([v.AnyType("<basename>"), v.AnyType("<spec>"), v.ForeignBlobType("<dataset>")]), desc="""\
+Save plot(s) to file(s).
+
+  Like ``plotf``, but save the resulting plot(s) instead of displaying on screen.
+  Just as <spec> may be either a single expression or a list, <basenames> may
+  either be a single symbol or a list of symbols. The number of basenames must
+  be the same as the number of specifications.
+
+  Examples:
+    (plotf_to_file (quote basename) (quote spec) <expression> ...) saves the plot specified by
+      the spec in the file "basename.png"
+    (plotf_to_file (quote (basename1 basename2)) (quote (spec1 spec2)) <expression> ...) saves
+      the spec1 plot in the file basename1.png, and the spec2 plot in basename2.png.
+"""),
+
+  engine_method_sp("sweep", infer_action_maker_type([v.ForeignBlobType("<dataset>")]), desc="""\
+Print the sweep count.
+
+  Extracts the last row of the supplied inference Dataset and prints its sweep count.
+
+  Examples:
+    (sweep d)
+
+"""),
+
+  ripl_macro_helper("assume", infer_action_maker_type([v.AnyType("<symbol>"), v.AnyType("<expression>"), v.AnyType("<label>")], min_req_args=2)),
+  ripl_macro_helper("observe", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType(), v.AnyType("<label>")], min_req_args=2)),
+  macro_helper("force", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType()])),
+  ripl_macro_helper("predict", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType("<label>")], min_req_args=1)),
   macro_helper("sample", infer_action_maker_type([v.AnyType("<expression>")], return_type=v.AnyType())),
   macro_helper("sample_all", infer_action_maker_type([v.AnyType("<expression>")], return_type=v.ListType())),
+
+  ripl_method_sp("forget", infer_action_maker_type([v.AnyType("<label>")]), desc="""\
+  Forget an observation, prediction, or unused assumption.
+
+  Removes the directive indicated by the label argument from the
+  model.  If an assumption is forgotten, the symbol it binds
+  disappears from scope; the behavior if that symbol was still
+  referenced is unspecified.
+
+"""),
+
+  ripl_method_sp("freeze", infer_action_maker_type([v.AnyType("<label>")]), desc="""\
+  Freeze an assumption to its current sample.
+
+  Replaces the assumption indicated by the label argument with a
+  constant whose value is that assumption's current value (which may
+  differ across particles).  This has the effect of preventing future
+  inference on that assumption, and decoupling it from its (former)
+  dependecies, as well as reclaiming any memory of random choices
+  that can no longer influence any toplevel value.
+
+  Together with forget, freeze makes it possible for particle filters
+  in Venture to use model memory independent of the sequence length.
+
+"""),
+
+  ["empty", deterministic_typed(lambda *args: Dataset(), [], v.ForeignBlobType("<dataset>"), descr="""\
+Create an empty dataset ``into`` which further ``collect`` ed stuff may be merged.
+  """)],
+
+  ["into", sequenced_sp(lambda orig, new: orig.merge_bang(new), infer_action_maker_type([v.ForeignBlobType(), v.ForeignBlobType()]), desc="""\
+Destructively merge the contents of the second argument into the
+first.
+
+Right now only implemented on datasets created by ``empty`` and
+``collect``, but in principle generalizable to any monoid.  """)],
 
   # Hackety hack hack backward compatibility
   ["ordered_range", deterministic_typed(lambda *args: (v.VentureSymbol("ordered_range"),) + args,
                                         [v.AnyType()], v.ListType(), variadic=True)],
 
-  sequenced_sp("assert", assert_fun, infer_action_maker_type([v.BoolType(), v.SymbolType("message")], min_req_args=1), desc="""\
+  ["assert", sequenced_sp(assert_fun, infer_action_maker_type([v.BoolType(), v.SymbolType("message")], min_req_args=1), desc="""\
 Check the given boolean condition and raise an error if it fails.
-"""),
+""")],
 
-  sequenced_sp("print", print_fun, infer_action_maker_type([v.AnyType()], variadic=True), desc="""\
+  ["print", sequenced_sp(print_fun, infer_action_maker_type([v.AnyType()], variadic=True), desc="""\
 Print the given values to the terminal.
+""")],
+
+  engine_method_sp("new_model", infer_action_maker_type([], v.ForeignBlobType("<model>")), desc="""\
+Create an new empty model.
+
+This is an inference action rather than a pure operation due to
+implementation accidents. [It reads the Engine to determine the
+backend to use (TODO could take that as an argument) and for the
+registry of bound foreign sps (TODO: Implicitly bind extant foreign
+sps into new models?)]
+
+ """),
+
+  engine_method_sp("in_model", infer_action_maker_type([v.ForeignBlobType("<model>"), v.AnyType("<action>")], v.PairType(v.AnyType(), v.ForeignBlobType("<model>"))), desc="""\
+Run the given inference action against the given model.
+
+Returns a pair consisting of the result of the action and the model, which is also mutated.
+
+This is itself an inference action rather than a pure operation due
+to implementation accidents. [It invokes a method on the Engine
+to actually run the given action].
 """),
 ]
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2014, MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -49,10 +49,10 @@ keywords = {                    # XXX Use a perfect hash.
     'define': grammar.K_DEFINE,
     'force': grammar.K_FORCE,
     'forget': grammar.K_FORGET,
+    'freeze': grammar.K_FREEZE,
     'get_current_exception': grammar.K_GET_CURRENT_EXCEPTION,
     'get_directive': grammar.K_GET_DIRECTIVE,
     'get_global_logscore': grammar.K_GET_GLOBAL_LOGSCORE,
-    'get_logscore': grammar.K_GET_LOGSCORE,
     'get_state': grammar.K_GET_STATE,
     'infer': grammar.K_INFER,
     'list_directives': grammar.K_LIST_DIRECTIVES,
@@ -71,7 +71,7 @@ keywords = {                    # XXX Use a perfect hash.
     'false': grammar.T_FALSE,
 }
 def scan_name(_scanner, text):
-    return keywords.get(text) or keywords.get(text.lower()) or grammar.L_NAME;
+    return keywords.get(text) or keywords.get(text.lower()) or grammar.L_NAME
 
 def scan_integer(scanner, text):
     scanner.produce(grammar.L_INTEGER, int(text, 10))
@@ -160,16 +160,18 @@ class Scanner(Plex.Scanner):
     lexicon = Plex.Lexicon([
         (whitespace,    Plex.IGNORE),
         (line_comment,  Plex.IGNORE),
-        (Plex.Str('['), grammar.T_LSQUARE),
-        (Plex.Str(']'), grammar.T_RSQUARE),
         (Plex.Str('('), grammar.T_LROUND),
         (Plex.Str(')'), grammar.T_RROUND),
-        (Plex.Str('{'), grammar.T_LCURLY),
-        (Plex.Str('}'), grammar.T_RCURLY),
+        (Plex.Str(','), grammar.T_COMMA),
+        (Plex.Str(':'), grammar.T_COLON),
         (Plex.Str('<'), grammar.T_LANGLE),
         (Plex.Str('>'), grammar.T_RANGLE),
-        (Plex.Str(':'), grammar.T_COLON),
-        (Plex.Str(','), grammar.T_COMMA),
+        (Plex.Str('['), grammar.T_LSQUARE),
+        (Plex.Str('\''), grammar.T_QUOTE),
+        (Plex.Str('`'), grammar.T_BACKTICK),
+        (Plex.Str(']'), grammar.T_RSQUARE),
+        (Plex.Str('{'), grammar.T_LCURLY),
+        (Plex.Str('}'), grammar.T_RCURLY),
         (operator,      grammar.L_OPERATOR),
         (name,          scan_name),
         (integer,       scan_integer),

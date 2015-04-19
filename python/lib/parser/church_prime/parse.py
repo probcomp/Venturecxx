@@ -1,4 +1,4 @@
-# Copyright (c) 2014, MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -41,6 +41,11 @@ def loctoken((value, start, end)):
 
 def loctoken1((_value, start, end), value):
     return located([start, end], value)
+
+def locquoted((_value, start, _end), located_value, f):
+    (_vstart, vend) = located_value['loc']
+    assert start < _vstart
+    return located([start, vend], f(located_value))
 
 def locbracket((_ovalue, ostart, oend), (_cvalue, cstart, cend), value):
     assert ostart <= oend
@@ -105,7 +110,7 @@ class Semantics(object):
 
     # instruction: Return located { 'instruction': 'foo', ... }.
     def p_instruction_labelled(self, l, open, d, close):
-        d['label'] = loctoken(l)
+        d['label'] = locmap(loctoken(l), val.symbol)
         d['instruction'] = locmap(d['instruction'], lambda i: 'labeled_' + i)
         return locbracket(l, close, d)
     def p_instruction_unlabelled(self, open, d, close):
@@ -138,6 +143,9 @@ class Semantics(object):
     def p_command_forget(self, k, dr):
         i = 'labeled_forget' if dr[0] == 'label' else 'forget'
         return { 'instruction': loctoken1(k, i), dr[0]: dr[1] }
+    def p_command_freeze(self, k, dr):
+        i = 'labeled_freeze' if dr[0] == 'label' else 'freeze'
+        return { 'instruction': loctoken1(k, i), dr[0]: dr[1] }
     def p_command_report(self, k, dr):
         i = 'labeled_report' if dr[0] == 'label' else 'report'
         return { 'instruction': loctoken1(k, i), dr[0]: dr[1] }
@@ -168,9 +176,6 @@ class Semantics(object):
         return { 'instruction': loctoken1(k, 'get_current_exception') }
     def p_command_get_state(self, k):
         return { 'instruction': loctoken1(k, 'get_state') }
-    def p_command_get_logscore(self, k, dr):
-        i = 'labeled_get_logscore' if dr[0] == 'label' else 'get_logscore'
-        return { 'instruction': loctoken1(k, i), dr[0]: dr[1] }
     def p_command_get_global_logscore(self, k):
         return { 'instruction': loctoken1(k, 'get_global_logscore') }
     def p_command_profiler_configure(self, k, options):
@@ -181,7 +186,8 @@ class Semantics(object):
     def p_command_list_random(self, k):
         return { 'instruction': loctoken1(k, 'profiler_list_random_choices') }
     def p_command_load(self, k, pathname):
-        return { 'instruction': loctoken1(k, 'load'), 'file': pathname }
+        return { 'instruction': loctoken1(k, 'load'),
+                 'file': loctoken(pathname) }
 
     # directive_ref: Return (reftype, located value) tuple.
     def p_directive_ref_numbered(self, number):
@@ -197,6 +203,12 @@ class Semantics(object):
         return locmap(loctoken(op), lambda op: val.symbol(operators[op]))
     def p_expression_literal(self, value):
         return value
+    def p_expression_quote(self, quote, e):
+        return locquoted(quote, e, val.quote)
+    def p_expression_qquote(self, qquote, e):
+        return locquoted(qquote, e, val.quasiquote)
+    def p_expression_unquote(self, unquote, e):
+        return locquoted(unquote, e, val.unquote)
     def p_expression_combination(self, open, es, close):
         return locbracket(open, close, es or [])
     def p_expression_comb_error(self, open, es, close):
@@ -234,8 +246,8 @@ class Semantics(object):
 
     # json_list: Return list.
     def p_json_list_l(self, b):                 return b
-    def p_json_list_body_none(self):            return []
-    def p_json_list_body_some(self, ts):        return ts
+    def p_json_list_empty(self):                return []
+    def p_json_list_nonempty(self, ts):         return ts
     def p_json_list_terms_one(self, t):         return [t]
     def p_json_list_terms_many(self, ts, t):    ts.append(t); return ts
     def p_json_list_terms_error(self, t):       return ['error']
@@ -452,8 +464,13 @@ class ChurchPrimeParser(object):
 
     def unparse_expression(self, expression):
         '''Unparse EXPRESSION into a string.'''
-        if isinstance(expression, dict):        # Leaf.
-            return value_to_string(expression)
+        if isinstance(expression, dict):
+            if expression["type"] == "array":
+                # Because combinations actually parse as arrays too,
+                # and I want the canonical form to be that.
+                return self.unparse_expression(expression["value"])
+            else: # Leaf
+                return value_to_string(expression)
         elif isinstance(expression, basestring):
             # XXX This is due to &@!#^&$@!^$&@#!^%&*.
             return expression
@@ -461,10 +478,32 @@ class ChurchPrimeParser(object):
             terms = (self.unparse_expression(e) for e in expression)
             return '(' + ' '.join(terms) + ')'
         else:
-            raise TypeError('Invalid expression: %s' % (repr(expression),))
+            raise TypeError('Invalid expression: %s of type %s' % (repr(expression),type(expression)))
+
+    escapes = {
+        '/':    '/',
+        '\"':   '\"',
+        '\\':   '\\',
+        '\b':   'b',            # Backspace
+        '\f':   'f',            # Form feed
+        '\n':   'n',            # Line feed
+        '\r':   'r',            # Carriage return
+        '\t':   't',            # Horizontal tab
+    }
 
     def unparse_integer(self, integer):
         return str(integer)
+    def unparse_string(self, string):
+        out = StringIO.StringIO()
+        out.write('"')
+        for ch in string:
+            if ch in escapes:
+                out.write('\\')
+                out.write(escapes[ch])
+            else:
+                out.write(ch)
+        out.write('"')
+        return out.getvalue()
     def unparse_symbol(self, symbol):
         assert isinstance(symbol, dict)
         assert 'type' in symbol
@@ -491,6 +530,8 @@ class ChurchPrimeParser(object):
         'configure': [('options', unparse_json)],
         'forget': [('directive_id', unparse_integer)],
         'labeled_forget': [('label', unparse_symbol)],
+        'freeze': [('directive_id', unparse_integer)],
+        'labeled_freeze': [('label', unparse_symbol)],
         'report': [('directive_id', unparse_integer)],
         'labeled_report': [('label', unparse_symbol)],
         'infer': [('expression', unparse_expression)],
@@ -506,12 +547,10 @@ class ChurchPrimeParser(object):
         'stop_continuous_inference': [],
         'get_current_exception': [],
         'get_state': [],
-        'get_logscore': [('directive_id', unparse_integer)],
-        'labeled_get_logscore': [('label', unparse_symbol)],
         'profiler_configure': [('options', unparse_json)],
         'profiler_clear': [],
         'profiler_list_random': [], # XXX Urk, extra keyword.
-        'load': [('file', unparse_json)],
+        'load': [('file', unparse_string)],
     }
     def unparse_instruction(self, instruction):
         '''Unparse INSTRUCTION into a string.'''
@@ -520,7 +559,7 @@ class ChurchPrimeParser(object):
         unparsers = self.unparsers[i]
         chunks = []
         if 'label' in instruction and 'label' not in (k for k,_u in unparsers):
-            chunks.append(instruction['label'])
+            chunks.append(instruction['label']['value'])
             chunks.append(': ')
         chunks.append('[')
         if i[0 : len('labeled_')] == 'labeled_':

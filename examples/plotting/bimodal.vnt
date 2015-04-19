@@ -1,0 +1,35 @@
+;;; Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+;;;
+;;; This file is part of Venture.
+;;;
+;;; Venture is free software: you can redistribute it and/or modify
+;;; it under the terms of the GNU General Public License as published by
+;;; the Free Software Foundation, either version 3 of the License, or
+;;; (at your option) any later version.
+;;;
+;;; Venture is distributed in the hope that it will be useful,
+;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;; GNU General Public License for more details.
+;;;
+;;; You should have received a copy of the GNU General Public License
+;;; along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
+[infer (resample 100)]
+
+[assume x (uniform_continuous 0 1)]
+[assume y (uniform_continuous 0 1)]
+
+[assume dist (lambda (x1 y1 x2 y2) (sqrt (+ (pow (- x1 x2) 2) (pow (- y2 y2) 2))))]
+
+[assume energy (lambda (x y) (+ (dist x y -1 -1) (dist x y 0 0)))]
+
+[observe (bernoulli (exp (* -1 (energy x y)))) 1]
+
+[predict (dist x y 0 0)]
+
+[list_directives]
+
+[infer (do
+  (mh default one 1)
+  (bind (collect x y) (curry plotf (quote p0d1dr))))]

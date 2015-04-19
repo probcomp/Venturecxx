@@ -1,5 +1,22 @@
 #!/bin/bash
 
+# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 # Reset the working directory to the directory above the script's path
 my_abs_path=$(readlink -f "$0")
 root_dirname=$(dirname $(dirname $my_abs_path))
@@ -20,13 +37,21 @@ echo Making a tarball marked version $release
 tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=.git \
     --exclude=.gitignore \
+    --exclude=.gitmodules \
+    --exclude=.gitattributes \
     --exclude=*.pyc \
+    --exclude=*.bci \
+    --exclude=*.bin \
+    --exclude=*.com \
+    --exclude=*.ext \
+    --exclude=v1-pre-scm/**/todo.txt \
     --exclude=build \
     --exclude=CMakeCache.txt \
     --exclude=CMakeFiles \
     --exclude=cmake_install.cmake \
     --exclude=env.d \
     --exclude=*~ \
+    --exclude=.owainnotes.txt \
     --exclude=valgrind-python.supp \
     --exclude=Makefile \
     --exclude=CMakeLists.txt \
@@ -36,13 +61,14 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=htmlcov \
     --exclude=.gdbinit \
     --exclude=backend/hs \
+    `# Excluding Terminal because it's unused and copyright-intermixed`
+    --exclude=demos/jsripl/Terminal \
     --exclude=CP1-Quad-Rotor \
     --exclude=.coverage \
     --exclude=.idea \
     --exclude=.ipynb_checkpoints \
     --exclude=tool/logs \
     --exclude=doc/v1 \
-    --exclude=backend/v1-pre-scm \
     --exclude=script/release-tarball \
     --exclude=venture-*.tgz \
     --exclude=venture-*.tar.gz \

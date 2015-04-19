@@ -1,4 +1,4 @@
-# Copyright (c) 2013, MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -12,7 +12,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import unittest
@@ -48,6 +49,10 @@ class TestChurchPrimeParser(unittest.TestCase):
         expected = {'instruction':'assume', 'symbol':v.sym('a'),
                     'expression':[v.sym('b'),v.sym('c'),v.sym('d')]}
         self.assertEqual(output,expected)
+
+    def test_parse_and_unparse_instruction(self):
+        for instruction in ["[assume a (b c d)]", "foo: [assume a (b c d)]"]:
+            self.assertEqual(self.p.unparse_instruction(self.p.parse_instruction(instruction)), instruction)
 
     # detects bug where '>=' is parsed as '> =' (because '>' is its own symbol)
     def test_double_symbol(self):

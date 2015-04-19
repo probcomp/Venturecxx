@@ -1,3 +1,20 @@
+# Copyright (c) 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 from nose.tools import assert_raises
 from numpy.testing import assert_array_almost_equal
 from os import path
@@ -31,16 +48,3 @@ def test_timer4():
   ripl = get_ripl()
   ripl.infer('(call_back timer_start)')
   ripl.infer('(call_back timer_time)')
-
-def test_dataset_to_file():
-  ripl = get_ripl()
-  ripl.assume('x', '(normal 0 1)')
-  infer = '''(begin
-                (resample 2)
-                (cycle ((mh default one 1) (peek x)) 5)
-                (call_back dataset_to_file (quote test_dataset)))'''
-  res = ripl.infer(infer)
-  assert path.exists('test_dataset.txt')
-  ds = pd.read_table('test_dataset.txt')
-  assert_array_almost_equal(res.dataset(), ds, decimal = 3)
-  os.remove('test_dataset.txt')

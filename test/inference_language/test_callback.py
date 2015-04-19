@@ -1,6 +1,22 @@
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 import numbers
 from nose.tools import eq_
-from pandas import DataFrame
 
 import venture.lite.value as v
 from venture.test.config import get_ripl
@@ -27,29 +43,8 @@ def testCallbackSmoke():
   ripl.execute_program("""
 [infer (resample 4)]
 [assume x (normal 0 1)]
-[infer (cycle ((call_back foo x (gamma 1 1))) 3)]""")
+[infer (repeat 3 (call_back foo x (gamma 1 1)))]""")
   eq_(my_callback.call_ct, 3)
-
-def testAccumulatingCallbackSmoke():
-  class MyCallback(object):
-    def __init__(self):
-      self.call_ct = 0
-    def __call__(self, dataset):
-      assert isinstance(dataset, DataFrame)
-      for c in ["sweep count", "particle id", "time (s)", "log score", "(gamma 1.0 1.0)", "x"]:
-        assert c in dataset.columns
-      eq_(len(dataset.index), 12) # 4 particles * 3 sweeps
-      self.call_ct += 1
-  my_callback = MyCallback()
-
-  ripl = get_ripl()
-  ripl.bind_callback("foo", my_callback)
-  ripl.execute_program("""
-[infer (resample 4)]
-[assume x (normal 0 1)]
-[infer (cycle ((call_back_accum foo x (gamma 1 1))) 3)]""")
-  eq_(my_callback.call_ct, 1)
-
 
 def testCallbackReturns():
   ripl = get_ripl()

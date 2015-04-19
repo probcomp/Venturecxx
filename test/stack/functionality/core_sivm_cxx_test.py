@@ -1,18 +1,19 @@
-# Copyright (c) 2013, MIT Probabilistic Computing Project.
-# 
+# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+#
 # This file is part of Venture.
-# 	
+#
 # Venture is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 	
+#
 # Venture is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 	
-# You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import unittest
 from nose import SkipTest
 from nose.plugins.attrib import attr
@@ -225,20 +226,6 @@ class TestCoreSivm(unittest.TestCase):
         self.sivm.execute_instruction(inst1)
         inst2 = {
                 'instruction':'get_global_logscore',
-                }
-        o2 = self.sivm.execute_instruction(inst2)
-        self.assertEquals(o2['logscore'],-0.6931471805599453)
-    def test_get_logscore(self):
-        raise SkipTest("Per-directive logscore not implemented.  Issue: https://app.asana.com/0/9277419963067/9940667562272")
-        inst1 = {
-                'instruction':'observe',
-                'expression': ['flip'],
-                'value': v.boolean(True)
-                }
-        o1 = self.sivm.execute_instruction(inst1)
-        inst2 = {
-                'instruction':'get_logscore',
-                'directive_id':o1['directive_id'],
                 }
         o2 = self.sivm.execute_instruction(inst2)
         self.assertEquals(o2['logscore'],-0.6931471805599453)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2013, MIT Probabilistic Computing Project.
+# Copyright (c) 2013-2015 MIT Probabilistic Computing Project.
 # 
 # This file is part of Venture.
 # 	
@@ -14,16 +14,20 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 # 	
-# You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
 import string
 import textwrap
 import subprocess
+
 from venture.lite.builtin import builtInSPsList
 from venture.lite.inference_sps import inferenceSPsList
-from venture.sivm.macro import macros
-from venture.engine.macro import macro_list
+import venture.sivm.macro # To register the macros
+from venture.sivm.macro_system import macros
+import venture.engine.inference_prelude
+from venture.shortcuts import Lite
 
 def flags(psp):
   ans = []
@@ -43,6 +47,9 @@ def flags(psp):
   # Simulation kernels and delta kernels are unused right now
   return ans
 
+def indent(string, prefix):
+  return "\n".join([prefix + line for line in string.strip().split("\n")])
+
 def wrap_description(desc):
   desc_lines = desc.split("\n")
   if len(desc_lines) == 1:
@@ -51,7 +58,7 @@ def wrap_description(desc):
     return string.join(desc_lines[0:-1], "\n") + "\n" + textwrap.fill(desc_lines[-1],70)
 
 def wrap_description_rst_format(header, body):
-  return header + "\n\n" + "\n".join(["   " + line for line in body.strip().split("\n")])
+  return header + "\n\n" + indent(body, "   ")
 
 def model_SPs():
   for (name,sp) in builtInSPsList:
@@ -74,20 +81,34 @@ def inference_SPs_rst_format():
     # print
     # print "   " + string.capitalize(string.join(flags(sp.outputPSP), ", "))
 
+def inference_prelude_SPs():
+  for (_name, desc, _body) in venture.engine.inference_prelude.prelude:
+    print ""
+    print desc
+
 def model_macros():
   for macro in macros:
+    if macro.intended_for_inference(): continue
     if macro.desc is None:
       sys.stderr.write("Skipping undesribed macro %s\n" % (macro,))
       continue
     print macro.desc
 
 def inference_macros():
-  for (name, _func, desc) in macro_list:
-    if desc is not None:
-      print desc
-    else:
-      print "- TODO " + name
+  for macro in macros:
+    if not macro.intended_for_inference(): continue
+    if macro.desc is None:
+      sys.stderr.write("Skipping undesribed macro %s\n" % (macro,))
+      continue
+    print macro.desc
+
+def callbacks():
+  ripl = Lite().make_church_prime_ripl()
+  import inspect
+  for (name, f) in ripl.sivm.core_sivm.engine.callbacks.iteritems():
     print ""
+    print "- Callback ``%s``" % (name,)
+    print indent(inspect.getdoc(f), "   ")
 
 def invocation():
   for mode in ["", "lite ", "server ", "remote "]:
@@ -103,10 +124,13 @@ if __name__ == "__main__":
       model_SPs_rst_format()
     elif sys.argv[1] == "inf":
       inference_SPs_rst_format()
+      inference_prelude_SPs()
     elif sys.argv[1] == "macros":
       model_macros()
     elif sys.argv[1] == "inf-macros":
       inference_macros()
+    elif sys.argv[1] == "callbacks":
+      callbacks()
     elif sys.argv[1] == "invocation":
       invocation()
     else:

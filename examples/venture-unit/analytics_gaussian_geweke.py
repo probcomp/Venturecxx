@@ -1,0 +1,143 @@
+# Copyright (c) 2014 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
+from venture.unit import *
+from venture.venturemagics.ip_parallel import *
+import time
+# class GaussianModel(VentureUnit):
+#     def makeAssumes(self):
+#       self.assume('mu', '(tag (quote params) 0 (normal 0 10))')
+#       self.assume('sigma', '(tag (quote params) 1 (sqrt (inv_gamma 1 1)))')
+#       self.assume('x', '(lambda () (normal mu sigma))')
+
+#     def makeObserves(self):
+#       self.observe('(x)', 1.0)
+
+# ripl = make_lite_church_prime_ripl()
+# model = GaussianModel(ripl).getAnalytics(ripl)
+# fh, ih, cr = model.gewekeTest(samples = 100000,
+#                                 infer = '(hmc default all 0.05 10 1)',
+#                                 plot = True)
+# with open('geweke-results/analytics-hmc.txt', 'w') as f:
+#     f.write(cr.reportString)
+# cr.compareFig.savefig('geweke-results/analytics-hmc.pdf', format = 'pdf')
+
+
+## currently fails in Analytics because of problem extracting assumes from ripl
+program = '''
+  [ASSUME mu (tag (quote parameters) 0 (normal 0 10))]
+  [ASSUME sigma (tag (quote parameters) 1 (gamma 1 1) ) ]
+  [ASSUME x (tag (quote data) 0 (lambda () (normal mu sigma)))]
+  '''
+###
+
+
+infer_statement = '(mh default one 20)' #infer_scope = '(mh params all 10)'
+hmc = '(hmc default one .05 10 1)'
+
+# mu has high variance prior, sigma has low variance prior.
+# if x is close to mu, hard to change value of x.
+fail_assumes = [ ('mu', '(tag (quote params) 0 (normal 0 30))') ,
+            ('sigma', '(tag (quote params) 1 (gamma .1 1))'),
+            ('x', '(lambda () (normal mu sigma))') ]
+
+# variances are better matched and '(mh default one)' should move around prior well 
+pass_assumes = [ ('mu', '(tag (quote params) 0 (normal 0 1))') ,
+            ('sigma', '(tag (quote params) 1 (gamma 1 1))'),
+            ('x', '(lambda () (normal mu sigma))') ]
+hmc_assumes = [ ('mu', '(tag (quote params) 0 (normal 0 1))') ]
+
+observes = [('(x)','0')]
+hmc_observes = [('(normal mu .4)','0')]
+
+
+# variables are highly correlated and so '(mh default one)' will never accept
+fail_assumes_correlated = [('x','(normal 0 10)'),('y','(normal x .0001)') ]
+fail_observes_correlated = None
+
+
+ripl = mk_l_ripl()
+ana = Analytics(ripl,assumes=hmc_assumes,observes=hmc_observes)
+
+t = time.time()
+fh,ih,cr = ana.gewekeTest(samples=1000,infer=hmc,useMRipl=False,plot=True)
+print 'time: ', time.time() - t
+
+
+
+
+# notes on geweke:                
+
+# Geweke 2004:
+# Grosse's blog post (HIPS blog) recommends using QQ plots to compare the marginal distributions on variables for forward samples vs. samples from MCMC. Doing so gives rich visual information about these distributions. But one has to be careful with the number of samples (and the autocorrelation of the MCMC samples). The Geweke test in Analytics which turns *observes* into *predicts* produces QQ plots, histograms and a KS test of all variables recorded by Analytics. (We could use this to compare QQ plots for arbitrary scalar functions of the variables in the model by adding query expressions to Analytics via *queryExps*). 
+
+# Geweke himself advocates comparing forward and MCMC samples on a series of scalar functions g(theta), where theta is the parameter vector. The examples in the paper are mostly first and second moments of components of theta. Forward samples give a standard MC approximation of the expectation of g(theta) over the prior. The MCMC samples are not independent and so the variance of the estimator is higher (and has to be estimated for the given chain). Using the CLT for independent and dependent samples, we can transform these estimates s.t. their difference is ~ N(0,1). We can then use a standard goodness of fit test to compare to N(0,1). 
+
+# How to automate this version in Venture? First, there needs to be an interface where you enter the functions g. You could either specify a Venture function or a Python function. Python functions will be simpler in most cases. Some care may need to be taken with numerical issues if the number of MCMC samples is very large. (You would want to use numpy/scipy functions, rather than write code for computing some function of higher moments yourself). 
+ 
+# You first estimate E( g(theta) ), then you compute its variances for foward and MCMC samples. These variances depend on the variance of the expectation and so you can only estimate them. So you need enough samples that your estimate is very close with high probability. (Geweke runs his tests for 10^5 iterations). Finally you implement/borrow some standard test for samples being ~ N(0,1).
+
+# If theta has high dimension it will have lots of second moments. Geweke suggests we test lots of them and use Bonferronni. (Some models may have a very large number of variables, and so running a KS test on all of them is likely to produce failures due to chance. One could just eyeball the KS p-values. But it might be good to use Bonferroni here also). 
+
+# Since the g(theta) statistics just depend on samples of theta, there is an incremental path from the current QQ plot Geweke for marginals and the generalization to arbitrary functions of theta.
+
+# One obvious advantage of Geweke's approach is in dealing with correlated variables. If x and y are highly correlated in the prior, this will show up in the second moments but not in the first.
+
+# Another possible advantage is in speeding up tests with very large numbers of variables. Before looking at QQ plots and KS tests for each marginal, we might compare expectations for some appropriate real-valued function of all of the variables. This involves throwing away lots of information, but I would think it would expose certain bugs. (We could test this empirically following Geweke's methodology). Another approach for models with many variables is to only read off values for some of them. Geweke doesn't use any function like this in his examples. I wonder if there are problems in doing so? 
+
+# Geweke demonstrates the effectiveness of his test by showing that it catches various intentional bugs, e.g. where the MCMC sampler has beta(2,2) while the forward sampler has beta(1,1). In implementing Geweke for Venture, it might be hard to test on bugs like this. But one could write some buggy variant of one of the simpler inference methods. (The simple test with Venture is inference programs that do some mix of optimization and MCMC. Such programs should spend more time in higher probability regions than the prior. If we spend most of the time on MCMC, the difference will be subtle and will take a large number of MCMC samples for KS test to expose it.)
+
+
+                                                                                                                                                                                                                                                                                                                                                
+# Discussion with David Wadden and VKM on Geweke and Testing:
+                                                                
+# There are a few advantages to having a Geweke that can take any Venture program (in the standard batch inference form, with sequence of finite assumes, then observes, then infers). 
+
+# First, for backend testing, developers can easily create additional Geweke tests using models/inference programs they suspect might be problematic. For backend testing, it's preferable that these programs are simple, transparent, and would have low autocorrelation for the specified kernel (so relatively few MCMC samples are needed to do the Geweke). On the other hand, some errors might not be easy to expose without a fair amount of compute time. (These are likely to be errors that aren't caught by users, because they involve subtle deviations from correctness). Geweke gives an example of a fairly simple mixture of two t-distributions. One bug is that the prior assumes Beta(1,1) on the mixture weights, while the posterior uses Beta(2,2). With 2.5*10^5 samples, this bug is only exposed by 12 of the 20 tests Geweke performs, and only 5 tests have p < .005. 
+
+# Second, if the program transform is sufficiently abstract, it should be robust to various changes in Venture's inference language.
+
+# Third, since the inference language now allows non-convergent programs, there is a need for a basic debugging tool for users. (These could be advanced users experimenting with subtle variants of MCMC that should converge but don't due to errors not in the backend but in their inference program).
+
+# Fourth, Geweke gives a picture of how well the MCMC transition operator moves around when conditioned on plausible data (i.e. data from the prior). Good visualization of this process seems potentially useful as a tool for getting early-warning about a transition operator that is liable to get stuck. (I'm still unclear of the usefulness of Geweke here as opposed to the standard MCMC diagnostics. One issue is that Geweke ignores your actual data, which might be bad if your data has low probability on the prior. )
+
+# Additional note (relating to point 4): when David and I played around with Geweke test for very simple inference problems like a Normal-Gamma prior on a Gaussian, we found that mixing and therefore Geweke (over a few thousand transitions) were very sensitive to the parameters for the prior. For instance, if the Normal prior on mu has high variance relative to the variance on sigma, then single-site MH can get stuck. (You can't move mu because proposed values are so far away from the data, given sigma. You can't move sigma much because it has a low variance.) 
+
+# The general issue is that if you want to use Geweke to debug inference programs in the backend, you need to be sure that you are doing enough inference to (at least) hit all modes of the prior. This is tricky: Venture's versions of HMC (etc.) are not identical to any well-documented software  and so it's hard to have baselines for how much inference is needed. 
+
+# The *conductance* of a chain is the probability of leaving its most 'isolated' region. Low conductance means slow convergence. For the Geweke test, the MCMC chain has already 'converged' (i.e. every random variable in the chain is identical modulo bugs in the backend). But if chain-length is low relative to the reciprocal of conductance, Geweke is liable to fail. (Is the following possible? Autocorrelation in the MCMC samples is low, because the transition kernel makes big jumps that are accepted. But conductance is low because certain regions are very hard to leave/enter.)
+
+# So the question is how to distinguish low-conductance and errors in the backend? 
+# Low conductance will often mean high autocorrelation and lower variance than the forward samples. However, if your chain jumped between two far apart modes and skipped stuff in between, the variance could be higher than the true variance. So I think the only signature of low-conductance is that the 'distance' between the MCMC distribution and the forward samples should go down over time. 
+
+# Errors in the backend could look exactly like low-conductance. (If the bug in the backend leads to correct inference but just lower conductance, then you won't be able to diagnose the bug by Geweke alone). However, various errors in the backend don't look like low-conductance. Consider a bug where inference over-estimates the variance in the data (inferring too high a value for a variance parameter in theta). Inferring too high a variance leads to generating data with higher variance. So the inferred variance will rise and rise, limited only by the prior (which won't constrain much if the dataset is large). This leads to a distribution on the variance parameter with higher expectation than for the prior. (Maybe more important is that this error will be more systematic than the discrepancy from forward samples you get from low-conductance chains. You can test this by running parallel chains from independent samples from the prior as initialization). 
+
+
+
+# An additional thing to keep in mind: apart from the program transformation, the main thing you need for Geweke is tools for comparing distributions. Currently there is a QQ plot, Axch's KS test from test suite (which uses KS from scipy), and plotting histograms on same axis. All these tools for comparing marginals are also needed for basic MCMC diagnostics. The simplest diagnostic for MCMC is just to compare random variables at two points in the Markov chain (where variables are sampled via parallel chains). If the distributions are different then you haven't converged. The QQ plot could be improved (and maybe a PP plot is better?) and should have documentation explaining its semantics.
+
+# Related, vkm sketched an interesting extension of the current observes->predicts program transformation. You annotate variables with potential kernels for inference, e.g. variables that support gradients, or discrete enumeration, etc. Programs in this form can be automatically coupled with a big space of compatible inference programs (i.e. programs that use any of the permissible kernels on the given variable).
+
+
+
+
+
+
+
+
+
+

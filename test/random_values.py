@@ -1,3 +1,20 @@
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 """Random Venture values and programs.
 """
 
@@ -91,7 +108,7 @@ class DefaultRandomVentureValue(object):
       length = npr.randint(0, 10)
     if elt_dist is None:
       elt_dist = DefaultRandomVentureValue("object") # TODO reuse class of self
-    return v.pythonListToVentureList(*[elt_dist.generate(**kwargs) for _ in range(length)])
+    return v.pythonListToVentureList([elt_dist.generate(**kwargs) for _ in range(length)])
   def exp(self, **_kwargs):
     # TODO Synthesizing interesting expressions is the fun part!
     return self.list(length=0)

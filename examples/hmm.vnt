@@ -1,0 +1,144 @@
+;;; Copyright (c) 2015 MIT Probabilistic Computing Project.
+;;;
+;;; This file is part of Venture.
+;;;
+;;; Venture is free software: you can redistribute it and/or modify
+;;; it under the terms of the GNU General Public License as published by
+;;; the Free Software Foundation, either version 3 of the License, or
+;;; (at your option) any later version.
+;;;
+;;; Venture is distributed in the hope that it will be useful,
+;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;; GNU General Public License for more details.
+;;;
+;;; You should have received a copy of the GNU General Public License
+;;; along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
+;; Run me with one of
+;; - venture lite -L hmm_plugin.py -f hmm.vnt -P -e '[infer (exact_map)]'
+;;   for one-shot exact max a-posteriori
+;; - venture lite -L hmm_plugin.py -f hmm.vnt -P -e '[infer (online_smoothed_marginals 10000 5 20)]'
+;;   for online approximate posterior marginals
+;; - venture lite -L hmm_plugin.py -f hmm.vnt -P -e '[infer (exact_filtering)]'
+;;   for one-shot exact forward marginals
+;; - venture puma -L hmm_plugin.py -f hmm.vnt -P -e '[infer (particle_filter 1000)]'
+;;   for particle filtering for forward marginals
+
+;;; HMM model
+
+[assume transition_matrix
+  (let ((t .33333333333333333))
+    (array (simplex t t t 0 0)
+           (simplex 0 t t t 0)
+           (simplex 0 0 t t t)
+           (simplex t 0 0 t t)
+           (simplex t t 0 0 t)
+           (simplex t t t 0 0)))]
+
+[assume emission_matrix
+  (array (simplex .6 .1 .1 .1 .1)
+	 (simplex .1 .6 .1 .1 .1)
+	 (simplex .1 .1 .6 .1 .1)
+	 (simplex .1 .1 .1 .6 .1)
+	 (simplex .1 .1 .1 .1 .6))]
+
+[assume transition
+  (lambda (state)
+    (categorical (lookup transition_matrix (- state 1)) (array 1 2 3 4 5)))]
+
+[assume emission
+  (lambda (state)
+    (categorical (lookup emission_matrix (- state 1)) (array 1 2 3 4 5)))]
+
+[assume state
+  (mem (lambda (t)
+	 (tag (quote seq) t
+          (if (<= t 1)
+              1
+              (transition (state (- t 1)))))))]
+
+;;; The data, and abstracting doing inference after each time step
+
+[define data (array 3 2 3 5 5 1 2 5 2 4 4 1 2 2 1 4 2 3 5 1)]
+
+[define go
+  (lambda (ct f)
+    (if (< ct 20)
+        (begin
+          (observe (emission (state (unquote (+ ct 1)))) (lookup data ct))
+          (incorporate)
+          (f (+ ct 1))
+          (go (+ ct 1) f))
+        pass))]
+
+[define for_each_observation
+  (lambda (f)
+    (go 0 f))]
+
+;;; Particle filter
+
+[define particle_filtering_step
+  (lambda (p)
+    (lambda (time)
+      (begin
+        (resample p)
+        (call_back hmm_state (state (unquote time))))))]
+
+[define particle_filter
+  (lambda (p)
+    (begin
+      (call_back hmm_start_timer)
+      (resample p)
+      (call_back hmm_begin)
+      (for_each_observation (particle_filtering_step p))
+      (call_back hmm_end)))]
+
+;;; Forward algorithm
+
+[define forward_phase_step
+  (lambda (time)
+    (begin
+      (enumerative_diversify (quote seq) time)
+      (collapse_equal_map (quote seq) time)))]
+
+[define exact_filtering
+  (lambda ()
+    (begin
+      (call_back hmm_start_timer)
+      (call_back hmm_begin)
+      (for_each_observation
+       (lambda (time)
+	 (begin
+	   (forward_phase_step time)
+	   (call_back hmm_state (state (unquote time))))))
+      (call_back hmm_end)))]
+
+;;; Viterbi algorithm
+
+[define exact_map
+  (lambda ()
+    (begin
+      (call_back hmm_start_timer)
+      (for_each_observation forward_phase_step)
+      (collapse_equal_map default none)
+      (assume int_to_float (lambda (x) (+ x 0)))
+      (call_back hmm_map (mapv state (mapv int_to_float (arange 1 21))))))]
+
+;;; Online smoothed marginals by iterated particle Gibbs
+
+[define pass_step (lambda (time) pass)]
+[define online_smoothed_marginals
+  (lambda (nparticles nsweeps niters)
+    (begin
+      (call_back hmm_start_timer)
+      (resample_multiprocess nparticles 60)
+      ;; Get all the observations but don't react to them
+      (for_each_observation pass_step)
+      (assume int_to_float (lambda (x) (+ x 0)))
+      (call_back hmm_smoothed_nw (mapv state (mapv int_to_float (arange 1 21))))
+      (repeat niters
+       (do ;(func_pgibbs (quote seq) ordered 5 (/ nsweeps 5))
+           (mh default one (* 20 nsweeps))
+           (call_back hmm_smoothed_nw
+	     (mapv state (mapv int_to_float (arange 1 21))))))))]

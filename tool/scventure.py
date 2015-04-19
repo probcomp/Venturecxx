@@ -1,4 +1,24 @@
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 """A StarCluster plugin for Venture.
+
+DEPRECATED; has not been maintained since around the 0.1.1 release;
+officially abandoned 1/29/15.
 
 Installs Venture (including development sources) on all nodes.
 
@@ -36,6 +56,7 @@ Additional option:
     for versions of Venture that support it, saves time by not
     installing the dependencies for the CXX backend of Venture, and by
     not compiling the backend itself.
+
 """
 from starcluster.clustersetup import ClusterSetup
 from starcluster.logger import log

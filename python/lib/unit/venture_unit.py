@@ -1,5 +1,5 @@
 
-# Copyright (c) 2014, MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -13,7 +13,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import time, random
 import numpy as np
 from venture.lite.utils import FixedRandomness
@@ -199,6 +200,10 @@ class VentureUnit(object):
     def runConditionedFromPrior(self, *args, **kwargs):
         a = Analytics(*self.analyticsArgs, **self.analyticsKwargs)
         return a.runConditionedFromPrior(*args,**kwargs)
+
+    def generateDataFromPrior(self, *args, **kwargs):
+        a = Analytics(*self.analyticsArgs, **self.analyticsKwargs)
+        return a.generateDataFromPrior(*args,**kwargs)
 
 
 class Analytics(object):
@@ -698,6 +703,9 @@ class Analytics(object):
         sweepIters = []
         logscores = []
 
+        if verbose:
+            print "Using inference program"
+            print infer
         for sweep in range(sweeps):
             if verbose:
                 print "Running sweep " + str(sweep+1) + " of " + str(sweeps)

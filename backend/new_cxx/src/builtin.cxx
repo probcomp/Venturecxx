@@ -1,3 +1,20 @@
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+//
+// This file is part of Venture.
+//
+// Venture is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Venture is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 #include "builtin.h"
 #include "sp.h"
 #include "sps/conditional.h"
@@ -16,7 +33,7 @@
 #include "sps/mvn.h"
 #include "sps/scope.h"
 
-map<string,VentureValuePtr> initBuiltInValues() 
+map<string,VentureValuePtr> initBuiltInValues()
 {
   map<string,VentureValuePtr> m;
   m["true"] = shared_ptr<VentureBool>(new VentureBool(true));
@@ -55,17 +72,18 @@ map<string,SP*> initBuiltInSPs()
   m["is_integer"] = new SP(new NullRequestPSP(), new IsIntegerOutputPSP());
   m["is_boolean"] = new SP(new NullRequestPSP(), new IsBoolOutputPSP());
   m["is_symbol"] = new SP(new NullRequestPSP(), new IsSymbolOutputPSP());
-  
+
   m["to_atom"] = new SP(new NullRequestPSP(), new ToAtomOutputPSP());
   m["is_atom"] = new SP(new NullRequestPSP(), new IsAtomOutputPSP());
 
   m["probability"] = new SP(new NullRequestPSP(), new ProbabilityOutputPSP());
   m["is_probability"] = new SP(new NullRequestPSP(), new IsProbabilityOutputPSP());
-  
+
   /* Continuous SPs */
   m["normal"] = new SP(new NullRequestPSP(), new NormalPSP());
   m["gamma"] = new SP(new NullRequestPSP(), new GammaPSP());
   m["inv_gamma"] = new SP(new NullRequestPSP(), new InvGammaPSP());
+  m["expon"] = new SP(new NullRequestPSP(), new ExponentialPSP());
   m["uniform_continuous"] = new SP(new NullRequestPSP(), new UniformContinuousPSP());
   m["beta"] = new SP(new NullRequestPSP(), new BetaPSP());
   m["student_t"] = new SP(new NullRequestPSP(), new StudentTPSP());
@@ -107,10 +125,11 @@ map<string,SP*> initBuiltInSPs()
   m["vector"] = new SP(new NullRequestPSP(), new VectorOutputPSP());
   m["is_vector"] = new SP(new NullRequestPSP(), new IsVectorOutputPSP());
   m["to_vector"] = new SP(new NullRequestPSP(), new ToVectorOutputPSP());
+  m["vector_dot"] = new SP(new NullRequestPSP(), new VectorDotOutputPSP());
 
   /* Scoping */
-  m["scope_include"] = new SP(new NullRequestPSP(), new ScopeIncludeOutputPSP());
-  m["scope_exclude"] = new SP(new NullRequestPSP(), new ScopeExcludeOutputPSP());
+  m["tag"] = new SP(new NullRequestPSP(), new TagOutputPSP());
+  m["tag_exclude"] = new SP(new NullRequestPSP(), new TagExcludeOutputPSP());
 
   /* Data structures */
   m["simplex"] = new SP(new NullRequestPSP(), new SimplexOutputPSP());
@@ -135,6 +154,7 @@ map<string,SP*> initBuiltInSPs()
   m["second"] = new SP(new NullRequestPSP(), new SecondOutputPSP());
   m["rest"] = new SP(new NullRequestPSP(), new RestOutputPSP());
   m["mapv"] = new SP(new ArrayMapRequestPSP(), new ESRArrayOutputPSP());
+  m["imapv"] = new SP(new IndexedArrayMapRequestPSP(), new ESRArrayOutputPSP());
   m["arange"] = new SP(new NullRequestPSP(), new ArangeOutputPSP());
 
   m["make_csp"] = new SP(new NullRequestPSP(), new MakeCSPOutputPSP());
@@ -152,6 +172,6 @@ map<string,SP*> initBuiltInSPs()
 
   /* Non parametrics */
   m["make_crp"] = new SP(new NullRequestPSP(), new MakeCRPOutputPSP());
-  
+
   return m;
 }

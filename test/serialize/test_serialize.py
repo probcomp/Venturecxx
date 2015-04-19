@@ -1,3 +1,20 @@
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 from nose import SkipTest
 from nose.tools import eq_
 from testconfig import config
@@ -13,33 +30,41 @@ def _test_serialize_program(v, label, action):
 
     if action == 'serialize':
         trace1 = engine.getDistinguishedTrace()
-        serialized = engine.dump_trace(trace1)
-        trace2 = engine.restore_trace(serialized)
-        assert isinstance(serialized, list)
-        assert all(isinstance(x, dict) for x in serialized)
+        serialized = trace1.dump()
+        trace2 = engine.model.restore_trace(serialized)
+        assert isinstance(serialized, tuple)
+        assert len(serialized) == 2
+        assert isinstance(serialized[0], list)
+        assert all(isinstance(x, dict) for x in serialized[0])
+        assert isinstance(serialized[1], dict) # Mapping directive ids to directives
+        for (key,val) in serialized[1].iteritems():
+            assert isinstance(key, int)
+            assert isinstance(val, list)
         assert isinstance(trace2, type(trace1))
+        assert isinstance(trace2.trace, type(trace1.trace))
     elif action == 'copy':
         trace1 = engine.getDistinguishedTrace()
-        trace2 = engine.copy_trace(trace1)
+        trace2 = engine.model.copy_trace(trace1)
         assert isinstance(trace2, type(trace1))
+        assert isinstance(trace2.trace, type(trace1.trace))
     elif action == 'convert_puma':
         trace1 = engine.getDistinguishedTrace()
         engine = engine.to_puma()
         trace2 = engine.getDistinguishedTrace()
-        assert 'venture.puma' in trace2.__module__
+        assert 'venture.puma' in trace2.trace.__module__
     elif action == 'convert_lite':
         trace1 = engine.getDistinguishedTrace()
         engine = engine.to_lite()
         trace2 = engine.getDistinguishedTrace()
-        assert 'venture.lite' in trace2.__module__
+        assert 'venture.lite' in trace2.trace.__module__
     else:
         assert False
 
     infer = "(mh default one %s)" % default_num_transitions_per_sample()
-    engine.trace_handler = engine.create_handler([trace2])
+    engine.model.create_trace_pool([trace2])
     r2 = collectStateSequence(v, label, infer=infer)
 
-    engine.trace_handler = engine.create_handler([trace1])
+    engine.model.create_trace_pool([trace1])
     r1 = collectStateSequence(v, label, infer=infer)
 
     return reportSameDiscrete(r1, r2)
@@ -163,13 +188,13 @@ def test_serialize_ripl():
     v1.observe('(flip_coin)', 'true')
 
     v1.infer(1)
-    result1 = v1.predict('theta', label='theta')
+    result1 = v1.predict('theta', label='theta_prediction')
 
     v1.save('/tmp/serialized.ripl')
 
     v2 = get_ripl()
     v2.load('/tmp/serialized.ripl')
-    result2 = v2.report('theta')
+    result2 = v2.report('theta_prediction')
     result3 = v2.predict('theta')
 
     assert result1 == result2 and result1 == result3
@@ -250,9 +275,9 @@ def check_foreign_sp(mode):
     eq_(v.sample('(test_binomial 1 1)'), test_binomial_result)
     eq_(v.sample('(test_sym_dir_mult 1 1)'), test_sym_dir_result)
     engine = v.sivm.core_sivm.engine
-    dumped = engine.retrieve_dump(0)
-    restored = engine.restore_trace(dumped)
-    engine.trace_handler = engine.create_handler([restored])
+    dumped = engine.model.retrieve_dump(0)
+    restored = engine.model.restore_trace(dumped)
+    engine.model.create_trace_pool([restored])
     # Make sure that the restored trace still has the foreign SP's
     eq_(v.sample('(test_binomial 1 1)'), test_binomial_result)
     eq_(v.sample('(test_sym_dir_mult 1 1)'), test_sym_dir_result)

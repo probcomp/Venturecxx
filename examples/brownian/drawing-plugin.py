@@ -1,3 +1,20 @@
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 # A custom inference SP for drawing the state of a particular model.
 
 # The goal is to illustrate extending Venture with custom inference
@@ -7,7 +24,7 @@
 # The model this applies to is
 # [assume brown_step (gamma 1 1)]
 # [assume obs_noise (gamma 1 1)]
-# [assume position (mem (lambda (t) (scope_include (quote exp) t (if (<= t 0) (normal 0 brown_step) (normal (position (- t 1)) brown_step)))))]
+# [assume position (mem (lambda (t) (tag (quote exp) t (if (<= t 0) (normal 0 brown_step) (normal (position (- t 1)) brown_step)))))]
 # [assume obs_fun (lambda (t) (normal (position t) obs_noise))]
 # [predict (position 10)]
 
@@ -15,7 +32,7 @@
 # calling it with
 #   -L drawing-plugin.py
 # Then enjoy with
-#   infer (cycle ((call_back draw)) 10)
+#   infer (repeat 10 (call_back draw))
 
 import pygame
 import pygame.image
@@ -60,12 +77,12 @@ def draw(inferrer):
 
   # Decide how far to plot the trajectory
   plot_range = 2
-  for (_did, directive) in inferrer.engine.directives.items():
+  for (_did, directive) in inferrer.engine.getDistinguishedTrace().directives.items():
     if directive[0] == "observe":
       (_, datum, val) = directive
       obs_i = int(datum[1]["value"])
       plot_range = max(plot_range, obs_i + 1)
-    if directive[0] == "predict":
+    if directive[0] == "evaluate":
       (_, datum) = directive
       pr_i = int(datum[1]["value"])
       plot_range = max(plot_range, pr_i + 1)
@@ -76,7 +93,7 @@ def draw(inferrer):
   x_scale = (640.0 - 60)/plot_range
 
   # Plot the observations
-  for (_did, directive) in inferrer.engine.directives.items():
+  for (_did, directive) in inferrer.engine.getDistinguishedTrace().directives.items():
     if directive[0] == "observe":
       (_, datum, val) = directive
       obs_i = int(datum[1]["value"])

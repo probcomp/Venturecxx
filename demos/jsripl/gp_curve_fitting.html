@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <title>Venture demos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+
+  </head>
+
+  <body>
+    <table width="100%"><tr><td align="right"><div id="ripl_address_info">... Loading ...</div></td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr></table>
+    <div class="vis_holder" style="margin-left:50px;">
+      <div id="loading-status">Demo is loading... RIPL initialization...<br><br>
+      You should not see this message too long.<br><br>
+      If demo does not work, please, write to <a href="mailto:venture-dev@lists.csail.mit.edu">venture-dev@lists.csail.mit.edu</a>. </div>
+    </div>
+
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script type="text/javascript" src="vendor/jquery.cookie.js"></script>
+    <script src="vendor/raphael-min.js"></script>
+    <script src="common-scripts.js"></script>
+    <script src="jripl.js"></script>
+    <script src="utils.js"></script>
+    <script src="vis_module.js"></script>
+    <script src="gp_fitting.js"></script>
+
+    <script type="text/javascript">
+      $(document).ready(
+        function() {
+          CheckCookieWithVentureRIPLAddress();
+          setTimeout(InitializeDemo,300);
+      }
+      );
+    </script>
+  </body>
+</html>

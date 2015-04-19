@@ -71,6 +71,7 @@ directive(predict)	::= K_PREDICT(k) expression(e).
 
 command(configure)	::= K_CONFIGURE(k) json(options).
 command(forget)		::= K_FORGET(k) directive_ref(dr).
+command(freeze)		::= K_FREEZE(k) directive_ref(dr).
 command(report)		::= K_REPORT(k) directive_ref(dr).
 command(infer)		::= K_INFER(k) expression(e).
 command(clear)		::= K_CLEAR(k).
@@ -85,12 +86,11 @@ command(start_continuous_inference)	::= K_START_CONTINUOUS_INFERENCE(k)
 command(stop_continuous_inference)	::= K_STOP_CONTINUOUS_INFERENCE(k).
 command(get_current_exception)		::= K_GET_CURRENT_EXCEPTION(k).
 command(get_state)		::= K_GET_STATE(k).
-command(get_logscore)		::= K_GET_LOGSCORE(k) directive_ref(d).
 command(get_global_logscore)	::= K_GET_GLOBAL_LOGSCORE(k).
 command(profiler_configure)	::= K_PROFILER_CONFIGURE(k) json(options).
 command(profiler_clear)		::= K_PROFILER_CLEAR(k).
 command(profiler_list_random)	::= K_PROFILER_LIST_RANDOM(k) K_CHOICES.
-command(load)		::= K_LOAD(k) json(pathname).
+command(load)		::= K_LOAD(k) L_STRING(pathname).
 
 directive_ref(numbered)	::= L_INTEGER(number).
 directive_ref(labelled)	::= L_NAME(label).
@@ -98,6 +98,9 @@ directive_ref(labelled)	::= L_NAME(label).
 expression(symbol)	::= L_NAME(name).
 expression(operator)	::= L_OPERATOR(op).
 expression(literal)	::= literal(value).
+expression(quote)       ::= T_QUOTE(quote) expression(e).
+expression(qquote)      ::= T_BACKTICK(qquote) expression(e).
+expression(unquote)     ::= T_COMMA(unquote) expression(e).
 expression(combination)	::= T_LROUND(open) expressions(es) T_RROUND(close).
 expression(comb_error)	::= T_LROUND(open) expressions(es) error
 				T_RROUND(close).
@@ -158,10 +161,10 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_CONTINUOUS_INFERENCE_STATUS
 	K_FORCE
 	K_FORGET
+	K_FREEZE
 	K_GET_CURRENT_EXCEPTION
 	K_GET_DIRECTIVE
 	K_GET_GLOBAL_LOGSCORE
-	K_GET_LOGSCORE
 	K_GET_STATE
 	K_INFER
 	K_LIST_DIRECTIVES

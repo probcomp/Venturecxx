@@ -1,15 +1,35 @@
-from nose.tools import raises
+# Copyright (c) 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
+from nose.tools import raises, eq_
 
 from venture.test.config import get_ripl, on_inf_prim
+import venture.test.errors as err
 
 @on_inf_prim("assert")
 def testAssertSmoke():
   get_ripl().infer("(assert true)")
 
 @on_inf_prim("assert")
-@raises(AssertionError)
 def testAssertSmoke2():
-  get_ripl().infer("(assert false)")
+  err.assert_error_message_contains("""\
+((assert false) model)
+^^^^^^^^^^^^^^^^^^^^^^
+""", get_ripl().infer, "(assert false)")
 
 @on_inf_prim("particle_log_weights")
 def testWeightsSmoke():
@@ -42,3 +62,11 @@ def testPosteriorSmoke():
   (assert (< (lookup p 0) (lookup l 0))))""")
 
 # TODO Also want statistical test cases for likelihood_at and posterior_at
+
+@on_inf_prim("quasiquote")
+def testExplicitQuasiquotation():
+  eq_(3, get_ripl().infer("(lambda (t) (pair (lookup (quasiquote ((unquote (+ 1 2)) 5)) 0) t))"))
+
+@on_inf_prim("quasiquote")
+def testExplicitQuasiquotation2():
+  eq_(3, get_ripl().infer("(lambda (t) (pair (lookup `(,(+ 1 2) 5) 0) t))"))

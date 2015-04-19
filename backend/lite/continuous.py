@@ -1,4 +1,22 @@
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 import scipy.stats
+import scipy.special
 import math
 import numpy.random as npr
 import numpy.linalg as npla
@@ -236,6 +254,34 @@ class NormalOutputPSP(RandomPSP):
     return "  (%s mu sigma) samples a normal distribution with mean mu and standard deviation sigma." % name
 
 
+class VonMisesOutputPSP(RandomPSP):
+  def simulate(self,args):
+    (mu, kappa) = args.operandValues
+    return scipy.stats.vonmises.rvs(kappa, loc=mu)
+  def logDensity(self,x,args):
+    (mu, kappa) = args.operandValues
+    # k * cos (x - mu) - log(2pi I_0(k))
+    return scipy.stats.vonmises.logpdf(x, kappa, loc=mu)
+  def logDensityBound(self, x, args):
+    (mu, kappa) = args.operandValues
+    if kappa is not None:
+      return scipy.stats.vonmises.logpdf(0, kappa)
+    elif x is not None and mu is not None:
+      raise Exception("TODO What is the bound for a vonmises varying kappa?")
+    else:
+      raise Exception("Cannot rejection sample psp with unbounded likelihood")
+  def gradientOfLogDensity(self, x, args):
+    (mu, kappa) = args.operandValues
+
+    gradX  = -math.sin(x - mu) * kappa
+    gradMu = math.sin(x - mu) * kappa
+    # d/dk(log density) = cos(x-mu) - [2pi d(I_0)(k)]/2pi I_0(k)
+    # d/dk I_0(k) = I_1(k)
+    gradK  = math.cos(x - mu) - (scipy.special.i1(kappa) / scipy.special.i0(kappa))
+    return (gradX, [gradMu, gradK])
+
+  def description(self,name):
+    return "  (%s mu kappa) samples a von Mises distribution with mean mu and shape kappa. The output is normalized to the interval [-pi,pi]." % name
 
 
 class UniformOutputPSP(RandomPSP):
@@ -284,20 +330,20 @@ class BetaOutputPSP(RandomPSP):
 
 class ExponOutputPSP(RandomPSP):
   # TODO don't need to be class methods
-  def simulateNumeric(self,gamma): return scipy.stats.expon.rvs(scale=1.0/gamma)
-  def logDensityNumeric(self,x,gamma): return scipy.stats.expon.logpdf(x,scale=1.0/gamma)
+  def simulateNumeric(self,theta): return scipy.stats.expon.rvs(scale=1.0/theta)
+  def logDensityNumeric(self,x,theta): return scipy.stats.expon.logpdf(x,scale=1.0/theta)
 
   def simulate(self,args): return self.simulateNumeric(*args.operandValues)
   def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
 
   def gradientOfLogDensity(self,x,args):
-    gamma = args.operandValues[0]
-    gradX = -gamma
-    gradGamma = 1. / gamma - x
-    return (gradX,[gradGamma])
+    theta = args.operandValues[0]
+    gradX = -theta
+    gradTheta = 1. / theta - x
+    return (gradX,[gradTheta])
 
   def description(self,name):
-    return "  (%s gamma) returns a sample from an exponential distribution with rate (inverse scale) parameter gamma." % name
+    return "  (%s theta) returns a sample from an exponential distribution with rate (inverse scale) parameter theta." % name
 
 class GammaOutputPSP(RandomPSP):
   # TODO don't need to be class methods

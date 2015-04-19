@@ -1,0 +1,33 @@
+#!/bin/bash
+
+case $1 in
+curve-fitting|graph_curve_fitting.html)
+  (sleep 1 && xdg-open graph_curve_fitting.html) &  # The sleep gives the server enough time to start
+  venture server puma
+;;
+clustering|cluster_crp_mixture.html)
+  (sleep 1 && xdg-open cluster_crp_mixture.html) &  # The sleep gives the server enough time to start
+  venture server puma
+;;
+collapsed-clustering|cmvn_crp_mixture.html)
+  (sleep 1 && xdg-open cmvn_crp_mixture.html) &  # The sleep gives the server enough time to start
+  venture server lite
+;;
+gp-curve-fitting|gp_curve_fitting.html)
+  (sleep 1 && xdg-open gp_curve_fitting.html) &  # The sleep gives the server enough time to start
+  python gp_server.py
+;;
+*)
+  cat <<EOF
+Usage: demo [demo-name]
+
+Starts the server and browser for the named web demo.
+
+Accepted names are:
+- curve-fitting or graph_curve_fitting.html      The curve fitting demo
+- clustering or cluster_crp_mixture.html         The clustering demo
+- collapsed-clustering or cmvn_crp_mixture.html  The clustering demo with collapsed Gaussian clusters
+- gp-curve-fitting or gp_curve_fitting.html      The Gaussian process curve fitting demo
+EOF
+;;
+esac

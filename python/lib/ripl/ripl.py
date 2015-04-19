@@ -1,4 +1,4 @@
-# Copyright (c) 2013, MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -12,7 +12,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
@@ -112,7 +113,9 @@ class Ripl():
 
 
 
-    def execute_instruction(self, instruction=None, params=None, suppress_drawing_plots=False):
+    def execute_instruction(self, instruction=None, params=None, suppress_pausing_continous_inference=False):
+        # The suppress_pausing_continous_inference flag is used by the
+        # thread doing the continuous inference.
         p = self._cur_parser()
         try: # execute instruction, and handle possible exception
             # perform parameter substitution if necessary
@@ -126,7 +129,7 @@ class Ripl():
             else:
                 stringable_instruction = instruction
                 parsed_instruction = self._ensure_parsed(instruction)
-            ret_value = self.sivm.execute_instruction(parsed_instruction)
+            ret_value = self.sivm.execute_instruction(parsed_instruction, suppress_pausing_continous_inference=suppress_pausing_continous_inference)
         except VentureException as e:
             import sys
             info = sys.exc_info()
@@ -145,12 +148,6 @@ class Ripl():
             did = ret_value['directive_id']
             self.directive_id_to_stringable_instruction[did] = stringable_instruction
             self.directive_id_to_mode[did] = self.mode
-        # This IF is a terrible hack for allowing plotf to actually
-        # draw its plots when run by execute_instruction (e.g., via
-        # execute_program) and also allowing programmatic access to
-        # the plot data by calling ripl.infer without drawing it.
-        if not suppress_drawing_plots and parsed_instruction['instruction'] is 'infer' and ret_value["value"] is not None and not isinstance(ret_value["value"], dict):
-            print ret_value["value"]
         return ret_value
 
     def _annotated_error(self, e, instruction):
@@ -351,7 +348,13 @@ class Ripl():
         if isinstance(instruction, basestring):
             return instruction
         else:
-            return self._unparse(instruction)
+            # If it didn't come in as a string, do the normalization
+            # the parser does before trying to generate a textual
+            # representation.  This mitigates possible problems with
+            # programmatically generated instructions (as from the
+            # assume inference SP). This may lose if the partially
+            # parsed instruction has a large string in it.
+            return self._unparse(self._ensure_parsed(instruction))
 
     def character_index_to_expression_index(self, directive_id, character_index):
         p = self._cur_parser()
@@ -376,8 +379,9 @@ class Ripl():
 
         p = self._cur_parser()
         exp = p.unparse_expression(exp)
-        text_index = p.expression_index_to_text_index(exp, index)
-        return exp, text_index
+        (start, end) = p.expression_index_to_text_index(exp, index)
+        ans = exp[0:start] + "\x1b[31m" + exp[start:end+1] + "\x1b[39;49m" + exp[end+1:]
+        return ans, (start, end)
 
 
     ############################################
@@ -385,7 +389,7 @@ class Ripl():
     ############################################
 
     def define(self, name, expression, type=False):
-        name = v.symbol(name)
+        name = _symbolize(name)
         i = {'instruction':'define', 'symbol':name, 'expression':expression}
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
@@ -401,13 +405,23 @@ The `type` argument, if supplied and given a true value, causes the
 value to be returned as a dict annotating its Venture type.
 
         '''
-        name = v.symbol(name)
-        if label==None:
-            i = {'instruction':'assume', 'symbol':name, 'expression':expression}
+        name = _symbolize(name)
+        if self.sivm.core_sivm.engine.swapped_model:
+            # TODO Properly scope directive labels the models those
+            # directives are in.
+            # Failing that, this code just suppresses labeling
+            # directives in any except the main model.
+            if label==None:
+                i = {'instruction': 'assume', 'symbol':name, 'expression':expression}
+            else:
+                raise Exception("TODO Cannot label instructions inside in_model.")
         else:
-            label = v.symbol(label)
+            if label==None:
+                label = name
+            else:
+                label = _symbolize(label)
             i = {'instruction':'labeled_assume',
-                  'symbol':name, 'expression':expression, 'label':label}
+                 'symbol':name, 'expression':expression, 'label':label}
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 
@@ -415,16 +429,16 @@ value to be returned as a dict annotating its Venture type.
         if label==None:
             i = {'instruction':'predict', 'expression':expression}
         else:
-            label = v.symbol(label)
+            label = _symbolize(label)
             i = {'instruction':'labeled_predict', 'expression':expression, 'label':label}
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 
-    def observe(self, expression, value, label=None):
+    def observe(self, expression, value, label=None, type=False):
         if label==None:
             i = {'instruction':'observe', 'expression':expression, 'value':value}
         else:
-            label = v.symbol(label)
+            label = _symbolize(label)
             i = {'instruction':'labeled_observe', 'expression':expression, 'value':value, 'label':label}
         self.execute_instruction(i)
         return None
@@ -527,7 +541,7 @@ Open issues:
         self.configure({'inference_timeout': inference_timeout})
         return None
 
-    def forget(self, label_or_did):
+    def forget(self, label_or_did, type=False):
         if isinstance(label_or_did,int):
             i = {'instruction':'forget', 'directive_id':label_or_did}
             # if asked to forget prelude instruction, decrement _n_prelude
@@ -536,16 +550,16 @@ Open issues:
         else:
             # assume that prelude instructions don't have labels
             i = {'instruction':'labeled_forget',
-                 'label':v.symbol(label_or_did)}
+                 'label':_symbolize(label_or_did)}
         self.execute_instruction(i)
         return None
 
-    def freeze(self, label_or_did):
+    def freeze(self, label_or_did, type=False):
         if isinstance(label_or_did,int):
             i = {'instruction':'freeze', 'directive_id':label_or_did}
         else:
             i = {'instruction':'labeled_freeze',
-                 'label':v.symbol(label_or_did)}
+                 'label':_symbolize(label_or_did)}
         self.execute_instruction(i)
         return None
 
@@ -575,15 +589,12 @@ Open issues:
         else:
             return program
 
-    def infer(self, params=None, type=False):
-        o = self.execute_instruction({'instruction':'infer', 'expression': self.defaultInferProgram(params)}, suppress_drawing_plots = True)
-        ans = o["value"]
-        if type:
-            return ans
-        elif isinstance(ans, dict): # Presume this is peek output
-            return u.strip_types_from_dict_values(ans)
-        else: # Presume this is plotf output
-            return ans
+    def infer(self, params=None, type=False, suppress_pausing_continous_inference=False):
+        # The suppress_pausing_continous_inference flag is used by the
+        # thread doing the continuous inference.
+        o = self.execute_instruction({'instruction':'infer', 'expression': self.defaultInferProgram(params)}, suppress_pausing_continous_inference=suppress_pausing_continous_inference)
+        value = o["value"]
+        return value if type else u.strip_types(value)
 
     def clear(self):
         self.execute_instruction({'instruction':'clear'})
@@ -671,14 +682,6 @@ Open issues:
         # TODO Go through the actual stack?
         self.sivm.core_sivm.engine.reinit_inference_problem(num_particles)
 
-    def get_logscore(self, label_or_did):
-        if isinstance(label_or_did,int):
-            i = {'instruction':'get_logscore', 'directive_id':label_or_did}
-        else:
-            i = {'instruction':'labeled_get_logscore',
-                 'label':v.symbol(label_or_did)}
-        return self.execute_instruction(i)['logscore']
-
     def get_global_logscore(self):
         return self.execute_instruction({'instruction':'get_global_logscore'})['logscore']
 
@@ -692,6 +695,11 @@ Open issues:
 
     def bind_callback(self, name, callback):
         self.sivm.core_sivm.engine.bind_callback(name, callback)
+
+    def bind_methods_as_callbacks(self, obj, prefix=""):
+        """Bind every public method of the given object as a callback of the same name."""
+        for name in (name for name in dir(obj) if not name.startswith("_")):
+            self.bind_callback(prefix + name, getattr(obj, name))
 
     ############################################
     # Serialization
@@ -867,3 +875,8 @@ def load_library(name):
     # print (file, pathname, description)
     # return imp.load_module(name, file, pathname, description)
 
+def _symbolize(thing):
+    if isinstance(thing, basestring):
+        return v.symbol(thing)
+    else:
+        return thing # Assume it's already the proper stack dict

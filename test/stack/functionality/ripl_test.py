@@ -1,4 +1,4 @@
-# Copyright (c) 2013, MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -12,7 +12,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import unittest
 from nose import SkipTest
 from nose.plugins.attrib import attr
@@ -252,14 +253,6 @@ class TestRipl(unittest.TestCase):
     def test_get_state(self):
         output = self.ripl.get_state()
         self.assertEqual(output,'default')
-
-    def test_get_logscore(self):
-        raise SkipTest("Fix test after per-directive logscore is implemented.  https://app.asana.com/0/9277419963067/9940667562272")
-        ret_value = self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
-        output = self.ripl.get_logscore(ret_value['directive_id'])
-        self.assertEqual(output,0)
-        output = self.ripl.get_logscore('moo')
-        self.assertEqual(output,0)
 
     def test_get_global_logscore(self):
         self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')

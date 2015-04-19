@@ -1,24 +1,25 @@
-# Copyright (c) 2013, MIT Probabilistic Computing Project.
-# 
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+#
 # This file is part of Venture.
-# 	
+#
 # Venture is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 	
+#
 # Venture is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 	
-# You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from venture.exception import VentureException
 from venture.sivm import utils
-import venture.value.dicts as val
+import venture.value.dicts as v
 import copy
 
 class CoreSivm(object):
@@ -35,7 +36,7 @@ class CoreSivm(object):
     
     _implemented_instructions = {"define","assume","observe","predict",
             "configure","forget","freeze","report","infer",
-            "clear","rollback","get_logscore","get_global_logscore",
+            "clear","rollback","get_global_logscore",
             "start_continuous_inference","stop_continuous_inference",
             "continuous_inference_status", "profiler_configure"}
     
@@ -69,8 +70,8 @@ class CoreSivm(object):
                 utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
         sym = utils.validate_arg(instruction,'symbol',
                 utils.validate_symbol)
-        val = self.engine.define(sym,exp)
-        return {"value":val}
+        (did, val) = self.engine.define(sym,exp)
+        return {"directive_id":did, "value":val}
 
     #FIXME: remove the modifier arguments in new implementation
     def _do_assume(self,instruction):
@@ -164,12 +165,6 @@ class CoreSivm(object):
         self.state = 'default'
         return {}
 
-    def _do_get_logscore(self,instruction):
-        utils.require_state(self.state,'default')
-        did = utils.validate_arg(instruction,'directive_id',
-                utils.validate_nonnegative_integer)
-        return {"logscore":self.engine.get_logscore(did)}
-
     def _do_get_global_logscore(self,_):
         utils.require_state(self.state,'default')
         l = self.engine.logscore()
@@ -240,13 +235,13 @@ def _modify_value(ob):
 
 _symbol_map = {}
 
-for s in ["lt", "gt", "lte", "gte"]:
-    _symbol_map["int_" + s] = s
+for symbol in ["lt", "gt", "lte", "gte"]:
+    _symbol_map["int_" + symbol] = symbol
 
 def _modify_symbol(s):
     if s in _symbol_map:
         s = _symbol_map[s]
     # NOTE: need to str() b/c unicode might come via REST,
     #       which the boost python wrappings can't convert
-    return val.symbol(str(s))
+    return v.symbol(str(s))
 

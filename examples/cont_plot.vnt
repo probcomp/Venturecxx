@@ -1,4 +1,0 @@
-[infer (resample 10)]
-[assume x (normal 0 1)]
-[assume y (normal 0 1)]
-[infer (loop ((mh default one 100) (plotf p0d1 x y)))]

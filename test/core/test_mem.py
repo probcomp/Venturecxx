@@ -1,3 +1,20 @@
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples, on_inf_prim, defaultInfer, skipWhenSubSampling
 from nose.tools import eq_
@@ -154,11 +171,11 @@ def testMemSP():
          (10, 0.6 * 0.6 * 0.9)]
   return reportKnownDiscrete(ans, predictions)
 
-############ CXX mem tests
+############ Puma mem tests
 
 def testMemoizingOnAList1():
   """MSP.requestPSP.simulate() needs to quote the values to pass this.
-     In CXX, VentureList needs to override several VentureValue methods as well"""
+     In Puma, VentureList needs to override several VentureValue methods as well"""
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (x) (if (flip) 1 1)))")
   ripl.predict("(f (list 0))",label="pid")
@@ -167,7 +184,7 @@ def testMemoizingOnAList1():
 
 def testMemoizingOnASymbol1():
   """MSP.requestPSP.simulate() needs to quote the values to pass this.
-     In CXX, VentureSymbol needs to override several VentureValue methods as well"""
+     In Puma, VentureSymbol needs to override several VentureValue methods as well"""
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (x) (if (flip) 1 1)))")
   ripl.predict("(f (quote sym))",label="pid")

@@ -1,3 +1,20 @@
+// Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+//
+// This file is part of Venture.
+//
+// Venture is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Venture is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 #ifndef PY_TRACE_H
 #define PY_TRACE_H
 
@@ -36,7 +53,6 @@ struct PyTrace
   void setSeed(size_t seed);
   size_t getSeed();
 
-  double getDirectiveLogScore(DirectiveID did);
   double getGlobalLogScore();
   uint32_t numUnconstrainedChoices();
 
@@ -52,7 +68,7 @@ struct PyTrace
   int numNodesInBlock(boost::python::object scope, boost::python::object block);
   boost::python::list numFamilies();
 
-  void infer(boost::python::dict params);
+  void primitive_infer(boost::python::dict params);
   
   void freeze(DirectiveID did);
 

@@ -1,3 +1,20 @@
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 import subprocess as s
 from unittest import SkipTest
 from distutils.spawn import find_executable
@@ -22,5 +39,23 @@ def checkExample(example):
 
 @gen_in_backend("none")
 def testExamples():
-  for ex in ["lda.py", "crosscat.py"]:
+  for ex in ["venture-unit/lda.py", "venture-unit/crosscat.py", "venture-unit/analytics_gaussian_geweke.py",
+             "venture-unit/crp-demo.py", "venture-unit/crp-2d-demo.py", "venture-unit/hmc-demo.py",
+             "venture-unit/hmm-demo.py"]:
     yield checkExample, ex
+
+def checkVentureExample(command):
+  timeout = findTimeout()
+  assert s.call("%s 1.5s %s" % (timeout, command), shell=True) == 124
+
+@gen_in_backend("none")
+def testVentureExamples():
+  for ex in ["venture puma -f examples/plotting/bimodal.vnt",
+             "venture puma -f examples/plotting/dice_plot.vnt",
+             "venture puma -f examples/plotting/normal_plot.vnt",
+             "venture lite -f examples/trickiness-ideal.vnts",
+             "venture puma -f examples/trickiness-concrete.vnts",
+             "venture puma -f examples/trickiness-concrete-2.vnts",
+             "venture lite -L examples/hmm_plugin.py -f examples/hmm.vnt -P -e '[infer (exact_filtering)]'",
+  ]:
+    yield checkVentureExample, ex

@@ -1,25 +1,31 @@
-from StringIO import StringIO
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 from nose.tools import eq_
-import sys
 from re import search
 
-from venture.test.config import get_ripl, broken_in
-
-def capture_output(ripl, program):
-  'Capture stdout; return the string headed for stdout and the result of the computation'
-  old_stdout = sys.stdout
-  captured = StringIO()
-  sys.stdout = captured
-  res = ripl.execute_program(program)
-  sys.stdout = old_stdout
-  return res, captured.getvalue()
+from venture.test.config import get_ripl, broken_in, capture_output
 
 def extract_integer(captured):
   'Extract the Venture integer from a captured print'
   res = search('VentureInteger\((.*)\)', captured) #pylint: disable=W1401
   return int(res.group(1))
 
-@broken_in("puma", "TODO: implement in PUMA")
+@broken_in("puma", "TODO: implement in-model debug print in puma")
 def test_print1():
   'Make sure that print prints the correct values by intercepting output'
   ripl = get_ripl()
@@ -33,7 +39,7 @@ def test_print1():
   eq_(y, captured_y)
   eq_(res_value, captured_x + captured_y)
 
-@broken_in("puma", "TODO: implement in PUMA")
+@broken_in("puma", "TODO: implement in-model debug print in puma")
 def test_print2():
   'Another test for consistency by intercepting output'
   ripl = get_ripl()

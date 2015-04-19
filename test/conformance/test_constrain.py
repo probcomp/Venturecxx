@@ -1,3 +1,20 @@
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 from venture.test.stats import statisticalTest, reportKnownMean
 from nose.tools import eq_, raises
 from venture.test.config import get_ripl, collectSamples, collectStateSequence, skipWhenRejectionSampling, on_inf_prim, gen_on_inf_prim
@@ -8,7 +25,7 @@ def checkConstrainAVar1a(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
-  ripl.observe("(if (scope_include 0 0 (flip)) x y)", 3.0)
+  ripl.observe("(if (tag 0 0 (flip)) x y)", 3.0)
   ripl.predict("x", label="pid")
   # Not collectSamples because we depend on the trace being in a
   # non-reset state at the end
@@ -20,7 +37,7 @@ def checkConstrainAVar1b(program):
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
   ripl.predict("x", label="pid")
-  ripl.observe("(if (scope_include 0 0 (flip)) x y)", 3.0)
+  ripl.observe("(if (tag 0 0 (flip)) x y)", 3.0)
   # Not collectSamples because we depend on the trace being in a
   # non-reset state at the end
   collectStateSequence(ripl,"pid",infer=program)
@@ -30,7 +47,7 @@ def checkConstrainAVar2a(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
-  ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
+  ripl.assume("f","(mem (lambda () (tag 0 0 (flip))))")
   ripl.predict("(if (f) x y)", label="pid")
   ripl.observe("(if (f) x y)", 3.0)
   # Not collectSamples because we depend on the trace being in a
@@ -42,7 +59,7 @@ def checkConstrainAVar2b(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
-  ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
+  ripl.assume("f","(mem (lambda () (tag 0 0 (flip))))")
   ripl.predict("(if (not (f)) x y)", label="pid")
   ripl.observe("(if (f) x y)", 3.0)
   # Not collectSamples because we depend on the trace being in a
@@ -81,7 +98,7 @@ def checkConstrainAVar4a(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
-  ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
+  ripl.assume("f","(mem (lambda () (tag 0 0 (flip))))")
   ripl.predict("(if (f) (* x 5) (* y 5))", label="pid")
   ripl.observe("(if (f) x y)", 3.0)
   # Not collectSamples because we depend on the trace being in a
@@ -93,7 +110,7 @@ def checkConstrainAVar4b(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
-  ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
+  ripl.assume("f","(mem (lambda () (tag 0 0 (flip))))")
   ripl.predict("(if (not (f)) (* x 5) (* y 5))", label="pid")
   ripl.observe("(if (f) x y)", 3.0)
   # Not collectSamples because we depend on the trace being in a
@@ -105,7 +122,7 @@ def checkConstrainAVar4c(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
-  ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
+  ripl.assume("f","(mem (lambda () (tag 0 0 (flip))))")
   ripl.predict("(* x 5)", label="pid")
   ripl.observe("(if (f) x y)", 3.0)
   # Not collectSamples because we depend on the trace being in a
@@ -124,7 +141,7 @@ def checkConstrainAVar5a(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
-  ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
+  ripl.assume("f","(mem (lambda () (tag 0 0 (flip))))")
   ripl.predict("(normal x 0.0001)")
   ripl.observe("(if (f) x y)", 3.0)
   collectSamples(ripl,"pid",infer=program)
@@ -138,7 +155,7 @@ def checkConstrainAVar5b(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
-  ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
+  ripl.assume("f","(mem (lambda () (tag 0 0 (flip))))")
   ripl.predict("(if (f) (normal x 0.0001) (normal y 0.0001))")
   ripl.observe("(if (f) x y)", 3.0)
   collectSamples(ripl,"pid",infer=program)
@@ -152,7 +169,7 @@ def checkConstrainAVar6a(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
-  ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
+  ripl.assume("f","(mem (lambda () (tag 0 0 (flip))))")
   ripl.predict("(if (< (normal x 1.0) 3) x y)")
   ripl.observe("(if (f) x y)", 3.0)
   collectSamples(ripl,"pid",infer=program)
@@ -166,7 +183,7 @@ def checkConstrainAVar6b(program):
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
-  ripl.assume("f","(mem (lambda () (scope_include 0 0 (flip))))")
+  ripl.assume("f","(mem (lambda () (tag 0 0 (flip))))")
   ripl.observe("(if (f) x y)", 3.0)
   ripl.predict("(if (< (normal x 1.0) 3) x y)")
   collectSamples(ripl,"pid",infer=program)
@@ -217,7 +234,7 @@ def testConstrainInAScope1():
   """At some point, constrain did not remove choices from scopes besides the default scope"""
   ripl = get_ripl()
 
-  ripl.assume("x","(scope_include 0 0 (normal 0 1))")
+  ripl.assume("x","(tag 0 0 (normal 0 1))")
   ripl.observe("x","1")
   ripl.predict("(normal x 1)")
 
@@ -228,7 +245,7 @@ def testConstrainInAScope2brush():
   """Particles need to override some of the relevant methods as well"""
   ripl = get_ripl()
 
-  ripl.assume("x","(scope_include 0 0 (if (flip) (normal 0 1) (normal 0 1)))")
+  ripl.assume("x","(tag 0 0 (if (flip) (normal 0 1) (normal 0 1)))")
   ripl.observe("x","1")
   ripl.predict("(+ x 1)")
 
@@ -239,7 +256,7 @@ def testConstrainInAScope2particles():
   """Particles need to override some of the relevant methods as well"""
   ripl = get_ripl()
 
-  ripl.assume("x","(scope_include 0 0 (if (flip) (normal 0 1) (normal 0 1)))")
+  ripl.assume("x","(tag 0 0 (if (flip) (normal 0 1) (normal 0 1)))")
   ripl.observe("x","1")
   ripl.predict("(+ x 1)")
 

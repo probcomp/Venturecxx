@@ -1,3 +1,20 @@
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 import math
 import numpy as np
 from numbers import Number
@@ -14,7 +31,6 @@ import cmvn
 import function
 import gp
 import msp
-import noisy
 import hmm
 import conditionals
 import scope
@@ -133,6 +149,11 @@ def grad_pow(args, direction):
 def grad_sqrt(args, direction):
   return [direction * (0.5 / math.sqrt(args[0]))]
 
+def grad_atan2(args, direction):
+  (y,x) = args
+  denom = x*x + y*y
+  return [direction * (x / denom), direction * (-y / denom)]
+
 def grad_list(args, direction):
   if direction == 0:
     return [0 for _ in args]
@@ -170,6 +191,8 @@ builtInSPsList = [
            [ "div",   binaryNum(lambda x,y: x / y,
                                 sim_grad=grad_div,
                                 descr="div returns the quotient of its first argument by its second") ],
+           [ "mod",   binaryNum(lambda x,y: x % y,
+                                descr="mod returns the modulus of its first argument by its second") ],
            [ "min",   binaryNum(min, descr="min returns the minimum value of its arguments") ],
            [ "eq",    binaryPred(lambda x,y: x.compare(y) == 0,
                                  descr="eq compares its two arguments for equality") ],
@@ -204,6 +227,9 @@ builtInSPsList = [
                              descr="Returns the log of its argument") ],
            [ "pow", binaryNum(math.pow, sim_grad=grad_pow, descr="pow returns its first argument raised to the power of its second argument") ],
            [ "sqrt", unaryNum(math.sqrt, sim_grad=grad_sqrt, descr="Returns the sqrt of its argument") ],
+           [ "atan2", binaryNum(math.atan2,
+                                sim_grad=grad_atan2,
+                                descr="atan2(y,x) returns the angle from the positive x axis to the point x,y.  The order of arguments is conventional.") ],
 
            [ "not", deterministic_typed(lambda x: not x, [v.BoolType()], v.BoolType(),
                                         descr="not returns the logical negation of its argument") ],
@@ -229,7 +255,10 @@ builtInSPsList = [
                                          sim_grad=lambda args, direction: [v.VenturePair((0, direction))],
                                          descr="rest returns the second component of its argument pair") ],
            [ "second", deterministic_typed(lambda p: p[1][0], [v.PairType(second_type=v.PairType())], v.AnyType(),
+                                           sim_grad=lambda args, direction: [v.VenturePair((0, v.VenturePair((direction, 0))))],
                                            descr="second returns the first component of the second component of its argument") ],
+           [ "to_list", deterministic_typed(lambda seq: seq.asPythonList(), [v.HomogeneousSequenceType(v.AnyType())], v.HomogeneousListType(v.AnyType()),
+                                            descr="to_list converts its argument sequence to a list") ],
 
 
            [ "array", deterministic_typed(lambda *args: np.array(args), [v.AnyType()], v.ArrayType(), variadic=True,
@@ -334,6 +363,12 @@ builtInSPsList = [
                                         v.RequestType("<array b>"))),
                         functional.ESRArrayOutputPSP()) ],
 
+           [ "imapv", SP(TypedPSP(functional.IndexedArrayMapRequestPSP(),
+                                  SPType([SPType([v.AnyType("index"), v.AnyType("a")], v.AnyType("b")),
+                                          v.HomogeneousArrayType(v.AnyType("a"))],
+                                         v.RequestType("<array b>"))),
+                         functional.ESRArrayOutputPSP()) ],
+
            [ "zip", deterministic_typed(lambda *args: zip(*args), [v.ListType()], v.HomogeneousListType(v.ListType()), variadic=True,
                                          descr="zip returns a list of lists, where the i-th nested list contains the i-th element from each of the input arguments") ],
 
@@ -361,15 +396,15 @@ builtInSPsList = [
                             [SPType([v.AnyType("a")], v.AnyType("b"), variadic=True)],
                             SPType([v.AnyType("a")], v.AnyType("b"), variadic=True)) ],
 
-           [ "scope_include",typed_nr(scope.ScopeIncludeOutputPSP(),
-                                      # These are type-restricted in Venture, but the actual PSP doesn't care.
-                                      [v.AnyType("<scope>"), v.AnyType("<block>"), v.AnyType()],
-                                      v.AnyType()) ],
+           [ "tag", typed_nr(scope.TagOutputPSP(),
+                             # These are type-restricted in Venture, but the actual PSP doesn't care.
+                             [v.AnyType("<scope>"), v.AnyType("<block>"), v.AnyType()],
+                             v.AnyType()) ],
 
-           [ "scope_exclude",typed_nr(scope.ScopeExcludeOutputPSP(),
-                                      # These are type-restricted in Venture, but the actual PSP doesn't care.
-                                      [v.AnyType("<scope>"), v.AnyType()],
-                                      v.AnyType()) ],
+           [ "tag_exclude", typed_nr(scope.TagExcludeOutputPSP(),
+                                     # These are type-restricted in Venture, but the actual PSP doesn't care.
+                                     [v.AnyType("<scope>"), v.AnyType()],
+                                     v.AnyType()) ],
 
            [ "binomial", typed_nr(discrete.BinomialOutputPSP(), [v.CountType(), v.ProbabilityType()], v.CountType()) ],
            [ "flip", typed_nr(discrete.BernoulliOutputPSP(), [v.ProbabilityType()], v.BoolType(), min_req_args=0) ],
@@ -380,6 +415,7 @@ builtInSPsList = [
            [ "uniform_discrete", typed_nr(discrete.UniformDiscreteOutputPSP(), [v.IntegerType(), v.IntegerType()], v.IntegerType()) ],
            [ "poisson", typed_nr(discrete.PoissonOutputPSP(), [v.PositiveType()], v.CountType()) ],
            [ "normal", typed_nr(continuous.NormalOutputPSP(), [v.NumberType(), v.NumberType()], v.NumberType()) ], # TODO Sigma is really non-zero, but negative is OK by scaling
+           [ "vonmises", typed_nr(continuous.VonMisesOutputPSP(), [v.NumberType(), v.PositiveType()], v.NumberType()) ],
            [ "uniform_continuous",typed_nr(continuous.UniformOutputPSP(), [v.NumberType(), v.NumberType()], v.NumberType()) ],
            [ "beta", typed_nr(continuous.BetaOutputPSP(), [v.PositiveType(), v.PositiveType()], v.ProbabilityType()) ],
            [ "expon", typed_nr(continuous.ExponOutputPSP(), [v.PositiveType()], v.PositiveType()) ],
@@ -412,7 +448,7 @@ builtInSPsList = [
            [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [v.SimplexType(), v.MatrixType(), v.MatrixType()], SPType([v.CountType()], v.AtomType())) ],
            [ "make_gp", gp.makeGPSP ],
            [ "apply_function", function.applyFunctionSP],
-           [ "noisy_id", typed_nr(noisy.NoisyIdentityOutputPSP(), [v.NumberType(), v.AnyType()], v.AnyType())],
+           [ "exactly", typed_nr(discrete.ExactlyOutputPSP(), [v.AnyType(), v.NumberType()], v.AnyType(), min_req_args=1)],
 ]
 
 def builtInSPs():

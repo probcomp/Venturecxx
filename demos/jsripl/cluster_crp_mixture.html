@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <title>Venture demos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="assets/css/bootstrap.css" rel="stylesheet">
+	<link href="jquery-terminal/css/jquery.terminal.css" rel="stylesheet"/>
+
+    <style type="text/css">
+      body {
+        padding-top: 30px;
+        padding-bottom: 40px;
+      }
+      .sidebar-nav {
+        padding: 9px 0;
+      }
+    </style>
+    <link href="assets/css/bootstrap-responsive.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="assets/ico/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="assets/ico/apple-touch-icon-57-precomposed.png">
+
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js"></script>
+  <link href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+  <script type="text/javascript" src="jqwidgets/jqxcore.js"></script>
+  <script type="text/javascript" src="jqwidgets/jqxlistbox.js"></script>
+  <script type="text/javascript" src="jqwidgets/jqxscrollbar.js"></script>
+  <script type="text/javascript" src="jqwidgets/jqxbuttons.js"></script> 
+  <link href="assets/css/jqx.base.css" rel="stylesheet">
+
+
+  </head>
+
+  <body>
+    <h1><center style="height:0px;">Venture</center></h1>
+    <div class="vis_holder" style="margin-left:50px; display: n2one;">
+      <div id="loading-status">Demo is loading... RIPL initialization...<br><br>
+      You should not see this message too long.<br><br>
+      If demo does not work, please, write to <a href="mailto:venture-dev@lists.csail.mit.edu">venture-dev@lists.csail.mit.edu</a>. </div>
+    </div>
+    <table width="100%"><tr><td align="left"><div id="ripl_address_info">... Loading ...</div></td><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr></table>
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="assets/js/jquery.js"></script>
+    <script src="assets/js/bootstrap-transition.js"></script>
+    <script src="assets/js/bootstrap-alert.js"></script>
+    <script src="assets/js/bootstrap-modal.js"></script>
+    <script src="assets/js/bootstrap-dropdown.js"></script>
+    <script src="assets/js/bootstrap-scrollspy.js"></script>
+    <script src="assets/js/bootstrap-tab.js"></script>
+    <script src="assets/js/bootstrap-tooltip.js"></script>
+    <script src="assets/js/bootstrap-popover.js"></script>
+    <script src="assets/js/bootstrap-button.js"></script>
+    <script src="assets/js/bootstrap-collapse.js"></script>
+    <script src="assets/js/bootstrap-carousel.js"></script>
+    <script src="assets/js/bootstrap-typeahead.js"></script>
+    <script src="jquery-terminal/js/jquery-1.7.1.min.js"></script>
+    <script src="jquery-terminal/js/jquery.mousewheel-min.js"></script>
+    <script src="jquery-terminal/js/jquery.terminal-min.js"></script>
+    <script src="http://d3js.org/d3.v2.js"></script>
+    <script type="text/javascript" src="vendor/jquery.cookie.js"></script>
+    <script src="vendor/raphael-min.js"></script>
+    <script src="common-scripts.js"></script>
+    <script src="vendor/spin.min.js"></script>
+    <script src="vendor/Base.js"></script>
+    <script src="jripl.js"></script>
+    <script src="utils.js"/>
+    <script src="vis_module.js"></script>
+    <script src="vis_crp_mixture.js"></script>
+
+    <script type="text/javascript">
+      $(document).ready(
+        function() { 
+          CheckCookieWithVentureRIPLAddress(); 
+          setTimeout(InitializeDemo,300); 
+      }
+      );
+      </script>
+  </body>
+</html>

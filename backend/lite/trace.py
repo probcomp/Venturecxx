@@ -1,3 +1,20 @@
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 import warnings
 from address import Address, List
 from builtin import builtInValues, builtInSPs
@@ -20,7 +37,7 @@ from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
 from omegadb import OmegaDB
 from smap import SamplableMap
 from sp import SPFamilies, VentureSPRecord
-from scope import isScopeIncludeOutputPSP, isScopeExcludeOutputPSP
+from scope import isTagOutputPSP, isTagExcludeOutputPSP
 from regen import regenAndAttach
 from detach import detachAndExtract
 from scaffold import constructScaffold
@@ -311,11 +328,11 @@ class Trace(object):
     self.addRandomChoicesInBlock(scope,block,pnodes,node.operatorNode)
 
     for i,operandNode in enumerate(node.operandNodes):
-      if i == 2 and isScopeIncludeOutputPSP(self.pspAt(node)):
+      if i == 2 and isTagOutputPSP(self.pspAt(node)):
         (new_scope,new_block,_) = [self.valueAt(randNode) for randNode in node.operandNodes]
         (new_scope,new_block) = self._normalizeEvaluatedScopeAndBlock(new_scope, new_block)
         if scope != new_scope or block == new_block: self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
-      elif i == 1 and isScopeExcludeOutputPSP(self.pspAt(node)):
+      elif i == 1 and isTagExcludeOutputPSP(self.pspAt(node)):
         (excluded_scope,_) = [self.valueAt(randNode) for randNode in node.operandNodes]
         excluded_scope = self._normalizeEvaluatedScope(excluded_scope)
         if scope != excluded_scope: self.addRandomChoicesInBlock(scope,block,pnodes,operandNode)
@@ -395,7 +412,7 @@ class Trace(object):
       else:
         # Could happen if this method is called on a torus, e.g. for rejection sampling
         raise MissingEsrParentError()
-    elif isScopeIncludeOutputPSP(self.pspAt(node)):
+    elif isTagOutputPSP(self.pspAt(node)):
       return self.getOutermostNonReferenceNode(node.operandNodes[2])
     else: return node
 
@@ -417,7 +434,7 @@ class Trace(object):
   def numRandomChoices(self):
     return len(self.rcs)
 
-  def infer_exp(self,exp):
+  def primitive_infer(self,exp):
     assert len(exp) >= 4
     (operator, scope, block) = exp[0:3]
     scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
@@ -498,7 +515,11 @@ class Trace(object):
         (rate, steps) = exp[3:5]
         mixMH(self, BlockScaffoldIndexer(scope, block), NesterovAcceleratedGradientAscentOperator(rate, int(steps)))
       elif operator == "rejection":
-        mixMH(self, BlockScaffoldIndexer(scope, block), RejectionOperator())
+        if len(exp) == 5:
+          trials = int(exp[3])
+        else:
+          trials = None
+        mixMH(self, BlockScaffoldIndexer(scope, block), RejectionOperator(trials))
       elif operator == "bogo_possibilize":
         mixMH(self, BlockScaffoldIndexer(scope, block), BogoPossibilizeOperator())
       elif operator == "print_scaffold_stats":
@@ -543,17 +564,21 @@ class Trace(object):
   def freeze(self, id):
     assert id in self.families
     node = self.families[id]
-    assert isinstance(node,OutputNode)
-    value = self.valueAt(node)
-    unevalFamily(self,node,Scaffold(),OmegaDB())
-    # XXX It looks like we kinda want to replace the identity of this
-    # node by a constant node, but we don't have a nice way to do that
-    # so we fake it by dropping the components and marking it frozen.
-    node.isFrozen = True
-    self.setValueAt(node, value)
-    node.requestNode = None
-    node.operandNodes = None
-    node.operatorNode = None
+    if isinstance(node,ConstantNode) or node.isFrozen == True:
+      # All set
+      pass
+    else:
+      assert isinstance(node,OutputNode)
+      value = self.valueAt(node)
+      unevalFamily(self,node,Scaffold(),OmegaDB())
+      # XXX It looks like we kinda want to replace the identity of this
+      # node by a constant node, but we don't have a nice way to do that
+      # so we fake it by dropping the components and marking it frozen.
+      node.isFrozen = True
+      self.setValueAt(node, value)
+      node.requestNode = None
+      node.operandNodes = None
+      node.operatorNode = None
 
   def diversify(self, exp, copy_trace):
     """Return the pair of parallel lists of traces and weights that
@@ -585,11 +610,6 @@ the scaffold determined by the given expression."""
     # random.seed(seed)
     # numpy.random.seed(seed)
     pass
-
-  def getDirectiveLogScore(self,id):
-    assert id in self.families
-    node = self.getOutermostNonReferenceNode(self.families[id])
-    return self.pspAt(node).logDensity(self.groundValueAt(node),self.argsAt(node))
 
   def getGlobalLogScore(self):
     # TODO This algorithm is totally wrong: https://app.asana.com/0/16653194948424/20100308871203
@@ -631,6 +651,10 @@ the scaffold determined by the given expression."""
   def evalAndRestore(self,id,exp,db):
     assert id not in self.families
     (_,self.families[id]) = evalFamily(self,Address(List(id)),self.unboxExpression(exp),self.globalEnv,Scaffold(),True,db,{})
+
+  def has_own_prng(self): return False
+
+  def short_circuit_copyable(self): return False
 
   #### Helpers (shouldn't be class methods)
 

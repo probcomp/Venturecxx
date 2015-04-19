@@ -1,3 +1,20 @@
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 import math
 import scipy.stats as stats
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
@@ -48,11 +65,11 @@ def checkPGibbsBlockingMHHMM1(operator):
   """The point of this is that it should give reasonable results in very few transitions but with a large number of particles."""
   ripl = get_ripl()
 
-  ripl.assume("x0","(scope_include 0 0 (normal 0.0 1.0))")
-  ripl.assume("x1","(scope_include 0 1 (normal x0 1.0))")
-  ripl.assume("x2","(scope_include 0 2 (normal x1 1.0))")
-  ripl.assume("x3","(scope_include 0 3 (normal x2 1.0))")
-  ripl.assume("x4","(scope_include 0 4 (normal x3 1.0))")
+  ripl.assume("x0","(tag 0 0 (normal 0.0 1.0))")
+  ripl.assume("x1","(tag 0 1 (normal x0 1.0))")
+  ripl.assume("x2","(tag 0 2 (normal x1 1.0))")
+  ripl.assume("x3","(tag 0 3 (normal x2 1.0))")
+  ripl.assume("x4","(tag 0 4 (normal x3 1.0))")
 
   ripl.assume("y0","(normal x0 1.0)")
   ripl.assume("y1","(normal x1 1.0)")
@@ -95,7 +112,7 @@ def checkPGibbsDynamicScope1(operator):
   ripl.assume("initial_state_fn", "(lambda () (normal 0.0 1.0))")
   ripl.assume("f","""
 (mem (lambda (t)
-  (scope_include 0 t (if (= t 0) (initial_state_fn) (transition_fn (f (- t 1)))))))
+  (tag 0 t (if (= t 0) (initial_state_fn) (transition_fn (f (- t 1)))))))
 """)  
 
   ripl.assume("g","(mem (lambda (t) (observation_fn (f t))))")
@@ -128,7 +145,7 @@ def testPGibbsDynamicScopeInterval():
   ripl.assume("initial_state_fn", "(lambda () (normal 0.0 1.0))")
   ripl.assume("f","""
 (mem (lambda (t)
-  (scope_include 0 t (if (= t 0) (initial_state_fn) (transition_fn (f (- t 1)))))))
+  (tag 0 t (if (= t 0) (initial_state_fn) (transition_fn (f (- t 1)))))))
 """)  
 
   ripl.assume("g","(mem (lambda (t) (observation_fn (f t))))")
@@ -144,7 +161,7 @@ def testPGibbsDynamicScopeInterval():
   P = 3 if ignore_inference_quality() else 8
   T = 2 if ignore_inference_quality() else 10
 
-  infer = "(cycle ((pgibbs 0 (ordered_range 0 3) %d %d) (pgibbs 0 (ordered_range 1 4) %d %d)) 1)" % (P,P,T,T)
+  infer = "(do (pgibbs 0 (ordered_range 0 3) %d %d) (pgibbs 0 (ordered_range 1 4) %d %d))" % (P,P,T,T)
 
   predictions = collectSamples(ripl,"pid",infer=infer)
   cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
@@ -158,7 +175,7 @@ def testFunnyHMM():
 def checkFunnyHMM(in_parallel):
   ripl = get_ripl()
   
-  ripl.assume("hypers", "(mem (lambda (t) (scope_include 0 t (normal 0 1))))")
+  ripl.assume("hypers", "(mem (lambda (t) (tag 0 t (normal 0 1))))")
   ripl.assume("init", "0")
   ripl.assume("next", "(lambda (state delta) (+ state delta))")
   ripl.assume("get_state",

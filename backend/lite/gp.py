@@ -1,16 +1,37 @@
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 import numpy as np
 import numpy.linalg as la
 import numpy.random as npr
+from exception import VentureValueError
 
 # XXX Replace by scipy.stats.multivariate_normal.logpdf when we
 # upgrade to scipy 0.14.
 def multivariate_normal_logpdf(x, mu, sigma):
-  dev = x - mu
-  ans = 0
-  ans += (-.5*(x-mu).transpose() * la.inv(sigma) * (x-mu))[0, 0]
-  ans += -.5*len(sigma)*np.log(2 * np.pi)
-  ans += -.5*np.log(la.det(sigma))
-  return ans
+  try:
+    dev = x - mu
+    ans = 0
+    ans += (-.5*(x-mu).transpose() * la.inv(sigma) * (x-mu))[0, 0]
+    ans += -.5*len(sigma)*np.log(2 * np.pi)
+    ans += -.5*np.log(la.det(sigma))
+    return ans
+  except la.LinAlgError as e:
+    raise VentureValueError("Bad GP covariance matrix.")
 
 def col_vec(xs):
   return np.matrix([xs]).T

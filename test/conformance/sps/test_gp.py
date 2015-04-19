@@ -1,3 +1,20 @@
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 from nose import SkipTest
 from venture.test.config import get_ripl, collectSamples, broken_in
 from venture.test.stats import statisticalTest, reportKnownMean, reportKnownMeanVariance
@@ -43,7 +60,7 @@ def prep_ripl(ripl):
 def array(xs):
   return v.VentureArrayUnboxed(np.array(xs), xType)
 
-@broken_in('puma')
+@broken_in('puma', "Puma does not define the gaussian process builtins")
 def testGP1():
   ripl = get_ripl()
   prep_ripl(ripl)
@@ -53,7 +70,7 @@ def testGP1():
   ripl.sample('(gp (array 1))')
   ripl.sample('(gp (array 2))')
   
-@broken_in('puma')
+@broken_in('puma', "Puma does not define the gaussian process builtins")
 @statisticalTest
 def testGPMean1():
   ripl = get_ripl()
@@ -67,7 +84,7 @@ def testGPMean1():
 
   return reportKnownMeanVariance(0, np.exp(-1), xs)
 
-@broken_in('puma')
+@broken_in('puma', "Puma does not define the gaussian process builtins")
 @statisticalTest
 def testGPMean2():
   ripl = get_ripl()
@@ -84,7 +101,7 @@ def testGPMean2():
   # TODO: variance
   return reportKnownMean(0, xs)
 
-@broken_in('puma')
+@broken_in('puma', "Puma does not define the gaussian process builtins")
 def testGPLogscore1():
   """Is this actually a valid test? The real solution to this problem
   (and to the corresponding bug with unincorporate) is to wrap the gp

@@ -1,3 +1,20 @@
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+//
+// This file is part of Venture.
+//
+// Venture is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Venture is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 #include "concrete_trace.h"
 #include "values.h"
 #include "consistency.h"
@@ -415,7 +432,7 @@ void ConcreteTrace::addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,
   for (size_t i = 0; i < outputNode->operandNodes.size(); ++i)
   {
     Node * operandNode = outputNode->operandNodes[i];
-    if (i == 2 && dynamic_pointer_cast<ScopeIncludeOutputPSP>(psp))
+    if (i == 2 && dynamic_pointer_cast<TagOutputPSP>(psp))
     {
       ScopeID new_scope = getValue(outputNode->operandNodes[0]);
       BlockID new_block = getValue(outputNode->operandNodes[1]);
@@ -424,7 +441,7 @@ void ConcreteTrace::addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,
         addUnconstrainedChoicesInBlock(scope,block,pnodes,operandNode);
       }
     }
-    else if (i == 1 && dynamic_pointer_cast<ScopeExcludeOutputPSP>(psp))
+    else if (i == 1 && dynamic_pointer_cast<TagExcludeOutputPSP>(psp))
     {
       ScopeID new_scope = getValue(outputNode->operandNodes[0]);
       if (!scope->equals(new_scope))
@@ -551,8 +568,20 @@ void ConcreteTrace::freezeDirectiveID(DirectiveID did)
 {
   RootOfFamily root = families[did];
   OutputNode * outputNode = dynamic_cast<OutputNode*>(root.get());
-  assert(outputNode);
-  freezeOutputNode(outputNode);
+  if (outputNode) {
+    if (outputNode->isFrozen) {
+      // OK
+    } else {
+      freezeOutputNode(outputNode);
+    }
+  } else {
+    ConstantNode * constantNode = dynamic_cast<ConstantNode*>(root.get());
+    if (constantNode) {
+      // OK
+    } else {
+      assert(false);
+    }
+  }
 }
 
 void ConcreteTrace::freezeOutputNode(OutputNode * outputNode)

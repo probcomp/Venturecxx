@@ -1,4 +1,4 @@
-# Copyright (c) 2013, MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -12,7 +12,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
@@ -40,7 +41,7 @@ _RIPL_FUNCTIONS = [
         'clear','rollback','list_directives','get_directive',
         'force','sample','continuous_inference_status',
         'start_continuous_inference','stop_continuous_inference',
-        'get_current_exception','get_state','get_logscore',
+        'get_current_exception','get_state',
         'get_global_logscore'
         ]
 

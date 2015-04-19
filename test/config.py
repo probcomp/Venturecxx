@@ -1,3 +1,20 @@
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 """Customizations of the Venture test suite.
 
 The Venture test suite has more structure than a typical "unit test"
@@ -53,6 +70,8 @@ import nose.tools as nose
 from nose import SkipTest
 from testconfig import config
 from inspect import isgeneratorfunction
+import sys
+from StringIO import StringIO
 
 import venture.shortcuts as s
 import venture.venturemagics.ip_parallel as ip_parallel
@@ -167,7 +186,7 @@ def _collectData(iid,ripl,address,num_samples=None,infer=None):
     # TODO Replace this awful hack with proper adjustment of tests for difficulty
     infer = defaultInfer()
     if infer is not "(rejection default all 1)":
-      infer = "(cycle (%s) 4)" % infer
+      infer = "(repeat 4 (do %s))" % infer
 
   predictions = []
   for _ in range(num_samples):
@@ -472,3 +491,12 @@ def gen_needs_ggplot(f):
     except ImportError:
       raise SkipTest("ggplot not installed on this machine")
   return wrapped
+
+def capture_output(ripl, program):
+  'Capture stdout; return the string headed for stdout and the result of the computation'
+  old_stdout = sys.stdout
+  captured = StringIO()
+  sys.stdout = captured
+  res = ripl.execute_program(program)
+  sys.stdout = old_stdout
+  return res, captured.getvalue()

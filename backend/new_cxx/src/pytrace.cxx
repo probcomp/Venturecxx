@@ -1,3 +1,20 @@
+// Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+//
+// This file is part of Venture.
+//
+// Venture is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Venture is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 #include "pytrace.h"
 #include "regen.h"
 #include "render.h"
@@ -95,23 +112,6 @@ void PyTrace::setSeed(size_t n) {
 size_t PyTrace::getSeed() {
   // TODO FIXME get_seed can't be implemented as spec'd (need a generic RNG state); current impl always returns 0, which may not interact well with VentureUnit
   return 0;
-}
-
-// TODO Should getDirectiveLogScore compute something about all the
-// nodes in the family or just the top one?
-double PyTrace::getDirectiveLogScore(DirectiveID did)
-{
-  assert(trace->families.count(did));
-  RootOfFamily root = trace->families[did];
-  ApplicationNode * node = dynamic_cast<ApplicationNode*>(trace->getOutermostNonReferenceNode(root.get()));
-  if (node != NULL)
-  {
-    shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
-    shared_ptr<Args> args = trace->getArgs(node);
-    return psp->logDensity(trace->getValue(node),args);
-  } else {
-    return 0; // Is zero really the right logscore for non-application directives?
-  }
 }
 
 double PyTrace::getGlobalLogScore()
@@ -241,7 +241,7 @@ struct Inferer
   }
 };
 
-void PyTrace::infer(boost::python::dict params)
+void PyTrace::primitive_infer(boost::python::dict params)
 {
   Inferer inferer(trace, params);
   inferer.infer();
@@ -371,11 +371,10 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("set_seed", &PyTrace::setSeed)
     .def("get_seed", &PyTrace::getSeed)
     .def("numRandomChoices", &PyTrace::numUnconstrainedChoices)
-    .def("getDirectiveLogScore", &PyTrace::getDirectiveLogScore)
     .def("getGlobalLogScore", &PyTrace::getGlobalLogScore)
     .def("observe", &PyTrace::observe)
     .def("unobserve", &PyTrace::unobserve)
-    .def("infer", &PyTrace::infer)
+    .def("primitive_infer", &PyTrace::primitive_infer)
     .def("dot_trace", &PyTrace::dotTrace)
     .def("makeConsistent", &PyTrace::makeConsistent)
     .def("likelihood_at", &PyTrace::likelihoodAt)

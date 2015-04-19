@@ -1,3 +1,20 @@
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 import numbers
 import exp as e
 from node import ConstantNode, LookupNode, RequestNode, OutputNode
@@ -5,10 +22,11 @@ from sp import VentureSPRecord
 from psp import NullRequestPSP, PSP
 from value import SPRef
 from lkernel import VariationalLKernel
-from scope import isScopeIncludeOutputPSP
+from scope import isTagOutputPSP
 from consistency import assertTorus, assertTrace
 from exception import VentureError
 from venture.exception import VentureException
+from venture.lite.inference_sps import VentureNestedRiplMethodError # TODO Ugh.
 
 def regenAndAttach(trace,scaffold,shouldRestore,omegaDB,gradients):
   assertTorus(scaffold)
@@ -108,7 +126,9 @@ def evalFamily(trace,address,exp,env,scaffold,shouldRestore,omegaDB,gradients):
     try:
       sourceNode = env.findSymbol(exp)
     except VentureError as err:
-      raise VentureException("evaluation", err.message, address=address)
+      import sys
+      info = sys.exc_info()
+      raise VentureException("evaluation", err.message, address=address), None, info[2]
     weight = regen(trace,sourceNode,scaffold,shouldRestore,omegaDB,gradients)
     return (weight,trace.createLookupNode(address,sourceNode))
   elif e.isSelfEvaluating(exp): return (0,trace.createConstantNode(address,exp))
@@ -125,8 +145,21 @@ def evalFamily(trace,address,exp,env,scaffold,shouldRestore,omegaDB,gradients):
     (requestNode,outputNode) = trace.createApplicationNodes(address,nodes[0],nodes[1:],env)
     try:
       weight += apply(trace,requestNode,outputNode,scaffold,shouldRestore,omegaDB,gradients)
-    except VentureError as err:
-      raise VentureException("evaluation", err.message, address=address)
+    except VentureNestedRiplMethodError as err:
+      # This is a hack to allow errors raised by inference SP actions
+      # that are ripl actions to blame the address of the maker of the
+      # action rather than the current address, which is the
+      # application of that action (which is where the mistake is
+      # detected).
+      import sys
+      info = sys.exc_info()
+      raise VentureException("evaluation", err.message, address=err.addr, cause=err), None, info[2]
+    except VentureException:
+      raise # Avoid rewrapping with the below
+    except Exception as err:
+      import sys
+      info = sys.exc_info()
+      raise VentureException("evaluation", err.message, address=address, cause=err), None, info[2]
     assert isinstance(weight, numbers.Number)
     return weight,outputNode
 
@@ -172,7 +205,7 @@ def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 
   if isinstance(newValue,VentureSPRecord): processMadeSP(trace,node,scaffold.isAAA(node))
   if psp.isRandom(): trace.registerRandomChoice(node)
-  if isScopeIncludeOutputPSP(psp):
+  if isTagOutputPSP(psp):
     scope,block = [trace.valueAt(n) for n in node.operandNodes[0:2]]
     blockNode = node.operandNodes[2]
     trace.registerRandomChoiceInScope(scope,block,blockNode)
