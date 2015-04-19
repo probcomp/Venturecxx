@@ -176,7 +176,7 @@ function InitializeDemo() {
         ripl.set_mode("church_prime");
 
         /* Model metadata */
-        ripl.assume('demo_id', demo_id, 'demo_id');
+        ripl.assume('demo_id', String(demo_id), 'demo_id');
         ripl.assume('model_type', '(quote simple)', 'model_type');
         ripl.assume('use_outliers', "" + model_variables.use_outliers, 'use_outliers');
         ripl.assume('infer_noise', "" + model_variables.infer_noise, 'infer_noise');
