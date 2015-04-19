@@ -21,7 +21,7 @@ data Command num = Directive (V.Directive num)
                  | ListDirectives
   deriving Show
 
-run :: (Fractional num) => (Command num -> IO B.ByteString) -> IO ()
+run :: (Fractional num) => (Command num -> IO (Either String B.ByteString)) -> IO ()
 run act = do
   putStrLn "Venture listening on 3000"
   Warp.run 3000 (application act)
@@ -76,7 +76,8 @@ allow_response = LBSResponse HTTP.status200 header "" where
 
 ---- Main action
 
-application :: (Fractional num) => ((Command num) -> IO B.ByteString) -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
+application :: (Fractional num) => ((Command num) -> IO (Either String B.ByteString))
+            -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
 application act req k = do
   logRequest req
   if (requestMethod req == "OPTIONS") then
@@ -89,9 +90,11 @@ application act req k = do
             case parse method args of
               Left err -> send $ error_response err
               Right d -> do body <- act d
-                            send $ resp body
+                            case body of
+                              Left err -> send $ error_response err
+                              Right win -> send $ success_response win
   where
-    resp body = LBSResponse HTTP.status200 headers body
+    success_response body = LBSResponse HTTP.status200 headers body
     headers = [("Content-Type", "application/json")] ++ boilerplate_headers
     send resp = do
       logResponse resp

@@ -61,5 +61,5 @@ onMVar var act = do
 main :: IO ()
 main = do
   engineMVar <- newMVar V.initial :: IO (MVar (V.Model IO Double))
-  run (execute engineMVar)
+  run (liftM Right . (execute engineMVar))
 
