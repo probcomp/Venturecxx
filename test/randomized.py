@@ -39,7 +39,7 @@ from nose import SkipTest
 from venture.test import random_values as r
 from venture.lite.exception import VentureValueError
 from venture.lite.sp import SPType
-from venture.lite.value import VentureType
+from venture.lite.types import VentureType
 from venture.lite import env as env
 
 def checkTypedProperty(prop, type_, *args, **kwargs):

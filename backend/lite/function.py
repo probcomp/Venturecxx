@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from value import VentureValue, registerVentureType, VentureType
-from psp import DeterministicPSP, NullRequestPSP, TypedPSP
+from value import VentureValue, registerVentureType
+from psp import DeterministicPSP, NullRequestPSP
 from sp import SP, SPType
 import venture.value.dicts as v
 

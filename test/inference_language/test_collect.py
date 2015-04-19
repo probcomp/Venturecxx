@@ -16,7 +16,6 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import scipy.stats as stats
-from nose.tools import eq_
 import re
 from StringIO import StringIO
 import sys
@@ -24,7 +23,7 @@ import sys
 from venture.test.stats import statisticalTest, reportKnownContinuous
 from venture.test.config import get_ripl, default_num_samples, on_inf_prim
 from venture.lite.psp import LikelihoodFreePSP
-import venture.lite.value as v
+import venture.lite.types as t
 from venture.lite.builtin import typed_nr
 
 def extract_from_dataset(result, names):
@@ -115,7 +114,7 @@ def testCollectLogScore():
     def simulate(self, args):
       x = args.operandValues[0]
       return x + stats.distributions.norm.rvs()
-  tester = typed_nr(TestPSP(), [v.NumberType()], v.NumberType())
+  tester = typed_nr(TestPSP(), [t.NumberType()], t.NumberType())
   ripl = get_ripl()
   ripl.bind_foreign_sp('test', tester)
   prog = '''

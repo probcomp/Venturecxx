@@ -30,7 +30,7 @@ from scipy.stats import norm
 from venture.lite.psp import RandomPSP
 from venture.lite.builtin import typed_nr
 import random
-import venture.lite.value as v
+import venture.lite.types as t
 import numpy as np
 from numpy import linalg as npla
 from venture import shortcuts
@@ -88,8 +88,8 @@ def force_x(i):
 
 def initialize_funnel(ripl):
   gaussianfunnel_sp = typed_nr(GaussianFunnel(),
-                               [v.NumberType()] * 10,
-                               v.NumberType())
+                               [t.NumberType()] * 10,
+                               t.NumberType())
   ripl.bind_foreign_sp('gaussian_funnel', gaussianfunnel_sp)
   xs = ' '.join(['x_' + str(i) for i in range(1,10)])
   funnel = '(gaussian_funnel v {0})'.format(xs)

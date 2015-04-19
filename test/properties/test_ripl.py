@@ -22,7 +22,8 @@ from venture.test.config import get_ripl, on_inf_prim, gen_on_inf_prim
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSPRecord
-from venture.lite.value import AnyType, VentureValue
+from venture.lite.value import VentureValue
+from venture.lite.types import AnyType
 import venture.value.dicts as v
 
 from test_sps import relevantSPs

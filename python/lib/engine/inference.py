@@ -19,8 +19,9 @@ import time
 from pandas import DataFrame
 from copy import copy
 
-from venture.lite.value import (ExpressionType, SymbolType, VentureArray, VentureSymbol,
+from venture.lite.value import (VentureArray, VentureSymbol,
                                 VentureInteger, VentureValue, VentureNil)
+from venture.lite.types import (ExpressionType, SymbolType)
 from venture.lite.utils import logWeightsToNormalizedDirect
 from venture.ripl.utils import strip_types_from_dict_values
 from venture.lite.exception import VentureValueError, VentureCallbackError

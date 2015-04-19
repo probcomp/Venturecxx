@@ -17,7 +17,6 @@
 
 import time
 
-import venture.lite.value as v
 import venture.ripl.utils as u
 
 def __venture_start__(ripl):
