@@ -71,11 +71,17 @@ error_response err = LBSResponse HTTP.status500 [("Content-Type", "text/plain")]
   json :: M.Map String String
   json = M.fromList [("exception", "fatal"), ("message", err)]
 
+allow_response :: LoggableResponse
+allow_response = LBSResponse HTTP.status200 header "" where
+    header = [ ("Content-Type", "text/plain")
+             , ("Allow", "HEAD, GET, POST, OPTIONS")
+             ] ++ boilerplate_headers
+
 application :: MVar (V.Model IO Double) -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
 application engineMVar req k = do
   logRequest req
   if (requestMethod req == "OPTIONS") then
-      undefined
+      send $ allow_response
   else do
       parsed <- off_the_wire req
       case parsed of
@@ -152,3 +158,10 @@ logResponse (LBSResponse s r b) = do
   putStrLn $ show $ s
   putStrLn $ show $ r
   B.putStrLn b
+
+boilerplate_headers =
+    [ ("access-control-max-age", "21600")
+    , ("access-control-allow-origin", "*")
+    , ("access-control-allow-methods", "HEAD, GET, POST, OPTIONS")
+    , ("access-control-allow-headers", "CONTENT-TYPE")
+    ]
