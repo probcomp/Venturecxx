@@ -10,24 +10,24 @@
 -- - Overview http://www.yesodweb.com/book/web-application-interface
 -- - Network.Wai package http://hackage.haskell.org/package/wai-2.1.0.1/docs/Network-Wai.html
 
-import Data.Functor.Compose
-import Control.Concurrent.MVar
-import Control.Monad.State.Lazy
-import qualified Data.ByteString.Lazy as B
-import qualified Data.Map as M
-import qualified Data.Text as T (unpack)
+import           Data.Functor.Compose
+import           Control.Concurrent.MVar
+import           Control.Monad.State.Lazy
+import qualified Data.ByteString.Lazy         as B
+import qualified Data.Map                     as M
+import qualified Data.Text                    as T (unpack)
 
-import Network.Wai
-import Network.HTTP.Types (status200, status500)
+import           Network.Wai
+import           Network.HTTP.Types           (status200, status500)
 import qualified Network.HTTP.Types           as H
-import Network.Wai.Handler.Warp (run)
+import           Network.Wai.Handler.Warp     (run)
 import qualified Data.Aeson as Aeson
 
-import Language hiding (Value)
-import InferenceInterpreter hiding (execute)
-import qualified Trace as T
-import qualified Venture as V
-import qualified VentureGrammar as G
+import           Language                     hiding (Value)
+import           InferenceInterpreter         hiding (execute)
+import qualified Trace                        as T
+import qualified Venture                      as V
+import qualified VentureGrammar               as G
 
 -- The Venture wire protocol is to request a url whose path is the
 -- method name and put in the body a list of strings to use for
