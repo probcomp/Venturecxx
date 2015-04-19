@@ -20,9 +20,9 @@ import qualified Data.Text                    as T (unpack)
 import           Network.Wai
 import qualified Network.HTTP.Types           as HTTP
 import           Network.Wai.Handler.Warp     (run)
-import qualified Data.Aeson as Aeson
+import qualified Data.Aeson                   as Aeson
 
-import           Language                     hiding (Value)
+import qualified Language                     as L
 import           InferenceInterpreter         hiding (execute)
 import qualified Trace                        as T
 import qualified Venture                      as V
@@ -86,12 +86,12 @@ encodeMaybeValue Nothing = "null"
 encodeMaybeValue (Just v) = encodeValue v
 
 encodeValue :: T.Value Double -> B.ByteString
-encodeValue (Number x) = Aeson.encode x
-encodeValue (Symbol s) = Aeson.encode s
-encodeValue (List vs) = "[" `B.append` (B.intercalate ", " $ map encodeValue vs) `B.append` "]"
-encodeValue (Procedure _) = "An SP"
-encodeValue (Boolean True) = "true"
-encodeValue (Boolean False) = "false"
+encodeValue (L.Number x) = Aeson.encode x
+encodeValue (L.Symbol s) = Aeson.encode s
+encodeValue (L.List vs) = "[" `B.append` (B.intercalate ", " $ map encodeValue vs) `B.append` "]"
+encodeValue (L.Procedure _) = "An SP"
+encodeValue (L.Boolean True) = "true"
+encodeValue (L.Boolean False) = "false"
 
 -- Execute the given state action on the contents of the given MVar,
 -- put the answer back, and return the result of the action.
