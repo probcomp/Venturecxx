@@ -61,6 +61,12 @@ parse m _ = Left $ "Unknown directive " ++ m
 
 ---- Response helpers
 
+allow_response :: LoggableResponse
+allow_response = LBSResponse HTTP.status200 header "" where
+    header = [ ("Content-Type", "text/plain")
+             , ("Allow", "HEAD, GET, POST, OPTIONS")
+             ] ++ boilerplate_headers
+
 -- This is meant to be interpreted by the client as a VentureException
 -- containing the error message.  The parallel code is
 -- python/lib/server/utils.py RestServer
@@ -69,11 +75,9 @@ error_response err = LBSResponse HTTP.status500 [("Content-Type", "text/plain")]
   json :: M.Map String String
   json = M.fromList [("exception", "fatal"), ("message", err)]
 
-allow_response :: LoggableResponse
-allow_response = LBSResponse HTTP.status200 header "" where
-    header = [ ("Content-Type", "text/plain")
-             , ("Allow", "HEAD, GET, POST, OPTIONS")
-             ] ++ boilerplate_headers
+success_response :: B.ByteString -> LoggableResponse
+success_response body = LBSResponse HTTP.status200 headers body where
+    headers = [("Content-Type", "application/json")] ++ boilerplate_headers
 
 ---- Main action
 
@@ -88,8 +92,6 @@ application act req k = do
       d <- hoistEither $ parse method args
       EitherT $ act d)
   where
-    success_response body = LBSResponse HTTP.status200 headers body
-    headers = [("Content-Type", "application/json")] ++ boilerplate_headers
     send resp = do
       logResponse resp
       k $ prepare resp
