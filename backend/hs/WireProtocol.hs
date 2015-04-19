@@ -20,6 +20,9 @@ import qualified VentureGrammar               as G
 
 data Command num = Directive (V.Directive num)
                  | ListDirectives
+                 | StopCI
+                 | Clear
+                 | SetMode String
   deriving Show
 
 run :: (Fractional num) => (Command num -> IO (Either String B.ByteString)) -> IO ()
@@ -57,6 +60,10 @@ parse :: (Fractional num) => String -> [String] -> Either String (Command num)
 parse "assume" [var, expr] = Right $ Directive $ V.Assume var $ Compose $ G.parse expr
 parse "assume" args = Left $ "Incorrect number of arguments to assume " ++ show args
 parse "list_directives" _ = Right ListDirectives
+parse "stop_continuous_inference" _ = Right StopCI
+parse "clear" _ = Right Clear
+parse "set_mode" [mode] = Right $ SetMode mode
+parse "set_mode" args = Left $ "Incorrect number of arguments to set_mode " ++ show args
 parse m _ = Left $ "Unknown directive " ++ m
 
 ---- Response helpers

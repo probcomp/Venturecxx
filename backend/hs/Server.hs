@@ -34,6 +34,11 @@ execute engineMVar c = do
     ListDirectives -> do
       directives <- liftM V._directives $ readMVar engineMVar
       return $ Aeson.encode $ map (show . U.pp) $ directives
+    StopCI -> return "" -- No continuous inference to stop yet
+    Clear -> do
+      onMVar engineMVar (put V.initial)
+      return ""
+    SetMode _ -> return "" -- Only one surface syntax is supported!
 
 encodeMaybeValue :: Maybe (T.Value Double) -> B.ByteString
 encodeMaybeValue Nothing = "null"
