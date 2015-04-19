@@ -21,7 +21,7 @@ data Command num = Directive (V.Directive num)
                  | ListDirectives
   deriving Show
 
-run :: (Command Double -> IO B.ByteString) -> IO ()
+run :: (Fractional num) => (Command num -> IO B.ByteString) -> IO ()
 run act = do
   putStrLn "Venture listening on 3000"
   Warp.run 3000 (application act)
@@ -52,7 +52,7 @@ decode_body "" = Right []
 decode_body str = Aeson.eitherDecode str
 
 -- So far, expect the method and arguments to lead to a directive
-parse :: String -> [String] -> Either String (Command Double)
+parse :: (Fractional num) => String -> [String] -> Either String (Command num)
 parse "assume" [var, expr] = Right $ Directive $ V.Assume var $ Compose $ G.parse expr
 parse "assume" args = Left $ "Incorrect number of arguments to assume " ++ show args
 parse "list_directives" _ = Right ListDirectives
@@ -76,7 +76,7 @@ allow_response = LBSResponse HTTP.status200 header "" where
 
 ---- Main action
 
-application :: ((Command Double) -> IO B.ByteString) -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
+application :: (Fractional num) => ((Command num) -> IO B.ByteString) -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
 application act req k = do
   logRequest req
   if (requestMethod req == "OPTIONS") then
