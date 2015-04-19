@@ -19,11 +19,15 @@ import Language
   flo  { T.Float $$ }
   lam  { T.Symbol "lambda" }
   quo  { T.Symbol "quote" }
+  true  { T.Symbol "true" }
+  false  { T.Symbol "false" }
   sym  { T.Symbol $$ }
 
 %%
 
 Exp : sym  { Var $1 }
+    | true { Datum $ Boolean True }
+    | false { Datum $ Boolean False }
     | int  { Datum $ Number $ fromInteger $1 }
     | flo  { Datum $ Number $1 }
     | '(' quo Exp ')' { Datum $ exp_to_value $3 } -- Or do I want a separate "datum" grammar?
