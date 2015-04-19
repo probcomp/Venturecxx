@@ -17,7 +17,7 @@ import Network.HTTP.Types (status200, status500)
 import qualified Network.HTTP.Types           as H
 import Network.Wai.Handler.Warp (run)
 import Data.Text (unpack)
-import Data.Aeson hiding (Value, Number)
+import qualified Data.Aeson as Aeson
 import Control.Concurrent.MVar
 import Control.Monad.State.Lazy
 import qualified Data.ByteString.Lazy as B
@@ -35,7 +35,7 @@ off_the_wire :: Request -> IO (Either String (String, [String]))
 off_the_wire r = do
   let method = parse_method r
   body <- lazyRequestBody r
-  case eitherDecode body of
+  case Aeson.eitherDecode body of
     Left err -> return $ Left err
     Right args -> case method of
                     Nothing -> return $ Left $ "Cannot parse method from path " ++ (show $ pathInfo r)
@@ -50,7 +50,7 @@ parse_method r = parse $ pathInfo r where
 -- containing the error message.  The parallel code is
 -- python/lib/server/utils.py RestServer
 error_response :: String -> LoggableResponse
-error_response err = LBSResponse status500 [("Content-Type", "text/plain")] $ encode json where
+error_response err = LBSResponse status500 [("Content-Type", "text/plain")] $ Aeson.encode json where
   json :: M.Map String String
   json = M.fromList [("exception", "fatal"), ("message", err)]
 
@@ -86,8 +86,8 @@ encodeMaybeValue Nothing = "null"
 encodeMaybeValue (Just v) = encodeValue v
 
 encodeValue :: T.Value Double -> B.ByteString
-encodeValue (Number x) = encode x
-encodeValue (Symbol s) = encode s
+encodeValue (Number x) = Aeson.encode x
+encodeValue (Symbol s) = Aeson.encode s
 encodeValue (List vs) = "[" `B.append` (B.intercalate ", " $ map encodeValue vs) `B.append` "]"
 encodeValue (Procedure _) = "An SP"
 encodeValue (Boolean True) = "true"
