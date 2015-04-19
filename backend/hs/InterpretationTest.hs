@@ -10,6 +10,7 @@ import Test.HUnit
 
 import Language hiding (Value)
 import Examples
+import Venture (Directive(..))
 import InferenceInterpreter
 import Trace (Valuable, fromValue, Value, var, lam, app)
 

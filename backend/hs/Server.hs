@@ -52,8 +52,8 @@ decode_body "" = Right []
 decode_body str = Aeson.eitherDecode str
 
 -- So far, expect the method and arguments to lead to a directive
-interpret :: String -> [String] -> Either String (Directive Double)
-interpret "assume" [var, expr] = Right $ Assume var $ Compose $ G.parse expr
+interpret :: String -> [String] -> Either String (V.Directive Double)
+interpret "assume" [var, expr] = Right $ V.Assume var $ Compose $ G.parse expr
 interpret "assume" args = Left $ "Incorrect number of arguments to assume " ++ show args
 interpret m _ = Left $ "Unknown directive " ++ m
 
@@ -81,7 +81,7 @@ application engineMVar req k = do
       logResponse resp
       k $ prepare resp
 
-execute :: MVar (V.Model IO Double) -> (Directive Double) -> IO LoggableResponse
+execute :: MVar (V.Model IO Double) -> (V.Directive Double) -> IO LoggableResponse
 execute engineMVar d = do
   putStrLn $ show d
   value <- onMVar engineMVar $ runDirective d

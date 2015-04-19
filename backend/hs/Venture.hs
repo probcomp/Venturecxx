@@ -21,6 +21,11 @@ import qualified Subproblem
 import SP
 import qualified Inference as I (resimulation_mh, Selector, Assessable(..))
 
+data Directive num = Assume String (T.Exp num)
+                   | Observe (T.Exp num) (T.Value num)
+                   | Predict (T.Exp num)
+  deriving Show
+
 data Model m num =
     Model { _env :: Env
            , _trace :: (Trace m num)
