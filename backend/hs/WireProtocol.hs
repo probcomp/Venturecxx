@@ -2,6 +2,7 @@
 
 module WireProtocol where
 
+import           Control.Monad.Trans.Either   -- from the 'either' package
 import           Data.Functor.Compose
 import qualified Data.ByteString.Lazy         as B
 import qualified Data.Map                     as M
@@ -81,18 +82,11 @@ application :: (Fractional num) => ((Command num) -> IO (Either String B.ByteStr
 application act req k = do
   logRequest req
   if (requestMethod req == "OPTIONS") then
-      send $ allow_response
-  else do
-      strings <- off_the_wire req
-      case strings of
-        Left err -> send $ error_response err
-        Right (method, args) ->
-            case parse method args of
-              Left err -> send $ error_response err
-              Right d -> do body <- act d
-                            case body of
-                              Left err -> send $ error_response err
-                              Right win -> send $ success_response win
+      send allow_response
+  else eitherT (send . error_response) (send . success_response) (do
+      (method, args) <- EitherT $ off_the_wire req
+      d <- hoistEither $ parse method args
+      EitherT $ act d)
   where
     success_response body = LBSResponse HTTP.status200 headers body
     headers = [("Content-Type", "application/json")] ++ boilerplate_headers
