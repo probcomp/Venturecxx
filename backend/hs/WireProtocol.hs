@@ -59,6 +59,8 @@ decode_body str = Aeson.eitherDecode str
 -- So far, expect the method and arguments to lead to a directive
 parse :: (Fractional num) => String -> [String] -> Either String (Command num)
 parse "assume" [var, expr] = Right $ Directive $ V.Assume var $ Compose $ G.parse expr
+-- Ignore labels for now; the demo supplies them but may not need to read
+parse "assume" [var, expr, label] = Right $ Directive $ V.Assume var $ Compose $ G.parse expr
 parse "assume" args = Left $ "Incorrect number of arguments to assume " ++ show args
 parse "list_directives" _ = Right ListDirectives
 parse "stop_continuous_inference" _ = Right StopCI
