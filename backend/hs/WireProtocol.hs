@@ -15,6 +15,8 @@ import qualified Data.Aeson                   as Aeson
 import qualified Venture                      as V
 import qualified VentureGrammar               as G
 
+---- Public interface
+
 data Command num = Directive (V.Directive num)
                  | ListDirectives
   deriving Show
@@ -23,6 +25,8 @@ run :: (Command Double -> IO B.ByteString) -> IO ()
 run act = do
   putStrLn "Venture listening on 3000"
   Warp.run 3000 (application act)
+
+---- Parsing
 
 -- The Venture wire protocol is to request a url whose path is the
 -- method name and put in the body a list of strings to use for
@@ -54,6 +58,8 @@ parse "assume" args = Left $ "Incorrect number of arguments to assume " ++ show 
 parse "list_directives" _ = Right ListDirectives
 parse m _ = Left $ "Unknown directive " ++ m
 
+---- Response helpers
+
 -- This is meant to be interpreted by the client as a VentureException
 -- containing the error message.  The parallel code is
 -- python/lib/server/utils.py RestServer
@@ -67,6 +73,8 @@ allow_response = LBSResponse HTTP.status200 header "" where
     header = [ ("Content-Type", "text/plain")
              , ("Allow", "HEAD, GET, POST, OPTIONS")
              ] ++ boilerplate_headers
+
+---- Main action
 
 application :: ((Command Double) -> IO B.ByteString) -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
 application act req k = do
