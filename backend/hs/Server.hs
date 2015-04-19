@@ -35,7 +35,7 @@ off_the_wire :: Request -> IO (Either String (String, [String]))
 off_the_wire r = do
   let method = parse_method r
   body <- lazyRequestBody r
-  case Aeson.eitherDecode body of
+  case decode_body body of
     Left err -> return $ Left err
     Right args -> case method of
                     Nothing -> return $ Left $ "Cannot parse method from path " ++ (show $ pathInfo r)
@@ -45,6 +45,11 @@ parse_method :: Request -> Maybe String
 parse_method r = parse $ pathInfo r where
   parse [method] = Just $ T.unpack method
   parse _ = Nothing
+
+-- Allow empty request body, meaning the same as no arguments
+decode_body :: Aeson.FromJSON a => B.ByteString -> Either String [a]
+decode_body "" = Right []
+decode_body str = Aeson.eitherDecode str
 
 -- This is meant to be interpreted by the client as a VentureException
 -- containing the error message.  The parallel code is
