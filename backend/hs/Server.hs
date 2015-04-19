@@ -14,6 +14,7 @@ import Data.Functor.Compose
 import qualified Data.Map as M
 import Network.Wai
 import Network.HTTP.Types (status200, status500)
+import qualified Network.HTTP.Types           as H
 import Network.Wai.Handler.Warp (run)
 import Data.Text (unpack)
 import Data.Aeson hiding (Value, Number)
@@ -48,32 +49,37 @@ parse_method r = parse $ pathInfo r where
 -- This is meant to be interpreted by the client as a VentureException
 -- containing the error message.  The parallel code is
 -- python/lib/server/utils.py RestServer
-error_response :: String -> Response
-error_response err = responseLBS status500 [("Content-Type", "text/plain")] $ encode json where
+error_response :: String -> LoggableResponse
+error_response err = LBSResponse status500 [("Content-Type", "text/plain")] $ encode json where
   json :: M.Map String String
   json = M.fromList [("exception", "fatal"), ("message", err)]
 
 application :: MVar (V.Model IO Double) -> Request -> (Response -> IO ResponseReceived) -> IO ResponseReceived
 application engineMVar req k = do
+  logRequest req
   parsed <- off_the_wire req
   case parsed of
-    Left err -> k $ error_response err
+    Left err -> send $ error_response err
     Right (method, args) -> do resp <- execute engineMVar method args
-                               k resp
+                               send resp
+  where
+    send resp = do
+      logResponse resp
+      k $ prepare resp
 
 interpret :: String -> [String] -> Either String (Directive Double)
 interpret "assume" [var, expr] = Right $ Assume var $ Compose $ G.parse expr
 interpret "assume" args = Left $ "Incorrect number of arguments to assume " ++ show args
 interpret m _ = Left $ "Unknown directive " ++ m
 
-execute :: MVar (V.Model IO Double) -> String -> [String] -> IO Response
+execute :: MVar (V.Model IO Double) -> String -> [String] -> IO LoggableResponse
 execute engineMVar method args =
   case interpret method args of
     Left err -> return $ error_response err
     Right d -> do
       putStrLn $ show d
       value <- onMVar engineMVar $ runDirective d
-      return $ responseLBS status200 [("Content-Type", "text/plain")] $ encodeMaybeValue value
+      return $ LBSResponse status200 [("Content-Type", "text/plain")] $ encodeMaybeValue value
 
 encodeMaybeValue :: Maybe (T.Value Double) -> B.ByteString
 encodeMaybeValue Nothing = "null"
@@ -103,3 +109,25 @@ main = do
   engineMVar <- newMVar V.initial :: IO (MVar (V.Model IO Double))
   putStrLn "Venture listening on 3000"
   run 3000 (application engineMVar)
+
+---- Logging
+
+logRequest :: Request -> IO ()
+logRequest req = do
+  putStrLn $ (show $ rawPathInfo req) ++ " " ++ (show $ rawQueryString req)
+  body <- lazyRequestBody req
+  putStrLn $ show body
+
+-- I couldn't figure out how to log responses generically, so
+-- intercept.
+data LoggableResponse = LBSResponse H.Status H.ResponseHeaders B.ByteString
+  -- Only one constructor because I only use LBS responses now
+
+prepare :: LoggableResponse -> Response
+prepare (LBSResponse s r b) = responseLBS s r b
+
+logResponse :: LoggableResponse -> IO ()
+logResponse (LBSResponse s r b) = do
+  putStrLn $ show $ s
+  putStrLn $ show $ r
+  B.putStrLn b
