@@ -22,6 +22,7 @@ import qualified Network.HTTP.Types           as HTTP
 import           Network.Wai.Handler.Warp     (run)
 import qualified Data.Aeson                   as Aeson
 
+import qualified Utils                        as U
 import qualified Language                     as L
 import           InferenceInterpreter         hiding (execute)
 import qualified Trace                        as T
@@ -95,7 +96,7 @@ execute engineMVar c = do
       return $ LBSResponse HTTP.status200 [("Content-Type", "text/plain")] $ encodeMaybeValue value
     ListDirectives -> do
       directives <- liftM V._directives $ takeMVar engineMVar
-      return $ LBSResponse HTTP.status200 [("Content-Type", "text/plain")] $ Aeson.encode $ undefined $ directives
+      return $ LBSResponse HTTP.status200 [("Content-Type", "text/plain")] $ Aeson.encode $ map (show . U.pp) $ directives
 
 encodeMaybeValue :: Maybe (T.Value Double) -> B.ByteString
 encodeMaybeValue Nothing = "null"
