@@ -102,10 +102,12 @@ execute engineMVar c = do
   case c of
     (Directive d) -> do
       value <- onMVar engineMVar $ runDirective d
-      return $ LBSResponse HTTP.status200 [("Content-Type", "text/plain")] $ encodeMaybeValue value
+      return $ resp $ encodeMaybeValue value
     ListDirectives -> do
       directives <- liftM V._directives $ readMVar engineMVar
-      return $ LBSResponse HTTP.status200 [("Content-Type", "text/plain")] $ Aeson.encode $ map (show . U.pp) $ directives
+      return $ resp $ Aeson.encode $ map (show . U.pp) $ directives
+    where resp body = LBSResponse HTTP.status200 headers body
+          headers = [("Content-Type", "application/json")] ++ boilerplate_headers
 
 encodeMaybeValue :: Maybe (T.Value Double) -> B.ByteString
 encodeMaybeValue Nothing = "null"
