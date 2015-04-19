@@ -3,8 +3,6 @@
 module WireProtocol where
 
 import           Data.Functor.Compose
-import           Control.Concurrent.MVar
-import           Control.Monad.State.Lazy
 import qualified Data.ByteString.Lazy         as B
 import qualified Data.Map                     as M
 import qualified Data.Text                    as T (unpack)
@@ -14,10 +12,6 @@ import qualified Network.HTTP.Types           as HTTP
 import qualified Network.Wai.Handler.Warp     as Warp (run)
 import qualified Data.Aeson                   as Aeson
 
-import qualified Utils                        as U
-import qualified Language                     as L
-import           InferenceInterpreter         hiding (execute)
-import qualified Trace                        as T
 import qualified Venture                      as V
 import qualified VentureGrammar               as G
 

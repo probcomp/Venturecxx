@@ -10,16 +10,10 @@
 -- - Overview http://www.yesodweb.com/book/web-application-interface
 -- - Network.Wai package http://hackage.haskell.org/package/wai-2.1.0.1/docs/Network-Wai.html
 
-import           Data.Functor.Compose
 import           Control.Concurrent.MVar
 import           Control.Monad.State.Lazy
 import qualified Data.ByteString.Lazy         as B
-import qualified Data.Map                     as M
-import qualified Data.Text                    as T (unpack)
 
-import           Network.Wai
-import qualified Network.HTTP.Types           as HTTP
-import           Network.Wai.Handler.Warp     (run)
 import qualified Data.Aeson                   as Aeson
 
 import qualified Utils                        as U
@@ -27,7 +21,6 @@ import qualified Language                     as L
 import           InferenceInterpreter         hiding (execute)
 import qualified Trace                        as T
 import qualified Venture                      as V
-import qualified VentureGrammar               as G
 
 import           WireProtocol                 (Command(..), run)
 
@@ -68,5 +61,5 @@ onMVar var act = do
 main :: IO ()
 main = do
   engineMVar <- newMVar V.initial :: IO (MVar (V.Model IO Double))
-  WireProtocol.run (execute engineMVar)
+  run (execute engineMVar)
 
