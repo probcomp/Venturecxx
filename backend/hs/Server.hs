@@ -21,6 +21,7 @@ import qualified Language                     as L
 import           InferenceInterpreter         hiding (execute)
 import qualified Trace                        as T
 import qualified Venture                      as V
+import qualified Inference                    as I
 
 import           WireProtocol                 (Command(..), run)
 
@@ -39,6 +40,9 @@ execute engineMVar c = do
       onMVar engineMVar (put V.initial)
       return ""
     SetMode _ -> return "" -- Only one surface syntax is supported!
+    Infer _ -> do
+      onMVar engineMVar $ V.resimulation_mh I.default_one -- Only MH supported
+      return ""
 
 encodeMaybeValue :: Maybe (T.Value Double) -> B.ByteString
 encodeMaybeValue Nothing = "null"

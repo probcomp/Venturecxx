@@ -23,6 +23,7 @@ data Command num = Directive (V.Directive num)
                  | StopCI
                  | Clear
                  | SetMode String
+                 | Infer String
   deriving Show
 
 run :: (Fractional num) => (Command num -> IO (Either String B.ByteString)) -> IO ()
@@ -67,6 +68,8 @@ parse "stop_continuous_inference" _ = Right StopCI
 parse "clear" _ = Right Clear
 parse "set_mode" [mode] = Right $ SetMode mode
 parse "set_mode" args = Left $ "Incorrect number of arguments to set_mode " ++ show args
+parse "infer" [prog] = Right $ Infer prog
+parse "infer" args = Left $ "Incorrect number of arguments to infer " ++ show args
 parse m _ = Left $ "Unknown directive " ++ m
 
 ---- Response helpers
