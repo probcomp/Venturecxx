@@ -7,8 +7,10 @@ module WireProtocol where
 import           Control.Monad.Trans.Either   -- from the 'either' package
 import           Data.Functor.Compose
 import qualified Data.ByteString.Lazy         as B
+import qualified Data.HashMap.Strict          as HashMap -- For the add_field and get_field combinators
 import qualified Data.Map                     as M
-import qualified Data.Text                    as T (pack, unpack)
+import           Data.Maybe                   (fromJust)
+import qualified Data.Text                    as T (Text, pack, unpack)
 
 import           Network.Wai
 import qualified Network.HTTP.Types           as HTTP
@@ -164,6 +166,12 @@ instance (Show num, Real num) => StackDict (L.Value proc num) where
         J.object [ ("type", J.String "boolean")
                  , ("value", J.Bool b)
                  ]
+
+add_field :: J.Value -> J.Pair -> J.Value
+add_field (J.Object m) (k, v) = J.Object $ HashMap.insert k v m
+
+get_field :: J.Value -> T.Text -> J.Value
+get_field (J.Object m) k = fromJust $ HashMap.lookup k m
 
 ---- Logging
 

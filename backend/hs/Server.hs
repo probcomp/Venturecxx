@@ -47,8 +47,8 @@ execute engineMVar c = do
 directive_report :: (Show num, Real num) => V.Model m num -> B.ByteString
 directive_report model = Aeson.encode $ map to_stack_dict $ directives where
     directives = Map.toList $ V._directives model
-    to_stack_dict (addr, directive) = as_stack_dict directive `undefined` "value" .= value
-        where value = V.lookupValue addr model
+    to_stack_dict (addr, directive) = as_stack_dict directive `W.add_field` ("value" .= value)
+        where value = W.get_field (as_stack_dict $ V.lookupValue addr model) "value"
 
 encodeMaybeValue :: Maybe (T.Value Double) -> B.ByteString
 encodeMaybeValue Nothing = "null"
