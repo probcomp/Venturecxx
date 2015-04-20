@@ -16,14 +16,13 @@ import qualified Data.ByteString.Lazy         as B
 
 import qualified Data.Aeson                   as Aeson
 
-import qualified Utils                        as U
 import qualified Language                     as L
 import           InferenceInterpreter         hiding (execute)
 import qualified Trace                        as T
 import qualified Venture                      as V
 import qualified Inference                    as I
 
-import           WireProtocol                 (Command(..), run)
+import           WireProtocol                 (Command(..), run, as_stack_dict)
 
 execute :: MVar (V.Model IO Double) -> (Command Double) -> IO B.ByteString
 execute engineMVar c = do
@@ -34,7 +33,7 @@ execute engineMVar c = do
       return $ encodeMaybeValue value
     ListDirectives -> do
       directives <- liftM V._directives $ readMVar engineMVar
-      return $ Aeson.encode $ map (show . U.pp) $ directives
+      return $ Aeson.encode $ map as_stack_dict $ directives
     StopCI -> return "" -- No continuous inference to stop yet
     Clear -> do
       onMVar engineMVar (put V.initial)
