@@ -37,16 +37,16 @@ data Model m num =
           , _trace :: (Trace m num)
           -- Hm.  Do I actually need to explicitly track this, or can
           -- it be deduced from the underlying Env and Trace?
-          , _directives :: [Directive num]
+          , _directives :: M.Map Address (Directive num)
           }
 
 makeLenses ''Model
 
 empty :: Model m num
-empty = Model Toplevel T.empty []
+empty = Model Toplevel T.empty M.empty
 
 initial :: (MonadRandom m, Show num, Real num, Floating num, Enum num) => Model m num
-initial = Model e t [] where
+initial = Model e t M.empty where
   (e, t) = runState (initializeBuiltins Toplevel) T.empty
 
 lookupValue :: Address -> Model m num -> Value num
@@ -66,7 +66,7 @@ assume var exp = do
   -- environment.
   address <- topeval exp
   env %= Frame (M.fromList [(var, address)])
-  directives %= ((Assume var exp) :)
+  directives . at address .= Just (Assume var exp)
   return address
 
 -- Evaluate the expression in the environment (building appropriate
@@ -87,12 +87,13 @@ observe exp v = do
   -- writing, Venturecxx has this limitation as well, so I will not
   -- address it here.
   trace `zoom` (constrain address v)
-  directives %= ((Observe exp v) :)
+  directives . at address .= Just (Observe exp v)
 
 predict :: (MonadRandom m, Numerical num) => Exp num -> (StateT (Model m num) m) Address
 predict exp = do
-  directives %= ((Predict exp) :)
-  topeval exp
+  address <- topeval exp
+  directives . at address .= Just (Predict exp)
+  return address
 
 sample :: (MonadRandom m, Numerical num) => Exp num -> (Model m num) -> m (Value num)
 sample exp model = evalStateT action model where

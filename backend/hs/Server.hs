@@ -13,7 +13,9 @@
 import           Control.Concurrent.MVar
 import           Control.Monad.State.Lazy
 import qualified Data.ByteString.Lazy         as B
+import qualified Data.Map                     as Map
 
+import           Data.Aeson                   ((.=))
 import qualified Data.Aeson                   as Aeson
 
 import qualified Language                     as L
@@ -23,6 +25,7 @@ import qualified Venture                      as V
 import qualified Inference                    as I
 
 import           WireProtocol                 (Command(..), run, as_stack_dict)
+import qualified WireProtocol                 as W
 
 execute :: MVar (V.Model IO Double) -> (Command Double) -> IO B.ByteString
 execute engineMVar c = do
@@ -31,9 +34,7 @@ execute engineMVar c = do
     (Directive d) -> do
       value <- onMVar engineMVar $ runDirective d
       return $ encodeMaybeValue value
-    ListDirectives -> do
-      directives <- liftM V._directives $ readMVar engineMVar
-      return $ Aeson.encode $ map as_stack_dict $ directives
+    ListDirectives -> liftM directive_report $ readMVar engineMVar
     StopCI -> return "" -- No continuous inference to stop yet
     Clear -> do
       onMVar engineMVar (put V.initial)
@@ -42,6 +43,12 @@ execute engineMVar c = do
     Infer _ -> do
       onMVar engineMVar $ V.resimulation_mh I.default_one -- Only MH supported
       return ""
+
+directive_report :: (Show num, Real num) => V.Model m num -> B.ByteString
+directive_report model = Aeson.encode $ map to_stack_dict $ directives where
+    directives = Map.toList $ V._directives model
+    to_stack_dict (addr, directive) = as_stack_dict directive `undefined` "value" .= value
+        where value = V.lookupValue addr model
 
 encodeMaybeValue :: Maybe (T.Value Double) -> B.ByteString
 encodeMaybeValue Nothing = "null"
