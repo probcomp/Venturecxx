@@ -15,15 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import warnings
 from nose import SkipTest
-from nose.tools import assert_almost_equal, eq_
+from nose.tools import assert_almost_equal
 import numpy as np
 from scipy import stats
 
-from venture.test.config import get_ripl, on_inf_prim, broken_in
+from venture.test.config import get_ripl, on_inf_prim
 from venture.lite.psp import LikelihoodFreePSP
-from venture.lite import value as v
+from venture.lite import types as t
 from venture.lite.builtin import typed_nr
 
 @on_inf_prim("none")
@@ -64,13 +63,13 @@ def setup_likelihood_free():
         def simulate(self, args):
             x = args.operandValues[0]
             return x + stats.distributions.norm.rvs()
-    tester1 = typed_nr(TestPSP1(), [v.NumberType()], v.NumberType())
+    tester1 = typed_nr(TestPSP1(), [t.NumberType()], t.NumberType())
 
     class TestPSP2(LikelihoodFreePSP):
         def simulate(self, args):
             x = args.operandValues[0]
             return x + stats.distributions.bernoulli(0.5).rvs()
-    tester2 = typed_nr(TestPSP2(), [v.NumberType()], v.NumberType())
+    tester2 = typed_nr(TestPSP2(), [t.NumberType()], t.NumberType())
     ripl = get_ripl()
     ripl.bind_foreign_sp('test1', tester1)
     ripl.bind_foreign_sp('test2', tester2)

@@ -20,6 +20,7 @@
 
 import numpy.random as npr
 from venture.lite import value as v
+from venture.lite import types as t
 from venture.lite.utils import normalizeList
 from venture.lite import env as env
 
@@ -60,7 +61,7 @@ class DefaultRandomVentureValue(object):
     if length is None:
       length = npr.randint(0, 10)
     if elt_type is None:
-      elt_type = v.NumberType() # TODO Do I want to test on a screwy class of unboxed arrays in general?
+      elt_type = t.NumberType() # TODO Do I want to test on a screwy class of unboxed arrays in general?
     return v.VentureArrayUnboxed([elt_type.asPython(elt_type.distribution(self.__class__, **kwargs).generate()) for _ in range(length)], elt_type)
   def nil(self, **_kwargs):
     return v.VentureNil()

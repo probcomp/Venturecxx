@@ -18,7 +18,7 @@
 from psp import DeterministicPSP, TypedPSP
 from request import Request,ESR
 from sp import SPType
-import value as v
+import types as t
 
 # TODO This is used very little because the stack expands if to biplex.  Flush?
 class BranchRequestPSP(DeterministicPSP):
@@ -38,4 +38,4 @@ class BranchRequestPSP(DeterministicPSP):
     return "%s evaluates either exp1 or exp2 in the current environment and returns the result.  Is itself deterministic, but the chosen expression may involve a stochastic computation." % name
 
 def branch_request_psp():
-  return TypedPSP(BranchRequestPSP(), SPType([v.BoolType(), v.ExpressionType(), v.ExpressionType()], v.RequestType("<object>")))
+  return TypedPSP(BranchRequestPSP(), SPType([t.BoolType(), t.ExpressionType(), t.ExpressionType()], t.RequestType("<object>")))
