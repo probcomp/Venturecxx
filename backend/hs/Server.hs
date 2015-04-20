@@ -10,9 +10,11 @@
 -- - Overview http://www.yesodweb.com/book/web-application-interface
 -- - Network.Wai package http://hackage.haskell.org/package/wai-2.1.0.1/docs/Network-Wai.html
 
+import           Control.Concurrent           (forkIO, yield)
 import           Control.Concurrent.MVar
 import           Control.Monad.State.Lazy
 import qualified Data.ByteString.Lazy         as B
+import           Data.List                    (isPrefixOf)
 import qualified Data.Map                     as Map
 
 import           Data.Aeson                   ((.=))
@@ -43,9 +45,16 @@ execute engineMVar c = do
     Infer prog -> interpret_inference engineMVar prog
 
 interpret_inference :: MVar (V.Model IO Double) -> String -> IO B.ByteString
-interpret_inference engineMVar _ = do
-  onMVar engineMVar $ V.resimulation_mh I.default_one -- Only MH supported
-  return ""
+interpret_inference engineMVar prog =
+    if "(loop " `isPrefixOf` prog then do
+      _ <- forkIO loop
+      return ""
+    else do
+      onMVar engineMVar $ V.resimulation_mh I.default_one -- Only MH supported
+      return ""
+    where loop = do _ <- interpret_inference engineMVar $ drop 6 prog -- TODO parse it for real
+                    yield
+                    loop
 
 directive_report :: (Show num, Real num) => V.Model m num -> B.ByteString
 directive_report model = Aeson.encode $ map to_stack_dict $ directives where
