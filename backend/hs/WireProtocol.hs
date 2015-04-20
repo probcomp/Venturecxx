@@ -113,7 +113,7 @@ application act req k = do
       EitherT $ act d)
   where
     send resp = do
-      logResponse resp
+      -- logResponse resp
       k $ prepare resp
 
 ---- Venture dict representation
