@@ -377,8 +377,8 @@ function InitializeDemo() {
     var ObservePoint = function(obs_id, x, y) {
         obs_str = 'points_' + obs_id;
 
-        ripl.predict(x, obs_str + '_x');
-        ripl.observe('(obs_fn ' + obs_id + ' ' + x + ')', y, obs_str + '_y');
+        ripl.predict(String(x), obs_str + '_x');
+        ripl.observe('(obs_fn ' + obs_id + ' ' + x + ')', String(y), obs_str + '_y');
         if (!model_variables.use_outliers) {
             ripl.predict('false', obs_str + '_outlier');
         } else {
