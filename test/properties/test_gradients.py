@@ -23,6 +23,7 @@ from venture.test.randomized import * # Importing many things, which are closely
 from venture.lite.exception import VentureBuiltinSPMethodError
 from venture.lite.mlens import real_lenses
 import venture.lite.value as vv
+import venture.lite.types as t
 from venture.lite.utils import FixedRandomness
 import venture.test.numerical as num
 
@@ -102,7 +103,7 @@ def asGradient(value):
   return value.map_real(lambda x: x)
 
 def propGradientOfSimulate(args_lists, name, sp):
-  if final_return_type(sp.venture_type().gradient_type()).__class__ == vv.ZeroType:
+  if final_return_type(sp.venture_type().gradient_type()).__class__ == t.ZeroType:
     # Do not test gradients of things that return elements of
     # 0-dimensional vector spaces
     return

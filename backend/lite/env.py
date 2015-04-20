@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from value import VentureValue, registerVentureType, standard_venture_type
+from value import VentureValue, registerVentureType
 from exception import VentureError
 
 # Environments store Python strings for the symbols, not Venture
@@ -82,5 +82,5 @@ class VentureEnvironment(VentureValue):
 
 registerVentureType(VentureEnvironment, "environment")
 # Exec is appropriate for metaprogramming
-from value import VentureType # Used by the exec pylint: disable=unused-import
+from types import VentureType, standard_venture_type # Used by the exec pylint: disable=unused-import
 exec(standard_venture_type("Environment")) # pylint: disable=exec-used

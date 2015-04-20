@@ -37,6 +37,7 @@ import scope
 import eval_sps
 import functional
 import value as v
+import types as t
 import env
 from utils import careful_exp
 from exception import VentureBuiltinSPMethodError
@@ -101,30 +102,30 @@ def deterministic_typed(f, args_types, return_type, descr=None, sim_grad=None, *
   return typed_nr(deterministic_psp(f, descr, sim_grad), args_types, return_type, **kwargs)
 
 def binaryNum(f, sim_grad=None, descr=None):
-  return deterministic_typed(f, [v.NumberType(), v.NumberType()], v.NumberType(), sim_grad=sim_grad, descr=descr)
+  return deterministic_typed(f, [t.NumberType(), t.NumberType()], t.NumberType(), sim_grad=sim_grad, descr=descr)
 
 def binaryNumS(output):
-  return typed_nr(output, [v.NumberType(), v.NumberType()], v.NumberType())
+  return typed_nr(output, [t.NumberType(), t.NumberType()], t.NumberType())
 
 def unaryNum(f, sim_grad=None, descr=None):
-  return deterministic_typed(f, [v.NumberType()], v.NumberType(), sim_grad=sim_grad, descr=descr)
+  return deterministic_typed(f, [t.NumberType()], t.NumberType(), sim_grad=sim_grad, descr=descr)
 
 def unaryNumS(f):
-  return typed_nr(f, [v.NumberType()], v.NumberType())
+  return typed_nr(f, [t.NumberType()], t.NumberType())
 
 def naryNum(f, sim_grad=None, descr=None):
-  return deterministic_typed(f, [v.NumberType()], v.NumberType(), variadic=True, sim_grad=sim_grad, descr=descr)
+  return deterministic_typed(f, [t.NumberType()], t.NumberType(), variadic=True, sim_grad=sim_grad, descr=descr)
 
 def zero_gradient(args, _direction):
   return [0 for _ in args]
 
 def binaryPred(f, descr=None):
-  return deterministic_typed(f, [v.AnyType(), v.AnyType()], v.BoolType(), sim_grad=zero_gradient, descr=descr)
+  return deterministic_typed(f, [t.AnyType(), t.AnyType()], t.BoolType(), sim_grad=zero_gradient, descr=descr)
 
-def type_test(t):
-  return deterministic_typed(lambda thing: thing in t, [v.AnyType()], v.BoolType(),
+def type_test(tp):
+  return deterministic_typed(lambda thing: thing in tp, [t.AnyType()], t.BoolType(),
                              sim_grad = zero_gradient,
-                             descr="%s returns true iff its argument is a " + t.name())
+                             descr="%s returns true iff its argument is a " + tp.name())
 
 def grad_times(args, direction):
   assert len(args) == 2, "Gradient only available for binary multiply"
@@ -206,16 +207,16 @@ builtInSPsList = [
                                  descr="lte returns true if its first argument compares less than or equal to its second") ],
            [ "floor", unaryNum(math.floor, sim_grad=zero_gradient, descr="floor returns the largest integer less than or equal to its argument (as a VentureNumber)") ],
            # Only makes sense with VentureAtom/VentureNumber distinction
-           [ "real",  deterministic_typed(lambda x:x, [v.AtomType()], v.NumberType(),
+           [ "real",  deterministic_typed(lambda x:x, [t.AtomType()], t.NumberType(),
                                           descr="real returns the identity of its argument atom as a number") ],
-           [ "atom_eq", deterministic_typed(lambda x,y: x == y, [v.AtomType(), v.AtomType()], v.BoolType(),
+           [ "atom_eq", deterministic_typed(lambda x,y: x == y, [t.AtomType(), t.AtomType()], t.BoolType(),
                                             descr="atom_eq tests its two arguments, which must be atoms, for equality") ],
            # If you are wondering about the type signature, this
            # function bootstraps the implicit coersion from numbers to
            # probabilities into an explicit one.  That means that the
            # valid arguments to it are exactly the ones that happen to
            # fall into the range of probabilities.
-           [ "probability",  deterministic_typed(lambda x:x, [v.ProbabilityType()], v.ProbabilityType(),
+           [ "probability",  deterministic_typed(lambda x:x, [t.ProbabilityType()], t.ProbabilityType(),
                                                  descr="probability converts its argument to a probability (in direct space)") ],
 
            [ "sin", unaryNum(math.sin, sim_grad=grad_sin, descr="Returns the sin of its argument") ],
@@ -231,154 +232,154 @@ builtInSPsList = [
                                 sim_grad=grad_atan2,
                                 descr="atan2(y,x) returns the angle from the positive x axis to the point x,y.  The order of arguments is conventional.") ],
 
-           [ "not", deterministic_typed(lambda x: not x, [v.BoolType()], v.BoolType(),
+           [ "not", deterministic_typed(lambda x: not x, [t.BoolType()], t.BoolType(),
                                         descr="not returns the logical negation of its argument") ],
 
-           [ "is_number", type_test(v.NumberType()) ],
-           [ "is_integer", type_test(v.IntegerType()) ],
-           [ "is_probability", type_test(v.ProbabilityType()) ],
-           [ "is_atom", type_test(v.AtomType()) ],
-           [ "is_boolean", type_test(v.BoolType()) ],
-           [ "is_symbol", type_test(v.SymbolType()) ],
-           [ "is_procedure", type_test(SPType([v.AnyType()], v.AnyType(), variadic=True)) ],
+           [ "is_number", type_test(t.NumberType()) ],
+           [ "is_integer", type_test(t.IntegerType()) ],
+           [ "is_probability", type_test(t.ProbabilityType()) ],
+           [ "is_atom", type_test(t.AtomType()) ],
+           [ "is_boolean", type_test(t.BoolType()) ],
+           [ "is_symbol", type_test(t.SymbolType()) ],
+           [ "is_procedure", type_test(SPType([t.AnyType()], t.AnyType(), variadic=True)) ],
 
-           [ "list", deterministic_typed(lambda *args: args, [v.AnyType()], v.ListType(), variadic=True,
+           [ "list", deterministic_typed(lambda *args: args, [t.AnyType()], t.ListType(), variadic=True,
                                          sim_grad=grad_list,
                                          descr="list returns the list of its arguments") ],
-           [ "pair", deterministic_typed(lambda a,d: (a,d), [v.AnyType(), v.AnyType()], v.PairType(),
+           [ "pair", deterministic_typed(lambda a,d: (a,d), [t.AnyType(), t.AnyType()], t.PairType(),
                                          descr="pair returns the pair whose first component is the first argument and whose second component is the second argument") ],
-           [ "is_pair", type_test(v.PairType()) ],
-           [ "first", deterministic_typed(lambda p: p[0], [v.PairType()], v.AnyType(),
+           [ "is_pair", type_test(t.PairType()) ],
+           [ "first", deterministic_typed(lambda p: p[0], [t.PairType()], t.AnyType(),
                                           sim_grad=lambda args, direction: [v.VenturePair((direction, 0))],
                                           descr="first returns the first component of its argument pair") ],
-           [ "rest", deterministic_typed(lambda p: p[1], [v.PairType()], v.AnyType(),
+           [ "rest", deterministic_typed(lambda p: p[1], [t.PairType()], t.AnyType(),
                                          sim_grad=lambda args, direction: [v.VenturePair((0, direction))],
                                          descr="rest returns the second component of its argument pair") ],
-           [ "second", deterministic_typed(lambda p: p[1][0], [v.PairType(second_type=v.PairType())], v.AnyType(),
+           [ "second", deterministic_typed(lambda p: p[1][0], [t.PairType(second_type=t.PairType())], t.AnyType(),
                                            sim_grad=lambda args, direction: [v.VenturePair((0, v.VenturePair((direction, 0))))],
                                            descr="second returns the first component of the second component of its argument") ],
-           [ "to_list", deterministic_typed(lambda seq: seq.asPythonList(), [v.HomogeneousSequenceType(v.AnyType())], v.HomogeneousListType(v.AnyType()),
+           [ "to_list", deterministic_typed(lambda seq: seq.asPythonList(), [t.HomogeneousSequenceType(t.AnyType())], t.HomogeneousListType(t.AnyType()),
                                             descr="to_list converts its argument sequence to a list") ],
 
 
-           [ "array", deterministic_typed(lambda *args: np.array(args), [v.AnyType()], v.ArrayType(), variadic=True,
+           [ "array", deterministic_typed(lambda *args: np.array(args), [t.AnyType()], t.ArrayType(), variadic=True,
                                           sim_grad=lambda args, direction: direction.getArray(),
                                           descr="array returns an array initialized with its arguments") ],
 
-           [ "vector", deterministic_typed(lambda *args: np.array(args), [v.NumberType()], v.ArrayUnboxedType(v.NumberType()), variadic=True,
+           [ "vector", deterministic_typed(lambda *args: np.array(args), [t.NumberType()], t.ArrayUnboxedType(t.NumberType()), variadic=True,
                                           sim_grad=lambda args, direction: direction.getArray(),
                                           descr="vector returns an unboxed numeric array initialized with its arguments") ],
 
-           [ "is_array", type_test(v.ArrayType()) ],
-           [ "is_vector", type_test(v.ArrayUnboxedType(v.NumberType())) ],
+           [ "is_array", type_test(t.ArrayType()) ],
+           [ "is_vector", type_test(t.ArrayUnboxedType(t.NumberType())) ],
 
-           [ "to_array", deterministic_typed(lambda seq: seq.getArray(), [v.HomogeneousSequenceType(v.AnyType())], v.HomogeneousArrayType(v.AnyType()),
+           [ "to_array", deterministic_typed(lambda seq: seq.getArray(), [t.HomogeneousSequenceType(t.AnyType())], t.HomogeneousArrayType(t.AnyType()),
                                              descr="to_array converts its argument sequence to an array") ],
-           [ "to_vector", deterministic_typed(lambda seq: np.array(seq.getArray(v.NumberType())), [v.HomogeneousSequenceType(v.NumberType())], v.ArrayUnboxedType(v.NumberType()),
+           [ "to_vector", deterministic_typed(lambda seq: np.array(seq.getArray(t.NumberType())), [t.HomogeneousSequenceType(t.NumberType())], t.ArrayUnboxedType(t.NumberType()),
                                              descr="to_vector converts its argument sequence to a vector") ],
 
            [ "dict", deterministic_typed(lambda keys, vals: dict(zip(keys, vals)),
-                                         [v.HomogeneousListType(v.AnyType("k")), v.HomogeneousListType(v.AnyType("v"))],
-                                         v.HomogeneousDictType(v.AnyType("k"), v.AnyType("v")),
+                                         [t.HomogeneousListType(t.AnyType("k")), t.HomogeneousListType(t.AnyType("v"))],
+                                         t.HomogeneousDictType(t.AnyType("k"), t.AnyType("v")),
                                          descr="dict returns the dictionary mapping the given keys to their respective given values.  It is an error if the given lists are not the same length.") ],
-           [ "is_dict", type_test(v.DictType()) ],
+           [ "is_dict", type_test(t.DictType()) ],
            [ "matrix", deterministic_typed(np.array,
-                                           [v.HomogeneousListType(v.HomogeneousListType(v.NumberType()))],
-                                           v.MatrixType(),
+                                           [t.HomogeneousListType(t.HomogeneousListType(t.NumberType()))],
+                                           t.MatrixType(),
                                            descr="matrix returns a matrix formed from the given list of rows.  It is an error if the given list is not rectangular.") ],
-           [ "is_matrix", type_test(v.MatrixType()) ],
-           [ "simplex", deterministic_typed(lambda *nums: np.array(nums), [v.ProbabilityType()], v.SimplexType(), variadic=True,
+           [ "is_matrix", type_test(t.MatrixType()) ],
+           [ "simplex", deterministic_typed(lambda *nums: np.array(nums), [t.ProbabilityType()], t.SimplexType(), variadic=True,
                                             descr="simplex returns the simplex point given by its argument coordinates.") ],
-           [ "is_simplex", type_test(v.SimplexType()) ],
+           [ "is_simplex", type_test(t.SimplexType()) ],
 
            [ "lookup", deterministic_typed(lambda xs, x: xs.lookup(x),
-                                           [v.HomogeneousMappingType(v.AnyType("k"), v.AnyType("v")), v.AnyType("k")],
-                                           v.AnyType("v"),
+                                           [t.HomogeneousMappingType(t.AnyType("k"), t.AnyType("v")), t.AnyType("k")],
+                                           t.AnyType("v"),
                                            sim_grad=lambda args, direction: [args[0].lookup_grad(args[1], direction), 0],
                                            descr="lookup looks the given key up in the given mapping and returns the result.  It is an error if the key is not in the mapping.  Lists and arrays are viewed as mappings from indices to the corresponding elements.  Environments are viewed as mappings from symbols to their values.") ],
            [ "contains", deterministic_typed(lambda xs, x: xs.contains(x),
-                                             [v.HomogeneousMappingType(v.AnyType("k"), v.AnyType("v")), v.AnyType("k")],
-                                             v.BoolType(),
+                                             [t.HomogeneousMappingType(t.AnyType("k"), t.AnyType("v")), t.AnyType("k")],
+                                             t.BoolType(),
                                              descr="contains reports whether the given key appears in the given mapping or not.") ],
            [ "size", deterministic_typed(lambda xs: xs.size(),
-                                         [v.HomogeneousMappingType(v.AnyType("k"), v.AnyType("v"))],
-                                         v.NumberType(),
+                                         [t.HomogeneousMappingType(t.AnyType("k"), t.AnyType("v"))],
+                                         t.NumberType(),
                                          descr="size returns the number of elements in the given collection (lists and arrays work too)") ],
 
            [ "arange", deterministic_typed(np.arange,
-                                           [v.IntegerType(), v.IntegerType()],
-                                           v.ArrayUnboxedType(v.IntegerType()),
+                                           [t.IntegerType(), t.IntegerType()],
+                                           t.ArrayUnboxedType(t.IntegerType()),
                                            min_req_args=1,
                                            descr="(%s [start] stop) returns an array of n consecutive integers from start (inclusive) up to stop (exclusive).")],
 
            [ "repeat", deterministic_typed(np.repeat,
-                                           [v.NumberType(), v.IntegerType()],
-                                           v.ArrayUnboxedType(v.NumberType()),
+                                           [t.NumberType(), t.IntegerType()],
+                                           t.ArrayUnboxedType(t.NumberType()),
                                            descr="(%s x n) returns an array with the number x repeated n times")],
 
            [ "linspace", deterministic_typed(np.linspace,
-                                             [v.NumberType(), v.NumberType(), v.CountType()],
-                                             v.ArrayUnboxedType(v.NumberType()),
+                                             [t.NumberType(), t.NumberType(), t.CountType()],
+                                             t.ArrayUnboxedType(t.NumberType()),
                                              descr="(%s start stop n) returns an array of n evenly spaced numbers over the interval [start, stop].") ],
 
            [ "id_matrix", deterministic_typed(np.identity,
-                                              [v.CountType()],
-                                              v.MatrixType(),
+                                              [t.CountType()],
+                                              t.MatrixType(),
                                               descr="(%s n) returns an identity matrix of dimension n.") ],
 
            [ "diag_matrix", deterministic_typed(np.diag,
-                                                [v.ArrayUnboxedType(v.NumberType())],
-                                                v.MatrixType(),
+                                                [t.ArrayUnboxedType(t.NumberType())],
+                                                t.MatrixType(),
                                                 descr="(%s v) returns a diagonal array whose diagonal is v.") ],
 
            [ "ravel", deterministic_typed(np.ravel,
-                                          [v.MatrixType()],
-                                          v.ArrayUnboxedType(v.NumberType()),
+                                          [t.MatrixType()],
+                                          t.ArrayUnboxedType(t.NumberType()),
                                           descr="(%s m) returns a 1-D array containing the elements of the matrix m.") ],
 
            [ "vector_dot", deterministic_typed(vector_dot,
-                                               [v.ArrayUnboxedType(v.NumberType()), v.ArrayUnboxedType(v.NumberType())],
-                                               v.NumberType(),
+                                               [t.ArrayUnboxedType(t.NumberType()), t.ArrayUnboxedType(t.NumberType())],
+                                               t.NumberType(),
                                                sim_grad=grad_vector_dot,
                                                descr="(%s x y) returns the dot product of vectors x and y.") ],
 
            [ "matrix_mul", deterministic_typed(np.dot,
-                                               [v.MatrixType(), v.MatrixType()],
-                                               v.MatrixType(),
+                                               [t.MatrixType(), t.MatrixType()],
+                                               t.MatrixType(),
                                                descr="(%s x y) returns the product of matrices x and y.") ],
 
            [ "print", deterministic_typed(print_,
-                                           [v.AnyType("k"), v.SymbolType()],
-                                           v.AnyType("k"),
+                                           [t.AnyType("k"), t.SymbolType()],
+                                           t.AnyType("k"),
                                            descr = "Print the value of the result of any other SP, labeled by a Symbol.") ],
 
            [ "apply", esr_output(TypedPSP(functional.ApplyRequestPSP(),
-                                          SPType([SPType([v.AnyType("a")], v.AnyType("b"), variadic=True),
-                                                  v.HomogeneousArrayType(v.AnyType("a"))],
-                                                 v.RequestType("b")))) ],
+                                          SPType([SPType([t.AnyType("a")], t.AnyType("b"), variadic=True),
+                                                  t.HomogeneousArrayType(t.AnyType("a"))],
+                                                 t.RequestType("b")))) ],
 
            [ "mapv", SP(TypedPSP(functional.ArrayMapRequestPSP(),
-                                 SPType([SPType([v.AnyType("a")], v.AnyType("b")),
-                                         v.HomogeneousArrayType(v.AnyType("a"))],
-                                        v.RequestType("<array b>"))),
+                                 SPType([SPType([t.AnyType("a")], t.AnyType("b")),
+                                         t.HomogeneousArrayType(t.AnyType("a"))],
+                                        t.RequestType("<array b>"))),
                         functional.ESRArrayOutputPSP()) ],
 
            [ "imapv", SP(TypedPSP(functional.IndexedArrayMapRequestPSP(),
-                                  SPType([SPType([v.AnyType("index"), v.AnyType("a")], v.AnyType("b")),
-                                          v.HomogeneousArrayType(v.AnyType("a"))],
-                                         v.RequestType("<array b>"))),
+                                  SPType([SPType([t.AnyType("index"), t.AnyType("a")], t.AnyType("b")),
+                                          t.HomogeneousArrayType(t.AnyType("a"))],
+                                         t.RequestType("<array b>"))),
                          functional.ESRArrayOutputPSP()) ],
 
-           [ "zip", deterministic_typed(lambda *args: zip(*args), [v.ListType()], v.HomogeneousListType(v.ListType()), variadic=True,
-                                         descr="zip returns a list of lists, where the i-th nested list contains the i-th element from each of the input arguments") ],
+           [ "zip", deterministic_typed(zip, [t.ListType()], t.HomogeneousListType(t.ListType()), variadic=True,
+                                        descr="zip returns a list of lists, where the i-th nested list contains the i-th element from each of the input arguments") ],
 
            [ "branch", esr_output(conditionals.branch_request_psp()) ],
-           [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [v.BoolType(), v.AnyType(), v.AnyType()], v.AnyType(),
+           [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [t.BoolType(), t.AnyType(), t.AnyType()], t.AnyType(),
                                            sim_grad=lambda args, direc: [0, direc, 0] if args[0] else [0, 0, direc],
                                            descr="biplex returns either its second or third argument.")],
            [ "make_csp", typed_nr(csp.MakeCSPOutputPSP(),
-                                  [v.HomogeneousArrayType(v.SymbolType()), v.ExpressionType()],
-                                  v.AnyType("a compound SP")) ],
+                                  [t.HomogeneousArrayType(t.SymbolType()), t.ExpressionType()],
+                                  t.AnyType("a compound SP")) ],
 
            [ "get_current_environment", typed_func(lambda args: args.env, [], env.EnvironmentType(),
                                                    descr="get_current_environment returns the lexical environment of its invocation site") ],
@@ -386,69 +387,69 @@ builtInSPsList = [
                                                  descr="get_empty_environment returns the empty environment") ],
            [ "is_environment", type_test(env.EnvironmentType()) ],
            [ "extend_environment", typed_nr(eval_sps.ExtendEnvOutputPSP(),
-                                            [env.EnvironmentType(), v.SymbolType(), v.AnyType()],
+                                            [env.EnvironmentType(), t.SymbolType(), t.AnyType()],
                                             env.EnvironmentType()) ],
            [ "eval",esr_output(TypedPSP(eval_sps.EvalRequestPSP(),
-                                        SPType([v.ExpressionType(), env.EnvironmentType()],
-                                               v.RequestType("<object>")))) ],
+                                        SPType([t.ExpressionType(), env.EnvironmentType()],
+                                               t.RequestType("<object>")))) ],
 
            [ "mem",typed_nr(msp.MakeMSPOutputPSP(),
-                            [SPType([v.AnyType("a")], v.AnyType("b"), variadic=True)],
-                            SPType([v.AnyType("a")], v.AnyType("b"), variadic=True)) ],
+                            [SPType([t.AnyType("a")], t.AnyType("b"), variadic=True)],
+                            SPType([t.AnyType("a")], t.AnyType("b"), variadic=True)) ],
 
            [ "tag", typed_nr(scope.TagOutputPSP(),
                              # These are type-restricted in Venture, but the actual PSP doesn't care.
-                             [v.AnyType("<scope>"), v.AnyType("<block>"), v.AnyType()],
-                             v.AnyType()) ],
+                             [t.AnyType("<scope>"), t.AnyType("<block>"), t.AnyType()],
+                             t.AnyType()) ],
 
            [ "tag_exclude", typed_nr(scope.TagExcludeOutputPSP(),
                                      # These are type-restricted in Venture, but the actual PSP doesn't care.
-                                     [v.AnyType("<scope>"), v.AnyType()],
-                                     v.AnyType()) ],
+                                     [t.AnyType("<scope>"), t.AnyType()],
+                                     t.AnyType()) ],
 
-           [ "binomial", typed_nr(discrete.BinomialOutputPSP(), [v.CountType(), v.ProbabilityType()], v.CountType()) ],
-           [ "flip", typed_nr(discrete.BernoulliOutputPSP(), [v.ProbabilityType()], v.BoolType(), min_req_args=0) ],
-           [ "bernoulli", typed_nr(discrete.BernoulliOutputPSP(), [v.ProbabilityType()], v.IntegerType(), min_req_args=0) ],
-           [ "log_flip", typed_nr(discrete.LogBernoulliOutputPSP(), [v.NumberType()], v.BoolType()) ],
-           [ "log_bernoulli", typed_nr(discrete.LogBernoulliOutputPSP(), [v.NumberType()], v.BoolType()) ],
-           [ "categorical", typed_nr(discrete.CategoricalOutputPSP(), [v.SimplexType(), v.ArrayType()], v.AnyType(), min_req_args=1) ],
-           [ "uniform_discrete", typed_nr(discrete.UniformDiscreteOutputPSP(), [v.IntegerType(), v.IntegerType()], v.IntegerType()) ],
-           [ "poisson", typed_nr(discrete.PoissonOutputPSP(), [v.PositiveType()], v.CountType()) ],
-           [ "normal", typed_nr(continuous.NormalOutputPSP(), [v.NumberType(), v.NumberType()], v.NumberType()) ], # TODO Sigma is really non-zero, but negative is OK by scaling
-           [ "vonmises", typed_nr(continuous.VonMisesOutputPSP(), [v.NumberType(), v.PositiveType()], v.NumberType()) ],
-           [ "uniform_continuous",typed_nr(continuous.UniformOutputPSP(), [v.NumberType(), v.NumberType()], v.NumberType()) ],
-           [ "beta", typed_nr(continuous.BetaOutputPSP(), [v.PositiveType(), v.PositiveType()], v.ProbabilityType()) ],
-           [ "expon", typed_nr(continuous.ExponOutputPSP(), [v.PositiveType()], v.PositiveType()) ],
-           [ "gamma", typed_nr(continuous.GammaOutputPSP(), [v.PositiveType(), v.PositiveType()], v.PositiveType()) ],
-           [ "student_t", typed_nr(continuous.StudentTOutputPSP(), [v.PositiveType(), v.NumberType(), v.NumberType()], v.NumberType(), min_req_args=1 ) ],
-           [ "inv_gamma", typed_nr(continuous.InvGammaOutputPSP(), [v.PositiveType(), v.PositiveType()], v.PositiveType()) ],
-           [ "laplace", typed_nr(continuous.LaplaceOutputPSP(), [v.NumberType(), v.PositiveType()], v.NumberType()) ],
+           [ "binomial", typed_nr(discrete.BinomialOutputPSP(), [t.CountType(), t.ProbabilityType()], t.CountType()) ],
+           [ "flip", typed_nr(discrete.BernoulliOutputPSP(), [t.ProbabilityType()], t.BoolType(), min_req_args=0) ],
+           [ "bernoulli", typed_nr(discrete.BernoulliOutputPSP(), [t.ProbabilityType()], t.IntegerType(), min_req_args=0) ],
+           [ "log_flip", typed_nr(discrete.LogBernoulliOutputPSP(), [t.NumberType()], t.BoolType()) ],
+           [ "log_bernoulli", typed_nr(discrete.LogBernoulliOutputPSP(), [t.NumberType()], t.BoolType()) ],
+           [ "categorical", typed_nr(discrete.CategoricalOutputPSP(), [t.SimplexType(), t.ArrayType()], t.AnyType(), min_req_args=1) ],
+           [ "uniform_discrete", typed_nr(discrete.UniformDiscreteOutputPSP(), [t.IntegerType(), t.IntegerType()], t.IntegerType()) ],
+           [ "poisson", typed_nr(discrete.PoissonOutputPSP(), [t.PositiveType()], t.CountType()) ],
+           [ "normal", typed_nr(continuous.NormalOutputPSP(), [t.NumberType(), t.NumberType()], t.NumberType()) ], # TODO Sigma is really non-zero, but negative is OK by scaling
+           [ "vonmises", typed_nr(continuous.VonMisesOutputPSP(), [t.NumberType(), t.PositiveType()], t.NumberType()) ],
+           [ "uniform_continuous",typed_nr(continuous.UniformOutputPSP(), [t.NumberType(), t.NumberType()], t.NumberType()) ],
+           [ "beta", typed_nr(continuous.BetaOutputPSP(), [t.PositiveType(), t.PositiveType()], t.ProbabilityType()) ],
+           [ "expon", typed_nr(continuous.ExponOutputPSP(), [t.PositiveType()], t.PositiveType()) ],
+           [ "gamma", typed_nr(continuous.GammaOutputPSP(), [t.PositiveType(), t.PositiveType()], t.PositiveType()) ],
+           [ "student_t", typed_nr(continuous.StudentTOutputPSP(), [t.PositiveType(), t.NumberType(), t.NumberType()], t.NumberType(), min_req_args=1 ) ],
+           [ "inv_gamma", typed_nr(continuous.InvGammaOutputPSP(), [t.PositiveType(), t.PositiveType()], t.PositiveType()) ],
+           [ "laplace", typed_nr(continuous.LaplaceOutputPSP(), [t.NumberType(), t.PositiveType()], t.NumberType()) ],
 
-           [ "multivariate_normal", typed_nr(continuous.MVNormalOutputPSP(), [v.HomogeneousArrayType(v.NumberType()), v.SymmetricMatrixType()], v.HomogeneousArrayType(v.NumberType())) ],
-           [ "inv_wishart", typed_nr(continuous.InverseWishartPSP(), [v.SymmetricMatrixType(), v.PositiveType()], v.SymmetricMatrixType())],
-           [ "wishart", typed_nr(continuous.WishartPSP(), [v.SymmetricMatrixType(), v.PositiveType()], v.SymmetricMatrixType())],
+           [ "multivariate_normal", typed_nr(continuous.MVNormalOutputPSP(), [t.HomogeneousArrayType(t.NumberType()), t.SymmetricMatrixType()], t.HomogeneousArrayType(t.NumberType())) ],
+           [ "inv_wishart", typed_nr(continuous.InverseWishartPSP(), [t.SymmetricMatrixType(), t.PositiveType()], t.SymmetricMatrixType())],
+           [ "wishart", typed_nr(continuous.WishartPSP(), [t.SymmetricMatrixType(), t.PositiveType()], t.SymmetricMatrixType())],
 
-           [ "make_beta_bernoulli",typed_nr(discrete.MakerCBetaBernoulliOutputPSP(), [v.PositiveType(), v.PositiveType()], SPType([], v.BoolType())) ],
-           [ "make_uc_beta_bernoulli",typed_nr(discrete.MakerUBetaBernoulliOutputPSP(), [v.PositiveType(), v.PositiveType()], SPType([], v.BoolType())) ],
+           [ "make_beta_bernoulli",typed_nr(discrete.MakerCBetaBernoulliOutputPSP(), [t.PositiveType(), t.PositiveType()], SPType([], t.BoolType())) ],
+           [ "make_uc_beta_bernoulli",typed_nr(discrete.MakerUBetaBernoulliOutputPSP(), [t.PositiveType(), t.PositiveType()], SPType([], t.BoolType())) ],
 
-           [ "dirichlet",typed_nr(dirichlet.DirichletOutputPSP(), [v.HomogeneousArrayType(v.PositiveType())], v.SimplexType()) ],
-           [ "symmetric_dirichlet",typed_nr(dirichlet.SymmetricDirichletOutputPSP(), [v.PositiveType(), v.CountType()], v.SimplexType()) ],
+           [ "dirichlet",typed_nr(dirichlet.DirichletOutputPSP(), [t.HomogeneousArrayType(t.PositiveType())], t.SimplexType()) ],
+           [ "symmetric_dirichlet",typed_nr(dirichlet.SymmetricDirichletOutputPSP(), [t.PositiveType(), t.CountType()], t.SimplexType()) ],
 
-           [ "make_dir_mult",typed_nr(dirichlet.MakerCDirMultOutputPSP(), [v.HomogeneousArrayType(v.PositiveType()), v.ArrayType()], SPType([], v.AnyType()), min_req_args=1) ],
-           [ "make_uc_dir_mult",typed_nr(dirichlet.MakerUDirMultOutputPSP(), [v.HomogeneousArrayType(v.PositiveType()), v.ArrayType()], SPType([], v.AnyType()), min_req_args=1) ],
+           [ "make_dir_mult",typed_nr(dirichlet.MakerCDirMultOutputPSP(), [t.HomogeneousArrayType(t.PositiveType()), t.ArrayType()], SPType([], t.AnyType()), min_req_args=1) ],
+           [ "make_uc_dir_mult",typed_nr(dirichlet.MakerUDirMultOutputPSP(), [t.HomogeneousArrayType(t.PositiveType()), t.ArrayType()], SPType([], t.AnyType()), min_req_args=1) ],
 
-           [ "make_sym_dir_mult",typed_nr(dirichlet.MakerCSymDirMultOutputPSP(), [v.PositiveType(), v.CountType(), v.ArrayType()], SPType([], v.AnyType()), min_req_args=2) ], # Saying AnyType here requires the underlying psp to emit a VentureValue.
-           [ "make_uc_sym_dir_mult",typed_nr(dirichlet.MakerUSymDirMultOutputPSP(), [v.PositiveType(), v.CountType(), v.ArrayType()], SPType([], v.AnyType()), min_req_args=2) ],
+           [ "make_sym_dir_mult",typed_nr(dirichlet.MakerCSymDirMultOutputPSP(), [t.PositiveType(), t.CountType(), t.ArrayType()], SPType([], t.AnyType()), min_req_args=2) ], # Saying AnyType here requires the underlying psp to emit a VentureValue.
+           [ "make_uc_sym_dir_mult",typed_nr(dirichlet.MakerUSymDirMultOutputPSP(), [t.PositiveType(), t.CountType(), t.ArrayType()], SPType([], t.AnyType()), min_req_args=2) ],
 
-           [ "make_crp",typed_nr(crp.MakeCRPOutputPSP(), [v.NumberType(),v.NumberType()], SPType([], v.AtomType()), min_req_args = 1) ],
+           [ "make_crp",typed_nr(crp.MakeCRPOutputPSP(), [t.NumberType(),t.NumberType()], SPType([], t.AtomType()), min_req_args = 1) ],
            [ "make_cmvn",typed_nr(cmvn.MakeCMVNOutputPSP(),
-                                  [v.HomogeneousArrayType(v.NumberType()),v.NumberType(),v.NumberType(),v.MatrixType()],
-                                  SPType([], v.HomogeneousArrayType(v.NumberType()))) ],
+                                  [t.HomogeneousArrayType(t.NumberType()),t.NumberType(),t.NumberType(),t.MatrixType()],
+                                  SPType([], t.HomogeneousArrayType(t.NumberType()))) ],
 
-           [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [v.SimplexType(), v.MatrixType(), v.MatrixType()], SPType([v.CountType()], v.AtomType())) ],
+           [ "make_lazy_hmm",typed_nr(hmm.MakeUncollapsedHMMOutputPSP(), [t.SimplexType(), t.MatrixType(), t.MatrixType()], SPType([t.CountType()], t.AtomType())) ],
            [ "make_gp", gp.makeGPSP ],
            [ "apply_function", function.applyFunctionSP],
-           [ "exactly", typed_nr(discrete.ExactlyOutputPSP(), [v.AnyType(), v.NumberType()], v.AnyType(), min_req_args=1)],
+           [ "exactly", typed_nr(discrete.ExactlyOutputPSP(), [t.AnyType(), t.NumberType()], t.AnyType(), min_req_args=1)],
 ]
 
 def builtInSPs():

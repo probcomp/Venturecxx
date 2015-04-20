@@ -24,7 +24,8 @@ from lkernel import LKernel
 from sp import SP, VentureSPRecord, SPAux, SPType
 from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from utils import simulateDirichlet, logDensityDirichlet
-from value import AnyType, VentureAtom
+from value import VentureAtom
+from types import AnyType
 from exception import VentureValueError
 from range_tree import Node, sample
 

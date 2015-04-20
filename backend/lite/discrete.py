@@ -23,7 +23,8 @@ from utils import extendedLog, simulateCategorical, logDensityCategorical
 from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, SPAux, VentureSPRecord, SPType
 from lkernel import LKernel
-from value import VentureAtom, BoolType # BoolType is metaprogrammed pylint:disable=no-name-in-module
+from value import VentureAtom
+from types import BoolType # BoolType is metaprogrammed pylint:disable=no-name-in-module
 from exception import VentureValueError
 
 class DiscretePSP(RandomPSP):

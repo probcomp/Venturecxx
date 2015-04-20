@@ -15,16 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import warnings
 from address import Address, List
 from builtin import builtInValues, builtInSPs
 from env import VentureEnvironment
-from node import Node,ConstantNode,LookupNode,RequestNode,OutputNode,Args
+from node import ConstantNode,LookupNode,RequestNode,OutputNode,Args
 import math
-from numpy import nan
 from regen import constrain, processMadeSP, evalFamily, restore
 from detach import unconstrain, unevalFamily
-from value import SPRef, ExpressionType, VentureValue, VentureSymbol, VentureNumber, VenturePair
+from value import SPRef, VentureValue, VentureSymbol, VentureNumber, VenturePair
+from types import ExpressionType
 from scaffold import Scaffold
 from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
                    EnumerativeGibbsOperator,EnumerativeMAPOperator,EnumerativeDiversify,
@@ -42,7 +41,7 @@ from regen import regenAndAttach
 from detach import detachAndExtract
 from scaffold import constructScaffold
 from lkernel import DeterministicLKernel
-from psp import ESRRefOutputPSP, TypedPSP, LikelihoodFreePSP
+from psp import ESRRefOutputPSP
 from serialize import OrderedOmegaDB
 from exception import VentureError, VentureBuiltinSPMethodError
 from venture.exception import VentureException

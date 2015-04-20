@@ -102,7 +102,7 @@ class GP(object):
   
 from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, VentureSPRecord, SPType
-import value as v
+import types as t
 
 class GPOutputPSP(RandomPSP):
   def __init__(self, mean, covariance):
@@ -138,7 +138,7 @@ class GPOutputPSP(RandomPSP):
     for x in xs:
       del samples[x]
 
-gpType = SPType([v.ArrayUnboxedType(v.NumberType())], v.ArrayUnboxedType(v.NumberType()))
+gpType = SPType([t.ArrayUnboxedType(t.NumberType())], t.ArrayUnboxedType(t.NumberType()))
 
 class GPSP(SP):
   def __init__(self, mean, covariance):
@@ -162,6 +162,6 @@ class MakeGPOutputPSP(DeterministicPSP):
   def description(self, _name=None):
     return """Constructs a Gaussian Process with the given mean and covariance functions. Wrap the gp in a mem if input points might be sampled multiple times. Global Logscore is broken with GPs, as it is with all SPs that have auxen."""
 
-makeGPType = SPType([v.AnyType("mean function"), v.AnyType("covariance function")], gpType)
+makeGPType = SPType([t.AnyType("mean function"), t.AnyType("covariance function")], gpType)
 makeGPSP = SP(NullRequestPSP(), TypedPSP(MakeGPOutputPSP(), makeGPType))
 
