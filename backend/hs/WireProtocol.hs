@@ -1,4 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module WireProtocol where
 
@@ -6,15 +8,18 @@ import           Control.Monad.Trans.Either   -- from the 'either' package
 import           Data.Functor.Compose
 import qualified Data.ByteString.Lazy         as B
 import qualified Data.Map                     as M
-import qualified Data.Text                    as T (unpack)
+import qualified Data.Text                    as T (pack, unpack)
 
 import           Network.Wai
 import qualified Network.HTTP.Types           as HTTP
 import qualified Network.Wai.Handler.Warp     as Warp (run)
 import qualified Data.Aeson                   as Aeson
+import qualified Data.Aeson.Types             as J
 
 import qualified Venture                      as V
 import qualified VentureGrammar               as G
+import qualified Trace                        as Tr -- For the stack dict class
+import qualified Language                     as L  -- For the stack dict class
 
 ---- Public interface
 
@@ -108,6 +113,57 @@ application act req k = do
     send resp = do
       logResponse resp
       k $ prepare resp
+
+---- Venture dict representation
+
+class StackDict a where
+  as_stack_dict :: a -> J.Value
+
+symbol :: String -> J.Value
+symbol str = J.object [ ("type", J.String "symbol")
+                      , ("value", J.String $ T.pack str)
+                      ]
+
+instance (Show num, Real num) => StackDict (V.Directive num) where
+    as_stack_dict (V.Assume var exp) =
+        J.object [ ("instruction", J.String "assume")
+                 , ("expression", as_stack_dict exp)
+                 , ("symbol", symbol var)
+                 ]
+    as_stack_dict (V.Observe exp val) =
+        J.object [ ("instruction", J.String "observe")
+                 , ("expression", as_stack_dict exp)
+                 , ("value", as_stack_dict val)
+                 ]
+    as_stack_dict (V.Predict exp) =
+        J.object [ ("instruction", J.String "predict")
+                 , ("expression", as_stack_dict exp)
+                 ]
+
+instance (Show num, Real num) => StackDict (Tr.Exp num) where
+    as_stack_dict (Compose (L.Datum val)) = as_stack_dict val -- TODO Quote?
+    as_stack_dict (Compose (L.Var var)) = symbol var
+    as_stack_dict (Compose (L.App op opands)) =
+        Aeson.toJSON $ map (as_stack_dict . Compose) (op:opands)
+    as_stack_dict (Compose (L.Lam formals body)) =
+        Aeson.toJSON $ ([symbol "lambda", st_formals, as_stack_dict (Compose body)])
+        where st_formals = Aeson.toJSON $ map symbol formals
+
+instance (Show num, Real num) => StackDict (L.Value proc num) where
+    as_stack_dict (L.Number n) =
+        J.object [ ("type", J.String "number")
+                 , ("value", J.Number $ realToFrac n)
+                 ]
+    as_stack_dict (L.Symbol str) = symbol str
+    as_stack_dict (L.List vals) = Aeson.toJSON $ map as_stack_dict vals
+    as_stack_dict (L.Procedure _) =
+        J.object [ ("type", J.String "sp")
+                 , ("value", J.String "unknown")
+                 ]
+    as_stack_dict (L.Boolean b) =
+        J.object [ ("type", J.String "boolean")
+                 , ("value", J.Bool b)
+                 ]
 
 ---- Logging
 
