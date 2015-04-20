@@ -40,9 +40,12 @@ execute engineMVar c = do
       onMVar engineMVar (put V.initial)
       return ""
     SetMode _ -> return "" -- Only one surface syntax is supported!
-    Infer _ -> do
-      onMVar engineMVar $ V.resimulation_mh I.default_one -- Only MH supported
-      return ""
+    Infer prog -> interpret_inference engineMVar prog
+
+interpret_inference :: MVar (V.Model IO Double) -> String -> IO B.ByteString
+interpret_inference engineMVar _ = do
+  onMVar engineMVar $ V.resimulation_mh I.default_one -- Only MH supported
+  return ""
 
 directive_report :: (Show num, Real num) => V.Model m num -> B.ByteString
 directive_report model = Aeson.encode $ map to_stack_dict $ directives where
