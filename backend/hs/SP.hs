@@ -124,6 +124,10 @@ nullary f [] [] = f
 nullary _ [] l = error $ "No requests expected " ++ (show $ length l) ++ " given."
 nullary _ l _ = error $ "No arguments expected " ++ (show $ length l) ++ " given."
 
+nary :: (a -> r) -> a -> [b] -> r
+nary f x [] = f x
+nary _ _ l = error $ "No requests expected " ++ (show $ length l) ++ " given."
+
 -- Is there a better name for these three combinators?
 typed :: (Valuable num a) => (a -> r) -> Value num -> r
 typed f = f . (fromJust "Incorrect type argument") . fromValue
@@ -144,15 +148,11 @@ typedr2 f x = toValue . f x
 typedr3 :: (ValueEncodable num r) => (a -> b -> c -> r) -> a -> b -> c -> Value num
 typedr3 f x y = toValue . f x y
 
-drop_fulfilments :: (a -> r) -> a -> [b] -> r
-drop_fulfilments f x [] = f x
-drop_fulfilments _ _ _ = error "Non-requesting SP given fulfilments"
-
-deterministic :: (forall num. [Value num] -> Value num) -> SP m
+deterministic :: (forall num. [Value num] -> [Value num] -> Value num) -> SP m
 deterministic f = no_state_sp $ NoStateSP
   { requester = nullReq
   , log_d_req = Just $ LogDReqNS $ trivial_log_d_req -- Only right for requests it actually made
-  , outputter = DeterministicO $ on_values $ drop_fulfilments f
+  , outputter = DeterministicO $ on_values f
   , log_d_out = Nothing
   }
 
@@ -355,7 +355,7 @@ initializeBuiltins env = do
                        , ("normal", no_state_sp normal)
                        , ("beta", no_state_sp beta)
                        , ("select", no_state_sp select)
-                       , ("list", deterministic List)
+                       , ("list", deterministic $ nary List)
                        , ("weighted", no_state_sp weighted)
                        , ("make-cbeta-bernoulli", make_cbeta_bernoulli)
                        , ("mem", mem)]
