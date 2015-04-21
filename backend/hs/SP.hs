@@ -148,8 +148,8 @@ drop_fulfilments :: (a -> r) -> a -> [b] -> r
 drop_fulfilments f x [] = f x
 drop_fulfilments _ _ _ = error "Non-requesting SP given fulfilments"
 
-deterministic :: (forall num. [Value num] -> Value num) -> NoStateSP m
-deterministic f = NoStateSP
+deterministic :: (forall num. [Value num] -> Value num) -> SP m
+deterministic f = no_state_sp $ NoStateSP
   { requester = nullReq
   , log_d_req = Just $ LogDReqNS $ trivial_log_d_req -- Only right for requests it actually made
   , outputter = DeterministicO $ on_values $ drop_fulfilments f
@@ -355,7 +355,7 @@ initializeBuiltins env = do
                        , ("normal", no_state_sp normal)
                        , ("beta", no_state_sp beta)
                        , ("select", no_state_sp select)
-                       , ("list", no_state_sp $ deterministic List)
+                       , ("list", deterministic List)
                        , ("weighted", no_state_sp weighted)
                        , ("make-cbeta-bernoulli", make_cbeta_bernoulli)
                        , ("mem", mem)]
