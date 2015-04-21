@@ -72,6 +72,21 @@ instance Valuable num SPAddress where
 instance Valuable num (Value num) where
     fromValue = Just
 
+class ValueEncodable num b where
+    toValue :: b -> Value num
+
+instance (Num num) => ValueEncodable num num where
+    toValue = Number
+
+instance ValueEncodable num Bool where
+    toValue = Boolean
+
+instance ValueEncodable num SPAddress where
+    toValue = Procedure
+
+instance ValueEncodable num (Value num) where
+    toValue = id
+
 newtype Address = Address Unique
     deriving (Eq, Ord, Show)
 

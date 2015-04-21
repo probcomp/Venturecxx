@@ -135,17 +135,29 @@ typed3 :: (Valuable num1 a, Valuable num2 b, Valuable num3 c) =>
           (a -> b -> c -> r) -> Value num1 -> Value num2 -> Value num3 -> r
 typed3 = typed . (typed2 .)
 
+typedr :: (ValueEncodable num r) => (a -> r) -> a -> Value num
+typedr f = toValue . f
+
+typedr2 :: (ValueEncodable num r) => (a -> b -> r) -> a -> b -> Value num
+typedr2 f x = toValue . f x
+
+typedr3 :: (ValueEncodable num r) => (a -> b -> c -> r) -> a -> b -> c -> Value num
+typedr3 f x y = toValue . f x y
+
+deterministic :: (forall num. [Value num] -> [Value num] -> Value num) -> NoStateSP m
+deterministic f = NoStateSP
+  { requester = nullReq
+  , log_d_req = Just $ LogDReqNS $ trivial_log_d_req -- Only right for requests it actually made
+  , outputter = DeterministicO $ on_values f
+  , log_d_out = Nothing
+  }
+
 execList :: [Value num] -> [b] -> Value num
 execList vs [] = List vs
 execList _ _ = error "List SP given fulfilments"
 
 list :: (Monad m) => NoStateSP m
-list = NoStateSP
-  { requester = nullReq
-  , log_d_req = Just $ LogDReqNS $ trivial_log_d_req -- Only right for requests it actually made
-  , outputter = DeterministicO $ on_values execList
-  , log_d_out = Nothing
-  }
+list = deterministic execList
 
 bernoulli_flip :: (MonadRandom m) => m (Value num)
 bernoulli_flip = liftM Boolean $ getRandomR (False,True)
