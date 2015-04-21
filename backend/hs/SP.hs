@@ -144,6 +144,10 @@ typedr2 f x = toValue . f x
 typedr3 :: (ValueEncodable num r) => (a -> b -> c -> r) -> a -> b -> c -> Value num
 typedr3 f x y = toValue . f x y
 
+drop_fulfilments :: (a -> r) -> a -> [b] -> r
+drop_fulfilments f x [] = f x
+drop_fulfilments _ _ _ = error "Non-requesting SP given fulfilments"
+
 deterministic :: (forall num. [Value num] -> [Value num] -> Value num) -> NoStateSP m
 deterministic f = NoStateSP
   { requester = nullReq
@@ -152,12 +156,8 @@ deterministic f = NoStateSP
   , log_d_out = Nothing
   }
 
-execList :: [Value num] -> [b] -> Value num
-execList vs [] = List vs
-execList _ _ = error "List SP given fulfilments"
-
 list :: (Monad m) => NoStateSP m
-list = deterministic execList
+list = deterministic (drop_fulfilments List)
 
 bernoulli_flip :: (MonadRandom m) => m (Value num)
 bernoulli_flip = liftM Boolean $ getRandomR (False,True)
