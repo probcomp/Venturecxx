@@ -169,7 +169,7 @@ data SPRequester m a
 
 data SPOutputter m a
     = Trivial
-    | DeterministicO (forall num. a -> [Node num] -> [Node num] -> Value num)
+    | DeterministicO (forall num. (Numerical num) => a -> [Node num] -> [Node num] -> Value num)
     | RandomO (forall num. (Numerical num) => a -> [Node num] -> [Node num] -> m (Value num))
     -- Are these ever random? Do they ever change the number representation of their SP?
     | SPMaker (forall num. (Numerical num) => a -> [Node num] -> [Node num] -> SP m)

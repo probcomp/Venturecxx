@@ -57,7 +57,7 @@ data SPRequesterNS m
 
 data SPOutputterNS m
     = Trivial
-    | DeterministicO (forall num. [Node num] -> [Node num] -> Value num)
+    | DeterministicO (forall num. (T.Numerical num) => [Node num] -> [Node num] -> Value num)
     | RandomO (forall num. (T.Numerical num) => [Node num] -> [Node num] -> m (Value num))
     | SPMaker (forall num. (T.Numerical num) => [Node num] -> [Node num] -> SP m) -- Are these ever random?
     | ReferringSPMaker ([Address] -> [Address] -> SP m)
@@ -148,7 +148,7 @@ typedr2 f x = toValue . f x
 typedr3 :: (ValueEncodable num r) => (a -> b -> c -> r) -> a -> b -> c -> Value num
 typedr3 f x y = toValue . f x y
 
-deterministic :: (forall num. [Value num] -> [Value num] -> Value num) -> SP m
+deterministic :: (forall num. (T.Numerical num) => [Value num] -> [Value num] -> Value num) -> SP m
 deterministic f = no_state_sp $ NoStateSP
   { requester = nullReq
   , log_d_req = Just $ LogDReqNS $ trivial_log_d_req -- Only right for requests it actually made
