@@ -74,7 +74,7 @@ assume var exp = do
 -- value (up to chasing down references until a random choice is
 -- found).  The constraining appears to consist only in removing that
 -- node from the list of random choices.
-observe :: (MonadRandom m, Numerical num) => Exp num -> Value num -> (StateT (Model m num) m) ()
+observe :: (MonadRandom m, Numerical num) => Exp num -> Value num -> (StateT (Model m num) m) Address
 observe exp v = do
   address <- topeval exp
   -- TODO What should happen if one observes a value that had
@@ -88,6 +88,7 @@ observe exp v = do
   -- address it here.
   trace `zoom` (constrain address v)
   directives . at address .= Just (Observe exp v)
+  return address
 
 predict :: (MonadRandom m, Numerical num) => Exp num -> (StateT (Model m num) m) Address
 predict exp = do
