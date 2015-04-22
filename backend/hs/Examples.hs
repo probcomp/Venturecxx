@@ -12,7 +12,6 @@ import Trace
 import Utils
 import Venture hiding (empty)
 import Inference
-import InferenceInterpreter
 
 watching_infer :: (MonadRandom m, Numerical num) =>
                   Address -> Int -> StateT (Trace m num) m [Value num]

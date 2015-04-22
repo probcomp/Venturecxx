@@ -10,8 +10,7 @@ import Test.HUnit
 
 import Language hiding (Value)
 import Examples
-import Venture (Directive(..))
-import InferenceInterpreter
+import Venture
 import Trace (Valuable, fromValue, Value, var, lam, app)
 
 import qualified Statistical as Stat

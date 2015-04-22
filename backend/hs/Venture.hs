@@ -96,6 +96,18 @@ predict exp = do
   directives . at address .= Just (Predict exp)
   return address
 
+runDirective' :: (MonadRandom m, T.Numerical num) =>
+                 Directive num -> StateT (Model m num) m T.Address
+runDirective' (Assume s e) = assume s e
+runDirective' (Observe e v) = observe e v
+runDirective' (Predict e) = predict e
+
+runDirective :: (MonadRandom m, T.Numerical num) =>
+                Directive num -> StateT (Model m num) m (T.Value num)
+runDirective d = do
+  addr <- runDirective' d
+  gets (lookupValue addr)
+
 sample :: (MonadRandom m, Numerical num) => Exp num -> (Model m num) -> m (Value num)
 sample exp model = evalStateT action model where
     action = do

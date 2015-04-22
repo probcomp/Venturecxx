@@ -23,7 +23,6 @@ import           Data.Bimap                   (Bimap)
 import qualified Data.Aeson                   as Aeson
 
 import qualified Language                     as L
-import           InferenceInterpreter         hiding (execute)
 import qualified Trace                        as T
 import qualified Venture                      as V
 import qualified Inference                    as I
@@ -38,7 +37,7 @@ execute engineMVar c = do
   putStrLn $ show c
   case c of
     (Directive d _label) -> do
-      value <- onMVar engineMVar $ _1 `zoom` runDirective d
+      value <- onMVar engineMVar $ _1 `zoom` V.runDirective d
       return $ encodeValue value
     ListDirectives -> liftM directive_report $ readMVar engineMVar
     StopCI -> return "" -- No continuous inference to stop yet
