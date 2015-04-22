@@ -206,7 +206,7 @@ function InitializeDemo() {
         ripl.set_mode("church_prime");
 
         /* Model metadata */
-        ripl.assume('demo_id', demo_id, 'demo_id');
+        ripl.assume('demo_id', String(demo_id), 'demo_id');
         ripl.assume('model_type', '(quote advanced)', 'model_type');
 
         /* Outliers */
