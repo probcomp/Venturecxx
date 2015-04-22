@@ -344,6 +344,17 @@ memoized_sp proc = T.SP
                                | otherwise = error "Memoized procedure unincorporating different requests for the same values"
     dec _ _ _ = error "Memoized procedure expects to unincorporate exactly one request"
 
+-- Question for a wizard: is there a way to actually use my stupid
+-- "typed" and "typedr" combinators for this?
+lift_numerical :: (forall num. T.Numerical num => num -> num) -> SP m
+lift_numerical f = deterministic $ unary f'
+    where f' (Number v) = Number $ f v
+          f' _ = error "Incorrect type argument"
+
+lift_numerical2 :: (forall num. T.Numerical num => num -> num -> num) -> SP m
+lift_numerical2 f = deterministic $ binary f'
+    where f' (Number v) (Number v2) = Number $ f v v2
+          f' _ _ = error "Incorrect type argument"
 
 initializeBuiltins :: (MonadState (Trace m1 num) m, MonadRandom m1,
                       Floating num, Enum num, Show num, Real num) => Env -> m Env
@@ -358,6 +369,10 @@ initializeBuiltins env = do
                        , ("list", deterministic $ nary List)
                        , ("weighted", no_state_sp weighted)
                        , ("make-cbeta-bernoulli", make_cbeta_bernoulli)
-                       , ("mem", mem)]
+                       , ("mem", mem)
+                       , ("sin", lift_numerical sin)
+                       , ("+", lift_numerical2 (+))
+                       , ("*", lift_numerical2 (*))
+                       ]
             names = map fst namedSps
             sps = map snd namedSps
