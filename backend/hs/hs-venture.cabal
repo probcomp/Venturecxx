@@ -73,7 +73,7 @@ library
   -- Base language which the package is written in.
   default-language:    Haskell2010
 
-  Ghc-options:         -Wall -fno-warn-name-shadowing
+  Ghc-options:         -Wall -fno-warn-name-shadowing -O2
   
 Test-suite tests
   Type:                exitcode-stdio-1.0
@@ -84,7 +84,7 @@ Test-suite tests
                        math-functions >=0.1, mtl, mmorph, HUnit, monad-coroutine,
                        random-fu, ks-test, ad
   default-language:    Haskell2010
-  Ghc-options:         -Wall -fno-warn-name-shadowing
+  Ghc-options:         -Wall -fno-warn-name-shadowing -O2
 
 executable venture-server
   main-is:             Server.hs
@@ -100,4 +100,14 @@ executable venture-server
                        unordered-containers,
                        bimap
   default-language:    Haskell2010
-  Ghc-options:         -Wall -fno-warn-name-shadowing
+  Ghc-options:         -Wall -fno-warn-name-shadowing -O2
+
+executable benchmark
+  main-is:             Benchmark.hs
+  build-depends:       base >=4.5, containers >=0.4,
+                       lens >=3.10, pretty >=1.1, random,
+                       MonadRandom >=0.1, transformers >=0.3,
+                       math-functions >=0.1, mtl, mmorph, HUnit, monad-coroutine
+  default-language:    Haskell2010
+  Ghc-options:         -Wall -fno-warn-name-shadowing -O2
+  ghc-prof-options:    -fprof-auto -rtsopts "-with-rtsopts=-s"
