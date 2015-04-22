@@ -27,7 +27,7 @@ import qualified Trace                        as T
 import qualified Venture                      as V
 import qualified Inference                    as I
 
-import           WireProtocol                 (Command(..), run, as_stack_dict)
+import           WireProtocol                 (Command(..), run, as_stack_dict, symbol)
 import qualified WireProtocol                 as W
 
 type Engine = ((V.Model IO Double), Bimap T.Address String)
@@ -36,9 +36,15 @@ execute :: MVar Engine  -> (Command Double) -> IO B.ByteString
 execute engineMVar c = do
   putStrLn $ show c
   case c of
-    (Directive d _label) -> do
-      value <- onMVar engineMVar $ _1 `zoom` V.runDirective d
+    (Directive d label) -> do
+      value <- onMVar engineMVar act
       return $ encodeValue value
+      where act = do
+              addr <- _1 `zoom` V.runDirective' d
+              case label of
+                Nothing -> return ()
+                (Just l) -> _2 %= Bimap.insert addr l
+              _1 `uses` (V.lookupValue addr)
     ListDirectives -> liftM directive_report $ readMVar engineMVar
     StopCI -> return "" -- No continuous inference to stop yet
     Clear -> do
@@ -60,10 +66,13 @@ interpret_inference engineMVar prog =
                     loop
 
 directive_report :: (Show num, Real num) => (V.Model m num, Bimap T.Address String) -> B.ByteString
-directive_report (model, _labels) = Aeson.encode $ map to_stack_dict $ directives where
+directive_report (model, labels) = Aeson.encode $ map to_stack_dict $ directives where
     directives = Map.toList $ V._directives model
-    to_stack_dict (addr, directive) = as_stack_dict directive `W.add_field` ("value", value)
+    to_stack_dict (addr, directive) = result
         where value = W.get_field (as_stack_dict $ V.lookupValue addr model) "value"
+              unlabeled = as_stack_dict directive `W.add_field` ("value", value)
+              result = maybe unlabeled (\l -> unlabeled `W.add_field` ("label", symbol l))
+                       $ Bimap.lookup addr labels
 
 encodeValue :: T.Value Double -> B.ByteString
 encodeValue (L.Number x) = Aeson.encode x
