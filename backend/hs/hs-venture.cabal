@@ -97,6 +97,7 @@ executable venture-server
                        aeson >=0.7, text >=0.11, array >=0.4, monad-coroutine, either,
                        -- unordered-containers because Aeson's Value
                        -- type doesn't supply enough combinators
-                       unordered-containers
+                       unordered-containers,
+                       bimap
   default-language:    Haskell2010
   Ghc-options:         -Wall -fno-warn-name-shadowing

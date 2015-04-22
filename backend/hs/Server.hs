@@ -12,12 +12,14 @@
 
 import           Control.Concurrent           (forkIO, yield)
 import           Control.Concurrent.MVar
+import           Control.Lens
 import           Control.Monad.State.Lazy
 import qualified Data.ByteString.Lazy         as B
 import           Data.List                    (isPrefixOf)
 import qualified Data.Map                     as Map
+import qualified Data.Bimap                   as Bimap
+import           Data.Bimap                   (Bimap)
 
-import           Data.Aeson                   ((.=))
 import qualified Data.Aeson                   as Aeson
 
 import qualified Language                     as L
@@ -29,37 +31,39 @@ import qualified Inference                    as I
 import           WireProtocol                 (Command(..), run, as_stack_dict)
 import qualified WireProtocol                 as W
 
-execute :: MVar (V.Model IO Double) -> (Command Double) -> IO B.ByteString
+type Engine = ((V.Model IO Double), Bimap T.Address String)
+
+execute :: MVar Engine  -> (Command Double) -> IO B.ByteString
 execute engineMVar c = do
   putStrLn $ show c
   case c of
     (Directive d) -> do
-      value <- onMVar engineMVar $ runDirective d
+      value <- onMVar engineMVar $ _1 `zoom` runDirective d
       return $ encodeMaybeValue value
     ListDirectives -> liftM directive_report $ readMVar engineMVar
     StopCI -> return "" -- No continuous inference to stop yet
     Clear -> do
-      onMVar engineMVar (put V.initial)
+      onMVar engineMVar $ put (V.initial, Bimap.empty)
       return ""
     SetMode _ -> return "" -- Only one surface syntax is supported!
     Infer prog -> interpret_inference engineMVar prog
 
-interpret_inference :: MVar (V.Model IO Double) -> String -> IO B.ByteString
+interpret_inference :: MVar Engine -> String -> IO B.ByteString
 interpret_inference engineMVar prog =
     if "(loop " `isPrefixOf` prog then do
       _ <- forkIO loop
       return ""
     else do
-      onMVar engineMVar $ V.resimulation_mh I.default_one -- Only MH supported
+      onMVar engineMVar $ _1 `zoom` V.resimulation_mh I.default_one -- Only MH supported
       return ""
     where loop = do _ <- interpret_inference engineMVar $ drop 6 prog -- TODO parse it for real
                     yield
                     loop
 
-directive_report :: (Show num, Real num) => V.Model m num -> B.ByteString
-directive_report model = Aeson.encode $ map to_stack_dict $ directives where
+directive_report :: (Show num, Real num) => (V.Model m num, Bimap T.Address String) -> B.ByteString
+directive_report (model, _labels) = Aeson.encode $ map to_stack_dict $ directives where
     directives = Map.toList $ V._directives model
-    to_stack_dict (addr, directive) = as_stack_dict directive `W.add_field` ("value" .= value)
+    to_stack_dict (addr, directive) = as_stack_dict directive `W.add_field` ("value", value)
         where value = W.get_field (as_stack_dict $ V.lookupValue addr model) "value"
 
 encodeMaybeValue :: Maybe (T.Value Double) -> B.ByteString
@@ -87,6 +91,6 @@ onMVar var act = do
 
 main :: IO ()
 main = do
-  engineMVar <- newMVar V.initial :: IO (MVar (V.Model IO Double))
+  engineMVar <- newMVar (V.initial :: (V.Model IO Double), Bimap.empty)
   run (liftM Right . (execute engineMVar))
 
