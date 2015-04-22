@@ -96,7 +96,7 @@ newtype SPAddress = SPAddress Unique
 newtype SRId = SRId Unique
     deriving (Eq, Ord, Show)
 
-data SimulationRequest num = SimulationRequest SRId (Exp num) Env
+data SimulationRequest num = SimulationRequest !SRId !(Exp num) !Env
     deriving (Show, Functor)
 
 srid :: SimulationRequest num -> SRId
@@ -213,10 +213,10 @@ isRandomO (ReferringSPMaker _) = False
 -- Nodes                                                            --
 ----------------------------------------------------------------------
 
-data Node num = Constant (Value num)
-              | Reference (Maybe (Value num)) Address
-              | Request (Maybe [SimulationRequest num]) (Maybe Address) Address [Address]
-              | Output (Maybe (Value num)) Address Address [Address] [Address]
+data Node num = Constant !(Value num)
+              | Reference !(Maybe (Value num)) !Address
+              | Request !(Maybe [SimulationRequest num]) !(Maybe Address) !Address ![Address]
+              | Output !(Maybe (Value num)) !Address !Address ![Address] ![Address]
     deriving (Show, Functor)
 
 valueOf :: Node num -> Maybe (Value num)
@@ -309,13 +309,13 @@ data Trace rand num =
           , _randoms :: S.Set Address
           , _node_children :: M.Map Address (S.Set Address)
           , _sprs :: (M.Map SPAddress (SPRecord rand))
-          , _addr_seed :: UniqueSeed
-          , _spaddr_seed :: UniqueSeed
+          , _addr_seed :: !UniqueSeed
+          , _spaddr_seed :: !UniqueSeed
           }
     deriving (Show, Functor)
 
 data SPRecord m = SPRecord { sp :: (SP m)
-                           , srid_seed :: UniqueSeed
+                           , srid_seed :: !UniqueSeed
                            , requests :: M.Map SRId Address
                            }
     deriving Show

@@ -16,11 +16,11 @@ import Data.Traversable
 -- specified in a module that imports this one.
 -- The "num" type variable is the type of representations of real
 -- numbers, which I am allowing to vary because I want to use AD.
-data Value proc real = Number real
-                     | Symbol String
+data Value proc real = Number !real
+                     | Symbol !String
                      | List [Value proc real]
-                     | Procedure proc
-                     | Boolean Bool
+                     | Procedure !proc
+                     | Boolean !Bool
   deriving (Eq, Ord, Show, Functor, Foldable, Traversable)
 
 instance (Num num) => Num (Value a num) where
@@ -39,10 +39,10 @@ instance (Num num) => Monoid (LogDensity num) where
 log_density_negate :: (Num num) => LogDensity num -> LogDensity num
 log_density_negate (LogDensity x) = LogDensity $ -x
 
-data Exp v = Datum v
-           | Var String
-           | App (Exp v) [Exp v]
-           | Lam [String] (Exp v)
+data Exp v = Datum !v
+           | Var !String
+           | App !(Exp v) ![Exp v]
+           | Lam ![String] !(Exp v)
     deriving (Show, Functor)
 
 instance (Num a) => Num (Exp a) where
