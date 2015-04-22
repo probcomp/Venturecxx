@@ -14,18 +14,6 @@ import Data.Maybe hiding (fromJust)
 import qualified Venture as V
 import qualified Trace as T
 
--- Return Just the address of the directive if it's a predict, otherwise Nothing
-executeDirective :: (MonadRandom m, T.Numerical num) =>
-                    V.Directive num -> StateT (V.Model m num) m (Maybe T.Address)
-executeDirective (V.Assume s e) = V.assume s e >> return Nothing
-executeDirective (V.Observe e v) = V.observe e v >> return Nothing
-executeDirective (V.Predict e) = V.predict e >>= return . Just
-
--- Returns the list of addresses the model wants watched (to wit, the predicts)
-execute :: (MonadRandom m, T.Numerical num) => [V.Directive num] -> StateT (V.Model m num) m [T.Address]
-execute ds = liftM catMaybes $ mapM executeDirective ds
-
-
 runDirective' :: (MonadRandom m, T.Numerical num) =>
                  V.Directive num -> StateT (V.Model m num) m T.Address
 runDirective' (V.Assume s e) = V.assume s e

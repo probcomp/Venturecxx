@@ -25,7 +25,7 @@ watching_infer address ct = replicateM ct (do
 simulation :: (MonadRandom m, Numerical num) =>
               Int -> [Directive num] -> StateT (Model m num) m [Value num]
 simulation ct ds = do
-  target <- liftM head (execute ds)
+  target <- liftM last (mapM runDirective' ds)
   trace `zoom` (watching_infer target ct)
 
 venture_main :: (MonadRandom m, Real num, Show num, Floating num, Enum num) =>
