@@ -27,15 +27,13 @@ execute ds = liftM catMaybes $ mapM executeDirective ds
 
 
 runDirective' :: (MonadRandom m, T.Numerical num) =>
-                 V.Directive num -> StateT (V.Model m num) m (Maybe T.Address)
-runDirective' (V.Assume s e) = V.assume s e >>= return . Just
-runDirective' (V.Observe e v) = V.observe e v >> return Nothing
-runDirective' (V.Predict e) = V.predict e >>= return . Just
+                 V.Directive num -> StateT (V.Model m num) m T.Address
+runDirective' (V.Assume s e) = V.assume s e
+runDirective' (V.Observe e v) = V.observe e v
+runDirective' (V.Predict e) = V.predict e
 
 runDirective :: (MonadRandom m, T.Numerical num) =>
-                V.Directive num -> StateT (V.Model m num) m (Maybe (T.Value num))
+                V.Directive num -> StateT (V.Model m num) m (T.Value num)
 runDirective d = do
   addr <- runDirective' d
-  case addr of
-    Nothing -> return Nothing
-    Just a -> gets (Just . (V.lookupValue a))
+  gets (V.lookupValue addr)

@@ -39,7 +39,7 @@ execute engineMVar c = do
   case c of
     (Directive d _label) -> do
       value <- onMVar engineMVar $ _1 `zoom` runDirective d
-      return $ encodeMaybeValue value
+      return $ encodeValue value
     ListDirectives -> liftM directive_report $ readMVar engineMVar
     StopCI -> return "" -- No continuous inference to stop yet
     Clear -> do
@@ -65,10 +65,6 @@ directive_report (model, _labels) = Aeson.encode $ map to_stack_dict $ directive
     directives = Map.toList $ V._directives model
     to_stack_dict (addr, directive) = as_stack_dict directive `W.add_field` ("value", value)
         where value = W.get_field (as_stack_dict $ V.lookupValue addr model) "value"
-
-encodeMaybeValue :: Maybe (T.Value Double) -> B.ByteString
-encodeMaybeValue Nothing = "null"
-encodeMaybeValue (Just v) = encodeValue v
 
 encodeValue :: T.Value Double -> B.ByteString
 encodeValue (L.Number x) = Aeson.encode x
