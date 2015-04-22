@@ -25,7 +25,8 @@ import qualified Language                     as L  -- For the stack dict class
 
 ---- Public interface
 
-data Command num = Directive (V.Directive num)
+type Label = String
+data Command num = Directive (V.Directive num) (Maybe Label)
                  | ListDirectives
                  | StopCI
                  | Clear
@@ -66,24 +67,30 @@ decode_body str = Aeson.eitherDecode str
 
 -- So far, expect the method and arguments to lead to a directive
 parse :: (Fractional num) => String -> [String] -> Either String (Command num)
-parse "assume" [var, expr] = Right $ Directive $ V.Assume var $ Compose $ G.parse expr
--- Ignore labels for now; the demo supplies them but may not need to read
-parse "assume" [var, expr, label] = Right $ Directive $ V.Assume var $ Compose $ G.parse expr
-parse "assume" args = Left $ "Incorrect number of arguments to assume " ++ show args
-parse "observe" [expr, val] = Right $ Directive $ V.Observe expr' val' where
-    expr' = Compose $ G.parse expr
-    val' = fromDatum $ G.parse val
-    fromDatum (L.Datum v) = v
--- Ignore labels for now; the demo supplies them but may not need to read
-parse "observe" [expr, val, label] = Right $ Directive $ V.Observe expr' val' where
-    expr' = Compose $ G.parse expr
-    val' = fromDatum $ G.parse val
-    fromDatum (L.Datum v) = v
-parse "observe" args = Left $ "Incorrect number of arguments to observe " ++ show args
-parse "predict" [expr] = Right $ Directive $ V.Predict $ Compose $ G.parse expr
--- Ignore labels for now; the demo supplies them but may not need to read
-parse "predict" [expr, label] = Right $ Directive $ V.Predict $ Compose $ G.parse expr
-parse "predict" args = Left $ "Incorrect number of arguments to predict " ++ show args
+parse "assume" [var, expr] =
+    Right $ Directive (V.Assume var $ Compose $ G.parse expr) Nothing
+parse "assume" [var, expr, label] =
+    Right $ Directive (V.Assume var $ Compose $ G.parse expr) $ Just label
+parse "assume" args =
+    Left $ "Incorrect number of arguments to assume " ++ show args
+parse "observe" [expr, val] =
+    Right $ Directive (V.Observe expr' val') Nothing where
+        expr' = Compose $ G.parse expr
+        val' = fromDatum $ G.parse val
+        fromDatum (L.Datum v) = v
+parse "observe" [expr, val, label] =
+    Right $ Directive (V.Observe expr' val') $ Just label where
+        expr' = Compose $ G.parse expr
+        val' = fromDatum $ G.parse val
+        fromDatum (L.Datum v) = v
+parse "observe" args =
+    Left $ "Incorrect number of arguments to observe " ++ show args
+parse "predict" [expr] =
+    Right $ Directive (V.Predict $ Compose $ G.parse expr) Nothing
+parse "predict" [expr, label] =
+    Right $ Directive (V.Predict $ Compose $ G.parse expr) $ Just label
+parse "predict" args =
+    Left $ "Incorrect number of arguments to predict " ++ show args
 parse "list_directives" _ = Right ListDirectives
 parse "stop_continuous_inference" _ = Right StopCI
 parse "clear" _ = Right Clear

@@ -37,7 +37,7 @@ execute :: MVar Engine  -> (Command Double) -> IO B.ByteString
 execute engineMVar c = do
   putStrLn $ show c
   case c of
-    (Directive d) -> do
+    (Directive d _label) -> do
       value <- onMVar engineMVar $ _1 `zoom` runDirective d
       return $ encodeMaybeValue value
     ListDirectives -> liftM directive_report $ readMVar engineMVar
