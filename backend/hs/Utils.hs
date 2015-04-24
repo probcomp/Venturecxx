@@ -15,7 +15,7 @@ import Control.Lens
 import Control.Monad.Coroutine -- from cabal install monad-coroutine
 import Control.Monad.Morph
 import qualified Control.Monad.State.Class as Cl
-import Control.Monad.Trans.State.Lazy
+import Control.Monad.Trans.State.Strict
 import Control.Monad.Trans.Writer.Strict
 import Text.PrettyPrint -- presumably from cabal install pretty
 

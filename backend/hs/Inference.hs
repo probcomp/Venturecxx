@@ -6,7 +6,7 @@ module Inference where
 
 import qualified Data.Set as S
 import Control.Monad.Reader
-import Control.Monad.Trans.State.Lazy
+import Control.Monad.Trans.State.Strict
 import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 import Control.Lens -- From cabal install lens

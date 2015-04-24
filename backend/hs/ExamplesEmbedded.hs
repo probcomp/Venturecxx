@@ -2,7 +2,7 @@ module ExamplesEmbedded where
 
 import Control.Monad
 import Control.Monad.Random
-import Control.Monad.Trans.State.Lazy
+import Control.Monad.Trans.State.Strict
 
 import qualified Trace as T
 import Venture

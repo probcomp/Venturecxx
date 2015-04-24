@@ -2,7 +2,7 @@ module GradientTest where
 
 import Control.Lens  -- from cabal install lens
 import Control.Monad
-import Control.Monad.Trans.State.Lazy
+import Control.Monad.Trans.State.Strict
 import Data.Functor.Compose
 import qualified Data.Map as Map
 import Numeric.AD.Mode.Reverse (grad)

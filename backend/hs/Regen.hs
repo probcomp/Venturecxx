@@ -9,7 +9,7 @@ import qualified Data.Map as Map
 import Data.Maybe hiding (fromJust)
 import Control.Monad
 import Control.Monad.Trans.Writer.Strict
-import Control.Monad.Trans.State.Lazy hiding (state, get, gets, modify)
+import Control.Monad.Trans.State.Strict hiding (state, get, gets, modify)
 import Control.Monad.Trans.Class
 import Control.Monad.State.Class
 import Control.Monad.Random -- From cabal install MonadRandom

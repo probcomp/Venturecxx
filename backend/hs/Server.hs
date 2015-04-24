@@ -13,7 +13,7 @@
 import           Control.Concurrent           (forkIO, yield)
 import           Control.Concurrent.MVar
 import           Control.Lens
-import           Control.Monad.State.Lazy
+import           Control.Monad.State.Strict
 import qualified Data.ByteString.Lazy         as B
 import           Data.List                    (isPrefixOf)
 import qualified Data.Map                     as Map

@@ -5,7 +5,7 @@ module Subproblem where
 
 import Control.Lens hiding (children)
 import Control.Monad.Reader
-import Control.Monad.Trans.State.Lazy
+import Control.Monad.Trans.State.Strict
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Text.PrettyPrint hiding (empty) -- presumably from cabal install pretty

@@ -3,7 +3,7 @@
 module Detach where
 
 import Control.Lens hiding (children)
-import Control.Monad.Trans.State.Lazy
+import Control.Monad.Trans.State.Strict
 import Control.Monad.Trans.Writer.Strict
 import qualified Data.Set as S
 

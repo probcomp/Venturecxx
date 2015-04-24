@@ -3,7 +3,7 @@
 module Examples where
 
 import Control.Monad.Reader
-import Control.Monad.Trans.State.Lazy
+import Control.Monad.Trans.State.Strict
 import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 import Control.Lens  -- from cabal install lens
 

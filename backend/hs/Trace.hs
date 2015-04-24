@@ -19,7 +19,7 @@ import Data.Maybe hiding (fromJust)
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Control.Lens hiding (children)  -- from cabal install lens
-import Control.Monad.State hiding (state) -- :set -hide-package monads-tf-0.1.0.1
+import Control.Monad.State.Strict hiding (state) -- :set -hide-package monads-tf-0.1.0.1
 import Control.Monad.Writer.Class
 import Control.Monad.Reader
 import Control.Monad.State.Class
