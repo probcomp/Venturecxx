@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from value import VentureValue, ExpressionType
+from value import VentureValue
+from types import ExpressionType
 from request import Request
 
 class Node(object):

@@ -313,7 +313,7 @@ class TypedPSP(PSP):
     marshalling and unmarshalling.  The type signature itself must be
     an instance of venture.lite.sp.SPType, and those are built
     predominantly out of instances of (subclasses of)
-    venture.lite.value.VentureType.  See also the "Types" section
+    venture.lite.types.VentureType.  See also the "Types" section
     of doc/type-system.md.
 
     """

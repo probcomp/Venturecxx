@@ -22,7 +22,7 @@ import numpy as np
 import numpy.random as npr
 import math
 from copy import copy
-from value import CountType, AtomType, RequestType
+from types import CountType, AtomType, RequestType
 from exception import VentureValueError
 
 def npSampleVector(pVec): return np.mat(npr.multinomial(1,np.array(pVec)[0,:]))

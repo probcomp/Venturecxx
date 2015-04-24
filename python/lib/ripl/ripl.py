@@ -35,7 +35,7 @@ overhead), but strings in concrete syntax are likely to be more
 readable.
 
 Typical usage begins by using one of the factory functions in the
-venture.shortcuts module:
+`venture.shortcuts` module::
 
     import venture.shortcuts as s
     r = s.Lite().make_church_prime_ripl()
@@ -104,7 +104,7 @@ class Ripl():
     ############################################
 
     def backend(self):
-        '''Return the name of backend powering this Ripl.  Either "lite" or "puma".'''
+        '''Return the name of backend powering this Ripl.  Either ``"lite"`` or ``"puma"``.'''
         return self.sivm.core_sivm.engine.name
 
     ############################################
@@ -450,11 +450,13 @@ Syntax:
 ripl.bulk_observe("<expr>", <iterable>)
 
 Semantics:
-Operationally equivalent to
+Operationally equivalent to::
+
   for x in iterable:
     ripl.observe("<expr>", x)
+
 but appreciably faster.  See also open considerations and details of
-the semantics in ripl.observe_dataset.
+the semantics in `observe_dataset`.
 
 """
         ret_vals = []

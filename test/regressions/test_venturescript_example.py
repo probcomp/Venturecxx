@@ -22,7 +22,7 @@ from nose.plugins.attrib import attr
 from venture.test.config import get_ripl, on_inf_prim
 import venture.lite.continuous as cont
 from venture.lite.builtin import typed_nr
-import venture.lite.value as v
+import venture.lite.types as t
 
 @attr("slow")
 @on_inf_prim("emap")
@@ -35,7 +35,7 @@ def testVentureScriptAbstractExample():
 
   r = get_ripl()
   r.set_mode("venture_script")
-  r.bind_foreign_sp("uniform_continuous", typed_nr(EnumerableUniformOutputPSP(), [v.NumberType(), v.NumberType()], v.NumberType()))
+  r.bind_foreign_sp("uniform_continuous", typed_nr(EnumerableUniformOutputPSP(), [t.NumberType(), t.NumberType()], t.NumberType()))
   r.execute_program("""
 infer resample(2)
 assume is_funny = tag(quote(fun), 0, flip(0.3))

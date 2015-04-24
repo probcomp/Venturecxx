@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from value import VentureValue, registerVentureType, VentureType
+from value import VentureValue, registerVentureType
+from types import VentureType
 import copy
 from exception import VentureError
 import venture.value.dicts as v

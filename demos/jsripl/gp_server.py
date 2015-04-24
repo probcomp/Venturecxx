@@ -49,18 +49,19 @@ ripl = s.make_lite_church_prime_ripl()
 from venture.lite.function import VentureFunction
 from venture.lite.sp import SPType
 import venture.lite.value as v
+import venture.lite.types as t
 import venture.value.dicts as d
 
-fType = v.AnyType("VentureFunction")
+fType = t.AnyType("VentureFunction")
 
 # input and output types for gp
-xType = v.NumberType()
-oType = v.NumberType()
+xType = t.NumberType()
+oType = t.NumberType()
 kernelType = SPType([xType, xType], oType)
 
 ripl.assume('app', 'apply_function')
 
-constantType = SPType([v.AnyType()], oType)
+constantType = SPType([t.AnyType()], oType)
 def makeConstFunc(c):
   return VentureFunction(lambda _: c, sp_type=constantType)
 
@@ -72,7 +73,7 @@ ripl.assume('make_const_func', VentureFunction(makeConstFunc, [xType], constantT
 def makeSquaredExponential(a, l):
   return VentureFunction(squared_exponential(a, l), sp_type=kernelType)
 
-ripl.assume('make_squared_exponential', VentureFunction(makeSquaredExponential, [v.NumberType(), xType], fType))
+ripl.assume('make_squared_exponential', VentureFunction(makeSquaredExponential, [t.NumberType(), xType], fType))
 
 #ripl.assume('sq_exp', '(app make_squared_exponential 1 1)')
 #print ripl.predict('(app sq_exp 0 1)')
@@ -80,11 +81,11 @@ ripl.assume('make_squared_exponential', VentureFunction(makeSquaredExponential, 
 def makeLinear(v, c):
   return VentureFunction(linear(v, c), sp_type=kernelType)
 
-ripl.assume('make_linear', VentureFunction(makeLinear, [v.NumberType(), xType], fType))
+ripl.assume('make_linear', VentureFunction(makeLinear, [t.NumberType(), xType], fType))
 #ripl.assume('linear', '(app make_linear 1 1)')
 #print ripl.predict('(app linear 2 3)')
 
-liftedBinaryType = SPType([v.AnyType(), v.AnyType()], v.AnyType())
+liftedBinaryType = SPType([t.AnyType(), t.AnyType()], t.AnyType())
 
 def makeLiftedBinary(op):
   lifted_op = lift_binary(op)

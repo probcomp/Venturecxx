@@ -21,7 +21,7 @@ import math
 import scipy.special
 import scipy.stats
 from utils import simulateCategorical
-from value import AtomType # The type names are metaprogrammed pylint: disable=no-name-in-module
+from types import AtomType # The type names are metaprogrammed pylint: disable=no-name-in-module
 from copy import deepcopy
 
 class CRPSPAux(object):

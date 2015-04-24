@@ -18,3 +18,4 @@ Contents:
    modeling.rst
    inference.rst
    plugins.rst
+   foreigns.rst

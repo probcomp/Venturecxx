@@ -18,6 +18,7 @@
 import sp
 import psp
 import value as v
+import types as t
 from builtin import no_request, deterministic_typed
 from exception import VentureError, VentureTypeError
 from venture.engine.inference import Dataset
@@ -105,12 +106,12 @@ class MadeActionOutputPSP(psp.DeterministicPSP):
     return self.desc
 
 def infer_action_type(return_type):
-  return sp.SPType([v.ForeignBlobType()], v.PairType(return_type, v.ForeignBlobType()))
+  return sp.SPType([t.ForeignBlobType()], t.PairType(return_type, t.ForeignBlobType()))
 
 def infer_action_maker_type(args_types, return_type=None, **kwargs):
   # Represent the underlying trace as a ForeignBlob for now.
   if return_type is None:
-    return_type = v.NilType()
+    return_type = t.NilType()
   return sp.SPType(args_types, infer_action_type(return_type), **kwargs)
 
 def typed_inf_sp(name, tp, klass, desc=""):
@@ -136,14 +137,14 @@ def sequenced_sp(f, tp, desc=""):
 
 def transition_oper_args_types(extra_args = None):
   # ExpressionType reasonably approximates the mapping I want for scope and block IDs.
-  return [v.AnyType("scope : object"), v.AnyType("block : object")] + (extra_args if extra_args is not None else []) + [v.IntegerType("transitions : int")]
+  return [t.AnyType("scope : object"), t.AnyType("block : object")] + (extra_args if extra_args is not None else []) + [t.IntegerType("transitions : int")]
 
 def transition_oper_type(extra_args = None, **kwargs):
   return infer_action_maker_type(transition_oper_args_types(extra_args), **kwargs)
 
 def par_transition_oper_type(extra_args = None, **kwargs):
   other_args = transition_oper_args_types(extra_args)
-  return infer_action_maker_type(other_args + [v.BoolType("in_parallel : bool")], min_req_args=len(other_args), **kwargs)
+  return infer_action_maker_type(other_args + [t.BoolType("in_parallel : bool")], min_req_args=len(other_args), **kwargs)
 
 def macro_helper(name, tp):
   return engine_method_sp("_" + name, tp, method_name=name, desc="""\
@@ -210,7 +211,7 @@ of the local posterior.  Parallel evaluation is only available in
 the Puma backend, and is on by default."""),
 
   trace_method_sp("func_pgibbs",
-                  par_transition_oper_type([v.IntegerType("particles : int")]),
+                  par_transition_oper_type([t.IntegerType("particles : int")]),
                   desc="""\
 Move to a sample of the local posterior computed by particle Gibbs.
 
@@ -228,7 +229,7 @@ parallelism.  Parallel evaluation is only available in the Puma
 backend, and is on by default. """),
 
   trace_method_sp("pgibbs",
-                  par_transition_oper_type([v.IntegerType("particles : int")]),
+                  par_transition_oper_type([t.IntegerType("particles : int")]),
                   desc="""\
 Like ``func_pgibbs`` but reuse a single trace instead of having several.
 
@@ -239,7 +240,7 @@ clone their auxiliary state.
 The only reason to use this is if you know you want to. """),
 
   trace_method_sp("func_pmap",
-                  par_transition_oper_type([v.IntegerType("particles : int")]),
+                  par_transition_oper_type([t.IntegerType("particles : int")]),
                   desc="""\
 Like func_pgibbs, but deterministically
 select the maximum-likelihood particle at the end instead of sampling.
@@ -248,7 +249,7 @@ Iterated applications of func_pmap are guaranteed to grow in likelihood
 (and therefore do not converge to the posterior)."""),
 
   trace_method_sp("meanfield",
-                  transition_oper_type([v.IntegerType("training_steps : int")]),
+                  transition_oper_type([t.IntegerType("training_steps : int")]),
                   desc="""\
 Sample from a mean-field variational approximation of the local posterior.
 
@@ -269,7 +270,7 @@ The `transitions` argument specifies how many times to do this;
 this is not redundant if the `block` argument is ``one``."""),
 
   trace_method_sp("nesterov",
-                  transition_oper_type([v.NumberType("step_size : number"), v.IntegerType("steps : int")]),
+                  transition_oper_type([t.NumberType("step_size : number"), t.IntegerType("steps : int")]),
                   desc="""\
 Move deterministically toward the maximum of the local posterior by
 Nesterov-accelerated gradient ascent.
@@ -294,7 +295,7 @@ Note: the Nesterov acceleration is applied across steps within one
 transition, not across transitions."""),
 
   trace_method_sp("map",
-                  transition_oper_type([v.NumberType("step_size : number"), v.IntegerType("steps : int")]),
+                  transition_oper_type([t.NumberType("step_size : number"), t.IntegerType("steps : int")]),
                   desc="""\
 Move deterministically toward the maximum of the local posterior by
 gradient ascent.
@@ -306,7 +307,7 @@ This is just like ``nesterov``, except without the Nesterov
 correction. """),
 
   trace_method_sp("hmc",
-                  transition_oper_type([v.NumberType("step_size : number"), v.IntegerType("steps : int")]),
+                  transition_oper_type([t.NumberType("step_size : number"), t.IntegerType("steps : int")]),
                   desc="""\
 Run a Hamiltonian Monte Carlo transition kernel.
 
@@ -325,7 +326,7 @@ trajectory.
 
 The `transitions` argument specifies how many times to do this."""),
 
-  trace_method_sp("rejection", transition_oper_type([v.NumberType("attempt_bound : number")], min_req_args=2), desc="""\
+  trace_method_sp("rejection", transition_oper_type([t.NumberType("attempt_bound : number")], min_req_args=2), desc="""\
 Sample from the local posterior by rejection sampling.
 
 Not available in the Puma backend.  Not all the builtin procedures
@@ -378,7 +379,7 @@ Specifying more than 1 transition is redundant if the `block` is
 anything other than ``one``. """),
 
   trace_method_sp("slice",
-                  transition_oper_type([v.NumberType("w : number"), v.IntegerType("m : int")]),
+                  transition_oper_type([t.NumberType("w : number"), t.IntegerType("m : int")]),
                   desc="""\
 Slice sample from the local posterior of the selected random choice.
 
@@ -393,7 +394,7 @@ The `transitions` argument specifies how many transitions of the chain
 to run."""),
 
   trace_method_sp("slice_doubling",
-                  transition_oper_type([v.NumberType("w : number"), v.IntegerType("p : int")]),
+                  transition_oper_type([t.NumberType("w : number"), t.IntegerType("p : int")]),
                   desc="""\
 Slice sample from the local posterior of the selected random choice.
 
@@ -408,7 +409,7 @@ The `transitions` argument specifies how many transitions of the chain
 to run."""),
 
   engine_method_sp("resample",
-                   infer_action_maker_type([v.IntegerType("particles : int")]),
+                   infer_action_maker_type([t.IntegerType("particles : int")]),
                    desc="""\
 Perform an SMC-style resampling step.
 
@@ -425,7 +426,7 @@ The new particles will be handled in series.  See the next procedures
 for alternatives."""),
 
   engine_method_sp("resample_multiprocess",
-                   infer_action_maker_type([v.IntegerType("particles : int"), v.IntegerType("max_processes : int")], min_req_args=1),
+                   infer_action_maker_type([t.IntegerType("particles : int"), t.IntegerType("max_processes : int")], min_req_args=1),
                    desc="""\
 Like ``resample``, but fork multiple OS processes to simulate the
 resulting particles in parallel.
@@ -442,7 +443,7 @@ replacement for ``resample``, as the former will handle internal
 states that cannot be serialized, whereas the latter will not.  """),
 
   engine_method_sp("resample_serializing",
-                   infer_action_maker_type([v.IntegerType("particles : int")]),
+                   infer_action_maker_type([t.IntegerType("particles : int")]),
                    desc="""\
 Like ``resample``, but performs serialization the same way ``resample_multiprocess`` does.
 
@@ -450,7 +451,7 @@ Use this to debug serialization problems without messing with actually
 spawning multiple processes.  """),
 
   engine_method_sp("resample_threaded",
-                   infer_action_maker_type([v.IntegerType("particles : int")]),
+                   infer_action_maker_type([t.IntegerType("particles : int")]),
                    desc="""\
 Like ``resample_multiprocess`` but uses threads rather than actual processes, and does not serialize, transmitting objects in shared memory instead.
 
@@ -462,7 +463,7 @@ with serialization and multiprocessing, but we expect such problems to
 be rare. """),
 
   engine_method_sp("resample_thread_ser",
-                   infer_action_maker_type([v.IntegerType("particles : int")]),
+                   infer_action_maker_type([t.IntegerType("particles : int")]),
                    desc="""\
 Like ``resample_threaded``, but serializes the same way ``resample_multiprocess`` does.
 
@@ -480,7 +481,7 @@ Resample all particles in the current set from the prior and reset
 their weights to the likelihood."""),
 
   engine_method_sp("enumerative_diversify",
-                   infer_action_maker_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")]),
+                   infer_action_maker_type([t.ExpressionType("scope : object"), t.ExpressionType("block : object")]),
                    desc="""\
 Diversify the current particle set to represent the local posterior exactly.
 
@@ -502,7 +503,7 @@ This is useful together with ``collapse_equal`` and
 programs in Venture. """),
 
   engine_method_sp("collapse_equal",
-                   infer_action_maker_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")]),
+                   infer_action_maker_type([t.ExpressionType("scope : object"), t.ExpressionType("block : object")]),
                    desc="""\
 Collapse the current particle set to represent the local posterior less redundantly.
 
@@ -525,7 +526,7 @@ This is useful together with ``enumerative_diversify`` for
 implementing certain kinds of dynamic programs in Venture. """),
 
   engine_method_sp("collapse_equal_map",
-                   infer_action_maker_type([v.ExpressionType("scope : object"), v.ExpressionType("block : object")]),
+                   infer_action_maker_type([t.ExpressionType("scope : object"), t.ExpressionType("block : object")]),
                    desc="""\
 Like ``collapse_equal`` but deterministically retain the max-weight particle.
 
@@ -538,8 +539,8 @@ Draw a visual representation of the scaffold indicated by the given scope and bl
 This is useful for debugging.  You probably do not want to specify more than 1 transition."""),
 
   trace_method_sp("subsampled_mh",
-                  transition_oper_type([v.IntegerType("Nbatch : int"), v.IntegerType("k0 : int"), v.NumberType("epsilon : number"),
-                                        v.BoolType("useDeltaKernels : bool"), v.NumberType("deltaKernelArgs : number"), v.BoolType("updateValues : bool")]),
+                  transition_oper_type([t.IntegerType("Nbatch : int"), t.IntegerType("k0 : int"), t.NumberType("epsilon : number"),
+                                        t.BoolType("useDeltaKernels : bool"), t.NumberType("deltaKernelArgs : number"), t.BoolType("updateValues : bool")]),
                   desc="""\
 Run a subsampled Metropolis-Hastings kernel
 
@@ -571,12 +572,12 @@ From the source::
 """),
 
   trace_method_sp("subsampled_mh_make_consistent",
-                  transition_oper_type([v.BoolType("useDeltaKernels : bool"), v.NumberType("deltaKernelArgs : number"), v.BoolType("updateValues : bool")]),
+                  transition_oper_type([t.BoolType("useDeltaKernels : bool"), t.NumberType("deltaKernelArgs : number"), t.BoolType("updateValues : bool")]),
                   desc="""\
 Fix inconsistencies introduced by subsampled MH."""),
 
   trace_method_sp("mh_kernel_update",
-                  transition_oper_type([v.BoolType("useDeltaKernels : bool"), v.NumberType("deltaKernelArgs : number"), v.BoolType("updateValues : bool")]),
+                  transition_oper_type([t.BoolType("useDeltaKernels : bool"), t.NumberType("deltaKernelArgs : number"), t.BoolType("updateValues : bool")]),
                   desc="""\
 Run a normal ``mh`` kernel, tolerating inconsistencies introduced by previous subsampled MH."""),
 
@@ -584,7 +585,7 @@ Run a normal ``mh`` kernel, tolerating inconsistencies introduced by previous su
 Run a normal ``gibbs`` kernel, tolerating inconsistencies introduced by previous subsampled MH. """),
 
   trace_method_sp("pgibbs_update",
-                  par_transition_oper_type([v.IntegerType("particles : int")]),
+                  par_transition_oper_type([t.IntegerType("particles : int")]),
                   desc="""\
 Run a normal ``pgibbs`` kernel, tolerating inconsistencies introduced by previous subsampled MH."""),
 
@@ -603,7 +604,7 @@ invoke in the middle of complex inference programs that introduce new
 observations."""),
 
   engine_method_sp("likelihood_at",
-                   infer_action_maker_type([v.AnyType("scope : object"), v.AnyType("block : object")], return_type=v.ArrayUnboxedType(v.NumberType())),
+                   infer_action_maker_type([t.AnyType("scope : object"), t.AnyType("block : object")], return_type=t.ArrayUnboxedType(t.NumberType())),
                    desc="""\
 Compute and return the value of the local log likelihood at the given scope and block.
 
@@ -619,7 +620,7 @@ treats exchangeably coupled nodes correctly.
 Compare posterior_at."""),
 
   engine_method_sp("posterior_at",
-                   infer_action_maker_type([v.AnyType("scope : object"), v.AnyType("block : object")], return_type=v.ArrayUnboxedType(v.NumberType())),
+                   infer_action_maker_type([t.AnyType("scope : object"), t.AnyType("block : object")], return_type=t.ArrayUnboxedType(t.NumberType())),
                    desc="""\
 Compute and return the value of the local log posterior at the given scope and block.
 
@@ -629,14 +630,14 @@ non-observed stochastic nodes."""),
 
   [ "particle_log_weights", no_request(psp.TypedPSP(MadeEngineMethodInferOutputPSP("particle_log_weights", [], desc="""\
 Return the weights of all extant particles as an array of numbers (in log space).
-"""), infer_action_type(v.ArrayUnboxedType(v.NumberType())))) ],
+"""), infer_action_type(t.ArrayUnboxedType(t.NumberType())))) ],
 
   engine_method_sp("set_particle_log_weights",
-                   infer_action_maker_type([v.ArrayUnboxedType(v.NumberType())]),
+                   infer_action_maker_type([t.ArrayUnboxedType(t.NumberType())]),
                    desc="""\
 Set the weights of the particles to the given array.  It is an error if the length of the array differs from the number of particles. """),
 
-  engine_method_sp("load_plugin", infer_action_maker_type([v.SymbolType("filename")], return_type=v.AnyType(), variadic=True), desc="""\
+  engine_method_sp("load_plugin", infer_action_maker_type([t.SymbolType("filename")], return_type=t.AnyType(), variadic=True), desc="""\
 Load the plugin located at <filename>.
 
 Any additional arguments to ``load_plugin`` are passed to the plugin's
@@ -646,15 +647,15 @@ XXX: Currently, extra arguments must be VentureSymbols, which are
 unwrapped to Python strings for the plugin.
 """),
 
-  macro_helper("call_back", infer_action_maker_type([v.AnyType()], return_type=v.AnyType(), variadic=True)),
-  macro_helper("collect", infer_action_maker_type([v.AnyType()], return_type=v.ForeignBlobType("<dataset>"), variadic=True)),
+  macro_helper("call_back", infer_action_maker_type([t.AnyType()], return_type=t.AnyType(), variadic=True)),
+  macro_helper("collect", infer_action_maker_type([t.AnyType()], return_type=t.ForeignBlobType("<dataset>"), variadic=True)),
 
-  engine_method_sp("printf", infer_action_maker_type([v.ForeignBlobType("<dataset>")]), desc="""\
+  engine_method_sp("printf", infer_action_maker_type([t.ForeignBlobType("<dataset>")]), desc="""\
 Print model values collected in a dataset.
 
 This is a basic debugging facility."""),
 
-  engine_method_sp("plotf", infer_action_maker_type([v.AnyType("<spec>"), v.ForeignBlobType("<dataset>")]), desc="""\
+  engine_method_sp("plotf", infer_action_maker_type([t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")]), desc="""\
 Plot a data set according to a plot specification.
 
 Example::
@@ -713,7 +714,7 @@ indicated, the third is mapped to color.
 If the given specification is a list, make all those plots at once.
 """),
 
-  engine_method_sp("plotf_to_file", infer_action_maker_type([v.AnyType("<basename>"), v.AnyType("<spec>"), v.ForeignBlobType("<dataset>")]), desc="""\
+  engine_method_sp("plotf_to_file", infer_action_maker_type([t.AnyType("<basename>"), t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")]), desc="""\
 Save plot(s) to file(s).
 
   Like ``plotf``, but save the resulting plot(s) instead of displaying on screen.
@@ -728,7 +729,7 @@ Save plot(s) to file(s).
       the spec1 plot in the file basename1.png, and the spec2 plot in basename2.png.
 """),
 
-  engine_method_sp("sweep", infer_action_maker_type([v.ForeignBlobType("<dataset>")]), desc="""\
+  engine_method_sp("sweep", infer_action_maker_type([t.ForeignBlobType("<dataset>")]), desc="""\
 Print the sweep count.
 
   Extracts the last row of the supplied inference Dataset and prints its sweep count.
@@ -738,14 +739,14 @@ Print the sweep count.
 
 """),
 
-  ripl_macro_helper("assume", infer_action_maker_type([v.AnyType("<symbol>"), v.AnyType("<expression>"), v.AnyType("<label>")], min_req_args=2)),
-  ripl_macro_helper("observe", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType(), v.AnyType("<label>")], min_req_args=2)),
-  macro_helper("force", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType()])),
-  ripl_macro_helper("predict", infer_action_maker_type([v.AnyType("<expression>"), v.AnyType("<label>")], min_req_args=1)),
-  macro_helper("sample", infer_action_maker_type([v.AnyType("<expression>")], return_type=v.AnyType())),
-  macro_helper("sample_all", infer_action_maker_type([v.AnyType("<expression>")], return_type=v.ListType())),
+  ripl_macro_helper("assume", infer_action_maker_type([t.AnyType("<symbol>"), t.AnyType("<expression>"), t.AnyType("<label>")], min_req_args=2)),
+  ripl_macro_helper("observe", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType(), t.AnyType("<label>")], min_req_args=2)),
+  macro_helper("force", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType()])),
+  ripl_macro_helper("predict", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType("<label>")], min_req_args=1)),
+  macro_helper("sample", infer_action_maker_type([t.AnyType("<expression>")], return_type=t.AnyType())),
+  macro_helper("sample_all", infer_action_maker_type([t.AnyType("<expression>")], return_type=t.ListType())),
 
-  ripl_method_sp("forget", infer_action_maker_type([v.AnyType("<label>")]), desc="""\
+  ripl_method_sp("forget", infer_action_maker_type([t.AnyType("<label>")]), desc="""\
   Forget an observation, prediction, or unused assumption.
 
   Removes the directive indicated by the label argument from the
@@ -755,7 +756,7 @@ Print the sweep count.
 
 """),
 
-  ripl_method_sp("freeze", infer_action_maker_type([v.AnyType("<label>")]), desc="""\
+  ripl_method_sp("freeze", infer_action_maker_type([t.AnyType("<label>")]), desc="""\
   Freeze an assumption to its current sample.
 
   Replaces the assumption indicated by the label argument with a
@@ -770,11 +771,11 @@ Print the sweep count.
 
 """),
 
-  ["empty", deterministic_typed(lambda *args: Dataset(), [], v.ForeignBlobType("<dataset>"), descr="""\
+  ["empty", deterministic_typed(lambda *args: Dataset(), [], t.ForeignBlobType("<dataset>"), descr="""\
 Create an empty dataset ``into`` which further ``collect`` ed stuff may be merged.
   """)],
 
-  ["into", sequenced_sp(lambda orig, new: orig.merge_bang(new), infer_action_maker_type([v.ForeignBlobType(), v.ForeignBlobType()]), desc="""\
+  ["into", sequenced_sp(lambda orig, new: orig.merge_bang(new), infer_action_maker_type([t.ForeignBlobType(), t.ForeignBlobType()]), desc="""\
 Destructively merge the contents of the second argument into the
 first.
 
@@ -782,18 +783,18 @@ Right now only implemented on datasets created by ``empty`` and
 ``collect``, but in principle generalizable to any monoid.  """)],
 
   # Hackety hack hack backward compatibility
-  ["ordered_range", deterministic_typed(lambda *args: (v.VentureSymbol("ordered_range"),) + args,
-                                        [v.AnyType()], v.ListType(), variadic=True)],
+  ["ordered_range", deterministic_typed(lambda *args: (t.VentureSymbol("ordered_range"),) + args,
+                                        [t.AnyType()], t.ListType(), variadic=True)],
 
-  ["assert", sequenced_sp(assert_fun, infer_action_maker_type([v.BoolType(), v.SymbolType("message")], min_req_args=1), desc="""\
+  ["assert", sequenced_sp(assert_fun, infer_action_maker_type([t.BoolType(), t.SymbolType("message")], min_req_args=1), desc="""\
 Check the given boolean condition and raise an error if it fails.
 """)],
 
-  ["print", sequenced_sp(print_fun, infer_action_maker_type([v.AnyType()], variadic=True), desc="""\
+  ["print", sequenced_sp(print_fun, infer_action_maker_type([t.AnyType()], variadic=True), desc="""\
 Print the given values to the terminal.
 """)],
 
-  engine_method_sp("new_model", infer_action_maker_type([], v.ForeignBlobType("<model>")), desc="""\
+  engine_method_sp("new_model", infer_action_maker_type([], t.ForeignBlobType("<model>")), desc="""\
 Create an new empty model.
 
 This is an inference action rather than a pure operation due to
@@ -804,7 +805,7 @@ sps into new models?)]
 
  """),
 
-  engine_method_sp("in_model", infer_action_maker_type([v.ForeignBlobType("<model>"), v.AnyType("<action>")], v.PairType(v.AnyType(), v.ForeignBlobType("<model>"))), desc="""\
+  engine_method_sp("in_model", infer_action_maker_type([t.ForeignBlobType("<model>"), t.AnyType("<action>")], t.PairType(t.AnyType(), t.ForeignBlobType("<model>"))), desc="""\
 Run the given inference action against the given model.
 
 Returns a pair consisting of the result of the action and the model, which is also mutated.

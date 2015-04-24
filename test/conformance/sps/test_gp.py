@@ -34,13 +34,14 @@ def squared_exponential(a, l):
 from venture.lite.function import VentureFunction
 from venture.lite.sp import SPType
 import venture.lite.value as v
+import venture.lite.types as t
 import venture.value.dicts as d
 
 # input and output types for gp
-xType = v.NumberType()
-oType = v.NumberType()
+xType = t.NumberType()
+oType = t.NumberType()
 
-constantType = SPType([v.AnyType()], oType)
+constantType = SPType([t.AnyType()], oType)
 def makeConstFunc(c):
   return VentureFunction(lambda _: c, sp_type=constantType)
 
@@ -53,7 +54,7 @@ def makeSquaredExponential(a, l):
 def prep_ripl(ripl):
   ripl.assume('app', 'apply_function')
   ripl.assume('make_const_func', VentureFunction(makeConstFunc, [xType], constantType))
-  ripl.assume('make_squared_exponential', VentureFunction(makeSquaredExponential, [v.NumberType(), xType], v.AnyType("VentureFunction")))
+  ripl.assume('make_squared_exponential', VentureFunction(makeSquaredExponential, [t.NumberType(), xType], t.AnyType("VentureFunction")))
   ripl.assume('zero', "(app make_const_func 0)")
   ripl.assume('sq_exp', "(app make_squared_exponential 1 1)")
 
