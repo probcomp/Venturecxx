@@ -134,7 +134,7 @@ inference.)
       assert trace is self.trace
       return copy_trace(self).trace
     (traces, weights) = self.trace.diversify(exp, copy_inner_trace)
-    return ([Trace(t) for t in traces], weights)
+    return ([Trace(t, self.directives) for t in traces], weights)
 
   def dump(self, skipStackDictConversion=False):
     return _dump_trace(self.trace, self.directives, skipStackDictConversion)
