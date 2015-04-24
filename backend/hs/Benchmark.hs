@@ -13,6 +13,13 @@ answer steps = evalStateT (do
   replicateM_ steps (resimulation_mh I.default_one)
   sampleM (var "x")) initial
 
+answer2 :: Int -> IO (Value Double)
+answer2 steps = evalStateT (do
+  assume "coin" (app (var "make-cbeta-bernoulli") [1, 1])
+  assume "result" (app (var "coin") [])
+  replicateM_ steps (resimulation_mh I.default_one)
+  sampleM (var "result")) initial
+
 main :: IO ()
 main = do [steps] <- liftM (fmap read) getArgs
-          answer steps >>= (putStrLn . show)
+          answer2 steps >>= (putStrLn . show)
