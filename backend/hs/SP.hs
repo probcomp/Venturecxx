@@ -346,6 +346,7 @@ memoized_sp proc = T.SP
 
 -- Question for a wizard: is there a way to actually use my stupid
 -- "typed" and "typedr" combinators for this?
+-- lift :: (forall num a r. (T.Numerical num, Valueable num a, ValueEncodable num r) => a -> r) -> SP m
 lift_numerical :: (forall num. T.Numerical num => num -> num) -> SP m
 lift_numerical f = deterministic $ unary f'
     where f' (Number v) = Number $ f v
