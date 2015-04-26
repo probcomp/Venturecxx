@@ -10,6 +10,7 @@ import Data.Foldable
 import qualified Data.Map as M
 import Data.Monoid
 import Data.Traversable
+import Data.Text
 
 -- The "proc" type variable is the type of representations of
 -- procedures, which I am allowing to vary because it will be
@@ -17,7 +18,7 @@ import Data.Traversable
 -- The "num" type variable is the type of representations of real
 -- numbers, which I am allowing to vary because I want to use AD.
 data Value proc real = Number !real
-                     | Symbol !String
+                     | Symbol !Text
                      | List [Value proc real]
                      | Procedure !proc
                      | Boolean !Bool

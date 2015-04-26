@@ -18,6 +18,7 @@ import Data.Functor.Compose
 import Data.Maybe hiding (fromJust)
 import qualified Data.Map as M
 import qualified Data.Set as S
+import qualified Data.Text as DT
 import Control.Lens hiding (children)  -- from cabal install lens
 import Control.Monad.State.Strict hiding (state) -- :set -hide-package monads-tf-0.1.0.1
 import Control.Monad.Writer.Class
@@ -835,7 +836,7 @@ instance Pretty (SPRecord m) where
 
 instance (Show num) => Pretty (Value num) where
     pp (Number d) = text $ show d
-    pp (Symbol s) = text s
+    pp (Symbol s) = text $ DT.unpack s
     pp (List l) = pp l
     pp (Procedure a) = text "Procedure" <+> pp a
     pp (Boolean True) = text "true"
