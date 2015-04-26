@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 import Control.Monad.State.Strict
 import System.Environment (getArgs)
 

@@ -142,16 +142,16 @@ application act req k = do
 class StackDict a where
   as_stack_dict :: a -> J.Value
 
-symbol :: String -> J.Value
+symbol :: T.Text -> J.Value
 symbol str = J.object [ ("type", J.String "symbol")
-                      , ("value", J.String $ T.pack str)
+                      , ("value", J.String str)
                       ]
 
 instance (Show num, Real num) => StackDict (V.Directive num) where
     as_stack_dict (V.Assume var exp) =
         J.object [ ("instruction", J.String "assume")
                  , ("expression", as_stack_dict exp)
-                 , ("symbol", symbol var)
+                 , ("symbol", symbol $ T.pack var)
                  ]
     as_stack_dict (V.Observe exp val) =
         J.object [ ("instruction", J.String "observe")

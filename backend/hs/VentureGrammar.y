@@ -1,5 +1,9 @@
 {
+{-# LANGUAGE OverloadedStrings #-}
+
 module VentureGrammar(parse) where
+
+import qualified Data.Text as DT
 
 import qualified VentureTokens as T
 import Language
@@ -25,14 +29,14 @@ import Language
 
 %%
 
-Exp : sym  { Var $1 }
+Exp : sym  { Var $ DT.pack $1 }
     | true { Datum $ Boolean True }
     | false { Datum $ Boolean False }
     | int  { Datum $ Number $ fromInteger $1 }
     | flo  { Datum $ Number $1 }
     | '(' quo Exp ')' { Datum $ exp_to_value $3 } -- Or do I want a separate "datum" grammar?
     | '(' Exp Exps ')' { App $2 (reverse $3) }
-    | '(' lam '(' Syms ')' Exp ')' { Lam (reverse $4) $6 }
+    | '(' lam '(' Syms ')' Exp ')' { Lam (reverse $ map DT.pack $4) $6 }
 
 Exps :  { [] }
      | Exps Exp { $2 : $1 }

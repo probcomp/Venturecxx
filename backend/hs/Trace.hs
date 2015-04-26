@@ -39,7 +39,7 @@ type Numerical a = (Show a, Floating a, Real a)
 
 type Value num = L.Value SPAddress num
 type Exp num = Compose L.Exp (L.Value SPAddress) num
-type Env = L.Env String Address
+type Env = L.Env DT.Text Address
 
 instance (Show num) => Show (Exp num) where
     show (Compose e) = show e
@@ -847,12 +847,12 @@ instance (Show num) => Pretty (SimulationRequest num) where
 
 instance (Show num) => Pretty (Exp num) where
     pp (Compose (Datum val)) = pp val
-    pp (Compose (Var var)) = text var
+    pp (Compose (Var var)) = text $ DT.unpack var
     pp (Compose (App op opands)) = parens $ sep $ map (pp . Compose) (op:opands)
     pp (Compose (Lam formals body)) = parens (text "lambda" <> space <> pp_formals <> space <> pp (Compose body))
       where
-        pp_formals = parens $ sep $ map text formals
+        pp_formals = parens $ sep $ map (text . DT.unpack) formals
 
 instance Pretty Env where
     pp e = brackets $ sep $ map entry $ M.toList $ effectiveEnv e where
-      entry (k,v) = text k <> colon <> space <> pp v
+      entry (k,v) = (text $ DT.unpack k) <> colon <> space <> pp v

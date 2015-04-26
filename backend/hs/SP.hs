@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
@@ -7,6 +8,7 @@ module SP where
 
 import Data.Functor.Compose
 import qualified Data.Map as M
+import qualified Data.Text as DT
 import Control.Monad.State.Strict hiding (state)
 import Control.Monad.State.Class
 import Control.Monad.Reader
@@ -89,7 +91,7 @@ no_state_o (RandomO f) = T.RandomO $ const f
 no_state_o (SPMaker f) = T.SPMaker $ const f
 no_state_o (ReferringSPMaker f) = T.ReferringSPMaker $ const f
 
-compoundSP :: (Monad m, Fractional num, Real num) => [String] -> Exp num -> Env -> SP m
+compoundSP :: (Monad m, Fractional num, Real num) => [DT.Text] -> Exp num -> Env -> SP m
 compoundSP formals exp env = no_state_sp NoStateSP
   { requester = DeterministicR req
   , log_d_req = Just $ LogDReqNS trivial_log_d_req
@@ -324,7 +326,7 @@ memoized_sp proc = T.SP
         (Just (id,_)) -> return [SimulationRequest id (Compose $ Var "unaccessed") Toplevel]
         Nothing -> do
           newId <- liftM SRId fresh
-          let names = take (length args) $ map show $ ([1..] :: [Int])
+          let names = take (length args) $ map (DT.pack . show) $ ([1..] :: [Int])
               exp = App (Var "memoized-sp") $ map Var names
               env = Frame (M.fromList $ ("memoized-sp",proc):(zip names args)) Toplevel
           return [SimulationRequest newId (Compose exp) env]

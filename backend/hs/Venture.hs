@@ -10,6 +10,7 @@ import Control.Monad.Trans.State.Strict
 import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 import Control.Lens  -- from cabal install lens
+import qualified Data.Text as DT
 import Text.PrettyPrint -- presumably from cabal install pretty
 
 import Utils
@@ -65,7 +66,7 @@ assume var exp = do
   -- functions, because of insufficient indirection to the
   -- environment.
   address <- topeval exp
-  env %= Frame (M.fromList [(var, address)])
+  env %= Frame (M.fromList [(DT.pack var, address)])
   directives . at address .= Just (Assume var exp)
   return address
 

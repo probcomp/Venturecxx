@@ -17,6 +17,7 @@ import           Control.Monad.State.Strict
 import qualified Data.ByteString.Lazy         as B
 import           Data.List                    (isPrefixOf)
 import qualified Data.Map                     as Map
+import qualified Data.Text                    as DT
 import qualified Data.Bimap                   as Bimap
 import           Data.Bimap                   (Bimap)
 
@@ -71,7 +72,7 @@ directive_report (model, labels) = Aeson.encode $ map to_stack_dict $ directives
     to_stack_dict (addr, directive) = result
         where value = W.get_field (as_stack_dict $ V.lookupValue addr model) "value"
               unlabeled = as_stack_dict directive `W.add_field` ("value", value)
-              result = maybe unlabeled (\l -> unlabeled `W.add_field` ("label", symbol l))
+              result = maybe unlabeled (\l -> unlabeled `W.add_field` ("label", symbol $ DT.pack l))
                        $ Bimap.lookup addr labels
 
 encodeValue :: T.Value Double -> B.ByteString

@@ -1,4 +1,5 @@
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Examples where
 
@@ -6,6 +7,7 @@ import Control.Monad.Reader
 import Control.Monad.Trans.State.Strict
 import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 import Control.Lens  -- from cabal install lens
+import qualified Data.Text as DT
 
 import Language hiding (Exp, Value, Env)
 import Trace
@@ -36,7 +38,7 @@ venture_main ct ds = do
 v_if :: Exp num -> Exp num -> Exp num -> Exp num
 v_if p c a = app (app (var "select") [p, (lam [] c), (lam [] a)]) []
 
-v_let1 :: String -> Exp num -> Exp num -> Exp num
+v_let1 :: DT.Text -> Exp num -> Exp num -> Exp num
 v_let1 name val body = app (lam [name] body) [val]
 
 flip_one_coin :: [Directive num]
