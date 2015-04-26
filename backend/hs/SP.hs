@@ -15,6 +15,7 @@ import Control.Monad.Reader
 import Control.Monad.Random -- From cabal install MonadRandom
 import Numeric.SpecFunctions -- From cabal install spec-functions
 import Control.Lens  -- from cabal install lens
+import qualified Data.Vector as V
 
 import Utils
 import Language hiding (Value, Env, Exp)
@@ -369,7 +370,7 @@ initializeBuiltins env = do
                        , ("normal", no_state_sp normal)
                        , ("beta", no_state_sp beta)
                        , ("select", no_state_sp select)
-                       , ("list", deterministic $ nary List)
+                       , ("list", deterministic $ nary $ List . V.fromList)
                        , ("weighted", no_state_sp weighted)
                        , ("make-cbeta-bernoulli", make_cbeta_bernoulli)
                        , ("mem", mem)

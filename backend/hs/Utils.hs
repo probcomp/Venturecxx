@@ -11,6 +11,7 @@ import Data.List (find)
 import Data.Monoid
 import qualified Data.Map as M
 import qualified Data.Set as S
+import qualified Data.Vector as V
 import Control.Lens
 import Control.Monad.Coroutine -- from cabal install monad-coroutine
 import Control.Monad.Morph
@@ -85,6 +86,9 @@ class Pretty a where
 
 instance (Pretty a) => Pretty [a] where
     pp as = brackets $ sep $ map pp as
+
+instance (Pretty a) => Pretty (V.Vector a) where
+    pp as = brackets $ sep $ V.toList $ fmap pp as
 
 instance Pretty Doc where
     pp = id

@@ -18,6 +18,7 @@ import qualified Data.ByteString.Lazy         as B
 import           Data.List                    (isPrefixOf)
 import qualified Data.Map                     as Map
 import qualified Data.Text                    as DT
+import qualified Data.Vector                  as Vec
 import qualified Data.Bimap                   as Bimap
 import           Data.Bimap                   (Bimap)
 
@@ -78,7 +79,7 @@ directive_report (model, labels) = Aeson.encode $ map to_stack_dict $ directives
 encodeValue :: T.Value Double -> B.ByteString
 encodeValue (L.Number x) = Aeson.encode x
 encodeValue (L.Symbol s) = Aeson.encode s
-encodeValue (L.List vs) = "[" `B.append` (B.intercalate ", " $ map encodeValue vs) `B.append` "]"
+encodeValue (L.List vs) = "[" `B.append` (B.intercalate ", " $ map encodeValue $ Vec.toList vs) `B.append` "]"
 encodeValue (L.Procedure _) = "An SP"
 encodeValue (L.Boolean True) = "true"
 encodeValue (L.Boolean False) = "false"

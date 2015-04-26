@@ -4,6 +4,7 @@
 module VentureGrammar(parse) where
 
 import qualified Data.Text as DT
+import qualified Data.Vector as V
 
 import qualified VentureTokens as T
 import Language
@@ -54,8 +55,8 @@ Syms : { [] }
 --   from list structure that detects keywords.
 exp_to_value (Datum val) = val
 exp_to_value (Var name) = Symbol name
-exp_to_value (App op opands) = List $ map exp_to_value (op:opands)
-exp_to_value (Lam formals body) = List [Symbol "lambda", List (map Symbol formals), exp_to_value body]
+exp_to_value (App op opands) = List $ V.fromList $ map exp_to_value (op:opands)
+exp_to_value (Lam formals body) = List $ V.fromList [Symbol "lambda", List (V.fromList $ map Symbol formals), exp_to_value body]
 
 parseError :: T.Token -> T.Alex a
 parseError t = T.Alex (\T.AlexState {T.alex_pos = (T.AlexPn _ line col)} -> Left $ "Parse error at " ++ show line ++ ":" ++ show col ++ " on token " ++ show t)

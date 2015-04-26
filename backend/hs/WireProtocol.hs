@@ -11,6 +11,7 @@ import qualified Data.HashMap.Strict          as HashMap -- For the add_field an
 import qualified Data.Map                     as M
 import           Data.Maybe                   (fromJust)
 import qualified Data.Text                    as T (Text, pack, unpack)
+import qualified Data.Vector                  as Vec
 
 import           Network.Wai
 import qualified Network.HTTP.Types           as HTTP
@@ -178,7 +179,7 @@ instance (Show num, Real num) => StackDict (L.Value proc num) where
                  , ("value", J.Number $ realToFrac n)
                  ]
     as_stack_dict (L.Symbol str) = symbol str
-    as_stack_dict (L.List vals) = Aeson.toJSON $ map as_stack_dict vals
+    as_stack_dict (L.List vals) = Aeson.toJSON $ Vec.toList $ fmap as_stack_dict vals
     as_stack_dict (L.Procedure _) =
         J.object [ ("type", J.String "sp")
                  , ("value", J.String "unknown")
