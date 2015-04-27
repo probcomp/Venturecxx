@@ -98,7 +98,7 @@ executable venture-server
                        -- unordered-containers because Aeson's Value
                        -- type doesn't supply enough combinators
                        unordered-containers,
-                       bimap, text, vector, strict-base-types
+                       bimap, vector, strict-base-types
   default-language:    Haskell2010
   Ghc-options:         -Wall -fno-warn-name-shadowing -O2
 
