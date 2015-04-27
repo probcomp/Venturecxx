@@ -166,19 +166,19 @@ instance Show (SP m) where
     show SP{current = s} = "A stochastic procedure with state " ++ show s
 
 data SPRequester m a
-    = DeterministicR (forall num. (Numerical num) =>
-                      a -> [Address] -> UniqueSource [SimulationRequest num])
-    | RandomR (forall num. a -> [Address] -> UniqueSourceT m [SimulationRequest num])
-    | ReaderR (forall num. (Numerical num) =>
-               a -> [Address] -> ReaderT (Trace m num) UniqueSource [SimulationRequest num])
+    = DeterministicR !(forall num. (Numerical num) =>
+                       a -> [Address] -> UniqueSource [SimulationRequest num])
+    | RandomR !(forall num. a -> [Address] -> UniqueSourceT m [SimulationRequest num])
+    | ReaderR !(forall num. (Numerical num) =>
+                a -> [Address] -> ReaderT (Trace m num) UniqueSource [SimulationRequest num])
 
 data SPOutputter m a
     = Trivial
-    | DeterministicO (forall num. (Numerical num) => a -> [Node num] -> [Node num] -> Value num)
-    | RandomO (forall num. (Numerical num) => a -> [Node num] -> [Node num] -> m (Value num))
+    | DeterministicO !(forall num. (Numerical num) => a -> [Node num] -> [Node num] -> Value num)
+    | RandomO !(forall num. (Numerical num) => a -> [Node num] -> [Node num] -> m (Value num))
     -- Are these ever random? Do they ever change the number representation of their SP?
-    | SPMaker (forall num. (Numerical num) => a -> [Node num] -> [Node num] -> SP m)
-    | ReferringSPMaker (a -> [Address] -> [Address] -> SP m)
+    | SPMaker !(forall num. (Numerical num) => a -> [Node num] -> [Node num] -> SP m)
+    | ReferringSPMaker !(a -> [Address] -> [Address] -> SP m)
 
 asRandomR :: (Monad m, Numerical num) => SPRequester m a -> a -> [Address]
           -> ReaderT (Trace m num) (UniqueSourceT m) [SimulationRequest num]
