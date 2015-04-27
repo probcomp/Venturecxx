@@ -9,13 +9,15 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe hiding (fromJust)
 import qualified Data.Maybe.Strict as Strict
-import Control.Monad hiding (mapM_)
+import Data.Traversable
+import qualified Data.Vector as V
+import Control.Monad hiding (mapM_, mapM, sequence)
 import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Trans.State.Strict hiding (state, get, gets, modify)
 import Control.Monad.Trans.Class
 import Control.Monad.State.Class
 import Control.Monad.Random -- From cabal install MonadRandom
-import Prelude hiding (lookup, mapM_)
+import Prelude hiding (lookup, mapM_, mapM, sequence)
 import Control.Lens -- From cabal install lens
 
 import Language hiding (Value, Exp, Env, lookup)
@@ -70,8 +72,8 @@ regenValue propose a = do
       nodes . ix a . value .= Strict.Just v)
     (Request _ outA opa ps) -> lift (do
       addr <- gets $ fromJust "Regenerating value for a request with no operator" . (fromValueAt opa)
-      reqs <- runRequester addr ps -- TODO allow proposals to tweak requests?
-      nodes . ix a . sim_reqs .= Strict.Just reqs
+      reqs <- runRequester addr (toList ps) -- TODO allow proposals to tweak requests?
+      nodes . ix a . sim_reqs .= Strict.Just (V.fromList reqs)
       resps <- evalRequests propose addr reqs
       do_incorporateR a
       case outA of
@@ -116,7 +118,7 @@ eval _ (Compose (Lam vs exp)) e = do
   state $ addFreshNode $ Constant $ Procedure spAddr
 eval propose (Compose (App op args)) env = do
   op' <- eval propose (Compose op) env
-  args' <- sequence $ map (flip (eval propose) env) $ map Compose $ toList args
+  args' <- sequence $ fmap (flip (eval propose) env) $ fmap Compose args
   addr <- state $ addFreshNode (Request Strict.Nothing Strict.Nothing op' args')
   -- Is there a good reason why I don't care about the log density of this regenNode?
   _ <- runWriterT $ regenNode propose addr
@@ -130,7 +132,7 @@ eval propose (Compose (App op args)) env = do
 prior :: (MonadRandom m, Numerical num) => Proposal m num
 prior a t =
   case t ^. nodes . hardix "Regenerating value for nonexistent node" a of
-    (Output _ _ opa ps rs) -> return $ outputFor addr ps rs t where
+    (Output _ _ opa ps rs) -> return $ outputFor addr (toList ps) (toList rs) t where
       addr = fromJust "Regenerating value for an output with no operator" $ fromValueAt opa t
 
 withDeterministic :: (Monad m, Numerical num) => Proposal m num -> Map Address (Value num) -> Proposal m num
@@ -142,6 +144,6 @@ withDeterministic base as a t =
         sp = fromJust "Absorbing at a node with no operator" $ operator node t
         absorbVal (Output _ _ _ args reqs) SP{log_d_out = (Strict.Just (LogDOut f)), current = a} =
             f a args' reqs' v where
-              args' = map (fromJust "absorb" . flip lookupNode t) args
-              reqs' = map (fromJust "absorb" . flip lookupNode t) reqs
+              args' = map (fromJust "absorb" . flip lookupNode t) $ toList args
+              reqs' = map (fromJust "absorb" . flip lookupNode t) $ toList reqs
       Nothing  -> base a t

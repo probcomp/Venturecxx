@@ -221,8 +221,10 @@ isRandomO (ReferringSPMaker _) = False
 
 data Node num = Constant !(Value num)
               | Reference !(Strict.Maybe (Value num)) !Address
-              | Request !(Strict.Maybe [SimulationRequest num]) !(Strict.Maybe Address) !Address ![Address]
-              | Output !(Strict.Maybe (Value num)) !Address !Address ![Address] ![Address]
+              | Request !(Strict.Maybe (V.Vector (SimulationRequest num)))
+                !(Strict.Maybe Address) !Address !(V.Vector Address)
+              | Output !(Strict.Maybe (Value num)) !Address !Address
+                !(V.Vector Address) !(V.Vector Address)
     deriving (Show, Functor)
 
 valueOf :: Node num -> Strict.Maybe (Value num)
@@ -251,7 +253,7 @@ isRegenerated (Request (Strict.Just _) _ _ _) = True
 isRegenerated (Output Strict.Nothing _ _ _ _) = False
 isRegenerated (Output (Strict.Just _) _ _ _ _) = True
 
-sim_reqs :: Simple Lens (Node num) (Strict.Maybe [SimulationRequest num])
+sim_reqs :: Simple Lens (Node num) (Strict.Maybe (V.Vector (SimulationRequest num)))
 sim_reqs = lens _requests re_requests where
     _requests (Request r _ _ _) = r
     _requests _ = Strict.Nothing
@@ -262,16 +264,16 @@ sim_reqs = lens _requests re_requests where
 parentAddrs :: Node num -> [Address]
 parentAddrs (Constant _) = []
 parentAddrs (Reference _ addr) = [addr]
-parentAddrs (Request _ _ a as) = a:as
-parentAddrs (Output _ reqA a as as') = reqA:a:(as ++ as')
+parentAddrs (Request _ _ a as) = a:V.toList as
+parentAddrs (Output _ reqA a as as') = reqA:a:(V.toList as ++ V.toList as')
 
 opAddr :: Node num -> Maybe Address
 opAddr (Request _ _ a _) = Just a
 opAddr (Output _ _ a _ _) = Just a
 opAddr _ = Nothing
 
-requestIds :: Node num -> [SRId]
-requestIds (Request (Strict.Just srs) _ _ _) = map srid srs
+requestIds :: Node num -> V.Vector SRId
+requestIds (Request (Strict.Just srs) _ _ _) = V.map srid srs
 requestIds _ = error "Asking for request IDs of a non-request node"
 
 addOutput :: Address -> Node num -> Node num
@@ -283,10 +285,10 @@ out_node = sets _out_node where
     _out_node f (Request v outA a as) = Request v (f outA) a as
     _out_node _ _ = error "Non-Request nodes do not have corresponding output nodes"
 
-responses :: Simple Lens (Node num) [Address]
+responses :: Simple Lens (Node num) (V.Vector Address)
 responses = lens _responses addResponses where
     _responses (Output _ _ _ _ rs) = rs
-    _responses _ = []
+    _responses _ = V.empty
     addResponses (Output v reqA a as _) resps = Output v reqA a as resps
     addResponses n _ = n
 
@@ -294,13 +296,13 @@ responses = lens _responses addResponses where
 -- a change to the given address (which is expected to be one of its
 -- parents).
 canAbsorb :: Node num -> Address -> SP m -> Bool
-canAbsorb (Request _ _ opA _)      a _                        | opA  == a = False
-canAbsorb (Request _ _ _ _)        _ SP{log_d_req = (Strict.Just _)}      = True
-canAbsorb (Output _ reqA _ _ _)    a _                        | reqA == a = False
-canAbsorb (Output _ _ opA _ _)     a _                        | opA  == a = False
-canAbsorb (Output _ _ _ _ (fst:_)) a SP{outputter = Trivial}  | fst  == a = False
-canAbsorb (Output _ _ _ _ _)       _ SP{outputter = Trivial}              = True
-canAbsorb (Output _ _ _ _ _)       _ SP{log_d_out = (Strict.Just _)}      = True
+canAbsorb (Request _ _ opA _)   a _                        | opA  == a        = False
+canAbsorb (Request _ _ _ _)     _ SP{log_d_req = (Strict.Just _)}             = True
+canAbsorb (Output _ reqA _ _ _) a _                        | reqA == a        = False
+canAbsorb (Output _ _ opA _ _)  a _                        | opA  == a        = False
+canAbsorb (Output _ _ _ _ pars) a SP{outputter = Trivial}  | V.head pars == a = False
+canAbsorb (Output _ _ _ _ _)    _ SP{outputter = Trivial}                     = True
+canAbsorb (Output _ _ _ _ _)    _ SP{log_d_out = (Strict.Just _)}             = True
 canAbsorb _ _ _ = False
 
 ----------------------------------------------------------------------
@@ -502,10 +504,10 @@ numRequests a t = length $ filter isOutput $ children a t where
 -- in the Trace).
 responsesAt :: Address -> Simple Lens (Trace m num) [Address]
 responsesAt a = lens _responses addResponses where
-    _responses t = t ^. nodes . hardix "Requesting reposnes from a dangling address" a . responses
+    _responses t = t ^. nodes . hardix "Requesting reposnes from a dangling address" a . responses . to V.toList
     addResponses t rs = execState (do
-      oldRs <- nodes . ix a . responses <<.= rs
-      node_children %= dropChildOf a oldRs
+      oldRs <- nodes . ix a . responses <<.= V.fromList rs
+      node_children %= dropChildOf a (V.toList oldRs)
       node_children %= addChildOf a rs) t
 
 ----------------------------------------------------------------------
@@ -589,20 +591,20 @@ processOutput result = case result of
                          (Right sp) -> do spAddr <- state $ addFreshSP sp
                                           return $ Procedure spAddr
 
-fulfilments :: Address -> Trace m num -> [Address]
+fulfilments :: Address -> Trace m num -> V.Vector Address
 -- The addresses of the responses to the requests made by the Request
 -- node at Address.
-fulfilments a t = map (fromJust "Unfulfilled request" . flip M.lookup reqs) $ requestIds node where
+fulfilments a t = fmap (fromJust "Unfulfilled request" . flip M.lookup reqs) $ requestIds node where
     node = t ^. nodes . hardix "Asking for fulfilments of a missing node" a
     SPRecord { requests = reqs } = fromJust "Asking for fulfilments of a node with no operator record" $ operatorRecord node t
 
 absorb :: (Numerical num) => Node num -> SP m -> Trace m num -> num
-absorb (Request (Strict.Just reqs) _ _ args) SP{log_d_req = (Strict.Just (LogDReq f)), current = a} _ = f a args reqs
+absorb (Request (Strict.Just reqs) _ _ args) SP{log_d_req = (Strict.Just (LogDReq f)), current = a} _ = f a (toList args) (toList reqs)
 -- This clause is only right if canAbsorb returned True on all changed parents
 absorb (Output _ _ _ _ _) SP { outputter = Trivial } _ = 0
-absorb (Output (Strict.Just v) _ _ args reqs) SP{log_d_out = (Strict.Just (LogDOut f)), current = a} t = f a args' reqs' v where
-    args' = map (fromJust "absorb" . flip lookupNode t) args
-    reqs' = map (fromJust "absorb" . flip lookupNode t) reqs
+absorb (Output (Strict.Just v) _ _ args reqs) SP{log_d_out = (Strict.Just (LogDOut f)), current = a} t = f a (toList args') (toList reqs') v where
+    args' = fmap (fromJust "absorb" . flip lookupNode t) args
+    reqs' = fmap (fromJust "absorb" . flip lookupNode t) reqs
 absorb _ _ _ = error "Inappropriate absorb attempt"
 
 absorbAt :: (Numerical num, MonadState (Trace m1 num) m, MonadWriter (LogDensity num) m) => Address -> m ()
@@ -645,9 +647,9 @@ corporateR name f a = do
       spaddr <- gets $ fromJust (name ++ "ncorporating requests for a requester with no operator address") . (fromValueAt opa)
       sp <- gets $ fromJust (name ++ "ncorporating requests for a requester with no operator") . (operator node)
       t <- get
-      let ns = map (fromJust (name ++ "ncorporate requests given dangling address") . flip M.lookup (t^.nodes)) args
-          vs = map (fromJust' (name ++ "ncorporate requests given valueless argument node") . valueOf) ns
-      sprs . ix spaddr %= \r -> r{sp = f vs rs sp}
+      let ns = fmap (fromJust (name ++ "ncorporate requests given dangling address") . flip M.lookup (t^.nodes)) args
+          vs = fmap (fromJust' (name ++ "ncorporate requests given valueless argument node") . valueOf) ns
+      sprs . ix spaddr %= \r -> r{sp = f (toList vs) (toList rs) sp}
     _ -> return ()
 
 do_unincorporateR :: (Numerical num, MonadState (Trace m num) m1) => Address -> m1 ()
@@ -675,7 +677,7 @@ maybe_constrain_parents a v = do
       case op of
         Nothing -> error "Trying to constrain an output node with no operator"
         (Just SP{outputter = Trivial}) ->
-           case reqs of
+           case toList reqs of
              -- TODO Make sure this constraint gets lifted if the
              -- requester is regenerated, even if r0 is ultimately a
              -- reference to some non-brush node.

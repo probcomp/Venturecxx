@@ -4,12 +4,15 @@
 module Subproblem where
 
 import Control.Lens hiding (children)
-import Control.Monad.Reader
+import Control.Monad.Reader hiding (mapM_, sequence_)
 import Control.Monad.Trans.State.Strict
+import Data.Foldable
 import qualified Data.Map as M
 import qualified Data.Maybe.Strict as Strict
 import qualified Data.Set as S
 import Text.PrettyPrint hiding (empty) -- presumably from cabal install pretty
+
+import Prelude hiding (mapM_, sequence_)
 
 import Utils
 import qualified InsertionOrderedSet as O
@@ -101,7 +104,7 @@ collectBrush = mapM_ disableRequests where
             spaddr <- asks $ fromJust "Disabling requests of operator-less request node"
                              . fromValueAt opa
             answers <- (asks $ fulfilments a)
-            sequence_ $ zipWith (disableRequestFor spaddr) (map srid reqs) answers
+            sequence_ $ zipWith (disableRequestFor spaddr) (map srid $ toList reqs) (toList answers)
           _ -> return ()
     -- Given the address of a requested node (and the SPAddress/SRId
     -- path of the request) account for the fact that it is now
