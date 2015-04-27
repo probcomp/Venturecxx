@@ -1,5 +1,6 @@
 {-# LANGUAGE TemplateHaskell, DoAndIfThenElse #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Subproblem where
 
@@ -10,6 +11,8 @@ import Data.Foldable
 import qualified Data.Map as M
 import qualified Data.Maybe.Strict as Strict
 import qualified Data.Set as S
+import qualified Data.Sequence as Seq
+import Data.Sequence ((><), ViewL(..))
 import qualified Data.Vector as V
 import Text.PrettyPrint hiding (empty) -- presumably from cabal install pretty
 
@@ -40,14 +43,13 @@ instance Pretty Scaffold where
 
 scaffold_from_principal_nodes :: [Address] -> Reader (Trace m num) Scaffold
 scaffold_from_principal_nodes as = do
-  scaffold <- execStateT (collectERG (map (,Nothing) as)) $ empty as
+  scaffold <- execStateT (collectERG $ Seq.fromList (map (,Nothing) as)) $ empty as
   (_, scaffold', _) <- execStateT (collectBrush $ O.toList $ scaffold ^. drg)
                                   (M.empty, scaffold, S.empty)
   return $ scaffold'
 
-collectERG :: [(Address,Maybe Address)] -> StateT Scaffold (Reader (Trace m num)) ()
-collectERG [] = return ()
-collectERG ((a,erg_parent):as) = do
+collectERG :: Seq.Seq (Address,Maybe Address) -> StateT Scaffold (Reader (Trace m num)) ()
+collectERG (Seq.viewl -> (a,erg_parent) :< as) = do
   -- erg_parent == Nothing means this is a principal node
   member <- uses drg $ O.member a
   -- Not stopping on nodes that are already absorbers because they can become ERG nodes
@@ -70,11 +72,12 @@ collectERG ((a,erg_parent):as) = do
           absorbers %= O.delete a
           drg %= O.insert a
           as' <- asks $ children a
-          collectERG $ (zip as' $ repeat $ Just a) ++ as
+          collectERG $ (Seq.fromList (zip as' $ repeat $ Just a)) >< as
         absorbing :: Address -> StateT Scaffold (Reader (Trace m num)) ()
         absorbing a = do
           absorbers %= O.insert a
           collectERG as
+collectERG _ = return ()
 
 -- Given the list of addresses in the ERG, produce an updated scaffold
 -- that includes the brush (and whose drg field is the actual DRG, not
