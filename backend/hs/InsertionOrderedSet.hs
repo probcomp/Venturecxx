@@ -8,7 +8,7 @@ module InsertionOrderedSet where
 -- but I am not inspired to do better right now.
 
 import qualified Data.Sequence as S
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 import qualified Data.Foldable as F
 import Data.Maybe
 
