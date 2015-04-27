@@ -322,9 +322,9 @@ data Trace rand num =
           }
     deriving (Show, Functor)
 
-data SPRecord m = SPRecord { sp :: !(SP m)
-                           , srid_seed :: !UniqueSeed
-                           , requests :: !(M.Map SRId Address)
+data SPRecord m = SPRecord { _sp :: !(SP m)
+                           , _srid_seed :: !UniqueSeed
+                           , _requests :: !(M.Map SRId Address)
                            }
     deriving Show
 
@@ -339,6 +339,7 @@ spRecord sp = SPRecord sp uniqueSeed M.empty
 -- invariants not enforced by the type system.
 
 makeLenses ''Trace
+makeLenses ''SPRecord
 
 empty :: Trace m num
 empty = Trace M.empty S.empty M.empty M.empty uniqueSeed uniqueSeed
@@ -350,7 +351,7 @@ operatorRecord :: Node num -> Trace m num -> Maybe (SPRecord m)
 operatorRecord n t = opAddr n >>= (flip fromValueAt t) >>= (\addr -> t ^. sprs . at addr)
 
 operator :: Node num -> Trace m num -> Maybe (SP m)
-operator n = liftM sp . operatorRecord n
+operator n = liftM _sp . operatorRecord n
 
 isRandomNode :: Node num -> Trace m num -> Bool
 isRandomNode n@(Request _ _ _ _) t = case operator n t of
@@ -465,7 +466,7 @@ addFreshSP sp t@Trace{ _sprs = ss, _spaddr_seed = seed } = (a, t{ _sprs = ss', _
 
 lookupResponse :: SPAddress -> SRId -> Trace m num -> Maybe Address
 lookupResponse spa srid t = do
-  SPRecord { requests = reqs } <- t ^. sprs . at spa
+  SPRecord { _requests = reqs } <- t ^. sprs . at spa
   M.lookup srid reqs
 
 -- Given a valid Trace, and an SPAddress, an SRId, and an Address that
@@ -476,8 +477,8 @@ lookupResponse spa srid t = do
 -- fulfilled by the Node at the given Address.
 insertResponse :: SPAddress -> SRId -> Address -> Trace m num -> Trace m num
 insertResponse spa id a t@Trace{ _sprs = ss } = t{ _sprs = M.insert spa spr' ss } where
-        spr' = spr{ requests = M.insert id a reqs }
-        spr@SPRecord { requests = reqs } = t ^. sprs . hardix "Inserting response to non-SP" spa
+        spr' = spr{ _requests = M.insert id a reqs }
+        spr@SPRecord { _requests = reqs } = t ^. sprs . hardix "Inserting response to non-SP" spa
 
 -- Given a valid Trace, an SPAddress in it, and a list of SRIds
 -- identifying SimulationRequests made by applications of the SP at
@@ -486,8 +487,8 @@ insertResponse spa id a t@Trace{ _sprs = ss } = t{ _sprs = M.insert spa spr' ss 
 -- multiplicity).
 forgetResponses :: (SPAddress, [SRId]) -> Trace m num -> Trace m num
 forgetResponses (spaddr, srids) t@Trace{ _sprs = ss } = t{ _sprs = M.insert spaddr spr' ss } where
-        spr' = spr{ requests = foldl (flip M.delete) reqs srids }
-        spr@SPRecord { requests = reqs } = t ^. sprs . hardix "Forgetting responses to non-SP" spaddr
+        spr' = spr{ _requests = foldl (flip M.delete) reqs srids }
+        spr@SPRecord { _requests = reqs } = t ^. sprs . hardix "Forgetting responses to non-SP" spaddr
 
 -- Given a valid Trace and an Address that occurs in it, returns the
 -- number of times that address has been requested.
@@ -560,10 +561,10 @@ runRequester :: (Monad m, Numerical num, MonadTrans t, MonadState (Trace m num) 
                 SPAddress -> [Address] -> t m [SimulationRequest num]
 runRequester spaddr args = do
   t <- get
-  spr@SPRecord { sp = SP{ requester = req, current = a }, srid_seed = seed } <-
+  SPRecord { _sp = SP{ requester = req, current = a }, _srid_seed = seed } <-
       use $ sprs . hardix "Running the requester of a non-SP" spaddr
   (reqs, seed') <- lift $ runUniqueSourceT (runReaderT (asRandomR req a args) t) seed
-  sprs . ix spaddr .= spr{ srid_seed = seed' }
+  sprs . ix spaddr . srid_seed .= seed'
   return reqs
 
 -- Given that the Trace argument is valid, and the inputs are an
@@ -578,7 +579,7 @@ runRequester spaddr args = do
 outputFor :: (Monad m, Numerical num) => SPAddress -> [Address] -> [Address] -> Trace m num
           -> (Either (m (Value num)) (SP m))
 outputFor spaddr argAs resultAs t =
-    case t ^. (sprs . hardix "Running the outputter of a non-SP" spaddr) . to sp of
+    case t ^. (sprs . hardix "Running the outputter of a non-SP" spaddr) . sp of
       SP{ outputter = out, current = st } -> asRandomO' out st argAs resultAs t
 
 -- Given that the Trace in the state is valid, process the given
@@ -596,7 +597,7 @@ fulfilments :: Address -> Trace m num -> V.Vector Address
 -- node at Address.
 fulfilments a t = fmap (fromJust "Unfulfilled request" . flip M.lookup reqs) $ requestIds node where
     node = t ^. nodes . hardix "Asking for fulfilments of a missing node" a
-    SPRecord { requests = reqs } = fromJust "Asking for fulfilments of a node with no operator record" $ operatorRecord node t
+    SPRecord { _requests = reqs } = fromJust "Asking for fulfilments of a node with no operator record" $ operatorRecord node t
 
 absorb :: (Numerical num) => Node num -> SP m -> Trace m num -> num
 absorb (Request (Strict.Just reqs) _ _ args) SP{log_d_req = (Strict.Just (LogDReq f)), current = a} _ = f a (toList args) (toList reqs)
@@ -625,8 +626,7 @@ corporate name f a = do
     (Output _ _ opa _ _) -> do
       let v = fromJust' (name ++ "ncorporating value that isn't there") $ valueOf node
       spaddr <- gets $ fromJust (name ++ "ncorporating value for an output with no operator address") . (fromValueAt opa)
-      sp <- gets $ fromJust (name ++ "ncorporating value for an output with no operator") . (operator node)
-      sprs . ix spaddr %= \r -> r{sp = f v sp}
+      sprs . ix spaddr . sp %= f v
     _ -> return ()
 
 do_unincorporate :: (Numerical num, MonadState (Trace m num) m1) => Address -> m1 ()
@@ -645,11 +645,10 @@ corporateR name f a = do
     (Request reqs _ opa args) -> do
       let rs = fromJust' (name ++ "ncorporating requests that aren't there") reqs
       spaddr <- gets $ fromJust (name ++ "ncorporating requests for a requester with no operator address") . (fromValueAt opa)
-      sp <- gets $ fromJust (name ++ "ncorporating requests for a requester with no operator") . (operator node)
       t <- get
       let ns = fmap (fromJust (name ++ "ncorporate requests given dangling address") . flip M.lookup (t^.nodes)) args
           vs = fmap (fromJust' (name ++ "ncorporate requests given valueless argument node") . valueOf) ns
-      sprs . ix spaddr %= \r -> r{sp = f (toList vs) (toList rs) sp}
+      sprs . ix spaddr . sp %= f (toList vs) (toList rs)
     _ -> return ()
 
 do_unincorporateR :: (Numerical num, MonadState (Trace m num) m1) => Address -> m1 ()
@@ -711,7 +710,7 @@ nodeChildrenKeys t = M.keys $ t ^. node_children
 nodeChildren :: Trace m num -> [Address]
 nodeChildren t = concat $ map S.toList $ M.elems $ t ^. node_children
 requestedAddresses :: Trace m num -> [Address]
-requestedAddresses t = concat $ map (M.elems . requests) $ M.elems $ t ^. sprs
+requestedAddresses t = concat $ map (M.elems . _requests) $ M.elems $ t ^. sprs
 
 invalidAddress :: Trace m num -> Address -> Bool
 invalidAddress t a = not $ isJust $ lookupNode a t
@@ -749,7 +748,7 @@ invalid_freshable trans as seed = if max < max' then Nothing else Just max where
     (max', _) = runUniqueSource (liftM trans fresh) seed
 
 invalid_srid :: SPRecord m -> Maybe SRId
-invalid_srid SPRecord{srid_seed = seed, requests = reqs} = invalid_freshable SRId (M.keys reqs) seed
+invalid_srid SPRecord{_srid_seed = seed, _requests = reqs} = invalid_freshable SRId (M.keys reqs) seed
 
 invalid_seeds :: Trace m num -> [TraceProblem]
 invalid_seeds t@Trace{_addr_seed = aseed, _spaddr_seed = spaseed, _sprs = sprs} =
@@ -837,7 +836,7 @@ ppDefault _ (Strict.Just a) = pp a
 ppDefault d Strict.Nothing = text d
 
 instance Pretty (SPRecord m) where
-    pp SPRecord { sp = SP{current = s}, requests = rs } = text (show s) <+> requests where
+    pp SPRecord { _sp = SP{current = s}, _requests = rs } = text (show s) <+> requests where
       requests = brackets $ sep $ map entry $ M.toList rs
       entry (k,v) = pp k <> colon <> space <> pp v
 
