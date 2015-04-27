@@ -23,9 +23,9 @@ import qualified Subproblem
 import SP
 import qualified Inference as I (resimulation_mh, Selector, Assessable(..))
 
-data Directive num = Assume DT.Text (T.Exp num)
-                   | Observe (T.Exp num) (T.Value num)
-                   | Predict (T.Exp num)
+data Directive num = Assume !DT.Text !(T.Exp num)
+                   | Observe !(T.Exp num) !(T.Value num)
+                   | Predict !(T.Exp num)
   deriving Show
 
 instance (Show num) => Pretty (Directive num) where
