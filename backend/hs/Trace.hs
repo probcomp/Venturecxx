@@ -313,18 +313,18 @@ canAbsorb _ _ _ = False
 -- some of whose Request nodes may have outstanding SimulationRequests
 -- that have not yet been met.
 data Trace rand num =
-    Trace { _nodes :: (M.Map Address (Node num))
-          , _randoms :: S.Set Address
-          , _node_children :: M.Map Address (S.Set Address)
-          , _sprs :: (M.Map SPAddress (SPRecord rand))
+    Trace { _nodes :: !(M.Map Address (Node num))
+          , _randoms :: !(S.Set Address)
+          , _node_children :: !(M.Map Address (S.Set Address))
+          , _sprs :: !(M.Map SPAddress (SPRecord rand))
           , _addr_seed :: !UniqueSeed
           , _spaddr_seed :: !UniqueSeed
           }
     deriving (Show, Functor)
 
-data SPRecord m = SPRecord { sp :: (SP m)
+data SPRecord m = SPRecord { sp :: !(SP m)
                            , srid_seed :: !UniqueSeed
-                           , requests :: M.Map SRId Address
+                           , requests :: !(M.Map SRId Address)
                            }
     deriving Show
 
