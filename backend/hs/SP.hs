@@ -10,6 +10,7 @@ import Data.Functor.Compose
 import qualified Data.Map.Strict as M
 import qualified Data.Maybe.Strict as Strict
 import qualified Data.Text as DT
+import Data.Tuple.Strict (Pair(..))
 import Control.Monad.State.Strict hiding (state)
 import Control.Monad.State.Class
 import Control.Monad.Reader
@@ -313,7 +314,7 @@ memoized_sp proc = T.SP
   , T.log_d_req = Strict.Just $ T.LogDReq $ const $ trivial_log_d_req
   , T.outputter = T.Trivial
   , T.log_d_out = Strict.Nothing
-  , T.current = (M.empty :: M.Map [Value Double] (SRId,Int))
+  , T.current = (M.empty :: M.Map [Value Double] (Pair SRId Int))
   , T.incorporate = const $ id
   , T.unincorporate = const $ id
   , T.incorporateR = inc
@@ -325,27 +326,27 @@ memoized_sp proc = T.SP
           vs = map (fromJust' "Memoized SP given valueless argument node" . valueOf) ns
       let cachedSRId = M.lookup (fmap (fmap realToFrac) vs) cache
       case cachedSRId of
-        (Just (id,_)) -> return [SimulationRequest id (Compose $ Var "unaccessed") Toplevel]
+        (Just (id :!: _)) -> return [SimulationRequest id (Compose $ Var "unaccessed") Toplevel]
         Nothing -> do
           newId <- liftM SRId fresh
           let names = take (length args) $ map (DT.pack . show) $ ([1..] :: [Int])
               exp = App (Var "memoized-sp") $ V.fromList $ map Var names
               env = Frame (M.fromList $ ("memoized-sp",proc):(zip names args)) Toplevel
           return [SimulationRequest newId (Compose exp) env]
-    inc :: (T.Numerical num1, T.Numerical num) => [Value num1] -> [SimulationRequest num1] -> M.Map [Value num] (SRId, Int) -> M.Map [Value num] (SRId, Int)
+    inc :: (T.Numerical num1, T.Numerical num) => [Value num1] -> [SimulationRequest num1] -> M.Map [Value num] (Pair SRId Int) -> M.Map [Value num] (Pair SRId Int)
     inc vs [req] cache = M.alter incr (fmap (fmap realToFrac) vs) cache where
-        incr :: Maybe (SRId, Int) -> Maybe (SRId, Int)
-        incr Nothing = Just (srid req, 1)
-        incr (Just (srid', k)) | srid' == srid req = Just (srid', k+1)
+        incr :: Maybe (Pair SRId Int) -> Maybe (Pair SRId Int)
+        incr Nothing = Just (srid req :!: 1)
+        incr (Just (srid' :!: k)) | srid' == srid req = Just (srid' :!: k+1)
                                | otherwise = error "Memoized procedure incorporating different requests for the same values"
     inc _ _ _ = error "Memoized procedure expects to incorporate exactly one request"
-    dec :: (T.Numerical num1, T.Numerical num) => [Value num1] -> [SimulationRequest num1] -> M.Map [Value num] (SRId, Int) -> M.Map [Value num] (SRId, Int)
+    dec :: (T.Numerical num1, T.Numerical num) => [Value num1] -> [SimulationRequest num1] -> M.Map [Value num] (Pair SRId Int) -> M.Map [Value num] (Pair SRId Int)
     dec vs [req] cache = M.alter decr (fmap (fmap realToFrac) vs) cache where
-        decr :: Maybe (SRId, Int) -> Maybe (SRId, Int)
+        decr :: Maybe (Pair SRId Int) -> Maybe (Pair SRId Int)
         decr Nothing = error "Memoized procedure unincorporating a request it did not make"
-        decr (Just (srid', k)) | srid' == srid req = if (k==1) then Nothing
-                                                     else Just (srid', k-1)
-                               | otherwise = error "Memoized procedure unincorporating different requests for the same values"
+        decr (Just (srid' :!: k)) | srid' == srid req = if (k==1) then Nothing
+                                                        else Just (srid' :!: k-1)
+                                  | otherwise = error "Memoized procedure unincorporating different requests for the same values"
     dec _ _ _ = error "Memoized procedure expects to unincorporate exactly one request"
 
 -- Question for a wizard: is there a way to actually use my stupid
