@@ -132,17 +132,17 @@ newtype LogDOut a = LogDOut
     (forall num. (Numerical num) => a -> [Node num] -> [Node num] -> Value num -> num)
 
 data SP m = forall a. (Show a) => SP 
-    { requester :: SPRequester m a
-    , log_d_req :: Strict.Maybe (LogDReq a)
-    , outputter :: SPOutputter m a
-    , log_d_out :: Strict.Maybe (LogDOut a)
+    { requester :: !(SPRequester m a)
+    , log_d_req :: !(Strict.Maybe (LogDReq a))
+    , outputter :: !(SPOutputter m a)
+    , log_d_out :: !(Strict.Maybe (LogDOut a))
     , current :: a
     -- These guys may need to accept the argument lists, but I have
     -- not yet seen an example that forces this.
-    , incorporate :: forall num. (Numerical num) => Value num -> a -> a
-    , unincorporate :: forall num. (Numerical num) => Value num -> a -> a
-    , incorporateR :: forall num. (Numerical num) => [Value num] -> [SimulationRequest num] -> a -> a
-    , unincorporateR :: forall num. (Numerical num) => [Value num] -> [SimulationRequest num] -> a -> a
+    , incorporate :: !(forall num. (Numerical num) => Value num -> a -> a)
+    , unincorporate :: !(forall num. (Numerical num) => Value num -> a -> a)
+    , incorporateR :: !(forall num. (Numerical num) => [Value num] -> [SimulationRequest num] -> a -> a)
+    , unincorporateR :: !(forall num. (Numerical num) => [Value num] -> [SimulationRequest num] -> a -> a)
     }
 -- TODO Can I refactor this data type to capture the fact that
 -- deterministic requesters and outputters never have meaningful log_d
