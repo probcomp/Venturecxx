@@ -23,13 +23,13 @@ import qualified Subproblem
 import SP
 import qualified Inference as I (resimulation_mh, Selector, Assessable(..))
 
-data Directive num = Assume String (T.Exp num)
+data Directive num = Assume DT.Text (T.Exp num)
                    | Observe (T.Exp num) (T.Value num)
                    | Predict (T.Exp num)
   deriving Show
 
 instance (Show num) => Pretty (Directive num) where
-    pp (Assume var exp) = text "assume" <> space <> text var <> space <> pp exp
+    pp (Assume var exp) = text "assume" <> space <> (text $ DT.unpack var) <> space <> pp exp
     pp (Observe exp val) = text "observe" <> space <> pp exp <> space <> pp val
     pp (Predict exp) = text "predict" <> space <> pp exp
 
@@ -60,13 +60,13 @@ topeval exp = do
   (Model e _ _) <- get
   trace `zoom` (eval prior exp e)
 
-assume :: (MonadRandom m, Numerical num) => String -> Exp num -> (StateT (Model m num) m) Address
+assume :: (MonadRandom m, Numerical num) => DT.Text -> Exp num -> (StateT (Model m num) m) Address
 assume var exp = do
   -- TODO This implementation of assume does not permit recursive
   -- functions, because of insufficient indirection to the
   -- environment.
   address <- topeval exp
-  env %= Frame (M.fromList [(DT.pack var, address)])
+  env %= Frame (M.fromList [(var, address)])
   directives . at address .= Just (Assume var exp)
   return address
 

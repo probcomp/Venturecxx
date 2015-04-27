@@ -69,9 +69,9 @@ decode_body str = Aeson.eitherDecode str
 -- So far, expect the method and arguments to lead to a directive
 parse :: (Fractional num) => String -> [String] -> Either String (Command num)
 parse "assume" [var, expr] =
-    Right $ Directive (V.Assume var $ Compose $ G.parse expr) Nothing
+    Right $ Directive (V.Assume (T.pack var) $ Compose $ G.parse expr) Nothing
 parse "assume" [var, expr, label] =
-    Right $ Directive (V.Assume var $ Compose $ G.parse expr) $ Just label
+    Right $ Directive (V.Assume (T.pack var) $ Compose $ G.parse expr) $ Just label
 parse "assume" args =
     Left $ "Incorrect number of arguments to assume " ++ show args
 parse "observe" [expr, val] =
@@ -152,7 +152,7 @@ instance (Show num, Real num) => StackDict (V.Directive num) where
     as_stack_dict (V.Assume var exp) =
         J.object [ ("instruction", J.String "assume")
                  , ("expression", as_stack_dict exp)
-                 , ("symbol", symbol $ T.pack var)
+                 , ("symbol", symbol $ var)
                  ]
     as_stack_dict (V.Observe exp val) =
         J.object [ ("instruction", J.String "observe")
