@@ -168,10 +168,10 @@ instance (Show num, Real num) => StackDict (Tr.Exp num) where
     as_stack_dict (Compose (L.Datum val)) = as_stack_dict val -- TODO Quote?
     as_stack_dict (Compose (L.Var var)) = symbol var
     as_stack_dict (Compose (L.App op opands)) =
-        Aeson.toJSON $ map (as_stack_dict . Compose) (op:opands)
+        Aeson.toJSON $ map (as_stack_dict . Compose) (op:Vec.toList opands)
     as_stack_dict (Compose (L.Lam formals body)) =
         Aeson.toJSON $ ([symbol "lambda", st_formals, as_stack_dict (Compose body)])
-        where st_formals = Aeson.toJSON $ map symbol formals
+        where st_formals = Aeson.toJSON $ map symbol $ Vec.toList formals
 
 instance (Show num, Real num) => StackDict (L.Value proc num) where
     as_stack_dict (L.Number n) =

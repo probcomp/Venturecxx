@@ -15,10 +15,12 @@ module Trace where
 
 import Debug.Trace
 import Data.Functor.Compose
+import Data.Foldable
 import Data.Maybe hiding (fromJust)
 import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Data.Text as DT
+import qualified Data.Vector as V
 import Control.Lens hiding (children)  -- from cabal install lens
 import Control.Monad.State.Strict hiding (state) -- :set -hide-package monads-tf-0.1.0.1
 import Control.Monad.Writer.Class
@@ -26,6 +28,8 @@ import Control.Monad.Reader
 import Control.Monad.State.Class
 import Control.Monad.Morph
 import Text.PrettyPrint -- presumably from cabal install pretty
+
+import Prelude hiding (foldl, concat, elem, maximum) -- Prefer Data.Foldable
 
 import Utils
 import Language hiding (Value, Exp, Env)
@@ -50,8 +54,8 @@ instance (Num num) => Num (Exp num) where
 
 datum = Compose . L.Datum
 var = Compose . L.Var
-app (Compose op) args = Compose $ L.App op $ map getCompose args
-lam formals (Compose body) = Compose $ L.Lam formals body
+app (Compose op) args = Compose $ L.App op $ V.fromList $ map getCompose $ toList args
+lam formals (Compose body) = Compose $ L.Lam (V.fromList $ toList formals) body
 true = Compose $ L.Datum $ L.Boolean True
 false = Compose $ L.Datum $ L.Boolean False
 
@@ -848,10 +852,10 @@ instance (Show num) => Pretty (SimulationRequest num) where
 instance (Show num) => Pretty (Exp num) where
     pp (Compose (Datum val)) = pp val
     pp (Compose (Var var)) = text $ DT.unpack var
-    pp (Compose (App op opands)) = parens $ sep $ map (pp . Compose) (op:opands)
+    pp (Compose (App op opands)) = parens $ sep $ map (pp . Compose) (op:toList opands)
     pp (Compose (Lam formals body)) = parens (text "lambda" <> space <> pp_formals <> space <> pp (Compose body))
       where
-        pp_formals = parens $ sep $ map (text . DT.unpack) formals
+        pp_formals = parens $ sep $ map (text . DT.unpack) $ toList formals
 
 instance Pretty Env where
     pp e = brackets $ sep $ map entry $ M.toList $ effectiveEnv e where

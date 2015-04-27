@@ -43,8 +43,8 @@ log_density_negate (LogDensity x) = LogDensity $ -x
 
 data Exp v = Datum !v
            | Var !Text
-           | App !(Exp v) ![Exp v]
-           | Lam ![Text] !(Exp v)
+           | App !(Exp v) !(V.Vector (Exp v))
+           | Lam !(V.Vector Text) !(Exp v)
     deriving (Show, Functor)
 
 instance (Num a) => Num (Exp a) where

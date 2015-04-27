@@ -36,8 +36,8 @@ Exp : sym  { Var $ DT.pack $1 }
     | int  { Datum $ Number $ fromInteger $1 }
     | flo  { Datum $ Number $1 }
     | '(' quo Exp ')' { Datum $ exp_to_value $3 } -- Or do I want a separate "datum" grammar?
-    | '(' Exp Exps ')' { App $2 (reverse $3) }
-    | '(' lam '(' Syms ')' Exp ')' { Lam (reverse $ map DT.pack $4) $6 }
+    | '(' Exp Exps ')' { App $2 (V.fromList $ reverse $3) }
+    | '(' lam '(' Syms ')' Exp ')' { Lam (V.fromList $ reverse $ map DT.pack $4) $6 }
 
 Exps :  { [] }
      | Exps Exp { $2 : $1 }
@@ -55,8 +55,8 @@ Syms : { [] }
 --   from list structure that detects keywords.
 exp_to_value (Datum val) = val
 exp_to_value (Var name) = Symbol name
-exp_to_value (App op opands) = List $ V.fromList $ map exp_to_value (op:opands)
-exp_to_value (Lam formals body) = List $ V.fromList [Symbol "lambda", List (V.fromList $ map Symbol formals), exp_to_value body]
+exp_to_value (App op opands) = List $ V.cons (exp_to_value op) $ V.map exp_to_value opands
+exp_to_value (Lam formals body) = List $ V.fromList [Symbol "lambda", List (V.map Symbol formals), exp_to_value body]
 
 parseError :: T.Token -> T.Alex a
 parseError t = T.Alex (\T.AlexState {T.alex_pos = (T.AlexPn _ line col)} -> Left $ "Parse error at " ++ show line ++ ":" ++ show col ++ " on token " ++ show t)

@@ -92,7 +92,7 @@ no_state_o (RandomO f) = T.RandomO $ const f
 no_state_o (SPMaker f) = T.SPMaker $ const f
 no_state_o (ReferringSPMaker f) = T.ReferringSPMaker $ const f
 
-compoundSP :: (Monad m, Fractional num, Real num) => [DT.Text] -> Exp num -> Env -> SP m
+compoundSP :: (Monad m, Fractional num, Real num) => V.Vector DT.Text -> Exp num -> Env -> SP m
 compoundSP formals exp env = no_state_sp NoStateSP
   { requester = DeterministicR req
   , log_d_req = Just $ LogDReqNS trivial_log_d_req
@@ -101,7 +101,7 @@ compoundSP formals exp env = no_state_sp NoStateSP
   } where
     req args = do
       freshId <- liftM SRId fresh
-      let r = SimulationRequest freshId (fmap realToFrac exp) $ Frame (M.fromList $ zip formals args) env
+      let r = SimulationRequest freshId (fmap realToFrac exp) $ Frame (M.fromList $ zip (V.toList formals) args) env
       return [r]
 
 -- It would be nice if these combinators admitted a nice way to pass
@@ -328,7 +328,7 @@ memoized_sp proc = T.SP
         Nothing -> do
           newId <- liftM SRId fresh
           let names = take (length args) $ map (DT.pack . show) $ ([1..] :: [Int])
-              exp = App (Var "memoized-sp") $ map Var names
+              exp = App (Var "memoized-sp") $ V.fromList $ map Var names
               env = Frame (M.fromList $ ("memoized-sp",proc):(zip names args)) Toplevel
           return [SimulationRequest newId (Compose exp) env]
     inc :: (T.Numerical num1, T.Numerical num) => [Value num1] -> [SimulationRequest num1] -> M.Map [Value num] (SRId, Int) -> M.Map [Value num] (SRId, Int)

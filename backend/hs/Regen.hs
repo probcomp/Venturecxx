@@ -3,17 +3,18 @@
 
 module Regen where
 
+import Data.Foldable
 import Data.Functor.Compose
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe hiding (fromJust)
-import Control.Monad
+import Control.Monad hiding (mapM_)
 import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Trans.State.Strict hiding (state, get, gets, modify)
 import Control.Monad.Trans.Class
 import Control.Monad.State.Class
 import Control.Monad.Random -- From cabal install MonadRandom
-import Prelude hiding (lookup)
+import Prelude hiding (lookup, mapM_)
 import Control.Lens -- From cabal install lens
 
 import Language hiding (Value, Exp, Env, lookup)
@@ -114,7 +115,7 @@ eval _ (Compose (Lam vs exp)) e = do
   state $ addFreshNode $ Constant $ Procedure spAddr
 eval propose (Compose (App op args)) env = do
   op' <- eval propose (Compose op) env
-  args' <- sequence $ map (flip (eval propose) env) $ map Compose args
+  args' <- sequence $ map (flip (eval propose) env) $ map Compose $ toList args
   addr <- state $ addFreshNode (Request Nothing Nothing op' args')
   -- Is there a good reason why I don't care about the log density of this regenNode?
   _ <- runWriterT $ regenNode propose addr
