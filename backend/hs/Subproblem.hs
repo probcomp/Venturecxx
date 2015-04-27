@@ -10,6 +10,7 @@ import Data.Foldable
 import qualified Data.Map as M
 import qualified Data.Maybe.Strict as Strict
 import qualified Data.Set as S
+import qualified Data.Vector as V
 import Text.PrettyPrint hiding (empty) -- presumably from cabal install pretty
 
 import Prelude hiding (mapM_, sequence_)
@@ -18,7 +19,7 @@ import Utils
 import qualified InsertionOrderedSet as O
 import Trace hiding (empty)
 
-data Scaffold = Scaffold { _principal :: [Address]
+data Scaffold = Scaffold { _principal :: V.Vector Address
                          , _drg :: O.Set Address -- Includes the principal nodes
                          , _absorbers :: O.Set Address
                          , _dead_reqs :: [(SPAddress, [SRId])]
@@ -29,7 +30,7 @@ data Scaffold = Scaffold { _principal :: [Address]
 makeLenses ''Scaffold
 
 empty :: [Address] -> Scaffold
-empty as = Scaffold as O.empty O.empty [] S.empty
+empty as = Scaffold (V.fromList as) O.empty O.empty [] S.empty
 
 instance Pretty Scaffold where
     pp s = hang (text "Scaffold") 1 $
