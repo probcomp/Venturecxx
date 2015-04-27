@@ -22,11 +22,14 @@ import Utils
 import qualified InsertionOrderedSet as O
 import Trace hiding (empty)
 
-data Scaffold = Scaffold { _principal :: V.Vector Address
-                         , _drg :: O.Set Address -- Includes the principal nodes
-                         , _absorbers :: O.Set Address
-                         , _dead_reqs :: [(SPAddress, [SRId])]
-                         , _brush :: S.Set Address
+data Scaffold = Scaffold { _principal :: !(V.Vector Address)
+                         , _drg :: !(O.Set Address) -- Includes the principal nodes
+                         , _absorbers :: !(O.Set Address)
+                         -- I want dead_reqs to be a list because I
+                         -- build it up by cons and then use it once
+                         -- by mapM_
+                         , _dead_reqs :: ![(SPAddress, [SRId])]
+                         , _brush :: !(S.Set Address)
                          }
   deriving Show
 
