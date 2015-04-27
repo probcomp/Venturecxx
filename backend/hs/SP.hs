@@ -48,23 +48,23 @@ newtype LogDOutNS =
     LogDOutNS (forall num. (T.Numerical num) => [Node num] -> [Node num] -> Value num -> num)
 
 data NoStateSP m = NoStateSP
-    { requester :: SPRequesterNS m
-    , log_d_req :: Strict.Maybe LogDReqNS
-    , outputter :: SPOutputterNS m
-    , log_d_out :: Strict.Maybe LogDOutNS
+    { requester :: !(SPRequesterNS m)
+    , log_d_req :: !(Strict.Maybe LogDReqNS)
+    , outputter :: !(SPOutputterNS m)
+    , log_d_out :: !(Strict.Maybe LogDOutNS)
     }
 
 data SPRequesterNS m
-    = DeterministicR (forall num. (T.Numerical num) => [Address] -> UniqueSource [SimulationRequest num])
-    | RandomR (forall num. [Address] -> UniqueSourceT m [SimulationRequest num])
-    | ReaderR (forall num. [Address] -> ReaderT (Trace m num) UniqueSource [SimulationRequest num])
+    = DeterministicR !(forall num. (T.Numerical num) => [Address] -> UniqueSource [SimulationRequest num])
+    | RandomR !(forall num. [Address] -> UniqueSourceT m [SimulationRequest num])
+    | ReaderR !(forall num. [Address] -> ReaderT (Trace m num) UniqueSource [SimulationRequest num])
 
 data SPOutputterNS m
     = Trivial
-    | DeterministicO (forall num. (T.Numerical num) => [Node num] -> [Node num] -> Value num)
-    | RandomO (forall num. (T.Numerical num) => [Node num] -> [Node num] -> m (Value num))
-    | SPMaker (forall num. (T.Numerical num) => [Node num] -> [Node num] -> SP m) -- Are these ever random?
-    | ReferringSPMaker ([Address] -> [Address] -> SP m)
+    | DeterministicO !(forall num. (T.Numerical num) => [Node num] -> [Node num] -> Value num)
+    | RandomO !(forall num. (T.Numerical num) => [Node num] -> [Node num] -> m (Value num))
+    | SPMaker !(forall num. (T.Numerical num) => [Node num] -> [Node num] -> SP m) -- Are these ever random?
+    | ReferringSPMaker !([Address] -> [Address] -> SP m)
 
 no_state_sp :: NoStateSP m -> SP m
 no_state_sp NoStateSP { requester = req, log_d_req = ldr, outputter = out, log_d_out = ldo } =
