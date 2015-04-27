@@ -4,7 +4,7 @@
 
 module Venture where
 
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.State.Strict
 import Control.Monad.Trans.Writer.Strict

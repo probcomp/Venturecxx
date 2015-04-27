@@ -16,7 +16,7 @@ import           Control.Lens
 import           Control.Monad.State.Strict
 import qualified Data.ByteString.Lazy         as B
 import           Data.List                    (isPrefixOf)
-import qualified Data.Map                     as Map
+import qualified Data.Map.Strict              as Map
 import qualified Data.Text                    as DT
 import qualified Data.Vector                  as Vec
 import qualified Data.Bimap                   as Bimap

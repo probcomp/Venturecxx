@@ -7,7 +7,7 @@
 module SP where
 
 import Data.Functor.Compose
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 import qualified Data.Maybe.Strict as Strict
 import qualified Data.Text as DT
 import Control.Monad.State.Strict hiding (state)

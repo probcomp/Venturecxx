@@ -8,7 +8,7 @@ import           Control.Monad.Trans.Either   -- from the 'either' package
 import           Data.Functor.Compose
 import qualified Data.ByteString.Lazy         as B
 import qualified Data.HashMap.Strict          as HashMap -- For the add_field and get_field combinators
-import qualified Data.Map                     as M
+import qualified Data.Map.Strict              as M
 import           Data.Maybe                   (fromJust)
 import qualified Data.Text                    as T (Text, pack, unpack)
 import qualified Data.Vector                  as Vec

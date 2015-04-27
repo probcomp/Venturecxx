@@ -8,7 +8,7 @@ import Control.Lens hiding (children)
 import Control.Monad.Reader hiding (mapM_, sequence_)
 import Control.Monad.Trans.State.Strict
 import Data.Foldable
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 import qualified Data.Maybe.Strict as Strict
 import qualified Data.Set as S
 import qualified Data.Sequence as Seq

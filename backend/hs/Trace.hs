@@ -18,7 +18,7 @@ import Data.Functor.Compose
 import Data.Foldable
 import Data.Maybe hiding (fromJust)
 import qualified Data.Maybe.Strict as Strict
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import qualified Data.Text as DT
 import qualified Data.Vector as V
