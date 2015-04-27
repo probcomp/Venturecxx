@@ -34,11 +34,11 @@ instance (Show num) => Pretty (Directive num) where
     pp (Predict exp) = text "predict" <> space <> pp exp
 
 data Model m num =
-    Model { _env :: Env
-          , _trace :: (Trace m num)
+    Model { _env :: !Env
+          , _trace :: !(Trace m num)
           -- Hm.  Do I actually need to explicitly track this, or can
           -- it be deduced from the underlying Env and Trace?
-          , _directives :: M.Map Address (Directive num)
+          , _directives :: !(M.Map Address (Directive num))
           }
 
 makeLenses ''Model
