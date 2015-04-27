@@ -20,7 +20,7 @@ import qualified Subproblem as Sub
 
 type MHAble m a num = a -> WriterT (LogDensity num) m a
 
-data Assessable m a b num = Assessable (a -> m b) (a -> b -> LogDensity num)
+data Assessable m a b num = Assessable !(a -> m b) !(a -> b -> LogDensity num)
 
 metropolis_hastings :: (MonadRandom m, Real num) => MHAble m a num -> a -> m a
 metropolis_hastings propose x = do
