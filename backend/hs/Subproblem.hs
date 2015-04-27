@@ -7,6 +7,7 @@ import Control.Lens hiding (children)
 import Control.Monad.Reader
 import Control.Monad.Trans.State.Strict
 import qualified Data.Map as M
+import qualified Data.Maybe.Strict as Strict
 import qualified Data.Set as S
 import Text.PrettyPrint hiding (empty) -- presumably from cabal install pretty
 
@@ -96,7 +97,7 @@ collectBrush = mapM_ disableRequests where
         _3 . contains a .= True
         node <- view $ nodes . hardix "Disabling requests of non-existent node" a
         case node of
-          (Request (Just reqs) _ opa _) -> do
+          (Request (Strict.Just reqs) _ opa _) -> do
             spaddr <- asks $ fromJust "Disabling requests of operator-less request node"
                              . fromValueAt opa
             answers <- (asks $ fulfilments a)

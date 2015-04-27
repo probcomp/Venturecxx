@@ -110,8 +110,8 @@ compoundSP formals exp env = no_state_sp NoStateSP
 -- repeat it all over its own definition.
 on_values :: ([Value num] -> [Value num] -> a) -> ([Node num] -> [Node num] -> a)
 on_values f ns1 ns2 = f vs1 vs2 where
-    vs1 = map (fromJust "Argument node had no value" . valueOf) ns1
-    vs2 = map (fromJust "Fulfilment node had no value" . valueOf) ns2
+    vs1 = map (fromJust' "Argument node had no value" . valueOf) ns1
+    vs2 = map (fromJust' "Fulfilment node had no value" . valueOf) ns2
 
 binary :: (a -> a -> r) -> [a] -> [b] -> r
 binary f [a1,a2] [] = f a1 a2
@@ -322,7 +322,7 @@ memoized_sp proc = T.SP
     req cache args = do
       t <- ask
       let ns = map (fromJust "Memoized SP given dangling address" . flip M.lookup (t^.nodes)) args
-          vs = map (fromJust "Memoized SP given valueless argument node" . valueOf) ns
+          vs = map (fromJust' "Memoized SP given valueless argument node" . valueOf) ns
       let cachedSRId = M.lookup (fmap (fmap realToFrac) vs) cache
       case cachedSRId of
         (Just (id,_)) -> return [SimulationRequest id (Compose $ Var "unaccessed") Toplevel]

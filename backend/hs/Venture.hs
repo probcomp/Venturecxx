@@ -52,7 +52,7 @@ initial = Model e t M.empty where
 
 lookupValue :: Address -> Model m num -> Value num
 lookupValue a (Model _ t _) =
-    fromJust "No value at address" $ valueOf
+    fromJust' "No value at address" $ valueOf
     $ fromJust "Invalid address" $ lookupNode a t
 
 topeval :: (MonadRandom m, Numerical num) => Exp num -> (StateT (Model m num) m) Address

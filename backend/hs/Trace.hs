@@ -194,7 +194,7 @@ isRandomR (ReaderR _) = False
 
 asRandomO :: (Monad m, Numerical num) => SPOutputter m a -> a -> [Node num] -> [Node num]
           -> Either (m (Value num)) (SP m)
-asRandomO Trivial _ _ (r0:_) = Left $ return $ fromJust "Trivial outputter node had no value" $ valueOf r0
+asRandomO Trivial _ _ (r0:_) = Left $ return $ fromJust' "Trivial outputter node had no value" $ valueOf r0
 asRandomO Trivial _ _ _ = error "Trivial outputter requires one response"
 asRandomO (RandomO f) st args reqs = Left $ f st args reqs
 asRandomO (DeterministicO f) st args reqs = Left $ return $ f st args reqs
@@ -220,43 +220,43 @@ isRandomO (ReferringSPMaker _) = False
 ----------------------------------------------------------------------
 
 data Node num = Constant !(Value num)
-              | Reference !(Maybe (Value num)) !Address
-              | Request !(Maybe [SimulationRequest num]) !(Maybe Address) !Address ![Address]
-              | Output !(Maybe (Value num)) !Address !Address ![Address] ![Address]
+              | Reference !(Strict.Maybe (Value num)) !Address
+              | Request !(Strict.Maybe [SimulationRequest num]) !(Strict.Maybe Address) !Address ![Address]
+              | Output !(Strict.Maybe (Value num)) !Address !Address ![Address] ![Address]
     deriving (Show, Functor)
 
-valueOf :: Node num -> Maybe (Value num)
-valueOf (Constant v) = Just v
+valueOf :: Node num -> Strict.Maybe (Value num)
+valueOf (Constant v) = Strict.Just v
 valueOf (Reference v _) = v
 valueOf (Output v _ _ _ _) = v
-valueOf _ = Nothing
+valueOf _ = Strict.Nothing
 
-revalue :: Node num -> Maybe (Value num) -> Node num
+revalue :: Node num -> Strict.Maybe (Value num) -> Node num
 revalue (Constant _) _ = error "Cannot revalue a constant"
 revalue (Reference _ a) v = Reference v a
 -- This is a slight violation of the lens laws
-revalue (Request _ outA a as) Nothing = Request Nothing outA a as
+revalue (Request _ outA a as) Strict.Nothing = Request Strict.Nothing outA a as
 revalue r@(Request _ _ _ _) _ = r
 revalue (Output _ reqA opa args reqs) v = Output v reqA opa args reqs
 
-value :: Simple Lens (Node num) (Maybe (Value num))
+value :: Simple Lens (Node num) (Strict.Maybe (Value num))
 value = lens valueOf revalue
 
 isRegenerated :: Node num -> Bool
 isRegenerated (Constant _) = True
-isRegenerated (Reference Nothing _) = False
-isRegenerated (Reference (Just _) _) = True
-isRegenerated (Request Nothing _ _ _) = False
-isRegenerated (Request (Just _) _ _ _) = True
-isRegenerated (Output Nothing _ _ _ _) = False
-isRegenerated (Output (Just _) _ _ _ _) = True
+isRegenerated (Reference Strict.Nothing _) = False
+isRegenerated (Reference (Strict.Just _) _) = True
+isRegenerated (Request Strict.Nothing _ _ _) = False
+isRegenerated (Request (Strict.Just _) _ _ _) = True
+isRegenerated (Output Strict.Nothing _ _ _ _) = False
+isRegenerated (Output (Strict.Just _) _ _ _ _) = True
 
-sim_reqs :: Simple Lens (Node num) (Maybe [SimulationRequest num])
+sim_reqs :: Simple Lens (Node num) (Strict.Maybe [SimulationRequest num])
 sim_reqs = lens _requests re_requests where
     _requests (Request r _ _ _) = r
-    _requests _ = Nothing
+    _requests _ = Strict.Nothing
     re_requests (Request _ outA a args) r = (Request r outA a args)
-    re_requests n Nothing = n
+    re_requests n Strict.Nothing = n
     re_requests _ _ = error "Trying to set requests for a non-request node."
 
 parentAddrs :: Node num -> [Address]
@@ -271,14 +271,14 @@ opAddr (Output _ _ a _ _) = Just a
 opAddr _ = Nothing
 
 requestIds :: Node num -> [SRId]
-requestIds (Request (Just srs) _ _ _) = map srid srs
+requestIds (Request (Strict.Just srs) _ _ _) = map srid srs
 requestIds _ = error "Asking for request IDs of a non-request node"
 
 addOutput :: Address -> Node num -> Node num
-addOutput outA (Request v _ a as) = Request v (Just outA) a as
+addOutput outA (Request v _ a as) = Request v (Strict.Just outA) a as
 addOutput _ n = n
 
-out_node :: Simple Setter (Node num) (Maybe Address)
+out_node :: Simple Setter (Node num) (Strict.Maybe Address)
 out_node = sets _out_node where
     _out_node f (Request v outA a as) = Request v (f outA) a as
     _out_node _ _ = error "Non-Request nodes do not have corresponding output nodes"
@@ -342,7 +342,7 @@ empty :: Trace m num
 empty = Trace M.empty S.empty M.empty M.empty uniqueSeed uniqueSeed
 
 fromValueAt :: Valuable num b => Address -> Trace m num -> Maybe b
-fromValueAt a t = (t^. nodes . at a) >>= valueOf >>= fromValue
+fromValueAt a t = (t^. nodes . at a) >>= (view lazy . valueOf) >>= fromValue where
 
 operatorRecord :: Node num -> Trace m num -> Maybe (SPRecord m)
 operatorRecord n t = opAddr n >>= (flip fromValueAt t) >>= (\addr -> t ^. sprs . at addr)
@@ -597,10 +597,10 @@ fulfilments a t = map (fromJust "Unfulfilled request" . flip M.lookup reqs) $ re
     SPRecord { requests = reqs } = fromJust "Asking for fulfilments of a node with no operator record" $ operatorRecord node t
 
 absorb :: (Numerical num) => Node num -> SP m -> Trace m num -> num
-absorb (Request (Just reqs) _ _ args) SP{log_d_req = (Strict.Just (LogDReq f)), current = a} _ = f a args reqs
+absorb (Request (Strict.Just reqs) _ _ args) SP{log_d_req = (Strict.Just (LogDReq f)), current = a} _ = f a args reqs
 -- This clause is only right if canAbsorb returned True on all changed parents
 absorb (Output _ _ _ _ _) SP { outputter = Trivial } _ = 0
-absorb (Output (Just v) _ _ args reqs) SP{log_d_out = (Strict.Just (LogDOut f)), current = a} t = f a args' reqs' v where
+absorb (Output (Strict.Just v) _ _ args reqs) SP{log_d_out = (Strict.Just (LogDOut f)), current = a} t = f a args' reqs' v where
     args' = map (fromJust "absorb" . flip lookupNode t) args
     reqs' = map (fromJust "absorb" . flip lookupNode t) reqs
 absorb _ _ _ = error "Inappropriate absorb attempt"
@@ -621,7 +621,7 @@ corporate name f a = do
   node <- use $ nodes . hardix (name ++ "ncorporating the value of a nonexistent node") a
   case node of
     (Output _ _ opa _ _) -> do
-      let v = fromJust (name ++ "ncorporating value that isn't there") $ valueOf node
+      let v = fromJust' (name ++ "ncorporating value that isn't there") $ valueOf node
       spaddr <- gets $ fromJust (name ++ "ncorporating value for an output with no operator address") . (fromValueAt opa)
       sp <- gets $ fromJust (name ++ "ncorporating value for an output with no operator") . (operator node)
       sprs . ix spaddr %= \r -> r{sp = f v sp}
@@ -641,12 +641,12 @@ corporateR name f a = do
   node <- use $ nodes . hardix (name ++ "ncorporating the requests of a nonexistent node") a
   case node of
     (Request reqs _ opa args) -> do
-      let rs = fromJust (name ++ "ncorporating requests that aren't there") reqs
+      let rs = fromJust' (name ++ "ncorporating requests that aren't there") reqs
       spaddr <- gets $ fromJust (name ++ "ncorporating requests for a requester with no operator address") . (fromValueAt opa)
       sp <- gets $ fromJust (name ++ "ncorporating requests for a requester with no operator") . (operator node)
       t <- get
       let ns = map (fromJust (name ++ "ncorporate requests given dangling address") . flip M.lookup (t^.nodes)) args
-          vs = map (fromJust (name ++ "ncorporate requests given valueless argument node") . valueOf) ns
+          vs = map (fromJust' (name ++ "ncorporate requests given valueless argument node") . valueOf) ns
       sprs . ix spaddr %= \r -> r{sp = f vs rs sp}
     _ -> return ()
 
@@ -658,7 +658,7 @@ do_incorporateR = corporateR "I" do_incR
 constrain :: (Numerical num, MonadState (Trace m num) m1) => Address -> Value num -> m1 ()
 constrain a v = do
   do_unincorporate a
-  nodes . ix a . value .= Just v
+  nodes . ix a . value .= Strict.Just v
   do_incorporate a
   -- TODO What will cause the node to be re-added to the set of random
   -- choices if the constraint is lifted in the future?
@@ -718,7 +718,7 @@ referencedInvalidAddresses :: Trace m num -> [TraceProblem]
 referencedInvalidAddresses t = map InvalidAddress $ filter (invalidAddress t) $ traceAddresses t
 
 traceSPAddresses :: Trace m num -> [SPAddress]
-traceSPAddresses t = catMaybes $ map (valueOf >=> fromValue) $ M.elems $ t ^. nodes
+traceSPAddresses t = catMaybes $ map ((view lazy) . valueOf >=> fromValue) $ M.elems $ t ^. nodes
 
 referencedInvalidSPAddresses :: Trace m num -> [TraceProblem]
 referencedInvalidSPAddresses t = map InvalidSPAddress $ filter (invalidSPAddress t) $ traceSPAddresses t
@@ -830,9 +830,9 @@ instance (Show num) => Pretty (Node num) where
                  <+> text "args:" <+> pp args
                  <+> text "esrs:" <+> pp reqs
 
-ppDefault :: Pretty a => String -> Maybe a -> Doc
-ppDefault _ (Just a) = pp a
-ppDefault d Nothing = text d
+ppDefault :: Pretty a => String -> Strict.Maybe a -> Doc
+ppDefault _ (Strict.Just a) = pp a
+ppDefault d Strict.Nothing = text d
 
 instance Pretty (SPRecord m) where
     pp SPRecord { sp = SP{current = s}, requests = rs } = text (show s) <+> requests where

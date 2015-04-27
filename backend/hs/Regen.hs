@@ -66,23 +66,23 @@ regenValue propose a = do
     (Constant _) -> return ()
     (Reference _ a') -> lift (do
       node' <- use $ nodes . hardix "Dangling reference found in regenValue" a'
-      let v = fromJust "Regenerating value for a reference with non-regenerated referent" $ node' ^. value
-      nodes . ix a . value .= Just v)
+      let v = fromJust' "Regenerating value for a reference with non-regenerated referent" $ node' ^. value
+      nodes . ix a . value .= Strict.Just v)
     (Request _ outA opa ps) -> lift (do
       addr <- gets $ fromJust "Regenerating value for a request with no operator" . (fromValueAt opa)
       reqs <- runRequester addr ps -- TODO allow proposals to tweak requests?
-      nodes . ix a . sim_reqs .= Just reqs
+      nodes . ix a . sim_reqs .= Strict.Just reqs
       resps <- evalRequests propose addr reqs
       do_incorporateR a
       case outA of
-        Nothing -> return ()
-        (Just outA') -> responsesAt outA' .= resps)
+        Strict.Nothing -> return ()
+        (Strict.Just outA') -> responsesAt outA' .= resps)
     (Output _ _ _ _ _) -> do
       t <- get
       let (val, d) = runWriter $ propose a t
       tell d
       v <- lift $ processOutput val
-      nodes . ix a . value .= Just v
+      nodes . ix a . value .= Strict.Just v
       do_incorporate a
 
 evalRequests :: (MonadRandom m, MonadTrans t, MonadState (Trace m num) (t m), Numerical num) =>
@@ -106,7 +106,7 @@ eval _ (Compose (Datum v)) _ = state $ addFreshNode $ Constant v
 eval propose (Compose (Var n)) e = do
   let answer = case L.lookup n e of
                  Nothing -> error $ "Unbound variable " ++ show n
-                 (Just a) -> Reference Nothing a
+                 (Just a) -> Reference Strict.Nothing a
   addr <- state $ addFreshNode answer
   -- Is there a good reason why I don't care about the log density of this regenNode?
   _ <- runWriterT $ regenNode propose addr
@@ -117,12 +117,12 @@ eval _ (Compose (Lam vs exp)) e = do
 eval propose (Compose (App op args)) env = do
   op' <- eval propose (Compose op) env
   args' <- sequence $ map (flip (eval propose) env) $ map Compose $ toList args
-  addr <- state $ addFreshNode (Request Nothing Nothing op' args')
+  addr <- state $ addFreshNode (Request Strict.Nothing Strict.Nothing op' args')
   -- Is there a good reason why I don't care about the log density of this regenNode?
   _ <- runWriterT $ regenNode propose addr
   reqAddrs <- gets $ fulfilments addr
-  addr' <- state $ addFreshNode (Output Nothing addr op' args' reqAddrs)
-  nodes . ix addr . out_node .= Just addr'
+  addr' <- state $ addFreshNode (Output Strict.Nothing addr op' args' reqAddrs)
+  nodes . ix addr . out_node .= Strict.Just addr'
   -- Is there a good reason why I don't care about the log density of this regenNode?
   _ <- runWriterT $ regenNode propose addr'
   return addr'

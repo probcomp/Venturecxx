@@ -5,6 +5,7 @@ module Detach where
 import Control.Lens hiding (children)
 import Control.Monad.Trans.State.Strict
 import Control.Monad.Trans.Writer.Strict
+import qualified Data.Maybe.Strict as Strict
 import qualified Data.Set as S
 
 import Utils
@@ -24,9 +25,9 @@ detach' Scaffold { _drg = d, _absorbers = abs, _dead_reqs = reqs, _brush = bru }
           node <- use $ nodes . hardix "Erasing the value of a nonexistent node" a
           do_unincorporate a -- Effective if a is an Output node
           do_unincorporateR a -- Effective if a is a Request node
-          nodes . ix a . value .= Nothing
+          nodes . ix a . value .= Strict.Nothing
           case node of
-            (Request _ (Just outA) _ _) -> responsesAt outA .= []
+            (Request _ (Strict.Just outA) _ _) -> responsesAt outA .= []
             _ -> return ()
         forgetRequest :: (SPAddress, [SRId]) -> State (Trace m num) ()
         forgetRequest x = modify $ forgetResponses x

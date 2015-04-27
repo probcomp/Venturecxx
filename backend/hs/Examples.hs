@@ -19,7 +19,7 @@ watching_infer :: (MonadRandom m, Numerical num) =>
                   Address -> Int -> StateT (Trace m num) m [Value num]
 watching_infer address ct = replicateM ct (do
   Inference.resimulation_mh default_one
-  gets $ fromJust "Value was not restored by inference" . valueOf
+  gets $ fromJust' "Value was not restored by inference" . valueOf
          . fromJust "Address became invalid after inference" . (lookupNode address))
 
 -- Expects the directives to contain exactly one Predict

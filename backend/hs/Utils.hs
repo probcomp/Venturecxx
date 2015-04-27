@@ -10,6 +10,7 @@ import Debug.Trace
 import Data.List (find)
 import Data.Monoid
 import qualified Data.Map as M
+import qualified Data.Maybe.Strict as Strict
 import qualified Data.Set as S
 import qualified Data.Vector as V
 import Control.Lens
@@ -26,6 +27,10 @@ import qualified InsertionOrderedSet as O
 fromJust :: String -> Maybe a -> a
 fromJust _ (Just a) = a
 fromJust msg Nothing = error msg
+
+fromJust' :: String -> Strict.Maybe a -> a
+fromJust' _ (Strict.Just a) = a
+fromJust' msg Strict.Nothing = error msg
 
 -- A version of the ix lens that errors out if the value is not there
 hardix :: (Ord k) => String -> k -> Simple Lens (M.Map k a) a
