@@ -8,6 +8,7 @@ import Data.Functor.Compose
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe hiding (fromJust)
+import qualified Data.Maybe.Strict as Strict
 import Control.Monad hiding (mapM_)
 import Control.Monad.Trans.Writer.Strict
 import Control.Monad.Trans.State.Strict hiding (state, get, gets, modify)
@@ -139,7 +140,7 @@ withDeterministic base as a t =
         -- TODO Abstract commonality between this nonsense and absorbAt
         node = t ^. nodes . hardix "Absorbing at a nonexistent node" a
         sp = fromJust "Absorbing at a node with no operator" $ operator node t
-        absorbVal (Output _ _ _ args reqs) SP{log_d_out = (Just (LogDOut f)), current = a} =
+        absorbVal (Output _ _ _ args reqs) SP{log_d_out = (Strict.Just (LogDOut f)), current = a} =
             f a args' reqs' v where
               args' = map (fromJust "absorb" . flip lookupNode t) args
               reqs' = map (fromJust "absorb" . flip lookupNode t) reqs

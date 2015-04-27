@@ -17,6 +17,7 @@ import Debug.Trace
 import Data.Functor.Compose
 import Data.Foldable
 import Data.Maybe hiding (fromJust)
+import qualified Data.Maybe.Strict as Strict
 import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Data.Text as DT
@@ -132,9 +133,9 @@ newtype LogDOut a = LogDOut
 
 data SP m = forall a. (Show a) => SP 
     { requester :: SPRequester m a
-    , log_d_req :: Maybe (LogDReq a)
+    , log_d_req :: Strict.Maybe (LogDReq a)
     , outputter :: SPOutputter m a
-    , log_d_out :: Maybe (LogDOut a)
+    , log_d_out :: Strict.Maybe (LogDOut a)
     , current :: a
     -- These guys may need to accept the argument lists, but I have
     -- not yet seen an example that forces this.
@@ -294,12 +295,12 @@ responses = lens _responses addResponses where
 -- parents).
 canAbsorb :: Node num -> Address -> SP m -> Bool
 canAbsorb (Request _ _ opA _)      a _                        | opA  == a = False
-canAbsorb (Request _ _ _ _)        _ SP{log_d_req = (Just _)}             = True
+canAbsorb (Request _ _ _ _)        _ SP{log_d_req = (Strict.Just _)}      = True
 canAbsorb (Output _ reqA _ _ _)    a _                        | reqA == a = False
 canAbsorb (Output _ _ opA _ _)     a _                        | opA  == a = False
 canAbsorb (Output _ _ _ _ (fst:_)) a SP{outputter = Trivial}  | fst  == a = False
 canAbsorb (Output _ _ _ _ _)       _ SP{outputter = Trivial}              = True
-canAbsorb (Output _ _ _ _ _)       _ SP{log_d_out = (Just _)}             = True
+canAbsorb (Output _ _ _ _ _)       _ SP{log_d_out = (Strict.Just _)}      = True
 canAbsorb _ _ _ = False
 
 ----------------------------------------------------------------------
@@ -596,10 +597,10 @@ fulfilments a t = map (fromJust "Unfulfilled request" . flip M.lookup reqs) $ re
     SPRecord { requests = reqs } = fromJust "Asking for fulfilments of a node with no operator record" $ operatorRecord node t
 
 absorb :: (Numerical num) => Node num -> SP m -> Trace m num -> num
-absorb (Request (Just reqs) _ _ args) SP{log_d_req = (Just (LogDReq f)), current = a} _ = f a args reqs
+absorb (Request (Just reqs) _ _ args) SP{log_d_req = (Strict.Just (LogDReq f)), current = a} _ = f a args reqs
 -- This clause is only right if canAbsorb returned True on all changed parents
 absorb (Output _ _ _ _ _) SP { outputter = Trivial } _ = 0
-absorb (Output (Just v) _ _ args reqs) SP{log_d_out = (Just (LogDOut f)), current = a} t = f a args' reqs' v where
+absorb (Output (Just v) _ _ args reqs) SP{log_d_out = (Strict.Just (LogDOut f)), current = a} t = f a args' reqs' v where
     args' = map (fromJust "absorb" . flip lookupNode t) args
     reqs' = map (fromJust "absorb" . flip lookupNode t) reqs
 absorb _ _ _ = error "Inappropriate absorb attempt"

@@ -8,6 +8,7 @@ module SP where
 
 import Data.Functor.Compose
 import qualified Data.Map as M
+import qualified Data.Maybe.Strict as Strict
 import qualified Data.Text as DT
 import Control.Monad.State.Strict hiding (state)
 import Control.Monad.State.Class
@@ -48,9 +49,9 @@ newtype LogDOutNS =
 
 data NoStateSP m = NoStateSP
     { requester :: SPRequesterNS m
-    , log_d_req :: Maybe LogDReqNS
+    , log_d_req :: Strict.Maybe LogDReqNS
     , outputter :: SPOutputterNS m
-    , log_d_out :: Maybe LogDOutNS
+    , log_d_out :: Strict.Maybe LogDOutNS
     }
 
 data SPRequesterNS m
@@ -68,9 +69,9 @@ data SPOutputterNS m
 no_state_sp :: NoStateSP m -> SP m
 no_state_sp NoStateSP { requester = req, log_d_req = ldr, outputter = out, log_d_out = ldo } =
     T.SP { T.requester = no_state_r req
-         , T.log_d_req = liftM convert1 ldr
+         , T.log_d_req = fmap convert1 ldr
          , T.outputter = no_state_o out
-         , T.log_d_out = liftM convert2 ldo
+         , T.log_d_out = fmap convert2 ldo
          , T.current = ()
          , T.incorporate = const id
          , T.unincorporate = const id
@@ -95,9 +96,9 @@ no_state_o (ReferringSPMaker f) = T.ReferringSPMaker $ const f
 compoundSP :: (Monad m, Fractional num, Real num) => V.Vector DT.Text -> Exp num -> Env -> SP m
 compoundSP formals exp env = no_state_sp NoStateSP
   { requester = DeterministicR req
-  , log_d_req = Just $ LogDReqNS trivial_log_d_req
+  , log_d_req = Strict.Just $ LogDReqNS trivial_log_d_req
   , outputter = Trivial
-  , log_d_out = Nothing -- Or Just (0 if it's right, -inf if not?)
+  , log_d_out = Strict.Nothing  -- Or Just (0 if it's right, -inf if not?)
   } where
     req args = do
       freshId <- liftM SRId fresh
@@ -154,9 +155,9 @@ typedr3 f x y = toValue . f x y
 deterministic :: (forall num. (T.Numerical num) => [Value num] -> [Value num] -> Value num) -> SP m
 deterministic f = no_state_sp $ NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ LogDReqNS $ trivial_log_d_req -- Only right for requests it actually made
+  , log_d_req = Strict.Just $ LogDReqNS $ trivial_log_d_req -- Only right for requests it actually made
   , outputter = DeterministicO $ on_values f
-  , log_d_out = Nothing
+  , log_d_out = Strict.Nothing
   }
 
 bernoulli_flip :: (MonadRandom m) => m (Value num)
@@ -165,9 +166,9 @@ bernoulli_flip = liftM Boolean $ getRandomR (False,True)
 bernoulli :: (MonadRandom m) => NoStateSP m
 bernoulli = NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ LogDReqNS $ trivial_log_d_req -- Only right for requests it actually made
+  , log_d_req = Strict.Just $ LogDReqNS $ trivial_log_d_req -- Only right for requests it actually made
   , outputter = RandomO $ nullary bernoulli_flip
-  , log_d_out = Just $ LogDOutNS $ nullary $ const (-log 2.0)
+  , log_d_out = Strict.Just $ LogDOutNS $ nullary $ const (-log 2.0)
   }
 
 weighted_flip :: (MonadRandom m, Real num) => num -> m (Value num)
@@ -182,9 +183,9 @@ log_d_weight weight False = log (1 - weight)
 weighted :: (MonadRandom m) => NoStateSP m
 weighted = NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
+  , log_d_req = Strict.Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
   , outputter = RandomO $ on_values $ unary $ typed weighted_flip
-  , log_d_out = Just $ LogDOutNS $ on_values $ unary $ typed2 log_d_weight
+  , log_d_out = Strict.Just $ LogDOutNS $ on_values $ unary $ typed2 log_d_weight
   }
 
 box_muller_cos :: Double -> Double -> Double
@@ -206,9 +207,9 @@ log_d_normal mean sigma x = - (x - mean)^^(2::Int) / (2 * sigma^^(2::Int)) - sca
 normal :: (MonadRandom m) => NoStateSP m
 normal = NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
+  , log_d_req = Strict.Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
   , outputter = RandomO $ on_values $ binary $ typed2 normal_flip
-  , log_d_out = Just $ LogDOutNS $ on_values $ binary $ typed3 log_d_normal
+  , log_d_out = Strict.Just $ LogDOutNS $ on_values $ binary $ typed3 log_d_normal
   }
 
 xxxFakeGenericity2 :: (Real num, Fractional num) =>
@@ -238,9 +239,9 @@ log_denisty_beta a b x = (a-1)*log x + (b-1)*log (1-x) - xxxFakeGenericity2 logB
 beta :: (MonadRandom m) => NoStateSP m
 beta = NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
+  , log_d_req = Strict.Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
   , outputter = RandomO $ on_values $ binary $ typed2 betaO
-  , log_d_out = Just $ LogDOutNS $ on_values $ binary $ typed3 log_denisty_beta
+  , log_d_out = Strict.Just $ LogDOutNS $ on_values $ binary $ typed3 log_denisty_beta
   }
 
 cbeta_bernoulli_flip :: (MonadRandom m, Numerical num, Numerical num2) => (num,num) -> m (Value num2)
@@ -257,9 +258,9 @@ cbeta_bernoulli :: (MonadRandom m, Show num, Floating num, Real num) =>
                    num -> num -> SP m
 cbeta_bernoulli ctYes ctNo = T.SP
   { T.requester = no_state_r nullReq
-  , T.log_d_req = Just $ T.LogDReq $ const trivial_log_d_req -- Only right for requests it actually made
+  , T.log_d_req = Strict.Just $ T.LogDReq $ const trivial_log_d_req -- Only right for requests it actually made
   , T.outputter = T.RandomO $ nullary . cbeta_bernoulli_flip
-  , T.log_d_out = Just $ T.LogDOut $ nullary . typed . cbeta_bernoulli_log_d
+  , T.log_d_out = Strict.Just $ T.LogDOut $ nullary . typed . cbeta_bernoulli_log_d
   , T.current = (ctYes, ctNo)
   , T.incorporate = typed $ cbeta_bernoulli_frob (+1)
   , T.unincorporate = typed $ cbeta_bernoulli_frob (+ (-1))
@@ -270,9 +271,9 @@ cbeta_bernoulli ctYes ctNo = T.SP
 make_cbeta_bernoulli :: (MonadRandom m) => SP m
 make_cbeta_bernoulli = no_state_sp NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
+  , log_d_req = Strict.Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
   , outputter = SPMaker $ on_values $ binary $ f -- typed2 cbeta_bernoulli
-  , log_d_out = Nothing
+  , log_d_out = Strict.Nothing
   } where
     f :: (MonadRandom m, Show num, Floating num, Real num) =>
          Value num -> Value num -> SP m
@@ -287,18 +288,18 @@ selectO _ _ = error "Wrong number of arguments to SELECT"
 select :: NoStateSP m
 select = NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ LogDReqNS trivial_log_d_req
+  , log_d_req = Strict.Just $ LogDReqNS trivial_log_d_req
   , outputter = DeterministicO $ on_values selectO
-  , log_d_out = Nothing -- Or Just (0 if it's right, -inf if not?)
+  , log_d_out = Strict.Nothing -- Or Just (0 if it's right, -inf if not?)
   }
 
 -- Here the Ord is because of the Ord constraint on memoized_sp
 mem :: (Monad m) => SP m
 mem = no_state_sp NoStateSP
   { requester = nullReq
-  , log_d_req = Just $ LogDReqNS trivial_log_d_req
+  , log_d_req = Strict.Just $ LogDReqNS trivial_log_d_req
   , outputter = ReferringSPMaker $ unary $ memoized_sp
-  , log_d_out = Nothing
+  , log_d_out = Strict.Nothing
   }
 
 -- The memoization cache always stores objects of type Value Double,
@@ -309,9 +310,9 @@ mem = no_state_sp NoStateSP
 memoized_sp :: (Monad m) => Address -> SP m
 memoized_sp proc = T.SP
   { T.requester = T.ReaderR req
-  , T.log_d_req = Just $ T.LogDReq $ const $ trivial_log_d_req
+  , T.log_d_req = Strict.Just $ T.LogDReq $ const $ trivial_log_d_req
   , T.outputter = T.Trivial
-  , T.log_d_out = Nothing
+  , T.log_d_out = Strict.Nothing
   , T.current = (M.empty :: M.Map [Value Double] (SRId,Int))
   , T.incorporate = const $ id
   , T.unincorporate = const $ id
