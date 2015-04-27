@@ -7,7 +7,7 @@ module Language where
 
 import Prelude hiding (lookup)
 import Data.Foldable
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 import Data.Monoid
 import Data.Traversable
 import Data.Text
@@ -52,7 +52,7 @@ instance (Num a) => Num (Exp a) where
     fromInteger = Datum . fromInteger
 
 data Env k v = Toplevel
-             | Frame (M.Map k v) (Env k v)
+             | Frame !(M.Map k v) !(Env k v)
     deriving Show
 
 lookup :: (Ord k) => k -> (Env k v) -> Maybe v
