@@ -110,5 +110,5 @@ executable benchmark
                        math-functions >=0.1, mtl, mmorph, HUnit, monad-coroutine,
                        text, vector, strict-base-types
   default-language:    Haskell2010
-  Ghc-options:         -Wall -fno-warn-name-shadowing -O2 -ddump-simpl -ddump-to-file
+  Ghc-options:         -Wall -fno-warn-name-shadowing -O2 -ddump-simpl -ddump-stg -ddump-to-file
   ghc-prof-options:    -fprof-auto -rtsopts "-with-rtsopts=-s"
