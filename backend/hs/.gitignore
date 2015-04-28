@@ -5,3 +5,4 @@ cabal.sandbox.config
 benchmark.pdf
 benchmark.prof
 normal-normal-chain
+*.iface
