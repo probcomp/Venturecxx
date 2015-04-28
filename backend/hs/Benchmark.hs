@@ -23,7 +23,7 @@ answer2 steps = evalStateT (do
   mapM_ infer [0..steps-1]
   sampleM (var "result")) initial
     where infer step = do resimulation_mh I.default_one
-                          if step `mod` 499 == 0 then do
+                          if step `mod` 49999 == 0 then do
                               model <- gets _trace
                               lift $ putStrLn $ show $ pp model
                           else
