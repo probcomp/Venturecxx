@@ -136,7 +136,7 @@ data SP m = forall a. (Show a) => SP
     , log_d_req :: !(Strict.Maybe (LogDReq a))
     , outputter :: !(SPOutputter m a)
     , log_d_out :: !(Strict.Maybe (LogDOut a))
-    , current :: a
+    , current :: !a -- Otherwise leaks for stateless SPs
     -- These guys may need to accept the argument lists, but I have
     -- not yet seen an example that forces this.
     , incorporate :: !(forall num. (Show num, Floating num, Real num) => Value num -> a -> a)
