@@ -10,6 +10,9 @@
 double NormalDistributionLogLikelihood(double sampled_value, double average, double sigma) {
   double loglikelihood = 0.0;
   loglikelihood -= log(sigma);
+  // TODO If I were doing this for real, I would compute this constant
+  // at most once, but this is what Puma does.  Is gcc smart enough to
+  // constant-fold this?
   loglikelihood -= 0.5 * log(2.0 * 3.14159265358979323846264338327950);
   double deviation = sampled_value - average;
   loglikelihood -= 0.5 * deviation * deviation / (sigma * sigma);
@@ -24,6 +27,9 @@ double chain(int steps) {
   double sigma_2 = 1.0;
   double x = gsl_ran_gaussian(rng, sigma_1) + mu_1;
   for (int i = 0; i < steps; i++) {
+    // TODO If I were doing this for real, I would store w_old from
+    // the previous loop iteration, not recompute it; but thus is what
+    // Puma does.
     double w_old = NormalDistributionLogLikelihood(2.0, x, sigma_2);
     double x_new = gsl_ran_gaussian(rng, sigma_1) + mu_1;
     double w_new = NormalDistributionLogLikelihood(2.0, x_new, sigma_2);
