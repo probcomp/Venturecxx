@@ -17,17 +17,16 @@
 
 import math
 import scipy.stats as stats
-from nose import SkipTest
 
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownMeanVariance, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, collect_iid_samples
+from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.config import get_ripl, collectSamples
 
 @statisticalTest
 def testNormal1():
   ripl = get_ripl()
-  ripl.predict("(normal 0 1)")
-  predictions = collectSamples(ripl,1)
-  cdf = lambda x: stats.norm.cdf(x,loc=0,scale=1)
+  ripl.predict("(normal 0 1)", label="pid")
+  predictions = collectSamples(ripl,"pid")
+  cdf = stats.norm(loc=0,scale=1).cdf
   return reportKnownContinuous(cdf, predictions, "N(0,1)")
 
 @statisticalTest
@@ -35,19 +34,25 @@ def testNormal2():
   ripl = get_ripl()
   ripl.assume("x","(normal 0 1)")
   ripl.predict("(normal x 1)")
-  predictions = collectSamples(ripl,1)
-  cdf = lambda x: stats.norm.cdf(x,loc=0,scale=1)
+  predictions = collectSamples(ripl,"x")
+  cdf = stats.norm(loc=0,scale=1).cdf
   return reportKnownContinuous(cdf, predictions, "N(0,1)")
 
+@statisticalTest
 def testNormal3():
   ripl = get_ripl()
   ripl.assume("f","(lambda (mu) (normal mu 1))")
-  ripl.predict("(f (normal 0 1))")
-  predictions = collectSamples(ripl,1)
+  ripl.predict("(f (normal 0 1))", label="pid")
+  predictions = collectSamples(ripl,"pid")
+  cdf = stats.norm(loc=0,scale=math.sqrt(2)).cdf
+  return reportKnownContinuous(cdf, predictions, "N(0,sqrt(2))")
 
+@statisticalTest
 def testNormal4():
   ripl = get_ripl()
   ripl.assume("f","(lambda (mu) (normal mu 1))")
   ripl.assume("g","(lambda (x y z) ((lambda () f)))")
-  ripl.predict("((g (f (normal 0 1)) (f 5) (f (f 1))) 5)")
-  predictions = collectSamples(ripl,1)
+  ripl.predict("((g (f (normal 0 1)) (f 5) (f (f 1))) 5)", label="pid")
+  predictions = collectSamples(ripl,"pid")
+  cdf = stats.norm(loc=5,scale=1).cdf
+  return reportKnownContinuous(cdf, predictions, "N(5,1)")
