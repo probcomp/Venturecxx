@@ -34,7 +34,7 @@ fi
 
 echo Making a tarball marked version $release
 
-tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
+tar --create --verbose --bzip --file ../venture-$release.tar.bz2 --directory .. \
     --exclude=.git \
     --exclude=.gitignore \
     --exclude=.gitmodules \
@@ -76,4 +76,4 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=venture-*.tar \
     Venturecxx/
 
-md5sum ../venture-$release.tgz
+md5sum ../venture-$release.tar.bz2
