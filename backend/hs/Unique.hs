@@ -1,4 +1,4 @@
-module Unique (Unique, UniqueSeed, UniqueSourceT, UniqueSource, asInteger
+module Unique (Unique(..), UniqueSeed, UniqueSourceT, UniqueSource
               , runUniqueSourceT, uniqueSeed, fresh, runUniqueSource) where
 
 import Data.Functor.Identity

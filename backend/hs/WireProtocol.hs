@@ -19,6 +19,7 @@ import qualified Network.Wai.Handler.Warp     as Warp (run)
 import qualified Data.Aeson                   as Aeson
 import qualified Data.Aeson.Types             as J
 
+import           Utils                        (Unique(..))
 import qualified Venture                      as V
 import qualified VentureGrammar               as G
 import qualified Trace                        as Tr -- For the stack dict class
@@ -28,6 +29,7 @@ import qualified Language                     as L  -- For the stack dict class
 
 type Label = T.Text
 data Command num = Directive (V.Directive num) (Maybe Label)
+                 | Forget Tr.Address
                  | ListDirectives
                  | StopCI
                  | Clear
@@ -99,6 +101,8 @@ parse "set_mode" [mode] = Right $ SetMode mode
 parse "set_mode" args = Left $ "Incorrect number of arguments to set_mode " ++ show args
 parse "infer" [prog] = Right $ Infer prog
 parse "infer" args = Left $ "Incorrect number of arguments to infer " ++ show args
+parse "forget" [did] = Right $ Forget $ Tr.Address $ Unique $ read did
+parse "forget" args = Left $ "Incorrect number of arguments to forget " ++ show args
 parse m _ = Left $ "Unknown directive " ++ m
 
 ---- Response helpers
