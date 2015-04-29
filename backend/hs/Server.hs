@@ -24,6 +24,7 @@ import           Data.Bimap                   (Bimap)
 
 import qualified Data.Aeson                   as Aeson
 
+import           Utils                        (asInteger)
 import qualified Language                     as L
 import qualified Trace                        as T
 import qualified Venture                      as V
@@ -72,7 +73,9 @@ directive_report (model, labels) = Aeson.encode $ map to_stack_dict $ directives
     directives = Map.toList $ V._directives model
     to_stack_dict (addr, directive) = result
         where value = W.get_field (as_stack_dict $ V.lookupValue addr model) "value"
-              unlabeled = as_stack_dict directive `W.add_field` ("value", value)
+              unidentified = as_stack_dict directive `W.add_field` ("value", value)
+              (T.Address unique_id) = addr
+              unlabeled = unidentified `W.add_field` ("directive_id", Aeson.Number $ fromInteger $ asInteger $ unique_id)
               result = maybe unlabeled (\l -> unlabeled `W.add_field` ("label", symbol l))
                        $ Bimap.lookup addr labels
 
