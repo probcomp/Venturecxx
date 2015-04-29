@@ -48,6 +48,8 @@ execute engineMVar c = do
                 Nothing -> return ()
                 (Just l) -> _2 %= Bimap.insert addr l
               _1 `uses` (V.lookupValue addr)
+    (Forget addr) -> do
+      onMVar engineMVar (_1 `zoom` V.forget addr >> return "")
     ListDirectives -> liftM directive_report $ readMVar engineMVar
     StopCI -> return "" -- No continuous inference to stop yet
     Clear -> do

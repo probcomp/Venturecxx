@@ -121,6 +121,9 @@ sampleM exp = do
   val <- lift $ sample exp model
   return val
 
+forget :: (Monad m) => Address -> (StateT (Model m num) m) ()
+forget addr = return () -- TODO Actually forgetting turned out to be less trivial than I thought.
+
 -- TODO Understand the set of layers of abstraction of trace operations:
 -- - what invariants does each layer preserve?
 -- - quickcheck and/or prove preservation of those invariants
