@@ -32,7 +32,7 @@ import qualified Inference                    as I
 import           WireProtocol                 (Command(..), run, as_stack_dict, symbol)
 import qualified WireProtocol                 as W
 
-type Engine = ((V.Model IO Double), Bimap T.Address String)
+type Engine = ((V.Model IO Double), Bimap T.Address DT.Text)
 
 execute :: MVar Engine  -> (Command Double) -> IO B.ByteString
 execute engineMVar c = do
@@ -67,13 +67,13 @@ interpret_inference engineMVar prog =
                     yield
                     loop
 
-directive_report :: (Show num, Real num) => (V.Model m num, Bimap T.Address String) -> B.ByteString
+directive_report :: (Show num, Real num) => (V.Model m num, Bimap T.Address DT.Text) -> B.ByteString
 directive_report (model, labels) = Aeson.encode $ map to_stack_dict $ directives where
     directives = Map.toList $ V._directives model
     to_stack_dict (addr, directive) = result
         where value = W.get_field (as_stack_dict $ V.lookupValue addr model) "value"
               unlabeled = as_stack_dict directive `W.add_field` ("value", value)
-              result = maybe unlabeled (\l -> unlabeled `W.add_field` ("label", symbol $ DT.pack l))
+              result = maybe unlabeled (\l -> unlabeled `W.add_field` ("label", symbol l))
                        $ Bimap.lookup addr labels
 
 encodeValue :: T.Value Double -> B.ByteString
