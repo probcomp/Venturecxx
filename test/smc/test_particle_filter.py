@@ -50,6 +50,21 @@ def testIncorporateDoesNotCrash():
   ripl.observe("(g 1)",False)
   ripl.infer("(incorporate)")
 
+@on_inf_prim("resample")
+@statisticalTest
+def testResampling(P=10):
+  ripl = get_ripl()
+  def a_sample():
+    ripl.clear()
+    ripl.infer("(resample %d)" % P)
+    ripl.assume("x", "(normal 0 1)")
+    ripl.observe("(normal x 1)", 2)
+    ripl.infer("(resample 1)")
+    return ripl.sample("x")
+  predictions = [a_sample() for _ in range(default_num_samples())]
+  cdf = stats.norm(loc=1, scale=math.sqrt(0.5)).cdf
+  return reportKnownContinuous(cdf, predictions, "N(1,sqrt(0.5))")
+
 def initBasicPFripl1():
   ripl = get_ripl()
   ripl.assume("f","""
