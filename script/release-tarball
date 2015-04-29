@@ -61,7 +61,7 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=htmlcov \
     --exclude=.gdbinit \
     --exclude=backend/hs \
-    `# Excluding Terminal because it's unused and copyright-intermixed`
+    `# Excluding Terminal because it's unused and copyright-intermixed` \
     --exclude=demos/jsripl/Terminal \
     --exclude=CP1-Quad-Rotor \
     --exclude=.coverage \
