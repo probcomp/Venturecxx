@@ -52,7 +52,7 @@ def testIncorporateDoesNotCrash():
 
 @on_inf_prim("resample")
 @statisticalTest
-def testResampling(P=10):
+def testResampling1(P=10):
   ripl = get_ripl()
   def a_sample():
     ripl.clear()
@@ -62,6 +62,26 @@ def testResampling(P=10):
     ripl.infer("(resample 1)")
     return ripl.sample("x")
   predictions = [a_sample() for _ in range(default_num_samples())]
+  cdf = stats.norm(loc=1, scale=math.sqrt(0.5)).cdf
+  return reportKnownContinuous(cdf, predictions, "N(1,sqrt(0.5))")
+
+@on_inf_prim("resample")
+@statisticalTest
+@attr("slow")
+def testResampling2(P=20):
+  "This differs from testResampling1 by an extra resample step, which is supposed to be harmless"
+  ripl = get_ripl()
+  def a_sample():
+    ripl.clear()
+    ripl.infer("(resample %d)" % P)
+    ripl.assume("x", "(normal 0 1)")
+    ripl.observe("(normal x 1)", 2)
+    ripl.infer("(incorporate)")
+    ripl.infer("(resample %d)" % P)
+    ripl.infer("(incorporate)")
+    ripl.infer("(resample 1)")
+    return ripl.sample("x")
+  predictions = [a_sample() for _ in range(4*default_num_samples())]
   cdf = stats.norm(loc=1, scale=math.sqrt(0.5)).cdf
   return reportKnownContinuous(cdf, predictions, "N(1,sqrt(0.5))")
 

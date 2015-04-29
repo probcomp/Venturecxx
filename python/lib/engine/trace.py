@@ -172,7 +172,7 @@ def _dump_trace(trace, directives, skipStackDictConversion=False):
       trace.observe(did, directive[2])
 
   # TODO Actually, I should restore the degree of incorporation the
-  # original trace had.  In the absence of tracking that, this
+  # trace originally had.  In the absence of tracking that, this
   # heuristically makes the trace fully incorporated.  Hopefully,
   # mistakes will be rarer than in the past (which will make them even
   # harder to detect).
@@ -199,5 +199,12 @@ def _restore_trace(trace, directives, values, foreign_sps, skipStackDictConversi
     elif directive[0] == "evaluate":
       datum = directive[1]
       trace.evalAndRestore(did, datum, db)
+
+  # TODO Actually, I should restore the degree of incorporation the
+  # original trace had.  In the absence of tracking that, this
+  # heuristically makes the trace fully incorporated.  Hopefully,
+  # mistakes will be rarer than in the past (which will make them even
+  # harder to detect).
+  trace.makeConsistent()
 
   return trace
