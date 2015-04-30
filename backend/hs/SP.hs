@@ -189,6 +189,23 @@ weighted = NoStateSP
   , log_d_out = Strict.Just $ LogDOutNS $ on_values $ unary $ typed2 log_d_weight
   }
 
+uniform_flip :: forall m num. (MonadRandom m, Numerical num) => num -> num -> m (Value num)
+uniform_flip low high = do
+  unit <- (getRandomR (0.0, 1.0)) :: m Double
+  return $ Number $ low + (realToFrac unit) * (high - low)
+
+log_d_uniform :: (Numerical num) => num -> num -> num -> num
+log_d_uniform x low high | low <= x && x <= high = - (log (high - low))
+                         | otherwise = log 0
+
+uniform_continuous :: (MonadRandom m) => NoStateSP m
+uniform_continuous = NoStateSP
+  { requester = nullReq
+  , log_d_req = Strict.Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
+  , outputter = RandomO $ on_values $ binary $ typed2 uniform_flip
+  , log_d_out = Strict.Just $ LogDOutNS $ on_values $ binary $ typed3 log_d_uniform
+  }
+
 box_muller_cos :: Double -> Double -> Double
 box_muller_cos u1 u2 = r * cos theta where
     r = sqrt (-2 * log u1)
@@ -369,6 +386,7 @@ initializeBuiltins env = do
   addrs <- mapM (state . addFreshNode . Constant . Procedure) spaddrs
   return $ Frame (M.fromList $ zip names addrs) env
       where namedSps = [ ("bernoulli", no_state_sp bernoulli)
+                       , ("uniform_continuous", no_state_sp uniform_continuous)
                        , ("normal", no_state_sp normal)
                        , ("beta", no_state_sp beta)
                        , ("select", no_state_sp select)
