@@ -56,7 +56,7 @@ execute engineMVar c = do
       onMVar engineMVar $ put (V.initial, Bimap.empty)
       return ""
     SetMode _ -> return "" -- Only one surface syntax is supported!
-    Infer prog -> interpret_inference engineMVar prog
+    Infer prog -> interpret_inference engineMVar $ DT.unpack prog
 
 interpret_inference :: MVar Engine -> String -> IO B.ByteString
 interpret_inference engineMVar prog =

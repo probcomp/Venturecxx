@@ -33,8 +33,8 @@ data Command num = Directive (V.Directive num) (Maybe Label)
                  | ListDirectives
                  | StopCI
                  | Clear
-                 | SetMode String
-                 | Infer String
+                 | SetMode T.Text
+                 | Infer T.Text
   deriving Show
 
 run :: (Fractional num) => (Command num -> IO (Either String B.ByteString)) -> IO ()
@@ -69,39 +69,39 @@ decode_body "" = Right []
 decode_body str = Aeson.eitherDecode str
 
 -- So far, expect the method and arguments to lead to a directive
-parse :: (Fractional num) => String -> [String] -> Either String (Command num)
-parse "assume" [var, expr] =
-    Right $ Directive (V.Assume (T.pack var) $ Compose $ G.parse expr) Nothing
-parse "assume" [var, expr, label] =
-    Right $ Directive (V.Assume (T.pack var) $ Compose $ G.parse expr) $ Just $ T.pack label
+parse :: (Fractional num) => String -> [J.Value] -> Either String (Command num)
+parse "assume" [J.String var, J.String expr] =
+    Right $ Directive (V.Assume var $ Compose $ G.parse $ T.unpack expr) Nothing
+parse "assume" [J.String var, J.String expr, J.String label] =
+    Right $ Directive (V.Assume var $ Compose $ G.parse $ T.unpack expr) $ Just label
 parse "assume" args =
     Left $ "Incorrect number of arguments to assume " ++ show args
-parse "observe" [expr, val] =
+parse "observe" [J.String expr, J.String val] =
     Right $ Directive (V.Observe expr' val') Nothing where
-        expr' = Compose $ G.parse expr
-        val' = fromDatum $ G.parse val
+        expr' = Compose $ G.parse $ T.unpack expr
+        val' = fromDatum $ G.parse $ T.unpack val
         fromDatum (L.Datum v) = v
-parse "observe" [expr, val, label] =
-    Right $ Directive (V.Observe expr' val') $ Just $ T.pack label where
-        expr' = Compose $ G.parse expr
-        val' = fromDatum $ G.parse val
+parse "observe" [J.String expr, J.String val, J.String label] =
+    Right $ Directive (V.Observe expr' val') $ Just label where
+        expr' = Compose $ G.parse $ T.unpack expr
+        val' = fromDatum $ G.parse $ T.unpack val
         fromDatum (L.Datum v) = v
 parse "observe" args =
     Left $ "Incorrect number of arguments to observe " ++ show args
-parse "predict" [expr] =
-    Right $ Directive (V.Predict $ Compose $ G.parse expr) Nothing
-parse "predict" [expr, label] =
-    Right $ Directive (V.Predict $ Compose $ G.parse expr) $ Just $ T.pack label
+parse "predict" [J.String expr] =
+    Right $ Directive (V.Predict $ Compose $ G.parse $ T.unpack expr) Nothing
+parse "predict" [J.String expr, J.String label] =
+    Right $ Directive (V.Predict $ Compose $ G.parse $ T.unpack expr) $ Just label
 parse "predict" args =
     Left $ "Incorrect number of arguments to predict " ++ show args
 parse "list_directives" _ = Right ListDirectives
 parse "stop_continuous_inference" _ = Right StopCI
 parse "clear" _ = Right Clear
-parse "set_mode" [mode] = Right $ SetMode mode
+parse "set_mode" [J.String mode] = Right $ SetMode mode
 parse "set_mode" args = Left $ "Incorrect number of arguments to set_mode " ++ show args
-parse "infer" [prog] = Right $ Infer prog
+parse "infer" [J.String prog] = Right $ Infer prog
 parse "infer" args = Left $ "Incorrect number of arguments to infer " ++ show args
-parse "forget" [did] = Right $ Forget $ Tr.Address $ Unique $ read did
+parse "forget" [J.String did] = Right $ Forget $ Tr.Address $ Unique $ read $ T.unpack did
 parse "forget" args = Left $ "Incorrect number of arguments to forget " ++ show args
 parse m _ = Left $ "Unknown directive " ++ m
 
