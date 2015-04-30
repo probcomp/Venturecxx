@@ -102,6 +102,7 @@ parse "set_mode" args = Left $ "Incorrect number of arguments to set_mode " ++ s
 parse "infer" [J.String prog] = Right $ Infer prog
 parse "infer" args = Left $ "Incorrect number of arguments to infer " ++ show args
 parse "forget" [J.String did] = Right $ Forget $ Tr.Address $ Unique $ read $ T.unpack did
+parse "forget" [J.Number did] = Right $ Forget $ Tr.Address $ Unique $ floor did
 parse "forget" args = Left $ "Incorrect number of arguments to forget " ++ show args
 parse m _ = Left $ "Unknown directive " ++ m
 
