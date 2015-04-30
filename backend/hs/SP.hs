@@ -392,6 +392,7 @@ initializeBuiltins env = do
                        , ("select", no_state_sp select)
                        , ("list", deterministic $ nary $ List . V.fromList)
                        , ("weighted", no_state_sp weighted)
+                       , ("flip", no_state_sp weighted) -- Conventional name.
                        , ("make-cbeta-bernoulli", make_cbeta_bernoulli)
                        , ("mem", mem)
                        , ("sin", lift_numerical sin)
