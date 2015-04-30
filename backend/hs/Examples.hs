@@ -35,11 +35,11 @@ venture_main ct ds = do
   vs <- evalStateT (simulation ct ds) initial
   return $ vs
 
-v_if :: Exp num -> Exp num -> Exp num -> Exp num
-v_if p c a = app (app (var "select") [p, (lam [] c), (lam [] a)]) []
+if_ :: Exp num -> Exp num -> Exp num -> Exp num
+if_ p c a = app (app (var "select") [p, (lam [] c), (lam [] a)]) []
 
-v_let1 :: DT.Text -> Exp num -> Exp num -> Exp num
-v_let1 name val body = app (lam [name] body) [val]
+let1_ :: DT.Text -> Exp num -> Exp num -> Exp num
+let1_ name val body = app (lam [name] body) [val]
 
 flip_one_coin :: [Directive num]
 flip_one_coin = [Predict $ app (var "bernoulli") []]
@@ -52,7 +52,7 @@ single_normal = [Predict $ app (var "normal") [0, 2]]
 -- (liftM (histogram 10) $ liftM (map $ fromJust "foo" . fromValue) $ venture_main 500 $ single_normal) >>= printHistogram
 
 condition_on_flip :: (Num num) => [Directive num]
-condition_on_flip = [Predict $ v_if (app (var "bernoulli") []) 1 2]
+condition_on_flip = [Predict $ if_ (app (var "bernoulli") []) 1 2]
 -- venture_main 10 $ condition_on_flip
 -- liftM discreteHistogram $ venture_main 100 condition_on_flip
 
@@ -137,7 +137,7 @@ cbeta_binomial =
 self_select_1 :: [Directive num]
 self_select_1 =
     [ Assume "x" $ app (var "bernoulli") []
-    , Predict $ v_if (var "x") (var "x") false
+    , Predict $ if_ (var "x") (var "x") false
     ]
 -- liftM discreteHistogram $ venture_main 100 self_select_1
 
@@ -146,7 +146,7 @@ self_select_1 =
 self_select_2 :: (Num num) => [Directive num]
 self_select_2 =
     [ Assume "x" $ app (var "bernoulli") []
-    , Predict $ v_if (var "x") (v_if (var "x") (var "x") 1) 0
+    , Predict $ if_ (var "x") (if_ (var "x") (var "x") 1) 0
     ]
 -- liftM discreteHistogram $ venture_main 100 self_select_2
 
@@ -162,7 +162,7 @@ mem_1 =
 mem_2 :: (Num num) => [Directive num]
 mem_2 =
     [ Assume "coins_p" $ app (var "mem") [lam ["i"] (app (var "bernoulli") [])]
-    , Assume "coins" $ v_if (app (var "bernoulli") []) (var "coins_p") (var "coins_p")
+    , Assume "coins" $ if_ (app (var "bernoulli") []) (var "coins_p") (var "coins_p")
     , Predict $ app (var "list") [flip 1, flip 1, flip 1, flip 2, flip 2, flip 2, flip 3, flip 3, flip 3]
     ] where
     flip k = app (var "coins") [k]
@@ -172,7 +172,7 @@ uncollapsed_conditional_and_coupled :: (Num num) => [Directive num]
 uncollapsed_conditional_and_coupled =
     [ Assume "weight" $ app (var "beta") [1,1]
     , Assume "coin" $ lam [] (app (var "weighted") [var "weight"])
-    , Predict $ v_if coin
+    , Predict $ if_ coin
               (app (var "list") [coin, coin, coin])
               false
     ] where coin = (app (var "coin") [])
@@ -182,7 +182,7 @@ uncollapsed_conditional_and_coupled =
 conditional_and_coupled :: (Num num) => [Directive num]
 conditional_and_coupled =
     [ Assume "coin" $ app (var "make-cbeta-bernoulli") [1, 1]
-    , Predict $ v_if coin
+    , Predict $ if_ coin
               (app (var "list") [coin, coin, coin])
               false
     ] where coin = (app (var "coin") [])
@@ -191,7 +191,7 @@ conditional_and_coupled =
 
 whether_a_node_is_random_can_change :: [Directive num]
 whether_a_node_is_random_can_change =
-    [ Assume "coin" $ v_if (app (var "bernoulli") [])
+    [ Assume "coin" $ if_ (app (var "bernoulli") [])
              (lam [] true)
              (var "bernoulli")
     , Predict $ app (var "coin") []

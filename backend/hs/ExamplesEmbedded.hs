@@ -7,7 +7,7 @@ import Control.Monad.Trans.State.Strict
 import qualified Trace as T
 import Venture
 import qualified Inference as I
-import Examples (v_if, v_let1)
+import Examples (if_, let1_)
 
 flip_one_coin :: (MonadRandom m) => m (T.Value Double)
 flip_one_coin = sample (T.app (T.var "bernoulli") []) initial

@@ -23,7 +23,7 @@ basics :: Test
 basics = test
   [ venture_main 1 [Predict 1] >>= (@?= [1])
   , venture_main 1 [Predict $ app v_id [1]] >>= (@?= [1])
-  , venture_main 1 [Predict $ v_let1 "id" v_id (app (var "id") [1])] >>= (@?= [1])
+  , venture_main 1 [Predict $ let1_ "id" v_id (app (var "id") [1])] >>= (@?= [1])
   -- K combinator
   , venture_main 1 [Predict $ app (app v_k [1]) [2]] >>= (@?= [1])
   ]
@@ -76,7 +76,7 @@ more = map (liftM report)
 --     isRandomNode check into regenValue somewhere; is a symmetric
 --     affordance needed for detach?
 -- - self_select_2 (but not self_select_1) leaks (empty) SPRecords
---   (presumably for the lambdas that v_if desugars into)
+--   (presumably for the lambdas that if_ desugars into)
 
 tests :: Test
 tests = test [basics, test (more :: [IO Assertion])]
