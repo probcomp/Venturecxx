@@ -76,6 +76,8 @@ parse "assume" [J.String var, J.String expr, J.String label] =
     Right $ Directive (V.Assume var $ Compose $ G.parse $ T.unpack expr) $ Just label
 parse "assume" args =
     Left $ "Incorrect number of arguments to assume " ++ show args
+parse "assume" args@[_, _] = Left $ "Incorrect type arguments for assume " ++ show args
+parse "assume" args@[_, _, _] = Left $ "Incorrect type arguments for assume " ++ show args
 parse "observe" [J.String expr, J.String val] =
     Right $ Directive (V.Observe expr' val') Nothing where
         expr' = Compose $ G.parse $ T.unpack expr
@@ -86,23 +88,30 @@ parse "observe" [J.String expr, J.String val, J.String label] =
         expr' = Compose $ G.parse $ T.unpack expr
         val' = fromDatum $ G.parse $ T.unpack val
         fromDatum (L.Datum v) = v
+parse "observe" args@[_, _] = Left $ "Incorrect type arguments for observe " ++ show args
+parse "observe" args@[_, _, _] = Left $ "Incorrect type arguments for observe " ++ show args
 parse "observe" args =
     Left $ "Incorrect number of arguments to observe " ++ show args
 parse "predict" [J.String expr] =
     Right $ Directive (V.Predict $ Compose $ G.parse $ T.unpack expr) Nothing
 parse "predict" [J.String expr, J.String label] =
     Right $ Directive (V.Predict $ Compose $ G.parse $ T.unpack expr) $ Just label
+parse "predict" args@[_, _] = Left $ "Incorrect type arguments for predict " ++ show args
+parse "predict" args@[_, _, _] = Left $ "Incorrect type arguments for predict " ++ show args
 parse "predict" args =
     Left $ "Incorrect number of arguments to predict " ++ show args
 parse "list_directives" _ = Right ListDirectives
 parse "stop_continuous_inference" _ = Right StopCI
 parse "clear" _ = Right Clear
 parse "set_mode" [J.String mode] = Right $ SetMode mode
+parse "set_mode" args@[_] = Left $ "Incorrect type argument for set_mode " ++ show args
 parse "set_mode" args = Left $ "Incorrect number of arguments to set_mode " ++ show args
 parse "infer" [J.String prog] = Right $ Infer prog
+parse "infer" args@[_] = Left $ "Incorrect type argument for infer " ++ show args
 parse "infer" args = Left $ "Incorrect number of arguments to infer " ++ show args
 parse "forget" [J.String did] = Right $ Forget $ Tr.Address $ Unique $ read $ T.unpack did
 parse "forget" [J.Number did] = Right $ Forget $ Tr.Address $ Unique $ floor did
+parse "forget" args@[_] = Left $ "Incorrect type argument for forget " ++ show args
 parse "forget" args = Left $ "Incorrect number of arguments to forget " ++ show args
 parse m _ = Left $ "Unknown directive " ++ m
 
