@@ -45,9 +45,9 @@ run act = do
 ---- Parsing
 
 -- The Venture wire protocol is to request a url whose path is the
--- method name and put in the body a list of strings to use for
+-- method name and put in the body a list of json objects to use for
 -- arguments.
-off_the_wire :: Request -> IO (Either String (String, [String]))
+off_the_wire :: Aeson.FromJSON a => Request -> IO (Either String (String, [a]))
 off_the_wire r = do
   let method = parse_method r
   body <- lazyRequestBody r
