@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module WireProtocol where
 
@@ -68,34 +69,38 @@ decode_body :: Aeson.FromJSON a => B.ByteString -> Either String [a]
 decode_body "" = Right []
 decode_body str = Aeson.eitherDecode str
 
+as_expr :: Fractional num => J.Value -> Maybe (Tr.Exp num)
+as_expr (J.String expr) = Just $ Compose $ G.parse $ T.unpack expr
+as_expr (J.Number x) = Just $ Compose $ L.Datum $ L.Number $ realToFrac x
+as_expr (J.Bool b) = Just $ Compose $ L.Datum $ L.Boolean b
+as_expr _ = Nothing
+
 -- So far, expect the method and arguments to lead to a directive
 parse :: (Fractional num) => String -> [J.Value] -> Either String (Command num)
-parse "assume" [J.String var, J.String expr] =
-    Right $ Directive (V.Assume var $ Compose $ G.parse $ T.unpack expr) Nothing
-parse "assume" [J.String var, J.String expr, J.String label] =
-    Right $ Directive (V.Assume var $ Compose $ G.parse $ T.unpack expr) $ Just label
-parse "assume" args =
-    Left $ "Incorrect number of arguments to assume " ++ show args
+parse "assume" [J.String var, as_expr -> (Just expr)] =
+    Right $ Directive (V.Assume var expr) Nothing
+parse "assume" [J.String var, as_expr -> (Just expr), J.String label] =
+    Right $ Directive (V.Assume var expr) $ Just label
 parse "assume" args@[_, _] = Left $ "Incorrect type arguments for assume " ++ show args
 parse "assume" args@[_, _, _] = Left $ "Incorrect type arguments for assume " ++ show args
-parse "observe" [J.String expr, J.String val] =
-    Right $ Directive (V.Observe expr' val') Nothing where
-        expr' = Compose $ G.parse $ T.unpack expr
+parse "assume" args =
+    Left $ "Incorrect number of arguments to assume " ++ show args
+parse "observe" [as_expr -> (Just expr), J.String val] =
+    Right $ Directive (V.Observe expr val') Nothing where
         val' = fromDatum $ G.parse $ T.unpack val
         fromDatum (L.Datum v) = v
-parse "observe" [J.String expr, J.String val, J.String label] =
-    Right $ Directive (V.Observe expr' val') $ Just label where
-        expr' = Compose $ G.parse $ T.unpack expr
+parse "observe" [as_expr -> (Just expr), J.String val, J.String label] =
+    Right $ Directive (V.Observe expr val') $ Just label where
         val' = fromDatum $ G.parse $ T.unpack val
         fromDatum (L.Datum v) = v
 parse "observe" args@[_, _] = Left $ "Incorrect type arguments for observe " ++ show args
 parse "observe" args@[_, _, _] = Left $ "Incorrect type arguments for observe " ++ show args
 parse "observe" args =
     Left $ "Incorrect number of arguments to observe " ++ show args
-parse "predict" [J.String expr] =
-    Right $ Directive (V.Predict $ Compose $ G.parse $ T.unpack expr) Nothing
-parse "predict" [J.String expr, J.String label] =
-    Right $ Directive (V.Predict $ Compose $ G.parse $ T.unpack expr) $ Just label
+parse "predict" [as_expr -> (Just expr)] =
+    Right $ Directive (V.Predict expr) Nothing
+parse "predict" [as_expr -> (Just expr), J.String label] =
+    Right $ Directive (V.Predict expr) $ Just label
 parse "predict" args@[_, _] = Left $ "Incorrect type arguments for predict " ++ show args
 parse "predict" args@[_, _, _] = Left $ "Incorrect type arguments for predict " ++ show args
 parse "predict" args =
