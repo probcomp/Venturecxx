@@ -11,7 +11,7 @@ import qualified Data.ByteString.Lazy         as B
 import qualified Data.HashMap.Strict          as HashMap -- For the add_field and get_field combinators
 import qualified Data.Map.Strict              as M
 import           Data.Maybe                   (fromJust)
-import qualified Data.Text                    as T (Text, pack, unpack)
+import qualified Data.Text                    as T (Text, unpack)
 import qualified Data.Vector                  as Vec
 
 import           Network.Wai
