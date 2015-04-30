@@ -10,6 +10,7 @@
 {-# LANGUAGE ImpredicativeTypes #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Trace where
 
@@ -59,6 +60,12 @@ app (Compose op) args = Compose $ L.App op $ V.fromList $ map getCompose $ toLis
 lam formals (Compose body) = Compose $ L.Lam (V.fromList $ toList formals) body
 true = Compose $ L.Datum $ L.Boolean True
 false = Compose $ L.Datum $ L.Boolean False
+
+if_ :: Exp num -> Exp num -> Exp num -> Exp num
+if_ p c a = app (app (var "select") [p, (lam [] c), (lam [] a)]) []
+
+let1_ :: DT.Text -> Exp num -> Exp num -> Exp num
+let1_ name val body = app (lam [name] body) [val]
 
 class Valuable num b where
     fromValue :: Value num -> Maybe b

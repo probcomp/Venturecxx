@@ -7,7 +7,6 @@ import Control.Monad.Reader
 import Control.Monad.Trans.State.Strict
 import Control.Monad.Random hiding (randoms) -- From cabal install MonadRandom
 import Control.Lens  -- from cabal install lens
-import qualified Data.Text as DT
 
 import Language hiding (Exp, Value, Env)
 import Trace
@@ -34,12 +33,6 @@ venture_main :: (MonadRandom m, Real num, Show num, Floating num, Enum num) =>
 venture_main ct ds = do
   vs <- evalStateT (simulation ct ds) initial
   return $ vs
-
-if_ :: Exp num -> Exp num -> Exp num -> Exp num
-if_ p c a = app (app (var "select") [p, (lam [] c), (lam [] a)]) []
-
-let1_ :: DT.Text -> Exp num -> Exp num -> Exp num
-let1_ name val body = app (lam [name] body) [val]
 
 flip_one_coin :: [Directive num]
 flip_one_coin = [Predict $ app (var "bernoulli") []]

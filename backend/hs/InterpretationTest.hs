@@ -12,7 +12,7 @@ import Test.HUnit
 import Language hiding (Value)
 import Examples
 import Venture
-import Trace (Valuable, fromValue, Value, var, lam, app)
+import Trace (Valuable, fromValue, Value, var, lam, app, let1_)
 
 import qualified Statistical as Stat
 
