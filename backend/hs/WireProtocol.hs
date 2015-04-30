@@ -75,6 +75,14 @@ as_expr (J.Number x) = Just $ Compose $ L.Datum $ L.Number $ realToFrac x
 as_expr (J.Bool b) = Just $ Compose $ L.Datum $ L.Boolean b
 as_expr _ = Nothing
 
+as_val :: Fractional num => J.Value -> Maybe (Tr.Value num)
+as_val (J.String val) = case G.parse $ T.unpack val of
+                          (L.Datum v) -> Just v
+                          _ -> Nothing
+as_val (J.Number x) = Just $ L.Number $ realToFrac x
+as_val (J.Bool b) = Just $ L.Boolean b
+as_val _ = Nothing
+
 -- So far, expect the method and arguments to lead to a directive
 parse :: (Fractional num) => String -> [J.Value] -> Either String (Command num)
 parse "assume" [J.String var, as_expr -> (Just expr)] =
@@ -85,14 +93,10 @@ parse "assume" args@[_, _] = Left $ "Incorrect type arguments for assume " ++ sh
 parse "assume" args@[_, _, _] = Left $ "Incorrect type arguments for assume " ++ show args
 parse "assume" args =
     Left $ "Incorrect number of arguments to assume " ++ show args
-parse "observe" [as_expr -> (Just expr), J.String val] =
-    Right $ Directive (V.Observe expr val') Nothing where
-        val' = fromDatum $ G.parse $ T.unpack val
-        fromDatum (L.Datum v) = v
-parse "observe" [as_expr -> (Just expr), J.String val, J.String label] =
-    Right $ Directive (V.Observe expr val') $ Just label where
-        val' = fromDatum $ G.parse $ T.unpack val
-        fromDatum (L.Datum v) = v
+parse "observe" [as_expr -> (Just expr), as_val -> (Just val)] =
+    Right $ Directive (V.Observe expr val) Nothing where
+parse "observe" [as_expr -> (Just expr), as_val -> (Just val), J.String label] =
+    Right $ Directive (V.Observe expr val) $ Just label where
 parse "observe" args@[_, _] = Left $ "Incorrect type arguments for observe " ++ show args
 parse "observe" args@[_, _, _] = Left $ "Incorrect type arguments for observe " ++ show args
 parse "observe" args =
