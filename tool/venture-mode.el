@@ -10,25 +10,25 @@ Blank lines separate paragraphs.  Semicolons start comments.
 Entering this mode runs the hooks `scheme-mode-hook' and then
 `venture-mode-hook'."
   (setq font-lock-defaults '(venture-font-lock-keywords
-			     nil t (("+-*/.<>=?$%_&~^:" . "w"))
+			     nil t (("_" . "w"))
 			     beginning-of-defun
 			     (font-lock-mark-block-function . mark-defun)))
   (set (make-local-variable 'imenu-case-fold-search) nil)
   (setq imenu-generic-expression dsssl-imenu-generic-expression)
   (set (make-local-variable 'imenu-syntax-alist)
-       '(("+-*/.<>=?$%_&~^:" . "w"))))
+       '(("_" . "w"))))
 
 (defvar venture-font-lock-keywords '() 
   "Default expressions to highlight in Venture mode.")
 (setq venture-font-lock-keywords
   (eval-when-compile
     (list
-     (list "[([]\\(define\\(-\\w+\\)?\\)\\>[ 	]*\\\((?\\)\\(\\sw+\\)\\>"
+     (list "[([]\\(define\\)\\>[ \t]*\\(\\sw+\\)\\>"
            '(1 font-lock-keyword-face)
-           '(4 font-lock-function-name-face))
-     (list "[([]\\(assume\\(-\\w+\\)?\\)\\>[ 	]*\\\((?\\)\\(\\sw+\\)\\>"
+           '(2 font-lock-function-name-face))
+     (list "[([]\\(assume\\)\\>[ \t]*\\(\\sw+\\)\\>"
            '(1 font-lock-variable-name-face)
-           '(4 font-lock-function-name-face))
+           '(2 font-lock-function-name-face))
      (cons
       (concat
        "(" (regexp-opt
@@ -63,3 +63,7 @@ Entering this mode runs the hooks `scheme-mode-hook' and then
 ;; predict, infer).  Is font-lock-variable-name-face good for that?
 
 (provide 'venture-mode)
+
+;; Make Emacs open .vnt files in venture-mode
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.vnt\\'" . venture-mode))
