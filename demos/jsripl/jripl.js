@@ -94,7 +94,7 @@ function jripl() {
     /* Perform the actual AJAX request. */
     var ajax_execute_post = function(URL,data_in,on_success) {
         var then = Date.now()
-        console.log("Ajax request sent")
+        console.log("Ajax request sent", request_queue.length, "left in queue")
         $.ajax({
             url: full_url(URL),
             type:'POST', 
@@ -104,7 +104,7 @@ function jripl() {
             crossDomain: true,
             success: function(data) {
                 now = Date.now();
-                console.log("Ajax response received", now - then);
+                console.log("Ajax response received", now - then, "ms delay");
                 a_request_processed_callback();
                 on_success(data);
                 ajax_continue_requests();
