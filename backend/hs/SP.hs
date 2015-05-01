@@ -21,6 +21,7 @@ import Control.Lens  -- from cabal install lens
 import qualified Data.Vector as V
 
 import Utils
+import Distributions
 import Language hiding (Value, Env, Exp)
 import Trace hiding (SP(..), SPRequester(..), SPOutputter(..))
 import qualified Trace as T
@@ -148,6 +149,42 @@ nary f x [] = f x
 nary _ _ l = error $ "No requests expected " ++ (show $ length l) ++ " given."
 
 -- Is there a better name for these three combinators?
+numericala :: (num -> r) -> Value num -> r
+numericala f = f' where
+    f' (Number v) = f v
+    f' _ = error "Incorrect type argument"
+
+numerical2a :: (num -> num -> r) -> Value num -> Value num -> r
+numerical2a f = f' where
+    f' (Number v) (Number v2) = f v v2
+    f' _ _ = error "Incorrect type argument"
+
+numericalr :: (a -> num) -> a -> Value num
+numericalr f = Number . f
+
+-- These Monad contexts are really Functor, but the Applicative Monad
+-- Proposal isn't in my version of GHC yet.
+numericalrM :: (Monad m) => (a -> m num) -> a -> m (Value num)
+numericalrM f x = liftM Number $ f x
+
+numerical2r :: (a -> b -> num) -> a -> b -> Value num
+numerical2r f x = Number . f x
+
+numerical2rM :: (Monad m) => (a -> b -> m num) -> a -> b -> m (Value num)
+numerical2rM f x y = liftM Number $ f x y
+
+numerical   :: (num -> num) -> Value num -> Value num
+numerical   f = numericalr   (numericala  f)
+
+numericalM  :: (Monad m) => (num -> m num) -> Value num -> m (Value num)
+numericalM  f = numericalrM  (numericala  f)
+
+numerical2  :: (num -> num -> num) -> Value num -> Value num -> Value num
+numerical2  f = numerical2r  (numerical2a f)
+
+numerical2M :: (Monad m) => (num -> num -> m num) -> Value num -> Value num -> m (Value num)
+numerical2M f = numerical2rM (numerical2a f)
+
 typed :: (Valuable num a) => (a -> r) -> Value num -> r
 typed f = f . (fromJust "Incorrect type argument") . fromValue
 
@@ -163,6 +200,9 @@ typedr f = toValue . f
 
 typedr2 :: (ValueEncodable num r) => (a -> b -> r) -> a -> b -> Value num
 typedr2 f x = toValue . f x
+
+typedr2M :: (Monad m, ValueEncodable num r) => (a -> b -> m r) -> a -> b -> m (Value num)
+typedr2M f x y = liftM toValue $ f x y
 
 typedr3 :: (ValueEncodable num r) => (a -> b -> c -> r) -> a -> b -> c -> Value num
 typedr3 f x y = toValue . f x y
@@ -222,25 +262,9 @@ uniform_discrete = no_request
   (RandomO $ on_values $ binary $ typed2 uniform_d_flip)
   (Strict.Just $ LogDOutNS $ on_values $ binary $ typed3 log_d_uniform_d)
 
-box_muller_cos :: Double -> Double -> Double
-box_muller_cos u1 u2 = r * cos theta where
-    r = sqrt (-2 * log u1)
-    theta = 2 * pi * u2
-
-normal_flip :: (MonadRandom m, Fractional num) => num -> num -> m (Value num)
-normal_flip mu sigma = do
-  u1 <- getRandomR (0.0, 1.0)
-  u2 <- getRandomR (0.0, 1.0)
-  let normal = box_muller_cos u1 u2
-  return $ Number $ sigma * realToFrac normal + mu
-
-log_d_normal :: (Floating num) => num -> num -> num -> num
-log_d_normal mean sigma x = - (x - mean)^^(2::Int) / (2 * sigma^^(2::Int)) - scale where
-    scale = log sigma + (log pi)/2
-
 normal :: (MonadRandom m) => NoStateSP m
 normal = no_request
-  (RandomO $ on_values $ binary $ typed2 normal_flip)
+  (RandomO $ on_values $ binary $ numerical2M normal_flip)
   (Strict.Just $ LogDOutNS $ on_values $ binary $ typed3 log_d_normal)
 
 xxxFakeGenericity2 :: (Real num, Fractional num) =>
