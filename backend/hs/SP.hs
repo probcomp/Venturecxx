@@ -396,7 +396,9 @@ initializeBuiltins env = do
                        , ("sin", lift_numerical sin)
                        , ("sqrt", lift_numerical sqrt)
                        , ("+", lift_numerical2 (+))
+                       , ("-", lift_numerical2 (-))
                        , ("*", lift_numerical2 (*))
+                       , ("=", lift_real_real_to_bool (==))
                        , (">=", lift_real_real_to_bool (>=))
                        -- "Tag" does nothing in HsVenture because
                        -- there are no selectors.
