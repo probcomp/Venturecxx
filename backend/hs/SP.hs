@@ -236,24 +236,16 @@ lift_parametric2 simulate log_d = no_request
   (Strict.Just $ LogDOutNS $ on_values $ binary $ numerical3a log_d)
 
 uniform_continuous :: (MonadRandom m) => NoStateSP m
-uniform_continuous = no_request
-  (RandomO $ on_values $ binary $ numerical2M uniform_c_flip)
-  (Strict.Just $ LogDOutNS $ on_values $ binary $ numerical3a log_d_uniform_c)
+uniform_continuous = lift_parametric2 uniform_c_flip log_d_uniform_c
 
 uniform_discrete :: (MonadRandom m) => NoStateSP m
-uniform_discrete = no_request
-  (RandomO $ on_values $ binary $ numerical2M uniform_d_flip)
-  (Strict.Just $ LogDOutNS $ on_values $ binary $ numerical3a log_d_uniform_d)
+uniform_discrete = lift_parametric2 uniform_d_flip log_d_uniform_d
 
 normal :: (MonadRandom m) => NoStateSP m
-normal = no_request
-  (RandomO $ on_values $ binary $ numerical2M normal_flip)
-  (Strict.Just $ LogDOutNS $ on_values $ binary $ numerical3a log_d_normal)
+normal = lift_parametric2 normal_flip log_d_normal
 
 beta :: (MonadRandom m) => NoStateSP m
-beta = no_request
-  (RandomO $ on_values $ binary $ numerical2M Distributions.beta)
-  (Strict.Just $ LogDOutNS $ on_values $ binary $ numerical3a log_denisty_beta)
+beta = lift_parametric2 Distributions.beta log_denisty_beta
 
 inv_gamma :: (MonadRandom m) => NoStateSP m
 inv_gamma = lift_parametric2 Distributions.inv_gamma log_d_inv_gamma
