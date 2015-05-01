@@ -87,8 +87,8 @@ beta alpha beta = do
                  | 0 < x && x < 1 = xxxFakeGenericity3 invIncompleteBeta alpha beta x
                  | otherwise = error $ "x must be in the range [0,1], got: " ++ show x
 
-log_denisty_beta :: (Floating num, Real num) => num -> num -> num -> num
-log_denisty_beta a b x = (a-1)*log x + (b-1)*log (1-x) - xxxFakeGenericity2 logBeta a b
+log_d_beta :: (Floating num, Real num) => num -> num -> num -> num
+log_d_beta a b x = (a-1)*log x + (b-1)*log (1-x) - xxxFakeGenericity2 logBeta a b
 
 ---- Gamma
 
