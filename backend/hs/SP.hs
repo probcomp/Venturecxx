@@ -387,19 +387,13 @@ memoized_sp proc = T.SP
 -- "typed" and "typedr" combinators for this?
 -- lift :: (forall num a r. (T.Numerical num, Valueable num a, ValueEncodable num r) => a -> r) -> SP m
 lift_numerical :: (forall num. T.Numerical num => num -> num) -> SP m
-lift_numerical f = deterministic $ unary f'
-    where f' (Number v) = Number $ f v
-          f' _ = error "Incorrect type argument"
+lift_numerical f = deterministic $ unary $ numerical f
 
 lift_numerical2 :: (forall num. T.Numerical num => num -> num -> num) -> SP m
-lift_numerical2 f = deterministic $ binary f'
-    where f' (Number v) (Number v2) = Number $ f v v2
-          f' _ _ = error "Incorrect type argument"
+lift_numerical2 f = deterministic $ binary $ numerical2 f
 
 lift_real_real_to_bool :: (forall num. T.Numerical num => num -> num -> Bool) -> SP m
-lift_real_real_to_bool f = deterministic $ binary f'
-    where f' (Number v) (Number v2) = Boolean $ f v v2
-          f' _ _ = error "Incorrect type argument"
+lift_real_real_to_bool f = deterministic $ binary $ typedr2 $ numerical2a f
 
 lift_numerical_variadic_reduction :: (forall num. T.Numerical num => num -> num -> num) -> Double -> SP m
 lift_numerical_variadic_reduction f init = deterministic f' where
