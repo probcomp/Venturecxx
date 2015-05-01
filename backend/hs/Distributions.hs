@@ -39,6 +39,22 @@ log_d_uniform_d :: (Ord num, Floating num) => num -> num -> num -> num
 log_d_uniform_d low high x | low <= x && x <= high = - (log (high - low))
                            | otherwise = log 0
 
+---- Categorical
+
+-- Adapted from MonadRandom.fromList.  Who thought it could possibly
+-- be a good idea to restrict the weight type to Rational of all
+-- things?  Especially since that one did its arithmetic in floating
+-- point?
+simulate_categorical :: (MonadRandom m, Ord num, Num num, Random num) => [(a,num)] -> m a
+simulate_categorical [] = error "simulate_categorical called with empty list"
+simulate_categorical [(x,_)] = return x
+simulate_categorical xs = do
+  -- TODO: Better error message if weights sum to 0.
+  let s = (sum (map snd xs))
+      cs = scanl1 (\(_,q) (y,s') -> (y, s'+q)) xs       -- cumulative weight
+  p <- getRandomR (0,s)
+  return . fst . head $ dropWhile (\(_,q) -> q < p) cs
+
 ---- Normal
 
 box_muller_cos :: Double -> Double -> Double

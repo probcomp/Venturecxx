@@ -3,6 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module SP where
 
@@ -259,6 +260,55 @@ make_cbeta_bernoulli = no_state_sp $ no_request
     f (Number n1) (Number n2) = cbeta_bernoulli n1 n2
     f _ _ = error "Wrong type argument to make_cbeta_bernoulli"
 
+data CRPState = CRPState { _tables :: !(M.Map Int Int)
+                         , _total :: !Int
+                         }
+  deriving Show
+
+makeLenses ''CRPState
+
+-- TODO Introduce a Venture type for CRP tables that is not "numerical"?
+crp_flip :: (MonadRandom m, Numerical num, Numerical num1) => num -> CRPState -> m num1
+crp_flip alpha CRPState { _tables = t } = liftM fromIntegral $ simulate_categorical $ zip indices counts where
+    (counts', indices') = unzip $ M.toList t
+    extra_ct = realToFrac alpha
+    next_index = first_absent_from indices'
+    counts :: [Double]
+    counts = extra_ct:(map fromIntegral counts')
+    indices = next_index:indices'
+    first_absent_from :: [Int] -> Int
+    first_absent_from [] = 1
+    first_absent_from ks = snd $ head $ filter (uncurry (/=)) $ zip ks [1..]
+
+crp_log_d :: (Numerical num, Numerical num1, Numerical num2) => num -> CRPState -> num1 -> num2
+crp_log_d alpha CRPState { _tables = t, _total = tot } index =
+    case M.lookup (floor index) t of
+      (Just ct) -> log (fromIntegral ct) - log (realToFrac alpha + fromIntegral tot)
+      Nothing -> log (realToFrac alpha) - log (realToFrac alpha + fromIntegral tot)
+
+crp_frob :: (RealFrac num) => (Int -> Int) -> num -> CRPState -> CRPState
+crp_frob f index s = execState act s where
+    act = do tables . at (floor index) . non 0 %= f
+             total %= f
+
+crp :: (MonadRandom m, Numerical num) => num -> SP m
+crp alpha = T.SP
+  { T.requester = no_state_r nullReq
+  , T.log_d_req = Strict.Just $ T.LogDReq $ const trivial_log_d_req -- Only right for requests it actually made
+  , T.outputter = T.RandomO $ nullary . (numericalrM $ crp_flip alpha)
+  , T.log_d_out = Strict.Just $ T.LogDOut $ nullary . numericala . crp_log_d alpha
+  , T.current = CRPState M.empty 0
+  , T.incorporate = numericala $ crp_frob (+1)
+  , T.unincorporate = numericala $ crp_frob (+ (-1))
+  , T.incorporateR = const $ const id
+  , T.unincorporateR = const $ const id
+  }
+
+make_crp :: (MonadRandom m) => SP m
+make_crp = no_state_sp $ no_request
+  (SPMaker $ on_values $ unary $ numericala crp)
+  Strict.Nothing
+
 selectO :: [Value num] -> [b] -> Value num
 selectO [p,c,a] [] = if fromJust "Predicate was not a boolean" $ fromValue p then c
                      else a
@@ -358,6 +408,7 @@ initializeBuiltins env = do
                        , ("weighted", no_state_sp weighted)
                        , ("flip", no_state_sp weighted) -- Conventional name.
                        , ("make-cbeta-bernoulli", make_cbeta_bernoulli)
+                       , ("make_crp", make_crp)
                        , ("mem", mem)
                        , ("sin", lift_numerical sin)
                        , ("sqrt", lift_numerical sqrt)
