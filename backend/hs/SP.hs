@@ -272,8 +272,7 @@ cbeta_bernoulli_frob :: (num -> num) -> Bool -> (Pair num num) -> (Pair num num)
 cbeta_bernoulli_frob f True  s = s & _1 %~ f
 cbeta_bernoulli_frob f False s = s & _2 %~ f
 
-cbeta_bernoulli :: (MonadRandom m, Show num, Floating num, Real num) =>
-                   num -> num -> SP m
+cbeta_bernoulli :: (MonadRandom m, Numerical num) => num -> num -> SP m
 cbeta_bernoulli ctYes ctNo = T.SP
   { T.requester = no_state_r nullReq
   , T.log_d_req = Strict.Just $ T.LogDReq $ const trivial_log_d_req -- Only right for requests it actually made
@@ -293,8 +292,7 @@ make_cbeta_bernoulli = no_state_sp NoStateSP
   , outputter = SPMaker $ on_values $ binary $ f -- typed2 cbeta_bernoulli
   , log_d_out = Strict.Nothing
   } where
-    f :: (MonadRandom m, Show num, Floating num, Real num) =>
-         Value num -> Value num -> SP m
+    f :: (MonadRandom m, T.Numerical num) => Value num -> Value num -> SP m
     f (Number n1) (Number n2) = cbeta_bernoulli n1 n2
     f _ _ = error "Wrong type argument to make_cbeta_bernoulli"
 

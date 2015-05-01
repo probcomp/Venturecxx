@@ -41,7 +41,7 @@ import qualified Language as L
 -- Small objects                                                    --
 ----------------------------------------------------------------------
 
-type Numerical a = (Show a, Floating a, Real a)
+type Numerical a = (Show a, Floating a, Real a, RealFrac a)
 
 type Value num = L.Value SPAddress num
 type Exp num = Compose L.Exp (L.Value SPAddress) num
@@ -146,10 +146,10 @@ data SP m = forall a. (Show a) => SP
     , current :: !a -- Otherwise leaks for stateless SPs
     -- These guys may need to accept the argument lists, but I have
     -- not yet seen an example that forces this.
-    , incorporate :: !(forall num. (Show num, Floating num, Real num) => Value num -> a -> a)
-    , unincorporate :: !(forall num. (Show num, Floating num, Real num) => Value num -> a -> a)
-    , incorporateR :: !(forall num. (Show num, Floating num, Real num) => [Value num] -> [SimulationRequest num] -> a -> a)
-    , unincorporateR :: !(forall num. (Show num, Floating num, Real num) => [Value num] -> [SimulationRequest num] -> a -> a)
+    , incorporate :: !(forall num. (Show num, Floating num, Real num, RealFrac num) => Value num -> a -> a)
+    , unincorporate :: !(forall num. (Show num, Floating num, Real num, RealFrac num) => Value num -> a -> a)
+    , incorporateR :: !(forall num. (Show num, Floating num, Real num, RealFrac num) => [Value num] -> [SimulationRequest num] -> a -> a)
+    , unincorporateR :: !(forall num. (Show num, Floating num, Real num, RealFrac num) => [Value num] -> [SimulationRequest num] -> a -> a)
     }
 -- TODO Can I refactor this data type to capture the fact that
 -- deterministic requesters and outputters never have meaningful log_d
@@ -162,16 +162,16 @@ data SP m = forall a. (Show a) => SP
 -- Not using the Numerical alias because it causes an asymptotic (!)
 -- performance degradation
 -- https://ghc.haskell.org/trac/ghc/ticket/10359
-do_inc :: (Show num, Floating num, Real num) => Value num -> SP m -> SP m
+do_inc :: (Show num, Floating num, Real num, RealFrac num) => Value num -> SP m -> SP m
 do_inc v SP{..} = SP{ current = incorporate v current, .. }
 
-do_uninc :: (Show num, Floating num, Real num) => Value num -> SP m -> SP m
+do_uninc :: (Show num, Floating num, Real num, RealFrac num) => Value num -> SP m -> SP m
 do_uninc v SP{..} = SP{ current = unincorporate v current, ..}
 
-do_incR :: (Show num, Floating num, Real num) => [Value num] -> [SimulationRequest num] -> SP m -> SP m
+do_incR :: (Show num, Floating num, Real num, RealFrac num) => [Value num] -> [SimulationRequest num] -> SP m -> SP m
 do_incR vs rs SP{..} = SP{ current = incorporateR vs rs current, ..}
 
-do_unincR :: (Show num, Floating num, Real num) => [Value num] -> [SimulationRequest num] -> SP m -> SP m
+do_unincR :: (Show num, Floating num, Real num, RealFrac num) => [Value num] -> [SimulationRequest num] -> SP m -> SP m
 do_unincR vs rs SP{..} = SP{ current = unincorporateR vs rs current, ..}
 
 instance Show (SP m) where
