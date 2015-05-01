@@ -371,6 +371,11 @@ lift_numerical2 f = deterministic $ binary f'
     where f' (Number v) (Number v2) = Number $ f v v2
           f' _ _ = error "Incorrect type argument"
 
+lift_real_real_to_bool :: (forall num. T.Numerical num => num -> num -> Bool) -> SP m
+lift_real_real_to_bool f = deterministic $ binary f'
+    where f' (Number v) (Number v2) = Boolean $ f v v2
+          f' _ _ = error "Incorrect type argument"
+
 initializeBuiltins :: (MonadState (Trace m1 num) m, MonadRandom m1,
                       Floating num, Enum num, Show num, Real num) => Env -> m Env
 initializeBuiltins env = do
@@ -392,6 +397,7 @@ initializeBuiltins env = do
                        , ("sqrt", lift_numerical sqrt)
                        , ("+", lift_numerical2 (+))
                        , ("*", lift_numerical2 (*))
+                       , (">=", lift_real_real_to_bool (>=))
                        -- "Tag" does nothing in HsVenture because
                        -- there are no selectors.
                        , ("tag", deterministic $ ternary $ const $ const id)

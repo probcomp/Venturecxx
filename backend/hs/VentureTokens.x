@@ -8,7 +8,7 @@ $digit = 0-9
 $alpha = [a-zA-Z]
 @signed = [\+\-]? $digit+
 $nonsymbol = . # [$white \( \)]
-$operchar = [\+\-\*\/]
+$operchar = [\+\-\*\/\>\<\=]
 
 tokens :-
 
