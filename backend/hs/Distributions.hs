@@ -24,7 +24,7 @@ uniform_c_flip low high = do
   return $ low + (realToFrac unit) * (high - low)
 
 log_d_uniform_c :: (Ord num, Floating num) => num -> num -> num -> num
-log_d_uniform_c x low high | low <= x && x <= high = - (log (high - low))
+log_d_uniform_c low high x | low <= x && x <= high = - (log (high - low))
                            | otherwise = log 0
 
 -- TODO A type for integers?
@@ -35,7 +35,7 @@ uniform_d_flip low high = do
 
 -- TODO Uniform-discrete's log density should have no derivatives
 log_d_uniform_d :: (Ord num, Floating num) => num -> num -> num -> num
-log_d_uniform_d x low high | low <= x && x <= high = - (log (high - low))
+log_d_uniform_d low high x | low <= x && x <= high = - (log (high - low))
                            | otherwise = log 0
 
 ---- Normal
