@@ -94,6 +94,14 @@ no_state_o (RandomO f) = T.RandomO $ const f
 no_state_o (SPMaker f) = T.SPMaker $ const f
 no_state_o (ReferringSPMaker f) = T.ReferringSPMaker $ const f
 
+no_request :: SPOutputterNS m -> Strict.Maybe LogDOutNS -> NoStateSP m
+no_request simulate maybe_log_d = NoStateSP
+  { requester = nullReq
+  , log_d_req = Strict.Just $ LogDReqNS $ trivial_log_d_req -- Only right for requests it actually made
+  , outputter = simulate
+  , log_d_out = maybe_log_d
+  }
+
 compoundSP :: (Monad m, Fractional num, Real num) => V.Vector DT.Text -> Exp num -> Env -> SP m
 compoundSP formals exp env = no_state_sp NoStateSP
   { requester = DeterministicR req
@@ -154,23 +162,15 @@ typedr3 :: (ValueEncodable num r) => (a -> b -> c -> r) -> a -> b -> c -> Value 
 typedr3 f x y = toValue . f x y
 
 deterministic :: (forall num. (T.Numerical num) => [Value num] -> [Value num] -> Value num) -> SP m
-deterministic f = no_state_sp $ NoStateSP
-  { requester = nullReq
-  , log_d_req = Strict.Just $ LogDReqNS $ trivial_log_d_req -- Only right for requests it actually made
-  , outputter = DeterministicO $ on_values f
-  , log_d_out = Strict.Nothing
-  }
+deterministic f = no_state_sp $ no_request (DeterministicO $ on_values f) Strict.Nothing
 
 bernoulli_flip :: (MonadRandom m) => m (Value num)
 bernoulli_flip = liftM Boolean $ getRandomR (False,True)
 
 bernoulli :: (MonadRandom m) => NoStateSP m
-bernoulli = NoStateSP
-  { requester = nullReq
-  , log_d_req = Strict.Just $ LogDReqNS $ trivial_log_d_req -- Only right for requests it actually made
-  , outputter = RandomO $ nullary bernoulli_flip
-  , log_d_out = Strict.Just $ LogDOutNS $ nullary $ const (-log 2.0)
-  }
+bernoulli = no_request
+  (RandomO $ nullary bernoulli_flip)
+  (Strict.Just $ LogDOutNS $ nullary $ const (-log 2.0))
 
 weighted_flip :: (MonadRandom m, Real num) => num -> m (Value num)
 weighted_flip weight = do
@@ -182,12 +182,9 @@ log_d_weight weight True = log weight
 log_d_weight weight False = log (1 - weight)
 
 weighted :: (MonadRandom m) => NoStateSP m
-weighted = NoStateSP
-  { requester = nullReq
-  , log_d_req = Strict.Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
-  , outputter = RandomO $ on_values $ unary $ typed weighted_flip
-  , log_d_out = Strict.Just $ LogDOutNS $ on_values $ unary $ typed2 log_d_weight
-  }
+weighted = no_request
+  (RandomO $ on_values $ unary $ typed weighted_flip)
+  (Strict.Just $ LogDOutNS $ on_values $ unary $ typed2 log_d_weight)
 
 uniform_c_flip :: forall m num. (MonadRandom m, Numerical num) => num -> num -> m (Value num)
 uniform_c_flip low high = do
@@ -199,12 +196,9 @@ log_d_uniform_c x low high | low <= x && x <= high = - (log (high - low))
                            | otherwise = log 0
 
 uniform_continuous :: (MonadRandom m) => NoStateSP m
-uniform_continuous = NoStateSP
-  { requester = nullReq
-  , log_d_req = Strict.Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
-  , outputter = RandomO $ on_values $ binary $ typed2 uniform_c_flip
-  , log_d_out = Strict.Just $ LogDOutNS $ on_values $ binary $ typed3 log_d_uniform_c
-  }
+uniform_continuous = no_request
+  (RandomO $ on_values $ binary $ typed2 uniform_c_flip)
+  (Strict.Just $ LogDOutNS $ on_values $ binary $ typed3 log_d_uniform_c)
 
 -- TODO A type for integers?
 uniform_d_flip :: forall m num. (MonadRandom m, Numerical num) => num -> num -> m (Value num)
@@ -218,12 +212,9 @@ log_d_uniform_d x low high | low <= x && x <= high = - (log (high - low))
                            | otherwise = log 0
 
 uniform_discrete :: (MonadRandom m) => NoStateSP m
-uniform_discrete = NoStateSP
-  { requester = nullReq
-  , log_d_req = Strict.Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
-  , outputter = RandomO $ on_values $ binary $ typed2 uniform_d_flip
-  , log_d_out = Strict.Just $ LogDOutNS $ on_values $ binary $ typed3 log_d_uniform_d
-  }
+uniform_discrete = no_request
+  (RandomO $ on_values $ binary $ typed2 uniform_d_flip)
+  (Strict.Just $ LogDOutNS $ on_values $ binary $ typed3 log_d_uniform_d)
 
 box_muller_cos :: Double -> Double -> Double
 box_muller_cos u1 u2 = r * cos theta where
@@ -242,12 +233,9 @@ log_d_normal mean sigma x = - (x - mean)^^(2::Int) / (2 * sigma^^(2::Int)) - sca
     scale = log sigma + (log pi)/2
 
 normal :: (MonadRandom m) => NoStateSP m
-normal = NoStateSP
-  { requester = nullReq
-  , log_d_req = Strict.Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
-  , outputter = RandomO $ on_values $ binary $ typed2 normal_flip
-  , log_d_out = Strict.Just $ LogDOutNS $ on_values $ binary $ typed3 log_d_normal
-  }
+normal = no_request
+  (RandomO $ on_values $ binary $ typed2 normal_flip)
+  (Strict.Just $ LogDOutNS $ on_values $ binary $ typed3 log_d_normal)
 
 xxxFakeGenericity2 :: (Real num, Fractional num) =>
                       (Double -> Double -> Double) -> (num -> num -> num)
@@ -274,12 +262,9 @@ log_denisty_beta :: (Floating num, Real num) => num -> num -> num -> num
 log_denisty_beta a b x = (a-1)*log x + (b-1)*log (1-x) - xxxFakeGenericity2 logBeta a b
 
 beta :: (MonadRandom m) => NoStateSP m
-beta = NoStateSP
-  { requester = nullReq
-  , log_d_req = Strict.Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
-  , outputter = RandomO $ on_values $ binary $ typed2 betaO
-  , log_d_out = Strict.Just $ LogDOutNS $ on_values $ binary $ typed3 log_denisty_beta
-  }
+beta = no_request
+  (RandomO $ on_values $ binary $ typed2 betaO)
+  (Strict.Just $ LogDOutNS $ on_values $ binary $ typed3 log_denisty_beta)
 
 cbeta_bernoulli_flip :: (MonadRandom m, Numerical num, Numerical num2) => (Pair num num) -> m (Value num2)
 cbeta_bernoulli_flip (ctYes :!: ctNo) = weighted_flip $ realToFrac $ ctYes / (ctYes + ctNo)
@@ -305,12 +290,10 @@ cbeta_bernoulli ctYes ctNo = T.SP
   }
 
 make_cbeta_bernoulli :: (MonadRandom m) => SP m
-make_cbeta_bernoulli = no_state_sp NoStateSP
-  { requester = nullReq
-  , log_d_req = Strict.Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
-  , outputter = SPMaker $ on_values $ binary $ f -- typed2 cbeta_bernoulli
-  , log_d_out = Strict.Nothing
-  } where
+make_cbeta_bernoulli = no_state_sp $ no_request
+  (SPMaker $ on_values $ binary $ f) -- typed2 cbeta_bernoulli
+  (Strict.Nothing)
+  where
     f :: (MonadRandom m, T.Numerical num) => Value num -> Value num -> SP m
     f (Number n1) (Number n2) = cbeta_bernoulli n1 n2
     f _ _ = error "Wrong type argument to make_cbeta_bernoulli"
@@ -322,12 +305,7 @@ selectO _ _ = error "Wrong number of arguments to SELECT"
 
 -- Here the Ord is because of the Ord constraint on memoized_sp
 mem :: (Monad m) => SP m
-mem = no_state_sp NoStateSP
-  { requester = nullReq
-  , log_d_req = Strict.Just $ LogDReqNS trivial_log_d_req
-  , outputter = ReferringSPMaker $ unary $ memoized_sp
-  , log_d_out = Strict.Nothing
-  }
+mem = no_state_sp $ no_request (ReferringSPMaker $ unary $ memoized_sp) Strict.Nothing
 
 -- The memoization cache always stores objects of type Value Double,
 -- and converts any other Numerical Value num to them for comparison.
