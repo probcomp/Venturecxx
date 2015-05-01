@@ -9,6 +9,7 @@ module SP where
 import Data.Functor.Compose
 import qualified Data.Map.Strict as M
 import qualified Data.Maybe.Strict as Strict
+import Data.List (foldl')
 import qualified Data.Text as DT
 import Data.Tuple.Strict (Pair(..))
 import Control.Monad.State.Strict hiding (state)
@@ -376,6 +377,12 @@ lift_real_real_to_bool f = deterministic $ binary f'
     where f' (Number v) (Number v2) = Boolean $ f v v2
           f' _ _ = error "Incorrect type argument"
 
+lift_numerical_variadic_reduction :: (forall num. T.Numerical num => num -> num -> num) -> Double -> SP m
+lift_numerical_variadic_reduction f init = deterministic f' where
+    f' vals _ = Number $ foldl' f (realToFrac init) $ map fromNumber vals
+    fromNumber (Number v) = v
+    fromNumber _ = error "Incorrect type argument"
+
 initializeBuiltins :: (MonadState (Trace m1 num) m, MonadRandom m1,
                       Floating num, Enum num, Show num, Real num) => Env -> m Env
 initializeBuiltins env = do
@@ -396,9 +403,9 @@ initializeBuiltins env = do
                        , ("sin", lift_numerical sin)
                        , ("sqrt", lift_numerical sqrt)
                        , ("pow", lift_numerical2 (**))
-                       , ("+", lift_numerical2 (+))
+                       , ("+", lift_numerical_variadic_reduction (+) 0)
                        , ("-", lift_numerical2 (-))
-                       , ("*", lift_numerical2 (*))
+                       , ("*", lift_numerical_variadic_reduction (*) 1)
                        , ("=", lift_real_real_to_bool (==))
                        , (">=", lift_real_real_to_bool (>=))
                        -- "Tag" does nothing in HsVenture because
