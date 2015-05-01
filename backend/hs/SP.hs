@@ -215,12 +215,9 @@ typedr3 f x y = toValue . f x y
 deterministic :: (forall num. (T.Numerical num) => [Value num] -> [Value num] -> Value num) -> SP m
 deterministic f = no_state_sp $ no_request (DeterministicO $ on_values f) Strict.Nothing
 
-bernoulli_flip :: (MonadRandom m) => m (Value num)
-bernoulli_flip = liftM Boolean $ getRandomR (False,True)
-
 bernoulli :: (MonadRandom m) => NoStateSP m
 bernoulli = no_request
-  (RandomO $ nullary bernoulli_flip)
+  (RandomO $ nullary $ liftM Boolean $ getRandomR (False,True))
   (Strict.Just $ LogDOutNS $ nullary $ const (-log 2.0))
 
 weighted_flip :: (MonadRandom m, Real num) => num -> m (Value num)
