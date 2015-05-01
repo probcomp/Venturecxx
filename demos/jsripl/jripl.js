@@ -200,19 +200,29 @@ function jripl() {
     var process_directives = function(time,f,ids) {
         return function(directives) {
             f(directives);
-            setTimeout(
-                function () {
-                    get_directives_recursively(time,f,ids);
-                },
-                time);
+            get_directives_later(time,f,ids);
         };
     };
 
+    var get_directives_later = function(time,f,ids) {
+        setTimeout(
+            function () {
+                get_directives_recursively(time,f,ids);
+            },
+            time);
+    };
+
     var get_directives_recursively = function(time,f,ids) {
-        ajax_post_in_sequence("list_directives",
-                              [],
-//                              ids, (see note above)
-                              process_directives(time,f,ids));
+        if (request_in_progressQ) {
+            // Wait until all other requests have come back
+            get_directives_later(time,f,ids);
+        }
+        else {
+            ajax_post_in_sequence("list_directives",
+                                  [],
+                                  // ids, (see note above)
+                                  process_directives(time,f,ids));
+        };
     };
 
     /* This the user-facing function. */
