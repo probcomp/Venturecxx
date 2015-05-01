@@ -2,6 +2,7 @@
 
 module Distributions where
 
+import Control.Monad
 import Control.Monad.Random
 import Numeric.SpecFunctions -- From cabal install spec-functions
 
@@ -62,6 +63,10 @@ xxxFakeGenericity2 :: (Real num, Fractional num) =>
                       (Double -> Double -> Double) -> (num -> num -> num)
 xxxFakeGenericity2 f x1 x2 = realToFrac $ f (realToFrac x1) (realToFrac x2)
 
+xxxFakeGenericity2M :: (Monad m, Real num, Fractional num) =>
+                       (Double -> Double -> m Double) -> (num -> num -> m num)
+xxxFakeGenericity2M f x1 x2 = liftM realToFrac $ f (realToFrac x1) (realToFrac x2)
+
 xxxFakeGenericity3 :: (Real num, Fractional num) =>
                       (Double -> Double -> Double -> Double) -> (num -> num -> Double -> num)
 xxxFakeGenericity3 f x1 x2 x3 = realToFrac $ f (realToFrac x1) (realToFrac x2) x3
@@ -81,3 +86,54 @@ beta alpha beta = do
 
 log_denisty_beta :: (Floating num, Real num) => num -> num -> num -> num
 log_denisty_beta a b x = (a-1)*log x + (b-1)*log (1-x) - xxxFakeGenericity2 logBeta a b
+
+---- Gamma
+
+-- Grump again.  I seem to be again losing from people imposing
+-- incompatible interfaces on their code.  I want
+
+gammaDouble :: forall m. (MonadRandom m) => Double -> Double -> m Double
+
+-- I wish I could reuse, e.g., Data.Random.Distribution.Gamma.gamma with
+--   gamma shape scale = ??? $ Gamma.gamma shape scale
+-- but in order to do that, I would need to write a combinator of type
+--   ??? :: (MonadRandom m) => RVar a -> m a
+-- that could sample from an arbitrary RVar in an arbitrary instance
+-- of the MonadRandom package's MonadRandom.  This is clearly
+-- nonsense.  So I copy and modify code to have the interface I want.
+
+-- In this case, since I'm copying anyway, I decided to copy from
+-- System.Random.MWC.Distributions.gamma
+
+{-# INLINE gammaDouble #-}
+gammaDouble a b
+  | a <= 0    = error "negative shape parameter for gamma distribution"
+  | otherwise = mainloop
+    where
+      mainloop = do
+        T x v <- innerloop
+        u     <- getRandomR (0.0, 1.0)
+        let cont =  u > 1 - 0.331 * sqr (sqr x)
+                 && log u > 0.5 * sqr x + a1 * (1 - v + log v) -- Rarely evaluated
+        case () of
+          _| cont      -> mainloop
+           | a >= 1    -> return $! a1 * v * b
+           | otherwise -> do y <- getRandomR (0.0, 1.0)
+                             return $! y ** (1 / a) * a1 * v * b
+      -- inner loop
+      innerloop = do
+        x <- normal_flip 0 1
+        case 1 + a2*x of
+          v | v <= 0    -> innerloop
+            | otherwise -> return $! T x (v*v*v)
+      -- constants
+      a' = if a < 1 then a + 1 else a
+      a1 = a' - 1/3
+      a2 = 1 / sqrt(9 * a1)
+      sqr x = x * x
+
+-- Unboxed 2-tuple
+data T = T {-# UNPACK #-} !Double {-# UNPACK #-} !Double
+
+gamma :: (MonadRandom m, Real num, Fractional num) => num -> num -> m num
+gamma = xxxFakeGenericity2M gammaDouble
