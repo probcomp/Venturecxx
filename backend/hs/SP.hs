@@ -16,7 +16,6 @@ import Control.Monad.State.Strict hiding (state)
 import Control.Monad.State.Class
 import Control.Monad.Reader
 import Control.Monad.Random -- From cabal install MonadRandom
-import Numeric.SpecFunctions -- From cabal install spec-functions
 import Control.Lens  -- from cabal install lens
 import qualified Data.Vector as V
 
@@ -243,33 +242,9 @@ normal = no_request
   (RandomO $ on_values $ binary $ numerical2M normal_flip)
   (Strict.Just $ LogDOutNS $ on_values $ binary $ numerical3a log_d_normal)
 
-xxxFakeGenericity2 :: (Real num, Fractional num) =>
-                      (Double -> Double -> Double) -> (num -> num -> num)
-xxxFakeGenericity2 f x1 x2 = realToFrac $ f (realToFrac x1) (realToFrac x2)
-
-xxxFakeGenericity3 :: (Real num, Fractional num) =>
-                      (Double -> Double -> Double -> Double) -> (num -> num -> Double -> num)
-xxxFakeGenericity3 f x1 x2 x3 = realToFrac $ f (realToFrac x1) (realToFrac x2) x3
-
-betaO :: forall m num. (MonadRandom m, Real num, Fractional num) => num -> num -> m (Value num)
-betaO alpha beta = do
-  -- Adapted from Statistics.Distribution.Beta; not reused because of
-  -- funny randomness management convention.
-  x <- getRandomR (0.0,1.0)
-  return $ Number $ quantile x
-    where
-      quantile :: Double -> num
-      quantile x | x == 0 = 0
-                 | x == 1 = 1
-                 | 0 < x && x < 1 = xxxFakeGenericity3 invIncompleteBeta alpha beta x
-                 | otherwise = error $ "x must be in the range [0,1], got: " ++ show x
-
-log_denisty_beta :: (Floating num, Real num) => num -> num -> num -> num
-log_denisty_beta a b x = (a-1)*log x + (b-1)*log (1-x) - xxxFakeGenericity2 logBeta a b
-
 beta :: (MonadRandom m) => NoStateSP m
 beta = no_request
-  (RandomO $ on_values $ binary $ numerical2a betaO)
+  (RandomO $ on_values $ binary $ numerical2M Distributions.beta)
   (Strict.Just $ LogDOutNS $ on_values $ binary $ numerical3a log_denisty_beta)
 
 cbeta_bernoulli_flip :: (MonadRandom m, Numerical num) => (Pair num num) -> m Bool
@@ -387,7 +362,7 @@ initializeBuiltins env = do
                        , ("uniform_continuous", no_state_sp uniform_continuous)
                        , ("uniform_discrete", no_state_sp uniform_discrete)
                        , ("normal", no_state_sp normal)
-                       , ("beta", no_state_sp beta)
+                       , ("beta", no_state_sp SP.beta)
                        , ("select", deterministic selectO)
                        , ("list", deterministic $ nary $ List . V.fromList)
                        , ("weighted", no_state_sp weighted)
