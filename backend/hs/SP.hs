@@ -189,21 +189,40 @@ weighted = NoStateSP
   , log_d_out = Strict.Just $ LogDOutNS $ on_values $ unary $ typed2 log_d_weight
   }
 
-uniform_flip :: forall m num. (MonadRandom m, Numerical num) => num -> num -> m (Value num)
-uniform_flip low high = do
+uniform_c_flip :: forall m num. (MonadRandom m, Numerical num) => num -> num -> m (Value num)
+uniform_c_flip low high = do
   unit <- (getRandomR (0.0, 1.0)) :: m Double
   return $ Number $ low + (realToFrac unit) * (high - low)
 
-log_d_uniform :: (Numerical num) => num -> num -> num -> num
-log_d_uniform x low high | low <= x && x <= high = - (log (high - low))
-                         | otherwise = log 0
+log_d_uniform_c :: (Numerical num) => num -> num -> num -> num
+log_d_uniform_c x low high | low <= x && x <= high = - (log (high - low))
+                           | otherwise = log 0
 
 uniform_continuous :: (MonadRandom m) => NoStateSP m
 uniform_continuous = NoStateSP
   { requester = nullReq
   , log_d_req = Strict.Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
-  , outputter = RandomO $ on_values $ binary $ typed2 uniform_flip
-  , log_d_out = Strict.Just $ LogDOutNS $ on_values $ binary $ typed3 log_d_uniform
+  , outputter = RandomO $ on_values $ binary $ typed2 uniform_c_flip
+  , log_d_out = Strict.Just $ LogDOutNS $ on_values $ binary $ typed3 log_d_uniform_c
+  }
+
+-- TODO A type for integers?
+uniform_d_flip :: forall m num. (MonadRandom m, Numerical num) => num -> num -> m (Value num)
+uniform_d_flip low high = do
+  res <- (getRandomR (ceiling low, floor high)) :: m Int
+  return $ Number $ fromIntegral res
+
+-- TODO Uniform-discrete's log density should have no derivatives
+log_d_uniform_d :: (Numerical num) => num -> num -> num -> num
+log_d_uniform_d x low high | low <= x && x <= high = - (log (high - low))
+                           | otherwise = log 0
+
+uniform_discrete :: (MonadRandom m) => NoStateSP m
+uniform_discrete = NoStateSP
+  { requester = nullReq
+  , log_d_req = Strict.Just $ LogDReqNS trivial_log_d_req -- Only right for requests it actually made
+  , outputter = RandomO $ on_values $ binary $ typed2 uniform_d_flip
+  , log_d_out = Strict.Just $ LogDOutNS $ on_values $ binary $ typed3 log_d_uniform_d
   }
 
 box_muller_cos :: Double -> Double -> Double
