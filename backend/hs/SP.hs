@@ -379,6 +379,7 @@ initializeBuiltins env = do
   return $ Frame (M.fromList $ zip names addrs) env
       where namedSps = [ ("bernoulli", no_state_sp bernoulli)
                        , ("uniform_continuous", no_state_sp uniform_continuous)
+                       , ("uniform_discrete", no_state_sp uniform_discrete)
                        , ("normal", no_state_sp normal)
                        , ("beta", no_state_sp beta)
                        , ("select", deterministic selectO)
