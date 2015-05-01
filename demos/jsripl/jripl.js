@@ -85,6 +85,7 @@ function jripl() {
                                 on_success: on_success});
         } 
         else {
+            request_in_progressQ = true;
             ajax_execute_post(URL,data_in,on_success);
         }
     };
@@ -111,8 +112,9 @@ function jripl() {
             },
             // TODO this error callback needs updating
             error: function(data) { 
-                    console.log(data.toString());
-                    },
+                console.log("Got an error", data);
+                ajax_continue_requests();
+            },
             complete: function() {}
         });
     };
