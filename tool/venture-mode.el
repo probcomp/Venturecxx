@@ -32,7 +32,9 @@ Entering this mode runs the hooks `scheme-mode-hook' and then
 
 (defvar venture-imenu-generic-expression
   '((nil
-     "^\\[\\(assume\\|define\\)\\s-+\\(\\sw+\\)" 2))
+     "^\\[\\(assume\\|define\\)\\s-+\\(\\sw+\\)" 2)
+    ("Nested assumes"
+     "(assume\\s-+\\(\\sw+\\)" 1))
   "Imenu generic expression for Venture mode.  See `imenu-generic-expression'.")
   
 
