@@ -203,6 +203,9 @@ typed3 = typed . (typed2 .)
 typedr :: (ValueEncodable num r) => (a -> r) -> a -> Value num
 typedr f = toValue . f
 
+typedrM :: (Monad m, ValueEncodable num r) => (a -> m r) -> a -> m (Value num)
+typedrM f = liftM toValue . f
+
 typedr2 :: (ValueEncodable num r) => (a -> b -> r) -> a -> b -> Value num
 typedr2 f x = toValue . f x
 
@@ -220,10 +223,10 @@ bernoulli = no_request
   (RandomO $ nullary $ liftM Boolean $ getRandomR (False,True))
   (Strict.Just $ LogDOutNS $ nullary $ const (-log 2.0))
 
-weighted_flip :: (MonadRandom m, Real num) => num -> m (Value num)
+weighted_flip :: (MonadRandom m, Real num) => num -> m Bool
 weighted_flip weight = do
   (toss :: Double) <- getRandomR (0.0,1.0)
-  return $ Boolean $ toss < realToFrac weight
+  return $ toss < realToFrac weight
 
 log_d_weight :: (Floating num) => num -> Bool -> num
 log_d_weight weight True = log weight
@@ -231,7 +234,7 @@ log_d_weight weight False = log (1 - weight)
 
 weighted :: (MonadRandom m) => NoStateSP m
 weighted = no_request
-  (RandomO $ on_values $ unary $ numericala weighted_flip)
+  (RandomO $ on_values $ unary $ numericala $ typedrM weighted_flip)
   (Strict.Just $ LogDOutNS $ on_values $ unary $ numericala $ typed . log_d_weight)
 
 uniform_c_flip :: forall m num. (MonadRandom m, Numerical num) => num -> num -> m (Value num)
@@ -298,8 +301,8 @@ beta = no_request
   (RandomO $ on_values $ binary $ numerical2a betaO)
   (Strict.Just $ LogDOutNS $ on_values $ binary $ numerical3a log_denisty_beta)
 
-cbeta_bernoulli_flip :: (MonadRandom m, Numerical num, Numerical num2) => (Pair num num) -> m (Value num2)
-cbeta_bernoulli_flip (ctYes :!: ctNo) = weighted_flip $ realToFrac $ ctYes / (ctYes + ctNo)
+cbeta_bernoulli_flip :: (MonadRandom m, Numerical num) => (Pair num num) -> m Bool
+cbeta_bernoulli_flip (ctYes :!: ctNo) = weighted_flip $ ctYes / (ctYes + ctNo)
 
 cbeta_bernoulli_log_d :: (Numerical num1, Numerical num2) => (Pair num1 num1) -> Bool -> num2
 cbeta_bernoulli_log_d (ctYes :!: ctNo) = log_d_weight $ realToFrac $ ctYes / (ctYes + ctNo)
@@ -312,7 +315,7 @@ cbeta_bernoulli :: (MonadRandom m, Numerical num) => num -> num -> SP m
 cbeta_bernoulli ctYes ctNo = T.SP
   { T.requester = no_state_r nullReq
   , T.log_d_req = Strict.Just $ T.LogDReq $ const trivial_log_d_req -- Only right for requests it actually made
-  , T.outputter = T.RandomO $ nullary . cbeta_bernoulli_flip
+  , T.outputter = T.RandomO $ nullary . (typedrM cbeta_bernoulli_flip)
   , T.log_d_out = Strict.Just $ T.LogDOut $ nullary . typed . cbeta_bernoulli_log_d
   , T.current = (ctYes :!: ctNo)
   , T.incorporate = typed $ cbeta_bernoulli_frob (+1)
