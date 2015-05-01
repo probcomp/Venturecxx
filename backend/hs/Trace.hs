@@ -6,7 +6,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE IncoherentInstances #-} -- TODO Show Exp overlaps with something
+{-# LANGUAGE IncoherentInstances #-} -- TODO Explicit Show Exp overlaps with the one from Data.Functor.Compose :(
 {-# LANGUAGE ImpredicativeTypes #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DeriveFunctor #-}
