@@ -396,6 +396,7 @@ initializeBuiltins env = do
                        , ("make-cbeta-bernoulli", make_cbeta_bernoulli)
                        , ("mem", mem)
                        , ("sin", lift_numerical sin)
+                       , ("sqrt", lift_numerical sqrt)
                        , ("+", lift_numerical2 (+))
                        , ("*", lift_numerical2 (*))
                        ]
