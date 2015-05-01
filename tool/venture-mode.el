@@ -1,7 +1,5 @@
 (require 'scheme)
 
-;; TODO: Fix the imenu generic expressions for Venture
-
 ;;;###autoload
 (define-derived-mode venture-mode scheme-mode "Venture"
   "Major mode for editing Venture code.
@@ -20,11 +18,17 @@ Entering this mode runs the hooks `scheme-mode-hook' and then
                              nil t (("_" . "w"))
                              beginning-of-defun
                              (font-lock-mark-block-function . mark-defun)))
-  (set (make-local-variable 'imenu-case-fold-search) nil)
-  (setq imenu-generic-expression dsssl-imenu-generic-expression)
+  (setq-local imenu-generic-expression venture-imenu-generic-expression)
+  (setq-local imenu-syntax-alist '(("_" . "w")))
   (setq-local lisp-indent-function 'venture-indent-function)
   (set (make-local-variable 'imenu-syntax-alist)
        '(("_" . "w"))))
+
+(defvar venture-imenu-generic-expression
+  '((nil
+     "^\\[\\(assume\\|define\\)\\s-+\\(\\sw+\\)" 2))
+  "Imenu generic expression for Venture mode.  See `imenu-generic-expression'.")
+  
 
 (defvar venture-font-lock-keywords-1 nil)
 (setq venture-font-lock-keywords-1
