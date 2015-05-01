@@ -227,29 +227,6 @@ weighted = no_request
   (RandomO $ on_values $ unary $ numericala $ typedrM weighted_flip)
   (Strict.Just $ LogDOutNS $ on_values $ unary $ numericala $ typed . log_d_weight)
 
-lift_parametric2 :: (MonadRandom m)
-                 => (forall num. (T.Numerical num) => (num -> num -> m num))
-                 -> (forall num. (T.Numerical num) => num -> num -> num -> num)
-                 -> NoStateSP m
-lift_parametric2 simulate log_d = no_request
-  (RandomO $ on_values $ binary $ numerical2M simulate)
-  (Strict.Just $ LogDOutNS $ on_values $ binary $ numerical3a log_d)
-
-uniform_continuous :: (MonadRandom m) => NoStateSP m
-uniform_continuous = lift_parametric2 uniform_c_flip log_d_uniform_c
-
-uniform_discrete :: (MonadRandom m) => NoStateSP m
-uniform_discrete = lift_parametric2 uniform_d_flip log_d_uniform_d
-
-normal :: (MonadRandom m) => NoStateSP m
-normal = lift_parametric2 normal_flip log_d_normal
-
-beta :: (MonadRandom m) => NoStateSP m
-beta = lift_parametric2 Distributions.beta log_denisty_beta
-
-inv_gamma :: (MonadRandom m) => NoStateSP m
-inv_gamma = lift_parametric2 Distributions.inv_gamma log_d_inv_gamma
-
 cbeta_bernoulli_flip :: (MonadRandom m, Numerical num) => (Pair num num) -> m Bool
 cbeta_bernoulli_flip (ctYes :!: ctNo) = weighted_flip $ ctYes / (ctYes + ctNo)
 
@@ -355,6 +332,14 @@ lift_numerical_variadic_reduction f init = deterministic f' where
     fromNumber (Number v) = v
     fromNumber _ = error "Incorrect type argument"
 
+lift_parametric2 :: (MonadRandom m)
+                 => (forall num. (T.Numerical num) => (num -> num -> m num))
+                 -> (forall num. (T.Numerical num) => num -> num -> num -> num)
+                 -> SP m
+lift_parametric2 simulate log_d = no_state_sp $ no_request
+  (RandomO $ on_values $ binary $ numerical2M simulate)
+  (Strict.Just $ LogDOutNS $ on_values $ binary $ numerical3a log_d)
+
 initializeBuiltins :: (MonadState (Trace m1 num) m, MonadRandom m1,
                       Floating num, Enum num, Show num, Real num) => Env -> m Env
 initializeBuiltins env = do
@@ -362,11 +347,11 @@ initializeBuiltins env = do
   addrs <- mapM (state . addFreshNode . Constant . Procedure) spaddrs
   return $ Frame (M.fromList $ zip names addrs) env
       where namedSps = [ ("bernoulli", no_state_sp bernoulli)
-                       , ("uniform_continuous", no_state_sp uniform_continuous)
-                       , ("uniform_discrete", no_state_sp uniform_discrete)
-                       , ("normal", no_state_sp normal)
-                       , ("beta", no_state_sp SP.beta)
-                       , ("inv_gamma", no_state_sp SP.inv_gamma)
+                       , ("uniform_continuous", lift_parametric2 uniform_c_flip log_d_uniform_c)
+                       , ("uniform_discrete", lift_parametric2 uniform_d_flip log_d_uniform_d)
+                       , ("normal", lift_parametric2 normal_flip log_d_normal)
+                       , ("beta", lift_parametric2 beta log_denisty_beta)
+                       , ("inv_gamma", lift_parametric2 inv_gamma log_d_inv_gamma)
                        , ("select", deterministic selectO)
                        , ("list", deterministic $ nary $ List . V.fromList)
                        , ("weighted", no_state_sp weighted)
