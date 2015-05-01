@@ -223,15 +223,6 @@ bernoulli = no_request
   (RandomO $ nullary $ liftM Boolean $ getRandomR (False,True))
   (Strict.Just $ LogDOutNS $ nullary $ const (-log 2.0))
 
-weighted_flip :: (MonadRandom m, Real num) => num -> m Bool
-weighted_flip weight = do
-  (toss :: Double) <- getRandomR (0.0,1.0)
-  return $ toss < realToFrac weight
-
-log_d_weight :: (Floating num) => num -> Bool -> num
-log_d_weight weight True = log weight
-log_d_weight weight False = log (1 - weight)
-
 weighted :: (MonadRandom m) => NoStateSP m
 weighted = no_request
   (RandomO $ on_values $ unary $ numericala $ typedrM weighted_flip)

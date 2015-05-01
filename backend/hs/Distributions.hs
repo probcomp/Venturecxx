@@ -1,6 +1,21 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Distributions where
 
 import Control.Monad.Random
+
+---- Bernoulli trials
+
+weighted_flip :: (MonadRandom m, Real num) => num -> m Bool
+weighted_flip weight = do
+  (toss :: Double) <- getRandomR (0.0,1.0)
+  return $ toss < realToFrac weight
+
+log_d_weight :: (Floating num) => num -> Bool -> num
+log_d_weight weight True = log weight
+log_d_weight weight False = log (1 - weight)
+
+---- Normal
 
 box_muller_cos :: Double -> Double -> Double
 box_muller_cos u1 u2 = r * cos theta where
