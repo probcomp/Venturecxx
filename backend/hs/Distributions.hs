@@ -1,11 +1,9 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE ConstraintKinds #-}
 
 module Distributions where
 
 import Control.Monad.Random
 
-import Trace (Numerical)
 ---- Bernoulli trials
 
 weighted_flip :: (MonadRandom m, Real num) => num -> m Bool
@@ -19,23 +17,23 @@ log_d_weight weight False = log (1 - weight)
 
 ---- Uniform distributions
 
-uniform_c_flip :: forall m num. (MonadRandom m, Numerical num) => num -> num -> m num
+uniform_c_flip :: forall m num. (MonadRandom m, Fractional num) => num -> num -> m num
 uniform_c_flip low high = do
   unit <- (getRandomR (0.0, 1.0)) :: m Double
   return $ low + (realToFrac unit) * (high - low)
 
-log_d_uniform_c :: (Numerical num) => num -> num -> num -> num
+log_d_uniform_c :: (Ord num, Floating num) => num -> num -> num -> num
 log_d_uniform_c x low high | low <= x && x <= high = - (log (high - low))
                            | otherwise = log 0
 
 -- TODO A type for integers?
-uniform_d_flip :: forall m num. (MonadRandom m, Numerical num) => num -> num -> m num
+uniform_d_flip :: forall m num. (MonadRandom m, RealFrac num) => num -> num -> m num
 uniform_d_flip low high = do
   res <- (getRandomR (ceiling low, floor high)) :: m Int
   return $ fromIntegral res
 
 -- TODO Uniform-discrete's log density should have no derivatives
-log_d_uniform_d :: (Numerical num) => num -> num -> num -> num
+log_d_uniform_d :: (Ord num, Floating num) => num -> num -> num -> num
 log_d_uniform_d x low high | low <= x && x <= high = - (log (high - low))
                            | otherwise = log 0
 
