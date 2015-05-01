@@ -351,6 +351,7 @@ initializeBuiltins env = do
                        , ("uniform_discrete", lift_parametric2 uniform_d_flip log_d_uniform_d)
                        , ("normal", lift_parametric2 normal_flip log_d_normal)
                        , ("beta", lift_parametric2 beta log_d_beta)
+                       , ("gamma", lift_parametric2 gamma log_d_gamma)
                        , ("inv_gamma", lift_parametric2 inv_gamma log_d_inv_gamma)
                        , ("select", deterministic selectO)
                        , ("list", deterministic $ nary $ List . V.fromList)

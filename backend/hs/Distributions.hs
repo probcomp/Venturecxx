@@ -141,6 +141,10 @@ data T = T {-# UNPACK #-} !Double {-# UNPACK #-} !Double
 gamma :: (MonadRandom m, Real num, Fractional num) => num -> num -> m num
 gamma = xxxFakeGenericity2M gammaDouble
 
+log_d_gamma :: (Real num, Floating num) => num -> num -> num -> num
+log_d_gamma shape scale x = c + (shape - 1) * x + (-x / scale) where
+  c = -(shape * log scale + (xxxFakeGenericity logGamma) shape)
+
 inv_gamma :: (MonadRandom m, Real num, Fractional num) => num -> num -> m num
 inv_gamma shape scale = liftM (\x -> 1/x) $ gamma shape scale
 
