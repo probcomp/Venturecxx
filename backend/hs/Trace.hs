@@ -6,7 +6,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE IncoherentInstances #-} -- TODO Valuable num num overlaps with Valueable num Bool
+{-# LANGUAGE IncoherentInstances #-} -- TODO Show Exp overlaps with something
 {-# LANGUAGE ImpredicativeTypes #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DeriveFunctor #-}
@@ -70,9 +70,9 @@ let1_ name val body = app (lam [name] body) [val]
 class Valuable num b where
     fromValue :: Value num -> Maybe b
 
-instance (Num num) => Valuable num num where
-    fromValue (Number d) = Just d
-    fromValue _ = Nothing
+numberFromValue :: Value num -> Maybe num
+numberFromValue (Number v) = Just v
+numberFromValue _ = Nothing
 
 instance Valuable num Bool where
     fromValue (Boolean b) = Just b
@@ -87,9 +87,6 @@ instance Valuable num (Value num) where
 
 class ValueEncodable num b where
     toValue :: b -> Value num
-
-instance (Num num) => ValueEncodable num num where
-    toValue = Number
 
 instance ValueEncodable num Bool where
     toValue = Boolean

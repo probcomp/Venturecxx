@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module InterpretationTest where
 
@@ -12,7 +13,7 @@ import Test.HUnit
 import Language hiding (Value)
 import Examples
 import Venture
-import Trace (Valuable, fromValue, Value, var, lam, app, let1_)
+import Trace (Valuable, numberFromValue, fromValue, Value, var, lam, app, let1_)
 
 import qualified Statistical as Stat
 
@@ -37,11 +38,14 @@ downsample n (x:xs) = x:(downsample n $ drop (n-1) xs)
 samples :: (MonadRandom m, Valuable Double a) => [Directive Double] -> m [a]
 samples prog = liftM (downsample 20) $ liftM (map $ fromJust . fromValue) $ venture_main 1000 prog
 
+instance Valuable Double Double where
+    fromValue = numberFromValue
+
 more :: (MonadRandom m) => [m Assertion]
 more = map (liftM report)
   [ liftM (Stat.knownDiscrete [(Boolean True, 0.5), (Boolean False, 0.5)]) $ venture_main 100 flip_one_coin
   , liftM (Stat.knownDiscrete [(1, 0.5), (2, 0.5)]) $ venture_main 100 condition_on_flip
-  , liftM (Stat.knownContinuous (Normal 0.0 2.0 :: Normal Double)) $ liftM (map $ fromJust . fromValue) $ venture_main 100 (single_normal :: [Directive Double])
+  , liftM (Stat.knownContinuous (Normal 0.0 2.0 :: Normal Double)) $ liftM (map $ fromJust . numberFromValue) $ venture_main 100 (single_normal :: [Directive Double])
   , liftM (Stat.knownContinuous (Normal 0.0 (sqrt 8.0) :: Normal Double)) $ samples chained_normals
   , liftM (Stat.knownContinuous (Normal 2.0 (sqrt 2.0) :: Normal Double)) $ samples observed_chained_normals
   , liftM (Stat.knownContinuous (Normal 2.0 (sqrt 2.0) :: Normal Double)) $ samples observed_chained_normals_lam

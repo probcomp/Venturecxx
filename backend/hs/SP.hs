@@ -159,6 +159,11 @@ numerical2a f = f' where
     f' (Number v) (Number v2) = f v v2
     f' _ _ = error "Incorrect type argument"
 
+numerical3a :: (num -> num -> num -> r) -> Value num -> Value num -> Value num -> r
+numerical3a f = f' where
+    f' (Number v) (Number v2) (Number v3) = f v v2 v3
+    f' _ _ _ = error "Incorrect type argument"
+
 numericalr :: (a -> num) -> a -> Value num
 numericalr f = Number . f
 
@@ -229,8 +234,8 @@ log_d_weight weight False = log (1 - weight)
 
 weighted :: (MonadRandom m) => NoStateSP m
 weighted = no_request
-  (RandomO $ on_values $ unary $ typed weighted_flip)
-  (Strict.Just $ LogDOutNS $ on_values $ unary $ typed2 log_d_weight)
+  (RandomO $ on_values $ unary $ numericala weighted_flip)
+  (Strict.Just $ LogDOutNS $ on_values $ unary $ numericala $ typed . log_d_weight)
 
 uniform_c_flip :: forall m num. (MonadRandom m, Numerical num) => num -> num -> m (Value num)
 uniform_c_flip low high = do
@@ -243,8 +248,8 @@ log_d_uniform_c x low high | low <= x && x <= high = - (log (high - low))
 
 uniform_continuous :: (MonadRandom m) => NoStateSP m
 uniform_continuous = no_request
-  (RandomO $ on_values $ binary $ typed2 uniform_c_flip)
-  (Strict.Just $ LogDOutNS $ on_values $ binary $ typed3 log_d_uniform_c)
+  (RandomO $ on_values $ binary $ numerical2a uniform_c_flip)
+  (Strict.Just $ LogDOutNS $ on_values $ binary $ numerical3a log_d_uniform_c)
 
 -- TODO A type for integers?
 uniform_d_flip :: forall m num. (MonadRandom m, Numerical num) => num -> num -> m (Value num)
@@ -259,13 +264,13 @@ log_d_uniform_d x low high | low <= x && x <= high = - (log (high - low))
 
 uniform_discrete :: (MonadRandom m) => NoStateSP m
 uniform_discrete = no_request
-  (RandomO $ on_values $ binary $ typed2 uniform_d_flip)
-  (Strict.Just $ LogDOutNS $ on_values $ binary $ typed3 log_d_uniform_d)
+  (RandomO $ on_values $ binary $ numerical2a uniform_d_flip)
+  (Strict.Just $ LogDOutNS $ on_values $ binary $ numerical3a log_d_uniform_d)
 
 normal :: (MonadRandom m) => NoStateSP m
 normal = no_request
   (RandomO $ on_values $ binary $ numerical2M normal_flip)
-  (Strict.Just $ LogDOutNS $ on_values $ binary $ typed3 log_d_normal)
+  (Strict.Just $ LogDOutNS $ on_values $ binary $ numerical3a log_d_normal)
 
 xxxFakeGenericity2 :: (Real num, Fractional num) =>
                       (Double -> Double -> Double) -> (num -> num -> num)
@@ -293,8 +298,8 @@ log_denisty_beta a b x = (a-1)*log x + (b-1)*log (1-x) - xxxFakeGenericity2 logB
 
 beta :: (MonadRandom m) => NoStateSP m
 beta = no_request
-  (RandomO $ on_values $ binary $ typed2 betaO)
-  (Strict.Just $ LogDOutNS $ on_values $ binary $ typed3 log_denisty_beta)
+  (RandomO $ on_values $ binary $ numerical2a betaO)
+  (Strict.Just $ LogDOutNS $ on_values $ binary $ numerical3a log_denisty_beta)
 
 cbeta_bernoulli_flip :: (MonadRandom m, Numerical num, Numerical num2) => (Pair num num) -> m (Value num2)
 cbeta_bernoulli_flip (ctYes :!: ctNo) = weighted_flip $ realToFrac $ ctYes / (ctYes + ctNo)
