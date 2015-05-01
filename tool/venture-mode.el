@@ -1,3 +1,7 @@
+(require 'scheme)
+
+;; TODO: Fix the imenu generic expressions for Venture
+
 ;;;###autoload
 (define-derived-mode venture-mode scheme-mode "Venture"
   "Major mode for editing Venture code.
@@ -18,6 +22,7 @@ Entering this mode runs the hooks `scheme-mode-hook' and then
                              (font-lock-mark-block-function . mark-defun)))
   (set (make-local-variable 'imenu-case-fold-search) nil)
   (setq imenu-generic-expression dsssl-imenu-generic-expression)
+  (setq-local lisp-indent-function 'venture-indent-function)
   (set (make-local-variable 'imenu-syntax-alist)
        '(("_" . "w"))))
 
@@ -159,8 +164,66 @@ Entering this mode runs the hooks `scheme-mode-hook' and then
 ;; Candidate special forms to highlight:
 ;; report?
 
+;; This is a hack; nearly a direct copy-paste of scheme-indent-function
+;; Needed because "do" is indented differently in Scheme than in Venture;
+;; if we didn't have a separate venture-indent-function, then the behavior
+;; of "do" would get clobbered for Scheme mode
+(defun venture-indent-function (indent-point state)
+  "Scheme mode function for the value of the variable `lisp-indent-function'.
+This behaves like the function `lisp-indent-function', except that:
+
+i) it checks for a non-nil value of the property `venture-indent-function', 
+rather than `lisp-indent-function'.
+
+ii) if that property specifies a function, it is called with three
+arguments (not two), the third argument being the default (i.e., current)
+indentation."
+  (let ((normal-indent (current-column)))
+    (goto-char (1+ (elt state 1)))
+    (parse-partial-sexp (point) calculate-lisp-indent-last-sexp 0 t)
+    (if (and (elt state 2)
+             (not (looking-at "\\sw\\|\\s_")))
+        ;; car of form doesn't seem to be a symbol
+        (progn
+          (if (not (> (save-excursion (forward-line 1) (point))
+                      calculate-lisp-indent-last-sexp))
+              (progn (goto-char calculate-lisp-indent-last-sexp)
+                     (beginning-of-line)
+                     (parse-partial-sexp (point)
+                                         calculate-lisp-indent-last-sexp 0 t)))
+          ;; Indent under the list or under the first sexp on the same
+          ;; line as calculate-lisp-indent-last-sexp.  Note that first
+          ;; thing on that line has to be complete sexp since we are
+          ;; inside the innermost containing sexp.
+          (backward-prefix-chars)
+          (current-column))
+      (let ((function (buffer-substring (point)
+                                        (progn (forward-sexp 1) (point))))
+            method)
+        (setq method (get (intern-soft function) 'venture-indent-function))
+        (cond ((or (eq method 'defun)
+                   (and (null method)
+                        (> (length function) 3)
+                        (string-match "\\`def" function)))
+               (lisp-indent-defform state indent-point))
+              ((integerp method)
+               (lisp-indent-specform method state
+                                     indent-point normal-indent))
+              (method
+               (funcall method state indent-point normal-indent)))))))
+
+;; Fix indentation for special forms that differ from venture
+(put 'begin 'venture-indent-function 0)
+(put 'do 'venture-indent-function 0)
+(put 'lambda 'venture-indent-function 1)
+(put 'let 'venture-indent-function 'scheme-let-indent)
+(put 'define 'venture-indent-function 1)
+(put 'assume 'venture-indent-function 1)
+
+;; Provide
 (provide 'venture-mode)
 
 ;; Make Emacs open .vnt files in venture-mode
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.vnt\\'" . venture-mode))
+
