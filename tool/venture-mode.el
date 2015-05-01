@@ -60,7 +60,7 @@ Entering this mode runs the hooks `scheme-mode-hook' and then
                 (list
                  (list (concat "(" (regexp-opt '(;; Model special forms
                                                  "if" "lambda" "let" "and"
-                                                 "or" "identity" "scope_include") t)
+                                                 "or" "identity") t)
                                "\\>")
                        '(1 font-lock-keyword-face))
                  (list (concat "(" (regexp-opt '(;; Inference special forms
