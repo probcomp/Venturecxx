@@ -58,7 +58,7 @@ Entering this mode runs the hooks `scheme-mode-hook' and then
                 (list
                  (list (concat "(" (regexp-opt '(;; Model special forms
                                                  "if" "lambda" "let" "and"
-                                                 "or" "identity") t)
+                                                 "or" "identity" "scope_include") t)
                                "\\>")
                        '(1 font-lock-keyword-face))
                  (list (concat "(" (regexp-opt '(;; Inference special forms
@@ -229,6 +229,8 @@ indentation."
 (put 'let 'venture-indent-function 'scheme-let-indent)
 (put 'define 'venture-indent-function 1)
 (put 'assume 'venture-indent-function 1)
+(put 'mem 'venture-indent-function 0)
+(put 'scope_include 'venture-indent-function 0)
 
 ;; Provide
 (provide 'venture-mode)
