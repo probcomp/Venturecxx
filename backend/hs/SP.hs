@@ -227,6 +227,14 @@ weighted = no_request
   (RandomO $ on_values $ unary $ numericala $ typedrM weighted_flip)
   (Strict.Just $ LogDOutNS $ on_values $ unary $ numericala $ typed . log_d_weight)
 
+lift_parametric2 :: (MonadRandom m)
+                 => (forall num. (T.Numerical num) => (num -> num -> m num))
+                 -> (forall num. (T.Numerical num) => num -> num -> num -> num)
+                 -> NoStateSP m
+lift_parametric2 simulate log_d = no_request
+  (RandomO $ on_values $ binary $ numerical2M simulate)
+  (Strict.Just $ LogDOutNS $ on_values $ binary $ numerical3a log_d)
+
 uniform_continuous :: (MonadRandom m) => NoStateSP m
 uniform_continuous = no_request
   (RandomO $ on_values $ binary $ numerical2M uniform_c_flip)
@@ -246,6 +254,9 @@ beta :: (MonadRandom m) => NoStateSP m
 beta = no_request
   (RandomO $ on_values $ binary $ numerical2M Distributions.beta)
   (Strict.Just $ LogDOutNS $ on_values $ binary $ numerical3a log_denisty_beta)
+
+inv_gamma :: (MonadRandom m) => NoStateSP m
+inv_gamma = lift_parametric2 Distributions.inv_gamma log_d_inv_gamma
 
 cbeta_bernoulli_flip :: (MonadRandom m, Numerical num) => (Pair num num) -> m Bool
 cbeta_bernoulli_flip (ctYes :!: ctNo) = weighted_flip $ ctYes / (ctYes + ctNo)
@@ -363,6 +374,7 @@ initializeBuiltins env = do
                        , ("uniform_discrete", no_state_sp uniform_discrete)
                        , ("normal", no_state_sp normal)
                        , ("beta", no_state_sp SP.beta)
+                       , ("inv_gamma", no_state_sp SP.inv_gamma)
                        , ("select", deterministic selectO)
                        , ("list", deterministic $ nary $ List . V.fromList)
                        , ("weighted", no_state_sp weighted)

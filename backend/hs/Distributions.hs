@@ -59,6 +59,9 @@ log_d_normal mean sigma x = - (x - mean)^^(2::Int) / (2 * sigma^^(2::Int)) - sca
 
 ----- Beta
 
+xxxFakeGenericity  :: (Real num, Fractional num) => (Double -> Double) -> (num -> num)
+xxxFakeGenericity  f x1 = realToFrac $ f (realToFrac x1)
+
 xxxFakeGenericity2 :: (Real num, Fractional num) =>
                       (Double -> Double -> Double) -> (num -> num -> num)
 xxxFakeGenericity2 f x1 x2 = realToFrac $ f (realToFrac x1) (realToFrac x2)
@@ -137,3 +140,10 @@ data T = T {-# UNPACK #-} !Double {-# UNPACK #-} !Double
 
 gamma :: (MonadRandom m, Real num, Fractional num) => num -> num -> m num
 gamma = xxxFakeGenericity2M gammaDouble
+
+inv_gamma :: (MonadRandom m, Real num, Fractional num) => num -> num -> m num
+inv_gamma shape scale = liftM (\x -> 1/x) $ gamma shape scale
+
+log_d_inv_gamma :: (Real num, Floating num) => num -> num -> num -> num
+log_d_inv_gamma shape scale x = c + (-shape - 1) * x + (-scale / x) where
+  c = shape * log scale - (xxxFakeGenericity logGamma) shape
