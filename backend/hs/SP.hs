@@ -395,6 +395,7 @@ initializeBuiltins env = do
                        , ("mem", mem)
                        , ("sin", lift_numerical sin)
                        , ("sqrt", lift_numerical sqrt)
+                       , ("pow", lift_numerical2 (**))
                        , ("+", lift_numerical2 (+))
                        , ("-", lift_numerical2 (-))
                        , ("*", lift_numerical2 (*))
