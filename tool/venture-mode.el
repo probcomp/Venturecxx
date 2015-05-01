@@ -1,3 +1,9 @@
+;; Syntax highlighting and indentation for Venture
+;; To active, include the following in emacs .init file
+;; (load [path-to-this-file])
+;; (require 'venture-mode)
+
+
 (require 'scheme)
 
 ;;;###autoload
