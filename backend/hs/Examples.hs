@@ -28,7 +28,7 @@ simulation ct ds = do
   target <- liftM last (mapM runDirective' ds)
   trace `zoom` (watching_infer target ct)
 
-venture_main :: (MonadRandom m, Real num, Show num, Floating num, Enum num) =>
+venture_main :: (MonadRandom m, Numerical num, Enum num) =>
                 Int -> [Directive num] -> m [Value num]
 venture_main ct ds = do
   vs <- evalStateT (simulation ct ds) initial
