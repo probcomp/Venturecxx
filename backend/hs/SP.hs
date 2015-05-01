@@ -303,14 +303,6 @@ selectO [p,c,a] [] = if fromJust "Predicate was not a boolean" $ fromValue p the
                      else a
 selectO _ _ = error "Wrong number of arguments to SELECT"
 
-select :: NoStateSP m
-select = NoStateSP
-  { requester = nullReq
-  , log_d_req = Strict.Just $ LogDReqNS trivial_log_d_req
-  , outputter = DeterministicO $ on_values selectO
-  , log_d_out = Strict.Nothing -- Or Just (0 if it's right, -inf if not?)
-  }
-
 -- Here the Ord is because of the Ord constraint on memoized_sp
 mem :: (Monad m) => SP m
 mem = no_state_sp NoStateSP
@@ -389,7 +381,7 @@ initializeBuiltins env = do
                        , ("uniform_continuous", no_state_sp uniform_continuous)
                        , ("normal", no_state_sp normal)
                        , ("beta", no_state_sp beta)
-                       , ("select", no_state_sp select)
+                       , ("select", deterministic selectO)
                        , ("list", deterministic $ nary $ List . V.fromList)
                        , ("weighted", no_state_sp weighted)
                        , ("flip", no_state_sp weighted) -- Conventional name.
