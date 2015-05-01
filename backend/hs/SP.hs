@@ -122,6 +122,11 @@ on_values f ns1 ns2 = f vs1 vs2 where
     vs1 = map (fromJust' "Argument node had no value" . valueOf) ns1
     vs2 = map (fromJust' "Fulfilment node had no value" . valueOf) ns2
 
+ternary :: (a -> a -> a -> r) -> [a] -> [b] -> r
+ternary f [a1,a2,a3] [] = f a1 a2 a3
+ternary _ [_,_,_] l = error $ "No requests expected " ++ (show $ length l) ++ " given."
+ternary _ l _ = error $ "Three arguments expected " ++ (show $ length l) ++ " given."
+
 binary :: (a -> a -> r) -> [a] -> [b] -> r
 binary f [a1,a2] [] = f a1 a2
 binary _ [_,_] l = error $ "No requests expected " ++ (show $ length l) ++ " given."
@@ -386,6 +391,9 @@ initializeBuiltins env = do
                        , ("sqrt", lift_numerical sqrt)
                        , ("+", lift_numerical2 (+))
                        , ("*", lift_numerical2 (*))
+                       -- "Tag" does nothing in HsVenture because
+                       -- there are no selectors.
+                       , ("tag", deterministic $ ternary $ const $ const id)
                        ]
             names = map fst namedSps
             sps = map snd namedSps
