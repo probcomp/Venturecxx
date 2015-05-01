@@ -228,34 +228,14 @@ weighted = no_request
   (RandomO $ on_values $ unary $ numericala $ typedrM weighted_flip)
   (Strict.Just $ LogDOutNS $ on_values $ unary $ numericala $ typed . log_d_weight)
 
-uniform_c_flip :: forall m num. (MonadRandom m, Numerical num) => num -> num -> m (Value num)
-uniform_c_flip low high = do
-  unit <- (getRandomR (0.0, 1.0)) :: m Double
-  return $ Number $ low + (realToFrac unit) * (high - low)
-
-log_d_uniform_c :: (Numerical num) => num -> num -> num -> num
-log_d_uniform_c x low high | low <= x && x <= high = - (log (high - low))
-                           | otherwise = log 0
-
 uniform_continuous :: (MonadRandom m) => NoStateSP m
 uniform_continuous = no_request
-  (RandomO $ on_values $ binary $ numerical2a uniform_c_flip)
+  (RandomO $ on_values $ binary $ numerical2M uniform_c_flip)
   (Strict.Just $ LogDOutNS $ on_values $ binary $ numerical3a log_d_uniform_c)
-
--- TODO A type for integers?
-uniform_d_flip :: forall m num. (MonadRandom m, Numerical num) => num -> num -> m (Value num)
-uniform_d_flip low high = do
-  res <- (getRandomR (ceiling low, floor high)) :: m Int
-  return $ Number $ fromIntegral res
-
--- TODO Uniform-discrete's log density should have no derivatives
-log_d_uniform_d :: (Numerical num) => num -> num -> num -> num
-log_d_uniform_d x low high | low <= x && x <= high = - (log (high - low))
-                           | otherwise = log 0
 
 uniform_discrete :: (MonadRandom m) => NoStateSP m
 uniform_discrete = no_request
-  (RandomO $ on_values $ binary $ numerical2a uniform_d_flip)
+  (RandomO $ on_values $ binary $ numerical2M uniform_d_flip)
   (Strict.Just $ LogDOutNS $ on_values $ binary $ numerical3a log_d_uniform_d)
 
 normal :: (MonadRandom m) => NoStateSP m
