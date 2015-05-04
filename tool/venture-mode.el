@@ -86,13 +86,7 @@ Entering this mode runs the hooks `scheme-mode-hook' and then
                                          "collect" "force" "forget" "freeze"
                                          "load") t) "\\>")
                        '(1 font-lock-keyword-face))
-                 (list (concat "\\<" (regexp-opt
-                                      '(;; Inference prelude SP's
-                                        "bind" "bind_" "curry" "curry3"
-                                        "global_likelihood" "global_posterior"
-                                        "iterate" "mapM" "pass" "repeat" "return"
-                                        "sequence") t) "\\>")
-                       '(1 font-lock-type-face))))))
+                 ))))
 
 (defvar venture-font-lock-keywords-3 nil)
 (setq venture-font-lock-keywords-3
@@ -142,6 +136,14 @@ Entering this mode runs the hooks `scheme-mode-hook' and then
                                    "vector" "vector_dot" "vonmises" "wishart"
                                    "zip") t)
                           "\\>")
+                  '(1 font-lock-builtin-face))
+                 (list
+                  (concat "\\<" (regexp-opt
+                                 '(;; Inference SPs defined in the prelude.
+                                   "bind" "bind_" "curry" "curry3"
+                                   "global_likelihood" "global_posterior"
+                                   "iterate" "mapM" "pass" "repeat" "return"
+                                   "sequence") t) "\\>")
                   '(1 font-lock-builtin-face))
                  (list
                   (concat "\\<" (regexp-opt
