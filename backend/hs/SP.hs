@@ -278,7 +278,7 @@ crp_flip alpha CRPState { _tables = t } = liftM fromIntegral $ simulate_categori
     indices = next_index:indices'
     first_absent_from :: [Int] -> Int
     first_absent_from ks = case filter (uncurry (/=)) $ zip ks [1..] of
-                             (discrepancy:rest) -> snd discrepancy
+                             (discrepancy:_) -> snd discrepancy
                              [] -> length ks + 1
 
 crp_log_d :: (Numerical num, Numerical num1, Numerical num2) => num -> CRPState -> num1 -> num2

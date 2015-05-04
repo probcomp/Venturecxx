@@ -122,7 +122,7 @@ sampleM exp = do
   return val
 
 forget :: (Monad m) => Address -> (StateT (Model m num) m) ()
-forget addr = return () -- TODO Actually forgetting turned out to be less trivial than I thought.
+forget _ = return () -- TODO Actually forgetting turned out to be less trivial than I thought.
 
 -- TODO Understand the set of layers of abstraction of trace operations:
 -- - what invariants does each layer preserve?
