@@ -68,11 +68,6 @@ Entering this mode runs the hooks `scheme-mode-hook' and then
                                                  "call_back") t)
                                "\\>")
                        '(1 font-lock-type-face))
-                 (list (concat "(" (regexp-opt
-                                    '(;; Quoting
-                                      "quasiquote" "quote" "unquote") t)
-                               "\\>")
-                       '(1 font-lock-string-face))
                  (list (concat "\\<" (regexp-opt
                                       '(;; Inference scopes
                                         "default" "all" "one" "none"
