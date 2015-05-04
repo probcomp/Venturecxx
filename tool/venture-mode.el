@@ -36,7 +36,7 @@ Entering this mode runs the hooks `scheme-mode-hook' and then
     ("Nested assumes"
      "(assume\\s-+\\(\\sw+\\)" 1))
   "Imenu generic expression for Venture mode.  See `imenu-generic-expression'.")
-  
+
 
 (defvar venture-font-lock-keywords-1 nil)
 (setq venture-font-lock-keywords-1
@@ -184,7 +184,7 @@ Entering this mode runs the hooks `scheme-mode-hook' and then
   "Scheme mode function for the value of the variable `lisp-indent-function'.
 This behaves like the function `lisp-indent-function', except that:
 
-i) it checks for a non-nil value of the property `venture-indent-function', 
+i) it checks for a non-nil value of the property `venture-indent-function',
 rather than `lisp-indent-function'.
 
 ii) if that property specifies a function, it is called with three
