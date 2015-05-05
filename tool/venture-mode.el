@@ -44,10 +44,10 @@ Entering this mode runs the hooks `scheme-mode-hook' and then
       (eval-when-compile
         (list
          (list "[([]\\(define\\)\\>[ \t]*\\(\\sw+\\)\\>"
-               '(1 font-lock-type-face)
+               '(1 font-lock-keyword-face)
                '(2 font-lock-function-name-face))
          (list "[([]\\(assume\\)\\>[ \t]*\\(\\sw+\\)\\>"
-               '(1 font-lock-keyword-face)
+               '(1 font-lock-comment-face)
                '(2 font-lock-function-name-face)))))
 
 (defvar venture-font-lock-keywords-2 nil)
@@ -65,22 +65,21 @@ Entering this mode runs the hooks `scheme-mode-hook' and then
                        '(1 font-lock-keyword-face))
                  (list (concat "(" (regexp-opt '(;; Inference special forms
                                                  "loop" "do" "begin"
-                                                 "call_back") t)
+                                                 "call_back" "load") t)
                                "\\>")
-                       '(1 font-lock-type-face))
+                       '(1 font-lock-keyword-face))
                  (list (concat "\\<" (regexp-opt
                                       '(;; Inference scopes
                                         "default" "all" "one" "none"
                                         "ordered") t) "\\>")
                        '(1 font-lock-builtin-face))
                  (list (concat "[([]" (regexp-opt
-                                       '(;; Modeling directives
-                                         ;; Load isn't really a directive, but doesn't fit anywhere else
-                                         "observe" "predict" "infer"
-                                         "sample" "sample_all"
-                                         "collect" "force" "forget" "freeze"
-                                         "load") t) "\\>")
-                       '(1 font-lock-keyword-face))
+                                       '(;; Inference special forms that introduce model context
+                                         ;; Also infer, even though its body is in the inference language
+                                         "assume" "observe" "predict" "infer"
+                                         "sample" "sample_all" "collect" "force"
+                                         ) t) "\\>")
+                       '(1 font-lock-comment-face))
                  ))))
 
 (defvar venture-font-lock-keywords-3 nil)
@@ -146,7 +145,7 @@ Entering this mode runs the hooks `scheme-mode-hook' and then
                                    ;; "python venture_mode_font_lock.py inference_SPs"
                                    "assert" "bogo_possibilize" "collapse_equal"
                                    "collapse_equal_map" "draw_scaffold" "emap"
-                                   "empty" "enumerative_diversify" "func_mh"
+                                   "empty" "enumerative_diversify" "forget" "freeze" "func_mh"
                                    "func_pgibbs" "func_pmap" "gibbs"
                                    "gibbs_update" "hmc" "in_model" "incorporate"
                                    "into" "likelihood_at" "likelihood_weight"
