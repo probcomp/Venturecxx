@@ -52,9 +52,7 @@ Entering this mode runs the hooks `scheme-mode-hook' and then
 
 (defvar venture-font-lock-keywords-2 nil)
 (setq venture-font-lock-keywords-2
-      ;; Control structures, special forms, modeling directives
-      ;; Some of these (e.g "load") don't fit neatly into a category, so
-      ;; I chose something arbitrary but hopefully not unreasonable.
+      ;; Control structures, special forms, modeling commands
       (append venture-font-lock-keywords-1
               (eval-when-compile
                 (list
