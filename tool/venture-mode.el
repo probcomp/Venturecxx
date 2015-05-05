@@ -30,6 +30,13 @@ Entering this mode runs the hooks `scheme-mode-hook' and then
   (set (make-local-variable 'imenu-syntax-alist)
        '(("_" . "w"))))
 
+;; Not actually sure what this does, but the scheme-mode file has it; apparently it's good
+(defcustom venture-mode-hook nil
+  "Normal hook run when entering `venture-mode'.
+See `run-hooks'."
+  :type 'hook
+  :group 'venture)
+
 (defvar venture-imenu-generic-expression
   '((nil
      "^\\[\\(assume\\|define\\)\\s-+\\(\\sw+\\)" 2)
