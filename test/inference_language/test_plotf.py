@@ -31,6 +31,7 @@ def testPlotfToFile1():
   'Test that plotf_to_file dumps file of correct name'
   ripl = get_ripl()
   ripl.assume('x', '(normal 0 1)')
+  testfile = 'test1.png'
   prog = """
 (let ((d (empty)))
   (do (repeat 10
@@ -39,7 +40,6 @@ def testPlotfToFile1():
       (plotf_to_file (quote test1) (quote h0) d)))"""
   try:
     ripl.infer(prog)
-    testfile = 'test1.png'
     assert exists(testfile)
   finally:
     if exists(testfile):
@@ -51,6 +51,7 @@ def testPlotfToFile2():
   'Test that plotf_to_file handles multiple files correctly'
   ripl = get_ripl()
   ripl.assume('x', '(normal 0 1)')
+  testfiles = ['test1.png', 'test2.png']
   prog = """
 (let ((d (empty)))
   (do (repeat 10
@@ -59,7 +60,6 @@ def testPlotfToFile2():
       (plotf_to_file (quote (test1 test2)) (quote (h0 lcd0d)) d)))"""
   try:
     ripl.infer(prog)
-    testfiles = ['test1.png', 'test2.png']
     for testfile in testfiles:
       assert exists(testfile)
   finally:
