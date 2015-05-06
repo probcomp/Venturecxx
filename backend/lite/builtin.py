@@ -39,8 +39,8 @@ import functional
 import value as v
 import types as t
 import env
-from utils import careful_exp
-from exception import VentureBuiltinSPMethodError
+from utils import careful_exp, raise_
+from exception import VentureBuiltinSPMethodError, VentureValueError
 
 # The types in the value module are generated programmatically, so
 # pylint doesn't find out about them.
@@ -450,6 +450,7 @@ builtInSPsList = [
            [ "make_gp", gp.makeGPSP ],
            [ "apply_function", function.applyFunctionSP],
            [ "exactly", typed_nr(discrete.ExactlyOutputPSP(), [t.AnyType(), t.NumberType()], t.AnyType(), min_req_args=1)],
+           [ "value_error", deterministic_typed(lambda s: raise_(VentureValueError(str(s))), [t.AnyType()], t.AnyType())]
 ]
 
 def builtInSPs():

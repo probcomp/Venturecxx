@@ -151,3 +151,7 @@ against fixed randomness.
     random.setstate(self.cur_pyr_state)
     npr.set_state(self.cur_numpyr_state)
     return False # Do not suppress any thrown exception
+
+# raise is a statement and can't be used in a lambda :(
+def raise_(e): raise e
+
