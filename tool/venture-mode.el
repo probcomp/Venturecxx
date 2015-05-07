@@ -50,10 +50,10 @@ See `run-hooks'."
 (defface font-lock-language-shift-face
   '((((class grayscale) (background light)) :foreground "LightGray" :weight bold)
     (((class grayscale) (background dark))  :foreground "DimGray" :weight bold)
-    (((class color) (min-colors 88) (background light)) :foreground "firebrick" bold)
-    (((class color) (min-colors 88) (background dark))  :foreground "firebrick" bold)
-    (((class color) (min-colors 16) (background light)) :foreground "firebrick" bold)
-    (((class color) (min-colors 16) (background dark)) :foreground "firebrick" bold)
+    (((class color) (min-colors 88) (background light)) :foreground "firebrick" :weight bold)
+    (((class color) (min-colors 88) (background dark))  :foreground "firebrick" :weight bold)
+    (((class color) (min-colors 16) (background light)) :foreground "firebrick" :weight bold)
+    (((class color) (min-colors 16) (background dark)) :foreground "firebrick" :weight bold)
     (((class color) (min-colors 8)) :foreground "red" :weight bold)
     (t :weight bold))
   "Font Lock mode face used to [TODO: describe what a language shift does]."
