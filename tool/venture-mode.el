@@ -44,6 +44,20 @@ See `run-hooks'."
      "(assume\\s-+\\(\\sw+\\)" 1))
   "Imenu generic expression for Venture mode.  See `imenu-generic-expression'.")
 
+(defvar font-lock-language-shift-face 'font-lock-language-shift-face
+  "Face name to use to [TODO: describe in generality what a language shift does]")
+
+(defface font-lock-language-shift-face
+  '((((class grayscale) (background light)) :foreground "LightGray" :weight bold)
+    (((class grayscale) (background dark))  :foreground "DimGray" :weight bold)
+    (((class color) (min-colors 88) (background light)) :foreground "firebrick" :weight bold)
+    (((class color) (min-colors 88) (background dark))  :foreground "firebrick" :weight bold)
+    (((class color) (min-colors 16) (background light)) :foreground "firebrick" :weight bold)
+    (((class color) (min-colors 16) (background dark)) :foreground "firebrick" :weight bold)
+    (((class color) (min-colors 8)) :foreground "red" :weight bold)
+    (t :weight bold))
+  "Font Lock mode face used to [TODO: describe what a language shift does]."
+  :group 'font-lock-faces)
 
 (defvar venture-font-lock-keywords-1 nil)
 (setq venture-font-lock-keywords-1
@@ -54,7 +68,7 @@ See `run-hooks'."
                '(1 font-lock-keyword-face)
                '(2 font-lock-function-name-face))
          (list "[([]\\(assume\\)\\>[ \t]*\\(\\sw+\\)\\>"
-               '(1 font-lock-comment-face)
+               '(1 font-lock-language-shift-face)
                '(2 font-lock-function-name-face)))))
 
 (defvar venture-font-lock-keywords-2 nil)
@@ -84,7 +98,7 @@ See `run-hooks'."
                                          "assume" "observe" "predict" "infer"
                                          "sample" "sample_all" "collect" "force"
                                          ) t) "\\>")
-                       '(1 font-lock-comment-face))
+                       '(1 font-lock-language-shift-face))
                  ))))
 
 (defvar venture-font-lock-keywords-3 nil)
