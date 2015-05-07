@@ -93,16 +93,16 @@ for (prefix, suffix) in [("make_core_", "sivm"),
     method = prefix + suffix
     # Your complaints about metaprogramming do not fall upon deaf ears, pylint: disable=exec-used
     string2 = """
-def %s():
-  return backend().%s()
+def %s(*args, **kwargs):
+  return backend().%s(*args, **kwargs)
 """ % (method, method)
     exec(string2)
 
     for backend_name in ["lite", "puma"]:
         function = prefix + backend_name + "_" + suffix
         string = """
-def %s():
-  return backend("%s").%s()
+def %s(*args, **kwargs):
+  return backend("%s").%s(*args, **kwargs)
 """ % (function, backend_name, method)
         exec(string)
 
