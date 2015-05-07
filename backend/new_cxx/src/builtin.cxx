@@ -29,6 +29,7 @@
 #include "sps/eval.h"
 #include "sps/hmm.h"
 #include "sps/matrix.h"
+#include "sps/misc.h"
 #include "sps/msp.h"
 #include "sps/mvn.h"
 #include "sps/scope.h"
@@ -172,6 +173,9 @@ map<string,SP*> initBuiltInSPs()
 
   /* Non parametrics */
   m["make_crp"] = new SP(new NullRequestPSP(), new MakeCRPOutputPSP());
-
+  
+  /* Misc */
+  m["exactly"] = new SP(new NullRequestPSP(), new ExactlyOutputPSP());
+  
   return m;
 }
