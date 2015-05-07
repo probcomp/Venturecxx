@@ -1,0 +1,291 @@
+[assume obj_selector_stream
+  (mem
+    (lambda (i)
+      (tag (quote stream) i (bernoulli 0.5))))]
+[assume obj_attribute_stream (mem (lambda (i) (if (< i 0) -10 (normal 0 1))))]
+
+[assume prefix_k
+  (lambda (stream_selector k)
+    (prefix_k_helper stream_selector (* 1.0 k) 0 (list) 0) )]
+
+; can be optimized, perhaps asymptotically? but should have empty brush
+[assume prefix_k_helper
+  (lambda (stream_selector k idx set_so_far size_so_far)
+    (let ((new_set (if (stream_selector idx)
+                       (pair idx set_so_far)
+                       set_so_far))
+          (new_size (if (stream_selector idx)
+                        (+ size_so_far 1)
+                        size_so_far)))
+      (if (= size_so_far k)
+          set_so_far
+          (prefix_k_helper stream_selector k (+ idx 1) new_set new_size))))]
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[assume abs (lambda (x) (if (> x 0) x (* -1 x)))]
+
+[assume to_float (lambda (x) (+ x 0))]
+
+; mapping from observation to ball
+[assume ball_of
+  (mem
+    (lambda (obs)
+      (if (= nballs 0)
+          -1
+          (let ((ix (uniform_discrete 0 nballs)))
+            (lookup balls ix)))))]
+
+; mapping from ball to single color
+[assume one_color
+  (lambda (ball)
+    (if (= ball -1)
+        -1
+        1))]
+
+; mapping from ball to 2 colors; not noisy
+[assume color
+  (mem
+    (lambda (ball)
+      (if (= ball -1)
+          -1
+          (bernoulli 0.5))))]
+
+; noisy color
+[assume noisy_color
+  (lambda (ball)
+    (let ((true_color (color ball)))
+      (if (= true_color -1)
+          -1
+           (abs (- true_color (bernoulli 0.2))))))]
+
+; observation model
+[assume measured_one_color
+  (mem (lambda (obs) (one_color (ball_of obs))))]
+
+[assume measured_color
+  (mem (lambda (obs) (color (ball_of obs))))]
+
+[assume measured_noisy_color
+  (mem (lambda (obs) (noisy_color (ball_of obs))))]
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Simple reality checks to make sure the model does reasonable things
+
+; Can refactor the test runners; will do this after the tests are working.
+
+[define run_test_resample
+  (lambda (tester filename nparticles min_balls)
+    (begin
+      (resample nparticles)
+      (assume nballs (to_float (poisson 3)))
+      (assume balls (prefix_k obj_selector_stream nballs))
+      (tester)
+      (incorporate)
+      (resample nparticles)
+      (plotf_to_file (unquote filename) h0 nballs)
+      (call_back assert_nballs_resample nballs (unquote min_balls))))]
+
+[define run_test_rejection
+  (lambda (tester filename nsamples min_balls)
+    (begin
+      (assume nballs (to_float (poisson 3)))
+      (assume balls (prefix_k obj_selector_stream nballs))
+      (tester)
+      (incorporate)
+      (repeat nsamples
+       (do (rejection default all 1)
+           (plotf_to_file (unquote filename) h0 nballs)
+           (printf sweep)))
+      (call_back assert_nballs (unquote min_balls))))]
+
+[define run_test_mh
+  (lambda (tester filename1 filename2 nsamples min_balls)
+    (begin
+      (assume nballs (to_float (poisson 3)))
+      (assume balls (prefix_k obj_selector_stream nballs))
+      (tester)
+      (incorporate)
+      (mh default one 100)
+      (repeat nsamples
+       (do (mh default one 10)
+           (plotf_to_file ((unquote filename1) (unquote filename2)) (lcd0d h0) nballs)
+           (printf sweep)))
+      (call_back assert_nballs (unquote min_balls))))]
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; The different scenarios in which we run the inferences
+
+; make sure poisson prior looks ok
+[define no_observations
+  (lambda () (begin (predict (flip))))]
+
+; with 1 observation, histogram should have no zeros
+[define one_observation_one_color
+  (lambda ()
+    (begin
+      (observe (normal (measured_one_color 0) 0.000001) 1)))]
+
+; with noiseless observations of the same color twice, 1 ball still possible
+[define two_observations_same_color
+  (lambda ()
+    (begin
+      (observe (normal (measured_color 0) 0.000001) 1)
+      (observe (normal (measured_color 1) 0.000001) 1)))]
+
+; with noiseless observations of two colors, should infer at least 2 balls
+[define two_observations_two_colors
+  (lambda ()
+    (begin
+      (observe (normal (measured_color 0) 0.000001) 1)
+      (observe (normal (measured_color 1) 0.000001) 0)))]
+
+; with 2 noisy observations of same color, 1 ball or more possible
+[define two_observations_same_color_noisy
+  (lambda ()
+    (begin
+      (observe (normal (measured_noisy_color 0) 0.000001) 1)
+      (observe (normal (measured_noisy_color 1) 0.000001) 1)))]
+
+; with 2 noisy observations of different colors, could still be just 1 ball
+[define two_observations_two_colors_noisy
+  (lambda ()
+    (begin
+      (observe (normal (measured_noisy_color 0) 0.000001) 1)
+      (observe (normal (measured_noisy_color 1) 0.000001) 0)))]
+
+; with 5 noisy observations of multiple colors, could be 1 or more balls
+[define five_observations_two_colors_noisy
+  (lambda ()
+    (begin
+      (observe (normal (measured_noisy_color 0) 0.000001) 1)
+      (observe (normal (measured_noisy_color 1) 0.000001) 0)
+      (observe (normal (measured_noisy_color 2) 0.000001) 1)
+      (observe (normal (measured_noisy_color 3) 0.000001) 0)
+      (observe (normal (measured_noisy_color 4) 0.000001) 0)))]
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; improving MH
+[define debug_mh
+  (lambda (n_obs inf_program f predict_first)
+    (begin
+      (assume nballs (tag (quote stream) 0 (to_float (poisson 3))))
+      (assume balls (prefix_k obj_selector_stream nballs))
+      (observe_n n_obs)
+      (if predict_first
+          (predict_colors)
+          pass)
+      (repeat 500
+       (do (plotf_to_file (unquote f) lcd0d nballs)
+           (printf sweep)
+           (call_back plot_state (unquote n_obs) balls (get_colors) (quote (unquote f)))
+           (inf_program)))
+      (call_back state_video (quote (unquote f)))))]
+
+; utility function to make n observations of alternating sign
+[define data (array 1 0 1 0 1 0)]
+[define observe_n
+  (lambda (n)
+    (if (> n 0)
+        (begin
+          (observe (normal (measured_noisy_color (unquote n)) 0.000001) (lookup data n))
+          (observe_n (- n 1)))
+        (incorporate)))]
+
+[assume get_colors (lambda () (get_colors_helper 20 (list)))]
+[assume get_colors_helper
+  (lambda (n accum)
+    (if (> n 0)
+        (let ((next_color (color n)))
+          (get_colors_helper (- n 1) (pair next_color accum)))
+        accum))]
+
+[define predict_colors (lambda () (predict_colors_helper 20))]
+
+[define predict_colors_helper
+  (lambda (i)
+    (if (> i 0)
+        (begin
+          (predict (color (unquote i)))
+          (predict_colors_helper (- i 1)))
+        pass))]
+
+[define mh_one
+  (lambda ()
+    (mh default one 1))]
+
+[define mh_all
+  (lambda ()
+    (mh default all 10))]
+
+[define mh_scoped
+  (lambda ()
+    (repeat 5 (do (mh (quote stream) all 2) (mh default one 2))))]
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+; harder example: try to reproduce the BLOG example.
+; use enumerative-diversify to get the exact posterior over the number of balls
+; use a modified poisson capped at 20; otherwise we can't enumerate
+
+[define run_blog
+  (lambda (tester n)
+    (begin
+      (resample n)
+      (assume nballs (tag (quote n) 0 (to_float (bounded_poisson 6))))
+      (assume balls (prefix_k obj_selector_stream nballs))
+      (observe (normal (measured_noisy_color (unquote 1)) 0.000001) 0)
+      (observe (normal (measured_noisy_color (unquote 2)) 0.000001) 1)
+      (observe (normal (measured_noisy_color (unquote 3)) 0.000001) 0)
+      (observe (normal (measured_noisy_color (unquote 4)) 0.000001) 1)
+      (observe (normal (measured_noisy_color (unquote 5)) 0.000001) 0)
+      (observe (normal (measured_noisy_color (unquote 6)) 0.000001) 1)
+      (observe (normal (measured_noisy_color (unquote 7)) 0.000001) 0)
+      (observe (normal (measured_noisy_color (unquote 8)) 0.000001) 1)
+      (observe (normal (measured_noisy_color (unquote 9)) 0.000001) 0)
+      (observe (normal (measured_noisy_color (unquote 10)) 0.000001) 1)
+      (tester)))]
+
+; turns out enumerative_diversify doesn't work because it conditions on the
+; other random choice instead of integrating them out. oops.
+[define diversify
+  (lambda ()
+    (begin
+      (enumerative_diversify (quote n) 0)
+      (call_back query_diversify nballs)))]
+
+[define importance_resample
+  (lambda ()
+    (begin
+      (incorporate)
+      (resample 1000)
+      (plotf_to_file blog_importance_resample_posterior h0 nballs)))]
+
+[define mh_default_one
+  (lambda ()
+    (repeat 2
+     (do (mh default one 25)
+         (plotf_to_file mh_default_one_posterior ltd0d nballs)
+         (printf sweep))))]
+
+[define reject
+  (lambda ()
+    (begin
+      (repeat 2500
+       (do (rejection default all 1)
+           (plotf_to_file blog_rejection_posterior h0 nballs)
+           (printf sweep)))
+      (call_back query_rejection)))]
+
+; With no data, should just give back bounded Poisson pmf. Which it does.
+[define test_diversify
+  (lambda ()
+    (begin
+      (assume nballs (bounded_poisson 6))
+      (enumerative_diversify default all)
+      (call_back query_diversify nballs)))]
+
