@@ -34,7 +34,7 @@
   (lambda ()
     (do
       ;; The balls in the urn
-      (assume n_balls (to_float (poisson 3)))
+      (assume n_balls (to_float (poisson 6)))
       (assume balls
         (let ((ball_selector
                (mem (lambda (i)
@@ -73,79 +73,21 @@
                   (if (flip 0.2)
                       (switch_color true_color)
                       true_color))))))
-      (assume soften
-        ;; Can't observe a deterministic; observe the softened version instead
-        (lambda (color)
-          (categorical (simplex 0.5 0.5)
-                       (list color -1))))
-          
       ))]
 
+;; First comparison to BLOG: observe two balls. Do rejection sampling
+[define test_1
+  (lambda()
+    (do (setup)
+        (observe_data)
+        (resample_multiprocess 40 40)
+        (let ((d (empty)))
+          (do (rejection default all 1)
+              (bind (collect n_balls) (curry into d))
+              (call_back print_this ,d)
+              ))))]
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-                                        ; Simple reality checks to make sure the model does reasonable things
-
-                                        ; Can refactor the test runners; will do this after the tests are working.
-
-    ;; [define run_test_resample
-    ;;   (lambda (tester filename nparticles min_balls)
-    ;;     (begin
-    ;;       (resample nparticles)
-    ;;       (assume n_balls (to_float (poisson 3)))
-    ;;       (assume balls (prefix_k obj_selector_stream n_balls))
-    ;;       (tester)
-    ;;       (incorporate)
-    ;;       (resample nparticles)
-    ;;       (plotf_to_file (unquote filename) h0 n_balls)
-    ;;       (call_back assert_n_balls_resample n_balls (unquote min_balls))))]
-
-    ;; [define run_test_rejection
-    ;;   (lambda (tester filename nsamples min_balls)
-    ;;     (begin
-    ;;       (assume n_balls (to_float (poisson 3)))
-    ;;       (assume balls (prefix_k obj_selector_stream n_balls))
-    ;;       (tester)
-    ;;       (incorporate)
-    ;;       (repeat nsamples
-    ;;        (do (rejection default all 1)
-    ;;            (plotf_to_file (unquote filename) h0 n_balls)
-    ;;            (printf sweep)))
-    ;;       (call_back assert_n_balls (unquote min_balls))))]
-
-    ;; [define run_test_mh
-    ;;   (lambda (tester filename1 filename2 nsamples min_balls)
-    ;;     (begin
-    ;;       (assume n_balls (to_float (poisson 3)))
-    ;;       (assume balls (prefix_k obj_selector_stream n_balls))
-    ;;       (tester)
-    ;;       (incorporate)
-    ;;       (mh default one 100)
-    ;;       (repeat nsamples
-    ;;        (do (mh default one 10)
-    ;;            (plotf_to_file ((unquote filename1) (unquote filename2)) (lcd0d h0) n_balls)
-    ;;            (printf sweep)))
-    ;;       (call_back assert_n_balls (unquote min_balls))))]
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-    ;; [assume get_colors (lambda () (get_colors_helper 20 (list)))]
-    ;; [assume get_colors_helper
-    ;;   (lambda (n accum)
-    ;;     (if (> n 0)
-    ;;         (let ((next_color (color n)))
-    ;;           (get_colors_helper (- n 1) (pair next_color accum)))
-    ;;         accum))]
-
-    ;; [define predict_colors (lambda () (predict_colors_helper 20))]
-
-    ;; [define predict_colors_helper
-    ;;   (lambda (i)
-    ;;     (if (> i 0)
-    ;;         (begin
-    ;;           (predict (color (unquote i)))
-    ;;           (predict_colors_helper (- i 1)))
+[define observe_data
+  (lambda ()
+    (do (observe (exactly (observed_color 0)) 'Blue)
+        (observe (exactly (observed_color 1)) 'Green)))]
