@@ -34,29 +34,6 @@
       false))]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Convert between arrays, lists, and vectors
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-; Convert an array or vector to a list
-; Parameters
-;   v : vector or array
-;   TODO : if we get is_list, use that instead of is_pair
-[assume to_list
-  (lambda (v)
-    (if (is_pair v)
-      v
-      (_to_list_helper v 0 (size v))))]
-
-; Helper for the above. Needed because no letrec in Venture.
-[assume _to_list_helper
-  (lambda (v idx n)
-    (if (= idx n)
-      (list)
-      (pair
-        (lookup v idx)
-        (_to_list_helper v (+ 1 idx) n))))]
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Support for functional programming
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -183,18 +160,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Convenience functions for assembling vectors and lists
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-; Repeat the given value n times; returns a list
-;[sample (repeat 4 7)]
-[assume repeat
-  (lambda (value n)
-    (_repeat_helper value n 0))]
-
-[assume _repeat_helper
-  (lambda (value n idx)
-    (if (= idx n)
-      (list)
-      (pair value (_repeat_helper value n (+ idx 1)))))]
 
 ; Construct vector of zeros of a given length n
 [assume zeros
