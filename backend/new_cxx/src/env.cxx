@@ -42,7 +42,7 @@ void VentureEnvironment::addBinding(const string& sym, Node * node)
   {
     throw sym + " already defined.";
   }
-  
+
   frame[sym] = node;
 }
 
@@ -66,21 +66,32 @@ Node * VentureEnvironment::lookupSymbol(shared_ptr<VentureSymbol> sym)
   return lookupSymbol(sym->s);
 }
 
-Node * VentureEnvironment::lookupSymbol(const string& sym) 
+Node * VentureEnvironment::lookupSymbol(const string& sym)
 {
-  if (frame.count(sym)) 
-  { 
-    return frame[sym]; 
-  }
-  else if (outerEnv.get() == NULL)
-  { 
+  Node* answer = safeLookupSymbol(sym);
+  if (answer == NULL)
+  {
     throw "Cannot find symbol '" + sym + "'";
   }
-  else 
+  else
   {
-    return outerEnv->lookupSymbol(sym);
+    return answer;
   }
 }
- 
 
+Node * VentureEnvironment::safeLookupSymbol(const string& sym)
+{
+  if (frame.count(sym))
+  {
+    return frame[sym];
+  }
+  else if (outerEnv.get() == NULL)
+  {
+    return NULL;
+  }
+  else
+  {
+    return outerEnv->safeLookupSymbol(sym);
+  }
+}
 
