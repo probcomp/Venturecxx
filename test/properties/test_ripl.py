@@ -75,6 +75,7 @@ def testRiplSimulate():
 def checkRiplAgreesWithDeterministicSimulate(name, sp):
   if config["get_ripl"] != "lite" and name in [
     ## Incompatibilities with Puma
+    "apply", # Not implemented, and can't seem to import it as a foreign from Python
     "arange", # Not the same return type (elements boxed in Puma?)
   ]:
     raise SkipTest("%s in Puma not implemented compatibly with Lite" % name)

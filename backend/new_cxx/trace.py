@@ -54,6 +54,11 @@ class Trace(object):
       self.trace.set_seed(random.randint(1,2**31-1))
       for name,sp in builtInSPs().iteritems():
         if self.trace.boundInGlobalEnv(name):
+          # Already there
+          pass
+        elif name == "apply":
+          # The foreign SP interface doesn't seem to be able to handle
+          # this, presumably due to limitations of stack dicts
           pass
         else:
           # Use the Python SP as a fallback to not having a fast one
