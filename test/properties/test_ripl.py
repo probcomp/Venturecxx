@@ -75,21 +75,7 @@ def testRiplSimulate():
 def checkRiplAgreesWithDeterministicSimulate(name, sp):
   if config["get_ripl"] != "lite" and name in [
     ## Incompatibilities with Puma
-    "to_list", # Not implemented
-    "min", # Not implemented
-    "mod", # Not implemented
-    "atan2", # Not implemented
-    "real", # Not implemented
-    "atom_eq", # Not implemented
-    "arange", # Not implemented
-    "linspace", # Not implemented
-    "diag_matrix", # Not implemented
-    "ravel", # Not implemented
-    "matrix_mul", # Not implemented
-    "repeat", # Not implemented
-    "zip", # Not implemented
-    "is_procedure", # Not implemented
-    "print", # Not implemented
+    "arange", # Not the same return type (elements boxed in Puma?)
   ]:
     raise SkipTest("%s in Puma not implemented compatibly with Lite" % name)
   checkTypedProperty(propRiplAgreesWithDeterministicSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)
