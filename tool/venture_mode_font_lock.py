@@ -30,6 +30,7 @@ def print_sorted_first_component(xs):
   names = sorted([x[0] for x in xs if not re.match("^_", x[0])])
   for name in names:
     sys.stdout.write('"{0}" '.format(name))
+  print
 
 def extract_macro_names(intended_for_inference):
   macro_names = []
@@ -60,12 +61,25 @@ def callbacks():
   ripl = Lite().make_church_prime_ripl()
   print_sorted_first_component(ripl.sivm.core_sivm.engine.callbacks.iteritems())
 
+def builtins():
+  "All font lock level 3 builtins"
+  print ";; model SP's"
+  model_SPs()
+  print ";; inference SP's"
+  inference_SPs()
+  print ";; inference prelude"
+  inference_prelude_SPs()
+  print ";; inference callbacks"
+  callbacks()
+  
 def dispatch():
   return {"model_SPs": model_SPs,
           "inference_SPs": inference_SPs,
           "model_macros": model_macros,
           "inference_macros": inference_macros,
-          "inference_prelude_SPs": inference_prelude_SPs}
+          "inference_prelude_SPs": inference_prelude_SPs,
+          "callbacks": callbacks,
+          "builtins": builtins}
 
 if __name__ == "__main__":
   if len(sys.argv) == 1:
