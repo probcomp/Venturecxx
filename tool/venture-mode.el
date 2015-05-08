@@ -116,15 +116,14 @@ See `run-hooks'."
                 (list
                  (list
                   (concat "\\<" (regexp-opt
-                                 '(;; Model SP's. For updated list, call:
-                                   ;; "python venture_mode_font_lock.py model_SPs"
-                                   "add" "apply" "apply_function" "arange" "array"
-                                   "atan2" "atom_eq" "bernoulli" "beta" "binomial"
-                                   "biplex" "branch" "categorical" "contains"
-                                   "cos" "diag_matrix" "dict" "dirichlet" "div"
-                                   "eq" "eval" "exactly" "exp" "expon"
-                                   "extend_environment" "first" "flip" "floor"
-                                   "gamma" "get_current_environment"
+                                 '(;; model SP's
+                                   "add" "apply" "apply_function" "arange"
+                                   "array" "atan2" "atom_eq" "bernoulli" "beta"
+                                   "binomial" "biplex" "branch" "categorical"
+                                   "contains" "cos" "diag_matrix" "dict"
+                                   "dirichlet" "div" "eq" "eval" "exactly" "exp"
+                                   "expon" "extend_environment" "first" "flip"
+                                   "floor" "gamma" "get_current_environment"
                                    "get_empty_environment" "gt" "gte" "hypot"
                                    "id_matrix" "imapv" "inv_gamma" "inv_wishart"
                                    "is_array" "is_atom" "is_boolean" "is_dict"
@@ -132,55 +131,51 @@ See `run-hooks'."
                                    "is_number" "is_pair" "is_probability"
                                    "is_procedure" "is_simplex" "is_symbol"
                                    "is_vector" "laplace" "linspace" "list" "log"
-                                   "log_bernoulli" "log_flip" "lookup" "lt" "lte"
-                                   "make_beta_bernoulli" "make_cmvn" "make_crp"
-                                   "make_csp" "make_dir_mult" "make_gp"
-                                   "make_lazy_hmm" "make_sym_dir_mult"
+                                   "log_bernoulli" "log_flip" "lookup" "lt"
+                                   "lte" "make_beta_bernoulli" "make_cmvn"
+                                   "make_crp" "make_csp" "make_dir_mult"
+                                   "make_gp" "make_lazy_hmm" "make_sym_dir_mult"
                                    "make_uc_beta_bernoulli" "make_uc_dir_mult"
                                    "make_uc_sym_dir_mult" "mapv" "matrix"
                                    "matrix_mul" "mem" "min" "mod" "mul"
                                    "multivariate_normal" "normal" "not" "pair"
                                    "poisson" "pow" "print" "probability" "ravel"
-                                   "real" "repeat" "rest" "second" "simplex" "sin"
-                                   "size" "sqrt" "student_t" "sub"
-                                   "symmetric_dirichlet" "tag" "tag_exclude" "tan"
-                                   "to_array" "to_list" "to_vector"
+                                   "real" "repeat" "rest" "second" "simplex"
+                                   "sin" "size" "sqrt" "student_t" "sub"
+                                   "symmetric_dirichlet" "tag" "tag_exclude"
+                                   "tan" "to_array" "to_list" "to_vector"
                                    "uniform_continuous" "uniform_discrete"
-                                   "vector" "vector_dot" "vonmises" "wishart"
-                                   "zip") t)
-                          "\\>")
-                  '(1 font-lock-builtin-face))
-                 (list
-                  (concat "\\<" (regexp-opt
-                                 '(;; Inference SPs defined in the prelude.
-                                   "bind" "bind_" "curry" "curry3"
-                                   "global_likelihood" "global_posterior"
-                                   "iterate" "mapM" "pass" "repeat" "return"
-                                   "sequence") t) "\\>")
-                  '(1 font-lock-builtin-face))
-                 (list
-                  (concat "\\<" (regexp-opt
-                                 '(;; Inference SP's. For updated list, call:
-                                   ;; "python venture_mode_font_lock.py inference_SPs"
+                                   "value_error" "vector" "vector_dot"
+                                   "vonmises" "wishart" "zip"
+                                   ;; inference SP's
                                    "assert" "bogo_possibilize" "collapse_equal"
                                    "collapse_equal_map" "draw_scaffold" "emap"
-                                   "empty" "enumerative_diversify" "forget" "freeze" "func_mh"
-                                   "func_pgibbs" "func_pmap" "gibbs"
-                                   "gibbs_update" "hmc" "in_model" "incorporate"
-                                   "into" "likelihood_at" "likelihood_weight"
-                                   "load_plugin" "map" "meanfield" "mh"
-                                   "mh_kernel_update" "nesterov" "new_model"
-                                   "ordered_range" "particle_log_weights"
-                                   "pgibbs" "pgibbs_update" "plotf"
-                                   "plotf_to_file" "posterior_at" "print"
-                                   "print_scaffold_stats" "printf" "rejection"
-                                   "resample" "resample_multiprocess"
+                                   "empty" "enumerative_diversify" "forget"
+                                   "freeze" "func_mh" "func_pgibbs" "func_pmap"
+                                   "gibbs" "gibbs_update" "hmc" "in_model"
+                                   "incorporate" "into" "likelihood_at"
+                                   "likelihood_weight" "load_plugin" "map"
+                                   "meanfield" "mh" "mh_kernel_update"
+                                   "nesterov" "new_model" "ordered_range"
+                                   "particle_log_weights" "pgibbs"
+                                   "pgibbs_update" "plotf" "plotf_to_file"
+                                   "posterior_at" "print" "print_scaffold_stats"
+                                   "printf" "rejection" "resample"
+                                   "resample_multiprocess"
                                    "resample_serializing" "resample_thread_ser"
                                    "resample_threaded"
                                    "set_particle_log_weights" "slice"
                                    "slice_doubling" "subsampled_mh"
                                    "subsampled_mh_check_applicability"
-                                   "subsampled_mh_make_consistent" "sweep") t)
+                                   "subsampled_mh_make_consistent" "sweep"
+                                   ;; inference prelude
+                                   "bind" "bind_" "curry"
+                                   "curry3" "global_likelihood"
+                                   "global_posterior" "iterate" "mapM" "pass"
+                                   "repeat" "return" "sequence"
+                                   ;; inference callbacks
+                                   "timer_pause" "timer_resume"
+                                   "timer_start" "timer_time") t)
                           "\\>")
                   '(1 font-lock-builtin-face))))))
 
@@ -255,4 +250,3 @@ indentation."
 ;; Make Emacs open .vnt files in venture-mode
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.vnt\\'" . venture-mode))
-
