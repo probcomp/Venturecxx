@@ -45,18 +45,18 @@ See `run-hooks'."
   "Imenu generic expression for Venture mode.  See `imenu-generic-expression'.")
 
 (defvar font-lock-language-shift-face 'font-lock-language-shift-face
-  "Face name to use to [TODO: describe in generality what a language shift does]")
+  "Face name used for symbols causing the program to enter the modeling language")
 
 (defface font-lock-language-shift-face
   '((((class grayscale) (background light)) :foreground "LightGray" :weight bold)
     (((class grayscale) (background dark))  :foreground "DimGray" :weight bold)
-    (((class color) (min-colors 88) (background light)) :foreground "firebrick" :weight bold)
-    (((class color) (min-colors 88) (background dark))  :foreground "firebrick" :weight bold)
-    (((class color) (min-colors 16) (background light)) :foreground "firebrick" :weight bold)
-    (((class color) (min-colors 16) (background dark)) :foreground "firebrick" :weight bold)
+    (((class color) (min-colors 88) (background light)) :foreground "firebrick")
+    (((class color) (min-colors 88) (background dark))  :foreground "firebrick")
+    (((class color) (min-colors 16) (background light)) :foreground "firebrick")
+    (((class color) (min-colors 16) (background dark)) :foreground "firebrick")
     (((class color) (min-colors 8)) :foreground "red" :weight bold)
     (t :weight bold))
-  "Font Lock mode face used to [TODO: describe what a language shift does]."
+  "Font Lock mode face used for symbols causing the program to enter the modeling language."
   :group 'font-lock-faces)
 
 (defvar venture-font-lock-keywords-1 nil)
