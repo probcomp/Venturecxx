@@ -748,6 +748,12 @@ set<Node*> ConcreteTrace::allNodes()
     assert(answer.count(node.get()) == 0);
     answer.insert(node.get());
   }
+  BOOST_FOREACH(shared_ptr<Node> node, boundForeignSPNodes)
+  {
+    assert(dynamic_cast<ConstantNode*>(node.get()));
+    assert(answer.count(node.get()) == 0);
+    answer.insert(node.get());
+  }
   typedef pair<DirectiveID, RootOfFamily> family_map_entry;
   BOOST_FOREACH(family_map_entry fam, families)
   {

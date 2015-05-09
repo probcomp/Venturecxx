@@ -264,5 +264,6 @@ void PyTrace::bindPrimitiveSP(const string& sym, boost::python::object sp)
   ConstantNode * node = trace->createConstantNode(spRecord);
   processMadeSP(trace.get(), node, false, false, shared_ptr<DB>(new DB()));
   assert(dynamic_pointer_cast<VentureSPRef>(trace->getValue(node)));
+  trace->boundForeignSPNodes.insert(shared_ptr<Node>(node));
   trace->globalEnvironment->addBinding(sym, node);
 }
