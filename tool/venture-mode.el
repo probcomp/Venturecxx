@@ -243,6 +243,7 @@ indentation."
 (put 'assume 'venture-indent-function 1)
 (put 'mem 'venture-indent-function 0)
 (put 'scope_include 'venture-indent-function 0)
+(put 'repeat 'venture-indent-function 1)
 
 ;; Provide
 (provide 'venture-mode)
