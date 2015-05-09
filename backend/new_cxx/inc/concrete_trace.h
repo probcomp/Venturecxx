@@ -180,7 +180,9 @@ struct ConcreteTrace : Trace
   map<Node*,VentureValuePtr> values;
   map<Node*,VentureValuePtr> observedValues;
 
-  set<shared_ptr<Node> > builtInNodes; // hack for simple garbage collection
+  // hack for simple garbage collection
+  set<shared_ptr<Node> > builtInNodes;
+  set<shared_ptr<Node> > boundForeignSPNodes;
 
   private:
   set<Node*> allNodes();
