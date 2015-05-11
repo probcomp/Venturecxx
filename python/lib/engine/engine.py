@@ -184,11 +184,10 @@ class Engine(object):
       self.start_continuous_inference(program[1])
     else:
       with self.inference_trace():
-        with self.self_evaluating_scope_hack():
-          did = self._do_infer(program)
-          ans = self._extract_infer_result(did)
-          self.infer_trace.uneval(did) # TODO This becomes "forget" after the engine.Trace wrapper
-          return ans
+        did = self._do_infer(program)
+        ans = self._extract_infer_result(did)
+        self.infer_trace.uneval(did) # TODO This becomes "forget" after the engine.Trace wrapper
+        return ans
 
   def is_infer_loop_program(self, program):
     return isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop"
@@ -233,6 +232,10 @@ class Engine(object):
     ans = lite.Trace()
     for name,sp in self.inferenceSPsList():
       ans.bindPrimitiveSP(name, sp)
+    import venture.lite.inference_sps as inf
+    for word in inf.inferenceKeywords:
+      if not ans.globalEnv.symbolBound(word):
+        ans.bindPrimitiveName(word, vv.VentureSymbol(word))
     self.install_inference_prelude(ans)
     return ans
 

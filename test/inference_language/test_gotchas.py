@@ -105,7 +105,7 @@ def checkRejectNormal(incl_mu, incl_sigma, incl_out):
   ripl.assume("sigma", maybewrap("(uniform_continuous 0 10)", incl_sigma))
   ripl.assume("out", maybewrap("(normal mu sigma)", incl_out))
   def doinfer():
-    ripl.infer("(rejection scaffold 0 1)")
+    ripl.infer("(rejection 'scaffold 0 1)")
   if [incl_mu, incl_sigma, incl_out] == [True, True, False]:
     assert_raises(Exception, doinfer) # Can't do rejection on normal when mu and sigma are unknown
   else:
