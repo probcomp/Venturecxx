@@ -112,3 +112,18 @@ def testArrayBlock():
   ripl.predict('(tag 1 (array 1 1) (flip))')
 
   ripl.infer('(mh 1 (array 1 1) 1)')
+
+@on_inf_prim("none")
+@broken_in('puma', "puma can't handle arrays as blocks in a tag.")
+def testArrayBlockSerializing():
+  ripl = get_ripl()
+  ripl.infer("(resample_serializing 1)")
+  ripl.assume('x', '(tag 1 (array 1 1) (flip))')
+  old_x = ripl.sample("x")
+  for _ in range(20):
+    ripl.infer('(mh 1 (array 1 1) 1)')
+    if ripl.sample("x") == old_x:
+      continue
+    else:
+      return
+  assert False, "MH did not move the choice it was supposed to operate on."
