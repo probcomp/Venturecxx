@@ -89,6 +89,12 @@ class Trace(object):
   def primitive_infer(self, exp):
     self.trace.primitive_infer(_expToDict(exp))
 
+  def likelihood_at(self, scope, block):
+    return self.trace.likelihood_at(_unwrapVentureValue(scope), _unwrapVentureValue(block))
+
+  def posterior_at(self, scope, block):
+    return self.trace.posterior_at(_unwrapVentureValue(scope), _unwrapVentureValue(block))
+
   def set_profiling(self, _enabled): pass # Puma can't be internally profiled (currently)
   def clear_profiling(self): pass
 

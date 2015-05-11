@@ -51,6 +51,15 @@ def testLikelihoodSmoke():
   (l <- (likelihood_at default all))
   (assert (< (lookup l 0) 0)))""")
 
+@on_inf_prim("likelihood_at")
+def testLikelihoodOnNumericBlock():
+  get_ripl().infer("""(do
+  (assume x (tag 'value 0 (normal 0 1)))
+  (observe (normal x 1) 2)
+  (incorporate)
+  (l <- (likelihood_at 'value 0))
+  (assert (< (lookup l 0) 0)))""")
+
 @on_inf_prim("posterior_at")
 def testPosteriorSmoke():
   get_ripl().infer("""(do
