@@ -23,17 +23,17 @@ from venture.lite.builtin import builtInSPs
 import venture.lite.foreign as foreign
 
 class WarningPSP(object):
+  warned = {}
   def __init__(self, name, psp):
     self.name = name
     self.psp = psp
-    self.warned = False
 
   def __getattr__(self, attrname):
     sub = getattr(self.psp, attrname)
     def f(*args, **kwargs):
-      if not self.warned:
+      if not self.name in WarningPSP.warned:
         print "Warning: Defaulting to using %s from Python, likely to be slow" % self.name
-        self.warned = True
+        WarningPSP.warned[self.name] = True
       return sub(*args, **kwargs)
     return f
 
