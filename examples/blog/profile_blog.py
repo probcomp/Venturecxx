@@ -6,6 +6,7 @@ from subprocess import call
 from time import time
 from functools import partial
 from pandas import DataFrame
+from multiprocessing import Pool
 
 def profile_one(inference_flag, n):
   method_flag = inference_flag.split('.')[-1]
@@ -22,7 +23,9 @@ def profile_one(inference_flag, n):
   return elapsed
 
 def profile(inference_flag):
-  times = map(partial(profile_one, inference_flag), range(1,11))
+  profile_partial = partial(profile_one, inference_flag)
+  workers = Pool(10)
+  times = workers.map(profile_partial, range(1,11))
   ds = DataFrame(dict(n_obs_pairs = range(1,11),
                       times= times))
   outname = inference_flag.split('.')[-1]

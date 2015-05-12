@@ -4,6 +4,8 @@
 # this makefile are checked into Git. Re-running this file will override those
 # results.
 
+# The python script parallelizes across 10 processes to speed things up.
+# If you want to use fewer cores, change the argument to Pool in profile_blog.py
 blog-results: profile_blog.py
 	mkdir blog-results
 	python profile_blog.py
