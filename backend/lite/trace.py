@@ -293,7 +293,11 @@ class Trace(object):
     else: return 0
 
   def getAllNodesInScope(self,scope):
-    return set.union(*[self.getNodesInBlock(scope,block) for block in self.getScope(scope).keys()])
+    blocks = [self.getNodesInBlock(scope,block) for block in self.getScope(scope).keys()]
+    if len(blocks) == 0: # Guido, WTF?
+      return set()
+    else:
+      return set.union(*blocks)
 
   def getOrderedSetsInScope(self,scope,interval=None):
     if interval is None:
