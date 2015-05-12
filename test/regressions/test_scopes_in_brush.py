@@ -36,4 +36,4 @@ def checkBrushScope(operator):
     (tag (quote state) t (normal 2 1))
     (tag (quote state) t (normal 0 1)))
 """)
-  ripl.infer("(%s state ordered 4 3)" % operator)
+  ripl.infer("(%s 'state ordered 4 3)" % operator)

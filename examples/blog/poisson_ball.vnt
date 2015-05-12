@@ -1,6 +1,7 @@
 [assume abs (lambda (x) (if (> x 0) x (* -1 x)))]
 [assume to_float (lambda (x) (+ x 0))]
 
+
 [define profile
   ;; TODO get this working
   (lambda (set_function_name
@@ -12,7 +13,7 @@
 
 [define main
   ;; Main function to perform inference for a single parameter setting
-  (lambda (n_cores
+  (lambda (n_particles
            set_function_name
            observation_function_name
            n_observations
@@ -21,8 +22,8 @@
            reportp ; predicate for whether to generate a report at the end
            )
     (do
-      (if (> 1 n_cores)
-          (resample_multiprocess n_cores 64)
+      (if (> n_particles 1)
+          (resample_multiprocess n_particles 64)
           pass)
       (setup_model set_function_name)
       (make_observations observation_function_name n_observations)
@@ -81,9 +82,11 @@
   (lambda (observation_function_name n_observations)
     ;; Makes one green observation, one blue
     ;; Pass in the observation function name quoted
-    (make_observation_iter observation_function_name
-                           n_observations
-                           0))]
+    (do
+      (make_observation_iter observation_function_name
+                             n_observations
+                             0)
+      (incorporate)))]
 
 [define make_observation_iter
   (lambda (observation_function_name n_observations i)
