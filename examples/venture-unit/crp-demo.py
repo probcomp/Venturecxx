@@ -23,19 +23,19 @@ from venture.unit import VentureUnit
 class CRPMixtureDemo(VentureUnit):
   def makeAssumes(self):
     program = """
-[ASSUME alpha (tag (quote hypers) 0 (gamma 1.0 1.0))]
-[ASSUME scale (tag (quote hypers) 1 (gamma 1.0 1.0))]
+[ASSUME alpha (tag 'hypers 0 (gamma 1.0 1.0))]
+[ASSUME scale (tag 'hypers 1 (gamma 1.0 1.0))]
 
 [ASSUME crp (make_crp alpha)]
 
 [ASSUME get_cluster (mem (lambda (id)
-  (tag (quote clustering) id (crp))))]
+  (tag 'clustering id (crp))))]
 
 [ASSUME get_mean (mem (lambda (cluster)
-  (tag (quote parameters) cluster (normal 0 10))))]
+  (tag 'parameters cluster (normal 0 10))))]
 
 [ASSUME get_variance (mem (lambda (cluster)
-  (tag (quote parameters) cluster (gamma 1 scale))))]
+  (tag 'parameters cluster (gamma 1 scale))))]
 
 [ASSUME get_component_model (lambda (cluster)
   (lambda () (normal (get_mean cluster) (get_variance cluster))))]
@@ -79,11 +79,11 @@ def run(arg):
 if __name__ == '__main__':
   model = CRPMixtureDemo(shortcuts.make_lite_church_prime_ripl())
   def statisticsInfer(ripl, _):
-    # ripl.infer("(repeat 10 (do (mh hypers one 5) (mh parameters one 20) (mh clustering one 80)))")
-    ripl.infer("(repeat 1 (do (mh hypers one 2) (mh parameters one 3) (mh clustering one 8)))")
+    # ripl.infer("(repeat 10 (do (mh 'hypers one 5) (mh 'parameters one 20) (mh 'clustering one 80)))")
+    ripl.infer("(repeat 1 (do (mh 'hypers one 2) (mh 'parameters one 3) (mh 'clustering one 8)))")
   def pGibbsInfer(ripl, _):
-    # ripl.infer("(repeat 10 (do (mh hypers one 5) (mh parameters one 20) (pgibbs clustering ordered 2 1)))")
-    ripl.infer("(repeat 3 (do (mh hypers one 2) (mh parameters one 3) (pgibbs clustering ordered 2 1)))")
+    # ripl.infer("(repeat 10 (do (mh 'hypers one 5) (mh 'parameters one 20) (pgibbs 'clustering ordered 2 1)))")
+    ripl.infer("(repeat 3 (do (mh 'hypers one 2) (mh 'parameters one 3) (pgibbs 'clustering ordered 2 1)))")
   multiprocess = False
   if multiprocess:
     from multiprocessing import Pool
