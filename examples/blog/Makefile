@@ -4,8 +4,6 @@
 # this makefile are checked into Git. Re-running this file will override those
 # results.
 
-# For speed, profile_blog.py will start multiple processes on the host machine
-# For sequential behavior, call profile_blog.py False
 blog-results: profile_blog.py
 	mkdir blog-results
 	python profile_blog.py
