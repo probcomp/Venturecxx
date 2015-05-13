@@ -104,9 +104,10 @@ class Trace(object):
   def unregisterRandomChoiceInScope(self,scope,block,node):
     (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
     self.scopes[scope][block].remove(node)
-    assert not scope == "default" or len(self.scopes[scope][block]) == 0
+    if scope == "default":
+      assert len(self.scopes[scope][block]) == 0
     if len(self.scopes[scope][block]) == 0: del self.scopes[scope][block]
-    if len(self.scopes[scope]) == 0: del self.scopes[scope]
+    if len(self.scopes[scope]) == 0 and (not scope == "default"): del self.scopes[scope]
 
   def _normalizeEvaluatedScopeOrBlock(self, val):
     if isinstance(val, VentureNumber):
@@ -292,7 +293,11 @@ class Trace(object):
     else: return 0
 
   def getAllNodesInScope(self,scope):
-    return set.union(*[self.getNodesInBlock(scope,block) for block in self.getScope(scope).keys()])
+    blocks = [self.getNodesInBlock(scope,block) for block in self.getScope(scope).keys()]
+    if len(blocks) == 0: # Guido, WTF?
+      return set()
+    else:
+      return set.union(*blocks)
 
   def getOrderedSetsInScope(self,scope,interval=None):
     if interval is None:

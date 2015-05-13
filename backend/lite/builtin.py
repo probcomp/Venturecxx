@@ -348,6 +348,12 @@ builtInSPsList = [
                                                t.MatrixType(),
                                                descr="(%s x y) returns the product of matrices x and y.") ],
 
+           [ "matrix_times_vector",
+             deterministic_typed(np.dot,
+                                 [t.MatrixType(), t.ArrayUnboxedType(t.NumberType())],
+                                 t.ArrayUnboxedType(t.NumberType()),
+                                 descr="(%s M v) returns the matrix-vector product Mv.") ],
+
            [ "print", deterministic_typed(print_,
                                            [t.AnyType("k"), t.SymbolType()],
                                            t.AnyType("k"),
