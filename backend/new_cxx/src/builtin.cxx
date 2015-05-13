@@ -127,6 +127,7 @@ map<string,SP*> initBuiltInSPs()
   m["is_vector"] = new SP(new NullRequestPSP(), new IsVectorOutputPSP());
   m["to_vector"] = new SP(new NullRequestPSP(), new ToVectorOutputPSP());
   m["vector_dot"] = new SP(new NullRequestPSP(), new VectorDotOutputPSP());
+  m["matrix_times_vector"] = new SP(new NullRequestPSP(), new MatrixTimesVectorOutputPSP());
 
   /* Scoping */
   m["tag"] = new SP(new NullRequestPSP(), new TagOutputPSP());
