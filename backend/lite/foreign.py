@@ -92,6 +92,9 @@ class ForeignLitePSP(object):
         args = ForeignArgs(args)
         self.psp.unincorporate(value, args)
 
+    def logDensityOfCounts(self, aux):
+        return self.psp.logDensityOfCounts(aux)
+
     def isRandom(self):
         return self.psp.isRandom()
 
@@ -117,9 +120,6 @@ class ForeignLitePSP(object):
         args = ForeignArgs(args)
         result = self.psp.enumerateValues(args)
         return [asStackDict(value) for value in result]
-
-    def logDensityOfCounts(self, aux):
-        return self.psp.logDensityOfCounts(aux)
 
 class ForeignLiteLKernel(object):
     def __init__(self, lkernel):

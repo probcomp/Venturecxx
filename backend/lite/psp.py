@@ -195,6 +195,25 @@ class PSP(object):
     incorporate."""
     pass
 
+  def logDensityOfCounts(self, _aux):
+    """Return the log-density of simulating a dataset with the given
+    collected statistics.
+
+    This is relevant only for PSPs that collect statistics about their
+    uses via incorporate and unincorporate that are sufficient to bulk
+    absorb at all applications of the PSP, without traversing them.
+
+    Specifically, the log-density to be returned is the sum of the
+    log-density at each application of this PSP; which is also the
+    log-density of producing any one output sequence consistent with
+    the given collected statistics, given inputs consistent with the
+    same set of collected statistics (which should be equal for all
+    such output sequences, since the statistics are supposed to be
+    sufficient).
+
+    """
+    raise VentureBuiltinSPMethodError("Cannot compute log density of counts of %s", type(self))
+
   def canEnumerate(self):
     """Return whether this PSP can enumerate the space of its possible
     return values.  Enumeration is used only for principal nodes in
@@ -339,6 +358,8 @@ class TypedPSP(PSP):
     return self.psp.incorporate(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def unincorporate(self,value,args):
     return self.psp.unincorporate(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
+  def logDensityOfCounts(self,aux):
+    return self.psp.logDensityOfCounts(aux)
   def enumerateValues(self,args):
     return [self.f_type.wrap_return(v) for v in self.psp.enumerateValues(self.f_type.unwrap_args(args))]
   def isRandom(self):
@@ -370,10 +391,6 @@ class TypedPSP(PSP):
   def description_rst_format(self, name):
     signature = ".. function:: " + self.f_type.name_rst_format(name)
     return (signature, self.psp.description(name))
-
-  # TODO Is this method part of the psp interface?
-  def logDensityOfCounts(self,aux):
-    return self.psp.logDensityOfCounts(aux)
 
 class TypedLKernel(LKernel):
   def __init__(self, kernel, f_type):
