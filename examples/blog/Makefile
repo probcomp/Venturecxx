@@ -10,4 +10,7 @@ blog-profile-time: profile_blog.py
 	mkdir blog-profile-time
 	python profile_blog.py time
 
+blog-profile-quality: profile_blog.py
+	mkdir profile-quality
+	python profile_blog.py quality
 

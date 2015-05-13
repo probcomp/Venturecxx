@@ -8,6 +8,7 @@ from functools import partial
 from pandas import DataFrame
 from multiprocessing import Pool
 from sys import argv
+import numpy as np
 
 def run_one(inference_flag, out, n_iter, n_obs):
   method_flag = inference_flag.split('.')[-1]
@@ -37,12 +38,12 @@ def profile_times():
   profile_time('blog.sample.MHSampler')
 
 def profile_quality():
-  # profile_partial = partial(run_one, 'blog-profile-quality',
-  #                           'blog.sample.LWSampler', n_obs = 5)
-  # workers = Pool(10)
-  # times = workers.map(lambda n_iter: profile_partial(n_iter = n_iter),
-                       
-  
+  # Can't parallelize b/c python sucks at higher-order functions
+  profile_partial = partial(run_one, inference_flag = 'blog.sample.LWSampler',
+                            out = 'profile-quality', n_obs = 5)
+  _ = [profile_partial(n_iter = n_iter)
+       for n_iter in [str(int(x)) for x in np.logspace(3, 5, 10)]]
+
 def main():
   dispatch = {'time' : profile_times,
               'quality' : profile_quality}
