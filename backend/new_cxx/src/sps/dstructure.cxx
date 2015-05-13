@@ -244,3 +244,12 @@ VentureValuePtr ArangeOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
   }
   return VentureValuePtr(new VentureArray(items));
 }
+
+VentureValuePtr RepeatOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  double item = args->operandValues[0]->getDouble();
+  long ct = args->operandValues[1]->getInt();
+  VectorXd v(ct);
+  for (size_t i = 0; i < ct; ++i) { v(i) = item; }
+  return VentureValuePtr(new VentureVector(v));
+}
