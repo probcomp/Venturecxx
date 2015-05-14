@@ -1,16 +1,6 @@
 [assume abs (lambda (x) (if (> x 0) x (* -1 x)))]
 [assume to_float (lambda (x) (+ x 0))]
 
-
-[define profile
-  ;; TODO get this working
-  (lambda (set_function_name
-           observation_function_name
-           observation_bounds
-           inference_function
-           )
-    pass)]
-
 [define main
   ;; Main function to perform inference for a single parameter setting
   (lambda (n_particles
@@ -20,17 +10,14 @@
            inference_function
            n_iterations
            reportp ; predicate for whether to generate a report at the end
-           )
+           report_path) ; where to dump the result data
     (do
       (if (> n_particles 1)
           (resample_multiprocess n_particles 64)
           pass)
       (setup_model set_function_name)
       (make_observations observation_function_name n_observations)
-      (ds <- (run_inference inference_function n_iterations))
-      ;; (call_back data_dump ,ds 'foo)
-      (generate_report reportp ds)
-      ))]
+      (ds <- (run_inference inference_function n_iterations))))]
 
 [define setup_model
   (lambda (set_function_name)
@@ -130,73 +117,29 @@
     (let ((ds (empty)))
       (do
         (repeat n_iterations
-          (do
-            (inference_function)
-            (bind (collect n_balls) (curry into ds))))
+                (do
+                  (inference_function)
+                  (bind (collect n_balls) (curry into ds))))
         (return ds))))]
 
 [define reject_function (lambda () (rejection default all 1))]
-[define bogo_function (lambda ()
-                        (do
-                          (bogo_possibilize default all 1)
-                          (bind global_likelihood set_particle_log_weights)))]
-[define likelihood_weight_function (lambda () (likelihood_weight))]
+
+[define likelihood_weight_function
+  ;; Allows impossible states
+  (lambda () (likelihood_weight))]
+
+[define likelihood_weight_bogo
+  ;; First resets; then, if state is impossible, replace with possible state
+  (lambda ()
+    (do
+      (likelihood_weight)
+      (bogo_possibilize default all 1)
+      (bind global_likelihood set_particle_log_weights)))]
 
 [define generate_report
   ;; if reportp is true, generate a report
-  (lambda (reportp ds)
+  (lambda (reportp ds report_path)
     (if reportp
-        (call_back data_dump ,ds 'foo)
+        (call_back data_dump ,ds ',report_path)
         pass))]
 
-;; ;; First comparison to BLOG: observe two balls. Do rejection sampling
-;; [define test_rejection
-;;   (lambda ()
-;;     (do
-;;       (resample_multiprocess 10 5)
-;;       (setup)
-;;       (observe_data)
-;;       (rejection default all 1)
-;;       (let ((d (empty)))
-;;         (do
-;;           (bind (collect n_balls) (curry into d))
-;;           (call_back print_this ,d)))))]
-
-;; [define test_resample
-;;   (lambda ()
-;;     (do (call_back timer_start)
-;;         (resample 100)
-;;         ;; (resample_multiprocess 100 80)
-;;         (setup)
-;;         (observe_data)
-;;         (resample 100)
-;;         ;; (resample_multiprocess 100 80)
-;;         (call_back timer_time)
-;;         (let ((d (empty)))
-;;           (do
-;;             (bind (collect n_balls) (curry into d))
-;;             (call_back print_this ,d)
-;;             ))))]
-
-;; [define simple_bogo_possibilize
-;;   (lambda ()
-;;     (do
-;;       (resample_multiprocess 10 10)
-;;       (setup)
-;;       (observe_data)
-;;       (let ((d (empty)))
-;;         (do
-;;           (repeat 10
-;;             (do
-;;               (bogo_possibilize default all 1)
-;;               (bind global_likelihood set_particle_log_weights)
-;;               (bind (collect n_balls) (curry into d))))
-;;           (call_back print_this ,d)))))]
-
-
-
-;; [define observe_data
-;;   (lambda ()
-;;     (do (observe (observed_color 0) 'Blue)
-;;         (observe (observed_color 1) 'Green)
-;;         (incorporate)))]
