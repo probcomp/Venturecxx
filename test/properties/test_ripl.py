@@ -78,6 +78,8 @@ def checkRiplAgreesWithDeterministicSimulate(name, sp):
     ## Incompatibilities with Puma
     "apply", # Not implemented, and can't seem to import it as a foreign from Python
     "arange", # Not the same return type (elements boxed in Puma?)
+    "vector_dot", # Numerical inconsistency between Eigen and Numpy
+    "matrix_times_vecttor", # Numerical inconsistency between Eigen and Numpy
   ]:
     raise SkipTest("%s in Puma not implemented compatibly with Lite" % name)
   checkTypedProperty(propRiplAgreesWithDeterministicSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)
