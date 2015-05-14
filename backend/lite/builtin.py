@@ -437,6 +437,7 @@ builtInSPsList = [
 
            [ "make_beta_bernoulli",typed_nr(discrete.MakerCBetaBernoulliOutputPSP(), [t.PositiveType(), t.PositiveType()], SPType([], t.BoolType())) ],
            [ "make_uc_beta_bernoulli",typed_nr(discrete.MakerUBetaBernoulliOutputPSP(), [t.PositiveType(), t.PositiveType()], SPType([], t.BoolType())) ],
+           [ "make_suff_stat_bernoulli",typed_nr(discrete.MakerSuffBernoulliOutputPSP(), [t.NumberType()], SPType([], t.BoolType())) ],
 
            [ "dirichlet",typed_nr(dirichlet.DirichletOutputPSP(), [t.HomogeneousArrayType(t.PositiveType())], t.SimplexType()) ],
            [ "symmetric_dirichlet",typed_nr(dirichlet.SymmetricDirichletOutputPSP(), [t.PositiveType(), t.CountType()], t.SimplexType()) ],
