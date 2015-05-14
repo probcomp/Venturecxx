@@ -59,7 +59,19 @@ def norm_blog_posterior(unnorm):
   p = ds.set_index('n_balls')['p']
   return p
 
-  
+def compute_venture_posterior(_, ds, n_iter):
+  ds = unwrap(ds).asPandas()
+  n_iter = int(unwrap(n_iter))
+  ds['n_balls'] = ds['n_balls'].apply(int)
+  norm = np.exp(ds['particle log weight']).sum()
+  p = ((ds.groupby('n_balls').
+        apply(lambda ds: np.exp(ds['particle log weight']).sum())) / norm)
+  p.name = 'p'
+  f_name = 'poisson-ball-results-venture-{0}-5.csv'.format(n_iter)
+  print 'Writing ' + f_name
+  p.to_csv('profile-quality/' + f_name)
+
+
 def main():
   dispatch = {'time' : profile_times,
               'quality' : profile_quality}

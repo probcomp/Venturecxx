@@ -9,15 +9,15 @@
            n_observations
            inference_function
            n_iterations
-           reportp ; predicate for whether to generate a report at the end
-           report_path) ; where to dump the result data
+           run_callbacks)
     (do
       (if (> n_particles 1)
           (resample_multiprocess n_particles 64)
           pass)
       (setup_model set_function_name)
       (make_observations observation_function_name n_observations)
-      (ds <- (run_inference inference_function n_iterations))))]
+      (ds <- (run_inference inference_function n_iterations))
+      (run_callbacks ds)))]
 
 [define setup_model
   (lambda (set_function_name)

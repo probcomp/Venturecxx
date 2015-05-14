@@ -14,3 +14,6 @@ blog-profile-quality: profile_model.py
 	mkdir profile-quality
 	python profile_model.py quality
 
+venture-profile-quality: poisson_ball.py poisson_ball.vnt profile_model.vnt
+	venture lite -P -L poisson_ball.py -f poisson_ball.vnt -f profile_model.vnt \
+		-e "[infer (profile_quality)]"
