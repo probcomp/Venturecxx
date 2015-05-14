@@ -20,7 +20,8 @@ from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, rejectionSampling, skipWhenSubSampling
 
 def testMakeBetaBernoulli1():
-  for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
+  for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli",
+                "(lambda (a b) (let ((weight (beta a b))) (make_suff_stat_bernoulli weight)))"]:
     for hyper in ["10.0", "(normal 10.0 1.0)"]:
       yield checkMakeBetaBernoulli1, maker, hyper
 
@@ -41,7 +42,8 @@ def checkMakeBetaBernoulli1(maker, hyper):
   return reportKnownDiscrete(ans, predictions)
 
 def testMakeBetaBernoulli2():
-  for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
+  for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli",
+                "(lambda (a b) (let ((weight (beta a b))) (make_suff_stat_bernoulli weight)))"]:
     yield checkMakeBetaBernoulli2,maker
 
 # These three represent mechanisable ways of fuzzing a program for
@@ -64,7 +66,8 @@ def checkMakeBetaBernoulli2(maker):
   return reportKnownDiscrete(ans, predictions)
 
 def testMakeBetaBernoulli3():
-  for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
+  for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli",
+                "(lambda (a b) (let ((weight (beta a b))) (make_suff_stat_bernoulli weight)))"]:
     yield checkMakeBetaBernoulli3,maker
 
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
@@ -88,7 +91,8 @@ def checkMakeBetaBernoulli3(maker):
   return reportKnownDiscrete(ans, predictions)
 
 def testMakeBetaBernoulli4():
-  for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
+  for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli",
+                "(lambda (a b) (let ((weight (beta a b))) (make_suff_stat_bernoulli weight)))"]:
     yield checkMakeBetaBernoulli4,maker
 
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
