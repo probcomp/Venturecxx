@@ -122,7 +122,21 @@ class SimulationLKernel(LKernel):
 class DeltaLKernel(LKernel):
   def reverseWeight(self, _trace, _oldValue, _args): return 0
 
-class DefaultAAALKernel(SimulationLKernel):
+class AAALKernel(LKernel):
+  """An AAA LKernel differs from an LKernel only in the weight contract.
+
+  To wit, the weight of an AAA LKernel is expected to include the
+  relevant terms from the full posterior on the node, not just the
+  prior.  The likelihood should be computable from the statistics that
+  the made SP maintains.
+
+  """
+  pass
+
+class SimulationAAALKernel(SimulationLKernel, AAALKernel):
+  """An AAA LKernel that is also a simulation kernel."""
+
+class DefaultAAALKernel(SimulationAAALKernel):
   """The weight of an AAA If the maker is deterministic, then the """
   def __init__(self,makerPSP): self.makerPSP = makerPSP
   def simulate(self, _trace, args):

@@ -20,7 +20,7 @@ import scipy.special
 import numpy.random as npr
 import math
 
-from lkernel import SimulationLKernel
+from lkernel import SimulationAAALKernel
 from sp import SP, VentureSPRecord, SPAux, SPType
 from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from utils import simulateDirichlet, logDensityDirichlet
@@ -175,7 +175,7 @@ class MakerUDirMultOutputPSP(RandomPSP):
   def description(self,name):
     return "  %s is an uncollapsed variant of make_dir_mult." % name
 
-class UDirMultAAALKernel(SimulationLKernel):
+class UDirMultAAALKernel(SimulationAAALKernel):
   def simulate(self, _trace, args):
     alpha = args.operandValues[0]
     os = args.operandValues[1] if len(args.operandValues) > 1 else [VentureAtom(i) for i in range(len(alpha))]
@@ -286,7 +286,7 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
   def description(self,name):
     return "  %s is an uncollapsed symmetric variant of make_dir_mult." % name
 
-class USymDirMultAAALKernel(SimulationLKernel):
+class USymDirMultAAALKernel(SimulationAAALKernel):
   def simulate(self, _trace, args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
     os = args.operandValues[2] if len(args.operandValues) > 2 else [VentureAtom(i) for i in range(n)]

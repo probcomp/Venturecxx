@@ -22,7 +22,7 @@ import scipy.special
 from utils import extendedLog, simulateCategorical, logDensityCategorical
 from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, SPAux, VentureSPRecord, SPType
-from lkernel import SimulationLKernel
+from lkernel import SimulationAAALKernel
 from value import VentureAtom
 from types import BoolType # BoolType is metaprogrammed pylint:disable=no-name-in-module
 from exception import VentureValueError
@@ -241,7 +241,7 @@ class MakerUBetaBernoulliOutputPSP(DiscretePSP):
   def description(self,name):
     return "  (%s alpha beta) returns an uncollapsed beta bernoulli sampler with pseudocounts alpha (for true) and beta (for false)." % name
 
-class UBetaBernoulliAAALKernel(SimulationLKernel):
+class UBetaBernoulliAAALKernel(SimulationAAALKernel):
   def simulate(self, _trace, args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
