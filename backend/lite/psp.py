@@ -16,7 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from utils import override
-from lkernel import DefaultAAALKernel,DefaultVariationalLKernel,LKernel
+from lkernel import DeterministicMakerAAALKernel,DefaultVariationalLKernel,LKernel
 from request import Request
 from exception import VentureBuiltinSPMethodError
 
@@ -247,7 +247,7 @@ class PSP(object):
     return None
 
   def childrenCanAAA(self): return False
-  def getAAALKernel(self): return DefaultAAALKernel(self)
+  def getAAALKernel(self): return DeterministicMakerAAALKernel(self)
 
   def hasVariationalLKernel(self): return False
   def getVariationalLKernel(self,args): return DefaultVariationalLKernel(self, args)

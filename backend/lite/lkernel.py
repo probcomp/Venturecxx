@@ -136,8 +136,12 @@ class AAALKernel(LKernel):
 class SimulationAAALKernel(SimulationLKernel, AAALKernel):
   """An AAA LKernel that is also a simulation kernel."""
 
-class DefaultAAALKernel(SimulationAAALKernel):
-  """The weight of an AAA If the maker is deterministic, then the """
+class DeterministicMakerAAALKernel(SimulationAAALKernel):
+  """If the maker is deterministic, then the proposal is necessarily the
+  same as the prior, and the AAA LKernel weight is the likelihood.
+
+  """
+
   def __init__(self,makerPSP): self.makerPSP = makerPSP
   def simulate(self, _trace, args):
     spRecord = self.makerPSP.simulate(args)
