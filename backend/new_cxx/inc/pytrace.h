@@ -49,7 +49,7 @@ struct PyTrace
 
   boost::python::object extractPythonValue(DirectiveID did);
 
-  void bindPrimitiveSP(const string& sym, boost::python::object sp);
+  void bindPythonSP(const string& sym, boost::python::object sp);
 
   void setSeed(size_t seed);
   size_t getSeed();
