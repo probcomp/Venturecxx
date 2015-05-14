@@ -397,13 +397,14 @@ class TypedLKernel(LKernel):
     self.kernel = kernel
     self.f_type = f_type
 
-  def simulate(self, trace, oldValue, args):
-    return self.f_type.wrap_return(self.kernel.simulate(trace, self.f_type.unwrap_return(oldValue),
-                                                        self.f_type.unwrap_args(args)))
-  def weight(self, trace, newValue, oldValue, args):
-    return self.kernel.weight(trace, self.f_type.unwrap_return(newValue),
-                              self.f_type.unwrap_return(oldValue),
-                              self.f_type.unwrap_args(args))
+  def forwardSimulate(self, trace, oldValue, args):
+    return self.f_type.wrap_return(self.kernel.forwardSimulate(trace, self.f_type.unwrap_return(oldValue),
+                                                               self.f_type.unwrap_args(args)))
+
+  def forwardWeight(self, trace, newValue, oldValue, args):
+    return self.kernel.forwardWeight(trace, self.f_type.unwrap_return(newValue),
+                                     self.f_type.unwrap_return(oldValue),
+                                     self.f_type.unwrap_args(args))
 
   def reverseWeight(self, trace, oldValue, args):
     return self.kernel.reverseWeight(trace,

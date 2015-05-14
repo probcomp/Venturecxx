@@ -22,7 +22,7 @@ import scipy.special
 from utils import extendedLog, simulateCategorical, logDensityCategorical
 from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, SPAux, VentureSPRecord, SPType
-from lkernel import LKernel
+from lkernel import SimulationLKernel
 from value import VentureAtom
 from types import BoolType # BoolType is metaprogrammed pylint:disable=no-name-in-module
 from exception import VentureValueError
@@ -241,15 +241,20 @@ class MakerUBetaBernoulliOutputPSP(DiscretePSP):
   def description(self,name):
     return "  (%s alpha beta) returns an uncollapsed beta bernoulli sampler with pseudocounts alpha (for true) and beta (for false)." % name
 
-class UBetaBernoulliAAALKernel(LKernel):
-  def simulate(self, _trace, _oldValue, args):
+class UBetaBernoulliAAALKernel(SimulationLKernel):
+  def simulate(self, _trace, args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
     [ctY,ctN] = args.madeSPAux.cts()
     newWeight = scipy.stats.beta.rvs(alpha + ctY, beta + ctN)
     output = TypedPSP(UBetaBernoulliOutputPSP(newWeight), SPType([], BoolType()))
     return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output), args.madeSPAux)
-  # Weight is zero because it's simulating from the right distribution
+
+  def weight(self, _trace, _newValue, _args):
+    # Gibbs step, samples exactly from the local posterior.  Being a
+    # AAALKernel, this one gets to cancel against the likelihood as
+    # well as the prior.
+    return 0
 
   def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
 

@@ -17,31 +17,117 @@
 
 import copy
 import numbers
-from sp import VentureSPRecord
-from value import VentureValue
 import sys
 import math
 
+from sp import VentureSPRecord
+from value import VentureValue
+from exception import VentureBuiltinLKernelMethodError
+
 class LKernel(object):
-  def simulate(self, _trace, _oldValue, _args):
-    raise Exception("Simulate not implemented!")
-  def weight(self, _trace, _newValue, _oldValue, _args): return 0
-  def reverseWeight(self,trace,oldValue,args):
-    return self.weight(trace,oldValue,None,args)
+  """A local proposal distribution for one node."""
+
+  def forwardSimulate(self, _trace, _oldValue, _args):
+    """Compute a proposed new value.
+
+    In general, the proposal may depend on the old value (delta
+    kernels).
+
+    """
+    raise VentureBuiltinLKernelMethodError("Cannot simulate %s", type(self))
+
+  def forwardWeight(self, _trace, _newValue, _oldValue, _args):
+    """The M-H acceptance term regen should include for this local proposal.
+
+    For general kernels that depend on the former value ("delta
+    kernels"), this should be the full M-H term
+
+      Prior(newValue) Kernel(oldValue|newValue)
+      -----------------------------------------
+      Prior(oldValue) Kernel(newValue|oldValue)
+
+    and the reverseWeight should be 0 (since the reverse probability
+    cannot be computed before the new value is available in this
+    case).
+
+    Note that the likelihood is accounted for by later recursive calls
+    to regen.
+
+    """
+    raise VentureBuiltinLKernelMethodError("Cannot compute forward weight of %s", type(self))
+
+  def reverseWeight(self, _trace, _oldValue, _args):
+    """The M-H acceptance term detach should include for this local proposal.
+
+    For general kernels that depend on the former value, the reverse
+    probability cannot be computed until a new value is simulated, and
+    this method should return 0.  This method exists to interface with
+    simulation kernels, that _can_ profitably compute the reverse
+    weight without access to the value that will be proposed.
+
+    """
+    raise VentureBuiltinLKernelMethodError("Cannot compute reverse weight of %s", type(self))
+
   def gradientOfReverseWeight(self, _trace, _value, args): return (0, [0 for _ in args.operandValues])
+
   def weightBound(self, _trace, _newValue, _oldValue, _args):
     # An upper bound on the value of weight over the variation
     # possible by changing the values of everything in the arguments
     # whose value is None.  Useful for rejection sampling.
     raise Exception("Cannot rejection sample with weight-unbounded LKernel of type %s" % type(self))
 
-class DefaultAAALKernel(LKernel):
+class SimulationLKernel(LKernel):
+  """A local proposal distribution that does not depend on the previous value of the node."""
+
+  def forwardSimulate(self, trace, _oldValue, args):
+    """Forward simulation must ignore the old value.
+
+    Do not override this; define the "simulate" method instead."""
+    return self.simulate(trace, args)
+
+  def simulate(self, _trace, _args):
+    """Compute a proposed new value, independently of the old one."""
+    raise VentureBuiltinLKernelMethodError("Cannot simulate %s", type(self))
+
+  def forwardWeight(self, trace, newValue, _oldValue, args):
+    """The forward weight must ignore the old value.
+
+    Do not override this; define the "weight" method instead."""
+    return self.weight(trace, newValue, args)
+
+  def weight(self, _trace, _value, _args):
+    r"""Return the importance weight of this proposed value against the prior.
+
+    In the case of simulation kernels, the M-H ratio factors as
+
+    / Kernel(newValue) \   / Prior(oldValue)  \
+    | ---------------- | * | ---------------- |
+    \ Prior(newValue)  /   \ Kernel(oldValue) /
+
+    and it is advantageous to compute the two terms separately.  The
+    "weight" method of a SimulationLKernel should return such a term
+    for the given value.
+
+    """
+    raise VentureBuiltinLKernelMethodError("Cannot compute the weight of %s", type(self))
+
+  def reverseWeight(self, trace, oldValue, args):
+    """The reverse weight can be computed without knowing the new value.
+
+    Do not override this; define the "weight" method instead."""
+    return self.weight(trace, oldValue, args)
+
+class DeltaLKernel(LKernel):
+  def reverseWeight(self, _trace, _oldValue, _args): return 0
+
+class DefaultAAALKernel(SimulationLKernel):
+  """The weight of an AAA If the maker is deterministic, then the """
   def __init__(self,makerPSP): self.makerPSP = makerPSP
-  def simulate(self,_trace,_oldValue,args):
+  def simulate(self, _trace, args):
     spRecord = self.makerPSP.simulate(args)
     spRecord.spAux = args.madeSPAux
     return spRecord
-  def weight(self,_trace,newValue,_oldValue,_args):
+  def weight(self, _trace, newValue, _args):
     # Using newValue.spAux here because args.madeSPAux is liable to be
     # None when detaching. This has something to do with when the Args
     # object is constructed relative to other things that happen
@@ -56,23 +142,26 @@ class DefaultAAALKernel(LKernel):
     # question.
     return self.makerPSP.madeSpLogDensityOfCountsBound(args.madeSPAux)
 
-class DeterministicLKernel(LKernel):
+class DeterministicLKernel(SimulationLKernel):
   def __init__(self,psp,value):
     self.psp = psp
     self.value = value
     assert isinstance(value, VentureValue)
 
-  def simulate(self,_trace,_oldValue,_args): return self.value
-  def weight(self, _trace, newValue, _oldValue, args):
+  def simulate(self, _trace, _args):
+    return self.value
+
+  def weight(self, _trace, newValue, args):
     answer = self.psp.logDensity(newValue,args)
     assert isinstance(answer, numbers.Number)
     return answer
+
   def gradientOfReverseWeight(self, _trace, newValue, args):
     return self.psp.gradientOfLogDensity(newValue, args)
 
 ######## Variational #########
 
-class VariationalLKernel(LKernel):
+class VariationalLKernel(SimulationLKernel):
   def gradientOfLogDensity(self, _value, _args): return 0
   def updateParameters(self,gradient,gain,stepSize): pass
 
@@ -82,10 +171,10 @@ class DefaultVariationalLKernel(VariationalLKernel):
     self.parameters = args.operandValues
     self.parameterScopes = psp.getParameterScopes()
 
-  def simulate(self,_trace,_oldValue,_args):
+  def simulate(self, _trace, _args):
     return self.psp.simulateNumeric(self.parameters)
 
-  def weight(self, _trace, newValue, _oldValue, args):
+  def weight(self, _trace, newValue, args):
     ld = self.psp.logDensityNumeric(newValue,args.operandValues)
     proposalLD = self.psp.logDensityNumeric(newValue,self.parameters)
     w = ld - proposalLD

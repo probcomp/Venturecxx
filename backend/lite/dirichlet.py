@@ -20,7 +20,7 @@ import scipy.special
 import numpy.random as npr
 import math
 
-from lkernel import LKernel
+from lkernel import SimulationLKernel
 from sp import SP, VentureSPRecord, SPAux, SPType
 from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
 from utils import simulateDirichlet, logDensityDirichlet
@@ -175,8 +175,8 @@ class MakerUDirMultOutputPSP(RandomPSP):
   def description(self,name):
     return "  %s is an uncollapsed variant of make_dir_mult." % name
 
-class UDirMultAAALKernel(LKernel):
-  def simulate(self, _trace, _oldValue, args):
+class UDirMultAAALKernel(SimulationLKernel):
+  def simulate(self, _trace, args):
     alpha = args.operandValues[0]
     os = args.operandValues[1] if len(args.operandValues) > 1 else [VentureAtom(i) for i in range(len(alpha))]
     assert isinstance(args.madeSPAux,DirMultSPAux)
@@ -184,6 +184,12 @@ class UDirMultAAALKernel(LKernel):
     newTheta = npr.dirichlet(counts)
     output = TypedPSP(UDirMultOutputPSP(newTheta,os), SPType([], AnyType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,len(alpha)), args.madeSPAux)
+
+  def weight(self, _trace, _newValue, _args):
+    # Gibbs step, samples exactly from the local posterior.  Being a
+    # AAALKernel, this one gets to cancel against the likelihood as
+    # well as the prior.
+    return 0
 
   def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
 
@@ -280,8 +286,8 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
   def description(self,name):
     return "  %s is an uncollapsed symmetric variant of make_dir_mult." % name
 
-class USymDirMultAAALKernel(LKernel):
-  def simulate(self, _trace, _oldValue, args):
+class USymDirMultAAALKernel(SimulationLKernel):
+  def simulate(self, _trace, args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
     os = args.operandValues[2] if len(args.operandValues) > 2 else [VentureAtom(i) for i in range(n)]
     assert isinstance(args.madeSPAux,DirMultSPAux)
@@ -289,6 +295,12 @@ class USymDirMultAAALKernel(LKernel):
     newTheta = npr.dirichlet(counts)
     output = TypedPSP(USymDirMultOutputPSP(newTheta,os), SPType([], AnyType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,n), args.madeSPAux)
+
+  def weight(self, _trace, _newValue, _args):
+    # Gibbs step, samples exactly from the local posterior.  Being a
+    # AAALKernel, this one gets to cancel against the likelihood as
+    # well as the prior.
+    return 0
 
   def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
 

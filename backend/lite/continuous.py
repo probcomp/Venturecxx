@@ -31,12 +31,12 @@ import warnings
 # pylint: disable=no-member
 
 from psp import RandomPSP
-from lkernel import LKernel
+from lkernel import DeltaLKernel
 
-class NormalDriftKernel(LKernel):
+class NormalDriftKernel(DeltaLKernel):
   def __init__(self,epsilon = 0.7): self.epsilon = epsilon
 
-  def simulate(self, _trace, oldValue, args):
+  def forwardSimulate(self, _trace, oldValue, args):
     mu,sigma = args.operandValues
     nu = scipy.stats.norm.rvs(0,sigma)
     term1 = mu
@@ -44,7 +44,13 @@ class NormalDriftKernel(LKernel):
     term3 = self.epsilon * nu
     return term1 + term2 + term3
 
-class MVNormalRandomWalkKernel(LKernel):
+  def forwardWeight(self, _trace, _newValue, _oldValue, _args):
+    # TODO This is what the code had before the DeltaLKernel refactor;
+    # I'm not sure it's right, however.  (Even though this kernel is
+    # symmetric, it remains responsible for the prior weight).
+    return 0
+
+class MVNormalRandomWalkKernel(DeltaLKernel):
   def __init__(self, epsilon = 0.7):
     self.epsilon = epsilon if epsilon is not None else 0.7
 
@@ -53,11 +59,11 @@ class MVNormalRandomWalkKernel(LKernel):
     nu = scipy.stats.norm.rvs(0,self.epsilon,mu.shape)
     return oldValue + nu
 
-  @override(LKernel)
-  def weight(self, _trace, _newValue, _oldValue, _args):
+  @override(DeltaLKernel)
+  def forwardWeight(self, _trace, newValue, oldValue, args):
     # log P(_newValue --> _oldValue) == log P(_oldValue --> _newValue)
-    (mu, sigma) = MVNormalOutputPSP.__parse_args__(_args)
-    return logDensityMVNormal(_newValue, mu, sigma)
+    (mu, sigma) = MVNormalOutputPSP.__parse_args__(args)
+    return logDensityMVNormal(newValue, mu, sigma) - logDensityMVNormal(oldValue, mu, sigma)
 
 class MVNormalOutputPSP(RandomPSP):
   def simulate(self, args):
