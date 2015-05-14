@@ -64,17 +64,21 @@ void ConcreteTrace::initialize()
        iter != builtInSPs.end();
        ++iter)
   {
-    ConstantNode * node = createConstantNode(VentureValuePtr(new VentureSPRecord(iter->second)));
-    processMadeSP(this,node,false,false,shared_ptr<DB>(new DB()));
-    assert(dynamic_pointer_cast<VentureSPRef>(getValue(node)));
-    globalEnvironment->addBinding(iter->first, node);
-    builtInNodes.insert(shared_ptr<Node>(node));
+    builtInNodes.insert(shared_ptr<Node>(bindPrimitiveSP(iter->first, iter->second)));
   }
 
   // New frame so users can shadow globals
   globalEnvironment = shared_ptr<VentureEnvironment>(new VentureEnvironment(globalEnvironment));
 }
 
+Node* ConcreteTrace::bindPrimitiveSP(const string& name, SP* sp)
+{
+  ConstantNode * node = createConstantNode(VentureValuePtr(new VentureSPRecord(sp)));
+  processMadeSP(this,node,false,false,shared_ptr<DB>(new DB()));
+  assert(dynamic_pointer_cast<VentureSPRef>(getValue(node)));
+  globalEnvironment->addBinding(name, node);
+  return node;
+}
 
 
 /* Registering metadata */
