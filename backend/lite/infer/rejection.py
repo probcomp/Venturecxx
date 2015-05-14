@@ -32,7 +32,7 @@ def computeRejectionBound(trace, scaffold, border):
       # TODO Is it right that the value here is the old value and the
       # new value?  Or do I need to fetch the old value from the
       # OmegaDB?
-      return scaffold.getLKernel(node).weightBound(trace, value, value, args)
+      return scaffold.getLKernel(node).weightBound(trace, value, args)
     else:
       # Resimulation kernel
       return psp.logDensityBound(value, args)

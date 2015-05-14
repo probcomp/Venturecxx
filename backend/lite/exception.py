@@ -28,6 +28,9 @@ of correct type (by analogy to ValueError in Python)."""
 class VentureBuiltinSPMethodError(VentureError):
   """This exception means that an unimplemented method was called on a built-in PSP."""
 
+class VentureBuiltinLKernelMethodError(VentureError):
+  """This exception means that an unimplemented method was called on a built-in LKernel."""
+
 class SubsampledScaffoldError(VentureError):
   """This exception means that the subsampled scaffold cannot be constructed."""
 

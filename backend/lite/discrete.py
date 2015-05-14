@@ -20,9 +20,9 @@ import math
 import scipy
 import scipy.special
 from utils import extendedLog, simulateCategorical, logDensityCategorical
-from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
+from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, SPAux, VentureSPRecord, SPType
-from lkernel import LKernel
+from lkernel import SimulationAAALKernel
 from value import VentureAtom
 from types import BoolType # BoolType is metaprogrammed pylint:disable=no-name-in-module
 from exception import VentureValueError
@@ -162,9 +162,7 @@ class BetaBernoulliSP(SP):
   def constructSPAux(self): return BetaBernoulliSPAux()
   def show(self,spaux): return spaux.cts()
 
-class MakerCBetaBernoulliOutputPSP(DeterministicPSP):
-  def childrenCanAAA(self): return True
-
+class MakerCBetaBernoulliOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self,args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
@@ -241,17 +239,22 @@ class MakerUBetaBernoulliOutputPSP(DiscretePSP):
   def description(self,name):
     return "  (%s alpha beta) returns an uncollapsed beta bernoulli sampler with pseudocounts alpha (for true) and beta (for false)." % name
 
-class UBetaBernoulliAAALKernel(LKernel):
-  def simulate(self, _trace, _oldValue, args):
+class UBetaBernoulliAAALKernel(SimulationAAALKernel):
+  def simulate(self, _trace, args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
     [ctY,ctN] = args.madeSPAux.cts()
     newWeight = scipy.stats.beta.rvs(alpha + ctY, beta + ctN)
     output = TypedPSP(UBetaBernoulliOutputPSP(newWeight), SPType([], BoolType()))
     return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output), args.madeSPAux)
-  # Weight is zero because it's simulating from the right distribution
 
-  def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
+  def weight(self, _trace, _newValue, _args):
+    # Gibbs step, samples exactly from the local posterior.  Being a
+    # AAALKernel, this one gets to cancel against the likelihood as
+    # well as the prior.
+    return 0
+
+  def weightBound(self, _trace, _value, _args): return 0
 
 class UBetaBernoulliOutputPSP(DiscretePSP):
   def __init__(self,weight):
