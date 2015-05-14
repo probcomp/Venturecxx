@@ -287,8 +287,8 @@ class UBetaBernoulliOutputPSP(DiscretePSP):
     # TODO Do I even want the total for all consistent sequences, or
     # just for one?  The latter is the same, except for the
     # numCombinations term.
-    numCombinations = scipy.misc.comb(ctY + ctN,ctY) # TODO Do this directly in log space
-    return ctY * math.log(self.weight) + ctN * math.log(1 - self.weight) + math.log(numCombinations)
+    # numCombinations = scipy.misc.comb(ctY + ctN,ctY) # TODO Do this directly in log space
+    return ctY * math.log(self.weight) + ctN * math.log(1 - self.weight) # + math.log(numCombinations)
 
 #### Non-conjugate AAA bernoulli
 
@@ -308,6 +308,8 @@ class MakerSuffBernoulliOutputPSP(DeterministicMakerAAAPSP):
     weight = args.operandValues[0]
     [ctY,ctN] = aux.cts()
     return [float(ctY) / weight - float(ctN) / (1 - weight)]
+
+  def madeSpLogDensityOfCountsBound(self, _aux): return 0
 
 class ExactlyOutputPSP(RandomPSP):
   def simulate(self, args):
