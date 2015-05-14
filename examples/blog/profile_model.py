@@ -9,6 +9,11 @@ from pandas import DataFrame
 from multiprocessing import Pool
 from sys import argv
 import numpy as np
+from scipy import stats
+import json
+import pandas as pd
+import seaborn as sns
+from matplotlib import pyplot as plt
 
 def run_one(inference_flag, out, n_iter, n_obs):
   method_flag = inference_flag.split('.')[-1]
@@ -44,38 +49,67 @@ def profile_quality():
   _ = [profile_partial(n_iter = n_iter)
        for n_iter in [str(int(x)) for x in np.logspace(3, 5, 10)]]
 
-def compute_blog_posterior(n_observations):
-  f_name = 'blog-results/poisson-ball-results-LWSampler-{0}.json'.format(n_observations)
-  with open(f_name) as f:
-    post_unnorm = load(f)
-  blog_posterior = norm_blog_posterior(post_unnorm)
-  return blog_posterior
+def compare_quality():
+  'Compare quality of likelihood weighting in Venture and Blog'
+  n_iters = [1000,1668,2782,4641,7742,12915,21544,35938,59948,100000]
+  divergences = pd.DataFrame(map(compute_divergences, n_iters))
+  divergences.index = n_iters
+  fig, ax = plt.subplots(1)
+  divergences.plot(ax = ax, logx = True,
+                   title = 'Inference quality in poisson-ball model: BLOG and Venture')
+  ax.set_xlabel('# iterations (log scale)')
+  ax.set_ylabel('KL divergence')
+  fig.savefig('profile-quality/poisson-ball-kl-divergence.png')
+                   
+def compute_divergences(n_iter):
+  'Compute divergences between Venture, Blog, and ground truth after n_iter samples'
+  exact_posterior = get_exact_posterior()
+  venture_posterior = get_venture_posterior(n_iter)
+  blog_posterior = get_blog_posterior(n_iter)
+  return {'exact_venture' : kl(exact_posterior, venture_posterior),
+          'exact_blog'    : kl(exact_posterior, blog_posterior),
+          'venture_blog'  : kl(venture_posterior, blog_posterior)}
 
-def norm_blog_posterior(unnorm):
-  ds = (pd.DataFrame(unnorm[0][1], columns = ['n_balls', 'log_p']).
-        convert_objects(convert_numeric = True).sort_index(by = 'n_balls'))
-  norm = np.exp(ds.log_p).sum()
-  ds['p'] = np.exp(ds.log_p) / norm
-  p = ds.set_index('n_balls')['p']
-  return p
+def kl(ps, qs):
+  def enough_supported(xs, ix): return xs[ix].sum() / xs.sum() > 0.99
+  # For KL to work, support of distributions must be identical
+  # Index out any entries for which only 1 distribution has support
+  # Check that such entries constitute less than 1% of the support
+  ix = ps.index.intersection(qs.index)
+  if enough_supported(ps, ix) and enough_supported(qs, ix):
+    return stats.entropy(ps[ix], qs[ix])
+  else:
+    return np.inf
 
-def compute_venture_posterior(_, ds, n_iter):
-  ds = unwrap(ds).asPandas()
-  n_iter = int(unwrap(n_iter))
+def get_exact_posterior():
+  return pd.read_csv('profile-quality/poisson-ball-exact-posterior-5.csv',
+                     index_col = 'n_balls')['p']
+
+def get_venture_posterior(n_iter):
+  ds = pd.read_csv('profile-quality/poisson-ball-results-venture.csv',
+                   nrows = n_iter)
   ds['n_balls'] = ds['n_balls'].apply(int)
-  norm = np.exp(ds['particle log weight']).sum()
-  p = ((ds.groupby('n_balls').
-        apply(lambda ds: np.exp(ds['particle log weight']).sum())) / norm)
-  p.name = 'p'
-  f_name = 'poisson-ball-results-venture-{0}-5.csv'.format(n_iter)
-  print 'Writing ' + f_name
-  p.to_csv('profile-quality/' + f_name)
+  ds['particle weight'] = ds['particle log weight'].apply(np.exp)
+  ps = ds.groupby('n_balls').agg({'particle weight' : sum})['particle weight']
+  ps.name = 'venture'
+  return ps
 
+def get_blog_posterior(n_iter):
+  f_name = 'profile-quality/poisson-ball-results-LWSampler-{0}-5.json'.format(n_iter)
+  with open(f_name) as f:
+    xs = json.load(f)
+  logps = pd.Series(dict(xs[0][1])).convert_objects(convert_numeric = True)
+  logps.index = map(int, logps.index)
+  ps = np.exp(logps).sort_index()
+  ps.name = 'blog'
+  return ps
 
 def main():
   dispatch = {'time' : profile_times,
-              'quality' : profile_quality}
+              'quality' : profile_quality,
+              'compare' : compare_quality}
   dispatch[argv[1]]()
 
 if __name__ == '__main__':
   main()
+  
