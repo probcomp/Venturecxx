@@ -355,6 +355,12 @@ boost::python::list PyTrace::scope_keys()
   return xs;
 }
 
+void PyTrace::bindPumaSP(const string& sym, SP* sp)
+{
+  Node* node = trace->bindPrimitiveSP(sym, sp);
+  trace->boundForeignSPNodes.insert(shared_ptr<Node>(node));
+}
+
 BOOST_PYTHON_MODULE(libpumatrace)
 {
   using namespace boost::python;
@@ -364,6 +370,7 @@ BOOST_PYTHON_MODULE(libpumatrace)
   register_exception_translator<string>(&translateStringException);
   register_exception_translator<const char*>(&translateCStringException);
 
+  class_<SP, SP* >("PumaSP", no_init); // raw pointer because Puma wants to take ownership
   class_<OrderedDB, shared_ptr<OrderedDB> >("OrderedDB", no_init);
 
   class_<PyTrace>("Trace",init<>())
@@ -373,7 +380,8 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("unbindInGlobalEnv", &PyTrace::unbindInGlobalEnv)
     .def("boundInGlobalEnv", &PyTrace::boundInGlobalEnv)
     .def("extractValue", &PyTrace::extractPythonValue)
-    .def("bindPrimitiveSP", &PyTrace::bindPythonSP)
+    .def("bindPythonSP", &PyTrace::bindPythonSP)
+    .def("bindPumaSP", &PyTrace::bindPumaSP)
     .def("set_seed", &PyTrace::setSeed)
     .def("get_seed", &PyTrace::getSeed)
     .def("numRandomChoices", &PyTrace::numUnconstrainedChoices)
