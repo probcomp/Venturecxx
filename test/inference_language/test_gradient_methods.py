@@ -49,3 +49,14 @@ def testNesterovWithInt():
   ripl.assume('x', '(normal 1 1)')
   ripl.force('x', 0)
   ripl.infer('(nesterov default one 0.1 10 20)')
+
+@broken_in('puma', "Gradients only implemented in Lite.")
+def testGradientThroughAAA():
+  ripl = get_ripl()
+  ripl.assume("weight", "(beta 1 1)")
+  ripl.force("weight", 0.5)
+  ripl.assume("coin", "(make_suff_stat_bernoulli weight)")
+  ripl.observe("(coin)", True)
+  ripl.observe("(coin)", True)
+  ripl.infer("(map default all 0.03 1 1)")
+  assert_almost_equal(ripl.sample("weight"), 0.62)

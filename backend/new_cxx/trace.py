@@ -84,7 +84,10 @@ class Trace(object):
   # have no need of that, using stop_and_copy instead).
 
   def bindPrimitiveSP(self, name, sp):
-    self.trace.bindPrimitiveSP(name, foreign.ForeignLiteSP(sp))
+    if isinstance(sp, puma.PumaSP):
+      self.trace.bindPumaSP(name, sp)
+    else:
+      self.trace.bindPythonSP(name, foreign.ForeignLiteSP(sp))
 
   def primitive_infer(self, exp):
     self.trace.primitive_infer(_expToDict(exp))

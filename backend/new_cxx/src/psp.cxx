@@ -27,7 +27,7 @@
 using std::cout;
 using std::endl;
 
-shared_ptr<LKernel> const PSP::getAAALKernel() { return shared_ptr<LKernel>(new DefaultAAALKernel(this)); }
+shared_ptr<LKernel> const PSP::getAAALKernel() { return shared_ptr<LKernel>(new DeterministicMakerAAALKernel(this)); }
 
 VentureValuePtr NullRequestPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {

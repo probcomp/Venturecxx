@@ -191,8 +191,8 @@ def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 
   if scaffold.hasLKernel(node):
     k = scaffold.getLKernel(node)
-    newValue = k.simulate(trace,oldValue,args) if not shouldRestore else oldValue
-    weight += k.weight(trace,newValue,oldValue,args)
+    newValue = k.forwardSimulate(trace,oldValue,args) if not shouldRestore else oldValue
+    weight += k.forwardWeight(trace,newValue,oldValue,args)
     assert isinstance(weight, numbers.Number)
     if isinstance(k,VariationalLKernel): 
       gradients[node] = k.gradientOfLogDensity(newValue,args)
