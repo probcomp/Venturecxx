@@ -35,7 +35,6 @@ struct LKernel
     { 
       return weight(trace,oldValue,shared_ptr<VentureValue>(),args);
     }
-  virtual bool isIndependent() const { return true; }
 };
 
 struct DefaultAAALKernel : LKernel
