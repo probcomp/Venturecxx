@@ -68,14 +68,6 @@ class LKernel(object):
     """
     raise VentureBuiltinLKernelMethodError("Cannot compute reverse weight of %s", type(self))
 
-  def gradientOfReverseWeight(self, _trace, _value, args): return (0, [0 for _ in args.operandValues])
-
-  def weightBound(self, _trace, _newValue, _oldValue, _args):
-    # An upper bound on the value of weight over the variation
-    # possible by changing the values of everything in the arguments
-    # whose value is None.  Useful for rejection sampling.
-    raise Exception("Cannot rejection sample with weight-unbounded LKernel of type %s" % type(self))
-
 class SimulationLKernel(LKernel):
   """A local proposal distribution that does not depend on the previous value of the node."""
 
@@ -117,6 +109,16 @@ class SimulationLKernel(LKernel):
     Do not override this; define the "weight" method instead."""
     return self.weight(trace, oldValue, args)
 
+  def gradientOfReverseWeight(self, _trace, _value, args):
+    """The gradient of the reverse weight, with respect to the old value and the arguments."""
+    return (0, [0 for _ in args.operandValues])
+
+  def weightBound(self, _trace, _value, _args):
+    """An upper bound on the value of weight over the variation
+    possible by changing the values of everything in the arguments
+    whose value is None.  Useful for rejection sampling."""
+    raise VentureBuiltinLKernelMethodError("Cannot rejection sample with weight-unbounded LKernel of type %s" % type(self))
+
 class DeltaLKernel(LKernel):
   def reverseWeight(self, _trace, _oldValue, _args): return 0
 
@@ -135,7 +137,7 @@ class DefaultAAALKernel(SimulationLKernel):
     # fragile.
     assert isinstance(newValue,VentureSPRecord)
     return newValue.sp.outputPSP.logDensityOfCounts(newValue.spAux)
-  def weightBound(self, _trace, _newValue, _oldValue, args):
+  def weightBound(self, _trace, _value, args):
     # Going through the maker here because the new value is liable to
     # be None when computing bounds for rejection, but the maker
     # should know enough about its possible values future to answer my
@@ -156,8 +158,8 @@ class DeterministicLKernel(SimulationLKernel):
     assert isinstance(answer, numbers.Number)
     return answer
 
-  def gradientOfReverseWeight(self, _trace, newValue, args):
-    return self.psp.gradientOfLogDensity(newValue, args)
+  def gradientOfReverseWeight(self, _trace, value, args):
+    return self.psp.gradientOfLogDensity(value, args)
 
 ######## Variational #########
 

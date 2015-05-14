@@ -256,7 +256,7 @@ class UBetaBernoulliAAALKernel(SimulationLKernel):
     # well as the prior.
     return 0
 
-  def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
+  def weightBound(self, _trace, _value, _args): return 0
 
 class UBetaBernoulliOutputPSP(DiscretePSP):
   def __init__(self,weight):

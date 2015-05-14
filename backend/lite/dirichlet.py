@@ -191,7 +191,7 @@ class UDirMultAAALKernel(SimulationLKernel):
     # well as the prior.
     return 0
 
-  def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
+  def weightBound(self, _trace, _value, _args): return 0
 
 class UDirMultOutputPSP(RandomPSP):
   def __init__(self,theta,os):
@@ -302,7 +302,7 @@ class USymDirMultAAALKernel(SimulationLKernel):
     # well as the prior.
     return 0
 
-  def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
+  def weightBound(self, _trace, _value, _args): return 0
 
 class USymDirMultOutputPSP(UDirMultOutputPSP):
   pass
