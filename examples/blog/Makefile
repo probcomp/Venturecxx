@@ -5,12 +5,12 @@
 # results.
 
 # The python script parallelizes across 10 processes to speed things up.
-# If you want to use fewer cores, change the argument to Pool in profile_blog.py
-blog-profile-time: profile_blog.py
+# If you want to use fewer cores, change the argument to Pool in profile_model.py
+blog-profile-time: profile_model.py
 	mkdir blog-profile-time
-	python profile_blog.py time
+	python profile_model.py time
 
-blog-profile-quality: profile_blog.py
+blog-profile-quality: profile_model.py
 	mkdir profile-quality
-	python profile_blog.py quality
+	python profile_model.py quality
 

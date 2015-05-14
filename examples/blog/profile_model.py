@@ -44,6 +44,22 @@ def profile_quality():
   _ = [profile_partial(n_iter = n_iter)
        for n_iter in [str(int(x)) for x in np.logspace(3, 5, 10)]]
 
+def compute_blog_posterior(n_observations):
+  f_name = 'blog-results/poisson-ball-results-LWSampler-{0}.json'.format(n_observations)
+  with open(f_name) as f:
+    post_unnorm = load(f)
+  blog_posterior = norm_blog_posterior(post_unnorm)
+  return blog_posterior
+
+def norm_blog_posterior(unnorm):
+  ds = (pd.DataFrame(unnorm[0][1], columns = ['n_balls', 'log_p']).
+        convert_objects(convert_numeric = True).sort_index(by = 'n_balls'))
+  norm = np.exp(ds.log_p).sum()
+  ds['p'] = np.exp(ds.log_p) / norm
+  p = ds.set_index('n_balls')['p']
+  return p
+
+  
 def main():
   dispatch = {'time' : profile_times,
               'quality' : profile_quality}
