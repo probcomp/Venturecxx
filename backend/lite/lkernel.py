@@ -155,6 +155,9 @@ class DeterministicMakerAAALKernel(SimulationAAALKernel):
     # fragile.
     assert isinstance(newValue,VentureSPRecord)
     return newValue.sp.outputPSP.logDensityOfCounts(newValue.spAux)
+  def gradientOfReverseWeight(self, _trace, value, args):
+    """The gradient of the reverse weight, with respect to the vale and the arguments."""
+    return (0, self.makerPSP.gradientOfLogDensityOfCounts(value.spAux, args))
   def weightBound(self, _trace, _value, args):
     # Going through the maker here because the new value is liable to
     # be None when computing bounds for rejection, but the maker
