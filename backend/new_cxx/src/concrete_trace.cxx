@@ -58,22 +58,21 @@ void ConcreteTrace::initialize()
     builtInNodes.insert(shared_ptr<Node>(node));
   }
 
+  globalEnvironment = shared_ptr<VentureEnvironment>(new VentureEnvironment(shared_ptr<VentureEnvironment>(),syms,nodes));
+
   for (map<string,SP *>::iterator iter = builtInSPs.begin();
        iter != builtInSPs.end();
        ++iter)
   {
-    shared_ptr<VentureSymbol> sym(new VentureSymbol(iter->first));
     ConstantNode * node = createConstantNode(VentureValuePtr(new VentureSPRecord(iter->second)));
     processMadeSP(this,node,false,false,shared_ptr<DB>(new DB()));
     assert(dynamic_pointer_cast<VentureSPRef>(getValue(node)));
-    syms.push_back(sym);
-    nodes.push_back(node);
+    globalEnvironment->addBinding(iter->first, node);
     builtInNodes.insert(shared_ptr<Node>(node));
   }
 
-  shared_ptr<VentureEnvironment> globalFrame (new VentureEnvironment(shared_ptr<VentureEnvironment>(),syms,nodes));
   // New frame so users can shadow globals
-  globalEnvironment = shared_ptr<VentureEnvironment>(new VentureEnvironment(globalFrame));
+  globalEnvironment = shared_ptr<VentureEnvironment>(new VentureEnvironment(globalEnvironment));
 }
 
 
