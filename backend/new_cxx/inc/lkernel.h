@@ -57,10 +57,10 @@ struct DeltaLKernel : LKernel
   double reverseWeight(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args) { return 0; }
 };
 
-struct DefaultAAALKernel : SimulationLKernel
+struct DeterministicMakerAAALKernel : SimulationLKernel
 {
   // TODO GC this kernel will not outlast the PSP
-  DefaultAAALKernel(const PSP * makerPSP): makerPSP(makerPSP) {}
+  DeterministicMakerAAALKernel(const PSP * makerPSP): makerPSP(makerPSP) {}
 
   VentureValuePtr simulate(Trace * trace,shared_ptr<Args> args,gsl_rng * rng);
   double weight(Trace * trace,VentureValuePtr value,shared_ptr<Args> args);

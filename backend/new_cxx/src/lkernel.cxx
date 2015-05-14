@@ -20,7 +20,7 @@
 #include "sp.h"
 #include "sprecord.h"
 
-VentureValuePtr DefaultAAALKernel::simulate(Trace * trace,shared_ptr<Args> args,gsl_rng * rng)
+VentureValuePtr DeterministicMakerAAALKernel::simulate(Trace * trace,shared_ptr<Args> args,gsl_rng * rng)
 {
   shared_ptr<VentureSPRecord> spRecord = dynamic_pointer_cast<VentureSPRecord>(makerPSP->simulate(args,rng));
 
@@ -28,7 +28,7 @@ VentureValuePtr DefaultAAALKernel::simulate(Trace * trace,shared_ptr<Args> args,
   return spRecord;
 }
 
-double DefaultAAALKernel::weight(Trace * trace,VentureValuePtr value,shared_ptr<Args> args)
+double DeterministicMakerAAALKernel::weight(Trace * trace,VentureValuePtr value,shared_ptr<Args> args)
 {
   shared_ptr<VentureSPRecord> spRecord = dynamic_pointer_cast<VentureSPRecord>(value);
   assert(spRecord);
