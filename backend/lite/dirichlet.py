@@ -22,7 +22,7 @@ import math
 
 from lkernel import SimulationAAALKernel
 from sp import SP, VentureSPRecord, SPAux, SPType
-from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
+from psp import DeterministicPSP, DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
 from utils import simulateDirichlet, logDensityDirichlet
 from value import VentureAtom
 from types import AnyType
@@ -94,7 +94,7 @@ class DirMultSP(SP):
 
 #### Collapsed dirichlet multinomial
 
-class MakerCDirMultOutputPSP(DeterministicPSP):
+class MakerCDirMultOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self,args):
     alpha = args.operandValues[0]
     os = args.operandValues[1] if len(args.operandValues) > 1 else [VentureAtom(i) for i in range(len(alpha))]
@@ -102,8 +102,6 @@ class MakerCDirMultOutputPSP(DeterministicPSP):
       raise VentureValueError("Set of objects to choose from is the wrong length")
     output = TypedPSP(CDirMultOutputPSP(alpha,os), SPType([], AnyType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,len(alpha)))
-
-  def childrenCanAAA(self): return True
 
   def description(self,name):
     return "  (%s alphas objects) returns a sampler for a collapsed Dirichlet multinomial model.  If the objects argument is given, the sampler will return one of those objects on each call; if not, it will return one of n <atom>s where n is the length of the list of alphas.  It is an error if the list of objects is supplied and has different length from the list of alphas.  While this procedure itself is deterministic, the returned sampler is stochastic." % name
@@ -224,7 +222,7 @@ class UDirMultOutputPSP(RandomPSP):
 
 #### Collapsed symmetric dirichlet multinomial
 
-class MakerCSymDirMultOutputPSP(DeterministicPSP):
+class MakerCSymDirMultOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
     os = args.operandValues[2] if len(args.operandValues) > 2 else [VentureAtom(i) for i in range(n)]
@@ -232,8 +230,6 @@ class MakerCSymDirMultOutputPSP(DeterministicPSP):
       raise VentureValueError("Set of objects to choose from is the wrong length")
     output = TypedPSP(CSymDirMultOutputPSP(alpha,n,os), SPType([], AnyType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,n))
-
-  def childrenCanAAA(self): return True
 
   def madeSpLogDensityOfCountsBound(self, aux):
     """Upper bound the log density the made SP may report for its

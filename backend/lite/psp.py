@@ -247,7 +247,8 @@ class PSP(object):
     return None
 
   def childrenCanAAA(self): return False
-  def getAAALKernel(self): return DeterministicMakerAAALKernel(self)
+  def getAAALKernel(self):
+    raise VentureBuiltinSPMethodError("%s has no AAA LKernel", type(self))
 
   def hasVariationalLKernel(self): return False
   def getVariationalLKernel(self,args): return DefaultVariationalLKernel(self, args)
@@ -271,6 +272,13 @@ class DeterministicPSP(PSP):
     return (0, [0 for _ in args.operandValues])
   @override(PSP)
   def logDensityBound(self, _value, _args): return 0
+
+class DeterministicMakerAAAPSP(DeterministicPSP):
+  """Provides good default implementations of PSP methods for PSPs that
+are deterministic makers whose children can absorb at applications."""
+
+  def childrenCanAAA(self): return True
+  def getAAALKernel(self): return DeterministicMakerAAALKernel(self)
 
 class NullRequestPSP(DeterministicPSP):
   @override(DeterministicPSP)

@@ -20,7 +20,7 @@ import math
 import scipy
 import scipy.special
 from utils import extendedLog, simulateCategorical, logDensityCategorical
-from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
+from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, SPAux, VentureSPRecord, SPType
 from lkernel import SimulationAAALKernel
 from value import VentureAtom
@@ -162,9 +162,7 @@ class BetaBernoulliSP(SP):
   def constructSPAux(self): return BetaBernoulliSPAux()
   def show(self,spaux): return spaux.cts()
 
-class MakerCBetaBernoulliOutputPSP(DeterministicPSP):
-  def childrenCanAAA(self): return True
-
+class MakerCBetaBernoulliOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self,args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
