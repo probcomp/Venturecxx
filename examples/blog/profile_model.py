@@ -30,7 +30,7 @@ def run_one(inference_flag, out, n_iter, n_obs):
   elapsed = time() - start
   return elapsed
 
-def profile_time(inference_flag):
+def profile_time_blog(inference_flag):
   profile_partial = partial(run_one, inference_flag, 'blog-profile-time', '100000')
   workers = Pool(10)
   times = workers.map(profile_partial, range(1,11))
@@ -39,9 +39,9 @@ def profile_time(inference_flag):
   outname = inference_flag.split('.')[-1]
   ds.to_csv('blog-profile-time/' + outname + '.txt', index = False, sep = '\t')
 
-def profile_times():
-  profile_time('blog.sample.LWSampler')
-  profile_time('blog.sample.MHSampler')
+def profile_times_blog():
+  profile_time_blog('blog.sample.LWSampler')
+  profile_time_blog('blog.sample.MHSampler')
 
 def profile_quality_blog():
   # Can't parallelize b/c python sucks at higher-order functions
@@ -160,7 +160,7 @@ def get_blog_posterior(n_iter):
   return ps
 
 def main():
-  dispatch = {'time' : profile_times,
+  dispatch = {'time_blog' : profile_times_blog,
               'quality_blog' : profile_quality_blog,
               'quality_venture' : profile_quality_venture,
               'compare' : compare_quality}

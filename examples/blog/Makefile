@@ -8,7 +8,7 @@
 # If you want to use fewer cores, change the argument to Pool in profile_model.py
 blog-profile-time: profile_model.py
 	mkdir blog-profile-time
-	python profile_model.py time
+	python profile_model.py time_blog
 
 blog-profile-quality: profile_model.py
 	mkdir profile-quality
