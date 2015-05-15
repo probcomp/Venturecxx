@@ -2,6 +2,7 @@
 Examine the asymptotics of inference in BLOG - in particular, poisson-ball.blog
 '''
 
+from itertools import product
 from subprocess import call
 from time import time
 from functools import partial
@@ -42,12 +43,33 @@ def profile_times():
   profile_time('blog.sample.LWSampler')
   profile_time('blog.sample.MHSampler')
 
-def profile_quality():
+def profile_quality_blog():
   # Can't parallelize b/c python sucks at higher-order functions
   profile_partial = partial(run_one, inference_flag = 'blog.sample.LWSampler',
                             out = 'profile-quality', n_obs = 5)
   _ = [profile_partial(n_iter = n_iter)
        for n_iter in [str(int(x)) for x in np.logspace(3, 5, 10)]]
+
+def profile_quality_venture():
+  set_fun_names = ["'prefix_k", "'set_as_list"]
+  inference_fun_names = ["lw", "mh"]
+  for set_fun_name, inference_fun_name in product(set_fun_names, inference_fun_names):
+    profile_quality_venture_loop(set_fun_name, inference_fun_name)
+
+def profile_quality_venture_loop(set_fun_name, inference_fun_name):
+  def get_inference_fun(inference_fun_name):
+    return {"lw" : "(lambda () (likelihood_weight))",
+            "mh" : "(lambda () (mh default one 1))"}[inference_fun_name]
+  inference_fun = get_inference_fun(inference_fun_name)
+  file_name = ('\'symbol<"profile-quality/poisson-ball-results-venture-{0}-{1}-5">'.
+               format(set_fun_name.replace("'", ""), inference_fun_name))
+  inf_cmd = ('[infer (profile_quality (list {0} {1} {2}))]'.
+             format(set_fun_name, inference_fun, file_name))
+  call(["venture", "lite", "-P",
+        "-L", "poisson_ball.py",
+        "-f", "poisson_ball.vnt",
+        "-f", "profile_model.vnt",
+        "-e", inf_cmd])
 
 def compare_quality():
   'Compare quality of likelihood weighting in Venture and Blog'
@@ -106,7 +128,8 @@ def get_blog_posterior(n_iter):
 
 def main():
   dispatch = {'time' : profile_times,
-              'quality' : profile_quality,
+              'quality_blog' : profile_quality_blog,
+              'quality_venture' : profile_quality_venture,
               'compare' : compare_quality}
   dispatch[argv[1]]()
 

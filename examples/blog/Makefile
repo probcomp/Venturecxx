@@ -12,11 +12,10 @@ blog-profile-time: profile_model.py
 
 blog-profile-quality: profile_model.py
 	mkdir profile-quality
-	python profile_model.py quality
+	python profile_model.py quality_blog
 
 venture-profile-quality: poisson_ball.py poisson_ball.vnt profile_model.vnt
-	venture lite -P -L poisson_ball.py -f poisson_ball.vnt -f profile_model.vnt \
-		-e "[infer (profile_quality)]"
+	python profile_model.py quality_venture
 
 compare-inference-quality: profile_model.py
 	python profile_model.py compare
