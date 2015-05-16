@@ -10,6 +10,10 @@ blog-profile-time: profile_model.py
 	mkdir blog-profile-time
 	python profile_model.py time_blog
 
+venture-profile-time: poisson_ball.py poisson_ball.vnt profile_model.vnt
+	mkdir venture-profile-time
+	python profile_model.py time_venture
+
 blog-profile-quality: profile_model.py
 	mkdir profile-quality
 	python profile_model.py quality_blog

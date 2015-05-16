@@ -20,3 +20,18 @@
                                       ,ds
                                       ',f_name)))
         (call_back timer_time))))]
+
+[define profile_time
+  (lambda (args)
+    (let ((n_obs               (lookup args 0))
+          (set_function_name   (lookup args 1))
+          (inference_function  (lookup args 2)))
+      (do
+        (main 1
+              set_function_name
+              'observed_color_clever
+              n_obs
+              inference_function
+              1000
+              (lambda (ds) pass)))))]
+        

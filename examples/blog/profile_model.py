@@ -86,7 +86,7 @@ def compare_quality():
   fig = kl_vs_time(kls[mh_idx], ts[mh_idx], fig, axs[1,1])
   fig.suptitle('Inference quality in poisson-ball model: BLOG and Venture')
   fig.savefig('profile-quality/poisson-ball-inference-quality.png')
-  
+
 def kl_vs_iter(kls, fig, ax):
   kls.plot(ax = ax, logx = True)
   if ax.is_last_row(): ax.set_xlabel('# iterations (log scale)')
@@ -101,7 +101,7 @@ def kl_vs_time(kls, ts, fig, ax):
   if ax.is_last_row(): ax.set_xlabel('Wall time (log seconds)')
   if ax.is_first_col(): ax.set_ylabel('KL divergence')
   return fig
-  
+
 def compute_divergences(n_iter):
   'Compute divergences between Venture, Blog, and ground truth after n_iter samples'
   exact_posterior = get_exact_posterior()
@@ -137,7 +137,7 @@ def get_venture_posteriors(n_iter):
                                       "set_as_list-mh-5.csv"]])
   ts = dict([(x[0], x[2]) for x in xs])
   ps = dict([(x[0], x[1]) for x in xs])
-  return ps, ts 
+  return ps, ts
 
 def get_venture_posterior(n_iter, f_name):
   ds = pd.read_csv(f_name, nrows = n_iter)
@@ -159,8 +159,43 @@ def get_blog_posterior(n_iter):
   ps.name = 'blog'
   return ps
 
+def profile_times_venture():
+  set_fun_names = ["'prefix_k", "'set_as_list"]
+  inference_fun_names = ["lw", "mh"]
+  for set_fun_name, inference_fun_name in product(set_fun_names, inference_fun_names):
+    profile_time_venture(set_fun_name, inference_fun_name)
+
+def profile_time_venture(set_fun_name, inference_fun_name):
+  print set_fun_name + ' ' + inference_fun_name
+  def get_inference_fun(inference_fun_name):
+    return {"lw" : "(lambda () (likelihood_weight))",
+            "mh" : "(lambda () (mh default one 1))"}[inference_fun_name]
+  inference_fun = get_inference_fun(inference_fun_name)
+  profile_partial = partial(run_one_venture, set_fun_name, inference_fun)
+  workers = Pool(10)
+  times = workers.map(profile_partial, range(1, 11))
+  ds = pd.DataFrame(dict(n_obs_pairs = range(1,11),
+                         times = times))
+  outname = set_fun_name.replace("'", "") + '-' + inference_fun_name
+  ds.to_csv('venture-profile-time/' + outname + '.txt',
+            index = False, sep = '\t')
+
+def run_one_venture(set_fun_name, inference_fun, n_obs):
+  inf_cmd = ('[infer (profile_time (list {0} {1} {2}))]'.
+             format(n_obs, set_fun_name, inference_fun))
+  print inf_cmd
+  start = time()
+  call(["venture", "lite", "-P",
+        "-L", "poisson_ball.py",
+        "-f", "poisson_ball.vnt",
+        "-f", "profile_model.vnt",
+        "-e", inf_cmd])
+  elapsed = time() - start
+  return elapsed
+
 def main():
   dispatch = {'time_blog' : profile_times_blog,
+              'time_venture' : profile_times_venture,
               'quality_blog' : profile_quality_blog,
               'quality_venture' : profile_quality_venture,
               'compare' : compare_quality}
