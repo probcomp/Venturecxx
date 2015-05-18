@@ -31,13 +31,13 @@ def run_one(inference_flag, out, n_iter, n_obs):
   return elapsed
 
 def profile_time_blog(inference_flag):
-  profile_partial = partial(run_one, inference_flag, 'blog-profile-time', '100000')
+  profile_partial = partial(run_one, inference_flag, 'profile-time', '100000')
   workers = Pool(10)
   times = workers.map(profile_partial, range(1,11))
   ds = DataFrame(dict(n_obs_pairs = range(1,11),
                       times= times))
   outname = inference_flag.split('.')[-1]
-  ds.to_csv('blog-profile-time/' + outname + '.txt', index = False, sep = '\t')
+  ds.to_csv('profile-time/' + outname + '.txt', index = False, sep = '\t')
 
 def profile_times_blog():
   profile_time_blog('blog.sample.LWSampler')
@@ -177,7 +177,7 @@ def profile_time_venture(set_fun_name, inference_fun_name):
   ds = pd.DataFrame(dict(n_obs_pairs = range(1,11),
                          times = times))
   outname = set_fun_name.replace("'", "") + '-' + inference_fun_name
-  ds.to_csv('venture-profile-time/' + outname + '.txt',
+  ds.to_csv('profile-time/' + outname + '.txt',
             index = False, sep = '\t')
 
 def run_one_venture(set_fun_name, inference_fun, n_obs):
@@ -193,12 +193,43 @@ def run_one_venture(set_fun_name, inference_fun, n_obs):
   elapsed = time() - start
   return elapsed
 
+def compare_time():
+  blog_times = {'lw' : pd.read_table('profile-time/LWSampler.txt'),
+                'mh' : pd.read_table('profile-time/MHSampler.txt')}
+  venture_times = get_venture_timing_results()
+  fig, (ax1, ax2) = plt.subplots(2)
+  plot_times(blog_times, ax1)
+  ax1.legend()
+  ax1.set_xlabel('')
+  ax1.set_title('BLOG')
+  plot_times(venture_times, ax2)
+  ax2.legend()
+  ax2.set_title('Venture')
+  fig.suptitle('Runtime scaling of inference in poisson ball model')
+  fig.savefig('profile-time/poisson-ball-inference-scaling.png')
+    
+def get_venture_timing_results():
+  def get_result(set_fun_name, inference_fun_name):
+    path = 'profile-time/' + set_fun_name + '-' + inference_fun_name + '.txt'
+    return  pd.read_table(path)
+  set_fun_names = ["prefix_k", "set_as_list"]
+  inference_fun_names = ["lw", "mh"]
+  return {set_fun_name + '-' + inference_fun_name : get_result(set_fun_name, inference_fun_name)
+          for set_fun_name, inference_fun_name
+          in product(set_fun_names, inference_fun_names)}
+
+def plot_times(d, ax):
+  for key, val in d.items():
+    val.plot(x = 'n_obs_pairs', y = 'times',
+             label = key, ax = ax)
+
 def main():
   dispatch = {'time_blog' : profile_times_blog,
               'time_venture' : profile_times_venture,
               'quality_blog' : profile_quality_blog,
               'quality_venture' : profile_quality_venture,
-              'compare' : compare_quality}
+              'compare_inference' : compare_quality,
+              'compare_time' : compare_time}
   dispatch[argv[1]]()
 
 if __name__ == '__main__':
