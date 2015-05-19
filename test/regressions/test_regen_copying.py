@@ -19,7 +19,7 @@ from nose.tools import eq_
 
 from venture.test.config import get_ripl, broken_in
 
-@broken_in("lite", "copying in Lite uses regen, which is too happy to make random choices.")
+#@broken_in("lite", "copying in Lite uses regen, which is too happy to make random choices.")
 def testCopyingChoiceAfterObservation():
   """Conjecture: makeConsistent may actually be stochastic, if there are
 random choices downstream from nodes that get constrained.
