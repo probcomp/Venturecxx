@@ -234,7 +234,9 @@ builtInSPsList = [
 
            [ "not", deterministic_typed(lambda x: not x, [t.BoolType()], t.BoolType(),
                                         descr="not returns the logical negation of its argument") ],
-
+           [ "xor", deterministic_typed(lambda x, y: x != y, [t.BoolType(), t.BoolType()], t.BoolType(),
+                                        descr="xor(x,y) returns true if exactly one of x and y is true") ],
+                                        
            [ "is_number", type_test(t.NumberType()) ],
            [ "is_integer", type_test(t.IntegerType()) ],
            [ "is_probability", type_test(t.ProbabilityType()) ],
