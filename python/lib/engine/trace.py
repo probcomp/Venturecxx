@@ -176,7 +176,7 @@ def _dump_trace(trace, directives, skipStackDictConversion=False):
   # heuristically makes the trace fully incorporated.  Hopefully,
   # mistakes will be rarer than in the past (which will make them even
   # harder to detect).
-  trace.makeConsistent()
+  trace.registerConstraints()
 
   return (trace.dumpSerializationDB(db, skipStackDictConversion), directives)
 
@@ -205,6 +205,7 @@ def _restore_trace(trace, directives, values, foreign_sps, skipStackDictConversi
   # heuristically makes the trace fully incorporated.  Hopefully,
   # mistakes will be rarer than in the past (which will make them even
   # harder to detect).
-  trace.makeConsistent()
+  trace.registerConstraints()
+  
 
   return trace

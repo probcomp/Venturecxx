@@ -138,6 +138,7 @@ struct ConcreteTrace : Trace
 
   bool scopeHasEntropy(ScopeID scope); 
   double makeConsistent();
+  void registerConstraints();
 
   int numUnconstrainedChoices();
 

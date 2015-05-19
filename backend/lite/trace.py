@@ -397,7 +397,16 @@ class Trace(object):
       # a nan weight.  I want to normalize these to indicating that
       # the resulting state is impossible.
       return float("-inf")
-
+  
+  # use instead of makeConsistent when restoring a trace
+  def registerConstraints(self):
+    for node,val in self.unpropagatedObservations.iteritems():
+      appNode = self.getConstrainableNode(node)
+      #import ipdb; ipdb.set_trace()
+      node.observe(val)
+      constrain(self,appNode,node.observedValue)
+    self.unpropagatedObservations.clear()
+  
   def getConstrainableNode(self, node):
     candidate = self.getOutermostNonReferenceNode(node)
     if isinstance(candidate,ConstantNode):

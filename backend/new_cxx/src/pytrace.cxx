@@ -265,6 +265,11 @@ double PyTrace::makeConsistent()
   return trace->makeConsistent();
 }
 
+void PyTrace::registerConstraints()
+{
+  trace->registerConstraints();
+}
+
 double PyTrace::likelihoodAt(boost::python::object pyscope, boost::python::object pyblock) {
   ScopeID scope = fromPython(pyscope);
   ScopeID block = fromPython(pyblock);
@@ -391,6 +396,7 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("primitive_infer", &PyTrace::primitive_infer)
     .def("dot_trace", &PyTrace::dotTrace)
     .def("makeConsistent", &PyTrace::makeConsistent)
+    .def("registerConstraints", &PyTrace::registerConstraints)
     .def("likelihood_at", &PyTrace::likelihoodAt)
     .def("posterior_at", &PyTrace::posteriorAt)
     .def("likelihood_weight", &PyTrace::likelihoodWeight)
