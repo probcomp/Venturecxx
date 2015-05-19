@@ -256,18 +256,6 @@ class TestPrelude(TestCase):
     self.check_type(container, 'res')
 
   @on_inf_prim("none")
-  def test_repeats(self):
-    'Test that "repeat", "ones", and "zeros" work as expected'
-    for fname, value in zip(['repeat', 'zeros', 'ones'],
-                            [np.random.uniform(0,10), 0, 1]):
-      self.reset_ripl()
-      n = int(self.r.assume('n', '(* 1 (uniform_discrete 1 10))'))
-      _ = self.r.assume('value', value)
-      x_ven = self.r.assume('x', '(repeat value n)')
-      x_py = [value] * n
-      self.assertAlmostEqual(x_py, x_ven)
-
-  @on_inf_prim("none")
   def test_range(self):
     'Test that range function matches python'
     self.reset_ripl()

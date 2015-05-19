@@ -19,7 +19,32 @@ import random
 import libpumatrace as puma
 
 from venture.lite.value import VentureValue
+from venture.lite.builtin import builtInSPs
 import venture.lite.foreign as foreign
+
+class WarningPSP(object):
+  warned = {}
+  def __init__(self, name, psp):
+    self.name = name
+    self.psp = psp
+
+  def __getattr__(self, attrname):
+    sub = getattr(self.psp, attrname)
+    def f(*args, **kwargs):
+      if not self.name in WarningPSP.warned:
+        print "Warning: Defaulting to using %s from Python, likely to be slow" % self.name
+        WarningPSP.warned[self.name] = True
+      return sub(*args, **kwargs)
+    return f
+
+class WarningSP(object):
+  def __init__(self, name, sp):
+    self.requestPSP = WarningPSP(name, sp.requestPSP)
+    self.outputPSP = WarningPSP(name, sp.outputPSP)
+    self.sp = sp
+
+  def __getattr__(self, attrname):
+    return getattr(self.sp, attrname)
 
 class Trace(object):
   def __init__(self, trace=None):
@@ -27,6 +52,17 @@ class Trace(object):
       self.trace = puma.Trace()
       # Poor Puma defaults its local RNG seed to the system time
       self.trace.set_seed(random.randint(1,2**31-1))
+      for name,sp in builtInSPs().iteritems():
+        if self.trace.boundInGlobalEnv(name):
+          # Already there
+          pass
+        elif name == "apply":
+          # The foreign SP interface doesn't seem to be able to handle
+          # this, presumably due to limitations of stack dicts
+          pass
+        else:
+          # Use the Python SP as a fallback to not having a fast one
+          self.bindPrimitiveSP(name, WarningSP(name, sp))
     else:
       assert isinstance(trace, puma.Trace)
       self.trace = trace
@@ -48,10 +84,19 @@ class Trace(object):
   # have no need of that, using stop_and_copy instead).
 
   def bindPrimitiveSP(self, name, sp):
-    self.trace.bindPrimitiveSP(name, foreign.ForeignLiteSP(sp))
+    if isinstance(sp, puma.PumaSP):
+      self.trace.bindPumaSP(name, sp)
+    else:
+      self.trace.bindPythonSP(name, foreign.ForeignLiteSP(sp))
 
   def primitive_infer(self, exp):
     self.trace.primitive_infer(_expToDict(exp))
+
+  def likelihood_at(self, scope, block):
+    return self.trace.likelihood_at(_unwrapVentureValue(scope), _unwrapVentureValue(block))
+
+  def posterior_at(self, scope, block):
+    return self.trace.posterior_at(_unwrapVentureValue(scope), _unwrapVentureValue(block))
 
   def set_profiling(self, _enabled): pass # Puma can't be internally profiled (currently)
   def clear_profiling(self): pass

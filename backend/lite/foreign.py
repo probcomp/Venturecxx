@@ -92,6 +92,9 @@ class ForeignLitePSP(object):
         args = ForeignArgs(args)
         self.psp.unincorporate(value, args)
 
+    def logDensityOfCounts(self, aux):
+        return self.psp.logDensityOfCounts(aux)
+
     def isRandom(self):
         return self.psp.isRandom()
 
@@ -118,28 +121,27 @@ class ForeignLitePSP(object):
         result = self.psp.enumerateValues(args)
         return [asStackDict(value) for value in result]
 
-    def logDensityOfCounts(self, aux):
-        return self.psp.logDensityOfCounts(aux)
-
 class ForeignLiteLKernel(object):
+    # TODO This is not actually an LKernel, because its methods do not
+    # accept the trace argument (since it is not effectively transferred)
     def __init__(self, lkernel):
         self.lkernel = lkernel
 
-    def simulate(self, oldValue, args):
+    def forwardSimulate(self, oldValue, args):
         oldValue = fromStackDict(oldValue)
         args = ForeignArgs(args)
         # stub the trace
         # TODO: do any lkernels actually use the trace argument?
-        result = self.lkernel.simulate(None, oldValue, args)
+        result = self.lkernel.forwardSimulate(None, oldValue, args)
         return asStackDict(result)
 
-    def weight(self, newValue, oldValue, args):
+    def forwardWeight(self, newValue, oldValue, args):
         newValue = fromStackDict(newValue)
         oldValue = fromStackDict(oldValue)
         args = ForeignArgs(args)
         # stub the trace
         # TODO: do any lkernels actually use the trace argument?
-        result = self.lkernel.weight(None, newValue, oldValue, args)
+        result = self.lkernel.forwardWeight(None, newValue, oldValue, args)
         return result
 
     def reverseWeight(self, oldValue, args):

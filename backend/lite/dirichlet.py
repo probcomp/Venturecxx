@@ -20,9 +20,9 @@ import scipy.special
 import numpy.random as npr
 import math
 
-from lkernel import LKernel
+from lkernel import SimulationAAALKernel
 from sp import SP, VentureSPRecord, SPAux, SPType
-from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
+from psp import DeterministicPSP, DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
 from utils import simulateDirichlet, logDensityDirichlet
 from value import VentureAtom
 from types import AnyType
@@ -94,7 +94,7 @@ class DirMultSP(SP):
 
 #### Collapsed dirichlet multinomial
 
-class MakerCDirMultOutputPSP(DeterministicPSP):
+class MakerCDirMultOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self,args):
     alpha = args.operandValues[0]
     os = args.operandValues[1] if len(args.operandValues) > 1 else [VentureAtom(i) for i in range(len(alpha))]
@@ -102,8 +102,6 @@ class MakerCDirMultOutputPSP(DeterministicPSP):
       raise VentureValueError("Set of objects to choose from is the wrong length")
     output = TypedPSP(CDirMultOutputPSP(alpha,os), SPType([], AnyType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,len(alpha)))
-
-  def childrenCanAAA(self): return True
 
   def description(self,name):
     return "  (%s alphas objects) returns a sampler for a collapsed Dirichlet multinomial model.  If the objects argument is given, the sampler will return one of those objects on each call; if not, it will return one of n <atom>s where n is the length of the list of alphas.  It is an error if the list of objects is supplied and has different length from the list of alphas.  While this procedure itself is deterministic, the returned sampler is stochastic." % name
@@ -175,8 +173,8 @@ class MakerUDirMultOutputPSP(RandomPSP):
   def description(self,name):
     return "  %s is an uncollapsed variant of make_dir_mult." % name
 
-class UDirMultAAALKernel(LKernel):
-  def simulate(self, _trace, _oldValue, args):
+class UDirMultAAALKernel(SimulationAAALKernel):
+  def simulate(self, _trace, args):
     alpha = args.operandValues[0]
     os = args.operandValues[1] if len(args.operandValues) > 1 else [VentureAtom(i) for i in range(len(alpha))]
     assert isinstance(args.madeSPAux,DirMultSPAux)
@@ -185,7 +183,13 @@ class UDirMultAAALKernel(LKernel):
     output = TypedPSP(UDirMultOutputPSP(newTheta,os), SPType([], AnyType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,len(alpha)), args.madeSPAux)
 
-  def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
+  def weight(self, _trace, _newValue, _args):
+    # Gibbs step, samples exactly from the local posterior.  Being a
+    # AAALKernel, this one gets to cancel against the likelihood as
+    # well as the prior.
+    return 0
+
+  def weightBound(self, _trace, _value, _args): return 0
 
 class UDirMultOutputPSP(RandomPSP):
   def __init__(self,theta,os):
@@ -218,7 +222,7 @@ class UDirMultOutputPSP(RandomPSP):
 
 #### Collapsed symmetric dirichlet multinomial
 
-class MakerCSymDirMultOutputPSP(DeterministicPSP):
+class MakerCSymDirMultOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self,args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
     os = args.operandValues[2] if len(args.operandValues) > 2 else [VentureAtom(i) for i in range(n)]
@@ -226,8 +230,6 @@ class MakerCSymDirMultOutputPSP(DeterministicPSP):
       raise VentureValueError("Set of objects to choose from is the wrong length")
     output = TypedPSP(CSymDirMultOutputPSP(alpha,n,os), SPType([], AnyType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,n))
-
-  def childrenCanAAA(self): return True
 
   def madeSpLogDensityOfCountsBound(self, aux):
     """Upper bound the log density the made SP may report for its
@@ -280,8 +282,8 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
   def description(self,name):
     return "  %s is an uncollapsed symmetric variant of make_dir_mult." % name
 
-class USymDirMultAAALKernel(LKernel):
-  def simulate(self, _trace, _oldValue, args):
+class USymDirMultAAALKernel(SimulationAAALKernel):
+  def simulate(self, _trace, args):
     (alpha,n) = (float(args.operandValues[0]),int(args.operandValues[1]))
     os = args.operandValues[2] if len(args.operandValues) > 2 else [VentureAtom(i) for i in range(n)]
     assert isinstance(args.madeSPAux,DirMultSPAux)
@@ -290,7 +292,13 @@ class USymDirMultAAALKernel(LKernel):
     output = TypedPSP(USymDirMultOutputPSP(newTheta,os), SPType([], AnyType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,n), args.madeSPAux)
 
-  def weightBound(self, _trace, _newValue, _oldValue, _args): return 0
+  def weight(self, _trace, _newValue, _args):
+    # Gibbs step, samples exactly from the local posterior.  Being a
+    # AAALKernel, this one gets to cancel against the likelihood as
+    # well as the prior.
+    return 0
+
+  def weightBound(self, _trace, _value, _args): return 0
 
 class USymDirMultOutputPSP(UDirMultOutputPSP):
   pass

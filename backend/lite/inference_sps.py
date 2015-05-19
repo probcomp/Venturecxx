@@ -660,12 +660,13 @@ Plot a data set according to a plot specification.
 
 Example::
 
-    [INFER (do (d <- (empty))
-               (repeat 1000
-                (do (mh default one 1)
-                    (bind (collect x) (curry into d))))
-               (plotf (quote c0s) d)) ]
-
+    [INFER (let ((d (empty)))
+             (do (assume x (normal 0 1))
+                 (repeat 1000
+                         (do (mh default one 1)
+                             (bind (collect x) (curry into d))))
+                 (plotf (quote c0s) d))) ]
+    
 will do 1000 iterations of MH collecting some standard data and
 the value of x, and then show a plot of the x variable (which
 should be a scalar) against the sweep number (from 1 to 1000),

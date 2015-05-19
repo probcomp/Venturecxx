@@ -85,6 +85,7 @@ function jripl() {
                                 on_success: on_success});
         } 
         else {
+            request_in_progressQ = true;
             ajax_execute_post(URL,data_in,on_success);
         }
     };
@@ -94,7 +95,7 @@ function jripl() {
     /* Perform the actual AJAX request. */
     var ajax_execute_post = function(URL,data_in,on_success) {
         var then = Date.now()
-        console.log("Ajax request sent")
+        console.log("Ajax request sent", request_queue.length, "left in queue")
         $.ajax({
             url: full_url(URL),
             type:'POST', 
@@ -104,15 +105,16 @@ function jripl() {
             crossDomain: true,
             success: function(data) {
                 now = Date.now();
-                console.log("Ajax response received", now - then);
+                console.log("Ajax response received", now - then, "ms delay");
                 a_request_processed_callback();
                 on_success(data);
                 ajax_continue_requests();
             },
             // TODO this error callback needs updating
             error: function(data) { 
-                    console.log(data.toString());
-                    },
+                console.log("Got an error", data);
+                ajax_continue_requests();
+            },
             complete: function() {}
         });
     };
@@ -200,19 +202,29 @@ function jripl() {
     var process_directives = function(time,f,ids) {
         return function(directives) {
             f(directives);
-            setTimeout(
-                function () {
-                    get_directives_recursively(time,f,ids);
-                },
-                time);
+            get_directives_later(time,f,ids);
         };
     };
 
+    var get_directives_later = function(time,f,ids) {
+        setTimeout(
+            function () {
+                get_directives_recursively(time,f,ids);
+            },
+            time);
+    };
+
     var get_directives_recursively = function(time,f,ids) {
-        ajax_post_in_sequence("list_directives",
-                              [],
-//                              ids, (see note above)
-                              process_directives(time,f,ids));
+        if (request_in_progressQ) {
+            // Wait until all other requests have come back
+            get_directives_later(time,f,ids);
+        }
+        else {
+            ajax_post_in_sequence("list_directives",
+                                  [],
+                                  // ids, (see note above)
+                                  process_directives(time,f,ids));
+        };
     };
 
     /* This the user-facing function. */

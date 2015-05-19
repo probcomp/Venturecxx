@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
+from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, VentureSPRecord, SPType
 import math
 from scipy.special import gammaln
@@ -86,7 +86,7 @@ class CMVNSP(SP):
   def constructSPAux(self): return CMVNSPAux(self.d)
   def show(self,spaux): return self.outputPSP.psp.getMVTParams(spaux)
 
-class MakeCMVNOutputPSP(DeterministicPSP):
+class MakeCMVNOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self,args):
     (m0,k0,v0,S0) = args.operandValues
     m0 = np.mat(m0).transpose()
@@ -94,8 +94,6 @@ class MakeCMVNOutputPSP(DeterministicPSP):
     d = np.size(m0)
     output = TypedPSP(CMVNOutputPSP(d,m0,k0,v0,S0), SPType([], HomogeneousArrayType(NumberType())))
     return VentureSPRecord(CMVNSP(NullRequestPSP(),output,d))
-
-  def childrenCanAAA(self): return True
 
   def description(self,name):
     return "(%s m0 k0 v0 S0) -> <SP () <float array>>\n  Collapsed multivariate normal with hyperparameters m0,k0,v0,S0, where parameters are named as in (Murphy, section 4.6.3.3, page 134)." % name

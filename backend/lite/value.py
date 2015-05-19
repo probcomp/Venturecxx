@@ -97,6 +97,9 @@ class VentureValue(object):
       return self.equal(other)
     else:
       return False
+  
+  def __ne__(self, other):
+    return not self == other
 
   # Some Venture value types form a natural vector space over reals,
   # so overload addition, subtraction, and multiplication by scalars.

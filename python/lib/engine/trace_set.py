@@ -77,7 +77,7 @@ class TraceSet(object):
 
   def bind_foreign_sp(self, name, sp):
     # check that we can pickle it
-    if (not is_picklable(sp)) and (self.mode != 'sequential'):
+    if (self.mode != 'sequential') and (not is_picklable(sp)):
       errstr = '''SP not picklable. To bind it, call [infer (resample_sequential <n_particles>)],
       bind the sp, then switch back to multiprocess.'''
       raise TypeError(errstr)

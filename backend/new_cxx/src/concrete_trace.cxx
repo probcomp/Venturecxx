@@ -58,24 +58,27 @@ void ConcreteTrace::initialize()
     builtInNodes.insert(shared_ptr<Node>(node));
   }
 
+  globalEnvironment = shared_ptr<VentureEnvironment>(new VentureEnvironment(shared_ptr<VentureEnvironment>(),syms,nodes));
+
   for (map<string,SP *>::iterator iter = builtInSPs.begin();
        iter != builtInSPs.end();
        ++iter)
   {
-    shared_ptr<VentureSymbol> sym(new VentureSymbol(iter->first));
-    ConstantNode * node = createConstantNode(VentureValuePtr(new VentureSPRecord(iter->second)));
-    processMadeSP(this,node,false,false,shared_ptr<DB>(new DB()));
-    assert(dynamic_pointer_cast<VentureSPRef>(getValue(node)));
-    syms.push_back(sym);
-    nodes.push_back(node);
-    builtInNodes.insert(shared_ptr<Node>(node));
+    builtInNodes.insert(shared_ptr<Node>(bindPrimitiveSP(iter->first, iter->second)));
   }
 
-  shared_ptr<VentureEnvironment> globalFrame (new VentureEnvironment(shared_ptr<VentureEnvironment>(),syms,nodes));
   // New frame so users can shadow globals
-  globalEnvironment = shared_ptr<VentureEnvironment>(new VentureEnvironment(globalFrame));
+  globalEnvironment = shared_ptr<VentureEnvironment>(new VentureEnvironment(globalEnvironment));
 }
 
+Node* ConcreteTrace::bindPrimitiveSP(const string& name, SP* sp)
+{
+  ConstantNode * node = createConstantNode(VentureValuePtr(new VentureSPRecord(sp)));
+  processMadeSP(this,node,false,false,shared_ptr<DB>(new DB()));
+  assert(dynamic_pointer_cast<VentureSPRef>(getValue(node)));
+  globalEnvironment->addBinding(name, node);
+  return node;
+}
 
 
 /* Registering metadata */
@@ -743,6 +746,12 @@ set<Node*> ConcreteTrace::allNodes()
 {
   set<Node*> answer;
   BOOST_FOREACH(shared_ptr<Node> node, builtInNodes)
+  {
+    assert(dynamic_cast<ConstantNode*>(node.get()));
+    assert(answer.count(node.get()) == 0);
+    answer.insert(node.get());
+  }
+  BOOST_FOREACH(shared_ptr<Node> node, boundForeignSPNodes)
   {
     assert(dynamic_cast<ConstantNode*>(node.get()));
     assert(answer.count(node.get()) == 0);

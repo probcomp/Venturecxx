@@ -39,8 +39,8 @@ import functional
 import value as v
 import types as t
 import env
-from utils import careful_exp
-from exception import VentureBuiltinSPMethodError
+from utils import careful_exp, raise_
+from exception import VentureBuiltinSPMethodError, VentureValueError
 
 # The types in the value module are generated programmatically, so
 # pylint doesn't find out about them.
@@ -348,6 +348,12 @@ builtInSPsList = [
                                                t.MatrixType(),
                                                descr="(%s x y) returns the product of matrices x and y.") ],
 
+           [ "matrix_times_vector",
+             deterministic_typed(np.dot,
+                                 [t.MatrixType(), t.ArrayUnboxedType(t.NumberType())],
+                                 t.ArrayUnboxedType(t.NumberType()),
+                                 descr="(%s M v) returns the matrix-vector product Mv.") ],
+
            [ "print", deterministic_typed(print_,
                                            [t.AnyType("k"), t.SymbolType()],
                                            t.AnyType("k"),
@@ -431,6 +437,7 @@ builtInSPsList = [
 
            [ "make_beta_bernoulli",typed_nr(discrete.MakerCBetaBernoulliOutputPSP(), [t.PositiveType(), t.PositiveType()], SPType([], t.BoolType())) ],
            [ "make_uc_beta_bernoulli",typed_nr(discrete.MakerUBetaBernoulliOutputPSP(), [t.PositiveType(), t.PositiveType()], SPType([], t.BoolType())) ],
+           [ "make_suff_stat_bernoulli",typed_nr(discrete.MakerSuffBernoulliOutputPSP(), [t.NumberType()], SPType([], t.BoolType())) ],
 
            [ "dirichlet",typed_nr(dirichlet.DirichletOutputPSP(), [t.HomogeneousArrayType(t.PositiveType())], t.SimplexType()) ],
            [ "symmetric_dirichlet",typed_nr(dirichlet.SymmetricDirichletOutputPSP(), [t.PositiveType(), t.CountType()], t.SimplexType()) ],
@@ -450,6 +457,7 @@ builtInSPsList = [
            [ "make_gp", gp.makeGPSP ],
            [ "apply_function", function.applyFunctionSP],
            [ "exactly", typed_nr(discrete.ExactlyOutputPSP(), [t.AnyType(), t.NumberType()], t.AnyType(), min_req_args=1)],
+           [ "value_error", deterministic_typed(lambda s: raise_(VentureValueError(str(s))), [t.AnyType()], t.AnyType())]
 ]
 
 def builtInSPs():

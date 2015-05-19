@@ -45,10 +45,12 @@ struct PyTrace
 
   void bindInGlobalEnv(const string& sym, DirectiveID did);
   void unbindInGlobalEnv(const string& sym);
+  bool boundInGlobalEnv(const string& sym);
 
   boost::python::object extractPythonValue(DirectiveID did);
 
-  void bindPrimitiveSP(const string& sym, boost::python::object sp);
+  void bindPythonSP(const string& sym, boost::python::object sp);
+  void bindPumaSP(const string& sym, SP* sp);
 
   void setSeed(size_t seed);
   size_t getSeed();

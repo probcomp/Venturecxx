@@ -29,6 +29,7 @@
 #include "sps/eval.h"
 #include "sps/hmm.h"
 #include "sps/matrix.h"
+#include "sps/misc.h"
 #include "sps/msp.h"
 #include "sps/mvn.h"
 #include "sps/scope.h"
@@ -126,6 +127,7 @@ map<string,SP*> initBuiltInSPs()
   m["is_vector"] = new SP(new NullRequestPSP(), new IsVectorOutputPSP());
   m["to_vector"] = new SP(new NullRequestPSP(), new ToVectorOutputPSP());
   m["vector_dot"] = new SP(new NullRequestPSP(), new VectorDotOutputPSP());
+  m["matrix_times_vector"] = new SP(new NullRequestPSP(), new MatrixTimesVectorOutputPSP());
 
   /* Scoping */
   m["tag"] = new SP(new NullRequestPSP(), new TagOutputPSP());
@@ -156,6 +158,7 @@ map<string,SP*> initBuiltInSPs()
   m["mapv"] = new SP(new ArrayMapRequestPSP(), new ESRArrayOutputPSP());
   m["imapv"] = new SP(new IndexedArrayMapRequestPSP(), new ESRArrayOutputPSP());
   m["arange"] = new SP(new NullRequestPSP(), new ArangeOutputPSP());
+  m["repeat"] = new SP(new NullRequestPSP(), new RepeatOutputPSP());
 
   m["make_csp"] = new SP(new NullRequestPSP(), new MakeCSPOutputPSP());
   m["mem"] = new SP(new NullRequestPSP(), new MakeMSPOutputPSP());
@@ -172,6 +175,9 @@ map<string,SP*> initBuiltInSPs()
 
   /* Non parametrics */
   m["make_crp"] = new SP(new NullRequestPSP(), new MakeCRPOutputPSP());
-
+  
+  /* Misc */
+  m["exactly"] = new SP(new NullRequestPSP(), new ExactlyOutputPSP());
+  
   return m;
 }

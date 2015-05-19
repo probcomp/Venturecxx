@@ -16,7 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from utils import override
-from lkernel import DefaultAAALKernel,DefaultVariationalLKernel,LKernel
+from lkernel import DeterministicMakerAAALKernel,DefaultVariationalLKernel,LKernel
 from request import Request
 from exception import VentureBuiltinSPMethodError
 
@@ -195,6 +195,25 @@ class PSP(object):
     incorporate."""
     pass
 
+  def logDensityOfCounts(self, _aux):
+    """Return the log-density of simulating a dataset with the given
+    collected statistics.
+
+    This is relevant only for PSPs that collect statistics about their
+    uses via incorporate and unincorporate that are sufficient to bulk
+    absorb at all applications of the PSP, without traversing them.
+
+    Specifically, the log-density to be returned is the sum of the
+    log-density at each application of this PSP; which is also the
+    log-density of producing any one output sequence consistent with
+    the given collected statistics, given inputs consistent with the
+    same set of collected statistics (which should be equal for all
+    such output sequences, since the statistics are supposed to be
+    sufficient).
+
+    """
+    raise VentureBuiltinSPMethodError("Cannot compute log density of counts of %s", type(self))
+
   def canEnumerate(self):
     """Return whether this PSP can enumerate the space of its possible
     return values.  Enumeration is used only for principal nodes in
@@ -228,7 +247,8 @@ class PSP(object):
     return None
 
   def childrenCanAAA(self): return False
-  def getAAALKernel(self): return DefaultAAALKernel(self)
+  def getAAALKernel(self):
+    raise VentureBuiltinSPMethodError("%s has no AAA LKernel", type(self))
 
   def hasVariationalLKernel(self): return False
   def getVariationalLKernel(self,args): return DefaultVariationalLKernel(self, args)
@@ -252,6 +272,13 @@ class DeterministicPSP(PSP):
     return (0, [0 for _ in args.operandValues])
   @override(PSP)
   def logDensityBound(self, _value, _args): return 0
+
+class DeterministicMakerAAAPSP(DeterministicPSP):
+  """Provides good default implementations of PSP methods for PSPs that
+are deterministic makers whose children can absorb at applications."""
+
+  def childrenCanAAA(self): return True
+  def getAAALKernel(self): return DeterministicMakerAAALKernel(self)
 
 class NullRequestPSP(DeterministicPSP):
   @override(DeterministicPSP)
@@ -339,6 +366,8 @@ class TypedPSP(PSP):
     return self.psp.incorporate(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
   def unincorporate(self,value,args):
     return self.psp.unincorporate(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
+  def logDensityOfCounts(self,aux):
+    return self.psp.logDensityOfCounts(aux)
   def enumerateValues(self,args):
     return [self.f_type.wrap_return(v) for v in self.psp.enumerateValues(self.f_type.unwrap_args(args))]
   def isRandom(self):
@@ -371,31 +400,33 @@ class TypedPSP(PSP):
     signature = ".. function:: " + self.f_type.name_rst_format(name)
     return (signature, self.psp.description(name))
 
-  # TODO Is this method part of the psp interface?
-  def logDensityOfCounts(self,aux):
-    return self.psp.logDensityOfCounts(aux)
-
 class TypedLKernel(LKernel):
   def __init__(self, kernel, f_type):
     self.kernel = kernel
     self.f_type = f_type
 
-  def simulate(self, trace, oldValue, args):
-    return self.f_type.wrap_return(self.kernel.simulate(trace, self.f_type.unwrap_return(oldValue),
-                                                        self.f_type.unwrap_args(args)))
-  def weight(self, trace, newValue, oldValue, args):
-    return self.kernel.weight(trace, self.f_type.unwrap_return(newValue),
-                              self.f_type.unwrap_return(oldValue),
-                              self.f_type.unwrap_args(args))
+  def forwardSimulate(self, trace, oldValue, args):
+    return self.f_type.wrap_return(self.kernel.forwardSimulate(trace, self.f_type.unwrap_return(oldValue),
+                                                               self.f_type.unwrap_args(args)))
+
+  def forwardWeight(self, trace, newValue, oldValue, args):
+    return self.kernel.forwardWeight(trace, self.f_type.unwrap_return(newValue),
+                                     self.f_type.unwrap_return(oldValue),
+                                     self.f_type.unwrap_args(args))
 
   def reverseWeight(self, trace, oldValue, args):
     return self.kernel.reverseWeight(trace,
                                      self.f_type.unwrap_return(oldValue),
                                      self.f_type.unwrap_args(args))
 
-  def weightBound(self, trace, newValue, oldValue, args):
-    return self.kernel.weightBound(trace, self.f_type.unwrap_return(newValue),
-                                   self.f_type.unwrap_return(oldValue),
+  def gradientOfReverseWeight(self, trace, value, args):
+    (dvalue, dargs) = self.kernel.gradientOfReverseWeight(trace,
+                                     self.f_type.unwrap_return(value),
+                                     self.f_type.unwrap_args(args))
+    return (self.f_type.gradient_type().wrap_return(dvalue), self.f_type.gradient_type().wrap_arg_list(dargs))
+
+  def weightBound(self, trace, value, args):
+    return self.kernel.weightBound(trace, self.f_type.unwrap_return(value),
                                    self.f_type.unwrap_args(args))
 
 class TypedVariationalLKernel(TypedLKernel):

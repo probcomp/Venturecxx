@@ -16,6 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose import SkipTest
+from nose.tools import eq_
 from testconfig import config
 
 from venture.test.config import get_ripl, on_inf_prim, gen_on_inf_prim
@@ -75,21 +76,10 @@ def testRiplSimulate():
 def checkRiplAgreesWithDeterministicSimulate(name, sp):
   if config["get_ripl"] != "lite" and name in [
     ## Incompatibilities with Puma
-    "to_list", # Not implemented
-    "min", # Not implemented
-    "mod", # Not implemented
-    "atan2", # Not implemented
-    "real", # Not implemented
-    "atom_eq", # Not implemented
-    "arange", # Not implemented
-    "linspace", # Not implemented
-    "diag_matrix", # Not implemented
-    "ravel", # Not implemented
-    "matrix_mul", # Not implemented
-    "repeat", # Not implemented
-    "zip", # Not implemented
-    "is_procedure", # Not implemented
-    "print", # Not implemented
+    "apply", # Not implemented, and can't seem to import it as a foreign from Python
+    "arange", # Not the same return type (elements boxed in Puma?)
+    "vector_dot", # Numerical inconsistency between Eigen and Numpy
+    "matrix_times_vector", # Numerical inconsistency between Eigen and Numpy
   ]:
     raise SkipTest("%s in Puma not implemented compatibly with Lite" % name)
   checkTypedProperty(propRiplAgreesWithDeterministicSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)
@@ -106,14 +96,14 @@ through a ripl (applied fully uncurried)."""
         ans2 = carefully(answer.sp.outputPSP.simulate, args2)
         inner = [v.symbol(name)] + [val.expressionFor() for val in args_lists[0]]
         expr = [inner] + [val.expressionFor() for val in args_lists[1]]
-        assert ans2.equal(carefully(eval_in_ripl, expr))
+        assert eq_(ans2, carefully(eval_in_ripl, expr))
       else:
         raise SkipTest("Putatively deterministic sp %s returned a random SP" % name)
     else:
       raise SkipTest("Putatively deterministic sp %s returned a requesting SP" % name)
   else:
     expr = [v.symbol(name)] + [val.expressionFor() for val in args_lists[0]]
-    assert answer.equal(carefully(eval_in_ripl, expr))
+    eq_(answer, carefully(eval_in_ripl, expr))
 
 def eval_foreign_sp(name, sp, expr):
   ripl = get_ripl()

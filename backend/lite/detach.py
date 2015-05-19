@@ -167,9 +167,14 @@ def unapplyPSP(trace, node, scaffold, omegaDB, compute_gradient = False):
 #  print "unapplyPSP",trace.valueAt(node)
 
   trace.setValueAt(node,None)
-  if compute_gradient and any([scaffold.isResampling(p) or scaffold.isBrush(p) for p in trace.parentsAt(node)]):
+  if compute_gradient and any([scaffold.isResampling(p) or scaffold.isBrush(p) for p in trace.parentsAt(node)]) and not scaffold.hasLKernel(node):
     # Don't need to compute the simulation gradient if the parents are
     # not in the DRG or brush.
+    # Not clear how to deal with LKernels.
+    # - DeterministicLKernel is probably ok because the nodes they are applied at
+    #   do not have interesting parents
+    # - DeterministicMakerAAALKernel is probably ok because its gradientOfReverseWeight
+    #   method computes the same thing gradientOfSimulate would properly have computed
     grad = psp.gradientOfSimulate(args, omegaDB.getValue(node), omegaDB.getPartial(node))
     omegaDB.addPartials(args.operandNodes + trace.esrParentsAt(node), grad)
 

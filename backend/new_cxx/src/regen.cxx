@@ -333,9 +333,9 @@ double applyPSP(Trace * trace,
   {
     shared_ptr<LKernel> k = trace->getLKernel(scaffold,node);
     if (shouldRestore) { newValue = oldValue; }
-    else { newValue = k->simulate(trace,oldValue,args,trace->getRNG()); }
+    else { newValue = k->forwardSimulate(trace,oldValue,args,trace->getRNG()); }
 
-    weight += k->weight(trace,newValue,oldValue,args);
+    weight += k->forwardWeight(trace,newValue,oldValue,args);
     /*
       These lines were causing problems, due to a mismatch between vector<double>
       and double in the gradientOfLogDensity. Puma doesn't actually have variational

@@ -38,7 +38,7 @@ def test_profiling1():
 
   ripl.profiler_enable()
   ripl.infer('(mh default one 10)')
-  ripl.infer('(gibbs tricky one 1)')
+  ripl.infer("(gibbs 'tricky one 1)")
 
   def printAddr((did, index)):
     exp = ripl.sivm._get_exp(did)

@@ -16,6 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose.tools import eq_
+from nose import SkipTest
 import threading
 import scipy.stats
 
@@ -69,7 +70,15 @@ def testResamplingSmoke4():
   n = default_num_samples()
   r = get_ripl()
   r.infer("(resample_multiprocess %s %s)" % (n, n/2)) # Limit the number of processes
-  stack_dicts = r.sivm.core_sivm.engine.sample_all(r._ensure_parsed_expression("(normal 0 1)"))
-  eq_(n, len(stack_dicts))
-  predictions = [d["value"] for d in stack_dicts]
+  predictions = r.sample_all("(normal 0 1)")
+  eq_(n, len(predictions))
   return reportKnownContinuous(scipy.stats.norm(loc=0, scale=1).cdf, predictions, "N(0,1)")
+
+@on_inf_prim("resample_serializing")
+def testSerializingTracesWithRandomSPs():
+  "Check that the presence of random variables that are SPs does not mess up resampling."
+  raise SkipTest("Still can't serialize random SPs")
+  r = get_ripl()
+  r.infer("(resample_serializing 2)")
+  r.assume("foo", "(categorical (simplex 0.5 0.5) (array (lambda () 1) (lambda () 2)))")
+  r.infer("(resample_serializing 2)")

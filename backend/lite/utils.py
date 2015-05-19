@@ -56,8 +56,7 @@ def logDensityCategorical(val,ps,os=None):
     if os[i] == val: 
       p = ps[i]
       break
-  assert p is not None
-  if p == 0:
+  if p is None or p == 0:
     return float('-inf')
   return math.log(p)
 
@@ -151,3 +150,7 @@ against fixed randomness.
     random.setstate(self.cur_pyr_state)
     npr.set_state(self.cur_numpyr_state)
     return False # Do not suppress any thrown exception
+
+# raise is a statement and can't be used in a lambda :(
+def raise_(e): raise e
+

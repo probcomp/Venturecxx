@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
+from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, VentureSPRecord, SPType
 import math
 import scipy.special
@@ -49,15 +49,13 @@ class CRPSP(SP):
       'counts': spaux.tableCounts,
     }
 
-class MakeCRPOutputPSP(DeterministicPSP):
+class MakeCRPOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self,args):
     alpha = args.operandValues[0]
     d = args.operandValues[1] if len(args.operandValues) == 2 else 0
 
     output = TypedPSP(CRPOutputPSP(alpha,d), SPType([], AtomType()))
     return VentureSPRecord(CRPSP(NullRequestPSP(),output))
-
-  def childrenCanAAA(self): return True
 
   def description(self,name):
     return "(%s alpha) -> <SP () <number>>\n  Chinese Restaurant Process with hyperparameter alpha.  Returns a sampler for the table number." % name

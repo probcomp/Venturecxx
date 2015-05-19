@@ -159,7 +159,7 @@ def testMoreElaborate():
 
   preds_mh = collectSamples(ripl, "pid", infer="(mh default one 10)")
   ripl.sivm.core_sivm.engine.reinit_inference_problem()
-  preds_hmc = collectSamples(ripl, "pid", infer="(hmc param all 0.1 20 10)")
+  preds_hmc = collectSamples(ripl, "pid", infer="(hmc 'param all 0.1 20 10)")
   return reportSameContinuous(preds_mh, preds_hmc)
 
 @broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")

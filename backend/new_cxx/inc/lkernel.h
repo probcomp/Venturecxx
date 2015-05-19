@@ -29,40 +29,59 @@ struct SPAux;
 
 struct LKernel
 {
-  virtual VentureValuePtr simulate(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args,gsl_rng * rng) =0;
-  virtual double weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,shared_ptr<Args> args) { return 0; }
-  virtual double reverseWeight(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args) 
-    { 
-      return weight(trace,oldValue,shared_ptr<VentureValue>(),args);
-    }
-  virtual bool isIndependent() const { return true; }
+  virtual VentureValuePtr forwardSimulate(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args,gsl_rng * rng) =0;
+  virtual double forwardWeight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,shared_ptr<Args> args) =0;
+  virtual double reverseWeight(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args) =0;
 };
 
-struct DefaultAAALKernel : LKernel
+struct SimulationLKernel : LKernel
+{
+  virtual VentureValuePtr simulate(Trace * trace, shared_ptr<Args> args, gsl_rng * rng) =0;
+  virtual double weight(Trace * trace, VentureValuePtr value, shared_ptr<Args> args) =0;
+
+  VentureValuePtr forwardSimulate(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args,gsl_rng * rng) {
+    return simulate(trace, args, rng);
+  }
+
+  double forwardWeight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,shared_ptr<Args> args) {
+    return weight(trace, newValue, args);
+  }
+
+  double reverseWeight(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args) {
+    return weight(trace,oldValue,args);
+  }
+};
+
+struct DeltaLKernel : LKernel
+{
+  double reverseWeight(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args) { return 0; }
+};
+
+struct DeterministicMakerAAALKernel : SimulationLKernel
 {
   // TODO GC this kernel will not outlast the PSP
-  DefaultAAALKernel(const PSP * makerPSP): makerPSP(makerPSP) {}
+  DeterministicMakerAAALKernel(const PSP * makerPSP): makerPSP(makerPSP) {}
 
-  VentureValuePtr simulate(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args,gsl_rng * rng);
-  double weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,shared_ptr<Args> args);
+  VentureValuePtr simulate(Trace * trace,shared_ptr<Args> args,gsl_rng * rng);
+  double weight(Trace * trace,VentureValuePtr value,shared_ptr<Args> args);
 
   const PSP * makerPSP;
 
 };
 
-struct DeterministicLKernel : LKernel
+struct DeterministicLKernel : SimulationLKernel
 {
   DeterministicLKernel(VentureValuePtr value, shared_ptr<PSP> psp): value(value), psp(psp) {}
 
-  VentureValuePtr simulate(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args,gsl_rng * rng);
-  double weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,shared_ptr<Args> args);
+  VentureValuePtr simulate(Trace * trace,shared_ptr<Args> args,gsl_rng * rng);
+  double weight(Trace * trace,VentureValuePtr value,shared_ptr<Args> args);
 
   VentureValuePtr value;
   shared_ptr<PSP> psp;
   
 };
 
-struct VariationalLKernel : LKernel
+struct VariationalLKernel : SimulationLKernel
 {
   virtual vector<double> gradientOfLogDensity(VentureValuePtr value, shared_ptr<Args> args) =0;
   virtual void updateParameters(Gradient gradient,double gain,double stepSize) =0;

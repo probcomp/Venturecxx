@@ -297,7 +297,7 @@ function InitializeDemo() {
         var points = {};
 
         var extract = function(directive) {
-            var path = directive.label.split('_').slice(1);
+            var path = directive.label.value.split('_').slice(1);
             //console.log(path.join("."));
             record(points, path, directive.value);
             

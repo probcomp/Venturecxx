@@ -661,6 +661,11 @@ Open issues:
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 
+    def sample_all(self, expression, type=False):
+        expression = self._ensure_parsed_expression(expression)
+        value = self.sivm.core_sivm.engine.sample_all(expression)
+        return value if type else u.strip_types(value)
+
     def continuous_inference_status(self):
         return self.execute_instruction({'instruction':'continuous_inference_status'})
 

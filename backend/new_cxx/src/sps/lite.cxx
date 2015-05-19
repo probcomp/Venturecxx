@@ -159,7 +159,7 @@ double ForeignLitePSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
   return boost::python::extract<double>(foreignLogDensityOfCounts);
 }
 
-VentureValuePtr ForeignLiteLKernel::simulate(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args,gsl_rng * rng)
+VentureValuePtr ForeignLiteLKernel::forwardSimulate(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args,gsl_rng * rng)
 {
   boost::python::object foreignOldValue;
   if (oldValue)
@@ -167,11 +167,11 @@ VentureValuePtr ForeignLiteLKernel::simulate(Trace * trace,VentureValuePtr oldVa
     foreignOldValue = oldValue->toPython(args->_trace);
   }
   boost::python::dict foreignArgs = foreignArgsToPython(args);
-  boost::python::object foreignResult = lkernel.attr("simulate")(foreignOldValue, foreignArgs);
+  boost::python::object foreignResult = lkernel.attr("forwardSimulate")(foreignOldValue, foreignArgs);
   return foreignFromPython(foreignResult);
 }
 
-double ForeignLiteLKernel::weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,shared_ptr<Args> args)
+double ForeignLiteLKernel::forwardWeight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,shared_ptr<Args> args)
 {
   boost::python::dict foreignNewValue = newValue->toPython(args->_trace);
   boost::python::object foreignOldValue;
@@ -180,7 +180,7 @@ double ForeignLiteLKernel::weight(Trace * trace,VentureValuePtr newValue,Venture
     foreignOldValue = oldValue->toPython(args->_trace);
   }
   boost::python::dict foreignArgs = foreignArgsToPython(args);
-  boost::python::object foreignWeight = lkernel.attr("weight")(foreignNewValue, foreignOldValue, foreignArgs);
+  boost::python::object foreignWeight = lkernel.attr("forwardWeight")(foreignNewValue, foreignOldValue, foreignArgs);
   return boost::python::extract<double>(foreignWeight);
 }
 
@@ -258,11 +258,8 @@ boost::python::dict ForeignLiteSP::toPython(Trace * trace, shared_ptr<SPAux> aux
   return stackDict;
 }
 
-void PyTrace::bindPrimitiveSP(const string& sym, boost::python::object sp)
+void PyTrace::bindPythonSP(const string& sym, boost::python::object sp)
 {
-  VentureValuePtr spRecord(new VentureSPRecord(new ForeignLiteSP(sp)));
-  ConstantNode * node = trace->createConstantNode(spRecord);
-  processMadeSP(trace.get(), node, false, false, shared_ptr<DB>(new DB()));
-  assert(dynamic_pointer_cast<VentureSPRef>(trace->getValue(node)));
-  trace->globalEnvironment->addBinding(sym, node);
+  Node* node = trace->bindPrimitiveSP(sym, new ForeignLiteSP(sp));
+  trace->boundForeignSPNodes.insert(shared_ptr<Node>(node));
 }

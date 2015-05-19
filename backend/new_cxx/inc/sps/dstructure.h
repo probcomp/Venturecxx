@@ -152,5 +152,9 @@ struct ArangeOutputPSP : PSP
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };
 
+struct RepeatOutputPSP : PSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
 
 #endif

@@ -184,11 +184,10 @@ class Engine(object):
       self.start_continuous_inference(program[1])
     else:
       with self.inference_trace():
-        with self.self_evaluating_scope_hack():
-          did = self._do_infer(program)
-          ans = self._extract_infer_result(did)
-          self.infer_trace.uneval(did) # TODO This becomes "forget" after the engine.Trace wrapper
-          return ans
+        did = self._do_infer(program)
+        ans = self._extract_infer_result(did)
+        self.infer_trace.uneval(did) # TODO This becomes "forget" after the engine.Trace wrapper
+        return ans
 
   def is_infer_loop_program(self, program):
     return isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop"
@@ -233,40 +232,12 @@ class Engine(object):
     ans = lite.Trace()
     for name,sp in self.inferenceSPsList():
       ans.bindPrimitiveSP(name, sp)
+    import venture.lite.inference_sps as inf
+    for word in inf.inferenceKeywords:
+      if not ans.globalEnv.symbolBound(word):
+        ans.bindPrimitiveName(word, vv.VentureSymbol(word))
     self.install_inference_prelude(ans)
     return ans
-
-  @contextmanager
-  def self_evaluating_scope_hack(self):
-    self.install_self_evaluating_scope_hack(self.infer_trace)
-    try:
-      yield
-    except VentureException:
-      if self.persistent_inference_trace:
-        self.remove_self_evaluating_scope_hack(self.infer_trace)
-      raise
-    else:
-      if self.persistent_inference_trace:
-        self.remove_self_evaluating_scope_hack(self.infer_trace)
-
-  def symbol_scopes(self):
-    all_scopes = [s for s in self.getDistinguishedTrace().scope_keys()]
-    symbol_scopes = [s for s in all_scopes if isinstance(s, basestring) and not s.startswith("default")]
-    return symbol_scopes
-
-  def install_self_evaluating_scope_hack(self, next_trace):
-    import venture.lite.inference_sps as inf
-    symbol_scopes = self.symbol_scopes()
-    for hack in inf.inferenceKeywords + symbol_scopes:
-      if not next_trace.globalEnv.symbolBound(hack):
-        next_trace.bindPrimitiveName(hack, vv.VentureSymbol(hack))
-
-  def remove_self_evaluating_scope_hack(self, next_trace):
-    import venture.lite.inference_sps as inf
-    symbol_scopes = self.symbol_scopes()
-    for hack in inf.inferenceKeywords + symbol_scopes:
-      if next_trace.globalEnv.symbolBound(hack):
-        next_trace.unbindInGlobalEnv(hack)
 
   def install_inference_prelude(self, next_trace):
     for name, exp in _inference_prelude():
