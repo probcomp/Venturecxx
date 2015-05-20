@@ -55,6 +55,7 @@ class Scaffold(object):
     print "# pnodes: " + str(len(self.getPrincipalNodes()))
     print "# absorbing nodes: " + str(len(self.absorbing))
     print "# aaa nodes: " + str(len(self.aaa))
+    print "# brush nodes: " + str(len(self.brush))
     print "border lengths: " + str([len(segment) for segment in self.border])
     print "# lkernels: " + str(len(self.lkernels))
 
@@ -63,6 +64,7 @@ class Scaffold(object):
     print "pnodes: " + str(self.getPrincipalNodes())
     print "absorbing nodes: " + str(self.absorbing)
     print "aaa nodes: " + str(self.aaa)
+    print "brush nodes: " + str(self.brush)
     print "borders: " + str(self.border)
     print "lkernels: " + str(self.lkernels)
 
