@@ -17,6 +17,7 @@
 
 from nose import SkipTest
 from nose.tools import eq_
+import tempfile
 from testconfig import config
 
 from venture.test.stats import statisticalTest, reportKnownDiscrete, reportSameDiscrete
@@ -181,53 +182,55 @@ def test_serialize_latents():
 
 @on_inf_prim("mh")
 def test_serialize_ripl():
-    v1 = get_ripl()
-    v1.assume('is_tricky', '(flip 0.2)')
-    v1.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
-    v1.assume('flip_coin', '(lambda () (flip theta))')
-    v1.observe('(flip_coin)', 'true')
+    with tempfile.NamedTemporaryFile(prefix='serialized.ripl') as f:
+        v1 = get_ripl()
+        v1.assume('is_tricky', '(flip 0.2)')
+        v1.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
+        v1.assume('flip_coin', '(lambda () (flip theta))')
+        v1.observe('(flip_coin)', 'true')
 
-    v1.infer(1)
-    result1 = v1.predict('theta', label='theta_prediction')
+        v1.infer(1)
+        result1 = v1.predict('theta', label='theta_prediction')
 
-    v1.save('/tmp/serialized.ripl')
+        v1.save(f.name)
 
-    v2 = get_ripl()
-    v2.load('/tmp/serialized.ripl')
-    result2 = v2.report('theta_prediction')
-    result3 = v2.predict('theta')
+        v2 = get_ripl()
+        v2.load(f.name)
+        result2 = v2.report('theta_prediction')
+        result3 = v2.predict('theta')
 
-    assert result1 == result2 and result1 == result3
+        assert result1 == result2 and result1 == result3
 
-    text1 = v1.get_text(1)
-    text2 = v2.get_text(1)
-    assert text1 == text2
+        text1 = v1.get_text(1)
+        text2 = v2.get_text(1)
+        assert text1 == text2
 
 @on_inf_prim("mh") # Easy to generalize but little testing value
 @statisticalTest
 def test_serialize_forget():
-    v1 = get_ripl()
-    v1.assume('is_tricky', '(flip 0.2)')
-    v1.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
-    v1.assume('flip_coin', '(lambda () (flip theta))')
-    for i in range(10):
-        v1.observe('(flip_coin)', 'true', label='y{}'.format(i))
+    with tempfile.NamedTemporaryFile(prefix='serialized.ripl') as f:
+        v1 = get_ripl()
+        v1.assume('is_tricky', '(flip 0.2)')
+        v1.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
+        v1.assume('flip_coin', '(lambda () (flip theta))')
+        for i in range(10):
+            v1.observe('(flip_coin)', 'true', label='y{}'.format(i))
 
-    v1.infer("(incorporate)")
-    v1.save('/tmp/serialized.ripl')
+        v1.infer("(incorporate)")
+        v1.save(f.name)
 
-    v2 = get_ripl()
-    v2.load('/tmp/serialized.ripl')
+        v2 = get_ripl()
+        v2.load(f.name)
 
-    for i in range(10):
-        v2.forget('y{}'.format(i))
+        for i in range(10):
+            v2.forget('y{}'.format(i))
 
-    v2.predict('is_tricky', label='pid')
+        v2.predict('is_tricky', label='pid')
 
-    infer = "(mh default one %s)" % default_num_transitions_per_sample()
-    samples = collectStateSequence(v2, 'pid', infer=infer)
-    ans = [(False, 0.8), (True, 0.2)]
-    return reportKnownDiscrete(ans, samples)
+        infer = "(mh default one %s)" % default_num_transitions_per_sample()
+        samples = collectStateSequence(v2, 'pid', infer=infer)
+        ans = [(False, 0.8), (True, 0.2)]
+        return reportKnownDiscrete(ans, samples)
 
 @on_inf_prim("none")
 def test_serialize_recursion():
@@ -242,8 +245,9 @@ def test_serialize_recursion():
     v.predict('(f 20)')
     try:
         # just make sure this doesn't crash
-        v.save('/tmp/serialized.ripl')
-        v.load('/tmp/serialized.ripl')
+        with tempfile.NamedTemporaryFile(prefix='serialized.ripl') as f:
+            v.save(f.name)
+            v.load(f.name)
     except RuntimeError as e:
         assert 'maximum recursion depth exceeded' not in e.message
         raise
@@ -255,8 +259,9 @@ def test_serialize_repeatedly():
     v.observe('(flip theta)', 'true')
     v.infer("(incorporate)")
     # just make sure this doesn't crash
-    v.save('/tmp/serialized.ripl')
-    v.save('/tmp/serialized.ripl')
+    with tempfile.NamedTemporaryFile(prefix='serialized.ripl') as f:
+        v.save(f.name)
+        v.load(f.name)
 
 def test_foreign_sp():
     # make sure that foreign SP's are retained through serialization
