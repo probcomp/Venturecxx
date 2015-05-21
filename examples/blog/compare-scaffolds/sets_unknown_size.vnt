@@ -1,0 +1,107 @@
+[define run_test
+  (lambda (set_model)
+    (do
+      (setup set_model 10)
+      (observe (observed_attribute 0) 5)
+      (observe (observed_attribute 1) -5)
+      (call_back pretty_print 'symbol<"Initial set:">)
+      (call_back pretty_print set)
+      (call_back newline)
+      (call_back pretty_print 'symbol<"Inferring inclusion tag 0">)
+      (infer_and_report 0)
+      (call_back pretty_print 'symbol<"Inferring inclusion tag 4">)
+      (infer_and_report 4)
+      (call_back pretty_print 'symbol<"Inferring inclusion tag 9">)
+      (infer_and_report 9)
+      ))]
+
+[define infer_and_report
+  (lambda (i)
+    (do
+      (repeat 5
+        (do
+          (mh 'in_set i 10)
+          (call_back pretty_print set)))
+      (call_back newline)))]
+
+[define setup
+  (lambda (set_model pool_size)
+    (do
+      (setup_helpers)
+      (set_model pool_size)
+      (setup_attributes)
+      ))]
+
+[define setup_helpers
+  (lambda ()
+    (do
+      (assume filter
+        (lambda (pred xs)
+          (if (= (size xs) 0)
+              (list)
+              (let ((fst (first xs))
+                    (rst (rest xs)))
+                (if (pred fst)
+                    (pair fst (filter pred rst))
+                    (filter pred rst))))))
+      (assume range
+        (lambda (n) (range_loop 0 n)))
+      (assume range_loop
+        (lambda (i n)
+          (if (= i n)
+              (list)
+              (pair i (range_loop (+ i 1) n)))))))]
+
+[define predict_loop
+  (lambda (i)
+    (if (> 1 i)
+        pass
+        (do
+          (predict (in_set (- ,i 1)))
+          (predict_loop (- i 1)))))]
+
+[define unknown_n
+  (lambda (pool_size)
+    (do
+      (assume in_set
+        (mem
+          (lambda (i) (tag 'in_set i (flip)))))
+      (assume set (filter in_set (range ,pool_size)))))]
+
+[define unknown_n_predict
+  (lambda (pool_size)
+    (do
+      (assume in_set
+        (mem
+          (lambda (i) (tag 'in_set i (flip)))))
+      (predict_loop pool_size)
+      (assume set (filter in_set (range ,pool_size)))))]
+
+[define unknown_n_thunk
+  (lambda (pool_size)
+    (do
+      (assume in_set
+        (lambda (i)
+          (mem (lambda () (tag 'in_set i (flip))))))
+      (assume included (mapv in_set (range ,pool_size)))
+      (assume set (filter (lambda (i) ((lookup included i))) (range ,pool_size)))))]
+
+[define setup_attributes
+  (lambda ()
+    (do
+      (assume attribute
+        (mem (lambda (element) (normal 0 1))))
+      (assume element_of
+        (mem
+          (lambda (obs)
+            (if (= (size set) 0)
+                false
+                (let ((ix (uniform_discrete 0 (size set))))
+                  (lookup set ix))))))
+      (assume observed_attribute
+        (lambda (obs)
+          (let ((element (element_of obs)))
+            (if (not element)
+                (exactly false)
+                (normal (attribute element) 0.1)))))))]
+
