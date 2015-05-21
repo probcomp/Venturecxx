@@ -1,4 +1,4 @@
-[define run_test
+[define test_sets_with_filter
   (lambda (set_model)
     (do
       (setup set_model 10)
