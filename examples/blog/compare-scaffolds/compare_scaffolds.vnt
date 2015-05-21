@@ -60,7 +60,7 @@
           (predict (in_set (- ,i 1)))
           (predict_loop (- i 1)))))]
 
-[define unknown_n
+[define filter_n
   (lambda (pool_size)
     (do
       (assume in_set
@@ -68,7 +68,7 @@
           (lambda (i) (tag 'in_set i (flip)))))
       (assume set (filter in_set (range ,pool_size)))))]
 
-[define unknown_n_predict
+[define filter_n_predict
   (lambda (pool_size)
     (do
       (assume in_set
@@ -77,7 +77,7 @@
       (predict_loop pool_size)
       (assume set (filter in_set (range ,pool_size)))))]
 
-[define unknown_n_thunk
+[define filter_n_thunk
   (lambda (pool_size)
     (do
       (assume in_set

@@ -4,6 +4,6 @@
 # here.  Many of these make commands dispatch to a shell script, because
 # makefiles don't seem to do loops and conditionals
 
-profile-unknown-size: sets_unknown_size.vnt plugins.py run-tests.sh
-	./run-tests.sh "profile_unknown_size"
+profile-with-filter: compare_scaffolds.vnt plugins.py run-tests.sh
+	./run-tests.sh "profile_with_filter"
 
