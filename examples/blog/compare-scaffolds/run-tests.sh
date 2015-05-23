@@ -1,23 +1,64 @@
-profile_with_filter () {
-    outfile="sets-with-filter.txt"
-    if [ -e $outfile ]
-    then
-        rm $outfile
-    fi
-    for set_model in filter_n filter_n_predict filter_n_thunk
+run_filter () {
+    # Whether we use thunks and predict
+    for settings in "false,false" "false,true" "true,false"            
     do
-        echo "Running tests for $set_model" >> $outfile
-        venture lite -P -L plugins.py -f compare_scaffolds.vnt \
-                -e "[infer (test_sets_with_filter $set_model)]" >> $outfile
+        use_thunks=$(echo $settings | cut -f1 -d,)
+        predict=$(echo $settings | cut -f2 -d,)
+        for i in 5 10 15 20 25 30
+        do
+            echo $i
+            venture lite -P -L plugins.py -f compare_scaffolds.vnt \
+                    -e "[infer (run_experiment (list 'filter_set $use_thunks $predict true $i))]" \
+                    > "results/filter-thunks-$use_thunks-predict-$predict-$i.txt"
+        done
+    done
+}
+
+run_prefix_k () {
+    # Whether we use thunks and predict
+    for settings in "false,false" "false,true" "true,false"            
+    do
+        use_thunks=$(echo $settings | cut -f1 -d,)
+        predict=$(echo $settings | cut -f2 -d,)
+        for i in 5 10 15 20 25 30
+        do
+            echo $i
+            venture lite -P -L plugins.py -f compare_scaffolds.vnt \
+                    -e "[infer (run_experiment (list 'prefix_k $use_thunks $predict true $i))]" \
+                    > "results/prefix_k-thunks-$use_thunks-predict-$predict-$i.txt"
+        done
+    done
+}
+
+run_map () {
+    # Whether we use thunks and predict
+    for settings in "false,false" "false,true" "true,false"            
+    do
+        use_thunks=$(echo $settings | cut -f1 -d,)
+        predict=$(echo $settings | cut -f2 -d,)
+        for i in 5 10 15 20 25 30
+        do
+            echo $i
+            venture lite -P -L plugins.py -f compare_scaffolds.vnt \
+                    -e "[infer (run_experiment (list 'map_set $use_thunks $predict false $i))]" \
+                    > "results/map-thunks-$use_thunks-predict-$predict-$i.txt"
+        done
     done
 }
 
 main () {
-    if [ "$1" == "profile_with_filter" ]
+    if [ "$1" == "run_filter" ]
     then
-        profile_with_filter
-    fi
+        run_filter
+    elif [ "$1" == "run_prefix_k" ]
+    then
+        run_prefix_k
+    elif [ "$1" == "run_map" ]
+    then
+        run_map
+    else
+        echo "Bad argument passed"
+    fi   
 }
 
-main "$1"
-
+main $1

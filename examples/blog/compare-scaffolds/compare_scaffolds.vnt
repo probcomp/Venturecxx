@@ -1,56 +1,143 @@
-[define test_sets_with_filter
-  (lambda (set_model)
+;; Helper functions
+
+[assume filter
+  (lambda (pred xs)
+    (if (= (size xs) 0)
+        (list)
+        (let ((fst (first xs))
+              (rst (rest xs)))
+          (if (pred fst)
+              (pair fst (filter pred rst))
+              (filter pred rst)))))]
+[assume filter_set
+  (lambda (pred size)
+    (filter pred (range (+ size 1))))]
+[assume map
+  (lambda (f xs)
+    (if (= (size xs) 0)
+        (list)
+        (pair (f (first xs)) (map f (rest xs)))))]
+[assume map_set
+  (lambda (f size) (map f (range (+ size 1))))]
+[assume range
+  (lambda (n) (range_loop 0 n))]
+[assume range_loop
+  (lambda (i n)
+    (if (= i n)
+        (list)
+        (pair i (range_loop (+ i 1) n))))]
+
+[assume prefix_k
+  (lambda (pred n_elements)
+    (prefix_k_iter pred  n_elements 0 (list)))]
+[assume prefix_k_iter
+  (lambda (pred k idx set_so_far)
+    (if (= (size set_so_far) k)
+        set_so_far
+        (let ((new_set (if (pred idx)
+                           (pair idx set_so_far)
+                           set_so_far)))
+          (prefix_k_iter pred  k (+ idx 1) new_set))))]
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[define run_experiment
+  ;; See setup_experiment for names of arg list variables
+  (lambda (arg_list)
     (do
-      (setup set_model 10)
-      (observe (observed_attribute 0) 5)
-      (observe (observed_attribute 1) -5)
-      (call_back pretty_print 'symbol<"Initial set:">)
-      (call_back pretty_print set)
-      (call_back newline)
-      (call_back pretty_print 'symbol<"Inferring inclusion tag 0">)
-      (infer_and_report 0)
-      (call_back pretty_print 'symbol<"Inferring inclusion tag 4">)
-      (infer_and_report 4)
-      (call_back pretty_print 'symbol<"Inferring inclusion tag 9">)
-      (infer_and_report 9)
+      (print_experiment_params arg_list)
+      (apply setup_experiment arg_list)
+      (experiment_loop 0 (lookup arg_list 4))))]
+
+[define print_experiment_params
+  (lambda (arg_list)
+    (do
+      (call_back pretty_print ',(lookup arg_list 0))            (call_back newline)
+      (call_back pretty_print 'symbol<"Using thunks: ">)
+      (call_back pretty_print ',(lookup arg_list 1))            (call_back newline)
+      (call_back pretty_print 'symbol<"Predicting tokens: ">)
+      (call_back pretty_print ',(lookup arg_list 2))            (call_back newline)
+      (call_back pretty_print 'symbol<"Adding client code: ">)
+      (call_back pretty_print ',(lookup arg_list 3))            (call_back newline)
+      (call_back pretty_print 'symbol<"Size: ">)
+      (call_back pretty_print ',(lookup arg_list 4))            (call_back newline)
       ))]
 
-[define infer_and_report
-  (lambda (i)
-    (do
-      (repeat 5
+[define setup_experiment
+  (lambda (set_model_name
+           use_thunks
+           predict
+           add_client_code
+           problem_size)
+    (let ((array_size (if (= set_model_name 'prefix_k)
+                          (* problem_size 10)
+                          problem_size)))
+      (do
+        ;; We can represent set membership as an array of mem'd thunks, or as mem'd functions
+        (if use_thunks
+            (do
+              (assume in_set_array
+                ;; If doing prefix_k, we don't know how many tokens we'll need answers for.
+                ;; So, just make more than we're likely to need.
+
+                (map
+                 (lambda (i)
+                   (mem (lambda () (tag 'in_set i (flip)))))
+                 (range (+ ,array_size 1))))
+              (assume in_set
+                (lambda (i) ((lookup in_set_array i)))))
+            (assume in_set
+              (mem
+                (lambda (i) (tag 'in_set i (flip))))))
+        ;; The set itself
+        (assume set (,set_model_name in_set ,problem_size))
+        ;; If asked, predict each of the switches
+        (if predict
+            (if (= set_model_name 'prefix_k)
+                ;; If prefix_k, don't know how many tokens we need, so predict a bunch
+                (predict_loop (* array_size 10))
+                (predict_loop array_size))
+            pass)
+        ;; If asked, add some client code
+        (if add_client_code
+            (do
+              (assume attribute
+                (mem (lambda (element) (normal 0 1))))
+              (assume element_of
+                (mem
+                  (lambda (obs)
+                    (if (= (size set) 0)
+                        false
+                        (let ((ix (uniform_discrete 0 (size set))))
+                          (lookup set ix))))))
+              (assume observed_attribute
+                (lambda (obs)
+                  (let ((element (element_of obs)))
+                    (if (not element)
+                        (exactly false)
+                        ;; Noise this up so that the evidence is very weak
+                        (normal (attribute element) 100)))))
+              (observe (observed_attribute 0) 0)
+              (incorporate))
+            pass))))]
+
+[define experiment_loop
+  (lambda (ix problem_size)
+    (if (< problem_size ix)
+        pass
         (do
-          (mh 'in_set i 10)
-          (call_back pretty_print set)))
-      (call_back newline)))]
-
-[define setup
-  (lambda (set_model pool_size)
-    (do
-      (setup_helpers)
-      (set_model pool_size)
-      (setup_attributes)
-      ))]
-
-[define setup_helpers
-  (lambda ()
-    (do
-      (assume filter
-        (lambda (pred xs)
-          (if (= (size xs) 0)
-              (list)
-              (let ((fst (first xs))
-                    (rst (rest xs)))
-                (if (pred fst)
-                    (pair fst (filter pred rst))
-                    (filter pred rst))))))
-      (assume range
-        (lambda (n) (range_loop 0 n)))
-      (assume range_loop
-        (lambda (i n)
-          (if (= i n)
-              (list)
-              (pair i (range_loop (+ i 1) n)))))))]
+          (call_back pretty_print 'symbol<"Index:">)
+          (call_back pretty_print ,ix) (call_back newline)
+          (print_scaffold_stats 'in_set ix 1) (call_back newline)
+          (call_back timer_start)
+          (repeat 5
+            (do
+              (mh 'in_set ix 10)
+              (call_back pretty_print set) (call_back newline)))
+          (call_back newline)
+          (call_back timer_time)
+          (experiment_loop (+ ix 5) problem_size)
+          )))]
 
 [define predict_loop
   (lambda (i)
@@ -59,49 +146,3 @@
         (do
           (predict (in_set (- ,i 1)))
           (predict_loop (- i 1)))))]
-
-[define filter_n
-  (lambda (pool_size)
-    (do
-      (assume in_set
-        (mem
-          (lambda (i) (tag 'in_set i (flip)))))
-      (assume set (filter in_set (range ,pool_size)))))]
-
-[define filter_n_predict
-  (lambda (pool_size)
-    (do
-      (assume in_set
-        (mem
-          (lambda (i) (tag 'in_set i (flip)))))
-      (predict_loop pool_size)
-      (assume set (filter in_set (range ,pool_size)))))]
-
-[define filter_n_thunk
-  (lambda (pool_size)
-    (do
-      (assume in_set
-        (lambda (i)
-          (mem (lambda () (tag 'in_set i (flip))))))
-      (assume included (mapv in_set (range ,pool_size)))
-      (assume set (filter (lambda (i) ((lookup included i))) (range ,pool_size)))))]
-
-[define setup_attributes
-  (lambda ()
-    (do
-      (assume attribute
-        (mem (lambda (element) (normal 0 1))))
-      (assume element_of
-        (mem
-          (lambda (obs)
-            (if (= (size set) 0)
-                false
-                (let ((ix (uniform_discrete 0 (size set))))
-                  (lookup set ix))))))
-      (assume observed_attribute
-        (lambda (obs)
-          (let ((element (element_of obs)))
-            (if (not element)
-                (exactly false)
-                (normal (attribute element) 0.1)))))))]
-

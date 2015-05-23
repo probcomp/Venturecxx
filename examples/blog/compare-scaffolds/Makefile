@@ -4,6 +4,8 @@
 # here.  Many of these make commands dispatch to a shell script, because
 # makefiles don't seem to do loops and conditionals
 
-profile-with-filter: compare_scaffolds.vnt plugins.py run-tests.sh
-	./run-tests.sh "profile_with_filter"
-
+profile-scaffold: compare_scaffolds.vnt plugins.py run-tests.sh
+	mkdir results
+	./run-tests.sh "run_filter"
+	./run-tests.sh "run_prefix_k"
+	./run-tests.sh "run_map"
