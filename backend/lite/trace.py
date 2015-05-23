@@ -576,7 +576,7 @@ class Trace(object):
 
   def freeze(self, id):
     assert id in self.families
-    node = self.families[id]
+    node = self.getOutermostNonReferenceNode(self.families[id])
     if isConstantNode(node):
       # All set
       pass
