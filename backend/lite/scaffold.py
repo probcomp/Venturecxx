@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from node import LookupNode, RequestNode, OutputNode
+from node import isLookupNode, isRequestNode, isOutputNode
 from value import SPRef
 from omegadb import OmegaDB
 from detach import unapplyPSP
@@ -106,10 +106,10 @@ def updateValuesAtScaffold(trace,scaffold,updatedNodes):
 def updateValueAtNode(trace, scaffold, node, updatedNodes):
   # Strong assumption! Only consider resampling nodes in the scaffold.
   if node not in updatedNodes and scaffold.isResampling(node):
-    if isinstance(node, LookupNode):
+    if isLookupNode(node):
       updateValueAtNode(trace, scaffold, node.sourceNode, updatedNodes)
       trace.setValueAt(node, trace.valueAt(node.sourceNode))
-    elif isinstance(node, OutputNode):
+    elif isOutputNode(node):
       # Assume SPRef and AAA nodes are always updated.
       psp = trace.pspAt(node)
       if not isinstance(trace.valueAt(node), SPRef) and not psp.childrenCanAAA():
@@ -184,7 +184,7 @@ def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i,ha
     node,isPrincipal,parentNode = q.pop()
     if node in drg and not node in aaa:
       addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder)
-    elif isinstance(node,LookupNode) or node.operatorNode in drg:
+    elif isLookupNode(node) or node.operatorNode in drg:
       addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder)
     # TODO temporary: once we put all uncollapsed AAA procs into AEKernels, this line won't be necessary
     elif node in aaa:
@@ -201,7 +201,7 @@ def findBrush(trace,cDRG):
   disabledRequests = set()
   brush = set()
   for node in cDRG:
-    if isinstance(node,RequestNode):
+    if isRequestNode(node):
       disableRequests(trace,node,disableCounts,disabledRequests,brush)
   return brush
 
@@ -217,7 +217,7 @@ def disableRequests(trace,node,disableCounts,disabledRequests,brush):
 def disableFamily(trace,node,disableCounts,disabledRequests,brush):
   if node in brush: return
   brush.add(node)
-  if isinstance(node,OutputNode):
+  if isOutputNode(node):
     brush.add(node.requestNode)
     disableRequests(trace,node.requestNode,disableCounts,disabledRequests,brush)
     disableFamily(trace,node.operatorNode,disableCounts,disabledRequests,brush)
@@ -266,10 +266,10 @@ def computeRegenCounts(trace,drg,absorbing,aaa,border,brush,hardBorder):
         maybeIncrementAAARegenCount(trace,regenCounts,aaa,parent)
 
     for node in brush:
-      if isinstance(node,OutputNode):
+      if isOutputNode(node):
         for esrParent in trace.esrParentsAt(node):
           maybeIncrementAAARegenCount(trace,regenCounts,aaa,esrParent)
-      elif isinstance(node,LookupNode):
+      elif isLookupNode(node):
         maybeIncrementAAARegenCount(trace,regenCounts,aaa,node.sourceNode)
 
   return regenCounts
@@ -278,7 +278,7 @@ def loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs):
   lkernels = { node : trace.pspAt(node).getAAALKernel() for node in aaa}
   if useDeltaKernels:
     for node in drg - aaa:
-      if not isinstance(node,OutputNode): continue
+      if not isOutputNode(node): continue
       if node.operatorNode in drg: continue
       for o in node.operandNodes:
         if o in drg: continue
