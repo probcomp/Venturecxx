@@ -83,9 +83,9 @@ class Trace(object):
     if directive[0] == "define":
       self.directives[directiveId] = ["define", directive[1], v.quote(value)]
     elif directive[0] == "observe":
-      self.directive[directiveId] = ["observe", v.quote(value), directive[2]]
+      self.directives[directiveId] = ["observe", v.quote(value), directive[2]]
     elif directive[0] == "evaluate":
-      self.directive[directiveId] = ["evaluate", v.quote(value)]
+      self.directives[directiveId] = ["evaluate", v.quote(value)]
     else:
       assert False, "Impossible directive type %s detected" % directive[0]
 
