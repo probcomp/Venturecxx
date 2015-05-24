@@ -73,3 +73,22 @@ def testFreezeMem():
   ripl.assume("y", "(stdnorm)")
   eq_(engine.get_entropy_info()["unconstrained_random_choices"],0)
   eq_(ripl.sample("x"), ripl.sample("y"))
+
+@broken_in("puma", "Puma still freezes shallowly")
+def testPredictFreezeForget():
+  "Check that predict-freeze-forget has an effect, if the freeze travels through the predicted expression."
+  def freeze_exp(ripl, exp):
+    ripl.predict(exp, label="do not clash with me")
+    ripl.freeze("do not clash with me")
+    ripl.forget("do not clash with me")
+
+  ripl = get_ripl()
+  ripl.assume("stdnorm", "(mem (lambda () (normal 0.0 1.0)))")
+  ripl.assume("x", "(stdnorm)")
+  engine = ripl.sivm.core_sivm.engine
+  eq_(engine.get_entropy_info()["unconstrained_random_choices"],1)
+  freeze_exp(ripl, "x")
+  eq_(engine.get_entropy_info()["unconstrained_random_choices"],0)
+  ripl.assume("y", "(stdnorm)")
+  eq_(engine.get_entropy_info()["unconstrained_random_choices"],0)
+  eq_(ripl.sample("x"), ripl.sample("y"))
