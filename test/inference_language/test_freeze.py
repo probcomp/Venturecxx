@@ -17,6 +17,7 @@
 
 from nose.tools import eq_
 
+from venture.test.config import broken_in
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
 import venture.lite.value as vv
@@ -66,3 +67,18 @@ def testFreezeSanityCheck3():
   ripl.infer(100)
   eq_(xval, ripl.sample("x"))
   assert not yval == ripl.sample("y")
+
+@broken_in("puma", "Puma still freezes shallowly")
+@broken_in("lite", "Lite still freezes shallowly")
+def testFreezeMem():
+  "Check that freezing affects all the values of a memmed procedure"
+  ripl = get_ripl()
+  ripl.assume("stdnorm", "(mem (lambda () (normal 0.0 1.0)))")
+  ripl.assume("x", "(stdnorm)")
+  engine = ripl.sivm.core_sivm.engine
+  eq_(engine.get_entropy_info()["unconstrained_random_choices"],1)
+  ripl.freeze("x")
+  eq_(engine.get_entropy_info()["unconstrained_random_choices"],0)
+  ripl.assume("y", "(stdnorm)")
+  eq_(engine.get_entropy_info()["unconstrained_random_choices"],0)
+  eq_(ripl.sample("x"), ripl.sample("y"))
