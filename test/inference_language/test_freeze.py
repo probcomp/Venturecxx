@@ -26,7 +26,7 @@ def count_nodes(engine):
   block = vv.VentureNumber(0)
   return engine.getDistinguishedTrace().numNodesInBlock(scope, block)
 
-@on_inf_prim("none")
+@on_inf_prim("freeze")
 def testFreezeSanityCheck1():
   ripl = get_ripl()
 
@@ -39,7 +39,7 @@ def testFreezeSanityCheck1():
   ripl.freeze("y")
   eq_(engine.get_entropy_info()["unconstrained_random_choices"],1)
 
-@on_inf_prim("none")
+@on_inf_prim("freeze")
 def testFreezeSanityCheck2():
   ripl = get_ripl()
 
@@ -53,7 +53,7 @@ def testFreezeSanityCheck2():
   ripl.freeze("y")
   eq_(count_nodes(engine), 1)
 
-@on_inf_prim("mh")
+@on_inf_prim("freeze")
 def testFreezeSanityCheck3():
   # Check that a frozen value no longer changes under inference, even
   # though unfrozen ones do.
