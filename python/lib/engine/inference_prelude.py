@@ -48,7 +48,7 @@ prelude = [
   :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
 
   Apply the given list of actions in sequence, discarding the values.
-  This is Haskell's sequence_
+  This is Haskell's sequence\\_.
 """,
 """(lambda (ks)
   (if (is_pair ks)
@@ -56,12 +56,13 @@ prelude = [
       (lambda (t) (pair nil t))))"""],
 
 ["mapM", """\
-.. function:: sequence(ks : list<inference action>)
+.. function:: mapM(act : proc(a -> <inference action returning b>), objs : list<a>)
 
-  :rtype: proc(<foreignblob>) -> <pair list<object> <foreignblob>>
+  :rtype: proc(<foreignblob>) -> <pair list<b> <foreignblob>>
 
-  Apply the given list of actions in sequence, returning a list of the
-  values.  The nomenclature is borrowed from Haskell.
+  Apply the given action function to each given object and perform
+  those actions in order.  Return a list of the resulting values.  The
+  nomenclature is borrowed from Haskell.
 """,
  """(lambda (act objs)
   (if (is_pair objs)
