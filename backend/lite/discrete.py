@@ -72,8 +72,8 @@ class LogBernoulliOutputPSP(DiscretePSP):
 
   def enumerateValues(self,args):
     logp = args.operandValues[0]
-    if p == 0: return [True]
-    elif p == float('-inf'): return [False]
+    if logp == 0: return [True]
+    elif logp == float('-inf'): return [False]
     else: return [True,False]
 
   def description(self,name):
