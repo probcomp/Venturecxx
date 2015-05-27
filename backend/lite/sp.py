@@ -151,18 +151,18 @@ used in the implementation of TypedPSP and TypedLKernel."""
       if len(lst) > len(self.args_types):
         raise VentureError("Too many arguments: SP takes at most %d args, got %d." % (len(self.args_types), len(lst)))
       # v could be None when computing log density bounds for a torus
-      return [self.args_types[i].asPythonNoneable(v) for (i,v) in enumerate(lst)]
+      return [self.args_types[i].asPythonNoneable(val) for (i,val) in enumerate(lst)]
     else:
-      return [self.args_types[0].asPythonNoneable(v) for v in lst]
+      return [self.args_types[0].asPythonNoneable(val) for val in lst]
 
   def wrap_arg_list(self, lst):
     if not self.variadic:
       assert len(lst) >= self.min_req_args
       assert len(lst) <= len(self.args_types)
       # v could be None when computing log density bounds for a torus
-      return [self.args_types[i].asVentureValue(v) for (i,v) in enumerate(lst)]
+      return [self.args_types[i].asVentureValue(val) for (i,val) in enumerate(lst)]
     else:
-      return [self.args_types[0].asVentureValue(v) for v in lst]
+      return [self.args_types[0].asVentureValue(val) for val in lst]
 
   def _name_for_fixed_arity(self, args_types):
     args_spec = " ".join([t.name() for t in args_types])
