@@ -71,6 +71,18 @@ prelude = [
           (return (pair v vs)))
       (return nil)))"""],
 
+["for_each_indexed", """\
+.. function:: for_each_indexed(act : proc(int, a) -> <inference action>, objs : list<a>)
+
+  :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
+
+  Apply the given action function to each given object and its index
+  in the list and perform those actions in order.  Discard the
+  results.  The nomenclature is borrowed from Scheme.
+""",
+ """(lambda (act objs)
+  (sequence (imapv act (to_array objs))))"""],
+
 # pass :: State a ()  pass = return ()
 ["pass", """\
 .. function:: pass(<foreignblob>)
