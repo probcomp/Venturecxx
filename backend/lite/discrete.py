@@ -24,6 +24,7 @@ from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, SPAux, VentureSPRecord, SPType
 from lkernel import SimulationAAALKernel
 from value import VentureAtom
+import types as t
 from types import BoolType # BoolType is metaprogrammed pylint:disable=no-name-in-module
 from exception import VentureValueError
 
@@ -154,6 +155,17 @@ class BetaBernoulliSPAux(SPAux):
     aux = BetaBernoulliSPAux()
     aux.yes = self.yes
     aux.no = self.no
+    return aux
+
+  v_type = t.PairType(t.NumberType(), t.NumberType())
+
+  def asVentureValue(self):
+    return BetaBernoulliSPAux.v_type.asVentureValue((self.yes, self.no))
+
+  @staticmethod
+  def fromVentureValue(val):
+    aux = BetaBernoulliSPAux()
+    (aux.yes, aux.no) = BetaBernoulliSPAux.v_type.asPython(val)
     return aux
 
   def cts(self): return [self.yes,self.no]
