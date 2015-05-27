@@ -893,7 +893,7 @@ class SPRef(VentureValue):
   def __init__(self,makerNode): self.makerNode = makerNode
   def asStackDict(self, trace=None):
     assert trace is not None
-    return v.val("sp", trace.madeSPRecordAt(self.makerNode).show())
+    return trace.madeSPRecordAt(self.makerNode).asStackDict()
 
   @staticmethod
   def fromStackDict(thing): return thing["value"]
