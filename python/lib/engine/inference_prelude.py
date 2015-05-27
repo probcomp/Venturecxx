@@ -81,7 +81,7 @@ prelude = [
   results.  The nomenclature is borrowed from Scheme.
 """,
  """(lambda (act objs)
-  (sequence (imapv act (to_array objs))))"""],
+  (sequence (to_list (imapv act (to_array objs)))))"""],
 
 # pass :: State a ()  pass = return ()
 ["pass", """\
