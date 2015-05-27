@@ -156,10 +156,10 @@ class BetaBernoulliSPAux(SPAux):
     aux.no = self.no
     return aux
 
-  v_type = t.PairType(t.NumberType(), t.NumberType())
+  v_type = t.HomogeneousListType(t.NumberType())
 
   def asVentureValue(self):
-    return BetaBernoulliSPAux.v_type.asVentureValue((self.yes, self.no))
+    return BetaBernoulliSPAux.v_type.asVentureValue([self.yes, self.no])
 
   @staticmethod
   def fromVentureValue(val):

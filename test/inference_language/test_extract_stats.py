@@ -18,6 +18,7 @@
 from nose.tools import eq_
 
 from venture.test.config import get_ripl, on_inf_prim
+import venture.ripl.utils as u
 
 @on_inf_prim("extract_stats")
 def testStatsExtractionSmoke():
@@ -29,4 +30,4 @@ def testStatsExtractionSmoke():
       (incorporate)
       (extract_stats coin))
 """)
-  eq_([1,0], val)
+  eq_([1,0], [u.strip_types(v) for v in val])

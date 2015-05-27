@@ -461,7 +461,7 @@ extractStatsMacro = quasiquotation_macro("extract_stats", min_size = 2, max_size
     (assume coin (make_beta_bernoulli 1 1))
     (observe (coin) true)
     (incorporate)
-    (extract_stats coin) --> (pair 1 0)
+    (extract_stats coin) --> (list 1 0)
 
 """)
 
