@@ -360,6 +360,9 @@ class VentureNil(VentureValue):
   def __init__(self): pass
   def __repr__(self): return "Nil"
 
+  def getArray(self, elt_type=None):
+    return VentureArray([]).getArray(elt_type)
+
   def asStackDict(self, _trace=None): return v.list([])
   @staticmethod
   def fromStackDict(_): return VentureNil()
