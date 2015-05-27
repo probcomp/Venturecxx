@@ -17,7 +17,7 @@
 
 import numbers
 import exp as e
-from node import ConstantNode, LookupNode, RequestNode, OutputNode
+from node import isConstantNode, isLookupNode, isRequestNode, isOutputNode
 from sp import VentureSPRecord
 from psp import NullRequestPSP, PSP
 from value import SPRef
@@ -66,14 +66,14 @@ def constrain(trace,node,value):
   return weight
 
 def propagateConstraint(trace,node,value):
-  if isinstance(node,LookupNode): trace.setValueAt(node,value)
-  elif isinstance(node,RequestNode):
+  if isLookupNode(node): trace.setValueAt(node,value)
+  elif isRequestNode(node):
     if not isinstance(trace.pspAt(node),NullRequestPSP):
       raise VentureException("evaluation", "Cannot make requests downstream of a node that gets constrained during regen", address = node.address)
   else:
     # TODO there may be more cases to ban here.
     # e.g. certain kinds of deterministic coupling through mutation.
-    assert isinstance(node,OutputNode)
+    assert isOutputNode(node)
     if trace.pspAt(node).isRandom():
       raise VentureException("evaluation", "Cannot make random choices downstream of a node that gets constrained during regen", address = node.address)
     # TODO Is it necessary to unincorporate and incorporate here?  If
@@ -107,11 +107,11 @@ def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   if scaffold.isResampling(node):
     if trace.regenCountAt(scaffold,node) == 0:
       weight += regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients)
-      if isinstance(node,LookupNode):
+      if isLookupNode(node):
         trace.setValueAt(node, trace.valueAt(node.sourceNode))
       else: 
         weight += applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients)
-        if isinstance(node,RequestNode): weight += evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients)
+        if isRequestNode(node): weight += evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients)
     trace.incRegenCountAt(scaffold,node)
 
   value = trace.valueAt(node)
@@ -213,7 +213,7 @@ def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   return weight
 
 def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
-  assert isinstance(node,RequestNode)
+  assert isRequestNode(node)
   weight = 0
   request = trace.valueAt(node)
 
@@ -249,16 +249,15 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   return weight
 
 def restore(trace,node,scaffold,omegaDB,gradients):
-  if isinstance(node,ConstantNode): return 0
-  if isinstance(node,OutputNode) and node.isFrozen: return 0
-  if isinstance(node,LookupNode):
+  if isConstantNode(node): return 0
+  if isLookupNode(node):
     weight = regenParents(trace,node,scaffold,True,omegaDB,gradients)
     trace.reconnectLookup(node)
     trace.setValueAt(node,trace.valueAt(node.sourceNode))
     assert isinstance(weight, numbers.Number)
     return weight
   else: # node is output node
-    assert isinstance(node,OutputNode)
+    assert isOutputNode(node)
     weight = restore(trace,node.operatorNode,scaffold,omegaDB,gradients)
     for operandNode in node.operandNodes: weight += restore(trace,operandNode,scaffold,omegaDB,gradients)
     weight += apply(trace,node.requestNode,node,scaffold,True,omegaDB,gradients)

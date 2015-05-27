@@ -59,7 +59,8 @@ struct PyTrace
   uint32_t numUnconstrainedChoices();
 
   double makeConsistent();
-
+  void registerConstraints();
+  
   double likelihoodAt(boost::python::object pyscope, boost::python::object pyblock);
   double posteriorAt(boost::python::object pyscope, boost::python::object pyblock);
   double likelihoodWeight();

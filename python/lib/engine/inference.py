@@ -157,6 +157,9 @@ class Infer(object):
     return VentureValue.fromStackDict(self.engine.sample(exp.asStackDict()))
   def sample_all(self, exp):
     return [VentureValue.fromStackDict(val) for val in self.engine.sample_all(exp.asStackDict())]
+  def extract_stats(self, exp):
+    sp_dict = self.engine.sample(exp.asStackDict())
+    return VentureValue.fromStackDict(sp_dict["aux"])
   def load_plugin(self, name, *args):
     return self.convert_none(self.engine.ripl.load_plugin(name, *args))
 

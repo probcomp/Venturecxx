@@ -19,13 +19,13 @@ from mh import MHOperator
 from ..omegadb import OmegaDB
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
-from ..node import ApplicationNode, Args
+from ..node import isApplicationNode, Args
 from ..lkernel import VariationalLKernel
 
 def registerVariationalLKernels(trace,scaffold):
   hasVariational = False
   for node in scaffold.regenCounts:
-    if isinstance(node,ApplicationNode) and \
+    if isApplicationNode(node) and \
        not trace.isConstrainedAt(node) and \
        trace.pspAt(node).hasVariationalLKernel() and \
        not scaffold.isResampling(node.operatorNode):

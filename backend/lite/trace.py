@@ -18,7 +18,7 @@
 from address import Address, List
 from builtin import builtInValues, builtInSPs
 from env import VentureEnvironment
-from node import ConstantNode,LookupNode,RequestNode,OutputNode,Args
+from node import ConstantNode,LookupNode,RequestNode,OutputNode,Args,isConstantNode,isLookupNode,isRequestNode,isOutputNode
 import math
 from regen import constrain, processMadeSP, evalFamily, restore
 from detach import unconstrain, unevalFamily
@@ -204,10 +204,10 @@ class Trace(object):
     return spFamilies
   def spauxAt(self,node): return self.madeSPAuxAt(self.spRefAt(node).makerNode)
   def pspAt(self,node):
-    if isinstance(node, RequestNode):
+    if isRequestNode(node):
       return self.spAt(node).requestPSP
     else:
-      assert isinstance(node, OutputNode)
+      assert isOutputNode(node)
       return self.spAt(node).outputPSP
 
   #### Stuff that a particle trace would need to override for persistence
@@ -319,7 +319,7 @@ class Trace(object):
       return pnodes
 
   def addRandomChoicesInBlock(self,scope,block,pnodes,node):
-    if not isinstance(node,OutputNode): return
+    if not isOutputNode(node): return
 
     if self.pspAt(node).isRandom() and not node in self.ccs: pnodes.add(node)
 
@@ -397,19 +397,28 @@ class Trace(object):
       # a nan weight.  I want to normalize these to indicating that
       # the resulting state is impossible.
       return float("-inf")
-
+  
+  # use instead of makeConsistent when restoring a trace
+  def registerConstraints(self):
+    for node,val in self.unpropagatedObservations.iteritems():
+      appNode = self.getConstrainableNode(node)
+      #import ipdb; ipdb.set_trace()
+      node.observe(val)
+      constrain(self,appNode,node.observedValue)
+    self.unpropagatedObservations.clear()
+  
   def getConstrainableNode(self, node):
     candidate = self.getOutermostNonReferenceNode(node)
-    if isinstance(candidate,ConstantNode):
+    if isConstantNode(candidate):
       raise VentureException("evaluation", "Cannot constrain a constant value.", address = node.address)
     if not self.pspAt(candidate).isRandom():
       raise VentureException("evaluation", "Cannot constrain a deterministic value.", address = node.address)
     return candidate
 
   def getOutermostNonReferenceNode(self,node):
-    if isinstance(node,ConstantNode): return node
-    if isinstance(node,LookupNode): return self.getOutermostNonReferenceNode(node.sourceNode)
-    assert isinstance(node,OutputNode)
+    if isConstantNode(node): return node
+    if isLookupNode(node): return self.getOutermostNonReferenceNode(node.sourceNode)
+    assert isOutputNode(node)
     if isinstance(self.pspAt(node),ESRRefOutputPSP):
       if self.esrParentsAt(node):
         return self.getOutermostNonReferenceNode(self.esrParentsAt(node)[0])
@@ -568,11 +577,11 @@ class Trace(object):
   def freeze(self, id):
     assert id in self.families
     node = self.families[id]
-    if isinstance(node,ConstantNode) or node.isFrozen == True:
+    if isConstantNode(node):
       # All set
       pass
     else:
-      assert isinstance(node,OutputNode)
+      assert isOutputNode(node)
       value = self.valueAt(node)
       unevalFamily(self,node,Scaffold(),OmegaDB())
       # XXX It looks like we kinda want to replace the identity of this

@@ -501,6 +501,20 @@ double ConcreteTrace::makeConsistent()
   }
 }
 
+void ConcreteTrace::registerConstraints()
+{
+  for (map<Node*,VentureValuePtr>::iterator iter = unpropagatedObservations.begin();
+       iter != unpropagatedObservations.end();
+       ++iter)
+  {
+    OutputNode * appNode = getConstrainableNode(iter->first);
+    observeNode(iter->first,iter->second);
+    constrain(this,appNode,getObservedValue(iter->first));
+  }
+  unpropagatedObservations.clear();
+}
+
+
 int ConcreteTrace::numUnconstrainedChoices() { return unconstrainedChoices.size(); }
 
 double ConcreteTrace::likelihoodAt(ScopeID scope, BlockID block) {
