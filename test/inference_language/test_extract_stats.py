@@ -17,17 +17,21 @@
 
 from nose.tools import eq_
 
-from venture.test.config import get_ripl, on_inf_prim
+from venture.test.config import get_ripl, gen_on_inf_prim
 import venture.ripl.utils as u
 
-@on_inf_prim("extract_stats")
+@gen_on_inf_prim("extract_stats")
 def testStatsExtractionSmoke():
+  yield checkStatsExtractionSmoke, "make_beta_bernoulli"
+  yield checkStatsExtractionSmoke, "make_uc_beta_bernoulli"
+
+def checkStatsExtractionSmoke(maker):
   ripl = get_ripl()
   val = ripl.infer("""\
     (do
-      (assume coin (make_beta_bernoulli 1 1))
+      (assume coin (%s 1 1))
       (observe (coin) true)
       (incorporate)
       (extract_stats coin))
-""")
+  """ % maker)
   eq_([1,0], [u.strip_types(v) for v in val])
