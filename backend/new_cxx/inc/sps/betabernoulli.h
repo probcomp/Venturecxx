@@ -27,6 +27,7 @@
 struct BetaBernoulliSPAux : SPAux
 {
   BetaBernoulliSPAux(): heads(0), tails(0) {}
+  VentureValuePtr asVentureValue() const;
   SPAux* copy_help(ForwardingMap* m) const;
 
   int heads;

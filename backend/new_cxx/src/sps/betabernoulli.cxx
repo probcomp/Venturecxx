@@ -172,5 +172,14 @@ void UBetaBernoulliOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Arg
 }
 
 // Auxs
+VentureValuePtr BetaBernoulliSPAux::asVentureValue() const
+{
+  VentureValuePtr hd(new VentureNumber(heads));
+  VentureValuePtr tl(new VentureNumber(tails));
+  VentureValuePtr end(new VentureNil());
+
+  return VentureValuePtr(new VenturePair(hd, VentureValuePtr(new VenturePair(tl, end))));
+}
+
 SPAux* BetaBernoulliSPAux::copy_help(ForwardingMap* m) const  { return new BetaBernoulliSPAux(*this);  }
 SPAux* UBetaBernoulliSPAux::copy_help(ForwardingMap* m) const { return new UBetaBernoulliSPAux(*this); }
