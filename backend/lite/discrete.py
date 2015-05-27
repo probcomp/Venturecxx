@@ -25,7 +25,6 @@ from sp import SP, SPAux, VentureSPRecord, SPType
 from lkernel import SimulationAAALKernel
 from value import VentureAtom
 import types as t
-from types import BoolType # BoolType is metaprogrammed pylint:disable=no-name-in-module
 from exception import VentureValueError
 
 class DiscretePSP(RandomPSP):
@@ -178,7 +177,7 @@ class MakerCBetaBernoulliOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self,args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
-    output = TypedPSP(CBetaBernoulliOutputPSP(alpha, beta), SPType([], BoolType()))
+    output = TypedPSP(CBetaBernoulliOutputPSP(alpha, beta), SPType([], t.BoolType()))
     return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output))
 
   def description(self,name):
@@ -237,7 +236,7 @@ class MakerUBetaBernoulliOutputPSP(DiscretePSP):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
     weight = scipy.stats.beta.rvs(alpha, beta)
-    output = TypedPSP(UBetaBernoulliOutputPSP(weight), SPType([], BoolType()))
+    output = TypedPSP(UBetaBernoulliOutputPSP(weight), SPType([], t.BoolType()))
     return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output))
 
   def logDensity(self,value,args):
@@ -257,7 +256,7 @@ class UBetaBernoulliAAALKernel(SimulationAAALKernel):
     beta  = args.operandValues[1]
     [ctY,ctN] = args.madeSPAux.cts()
     newWeight = scipy.stats.beta.rvs(alpha + ctY, beta + ctN)
-    output = TypedPSP(UBetaBernoulliOutputPSP(newWeight), SPType([], BoolType()))
+    output = TypedPSP(UBetaBernoulliOutputPSP(newWeight), SPType([], t.BoolType()))
     return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output), args.madeSPAux)
 
   def weight(self, _trace, _newValue, _args):
@@ -309,7 +308,7 @@ class MakerSuffBernoulliOutputPSP(DeterministicMakerAAAPSP):
     weight = args.operandValues[0]
     # The made SP is the same as in the conjugate case: flip coins
     # based on an explicit weight, and maintain sufficient statistics.
-    output = TypedPSP(UBetaBernoulliOutputPSP(weight), SPType([], BoolType()))
+    output = TypedPSP(UBetaBernoulliOutputPSP(weight), SPType([], t.BoolType()))
     return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output))
 
   def description(self,name):
