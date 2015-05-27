@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from value import VentureValue, registerVentureType
+from value import VentureValue, registerVentureType, VentureNil
 from types import VentureType
 import copy
 from exception import VentureError
@@ -41,6 +41,10 @@ class SPFamilies(object):
 
 class SPAux(object):
   def copy(self): return SPAux()
+  def asVentureValue(self): return VentureNil()
+  @staticmethod
+  def fromVentureValue(_thing):
+    raise Exception("Cannot convert a Venture value into a generic SPAux")
 
 class SP(object):
   def __init__(self,requestPSP,outputPSP):
