@@ -56,7 +56,7 @@ prelude = [
       (lambda (t) (pair nil t))))"""],
 
 ["mapM", """\
-.. function:: mapM(act : proc(a -> <inference action returning b>), objs : list<a>)
+.. function:: mapM(act : proc(a) -> <inference action returning b>, objs : list<a>)
 
   :rtype: proc(<foreignblob>) -> <pair list<b> <foreignblob>>
 
@@ -84,7 +84,7 @@ prelude = [
 
 # bind :: State s a -> (a -> State s b) -> State s b
 ["bind", """\
-.. function:: bind(<inference action returning a>, proc(a -> <inference action returning b>))
+.. function:: bind(<inference action returning a>, proc(a) -> <inference action returning b>)
 
   :rtype: proc(<foreignblob>) -> <pair b <foreignblob>>
 
@@ -100,7 +100,7 @@ prelude = [
 # bind_ :: State s b -> State s a -> State s a
 # drop the value of type b but perform both actions
 ["bind_", """\
-.. function:: bind_(<inference action>, proc(() -> <inference action returning a>))
+.. function:: bind_(<inference action>, proc() -> <inference action returning a>)
 
   :rtype: proc(<foreignblob>) -> <pair a <foreignblob>>
 
