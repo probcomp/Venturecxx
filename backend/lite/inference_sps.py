@@ -746,6 +746,7 @@ Print the sweep count.
   ripl_macro_helper("predict", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType("<label>")], min_req_args=1)),
   macro_helper("sample", infer_action_maker_type([t.AnyType("<expression>")], return_type=t.AnyType())),
   macro_helper("sample_all", infer_action_maker_type([t.AnyType("<expression>")], return_type=t.ListType())),
+  macro_helper("extract_stats", infer_action_maker_type([t.AnyType("<expression>")], return_type=t.AnyType())),
 
   ripl_method_sp("forget", infer_action_maker_type([t.AnyType("<label>")]), desc="""\
   Forget an observation, prediction, or unused assumption.

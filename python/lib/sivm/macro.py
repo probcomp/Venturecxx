@@ -445,8 +445,29 @@ sampleAllMacro = quasiquotation_macro("sample_all", min_size = 2, max_size = 2, 
   The given model expression may be constructed programmatically --
   see ``unquote``.  """)
 
+extractStatsMacro = quasiquotation_macro("extract_stats", min_size = 2, max_size = 2, desc="""\
+- `(extract_stats <model-expression>)`: Extract maintained statistics.
+
+  Specifically, sample the given model expression, like ``sample``,
+  but expect it to return a stochastic procedure and reify and return
+  the statistics about its applications that it has collected.
+
+  The exact Venture-level representation of the returned statistics
+  depends on the procedure in question.  If the procedure does not
+  collect statistics, return nil.
+
+  For example::
+
+    (assume coin (make_cbeta_bernoulli 1 1))
+    (observe (coin) true)
+    (incorporate)
+    (extract_stats coin) --> (pair 1 0)
+
+""")
+
 for m in [identityMacro, lambdaMacro, ifMacro, andMacro, orMacro, letMacro, doMacro, beginMacro, qqMacro,
           callBackMacro, collectMacro,
           assumeMacro, observeMacro, predictMacro, forceMacro, sampleMacro, sampleAllMacro,
+          extractStatsMacro,
           ListMacro(), LiteralMacro()]:
   register_macro(m)
