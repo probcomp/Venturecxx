@@ -106,6 +106,12 @@ def symmetric_matrix(vs):
   import numpy as np
   return val("symmetric_matrix", np.asarray(vs))
 
+def sp(v, aux=None):
+  candidate = {"type":"sp", "value":v}
+  if aux is not None:
+    candidate["aux"] = aux
+  return candidate
+
 def quote(v):
   return [symbol("quote"), v]
 

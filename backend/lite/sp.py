@@ -98,7 +98,7 @@ class VentureSPRecord(VentureValue):
     return self.sp.show(self.spAux)
 
   def asStackDict(self, _trace=None):
-    return v.val("sp", self.show())
+    return v.sp(self.show(), self.spAux.asVentureValue().asStackDict())
 
 registerVentureType(VentureSPRecord)
 
