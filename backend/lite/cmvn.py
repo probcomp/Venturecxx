@@ -16,7 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
-from sp import SP, VentureSPRecord, SPType
+from sp import SP, SPAux, VentureSPRecord, SPType
 import math
 from scipy.special import gammaln
 from types import HomogeneousArrayType, NumberType # The type names are metaprogrammed pylint: disable=no-name-in-module
@@ -65,7 +65,7 @@ def mvtSample(mu,Sigma,N):
 
 # TODO: I remember there being mistakes in this section (wrt dividing by N)
 
-class CMVNSPAux(object):
+class CMVNSPAux(SPAux):
   def __init__(self,d):
     self.N = 0
     self.STotal = np.mat(np.zeros((d,d)))
