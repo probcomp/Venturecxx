@@ -101,7 +101,7 @@ class GP(object):
     return multivariate_normal_logpdf(col_vec(os), mu, sigma)
   
 from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
-from sp import SP, VentureSPRecord, SPType
+from sp import SP, SPAux, VentureSPRecord, SPType
 import types as t
 
 class GPOutputPSP(RandomPSP):
@@ -113,12 +113,12 @@ class GPOutputPSP(RandomPSP):
     return GP(self.mean, self.covariance, samples)
   
   def simulate(self,args):
-    samples = args.spaux
+    samples = args.spaux.samples
     xs = args.operandValues[0]
     return self.makeGP(samples).sample(*xs)
 
   def logDensity(self,os,args):
-    samples = args.spaux
+    samples = args.spaux.samples
     xs = args.operandValues[0]
     return self.makeGP(samples).logDensity(xs, os)
 
@@ -126,19 +126,23 @@ class GPOutputPSP(RandomPSP):
     return self.makeGP(samples).logDensityOfCounts()
   
   def incorporate(self,os,args):
-    samples = args.spaux
+    samples = args.spaux.samples
     xs = args.operandValues[0]
     
     for x, o in zip(xs, os):
       samples[x] = o
 
   def unincorporate(self,_os,args):
-    samples = args.spaux
+    samples = args.spaux.samples
     xs = args.operandValues[0]
     for x in xs:
       del samples[x]
 
 gpType = SPType([t.ArrayUnboxedType(t.NumberType())], t.ArrayUnboxedType(t.NumberType()))
+
+class GPSPAux(SPAux):
+  def __init__(self, samples):
+    self.samples = samples
 
 class GPSP(SP):
   def __init__(self, mean, covariance):
@@ -147,7 +151,7 @@ class GPSP(SP):
     output = TypedPSP(GPOutputPSP(mean, covariance), gpType)
     super(GPSP, self).__init__(NullRequestPSP(),output)
 
-  def constructSPAux(self): return {}
+  def constructSPAux(self): return GPSPAux({})
   def show(self,spaux): return GP(self.mean, self.covariance, spaux)
 
 class MakeGPOutputPSP(DeterministicPSP):
