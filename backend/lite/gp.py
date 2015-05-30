@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import copy
 import numpy as np
 import numpy.linalg as la
 import numpy.random as npr
@@ -143,6 +144,8 @@ gpType = SPType([t.ArrayUnboxedType(t.NumberType())], t.ArrayUnboxedType(t.Numbe
 class GPSPAux(SPAux):
   def __init__(self, samples):
     self.samples = samples
+  def copy(self):
+    return GPSPAux(copy.copy(self.samples))
 
 class GPSP(SP):
   def __init__(self, mean, covariance):
