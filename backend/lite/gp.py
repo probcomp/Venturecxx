@@ -24,13 +24,13 @@ from exception import VentureValueError
 # upgrade to scipy 0.14.
 def multivariate_normal_logpdf(x, mu, sigma):
   try:
-    dev = x - mu
+    # dev = x - mu
     ans = 0
     ans += (-.5*(x-mu).transpose() * la.inv(sigma) * (x-mu))[0, 0]
     ans += -.5*len(sigma)*np.log(2 * np.pi)
     ans += -.5*np.log(la.det(sigma))
     return ans
-  except la.LinAlgError as e:
+  except la.LinAlgError:
     raise VentureValueError("Bad GP covariance matrix.")
 
 def col_vec(xs):
