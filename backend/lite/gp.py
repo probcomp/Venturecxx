@@ -19,7 +19,11 @@ import copy
 import numpy as np
 import numpy.linalg as la
 import numpy.random as npr
+
 from exception import VentureValueError
+from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
+from sp import SP, SPAux, VentureSPRecord, SPType
+import types as t
 
 # XXX Replace by scipy.stats.multivariate_normal.logpdf when we
 # upgrade to scipy 0.14.
@@ -101,10 +105,6 @@ class GP(object):
     
     return multivariate_normal_logpdf(col_vec(os), mu, sigma)
   
-from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
-from sp import SP, SPAux, VentureSPRecord, SPType
-import types as t
-
 class GPOutputPSP(RandomPSP):
   def __init__(self, mean, covariance):
     self.mean = mean
@@ -123,8 +123,8 @@ class GPOutputPSP(RandomPSP):
     xs = args.operandValues[0]
     return self.makeGP(samples).logDensity(xs, os)
 
-  def logDensityOfCounts(self,samples):
-    return self.makeGP(samples).logDensityOfCounts()
+  def logDensityOfCounts(self,aux):
+    return self.makeGP(aux.samples).logDensityOfCounts()
   
   def incorporate(self,os,args):
     samples = args.spaux.samples
@@ -157,7 +157,7 @@ class GPSP(SP):
   def constructSPAux(self): return GPSPAux({})
   def show(self,spaux): return GP(self.mean, self.covariance, spaux)
 
-class MakeGPOutputPSP(DeterministicPSP):
+class MakeGPOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self,args):
     mean = args.operandValues[0]
     covariance = args.operandValues[1]
