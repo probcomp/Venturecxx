@@ -326,12 +326,14 @@ class WorkerBase(object):
     self._initialize()
 
   def run(self):
-    while True: self.poll()
+    done = False
+    while not done:
+      done = self.poll()
 
   def poll(self):
     cmd, args, kwargs, index = self.pipe.recv()
     if cmd == 'stop':
-      return
+      return True # Done
     if hasattr(self, cmd):
       res = getattr(self, cmd)(index, *args, **kwargs)
     elif index is not None:
@@ -339,6 +341,7 @@ class WorkerBase(object):
     else:
       res = [getattr(o, cmd)(*args, **kwargs) for o in self.objs]
     self.pipe.send(res)
+    return False # Maybe not done
 
   @safely
   def set_seeds(self, _index, seeds):
