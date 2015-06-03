@@ -245,14 +245,12 @@ class Analytics(object):
         assert not(assumes is None and observes is not None),'No *observes* without *assumes*.'
         assert queryExps is None or isinstance(queryExps,(list,tuple)), 'QueryExps must be list or tuple'
 
-
         if hasattr(ripl_mripl,'no_ripls'): # test for ripl vs. MRipl
             ripl=ripl_mripl.local_ripls[0] # only needed because of set_seed
             self.mripl = True
         else:
             ripl = ripl_mripl
             self.mripl = False
-
 
         # make fresh ripl with same backend as input ripl
         self.backend = ripl.backend()
@@ -261,13 +259,10 @@ class Analytics(object):
         directives_list = ripl.list_directives(type=True)
 
 
-
-
         if assumes is not None:
             self.assumes = assumes
             self.observes = list(observes) if observes is not None else []
         else:
-
             assumes = [d for d in directives_list if d['instruction']=='assume']
             self.assumes = map(directive_split,assumes)
             observes = [d for d in directives_list if d['instruction']=='observe']
@@ -293,9 +288,7 @@ class Analytics(object):
             #   #self.observes = clean_observes
 
 
-
         self.queryExps=[] if queryExps is None else list(queryExps)
-
 
         if parameters is None: parameters = {}
         self.parameters = parameters.copy()
@@ -303,7 +296,6 @@ class Analytics(object):
             self.ripl.set_seed(self.parameters['venture_random_seed'])
         else:
             self.parameters['venture_random_seed'] = 1 ## UNKNOWN SEED
-
 
         # make fresh mripl with same backend as input mripl
 
