@@ -150,9 +150,9 @@ def testDirectivesForget():
     'forget'
     v=get_mripl(no_ripls=default_num_samples())
     v.assume('x','(normal 1 10)',label='pid')
-    v.observe('(normal x .1)','1')
+    v.observe('(normal x .1)','1',label='obs')
     v.infer(default_num_transitions_per_sample())
-    v.forget(2)
+    v.forget('obs')
     v.infer(default_num_transitions_per_sample())
     samples = v.report('pid')
     cdf = stats.norm(loc=1, scale=10).cdf
