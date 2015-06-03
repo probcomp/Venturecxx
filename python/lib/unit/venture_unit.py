@@ -19,7 +19,11 @@ import time, random
 import numpy as np
 from venture.lite.utils import FixedRandomness
 from venture.ripl.utils import strip_types
-from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl,mk_l_ripl, build_exp
+from venture.shortcuts import make_puma_church_prime_ripl
+from venture.shortcuts import make_lite_church_prime_ripl
+mk_l_ripl = make_lite_church_prime_ripl
+mk_p_ripl = make_puma_church_prime_ripl
+from venture.venturemagics.ip_parallel import MRipl,build_exp
 from history import History, Run, Series, historyOverlay,compareSampleDicts,filterDict,historyNameToValues
 
 parseValue = strip_types
