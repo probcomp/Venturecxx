@@ -25,7 +25,7 @@ from nose import SkipTest
 from venture.test.stats import statisticalTest, reportKnownContinuous
 from venture.test.config import get_ripl, get_mripl, default_num_samples, default_num_transitions_per_sample, on_inf_prim
 
-from venture.venturemagics.ip_parallel import *
+import venture.venturemagics.ip_parallel as ip_parallel
 
 
 def setup_function():
@@ -67,7 +67,7 @@ def localRunFunctions():
 def testInitSwitchLocal():
     'if no engines are running, should switch to local'
     try:
-        v=MRipl(2)
+        v=ip_parallel.MRipl(2)
         if v.local_mode is True:
             eq_(v.no_local_ripls,v.no_ripls)
     except:
@@ -260,7 +260,7 @@ def testMapProc():
     # use fact that ip_parallel is imported to engines
     if v.local_mode is False:
         def f(ripl):
-            mripl = MRipl(2,local_mode=True)
+            mripl = ip_parallel.MRipl(2,local_mode=True)
             mripl.mr_set_seeds(range(2))
             return mripl.sample('(poisson 20)')
         pairs = v.map_proc('all',f)
@@ -323,7 +323,7 @@ def testMRiplUtils():
     v.observe('(normal x 1)','2')
     v.predict('(+ x 0)') # ==2
     v.predict('(f)')    # ==2
-    di_string = mk_directives_string(v)
+    di_string = ip_parallel.mk_directives_string(v)
     v.clear()
     v.execute_program(di_string)
     [eq_(v.report(i),2) for i in [1,3,4,5]]
