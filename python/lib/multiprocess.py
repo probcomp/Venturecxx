@@ -196,7 +196,7 @@ class MasterBase(object):
     res = []
     for pipe in self.pipes:
       ans = pipe.recv()
-      res.extend(ans)
+      self.accumulate_result(res, ans)
     return self.handle_result_list(res)
 
   def map_chunk(self, ix, cmd, *args, **kwargs):
@@ -215,6 +215,17 @@ class MasterBase(object):
     pipe.send((cmd, args, kwargs, self.chunk_offsets[ix]))
     res = pipe.recv()
     return self.handle_one_result(res)
+
+  def accumulate_result(self, res, ans):
+    # ans could be a list of Success/Failures or a single
+    # Success/Failure about an operation that was supposed to produce
+    # a list.
+    if isinstance(ans, list):
+      res.extend(ans)
+    elif ans.threw_error():
+      res.append(ans) # Put in the one error for later processing
+    else:
+      res.extend([Success(a) for a in ans.result])
 
   def handle_result_list(self, res):
     if any([entry.threw_error() for entry in res]):
