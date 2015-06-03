@@ -41,15 +41,15 @@ class TestVentureSivm(unittest.TestCase):
     def extractValue(self,d): return d['value']['value']
 
     def testAssume(self):
-        self.sivm.assume('x1',v.number(1))
+        did1 = self.sivm.assume('x1',v.number(1))['directive_id']
         self.sivm.assume('x2',v.number(2),label='xx2')
-        assert_equal(self.extractValue(self.sivm.report(1)),1)
+        assert_equal(self.extractValue(self.sivm.report(did1)),1)
         assert_equal(self.extractValue(self.sivm.report('xx2')),2)
 
     def testPredict(self):
-        self.sivm.predict(v.number(1))
+        did1 = self.sivm.predict(v.number(1))['directive_id']
         self.sivm.predict(v.number(2),label='xx2')
-        assert_equal(self.extractValue(self.sivm.report(1)),1)
+        assert_equal(self.extractValue(self.sivm.report(did1)),1)
         assert_equal(self.extractValue(self.sivm.report('xx2')),2)
 
     def testListDirectives(self):
@@ -59,13 +59,14 @@ class TestVentureSivm(unittest.TestCase):
 
     def testObserve(self):
         self.sivm.observe([v.symbol('normal'), v.number(0), v.number(1)],
-                          v.number(1))
-        assert_equal(self.extractValue(self.sivm.report(1)),1)
+                          v.number(1),
+                          label='obs')
+        assert_equal(self.extractValue(self.sivm.report('obs')),1)
 
     def testForget(self):
-        self.sivm.predict(v.number(1))
+        did1 = self.sivm.predict(v.number(1))['directive_id']
         self.sivm.predict(v.number(2),label='xx2')
-        self.sivm.forget(1)
+        self.sivm.forget(did1)
         self.sivm.forget('xx2')
         assert_equal(len(self.sivm.list_directives()['directives']),0)
 
