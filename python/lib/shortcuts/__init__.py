@@ -38,24 +38,24 @@ from venture import parser, ripl, sivm, server
 
 class Backend(object):
     def trace_constructor(self): pass
-    def make_engine(self, persistent_inference_trace=False):
+    def make_engine(self, persistent_inference_trace=True):
         from venture.engine import engine
         return engine.Engine(self.name(), self.trace_constructor(), persistent_inference_trace)
-    def make_core_sivm(self, persistent_inference_trace=False):
+    def make_core_sivm(self, persistent_inference_trace=True):
         return sivm.CoreSivm(self.make_engine(persistent_inference_trace))
-    def make_venture_sivm(self, persistent_inference_trace=False):
+    def make_venture_sivm(self, persistent_inference_trace=True):
         return sivm.VentureSivm(self.make_core_sivm(persistent_inference_trace))
-    def make_church_prime_ripl(self, persistent_inference_trace=False):
+    def make_church_prime_ripl(self, persistent_inference_trace=True):
         r = ripl.Ripl(self.make_venture_sivm(persistent_inference_trace),
                       {"church_prime":parser.ChurchPrimeParser.instance()})
         r.backend_name = self.name()
         return r
-    def make_venture_script_ripl(self, persistent_inference_trace=False):
+    def make_venture_script_ripl(self, persistent_inference_trace=True):
         r = ripl.Ripl(self.make_venture_sivm(persistent_inference_trace),
                       {"venture_script":parser.VentureScriptParser.instance()})
         r.backend_name = self.name()
         return r
-    def make_combined_ripl(self, persistent_inference_trace=False):
+    def make_combined_ripl(self, persistent_inference_trace=True):
         v = self.make_venture_sivm(persistent_inference_trace)
         parser1 = parser.ChurchPrimeParser.instance()
         parser2 = parser.VentureScriptParser.instance()

@@ -26,7 +26,7 @@ import venture.lite.value as vv
 
 class Engine(object):
 
-  def __init__(self, name="phony", Trace=None, persistent_inference_trace=False):
+  def __init__(self, name="phony", Trace=None, persistent_inference_trace=True):
     self.name = name
     self.model = TraceSet(self, Trace)
     self.swapped_model = False
