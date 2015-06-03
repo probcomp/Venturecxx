@@ -515,10 +515,8 @@ class Analytics(object):
             queryExpsValues={}
 
             v = MRipl(samples, backend=self.backend, local_mode=mriplLocalMode)
-            for sym,exp in self.assumes: v.assume(sym,exp)
+            for sym,exp in self.assumes: v.assume(sym,exp,label=sym)
 
-            # this range has to begin with the first directive after the prelude
-            rangeAssumes=range(v._n_prelude+1,v._n_prelude+len(self.assumes)+1)
             observeLabels=[self.nameObserve(i) for i,_ in enumerate(self.observes)]
             if mriplTrackObserves is False:
                 observeLabels = []
@@ -526,8 +524,8 @@ class Analytics(object):
             for (exp,_),name in zip(self.observes,observeLabels):
                 v.predict(exp,label=name)
 
-            for did, (sym,_) in zip( rangeAssumes,self.assumes):
-                assumedValues[sym] = v.report(did,type=True)
+            for (sym,_) in self.assumes:
+                assumedValues[sym] = v.report(sym,type=True)
             for name in observeLabels:
                 predictedValues[name] = v.report(name,type=True)
             for exp in self.queryExps:
