@@ -28,12 +28,12 @@ from venture.venturemagics.ip_parallel import MRipl
 import venture.unit as unit
 from venture.test.stats import statisticalTest, reportKnownContinuous
 from venture.test.config import get_ripl,get_mripl,ignore_inference_quality,default_num_samples,gen_in_backend, gen_on_inf_prim
-import venture.value.dicts as v
+import venture.value.dicts as val
 
 ## Functions used by tests
 def betaModel(ripl):
     assumes=[('p','(beta 1.0 1.0)')]
-    observes=[('(flip p)',v.boolean(True)) for _ in range(2)]
+    observes=[('(flip p)',val.boolean(True)) for _ in range(2)]
     queryExps =  ['(add (bernoulli p) (bernoulli p))'] # exps in python form
     for sym,exp in assumes:
         ripl.assume(sym,exp)
@@ -43,7 +43,7 @@ def betaModel(ripl):
 
 def normalModel(ripl):
     assumes = [ ('x','(normal 0 100)') ]
-    observes = [ ('(normal x 100)',v.number(0)) ]
+    observes = [ ('(normal x 100)',val.number(0)) ]
     queryExps = ('(* x 2)',)
     for sym,exp in assumes:
         ripl.assume(sym,exp)
