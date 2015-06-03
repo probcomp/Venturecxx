@@ -19,7 +19,11 @@ import time, random
 import numpy as np
 from venture.lite.utils import FixedRandomness
 from venture.ripl.utils import strip_types
-from venture.venturemagics.ip_parallel import MRipl,mk_p_ripl,mk_l_ripl, build_exp
+from venture.shortcuts import make_puma_church_prime_ripl
+from venture.shortcuts import make_lite_church_prime_ripl
+mk_l_ripl = make_lite_church_prime_ripl
+mk_p_ripl = make_puma_church_prime_ripl
+from venture.venturemagics.ip_parallel import MRipl,build_exp
 from history import History, Run, Series, historyOverlay,compareSampleDicts,filterDict,historyNameToValues
 
 parseValue = strip_types
@@ -245,14 +249,12 @@ class Analytics(object):
         assert not(assumes is None and observes is not None),'No *observes* without *assumes*.'
         assert queryExps is None or isinstance(queryExps,(list,tuple)), 'QueryExps must be list or tuple'
 
-
         if hasattr(ripl_mripl,'no_ripls'): # test for ripl vs. MRipl
             ripl=ripl_mripl.local_ripls[0] # only needed because of set_seed
             self.mripl = True
         else:
             ripl = ripl_mripl
             self.mripl = False
-
 
         # make fresh ripl with same backend as input ripl
         self.backend = ripl.backend()
@@ -261,13 +263,10 @@ class Analytics(object):
         directives_list = ripl.list_directives(type=True)
 
 
-
-
         if assumes is not None:
             self.assumes = assumes
             self.observes = list(observes) if observes is not None else []
         else:
-
             assumes = [d for d in directives_list if d['instruction']=='assume']
             self.assumes = map(directive_split,assumes)
             observes = [d for d in directives_list if d['instruction']=='observe']
@@ -293,9 +292,7 @@ class Analytics(object):
             #   #self.observes = clean_observes
 
 
-
         self.queryExps=[] if queryExps is None else list(queryExps)
-
 
         if parameters is None: parameters = {}
         self.parameters = parameters.copy()
@@ -303,7 +300,6 @@ class Analytics(object):
             self.ripl.set_seed(self.parameters['venture_random_seed'])
         else:
             self.parameters['venture_random_seed'] = 1 ## UNKNOWN SEED
-
 
         # make fresh mripl with same backend as input mripl
 
@@ -515,19 +511,17 @@ class Analytics(object):
             queryExpsValues={}
 
             v = MRipl(samples, backend=self.backend, local_mode=mriplLocalMode)
-            for sym,exp in self.assumes: v.assume(sym,exp)
+            for sym,exp in self.assumes: v.assume(sym,exp,label=sym)
 
-            # this range has to begin with the first directive after the prelude
-            rangeAssumes=range(v._n_prelude+1,v._n_prelude+len(self.assumes)+1)
             observeLabels=[self.nameObserve(i) for i,_ in enumerate(self.observes)]
             if mriplTrackObserves is False:
-                observeLabel = []
+                observeLabels = []
 
             for (exp,_),name in zip(self.observes,observeLabels):
                 v.predict(exp,label=name)
 
-            for did, (sym,_) in zip( rangeAssumes,self.assumes):
-                assumedValues[sym] = v.report(did,type=True)
+            for (sym,_) in self.assumes:
+                assumedValues[sym] = v.report(sym,type=True)
             for name in observeLabels:
                 predictedValues[name] = v.report(name,type=True)
             for exp in self.queryExps:

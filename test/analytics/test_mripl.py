@@ -19,27 +19,28 @@ import time,subprocess
 import numpy as np
 import scipy.stats as stats
 from IPython.parallel import Client
-from nose.tools import with_setup, eq_,assert_equal,assert_almost_equal
+from nose.tools import eq_,assert_almost_equal
 from nose import SkipTest
 
 from venture.test.stats import statisticalTest, reportKnownContinuous
 from venture.test.config import get_ripl, get_mripl, default_num_samples, default_num_transitions_per_sample, on_inf_prim
 
-from venture.venturemagics.ip_parallel import *
+import venture.venturemagics.ip_parallel as ip_parallel
 
 
 def setup_function():
     print 'START SETUP'
     def start_engines(no_engines,sleeptime=20):
-        start = subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines,'&'])
+        subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines,'&'])
         time.sleep(sleeptime)
     try:
-        cli=Client()
+        Client()
     except:
         try:
             start_engines(2,sleeptime=10)
             print 'IPCLUS START ... SUCCESS'
-        except: assert False,"subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines])"
+        except:
+            assert False, "subprocess.Popen(['ipcluster', 'start', '--n=%i' % no_engines])"
 
 def teardown_function():
     print "TEARDOWN REACHED"
@@ -60,14 +61,15 @@ def localRunFunctions():
         if hasattr(v,'__call__') and k.startswith('test'):
             print k,v
             tests.append( v )
-    [t() for t in tests]
+    for t in tests:
+        t()
 
 
 @on_inf_prim("none")
 def testInitSwitchLocal():
     'if no engines are running, should switch to local'
     try:
-        v=MRipl(2)
+        v=ip_parallel.MRipl(2)
         if v.local_mode is True:
             eq_(v.no_local_ripls,v.no_ripls)
     except:
@@ -87,13 +89,15 @@ def testDirectivesAssume():
     outs.append( [ type_value["value"] for type_value in typed] )
 
     outAssume= map(int,outAssume)
-    [eq_(outAssume,map(int,out)) for out in outs]
+    for out in outs:
+        eq_(outAssume,map(int,out))
 
     # test observe
     v.clear()
     outAssume = v.assume("x","(normal 1 1)",label="x")
     v.observe("(normal x 1)","2",label="obs")
-    [assert_almost_equal(out,2) for out in v.report("obs")]
+    for out in v.report("obs"):
+        assert_almost_equal(out,2)
     assert_almost_equal(outAssume[0],v.report("x")[0])
 
 
@@ -134,7 +138,8 @@ def testDirectivesInfer2():
     'inference program'
     v=get_mripl(no_ripls=default_num_samples())
     samples = v.assume('x','(normal 1 1)',label='pid')
-    [v.infer(params='(mh default one 1)') for _ in range(5)]
+    for _ in range(5):
+        v.infer(params='(mh default one 1)')
     samples.extend(v.report('pid'))
     cdf = stats.norm(loc=1, scale=1).cdf
     return reportKnownContinuous(cdf,samples,"N(1,1)")
@@ -145,9 +150,9 @@ def testDirectivesForget():
     'forget'
     v=get_mripl(no_ripls=default_num_samples())
     v.assume('x','(normal 1 10)',label='pid')
-    v.observe('(normal x .1)','1')
+    v.observe('(normal x .1)','1',label='obs')
     v.infer(default_num_transitions_per_sample())
-    v.forget(2)
+    v.forget('obs')
     v.infer(default_num_transitions_per_sample())
     samples = v.report('pid')
     cdf = stats.norm(loc=1, scale=10).cdf
@@ -199,7 +204,8 @@ def testMultiMRipls():
     if vs[0].local_mode is False:
         assert vs[0].mrid != vs[1].mrid     # distinct mripl ids
 
-    [v.mr_set_seeds(range(2)) for v in vs]
+    for v in vs:
+        v.mr_set_seeds(range(2))
     outs = [v.sample('(poisson 20)') for v in vs]
     if vs[0].backend is 'puma':
         eq_(outs[0],outs[1])
@@ -219,7 +225,6 @@ def testMapProc():
 
     # no args, no limit (proc does import)
     def f(ripl):
-        import numpy as np
         return ripl.predict(str( np.power(4,2)))
     out = v.map_proc('all',f)
     assert all( 16. == np.array(out) )
@@ -260,7 +265,7 @@ def testMapProc():
     # use fact that ip_parallel is imported to engines
     if v.local_mode is False:
         def f(ripl):
-            mripl = MRipl(2,local_mode=True)
+            mripl = ip_parallel.MRipl(2,local_mode=True)
             mripl.mr_set_seeds(range(2))
             return mripl.sample('(poisson 20)')
         pairs = v.map_proc('all',f)
@@ -323,10 +328,11 @@ def testMRiplUtils():
     v.observe('(normal x 1)','2')
     v.predict('(+ x 0)') # ==2
     v.predict('(f)')    # ==2
-    di_string = mk_directives_string(v)
+    di_string = ip_parallel.mk_directives_string(v)
     v.clear()
     v.execute_program(di_string)
-    [eq_(v.report(i),2) for i in [1,3,4,5]]
+    for i in [1,3,4,5]:
+        eq_(v.report(i),2)
 
 
 
