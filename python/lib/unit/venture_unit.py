@@ -521,7 +521,7 @@ class Analytics(object):
             rangeAssumes=range(v._n_prelude+1,v._n_prelude+len(self.assumes)+1)
             observeLabels=[self.nameObserve(i) for i,_ in enumerate(self.observes)]
             if mriplTrackObserves is False:
-                observeLabel = []
+                observeLabels = []
 
             for (exp,_),name in zip(self.observes,observeLabels):
                 v.predict(exp,label=name)
