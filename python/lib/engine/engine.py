@@ -129,9 +129,11 @@ class Engine(object):
   def report_raw(self,directiveId):
     return self.model.report_raw(directiveId)
 
-  def bind_foreign_sp(self, name, sp):
+  def register_foreign_sp(self, name, sp):
     self.foreign_sps[name] = sp
-    self.model.bind_foreign_sp(name, sp)
+
+  def import_foreign(self, name):
+    self.model.bind_foreign_sp(name, self.foreign_sps[name])
 
   def clear(self):
     self.model.clear()

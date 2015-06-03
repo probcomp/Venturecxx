@@ -25,13 +25,17 @@ class Trace(object):
   the backend-specific traces.
 
   """
-  def __init__(self, trace, directives=None):
+  def __init__(self, trace, directives=None, foreign_sp_names=None):
     assert not isinstance(trace, Trace) # I've had too many double-wrapping bugs
     self.trace = trace
     if directives is not None:
       self.directives = copy.copy(directives)
     else:
       self.directives = {}
+    if foreign_sp_names is not None:
+      self.foreign_sp_names = copy.copy(foreign_sp_names)
+    else:
+      self.foreign_sp_names = set()
 
   def __getattr__(self, attrname):
     # Forward all other trace methods without modification
@@ -103,6 +107,8 @@ class Trace(object):
     return self.trace.extractRaw(directiveId)
 
   def bind_foreign_sp(self, name, sp):
+    # Assume the SP came from the engine's foreign SP registry
+    self.foreign_sp_names.add(name)
     self.trace.bindPrimitiveSP(name, sp)
 
   def reset_to_prior(self):
@@ -137,12 +143,13 @@ inference.)
     return ([Trace(t, self.directives) for t in traces], weights)
 
   def dump(self, skipStackDictConversion=False):
-    return _dump_trace(self.trace, self.directives, skipStackDictConversion)
+    values = _dump_trace(self.trace, self.directives, skipStackDictConversion)
+    return (values, self.directives, self.foreign_sp_names)
 
   @staticmethod
   def restore(mk_trace, serialized, foreign_sps, skipStackDictConversion=False):
-    (values, directives) = serialized
-    return Trace(_restore_trace(mk_trace(), directives, values, foreign_sps, skipStackDictConversion), directives)
+    (values, directives, foreign_sp_names) = serialized
+    return Trace(_restore_trace(mk_trace(), directives, values, foreign_sp_names, foreign_sps, skipStackDictConversion), directives, foreign_sp_names)
 
   def stop_and_copy(self):
     return Trace(self.trace.stop_and_copy(), self.directives)
@@ -152,10 +159,6 @@ inference.)
 ######################################################################
 
 def _dump_trace(trace, directives, skipStackDictConversion=False):
-  # TODO: It would be good to pass foreign_sps to this function as well,
-  # and then check that the passed foreign_sps match up with the foreign
-  # SP's bound in the trace's global environment. However, in the Puma backend
-  # there is currently no way to access this global environment.
   # This block mutates the trace
   db = trace.makeSerializationDB()
   for did, directive in sorted(directives.items(), reverse=True):
@@ -178,12 +181,12 @@ def _dump_trace(trace, directives, skipStackDictConversion=False):
   # harder to detect).
   trace.registerConstraints()
 
-  return (trace.dumpSerializationDB(db, skipStackDictConversion), directives)
+  return trace.dumpSerializationDB(db, skipStackDictConversion)
 
-def _restore_trace(trace, directives, values, foreign_sps, skipStackDictConversion=False):
-  # bind the foreign sp's; wrap if necessary
-  for name, sp in foreign_sps.items():
-    trace.bindPrimitiveSP(name, sp)
+def _restore_trace(trace, directives, values, foreign_sp_names, foreign_sps, skipStackDictConversion=False):
+  # Bind the foreign sps; wrap if necessary
+  for name in foreign_sp_names:
+    trace.bindPrimitiveSP(name, foreign_sps[name])
 
   db = trace.makeSerializationDB(values, skipStackDictConversion)
 

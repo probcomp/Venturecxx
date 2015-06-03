@@ -816,6 +816,21 @@ This is itself an inference action rather than a pure operation due
 to implementation accidents. [It invokes a method on the Engine
 to actually run the given action].
 """),
+
+  engine_method_sp("model_import_foreign", infer_action_maker_type([t.SymbolType("<name>")]), desc="""\
+  Import the named registered foregin SP into the current model.
+
+  This is typically only necessary in conjunction with ``new_model``,
+  because foreign SPs are automatically imported into the model that
+  is ambient at the time the foreign SP is bound by the ripl (which is
+  usually the toplevel model).
+
+  The name must refer to an SP that was previously registered with
+  Venture via ``ripl.register_foreign_sp`` or ``ripl.bind_foreign_sp``.
+  Binds that symbol to that procedure in the current model.
+
+"""),
+
 ]
 
 inferenceKeywords = [ "default", "all", "none", "one", "ordered" ]
