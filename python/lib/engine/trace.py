@@ -32,6 +32,9 @@ class Trace(object):
       self.directives = copy.copy(directives)
     else:
       self.directives = {}
+    # TODO Do I want to turn this into part of the directive list?
+    # That way, can interleave binding with other directives; possibly
+    # forget imports
     if foreign_sp_names is not None:
       self.foreign_sp_names = copy.copy(foreign_sp_names)
     else:
