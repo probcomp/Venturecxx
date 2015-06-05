@@ -84,6 +84,18 @@ from venture.exception import VentureException, format_worker_trace
 # Auxiliary functions for safe function evaluation
 ######################################################################
 
+class Success(object):
+  def __init__(self, result):
+    self.result = result
+  def threw_error(self): return False
+
+class Failure(object):
+  def __init__(self, exc_type, value, trace):
+    self.exc_type = exc_type
+    self.value = value
+    self.trace = trace
+  def threw_error(self): return True
+
 def safely(f):
   # pylint: disable=broad-except
   # in this use case, we want to catch all exceptions to avoid hanging
@@ -98,15 +110,10 @@ def safely(f):
       # If it's a VentureException, need to convert to JSON to send over pipe
       if isinstance(value, VentureException):
         value = value.to_json_object()
-      return exc_type, value, trace
+      return Failure(exc_type, value, trace)
     else:
-      return res
+      return Success(res)
   return wrapped
-
-def threw_error(entry):
-  return (isinstance(entry, tuple) and
-          (len(entry) == 3) and
-          issubclass(entry[0], Exception))
 
 ######################################################################
 # The masters; manage communication between the client and the objects
@@ -189,31 +196,48 @@ class MasterBase(object):
     res = []
     for pipe in self.pipes:
       ans = pipe.recv()
-      res.extend(ans)
-    if any([threw_error(entry) for entry in res]):
-      exception_handler = WorkerExceptionHandler(res)
-      raise exception_handler.gen_exception()
-    return res
+      self.accumulate_result(res, ans)
+    return self.handle_result_list(res)
 
   def map_chunk(self, ix, cmd, *args, **kwargs):
     '''Delegate command to (all the objects of) a single worker, indexed by ix in the process list'''
     pipe = self.pipes[ix]
     pipe.send((cmd, args, kwargs, None))
     res = pipe.recv()
-    if any([threw_error(entry) for entry in res]):
-      exception_handler = WorkerExceptionHandler(res)
-      raise exception_handler.gen_exception()
-    return res
+    if isinstance(res, list):
+      return self.handle_result_list(res)
+    else:
+      return self.handle_one_result(res) # set_seeds is like this
 
   def at(self, ix, cmd, *args, **kwargs):
     '''Delegate command to a single object, indexed by ix in the object list'''
     pipe = self.pipes[self.chunk_indexes[ix]]
     pipe.send((cmd, args, kwargs, self.chunk_offsets[ix]))
     res = pipe.recv()
-    if threw_error(res):
+    return self.handle_one_result(res)
+
+  def accumulate_result(self, res, ans):
+    # ans could be a list of Success/Failures or a single
+    # Success/Failure about an operation that was supposed to produce
+    # a list.
+    if isinstance(ans, list):
+      res.extend(ans)
+    elif ans.threw_error():
+      res.append(ans) # Put in the one error for later processing
+    else:
+      res.extend([Success(a) for a in ans.result])
+
+  def handle_result_list(self, res):
+    if any([entry.threw_error() for entry in res]):
+      exception_handler = WorkerExceptionHandler(res)
+      raise exception_handler.gen_exception()
+    return [entry.result for entry in res]
+
+  def handle_one_result(self, res):
+    if res.threw_error():
       exception_handler = WorkerExceptionHandler([res])
       raise exception_handler.gen_exception()
-    return res
+    return res.result
 
   def at_distinguished(self, cmd, *args, **kwargs):
     return self.at(0, cmd, *args, **kwargs)
@@ -311,7 +335,8 @@ class Safely(object):
 
   def __getattr__(self, attrname):
     # @safely doesn't work as a decorator here; do it this way.
-    return safely(safely(getattr)(self.obj, attrname))
+    # eta expand b/c getattr might fail pylint:disable=W0108
+    return safely(lambda *args,**kwargs: getattr(self.obj, attrname)(*args, **kwargs))
 
 
 class WorkerBase(object):
@@ -467,7 +492,7 @@ class WorkerExceptionHandler(object):
   debugging.
   '''
   def __init__(self, res):
-    self.info = [self._format_results(entry) for entry in res if threw_error(entry)]
+    self.info = [self._format_results(entry) for entry in res if entry.threw_error()]
     self.exc_types, self.values, self.traces = zip(*self.info)
     self.n_processes = len(res)
     self.n_errors = len(self.info)
@@ -485,11 +510,11 @@ class WorkerExceptionHandler(object):
 
   @staticmethod
   def _format_results(entry):
-    if issubclass(entry[0], VentureException):
-      value = VentureException.from_json_object(entry[1])
+    if issubclass(entry.exc_type, VentureException):
+      value = VentureException.from_json_object(entry.value)
     else:
-      value = entry[1]
-    return (entry[0], value, entry[2])
+      value = entry.value
+    return (entry.exc_type, value, entry.trace)
 
 # Concerning the hack above: In designing masters that handle parallel objects,
 # we'd like errors in the child trace process to be passed back up to the master.

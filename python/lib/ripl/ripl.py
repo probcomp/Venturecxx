@@ -692,10 +692,14 @@ Open issues:
     def get_global_logscore(self):
         return self.execute_instruction({'instruction':'get_global_logscore'})['logscore']
 
-    def bind_foreign_sp(self, name, sp):
+    def register_foreign_sp(self, name, sp):
         # TODO Remember this somehow?  Is it storable for copies and
         # rebuilds of the ripl, etc?
-        self.sivm.core_sivm.engine.bind_foreign_sp(name, sp)
+        self.sivm.core_sivm.engine.register_foreign_sp(name, sp)
+
+    def bind_foreign_sp(self, name, sp):
+        self.register_foreign_sp(name, sp)
+        self.sivm.core_sivm.engine.import_foreign(name)
 
     def bind_foreign_inference_sp(self, name, sp):
         self.sivm.core_sivm.engine.bind_foreign_inference_sp(name, sp)

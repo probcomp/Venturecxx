@@ -26,7 +26,7 @@ import venture.lite.value as vv
 
 class Engine(object):
 
-  def __init__(self, name="phony", Trace=None, persistent_inference_trace=False):
+  def __init__(self, name="phony", Trace=None, persistent_inference_trace=True):
     self.name = name
     self.model = TraceSet(self, Trace)
     self.swapped_model = False
@@ -129,15 +129,18 @@ class Engine(object):
   def report_raw(self,directiveId):
     return self.model.report_raw(directiveId)
 
-  def bind_foreign_sp(self, name, sp):
+  def register_foreign_sp(self, name, sp):
     self.foreign_sps[name] = sp
-    self.model.bind_foreign_sp(name, sp)
+
+  def import_foreign(self, name):
+    self.model.bind_foreign_sp(name, self.foreign_sps[name])
 
   def clear(self):
     self.model.clear()
     self.directiveCounter = 0
+    if self.persistent_inference_trace:
+      self.infer_trace = self.init_inference_trace()
     # TODO The clear operation appears to be bit-rotten.  Problems include:
-    # - Doesn't reset the inference trace
     # - Doesn't clean up the sivm's and ripl's per-directive records
     # - Not clear what it should do with foreign SPs (remove the
     #   dictionaries or rebind them in the new traces?)
