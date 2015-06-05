@@ -91,6 +91,7 @@ class VentureValue(object):
     raise VentureTypeError("Cannot compute gradient of looking things up in %s" % type(self))
   def contains(self, _): raise VentureTypeError("Cannot look for things in %s" % type(self))
   def length(self): raise VentureTypeError("Cannot measure length of %s" % type(self))
+  def take(self, _ct): raise VentureTypeError("Cannot take a prefix of %s" % type(self))
 
   def __eq__(self, other):
     if isinstance(other, VentureValue):
@@ -374,6 +375,11 @@ class VentureNil(VentureValue):
     raise VentureValueError("Index out of bounds: too long by %s" % index)
   def contains(self, _obj): return False
   def size(self): return 0
+  def take(self, ct):
+    if ct < 1:
+      return self
+    else:
+      raise VentureValueError("Index out of bounds: too long by %s" % ct)
 
   def expressionFor(self):
     return [v.symbol("list")]
@@ -459,6 +465,11 @@ class VenturePair(VentureValue):
       return self.rest.contains(obj)
   def size(self): # Really, length
     return 1 + self.rest.size()
+  def take(self, ind):
+    if ind < 1:
+      return VentureNil()
+    else:
+      return VenturePair(self.first, self.rest.take(ind-1))
 
   def __add__(self, other):
     if other == 0:
@@ -553,6 +564,8 @@ class VentureArray(VentureValue):
     # anyway, so might as well eventually use `in` here.
     return any(obj.equal(li) for li in self.array)
   def size(self): return len(self.array)
+  def take(self, ind):
+    return VentureArray(self.array[0:ind])
 
   def __add__(self, other):
     if other == 0:
@@ -648,6 +661,8 @@ class VentureArrayUnboxed(VentureValue):
   def contains(self, obj):
     return any(obj.equal(self.elt_type.asVentureValue(li)) for li in self.array)
   def size(self): return len(self.array)
+  def take(self, ind):
+    return VentureArrayUnboxed(self.array[0:ind], self.elt_type)
 
   def __add__(self, other):
     if other == 0:
@@ -729,6 +744,9 @@ are also supposed to sum to 1, but we are not checking that.
     # Homogeneous; TODO make it return False instead of exploding for non-numeric objects.
     return obj.getNumber() in self.simplex
   def size(self): return len(self.simplex)
+  def take(self, ind):
+    from types import ProbabilityType
+    return VentureArrayUnboxed(self.simplex[0:ind], ProbabilityType())
 
   def expressionFor(self):
     return [v.symbol("simplex")] + self.simplex
