@@ -27,7 +27,7 @@ from ..exception import (SubsampledScaffoldError,
 from ..value import SPRef
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
-from ..node import LookupNode, OutputNode
+from ..node import isLookupNode, isOutputNode
 from ..scaffold import constructScaffold, updateValuesAtScaffold
 from mh import BlockScaffoldIndexer, InPlaceOperator
 
@@ -192,8 +192,8 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
     return index
 
   def sampleLocalIndex(self,trace,local_root,globalBorder):
-    if not (isinstance(local_root, LookupNode) or
-        (isinstance(local_root, OutputNode) and
+    if not (isLookupNode(local_root) or
+        (isOutputNode(local_root) and
          len(globalBorder) == 1 and
          not trace.pspAt(local_root).canAbsorb(trace, local_root, globalBorder[0]))):
       raise SubsampledScaffoldError("Invalid local root node.")
@@ -341,7 +341,7 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
         break
       numLONode = 0
       for child in children:
-        if isinstance(child, (LookupNode, OutputNode)):
+        if isLookupNode(child) or isOutputNode(child):
           numLONode += 1
           nextNode = child
         else:

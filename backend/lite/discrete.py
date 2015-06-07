@@ -24,7 +24,7 @@ from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, SPAux, VentureSPRecord, SPType
 from lkernel import SimulationAAALKernel
 from value import VentureAtom
-from types import BoolType # BoolType is metaprogrammed pylint:disable=no-name-in-module
+import types as t
 from exception import VentureValueError
 
 class DiscretePSP(RandomPSP):
@@ -71,8 +71,8 @@ class LogBernoulliOutputPSP(DiscretePSP):
 
   def enumerateValues(self,args):
     logp = args.operandValues[0]
-    if p == 0: return [True]
-    elif p == float('-inf'): return [False]
+    if logp == 0: return [True]
+    elif logp == float('-inf'): return [False]
     else: return [True,False]
 
   def description(self,name):
@@ -156,6 +156,17 @@ class BetaBernoulliSPAux(SPAux):
     aux.no = self.no
     return aux
 
+  v_type = t.HomogeneousListType(t.NumberType())
+
+  def asVentureValue(self):
+    return BetaBernoulliSPAux.v_type.asVentureValue([self.yes, self.no])
+
+  @staticmethod
+  def fromVentureValue(val):
+    aux = BetaBernoulliSPAux()
+    (aux.yes, aux.no) = BetaBernoulliSPAux.v_type.asPython(val)
+    return aux
+
   def cts(self): return [self.yes,self.no]
 
 class BetaBernoulliSP(SP):
@@ -166,7 +177,7 @@ class MakerCBetaBernoulliOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self,args):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
-    output = TypedPSP(CBetaBernoulliOutputPSP(alpha, beta), SPType([], BoolType()))
+    output = TypedPSP(CBetaBernoulliOutputPSP(alpha, beta), SPType([], t.BoolType()))
     return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output))
 
   def description(self,name):
@@ -225,7 +236,7 @@ class MakerUBetaBernoulliOutputPSP(DiscretePSP):
     alpha = args.operandValues[0]
     beta  = args.operandValues[1]
     weight = scipy.stats.beta.rvs(alpha, beta)
-    output = TypedPSP(UBetaBernoulliOutputPSP(weight), SPType([], BoolType()))
+    output = TypedPSP(UBetaBernoulliOutputPSP(weight), SPType([], t.BoolType()))
     return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output))
 
   def logDensity(self,value,args):
@@ -245,7 +256,7 @@ class UBetaBernoulliAAALKernel(SimulationAAALKernel):
     beta  = args.operandValues[1]
     [ctY,ctN] = args.madeSPAux.cts()
     newWeight = scipy.stats.beta.rvs(alpha + ctY, beta + ctN)
-    output = TypedPSP(UBetaBernoulliOutputPSP(newWeight), SPType([], BoolType()))
+    output = TypedPSP(UBetaBernoulliOutputPSP(newWeight), SPType([], t.BoolType()))
     return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output), args.madeSPAux)
 
   def weight(self, _trace, _newValue, _args):
@@ -297,7 +308,7 @@ class MakerSuffBernoulliOutputPSP(DeterministicMakerAAAPSP):
     weight = args.operandValues[0]
     # The made SP is the same as in the conjugate case: flip coins
     # based on an explicit weight, and maintain sufficient statistics.
-    output = TypedPSP(UBetaBernoulliOutputPSP(weight), SPType([], BoolType()))
+    output = TypedPSP(UBetaBernoulliOutputPSP(weight), SPType([], t.BoolType()))
     return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output))
 
   def description(self,name):

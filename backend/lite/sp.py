@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from value import VentureValue, registerVentureType
+from value import VentureValue, registerVentureType, VentureNil
 from types import VentureType
 import copy
 from exception import VentureError
@@ -41,6 +41,10 @@ class SPFamilies(object):
 
 class SPAux(object):
   def copy(self): return SPAux()
+  def asVentureValue(self): return VentureNil()
+  @staticmethod
+  def fromVentureValue(_thing):
+    raise Exception("Cannot convert a Venture value into a generic SPAux")
 
 class SP(object):
   def __init__(self,requestPSP,outputPSP):
@@ -94,7 +98,7 @@ class VentureSPRecord(VentureValue):
     return self.sp.show(self.spAux)
 
   def asStackDict(self, _trace=None):
-    return v.val("sp", self.show())
+    return v.sp(self.show(), self.spAux.asVentureValue().asStackDict())
 
 registerVentureType(VentureSPRecord)
 
@@ -147,18 +151,18 @@ used in the implementation of TypedPSP and TypedLKernel."""
       if len(lst) > len(self.args_types):
         raise VentureError("Too many arguments: SP takes at most %d args, got %d." % (len(self.args_types), len(lst)))
       # v could be None when computing log density bounds for a torus
-      return [self.args_types[i].asPythonNoneable(v) for (i,v) in enumerate(lst)]
+      return [self.args_types[i].asPythonNoneable(val) for (i,val) in enumerate(lst)]
     else:
-      return [self.args_types[0].asPythonNoneable(v) for v in lst]
+      return [self.args_types[0].asPythonNoneable(val) for val in lst]
 
   def wrap_arg_list(self, lst):
     if not self.variadic:
       assert len(lst) >= self.min_req_args
       assert len(lst) <= len(self.args_types)
       # v could be None when computing log density bounds for a torus
-      return [self.args_types[i].asVentureValue(v) for (i,v) in enumerate(lst)]
+      return [self.args_types[i].asVentureValue(val) for (i,val) in enumerate(lst)]
     else:
-      return [self.args_types[0].asVentureValue(v) for v in lst]
+      return [self.args_types[0].asVentureValue(val) for val in lst]
 
   def _name_for_fixed_arity(self, args_types):
     args_spec = " ".join([t.name() for t in args_types])

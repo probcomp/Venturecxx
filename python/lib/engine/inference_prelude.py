@@ -48,7 +48,7 @@ prelude = [
   :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
 
   Apply the given list of actions in sequence, discarding the values.
-  This is Haskell's sequence_
+  This is Haskell's sequence\\_.
 """,
 """(lambda (ks)
   (if (is_pair ks)
@@ -56,12 +56,13 @@ prelude = [
       (lambda (t) (pair nil t))))"""],
 
 ["mapM", """\
-.. function:: sequence(ks : list<inference action>)
+.. function:: mapM(act : proc(a) -> <inference action returning b>, objs : list<a>)
 
-  :rtype: proc(<foreignblob>) -> <pair list<object> <foreignblob>>
+  :rtype: proc(<foreignblob>) -> <pair list<b> <foreignblob>>
 
-  Apply the given list of actions in sequence, returning a list of the
-  values.  The nomenclature is borrowed from Haskell.
+  Apply the given action function to each given object and perform
+  those actions in order.  Return a list of the resulting values.  The
+  nomenclature is borrowed from Haskell.
 """,
  """(lambda (act objs)
   (if (is_pair objs)
@@ -69,6 +70,18 @@ prelude = [
           (vs <- (mapM act (rest objs)))
           (return (pair v vs)))
       (return nil)))"""],
+
+["for_each_indexed", """\
+.. function:: for_each_indexed(act : proc(int, a) -> <inference action>, objs : list<a>)
+
+  :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
+
+  Apply the given action function to each given object and its index
+  in the list and perform those actions in order.  Discard the
+  results.  The nomenclature is borrowed from Scheme.
+""",
+ """(lambda (act objs)
+  (sequence (to_list (imapv act (to_array objs)))))"""],
 
 # pass :: State a ()  pass = return ()
 ["pass", """\
@@ -83,7 +96,7 @@ prelude = [
 
 # bind :: State s a -> (a -> State s b) -> State s b
 ["bind", """\
-.. function:: bind(<inference action returning a>, proc(a -> <inference action returning b>))
+.. function:: bind(<inference action returning a>, proc(a) -> <inference action returning b>)
 
   :rtype: proc(<foreignblob>) -> <pair b <foreignblob>>
 
@@ -99,7 +112,7 @@ prelude = [
 # bind_ :: State s b -> State s a -> State s a
 # drop the value of type b but perform both actions
 ["bind_", """\
-.. function:: bind_(<inference action>, proc(() -> <inference action returning a>))
+.. function:: bind_(<inference action>, proc() -> <inference action returning a>)
 
   :rtype: proc(<foreignblob>) -> <pair a <foreignblob>>
 

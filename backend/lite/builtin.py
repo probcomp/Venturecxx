@@ -307,6 +307,10 @@ builtInSPsList = [
                                          [t.HomogeneousMappingType(t.AnyType("k"), t.AnyType("v"))],
                                          t.NumberType(),
                                          descr="size returns the number of elements in the given collection (lists and arrays work too)") ],
+           [ "take", deterministic_typed(lambda ind, xs: xs.take(ind),
+                                         [t.IntegerType(), t.HomogeneousSequenceType(t.AnyType("k"))],
+                                         t.HomogeneousSequenceType(t.AnyType("k")),
+                                         descr="take returns the requested number of elements from the beginning of the given sequence, as another sequence of the same type.") ],
 
            [ "arange", deterministic_typed(np.arange,
                                            [t.IntegerType(), t.IntegerType()],

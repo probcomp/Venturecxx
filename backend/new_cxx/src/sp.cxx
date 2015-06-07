@@ -70,11 +70,23 @@ boost::python::object SPAux::toPython(Trace * trace) const
   return boost::python::object("unknown spAux");
 }
 
+VentureValuePtr SPAux::asVentureValue() const
+{
+  return VentureValuePtr(new VentureNil());
+}
+
+
 boost::python::dict SP::toPython(Trace * trace, shared_ptr<SPAux> spAux) const
 {
   boost::python::dict value;
   value["type"] = "sp";
   value["value"] = "unknown";
+  if (spAux) {
+    value["aux"] = spAux->asVentureValue()->toPython(trace);
+  } else {
+    VentureValuePtr nil(new VentureNil());
+    value["aux"] = nil->toPython(trace);
+  }
   return value;
 }
 

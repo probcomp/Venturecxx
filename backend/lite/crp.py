@@ -16,7 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
-from sp import SP, VentureSPRecord, SPType
+from sp import SP, SPAux, VentureSPRecord, SPType
 import math
 import scipy.special
 import scipy.stats
@@ -24,7 +24,7 @@ from utils import simulateCategorical
 from types import AtomType # The type names are metaprogrammed pylint: disable=no-name-in-module
 from copy import deepcopy
 
-class CRPSPAux(object):
+class CRPSPAux(SPAux):
   def __init__(self):
     self.tableCounts = {}
     self.nextIndex = 1

@@ -16,7 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import warnings
-from ..node import Node, OutputNode, RequestNode, LookupNode, ConstantNode
+from ..node import Node, isConstantNode, isLookupNode, isRequestNode, isOutputNode
 
 try:
   import networkx as nx
@@ -122,13 +122,13 @@ def nodeLabelDict(nodes, trace):
   for node in nodes:
     if inv_env_dict.has_key(node):
       label = inv_env_dict[node]
-    elif isinstance(node, OutputNode):
+    elif isOutputNode(node):
       label = 'O' # 'Output' #: ' + str(node.value)
-    elif isinstance(node, RequestNode):
+    elif isRequestNode(node):
       label = 'R' # 'Request' #: ' + str(node.value)
-    elif isinstance(node, LookupNode):
+    elif isLookupNode(node):
       label = 'L' # 'Lookup'
-    elif isinstance(node, ConstantNode):
+    elif isConstantNode(node):
       label = 'C' # 'Constant'
     else:
       label = '' # str(node.value)

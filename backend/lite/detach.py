@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from node import ConstantNode, LookupNode, ApplicationNode, RequestNode, OutputNode
+from node import RequestNode, isConstantNode, isLookupNode, isApplicationNode, isRequestNode, isOutputNode
 from omegadb import OmegaDB
 from value import SPRef
 from scope import isTagOutputPSP
@@ -91,13 +91,13 @@ def extract(trace, node, scaffold, omegaDB, compute_gradient = False):
     trace.decRegenCountAt(scaffold,node)
     assert trace.regenCountAt(scaffold,node) >= 0
     if trace.regenCountAt(scaffold,node) == 0:
-      if isinstance(node,ApplicationNode):
-        if isinstance(node,RequestNode):
+      if isApplicationNode(node):
+        if isRequestNode(node):
           weight += unevalRequests(trace, node, scaffold, omegaDB, compute_gradient)
         weight += unapplyPSP(trace, node, scaffold, omegaDB, compute_gradient)
       else: 
         trace.setValueAt(node,None)
-        assert isinstance(node, LookupNode) or isinstance(node, ConstantNode)
+        assert isLookupNode(node) or isConstantNode(node)
         assert len(trace.parentsAt(node)) <= 1
         if compute_gradient:
           for p in trace.parentsAt(node):
@@ -108,9 +108,8 @@ def extract(trace, node, scaffold, omegaDB, compute_gradient = False):
 
 def unevalFamily(trace, node, scaffold, omegaDB, compute_gradient = False):
   weight = 0
-  if isinstance(node,ConstantNode): pass
-  elif isinstance(node,OutputNode) and node.isFrozen: pass
-  elif isinstance(node,LookupNode):
+  if isConstantNode(node): pass
+  elif isLookupNode(node):
     assert len(trace.parentsAt(node)) == 1
     if compute_gradient:
       for p in trace.parentsAt(node):
@@ -119,7 +118,7 @@ def unevalFamily(trace, node, scaffold, omegaDB, compute_gradient = False):
     trace.setValueAt(node,None)
     weight += extractParents(trace, node, scaffold, omegaDB, compute_gradient)
   else:
-    assert isinstance(node,OutputNode)
+    assert isOutputNode(node)
     weight += unapply(trace, node, scaffold, omegaDB, compute_gradient)
     for operandNode in reversed(node.operandNodes):
       weight += unevalFamily(trace, operandNode, scaffold, omegaDB, compute_gradient)
@@ -181,7 +180,7 @@ def unapplyPSP(trace, node, scaffold, omegaDB, compute_gradient = False):
   return weight
 
 def unevalRequests(trace, node, scaffold, omegaDB, compute_gradient = False):
-  assert isinstance(node,RequestNode)
+  assert isRequestNode(node)
   weight = 0
   request = trace.valueAt(node)
   # TODO I may have the following AD bug: if a request constructs an

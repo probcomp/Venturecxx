@@ -30,6 +30,7 @@ class Node(object):
     self.numRequests = 0
     self.esrParents = []
     self.esrParents = []
+    self.isFrozen = False
 
   def observe(self,val):
     self.observedValue = val
@@ -99,6 +100,17 @@ class OutputNode(ApplicationNode):
   def definiteParents(self): return [self.operatorNode] + self.operandNodes + [self.requestNode]
   def parents(self): return self.definiteParents() + self.esrParents
 
+
+def isConstantNode(thing):
+  return isinstance(thing, ConstantNode) or (isinstance(thing, Node) and thing.isFrozen)
+def isLookupNode(thing):
+  return isinstance(thing, LookupNode) and not thing.isFrozen
+def isApplicationNode(thing):
+  return isinstance(thing, ApplicationNode) and not thing.isFrozen
+def isRequestNode(thing):
+  return isinstance(thing, RequestNode) and not thing.isFrozen
+def isOutputNode(thing):
+  return isinstance(thing, OutputNode) and not thing.isFrozen
 
 class Args(object):
   def __init__(self,trace,node):

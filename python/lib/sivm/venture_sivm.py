@@ -519,7 +519,6 @@ class VentureSivm(object):
         if label==None:
             d = {'instruction': 'observe', 'expression':expression, 'value':value}
         else:
-            label = v.symbol(label)
             d = {'instruction': 'labeled_observe', 'expression':expression, 'value':value, 'label':v.symbol(label)}
         return self.execute_instruction(d)
 

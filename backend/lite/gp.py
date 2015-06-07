@@ -15,22 +15,27 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import copy
 import numpy as np
 import numpy.linalg as la
 import numpy.random as npr
+
 from exception import VentureValueError
+from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
+from sp import SP, SPAux, VentureSPRecord, SPType
+import types as t
 
 # XXX Replace by scipy.stats.multivariate_normal.logpdf when we
 # upgrade to scipy 0.14.
 def multivariate_normal_logpdf(x, mu, sigma):
   try:
-    dev = x - mu
+    # dev = x - mu
     ans = 0
     ans += (-.5*(x-mu).transpose() * la.inv(sigma) * (x-mu))[0, 0]
     ans += -.5*len(sigma)*np.log(2 * np.pi)
     ans += -.5*np.log(la.det(sigma))
     return ans
-  except la.LinAlgError as e:
+  except la.LinAlgError:
     raise VentureValueError("Bad GP covariance matrix.")
 
 def col_vec(xs):
@@ -100,10 +105,6 @@ class GP(object):
     
     return multivariate_normal_logpdf(col_vec(os), mu, sigma)
   
-from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
-from sp import SP, VentureSPRecord, SPType
-import types as t
-
 class GPOutputPSP(RandomPSP):
   def __init__(self, mean, covariance):
     self.mean = mean
@@ -113,32 +114,38 @@ class GPOutputPSP(RandomPSP):
     return GP(self.mean, self.covariance, samples)
   
   def simulate(self,args):
-    samples = args.spaux
+    samples = args.spaux.samples
     xs = args.operandValues[0]
     return self.makeGP(samples).sample(*xs)
 
   def logDensity(self,os,args):
-    samples = args.spaux
+    samples = args.spaux.samples
     xs = args.operandValues[0]
     return self.makeGP(samples).logDensity(xs, os)
 
-  def logDensityOfCounts(self,samples):
-    return self.makeGP(samples).logDensityOfCounts()
+  def logDensityOfCounts(self,aux):
+    return self.makeGP(aux.samples).logDensityOfCounts()
   
   def incorporate(self,os,args):
-    samples = args.spaux
+    samples = args.spaux.samples
     xs = args.operandValues[0]
     
     for x, o in zip(xs, os):
       samples[x] = o
 
   def unincorporate(self,_os,args):
-    samples = args.spaux
+    samples = args.spaux.samples
     xs = args.operandValues[0]
     for x in xs:
       del samples[x]
 
 gpType = SPType([t.ArrayUnboxedType(t.NumberType())], t.ArrayUnboxedType(t.NumberType()))
+
+class GPSPAux(SPAux):
+  def __init__(self, samples):
+    self.samples = samples
+  def copy(self):
+    return GPSPAux(copy.copy(self.samples))
 
 class GPSP(SP):
   def __init__(self, mean, covariance):
@@ -147,10 +154,10 @@ class GPSP(SP):
     output = TypedPSP(GPOutputPSP(mean, covariance), gpType)
     super(GPSP, self).__init__(NullRequestPSP(),output)
 
-  def constructSPAux(self): return {}
+  def constructSPAux(self): return GPSPAux({})
   def show(self,spaux): return GP(self.mean, self.covariance, spaux)
 
-class MakeGPOutputPSP(DeterministicPSP):
+class MakeGPOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self,args):
     mean = args.operandValues[0]
     covariance = args.operandValues[1]
