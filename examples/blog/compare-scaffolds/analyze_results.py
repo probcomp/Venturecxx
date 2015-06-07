@@ -1,5 +1,8 @@
 import os
 import pandas as pd
+import seaborn as sns
+from string import lower
+from matplotlib import pyplot as plt
 
 def collect_results():
   results_path = 'results'
@@ -36,5 +39,24 @@ def collect_result_file(fname):
                              index = indices,
                              brush_nodes = brush_nodes))
 
+def plot_brush_sizes():
+  ds = pd.read_csv('results/result_summary.csv')
+  for names, df in ds.groupby(['set_model', 'thunks', 'predict', 'client']):
+    plot_brush(names, df)
 
+def plot_brush(names, df):
+  fig, ax = plt.subplots(1)
+  df.groupby('size').plot(x = 'index', y = 'brush_nodes',
+                          legend = False, ax = ax)
+  ax.legend(sorted(df['size'].unique()), title = 'Set size')
+  ax.set_xlabel('Index of set selector')
+  ax.set_ylabel('Brush size')
+  title = '{0}. Thunks: {1}. Predict: {2}.'
+  title = title.format(*names[:-1])
+  ax.set_title(title)
+  fname ='{0}-thunks-{1}-predict-{2}.png'.format(*[lower(str(x)) for x in names[:-1]])
+  fig.savefig('results/' + fname)
   
+if __name__ == '__main__':
+  collect_results()
+  plot_brush_sizes()
