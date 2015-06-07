@@ -86,9 +86,7 @@
                  (range (+ ,array_size 1))))
               (assume in_set
                 (lambda (i) ((lookup in_set_array i)))))
-            (assume in_set
-              (mem
-                (lambda (i) (tag 'in_set i (flip))))))
+
         ;; The set itself
         (assume set (,set_model_name in_set ,problem_size))
         ;; If asked, predict each of the switches
