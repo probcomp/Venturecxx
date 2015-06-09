@@ -251,6 +251,9 @@ Getting Started
 Developing Venture
 ==================
 
+You can build a local version of the refence manual from the `refman/`
+directory.  This requires Sphinx; see instructions in the README there.
+
 The interesting parts of the code are:
 - There is a live tutorial in `examples/tutorial/part*` (run an
   ipython notebook server in that directory)
@@ -261,7 +264,6 @@ The interesting parts of the code are:
 - The actual entry points are in `script/`, notably `script/venture`.
 - Advanced example programs live in `examples/`.
 - There are some developer tools available in `tool/`.
-- The reference manual can be built from the `refman/` directory (requires Sphinx).
 - The Javascript client and web demos are in `demos/`, subdivided by
   architecture into `demos/jsripl` (which corresponds to the erstwile
   VentureJSRIPL repository), `demos/elm` (an attempt to do demos in
