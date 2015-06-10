@@ -49,6 +49,11 @@ class Trace(object):
     py_exp = t.ExpressionType().asPython(vv.VentureValue.fromStackDict(exp))
     self.results[id] = evaluator.eval(addr.Address(addr.List(id)), py_exp, self.env)
 
+  def uneval(self, id):
+    # Not much to do here
+    assert id in self.results
+    del self.results[id]
+
   def bindPrimitiveName(self, name, val):
     self.env.addBinding(name, node.Node(None, val))
 
