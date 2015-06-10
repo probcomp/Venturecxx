@@ -15,7 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from ..lite import value as vv
+from ..lite import types as t
+
 class Node(object):
   def __init__(self, address, value = None):
     self.address = address
-    self.value = value
+    if isinstance(value, vv.VentureValue):
+      # Possible for programmatic construction, e.g. builtin.py
+      # Will also occur for literal atoms, since there's no other way
+      # to tell them apart from literal numbers.
+      self.value = value
+    else: # In eval
+      self.value = t.ExpressionType().asVentureValue(value)
