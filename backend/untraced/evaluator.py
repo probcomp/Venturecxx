@@ -73,10 +73,9 @@ def apply(address, nodes, env):
   spr = nodes[0].value
   assert isinstance(spr, VentureSPRecord)
   requests = applyPSP(spr.sp.requestPSP, RequestArgs(address, nodes[1:], env))
-  print requests
-  more = [evalRequest(address, r) for r in requests.esrs]
+  req_nodes = [evalRequest(address, r) for r in requests.esrs]
   # TODO Do I need to do anything about LSRs?
-  return applyPSP(spr.sp.outputPSP, OutputArgs(address, nodes[1:], env, more))
+  return applyPSP(spr.sp.outputPSP, OutputArgs(address, nodes[1:], env, req_nodes))
 
 class RequestArgs(object):
   "A package containing all the evaluation context information that a RequestPSP might need, parallel to venture.lite.node.Args"
@@ -93,10 +92,11 @@ class RequestArgs(object):
 
 class OutputArgs(RequestArgs):
   "A package containing all the evaluation context information that an OutputPSP might need, parallel to venture.lite.node.Args"
-  def __init__(self, address, inputs, env, esr_vals):
+  def __init__(self, address, inputs, env, esr_nodes):
     super(OutputArgs, self).__init__(address, inputs, env)
     self.isOutput = True
-    self.esrValues = esr_vals
+    self.esrNodes = esr_nodes
+    self.esrValues = [n.value for n in esr_nodes]
 
 def applyPSP(psp, args):
   assert isinstance(psp, PSP)
@@ -107,4 +107,5 @@ def applyPSP(psp, args):
 
 def evalRequest(address, r):
   # TODO Maintain mem tables by request id
-  return eval(address, r.exp, r.env)
+  new_addr = address.request(r.addr)
+  return node.Node(new_addr, eval(new_addr, r.exp, r.env))
