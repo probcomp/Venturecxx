@@ -237,7 +237,7 @@ class Engine(object):
       ans.bindPrimitiveSP(name, sp)
     import venture.lite.inference_sps as inf
     for word in inf.inferenceKeywords:
-      if not ans.globalEnv.symbolBound(word):
+      if not ans.boundInGlobalEnv(word):
         ans.bindPrimitiveName(word, vv.VentureSymbol(word))
     self.install_inference_prelude(ans)
     return ans

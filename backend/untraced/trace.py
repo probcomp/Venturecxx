@@ -36,3 +36,5 @@ class Trace(object):
     # TODO Mess with SPRecords and SPRefs properly
     spVal = VentureSPRecord(sp)
     self.env.addBinding(name, spVal)
+
+  def boundInGlobalEnv(self, sym): return self.env.symbolBound(sym)
