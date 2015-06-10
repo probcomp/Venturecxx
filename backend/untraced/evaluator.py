@@ -1,3 +1,20 @@
+# Copyright (c) 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 from ..lite import exp as e
 from ..lite.exception import VentureError
 from venture.exception import VentureException
@@ -7,10 +24,18 @@ from ..lite import value as vv
 from ..lite.sp import VentureSPRecord
 from ..lite.psp import PSP
 
+import node
+
+# We still have a notion of nodes.  A node is a thing that knows its
+# address, and its value if it has one.
+
 def eval(address, exp, env):
+  # The exact parallel to venture.lite.regen.eval would be to return a
+  # Node, but since the address will always be the input address,
+  # might as well just return the value.
   if e.isVariable(exp):
     try:
-      value = env.findSymbol(exp)
+      value = env.findSymbol(exp).value
     except VentureError as err:
       import sys
       info = sys.exc_info()
@@ -19,14 +44,14 @@ def eval(address, exp, env):
   elif e.isSelfEvaluating(exp): return exp
   elif e.isQuotation(exp): return e.textOfQuotation(exp)
   else:
-    vals = []
+    nodes = []
     for index, subexp in enumerate(exp):
       addr = address.extend(index)
       v = eval(addr,subexp,env)
-      vals.append(v)
+      nodes.append(node.Node(addr, v))
 
     try:
-      val = apply(address, vals, env)
+      val = apply(address, nodes, env)
     except VentureNestedRiplMethodError as err:
       # This is a hack to allow errors raised by inference SP actions
       # that are ripl actions to blame the address of the maker of the
@@ -44,20 +69,20 @@ def eval(address, exp, env):
       raise VentureException("evaluation", err.message, address=address, cause=err), None, info[2]
     return val
 
-def apply(address, vals, env):
-  spr = vals[0]
+def apply(address, nodes, env):
+  spr = nodes[0].value
   assert isinstance(spr, VentureSPRecord)
-  inputs = vals[1:]
-  requests = applyPSP(spr.sp.requestPSP, RequestArgs(inputs, env))
+  requests = applyPSP(spr.sp.requestPSP, RequestArgs(nodes[1:], env))
   print requests
   more = [evalRequest(address, r) for r in requests.esrs]
   # TODO Do I need to do anything about LSRs?
-  return applyPSP(spr.sp.outputPSP, OutputArgs(inputs, env, more))
+  return applyPSP(spr.sp.outputPSP, OutputArgs(nodes[1:], env, more))
 
 class RequestArgs(object):
   "A package containing all the evaluation context information that a RequestPSP might need, parallel to venture.lite.node.Args"
-  def __init__(self, inputs, env):
-    self.operandValues = inputs
+  def __init__(self, nodes, env):
+    self.operandNodes = nodes
+    self.operandValues = [n.value for n in nodes]
     for v in self.operandValues:
       # v could be None if this is for logDensityBound for rejection
       # sampling, which is computed from the torus.
