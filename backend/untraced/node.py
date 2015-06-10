@@ -21,7 +21,9 @@ from ..lite import types as t
 class Node(object):
   def __init__(self, address, value = None):
     self.address = address
-    if isinstance(value, vv.VentureValue):
+    if value is None:
+      self.value = None
+    elif isinstance(value, vv.VentureValue):
       # Possible for programmatic construction, e.g. builtin.py
       # Will also occur for literal atoms, since there's no other way
       # to tell them apart from literal numbers.

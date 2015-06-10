@@ -72,15 +72,16 @@ def eval(address, exp, env):
 def apply(address, nodes, env):
   spr = nodes[0].value
   assert isinstance(spr, VentureSPRecord)
-  requests = applyPSP(spr.sp.requestPSP, RequestArgs(nodes[1:], env))
+  requests = applyPSP(spr.sp.requestPSP, RequestArgs(address, nodes[1:], env))
   print requests
   more = [evalRequest(address, r) for r in requests.esrs]
   # TODO Do I need to do anything about LSRs?
-  return applyPSP(spr.sp.outputPSP, OutputArgs(nodes[1:], env, more))
+  return applyPSP(spr.sp.outputPSP, OutputArgs(address, nodes[1:], env, more))
 
 class RequestArgs(object):
   "A package containing all the evaluation context information that a RequestPSP might need, parallel to venture.lite.node.Args"
-  def __init__(self, nodes, env):
+  def __init__(self, address, nodes, env):
+    self.node = node.Node(address)
     self.operandNodes = nodes
     self.operandValues = [n.value for n in nodes]
     for v in self.operandValues:
@@ -92,8 +93,8 @@ class RequestArgs(object):
 
 class OutputArgs(RequestArgs):
   "A package containing all the evaluation context information that an OutputPSP might need, parallel to venture.lite.node.Args"
-  def __init__(self, inputs, env, esr_vals):
-    super(OutputArgs, self).__init__(inputs, env)
+  def __init__(self, address, inputs, env, esr_vals):
+    super(OutputArgs, self).__init__(address, inputs, env)
     self.isOutput = True
     self.esrValues = esr_vals
 
