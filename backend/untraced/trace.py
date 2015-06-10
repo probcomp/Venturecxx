@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from ..lite.exception import VentureError
+from venture.exception import VentureException
 from ..lite import types as t
 from ..lite import value as vv
 from ..lite import env
@@ -54,5 +56,13 @@ class Trace(object):
     # TODO Mess with SPRecords and SPRefs properly
     spVal = VentureSPRecord(sp)
     self.env.addBinding(name, node.Node(None, spVal))
+
+  def bindInGlobalEnv(self,sym,id):
+    try:
+      self.env.addBinding(sym, node.Node(id, self.results[id]))
+    except VentureError as e:
+      raise VentureException("invalid_argument", message=e.message, argument="symbol")
+
+  def unbindInGlobalEnv(self,sym): self.env.removeBinding(sym)
 
   def boundInGlobalEnv(self, sym): return self.env.symbolBound(sym)
