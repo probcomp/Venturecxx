@@ -41,8 +41,8 @@ def eval(address, exp, env):
       info = sys.exc_info()
       raise VentureException("evaluation", err.message, address=address), None, info[2]
     return value
-  elif e.isSelfEvaluating(exp): return exp
-  elif e.isQuotation(exp): return e.textOfQuotation(exp)
+  elif e.isSelfEvaluating(exp): return node.normalize(exp)
+  elif e.isQuotation(exp): return node.normalize(e.textOfQuotation(exp))
   else:
     nodes = []
     for index, subexp in enumerate(exp):

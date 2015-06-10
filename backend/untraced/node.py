@@ -18,15 +18,18 @@
 from ..lite import value as vv
 from ..lite import types as t
 
+def normalize(value):
+  if value is None:
+    return None
+  elif isinstance(value, vv.VentureValue):
+    # Possible for programmatic construction, e.g. builtin.py
+    # Will also occur for literal atoms, since there's no other way
+    # to tell them apart from literal numbers.
+    return value
+  else: # In eval
+    return t.ExpressionType().asVentureValue(value)
+
 class Node(object):
   def __init__(self, address, value = None):
     self.address = address
-    if value is None:
-      self.value = None
-    elif isinstance(value, vv.VentureValue):
-      # Possible for programmatic construction, e.g. builtin.py
-      # Will also occur for literal atoms, since there's no other way
-      # to tell them apart from literal numbers.
-      self.value = value
-    else: # In eval
-      self.value = t.ExpressionType().asVentureValue(value)
+    self.value = normalize(value)
