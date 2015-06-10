@@ -231,7 +231,7 @@ class Engine(object):
         self.infer_trace = None
 
   def init_inference_trace(self):
-    import venture.lite.trace as lite
+    import venture.untraced.trace as lite
     ans = lite.Trace()
     for name,sp in self.inferenceSPsList():
       ans.bindPrimitiveSP(name, sp)
