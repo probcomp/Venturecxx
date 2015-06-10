@@ -2,6 +2,7 @@ from ..lite import exp as e
 from ..lite.exception import VentureError
 from venture.exception import VentureException
 from ..lite.inference_sps import VentureNestedRiplMethodError # TODO Ugh.
+from ..lite import value as vv
 
 from ..lite.sp import VentureSPRecord
 from ..lite.psp import PSP
@@ -47,13 +48,31 @@ def apply(address, vals, env):
   spr = vals[0]
   assert isinstance(spr, VentureSPRecord)
   inputs = vals[1:]
-  requests = applyPSP(spr.sp.requestPSP, inputs, env, [])
-  more = [evalRequest(address, r) for r in requests]
+  requests = applyPSP(spr.sp.requestPSP, RequestArgs(inputs, env))
+  print requests
+  more = [evalRequest(address, r) for r in requests.esrs]
   # TODO Do I need to do anything about LSRs?
-  return applyPSP(spr.sp.outputPSP, inputs, env, more)
+  return applyPSP(spr.sp.outputPSP, OutputArgs(inputs, env, more))
 
-def applyPSP(psp, inputs, env, esr_vals):
-  args = inputs  # Actually trace.argsAt(node)
+class RequestArgs(object):
+  "A package containing all the evaluation context information that a RequestPSP might need, parallel to venture.lite.node.Args"
+  def __init__(self, inputs, env):
+    self.operandValues = inputs
+    for v in self.operandValues:
+      # v could be None if this is for logDensityBound for rejection
+      # sampling, which is computed from the torus.
+      assert v is None or isinstance(v, vv.VentureValue)
+    self.isOutput = False
+    self.env = env
+
+class OutputArgs(RequestArgs):
+  "A package containing all the evaluation context information that an OutputPSP might need, parallel to venture.lite.node.Args"
+  def __init__(self, inputs, env, esr_vals):
+    super(OutputArgs, self).__init__(inputs, env)
+    self.isOutput = True
+    self.esrValues = esr_vals
+
+def applyPSP(psp, args):
   assert isinstance(psp, PSP)
   val = psp.simulate(args)
   psp.incorporate(val, args)
