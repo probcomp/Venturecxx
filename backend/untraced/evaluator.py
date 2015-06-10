@@ -3,6 +3,7 @@ from ..lite.exception import VentureError
 from venture.exception import VentureException
 from ..lite.inference_sps import VentureNestedRiplMethodError # TODO Ugh.
 
+from ..lite.sp import VentureSPRecord
 from ..lite.psp import PSP
 
 def eval(address, exp, env):
@@ -43,12 +44,13 @@ def eval(address, exp, env):
     return val
 
 def apply(address, vals, env):
-  sp = vals[0]
+  spr = vals[0]
+  assert isinstance(spr, VentureSPRecord)
   inputs = vals[1:]
-  requests = applyPSP(sp.requestPSP, inputs, env, [])
+  requests = applyPSP(spr.sp.requestPSP, inputs, env, [])
   more = [evalRequest(address, r) for r in requests]
   # TODO Do I need to do anything about LSRs?
-  return applyPSP(sp.outputPSP, inputs, env, more)
+  return applyPSP(spr.sp.outputPSP, inputs, env, more)
 
 def applyPSP(psp, inputs, env, esr_vals):
   args = inputs  # Actually trace.argsAt(node)
