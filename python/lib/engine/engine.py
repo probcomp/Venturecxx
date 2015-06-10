@@ -231,13 +231,13 @@ class Engine(object):
         self.infer_trace = None
 
   def init_inference_trace(self):
-    import venture.lite.trace as lite
+    import venture.untraced.trace as lite
     ans = lite.Trace()
     for name,sp in self.inferenceSPsList():
       ans.bindPrimitiveSP(name, sp)
     import venture.lite.inference_sps as inf
     for word in inf.inferenceKeywords:
-      if not ans.globalEnv.symbolBound(word):
+      if not ans.boundInGlobalEnv(word):
         ans.bindPrimitiveName(word, vv.VentureSymbol(word))
     self.install_inference_prelude(ans)
     return ans

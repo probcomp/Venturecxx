@@ -103,6 +103,7 @@ packages = [
     "venture.engine",
     "venture.lite",
     "venture.lite.infer",
+    "venture.untraced",
     "venture.parser",
     "venture.parser.church_prime",
     "venture.plex",
@@ -217,6 +218,7 @@ setup (
     package_dir = {
         "venture": "python/lib/",
         "venture.lite": "backend/lite/",
+        "venture.untraced": "backend/untraced/",
         "venture.plex": "external/plex/dist/Plex/",
         "venture.puma": "backend/new_cxx/",
         "venture.test": "test/",

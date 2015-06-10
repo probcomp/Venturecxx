@@ -365,6 +365,8 @@ class Trace(object):
 
   def unbindInGlobalEnv(self,sym): self.globalEnv.removeBinding(sym)
 
+  def boundInGlobalEnv(self, sym): return self.globalEnv.symbolBound(sym)
+
   def extractValue(self,id): return self.boxValue(self.valueAt(self.families[id]))
 
   def extractRaw(self,id): return self.valueAt(self.families[id])
