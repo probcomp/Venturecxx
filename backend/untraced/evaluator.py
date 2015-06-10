@@ -72,9 +72,12 @@ def eval(address, exp, env):
 def apply(address, nodes, env):
   spr = nodes[0].value
   assert isinstance(spr, VentureSPRecord)
-  requests = applyPSP(spr.sp.requestPSP, RequestArgs(address, nodes[1:], env))
+  req_args = RequestArgs(address, nodes[1:], env)
+  requests = applyPSP(spr.sp.requestPSP, req_args)
+  for esr in requests.esrs:
+    assert esr.id == req_args.node, "The untraced evaluator does not yet support non-unique request ids"
   req_nodes = [evalRequest(address, r) for r in requests.esrs]
-  # TODO Do I need to do anything about LSRs?
+  assert not requests.lsrs, "The untraced evaluator does not yet support LSRs."
   return applyPSP(spr.sp.outputPSP, OutputArgs(address, nodes[1:], env, req_nodes))
 
 class RequestArgs(object):
@@ -84,11 +87,10 @@ class RequestArgs(object):
     self.operandNodes = nodes
     self.operandValues = [n.value for n in nodes]
     for v in self.operandValues:
-      # v could be None if this is for logDensityBound for rejection
-      # sampling, which is computed from the torus.
       assert v is None or isinstance(v, vv.VentureValue)
     self.isOutput = False
     self.env = env
+    # TODO Theoretically need spaux and makeSPAux fields
 
 class OutputArgs(RequestArgs):
   "A package containing all the evaluation context information that an OutputPSP might need, parallel to venture.lite.node.Args"
@@ -102,10 +104,8 @@ def applyPSP(psp, args):
   assert isinstance(psp, PSP)
   val = psp.simulate(args)
   psp.incorporate(val, args)
-  # At this point, Lite converts any SPRecord values to SPRefs
   return val
 
 def evalRequest(address, r):
-  # TODO Maintain mem tables by request id
   new_addr = address.request(r.addr)
   return node.Node(new_addr, eval(new_addr, r.exp, r.env))
