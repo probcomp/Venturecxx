@@ -74,9 +74,7 @@ def apply(address, nodes, env):
   assert isinstance(spr, VentureSPRecord)
   req_args = RequestArgs(address, nodes[1:], env)
   requests = applyPSP(spr.sp.requestPSP, req_args)
-  for esr in requests.esrs:
-    assert esr.id == req_args.node, "The untraced evaluator does not yet support non-unique request ids"
-  req_nodes = [evalRequest(address, r) for r in requests.esrs]
+  req_nodes = [evalRequest(address, spr, r) for r in requests.esrs]
   assert not requests.lsrs, "The untraced evaluator does not yet support LSRs."
   return applyPSP(spr.sp.outputPSP, OutputArgs(address, nodes[1:], env, req_nodes))
 
@@ -106,6 +104,12 @@ def applyPSP(psp, args):
   psp.incorporate(val, args)
   return val
 
-def evalRequest(address, r):
-  new_addr = address.request(r.addr)
-  return node.Node(new_addr, eval(new_addr, r.exp, r.env))
+def evalRequest(address, spr, r):
+  families = spr.spFamilies
+  if families.containsFamily(r.id):
+    return families.getFamily(r.id)
+  else:
+    new_addr = address.request(r.addr)
+    ans = node.Node(new_addr, eval(new_addr, r.exp, r.env))
+    families.registerFamily(r.id, ans)
+    return ans
