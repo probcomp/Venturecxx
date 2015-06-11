@@ -79,6 +79,18 @@ class ListSyntax(Syntax):
       return index
     return index[:1] + self.exp[index[0]].resugar_index(index[1:])
 
+def CondExpand(exp):
+  n = len(exp) - 1
+  preds = ['__pred%d__' % i for i in range(n)]
+  exprs = ['__expr%d__' % i for i in range(n)]
+
+  pattern = ['cond'] + map(list, zip(preds, exprs))
+
+  template = 'nil'
+  for i in reversed(range(n)):
+    template = ['if', preds[i], exprs[i], template]
+  return SyntaxRule(pattern, template).expand(exp)
+
 def LetExpand(exp):
   if len(exp) != 3:
       raise VentureException('parse','"let" statement requires 2 arguments',expression_index=[])
@@ -216,6 +228,17 @@ ifMacro = SyntaxRule(['if', 'predicate', 'consequent', 'alternative'],
 - `(if predicate consequent alternate)`: Branch control.
 
   The predicate, consequent, and alternate must be Venture expressions.
+""")
+
+# Cond is not directly a SyntaxRule because the pattern language does
+# not support repetition.  Instead, expansion of a cond form computes a
+# ground pattern and template pair of the right size and dynamically
+# forms and uses a SyntaxRule out of that.
+condMacro = Macro(arg0("cond"), CondExpand, desc="""\
+- `(cond (predicate expression) ...)`: Multiple branching.
+
+  Each predicate and each expression must be a Venture expression.
+  If none of the predicates match, returns nil.
 """)
 
 andMacro = SyntaxRule(['and', 'exp1', 'exp2'],
@@ -465,7 +488,7 @@ extractStatsMacro = quasiquotation_macro("extract_stats", min_size = 2, max_size
 
 """)
 
-for m in [identityMacro, lambdaMacro, ifMacro, andMacro, orMacro, letMacro, doMacro, beginMacro, qqMacro,
+for m in [identityMacro, lambdaMacro, ifMacro, condMacro, andMacro, orMacro, letMacro, doMacro, beginMacro, qqMacro,
           callBackMacro, collectMacro,
           assumeMacro, observeMacro, predictMacro, forceMacro, sampleMacro, sampleAllMacro,
           extractStatsMacro,
