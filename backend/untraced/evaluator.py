@@ -74,7 +74,7 @@ def apply(address, nodes, env):
   assert isinstance(spr, VentureSPRecord)
   req_args = RequestArgs(address, nodes[1:], env)
   requests = applyPSP(spr.sp.requestPSP, req_args)
-  req_nodes = [evalRequest(address, spr, r) for r in requests.esrs]
+  req_nodes = [evalRequest(req_args, spr, r) for r in requests.esrs]
   assert not requests.lsrs, "The untraced evaluator does not yet support LSRs."
   return applyPSP(spr.sp.outputPSP, OutputArgs(address, nodes[1:], env, req_nodes))
 
@@ -104,12 +104,20 @@ def applyPSP(psp, args):
   psp.incorporate(val, args)
   return val
 
-def evalRequest(address, spr, r):
+def evalRequest(req_args, spr, r):
   families = spr.spFamilies
   if families.containsFamily(r.id):
     return families.getFamily(r.id)
   else:
-    new_addr = address.request(r.addr)
+    new_addr = req_args.node.address.request(r.addr)
     ans = node.Node(new_addr, eval(new_addr, r.exp, r.env))
-    families.registerFamily(r.id, ans)
+    if nonRepeatableRequestID(req_args, r.id):
+      pass
+    else:
+      families.registerFamily(r.id, ans)
     return ans
+
+def nonRepeatableRequestID(req_args, id):
+  # Conservatively detect patterns or request ids indicating intention
+  # not to collide, so they do not need to be stored.
+  return id == req_args.node or (isinstance(id, tuple) and id[0] == req_args.node)
