@@ -190,6 +190,25 @@ VentureValuePtr RestOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
 
 /* Functional */
 
+VentureValuePtr ApplyRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  VentureValuePtr optor = args->operandValues[0];
+  VentureValuePtr opands = args->operandValues[1];
+
+  shared_ptr<VentureEnvironment> env = shared_ptr<VentureEnvironment>(new VentureEnvironment());
+
+  vector<VentureValuePtr> parts;
+  parts.push_back(optor);
+  BOOST_FOREACH(VentureValuePtr opand, opands->getArray())
+  {
+    parts.push_back(opand);
+  }
+  VentureValuePtr expression = VentureValuePtr(new VentureArray(parts));
+  vector<ESR> esrs;
+  esrs.push_back(ESR(VentureValuePtr(new VentureID()), expression, env));
+  return VentureValuePtr(new VentureRequest(esrs, vector<shared_ptr<LSR> >()));
+}
+
 VentureValuePtr ArrayMapRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   VentureValuePtr optor = args->operandValues[0];

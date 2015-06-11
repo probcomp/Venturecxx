@@ -132,6 +132,11 @@ struct RestOutputPSP : PSP // TODO ought to allow dotted lists
 
 /* Functional */
 
+struct ApplyRequestPSP : PSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
 struct ArrayMapRequestPSP : PSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
