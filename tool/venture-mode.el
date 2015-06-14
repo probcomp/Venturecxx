@@ -78,7 +78,7 @@ See `run-hooks'."
               (eval-when-compile
                 (list
                  (list (concat "(" (regexp-opt '(;; Model special forms
-                                                 "cond" "if" "lambda" "let"
+                                                 "cond" "if" "lambda" "let" "letrec"
                                                  "and" "or" "identity") t)
                                "\\>")
                        '(1 font-lock-keyword-face))
@@ -242,6 +242,7 @@ indentation."
 (put 'do 'venture-indent-function 0)
 (put 'lambda 'venture-indent-function 1)
 (put 'let 'venture-indent-function 'scheme-let-indent)
+(put 'letrec 'venture-indent-function 'scheme-let-indent)
 (put 'define 'venture-indent-function 1)
 (put 'assume 'venture-indent-function 1)
 (put 'mem 'venture-indent-function 0)
