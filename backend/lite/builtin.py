@@ -372,6 +372,15 @@ builtInSPsList = [
                                                   t.HomogeneousArrayType(t.AnyType("a"))],
                                                  t.RequestType("b")))) ],
 
+           [ "fix", SP(TypedPSP(functional.FixRequestPSP(),
+                                SPType([t.HomogeneousArrayType(t.SymbolType()),
+                                        t.HomogeneousArrayType(t.ExpressionType())],
+                                       t.RequestType())),
+                       TypedPSP(functional.FixOutputPSP(),
+                                SPType([t.HomogeneousArrayType(t.SymbolType()),
+                                        t.HomogeneousArrayType(t.ExpressionType())],
+                                       env.EnvironmentType()))) ],
+
            [ "mapv", SP(TypedPSP(functional.ArrayMapRequestPSP(),
                                  SPType([SPType([t.AnyType("a")], t.AnyType("b")),
                                          t.HomogeneousArrayType(t.AnyType("a"))],

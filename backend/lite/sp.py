@@ -138,8 +138,9 @@ used in the implementation of TypedPSP and TypedLKernel."""
     # sampling.
     return self.return_type.asPythonNoneable(value)
   def unwrap_args(self, args):
-    if args.isOutput:
-      assert not args.esrValues # TODO Later support outputs that have non-latent requesters
+    # XXX: why was this check necessary?
+    # if args.isOutput:
+    #   assert not args.esrValues # TODO Later support outputs that have non-latent requesters
     answer = copy.copy(args)
     answer.operandValues = self.unwrap_arg_list(args.operandValues)
     return answer
