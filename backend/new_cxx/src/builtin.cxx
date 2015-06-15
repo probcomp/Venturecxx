@@ -156,6 +156,7 @@ map<string,SP*> initBuiltInSPs()
   m["second"] = new SP(new NullRequestPSP(), new SecondOutputPSP());
   m["rest"] = new SP(new NullRequestPSP(), new RestOutputPSP());
   m["apply"] = new SP(new ApplyRequestPSP(), new ESRRefOutputPSP());
+  m["fix"] = new SP(new FixRequestPSP(), new FixOutputPSP());
   m["mapv"] = new SP(new ArrayMapRequestPSP(), new ESRArrayOutputPSP());
   m["imapv"] = new SP(new IndexedArrayMapRequestPSP(), new ESRArrayOutputPSP());
   m["arange"] = new SP(new NullRequestPSP(), new ArangeOutputPSP());

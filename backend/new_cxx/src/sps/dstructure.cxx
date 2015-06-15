@@ -19,7 +19,9 @@
 #include "values.h"
 #include "utils.h"
 #include "env.h" // For the request in ArrayMapRequestPSP
+#include "sp.h" // For VentureSPRef in FixRequestPSP
 #include <boost/foreach.hpp>
+#include <boost/range/combine.hpp>
 
 VentureValuePtr SimplexOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
@@ -207,6 +209,42 @@ VentureValuePtr ApplyRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
   vector<ESR> esrs;
   esrs.push_back(ESR(VentureValuePtr(new VentureID()), expression, env));
   return VentureValuePtr(new VentureRequest(esrs, vector<shared_ptr<LSR> >()));
+}
+
+
+VentureValuePtr FixRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("fix", args, 2);
+
+  VentureValuePtr ids = args->operandValues[0];
+  VentureValuePtr expressions = args->operandValues[1];
+  shared_ptr<VentureEnvironment> env = shared_ptr<VentureEnvironment>(new VentureEnvironment(args->env));
+  BOOST_FOREACH(VentureValuePtr id, ids->getArray())
+  {
+    // add empty binding for id;
+  }
+  vector<ESR> esrs;
+  BOOST_FOREACH(VentureValuePtr expression, expressions->getArray())
+  {
+    esrs.push_back(ESR(VentureValuePtr(new VentureID()), expression, env));
+  }
+  return VentureValuePtr(new VentureRequest(esrs, vector<shared_ptr<LSR> >()));
+}
+
+VentureValuePtr FixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  vector<VentureValuePtr> ids = args->operandValues[0]->getArray();
+  shared_ptr<VentureEnvironment> env = args->env;
+  BOOST_FOREACH(ESR esr, args->requestValue->esrs)
+  {
+    // assert(env == esr->env);
+    env = esr.env;
+  }
+  for (size_t i = 0; i < ids.size(); ++i)
+  {
+    env->addBinding(ids[i]->getSymbol(), args->esrParentNodes[i].get());
+  }
+  return env;
 }
 
 VentureValuePtr ArrayMapRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const

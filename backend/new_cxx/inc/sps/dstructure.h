@@ -137,6 +137,16 @@ struct ApplyRequestPSP : PSP
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };
 
+struct FixRequestPSP : PSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
+struct FixOutputPSP : PSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
 struct ArrayMapRequestPSP : PSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
