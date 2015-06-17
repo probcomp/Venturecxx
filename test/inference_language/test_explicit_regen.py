@@ -15,11 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.config import get_ripl, on_inf_prim, broken_in
+import math
+import scipy.stats as stats
 
-@on_inf_prim("regen")
-@broken_in("puma", "Does not support the regen SP yet")
-def testDetachRegenSmoke():
+from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.config import get_ripl, on_inf_prim, broken_in, collectSamples, default_num_transitions_per_sample
+
+def custom_mh_ripl():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.define("custom_mh", """\
 (lambda (scope block)
@@ -33,7 +35,24 @@ def testDetachRegenSmoke():
             (do (detach subproblem) ; reject
                 (restore subproblem rho_db))))))
 """)
+  return ripl
+
+@on_inf_prim("regen")
+@broken_in("puma", "Does not support the regen SP yet")
+def testDetachRegenSmoke():
+  ripl = custom_mh_ripl()
   ripl.assume("x", "(normal 0 1)")
   old = ripl.sample("x")
   ripl.infer("(custom_mh default all)")
   assert not old == ripl.sample("x")
+
+@on_inf_prim("regen")
+@broken_in("puma", "Does not support the regen SP yet")
+@statisticalTest
+def testDetachRegenInference():
+  ripl = custom_mh_ripl()
+  ripl.assume("x", "(normal 0 1)")
+  ripl.observe("(normal x 1)", 2)
+  predictions = collectSamples(ripl, "x", infer="(repeat %d (custom_mh default all))" % default_num_transitions_per_sample())
+  cdf = stats.norm(loc=1, scale=math.sqrt(0.5)).cdf
+  return reportKnownContinuous(cdf, predictions, "N(1,sqrt(0.5))")
