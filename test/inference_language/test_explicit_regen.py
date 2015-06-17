@@ -28,7 +28,7 @@ def testDetachRegenSmoke():
       (xi_weight <- (regen subproblem))
       (let ((rho_weight (first rho_weight_and_rho_db))
             (rho_db (rest rho_weight_and_rho_db)))
-        (if (< (log (uniform 0 1)) (- xi_weight rho_weight))
+        (if (< (log (uniform_continuous 0 1)) (- xi_weight rho_weight))
             pass ; accept
             (do (detach subproblem) ; reject
                 (restore subproblem rho_db))))))
