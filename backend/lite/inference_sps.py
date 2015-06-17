@@ -834,6 +834,9 @@ to actually run the given action].
   engine_method_sp("select", infer_action_maker_type([t.AnyType("scope : object"), t.AnyType("block : object")], t.ForeignBlobType("subproblem")), desc="""\
 Select the subproblem indicated by the given scope and block from the current model.
 
+Does not interoperate with multiple particles, or with stochastic
+subproblem selection.
+
 """),
 
   engine_method_sp("detach", infer_action_maker_type([t.ForeignBlobType("subproblem")], t.PairType(t.NumberType("weight"), t.ForeignBlobType("rhoDB"))), desc="""\
@@ -843,6 +846,8 @@ Return the current likelihood at the fringe, and a database of the old
 values that is suitable for restoring the current state (e.g., for
 rejecting a proposal).
 
+Does not interoperate with multiple particles, or with custom proposals.
+
 """),
 
   engine_method_sp("regen", infer_action_maker_type([t.ForeignBlobType("subproblem")], t.NumberType("weight")), desc="""\
@@ -850,11 +855,14 @@ Regenerate the current model along the given subproblem.
 
 Return the new likelihood at the fringe.
 
+Does not interoperate with multiple particles, or with custom proposals.
+
 """),
 
   engine_method_sp("restore", infer_action_maker_type([t.ForeignBlobType("subproblem"), t.ForeignBlobType("rhoDB")], t.NumberType("weight")), desc="""\
 Restore a former state of the current model along the given subproblem.
 
+Does not interoperate with multiple particles.
 """),
 
 ]
