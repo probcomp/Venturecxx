@@ -179,12 +179,16 @@ class Infer(object):
     return self.engine.import_foreign(name)
 
   def select(self, scope, block):
+    assert len(self.engine.model.log_weights) == 1, "Custom subproblems only supported for one trace at a time"
     return self.engine.model.traces.at(0, 'select', scope, block)
   def detach(self, scaffold):
+    assert len(self.engine.model.log_weights) == 1, "Custom proposals only supported for one trace at a time"
     return self.engine.model.traces.at(0, 'just_detach', scaffold)
   def regen(self, scaffold):
+    assert len(self.engine.model.log_weights) == 1, "Custom proposals only supported for one trace at a time"
     return self.engine.model.traces.at(0, 'just_regen', scaffold)
   def restore(self, scaffold, rhoDB):
+    assert len(self.engine.model.log_weights) == 1, "Custom proposals only supported for one trace at a time"
     return self.engine.model.traces.at(0, 'just_restore', scaffold, rhoDB)
 
 class Dataset(object):

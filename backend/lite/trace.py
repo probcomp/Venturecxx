@@ -611,6 +611,7 @@ function.
 
   def select(self, scope, block):
     scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
+    assert not block == "one", "Accounting for stochastic subproblem selection not supported"
     scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
     return scaffold
 
