@@ -181,11 +181,11 @@ class Infer(object):
   def select(self, scope, block):
     return self.engine.model.traces.at(0, 'select', scope, block)
   def detach(self, scaffold):
-    self.engine.model.traces.at(0, 'just_detach', scaffold)
+    return self.engine.model.traces.at(0, 'just_detach', scaffold)
   def regen(self, scaffold):
-    self.engine.model.traces.at(0, 'just_regen', scaffold)
+    return self.engine.model.traces.at(0, 'just_regen', scaffold)
   def restore(self, scaffold, rhoDB):
-    self.engine.model.traces.at(0, 'just_restore', scaffold, rhoDB)
+    return self.engine.model.traces.at(0, 'just_restore', scaffold, rhoDB)
 
 class Dataset(object):
   """Basically a wrapper for a Pandas Dataframe that knows about a few
