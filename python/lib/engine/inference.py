@@ -20,7 +20,7 @@ from pandas import DataFrame
 from copy import copy
 
 from venture.lite.value import (VentureArray, VentureSymbol,
-                                VentureInteger, VentureValue, VentureNil)
+                                VentureInteger, VentureValue, VentureNil, VentureForeignBlob)
 from venture.lite.types import (ExpressionType, SymbolType)
 from venture.lite.utils import logWeightsToNormalizedDirect
 from venture.ripl.utils import strip_types_from_dict_values
@@ -177,6 +177,15 @@ class Infer(object):
     return self.engine.in_model(model, action)
   def model_import_foreign(self, name):
     return self.engine.import_foreign(name)
+
+  def select(self, scope, block):
+    return self.engine.model.traces.at(0, 'select', scope, block)
+  def detach(self, scaffold):
+    self.engine.model.traces.at(0, 'just_detach', scaffold)
+  def regen(self, scaffold):
+    self.engine.model.traces.at(0, 'just_regen', scaffold)
+  def restore(self, scaffold, rhoDB):
+    self.engine.model.traces.at(0, 'just_restore', scaffold, rhoDB)
 
 class Dataset(object):
   """Basically a wrapper for a Pandas Dataframe that knows about a few

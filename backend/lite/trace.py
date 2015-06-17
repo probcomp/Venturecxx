@@ -609,6 +609,20 @@ function.
       return EnumerativeDiversify(copy_trace)(self, BlockScaffoldIndexer(scope, block))
     else: raise Exception("DIVERSIFY %s is not implemented" % operator)
 
+  def select(self, scope, block):
+    scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
+    scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
+    return scaffold
+
+  def just_detach(self, scaffold):
+    return detachAndExtract(self, scaffold)
+
+  def just_regen(self, scaffold):
+    return regenAndAttach(self, scaffold, False, OmegaDB(), {})
+
+  def just_restore(self, scaffold, rhoDB):
+    return regenAndAttach(self, scaffold, True, rhoDB, {})
+
   def block_values(self, scope, block):
     """Return a map between the addresses and values of principal nodes in
 the scaffold determined by the given expression."""
