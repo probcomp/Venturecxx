@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.config import get_ripl, on_inf_prim
+from venture.test.config import get_ripl, broken_in, on_inf_prim
+from venture.test.errors import assert_error_message_contains
 from nose.tools import assert_equals
 
 @on_inf_prim("none")
@@ -49,3 +50,13 @@ def testFixMem():
   (fib 15))
 """, label="pid")
   assert_equals(ripl.report("pid"), 987.0)
+
+@broken_in("puma", "Puma raises RuntimeError instead of VentureException")
+@on_inf_prim("none")
+def testFixScope():
+  ripl = get_ripl()
+  assert_error_message_contains("Cannot find symbol 'x'", ripl.predict, """\
+(let ((x 5))
+  (letrec ((x x))
+    x))
+""", label="pid")
