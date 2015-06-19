@@ -221,7 +221,7 @@ VentureValuePtr FixRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
   shared_ptr<VentureEnvironment> env = shared_ptr<VentureEnvironment>(new VentureEnvironment(args->env));
   BOOST_FOREACH(VentureValuePtr id, ids->getArray())
   {
-    // add empty binding for id;
+    env->addBinding(id->getSymbol(), NULL);
   }
   vector<ESR> esrs;
   BOOST_FOREACH(VentureValuePtr expression, expressions->getArray())
@@ -237,12 +237,12 @@ VentureValuePtr FixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
   shared_ptr<VentureEnvironment> env = args->env;
   BOOST_FOREACH(ESR esr, args->requestValue->esrs)
   {
-    // assert(env == esr->env);
+    assert(env == args->env || env == esr.env);
     env = esr.env;
   }
   for (size_t i = 0; i < ids.size(); ++i)
   {
-    env->addBinding(ids[i]->getSymbol(), args->esrParentNodes[i].get());
+    env->replaceBinding(ids[i]->getSymbol(), args->esrParentNodes[i].get());
   }
   return env;
 }
