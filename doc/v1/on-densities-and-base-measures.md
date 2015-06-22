@@ -1,7 +1,5 @@
-
-----------
 Background
-----------
+==========
 
 Random variables are pretty clearly better than measures for defining
 the basic semantics of metaprob.  One reason why is their superior
@@ -38,9 +36,8 @@ standard deviation may take on.  Thus the specification itself becomes
 a random variable; in this instance one that depends on less of w than
 the random variable being specified.
 
----------
 Densities
----------
+=========
 
 One commonly practiced style of specifying a measure on a sample space
 X is as a density function against some (presumably well-understood)
@@ -73,9 +70,8 @@ restricted to metric spaces satisfying some covering theorems, but it
 is possible that in our setting a metric will always exist and those
 conditions will always be met.
 
---------
 Benefits
---------
+========
 
 The major benefit of having an effective representation of those
 realized limits is being able to work with exact equality constraints
@@ -84,7 +80,7 @@ on random variables with continuous sample spaces.
 For example, consider a program that defines some random variable x,
 and then proclaims
 
-  [observe (normal x 1) 4]
+    [observe (normal x 1) 4]
 
 Of course the probability of a Gaussian with mean x and standard
 deviation 1 producing exactly 4 is zero, so prima facie this
@@ -93,13 +89,13 @@ However, we can choose to make sense of this by passing to balls
 around 4 and taking the limit as their size goes to zero.
 The conditional probability (pardon the notation) becomes
 
-  p(x|4) = lim_{r->0} p(x|B_r(4)) / Z_r               (1)
-         = lim_{r->0} p(x) mu_{N(x,1)}(B_r(4)) / Z_r  (2)
-         = p(x) lim_{r->0} mu_{N(x,1)}(B_r(4)) / Z_r  (3)
-                           / mu_{N(x,1)}(B_r(4)) \
-         = p(x) lim_{r->0} | ------------------- |    (4)
-                           \ Z'_r * mu_L(B_r(4)) /
-         = p(x) N(4|x,1) / Z.                         (5)
+    p(x|4) = lim_{r->0} p(x|B_r(4)) / Z_r               (1)
+           = lim_{r->0} p(x) mu_{N(x,1)}(B_r(4)) / Z_r  (2)
+           = p(x) lim_{r->0} mu_{N(x,1)}(B_r(4)) / Z_r  (3)
+                             / mu_{N(x,1)}(B_r(4)) \
+           = p(x) lim_{r->0} | ------------------- |    (4)
+                             \ Z'_r * mu_L(B_r(4)) /
+           = p(x) N(4|x,1) / Z.                         (5)
 
 Here
 - (1) is just interpreting our problem as a limit, but note that
@@ -126,15 +122,14 @@ In particular, having those limits computationally realized permits
   reversible-jump comes in)
 - importance sampling against continuous constraints
 
---------
 Problems
---------
+========
 
 Nothing in computing with real numbers is ever easy.  Trying to handle
 densities in a general way calls for solving several problems:
 
 Base measure agreement
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 In the example above, the base measure against which the density of
 the Gaussian is computed is always Lebesgue measure, regardless of the
@@ -169,7 +164,7 @@ due to those sums being different and non-equivalent measures for
 different values of the cutoff parameter.
 
 Normalization constant agreement
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------
 
 All the density-using algorithms mentioned above, namely rejection
 sampling, M-H, and importance sampling with resampling (but not
@@ -179,9 +174,8 @@ to do so, however, introduces another problem very analogous to the
 base measure problem, namely that the normalization constant needs to
 actually cancel across different values of the parameters.
 
-----------
 Approaches
-----------
+==========
 
 There are several distinct criteria on which an approach to the above
 problems may be evaluated.  I will try to keep them distinct in my
@@ -195,7 +189,7 @@ thinking:
   that be?
 
 Counting Measure FTW
-~~~~~~~~~~~~~~~~~~~~
+--------------------
 
 Always use counting measure over representable objects, including
 floating-point quantities.
@@ -292,7 +286,7 @@ Subtleties:
   floating-point process (which, however, is known from its type tag).
 
 Type-Driven Universal Base Measure
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------
 
 Basic idea: the base measure which all densities must be against is
 determined by the type of the datum, with Lebesgue measure for all
@@ -394,7 +388,7 @@ Issues particular to the statically typed version:
   measure compatibility assumptions about the particles.
 
 Implicit Unconditional Per-SP Base Measure
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------------------
 
 This is what Venture tries to do now.  Base measures are assumed to be
 determined by the SP, but are not explicitly represented anywhere.
@@ -437,7 +431,7 @@ Issues:
   rule?
 
 Explicit Base Measure
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 Represent the base measure explicitly.  Every SP gets a baseMeasure
 method which returns an instance of a BaseMeasure class which has
@@ -506,7 +500,7 @@ Issues:
         sufficient to eliminate the base measures at runtime?
 
 Represent the Full Radon-Nikodym Decomposition
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------------
 
 This option is complementary to any of the above proposals that
 involve Lebesgue base measures.  This option permits more sampler
@@ -614,9 +608,8 @@ Issues:
   - How easy is it to either fast-path that out, or get rid of it by
     inlining and dead code elimination?
 
---------------------------------------
 Approaches for Normalization Constants
---------------------------------------
+======================================
 
 Venture's current approach to normalization constants is analogous to
 the "Implicit Unconditional Per-SP Base Measure" proposal, with much
@@ -626,9 +619,8 @@ issues.  Note that this choice is essentially independent of the base
 measure choice.  It's harder to treat the normalization constant as a
 type, because it's actually a number (if an unknown number).
 
---------------
 General Issues
---------------
+==============
 
 Looking the list over now, the maxim "Treat base measure
 incompatibility as a type error in application of that inference
@@ -672,9 +664,8 @@ possibly to the others as well.  Or is there a reason this is not
 needed?  Is there a capability we could gain by making a place for the
 Jacobian (or its determinant) in the SP interface?
 
----------------------------------
 Reactions to Reversible-Jump MCMC
----------------------------------
+=================================
 
 These reactions are to the exposition at
 http://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&ved=0CCoQFjAB&url=http%3A%2F%2Fwww.ece.duke.edu%2F~lcarin%2Frjmcmc_20090613.pdf&ei=UgCHVcztLpCWyATn6IPgDQ&usg=AFQjCNH-92Pj2qJ7D4qpX2misdEc_zdF_w&sig2=opYeKFReuyet1NInfA3A8g&bvm=bv.96339352,d.aWw
@@ -718,9 +709,8 @@ Evaluation of Venture MH:
   - bug: a deterministic DeltaLKernel (which Venture does not rule
     out!)  has no channel by which to report its Jacobian determinant.
 
------
 Notes
------
+=====
 
 [1] Really rx = liftM2 (,) (fst . rx) (snd . rx) but we're all friends
 here.
@@ -753,9 +743,8 @@ first bit of the mantissa.  Not obvious at the moment whether this
 correction from 3 will arise naturally from the general handling of
 float density discussed earlier.
 
-----------
 References
-----------
+==========
 
 http://www.encyclopediaofmath.org/index.php/Absolutely_continuous_measures
 https://en.wikipedia.org/wiki/Absolute_continuity#Absolute_continuity_of_measures
