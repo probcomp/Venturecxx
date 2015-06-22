@@ -79,6 +79,18 @@ class ListSyntax(Syntax):
       return index
     return index[:1] + self.exp[index[0]].resugar_index(index[1:])
 
+def CondExpand(exp):
+  n = len(exp) - 1
+  preds = ['__pred%d__' % i for i in range(n)]
+  exprs = ['__expr%d__' % i for i in range(n)]
+
+  pattern = ['cond'] + map(list, zip(preds, exprs))
+
+  template = 'nil'
+  for i in reversed(range(n)):
+    template = ['if', preds[i], exprs[i], template]
+  return SyntaxRule(pattern, template).expand(exp)
+
 def LetExpand(exp):
   if len(exp) != 3:
       raise VentureException('parse','"let" statement requires 2 arguments',expression_index=[])
@@ -94,6 +106,22 @@ def LetExpand(exp):
   template = 'body'
   for i in reversed(range(n)):
     template = [['lambda', [syms[i]], template], vals[i]]
+  return SyntaxRule(pattern, template).expand(exp)
+
+def LetRecExpand(exp):
+  if len(exp) != 3:
+      raise VentureException('parse','"letrec" statement requires 2 arguments',expression_index=[])
+  if not isinstance(exp[1], list):
+      raise VentureException('parse','"letrec" first argument must be a list',expression_index=[1])
+
+  n = len(exp[1])
+  syms = ['__sym%d__' % i for i in range(n)]
+  vals = ['__val%d__' % i for i in range(n)]
+
+  pattern = ['letrec', map(list, zip(syms, vals)), 'body']
+
+  template = ['fix'] + [['quote'] + [syms]] + [['quote'] + [vals]]
+  template = ['eval', ['quote', 'body'], template]
   return SyntaxRule(pattern, template).expand(exp)
 
 def arg0(name):
@@ -218,6 +246,17 @@ ifMacro = SyntaxRule(['if', 'predicate', 'consequent', 'alternative'],
   The predicate, consequent, and alternate must be Venture expressions.
 """)
 
+# Cond is not directly a SyntaxRule because the pattern language does
+# not support repetition.  Instead, expansion of a cond form computes a
+# ground pattern and template pair of the right size and dynamically
+# forms and uses a SyntaxRule out of that.
+condMacro = Macro(arg0("cond"), CondExpand, desc="""\
+- `(cond (predicate expression) ...)`: Multiple branching.
+
+  Each predicate and each expression must be a Venture expression.
+  If none of the predicates match, returns nil.
+""")
+
 andMacro = SyntaxRule(['and', 'exp1', 'exp2'],
                       ['if', 'exp1', 'exp2', v.boolean(False)],
                       desc="""- `(and exp1 exp2)`: Short-circuiting and. """)
@@ -239,6 +278,19 @@ letMacro = Macro(arg0("let"), LetExpand, desc="""\
   The semantics are as Scheme's `let*`: each `exp` is evaluated in turn,
   its result is bound to the `param`, and made available to subsequent
   `exp` s and the `body`.
+""")
+
+# Letrec is not directly a SyntaxRule because the pattern language does
+# not support repetition.  Instead, expansion of a let form computes a
+# ground pattern and template pair of the right size and dynamically
+# forms and uses a SyntaxRule out of that.
+letrecMacro = Macro(arg0("letrec"), LetRecExpand, desc="""\
+- `(letrec ((param exp) ...) body)`: Evaluation with local scope.
+
+  Each parameter must be a Venture symbol.
+  Each exp must be a Venture expression that evaluates to a procedure.
+  The body must be a Venture expression.
+  The semantics are as Scheme's `letrec`: (TODO)
 """)
 
 # Do is not directly a SyntaxRule because the pattern language does
@@ -465,7 +517,7 @@ extractStatsMacro = quasiquotation_macro("extract_stats", min_size = 2, max_size
 
 """)
 
-for m in [identityMacro, lambdaMacro, ifMacro, andMacro, orMacro, letMacro, doMacro, beginMacro, qqMacro,
+for m in [identityMacro, lambdaMacro, ifMacro, condMacro, andMacro, orMacro, letMacro, letrecMacro, doMacro, beginMacro, qqMacro,
           callBackMacro, collectMacro,
           assumeMacro, observeMacro, predictMacro, forceMacro, sampleMacro, sampleAllMacro,
           extractStatsMacro,

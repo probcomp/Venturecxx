@@ -57,3 +57,33 @@ class IndexedArrayMapRequestPSP(DeterministicPSP):
 class ESRArrayOutputPSP(DeterministicPSP):
     def simulate(self, args):
         return VentureArray(args.esrValues)
+
+class FixRequestPSP(DeterministicPSP):
+    def simulate(self, args):
+        ids = args.operandValues[0]
+        exps = args.operandValues[1]
+        # point to the desugared source code location of expression list
+        addr = args.operandNodes[1].address.last.append(1)
+        # extend current environment with empty bindings for ids
+        # (will be initialized in the output PSP)
+        env = VentureEnvironment(args.env, ids, [None for _ in ids])
+        request = Request([ESR((args.node, i), exp, addr.append(i), env)
+                           for i, exp in enumerate(exps)])
+        return request
+
+class FixOutputPSP(DeterministicPSP):
+    def simulate(self, args):
+        ids = args.operandValues[0]
+        # get the extended environment shared by the ESRs
+        env = None
+        for esr in args.requestValue.esrs:
+            if env is None: env = esr.env
+            else: assert env is esr.env
+        if env is None: env = args.env
+        # bind ids to the requested values
+        for id, esrParent in zip(ids, args.esrNodes):
+            env.replaceBinding(id, esrParent)
+        return env
+
+    def description(self, name):
+        return "%s\n  Used internally in the implementation of letrec." % name

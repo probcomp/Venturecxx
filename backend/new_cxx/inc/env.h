@@ -37,6 +37,7 @@ struct VentureEnvironment : VentureValue
 
   void addBinding(const string& sym,Node * node);
   void removeBinding(const string& sym);
+  void replaceBinding(const string& sym,Node * node);
   Node * lookupSymbol(shared_ptr<VentureSymbol> sym);
   Node * lookupSymbol(const string& sym);
   Node * safeLookupSymbol(const string& sym);

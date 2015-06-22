@@ -61,6 +61,13 @@ void VentureEnvironment::removeBinding(const string& sym)
   }
 }
 
+void VentureEnvironment::replaceBinding(const string& sym, Node * node)
+{
+  assert(frame.count(sym));
+  assert(frame[sym] == NULL);
+  frame[sym] = node;
+}
+
 Node * VentureEnvironment::lookupSymbol(shared_ptr<VentureSymbol> sym)
 {
   return lookupSymbol(sym->s);
