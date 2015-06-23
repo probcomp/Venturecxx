@@ -174,7 +174,7 @@ class VentureSivm(object):
             self.state='exception'
 
             address = e.data['address'].asList()
-            e.data['stack_trace'] = [frame for frame in [self._resugar(index) for index in address] if frame is not None]
+            e.data['stack_trace'] = self.trace_address_to_stack(address)
             del e.data['address']
 
             self.current_exception = e.to_json_object()
@@ -196,6 +196,9 @@ class VentureSivm(object):
                     e.data['argument'] = 'label'
                     del e.data['directive_id']
         return e
+
+    def trace_address_to_stack(self, address):
+        return [frame for frame in [self._resugar(index) for index in address] if frame is not None]
 
     def _get_syntax_record(self, did):
         if did not in self.syntax_dict:

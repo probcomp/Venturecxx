@@ -383,6 +383,24 @@ class Ripl():
         ans = exp[0:start] + "\x1b[31m" + exp[start:end+1] + "\x1b[39;49m" + exp[end+1:]
         return ans, (start, end)
 
+    def annotate_scaffold(self, scaffold):
+        def red(string):
+            return "\x1b[31m" + string + "\x1b[39;49m"
+        def green(string):
+            return "\x1b[32m" + string + "\x1b[39;49m"
+        def yellow(string):
+            return "\x1b[33m" + string + "\x1b[39;49m"
+
+        frames = [self.sivm.trace_address_to_stack(pnode.address) for pnodes in scaffold.setsOfPNodes for pnode in pnodes]
+        by_did = {}
+        for f in frames:
+            if f['did'] not in by_did:
+                by_did[f['did']] = []
+            by_did[f['did']].extend((f['exp'], f['index']))
+        for (_did, marks) in by_did:
+            exp = marks[0][0] # Should all be the same
+            places = [(mark[1], red) for mark in marks]
+            print self._cur_parser().unparse_expression_and_mark_up(exp, places)
 
     ############################################
     # Directives
