@@ -393,17 +393,19 @@ class Ripl():
             return "\x1b[32m" + string + "\x1b[39;49m"
         def yellow(string):
             return "\x1b[33m" + string + "\x1b[39;49m"
+        by_did = {}
+        def mark(nodes, color):
+            for node in nodes:
+                frame = self.sivm.trace_address_to_stack(node.address.asList())[-1]
+                if frame['did'] not in by_did:
+                    by_did[frame['did']] = []
+                by_did[frame['did']].append((frame['exp'], frame['index'], color))
 
         scaffold = scaffold_dict['value']
-        frames = [self.sivm.trace_address_to_stack(pnode.address.asList())[-1] for pnodes in scaffold.setsOfPNodes for pnode in pnodes]
-        by_did = {}
-        for f in frames:
-            if f['did'] not in by_did:
-                by_did[f['did']] = []
-            by_did[f['did']].append((f['exp'], f['index']))
+        mark(scaffold.getPrincipalNodes(), red)
         for (_did, marks) in by_did.iteritems():
             exp = marks[0][0] # Should all be the same
-            places = [(mark[1], red) for mark in marks]
+            places = [(mark[1], mark[2]) for mark in marks]
             print self._cur_parser().unparse_expression_and_mark_up(exp, places)
 
     ############################################
