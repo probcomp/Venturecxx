@@ -132,7 +132,7 @@ double PyTrace::getGlobalLogScore()
     shared_ptr<Args> args = trace->getArgs(node);
     if (psp->canAbsorb(trace.get(), node, NULL))
     {
-      ls += psp->logDensity(trace->getValue(node),args);
+      ls += psp->logDensity(trace->getGroundValue(node),args);
     }
   }
   for (set<Node*>::iterator iter = trace->constrainedChoices.begin();
@@ -142,7 +142,7 @@ double PyTrace::getGlobalLogScore()
     ApplicationNode * node = dynamic_cast<ApplicationNode*>(*iter);
     shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
     shared_ptr<Args> args = trace->getArgs(node);
-    ls += psp->logDensity(trace->getValue(node),args);
+    ls += psp->logDensity(trace->getGroundValue(node),args);
   }
   return ls;
 }
