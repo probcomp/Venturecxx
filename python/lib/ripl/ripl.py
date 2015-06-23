@@ -383,7 +383,7 @@ class Ripl():
         ans = exp[0:start] + "\x1b[31m" + exp[start:end+1] + "\x1b[39;49m" + exp[end+1:]
         return ans, (start, end)
 
-    def annotate_scaffold(self, scaffold):
+    def draw_subproblem(self, scaffold):
         def red(string):
             return "\x1b[31m" + string + "\x1b[39;49m"
         def green(string):

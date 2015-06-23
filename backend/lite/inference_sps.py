@@ -839,7 +839,7 @@ subproblem selection.
 
 """),
 
-  engine_method_sp("detach", infer_action_maker_type([t.ForeignBlobType("subproblem")], t.PairType(t.NumberType("weight"), t.ForeignBlobType("rhoDB"))), desc="""\
+  engine_method_sp("detach", infer_action_maker_type([t.ForeignBlobType("<subproblem>")], t.PairType(t.NumberType("weight"), t.ForeignBlobType("<rhoDB>"))), desc="""\
 Detach the current model along the given subproblem.
 
 Return the current likelihood at the fringe, and a database of the old
@@ -850,7 +850,7 @@ Does not interoperate with multiple particles, or with custom proposals.
 
 """),
 
-  engine_method_sp("regen", infer_action_maker_type([t.ForeignBlobType("subproblem")], t.NumberType("weight")), desc="""\
+  engine_method_sp("regen", infer_action_maker_type([t.ForeignBlobType("<subproblem>")], t.NumberType("weight")), desc="""\
 Regenerate the current model along the given subproblem.
 
 Return the new likelihood at the fringe.
@@ -859,10 +859,15 @@ Does not interoperate with multiple particles, or with custom proposals.
 
 """),
 
-  engine_method_sp("restore", infer_action_maker_type([t.ForeignBlobType("subproblem"), t.ForeignBlobType("rhoDB")], t.NumberType("weight")), desc="""\
+  engine_method_sp("restore", infer_action_maker_type([t.ForeignBlobType("<subproblem>"), t.ForeignBlobType("<rhoDB>")], t.NumberType("weight")), desc="""\
 Restore a former state of the current model along the given subproblem.
 
 Does not interoperate with multiple particles.
+"""),
+
+  ripl_method_sp("draw_subproblem", infer_action_maker_type([t.ForeignBlobType("<subproblem>")]), desc="""\
+  Draw a subproblem by printing out the source code of affected random choices.
+
 """),
 
 ]
