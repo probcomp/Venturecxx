@@ -865,7 +865,7 @@ Restore a former state of the current model along the given subproblem.
 Does not interoperate with multiple particles.
 """),
 
-  ripl_method_sp("draw_subproblem", infer_action_maker_type([t.ForeignBlobType("<subproblem>")]), desc="""\
+  ripl_method_sp("draw_subproblem", infer_action_maker_type([t.AnyType("<subproblem>")]), desc="""\
   Draw a subproblem by printing out the source code of affected random choices.
 
 """),
