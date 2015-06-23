@@ -57,6 +57,8 @@ import plugins
 import utils as u
 import venture.value.dicts as v
 
+from venture.lite.node import RequestNode # For scaffold drawing
+
 PRELUDE_FILE = 'prelude.vnt'
 
 class Ripl():
@@ -400,6 +402,7 @@ class Ripl():
         by_did = {}
         def mark(nodes, color):
             for node in nodes:
+                if isinstance(node, RequestNode): continue
                 frame = self.sivm.trace_address_to_stack(node.address.asList())[-1]
                 if frame['did'] not in by_did:
                     by_did[frame['did']] = []
