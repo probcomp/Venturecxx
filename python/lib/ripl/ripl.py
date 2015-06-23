@@ -393,6 +393,10 @@ class Ripl():
             return "\x1b[32m" + string + "\x1b[39;49m"
         def yellow(string):
             return "\x1b[33m" + string + "\x1b[39;49m"
+        def blue(string):
+            return "\x1b[34m" + string + "\x1b[39;49m"
+        def pink(string):
+            return "\x1b[35m" + string + "\x1b[39;49m"
         by_did = {}
         def mark(nodes, color):
             for node in nodes:
@@ -403,6 +407,9 @@ class Ripl():
 
         scaffold = scaffold_dict['value']
         mark(scaffold.getPrincipalNodes(), red)
+        mark(scaffold.absorbing, blue)
+        mark(scaffold.aaa, pink)
+        mark(scaffold.brush, green)
         for (_did, marks) in by_did.iteritems():
             exp = marks[0][0] # Should all be the same
             places = [(mark[1], mark[2]) for mark in marks]
