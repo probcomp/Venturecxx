@@ -74,18 +74,17 @@
                           problem_size)))
       (do
         ;; We can represent set membership as an array of mem'd thunks, or as mem'd functions
-        (if use_thunks
-            (do
-              (assume in_set_array
-                ;; If doing prefix_k, we don't know how many tokens we'll need answers for.
-                ;; So, just make more than we're likely to need.
+        (do
+          (assume in_set_array
+            ;; If doing prefix_k, we don't know how many tokens we'll need answers for.
+            ;; So, just make more than we're likely to need.
 
-                (map
-                 (lambda (i)
-                   (mem (lambda () (tag 'in_set i (flip)))))
-                 (range (+ ,array_size 1))))
-              (assume in_set
-                (lambda (i) ((lookup in_set_array i)))))
+            (map
+             (lambda (i)
+               (mem (lambda () (tag 'in_set i (flip)))))
+             (range (+ ,array_size 1))))
+          (assume in_set
+            (lambda (i) ((lookup in_set_array i)))))
 
         ;; The set itself
         (assume set (,set_model_name in_set ,problem_size))
@@ -117,7 +116,7 @@
                         (normal (attribute element) 100)))))
               (observe (observed_attribute 0) 0)
               (incorporate))
-            pass)))))]
+            pass))))]
 
 [define experiment_loop
   (lambda (ix problem_size)

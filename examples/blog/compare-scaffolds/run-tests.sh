@@ -1,3 +1,5 @@
+#!/bin/bash
+
 run_filter () {
     # Whether we use thunks and predict
     for settings in "false,false" "false,true" "true,false"            

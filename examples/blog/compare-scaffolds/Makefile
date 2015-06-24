@@ -5,7 +5,7 @@
 # makefiles don't seem to do loops and conditionals
 
 profile-scaffold: compare_scaffolds.vnt plugins.py run-tests.sh analyze_results.py
-	mkdir results
+	mkdir -p results
 	./run-tests.sh "run_filter"
 	./run-tests.sh "run_prefix_k"
 	./run-tests.sh "run_map"
