@@ -417,17 +417,16 @@ class Ripl():
                 frame = self.sivm.trace_address_to_stack(node.address.asList())[-1]
                 if frame['did'] not in by_did:
                     by_did[frame['did']] = []
-                by_did[frame['did']].append((frame['exp'], frame['index'], color))
+                by_did[frame['did']].append((frame['index'], color))
 
         scaffold = scaffold_dict['value']
         mark(scaffold.getPrincipalNodes(), red)
         mark(scaffold.absorbing, blue)
         mark(scaffold.aaa, pink)
         mark(scaffold.brush, green)
-        for (_did, marks) in by_did.iteritems():
-            exp = marks[0][0] # Should all be the same
-            places = [(mark[1], mark[2]) for mark in marks]
-            print self._cur_parser().unparse_expression_and_mark_up(exp, places)
+        for (did, marks) in by_did.iteritems():
+            instr = self.directive_id_to_stringable_instruction[did]
+            print self._cur_parser().unparse_instruction(instr, marks)
 
     ############################################
     # Directives
