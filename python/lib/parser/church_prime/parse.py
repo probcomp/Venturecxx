@@ -552,7 +552,7 @@ class ChurchPrimeParser(object):
         'profiler_list_random': [], # XXX Urk, extra keyword.
         'load': [('file', unparse_string)],
     }
-    def unparse_instruction(self, instruction):
+    def unparse_instruction(self, instruction, expr_markers=None):
         '''Unparse INSTRUCTION into a string.'''
         # XXX Urgh.  Whattakludge!
         i = instruction['instruction']
@@ -568,7 +568,10 @@ class ChurchPrimeParser(object):
             chunks.append(i)
         for key, unparser in unparsers:
             chunks.append(' ')
-            chunks.append(unparser(self, instruction[key]))
+            if key == 'expression': # Urk
+                chunks.append(self.unparse_expression_and_mark_up(instruction[key], expr_markers))
+            else:
+                chunks.append(unparser(self, instruction[key]))
         chunks.append(']')
         return ''.join(chunks)
 
@@ -634,7 +637,7 @@ class ChurchPrimeParser(object):
             l = l['value'][index[i]]
         return l['loc']
 
-    def unparse_expression_and_mark_up(self, exp, places):
+    def unparse_expression_and_mark_up(self, exp, places=None):
         '''Return a string representing the given EXP with markings at the given PLACES.
 
         - EXP is a parsed expression
@@ -643,8 +646,10 @@ class ChurchPrimeParser(object):
             subexpressions
           - each marker is a string->string function
         '''
-
-        marker_trie = Trie.from_list(places)
+        if places is not None:
+            marker_trie = Trie.from_list(places)
+        else:
+            marker_trie = None
         return self._unparse_expression_and_mark_up_with_trie(exp, marker_trie)
 
     def _unparse_expression_and_mark_up_with_trie(self, exp, markers):
