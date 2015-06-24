@@ -661,9 +661,13 @@ class ChurchPrimeParser(object):
                 # and I want the canonical form to be that.
                 return self._unparse_expression_and_mark_up_with_trie(exp["value"], markers)
             else: # Leaf
+                if markers.has_children():
+                    print "Warning: index mismatch detected: looking for children of %s." % value_to_string(exp)
                 return unparse_leaf(value_to_string(exp), markers)
         elif isinstance(exp, basestring):
             # XXX This is due to &@!#^&$@!^$&@#!^%&*.
+            if markers.has_children():
+                print "Warning: index mismatch detected: looking for children of string-exp %s." % exp
             return unparse_leaf(exp, markers)
         elif isinstance(exp, list):
             terms = (self._unparse_expression_and_mark_up_with_trie(e, markers.get(i))
@@ -698,6 +702,9 @@ class Trie(object):
 
     def top(self):
         return self.here_list[0]
+
+    def has_children(self):
+        return self.later_nodes
 
     def get(self, k):
         if k in self.later_nodes:
