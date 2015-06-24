@@ -1,0 +1,37 @@
+;; Run profiling of the poisson ball model in Venture to see how it compares to BLOG
+;; For comparison with exact enumeration example, do the case
+;; with 10 observations - 5 green, 5 blue.
+
+[define profile_quality
+  (lambda (args)
+    (let ((set_function_name   (lookup args 0))
+          (inference_function  (lookup args 1))
+          (f_name (lookup args 2)))
+      (do
+        (call_back timer_start)
+        (print f_name)
+        (main 60                                     ; number of cores
+              set_function_name                      ; set model to use
+              'observed_color_clever                 ; observation function to use
+              5                                      ; number of observation pairs
+              inference_function                     ; inference function
+              1667                                   ; number of iterations
+              (lambda (ds) (call_back data_dump      ; what to do after inference completes
+                                      ,ds
+                                      ',f_name)))
+        (call_back timer_time))))]
+
+[define profile_time
+  (lambda (args)
+    (let ((n_obs               (lookup args 0))
+          (set_function_name   (lookup args 1))
+          (inference_function  (lookup args 2)))
+      (do
+        (main 1
+              set_function_name
+              'observed_color_clever
+              n_obs
+              inference_function
+              1000
+              (lambda (ds) pass)))))]
+        

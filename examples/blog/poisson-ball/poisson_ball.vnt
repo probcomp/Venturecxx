@@ -1,0 +1,145 @@
+[assume abs (lambda (x) (if (> x 0) x (* -1 x)))]
+[assume to_float (lambda (x) (+ x 0))]
+
+[define main
+  ;; Main function to perform inference for a single parameter setting
+  (lambda (n_particles
+           set_function_name
+           observation_function_name
+           n_observations
+           inference_function
+           n_iterations
+           run_callbacks)
+    (do
+      (if (> n_particles 1)
+          (resample_multiprocess n_particles 64)
+          pass)
+      (setup_model set_function_name)
+      (make_observations observation_function_name n_observations)
+      (ds <- (run_inference inference_function n_iterations))
+      (run_callbacks ds)))]
+
+[define setup_model
+  (lambda (set_function_name)
+    ;; The set_function_name should be either set_as_list or prefix_k
+    ;; Pass it in quoted.
+    (do
+      (assume n_balls (to_float (poisson 6)))
+      (assume balls (,set_function_name n_balls))
+      (assume switch_color
+        (lambda (color)
+          (if (= color 'Blue)
+              'Green
+              'Blue)))
+      (assume ball_of
+        (mem
+          (lambda (obs)
+            (if (= n_balls 0)
+                false
+                (let ((ix (uniform_discrete 0 n_balls)))
+                  (lookup balls ix))))))
+      (assume color_of
+        (mem
+          (lambda (ball)
+            (if (not n_balls)
+                false
+                (categorical (simplex 0.5 0.5)
+                             (list 'Blue 'Green))))))))]
+
+[assume set_as_list
+  (lambda (n_balls)
+    (mapv to_float (arange n_balls)))]
+
+[assume prefix_k
+  (lambda (n_balls)
+    (let ((selector (mem (lambda (i)
+                           (tag 'selector i (flip))))))
+      (prefix_k_iter selector (to_float n_balls) 0 (list))))]
+
+[assume prefix_k_iter
+  (lambda (selector k idx set_so_far)
+    (if (= (size set_so_far) k)
+        set_so_far
+        (let ((new_set (if (selector idx)
+                           (pair idx set_so_far)
+                           set_so_far)))
+          (prefix_k_iter selector k (+ idx 1) new_set))))]
+
+[define make_observations
+  (lambda (observation_function_name n_observations)
+    ;; Makes one green observation, one blue
+    ;; Pass in the observation function name quoted
+    (do
+      (make_observation_iter observation_function_name
+                             n_observations
+                             0)
+      (incorporate)))]
+
+[define make_observation_iter
+  (lambda (observation_function_name n_observations i)
+    (if (= n_observations i)
+        pass
+        (do
+          (let ((ix1 (+ (* i 2) 1))
+                (ix2 (+ (* i 2) 2)))
+            (do
+              (observe (,observation_function_name ,ix1) 'Blue)
+              (observe (,observation_function_name ,ix2) 'Green)
+              (make_observation_iter observation_function_name
+                                     n_observations
+                                     (+ i 1)))))))]
+
+[assume observed_color_naive
+  (mem
+    (lambda (obs)
+      (let ((ball (ball_of obs))
+            (true_color (color_of ball)))
+        (exactly
+         (if (= true_color false) ; can't do (not true_color) because (not 'a_symbol) breaks
+             false
+             (if (flip 0.2)
+                 (switch_color true_color)
+                 true_color))))))]
+
+[assume observed_color_clever
+  (mem
+    (lambda (obs)
+      (let ((ball (ball_of obs))
+            (true_color (color_of ball)))
+        (if (= true_color false)
+            (exactly false)
+            (categorical (simplex 0.8 0.2)
+                         (list true_color (switch_color true_color)))))))]
+
+[define run_inference
+  ;; Runs the inference loop
+  (lambda (inference_function n_iterations) ; pass the actual function, not its name.
+    (let ((ds (empty)))
+      (do
+        (repeat n_iterations
+                (do
+                  (inference_function)
+                  (bind (collect n_balls) (curry into ds))))
+        (return ds))))]
+
+[define reject_function (lambda () (rejection default all 1))]
+
+[define likelihood_weight_function
+  ;; Allows impossible states
+  (lambda () (likelihood_weight))]
+
+[define likelihood_weight_bogo
+  ;; First resets; then, if state is impossible, replace with possible state
+  (lambda ()
+    (do
+      (likelihood_weight)
+      (bogo_possibilize default all 1)
+      (bind global_likelihood set_particle_log_weights)))]
+
+[define generate_report
+  ;; if reportp is true, generate a report
+  (lambda (reportp ds report_path)
+    (if reportp
+        (call_back data_dump ,ds ',report_path)
+        pass))]
+
