@@ -125,7 +125,8 @@
         (do
           (call_back pretty_print 'symbol<"Index:">)
           (call_back pretty_print ,ix) (call_back newline)
-          (print_scaffold_stats 'in_set ix 1) (call_back newline)
+          (scaffold <- (select 'in_set ix))
+          (draw_subproblem scaffold) (call_back newline)
           (call_back timer_start)
           (repeat 5
             (do

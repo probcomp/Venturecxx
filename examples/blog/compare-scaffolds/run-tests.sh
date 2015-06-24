@@ -6,12 +6,12 @@ run_filter () {
     do
         use_thunks=$(echo $settings | cut -f1 -d,)
         predict=$(echo $settings | cut -f2 -d,)
-        for i in 5 10 15 20 25 30
+        for i in 5 # 10 15 20 25 30
         do
             echo $i
             venture lite -P -L plugins.py -f compare_scaffolds.vnt \
                     -e "[infer (run_experiment (list 'filter_set $use_thunks $predict true $i))]" \
-                    > "results/filter-thunks-$use_thunks-predict-$predict-$i.txt"
+                    # > "results/filter-thunks-$use_thunks-predict-$predict-$i.txt"
         done
     done
 }
