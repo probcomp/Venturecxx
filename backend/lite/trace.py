@@ -365,6 +365,8 @@ class Trace(object):
 
   def unbindInGlobalEnv(self,sym): self.globalEnv.removeBinding(sym)
 
+  def boundInGlobalEnv(self, sym): return self.globalEnv.symbolBound(sym)
+
   def extractValue(self,id): return self.boxValue(self.valueAt(self.families[id]))
 
   def extractRaw(self,id): return self.valueAt(self.families[id])
@@ -606,6 +608,21 @@ function.
     if operator == "enumerative":
       return EnumerativeDiversify(copy_trace)(self, BlockScaffoldIndexer(scope, block))
     else: raise Exception("DIVERSIFY %s is not implemented" % operator)
+
+  def select(self, scope, block):
+    scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
+    assert not block == "one", "Accounting for stochastic subproblem selection not supported"
+    scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
+    return scaffold
+
+  def just_detach(self, scaffold):
+    return detachAndExtract(self, scaffold)
+
+  def just_regen(self, scaffold):
+    return regenAndAttach(self, scaffold, False, OmegaDB(), {})
+
+  def just_restore(self, scaffold, rhoDB):
+    return regenAndAttach(self, scaffold, True, rhoDB, {})
 
   def block_values(self, scope, block):
     """Return a map between the addresses and values of principal nodes in

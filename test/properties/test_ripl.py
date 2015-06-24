@@ -80,6 +80,8 @@ def checkRiplAgreesWithDeterministicSimulate(name, sp):
     "arange", # Not the same return type (elements boxed in Puma?)
     "vector_dot", # Numerical inconsistency between Eigen and Numpy
     "matrix_times_vector", # Numerical inconsistency between Eigen and Numpy
+    "int_div", # Disagreement between Python and C++
+    "int_mod", # Disagreement between Python and C++
   ]:
     raise SkipTest("%s in Puma not implemented compatibly with Lite" % name)
   checkTypedProperty(propRiplAgreesWithDeterministicSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)

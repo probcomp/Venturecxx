@@ -21,6 +21,9 @@ from exception import VentureError
 # Environments store Python strings for the symbols, not Venture
 # symbol objects.  This is a choice, but whichever way it is made it
 # should be consistent.
+# Binding a symbol to the Python value None has the effect of making
+# the symbol behave as if unbound, shadowing existing bindings; this
+# behavior is used in the implementation of letrec.
 class VentureEnvironment(VentureValue):
   def __init__(self,outerEnv=None,ids=None,nodes=None):
     self.outerEnv = outerEnv
@@ -43,13 +46,23 @@ class VentureEnvironment(VentureValue):
     elif not self.outerEnv: raise VentureError("Cannot unbind unbound symbol '%s'" % sym)
     else: self.outerEnv.removeBinding(sym)
 
+  def replaceBinding(self,sym,val):
+    # Used in the implementation of letrec
+    assert isinstance(sym, str)
+    assert sym in self.frame
+    assert self.frame[sym] is None
+    self.frame[sym] = val
+
   def findSymbol(self,sym):
-    if sym in self.frame: return self.frame[sym]
-    elif not self.outerEnv: raise VentureError("Cannot find symbol '%s'" % sym)
-    else: return self.outerEnv.findSymbol(sym)
+    if sym in self.frame: ret = self.frame[sym]
+    elif not self.outerEnv: ret = None
+    else: ret = self.outerEnv.findSymbol(sym)
+    if ret is None:
+      raise VentureError("Cannot find symbol '%s'" % sym)
+    return ret
 
   def symbolBound(self, sym):
-    if sym in self.frame: return True
+    if sym in self.frame: return self.frame[sym] is not None
     elif not self.outerEnv: return False
     else: return self.outerEnv.symbolBound(sym)
 
