@@ -57,7 +57,7 @@ import plugins
 import utils as u
 import venture.value.dicts as v
 
-from venture.lite.node import RequestNode # For scaffold drawing
+from venture.lite.node import RequestNode, OutputNode # For scaffold drawing
 
 PRELUDE_FILE = 'prelude.vnt'
 
@@ -399,10 +399,20 @@ class Ripl():
             return "\x1b[34m" + string + "\x1b[39;49m"
         def pink(string):
             return "\x1b[35m" + string + "\x1b[39;49m"
+        def color_app(color):
+            def doit(string):
+                assert string[0] == '('
+                assert string[-1] == ')'
+                return color("*(") + string[1:-1] + color(")")
+            return doit
         by_did = {}
-        def mark(nodes, color):
+        def mark(nodes, base_color):
             for node in nodes:
                 if isinstance(node, RequestNode): continue
+                if isinstance(node, OutputNode):
+                    color = color_app(base_color)
+                else:
+                    color = base_color
                 frame = self.sivm.trace_address_to_stack(node.address.asList())[-1]
                 if frame['did'] not in by_did:
                     by_did[frame['did']] = []
