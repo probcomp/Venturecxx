@@ -401,9 +401,10 @@ class Ripl():
             return "\x1b[35m" + string + "\x1b[39;49m"
         def color_app(color):
             def doit(string):
-                assert string[0] == '('
-                assert string[-1] == ')'
-                return color("*(") + string[1:-1] + color(")")
+                if string[0] == '(' and string[-1] == ')':
+                    return color("*(") + string[1:-1] + color(")")
+                else:
+                    return color("*") + string
             return doit
         by_did = {}
         def mark(nodes, base_color):

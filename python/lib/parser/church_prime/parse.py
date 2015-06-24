@@ -651,10 +651,10 @@ class ChurchPrimeParser(object):
         if markers is None:
             return self.unparse_expression(exp)
         def unparse_leaf(leaf, markers):
-            if markers.has_top():
-                return markers.top()(leaf)
-            else:
-                return leaf
+            ans = leaf
+            for f in markers.tops():
+                ans = f(ans)
+            return ans
         if isinstance(exp, dict):
             if exp["type"] == "array":
                 # Because combinations actually parse as arrays too,
@@ -691,6 +691,9 @@ class Trie(object):
     but more compact and supports more efficient subset queries by
     prefix.
 
+    For my application, the values of the trie are actually lists of
+    all the values having that key.
+
     '''
 
     def __init__(self, here_list, later_nodes):
@@ -703,6 +706,9 @@ class Trie(object):
     def top(self):
         return self.here_list[0]
 
+    def tops(self):
+        return self.here_list
+
     def has_children(self):
         return self.later_nodes
 
@@ -714,7 +720,7 @@ class Trie(object):
 
     def insert(self, ks, v):
         if not ks: # Empty list
-            self.here_list = [v]
+            self.here_list.append(v)
         else:
             self._ensure(ks[0]).insert(ks[1:], v)
 
@@ -725,7 +731,7 @@ class Trie(object):
 
     @staticmethod
     def empty():
-        return Trie(None, {})
+        return Trie([], {})
 
     @staticmethod
     def from_list(keyed_items):
