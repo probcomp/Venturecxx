@@ -424,9 +424,9 @@ class Ripl():
         mark(scaffold.absorbing, blue)
         mark(scaffold.aaa, pink)
         mark(scaffold.brush, green)
-        for (did, marks) in by_did.iteritems():
+        for did in sorted(by_did.keys()):
             instr = self.directive_id_to_stringable_instruction[did]
-            print self._cur_parser().unparse_instruction(instr, marks)
+            print self._cur_parser().unparse_instruction(instr, by_did[did])
 
     ############################################
     # Directives
