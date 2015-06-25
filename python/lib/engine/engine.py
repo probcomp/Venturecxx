@@ -63,6 +63,11 @@ class Engine(object):
     self.directiveCounter += 1
     return self.directiveCounter
 
+  def predictNextDirectiveId(self):
+    # Careful: this prediction will be wrong if another thread does
+    # something before the directive id is actually assigned.
+    return self.directiveCounter + 1
+
   def define(self, id, datum):
     assert self.persistent_inference_trace, "Define only works if the inference trace is persistent"
     return self._define_in(id, datum, self.infer_trace)

@@ -118,7 +118,7 @@ class VentureSivm(object):
             syntax = macro_system.expand(exp)
             desugared_instruction['expression'] = syntax.desugared()
             # for error handling
-            self._record_running_instruction(instruction_type, (exp, syntax))
+            self._record_running_instruction(instruction, (exp, syntax))
         # desugar the expression index
         if instruction_type == 'debugger_set_breakpoint_source_code_location':
             desugared_src_location = desugared_instruction['source_code_location']
@@ -144,11 +144,12 @@ class VentureSivm(object):
         self._register_executed_instruction(instruction, response)
         return response
 
-    def _record_running_instruction(self, instruction_type, record):
+    def _record_running_instruction(self, instruction, record):
         # This is a crock.  I am trying to ballistically coordinate
         # the expressions and Syntax objects I record here with the
         # expressions the underlying Engine actually evaluates in its
         # traces.
+        instruction_type = instruction['instruction']
         if instruction_type is 'infer':
             if self.core_sivm.engine.is_infer_loop_program(record[0]):
                 # The engine does something funny with infer loop that
@@ -158,7 +159,25 @@ class VentureSivm(object):
             else:
                 self.attempted.append(self._hack_infer_expression_structure(*record))
         else:
-            self.attempted.append(record)
+            # One might think this should be done for 'infer' too.  As
+            # long as there is no mutation and SPs cannot roundtrip
+            # through the stack dict representation, I expect there to
+            # be no way for a stack trace to reference an 'infer'
+            # (rather than 'define') command directly (as opposed to
+            # model statements introduced thereby, which are handled
+            # separately) after the dynamic extent of that 'infer'.
+            # That means it's currently safe to leave it off, and
+            # putting it in would be more work, because the Engine
+            # does not report directive ids for infer responses.
+            did = self.core_sivm.engine.predictNextDirectiveId()
+            assert did not in self.syntax_dict
+            tmp_instruction = {}
+            tmp_instruction['directive_id'] = did
+            for key in ('instruction', 'expression', 'symbol', 'value'):
+                if key in instruction:
+                    tmp_instruction[key] = copy.copy(instruction[key])
+            self.directive_dict[did] = tmp_instruction
+            self.syntax_dict[did] = record
 
     def _hack_infer_expression_structure(self, exp, syntax):
         # The engine actually executes an application form around the
@@ -242,33 +261,9 @@ class VentureSivm(object):
             if did in self.did_dict:
                 del self.label_dict[self.did_dict[did]]
                 del self.did_dict[did]
-        # save the directive if the instruction is a directive
-        if instruction_type in ['assume','observe','predict','define']:
-            # One might think 'infer' should be on this list.  As long
-            # as there is no mutation and SPs cannot roundtrip through
-            # the stack dict representation, I expect there to be no
-            # way for a stack trace to reference an 'infer' (rather
-            # than 'define') command directly (as opposed to model
-            # statements introduced thereby, which are handled
-            # separately) after the dynamic extent of that 'infer'.
-            # That means it's currently safe to leave it off, and
-            # putting it in would be more work, because the Engine
-            # does not report directive ids for infer responses.
-            did = response['directive_id']
-            assert did not in self.syntax_dict
-            tmp_instruction = {}
-            tmp_instruction['directive_id'] = did
-            for key in ('instruction', 'expression', 'symbol', 'value'):
-                if key in instruction:
-                    tmp_instruction[key] = copy.copy(instruction[key])
-            self.directive_dict[did] = tmp_instruction
-            # TODO: Is this right if the attempt stack was popped by
-            # exception annotation?  Or will this section be skipped
-            # in that case?  Is _that_ right?
-            self.syntax_dict[did] = self.attempted.pop()
         if instruction_type in ['infer']:
-            # Don't build up "in-flight" records, even if "infer" is
-            # not recorded for posterity.
+            # Don't build up "in-flight" records, even though "infer"
+            # is not recorded for posterity.
             # TODO Is there a race condition here?  The continuous
             # inference thread repeatedly calls ripl.infer, which will
             # trigger both pushes to self.attempted and pops from it.
