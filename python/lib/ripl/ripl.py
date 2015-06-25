@@ -132,8 +132,8 @@ class Ripl():
                 stringable_instruction = instruction
                 parsed_instruction = self._ensure_parsed(instruction)
             # if directive, then save the text string
-            if parsed_instruction['instruction'] in ['assume','observe',
-                    'predict','labeled_assume','labeled_observe','labeled_predict']:
+            if parsed_instruction['instruction'] in ['assume', 'observe', 'predict', 'define',
+                                                     'labeled_assume','labeled_observe','labeled_predict']:
                 did = self.sivm.core_sivm.engine.predictNextDirectiveId()
                 self.directive_id_to_stringable_instruction[did] = stringable_instruction
                 self.directive_id_to_mode[did] = self.mode
