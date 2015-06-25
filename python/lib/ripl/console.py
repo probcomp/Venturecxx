@@ -50,6 +50,7 @@ class RiplCmd(Cmd, object):
     self.prompt = '>>> '
     self.rebuild = rebuild
     self.files = []
+    self.plugins = []
 
   def emptyline(self):
     pass
@@ -187,8 +188,11 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def do_reload(self, _):
     '''Reload all previously loaded Venture files.'''
+    plugins = copy.copy(self.plugins)
     files = copy.copy(self.files)
     self.do_clear(None)
+    for p in plugins:
+      self.do_load_plugin(p)
     for f in files:
       self.do_load(f)
 
@@ -197,12 +201,13 @@ class RiplCmd(Cmd, object):
     '''Load the given plugin.'''
     # TODO Make a way to pass arguments to the plugin
     self.ripl.load_plugin(s)
+    self.plugins.append(s)
 
   def _update_prompt(self):
-    if len(self.files) == 0:
+    if len(self.files) == 0 and len(self.plugins) == 0:
       self.prompt = ">>> "
     else:
-      self.prompt = " ".join(self.files) + " > "
+      self.prompt = " ".join(self.plugins + self.files) + " > "
 
 def run_venture_console(ripl, rebuild):
   RiplCmd(ripl, rebuild).cmdloop()
