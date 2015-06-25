@@ -414,7 +414,9 @@ class Ripl():
                     color = color_app(base_color)
                 else:
                     color = base_color
-                frame = self.sivm.trace_address_to_stack(node.address.asList())[-1]
+                address = node.address.asList()
+                stack = self.sivm.trace_address_to_stack(address)
+                frame = stack[-1]
                 if frame['did'] not in by_did:
                     by_did[frame['did']] = []
                 by_did[frame['did']].append((frame['index'], color))
