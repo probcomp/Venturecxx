@@ -131,6 +131,7 @@ class RiplCmd(Cmd, object):
     self.ripl.stop_continuous_inference()
     (_, self.ripl) = self.rebuild()
     self.files = []
+    self.plugins = []
     self._update_prompt()
   
   @catchesVentureException
