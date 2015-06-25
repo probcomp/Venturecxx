@@ -192,6 +192,12 @@ class RiplCmd(Cmd, object):
     for f in files:
       self.do_load(f)
 
+  @catchesVentureException
+  def do_load_plugin(self, s):
+    '''Load the given plugin.'''
+    # TODO Make a way to pass arguments to the plugin
+    self.ripl.load_plugin(s)
+
   def _update_prompt(self):
     if len(self.files) == 0:
       self.prompt = ">>> "
