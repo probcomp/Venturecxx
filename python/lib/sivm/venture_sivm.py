@@ -230,6 +230,11 @@ class VentureSivm(object):
 
     def _resugar(self, index):
         did = index[0]
+        if not did:
+            # The empty address used at the top of "mem"s contains the
+            # empty list in the location that usually holds dids.
+            # Skip that frame.
+            return None
         if self._hack_skip_inference_prelude_entry(did):
             # The reason to skip is to avoid popping the
             # self.attempted stack even though the did is not there.
