@@ -157,6 +157,7 @@ class VentureSivm(object):
                 # infer program itself.
                 pass
             else:
+                assert len(self.attempted) == 0, "Infer should never reentrantly run itself."
                 self.attempted.append(self._hack_infer_expression_structure(*record))
         else:
             # One might think this should be done for 'infer' too.  As
@@ -166,9 +167,8 @@ class VentureSivm(object):
             # (rather than 'define') command directly (as opposed to
             # model statements introduced thereby, which are handled
             # separately) after the dynamic extent of that 'infer'.
-            # That means it's currently safe to leave it off, and
-            # putting it in would be more work, because the Engine
-            # does not report directive ids for infer responses.
+            # That means it's currently safe to leave it off.  Why not
+            # put it in anyway?  Inertia.
             did = self.core_sivm.engine.predictNextDirectiveId()
             assert did not in self.syntax_dict
             tmp_instruction = {}
