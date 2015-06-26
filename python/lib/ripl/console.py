@@ -203,6 +203,7 @@ class RiplCmd(Cmd, object):
     # TODO Make a way to pass arguments to the plugin
     self.ripl.load_plugin(s)
     self.plugins.append(s)
+    self._update_prompt()
 
   def _update_prompt(self):
     if len(self.files) == 0 and len(self.plugins) == 0:
