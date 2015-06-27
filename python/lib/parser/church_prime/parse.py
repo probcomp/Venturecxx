@@ -552,7 +552,7 @@ class ChurchPrimeParser(object):
         'profiler_list_random': [], # XXX Urk, extra keyword.
         'load': [('file', unparse_string)],
     }
-    def unparse_instruction(self, instruction):
+    def unparse_instruction(self, instruction, expr_markers=None):
         '''Unparse INSTRUCTION into a string.'''
         # XXX Urgh.  Whattakludge!
         i = instruction['instruction']
@@ -568,7 +568,10 @@ class ChurchPrimeParser(object):
             chunks.append(i)
         for key, unparser in unparsers:
             chunks.append(' ')
-            chunks.append(unparser(self, instruction[key]))
+            if key == 'expression': # Urk
+                chunks.append(self.unparse_expression_and_mark_up(instruction[key], expr_markers))
+            else:
+                chunks.append(unparser(self, instruction[key]))
         chunks.append(']')
         return ''.join(chunks)
 
@@ -634,7 +637,7 @@ class ChurchPrimeParser(object):
             l = l['value'][index[i]]
         return l['loc']
 
-    def unparse_expression_and_mark_up(self, exp, places):
+    def unparse_expression_and_mark_up(self, exp, places=None):
         '''Return a string representing the given EXP with markings at the given PLACES.
 
         - EXP is a parsed expression
@@ -643,27 +646,33 @@ class ChurchPrimeParser(object):
             subexpressions
           - each marker is a string->string function
         '''
-
-        marker_trie = Trie.from_list(places)
+        if places is not None:
+            marker_trie = Trie.from_list(places)
+        else:
+            marker_trie = None
         return self._unparse_expression_and_mark_up_with_trie(exp, marker_trie)
 
     def _unparse_expression_and_mark_up_with_trie(self, exp, markers):
         if markers is None:
             return self.unparse_expression(exp)
         def unparse_leaf(leaf, markers):
-            if markers.has_top():
-                return markers.top()(leaf)
-            else:
-                return leaf
+            ans = leaf
+            for f in markers.tops():
+                ans = f(ans)
+            return ans
         if isinstance(exp, dict):
             if exp["type"] == "array":
                 # Because combinations actually parse as arrays too,
                 # and I want the canonical form to be that.
                 return self._unparse_expression_and_mark_up_with_trie(exp["value"], markers)
             else: # Leaf
+                if markers.has_children():
+                    print "Warning: index mismatch detected: looking for children of %s." % value_to_string(exp)
                 return unparse_leaf(value_to_string(exp), markers)
         elif isinstance(exp, basestring):
             # XXX This is due to &@!#^&$@!^$&@#!^%&*.
+            if markers.has_children():
+                print "Warning: index mismatch detected: looking for children of string-exp %s." % exp
             return unparse_leaf(exp, markers)
         elif isinstance(exp, list):
             terms = (self._unparse_expression_and_mark_up_with_trie(e, markers.get(i))
@@ -687,6 +696,9 @@ class Trie(object):
     but more compact and supports more efficient subset queries by
     prefix.
 
+    For my application, the values of the trie are actually lists of
+    all the values having that key.
+
     '''
 
     def __init__(self, here_list, later_nodes):
@@ -699,6 +711,12 @@ class Trie(object):
     def top(self):
         return self.here_list[0]
 
+    def tops(self):
+        return self.here_list
+
+    def has_children(self):
+        return self.later_nodes
+
     def get(self, k):
         if k in self.later_nodes:
             return self.later_nodes[k]
@@ -707,7 +725,7 @@ class Trie(object):
 
     def insert(self, ks, v):
         if not ks: # Empty list
-            self.here_list = [v]
+            self.here_list.append(v)
         else:
             self._ensure(ks[0]).insert(ks[1:], v)
 
@@ -718,7 +736,7 @@ class Trie(object):
 
     @staticmethod
     def empty():
-        return Trie(None, {})
+        return Trie([], {})
 
     @staticmethod
     def from_list(keyed_items):
