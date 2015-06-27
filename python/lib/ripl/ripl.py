@@ -420,7 +420,6 @@ class Ripl():
         by_did = {}
         def mark(nodes, base_color, only_bottom=False):
             for node in nodes:
-                if isinstance(node, RequestNode): continue
                 color = color_app(base_color)
                 address = node.address.asList()
                 stack = self.sivm.trace_address_to_stack(address)
