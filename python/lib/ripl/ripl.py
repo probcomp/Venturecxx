@@ -406,8 +406,9 @@ class Ripl():
                 else:
                     return color("*") + string
             return doit
+        scaffold = scaffold_dict['value']
         by_did = {}
-        def mark(nodes, base_color):
+        def mark(nodes, base_color, only_bottom=False):
             for node in nodes:
                 if isinstance(node, RequestNode): continue
                 if isinstance(node, OutputNode):
@@ -416,16 +417,31 @@ class Ripl():
                     color = base_color
                 address = node.address.asList()
                 stack = self.sivm.trace_address_to_stack(address)
-                frame = stack[-1]
-                if frame['did'] not in by_did:
-                    by_did[frame['did']] = []
-                by_did[frame['did']].append((frame['index'], color))
+                def add_frame(frame):
+                    if frame['did'] not in by_did:
+                        by_did[frame['did']] = []
+                    by_did[frame['did']].append((frame['index'], color))
+                if only_bottom:
+                    add_frame(stack[-1])
+                else:
+                    for frame in stack:
+                        add_frame(frame)
 
-        scaffold = scaffold_dict['value']
-        mark(scaffold.getPrincipalNodes(), red)
-        mark(scaffold.absorbing, blue)
-        mark(scaffold.aaa, pink)
-        mark(scaffold.brush, green)
+        print "The nodes"
+        mark(scaffold.getPrincipalNodes(), red, only_bottom=True)
+        mark(scaffold.absorbing, blue, only_bottom=True)
+        mark(scaffold.aaa, pink, only_bottom=True)
+        mark(scaffold.brush, green, only_bottom=True)
+        for did in sorted(by_did.keys()):
+            instr = self.directive_id_to_stringable_instruction[did]
+            print self._cur_parser().unparse_instruction(instr, by_did[did])
+
+        print "The stacks"
+        by_did = {}
+        mark(scaffold.getPrincipalNodes(), red, only_bottom=False)
+        mark(scaffold.absorbing, blue, only_bottom=False)
+        mark(scaffold.aaa, pink, only_bottom=False)
+        mark(scaffold.brush, green, only_bottom=False)
         for did in sorted(by_did.keys()):
             instr = self.directive_id_to_stringable_instruction[did]
             print self._cur_parser().unparse_instruction(instr, by_did[did])
