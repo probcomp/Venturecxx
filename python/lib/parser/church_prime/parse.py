@@ -552,7 +552,7 @@ class ChurchPrimeParser(object):
         'profiler_list_random': [], # XXX Urk, extra keyword.
         'load': [('file', unparse_string)],
     }
-    def unparse_instruction(self, instruction):
+    def unparse_instruction(self, instruction, expr_markers=None):
         '''Unparse INSTRUCTION into a string.'''
         # XXX Urgh.  Whattakludge!
         i = instruction['instruction']
@@ -568,7 +568,10 @@ class ChurchPrimeParser(object):
             chunks.append(i)
         for key, unparser in unparsers:
             chunks.append(' ')
-            chunks.append(unparser(self, instruction[key]))
+            if key == 'expression': # Urk
+                chunks.append(self.unparse_expression_and_mark_up(instruction[key], expr_markers))
+            else:
+                chunks.append(unparser(self, instruction[key]))
         chunks.append(']')
         return ''.join(chunks)
 
@@ -633,3 +636,111 @@ class ChurchPrimeParser(object):
                     (index, repr(string)))
             l = l['value'][index[i]]
         return l['loc']
+
+    def unparse_expression_and_mark_up(self, exp, places=None):
+        '''Return a string representing the given EXP with markings at the given PLACES.
+
+        - EXP is a parsed expression
+        - PLACES is an association list from index lists to markers
+          - each key is a list of indices into successively nested
+            subexpressions
+          - each marker is a string->string function
+        '''
+        if places is not None:
+            marker_trie = Trie.from_list(places)
+        else:
+            marker_trie = None
+        return self._unparse_expression_and_mark_up_with_trie(exp, marker_trie)
+
+    def _unparse_expression_and_mark_up_with_trie(self, exp, markers):
+        if markers is None:
+            return self.unparse_expression(exp)
+        def unparse_leaf(leaf, markers):
+            ans = leaf
+            for f in markers.tops():
+                ans = f(ans)
+            return ans
+        if isinstance(exp, dict):
+            if exp["type"] == "array":
+                # Because combinations actually parse as arrays too,
+                # and I want the canonical form to be that.
+                return self._unparse_expression_and_mark_up_with_trie(exp["value"], markers)
+            else: # Leaf
+                if markers.has_children():
+                    print "Warning: index mismatch detected: looking for children of %s." % value_to_string(exp)
+                return unparse_leaf(value_to_string(exp), markers)
+        elif isinstance(exp, basestring):
+            # XXX This is due to &@!#^&$@!^$&@#!^%&*.
+            if markers.has_children():
+                print "Warning: index mismatch detected: looking for children of string-exp %s." % exp
+            return unparse_leaf(exp, markers)
+        elif isinstance(exp, list):
+            terms = (self._unparse_expression_and_mark_up_with_trie(e, markers.get(i))
+                     for (i, e) in enumerate(exp))
+            return unparse_leaf('(' + ' '.join(terms) + ')', markers)
+        else:
+            raise TypeError('Invalid expression: %s of type %s' % (repr(exp),type(exp)))
+
+class Trie(object):
+    '''A compact representation of an association with sequence keys.
+
+    A trie node is the set of values whose remaining key suffix is the
+    empty list, together with a map from next key elements to Trie
+    nodes representing the key suffixes remaining after stripping
+    those elements.
+
+    In Haskell:
+      data Trie k v = Trie (Maybe v) (Map k (Trie k v))
+    which is isomorphic (at least for finite key lists) to
+      Map [k] v
+    but more compact and supports more efficient subset queries by
+    prefix.
+
+    For my application, the values of the trie are actually lists of
+    all the values having that key.
+
+    '''
+
+    def __init__(self, here_list, later_nodes):
+        self.here_list = here_list
+        self.later_nodes = later_nodes
+
+    def has_top(self):
+        return self.here_list
+
+    def top(self):
+        return self.here_list[0]
+
+    def tops(self):
+        return self.here_list
+
+    def has_children(self):
+        return self.later_nodes
+
+    def get(self, k):
+        if k in self.later_nodes:
+            return self.later_nodes[k]
+        else:
+            return None
+
+    def insert(self, ks, v):
+        if not ks: # Empty list
+            self.here_list.append(v)
+        else:
+            self._ensure(ks[0]).insert(ks[1:], v)
+
+    def _ensure(self, k):
+        if k not in self.later_nodes:
+            self.later_nodes[k] = Trie.empty()
+        return self.later_nodes[k]
+
+    @staticmethod
+    def empty():
+        return Trie([], {})
+
+    @staticmethod
+    def from_list(keyed_items):
+        answer = Trie.empty()
+        for (ks, v) in keyed_items:
+            answer.insert(ks, v)
+        return answer

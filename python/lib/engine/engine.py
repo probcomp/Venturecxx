@@ -63,25 +63,29 @@ class Engine(object):
     self.directiveCounter += 1
     return self.directiveCounter
 
+  def predictNextDirectiveId(self):
+    # Careful: this prediction will be wrong if another thread does
+    # something before the directive id is actually assigned.
+    return self.directiveCounter + 1
+
   def define(self, id, datum):
     assert self.persistent_inference_trace, "Define only works if the inference trace is persistent"
     return self._define_in(id, datum, self.infer_trace)
 
   def _define_in(self, id, datum, trace):
-    self.directiveCounter += 1
-    did = self.directiveCounter # Might be changed by reentrant execution
+    did = self.nextBaseAddr()
     trace.eval(did, datum)
     trace.bindInGlobalEnv(id, did)
-    return (did,trace.extractValue(did))
+    return (did, trace.extractValue(did))
 
   def assume(self,id,datum):
     baseAddr = self.nextBaseAddr()
-    return (self.directiveCounter,self.model.define(baseAddr,id,datum))
+    return (baseAddr, self.model.define(baseAddr,id,datum))
 
   def predict_all(self,datum):
     baseAddr = self.nextBaseAddr()
     values = self.model.evaluate(baseAddr, datum)
-    return (self.directiveCounter,values)
+    return (baseAddr, values)
 
   def predict(self, datum):
     (did, answers) = self.predict_all(datum)
@@ -90,7 +94,7 @@ class Engine(object):
   def observe(self,datum,val):
     baseAddr = self.nextBaseAddr()
     self.model.observe(baseAddr, datum, val)
-    return self.directiveCounter
+    return baseAddr
 
   def forget(self,directiveId):
     self.model.forget(directiveId)
@@ -102,7 +106,7 @@ class Engine(object):
     did = self.observe(datum, val)
     self.incorporate()
     self.forget(did)
-    return self.directiveCounter
+    return did
 
   def sample(self,datum):
     # TODO Officially this is taken care of by the Venture SIVM level,
@@ -196,8 +200,7 @@ class Engine(object):
     return isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop"
 
   def _do_infer(self, program):
-    self.directiveCounter += 1
-    did = self.directiveCounter # Might be mutated by reentrant execution
+    did = self.nextBaseAddr()
     self.infer_trace.eval(did, [program, v.blob(Infer(self))])
     return did
 

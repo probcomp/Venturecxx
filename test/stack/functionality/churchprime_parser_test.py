@@ -124,4 +124,12 @@ class TestChurchPrimeParser(unittest.TestCase):
         output = f('infer')
         self.assertEqual(output,'[ infer %(expression)s ]')
 
-
+    def test_mark_up_expression_smoke(self):
+        parsed = self.p.parse_expression("(add 2 3)")
+        def red(string):
+            return "\x1b[31m" + string + "\x1b[39;49m"
+        def green(string):
+            return "\x1b[32m" + string + "\x1b[39;49m"
+        marked = self.p.unparse_expression_and_mark_up(parsed, [([0], red), ([1], green)])
+        # The junk in the answer is ANSI terminal color codes
+        self.assertEqual('(\x1b[31madd\x1b[39;49m \x1b[32m2\x1b[39;49m 3)', marked)

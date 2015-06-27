@@ -253,3 +253,16 @@ def testLoopErrorAnnotationSmoke():
                                            ^^^^^^^
 """, doit)
   eq_(numthreads, threading.active_count()) # Erroring out in loop does not leak active threads
+
+@broken_in("puma", "Puma does not report error addresses")
+@on_inf_prim("none")
+def testAnnotateErrorInMemmedProcedure():
+  ripl = get_ripl()
+  ripl.assume("f", "(mem (lambda () (normal (+ 1 badness) 1)))")
+  err.assert_error_message_contains("""\
+(f)
+^^^
+(mem (lambda () (normal (add 1 badness) 1)))
+                               ^^^^^^^
+""",
+  ripl.predict, "(f)")

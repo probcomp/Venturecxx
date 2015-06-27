@@ -57,6 +57,8 @@ import plugins
 import utils as u
 import venture.value.dicts as v
 
+from venture.lite.node import RequestNode, OutputNode # For scaffold drawing
+
 PRELUDE_FILE = 'prelude.vnt'
 
 class Ripl():
@@ -129,6 +131,12 @@ class Ripl():
             else:
                 stringable_instruction = instruction
                 parsed_instruction = self._ensure_parsed(instruction)
+            # if directive, then save the text string
+            if parsed_instruction['instruction'] in ['assume', 'observe', 'predict', 'define',
+                                                     'labeled_assume','labeled_observe','labeled_predict']:
+                did = self.sivm.core_sivm.engine.predictNextDirectiveId()
+                self.directive_id_to_stringable_instruction[did] = stringable_instruction
+                self.directive_id_to_mode[did] = self.mode
             ret_value = self.sivm.execute_instruction(parsed_instruction, suppress_pausing_continous_inference=suppress_pausing_continous_inference)
         except VentureException as e:
             import sys
@@ -142,12 +150,6 @@ class Ripl():
                 e.annotated = False
                 raise e, None, info[2]
             raise annotated, None, info[2]
-        # if directive, then save the text string
-        if parsed_instruction['instruction'] in ['assume','observe',
-                'predict','labeled_assume','labeled_observe','labeled_predict']:
-            did = ret_value['directive_id']
-            self.directive_id_to_stringable_instruction[did] = stringable_instruction
-            self.directive_id_to_mode[did] = self.mode
         return ret_value
 
     def _annotated_error(self, e, instruction):
@@ -383,6 +385,78 @@ class Ripl():
         ans = exp[0:start] + "\x1b[31m" + exp[start:end+1] + "\x1b[39;49m" + exp[end+1:]
         return ans, (start, end)
 
+    def draw_subproblem(self, scaffold_dict, type=False):
+        # Need to take the "type" argument because
+        # MadeRiplMethodInferOutputPSP passes an argument for the type
+        # keyword.
+        colors = dict(
+            red = ("\x1b[31m", "\x1b[39;49m"),
+            green = ("\x1b[32m", "\x1b[39;49m"),
+            yellow = ("\x1b[33m", "\x1b[39;49m"),
+            blue = ("\x1b[34m", "\x1b[39;49m"),
+            pink = ("\x1b[35m", "\x1b[39;49m"),
+            white = ("\x1b[37m", "\x1b[39;49m"),
+            teal = ("\x1b[36m", "\x1b[39;49m"),
+            )
+        def escape(chunk):
+            return re.sub("[[]", "\\[", chunk)
+        for (color, (start, stop)) in colors.iteritems():
+            pattern = "^" + escape(colors[color][0]) + "([0-9]+)/" + escape(colors[color][1]) + "(.*)$"
+            colors[color] = (start, stop, re.compile(pattern))
+        def color_app(color):
+            def doit(string):
+                def do_color(string):
+                    return colors[color][0] + string + colors[color][1]
+                if string[0] == '(' and string[-1] == ')':
+                    return do_color("1/") + do_color("(") + string[1:-1] + do_color(")")
+                m = re.match(colors[color][2], string)
+                if m is not None:
+                    ct = int(m.group(1))
+                    return do_color(str(ct+1) + "/") + m.group(2)
+                else:
+                    return do_color("1/") + string
+            return doit
+        scaffold = scaffold_dict['value']
+        by_did = {}
+        def mark(nodes, base_color, only_bottom=False):
+            for node in nodes:
+                color = color_app(base_color)
+                address = node.address.asList()
+                stack = self.sivm.trace_address_to_stack(address)
+                def add_frame(frame):
+                    if frame['did'] not in by_did:
+                        by_did[frame['did']] = []
+                    by_did[frame['did']].append((frame['index'], color))
+                if only_bottom:
+                    add_frame(stack[-1])
+                else:
+                    de_dup = set()
+                    for frame in stack:
+                        key = (frame['did'], tuple(frame['index']))
+                        if key in de_dup: continue
+                        de_dup.add(key)
+                        add_frame(frame)
+
+        print "The nodes"
+        mark(scaffold.getPrincipalNodes(), 'red', only_bottom=True)
+        mark(scaffold.drg, 'yellow', only_bottom=True)
+        mark(scaffold.absorbing, 'blue', only_bottom=True)
+        mark(scaffold.aaa, 'pink', only_bottom=True)
+        mark(scaffold.brush, 'green', only_bottom=True)
+        for did in sorted(by_did.keys()):
+            instr = self.directive_id_to_stringable_instruction[did]
+            print self._cur_parser().unparse_instruction(instr, by_did[did])
+
+        print "The stacks"
+        by_did = {}
+        mark(scaffold.getPrincipalNodes(), 'red', only_bottom=False)
+        mark(scaffold.drg, 'yellow', only_bottom=False)
+        mark(scaffold.absorbing, 'blue', only_bottom=False)
+        mark(scaffold.aaa, 'pink', only_bottom=False)
+        mark(scaffold.brush, 'green', only_bottom=False)
+        for did in sorted(by_did.keys()):
+            instr = self.directive_id_to_stringable_instruction[did]
+            print self._cur_parser().unparse_instruction(instr, by_did[did])
 
     ############################################
     # Directives
