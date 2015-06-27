@@ -424,7 +424,11 @@ class Ripl():
                 if only_bottom:
                     add_frame(stack[-1])
                 else:
+                    de_dup = set()
                     for frame in stack:
+                        key = (frame['did'], tuple(frame['index']))
+                        if key in de_dup: continue
+                        de_dup.add(key)
                         add_frame(frame)
 
         print "The nodes"
