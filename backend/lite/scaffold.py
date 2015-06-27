@@ -22,7 +22,7 @@ from detach import unapplyPSP
 from regen import applyPSP
 
 class Scaffold(object):
-  def __init__(self,setsOfPNodes=None,regenCounts=None,absorbing=None,aaa=None,border=None,lkernels=None,brush=None):
+  def __init__(self,setsOfPNodes=None,regenCounts=None,absorbing=None,aaa=None,border=None,lkernels=None,brush=None,drg=None):
     self.setsOfPNodes = setsOfPNodes if setsOfPNodes else [] # [Set Node]
     self.regenCounts = regenCounts if regenCounts else {} # {Node:Int}
     self.absorbing = absorbing if absorbing else set() # Set Node
@@ -30,6 +30,8 @@ class Scaffold(object):
     self.border = border if border else [] # [[Node]]
     self.lkernels = lkernels if lkernels else {} # {Node:LKernel}
     self.brush = brush if brush else set() # Set Node
+    self.drg = drg if drg else set() # Set Node
+    # Store the drg for introspection; not directly read by regen/detach
 
   def getPrincipalNodes(self):
     # Return a list so that repeated traversals have the same order
@@ -148,7 +150,7 @@ def constructScaffold(trace, setsOfPNodes, useDeltaKernels=False, deltaKernelArg
   for node in hardBorder: assert node in border
   lkernels = loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs)
   borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
-  scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
+  scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush,drg)
 
   if updateValues:
     updateValuesAtScaffold(trace,scaffold,set())
