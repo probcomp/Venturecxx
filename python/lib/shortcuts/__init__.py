@@ -40,7 +40,7 @@ class Backend(object):
     def trace_constructor(self): pass
     def make_engine(self, persistent_inference_trace=True):
         from venture.engine import engine
-        return engine.Engine(self.name(), self.trace_constructor(), persistent_inference_trace)
+        return engine.Engine(self.name(), self, persistent_inference_trace)
     def make_core_sivm(self, persistent_inference_trace=True):
         return sivm.CoreSivm(self.make_engine(persistent_inference_trace))
     def make_venture_sivm(self, persistent_inference_trace=True):

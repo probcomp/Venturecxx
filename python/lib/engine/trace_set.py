@@ -25,13 +25,14 @@ from venture.lite.utils import sampleLogCategorical, logaddexp
 
 class TraceSet(object):
 
-  def __init__(self, engine, Trace=None):
+  def __init__(self, engine, backend):
     self.engine = engine # Because it contains the foreign sp registry and other misc stuff for restoring traces
-    self.Trace = Trace
+    self.backend = backend
+    self.Trace = backend.trace_constructor()
     self.mode = 'sequential'
     self.process_cap = None
     self.traces = None
-    self.create_trace_pool([tr.Trace(Trace())])
+    self.create_trace_pool([tr.Trace(self.Trace())])
 
   def _trace_master(self, mode):
     if mode == 'multiprocess':

@@ -172,7 +172,7 @@ class Infer(object):
     return logWeightsToNormalizedDirect(self.particle_log_weights())
 
   def new_model(self):
-    return TraceSet(self.engine, self.engine.model.Trace)
+    return TraceSet(self.engine, self.engine.model.backend)
   def in_model(self, model, action):
     return self.engine.in_model(model, action)
   def model_import_foreign(self, name):
