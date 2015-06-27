@@ -395,6 +395,8 @@ class Ripl():
             yellow = ("\x1b[33m", "\x1b[39;49m"),
             blue = ("\x1b[34m", "\x1b[39;49m"),
             pink = ("\x1b[35m", "\x1b[39;49m"),
+            white = ("\x1b[37m", "\x1b[39;49m"),
+            teal = ("\x1b[36m", "\x1b[39;49m"),
             )
         def escape(chunk):
             return re.sub("[[]", "\\[", chunk)
