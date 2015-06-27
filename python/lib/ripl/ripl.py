@@ -402,19 +402,15 @@ class Ripl():
             return re.sub("[[]", "\\[", chunk)
         for (color, (start, stop)) in colors.iteritems():
             pattern = "^" + escape(colors[color][0]) + "([0-9]+)/" + escape(colors[color][1]) + "(.*)$"
-            print pattern
             colors[color] = (start, stop, re.compile(pattern))
-        def color_base(color):
-            def doit(string):
-                return colors[color][0] + string + colors[color][1]
-            return doit
         def color_app(color):
             def doit(string):
-                do_color = color_base(color)
+                def do_color(string):
+                    return colors[color][0] + string + colors[color][1]
                 if string[0] == '(' and string[-1] == ')':
-                    return do_color("1/(") + string[1:-1] + do_color(")")
+                    return do_color("1/") + do_color("(") + string[1:-1] + do_color(")")
                 m = re.match(colors[color][2], string)
-                if m:
+                if m is not None:
                     ct = int(m.group(1))
                     return do_color(str(ct+1) + "/") + m.group(2)
                 else:
@@ -425,10 +421,7 @@ class Ripl():
         def mark(nodes, base_color, only_bottom=False):
             for node in nodes:
                 if isinstance(node, RequestNode): continue
-                if isinstance(node, OutputNode):
-                    color = color_app(base_color)
-                else:
-                    color = color_base(base_color)
+                color = color_app(base_color)
                 address = node.address.asList()
                 stack = self.sivm.trace_address_to_stack(address)
                 def add_frame(frame):
