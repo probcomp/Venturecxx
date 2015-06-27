@@ -389,22 +389,34 @@ class Ripl():
         # Need to take the "type" argument because
         # MadeRiplMethodInferOutputPSP passes an argument for the type
         # keyword.
-        def red(string):
-            return "\x1b[31m" + string + "\x1b[39;49m"
-        def green(string):
-            return "\x1b[32m" + string + "\x1b[39;49m"
-        def yellow(string):
-            return "\x1b[33m" + string + "\x1b[39;49m"
-        def blue(string):
-            return "\x1b[34m" + string + "\x1b[39;49m"
-        def pink(string):
-            return "\x1b[35m" + string + "\x1b[39;49m"
+        colors = dict(
+            red = ("\x1b[31m", "\x1b[39;49m"),
+            green = ("\x1b[32m", "\x1b[39;49m"),
+            yellow = ("\x1b[33m", "\x1b[39;49m"),
+            blue = ("\x1b[34m", "\x1b[39;49m"),
+            pink = ("\x1b[35m", "\x1b[39;49m"),
+            )
+        def escape(chunk):
+            return re.sub("[[]", "\\[", chunk)
+        for (color, (start, stop)) in colors.iteritems():
+            pattern = "^" + escape(colors[color][0]) + "([0-9]+)/" + escape(colors[color][1]) + "(.*)$"
+            print pattern
+            colors[color] = (start, stop, re.compile(pattern))
+        def color_base(color):
+            def doit(string):
+                return colors[color][0] + string + colors[color][1]
+            return doit
         def color_app(color):
             def doit(string):
+                do_color = color_base(color)
                 if string[0] == '(' and string[-1] == ')':
-                    return color("*(") + string[1:-1] + color(")")
+                    return do_color("1/(") + string[1:-1] + do_color(")")
+                m = re.match(colors[color][2], string)
+                if m:
+                    ct = int(m.group(1))
+                    return do_color(str(ct+1) + "/") + m.group(2)
                 else:
-                    return color("*") + string
+                    return do_color("1/") + string
             return doit
         scaffold = scaffold_dict['value']
         by_did = {}
@@ -414,7 +426,7 @@ class Ripl():
                 if isinstance(node, OutputNode):
                     color = color_app(base_color)
                 else:
-                    color = base_color
+                    color = color_base(base_color)
                 address = node.address.asList()
                 stack = self.sivm.trace_address_to_stack(address)
                 def add_frame(frame):
@@ -432,22 +444,22 @@ class Ripl():
                         add_frame(frame)
 
         print "The nodes"
-        mark(scaffold.getPrincipalNodes(), red, only_bottom=True)
-        mark(scaffold.drg, yellow, only_bottom=True)
-        mark(scaffold.absorbing, blue, only_bottom=True)
-        mark(scaffold.aaa, pink, only_bottom=True)
-        mark(scaffold.brush, green, only_bottom=True)
+        mark(scaffold.getPrincipalNodes(), 'red', only_bottom=True)
+        mark(scaffold.drg, 'yellow', only_bottom=True)
+        mark(scaffold.absorbing, 'blue', only_bottom=True)
+        mark(scaffold.aaa, 'pink', only_bottom=True)
+        mark(scaffold.brush, 'green', only_bottom=True)
         for did in sorted(by_did.keys()):
             instr = self.directive_id_to_stringable_instruction[did]
             print self._cur_parser().unparse_instruction(instr, by_did[did])
 
         print "The stacks"
         by_did = {}
-        mark(scaffold.getPrincipalNodes(), red, only_bottom=False)
-        mark(scaffold.drg, yellow, only_bottom=False)
-        mark(scaffold.absorbing, blue, only_bottom=False)
-        mark(scaffold.aaa, pink, only_bottom=False)
-        mark(scaffold.brush, green, only_bottom=False)
+        mark(scaffold.getPrincipalNodes(), 'red', only_bottom=False)
+        mark(scaffold.drg, 'yellow', only_bottom=False)
+        mark(scaffold.absorbing, 'blue', only_bottom=False)
+        mark(scaffold.aaa, 'pink', only_bottom=False)
+        mark(scaffold.brush, 'green', only_bottom=False)
         for did in sorted(by_did.keys()):
             instr = self.directive_id_to_stringable_instruction[did]
             print self._cur_parser().unparse_instruction(instr, by_did[did])
