@@ -71,3 +71,20 @@ def testModelSwitchingSmoke():
   predictions = [ripl.infer("(normal_through_model 0 1)") for _ in range(default_num_samples())]
   cdf = stats.norm(loc=0.0, scale=1.0).cdf
   return reportKnownContinuous(cdf, predictions, "N(0,1)")
+
+@on_inf_prim("new_model")
+def testBackendSwitchingSmoke():
+  ripl = get_ripl(persistent_inference_trace=True)
+  ripl.execute_program("""\
+[define something
+  (do (assume x (normal 0 1))
+      (observe (normal x 1) 2)
+      (predict (+ x 1))
+      (mh default one 5))]
+
+[infer
+  (do (m1 <- (new_model 'lite))
+      (m2 <- (new_model 'puma))
+      (in_model m1 something)
+      (in_model m2 something))]
+""")
