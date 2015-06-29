@@ -25,13 +25,13 @@ from venture.lite.utils import sampleLogCategorical, logaddexp
 
 class TraceSet(object):
 
-  def __init__(self, engine, Trace=None):
+  def __init__(self, engine, backend):
     self.engine = engine # Because it contains the foreign sp registry and other misc stuff for restoring traces
-    self.Trace = Trace
+    self.backend = backend
     self.mode = 'sequential'
     self.process_cap = None
     self.traces = None
-    self.create_trace_pool([tr.Trace(Trace())])
+    self.create_trace_pool([tr.Trace(self.backend.trace_constructor()())])
 
   def _trace_master(self, mode):
     if mode == 'multiprocess':
@@ -85,7 +85,7 @@ class TraceSet(object):
     self.traces.map('bind_foreign_sp', name, sp)
 
   def clear(self):
-    self.create_trace_pool([tr.Trace(self.Trace())])
+    self.create_trace_pool([tr.Trace(self.backend.trace_constructor()())])
 
   def reinit_inference_problem(self, num_particles=1):
     """Unincorporate all observations and return to the prior.
@@ -222,7 +222,7 @@ if freeze has been used.
       return [self.restore_trace(dumped) for dumped in dumped_all]
 
   def restore_trace(self, values, skipStackDictConversion=False):
-    return tr.Trace.restore(self.Trace, values, self.engine.foreign_sps, skipStackDictConversion)
+    return tr.Trace.restore(self.backend.trace_constructor(), values, self.engine.foreign_sps, skipStackDictConversion)
 
   def copy_trace(self, trace):
     if trace.short_circuit_copyable():

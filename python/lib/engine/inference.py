@@ -171,8 +171,12 @@ class Infer(object):
   def particle_normalized_probs(self):
     return logWeightsToNormalizedDirect(self.particle_log_weights())
 
-  def new_model(self):
-    return TraceSet(self.engine, self.engine.model.Trace)
+  def new_model(self, backend_name=None):
+    if backend_name is None:
+      return TraceSet(self.engine, self.engine.model.backend)
+    else:
+      import venture.shortcuts as s
+      return TraceSet(self.engine, s.backend(backend_name))
   def in_model(self, model, action):
     return self.engine.in_model(model, action)
   def model_import_foreign(self, name):

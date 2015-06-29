@@ -107,7 +107,7 @@ class Ripl():
 
     def backend(self):
         '''Return the name of backend powering this Ripl.  Either ``"lite"`` or ``"puma"``.'''
-        return self.sivm.core_sivm.engine.name
+        return self.sivm.core_sivm.engine.model.backend.name()
 
     ############################################
     # Execution
