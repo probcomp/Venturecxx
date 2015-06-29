@@ -796,12 +796,16 @@ Check the given boolean condition and raise an error if it fails.
 Print the given values to the terminal.
 """)],
 
-  engine_method_sp("new_model", infer_action_maker_type([], t.ForeignBlobType("<model>")), desc="""\
+  engine_method_sp("new_model", infer_action_maker_type([t.SymbolType()], t.ForeignBlobType("<model>"), min_req_args=0), desc="""\
 Create an new empty model.
+
+The symbol, if supplied, gives the name of the backend to use, either
+``puma`` or ``lite``.  If omitted, defaults to the same backend as the
+current implicit model.
 
 This is an inference action rather than a pure operation due to
 implementation accidents. [It reads the Engine to determine the
-backend to use (TODO could take that as an argument) and for the
+default backend to use (TODO could take that as an argument) and for the
 registry of bound foreign sps (TODO: Implicitly bind extant foreign
 sps into new models?)]
 
