@@ -24,6 +24,7 @@ matplotlib>=1.1
 # IPython Magics
 ipython>=1.2
 pyzmq>=13
+jsonschema # Ubuntu 14.04 apparently needs this mentioned for notebooks to work
 
 # lite
 scipy>=0.13
