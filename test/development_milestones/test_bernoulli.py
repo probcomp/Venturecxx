@@ -15,48 +15,32 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import math
-import scipy.stats as stats
-from nose import SkipTest
-
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownMeanVariance, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, collect_iid_samples
+from venture.test.stats import statisticalTest, reportKnownDiscrete
+from venture.test.config import get_ripl, collectSamples
 
 @statisticalTest
 def testBernoulli1():
   ripl = get_ripl()
-  ripl.predict("(bernoulli 0.3)")
-  # ripl.assume("x2", "(bernoulli 0.4)")
-  # ripl.assume("x3", "(bernoulli 0.0)")
-  # ripl.assume("x4", "(bernoulli 1.0)")
-  # ripl.assume("x5", "(bernoulli)")  
+  ripl.predict("(bernoulli 0.3)", label="pid")
 
-  predictions = collectSamples(ripl,1)
+  predictions = collectSamples(ripl,"pid")
   ans = [(True, 0.3),(False, 0.7)]
   return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
 def testCategorical1():
   ripl = get_ripl()
-  ripl.predict("(categorical (simplex 0.3 0.7))")
-  # ripl.assume("x2", "(bernoulli 0.4)")
-  # ripl.assume("x3", "(bernoulli 0.0)")
-  # ripl.assume("x4", "(bernoulli 1.0)")
-  # ripl.assume("x5", "(bernoulli)")  
+  ripl.predict("(categorical (simplex 0.3 0.7))", label="pid")
 
-  predictions = collectSamples(ripl,1)
+  predictions = collectSamples(ripl,"pid")
   ans = [(0, 0.3),(1, 0.7)]
   return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
 def testCategorical2():
   ripl = get_ripl()
-  ripl.predict("(categorical (simplex 0.3 0.7) (array true false))")
-  # ripl.assume("x2", "(bernoulli 0.4)")
-  # ripl.assume("x3", "(bernoulli 0.0)")
-  # ripl.assume("x4", "(bernoulli 1.0)")
-  # ripl.assume("x5", "(bernoulli)")  
+  ripl.predict("(categorical (simplex 0.3 0.7) (array true false))", label="pid")
 
-  predictions = collectSamples(ripl,1)
+  predictions = collectSamples(ripl,"pid")
   ans = [(True, 0.3),(False, 0.7)]
   return reportKnownDiscrete(ans, predictions)

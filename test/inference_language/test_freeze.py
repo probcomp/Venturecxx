@@ -29,7 +29,7 @@ def testFreezeSanityCheck1():
   engine = ripl.sivm.core_sivm.engine
   eq_(engine.get_entropy_info()["unconstrained_random_choices"],6)
 
-  ripl.freeze(2)
+  ripl.freeze("y")
   eq_(engine.get_entropy_info()["unconstrained_random_choices"],1)
 
 @on_inf_prim("none")
@@ -43,7 +43,7 @@ def testFreezeSanityCheck2():
   engine = ripl.sivm.core_sivm.engine
   eq_(engine.getDistinguishedTrace().numNodesInBlock(0,0),6)
 
-  ripl.freeze(2)
+  ripl.freeze("y")
   eq_(engine.getDistinguishedTrace().numNodesInBlock(0,0),1)
 
 @on_inf_prim("mh")
@@ -55,7 +55,7 @@ though unfrozen ones do."""
   ripl.assume("y", "(normal 0.0 1.0)")
   xval = ripl.sample("x")
   yval = ripl.sample("y")
-  ripl.freeze(1)
+  ripl.freeze("x")
   ripl.infer(100)
   eq_(xval, ripl.sample("x"))
   assert not yval == ripl.sample("y")
