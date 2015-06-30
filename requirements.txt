@@ -32,7 +32,8 @@ dill
 
 # Plotting (optional)
 patsy # Because ggplot needs this installed first ??
-pandas>=0.14 # TODO Is the dependency on pandas actually optional?
+# TODO Is the dependency on pandas actually optional?
+pandas>=0.14, <0.16 # <0.16 because that version introduces a change that breaks ggplot
 # ggplot
 
 # Drawing scaffolds for debugging (optional)
