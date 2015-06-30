@@ -27,16 +27,14 @@ Each cell is submitted to the kernel, and checked for errors.
 [cloned by owain@mit https://github.com/ipython/ipython/wiki/Cookbook%3a-Notebook-utilities]
 """
 
-import os,sys,time
-
-from Queue import Empty
+import os,sys
 
 try:
     from IPython.kernel import KernelManager
 except ImportError:
     from IPython.zmq.blockingkernelmanager import BlockingKernelManager as KernelManager
 
-from IPython.nbformat.current import reads, NotebookNode
+from IPython.nbformat.current import reads
 
 def run_notebook(nb):
     km = KernelManager()
@@ -84,8 +82,5 @@ if __name__ == '__main__':
     for ipynb in sys.argv[1:]:
         print "running %s" % ipynb
         with open(ipynb) as f:
-            nb = reads(f.read(), 'json')
-        run_notebook(nb)
-
-
-
+            nb1 = reads(f.read(), 'json')
+        run_notebook(nb1)
