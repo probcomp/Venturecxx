@@ -356,7 +356,7 @@ class ContinuousInferrer(object):
     while self.inferrer is not None:
       # TODO React somehow to values returned by the inference action?
       # Currently suppressed for fear of clobbering the prompt
-      self.engine.ripl.infer(program, suppress_pausing_continous_inference=True)
+      self.engine.ripl.infer(program)
       time.sleep(0.0001) # Yield to be a good citizen
 
   def stop(self):

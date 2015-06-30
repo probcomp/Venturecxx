@@ -55,13 +55,11 @@ class VentureSivm(object):
     _dont_pause_continuous_inference = {"start_continuous_inference",
             "stop_continuous_inference", "continuous_inference_status"}
 
-    def execute_instruction(self, instruction, suppress_pausing_continous_inference=False):
-        # The suppress_pausing_continous_inference flag is used by the
-        # thread doing the continuous inference.
+    def execute_instruction(self, instruction):
         utils.validate_instruction(instruction,self._core_instructions | self._extra_instructions)
         instruction_type = instruction['instruction']
 
-        pause = instruction_type not in self._dont_pause_continuous_inference and not suppress_pausing_continous_inference and not self.core_sivm.engine.on_continuous_inference_thread()
+        pause = instruction_type not in self._dont_pause_continuous_inference and not self.core_sivm.engine.on_continuous_inference_thread()
         with self._pause_continuous_inference(pause=pause):
             if instruction_type in self._extra_instructions:
                 f = getattr(self,'_do_'+instruction_type)

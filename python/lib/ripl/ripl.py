@@ -115,9 +115,7 @@ class Ripl():
 
 
 
-    def execute_instruction(self, instruction=None, params=None, suppress_pausing_continous_inference=False):
-        # The suppress_pausing_continous_inference flag is used by the
-        # thread doing the continuous inference.
+    def execute_instruction(self, instruction=None, params=None):
         p = self._cur_parser()
         try: # execute instruction, and handle possible exception
             # perform parameter substitution if necessary
@@ -137,7 +135,7 @@ class Ripl():
                 did = self.sivm.core_sivm.engine.predictNextDirectiveId()
                 self.directive_id_to_stringable_instruction[did] = stringable_instruction
                 self.directive_id_to_mode[did] = self.mode
-            ret_value = self.sivm.execute_instruction(parsed_instruction, suppress_pausing_continous_inference=suppress_pausing_continous_inference)
+            ret_value = self.sivm.execute_instruction(parsed_instruction)
         except VentureException as e:
             import sys
             info = sys.exc_info()
@@ -665,10 +663,8 @@ Open issues:
         else:
             return program
 
-    def infer(self, params=None, type=False, suppress_pausing_continous_inference=False):
-        # The suppress_pausing_continous_inference flag is used by the
-        # thread doing the continuous inference.
-        o = self.execute_instruction({'instruction':'infer', 'expression': self.defaultInferProgram(params)}, suppress_pausing_continous_inference=suppress_pausing_continous_inference)
+    def infer(self, params=None, type=False):
+        o = self.execute_instruction({'instruction':'infer', 'expression': self.defaultInferProgram(params)})
         value = o["value"]
         return value if type else u.strip_types(value)
 
