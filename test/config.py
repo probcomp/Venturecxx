@@ -120,7 +120,7 @@ def default_num_transitions_per_sample():
 disable_get_ripl = False
 ct_get_ripl_called = 0
 
-def get_ripl(persistent_inference_trace=False):
+def get_ripl(persistent_inference_trace=True):
   assert not disable_get_ripl, "Trying to get the configured ripl in a test marked as not ripl-agnostic."
   global ct_get_ripl_called
   ct_get_ripl_called += 1
