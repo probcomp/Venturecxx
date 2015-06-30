@@ -61,7 +61,7 @@ class VentureSivm(object):
         utils.validate_instruction(instruction,self._core_instructions | self._extra_instructions)
         instruction_type = instruction['instruction']
 
-        pause = instruction_type not in self._dont_pause_continuous_inference and not suppress_pausing_continous_inference
+        pause = instruction_type not in self._dont_pause_continuous_inference and not suppress_pausing_continous_inference and not self.core_sivm.engine.on_continuous_inference_thread()
         with self._pause_continuous_inference(pause=pause):
             if instruction_type in self._extra_instructions:
                 f = getattr(self,'_do_'+instruction_type)
@@ -310,7 +310,7 @@ class VentureSivm(object):
                     # The instruction started a new CI, so let it win
                     pass
                 elif self.ci_was_running:
-                    #print("restarting continuous inference")
+                    # print "restarting continuous inference"
                     sivm._start_continuous_inference(self.ci_status["expression"])
         return tmp()
 

@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+import threading
 import dill
 import time
 from contextlib import contextmanager
@@ -269,12 +270,27 @@ class Engine(object):
   def start_continuous_inference(self, program):
     self.stop_continuous_inference()
     self.inferrer = ContinuousInferrer(self, program)
+    self.inferrer.start()
 
   def stop_continuous_inference(self):
     if self.inferrer is not None:
       # Running CI in Python
       self.inferrer.stop()
       self.inferrer = None
+
+  def on_continuous_inference_thread(self):
+    inferrer_obj = self.inferrer # Read self.inferrer atomically, just in case.
+    # The time that self.inferrer is not None is a superset of
+    # lifetime of the continuous inference thread.
+    if inferrer_obj is None:
+      return False
+    # Otherwise, the first thing the continuous inference thread does
+    # is set the inference_thread_id to its identifier, so if it is
+    # unset (or not equal to the current thread identifier), this
+    # thread is not the CI thread.
+    else:
+      return inferrer_obj.inference_thread_id == threading.currentThread().ident
+
 
   def save(self, fname, extra=None):
     data = self.model.saveable()
@@ -326,12 +342,15 @@ class ContinuousInferrer(object):
   def __init__(self, engine, program):
     self.engine = engine
     self.program = program
-    import threading as t
-    self.inferrer = t.Thread(target=self.infer_continuously, args=(self.program,))
+    self.inferrer = threading.Thread(target=self.infer_continuously, args=(self.program,))
     self.inferrer.daemon = True
+    self.inference_thread_id = None
+
+  def start(self):
     self.inferrer.start()
 
   def infer_continuously(self, program):
+    self.inference_thread_id = threading.currentThread().ident
     # Can use the storage of the thread object itself as the semaphore
     # controlling whether continuous inference proceeds.
     while self.inferrer is not None:
