@@ -47,10 +47,10 @@ def run_notebook(nb):
         # 0.13
         kc = km
     kc.start_channels()
-    shell = kc.shell_channel
+    shell = kc
     # simple ping:
     shell.execute("pass")
-    shell.get_msg()
+    shell.get_shell_msg()
     
     cells = 0
     failures = 0
@@ -60,7 +60,7 @@ def run_notebook(nb):
                 continue
             shell.execute(cell.input)
             # wait for finish, maximum 20s
-            reply = shell.get_msg(timeout=20)['content']
+            reply = shell.get_shell_msg(timeout=20)['content']
             if reply['status'] == 'error':
                 failures += 1
                 print "\nFAILURE:"
