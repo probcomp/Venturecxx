@@ -59,10 +59,10 @@ def make_pic(name, inf_prog):
 if __name__ == '__main__':
   # TODO To compare rejection sampling, would need to define logDensityBound for MVNormalOutputPSP
   # make_pic("rej", "(rejection default all 1)")
-  h1 = make_pic("hmc", "(hmc param all 0.1 20 1)")
+  h1 = make_pic("hmc", "(hmc 'param all 0.1 20 1)")
 # h1.quickScatter("x", "y", style="-", contour_func=true_pdf, contour_delta=0.5)
   h2 = make_pic("mh", "(mh default one 10)")
-  h3 = make_pic("map", "(map param all 0.1 2 1)")
+  h3 = make_pic("map", "(map 'param all 0.1 2 1)")
 # h3.quickScatter("x", "y", style="-", contour_func=true_pdf, contour_delta=0.5)
   u.historyOverlay("demo", [("hmc", h1), ("mh", h2), ("map", h3)]).quickScatter("x", "y", contour_func=true_pdf, contour_delta=0.5)
 
