@@ -54,7 +54,7 @@ class PlotSpec(object):
       # add the wall time
       title = self._format_title(dataset)
       plot += g.ggtitle(title)
-      for (dim, scale) in zip(["x", "y", "color"], spec.scales):
+      for (dim, scale) in zip(spec.dimensions(), spec.scales):
         obj = self._interp_scale(dim, scale)
         if obj: plot += obj
       figs.append(self._add_date(plot.draw()))
@@ -156,10 +156,16 @@ class FrameSpec(object):
       self.two_d_only = False
     return {"p":g.geom_point, "l":g.geom_line, "b":g.geom_bar, "h":g.geom_histogram}[ge]()
 
+  def dimensions(self):
+    if self.two_d_only:
+      return ["x", "y", "color"]
+    else:
+      return ["x", "color"]
+
   def aes_dict_at(self, next_index, names, geoms):
     next_index = next_index
     ans = {}
-    for (key, stream) in zip(["x", "y", "color"], self.streams):
+    for (key, stream) in zip(self.dimensions(), self.streams):
       if stream == "c":
         ans[key] = "sweep count"
       elif stream == "r":
