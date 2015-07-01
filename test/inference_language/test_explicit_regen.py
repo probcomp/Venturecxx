@@ -95,3 +95,16 @@ def testCustomProposalInference():
   predictions = collectSamples(ripl, "x", infer="(repeat %d (gaussian_drift_mh default all 0.5))" % default_num_transitions_per_sample())
   cdf = stats.norm(loc=1, scale=math.sqrt(0.5)).cdf
   return reportKnownContinuous(cdf, predictions, "N(1,sqrt(0.5))")
+
+@on_inf_prim("regen")
+@broken_in("puma", "Does not support the regen SP yet")
+def testDetachForProposalDoesNotMutateScaffold():
+  ripl = get_ripl(persistent_inference_trace=True)
+  ripl.assume("x", "(normal 0 1)")
+  old = ripl.sample("x")
+  ripl.infer("""\
+(do (subproblem <- (select default all))
+    (detach_for_proposal subproblem)
+    (regen subproblem))
+""")
+  assert not old == ripl.sample("x")

@@ -30,6 +30,10 @@ def registerDeterministicLKernels(trace,scaffold,pnodes,currentValues):
     assert not isinstance(currentValue,list)
     scaffold.lkernels[pnode] = DeterministicLKernel(trace.pspAt(pnode),currentValue)
 
+def unregisterDeterministicLKernels(_trace,scaffold,pnodes):
+  for pnode in pnodes:
+    del scaffold.lkernels[pnode]
+
 def getCurrentValuesWithAddresses(trace,pnodes): return [(pnode.address, trace.valueAt(pnode)) for pnode in pnodes]
 
 def registerDeterministicLKernelsByAddress(trace,scaffold,addressesAndValues):
