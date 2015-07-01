@@ -624,6 +624,26 @@ function.
   def just_restore(self, scaffold, rhoDB):
     return regenAndAttach(self, scaffold, True, rhoDB, {})
 
+  def detach_for_proposal(self, scaffold):
+    pnodes = scaffold.getPrincipalNodes()
+    from infer.mh import getCurrentValues, registerDeterministicLKernels
+    currentValues = getCurrentValues(self, pnodes)
+    registerDeterministicLKernels(self, scaffold, pnodes, currentValues)
+    return detachAndExtract(self, scaffold)
+
+  def regen_with_proposal(self, scaffold, values):
+    pnodes = scaffold.getPrincipalNodes()
+    assert len(values) == len(pnodes), "Tried to propose %d values, but subproblem accepts %d values" % (len(values), len(pnodes))
+    from infer.mh import registerDeterministicLKernels
+    registerDeterministicLKernels(self, scaffold, pnodes, values)
+    return regenAndAttach(self, scaffold, False, OmegaDB(), {})
+
+  def get_current_values(self, scaffold):
+    pnodes = scaffold.getPrincipalNodes()
+    from infer.mh import getCurrentValues
+    currentValues = getCurrentValues(self, pnodes)
+    return currentValues
+
   def block_values(self, scope, block):
     """Return a map between the addresses and values of principal nodes in
 the scaffold determined by the given expression."""
