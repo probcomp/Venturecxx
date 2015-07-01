@@ -626,17 +626,21 @@ function.
 
   def detach_for_proposal(self, scaffold):
     pnodes = scaffold.getPrincipalNodes()
-    from infer.mh import getCurrentValues, registerDeterministicLKernels
+    from infer.mh import getCurrentValues, registerDeterministicLKernels, unregisterDeterministicLKernels
     currentValues = getCurrentValues(self, pnodes)
     registerDeterministicLKernels(self, scaffold, pnodes, currentValues)
-    return detachAndExtract(self, scaffold)
+    rhoWeight, rhoDB = detachAndExtract(self, scaffold)
+    unregisterDeterministicLKernels(self, scaffold, pnodes) # de-mutate the scaffold in case it is used for subsequent operations
+    return rhoWeight, rhoDB
 
   def regen_with_proposal(self, scaffold, values):
     pnodes = scaffold.getPrincipalNodes()
     assert len(values) == len(pnodes), "Tried to propose %d values, but subproblem accepts %d values" % (len(values), len(pnodes))
-    from infer.mh import registerDeterministicLKernels
+    from infer.mh import registerDeterministicLKernels, unregisterDeterministicLKernels
     registerDeterministicLKernels(self, scaffold, pnodes, values)
-    return regenAndAttach(self, scaffold, False, OmegaDB(), {})
+    xiWeight = regenAndAttach(self, scaffold, False, OmegaDB(), {})
+    unregisterDeterministicLKernels(self, scaffold, pnodes) # de-mutate the scaffold in case it is used for subsequent operations
+    return xiWeight
 
   def get_current_values(self, scaffold):
     pnodes = scaffold.getPrincipalNodes()
