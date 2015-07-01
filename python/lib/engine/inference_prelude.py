@@ -182,4 +182,31 @@ prelude = [
   (in log space).  Cost: O(size of trace).
 """,
 "(posterior_at (quote default) (quote all))"],
+
+["accumulate_dataset", """\
+.. function:: accumulate_dataset(iterations : int, a : <inference action returning a dataset>)
+
+  :rtype: proc(<foreignblob>) -> <pair <dataset> <foreignblob>>
+
+  Run the given inference action the given number of times,
+  accumulating all the returned datasets into one.
+
+  For example,
+
+      (accumulate_dataset 1000
+        (do (mh default one 10)
+            (collect x)))
+
+  will return a dataset consisting of the values of x that occur at
+  10-step intervals in the history of a 10000-step default Markov
+  chain on the current model.
+""",
+"""\
+(lambda (count action)
+  (let ((d (empty)))
+    (do (repeat count
+          (do (frame <- action)
+              (into d frame)))
+        (return d))))"""],
+
 ]
