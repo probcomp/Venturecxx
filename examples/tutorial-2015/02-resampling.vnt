@@ -1,9 +1,0 @@
-[assume x (normal 0 1)]
-[observe (normal x 1) 2]
-[infer
-  (do (d <- (accumulate_dataset 1000
-              (do (resample 10)
-                  (likelihood_weight)
-                  (resample 1)
-                  (collect x))))
-      (plotf 'h0 d))]

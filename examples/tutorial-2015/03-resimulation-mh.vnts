@@ -1,0 +1,9 @@
+assume x = normal(0, 1)
+observe normal(x, 1) = 2
+infer
+  do(resample(100),
+     d <- accumulate_dataset(100,
+            do(likelihood_weight(),
+               mh(default, one, 10),
+               collect(x))),
+     plotf(quote(h0), d))
