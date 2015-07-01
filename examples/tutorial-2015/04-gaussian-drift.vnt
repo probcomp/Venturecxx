@@ -1,0 +1,24 @@
+[define gaussian_drift_mh
+  (lambda (scope block sigma)
+    (do (subproblem <- (select scope block))
+        (values <- (get_current_values subproblem))
+        (let ((move (lambda (value) (normal value sigma))) ; gaussian drift proposal kernel
+              (new_values (mapv move values)))
+          (do (rho_weight_and_rho_db <- (detach_for_proposal subproblem))
+              (xi_weight <- (regen_with_proposal subproblem new_values))
+              (let ((rho_weight (first rho_weight_and_rho_db))
+                    (rho_db (rest rho_weight_and_rho_db)))
+                (if (< (log (uniform_continuous 0 1)) (- xi_weight rho_weight))
+                    pass                    ; accept
+                    (do (detach subproblem) ; reject
+                        (restore subproblem rho_db))))))))]
+
+[assume x (normal 0 1)]
+[observe (normal x 1) 10]
+[infer
+ (do (d <- (accumulate_dataset 500
+             (do (likelihood_weight)
+                 ;; 50 seems to converge, for the datum being at 10
+                 (repeat 10 (gaussian_drift_mh default all 1))
+                 (collect x))))
+     (plotf 'h0 d))]
