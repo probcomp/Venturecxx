@@ -194,6 +194,15 @@ class Infer(object):
   def restore(self, scaffold, rhoDB):
     assert len(self.engine.model.log_weights) == 1, "Custom proposals only supported for one trace at a time"
     return self.engine.model.traces.at(0, 'just_restore', scaffold, rhoDB)
+  def detach_for_proposal(self, scaffold):
+    assert len(self.engine.model.log_weights) == 1, "Custom proposals only supported for one trace at a time"
+    return self.engine.model.traces.at(0, 'detach_for_proposal', scaffold)
+  def regen_with_proposal(self, scaffold, values):
+    assert len(self.engine.model.log_weights) == 1, "Custom proposals only supported for one trace at a time"
+    return self.engine.model.traces.at(0, 'regen_with_proposal', scaffold, values)
+  def get_current_values(self, scaffold):
+    assert len(self.engine.model.log_weights) == 1, "Custom proposals only supported for one trace at a time"
+    return self.engine.model.traces.at(0, 'get_current_values', scaffold)
 
 class Dataset(object):
   """Basically a wrapper for a Pandas Dataframe that knows about a few

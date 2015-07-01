@@ -867,6 +867,44 @@ Does not interoperate with multiple particles, or with custom proposals.
 Restore a former state of the current model along the given subproblem.
 
 Does not interoperate with multiple particles.
+
+"""),
+
+  engine_method_sp("detach_for_proposal", infer_action_maker_type([t.ForeignBlobType("<subproblem>")], t.PairType(t.NumberType("weight"), t.ForeignBlobType("<rhoDB>"))), desc="""\
+Detach the current model along the given subproblem, returning the
+local posterior.
+
+Differs from detach in that it includes the log densities of the principal
+nodes in the returned weight, so as to match regen_with_proposal. The
+principal nodes must be able to assess.
+
+Return the current posterior at the fringe, and a database of the old
+values for restoring the current state.
+
+Does not interoperate with multiple particles.
+
+"""),
+
+  engine_method_sp("regen_with_proposal", infer_action_maker_type([t.ForeignBlobType("<subproblem>"), t.ListType()], t.NumberType("weight")), desc="""\
+Regenerate the current model along the given subproblem from the
+given values.
+
+Differs from regen in that it deterministically moves the principal nodes
+to the given values rather than resimulating them from the prior, and
+includes the log densities of those nodes in the returned weight. The
+principal nodes must be able to assess.
+
+Return the new posterior at the fringe.
+
+Does not interoperate with multiple particles.
+
+"""),
+
+  engine_method_sp("get_current_values", infer_action_maker_type([t.ForeignBlobType("<subproblem>")], t.ListType()), desc="""\
+Get the current values of the principal nodes of the given subproblem.
+
+Does not interoperate with multiple particles.
+
 """),
 
   ripl_method_sp("draw_subproblem", infer_action_maker_type([t.AnyType("<subproblem>")]), desc="""\

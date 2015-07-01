@@ -56,3 +56,42 @@ def testDetachRegenInference():
   predictions = collectSamples(ripl, "x", infer="(repeat %d (custom_mh default all))" % default_num_transitions_per_sample())
   cdf = stats.norm(loc=1, scale=math.sqrt(0.5)).cdf
   return reportKnownContinuous(cdf, predictions, "N(1,sqrt(0.5))")
+
+def gaussian_drift_mh_ripl():
+  ripl = get_ripl(persistent_inference_trace=True)
+  ripl.define("gaussian_drift_mh", """\
+(lambda (scope block sigma)
+  (do (subproblem <- (select scope block))
+      (values <- (get_current_values subproblem))
+      (let ((move (lambda (value) (normal value sigma))) ; gaussian drift proposal kernel
+            (new_values (mapv move values)))
+        (do (rho_weight_and_rho_db <- (detach_for_proposal subproblem))
+            (xi_weight <- (regen_with_proposal subproblem new_values))
+            (let ((rho_weight (first rho_weight_and_rho_db))
+                  (rho_db (rest rho_weight_and_rho_db)))
+              (if (< (log (uniform_continuous 0 1)) (- xi_weight rho_weight))
+                  pass ; accept
+                  (do (detach subproblem) ; reject
+                      (restore subproblem rho_db))))))))
+""")
+  return ripl
+
+@on_inf_prim("regen")
+@broken_in("puma", "Does not support the regen SP yet")
+def testCustomProposalSmoke():
+  ripl = gaussian_drift_mh_ripl()
+  ripl.assume("x", "(normal 0 1)")
+  old = ripl.sample("x")
+  ripl.infer("(gaussian_drift_mh default all 0.1)")
+  assert not old == ripl.sample("x")
+
+@on_inf_prim("regen")
+@broken_in("puma", "Does not support the regen SP yet")
+@statisticalTest
+def testCustomProposalInference():
+  ripl = gaussian_drift_mh_ripl()
+  ripl.assume("x", "(normal 0 1)")
+  ripl.observe("(normal x 1)", 2)
+  predictions = collectSamples(ripl, "x", infer="(repeat %d (gaussian_drift_mh default all 0.5))" % default_num_transitions_per_sample())
+  cdf = stats.norm(loc=1, scale=math.sqrt(0.5)).cdf
+  return reportKnownContinuous(cdf, predictions, "N(1,sqrt(0.5))")
