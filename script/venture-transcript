@@ -23,6 +23,13 @@
 
 import sys
 import re
+import os.path
+
+try:
+    import markdown2
+except ImportError:
+    sys.stderr.write('Please make sure you have markdown2 installed.\n')
+    sys.exit(1)
 
 start_of_block = re.compile(r"^[ \t\r\f\v]*```venture[ \t\r\f\v]*$", re.MULTILINE)
 end_of_block = re.compile(r"^[ \t\r\f\v]*```[ \t\r\f\v]*$", re.MULTILINE)
@@ -31,17 +38,20 @@ def main():
     (_, filename, outdir) = sys.argv
     print filename, outdir
     content = open(filename).read()
-    Writer(outdir).in_text(content)
+    Writer(filename, outdir).in_text(content)
 
 class Writer(object):
-    def __init__(self, outdir):
+    def __init__(self, filename, outdir):
+        basename = os.path.splitext(os.path.basename(filename))[0]
         self.outdir = outdir
+        self.out_chunks = []
 
     def in_text(self, string):
         split_res = re.split(start_of_block, string, maxsplit=1)
         if len(split_res) == 1:
             # File ended in text block
             self.emit_text(split_res[0])
+            self.finish()
         elif len(split_res) == 2:
             # New Venture block started
             self.emit_text(split_res[0])
@@ -55,6 +65,7 @@ class Writer(object):
             # File ended in code block
             sys.stderr.write('Transcript file ended mid-code-block.\n')
             self.emit_code(split_res[0])
+            self.finish()
         elif len(split_res) == 2:
             # New text block started
             self.emit_code(split_res[0])
@@ -63,12 +74,14 @@ class Writer(object):
             raise Exception("??? Splitting on end of block produced %s" % (split_res,))
 
     def emit_text(self, string):
-        print "text"
-        print string
+        self.out_chunks.append(string)
 
     def emit_code(self, string):
-        print "code"
-        print string
+        self.out_chunks.extend(["```", string, "```"])
+
+    def finish(self):
+        result = ''.join(self.out_chunks)
+        print markdown2.markdown(result)
 
 if __name__ == "__main__":
     main()
