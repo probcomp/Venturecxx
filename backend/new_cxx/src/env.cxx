@@ -61,7 +61,7 @@ void VentureEnvironment::removeBinding(const string& sym)
   }
 }
 
-void VentureEnvironment::replaceBinding(const string& sym, Node * node)
+void VentureEnvironment::fillBinding(const string& sym, Node * node)
 {
   assert(frame.count(sym));
   assert(frame[sym] == NULL);
