@@ -21,4 +21,11 @@ infer posterior
 sample x
 <still different number>
 
-Are these the right distribution?  We could eyeball it like this a bit more.
+Are these the right distribution?  We could eyeball it like this a bit
+more, but it's better to gather data programmatically:
+
+define data (run (accumulate_dataset 100 (do posterior (collect x))))
+
+infer (printf data)
+
+infer (plotf 'h0 data)
