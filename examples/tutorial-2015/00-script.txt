@@ -1,31 +1,52 @@
+```venture
 sample normal(0, 1)
+```
 <a number>
+
+```venture
 sample normal(0, 1)
+```
 <another number>
 
+```venture
 assume x = normal(0, 1)
+```
 <a number>
+```venture
 sample x
+```
 <same number>
 
+```venture
 observe normal(x,1) = 2
 sample x
+```
 <same number>
 "nothing happened yet"
 
+```venture
 infer posterior
 sample x
+```
 <different number>
 
+```venture
 infer posterior
 sample x
+```
 <still different number>
 
 Are these the right distribution?  We could eyeball it like this a bit
 more, but it's better to gather data programmatically:
 
+```venture
 define data (run (accumulate_dataset 100 (do posterior (collect x))))
+```
 
+```venture
 infer (printf data)
+```
 
+```venture
 infer (plotf 'h0 data)
+```

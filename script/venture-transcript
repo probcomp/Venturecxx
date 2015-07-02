@@ -1,0 +1,70 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Copyright (c) 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
+# Process a markdown file with inline Venture snippets to produce a
+# transcript document.
+
+import sys
+import re
+
+start_of_block = re.compile(r"^[ \t\r\f\v]*```venture[ \t\r\f\v]*$", re.MULTILINE)
+end_of_block = re.compile(r"^[ \t\r\f\v]*```[ \t\r\f\v]*$", re.MULTILINE)
+
+def main():
+    (_, filename, outdir) = sys.argv
+    print filename, outdir
+    content = open(filename).read()
+    in_text(content)
+
+def in_text(string):
+    split_res = re.split(start_of_block, string, maxsplit=1)
+    if len(split_res) == 1:
+        # File ended in text block
+        emit_text(split_res[0])
+    elif len(split_res) == 2:
+        # New Venture block started
+        emit_text(split_res[0])
+        in_code(split_res[1])
+    else:
+        raise Exception("??? Splitting on start of block produced %s" % (split_res,))
+
+def in_code(string):
+    split_res = re.split(end_of_block, string, maxsplit=1)
+    if len(split_res) == 1:
+        # File ended in code block
+        sys.stderr.write('Transcript file ended mid-code-block.\n')
+        emit_code(split_res[0])
+    elif len(split_res) == 2:
+        # New text block started
+        emit_code(split_res[0])
+        in_text(split_res[1])
+    else:
+        raise Exception("??? Splitting on end of block produced %s" % (split_res,))
+
+def emit_text(string):
+    print "text"
+    print string
+
+def emit_code(string):
+    print "code"
+    print string
+
+if __name__ == "__main__":
+    main()
