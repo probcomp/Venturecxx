@@ -31,40 +31,44 @@ def main():
     (_, filename, outdir) = sys.argv
     print filename, outdir
     content = open(filename).read()
-    in_text(content)
+    Writer(outdir).in_text(content)
 
-def in_text(string):
-    split_res = re.split(start_of_block, string, maxsplit=1)
-    if len(split_res) == 1:
-        # File ended in text block
-        emit_text(split_res[0])
-    elif len(split_res) == 2:
-        # New Venture block started
-        emit_text(split_res[0])
-        in_code(split_res[1])
-    else:
-        raise Exception("??? Splitting on start of block produced %s" % (split_res,))
+class Writer(object):
+    def __init__(self, outdir):
+        self.outdir = outdir
 
-def in_code(string):
-    split_res = re.split(end_of_block, string, maxsplit=1)
-    if len(split_res) == 1:
-        # File ended in code block
-        sys.stderr.write('Transcript file ended mid-code-block.\n')
-        emit_code(split_res[0])
-    elif len(split_res) == 2:
-        # New text block started
-        emit_code(split_res[0])
-        in_text(split_res[1])
-    else:
-        raise Exception("??? Splitting on end of block produced %s" % (split_res,))
+    def in_text(self, string):
+        split_res = re.split(start_of_block, string, maxsplit=1)
+        if len(split_res) == 1:
+            # File ended in text block
+            self.emit_text(split_res[0])
+        elif len(split_res) == 2:
+            # New Venture block started
+            self.emit_text(split_res[0])
+            self.in_code(split_res[1])
+        else:
+            raise Exception("??? Splitting on start of block produced %s" % (split_res,))
 
-def emit_text(string):
-    print "text"
-    print string
+    def in_code(self, string):
+        split_res = re.split(end_of_block, string, maxsplit=1)
+        if len(split_res) == 1:
+            # File ended in code block
+            sys.stderr.write('Transcript file ended mid-code-block.\n')
+            self.emit_code(split_res[0])
+        elif len(split_res) == 2:
+            # New text block started
+            self.emit_code(split_res[0])
+            self.in_text(split_res[1])
+        else:
+            raise Exception("??? Splitting on end of block produced %s" % (split_res,))
 
-def emit_code(string):
-    print "code"
-    print string
+    def emit_text(self, string):
+        print "text"
+        print string
+
+    def emit_code(self, string):
+        print "code"
+        print string
 
 if __name__ == "__main__":
     main()
