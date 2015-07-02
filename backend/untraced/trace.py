@@ -64,12 +64,16 @@ class Trace(object):
     spVal = VentureSPRecord(sp)
     self.env.addBinding(name, node.Node(None, spVal))
 
-  def bindInGlobalEnv(self,sym,id):
+  def bindInGlobalEnv(self, sym, id):
     try:
       self.env.addBinding(sym, node.Node(id, self.results[id]))
     except VentureError as e:
       raise VentureException("invalid_argument", message=e.message, argument="symbol")
 
-  def unbindInGlobalEnv(self,sym): self.env.removeBinding(sym)
+  def rebindInGlobalEnv(self, sym, val):
+    assert isinstance(val, vv.VentureValue)
+    self.env.findSymbol(sym).value = val
+
+  def unbindInGlobalEnv(self, sym): self.env.removeBinding(sym)
 
   def boundInGlobalEnv(self, sym): return self.env.symbolBound(sym)

@@ -201,7 +201,9 @@ class Engine(object):
 
   def _do_infer(self, program):
     did = self.nextBaseAddr()
-    self.infer_trace.eval(did, [program, v.blob(Infer(self))])
+    inferrer = v.blob(Infer(self))
+    self.infer_trace.rebindInGlobalEnv("__the_inferrer__", vv.VentureValue.fromStackDict(inferrer))
+    self.infer_trace.eval(did, [program, inferrer])
     return did
 
   def _extract_infer_result(self, did):
