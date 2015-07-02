@@ -914,4 +914,4 @@ Does not interoperate with multiple particles.
 
 ]
 
-inferenceKeywords = [ "default", "all", "none", "one", "ordered" ]
+inferenceKeywords = [ "default", "all", "none", "one", "ordered", "__the_inferrer__" ]

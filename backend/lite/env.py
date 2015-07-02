@@ -46,7 +46,7 @@ class VentureEnvironment(VentureValue):
     elif not self.outerEnv: raise VentureError("Cannot unbind unbound symbol '%s'" % sym)
     else: self.outerEnv.removeBinding(sym)
 
-  def replaceBinding(self,sym,val):
+  def fillBinding(self,sym,val):
     # Used in the implementation of letrec
     assert isinstance(sym, str)
     assert sym in self.frame

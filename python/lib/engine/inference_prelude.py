@@ -220,4 +220,16 @@ prelude = [
   This is equivalent to ``(likelihood_weight)''.""",
 "(likelihood_weight)"],
 
+["run", """\
+.. function:: run(<inference action returning a>)
+
+  :rtype: a
+
+  Run the given inference action and return its value.
+""",
+"""\
+(lambda (action)
+  (let ((result (action __the_inferrer__)))
+    (first result)))"""],
+
 ]

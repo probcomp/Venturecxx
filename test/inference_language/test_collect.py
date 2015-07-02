@@ -107,6 +107,20 @@ def testPrintf():
   res = result.getvalue()
   assert pattern.match(res) is not None
 
+def testPrintf2():
+  '''Intercept stdout and make sure the message read what we expect'''
+  ripl = get_ripl()
+  pattern = make_pattern()
+  ripl.infer('(resample 2)')
+  ripl.assume('x', 2.1)
+  old_stdout = sys.stdout
+  result = StringIO()
+  sys.stdout = result
+  ripl.infer('(repeat 2 (do (mh default one 1) (printf (run (collect x (labelled 3.1 foo))))))')
+  sys.stdout = old_stdout
+  res = result.getvalue()
+  assert pattern.match(res) is not None
+
 def testCollectLogScore():
   '''In the presence of likelihood-free SP's, the calling "collect" or "printf"
   should not crash the program.'''

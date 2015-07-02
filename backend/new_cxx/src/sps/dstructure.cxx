@@ -242,7 +242,7 @@ VentureValuePtr FixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
   }
   for (size_t i = 0; i < ids.size(); ++i)
   {
-    env->replaceBinding(ids[i]->getSymbol(), args->esrParentNodes[i].get());
+    env->fillBinding(ids[i]->getSymbol(), args->esrParentNodes[i].get());
   }
   return env;
 }
