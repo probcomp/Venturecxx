@@ -15,11 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from psp import DeterministicPSP
+from psp import DeterministicPSP, NullRequestPSP
 from env import VentureEnvironment
 from request import Request, ESR
-from value import VentureArray
+from value import VentureArray, SPRef
 from address import emptyAddress
+from exception import VentureValueError
 
 class ApplyRequestPSP(DeterministicPSP):
     def simulate(self, args):
@@ -87,3 +88,29 @@ class FixOutputPSP(DeterministicPSP):
 
     def description(self, name):
         return "%s\n  Used internally in the implementation of letrec." % name
+
+class AssessOutputPSP(DeterministicPSP):
+    def simulate(self, args):
+        value = args.operandValues[0]
+        if isinstance(value, SPRef):
+            value = value.makerNode.madeSPRecord # XXX trace.madeSPRecordAt(value.makerNode)
+
+        operator = args.operandValues[1]
+        if isinstance(operator, SPRef):
+            operator = operator.makerNode.madeSPRecord # XXX trace.madeSPRecordAt(operator.makerNode)
+        if not isinstance(operator.sp.requestPSP, NullRequestPSP):
+            raise VentureValueError("Cannot assess a requesting SP.")
+        if not operator.sp.outputPSP.isRandom():
+            raise VentureValueError("Cannot assess a deterministic SP.")
+
+        import copy
+        assessedArgs = copy.copy(args)
+        assessedArgs.operandValues = args.operandValues[2:]
+        assessedArgs.operandNodes = args.operandNodes[2:]
+        assessedArgs.spaux = operator.spAux # XXX trace.madeSPAuxAt(operator.makerNode)
+        # XXX madeSPAux?
+
+        return operator.sp.outputPSP.logDensity(value, assessedArgs)
+
+    def description(self, name):
+        return "  (%s val func arg1 arg2 ...) returns the log probability (density) of simulating val from (func arg1 arg2 ...)" % name
