@@ -24,12 +24,16 @@
 import sys
 import re
 import os.path
+from StringIO import StringIO
 
 try:
     import markdown2
 except ImportError:
     sys.stderr.write('Please make sure you have markdown2 installed.\n')
     sys.exit(1)
+
+import venture.shortcuts as vs
+from venture.ripl.utils import strip_types
 
 start_of_block = re.compile(r"^[ \t\r\f\v]*```venture[ \t\r\f\v]*$", re.MULTILINE)
 end_of_block = re.compile(r"^[ \t\r\f\v]*```[ \t\r\f\v]*$", re.MULTILINE)
@@ -55,12 +59,26 @@ def main():
     content = open(filename).read()
     Writer(filename, outdir).in_text(content)
 
+def with_output_to_string(f, *args, **kwargs):
+    old_stdout = sys.stdout
+    result = StringIO()
+    sys.stdout = result
+    val = f(*args, **kwargs)
+    sys.stdout = old_stdout
+    ans = result.getvalue()
+    return (val, ans)
+
+def getValue(v):
+  return strip_types(v['value'])
+
 class Writer(object):
     def __init__(self, filename, outdir):
         basename = os.path.splitext(os.path.basename(filename))[0]
         self.outdir = outdir
         self.outfile = outdir + "/" + basename + ".html"
         self.out_chunks = []
+        self.ripl = vs.backend("lite").make_combined_ripl()
+        self.ripl.set_mode("venture_script")
 
     def in_text(self, string):
         split_res = re.split(start_of_block, string, maxsplit=1)
@@ -93,7 +111,11 @@ class Writer(object):
         self.out_chunks.append(string)
 
     def emit_code(self, string):
-        self.out_chunks.extend(["```", string, "```"])
+        print "Trying program"
+        print string
+        (ans, output) = with_output_to_string(self.ripl.execute_program, string)
+        print getValue(ans[-1])
+        self.out_chunks.extend(["```", string, "```\n", output])
 
     def finish(self):
         result = ''.join(self.out_chunks)
