@@ -34,9 +34,24 @@ except ImportError:
 start_of_block = re.compile(r"^[ \t\r\f\v]*```venture[ \t\r\f\v]*$", re.MULTILINE)
 end_of_block = re.compile(r"^[ \t\r\f\v]*```[ \t\r\f\v]*$", re.MULTILINE)
 
+header = """\
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>A Venture transcript</title>
+</head>
+<body>
+"""
+
+footer = """\
+</body>
+</html>
+"""
 def main():
     (_, filename, outdir) = sys.argv
     print filename, outdir
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
     content = open(filename).read()
     Writer(filename, outdir).in_text(content)
 
@@ -44,6 +59,7 @@ class Writer(object):
     def __init__(self, filename, outdir):
         basename = os.path.splitext(os.path.basename(filename))[0]
         self.outdir = outdir
+        self.outfile = outdir + "/" + basename + ".html"
         self.out_chunks = []
 
     def in_text(self, string):
@@ -81,7 +97,10 @@ class Writer(object):
 
     def finish(self):
         result = ''.join(self.out_chunks)
-        print markdown2.markdown(result)
+        with open(self.outfile, 'w') as out:
+            out.write(header)
+            out.write(markdown2.markdown(result))
+            out.write(footer)
 
 if __name__ == "__main__":
     main()
