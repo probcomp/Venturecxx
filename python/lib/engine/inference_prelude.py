@@ -209,4 +209,15 @@ prelude = [
               (into d frame)))
         (return d))))"""],
 
+["reset_to_prior", """\
+
+.. function:: reset_to_prior(<foreignblob>)
+
+  :rtype: <pair () <foreignblob>>
+
+  Reset all particles to the prior.  Also reset their weights to the likelihood.
+
+  This is equivalent to ``(likelihood_weight)''.""",
+"(likelihood_weight)"],
+
 ]
