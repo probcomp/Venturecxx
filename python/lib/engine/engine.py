@@ -201,9 +201,7 @@ class Engine(object):
 
   def _do_infer(self, program):
     did = self.nextBaseAddr()
-    inferrer = v.blob(Infer(self))
-    self.infer_trace.rebindInGlobalEnv("__the_inferrer__", vv.VentureValue.fromStackDict(inferrer))
-    self.infer_trace.eval(did, [program, inferrer])
+    self.infer_trace.eval(did, [program, v.sym("__the_inferrer__")])
     return did
 
   def _extract_infer_result(self, did):
@@ -244,6 +242,7 @@ class Engine(object):
     for word in inf.inferenceKeywords:
       if not ans.boundInGlobalEnv(word):
         ans.bindPrimitiveName(word, vv.VentureSymbol(word))
+    ans.bindPrimitiveName("__the_inferrer__", vv.VentureForeignBlob(Infer(self)))
     self.install_inference_prelude(ans)
     return ans
 
