@@ -183,6 +183,22 @@ prelude = [
 """,
 "(posterior_at (quote default) (quote all))"],
 
+["posterior", """\
+.. function:: global_posterior(<foreignblob>)
+
+  :rtype: <pair () <foreignblob>>
+
+  An inference action that sets each particle to an independent sample
+  from the full posterior (with respect to currently incorporated
+  observations).
+
+  This is implemented by global rejection sampling (generalized to
+  continuous equality constraints), so may take a while for problems
+  where the posterior is far from the prior in KL divergence.
+
+""",
+"(rejection default all 1)"],
+
 ["accumulate_dataset", """\
 .. function:: accumulate_dataset(iterations : int, a : <inference action returning a dataset>)
 
