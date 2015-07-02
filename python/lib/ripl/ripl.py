@@ -436,8 +436,9 @@ class Ripl():
                         add_frame(frame)
 
         print "The nodes"
-        mark(scaffold.getPrincipalNodes(), 'red', only_bottom=True)
-        mark(scaffold.drg, 'yellow', only_bottom=True)
+        pnodes = scaffold.getPrincipalNodes()
+        mark(pnodes, 'red', only_bottom=True)
+        mark(scaffold.drg.difference(pnodes), 'yellow', only_bottom=True)
         mark(scaffold.absorbing, 'blue', only_bottom=True)
         mark(scaffold.aaa, 'pink', only_bottom=True)
         mark(scaffold.brush, 'green', only_bottom=True)
@@ -447,8 +448,8 @@ class Ripl():
 
         print "The stacks"
         by_did = {}
-        mark(scaffold.getPrincipalNodes(), 'red', only_bottom=False)
-        mark(scaffold.drg, 'yellow', only_bottom=False)
+        mark(pnodes, 'red', only_bottom=False)
+        mark(scaffold.drg.difference(pnodes), 'yellow', only_bottom=False)
         mark(scaffold.absorbing, 'blue', only_bottom=False)
         mark(scaffold.aaa, 'pink', only_bottom=False)
         mark(scaffold.brush, 'green', only_bottom=False)
