@@ -59,7 +59,6 @@ css_file = os.path.join(selfdir, 'transcript.css')
 
 def main():
     (_, filename, outdir) = sys.argv
-    print filename, outdir
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     content = open(filename).read()
@@ -89,7 +88,6 @@ class Writer(object):
 
     def in_text(self, string):
         split_res = re.split(start_of_block, string, maxsplit=1)
-        print split_res
         if len(split_res) == 1:
             # File ended in text block
             self.emit_text(split_res[0])
@@ -120,7 +118,6 @@ class Writer(object):
 
     def emit_code(self, mode, string):
         print "Trying program in %s mode" % (mode,)
-        print string
         if mode == "venture":
             self.ripl.set_mode("venture_script")
         elif mode == "church'":
@@ -128,6 +125,7 @@ class Writer(object):
         else:
             raise Exception("Unknown block mode %s", mode)
         (figures, munged) = self.munge_plotfs(mode, string)
+        print munged.strip()
         (ans, output) = with_output_to_string(self.ripl.execute_program, munged)
         val = getValue(ans[-1])
         figure_blocks = ["![A Venture plot](%s)\n" % (figure,) for figure in figures]
@@ -152,13 +150,10 @@ class Writer(object):
             else:
                 figures.append("figure-%s.png" % (self.fignum,))
                 self.fignum += 1
-        print "Munged"
-        print ans
         return (figures, ans)
 
     def finish(self):
         result = ''.join(self.out_chunks)
-        print result
         with open(self.outfile, 'w') as out:
             out.write(header)
             out.write(markdown2.markdown(result, extras=['fenced-code-blocks']))
