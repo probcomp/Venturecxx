@@ -1,5 +1,5 @@
 Modeling Basics
----------------
+===============
 
 Sample an expression
 
@@ -94,7 +94,332 @@ plotf abstraction].
 Here's a version with more samples for better resolution:
 
 ```church'
-[infer (plotf 'h0 (run (accumulate_dataset 500 (do posterior (collect x)))))]
+[infer (plotf 'h0 (run (accumulate_dataset 5 (do posterior (collect x)))))]
 ```
 
-Fiddle with that number until you're convinced.
+The analytical answer is a Gaussian with mean 1 and precision 2 (which
+is standard deviation `1/sqrt(2)`).  Feel free to fiddle with the 500
+to convince yourself that the inference is working.
+
+[Say somewhere: we start with the normal-normal model because it's
+easy and has an analytic solution, but the Gaussian distribution is
+actually a pretty good proxy for all probability problems: the mean is
+like the "right answer", and the precision is like "how well or
+precisely I know it", or conversely the variance is like "how much
+slack I am willing to tolerate".]
+
+Inference Choices
+=================
+
+Rejection sampling does not solve all problems
+----------------------------------------------
+
+`posterior` is rejection sampling -- likely to get slow.  In
+particular, let's see what happens as we change the model to make the
+problem harder.  First, have a look at what we have:
+
+```church'
+list_directives
+```
+
+[Note: The above output is presented in a prefix notation syntax that
+represents how it actually parsed.]
+
+Now we can use `forget` to remove the existing observation and replace
+it with one where the datum is farther out.
+
+```venture
+forget 22
+observe normal(x,1) = 4
+```
+
+The same solution still works
+
+```church'
+[infer (plotf 'h0 (run (accumulate_dataset 5 (do posterior (collect x)))))]
+```
+
+but if you fiddle with the numbers here (the 4 and the 500) you can
+tell that more distant observations take longer to get samples for.
+[Inference phenomenon: KL divergence between prior and posterior
+measures problem difficulty; rejection sampling (which is the
+algorithm the `posterior` command uses) is exponentially slow in the
+KL gap it is trying to cross.]
+
+Alternative for fiddling: Copy this to a file, say `exact.vnts`
+
+```
+assume x = normal(0,1)
+observe normal(x,1) = 2
+infer plotf(quote(h0), run(accumulate_dataset(5, do(posterior, collect(x)))))
+```
+
+and run it with
+
+```
+$ venture lite -f exact.vnts
+```
+
+while editing numbers to heart's content.
+
+Importance Sampling with Resampling
+-----------------------------------
+
+A very common inference technique is importance sampling with
+resampling.  It is:
+
+- Draw some number of trials from the prior [or any proposal
+  distribution of your choice]
+
+- Weight them by the likelihood [or the ratio between the posterior
+  and proposal probabilities]
+
+- Select one at random in proportion to its weight [or more than one,
+  but then they are not independent of each other]
+
+Here's what a basic version of this looks like in Venture.  Make 10
+particles
+
+```venture
+infer resample(10)
+```
+
+Reset them to the prior and weight by likelihood:
+
+```venture
+infer likelihood_weight()
+```
+
+Pick one
+
+```venture
+infer resample(1)
+sample x
+```
+
+Here's the distribution that makes:
+
+```venture
+infer plotf(quote(h0), run(accumulate_dataset(10,
+  do(resample(10),
+     likelihood_weight(),
+     resample(1),
+     collect(x)))))
+```
+
+[Inference phenomenon: 10 trials do not solve this problem if the
+observation is 4 sigma out from the prior.  On the plus side, 10
+trials always take the same amount of time, regardless of how hard the
+problem is; and for any given problem enough trials will solve it.
+This is a time-accuracy tradeoff.  Feel free to paste this inference
+program into a file and mess with the numbers to see what changes.
+Try it slowly increasing the number of trials and see how the
+distribution evolves toward the right answer.]
+
+Basic Metropolis-Hastings Markov Chains
+---------------------------------------
+
+[TODO Fill in the storytelling here]
+
+```venture
+infer plotf(quote(h0), run(accumulate_dataset(5, do(mh(default, one, 1), collect(x)))))
+```
+
+Optional Subunit: Custom M-H Proposals
+--------------------------------------
+
+[TODO Would want to abstract this code better for presentation; does
+this even belong here?  Will the students wonder about custom
+proposals at this stage?]
+
+```church'
+clear
+```
+
+```church'
+[define gaussian_drift_mh
+  (lambda (scope block sigma)
+    (do (subproblem <- (select scope block))
+        (values <- (get_current_values subproblem))
+        (let ((move (lambda (value) (normal value sigma))) ; gaussian drift proposal kernel
+              (new_values (mapv move values)))
+          (do (rho_weight_and_rho_db <- (detach_for_proposal subproblem))
+              (xi_weight <- (regen_with_proposal subproblem new_values))
+              (let ((rho_weight (first rho_weight_and_rho_db))
+                    (rho_db (rest rho_weight_and_rho_db)))
+                (if (< (log (uniform_continuous 0 1)) (- xi_weight rho_weight))
+                    pass                    ; accept
+                    (do (detach subproblem) ; reject
+                        (restore subproblem rho_db))))))))]
+
+[assume x (normal 0 1)]
+[observe (normal x 1) 10]
+[infer
+ (do (d <- (accumulate_dataset 10
+             (do (likelihood_weight)
+                 ;; 50 seems to converge, for the datum being at 10
+                 (repeat 10 (gaussian_drift_mh default all 1))
+                 (collect x))))
+     (plotf 'h0 d))]
+```
+
+More Modeling: Linear Regression
+================================
+
+Ok, one gaussian isn't that much fun: let's try varying the mean as
+a function of the input, i.e. linear regression.
+
+[Concepts: more elaborate models; functions; abstraction?; genericity
+of built-in inference procedures]
+
+```church'
+clear
+```
+
+```church'
+;; Prior on line parameters
+[assume a (normal 0 7)]
+[assume b (normal 0 4)]
+
+;; Hypothesized linear relationship
+[assume f (lambda (x) (+ a (* b x)))]
+
+;; Prior for unknown noise level
+[assume noise (gamma 1 1)]
+
+;; Full data model: linear relationship with additive noise of
+;; unknown but consistent magnitude
+[assume obs_fun (lambda (x) (normal (f x) noise))]
+
+;; A tiny data set
+[observe (obs_fun 1) 2]
+[observe (obs_fun 2) 2]
+
+;; Scatter plot of parameters after some inferece
+;; (independent short Markov chains)
+[infer (plotf 'p0d1d (run (accumulate_dataset 5
+  (do reset_to_prior
+      (mh default one 30)
+      (collect a b)))))]
+```
+
+Topic: Understanding a model with visualization
+===============================================
+
+[Drop in pygame visualization code.  How much to explain vs black-box it?]
+
+Elaboration: Outlier Detection
+==============================
+
+[TODO Go through this]
+
+```church'
+clear
+```
+
+```church'
+;; Prior on line parameters
+[assume a (tag 'param 'a (normal 0 7))]
+[assume b (tag 'param 'b (normal 0 4))]
+
+;; Hypothesized linear relationship
+[assume f (lambda (x) (+ a (* b x)))]
+
+;; Prior for unknown noise level
+[assume noise (tag 'hyper 'noise (gamma 1 1))]
+
+;; Prior on the outlier rate
+[assume outlier_prob (tag 'hyper 'outlier_prob (uniform_continuous 0.01 0.3))]
+
+;; Per-point outlier check
+[assume is_outlier (mem (lambda (i)
+  (tag 'outlier i
+   (flip outlier_prob))))]
+
+;; Full data model: linear relationship with additive noise of unknown
+;; but consistent magnitude, plus outlier detection with a broad
+;; Gaussian outlier model.
+[assume obs_fun
+  (lambda (i x)
+    (if (is_outlier i)
+        (normal 0 100)
+        (normal (f x) noise)))]
+
+;; Data set
+[observe (obs_fun 0 1) 0.5]
+[observe (obs_fun 1 4) 0]
+[observe (obs_fun 2 -3) 1]
+[observe (obs_fun 3 -5) -1]
+
+;; Scatter plot of parameters after some inferece
+;; (independent short Markov chains)
+[infer (plotf 'p0d1d (run (accumulate_dataset 5
+  (do reset_to_prior
+      (mh default one 30)
+      (collect a b)))))]
+```
+
+Using tags for inference control
+================================
+
+[TODO]
+
+Elaboration: Model Selection
+============================
+
+[TODO Go through this]
+
+```church'
+clear
+```
+
+```church'
+;; Prior on polynomial coefficients
+[assume a (tag 'param 'a (normal 0 7))]
+[assume b (tag 'param 'b (normal 0 4))]
+[assume c (tag 'param 'c (normal 0 2))]
+
+;; Prior probability of being a quadratic
+[assume is_quadratic (tag 'model 0 (flip 0.5))]
+
+;; Hypothesized relationship
+[assume f
+  (lambda (x)
+    (if is_quadratic
+        (+ a (* b x) (* c (* x x)))
+        (+ a (* b x))))]
+
+;; Prior for unknown noise level
+[assume noise (tag 'hyper 'noise (gamma 1 1))]
+
+;; Prior on the outlier rate
+[assume outlier_prob (tag 'hyper 'outlier_prob (uniform_continuous 0.01 0.3))]
+
+;; Per-point outlier check
+[assume is_outlier (mem (lambda (i)
+  (tag 'outlier i
+   (flip outlier_prob))))]
+
+;; Full data model: linear or quadratic relationship with additive
+;; noise of unknown but consistent magnitude, plus outlier detection
+;; with a broad Gaussian outlier model.
+[assume obs_fun
+  (lambda (i x)
+    (if (is_outlier i)
+        (normal 0 100)
+        (normal (f x) noise)))]
+
+[observe (obs_fun 0 1) 0.5]
+[observe (obs_fun 1 4) 0]
+[observe (obs_fun 2 -3) 1]
+[observe (obs_fun 3 -5) -1]
+
+;; Scatter plot of parameters after some inferece
+;; (independent short Markov chains)
+[infer (plotf 'p0d1d (run (accumulate_dataset 5
+  (do reset_to_prior
+      (mh default one 30)
+      (collect a b)))))]
+```
+
+[TODO illustrate and elaborate] Inference phenomenon: Bayes Occam's Razor
