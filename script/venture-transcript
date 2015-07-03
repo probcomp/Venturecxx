@@ -163,6 +163,8 @@ class Writer(object):
     def execute_program(self, munged):
         if munged.strip() == "list_directives":
             return [self.ripl.print_directives()]
+        elif munged.strip() == "clear":
+            return [self.ripl.clear()]
         else:
             return self.ripl.execute_program(munged)
 
