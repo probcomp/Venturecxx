@@ -114,14 +114,15 @@ class Writer(object):
         print "Trying program"
         print string
         (ans, output) = with_output_to_string(self.ripl.execute_program, string)
-        print getValue(ans[-1])
-        self.out_chunks.extend(["```", string, "```\n", output])
+        val = getValue(ans[-1])
+        self.out_chunks.extend(["```", string, output, str(val), "\n```\n"])
 
     def finish(self):
         result = ''.join(self.out_chunks)
+        print result
         with open(self.outfile, 'w') as out:
             out.write(header)
-            out.write(markdown2.markdown(result))
+            out.write(markdown2.markdown(result, extras=['fenced-code-blocks']))
             out.write(footer)
 
 if __name__ == "__main__":
