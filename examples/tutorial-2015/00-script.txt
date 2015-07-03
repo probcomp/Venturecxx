@@ -39,14 +39,14 @@ sample x
 Are these the right distribution?  We could eyeball it like this a bit
 more, but it's better to gather data programmatically:
 
-```venture
-define data (run (accumulate_dataset 100 (do posterior (collect x))))
+```church'
+[define data (run (accumulate_dataset 100 (do posterior (collect x))))]
 ```
 
-```venture
-infer (printf data)
+```church'
+[infer (printf data)]
 ```
 
-```venture
-infer (plotf 'h0 data)
+```church'
+[infer (plotf 'h0 data)]
 ```

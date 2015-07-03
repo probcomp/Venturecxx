@@ -35,7 +35,7 @@ except ImportError:
 import venture.shortcuts as vs
 from venture.ripl.utils import strip_types
 
-start_of_block = re.compile(r"^[ \t\r\f\v]*```venture[ \t\r\f\v]*$", re.MULTILINE)
+start_of_block = re.compile(r"^[ \t\r\f\v]*```(venture|church')[ \t\r\f\v]*$", re.MULTILINE)
 end_of_block = re.compile(r"^[ \t\r\f\v]*```[ \t\r\f\v]*$", re.MULTILINE)
 
 header = """\
@@ -82,27 +82,28 @@ class Writer(object):
 
     def in_text(self, string):
         split_res = re.split(start_of_block, string, maxsplit=1)
+        print split_res
         if len(split_res) == 1:
             # File ended in text block
             self.emit_text(split_res[0])
             self.finish()
-        elif len(split_res) == 2:
+        elif len(split_res) == 3:
             # New Venture block started
             self.emit_text(split_res[0])
-            self.in_code(split_res[1])
+            self.in_code(split_res[1], split_res[2])
         else:
             raise Exception("??? Splitting on start of block produced %s" % (split_res,))
 
-    def in_code(self, string):
+    def in_code(self, mode, string):
         split_res = re.split(end_of_block, string, maxsplit=1)
         if len(split_res) == 1:
             # File ended in code block
             sys.stderr.write('Transcript file ended mid-code-block.\n')
-            self.emit_code(split_res[0])
+            self.emit_code(mode, split_res[0])
             self.finish()
         elif len(split_res) == 2:
             # New text block started
-            self.emit_code(split_res[0])
+            self.emit_code(mode, split_res[0])
             self.in_text(split_res[1])
         else:
             raise Exception("??? Splitting on end of block produced %s" % (split_res,))
@@ -110,9 +111,15 @@ class Writer(object):
     def emit_text(self, string):
         self.out_chunks.append(string)
 
-    def emit_code(self, string):
-        print "Trying program"
+    def emit_code(self, mode, string):
+        print "Trying program in %s mode" % (mode,)
         print string
+        if mode == "venture":
+            self.ripl.set_mode("venture_script")
+        elif mode == "church'":
+            self.ripl.set_mode("church_prime")
+        else:
+            raise Exception("Unknown block mode %s", mode)
         (ans, output) = with_output_to_string(self.ripl.execute_program, string)
         val = getValue(ans[-1])
         self.out_chunks.extend(["```", string, output, str(val), "\n```\n"])
