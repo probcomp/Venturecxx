@@ -125,7 +125,7 @@ class Writer(object):
         (ans, output) = with_output_to_string(self.ripl.execute_program, munged)
         val = getValue(ans[-1])
         figure_blocks = ["![A Venture plot](%s)\n" % (figure,) for figure in figures]
-        self.out_chunks.extend(["```", string, output] + figure_blocks + [str(val), "\n```\n"])
+        self.out_chunks.extend(["```", string, output, str(val), "\n```\n"] + figure_blocks)
 
     def munge_plotfs(self, mode, string):
         figures = []
@@ -144,7 +144,7 @@ class Writer(object):
             if count == 0:
                 done = True
             else:
-                figures.append("%s/figure-%s.png" % (self.outdir, self.fignum))
+                figures.append("figure-%s.png" % (self.fignum,))
                 self.fignum += 1
         print "Munged"
         print ans
