@@ -76,25 +76,25 @@ It's better to gather data programmatically [talk some about inference
 programming, the abstractions `accumulate_dataset` and `collect`,
 either gloss over or discuss `run` and `do`]:
 
-```church'
-[define data (run (accumulate_dataset 100 (do posterior (collect x))))]
+```venture
+define data = run(accumulate_dataset(100, do(posterior, collect(x))))
 ```
 
-```church'
-[infer (printf data)]
+```venture
+infer printf(data)
 ```
 
 Do those values of x look good?  It's even better to plot [talk about
 plotf abstraction].
 
-```church'
-[infer (plotf 'h0 data)]
+```venture
+infer plotf(quote(h0), data)
 ```
 
 Here's a version with more samples for better resolution:
 
-```church'
-[infer (plotf 'h0 (run (accumulate_dataset 5 (do posterior (collect x)))))]
+```venture
+infer plotf(quote(h0), run(accumulate_dataset(5, do(posterior, collect(x)))))
 ```
 
 The analytical answer is a Gaussian with mean 1 and precision 2 (which
@@ -135,8 +135,8 @@ observe normal(x,1) = 4
 
 The same solution still works
 
-```church'
-[infer (plotf 'h0 (run (accumulate_dataset 5 (do posterior (collect x)))))]
+```venture
+infer plotf(quote(h0), run(accumulate_dataset(5, do(posterior, collect(x)))))
 ```
 
 but if you fiddle with the numbers here (the 4 and the 500) you can
