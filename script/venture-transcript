@@ -25,6 +25,7 @@ import sys
 import re
 import os.path
 from StringIO import StringIO
+import shutil
 
 try:
     import markdown2
@@ -43,6 +44,7 @@ header = """\
 <html lang="en">
 <head>
   <title>A Venture transcript</title>
+  <link rel="stylesheet" type="text/css" href="transcript.css">
 </head>
 <body>
 """
@@ -51,6 +53,10 @@ footer = """\
 </body>
 </html>
 """
+
+selfdir = os.path.dirname(os.path.abspath(__file__))
+css_file = os.path.join(selfdir, 'transcript.css')
+
 def main():
     (_, filename, outdir) = sys.argv
     print filename, outdir
@@ -157,6 +163,7 @@ class Writer(object):
             out.write(header)
             out.write(markdown2.markdown(result, extras=['fenced-code-blocks']))
             out.write(footer)
+        shutil.copy(css_file, self.outdir)
 
 if __name__ == "__main__":
     main()

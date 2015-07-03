@@ -1,0 +1,37 @@
+* {
+    font-family: 'helvetica nueue', arial;
+    color: #333;}
+   
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 300}
+
+pre, code {
+    font-family: monaco, monospace;
+    font-size: 12;
+    background-color: #efefef;}
+
+pre {
+    padding: 2em;
+    overflow: scroll;
+    border-radius: 3px;}
+
+html {
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 3em;
+    max-width: 960px;}
+
+img {max-width: 100%;}
+
+@media print{
+    h1 {font-size: 20pt}
+    h2 {font-size: 16pt}
+    h3 {font-size: 14pt}
+    h4, h5 {font-size: 12pt}
+    h6 {font-size: 11pt}
+    p {font-size: 10pt}
+    pre code {font-size: 8pt}
+    pre {border: 1px solid #aaa;}
+    @page :left{ margin: 1cm }
+    @page :right{ margin: 1cm }
+}
