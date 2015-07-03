@@ -79,6 +79,7 @@ class Writer(object):
         self.out_chunks = []
         self.ripl = vs.backend("lite").make_combined_ripl()
         self.ripl.set_mode("venture_script")
+        self.fignum = 0
 
     def in_text(self, string):
         split_res = re.split(start_of_block, string, maxsplit=1)
@@ -120,9 +121,34 @@ class Writer(object):
             self.ripl.set_mode("church_prime")
         else:
             raise Exception("Unknown block mode %s", mode)
-        (ans, output) = with_output_to_string(self.ripl.execute_program, string)
+        (figures, munged) = self.munge_plotfs(mode, string)
+        (ans, output) = with_output_to_string(self.ripl.execute_program, munged)
         val = getValue(ans[-1])
-        self.out_chunks.extend(["```", string, output, str(val), "\n```\n"])
+        figure_blocks = ["![A Venture plot](%s)\n" % (figure,) for figure in figures]
+        self.out_chunks.extend(["```", string, output] + figure_blocks + [str(val), "\n```\n"])
+
+    def munge_plotfs(self, mode, string):
+        figures = []
+        ans = string
+        done = False
+        if mode == "venture":
+            pattern = re.compile(r"plotf\(")
+        else:
+            pattern = re.compile(r"\(plotf ")
+        while not done:
+            if mode == "venture":
+                replacement = 'plotf_to_file(quote(symbol<"%s/figure-%s">), ' % (self.outdir, self.fignum)
+            else:
+                replacement = '(plotf_to_file (quote symbol<"%s/figure-%s">) ' % (self.outdir, self.fignum)
+            (ans, count) = re.subn(pattern, replacement, ans, count=1)
+            if count == 0:
+                done = True
+            else:
+                figures.append("%s/figure-%s.png" % (self.outdir, self.fignum))
+                self.fignum += 1
+        print "Munged"
+        print ans
+        return (figures, ans)
 
     def finish(self):
         result = ''.join(self.out_chunks)
