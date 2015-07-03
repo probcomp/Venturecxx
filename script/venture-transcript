@@ -135,6 +135,11 @@ class Writer(object):
         self.out_chunks.extend(["```", string, output, str(val), "\n```\n"] + figure_blocks)
 
     def munge_plotfs(self, mode, string):
+        # TODO Instead of munging the source, should also be able to
+        # intercept all outgoing plots by rebinding plotf to a thing
+        # that calls back to the Writer to determine and update the
+        # figure number, and then does plotf_to_file.  [Taylor's
+        # recommendation].
         figures = []
         ans = string
         done = False
