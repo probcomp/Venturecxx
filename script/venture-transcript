@@ -74,7 +74,10 @@ def with_output_to_string(f, *args, **kwargs):
     return (val, ans)
 
 def getValue(v):
-  return strip_types(v['value'])
+    if v is not None and 'value' in v:
+        return strip_types(v['value'])
+    else:
+        return ""
 
 class Writer(object):
     def __init__(self, filename, outdir):
@@ -126,7 +129,7 @@ class Writer(object):
             raise Exception("Unknown block mode %s", mode)
         (figures, munged) = self.munge_plotfs(mode, string)
         print munged.strip()
-        (ans, output) = with_output_to_string(self.ripl.execute_program, munged)
+        (ans, output) = with_output_to_string(self.execute_program, munged)
         val = getValue(ans[-1])
         figure_blocks = ["![A Venture plot](%s)\n" % (figure,) for figure in figures]
         self.out_chunks.extend(["```", string, output, str(val), "\n```\n"] + figure_blocks)
@@ -151,6 +154,12 @@ class Writer(object):
                 figures.append("figure-%s.png" % (self.fignum,))
                 self.fignum += 1
         return (figures, ans)
+
+    def execute_program(self, munged):
+        if munged.strip() == "list_directives":
+            return [self.ripl.print_directives()]
+        else:
+            return self.ripl.execute_program(munged)
 
     def finish(self):
         result = ''.join(self.out_chunks)
