@@ -72,7 +72,9 @@ infer posterior
 sample x
 ```
 
-It's better to gather data programmatically:
+It's better to gather data programmatically [talk some about inference
+programming, the abstractions `accumulate_dataset` and `collect`,
+either gloss over or discuss `run` and `do`]:
 
 ```church'
 [define data (run (accumulate_dataset 100 (do posterior (collect x))))]
@@ -82,7 +84,8 @@ It's better to gather data programmatically:
 [infer (printf data)]
 ```
 
-Do those values of x look good?  It's even better to plot.
+Do those values of x look good?  It's even better to plot [talk about
+plotf abstraction].
 
 ```church'
 [infer (plotf 'h0 data)]
