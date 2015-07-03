@@ -1,43 +1,78 @@
-```venture
-sample normal(0, 1)
-```
-<a number>
+Modeling Basics
+---------------
+
+Sample an expression
 
 ```venture
 sample normal(0, 1)
 ```
-<another number>
+
+These are independent samples from the standard Gaussian distribution
+
+```venture
+sample normal(0, 1)
+```
+
+Make an assumption.  `x` is normally distributed, and its current
+value is a sample from that distribution.
 
 ```venture
 assume x = normal(0, 1)
 ```
-<a number>
+
+The value of `x` persists
+
 ```venture
 sample x
 ```
-<same number>
+
+Register an observation.
 
 ```venture
 observe normal(x,1) = 2
 sample x
 ```
-<same number>
-"nothing happened yet"
+
+The value of `x` hasn't changed -- all we did was register an observation.
+
+Now infer.
 
 ```venture
 infer posterior
 sample x
 ```
-<different number>
+
+The new value of `x` is a sample from the posterior on `x` with prior
+given by our `assume` and likelihood given by all the `observe`s.
+
+If we do no more inference, `x` doesn't change.
+
+```venture
+sample x
+```
+
+But we can compute a new posterior sample by running the posterior
+inferrer again.
 
 ```venture
 infer posterior
 sample x
 ```
-<still different number>
 
-Are these the right distribution?  We could eyeball it like this a bit
-more, but it's better to gather data programmatically:
+Are these samples actually from the right distribution?  We could
+eyeball it like this a bit more:
+
+```venture
+infer posterior
+sample x
+```
+
+```venture
+infer posterior
+sample x
+```
+
+It's better to gather data programmatically:
 
 ```church'
 [define data (run (accumulate_dataset 100 (do posterior (collect x))))]
@@ -47,6 +82,16 @@ more, but it's better to gather data programmatically:
 [infer (printf data)]
 ```
 
+Do those values of x look good?  It's even better to plot.
+
 ```church'
 [infer (plotf 'h0 data)]
 ```
+
+Here's a version with more samples for better resolution:
+
+```church'
+[infer (plotf 'h0 (run (accumulate_dataset 500 (do posterior (collect x)))))]
+```
+
+Fiddle with that number until you're convinced.
