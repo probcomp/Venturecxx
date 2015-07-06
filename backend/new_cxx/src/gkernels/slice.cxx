@@ -31,15 +31,15 @@
 double SliceGKernel::computeLogDensity(double x)
 {
   Node * node = static_cast<Node*>(pnode);
-  trace->registerLKernel(scaffold,node,shared_ptr<LKernel>(new DeterministicLKernel(VentureValuePtr(new VentureNumber(x)),psp)));
+  trace->registerLKernel(scaffold,node,boost::shared_ptr<LKernel>(new DeterministicLKernel(VentureValuePtr(new VentureNumber(x)),psp)));
 
   /* The density is with respect to fixed entropy */
-  shared_ptr<RNGbox> rng(new RNGbox(gsl_rng_mt19937));
+  boost::shared_ptr<RNGbox> rng(new RNGbox(gsl_rng_mt19937));
   rng->set_seed(seed);
 
-  shared_ptr<Particle> p = shared_ptr<Particle>(new Particle(trace,rng));
+  boost::shared_ptr<Particle> p = boost::shared_ptr<Particle>(new Particle(trace,rng));
 
-  return regenAndAttach(p.get(),scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),shared_ptr<map<Node*,Gradient> >());
+  return regenAndAttach(p.get(),scaffold->border[0],scaffold,false,boost::shared_ptr<DB>(new DB()),boost::shared_ptr<map<Node*,Gradient> >());
 }
 
 double SliceGKernel::sliceSample(double x0, double w, int m, double lower, double upper)
@@ -95,7 +95,7 @@ double SliceGKernel::sliceSample(double x0, double w, int m, double lower, doubl
   }
 }
 
-pair<Trace*,double> SliceGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold)
+pair<Trace*,double> SliceGKernel::propose(ConcreteTrace * trace,boost::shared_ptr<Scaffold> scaffold)
 {
   this->trace = trace;
   this->scaffold = scaffold;
@@ -113,8 +113,8 @@ pair<Trace*,double> SliceGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaff
   VentureValuePtr currentVValue = trace->getValue(pnode);
   double x0 = currentVValue->getDouble();
 
-  trace->registerLKernel(scaffold,pnode,shared_ptr<LKernel>(new DeterministicLKernel(currentVValue,psp)));
-  pair<double, shared_ptr<DB> > rhoWeightAndDB = detachAndExtract(trace,scaffold->border[0],scaffold);
+  trace->registerLKernel(scaffold,pnode,boost::shared_ptr<LKernel>(new DeterministicLKernel(currentVValue,psp)));
+  pair<double, boost::shared_ptr<DB> > rhoWeightAndDB = detachAndExtract(trace,scaffold->border[0],scaffold);
   double rhoWeight = rhoWeightAndDB.first;
   rhoDB = rhoWeightAndDB.second;
   assertTorus(scaffold);
@@ -126,8 +126,8 @@ pair<Trace*,double> SliceGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaff
 
   double x1 = sliceSample(x0,w,m,lower,upper);
   double xiLD = computeLogDensity(x1);
-  trace->registerLKernel(scaffold,pnode,shared_ptr<LKernel>(new DeterministicLKernel(VentureValuePtr(new VentureNumber(x1)),psp)));
-  double xiWeight = regenAndAttach(trace,scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),shared_ptr<map<Node*,Gradient> >());
+  trace->registerLKernel(scaffold,pnode,boost::shared_ptr<LKernel>(new DeterministicLKernel(VentureValuePtr(new VentureNumber(x1)),psp)));
+  double xiWeight = regenAndAttach(trace,scaffold->border[0],scaffold,false,boost::shared_ptr<DB>(new DB()),boost::shared_ptr<map<Node*,Gradient> >());
   /* This is subtle. We cancel out the weight compensation that we got by "forcing" x1, so that the weight is as if it had been sampled.
      This is because this weight is cancelled elsewhere (in the mixing over the slice). */
 
@@ -145,6 +145,6 @@ void SliceGKernel::reject()
 {
   detachAndExtract(trace,scaffold->border[0],scaffold);
   assertTorus(scaffold);
-  regenAndAttach(trace,scaffold->border[0],scaffold,true,rhoDB,shared_ptr<map<Node*,Gradient> >());
+  regenAndAttach(trace,scaffold->border[0],scaffold,true,rhoDB,boost::shared_ptr<map<Node*,Gradient> >());
 }
 

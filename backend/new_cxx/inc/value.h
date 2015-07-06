@@ -119,12 +119,12 @@ struct VentureValue
 
   // Other
   virtual const vector<ESR>& getESRs() const;
-  virtual const vector<shared_ptr<LSR> >& getLSRs() const;
+  virtual const vector<boost::shared_ptr<LSR> >& getLSRs() const;
 
   bool hasNode() const { return false; }
   virtual Node * getNode() const;
 
-  virtual shared_ptr<SPAux> getSPAux() const;
+  virtual boost::shared_ptr<SPAux> getSPAux() const;
 
   virtual string toString() const { return "Unknown VentureValue"; };
 

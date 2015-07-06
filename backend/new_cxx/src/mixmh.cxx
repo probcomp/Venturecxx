@@ -30,10 +30,10 @@ using std::endl;
 using std::flush;
 
 void mixMH(ConcreteTrace * trace,
-	   shared_ptr<ScaffoldIndexer> indexer,
-	   shared_ptr<GKernel> gKernel)
+	   boost::shared_ptr<ScaffoldIndexer> indexer,
+	   boost::shared_ptr<GKernel> gKernel)
 {
-  shared_ptr<Scaffold> index = indexer->sampleIndex(trace);
+  boost::shared_ptr<Scaffold> index = indexer->sampleIndex(trace);
 
 
   double rhoMix = indexer->logDensityOfIndex(trace,index);

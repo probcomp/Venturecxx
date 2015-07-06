@@ -19,16 +19,17 @@
 #define SRS_H
 
 #include "types.h"
+#include <boost/shared_ptr.hpp>
 
 struct VentureEnvironment;
 
 struct ESR
 {
-  ESR(FamilyID id,VentureValuePtr exp,shared_ptr<VentureEnvironment> env) :
+  ESR(FamilyID id, VentureValuePtr exp, boost::shared_ptr<VentureEnvironment> env) :
     id(id), exp(exp), env(env) {};
   FamilyID id;
   VentureValuePtr exp;
-  shared_ptr<VentureEnvironment> env;
+  boost::shared_ptr<VentureEnvironment> env;
 };
 
 struct LSR { virtual ~LSR() {} };

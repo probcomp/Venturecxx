@@ -18,9 +18,9 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 # Reset the working directory to the script's path
-my_abs_path=$(readlink -f "$0")
-my_dirname=$(dirname $my_abs_path)
-cd "$my_dirname"
+#my_abs_path=$(readlink -f "$0")
+#my_dirname=$(dirname $my_abs_path)
+#cd "$my_dirname"
 
 function abort_on_error () {
     if [[ $? -ne "0" ]]; then

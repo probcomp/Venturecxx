@@ -35,13 +35,13 @@
 
 /* Constructor */
 
-ConcreteTrace::ConcreteTrace(): Trace(), rng(shared_ptr<RNGbox>(new RNGbox(gsl_rng_mt19937))) {}
+ConcreteTrace::ConcreteTrace(): Trace(), rng(boost::shared_ptr<RNGbox>(new RNGbox(gsl_rng_mt19937))) {}
 
 void ConcreteTrace::initialize()
 {
   rng->set_seed(time(NULL));
 
-  vector<shared_ptr<VentureSymbol> > syms;
+  vector<boost::shared_ptr<VentureSymbol> > syms;
   vector<Node*> nodes;
 
   map<string,VentureValuePtr> builtInValues = initBuiltInValues();
@@ -51,30 +51,30 @@ void ConcreteTrace::initialize()
        iter != builtInValues.end();
        ++iter)
   {
-    shared_ptr<VentureSymbol> sym(new VentureSymbol(iter->first));
+    boost::shared_ptr<VentureSymbol> sym(new VentureSymbol(iter->first));
     ConstantNode * node = createConstantNode(iter->second);
     syms.push_back(sym);
     nodes.push_back(node);
-    builtInNodes.insert(shared_ptr<Node>(node));
+    builtInNodes.insert(boost::shared_ptr<Node>(node));
   }
 
-  globalEnvironment = shared_ptr<VentureEnvironment>(new VentureEnvironment(shared_ptr<VentureEnvironment>(),syms,nodes));
+  globalEnvironment = boost::shared_ptr<VentureEnvironment>(new VentureEnvironment(boost::shared_ptr<VentureEnvironment>(),syms,nodes));
 
   for (map<string,SP *>::iterator iter = builtInSPs.begin();
        iter != builtInSPs.end();
        ++iter)
   {
-    builtInNodes.insert(shared_ptr<Node>(bindPrimitiveSP(iter->first, iter->second)));
+    builtInNodes.insert(boost::shared_ptr<Node>(bindPrimitiveSP(iter->first, iter->second)));
   }
 
   // New frame so users can shadow globals
-  globalEnvironment = shared_ptr<VentureEnvironment>(new VentureEnvironment(globalEnvironment));
+  globalEnvironment = boost::shared_ptr<VentureEnvironment>(new VentureEnvironment(globalEnvironment));
 }
 
 Node* ConcreteTrace::bindPrimitiveSP(const string& name, SP* sp)
 {
   ConstantNode * node = createConstantNode(VentureValuePtr(new VentureSPRecord(sp)));
-  processMadeSP(this,node,false,false,shared_ptr<DB>(new DB()));
+  processMadeSP(this,node,false,false,boost::shared_ptr<DB>(new DB()));
   assert(dynamic_pointer_cast<VentureSPRef>(getValue(node)));
   globalEnvironment->addBinding(name, node);
   return node;
@@ -91,8 +91,8 @@ void ConcreteTrace::registerAEKernel(Node * node)
 void ConcreteTrace::registerUnconstrainedChoice(Node * node) {
   assert(unconstrainedChoices.count(node) == 0);
   unconstrainedChoices.insert(node);
-  registerUnconstrainedChoiceInScope(shared_ptr<VentureSymbol>(new VentureSymbol("default")),
-                     shared_ptr<VentureNode>(new VentureNode(node)),
+  registerUnconstrainedChoiceInScope(boost::shared_ptr<VentureSymbol>(new VentureSymbol("default")),
+                     boost::shared_ptr<VentureNode>(new VentureNode(node)),
                      node);
 }
 
@@ -128,8 +128,8 @@ void ConcreteTrace::unregisterAEKernel(Node * node)
 
 
 void ConcreteTrace::unregisterUnconstrainedChoice(Node * node) {
-  unregisterUnconstrainedChoiceInScope(shared_ptr<VentureSymbol>(new VentureSymbol("default")),
-                       shared_ptr<VentureNode>(new VentureNode(node)),
+  unregisterUnconstrainedChoiceInScope(boost::shared_ptr<VentureSymbol>(new VentureSymbol("default")),
+                       boost::shared_ptr<VentureNode>(new VentureNode(node)),
                        node);
   assert(unconstrainedChoices.count(node) == 1);
   unconstrainedChoices.erase(node);
@@ -150,7 +150,7 @@ void ConcreteTrace::unregisterConstrainedChoice(Node * node) {
   constrainedChoices.erase(node);
   ApplicationNode * appNode = dynamic_cast<ApplicationNode*>(node);
   assert(appNode);
-  shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(appNode))->getPSP(appNode);
+  boost::shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(appNode))->getPSP(appNode);
   if (psp->isRandom()) { registerUnconstrainedChoice(appNode); }
 }
 
@@ -168,11 +168,11 @@ void ConcreteTrace::reconnectLookup(LookupNode * lookupNode)
 }
 
 void ConcreteTrace::incNumRequests(RootOfFamily root) { numRequests[root]++; }
-void ConcreteTrace::incRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->incRegenCount(node); }
+void ConcreteTrace::incRegenCount(boost::shared_ptr<Scaffold> scaffold, Node * node) { scaffold->incRegenCount(node); }
 
-bool ConcreteTrace::hasLKernel(shared_ptr<Scaffold> scaffold, Node * node) { return scaffold->hasLKernel(node); }
-void ConcreteTrace::registerLKernel(shared_ptr<Scaffold> scaffold,Node * node,shared_ptr<LKernel> lkernel) { scaffold->registerLKernel(node,lkernel); }
-shared_ptr<LKernel> ConcreteTrace::getLKernel(shared_ptr<Scaffold> scaffold,Node * node) { return scaffold->getLKernel(node); }
+bool ConcreteTrace::hasLKernel(boost::shared_ptr<Scaffold> scaffold, Node * node) { return scaffold->hasLKernel(node); }
+void ConcreteTrace::registerLKernel(boost::shared_ptr<Scaffold> scaffold,Node * node,boost::shared_ptr<LKernel> lkernel) { scaffold->registerLKernel(node,lkernel); }
+boost::shared_ptr<LKernel> ConcreteTrace::getLKernel(boost::shared_ptr<Scaffold> scaffold,Node * node) { return scaffold->getLKernel(node); }
 
 void ConcreteTrace::addChild(Node * node, Node * child) 
 {
@@ -203,7 +203,7 @@ void ConcreteTrace::decNumRequests(RootOfFamily root)
   if (numRequests[root] == 0) { numRequests.erase(root); }
 }
 
-void ConcreteTrace::decRegenCount(shared_ptr<Scaffold> scaffold, Node * node) { scaffold->decRegenCount(node); }
+void ConcreteTrace::decRegenCount(boost::shared_ptr<Scaffold> scaffold, Node * node) { scaffold->decRegenCount(node); }
 void ConcreteTrace::removeChild(Node * node, Node * child) 
 { 
   assert(node->children.count(child)); 
@@ -219,25 +219,25 @@ VentureValuePtr ConcreteTrace::getValue(Node * node)
   return values[node]; 
 }
 
-shared_ptr<SP> ConcreteTrace::getMadeSP(Node * makerNode)
+boost::shared_ptr<SP> ConcreteTrace::getMadeSP(Node * makerNode)
 {
-  shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
+  boost::shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
   return spRecord->sp;
 }
 
-shared_ptr<SPFamilies> ConcreteTrace::getMadeSPFamilies(Node * makerNode)
+boost::shared_ptr<SPFamilies> ConcreteTrace::getMadeSPFamilies(Node * makerNode)
 {
-  shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
+  boost::shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
   return spRecord->spFamilies;
 }
 
-shared_ptr<SPAux> ConcreteTrace::getMadeSPAux(Node * makerNode)
+boost::shared_ptr<SPAux> ConcreteTrace::getMadeSPAux(Node * makerNode)
 {
-  shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
+  boost::shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
   return spRecord->spAux;
 }
 
-shared_ptr<VentureSPRecord> ConcreteTrace::getMadeSPRecord(Node * makerNode) 
+boost::shared_ptr<VentureSPRecord> ConcreteTrace::getMadeSPRecord(Node * makerNode) 
 {
   assert(madeSPRecords.count(makerNode));
   return madeSPRecords[makerNode]; 
@@ -254,7 +254,7 @@ int ConcreteTrace::getNumRequests(RootOfFamily root)
   if (numRequests.count(root)) { return numRequests[root]; } 
   else { return 0; }
 }
-int ConcreteTrace::getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) { return scaffold->getRegenCount(node); }
+int ConcreteTrace::getRegenCount(boost::shared_ptr<Scaffold> scaffold,Node * node) { return scaffold->getRegenCount(node); }
 
 VentureValuePtr ConcreteTrace::getObservedValue(Node * node) { assert(observedValues.count(node)); return observedValues[node]; }
 
@@ -283,7 +283,7 @@ void ConcreteTrace::observeNode(Node * node,VentureValuePtr value)
   observedValues[node] = value; 
 }
 
-void ConcreteTrace::setMadeSPRecord(Node * makerNode,shared_ptr<VentureSPRecord> spRecord)
+void ConcreteTrace::setMadeSPRecord(Node * makerNode,boost::shared_ptr<VentureSPRecord> spRecord)
 {
   assert(!madeSPRecords.count(makerNode));
   madeSPRecords[makerNode] = spRecord;
@@ -296,11 +296,11 @@ void ConcreteTrace::destroyMadeSPRecord(Node * makerNode)
 }
 
 
-void ConcreteTrace::setMadeSP(Node * makerNode,shared_ptr<SP> sp) 
+void ConcreteTrace::setMadeSP(Node * makerNode,boost::shared_ptr<SP> sp) 
 {
   getMadeSPRecord(makerNode)->sp = sp;
 }
-void ConcreteTrace::setMadeSPAux(Node * makerNode,shared_ptr<SPAux> spAux) 
+void ConcreteTrace::setMadeSPAux(Node * makerNode,boost::shared_ptr<SPAux> spAux) 
 { 
   getMadeSPRecord(makerNode)->spAux = spAux;
 }
@@ -421,10 +421,10 @@ void ConcreteTrace::addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,
 { 
   OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
   if (!outputNode) { return; }
-  shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
+  boost::shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
   if (psp->isRandom() && !isConstrained(outputNode)) { pnodes.insert(outputNode); }
   RequestNode * requestNode = outputNode->requestNode;
-  shared_ptr<PSP> requestPSP = getMadeSP(getOperatorSPMakerNode(requestNode))->getPSP(requestNode);
+  boost::shared_ptr<PSP> requestPSP = getMadeSP(getOperatorSPMakerNode(requestNode))->getPSP(requestNode);
   if (requestPSP->isRandom() && !isConstrained(requestNode)) { pnodes.insert(requestNode); }
 
   const vector<ESR>& esrs = getValue(requestNode)->getESRs();
@@ -476,13 +476,13 @@ double ConcreteTrace::makeConsistent()
     set<Node*> pnodes;
     pnodes.insert(appNode);
     setsOfPNodes.push_back(pnodes);
-    shared_ptr<Scaffold> scaffold = constructScaffold(this,setsOfPNodes,false);
-    pair<double,shared_ptr<DB> > p = detachAndExtract(this,scaffold->border[0],scaffold);
+    boost::shared_ptr<Scaffold> scaffold = constructScaffold(this,setsOfPNodes,false);
+    pair<double,boost::shared_ptr<DB> > p = detachAndExtract(this,scaffold->border[0],scaffold);
     double rhoWeight = p.first;
     assertTorus(scaffold);
-    shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(appNode))->getPSP(appNode);
-    scaffold->lkernels[appNode] = shared_ptr<DeterministicLKernel>(new DeterministicLKernel(iter->second,psp));
-    double xiWeight = regenAndAttach(this,scaffold->border[0],scaffold,false,shared_ptr<DB>(new DB()),shared_ptr<map<Node*,Gradient> >());
+    boost::shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(appNode))->getPSP(appNode);
+    scaffold->lkernels[appNode] = boost::shared_ptr<DeterministicLKernel>(new DeterministicLKernel(iter->second,psp));
+    double xiWeight = regenAndAttach(this,scaffold->border[0],scaffold,false,boost::shared_ptr<DB>(new DB()),boost::shared_ptr<map<Node*,Gradient> >());
     // If xiWeight is -inf, we are in an impossible state, but that might be ok.
     // Finish constraining, to avoid downstream invariant violations.
     observeNode(iter->first,iter->second);
@@ -520,10 +520,10 @@ int ConcreteTrace::numUnconstrainedChoices() { return unconstrainedChoices.size(
 double ConcreteTrace::likelihoodAt(ScopeID scope, BlockID block) {
   // TODO This is a different code path from normal infer commands
   // because it needs to return the weight
-  shared_ptr<ScaffoldIndexer> scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
-  shared_ptr<Scaffold> scaffold = scaffoldIndexer->sampleIndex(this);
-  pair<double,shared_ptr<DB> > p = detachAndExtract(this,scaffold->border[0],scaffold);
-  double xiWeight = regenAndAttach(this, scaffold->border[0], scaffold, true, p.second, shared_ptr<map<Node*,Gradient> >());
+  boost::shared_ptr<ScaffoldIndexer> scaffoldIndexer = boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
+  boost::shared_ptr<Scaffold> scaffold = scaffoldIndexer->sampleIndex(this);
+  pair<double,boost::shared_ptr<DB> > p = detachAndExtract(this,scaffold->border[0],scaffold);
+  double xiWeight = regenAndAttach(this, scaffold->border[0], scaffold, true, p.second, boost::shared_ptr<map<Node*,Gradient> >());
   // Old state restored, don't need to do anything else
   return xiWeight;
 }
@@ -531,8 +531,8 @@ double ConcreteTrace::likelihoodAt(ScopeID scope, BlockID block) {
 double ConcreteTrace::posteriorAt(ScopeID scope, BlockID block) {
   // TODO This is a different code path from normal infer commands
   // because it needs to return the weight
-  shared_ptr<ScaffoldIndexer> scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
-  shared_ptr<Scaffold> scaffold = scaffoldIndexer->sampleIndex(this);
+  boost::shared_ptr<ScaffoldIndexer> scaffoldIndexer = boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
+  boost::shared_ptr<Scaffold> scaffold = scaffoldIndexer->sampleIndex(this);
   set<Node*> pNodes = scaffold->getPrincipalNodes();
 
   // TODO Abstract this conversion between set<Node*> and vector<ApplicationNode*>
@@ -552,8 +552,8 @@ double ConcreteTrace::posteriorAt(ScopeID scope, BlockID block) {
   }
 
   registerDeterministicLKernels(this, scaffold, appNodes, currentValues);
-  pair<double,shared_ptr<DB> > p = detachAndExtract(this,scaffold->border[0],scaffold);
-  double xiWeight = regenAndAttach(this, scaffold->border[0], scaffold, true, p.second, shared_ptr<map<Node*,Gradient> >());
+  pair<double,boost::shared_ptr<DB> > p = detachAndExtract(this,scaffold->border[0],scaffold);
+  double xiWeight = regenAndAttach(this, scaffold->border[0], scaffold, true, p.second, boost::shared_ptr<map<Node*,Gradient> >());
   // Old state restored, don't need to do anything else
   return xiWeight;
 }
@@ -563,10 +563,10 @@ double ConcreteTrace::likelihoodWeight() {
   // because it needs to return the new weight
   ScopeID scope = VentureValuePtr(new VentureSymbol("default"));
   BlockID block = VentureValuePtr(new VentureSymbol("all"));
-  shared_ptr<ScaffoldIndexer> scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
-  shared_ptr<Scaffold> scaffold = scaffoldIndexer->sampleIndex(this);
-  pair<double,shared_ptr<DB> > p = detachAndExtract(this,scaffold->border[0],scaffold);
-  double xiWeight = regenAndAttach(this, scaffold->border[0], scaffold, false, shared_ptr<DB>(new DB()), shared_ptr<map<Node*,Gradient> >());
+  boost::shared_ptr<ScaffoldIndexer> scaffoldIndexer = boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
+  boost::shared_ptr<Scaffold> scaffold = scaffoldIndexer->sampleIndex(this);
+  pair<double,boost::shared_ptr<DB> > p = detachAndExtract(this,scaffold->border[0],scaffold);
+  double xiWeight = regenAndAttach(this, scaffold->border[0], scaffold, false, boost::shared_ptr<DB>(new DB()), boost::shared_ptr<map<Node*,Gradient> >());
   // Always "accept"
   return xiWeight;
 }
@@ -577,8 +577,8 @@ double ConcreteTrace::getGlobalLogScore() { assert(false); }
 
 bool ConcreteTrace::hasAAAMadeSPAux(OutputNode * makerNode) { return aaaMadeSPAuxs.count(makerNode); }
 void ConcreteTrace::discardAAAMadeSPAux(OutputNode * makerNode) { assert(aaaMadeSPAuxs.count(makerNode)); aaaMadeSPAuxs.erase(makerNode); }
-void ConcreteTrace::registerAAAMadeSPAux(OutputNode * makerNode,shared_ptr<SPAux> spAux) { aaaMadeSPAuxs[makerNode] = spAux; }
-shared_ptr<SPAux> ConcreteTrace::getAAAMadeSPAux(OutputNode * makerNode) { return aaaMadeSPAuxs[makerNode]; }
+void ConcreteTrace::registerAAAMadeSPAux(OutputNode * makerNode,boost::shared_ptr<SPAux> spAux) { aaaMadeSPAuxs[makerNode] = spAux; }
+boost::shared_ptr<SPAux> ConcreteTrace::getAAAMadeSPAux(OutputNode * makerNode) { return aaaMadeSPAuxs[makerNode]; }
 
 
 void ConcreteTrace::freezeDirectiveID(DirectiveID did)
@@ -604,7 +604,7 @@ void ConcreteTrace::freezeDirectiveID(DirectiveID did)
 void ConcreteTrace::freezeOutputNode(OutputNode * outputNode)
 {
   VentureValuePtr curVal = getValue(outputNode);
-  unevalFamily(this,outputNode,shared_ptr<Scaffold>(new Scaffold()),shared_ptr<DB>(new DB()));
+  unevalFamily(this,outputNode,boost::shared_ptr<Scaffold>(new Scaffold()),boost::shared_ptr<DB>(new DB()));
   outputNode->isFrozen = true;
   outputNode->exp = curVal; // Get rid of the former expression; seems harmless and should save memory (and copying)
   setValue(outputNode, curVal);
@@ -701,7 +701,7 @@ void ConcreteTrace::seekInconsistencies()
       {
         cout << "Warning: found node " << n << " with madeSPRecord entry but non-SPRef value " << values[n] << endl;
       } else {
-        shared_ptr<VentureSPRef> spref(dynamic_pointer_cast<VentureSPRef>(values[n]));
+        boost::shared_ptr<VentureSPRef> spref(dynamic_pointer_cast<VentureSPRef>(values[n]));
         if (!(spref->makerNode == n))
         {
           cout << "Warning: found maker node " << n << " whose value is not a self-link" << endl;
@@ -759,13 +759,13 @@ void addNodes(Node* root, set<Node*>& answer)
 set<Node*> ConcreteTrace::allNodes()
 {
   set<Node*> answer;
-  BOOST_FOREACH(shared_ptr<Node> node, builtInNodes)
+  BOOST_FOREACH(boost::shared_ptr<Node> node, builtInNodes)
   {
     assert(dynamic_cast<ConstantNode*>(node.get()));
     assert(answer.count(node.get()) == 0);
     answer.insert(node.get());
   }
-  BOOST_FOREACH(shared_ptr<Node> node, boundForeignSPNodes)
+  BOOST_FOREACH(boost::shared_ptr<Node> node, boundForeignSPNodes)
   {
     assert(dynamic_cast<ConstantNode*>(node.get()));
     assert(answer.count(node.get()) == 0);

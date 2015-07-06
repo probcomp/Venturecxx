@@ -175,7 +175,7 @@ boost::python::object toPython<double>(Trace * trace, const double& st)
 
 using boost::lexical_cast;
 
-void checkArgsLength(const string& sp, const shared_ptr<Args> args, size_t expected)
+void checkArgsLength(const string& sp, const boost::shared_ptr<Args> args, size_t expected)
 {
   size_t length = args->operandValues.size();
   if (length != expected)
@@ -184,7 +184,7 @@ void checkArgsLength(const string& sp, const shared_ptr<Args> args, size_t expec
   }
 }
 
-void checkArgsLength(const string& sp, const shared_ptr<Args> args, size_t lower, size_t upper)
+void checkArgsLength(const string& sp, const boost::shared_ptr<Args> args, size_t lower, size_t upper)
 {
   size_t length = args->operandValues.size();
   if (length < lower || length > upper)

@@ -62,9 +62,9 @@ bool Scaffold::isResampling(Node * node) { return regenCounts.count(node); }
 bool Scaffold::isAbsorbing(Node * node) { return absorbing.count(node); }
 bool Scaffold::isAAA(Node * node) { return aaa.count(node); }
 bool Scaffold::hasLKernel(Node * node) { return lkernels.count(node); }
-void Scaffold::registerLKernel(Node * node,shared_ptr<LKernel> lkernel) { lkernels[node] = lkernel; }
+void Scaffold::registerLKernel(Node * node,boost::shared_ptr<LKernel> lkernel) { lkernels[node] = lkernel; }
 
-shared_ptr<LKernel> Scaffold::getLKernel(Node * node) 
+boost::shared_ptr<LKernel> Scaffold::getLKernel(Node * node) 
 {
   assert(lkernels.count(node));
   return lkernels[node];
@@ -77,7 +77,7 @@ string Scaffold::showSizes()
 }
 
 
-shared_ptr<Scaffold> constructScaffold(ConcreteTrace * trace,const vector<set<Node*> > & setsOfPNodes,bool useDeltaKernels)
+boost::shared_ptr<Scaffold> constructScaffold(ConcreteTrace * trace,const vector<set<Node*> > & setsOfPNodes,bool useDeltaKernels)
 {
   set<Node*> cDRG;
   set<Node*> cAbsorbing;
@@ -96,9 +96,9 @@ shared_ptr<Scaffold> constructScaffold(ConcreteTrace * trace,const vector<set<No
 
   set<Node*> border = findBorder(trace,drg,absorbing,aaa);
   map<Node*,int> regenCounts = computeRegenCounts(trace,drg,absorbing,aaa,border,brush);
-  map<Node*,shared_ptr<LKernel> > lkernels = loadKernels(trace,drg,aaa,false);
+  map<Node*,boost::shared_ptr<LKernel> > lkernels = loadKernels(trace,drg,aaa,false);
   vector<vector<Node *> > borderSequence = assignBorderSequnce(border,indexAssignments,setsOfPNodes.size());
-  return shared_ptr<Scaffold>(new Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush));
+  return boost::shared_ptr<Scaffold>(new Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush));
 }
 
 
@@ -184,7 +184,7 @@ void extendCandidateScaffold(ConcreteTrace * trace,
     {
       ApplicationNode * appNode = dynamic_cast<ApplicationNode*>(node);
       assert(appNode);
-      shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(appNode))->getPSP(appNode);
+      boost::shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(appNode))->getPSP(appNode);
       if (cDRG.count(appNode->operatorNode))
       {
         addResamplingNode(trace,cDRG,cAbsorbing,cAAA,q,node,indexAssignments,i);
@@ -331,7 +331,7 @@ void maybeIncrementAAARegenCount(ConcreteTrace * trace,
                                  set<Node*> & aaa,
                                  Node * node) 
 {
-  shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(trace->getValue(node));
+  boost::shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(trace->getValue(node));
   if (spRef && aaa.count(spRef->makerNode)) { regenCounts[spRef->makerNode] += 1; }
 }
 
@@ -382,17 +382,17 @@ map<Node*,int> computeRegenCounts(ConcreteTrace * trace,
   return regenCounts;
 }
 
-map<Node*,shared_ptr<LKernel> > loadKernels(ConcreteTrace * trace,
+map<Node*,boost::shared_ptr<LKernel> > loadKernels(ConcreteTrace * trace,
                                             set<Node*> & drg,
                                             set<Node*> & aaa,
                                             bool useDeltaKernels)
 { 
-  map<Node*,shared_ptr<LKernel> > lkernels;
+  map<Node*,boost::shared_ptr<LKernel> > lkernels;
   for (set<Node*>::iterator aaaIter = aaa.begin(); aaaIter != aaa.end(); ++aaaIter)
   {
     OutputNode * outputNode = dynamic_cast<OutputNode*>(*aaaIter);
     assert(outputNode);
-    shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
+    boost::shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
     lkernels[*aaaIter] = psp->getAAALKernel();
   }
 
@@ -404,7 +404,7 @@ map<Node*,shared_ptr<LKernel> > loadKernels(ConcreteTrace * trace,
           if (!outputNode) { continue; }
           if (drg.count(outputNode->operatorNode)) { continue; }
           if (aaa.count(outputNode)) { continue; }
-          shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
+          boost::shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
           if (psp->hasDeltaKernel()) { lkernels[outputNode] = psp->getDeltaKernel(); }
         }
     }

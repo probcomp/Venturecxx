@@ -40,7 +40,7 @@ VentureValuePtr OrderedDB::getValue(Node * node)
   }
 
   ApplicationNode * appNode = dynamic_cast<ApplicationNode*>(node);
-  shared_ptr<PSP> psp = trace->getPSP(appNode);
+  boost::shared_ptr<PSP> psp = trace->getPSP(appNode);
   if (psp->isRandom()) {
     VentureValuePtr value = stack.back();
     stack.pop_back();
@@ -49,7 +49,7 @@ VentureValuePtr OrderedDB::getValue(Node * node)
   }
   else {
     // resimulate deterministic PSPs
-    shared_ptr<Args> args = trace->getArgs(appNode);
+    boost::shared_ptr<Args> args = trace->getArgs(appNode);
     return psp->simulate(args, 0);
   }
 }
@@ -59,19 +59,19 @@ void OrderedDB::registerValue(Node * node, VentureValuePtr value)
   DB::registerValue(node, value);
 
   ApplicationNode * appNode = dynamic_cast<ApplicationNode*>(node);
-  shared_ptr<PSP> psp = trace->getPSP(appNode);
+  boost::shared_ptr<PSP> psp = trace->getPSP(appNode);
   if (psp->isRandom()) {
     // TODO: check if it's a Request, SPRef, or VentureEnvironment and raise an exception
     stack.push_back(value);
   }
 }
 
-shared_ptr<OrderedDB> PyTrace::makeEmptySerializationDB()
+boost::shared_ptr<OrderedDB> PyTrace::makeEmptySerializationDB()
 {
-  return shared_ptr<OrderedDB>(new OrderedDB(trace.get()));
+  return boost::shared_ptr<OrderedDB>(new OrderedDB(trace.get()));
 }
 
-shared_ptr<OrderedDB> PyTrace::makeSerializationDB(boost::python::list stackDicts, bool skipStackDictConversion)
+boost::shared_ptr<OrderedDB> PyTrace::makeSerializationDB(boost::python::list stackDicts, bool skipStackDictConversion)
 {
   assert(!skipStackDictConversion);
 
@@ -81,10 +81,10 @@ shared_ptr<OrderedDB> PyTrace::makeSerializationDB(boost::python::list stackDict
     values.push_back(parseValue(boost::python::extract<boost::python::dict>(stackDicts[i])));
   }
 
-  return shared_ptr<OrderedDB>(new OrderedDB(trace.get(), values));
+  return boost::shared_ptr<OrderedDB>(new OrderedDB(trace.get(), values));
 }
 
-boost::python::list PyTrace::dumpSerializationDB(shared_ptr<OrderedDB> db, bool skipStackDictConversion)
+boost::python::list PyTrace::dumpSerializationDB(boost::shared_ptr<OrderedDB> db, bool skipStackDictConversion)
 {
   assert(!skipStackDictConversion);
 
@@ -98,37 +98,37 @@ boost::python::list PyTrace::dumpSerializationDB(shared_ptr<OrderedDB> db, bool 
   return stackDicts;
 }
 
-void PyTrace::unevalAndExtract(DirectiveID did, shared_ptr<OrderedDB> db)
+void PyTrace::unevalAndExtract(DirectiveID did, boost::shared_ptr<OrderedDB> db)
 {
   // leaves trace in an inconsistent state. use restore afterward
   assert(trace->families.count(did));
   unevalFamily(trace.get(),
                trace->families[did].get(),
-               shared_ptr<Scaffold>(new Scaffold()),
+               boost::shared_ptr<Scaffold>(new Scaffold()),
                db);
 }
 
-void PyTrace::restoreDirectiveID(DirectiveID did, shared_ptr<OrderedDB> db)
+void PyTrace::restoreDirectiveID(DirectiveID did, boost::shared_ptr<OrderedDB> db)
 {
   assert(trace->families.count(did));
   restore(trace.get(),
           trace->families[did].get(),
-          shared_ptr<Scaffold>(new Scaffold()),
+          boost::shared_ptr<Scaffold>(new Scaffold()),
           db,
-          shared_ptr<map<Node*,Gradient> >());
+          boost::shared_ptr<map<Node*,Gradient> >());
 }
 
-void PyTrace::evalAndRestore(DirectiveID did, boost::python::object object, shared_ptr<OrderedDB> db)
+void PyTrace::evalAndRestore(DirectiveID did, boost::python::object object, boost::shared_ptr<OrderedDB> db)
 {
   VentureValuePtr exp = parseExpression(object);
   pair<double,Node*> p = evalFamily(trace.get(),
                                     exp,
                                     trace->globalEnvironment,
-                                    shared_ptr<Scaffold>(new Scaffold()),
+                                    boost::shared_ptr<Scaffold>(new Scaffold()),
                                     true,
                                     db,
-                                    shared_ptr<map<Node*,Gradient> >());
+                                    boost::shared_ptr<map<Node*,Gradient> >());
   assert(p.first == 0);
   assert(!trace->families.count(did));
-  trace->families[did] = shared_ptr<Node>(p.second);
+  trace->families[did] = boost::shared_ptr<Node>(p.second);
 }

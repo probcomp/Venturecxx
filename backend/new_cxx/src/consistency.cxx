@@ -19,7 +19,7 @@
 #include "scaffold.h"
 #include "trace.h"
 
-void assertTorus(shared_ptr<Scaffold> scaffold)
+void assertTorus(boost::shared_ptr<Scaffold> scaffold)
 {
   for (map<Node*,int>::iterator iter = scaffold->regenCounts.begin();
        iter != scaffold->regenCounts.end();
@@ -29,7 +29,7 @@ void assertTorus(shared_ptr<Scaffold> scaffold)
   }
 }
 
-void assertTrace(Trace * trace,shared_ptr<Scaffold> scaffold)
+void assertTrace(Trace * trace,boost::shared_ptr<Scaffold> scaffold)
 {
   for (map<Node*,int>::iterator iter = scaffold->regenCounts.begin();
        iter != scaffold->regenCounts.end();
