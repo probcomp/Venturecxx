@@ -325,6 +325,56 @@ clear
 
 ```church'
 ;; Prior on line parameters
+[assume a (normal 0 7)]
+[assume b (normal 0 4)]
+
+;; Hypothesized linear relationship
+[assume f (lambda (x) (+ a (* b x)))]
+
+;; Prior for unknown noise level
+[assume noise (gamma 1 1)]
+
+;; Prior on the outlier rate
+[assume outlier_prob (uniform_continuous 0.01 0.3)]
+
+;; Per-point outlier check
+[assume is_outlier (mem (lambda (i)
+  (flip outlier_prob)))]
+
+;; Full data model: linear relationship with additive noise of unknown
+;; but consistent magnitude, plus outlier detection with a broad
+;; Gaussian outlier model.
+[assume obs_fun
+  (lambda (i x)
+    (if (is_outlier i)
+        (normal 0 100)
+        (normal (f x) noise)))]
+
+;; Data set
+[observe (obs_fun 0 1) 0.5]
+[observe (obs_fun 1 4) 0]
+[observe (obs_fun 2 -3) 1]
+[observe (obs_fun 3 -5) -1]
+
+;; Scatter plot of parameters after some inferece
+;; (independent short Markov chains)
+[infer (plotf 'p0d1d (run (accumulate_dataset 100
+  (do reset_to_prior
+      (mh default one 30)
+      (collect a b)))))]
+```
+
+Using tags for inference control
+================================
+
+[TODO]
+
+```church'
+clear
+```
+
+```church'
+;; Prior on line parameters
 [assume a (tag 'param 'a (normal 0 7))]
 [assume b (tag 'param 'b (normal 0 4))]
 
@@ -364,11 +414,6 @@ clear
       (mh default one 30)
       (collect a b)))))]
 ```
-
-Using tags for inference control
-================================
-
-[TODO]
 
 Elaboration: Model Selection
 ============================
