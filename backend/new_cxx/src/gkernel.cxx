@@ -29,13 +29,13 @@
 #include <boost/foreach.hpp>
 
 void registerDeterministicLKernels(Trace * trace,
-  shared_ptr<Scaffold> scaffold,
+  boost::shared_ptr<Scaffold> scaffold,
   const vector<ApplicationNode*>& applicationNodes,
   const vector<VentureValuePtr>& values)
 {
   for (size_t i = 0; i < applicationNodes.size(); ++i)
   {
-    trace->registerLKernel(scaffold,applicationNodes[i],shared_ptr<DeterministicLKernel>(new DeterministicLKernel(values[i], trace->getPSP(applicationNodes[i]))));
+    trace->registerLKernel(scaffold,applicationNodes[i],boost::shared_ptr<DeterministicLKernel>(new DeterministicLKernel(values[i], trace->getPSP(applicationNodes[i]))));
   }
 }
 

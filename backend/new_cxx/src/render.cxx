@@ -34,8 +34,8 @@ Renderer::Renderer(): dot(""), numClusters(0), labels(true), colorIgnored(false)
 
 void Renderer::reset()
 {
-  trace = shared_ptr<ConcreteTrace>();
-  scaffold = shared_ptr<Scaffold>();
+  trace = boost::shared_ptr<ConcreteTrace>();
+  scaffold = boost::shared_ptr<Scaffold>();
   numClusters = 0;
   dot = "";
 }
@@ -47,7 +47,7 @@ string Renderer::getNextClusterIndex()
 }
 
 
-void Renderer::dotTrace(shared_ptr<ConcreteTrace> trace, shared_ptr<Scaffold> scaffold, bool labels, bool colorIgnored)
+void Renderer::dotTrace(boost::shared_ptr<ConcreteTrace> trace, boost::shared_ptr<Scaffold> scaffold, bool labels, bool colorIgnored)
 {
   reset();
   this->trace = trace;
@@ -88,11 +88,11 @@ void Renderer::dotNodes()
 
 void Renderer::dotSPFamilies()
 {
-  for (map<Node*, shared_ptr<VentureSPRecord> >::iterator iter1 = trace->madeSPRecords.begin();
+  for (map<Node*, boost::shared_ptr<VentureSPRecord> >::iterator iter1 = trace->madeSPRecords.begin();
        iter1 != trace->madeSPRecords.end();
        ++iter1)
     {
-      shared_ptr<SPFamilies> spFamilies = iter1->second->spFamilies;
+      boost::shared_ptr<SPFamilies> spFamilies = iter1->second->spFamilies;
       for (MapVVPtrRootOfFamily::iterator iter2  = spFamilies->families.begin();
 	   iter2 != spFamilies->families.end();
 	   ++iter2)
@@ -256,11 +256,11 @@ string Renderer::getNodeLabel(Node * node)
 // Edges
 void Renderer::dotEdges() 
 {
-  for (map<Node*, shared_ptr<VentureSPRecord> >::iterator iter1 = trace->madeSPRecords.begin();
+  for (map<Node*, boost::shared_ptr<VentureSPRecord> >::iterator iter1 = trace->madeSPRecords.begin();
        iter1 != trace->madeSPRecords.end();
        ++iter1)
     {
-      shared_ptr<SPFamilies> spFamilies = iter1->second->spFamilies;
+      boost::shared_ptr<SPFamilies> spFamilies = iter1->second->spFamilies;
       for (MapVVPtrRootOfFamily::iterator iter2  = spFamilies->families.begin();
 	   iter2 != spFamilies->families.end();
 	   ++iter2)

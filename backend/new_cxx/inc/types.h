@@ -43,11 +43,11 @@ struct Node;
 struct ForwardingMap;
 
 typedef int DirectiveID;
-typedef shared_ptr<VentureValue> VentureValuePtr;
+typedef boost::shared_ptr<VentureValue> VentureValuePtr;
 typedef VentureValuePtr ScopeID;
 typedef VentureValuePtr BlockID;
 typedef VentureValuePtr FamilyID;
-typedef shared_ptr<Node> RootOfFamily;
+typedef boost::shared_ptr<Node> RootOfFamily;
 typedef vector<double> Simplex;
 typedef vector<double> Gradient;
 

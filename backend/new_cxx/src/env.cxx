@@ -22,10 +22,10 @@
 using std::cout;
 using std::endl;
 
-VentureEnvironment::VentureEnvironment(shared_ptr<VentureEnvironment> outerEnv) : outerEnv(outerEnv) {}
+VentureEnvironment::VentureEnvironment(boost::shared_ptr<VentureEnvironment> outerEnv) : outerEnv(outerEnv) {}
 
-VentureEnvironment::VentureEnvironment(shared_ptr<VentureEnvironment> outerEnv,
-				       const vector<shared_ptr<VentureSymbol> > & syms,
+VentureEnvironment::VentureEnvironment(boost::shared_ptr<VentureEnvironment> outerEnv,
+				       const vector<boost::shared_ptr<VentureSymbol> > & syms,
 				       const vector<Node*> & nodes):
   outerEnv(outerEnv)
 {
@@ -68,7 +68,7 @@ void VentureEnvironment::fillBinding(const string& sym, Node * node)
   frame[sym] = node;
 }
 
-Node * VentureEnvironment::lookupSymbol(shared_ptr<VentureSymbol> sym)
+Node * VentureEnvironment::lookupSymbol(boost::shared_ptr<VentureSymbol> sym)
 {
   return lookupSymbol(sym->s);
 }

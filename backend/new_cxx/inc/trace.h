@@ -55,25 +55,25 @@ struct Trace
   virtual LookupNode * createLookupNode(Node * sourceNode,VentureValuePtr exp);
   virtual pair<RequestNode*,OutputNode*> createApplicationNodes(Node * operatorNode,
 								const vector<Node*> & operandNodes,
-								const shared_ptr<VentureEnvironment> & env,
+								const boost::shared_ptr<VentureEnvironment> & env,
 								VentureValuePtr exp);
 
   /* Regen mutations */
   virtual void addESREdge(RootOfFamily esrRoot,OutputNode * outputNode) =0;
   virtual void reconnectLookup(LookupNode * lookupNode) =0;
   virtual void incNumRequests(RootOfFamily root) =0;
-  virtual void incRegenCount(shared_ptr<Scaffold> scaffold,Node * node) =0;
+  virtual void incRegenCount(boost::shared_ptr<Scaffold> scaffold,Node * node) =0;
 
-  virtual bool hasLKernel(shared_ptr<Scaffold> scaffold, Node * node) =0;
-  virtual void registerLKernel(shared_ptr<Scaffold> scaffold,Node * node,shared_ptr<LKernel> lkernel) =0;
-  virtual shared_ptr<LKernel> getLKernel(shared_ptr<Scaffold> scaffold, Node * node) =0;
+  virtual bool hasLKernel(boost::shared_ptr<Scaffold> scaffold, Node * node) =0;
+  virtual void registerLKernel(boost::shared_ptr<Scaffold> scaffold,Node * node,boost::shared_ptr<LKernel> lkernel) =0;
+  virtual boost::shared_ptr<LKernel> getLKernel(boost::shared_ptr<Scaffold> scaffold, Node * node) =0;
   virtual void addChild(Node * node, Node * child) =0;
 
   /* Detach mutations */  
   virtual RootOfFamily popLastESRParent(OutputNode * outputNode) =0;
   virtual void disconnectLookup(LookupNode * lookupNode) =0;
   virtual void decNumRequests(RootOfFamily root) =0;
-  virtual void decRegenCount(shared_ptr<Scaffold> scaffold,Node * node) =0;
+  virtual void decRegenCount(boost::shared_ptr<Scaffold> scaffold,Node * node) =0;
   virtual void removeChild(Node * node, Node * child) =0;
 
   /* Primitive getters */
@@ -81,10 +81,10 @@ struct Trace
   virtual vector<RootOfFamily> getESRParents(Node * node) =0;
   virtual set<Node*> getChildren(Node * node) =0;
   virtual int getNumRequests(RootOfFamily root) =0;
-  virtual int getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) =0;
+  virtual int getRegenCount(boost::shared_ptr<Scaffold> scaffold,Node * node) =0;
 
-  virtual shared_ptr<SP> getMadeSP(Node * makerNode) =0;
-  virtual shared_ptr<SPAux> getMadeSPAux(Node * node) =0;
+  virtual boost::shared_ptr<SP> getMadeSP(Node * makerNode) =0;
+  virtual boost::shared_ptr<SPAux> getMadeSPAux(Node * node) =0;
 
   virtual VentureValuePtr getObservedValue(Node * node) =0;
 
@@ -96,19 +96,19 @@ struct Trace
   virtual VentureValuePtr getGroundValue(Node * node);
   virtual Node * getOperatorSPMakerNode(ApplicationNode * node);
   virtual vector<Node*> getParents(Node * node);
-  virtual shared_ptr<Args> getArgs(ApplicationNode * node);
-  virtual shared_ptr<PSP> getPSP(ApplicationNode * node);
+  virtual boost::shared_ptr<Args> getArgs(ApplicationNode * node);
+  virtual boost::shared_ptr<PSP> getPSP(ApplicationNode * node);
 
   /* Primitive setters */
   virtual void setValue(Node * node, VentureValuePtr value) =0;
   virtual void clearValue(Node * node) =0;
 
 
-  virtual void setMadeSPRecord(Node * makerNode,shared_ptr<VentureSPRecord> spRecord) =0;
+  virtual void setMadeSPRecord(Node * makerNode,boost::shared_ptr<VentureSPRecord> spRecord) =0;
   virtual void destroyMadeSPRecord(Node * makerNode) =0;
 
-  virtual void setMadeSP(Node * makerNode,shared_ptr<SP> sp) =0;
-  virtual void setMadeSPAux(Node * makerNode,shared_ptr<SPAux> spaux) =0;
+  virtual void setMadeSP(Node * makerNode,boost::shared_ptr<SP> sp) =0;
+  virtual void setMadeSPAux(Node * makerNode,boost::shared_ptr<SPAux> spaux) =0;
 
   virtual void setChildren(Node * node,set<Node*> children) =0;
   virtual void setESRParents(Node * node,const vector<RootOfFamily> & esrRoots) =0;
@@ -132,9 +132,9 @@ struct Trace
 
 
   virtual bool hasAAAMadeSPAux(OutputNode * makerNode) =0;
-  virtual void registerAAAMadeSPAux(OutputNode * makerNode,shared_ptr<SPAux> spAux) =0;
+  virtual void registerAAAMadeSPAux(OutputNode * makerNode,boost::shared_ptr<SPAux> spAux) =0;
   virtual void discardAAAMadeSPAux(OutputNode * makerNode) =0;
-  virtual shared_ptr<SPAux> getAAAMadeSPAux(OutputNode * makerNode) =0;
+  virtual boost::shared_ptr<SPAux> getAAAMadeSPAux(OutputNode * makerNode) =0;
 
   virtual gsl_rng * getRNG() =0;
 };

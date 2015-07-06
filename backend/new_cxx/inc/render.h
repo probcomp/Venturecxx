@@ -18,6 +18,7 @@
 #ifndef RENDER_H
 #define RENDER_H
 
+#include <boost/shared_ptr.hpp>
 #include <string>
 #include <map>
 #include <set>
@@ -26,8 +27,6 @@
 struct ConcreteTrace;
 struct Node;
 struct Scaffold;
-
-using namespace std;
 
 enum EdgeType { OP,ARG,LOOKUP,ESR_PARENT,REQUEST_TO_OUTPUT,REQUEST };
 
@@ -44,7 +43,7 @@ Edge(Node * start, Node * end, enum EdgeType edgeType):
 struct Renderer
 {
   Renderer();
-  void dotTrace(shared_ptr<ConcreteTrace> trace, shared_ptr<Scaffold> scaffold,bool labels,bool colorIgnored);
+  void dotTrace(boost::shared_ptr<ConcreteTrace> trace, boost::shared_ptr<Scaffold> scaffold,bool labels,bool colorIgnored);
 
   void reset();
   string getNextClusterIndex();
@@ -85,8 +84,8 @@ struct Renderer
 
   set<Node *> nodes;
 
-  shared_ptr<ConcreteTrace> trace;
-  shared_ptr<Scaffold> scaffold;
+  boost::shared_ptr<ConcreteTrace> trace;
+  boost::shared_ptr<Scaffold> scaffold;
   string dot;
   int numClusters;
   bool labels;

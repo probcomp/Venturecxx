@@ -27,10 +27,10 @@ struct VentureEnvironment : VentureValue
 {
   VentureEnvironment() {}
 
-  VentureEnvironment(shared_ptr<VentureEnvironment> outerEnv);
+  VentureEnvironment(boost::shared_ptr<VentureEnvironment> outerEnv);
 
-  VentureEnvironment(shared_ptr<VentureEnvironment> outerEnv,
-		     const vector<shared_ptr<VentureSymbol> > & syms,
+  VentureEnvironment(boost::shared_ptr<VentureEnvironment> outerEnv,
+		     const vector<boost::shared_ptr<VentureSymbol> > & syms,
 		     const vector<Node*> & nodes);
 
   int getValueTypeRank() const;
@@ -38,11 +38,11 @@ struct VentureEnvironment : VentureValue
   void addBinding(const string& sym,Node * node);
   void removeBinding(const string& sym);
   void fillBinding(const string& sym,Node * node);
-  Node * lookupSymbol(shared_ptr<VentureSymbol> sym);
+  Node * lookupSymbol(boost::shared_ptr<VentureSymbol> sym);
   Node * lookupSymbol(const string& sym);
   Node * safeLookupSymbol(const string& sym);
 
-  shared_ptr<VentureEnvironment> outerEnv;
+  boost::shared_ptr<VentureEnvironment> outerEnv;
   map<string,Node*> frame;
 
   VentureEnvironment* copy_help(ForwardingMap* m) const;

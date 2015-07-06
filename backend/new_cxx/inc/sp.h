@@ -63,7 +63,7 @@ struct SPFamilies
 struct SPAux
 {
   virtual ~SPAux() {}
-  shared_ptr<SPAux> clone();
+  boost::shared_ptr<SPAux> clone();
   virtual boost::python::object toPython(Trace * trace) const;
   virtual VentureValuePtr asVentureValue() const;
   // TODO stupid and may make bugs hard to find
@@ -74,18 +74,18 @@ struct SP
 {
   SP(PSP * requestPSP, PSP * outputPSP);
   
-  shared_ptr<PSP> requestPSP;
-  shared_ptr<PSP> outputPSP;
+  boost::shared_ptr<PSP> requestPSP;
+  boost::shared_ptr<PSP> outputPSP;
   
-  virtual shared_ptr<PSP> getPSP(ApplicationNode * node) const;
+  virtual boost::shared_ptr<PSP> getPSP(ApplicationNode * node) const;
 
-  virtual shared_ptr<LatentDB> constructLatentDB() const;
-  virtual double simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB,gsl_rng * rng) const;
-  virtual double detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const;
+  virtual boost::shared_ptr<LatentDB> constructLatentDB() const;
+  virtual double simulateLatents(boost::shared_ptr<SPAux> spaux,boost::shared_ptr<LSR> lsr,bool shouldRestore,boost::shared_ptr<LatentDB> latentDB,gsl_rng * rng) const;
+  virtual double detachLatents(boost::shared_ptr<SPAux> spaux,boost::shared_ptr<LSR> lsr,boost::shared_ptr<LatentDB> latentDB) const;
   virtual bool hasAEKernel() const { return false; }
-  virtual void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args, gsl_rng * rng) const;
+  virtual void AEInfer(boost::shared_ptr<SPAux> spAux, boost::shared_ptr<Args> args, gsl_rng * rng) const;
   
-  virtual boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;
+  virtual boost::python::dict toPython(Trace * trace, boost::shared_ptr<SPAux> spAux) const;
   virtual SP* copy_help(ForwardingMap* m) const;
   virtual ~SP() {}
 };

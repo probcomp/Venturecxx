@@ -37,9 +37,9 @@
 map<string,VentureValuePtr> initBuiltInValues()
 {
   map<string,VentureValuePtr> m;
-  m["true"] = shared_ptr<VentureBool>(new VentureBool(true));
-  m["false"] = shared_ptr<VentureBool>(new VentureBool(false));
-  m["nil"] = shared_ptr<VentureNil>(new VentureNil());
+  m["true"] = boost::shared_ptr<VentureBool>(new VentureBool(true));
+  m["false"] = boost::shared_ptr<VentureBool>(new VentureBool(false));
+  m["nil"] = boost::shared_ptr<VentureNil>(new VentureNil());
   return m;
 }
 

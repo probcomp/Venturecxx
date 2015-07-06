@@ -38,7 +38,7 @@ LookupNode * Trace::createLookupNode(Node * sourceNode,VentureValuePtr sym)
 }
 
 
-pair<RequestNode*,OutputNode*> Trace::createApplicationNodes(Node * operatorNode, const vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env,VentureValuePtr exp)
+pair<RequestNode*,OutputNode*> Trace::createApplicationNodes(Node * operatorNode, const vector<Node*>& operandNodes, const boost::shared_ptr<VentureEnvironment>& env,VentureValuePtr exp)
 {
   RequestNode * requestNode = new RequestNode(operatorNode, operandNodes, env);
   OutputNode * outputNode = new OutputNode(operatorNode, operandNodes, requestNode, env, exp);
@@ -60,7 +60,7 @@ pair<RequestNode*,OutputNode*> Trace::createApplicationNodes(Node * operatorNode
 }
 
 /* Derived Getters */
-shared_ptr<PSP> Trace::getPSP(ApplicationNode * node)
+boost::shared_ptr<PSP> Trace::getPSP(ApplicationNode * node)
 {
   return getMadeSP(getOperatorSPMakerNode(node))->getPSP(node);
 }
@@ -68,7 +68,7 @@ shared_ptr<PSP> Trace::getPSP(ApplicationNode * node)
 VentureValuePtr Trace::getGroundValue(Node * node)
 {
   VentureValuePtr value = getValue(node);
-  shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(value);
+  boost::shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(value);
   
   // TODO Hack!
   if (spRef) { return VentureValuePtr(new VentureSPRecord(getMadeSP(spRef->makerNode),getMadeSPAux(spRef->makerNode))); }
@@ -77,7 +77,7 @@ VentureValuePtr Trace::getGroundValue(Node * node)
 
 Node * Trace::getOperatorSPMakerNode(ApplicationNode * node)
 {
-  shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(getValue(node->operatorNode));
+  boost::shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(getValue(node->operatorNode));
   assert(spRef);
   return spRef->makerNode;
 }
@@ -97,7 +97,7 @@ vector<Node*> Trace::getParents(Node * node)
   return parents;
 }
 
-shared_ptr<Args> Trace::getArgs(ApplicationNode * node) { return shared_ptr<Args>(new Args(this,node)); }
+boost::shared_ptr<Args> Trace::getArgs(ApplicationNode * node) { return boost::shared_ptr<Args>(new Args(this,node)); }
 
 
 ///////// misc
@@ -124,7 +124,7 @@ Node * Trace::getOutermostNonReferenceNode(Node * node)
   OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
   assert(outputNode);
   
-  shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
+  boost::shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
   
   if (dynamic_pointer_cast<ESRRefOutputPSP>(psp))
   { 

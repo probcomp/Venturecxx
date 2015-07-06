@@ -20,12 +20,12 @@
 #include <boost/foreach.hpp>
 
 Particle::Particle(ConcreteTrace * outerTrace): baseTrace(outerTrace) {  }
-Particle::Particle(ConcreteTrace * outerTrace, shared_ptr<RNGbox> rng):
+Particle::Particle(ConcreteTrace * outerTrace, boost::shared_ptr<RNGbox> rng):
   baseTrace(outerTrace),
   rng(rng) { }
 
 
-Particle::Particle(shared_ptr<Particle> outerParticle):
+Particle::Particle(boost::shared_ptr<Particle> outerParticle):
   baseTrace(outerParticle->baseTrace),
   unconstrainedChoices(outerParticle->unconstrainedChoices),
   constrainedChoices(outerParticle->constrainedChoices),
@@ -49,12 +49,12 @@ Particle::Particle(shared_ptr<Particle> outerParticle):
   discardedAAAMakerNodes(outerParticle->discardedAAAMakerNodes)
 
   {
-    for (map<Node*, shared_ptr<SPAux> >::iterator iter = outerParticle->madeSPAuxs.begin();
+    for (map<Node*, boost::shared_ptr<SPAux> >::iterator iter = outerParticle->madeSPAuxs.begin();
       iter != outerParticle->madeSPAuxs.end();
       ++iter)
     {
       if (iter->second) { madeSPAuxs[iter->first] = iter->second->clone(); }
-      else { madeSPAuxs[iter->first] = shared_ptr<SPAux>(); }
+      else { madeSPAuxs[iter->first] = boost::shared_ptr<SPAux>(); }
     }
   }
 
@@ -132,25 +132,25 @@ void Particle::incNumRequests(RootOfFamily root)
   if (!numRequests.contains(root)) { numRequests = numRequests.insert(root,baseTrace->getNumRequests(root)); }
   numRequests = numRequests.insert(root,numRequests.lookup(root) + 1);
 }
-void Particle::incRegenCount(shared_ptr<Scaffold> scaffold,Node * node) 
+void Particle::incRegenCount(boost::shared_ptr<Scaffold> scaffold,Node * node) 
 {
   if (!regenCounts.contains(node)) { regenCounts = regenCounts.insert(node,0); }
   regenCounts = regenCounts.insert(node,regenCounts.lookup(node) + 1);
 }
 
 
-bool Particle::hasLKernel(shared_ptr<Scaffold> scaffold, Node * node)
+bool Particle::hasLKernel(boost::shared_ptr<Scaffold> scaffold, Node * node)
 {
   if (lkernels.contains(node)) { return true; }
   else { return baseTrace->hasLKernel(scaffold,node); }
 }
 
-void Particle::registerLKernel(shared_ptr<Scaffold> scaffold,Node * node,shared_ptr<LKernel> lkernel)
+void Particle::registerLKernel(boost::shared_ptr<Scaffold> scaffold,Node * node,boost::shared_ptr<LKernel> lkernel)
 {
   lkernels = lkernels.insert(node,lkernel);
 }
 
-shared_ptr<LKernel> Particle::getLKernel(shared_ptr<Scaffold> scaffold,Node * node)
+boost::shared_ptr<LKernel> Particle::getLKernel(boost::shared_ptr<Scaffold> scaffold,Node * node)
 {
   if (lkernels.contains(node)) { return lkernels.lookup(node); }
   else { return baseTrace->getLKernel(scaffold,node); }
@@ -177,13 +177,13 @@ VentureValuePtr Particle::getValue(Node * node)
   else { return baseTrace->getValue(node); }
 }
 
-shared_ptr<SP> Particle::getMadeSP(Node * makerNode)
+boost::shared_ptr<SP> Particle::getMadeSP(Node * makerNode)
 {
   if (madeSPs.contains(makerNode)) { return madeSPs.lookup(makerNode); }
   else { return baseTrace->getMadeSP(makerNode); }
 }
 
-shared_ptr<SPAux> Particle::getMadeSPAux(Node * makerNode)
+boost::shared_ptr<SPAux> Particle::getMadeSPAux(Node * makerNode)
 {
   if (!madeSPAuxs.count(makerNode))
   {
@@ -191,7 +191,7 @@ shared_ptr<SPAux> Particle::getMadeSPAux(Node * makerNode)
     {
       madeSPAuxs[makerNode] = baseTrace->getMadeSPAux(makerNode)->clone();
     }
-    else { return shared_ptr<SPAux>(); }
+    else { return boost::shared_ptr<SPAux>(); }
   }
   return madeSPAuxs[makerNode];
 }
@@ -203,7 +203,7 @@ vector<RootOfFamily> Particle::getESRParents(Node * node)
   else { return baseTrace->getESRParents(node); }
 }
 
-int Particle::getRegenCount(shared_ptr<Scaffold> scaffold,Node * node) 
+int Particle::getRegenCount(boost::shared_ptr<Scaffold> scaffold,Node * node) 
 { 
   assert(baseTrace->getRegenCount(scaffold,node) == 0);
   if (regenCounts.contains(node)) { return regenCounts.lookup(node); }
@@ -220,7 +220,7 @@ void Particle::setValue(Node * node, VentureValuePtr value)
 }
 
 
-void Particle::setMadeSPRecord(Node * makerNode,shared_ptr<VentureSPRecord> spRecord) 
+void Particle::setMadeSPRecord(Node * makerNode,boost::shared_ptr<VentureSPRecord> spRecord) 
 { 
   madeSPs = madeSPs.insert(makerNode,spRecord->sp);
   madeSPAuxs[makerNode] = spRecord->spAux;
@@ -228,14 +228,14 @@ void Particle::setMadeSPRecord(Node * makerNode,shared_ptr<VentureSPRecord> spRe
 }
 
 
-void Particle::setMadeSP(Node * makerNode,shared_ptr<SP> sp) 
+void Particle::setMadeSP(Node * makerNode,boost::shared_ptr<SP> sp) 
 { 
   assert(!madeSPs.contains(makerNode));
   assert(!baseTrace->getMadeSP(makerNode));
   madeSPs = madeSPs.insert(makerNode,sp);
 }
 
-void Particle::setMadeSPAux(Node * makerNode,shared_ptr<SPAux> spAux) 
+void Particle::setMadeSPAux(Node * makerNode,boost::shared_ptr<SPAux> spAux) 
 { 
   assert(!madeSPAuxs.count(makerNode));
   assert(!baseTrace->getMadeSPAux(makerNode));
@@ -325,11 +325,11 @@ void Particle::commit()
 
 
   
-  vector<pair<Node*, shared_ptr<SP> > > madeSPItems = madeSPs.items();
+  vector<pair<Node*, boost::shared_ptr<SP> > > madeSPItems = madeSPs.items();
   for (size_t madeSPIndex = 0; madeSPIndex < madeSPItems.size(); ++madeSPIndex)
   {
-    pair<Node*, shared_ptr<SP> > madeSPItem = madeSPItems[madeSPIndex];
-    baseTrace->setMadeSPRecord(madeSPItem.first, shared_ptr<VentureSPRecord>(new VentureSPRecord(madeSPItem.second)));
+    pair<Node*, boost::shared_ptr<SP> > madeSPItem = madeSPItems[madeSPIndex];
+    baseTrace->setMadeSPRecord(madeSPItem.first, boost::shared_ptr<VentureSPRecord>(new VentureSPRecord(madeSPItem.second)));
   }
   
   
@@ -374,10 +374,10 @@ void Particle::commit()
   vector<OutputNode*> discardedAAAMakerNodeItems = discardedAAAMakerNodes.keys();
   BOOST_FOREACH(OutputNode * makerNode, discardedAAAMakerNodeItems) { baseTrace->discardAAAMadeSPAux(makerNode); }
   
-  vector<pair<Node*, shared_ptr<SPAux> > > madeSPAuxItems(madeSPAuxs.begin(), madeSPAuxs.end());
+  vector<pair<Node*, boost::shared_ptr<SPAux> > > madeSPAuxItems(madeSPAuxs.begin(), madeSPAuxs.end());
   for (size_t madeSPAuxIndex = 0; madeSPAuxIndex < madeSPAuxItems.size(); ++madeSPAuxIndex)
   {
-    pair<Node*, shared_ptr<SPAux> > madeSPAuxItem = madeSPAuxItems[madeSPAuxIndex];
+    pair<Node*, boost::shared_ptr<SPAux> > madeSPAuxItem = madeSPAuxItems[madeSPAuxIndex];
     baseTrace->setMadeSPAux(madeSPAuxItem.first, madeSPAuxItem.second);
   }
 }
@@ -406,7 +406,7 @@ bool Particle::hasAAAMadeSPAux(OutputNode * makerNode)
   return baseTrace->hasAAAMadeSPAux(makerNode) && !discardedAAAMakerNodes.contains(makerNode);
 }
 void Particle::discardAAAMadeSPAux(OutputNode * makerNode) { discardedAAAMakerNodes = discardedAAAMakerNodes.insert(makerNode); }
-shared_ptr<SPAux> Particle::getAAAMadeSPAux(OutputNode * makerNode) 
+boost::shared_ptr<SPAux> Particle::getAAAMadeSPAux(OutputNode * makerNode) 
 { 
   assert(hasAAAMadeSPAux(makerNode));
   return baseTrace->aaaMadeSPAuxs[makerNode]; 
@@ -414,11 +414,11 @@ shared_ptr<SPAux> Particle::getAAAMadeSPAux(OutputNode * makerNode)
 
 /* The following should never be called on particles */
 
-void Particle::registerAAAMadeSPAux(OutputNode * makerNode,shared_ptr<SPAux> spAux) { assert(false); }
+void Particle::registerAAAMadeSPAux(OutputNode * makerNode,boost::shared_ptr<SPAux> spAux) { assert(false); }
 RootOfFamily Particle::popLastESRParent(OutputNode * outputNode) { assert(false); throw "should never be called"; }
 void Particle::disconnectLookup(LookupNode * lookupNode) { assert(false); throw "should never be called"; }
 void Particle::decNumRequests(RootOfFamily root) { assert(false); throw "should never be called"; }
-void Particle::decRegenCount(shared_ptr<Scaffold> scaffold,Node * node) { assert(false); throw "should never be called"; }
+void Particle::decRegenCount(boost::shared_ptr<Scaffold> scaffold,Node * node) { assert(false); throw "should never be called"; }
 void Particle::removeChild(Node * node, Node * child) { assert(false); throw "should never be called"; }
 void Particle::unregisterAEKernel(Node * node) { assert(false); throw "should never be called"; }
 

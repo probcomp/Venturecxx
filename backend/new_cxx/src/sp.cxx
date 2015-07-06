@@ -40,30 +40,30 @@ void SPFamilies::unregisterFamily(FamilyID id)
   families.erase(id);
 }
 
-shared_ptr<SPAux> SPAux::clone()
+boost::shared_ptr<SPAux> SPAux::clone()
 {
   ForwardingMap m = ForwardingMap();
-  return shared_ptr<SPAux>(this->copy_help(&m));
+  return boost::shared_ptr<SPAux>(this->copy_help(&m));
 }
 
-shared_ptr<LatentDB> SP::constructLatentDB() const { return shared_ptr<LatentDB>(); }
+boost::shared_ptr<LatentDB> SP::constructLatentDB() const { return boost::shared_ptr<LatentDB>(); }
 
 SP::SP(PSP * requestPSP, PSP * outputPSP) :
-  requestPSP(shared_ptr<PSP>(requestPSP)),
-  outputPSP(shared_ptr<PSP>(outputPSP))
+  requestPSP(boost::shared_ptr<PSP>(requestPSP)),
+  outputPSP(boost::shared_ptr<PSP>(outputPSP))
   {}
 
-double SP::simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB,gsl_rng * rng) const { assert(false); throw "no default latent handling"; }
-double SP::detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const { assert(false); throw "no default latent handling"; }
+double SP::simulateLatents(boost::shared_ptr<SPAux> spaux,boost::shared_ptr<LSR> lsr,bool shouldRestore,boost::shared_ptr<LatentDB> latentDB,gsl_rng * rng) const { assert(false); throw "no default latent handling"; }
+double SP::detachLatents(boost::shared_ptr<SPAux> spaux,boost::shared_ptr<LSR> lsr,boost::shared_ptr<LatentDB> latentDB) const { assert(false); throw "no default latent handling"; }
 
 
-shared_ptr<PSP> SP::getPSP(ApplicationNode * node) const
+boost::shared_ptr<PSP> SP::getPSP(ApplicationNode * node) const
 {
   if (dynamic_cast<RequestNode*>(node)) { return requestPSP; }
   else { return outputPSP; }
 }
 
-void SP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng * rng) const { assert(false); }
+void SP::AEInfer(boost::shared_ptr<SPAux> spAux, boost::shared_ptr<Args> args,gsl_rng * rng) const { assert(false); }
 
 boost::python::object SPAux::toPython(Trace * trace) const
 {
@@ -76,7 +76,7 @@ VentureValuePtr SPAux::asVentureValue() const
 }
 
 
-boost::python::dict SP::toPython(Trace * trace, shared_ptr<SPAux> spAux) const
+boost::python::dict SP::toPython(Trace * trace, boost::shared_ptr<SPAux> spAux) const
 {
   boost::python::dict value;
   value["type"] = "sp";
@@ -97,7 +97,7 @@ boost::python::dict VentureSPRef::toPython(Trace * trace) const
 
 bool VentureSPRef::equals(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureSPRef> other_v = dynamic_pointer_cast<VentureSPRef>(other);
+  boost::shared_ptr<VentureSPRef> other_v = dynamic_pointer_cast<VentureSPRef>(other);
   return other_v && (other_v->makerNode == makerNode);
 }
 

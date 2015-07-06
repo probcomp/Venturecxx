@@ -27,13 +27,13 @@ struct DB;
 struct BogoPossibilizeGKernel : GKernel
 {
 
-  pair<Trace*,double> propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold);
+  pair<Trace*,double> propose(ConcreteTrace * trace,boost::shared_ptr<Scaffold> scaffold);
   void accept();
   void reject();
   
   ConcreteTrace * trace;
-  shared_ptr<Scaffold> scaffold;
-  shared_ptr<DB> rhoDB;
+  boost::shared_ptr<Scaffold> scaffold;
+  boost::shared_ptr<DB> rhoDB;
 
 };
 #endif
