@@ -921,7 +921,7 @@ not directly accessible.  The environment against which ``pyexec`` is
 executed persists across invocations of ``pyexec`` and ``pyeval``.
 """),
 
-  engine_method_sp("pyeval", infer_action_maker_type([t.SymbolType("<code>")]), desc="""\
+  engine_method_sp("pyeval", infer_action_maker_type([t.SymbolType("<code>")], return_type=t.AnyType()), desc="""\
 Evaluate the given string as a Python expression, via eval.
 
 The code is executed in an environment where the RIPL is accessible
