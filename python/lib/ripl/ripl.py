@@ -59,8 +59,6 @@ import plugins
 import utils as u
 import venture.value.dicts as v
 
-from venture.lite.node import RequestNode, OutputNode # For scaffold drawing
-
 PRELUDE_FILE = 'prelude.vnt'
 
 class Ripl():
@@ -83,6 +81,7 @@ class Ripl():
             pass
         else:
             print "Wrapping sivm %s in a new ripl but it already has one: %s.  Engine to ripl references may be incorrect." % (self.sivm, r)
+        self.pyglobals = {"ripl", self} # A global environment for dropping to Python
         plugins.__venture_start__(self)
 
 
@@ -787,6 +786,13 @@ Open issues:
         """Bind every public method of the given object as a callback of the same name."""
         for name in (name for name in dir(obj) if not name.startswith("_")):
             self.bind_callback(prefix + name, getattr(obj, name))
+
+    def pyexec(self, code):
+        # Because that's the point pylint:disable=exec-used
+        exec code in self.pyglobals
+
+    def pyeval(self, code):
+        return eval(code, self.pyglobals)
 
     ############################################
     # Serialization
