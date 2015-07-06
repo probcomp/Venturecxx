@@ -912,7 +912,7 @@ Does not interoperate with multiple particles.
 
 """),
 
-  ripl_method_sp("pyexec", infer_action_maker_type([t.AnyType("<label>")]), desc="""\
+  engine_method_sp("pyexec", infer_action_maker_type([t.SymbolType("<code>")]), desc="""\
 Execute the given string as Python code, via exec.
 
 The code is executed in an environment where the RIPL is accessible
@@ -921,7 +921,7 @@ not directly accessible.  The environment against which ``pyexec`` is
 executed persists across invocations of ``pyexec`` and ``pyeval``.
 """),
 
-  ripl_method_sp("pyeval", infer_action_maker_type([t.AnyType("<label>")]), desc="""\
+  engine_method_sp("pyeval", infer_action_maker_type([t.SymbolType("<code>")]), desc="""\
 Evaluate the given string as a Python expression, via eval.
 
 The code is executed in an environment where the RIPL is accessible

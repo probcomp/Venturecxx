@@ -204,6 +204,11 @@ class Infer(object):
     assert len(self.engine.model.log_weights) == 1, "Custom proposals only supported for one trace at a time"
     return self.engine.model.traces.at(0, 'get_current_values', scaffold)
 
+  def pyexec(self, code):
+    self.engine.ripl.pyexec(code)
+  def pyeval(self, code):
+    return self.engine.ripl.pyeval(code)
+
 class Dataset(object):
   """Basically a wrapper for a Pandas Dataframe that knows about a few
 special columns (like the sweep count).  If you are a Venture user and

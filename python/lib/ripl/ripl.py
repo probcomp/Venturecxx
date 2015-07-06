@@ -81,7 +81,7 @@ class Ripl():
             pass
         else:
             print "Wrapping sivm %s in a new ripl but it already has one: %s.  Engine to ripl references may be incorrect." % (self.sivm, r)
-        self.pyglobals = {"ripl", self} # A global environment for dropping to Python
+        self.pyglobals = {"ripl": self} # A global environment for dropping to Python
         plugins.__venture_start__(self)
 
 
