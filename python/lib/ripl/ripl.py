@@ -48,7 +48,9 @@ Typical usage begins by using one of the factory functions in the
 
 import numbers
 import re
+import os
 from os import path
+import sys
 import numpy as np
 
 from venture.exception import VentureException
@@ -380,7 +382,10 @@ class Ripl():
         p = self._cur_parser()
         exp = p.unparse_expression(exp)
         (start, end) = p.expression_index_to_text_index(exp, index)
-        ans = exp[0:start] + "\x1b[31m" + exp[start:end+1] + "\x1b[39;49m" + exp[end+1:]
+        if os.isatty(sys.stdout.fileno()):
+            ans = exp[0:start] + "\x1b[31m" + exp[start:end+1] + "\x1b[39;49m" + exp[end+1:]
+        else:
+            ans = exp
         return ans, (start, end)
 
     def draw_subproblem(self, scaffold_dict, type=False):
