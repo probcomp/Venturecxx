@@ -117,6 +117,8 @@ class Semantics(object):
         return locbracket(open, close, d)
     def p_instruction_command(self, open, c, close):
         return locbracket(open, close, c)
+    def p_instruction_expression(self, e):
+        return { 'instruction': 'evaluate', 'expression': e }
     def p_instruction_laberror(self, d):
         return 'error'
     def p_instruction_labdirerror(self):
@@ -313,10 +315,10 @@ def parse_instruction(string):
     return ls[0]
 
 def parse_expression(string):
-    t, l = parse_church_prime_string(string)
-    if t != 'expression':
+    t, ls = parse_church_prime_string(string)
+    if not (t == 'instructions' and len(ls) == 1):
         raise VentureException('parse', 'Expected an expression')
-    return l
+    return ls[0]['expression']
 
 def value_to_string(v):
     if isinstance(v, dict):
