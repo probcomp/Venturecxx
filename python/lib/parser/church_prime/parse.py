@@ -95,11 +95,9 @@ class Semantics(object):
 
     # Venture start symbol: store result in self.answer, return none.
     def p_venture_empty(self):
-        self.answer = ('instructions', [])
+        self.answer = []
     def p_venture_i(self, insts):
-        self.answer = ('instructions', insts)
-    def p_venture_e(self, exp):
-        self.answer = ('expression', exp)
+        self.answer = insts
 
     # instructions: Return list of instructions.
     def p_instructions_one(self, inst):
@@ -303,10 +301,7 @@ def parse_church_prime_string(string):
         raise e
 
 def parse_instructions(string):
-    t, ls = parse_church_prime_string(string)
-    if t != 'instructions':
-        raise VentureException('parse', 'Expected instructions')
-    return ls
+    return parse_church_prime_string(string)
 
 def parse_instruction(string):
     ls = parse_instructions(string)
@@ -315,10 +310,10 @@ def parse_instruction(string):
     return ls[0]
 
 def parse_expression(string):
-    t, ls = parse_church_prime_string(string)
-    if not (t == 'instructions' and len(ls) == 1):
+    inst = parse_instruction(string)
+    if not inst['instruction'] == 'evaluate':
         raise VentureException('parse', 'Expected an expression')
-    return ls[0]['expression']
+    return inst['expression']
 
 def value_to_string(v):
     if isinstance(v, dict):
