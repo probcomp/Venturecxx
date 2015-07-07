@@ -166,14 +166,14 @@ class Engine(object):
   def likelihood_weight(self): self.model.likelihood_weight()
   def incorporate(self): self.model.incorporate()
 
-  def execute(self, program):
+  def evaluate(self, program):
     with self.inference_trace():
-      did = self._do_execute(program)
+      did = self._do_evaluate(program)
       ans = self.infer_trace.extractValue(did)
       self.infer_trace.uneval(did) # TODO This becomes "forget" after the engine.Trace wrapper
       return ans
 
-  def _do_execute(self, program):
+  def _do_evaluate(self, program):
     did = self.nextBaseAddr()
     self.infer_trace.eval(did, program)
     return did
