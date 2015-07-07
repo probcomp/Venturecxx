@@ -79,6 +79,12 @@ class RiplCmd(Cmd, object):
     return line
 
   @catchesVentureException
+  def default(self, line):
+    '''Evaluate an expression in the inference program.'''
+    ans = self.ripl.execute_instruction('(' + line + ')')
+    print getValue(ans)
+
+  @catchesVentureException
   def do_define(self, s):
     '''Define a variable in the inference program.'''
     print getValue(self._do_instruction('define', s))
