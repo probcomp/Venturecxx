@@ -181,9 +181,9 @@ class VentureSivm(object):
         # The engine actually executes an application form around the
         # passed inference program.  Storing this will align the
         # indexes correctly.
-        symbol = v.symbol("model")
-        hacked_exp = [exp, symbol]
-        hacked_syntax = macro.ListSyntax([syntax, macro.LiteralSyntax(symbol)])
+        symbol = v.symbol("run")
+        hacked_exp = [symbol, exp]
+        hacked_syntax = macro.ListSyntax([macro.LiteralSyntax(symbol), syntax])
         return (hacked_exp, hacked_syntax)
 
     def _annotate(self, e, instruction):
