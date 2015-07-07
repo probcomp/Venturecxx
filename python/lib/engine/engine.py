@@ -213,27 +213,18 @@ class Engine(object):
 
   def _do_infer(self, program):
     did = self.nextBaseAddr()
-    self.infer_trace.eval(did, [program, v.sym("__the_inferrer__")])
+    self.infer_trace.eval(did, [v.sym("run"), program])
     return did
 
   def _extract_infer_result(self, did):
     ans = self.infer_trace.extractValue(did)
-    # Expect the result to be a Venture pair of the "value" of the
-    # inference action together with the mutated Infer object.
     assert isinstance(ans, dict)
-    assert ans["type"] is "improper_list"
-    (vs, tail) = ans["value"]
-    assert tail["type"] is "blob"
-    assert isinstance(tail["value"], Infer)
-    assert len(vs) == 1
-    return vs[0]
+    return ans
 
   def _extract_raw_infer_result(self, did):
     ans = self.infer_trace.extractRaw(did)
-    # Expect the result to be a Venture pair of the "value" of the
-    # inference action together with the mutated Infer object.
-    assert isinstance(ans, vv.VenturePair)
-    return ans.first
+    assert isinstance(ans, vv.VentureValue)
+    return ans
 
   @contextmanager
   def inference_trace(self):
