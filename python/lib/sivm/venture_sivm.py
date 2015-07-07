@@ -250,7 +250,8 @@ class VentureSivm(object):
 
     def _hack_skip_inference_prelude_entry(self, did):
         import venture.engine.engine as e
-        return self.core_sivm.engine.persistent_inference_trace and did < len(e._inference_prelude())
+        # <= because directive IDs are 1-indexed (see Engine.nextBaseAddr)
+        return self.core_sivm.engine.persistent_inference_trace and did <= len(e._inference_prelude())
 
     def _register_executed_instruction(self, instruction, response):
         instruction_type = instruction['instruction']
