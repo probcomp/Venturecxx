@@ -118,7 +118,7 @@ Rejection sampling does not solve all problems
 particular, let's see what happens as we change the model to make the
 problem harder.  First, have a look at what we have:
 
-```church'
+```venture
 list_directives
 ```
 
