@@ -185,10 +185,11 @@ class Engine(object):
     # TODO asStackDict doesn't do the right thing because it tries to
     # be politely printable.  Maybe I should change that.
     stack_dict_action = {"type":"SP", "value":action}
+    program = [v.sym("run"), v.quote(stack_dict_action)]
     try:
       self.swapped_model = True
       with self.inference_trace():
-        did = self._do_infer(v.quote(stack_dict_action))
+        did = self._do_evaluate(program)
         ans = self.infer_trace.extractRaw(did)
         self.infer_trace.uneval(did) # TODO This becomes "forget" after the engine.Trace wrapper
         return (ans, model)
@@ -202,17 +203,10 @@ class Engine(object):
       assert len(program) == 2
       self.start_continuous_inference(program[1])
     else:
-      with self.inference_trace():
-        did = self._do_infer(program)
-        ans = self.infer_trace.extractValue(did)
-        self.infer_trace.uneval(did) # TODO This becomes "forget" after the engine.Trace wrapper
-        return ans
+      return self.evaluate([v.sym("run"), program])
 
   def is_infer_loop_program(self, program):
     return isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop"
-
-  def _do_infer(self, program):
-    return self._do_evaluate([v.sym("run"), program])
 
   @contextmanager
   def inference_trace(self):
