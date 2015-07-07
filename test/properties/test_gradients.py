@@ -17,6 +17,7 @@
 
 import math
 from numpy.testing import assert_allclose
+from flaky import flaky
 
 from venture.test.config import gen_in_backend
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
@@ -77,27 +78,36 @@ def assert_gradients_close(numerical_gradient, computed_gradient):
 @gen_in_backend("none")
 def testGradientOfSimulate():
   for (name,sp) in relevantSPs():
-    if name not in ["dict",  # TODO Synthesize dicts to act as the directions
-                    "matrix", # TODO Synthesize non-ragged test lists
-                    # The gradients of tag and tag_exclude
-                    # have weird shapes because tag and
-                    # tag_exclude are weird.
-                    "tag", "tag_exclude",
-                    # The gradients of biplex and lookup have sporadic
-                    # symbolic zeroes.
-                    "biplex", "lookup",
-                    # TODO The gradient of floor is a symbolic zero
-                    # with a continuous-looking output space, which
-                    # confuses this code
-                    "floor",
-                    # For some reason, the gradient is too often large
-                    # enough to confuse the numerical approximation
-                    "tan"
-                   ]:
+    if name in ["dict",  # TODO Synthesize dicts to act as the directions
+                "matrix", # TODO Synthesize non-ragged test lists
+                # The gradients of tag and tag_exclude
+                # have weird shapes because tag and
+                # tag_exclude are weird.
+                "tag", "tag_exclude",
+                # The gradients of biplex and lookup have sporadic
+                # symbolic zeroes.
+                "biplex", "lookup",
+                # TODO The gradient of floor is a symbolic zero
+                # with a continuous-looking output space, which
+                # confuses this code
+                "floor",
+                # For some reason, the gradient is too often large
+                # enough to confuse the numerical approximation
+                "tan"
+    ]:
+      continue
+    elif name in ["gamma"]:
+      # Because of numerical artifacts when test arguments are near zero
+      yield checkFlakyGradientOfSimulate, name, sp
+    else:
       yield checkGradientOfSimulate, name, sp
 
 def checkGradientOfSimulate(name, sp):
   checkTypedProperty(propGradientOfSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)
+
+@flaky
+def checkFlakyGradientOfSimulate(name, sp):
+  checkGradientOfSimulate(name, sp)
 
 def asGradient(value):
   return value.map_real(lambda x: x)

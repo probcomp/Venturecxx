@@ -20,6 +20,7 @@
 import math
 from testconfig import config
 from nose.tools import eq_, assert_almost_equal
+from flaky import flaky
 
 from venture.test.config import gen_in_backend
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
@@ -101,10 +102,14 @@ fully uncurried)."""
 def testRandom():
   for (name,sp) in relevantSPs():
     if sp.outputPSP.isRandom():
-      if not name in ["make_uc_dir_mult", "categorical", "make_uc_sym_dir_mult",
-                      "log_bernoulli", "log_flip",  # Because the default distribution does a bad job of picking arguments at which log_bernoulli's output actually varies.
-                      "exactly" # Because it intentionally pretends to be random even though it's not.
+      if name in ["make_uc_dir_mult", "categorical", "make_uc_sym_dir_mult",
+                  "log_bernoulli", "log_flip",  # Because the default distribution does a bad job of picking arguments at which log_bernoulli's output actually varies.
+                  "exactly" # Because it intentionally pretends to be random even though it's not.
       ]:
+        continue
+      elif name in ["inv_wishart"]:
+        yield checkFlakyRandom, name, sp
+      else:
         yield checkRandom, name, sp
 
 def checkRandom(name, sp):
@@ -124,6 +129,10 @@ def checkRandom(name, sp):
         return True # Output differed on some input: pass
 
   assert False, "SP deterministically gave i/o pairs %s" % answers
+
+@flaky
+def checkFlakyRandom(name, sp):
+  checkRandom(name, sp)
 
 def simulate_fully_uncurried(name, sp, args_lists):
   if isinstance(sp, VentureSPRecord):

@@ -16,6 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose.tools import eq_
+from flaky import flaky
 import time
 import threading
 
@@ -53,6 +54,7 @@ def testInferLoopSmoke():
     ripl.stop_continuous_inference() # Don't want to leave active threads lying around
 
 @on_inf_prim("mh") # Really loop, but that's very special
+@flaky # Because sometimes it doesn't wait long enough for the other thread to go
 def testStartStopInferLoop():
   numthreads = threading.active_count()
   ripl = get_ripl()
