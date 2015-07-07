@@ -23,26 +23,41 @@ prelude = [
 
   :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
 
-  Repeatedly apply the given action, suppressing the returned vaues.
+  Repeatedly apply the given action, suppressing the returned values.
 """,
 """(lambda (f iter)
   (if (<= iter 0)
       pass
-      (lambda (t) (f (rest ((iterate f (- iter 1)) t))))))"""],
+      (do f (iterate f (- iter 1)))))"""],
 
 ["repeat",
 """\
-.. function:: repeat(iterations : int, f : <inference action returning a>)
+.. function:: repeat(iterations : int, f : <inference action>)
 
-  :rtype: proc(<foreignblob>) -> <pair a <foreignblob>>
+  :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
 
-  Repeatedly apply the given action, returning the last value.
+  Repeatedly apply the given action, suppressing the returned values.
   This is the same as ``iterate``, except for taking its arguments
   in the opposite order, as a convenience.
 """,
 """(lambda (iter f) (iterate f iter))"""],
 
 ["sequence", """\
+.. function:: sequence(ks : list<inference action returning a>)
+
+  :rtype: proc(<foreignblob>) -> <pair a <foreignblob>>
+
+  Apply the given list of actions in sequence, returning the values.
+  This is Haskell's sequence.
+""",
+"""(lambda (ks)
+  (if (is_pair ks)
+      (do (v <- (first ks))
+          (vs <- (sequence (rest ks)))
+          (return (pair v vs)))
+      (return nil)))"""],
+
+["sequence_", """\
 .. function:: sequence(ks : list<inference action>)
 
   :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
@@ -52,8 +67,9 @@ prelude = [
 """,
 """(lambda (ks)
   (if (is_pair ks)
-      (lambda (t) ((sequence (rest ks)) (rest ((first ks) t))))
-      (lambda (t) (pair nil t))))"""],
+      (do (first ks)
+          (sequence_ (rest ks)))
+      pass))"""],
 
 ["mapM", """\
 .. function:: mapM(act : proc(a) -> <inference action returning b>, objs : list<a>)
@@ -65,11 +81,30 @@ prelude = [
   nomenclature is borrowed from Haskell.
 """,
  """(lambda (act objs)
-  (if (is_pair objs)
-      (do (v <- (act (first objs)))
-          (vs <- (mapM act (rest objs)))
-          (return (pair v vs)))
-      (return nil)))"""],
+  (sequence (to_list (mapv act (to_array objs)))))"""],
+
+["imapM", """\
+.. function:: imapM(act : proc(int, a) -> <inference action returning b>, objs : list<a>)
+
+  :rtype: proc(<foreignblob>) -> <pair list<b> <foreignblob>>
+
+  Apply the given action function to each given object and its index
+  in the list and perform those actions in order.  Return a list of
+  the resulting values.
+""",
+ """(lambda (act objs)
+  (sequence (to_list (imapv act (to_array objs)))))"""],
+
+["for_each", """\
+.. function:: for_each(act : proc(a) -> <inference action>, objs : list<a>)
+
+  :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
+
+  Apply the given action function to each given object and perform
+  those actions in order.  Discard the results.
+""",
+ """(lambda (act objs)
+  (sequence_ (to_list (mapv act (to_array objs)))))"""],
 
 ["for_each_indexed", """\
 .. function:: for_each_indexed(act : proc(int, a) -> <inference action>, objs : list<a>)
@@ -78,10 +113,10 @@ prelude = [
 
   Apply the given action function to each given object and its index
   in the list and perform those actions in order.  Discard the
-  results.  The nomenclature is borrowed from Scheme.
+  results.
 """,
  """(lambda (act objs)
-  (sequence (to_list (imapv act (to_array objs)))))"""],
+  (sequence_ (to_list (imapv act (to_array objs)))))"""],
 
 # pass :: State a ()  pass = return ()
 ["pass", """\
