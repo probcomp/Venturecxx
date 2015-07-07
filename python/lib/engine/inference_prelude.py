@@ -234,6 +234,20 @@ prelude = [
 """,
 "(rejection default all 1)"],
 
+["join_datasets", """\
+.. function:: join_datasets(datasets : list<dataset>)
+
+  :rtype: proc(<foreignblob>) -> <pair <dataset> <foreignblob>>
+
+  Merge all the given datasets into one.
+""",
+"""\
+(lambda (datasets)
+  (let ((d (empty)))
+    (do (for_each datasets
+          (curry into d))
+        (return d))))"""],
+
 ["accumulate_dataset", """\
 .. function:: accumulate_dataset(iterations : int, a : <inference action returning a dataset>)
 
