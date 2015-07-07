@@ -219,6 +219,7 @@ class VentureSivm(object):
 
     def _get_syntax_record(self, did):
         if did not in self.syntax_dict:
+            # print "Assuming missing did %s is from the top of the stack %s" % (did, self.attempted)
             # Presume that the desired did is currently being evaluated
             self.syntax_dict[did] = self.attempted.pop()
         return self.syntax_dict[did]
