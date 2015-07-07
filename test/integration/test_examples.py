@@ -19,7 +19,7 @@ import subprocess as s
 from unittest import SkipTest
 from distutils.spawn import find_executable
 
-from venture.test.config import gen_in_backend, gen_needs_backend
+from venture.test.config import gen_in_backend, gen_needs_backend, gen_needs_ggplot
 
 def findTimeout():
   '''
@@ -57,6 +57,7 @@ def checkVentureExample(command):
 
 @gen_in_backend("none")
 @gen_needs_backend("puma")
+@gen_needs_ggplot
 def testVentureExamplesPuma():
   for ex in ["venture puma -f examples/plotting/bimodal.vnt",
              "venture puma -f examples/plotting/dice_plot.vnt",
@@ -68,8 +69,15 @@ def testVentureExamplesPuma():
 
 @gen_in_backend("none")
 @gen_needs_backend("lite")
-def testVentureExamplesLite():
+@gen_needs_ggplot
+def testVentureExamplesLitePlot():
   for ex in ["venture lite -f examples/trickiness-ideal.vnts",
-             "venture lite -L examples/hmm_plugin.py -f examples/hmm.vnt -P -e '[infer (exact_filtering)]'",
+  ]:
+    yield checkVentureExample, ex
+
+@gen_in_backend("none")
+@gen_needs_backend("lite")
+def testVentureExamplesLitePlot():
+  for ex in ["venture lite -L examples/hmm_plugin.py -f examples/hmm.vnt -P -e '[infer (exact_filtering)]'",
   ]:
     yield checkVentureExample, ex
