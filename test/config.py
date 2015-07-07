@@ -285,6 +285,37 @@ def testSomeThingsAboutPuma():
     return wrapped
   return wrap
 
+def needs_backend(backend):
+  """Marks this test as needing the given backend."""
+  def wrap(f):
+    assert not isgeneratorfunction(f), \
+      "Use gen_needs_backend for test generator %s" % (f.__name__,)
+    @nose.make_decorator
+    def wrapped(*args):
+      try:
+        s.backend(backend).make_combined_ripl()
+      except Exception as e:
+        raise SkipTest(f.__name__ + " needs " + backend)
+      return f(*args)
+    return wrapped
+  return wrap
+
+def gen_needs_backend(backend):
+  """Marks this test generator as needing the given backend."""
+  def wrap(f):
+    assert isgeneratorfunction(f), \
+      "Use needs_backend for non-generator test %s" % (f.__name__,)
+    @nose.make_decorator(f)
+    def wrapped(*args):
+      try:
+        s.backend(backend).make_combined_ripl()
+      except Exception as e:
+        raise SkipTest(f.__name__ + " needs " + backend)
+      for t in f(*args):
+        yield t
+    return wrapped
+  return wrap
+
 def broken_in(backend, reason = None):
   """Marks this test as being known to be broken in some backend."""
   def wrap(f):
