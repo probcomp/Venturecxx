@@ -60,8 +60,8 @@ def testAnnotateErrorTriggeredByInference():
 def testAnnotateProgrammaticAssume():
   ripl = get_ripl()
   err.assert_error_message_contains("""\
-((assume x (add 1 foo)) model)
- ^^^^^^^^^^^^^^^^^^^^^^
+(run (assume x (add 1 foo)))
+     ^^^^^^^^^^^^^^^^^^^^^^
 """,
   ripl.infer, "(assume x (+ 1 foo))")
   err.assert_error_message_contains("""\
@@ -97,8 +97,8 @@ def testAnnotateDefinedProgrammaticAssume():
   # However, the top stack frame is somewhat misleading as to when the
   # problem was identified.  I might be able to live with that.
   err.assert_error_message_contains("""\
-((action) model)
- ^^^^^^^^
+(run (action))
+     ^^^^^^^^
 (lambda () (assume x (add 1 foo)))
            ^^^^^^^^^^^^^^^^^^^^^^
 """,
@@ -114,8 +114,8 @@ def testAnnotateDefinedProgrammaticAssume():
 def testAnnotateInferenceProgramError():
   ripl = get_ripl()
   err.assert_error_message_contains("""\
-((observe (normal 0 1) (add 1 foo)) model)
-                              ^^^
+(run (observe (normal 0 1) (add 1 foo)))
+                                  ^^^
 """,
   ripl.infer, "(observe (normal 0 1) (+ 1 foo))")
 
@@ -135,8 +135,8 @@ def testAnnotateDefinedInferenceProgramError():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.define("badness", "(lambda () (observe (normal 0 1) (+ 1 foo)))")
   err.assert_error_message_contains("""\
-((badness) model)
- ^^^^^^^^^
+(run (badness))
+     ^^^^^^^^^
 (lambda () (observe (normal 0 1) (add 1 foo)))
                                         ^^^
 """,
@@ -152,8 +152,8 @@ def testAnnotateDefinedQuasiquotedProgrammaticAssume():
   # However, the top stack frame is somewhat misleading as to when the
   # problem was identified.  I might be able to live with that.
   err.assert_error_message_contains("""\
-((action (quote foo)) model)
- ^^^^^^^^^^^^^^^^^^^^
+(run (action (quote foo)))
+     ^^^^^^^^^^^^^^^^^^^^
 (lambda (name) (assume x (add 1 (unquote name))))
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 """,
@@ -184,10 +184,10 @@ def testAnnotateInferenceErrorInDo():
 (do (assume x (normal 0 1))
     (observe x (+ 1 badness)))"""
   err.assert_error_message_contains("""\
-((do (assume x (normal 0 1)) (observe x (add 1 badness))) model)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-((do (assume x (normal 0 1)) (observe x (add 1 badness))) model)
-                                               ^^^^^^^
+(run (do (assume x (normal 0 1)) (observe x (add 1 badness))))
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(run (do (assume x (normal 0 1)) (observe x (add 1 badness))))
+                                                   ^^^^^^^
 """,
   ripl.infer, expression)
 
@@ -200,8 +200,8 @@ def testAnnotateInferenceErrorInDefinedDo():
     (y <- (sample x))
     (observe x (+ 1 badness)))""")
   err.assert_error_message_contains("""\
-(action model)
-^^^^^^^^^^^^^^
+(run action)
+^^^^^^^^^^^^
 (do (assume x (normal 0 1)) (y <- (sample x)) (observe x (add 1 badness)))
                                                                 ^^^^^^^
 """,
@@ -215,10 +215,10 @@ def testAnnotateInferenceErrorInQuasiquote():
 (lambda (t) (pair (lookup `(,(+ 1 badness) 5) 0) t))
 """
   err.assert_error_message_contains("""\
-((lambda (t) (pair (lookup (quasiquote ((unquote (add 1 badness)) 5)) 0) t)) model)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-((lambda (t) (pair (lookup (quasiquote ((unquote (add 1 badness)) 5)) 0) t)) model)
-                                                        ^^^^^^^
+(run (lambda (t) (pair (lookup (quasiquote ((unquote (add 1 badness)) 5)) 0) t)))
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(run (lambda (t) (pair (lookup (quasiquote ((unquote (add 1 badness)) 5)) 0) t)))
+                                                            ^^^^^^^
 """,
   ripl.infer, expression)
 
@@ -230,8 +230,8 @@ def testAnnotateInferenceErrorInImplicitQuasiquote():
 (assume x (normal ,(+ 1 badness) 1))
 """
   err.assert_error_message_contains("""\
-((assume x (normal (unquote (add 1 badness)) 1)) model)
-                                   ^^^^^^^
+(run (assume x (normal (unquote (add 1 badness)) 1)))
+                                       ^^^^^^^
 """,
   ripl.infer, expression)
 
@@ -247,10 +247,10 @@ def testLoopErrorAnnotationSmoke():
     time.sleep(0.01) # Give it time to start
     ripl.stop_continuous_inference() # Join the other thread to make sure it errored
   err.assert_print_output_contains("""\
-((make_csp (quote (t)) (quote (pair (add 1 badness) t))) model)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-((make_csp (quote (t)) (quote (pair (add 1 badness) t))) model)
-                                           ^^^^^^^
+(run (make_csp (quote (t)) (quote (pair (add 1 badness) t))))
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(run (make_csp (quote (t)) (quote (pair (add 1 badness) t))))
+                                               ^^^^^^^
 """, doit)
   eq_(numthreads, threading.active_count()) # Erroring out in loop does not leak active threads
 

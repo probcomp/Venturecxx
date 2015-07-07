@@ -27,8 +27,8 @@ def testAssertSmoke():
 @on_inf_prim("assert")
 def testAssertSmoke2():
   err.assert_error_message_contains("""\
-((assert false) model)
-^^^^^^^^^^^^^^^^^^^^^^
+(run (assert false))
+^^^^^^^^^^^^^^^^^^^^
 """, get_ripl().infer, "(assert false)")
 
 @on_inf_prim("particle_log_weights")

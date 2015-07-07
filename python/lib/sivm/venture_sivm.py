@@ -181,9 +181,9 @@ class VentureSivm(object):
         # The engine actually executes an application form around the
         # passed inference program.  Storing this will align the
         # indexes correctly.
-        symbol = v.symbol("model")
-        hacked_exp = [exp, symbol]
-        hacked_syntax = macro.ListSyntax([syntax, macro.LiteralSyntax(symbol)])
+        symbol = v.symbol("run")
+        hacked_exp = [symbol, exp]
+        hacked_syntax = macro.ListSyntax([macro.LiteralSyntax(symbol), syntax])
         return (hacked_exp, hacked_syntax)
 
     def _annotate(self, e, instruction):
@@ -219,6 +219,7 @@ class VentureSivm(object):
 
     def _get_syntax_record(self, did):
         if did not in self.syntax_dict:
+            # print "Assuming missing did %s is from the top of the stack %s" % (did, self.attempted)
             # Presume that the desired did is currently being evaluated
             self.syntax_dict[did] = self.attempted.pop()
         return self.syntax_dict[did]
@@ -249,7 +250,8 @@ class VentureSivm(object):
 
     def _hack_skip_inference_prelude_entry(self, did):
         import venture.engine.engine as e
-        return self.core_sivm.engine.persistent_inference_trace and did < len(e._inference_prelude())
+        # <= because directive IDs are 1-indexed (see Engine.nextBaseAddr)
+        return self.core_sivm.engine.persistent_inference_trace and did <= len(e._inference_prelude())
 
     def _register_executed_instruction(self, instruction, response):
         instruction_type = instruction['instruction']
