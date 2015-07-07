@@ -212,9 +212,7 @@ class Engine(object):
     return isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop"
 
   def _do_infer(self, program):
-    did = self.nextBaseAddr()
-    self.infer_trace.eval(did, [v.sym("run"), program])
-    return did
+    return self._do_evaluate([v.sym("run"), program])
 
   @contextmanager
   def inference_trace(self):
