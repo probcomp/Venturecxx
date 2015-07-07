@@ -72,16 +72,20 @@ class RiplCmd(Cmd, object):
     return self.ripl.execute_instruction(r_inst)
 
   def precmd(self, line):
+    self.strip_hack = False
     line = line.strip()
     if len(line) > 0 and (line[0] == "[" or line[0] == "("):
       if line[-1] == "]" or line[-1] == ")":
+        self.strip_hack = True
         return line[1:-1]
     return line
 
   @catchesVentureException
   def default(self, line):
     '''Evaluate an expression in the inference program.'''
-    ans = self.ripl.execute_instruction('(' + line + ')')
+    if self.strip_hack:
+      line = '(' + line + ')'
+    ans = self.ripl.execute_instruction(line)
     print getValue(ans)
 
   @catchesVentureException
