@@ -189,7 +189,7 @@ class Engine(object):
       self.swapped_model = True
       with self.inference_trace():
         did = self._do_infer(v.quote(stack_dict_action))
-        ans = self._extract_raw_infer_result(did)
+        ans = self.infer_trace.extractRaw(did)
         self.infer_trace.uneval(did) # TODO This becomes "forget" after the engine.Trace wrapper
         return (ans, model)
     finally:
@@ -204,7 +204,7 @@ class Engine(object):
     else:
       with self.inference_trace():
         did = self._do_infer(program)
-        ans = self._extract_infer_result(did)
+        ans = self.infer_trace.extractValue(did)
         self.infer_trace.uneval(did) # TODO This becomes "forget" after the engine.Trace wrapper
         return ans
 
@@ -215,16 +215,6 @@ class Engine(object):
     did = self.nextBaseAddr()
     self.infer_trace.eval(did, [v.sym("run"), program])
     return did
-
-  def _extract_infer_result(self, did):
-    ans = self.infer_trace.extractValue(did)
-    assert isinstance(ans, dict)
-    return ans
-
-  def _extract_raw_infer_result(self, did):
-    ans = self.infer_trace.extractRaw(did)
-    assert isinstance(ans, vv.VentureValue)
-    return ans
 
   @contextmanager
   def inference_trace(self):
