@@ -18,7 +18,7 @@
 import scipy.stats as stats
 
 from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, on_inf_prim, default_num_samples, default_num_transitions_per_sample
+from venture.test.config import get_ripl, on_inf_prim, default_num_samples, default_num_transitions_per_sample, needs_backend
 
 @on_inf_prim("sample")
 def testMonadicSmoke():
@@ -72,6 +72,8 @@ def testModelSwitchingSmoke():
   cdf = stats.norm(loc=0.0, scale=1.0).cdf
   return reportKnownContinuous(cdf, predictions, "N(0,1)")
 
+@needs_backend("lite")
+@needs_backend("puma")
 @on_inf_prim("new_model")
 def testBackendSwitchingSmoke():
   ripl = get_ripl(persistent_inference_trace=True)
