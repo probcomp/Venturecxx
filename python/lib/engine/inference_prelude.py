@@ -96,18 +96,18 @@ prelude = [
   (sequence (to_list (imapv act (to_array objs)))))"""],
 
 ["for_each", """\
-.. function:: for_each(act : proc(a) -> <inference action>, objs : list<a>)
+.. function:: for_each(objs : list<a>, act : proc(a) -> <inference action>)
 
   :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
 
   Apply the given action function to each given object and perform
   those actions in order.  Discard the results.
 """,
- """(lambda (act objs)
+ """(lambda (objs act)
   (sequence_ (to_list (mapv act (to_array objs)))))"""],
 
 ["for_each_indexed", """\
-.. function:: for_each_indexed(act : proc(int, a) -> <inference action>, objs : list<a>)
+.. function:: for_each_indexed(objs : list<a>, act : proc(int, a) -> <inference action>)
 
   :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
 
@@ -115,7 +115,7 @@ prelude = [
   in the list and perform those actions in order.  Discard the
   results.
 """,
- """(lambda (act objs)
+ """(lambda (objs act)
   (sequence_ (to_list (imapv act (to_array objs)))))"""],
 
 # pass :: State a ()  pass = return ()
