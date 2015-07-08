@@ -164,8 +164,8 @@ def grad_list(args, direction):
     tails = [0 for _ in range(len(args) - len(list_))]
     return list_ + tails
 
-def print_(value, label):
-  print 'print ' + label + ': ' + str(value)
+def debug_print(label, value):
+  print 'debug ' + label + ': ' + str(value)
   return value
 
 def vector_dot(v1, v2):
@@ -362,10 +362,10 @@ builtInSPsList = [
                                  t.ArrayUnboxedType(t.NumberType()),
                                  descr="(%s M v) returns the matrix-vector product Mv.") ],
 
-           [ "print", deterministic_typed(print_,
-                                           [t.AnyType("k"), t.SymbolType()],
+           [ "debug", deterministic_typed(debug_print,
+                                           [t.SymbolType(), t.AnyType("k")],
                                            t.AnyType("k"),
-                                           descr = "Print the value of the result of any other SP, labeled by a Symbol.") ],
+                                           descr = "Print the given value, labeled by a Symbol. Return the value. Intended for debugging or for monitoring execution.") ],
 
            [ "apply", esr_output(TypedPSP(functional.ApplyRequestPSP(),
                                           SPType([SPType([t.AnyType("a")], t.AnyType("b"), variadic=True),

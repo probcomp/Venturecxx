@@ -31,7 +31,7 @@ def test_print1():
   ripl = get_ripl()
   x = ripl.assume('x', '(uniform_discrete 1 10)')
   y = ripl.assume('y', '(uniform_discrete 1 10)')
-  program = ('[SAMPLE (+ (print x (quote x)) (print y (quote y)))]')
+  program = ('''[SAMPLE (+ (debug 'x x) (debug 'y y))]''')
   res, captured = capture_output(ripl, program)
   res_value = res[0]['value']['value']
   captured_x, captured_y = map(extract_integer, captured.splitlines())
@@ -43,8 +43,8 @@ def test_print1():
 def test_print2():
   'Another test for consistency by intercepting output'
   ripl = get_ripl()
-  program = '''[SAMPLE (+ (print (uniform_discrete 1 10) (quote x))
-                          (print (uniform_discrete 1 10) (quote y)))]'''
+  program = '''[SAMPLE (+ (debug 'x (uniform_discrete 1 10))
+                          (debug 'y (uniform_discrete 1 10)))]'''
   res, captured = capture_output(ripl, program)
   res_value = res[0]['value']['value']
   captured_values = map(extract_integer, captured.splitlines())
