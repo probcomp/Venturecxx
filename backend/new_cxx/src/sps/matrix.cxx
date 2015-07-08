@@ -203,6 +203,6 @@ VentureValuePtr VectorTimesMatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_
 
   VectorXd v = args->operandValues[0]->getVector();
   MatrixXd m = args->operandValues[1]->getMatrix();
-  VectorXd ans = v*m;
+  VectorXd ans = v.transpose()*m;
   return VentureValuePtr(new VentureVector(ans));
 }
