@@ -1,6 +1,18 @@
 <% sample_size = 500 %>
 <% if ENV['SMOKETEST'] then sample_size = 5 end %>
 <% smaller_sample_size = [sample_size / 5, 5].max %>
+<% refman_url = "http://probcomp.csail.mit.edu/venture/edge/reference/" %>
+
+Getting Started
+===============
+
+Start a venture session by running
+
+```
+$ venture lite --lang venture_script
+```
+
+(N.B.: The [command line reference](<%= refman_url %>usage.html#standalone-invocation))
 
 Modeling Basics
 ===============
