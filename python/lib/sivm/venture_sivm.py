@@ -79,7 +79,6 @@ class VentureSivm(object):
         self.syntax_dict = {} # Maps directive ids to the Syntax objects that record their macro expansion history
         self._debugger_clear()
         self.state = 'default'
-        self.attempted = [] # Stores Syntax objects of in-progress instructions (that do not have assigned directive IDs yet).
 
     def _debugger_clear(self):
         self.breakpoint_dict = {}
@@ -212,10 +211,6 @@ class VentureSivm(object):
         return [frame for frame in [self._resugar(index) for index in address] if frame is not None]
 
     def _get_syntax_record(self, did):
-        if did not in self.syntax_dict:
-            # print "Assuming missing did %s is from the top of the stack %s" % (did, self.attempted)
-            # Presume that the desired did is currently being evaluated
-            self.syntax_dict[did] = self.attempted.pop()
         return self.syntax_dict[did]
 
     def _get_exp(self, did):
@@ -229,8 +224,8 @@ class VentureSivm(object):
             # Skip that frame.
             return None
         if self._hack_skip_inference_prelude_entry(did):
-            # The reason to skip is to avoid popping the
-            # self.attempted stack even though the did is not there.
+            # The reason to skip is that those entries are (still)
+            # never entered into the syntax_dict.
             print "Warning: skipping annotating did %s, assumed to be from the inference prelude" % did
             return None
         exp, syntax = self._get_syntax_record(did)
