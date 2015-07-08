@@ -160,7 +160,7 @@ map<string,SP*> initBuiltInSPs()
   m["mapv"] = new SP(new ArrayMapRequestPSP(), new ESRArrayOutputPSP());
   m["imapv"] = new SP(new IndexedArrayMapRequestPSP(), new ESRArrayOutputPSP());
   m["arange"] = new SP(new NullRequestPSP(), new ArangeOutputPSP());
-  m["repeat"] = new SP(new NullRequestPSP(), new RepeatOutputPSP());
+  m["fill"] = new SP(new NullRequestPSP(), new RepeatOutputPSP());
 
   m["make_csp"] = new SP(new NullRequestPSP(), new MakeCSPOutputPSP());
   m["mem"] = new SP(new NullRequestPSP(), new MakeMSPOutputPSP());
