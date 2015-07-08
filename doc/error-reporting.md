@@ -56,9 +56,8 @@ The current (somewhat baroque) error management architecture is this:
      [macro_system.py](../python/lib/sivm/macro_system.py) and
      [pattern_language.py](../python/lib/sivm/pattern_language.py).
 
-   - Complication: directive ids are actually assigned by the
-     Engine, so the sivm maintains a stack of macro expansions of
-     directives currently in progress.
+   - Complication: directive ids are actually assigned by the Engine,
+     so the sivm asks the Engine to predict the upcoming directive ID.
 
 3. The next layer (engine) actually executes the desired computation
    in either the inference or the model trace.
