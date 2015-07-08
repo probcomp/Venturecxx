@@ -1,7 +1,7 @@
 Notes on Venture error reporting
 ================================
 
-Alexey Radul, 3/17/15
+Alexey Radul, 3/17/15; updated lightly 7/8/15
 
 I am stopping work on error reporting for now, becuase it got better
 and I am tired of wrangling with it.  I am recording my notes here in
@@ -275,13 +275,6 @@ Anticipated Future Problems
   inference trace mode, if I start recording desugarings of infer
   instructions.
 
-- The currently executing expression is not the only one the sivm
-  doesn't have in its sugar dict: there are also the inference and
-  model preludes.  This may causes confusion.
-
-    - I may have hacked the inference prelude problem satisfactorily,
-      but maybe not.
-
 - [hacked] [blaming makers] Crashing in a programmatic assume by
   default blames the application of the made action SP, even though
   the mistake is made in the application of the maker.  If it were a
@@ -311,8 +304,8 @@ Anticipated Future Problems
   it is likely to be vulnerable to the double macroexpansion problem.
   - Possible solution: handle [infer (loop ...)] at the sivm or ripl
     level instead of the engine.
-  - It is also likely to leak records in the persistent inference
-    trace, and macroexpansion records in the sivm.
+  - It probably does not leak records in the persistent inference
+    trace; might leak macroexpansion records in the sivm.
 
 Milestones
 ----------
