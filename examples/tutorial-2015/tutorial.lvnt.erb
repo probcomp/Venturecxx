@@ -1,4 +1,5 @@
 <% sample_size = 500 %>
+<% if ENV['SMOKETEST'] then sample_size = 5 end %>
 <% smaller_sample_size = [sample_size / 5, 5].max %>
 
 Modeling Basics
