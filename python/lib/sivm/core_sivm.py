@@ -35,7 +35,7 @@ class CoreSivm(object):
         self.profiler_enabled = False
     
     _implemented_instructions = {"define","assume","observe","predict",
-            "configure","forget","freeze","report","infer",
+            "configure","forget","freeze","report","evaluate","infer",
             "clear","rollback","get_global_logscore",
             "start_continuous_inference","stop_continuous_inference",
             "continuous_inference_status", "profiler_configure"}
@@ -145,6 +145,13 @@ class CoreSivm(object):
         else:
             val = self.engine.report_value(did)
             return {"value":val}
+
+    def _do_evaluate(self,instruction):
+        utils.require_state(self.state,'default')
+        e = utils.validate_arg(instruction,'expression',
+                utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
+        val = self.engine.evaluate(e)
+        return {"value":val}
 
     def _do_infer(self,instruction):
         utils.require_state(self.state,'default')

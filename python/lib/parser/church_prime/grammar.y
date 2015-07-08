@@ -33,7 +33,6 @@
 
 venture(empty)		::= .
 venture(i)		::= instructions(insts).
-venture(e)		::= expression(exp).
 
 instructions(one)	::= instruction(inst).
 instructions(many)	::= instructions(insts) instruction(inst).
@@ -42,6 +41,7 @@ instruction(labelled)	::= L_NAME(l) T_COLON
 				T_LSQUARE(open) directive(d) T_RSQUARE(close).
 instruction(unlabelled)	::= T_LSQUARE(open) directive(d) T_RSQUARE(close).
 instruction(command)	::= T_LSQUARE(open) command(c) T_RSQUARE(close).
+instruction(expression) ::= expression(e).
 instruction(laberror)	::= error T_COLON(colon)
 				T_LSQUARE(open) directive(d) T_RSQUARE(close).
 instruction(direrror)	::= L_NAME(l) T_COLON(colon)

@@ -668,6 +668,11 @@ Open issues:
         else:
             return program
 
+    def evaluate(self, program, type=False):
+        o = self.execute_instruction({'instruction':'evaluate', 'expression': program})
+        value = o["value"]
+        return value if type else u.strip_types(value)
+
     def infer(self, params=None, type=False):
         o = self.execute_instruction({'instruction':'infer', 'expression': self.defaultInferProgram(params)})
         value = o["value"]

@@ -39,7 +39,7 @@ class VentureSivm(object):
             'force','sample','get_current_exception',
             'get_state', 'reset', 'debugger_list_breakpoints','debugger_get_breakpoint'}
     _core_instructions = {"define","assume","observe","predict",
-            "configure","forget","freeze","report","infer","start_continuous_inference",
+            "configure","forget","freeze","report","evaluate","infer","start_continuous_inference",
             "stop_continuous_inference","continuous_inference_status",
             "clear","rollback","get_global_logscore",
             "debugger_configure","debugger_list_random_choices", "debugger_clear",
@@ -110,7 +110,7 @@ class VentureSivm(object):
         desugared_instruction = copy.copy(instruction)
         instruction_type = instruction['instruction']
         # desugar the expression
-        if instruction_type in ['define','assume','observe','predict','infer']:
+        if instruction_type in ['define','assume','observe','predict','evaluate','infer']:
             exp = utils.validate_arg(instruction,'expression',
                     utils.validate_expression, wrap_exception=False)
             syntax = macro_system.expand(exp)
@@ -148,23 +148,26 @@ class VentureSivm(object):
         # expressions the underlying Engine actually evaluates in its
         # traces.
         instruction_type = instruction['instruction']
-        if instruction_type is 'infer':
+        if instruction_type is 'evaluate':
+            assert len(self.attempted) == 0, "Evaluate should never reentrantly run infer or evaluate."
+            self.attempted.append(record)
+        elif instruction_type is 'infer':
             if self.core_sivm.engine.is_infer_loop_program(record[0]):
                 # The engine does something funny with infer loop that
                 # has the effect that I should not store the loop
                 # infer program itself.
                 pass
             else:
-                assert len(self.attempted) == 0, "Infer should never reentrantly run itself."
+                assert len(self.attempted) == 0, "Infer should never reentrantly run infer or evaluate."
                 self.attempted.append(self._hack_infer_expression_structure(*record))
         else:
-            # One might think this should be done for 'infer' too.  As
+            # One might think this should be done for 'evaluate' and 'infer' too.  As
             # long as there is no mutation and SPs cannot roundtrip
             # through the stack dict representation, I expect there to
-            # be no way for a stack trace to reference an 'infer'
+            # be no way for a stack trace to reference an 'evaluate' or 'infer'
             # (rather than 'define') command directly (as opposed to
             # model statements introduced thereby, which are handled
-            # separately) after the dynamic extent of that 'infer'.
+            # separately) after the dynamic extent of that 'evaluate' or 'infer'.
             # That means it's currently safe to leave it off.  Why not
             # put it in anyway?  Inertia.
             did = self.core_sivm.engine.predictNextDirectiveId()
@@ -266,9 +269,9 @@ class VentureSivm(object):
             if did in self.did_dict:
                 del self.label_dict[self.did_dict[did]]
                 del self.did_dict[did]
-        if instruction_type in ['infer']:
-            # Don't build up "in-flight" records, even though "infer"
-            # is not recorded for posterity.
+        if instruction_type in ['evaluate', 'infer']:
+            # Don't build up "in-flight" records, even though
+            # "evaluate" and "infer" are not recorded for posterity.
             # TODO Is there a race condition here?  The continuous
             # inference thread repeatedly calls ripl.infer, which will
             # trigger both pushes to self.attempted and pops from it.
@@ -279,7 +282,7 @@ class VentureSivm(object):
             # defensively anyway?
             exp = utils.validate_arg(instruction,'expression',
                     utils.validate_expression, wrap_exception=False)
-            if self.core_sivm.engine.is_infer_loop_program(exp):
+            if instruction_type is 'infer' and self.core_sivm.engine.is_infer_loop_program(exp):
                 # We didn't save the infer loop thing
                 pass
             else:
@@ -500,7 +503,7 @@ class VentureSivm(object):
     ###############################
     # Convenience wrappers some popular core instructions
     # Currently supported wrappers:
-    # assume,observe,predict,forget,report,infer,force,sample,list_directives
+    # assume,observe,predict,forget,report,evaluate,infer,force,sample,list_directives
     ###############################
 
     def assume(self, name, expression, label=None):
@@ -537,6 +540,10 @@ class VentureSivm(object):
             d = {'instruction':'report','directive_id':label_or_did}
         else:
             d = {'instruction':'labeled_report','label':v.symbol(label_or_did)}
+        return self.execute_instruction(d)
+
+    def evaluate(self, params=None):
+        d = {'instruction':'evaluate','params':params}
         return self.execute_instruction(d)
 
     def infer(self, params=None):
