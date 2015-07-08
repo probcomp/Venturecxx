@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from numpy import array_equal
+from numpy import array_equal, allclose
 from venture.test.config import get_ripl, on_inf_prim, gen_on_inf_prim
 
 class TestMatrixVector(object):
@@ -40,12 +40,12 @@ class TestMatrixVector(object):
   @on_inf_prim("none")
   def testScaleVector(self):
     assert array_equal(self.ripl.sample("(scale_vector 11 v1)"), [11, 77])
-    assert array_equal(self.ripl.sample("(scale_vector -0.5 v2)"), [-1.5, -2.0])
+    assert allclose(self.ripl.sample("(scale_vector -0.5 v2)"), [-1.5, -2.0])
 
   @on_inf_prim("none")
   def testScaleMatrix(self):
     assert array_equal(self.ripl.sample("(scale_matrix -2 m1)"), [[0, -2], [2, 0]])
-    assert array_equal(self.ripl.sample("(scale_matrix 0.1 m2)"), [[0.1, 0.7], [0.3, 0.4]])
+    assert allclose(self.ripl.sample("(scale_matrix 0.1 m2)"), [[0.1, 0.7], [0.3, 0.4]])
 
   @on_inf_prim("none")
   def testVectorDot(self):
