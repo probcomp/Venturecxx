@@ -252,8 +252,8 @@ pair<double,Node*> evalFamily(Trace * trace,
     Node * operatorNode = p.second;
 
     /* DEBUG */
-    boost::shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(trace->getValue(operatorNode));
-    assert(spRef);
+    // boost::shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(trace->getValue(operatorNode));
+    // assert(spRef);
     /* END DEBUG */
 
     vector<Node*> operandNodes;
