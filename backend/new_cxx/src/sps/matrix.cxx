@@ -18,11 +18,15 @@
 #include "sps/matrix.h"
 #include "Eigen/Dense"
 
+#include "utils.h"
+
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
 VentureValuePtr MatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
+  checkArgsLength("matrix", args, 1);
+
   uint32_t rows, cols;
 
   vector<VentureValuePtr> allRows = args->operandValues[0]->getArray();
@@ -61,6 +65,8 @@ VentureValuePtr MatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
 
 VentureValuePtr IdentityMatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
+  checkArgsLength("id_matrix", args, 1);
+
   int dim = args->operandValues[0]->getInt();
   
   return VentureValuePtr(new VentureMatrix(MatrixXd::Identity(dim, dim)));
@@ -68,6 +74,8 @@ VentureValuePtr IdentityMatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng
 
 VentureValuePtr IsMatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
+  checkArgsLength("is_matrix", args, 1);
+
   return VentureValuePtr(new VentureBool(NULL != dynamic_pointer_cast<VentureMatrix>(args->operandValues[0])));
 }
 
@@ -91,11 +99,15 @@ VentureValuePtr VectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
 
 VentureValuePtr IsVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
+  checkArgsLength("is_vector", args, 1);
+
   return VentureValuePtr(new VentureBool(NULL != dynamic_pointer_cast<VentureVector>(args->operandValues[0])));
 }
 
 VentureValuePtr ToVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
+  checkArgsLength("to_vector", args, 1);
+
   vector<VentureValuePtr> row = args->operandValues[0]->getArray();
 
   if (row.size() == 0) { return VentureValuePtr(new VentureVector(VectorXd())); }
@@ -110,6 +122,8 @@ VentureValuePtr ToVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng
 
 VentureValuePtr VectorDotOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
+  checkArgsLength("vector_dot", args, 2);
+
   VectorXd v1 = args->operandValues[0]->getVector();
   VectorXd v2 = args->operandValues[1]->getVector();
   return VentureValuePtr(new VentureNumber(v1.dot(v2)));
@@ -117,6 +131,8 @@ VentureValuePtr VectorDotOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rn
 
 VentureValuePtr MatrixTimesVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
+  checkArgsLength("matrix_times_vector", args, 2);
+
   MatrixXd m = args->operandValues[0]->getMatrix();
   VectorXd v = args->operandValues[1]->getVector();
   VectorXd ans = m*v;
