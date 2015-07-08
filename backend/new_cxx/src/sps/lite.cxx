@@ -246,9 +246,13 @@ void ForeignLiteSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args, gsl_
   sp.attr("AEInfer")(foreignAux);
 }
 
-boost::python::dict ForeignLiteSP::toPython(Trace * trace, shared_ptr<SPAux> aux) const
+boost::python::dict ForeignLiteSP::toPython(Trace * trace, shared_ptr<SPAux> spAux) const
 {
-  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(aux)->aux;
+  boost::python::object foreignAux;
+  if (shared_ptr<ForeignLiteSPAux> aux = dynamic_pointer_cast<ForeignLiteSPAux>(spAux))
+  {
+    foreignAux = aux->aux;
+  }
   // TODO: make this transparent if possible
   boost::python::dict stackDict;
   stackDict["type"] = "foreign_sp";

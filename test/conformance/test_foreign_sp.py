@@ -152,4 +152,8 @@ def check_unpicklable_sp_parallel(mode):
     with assert_raises_regexp(TypeError, regexp):
         ripl.bind_foreign_sp('f', binaryNum(lambda x, y: 10*x + y))
 
-
+def test_return_foreign_sp():
+    'Foreign SPs can be returned as the result of directives.'
+    ripl = get_ripl()
+    ripl.bind_foreign_sp('f', binaryNum(lambda x, y: 10*x + y))
+    ripl.sample('f')
