@@ -109,6 +109,7 @@ class VentureSivm(object):
     def _call_core_sivm_instruction(self,instruction):
         desugared_instruction = copy.copy(instruction)
         instruction_type = instruction['instruction']
+        predicted_did = None
         # desugar the expression
         if instruction_type in ['define','assume','observe','predict','evaluate','infer']:
             exp = utils.validate_arg(instruction,'expression',
@@ -116,7 +117,7 @@ class VentureSivm(object):
             syntax = macro_system.expand(exp)
             desugared_instruction['expression'] = syntax.desugared()
             # for error handling
-            self._record_running_instruction(instruction, (exp, syntax))
+            predicted_did = self._record_running_instruction(instruction, (exp, syntax))
         # desugar the expression index
         if instruction_type == 'debugger_set_breakpoint_source_code_location':
             desugared_src_location = desugared_instruction['source_code_location']
@@ -139,7 +140,7 @@ class VentureSivm(object):
                 print traceback.format_exc()
                 raise e, None, info[2]
             raise e, None, info[2]
-        self._register_executed_instruction(instruction, response)
+        self._register_executed_instruction(instruction, predicted_did, response)
         return response
 
     def _record_running_instruction(self, instruction, record):
@@ -179,6 +180,7 @@ class VentureSivm(object):
                     tmp_instruction[key] = copy.copy(instruction[key])
             self.directive_dict[did] = tmp_instruction
             self.syntax_dict[did] = record
+            return did
 
     def _hack_infer_expression_structure(self, exp, syntax):
         # The engine actually executes an application form around the
@@ -256,7 +258,7 @@ class VentureSivm(object):
         # <= because directive IDs are 1-indexed (see Engine.nextBaseAddr)
         return self.core_sivm.engine.persistent_inference_trace and did <= len(e._inference_prelude())
 
-    def _register_executed_instruction(self, instruction, response):
+    def _register_executed_instruction(self, instruction, predicted_did, response):
         instruction_type = instruction['instruction']
         # clear the dicts on the "clear" command
         if instruction_type == 'clear':
