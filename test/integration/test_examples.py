@@ -78,6 +78,6 @@ def testVentureExamplesLitePlot():
 @gen_in_backend("none")
 @gen_needs_backend("lite")
 def testVentureExamplesLitePlot():
-  for ex in ["venture lite -L examples/hmm_plugin.py -f examples/hmm.vnt -P -e '[infer (exact_filtering)]'",
+  for ex in ["venture lite -L examples/hmm_plugin.py -f examples/hmm.vnt -e '[infer (exact_filtering)]'",
   ]:
     yield checkVentureExample, ex

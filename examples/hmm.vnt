@@ -16,13 +16,13 @@
 ;;; along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 ;; Run me with one of
-;; - venture lite -L hmm_plugin.py -f hmm.vnt -P -e '[infer (exact_map)]'
+;; - venture lite -L hmm_plugin.py -f hmm.vnt -e '[infer (exact_map)]'
 ;;   for one-shot exact max a-posteriori
-;; - venture lite -L hmm_plugin.py -f hmm.vnt -P -e '[infer (online_smoothed_marginals 10000 5 20)]'
+;; - venture lite -L hmm_plugin.py -f hmm.vnt -e '[infer (online_smoothed_marginals 10000 5 20)]'
 ;;   for online approximate posterior marginals
-;; - venture lite -L hmm_plugin.py -f hmm.vnt -P -e '[infer (exact_filtering)]'
+;; - venture lite -L hmm_plugin.py -f hmm.vnt -e '[infer (exact_filtering)]'
 ;;   for one-shot exact forward marginals
-;; - venture puma -L hmm_plugin.py -f hmm.vnt -P -e '[infer (particle_filter 1000)]'
+;; - venture puma -L hmm_plugin.py -f hmm.vnt -e '[infer (particle_filter 1000)]'
 ;;   for particle filtering for forward marginals
 
 ;;; HMM model
