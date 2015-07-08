@@ -81,7 +81,7 @@ Node * Trace::getOperatorSPMakerNode(ApplicationNode * node)
   boost::shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(candidate);
   if (!spRef)
   {
-    throw "spRef not an spRef but a " + candidate->toString();
+    throw "Cannot apply a non-procedure: " + candidate->toString();
   }
   return spRef->makerNode;
 }
