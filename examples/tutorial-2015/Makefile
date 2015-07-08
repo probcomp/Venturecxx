@@ -1,6 +1,9 @@
 all: build
 
-build:
+tutorial.lvnt: tutorial.lvnt.erb
+	erb tutorial.lvnt.erb > tutorial.lvnt
+
+build: tutorial.lvnt
 	../../script/venture-transcript tutorial.lvnt ppaml
 
 upload: build
