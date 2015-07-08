@@ -149,38 +149,27 @@ class VentureSivm(object):
         # expressions the underlying Engine actually evaluates in its
         # traces.
         instruction_type = instruction['instruction']
-        if instruction_type is 'evaluate':
-            assert len(self.attempted) == 0, "Evaluate should never reentrantly run infer or evaluate."
-            self.attempted.append(record)
-        elif instruction_type is 'infer':
+        if instruction_type is 'infer':
             if self.core_sivm.engine.is_infer_loop_program(record[0]):
                 # The engine does something funny with infer loop that
                 # has the effect that I should not store the loop
                 # infer program itself.
-                pass
+                return None
             else:
-                assert len(self.attempted) == 0, "Infer should never reentrantly run infer or evaluate."
-                self.attempted.append(self._hack_infer_expression_structure(*record))
-        else:
-            # One might think this should be done for 'evaluate' and 'infer' too.  As
-            # long as there is no mutation and SPs cannot roundtrip
-            # through the stack dict representation, I expect there to
-            # be no way for a stack trace to reference an 'evaluate' or 'infer'
-            # (rather than 'define') command directly (as opposed to
-            # model statements introduced thereby, which are handled
-            # separately) after the dynamic extent of that 'evaluate' or 'infer'.
-            # That means it's currently safe to leave it off.  Why not
-            # put it in anyway?  Inertia.
-            did = self.core_sivm.engine.predictNextDirectiveId()
-            assert did not in self.syntax_dict
-            tmp_instruction = {}
-            tmp_instruction['directive_id'] = did
-            for key in ('instruction', 'expression', 'symbol', 'value'):
-                if key in instruction:
-                    tmp_instruction[key] = copy.copy(instruction[key])
-            self.directive_dict[did] = tmp_instruction
-            self.syntax_dict[did] = record
-            return did
+                # "infer" causes the engine to run a variant of the
+                # actual passed expression.
+                record = self._hack_infer_expression_structure(*record)
+
+        did = self.core_sivm.engine.predictNextDirectiveId()
+        assert did not in self.syntax_dict
+        tmp_instruction = {}
+        tmp_instruction['directive_id'] = did
+        for key in ('instruction', 'expression', 'symbol', 'value'):
+            if key in instruction:
+                tmp_instruction[key] = copy.copy(instruction[key])
+        self.directive_dict[did] = tmp_instruction
+        self.syntax_dict[did] = record
+        return did
 
     def _hack_infer_expression_structure(self, exp, syntax):
         # The engine actually executes an application form around the
@@ -259,6 +248,13 @@ class VentureSivm(object):
         return self.core_sivm.engine.persistent_inference_trace and did <= len(e._inference_prelude())
 
     def _register_executed_instruction(self, instruction, predicted_did, response):
+        if response is not None and 'directive_id' in response:
+            if not response['directive_id'] == predicted_did:
+                warning = "Warning: Instruction %s was pre-assigned did %s but actually assigned did %s"
+                print warning % (instruction, predicted_did, response['directive_id'])
+        elif predicted_did is not None:
+            warning = "Warning: Instruction %s was pre-assigned did %s but not actually assigned any did"
+            print warning % (instruction, predicted_did)
         instruction_type = instruction['instruction']
         # clear the dicts on the "clear" command
         if instruction_type == 'clear':
@@ -272,23 +268,16 @@ class VentureSivm(object):
                 del self.label_dict[self.did_dict[did]]
                 del self.did_dict[did]
         if instruction_type in ['evaluate', 'infer']:
-            # Don't build up "in-flight" records, even though
-            # "evaluate" and "infer" are not recorded for posterity.
-            # TODO Is there a race condition here?  The continuous
-            # inference thread repeatedly calls ripl.infer, which will
-            # trigger both pushes to self.attempted and pops from it.
-            # If some other ripl instruction happens concurrently that
-            # also affects self.attempted, could there be a mix-up?
-            # Or does pausing continuous inference prevent that from
-            # happening?  Should I make the attempt stack thread-local
-            # defensively anyway?
+            # "evaluate" and "infer" are forgotten by the Engine;
+            # forget them here, too.
             exp = utils.validate_arg(instruction,'expression',
                     utils.validate_expression, wrap_exception=False)
             if instruction_type is 'infer' and self.core_sivm.engine.is_infer_loop_program(exp):
                 # We didn't save the infer loop thing
                 pass
             else:
-                self.attempted.pop()
+                del self.directive_dict[predicted_did]
+                del self.syntax_dict[predicted_did]
         # save the breakpoint if the instruction sets the breakpoint
         if instruction_type in ['debugger_set_breakpoint_address',
                 'debugger_set_breakpoint_source_code_location']:
