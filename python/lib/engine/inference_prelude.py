@@ -45,7 +45,7 @@ prelude = [
 ["sequence", """\
 .. function:: sequence(ks : list<inference action returning a>)
 
-  :rtype: proc(<foreignblob>) -> <pair a <foreignblob>>
+  :rtype: proc(<foreignblob>) -> <pair list<a> <foreignblob>>
 
   Apply the given list of actions in sequence, returning the values.
   This is Haskell's sequence.
