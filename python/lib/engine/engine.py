@@ -171,7 +171,8 @@ class Engine(object):
       did = self._do_evaluate(program)
       ans = self.infer_trace.extractValue(did)
       self.infer_trace.uneval(did) # TODO This becomes "forget" after the engine.Trace wrapper
-      return ans
+      # Return the forgotten did to better coordinate with the sivm
+      return (did, ans)
 
   def _do_evaluate(self, program):
     did = self.nextBaseAddr()
@@ -202,6 +203,7 @@ class Engine(object):
     if self.is_infer_loop_program(program):
       assert len(program) == 2
       self.start_continuous_inference(program[1])
+      return (None, None) # The core_sivm expects a 2-tuple
     else:
       return self.evaluate([v.sym("run"), program])
 

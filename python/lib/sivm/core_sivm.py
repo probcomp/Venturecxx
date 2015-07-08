@@ -150,15 +150,15 @@ class CoreSivm(object):
         utils.require_state(self.state,'default')
         e = utils.validate_arg(instruction,'expression',
                 utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
-        val = self.engine.evaluate(e)
-        return {"value":val}
+        (did, val) = self.engine.evaluate(e)
+        return {"directive_id": did, "value":val}
 
     def _do_infer(self,instruction):
         utils.require_state(self.state,'default')
         e = utils.validate_arg(instruction,'expression',
                 utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
-        val = self.engine.infer(e)
-        return {"value":val}
+        (did, val) = self.engine.infer(e)
+        return {"directive_id": did, "value":val}
 
     def _do_clear(self,_):
         utils.require_state(self.state,'default')
