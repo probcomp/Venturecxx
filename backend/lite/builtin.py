@@ -345,6 +345,31 @@ builtInSPsList = [
                                           t.ArrayUnboxedType(t.NumberType()),
                                           descr="(%s m) returns a 1-D array containing the elements of the matrix m.") ],
 
+           [ "transpose", deterministic_typed(np.transpose,
+                                              [t.MatrixType()],
+                                              t.MatrixType(),
+                                              descr="(%s m) returns the transpose of the matrix m.") ],
+
+           [ "vector_add", deterministic_typed(np.add,
+                                               [t.ArrayUnboxedType(t.NumberType()), t.ArrayUnboxedType(t.NumberType())],
+                                               t.ArrayUnboxedType(t.NumberType()),
+                                               descr="(%s x y) returns the sum of vectors x and y.") ],
+
+           [ "matrix_add", deterministic_typed(np.add,
+                                               [t.MatrixType(), t.MatrixType()],
+                                               t.MatrixType(),
+                                               descr="(%s x y) returns the sum of matrices x and y.") ],
+
+           [ "scale_vector", deterministic_typed(np.multiply,
+                                                 [t.NumberType(), t.ArrayUnboxedType(t.NumberType())],
+                                                 t.ArrayUnboxedType(t.NumberType()),
+                                                 descr="(%s x y) returns the product of scalar x and vector y.") ],
+
+           [ "scale_matrix", deterministic_typed(np.multiply,
+                                                 [t.NumberType(), t.MatrixType()],
+                                                 t.MatrixType(),
+                                                 descr="(%s x y) returns the product of scalar x and matrix y.") ],
+
            [ "vector_dot", deterministic_typed(vector_dot,
                                                [t.ArrayUnboxedType(t.NumberType()), t.ArrayUnboxedType(t.NumberType())],
                                                t.NumberType(),
@@ -361,6 +386,12 @@ builtInSPsList = [
                                  [t.MatrixType(), t.ArrayUnboxedType(t.NumberType())],
                                  t.ArrayUnboxedType(t.NumberType()),
                                  descr="(%s M v) returns the matrix-vector product Mv.") ],
+
+           [ "vector_times_matrix",
+             deterministic_typed(np.dot,
+                                 [t.ArrayUnboxedType(t.NumberType()), t.MatrixType()],
+                                 t.ArrayUnboxedType(t.NumberType()),
+                                 descr="(%s v M) returns the vector-matrix product vM.") ],
 
            [ "debug", deterministic_typed(debug_print,
                                            [t.SymbolType(), t.AnyType("k")],
