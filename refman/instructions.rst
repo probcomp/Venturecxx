@@ -162,7 +162,7 @@ problem-specific insights.  The inference expressions are described
   A typical use case would be::
 
     [define proc (lambda (a b)
-      (begin
+      (do
         (some inference commmand)
         (some other inference commmand)
         ...))]
@@ -171,12 +171,6 @@ problem-specific insights.  The inference expressions are described
   other inference procedure::
 
     [infer (proc 1 4)]
-
-  *Note*: ``define`` is only available if one enables the
-  still-experimental "persistent inference trace" extension.  This
-  extension can be enabled at the command line by passing
-  ``--persistent-inference-trace`` or ``-P`` to ``venture``, or programmatically
-  by passing ``persistent_inference_trace=True`` to ``make_foo_ripl``.
 
 Miscellaneous Instructions
 --------------------------
