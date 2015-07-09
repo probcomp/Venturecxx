@@ -170,8 +170,25 @@ sample x
 Better Inspection
 =================
 
-Are these samples actually from the right distribution?  We could
-eyeball it like this a bit more:
+As a reminder, we were studying this model (you can skip this block if
+you have your session from the last segment):
+
+```venture
+clear
+assume x = normal(0, 1)
+assume y = normal(x, 0.3)
+observe y = 2
+```
+
+We can get samples from inference
+
+```venture
+infer posterior
+sample x
+```
+
+but are they actually from the right distribution?  We could eyeball
+it like this a bit more:
 
 ```venture
 infer posterior
@@ -183,13 +200,21 @@ infer posterior
 sample x
 ```
 
-It's better to gather data programmatically [talk some about inference
-programming, the abstractions `accumulate_dataset` and `collect`,
-either gloss over or discuss `run` and `do`]:
+but that will get old quickly.
+
+It's better to gather data programmatically, for example like this:
 
 ```venture
 define data = run(accumulate_dataset(<%= smaller_sample_size %>, do(posterior, collect(x))))
 ```
+
+If you really want to know what's going on in this expression you can
+study the documentation of [do](<%= refman_url
+%>inference.html#special-forms), [run](<%= refman_url
+%>inference.html#run), and [accumulate_dataset](<%= refman_url
+%>inference.html#accumulate_dataset).  The effect is to gather up the
+values of `x` (and some metadata) over <%= smaller_sample_size %>
+iterations of the `posterior` inference command.
 
 ```venture
 infer printf(data)
