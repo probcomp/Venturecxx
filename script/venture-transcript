@@ -81,9 +81,8 @@ def getValue(v):
 
 class Writer(object):
     def __init__(self, filename, outdir):
-        basename = os.path.splitext(os.path.basename(filename))[0]
         self.outdir = outdir
-        self.outfile = outdir + "/" + basename + ".html"
+        self.outfile = outdir + "/index.html"
         self.out_chunks = []
         self.ripl = vs.backend("lite").make_combined_ripl()
         self.ripl.set_mode("venture_script")
