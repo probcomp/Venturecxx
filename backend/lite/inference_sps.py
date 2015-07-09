@@ -23,6 +23,7 @@ from builtin import no_request, deterministic_typed
 from exception import VentureError, VentureTypeError
 from venture.engine.inference import Dataset
 from venture.exception import VentureException
+from venture.lite.value import VentureForeignBlob
 from venture.lite.exception import VentureValueError
 from venture.engine.plot_spec import PlotSpec
 
@@ -165,7 +166,15 @@ def assert_fun(test, msg=""):
   assert test, msg
 
 def print_fun(*args):
-  print args
+  def convert_arg(arg):
+    if isinstance(arg, VentureForeignBlob) and isinstance(arg.getForeignBlob(), Dataset):
+      return arg.getForeignBlob().asPandas()
+    else:
+      return arg
+  if len(args) == 1:
+    print convert_arg(args[0])
+  else:
+    print [convert_arg(a) for a in args]
 
 def plot_fun(spec, dataset):
   spec = t.ExpressionType().asPython(spec)
