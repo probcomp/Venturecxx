@@ -21,20 +21,61 @@ $ venture lite -f script.vnts
 
 (N.B.: The [command line reference](<%= refman_url %>usage.html#standalone-invocation))
 
-Modeling Basics
-===============
+Basics
+======
 
 Sample an expression
 
-```venture
-sample normal(0, 1)
+```church'
+(uniform_continuous 0 1)
 ```
 
-These are independent samples from the standard Gaussian distribution
+These are independent samples from the unit uniform distribution
+
+```church'
+(uniform_continuous 0 1)
+```
+
+We can introduce a variable:
 
 ```venture
-sample normal(0, 1)
+define mean = expon(2)  // Exponential distribution with rate 2
 ```
+
+whose value is a particular sample from that distribution:
+
+```church'
+mean
+```
+
+and we can sample further expressions conditioned on that value:
+
+```church'
+(normal mean 0.2)
+```
+
+Exercise: Convince yourself that, for any given ``mean``, ``(normal mean 0.2)``
+is a different distribution from
+
+```church'
+(normal (expon 2) 0.2)
+```
+
+because the latter samples a new internal mean every time.
+
+You can find the list of distributions (and deterministic functions)
+available in Venture in the appropriate [section of the reference
+manual](<%= refman_url %>modeling.html#built-in-procedures).
+
+And now clear your session (or quit and restart Venture) for the next
+segment:
+
+```venture
+clear
+```
+
+Observations
+============
 
 Make an assumption.  `x` is normally distributed, and its current
 value is a sample from that distribution.
@@ -50,6 +91,25 @@ sample x
 ```
 
 Register an observation.
+
+```venture
+observe x = 2
+sample x
+```
+
+The value of `x` hasn't changed -- all we did was register an observation.
+
+Now infer.
+
+```venture
+infer posterior
+sample x
+```
+
+Now `x` obeys the observation.
+
+Basic Modeling
+==============
 
 ```venture
 observe normal(x,1) = 2
@@ -152,7 +212,7 @@ Now we can use `forget` to remove the existing observation and replace
 it with one where the datum is farther out.
 
 ```venture
-forget 26
+forget 28
 observe normal(x,1) = 4
 ```
 
