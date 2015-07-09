@@ -23,6 +23,8 @@ from builtin import no_request, deterministic_typed
 from exception import VentureError, VentureTypeError
 from venture.engine.inference import Dataset
 from venture.exception import VentureException
+from venture.lite.exception import VentureValueError
+from venture.engine.plot_spec import PlotSpec
 
 class InferPrimitiveOutputPSP(psp.DeterministicPSP):
   def __init__(self, val, klass, desc, tp):
@@ -164,6 +166,27 @@ def assert_fun(test, msg=""):
 
 def print_fun(*args):
   print args
+
+def plot_fun(spec, dataset):
+  spec = t.ExpressionType().asPython(spec)
+  PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names)
+
+def plot_to_file_fun(basenames, spec, dataset):
+  filenames = t.ExpressionType().asPython(basenames)
+  spec = t.ExpressionType().asPython(spec)
+  PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names, _format_filenames(filenames, spec))
+
+def _format_filenames(filenames,spec):
+  if isinstance(filenames, basestring):
+    if isinstance(spec, basestring):
+      return [filenames + '.png']
+    else:
+      raise VentureValueError('The number of specs must match the number of filenames.')
+  else:
+    if isinstance(spec, list) and len(spec) == len(filenames):
+      return [filename + '.png' for filename in filenames]
+    else:
+      raise VentureValueError('The number of specs must match the number of filenames.')
 
 inferenceSPsList = [
   trace_method_sp("mh", transition_oper_type(), desc="""\
@@ -655,6 +678,66 @@ Print model values collected in a dataset.
 
 This is a basic debugging facility."""),
 
+  ["plot", deterministic_typed(plot_fun, [t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")], t.NilType(), descr="""\
+Plot a data set according to a plot specification.
+
+Example::
+
+    [define d (empty)]
+    [infer (do (assume x (normal 0 1))
+               (repeat 1000
+                       (do (mh default one 1)
+                           (bind (collect x) (curry into d)))))]
+    (plot d)
+    
+will do 1000 iterations of MH collecting some standard data and
+the value of x, and then show a plot of the x variable (which
+should be a scalar) against the sweep number (from 1 to 1000),
+colored according to the global log score.  See ``collect``
+for details on collecting and labeling data to be plotted.
+
+The format specifications are inspired loosely by the classic
+printf.  To wit, each individual plot that appears on a page is
+specified by some line noise consisting of format characters
+matching the following regex::
+
+    [<geom>]*(<stream>?<scale>?){1,3}
+
+specifying
+
+- the geometric objects to draw the plot with, and
+- for each dimension (x, y, and color, respectively)
+    - the data stream to use
+    - the scale
+
+The possible geometric objects are:
+
+- _p_oint,
+- _l_ine,
+- _b_ar, and
+- _h_istogram
+
+The possible data streams are:
+
+- _<an integer>_ that column in the data set, 0-indexed,
+- _%_ the next column after the last used one
+- sweep _c_ounter,
+- _t_ime (wall clock, since the beginning of the Venture program),
+- log _s_core, and
+- pa_r_ticle
+
+The possible scales are:
+
+- _d_irect, and
+- _l_ogarithmic
+
+If one stream is indicated for a 2-D plot (points or lines), the x
+axis is filled in with the sweep counter.  If three streams are
+indicated, the third is mapped to color.
+
+If the given specification is a list, make all those plots at once.
+""")],
+
   engine_method_sp("plotf", infer_action_maker_type([t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")]), desc="""\
 Plot a data set according to a plot specification.
 
@@ -714,6 +797,21 @@ indicated, the third is mapped to color.
 
 If the given specification is a list, make all those plots at once.
 """),
+
+  ["plot_to_file", deterministic_typed(plot_to_file_fun, [t.AnyType("<basename>"), t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")], t.NilType(), descr="""\
+Save plot(s) to file(s).
+
+  Like ``plot``, but save the resulting plot(s) instead of displaying on screen.
+  Just as <spec> may be either a single expression or a list, <basenames> may
+  either be a single symbol or a list of symbols. The number of basenames must
+  be the same as the number of specifications.
+
+  Examples:
+    (plot_to_file (quote basename) (quote spec) <expression> ...) saves the plot specified by
+      the spec in the file "basename.png"
+    (plot_to_file (quote (basename1 basename2)) (quote (spec1 spec2)) <expression> ...) saves
+      the spec1 plot in the file basename1.png, and the spec2 plot in basename2.png.
+""")],
 
   engine_method_sp("plotf_to_file", infer_action_maker_type([t.AnyType("<basename>"), t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")]), desc="""\
 Save plot(s) to file(s).
