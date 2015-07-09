@@ -8,6 +8,7 @@ tutorial-smoke.lvnt: tutorial.lvnt.erb
 
 build: tutorial.lvnt
 	../../script/venture-transcript tutorial.lvnt ppaml
+	cp ppaml/index.html ppaml/tutorial.html
 
 build-smoke: tutorial-smoke.lvnt
 	../../script/venture-transcript tutorial-smoke.lvnt ppaml-smoke
