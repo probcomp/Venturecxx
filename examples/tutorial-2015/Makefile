@@ -10,7 +10,7 @@ build: tutorial.lvnt
 	../../script/venture-transcript tutorial.lvnt ppaml
 
 build-smoke: tutorial-smoke.lvnt
-	../../script/venture-transcript tutorial.lvnt ppaml-smoke
+	../../script/venture-transcript tutorial-smoke.lvnt ppaml-smoke
 
 upload: build
 	scp -r ppaml/ login.csail.mit.edu:/afs/csail.mit.edu/proj/probcomp/www/data/venture/
