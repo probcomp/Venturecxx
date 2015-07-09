@@ -19,7 +19,8 @@ extension and running
 $ venture lite -f script.vnts
 ```
 
-(N.B.: The [command line reference](<%= refman_url %>usage.html#standalone-invocation))
+N.B.: The [command line reference](<%= refman_url %>usage.html#standalone-invocation)
+explains what's happening here and what other options Venture accepts.
 
 Basics
 ======
@@ -54,7 +55,7 @@ and we can sample further expressions conditioned on that value:
 (normal mean 0.2)
 ```
 
-Exercise: Convince yourself that, for any given ``mean``, ``(normal mean 0.2)``
+Exercise: Convince yourself that, for any given `mean`, `(normal mean 0.2)`
 is a different distribution from
 
 ```church'
@@ -67,66 +68,80 @@ You can find the list of distributions (and deterministic functions)
 available in Venture in the appropriate [section of the reference
 manual](<%= refman_url %>modeling.html#built-in-procedures).
 
-And now clear your session (or quit and restart Venture) for the next
+Now clear your session (or quit and restart Venture) for the next
 segment:
 
 ```venture
 clear
 ```
 
-Observations
-============
+Basic Modeling
+==============
 
-Make an assumption.  `x` is normally distributed, and its current
-value is a sample from that distribution.
+When we used `define` to make a `mean` variable in the previous
+segment, that variable's value was fixed to a particular sample from
+its generating distribution for the remainder of the program.
+
+In order to make variables that we can learn things about by
+observation and reasoning, we need to flag them as uncertain, using
+`assume`:
 
 ```venture
 assume x = normal(0, 1)
 ```
 
-The value of `x` persists
+Now `x` is a normally distributed random variable, and its current
+value is a sample from that distribution.
+
+Assumed and defined variables live in separate namespaces in Venture,
+so just a bare `x` gives an error:
+
+```church'
+x
+```
+
+To access the current value of an assumed variable, we use `sample`
 
 ```venture
 sample x
 ```
 
-Register an observation.
+Note that repeated access to `x` gives the same value each time:
 
 ```venture
-observe x = 2
-sample x
+sample x + x
 ```
 
-The value of `x` hasn't changed -- all we did was register an observation.
+That's what allows us to form models with conditional dependencies,
+such as this extension:
+
+```venture
+assume y = normal(x, 1)
+```
+
+So, why is `assume` any more useful than `define`?  Models, unlike the
+top level, allow us to register observations:
+
+```venture
+observe y = 2
+sample y
+```
+
+The value of `y` hasn't changed -- all we did was register an observation.
 
 Now infer.
 
 ```venture
 infer posterior
-sample x
+sample y
 ```
 
-Now `x` obeys the observation.
-
-Basic Modeling
-==============
+Now `y` obeys the observation, and `x` is a sample from the posterior
+distribution `p(x|y=2)` defined by our assumptions and observations:
 
 ```venture
-observe normal(x,1) = 2
 sample x
 ```
-
-The value of `x` hasn't changed -- all we did was register an observation.
-
-Now infer.
-
-```venture
-infer posterior
-sample x
-```
-
-The new value of `x` is a sample from the posterior on `x` with prior
-given by our `assume` and likelihood given by all the `observe`s.
 
 If we do no more inference, `x` doesn't change.
 
@@ -141,6 +156,9 @@ inferrer again.
 infer posterior
 sample x
 ```
+
+Better Inspection
+=================
 
 Are these samples actually from the right distribution?  We could
 eyeball it like this a bit more:
@@ -212,7 +230,7 @@ Now we can use `forget` to remove the existing observation and replace
 it with one where the datum is farther out.
 
 ```venture
-forget 28
+forget 27
 observe normal(x,1) = 4
 ```
 
