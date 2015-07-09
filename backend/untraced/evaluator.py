@@ -71,7 +71,8 @@ def eval(address, exp, env):
 
 def apply(address, nodes, env):
   spr = nodes[0].value
-  assert isinstance(spr, VentureSPRecord)
+  if not isinstance(spr, VentureSPRecord):
+    raise VentureException("evaluation", "Cannot apply a non-procedure", address=address)
   req_args = RequestArgs(address, nodes[1:], env)
   requests = applyPSP(spr.sp.requestPSP, req_args)
   req_nodes = [evalRequest(req_args, spr, r) for r in requests.esrs]
