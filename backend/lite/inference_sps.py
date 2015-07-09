@@ -890,7 +890,7 @@ Right now only implemented on datasets created by ``empty`` and
 Check the given boolean condition and raise an error if it fails.
 """)],
 
-  ["print", sequenced_sp(print_fun, infer_action_maker_type([t.AnyType()], variadic=True), desc="""\
+  ["print", deterministic_typed(print_fun, [t.AnyType()], t.NilType(), variadic=True, descr="""\
 Print the given values to the terminal.
 """)],
 
