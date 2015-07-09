@@ -117,7 +117,7 @@ That's what allows us to form models with conditional dependencies,
 such as this extension:
 
 ```venture
-assume y = normal(x, 0.3)
+assume y = normal(x, 1)
 ```
 
 So, why is `assume` any more useful than `define`?  Models, unlike the
@@ -176,7 +176,7 @@ you have your session from the last segment):
 ```venture
 clear
 assume x = normal(0, 1)
-assume y = normal(x, 0.3)
+assume y = normal(x, 1)
 observe y = 2
 ```
 
@@ -229,8 +229,8 @@ plotf abstraction].
 
 Here's a version with more samples for better resolution:
 
-```venture
-infer plotf(quote(h0), run(accumulate_dataset(<%= sample_size %>, do(posterior, collect(x)))))
+```church'
+(plot 'h0 (run (accumulate_dataset <%= sample_size %> (do posterior (collect x)))))
 ```
 
 The analytical answer is a Gaussian with mean 1 and precision 2 (which
