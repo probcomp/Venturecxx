@@ -35,6 +35,7 @@ except ImportError:
 
 import venture.shortcuts as vs
 from venture.ripl.utils import strip_types
+from venture.exception import VentureException
 
 start_of_block = re.compile(r"^[ \t\r\f\v]*```(venture|church')[ \t\r\f\v]*$", re.MULTILINE)
 end_of_block = re.compile(r"^[ \t\r\f\v]*```[ \t\r\f\v]*$", re.MULTILINE)
@@ -165,7 +166,11 @@ class Writer(object):
         elif munged.strip() == "clear":
             return [self.ripl.clear()]
         else:
-            return self.ripl.execute_program(munged)
+            try:
+                return self.ripl.execute_program(munged)
+            except VentureException as e:
+                print e
+                return [None]
 
     def finish(self):
         result = ''.join(self.out_chunks)
