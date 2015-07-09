@@ -220,12 +220,17 @@ iterations of the `posterior` inference command.
 (print data)
 ```
 
-Do those values of x look good?  It's even better to plot [talk about
-plotf abstraction].
+Do those values of `x` look good?  The values look sane to me, but I
+can't eyeball a table of numbers and tell whether they are distributed
+properly.  Which is why Venture has a basic plotting facility
+built-in:
 
 ```church'
 (plot 'h0 data)
 ```
+
+(That `h0` says "make a historgram of the zeroth collected data stream".
+You will eventually want to study [the plot spec reference](<%= refman_url %>inference.html#plot).)
 
 Here's a version with more samples for better resolution:
 
@@ -234,7 +239,7 @@ Here's a version with more samples for better resolution:
 ```
 
 The analytical answer is a Gaussian with mean 1 and precision 2 (which
-is standard deviation `1/sqrt(2)`).  Feel free to fiddle with the <%= sample_size %>
+is standard deviation `1/sqrt(2)`).  Feel free to increase the <%= sample_size %>
 to convince yourself that the inference is working.
 
 [Say somewhere: we start with the normal-normal model because it's
