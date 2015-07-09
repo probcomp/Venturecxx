@@ -68,7 +68,7 @@ class Trace(object):
 
   def forget(self, directiveId):
     if directiveId not in self.directives:
-      raise VentureException("invalid_argument", "Cannot forget a non-existent directive id",
+      raise VentureException("invalid_argument", "Cannot forget a non-existent directive id.  Valid options are %s" % self.directives.keys(),
                              argument="directive_id", directive_id=directiveId)
     directive = self.directives[directiveId]
     if directive[0] == "observe": self.trace.unobserve(directiveId)
@@ -78,7 +78,7 @@ class Trace(object):
 
   def freeze(self, directiveId):
     if directiveId not in self.directives:
-      raise VentureException("invalid_argument", "Cannot freeze a non-existent directive id",
+      raise VentureException("invalid_argument", "Cannot freeze a non-existent directive id.  Valid options are %s" % self.directives.keys(),
                              argument="directive_id", directive_id=directiveId)
     self.trace.freeze(directiveId)
     self._record_directive_frozen(directiveId)
