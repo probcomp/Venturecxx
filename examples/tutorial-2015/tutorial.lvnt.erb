@@ -40,29 +40,29 @@ These are independent samples from the unit uniform distribution
 We can introduce a variable:
 
 ```venture
-define mean = expon(2)  // Exponential distribution with rate 2
+define mu = expon(2)  // Exponential distribution with rate 2
 ```
 
 whose value is a particular sample from that distribution:
 
 ```church'
-mean
+mu
 ```
 
 and we can sample further expressions conditioned on that value:
 
 ```church'
-(normal mean 0.2)
+(normal mu 0.2)
 ```
 
-Exercise: Convince yourself that, for any given `mean`, `(normal mean 0.2)`
+Exercise: Convince yourself that, for any given `mu`, `(normal mu 0.2)`
 is a different distribution from
 
 ```church'
 (normal (expon 2) 0.2)
 ```
 
-because the latter samples a new internal mean every time.
+because the latter samples a new internal mu every time.
 
 You can find the list of distributions (and deterministic functions)
 available in Venture in the appropriate [section of the reference
@@ -78,7 +78,7 @@ clear
 Basic Modeling
 ==============
 
-When we used `define` to make a `mean` variable in the previous
+When we used `define` to make a `mu` variable in the previous
 segment, that variable's value was fixed to a particular sample from
 its generating distribution for the remainder of the program.
 
