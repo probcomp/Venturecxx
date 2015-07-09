@@ -64,9 +64,10 @@ is a different distribution from
 
 because the latter samples a new internal mu every time.
 
-You can find the list of distributions (and deterministic functions)
-available in Venture in the appropriate [section of the reference
-manual](<%= refman_url %>modeling.html#built-in-procedures).
+You can find the [list of distributions](<%= refman_url
+%>modeling.html#built-in-procedures) (and deterministic functions)
+available in Venture in the appropriate section of the [reference
+manual](<%= refman_url %>).
 
 Now clear your session (or quit and restart Venture) for the next
 segment:
@@ -124,10 +125,19 @@ top level, allow us to register observations:
 
 ```venture
 observe y = 2
+```
+
+Note: the values of `x` and `y` don't change --
+
+```venture
+sample x
+```
+
+```venture
 sample y
 ```
 
-The value of `y` hasn't changed -- all we did was register an observation.
+ -- all we did was register an observation.
 
 Now infer.
 
