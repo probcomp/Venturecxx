@@ -76,7 +76,7 @@ class LogBernoulliOutputPSP(DiscretePSP):
     else: return [True,False]
 
   def description(self,name):
-    return "  (%s p) returns true with probability exp(p) and false otherwise." % name
+    return "  (%s p) returns true with probability exp(p) and false otherwise.  This is useful for modeling very low probability events, because it does not suffer the underflow that (%s (exp p)) would." % (name, name)
 
 class BinomialOutputPSP(DiscretePSP):
   def simulate(self,args):
