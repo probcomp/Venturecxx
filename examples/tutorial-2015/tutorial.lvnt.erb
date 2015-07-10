@@ -256,20 +256,49 @@ is?
 In the next segment, we will look at a few different inference
 strategies, which give different speed-accuracy tradeoffs.
 
-[Say somewhere: we start with the normal-normal model because it's
-easy and has an analytic solution, but the Gaussian distribution is
-actually a pretty good proxy for all probability problems: the mean is
-like the "right answer", and the precision is like "how well or
-precisely I know it", or conversely the variance is like "how much
-slack I am willing to tolerate".]
-
 Inference Choices
 =================
+
+In this segment, we will look at a few different generic inference
+strategies that are built in to Venture and do some basic exploration
+of their speed-accuracy behavior.  As a reminder, here is the model we
+are working with (you can skip this block if you have your session
+from the last segment):
+
+```venture
+clear
+assume x = normal(0, 1)
+assume y = normal(x, 1)
+observe y = 2
+```
+
+[TODO: Where should this motivating block go?]
+
+If you're curious why we're looking at the performance of inference on
+such a simple model, there are a couple reasons:
+
+- There is an analytic solution, which means the correct result is
+  available for comparison.
+
+- The Gaussian distribution is actually a pretty good proxy for
+  general probability problems: the mean corresponds to "the true
+  result" and the standard deviation corresponds to "the uncertainty"
+  or "the error tolerance".
+
+- The position of the observation is a proxy for the "difficulty" of
+  the problem: the further out the data are from the prior, the more
+  inference needs to overcome in order to reach the right answer.
+
+- The one down side is that this problem in one-dimensional, so you
+  need to exercise active skepticism around your geometric intuitions:
+  try and cross-check the mental pictures you build for how they would
+  work in 2, 3, 10, or 10,000 dimensions.
 
 Rejection sampling does not solve all problems
 ----------------------------------------------
 
-`posterior` is rejection sampling -- likely to get slow.  In
+The inference command `posterior` is global rejection sampling -- guessing and checking.
+As you might know or imagine, this is likely to get slow.  In
 particular, let's see what happens as we change the model to make the
 problem harder.  First, have a look at what we have:
 
