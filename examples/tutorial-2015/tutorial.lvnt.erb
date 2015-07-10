@@ -205,7 +205,7 @@ but that will get old quickly.
 It's better to gather data programmatically, for example like this:
 
 ```venture
-define data = run(accumulate_dataset(<%= smaller_sample_size %>, do(posterior, collect(x))))
+define data = run(accumulate_dataset(4, do(posterior, collect(x))))
 ```
 
 If you really want to know what's going on in this expression you can
@@ -213,7 +213,7 @@ study the documentation of [do](<%= refman_url
 %>inference.html#special-forms), [run](<%= refman_url
 %>inference.html#run), and [accumulate_dataset](<%= refman_url
 %>inference.html#accumulate_dataset).  The effect is to gather up the
-values of `x` (and some metadata) over <%= smaller_sample_size %>
+values of `x` (and some metadata) over 4
 iterations of the `posterior` inference command.
 
 ```church'
@@ -222,11 +222,14 @@ iterations of the `posterior` inference command.
 
 Do those values of `x` look good?  The values look sane to me, but I
 can't eyeball a table of numbers and tell whether they are distributed
-properly.  Which is why Venture has a basic plotting facility
-built-in:
+properly.  Let's get more data and plot it:
+
+```venture
+define more_data = run(accumulate_dataset(<%= smaller_sample_size %>, do(posterior, collect(x))))
+```
 
 ```church'
-(plot 'h0 data)
+(plot 'h0 more_data)
 ```
 
 (That `h0` says "make a histogram of the zeroth collected data stream".
