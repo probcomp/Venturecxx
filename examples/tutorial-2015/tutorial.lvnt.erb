@@ -242,8 +242,17 @@ Here's a version with more samples for better resolution:
 ```
 
 The analytical answer is a Gaussian with mean 1 and precision 2 (which
-is standard deviation `1/sqrt(2)`).  Feel free to increase the <%= sample_size %>
-to convince yourself that the inference is working.
+is standard deviation `1/sqrt(2)`), whose histogram looks like this:
+
+![A Gaussian with a lot of samples](gauss_plot.png)
+
+Exercise: How visually close can you get to this plot by increasing
+the number of iterations (the <%= sample_size %>) in the above
+expression?  Is inference working?  Are you satisfied with how fast it
+is?
+
+In the next segment, we will look at a few different inference
+strategies, which give different speed-accuracy tradeoffs.
 
 [Say somewhere: we start with the normal-normal model because it's
 easy and has an analytic solution, but the Gaussian distribution is
