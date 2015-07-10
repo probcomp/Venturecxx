@@ -114,8 +114,8 @@ def checkPlotfToFileBadArgs(basenames, specs):
     ripl.infer(infer)
   assert "stack_trace" in cm.exception.data # I.e., error annotation succeeded.
 
-def testSweep():
-  'Check that the sweep counter prints correctly'
+def testIteration():
+  'Check that the iteration counter prints correctly'
   ripl = get_ripl()
   ripl.assume('x', '(normal 0 1)')
   program = """[infer
@@ -125,4 +125,4 @@ def testSweep():
        (bind (collect x) (curry into d))
        (sweep d))))]"""
   res, captured = capture_output(ripl, program)
-  assert captured == '\n'.join(['Sweep count: ' + str(x) for x in range(1,6)]) + '\n'
+  assert captured == '\n'.join(['Iteration count: ' + str(x) for x in range(1,6)]) + '\n'

@@ -79,10 +79,10 @@ class PlotSpec(object):
   @staticmethod
   def _format_title(dataset):
     walltime = dataset['time (s)'].max()
-    nsweeps = dataset['sweep count'].max()
+    niterations = dataset['iteration count'].max()
     nparticles = dataset['particle id'].max() + 1
-    title = 'Wall time: {0}m, {1:0.2f}s. Sweeps: {2}. Particles: {3}'
-    title = title.format(int(walltime // 60), walltime % 60, nsweeps, nparticles)
+    title = 'Wall time: {0}m, {1:0.2f}s. Iterations: {2}. Particles: {3}'
+    title = title.format(int(walltime // 60), walltime % 60, niterations, nparticles)
     return title
 
   @staticmethod
@@ -139,7 +139,7 @@ class FrameSpec(object):
         self.streams.append(stream)
         self.scales.append(scale)
     if len(self.streams) == 1 and self.two_d_only:
-      # Two-dimensional plots default to plotting against sweep count (in direct space)
+      # Two-dimensional plots default to plotting against iteration count (in direct space)
       self.streams = ["c"] + self.streams
       self.scales = ["d"] + self.scales
 
@@ -167,7 +167,7 @@ class FrameSpec(object):
     ans = {}
     for (key, stream) in zip(self.dimensions(), self.streams):
       if stream == "c":
-        ans[key] = "sweep count"
+        ans[key] = "iteration count"
       elif stream == "r":
         ans[key] = "particle id"
       elif stream == "t":

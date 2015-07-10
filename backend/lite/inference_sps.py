@@ -701,7 +701,7 @@ Example::
     
 will do 1000 iterations of MH collecting some standard data and
 the value of x, and then show a plot of the x variable (which
-should be a scalar) against the sweep number (from 1 to 1000),
+should be a scalar) against the iteration number (from 1 to 1000),
 colored according to the global log score.  See ``collect``
 for details on collecting and labeling data to be plotted.
 
@@ -730,7 +730,7 @@ The possible data streams are:
 
 - _<an integer>_ that column in the data set, 0-indexed,
 - _%_ the next column after the last used one
-- sweep _c_ounter,
+- iteration _c_ounter,
 - _t_ime (wall clock, since the beginning of the Venture program),
 - log _s_core, and
 - pa_r_ticle
@@ -741,7 +741,7 @@ The possible scales are:
 - _l_ogarithmic
 
 If one stream is indicated for a 2-D plot (points or lines), the x
-axis is filled in with the sweep counter.  If three streams are
+axis is filled in with the iteration counter.  If three streams are
 indicated, the third is mapped to color.
 
 If the given specification is a list, make all those plots at once.
@@ -761,7 +761,7 @@ Example::
     
 will do 1000 iterations of MH collecting some standard data and
 the value of x, and then show a plot of the x variable (which
-should be a scalar) against the sweep number (from 1 to 1000),
+should be a scalar) against the iteration number (from 1 to 1000),
 colored according to the global log score.  See ``collect``
 for details on collecting and labeling data to be plotted.
 
@@ -790,7 +790,7 @@ The possible data streams are:
 
 - _<an integer>_ that column in the data set, 0-indexed,
 - _%_ the next column after the last used one
-- sweep _c_ounter,
+- iteration _c_ounter,
 - _t_ime (wall clock, since the beginning of the Venture program),
 - log _s_core, and
 - pa_r_ticle
@@ -801,7 +801,7 @@ The possible scales are:
 - _l_ogarithmic
 
 If one stream is indicated for a 2-D plot (points or lines), the x
-axis is filled in with the sweep counter.  If three streams are
+axis is filled in with the iteration counter.  If three streams are
 indicated, the third is mapped to color.
 
 If the given specification is a list, make all those plots at once.
@@ -838,9 +838,9 @@ Save plot(s) to file(s).
 """),
 
   engine_method_sp("sweep", infer_action_maker_type([t.ForeignBlobType("<dataset>")]), desc="""\
-Print the sweep count.
+Print the iteration count.
 
-  Extracts the last row of the supplied inference Dataset and prints its sweep count.
+  Extracts the last row of the supplied inference Dataset and prints its iteration count.
 
   Examples:
     (sweep d)
