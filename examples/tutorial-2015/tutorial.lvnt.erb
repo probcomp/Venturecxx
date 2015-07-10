@@ -232,8 +232,10 @@ define more_data = run(accumulate_dataset(<%= smaller_sample_size %>, do(posteri
 (plot 'h0 more_data)
 ```
 
-(That `h0` says "make a histogram of the zeroth collected data stream".
-You will eventually want to study [the plot spec reference](<%= refman_url %>inference.html#plot).)
+That `h0` says "make a histogram of the zeroth collected data stream".
+You will eventually want to study [the plot spec reference](<%= refman_url %>inference.html#plot),
+because that explains how to plot any of the values or metadata collected in the dataset
+on the x, y, or color axis of a plot.
 
 Here's a version with more samples for better resolution:
 
