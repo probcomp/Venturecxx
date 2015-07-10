@@ -299,52 +299,74 @@ Rejection sampling does not solve all problems
 
 The inference command `posterior` is global rejection sampling -- guessing and checking.
 As you might know or imagine, this is likely to get slow.  In
-particular, let's see what happens as we change the model to make the
-problem harder.  First, have a look at what we have:
+particular, let's fiddle with the position of the observation
+and see what happens as we change the model to make the
+problem harder.
+
+If you like standalone scripts, save the following into a file named,
+say, `exact.vnt`
+
+```
+[assume x (normal 0 1)]
+[assume y (normal x 1)]
+[observe y 2]
+(plot 'h0
+ (run
+  (accumulate_dataset <%= smaller_sample_size %>
+   (do posterior
+       (collect x)))))
+```
+
+and explore by editing it and rerunning it with
+
+```
+$ venture lite -f exact.vnt
+```
+
+If you prefer to fiddle interactively, Venture has a command named
+`forget` for removing parts of a model so they can be changed.
+First, check what's in the model already:
 
 ```venture
 list_directives
 ```
 
 [Note: The above output is presented in a prefix notation syntax that
-represents how it actually parsed.]
+represents how Venture actually parsed it.]
 
-Now we can use `forget` to remove the existing observation and replace
-it with one where the datum is farther out.
+Then use `forget` to remove the existing observation, and replace it
+with one where the datum is farther out.
 
 ```venture
 forget 24
 observe normal(x,1) = 4
 ```
 
+```venture
+list_directives
+```
+
 The same solution still works
 
-```venture
-infer plotf(quote(h0), run(accumulate_dataset(<%= smaller_sample_size %>, do(posterior, collect(x)))))
+```church'
+(plot 'h0 (run (accumulate_dataset <%= smaller_sample_size %> (do posterior (collect x)))))
 ```
 
-but if you fiddle with the numbers here (the 4 and the <%= smaller_sample_size %>) you can
-tell that more distant observations take longer to get samples for.
-[Inference phenomenon: KL divergence between prior and posterior
-measures problem difficulty; rejection sampling (which is the
-algorithm the `posterior` command uses) is exponentially slow in the
-KL gap it is trying to cross.]
+but as you move the datum further out (with more `forget` and
+`observe` commands), you can tell that more distant observations take
+longer to get samples for.  Don't move the datum too far: rejection is
+`O(e^(position^2))` on this problem.
 
-Alternative for fiddling: Copy this to a file, say `exact.vnts`
+The inference phenomenon at work here is this:
 
-```
-assume x = normal(0,1)
-observe normal(x,1) = 4
-infer plotf(quote(h0), run(accumulate_dataset(<%= smaller_sample_size %>, do(posterior, collect(x)))))
-```
+- the [KL divergence](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence)
+  from the posterior to the prior measures the difficulty of the
+  problem; in this case it grows quadratically with position of the
+  datum.
 
-and run it with
-
-```
-$ venture lite -f exact.vnts
-```
-
-while editing numbers to heart's content.
+- Rejection sampling (which is the algorithm the `posterior` command
+  uses) is [exponentially slow in the KL gap it is trying to
+  cross](http://danroy.org/papers/FreerManRoy-NIPSMC-2010.pdf).
 
 Importance Sampling with Resampling
 -----------------------------------
