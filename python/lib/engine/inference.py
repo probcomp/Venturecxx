@@ -66,7 +66,7 @@ class Infer(object):
     return names, stack_dicts
 
   def parse_expr(self, expr, command):
-    special_names = [VentureSymbol(x) for x in ['iteration', 'time', 'score']]
+    special_names = [VentureSymbol(x) for x in ['iter', 'time', 'score']]
     if (type(expr) is VentureArray and
         expr.lookup(VentureInteger(0)) == VentureSymbol('labelled')):
       # the first element is the command, the second is the label for the command
@@ -111,7 +111,7 @@ class Infer(object):
     spec = ExpressionType().asPython(spec)
     PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names, self._format_filenames(filenames, spec))
   def sweep(self, dataset):
-    print 'Iteration count: ' + str(dataset.asPandas()['iteration'].values[-1])
+    print 'Iteration count: ' + str(dataset.asPandas()['iter'].values[-1])
   def call_back(self, name, *exprs):
     name = SymbolType().asPython(name)
     if name not in self.engine.callbacks:
@@ -128,17 +128,17 @@ class Infer(object):
     names, stack_dicts = self.parse_exprs(exprs, None)
     answer = {} # Map from column name to list of values; the values
                 # are parallel to the particles
-    std_names = ['iteration', 'prt. id', 'time (s)', 'log score',
-                 'prt. log wgt.', 'prt. norm. prob.']
+    std_names = ['iter', 'prt. id', 'time (s)', 'log score',
+                 'prt. log wgt.', 'prt. prob.']
     def collect_std_streams(engine):
       the_time = time.time() - engine.creation_time
-      answer['iteration'] = [1] * engine.num_traces()
+      answer['iter'] = [1] * engine.num_traces()
       answer['prt. id'] = range(engine.num_traces())
       answer['time (s)'] = [the_time] * engine.num_traces()
       answer['log score'] = engine.logscore_all() # TODO Replace this by explicit references to (global_likelihood), because the current implementation is wrong
       log_weights = copy(engine.model.log_weights)
       answer['prt. log wgt.'] = log_weights
-      answer['prt. norm. prob.'] = logWeightsToNormalizedDirect(log_weights)
+      answer['prt. prob.'] = logWeightsToNormalizedDirect(log_weights)
     collect_std_streams(self.engine)
     for name, stack_dict in zip(names, stack_dicts):
       if stack_dict is not None:
@@ -235,7 +235,7 @@ Dataset which is the result of the merge. """
     self._check_compat(other)
     answer = {}
     for (key, vals) in self.data.iteritems():
-      if key == "iteration" and len(vals) > 0:
+      if key == "iter" and len(vals) > 0:
         nxt = max(vals)
         answer[key] = vals + [v + nxt for v in other.data[key]]
       else:
@@ -252,7 +252,7 @@ Dataset which is the result of the merge. """
       self.data = dict([name, []] for name in self.ind_names + self.std_names)
     self._check_compat(other)
     for key in self.data.keys():
-      if key == "iteration" and len(self.data[key]) > 0:
+      if key == "iter" and len(self.data[key]) > 0:
         nxt = max(self.data[key])
         self.data[key].extend([v + nxt for v in other.data[key]])
       else:

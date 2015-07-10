@@ -85,7 +85,7 @@ def testCollectSmoke4():
       (return d)))""")
   cdf = stats.norm(loc=0.0, scale=2.0).cdf
   result = out.asPandas()
-  for k in ["x", "y", "iteration", "time (s)", "log score", "prt. id", "(abs (sub y x))", "abs_x"]:
+  for k in ["x", "y", "iter", "time (s)", "log score", "prt. id", "(abs (sub y x))", "abs_x"]:
     assert k in result
     assert len(result[k]) == 30
   # Check that the dataset can be extracted again
