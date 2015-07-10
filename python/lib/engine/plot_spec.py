@@ -46,7 +46,7 @@ class PlotSpec(object):
     for spec in self.frames:
       spec.initialize()
       if spec.weighted:
-        dataset['particle weight'] = logWeightsToNormalizedDirect(dataset['particle log weight'])
+        dataset['particle weight'] = logWeightsToNormalizedDirect(dataset['prt. log wgt.'])
       (aes, index) = spec.aes_dict_at(index, names, spec.get_geoms())
       plot = g.ggplot(dataset, g.aes(**aes))
       for geom in spec.get_geoms():
@@ -80,7 +80,7 @@ class PlotSpec(object):
   def _format_title(dataset):
     walltime = dataset['time (s)'].max()
     niterations = dataset['iteration'].max()
-    nparticles = dataset['particle id'].max() + 1
+    nparticles = dataset['prt. id'].max() + 1
     title = 'Wall time: {0}m, {1:0.2f}s. Iterations: {2}. Particles: {3}'
     title = title.format(int(walltime // 60), walltime % 60, niterations, nparticles)
     return title
@@ -169,7 +169,7 @@ class FrameSpec(object):
       if stream == "c":
         ans[key] = "iteration"
       elif stream == "r":
-        ans[key] = "particle id"
+        ans[key] = "prt. id"
       elif stream == "t":
         ans[key] = "time (s)"
       elif stream == "s":

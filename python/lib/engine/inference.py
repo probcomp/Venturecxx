@@ -128,17 +128,17 @@ class Infer(object):
     names, stack_dicts = self.parse_exprs(exprs, None)
     answer = {} # Map from column name to list of values; the values
                 # are parallel to the particles
-    std_names = ['iteration', 'particle id', 'time (s)', 'log score',
-                 'particle log weight', 'particle normalized prob']
+    std_names = ['iteration', 'prt. id', 'time (s)', 'log score',
+                 'prt. log wgt.', 'prt. norm. prob.']
     def collect_std_streams(engine):
       the_time = time.time() - engine.creation_time
       answer['iteration'] = [1] * engine.num_traces()
-      answer['particle id'] = range(engine.num_traces())
+      answer['prt. id'] = range(engine.num_traces())
       answer['time (s)'] = [the_time] * engine.num_traces()
       answer['log score'] = engine.logscore_all() # TODO Replace this by explicit references to (global_likelihood), because the current implementation is wrong
       log_weights = copy(engine.model.log_weights)
-      answer['particle log weight'] = log_weights
-      answer['particle normalized prob'] = logWeightsToNormalizedDirect(log_weights)
+      answer['prt. log wgt.'] = log_weights
+      answer['prt. norm. prob.'] = logWeightsToNormalizedDirect(log_weights)
     collect_std_streams(self.engine)
     for name, stack_dict in zip(names, stack_dicts):
       if stack_dict is not None:
