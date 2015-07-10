@@ -79,7 +79,7 @@ class PlotSpec(object):
   @staticmethod
   def _format_title(dataset):
     walltime = dataset['time (s)'].max()
-    niterations = dataset['iteration count'].max()
+    niterations = dataset['iteration'].max()
     nparticles = dataset['particle id'].max() + 1
     title = 'Wall time: {0}m, {1:0.2f}s. Iterations: {2}. Particles: {3}'
     title = title.format(int(walltime // 60), walltime % 60, niterations, nparticles)
@@ -167,7 +167,7 @@ class FrameSpec(object):
     ans = {}
     for (key, stream) in zip(self.dimensions(), self.streams):
       if stream == "c":
-        ans[key] = "iteration count"
+        ans[key] = "iteration"
       elif stream == "r":
         ans[key] = "particle id"
       elif stream == "t":

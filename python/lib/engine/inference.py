@@ -111,7 +111,7 @@ class Infer(object):
     spec = ExpressionType().asPython(spec)
     PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names, self._format_filenames(filenames, spec))
   def sweep(self, dataset):
-    print 'Iteration count: ' + str(dataset.asPandas()['iteration count'].values[-1])
+    print 'Iteration count: ' + str(dataset.asPandas()['iteration'].values[-1])
   def call_back(self, name, *exprs):
     name = SymbolType().asPython(name)
     if name not in self.engine.callbacks:
@@ -128,11 +128,11 @@ class Infer(object):
     names, stack_dicts = self.parse_exprs(exprs, None)
     answer = {} # Map from column name to list of values; the values
                 # are parallel to the particles
-    std_names = ['iteration count', 'particle id', 'time (s)', 'log score',
+    std_names = ['iteration', 'particle id', 'time (s)', 'log score',
                  'particle log weight', 'particle normalized prob']
     def collect_std_streams(engine):
       the_time = time.time() - engine.creation_time
-      answer['iteration count'] = [1] * engine.num_traces()
+      answer['iteration'] = [1] * engine.num_traces()
       answer['particle id'] = range(engine.num_traces())
       answer['time (s)'] = [the_time] * engine.num_traces()
       answer['log score'] = engine.logscore_all() # TODO Replace this by explicit references to (global_likelihood), because the current implementation is wrong
@@ -235,7 +235,7 @@ Dataset which is the result of the merge. """
     self._check_compat(other)
     answer = {}
     for (key, vals) in self.data.iteritems():
-      if key == "iteration count" and len(vals) > 0:
+      if key == "iteration" and len(vals) > 0:
         nxt = max(vals)
         answer[key] = vals + [v + nxt for v in other.data[key]]
       else:
@@ -252,7 +252,7 @@ Dataset which is the result of the merge. """
       self.data = dict([name, []] for name in self.ind_names + self.std_names)
     self._check_compat(other)
     for key in self.data.keys():
-      if key == "iteration count" and len(self.data[key]) > 0:
+      if key == "iteration" and len(self.data[key]) > 0:
         nxt = max(self.data[key])
         self.data[key].extend([v + nxt for v in other.data[key]])
       else:
