@@ -383,44 +383,94 @@ resampling.  It is:
 - Select one at random in proportion to its weight [or more than one,
   but then they are not independent of each other]
 
-Here's what a basic version of this looks like in Venture.  Make 10
-particles
+Here's what a basic version of this looks like in Venture.  Reset the
+model if you need to
 
 ```venture
-infer resample(10)
+clear
+assume x = normal(0, 1)
+assume y = normal(x, 1)
+observe y = 4
 ```
 
-Reset them to the prior and weight by likelihood:
+or load your file from the rejection segment into an interactive session
+with
+
+```
+venture lite -f exact.vnt -i
+```
+
+Then make 5 particles
 
 ```venture
-infer likelihood_weight()
+infer resample(5)
 ```
 
-Pick one
+The [resample](<%= refman_url %>inference.html#resample) inference
+action makes as many particles as requested by drawing from the
+existing pool proportionally to their weight (and then makes the
+weights equal).  Initially there is just one particle, so right now
+all of them are the same:
+
+```church'
+(run (sample_all x))
+```
+
+To do importance sampling, we next [reset them to the prior and weight
+by likelihood](<%= refman_url %>inference.html#likelihood_weight):
+
+```church'
+[infer (likelihood_weight)]
+(run (sample_all x))
+```
+
+and then resample down to one, which picks a particle at random
+in proportion to its weight.
 
 ```venture
 infer resample(1)
 sample x
 ```
 
-Here's the distribution that makes:
+Using the plotting tools we learned before, here's the distribution
+this algrithm makes (note the use of `do` to sequence inference actions):
 
 ```venture
 infer plotf(quote(h0), run(accumulate_dataset(<%= smaller_sample_size %>,
-  do(resample(10),
+  do(resample(5),
      likelihood_weight(),
      resample(1),
      collect(x)))))
 ```
 
-[Inference phenomenon: 10 trials do not solve this problem if the
-observation is 4 sigma out from the prior.  On the plus side, 10
-trials always take the same amount of time, regardless of how hard the
-problem is; and for any given problem enough trials will solve it.
-This is a time-accuracy tradeoff.  Feel free to paste this inference
-program into a file and mess with the numbers to see what changes.
-Try it slowly increasing the number of trials and see how the
-distribution evolves toward the right answer.]
+What is going on here?  If you put the observation at 4, then the
+answer should be a Gaussian with mean 2, but the distribution with 5
+trials is not even close (though it has moved from the prior).  This
+is our first approximate inference algorithm, and generates our first
+time-accuracy tradeoff.
+
+Exercises:
+
+1. Vary the location of the observation without varying the inference
+   program.  Confirm that the runtime does not change, but the quality
+   of the result (relative to the true posterior) does.
+
+2. Vary the number of trials (the argument to the first resample) for
+   a fixed location of the datum.  Confirm that the runtime is
+   asymptotically linear in that, and that the result distribution
+   approaches the true posterior as the number of trials increases.
+
+3. What happens if we don't do the second resample at all?  Why?
+   [For the instructor: you get the prior, becaue you are not using the weights]
+
+4. What happens if we draw more than 1 particle in the second
+   resample?  Why?
+   [For the instructor: this is more subtle.
+   - First off, the distribution will not get closer to the posterior
+   - For a while, drawing more particles should give a better resolution plot
+     of the distribution with one.
+   - Eventually, though, the fact that they are not iid (but coupled through
+     the original set) will begin to dominate, and the benefit will trail off.]
 
 Basic Metropolis-Hastings Markov Chains
 ---------------------------------------
