@@ -544,8 +544,8 @@ define chain_history = run(accumulate_dataset(<%= sample_size %>, do(default_mar
 (plot 'lc0 chain_history)
 ```
 
-The `lc0` says "make a *l*ine plot of the 0th collected expression vs
-the iteration *c*ount"; here's the [reference](<%= refman_url %>inference.html#plot).
+The `lc0` says "make a **l**ine plot of the 0th collected expression vs
+the iteration **c**ount"; here's the [reference](<%= refman_url %>inference.html#plot).
 
 That was one particular chain.  Let's see how their histories vary.
 First reset the state to the prior
@@ -563,7 +563,7 @@ and let's plot another one:
 For more insight, let's plot several independent chains together.  If
 we don't use the weights for anything, Venture's particles will serve
 to run several independent chains (the `r` in the plot specification
-means color the lines by pa*r*ticle id).
+means color the lines by pa**r**ticle id).
 
 ```church'
 [infer (resample 20)]
