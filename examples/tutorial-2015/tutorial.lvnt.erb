@@ -460,11 +460,11 @@ Exercises:
    asymptotically linear in that, and that the result distribution
    approaches the true posterior as the number of trials increases.
 
-3. What happens if we don't do the second resample at all?  Why?
+3. What happens if we don't do the second `resample` at all?  Why?
    [For the instructor: you get the prior, becaue you are not using the weights]
 
 4. What happens if we draw more than 1 particle in the second
-   resample?  Why?
+   `resample`?  Why?
    [For the instructor: this is more subtle.
    - First off, the distribution will not get closer to the posterior
    - For a while, drawing more particles should give a better resolution plot
@@ -475,17 +475,145 @@ Exercises:
 Basic Metropolis-Hastings Markov Chains
 ---------------------------------------
 
-[TODO Fill in the storytelling here]
+Both rejection sampling and importance sampling consist of guessing
+possible explanations of the data, without taking advantage of
+previous guesses when forming new ones.  The other major class of
+inference algorithms tries to take advantage of what has already been
+learned by retaining a "current state" and (stochastically) evolving
+it by trying various adjustments in some way arranged to approach the
+posterior in distribution.  Broadly, such algorithms are called Markov
+chains.  (The Markovness is that the "current state" holds all the
+information about the chain's history that is relevant to determining
+its future evolution.)
+
+Venture has extensive facilities for constructing Markov chain
+inference strategies.  In this segment, we will explore the behavior
+of a simple generic one on the one-variable normal-normal problem we
+have been studying.
+
+Reset the model if you need to
 
 ```venture
-infer plotf(quote(h0), run(accumulate_dataset(<%= 4*sample_size %>, do(mh(default, one, 1), collect(x)))))
+clear
+assume x = normal(0, 1)
+assume y = normal(x, 1)
+observe y = 4
+sample x
 ```
 
-[See how the distribution evolves with more transitions]
+The inference command `default_markov_chain(1)` takes one step of
+Venture's default Markov chain, possibly changing the value of `x`.
 
 ```venture
-infer plotf(quote(h0), run(accumulate_dataset(<%= sample_size %>, do(mh(default, one, 10), collect(x)))))
+infer default_markov_chain(1)
+sample x
 ```
+
+If we do that a few more times,
+
+```venture
+infer default_markov_chain(1)
+sample x
+```
+
+```venture
+infer default_markov_chain(1)
+sample x
+```
+
+```venture
+infer default_markov_chain(1)
+sample x
+```
+
+```venture
+infer default_markov_chain(1)
+sample x
+```
+
+we should see `x` moving (perhaps haltingly and non-monotonically)
+toward regions of high posterior mass.
+
+As usual, let's see that with more data:
+
+```venture
+define chain_history = run(accumulate_dataset(<%= sample_size %>, do(default_markov_chain(1), collect(x))))
+```
+
+```church'
+(plot 'lc0 chain_history)
+```
+
+The `lc0` says "make a *l*ine plot of the 0th collected expression vs
+the iteration *c*ount"; here's the [reference](<%= refman_url %>inference.html#plot).
+
+That was one particular chain.  Let's see how their histories vary.
+First reset the state to the prior
+
+```venture
+infer reset_to_prior
+```
+
+and let's plot another one:
+
+```church'
+(plot 'lc0 (run (accumulate_dataset <%= sample_size %> (do (default_markov_chain 1) (collect x)))))
+```
+
+For more insight, let's plot several independent chains together.  If
+we don't use the weights for anything, Venture's particles will serve
+to run several independent chains (the `r` in the plot specification
+means color the lines by pa*r*ticle id).
+
+```church'
+[infer (resample 20)]
+[infer reset_to_prior]  ; Reset after resampling to get independent initialization
+(plot 'lc0r (run (accumulate_dataset <%= smaller_sample_size %> (do (default_markov_chain 1) (collect x)))))
+```
+
+That gives a flavor for how the chains evolve to compute a solution to
+this problem.  We can also more precisely characterize the
+distribution that obtains after taking some number of steps by
+plotting the end point rather than the history
+
+```venture
+infer plotf(quote(h0), run(accumulate_dataset(<%= smaller_sample_size %>,
+   do(resample(10),
+      reset_to_prior,
+      default_markov_chain(5),
+      collect(x)))))
+```
+
+Notice that a 5-step chain does not suffice to get to the right answer
+in distribution.  This our second approximation algorithm.
+
+Exercises:
+
+1. Vary the location of the observation without varying the inference
+   program.  Confirm that the runtime of a fixed-length chain does not
+   change, but the quality of the result (relative to the true
+   posterior) does.
+
+2. Vary the number of transitions for a fixed location of the datum.
+   Confirm that the runtime is asymptotically linear in that, and that
+   the result distribution approaches the true posterior as the number
+   of steps increases.
+
+3. What happens if we don't `reset_to_prior`?  Now the histogram
+   includes successive states of one long Markov chain.  Most of those
+   data points will be individually distributed according to the
+   posterior, but if the number of steps between them is too small,
+   they will not be independent.
+
+4. Increase both the location of the observation (making the problem
+   harder) and the number of transitions (doing more work).  How fast
+   does the latter have to move to keep up with the former?  What
+   does the history of a long chain on a hard obervation look like?
+   [For instructor: since the proposal is from the prior, the further
+   the chain gets, the longer it will sit still before advancing.
+   In this case, the probability of proposing a new state larger than
+   the current one decreases exponentially, but at least it's not
+   the squared exponential of rejection sampling.]
 
 Optional Subunit: Custom M-H Proposals
 --------------------------------------
@@ -524,6 +652,10 @@ clear
                  (collect x))))
      (plotf 'h0 d))]
 ```
+
+[Here the proposal depends on the current state.  Up side: can travel
+toward the posterior much faster than proposing from a bad prior.
+Down side: will get stuck in single modes.]
 
 More Modeling: Linear Regression
 ================================
