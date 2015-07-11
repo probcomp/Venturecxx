@@ -15,11 +15,11 @@ tutorial/%/index.html: %.lvnt
 tutorial-smoke/%/index.html: %-smoke.lvnt
 	../../script/venture-transcript $< tutorial-smoke/$*
 
-build: tutorial/tutorial/index.html tutorial/linear-regression.html gauss_plot.png
-	cp gauss_plot.png tutorial/tutorial/
+build: tutorial/basics/index.html tutorial/linear-regression.html gauss_plot.png
+	cp gauss_plot.png tutorial/basics/
 
-build-smoke: tutorial-smoke/tutorial/index.html tutorial-smoke/linear-regression/index.html gauss_plot.png
-	cp gauss_plot.png tutorial-smoke/tutorial/
+build-smoke: tutorial-smoke/basics/index.html tutorial-smoke/linear-regression/index.html gauss_plot.png
+	cp gauss_plot.png tutorial-smoke/basics/
 
 upload: build
 	scp -r tutorial/ login.csail.mit.edu:/afs/csail.mit.edu/proj/probcomp/www/data/venture/
