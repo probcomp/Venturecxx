@@ -17,9 +17,11 @@ tutorial-smoke/%/index.html: %-smoke.lvnt
 
 build: tutorial/basics/index.html tutorial/linear-regression.html gauss_plot.png
 	cp gauss_plot.png tutorial/basics/
+	cp lin-reg-1.vnts tutorial/linear-regression
 
 build-smoke: tutorial-smoke/basics/index.html tutorial-smoke/linear-regression/index.html gauss_plot.png
 	cp gauss_plot.png tutorial-smoke/basics/
+	cp lin-reg-1.vnts tutorial-smoke/linear-regression
 
 upload: build
 	scp -r tutorial/ login.csail.mit.edu:/afs/csail.mit.edu/proj/probcomp/www/data/venture/

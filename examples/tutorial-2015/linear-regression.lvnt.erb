@@ -43,31 +43,50 @@ Simple Linear Regression
 [Concepts: more elaborate models; functions; abstraction?; genericity
 of built-in inference procedures]
 
+Let's start by putting down the first model for linear regression that
+comes to mind.  A line has a slope and an intercept
+
+```venture
+assume intercept = normal(0,10)
+assume slope = normal(0,10)
+```
+
+and is reasonable to represent as a function from the independent to
+the dependent variable
+
+```venture
+assume line = proc(x) { slope * x + intercept }
+```
+
+In VentureScript, `proc` is the syntax for making an anonymous
+function with the given formal parameters and behavior, and we use
+`assume` to give it a name in our model.
+
+Finally, we will model our data observations as subject to Gaussian
+noise, so we capture that by defining an observation function
+
+```venture
+assume obs = proc(x) { normal(line(x), 1) }
+```
+
+If you don't want to type that, you can download
+[lin-reg-1.vnts](lin-reg-1.vnts) and use it with
+
+```
+$ venture lite -f lin-reg-1.vnts --interactive
+```
+
 ```church'
-;; Prior on line parameters
-[assume a (normal 0 7)]
-[assume b (normal 0 4)]
-
-;; Hypothesized linear relationship
-[assume f (lambda (x) (+ a (* b x)))]
-
-;; Prior for unknown noise level
-[assume noise (gamma 1 1)]
-
-;; Full data model: linear relationship with additive noise of
-;; unknown but consistent magnitude
-[assume obs_fun (lambda (x) (normal (f x) noise))]
-
 ;; A tiny data set
-[observe (obs_fun 1) 2]
-[observe (obs_fun 2) 2]
+[observe (obs 1) 2]
+[observe (obs 2) 2]
 
 ;; Scatter plot of parameters after some inferece
 ;; (independent short Markov chains)
 [infer (plotf 'p0d1d (run (accumulate_dataset <%= smaller_sample_size %>
   (do reset_to_prior
       (mh default one 30)
-      (collect a b)))))]
+      (collect intercept slope)))))]
 ```
 
 Topic: Understanding a model with visualization
