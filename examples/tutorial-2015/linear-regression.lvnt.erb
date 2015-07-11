@@ -1,0 +1,218 @@
+<% sample_size = 500 %>
+<% if ENV['SMOKETEST'] then sample_size = 5 end %>
+<% smaller_sample_size = [sample_size / 5, 5].max %>
+<% refman_url = "http://probcomp.csail.mit.edu/venture/edge/reference/" %>
+
+More Modeling: Linear Regression
+================================
+
+[Ok, one gaussian isn't that much fun: let's try varying the mean as a
+function of the input, i.e. linear regression.]
+
+In this part, we will build up a somewhat more elaborate model, and
+explore strategies for inspecting and debugging it.  The problem we
+address is linear regression: trying to infer a linear relationship
+between an input and an output from some data.  This is of course
+well-trodden terrain -- we are primarily using it to introduce more
+Venture concepts, but the models themselves will get interesting
+toward the end.
+
+[Concepts: more elaborate models; functions; abstraction?; genericity
+of built-in inference procedures]
+
+```church'
+clear
+```
+
+```church'
+;; Prior on line parameters
+[assume a (normal 0 7)]
+[assume b (normal 0 4)]
+
+;; Hypothesized linear relationship
+[assume f (lambda (x) (+ a (* b x)))]
+
+;; Prior for unknown noise level
+[assume noise (gamma 1 1)]
+
+;; Full data model: linear relationship with additive noise of
+;; unknown but consistent magnitude
+[assume obs_fun (lambda (x) (normal (f x) noise))]
+
+;; A tiny data set
+[observe (obs_fun 1) 2]
+[observe (obs_fun 2) 2]
+
+;; Scatter plot of parameters after some inferece
+;; (independent short Markov chains)
+[infer (plotf 'p0d1d (run (accumulate_dataset <%= smaller_sample_size %>
+  (do reset_to_prior
+      (mh default one 30)
+      (collect a b)))))]
+```
+
+Topic: Understanding a model with visualization
+===============================================
+
+[Drop in pygame visualization code.  How much to explain vs black-box it?]
+
+Elaboration: Outlier Detection
+==============================
+
+[TODO Go through this]
+
+```church'
+clear
+```
+
+```church'
+;; Prior on line parameters
+[assume a (normal 0 7)]
+[assume b (normal 0 4)]
+
+;; Hypothesized linear relationship
+[assume f (lambda (x) (+ a (* b x)))]
+
+;; Prior for unknown noise level
+[assume noise (gamma 1 1)]
+
+;; Prior on the outlier rate
+[assume outlier_prob (uniform_continuous 0.01 0.3)]
+
+;; Per-point outlier check
+[assume is_outlier (mem (lambda (i)
+  (flip outlier_prob)))]
+
+;; Full data model: linear relationship with additive noise of unknown
+;; but consistent magnitude, plus outlier detection with a broad
+;; Gaussian outlier model.
+[assume obs_fun
+  (lambda (i x)
+    (if (is_outlier i)
+        (normal 0 100)
+        (normal (f x) noise)))]
+
+;; Data set
+[observe (obs_fun 0 1) 0.5]
+[observe (obs_fun 1 4) 0]
+[observe (obs_fun 2 -3) 1]
+[observe (obs_fun 3 -5) -1]
+
+;; Scatter plot of parameters after some inferece
+;; (independent short Markov chains)
+[infer (plotf 'p0d1d (run (accumulate_dataset <%= smaller_sample_size %>
+  (do reset_to_prior
+      (mh default one 30)
+      (collect a b)))))]
+```
+
+Using tags for inference control
+================================
+
+[TODO]
+
+```church'
+clear
+```
+
+```church'
+;; Prior on line parameters
+[assume a (tag 'param 'a (normal 0 7))]
+[assume b (tag 'param 'b (normal 0 4))]
+
+;; Hypothesized linear relationship
+[assume f (lambda (x) (+ a (* b x)))]
+
+;; Prior for unknown noise level
+[assume noise (tag 'hyper 'noise (gamma 1 1))]
+
+;; Prior on the outlier rate
+[assume outlier_prob (tag 'hyper 'outlier_prob (uniform_continuous 0.01 0.3))]
+
+;; Per-point outlier check
+[assume is_outlier (mem (lambda (i)
+  (tag 'outlier i
+   (flip outlier_prob))))]
+
+;; Full data model: linear relationship with additive noise of unknown
+;; but consistent magnitude, plus outlier detection with a broad
+;; Gaussian outlier model.
+[assume obs_fun
+  (lambda (i x)
+    (if (is_outlier i)
+        (normal 0 100)
+        (normal (f x) noise)))]
+
+;; Data set
+[observe (obs_fun 0 1) 0.5]
+[observe (obs_fun 1 4) 0]
+[observe (obs_fun 2 -3) 1]
+[observe (obs_fun 3 -5) -1]
+
+;; Scatter plot of parameters after some inferece
+;; (independent short Markov chains)
+[infer (plotf 'p0d1d (run (accumulate_dataset <%= smaller_sample_size %>
+  (do reset_to_prior
+      (mh default one 30)
+      (collect a b)))))]
+```
+
+Elaboration: Model Selection
+============================
+
+[TODO Go through this]
+
+```church'
+clear
+```
+
+```church'
+;; Prior on polynomial coefficients
+[assume a (tag 'param 'a (normal 0 7))]
+[assume b (tag 'param 'b (normal 0 4))]
+[assume c (tag 'param 'c (normal 0 2))]
+
+;; Prior probability of being a quadratic
+[assume is_quadratic (tag 'model 0 (flip 0.5))]
+
+;; Hypothesized relationship
+[assume f
+  (lambda (x)
+    (if is_quadratic
+        (+ a (* b x) (* c (* x x)))
+        (+ a (* b x))))]
+
+;; Prior for unknown noise level
+[assume noise (tag 'hyper 'noise (gamma 1 1))]
+
+;; Prior on the outlier rate
+[assume outlier_prob (tag 'hyper 'outlier_prob (uniform_continuous 0.01 0.3))]
+
+;; Per-point outlier check
+[assume is_outlier (mem (lambda (i)
+  (tag 'outlier i
+   (flip outlier_prob))))]
+
+;; Full data model: linear or quadratic relationship with additive
+;; noise of unknown but consistent magnitude, plus outlier detection
+;; with a broad Gaussian outlier model.
+[assume obs_fun
+  (lambda (i x)
+    (if (is_outlier i)
+        (normal 0 100)
+        (normal (f x) noise)))]
+
+[observe (obs_fun 0 1) 0.5]
+[observe (obs_fun 1 4) 0]
+[observe (obs_fun 2 -3) 1]
+[observe (obs_fun 3 -5) -1]
+
+;; Scatter plot of parameters after some inferece
+;; (independent short Markov chains)
+[infer (plotf 'p0d1d (run (accumulate_dataset <%= smaller_sample_size %>
+  (do reset_to_prior
+      (mh default one 30)
+      (collect a b)))))]
+```
+
+[TODO illustrate and elaborate] Inference phenomenon: Bayes Occam's Razor
