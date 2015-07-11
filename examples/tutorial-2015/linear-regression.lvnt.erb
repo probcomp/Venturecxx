@@ -5,8 +5,8 @@
 
 [< Prev: Basics](../basics/index.html)
 
-More Modeling: Linear Regression
-================================
+Linear Regression
+=================
 
 [Ok, one gaussian isn't that much fun: let's try varying the mean as a
 function of the input, i.e. linear regression.]
@@ -19,12 +19,29 @@ well-trodden terrain -- we are primarily using it to introduce more
 Venture concepts, but the models themselves will get interesting
 toward the end.
 
+Recap
+=====
+
+In the [previous part](../basics/index.html) we discussed basic
+concepts of Venture programming, modeling, and inference.  As a
+reminder, the main modes of using Venture we saw are starting Venture
+interactively
+
+```
+$ venture lite --lang venture_script
+```
+
+and running standalone Venture scripts
+
+```
+$ venture lite -f script.vnts
+```
+
+Simple Linear Regression
+========================
+
 [Concepts: more elaborate models; functions; abstraction?; genericity
 of built-in inference procedures]
-
-```church'
-clear
-```
 
 ```church'
 ;; Prior on line parameters
