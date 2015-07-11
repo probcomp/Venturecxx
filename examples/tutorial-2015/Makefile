@@ -15,7 +15,7 @@ tutorial/%/index.html: %.lvnt
 tutorial-smoke/%/index.html: %-smoke.lvnt
 	../../script/venture-transcript $< tutorial-smoke/$*
 
-build: tutorial/basics/index.html tutorial/linear-regression.html gauss_plot.png
+build: tutorial/basics/index.html tutorial/linear-regression/index.html gauss_plot.png
 	cp gauss_plot.png tutorial/basics/
 	cp lin-reg-1.vnts tutorial/linear-regression
 

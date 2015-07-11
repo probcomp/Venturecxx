@@ -76,18 +76,86 @@ If you don't want to type that, you can download
 $ venture lite -f lin-reg-1.vnts --interactive
 ```
 
-```church'
-;; A tiny data set
-[observe (obs 1) 2]
-[observe (obs 2) 2]
+Let's give this model a smoke test
 
-;; Scatter plot of parameters after some inferece
-;; (independent short Markov chains)
-[infer (plotf 'p0d1d (run (accumulate_dataset <%= smaller_sample_size %>
-  (do reset_to_prior
-      (mh default one 30)
-      (collect intercept slope)))))]
+```venture
+// A tiny data set
+observe obs(1) = 2
+observe obs(2) = 2
+
+// Should be solvable exactly
+infer posterior
+
+// Do we get plausible values?
+sample list(intercept, slope, line(3))
 ```
+
+Exercise: Evaluate the model's performance on the two data points.
+
+1. Gather and save a dataset of independent posterior samples of the
+   parameters and a prediction at some value.
+   [Hint: You can pass multiple arguments to `collect`]
+   [Answer:
+
+```venture
+define data = run(accumulate_dataset(<%= smaller_sample_size %>,
+  do(posterior,
+     collect(intercept, slope, line(3)))))
+```
+
+]
+
+2. Predictive accuracy: Where do you expect the predictive mean to be,
+   based on the observations we trained the model on?  How widely do
+   you expect it be dispersed, based on the noise in the model?  Plot
+   the predictions: does the data agree with your intuition?
+
+[Answer: 2, pretty broad,
+
+```church'
+(plot 'h2 data)
+```
+
+]
+
+3. Parameter inference
+
+    a. Where do you expect the intercept to be located, and how
+       concentrated do you expect it to be?  Plot the intercept and
+       check your intuition.
+
+[Answer: 2, broad,
+
+```church'
+(plot 'h0 data)
+```
+]
+
+    b. Where do you expect the slope to be located, and how
+       concentrated do you expect it to be?  Plot the slope and check
+       your intuition.
+
+[Answer: 2, broad,
+
+```church'
+(plot 'h1 data)
+```
+]
+
+    c. What do you expect the relationship between the slope and
+       intercept to be?  Plot them against each other and check your
+       intuition.  Hint: The usual way to get a scatter plot is
+       `p0d1d`: `p` for **p**oint and `d` for **d**irect as opposed to
+       log scale.  A gotcha: if you leave the middle `d` off, the 0
+       and 1 will run together into a single index.
+
+[Answer: anticorrelated, because the line is trying to pass through
+around (1.5, 2).
+
+```church'
+(plot 'p0d1d data)
+```
+
 
 Topic: Understanding a model with visualization
 ===============================================
