@@ -1,3 +1,4 @@
 ppaml
-ppaml-smoke
-tutorial*.lvnt
+linear-regression
+*-smoke
+*.lvnt
