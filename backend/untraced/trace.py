@@ -65,6 +65,9 @@ class Trace(object):
     self.env.addBinding(name, node.Node(None, spVal))
 
   def bindInGlobalEnv(self, sym, id):
+    if self.boundInGlobalEnv(sym):
+      # No problems with overwrites in the untraced setting.
+      self.unbindInGlobalEnv(sym)
     try:
       self.env.addBinding(sym, node.Node(id, self.results[id]))
     except VentureError as e:
