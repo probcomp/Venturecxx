@@ -1,7 +1,14 @@
 all: build
 
+# Assets
+
 gauss_plot.png:  # This takes about 3 minutes on my laptop
 	venture puma -e '(run (resample 100)) (plot_to_file (quote gauss_plot) (quote h0) (run (accumulate_dataset 10000 (collect (labelled (normal 1 0.7071067811865475) x)))))'
+
+reg-test.csv: mk_dataset.vnt
+	venture puma -f $<
+
+# Tutorial content files
 
 %.lvnt: %.lvnt.erb
 	erb $< > $@
@@ -14,6 +21,8 @@ tutorial/%/index.html: %.lvnt
 
 tutorial-smoke/%/index.html: %-smoke.lvnt
 	../../script/venture-transcript $< tutorial-smoke/$*
+
+# Full builds
 
 build: tutorial/basics/index.html tutorial/linear-regression/index.html gauss_plot.png
 	cp gauss_plot.png tutorial/basics/
