@@ -2,3 +2,4 @@ ppaml
 tutorial/
 tutorial-smoke/
 *.lvnt
+reg-test.csv
