@@ -168,8 +168,33 @@ $ venture lite -f lin-reg-1.vnts --interactive
 
 In this segment, we will try it on more data.
 
-Here's [a little synthetic regression dataset](reg-test.csv).
+There is [a little synthetic regression dataset in the file
+reg-test.csv](reg-test.csv).  Download it and have a look.
 
+You could, of course, type all this data into your Venture session
+as
+
+```
+observe obs(this) = that
+observe obs(that) = the other
+...
+```
+
+but that's pretty tedious.  Being a probabilistic programming
+language, Venture doesn't replicate standard programming facilities
+like reading data files, and instead offers close integration with
+Python.  So the way to do a job like this is to use
+[`pyexec`](<%= refman_url %>/inference.html#pyexec):
+
+```church'
+(run (pyexec 'symbol<"import pandas as pd">))
+(run (pyexec 'symbol<"frame = pd.read_csv('reg-test.csv')">))
+(run (pyexec 'symbol<"ripl.observe_dataset('obs', frame[['x','y']].values)">))
+```
+
+```church'
+list_directives
+```
 
 Topic: Understanding a model with visualization
 ===============================================
