@@ -196,6 +196,16 @@ Python.  So the way to do a job like this is to use
 list_directives
 ```
 
+If you want to know what just happened there, `pyexec` is an action of
+the inference language that executes the given string of Python code.
+The binding environment begins with the variable `ripl` bound to the
+current session's
+[Read-Infer-Predict Layer](<%= refman_url %>venture.ripl.ripl.html#module-venture.ripl.ripl),
+which serves as the entry point for using Venture as a Python library.
+In this case, we used the escape to load our csv file up into a Pandas DataFrame,
+and then used the RIPL's [`observe_dataset`](<%= refman_url %>venture.ripl.ripl.html#venture.ripl.ripl.Ripl.observe_dataset) method to load it into Venture
+as individual observations.
+
 Topic: Understanding a model with visualization
 ===============================================
 
