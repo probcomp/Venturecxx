@@ -198,13 +198,45 @@ list_directives
 
 If you want to know what just happened there, `pyexec` is an action of
 the inference language that executes the given string of Python code.
-The binding environment begins with the variable `ripl` bound to the
+The binding environment persists across calls, and begins with the variable `ripl` bound to the
 current session's
 [Read-Infer-Predict Layer](<%= refman_url %>venture.ripl.ripl.html#module-venture.ripl.ripl),
 which serves as the entry point for using Venture as a Python library.
 In this case, we used the escape to load our csv file up into a Pandas DataFrame,
 and then used the RIPL's [`observe_dataset`](<%= refman_url %>venture.ripl.ripl.html#venture.ripl.ripl.Ripl.observe_dataset) method to load it into Venture
 as individual observations.
+
+OK, so we loaded the data.  We could do some inference
+
+```venture
+infer default_markov_chain(30)
+```
+
+and ask for a prediction
+
+```venture
+sample line(11)
+```
+
+but without a look at the data, we don't even know what to expect.
+There are of course plenty of ways to plot a dataset; in this case, we
+will use Venture's `plot`:
+
+```church'
+(run (pyexec 'symbol<"import venture.lite.value as vv">))
+[define frame (run (pyeval 'symbol<"vv.VentureForeignBlob(frame[['x', 'y']])">))]
+(plot 'p0d1d frame)
+```
+
+```venture
+define data = run(accumulate_dataset(<%= smaller_sample_size %>,
+  do(default_markov_chain(30),
+     collect(intercept, slope, line(11)))))
+```
+
+```church'
+(plot 'h2 data)
+```
 
 Topic: Understanding a model with visualization
 ===============================================
