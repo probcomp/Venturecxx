@@ -1,0 +1,15 @@
+[assume a (normal 0 1)]
+[assume b (normal 0 1)]
+[assume f (lambda (x) (+ a (* x b)))]
+[assume obs_fun (lambda (x) (normal (f x) 0.3))]
+
+[define point
+  (lambda (x)
+    (collect (labelled ,x x)
+             (labelled (obs_fun ,x) y)))]
+
+[define data
+  (run (do (datasets <- (mapM point '(-10 -9 -8 -7 -6 -5 -4 -3 -2 -1 0 1 2 3 4 5 6 7 8 9 10)))
+           (join_datasets datasets)))]
+
+(run (pyexec 'symbol<"ripl.evaluate('data').asPandas()[['x', 'y']].to_csv('reg-test.csv')">))
