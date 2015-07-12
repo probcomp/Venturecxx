@@ -178,12 +178,19 @@ def print_fun(*args):
 
 def plot_fun(spec, dataset):
   spec = t.ExpressionType().asPython(spec)
-  PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names)
+  if isinstance(dataset, Dataset):
+    PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names)
+  else:
+    # Assume a raw data frame
+    PlotSpec(spec).plot(dataset, list(dataset.columns.values))
 
 def plot_to_file_fun(basenames, spec, dataset):
   filenames = t.ExpressionType().asPython(basenames)
   spec = t.ExpressionType().asPython(spec)
-  PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names, _format_filenames(filenames, spec))
+  if isinstance(dataset, Dataset):
+    PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names, _format_filenames(filenames, spec))
+  else:
+    PlotSpec(spec).plot(dataset, list(dataset.columns.values), _format_filenames(filenames, spec))
 
 def _format_filenames(filenames,spec):
   if isinstance(filenames, basestring):

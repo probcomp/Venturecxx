@@ -78,12 +78,15 @@ class PlotSpec(object):
 
   @staticmethod
   def _format_title(dataset):
-    walltime = dataset['time (s)'].max()
-    niterations = dataset['iter'].max()
-    nparticles = dataset['prt. id'].max() + 1
-    title = 'Wall time: {0}m, {1:0.2f}s. Iterations: {2}. Particles: {3}'
-    title = title.format(int(walltime // 60), walltime % 60, niterations, nparticles)
-    return title
+    if 'time (s)' in dataset and 'iter' in dataset and 'prt. id' in dataset:
+      walltime = dataset['time (s)'].max()
+      niterations = dataset['iter'].max()
+      nparticles = dataset['prt. id'].max() + 1
+      title = 'Wall time: {0}m, {1:0.2f}s. Iterations: {2}. Particles: {3}'
+      title = title.format(int(walltime // 60), walltime % 60, niterations, nparticles)
+      return title
+    else:
+      return ""
 
   @staticmethod
   def _add_date(fig):
