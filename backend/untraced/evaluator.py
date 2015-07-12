@@ -89,7 +89,7 @@ class RequestArgs(object):
       assert v is None or isinstance(v, vv.VentureValue)
     self.isOutput = False
     self.env = env
-    # TODO Theoretically need spaux and makeSPAux fields
+    # TODO Theoretically need spaux and madeSPAux fields
 
 class OutputArgs(RequestArgs):
   "A package containing all the evaluation context information that an OutputPSP might need, parallel to venture.lite.node.Args"

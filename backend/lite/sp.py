@@ -17,7 +17,6 @@
 
 from value import VentureValue, registerVentureType, VentureNil
 from types import VentureType
-import copy
 from exception import VentureError
 import venture.value.dicts as v
 
@@ -102,6 +101,30 @@ class VentureSPRecord(VentureValue):
 
 registerVentureType(VentureSPRecord)
 
+class UnwrappingRequestArgs(object):
+  def __init__(self, f_type, args):
+    self.f_type = f_type
+    self.node = args.node
+    self.operandValues = args.operandValues
+    self.operandNodes = args.operandNodes
+    self.isOutput = args.isOutput
+    if hasattr(args, "spaux"):
+      self.spaux = args.spaux
+    self.env = args.env
+
+  def __repr__(self):
+    return "%s(%r)" % (self.__class__, self.__dict__)
+
+class UnwrappingOutputArgs(UnwrappingRequestArgs):
+  def __init__(self, f_type, args):
+    super(UnwrappingOutputArgs, self).__init__(f_type, args)
+    if hasattr(args, "requestValue"):
+      self.requestValue = args.requestValue
+    self.esrValues = args.esrValues
+    self.esrNodes = args.esrNodes
+    if hasattr(args, "madeSPAux"):
+      self.madeSPAux = args.madeSPAux
+
 class SPType(VentureType):
   """An object representing a Venture function type.  It knows
 the types expected for the arguments and the return, and thus knows
@@ -141,7 +164,10 @@ used in the implementation of TypedPSP and TypedLKernel."""
     # XXX: why was this check necessary?
     # if args.isOutput:
     #   assert not args.esrValues # TODO Later support outputs that have non-latent requesters
-    answer = copy.copy(args)
+    if args.isOutput:
+      answer = UnwrappingOutputArgs(self, args)
+    else:
+      answer = UnwrappingRequestArgs(self, args)
     answer.operandValues = self.unwrap_arg_list(args.operandValues)
     return answer
 
