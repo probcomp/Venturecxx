@@ -214,18 +214,24 @@ class WishartPSP(RandomPSP):
   def __parse_args__(self, args):
     return (np.array(args.operandValues[0]), args.operandValues[1])
 
+half_log2pi = 0.5 * math.log(2 * math.pi)
+
 class NormalOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self,params): return scipy.stats.norm.rvs(*params)
-  def logDensityNumeric(self,x,params): return scipy.stats.norm.logpdf(x,*params)
+  def logDensityNumeric(self,x,params):
+    (mu, sigma) = params
+    deviation = x - mu
+    ans = - math.log(sigma) - half_log2pi - (0.5 * deviation * deviation / (sigma * sigma))
+    return ans
   def logDensityBoundNumeric(self, x, mu, sigma):
     if sigma is not None:
-      return -(math.log(sigma) + 0.5 * math.log(2 * math.pi))
+      return -(math.log(sigma) + half_log2pi)
     elif x is not None and mu is not None:
       # Per the derivative of the log density noted in the
       # gradientOfLogDensity method, the maximum occurs when
       # (x-mu)^2 = sigma^2
-      return scipy.stats.norm.logpdf(x, mu, abs(x-mu))
+      return self.logDensityNumeric(x, [mu, abs(x-mu)])
     else:
       raise Exception("Cannot rejection sample psp with unbounded likelihood")
 
