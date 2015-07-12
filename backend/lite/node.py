@@ -112,8 +112,14 @@ def isRequestNode(thing):
 def isOutputNode(thing):
   return isinstance(thing, OutputNode) and not thing.isFrozen
 
-class Args(object):
-  def __init__(self,trace,node):
+def Args(trace, node): # TODO Inline this shim for preserving this module's visible API
+  if isinstance(node, OutputNode):
+    return OutputArgs(trace, node)
+  else:
+    return RequestArgs(trace, node)
+
+class RequestArgs(object):
+  def __init__(self, trace, node):
     self.node = node
     self.operandValues = [trace.valueAt(operandNode) for operandNode in node.operandNodes]
     for v in self.operandValues:
@@ -121,18 +127,18 @@ class Args(object):
       # sampling, which is computed from the torus.
       assert v is None or isinstance(v, VentureValue)
     self.operandNodes = node.operandNodes
-
-    if isinstance(node,OutputNode):
-      self.requestValue = trace.valueAt(node.requestNode)
-      self.esrValues = [trace.valueAt(esrParent) for esrParent in trace.esrParentsAt(node)]
-      self.esrNodes = trace.esrParentsAt(node)
-      self.madeSPAux = trace.getAAAMadeSPAuxAt(node)
-      self.isOutput = True
-    else:
-      self.isOutput = False
-
+    self.isOutput = False
     self.spaux = trace.spauxAt(node)
     self.env = node.env
 
   def __repr__(self):
     return "%s(%r)" % (self.__class__, self.__dict__)
+
+class OutputArgs(RequestArgs):
+  def __init__(self, trace, node):
+    super(OutputArgs, self).__init__(trace, node)
+    self.requestValue = trace.valueAt(node.requestNode)
+    self.esrValues = [trace.valueAt(esrParent) for esrParent in trace.esrParentsAt(node)]
+    self.esrNodes = trace.esrParentsAt(node)
+    self.madeSPAux = trace.getAAAMadeSPAuxAt(node)
+    self.isOutput = True
