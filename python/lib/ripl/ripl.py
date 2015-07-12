@@ -553,7 +553,7 @@ ripl.observe_dataset("<expr>", <iterable>)
   recent assume.
 
 - The <iterable> is a Python iterable each of whose elements must be a
-  tuple of a list of valid Venture values and a Venture value: ([a], b)
+  nonempty list of valid Venture values.
 
 - There is no Venture syntax for this; it is accessible only when
   using Venture as a library.
@@ -562,10 +562,10 @@ Semantics:
 
 - As to its effect on the distribution over traces, this is equivalent
   to looping over the contents of the given iterable, calling
-  ripl.observe on each element as ripl.observe("(<expr> $tuple[0])",
-  tuple[1]). In other words, the first component of each element of
-  the iterable gives the arguments to the procedure given by <expr>,
-  and the second component gives the value to observe.
+  ripl.observe on each element as ripl.observe("(<expr> *item[:-1])",
+  item[-1]). In other words, the first elements of each item of
+  the iterable give the arguments to the procedure given by <expr>,
+  and the last element gives the value to observe.
 
 - The ripl method returns a list of directive ids, which correspond to
   the individual observes thus generated.
@@ -592,9 +592,9 @@ Open issues:
         """
         ret_vals = []
         parsed = self._ensure_parsed_expression(proc_expression)
-        for i, (args, val) in enumerate(iterable):
-          expr = [parsed] + [v.quote(a) for a in args]
-          ret_vals.append(self.observe(expr,val,label+"_"+str(i) if label is not None else None))
+        for i, args_val in enumerate(iterable):
+          expr = [parsed] + [v.quote(a) for a in args_val[:-1]]
+          ret_vals.append(self.observe(expr,args_val[-1],label+"_"+str(i) if label is not None else None))
         return ret_vals
 
     ############################################
