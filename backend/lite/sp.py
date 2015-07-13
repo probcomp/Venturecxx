@@ -121,13 +121,11 @@ class UnwrappingRequestArgs(object):
 class UnwrappingOutputArgs(UnwrappingRequestArgs):
   def __init__(self, f_type, args):
     super(UnwrappingOutputArgs, self).__init__(f_type, args)
-    if hasattr(args, "requestValue"):
-      self.requestValue = args.requestValue
     self.esrNodes = args.esrNodes
-    if hasattr(args, "madeSPAux"):
-      self.madeSPAux = args.madeSPAux
 
+  def requestValue(self): return self.args.requestValue()
   def esrValues(self): return self.args.esrValues()
+  def madeSPAux(self): return self.args.madeSPAux()
 
 class SPType(VentureType):
   """An object representing a Venture function type.  It knows

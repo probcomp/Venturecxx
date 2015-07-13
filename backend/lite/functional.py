@@ -72,7 +72,7 @@ class FixOutputPSP(DeterministicPSP):
         ids = args.operandValues()[0]
         # get the extended environment shared by the ESRs
         env = None
-        for esr in args.requestValue.esrs:
+        for esr in args.requestValue().esrs:
             if env is None: env = esr.env
             else: assert env is esr.env
         if env is None: env = args.env

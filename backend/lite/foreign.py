@@ -58,7 +58,7 @@ class ForeignArgs(object):
             self.requestValue = None
             self.esrValues = []
             self.esrNodes = []
-            self.madeSPAux = args.get('madeSPAux')
+            self.madeSPAux = args.get('madeSPAux')()
             self.isOutput = True
         else:
             self.isOutput = False

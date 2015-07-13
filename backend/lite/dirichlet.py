@@ -183,11 +183,12 @@ class UDirMultAAALKernel(SimulationAAALKernel):
     vals = args.operandValues()
     alpha = vals[0]
     os = vals[1] if len(vals) > 1 else [VentureAtom(i) for i in range(len(alpha))]
-    assert isinstance(args.madeSPAux,DirMultSPAux)
-    counts = [count + a for (count,a) in zip(args.madeSPAux.counts,alpha)]
+    madeaux = args.madeSPAux()
+    assert isinstance(madeaux,DirMultSPAux)
+    counts = [count + a for (count,a) in zip(madeaux.counts,alpha)]
     newTheta = npr.dirichlet(counts)
     output = TypedPSP(UDirMultOutputPSP(newTheta,os), SPType([], AnyType()))
-    return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,len(alpha)), args.madeSPAux)
+    return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,len(alpha)), madeaux)
 
   def weight(self, _trace, _newValue, _args):
     # Gibbs step, samples exactly from the local posterior.  Being a
@@ -297,11 +298,12 @@ class USymDirMultAAALKernel(SimulationAAALKernel):
     vals = args.operandValues()
     (alpha,n) = (float(vals[0]),int(vals[1]))
     os = vals[2] if len(vals) > 2 else [VentureAtom(i) for i in range(n)]
-    assert isinstance(args.madeSPAux,DirMultSPAux)
-    counts = [count + alpha for count in args.madeSPAux.counts]
+    madeaux = args.madeSPAux()
+    assert isinstance(madeaux,DirMultSPAux)
+    counts = [count + alpha for count in madeaux.counts]
     newTheta = npr.dirichlet(counts)
     output = TypedPSP(USymDirMultOutputPSP(newTheta,os), SPType([], AnyType()))
-    return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,n), args.madeSPAux)
+    return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,n), madeaux)
 
   def weight(self, _trace, _newValue, _args):
     # Gibbs step, samples exactly from the local posterior.  Being a

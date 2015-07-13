@@ -258,10 +258,11 @@ class MakerUBetaBernoulliOutputPSP(DiscretePSP):
 class UBetaBernoulliAAALKernel(SimulationAAALKernel):
   def simulate(self, _trace, args):
     (alpha, beta) = args.operandValues()
-    [ctY,ctN] = args.madeSPAux.cts()
+    madeaux = args.madeSPAux()
+    [ctY,ctN] = madeaux.cts()
     newWeight = scipy.stats.beta.rvs(alpha + ctY, beta + ctN)
     output = TypedPSP(UBetaBernoulliOutputPSP(newWeight), SPType([], t.BoolType()))
-    return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output), args.madeSPAux)
+    return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output), madeaux)
 
   def weight(self, _trace, _newValue, _args):
     # Gibbs step, samples exactly from the local posterior.  Being a

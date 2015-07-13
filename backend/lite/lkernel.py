@@ -145,10 +145,10 @@ class DeterministicMakerAAALKernel(SimulationAAALKernel):
   def __init__(self,makerPSP): self.makerPSP = makerPSP
   def simulate(self, _trace, args):
     spRecord = self.makerPSP.simulate(args)
-    spRecord.spAux = args.madeSPAux
+    spRecord.spAux = args.madeSPAux()
     return spRecord
   def weight(self, _trace, newValue, _args):
-    # Using newValue.spAux here because args.madeSPAux is liable to be
+    # Using newValue.spAux here because args.madeSPAux() is liable to be
     # None when detaching. This has something to do with when the Args
     # object is constructed relative to other things that happen
     # during detach/regen. TODO: fix it so that this code is less
@@ -163,7 +163,7 @@ class DeterministicMakerAAALKernel(SimulationAAALKernel):
     # be None when computing bounds for rejection, but the maker
     # should know enough about its possible values future to answer my
     # question.
-    return self.makerPSP.madeSpLogDensityOfCountsBound(args.madeSPAux)
+    return self.makerPSP.madeSpLogDensityOfCountsBound(args.madeSPAux())
 
 class DeterministicLKernel(SimulationLKernel):
   def __init__(self,psp,value):
