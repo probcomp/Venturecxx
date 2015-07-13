@@ -62,7 +62,7 @@ class ForeignArgs(object):
             self.isOutput = True
         else:
             self.isOutput = False
-        self.spaux = args.get('spaux')
+        self.spaux = args.get('spaux')()
         self.env = None
 
 class ForeignLitePSP(object):

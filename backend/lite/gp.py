@@ -114,12 +114,12 @@ class GPOutputPSP(RandomPSP):
     return GP(self.mean, self.covariance, samples)
   
   def simulate(self,args):
-    samples = args.spaux.samples
+    samples = args.spaux().samples
     xs = args.operandValues()[0]
     return self.makeGP(samples).sample(*xs)
 
   def logDensity(self,os,args):
-    samples = args.spaux.samples
+    samples = args.spaux().samples
     xs = args.operandValues()[0]
     return self.makeGP(samples).logDensity(xs, os)
 
@@ -127,14 +127,14 @@ class GPOutputPSP(RandomPSP):
     return self.makeGP(aux.samples).logDensityOfCounts()
   
   def incorporate(self,os,args):
-    samples = args.spaux.samples
+    samples = args.spaux().samples
     xs = args.operandValues()[0]
     
     for x, o in zip(xs, os):
       samples[x] = o
 
   def unincorporate(self,_os,args):
-    samples = args.spaux.samples
+    samples = args.spaux().samples
     xs = args.operandValues()[0]
     for x in xs:
       del samples[x]

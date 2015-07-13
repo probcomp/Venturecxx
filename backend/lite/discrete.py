@@ -198,26 +198,26 @@ class CBetaBernoulliOutputPSP(DiscretePSP):
     self.beta = beta
 
   def incorporate(self,value,args):
-    spaux = args.spaux
+    spaux = args.spaux()
     if value: # I produced true
       spaux.yes += 1
     else: # I produced false
       spaux.no += 1
 
   def unincorporate(self,value,args):
-    spaux = args.spaux
+    spaux = args.spaux()
     if value: # I produced true
       spaux.yes -= 1
     else: # I produced false
       spaux.no -= 1
 
   def simulate(self,args):
-    [ctY,ctN] = args.spaux.cts()
+    [ctY,ctN] = args.spaux().cts()
     weight = (self.alpha + ctY) / (self.alpha + ctY + self.beta + ctN)
     return random.random() < weight
 
   def logDensity(self,value,args):
-    [ctY,ctN] = args.spaux.cts()
+    [ctY,ctN] = args.spaux().cts()
     weight = (self.alpha + ctY) / (self.alpha + ctY + self.beta + ctN)
     if value == True:
       return math.log(weight)
@@ -276,14 +276,14 @@ class UBetaBernoulliOutputPSP(DiscretePSP):
     self.weight = weight
 
   def incorporate(self,value,args):
-    spaux = args.spaux
+    spaux = args.spaux()
     if value: # I produced true
       spaux.yes += 1
     else: # I produced false
       spaux.no += 1
 
   def unincorporate(self,value,args):
-    spaux = args.spaux
+    spaux = args.spaux()
     if value: # I produced true
       spaux.yes -= 1
     else: # I produced false

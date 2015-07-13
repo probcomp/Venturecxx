@@ -114,26 +114,29 @@ class CDirMultOutputPSP(RandomPSP):
     self.index = dict((val, i) for (i, val) in enumerate(os))
 
   def simulate(self,args):
-    index = sample(self.alpha, args.spaux.counts)
+    index = sample(self.alpha, args.spaux().counts)
     return self.os[index]
       
   def logDensity(self,val,args):
     index = self.index[val]
-    num = args.spaux.counts[index] + self.alpha[index]
-    denom = args.spaux.counts.total + self.alpha.total
+    aux = args.spaux()
+    num = aux.counts[index] + self.alpha[index]
+    denom = aux.counts.total + self.alpha.total
     return math.log(num/denom)
 
   def incorporate(self,val,args):
-    assert isinstance(args.spaux,DirMultSPAux)
+    aux = args.spaux()
+    assert isinstance(aux,DirMultSPAux)
     index = self.index[val]
-    assert args.spaux.counts[index] >= 0
-    args.spaux.counts.increment(index)
+    assert aux.counts[index] >= 0
+    aux.counts.increment(index)
     
   def unincorporate(self,val,args):
-    assert isinstance(args.spaux,DirMultSPAux)
+    aux = args.spaux()
+    assert isinstance(aux,DirMultSPAux)
     index = self.index[val]
-    args.spaux.counts.decrement(index)
-    assert args.spaux.counts[index] >= 0
+    aux.counts.decrement(index)
+    assert aux.counts[index] >= 0
         
   def enumerateValues(self, _args):
     return self.os
@@ -209,16 +212,18 @@ class UDirMultOutputPSP(RandomPSP):
     return math.log(self.theta[index])
 
   def incorporate(self,val,args):
-    assert isinstance(args.spaux,DirMultSPAux)
+    aux = args.spaux()
+    assert isinstance(aux,DirMultSPAux)
     index = self.index[val]
-    assert args.spaux.counts[index] >= 0
-    args.spaux.counts.increment(index)
+    assert aux.counts[index] >= 0
+    aux.counts.increment(index)
     
   def unincorporate(self,val,args):
-    assert isinstance(args.spaux,DirMultSPAux)
+    aux = args.spaux()
+    assert isinstance(aux,DirMultSPAux)
     index = self.index[val]
-    args.spaux.counts.decrement(index)
-    assert args.spaux.counts[index] >= 0
+    aux.counts.decrement(index)
+    assert aux.counts[index] >= 0
 
   def enumerateValues(self, _args):
     return self.os

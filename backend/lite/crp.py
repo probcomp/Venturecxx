@@ -67,7 +67,7 @@ class CRPOutputPSP(RandomPSP):
     self.d = float(d)
 
   def simulate(self,args):
-    aux = args.spaux
+    aux = args.spaux()
     old_indices = [i for i in aux.tableCounts]
     counts = [aux.tableCounts[i] - self.d for i in old_indices] + [self.alpha + (aux.numTables * self.d)]
     nextIndex = aux.nextIndex if len(aux.freeIndices) == 0 else aux.freeIndices.__iter__().next()
@@ -75,18 +75,18 @@ class CRPOutputPSP(RandomPSP):
     return simulateCategorical(counts,indices)
 
   def logDensity(self,index,args):
-    aux = args.spaux
+    aux = args.spaux()
     if index in aux.tableCounts:
       return math.log(aux.tableCounts[index] - self.d) - math.log(self.alpha + aux.numCustomers)
     else:
       return math.log(self.alpha + (aux.numTables * self.d)) - math.log(self.alpha + aux.numCustomers)
 
   # def gradientOfLogDensity(self, value, args):
-  #   aux = args.spaux
+  #   aux = args.spaux()
   #   if index in aux.tableCounts:
 
   def incorporate(self,index,args):
-    aux = args.spaux
+    aux = args.spaux()
     aux.numCustomers += 1
     if index in aux.tableCounts:
       aux.tableCounts[index] += 1
@@ -99,7 +99,7 @@ class CRPOutputPSP(RandomPSP):
         aux.nextIndex = max(index+1, aux.nextIndex)
 
   def unincorporate(self,index,args):
-    aux = args.spaux
+    aux = args.spaux()
     aux.numCustomers -= 1
     aux.tableCounts[index] -= 1
     if aux.tableCounts[index] == 0:
@@ -114,7 +114,7 @@ class CRPOutputPSP(RandomPSP):
     return term1 + term2 + term3
 
   def enumerateValues(self,args):
-    aux = args.spaux
+    aux = args.spaux()
     old_indices = [i for i in aux.tableCounts]
     indices = old_indices + [aux.nextIndex]
     return indices

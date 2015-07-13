@@ -108,12 +108,12 @@ class UnwrappingRequestArgs(object):
     self.node = args.node
     self.operandNodes = args.operandNodes
     self.isOutput = args.isOutput
-    if hasattr(args, "spaux"):
-      self.spaux = args.spaux
     self.env = args.env
 
   def operandValues(self):
     return self.f_type.unwrap_arg_list(self.args.operandValues())
+
+  def spaux(self): return self.args.spaux()
 
   def __repr__(self):
     return "%s(%r)" % (self.__class__, self.__dict__)

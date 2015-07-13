@@ -124,7 +124,6 @@ class RequestArgs(object):
     self.node = node
     self.operandNodes = node.operandNodes
     self.isOutput = False
-    self.spaux = trace.spauxAt(node)
     self.env = node.env
 
   def operandValues(self):
@@ -134,6 +133,8 @@ class RequestArgs(object):
       # sampling, which is computed from the torus.
       assert v is None or isinstance(v, VentureValue)
     return ans
+
+  def spaux(self): return self.trace.spauxAt(self.node)
 
   def __repr__(self):
     return "%s(%r)" % (self.__class__, self.__dict__)
