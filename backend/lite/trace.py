@@ -213,7 +213,6 @@ class Trace(object):
   #### Stuff that a particle trace would need to override for persistence
 
   def valueAt(self,node):
-    assert node.isAppropriateValue(node.value)
     return node.value
 
   def setValueAt(self,node,value):
