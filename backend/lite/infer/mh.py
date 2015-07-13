@@ -158,5 +158,16 @@ class MHOperator(InPlaceOperator):
   def name(self): return "resimulation MH"
 
 
+class FuncMHOperator(object):
+  def propose(self, trace, scaffold):
+    self.trace = trace
+    self.scaffold = scaffold
+    from ..particle import Particle
+    rhoWeight, self.rhoDB = detachAndExtract(trace, scaffold)
+    self.particle = Particle(trace)
+    xiWeight = regenAndAttach(self.particle, scaffold, False, self.rhoDB, {})
+    return self.particle, xiWeight - rhoWeight
 
-
+  def accept(self): self.particle.commit()
+  def reject(self): regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,{})
+  def name(self): return "resimulation MH"

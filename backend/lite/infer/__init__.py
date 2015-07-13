@@ -19,7 +19,7 @@ from egibbs import EnumerativeGibbsOperator, EnumerativeMAPOperator, Enumerative
 from hmc import HamiltonianMonteCarloOperator
 from map_gradient import MAPOperator, NesterovAcceleratedGradientAscentOperator
 from meanfield import MeanfieldOperator
-from mh import mixMH,MHOperator,BlockScaffoldIndexer
+from mh import mixMH,MHOperator,FuncMHOperator,BlockScaffoldIndexer
 from subsampled_mh import (subsampledMixMH, SubsampledMHOperator,
                            SubsampledBlockScaffoldIndexer)
 from draw_scaffold import drawScaffold
