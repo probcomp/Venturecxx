@@ -205,8 +205,7 @@ class DefaultVariationalLKernel(VariationalLKernel):
     return w
 
   def gradientOfLogDensity(self, value, args):
-    new_args = copy.copy(args)
-    new_args.operandValues = self.parameters
+    new_args = FixedValueArgs(args, self.parameters)
     # Ignore the derivative of the value because we do not care about it
     (_, grad) = self.psp.gradientOfLogDensity(value, new_args)
     return grad
@@ -222,3 +221,23 @@ class DefaultVariationalLKernel(VariationalLKernel):
       if self.parameterScopes[i] == "POSITIVE_REAL" and \
          self.parameters[i] < 0.1: self.parameters[i] = 0.1
       assert not math.isinf(self.parameters[i]) and not math.isnan(self.parameters[i])
+
+class FixedValueArgs(object):
+  def __init__(self, args, operandValues):
+    self.args = args
+    self._operandValues = operandValues
+    self.node = args.node
+    self.operandNodes = args.operandNodes
+    self.env = args.env
+
+  def operandValues(self): return self._operandValues
+  def spaux(self): return self.args.spaux()
+
+  # These four are only used on output nodes
+  def requestValue(self): return self.args.requestValue()
+  def esrNodes(self): return self.args.esrNodes()
+  def esrValues(self): return self.args.esrValues()
+  def madeSPAux(self): return self.args.madeSPAux()
+
+  def __repr__(self):
+    return "%s(%r)" % (self.__class__, self.__dict__)
