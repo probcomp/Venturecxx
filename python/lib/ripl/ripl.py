@@ -455,6 +455,7 @@ class Ripl():
         mark(scaffold.brush, 'green', only_bottom=True)
         for did in sorted(by_did.keys()):
             instr = self.directive_id_to_stringable_instruction[did]
+            instr = self._ensure_parsed(instr)
             print self._cur_parser().unparse_instruction(instr, by_did[did])
 
         print "The stacks"
@@ -466,6 +467,7 @@ class Ripl():
         mark(scaffold.brush, 'green', only_bottom=False)
         for did in sorted(by_did.keys()):
             instr = self.directive_id_to_stringable_instruction[did]
+            instr = self._ensure_parsed(instr)
             print self._cur_parser().unparse_instruction(instr, by_did[did])
 
     ############################################
