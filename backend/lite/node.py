@@ -112,13 +112,7 @@ def isRequestNode(thing):
 def isOutputNode(thing):
   return isinstance(thing, OutputNode) and not thing.isFrozen
 
-def Args(trace, node): # TODO Inline this shim for preserving this module's visible API
-  if isinstance(node, OutputNode):
-    return OutputArgs(trace, node)
-  else:
-    return RequestArgs(trace, node)
-
-class RequestArgs(object):
+class Args(object):
   def __init__(self, trace, node):
     self.trace = trace
     self.node = node
@@ -135,13 +129,7 @@ class RequestArgs(object):
 
   def spaux(self): return self.trace.spauxAt(self.node)
 
-  def __repr__(self):
-    return "%s(%r)" % (self.__class__, self.__dict__)
-
-class OutputArgs(RequestArgs):
-  def __init__(self, trace, node):
-    super(OutputArgs, self).__init__(trace, node)
-
+  # There four are for Args at output nodes.
   def requestValue(self):
     return self.trace.valueAt(self.node.requestNode)
   def esrNodes(self): return self.trace.esrParentsAt(self.node)
@@ -149,3 +137,6 @@ class OutputArgs(RequestArgs):
     return [self.trace.valueAt(esrParent) for esrParent in self.trace.esrParentsAt(self.node)]
   def madeSPAux(self):
     return self.trace.getAAAMadeSPAuxAt(self.node)
+
+  def __repr__(self):
+    return "%s(%r)" % (self.__class__, self.__dict__)
