@@ -50,20 +50,19 @@ def asStackDict(thing):
 class ForeignArgs(object):
     """A mock Args object used to call a Lite SP from other backends."""
 
-    def __init__(self, args, output=True):
+    def __init__(self, args, _output=True):
         self.node = None
-        self.operandValues = map(fromStackDict, args.get('operandValues')())
-        self.operandNodes = [None for _ in self.operandValues]
-        if output:
-            self.requestValue = None
-            self.esrValues = []
-            self.esrNodes = []
-            self.madeSPAux = args.get('madeSPAux')()
-            self.isOutput = True
-        else:
-            self.isOutput = False
-        self.spaux = args.get('spaux')()
+        self.args = args
+        self._operandValues = map(fromStackDict, args.get('operandValues'))
+        self.operandNodes = [None for _ in self._operandValues]
         self.env = None
+
+    def operandValues(self): return self._operandValues
+    def spaux(self): return self.args.get('spaux')
+    def requestValue(self): return None
+    def esrNodes(self): return []
+    def estValues(self): return []
+    def madeSPAux(self): return self.args.get('madeSPAux')
 
 class ForeignLitePSP(object):
     """A wrapper around a Lite PSP that can be called by other backends."""
