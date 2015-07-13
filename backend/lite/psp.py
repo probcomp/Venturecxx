@@ -269,7 +269,7 @@ class DeterministicPSP(PSP):
   def logDensity(self, _value, _args): return 0
   @override(PSP)
   def gradientOfLogDensity(self, _value, args):
-    return (0, [0 for _ in args.operandValues])
+    return (0, [0 for _ in args.operandNodes])
   @override(PSP)
   def logDensityBound(self, _value, _args): return 0
 
@@ -284,7 +284,7 @@ class NullRequestPSP(DeterministicPSP):
   @override(DeterministicPSP)
   def simulate(self, _args): return Request()
   @override(PSP)
-  def gradientOfSimulate(self, args, _value, _direction): return [0 for _ in args.operandValues]
+  def gradientOfSimulate(self, args, _value, _direction): return [0 for _ in args.operandNodes]
   @override(DeterministicPSP)
   def canAbsorb(self, _trace, _appNode, _parentNode): return True
 
@@ -296,11 +296,11 @@ class ESRRefOutputPSP(DeterministicPSP):
 
   @override(PSP)
   def gradientOfSimulate(self, args, _value, direction):
-    return [0 for _ in args.operandValues] + [direction]
+    return [0 for _ in args.operandNodes] + [direction]
 
   @override(DeterministicPSP)
   def gradientOfLogDensity(self, _value, args):
-    return (0, [0 for _ in args.operandValues + args.esrNodes])
+    return (0, [0 for _ in args.operandNodes + args.esrNodes])
 
   @override(DeterministicPSP)
   def canAbsorb(self,trace,appNode,parentNode):

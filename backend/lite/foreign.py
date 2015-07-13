@@ -52,7 +52,7 @@ class ForeignArgs(object):
 
     def __init__(self, args, output=True):
         self.node = None
-        self.operandValues = map(fromStackDict, args.get('operandValues'))
+        self.operandValues = map(fromStackDict, args.get('operandValues')())
         self.operandNodes = [None for _ in self.operandValues]
         if output:
             self.requestValue = None

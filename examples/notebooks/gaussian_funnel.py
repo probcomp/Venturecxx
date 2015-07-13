@@ -66,8 +66,9 @@ class GaussianFunnel(RandomPSP):
 
   def __parse_args__(self, args):
     # pass in v as a scalar, the x's as a 9-vector
-    v = args.operandValues[0]
-    x = np.array(args.operandValues[1:])
+    vals = args.operandValues()
+    v = vals[0]
+    x = np.array(vals[1:])
     return v, x
 
 def assemble_x(i):

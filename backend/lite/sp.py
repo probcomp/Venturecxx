@@ -104,13 +104,16 @@ registerVentureType(VentureSPRecord)
 class UnwrappingRequestArgs(object):
   def __init__(self, f_type, args):
     self.f_type = f_type
+    self.args = args
     self.node = args.node
-    self.operandValues = args.operandValues
     self.operandNodes = args.operandNodes
     self.isOutput = args.isOutput
     if hasattr(args, "spaux"):
       self.spaux = args.spaux
     self.env = args.env
+
+  def operandValues(self):
+    return self.f_type.unwrap_arg_list(self.args.operandValues())
 
   def __repr__(self):
     return "%s(%r)" % (self.__class__, self.__dict__)
@@ -168,7 +171,6 @@ used in the implementation of TypedPSP and TypedLKernel."""
       answer = UnwrappingOutputArgs(self, args)
     else:
       answer = UnwrappingRequestArgs(self, args)
-    answer.operandValues = self.unwrap_arg_list(args.operandValues)
     return answer
 
   def unwrap_arg_list(self, lst):

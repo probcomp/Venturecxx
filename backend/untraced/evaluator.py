@@ -84,12 +84,15 @@ class RequestArgs(object):
   def __init__(self, address, nodes, env):
     self.node = node.Node(address)
     self.operandNodes = nodes
-    self.operandValues = [n.value for n in nodes]
-    for v in self.operandValues:
-      assert v is None or isinstance(v, vv.VentureValue)
     self.isOutput = False
     self.env = env
     # TODO Theoretically need spaux and madeSPAux fields
+
+  def operandValues(self):
+    ans = [n.value for n in self.operandNodes]
+    for v in ans:
+      assert v is None or isinstance(v, vv.VentureValue)
+    return ans
 
 class OutputArgs(RequestArgs):
   "A package containing all the evaluation context information that an OutputPSP might need, parallel to venture.lite.node.Args"

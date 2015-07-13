@@ -34,7 +34,8 @@ class MSPRequestPSP(DeterministicPSP):
     self.sharedOperatorNode = sharedOperatorNode
 
   def simulate(self,args): 
-    id = str(args.operandValues)
-    exp = ["memoizedSP"] + [["quote",val] for val in args.operandValues]
+    vals = args.operandValues()
+    id = str(vals)
+    exp = ["memoizedSP"] + [["quote",val] for val in vals]
     env = VentureEnvironment(None,["memoizedSP"],[self.sharedOperatorNode])
     return Request([ESR(id,exp,emptyAddress,env)])

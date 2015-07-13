@@ -111,7 +111,7 @@ class SimulationLKernel(LKernel):
 
   def gradientOfReverseWeight(self, _trace, _value, args):
     """The gradient of the reverse weight, with respect to the old value and the arguments."""
-    return (0, [0 for _ in args.operandValues])
+    return (0, [0 for _ in args.operandNodes])
 
   def weightBound(self, _trace, _value, _args):
     """An upper bound on the value of weight over the variation
@@ -191,14 +191,14 @@ class VariationalLKernel(SimulationLKernel):
 class DefaultVariationalLKernel(VariationalLKernel):
   def __init__(self,psp,args):
     self.psp = psp
-    self.parameters = args.operandValues
+    self.parameters = args.operandValues()
     self.parameterScopes = psp.getParameterScopes()
 
   def simulate(self, _trace, _args):
     return self.psp.simulateNumeric(self.parameters)
 
   def weight(self, _trace, newValue, args):
-    ld = self.psp.logDensityNumeric(newValue,args.operandValues)
+    ld = self.psp.logDensityNumeric(newValue,args.operandValues())
     proposalLD = self.psp.logDensityNumeric(newValue,self.parameters)
     w = ld - proposalLD
     assert not math.isinf(w) and not math.isnan(w)

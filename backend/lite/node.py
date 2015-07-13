@@ -120,16 +120,20 @@ def Args(trace, node): # TODO Inline this shim for preserving this module's visi
 
 class RequestArgs(object):
   def __init__(self, trace, node):
+    self.trace = trace
     self.node = node
-    self.operandValues = [trace.valueAt(operandNode) for operandNode in node.operandNodes]
-    for v in self.operandValues:
-      # v could be None if this is for logDensityBound for rejection
-      # sampling, which is computed from the torus.
-      assert v is None or isinstance(v, VentureValue)
     self.operandNodes = node.operandNodes
     self.isOutput = False
     self.spaux = trace.spauxAt(node)
     self.env = node.env
+
+  def operandValues(self):
+    ans = [self.trace.valueAt(operandNode) for operandNode in self.operandNodes]
+    for v in ans:
+      # v could be None if this is for logDensityBound for rejection
+      # sampling, which is computed from the torus.
+      assert v is None or isinstance(v, VentureValue)
+    return ans
 
   def __repr__(self):
     return "%s(%r)" % (self.__class__, self.__dict__)

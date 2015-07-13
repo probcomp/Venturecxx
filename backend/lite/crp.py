@@ -51,8 +51,9 @@ class CRPSP(SP):
 
 class MakeCRPOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self,args):
-    alpha = args.operandValues[0]
-    d = args.operandValues[1] if len(args.operandValues) == 2 else 0
+    vals = args.operandValues()
+    alpha = vals[0]
+    d = vals[1] if len(vals) == 2 else 0
 
     output = TypedPSP(CRPOutputPSP(alpha,d), SPType([], AtomType()))
     return VentureSPRecord(CRPSP(NullRequestPSP(),output))

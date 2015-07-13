@@ -21,8 +21,7 @@ from request import Request,ESR
 
 class EvalRequestPSP(DeterministicPSP):
   def simulate(self,args):
-    exp = args.operandValues[0]
-    env = args.operandValues[1]
+    (exp, env) = args.operandValues()
     # point to the desugared source code location of lambda body
     addr = args.operandNodes[0].address.last.append(1)    
     return Request([ESR(args.node,exp,addr,env)])
@@ -31,8 +30,7 @@ class EvalRequestPSP(DeterministicPSP):
 
 class ExtendEnvOutputPSP(DeterministicPSP):
   def simulate(self,args): 
-    env = args.operandValues[0]
-    sym = args.operandValues[1]
+    (env, sym, _) = args.operandValues()
     node = args.operandNodes[2]
     return VentureEnvironment(env,[sym],[node])
   def description(self,name):

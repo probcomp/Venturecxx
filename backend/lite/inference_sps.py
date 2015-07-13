@@ -34,7 +34,7 @@ class InferPrimitiveOutputPSP(psp.DeterministicPSP):
     self.desc = desc
     self.tp = tp
   def simulate(self, args):
-    result = self.klass(self.val, args.operandValues)
+    result = self.klass(self.val, args.operandValues())
     if self.klass is MadeRiplMethodInferOutputPSP:
       # Hack to allow MadeRiplMethodInferOutputPSP s to blame the
       # maker application for errors.
@@ -48,8 +48,9 @@ class MadeInferPrimitiveOutputPSP(psp.LikelihoodFreePSP):
   def __init__(self, name, exp):
     self.exp = [name] + exp
   def simulate(self, args):
-    ans = args.operandValues[0].primitive_infer(self.exp)
-    return (ans, args.operandValues[0])
+    engine = args.operandValues()[0]
+    ans = engine.primitive_infer(self.exp)
+    return (ans, engine)
 
 class MadeEngineMethodInferOutputPSP(psp.LikelihoodFreePSP):
   def __init__(self, name, operands, desc=None):
@@ -57,8 +58,9 @@ class MadeEngineMethodInferOutputPSP(psp.LikelihoodFreePSP):
     self.operands = operands
     self.desc = desc
   def simulate(self, args):
-    ans = getattr(args.operandValues[0], self.name)(*self.operands)
-    return (ans, args.operandValues[0])
+    engine = args.operandValues()[0]
+    ans = getattr(engine, self.name)(*self.operands)
+    return (ans, engine)
   def description(self, _name):
     return self.desc
 
@@ -79,7 +81,8 @@ class MadeRiplMethodInferOutputPSP(psp.LikelihoodFreePSP):
     self.operands = operands
     self.desc = desc
   def simulate(self, args):
-    ripl = args.operandValues[0].engine.ripl
+    eng = args.operandValues()[0]
+    ripl = eng.engine.ripl
     arguments = [o.asStackDict() for o in self.operands]
     try:
       ans = getattr(ripl, self.name)(*arguments, type=True) # Keep the stack dict
@@ -93,7 +96,7 @@ class MadeRiplMethodInferOutputPSP(psp.LikelihoodFreePSP):
       # Do not return values that cannot be reconstructed from stack
       # dicts (e.g., SPs)
       ans_vv = v.VentureNil()
-    return (ans_vv, args.operandValues[0])
+    return (ans_vv, eng)
   def description(self, _name):
     return self.desc
 
@@ -104,7 +107,7 @@ class MadeActionOutputPSP(psp.DeterministicPSP):
     self.desc = desc
   def simulate(self, args):
     ans = self.f(*self.operands)
-    return (ans, args.operandValues[0])
+    return (ans, args.operandValues()[0])
   def description(self, _name):
     return self.desc
 

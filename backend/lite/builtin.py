@@ -89,8 +89,8 @@ def typed_func(*args, **kwargs):
 # one splats the operand values).
 def deterministic_psp(f, descr=None, sim_grad=None):
   def new_grad(args, direction):
-    return sim_grad(args.operandValues, direction)
-  return FunctionPSP(lambda args: f(*args.operandValues), descr, sim_grad=(new_grad if sim_grad else None))
+    return sim_grad(args.operandValues(), direction)
+  return FunctionPSP(lambda args: f(*args.operandValues()), descr, sim_grad=(new_grad if sim_grad else None))
 
 def deterministic_typed_psp(f, args_types, return_type, descr=None, sim_grad=None, **kwargs):
   return TypedPSP(deterministic_psp(f, descr, sim_grad), SPType(args_types, return_type, **kwargs))

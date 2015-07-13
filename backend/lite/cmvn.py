@@ -88,7 +88,7 @@ class CMVNSP(SP):
 
 class MakeCMVNOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self,args):
-    (m0,k0,v0,S0) = args.operandValues
+    (m0,k0,v0,S0) = args.operandValues()
     m0 = np.mat(m0).transpose()
 
     d = np.size(m0)

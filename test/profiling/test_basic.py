@@ -57,7 +57,7 @@ def test_profiling_likelihoodfree():
   "Make sure profiling doesn't break with likelihood-free SP's"
   class TestPSP(LikelihoodFreePSP):
     def simulate(self, args):
-      x = args.operandValues[0]
+      x = args.operandValues()[0]
       return x + stats.distributions.norm.rvs()
   tester = typed_nr(TestPSP(), [t.NumberType()], t.NumberType())
   ripl = get_ripl()
