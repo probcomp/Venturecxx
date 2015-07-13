@@ -37,7 +37,7 @@ class NormalDriftKernel(DeltaLKernel):
   def __init__(self,epsilon = 0.7): self.epsilon = epsilon
 
   def forwardSimulate(self, _trace, oldValue, args):
-    mu,sigma = args.operandValues
+    mu,sigma = args.operandValues()
     nu = scipy.stats.norm.rvs(0,sigma)
     term1 = mu
     term2 = math.sqrt(1 - (self.epsilon * self.epsilon)) * (oldValue - mu)
@@ -100,7 +100,8 @@ class MVNormalOutputPSP(RandomPSP):
 
   @staticmethod
   def __parse_args__(args):
-    return (np.array(args.operandValues[0]), np.array(args.operandValues[1]))
+    (mu, sigma) = args.operandValues()
+    return (np.array(mu), np.array(sigma))
 
 class InverseWishartPSP(RandomPSP):
   def simulate(self, args):
@@ -150,7 +151,8 @@ class InverseWishartPSP(RandomPSP):
     return "  (%s scale_matrix degree_of_freedeom) samples a positive definite matrix according to the given inverse wishart distribution " % name
 
   def __parse_args__(self, args):
-    return (np.array(args.operandValues[0]), args.operandValues[1])
+    (lmbda, dof) = args.operandValues()
+    return (np.array(lmbda), dof)
 
 
 class WishartPSP(RandomPSP):
@@ -212,32 +214,39 @@ class WishartPSP(RandomPSP):
     return "  (%s scale_matrix degree_of_freedeom) samples a positive definite matrix according to the given inverse wishart distribution " % name
 
   def __parse_args__(self, args):
-    return (np.array(args.operandValues[0]), args.operandValues[1])
+    (sigma, dof) = args.operandValues()
+    return (np.array(sigma), dof)
+
+half_log2pi = 0.5 * math.log(2 * math.pi)
 
 class NormalOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self,params): return scipy.stats.norm.rvs(*params)
-  def logDensityNumeric(self,x,params): return scipy.stats.norm.logpdf(x,*params)
+  def logDensityNumeric(self,x,params):
+    (mu, sigma) = params
+    deviation = x - mu
+    ans = - math.log(sigma) - half_log2pi - (0.5 * deviation * deviation / (sigma * sigma))
+    return ans
   def logDensityBoundNumeric(self, x, mu, sigma):
     if sigma is not None:
-      return -(math.log(sigma) + 0.5 * math.log(2 * math.pi))
+      return -(math.log(sigma) + half_log2pi)
     elif x is not None and mu is not None:
       # Per the derivative of the log density noted in the
       # gradientOfLogDensity method, the maximum occurs when
       # (x-mu)^2 = sigma^2
-      return scipy.stats.norm.logpdf(x, mu, abs(x-mu))
+      return self.logDensityNumeric(x, [mu, abs(x-mu)])
     else:
       raise Exception("Cannot rejection sample psp with unbounded likelihood")
 
-  def simulate(self,args): return self.simulateNumeric(args.operandValues)
+  def simulate(self,args): return self.simulateNumeric(args.operandValues())
   def gradientOfSimulate(self, args, value, direction):
     # Reverse engineering the behavior of scipy.stats.norm.rvs
     # suggests this gradient is correct.
-    (mu, sigma) = args.operandValues
+    (mu, sigma) = args.operandValues()
     deviation = (value - mu) / sigma
     return [direction*1, direction*deviation]
-  def logDensity(self,x,args): return self.logDensityNumeric(x,args.operandValues)
-  def logDensityBound(self, x, args): return self.logDensityBoundNumeric(x, *args.operandValues)
+  def logDensity(self,x,args): return self.logDensityNumeric(x,args.operandValues())
+  def logDensityBound(self, x, args): return self.logDensityBoundNumeric(x, *args.operandValues())
 
   def hasDeltaKernel(self): return False # have each gkernel control whether it is delta or not
   def getDeltaKernel(self,args): return NormalDriftKernel(args)
@@ -246,8 +255,7 @@ class NormalOutputPSP(RandomPSP):
   def getParameterScopes(self): return ["REAL","POSITIVE_REAL"]
 
   def gradientOfLogDensity(self,x,args):
-    mu = args.operandValues[0]
-    sigma = args.operandValues[1]
+    (mu, sigma) = args.operandValues()
 
     gradX = -(x - mu) / (math.pow(sigma,2))
     gradMu = (x - mu) / (math.pow(sigma,2))
@@ -262,14 +270,14 @@ class NormalOutputPSP(RandomPSP):
 
 class VonMisesOutputPSP(RandomPSP):
   def simulate(self,args):
-    (mu, kappa) = args.operandValues
+    (mu, kappa) = args.operandValues()
     return scipy.stats.vonmises.rvs(kappa, loc=mu)
   def logDensity(self,x,args):
-    (mu, kappa) = args.operandValues
+    (mu, kappa) = args.operandValues()
     # k * cos (x - mu) - log(2pi I_0(k))
     return scipy.stats.vonmises.logpdf(x, kappa, loc=mu)
   def logDensityBound(self, x, args):
-    (mu, kappa) = args.operandValues
+    (mu, kappa) = args.operandValues()
     if kappa is not None:
       return scipy.stats.vonmises.logpdf(0, kappa)
     elif x is not None and mu is not None:
@@ -277,7 +285,7 @@ class VonMisesOutputPSP(RandomPSP):
     else:
       raise Exception("Cannot rejection sample psp with unbounded likelihood")
   def gradientOfLogDensity(self, x, args):
-    (mu, kappa) = args.operandValues
+    (mu, kappa) = args.operandValues()
 
     gradX  = -math.sin(x - mu) * kappa
     gradMu = math.sin(x - mu) * kappa
@@ -301,12 +309,13 @@ class UniformOutputPSP(RandomPSP):
     else:
       return -math.log(high - low)
 
-  def simulate(self,args): return self.simulateNumeric(*args.operandValues)
-  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
+  def simulate(self,args): return self.simulateNumeric(*args.operandValues())
+  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues())
   def gradientOfLogDensity(self, _, args):
-    spread = 1.0/(args.operandValues[1]-args.operandValues[0])
+    (low, high) = args.operandValues()
+    spread = 1.0 / (high - low)
     return (0, [spread, -spread])
-  def logDensityBound(self, x, args): return self.logDensityBoundNumeric(x, *args.operandValues)
+  def logDensityBound(self, x, args): return self.logDensityBoundNumeric(x, *args.operandValues())
 
   def description(self,name):
     return "  (%s low high) -> samples a uniform real number between low and high." % name
@@ -318,12 +327,11 @@ class BetaOutputPSP(RandomPSP):
   def simulateNumeric(self,params): return scipy.stats.beta.rvs(*params)
   def logDensityNumeric(self,x,params): return scipy.stats.beta.logpdf(x,*params)
 
-  def simulate(self,args): return self.simulateNumeric(args.operandValues)
-  def logDensity(self,x,args): return self.logDensityNumeric(x,args.operandValues)
+  def simulate(self,args): return self.simulateNumeric(args.operandValues())
+  def logDensity(self,x,args): return self.logDensityNumeric(x,args.operandValues())
 
   def gradientOfLogDensity(self,x,args):
-    alpha = args.operandValues[0]
-    beta = args.operandValues[1]
+    (alpha, beta) = args.operandValues()
     gradX = ((float(alpha) - 1) / x) - ((float(beta) - 1) / (1 - x))
     gradAlpha = spsp.digamma(alpha + beta) - spsp.digamma(alpha) + math.log(x)
     gradBeta = spsp.digamma(alpha + beta) - spsp.digamma(beta) + math.log(1 - x)
@@ -339,11 +347,11 @@ class ExponOutputPSP(RandomPSP):
   def simulateNumeric(self,theta): return scipy.stats.expon.rvs(scale=1.0/theta)
   def logDensityNumeric(self,x,theta): return scipy.stats.expon.logpdf(x,scale=1.0/theta)
 
-  def simulate(self,args): return self.simulateNumeric(*args.operandValues)
-  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
+  def simulate(self,args): return self.simulateNumeric(*args.operandValues())
+  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues())
 
   def gradientOfLogDensity(self,x,args):
-    theta = args.operandValues[0]
+    theta = args.operandValues()[0]
     gradX = -theta
     gradTheta = 1. / theta - x
     return (gradX,[gradTheta])
@@ -356,11 +364,11 @@ class GammaOutputPSP(RandomPSP):
   def simulateNumeric(self,alpha,beta): return scipy.stats.gamma.rvs(alpha,scale=1.0/beta)
   def logDensityNumeric(self,x,alpha,beta): return scipy.stats.gamma.logpdf(x,alpha,scale=1.0/beta)
 
-  def simulate(self,args): return self.simulateNumeric(*args.operandValues)
+  def simulate(self,args): return self.simulateNumeric(*args.operandValues())
   def gradientOfSimulate(self,args,value,direction):
     # These gradients were computed by Sympy; the script to get them is
     # in doc/gradients.py
-    alpha, beta = args.operandValues
+    alpha, beta = args.operandValues()
     if alpha == 1:
       warnstr = ('Gradient of simulate is discontinuous at alpha = 1.\n'
                  'Issue: https://app.asana.com/0/11192551635048/14271708124534.')
@@ -390,11 +398,10 @@ class GammaOutputPSP(RandomPSP):
                     alpha + 1) ** x0 / beta ** 2.0)
     return [direction * gradAlpha, direction * gradBeta]
 
-  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
+  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues())
 
   def gradientOfLogDensity(self,x,args):
-    alpha = args.operandValues[0]
-    beta = args.operandValues[1]
+    (alpha, beta) = args.operandValues()
     gradX = ((alpha - 1) / float(x)) - beta
     gradAlpha = math.log(beta) - spsp.digamma(alpha) + math.log(x)
     gradBeta = (float(alpha) / beta) - x
@@ -411,18 +418,21 @@ class StudentTOutputPSP(RandomPSP):
   def logDensityNumeric(self,x,nu,loc,scale): return scipy.stats.t.logpdf(x,nu,loc,scale)
 
   def simulate(self,args):
-    loc = args.operandValues[1] if len(args.operandValues) > 1 else 0
-    shape = args.operandValues[2] if len(args.operandValues) > 1 else 1
-    return self.simulateNumeric(args.operandValues[0],loc,shape)
+    vals = args.operandValues()
+    loc = vals[1] if len(vals) > 1 else 0
+    shape = vals[2] if len(vals) > 1 else 1
+    return self.simulateNumeric(vals[0],loc,shape)
   def logDensity(self,x,args):
-    loc = args.operandValues[1] if len(args.operandValues) > 1 else 0
-    shape = args.operandValues[2] if len(args.operandValues) > 1 else 1
-    return self.logDensityNumeric(x,args.operandValues[0],loc,shape)
+    vals = args.operandValues()
+    loc = vals[1] if len(vals) > 1 else 0
+    shape = vals[2] if len(vals) > 1 else 1
+    return self.logDensityNumeric(x,vals[0],loc,shape)
 
   def gradientOfLogDensity(self,x,args):
-    nu = args.operandValues[0]
-    loc = args.operandValues[1] if len(args.operandValues) > 1 else 0
-    shape = args.operandValues[2] if len(args.operandValues) > 1 else 1
+    vals = args.operandValues()
+    nu = vals[0]
+    loc = vals[1] if len(vals) > 1 else 0
+    shape = vals[2] if len(vals) > 1 else 1
     gradX = (loc - x) * (nu + 1) / (nu * shape ** 2 + (loc - x) ** 2)
     # we'll do gradNu in pieces because it's messy
     x0 = 1.0 / nu
@@ -434,7 +444,7 @@ class StudentTOutputPSP(RandomPSP):
     gradNu = (x0 * (nu * x4 * (-math.log(x0 * x4 / x1) - spsp.digamma(x5)
               + spsp.digamma(x5 + 1.0 / 2)) - x2
               + x3 * (nu + 1) - x3) / (2.0 * x4))
-    if len(args.operandValues) == 1:
+    if len(vals) == 1:
       return (gradX,[gradNu])
     gradLoc = -(loc - x) * (nu + 1) / (nu * shape ** 2 + (loc - x) ** 2)
     gradShape = ((-nu * shape ** 2 + (loc - x) ** 2 * (nu + 1) -
@@ -451,12 +461,11 @@ class InvGammaOutputPSP(RandomPSP):
   def simulateNumeric(self,a,b): return scipy.stats.invgamma.rvs(a,scale=b)
   def logDensityNumeric(self,x,a,b): return scipy.stats.invgamma.logpdf(x,a,scale=b)
 
-  def simulate(self,args): return self.simulateNumeric(*args.operandValues)
-  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
+  def simulate(self,args): return self.simulateNumeric(*args.operandValues())
+  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues())
 
   def gradientOfLogDensity(self,x,args):
-    alpha = args.operandValues[0]
-    beta = args.operandValues[1]
+    (alpha, beta) = args.operandValues()
     gradX = (1.0 / x) * (-alpha - 1 + (beta / x))
     gradAlpha = math.log(beta) - spsp.digamma(alpha) - math.log(x)
     gradBeta = (float(alpha) / beta) - (1.0 / x)
@@ -472,12 +481,11 @@ class LaplaceOutputPSP(RandomPSP):
   def simulateNumeric(self,a,b): return scipy.stats.laplace.rvs(a,b)
   def logDensityNumeric(self,x,a,b): return scipy.stats.laplace.logpdf(x,a,b)
 
-  def simulate(self, args): return self.simulateNumeric(*args.operandValues)
-  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues)
+  def simulate(self, args): return self.simulateNumeric(*args.operandValues())
+  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues())
 
   def gradientOfLogDensity(self,x,args):
-    a = args.operandValues[0]
-    b = args.operandValues[1]
+    (a, b) = args.operandValues()
     # if we're at the cusp point, play it safe and go undefined
     if x == a:
       gradX = np.nan

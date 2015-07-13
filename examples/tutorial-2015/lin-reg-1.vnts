@@ -1,0 +1,9 @@
+// Line parameter prior
+assume intercept = normal(0,10)
+assume slope = normal(0,10)
+
+// Hypothesized linear relationship
+assume line = proc(x) { slope * x + intercept }
+
+// Full data model: linear relationship with additive noise
+assume obs = proc(x) { normal(line(x), 1) }

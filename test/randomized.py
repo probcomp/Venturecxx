@@ -163,9 +163,13 @@ class BogusArgs(object):
 
   def __init__(self, args, aux):
     # TODO Do I want to try to synthesize an actual real random valid Args object?
-    self.operandValues = args
+    self.args = args
+    self.aux = aux
+    self.node = None
     self.operandNodes = [None for _ in args]
-    self.isOutput = True
-    self.esrValues = []
     self.env = env.VentureEnvironment()
-    self.spaux = aux
+
+  def operandValues(self): return self.args
+  def spaux(self): return self.aux
+  def esrNodes(self): return []
+  def esrValues(self): return []

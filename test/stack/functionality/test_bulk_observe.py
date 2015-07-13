@@ -21,7 +21,7 @@ from nose.tools import eq_
 def testBulkObserve1():
   ripl = get_ripl()
   n_before = len(ripl.list_directives())
-  ripl.observe_dataset("normal",[([0,5],11),([2,8],22),([3,10],33)],label="pid")
+  ripl.observe_dataset("normal",[(0,5,11),(2,8,22),(3,10,33)],label="pid")
   ripl.infer(100)
   eq_(ripl.report("pid_0"),11)
   eq_(ripl.report("pid_1"),22)

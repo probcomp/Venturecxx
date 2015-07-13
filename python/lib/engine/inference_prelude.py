@@ -297,4 +297,22 @@ prelude = [
   (let ((result (action __the_inferrer__)))
     (first result)))"""],
 
+["default_markov_chain", """\
+.. function:: default_markov_chain(transitions : int)
+
+  :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
+
+  Take the requested number of steps of the default Markov chain.
+
+  The default Markov chain is single-site resimulation M-H.
+
+    (default_markov_chain k)
+
+  is equivalent to
+
+    (mh default one k)
+
+""",
+"(lambda (k) (mh default one k))"],
+
 ]

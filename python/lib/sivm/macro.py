@@ -411,7 +411,7 @@ collectMacro = quasiquotation_macro("collect", min_size = 2, desc="""\
   programmatically: see ``unquote``.
 
   ``collect`` also automatically collects some standard items: the
-  sweep count (maintained by merging datasets), the particle id, the
+  iteration count (maintained by merging datasets), the particle id, the
   wall clock time that passed since the Venture program began, the
   global log score, the particle weights in log space, and the
   normalized weights of the particles in direct space.

@@ -144,14 +144,14 @@ class Writer(object):
         ans = string
         done = False
         if mode == "venture":
-            pattern = re.compile(r"plotf\(")
+            pattern = re.compile(r"plot(f?)\(")
         else:
-            pattern = re.compile(r"\(plotf ")
+            pattern = re.compile(r"\(plot(f?) ")
         while not done:
             if mode == "venture":
-                replacement = 'plotf_to_file(quote(symbol<"%s/figure-%s">), ' % (self.outdir, self.fignum)
+                replacement = 'plot\\1_to_file(quote(symbol<"%s/figure-%s">), ' % (self.outdir, self.fignum)
             else:
-                replacement = '(plotf_to_file (quote symbol<"%s/figure-%s">) ' % (self.outdir, self.fignum)
+                replacement = '(plot\\1_to_file (quote symbol<"%s/figure-%s">) ' % (self.outdir, self.fignum)
             (ans, count) = re.subn(pattern, replacement, ans, count=1)
             if count == 0:
                 done = True

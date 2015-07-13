@@ -1,3 +1,5 @@
 ppaml
-ppaml-smoke
-tutorial*.lvnt
+tutorial/
+tutorial-smoke/
+*.lvnt
+reg-test.csv

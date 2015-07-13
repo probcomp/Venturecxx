@@ -30,7 +30,7 @@ def testVentureScriptAbstractExample():
   class EnumerableUniformOutputPSP(cont.UniformOutputPSP):
     def canEnumerate(self): return True
     def enumerateValues(self, args):
-      (low, high) = args.operandValues
+      (low, high) = args.operandValues()
       return np.arange(low, high, (high-low)/100)
 
   r = get_ripl()

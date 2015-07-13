@@ -85,7 +85,7 @@ def testCollectSmoke4():
       (return d)))""")
   cdf = stats.norm(loc=0.0, scale=2.0).cdf
   result = out.asPandas()
-  for k in ["x", "y", "sweep count", "time (s)", "log score", "particle id", "(abs (sub y x))", "abs_x"]:
+  for k in ["x", "y", "iter", "time (s)", "log score", "prt. id", "(abs (sub y x))", "abs_x"]:
     assert k in result
     assert len(result[k]) == 30
   # Check that the dataset can be extracted again
@@ -126,7 +126,7 @@ def testCollectLogScore():
   should not crash the program.'''
   class TestPSP(LikelihoodFreePSP):
     def simulate(self, args):
-      x = args.operandValues[0]
+      x = args.operandValues()[0]
       return x + stats.distributions.norm.rvs()
   tester = typed_nr(TestPSP(), [t.NumberType()], t.NumberType())
   ripl = get_ripl()
@@ -138,6 +138,6 @@ def testCollectLogScore():
   ripl.execute_program(prog)
 
 def make_pattern():
-  sweep = r".*x.*foo.*\n.*2.1.*3.1.*\n.*2.1.*3.1.*"
-  return re.compile(sweep + sweep, re.DOTALL)
+  iteration = r".*x.*foo.*\n.*2.1.*3.1.*\n.*2.1.*3.1.*"
+  return re.compile(iteration + iteration, re.DOTALL)
 
