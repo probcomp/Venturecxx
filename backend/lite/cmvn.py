@@ -88,7 +88,7 @@ class CMVNSP(SP):
 
 class MakeCMVNOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self,args):
-    (m0,k0,v0,S0) = args.operandValues
+    (m0,k0,v0,S0) = args.operandValues()
     m0 = np.mat(m0).transpose()
 
     d = np.size(m0)
@@ -125,25 +125,27 @@ class CMVNOutputPSP(RandomPSP):
     return self.mvtParams(*self.updatedParams(spaux))
   
   def simulate(self,args):
-    params = self.getMVTParams(args.spaux)
+    params = self.getMVTParams(args.spaux())
     x = mvtSample(*params)
     return x.A1
 
   def logDensity(self,x,args):
     x = np.mat(x).reshape((self.d,1))
-    return mvtLogDensity(x, *self.getMVTParams(args.spaux))
+    return mvtLogDensity(x, *self.getMVTParams(args.spaux()))
 
   def incorporate(self,x,args):
     x = np.mat(x).reshape((self.d,1))
-    args.spaux.N += 1
-    args.spaux.xTotal += x
-    args.spaux.STotal += x * x.T
+    aux = args.spaux()
+    aux.N += 1
+    aux.xTotal += x
+    aux.STotal += x * x.T
 
   def unincorporate(self,x,args):
     x = np.mat(x).reshape((self.d,1))
-    args.spaux.N -= 1
-    args.spaux.xTotal -= x
-    args.spaux.STotal -= x * x.T
+    aux = args.spaux()
+    aux.N -= 1
+    aux.xTotal -= x
+    aux.STotal -= x * x.T
 
   def logDensityOfCounts(self,aux):
     (mN,kN,vN,SN) = self.updatedParams(aux)

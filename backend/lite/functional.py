@@ -23,8 +23,7 @@ from address import emptyAddress
 
 class ApplyRequestPSP(DeterministicPSP):
     def simulate(self, args):
-        operator = args.operandValues[0]
-        operands = args.operandValues[1]
+        (operator, operands) = args.operandValues()
         exp = [operator] + operands
         env = VentureEnvironment()
         return Request([ESR(args.node, exp, emptyAddress, env)])
@@ -34,8 +33,7 @@ class ApplyRequestPSP(DeterministicPSP):
 
 class ArrayMapRequestPSP(DeterministicPSP):
     def simulate(self, args):
-        operator = args.operandValues[0]
-        operands = args.operandValues[1]
+        (operator, operands) = args.operandValues()
         exps = [[operator, operand] for operand in operands]
         env = VentureEnvironment()
         return Request([ESR((args.node, i), exp, emptyAddress, env) for i, exp in enumerate(exps)])
@@ -45,8 +43,7 @@ class ArrayMapRequestPSP(DeterministicPSP):
 
 class IndexedArrayMapRequestPSP(DeterministicPSP):
     def simulate(self, args):
-        operator = args.operandValues[0]
-        operands = args.operandValues[1]
+        (operator, operands) = args.operandValues()
         exps = [[operator, index, operand] for (index, operand) in enumerate(operands)]
         env = VentureEnvironment()
         return Request([ESR((args.node, i), exp, emptyAddress, env) for i, exp in enumerate(exps)])
@@ -56,12 +53,11 @@ class IndexedArrayMapRequestPSP(DeterministicPSP):
 
 class ESRArrayOutputPSP(DeterministicPSP):
     def simulate(self, args):
-        return VentureArray(args.esrValues)
+        return VentureArray(args.esrValues())
 
 class FixRequestPSP(DeterministicPSP):
     def simulate(self, args):
-        ids = args.operandValues[0]
-        exps = args.operandValues[1]
+        (ids, exps) = args.operandValues()
         # point to the desugared source code location of expression list
         addr = args.operandNodes[1].address.last.append(1)
         # extend current environment with empty bindings for ids
@@ -73,15 +69,15 @@ class FixRequestPSP(DeterministicPSP):
 
 class FixOutputPSP(DeterministicPSP):
     def simulate(self, args):
-        ids = args.operandValues[0]
+        ids = args.operandValues()[0]
         # get the extended environment shared by the ESRs
         env = None
-        for esr in args.requestValue.esrs:
+        for esr in args.requestValue().esrs:
             if env is None: env = esr.env
             else: assert env is esr.env
         if env is None: env = args.env
         # bind ids to the requested values
-        for id, esrParent in zip(ids, args.esrNodes):
+        for id, esrParent in zip(ids, args.esrNodes()):
             env.fillBinding(id, esrParent)
         return env
 

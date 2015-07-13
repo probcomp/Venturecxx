@@ -114,28 +114,28 @@ class GPOutputPSP(RandomPSP):
     return GP(self.mean, self.covariance, samples)
   
   def simulate(self,args):
-    samples = args.spaux.samples
-    xs = args.operandValues[0]
+    samples = args.spaux().samples
+    xs = args.operandValues()[0]
     return self.makeGP(samples).sample(*xs)
 
   def logDensity(self,os,args):
-    samples = args.spaux.samples
-    xs = args.operandValues[0]
+    samples = args.spaux().samples
+    xs = args.operandValues()[0]
     return self.makeGP(samples).logDensity(xs, os)
 
   def logDensityOfCounts(self,aux):
     return self.makeGP(aux.samples).logDensityOfCounts()
   
   def incorporate(self,os,args):
-    samples = args.spaux.samples
-    xs = args.operandValues[0]
+    samples = args.spaux().samples
+    xs = args.operandValues()[0]
     
     for x, o in zip(xs, os):
       samples[x] = o
 
   def unincorporate(self,_os,args):
-    samples = args.spaux.samples
-    xs = args.operandValues[0]
+    samples = args.spaux().samples
+    xs = args.operandValues()[0]
     for x in xs:
       del samples[x]
 
@@ -159,9 +159,7 @@ class GPSP(SP):
 
 class MakeGPOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self,args):
-    mean = args.operandValues[0]
-    covariance = args.operandValues[1]
-
+    (mean, covariance) = args.operandValues()
     return VentureSPRecord(GPSP(mean, covariance))
 
   def childrenCanAAA(self): return True

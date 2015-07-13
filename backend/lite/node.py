@@ -113,26 +113,30 @@ def isOutputNode(thing):
   return isinstance(thing, OutputNode) and not thing.isFrozen
 
 class Args(object):
-  def __init__(self,trace,node):
+  def __init__(self, trace, node):
+    self.trace = trace
     self.node = node
-    self.operandValues = [trace.valueAt(operandNode) for operandNode in node.operandNodes]
-    for v in self.operandValues:
+    self.operandNodes = node.operandNodes
+    self.env = node.env
+
+  def operandValues(self):
+    ans = [self.trace.valueAt(operandNode) for operandNode in self.operandNodes]
+    for v in ans:
       # v could be None if this is for logDensityBound for rejection
       # sampling, which is computed from the torus.
       assert v is None or isinstance(v, VentureValue)
-    self.operandNodes = node.operandNodes
+    return ans
 
-    if isinstance(node,OutputNode):
-      self.requestValue = trace.valueAt(node.requestNode)
-      self.esrValues = [trace.valueAt(esrParent) for esrParent in trace.esrParentsAt(node)]
-      self.esrNodes = trace.esrParentsAt(node)
-      self.madeSPAux = trace.getAAAMadeSPAuxAt(node)
-      self.isOutput = True
-    else:
-      self.isOutput = False
+  def spaux(self): return self.trace.spauxAt(self.node)
 
-    self.spaux = trace.spauxAt(node)
-    self.env = node.env
+  # There four are for Args at output nodes.
+  def requestValue(self):
+    return self.trace.valueAt(self.node.requestNode)
+  def esrNodes(self): return self.trace.esrParentsAt(self.node)
+  def esrValues(self):
+    return [self.trace.valueAt(esrParent) for esrParent in self.trace.esrParentsAt(self.node)]
+  def madeSPAux(self):
+    return self.trace.getAAAMadeSPAuxAt(self.node)
 
   def __repr__(self):
     return "%s(%r)" % (self.__class__, self.__dict__)
