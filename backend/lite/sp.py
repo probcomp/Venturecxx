@@ -123,10 +123,11 @@ class UnwrappingOutputArgs(UnwrappingRequestArgs):
     super(UnwrappingOutputArgs, self).__init__(f_type, args)
     if hasattr(args, "requestValue"):
       self.requestValue = args.requestValue
-    self.esrValues = args.esrValues
     self.esrNodes = args.esrNodes
     if hasattr(args, "madeSPAux"):
       self.madeSPAux = args.madeSPAux
+
+  def esrValues(self): return self.args.esrValues()
 
 class SPType(VentureType):
   """An object representing a Venture function type.  It knows
@@ -164,9 +165,6 @@ used in the implementation of TypedPSP and TypedLKernel."""
     # sampling.
     return self.return_type.asPythonNoneable(value)
   def unwrap_args(self, args):
-    # XXX: why was this check necessary?
-    # if args.isOutput:
-    #   assert not args.esrValues # TODO Later support outputs that have non-latent requesters
     if args.isOutput:
       answer = UnwrappingOutputArgs(self, args)
     else:

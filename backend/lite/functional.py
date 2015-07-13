@@ -53,7 +53,7 @@ class IndexedArrayMapRequestPSP(DeterministicPSP):
 
 class ESRArrayOutputPSP(DeterministicPSP):
     def simulate(self, args):
-        return VentureArray(args.esrValues)
+        return VentureArray(args.esrValues())
 
 class FixRequestPSP(DeterministicPSP):
     def simulate(self, args):

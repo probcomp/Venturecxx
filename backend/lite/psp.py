@@ -292,7 +292,7 @@ class ESRRefOutputPSP(DeterministicPSP):
   @override(DeterministicPSP)
   def simulate(self,args):
     assert len(args.esrNodes) ==  1
-    return args.esrValues[0]
+    return args.esrValues()[0]
 
   @override(PSP)
   def gradientOfSimulate(self, args, _value, direction):
