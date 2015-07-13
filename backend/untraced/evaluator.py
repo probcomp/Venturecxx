@@ -84,7 +84,6 @@ class RequestArgs(object):
   def __init__(self, address, nodes, env):
     self.node = node.Node(address)
     self.operandNodes = nodes
-    self.isOutput = False
     self.env = env
     # TODO Theoretically need spaux and madeSPAux fields
 
@@ -98,7 +97,6 @@ class OutputArgs(RequestArgs):
   "A package containing all the evaluation context information that an OutputPSP might need, parallel to venture.lite.node.Args"
   def __init__(self, address, inputs, env, esr_nodes):
     super(OutputArgs, self).__init__(address, inputs, env)
-    self.isOutput = True
     self.esr_nodes = esr_nodes
 
   def esrNodes(self): return self.esr_nodes

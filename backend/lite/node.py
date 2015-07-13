@@ -123,7 +123,6 @@ class RequestArgs(object):
     self.trace = trace
     self.node = node
     self.operandNodes = node.operandNodes
-    self.isOutput = False
     self.env = node.env
 
   def operandValues(self):
@@ -142,7 +141,6 @@ class RequestArgs(object):
 class OutputArgs(RequestArgs):
   def __init__(self, trace, node):
     super(OutputArgs, self).__init__(trace, node)
-    self.isOutput = True
 
   def requestValue(self):
     return self.trace.valueAt(self.node.requestNode)
