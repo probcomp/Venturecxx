@@ -121,9 +121,9 @@ class UnwrappingRequestArgs(object):
 class UnwrappingOutputArgs(UnwrappingRequestArgs):
   def __init__(self, f_type, args):
     super(UnwrappingOutputArgs, self).__init__(f_type, args)
-    self.esrNodes = args.esrNodes
 
   def requestValue(self): return self.args.requestValue()
+  def esrNodes(self): return self.args.esrNodes()
   def esrValues(self): return self.args.esrValues()
   def madeSPAux(self): return self.args.madeSPAux()
 

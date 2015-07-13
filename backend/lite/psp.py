@@ -291,7 +291,7 @@ class NullRequestPSP(DeterministicPSP):
 class ESRRefOutputPSP(DeterministicPSP):
   @override(DeterministicPSP)
   def simulate(self,args):
-    assert len(args.esrNodes) ==  1
+    assert len(args.esrNodes()) ==  1
     return args.esrValues()[0]
 
   @override(PSP)
@@ -300,7 +300,7 @@ class ESRRefOutputPSP(DeterministicPSP):
 
   @override(DeterministicPSP)
   def gradientOfLogDensity(self, _value, args):
-    return (0, [0 for _ in args.operandNodes + args.esrNodes])
+    return (0, [0 for _ in args.operandNodes + args.esrNodes()])
 
   @override(DeterministicPSP)
   def canAbsorb(self,trace,appNode,parentNode):

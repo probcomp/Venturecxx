@@ -99,9 +99,10 @@ class OutputArgs(RequestArgs):
   def __init__(self, address, inputs, env, esr_nodes):
     super(OutputArgs, self).__init__(address, inputs, env)
     self.isOutput = True
-    self.esrNodes = esr_nodes
+    self.esr_nodes = esr_nodes
 
-  def esrValues(self): return [n.value for n in self.esrNodes]
+  def esrNodes(self): return self.esr_nodes
+  def esrValues(self): return [n.value for n in self.esr_nodes]
 
 def applyPSP(psp, args):
   assert isinstance(psp, PSP)

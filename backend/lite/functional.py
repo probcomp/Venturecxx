@@ -77,7 +77,7 @@ class FixOutputPSP(DeterministicPSP):
             else: assert env is esr.env
         if env is None: env = args.env
         # bind ids to the requested values
-        for id, esrParent in zip(ids, args.esrNodes):
+        for id, esrParent in zip(ids, args.esrNodes()):
             env.fillBinding(id, esrParent)
         return env
 

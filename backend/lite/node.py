@@ -142,11 +142,11 @@ class RequestArgs(object):
 class OutputArgs(RequestArgs):
   def __init__(self, trace, node):
     super(OutputArgs, self).__init__(trace, node)
-    self.esrNodes = trace.esrParentsAt(node)
     self.isOutput = True
 
   def requestValue(self):
     return self.trace.valueAt(self.node.requestNode)
+  def esrNodes(self): return self.trace.esrParentsAt(self.node)
   def esrValues(self):
     return [self.trace.valueAt(esrParent) for esrParent in self.trace.esrParentsAt(self.node)]
   def madeSPAux(self):

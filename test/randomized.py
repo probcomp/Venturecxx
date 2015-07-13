@@ -168,9 +168,9 @@ class BogusArgs(object):
     self.node = None
     self.operandNodes = [None for _ in args]
     self.isOutput = True
-    self.esrNodes = []
     self.env = env.VentureEnvironment()
 
   def operandValues(self): return self.args
   def spaux(self): return self.aux
+  def esrNodes(self): return []
   def esrValues(self): return []
