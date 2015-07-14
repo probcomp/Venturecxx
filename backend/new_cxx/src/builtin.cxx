@@ -123,11 +123,18 @@ map<string,SP*> initBuiltInSPs()
   m["matrix"] = new SP(new NullRequestPSP(), new MatrixOutputPSP());
   m["is_matrix"] = new SP(new NullRequestPSP(), new IsMatrixOutputPSP());
   m["id_matrix"] = new SP(new NullRequestPSP(), new IdentityMatrixOutputPSP());
+  m["transpose"] = new SP(new NullRequestPSP(), new TransposeOutputPSP());
   m["vector"] = new SP(new NullRequestPSP(), new VectorOutputPSP());
   m["is_vector"] = new SP(new NullRequestPSP(), new IsVectorOutputPSP());
   m["to_vector"] = new SP(new NullRequestPSP(), new ToVectorOutputPSP());
+  m["vector_add"] = new SP(new NullRequestPSP(), new VectorAddOutputPSP());
+  m["matrix_add"] = new SP(new NullRequestPSP(), new MatrixAddOutputPSP());
+  m["scale_vector"] = new SP(new NullRequestPSP(), new ScaleVectorOutputPSP());
+  m["scale_matrix"] = new SP(new NullRequestPSP(), new ScaleMatrixOutputPSP());
   m["vector_dot"] = new SP(new NullRequestPSP(), new VectorDotOutputPSP());
+  m["matrix_mul"] = new SP(new NullRequestPSP(), new MatrixMulOutputPSP());
   m["matrix_times_vector"] = new SP(new NullRequestPSP(), new MatrixTimesVectorOutputPSP());
+  m["vector_times_matrix"] = new SP(new NullRequestPSP(), new VectorTimesMatrixOutputPSP());
 
   /* Scoping */
   m["tag"] = new SP(new NullRequestPSP(), new TagOutputPSP());

@@ -36,6 +36,11 @@ struct IsMatrixOutputPSP : PSP
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };
 
+struct TransposeOutputPSP : PSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
 struct VectorOutputPSP : PSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
@@ -51,12 +56,42 @@ struct ToVectorOutputPSP : PSP
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };
 
+struct VectorAddOutputPSP : PSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
+struct MatrixAddOutputPSP : PSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
+struct ScaleVectorOutputPSP : PSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
+struct ScaleMatrixOutputPSP : PSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
 struct VectorDotOutputPSP : PSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };
 
+struct MatrixMulOutputPSP : PSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
 struct MatrixTimesVectorOutputPSP : PSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
+struct VectorTimesMatrixOutputPSP : PSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };
