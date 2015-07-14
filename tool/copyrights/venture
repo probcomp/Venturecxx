@@ -43,10 +43,17 @@ def venture_comment_syntax_convention(filename):
     return copyright.repeated_character_comment_syntax('/', 2, 2)
   elif extension in [".txt", ".rst", ".md", ".ipynb", ".xml", ".org"]:
     return "skip"
-  elif filename in ["README", ".gitignore", ".gitmodules", ".gitattributes", "Makefile", ".png", ".gdbinit",
-                    "Dockerfile", "LICENSE"]:
+  elif os.path.basename(filename) in ["README", ".gitignore", ".gitmodules", ".gitattributes",
+                                      "Makefile", ".png", ".gdbinit", "Dockerfile", "LICENSE"]:
     return "skip"
-  return None
+  elif extension in [".h", ".cxx", ".c", ".hpp", ".ipy", ".py", ".sh", ".scm", ".el", ".js", ".elm"]:
+    return None # Explicitly defer to the default to avoid trying to read the file
+  else:
+    with open(filename) as f:
+      top_line = f.readline()
+      if top_line in ["#!/bin/sh\n", "#!/bin/bash\n"]:
+        return copyright.repeated_character_comment_syntax('#', 1, 1)
+    return None
 
 if __name__ == "__main__":
   copyright.process_file(sys.argv[1], VentureCopyCorrector, venture_comment_syntax_convention)
