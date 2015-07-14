@@ -20,6 +20,7 @@ from nose.tools import eq_
 
 from venture.test.stats import statisticalTest, reportKnownContinuous
 from venture.test.config import get_ripl, on_inf_prim, default_num_samples, default_num_transitions_per_sample, needs_backend
+import venture.test.errors as err
 
 def testInferenceLanguageEvalSmoke():
   ripl = get_ripl()
@@ -77,6 +78,12 @@ def testModelSwitchingSmoke():
   predictions = [ripl.infer("(normal_through_model 0 1)") for _ in range(default_num_samples())]
   cdf = stats.norm(loc=0.0, scale=1.0).cdf
   return reportKnownContinuous(cdf, predictions, "N(0,1)")
+
+@on_inf_prim("return")
+@on_inf_prim("action")
+def testReturnAndAction():
+  eq_(3.0, get_ripl().infer("(do (return 3))"))
+  eq_(3.0, get_ripl().infer("(do (action 3))"))
 
 @needs_backend("lite")
 @needs_backend("puma")
