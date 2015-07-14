@@ -92,6 +92,8 @@ comment syntaxes obey this convention.
   if comments is None:
     # Initially, assume unknown comment syntax
     print "Unknown comment syntax", fname
+  elif comments == "skip":
+    print "Skipping", fname
   else:
     (detect_comments, make_comments) = comments
     with open(fname) as f:
