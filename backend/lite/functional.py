@@ -21,6 +21,7 @@ from request import Request, ESR
 from value import VentureArray, SPRef
 from address import emptyAddress
 from exception import VentureValueError
+from node import FixedValueArgs
 
 class ApplyRequestPSP(DeterministicPSP):
     def simulate(self, args):
@@ -87,11 +88,12 @@ class FixOutputPSP(DeterministicPSP):
 
 class AssessOutputPSP(DeterministicPSP):
     def simulate(self, args):
-        value = args.operandValues[0]
+        vals = args.operandValues()
+        value = vals[0]
         if isinstance(value, SPRef):
             value = value.makerNode.madeSPRecord # XXX trace.madeSPRecordAt(value.makerNode)
 
-        operator = args.operandValues[1]
+        operator = vals[1]
         if isinstance(operator, SPRef):
             operator = operator.makerNode.madeSPRecord # XXX trace.madeSPRecordAt(operator.makerNode)
         if not isinstance(operator.sp.requestPSP, NullRequestPSP):
@@ -99,13 +101,7 @@ class AssessOutputPSP(DeterministicPSP):
         if not operator.sp.outputPSP.isRandom():
             raise VentureValueError("Cannot assess a deterministic SP.")
 
-        import copy
-        assessedArgs = copy.copy(args)
-        assessedArgs.operandValues = args.operandValues[2:]
-        assessedArgs.operandNodes = args.operandNodes[2:]
-        assessedArgs.spaux = operator.spAux # XXX trace.madeSPAuxAt(operator.makerNode)
-        # XXX madeSPAux?
-
+        assessedArgs = FixedValueArgs(args, vals[2:], operandNodes=args.operandNodes[2:])
         return operator.sp.outputPSP.logDensity(value, assessedArgs)
 
     def description(self, name):

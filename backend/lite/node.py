@@ -145,11 +145,14 @@ class Args(object):
     return "%s(%r)" % (self.__class__, self.__dict__)
 
 class FixedValueArgs(object):
-  def __init__(self, args, operandValues):
+  def __init__(self, args, operandValues, operandNodes = None):
     self.args = args
     self._operandValues = operandValues
     self.node = args.node
-    self.operandNodes = args.operandNodes
+    if operandNodes is None:
+      self.operandNodes = args.operandNodes
+    else:
+      self.operandNodes = operandNodes
     self.env = args.env
 
   def operandValues(self): return self._operandValues
