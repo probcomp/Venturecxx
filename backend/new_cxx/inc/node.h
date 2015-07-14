@@ -1,4 +1,4 @@
-// Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -48,17 +48,17 @@ struct LookupNode : Node
 
 struct ApplicationNode : Node
 {
-  ApplicationNode(Node * operatorNode, const vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env,VentureValuePtr exp);
+  ApplicationNode(Node * operatorNode, const vector<Node*>& operandNodes, const boost::shared_ptr<VentureEnvironment>& env,VentureValuePtr exp);
   Node * operatorNode;
   vector<Node *> operandNodes;
-  shared_ptr<VentureEnvironment> env;
+  boost::shared_ptr<VentureEnvironment> env;
 };
 
 struct OutputNode;
 
 struct RequestNode : ApplicationNode
 {
-  RequestNode(Node * operatorNode, const vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env);
+  RequestNode(Node * operatorNode, const vector<Node*>& operandNodes, const boost::shared_ptr<VentureEnvironment>& env);
   vector<Node*> getDefiniteParents();
   OutputNode * outputNode;
   RequestNode* copy_help(ForwardingMap* m) const;
@@ -66,7 +66,7 @@ struct RequestNode : ApplicationNode
 
 struct OutputNode : ApplicationNode
 {
-  OutputNode(Node * operatorNode, const vector<Node*>& operandNodes, RequestNode * requestNode, const shared_ptr<VentureEnvironment>& env,VentureValuePtr exp);
+  OutputNode(Node * operatorNode, const vector<Node*>& operandNodes, RequestNode * requestNode, const boost::shared_ptr<VentureEnvironment>& env,VentureValuePtr exp);
   vector<Node*> getDefiniteParents();
   RequestNode * requestNode;
   bool isFrozen;

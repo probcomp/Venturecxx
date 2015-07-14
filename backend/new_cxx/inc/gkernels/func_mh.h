@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -29,13 +29,13 @@ struct Particle;
 struct FuncMHGKernel : GKernel
 {
 
-  pair<Trace*,double> propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold);
+  pair<Trace*,double> propose(ConcreteTrace * trace,boost::shared_ptr<Scaffold> scaffold);
   void accept();
   void reject();
   
   ConcreteTrace * trace;
-  shared_ptr<Scaffold> scaffold;
-  shared_ptr<DB> rhoDB;
-  shared_ptr<Particle> particle;
+  boost::shared_ptr<Scaffold> scaffold;
+  boost::shared_ptr<DB> rhoDB;
+  boost::shared_ptr<Particle> particle;
 };
 #endif

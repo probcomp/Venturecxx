@@ -1,4 +1,4 @@
-;;; Copyright (c) 2014 MIT Probabilistic Computing Project.
+;;; Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 ;;;
 ;;; This file is part of Venture.
 ;;;
@@ -164,12 +164,12 @@
 ; Construct vector of zeros of a given length n
 [assume zeros
   (lambda (n)
-    (repeat 0 n))]
+    (fill n 0))]
 
 ; Construct vector of ones of a given length n
 [assume ones
   (lambda (n)
-    (repeat 0 n))]
+    (fill n 1))]
 
 ; Range (as Python's range function); returns list
 [assume range

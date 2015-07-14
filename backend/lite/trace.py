@@ -25,7 +25,7 @@ from detach import unconstrain, unevalFamily
 from value import SPRef, VentureValue, VentureSymbol, VentureNumber, VenturePair
 from types import ExpressionType
 from scaffold import Scaffold
-from infer import (mixMH,MHOperator,MeanfieldOperator,BlockScaffoldIndexer,
+from infer import (mixMH,MHOperator,FuncMHOperator,MeanfieldOperator,BlockScaffoldIndexer,
                    EnumerativeGibbsOperator,EnumerativeMAPOperator,EnumerativeDiversify,
                    PGibbsOperator,ParticlePGibbsOperator,ParticlePMAPOperator,
                    RejectionOperator, BogoPossibilizeOperator, MissingEsrParentError, NoSPRefError,
@@ -203,17 +203,11 @@ class Trace(object):
     assert isinstance(spFamilies,SPFamilies)
     return spFamilies
   def spauxAt(self,node): return self.madeSPAuxAt(self.spRefAt(node).makerNode)
-  def pspAt(self,node):
-    if isRequestNode(node):
-      return self.spAt(node).requestPSP
-    else:
-      assert isOutputNode(node)
-      return self.spAt(node).outputPSP
+  def pspAt(self,node): return node.relevantPSP(self.spAt(node))
 
   #### Stuff that a particle trace would need to override for persistence
 
   def valueAt(self,node):
-    assert node.isAppropriateValue(node.value)
     return node.value
 
   def setValueAt(self,node,value):
@@ -464,6 +458,8 @@ class Trace(object):
     for _ in range(transitions):
       if operator == "mh":
         mixMH(self, BlockScaffoldIndexer(scope, block), MHOperator())
+      elif operator == "func_mh":
+        mixMH(self, BlockScaffoldIndexer(scope, block), FuncMHOperator())
       elif operator == "draw_scaffold":
         drawScaffold(self, BlockScaffoldIndexer(scope, block))
       elif operator == "mh_kernel_update":

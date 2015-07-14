@@ -61,13 +61,13 @@ def test_logscore_likelihood_free():
 def setup_likelihood_free():
     class TestPSP1(LikelihoodFreePSP):
         def simulate(self, args):
-            x = args.operandValues[0]
+            x = args.operandValues()[0]
             return x + stats.distributions.norm.rvs()
     tester1 = typed_nr(TestPSP1(), [t.NumberType()], t.NumberType())
 
     class TestPSP2(LikelihoodFreePSP):
         def simulate(self, args):
-            x = args.operandValues[0]
+            x = args.operandValues()[0]
             return x + stats.distributions.bernoulli(0.5).rvs()
     tester2 = typed_nr(TestPSP2(), [t.NumberType()], t.NumberType())
     ripl = get_ripl()

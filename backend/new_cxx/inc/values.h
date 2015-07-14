@@ -334,19 +334,19 @@ struct VentureVector : VentureValue
 
 struct VentureRequest : VentureValue
 {
-  VentureRequest(const vector<ESR> & esrs, const vector<shared_ptr<LSR> > & lsrs): esrs(esrs), lsrs(lsrs) {}
+  VentureRequest(const vector<ESR> & esrs, const vector<boost::shared_ptr<LSR> > & lsrs): esrs(esrs), lsrs(lsrs) {}
   VentureRequest(const vector<ESR> & esrs): esrs(esrs) {}
-  VentureRequest(const vector<shared_ptr<LSR> > & lsrs): lsrs(lsrs) {}
+  VentureRequest(const vector<boost::shared_ptr<LSR> > & lsrs): lsrs(lsrs) {}
 
   int getValueTypeRank() const;
 
   const vector<ESR>& getESRs() const { return esrs; }
-  const vector<shared_ptr<LSR> >& getLSRs() const { return lsrs; }
+  const vector<boost::shared_ptr<LSR> >& getLSRs() const { return lsrs; }
 
   string toString() const;
 
   vector<ESR> esrs;
-  vector<shared_ptr<LSR> > lsrs;
+  vector<boost::shared_ptr<LSR> > lsrs;
 };
 
 

@@ -28,8 +28,9 @@ cflags = os.getenv("CFLAGS", "").split()
 if ON_LINUX:
     os.environ['CC'] = 'ccache gcc '
 if ON_MAC:
-    os.environ['CC'] = 'ccache gcc-4.9'
-    os.environ['CXX'] = 'ccache g++-4.9'
+    os.environ['CC'] = 'ccache gcc'
+    os.environ['CXX'] = 'ccache g++'
+    os.environ['CFLAGS'] = "-std=c++11 -stdlib=libc++"
 
 puma_src_files = [
     "src/args.cxx",
@@ -53,7 +54,6 @@ puma_src_files = [
     "src/pytrace.cxx",
     "src/pyutils.cxx",
     "src/regen.cxx",
-    "src/render.cxx",
     "src/scaffold.cxx",
     "src/serialize.cxx",
     "src/sp.cxx",
@@ -94,7 +94,7 @@ puma_src_files = [
 ]
 puma_src_files = ["backend/new_cxx/" + f for f in puma_src_files]
 
-puma_inc_dirs = ['inc/', 'inc/sps/', 'inc/infer/', 'inc/Eigen']
+puma_inc_dirs = ['inc/', 'inc/sps/', 'inc/infer/']
 puma_inc_dirs = ["backend/new_cxx/" + d for d in puma_inc_dirs]
 
 ext_modules = []
@@ -159,7 +159,7 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
     if ON_LINUX:
         self.compiler_so = ["ccache", "gcc"]
     if ON_MAC:
-        self.compiler_so = ["ccache", "gcc-4.9"]
+        self.compiler_so = ["ccache", "gcc"]
 
     # parallel code
     import multiprocessing, multiprocessing.pool

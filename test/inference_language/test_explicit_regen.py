@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -82,7 +82,7 @@ def testCustomProposalSmoke():
   ripl = gaussian_drift_mh_ripl()
   ripl.assume("x", "(normal 0 1)")
   old = ripl.sample("x")
-  ripl.infer("(gaussian_drift_mh default all 0.1)")
+  ripl.infer("(repeat 5 (gaussian_drift_mh default all 0.1))")
   assert not old == ripl.sample("x")
 
 @on_inf_prim("regen")

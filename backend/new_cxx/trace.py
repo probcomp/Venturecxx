@@ -18,6 +18,7 @@ import random
 
 import libpumatrace as puma
 
+from venture.lite.sp import VentureSPRecord
 from venture.lite.value import VentureValue
 from venture.lite.builtin import builtInSPs
 import venture.lite.foreign as foreign
@@ -84,6 +85,12 @@ class Trace(object):
       self.trace.bindPumaSP(name, sp)
     else:
       self.trace.bindPythonSP(name, foreign.ForeignLiteSP(sp))
+
+  def extractValue(self, did):
+    ret = self.trace.extractValue(did)
+    if ret["type"] == "foreign_sp":
+      ret = VentureSPRecord(ret["sp"], ret["aux"]).asStackDict(None)
+    return ret
 
   def primitive_infer(self, exp):
     self.trace.primitive_infer(_expToDict(exp))

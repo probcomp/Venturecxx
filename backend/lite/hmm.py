@@ -45,7 +45,7 @@ class HMMSPAux(SPAux):
 
 class MakeUncollapsedHMMOutputPSP(DeterministicPSP):
   def simulate(self,args):
-    (p0,T,O) = args.operandValues
+    (p0,T,O) = args.operandValues()
     # p0 comes in as a simplex but needs to become a 1-row matrix
     p0 = np.mat([p0])
     # Transposition for compatibility with Puma
@@ -123,30 +123,34 @@ class UncollapsedHMMOutputPSP(RandomPSP):
     self.O = O
 
   def simulate(self,args): 
-    n = args.operandValues[0]
-    if 0 <= n and n < len(args.spaux.xs):
-      return npIndexOfOne(npSampleVector(args.spaux.xs[n] * self.O))
+    n = args.operandValues()[0]
+    xs = args.spaux().xs
+    if 0 <= n and n < len(xs):
+      return npIndexOfOne(npSampleVector(xs[n] * self.O))
     else:
       raise VentureValueError("Index out of bounds %s" % n)
 
   def logDensity(self,value,args):
-    n = args.operandValues[0]
-    assert len(args.spaux.xs) > n
-    theta = args.spaux.xs[n] * self.O
+    n = args.operandValues()[0]
+    xs = args.spaux().xs
+    assert len(xs) > n
+    theta = xs[n] * self.O
     return math.log(theta[0,value])
 
   def incorporate(self,value,args):
-    n = args.operandValues[0]
-    if not n in args.spaux.os: args.spaux.os[n] = []
-    args.spaux.os[n].append(value)
+    n = args.operandValues()[0]
+    os = args.spaux().os
+    if not n in os: os[n] = []
+    os[n].append(value)
 
   def unincorporate(self,value,args):
-    n = args.operandValues[0]
-    del args.spaux.os[n][args.spaux.os[n].index(value)]
-    if not args.spaux.os[n]: del args.spaux.os[n]
+    n = args.operandValues()[0]
+    os = args.spaux().os
+    del os[n][os[n].index(value)]
+    if not os[n]: del os[n]
 
 class UncollapsedHMMRequestPSP(DeterministicPSP):
-  def simulate(self,args): return Request([],[args.operandValues[0]])
+  def simulate(self,args): return Request([],[args.operandValues()[0]])
 
 
 ##########################################

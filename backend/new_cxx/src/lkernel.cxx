@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -20,27 +20,27 @@
 #include "sp.h"
 #include "sprecord.h"
 
-VentureValuePtr DeterministicMakerAAALKernel::simulate(Trace * trace,shared_ptr<Args> args,gsl_rng * rng)
+VentureValuePtr DeterministicMakerAAALKernel::simulate(Trace * trace,boost::shared_ptr<Args> args,gsl_rng * rng)
 {
-  shared_ptr<VentureSPRecord> spRecord = dynamic_pointer_cast<VentureSPRecord>(makerPSP->simulate(args,rng));
+  boost::shared_ptr<VentureSPRecord> spRecord = dynamic_pointer_cast<VentureSPRecord>(makerPSP->simulate(args,rng));
 
   spRecord->spAux = args->aaaMadeSPAux;
   return spRecord;
 }
 
-double DeterministicMakerAAALKernel::weight(Trace * trace,VentureValuePtr value,shared_ptr<Args> args)
+double DeterministicMakerAAALKernel::weight(Trace * trace,VentureValuePtr value,boost::shared_ptr<Args> args)
 {
-  shared_ptr<VentureSPRecord> spRecord = dynamic_pointer_cast<VentureSPRecord>(value);
+  boost::shared_ptr<VentureSPRecord> spRecord = dynamic_pointer_cast<VentureSPRecord>(value);
   assert(spRecord);
   return spRecord->sp->outputPSP->logDensityOfCounts(spRecord->spAux);
 }
 
-VentureValuePtr DeterministicLKernel::simulate(Trace * trace,shared_ptr<Args> args,gsl_rng * rng)
+VentureValuePtr DeterministicLKernel::simulate(Trace * trace,boost::shared_ptr<Args> args,gsl_rng * rng)
 {
   return value;
 }
 
-double DeterministicLKernel::weight(Trace * trace,VentureValuePtr value,shared_ptr<Args> args)
+double DeterministicLKernel::weight(Trace * trace,VentureValuePtr value,boost::shared_ptr<Args> args)
 {
   return psp->logDensity(value,args);
 }

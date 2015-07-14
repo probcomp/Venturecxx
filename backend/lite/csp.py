@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -38,14 +38,13 @@ class CSPRequestPSP(DeterministicPSP):
     # TODO Collect derivatives with respect to constants in the body
     # of the lambda and pass them through the constructor to whoever
     # came up with those constants.
-    return [0 for _ in args.operandValues]
+    return [0 for _ in args.operandNodes]
 
   def canAbsorb(self, _trace, _appNode, _parentNode): return True
 
 class MakeCSPOutputPSP(DeterministicPSP):
   def simulate(self,args):
-    ids = args.operandValues[0]
-    exp = args.operandValues[1]
+    (ids, exp) = args.operandValues()
     # point to the desugared source code location of lambda body
     addr = args.operandNodes[1].address.last.append(1)
     return VentureSPRecord(SP(CSPRequestPSP(ids,exp,addr,args.env),ESRRefOutputPSP()))
@@ -53,7 +52,7 @@ class MakeCSPOutputPSP(DeterministicPSP):
   def gradientOfSimulate(self, args, _value, _direction):
     # A lambda is a constant.  I may need to do some plumbing here,
     # depending on how I want to handle closed-over values.
-    return [0 for _ in args.operandValues]
+    return [0 for _ in args.operandNodes]
 
   def description(self,name):
     return "%s\n  Used internally in the implementation of compound procedures." % name

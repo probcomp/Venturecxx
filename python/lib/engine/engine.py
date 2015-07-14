@@ -166,6 +166,19 @@ class Engine(object):
   def likelihood_weight(self): self.model.likelihood_weight()
   def incorporate(self): self.model.incorporate()
 
+  def evaluate(self, program):
+    with self.inference_trace():
+      did = self._do_evaluate(program)
+      ans = self.infer_trace.extractValue(did)
+      self.infer_trace.uneval(did) # TODO This becomes "forget" after the engine.Trace wrapper
+      # Return the forgotten did to better coordinate with the sivm
+      return (did, ans)
+
+  def _do_evaluate(self, program):
+    did = self.nextBaseAddr()
+    self.infer_trace.eval(did, program)
+    return did
+
   def in_model(self, model, action):
     current_model = self.model
     current_swapped_status = self.swapped_model
@@ -173,11 +186,12 @@ class Engine(object):
     # TODO asStackDict doesn't do the right thing because it tries to
     # be politely printable.  Maybe I should change that.
     stack_dict_action = {"type":"SP", "value":action}
+    program = [v.sym("run"), v.quote(stack_dict_action)]
     try:
       self.swapped_model = True
       with self.inference_trace():
-        did = self._do_infer(v.quote(stack_dict_action))
-        ans = self._extract_raw_infer_result(did)
+        did = self._do_evaluate(program)
+        ans = self.infer_trace.extractRaw(did)
         self.infer_trace.uneval(did) # TODO This becomes "forget" after the engine.Trace wrapper
         return (ans, model)
     finally:
@@ -189,39 +203,12 @@ class Engine(object):
     if self.is_infer_loop_program(program):
       assert len(program) == 2
       self.start_continuous_inference(program[1])
+      return (None, None) # The core_sivm expects a 2-tuple
     else:
-      with self.inference_trace():
-        did = self._do_infer(program)
-        ans = self._extract_infer_result(did)
-        self.infer_trace.uneval(did) # TODO This becomes "forget" after the engine.Trace wrapper
-        return ans
+      return self.evaluate([v.sym("run"), program])
 
   def is_infer_loop_program(self, program):
     return isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop"
-
-  def _do_infer(self, program):
-    did = self.nextBaseAddr()
-    self.infer_trace.eval(did, [program, v.blob(Infer(self))])
-    return did
-
-  def _extract_infer_result(self, did):
-    ans = self.infer_trace.extractValue(did)
-    # Expect the result to be a Venture pair of the "value" of the
-    # inference action together with the mutated Infer object.
-    assert isinstance(ans, dict)
-    assert ans["type"] is "improper_list"
-    (vs, tail) = ans["value"]
-    assert tail["type"] is "blob"
-    assert isinstance(tail["value"], Infer)
-    assert len(vs) == 1
-    return vs[0]
-
-  def _extract_raw_infer_result(self, did):
-    ans = self.infer_trace.extractRaw(did)
-    # Expect the result to be a Venture pair of the "value" of the
-    # inference action together with the mutated Infer object.
-    assert isinstance(ans, vv.VenturePair)
-    return ans.first
 
   @contextmanager
   def inference_trace(self):
@@ -234,14 +221,15 @@ class Engine(object):
         self.infer_trace = None
 
   def init_inference_trace(self):
-    import venture.untraced.trace as lite
-    ans = lite.Trace()
+    import venture.untraced.trace as trace
+    ans = trace.Trace()
     for name,sp in self.inferenceSPsList():
       ans.bindPrimitiveSP(name, sp)
     import venture.lite.inference_sps as inf
     for word in inf.inferenceKeywords:
       if not ans.boundInGlobalEnv(word):
         ans.bindPrimitiveName(word, vv.VentureSymbol(word))
+    ans.bindPrimitiveName("__the_inferrer__", vv.VentureForeignBlob(Infer(self)))
     self.install_inference_prelude(ans)
     return ans
 

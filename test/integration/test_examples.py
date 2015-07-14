@@ -19,7 +19,7 @@ import subprocess as s
 from unittest import SkipTest
 from distutils.spawn import find_executable
 
-from venture.test.config import gen_in_backend
+from venture.test.config import gen_in_backend, gen_needs_backend, gen_needs_ggplot
 
 def findTimeout():
   '''
@@ -38,8 +38,15 @@ def checkExample(example):
   assert s.call("%s 1.5s python examples/%s" % (timeout, example), shell=True) == 124
 
 @gen_in_backend("none")
+@gen_needs_backend("puma")
+def testExamplesPuma():
+  for ex in ["venture-unit/lda.py", "venture-unit/crosscat.py"]:
+    yield checkExample, ex
+
+@gen_in_backend("none")
+@gen_needs_backend("lite")
 def testExamples():
-  for ex in ["venture-unit/lda.py", "venture-unit/crosscat.py", "venture-unit/analytics_gaussian_geweke.py",
+  for ex in ["venture-unit/analytics_gaussian_geweke.py",
              "venture-unit/crp-demo.py", "venture-unit/crp-2d-demo.py", "venture-unit/hmc-demo.py",
              "venture-unit/hmm-demo.py"]:
     yield checkExample, ex
@@ -49,13 +56,28 @@ def checkVentureExample(command):
   assert s.call("%s 1.5s %s" % (timeout, command), shell=True) == 124
 
 @gen_in_backend("none")
-def testVentureExamples():
+@gen_needs_backend("puma")
+@gen_needs_ggplot
+def testVentureExamplesPuma():
   for ex in ["venture puma -f examples/plotting/bimodal.vnt",
              "venture puma -f examples/plotting/dice_plot.vnt",
              "venture puma -f examples/plotting/normal_plot.vnt",
-             "venture lite -f examples/trickiness-ideal.vnts",
              "venture puma -f examples/trickiness-concrete.vnts",
              "venture puma -f examples/trickiness-concrete-2.vnts",
-             "venture lite -L examples/hmm_plugin.py -f examples/hmm.vnt -P -e '[infer (exact_filtering)]'",
+  ]:
+    yield checkVentureExample, ex
+
+@gen_in_backend("none")
+@gen_needs_backend("lite")
+@gen_needs_ggplot
+def testVentureExamplesLitePlot():
+  for ex in ["venture lite -f examples/trickiness-ideal.vnts",
+  ]:
+    yield checkVentureExample, ex
+
+@gen_in_backend("none")
+@gen_needs_backend("lite")
+def testVentureExamplesLitePlot():
+  for ex in ["venture lite -L examples/hmm_plugin.py -f examples/hmm.vnt -e '[infer (exact_filtering)]'",
   ]:
     yield checkVentureExample, ex

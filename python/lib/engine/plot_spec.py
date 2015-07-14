@@ -46,7 +46,7 @@ class PlotSpec(object):
     for spec in self.frames:
       spec.initialize()
       if spec.weighted:
-        dataset['particle weight'] = logWeightsToNormalizedDirect(dataset['particle log weight'])
+        dataset['particle weight'] = logWeightsToNormalizedDirect(dataset['prt. log wgt.'])
       (aes, index) = spec.aes_dict_at(index, names, spec.get_geoms())
       plot = g.ggplot(dataset, g.aes(**aes))
       for geom in spec.get_geoms():
@@ -54,7 +54,7 @@ class PlotSpec(object):
       # add the wall time
       title = self._format_title(dataset)
       plot += g.ggtitle(title)
-      for (dim, scale) in zip(["x", "y", "color"], spec.scales):
+      for (dim, scale) in zip(spec.dimensions(), spec.scales):
         obj = self._interp_scale(dim, scale)
         if obj: plot += obj
       figs.append(self._add_date(plot.draw()))
@@ -78,12 +78,15 @@ class PlotSpec(object):
 
   @staticmethod
   def _format_title(dataset):
-    walltime = dataset['time (s)'].max()
-    nsweeps = dataset['sweep count'].max()
-    nparticles = dataset['particle id'].max() + 1
-    title = 'Wall time: {0}m, {1:0.2f}s. Sweeps: {2}. Particles: {3}'
-    title = title.format(int(walltime // 60), walltime % 60, nsweeps, nparticles)
-    return title
+    if 'time (s)' in dataset and 'iter' in dataset and 'prt. id' in dataset:
+      walltime = dataset['time (s)'].max()
+      niterations = dataset['iter'].max()
+      nparticles = dataset['prt. id'].max() + 1
+      title = 'Wall time: {0}m, {1:0.2f}s. Iterations: {2}. Particles: {3}'
+      title = title.format(int(walltime // 60), walltime % 60, niterations, nparticles)
+      return title
+    else:
+      return ""
 
   @staticmethod
   def _add_date(fig):
@@ -139,7 +142,7 @@ class FrameSpec(object):
         self.streams.append(stream)
         self.scales.append(scale)
     if len(self.streams) == 1 and self.two_d_only:
-      # Two-dimensional plots default to plotting against sweep count (in direct space)
+      # Two-dimensional plots default to plotting against iteration count (in direct space)
       self.streams = ["c"] + self.streams
       self.scales = ["d"] + self.scales
 
@@ -156,14 +159,20 @@ class FrameSpec(object):
       self.two_d_only = False
     return {"p":g.geom_point, "l":g.geom_line, "b":g.geom_bar, "h":g.geom_histogram}[ge]()
 
+  def dimensions(self):
+    if self.two_d_only:
+      return ["x", "y", "color"]
+    else:
+      return ["x", "color"]
+
   def aes_dict_at(self, next_index, names, geoms):
     next_index = next_index
     ans = {}
-    for (key, stream) in zip(["x", "y", "color"], self.streams):
+    for (key, stream) in zip(self.dimensions(), self.streams):
       if stream == "c":
-        ans[key] = "sweep count"
+        ans[key] = "iter"
       elif stream == "r":
-        ans[key] = "particle id"
+        ans[key] = "prt. id"
       elif stream == "t":
         ans[key] = "time (s)"
       elif stream == "s":

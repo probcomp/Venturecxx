@@ -242,7 +242,7 @@ VentureValuePtr FixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
   }
   for (size_t i = 0; i < ids.size(); ++i)
   {
-    env->replaceBinding(ids[i]->getSymbol(), args->esrParentNodes[i].get());
+    env->fillBinding(ids[i]->getSymbol(), args->esrParentNodes[i].get());
   }
   return env;
 }
@@ -304,8 +304,8 @@ VentureValuePtr ArangeOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
 
 VentureValuePtr RepeatOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  double item = args->operandValues[0]->getDouble();
-  long ct = args->operandValues[1]->getInt();
+  long ct = args->operandValues[0]->getInt();
+  double item = args->operandValues[1]->getDouble();
   VectorXd v(ct);
   for (int i = 0; i < ct; ++i) { v(i) = item; }
   return VentureValuePtr(new VentureVector(v));

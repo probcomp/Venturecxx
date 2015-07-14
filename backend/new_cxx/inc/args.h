@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -37,16 +37,16 @@ struct Args
   vector<VentureValuePtr> operandValues;
   vector<Node*> operandNodes;
 
-  shared_ptr<VentureRequest> requestValue;
+  boost::shared_ptr<VentureRequest> requestValue;
   RequestNode * requestNode;
 
   vector<VentureValuePtr> esrParentValues;
   vector<RootOfFamily> esrParentNodes;
 
-  shared_ptr<SPAux> spAux;
-  shared_ptr<SPAux> aaaMadeSPAux;
+  boost::shared_ptr<SPAux> spAux;
+  boost::shared_ptr<SPAux> aaaMadeSPAux;
 
-  shared_ptr<VentureEnvironment> env;
+  boost::shared_ptr<VentureEnvironment> env;
 
 };
 

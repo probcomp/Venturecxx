@@ -37,9 +37,9 @@
 map<string,VentureValuePtr> initBuiltInValues()
 {
   map<string,VentureValuePtr> m;
-  m["true"] = shared_ptr<VentureBool>(new VentureBool(true));
-  m["false"] = shared_ptr<VentureBool>(new VentureBool(false));
-  m["nil"] = shared_ptr<VentureNil>(new VentureNil());
+  m["true"] = boost::shared_ptr<VentureBool>(new VentureBool(true));
+  m["false"] = boost::shared_ptr<VentureBool>(new VentureBool(false));
+  m["nil"] = boost::shared_ptr<VentureNil>(new VentureNil());
   return m;
 }
 
@@ -160,7 +160,7 @@ map<string,SP*> initBuiltInSPs()
   m["mapv"] = new SP(new ArrayMapRequestPSP(), new ESRArrayOutputPSP());
   m["imapv"] = new SP(new IndexedArrayMapRequestPSP(), new ESRArrayOutputPSP());
   m["arange"] = new SP(new NullRequestPSP(), new ArangeOutputPSP());
-  m["repeat"] = new SP(new NullRequestPSP(), new RepeatOutputPSP());
+  m["fill"] = new SP(new NullRequestPSP(), new RepeatOutputPSP());
 
   m["make_csp"] = new SP(new NullRequestPSP(), new MakeCSPOutputPSP());
   m["mem"] = new SP(new NullRequestPSP(), new MakeMSPOutputPSP());

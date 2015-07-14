@@ -48,7 +48,9 @@ Typical usage begins by using one of the factory functions in the
 
 import numbers
 import re
+import os
 from os import path
+import sys
 import numpy as np
 
 from venture.exception import VentureException
@@ -56,8 +58,6 @@ from venture.lite.value import VentureValue
 import plugins
 import utils as u
 import venture.value.dicts as v
-
-from venture.lite.node import RequestNode, OutputNode # For scaffold drawing
 
 PRELUDE_FILE = 'prelude.vnt'
 
@@ -81,6 +81,7 @@ class Ripl():
             pass
         else:
             print "Wrapping sivm %s in a new ripl but it already has one: %s.  Engine to ripl references may be incorrect." % (self.sivm, r)
+        self.pyglobals = {"ripl": self} # A global environment for dropping to Python
         plugins.__venture_start__(self)
 
 
@@ -380,7 +381,10 @@ class Ripl():
         p = self._cur_parser()
         exp = p.unparse_expression(exp)
         (start, end) = p.expression_index_to_text_index(exp, index)
-        ans = exp[0:start] + "\x1b[31m" + exp[start:end+1] + "\x1b[39;49m" + exp[end+1:]
+        if hasattr(sys.stdout, "fileno") and os.isatty(sys.stdout.fileno()):
+            ans = exp[0:start] + "\x1b[31m" + exp[start:end+1] + "\x1b[39;49m" + exp[end+1:]
+        else:
+            ans = exp
         return ans, (start, end)
 
     def draw_subproblem(self, scaffold_dict, type=False):
@@ -436,8 +440,9 @@ class Ripl():
                         add_frame(frame)
 
         print "The nodes"
-        mark(scaffold.getPrincipalNodes(), 'red', only_bottom=True)
-        mark(scaffold.drg, 'yellow', only_bottom=True)
+        pnodes = scaffold.getPrincipalNodes()
+        mark(pnodes, 'red', only_bottom=True)
+        mark(scaffold.drg.difference(pnodes), 'yellow', only_bottom=True)
         mark(scaffold.absorbing, 'blue', only_bottom=True)
         mark(scaffold.aaa, 'pink', only_bottom=True)
         mark(scaffold.brush, 'green', only_bottom=True)
@@ -447,8 +452,8 @@ class Ripl():
 
         print "The stacks"
         by_did = {}
-        mark(scaffold.getPrincipalNodes(), 'red', only_bottom=False)
-        mark(scaffold.drg, 'yellow', only_bottom=False)
+        mark(pnodes, 'red', only_bottom=False)
+        mark(scaffold.drg.difference(pnodes), 'yellow', only_bottom=False)
         mark(scaffold.absorbing, 'blue', only_bottom=False)
         mark(scaffold.aaa, 'pink', only_bottom=False)
         mark(scaffold.brush, 'green', only_bottom=False)
@@ -548,7 +553,7 @@ ripl.observe_dataset("<expr>", <iterable>)
   recent assume.
 
 - The <iterable> is a Python iterable each of whose elements must be a
-  tuple of a list of valid Venture values and a Venture value: ([a], b)
+  nonempty list of valid Venture values.
 
 - There is no Venture syntax for this; it is accessible only when
   using Venture as a library.
@@ -557,10 +562,10 @@ Semantics:
 
 - As to its effect on the distribution over traces, this is equivalent
   to looping over the contents of the given iterable, calling
-  ripl.observe on each element as ripl.observe("(<expr> $tuple[0])",
-  tuple[1]). In other words, the first component of each element of
-  the iterable gives the arguments to the procedure given by <expr>,
-  and the second component gives the value to observe.
+  ripl.observe on each element as ripl.observe("(<expr> *item[:-1])",
+  item[-1]). In other words, the first elements of each item of
+  the iterable give the arguments to the procedure given by <expr>,
+  and the last element gives the value to observe.
 
 - The ripl method returns a list of directive ids, which correspond to
   the individual observes thus generated.
@@ -587,9 +592,9 @@ Open issues:
         """
         ret_vals = []
         parsed = self._ensure_parsed_expression(proc_expression)
-        for i, (args, val) in enumerate(iterable):
-          expr = [parsed] + [v.quote(a) for a in args]
-          ret_vals.append(self.observe(expr,val,label+"_"+str(i) if label is not None else None))
+        for i, args_val in enumerate(iterable):
+          expr = [parsed] + [v.quote(a) for a in args_val[:-1]]
+          ret_vals.append(self.observe(expr,args_val[-1],label+"_"+str(i) if label is not None else None))
         return ret_vals
 
     ############################################
@@ -662,6 +667,11 @@ Open issues:
                 return "mh(default, one, %d)" % program
         else:
             return program
+
+    def evaluate(self, program, type=False):
+        o = self.execute_instruction({'instruction':'evaluate', 'expression': program})
+        value = o["value"]
+        return value if type else u.strip_types(value)
 
     def infer(self, params=None, type=False):
         o = self.execute_instruction({'instruction':'infer', 'expression': self.defaultInferProgram(params)})
@@ -781,6 +791,13 @@ Open issues:
         """Bind every public method of the given object as a callback of the same name."""
         for name in (name for name in dir(obj) if not name.startswith("_")):
             self.bind_callback(prefix + name, getattr(obj, name))
+
+    def pyexec(self, code):
+        # Because that's the point pylint:disable=exec-used
+        exec code in self.pyglobals
+
+    def pyeval(self, code):
+        return eval(code, self.pyglobals)
 
     ############################################
     # Serialization

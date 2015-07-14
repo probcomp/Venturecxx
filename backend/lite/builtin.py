@@ -89,8 +89,8 @@ def typed_func(*args, **kwargs):
 # one splats the operand values).
 def deterministic_psp(f, descr=None, sim_grad=None):
   def new_grad(args, direction):
-    return sim_grad(args.operandValues, direction)
-  return FunctionPSP(lambda args: f(*args.operandValues), descr, sim_grad=(new_grad if sim_grad else None))
+    return sim_grad(args.operandValues(), direction)
+  return FunctionPSP(lambda args: f(*args.operandValues()), descr, sim_grad=(new_grad if sim_grad else None))
 
 def deterministic_typed_psp(f, args_types, return_type, descr=None, sim_grad=None, **kwargs):
   return TypedPSP(deterministic_psp(f, descr, sim_grad), SPType(args_types, return_type, **kwargs))
@@ -164,8 +164,8 @@ def grad_list(args, direction):
     tails = [0 for _ in range(len(args) - len(list_))]
     return list_ + tails
 
-def print_(value, label):
-  print 'print ' + label + ': ' + str(value)
+def debug_print(label, value):
+  print 'debug ' + label + ': ' + str(value)
   return value
 
 def vector_dot(v1, v2):
@@ -320,10 +320,10 @@ builtInSPsList = [
                                            min_req_args=1,
                                            descr="(%s [start] stop) returns an array of n consecutive integers from start (inclusive) up to stop (exclusive).")],
 
-           [ "repeat", deterministic_typed(np.repeat,
-                                           [t.NumberType(), t.IntegerType()],
-                                           t.ArrayUnboxedType(t.NumberType()),
-                                           descr="(%s x n) returns an array with the number x repeated n times")],
+           [ "fill", deterministic_typed(np.full,
+                                         [t.IntegerType(), t.NumberType()],
+                                         t.ArrayUnboxedType(t.NumberType()),
+                                         descr="(%s n x) returns an array with the number x repeated n times")],
 
            [ "linspace", deterministic_typed(np.linspace,
                                              [t.NumberType(), t.NumberType(), t.CountType()],
@@ -362,10 +362,10 @@ builtInSPsList = [
                                  t.ArrayUnboxedType(t.NumberType()),
                                  descr="(%s M v) returns the matrix-vector product Mv.") ],
 
-           [ "print", deterministic_typed(print_,
-                                           [t.AnyType("k"), t.SymbolType()],
+           [ "debug", deterministic_typed(debug_print,
+                                           [t.SymbolType(), t.AnyType("k")],
                                            t.AnyType("k"),
-                                           descr = "Print the value of the result of any other SP, labeled by a Symbol.") ],
+                                           descr = "Print the given value, labeled by a Symbol. Return the value. Intended for debugging or for monitoring execution.") ],
 
            [ "apply", esr_output(TypedPSP(functional.ApplyRequestPSP(),
                                           SPType([SPType([t.AnyType("a")], t.AnyType("b"), variadic=True),

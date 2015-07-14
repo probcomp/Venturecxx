@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -173,7 +173,7 @@ const vector<ESR>& VentureValue::getESRs() const
   cannotConvertType(this,"requests"); assert(false); throw "no return";
 }
 
-const vector<shared_ptr<LSR> >& VentureValue::getLSRs() const
+const vector<boost::shared_ptr<LSR> >& VentureValue::getLSRs() const
 {
   cannotConvertType(this,"requests"); assert(false); throw "no return";
 }
@@ -185,7 +185,7 @@ Node * VentureValue::getNode() const
 }
 
 
-shared_ptr<SPAux> VentureValue::getSPAux() const
+boost::shared_ptr<SPAux> VentureValue::getSPAux() const
 {
   cannotConvertType(this,"sprecord") ; assert(false); throw "no return";
 }

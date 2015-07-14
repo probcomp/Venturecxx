@@ -1,0 +1,408 @@
+<% sample_size = 500 %>
+<% if ENV['SMOKETEST'] then sample_size = 5 end %>
+<% smaller_sample_size = [sample_size / 5, 5].max %>
+<% refman_url = "http://probcomp.csail.mit.edu/venture/edge/reference/" %>
+
+[< Prev: Basics](../basics/index.html)
+
+Linear Regression
+=================
+
+[Ok, one gaussian isn't that much fun: let's try varying the mean as a
+function of the input, i.e. linear regression.]
+
+In this part, we will build up a somewhat more elaborate model, and
+explore strategies for inspecting and debugging it.  The problem we
+address is linear regression: trying to infer a linear relationship
+between an input and an output from some data.  This is of course
+well-trodden terrain -- we are primarily using it to introduce more
+Venture concepts, but the models themselves will get interesting
+toward the end.
+
+Recap
+=====
+
+In the [previous part](../basics/index.html) we discussed basic
+concepts of Venture programming, modeling, and inference.  As a
+reminder, the main modes of using Venture we saw are starting Venture
+interactively
+
+```
+$ venture lite --lang venture_script
+```
+
+and running standalone Venture scripts
+
+```
+$ venture lite -f script.vnts
+```
+
+Simple Linear Regression
+========================
+
+[Concepts: more elaborate models; functions; abstraction?; genericity
+of built-in inference procedures]
+
+Let's start by putting down the first model for linear regression that
+comes to mind.  A line has a slope and an intercept
+
+```venture
+assume intercept = normal(0,10)
+assume slope = normal(0,10)
+```
+
+and is reasonable to represent as a function from the independent to
+the dependent variable
+
+```venture
+assume line = proc(x) { slope * x + intercept }
+```
+
+In VentureScript, `proc` is the syntax for making an anonymous
+function with the given formal parameters and behavior, and we use
+`assume` to give it a name in our model.
+
+Finally, we will model our data observations as subject to Gaussian
+noise, so we capture that by defining an observation function
+
+```venture
+assume obs = proc(x) { normal(line(x), 1) }
+```
+
+If you don't want to type that, you can download
+[lin-reg-1.vnts](lin-reg-1.vnts) and use it with
+
+```
+$ venture lite -f lin-reg-1.vnts --interactive
+```
+
+Let's give this model a smoke test
+
+```venture
+// A tiny data set
+observe obs(1) = 2
+observe obs(2) = 2
+
+// Should be solvable exactly
+infer posterior
+
+// Do we get plausible values?
+sample list(intercept, slope, line(3))
+```
+
+Exercise: Evaluate the model's performance on the two data points.
+
+1. Gather and save a dataset of independent posterior samples of the
+   parameters and a prediction at some value.
+   [Hint: You can pass multiple arguments to `collect`]
+   [Answer:
+
+```venture
+define data = run(accumulate_dataset(<%= smaller_sample_size %>,
+  do(posterior,
+     collect(intercept, slope, line(3)))))
+```
+
+]
+
+2. Predictive accuracy: Where do you expect the predictive mean to be,
+   based on the observations we trained the model on?  How widely do
+   you expect it be dispersed, based on the noise in the model?  Plot
+   the predictions: does the data agree with your intuition?
+
+[Answer: 2, pretty broad,
+
+```church'
+(plot 'h2 data)
+```
+
+]
+
+3. Parameter inference
+
+    a. Where do you expect the intercept to be located, and how
+       concentrated do you expect it to be?  Plot the intercept and
+       check your intuition.
+
+[Answer: 2, broad,
+
+```church'
+(plot 'h0 data)
+```
+]
+
+    b. Where do you expect the slope to be located, and how
+       concentrated do you expect it to be?  Plot the slope and check
+       your intuition.
+
+[Answer: 2, broad,
+
+```church'
+(plot 'h1 data)
+```
+]
+
+    c. What do you expect the relationship between the slope and
+       intercept to be?  Plot them against each other and check your
+       intuition.  Hint: The usual way to get a scatter plot is
+       `p0d1d`: `p` for **p**oint and `d` for **d**irect as opposed to
+       log scale.  A gotcha: if you leave the middle `d` off, the 0
+       and 1 will run together into a single index.
+
+[Answer: anticorrelated, because the line is trying to pass through
+around (1.5, 2).
+
+```church'
+(plot 'p0d1d data)
+```
+
+TODO: Segment Title
+===================
+
+In the previous segment, we started with the simple linear regression
+model in [lin-reg-1.vnts](lin-reg-1.vnts)
+
+```
+$ venture lite -f lin-reg-1.vnts --interactive
+```
+
+In this segment, we will try it on more data.
+
+There is [a little synthetic regression dataset in the file
+reg-test.csv](reg-test.csv).  Download it and have a look.
+
+You could, of course, type all this data into your Venture session
+as
+
+```
+observe obs(this) = that
+observe obs(that) = the other
+...
+```
+
+but that's pretty tedious.  Being a probabilistic programming
+language, Venture doesn't replicate standard programming facilities
+like reading data files, and instead offers close integration with
+Python.  So the way to do a job like this is to use
+[`pyexec`](<%= refman_url %>/inference.html#pyexec):
+
+```church'
+(run (pyexec 'symbol<"import pandas as pd">))
+(run (pyexec 'symbol<"frame = pd.read_csv('reg-test.csv')">))
+(run (pyexec 'symbol<"ripl.observe_dataset('obs', frame[['x','y']].values)">))
+```
+
+```church'
+list_directives
+```
+
+If you want to know what just happened there, `pyexec` is an action of
+the inference language that executes the given string of Python code.
+The binding environment persists across calls, and begins with the variable `ripl` bound to the
+current session's
+[Read-Infer-Predict Layer](<%= refman_url %>venture.ripl.ripl.html#module-venture.ripl.ripl),
+which serves as the entry point for using Venture as a Python library.
+In this case, we used the escape to load our csv file up into a Pandas DataFrame,
+and then used the RIPL's [`observe_dataset`](<%= refman_url %>venture.ripl.ripl.html#venture.ripl.ripl.Ripl.observe_dataset) method to load it into Venture
+as individual observations.
+
+OK, so we loaded the data.  We could do some inference
+
+```venture
+infer default_markov_chain(30)
+```
+
+and ask for a prediction
+
+```venture
+sample line(11)
+```
+
+but without a look at the data, we don't even know what to expect.
+There are of course plenty of ways to plot a dataset; in this case, we
+will use Venture's `plot`:
+
+```church'
+(run (pyexec 'symbol<"import venture.lite.value as vv">))
+[define frame (run (pyeval 'symbol<"vv.VentureForeignBlob(frame[['x', 'y']])">))]
+(plot 'p0d1d frame)
+```
+
+```venture
+define data = run(accumulate_dataset(<%= smaller_sample_size %>,
+  do(reset_to_prior,
+     default_markov_chain(30),
+     collect(intercept, slope, line(11)))))
+```
+
+```church'
+(plot 'h2 data)
+```
+
+Topic: Understanding a model with visualization
+===============================================
+
+[TODO Drop in pygame visualization code.  How much to explain vs black-box it?]
+
+Elaboration: Outlier Detection
+==============================
+
+[TODO Go through this]
+
+```church'
+clear
+```
+
+```church'
+;; Prior on line parameters
+[assume a (normal 0 7)]
+[assume b (normal 0 4)]
+
+;; Hypothesized linear relationship
+[assume f (lambda (x) (+ a (* b x)))]
+
+;; Prior for unknown noise level
+[assume noise (gamma 1 1)]
+
+;; Prior on the outlier rate
+[assume outlier_prob (uniform_continuous 0.01 0.3)]
+
+;; Per-point outlier check
+[assume is_outlier (mem (lambda (i)
+  (flip outlier_prob)))]
+
+;; Full data model: linear relationship with additive noise of unknown
+;; but consistent magnitude, plus outlier detection with a broad
+;; Gaussian outlier model.
+[assume obs_fun
+  (lambda (i x)
+    (if (is_outlier i)
+        (normal 0 100)
+        (normal (f x) noise)))]
+
+;; Data set
+[observe (obs_fun 0 1) 0.5]
+[observe (obs_fun 1 4) 0]
+[observe (obs_fun 2 -3) 1]
+[observe (obs_fun 3 -5) -1]
+
+;; Scatter plot of parameters after some inferece
+;; (independent short Markov chains)
+[infer (plotf 'p0d1d (run (accumulate_dataset <%= smaller_sample_size %>
+  (do reset_to_prior
+      (mh default one 30)
+      (collect a b)))))]
+```
+
+Using tags for inference control
+================================
+
+[TODO]
+
+```church'
+clear
+```
+
+```church'
+;; Prior on line parameters
+[assume a (tag 'param 'a (normal 0 7))]
+[assume b (tag 'param 'b (normal 0 4))]
+
+;; Hypothesized linear relationship
+[assume f (lambda (x) (+ a (* b x)))]
+
+;; Prior for unknown noise level
+[assume noise (tag 'hyper 'noise (gamma 1 1))]
+
+;; Prior on the outlier rate
+[assume outlier_prob (tag 'hyper 'outlier_prob (uniform_continuous 0.01 0.3))]
+
+;; Per-point outlier check
+[assume is_outlier (mem (lambda (i)
+  (tag 'outlier i
+   (flip outlier_prob))))]
+
+;; Full data model: linear relationship with additive noise of unknown
+;; but consistent magnitude, plus outlier detection with a broad
+;; Gaussian outlier model.
+[assume obs_fun
+  (lambda (i x)
+    (if (is_outlier i)
+        (normal 0 100)
+        (normal (f x) noise)))]
+
+;; Data set
+[observe (obs_fun 0 1) 0.5]
+[observe (obs_fun 1 4) 0]
+[observe (obs_fun 2 -3) 1]
+[observe (obs_fun 3 -5) -1]
+
+;; Scatter plot of parameters after some inferece
+;; (independent short Markov chains)
+[infer (plotf 'p0d1d (run (accumulate_dataset <%= smaller_sample_size %>
+  (do reset_to_prior
+      (mh default one 30)
+      (collect a b)))))]
+```
+
+Elaboration: Model Selection
+============================
+
+[TODO Go through this]
+
+```church'
+clear
+```
+
+```church'
+;; Prior on polynomial coefficients
+[assume a (tag 'param 'a (normal 0 7))]
+[assume b (tag 'param 'b (normal 0 4))]
+[assume c (tag 'param 'c (normal 0 2))]
+
+;; Prior probability of being a quadratic
+[assume is_quadratic (tag 'model 0 (flip 0.5))]
+
+;; Hypothesized relationship
+[assume f
+  (lambda (x)
+    (if is_quadratic
+        (+ a (* b x) (* c (* x x)))
+        (+ a (* b x))))]
+
+;; Prior for unknown noise level
+[assume noise (tag 'hyper 'noise (gamma 1 1))]
+
+;; Prior on the outlier rate
+[assume outlier_prob (tag 'hyper 'outlier_prob (uniform_continuous 0.01 0.3))]
+
+;; Per-point outlier check
+[assume is_outlier (mem (lambda (i)
+  (tag 'outlier i
+   (flip outlier_prob))))]
+
+;; Full data model: linear or quadratic relationship with additive
+;; noise of unknown but consistent magnitude, plus outlier detection
+;; with a broad Gaussian outlier model.
+[assume obs_fun
+  (lambda (i x)
+    (if (is_outlier i)
+        (normal 0 100)
+        (normal (f x) noise)))]
+
+[observe (obs_fun 0 1) 0.5]
+[observe (obs_fun 1 4) 0]
+[observe (obs_fun 2 -3) 1]
+[observe (obs_fun 3 -5) -1]
+
+;; Scatter plot of parameters after some inferece
+;; (independent short Markov chains)
+[infer (plotf 'p0d1d (run (accumulate_dataset <%= smaller_sample_size %>
+  (do reset_to_prior
+      (mh default one 30)
+      (collect a b)))))]
+```
+
+[TODO illustrate and elaborate] Inference phenomenon: Bayes Occam's Razor
+
+[< Prev: Basics](../basics/index.html)

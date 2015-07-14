@@ -6,6 +6,7 @@ Third-party software:
 - silva_mvn.h silva_mvn.cxx
 - auto-compilation.scm
 - match.scm
+- test/venturemagics/nb_tester.py (from the Internet)
 - Solution for the copyright processing tool itself: Exclude it from
   the release.  Then it doesn't matter that it's third-party.
 - demos/jsripl/vendor
@@ -62,4 +63,5 @@ time git ls-tree -r --full-tree --name-only HEAD | \
   grep -v "silva_mvn.h$" | \
   grep -v "silva_mvn.cxx$" | \
   grep -v "match.scm$" | \
+  grep -v "nb_tester.py$" | \
   xargs -l tool/copyrights/venture

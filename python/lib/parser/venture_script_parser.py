@@ -463,16 +463,20 @@ class VentureScriptParser(object):
         return utils.simplify_expression_parse_tree(
             utils.apply_parser(self.expression, expression_string)[0])
 
-    def unparse_expression(self, _expression):
-        # FIXME: implementation
-        raise VentureException("VentureScript can't unparse expressions :(")
+    def unparse_expression(self, expression):
+        # TODO: Actually unparse as VentureScript
+        from venture.parser import ChurchPrimeParser
+        return ChurchPrimeParser.instance().unparse_expression(expression)
 
-    def unparse_instruction(self, instruction):
-        def unparse(k, v):
-            return self.unparse_expression(v) if k == 'expression' else v
-        template = self.instruction_strings[instruction['instruction']]
-        param = dict((k, unparse(k, v)) for k, v in instruction.iteritems())
-        return self.substitute_params(template, param)
+    def unparse_instruction(self, instruction, expr_markers=None):
+        # TODO: Actually unparse as VentureScript
+        # def unparse(k, v):
+        #     return self.unparse_expression(v) if k == 'expression' else v
+        # template = self.instruction_strings[instruction['instruction']]
+        # param = dict((k, unparse(k, v)) for k, v in instruction.iteritems())
+        # return self.substitute_params(template, param)
+        from venture.parser import ChurchPrimeParser
+        return ChurchPrimeParser.instance().unparse_instruction(instruction, expr_markers)
 
     def parse_number(self, number_string):
         return utils.apply_parser(self.literal, number_string)[0]

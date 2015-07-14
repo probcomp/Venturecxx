@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -48,19 +48,19 @@ struct SliceGKernel : GKernel
   double computeLogDensity(double x);
   double sliceSample(double x0, double w, int m, double lower, double upper);
 
-  pair<Trace*,double> propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold);
+  pair<Trace*,double> propose(ConcreteTrace * trace,boost::shared_ptr<Scaffold> scaffold);
   void accept();
   void reject();
 
   ConcreteTrace * trace;
-  shared_ptr<Scaffold> scaffold;
-  shared_ptr<PSP> psp;
+  boost::shared_ptr<Scaffold> scaffold;
+  boost::shared_ptr<PSP> psp;
   ApplicationNode * pnode;
 
   unsigned int seed;
 
   /* The old DB */
-  shared_ptr<DB> rhoDB;
+  boost::shared_ptr<DB> rhoDB;
 
 };
 #endif

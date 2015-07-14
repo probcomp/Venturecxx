@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -111,7 +111,7 @@ class SimulationLKernel(LKernel):
 
   def gradientOfReverseWeight(self, _trace, _value, args):
     """The gradient of the reverse weight, with respect to the old value and the arguments."""
-    return (0, [0 for _ in args.operandValues])
+    return (0, [0 for _ in args.operandNodes])
 
   def weightBound(self, _trace, _value, _args):
     """An upper bound on the value of weight over the variation
@@ -145,10 +145,10 @@ class DeterministicMakerAAALKernel(SimulationAAALKernel):
   def __init__(self,makerPSP): self.makerPSP = makerPSP
   def simulate(self, _trace, args):
     spRecord = self.makerPSP.simulate(args)
-    spRecord.spAux = args.madeSPAux
+    spRecord.spAux = args.madeSPAux()
     return spRecord
   def weight(self, _trace, newValue, _args):
-    # Using newValue.spAux here because args.madeSPAux is liable to be
+    # Using newValue.spAux here because args.madeSPAux() is liable to be
     # None when detaching. This has something to do with when the Args
     # object is constructed relative to other things that happen
     # during detach/regen. TODO: fix it so that this code is less
@@ -163,7 +163,7 @@ class DeterministicMakerAAALKernel(SimulationAAALKernel):
     # be None when computing bounds for rejection, but the maker
     # should know enough about its possible values future to answer my
     # question.
-    return self.makerPSP.madeSpLogDensityOfCountsBound(args.madeSPAux)
+    return self.makerPSP.madeSpLogDensityOfCountsBound(args.madeSPAux())
 
 class DeterministicLKernel(SimulationLKernel):
   def __init__(self,psp,value):
@@ -191,22 +191,21 @@ class VariationalLKernel(SimulationLKernel):
 class DefaultVariationalLKernel(VariationalLKernel):
   def __init__(self,psp,args):
     self.psp = psp
-    self.parameters = args.operandValues
+    self.parameters = args.operandValues()
     self.parameterScopes = psp.getParameterScopes()
 
   def simulate(self, _trace, _args):
     return self.psp.simulateNumeric(self.parameters)
 
   def weight(self, _trace, newValue, args):
-    ld = self.psp.logDensityNumeric(newValue,args.operandValues)
+    ld = self.psp.logDensityNumeric(newValue,args.operandValues())
     proposalLD = self.psp.logDensityNumeric(newValue,self.parameters)
     w = ld - proposalLD
     assert not math.isinf(w) and not math.isnan(w)
     return w
 
   def gradientOfLogDensity(self, value, args):
-    new_args = copy.copy(args)
-    new_args.operandValues = self.parameters
+    new_args = FixedValueArgs(args, self.parameters)
     # Ignore the derivative of the value because we do not care about it
     (_, grad) = self.psp.gradientOfLogDensity(value, new_args)
     return grad
@@ -222,3 +221,23 @@ class DefaultVariationalLKernel(VariationalLKernel):
       if self.parameterScopes[i] == "POSITIVE_REAL" and \
          self.parameters[i] < 0.1: self.parameters[i] = 0.1
       assert not math.isinf(self.parameters[i]) and not math.isnan(self.parameters[i])
+
+class FixedValueArgs(object):
+  def __init__(self, args, operandValues):
+    self.args = args
+    self._operandValues = operandValues
+    self.node = args.node
+    self.operandNodes = args.operandNodes
+    self.env = args.env
+
+  def operandValues(self): return self._operandValues
+  def spaux(self): return self.args.spaux()
+
+  # These four are only used on output nodes
+  def requestValue(self): return self.args.requestValue()
+  def esrNodes(self): return self.args.esrNodes()
+  def esrValues(self): return self.args.esrValues()
+  def madeSPAux(self): return self.args.madeSPAux()
+
+  def __repr__(self):
+    return "%s(%r)" % (self.__class__, self.__dict__)

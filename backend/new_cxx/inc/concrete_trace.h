@@ -51,11 +51,11 @@ struct ConcreteTrace : Trace
   void addESREdge(RootOfFamily esrRoot,OutputNode * outputNode);
   void reconnectLookup(LookupNode * lookupNode);
   void incNumRequests(RootOfFamily root);
-  void incRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
+  void incRegenCount(boost::shared_ptr<Scaffold> scaffold,Node * node);
 
-  bool hasLKernel(shared_ptr<Scaffold> scaffold, Node * node);
-  void registerLKernel(shared_ptr<Scaffold> scaffold,Node * node,shared_ptr<LKernel> lkernel);
-  shared_ptr<LKernel> getLKernel(shared_ptr<Scaffold> scaffold,Node * node);
+  bool hasLKernel(boost::shared_ptr<Scaffold> scaffold, Node * node);
+  void registerLKernel(boost::shared_ptr<Scaffold> scaffold,Node * node,boost::shared_ptr<LKernel> lkernel);
+  boost::shared_ptr<LKernel> getLKernel(boost::shared_ptr<Scaffold> scaffold,Node * node);
 
   void addChild(Node * node, Node * child);
 
@@ -63,7 +63,7 @@ struct ConcreteTrace : Trace
   RootOfFamily popLastESRParent(OutputNode * outputNode);
   void disconnectLookup(LookupNode * lookupNode);
   void decNumRequests(RootOfFamily root);
-  void decRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
+  void decRegenCount(boost::shared_ptr<Scaffold> scaffold,Node * node);
   void removeChild(Node * node, Node * child);
 
   /* Primitive getters */
@@ -72,13 +72,13 @@ struct ConcreteTrace : Trace
   vector<RootOfFamily> getESRParents(Node * node);
   set<Node*> getChildren(Node * node);
   int getNumRequests(RootOfFamily root);
-  int getRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
+  int getRegenCount(boost::shared_ptr<Scaffold> scaffold,Node * node);
   VentureValuePtr getObservedValue(Node * node);
-  shared_ptr<SP> getMadeSP(Node * makerNode);
-  shared_ptr<SPFamilies> getMadeSPFamilies(Node * makerNode);
+  boost::shared_ptr<SP> getMadeSP(Node * makerNode);
+  boost::shared_ptr<SPFamilies> getMadeSPFamilies(Node * makerNode);
 
-  shared_ptr<SPAux> getMadeSPAux(Node * makerNode);
-  shared_ptr<VentureSPRecord> getMadeSPRecord(Node * makerNode); // not in particle
+  boost::shared_ptr<SPAux> getMadeSPAux(Node * makerNode);
+  boost::shared_ptr<VentureSPRecord> getMadeSPRecord(Node * makerNode); // not in particle
 
 
   bool isMakerNode(Node * node);
@@ -93,15 +93,15 @@ struct ConcreteTrace : Trace
   void observeNode(Node * node,VentureValuePtr value);
 
 
-  void setMadeSPRecord(Node * makerNode,shared_ptr<VentureSPRecord> spRecord);
+  void setMadeSPRecord(Node * makerNode,boost::shared_ptr<VentureSPRecord> spRecord);
   void destroyMadeSPRecord(Node * makerNode);
 
 
   void clearMadeSPFamilies(Node * node);
   
 
-  void setMadeSP(Node * node,shared_ptr<SP> sp);
-  void setMadeSPAux(Node * node,shared_ptr<SPAux> spaux);
+  void setMadeSP(Node * node,boost::shared_ptr<SP> sp);
+  void setMadeSPAux(Node * node,boost::shared_ptr<SPAux> spaux);
 
   void setChildren(Node * node,set<Node*> children);
   void setESRParents(Node * node,const vector<RootOfFamily> & esrRoots);
@@ -151,17 +151,17 @@ struct ConcreteTrace : Trace
 
   bool hasAAAMadeSPAux(OutputNode * makerNode);
   void discardAAAMadeSPAux(OutputNode * makerNode);
-  void registerAAAMadeSPAux(OutputNode * makerNode,shared_ptr<SPAux> spAux);
-  shared_ptr<SPAux> getAAAMadeSPAux(OutputNode * makerNode);
+  void registerAAAMadeSPAux(OutputNode * makerNode,boost::shared_ptr<SPAux> spAux);
+  boost::shared_ptr<SPAux> getAAAMadeSPAux(OutputNode * makerNode);
 
-  shared_ptr<ConcreteTrace> stop_and_copy() const;
-  shared_ptr<ConcreteTrace> copy_help(ForwardingMap* forward) const;
+  boost::shared_ptr<ConcreteTrace> stop_and_copy() const;
+  boost::shared_ptr<ConcreteTrace> copy_help(ForwardingMap* forward) const;
 
   void seekInconsistencies();
 
-  shared_ptr<RNGbox> rng;
+  boost::shared_ptr<RNGbox> rng;
 
-  shared_ptr<VentureEnvironment> globalEnvironment;
+  boost::shared_ptr<VentureEnvironment> globalEnvironment;
 
   set<Node*> unconstrainedChoices;
   set<Node*> constrainedChoices;
@@ -169,7 +169,7 @@ struct ConcreteTrace : Trace
 
   map<Node*,VentureValuePtr> unpropagatedObservations;
 
-  map<OutputNode*,shared_ptr<SPAux> > aaaMadeSPAuxs;
+  map<OutputNode*,boost::shared_ptr<SPAux> > aaaMadeSPAuxs;
 
   map<DirectiveID,RootOfFamily> families;
 
@@ -177,14 +177,14 @@ struct ConcreteTrace : Trace
 
   map<Node*, vector<RootOfFamily> > esrRoots;
   map<RootOfFamily, int> numRequests;
-  map<Node*, shared_ptr<VentureSPRecord> > madeSPRecords;
+  map<Node*, boost::shared_ptr<VentureSPRecord> > madeSPRecords;
 
   map<Node*,VentureValuePtr> values;
   map<Node*,VentureValuePtr> observedValues;
 
   // hack for simple garbage collection
-  set<shared_ptr<Node> > builtInNodes;
-  set<shared_ptr<Node> > boundForeignSPNodes;
+  set<boost::shared_ptr<Node> > builtInNodes;
+  set<boost::shared_ptr<Node> > boundForeignSPNodes;
 
   private:
   set<Node*> allNodes();

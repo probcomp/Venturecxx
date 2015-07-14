@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -22,13 +22,13 @@ LookupNode::LookupNode(Node * sourceNode,VentureValuePtr exp) :
   Node(exp),
   sourceNode(sourceNode) {}
 
-ApplicationNode::ApplicationNode(Node * operatorNode, const vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env,VentureValuePtr exp) :
+ApplicationNode::ApplicationNode(Node * operatorNode, const vector<Node*>& operandNodes, const boost::shared_ptr<VentureEnvironment>& env,VentureValuePtr exp) :
   Node(exp),
   operatorNode(operatorNode),
   operandNodes(operandNodes),
   env(env) {}
 
-RequestNode::RequestNode(Node * operatorNode, const vector<Node*>& operandNodes, const shared_ptr<VentureEnvironment>& env) :
+RequestNode::RequestNode(Node * operatorNode, const vector<Node*>& operandNodes, const boost::shared_ptr<VentureEnvironment>& env) :
   ApplicationNode(operatorNode,operandNodes,env,VentureValuePtr(new VentureNil))
   { }
 
@@ -40,7 +40,7 @@ vector<Node*> RequestNode::getDefiniteParents()
   return dps;
 }
 
-OutputNode::OutputNode(Node * operatorNode, const vector<Node*>& operandNodes, RequestNode * requestNode, const shared_ptr<VentureEnvironment>& env,VentureValuePtr exp) :
+OutputNode::OutputNode(Node * operatorNode, const vector<Node*>& operandNodes, RequestNode * requestNode, const boost::shared_ptr<VentureEnvironment>& env,VentureValuePtr exp) :
   ApplicationNode(operatorNode,operandNodes,env,exp),
   requestNode(requestNode),
   isFrozen(false) {}

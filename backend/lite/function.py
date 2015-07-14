@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -53,8 +53,9 @@ registerVentureType(VentureFunction, "function")
 
 class ApplyFunctionOutputPSP(DeterministicPSP):
   def simulate(self,args):
-    function = args.operandValues[0]
-    arguments = args.operandValues[1:]
+    vals = args.operandValues()
+    function = vals[0]
+    arguments = vals[1:]
     
     sp_type = function.sp_type
     unwrapped_args = sp_type.unwrap_arg_list(arguments)

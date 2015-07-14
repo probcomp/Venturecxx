@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -20,7 +20,7 @@ from psp import DeterministicPSP, TypedPSP
 
 class TagOutputPSP(DeterministicPSP):
   @override(DeterministicPSP)
-  def simulate(self,args): return args.operandValues[2]
+  def simulate(self,args): return args.operandValues()[2]
   @override(DeterministicPSP)
   def gradientOfSimulate(self, _args, _value, direction): return [0, 0, direction]
   @override(DeterministicPSP)
@@ -36,7 +36,7 @@ def isTagOutputPSP(thing):
 
 class TagExcludeOutputPSP(DeterministicPSP):
   @override(DeterministicPSP)
-  def simulate(self,args): return args.operandValues[1]
+  def simulate(self,args): return args.operandValues()[1]
   @override(DeterministicPSP)
   def gradientOfSimulate(self, _args, _value, direction): return [0, direction]
   @override(DeterministicPSP)

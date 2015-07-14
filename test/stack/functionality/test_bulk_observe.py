@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 from venture.test.config import get_ripl, on_inf_prim
 from nose.tools import eq_
 
@@ -21,7 +22,7 @@ from nose.tools import eq_
 def testBulkObserve1():
   ripl = get_ripl()
   n_before = len(ripl.list_directives())
-  ripl.observe_dataset("normal",[([0,5],11),([2,8],22),([3,10],33)],label="pid")
+  ripl.observe_dataset("normal",[(0,5,11),(2,8,22),(3,10,33)],label="pid")
   ripl.infer(100)
   eq_(ripl.report("pid_0"),11)
   eq_(ripl.report("pid_1"),22)

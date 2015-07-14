@@ -1,4 +1,4 @@
-# Copyright (c) 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -71,7 +71,8 @@ def eval(address, exp, env):
 
 def apply(address, nodes, env):
   spr = nodes[0].value
-  assert isinstance(spr, VentureSPRecord)
+  if not isinstance(spr, VentureSPRecord):
+    raise VentureException("evaluation", "Cannot apply a non-procedure", address=address)
   req_args = RequestArgs(address, nodes[1:], env)
   requests = applyPSP(spr.sp.requestPSP, req_args)
   req_nodes = [evalRequest(req_args, spr, r) for r in requests.esrs]
@@ -83,20 +84,23 @@ class RequestArgs(object):
   def __init__(self, address, nodes, env):
     self.node = node.Node(address)
     self.operandNodes = nodes
-    self.operandValues = [n.value for n in nodes]
-    for v in self.operandValues:
-      assert v is None or isinstance(v, vv.VentureValue)
-    self.isOutput = False
     self.env = env
-    # TODO Theoretically need spaux and makeSPAux fields
+    # TODO Theoretically need spaux and madeSPAux fields
+
+  def operandValues(self):
+    ans = [n.value for n in self.operandNodes]
+    for v in ans:
+      assert v is None or isinstance(v, vv.VentureValue)
+    return ans
 
 class OutputArgs(RequestArgs):
   "A package containing all the evaluation context information that an OutputPSP might need, parallel to venture.lite.node.Args"
   def __init__(self, address, inputs, env, esr_nodes):
     super(OutputArgs, self).__init__(address, inputs, env)
-    self.isOutput = True
-    self.esrNodes = esr_nodes
-    self.esrValues = [n.value for n in esr_nodes]
+    self.esr_nodes = esr_nodes
+
+  def esrNodes(self): return self.esr_nodes
+  def esrValues(self): return [n.value for n in self.esr_nodes]
 
 def applyPSP(psp, args):
   assert isinstance(psp, PSP)

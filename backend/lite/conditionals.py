@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -24,12 +24,13 @@ import types as t
 class BranchRequestPSP(DeterministicPSP):
   def simulate(self,args): 
 #    print "branchRequest::simulate()"
-    assert not args.operandValues[0] is None
-    if args.operandValues[0]:
+    vals = args.operandValues()
+    assert not vals[0] is None
+    if vals[0]:
       expIndex = 1
     else:
       expIndex = 2
-    exp = args.operandValues[expIndex]
+    exp = vals[expIndex]
     # point to the source code location of the expression
     addr = args.operandNodes[expIndex].address.last.append(1)
     return Request([ESR(args.node,exp,addr,args.env)])

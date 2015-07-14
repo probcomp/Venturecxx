@@ -47,6 +47,28 @@ def testPlotfToFile1():
 
 @needs_ggplot
 @on_inf_prim("plotf_to_file")
+def testPlotToFile1():
+  'Test that plot_to_file dumps file of correct name'
+  # TODO Delete this duplicate test if plotf becomes an alias for return plot
+  ripl = get_ripl()
+  ripl.assume('x', '(normal 0 1)')
+  testfile = 'test1.png'
+  prog = """
+[define d (empty)]
+[infer
+  (do (repeat 10
+       (do (mh default one 10)
+           (bind (collect x) (curry into d)))))]
+(plot_to_file (quote test1) (quote h0) d)"""
+  try:
+    ripl.execute_program(prog)
+    assert exists(testfile)
+  finally:
+    if exists(testfile):
+      remove(testfile)
+
+@needs_ggplot
+@on_inf_prim("plotf_to_file")
 def testPlotfToFile2():
   'Test that plotf_to_file handles multiple files correctly'
   ripl = get_ripl()
@@ -92,8 +114,8 @@ def checkPlotfToFileBadArgs(basenames, specs):
     ripl.infer(infer)
   assert "stack_trace" in cm.exception.data # I.e., error annotation succeeded.
 
-def testSweep():
-  'Check that the sweep counter prints correctly'
+def testIteration():
+  'Check that the iteration counter prints correctly'
   ripl = get_ripl()
   ripl.assume('x', '(normal 0 1)')
   program = """[infer
@@ -103,4 +125,4 @@ def testSweep():
        (bind (collect x) (curry into d))
        (sweep d))))]"""
   res, captured = capture_output(ripl, program)
-  assert captured == '\n'.join(['Sweep count: ' + str(x) for x in range(1,6)]) + '\n'
+  assert captured == '\n'.join(['Iteration count: ' + str(x) for x in range(1,6)]) + '\n'

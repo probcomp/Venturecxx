@@ -50,3 +50,13 @@ def testCallbackReturns():
   ripl = get_ripl()
   ripl.bind_callback("three", lambda _inferrer: v.VentureNumber(3))
   ripl.infer("(do (x <- (call_back three)) (assert (eq 3 x)))")
+
+def testDropIntoPythonSmoke():
+  ripl = get_ripl()
+  ripl.infer("(pyexec 'symbol<\"import venture.lite.value as vv\">)")
+  eq_(3, ripl.infer("(pyeval 'symbol<\"vv.VentureNumber(3)\">)"))
+
+def testDropIntoPythonSmoke2():
+  ripl = get_ripl()
+  ripl.infer("(pyexec 'symbol<\"ripl.assume('x', 3)\">)")
+  eq_(3, ripl.sample("x"))

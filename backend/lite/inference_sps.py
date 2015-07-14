@@ -23,6 +23,9 @@ from builtin import no_request, deterministic_typed
 from exception import VentureError, VentureTypeError
 from venture.engine.inference import Dataset
 from venture.exception import VentureException
+from venture.lite.value import VentureForeignBlob
+from venture.lite.exception import VentureValueError
+from venture.engine.plot_spec import PlotSpec
 
 class InferPrimitiveOutputPSP(psp.DeterministicPSP):
   def __init__(self, val, klass, desc, tp):
@@ -31,7 +34,7 @@ class InferPrimitiveOutputPSP(psp.DeterministicPSP):
     self.desc = desc
     self.tp = tp
   def simulate(self, args):
-    result = self.klass(self.val, args.operandValues)
+    result = self.klass(self.val, args.operandValues())
     if self.klass is MadeRiplMethodInferOutputPSP:
       # Hack to allow MadeRiplMethodInferOutputPSP s to blame the
       # maker application for errors.
@@ -45,8 +48,9 @@ class MadeInferPrimitiveOutputPSP(psp.LikelihoodFreePSP):
   def __init__(self, name, exp):
     self.exp = [name] + exp
   def simulate(self, args):
-    ans = args.operandValues[0].primitive_infer(self.exp)
-    return (ans, args.operandValues[0])
+    engine = args.operandValues()[0]
+    ans = engine.primitive_infer(self.exp)
+    return (ans, engine)
 
 class MadeEngineMethodInferOutputPSP(psp.LikelihoodFreePSP):
   def __init__(self, name, operands, desc=None):
@@ -54,8 +58,9 @@ class MadeEngineMethodInferOutputPSP(psp.LikelihoodFreePSP):
     self.operands = operands
     self.desc = desc
   def simulate(self, args):
-    ans = getattr(args.operandValues[0], self.name)(*self.operands)
-    return (ans, args.operandValues[0])
+    engine = args.operandValues()[0]
+    ans = getattr(engine, self.name)(*self.operands)
+    return (ans, engine)
   def description(self, _name):
     return self.desc
 
@@ -76,7 +81,8 @@ class MadeRiplMethodInferOutputPSP(psp.LikelihoodFreePSP):
     self.operands = operands
     self.desc = desc
   def simulate(self, args):
-    ripl = args.operandValues[0].engine.ripl
+    eng = args.operandValues()[0]
+    ripl = eng.engine.ripl
     arguments = [o.asStackDict() for o in self.operands]
     try:
       ans = getattr(ripl, self.name)(*arguments, type=True) # Keep the stack dict
@@ -90,7 +96,7 @@ class MadeRiplMethodInferOutputPSP(psp.LikelihoodFreePSP):
       # Do not return values that cannot be reconstructed from stack
       # dicts (e.g., SPs)
       ans_vv = v.VentureNil()
-    return (ans_vv, args.operandValues[0])
+    return (ans_vv, eng)
   def description(self, _name):
     return self.desc
 
@@ -101,7 +107,7 @@ class MadeActionOutputPSP(psp.DeterministicPSP):
     self.desc = desc
   def simulate(self, args):
     ans = self.f(*self.operands)
-    return (ans, args.operandValues[0])
+    return (ans, args.operandValues()[0])
   def description(self, _name):
     return self.desc
 
@@ -163,7 +169,43 @@ def assert_fun(test, msg=""):
   assert test, msg
 
 def print_fun(*args):
-  print args
+  def convert_arg(arg):
+    if isinstance(arg, VentureForeignBlob) and isinstance(arg.getForeignBlob(), Dataset):
+      return arg.getForeignBlob().asPandas()
+    else:
+      return arg
+  if len(args) == 1:
+    print convert_arg(args[0])
+  else:
+    print [convert_arg(a) for a in args]
+
+def plot_fun(spec, dataset):
+  spec = t.ExpressionType().asPython(spec)
+  if isinstance(dataset, Dataset):
+    PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names)
+  else:
+    # Assume a raw data frame
+    PlotSpec(spec).plot(dataset, list(dataset.columns.values))
+
+def plot_to_file_fun(basenames, spec, dataset):
+  filenames = t.ExpressionType().asPython(basenames)
+  spec = t.ExpressionType().asPython(spec)
+  if isinstance(dataset, Dataset):
+    PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names, _format_filenames(filenames, spec))
+  else:
+    PlotSpec(spec).plot(dataset, list(dataset.columns.values), _format_filenames(filenames, spec))
+
+def _format_filenames(filenames,spec):
+  if isinstance(filenames, basestring):
+    if isinstance(spec, basestring):
+      return [filenames + '.png']
+    else:
+      raise VentureValueError('The number of specs must match the number of filenames.')
+  else:
+    if isinstance(spec, list) and len(spec) == len(filenames):
+      return [filename + '.png' for filename in filenames]
+    else:
+      raise VentureValueError('The number of specs must match the number of filenames.')
 
 inferenceSPsList = [
   trace_method_sp("mh", transition_oper_type(), desc="""\
@@ -655,21 +697,21 @@ Print model values collected in a dataset.
 
 This is a basic debugging facility."""),
 
-  engine_method_sp("plotf", infer_action_maker_type([t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")]), desc="""\
+  ["plot", deterministic_typed(plot_fun, [t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")], t.NilType(), descr="""\
 Plot a data set according to a plot specification.
 
 Example::
 
-    [INFER (let ((d (empty)))
-             (do (assume x (normal 0 1))
-                 (repeat 1000
-                         (do (mh default one 1)
-                             (bind (collect x) (curry into d))))
-                 (plotf (quote c0s) d))) ]
+    [define d (empty)]
+    [infer (do (assume x (normal 0 1))
+               (repeat 1000
+                       (do (mh default one 1)
+                           (bind (collect x) (curry into d)))))]
+    (plot d)
     
 will do 1000 iterations of MH collecting some standard data and
 the value of x, and then show a plot of the x variable (which
-should be a scalar) against the sweep number (from 1 to 1000),
+should be a scalar) against the iteration number (from 1 to 1000),
 colored according to the global log score.  See ``collect``
 for details on collecting and labeling data to be plotted.
 
@@ -698,7 +740,7 @@ The possible data streams are:
 
 - _<an integer>_ that column in the data set, 0-indexed,
 - _%_ the next column after the last used one
-- sweep _c_ounter,
+- iteration _c_ounter,
 - _t_ime (wall clock, since the beginning of the Venture program),
 - log _s_core, and
 - pa_r_ticle
@@ -709,11 +751,86 @@ The possible scales are:
 - _l_ogarithmic
 
 If one stream is indicated for a 2-D plot (points or lines), the x
-axis is filled in with the sweep counter.  If three streams are
+axis is filled in with the iteration counter.  If three streams are
+indicated, the third is mapped to color.
+
+If the given specification is a list, make all those plots at once.
+""")],
+
+  engine_method_sp("plotf", infer_action_maker_type([t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")]), desc="""\
+Plot a data set according to a plot specification.
+
+Example::
+
+    [INFER (let ((d (empty)))
+             (do (assume x (normal 0 1))
+                 (repeat 1000
+                         (do (mh default one 1)
+                             (bind (collect x) (curry into d))))
+                 (plotf (quote c0s) d))) ]
+    
+will do 1000 iterations of MH collecting some standard data and
+the value of x, and then show a plot of the x variable (which
+should be a scalar) against the iteration number (from 1 to 1000),
+colored according to the global log score.  See ``collect``
+for details on collecting and labeling data to be plotted.
+
+The format specifications are inspired loosely by the classic
+printf.  To wit, each individual plot that appears on a page is
+specified by some line noise consisting of format characters
+matching the following regex::
+
+    [<geom>]*(<stream>?<scale>?){1,3}
+
+specifying
+
+- the geometric objects to draw the plot with, and
+- for each dimension (x, y, and color, respectively)
+    - the data stream to use
+    - the scale
+
+The possible geometric objects are:
+
+- _p_oint,
+- _l_ine,
+- _b_ar, and
+- _h_istogram
+
+The possible data streams are:
+
+- _<an integer>_ that column in the data set, 0-indexed,
+- _%_ the next column after the last used one
+- iteration _c_ounter,
+- _t_ime (wall clock, since the beginning of the Venture program),
+- log _s_core, and
+- pa_r_ticle
+
+The possible scales are:
+
+- _d_irect, and
+- _l_ogarithmic
+
+If one stream is indicated for a 2-D plot (points or lines), the x
+axis is filled in with the iteration counter.  If three streams are
 indicated, the third is mapped to color.
 
 If the given specification is a list, make all those plots at once.
 """),
+
+  ["plot_to_file", deterministic_typed(plot_to_file_fun, [t.AnyType("<basename>"), t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")], t.NilType(), descr="""\
+Save plot(s) to file(s).
+
+  Like ``plot``, but save the resulting plot(s) instead of displaying on screen.
+  Just as <spec> may be either a single expression or a list, <basenames> may
+  either be a single symbol or a list of symbols. The number of basenames must
+  be the same as the number of specifications.
+
+  Examples:
+    (plot_to_file (quote basename) (quote spec) <expression> ...) saves the plot specified by
+      the spec in the file "basename.png"
+    (plot_to_file (quote (basename1 basename2)) (quote (spec1 spec2)) <expression> ...) saves
+      the spec1 plot in the file basename1.png, and the spec2 plot in basename2.png.
+""")],
 
   engine_method_sp("plotf_to_file", infer_action_maker_type([t.AnyType("<basename>"), t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")]), desc="""\
 Save plot(s) to file(s).
@@ -731,9 +848,9 @@ Save plot(s) to file(s).
 """),
 
   engine_method_sp("sweep", infer_action_maker_type([t.ForeignBlobType("<dataset>")]), desc="""\
-Print the sweep count.
+Print the iteration count.
 
-  Extracts the last row of the supplied inference Dataset and prints its sweep count.
+  Extracts the last row of the supplied inference Dataset and prints its iteration count.
 
   Examples:
     (sweep d)
@@ -792,7 +909,7 @@ Right now only implemented on datasets created by ``empty`` and
 Check the given boolean condition and raise an error if it fails.
 """)],
 
-  ["print", sequenced_sp(print_fun, infer_action_maker_type([t.AnyType()], variadic=True), desc="""\
+  ["print", deterministic_typed(print_fun, [t.AnyType()], t.NilType(), variadic=True, descr="""\
 Print the given values to the terminal.
 """)],
 
@@ -910,6 +1027,24 @@ Does not interoperate with multiple particles.
   ripl_method_sp("draw_subproblem", infer_action_maker_type([t.AnyType("<subproblem>")]), desc="""\
   Draw a subproblem by printing out the source code of affected random choices.
 
+"""),
+
+  engine_method_sp("pyexec", infer_action_maker_type([t.SymbolType("<code>")]), desc="""\
+Execute the given string as Python code, via exec.
+
+The code is executed in an environment where the RIPL is accessible
+via the name ``ripl``.  Values from the ambient inference program are
+not directly accessible.  The environment against which ``pyexec`` is
+executed persists across invocations of ``pyexec`` and ``pyeval``.
+"""),
+
+  engine_method_sp("pyeval", infer_action_maker_type([t.SymbolType("<code>")], return_type=t.AnyType()), desc="""\
+Evaluate the given string as a Python expression, via eval.
+
+The code is executed in an environment where the RIPL is accessible
+via the name ``ripl``.  Values from the ambient inference program are
+not directly accessible.  The environment against which ``pyeval`` is
+evaluated persists across invocations of ``pyexec`` and ``pyeval``.
 """),
 
 ]

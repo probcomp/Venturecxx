@@ -1,4 +1,4 @@
-// Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -22,10 +22,10 @@
 using std::cout;
 using std::endl;
 
-VentureEnvironment::VentureEnvironment(shared_ptr<VentureEnvironment> outerEnv) : outerEnv(outerEnv) {}
+VentureEnvironment::VentureEnvironment(boost::shared_ptr<VentureEnvironment> outerEnv) : outerEnv(outerEnv) {}
 
-VentureEnvironment::VentureEnvironment(shared_ptr<VentureEnvironment> outerEnv,
-				       const vector<shared_ptr<VentureSymbol> > & syms,
+VentureEnvironment::VentureEnvironment(boost::shared_ptr<VentureEnvironment> outerEnv,
+				       const vector<boost::shared_ptr<VentureSymbol> > & syms,
 				       const vector<Node*> & nodes):
   outerEnv(outerEnv)
 {
@@ -61,14 +61,14 @@ void VentureEnvironment::removeBinding(const string& sym)
   }
 }
 
-void VentureEnvironment::replaceBinding(const string& sym, Node * node)
+void VentureEnvironment::fillBinding(const string& sym, Node * node)
 {
   assert(frame.count(sym));
   assert(frame[sym] == NULL);
   frame[sym] = node;
 }
 
-Node * VentureEnvironment::lookupSymbol(shared_ptr<VentureSymbol> sym)
+Node * VentureEnvironment::lookupSymbol(boost::shared_ptr<VentureSymbol> sym)
 {
   return lookupSymbol(sym->s);
 }

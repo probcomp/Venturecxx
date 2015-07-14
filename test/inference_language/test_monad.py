@@ -16,9 +16,15 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import scipy.stats as stats
+from nose.tools import eq_
 
 from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, on_inf_prim, default_num_samples, default_num_transitions_per_sample
+from venture.test.config import get_ripl, on_inf_prim, default_num_samples, default_num_transitions_per_sample, needs_backend
+
+def testInferenceLanguageEvalSmoke():
+  ripl = get_ripl()
+  eq_(4,ripl.evaluate(4))
+  eq_(4,ripl.evaluate("4"))
 
 @on_inf_prim("sample")
 def testMonadicSmoke():
@@ -72,6 +78,14 @@ def testModelSwitchingSmoke():
   cdf = stats.norm(loc=0.0, scale=1.0).cdf
   return reportKnownContinuous(cdf, predictions, "N(0,1)")
 
+@on_inf_prim("return")
+@on_inf_prim("action")
+def testReturnAndAction():
+  eq_(3.0, get_ripl().infer("(do (return 3))"))
+  eq_(3.0, get_ripl().infer("(do (action 3))"))
+
+@needs_backend("lite")
+@needs_backend("puma")
 @on_inf_prim("new_model")
 def testBackendSwitchingSmoke():
   ripl = get_ripl(persistent_inference_trace=True)

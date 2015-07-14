@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -25,14 +25,14 @@
 ScaffoldIndexer::ScaffoldIndexer(ScopeID scope,BlockID block): scope(scope),block(block) {}
 ScaffoldIndexer::ScaffoldIndexer(ScopeID scope,BlockID block,BlockID minBlock,BlockID maxBlock): scope(scope),block(block),minBlock(minBlock),maxBlock(maxBlock) {}
 
-shared_ptr<Scaffold> ScaffoldIndexer::sampleIndex(ConcreteTrace * trace) const
+boost::shared_ptr<Scaffold> ScaffoldIndexer::sampleIndex(ConcreteTrace * trace) const
 {
   if (block->hasSymbol() && block->getSymbol() == "one")
     {
       BlockID actualBlock = trace->sampleBlock(scope);
       vector<set<Node*> > setsOfPNodes;
       setsOfPNodes.push_back(trace->getNodesInBlock(scope,actualBlock));
-      shared_ptr<Scaffold> scaffold = constructScaffold(trace,setsOfPNodes,false);
+      boost::shared_ptr<Scaffold> scaffold = constructScaffold(trace,setsOfPNodes,false);
       //cout << scaffold->showSizes() << endl;
       return scaffold;
     }
@@ -58,7 +58,7 @@ shared_ptr<Scaffold> ScaffoldIndexer::sampleIndex(ConcreteTrace * trace) const
 }
 
 
-double ScaffoldIndexer::logDensityOfIndex(Trace * trace, shared_ptr<Scaffold> scaffold) const
+double ScaffoldIndexer::logDensityOfIndex(Trace * trace, boost::shared_ptr<Scaffold> scaffold) const
 {
   if (dynamic_pointer_cast<VentureSymbol>(block) && block->getSymbol() == "one")
   {

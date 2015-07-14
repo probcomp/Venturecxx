@@ -1,4 +1,4 @@
-// Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -40,7 +40,7 @@ struct Scaffold
 	   const set<Node*> & absorbing,
 	   const set<Node*> & aaa,
 	   const vector<vector<Node *> > & border,
-	   const map<Node*,shared_ptr<LKernel> > & lkernels,
+	   const map<Node*,boost::shared_ptr<LKernel> > & lkernels,
 	   const set<Node*> & brush):
   setsOfPNodes(setsOfPNodes),
     regenCounts(regenCounts),
@@ -61,8 +61,8 @@ struct Scaffold
   bool isAbsorbing(Node * node);
   bool isAAA(Node * node);
   bool hasLKernel(Node * node);
-  void registerLKernel(Node * node,shared_ptr<LKernel> lkernel);
-  shared_ptr<LKernel> getLKernel(Node * node);
+  void registerLKernel(Node * node,boost::shared_ptr<LKernel> lkernel);
+  boost::shared_ptr<LKernel> getLKernel(Node * node);
   string showSizes();
 
 
@@ -71,23 +71,23 @@ struct Scaffold
   set<Node*> absorbing;
   set<Node*> aaa;
   vector<vector<Node *> > border;
-  map<Node*,shared_ptr<LKernel> > lkernels;
+  map<Node*,boost::shared_ptr<LKernel> > lkernels;
   set<Node*> brush;
 
 };
 
 
-shared_ptr<Scaffold> constructScaffold(ConcreteTrace * trace,const vector<set<Node*> > & setsOfPNodes,bool useDeltaKernels);
+boost::shared_ptr<Scaffold> constructScaffold(ConcreteTrace * trace,const vector<set<Node*> > & setsOfPNodes,bool useDeltaKernels);
 
 // TODO everything from here on should be moved to .cxx
 void addResamplingNode(ConcreteTrace * trace,
-            set<Node*> & cDRG,
-			      set<Node*> & cAbsorbing,
-			      set<Node*> & cAAA,
-			      queue<tuple<Node*,bool,Node*> > & q,
-			      Node * node,
-			      map<Node*,int> & indexAssignments,
-			      int i);
+                       set<Node*> & cDRG,
+                       set<Node*> & cAbsorbing,
+                       set<Node*> & cAAA,
+                       queue<boost::tuple<Node*,bool,Node*> > & q,
+                       Node * node,
+                       map<Node*,int> & indexAssignments,
+                       int i);
 
 void addAbsorbingNode(set<Node*> & cDRG,
 			      set<Node*> & cAbsorbing,
@@ -129,10 +129,10 @@ void disableFamily(ConcreteTrace * trace,
 		     set<Node*> & brush);
 
 
-tuple<set<Node*>,set<Node*>,set<Node*> > removeBrush(set<Node*> & cDRG,
-						     set<Node*> & cAbsorbing,
-						     set<Node*> & cAAA,
-						     set<Node*> & brush);
+boost::tuple<set<Node*>,set<Node*>,set<Node*> > removeBrush(set<Node*> & cDRG,
+                                                            set<Node*> & cAbsorbing,
+                                                            set<Node*> & cAAA,
+                                                            set<Node*> & brush);
 
 bool hasChildInAorD(ConcreteTrace * trace,
 		    set<Node*> & drg,
@@ -156,7 +156,7 @@ map<Node*,int> computeRegenCounts(ConcreteTrace * trace,
 			      set<Node*> & border,
 			      set<Node*> & brush);
 
-map<Node*,shared_ptr<LKernel> > loadKernels(ConcreteTrace * trace,
+map<Node*,boost::shared_ptr<LKernel> > loadKernels(ConcreteTrace * trace,
 					    set<Node*> & drg,
 					    set<Node*> & aaa,
 					    bool useDeltaKernels);

@@ -1,0 +1,184 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Copyright (c) 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
+# Process a markdown file with inline Venture snippets to produce a
+# transcript document.
+
+import sys
+import re
+import os.path
+from StringIO import StringIO
+import shutil
+
+try:
+    import markdown2
+except ImportError:
+    sys.stderr.write('Please make sure you have markdown2 installed.\n')
+    sys.exit(1)
+
+import venture.shortcuts as vs
+from venture.ripl.utils import strip_types
+from venture.exception import VentureException
+
+start_of_block = re.compile(r"^[ \t\r\f\v]*```(venture|church')[ \t\r\f\v]*$", re.MULTILINE)
+end_of_block = re.compile(r"^[ \t\r\f\v]*```[ \t\r\f\v]*$", re.MULTILINE)
+
+header = """\
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>A Venture transcript</title>
+  <link rel="stylesheet" type="text/css" href="transcript.css">
+</head>
+<body>
+"""
+
+footer = """\
+</body>
+</html>
+"""
+
+selfdir = os.path.dirname(os.path.abspath(__file__))
+css_file = os.path.join(selfdir, 'transcript.css')
+
+def main():
+    (_, filename, outdir) = sys.argv
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+    content = open(filename).read()
+    Writer(filename, outdir).in_text(content)
+
+def with_output_to_string(f, *args, **kwargs):
+    old_stdout = sys.stdout
+    result = StringIO()
+    sys.stdout = result
+    val = f(*args, **kwargs)
+    sys.stdout = old_stdout
+    ans = result.getvalue()
+    return (val, ans)
+
+def getValue(v):
+    if v is not None and 'value' in v:
+        return strip_types(v['value'])
+    else:
+        return ""
+
+class Writer(object):
+    def __init__(self, filename, outdir):
+        self.outdir = outdir
+        self.outfile = outdir + "/index.html"
+        self.out_chunks = []
+        self.ripl = vs.backend("lite").make_combined_ripl()
+        self.ripl.set_mode("venture_script")
+        self.fignum = 0
+
+    def in_text(self, string):
+        split_res = re.split(start_of_block, string, maxsplit=1)
+        if len(split_res) == 1:
+            # File ended in text block
+            self.emit_text(split_res[0])
+            self.finish()
+        elif len(split_res) == 3:
+            # New Venture block started
+            self.emit_text(split_res[0])
+            self.in_code(split_res[1], split_res[2])
+        else:
+            raise Exception("??? Splitting on start of block produced %s" % (split_res,))
+
+    def in_code(self, mode, string):
+        split_res = re.split(end_of_block, string, maxsplit=1)
+        if len(split_res) == 1:
+            # File ended in code block
+            sys.stderr.write('Transcript file ended mid-code-block.\n')
+            self.emit_code(mode, split_res[0])
+            self.finish()
+        elif len(split_res) == 2:
+            # New text block started
+            self.emit_code(mode, split_res[0])
+            self.in_text(split_res[1])
+        else:
+            raise Exception("??? Splitting on end of block produced %s" % (split_res,))
+
+    def emit_text(self, string):
+        self.out_chunks.append(string)
+
+    def emit_code(self, mode, string):
+        print "Trying program in %s mode" % (mode,)
+        if mode == "venture":
+            self.ripl.set_mode("venture_script")
+        elif mode == "church'":
+            self.ripl.set_mode("church_prime")
+        else:
+            raise Exception("Unknown block mode %s", mode)
+        (figures, munged) = self.munge_plotfs(mode, string)
+        print munged.strip()
+        (ans, output) = with_output_to_string(self.execute_program, munged)
+        val = getValue(ans[-1])
+        figure_blocks = ["![A Venture plot](%s)\n" % (figure,) for figure in figures]
+        self.out_chunks.extend(["```", string, output, str(val), "\n```\n"] + figure_blocks)
+
+    def munge_plotfs(self, mode, string):
+        # TODO Instead of munging the source, should also be able to
+        # intercept all outgoing plots by rebinding plotf to a thing
+        # that calls back to the Writer to determine and update the
+        # figure number, and then does plotf_to_file.  [Taylor's
+        # recommendation].
+        figures = []
+        ans = string
+        done = False
+        if mode == "venture":
+            pattern = re.compile(r"plot(f?)\(")
+        else:
+            pattern = re.compile(r"\(plot(f?) ")
+        while not done:
+            if mode == "venture":
+                replacement = 'plot\\1_to_file(quote(symbol<"%s/figure-%s">), ' % (self.outdir, self.fignum)
+            else:
+                replacement = '(plot\\1_to_file (quote symbol<"%s/figure-%s">) ' % (self.outdir, self.fignum)
+            (ans, count) = re.subn(pattern, replacement, ans, count=1)
+            if count == 0:
+                done = True
+            else:
+                figures.append("figure-%s.png" % (self.fignum,))
+                self.fignum += 1
+        return (figures, ans)
+
+    def execute_program(self, munged):
+        if munged.strip() == "list_directives":
+            return [self.ripl.print_directives()]
+        elif munged.strip() == "clear":
+            return [self.ripl.clear()]
+        else:
+            try:
+                return self.ripl.execute_program(munged)
+            except VentureException as e:
+                print e
+                return [None]
+
+    def finish(self):
+        result = ''.join(self.out_chunks)
+        with open(self.outfile, 'w') as out:
+            out.write(header)
+            out.write(markdown2.markdown(result, extras=['fenced-code-blocks']))
+            out.write(footer)
+        shutil.copy(css_file, self.outdir)
+
+if __name__ == "__main__":
+    main()

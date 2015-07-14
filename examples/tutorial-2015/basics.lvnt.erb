@@ -1,0 +1,662 @@
+<% sample_size = 500 %>
+<% if ENV['SMOKETEST'] then sample_size = 5 end %>
+<% smaller_sample_size = [sample_size / 5, 5].max %>
+<% refman_url = "http://probcomp.csail.mit.edu/venture/edge/reference/" %>
+
+[Next: Linear Regression >](../linear-regression/index.html)
+
+Getting Started
+===============
+
+Start a venture session by running
+
+```
+$ venture lite --lang venture_script
+```
+
+You can also run venture scripts by making a file with a `.vnts`
+extension and running
+
+```
+$ venture lite -f script.vnts
+```
+
+N.B.: The [command line reference](<%= refman_url %>usage.html#standalone-invocation)
+explains what's happening here and what other options Venture accepts.
+
+Basics
+======
+
+Sample an expression
+
+```church'
+(uniform_continuous 0 1)
+```
+
+These are independent samples from the unit uniform distribution
+
+```church'
+(uniform_continuous 0 1)
+```
+
+We can introduce a variable:
+
+```venture
+define mu = expon(2)  // Exponential distribution with rate 2
+```
+
+whose value is a particular sample from that distribution:
+
+```church'
+mu
+```
+
+and we can sample further expressions conditioned on that value:
+
+```church'
+(normal mu 0.2)
+```
+
+Exercise: Convince yourself that, for any given `mu`, `(normal mu 0.2)`
+is a different distribution from
+
+```church'
+(normal (expon 2) 0.2)
+```
+
+because the latter samples a new internal mu every time.
+
+You can find the [list of distributions](<%= refman_url
+%>modeling.html#built-in-procedures) (and deterministic functions)
+available in Venture in the appropriate section of the [reference
+manual](<%= refman_url %>).
+
+Now clear your session (or quit and restart Venture) for the next
+segment:
+
+```venture
+clear
+```
+
+Basic Modeling
+==============
+
+When we used `define` to make a `mu` variable in the previous
+segment, that variable's value was fixed to a particular sample from
+its generating distribution for the remainder of the program.
+
+In order to make variables that we can learn things about by
+observation and reasoning, we need to flag them as uncertain, using
+`assume`:
+
+```venture
+assume x = normal(0, 1)
+```
+
+Now `x` is a normally distributed random variable, and its current
+value is a sample from that distribution.
+
+Assumed and defined variables live in separate namespaces in Venture,
+so just a bare `x` gives an error:
+
+```church'
+x
+```
+
+To access the current value of an assumed variable, we use `sample`
+
+```venture
+sample x
+```
+
+Note that repeated access to `x` gives the same value each time:
+
+```venture
+sample x + x
+```
+
+That's what allows us to form models with conditional dependencies,
+such as this extension:
+
+```venture
+assume y = normal(x, 1)
+```
+
+So, why is `assume` any more useful than `define`?  Models, unlike the
+top level, allow us to register observations:
+
+```venture
+observe y = 2
+```
+
+Note: the values of `x` and `y` don't change --
+
+```venture
+sample x
+```
+
+```venture
+sample y
+```
+
+ -- all we did was register an observation.
+
+Now infer.
+
+```venture
+infer posterior
+sample y
+```
+
+Now `y` obeys the observation, and `x` is a sample from the posterior
+distribution `p(x|y=2)` defined by our assumptions and observations:
+
+```venture
+sample x
+```
+
+If we do no more inference, `x` doesn't change.
+
+```venture
+sample x
+```
+
+But we can compute a new posterior sample by running the posterior
+inferrer again.
+
+```venture
+infer posterior
+sample x
+```
+
+Better Inspection
+=================
+
+As a reminder, we were studying this model (you can skip this block if
+you have your session from the last segment):
+
+```venture
+clear
+assume x = normal(0, 1)
+assume y = normal(x, 1)
+observe y = 2
+```
+
+We can get samples from inference
+
+```venture
+infer posterior
+sample x
+```
+
+but are they actually from the right distribution?  We could eyeball
+it like this a bit more:
+
+```venture
+infer posterior
+sample x
+```
+
+```venture
+infer posterior
+sample x
+```
+
+but that will get old quickly.
+
+It's better to gather data programmatically, for example like this:
+
+```venture
+define data = run(accumulate_dataset(10, do(posterior, collect(x))))
+```
+
+If you really want to know what's going on in this expression you can
+study the documentation of [do](<%= refman_url
+%>inference.html#special-forms), [run](<%= refman_url
+%>inference.html#run), and [accumulate_dataset](<%= refman_url
+%>inference.html#accumulate_dataset).  The effect is to gather up the
+values of `x` (and some metadata) over 10
+iterations of the `posterior` inference command.
+
+```church'
+(print data)
+```
+
+Do those values of `x` look good?  The values look sane to me, but I
+can't eyeball a table of numbers and tell whether they are distributed
+properly.  Let's get more data and plot it:
+
+```venture
+define more_data = run(accumulate_dataset(<%= smaller_sample_size %>, do(posterior, collect(x))))
+```
+
+```church'
+(plot 'h0 more_data)
+```
+
+That `h0` says "make a histogram of the zeroth collected data stream".
+You will eventually want to study [the plot spec reference](<%= refman_url %>inference.html#plot),
+because that explains how to plot any of the values or metadata collected in the dataset
+on the x, y, or color axis of a plot.
+
+Here's a version with more samples for better resolution:
+
+```church'
+(plot 'h0 (run (accumulate_dataset <%= sample_size %> (do posterior (collect x)))))
+```
+
+The analytical answer is a Gaussian with mean 1 and precision 2 (which
+is standard deviation `1/sqrt(2)`), whose histogram looks like this:
+
+![A Gaussian with a lot of samples](gauss_plot.png)
+
+Exercise: How visually close can you get to this plot by increasing
+the number of iterations (the <%= sample_size %>) in the above
+expression?  Is inference working?  Are you satisfied with how fast it
+is?
+
+In the next segment, we will look at a few different inference
+strategies, which give different speed-accuracy tradeoffs.
+
+Inference Choices
+=================
+
+In this segment, we will look at a few different generic inference
+strategies that are built in to Venture and do some basic exploration
+of their speed-accuracy behavior.  As a reminder, here is the model we
+are working with (you can skip this block if you have your session
+from the last segment):
+
+```venture
+clear
+assume x = normal(0, 1)
+assume y = normal(x, 1)
+observe y = 2
+```
+
+[TODO: Where should this motivating block go?]
+
+If you're curious why we're looking at the performance of inference on
+such a simple model, there are a couple reasons:
+
+- There is an analytic solution, which means the correct result is
+  available for comparison.
+
+- The Gaussian distribution is actually a pretty good proxy for
+  general probability problems: the mean corresponds to "the true
+  result" and the standard deviation corresponds to "the uncertainty"
+  or "the error tolerance".
+
+- The position of the observation is a proxy for the "difficulty" of
+  the problem: the further out the data are from the prior, the more
+  inference needs to overcome in order to reach the right answer.
+
+- The one down side is that this problem in one-dimensional, so you
+  need to exercise active skepticism around your geometric intuitions:
+  try and cross-check the mental pictures you build for how they would
+  work in 2, 3, 10, or 10,000 dimensions.
+
+Rejection sampling does not solve all problems
+----------------------------------------------
+
+The inference command `posterior` is global rejection sampling -- guessing and checking.
+As you might know or imagine, this is likely to get slow.  In
+particular, let's fiddle with the position of the observation
+and see what happens as we change the model to make the
+problem harder.
+
+If you like standalone scripts, save the following into a file named,
+say, `exact.vnt`
+
+```
+[assume x (normal 0 1)]
+[assume y (normal x 1)]
+[observe y 2]
+(plot 'h0
+ (run
+  (accumulate_dataset <%= smaller_sample_size %>
+   (do posterior
+       (collect x)))))
+```
+
+and explore by editing it and rerunning it with
+
+```
+$ venture lite -f exact.vnt
+```
+
+If you prefer to fiddle interactively, Venture has a command named
+`forget` for removing parts of a model so they can be changed.
+First, check what's in the model already:
+
+```venture
+list_directives
+```
+
+[Note: The above output is presented in a prefix notation syntax that
+represents how Venture actually parsed it.]
+
+Then use `forget` to remove the existing observation, and replace it
+with one where the datum is farther out.
+
+```venture
+forget 24
+observe normal(x,1) = 4
+```
+
+```venture
+list_directives
+```
+
+The same solution still works
+
+```church'
+(plot 'h0 (run (accumulate_dataset <%= smaller_sample_size %> (do posterior (collect x)))))
+```
+
+but as you move the datum further out (with more `forget` and
+`observe` commands), you can tell that more distant observations take
+longer to get samples for.  Don't move the datum too far: rejection is
+`O(e^(position^2))` on this problem.
+
+The inference phenomenon at work here is this:
+
+- the [KL divergence](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence)
+  from the posterior to the prior measures the difficulty of the
+  problem; in this case it grows quadratically with position of the
+  datum.
+
+- Rejection sampling (which is the algorithm the `posterior` command
+  uses) is [exponentially slow in the KL gap it is trying to
+  cross](http://danroy.org/papers/FreerManRoy-NIPSMC-2010.pdf).
+
+Importance Sampling with Resampling
+-----------------------------------
+
+A very common inference technique is importance sampling with
+resampling.  It is:
+
+- Draw some number of trials from the prior [or any proposal
+  distribution of your choice]
+
+- Weight them by the likelihood [or the ratio between the posterior
+  and proposal probabilities]
+
+- Select one at random in proportion to its weight [or more than one,
+  but then they are not independent of each other]
+
+Here's what a basic version of this looks like in Venture.  Reset the
+model if you need to
+
+```venture
+clear
+assume x = normal(0, 1)
+assume y = normal(x, 1)
+observe y = 4
+```
+
+or load your file from the rejection segment into an interactive session
+with
+
+```
+venture lite -f exact.vnt -i
+```
+
+Then make 5 particles
+
+```venture
+infer resample(5)
+```
+
+The [resample](<%= refman_url %>inference.html#resample) inference
+action makes as many particles as requested by drawing from the
+existing pool proportionally to their weight (and then makes the
+weights equal).  Initially there is just one particle, so right now
+all of them are the same:
+
+```church'
+(run (sample_all x))
+```
+
+To do importance sampling, we next [reset them to the prior and weight
+by likelihood](<%= refman_url %>inference.html#likelihood_weight):
+
+```church'
+[infer (likelihood_weight)]
+(run (sample_all x))
+```
+
+and then resample down to one, which picks a particle at random
+in proportion to its weight.
+
+```venture
+infer resample(1)
+sample x
+```
+
+Using the plotting tools we learned before, here's the distribution
+this algrithm makes (note the use of `do` to sequence inference actions):
+
+```venture
+infer plotf(quote(h0), run(accumulate_dataset(<%= smaller_sample_size %>,
+  do(resample(5),
+     likelihood_weight(),
+     resample(1),
+     collect(x)))))
+```
+
+What is going on here?  If you put the observation at 4, then the
+answer should be a Gaussian with mean 2, but the distribution with 5
+trials is not even close (though it has moved from the prior).  This
+is our first approximate inference algorithm, and generates our first
+time-accuracy tradeoff.
+
+Exercises:
+
+1. Vary the location of the observation without varying the inference
+   program.  Confirm that the runtime does not change, but the quality
+   of the result (relative to the true posterior) does.
+
+2. Vary the number of trials (the argument to the first resample) for
+   a fixed location of the datum.  Confirm that the runtime is
+   asymptotically linear in that, and that the result distribution
+   approaches the true posterior as the number of trials increases.
+
+3. What happens if we don't do the second `resample` at all?  Why?
+   [For the instructor: you get the prior, becaue you are not using the weights]
+
+4. What happens if we draw more than 1 particle in the second
+   `resample`?  Why?
+   [For the instructor: this is more subtle.
+   - First off, the distribution will not get closer to the posterior
+   - For a while, drawing more particles should give a better resolution plot
+     of the distribution with one.
+   - Eventually, though, the fact that they are not iid (but coupled through
+     the original set) will begin to dominate, and the benefit will trail off.]
+
+Basic Metropolis-Hastings Markov Chains
+---------------------------------------
+
+Both rejection sampling and importance sampling consist of guessing
+possible explanations of the data, without taking advantage of
+previous guesses when forming new ones.  The other major class of
+inference algorithms tries to take advantage of what has already been
+learned by retaining a "current state" and (stochastically) evolving
+it by trying various adjustments in some way arranged to approach the
+posterior in distribution.  Broadly, such algorithms are called Markov
+chains.  (The Markovness is that the "current state" holds all the
+information about the chain's history that is relevant to determining
+its future evolution.)
+
+Venture has extensive facilities for constructing Markov chain
+inference strategies.  In this segment, we will explore the behavior
+of a simple generic one on the one-variable normal-normal problem we
+have been studying.
+
+Reset the model if you need to
+
+```venture
+clear
+assume x = normal(0, 1)
+assume y = normal(x, 1)
+observe y = 4
+sample x
+```
+
+The inference command `default_markov_chain(1)` takes one step of
+Venture's default Markov chain, possibly changing the value of `x`.
+
+```venture
+infer default_markov_chain(1)
+sample x
+```
+
+If we do that a few more times,
+
+```venture
+infer default_markov_chain(1)
+sample x
+```
+
+```venture
+infer default_markov_chain(1)
+sample x
+```
+
+```venture
+infer default_markov_chain(1)
+sample x
+```
+
+```venture
+infer default_markov_chain(1)
+sample x
+```
+
+we should see `x` moving (perhaps haltingly and non-monotonically)
+toward regions of high posterior mass.
+
+As usual, let's see that with more data:
+
+```venture
+define chain_history = run(accumulate_dataset(<%= sample_size %>, do(default_markov_chain(1), collect(x))))
+```
+
+```church'
+(plot 'lc0 chain_history)
+```
+
+The `lc0` says "make a **l**ine plot of the 0th collected expression vs
+the iteration **c**ount"; here's the [reference](<%= refman_url %>inference.html#plot).
+
+That was one particular chain.  Let's see how their histories vary.
+First reset the state to the prior
+
+```venture
+infer reset_to_prior
+```
+
+and let's plot another one:
+
+```church'
+(plot 'lc0 (run (accumulate_dataset <%= sample_size %> (do (default_markov_chain 1) (collect x)))))
+```
+
+For more insight, let's plot several independent chains together.  If
+we don't use the weights for anything, Venture's particles will serve
+to run several independent chains (the `r` in the plot specification
+means color the lines by pa**r**ticle id).
+
+```church'
+[infer (resample 20)]
+[infer reset_to_prior]  ; Reset after resampling to get independent initialization
+(plot 'lc0r (run (accumulate_dataset <%= smaller_sample_size %> (do (default_markov_chain 1) (collect x)))))
+```
+
+That gives a flavor for how the chains evolve to compute a solution to
+this problem.  We can also more precisely characterize the
+distribution that obtains after taking some number of steps by
+plotting the end point rather than the history
+
+```venture
+infer plotf(quote(h0), run(accumulate_dataset(<%= smaller_sample_size %>,
+   do(resample(10),
+      reset_to_prior,
+      default_markov_chain(5),
+      collect(x)))))
+```
+
+Notice that a 5-step chain does not suffice, on this problem, to get to the right answer
+in distribution.  This our second approximation algorithm.
+
+Exercises:
+
+1. Vary the location of the observation without varying the inference
+   program.  Confirm that the runtime of a fixed-length chain does not
+   change, but the quality of the result (relative to the true
+   posterior) does.
+
+2. Vary the number of transitions for a fixed location of the datum.
+   Confirm that the runtime is asymptotically linear in that, and that
+   the result distribution approaches the true posterior as the number
+   of steps increases.
+
+3. What happens if we don't `reset_to_prior`?  Now the histogram
+   includes successive states of one long Markov chain.  Most of those
+   data points will be individually distributed according to the
+   posterior, but if the number of steps between them is too small,
+   they will not be independent.
+
+4. Increase both the location of the observation (making the problem
+   harder) and the number of transitions (doing more work).  How fast
+   does the latter have to move to keep up with the former?  What
+   does the history of a long chain on a hard obervation look like?
+   [For instructor: since the proposal is from the prior, the further
+   the chain gets, the longer it will sit still before advancing.
+   In this case, the probability of proposing a new state larger than
+   the current one decreases exponentially, but at least it's not
+   the squared exponential of rejection sampling.]
+
+Optional Subunit: Custom M-H Proposals
+--------------------------------------
+
+[TODO Would want to abstract this code better for presentation; does
+this even belong here?  Will the students wonder about custom
+proposals at this stage?]
+
+```church'
+clear
+```
+
+```church'
+[define gaussian_drift_mh
+  (lambda (scope block sigma)
+    (do (subproblem <- (select scope block))
+        (values <- (get_current_values subproblem))
+        (let ((move (lambda (value) (normal value sigma))) ; gaussian drift proposal kernel
+              (new_values (mapv move values)))
+          (do (rho_weight_and_rho_db <- (detach_for_proposal subproblem))
+              (xi_weight <- (regen_with_proposal subproblem new_values))
+              (let ((rho_weight (first rho_weight_and_rho_db))
+                    (rho_db (rest rho_weight_and_rho_db)))
+                (if (< (log (uniform_continuous 0 1)) (- xi_weight rho_weight))
+                    pass                    ; accept
+                    (do (detach subproblem) ; reject
+                        (restore subproblem rho_db))))))))]
+
+[assume x (normal 0 1)]
+[observe (normal x 1) 10]
+[infer
+ (do (d <- (accumulate_dataset <%= smaller_sample_size %>
+             (do (likelihood_weight)
+                 ;; 50 seems to converge, for the datum being at 10
+                 (repeat 10 (gaussian_drift_mh default all 1))
+                 (collect x))))
+     (plotf 'h0 d))]
+```
+
+[Here the proposal depends on the current state.  Up side: can travel
+toward the posterior much faster than proposing from a bad prior.
+Down side: will get stuck in single modes.]
+
+[Next: Linear Regression >](../linear-regression/index.html)

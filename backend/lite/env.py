@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -46,7 +46,7 @@ class VentureEnvironment(VentureValue):
     elif not self.outerEnv: raise VentureError("Cannot unbind unbound symbol '%s'" % sym)
     else: self.outerEnv.removeBinding(sym)
 
-  def replaceBinding(self,sym,val):
+  def fillBinding(self,sym,val):
     # Used in the implementation of letrec
     assert isinstance(sym, str)
     assert sym in self.frame

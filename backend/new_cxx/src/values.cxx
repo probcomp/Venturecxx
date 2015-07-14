@@ -33,7 +33,7 @@ vector<VentureValuePtr> VenturePair::getArray() const
   vector<VentureValuePtr> xs;
   xs.push_back(getFirst());
   VentureValuePtr rest = getRest();
-  shared_ptr<VenturePair> p;
+  boost::shared_ptr<VenturePair> p;
   while (p = dynamic_pointer_cast<VenturePair>(rest))
   {
     xs.push_back(p->getFirst());
@@ -150,7 +150,7 @@ boost::python::dict VenturePair::toPython(Trace * trace) const
   boost::python::list l;
   l.append(getFirst()->toPython(trace));
   VentureValuePtr rest = getRest();
-  shared_ptr<VenturePair> p;
+  boost::shared_ptr<VenturePair> p;
   while (p = dynamic_pointer_cast<VenturePair>(rest))
   {
     l.append(p->getFirst()->toPython(trace));
@@ -268,50 +268,50 @@ int VentureID::getValueTypeRank() const { return 190; }
 
 bool VentureNumber::ltSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureNumber> other_v = dynamic_pointer_cast<VentureNumber>(other);
+  boost::shared_ptr<VentureNumber> other_v = dynamic_pointer_cast<VentureNumber>(other);
   assert(other_v); return (x < other_v->x);
 }
 
 bool VentureInteger::ltSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureInteger> other_v = dynamic_pointer_cast<VentureInteger>(other);
+  boost::shared_ptr<VentureInteger> other_v = dynamic_pointer_cast<VentureInteger>(other);
   assert(other_v); return (n < other_v->n);
 }
 
 bool VentureProbability::ltSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureProbability> other_v = dynamic_pointer_cast<VentureProbability>(other);
+  boost::shared_ptr<VentureProbability> other_v = dynamic_pointer_cast<VentureProbability>(other);
   assert(other_v); return (x < other_v->x);
 }
 
 bool VentureAtom::ltSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureAtom> other_v = dynamic_pointer_cast<VentureAtom>(other);
+  boost::shared_ptr<VentureAtom> other_v = dynamic_pointer_cast<VentureAtom>(other);
   assert(other_v); return (n < other_v->n);
 }
 
 bool VentureBool::ltSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureBool> other_v = dynamic_pointer_cast<VentureBool>(other);
+  boost::shared_ptr<VentureBool> other_v = dynamic_pointer_cast<VentureBool>(other);
   assert(other_v); return (b < other_v->b);
 }
 
 bool VentureSymbol::ltSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureSymbol> other_v = dynamic_pointer_cast<VentureSymbol>(other);
+  boost::shared_ptr<VentureSymbol> other_v = dynamic_pointer_cast<VentureSymbol>(other);
   assert(other_v); return (s < other_v->s);
 }
 
 bool VentureNil::ltSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureNil> other_v = dynamic_pointer_cast<VentureNil>(other);
+  boost::shared_ptr<VentureNil> other_v = dynamic_pointer_cast<VentureNil>(other);
   assert(other_v);
   return false;
 }
 
 bool VenturePair::ltSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VenturePair> other_v = dynamic_pointer_cast<VenturePair>(other);
+  boost::shared_ptr<VenturePair> other_v = dynamic_pointer_cast<VenturePair>(other);
   assert(other_v);
   if (car < other_v->car) { return true; }
   else if (other_v->car < car) { return false; }
@@ -320,7 +320,7 @@ bool VenturePair::ltSameType(const VentureValuePtr & other) const
 
 bool VentureArray::ltSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureArray> other_v = dynamic_pointer_cast<VentureArray>(other);
+  boost::shared_ptr<VentureArray> other_v = dynamic_pointer_cast<VentureArray>(other);
   assert(other_v);
   if (xs.size() != other_v->xs.size()) { return xs.size() < other_v->xs.size(); }
   for (size_t i = 0; i < xs.size(); ++i)
@@ -333,7 +333,7 @@ bool VentureArray::ltSameType(const VentureValuePtr & other) const
 
 bool VentureSimplex::ltSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureSimplex> other_v = dynamic_pointer_cast<VentureSimplex>(other);
+  boost::shared_ptr<VentureSimplex> other_v = dynamic_pointer_cast<VentureSimplex>(other);
   assert(other_v);
   if (ps.size() != other_v->ps.size()) { return ps.size() < other_v->ps.size(); }
   for (size_t i = 0; i < ps.size(); ++i)
@@ -346,7 +346,7 @@ bool VentureSimplex::ltSameType(const VentureValuePtr & other) const
 
 bool VentureVector::ltSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureVector> other_v = dynamic_pointer_cast<VentureVector>(other);
+  boost::shared_ptr<VentureVector> other_v = dynamic_pointer_cast<VentureVector>(other);
   assert(other_v);
   if (v.size() != other_v->v.size()) { return v.size() < other_v->v.size(); }
   for (int i = 0; i < v.size(); ++i)
@@ -359,7 +359,7 @@ bool VentureVector::ltSameType(const VentureValuePtr & other) const
 
 bool VentureMatrix::ltSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureMatrix> other_m = dynamic_pointer_cast<VentureMatrix>(other);
+  boost::shared_ptr<VentureMatrix> other_m = dynamic_pointer_cast<VentureMatrix>(other);
   assert(other_m);
   if (m.rows() != other_m->m.rows()) { return m.rows() < other_m->m.rows(); }
   if (m.cols() != other_m->m.cols()) { return m.cols() < other_m->m.cols(); }
@@ -376,7 +376,7 @@ bool VentureMatrix::ltSameType(const VentureValuePtr & other) const
 
 bool VentureNode::ltSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureNode> other_v = dynamic_pointer_cast<VentureNode>(other);
+  boost::shared_ptr<VentureNode> other_v = dynamic_pointer_cast<VentureNode>(other);
   assert(other_v);
   return node < other_v->node;
 }
@@ -390,57 +390,57 @@ bool VentureID::ltSameType(const VentureValuePtr & other) const
 
 bool VentureNumber::equalsSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureNumber> other_v = dynamic_pointer_cast<VentureNumber>(other);
+  boost::shared_ptr<VentureNumber> other_v = dynamic_pointer_cast<VentureNumber>(other);
   assert(other_v); return (other_v->x == x);
 }
 
 bool VentureInteger::equalsSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureInteger> other_v = dynamic_pointer_cast<VentureInteger>(other);
+  boost::shared_ptr<VentureInteger> other_v = dynamic_pointer_cast<VentureInteger>(other);
   assert(other_v); return (other_v->n == n);
 }
 
 bool VentureProbability::equalsSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureProbability> other_v = dynamic_pointer_cast<VentureProbability>(other);
+  boost::shared_ptr<VentureProbability> other_v = dynamic_pointer_cast<VentureProbability>(other);
   assert(other_v); return (other_v->x == x);
 }
 
 bool VentureAtom::equalsSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureAtom> other_v = dynamic_pointer_cast<VentureAtom>(other);
+  boost::shared_ptr<VentureAtom> other_v = dynamic_pointer_cast<VentureAtom>(other);
   assert(other_v); return (other_v->n == n);
 }
 
 bool VentureBool::equalsSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureBool> other_v = dynamic_pointer_cast<VentureBool>(other);
+  boost::shared_ptr<VentureBool> other_v = dynamic_pointer_cast<VentureBool>(other);
   assert(other_v); return (other_v->b == b);
 }
 
 bool VentureSymbol::equalsSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureSymbol> other_v = dynamic_pointer_cast<VentureSymbol>(other);
+  boost::shared_ptr<VentureSymbol> other_v = dynamic_pointer_cast<VentureSymbol>(other);
   assert(other_v); return (other_v->s == s);
 }
 
 bool VentureNil::equalsSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureNil> other_v = dynamic_pointer_cast<VentureNil>(other);
+  boost::shared_ptr<VentureNil> other_v = dynamic_pointer_cast<VentureNil>(other);
   assert(other_v);
   return true;
 }
 
 bool VenturePair::equalsSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VenturePair> other_v = dynamic_pointer_cast<VenturePair>(other);
+  boost::shared_ptr<VenturePair> other_v = dynamic_pointer_cast<VenturePair>(other);
   assert(other_v);
   return (other_v->car->equals(car) && other_v->cdr->equals(cdr));
 }
 
 bool VentureArray::equalsSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureArray> other_v = dynamic_pointer_cast<VentureArray>(other);
+  boost::shared_ptr<VentureArray> other_v = dynamic_pointer_cast<VentureArray>(other);
   assert(other_v);
   if (xs.size() != other_v->xs.size()) { return false; }
   for (size_t i = 0; i < xs.size(); ++i)
@@ -455,7 +455,7 @@ bool VentureArray::equalsSameType(const VentureValuePtr & other) const
 
 bool VentureSimplex::equalsSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureSimplex> other_v = dynamic_pointer_cast<VentureSimplex>(other);
+  boost::shared_ptr<VentureSimplex> other_v = dynamic_pointer_cast<VentureSimplex>(other);
   assert(other_v);
   if (ps.size() != other_v->ps.size()) { return false; }
   for (size_t i = 0; i < ps.size(); ++i) { if (ps[i] != other_v->ps[i]) { return false; } }
@@ -464,7 +464,7 @@ bool VentureSimplex::equalsSameType(const VentureValuePtr & other) const
 
 bool VentureVector::equalsSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureVector> other_v = dynamic_pointer_cast<VentureVector>(other);
+  boost::shared_ptr<VentureVector> other_v = dynamic_pointer_cast<VentureVector>(other);
   assert(other_v);
   if (v.size() != other_v->v.size()) { return false; }
   for (int i = 0; i < v.size(); ++i) { if (v[i] != other_v->v[i]) { return false; } }
@@ -473,7 +473,7 @@ bool VentureVector::equalsSameType(const VentureValuePtr & other) const
 
 bool VentureMatrix::equalsSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureMatrix> other_m = dynamic_pointer_cast<VentureMatrix>(other);
+  boost::shared_ptr<VentureMatrix> other_m = dynamic_pointer_cast<VentureMatrix>(other);
   assert(other_m);
   if (m.rows() != other_m->m.rows()) { return false; }
   if (m.cols() != other_m->m.cols()) { return false; }
@@ -489,7 +489,7 @@ bool VentureMatrix::equalsSameType(const VentureValuePtr & other) const
 
 bool VentureNode::equalsSameType(const VentureValuePtr & other) const
 {
-  shared_ptr<VentureNode> other_v = dynamic_pointer_cast<VentureNode>(other);
+  boost::shared_ptr<VentureNode> other_v = dynamic_pointer_cast<VentureNode>(other);
   assert(other_v);
   return node == other_v->getNode();
 }

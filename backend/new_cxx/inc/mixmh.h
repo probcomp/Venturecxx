@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -24,7 +24,7 @@ struct ScaffoldIndexer;
 struct GKernel;
 
 void mixMH(ConcreteTrace * trace,
-	   shared_ptr<ScaffoldIndexer> indexer,
-	   shared_ptr<GKernel> gKernel);
+	   boost::shared_ptr<ScaffoldIndexer> indexer,
+	   boost::shared_ptr<GKernel> gKernel);
 
 #endif

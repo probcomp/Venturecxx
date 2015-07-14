@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013-2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -64,10 +64,7 @@ def local_ripl(args, backend):
 def ripl_builder(args, backend):
   def build():
     interactive = True
-    if args is not None and args.transient_inference_trace:
-        r = backend.make_combined_ripl(persistent_inference_trace = False)
-    else:
-        r = backend.make_combined_ripl(persistent_inference_trace = True)
+    r = backend.make_combined_ripl(persistent_inference_trace = True)
     if args is not None:
         if args.prelude: r.load_prelude()
         if args.library:
@@ -89,20 +86,19 @@ def ripl_builder(args, backend):
   return build
 
 def add_local_args(parser):
-    parser.add_argument('--prelude', action='store_true',
-                        help = 'load prelude on startup')
     parser.add_argument('-f', '--file', action='append', help="execute the given file")
     parser.add_argument('-e', '--eval', action='append', help="execute the given program")
     parser.add_argument('-i', '--interactive', action='store_true', help="enter interactive interpreter after completing script file")
     parser.add_argument('-l', '--lang', default="church_prime",
-                        help="the syntax to interpret in the console (valid values: are \"church_prime\" (default) and \"venture_script\")")
+                        help="the syntax to interpret in the console (valid values: \"church_prime\" (default) and \"venture_script\")")
     parser.add_argument('-L', '--library', action='append',
                         help="load a Python file in the local directory.  If the file defines a __venture_start__ function, call it with the ripl to initialize the library.")
-    parser.add_argument('-P', '--persistent-inference-trace', action='store_true', help="Run with a persistent inference trace (default)")
-    parser.add_argument('-T', '--transient-inference-trace', action='store_true', help="Run with transient inference traces (disabled 'define' directive; may cost less memory)")
+    parser.add_argument('--prelude', action='store_true',
+                        help = 'load model prelude on startup (default: off)')
     return parser
 
-parser = argparse.ArgumentParser(description='An interactive, Turing-complete probabilistic programming platform')
+parser = argparse.ArgumentParser(description='An interactive, Turing-complete probabilistic programming platform',
+                                 epilog="Run 'venture {mode} -h' for help on mode-specific options")
 parser.add_argument('--version', action='version', version='Venture, version %s' % version_str)
 subparsers = parser.add_subparsers(title="optional mode")
 
