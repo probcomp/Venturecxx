@@ -203,12 +203,7 @@ class Trace(object):
     assert isinstance(spFamilies,SPFamilies)
     return spFamilies
   def spauxAt(self,node): return self.madeSPAuxAt(self.spRefAt(node).makerNode)
-  def pspAt(self,node):
-    if isRequestNode(node):
-      return self.spAt(node).requestPSP
-    else:
-      assert isOutputNode(node)
-      return self.spAt(node).outputPSP
+  def pspAt(self,node): return node.relevantPSP(self.spAt(node))
 
   #### Stuff that a particle trace would need to override for persistence
 

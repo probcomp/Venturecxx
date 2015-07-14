@@ -86,6 +86,8 @@ class RequestNode(ApplicationNode):
 
   def definiteParents(self): return [self.operatorNode] + self.operandNodes
 
+  def relevantPSP(self, sp): return sp.requestPSP
+
   def isAppropriateValue(self, value):
     return value is None or isinstance(value, Request)
 
@@ -99,6 +101,7 @@ class OutputNode(ApplicationNode):
 
   def definiteParents(self): return [self.operatorNode] + self.operandNodes + [self.requestNode]
   def parents(self): return self.definiteParents() + self.esrParents
+  def relevantPSP(self, sp): return sp.outputPSP
 
 
 def isConstantNode(thing):
