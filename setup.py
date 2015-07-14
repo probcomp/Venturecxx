@@ -30,6 +30,7 @@ if ON_LINUX:
 if ON_MAC:
     os.environ['CC'] = 'ccache gcc'
     os.environ['CXX'] = 'ccache g++'
+    os.environ['CFLAGS'] = "-std=c++11 -stdlib=libc++"
 
 puma_src_files = [
     "src/args.cxx",

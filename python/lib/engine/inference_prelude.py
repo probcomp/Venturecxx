@@ -166,6 +166,17 @@ prelude = [
     (let ((res (act t)))
       ((next) (rest res)))))"""],
 
+# action :: b -> State a b
+["action", """\
+.. function:: action(<object>)
+
+  :rtype: proc(<foreignblob>) -> <pair <object> <foreignblob>>
+
+  Wrap an object, usually a non-inference function like plotf,
+  as an inference action, so it can be used inside a do(...) block.
+""",
+"""(lambda (val) (lambda (t) (pair val t)))"""],
+
 # return :: b -> State a b
 ["return", """\
 .. function:: return(<object>)
@@ -175,7 +186,7 @@ prelude = [
   An inference action that does nothing and just returns the argument
   passed to ``return``.
 """,
-"""(lambda (val) (lambda (t) (pair val t)))"""],
+"""action"""],
 
 ["curry", """\
 .. function:: curry(proc(<a>, <b>) -> <c>, <a>)
