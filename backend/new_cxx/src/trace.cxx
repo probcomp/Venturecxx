@@ -77,8 +77,12 @@ VentureValuePtr Trace::getGroundValue(Node * node)
 
 Node * Trace::getOperatorSPMakerNode(ApplicationNode * node)
 {
-  boost::shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(getValue(node->operatorNode));
-  assert(spRef);
+  VentureValuePtr candidate = getValue(node->operatorNode);
+  boost::shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(candidate);
+  if (!spRef)
+  {
+    throw "Cannot apply a non-procedure: " + candidate->toString();
+  }
   return spRef->makerNode;
 }
 

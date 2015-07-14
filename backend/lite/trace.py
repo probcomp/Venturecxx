@@ -193,7 +193,7 @@ class Trace(object):
   def spRefAt(self,node):
     candidate = self.valueAt(node.operatorNode)
     if not isinstance(candidate, SPRef):
-      raise NoSPRefError("spRef not an spRef but a %s at node %s with operator %s" % (type(candidate), node, node.operatorNode))
+      raise NoSPRefError("Cannot apply a non-procedure: %s (at node %s with operator %s)" % (candidate, node, node.operatorNode))
     assert isinstance(candidate, SPRef)
     return candidate
 

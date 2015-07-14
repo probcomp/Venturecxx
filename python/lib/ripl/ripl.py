@@ -403,20 +403,20 @@ class Ripl():
         def escape(chunk):
             return re.sub("[[]", "\\[", chunk)
         for (color, (start, stop)) in colors.iteritems():
-            pattern = "^" + escape(colors[color][0]) + "([0-9]+)/" + escape(colors[color][1]) + "(.*)$"
+            pattern = "^" + escape(colors[color][0]) + "([0-9]+)@" + escape(colors[color][1]) + "(.*)$"
             colors[color] = (start, stop, re.compile(pattern))
         def color_app(color):
             def doit(string):
                 def do_color(string):
                     return colors[color][0] + string + colors[color][1]
                 if string[0] == '(' and string[-1] == ')':
-                    return do_color("1/") + do_color("(") + string[1:-1] + do_color(")")
+                    return do_color("1@") + do_color("(") + string[1:-1] + do_color(")")
                 m = re.match(colors[color][2], string)
                 if m is not None:
                     ct = int(m.group(1))
-                    return do_color(str(ct+1) + "/") + m.group(2)
+                    return do_color(str(ct+1) + "@") + m.group(2)
                 else:
-                    return do_color("1/") + string
+                    return do_color("1@") + string
             return doit
         scaffold = scaffold_dict['value']
         by_did = {}
@@ -439,6 +439,13 @@ class Ripl():
                         de_dup.add(key)
                         add_frame(frame)
 
+        print "Color key:"
+        print color_app('red')(' principal nodes')
+        print color_app('yellow')(' definite regeneration graph')
+        print color_app('blue')(' absorbing nodes')
+        print color_app('pink')(' absorbing at applications')
+        print color_app('green')(' brush')
+
         print "The nodes"
         pnodes = scaffold.getPrincipalNodes()
         mark(pnodes, 'red', only_bottom=True)
@@ -448,6 +455,7 @@ class Ripl():
         mark(scaffold.brush, 'green', only_bottom=True)
         for did in sorted(by_did.keys()):
             instr = self.directive_id_to_stringable_instruction[did]
+            instr = self._ensure_parsed(instr)
             print self._cur_parser().unparse_instruction(instr, by_did[did])
 
         print "The stacks"
@@ -459,6 +467,7 @@ class Ripl():
         mark(scaffold.brush, 'green', only_bottom=False)
         for did in sorted(by_did.keys()):
             instr = self.directive_id_to_stringable_instruction[did]
+            instr = self._ensure_parsed(instr)
             print self._cur_parser().unparse_instruction(instr, by_did[did])
 
     ############################################
