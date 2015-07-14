@@ -78,6 +78,12 @@ def testModelSwitchingSmoke():
   cdf = stats.norm(loc=0.0, scale=1.0).cdf
   return reportKnownContinuous(cdf, predictions, "N(0,1)")
 
+@on_inf_prim("return")
+@on_inf_prim("action")
+def testReturnAndAction():
+  eq_(3.0, get_ripl().infer("(do (return 3))"))
+  eq_(3.0, get_ripl().infer("(do (action 3))"))
+
 @needs_backend("lite")
 @needs_backend("puma")
 @on_inf_prim("new_model")
