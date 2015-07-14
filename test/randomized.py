@@ -136,7 +136,7 @@ passed to the given SP."""
     return sp_type.args_types
   else:
     length = npr.randint(0, 10)
-    return [sp_type.args_types[0] for _ in range(length)]
+    return sp_type.args_types[:-1] + [sp_type.args_types[-1] for _ in range(length)]
 
 def fully_uncurried_sp_type(sp_type):
   """Returns a list of argument list types representing arguments that
