@@ -67,7 +67,10 @@ void SP::AEInfer(boost::shared_ptr<SPAux> spAux, boost::shared_ptr<Args> args,gs
 
 boost::python::object SPAux::toPython(Trace * trace) const
 {
-  return boost::python::object("unknown spAux");
+  // this is only called on subclasses of SPAux to display the
+  // associated procedures. TODO: teach those procedures to use
+  // SPAux::asVentureValue instead.
+  throw "unknown spAux";
 }
 
 VentureValuePtr SPAux::asVentureValue() const
