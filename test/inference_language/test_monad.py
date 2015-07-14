@@ -20,7 +20,6 @@ from nose.tools import eq_
 
 from venture.test.stats import statisticalTest, reportKnownContinuous
 from venture.test.config import get_ripl, on_inf_prim, default_num_samples, default_num_transitions_per_sample, needs_backend
-import venture.test.errors as err
 
 def testInferenceLanguageEvalSmoke():
   ripl = get_ripl()
