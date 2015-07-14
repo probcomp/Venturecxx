@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import copy
 import numbers
 import sys
 import math
@@ -23,6 +22,7 @@ import math
 from sp import VentureSPRecord
 from value import VentureValue
 from exception import VentureBuiltinLKernelMethodError
+from node import FixedValueArgs
 
 class LKernel(object):
   """A local proposal distribution for one node."""
@@ -221,23 +221,3 @@ class DefaultVariationalLKernel(VariationalLKernel):
       if self.parameterScopes[i] == "POSITIVE_REAL" and \
          self.parameters[i] < 0.1: self.parameters[i] = 0.1
       assert not math.isinf(self.parameters[i]) and not math.isnan(self.parameters[i])
-
-class FixedValueArgs(object):
-  def __init__(self, args, operandValues):
-    self.args = args
-    self._operandValues = operandValues
-    self.node = args.node
-    self.operandNodes = args.operandNodes
-    self.env = args.env
-
-  def operandValues(self): return self._operandValues
-  def spaux(self): return self.args.spaux()
-
-  # These four are only used on output nodes
-  def requestValue(self): return self.args.requestValue()
-  def esrNodes(self): return self.args.esrNodes()
-  def esrValues(self): return self.args.esrValues()
-  def madeSPAux(self): return self.args.madeSPAux()
-
-  def __repr__(self):
-    return "%s(%r)" % (self.__class__, self.__dict__)
