@@ -80,7 +80,7 @@ boost::python::dict SP::toPython(Trace * trace, boost::shared_ptr<SPAux> spAux) 
 {
   boost::python::dict value;
   value["type"] = "sp";
-  value["value"] = "unknown";
+  value["value"] = "<procedure>";
   if (spAux) {
     value["aux"] = spAux->asVentureValue()->toPython(trace);
   } else {
