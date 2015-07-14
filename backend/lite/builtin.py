@@ -462,7 +462,7 @@ builtInSPsList = [
                                      t.AnyType()) ],
 
            [ "assess", typed_nr(functional.AssessOutputPSP(),
-                                [t.AnyType("<val>"), t.AnyType("<sp>"), t.AnyType("<args>")],
+                                [t.AnyType("<val>"), SPType("<sp>"), t.AnyType("<args>")],
                                 t.NumberType(),
                                 variadic=True) ],
 
