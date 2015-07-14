@@ -141,8 +141,6 @@ used in the implementation of TypedPSP and TypedLKernel."""
     self.args_types = args_types
     self.return_type = return_type
     self.variadic = variadic
-    if variadic:
-      assert len(args_types) == 1 # TODO Support non-homogeneous variadics later
     self.min_req_args = len(args_types) if min_req_args is None else min_req_args
 
   def wrap_return(self, value):
@@ -169,7 +167,12 @@ used in the implementation of TypedPSP and TypedLKernel."""
       # v could be None when computing log density bounds for a torus
       return [self.args_types[i].asPythonNoneable(val) for (i,val) in enumerate(lst)]
     else:
-      return [self.args_types[0].asPythonNoneable(val) for val in lst]
+      min_req_args = len(self.args_types) - 1
+      if len(lst) < min_req_args:
+        raise VentureError("Too few arguments: SP requires at least %d args, got only %d." % (min_req_args, len(lst)))
+      first_args = [self.args_types[i].asPythonNoneable(val) for (i,val) in enumerate(lst[:min_req_args])]
+      rest_args = [self.args_types[-1].asPythonNoneable(val) for val in lst[min_req_args:]]
+      return first_args + rest_args
 
   def wrap_arg_list(self, lst):
     if not self.variadic:
@@ -178,7 +181,11 @@ used in the implementation of TypedPSP and TypedLKernel."""
       # v could be None when computing log density bounds for a torus
       return [self.args_types[i].asVentureValue(val) for (i,val) in enumerate(lst)]
     else:
-      return [self.args_types[0].asVentureValue(val) for val in lst]
+      min_req_args = len(self.args_types) - 1
+      assert len(lst) >= min_req_args
+      first_args = [self.args_types[i].asVentureValue(val) for (i,val) in enumerate(lst[:min_req_args])]
+      rest_args = [self.args_types[-1].asVentureValue(val) for val in lst[min_req_args:]]
+      return first_args + rest_args
 
   def _name_for_fixed_arity(self, args_types):
     args_spec = " ".join([t.name() for t in args_types])

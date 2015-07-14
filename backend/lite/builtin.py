@@ -430,6 +430,11 @@ builtInSPsList = [
                                      [t.AnyType("<scope>"), t.AnyType()],
                                      t.AnyType()) ],
 
+           [ "assess", typed_nr(functional.AssessOutputPSP(),
+                                [t.AnyType("<val>"), t.AnyType("<sp>"), t.AnyType("<args>")],
+                                t.NumberType(),
+                                variadic=True) ],
+
            [ "binomial", typed_nr(discrete.BinomialOutputPSP(), [t.CountType(), t.ProbabilityType()], t.CountType()) ],
            [ "flip", typed_nr(discrete.BernoulliOutputPSP(), [t.ProbabilityType()], t.BoolType(), min_req_args=0) ],
            [ "bernoulli", typed_nr(discrete.BernoulliOutputPSP(), [t.ProbabilityType()], t.IntegerType(), min_req_args=0) ],

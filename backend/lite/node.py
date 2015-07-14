@@ -143,3 +143,26 @@ class Args(object):
 
   def __repr__(self):
     return "%s(%r)" % (self.__class__, self.__dict__)
+
+class FixedValueArgs(object):
+  def __init__(self, args, operandValues, operandNodes = None):
+    self.args = args
+    self._operandValues = operandValues
+    self.node = args.node
+    if operandNodes is None:
+      self.operandNodes = args.operandNodes
+    else:
+      self.operandNodes = operandNodes
+    self.env = args.env
+
+  def operandValues(self): return self._operandValues
+  def spaux(self): return self.args.spaux()
+
+  # These four are only used on output nodes
+  def requestValue(self): return self.args.requestValue()
+  def esrNodes(self): return self.args.esrNodes()
+  def esrValues(self): return self.args.esrValues()
+  def madeSPAux(self): return self.args.madeSPAux()
+
+  def __repr__(self):
+    return "%s(%r)" % (self.__class__, self.__dict__)
