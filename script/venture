@@ -30,9 +30,9 @@ def banner(help=True):
     if not(help):
         help_ad = ""
     print '''
-Venture, version {0}  http://probcomp.csail.mit.edu/venture/{1}
+Venture Script, version {0}  http://probcomp.csail.mit.edu/venture/{1}
 Venture is *alpha quality* software.
-Expect occasional crashes that wipe out your Venture session.
+Expect occasional crashes that wipe out your console session.
 '''.format(version_str, help_ad).strip()
 
 def server(args):
