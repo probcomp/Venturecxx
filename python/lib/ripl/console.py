@@ -47,7 +47,7 @@ class RiplCmd(Cmd, object):
   def __init__(self, ripl, rebuild):
     super(RiplCmd, self).__init__()
     self.ripl = ripl
-    self.prompt = '>>> '
+    self.prompt = 'venture[script] > '
     self.rebuild = rebuild
     self.files = []
     self.plugins = []
@@ -217,9 +217,9 @@ class RiplCmd(Cmd, object):
 
   def _update_prompt(self):
     if len(self.files) == 0 and len(self.plugins) == 0:
-      self.prompt = ">>> "
+      self.prompt = "venture[script] > "
     else:
-      self.prompt = " ".join(self.plugins + self.files) + " > "
+      self.prompt = "venture[script]" + " ".join(self.plugins + self.files) + " > "
 
 def run_venture_console(ripl, rebuild):
   RiplCmd(ripl, rebuild).cmdloop()
