@@ -157,6 +157,17 @@ if len(sys.argv) == 1:
 elif sys.argv[1] in ["puma", "lite", "server", "remote"]:
     args = parser.parse_args()
     args.func(args)
+elif sys.argv[1] == "bql":
+    from distutils.spawn import find_executable
+    if find_executable("bayeslite"):
+        import os
+        sys.stdout.flush()
+        os.execvp("bayeslite", ["bayeslite"] + sys.argv[2:])
+    else:
+        print """\
+You do not appear to have the `bayeslite` command installed.
+Please contact us for a private alpha."""
+        exit(1)
 else:
     args = parser_no_mode.parse_args()
     lite(args)
