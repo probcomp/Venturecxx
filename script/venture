@@ -48,9 +48,11 @@ def client(args):
     run_venture_console(v.make_ripl_rest_client(url))
 
 def puma(args):
+    print "Tracing models with the Puma backend"
     local_ripl(args, v.Puma())
 
 def lite(args):
+    print "Tracing models with the Lite backend"
     local_ripl(args, v.Lite())
 
 def local_ripl(args, backend):
@@ -131,9 +133,17 @@ parser_client.add_argument("-p", "--port", type=int, default=default_port,
                            help="the port to connect on (default {0})".format(default_port))
 parser_client.set_defaults(func=client)
 
+parser_no_mode = argparse.ArgumentParser(description='foo',
+                                         epilog='bar')
+parser_no_mode.add_argument('--version', action='version', version='Venture, version %s' % version_str)
+add_local_args(parser_no_mode)
+
 if len(sys.argv) == 1:
     # Work around what appears to be a limitation of argparse
-    puma(None)
-else:
+    lite(None)
+elif sys.argv[1] in ["puma", "lite", "server", "remote"]:
     args = parser.parse_args()
     args.func(args)
+else:
+    args = parser_no_mode.parse_args()
+    lite(args)
