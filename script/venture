@@ -98,7 +98,7 @@ def add_local_args(parser):
     parser.add_argument('--abstract-syntax', action='store_true',
                         help="interpret abstract rather than concrete syntax")
     parser.add_argument('-L', '--library', action='append',
-                        help="load a Python file in the local directory.  If the file defines a __venture_start__ function, call it with the ripl to initialize the library.")
+                        help="load a Python file in the local directory.  If the file defines\na __venture_start__ function, call it with the ripl to\ninitialize the library.")
     parser.add_argument('--prelude', action='store_true',
                         help = 'load model prelude on startup (default: off)')
     return parser
@@ -108,37 +108,46 @@ parser = argparse.ArgumentParser(description='An interactive, Turing-complete pr
 parser.add_argument('--version', action='version', version='Venture, version %s' % version_str)
 subparsers = parser.add_subparsers(title="optional mode")
 
-parser_local = subparsers.add_parser("puma", help="[default] Start a local Venture Puma session",
-                                     description="Start a local Venture Puma session")
+parser_local = subparsers.add_parser("puma", help="VentureScript, tracing models with the Puma backend",
+                                     description="VentureScript, tracing models with the Puma backend")
 parser_local.set_defaults(func=puma)
 add_local_args(parser_local)
 
-parser_local = subparsers.add_parser("lite", help="Start a local Venture Lite session",
-                                     description="Start a local Venture Lite session")
+parser_local = subparsers.add_parser("lite", help="VentureScript, tracing models with the Lite backend",
+                                     description="VentureScript, tracing models with the Lite backend")
 parser_local.set_defaults(func=lite)
 add_local_args(parser_local)
 
 default_port = 8082
 
-parser_server = subparsers.add_parser("server", help="Start a Venture server session",
-                                      description="Start a Venture server session")
-parser_server.add_argument("backend", default="lite", help="the Venture backend use")
+parser_server = subparsers.add_parser("server", help="Start a VentureScript server",
+                                      description="Start a VentureScript server")
+parser_server.add_argument("backend", default="lite", help="the backend to trace models in")
 parser_server.add_argument("-p", "--port", type=int, default=default_port,
                            help="the port to listen on (default {0})".format(default_port))
 parser_server.set_defaults(func=server)
 
 default_host = '127.0.0.1'
 
-parser_client = subparsers.add_parser("remote", help="Connect to a running Venture server session",
-                                      description="Connect to a running Venture server session")
+parser_client = subparsers.add_parser("remote", help="Connect to a running VentureScript server",
+                                      description="Connect to a running VentureScript server")
 parser_client.add_argument("--host", default=default_host,
                            help="the host to connect to (default {0})".format(default_host))
 parser_client.add_argument("-p", "--port", type=int, default=default_port,
                            help="the port to connect on (default {0})".format(default_port))
 parser_client.set_defaults(func=client)
 
-parser_no_mode = argparse.ArgumentParser(description='foo',
-                                         epilog='bar')
+parser_no_mode = argparse.ArgumentParser(description='A general-purpose probabilistic computing platform.',
+                                         epilog="""\
+optional modes:
+  lite                  (default) VentureScript, tracing models with the Lite backend
+  puma                  VentureScript, tracing models with the Puma backend
+  server                Start a VentureScript command server
+  remote                Connect to a running VentureScript command server
+
+Run venture {mode} -h for mode-specific options.
+                                         """,
+                                         formatter_class=argparse.RawTextHelpFormatter)
 parser_no_mode.add_argument('--version', action='version', version='Venture, version %s' % version_str)
 add_local_args(parser_no_mode)
 
