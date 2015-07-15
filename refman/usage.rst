@@ -7,8 +7,8 @@ a Python library.
 Interactive console::
 
     $ venture
-    >>> assume x (normal 0 1)
-    >>> observe (normal x 1) 2
+    venture[script] > assume x (normal 0 1)
+    venture[script] > observe (normal x 1) 2
 
 Source file::
 
