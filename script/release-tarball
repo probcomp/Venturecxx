@@ -60,6 +60,7 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=cmake \
     --exclude=htmlcov \
     --exclude=.gdbinit \
+    --exclude=refman/_build \
     --exclude=backend/hs \
     `# Excluding Terminal because it's unused and copyright-intermixed` \
     --exclude=demos/jsripl/Terminal \
