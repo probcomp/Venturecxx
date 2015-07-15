@@ -120,84 +120,65 @@ See `run-hooks'."
 
 (defvar venture-font-lock-keywords-3 nil)
 (setq venture-font-lock-keywords-3
-      ;; These are likely to change over time. To get an updated list,
-      ;; call the script venture_mode_font_lock.py in the "tool" directory
-      ;; with the appropriate argument.
-      ;; Call with no arguments for list of valid arguments to pass.
+      ;; These are likely to change over time. To get an updated list, run
+      ;;   tool/venture_mode_font_lock.py builtins
+      ;; [The script also supports a few subsets Call with no
+      ;; arguments for list of valid arguments to pass.]
       ;; Unfortunately, the resulting list will not be perfect. For instance,
       ;; "forget" and "freeze" show up as inference SP's, but are also included
       ;; up above as directives. Fortunately, font-lock-keywords with lower
       ;; numbers take precedence.
-      (append venture-font-lock-keywords-2
-              (eval-when-compile
-                (list
-                 (list
-                  (concat "\\<" (regexp-opt
-                                 '(;; model SP's
-                                   "add" "apply" "apply_function" "arange"
-                                   "array" "atan2" "atom_eq" "bernoulli" "beta"
-                                   "binomial" "biplex" "branch" "categorical"
-                                   "contains" "cos" "diag_matrix" "dict"
-                                   "dirichlet" "div" "eq" "eval" "exactly" "exp"
-                                   "expon" "extend_environment" "first" "flip"
-                                   "floor" "gamma" "get_current_environment"
-                                   "get_empty_environment" "gt" "gte" "hypot"
-                                   "id_matrix" "imapv" "int_div" "int_mod"
-                                   "inv_gamma" "inv_wishart" "is_array"
-                                   "is_atom" "is_boolean" "is_dict"
-                                   "is_environment" "is_integer" "is_matrix"
-                                   "is_number" "is_pair" "is_probability"
-                                   "is_procedure" "is_simplex" "is_symbol"
-                                   "is_vector" "laplace" "linspace" "list" "log"
-                                   "log_bernoulli" "log_flip" "lookup" "lt"
-                                   "lte" "make_beta_bernoulli" "make_cmvn"
-                                   "make_crp" "make_csp" "make_dir_mult"
-                                   "make_gp" "make_lazy_hmm"
-                                   "make_suff_stat_bernoulli"
-                                   "make_sym_dir_mult" "make_uc_beta_bernoulli"
-                                   "make_uc_dir_mult" "make_uc_sym_dir_mult"
-                                   "mapv" "matrix" "matrix_mul"
-                                   "matrix_times_vector" "mem" "min" "mul"
-                                   "multivariate_normal" "normal" "not" "pair"
-                                   "poisson" "pow" "print" "probability" "ravel"
-                                   "real" "repeat" "rest" "second" "simplex"
-                                   "sin" "size" "sqrt" "student_t" "sub"
-                                   "symmetric_dirichlet" "tag" "tag_exclude"
-                                   "take" "tan" "to_array" "to_list" "to_vector"
-                                   "uniform_continuous" "uniform_discrete"
-                                   "value_error" "vector" "vector_dot"
-                                   "vonmises" "wishart" "xor" "zip"
-                                   ;; inference SP's
-                                   "assert" "bogo_possibilize" "collapse_equal"
-                                   "collapse_equal_map" "draw_scaffold" "emap"
-                                   "empty" "enumerative_diversify" "forget"
-                                   "freeze" "func_mh" "func_pgibbs" "func_pmap"
-                                   "gibbs" "gibbs_update" "hmc" "in_model"
-                                   "incorporate" "into" "likelihood_at"
-                                   "likelihood_weight" "load_plugin" "map"
-                                   "meanfield" "mh" "mh_kernel_update"
-                                   "nesterov" "new_model" "ordered_range"
-                                   "particle_log_weights" "pgibbs"
-                                   "pgibbs_update" "plotf" "plotf_to_file"
-                                   "posterior_at" "print" "print_scaffold_stats"
-                                   "printf" "rejection" "resample"
-                                   "resample_multiprocess"
-                                   "resample_serializing" "resample_thread_ser"
-                                   "resample_threaded"
-                                   "set_particle_log_weights" "slice"
-                                   "slice_doubling" "subsampled_mh"
-                                   "subsampled_mh_check_applicability"
-                                   "subsampled_mh_make_consistent" "sweep"
-                                   ;; inference prelude
-                                   "bind" "bind_" "curry"
-                                   "curry3" "global_likelihood"
-                                   "global_posterior" "iterate" "mapM" "pass"
-                                   "repeat" "return" "sequence"
-                                   ;; inference callbacks
-                                   "timer_pause" "timer_resume"
-                                   "timer_start" "timer_time") t)
-                          "\\>")
-                  '(1 font-lock-builtin-face))))))
+      (append
+       venture-font-lock-keywords-2
+       (eval-when-compile
+         (list
+          (list
+           (concat "\\<"
+            (regexp-opt
+             '(;; model SP's
+               "add" "apply" "apply_function" "arange" "array" "assess" "atan2"
+               "atom_eq" "bernoulli" "beta" "binomial" "biplex" "branch" "categorical"
+               "contains" "cos" "debug" "diag_matrix" "dict" "dirichlet" "div" "eq"
+               "eval" "exactly" "exp" "expon" "extend_environment" "fill" "first"
+               "fix" "flip" "floor" "gamma" "get_current_environment"
+               "get_empty_environment" "gt" "gte" "hypot" "id_matrix" "imapv" "int_div"
+               "int_mod" "inv_gamma" "inv_wishart" "is_array" "is_atom" "is_boolean"
+               "is_dict" "is_environment" "is_integer" "is_matrix" "is_number" "is_pair"
+               "is_probability" "is_procedure" "is_simplex" "is_symbol" "is_vector" "laplace"
+               "linspace" "list" "log" "log_bernoulli" "log_flip" "lookup" "lt" "lte"
+               "make_beta_bernoulli" "make_cmvn" "make_crp" "make_csp" "make_dir_mult"
+               "make_gp" "make_lazy_hmm" "make_suff_stat_bernoulli" "make_sym_dir_mult"
+               "make_uc_beta_bernoulli" "make_uc_dir_mult" "make_uc_sym_dir_mult" "mapv"
+               "matrix" "matrix_add" "matrix_mul" "matrix_times_vector" "mem" "min" "mul"
+               "multivariate_normal" "normal" "not" "pair" "poisson" "pow" "probability"
+               "ravel" "real" "rest" "scale_matrix" "scale_vector" "second" "simplex" "sin"
+               "size" "sqrt" "student_t" "sub" "symmetric_dirichlet" "tag" "tag_exclude"
+               "take" "tan" "to_array" "to_list" "to_vector" "transpose" "uniform_continuous"
+               "uniform_discrete" "value_error" "vector" "vector_add" "vector_dot"
+               "vector_times_matrix" "vonmises" "wishart" "xor" "zip" 
+               ;; inference SP's
+               "assert" "bogo_possibilize" "collapse_equal" "collapse_equal_map" "detach"
+               "detach_for_proposal" "draw_scaffold" "draw_subproblem" "emap" "empty"
+               "enumerative_diversify" "forget" "freeze" "func_mh" "func_pgibbs" "func_pmap"
+               "get_current_values" "gibbs" "gibbs_update" "hmc" "in_model" "incorporate"
+               "into" "likelihood_at" "likelihood_weight" "load_plugin" "map" "meanfield"
+               "mh" "mh_kernel_update" "model_import_foreign" "nesterov" "new_model"
+               "ordered_range" "particle_log_weights" "pgibbs" "pgibbs_update" "plot"
+               "plot_to_file" "plotf" "plotf_to_file" "posterior_at" "print"
+               "print_scaffold_stats" "printf" "pyeval" "pyexec" "regen" "regen_with_proposal"
+               "rejection" "resample" "resample_multiprocess" "resample_serializing"
+               "resample_thread_ser" "resample_threaded" "restore" "select"
+               "set_particle_log_weights" "slice" "slice_doubling" "subsampled_mh"
+               "subsampled_mh_check_applicability" "subsampled_mh_make_consistent" "sweep" 
+               ;; inference prelude
+               "accumulate_dataset" "action" "bind" "bind_" "curry" "curry3"
+               "default_markov_chain" "for_each" "for_each_indexed" "global_likelihood"
+               "global_posterior" "imapM" "iterate" "join_datasets" "mapM" "pass" "posterior"
+               "repeat" "reset_to_prior" "return" "run" "sequence" "sequence_" 
+               ;; inference callbacks
+               "timer_pause" "timer_resume" "timer_start" "timer_time") t)
+            "\\>")
+           '(1 font-lock-builtin-face))))))
 
 (defvar venture-font-lock-keywords nil
   "Default expressions to highlight in Venture")
