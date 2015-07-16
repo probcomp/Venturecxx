@@ -170,6 +170,10 @@ class Writer(object):
                 return self.ripl.execute_program(munged)
             except VentureException as e:
                 print e
+                sys.stderr.write("Inserting exception into output:\n")
+                sys.stderr.write(str(e))
+                sys.stderr.write("\n")
+                sys.stderr.flush()
                 return [None]
 
     def finish(self):
