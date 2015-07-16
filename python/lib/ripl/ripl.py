@@ -378,7 +378,8 @@ class Ripl():
         """Take a parsed expression and index and turn it into
         unparsed form with text indeces."""
 
-        p = self._cur_parser()
+        from venture.parser import ChurchPrimeParser
+        p = ChurchPrimeParser.instance() # self._cur_parser() fails b/c VS can't unparse
         exp = p.unparse_expression(exp)
         (start, end) = p.expression_index_to_text_index(exp, index)
         if hasattr(sys.stdout, "fileno") and os.isatty(sys.stdout.fileno()):
