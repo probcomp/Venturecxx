@@ -96,7 +96,7 @@ def testGradientOfSimulate():
                 "tan"
     ]:
       continue
-    elif name in ["gamma"]:
+    elif name in ["div", "gamma"]:
       # Because of numerical artifacts when test arguments are near zero
       yield checkFlakyGradientOfSimulate, name, sp
     else:
