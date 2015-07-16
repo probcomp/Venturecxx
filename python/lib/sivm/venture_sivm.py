@@ -138,6 +138,15 @@ class VentureSivm(object):
                 import traceback
                 print traceback.format_exc()
                 raise e, None, info[2]
+            finally:
+                if instruction_type in ['define','assume','observe','predict','evaluate','infer']:
+                    # After annotation completes, clear the syntax
+                    # dictionaries, because the instruction was
+                    # (presumably!) not recorded in the underlying
+                    # engine (so e.g. future list_directives commands
+                    # should not list it)
+                    del self.directive_dict[predicted_did]
+                    del self.syntax_dict[predicted_did]
             raise e, None, info[2]
         self._register_executed_instruction(instruction, predicted_did, response)
         return response
