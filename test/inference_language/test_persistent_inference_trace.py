@@ -105,8 +105,8 @@ def testDirectivesInInfer2():
 
 def testForeignInfSPs():
   r = get_ripl(persistent_inference_trace = True)
-  r.bind_foreign_inference_sp("my_bernoulli", builtin.builtInSPs()["bernoulli"])
-  r.infer("(mh default one (+ (my_bernoulli 0.5) 1))")
+  r.bind_foreign_inference_sp("my_mul", builtin.builtInSPs()["mul"])
+  r.infer("(mh default one (+ (my_mul 2 2) 1))")
 
 def testForceSmoke1():
   r = get_ripl(persistent_inference_trace=True)
