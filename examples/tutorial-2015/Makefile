@@ -22,10 +22,10 @@ REGRESSION_ASSETS = lin-reg-1.vnts reg-test.csv vis-frame.png curve-fitting.py
 %-smoke.lvnt: %.lvnt.erb
 	SMOKETEST=1 erb $< > $@
 
-tutorial/%/index.html: %.lvnt
+tutorial/%/index.html: %.lvnt reg-test.csv
 	../../script/venture-transcript $< tutorial/$*
 
-tutorial-smoke/%/index.html: %-smoke.lvnt
+tutorial-smoke/%/index.html: %-smoke.lvnt reg-test.csv
 	../../script/venture-transcript $< tutorial-smoke/$*
 
 # Full builds
