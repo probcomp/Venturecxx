@@ -179,6 +179,11 @@ def grad_vector_dot(args, direction):
   unscaled = [v.VentureArray(args[1]), v.VentureArray(args[0])]
   return [direction.getNumber() * x for x in unscaled]
 
+def vvsum(venture_array):
+  # TODO Why do the directions come in and out as Venture Values
+  # instead of being unpacked by f_type.gradient_type()?
+  return v.VentureNumber(sum(venture_array.getArray(t.NumberType())))
+
 def dispatching_psp(types, psps):
   return DispatchingPSP(types, [TypedPSP(psp, tp) for (psp, tp) in zip(psps, types)])
 
@@ -193,8 +198,8 @@ generic_add = dispatching_psp(
   [deterministic_psp(lambda *args: sum(args),
                      sim_grad=lambda args, direction: [direction for _ in args],
                      descr="add returns the sum of all its arguments"),
-   deterministic_psp(np.add, sim_grad=lambda args, direction: [direction, sum(direction)]),
-   deterministic_psp(np.add, sim_grad=lambda args, direction: [sum(direction), direction]),
+   deterministic_psp(np.add, sim_grad=lambda args, direction: [direction, vvsum(direction)]),
+   deterministic_psp(np.add, sim_grad=lambda args, direction: [vvsum(direction), direction]),
    deterministic_psp(lambda *args: np.sum(args, axis=0),
                      sim_grad=lambda args, direction: [direction for _ in args],
                      descr="add returns the sum of all its arguments")])
@@ -209,10 +214,10 @@ generic_times = dispatching_psp(
                      sim_grad=grad_times,
                      descr="mul returns the product of all its arguments"),
    deterministic_psp(np.multiply,
-                     sim_grad=lambda args, direction: [ sum(np.dot(args[1], direction)), np.multiply(args[0], direction) ],
+                     sim_grad=lambda args, direction: [ v.VentureNumber(v.vv_dot_product(v.VentureArrayUnboxed(args[1], t.NumberType()), direction)), direction * args[0] ],
                      descr="scalar times vector"),
    deterministic_psp(np.multiply,
-                     sim_grad=lambda args, direction: [ np.multiply(args[1], direction), sum(np.dot(args[0], direction)) ],
+                     sim_grad=lambda args, direction: [ direction * args[1], v.VentureNumber(v.vv_dot_product(v.VentureArrayUnboxed(args[0], t.NumberType()), direction)) ],
                      descr="vector times scalar")])
 
 generic_normal = dispatching_psp(
