@@ -8,7 +8,7 @@ gauss_plot.png:  # This takes about 3 minutes on my laptop
 reg-test.csv: mk_dataset.vnt
 	venture puma -f $<
 
-vis-frame.png: mk_frame.vnt curve-fitting.py reg-test.csv
+vis-frame.png: mk_frame.vnts curve-fitting.py reg-test.csv
 	venture lite -L curve-fitting.py -f $<
 
 BASIC_ASSETS = gauss_plot.png
