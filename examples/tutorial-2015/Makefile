@@ -9,7 +9,7 @@ reg-test.csv: mk_dataset.vnt
 	venture puma -f $<
 
 vis-frame.png: mk_frame.vnt curve-fitting.py
-	venture puma -L curve-fitting.py -f $<
+	venture lite -L curve-fitting.py -f $<
 
 # Tutorial content files
 
