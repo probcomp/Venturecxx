@@ -108,7 +108,6 @@ class Draw(object):
           else:
             # This is the vectorized observation regime
             for (x, y) in zip(obs_x, val["value"]):
-              print x, y
               self._draw_point((int(x), y), is_outlier, noise_level)
     return (has_quad, has_sine)
 
