@@ -207,6 +207,17 @@ generic_times = dispatching_psp(
    deterministic_psp(np.multiply,
                      descr="vector times scalar")])
 
+generic_normal = dispatching_psp(
+  [SPType([t.NumberType(), t.NumberType()], t.NumberType()), # TODO Sigma is really non-zero, but negative is OK by scaling
+   SPType([t.NumberType(), t.ArrayUnboxedType(t.NumberType())],
+          t.ArrayUnboxedType(t.NumberType())),
+   SPType([t.ArrayUnboxedType(t.NumberType()), t.NumberType()],
+          t.ArrayUnboxedType(t.NumberType())),
+   SPType([t.ArrayUnboxedType(t.NumberType()), t.ArrayUnboxedType(t.NumberType())],
+          t.ArrayUnboxedType(t.NumberType()))],
+  [continuous.NormalOutputPSP(), continuous.NormalvvOutputPSP(),
+   continuous.NormalvvOutputPSP(), continuous.NormalvvOutputPSP()])
+
 builtInSPsList = [
            [ "add", no_request(generic_add)],
            [ "sub", binaryNum(lambda x,y: x - y,
@@ -498,7 +509,7 @@ builtInSPsList = [
            [ "categorical", typed_nr(discrete.CategoricalOutputPSP(), [t.SimplexType(), t.ArrayType()], t.AnyType(), min_req_args=1) ],
            [ "uniform_discrete", typed_nr(discrete.UniformDiscreteOutputPSP(), [t.IntegerType(), t.IntegerType()], t.IntegerType()) ],
            [ "poisson", typed_nr(discrete.PoissonOutputPSP(), [t.PositiveType()], t.CountType()) ],
-           [ "normal", typed_nr(continuous.NormalOutputPSP(), [t.NumberType(), t.NumberType()], t.NumberType()) ], # TODO Sigma is really non-zero, but negative is OK by scaling
+           [ "normal", no_request(generic_normal) ],
            [ "vonmises", typed_nr(continuous.VonMisesOutputPSP(), [t.NumberType(), t.PositiveType()], t.NumberType()) ],
            [ "uniform_continuous",typed_nr(continuous.UniformOutputPSP(), [t.NumberType(), t.NumberType()], t.NumberType()) ],
            [ "beta", typed_nr(continuous.BetaOutputPSP(), [t.PositiveType(), t.PositiveType()], t.ProbabilityType()) ],

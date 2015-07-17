@@ -22,5 +22,21 @@ from venture.test.config import get_ripl, collectSamples, on_inf_prim
 def testGenericPlusSmoke():
   eq_(3, get_ripl().evaluate("(+ 1 2)"))
   assert_allclose([5, 9], get_ripl().evaluate("(+ (vector 1 2) (vector 4 7))"))
+
+def testGenericTimesSmoke():
   assert_allclose([3, 6], get_ripl().evaluate("(* 3 (vector 1 2))"))
   assert_allclose([8, 14], get_ripl().evaluate("(* (vector 4 7) 2)"))
+
+def testGenericNormalSmoke():
+  get_ripl().evaluate("(normal (vector 1 2 3) 3)")
+  get_ripl().evaluate("(normal 3 (vector 1 2 3))")
+  get_ripl().evaluate("(normal (vector 1 2 3) (vector 1 2 3))")
+  assert_allclose(get_ripl().evaluate("(assess (vector 0 0) normal (vector 1 2) 3)"),
+                  get_ripl().evaluate("(assess 0 normal 1 3)") +
+                  get_ripl().evaluate("(assess 0 normal 2 3)"))
+  assert_allclose(get_ripl().evaluate("(assess (vector 0 0) normal 3 (vector 1 2))"),
+                  get_ripl().evaluate("(assess 0 normal 3 1)") +
+                  get_ripl().evaluate("(assess 0 normal 3 2)"))
+  assert_allclose(get_ripl().evaluate("(assess (vector 0 0) normal (vector 1 2) (vector 1 2))"),
+                  get_ripl().evaluate("(assess 0 normal 1 1)") +
+                  get_ripl().evaluate("(assess 0 normal 2 2)"))
