@@ -8,6 +8,9 @@ gauss_plot.png:  # This takes about 3 minutes on my laptop
 reg-test.csv: mk_dataset.vnt
 	venture puma -f $<
 
+vis-frame.png: mk_frame.vnt curve-fitting.py
+	venture puma -L curve-fitting.py -f $<
+
 # Tutorial content files
 
 %.lvnt: %.lvnt.erb
