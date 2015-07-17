@@ -18,7 +18,7 @@
 from utils import override
 from lkernel import DeterministicMakerAAALKernel,DefaultVariationalLKernel,LKernel
 from request import Request
-from exception import VentureBuiltinSPMethodError
+from exception import VentureBuiltinSPMethodError, VentureError
 
 class PSP(object):
   """A Primitive Stochastic Procedure.
@@ -334,7 +334,7 @@ class TypedPSP(PSP):
 
   def __init__(self, psp, f_type):
     """The first argument is the PSP-like delegate, that is expected to
-    all the work, operating on Python representations of the data.
+    do all the work, operating on Python representations of the data.
 
     The second argument is the type signature, which controls the
     marshalling and unmarshalling.  The type signature itself must be
@@ -399,6 +399,63 @@ class TypedPSP(PSP):
   def description_rst_format(self, name):
     signature = ".. function:: " + self.f_type.name_rst_format(name)
     return (signature, self.psp.description(name))
+
+class DispatchingPSP(PSP):
+  def __init__(self, f_types, psps):
+    self.f_types = f_types
+    self.psps = psps
+
+  def _disptach(self, args):
+    for (f_type, psp) in zip(self.f_types, self.psps):
+      if f_type.args_match(args):
+        return psp
+    raise VentureError("Args do not match any alternative")
+
+  def simulate(self, args):
+    return self._disptach(args).simulate(args)
+  def gradientOfSimulate(self, args, value, direction):
+    return self._disptach(args).gradientOfSimulate(args, value, direction)
+  def logDensity(self, value, args):
+    return self._disptach(args).logDensity(value, args)
+  def gradientOfLogDensity(self, value, args):
+    return self._disptach(args).gradientOfLogDensity(value, args)
+  def logDensityBound(self, value, args):
+    return self._disptach(args).logDensityBound(value, args)
+  def incorporate(self, value, args):
+    return self._disptach(args).incorporate(value, args)
+  def unincorporate(self, value, args):
+    return self._disptach(args).unincorporate(value, args)
+  def enumerateValues(self, args):
+    return self._disptach(args).enumerateValues(args)
+
+  # Is this really the right treatment of methods that don't give args?
+  def logDensityOfCounts(self, aux):
+    return self.psps[0].logDensityOfCounts(aux)
+  def isRandom(self):
+    return self.psps[0].isRandom()
+  def canAbsorb(self, trace, appNode, parentNode):
+    return self.psps[0].canAbsorb(trace, appNode, parentNode)
+  def childrenCanAAA(self):
+    return self.psps[0].childrenCanAAA()
+  def getAAALKernel(self):
+    return self.psps[0].getAAALKernel()
+  def canEnumerate(self):
+    return self.psps[0].canEnumerate()
+  def hasVariationalLKernel(self):
+    return self.psps[0].hasVariationalLKernel()
+  def getVariationalLKernel(self, args):
+    return self._disptach(args).getVariationalLKernel(args)
+  def hasSimulationKernel(self):
+    return self.psps[0].hasSimulationKernel()
+  def hasDeltaKernel(self):
+    return self.psps[0].hasDeltaKernel()
+  def getDeltaKernel(self, args):
+    return self._disptach(args).getDeltaKernel(args)
+
+  def description(self, name):
+    return self.psps[0].description(name)
+  def description_rst_format(self, name):
+    return self.psps[0].description_rst_format(name)
 
 class TypedLKernel(LKernel):
   def __init__(self, kernel, f_type):

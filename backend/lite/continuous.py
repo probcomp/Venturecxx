@@ -267,6 +267,9 @@ class NormalOutputPSP(RandomPSP):
   def description(self,name):
     return "  (%s mu sigma) samples a normal distribution with mean mu and standard deviation sigma." % name
 
+class NormalvvOutputPSP(RandomPSP):
+  def simulate(self, args): return np.random.normal(*args.operandValues())
+  def logDensity(self, x, args): return sum(scipy.stats.norm.logpdf(x, *args.operandValues()))
 
 class VonMisesOutputPSP(RandomPSP):
   def simulate(self,args):
