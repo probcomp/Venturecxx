@@ -112,6 +112,7 @@ literal(true)		::= T_TRUE(t).
 literal(false)		::= T_FALSE(f).
 literal(integer)	::= L_INTEGER(v).
 literal(real)		::= L_REAL(v).
+literal(string)		::= L_STRING(v).
 literal(json)		::= L_NAME(type)
 				T_LANGLE(open) json(value) T_RANGLE(close).
 literal(json_error)	::= L_NAME(type) T_LANGLE(open) error T_RANGLE(close).

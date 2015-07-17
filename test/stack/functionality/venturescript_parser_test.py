@@ -523,6 +523,11 @@ class TestVentureScriptParser(unittest.TestCase):
         output = f('infer')
         self.assertEqual(output,'infer %(expression)s')
 
+    def test_string(self):
+        output = self.p.parse_expression('"foo"')
+        expected = v.string('foo')
+        self.assertEqual(output,expected)
+
 
 # Almost the same effect as @venture.test.config.in_backend('none'),
 # but works on the whole class

@@ -230,6 +230,8 @@ class Semantics(object):
         return locmap(loctoken(v), val.number)
     def p_literal_real(self, v):
         return locmap(loctoken(v), val.number)
+    def p_literal_string(self, v):
+        return locmap(loctoken(v), val.string)
     def p_literal_json(self, type, open, value, close):
         t, start, end = type
         if t == 'number' or t == 'boolean':
@@ -337,6 +339,9 @@ def tagged_value_to_string(v):
     elif v['type'] == 'symbol':
         assert isinstance(v['value'], basestring)
         return v['value']
+    elif v['type'] == 'string':
+        assert isinstance(v['value'], basestring)
+        return quote_string(v['value'])
     elif v['type'] == 'array_unboxed':
         # first problem: the JSON representation for this isn't one-to-one,
         # because it doesn't include a way to specify subtype.
@@ -350,6 +355,29 @@ def tagged_value_to_string(v):
         return '%s<%s>' % (v['type'], json.dumps(v['value']))
     else:
         return '%s<%s>' % (v['type'], json.dumps(v['value']))
+
+escapes = {
+    '/':    '/',
+    '\"':   '\"',
+    '\\':   '\\',
+    '\b':   'b',            # Backspace
+    '\f':   'f',            # Form feed
+    '\n':   'n',            # Line feed
+    '\r':   'r',            # Carriage return
+    '\t':   't',            # Horizontal tab
+}
+
+def quote_string(s):
+    out = StringIO.StringIO()
+    out.write('"')
+    for ch in string:
+        if ch in escapes:
+            out.write('\\')
+            out.write(escapes[ch])
+        else:
+            out.write(ch)
+    out.write('"')
+    return out.getvalue()
 
 # XXX Ugh, whattakludge.  If we can get rid of substitute_params, we
 # can get rid of this.
@@ -488,30 +516,10 @@ class ChurchPrimeParser(object):
         else:
             raise TypeError('Invalid expression: %s of type %s' % (repr(expression),type(expression)))
 
-    escapes = {
-        '/':    '/',
-        '\"':   '\"',
-        '\\':   '\\',
-        '\b':   'b',            # Backspace
-        '\f':   'f',            # Form feed
-        '\n':   'n',            # Line feed
-        '\r':   'r',            # Carriage return
-        '\t':   't',            # Horizontal tab
-    }
-
     def unparse_integer(self, integer):
         return str(integer)
     def unparse_string(self, string):
-        out = StringIO.StringIO()
-        out.write('"')
-        for ch in string:
-            if ch in escapes:
-                out.write('\\')
-                out.write(escapes[ch])
-            else:
-                out.write(ch)
-        out.write('"')
-        return out.getvalue()
+        return quote_string(string)
     def unparse_symbol(self, symbol):
         assert isinstance(symbol, dict)
         assert 'type' in symbol

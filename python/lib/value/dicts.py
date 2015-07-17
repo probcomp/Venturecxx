@@ -72,6 +72,10 @@ def symbol(s):
 
 sym = symbol
 
+def string(s):
+  assert isinstance(s, basestring)
+  return val("string",s)
+
 def blob(v):
   return val("blob",v)
 
