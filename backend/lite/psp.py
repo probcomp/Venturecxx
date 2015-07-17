@@ -410,7 +410,7 @@ class DispatchingPSP(PSP):
     for (f_type, psp) in zip(self.f_types, self.psps):
       if f_type.args_match(args):
         return psp
-    raise VentureError("Args do not match any alternative")
+    return self.psps[0] # And hope coersion succeeds
 
   def simulate(self, args):
     return self._disptach(args).simulate(args)
