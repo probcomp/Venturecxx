@@ -85,14 +85,22 @@ class Draw(object):
         (_, datum, val) = directive
         if isinstance(datum, list) and len(datum) == 2:
           # Assume obs_fun call with no outlier tag
-          obs_x = datum[1]["value"]
+          if isinstance(datum[1], list) and len(datum[1]) == 2 and datum[1][0] == {'type': 'symbol', 'value': 'quote'}:
+            # quoted, probably by observe_dataset
+            obs_x = datum[1][1]["value"]
+          else:
+            obs_x = datum[1]["value"]
           is_outlier = False
         elif isinstance(datum, list):
           # Assume obs_fun call with outlier tag
           # Assume outliers are not vectorized
           id = datum[1]
           is_outlier = u.strip_types(inferrer.engine.sample(v.app(v.sym("is_outlier"), id)))
-          obs_x = datum[2]["value"]
+          if isinstance(datum[2], list) and len(datum[2]) == 2 and datum[2][0] == {'type': 'symbol', 'value': 'quote'}:
+            # quoted, probably by observe_dataset
+            obs_x = datum[2][1]["value"]
+          else:
+            obs_x = datum[2]["value"]
         if isinstance(datum, list):
           if isinstance(obs_x, numbers.Number):
             # This is the one-observation-at-a-time regime
