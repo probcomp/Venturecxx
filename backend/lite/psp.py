@@ -404,6 +404,7 @@ class DispatchingPSP(PSP):
   def __init__(self, f_types, psps):
     self.f_types = f_types
     self.psps = psps
+    self.f_type = f_types[0] # TODO Hack to pacify SP.venture_type for now
 
   def _disptach(self, args):
     for (f_type, psp) in zip(self.f_types, self.psps):
