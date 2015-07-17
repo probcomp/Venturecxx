@@ -20,7 +20,7 @@ import numpy as np
 from numbers import Number
 
 from sp import SP, SPType
-from psp import NullRequestPSP, ESRRefOutputPSP, DeterministicPSP, TypedPSP
+from psp import NullRequestPSP, ESRRefOutputPSP, DeterministicPSP, TypedPSP, DispatchingPSP
 
 import discrete
 import dirichlet
@@ -179,10 +179,19 @@ def grad_vector_dot(args, direction):
   unscaled = [v.VentureArray(args[1]), v.VentureArray(args[0])]
   return [direction.getNumber() * x for x in unscaled]
 
+generic_add = DispatchingPSP([SPType([t.NumberType()], t.NumberType(), variadic=True),
+                              SPType([t.ArrayUnboxedType(t.NumberType())], t.ArrayUnboxedType(t.NumberType()), variadic=True)],
+                             [TypedPSP(deterministic_psp(lambda *args: sum(args),
+                                                         sim_grad=lambda args, direction: [direction for _ in args],
+                                                         descr="add returns the sum of all its arguments"),
+                                       SPType([t.NumberType()], t.NumberType(), variadic=True)),
+                              TypedPSP(deterministic_psp(lambda *args: np.sum(args, axis=0),
+                                                         sim_grad=lambda args, direction: [direction for _ in args],
+                                                         descr="add returns the sum of all its arguments"),
+                                       SPType([t.ArrayUnboxedType(t.NumberType())], t.ArrayUnboxedType(t.NumberType()), variadic=True))])
+
 builtInSPsList = [
-           [ "add",  naryNum(lambda *args: sum(args),
-                             sim_grad=lambda args, direction: [direction for _ in args],
-                             descr="add returns the sum of all its arguments") ],
+           [ "add", no_request(generic_add)],
            [ "sub", binaryNum(lambda x,y: x - y,
                               sim_grad=lambda args, direction: [direction, -direction],
                               descr="sub returns the difference between its first and second arguments") ],
