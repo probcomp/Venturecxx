@@ -22,3 +22,5 @@ from venture.test.config import get_ripl, collectSamples, on_inf_prim
 def testGenericPlusSmoke():
   eq_(3, get_ripl().evaluate("(+ 1 2)"))
   assert_allclose([5, 9], get_ripl().evaluate("(+ (vector 1 2) (vector 4 7))"))
+  assert_allclose([3, 6], get_ripl().evaluate("(* 3 (vector 1 2))"))
+  assert_allclose([8, 14], get_ripl().evaluate("(* (vector 4 7) 2)"))

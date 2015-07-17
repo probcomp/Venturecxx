@@ -193,14 +193,26 @@ generic_add = dispatching_psp(
                      sim_grad=lambda args, direction: [direction for _ in args],
                      descr="add returns the sum of all its arguments")])
 
+generic_times = dispatching_psp(
+  [SPType([t.NumberType()], t.NumberType(), variadic=True),
+   SPType([t.NumberType(), t.ArrayUnboxedType(t.NumberType())],
+          t.ArrayUnboxedType(t.NumberType())),
+   SPType([t.ArrayUnboxedType(t.NumberType()), t.NumberType()],
+          t.ArrayUnboxedType(t.NumberType()))],
+  [deterministic_psp(lambda *args: reduce(lambda x,y: x * y,args,1),
+                     sim_grad=grad_times,
+                     descr="mul returns the product of all its arguments"),
+   deterministic_psp(np.multiply,
+                     descr="scalar times vector"),
+   deterministic_psp(np.multiply,
+                     descr="vector times scalar")])
+
 builtInSPsList = [
            [ "add", no_request(generic_add)],
            [ "sub", binaryNum(lambda x,y: x - y,
                               sim_grad=lambda args, direction: [direction, -direction],
                               descr="sub returns the difference between its first and second arguments") ],
-           [ "mul", naryNum(lambda *args: reduce(lambda x,y: x * y,args,1),
-                              sim_grad=grad_times,
-                              descr="mul returns the product of all its arguments") ],
+           [ "mul", no_request(generic_times) ],
            [ "div",   binaryNum(lambda x,y: x / y,
                                 sim_grad=grad_div,
                                 descr="div returns the ratio of its first argument to its second") ],
