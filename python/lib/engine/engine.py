@@ -94,6 +94,8 @@ class Engine(object):
   def observe(self,datum,val):
     baseAddr = self.nextBaseAddr()
     self.model.observe(baseAddr, datum, val)
+    if True: # TODO: add flag to toggle auto-incorporation
+      self.incorporate()
     return baseAddr
 
   def forget(self,directiveId):
@@ -199,7 +201,6 @@ class Engine(object):
       self.swapped_model = current_swapped_status
 
   def infer(self, program):
-    self.incorporate()
     if self.is_infer_loop_program(program):
       assert len(program) == 2
       self.start_continuous_inference(program[1])
