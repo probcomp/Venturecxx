@@ -184,11 +184,17 @@ def dispatching_psp(types, psps):
 
 generic_add = dispatching_psp(
   [SPType([t.NumberType()], t.NumberType(), variadic=True),
+   SPType([t.ArrayUnboxedType(t.NumberType()), t.NumberType()],
+          t.ArrayUnboxedType(t.NumberType())),
+   SPType([t.NumberType(), t.ArrayUnboxedType(t.NumberType())],
+          t.ArrayUnboxedType(t.NumberType())),
    SPType([t.ArrayUnboxedType(t.NumberType())], t.ArrayUnboxedType(t.NumberType()),
           variadic=True)],
   [deterministic_psp(lambda *args: sum(args),
                      sim_grad=lambda args, direction: [direction for _ in args],
                      descr="add returns the sum of all its arguments"),
+   deterministic_psp(lambda v, x: np.array([vi + x for vi in v])),
+   deterministic_psp(lambda x, v: np.array([x + vi for vi in v])),
    deterministic_psp(lambda *args: np.sum(args, axis=0),
                      sim_grad=lambda args, direction: [direction for _ in args],
                      descr="add returns the sum of all its arguments")])
