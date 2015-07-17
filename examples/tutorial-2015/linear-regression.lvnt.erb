@@ -255,23 +255,65 @@ Topic: Understanding a model with visualization
 
 Is our fit any good? Although we can get some idea of what's going on
 by plotting the predictions for a given `x`, it's much more effective
-to be able to visualize the actual line overlaid on top of the data,
-and see how it changes during inference.
+to be able to see the fitted line plotted alongside the data, and see
+what happens over the course of inference.
 
 In order to do so, we can make use of Venture's plugin infrastructure
-to load external visualization code written in Python. The plugin
-[curve-fitting.py](curve-fitting.py) provides an interactive curve-fitting
-visualization, which you can download and load into Venture using
+to load external code written in Python. In this case, we've provided
+a custom plugin that produces an animated curve-fitting visualization
+that can be updated during the inference program. Download
+[curve-fitting.py](curve-fitting.py) and load it into Venture using
 
 ```venture
 load_plugin curve-fitting.py
 ```
 
-[TODO Drop in pygame visualization code.  How much to explain vs black-box it?]
+Alternatively, the plugin can be loaded when you launch Venture by
+supplying `-L curve-fitting.py` on the command line.
 
-This should render an animated plot that looks like this:
+When the plugin loads, a new window should pop up where the animation
+will appear. The plugin provides a callback that can be invoked to
+draw a new frame
+
+```venture
+infer call_back(draw)
+```
+
+which should render a plot that looks like this:
 
 ![A frame of the visualization](vis-frame.png)
+
+We can also plot multiple frames with inference commands interleaved
+
+```venture
+infer reset_to_prior
+infer repeat(30, do(default_markov_chain(1),
+                    call_back(draw)))
+```
+
+The [`repeat`](<%= refman_url %>inference.html#repeat) command works
+similarly to `accumulate_dataset`, but in this case we aren't
+concerned with collecting the data since it's being rendered in the
+visualization instead. Together, this command will run the Markov
+chain for 30 iterations, drawing an animation frame after each
+iteration.
+
+Exercise: Play with this visualization to see how inference is doing.
+
+1. Simulate the Markov chain for <%= smaller_sample_size %> iterations
+and watch the animation. Does the line move toward a good fit to the
+data?
+
+2. We can use `resample` to run multiple independent chains and plot
+all of the resulting lines on the same plot, to get some sense of the
+posterior distribution over lines. Resample 20 particles (remember to
+reset them to the prior), run them for 30 iterations, and look at the
+resulting animation. Does it look like the distribution of lines
+converges to something plausible?  How long does it take to run this?
+
+[TODO introduce continuous inference?]
+
+[TODO drop in custom proposals here for better inference]
 
 Elaboration: Outlier Detection
 ==============================
