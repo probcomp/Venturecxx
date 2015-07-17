@@ -100,8 +100,8 @@ class Draw(object):
     return (has_quad, has_sine)
 
   def _draw_curves_by_sampling_parameters(self, inferrer, has_quad, alpha_levels):
-    intercepts = u.strip_types(inferrer.engine.sample_all(v.sym("a")))
-    slopes = u.strip_types(inferrer.engine.sample_all(v.sym("b")))
+    intercepts = u.strip_types(inferrer.engine.sample_all(v.sym("intercept")))
+    slopes = u.strip_types(inferrer.engine.sample_all(v.sym("slope")))
     if has_quad:
       quads = u.strip_types(inferrer.engine.sample_all(v.sym("c")))
       is_quadratics = u.strip_types(inferrer.engine.sample_all(v.sym("is_quadratic")))
