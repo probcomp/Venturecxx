@@ -90,7 +90,12 @@ infer posterior
 sample list(intercept, slope, line(3))
 ```
 
-Exercise: Evaluate the model's performance on the two data points.
+Note that we are using rejection sampling here (`infer posterior`).
+This is fine for this example, but as explored previously, rejection
+sampling can become very slow as you increase the difficulty of the
+problem (such as by adding more data points, as we will do shortly).
+
+Exercise: For now, evaluate the model's performance on the two data points.
 
 1. Gather and save a dataset of independent posterior samples of the
    parameters and a prediction at some value.
@@ -135,7 +140,7 @@ define data = run(accumulate_dataset(<%= smaller_sample_size %>,
        concentrated do you expect it to be?  Plot the slope and check
        your intuition.
 
-[Answer: 2, broad,
+[Answer: 0, broad,
 
 ```church'
 (plot 'h1 data)
