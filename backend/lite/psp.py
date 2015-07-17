@@ -453,9 +453,9 @@ class DispatchingPSP(PSP):
     return self._disptach(args).getDeltaKernel(args)
 
   def description(self, name):
-    return "A dispatching psp" # TODO
+    return self.psps[0].description(name)
   def description_rst_format(self, name):
-    return "A dispatching psp" # TODO
+    return self.psps[0].description_rst_format(name)
 
 class TypedLKernel(LKernel):
   def __init__(self, kernel, f_type):
