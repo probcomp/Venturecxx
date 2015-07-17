@@ -28,8 +28,7 @@ def testScopeObservedThroughMem1():
   r.predict("(tag (quote foo) 0 (frob 1))")
   trace = r.sivm.core_sivm.engine.getDistinguishedTrace()
   scope = trace._normalizeEvaluatedScopeOrBlock(val.VentureSymbol("foo")) # pylint:disable=protected-access
-  eq_(1, len(trace.getAllNodesInScope(scope)))
-  r.infer("(incorporate)")
+  # TODO test for when auto-incorporation is disabled
   eq_(0, len(trace.getAllNodesInScope(scope)))
 
 @broken_in("puma", "No introspection on blocks in scope")
