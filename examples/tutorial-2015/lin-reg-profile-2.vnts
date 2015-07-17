@@ -33,5 +33,5 @@ infer incorporate()
 
 define data = run(accumulate_dataset(200,
   do(reset_to_prior,
-     map(default, all, 0.01, 1, 1),
+     map(default, all, 0.002, 20, 1),
      collect(intercept, slope, line(11)))))
