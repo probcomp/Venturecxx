@@ -193,8 +193,8 @@ generic_add = dispatching_psp(
   [deterministic_psp(lambda *args: sum(args),
                      sim_grad=lambda args, direction: [direction for _ in args],
                      descr="add returns the sum of all its arguments"),
-   deterministic_psp(np.add),
-   deterministic_psp(np.add),
+   deterministic_psp(np.add, sim_grad=lambda args, direction: [direction, sum(direction)]),
+   deterministic_psp(np.add, sim_grad=lambda args, direction: [sum(direction), direction]),
    deterministic_psp(lambda *args: np.sum(args, axis=0),
                      sim_grad=lambda args, direction: [direction for _ in args],
                      descr="add returns the sum of all its arguments")])
@@ -209,8 +209,10 @@ generic_times = dispatching_psp(
                      sim_grad=grad_times,
                      descr="mul returns the product of all its arguments"),
    deterministic_psp(np.multiply,
+                     sim_grad=lambda args, direction: [ sum(np.dot(args[1], direction)), np.multiply(args[0], direction) ],
                      descr="scalar times vector"),
    deterministic_psp(np.multiply,
+                     sim_grad=lambda args, direction: [ np.multiply(args[1], direction), sum(np.dot(args[0], direction)) ],
                      descr="vector times scalar")])
 
 generic_normal = dispatching_psp(
@@ -221,8 +223,8 @@ generic_normal = dispatching_psp(
           t.ArrayUnboxedType(t.NumberType())),
    SPType([t.ArrayUnboxedType(t.NumberType()), t.ArrayUnboxedType(t.NumberType())],
           t.ArrayUnboxedType(t.NumberType()))],
-  [continuous.NormalOutputPSP(), continuous.NormalvvOutputPSP(),
-   continuous.NormalvvOutputPSP(), continuous.NormalvvOutputPSP()])
+  [continuous.NormalOutputPSP(), continuous.NormalsvOutputPSP(),
+   continuous.NormalvsOutputPSP(), continuous.NormalvvOutputPSP()])
 
 builtInSPsList = [
            [ "add", no_request(generic_add)],
