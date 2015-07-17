@@ -17,6 +17,7 @@
 
 import pygame
 import pygame.image
+import numbers
 
 import venture.ripl.utils as u
 import venture.value.dicts as v
@@ -79,15 +80,23 @@ class Draw(object):
         (_, datum, val) = directive
         if isinstance(datum, list) and len(datum) == 2:
           # Assume obs_fun call with no outlier tag
-          obs_i = int(datum[1]["value"])
+          obs_x = datum[1]["value"]
           is_outlier = False
         elif isinstance(datum, list):
           # Assume obs_fun call with outlier tag
+          # Assume outliers are not vectorized
           id = datum[1]
           is_outlier = u.strip_types(inferrer.engine.sample(v.app(v.sym("is_outlier"), id)))
-          obs_i = int(datum[2]["value"])
+          obs_x = datum[2]["value"]
         if isinstance(datum, list):
-          self._draw_point((obs_i, val["value"]), is_outlier, noise_level)
+          if isinstance(obs_x, numbers.Number):
+            # This is the one-observation-at-a-time regime
+            self._draw_point((int(obs_x), val["value"]), is_outlier, noise_level)
+          else:
+            # This is the vectorized observation regime
+            for (x, y) in zip(obs_x, val["value"]):
+              print x, y
+              self._draw_point((int(x), y), is_outlier, noise_level)
     return (has_quad, has_sine)
 
   def _draw_curves_by_sampling_parameters(self, inferrer, has_quad, alpha_levels):
