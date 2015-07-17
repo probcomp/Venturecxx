@@ -161,8 +161,8 @@ around (1.5, 2).
 (plot 'p0d1d data)
 ```
 
-TODO: Segment Title
-===================
+Working with Datasets
+=====================
 
 In the previous segment, we started with the simple linear regression
 model in [lin-reg-1.vnts](lin-reg-1.vnts)
@@ -217,7 +217,7 @@ OK, so we loaded the data.  We could do some inference
 infer default_markov_chain(30)
 ```
 
-and ask for a prediction
+and ask for a prediction at a new `x`-value
 
 ```venture
 sample line(11)
@@ -233,6 +233,10 @@ will use Venture's `plot`:
 (plot 'p0d1d frame)
 ```
 
+The dataset exhibits a clear linear relationship, and we should expect `line(11)` to be around 15.
+
+Let's try using Markov chain inference to fit our linear model. Start <%= smaller_sample_size %> independent chains, evolve them for 30 iterations, and record where they end up:
+
 ```venture
 define data = run(accumulate_dataset(<%= smaller_sample_size %>,
   do(reset_to_prior,
@@ -240,12 +244,19 @@ define data = run(accumulate_dataset(<%= smaller_sample_size %>,
      collect(intercept, slope, line(11)))))
 ```
 
+Now we can plot a histogram of the predicted `line(11)` value.
+
 ```church'
 (plot 'h2 data)
 ```
 
 Topic: Understanding a model with visualization
 ===============================================
+
+Is our fit any good? Although we can get some idea of what's going on
+by plotting the predictions for a given `x`, it's much more effective
+to be able to actually draw the line fit to the data and see how it
+changes during inference.
 
 [TODO Drop in pygame visualization code.  How much to explain vs black-box it?]
 
