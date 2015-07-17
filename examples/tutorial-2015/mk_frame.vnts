@@ -31,3 +31,4 @@ infer pyexec(quote(symbol<"frame = pd.read_csv('reg-test.csv')">))
 infer pyexec(quote(symbol<"ripl.observe(v.app('obs', v.vector(frame['x'].values)), v.vector(frame['y'].values))">))
 
 infer call_back(draw)
+infer call_back(draw_to_disk, quote(symbol<"vis-frame.png">))

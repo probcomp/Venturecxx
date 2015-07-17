@@ -58,6 +58,11 @@ class Draw(object):
     alpha_levels = [int(255.0 * p) for p in inferrer.particle_normalized_probs()]
     self.draw(inferrer, alpha_levels)
 
+  def draw_to_disk(self, inferrer, paths):
+    path = paths[0]["value"]
+    self.draw(inferrer)
+    pygame.image.save(self.window, path)
+
   def stop(self, _inferrer):
     pygame.quit()
     self.window = None
