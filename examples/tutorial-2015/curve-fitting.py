@@ -20,6 +20,7 @@ import pygame.image
 
 import venture.ripl.utils as u
 import venture.value.dicts as v
+from venture.exception import VentureException
 
 class Draw(object):
   def __init__(self):
@@ -63,7 +64,10 @@ class Draw(object):
   def _draw_observations(self, inferrer):
     has_quad = False
     has_sine = False
-    noise_level = u.strip_types(inferrer.engine.sample(v.sym("noise")))
+    try:
+        noise_level = u.strip_types(inferrer.engine.sample(v.sym("noise")))
+    except VentureException:
+        noise_level = 1 # Assume that undefined noise means 1
     for (_did, directive) in inferrer.engine.getDistinguishedTrace().directives.items():
       if directive[0] == "define":
         (_, symbol, datum) = directive
