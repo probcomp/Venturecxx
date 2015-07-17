@@ -182,14 +182,16 @@ def grad_vector_dot(args, direction):
 def dispatching_psp(types, psps):
   return DispatchingPSP(types, [TypedPSP(psp, tp) for (psp, tp) in zip(psps, types)])
 
-generic_add = dispatching_psp([SPType([t.NumberType()], t.NumberType(), variadic=True),
-                               SPType([t.ArrayUnboxedType(t.NumberType())], t.ArrayUnboxedType(t.NumberType()), variadic=True)],
-                              [deterministic_psp(lambda *args: sum(args),
-                                                 sim_grad=lambda args, direction: [direction for _ in args],
-                                                 descr="add returns the sum of all its arguments"),
-                               deterministic_psp(lambda *args: np.sum(args, axis=0),
-                                                 sim_grad=lambda args, direction: [direction for _ in args],
-                                                 descr="add returns the sum of all its arguments")])
+generic_add = dispatching_psp(
+  [SPType([t.NumberType()], t.NumberType(), variadic=True),
+   SPType([t.ArrayUnboxedType(t.NumberType())], t.ArrayUnboxedType(t.NumberType()),
+          variadic=True)],
+  [deterministic_psp(lambda *args: sum(args),
+                     sim_grad=lambda args, direction: [direction for _ in args],
+                     descr="add returns the sum of all its arguments"),
+   deterministic_psp(lambda *args: np.sum(args, axis=0),
+                     sim_grad=lambda args, direction: [direction for _ in args],
+                     descr="add returns the sum of all its arguments")])
 
 builtInSPsList = [
            [ "add", no_request(generic_add)],
