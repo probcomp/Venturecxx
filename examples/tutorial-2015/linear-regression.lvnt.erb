@@ -322,12 +322,56 @@ an animation frame after every iteration. Watch the animation while it
 runs and confirm that the line eventually approaches a good fit to the
 data. Does it take gradual steps or sudden jumps?
 
-2. We can use `resample` to run multiple independent chains and plot
-all of the resulting lines in the same window, to get some sense of
-the posterior distribution over lines. Resample 20 particles (remember
-to reset them to the prior), run them for 30 iterations, and look at
-the resulting animation. Does it look like the distribution of lines
-converges to something plausible?  How long does it take to run this?
+[Answer: It takes sudden jumps, with varying amount of time between
+jumps.
+
+```venture
+infer loop(do(default_markov_chain(1), call_back(draw)))
+```
+]
+
+2. How many iterations does it take for the chain to converge? Modify
+the inference loop to call `reset_to_prior` after every 30 iterations
+of the Markov chain. (Hint: You may want to use `repeat` and `do`.) Is
+the Markov chain able to find a good fit within 30 iterations? What
+about 100 iterations? Try playing with the number of iterations to see
+how many it takes to reliably find a reasonable fit.
+
+[Answer: 30 is not enough, and you may not even be able to tell
+exactly when it's resetting to the prior. 100 is better, but it's
+still hard to tell; 200-300 is clearly able to find it most of the time.
+
+```venture
+infer loop(do(reset_to_prior,
+              repeat(30, do(default_markov_chain(1),
+	                    call_back(draw)))))
+```
+]
+
+[TODO is it possible to make the pygame visualization display an
+iteration count to make this easier to interpret?]
+
+3. If you're still running the infer loop, turn it off for this part
+(`stop_continuous_inference`).
+
+We can use `resample` to run multiple independent chains and plot all
+of the resulting lines in the same window, to get some sense of the
+posterior distribution over lines. Resample 20 particles (remember to
+reset them to the prior), run them for 30 iterations, and look at the
+resulting animation. Does it look like the distribution of lines
+converges to something plausible? If you're impatient, try increasing
+the number of iterations as above.
+
+[Answer: Some of the samples do concentrate around the correct line,
+but again 30 iterations is not enough to converge.
+
+```venture
+infer resample(20)
+infer do(reset_to_prior,
+         repeat(30, do(default_markov_chain(1),
+	               call_back(draw))))
+```
+]
 
 [TODO drop in custom proposals here for better inference]
 
