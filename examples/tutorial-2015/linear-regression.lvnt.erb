@@ -298,20 +298,36 @@ visualization instead. Together, this command will run the Markov
 chain for 30 iterations, drawing an animation frame after each
 iteration.
 
+Another useful command which works well with visualization is
+[`loop`](<%= refman_url %>inference.html#loop), which runs the given
+action continually in the background. You can use it like this
+
+```venture
+infer loop(do(default_markov_chain(5),
+              call_back(draw)))
+```
+
+which will iterate the Markov chain and draw an animation frame every
+ 5 iterations, continuing to do so indefinitely. You can turn it off
+ with
+
+```venture
+stop_continuous_inference
+```
+
 Exercise: Play with this visualization to see how inference is doing.
 
-1. Simulate the Markov chain for <%= smaller_sample_size %> iterations
-and watch the animation. Does the line move toward a good fit to the
-data?
+1. Use the `loop` command to run the Markov chain continually and draw
+an animation frame after every iteration. Watch the animation while it
+runs and confirm that the line eventually approaches a good fit to the
+data. Does it take gradual steps or sudden jumps?
 
 2. We can use `resample` to run multiple independent chains and plot
-all of the resulting lines on the same plot, to get some sense of the
-posterior distribution over lines. Resample 20 particles (remember to
-reset them to the prior), run them for 30 iterations, and look at the
-resulting animation. Does it look like the distribution of lines
+all of the resulting lines in the same window, to get some sense of
+the posterior distribution over lines. Resample 20 particles (remember
+to reset them to the prior), run them for 30 iterations, and look at
+the resulting animation. Does it look like the distribution of lines
 converges to something plausible?  How long does it take to run this?
-
-[TODO introduce continuous inference?]
 
 [TODO drop in custom proposals here for better inference]
 
