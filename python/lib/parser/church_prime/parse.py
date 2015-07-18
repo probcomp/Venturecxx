@@ -370,7 +370,7 @@ escapes = {
 def quote_string(s):
     out = StringIO.StringIO()
     out.write('"')
-    for ch in string:
+    for ch in s:
         if ch in escapes:
             out.write('\\')
             out.write(escapes[ch])
