@@ -106,6 +106,7 @@ packages = [
     "venture.untraced",
     "venture.parser",
     "venture.parser.church_prime",
+    "venture.parser.venture_script",
     "venture.plex",
     "venture.puma",
     "venture.ripl",
@@ -181,6 +182,7 @@ distutils.ccompiler.CCompiler.compile=parallelCCompile
 # is more expedient for now.
 grammars = [
     'python/lib/parser/church_prime/grammar.y',
+    'python/lib/parser/venture_script/grammar.y',
 ]
 
 import distutils.spawn

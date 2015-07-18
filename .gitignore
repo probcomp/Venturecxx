@@ -31,3 +31,5 @@ venture-*.tar.gz
 # Lemonade parser generator output
 python/lib/parser/church_prime/grammar.out
 python/lib/parser/church_prime/grammar.py
+python/lib/parser/venture_script/grammar.out
+python/lib/parser/venture_script/grammar.py
