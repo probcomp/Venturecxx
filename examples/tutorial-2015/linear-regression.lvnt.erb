@@ -468,8 +468,11 @@ infer loop(do(default_markov_chain(1),
               call_back(draw)))
 ```
 
-[TODO explain continuous inference and make sure the example is
-convincing enough.]
+This should spend a while considering different hypotheses and whether
+or not to treat each point as an outlier. Eventually, it might find
+this configuration and settle on it for a while:
+
+![Most favorable configuration of the outlier model](vis-outlier.png)
 
 ```venture
 stop_continuous_inference
