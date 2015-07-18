@@ -353,8 +353,8 @@ assume is_outlier = mem(proc(i) { flip(outlier_prob) })
 
 Here we introduce `mem`, which memoizes a procedure, meaning that it
 will return the same result whenever it is applied with the same
-argument(s). Effectively, this makes a variable `is_outlier(i)` for
-every value of `i`, which we will use as an indicator variable that
+argument(s). Effectively, this creates a new variable `is_outlier(i)`
+for each value of `i`, which we will use as an indicator variable that
 says whether the `i`-th point is an outlier or not.
 
 [TODO: Do we need to clarify that mem's are memoized over the
