@@ -318,103 +318,128 @@ converges to something plausible?  How long does it take to run this?
 Elaboration: Outlier Detection
 ==============================
 
-[TODO Go through this]
+So far, we haven't really done anything beyond what standard tools for
+linear least squares regression can do. Now we will look at what
+happens if the data may contain outliers: points that do not fit in
+with the rest. In ordinary least squares regression, outliers can
+disproportionally influence the result and so are often excluded
+before running the regression. Here, we will take a different
+approach by extending our model to consider the possibility of outliers.
 
-```church'
+```venture
 clear
 ```
 
-```church'
-;; Prior on line parameters
-[assume a (normal 0 7)]
-[assume b (normal 0 4)]
+We start with our linear model much the same as before
 
-;; Hypothesized linear relationship
-[assume f (lambda (x) (+ a (* b x)))]
+```venture
+assume intercept = normal(0,7)
+assume slope = normal(0,4)
+assume line = proc(x) { slope * x + intercept }
+```
 
-;; Prior for unknown noise level
-[assume noise (gamma 1 1)]
+but this time, each point has some probability of being an outlier.
 
-;; Prior on the outlier rate
-[assume outlier_prob (uniform_continuous 0.01 0.3)]
+[TODO motivate the noise prior too.]
 
-;; Per-point outlier check
-[assume is_outlier (mem (lambda (i)
-  (flip outlier_prob)))]
+```venture
+assume noise = gamma(1,1)
+```
 
-;; Full data model: linear relationship with additive noise of unknown
-;; but consistent magnitude, plus outlier detection with a broad
-;; Gaussian outlier model.
-[assume obs_fun
-  (lambda (i x)
-    (if (is_outlier i)
-        (normal 0 100)
-        (normal (f x) noise)))]
+```venture
+assume outlier_prob = uniform_continuous(0.01,0.3)
+assume is_outlier = mem(proc(i) { flip(outlier_prob) })
+```
 
-;; Data set
-[observe (obs_fun 0 1) 0.5]
-[observe (obs_fun 1 4) 0]
-[observe (obs_fun 2 -3) 1]
-[observe (obs_fun 3 -5) -1]
+Here we introduce `mem`, which memoizes a procedure, meaning that it
+will return the same result whenever it is applied with the same
+argument(s). Effectively, this makes a variable `is_outlier(i)` for
+every value of `i`, which we will use as an indicator variable that
+says whether the `i`-th point is an outlier or not.
 
-;; Scatter plot of parameters after some inferece
-;; (independent short Markov chains)
-[infer (plotf 'p0d1d (run (accumulate_dataset <%= smaller_sample_size %>
-  (do reset_to_prior
-      (mh default one 30)
-      (collect a b)))))]
+What does it mean for a point to be an outlier? Unlike most of the
+other points, which we can expect to be near the value predicted by
+our linear equation, an outlier could just as likely be anywhere. We
+will model that by saying that for an outlier point, the y-value is
+drawn from `normal(0,20)`. Putting that all together, our full data
+model is
+
+[TODO put the noise prior somewhere and motivate it]
+
+```venture
+assume obs = proc(i,x) {
+  if (is_outlier(i)) {
+    normal(0,20)
+  } else {
+    normal(line(x), noise)
+  }
+}
+```
+
+Whew. If you don't want to type all that in, it's also in
+[lin-reg-2.vnts](lin-reg-2.vnts).
+
+Let's try this with some data
+
+```venture
+observe obs(0,1) = 2.5
+observe obs(1,4) = 1
+observe obs(2,-3) = -1
+observe obs(3,-5) = 6
+```
+
+and load it into our visualization
+
+```venture
+load_plugin curve-fitting.py
+infer loop(do(default_markov_chain(1),
+              call_back(draw)))
+```
+
+[TODO explain continuous inference and make sure the example is
+convincing enough.]
+
+```venture
+stop_continuous_inference
 ```
 
 Using tags for inference control
 ================================
 
-[TODO]
+Now that we have a more complex model with more moving parts, we'd
+like to be able to treat each of those parts independently when it
+comes to deciding how to do inference. Venture provides a mechanism to
+tag different parts of the model program and then refer to those tags
+from inference commands.
 
-```church'
+Let's see how this works. We'll load the same model as before, but
+this time we'll tag each of the random choices made in the model so
+that we can refer to them separately ([lin-reg-3.vnts](lin-reg-3.vnts)):
+
+```venture'
 clear
 ```
 
-```church'
-;; Prior on line parameters
-[assume a (tag 'param 'a (normal 0 7))]
-[assume b (tag 'param 'b (normal 0 4))]
+```venture'
+assume intercept = tag(quote(param), quote(intercept), normal(0,7))
+assume slope = tag(quote(param), quote(slope), normal(0,4))
+assume line = proc(x) { slope * x + intercept }
 
-;; Hypothesized linear relationship
-[assume f (lambda (x) (+ a (* b x)))]
+assume noise = tag(quote(hyper), quote(noise), gamma(1, 1))
 
-;; Prior for unknown noise level
-[assume noise (tag 'hyper 'noise (gamma 1 1))]
+assume outlier_prob = tag(quote(hyper), quote(outlier_prob), uniform_continuous(0.01, 0.3))
+assume is_outlier = mem(proc(i) { tag(quote(outlier), i, flip(outlier_prob)) })
 
-;; Prior on the outlier rate
-[assume outlier_prob (tag 'hyper 'outlier_prob (uniform_continuous 0.01 0.3))]
-
-;; Per-point outlier check
-[assume is_outlier (mem (lambda (i)
-  (tag 'outlier i
-   (flip outlier_prob))))]
-
-;; Full data model: linear relationship with additive noise of unknown
-;; but consistent magnitude, plus outlier detection with a broad
-;; Gaussian outlier model.
-[assume obs_fun
-  (lambda (i x)
-    (if (is_outlier i)
-        (normal 0 100)
-        (normal (f x) noise)))]
-
-;; Data set
-[observe (obs_fun 0 1) 0.5]
-[observe (obs_fun 1 4) 0]
-[observe (obs_fun 2 -3) 1]
-[observe (obs_fun 3 -5) -1]
-
-;; Scatter plot of parameters after some inferece
-;; (independent short Markov chains)
-[infer (plotf 'p0d1d (run (accumulate_dataset <%= smaller_sample_size %>
-  (do reset_to_prior
-      (mh default one 30)
-      (collect a b)))))]
+assume obs = proc(i, x) {
+  if (is_outlier(i)) {
+    normal(0,20)
+  } else {
+    normal(line(x), noise)
+  }
+}
 ```
+
+[TODO something interesting using the scopes]
 
 Elaboration: Model Selection
 ============================
