@@ -35,15 +35,18 @@ class Draw(object):
   def _do_start(self):
     pygame.init()
     self.window = pygame.display.set_mode(self.winsize)
+    self.font = pygame.font.Font(None, 30)
+    self.frame_count = 0
     pygame.display.update()
 
   def _ensure_started(self):
     if self.window is None:
       self._do_start()
 
-  def draw(self, inferrer, alpha_levels=None):
+  def _draw(self, inferrer, alpha_levels=None):
     self._ensure_started()
     self.window.fill(pygame.Color(255, 255, 255))
+    self._draw_frame_count()
     if alpha_levels is None:
       n = len(inferrer.particle_log_weights())
       alpha_levels = [max(int(255.0 / n), 100) for _ in range(n)]  # Blend the particles evenly by default
@@ -54,9 +57,17 @@ class Draw(object):
       self._draw_curves_by_sampling_parameters(inferrer, has_quad, alpha_levels)
     pygame.display.update()
 
+  def _draw_frame_count(self):
+    self.frame_count += 1
+    text = self.font.render("%d" % self.frame_count, True, (0, 0, 0), (255, 255, 255))
+    self.window.blit(text, (1,1))
+
+  def draw(self, inferrer):
+    self._draw(inferrer)
+
   def wdraw(self, inferrer):
     alpha_levels = [int(255.0 * p) for p in inferrer.particle_normalized_probs()]
-    self.draw(inferrer, alpha_levels)
+    self._draw(inferrer, alpha_levels)
 
   def draw_to_disk(self, inferrer, paths):
     path = paths[0]["value"]

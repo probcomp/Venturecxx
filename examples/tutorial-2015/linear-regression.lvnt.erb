@@ -337,9 +337,9 @@ the Markov chain able to find a good fit within 30 iterations? What
 about 100 iterations? Try playing with the number of iterations to see
 how many it takes to reliably find a reasonable fit.
 
-[Answer: 30 is not enough, and you may not even be able to tell
-exactly when it's resetting to the prior. 100 is better, but it's
-still hard to tell; 200-300 is clearly able to find it most of the time.
+[Answer: 30 is not enough, and it may not even be obvious visually
+when it's resetting to the prior. 100 is better, but still often fails
+to find a fit; 200-300 is clearly able to find it most of the time.
 
 ```venture
 infer loop(do(reset_to_prior,
@@ -347,9 +347,6 @@ infer loop(do(reset_to_prior,
 	                    call_back(draw)))))
 ```
 ]
-
-[TODO is it possible to make the pygame visualization display an
-iteration count to make this easier to interpret?]
 
 3. If you're still running the infer loop, turn it off for this part
 (`stop_continuous_inference`).
