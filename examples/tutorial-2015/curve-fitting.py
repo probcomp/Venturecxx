@@ -191,7 +191,8 @@ class Draw(object):
     return _interpolate(x, self.view_x, self.win_x)
 
   def _interpolate_y(self, y):
-    return _interpolate(y, self.view_y, self.win_y)
+    # invert y, because graphics coordinates.
+    return _interpolate(-y, self.view_y, self.win_y)
 
 def _interpolate(src_pt, src_bounds, dest_bounds):
   src_offset = src_pt - src_bounds[0]
