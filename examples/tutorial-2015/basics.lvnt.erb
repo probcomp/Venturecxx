@@ -635,14 +635,12 @@ clear
 
 ```church'
 [define mh_symmetric_proposal
-  (lambda (scope block proposal_kernel)
+  (lambda (proposal_kernel scope block)
     (do (subproblem <- (select scope block))
         (values <- (get_current_values subproblem))
-        (assert (= nil (rest values)) 'symbol<"can only propose one random choice at a time">)
-        (let ((value (first values))
-              (new_value (proposal_kernel value)))
+        (let ((new_values (mapv proposal_kernel values)))
           (do (rho_weight_and_rho_db <- (detach_for_proposal subproblem))
-              (xi_weight <- (regen_with_proposal subproblem (list new_value)))
+              (xi_weight <- (regen_with_proposal subproblem new_values))
               (let ((rho_weight (first rho_weight_and_rho_db))
                     (rho_db (rest rho_weight_and_rho_db)))
                 (if (< (log (uniform_continuous 0 1)) (- xi_weight rho_weight))
