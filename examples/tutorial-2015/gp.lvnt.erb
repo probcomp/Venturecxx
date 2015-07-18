@@ -176,8 +176,8 @@ with the number of data points.  For an introduction to Gaussian processes, see
 [TODO link].
 
 ```
-assume se = get_squaredexp(log(1.2), log(0.8))
-assume zero = get_zerofunc()
+assume se = make_squaredexp(log(1.2), log(0.8))
+assume zero = make_zerofunc()
 assume g = make_gp(zero, se)
 ```
 
