@@ -16,20 +16,20 @@
 // along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 // Line parameter prior
-assume intercept = tag(quote(param), quote(intercept), normal(0,7))
-assume slope = tag(quote(param), quote(slope), normal(0,4))
+assume intercept = tag(quote(param), quote(intercept), normal(0,7));
+assume slope = tag(quote(param), quote(slope), normal(0,4));
 
 // Hypothesized linear relationship
-assume line = proc(x) { slope * x + intercept }
+assume line = proc(x) { slope * x + intercept };
 
 // Prior for unknown noise level
-assume noise = tag(quote(hyper), quote(noise), gamma(1, 1))
+assume noise = tag(quote(hyper), quote(noise), gamma(1, 1));
 
 // Prior on the outlier rate
-assume outlier_prob = tag(quote(hyper), quote(outlier_prob), uniform_continuous(0.01, 0.3))
+assume outlier_prob = tag(quote(hyper), quote(outlier_prob), uniform_continuous(0.01, 0.3));
 
 // Per-point outlier check
-assume is_outlier = mem(proc(i) { tag(quote(outlier), i, flip(outlier_prob)) })
+assume is_outlier = mem(proc(i) { tag(quote(outlier), i, flip(outlier_prob)) });
 
 // Full data model: linear relationship with additive noise of unknown
 // but consistent magnitude, plus outlier detection with a broad
@@ -40,4 +40,4 @@ assume obs = proc(i, x) {
   } else {
     normal(line(x), noise)
   }
-}
+};
