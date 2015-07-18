@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-# Venture parser (`Church prime', Lisp-style notation).
+# Venture parser (`VentureScript', JavaScript-style notation).
 
 import StringIO
 import json
@@ -23,18 +23,30 @@ import json
 from venture.exception import VentureException
 import venture.value.dicts as val
 
-from venture.parser.church_prime import grammar
-from venture.parser.church_prime import scan
+from venture.parser.venture_script import grammar
+from venture.parser.venture_script import scan
 
 def tokval((value, _start, _end)):
     return value
 
+def isloc(obj):
+    return isinstance(obj, dict) and sorted(obj.keys()) == ['loc', 'value']
+
 def located(loc, value):
     # XXX Use a namedtuple, not a dict.
-    return { 'loc': loc, 'value': value }
+    return {'loc': loc, 'value': value}
+
+def locval(lv, v):
+    return {'loc': lv['loc'], 'value': v}
 
 def locmap(l, f):
-    return { 'loc': l['loc'], 'value': f(l['value']) }
+    return {'loc': l['loc'], 'value': f(l['value'])}
+
+def locmerge(lv0, lv1, v):
+    start0, end0 = lv0['loc']
+    start1, end1 = lv1['loc']
+    assert start0 < end1
+    return {'loc': [start0, end1], 'value': v}
 
 def loctoken((value, start, end)):
     return located([start, end], value)
@@ -65,12 +77,15 @@ operators = {
     '-':        'sub',
     '*':        'mul',
     '/':        'div',
+    '**':       'pow',
     '<':        'lt',
     '>':        'gt',
     '<=':       'lte',
     '>=':       'gte',
-    '=':        'eq',
+    '==':       'eq',  # XXX Church' uses = for eq, VScript uses = for def.
     '!=':       'neq',
+    '&&':       'and',
+    '||':       'or',
     '<-':       '<-',
 }
 
@@ -82,144 +97,264 @@ class Semantics(object):
         assert self.answer is not None
     def parse_failed(self):
         assert self.answer is None
-        raise VentureException('parse', 'Syntax error!')
-    def syntax_error(self, (_number, (text, start, end))):
+        raise VentureException('text_parse', 'Syntax error!')
+    def syntax_error(self, (number, (text, start, end))):
         # XXX Should not raise here -- should accumulate errors and
         # report them all at the end.
         #
         # XXX Should adapt lemonade to support passing a message, and
         # make the generated parser say which tokens (and, ideally,
         # nonterminals) it was expecting instead.
-        raise VentureException('parse', ('Syntax error at %s' % (repr(text,))),
+        raise VentureException('text_parse',
+            ('Syntax error at %s (token %d)' % (repr(text), number)),
             text_index=[start, end])
 
     # Venture start symbol: store result in self.answer, return none.
-    def p_venture_empty(self):
-        self.answer = []
-    def p_venture_i(self, insts):
+    def p_venture_top(self, insts):
+        for i in insts:
+            assert isloc(i)
         self.answer = insts
 
-    # instructions: Return list of instructions.
-    def p_instructions_one(self, inst):
-        return [inst]
-    def p_instructions_many(self, insts, inst):
-        insts.append(inst)
+    # instructions: Return list of located instructions.
+    def p_instructions_none(self):
+        return []
+    def p_instructions_some(self, insts, inst):
+        if inst is not None:
+            assert isloc(inst)
+            insts.append(inst)
         return insts
 
-    # instruction: Return located { 'instruction': 'foo', ... }.
-    def p_instruction_labelled(self, l, open, d, close):
-        d['label'] = locmap(loctoken(l), val.symbol)
-        d['instruction'] = locmap(d['instruction'], lambda i: 'labeled_' + i)
-        return locbracket(l, close, d)
-    def p_instruction_unlabelled(self, open, d, close):
-        return locbracket(open, close, d)
-    def p_instruction_command(self, open, c, close):
-        return locbracket(open, close, c)
+    # instruction_opt: Return located instruction or None.
+    def p_instruction_opt_none(self):
+        return None
+    def p_instruction_opt_some(self, inst):
+        assert isloc(inst)
+        return inst
+
+    # instruction: Return located {'instruction': 'foo', ...}.
+    def p_instruction_labelled(self, l, d):
+        d['value']['label'] = locmap(loctoken(l), val.symbol)
+        d['value']['instruction'] = \
+            locmap(d['value']['instruction'], lambda i: 'labeled_' + i)
+        return locmerge(loctoken(l), d, d['value'])
+    def p_instruction_unlabelled(self, d):
+        assert isloc(d)
+        return d
+    def p_instruction_command(self, c):
+        assert isloc(c)
+        return c
     def p_instruction_expression(self, e):
-        return locmap(e, lambda _: { 'instruction': locmap(e, lambda _: 'evaluate'), 'expression': e })
-    def p_instruction_laberror(self, d):
-        return 'error'
-    def p_instruction_labdirerror(self):
-        return 'error'
-    def p_instruction_error(self):
-        return 'error'
+        i = locval(e, 'evaluate')
+        return locval(e, {'instruction': i, 'expression': e})
 
-    # directive: Return { 'instruction': located(..., 'foo'), ... }.
-    def p_directive_define(self, k, n, e):
-        return { 'instruction': loctoken1(k, 'define'),
-                 'symbol': locmap(loctoken(n), val.symbol), 'expression': e }
-    def p_directive_assume(self, k, n, e):
-        return { 'instruction': loctoken1(k, 'assume'),
-                 'symbol': locmap(loctoken(n), val.symbol), 'expression': e }
-    def p_directive_observe(self, k, e, v):
-        return { 'instruction': loctoken1(k, 'observe'),
-                 'expression': e, 'value': v }
+    # directive: Return located {'instruction': located(..., 'foo'), ...}.
+    def p_directive_define(self, k, n, eq, e):
+        assert isloc(e)
+        i = loctoken1(k, 'define')
+        s = locmap(loctoken(n), val.symbol)
+        return locmerge(i, e, {'instruction': i, 'symbol': s, 'expression': e})
+    def p_directive_assume(self, k, n, eq, e):
+        assert isloc(e)
+        i = loctoken1(k, 'assume')
+        s = locmap(loctoken(n), val.symbol)
+        return locmerge(i, e, {'instruction': i, 'symbol': s, 'expression': e})
+    def p_directive_observe(self, k, e, eq, v):
+        assert isloc(e)
+        i = loctoken1(k, 'observe')
+        return locmerge(i, v, {'instruction': i, 'expression': e, 'value': v})
     def p_directive_predict(self, k, e):
-        return { 'instruction': loctoken1(k, 'predict'), 'expression': e }
+        assert isloc(e)
+        i = loctoken1(k, 'predict')
+        return locmerge(i, e, {'instruction': i, 'expression': e})
 
-    # command: Return { 'instruction': located(..., 'foo'), ... }.
+    # command: Return located { 'instruction': located(..., 'foo'), ... }.
     def p_command_configure(self, k, options):
-        return { 'instruction': loctoken1(k, 'configure'), 'options': options }
+        i = loctoken1(k, 'configure')
+        return locmerge(i, options, {'instruction': i, 'options': options})
     def p_command_forget(self, k, dr):
-        i = 'labeled_forget' if dr[0] == 'label' else 'forget'
-        return { 'instruction': loctoken1(k, i), dr[0]: dr[1] }
+        assert isloc(dr[1])
+        ui = 'labeled_forget' if dr[0] == 'label' else 'forget'
+        i = loctoken1(k, ui)
+        return locmerge(i, dr[1], {'instruction': i, dr[0]: dr[1]})
     def p_command_freeze(self, k, dr):
-        i = 'labeled_freeze' if dr[0] == 'label' else 'freeze'
-        return { 'instruction': loctoken1(k, i), dr[0]: dr[1] }
+        assert isloc(dr[1])
+        ui = 'labeled_freeze' if dr[0] == 'label' else 'freeze'
+        i = loctoken1(k, ui)
+        return locmerge(i, dr[1], {'instruction': i, dr[0]: dr[1]})
     def p_command_report(self, k, dr):
-        i = 'labeled_report' if dr[0] == 'label' else 'report'
-        return { 'instruction': loctoken1(k, i), dr[0]: dr[1] }
+        assert isloc(dr[1])
+        ui = 'labeled_report' if dr[0] == 'label' else 'report'
+        inst = {'instruction': loctoken1(k, ui), dr[0]: dr[1]}
+        return locmerge(i, dr[1], inst)
     def p_command_infer(self, k, e):
-        return { 'instruction': loctoken1(k, 'infer'), 'expression': e }
+        assert isloc(e)
+        i = loctoken1(k, 'infer')
+        return locmerge(i, e, {'instruction': i, 'expression': e})
     def p_command_clear(self, k):
-        return { 'instruction': loctoken1(k, 'clear') }
+        i = loctoken1(k, 'clear')
+        return locval(i, {'instruction': i})
     def p_command_rollback(self, k):
-        return { 'instruction': loctoken1(k, 'rollback') }
+        i = loctoken1(k, 'rollback')
+        return locval(i, {'instruction': i})
     def p_command_list_directives(self, k):
-        return { 'instruction': loctoken1(k, 'list_directives') }
+        i = loctoken1(k, 'list_directives')
+        return locval(i, {'instruction': i})
     def p_command_get_directive(self, k, dr):
-        i = 'labeled_get_directive' if dr[0] == 'label' else 'get_directive'
-        return { 'instruction': loctoken1(k, i), dr[0]: dr[1] }
-    def p_command_force(self, k, e, v):
-        return { 'instruction': loctoken1(k, 'force'), 'expression': e,
-                 'value': v }
+        assert isloc(dr[1])
+        ui = 'labeled_get_directive' if dr[0] == 'label' else 'get_directive'
+        i = loctoken1(k, ui)
+        return locmerge(i, dr[1], {'instruction': i, dr[0]: dr[1]})
+    def p_command_force(self, k, e, eq, v):
+        assert isloc(e)
+        assert isloc(v)
+        i = loctoken1(k, 'force')
+        return locmerge(i, v, {'instruction': i, 'expression': e, 'value': v})
     def p_command_sample(self, k, e):
-        return { 'instruction': loctoken1(k, 'sample'), 'expression': e }
+        assert isloc(e)
+        i = loctoken1(k, 'sample')
+        return locmerge(i, e, {'instruction': i, 'expression': e})
     def p_command_continuous_inference_status(self, k):
-        return { 'instruction': loctoken1(k, 'continuous_inference_status') }
+        i = loctoken1(k, 'continuous_inference_status')
+        return locval(i, {'instruction': i})
     def p_command_start_continuous_inference(self, k, e):
-        return { 'instruction': loctoken1(k, 'start_continuous_inference'),
-                 'expression': e }
+        assert isloc(e)
+        i = loctoken1(k, 'start_continuous_inference')
+        return locmerge(i, e, {'instruction': i, 'expression': e})
     def p_command_stop_continuous_inference(self, k):
-        return { 'instruction': loctoken1(k, 'stop_continuous_inference') }
+        i = loctoken1(k, 'stop_continuous_inference')
+        return locval(i, {'instruction': i})
     def p_command_get_current_exception(self, k):
-        return { 'instruction': loctoken1(k, 'get_current_exception') }
+        i = loctoken1(k, 'get_current_exception')
+        return locval(i, {'instruction': i})
     def p_command_get_state(self, k):
-        return { 'instruction': loctoken1(k, 'get_state') }
+        i = loctoken1(k, 'get_state')
+        return locval(i, {'instruction': i})
     def p_command_get_global_logscore(self, k):
-        return { 'instruction': loctoken1(k, 'get_global_logscore') }
-    def p_command_profiler_configure(self, k, options):
-        return { 'instruction': loctoken1(k, 'profiler_configure'),
-                 'options': options }
-    def p_command_profiler_clear(self, k):
-        return { 'instruction': loctoken1(k, 'profiler_clear') }
-    def p_command_list_random(self, k):
-        return { 'instruction': loctoken1(k, 'profiler_list_random_choices') }
+        i = loctoken1(k, 'get_global_logscore')
+        return locval(i, {'instruction': i})
     def p_command_load(self, k, pathname):
-        return { 'instruction': loctoken1(k, 'load'),
-                 'file': loctoken(pathname) }
+        i = loctoken1(k, 'load')
+        p = loctoken(pathname)
+        return locmerge(i, p, {'instruction': i, 'file': p})
 
     # directive_ref: Return (reftype, located value) tuple.
     def p_directive_ref_numbered(self, number):
         return ('directive_id', loctoken(number))
     def p_directive_ref_labelled(self, label):
-        return ('label', loctoken(label))
+        return ('label', locmap(loctoken(label), val.symbol))
+
+    # body: Return located expression.
+    def p_body_let(self, l, semi, e):
+        assert isloc(l)
+        assert isloc(e)
+        return locmerge(l, e, [locmerge(l, e, val.symbol('let')), l, e])
+    def p_body_exp(self, e):
+        assert isloc(e)
+        return e
+
+    # let: Return located list of located bindings.
+    def p_let_one(self, l):
+        assert isloc(l)
+        return locval(l, [l])
+    def p_let_many(self, ls, semi, l):
+        assert isloc(ls)
+        assert isloc(l)
+        ls['value'].append(l)
+        return locmerge(ls, l, ls['value'])
+
+    # let1: Return located binding.
+    def p_let1_l(self, n, eq, e):
+        assert isloc(e)
+        n = loctoken(n)
+        return locmerge(n, e, [locmap(n, val.symbol), e])
+
+    def _p_binop(self, l, op, r):
+        assert isloc(l)
+        assert isloc(r)
+        assert tokval(op) in operators
+        app = [locmap(loctoken1(op, operators[tokval(op)]), val.symbol), l, r]
+        return locmerge(l, r, app)
+    def _p_exp(self, e):
+        assert isloc(e)
+        return e
 
     # expression: Return located expression.
-    def p_expression_symbol(self, name):
-        return locmap(loctoken(name), val.symbol)
-    def p_expression_operator(self, op):
-        assert op[0] in operators
-        return locmap(loctoken(op), lambda op: val.symbol(operators[op]))
-    def p_expression_literal(self, value):
-        return value
-    def p_expression_quote(self, quote, e):
-        return locquoted(quote, e, val.quote)
-    def p_expression_qquote(self, qquote, e):
-        return locquoted(qquote, e, val.quasiquote)
-    def p_expression_unquote(self, unquote, e):
-        return locquoted(unquote, e, val.unquote)
-    def p_expression_combination(self, open, es, close):
-        return locbracket(open, close, es or [])
-    def p_expression_comb_error(self, open, es, close):
-        return 'error'
+    p_expression_top = _p_exp
+    def p_do_bind_bind(self, n, op, e):
+        assert isloc(e)
+        n = loctoken(n)
+        # XXX Yes, this remains infix, for the macro expander to handle...
+        return locmerge(n, e, [n, locmap(loctoken(op), val.symbol), e])
+    p_do_bind_none = _p_exp
+    p_boolean_or_or = _p_binop
+    p_boolean_or_none = _p_exp
+    p_boolean_and_and = _p_binop
+    p_boolean_and_none = _p_exp
+    p_equality_eq = _p_binop
+    p_equality_neq = _p_binop
+    p_equality_none = _p_exp
+    p_comparison_lt = _p_binop
+    p_comparison_le = _p_binop
+    p_comparison_ge = _p_binop
+    p_comparison_gt = _p_binop
+    p_comparison_none = _p_exp
+    p_additive_add = _p_binop
+    p_additive_sub = _p_binop
+    p_additive_none = _p_exp
+    p_multiplicative_mul = _p_binop
+    p_multiplicative_div = _p_binop
+    p_multiplicative_none = _p_exp
+    p_exponential_pow = _p_binop
+    p_exponential_none = _p_exp
 
-    # expressions: Return list of expressions, or None.
-    def p_expressions_none(self):
-        return []
-    def p_expressions_some(self, es, e):
-        es.append(e)
-        return es
+    def p_applicative_app(self, fn, o, args, c):
+        assert isloc(fn)
+        for arg in args:
+            assert isloc(arg)
+        return locmerge(fn, loctoken(c), [fn] + args)
+    def p_applicative_none(self, e):
+        assert isloc(e)
+        return e
+
+    # arglist, args: Return list of located expressions.
+    def p_arglist_none(self):           return []
+    def p_arglist_some(self, args):     return args
+    def p_args_one(self, arg):          return [arg]
+    def p_args_many(self, args, arg):   args.append(arg); return args
+
+    def p_primary_paren(self, o, e, c):
+        assert isloc(e)
+        return locbracket(o, c, [locbracket(o, c, val.symbol('identity')), e])
+    def p_primary_brace(self, o, l, semi, e, c):
+        assert isloc(e)
+        return locbracket(o, c, [locbracket(o, c, val.symbol('let')), l, e])
+    def p_primary_proc(self, k, po, params, pc, bo, body, bc):
+        assert isloc(body)
+        return locbracket(k, bc, [
+            locmap(loctoken1(k, 'lambda'), val.symbol),
+            locbracket(po, pc, params),
+            body,
+        ])
+    def p_primary_if(self, k, po, p, pc, co, c, cc, ke, ao, a, ac):
+        assert isloc(p)
+        assert isloc(c)
+        assert isloc(a)
+        return locbracket(k, ac,
+            [locmap(loctoken1(k, 'if'), val.symbol), p, c, a])
+    def p_primary_literal(self, l):
+        assert isloc(l)
+        return l
+    def p_primary_symbol(self, s):
+        return locmap(loctoken(s), val.symbol)
+
+    # paramlist, params: Return list of located symbols.
+    def p_paramlist_none(self):                 return []
+    def p_paramlist_some(self, params):         return params
+    def p_params_one(self, param):
+        return [locmap(loctoken(param), val.symbol)]
+    def p_params_many(self, params, c, param):
+        params.append(locmap(loctoken(param), val.symbol))
+        return params
 
     # literal: Return located `val'.
     def p_literal_true(self, t):
@@ -232,12 +367,16 @@ class Semantics(object):
         return locmap(loctoken(v), val.number)
     def p_literal_string(self, v):
         return locmap(loctoken(v), val.string)
-    def p_literal_json(self, type, open, value, close):
-        t, start, end = type
-        if t == 'number' or t == 'boolean':
-            raise VentureException('parse', ('JSON not allowed for %s' % (t,)),
+    def p_literal_json(self, t, v, c):
+        t0, start, end = t
+        assert t0[-1] == '<'
+        t0 = t0[:-1]
+        if t0 == 'number' or t0 == 'boolean':
+            # XXX Accumulate parse error.
+            raise VentureException('text_parse',
+                ('JSON not allowed for %s' % (t0,)),
                 text_index=[start, end])
-        return locbracket(type, close, { 'type': t, 'value': value })
+        return locbracket(t, c, {'type': t0, 'value': v})
 
     # json: Return json object.
     def p_json_string(self, v):                 return tokval(v)
@@ -269,7 +408,7 @@ class Semantics(object):
     def p_json_dict_entry_e(self, key, value):  return (tokval(key), value)
     def p_json_dict_entry_error(self, value):   return ('error', value)
 
-def parse_church_prime(f, context):
+def parse(f, context):
     scanner = scan.Scanner(f, context)
     semantics = Semantics()
     parser = grammar.Parser(semantics)
@@ -278,14 +417,21 @@ def parse_church_prime(f, context):
         if token[0] == -1:      # error
             semantics.syntax_error(token)
         else:
+            if token[0] == 0:   # EOF
+                # Implicit ; at EOF.
+                semi = (';', scanner.cur_pos, scanner.cur_pos)
+                parser.feed((grammar.T_SEMI, semi))
             parser.feed(token)
         if token[0] == 0:       # EOF
             break
+    assert isinstance(semantics.answer, list)
+    for i in semantics.answer:
+        assert isloc(i)
     return semantics.answer
 
-def parse_church_prime_string(string):
+def parse_string(string):
     try:
-        return parse_church_prime(StringIO.StringIO(string), '(string)')
+        return parse(StringIO.StringIO(string), '(string)')
     except VentureException as e:
         assert 'instruction_string' not in e.data
         if 'text_index' in e.data:
@@ -303,18 +449,18 @@ def parse_church_prime_string(string):
         raise e
 
 def parse_instructions(string):
-    return parse_church_prime_string(string)
+    return parse_string(string)
 
 def parse_instruction(string):
     ls = parse_instructions(string)
     if len(ls) != 1:
-        raise VentureException('parse', 'Expected a single instruction')
+        raise VentureException('text_parse', 'Expected a single instruction')
     return ls[0]
 
 def parse_expression(string):
     inst = parse_instruction(string)['value']
     if not inst['instruction']['value'] == 'evaluate':
-        raise VentureException('parse', 'Expected an expression')
+        raise VentureException('text_parse', 'Expected an expression')
     return inst['expression']
 
 def value_to_string(v):
@@ -342,17 +488,6 @@ def tagged_value_to_string(v):
     elif v['type'] == 'string':
         assert isinstance(v['value'], basestring)
         return quote_string(v['value'])
-    elif v['type'] == 'array_unboxed':
-        # first problem: the JSON representation for this isn't one-to-one,
-        # because it doesn't include a way to specify subtype.
-        # second: the value might be a numpy array, which JSON doesn't like.
-        # solution: convert to lite's VentureValue, unbox, convert back.
-        # XXX is there a better way?
-        from venture.lite.value import VentureValue, VentureArray
-        v = VentureValue.fromStackDict(v)
-        v = VentureArray(v.getArray())
-        v = v.asStackDict()
-        return '%s<%s>' % (v['type'], json.dumps(v['value']))
     else:
         return '%s<%s>' % (v['type'], json.dumps(v['value']))
 
@@ -461,15 +596,15 @@ def substitute_params_named(string, params):
 
 the_parser = None
 
-class ChurchPrimeParser(object):
-    '''Legacy interface to Church' parser.'''
+class VentureScriptParser(object):
+    '''Legacy interface to VentureScript parser.'''
 
     @staticmethod
     def instance():
-        '''Return the global Church' parser instance.'''
+        '''Return the global VentureScript parser instance.'''
         global the_parser
         if the_parser is None:
-            the_parser = ChurchPrimeParser()
+            the_parser = VentureScriptParser()
         return the_parser
 
     # XXX Doesn't really belong here.
@@ -632,9 +767,17 @@ class ChurchPrimeParser(object):
         return [strings, sortlocs]
 
     # XXX Make the tests pass, nobody else calls this.
+    def get_instruction_string(self, i):
+        if i == 'observe':
+            return 'observe %(expression)s = %(value)v'
+        elif i == 'infer':
+            return 'infer %(expression)s'
+        assert False
+
+    # XXX Make the tests pass, nobody else calls this.
     def character_index_to_expression_index(self, _string, index):
         '''Return bogus data to make tests pass.  Nobody cares!'''
-        return [[], [0], [], None, None, [2], [2,0]][index]
+        return [[0], [], [], None, None, [2,0], [2]][index]
 
     def expression_index_to_text_index(self, string, index):
         '''Return position of expression in STRING indexed by INDEX.
@@ -760,3 +903,38 @@ class Trie(object):
         for (ks, v) in keyed_items:
             answer.insert(ks, v)
         return answer
+
+def _collapse_identity(toks, operators):
+    """
+    Removes one layer of nested identity functions if the
+    inner expression is a function application contained
+    in the list of operators. For example:
+
+    _collapse_identity(
+        ['identity',
+            ['identity',
+                ['+', a, b]]],
+        ('+'))
+
+    returns: ['identity',
+                ['+',a, b]]
+
+    Of course, this function operates on the 'full'
+    {"loc":[], "value":[]} representation the above
+    parse trees. When a layer of parentheses is
+    collapsed, the loc range of the inner expression
+    is expanded to include the collapsed parens.
+    """
+    if not isinstance(toks['value'], (list, tuple)):
+        return toks
+    if not toks['value'][0]['value'] == val.symbol('identity'):
+        return toks
+    if not isinstance(toks['value'][1]['value'], (list, tuple)):
+        return toks
+    if toks['value'][1]['value'][0]['value'] == val.symbol('identity'):
+        return {"loc":toks['loc'], "value":[
+            toks['value'][0],
+            _collapse_identity(toks['value'][1], operators)]}
+    if toks['value'][1]['value'][0]['value']['value'] in operators:
+        return {"loc":toks['loc'], "value":toks['value'][1]['value']}
+    return toks

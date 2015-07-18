@@ -19,4 +19,4 @@
 
 
 from venture.parser.church_prime.parse import ChurchPrimeParser
-from venture.parser.venture_script_parser import VentureScriptParser
+from venture.parser.venture_script.parse import VentureScriptParser
