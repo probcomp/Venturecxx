@@ -30,14 +30,14 @@ Basics
 
 Sample an expression
 
-```church'
-(uniform_continuous 0 1)
+```venture
+uniform_continuous(0, 1)
 ```
 
 These are independent samples from the unit uniform distribution
 
-```church'
-(uniform_continuous 0 1)
+```venture
+uniform_continuous(0, 1)
 ```
 
 We can introduce a variable:
@@ -48,21 +48,21 @@ define mu = expon(2)  // Exponential distribution with rate 2
 
 whose value is a particular sample from that distribution:
 
-```church'
+```venture
 mu
 ```
 
 and we can sample further expressions conditioned on that value:
 
-```church'
-(normal mu 0.2)
+```venture
+normal(mu, 0.2)
 ```
 
 Exercise: Convince yourself that, for any given `mu`, `(normal mu 0.2)`
 is a different distribution from
 
-```church'
-(normal (expon 2) 0.2)
+```venture
+normal(expon(2), 0.2)
 ```
 
 because the latter samples a new internal mu every time.
@@ -100,7 +100,7 @@ value is a sample from that distribution.
 Assumed and defined variables live in separate namespaces in Venture,
 so just a bare `x` gives an error:
 
-```church'
+```venture
 x
 ```
 
@@ -145,7 +145,7 @@ sample y
 Now infer.
 
 ```venture
-infer posterior
+infer posterior;
 sample y
 ```
 
@@ -166,7 +166,7 @@ But we can compute a new posterior sample by running the posterior
 inferrer again.
 
 ```venture
-infer posterior
+infer posterior;
 sample x
 ```
 
@@ -177,16 +177,16 @@ As a reminder, we were studying this model (you can skip this block if
 you have your session from the last segment):
 
 ```venture
-clear
-assume x = normal(0, 1)
-assume y = normal(x, 1)
+clear;
+assume x = normal(0, 1);
+assume y = normal(x, 1);
 observe y = 2
 ```
 
 We can get samples from inference
 
 ```venture
-infer posterior
+infer posterior;
 sample x
 ```
 
@@ -194,12 +194,12 @@ but are they actually from the right distribution?  We could eyeball
 it like this a bit more:
 
 ```venture
-infer posterior
+infer posterior;
 sample x
 ```
 
 ```venture
-infer posterior
+infer posterior;
 sample x
 ```
 
@@ -219,8 +219,8 @@ study the documentation of [do](<%= refman_url
 values of `x` (and some metadata) over 10
 iterations of the `posterior` inference command.
 
-```church'
-(print data)
+```venture
+print(data)
 ```
 
 Do those values of `x` look good?  The values look sane to me, but I
@@ -231,8 +231,8 @@ properly.  Let's get more data and plot it:
 define more_data = run(accumulate_dataset(<%= smaller_sample_size %>, do(posterior, collect(x))))
 ```
 
-```church'
-(plot 'h0 more_data)
+```venture
+plot(quote(h0), more_data)
 ```
 
 That `h0` says "make a histogram of the zeroth collected data stream".
@@ -242,8 +242,8 @@ on the x, y, or color axis of a plot.
 
 Here's a version with more samples for better resolution:
 
-```church'
-(plot 'h0 (run (accumulate_dataset <%= sample_size %> (do posterior (collect x)))))
+```venture
+plot(quote(h0), run(accumulate_dataset(<%= sample_size %>, do(posterior, collect(x)))))
 ```
 
 The analytical answer is a Gaussian with mean 1 and precision 2 (which
@@ -269,9 +269,9 @@ are working with (you can skip this block if you have your session
 from the last segment):
 
 ```venture
-clear
-assume x = normal(0, 1)
-assume y = normal(x, 1)
+clear;
+assume x = normal(0, 1);
+assume y = normal(x, 1);
 observe y = 2
 ```
 
@@ -307,23 +307,23 @@ and see what happens as we change the model to make the
 problem harder.
 
 If you like standalone scripts, save the following into a file named,
-say, `exact.vnt`
+say, `exact.vnts`
 
 ```
-[assume x (normal 0 1)]
-[assume y (normal x 1)]
-[observe y 2]
-(plot 'h0
- (run
-  (accumulate_dataset <%= smaller_sample_size %>
-   (do posterior
-       (collect x)))))
+assume x = normal(0, 1);
+assume y = normal(x, 1);
+observe y = 2;
+plot(quote(h0),
+ run(
+  accumulate_dataset(<%= smaller_sample_size %>,
+   do(posterior,
+      collect(x)))))
 ```
 
 and explore by editing it and rerunning it with
 
 ```
-$ venture lite -f exact.vnt
+$ venture -f exact.vnts
 ```
 
 If you prefer to fiddle interactively, Venture has a command named
@@ -341,7 +341,7 @@ Then use `forget` to remove the existing observation, and replace it
 with one where the datum is farther out.
 
 ```venture
-forget <%= inf_prelude_size + 3 %>
+forget <%= inf_prelude_size + 3 %>;
 observe normal(x,1) = 4
 ```
 
@@ -351,8 +351,8 @@ list_directives
 
 The same solution still works
 
-```church'
-(plot 'h0 (run (accumulate_dataset <%= smaller_sample_size %> (do posterior (collect x)))))
+```venture
+plot(quote(h0), run(accumulate_dataset(<%= smaller_sample_size %>, do(posterior, collect(x)))))
 ```
 
 but as you move the datum further out (with more `forget` and
@@ -390,9 +390,9 @@ Here's what a basic version of this looks like in Venture.  Reset the
 model if you need to
 
 ```venture
-clear
-assume x = normal(0, 1)
-assume y = normal(x, 1)
+clear;
+assume x = normal(0, 1);
+assume y = normal(x, 1);
 observe y = 4
 ```
 
@@ -400,7 +400,7 @@ or load your file from the rejection segment into an interactive session
 with
 
 ```
-venture lite -f exact.vnt -i
+venture -f exact.vnts -i
 ```
 
 Then make 5 particles
@@ -415,23 +415,23 @@ existing pool proportionally to their weight (and then makes the
 weights equal).  Initially there is just one particle, so right now
 all of them are the same:
 
-```church'
-(run (sample_all x))
+```venture
+run(sample_all(x))
 ```
 
 To do importance sampling, we next [reset them to the prior and weight
 by likelihood](<%= refman_url %>inference.html#likelihood_weight):
 
-```church'
-[infer (likelihood_weight)]
-(run (sample_all x))
+```venture
+infer likelihood_weight();
+run(sample_all(x))
 ```
 
 and then resample down to one, which picks a particle at random
 in proportion to its weight.
 
 ```venture
-infer resample(1)
+infer resample(1);
 sample x
 ```
 
@@ -439,7 +439,7 @@ Using the plotting tools we learned before, here's the distribution
 this algrithm makes (note the use of `do` to sequence inference actions):
 
 ```venture
-infer plotf(quote(h0), run(accumulate_dataset(<%= smaller_sample_size %>,
+plot(quote(h0), run(accumulate_dataset(<%= smaller_sample_size %>,
   do(resample(5),
      likelihood_weight(),
      resample(1),
@@ -497,10 +497,10 @@ have been studying.
 Reset the model if you need to
 
 ```venture
-clear
-assume x = normal(0, 1)
-assume y = normal(x, 1)
-observe y = 4
+clear;
+assume x = normal(0, 1);
+assume y = normal(x, 1);
+observe y = 4;
 sample x
 ```
 
@@ -508,29 +508,29 @@ The inference command `default_markov_chain(1)` takes one step of
 Venture's default Markov chain, possibly changing the value of `x`.
 
 ```venture
-infer default_markov_chain(1)
+infer default_markov_chain(1);
 sample x
 ```
 
 If we do that a few more times,
 
 ```venture
-infer default_markov_chain(1)
+infer default_markov_chain(1);
 sample x
 ```
 
 ```venture
-infer default_markov_chain(1)
+infer default_markov_chain(1);
 sample x
 ```
 
 ```venture
-infer default_markov_chain(1)
+infer default_markov_chain(1);
 sample x
 ```
 
 ```venture
-infer default_markov_chain(1)
+infer default_markov_chain(1);
 sample x
 ```
 
@@ -543,8 +543,8 @@ As usual, let's see that with more data:
 define chain_history = run(accumulate_dataset(<%= sample_size %>, do(default_markov_chain(1), collect(x))))
 ```
 
-```church'
-(plot 'lc0 chain_history)
+```
+plot(quote(lc0), chain_history)
 ```
 
 The `lc0` says "make a **l**ine plot of the 0th collected expression vs
@@ -559,8 +559,8 @@ infer reset_to_prior
 
 and let's plot another one:
 
-```church'
-(plot 'lc0 (run (accumulate_dataset <%= sample_size %> (do (default_markov_chain 1) (collect x)))))
+```venture
+plot(quote(lc0), run(accumulate_dataset(<%= sample_size %>, do(default_markov_chain(1), collect(x)))))
 ```
 
 For more insight, let's plot several independent chains together.  If
@@ -568,10 +568,10 @@ we don't use the weights for anything, Venture's particles will serve
 to run several independent chains (the `r` in the plot specification
 means color the lines by pa**r**ticle id).
 
-```church'
-[infer (resample 20)]
-[infer reset_to_prior]  ; Reset after resampling to get independent initialization
-(plot 'lc0r (run (accumulate_dataset <%= smaller_sample_size %> (do (default_markov_chain 1) (collect x)))))
+```venture
+infer resample(20);
+infer reset_to_prior;  // Reset after resampling to get independent initialization
+plot(quote(lc0r), run(accumulate_dataset(<%= smaller_sample_size %>, do(default_markov_chain(1), collect(x)))))
 ```
 
 That gives a flavor for how the chains evolve to compute a solution to
@@ -580,7 +580,7 @@ distribution that obtains after taking some number of steps by
 plotting the end point rather than the history
 
 ```venture
-infer plotf(quote(h0), run(accumulate_dataset(<%= smaller_sample_size %>,
+plot(quote(h0), run(accumulate_dataset(<%= smaller_sample_size %>,
    do(resample(10),
       reset_to_prior,
       default_markov_chain(5),
