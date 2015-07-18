@@ -28,13 +28,13 @@ reminder, the main modes of using Venture we saw are starting Venture
 interactively
 
 ```
-$ venture lite --lang venture_script
+$ venture
 ```
 
 and running standalone Venture scripts
 
 ```
-$ venture lite -f script.vnts
+$ venture -f script.vnts
 ```
 
 Simple Linear Regression
@@ -47,7 +47,7 @@ Let's start by putting down the first model for linear regression that
 comes to mind.  A line has a slope and an intercept
 
 ```venture
-assume intercept = normal(0,10)
+assume intercept = normal(0,10);
 assume slope = normal(0,10)
 ```
 
@@ -73,18 +73,18 @@ If you don't want to type that, you can download
 [lin-reg-1.vnts](lin-reg-1.vnts) and use it with
 
 ```
-$ venture lite -f lin-reg-1.vnts --interactive
+$ venture -f lin-reg-1.vnts --interactive
 ```
 
 Let's give this model a smoke test
 
 ```venture
 // A tiny data set
-observe obs(1) = 2
-observe obs(2) = 2
+observe obs(1) = 2;
+observe obs(2) = 2;
 
 // Should be solvable exactly
-infer posterior
+infer posterior;
 
 // Do we get plausible values?
 sample list(intercept, slope, line(3))
@@ -117,8 +117,8 @@ define data = run(accumulate_dataset(<%= smaller_sample_size %>,
 
 [Answer: 2, pretty broad,
 
-```church'
-(plot 'h2 data)
+```venture
+plot("h2", data)
 ```
 
 ]
@@ -131,8 +131,8 @@ define data = run(accumulate_dataset(<%= smaller_sample_size %>,
 
 [Answer: 2, broad,
 
-```church'
-(plot 'h0 data)
+```venture
+plot("h0", data)
 ```
 ]
 
@@ -142,8 +142,8 @@ define data = run(accumulate_dataset(<%= smaller_sample_size %>,
 
 [Answer: 0, broad,
 
-```church'
-(plot 'h1 data)
+```venture
+plot("h1", data)
 ```
 ]
 
@@ -157,8 +157,8 @@ define data = run(accumulate_dataset(<%= smaller_sample_size %>,
 [Answer: anticorrelated, because the line is trying to pass through
 around (1.5, 2).
 
-```church'
-(plot 'p0d1d data)
+```venture
+plot("p0d1d", data)
 ```
 
 Working with Datasets
@@ -168,7 +168,7 @@ In the previous segment, we started with the simple linear regression
 model in [lin-reg-1.vnts](lin-reg-1.vnts)
 
 ```
-$ venture lite -f lin-reg-1.vnts --interactive
+$ venture -f lin-reg-1.vnts --interactive
 ```
 
 In this segment, we will try it on more data.
@@ -180,8 +180,8 @@ You could, of course, type all this data into your Venture session
 as
 
 ```
-observe obs(this) = that
-observe obs(that) = the other
+observe obs(this) = that;
+observe obs(that) = the other;
 ...
 ```
 
@@ -191,13 +191,13 @@ like reading data files, and instead offers close integration with
 Python.  So the way to do a job like this is to use
 [`pyexec`](<%= refman_url %>/inference.html#pyexec):
 
-```church'
-(run (pyexec 'symbol<"import pandas as pd">))
-(run (pyexec 'symbol<"frame = pd.read_csv('reg-test.csv')">))
-(run (pyexec 'symbol<"ripl.observe_dataset('obs', frame[['x','y']].values)">))
+```venture
+run(pyexec("import pandas as pd"));
+run(pyexec("frame = pd.read_csv('reg-test.csv')"));
+run(pyexec("ripl.observe_dataset('obs', frame[['x','y']].values)"))
 ```
 
-```church'
+```venture
 list_directives
 ```
 
@@ -227,10 +227,10 @@ but without a look at the data, we don't even know what to expect.
 There are of course plenty of ways to plot a dataset; in this case, we
 will use Venture's `plot`:
 
-```church'
-(run (pyexec 'symbol<"import venture.lite.value as vv">))
-[define frame (run (pyeval 'symbol<"vv.VentureForeignBlob(frame[['x', 'y']])">))]
-(plot 'p0d1d frame)
+```venture
+run(pyexec("import venture.lite.value as vv"));
+define frame = run(pyeval("vv.VentureForeignBlob(frame[['x', 'y']])"));
+plot("p0d1d", frame)
 ```
 
 The dataset exhibits a clear linear relationship, and we should expect `line(11)` to be around 7.
@@ -246,8 +246,8 @@ define data = run(accumulate_dataset(<%= smaller_sample_size %>,
 
 Now we can plot a histogram of the predicted `line(11)` value.
 
-```church'
-(plot 'h2 data)
+```venture
+plot("h2", data)
 ```
 
 Topic: Understanding a model with visualization
@@ -276,7 +276,7 @@ will appear. The plugin provides a callback that can be invoked to
 draw a new frame
 
 ```venture
-infer call_back(draw)
+run(call_back(draw))
 ```
 
 which should render a plot that looks like this:
@@ -286,7 +286,7 @@ which should render a plot that looks like this:
 We can also plot multiple frames with inference commands interleaved
 
 ```venture
-infer reset_to_prior
+infer reset_to_prior;
 infer repeat(30, do(default_markov_chain(1),
                     call_back(draw)))
 ```
