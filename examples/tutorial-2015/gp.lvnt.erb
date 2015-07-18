@@ -1,0 +1,247 @@
+<% sample_size = 500 %>
+<% if ENV['SMOKETEST'] then sample_size = 5 end %>
+<% smaller_sample_size = [sample_size / 5, 5].max %>
+<% refman_url = "http://probcomp.csail.mit.edu/venture/edge/reference/" %>
+
+[Next: TODO idk >](../idk/index.html)
+
+Getting Started
+===============
+
+As a reminder, you can start an interactive Venture session with
+
+```
+$ venture lite --lang venture_script
+```
+
+You can also run a file such as `script.vnts` using
+
+```
+$ venture lite -f script.vnts
+```
+
+A Simple Mixture Model
+======================
+
+One simple way to define a mixture model is to choose a mixture component at
+top-level, and define each component in separate code path.
+
+```venture
+assume components = array(
+    proc() { uniform_continuous(0, 10) },  // component 0
+    proc() { uniform_continuous(0, 5) },   // component 1
+    proc() { uniform_continuous(0, 2) }    // component 2
+    )
+
+assume mweights = simplex(0.3, 0.3, 0.4)
+
+assume cnum = tag(quote(cnum), 0, categorical(mweights))
+assume f = lookup(components, cnum)
+
+sample f()
+```
+
+Here the value of `f()` is "doubly random" -- the procedure `f` is randomly
+chosen, and after `f` is fixed, the output of a call to `f` is also random.
+Equivalently, the value of `f()` follows a mixture model with mixture
+components `components` and corresponding weights `mweights`.  
+
+It can be instructive to examine the effect of observations.  The prior on
+mixture components is:
+
+```church'
+(plot 'h0
+ (run
+  (accumulate_dataset <%= smaller_sample_size %>
+   (do (mh 'cnum one 10)
+       (collect cnum)))))
+```
+
+Now let's make some observations
+
+```venture
+observe f() = 3.3
+observe f() = 3.1
+observe f() = 4.5
+infer incorporate()
+```
+
+and examine the posterior
+
+```church'
+(plot 'h0
+ (run
+  (accumulate_dataset <%= smaller_sample_size %>
+   (do (mh 'cnum one 10)
+       (collect cnum)))))
+```
+
+As we would expect, the possibility of `uniform_continuous(0, 2)` has been
+eliminated, as the sampled values of `f()` are not possible in that component.
+The remaining components are `uniform_continuous(0, 10)` and
+`uniform_continuous(0, 5)`.
+
+Notice that `uniform_continuous(0, 10)` is much less probable than
+`uniform_continuous(0, 5)` in the posterior, whereas it was equally probable in
+the prior.  This is a case of the _Bayesian Occam's razor:_ Bayesian inference
+"automatically" favors parsimonious models.  Said differently, in the presence
+of data, the likelihood will penalize models with overly broad explanatory
+power.  In the present case this shows up as: if `f` were
+`uniform_continuous(0, 10)`, wouldn't it be a suspicious coincidence that three
+independent samples of `f()` were all between 3 and 5?  The coincidence would
+be much less suspicious if `f` were `uniform_continuous(0, 5)`.
+
+Regression With a Mixture
+=========================
+Taking the above one step further, we can use a mixture model to perform
+regression.  The following code asks, "what is the posterior on models that are
+either linear or sine wave, conditioned on the given data?"
+
+```
+define data = TODO
+
+assume a = unform(-2, 2)
+assume b = unform(-2, 2)
+assume c = unform(-2, 2)
+assume d = unform(0, 3)
+assume e = unform(0, 2*3.14159)
+assume components = array(
+    proc(x) { a*x + b },
+    proc(x) { c*sin(d*x + e) }
+    )
+assume mweights = simplex(0.5, 0.5)
+assume f = categorical(components, mweights)
+
+assume v = 0.1
+// TODO fix the below
+define obs_f = proc(xy) { run(observe(normal(f(lookup(quote(unquote(xy))), 0), v), lookup(quote(unquote(xy))), 1)) }
+infer run(mapv(obs_f, data))
+infer incorporate()
+
+infer default_markov_chain(1000)
+// (plot TODO)
+```
+
+Another interesting case of mixture regression is when the mixture components
+are models of increasing power, where more powerful models are harder to
+tune/fit to the data.  In that case mixture regression can be viewed as a way
+of training all the components in parallel, and a sample of the computed
+(approximate) posterior consists of a choice of model along with values of the
+parameters for that model.
+
+```venture
+clear
+assume r = 0 - beta(2,2)
+assume components = array(
+    proc(x) { 0.3 },         // component 0
+    proc(x) { x**-1 },       // component 1
+    proc(x) { x**r }         // component 2
+    )
+
+assume mweights = simplex(0.3, 0.3, 0.4)
+assume cnum = tag(quote(cnum), 0, categorical(mweights))
+assume f = lookup(components, cnum)
+
+assume v = 0.01
+observe normal(f(5), v) = 0.32
+observe normal(f(0.1), v) = 5.0
+infer incorporate()
+
+infer default_markov_chain(1000)
+
+// (plot TODO)
+sample cnum
+sample r
+```
+TODO Show the progression of posterior on cnum, and r, etc., as more data
+points are seen and more inference steps are done
+
+TODO There is a lesson about Bayesian something-or-other here, where the
+posterior weight of a component is the average goodness of randomly drawn
+parameters, not just the goodness of the MAP (though for some setups those can
+end up being approximately the same thing).  Not sure whether this is something
+I want to try to communicate though.
+
+GP Regression
+=============
+While the above examples rergess nonlinearly on a data set, they are still
+hard-coded parametric models, and as such, the amount of modeller/programmer
+resources required to write them grows with the complexity of the model.
+
+We will now look at Gaussian process models, which "let the data speak for
+itself" in the sense that the "effective dimensionality" of the model grows
+with the number of data points.  For an introduction to Gaussian processes, see
+[TODO link].
+
+```
+assume se = get_squaredexp(log(1.2), log(0.8))
+assume zero = get_zerofunc()
+assume g = make_gp(zero, se)
+```
+
+The Gaussian process `g` can be thought of as a random function whose prior is
+a Gaussian process with mean zero and covariance function `se`, that is,
+squared exponential: prior_covariance(g(x1), g(x2)) = 1.2 * exp((x1-x2)^2 /
+(2*0.8)).
+
+We can observe the value of `g` at given data points:
+
+```
+assume xs = array(3.2, 2.2, 8.7)
+assume ys = array(8.7, -0.2, 5.5)
+observe g(xs) = ys
+infer incorporate()
+infer visualize_gp(g, 0, 10)
+```
+
+The posterior of `g` is again a Gaussian process, with a different mean
+function and a different covariance function (TODO link to an expository
+article).  The inputs and outputs of `g` are arrays, because `g` samples from
+the joint distribution of the GP's values on all supplied inputs.  Exercise:
+verify and explain why the following two commands are not equivalent:
+
+```
+sample array(g(array(1.0)), g(array(2.0)))
+sample g(array(1.0, 2.0))
+```
+
+TODO mention that regression on dataset D is equivalent to statistical
+emulation of f_restr(x) = {D[x], if x in D; Error, otherwise }
+
+TODO give an example of learning the hyperparameters sigma and l (using some
+hard-coded data which you should come up with).  Show a picture of the
+posterior GP (with data observed) before and after hyperparameter inference.
+
+gpmem
+=====
+We recently developed language support for a new idiom for GP modelling, called
+_Gaussian process memoization_, or `gpmem`.  The idea is to wrap a function `f`
+into a package containing both a self-caching "prober" (which actually calls
+`f`) and a statistical emulator, which simulates `f` using a GP prior
+conditioned on the values of all previous invocations of the prober.  For
+example:
+
+```
+clear
+assume f = get_expensive_function()
+assume package = gpmem(f, se)
+
+assume ffive = first(package)(5)
+assume fsix = first(package)(6)
+
+sample second(package)(array(5.5))
+```
+
+Note that the emulator expects an array as input (since it is a GP, as above),
+but the prober does not (since `f` is just a function, there is no need to
+"jointly" evaluate `f` at multiple points).
+
+Our original motivation for this idiom was the case when `f` is too expensive
+to compute many times, so we need to learn using a limited number of samples.
+We would love to hear any ideas that come to mind for you regarding other
+potential uses.
+
+TODO give optimization example
+
+
+[Next: TODO idk >](../idk/index.html)
