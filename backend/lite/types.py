@@ -87,7 +87,7 @@ class %sType(VentureType):
   def gradient_type(self): return %sType()
 """ % (typename, typename, typename, typename, typename.lower(), gradient_typename)
 
-for typename in ["Integer", "Atom", "Bool", "Symbol", "ForeignBlob"]:
+for typename in ["Integer", "Atom", "Bool", "Symbol", "String", "ForeignBlob"]:
   # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
   # pylint: disable=exec-used
   exec(standard_venture_type(typename, gradient_typename="Zero"))

@@ -75,6 +75,12 @@ const string& VentureValue::getSymbol() const
   cannotConvertType(this,"symbol"); assert(false); throw "no return";
 }
 
+bool VentureValue::hasString() const { return false; }
+const string& VentureValue::getString() const
+{
+  cannotConvertType(this,"string"); assert(false); throw "no return";
+}
+
 
 const VentureValuePtr& VentureValue::getFirst() const
 {

@@ -78,6 +78,9 @@ struct VentureValue
   virtual bool hasSymbol() const;
   virtual const string & getSymbol() const;
 
+  virtual bool hasString() const;
+  virtual const string & getString() const;
+
   // TODO: Maybe foreign blob?
 
   virtual bool isNil() const { return false; }

@@ -133,6 +133,14 @@ boost::python::dict VentureSymbol::toPython(Trace * trace) const
   return value;
 }
 
+boost::python::dict VentureString::toPython(Trace * trace) const
+{
+  boost::python::dict value;
+  value["type"] = "string";
+  value["value"] = boost::python::object(s);
+  return value;
+}
+
 boost::python::dict VentureNil::toPython(Trace * trace) const
 {
   boost::python::dict value;
@@ -248,6 +256,7 @@ int VentureProbability::getValueTypeRank() const { return 20; }
 int VentureAtom::getValueTypeRank() const { return 30; }
 int VentureBool::getValueTypeRank() const { return 40; }
 int VentureSymbol::getValueTypeRank() const { return 50; }
+int VentureString::getValueTypeRank() const { return 55; }
 
 int VentureNil::getValueTypeRank() const { return 60; }
 int VenturePair::getValueTypeRank() const { return 70; }
@@ -299,6 +308,12 @@ bool VentureBool::ltSameType(const VentureValuePtr & other) const
 bool VentureSymbol::ltSameType(const VentureValuePtr & other) const
 {
   boost::shared_ptr<VentureSymbol> other_v = dynamic_pointer_cast<VentureSymbol>(other);
+  assert(other_v); return (s < other_v->s);
+}
+
+bool VentureString::ltSameType(const VentureValuePtr & other) const
+{
+  boost::shared_ptr<VentureString> other_v = dynamic_pointer_cast<VentureString>(other);
   assert(other_v); return (s < other_v->s);
 }
 
@@ -424,6 +439,12 @@ bool VentureSymbol::equalsSameType(const VentureValuePtr & other) const
   assert(other_v); return (other_v->s == s);
 }
 
+bool VentureString::equalsSameType(const VentureValuePtr & other) const
+{
+  boost::shared_ptr<VentureString> other_v = dynamic_pointer_cast<VentureString>(other);
+  assert(other_v); return (other_v->s == s);
+}
+
 bool VentureNil::equalsSameType(const VentureValuePtr & other) const
 {
   boost::shared_ptr<VentureNil> other_v = dynamic_pointer_cast<VentureNil>(other);
@@ -537,6 +558,12 @@ size_t VentureSymbol::hash() const
   return string_hash(s);
 }
 
+size_t VentureString::hash() const
+{
+  boost::hash<string> string_hash;
+  return string_hash(s);
+}
+
 size_t VentureNil::hash() const
 {
   return 3491; // TODO arbitrary prime
@@ -584,6 +611,7 @@ string VentureProbability::toString() const { return "VentureProbability " + lex
 string VentureAtom::toString() const { return "VentureAtom " + lexical_cast<string>(n);}
 string VentureBool::toString() const { return "VentureBool " + lexical_cast<string>(b);}
 string VentureSymbol::toString() const { return "VentureSymbol " + s;}
+string VentureString::toString() const { return "VentureString " + s;}
 string VentureNil::toString() const { return "VentureNil";}
 string VenturePair::toString() const { return "VenturePair (" + car->toString() + ", " + cdr->toString() + ")";}
 
@@ -628,6 +656,7 @@ string VentureProbability::asExpression() const { return lexical_cast<string>(x)
 string VentureAtom::asExpression() const { return lexical_cast<string>(n);}
 string VentureBool::asExpression() const { return lexical_cast<string>(b);}
 string VentureSymbol::asExpression() const { return s;}
+string VentureString::asExpression() const { return s;}
 string VentureNil::asExpression() const { return "nil";}
 string VenturePair::asExpression() const { return "[" + car->asExpression() + " . " + cdr->asExpression() + "]";}
 

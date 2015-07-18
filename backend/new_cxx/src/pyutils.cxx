@@ -264,6 +264,7 @@ VentureValuePtr parseValue(dict d)
   else if (type == "atom") { return VentureValuePtr(new VentureAtom(extract<uint32_t>(value))); }
   else if (type == "boolean") { return VentureValuePtr(new VentureBool(extract<bool>(value))); }
   else if (type == "symbol") { return VentureValuePtr(new VentureSymbol(extract<string>(value))); }
+  else if (type == "string") { return VentureValuePtr(new VentureString(extract<string>(value))); }
   else if (type == "list") { return parseList(value); }
   else if (type == "improper_list") { return parseImproperList(value); }
   else if (type == "vector") { return parseVector(value); }

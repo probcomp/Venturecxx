@@ -41,6 +41,7 @@ class VentureValue(object):
   def getAtom(self): raise VentureTypeError("Cannot convert %s to atom" % type(self))
   def getBool(self): raise VentureTypeError("Cannot convert %s to bool" % type(self))
   def getSymbol(self): raise VentureTypeError("Cannot convert %s to symbol" % type(self))
+  def getString(self): raise VentureTypeError("Cannot convert %s to string" % type(self))
   def getForeignBlob(self): raise VentureTypeError("Cannot convert %s to foreign blob" % type(self))
   def getPair(self): raise VentureTypeError("Cannot convert %s to pair" % type(self))
   # Convention for containers: if the elt_type argument is None,
@@ -343,6 +344,19 @@ class VentureSymbol(VentureValue):
   def fromStackDict(thing): return VentureSymbol(thing["value"])
   def compareSameType(self, other): return stupidCompare(self.symbol, other.symbol)
   def __hash__(self): return hash(self.symbol)
+  def expressionFor(self): return v.quote(self.asStackDict(None))
+
+# The difference between strings and symbols is that strings are
+# self-evaluating
+class VentureString(VentureValue):
+  def __init__(self,strng): self.strng = strng
+  def __repr__(self): return "Strng(%s)" % self.strng
+  def getString(self): return self.strng
+  def asStackDict(self, _trace=None): return v.string(self.strng)
+  @staticmethod
+  def fromStackDict(thing): return VentureString(thing["value"])
+  def compareSameType(self, other): return stupidCompare(self.strng, other.strng)
+  def __hash__(self): return hash(self.strng)
   def expressionFor(self): return v.quote(self.asStackDict(None))
 
 class VentureForeignBlob(VentureValue):
@@ -938,6 +952,7 @@ stackable_types = {
   "atom": VentureAtom,
   "boolean": VentureBool,
   "symbol": VentureSymbol,
+  "string": VentureString,
   "blob": VentureForeignBlob,
   "list": VenturePair,
   "improper_list": VenturePair,

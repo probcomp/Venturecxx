@@ -70,3 +70,9 @@ def testFlip2():
 @on_inf_prim("none")
 def testAtom():
   assert get_ripl().predict("(is_atom atom<1>)")
+
+def testString():
+  eq_("foo", get_ripl().evaluate('"foo"'))
+
+def testModelString():
+  eq_("foo", get_ripl().sample('"foo"'))

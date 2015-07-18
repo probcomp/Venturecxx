@@ -153,6 +153,26 @@ struct VentureSymbol : VentureValue
   string s;
 };
 
+struct VentureString : VentureValue
+{
+  VentureString(string s): s(s) {}
+
+  bool hasString() const { return true; }
+  const string& getString() const { return s; }
+
+  boost::python::dict toPython(Trace * trace) const;
+
+  int getValueTypeRank() const;
+  bool ltSameType(const VentureValuePtr & other) const;
+  bool equalsSameType(const VentureValuePtr & other) const;
+  size_t hash() const;
+
+  string toString() const;
+  string asExpression() const;
+
+  string s;
+};
+
 struct VentureNil : VentureValue
 {
   bool isNil() const { return true; }
