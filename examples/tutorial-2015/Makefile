@@ -12,7 +12,7 @@ vis-frame.png: mk_frame.vnts curve-fitting.py reg-test.csv
 	venture lite -L curve-fitting.py -f $<
 
 BASIC_ASSETS = gauss_plot.png
-REGRESSION_ASSETS = lin-reg-1.vnts reg-test.csv vis-frame.png curve-fitting.py
+REGRESSION_ASSETS = lin-reg-1.vnts lin-reg-2.vnts lin-reg-3.vnts reg-test.csv vis-frame.png curve-fitting.py
 
 # Tutorial content files
 
