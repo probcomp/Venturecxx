@@ -19,8 +19,8 @@ import time
 from pandas import DataFrame
 from copy import copy
 
-from venture.lite.value import (VentureArray, VentureSymbol,
-                                VentureInteger, VentureValue, VentureNil, VentureForeignBlob)
+from venture.lite.value import (VentureArray, VentureSymbol, VentureString,
+                                VentureInteger, VentureValue, VentureNil)
 from venture.lite.types import (ExpressionType, SymbolType)
 from venture.lite.utils import logWeightsToNormalizedDirect
 from venture.ripl.utils import strip_types_from_dict_values
@@ -35,7 +35,7 @@ class Infer(object):
   @staticmethod
   def _format_filenames(filenames,spec):
     if isinstance(filenames, basestring):
-      if isinstance(spec, basestring):
+      if isinstance(spec, basestring) or isinstance(spec, VentureString):
         return [filenames + '.png']
       else:
         raise VentureValueError('The number of specs must match the number of filenames.')

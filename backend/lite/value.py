@@ -351,6 +351,7 @@ class VentureSymbol(VentureValue):
 class VentureString(VentureValue):
   def __init__(self,strng): self.strng = strng
   def __repr__(self): return "Strng(%s)" % self.strng
+  def getSymbol(self): return self.strng
   def getString(self): return self.strng
   def asStackDict(self, _trace=None): return v.string(self.strng)
   @staticmethod

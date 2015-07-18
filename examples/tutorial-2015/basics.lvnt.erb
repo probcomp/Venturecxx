@@ -232,7 +232,7 @@ define more_data = run(accumulate_dataset(<%= smaller_sample_size %>, do(posteri
 ```
 
 ```venture
-plot(quote(h0), more_data)
+plot("h0", more_data)
 ```
 
 That `h0` says "make a histogram of the zeroth collected data stream".
@@ -243,7 +243,7 @@ on the x, y, or color axis of a plot.
 Here's a version with more samples for better resolution:
 
 ```venture
-plot(quote(h0), run(accumulate_dataset(<%= sample_size %>, do(posterior, collect(x)))))
+plot("h0", run(accumulate_dataset(<%= sample_size %>, do(posterior, collect(x)))))
 ```
 
 The analytical answer is a Gaussian with mean 1 and precision 2 (which
@@ -313,7 +313,7 @@ say, `exact.vnts`
 assume x = normal(0, 1);
 assume y = normal(x, 1);
 observe y = 2;
-plot(quote(h0),
+plot("h0",
  run(
   accumulate_dataset(<%= smaller_sample_size %>,
    do(posterior,
@@ -352,7 +352,7 @@ list_directives
 The same solution still works
 
 ```venture
-plot(quote(h0), run(accumulate_dataset(<%= smaller_sample_size %>, do(posterior, collect(x)))))
+plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>, do(posterior, collect(x)))))
 ```
 
 but as you move the datum further out (with more `forget` and
@@ -439,7 +439,7 @@ Using the plotting tools we learned before, here's the distribution
 this algrithm makes (note the use of `do` to sequence inference actions):
 
 ```venture
-plot(quote(h0), run(accumulate_dataset(<%= smaller_sample_size %>,
+plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>,
   do(resample(5),
      likelihood_weight(),
      resample(1),
@@ -544,7 +544,7 @@ define chain_history = run(accumulate_dataset(<%= sample_size %>, do(default_mar
 ```
 
 ```
-plot(quote(lc0), chain_history)
+plot("lc0", chain_history)
 ```
 
 The `lc0` says "make a **l**ine plot of the 0th collected expression vs
@@ -560,7 +560,7 @@ infer reset_to_prior
 and let's plot another one:
 
 ```venture
-plot(quote(lc0), run(accumulate_dataset(<%= sample_size %>, do(default_markov_chain(1), collect(x)))))
+plot("lc0", run(accumulate_dataset(<%= sample_size %>, do(default_markov_chain(1), collect(x)))))
 ```
 
 For more insight, let's plot several independent chains together.  If
@@ -571,7 +571,7 @@ means color the lines by pa**r**ticle id).
 ```venture
 infer resample(20);
 infer reset_to_prior;  // Reset after resampling to get independent initialization
-plot(quote(lc0r), run(accumulate_dataset(<%= smaller_sample_size %>, do(default_markov_chain(1), collect(x)))))
+plot("lc0r", run(accumulate_dataset(<%= smaller_sample_size %>, do(default_markov_chain(1), collect(x)))))
 ```
 
 That gives a flavor for how the chains evolve to compute a solution to
@@ -580,7 +580,7 @@ distribution that obtains after taking some number of steps by
 plotting the end point rather than the history
 
 ```venture
-plot(quote(h0), run(accumulate_dataset(<%= smaller_sample_size %>,
+plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>,
    do(resample(10),
       reset_to_prior,
       default_markov_chain(5),

@@ -197,7 +197,7 @@ def plot_to_file_fun(basenames, spec, dataset):
 
 def _format_filenames(filenames,spec):
   if isinstance(filenames, basestring):
-    if isinstance(spec, basestring):
+    if isinstance(spec, basestring) or isinstance(spec, v.VentureString):
       return [filenames + '.png']
     else:
       raise VentureValueError('The number of specs must match the number of filenames.')

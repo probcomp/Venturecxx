@@ -20,6 +20,7 @@ from itertools import chain
 from time import strftime
 
 from venture.lite.utils import logWeightsToNormalizedDirect
+from venture.lite.value import VentureString
 
 stream_rx = r"([rcts%]|[0-9]+)"
 scale_rx = r"([dl])"
@@ -36,6 +37,8 @@ class PlotSpec(object):
   def __init__(self, spec):
     if isinstance(spec, basestring):
       self.frames = [FrameSpec(spec)]
+    elif isinstance(spec, VentureString):
+      self.frames = [FrameSpec(spec.getString())]
     else:
       self.frames = [FrameSpec(s) for s in spec]
 
