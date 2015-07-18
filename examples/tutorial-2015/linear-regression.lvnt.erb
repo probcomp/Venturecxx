@@ -298,20 +298,80 @@ visualization instead. Together, this command will run the Markov
 chain for 30 iterations, drawing an animation frame after each
 iteration.
 
+Another useful command which works well with visualization is
+[`loop`](<%= refman_url %>inference.html#loop), which runs the given
+action continually in the background. You can use it like this
+
+```venture
+infer loop(do(default_markov_chain(5),
+              call_back(draw)))
+```
+
+which will iterate the Markov chain and draw an animation frame every
+ 5 iterations, continuing to do so indefinitely. You can turn it off
+ with
+
+```venture
+stop_continuous_inference
+```
+
 Exercise: Play with this visualization to see how inference is doing.
 
-1. Simulate the Markov chain for <%= smaller_sample_size %> iterations
-and watch the animation. Does the line move toward a good fit to the
-data?
+1. Use the `loop` command to run the Markov chain continually and draw
+an animation frame after every iteration. Watch the animation while it
+runs and confirm that the line eventually approaches a good fit to the
+data. Does it take gradual steps or sudden jumps?
 
-2. We can use `resample` to run multiple independent chains and plot
-all of the resulting lines on the same plot, to get some sense of the
+[Answer: It takes sudden jumps, with varying amount of time between
+jumps.
+
+```venture
+infer loop(do(default_markov_chain(1), call_back(draw)))
+```
+]
+
+2. How many iterations does it take for the chain to converge? Modify
+the inference loop to call `reset_to_prior` after every 30 iterations
+of the Markov chain. (Hint: You may want to use `repeat` and `do`.) Is
+the Markov chain able to find a good fit within 30 iterations? What
+about 100 iterations? Try playing with the number of iterations to see
+how many it takes to reliably find a reasonable fit.
+
+[Answer: 30 is not enough, and you may not even be able to tell
+exactly when it's resetting to the prior. 100 is better, but it's
+still hard to tell; 200-300 is clearly able to find it most of the time.
+
+```venture
+infer loop(do(reset_to_prior,
+              repeat(30, do(default_markov_chain(1),
+	                    call_back(draw)))))
+```
+]
+
+[TODO is it possible to make the pygame visualization display an
+iteration count to make this easier to interpret?]
+
+3. If you're still running the infer loop, turn it off for this part
+(`stop_continuous_inference`).
+
+We can use `resample` to run multiple independent chains and plot all
+of the resulting lines in the same window, to get some sense of the
 posterior distribution over lines. Resample 20 particles (remember to
 reset them to the prior), run them for 30 iterations, and look at the
 resulting animation. Does it look like the distribution of lines
-converges to something plausible?  How long does it take to run this?
+converges to something plausible? If you're impatient, try increasing
+the number of iterations as above.
 
-[TODO introduce continuous inference?]
+[Answer: Some of the samples do concentrate around the correct line,
+but again 30 iterations is not enough to converge.
+
+```venture
+infer resample(20)
+infer do(reset_to_prior,
+         repeat(30, do(default_markov_chain(1),
+	               call_back(draw))))
+```
+]
 
 [TODO drop in custom proposals here for better inference]
 
@@ -323,8 +383,8 @@ linear least squares regression can do. Now we will look at what
 happens if the data may contain outliers: points that do not fit in
 with the rest. In ordinary least squares regression, outliers can
 disproportionally influence the result and so are often excluded
-before running the regression. Here, we will take a different
-approach by extending our model to consider the possibility of outliers.
+before running the regression. Here, we will take a different approach
+by extending our probabilistic model to take outliers into account.
 
 ```venture
 clear
@@ -335,16 +395,11 @@ We start with our linear model much the same as before
 ```venture
 assume intercept = normal(0,7);
 assume slope = normal(0,4);
+
 assume line = proc(x) { slope * x + intercept }
 ```
 
 but this time, each point has some probability of being an outlier.
-
-[TODO motivate the noise prior too.]
-
-```venture
-assume noise = gamma(1,1)
-```
 
 ```venture
 assume outlier_prob = uniform_continuous(0.01,0.3);
@@ -365,17 +420,30 @@ What does it mean for a point to be an outlier? Unlike most of the
 other points, which we can expect to be near the value predicted by
 our linear equation, an outlier could just as likely be anywhere. We
 will model that by saying that for an outlier point, the y-value is
-drawn from `normal(0,20)`. Putting that all together, our full data
-model is
+drawn from `normal(0,20)`.
 
-[TODO put the noise prior somewhere and motivate it]
+```venture
+assume obs_outlier = proc(x) { normal(0,20) }
+```
+
+Non-outlier points, as before, are centered on the line but subject to
+some Gaussian noise. This time, rather than assuming a fixed amount of
+noise, we will put a prior over the amount of noise as well and see
+how well we can infer it:
+
+```venture
+assume noise = gamma(1,1)
+assume obs_inlier = proc(x) { normal(line(x), noise) }
+```
+
+Putting that all together, our full data model is
 
 ```venture
 assume obs = proc(i,x) {
   if (is_outlier(i)) {
-    normal(0,20)
+    obs_outlier(x)
   } else {
-    normal(line(x), noise)
+    obs_inlier(x)
   }
 }
 ```
@@ -400,8 +468,11 @@ infer loop(do(default_markov_chain(1),
               call_back(draw)))
 ```
 
-[TODO explain continuous inference and make sure the example is
-convincing enough.]
+This should spend a while considering different hypotheses and whether
+or not to treat each point as an outlier. Eventually, it might find
+this configuration and settle on it for a while:
+
+![Most favorable configuration of the outlier model](vis-outlier.png)
 
 ```venture
 stop_continuous_inference
