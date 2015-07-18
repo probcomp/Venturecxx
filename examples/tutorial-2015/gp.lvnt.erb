@@ -31,12 +31,12 @@ assume components = array(
     proc() { uniform_continuous(0, 10) },  // component 0
     proc() { uniform_continuous(0, 5) },   // component 1
     proc() { uniform_continuous(0, 2) }    // component 2
-    )
+    );
 
-assume mweights = simplex(0.3, 0.3, 0.4)
+assume mweights = simplex(0.3, 0.3, 0.4);
 
-assume cnum = tag(quote(cnum), 0, categorical(mweights))
-assume f = lookup(components, cnum)
+assume cnum = tag(quote(cnum), 0, categorical(mweights));
+assume f = lookup(components, cnum);
 
 sample f()
 ```
@@ -60,10 +60,10 @@ mixture components is:
 Now let's make some observations
 
 ```venture
-observe f() = 3.3
-observe f() = 3.1
-observe f() = 4.5
-infer incorporate()
+observe f() = 3.3;
+observe f() = 3.1;
+observe f() = 4.5;
+infer incorporate();
 ```
 
 and examine the posterior
@@ -98,27 +98,27 @@ regression.  The following code asks, "what is the posterior on models that are
 either linear or sine wave, conditioned on the given data?"
 
 ```
-define data = TODO
+define data = TODO;
 
-assume a = unform(-2, 2)
-assume b = unform(-2, 2)
-assume c = unform(-2, 2)
-assume d = unform(0, 3)
-assume e = unform(0, 2*3.14159)
+assume a = unform(-2, 2);
+assume b = unform(-2, 2);
+assume c = unform(-2, 2);
+assume d = unform(0, 3);
+assume e = unform(0, 2*3.14159);
 assume components = array(
     proc(x) { a*x + b },
     proc(x) { c*sin(d*x + e) }
-    )
-assume mweights = simplex(0.5, 0.5)
-assume f = categorical(components, mweights)
+    );
+assume mweights = simplex(0.5, 0.5);
+assume f = categorical(components, mweights);
 
-assume v = 0.1
+assume v = 0.1;
 // TODO fix the below
-define obs_f = proc(xy) { run(observe(normal(f(lookup(quote(unquote(xy))), 0), v), lookup(quote(unquote(xy))), 1)) }
-infer run(mapv(obs_f, data))
-infer incorporate()
+define obs_f = proc(xy) { run(observe(normal(f(lookup(quote(unquote(xy))), 0), v), lookup(quote(unquote(xy))), 1)) };
+infer run(mapv(obs_f, data));
+infer incorporate();
 
-infer default_markov_chain(1000)
+infer default_markov_chain(1000);
 // (plot TODO)
 ```
 
@@ -130,27 +130,27 @@ of training all the components in parallel, and a sample of the computed
 parameters for that model.
 
 ```venture
-clear
-assume r = 0 - beta(2,2)
+clear;
+assume r = 0 - beta(2,2);
 assume components = array(
     proc(x) { 0.3 },         // component 0
-    proc(x) { x**-1 },       // component 1
-    proc(x) { x**r }         // component 2
-    )
+    proc(x) { pow(x, 0-1) },       // component 1
+    proc(x) { pow(x, r) }         // component 2
+    );
 
-assume mweights = simplex(0.3, 0.3, 0.4)
-assume cnum = tag(quote(cnum), 0, categorical(mweights))
-assume f = lookup(components, cnum)
+assume mweights = simplex(0.3, 0.3, 0.4);
+assume cnum = tag(quote(cnum), 0, categorical(mweights));
+assume f = lookup(components, cnum);
 
-assume v = 0.01
-observe normal(f(5), v) = 0.32
-observe normal(f(0.1), v) = 5.0
-infer incorporate()
+assume v = 0.01;
+observe normal(f(5), v) = 0.32;
+observe normal(f(0.1), v) = 5.0;
+infer incorporate();
 
-infer default_markov_chain(1000)
+infer default_markov_chain(1000);
 
 // (plot TODO)
-sample cnum
+sample cnum;
 sample r
 ```
 TODO Show the progression of posterior on cnum, and r, etc., as more data
@@ -172,13 +172,16 @@ resources required to write them grows with the complexity of the model.
 
 We will now look at Gaussian process models, which "let the data speak for
 itself" in the sense that the "effective dimensionality" of the model grows
-with the number of data points.  For an introduction to Gaussian processes, see
-[TODO link].
+with the number of data points.  For an introduction to Gaussian processes
+viewed as random functions, see Section 2.2 of [Rasmussen and
+Williams](http://www.gaussianprocess.org/gpml/chapters/RW2.pdf).
 
-```
-assume se = make_squaredexp(log(1.2), log(0.8))
-assume zero = make_zerofunc()
-assume g = make_gp(zero, se)
+```venture
+clear;
+run(load_plugin("gpexample_plugin.py"));
+assume se = make_squaredexp(1.2, 0.8);
+assume zero = make_const_func(0.0);
+assume g = make_gp(zero, se);
 ```
 
 The Gaussian process `g` can be thought of as a random function whose prior is
@@ -188,27 +191,27 @@ squared exponential: prior_covariance(g(x1), g(x2)) = 1.2 * exp((x1-x2)^2 /
 
 We can observe the value of `g` at given data points:
 
-```
-assume xs = array(3.2, 2.2, 8.7)
-assume ys = array(8.7, -0.2, 5.5)
-observe g(xs) = ys
-infer incorporate()
-infer visualize_gp(g, 0, 10)
+```venture
+assume xs = array(3.2, 2.2, 8.7);
+define ys = array(8.7, 0.2, 5.5);
+run(observe(g(xs), ys));
+infer incorporate();
+// infer visualize_gp(g, 0, 10);
 ```
 
 The posterior of `g` is again a Gaussian process, with a different mean
-function and a different covariance function (TODO link to an expository
-article).  The inputs and outputs of `g` are arrays, because `g` samples from
-the joint distribution of the GP's values on all supplied inputs.  Exercise:
-verify and explain why the following two commands are not equivalent:
+function and a different covariance function (see
+[R&W](http://www.gaussianprocess.org/gpml/chapters/RW2.pdf) for more on this).
+The inputs and outputs of `g` are arrays, because `g` samples from the joint
+distribution of the GP's values on all supplied inputs.
 
-```
-sample array(g(array(1.0)), g(array(2.0)))
-sample g(array(1.0, 2.0))
-```
+Exercise: verify and explain why the following two commands are not equivalent:
 
-TODO mention that regression on dataset D is equivalent to statistical
-emulation of f_restr(x) = {D[x], if x in D; Error, otherwise }
+```venture
+assume gg = proc(x) { lookup(g(array(x)), 0) };
+sample array(gg(1.0), gg(2.0));
+sample g(array(1.0, 2.0));
+```
 
 TODO give an example of learning the hyperparameters sigma and l (using some
 hard-coded data which you should come up with).  Show a picture of the
@@ -223,13 +226,12 @@ into a package containing both a self-caching "prober" (which actually calls
 conditioned on the values of all previous invocations of the prober.  For
 example:
 
-```
-clear
-assume f = get_expensive_function()
-assume package = gpmem(f, se)
+```venture
+assume f = make_audited_expensive_function("f");
+assume package = gpmem(f, se);
 
-assume ffive = first(package)(5)
-assume fsix = first(package)(6)
+assume ffive = first(package)(5);
+assume fsix = first(package)(6);
 
 sample second(package)(array(5.5))
 ```
@@ -240,10 +242,55 @@ but the prober does not (since `f` is just a function, there is no need to
 
 Our original motivation for this idiom was the case when `f` is too expensive
 to compute many times, so we need to learn using a limited number of samples.
-We would love to hear any ideas that come to mind for you regarding other
-potential uses.
+Later we realized that GP regression in general can be cast as a special case
+of `gpmem`: regression on a dataset `D` (with keys `x` and values `y = D[x]`)
+is the same as statistical emulation of the function `f` defined in pseudocode
+as
 
-TODO give optimization example
+```
+def f(x):
+  if x in D:
+    return D[x]
+  else:
+    raise Exception("Illegal input")
+```
+
+Observing data points {`(x, y)`} is the same as probing the value of `f` at all
+the x-values.
+
+If any ideas regarding other potential applications of `gpmem` come to mind for
+you, we would love to hear them.
+
+Bayesian Optimization Example
+-----------------------------
+TODO write exposition
+
+```venture
+assume V = make_audited_expensive_function("V");
+
+assume V_sf = tag(quote(hyper), 0, uniform_continuous(0, 10));
+assume V_l = tag(quote(hyper), 1, uniform_continuous(0, 10));
+assume V_se = make_squaredexp(V_sf, V_l);
+assume V_package = gpmem(V, V_se);
+
+define mc_argmax = proc(func) {
+    proc(candidate_xs) {
+        proc(candidate_ys) {
+            lookup(candidate_xs, argmax_of_array(candidate_ys))
+        }(mapv(func, candidate_xs))
+    }(mapv(proc(i) {uniform_continuous(0-20, 20)},
+           linspace(0, 19, 20)))
+};
+
+define V_emu_pointwise = proc(x) {
+    run(sample(lookup(second(V_package)(array(unquote(x))),
+                      0)))
+};
+
+infer repeat(15, do(pass,
+    predict(first(V_package)(unquote(mc_argmax(V_emu_pointwise)))),
+    mh(quote(hyper), one, 50)));
+```
 
 
 [Next: TODO idk >](../idk/index.html)
