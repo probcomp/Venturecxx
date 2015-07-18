@@ -20,7 +20,7 @@ import numpy as np
 from numbers import Number
 
 from sp import SP, SPType
-from psp import NullRequestPSP, ESRRefOutputPSP, DeterministicPSP, TypedPSP
+from psp import NullRequestPSP, ESRRefOutputPSP, DeterministicPSP, TypedPSP, DispatchingPSP
 
 import discrete
 import dirichlet
@@ -179,16 +179,64 @@ def grad_vector_dot(args, direction):
   unscaled = [v.VentureArray(args[1]), v.VentureArray(args[0])]
   return [direction.getNumber() * x for x in unscaled]
 
+def vvsum(venture_array):
+  # TODO Why do the directions come in and out as Venture Values
+  # instead of being unpacked by f_type.gradient_type()?
+  return v.VentureNumber(sum(venture_array.getArray(t.NumberType())))
+
+def dispatching_psp(types, psps):
+  return DispatchingPSP(types, [TypedPSP(psp, tp) for (psp, tp) in zip(psps, types)])
+
+generic_add = dispatching_psp(
+  [SPType([t.NumberType()], t.NumberType(), variadic=True),
+   SPType([t.ArrayUnboxedType(t.NumberType()), t.NumberType()],
+          t.ArrayUnboxedType(t.NumberType())),
+   SPType([t.NumberType(), t.ArrayUnboxedType(t.NumberType())],
+          t.ArrayUnboxedType(t.NumberType())),
+   SPType([t.ArrayUnboxedType(t.NumberType())], t.ArrayUnboxedType(t.NumberType()),
+          variadic=True)],
+  [deterministic_psp(lambda *args: sum(args),
+                     sim_grad=lambda args, direction: [direction for _ in args],
+                     descr="add returns the sum of all its arguments"),
+   deterministic_psp(np.add, sim_grad=lambda args, direction: [direction, vvsum(direction)]),
+   deterministic_psp(np.add, sim_grad=lambda args, direction: [vvsum(direction), direction]),
+   deterministic_psp(lambda *args: np.sum(args, axis=0),
+                     sim_grad=lambda args, direction: [direction for _ in args],
+                     descr="add returns the sum of all its arguments")])
+
+generic_times = dispatching_psp(
+  [SPType([t.NumberType()], t.NumberType(), variadic=True),
+   SPType([t.NumberType(), t.ArrayUnboxedType(t.NumberType())],
+          t.ArrayUnboxedType(t.NumberType())),
+   SPType([t.ArrayUnboxedType(t.NumberType()), t.NumberType()],
+          t.ArrayUnboxedType(t.NumberType()))],
+  [deterministic_psp(lambda *args: reduce(lambda x,y: x * y,args,1),
+                     sim_grad=grad_times,
+                     descr="mul returns the product of all its arguments"),
+   deterministic_psp(np.multiply,
+                     sim_grad=lambda args, direction: [ v.VentureNumber(v.vv_dot_product(v.VentureArrayUnboxed(args[1], t.NumberType()), direction)), direction * args[0] ],
+                     descr="scalar times vector"),
+   deterministic_psp(np.multiply,
+                     sim_grad=lambda args, direction: [ direction * args[1], v.VentureNumber(v.vv_dot_product(v.VentureArrayUnboxed(args[0], t.NumberType()), direction)) ],
+                     descr="vector times scalar")])
+
+generic_normal = dispatching_psp(
+  [SPType([t.NumberType(), t.NumberType()], t.NumberType()), # TODO Sigma is really non-zero, but negative is OK by scaling
+   SPType([t.NumberType(), t.ArrayUnboxedType(t.NumberType())],
+          t.ArrayUnboxedType(t.NumberType())),
+   SPType([t.ArrayUnboxedType(t.NumberType()), t.NumberType()],
+          t.ArrayUnboxedType(t.NumberType())),
+   SPType([t.ArrayUnboxedType(t.NumberType()), t.ArrayUnboxedType(t.NumberType())],
+          t.ArrayUnboxedType(t.NumberType()))],
+  [continuous.NormalOutputPSP(), continuous.NormalsvOutputPSP(),
+   continuous.NormalvsOutputPSP(), continuous.NormalvvOutputPSP()])
+
 builtInSPsList = [
-           [ "add",  naryNum(lambda *args: sum(args),
-                             sim_grad=lambda args, direction: [direction for _ in args],
-                             descr="add returns the sum of all its arguments") ],
+           [ "add", no_request(generic_add)],
            [ "sub", binaryNum(lambda x,y: x - y,
                               sim_grad=lambda args, direction: [direction, -direction],
                               descr="sub returns the difference between its first and second arguments") ],
-           [ "mul", naryNum(lambda *args: reduce(lambda x,y: x * y,args,1),
-                              sim_grad=grad_times,
-                              descr="mul returns the product of all its arguments") ],
+           [ "mul", no_request(generic_times) ],
            [ "div",   binaryNum(lambda x,y: x / y,
                                 sim_grad=grad_div,
                                 descr="div returns the ratio of its first argument to its second") ],
@@ -474,7 +522,7 @@ builtInSPsList = [
            [ "categorical", typed_nr(discrete.CategoricalOutputPSP(), [t.SimplexType(), t.ArrayType()], t.AnyType(), min_req_args=1) ],
            [ "uniform_discrete", typed_nr(discrete.UniformDiscreteOutputPSP(), [t.IntegerType(), t.IntegerType()], t.IntegerType()) ],
            [ "poisson", typed_nr(discrete.PoissonOutputPSP(), [t.PositiveType()], t.CountType()) ],
-           [ "normal", typed_nr(continuous.NormalOutputPSP(), [t.NumberType(), t.NumberType()], t.NumberType()) ], # TODO Sigma is really non-zero, but negative is OK by scaling
+           [ "normal", no_request(generic_normal) ],
            [ "vonmises", typed_nr(continuous.VonMisesOutputPSP(), [t.NumberType(), t.PositiveType()], t.NumberType()) ],
            [ "uniform_continuous",typed_nr(continuous.UniformOutputPSP(), [t.NumberType(), t.NumberType()], t.NumberType()) ],
            [ "beta", typed_nr(continuous.BetaOutputPSP(), [t.PositiveType(), t.PositiveType()], t.ProbabilityType()) ],

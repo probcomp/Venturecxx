@@ -2,6 +2,8 @@
 <% if ENV['SMOKETEST'] then sample_size = 5 end %>
 <% smaller_sample_size = [sample_size / 5, 5].max %>
 <% refman_url = "http://probcomp.csail.mit.edu/venture/edge/reference/" %>
+<% inf_prelude_size = `cat ../../python/lib/engine/inference_prelude.py | grep '[[]"' | wc -l`.to_i %>
+<% puts inf_prelude_size %>
 
 [Next: Linear Regression >](../linear-regression/index.html)
 
@@ -340,7 +342,7 @@ Then use `forget` to remove the existing observation, and replace it
 with one where the datum is farther out.
 
 ```venture
-forget 24
+forget <%= inf_prelude_size + 3 %>
 observe normal(x,1) = 4
 ```
 
@@ -624,19 +626,24 @@ Optional Subunit: Custom M-H Proposals
 this even belong here?  Will the students wonder about custom
 proposals at this stage?]
 
+[TODO More specific suggestion: Hide mh_symmetric_proposal in an
+external file which can simply be loaded. Do we want an alias that
+also passes "default all"?]
+
 ```church'
 clear
 ```
 
 ```church'
-[define gaussian_drift_mh
-  (lambda (scope block sigma)
+[define mh_symmetric_proposal
+  (lambda (scope block proposal_kernel)
     (do (subproblem <- (select scope block))
         (values <- (get_current_values subproblem))
-        (let ((move (lambda (value) (normal value sigma))) ; gaussian drift proposal kernel
-              (new_values (mapv move values)))
+        (assert (= nil (rest values)) 'symbol<"can only propose one random choice at a time">)
+        (let ((value (first values))
+              (new_value (proposal_kernel value)))
           (do (rho_weight_and_rho_db <- (detach_for_proposal subproblem))
-              (xi_weight <- (regen_with_proposal subproblem new_values))
+              (xi_weight <- (regen_with_proposal subproblem (list new_value)))
               (let ((rho_weight (first rho_weight_and_rho_db))
                     (rho_db (rest rho_weight_and_rho_db)))
                 (if (< (log (uniform_continuous 0 1)) (- xi_weight rho_weight))
@@ -644,13 +651,16 @@ clear
                     (do (detach subproblem) ; reject
                         (restore subproblem rho_db))))))))]
 
+[define drift_kernel
+  (lambda (x) (normal x 1))]
+
 [assume x (normal 0 1)]
 [observe (normal x 1) 10]
 [infer
  (do (d <- (accumulate_dataset <%= smaller_sample_size %>
              (do (likelihood_weight)
                  ;; 50 seems to converge, for the datum being at 10
-                 (repeat 10 (gaussian_drift_mh default all 1))
+                 (repeat 10 (mh_symmetric_proposal drift_kernel default all))
                  (collect x))))
      (plotf 'h0 d))]
 ```

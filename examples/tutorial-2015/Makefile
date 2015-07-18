@@ -8,6 +8,12 @@ gauss_plot.png:  # This takes about 3 minutes on my laptop
 reg-test.csv: mk_dataset.vnt
 	venture puma -f $<
 
+vis-frame.png: mk_frame.vnts curve-fitting.py reg-test.csv
+	venture lite -L curve-fitting.py -f $<
+
+BASIC_ASSETS = gauss_plot.png
+REGRESSION_ASSETS = lin-reg-1.vnts reg-test.csv vis-frame.png curve-fitting.py
+
 # Tutorial content files
 
 %.lvnt: %.lvnt.erb
@@ -16,23 +22,21 @@ reg-test.csv: mk_dataset.vnt
 %-smoke.lvnt: %.lvnt.erb
 	SMOKETEST=1 erb $< > $@
 
-tutorial/%/index.html: %.lvnt
+tutorial/%/index.html: %.lvnt reg-test.csv
 	../../script/venture-transcript $< tutorial/$*
 
-tutorial-smoke/%/index.html: %-smoke.lvnt
+tutorial-smoke/%/index.html: %-smoke.lvnt reg-test.csv
 	../../script/venture-transcript $< tutorial-smoke/$*
 
 # Full builds
 
-build: tutorial/basics/index.html tutorial/linear-regression/index.html tutorial/gp/index.html gauss_plot.png lin-reg-1.vnts reg-test.csv
-	cp gauss_plot.png tutorial/basics/
-	cp lin-reg-1.vnts tutorial/linear-regression
-	cp reg-test.csv tutorial/linear-regression
+build: tutorial/basics/index.html tutorial/linear-regression/index.html tutorial/gp/index.html $(BASIC_ASSETS) $(REGRESSION_ASSETS)
+	cp $(BASIC_ASSETS) tutorial/basics/
+	cp $(REGRESSION_ASSETS) tutorial/linear-regression
 
-build-smoke: tutorial-smoke/basics/index.html tutorial-smoke/linear-regression/index.html tutorial-smoke/gp/index.html gauss_plot.png lin-reg-1.vnts reg-test.csv
-	cp gauss_plot.png tutorial-smoke/basics/
-	cp lin-reg-1.vnts tutorial-smoke/linear-regression
-	cp reg-test.csv tutorial-smoke/linear-regression
+build-smoke: tutorial-smoke/basics/index.html tutorial-smoke/linear-regression/index.html tutorial-smoke/gp/index.html $(BASIC_ASSETS) $(REGRESSION_ASSETS)
+	cp $(BASIC_ASSETS) tutorial-smoke/basics/
+	cp $(REGRESSION_ASSETS) tutorial-smoke/linear-regression
 
 upload: build
 	scp -r tutorial/ login.csail.mit.edu:/afs/csail.mit.edu/proj/probcomp/www/data/venture/

@@ -158,6 +158,19 @@ used in the implementation of TypedPSP and TypedLKernel."""
   def unwrap_args(self, args):
     return UnwrappingArgs(self, args)
 
+  def args_match(self, args):
+    vals = args.operandValues()
+    if not self.variadic:
+      if len(vals) < self.min_req_args or len(vals) > len(self.args_types):
+        return False
+      return all((val in self.args_types[i] for (i,val) in enumerate(vals)))
+    else:
+      min_req_args = len(self.args_types) - 1
+      if len(vals) < min_req_args: return False
+      first_args = all((val in self.args_types[i] for (i,val) in enumerate(vals[:min_req_args])))
+      rest_args = all((val in self.args_types[-1] for (i,val) in enumerate(vals[min_req_args:])))
+      return first_args and rest_args
+
   def unwrap_arg_list(self, lst):
     if not self.variadic:
       if len(lst) < self.min_req_args:

@@ -90,7 +90,12 @@ infer posterior
 sample list(intercept, slope, line(3))
 ```
 
-Exercise: Evaluate the model's performance on the two data points.
+Note that we are using rejection sampling here (`infer posterior`).
+This is fine for this example, but as explored previously, rejection
+sampling can become very slow as you increase the difficulty of the
+problem (such as by adding more data points, as we will do shortly).
+
+Exercise: For now, evaluate the model's performance on the two data points.
 
 1. Gather and save a dataset of independent posterior samples of the
    parameters and a prediction at some value.
@@ -135,7 +140,7 @@ define data = run(accumulate_dataset(<%= smaller_sample_size %>,
        concentrated do you expect it to be?  Plot the slope and check
        your intuition.
 
-[Answer: 2, broad,
+[Answer: 0, broad,
 
 ```church'
 (plot 'h1 data)
@@ -156,8 +161,8 @@ around (1.5, 2).
 (plot 'p0d1d data)
 ```
 
-TODO: Segment Title
-===================
+Working with Datasets
+=====================
 
 In the previous segment, we started with the simple linear regression
 model in [lin-reg-1.vnts](lin-reg-1.vnts)
@@ -212,7 +217,7 @@ OK, so we loaded the data.  We could do some inference
 infer default_markov_chain(30)
 ```
 
-and ask for a prediction
+and ask for a prediction at a new `x`-value
 
 ```venture
 sample line(11)
@@ -228,12 +233,18 @@ will use Venture's `plot`:
 (plot 'p0d1d frame)
 ```
 
+The dataset exhibits a clear linear relationship, and we should expect `line(11)` to be around 7.
+
+Let's try using Markov chain inference to fit our linear model. Start <%= smaller_sample_size %> independent chains, evolve them for 30 iterations, and record where they end up:
+
 ```venture
 define data = run(accumulate_dataset(<%= smaller_sample_size %>,
   do(reset_to_prior,
      default_markov_chain(30),
      collect(intercept, slope, line(11)))))
 ```
+
+Now we can plot a histogram of the predicted `line(11)` value.
 
 ```church'
 (plot 'h2 data)
@@ -242,7 +253,67 @@ define data = run(accumulate_dataset(<%= smaller_sample_size %>,
 Topic: Understanding a model with visualization
 ===============================================
 
-[TODO Drop in pygame visualization code.  How much to explain vs black-box it?]
+Is our fit any good? Although we can get some idea of what's going on
+by plotting the predictions for a given `x`, it's much more effective
+to be able to see the fitted line plotted alongside the data, and see
+what happens over the course of inference.
+
+In order to do so, we can make use of Venture's plugin infrastructure
+to load external code written in Python. In this case, we've provided
+a custom plugin that produces an animated curve-fitting visualization
+that can be updated during the inference program. Download
+[curve-fitting.py](curve-fitting.py) and load it into Venture using
+
+```venture
+load_plugin curve-fitting.py
+```
+
+Alternatively, the plugin can be loaded when you launch Venture by
+supplying `-L curve-fitting.py` on the command line.
+
+When the plugin loads, a new window should pop up where the animation
+will appear. The plugin provides a callback that can be invoked to
+draw a new frame
+
+```venture
+infer call_back(draw)
+```
+
+which should render a plot that looks like this:
+
+![A frame of the visualization](vis-frame.png)
+
+We can also plot multiple frames with inference commands interleaved
+
+```venture
+infer reset_to_prior
+infer repeat(30, do(default_markov_chain(1),
+                    call_back(draw)))
+```
+
+The [`repeat`](<%= refman_url %>inference.html#repeat) command works
+similarly to `accumulate_dataset`, but in this case we aren't
+concerned with collecting the data since it's being rendered in the
+visualization instead. Together, this command will run the Markov
+chain for 30 iterations, drawing an animation frame after each
+iteration.
+
+Exercise: Play with this visualization to see how inference is doing.
+
+1. Simulate the Markov chain for <%= smaller_sample_size %> iterations
+and watch the animation. Does the line move toward a good fit to the
+data?
+
+2. We can use `resample` to run multiple independent chains and plot
+all of the resulting lines on the same plot, to get some sense of the
+posterior distribution over lines. Resample 20 particles (remember to
+reset them to the prior), run them for 30 iterations, and look at the
+resulting animation. Does it look like the distribution of lines
+converges to something plausible?  How long does it take to run this?
+
+[TODO introduce continuous inference?]
+
+[TODO drop in custom proposals here for better inference]
 
 Elaboration: Outlier Detection
 ==============================

@@ -26,11 +26,9 @@ assume line = proc(x) { slope * x + intercept }
 assume obs = proc(x) { normal(line(x), 1) }
 
 infer pyexec(quote(symbol<"import pandas as pd">))
+infer pyexec(quote(symbol<"import venture.value.dicts as v">))
 infer pyexec(quote(symbol<"frame = pd.read_csv('reg-test.csv')">))
-infer pyexec(quote(symbol<"ripl.observe_dataset('obs', frame[['x','y']].values)">))
-infer incorporate()
+infer pyexec(quote(symbol<"ripl.observe(v.app('obs', v.vector(frame['x'].values)), v.vector(frame['y'].values))">))
 
-define data = run(accumulate_dataset(15,
-  do(reset_to_prior,
-     default_markov_chain(30),
-     collect(intercept, slope, line(11)))))
+infer call_back(draw)
+infer call_back(draw_to_disk, quote(symbol<"vis-frame.png">))
