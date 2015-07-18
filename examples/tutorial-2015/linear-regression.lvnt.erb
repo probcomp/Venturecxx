@@ -323,8 +323,8 @@ linear least squares regression can do. Now we will look at what
 happens if the data may contain outliers: points that do not fit in
 with the rest. In ordinary least squares regression, outliers can
 disproportionally influence the result and so are often excluded
-before running the regression. Here, we will take a different
-approach by extending our model to consider the possibility of outliers.
+before running the regression. Here, we will take a different approach
+by extending our probabilistic model to take outliers into account.
 
 ```venture
 clear
@@ -335,16 +335,11 @@ We start with our linear model much the same as before
 ```venture
 assume intercept = normal(0,7);
 assume slope = normal(0,4);
+
 assume line = proc(x) { slope * x + intercept }
 ```
 
 but this time, each point has some probability of being an outlier.
-
-[TODO motivate the noise prior too.]
-
-```venture
-assume noise = gamma(1,1)
-```
 
 ```venture
 assume outlier_prob = uniform_continuous(0.01,0.3);
@@ -365,17 +360,30 @@ What does it mean for a point to be an outlier? Unlike most of the
 other points, which we can expect to be near the value predicted by
 our linear equation, an outlier could just as likely be anywhere. We
 will model that by saying that for an outlier point, the y-value is
-drawn from `normal(0,20)`. Putting that all together, our full data
-model is
+drawn from `normal(0,20)`.
 
-[TODO put the noise prior somewhere and motivate it]
+```venture
+assume obs_outlier = proc(x) { normal(0,20) }
+```
+
+Non-outlier points, as before, are centered on the line but subject to
+some Gaussian noise. This time, rather than assuming a fixed amount of
+noise, we will put a prior over the amount of noise as well and see
+how well we can infer it:
+
+```venture
+assume noise = gamma(1,1)
+assume obs_inlier = proc(x) { normal(line(x), noise) }
+```
+
+Putting that all together, our full data model is
 
 ```venture
 assume obs = proc(i,x) {
   if (is_outlier(i)) {
-    normal(0,20)
+    obs_outlier(x)
   } else {
-    normal(line(x), noise)
+    obs_inlier(x)
   }
 }
 ```
