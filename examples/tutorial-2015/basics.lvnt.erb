@@ -134,14 +134,14 @@ top level, allow us to register observations:
 observe y = 2
 ```
 
-Note: the values of `x` and `y` don't change --
+```venture
+sample y
+```
+
+Note: the value of `x` doesn't change --
 
 ```venture
 sample x
-```
-
-```venture
-sample y
 ```
 
  -- all we did was register an observation.
@@ -149,12 +149,11 @@ sample y
 Now infer.
 
 ```venture
-infer posterior;
-sample y
+infer posterior
 ```
 
-Now `y` obeys the observation, and `x` is a sample from the posterior
-distribution `p(x|y=2)` defined by our assumptions and observations:
+Now `x` is a sample from the posterior distribution `p(x|y=2)` defined
+by our assumptions and observations:
 
 ```venture
 sample x
