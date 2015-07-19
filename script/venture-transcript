@@ -131,8 +131,9 @@ class Writer(object):
         print munged.strip()
         (ans, output) = with_output_to_string(self.execute_program, munged)
         val = getValue(ans[-1])
-        figure_blocks = ["![A Venture plot](%s)\n" % (figure,) for figure in figures]
-        self.out_chunks.extend(["```", string, output, str(val), "\n```\n"] + figure_blocks)
+        indent = self.detect_indent(string)
+        figure_blocks = [indent + "![A Venture plot](%s)\n" % (figure,) for figure in figures]
+        self.out_chunks.extend([indent, "```", string, output, indent, str(val), "\n", indent, "```\n"] + figure_blocks)
 
     def munge_plotfs(self, mode, string):
         # TODO Instead of munging the source, should also be able to
@@ -175,6 +176,19 @@ class Writer(object):
                 sys.stderr.write("\n")
                 sys.stderr.flush()
                 return [None]
+
+    def detect_indent(self, string):
+        indents = []
+        for line in string.split('\n'):
+            if line:
+                indent = line[:len(line)-len(line.lstrip())]
+                indents.append(indent)
+        s1 = min(indents)
+        s2 = max(indents)
+        for i, c in enumerate(s1):
+            if c != s2[i]:
+                return s1[:i]
+        return s1
 
     def finish(self):
         result = ''.join(self.out_chunks)

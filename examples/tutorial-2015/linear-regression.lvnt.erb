@@ -104,26 +104,27 @@ Exercise: For now, evaluate the model's performance on the two data points.
    [Hint: You can pass multiple arguments to `collect`]
    [Answer:
 
-```venture
-define data = run(accumulate_dataset(<%= smaller_sample_size %>,
-  do(posterior,
-     collect(intercept, slope, line(3)))))
-```
 
-]
+   ```venture
+   define data = run(accumulate_dataset(<%= smaller_sample_size %>,
+     do(posterior,
+        collect(intercept, slope, line(3)))))
+   ```
+
+   ]
 
 2. Predictive accuracy: Where do you expect the predictive mean to be,
    based on the observations we trained the model on?  How widely do
    you expect it be dispersed, based on the noise in the model?  Plot
    the predictions: does the data agree with your intuition?
 
-[Answer: 2, pretty broad,
+   [Answer: 2, pretty broad,
 
-```venture
-plot("h2", data)
-```
+   ```venture
+   plot("h2", data)
+   ```
 
-]
+   ]
 
 3. Parameter inference
 
@@ -131,23 +132,23 @@ plot("h2", data)
        concentrated do you expect it to be?  Plot the intercept and
        check your intuition.
 
-[Answer: 2, broad,
+    [Answer: 2, broad,
 
-```venture
-plot("h0", data)
-```
-]
+    ```venture
+    plot("h0", data)
+    ```
+    ]
 
     b. Where do you expect the slope to be located, and how
        concentrated do you expect it to be?  Plot the slope and check
        your intuition.
 
-[Answer: 0, broad,
+    [Answer: 0, broad,
 
-```venture
-plot("h1", data)
-```
-]
+    ```venture
+    plot("h1", data)
+    ```
+    ]
 
     c. What do you expect the relationship between the slope and
        intercept to be?  Plot them against each other and check your
@@ -156,12 +157,13 @@ plot("h1", data)
        log scale.  A gotcha: if you leave the middle `d` off, the 0
        and 1 will run together into a single index.
 
-[Answer: anticorrelated, because the line is trying to pass through
-around (1.5, 2).
+    [Answer: anticorrelated, because the line is trying to pass through
+    around (1.5, 2).
 
-```venture
-plot("p0d1d", data)
-```
+    ```venture
+    plot("p0d1d", data)
+    ```
+    ]
 
 Working with Datasets
 =====================
@@ -320,62 +322,64 @@ stop_continuous_inference
 Exercise: Play with this visualization to see how inference is doing.
 
 1. Use the `loop` command to run the Markov chain continually and draw
-an animation frame after every iteration. Watch the animation while it
-runs and confirm that the line eventually approaches a good fit to the
-data. Does it take gradual steps or sudden jumps?
+   an animation frame after every iteration. Watch the animation while
+   it runs and confirm that the line eventually approaches a good fit
+   to the data. Does it take gradual steps or sudden jumps?
 
-[Answer: It takes sudden jumps, with varying amount of time between
-jumps.
+   [Answer: It takes sudden jumps, with varying amount of time between
+   jumps.
 
-```venture
-infer loop(do(default_markov_chain(1), call_back(draw)))
-```
-]
+   ```venture
+   infer loop(do(default_markov_chain(1), call_back(draw)))
+   ```
+   ]
 
 2. How many iterations does it take for the chain to converge? Modify
-the inference loop to call `reset_to_prior` after every 30 iterations
-of the Markov chain. (Hint: You may want to use `repeat` and `do`.) Is
-the Markov chain able to find a good fit within 30 iterations? What
-about 100 iterations? Try playing with the number of iterations to see
-how many it takes to reliably find a reasonable fit.
+   the inference loop to call `reset_to_prior` after every 30
+   iterations of the Markov chain. (Hint: You may want to use `repeat`
+   and `do`.) Is the Markov chain able to find a good fit within 30
+   iterations? What about 100 iterations? Try playing with the number
+   of iterations to see how many it takes to reliably find a
+   reasonable fit.
 
-[Answer: 30 is not enough, and it may not even be obvious visually
-when it's resetting to the prior. 100 is better, but still often fails
-to find a fit; 200-300 is clearly able to find it most of the time.
+   [Answer: 30 is not enough, and it may not even be obvious visually
+   when it's resetting to the prior. 100 is better, but still often
+   fails to find a fit; 200-300 is clearly able to find it most of the
+   time.
 
-```venture
-infer loop(do(reset_to_prior,
-              repeat(<%= iterations %>, do(default_markov_chain(1),
-	                    call_back(draw)))))
-```
-]
+   ```venture
+   infer loop(do(reset_to_prior,
+                 repeat(<%= iterations %>, do(default_markov_chain(1),
+                               call_back(draw)))))
+   ```
+   ]
 
 3. (If you're still running the infer loop, turn it off for this
-part:
+   part:
 
-```venture
-stop_continuous_inference
-```
-)
+   ```venture
+   stop_continuous_inference
+   ```
+   )
 
-We can use `resample` to run multiple independent chains and plot all
-of the resulting lines in the same window, to get some sense of the
-posterior distribution over lines. Resample 20 particles (remember to
-reset them to the prior), run them for 30 iterations, and look at the
-resulting animation. Does it look like the distribution of lines
-converges to something plausible? If you're impatient, try increasing
-the number of iterations as above.
+   We can use `resample` to run multiple independent chains and plot
+   all of the resulting lines in the same window, to get some sense of
+   the posterior distribution over lines. Resample 20 particles
+   (remember to reset them to the prior), run them for 30 iterations,
+   and look at the resulting animation. Does it look like the
+   distribution of lines converges to something plausible? If you're
+   impatient, try increasing the number of iterations as above.
 
-[Answer: Some of the samples do concentrate around the correct line,
-but again 30 iterations is not enough to converge.
+   [Answer: Some of the samples do concentrate around the correct line,
+   but again 30 iterations is not enough to converge.
 
-```venture
-infer resample(20);
-infer do(reset_to_prior,
-         repeat(<%= iterations %>, do(default_markov_chain(1),
-	               call_back(draw))))
-```
-]
+   ```venture
+   infer resample(20);
+   infer do(reset_to_prior,
+            repeat(<%= iterations %>, do(default_markov_chain(1),
+                          call_back(draw))))
+   ```
+   ]
 
 [TODO drop in custom proposals here for better inference]
 
