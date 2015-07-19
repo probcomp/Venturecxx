@@ -669,9 +669,11 @@ clear
 [define on_subproblem
   (lambda (scope block proposal)
     (do (subproblem <- (select scope block))
-        (let ((rhoWeight (assess subproblem select scope block)))
+        (let ((rhoWeight 0 ; (assess subproblem select scope block)
+                         ))
           (do (result <- (proposal subproblem))
-              (let ((xiWeight (assess subproblem select scope block))
+              (let ((xiWeight 0 ; (assess subproblem select scope block)
+                              )
                     (new_weight (+ xiWeight (first result) (- rhoWeight))))
                 (return (pair new_weight (rest result))))))))]
 
