@@ -250,9 +250,10 @@ class Engine(object):
     self.model.traces.at_distinguished('set_seed', seed) # TODO is this what we want?
 
   def continuous_inference_status(self):
-    if self.inferrer is not None:
+    inferrer_obj = self.inferrer # Read self.inferrer atomically, just in case.
+    if inferrer_obj is not None:
       # Running CI in Python
-      return {"running":True, "expression":self.inferrer.program}
+      return {"running":True, "expression":inferrer_obj.program}
     else:
       return {"running":False}
 
@@ -262,9 +263,10 @@ class Engine(object):
     self.inferrer.start()
 
   def stop_continuous_inference(self):
-    if self.inferrer is not None:
+    inferrer_obj = self.inferrer # Read self.inferrer atomically, just in case.
+    if inferrer_obj is not None:
       # Running CI in Python
-      self.inferrer.stop()
+      inferrer_obj.stop()
       self.inferrer = None
 
   def on_continuous_inference_thread(self):
