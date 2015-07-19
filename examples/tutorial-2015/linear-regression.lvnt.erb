@@ -363,7 +363,7 @@ the number of iterations as above.
 but again 30 iterations is not enough to converge.
 
 ```venture
-infer resample(20)
+infer resample(20);
 infer do(reset_to_prior,
          repeat(30, do(default_markov_chain(1),
 	               call_back(draw))))
