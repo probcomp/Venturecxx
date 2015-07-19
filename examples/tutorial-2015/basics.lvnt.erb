@@ -362,14 +362,17 @@ longer to get samples for.  Don't move the datum too far: rejection is
 
 The inference phenomenon at work here is this:
 
-- the [KL divergence](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence)
-  from the posterior to the prior measures the difficulty of the
-  problem; in this case it grows quadratically with position of the
-  datum.
+- The [KL divergence](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence)
+  from the posterior to the prior is one notion of the "distance" between the
+  posterior and the prior.  Intuitively, we can think of this KL divergence as
+  measuring the difficulty of the problem.  In the current example, the KL
+  divergence grows quadratically with position of the datum.
 
 - Rejection sampling (which is the algorithm the `posterior` command
   uses) is [exponentially slow in the KL gap it is trying to
-  cross](http://danroy.org/papers/FreerManRoy-NIPSMC-2010.pdf).
+  cross](http://danroy.org/papers/FreerManRoy-NIPSMC-2010.pdf).  This is one
+  case in which the intuitive notion that KL divergence measures the difficulty
+  of inference has been made precise.
 
 Importance Sampling with Resampling
 -----------------------------------
