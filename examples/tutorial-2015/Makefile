@@ -34,12 +34,14 @@ tutorial-smoke/%/index.html: %-smoke.lvnt reg-test.csv
 
 # Full builds
 
-build: tutorial/basics/index.html tutorial/linear-regression/index.html tutorial/gp/index.html $(BASIC_ASSETS) $(REGRESSION_ASSETS) $(GP_ASSETS)
+build: index.html tutorial/basics/index.html tutorial/linear-regression/index.html tutorial/gp/index.html $(BASIC_ASSETS) $(REGRESSION_ASSETS) $(GP_ASSETS)
+	cp index.html tutorial/
 	cp $(BASIC_ASSETS) tutorial/basics/
 	cp $(REGRESSION_ASSETS) tutorial/linear-regression
 	cp $(GP_ASSETS) tutorial/gp
 
-build-smoke: tutorial-smoke/basics/index.html tutorial-smoke/linear-regression/index.html tutorial-smoke/gp/index.html $(BASIC_ASSETS) $(REGRESSION_ASSETS)
+build-smoke: index.html tutorial-smoke/basics/index.html tutorial-smoke/linear-regression/index.html tutorial-smoke/gp/index.html $(BASIC_ASSETS) $(REGRESSION_ASSETS)
+	cp index.html tutorial-smoke/
 	cp $(BASIC_ASSETS) tutorial-smoke/basics/
 	cp $(REGRESSION_ASSETS) tutorial-smoke/linear-regression
 	cp $(GP_ASSETS) tutorial-smoke/gp
