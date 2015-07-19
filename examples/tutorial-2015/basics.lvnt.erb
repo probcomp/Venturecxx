@@ -644,10 +644,11 @@ clear
           (xi_weight <- (regen_with_proposal subproblem values))
           (let ((rho_weight (first rho_weight_and_rho_db))
                 (rho_db (rest rho_weight_and_rho_db)))
-            (list (- xi_weight rho_weight)
-                  pass                    ; accept
-                  (do (detach subproblem) ; reject
-                      (restore subproblem rho_db)))))))]
+            (return
+             (list (- xi_weight rho_weight)
+                   pass                    ; accept
+                   (do (detach subproblem) ; reject
+                       (restore subproblem rho_db))))))))]
 
 [define mh_correct
   (lambda (proposal)
@@ -674,7 +675,7 @@ clear
           (do (result <- (proposal subproblem))
               (let ((xiWeight 0 ; (assess subproblem select scope block)
                               )
-                    (new_weight (+ xiWeight (first result) (- rhoWeight))))
+                    (new_weight (+ xiWeight (first result) (- 0 rhoWeight))))
                 (return (pair new_weight (rest result))))))))]
 
 [define drift_kernel
