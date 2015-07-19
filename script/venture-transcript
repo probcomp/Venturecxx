@@ -194,7 +194,7 @@ class Writer(object):
         result = ''.join(self.out_chunks)
         with open(self.outfile, 'w') as out:
             out.write(header)
-            out.write(markdown2.markdown(result, extras=['fenced-code-blocks']))
+            out.write(markdown2.markdown(result, extras=['fenced-code-blocks', 'markdown-in-html']))
             out.write(footer)
         shutil.copy(css_file, self.outdir)
 
