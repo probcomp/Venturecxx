@@ -209,7 +209,7 @@ assume xs = array(3.2, 2.2, 8.7);
 define ys = array(8.7, 0.2, 5.5);
 run(observe(g(xs), ys));
 infer incorporate();
-// TODO plot, I dunno, 30 samples of mapv(g, xs) where xs = linspace(0, 10, 50), as 30 superimposed line graphs (so the set of (x,y) pairs for one line is zip(xs, mapv(g, xs))).
+// TODO plot, I dunno, 30 samples of mapv(g, xs) where xs = linspace(0, 10, 50), as 30 superimposed line graphs (so the set of (x,y) pairs for one line is zip(xs, mapv(g, xs))).  The samples do not have to come from different particles.
 ```
 
 The posterior of `g` is again a Gaussian process, with a different mean
