@@ -46,6 +46,7 @@ keywords = {                    # XXX Use a perfect hash.
     'assume': grammar.K_ASSUME,
     'clear': grammar.K_CLEAR,
     'continuous': grammar.K_CONTINUOUS,
+    'continuous_inference_status': grammar.K_CONTINUOUS_INFERENCE_STATUS,
     'current': grammar.K_CURRENT,
     'define': grammar.K_DEFINE,
     'directive': grammar.K_DIRECTIVE,
@@ -84,6 +85,7 @@ keywords = {                    # XXX Use a perfect hash.
     'state': grammar.K_STATE,
     'status': grammar.K_STATUS,
     'stop': grammar.K_STOP,
+    'stop_continuous_inference': grammar.K_STOP_CONTINUOUS_INFERENCE,
     'sub': grammar.K_SUB,
     'true': grammar.T_TRUE,
     'false': grammar.T_FALSE,
@@ -159,9 +161,9 @@ class Scanner(Plex.Scanner):
     digits = Plex.Rep(digit)
     digits1 = Plex.Rep1(digit)
     dot = Plex.Str('.')
-    integer = digits1                                   # NNNN
-    intfrac = integer + Plex.Opt(dot + digits)          # NNN[.[NNNN]]
-    fraconly = dot + digits1                            # .NNNN
+    integer = optsign + digits1                         # [+/-]NNNN
+    intfrac = integer + Plex.Opt(dot + digits)          # [+/-]NNN[.[NNNN]]
+    fraconly = optsign + dot + digits1                  # [+/-].NNNN
     expmark = Plex.Any('eE')
     exponent = expmark + optsign + digits1              # (e/E)[+/-]NNN
     real = (intfrac | fraconly) + Plex.Opt(exponent)

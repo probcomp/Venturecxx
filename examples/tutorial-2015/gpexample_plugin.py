@@ -37,9 +37,27 @@ whitenoiseType = sp.SPType([t.NumberType()], t.NumberType())
 def whitenoise(s):
     def f(x1, x2):
         tol = 1.e-9  # Tolerance for declaring two vectors "equal"
-        M = spdist.cdist(x1, x2, 'sqeuclidean')
-        A = s * (M < tol)
+        M = spdist.cdist([[x1]], [[x2]], 'sqeuclidean')
+        A = s * (M < tol)[0,0]
         return A
+    return f
+
+periodicType = sp.SPType([t.NumberType(), t.NumberType(), t.NumberType()], t.NumberType())
+def periodic(l,p,sf):
+    def f(x1, x2):
+        A = np.sqrt(spdist.cdist([[x1]],[[x2]],'sqeuclidean'))[0,0]
+        A = np.pi*A/p
+        A = np.sin(A)/l
+        A = A * A
+        A = sf *np.exp(-2.*A)
+        return A
+    return f
+
+linearType = sp.SPType([t.NumberType()], t.NumberType())
+def linear(sf):
+    def f(x1, x2):
+        A = np.dot(x1,x2.T) + 1e-10    # required for numerical accuracy
+        return sf * A
     return f
 
 def __venture_start__(ripl, *args):
@@ -55,6 +73,14 @@ def __venture_start__(ripl, *args):
                 VentureFunction(whitenoise(s),
                     name="WN",parameter=[s], sp_type=whitenoiseType),
             [t.NumberType()], t.AnyType("VentureFunction"))
+    make_periodic_cov_SP = deterministic_typed(lambda l, p, sf:
+                VentureFunction(periodic(l, p, sf),
+                    name="PER",parameter=[l,p,sf], sp_type=periodicType),
+            [t.NumberType(), t.NumberType(), t.NumberType()], t.AnyType("VentureFunction"))
+    make_linear_cov_SP = deterministic_typed(lambda sf:
+                VentureFunction(linear(sf),
+                    name="LIN",parameter=[sf], sp_type=linearType),
+            [t.NumberType()], t.AnyType("VentureFunction"))
     make_const_func_SP = deterministic_typed(lambda c:
             VentureFunction(lambda x: c,
                 sp_type = sp.SPType([], t.NumberType())),
@@ -63,13 +89,19 @@ def __venture_start__(ripl, *args):
     add_funcs_SP = deterministic_typed(lambda f1, f2: VentureFunction(lambda x: f1(x) + f2(x)),
         [t.AnyType("VentureFunction"), t.AnyType("VentureFunction")],
         t.AnyType("VentureFunction"))
+    mult_funcs_SP = deterministic_typed(lambda f1, f2: VentureFunction(lambda x: f1(x) * f2(x)),
+        [t.AnyType("VentureFunction"), t.AnyType("VentureFunction")],
+        t.AnyType("VentureFunction"))
 
     ripl.bind_foreign_sp('gpmem', gpmem.gpmemSP)
     ripl.bind_foreign_inference_sp('argmax_of_array', argmaxSP)
     ripl.bind_foreign_sp('abs', absSP)
     ripl.bind_foreign_sp('make_squaredexp', make_se_SP)
     ripl.bind_foreign_sp('add_funcs', add_funcs_SP)
+    ripl.bind_foreign_sp('mult_funcs', mult_funcs_SP)
     ripl.bind_foreign_sp('make_whitenoise', make_whitenoise_SP)
+    ripl.bind_foreign_sp('make_periodic_cov', make_periodic_cov_SP)
+    ripl.bind_foreign_sp('make_linear_cov', make_periodic_cov_SP)
     ripl.bind_foreign_sp('make_const_func', make_const_func_SP)
 
 
