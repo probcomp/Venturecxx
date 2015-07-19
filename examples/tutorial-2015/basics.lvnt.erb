@@ -358,7 +358,7 @@ plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>, do(posterior, coll
 but as you move the datum further out (with more `forget` and
 `observe` commands), you can tell that more distant observations take
 longer to get samples for.  Don't move the datum too far: rejection is
-`O(e^(position^2))` on this problem.
+`e^(O(position^2))` on this problem.
 
 The inference phenomenon at work here is this:
 
