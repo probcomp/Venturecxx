@@ -337,9 +337,9 @@ the Markov chain able to find a good fit within 30 iterations? What
 about 100 iterations? Try playing with the number of iterations to see
 how many it takes to reliably find a reasonable fit.
 
-[Answer: 30 is not enough, and you may not even be able to tell
-exactly when it's resetting to the prior. 100 is better, but it's
-still hard to tell; 200-300 is clearly able to find it most of the time.
+[Answer: 30 is not enough, and it may not even be obvious visually
+when it's resetting to the prior. 100 is better, but still often fails
+to find a fit; 200-300 is clearly able to find it most of the time.
 
 ```venture
 infer loop(do(reset_to_prior,
@@ -347,9 +347,6 @@ infer loop(do(reset_to_prior,
 	                    call_back(draw)))))
 ```
 ]
-
-[TODO is it possible to make the pygame visualization display an
-iteration count to make this easier to interpret?]
 
 3. If you're still running the infer loop, turn it off for this part
 (`stop_continuous_inference`).
@@ -514,7 +511,69 @@ assume obs = proc(i, x) {
 }
 ```
 
-[TODO something interesting using the scopes]
+Each `tag` command takes three arguments: a scope ID, a block ID, and
+the expression it applies to. Inference commands can then target a
+particular scope and block. For example, we can do Markov chain
+inference on just the line parameters using
+
+```venture
+infer mh(quote(param), one, 1);
+```
+
+The `mh` inference command is the same as `default_markov_chain`,
+except that it allows you to specify a scope and block to operate on;
+in fact, `default_markov_chain(x)` is an alias for `mh(default, one,
+x)`. Here `default` is a keyword that refers to the default scope
+containing all random choices in the model, and `one` means to pick
+one randomly from the blocks associated with the scope.
+
+What are scoped inference commands good for? Here are some use cases:
+
+* Specifying how to divide effort between different parts of the
+  model. For instance, one issue with using the default Markov chain
+  on the model with outliers is that the default chain will consider
+  each random choice in the model equally often, but the model
+  contains one random choice for every data point that determines
+  whether it's an outlier or not, so as the number of data points
+  increases it will spend most of its time categorizing points as
+  outliers and relatively little time actually fitting the line
+  parameters. Using scopes, we can explicitly decide how many
+  iterations to allocate to outlier detection to avoid having it take
+  a disproportionate amount of effort.
+
+* Using different inference strategies for different parts of the
+  model. For instance, we may want to use [enumerative Gibbs](<%=
+  refman_url %>inference.html#gibbs) for the outlier detection, and
+  drift proposals for the line parameters. This is especially useful
+  when some inference strategies only make sense for some types of
+  variables; in this case, enumerative Gibbs is only possible for
+  discrete variables and normal drift proposals only make sense for
+  continuous variables.
+
+Here is an inference program that illustrates these ideas:
+
+```venture
+infer loop(do(mh(quote(param), one, 2),
+              mh(quote(hyper), one, 1),
+	      gibbs(quote(outlier), one, 1),
+	      call_back(draw)))
+```
+
+Exercise: Compare this to the infer loop that only used
+`default_markov_chain` from earlier. What qualitative differences in
+behavior do you see? Try adjusting the number of iterations allocated
+to each scope and see what happens.
+
+[Answer: The line moves more often, because the program spends less
+time on uselessly reconsidering whether points are outliers and more
+time on proposing new line parameters. Giving more iterations to the
+line parameters (say, `mh(quote(param), one, 5)`) will cause the line
+to move even more, but it may miss the opportunity to reduce the noise
+level or flag a point as an outlier when it doesn't fit. Giving more
+iterations to the noise hyperparameter or the outlier detection will
+make these opportunities more likely, but may also waste time
+reconsidering the same random choices just like `default_markov_chain`
+does.]
 
 Elaboration: Model Selection
 ============================
