@@ -62,15 +62,19 @@ def testStartStopInferLoop():
   ripl.assume("x", "(normal 0 1)")
   assertNotInferring(ripl)
   eq_(numthreads, threading.active_count())
+  eq_(False, ripl.continuous_inference_status()['running'])
   try:
     ripl.infer("(loop (mh default one 1))")
     assertInferring(ripl)
     eq_(numthreads+1, threading.active_count())
+    eq_(True, ripl.continuous_inference_status()['running'])
     with ripl.sivm._pause_continuous_inference():
       assertNotInferring(ripl)
       eq_(numthreads, threading.active_count())
+      eq_(False, ripl.continuous_inference_status()['running'])
     assertInferring(ripl)
     eq_(numthreads+1, threading.active_count())
+    eq_(True, ripl.continuous_inference_status()['running'])
   finally:
     ripl.stop_continuous_inference() # Don't want to leave active threads lying around
 
