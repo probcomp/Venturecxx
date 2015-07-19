@@ -5,6 +5,26 @@
 <% if ENV['SMOKETEST'] then iterations = 1 end %>
 <% refman_url = "http://probcomp.csail.mit.edu/venture/edge/reference/" %>
 
+<script type="text/javascript">
+function hideAnswers() {
+  var answers = document.getElementsByClassName("answer");
+  for (var i = 0; i < answers.length; ++i) {
+    var answer = answers[i];
+    answer.style.display = "none";
+  }
+}
+window.addEventListener('load', hideAnswers);
+function toggle(id) {
+  var answer = document.getElementById(id);
+  if (answer.style.display === "none") {
+    answer.style.display = "block";
+  }
+  else {
+    answer.style.display = "none";
+  }
+}
+</script>
+
 [< Prev: Basics](../basics/index.html)
 
 Linear Regression
@@ -102,52 +122,59 @@ Exercise: For now, evaluate the model's performance on the two data points.
 1. Gather and save a dataset of independent posterior samples of the
    parameters and a prediction at some value.
    [Hint: You can pass multiple arguments to `collect`]
-   [Answer:
+   <a href="javascript:toggle('answer-simple-1')">(Show Answer)</a>
 
-```venture
-define data = run(accumulate_dataset(<%= smaller_sample_size %>,
-  do(posterior,
-     collect(intercept, slope, line(3)))))
-```
+   <div class="answer" id="answer-simple-1" markdown="1">
+   Answer:
 
-]
+   ```venture
+   define data = run(accumulate_dataset(<%= smaller_sample_size %>,
+     do(posterior,
+        collect(intercept, slope, line(3)))))
+   ```
+   </div>
 
 2. Predictive accuracy: Where do you expect the predictive mean to be,
    based on the observations we trained the model on?  How widely do
    you expect it be dispersed, based on the noise in the model?  Plot
    the predictions: does the data agree with your intuition?
+   <a href="javascript:toggle('answer-simple-2')">(Show Answer)</a>
 
-[Answer: 2, pretty broad,
+   <div class="answer" id="answer-simple-2" markdown="1">
+   Answer: 2, pretty broad,
 
-```venture
-plot("h2", data)
-```
-
-]
+   ```venture
+   plot("h2", data)
+   ```
+   </div>
 
 3. Parameter inference
 
     a. Where do you expect the intercept to be located, and how
        concentrated do you expect it to be?  Plot the intercept and
        check your intuition.
+       <a href="javascript:toggle('answer-simple-3a')">(Show Answer)</a>
 
-[Answer: 2, broad,
+    <div class="answer" id="answer-simple-3a" markdown="1">
+    Answer: 2, broad,
 
-```venture
-plot("h0", data)
-```
-]
+    ```venture
+    plot("h0", data)
+    ```
+    </div>
 
     b. Where do you expect the slope to be located, and how
        concentrated do you expect it to be?  Plot the slope and check
        your intuition.
+       <a href="javascript:toggle('answer-simple-3b')">(Show Answer)</a>
 
-[Answer: 0, broad,
+    <div class="answer" id="answer-simple-3b" markdown="1">
+    Answer: 0, broad,
 
-```venture
-plot("h1", data)
-```
-]
+    ```venture
+    plot("h1", data)
+    ```
+    </div>
 
     c. What do you expect the relationship between the slope and
        intercept to be?  Plot them against each other and check your
@@ -155,13 +182,16 @@ plot("h1", data)
        `p0d1d`: `p` for **p**oint and `d` for **d**irect as opposed to
        log scale.  A gotcha: if you leave the middle `d` off, the 0
        and 1 will run together into a single index.
+       <a href="javascript:toggle('answer-simple-3c')">(Show Answer)</a>
 
-[Answer: anticorrelated, because the line is trying to pass through
-around (1.5, 2).
+    <div class="answer" id="answer-simple-3c" markdown="1">
+    Answer: anticorrelated, because the line is trying to pass through
+    around (1.5, 2).
 
-```venture
-plot("p0d1d", data)
-```
+    ```venture
+    plot("p0d1d", data)
+    ```
+    </div>
 
 Working with Datasets
 =====================
@@ -320,62 +350,69 @@ stop_continuous_inference
 Exercise: Play with this visualization to see how inference is doing.
 
 1. Use the `loop` command to run the Markov chain continually and draw
-an animation frame after every iteration. Watch the animation while it
-runs and confirm that the line eventually approaches a good fit to the
-data. Does it take gradual steps or sudden jumps?
+   an animation frame after every iteration. Watch the animation while
+   it runs and confirm that the line eventually approaches a good fit
+   to the data. Does it take gradual steps or sudden jumps?
+   <a href="javascript:toggle('answer-vis-1')">(Show Answer)</a>
 
-[Answer: It takes sudden jumps, with varying amount of time between
-jumps.
+   <div class="answer" id="answer-vis-1" markdown="1">
+   Answer: It takes sudden jumps, with varying amount of time between
+   jumps.
 
-```venture
-infer loop(do(default_markov_chain(1), call_back(draw)))
-```
-]
+   ```venture
+   infer loop(do(default_markov_chain(1), call_back(draw)))
+   ```
+   </div>
 
 2. How many iterations does it take for the chain to converge? Modify
-the inference loop to call `reset_to_prior` after every 30 iterations
-of the Markov chain. (Hint: You may want to use `repeat` and `do`.) Is
-the Markov chain able to find a good fit within 30 iterations? What
-about 100 iterations? Try playing with the number of iterations to see
-how many it takes to reliably find a reasonable fit.
+   the inference loop to call `reset_to_prior` after every 30
+   iterations of the Markov chain. (Hint: You may want to use `repeat`
+   and `do`.) Is the Markov chain able to find a good fit within 30
+   iterations? What about 100 iterations? Try playing with the number
+   of iterations to see how many it takes to reliably find a
+   reasonable fit.
+   <a href="javascript:toggle('answer-vis-2')">(Show Answer)</a>
 
-[Answer: 30 is not enough, and it may not even be obvious visually
-when it's resetting to the prior. 100 is better, but still often fails
-to find a fit; 200-300 is clearly able to find it most of the time.
+   <div class="answer" id="answer-vis-2" markdown="1">
+   Answer: 30 is not enough, and it may not even be obvious visually
+   when it's resetting to the prior. 100 is better, but still often
+   fails to find a fit; 200-300 is clearly able to find it most of the
+   time.
 
-```venture
-infer loop(do(reset_to_prior,
-              repeat(<%= iterations %>, do(default_markov_chain(1),
-	                    call_back(draw)))))
-```
-]
+   ```venture
+   infer loop(do(reset_to_prior,
+                 repeat(<%= iterations %>, do(default_markov_chain(1),
+                               call_back(draw)))))
+   ```
+   </div>
 
 3. (If you're still running the infer loop, turn it off for this
-part:
+   part.)
 
-```venture
-stop_continuous_inference
-```
-)
+   ```venture
+   stop_continuous_inference
+   ```
 
-We can use `resample` to run multiple independent chains and plot all
-of the resulting lines in the same window, to get some sense of the
-posterior distribution over lines. Resample 20 particles (remember to
-reset them to the prior), run them for 30 iterations, and look at the
-resulting animation. Does it look like the distribution of lines
-converges to something plausible? If you're impatient, try increasing
-the number of iterations as above.
+   We can use `resample` to run multiple independent chains and plot
+   all of the resulting lines in the same window, to get some sense of
+   the posterior distribution over lines. Resample 20 particles
+   (remember to reset them to the prior), run them for 30 iterations,
+   and look at the resulting animation. Does it look like the
+   distribution of lines converges to something plausible? If you're
+   impatient, try increasing the number of iterations as above.
+   <a href="javascript:toggle('answer-vis-3')">(Show Answer)</a>
 
-[Answer: Some of the samples do concentrate around the correct line,
-but again 30 iterations is not enough to converge.
+   <div class="answer" id="answer-vis-3" markdown="1">
+   Answer: Some of the samples do concentrate around the correct line,
+   but again 30 iterations is not enough to converge.
 
-```venture
-infer resample(20);
-infer do(reset_to_prior,
-         repeat(<%= iterations %>, do(default_markov_chain(1),
-	               call_back(draw))))
-```
-]
+   ```venture
+   infer resample(20);
+   infer do(reset_to_prior,
+            repeat(<%= iterations %>, do(default_markov_chain(1),
+                          call_back(draw))))
+   ```
+   </div>
 
 [TODO drop in custom proposals here for better inference]
 
@@ -562,25 +599,33 @@ Here is an inference program that illustrates these ideas:
 ```venture
 infer loop(do(mh(quote(param), one, 2),
               mh(quote(hyper), one, 1),
-	      gibbs(quote(outlier), one, 1),
-	      call_back(draw)))
+              gibbs(quote(outlier), one, 1),
+              call_back(draw)))
 ```
 
 Exercise: Compare this to the infer loop that only used
 `default_markov_chain` from earlier. What qualitative differences in
 behavior do you see? Try adjusting the number of iterations allocated
 to each scope and see what happens.
+<a href="javascript:toggle('answer-scopes')">(Show Answer)</a>
 
-[Answer: The line moves more often, because the program spends less
+<div class="answer" id="answer-scopes" markdown="1">
+
+Answer: The line moves more often, because the program spends less
 time on uselessly reconsidering whether points are outliers and more
-time on proposing new line parameters. Giving more iterations to the
-line parameters (say, `mh(quote(param), one, 5)`) will cause the line
-to move even more, but it may miss the opportunity to reduce the noise
-level or flag a point as an outlier when it doesn't fit. Giving more
-iterations to the noise hyperparameter or the outlier detection will
-make these opportunities more likely, but may also waste time
-reconsidering the same random choices over and over just like
-`default_markov_chain` does.]
+time on proposing new line parameters.
+
+Giving more iterations to the line parameters (say, `mh(quote(param),
+one, 5)`) will cause the line to move even more, but it may miss the
+opportunity to reduce the noise level or flag a point as an outlier
+when it doesn't fit.
+
+Giving more iterations to the noise hyperparameter or the outlier
+detection will make these opportunities more likely, but may also
+waste time reconsidering the same random choices over and over just
+like `default_markov_chain` does.
+
+</div>
 
 ```venture
 stop_continuous_inference
