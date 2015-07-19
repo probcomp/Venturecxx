@@ -196,7 +196,9 @@ def plot_to_file_fun(basenames, spec, dataset):
     PlotSpec(spec).plot(dataset, list(dataset.columns.values), _format_filenames(filenames, spec))
 
 def _format_filenames(filenames,spec):
-  if isinstance(filenames, basestring):
+  if isinstance(filenames, basestring) or isinstance(filenames, v.VentureString):
+    if isinstance(filenames, v.VentureString):
+      filenames = filenames.getString()
     if isinstance(spec, basestring) or isinstance(spec, v.VentureString):
       return [filenames + '.png']
     else:
