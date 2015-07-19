@@ -53,7 +53,7 @@ def testInferLoopSmoke():
   finally:
     ripl.stop_continuous_inference() # Don't want to leave active threads lying around
 
-@on_inf_prim("mh") # Really loop, but that's very special
+@on_inf_prim("loop")
 @flaky # Because sometimes it doesn't wait long enough for the other thread to go
 def testStartStopInferLoop():
   numthreads = threading.active_count()
@@ -74,7 +74,7 @@ def testStartStopInferLoop():
   finally:
     ripl.stop_continuous_inference() # Don't want to leave active threads lying around
 
-@on_inf_prim("mh") # Really loop, but that's very special
+@on_inf_prim("loop")
 def testStartCISmoke():
   ripl = get_ripl()
   ripl.assume("x", "(normal 0 1)")
@@ -87,7 +87,7 @@ def testStartCISmoke():
   finally:
     ripl.stop_continuous_inference() # Don't want to leave active threads lying around
 
-@on_inf_prim("mh") # Really loop, but that's very special
+@on_inf_prim("loop")
 def testStartCIInstructionSmoke():
   ripl = get_ripl()
   ripl.assume("x", "(normal 0 1)")
