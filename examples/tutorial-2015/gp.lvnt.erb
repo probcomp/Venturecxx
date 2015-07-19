@@ -148,7 +148,7 @@ assume mweights = simplex(0.3, 0.3, 0.4);
 assume cnum = tag(quote(cnum), 0, categorical(mweights));
 assume f = lookup(components, cnum);
 
-assume v = 0.05
+assume v = 0.05;
 define obs_f = proc(xy) {
     run(do(
         x <- return(lookup(xy, 0)),
@@ -190,8 +190,8 @@ Williams](http://www.gaussianprocess.org/gpml/chapters/RW2.pdf).
 clear;
 run(load_plugin("gpexample_plugin.py"));
 assume se = make_squaredexp(1.2, 0.8);
-assume zero = make_const_func(0.0);
-assume g = make_gp(zero, se);
+assume zero_func = make_const_func(0.0);
+assume g = make_gp(zero_func, se);
 ```
 
 The Gaussian process `g` can be thought of as a random function whose prior is
@@ -242,12 +242,13 @@ We recently developed language support for a new idiom for GP modelling, called
 _Gaussian process memoization_, or `gpmem`.  The idea is to wrap a function `f`
 into a package containing both a self-caching "prober" (which actually calls
 `f`) and a statistical emulator, which simulates `f` using a GP prior
-conditioned on the values of all previous invocations of the prober.  For
-example:
+conditioned on the values of all previous invocations of the prober.  The
+arguments to `gpmem` are the function `f`, a prior mean function for the
+GP-based emulator, and a prior covariance function.  For example:
 
 ```venture
 assume f = make_audited_expensive_function("f");
-assume package = gpmem(f, se);
+assume package = gpmem(f, zero_func, se);
 
 assume ffive = first(package)(5);
 assume fsix = first(package)(6);
@@ -298,7 +299,7 @@ assume V = make_audited_expensive_function("V");
 assume V_sf = tag(quote(hyper), 0, uniform_continuous(0, 10));
 assume V_l = tag(quote(hyper), 1, uniform_continuous(0, 10));
 assume V_se = make_squaredexp(V_sf, V_l);
-assume V_package = gpmem(V, V_se);
+assume V_package = gpmem(V, zero_func, V_se);
 
 // A very naive estimate of the argmax of the given function
 define mc_argmax = proc(func) {
@@ -310,7 +311,8 @@ define mc_argmax = proc(func) {
                   argmax_of_array(candidate_ys)))))
 };
 
-// Shortcut to sample the emulator at a single point without packing and unpacking arrays
+// Shortcut to sample the emulator at a single point without packing
+// and unpacking arrays
 define V_emu_pointwise = proc(x) {
     run(sample(lookup(second(V_package)(array(unquote(x))),
                       0)))

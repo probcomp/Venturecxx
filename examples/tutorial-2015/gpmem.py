@@ -23,12 +23,13 @@ class MakeGPMSPOutputPSP(DeterministicPSP):
 
     def simulate(self, args):
         f_node = args.operandNodes[0]
-        prior_covariance_function = args.operandValues()[1]
+        prior_mean_function = args.operandValues()[1]
+        prior_covariance_function = args.operandValues()[2]
         f_compute = VentureSPRecord(
                 SP(GPMComputerRequestPSP(f_node), GPMComputerOutputPSP()))
         # Prior mean is fixed to zero, because the current GP implementation
         # assumes this
-        f_emu = VentureSPRecord(GPSP(zero_function, prior_covariance_function))
+        f_emu = VentureSPRecord(GPSP(prior_mean_function, prior_covariance_function))
         f_emu.spAux = self.shared_aux
         f_compute.spAux = self.shared_aux
         # TODO ways to get_Xseen and get_Yseen? maybe this belongs in the
@@ -66,8 +67,6 @@ class GPMDeterministicMakerAAALKernel(SimulationAAALKernel):
         return answer
 
 gpmemSP = no_request(MakeGPMSPOutputPSP())
-
-zero_function = VentureFunction(lambda x: 0, [t.AnyType()], t.NumberType())
 
 # TODO treat this as not necessarily random?
 class GPMComputerRequestPSP(DeterministicPSP):
