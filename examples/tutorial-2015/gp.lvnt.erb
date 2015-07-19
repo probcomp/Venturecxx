@@ -11,7 +11,7 @@ Getting Started
 As a reminder, you can start an interactive Venture session with
 
 ```
-$ venture lite --lang venture_script
+$ venture lite
 ```
 
 You can also run a file such as `script.vnts` using
@@ -97,29 +97,35 @@ Taking the above one step further, we can use a mixture model to perform
 regression.  The following code asks, "what is the posterior on models that are
 either linear or sine wave, conditioned on the given data?"
 
-```
-define data = TODO;
-
-assume a = unform(-2, 2);
-assume b = unform(-2, 2);
-assume c = unform(-2, 2);
-assume d = unform(0, 3);
-assume e = unform(0, 2*3.14159);
+```venture
+clear;
+assume a = uniform_continuous(0-2, 2);
+assume b = uniform_continuous(0-2, 2);
+assume c = uniform_continuous(0-2, 2);
+assume d = uniform_continuous(0, 3);
+assume e = uniform_continuous(0, 2*3.14159);
 assume components = array(
     proc(x) { a*x + b },
     proc(x) { c*sin(d*x + e) }
     );
 assume mweights = simplex(0.5, 0.5);
-assume f = categorical(components, mweights);
+assume f = categorical(mweights, components);
 
 assume v = 0.1;
-// TODO fix the below
-define obs_f = proc(xy) { run(observe(normal(f(lookup(quote(unquote(xy))), 0), v), lookup(quote(unquote(xy))), 1)) };
-infer run(mapv(obs_f, data));
+define obs_f = proc(xy) {
+    run(do(
+        x <- return(lookup(xy, 0)),
+        y <- return(lookup(xy, 1)),
+        observe(normal(f(unquote(x)), v), y)))
+};
+define xs = array(9.9, 9.07, 2.17, 3.76, 8.09, 8.72, 9.04, 5.9, 9.34, 1.14, 1.59, 3.27, 3.63, 2.11, 5.3, 6.08, 2.83, 3.88, 0.58, 1.9, 6.54, 8.28, 9.58, 9.98, 1.66, 3.9, 3.36, 5.76, 1.57, 3.92);
+define ys = array(0-0.67, 0.51, 0-0.69, 1.04, 0.87, 1.0, 0.6, 0-1.09, 0.06, 0-0.88, 0-1.01, 0.7, 1.05, 0-0.87, 0-0.52, 0-1.16, 0.11, 1.05, 0.0, 0-0.86, 0-0.92, 1.18, 0-0.02, 0-0.91, 0-1.13, 0.99, 1.01, 0-1.0, 0-1.17, 1.13);
+define data = zip(xs, ys);
+infer return(mapv(obs_f, data));
 infer incorporate();
 
 infer default_markov_chain(1000);
-// (plot TODO)
+// TODO collect the value of mapv(f, linspace(0, 10, 50)) as inference is done (say, 100 steps at a time) and plot them as superimposed line graphs with color proportional to time
 ```
 
 Another interesting case of mixture regression is when the mixture components
@@ -133,28 +139,32 @@ parameters for that model.
 clear;
 assume r = 0 - beta(2,2);
 assume components = array(
-    proc(x) { 0.3 },         // component 0
-    proc(x) { pow(x, 0-1) },       // component 1
-    proc(x) { pow(x, r) }         // component 2
+    proc(x) { 0.3 },           // component 0
+    proc(x) { pow(x, 0-1) },   // component 1
+    proc(x) { pow(x, r) }      // component 2
     );
 
 assume mweights = simplex(0.3, 0.3, 0.4);
 assume cnum = tag(quote(cnum), 0, categorical(mweights));
 assume f = lookup(components, cnum);
 
-assume v = 0.01;
-observe normal(f(5), v) = 0.32;
-observe normal(f(0.1), v) = 5.0;
+assume v = 0.05
+define obs_f = proc(xy) {
+    run(do(
+        x <- return(lookup(xy, 0)),
+        y <- return(lookup(xy, 1)),
+        observe(normal(f(unquote(x)), v), y)))
+};
+define xs = array(3.54, 4.38, 4.72, 2.06, 2.91, 1.83, 0.82, 3.92, 3.46, 3.83, 0.44, 3.46, 3.69, 3.34, 0.56, 1.61, 4.43, 2.98, 2.94, 1.6);
+define ys = array(1.03, 0.68, 0.29, 0-1.03, 0.41, 0-1.13, 0-0.55, 1.29, 1.11, 1.1, 0-0.08, 0.87, 1.11, 0.9, 0-0.11, 0-1.02, 0.87, 0.23, 0.37, 0-1.08);
+define data = zip(xs, ys);
+infer return(mapv(obs_f, data));
 infer incorporate();
 
 infer default_markov_chain(1000);
 
-// (plot TODO)
-sample cnum;
-sample r
+// TODO plot cnum vs time and r vs time, as two superimposed line graphs.  The data was generated with r=0.6, can change that to use an r that makes it take longer to decide, if that looks better.
 ```
-TODO Show the progression of posterior on cnum, and r, etc., as more data
-points are seen and more inference steps are done
 
 TODO There is a lesson about Bayesian something-or-other here, where the
 posterior weight of a component is the average goodness of randomly drawn
@@ -186,8 +196,11 @@ assume g = make_gp(zero, se);
 
 The Gaussian process `g` can be thought of as a random function whose prior is
 a Gaussian process with mean zero and covariance function `se`, that is,
-squared exponential: prior_covariance(g(x1), g(x2)) = 1.2 * exp((x1-x2)^2 /
-(2*0.8)).
+squared exponential:
+
+```
+prior_covariance(g(x1), g(x2)) = 1.2 * exp((x1-x2)^2 / (2*0.8))
+```
 
 We can observe the value of `g` at given data points:
 
@@ -196,7 +209,7 @@ assume xs = array(3.2, 2.2, 8.7);
 define ys = array(8.7, 0.2, 5.5);
 run(observe(g(xs), ys));
 infer incorporate();
-// infer visualize_gp(g, 0, 10);
+// TODO plot, I dunno, 30 samples of mapv(g, xs) where xs = linspace(0, 10, 50), as 30 superimposed line graphs (so the set of (x,y) pairs for one line is zip(xs, mapv(g, xs))).
 ```
 
 The posterior of `g` is again a Gaussian process, with a different mean
@@ -213,9 +226,15 @@ sample array(gg(1.0), gg(2.0));
 sample g(array(1.0, 2.0));
 ```
 
-TODO give an example of learning the hyperparameters sigma and l (using some
-hard-coded data which you should come up with).  Show a picture of the
-posterior GP (with data observed) before and after hyperparameter inference.
+Note that the choice of covariance function can itself be random (as long as
+all possible functions are symmetric and positive-semidefinite).  For example,
+rather than defining `se = make_squaredexp(1.2, 0.8)`, we could have defined
+`se = make_squaredexp(sigma_prior(), l_prior())`, where `sigma_prior` and
+`l_prior` are stochastic procedures.  The inference engine could then be used
+to perform parameter estimation; in fact, we do this below, in the section on
+Bayesian optimization.  It would even be possible to infer the structure of the
+covariance function, if we had in mind a generative model of covariance
+function structures.
 
 gpmem
 =====
@@ -256,14 +275,22 @@ def f(x):
 ```
 
 Observing data points {`(x, y)`} is the same as probing the value of `f` at all
-the x-values.
+the `x`s.
 
-If any ideas regarding other potential applications of `gpmem` come to mind for
-you, we would love to hear them.
+If you can think of any other potential applications of `gpmem`, we would love
+to hear them.
 
 Bayesian Optimization Example
 -----------------------------
-TODO write exposition
+The example below showcases several nice features of `gpmem` and GP modelling
+in Venture.  In the code below we aim to find the maximum value of our
+expensive function `V` on the interval [-20, 20] using as few evaluations of
+`V` as possible.  We do this by wrapping `V` in a `gpmem` and repeatedly using
+the GP-based emulator to find a point where we have the most evidence than `V`
+will be large.  We probe `V` at said point, which gives our GP model more
+information to choose the next probe point.  In addition, we perform
+Metropolis-Hastings inference on the hyperparameters of the covariance function
+after each probe.
 
 ```venture
 assume V = make_audited_expensive_function("V");
@@ -273,24 +300,41 @@ assume V_l = tag(quote(hyper), 1, uniform_continuous(0, 10));
 assume V_se = make_squaredexp(V_sf, V_l);
 assume V_package = gpmem(V, V_se);
 
+// A very naive estimate of the argmax of the given function
 define mc_argmax = proc(func) {
-    proc(candidate_xs) {
-        proc(candidate_ys) {
-            lookup(candidate_xs, argmax_of_array(candidate_ys))
-        }(mapv(func, candidate_xs))
-    }(mapv(proc(i) {uniform_continuous(0-20, 20)},
-           linspace(0, 19, 20)))
+  run(do(
+    candidate_xs <- return(mapv(proc(i) {uniform_continuous(0-20, 20)},
+                          linspace(0, 19, 20))),
+    candidate_ys <- return(mapv(func, candidate_xs)),
+    return(lookup(candidate_xs,
+                  argmax_of_array(candidate_ys)))))
 };
 
+// Shortcut to sample the emulator at a single point without packing and unpacking arrays
 define V_emu_pointwise = proc(x) {
     run(sample(lookup(second(V_package)(array(unquote(x))),
                       0)))
 };
 
 infer repeat(15, do(pass,
+    // Probe V at the point mc_argmax(V_emu_pointwise)
     predict(first(V_package)(unquote(mc_argmax(V_emu_pointwise)))),
+    // Infer hyperparameters
     mh(quote(hyper), one, 50)));
 ```
 
+Here is a visualization of a run of this program (not the same run as above),
+showing the state of the emulator at various times.   Each row adds a new probe
+point.  The left column is before hyperparameter inference, the right column
+after.  The blue curve is the true function `V`, the green circle is the next
+chosen probe point, and the purple square is the best probe point found so far.
+Notice that probes tend to be chosen either where the value of the emulator is
+high, or where the emulator has high uncertainty.  Also note that the "crazy"
+plots on the third-fourth rows correspond to a "crazy" choice of parameters.
+This is not a mistake -- Metropolis-Hastings samplers will make crazy choices
+every once in a while (as will the true posterior, with some small
+probability).
+
+![Visualization of Bayesian optimization](BayesOpt_gpmem_sequence.png)
 
 [Next: TODO idk >](../idk/index.html)

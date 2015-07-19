@@ -16,6 +16,7 @@ vis-outlier.png: mk_outlier_frame.vnts curve-fitting.py
 
 BASIC_ASSETS = gauss_plot.png
 REGRESSION_ASSETS = lin-reg-1.vnts lin-reg-2.vnts lin-reg-3.vnts reg-test.csv vis-frame.png vis-outlier.png curve-fitting.py
+GP_ASSETS = BayesOpt_gpmem_sequence.png
 
 # Tutorial content files
 
@@ -33,13 +34,15 @@ tutorial-smoke/%/index.html: %-smoke.lvnt reg-test.csv
 
 # Full builds
 
-build: tutorial/basics/index.html tutorial/linear-regression/index.html tutorial/gp/index.html $(BASIC_ASSETS) $(REGRESSION_ASSETS)
+build: tutorial/basics/index.html tutorial/linear-regression/index.html tutorial/gp/index.html $(BASIC_ASSETS) $(REGRESSION_ASSETS) $(GP_ASSETS)
 	cp $(BASIC_ASSETS) tutorial/basics/
 	cp $(REGRESSION_ASSETS) tutorial/linear-regression
+	cp $(GP_ASSETS) tutorial/gp
 
 build-smoke: tutorial-smoke/basics/index.html tutorial-smoke/linear-regression/index.html tutorial-smoke/gp/index.html $(BASIC_ASSETS) $(REGRESSION_ASSETS)
 	cp $(BASIC_ASSETS) tutorial-smoke/basics/
 	cp $(REGRESSION_ASSETS) tutorial-smoke/linear-regression
+	cp $(GP_ASSETS) tutorial-smoke/gp
 
 upload: build
 	scp -r tutorial/ login.csail.mit.edu:/afs/csail.mit.edu/proj/probcomp/www/data/venture/
