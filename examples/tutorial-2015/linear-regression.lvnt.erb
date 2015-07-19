@@ -1,6 +1,8 @@
 <% sample_size = 500 %>
 <% if ENV['SMOKETEST'] then sample_size = 5 end %>
 <% smaller_sample_size = [sample_size / 5, 5].max %>
+<% iterations = 30 %>
+<% if ENV['SMOKETEST'] then iterations = 1 end %>
 <% refman_url = "http://probcomp.csail.mit.edu/venture/edge/reference/" %>
 
 [< Prev: Basics](../basics/index.html)
@@ -214,7 +216,7 @@ as individual observations.
 OK, so we loaded the data.  We could do some inference
 
 ```venture
-infer default_markov_chain(30)
+infer default_markov_chain(<%= iterations %>)
 ```
 
 and ask for a prediction at a new `x`-value
@@ -235,12 +237,12 @@ plot("p0d1d", frame)
 
 The dataset exhibits a clear linear relationship, and we should expect `line(11)` to be around 7.
 
-Let's try using Markov chain inference to fit our linear model. Start <%= smaller_sample_size %> independent chains, evolve them for 30 iterations, and record where they end up:
+Let's try using Markov chain inference to fit our linear model. Start <%= smaller_sample_size %> independent chains, evolve them for <%= iterations %> iterations, and record where they end up:
 
 ```venture
 define data = run(accumulate_dataset(<%= smaller_sample_size %>,
   do(reset_to_prior,
-     default_markov_chain(30),
+     default_markov_chain(<%= iterations %>),
      collect(intercept, slope, line(11)))))
 ```
 
@@ -287,7 +289,7 @@ We can also plot multiple frames with inference commands interleaved
 
 ```venture
 infer reset_to_prior;
-infer repeat(30, do(default_markov_chain(1),
+infer repeat(<%= iterations %>, do(default_markov_chain(1),
                     call_back(draw)))
 ```
 
@@ -295,7 +297,7 @@ The [`repeat`](<%= refman_url %>inference.html#repeat) command works
 similarly to `accumulate_dataset`, but in this case we aren't
 concerned with collecting the data since it's being rendered in the
 visualization instead. Together, this command will run the Markov
-chain for 30 iterations, drawing an animation frame after each
+chain for <%= iterations %> iterations, drawing an animation frame after each
 iteration.
 
 Another useful command which works well with visualization is
@@ -343,13 +345,18 @@ to find a fit; 200-300 is clearly able to find it most of the time.
 
 ```venture
 infer loop(do(reset_to_prior,
-              repeat(30, do(default_markov_chain(1),
+              repeat(<%= iterations %>, do(default_markov_chain(1),
 	                    call_back(draw)))))
 ```
 ]
 
-3. If you're still running the infer loop, turn it off for this part
-(`stop_continuous_inference`).
+3. (If you're still running the infer loop, turn it off for this
+part:
+
+```venture
+stop_continuous_inference
+```
+)
 
 We can use `resample` to run multiple independent chains and plot all
 of the resulting lines in the same window, to get some sense of the
@@ -365,7 +372,7 @@ but again 30 iterations is not enough to converge.
 ```venture
 infer resample(20);
 infer do(reset_to_prior,
-         repeat(30, do(default_markov_chain(1),
+         repeat(<%= iterations %>, do(default_markov_chain(1),
 	               call_back(draw))))
 ```
 ]
@@ -429,7 +436,7 @@ noise, we will put a prior over the amount of noise as well and see
 how well we can infer it:
 
 ```venture
-assume noise = gamma(1,1)
+assume noise = gamma(1,1);
 assume obs_inlier = proc(x) { normal(line(x), noise) }
 ```
 
@@ -575,6 +582,10 @@ make these opportunities more likely, but may also waste time
 reconsidering the same random choices over and over just like
 `default_markov_chain` does.]
 
+```venture
+stop_continuous_inference
+```
+
 Elaboration: Model Selection
 ============================
 
@@ -629,7 +640,7 @@ clear
 ;; (independent short Markov chains)
 [infer (plotf 'p0d1d (run (accumulate_dataset <%= smaller_sample_size %>
   (do reset_to_prior
-      (mh default one 30)
+      (mh default one <%= iterations %>)
       (collect a b)))))]
 ```
 
