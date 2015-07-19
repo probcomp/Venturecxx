@@ -637,19 +637,43 @@ clear
 ```
 
 ```church'
-[define mh_symmetric_proposal
-  (lambda (proposal_kernel scope block)
+[define regeneration_local_proposal
+  (lambda (values)
+    (lambda (subproblem)
+      (do (rho_weight_and_rho_db <- (detach_for_proposal subproblem))
+          (xi_weight <- (regen_with_proposal subproblem values))
+          (let ((rho_weight (first rho_weight_and_rho_db))
+                (rho_db (rest rho_weight_and_rho_db)))
+            (list (- xi_weight rho_weight)
+                  pass                    ; accept
+                  (do (detach subproblem) ; reject
+                      (restore subproblem rho_db)))))))]
+
+[define mh_correct
+  (lambda (proposal)
+    (do (result <- proposal)
+        (let ((weight (first result))
+              (accept (second result))
+              (reject (second (rest result))))
+          (if (< (log (uniform_continuous 0 1)) weight)
+              accept
+              reject))))]
+
+[define symmetric_local_proposal
+  (lambda (kernel)
+    (lambda (subproblem)
+      (do (values <- (get_current_values subproblem))
+          (let ((new_values (mapv kernel values)))
+            ((regeneration_local_proposal new_values) subproblem)))))]
+
+[define on_subproblem
+  (lambda (scope block proposal)
     (do (subproblem <- (select scope block))
-        (values <- (get_current_values subproblem))
-        (let ((new_values (mapv proposal_kernel values)))
-          (do (rho_weight_and_rho_db <- (detach_for_proposal subproblem))
-              (xi_weight <- (regen_with_proposal subproblem new_values))
-              (let ((rho_weight (first rho_weight_and_rho_db))
-                    (rho_db (rest rho_weight_and_rho_db)))
-                (if (< (log (uniform_continuous 0 1)) (- xi_weight rho_weight))
-                    pass                    ; accept
-                    (do (detach subproblem) ; reject
-                        (restore subproblem rho_db))))))))]
+        (let ((rhoWeight (assess subproblem select scope block)))
+          (do (result <- (proposal subproblem))
+              (let ((xiWeight (assess subproblem select scope block))
+                    (new_weight (+ xiWeight (first result) (- rhoWeight))))
+                (return (pair new_weight (rest result))))))))]
 
 [define drift_kernel
   (lambda (x) (normal x 1))]
@@ -660,7 +684,9 @@ clear
  (do (d <- (accumulate_dataset <%= smaller_sample_size %>
              (do (likelihood_weight)
                  ;; 50 seems to converge, for the datum being at 10
-                 (repeat 10 (mh_symmetric_proposal drift_kernel default all))
+                 (repeat 10 (mh_correct
+                  (on_subproblem default all
+                    (symmetric_local_proposal drift_kernel))))
                  (collect x))))
      (plotf 'h0 d))]
 ```
