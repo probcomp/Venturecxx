@@ -236,6 +236,40 @@ Bayesian optimization.  It would even be possible to infer the structure of the
 covariance function, if we had in mind a generative model of covariance
 function structures.
 
+Structure
+---------
+TODO write exposition
+
+```venture
+assume twoterms = tag(quote(structure), 0, flip());
+assume singleton_cov = tag(quote(structure), 1, uniform_discrete(0,2));
+assume pair_cov_1 = tag(quote(structure), 2, uniform_discrete(0,2));
+assume pair_cov_2 = tag(quote(structure), 3, uniform_discrete(0,2));
+assume pair_cov_op = tag(quote(structure), 4, uniform_discrete(0,2));
+
+assume covs = array(make_linear_cov, make_periodic_cov);
+assume ops = array(add_funcs, mult_funcs);
+assume paramgens = list(
+    proc() { array(
+        tag(quote(param), 0, uniform_continuous(0-2, 2))  // sf for LIN
+        )
+    },
+    proc() { array(
+        tag(quote(param), 0, uniform_continuous(0-2, 2)), // l for PER
+        tag(quote(param), 0, uniform_continuous(0-2, 2)), // p for PER
+        tag(quote(param), 0, uniform_continuous(0-2, 2))  // sf for PER
+        )
+    });
+
+assume cov = if (twoterms) {
+    lookup(covs, singleton_cov)
+} else {
+    lookup(ops, pair_cov_op)(
+        apply(lookup(covs, pair_cov_1), lookup(paramgens, pair_cov_1)()),
+        apply(lookup(covs, pair_cov_2), lookup(paramgens, pair_cov_2)()))
+};
+```
+
 gpmem
 =====
 We recently developed language support for a new idiom for GP modelling, called
