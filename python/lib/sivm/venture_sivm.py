@@ -327,7 +327,7 @@ class VentureSivm(object):
         self._call_core_sivm_instruction({"instruction" : "start_continuous_inference", "expression" : expression})
 
     def _stop_continuous_inference(self):
-        self._call_core_sivm_instruction({"instruction" : "stop_continuous_inference"})
+        return self._call_core_sivm_instruction({"instruction" : "stop_continuous_inference"})
 
     ###############################
     # Shortcuts

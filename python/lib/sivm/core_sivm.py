@@ -193,7 +193,7 @@ class CoreSivm(object):
         
     def _do_stop_continuous_inference(self,_):
         utils.require_state(self.state,'default')
-        self.engine.stop_continuous_inference()
+        return self.engine.stop_continuous_inference()
     
     ##############################
     # Profiler (stubs)
