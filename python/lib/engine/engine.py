@@ -353,11 +353,16 @@ class ContinuousInferrer(object):
     self.inference_thread_id = threading.currentThread().ident
     # Can use the storage of the thread object itself as the semaphore
     # controlling whether continuous inference proceeds.
-    while self.inferrer is not None:
-      # TODO React somehow to values returned by the inference action?
-      # Currently suppressed for fear of clobbering the prompt
-      self.engine.ripl.infer(program)
-      time.sleep(0.0001) # Yield to be a good citizen
+    try:
+      while self.inferrer is not None:
+        # TODO React somehow to values returned by the inference action?
+        # Currently suppressed for fear of clobbering the prompt
+        self.engine.ripl.infer(program)
+        time.sleep(0.0001) # Yield to be a good citizen
+    except Exception: # pylint:disable=broad-except
+      self.crashed = True
+      import traceback
+      traceback.print_exc()
 
   def stop(self):
     inferrer = self.inferrer

@@ -299,10 +299,11 @@ class VentureSivm(object):
         sivm = self # Naming conventions...
         class tmp(object):
             def __enter__(self):
-                self.ci_status = sivm._continuous_inference_status()
-                self.ci_was_running = pause and self.ci_status["running"]
-                if self.ci_was_running:
-                    sivm._stop_continuous_inference()
+                if pause:
+                    self.ci_status = sivm._stop_continuous_inference()
+                    self.ci_was_running = self.ci_status["running"]
+                else:
+                    self.ci_was_running = False
             def __exit__(self, type, value, traceback):
                 if sivm._continuous_inference_status()["running"]:
                     # The instruction started a new CI, so let it win

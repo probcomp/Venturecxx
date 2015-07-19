@@ -110,3 +110,16 @@ def testRiplCommandInLoop():
     assertInferring(ripl)
   finally:
     ripl.stop_continuous_inference() # Don't want to leave active threads lying around
+
+@on_inf_prim("loop")
+def testCrashStopsInferLoop():
+  ripl = get_ripl()
+  ripl.infer('(pyexec "import venture.lite.value as v")')
+  ripl.infer('(pyexec "loop_thread_start_count = 0")')
+  try:
+    ripl.infer('(loop (do (pyexec "loop_thread_start_count += 1") crash))')
+    time.sleep(0.00001) # Yield to give CI a chance to run and crash
+    ripl.sample(1) # This should not restart a crashed CI thread
+  finally:
+    ripl.stop_continuous_inference() # Don't want to leave active threads lying around
+  eq_(1, ripl.infer('(pyeval "v.VentureNumber(loop_thread_start_count)")'))
