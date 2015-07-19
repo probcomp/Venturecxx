@@ -537,14 +537,15 @@ clear
 ```
 
 ```venture
-assume intercept = tag(quote(param), quote(intercept), normal(0,7));
-assume slope = tag(quote(param), quote(slope), normal(0,4));
+assume intercept = tag("param", "intercept", normal(0,7));
+assume slope = tag("param", "slope", normal(0,4));
+
 assume line = proc(x) { slope * x + intercept };
 
-assume noise = tag(quote(hyper), quote(noise), gamma(1, 1));
+assume noise = tag("hyper", "noise", gamma(1, 1));
 
-assume outlier_prob = tag(quote(hyper), quote(outlier_prob), uniform_continuous(0.01, 0.3));
-assume is_outlier = mem(proc(i) { tag(quote(outlier), i, flip(outlier_prob)) });
+assume outlier_prob = tag("hyper", "outlier_prob", uniform_continuous(0.01, 0.3));
+assume is_outlier = mem(proc(i) { tag("outlier", i, flip(outlier_prob)) });
 
 assume obs = proc(i, x) {
   if (is_outlier(i)) {
@@ -555,13 +556,15 @@ assume obs = proc(i, x) {
 }
 ```
 
-Each `tag` command takes three arguments: a scope ID, a block ID, and
-the expression it applies to. Inference commands can then target a
-particular scope and block. For example, we can do Markov chain
-inference on just the line parameters using
+Each `tag` command takes three arguments: a scope identifier, a block
+identifier, and the expression it applies to. Scope and block
+identifiers can be any unique expression. Inference commands can then
+use these identifiers to target a particular scope and block. For
+example, we can do Markov chain inference on just the line parameters
+using
 
 ```venture
-infer mh(quote(param), one, 1);
+infer mh("param", one, 1);
 ```
 
 The `mh` inference command is the same as `default_markov_chain`,
@@ -597,9 +600,9 @@ What are scoped inference commands good for? Here are some use cases:
 Here is an inference program that illustrates these ideas:
 
 ```venture
-infer loop(do(mh(quote(param), one, 2),
-              mh(quote(hyper), one, 1),
-              gibbs(quote(outlier), one, 1),
+infer loop(do(mh("param", one, 2),
+              mh("hyper", one, 1),
+              gibbs("outlier", one, 1),
               call_back(draw)))
 ```
 
@@ -615,7 +618,7 @@ Answer: The line moves more often, because the program spends less
 time on uselessly reconsidering whether points are outliers and more
 time on proposing new line parameters.
 
-Giving more iterations to the line parameters (say, `mh(quote(param),
+Giving more iterations to the line parameters (say, `mh("param",
 one, 5)`) will cause the line to move even more, but it may miss the
 opportunity to reduce the noise level or flag a point as an outlier
 when it doesn't fit.
