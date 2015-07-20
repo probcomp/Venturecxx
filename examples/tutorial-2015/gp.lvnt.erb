@@ -58,12 +58,11 @@ components `mcomponents` and corresponding weights `mweights`.
 It can be instructive to examine the effect of observations.  The prior on
 mixture components is:
 
-```church'
-(plot 'h0
- (run
-  (accumulate_dataset <%= smaller_sample_size %>
-   (do (mh 'mnum one 10)
-       (collect mnum)))))
+```venture
+plot("h0",
+ run(accumulate_dataset(<%= smaller_sample_size %>,
+  do(mh(quote(mnum), one, 10),
+     collect(mnum)))))
 ```
 
 Now let's make some observations
@@ -72,17 +71,15 @@ Now let's make some observations
 observe mf() = 3.3;
 observe mf() = 3.1;
 observe mf() = 4.5;
-infer incorporate();
 ```
 
 and examine the posterior
 
-```church'
-(plot 'h0
- (run
-  (accumulate_dataset <%= smaller_sample_size %>
-   (do (mh 'mnum one 10)
-       (collect mnum)))))
+```venture
+plot("h0",
+ run(accumulate_dataset(<%= smaller_sample_size %>,
+  do(mh(quote(mnum), one, 10),
+     collect(mnum)))))
 ```
 
 As we would expect, the possibility of `uniform_continuous(0, 2)` has been
