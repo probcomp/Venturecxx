@@ -6,6 +6,26 @@ Title: Basic VentureScript
 <% refman_url = "http://probcomp.csail.mit.edu/venture/edge/reference/" %>
 <% inf_prelude_size = `cat ../../python/lib/engine/inference_prelude.py | grep '[[]"' | wc -l`.to_i %>
 
+<script type="text/javascript">
+function hideAnswers() {
+  var answers = document.getElementsByClassName("answer");
+  for (var i = 0; i < answers.length; ++i) {
+    var answer = answers[i];
+    answer.style.display = "none";
+  }
+}
+window.addEventListener('load', hideAnswers);
+function toggle(id) {
+  var answer = document.getElementById(id);
+  if (answer.style.display === "none") {
+    answer.style.display = "block";
+  }
+  else {
+    answer.style.display = "none";
+  }
+}
+</script>
+
 [< Prev: Top](../index.html)
 [^ Top](../index.html)
 [Next: More VentureScript: Linear Regression >](../linear-regression/index.html)
@@ -480,16 +500,29 @@ Exercises:
    approaches the true posterior as the number of trials increases.
 
 3. What happens if we don't do the second `resample` at all?  Why?
-   [For the instructor: you get the prior, becaue you are not using the weights]
+   <a href="javascript:toggle('answer-resampling-3')">(Show Answer)</a>
+
+   <div class="answer" id="answer-resampling-3" markdown="1">
+   Answer: You get samples from the prior, because you are not using
+   the weights.
+   </div>
 
 4. What happens if we draw more than 1 particle in the second
    `resample`?  Why?
-   [For the instructor: this is more subtle.
-   - First off, the distribution will not get closer to the posterior
-   - For a while, drawing more particles should give a better resolution plot
-     of the distribution with one.
-   - Eventually, though, the fact that they are not iid (but coupled through
-     the original set) will begin to dominate, and the benefit will trail off.]
+   <a href="javascript:toggle('answer-resampling-4')">(Show Answer)</a>
+
+   <div class="answer" id="answer-resampling-4" markdown="1">
+   This is more subtle.
+   - For a while, drawing more particles should give a better-resolution plot
+     of the distribution, since you have more data points overall.
+   - Eventually, though, the fact that they are not independently distributed
+     (but coupled through the original set) will begin to dominate, and the
+     benefit will trail off.
+   - The quality of the approximation is limited by the distribution of
+     particles from the first resample; if you only increase the number of
+     trials in the second resample while leaving the first resample fixed,
+     the result will not converge to the true posterior.
+   </div>
 
 Basic Metropolis-Hastings Markov Chains
 ---------------------------------------
@@ -618,21 +651,28 @@ Exercises:
    the result distribution approaches the true posterior as the number
    of steps increases.
 
-3. What happens if we don't `reset_to_prior`?  Now the histogram
-   includes successive states of one long Markov chain.  Most of those
-   data points will be individually distributed according to the
-   posterior, but if the number of steps between them is too small,
-   they will not be independent.
+3. What happens if we don't `reset_to_prior`?
+   <a href="javascript:toggle('answer-mh-3')">(Show Answer)</a>
+
+   <div class="answer" id="answer-mh-3" markdown="1">
+   Answer: Now the histogram includes successive states of one long
+   Markov chain.  Most of those data points will be individually
+   distributed according to the posterior, but if the number of steps
+   between them is too small, they will not be independent.
+   </div>
 
 4. Increase both the location of the observation (making the problem
    harder) and the number of transitions (doing more work).  How fast
    does the latter have to move to keep up with the former?  What
    does the history of a long chain on a hard obervation look like?
-   [For instructor: since the proposal is from the prior, the further
-   the chain gets, the longer it will sit still before advancing.
-   In this case, the probability of proposing a new state larger than
-   the current one decreases exponentially, but at least it's not
-   the squared exponential of rejection sampling.]
+   <a href="javascript:toggle('answer-mh-4')">(Show Answer)</a>
+
+   <div class="answer" id="answer-mh-4" markdown="1">
+   Answer: The further the chain gets, the longer it will sit still
+   before advancing.  In this case, the probability of visiting a new
+   state larger than the current one decreases exponentially, but at
+   least it's not the squared exponential of rejection sampling.
+   </div>
 
 Optional Subunit: Custom M-H Proposals
 --------------------------------------
