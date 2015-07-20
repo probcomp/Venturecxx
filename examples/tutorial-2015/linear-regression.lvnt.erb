@@ -38,7 +38,7 @@ explore strategies for inspecting and debugging it.  The problem we
 address is linear regression: trying to infer a linear relationship
 between an input and an output from some data.  This is of course
 well-trodden terrain -- we are primarily using it to introduce more
-Venture concepts, but the models themselves will get interesting
+VentureScript concepts, but the models themselves will get interesting
 toward the end.
 
 [%TOC%]
@@ -47,15 +47,15 @@ Recap
 =====
 
 In the [previous part](../basics/index.html) we discussed basic
-concepts of Venture programming, modeling, and inference.  As a
-reminder, the main modes of using Venture we saw are starting Venture
+concepts of VentureScript programming, modeling, and inference.  As a
+reminder, the main modes of using VentureScript we saw are starting Venture
 interactively
 
 ```
 $ venture
 ```
 
-and running standalone Venture scripts
+and running standalone VentureScript scripts
 
 ```
 $ venture -f script.vnts
@@ -121,7 +121,7 @@ Exercise: For now, evaluate the model's performance on the two data points.
 1. Gather and save a dataset of independent posterior samples of the
    parameters and a prediction at some value.
    [Hint: You can pass multiple arguments to `collect`]
-   <a href="javascript:toggle('answer-simple-1')">(Show Answer)</a>
+   <a href="javascript:toggle('answer-simple-1')">(show answer)</a>
 
    <div class="answer" id="answer-simple-1" markdown="1">
    Answer:
@@ -137,7 +137,7 @@ Exercise: For now, evaluate the model's performance on the two data points.
    based on the observations we trained the model on?  How widely do
    you expect it be dispersed, based on the noise in the model?  Plot
    the predictions: does the data agree with your intuition?
-   <a href="javascript:toggle('answer-simple-2')">(Show Answer)</a>
+   <a href="javascript:toggle('answer-simple-2')">(show answer)</a>
 
    <div class="answer" id="answer-simple-2" markdown="1">
    Answer: 2, pretty broad,
@@ -152,7 +152,7 @@ Exercise: For now, evaluate the model's performance on the two data points.
     a. Where do you expect the intercept to be located, and how
        concentrated do you expect it to be?  Plot the intercept and
        check your intuition.
-       <a href="javascript:toggle('answer-simple-3a')">(Show Answer)</a>
+       <a href="javascript:toggle('answer-simple-3a')">(show answer)</a>
 
     <div class="answer" id="answer-simple-3a" markdown="1">
     Answer: 2, broad,
@@ -165,7 +165,7 @@ Exercise: For now, evaluate the model's performance on the two data points.
     b. Where do you expect the slope to be located, and how
        concentrated do you expect it to be?  Plot the slope and check
        your intuition.
-       <a href="javascript:toggle('answer-simple-3b')">(Show Answer)</a>
+       <a href="javascript:toggle('answer-simple-3b')">(show answer)</a>
 
     <div class="answer" id="answer-simple-3b" markdown="1">
     Answer: 0, broad,
@@ -181,19 +181,19 @@ Exercise: For now, evaluate the model's performance on the two data points.
        `p0d1d`: `p` for **p**oint and `d` for **d**irect as opposed to
        log scale.  A gotcha: if you leave the middle `d` off, the 0
        and 1 will run together into a single index.
-       <a href="javascript:toggle('answer-simple-3c')">(Show Answer)</a>
+       <a href="javascript:toggle('answer-simple-3c')">(show answer)</a>
 
     <div class="answer" id="answer-simple-3c" markdown="1">
-    Answer: anticorrelated, because the line is trying to pass through
-    around (1.5, 2).
+    Answer: The slope and intercept are anticorrelated, because the
+    line is trying to pass through around (1.5, 2).
 
     ```venture
     plot("p0d1d", data)
     ```
     </div>
 
-Working with Datasets
-=====================
+Topic: Working with Datasets
+============================
 
 In the previous segment, we started with the simple linear regression
 model in [lin-reg-1.vnts](lin-reg-1.vnts)
@@ -217,7 +217,7 @@ observe obs(that) = the other;
 ```
 
 but that's pretty tedious.  Being a probabilistic programming
-language, Venture doesn't replicate standard programming facilities
+language, VentureScript doesn't replicate standard programming facilities
 like reading data files, and instead offers close integration with
 Python.  So the way to do a job like this is to use
 [`pyexec`](<%= refman_url %>/inference.html#pyexec):
@@ -237,9 +237,9 @@ the inference language that executes the given string of Python code.
 The binding environment persists across calls, and begins with the variable `ripl` bound to the
 current session's
 [Read-Infer-Predict Layer](<%= refman_url %>venture.ripl.ripl.html#module-venture.ripl.ripl),
-which serves as the entry point for using Venture as a Python library.
+which serves as the entry point for using VentureScript as a Python library.
 In this case, we used the escape to load our csv file up into a Pandas DataFrame,
-and then used the RIPL's [`observe_dataset`](<%= refman_url %>venture.ripl.ripl.html#venture.ripl.ripl.Ripl.observe_dataset) method to load it into Venture
+and then used the RIPL's [`observe_dataset`](<%= refman_url %>venture.ripl.ripl.html#venture.ripl.ripl.Ripl.observe_dataset) method to load it into VentureScript
 as individual observations.
 
 OK, so we loaded the data.  We could do some inference
@@ -256,7 +256,7 @@ sample line(11)
 
 but without a look at the data, we don't even know what to expect.
 There are of course plenty of ways to plot a dataset; in this case, we
-will use Venture's `plot`:
+will use VentureScript's `plot`:
 
 ```venture
 run(pyexec("import venture.lite.value as vv"));
@@ -264,9 +264,12 @@ define frame = run(pyeval("vv.VentureForeignBlob(frame[['x', 'y']])"));
 plot("p0d1d", frame)
 ```
 
-The dataset exhibits a clear linear relationship, and we should expect `line(11)` to be around 7.
+The dataset exhibits a clear linear relationship, and we should expect
+`line(11)` to be around 7.
 
-Let's try using Markov chain inference to fit our linear model. Start <%= smaller_sample_size %> independent chains, evolve them for <%= iterations %> iterations, and record where they end up:
+Let's try using Markov chain inference to fit our linear model. Start
+<%= smaller_sample_size %> independent chains, evolve them for <%=
+iterations %> iterations, and record where they end up:
 
 ```venture
 define data = run(accumulate_dataset(<%= smaller_sample_size %>,
@@ -356,7 +359,7 @@ Exercise: Play with this visualization to see how inference is doing.
    an animation frame after every iteration. Watch the animation while
    it runs and confirm that the line eventually approaches a good fit
    to the data. Does it take gradual steps or sudden jumps?
-   <a href="javascript:toggle('answer-vis-1')">(Show Answer)</a>
+   <a href="javascript:toggle('answer-vis-1')">(show answer)</a>
 
    <div class="answer" id="answer-vis-1" markdown="1">
    Answer: It takes sudden jumps, with varying amount of time between
@@ -374,7 +377,7 @@ Exercise: Play with this visualization to see how inference is doing.
    iterations? What about 100 iterations? Try playing with the number
    of iterations to see how many it takes to reliably find a
    reasonable fit.
-   <a href="javascript:toggle('answer-vis-2')">(Show Answer)</a>
+   <a href="javascript:toggle('answer-vis-2')">(show answer)</a>
 
    <div class="answer" id="answer-vis-2" markdown="1">
    Answer: 30 is not enough, and it may not even be obvious visually
@@ -403,7 +406,7 @@ Exercise: Play with this visualization to see how inference is doing.
    and look at the resulting animation. Does it look like the
    distribution of lines converges to something plausible? If you're
    impatient, try increasing the number of iterations as above.
-   <a href="javascript:toggle('answer-vis-3')">(Show Answer)</a>
+   <a href="javascript:toggle('answer-vis-3')">(show answer)</a>
 
    <div class="answer" id="answer-vis-3" markdown="1">
    Answer: Some of the samples do concentrate around the correct line,
@@ -525,8 +528,8 @@ ones are inliers.
 stop_continuous_inference
 ```
 
-Using tags for inference control
-================================
+Topic: Using tags for inference control
+=======================================
 
 Now that we have a more complex model with more moving parts, we'd
 like to be able to treat each of those parts independently when it
@@ -616,7 +619,7 @@ Exercise: Compare this to the infer loop that only used
 `default_markov_chain` from earlier. What qualitative differences in
 behavior do you see? Try adjusting the number of iterations allocated
 to each scope and see what happens.
-<a href="javascript:toggle('answer-scopes')">(Show Answer)</a>
+<a href="javascript:toggle('answer-scopes')">(show answer)</a>
 
 <div class="answer" id="answer-scopes" markdown="1">
 
