@@ -102,7 +102,7 @@ def __venture_start__(ripl, *args):
     ripl.bind_foreign_sp('mult_funcs', mult_funcs_SP)
     ripl.bind_foreign_sp('make_whitenoise', make_whitenoise_SP)
     ripl.bind_foreign_sp('make_periodic_cov', make_periodic_cov_SP)
-    ripl.bind_foreign_sp('make_linear_cov', make_periodic_cov_SP)
+    ripl.bind_foreign_sp('make_linear_cov', make_linear_cov_SP)
     ripl.bind_foreign_sp('make_const_func', make_const_func_SP)
 
 
