@@ -103,6 +103,12 @@ class VentureValue(object):
   def __ne__(self, other):
     return not self == other
 
+  def __cmp__(self, other):
+    if isinstance(other, VentureValue):
+      return self.compare(other)
+    else:
+      return NotImplemented
+
   # Some Venture value types form a natural vector space over reals,
   # so overload addition, subtraction, and multiplication by scalars.
   # def __add__(self, other), and also __radd__, __neg__, __sub__,
