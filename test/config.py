@@ -193,7 +193,9 @@ def _collectData(iid,ripl,address,num_samples=None,infer=None):
     # TODO Consider going direct here to avoid the parser
     ripl.infer(infer)
     predictions.append(ripl.report(address))
-    if iid: ripl.sivm.core_sivm.engine.reinit_inference_problem()
+    if iid:
+      ripl.sivm.core_sivm.engine.reinit_inference_problem()
+      ripl.infer("(incorporate)")
   return predictions
 
 disable_default_infer = False
