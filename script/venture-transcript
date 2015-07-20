@@ -82,10 +82,27 @@ def with_output_to_string(f, *args, **kwargs):
     old_stdout = sys.stdout
     result = StringIO()
     sys.stdout = result
-    val = f(*args, **kwargs)
+    retval = f(*args, **kwargs)
     sys.stdout = old_stdout
-    ans = result.getvalue()
-    return (val, ans)
+    captured_from_stdout = result.getvalue()
+    return (retval, captured_from_stdout)
+
+def format_printed(text, comment_start):
+    if len(text) == 0:
+        return text
+    else:
+        lines = text.split('\n')
+        # Suppress final line if blank
+        if len(lines[-1]) == 0:
+            lines.pop()
+        return '\n'.join(comment_start + ' [--STDOUT--] ' + line
+                for line in lines) + '\n'
+
+def format_returned(val, comment_start):
+    lines = str(val).split('\n')
+    return comment_start + ' [--RETURN--] ' + lines[0] + '\n'.join(
+            comment_start + ' [..........] ' + line for line in lines[1:]) + '\n'
+
 
 def getValue(v):
     if v is not None and 'value' in v:
@@ -138,17 +155,19 @@ class Writer(object):
         print "Trying program in %s mode" % (mode,)
         if mode == "venture":
             self.ripl.set_mode("venture_script")
+            comment_start = '//'
         elif mode == "church'":
             self.ripl.set_mode("church_prime")
+            comment_start = ';'
         else:
             raise Exception("Unknown block mode %s", mode)
         (figures, munged) = self.munge_plotfs(mode, string)
         print munged.strip()
-        (ans, output) = with_output_to_string(self.execute_program, munged, expect_error)
-        val = getValue(ans[-1])
+        (returned, printed) = with_output_to_string(self.execute_program, munged, expect_error)
+        val = getValue(returned[-1])
         indent = self.detect_indent(string)
         figure_blocks = [indent + "![A Venture plot](%s)\n" % (figure,) for figure in figures]
-        self.out_chunks.extend([indent, "```", string, output, indent, str(val), "\n", indent, "```\n"] + figure_blocks)
+        self.out_chunks.extend([indent, "```", string, format_printed(printed, comment_start), indent, format_returned(val, comment_start), "\n", indent, "```\n"] + figure_blocks)
 
     def munge_plotfs(self, mode, string):
         # TODO Instead of munging the source, should also be able to
