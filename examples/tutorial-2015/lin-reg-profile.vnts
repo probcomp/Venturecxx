@@ -16,21 +16,21 @@
 // along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 // Line parameter prior
-assume intercept = normal(0,10)
-assume slope = normal(0,10)
+assume intercept = normal(0,10);
+assume slope = normal(0,10);
 
 // Hypothesized linear relationship
-assume line = proc(x) { slope * x + intercept }
+assume line = proc(x) { slope * x + intercept };
 
 // Full data model: linear relationship with additive noise
-assume obs = proc(x) { normal(line(x), 1) }
+assume obs = proc(x) { normal(line(x), 1) };
 
-infer pyexec("import pandas as pd")
-infer pyexec("frame = pd.read_csv('reg-test.csv')")
-infer pyexec("ripl.observe_dataset('obs', frame[['x','y']].values)")
-infer incorporate()
+infer pyexec("import pandas as pd");
+infer pyexec("frame = pd.read_csv('reg-test.csv')");
+infer pyexec("ripl.observe_dataset('obs', frame[['x','y']].values)");
+infer incorporate();
 
 define data = run(accumulate_dataset(15,
   do(reset_to_prior,
      default_markov_chain(30),
-     collect(intercept, slope, line(11)))))
+     collect(intercept, slope, line(11)))));
