@@ -85,10 +85,10 @@ def __venture_start__(ripl, *args):
                 sp_type = sp.SPType([], t.NumberType())),
             [t.NumberType()], t.AnyType("VentureFunction"))
 
-    add_funcs_SP = deterministic_typed(lambda f1, f2: VentureFunction(lambda x: f1(x) + f2(x), sp_type=covType),
+    add_funcs_SP = deterministic_typed(lambda f1, f2: VentureFunction(lambda x1,x2: f1(x1,x2) + f2(x1,x2), sp_type=covType),
         [t.AnyType("VentureFunction"), t.AnyType("VentureFunction")],
         t.AnyType("VentureFunction"))
-    mult_funcs_SP = deterministic_typed(lambda f1, f2: VentureFunction(lambda x: f1(x) * f2(x), sp_type=covType),
+    mult_funcs_SP = deterministic_typed(lambda f1, f2: VentureFunction(lambda x1,x2: f1(x1,x2) * f2(x1,x2), sp_type=covType),
         [t.AnyType("VentureFunction"), t.AnyType("VentureFunction")],
         t.AnyType("VentureFunction"))
 
