@@ -669,13 +669,14 @@ Exercises:
 
    <div class="answer" id="answer-mh-4" markdown="1">
    Answer: The further the chain gets, the longer it will sit still
-   before advancing.  In this case, the probability of visiting a new
-   state larger than the current one decreases exponentially, but at
-   least it's not the squared exponential of rejection sampling.
-   The reason this happens is that the default Markov chain proposes
-   new candidate values from the prior, independently of the current state.
-   If most of the prior mass has lower posterior probability than the
-   current state, the chain will only rarely make progress.
+   before advancing.  The reason this happens is that the default
+   Markov chain proposes new candidate values from the prior,
+   independently of the current state.  If most of the prior mass has
+   lower posterior probability than the current state, the chain will
+   only rarely make progress. In this case, the probability of
+   proposing a new state larger than the current one decreases
+   exponentially, but at least it's not the squared exponential of
+   rejection sampling.
    </div>
 
 Optional Subunit: Custom M-H Proposals
