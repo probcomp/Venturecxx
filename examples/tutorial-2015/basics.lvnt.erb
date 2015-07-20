@@ -43,13 +43,15 @@ possible to understand very clearly what's happening.
 Getting Started
 ===============
 
-Start a venture session by running
+Start a Venture session by running
 
 ```
 $ venture
 ```
 
-You can also run venture scripts by making a file with a `.vnts`
+This command starts an interactive interpreter for VentureScript.
+
+You can also run VentureScript scripts by making a file with a `.vnts`
 extension and running
 
 ```
@@ -57,7 +59,7 @@ $ venture -f script.vnts
 ```
 
 N.B.: The [command line reference](<%= refman_url %>usage.html#standalone-invocation)
-explains what's happening here and what other options Venture accepts.
+explains what's happening here and what other options `venture` accepts.
 
 First Steps
 ===========
@@ -104,7 +106,7 @@ a few samples from each should suffice.
 
 You can find the [list of distributions](<%= refman_url
 %>modeling.html#built-in-procedures) (and deterministic functions)
-available in Venture in the appropriate section of the [reference
+available in VentureScript in the appropriate section of the [reference
 manual](<%= refman_url %>).
 
 Now clear your session (or quit and restart Venture) for the next
@@ -174,7 +176,7 @@ observe y = 2
 sample y
 ```
 
-Note: the value of `x` doesn't change --
+Note: the value of `x` doesn't change yet --
 
 ```venture
 sample x
@@ -302,7 +304,7 @@ Inference Choices
 =================
 
 In this segment, we will look at a few different generic inference
-strategies that are built in to Venture and do some basic exploration
+strategies that are built in to VentureScript and do some basic exploration
 of their speed-accuracy behavior.  As a reminder, here is the model we
 are working with (you can skip this block if you have your session
 from the last segment):
@@ -313,8 +315,6 @@ assume x = normal(0, 1);
 assume y = normal(x, 1);
 observe y = 2
 ```
-
-[TODO: Where should this motivating block go?]
 
 If you're curious why we're looking at the performance of inference on
 such a simple model, there are a couple reasons:
@@ -365,7 +365,7 @@ and explore by editing it and rerunning it with
 $ venture -f exact.vnts
 ```
 
-If you prefer to fiddle interactively, Venture has a command named
+If you prefer to fiddle interactively, VentureScript has a command named
 `forget` for removing parts of a model so they can be changed.
 First, check what's in the model already:
 
@@ -374,7 +374,7 @@ list_directives
 ```
 
 [Note: The above output is presented in a prefix notation syntax that
-represents how Venture actually parsed it.]
+represents how VentureScript actually parsed it.]
 
 Then use `forget` to remove the existing observation, and replace it
 with one where the datum is farther out.
@@ -394,10 +394,10 @@ The same solution still works
 plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>, do(posterior, collect(x)))))
 ```
 
-but as you move the datum further out (with more `forget` and
+but as you move the datum still further out (with more `forget` and
 `observe` commands), you can tell that more distant observations take
-longer to get samples for.  Don't move the datum too far: rejection is
-`e^(O(position^2))` on this problem.
+longer to get samples for.  Don't move the datum too far: rejection takes
+`e^(O(position^2))` time on this problem.
 
 The inference phenomenon at work here is this:
 
@@ -428,7 +428,7 @@ resampling.  It is:
 - Select one at random in proportion to its weight [or more than one,
   but then they are not independent of each other]
 
-Here's what a basic version of this looks like in Venture.  Reset the
+Here's what a basic version of this looks like in VentureScript.  Reset the
 model if you need to
 
 ```venture
@@ -453,8 +453,9 @@ infer resample(5)
 
 The [resample](<%= refman_url %>inference.html#resample) inference
 action makes as many particles as requested by drawing from the
-existing pool proportionally to their weight (and then makes the
-weights equal).  Initially there is just one particle, so right now
+existing pool proportionally to their weight, and then makes the
+weights equal (this compound operation is very common in sequential Monte Carlo
+or particle filter methods).  Initially there is just one particle, so right now
 all of them are the same:
 
 ```venture
@@ -506,27 +507,27 @@ Exercises:
    approaches the true posterior as the number of trials increases.
 
 3. What happens if we don't do the second `resample` at all?  Why?
-   <a href="javascript:toggle('answer-resampling-3')">(Show Answer)</a>
+   <a href="javascript:toggle('answer-resampling-3')">(show answer)</a>
 
    <div class="answer" id="answer-resampling-3" markdown="1">
-   Answer: You get samples from the prior, because you are not using
+   Answer: We get samples from the prior, because we are not using
    the weights.
    </div>
 
 4. What happens if we draw more than 1 particle in the second
    `resample`?  Why?
-   <a href="javascript:toggle('answer-resampling-4')">(Show Answer)</a>
+   <a href="javascript:toggle('answer-resampling-4')">(show answer)</a>
 
    <div class="answer" id="answer-resampling-4" markdown="1">
-   This is more subtle.
+   Answer: This is more subtle.
    - For a while, drawing more particles should give a better-resolution plot
-     of the distribution, since you have more data points overall.
+     of the distribution, since we have more data points overall.
    - Eventually, though, the fact that they are not independently distributed
      (but coupled through the original set) will begin to dominate, and the
      benefit will trail off.
    - The quality of the approximation is limited by the distribution of
      particles from the first resample; if you only increase the number of
-     trials in the second resample while leaving the first resample fixed,
+     particles in the second resample while leaving the first resample fixed,
      the result will not converge to the true posterior.
    </div>
 
@@ -538,13 +539,13 @@ possible explanations of the data, without taking advantage of
 previous guesses when forming new ones.  The other major class of
 inference algorithms tries to take advantage of what has already been
 learned by retaining a "current state" and (stochastically) evolving
-it by trying various adjustments in some way arranged to approach the
+it by trying various adjustments, in some way arranged to approach the
 posterior in distribution.  Broadly, such algorithms are called Markov
 chains.  (The Markovness is that the "current state" holds all the
 information about the chain's history that is relevant to determining
 its future evolution.)
 
-Venture has extensive facilities for constructing Markov chain
+VentureScript has extensive facilities for constructing Markov chain
 inference strategies.  In this segment, we will explore the behavior
 of a simple generic one on the one-variable normal-normal problem we
 have been studying.
@@ -560,7 +561,7 @@ sample x
 ```
 
 The inference command `default_markov_chain(1)` takes one step of
-Venture's default Markov chain, possibly changing the value of `x`.
+VentureScript's default Markov chain, possibly changing the value of `x`.
 
 ```venture
 infer default_markov_chain(1);
@@ -598,7 +599,7 @@ As usual, let's see that with more data:
 define chain_history = run(accumulate_dataset(<%= sample_size %>, do(default_markov_chain(1), collect(x))))
 ```
 
-```
+```venture
 plot("lc0", chain_history)
 ```
 
@@ -619,7 +620,7 @@ plot("lc0", run(accumulate_dataset(<%= sample_size %>, do(default_markov_chain(1
 ```
 
 For more insight, let's plot several independent chains together.  If
-we don't use the weights for anything, Venture's particles will serve
+we don't use the weights for anything, VentureScript's particles will serve
 to run several independent chains (the `r` in the plot specification
 means color the lines by pa**r**ticle id).
 
@@ -658,7 +659,7 @@ Exercises:
    of steps increases.
 
 3. What happens if we don't `reset_to_prior`?
-   <a href="javascript:toggle('answer-mh-3')">(Show Answer)</a>
+   <a href="javascript:toggle('answer-mh-3')">(show answer)</a>
 
    <div class="answer" id="answer-mh-3" markdown="1">
    Answer: Now the histogram includes successive states of one long
@@ -671,7 +672,7 @@ Exercises:
    harder) and the number of transitions (doing more work).  How fast
    does the latter have to move to keep up with the former?  What
    does the history of a long chain on a hard obervation look like?
-   <a href="javascript:toggle('answer-mh-4')">(Show Answer)</a>
+   <a href="javascript:toggle('answer-mh-4')">(show answer)</a>
 
    <div class="answer" id="answer-mh-4" markdown="1">
    Answer: The further the chain gets, the longer it will sit still
