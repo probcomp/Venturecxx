@@ -64,9 +64,6 @@ $ venture -f script.vnts
 Simple Linear Regression
 ========================
 
-[Concepts: more elaborate models; functions; abstraction?; genericity
-of built-in inference procedures]
-
 Let's start by putting down the first model for linear regression that
 comes to mind.  A line has a slope and an intercept
 
@@ -520,6 +517,9 @@ or not to treat each point as an outlier. Eventually, it might find
 this configuration and settle on it for a while:
 
 ![Most favorable configuration of the outlier model](vis-outlier.png)
+
+The grey dot is currently assumed to be an outlier, whereas the green
+ones are inliers.
 
 ```venture
 stop_continuous_inference
