@@ -90,7 +90,7 @@ class Semantics(object):
         # XXX Should adapt lemonade to support passing a message, and
         # make the generated parser say which tokens (and, ideally,
         # nonterminals) it was expecting instead.
-        raise VentureException('parse', ('Syntax error at %s' % (repr(text,))),
+        raise VentureException('parse', ('Syntax error at %s' % (repr(text),)),
             text_index=[start, end])
 
     # Venture start symbol: store result in self.answer, return none.
