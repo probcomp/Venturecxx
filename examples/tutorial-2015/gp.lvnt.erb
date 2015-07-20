@@ -20,6 +20,12 @@ You can also run a file such as `script.vnts` using
 $ venture lite -f script.vnts
 ```
 
+We'll be using a plugin.  Load it with
+
+```venture
+run(load_plugin("gpexample_plugin.py"));
+```
+
 A Simple Mixture Model
 ======================
 
@@ -27,7 +33,7 @@ One simple way to define a mixture model is to choose a mixture component at
 top-level, and define each component in separate code path.
 
 ```venture
-assume components = array(
+assume mcomponents = array(
     proc() { uniform_continuous(0, 10) },  // component 0
     proc() { uniform_continuous(0, 5) },   // component 1
     proc() { uniform_continuous(0, 2) }    // component 2
@@ -35,16 +41,16 @@ assume components = array(
 
 assume mweights = simplex(0.3, 0.3, 0.4);
 
-assume cnum = tag(quote(cnum), 0, categorical(mweights));
-assume f = lookup(components, cnum);
+assume mnum = tag(quote(mnum), 0, categorical(mweights));
+assume mf = lookup(mcomponents, mnum);
 
-sample f()
+sample mf()
 ```
 
-Here the value of `f()` is "doubly random" -- the procedure `f` is randomly
-chosen, and after `f` is fixed, the output of a call to `f` is also random.
-Equivalently, the value of `f()` follows a mixture model with mixture
-components `components` and corresponding weights `mweights`.  
+Here the value of `mf()` is "doubly random" -- the procedure `mf` is randomly
+chosen, and after `mf` is fixed, the output of a call to `mf` is also random.
+Equivalently, the value of `mf()` follows a mixture model with mixture
+components `mcomponents` and corresponding weights `mweights`.  
 
 It can be instructive to examine the effect of observations.  The prior on
 mixture components is:
@@ -53,16 +59,16 @@ mixture components is:
 (plot 'h0
  (run
   (accumulate_dataset <%= smaller_sample_size %>
-   (do (mh 'cnum one 10)
-       (collect cnum)))))
+   (do (mh 'mnum one 10)
+       (collect mnum)))))
 ```
 
 Now let's make some observations
 
 ```venture
-observe f() = 3.3;
-observe f() = 3.1;
-observe f() = 4.5;
+observe mf() = 3.3;
+observe mf() = 3.1;
+observe mf() = 4.5;
 infer incorporate();
 ```
 
@@ -72,12 +78,12 @@ and examine the posterior
 (plot 'h0
  (run
   (accumulate_dataset <%= smaller_sample_size %>
-   (do (mh 'cnum one 10)
-       (collect cnum)))))
+   (do (mh 'mnum one 10)
+       (collect mnum)))))
 ```
 
 As we would expect, the possibility of `uniform_continuous(0, 2)` has been
-eliminated, as the sampled values of `f()` are not possible in that component.
+eliminated, as the sampled values of `mf()` are not possible in that component.
 The remaining components are `uniform_continuous(0, 10)` and
 `uniform_continuous(0, 5)`.
 
@@ -86,10 +92,10 @@ Notice that `uniform_continuous(0, 10)` is much less probable than
 the prior.  This is a case of the _Bayesian Occam's razor:_ Bayesian inference
 "automatically" favors parsimonious models.  Said differently, in the presence
 of data, the likelihood will penalize models with overly broad explanatory
-power.  In the present case this shows up as: if `f` were
+power.  In the present case this shows up as: if `mf` were
 `uniform_continuous(0, 10)`, wouldn't it be a suspicious coincidence that three
-independent samples of `f()` were all between 3 and 5?  The coincidence would
-be much less suspicious if `f` were `uniform_continuous(0, 5)`.
+independent samples of `mf()` were all between 3 and 5?  The coincidence would
+be much less suspicious if `mf` were `uniform_continuous(0, 5)`.
 
 Regression With a Mixture
 =========================
@@ -98,81 +104,138 @@ regression.  The following code asks, "what is the posterior on models that are
 either linear or sine wave, conditioned on the given data?"
 
 ```venture
-clear;
 assume a = uniform_continuous(0-2, 2);
 assume b = uniform_continuous(0-2, 2);
 assume c = uniform_continuous(0-2, 2);
 assume d = uniform_continuous(0, 3);
 assume e = uniform_continuous(0, 2*3.14159);
-assume components = array(
+assume ccomponents = array(
     proc(x) { a*x + b },
     proc(x) { c*sin(d*x + e) }
     );
-assume mweights = simplex(0.5, 0.5);
-assume f = categorical(mweights, components);
+assume cweights = simplex(0.5, 0.5);
+assume cf = categorical(cweights, ccomponents);
 
-assume v = 0.1;
-define obs_f = proc(xy) {
+assume cv = 1.0;
+define obs_cf = proc(xy) {
     run(do(
         x <- return(lookup(xy, 0)),
         y <- return(lookup(xy, 1)),
-        observe(normal(f(unquote(x)), v), y)))
+        observe(normal(cf(unquote(x)), cv), y)))
 };
-define xs = array(9.9, 9.07, 2.17, 3.76, 8.09, 8.72, 9.04, 5.9, 9.34, 1.14, 1.59, 3.27, 3.63, 2.11, 5.3, 6.08, 2.83, 3.88, 0.58, 1.9, 6.54, 8.28, 9.58, 9.98, 1.66, 3.9, 3.36, 5.76, 1.57, 3.92);
-define ys = array(0-0.67, 0.51, 0-0.69, 1.04, 0.87, 1.0, 0.6, 0-1.09, 0.06, 0-0.88, 0-1.01, 0.7, 1.05, 0-0.87, 0-0.52, 0-1.16, 0.11, 1.05, 0.0, 0-0.86, 0-0.92, 1.18, 0-0.02, 0-0.91, 0-1.13, 0.99, 1.01, 0-1.0, 0-1.17, 1.13);
-define data = zip(xs, ys);
-infer return(mapv(obs_f, data));
+define data_xs = array(8.73, 7.47, 0.11, 0.26, 3.94, 4.86, 4.07, 5.65, 9.1, 6.62, 9.98, 3.54, 8.12, 5.17, 5.39);
+define data_ys = array(0.53, 0.67, 0.23, 0.02, 0.13, 0.27, 0.33, 0.04, 0.68, 0.17, 0.1, 0.16, 0.53, 0.42, 0.4);
+define data = zip(data_xs, data_ys);
+infer return(mapv(obs_cf, data));
 infer incorporate();
 
-infer default_markov_chain(1000);
-// TODO collect the value of mapv(f, linspace(0, 10, 50)) as inference is done (say, 100 steps at a time) and plot them as superimposed line graphs with color proportional to time
+define xs = linspace(0, 10, 200);
+define yss = mapv(proc(i) {
+    run(do(
+        ys <- sample(mapv(cf, unquote(xs))),
+        mh(default, one, <%= mixreg_increment = sample_size.div(10) %>),
+        return(ys)))
+    }, linspace(0, 0, 10));
+infer return(plot_lines(xs, yss, data_xs, data_ys, 0-2, 2, 0.5, 1.0, 1.0));
 ```
+
+![Plots of f as inference progresses](gp_mixreg_hardcoded.png)
+
+The plot contains samples of the function `cf` as inference progresses, <%=
+mixreg_increment %> steps at time.  As time progresses, the hue changes from
+cyan to blue to purple to red.  Notice that neither a line nor a sine wave is a
+perfect fit for this data set; lines incur a penalty due to the waviness of the
+data and sine waves incur a penalty due to the rising pattern of the data.
+
+(The function `plot_lines(xs, yss, data_xs, data_ys, ymin, ymax, huemin,
+huemax, linewidth)` works as follows: scatterplot of `data_xs` versus
+`data_ys`, as well as line plots of `ys` versus `xs` for each `ys` in `yss`.
+As the line plots progress from the first entry of `yss` to the last entry of
+`yss`, the hue of the drawn line progresses from `huemin` to `huemax`.  The
+lines have width `linewidth`, with 1 being the normal width.  The plot should
+show up in a matplotlib window.)
 
 Another interesting case of mixture regression is when the mixture components
 are models of increasing power, where more powerful models are harder to
 tune/fit to the data.  In that case mixture regression can be viewed as a way
 of training all the components in parallel, and a sample of the computed
 (approximate) posterior consists of a choice of model along with values of the
-parameters for that model.
+parameters for that model.  We now present such an example, with observation
+data as shown below:
+
+![Observation data](gp_progressivemixreg_data.png)
+
+We have drawn in curves for each of the three mixture components we will be
+using in our mixture model: `y = 0.9` (blue), `y = 1/x` (green), and `y = x^r`
+(magenta, with parameter value `r = -0.6`).  Now let's look at a probabilistic
+program for regression using this mixture:
 
 ```venture
-clear;
-assume r = 0 - beta(2,2);
-assume components = array(
-    proc(x) { 0.3 },           // component 0
+assume r = tag(quote(r), 0, 0 - beta(2,2));
+assume pcomponents = array(
+    proc(x) { 0.9 },           // component 0
     proc(x) { pow(x, 0-1) },   // component 1
     proc(x) { pow(x, r) }      // component 2
     );
 
-assume mweights = simplex(0.3, 0.3, 0.4);
-assume cnum = tag(quote(cnum), 0, categorical(mweights));
-assume f = lookup(components, cnum);
+assume pweights = simplex(0.3, 0.3, 0.4);
+assume pnum = tag(quote(pnum), 0, categorical(pweights));
+assume pf = lookup(pcomponents, pnum);
 
-assume v = 0.05;
-define obs_f = proc(xy) {
+assume pv = 1.0;
+define obs_pf = proc(xy) {
     run(do(
         x <- return(lookup(xy, 0)),
         y <- return(lookup(xy, 1)),
-        observe(normal(f(unquote(x)), v), y)))
+        observe(normal(pf(unquote(x)), pv), y)))
 };
-define xs = array(3.54, 4.38, 4.72, 2.06, 2.91, 1.83, 0.82, 3.92, 3.46, 3.83, 0.44, 3.46, 3.69, 3.34, 0.56, 1.61, 4.43, 2.98, 2.94, 1.6);
-define ys = array(1.03, 0.68, 0.29, 0-1.03, 0.41, 0-1.13, 0-0.55, 1.29, 1.11, 1.1, 0-0.08, 0.87, 1.11, 0.9, 0-0.11, 0-1.02, 0.87, 0.23, 0.37, 0-1.08);
+define xs = array(0.67, 3.58, 2.52, 1.09, 0.7, 0.4);
+define ys = array(1.19, 0.47, 0.67, 0.9, 1.09, 1.67);
 define data = zip(xs, ys);
-infer return(mapv(obs_f, data));
+infer return(mapv(obs_pf, data));
 infer incorporate();
 
-infer default_markov_chain(1000);
-
-// TODO plot cnum vs time and r vs time, as two superimposed line graphs.  The data was generated with r=0.6, can change that to use an r that makes it take longer to decide, if that looks better.
+define dataset = run(accumulate_dataset(<%= smaller_sample_size %>,
+    do(if(eq(run(sample(pnum)), atom<2>)) { mh(quote(r), one, 10) } else { pass },
+       mh(quote(pnum), one, 10),
+       collect(pnum, r))));
+plot(quote(p0d1dcd), dataset);
 ```
 
-TODO There is a lesson about Bayesian something-or-other here, where the
-posterior weight of a component is the average goodness of randomly drawn
-parameters, not just the goodness of the MAP (though for some setups those can
-end up being approximately the same thing).  Not sure whether this is something
-I want to try to communicate though.  Actually, this lesson was probably
-already taught in the similar example of linear-or-quadratic regression.  Maybe
-I don't even need the above, idk.
+Above, the parameter `r` is plotted against `pnum` (where `pnum = 0` for `y =
+0.3`, `pnum = 1` for `y = 1/x`, and `pnum = 2` for `y = x^(-r))`.  The darker
+points correspond to later in time, i.e. after more inference steps.
+
+Note that the inference loop contains the instruction
+
+```
+if(eq(run(sample(pnum)), atom<2>)) { mh(quote(r), one, 10) } else { pass }
+```
+
+This says, if the current value of `pnum` is 2 (so that y = x^(-r)), then do
+inference on `r`, and otherwise, do not touch `r`.  This is a sensible thing to
+do since the likelihood is indifferent to `r` if `pnum != 2`, so any inference
+steps taken on `r` when `pnum != 2` would retrogress on inference progress.
+Thus we see a case in which fully programmable inference is beneficial.
+
+_Subtle:_ It is tempting to think of inference on this mixture model as a
+search: first to find the "right" component, then to find the "right"
+parameters for that component.  That cartoon often doesn't correctly capture
+the Bayesian picture of inference.  The posterior probability of a component is
+the _average_ goodness (in terms of likeilhood) of using that component with
+parameters drawn randomly from the prior.  So the question of whether one
+particular MAP solution will dominate the posterior depends not just on (1) how
+likely the MAP solution is, but also on (2) the prior on parameters, and (3)
+how wide a region of very-good solutions surround the MAP, which is related to
+how sensitive the likelihood is to small changes in the parameters.  In the
+above example, `r` is the only parameter.
+
+Exercise: Come up with a prior on `r` such that component 2 dominates the
+posterior.  Then come up with a prior on `r` such that component 2 is very
+improbable in the posterior (but don't cheat -- the region from `r = -0.8` to
+`r = -0.4` should still have positive probability).  What other parts of the
+model have a describable effect on the behavior of inference?
+
 
 GP Regression
 =============
@@ -187,8 +250,6 @@ viewed as random functions, see Section 2.2 of [Rasmussen and
 Williams](http://www.gaussianprocess.org/gpml/chapters/RW2.pdf).
 
 ```venture
-clear;
-run(load_plugin("gpexample_plugin.py"));
 assume se = make_squaredexp(1.2, 0.8);
 assume zero_func = make_const_func(0.0);
 assume g = make_gp(zero_func, se);
@@ -205,18 +266,27 @@ prior_covariance(g(x1), g(x2)) = 1.2 * exp((x1-x2)^2 / (2*0.8))
 We can observe the value of `g` at given data points:
 
 ```venture
-assume xs = array(3.2, 2.2, 8.7);
-define ys = array(8.7, 0.2, 5.5);
-run(observe(g(xs), ys));
+assume data_xs = array(3.2, 2.2, 8.7);
+define data_ys = array(8.7, 0.2, 5.5);
+infer observe(g(data_xs), data_ys);
 infer incorporate();
-// TODO plot, I dunno, 30 samples of mapv(g, xs) where xs = linspace(0, 10, 50), as 30 superimposed line graphs (so the set of (x,y) pairs for one line is zip(xs, mapv(g, xs))).  The samples do not have to come from different particles.
+
+define xs = linspace(0, 10, 200);
+define yss = mapv(proc(i) {
+    run(do(
+        ys <- sample(g(unquote(xs))),
+        return(ys)))
+    }, linspace(0, 0, 10));
+infer return(plot_lines(xs, yss, run(sample(data_xs)), data_ys, 0-5, 12, 1.0, 1.0, 0.5));
 ```
 
-The posterior of `g` is again a Gaussian process, with a different mean
-function and a different covariance function (see
-[R&W](http://www.gaussianprocess.org/gpml/chapters/RW2.pdf) for more on this).
-The inputs and outputs of `g` are arrays, because `g` samples from the joint
-distribution of the GP's values on all supplied inputs.
+![Posterior of toy GP](gp_toy_posterior.png)
+
+The posterior of `g` is again a Gaussian process (several samples of which are
+plotted above), with a different mean function and a different covariance
+function (see [R&W](http://www.gaussianprocess.org/gpml/chapters/RW2.pdf) for
+more on this).  The inputs and outputs of `g` are arrays, because `g` samples
+from the joint distribution of the GP's values on all supplied inputs.
 
 Exercise: verify and explain why the following two commands are not equivalent:
 
@@ -236,39 +306,6 @@ Bayesian optimization.  It would even be possible to infer the structure of the
 covariance function, if we had in mind a generative model of covariance
 function structures.
 
-Structure
----------
-TODO write exposition
-
-```venture
-assume twoterms = tag(quote(structure), 0, flip());
-assume singleton_cov = tag(quote(structure), 1, uniform_discrete(0,2));
-assume pair_cov_1 = tag(quote(structure), 2, uniform_discrete(0,2));
-assume pair_cov_2 = tag(quote(structure), 3, uniform_discrete(0,2));
-assume pair_cov_op = tag(quote(structure), 4, uniform_discrete(0,2));
-
-assume covs = array(make_linear_cov, make_periodic_cov);
-assume ops = array(add_funcs, mult_funcs);
-assume paramgens = list(
-    proc() { array(
-        tag(quote(param), 0, uniform_continuous(0-2, 2))  // sf for LIN
-        )
-    },
-    proc() { array(
-        tag(quote(param), 0, uniform_continuous(0-2, 2)), // l for PER
-        tag(quote(param), 0, uniform_continuous(0-2, 2)), // p for PER
-        tag(quote(param), 0, uniform_continuous(0-2, 2))  // sf for PER
-        )
-    });
-
-assume cov = if (twoterms) {
-    lookup(covs, singleton_cov)
-} else {
-    lookup(ops, pair_cov_op)(
-        apply(lookup(covs, pair_cov_1), lookup(paramgens, pair_cov_1)()),
-        apply(lookup(covs, pair_cov_2), lookup(paramgens, pair_cov_2)()))
-};
-```
 
 gpmem
 =====

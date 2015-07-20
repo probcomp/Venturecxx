@@ -4,6 +4,7 @@ sys.path.append('.')
 import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as clr
 # Let's see what we need here
 # from models.covFunctions import *
 # from models.tools import array
@@ -148,4 +149,27 @@ def __venture_start__(ripl, *args):
 
     get_regexempl_data_xs_SP = deterministic_typed(lambda: regexempl_data_xs, [], t.HomogeneousArrayType(t.NumberType()))
     ripl.bind_foreign_sp('get_regexempl_data_xs', get_regexempl_data_xs_SP)
-        
+
+    # Plotting
+    def plot_lines(xs, yss, data_xs, data_ys, ymin, ymax, huemin, huemax, linewidth):
+        hues = np.linspace(huemin, huemax, len(yss))
+        fig, ax = plt.subplots(1)
+        for (ys, hue) in zip(yss, hues):
+            ax.plot(xs, ys, color=clr.hsv_to_rgb([hue, 1, 1]), linewidth=linewidth)
+        ax.scatter(data_xs, data_ys, color='k')
+        ax.set_ylim(ymin, ymax)
+        plt.show()
+        # plt.savefig('plotlines_fig.png')
+    plot_lines_sp = deterministic_typed(plot_lines,
+            [t.HomogeneousArrayType(t.NumberType()), # xs
+                t.HomogeneousArrayType(t.HomogeneousArrayType(t.NumberType())), # yss
+                t.HomogeneousArrayType(t.NumberType()), # data_xs
+                t.HomogeneousArrayType(t.NumberType()), # data_ys
+                t.NumberType(), # ymin
+                t.NumberType(), # ymax
+                t.NumberType(), # huemin
+                t.NumberType(), # huemax
+                t.NumberType(), # linewidth
+                ],
+            t.NilType())
+    ripl.bind_foreign_inference_sp('plot_lines', plot_lines_sp)
