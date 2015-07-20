@@ -53,8 +53,7 @@ def periodic(l,p,sf):
 
 def linear(sf):
     def f(x1, x2):
-        A = np.dot(x1,x2.T) + 1e-10    # required for numerical accuracy
-        return sf * A
+        return x1*x2 + 1e-10    # required for numerical accuracy
     return f
 
 covType = sp.SPType([t.NumberType(), t.NumberType()], t.NumberType())

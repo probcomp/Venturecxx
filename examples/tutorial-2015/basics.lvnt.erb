@@ -419,8 +419,8 @@ Importance Sampling with Resampling
 A very common inference technique is importance sampling with
 resampling.  It is:
 
-- Draw some number of trials from the prior [or any proposal
-  distribution of your choice]
+- Draw some number of trials (or "particles") from the prior [or any
+  proposal distribution of your choice]
 
 - Weight them by the likelihood [or the ratio between the posterior
   and proposal probabilities]
@@ -539,16 +539,17 @@ possible explanations of the data, without taking advantage of
 previous guesses when forming new ones.  The other major class of
 inference algorithms tries to take advantage of what has already been
 learned by retaining a "current state" and (stochastically) evolving
-it by trying various adjustments, in some way arranged to approach the
-posterior in distribution.  Broadly, such algorithms are called Markov
-chains.  (The Markovness is that the "current state" holds all the
-information about the chain's history that is relevant to determining
-its future evolution.)
+it by trying various adjustments in some way arranged to approach the
+posterior in distribution.  Broadly, such algorithms are called
+[Markov chains](https://en.wikipedia.org/wiki/Markov_chain_Monte_Carlo).
+(The Markovness is that the "current state" holds all the information
+about the chain's history that is relevant to determining its future
+evolution.)
 
 VentureScript has extensive facilities for constructing Markov chain
 inference strategies.  In this segment, we will explore the behavior
-of a simple generic one on the one-variable normal-normal problem we
-have been studying.
+of a simple generic one on the single-variable normal-normal problem
+we have been studying.
 
 Reset the model if you need to
 
@@ -592,6 +593,12 @@ sample x
 
 we should see `x` moving (perhaps haltingly and non-monotonically)
 toward regions of high posterior mass.
+
+(Aside: Internally, Venture's default Markov chain uses an algorithm
+called [Metropolis-Hastings](https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm),
+which examines random choices made during the program execution,
+samples new proposed values for those choices, and decides whether to
+accept a proposed value based on a ratio of likelihoods.)
 
 As usual, let's see that with more data:
 
