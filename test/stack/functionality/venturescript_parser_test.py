@@ -444,7 +444,7 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
 
         #fancy expression
         self.run_legacy_test( '''
-        (1 + 4)/3**5.11 + 32*4-2
+        (1 + 4)/3**5.11 + 32*4 - 2
         ''',
                 [[v.sym('sub'),
                             [v.sym('add'),
