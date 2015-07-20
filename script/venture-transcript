@@ -37,7 +37,7 @@ import venture.shortcuts as vs
 from venture.ripl.utils import strip_types
 from venture.exception import VentureException
 
-start_of_block = re.compile(r"^[ \t\r\f\v]*```(venture|church')[ \t\r\f\v]*$", re.MULTILINE)
+start_of_block = re.compile(r"^[ \t\r\f\v]*```(venture|church')(/error)?[ \t\r\f\v]*$", re.MULTILINE)
 end_of_block = re.compile(r"^[ \t\r\f\v]*```[ \t\r\f\v]*$", re.MULTILINE)
 
 def header(title=None):
@@ -72,9 +72,11 @@ def main():
     content = open(filename).read()
     try_title = re.match(r'\ATitle: (.*)\n((.|\n)*)\Z', content, re.MULTILINE)
     if try_title is not None:
-        Writer(filename, outdir, try_title.group(1)).in_text(try_title.group(2))
+        unexpected_errors = Writer(filename, outdir, try_title.group(1)).in_text(try_title.group(2))
+        exit(unexpected_errors)
     else:
-        Writer(filename, outdir, title).in_text(content)
+        unexpected_errors = Writer(filename, outdir, title).in_text(content)
+        exit(unexpected_errors)
 
 def with_output_to_string(f, *args, **kwargs):
     old_stdout = sys.stdout
@@ -100,38 +102,39 @@ class Writer(object):
         self.ripl.set_mode("venture_script")
         self.fignum = 0
         self.title = title
+        self.unexpected_errors = 0
 
     def in_text(self, string):
         split_res = re.split(start_of_block, string, maxsplit=1)
         if len(split_res) == 1:
             # File ended in text block
             self.emit_text(split_res[0])
-            self.finish()
-        elif len(split_res) == 3:
+            return self.finish()
+        elif len(split_res) == 4:
             # New Venture block started
             self.emit_text(split_res[0])
-            self.in_code(split_res[1], split_res[2])
+            return self.in_code(split_res[1], split_res[2] == "/error", split_res[3])
         else:
             raise Exception("??? Splitting on start of block produced %s" % (split_res,))
 
-    def in_code(self, mode, string):
+    def in_code(self, mode, expect_error, string):
         split_res = re.split(end_of_block, string, maxsplit=1)
         if len(split_res) == 1:
             # File ended in code block
             sys.stderr.write('Transcript file ended mid-code-block.\n')
-            self.emit_code(mode, split_res[0])
-            self.finish()
+            self.emit_code(mode, expect_error, split_res[0])
+            return self.finish()
         elif len(split_res) == 2:
             # New text block started
-            self.emit_code(mode, split_res[0])
-            self.in_text(split_res[1])
+            self.emit_code(mode, expect_error, split_res[0])
+            return self.in_text(split_res[1])
         else:
             raise Exception("??? Splitting on end of block produced %s" % (split_res,))
 
     def emit_text(self, string):
         self.out_chunks.append(string)
 
-    def emit_code(self, mode, string):
+    def emit_code(self, mode, expect_error, string):
         print "Trying program in %s mode" % (mode,)
         if mode == "venture":
             self.ripl.set_mode("venture_script")
@@ -141,7 +144,7 @@ class Writer(object):
             raise Exception("Unknown block mode %s", mode)
         (figures, munged) = self.munge_plotfs(mode, string)
         print munged.strip()
-        (ans, output) = with_output_to_string(self.execute_program, munged)
+        (ans, output) = with_output_to_string(self.execute_program, munged, expect_error)
         val = getValue(ans[-1])
         indent = self.detect_indent(string)
         figure_blocks = [indent + "![A Venture plot](%s)\n" % (figure,) for figure in figures]
@@ -173,7 +176,7 @@ class Writer(object):
                 self.fignum += 1
         return (figures, ans)
 
-    def execute_program(self, munged):
+    def execute_program(self, munged, expect_error):
         if munged.strip() == "list_directives":
             return [self.ripl.print_directives()]
         elif munged.strip() == "clear":
@@ -183,10 +186,12 @@ class Writer(object):
                 return self.ripl.execute_program(munged)
             except VentureException as e:
                 print e
-                sys.stderr.write("Inserting exception into output:\n")
-                sys.stderr.write(str(e))
-                sys.stderr.write("\n")
-                sys.stderr.flush()
+                if not expect_error:
+                    sys.stderr.write("Inserting unexpected exception into output:\n")
+                    sys.stderr.write(str(e))
+                    sys.stderr.write("\n")
+                    sys.stderr.flush()
+                    self.unexpected_errors += 1
                 return [None]
 
     def detect_indent(self, string):
@@ -210,6 +215,7 @@ class Writer(object):
             out.write(re.sub(r"\[%TOC%\]", "<h1>Contents</h1>\n" + marked_down.toc_html, marked_down))
             out.write(footer)
         shutil.copy(css_file, self.outdir)
+        return self.unexpected_errors
 
 if __name__ == "__main__":
     main()
