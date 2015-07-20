@@ -106,9 +106,9 @@ regression.  The following code asks, "what is the posterior on models that are
 either linear or sine wave, conditioned on the given data?"
 
 ```venture
-assume a = uniform_continuous(0-2, 2);
-assume b = uniform_continuous(0-2, 2);
-assume c = uniform_continuous(0-2, 2);
+assume a = uniform_continuous(-2, 2);
+assume b = uniform_continuous(-2, 2);
+assume c = uniform_continuous(-2, 2);
 assume d = uniform_continuous(0, 3);
 assume e = uniform_continuous(0, 2*3.14159);
 assume ccomponents = array(
@@ -138,7 +138,7 @@ define yss = mapv(proc(i) {
         mh(default, one, <%= mixreg_increment = sample_size.div(10) %>),
         return(ys)))
     }, linspace(0, 0, 10));
-infer return(plot_lines(xs, yss, data_xs, data_ys, 0-2, 2, 0.5, 1.0, 1.0));
+infer return(plot_lines(xs, yss, data_xs, data_ys, -2, 2, 0.5, 1.0, 1.0));
 ```
 
 ![Plots of f as inference progresses](gp_mixreg_hardcoded.png)
@@ -176,7 +176,7 @@ program for regression using this mixture:
 assume r = tag(quote(r), 0, 0 - beta(2,2));
 assume pcomponents = array(
     proc(x) { 0.9 },           // component 0
-    proc(x) { pow(x, 0-1) },   // component 1
+    proc(x) { pow(x, -1) },    // component 1
     proc(x) { pow(x, r) }      // component 2
     );
 
@@ -279,7 +279,7 @@ define yss = mapv(proc(i) {
         ys <- sample(g(unquote(xs))),
         return(ys)))
     }, linspace(0, 0, 10));
-infer return(plot_lines(xs, yss, run(sample(data_xs)), data_ys, 0-5, 12, 1.0, 1.0, 0.5));
+infer return(plot_lines(xs, yss, run(sample(data_xs)), data_ys, -5, 12, 1.0, 1.0, 0.5));
 ```
 
 ![Posterior of toy GP](gp_toy_posterior.png)
@@ -377,7 +377,7 @@ assume V_package = gpmem(V, zero_func, V_se);
 // A very naive estimate of the argmax of the given function
 define mc_argmax = proc(func) {
   run(do(
-    candidate_xs <- return(mapv(proc(i) {uniform_continuous(0-20, 20)},
+    candidate_xs <- return(mapv(proc(i) {uniform_continuous(-20, 20)},
                           linspace(0, 19, 20))),
     candidate_ys <- return(mapv(func, candidate_xs)),
     return(lookup(candidate_xs,
