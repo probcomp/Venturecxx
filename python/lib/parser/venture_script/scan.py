@@ -161,9 +161,9 @@ class Scanner(Plex.Scanner):
     digits = Plex.Rep(digit)
     digits1 = Plex.Rep1(digit)
     dot = Plex.Str('.')
-    integer = optsign + digits1                         # [+/-]NNNN
-    intfrac = integer + Plex.Opt(dot + digits)          # [+/-]NNN[.[NNNN]]
-    fraconly = optsign + dot + digits1                  # [+/-].NNNN
+    integer = digits1                                   # NNNN
+    intfrac = integer + Plex.Opt(dot + digits)          # NNN[.[NNNN]]
+    fraconly = dot + digits1                            # .NNNN
     expmark = Plex.Any('eE')
     exponent = expmark + optsign + digits1              # (e/E)[+/-]NNN
     real = (intfrac | fraconly) + Plex.Opt(exponent)
