@@ -57,8 +57,7 @@ def periodic(l,p,sf):
 linearType = sp.SPType([t.NumberType()], t.NumberType())
 def linear(sf):
     def f(x1, x2):
-        A = np.dot(x1,x2.T) + 1e-10    # required for numerical accuracy
-        return sf * A
+        return x1*x2 + 1e-10    # required for numerical accuracy
     return f
 
 def __venture_start__(ripl, *args):
