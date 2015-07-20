@@ -40,15 +40,18 @@ from venture.exception import VentureException
 start_of_block = re.compile(r"^[ \t\r\f\v]*```(venture|church')[ \t\r\f\v]*$", re.MULTILINE)
 end_of_block = re.compile(r"^[ \t\r\f\v]*```[ \t\r\f\v]*$", re.MULTILINE)
 
-header = """\
+def header(title=None):
+    if title is None:
+        title = "A VentureScript transcript"
+    return """\
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>A Venture transcript</title>
+  <title>%s</title>
   <link rel="stylesheet" type="text/css" href="transcript.css">
 </head>
 <body>
-"""
+""" % (title,)
 
 footer = """\
 </body>
@@ -59,11 +62,19 @@ selfdir = os.path.dirname(os.path.abspath(__file__))
 css_file = os.path.join(selfdir, 'transcript.css')
 
 def main():
-    (_, filename, outdir) = sys.argv
+    if len(sys.argv) == 3:
+        (_, filename, outdir) = sys.argv
+        title = "A VentureScript transcript"
+    else:
+        (_, filename, outdir, title) = sys.argv
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     content = open(filename).read()
-    Writer(filename, outdir).in_text(content)
+    try_title = re.match(r'\ATitle: (.*)\n((.|\n)*)\Z', content, re.MULTILINE)
+    if try_title is not None:
+        Writer(filename, outdir, try_title.group(1)).in_text(try_title.group(2))
+    else:
+        Writer(filename, outdir, title).in_text(content)
 
 def with_output_to_string(f, *args, **kwargs):
     old_stdout = sys.stdout
@@ -81,13 +92,14 @@ def getValue(v):
         return ""
 
 class Writer(object):
-    def __init__(self, filename, outdir):
+    def __init__(self, filename, outdir, title=None):
         self.outdir = outdir
         self.outfile = outdir + "/index.html"
         self.out_chunks = []
         self.ripl = vs.backend("lite").make_combined_ripl()
         self.ripl.set_mode("venture_script")
         self.fignum = 0
+        self.title = title
 
     def in_text(self, string):
         split_res = re.split(start_of_block, string, maxsplit=1)
@@ -131,8 +143,9 @@ class Writer(object):
         print munged.strip()
         (ans, output) = with_output_to_string(self.execute_program, munged)
         val = getValue(ans[-1])
-        figure_blocks = ["![A Venture plot](%s)\n" % (figure,) for figure in figures]
-        self.out_chunks.extend(["```", string, output, str(val), "\n```\n"] + figure_blocks)
+        indent = self.detect_indent(string)
+        figure_blocks = [indent + "![A Venture plot](%s)\n" % (figure,) for figure in figures]
+        self.out_chunks.extend([indent, "```", string, output, indent, str(val), "\n", indent, "```\n"] + figure_blocks)
 
     def munge_plotfs(self, mode, string):
         # TODO Instead of munging the source, should also be able to
@@ -149,9 +162,9 @@ class Writer(object):
             pattern = re.compile(r"\(plot(f?) ")
         while not done:
             if mode == "venture":
-                replacement = 'plot\\1_to_file(quote(symbol<"%s/figure-%s">), ' % (self.outdir, self.fignum)
+                replacement = 'plot\\1_to_file("%s/figure-%s", ' % (self.outdir, self.fignum)
             else:
-                replacement = '(plot\\1_to_file (quote symbol<"%s/figure-%s">) ' % (self.outdir, self.fignum)
+                replacement = '(plot\\1_to_file "%s/figure-%s" ' % (self.outdir, self.fignum)
             (ans, count) = re.subn(pattern, replacement, ans, count=1)
             if count == 0:
                 done = True
@@ -176,11 +189,25 @@ class Writer(object):
                 sys.stderr.flush()
                 return [None]
 
+    def detect_indent(self, string):
+        indents = []
+        for line in string.split('\n'):
+            if line:
+                indent = line[:len(line)-len(line.lstrip())]
+                indents.append(indent)
+        s1 = min(indents)
+        s2 = max(indents)
+        for i, c in enumerate(s1):
+            if c != s2[i]:
+                return s1[:i]
+        return s1
+
     def finish(self):
         result = ''.join(self.out_chunks)
+        marked_down = markdown2.markdown(result, extras=['fenced-code-blocks', 'markdown-in-html', 'toc'])
         with open(self.outfile, 'w') as out:
-            out.write(header)
-            out.write(markdown2.markdown(result, extras=['fenced-code-blocks']))
+            out.write(header(self.title))
+            out.write(re.sub(r"\[%TOC%\]", "<h1>Contents</h1>\n" + marked_down.toc_html, marked_down))
             out.write(footer)
         shutil.copy(css_file, self.outdir)
 

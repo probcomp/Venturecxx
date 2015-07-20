@@ -17,30 +17,30 @@
 
 // Run me with venture lite -f trickiness-ideal.vnts
 // (lite because Puma does not support rejection sampling)
-infer resample(40)
-assume is_tricky = bernoulli(0.1)
+infer resample(40);
+assume is_tricky = bernoulli(0.1);
 assume weight = if (is_tricky) {
   uniform_continuous(0, 1)
 } else {
   0.5
-}
-infer bind(collect(is_tricky), curry3(plotf_to_file, quote(ideal_prior_trick_mar), quote(h0)))
-infer bind(collect(weight), curry3(plotf_to_file, quote(ideal_prior_weight_mar), quote(h0)))
-infer bind(collect(is_tricky, weight), curry3(plotf_to_file, quote(ideal_prior_joint), quote(p0d1d)))
-observe bernoulli(weight) = 1
-observe bernoulli(weight) = 1
-observe bernoulli(weight) = 1
-infer bind(collect(is_tricky), curry3(plotf_to_file, quote(ideal_obs_trick_mar), quote( h0)))
-infer bind(collect(weight), curry3(plotf_to_file, quote(ideal_obs_weight_mar), quote(h0)))
-infer bind(collect(is_tricky, weight), curry3(plotf_to_file, quote(ideal_obs_joint), quote(p0d1d)))
-infer rejection(default, all, 1)
-infer bind(collect(is_tricky), curry3(plotf_to_file, quote(ideal_trick_mar), quote(h0)))
-infer bind(collect(weight), curry3(plotf_to_file, quote(ideal_weight_mar), quote(h0)))
-infer bind(collect(is_tricky, weight), curry3(plotf_to_file, quote(ideal_joint), quote(p0d1d)))
-observe bernoulli(weight) = 1
-observe bernoulli(weight) = 1
-observe bernoulli(weight) = 1
-infer rejection(default, all, 1)
-infer bind(collect(is_tricky), curry3(plotf_to_file, quote(ideal_more_data_trick_mar), quote(h0)))
-infer bind(collect(weight), curry3(plotf_to_file, quote(ideal_more_data_weight_mar), quote(h0)))
-infer bind(collect(is_tricky, weight), curry3(plotf_to_file, quote(ideal_more_data_joint), quote(p0d1d)))
+};
+infer bind(collect(is_tricky), curry3(plotf_to_file, quote(ideal_prior_trick_mar), quote(h0)));
+infer bind(collect(weight), curry3(plotf_to_file, quote(ideal_prior_weight_mar), quote(h0)));
+infer bind(collect(is_tricky, weight), curry3(plotf_to_file, quote(ideal_prior_joint), quote(p0d1d)));
+observe bernoulli(weight) = 1;
+observe bernoulli(weight) = 1;
+observe bernoulli(weight) = 1;
+infer bind(collect(is_tricky), curry3(plotf_to_file, quote(ideal_obs_trick_mar), quote( h0)));
+infer bind(collect(weight), curry3(plotf_to_file, quote(ideal_obs_weight_mar), quote(h0)));
+infer bind(collect(is_tricky, weight), curry3(plotf_to_file, quote(ideal_obs_joint), quote(p0d1d)));
+infer rejection(default, all, 1);
+infer bind(collect(is_tricky), curry3(plotf_to_file, quote(ideal_trick_mar), quote(h0)));
+infer bind(collect(weight), curry3(plotf_to_file, quote(ideal_weight_mar), quote(h0)));
+infer bind(collect(is_tricky, weight), curry3(plotf_to_file, quote(ideal_joint), quote(p0d1d)));
+observe bernoulli(weight) = 1;
+observe bernoulli(weight) = 1;
+observe bernoulli(weight) = 1;
+infer rejection(default, all, 1);
+infer bind(collect(is_tricky), curry3(plotf_to_file, quote(ideal_more_data_trick_mar), quote(h0)));
+infer bind(collect(weight), curry3(plotf_to_file, quote(ideal_more_data_weight_mar), quote(h0)));
+infer bind(collect(is_tricky, weight), curry3(plotf_to_file, quote(ideal_more_data_joint), quote(p0d1d)));

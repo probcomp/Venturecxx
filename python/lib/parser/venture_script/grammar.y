@@ -58,12 +58,11 @@ command(list_directives)::= K_LIST(k0) K_DIRECTIVES(k1).
 command(get_directive)	::= K_GET(k0) K_DIRECTIVE(k1) directive_ref(dr).
 command(force)		::= K_FORCE(k) expression(e) T_EQDEF(eq) literal(v).
 command(sample)		::= K_SAMPLE(k) expression(e).
-command(continuous_inference_status)	::= K_CONTINUOUS(k0) K_INFERENCE(k1)
-						K_STATUS(k2).
+/* XXX are these commands supposed to be one keyword or three? */
+command(continuous_inference_status)	::= K_CONTINUOUS_INFERENCE_STATUS(k).
 command(start_continuous_inference)	::= K_START(k0) K_CONTINUOUS(k1)
 						K_INFERENCE(k2).
-command(stop_continuous_inference)	::= K_STOP(k0) K_CONTINUOUS(k1)
-						K_INFERENCE(k2).
+command(stop_continuous_inference)	::= K_STOP_CONTINUOUS_INFERENCE(k).
 command(get_current_exception)		::= K_GET(k0) K_CURRENT(k1)
 						K_EXCEPTION(k2).
 command(get_state)		::= K_GET(k0) K_STATE(k1).

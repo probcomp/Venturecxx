@@ -234,14 +234,6 @@ class TestRipl(unittest.TestCase):
         output = self.ripl.sample('(+ 1 1)')
         self.assertEqual(output, 2)
 
-    def test_continuous_inference(self):
-        self.ripl.start_continuous_inference()
-        output = self.ripl.continuous_inference_status()
-        self.assertEqual(output['running'], True)
-        self.ripl.stop_continuous_inference()
-        output = self.ripl.continuous_inference_status()
-        self.assertEqual(output['running'], False)
-
     def test_get_current_exception(self):
         # TODO: write test after exception states are implemented
         pass

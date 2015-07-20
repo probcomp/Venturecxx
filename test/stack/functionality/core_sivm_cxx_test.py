@@ -230,20 +230,6 @@ class TestCoreSivm(unittest.TestCase):
         o2 = self.sivm.execute_instruction(inst2)
         self.assertEquals(o2['logscore'],-0.6931471805599453)
     
-    def test_continuous_inference(self):
-        status = {'instruction':'continuous_inference_status'}
-        o1 = self.sivm.execute_instruction(status)
-        self.assertEquals(o1['running'], False)
-        
-        exp = [v.sym("mh"), v.sym("default"), v.sym("one"), v.num(2)]
-        self.sivm.execute_instruction({'instruction':'start_continuous_inference', 'expression' : exp})
-        o2 = self.sivm.execute_instruction(status)
-        self.assertEquals(o2['running'], True)
-        
-        self.sivm.execute_instruction({'instruction':'stop_continuous_inference'})
-        o3 = self.sivm.execute_instruction(status)
-        self.assertEquals(o3['running'], False)
-    
     def test_profiler_configure(self):
         i1 = {'instruction':'profiler_configure', 'options': {}}
         o1 = self.sivm.execute_instruction(i1)

@@ -1,37 +1,61 @@
+Title: More VentureScript: Linear Regression
+
 <% sample_size = 500 %>
 <% if ENV['SMOKETEST'] then sample_size = 5 end %>
 <% smaller_sample_size = [sample_size / 5, 5].max %>
+<% iterations = 30 %>
+<% if ENV['SMOKETEST'] then iterations = 1 end %>
 <% refman_url = "http://probcomp.csail.mit.edu/venture/edge/reference/" %>
 
-[< Prev: Basics](../basics/index.html)
+<script type="text/javascript">
+function hideAnswers() {
+  var answers = document.getElementsByClassName("answer");
+  for (var i = 0; i < answers.length; ++i) {
+    var answer = answers[i];
+    answer.style.display = "none";
+  }
+}
+window.addEventListener('load', hideAnswers);
+function toggle(id) {
+  var answer = document.getElementById(id);
+  if (answer.style.display === "none") {
+    answer.style.display = "block";
+  }
+  else {
+    answer.style.display = "none";
+  }
+}
+</script>
 
-Linear Regression
-=================
+[< Prev: Basic VentureScript](../basics/index.html)
+[^ Top](../index.html)
 
-[Ok, one gaussian isn't that much fun: let's try varying the mean as a
-function of the input, i.e. linear regression.]
+More VentureScript: Linear Regression
+=====================================
 
-In this part, we will build up a somewhat more elaborate model, and
+In this chapter, we will build up a somewhat more elaborate model, and
 explore strategies for inspecting and debugging it.  The problem we
 address is linear regression: trying to infer a linear relationship
 between an input and an output from some data.  This is of course
 well-trodden terrain -- we are primarily using it to introduce more
-Venture concepts, but the models themselves will get interesting
+VentureScript concepts, but the models themselves will get interesting
 toward the end.
+
+[%TOC%]
 
 Recap
 =====
 
 In the [previous part](../basics/index.html) we discussed basic
-concepts of Venture programming, modeling, and inference.  As a
-reminder, the main modes of using Venture we saw are starting Venture
+concepts of VentureScript programming, modeling, and inference.  As a
+reminder, the main modes of using VentureScript we saw are starting Venture
 interactively
 
 ```
 $ venture
 ```
 
-and running standalone Venture scripts
+and running standalone VentureScript scripts
 
 ```
 $ venture -f script.vnts
@@ -39,9 +63,6 @@ $ venture -f script.vnts
 
 Simple Linear Regression
 ========================
-
-[Concepts: more elaborate models; functions; abstraction?; genericity
-of built-in inference procedures]
 
 Let's start by putting down the first model for linear regression that
 comes to mind.  A line has a slope and an intercept
@@ -100,52 +121,59 @@ Exercise: For now, evaluate the model's performance on the two data points.
 1. Gather and save a dataset of independent posterior samples of the
    parameters and a prediction at some value.
    [Hint: You can pass multiple arguments to `collect`]
-   [Answer:
+   <a href="javascript:toggle('answer-simple-1')">(show answer)</a>
 
-```venture
-define data = run(accumulate_dataset(<%= smaller_sample_size %>,
-  do(posterior,
-     collect(intercept, slope, line(3)))))
-```
+   <div class="answer" id="answer-simple-1" markdown="1">
+   Answer:
 
-]
+   ```venture
+   define data = run(accumulate_dataset(<%= smaller_sample_size %>,
+     do(posterior,
+        collect(intercept, slope, line(3)))))
+   ```
+   </div>
 
 2. Predictive accuracy: Where do you expect the predictive mean to be,
    based on the observations we trained the model on?  How widely do
    you expect it be dispersed, based on the noise in the model?  Plot
    the predictions: does the data agree with your intuition?
+   <a href="javascript:toggle('answer-simple-2')">(show answer)</a>
 
-[Answer: 2, pretty broad,
+   <div class="answer" id="answer-simple-2" markdown="1">
+   Answer: 2, pretty broad,
 
-```venture
-plot("h2", data)
-```
-
-]
+   ```venture
+   plot("h2", data)
+   ```
+   </div>
 
 3. Parameter inference
 
     a. Where do you expect the intercept to be located, and how
        concentrated do you expect it to be?  Plot the intercept and
        check your intuition.
+       <a href="javascript:toggle('answer-simple-3a')">(show answer)</a>
 
-[Answer: 2, broad,
+    <div class="answer" id="answer-simple-3a" markdown="1">
+    Answer: 2, broad,
 
-```venture
-plot("h0", data)
-```
-]
+    ```venture
+    plot("h0", data)
+    ```
+    </div>
 
     b. Where do you expect the slope to be located, and how
        concentrated do you expect it to be?  Plot the slope and check
        your intuition.
+       <a href="javascript:toggle('answer-simple-3b')">(show answer)</a>
 
-[Answer: 0, broad,
+    <div class="answer" id="answer-simple-3b" markdown="1">
+    Answer: 0, broad,
 
-```venture
-plot("h1", data)
-```
-]
+    ```venture
+    plot("h1", data)
+    ```
+    </div>
 
     c. What do you expect the relationship between the slope and
        intercept to be?  Plot them against each other and check your
@@ -153,16 +181,19 @@ plot("h1", data)
        `p0d1d`: `p` for **p**oint and `d` for **d**irect as opposed to
        log scale.  A gotcha: if you leave the middle `d` off, the 0
        and 1 will run together into a single index.
+       <a href="javascript:toggle('answer-simple-3c')">(show answer)</a>
 
-[Answer: anticorrelated, because the line is trying to pass through
-around (1.5, 2).
+    <div class="answer" id="answer-simple-3c" markdown="1">
+    Answer: The slope and intercept are anticorrelated, because the
+    line is trying to pass through around (1.5, 2).
 
-```venture
-plot("p0d1d", data)
-```
+    ```venture
+    plot("p0d1d", data)
+    ```
+    </div>
 
-Working with Datasets
-=====================
+Topic: Working with Datasets
+============================
 
 In the previous segment, we started with the simple linear regression
 model in [lin-reg-1.vnts](lin-reg-1.vnts)
@@ -186,7 +217,7 @@ observe obs(that) = the other;
 ```
 
 but that's pretty tedious.  Being a probabilistic programming
-language, Venture doesn't replicate standard programming facilities
+language, VentureScript doesn't replicate standard programming facilities
 like reading data files, and instead offers close integration with
 Python.  So the way to do a job like this is to use
 [`pyexec`](<%= refman_url %>/inference.html#pyexec):
@@ -206,15 +237,15 @@ the inference language that executes the given string of Python code.
 The binding environment persists across calls, and begins with the variable `ripl` bound to the
 current session's
 [Read-Infer-Predict Layer](<%= refman_url %>venture.ripl.ripl.html#module-venture.ripl.ripl),
-which serves as the entry point for using Venture as a Python library.
+which serves as the entry point for using VentureScript as a Python library.
 In this case, we used the escape to load our csv file up into a Pandas DataFrame,
-and then used the RIPL's [`observe_dataset`](<%= refman_url %>venture.ripl.ripl.html#venture.ripl.ripl.Ripl.observe_dataset) method to load it into Venture
+and then used the RIPL's [`observe_dataset`](<%= refman_url %>venture.ripl.ripl.html#venture.ripl.ripl.Ripl.observe_dataset) method to load it into VentureScript
 as individual observations.
 
 OK, so we loaded the data.  We could do some inference
 
 ```venture
-infer default_markov_chain(30)
+infer default_markov_chain(<%= iterations %>)
 ```
 
 and ask for a prediction at a new `x`-value
@@ -225,7 +256,7 @@ sample line(11)
 
 but without a look at the data, we don't even know what to expect.
 There are of course plenty of ways to plot a dataset; in this case, we
-will use Venture's `plot`:
+will use VentureScript's `plot`:
 
 ```venture
 run(pyexec("import venture.lite.value as vv"));
@@ -233,14 +264,17 @@ define frame = run(pyeval("vv.VentureForeignBlob(frame[['x', 'y']])"));
 plot("p0d1d", frame)
 ```
 
-The dataset exhibits a clear linear relationship, and we should expect `line(11)` to be around 7.
+The dataset exhibits a clear linear relationship, and we should expect
+`line(11)` to be around 7.
 
-Let's try using Markov chain inference to fit our linear model. Start <%= smaller_sample_size %> independent chains, evolve them for 30 iterations, and record where they end up:
+Let's try using Markov chain inference to fit our linear model. Start
+<%= smaller_sample_size %> independent chains, evolve them for <%=
+iterations %> iterations, and record where they end up:
 
 ```venture
 define data = run(accumulate_dataset(<%= smaller_sample_size %>,
   do(reset_to_prior,
-     default_markov_chain(30),
+     default_markov_chain(<%= iterations %>),
      collect(intercept, slope, line(11)))))
 ```
 
@@ -262,7 +296,7 @@ In order to do so, we can make use of Venture's plugin infrastructure
 to load external code written in Python. In this case, we've provided
 a custom plugin that produces an animated curve-fitting visualization
 that can be updated during the inference program. Download
-[curve-fitting.py](curve-fitting.py) and load it into Venture using
+[curve-fitting.py](curve-fitting.py) and load it into VentureScript using
 
 ```venture
 run(load_plugin("curve-fitting.py"))
@@ -283,11 +317,16 @@ which should render a plot that looks like this:
 
 ![A frame of the visualization](vis-frame.png)
 
+The blue line is the current guess.  The green points are the
+observations; the error bars around them reach twice the standard
+deviation of the noise, above and below.  The number at the top left
+is the count of how many frames have been drawn.
+
 We can also plot multiple frames with inference commands interleaved
 
 ```venture
 infer reset_to_prior;
-infer repeat(30, do(default_markov_chain(1),
+infer repeat(<%= iterations %>, do(default_markov_chain(1),
                     call_back(draw)))
 ```
 
@@ -295,7 +334,7 @@ The [`repeat`](<%= refman_url %>inference.html#repeat) command works
 similarly to `accumulate_dataset`, but in this case we aren't
 concerned with collecting the data since it's being rendered in the
 visualization instead. Together, this command will run the Markov
-chain for 30 iterations, drawing an animation frame after each
+chain for <%= iterations %> iterations, drawing an animation frame after each
 iteration.
 
 Another useful command which works well with visualization is
@@ -318,57 +357,69 @@ stop_continuous_inference
 Exercise: Play with this visualization to see how inference is doing.
 
 1. Use the `loop` command to run the Markov chain continually and draw
-an animation frame after every iteration. Watch the animation while it
-runs and confirm that the line eventually approaches a good fit to the
-data. Does it take gradual steps or sudden jumps?
+   an animation frame after every iteration. Watch the animation while
+   it runs and confirm that the line eventually approaches a good fit
+   to the data. Does it take gradual steps or sudden jumps?
+   <a href="javascript:toggle('answer-vis-1')">(show answer)</a>
 
-[Answer: It takes sudden jumps, with varying amount of time between
-jumps.
+   <div class="answer" id="answer-vis-1" markdown="1">
+   Answer: It takes sudden jumps, with varying amount of time between
+   jumps.
 
-```venture
-infer loop(do(default_markov_chain(1), call_back(draw)))
-```
-]
+   ```venture
+   infer loop(do(default_markov_chain(1), call_back(draw)))
+   ```
+   </div>
 
 2. How many iterations does it take for the chain to converge? Modify
-the inference loop to call `reset_to_prior` after every 30 iterations
-of the Markov chain. (Hint: You may want to use `repeat` and `do`.) Is
-the Markov chain able to find a good fit within 30 iterations? What
-about 100 iterations? Try playing with the number of iterations to see
-how many it takes to reliably find a reasonable fit.
+   the inference loop to call `reset_to_prior` after every 30
+   iterations of the Markov chain. (Hint: You may want to use `repeat`
+   and `do`.) Is the Markov chain able to find a good fit within 30
+   iterations? What about 100 iterations? Try playing with the number
+   of iterations to see how many it takes to reliably find a
+   reasonable fit.
+   <a href="javascript:toggle('answer-vis-2')">(show answer)</a>
 
-[Answer: 30 is not enough, and it may not even be obvious visually
-when it's resetting to the prior. 100 is better, but still often fails
-to find a fit; 200-300 is clearly able to find it most of the time.
+   <div class="answer" id="answer-vis-2" markdown="1">
+   Answer: 30 is not enough, and it may not even be obvious visually
+   when it's resetting to the prior. 100 is better, but still often
+   fails to find a fit; 200-300 is clearly able to find it most of the
+   time.
 
-```venture
-infer loop(do(reset_to_prior,
-              repeat(30, do(default_markov_chain(1),
-	                    call_back(draw)))))
-```
-]
+   ```venture
+   infer loop(do(reset_to_prior,
+                 repeat(<%= iterations %>, do(default_markov_chain(1),
+                               call_back(draw)))))
+   ```
+   </div>
 
-3. If you're still running the infer loop, turn it off for this part
-(`stop_continuous_inference`).
+3. (If you're still running the infer loop, turn it off for this
+   part.)
 
-We can use `resample` to run multiple independent chains and plot all
-of the resulting lines in the same window, to get some sense of the
-posterior distribution over lines. Resample 20 particles (remember to
-reset them to the prior), run them for 30 iterations, and look at the
-resulting animation. Does it look like the distribution of lines
-converges to something plausible? If you're impatient, try increasing
-the number of iterations as above.
+   ```venture
+   stop_continuous_inference
+   ```
 
-[Answer: Some of the samples do concentrate around the correct line,
-but again 30 iterations is not enough to converge.
+   We can use `resample` to run multiple independent chains and plot
+   all of the resulting lines in the same window, to get some sense of
+   the posterior distribution over lines. Resample 20 particles
+   (remember to reset them to the prior), run them for 30 iterations,
+   and look at the resulting animation. Does it look like the
+   distribution of lines converges to something plausible? If you're
+   impatient, try increasing the number of iterations as above.
+   <a href="javascript:toggle('answer-vis-3')">(show answer)</a>
 
-```venture
-infer resample(20)
-infer do(reset_to_prior,
-         repeat(30, do(default_markov_chain(1),
-	               call_back(draw))))
-```
-]
+   <div class="answer" id="answer-vis-3" markdown="1">
+   Answer: Some of the samples do concentrate around the correct line,
+   but again 30 iterations is not enough to converge.
+
+   ```venture
+   infer resample(20);
+   infer do(reset_to_prior,
+            repeat(<%= iterations %>, do(default_markov_chain(1),
+                          call_back(draw))))
+   ```
+   </div>
 
 [TODO drop in custom proposals here for better inference]
 
@@ -429,7 +480,7 @@ noise, we will put a prior over the amount of noise as well and see
 how well we can infer it:
 
 ```venture
-assume noise = gamma(1,1)
+assume noise = gamma(1,1);
 assume obs_inlier = proc(x) { normal(line(x), noise) }
 ```
 
@@ -471,16 +522,22 @@ this configuration and settle on it for a while:
 
 ![Most favorable configuration of the outlier model](vis-outlier.png)
 
+The grey dot is currently assumed to be an outlier, whereas the green
+ones are inliers.
+
 ```venture
 stop_continuous_inference
 ```
 
-Using tags for inference control
-================================
+[TODO What exericses should we give on this segment?  Is this a good
+place to talk about Bayes Occam's Razor?]
+
+Topic: Using tags for inference control
+=======================================
 
 Now that we have a more complex model with more moving parts, we'd
 like to be able to treat each of those parts independently when it
-comes to deciding how to do inference. Venture provides a mechanism to
+comes to deciding how to do inference.  VentureScript provides a mechanism to
 tag different parts of the model program and then refer to those tags
 from inference commands.
 
@@ -493,14 +550,15 @@ clear
 ```
 
 ```venture
-assume intercept = tag(quote(param), quote(intercept), normal(0,7));
-assume slope = tag(quote(param), quote(slope), normal(0,4));
+assume intercept = tag("param", "intercept", normal(0,7));
+assume slope = tag("param", "slope", normal(0,4));
+
 assume line = proc(x) { slope * x + intercept };
 
-assume noise = tag(quote(hyper), quote(noise), gamma(1, 1));
+assume noise = tag("hyper", "noise", gamma(1, 1));
 
-assume outlier_prob = tag(quote(hyper), quote(outlier_prob), uniform_continuous(0.01, 0.3));
-assume is_outlier = mem(proc(i) { tag(quote(outlier), i, flip(outlier_prob)) });
+assume outlier_prob = tag("hyper", "outlier_prob", uniform_continuous(0.01, 0.3));
+assume is_outlier = mem(proc(i) { tag("outlier", i, flip(outlier_prob)) });
 
 assume obs = proc(i, x) {
   if (is_outlier(i)) {
@@ -511,13 +569,15 @@ assume obs = proc(i, x) {
 }
 ```
 
-Each `tag` command takes three arguments: a scope ID, a block ID, and
-the expression it applies to. Inference commands can then target a
-particular scope and block. For example, we can do Markov chain
-inference on just the line parameters using
+Each `tag` command takes three arguments: a scope identifier, a block
+identifier, and the expression it applies to. Scope and block
+identifiers can be any unique expression. Inference commands can then
+use these identifiers to target a particular scope and block. For
+example, we can do Markov chain inference on just the line parameters
+using
 
 ```venture
-infer mh(quote(param), one, 1);
+infer mh("param", one, 1);
 ```
 
 The `mh` inference command is the same as `default_markov_chain`,
@@ -553,32 +613,46 @@ What are scoped inference commands good for? Here are some use cases:
 Here is an inference program that illustrates these ideas:
 
 ```venture
-infer loop(do(mh(quote(param), one, 2),
-              mh(quote(hyper), one, 1),
-	      gibbs(quote(outlier), one, 1),
-	      call_back(draw)))
+infer loop(do(mh("param", one, 2),
+              mh("hyper", one, 1),
+              gibbs("outlier", one, 1),
+              call_back(draw)))
 ```
 
 Exercise: Compare this to the infer loop that only used
 `default_markov_chain` from earlier. What qualitative differences in
 behavior do you see? Try adjusting the number of iterations allocated
 to each scope and see what happens.
+<a href="javascript:toggle('answer-scopes')">(show answer)</a>
 
-[Answer: The line moves more often, because the program spends less
+<div class="answer" id="answer-scopes" markdown="1">
+
+Answer: The line moves more often, because the program spends less
 time on uselessly reconsidering whether points are outliers and more
-time on proposing new line parameters. Giving more iterations to the
-line parameters (say, `mh(quote(param), one, 5)`) will cause the line
-to move even more, but it may miss the opportunity to reduce the noise
-level or flag a point as an outlier when it doesn't fit. Giving more
-iterations to the noise hyperparameter or the outlier detection will
-make these opportunities more likely, but may also waste time
-reconsidering the same random choices over and over just like
-`default_markov_chain` does.]
+time on proposing new line parameters.
+
+Giving more iterations to the line parameters (say, `mh("param",
+one, 5)`) will cause the line to move even more, but it may miss the
+opportunity to reduce the noise level or flag a point as an outlier
+when it doesn't fit.
+
+Giving more iterations to the noise hyperparameter or the outlier
+detection will make these opportunities more likely, but may also
+waste time reconsidering the same random choices over and over just
+like `default_markov_chain` does.
+
+</div>
+
+```venture
+stop_continuous_inference
+```
+
+[TODO Maybe play with gradients or drift proposals for the weights?]
 
 Elaboration: Model Selection
 ============================
 
-[TODO Go through this]
+[TODO Go through this, or drop it]
 
 ```church'
 clear
@@ -629,10 +703,12 @@ clear
 ;; (independent short Markov chains)
 [infer (plotf 'p0d1d (run (accumulate_dataset <%= smaller_sample_size %>
   (do reset_to_prior
-      (mh default one 30)
+      (mh default one <%= iterations %>)
       (collect a b)))))]
 ```
 
-[TODO illustrate and elaborate] Inference phenomenon: Bayes Occam's Razor
+[TODO Discuss how Bayes Occam's Razor happens again, namely over the
+extra degree of the curve]
 
-[< Prev: Basics](../basics/index.html)
+[< Prev: Basic VentureScript](../basics/index.html)
+[^ Top](../index.html)

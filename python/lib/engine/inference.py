@@ -34,7 +34,9 @@ class Infer(object):
 
   @staticmethod
   def _format_filenames(filenames,spec):
-    if isinstance(filenames, basestring):
+    if isinstance(filenames, basestring) or isinstance(filenames, VentureString):
+      if isinstance(filenames, VentureString):
+        filenames = filenames.getString()
       if isinstance(spec, basestring) or isinstance(spec, VentureString):
         return [filenames + '.png']
       else:

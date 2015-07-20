@@ -250,9 +250,11 @@ class Engine(object):
     self.model.traces.at_distinguished('set_seed', seed) # TODO is this what we want?
 
   def continuous_inference_status(self):
-    if self.inferrer is not None:
+    "A purely advisory guess about whether CI is running or not.  If you want to interact with CI safely, use stop_continuous_inference."
+    inferrer_obj = self.inferrer # Read self.inferrer atomically, just in case.
+    if inferrer_obj is not None and not inferrer_obj.crashed:
       # Running CI in Python
-      return {"running":True, "expression":self.inferrer.program}
+      return {"running":True, "expression":inferrer_obj.program}
     else:
       return {"running":False}
 
@@ -262,16 +264,24 @@ class Engine(object):
     self.inferrer.start()
 
   def stop_continuous_inference(self):
-    if self.inferrer is not None:
+    "Atomically stop continuous inference and return whether it was program, and if so what program."
+    inferrer_obj = self.inferrer # Read self.inferrer atomically, just in case.
+    if inferrer_obj is not None:
       # Running CI in Python
-      self.inferrer.stop()
+      program = inferrer_obj.stop()
       self.inferrer = None
+    else:
+      program = None
+    if program is not None:
+      return {"running":True, "expression":program}
+    else:
+      return {"running":False}
 
   def on_continuous_inference_thread(self):
     inferrer_obj = self.inferrer # Read self.inferrer atomically, just in case.
     # The time that self.inferrer is not None is a superset of
     # lifetime of the continuous inference thread.
-    if inferrer_obj is None:
+    if inferrer_obj is None or inferrer_obj.crashed:
       return False
     # Otherwise, the first thing the continuous inference thread does
     # is set the inference_thread_id to its identifier, so if it is
@@ -334,6 +344,7 @@ class ContinuousInferrer(object):
     self.inferrer = threading.Thread(target=self.infer_continuously, args=(self.program,))
     self.inferrer.daemon = True
     self.inference_thread_id = None
+    self.crashed = False
 
   def start(self):
     self.inferrer.start()
@@ -342,16 +353,25 @@ class ContinuousInferrer(object):
     self.inference_thread_id = threading.currentThread().ident
     # Can use the storage of the thread object itself as the semaphore
     # controlling whether continuous inference proceeds.
-    while self.inferrer is not None:
-      # TODO React somehow to values returned by the inference action?
-      # Currently suppressed for fear of clobbering the prompt
-      self.engine.ripl.infer(program)
-      time.sleep(0.0001) # Yield to be a good citizen
+    try:
+      while self.inferrer is not None:
+        # TODO React somehow to values returned by the inference action?
+        # Currently suppressed for fear of clobbering the prompt
+        self.engine.ripl.infer(program)
+        time.sleep(0.0001) # Yield to be a good citizen
+    except Exception: # pylint:disable=broad-except
+      self.crashed = True
+      import traceback
+      traceback.print_exc()
 
   def stop(self):
     inferrer = self.inferrer
     self.inferrer = None # Grab the semaphore
     inferrer.join()
+    if self.crashed:
+      return None
+    else:
+      return self.program
 
 # Inference prelude
 

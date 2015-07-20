@@ -17,30 +17,30 @@
 
 // Run me with venture puma -f trickiness-concrete.vnts
 
-infer resample(400)
-assume is_tricky = bernoulli(0.1)
+infer resample(400);
+assume is_tricky = bernoulli(0.1);
 assume weight = if (is_tricky) {
   uniform_continuous(0, 1)
 } else {
   0.5
-}
-infer bind(collect(is_tricky), curry3(plotf_to_file, quote(concrete_prior_trick_mar), quote( h0)))
-infer bind(collect(weight), curry3(plotf_to_file, quote(concrete_prior_weight_mar), quote(h0)))
-infer bind(collect(is_tricky, weight), curry3(plotf_to_file, quote(concrete_prior_joint), quote(p0d1d)))
-observe bernoulli(weight) = 1
-observe bernoulli(weight) = 1
-observe bernoulli(weight) = 1
-infer bind(collect(is_tricky), curry3(plotf_to_file, quote(concrete_obs_trick_mar), quote(h0)))
-infer bind(collect(weight), curry3(plotf_to_file, quote(concrete_obs_weight_mar), quote(h0)))
-infer bind(collect(is_tricky, weight), curry3(plotf_to_file, quote(concrete_obs_joint), quote(p0d1d)))
-infer mh(default, one, 3)
-infer bind(collect(is_tricky), curry3(plotf_to_file, quote(concrete_trick_mar), quote(h0)))
-infer bind(collect(weight), curry3(plotf_to_file, quote(concrete_weight_mar), quote(h0)))
-infer bind(collect(is_tricky, weight), curry3(plotf_to_file, quote(concrete_joint), quote(p0d1d)))
-observe bernoulli(weight) = 1
-observe bernoulli(weight) = 1
-observe bernoulli(weight) = 1
-infer mh(default, one, 3)
-infer bind(collect(is_tricky), curry3(plotf_to_file, quote(concrete_more_data_trick_mar), quote(h0)))
-infer bind(collect(weight), curry3(plotf_to_file, quote(concrete_more_data_weight_mar), quote(h0)))
-infer bind(collect(is_tricky, weight), curry3(plotf_to_file, quote(concrete_more_data_joint), quote(p0d1d)))
+};
+infer bind(collect(is_tricky), curry3(plotf_to_file, quote(concrete_prior_trick_mar), quote( h0)));
+infer bind(collect(weight), curry3(plotf_to_file, quote(concrete_prior_weight_mar), quote(h0)));
+infer bind(collect(is_tricky, weight), curry3(plotf_to_file, quote(concrete_prior_joint), quote(p0d1d)));
+observe bernoulli(weight) = 1;
+observe bernoulli(weight) = 1;
+observe bernoulli(weight) = 1;
+infer bind(collect(is_tricky), curry3(plotf_to_file, quote(concrete_obs_trick_mar), quote(h0)));
+infer bind(collect(weight), curry3(plotf_to_file, quote(concrete_obs_weight_mar), quote(h0)));
+infer bind(collect(is_tricky, weight), curry3(plotf_to_file, quote(concrete_obs_joint), quote(p0d1d)));
+infer mh(default, one, 3);
+infer bind(collect(is_tricky), curry3(plotf_to_file, quote(concrete_trick_mar), quote(h0)));
+infer bind(collect(weight), curry3(plotf_to_file, quote(concrete_weight_mar), quote(h0)));
+infer bind(collect(is_tricky, weight), curry3(plotf_to_file, quote(concrete_joint), quote(p0d1d)));
+observe bernoulli(weight) = 1;
+observe bernoulli(weight) = 1;
+observe bernoulli(weight) = 1;
+infer mh(default, one, 3);
+infer bind(collect(is_tricky), curry3(plotf_to_file, quote(concrete_more_data_trick_mar), quote(h0)));
+infer bind(collect(weight), curry3(plotf_to_file, quote(concrete_more_data_weight_mar), quote(h0)));
+infer bind(collect(is_tricky, weight), curry3(plotf_to_file, quote(concrete_more_data_joint), quote(p0d1d)));
