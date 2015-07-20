@@ -132,8 +132,10 @@ assume x = normal(0, 1)
 Now `x` is a normally distributed random variable, and its current
 value is a sample from that distribution.
 
-Assumed and defined variables live in separate namespaces in Venture,
-so just a bare `x` gives an error:
+Assumed and defined variables live in separate namespaces in
+VentureScript: `define` goes into the toplevel namespace,
+and `assume` goes in the model namespace.  Bare expressions
+are evaluated in the toplevel namespace, so just typing `x` gives an error:
 
 ```venture
 x
@@ -144,6 +146,9 @@ To access the current value of an assumed variable, we use `sample`
 ```venture
 sample x
 ```
+
+because `sample` runs its expression in the model namespace (without
+altering the content of the model).
 
 Note that repeated access to `x` gives the same value each time:
 
