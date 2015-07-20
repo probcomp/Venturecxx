@@ -15,9 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.config import get_ripl, on_inf_prim
+from venture.test.config import get_ripl, on_inf_prim, broken_in
 
 @on_inf_prim("gibbs")
+@broken_in("puma", "Strings turn into symbols when passed to Puma")
 def testStringScopeGibbs():
   """Check that using unnormalized values (like strings) as scope
   identifiers doesn't cause Gibbs to crash due to failed PMap
