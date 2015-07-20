@@ -116,6 +116,7 @@ assume ccomponents = array(
 assume cweights = simplex(0.5, 0.5);
 assume cf = categorical(cweights, ccomponents);
 
+// Observe data points (with modelled noise variance cv)
 assume cv = 1.0;
 define obs_cf = proc(xy) {
     run(do(
@@ -129,6 +130,7 @@ define data = zip(data_xs, data_ys);
 infer return(mapv(obs_cf, data));
 infer incorporate();
 
+// Plot several snapshots of the inferred posterior
 define xs = linspace(0, 10, 200);
 define yss = mapv(proc(i) {
     run(do(
@@ -151,9 +153,9 @@ data and sine waves incur a penalty due to the rising pattern of the data.
 huemax, linewidth)` works as follows: scatterplot of `data_xs` versus
 `data_ys`, as well as line plots of `ys` versus `xs` for each `ys` in `yss`.
 As the line plots progress from the first entry of `yss` to the last entry of
-`yss`, the hue of the drawn line progresses from `huemin` to `huemax`.  The
-lines have width `linewidth`, with 1 being the normal width.  The plot should
-show up in a matplotlib window.)
+`yss`, the hue of the drawn line progresses from `huemin` to `huemax` (with
+hues being on a scale from 0 to 1).  The lines have width `linewidth`, with 1
+being the normal width.  The plot should show up in a matplotlib window.)
 
 Another interesting case of mixture regression is when the mixture components
 are models of increasing power, where more powerful models are harder to
@@ -182,6 +184,7 @@ assume pweights = simplex(0.3, 0.3, 0.4);
 assume pnum = tag(quote(pnum), 0, categorical(pweights));
 assume pf = lookup(pcomponents, pnum);
 
+// Observe data points (with modelled noise variance pv)
 assume pv = 1.0;
 define obs_pf = proc(xy) {
     run(do(
@@ -195,6 +198,7 @@ define data = zip(xs, ys);
 infer return(mapv(obs_pf, data));
 infer incorporate();
 
+// Do inference, and plot the inferred values of r and pnum over time
 define dataset = run(accumulate_dataset(<%= smaller_sample_size %>,
     do(if(eq(run(sample(pnum)), atom<2>)) { mh(quote(r), one, 10) } else { pass },
        mh(quote(pnum), one, 10),
@@ -250,8 +254,11 @@ viewed as random functions, see Section 2.2 of [Rasmussen and
 Williams](http://www.gaussianprocess.org/gpml/chapters/RW2.pdf).
 
 ```venture
+// Covariance function
 assume se = make_squaredexp(1.2, 0.8);
+// Mean function
 assume zero_func = make_const_func(0.0);
+// Gaussian process
 assume g = make_gp(zero_func, se);
 ```
 
@@ -271,6 +278,7 @@ define data_ys = array(8.7, 0.2, 5.5);
 infer observe(g(data_xs), data_ys);
 infer incorporate();
 
+// Plot several samples of the gp
 define xs = linspace(0, 10, 200);
 define yss = mapv(proc(i) {
     run(do(
@@ -291,8 +299,10 @@ from the joint distribution of the GP's values on all supplied inputs.
 Exercise: verify and explain why the following two commands are not equivalent:
 
 ```venture
+// Command 1
 assume gg = proc(x) { lookup(g(array(x)), 0) };
 sample array(gg(1.0), gg(2.0));
+// Command 2
 sample g(array(1.0, 2.0));
 ```
 
@@ -389,6 +399,7 @@ define V_emu_pointwise = proc(x) {
                       0)))
 };
 
+// Main inference loop (notice how concise it is)
 infer repeat(15, do(pass,
     // Probe V at the point mc_argmax(V_emu_pointwise)
     predict(first(V_package)(unquote(mc_argmax(V_emu_pointwise)))),
