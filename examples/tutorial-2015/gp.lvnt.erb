@@ -33,7 +33,7 @@ A Simple Mixture Model
 ======================
 
 One simple way to define a mixture model is to choose a mixture component at
-top-level, and define each component in separate code path.
+top-level, and define each component in a separate code path.
 
 ```venture
 assume mcomponents = array(
@@ -88,17 +88,22 @@ The remaining components are `uniform_continuous(0, 10)` and
 `uniform_continuous(0, 5)`.
 
 Notice that `uniform_continuous(0, 10)` is much less probable than
-`uniform_continuous(0, 5)` in the posterior, whereas it was equally probable in
-the prior.  This is a case of the _Bayesian Occam's razor:_ Bayesian inference
-"automatically" favors parsimonious models.  Said differently, in the presence
-of data, the likelihood will penalize models with overly broad explanatory
-power.  In the present case this shows up as: if `mf` were
-`uniform_continuous(0, 10)`, wouldn't it be a suspicious coincidence that three
-independent samples of `mf()` were all between 3 and 5?  The coincidence would
-be much less suspicious if `mf` were `uniform_continuous(0, 5)`.
+`uniform_continuous(0, 5)` in the posterior, whereas it was equally
+probable in the prior.  This is a case of the _Bayesian Occam's
+razor:_ among models that agree with the data, Bayesian inference
+automatically favors more parsimonious ones, because they are better
+able to concentrate predictive mass.  Said differently, confirmation is
+more impressive for a more constrained prediction.
+
+In the present case this shows up thus: if `mf` were
+`uniform_continuous(0, 10)`, wouldn't it be a suspicious coincidence
+that three independent samples of `mf()` were all between 3 and 5?
+The coincidence would be much less suspicious if `mf` were
+`uniform_continuous(0, 5)`.
 
 Regression With a Mixture
 =========================
+
 Taking the above one step further, we can use a mixture model to perform
 regression.  The following code asks, "what is the posterior on models that are
 either linear or sine wave, conditioned on the given data?"
@@ -228,7 +233,7 @@ parameters for that component.  That cartoon often doesn't correctly capture
 the Bayesian picture of inference.  The posterior probability of a component is
 the _average_ goodness (in terms of likeilhood) of using that component with
 parameters drawn randomly from the prior.  So the question of whether one
-particular MAP solution will dominate the posterior depends not just on (1) how
+particular max a-posteriori (MAP) solution will dominate the posterior depends not just on (1) how
 likely the MAP solution is, but also on (2) the prior on parameters, and (3)
 how wide a region of very-good solutions surround the MAP, which is related to
 how sensitive the likelihood is to small changes in the parameters.  In the
@@ -317,9 +322,10 @@ covariance function, if we had in mind a generative model of covariance
 function structures.
 
 
-gpmem
-=====
-We recently developed language support for a new idiom for GP modelling, called
+Gaussian Process Memoization
+============================
+
+We recently developed language support for a new idiom for GP modeling, called
 _Gaussian process memoization_, or `gpmem`.  The idea is to wrap a function `f`
 into a package containing both a self-caching "prober" (which actually calls
 `f`) and a statistical emulator, which simulates `f` using a GP prior
@@ -364,8 +370,8 @@ to hear them.
 
 Bayesian Optimization Example
 -----------------------------
-The example below showcases several nice features of `gpmem` and GP modelling
-in Venture.  In the code below we aim to find the maximum value of our
+The example below showcases several nice features of `gpmem` and GP modeling
+in VentureScript.  In the code below we aim to find the maximum value of our
 expensive function `V` on the interval [-20, 20] using as few evaluations of
 `V` as possible.  We do this by wrapping `V` in a `gpmem` and repeatedly using
 the GP-based emulator to find a point where we have the most evidence than `V`
