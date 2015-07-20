@@ -720,6 +720,14 @@ Return the weights of all extant particles as an array of numbers (in log space)
                    desc="""\
 Set the weights of the particles to the given array.  It is an error if the length of the array differs from the number of particles. """),
 
+  engine_method_sp("for_each_particle",
+                   infer_action_maker_type([t.AnyType("<action>")], t.ListType()), desc="""\
+Run the given inference action once for each particle in the
+model. The inference action is evaluated independently for each
+particle, and is not allowed to contain modeling commands (``assume``,
+``observe``, ``predict``, ``forget``, ``freeze``).
+"""),
+
   engine_method_sp("load_plugin", infer_action_maker_type([t.SymbolType("filename")], return_type=t.AnyType(), variadic=True), desc="""\
 Load the plugin located at <filename>.
 

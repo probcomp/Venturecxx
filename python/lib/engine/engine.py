@@ -203,6 +203,28 @@ class Engine(object):
       self.model = current_model
       self.swapped_model = current_swapped_status
 
+  def for_each_particle(self, action):
+    ripl = self.ripl
+    # disallow the ripl.
+    class NoRipl(object):
+      def __getattr__(self, attr):
+        raise Exception('Modeling commands not allowed in for_each_particle.')
+    self.ripl = NoRipl()
+    # TODO asStackDict doesn't do the right thing because it tries to
+    # be politely printable.  Maybe I should change that.
+    stack_dict_action = {"type":"SP", "value":action}
+    program = [v.sym("run"), v.quote(stack_dict_action)]
+    def do_action(_trace):
+      with self.inference_trace():
+        did = self._do_evaluate(program)
+        ans = self.infer_trace.extractRaw(did)
+        self.infer_trace.uneval(did) # TODO This becomes "forget" after the engine.Trace wrapper
+        return ans
+    try:
+      return self.model.for_each_trace_sequential(do_action)
+    finally:
+      self.ripl = ripl
+
   def infer(self, program):
     if self.is_infer_loop_program(program):
       assert len(program) == 2

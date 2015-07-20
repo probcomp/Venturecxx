@@ -192,6 +192,27 @@ if freeze has been used.
     for i, increment in enumerate(weight_increments):
       self.log_weights[i] += increment
 
+  def for_each_trace_sequential(self, f):
+    # TODO is there any way to do something like this while leveraging
+    # parallelism?
+    traces = self.retrieve_traces()
+    weights = self.log_weights
+    try:
+      res = []
+      new_traces = []
+      new_weights = []
+      for trace, weight in zip(traces, weights):
+        self.create_trace_pool([trace], [weight])
+        ans = f(trace)
+        res.append(ans)
+        new_traces += self.retrieve_traces()
+        new_weights += self.log_weights
+      traces = new_traces
+      weights = new_weights
+      return res
+    finally:
+      self.create_trace_pool(traces, weights)
+
   def primitive_infer(self, exp):
     self.traces.map('primitive_infer', exp)
 
