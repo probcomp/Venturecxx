@@ -296,7 +296,7 @@ In order to do so, we can make use of Venture's plugin infrastructure
 to load external code written in Python. In this case, we've provided
 a custom plugin that produces an animated curve-fitting visualization
 that can be updated during the inference program. Download
-[curve-fitting.py](curve-fitting.py) and load it into Venture using
+[curve-fitting.py](curve-fitting.py) and load it into VentureScript using
 
 ```venture
 run(load_plugin("curve-fitting.py"))
@@ -319,7 +319,8 @@ which should render a plot that looks like this:
 
 The blue line is the current guess.  The green points are the
 observations; the error bars around them reach twice the standard
-deviation of the noise, above and below.
+deviation of the noise, above and below.  The number at the top left
+is the count of how many frames have been drawn.
 
 We can also plot multiple frames with inference commands interleaved
 
@@ -528,12 +529,15 @@ ones are inliers.
 stop_continuous_inference
 ```
 
+[TODO What exericses should we give on this segment?  Is this a good
+place to talk about Bayes Occam's Razor?]
+
 Topic: Using tags for inference control
 =======================================
 
 Now that we have a more complex model with more moving parts, we'd
 like to be able to treat each of those parts independently when it
-comes to deciding how to do inference. Venture provides a mechanism to
+comes to deciding how to do inference.  VentureScript provides a mechanism to
 tag different parts of the model program and then refer to those tags
 from inference commands.
 
@@ -643,10 +647,12 @@ like `default_markov_chain` does.
 stop_continuous_inference
 ```
 
+[TODO Maybe play with gradients or drift proposals for the weights?]
+
 Elaboration: Model Selection
 ============================
 
-[TODO Go through this]
+[TODO Go through this, or drop it]
 
 ```church'
 clear
@@ -701,7 +707,8 @@ clear
       (collect a b)))))]
 ```
 
-[TODO illustrate and elaborate] Inference phenomenon: Bayes Occam's Razor
+[TODO Discuss how Bayes Occam's Razor happens again, namely over the
+extra degree of the curve]
 
 [< Prev: Basic VentureScript](../basics/index.html)
 [^ Top](../index.html)
