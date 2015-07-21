@@ -20,15 +20,6 @@
 
 // Data obtained from: https://github.com/cran/Flury/blob/master/data/
 
-// Absolute value function.
-assume abs = proc(x) {
-  if (x < 0) {
-    0 - x
-  } else {
-    x
-  }
-};
-
 // Female average
 assume mu_f = tag("param", "mu_f", normal(86, 1));
 
