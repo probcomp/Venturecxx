@@ -1,5 +1,5 @@
-venture.ripl.ripl module
-------------------------
+Read Infer Predict Layer: module venture.ripl.ripl
+--------------------------------------------------
 
 .. automodule:: venture.ripl.ripl
     :members:
