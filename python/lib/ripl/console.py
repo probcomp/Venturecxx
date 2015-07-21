@@ -177,7 +177,7 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def do_infer(self, s):
     '''Run inference synchronously.'''
-    out = self.ripl.infer(s if s else None)
+    out = self._do_instruction('infer', self.ripl.defaultInferProgram(s if s else None))
     if isinstance(out, dict):
       if len(out) > 0: print out
     else:
