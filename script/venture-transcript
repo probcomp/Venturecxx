@@ -219,7 +219,6 @@ class Writer(object):
 
     def finish(self):
         result = ''.join(self.out_chunks)
-        print result
         marked_down = markdown2.markdown(result, extras=['fenced-code-blocks', 'markdown-in-html', 'toc'])
         with open(self.outfile, 'w') as out:
             out.write(header(self.title))
