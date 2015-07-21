@@ -116,7 +116,13 @@ Regression With a Mixture
 =========================
 
 Taking the above one step further, we can use a mixture model to perform
-regression.  The following code asks, "what is the posterior on models that are
+regression.  Feel free to clear your session
+
+```venture
+clear
+```
+
+The following code asks, "what is the posterior on models that are
 either linear or sine wave, conditioned on the given data?"
 
 ```venture
@@ -185,6 +191,9 @@ As the line plots progress from the first entry of `yss` to the last entry of
 hues being on a scale from 0 to 1).  The lines have width `linewidth`, with 1
 being the normal width.  The plot should show up in a matplotlib window.)
 
+Progressive Mixture Regression
+==============================
+
 Another interesting case of mixture regression is when the mixture components
 are models of increasing power, where more powerful models are harder to
 tune/fit to the data.  In that case mixture regression can be viewed as a way
@@ -197,8 +206,13 @@ data as shown below:
 
 We have drawn in curves for each of the three mixture components we will be
 using in our mixture model: `y = 0.9` (blue), `y = 1/x` (green), and `y = x^r`
-(magenta, with parameter value `r = -0.6`).  Now let's look at a probabilistic
-program for regression using this mixture:
+(magenta, with parameter value `r = -0.6`).  Now let's clear our session
+
+```venture
+clear
+```
+
+and look at a probabilistic program for regression using this mixture:
 
 ```venture
 assume r = tag(quote(r), 0, 0 - beta(2,2));
@@ -272,7 +286,7 @@ model have a describable effect on the behavior of inference?
 Gaussian Process Regression
 ===========================
 
-While the above examples rergess nonlinearly on a data set, they are still
+While the above examples rergess nonlinearly on a data set, the mixture components are still
 hard-coded parametric models, and as such, the amount of modeller/programmer
 resources required to write them grows with the complexity of the model.
 
@@ -281,6 +295,10 @@ itself" in the sense that the "effective dimensionality" of the model grows
 with the number of data points.  For an introduction to Gaussian processes
 viewed as random functions, see Section 2.2 of [Rasmussen and
 Williams](http://www.gaussianprocess.org/gpml/chapters/RW2.pdf).
+
+```venture
+clear
+```
 
 This segment requires a [more elaborate plugin](gpexample_plugin.py),
 where we implement a Gaussian process as a foreign stochastic procedure.
