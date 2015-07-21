@@ -23,12 +23,6 @@ You can also run a file such as `script.vnts` using
 $ venture -f script.vnts
 ```
 
-We'll be using a plugin.  Load it with
-
-```venture
-run(load_plugin("gpexample_plugin.py"));
-```
-
 A Simple Mixture Model
 ======================
 
@@ -135,7 +129,7 @@ define data = zip(data_xs, data_ys);
 infer return(mapv(obs_cf, data));
 infer incorporate();
 
-// Plot several snapshots of the inferred posterior
+// Collect several snapshots of the inferred posterior
 define xs = linspace(0, 10, 200);
 define yss = mapv(proc(i) {
     run(do(
@@ -143,7 +137,19 @@ define yss = mapv(proc(i) {
         mh(default, one, <%= mixreg_increment = sample_size.div(10) %>),
         return(ys)))
     }, linspace(0, 0, 10));
-infer return(plot_lines(xs, yss, data_xs, data_ys, -2, 2, 0.5, 1.0, 1.0));
+```
+
+We're going to use a [small plugin](multiline_plot_plugin.py) to make
+a custom plot.  Download it and load it into VentureScript with
+
+```venture
+run(load_plugin("multiline_plot_plugin.py"));
+```
+
+then plot, for example, with
+
+```venture
+plot_lines(xs, yss, data_xs, data_ys, -2, 2, 0.5, 1.0, 1.0);
 ```
 
 ![Plots of f as inference progresses](gp_mixreg_hardcoded.png)
@@ -257,6 +263,14 @@ itself" in the sense that the "effective dimensionality" of the model grows
 with the number of data points.  For an introduction to Gaussian processes
 viewed as random functions, see Section 2.2 of [Rasmussen and
 Williams](http://www.gaussianprocess.org/gpml/chapters/RW2.pdf).
+
+This segment requires a [more elaborate plugin](gpexample_plugin.py),
+where we implement a Gaussian process as a foreign stochastic procedure.
+Load it with
+
+```venture
+run(load_plugin("gpexample_plugin.py"));
+```
 
 ```venture
 // Covariance function
