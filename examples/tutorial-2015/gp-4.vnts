@@ -1,0 +1,22 @@
+// Covariance function
+assume se = make_squaredexp(1.2, 0.8);
+
+// Mean function
+assume zero_func = make_const_func(0.0);
+
+// Gaussian process
+assume g = make_gp(zero_func, se);
+
+// Data
+assume data_xs = array(3.2, 2.2, 8.7);
+define data_ys = array(8.7, 0.2, 5.5);
+infer observe(g(data_xs), data_ys);
+
+// Plot several samples of the gp
+define xs = linspace(0, 10, 200);
+define yss = mapv(proc(i) {
+    run(do(
+        ys <- sample(g(unquote(xs))),
+        return(ys)))
+    }, linspace(0, 0, 10));
+plot_lines(xs, yss, run(sample(data_xs)), data_ys, -5, 12, 1.0, 1.0, 0.5);

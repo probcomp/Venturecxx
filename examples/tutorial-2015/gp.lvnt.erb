@@ -141,50 +141,12 @@ a custom plot.  Download it and load it into VentureScript with
 run(load_plugin("multiline_plot_plugin.py"));
 ```
 
-The following code asks, "what is the posterior on models that are
+The following code ([gp-2.vnts](gp-2.vnts)) asks, "what is the posterior on models that are
 either linear or sine wave, conditioned on the given data?"
+<% mixreg_increment = sample_size.div(10) %>
 
 ```venture
-// Coefficient priors
-assume a = uniform_continuous(-2, 2);
-assume b = uniform_continuous(-2, 2);
-assume c = uniform_continuous(-2, 2);
-assume d = uniform_continuous(0, 3);
-assume e = uniform_continuous(0, 2*3.14159);
-
-// Mixture
-assume components = array(
-    proc(x) { a*x + b },
-    proc(x) { c*sin(d*x + e) }
-    );
-assume weights = simplex(0.5, 0.5);
-assume true_f = categorical(weights, components);
-
-// Data (inline, in this case)
-define data_xs = array(8.73, 7.47, 0.11, 0.26, 3.94, 4.86, 4.07, 5.65, 9.1, 6.62, 9.98, 3.54, 8.12, 5.17, 5.39);
-define data_ys = array(0.53, 0.67, 0.23, 0.02, 0.13, 0.27, 0.33, 0.04, 0.68, 0.17, 0.1, 0.16, 0.53, 0.42, 0.4);
-define data = zip(data_xs, data_ys);
-
-// Function for programmatically observing the data
-define obs = proc(xy) {
-    run(do(
-        x <- return(lookup(xy, 0)),
-        y <- return(lookup(xy, 1)),
-        observe(normal(true_f(unquote(x)), 1.0), y)))
-};
-mapv(obs, data);
-
-// Collect several snapshots of the progress of inference
-define xs = linspace(0, 10, 200);
-define yss = mapv(proc(i) {
-    run(do(
-        ys <- sample(mapv(true_f, unquote(xs))),
-        mh(default, one, <%= mixreg_increment = sample_size.div(10) %>),
-        return(ys)))
-    }, linspace(0, 0, 10));
-
-// Plot them
-plot_lines(xs, yss, data_xs, data_ys, -2, 2, 0.5, 1.0, 1.0);
+<%= `cat gp-2.vnts`.strip().sub("mh(default, one, 50)", "mh(default, one, #{mixreg_increment})") %>
 ```
 
 ![Plots of f as inference progresses](gp_mixreg_hardcoded.png)
@@ -228,42 +190,11 @@ clear
 run(load_plugin("multiline_plot_plugin.py"));
 ```
 
-and look at a probabilistic program for regression using this mixture:
+and look at a probabilistic program for regression using this mixture
+([gp-3.vnts](gp-3.vnts)):
 
 ```venture
-// Parameter for component 2
-assume r = tag(quote(r), 0, 0 - beta(2,2));
-
-// Mixture
-assume pcomponents = array(
-    proc(x) { 0.9 },           // component 0
-    proc(x) { pow(x, -1) },    // component 1
-    proc(x) { pow(x, r) }      // component 2
-    );
-assume pweights = simplex(0.3, 0.3, 0.4);
-assume pnum = tag(quote(pnum), 0, categorical(pweights));
-assume pf = lookup(pcomponents, pnum);
-
-// Data
-define xs = array(0.67, 3.58, 2.52, 1.09, 0.7, 0.4);
-define ys = array(1.19, 0.47, 0.67, 0.9, 1.09, 1.67);
-define data = zip(xs, ys);
-
-// Observe data points
-define obs_pf = proc(xy) {
-    run(do(
-        x <- return(lookup(xy, 0)),
-        y <- return(lookup(xy, 1)),
-        observe(normal(pf(unquote(x)), 1.0), y)))
-};
-mapv(obs_pf, data);
-
-// Do inference, and plot the inferred values of r and pnum over time
-define dataset = run(accumulate_dataset(<%= smaller_sample_size %>,
-    do(if(eq(run(sample(pnum)), atom<2>)) { mh(quote(r), one, 10) } else { pass },
-       mh(quote(pnum), one, 10),
-       collect(pnum, r))));
-plot("p0d1dcd", dataset);
+<%= `cat gp-3.vnts`.strip().sub("accumulate_dataset(100", "accumulate_dataset(#{smaller_sample_size}") %>
 ```
 
 Above, the parameter `r` is plotted against `pnum` (where `pnum = 0` for `y =
@@ -332,8 +263,10 @@ and set up the Gaussian process like so
 ```venture
 // Covariance function
 assume se = make_squaredexp(1.2, 0.8);
+
 // Mean function
 assume zero_func = make_const_func(0.0);
+
 // Gaussian process
 assume g = make_gp(zero_func, se);
 ```
@@ -365,6 +298,8 @@ plot_lines(xs, yss, run(sample(data_xs)), data_ys, -5, 12, 1.0, 1.0, 0.5);
 ```
 
 ![Posterior of toy GP](gp_toy_posterior.png)
+
+(The above two VentureScript blocks are [gp-4.vnts](gp-4.vnts).)
 
 The posterior of `g` is again a Gaussian process (several samples of which are
 plotted above), with a different mean function and a different covariance
@@ -412,30 +347,14 @@ into a package containing both a self-caching "prober" (which actually calls
 `f`) and a statistical emulator, which simulates `f` using a GP prior
 conditioned on the values of all previous invocations of the prober.  The
 arguments to `gpmem` are the function `f`, a prior mean function for the
-GP-based emulator, and a prior covariance function.  For example:
+GP-based emulator, and a prior covariance function.  For example ([gp-5.vnts](gp-5.vnts)):
 
 ```venture
 clear
 ```
 
 ```venture
-run(load_plugin("gpexample_plugin.py"));
-
-// Function to model
-assume f = make_audited_expensive_function("f");
-
-// Mean and covariance functions for the GP emulator
-assume zero_func = make_const_func(0.0);
-assume se = make_squaredexp(1.2, 0.8);
-
-// GPMem package
-assume package = gpmem(f, zero_func, se);
-
-// Test
-assume ffive = first(package)(5);
-assume fsix = first(package)(6);
-
-sample second(package)(array(5.5))
+<%= `cat gp-5.vnts`.strip() %>
 ```
 
 Note that the emulator expects an array as input (since it is a GP, as above),
@@ -473,45 +392,14 @@ the GP-based emulator to find a point where we have the most evidence than `V`
 will be large.  We probe `V` at said point, which gives our GP model more
 information to choose the next probe point.  In addition, we perform
 Metropolis-Hastings inference on the hyperparameters of the covariance function
-after each probe.
+after each probe ([gp-6.vnts](gp-6.vnts)).
 
 ```venture
 clear
 ```
 
 ```venture
-run(load_plugin("gpexample_plugin.py"));
-
-// The target
-assume V = make_audited_expensive_function("V");
-
-// The GP memoizer
-assume zero_func = make_const_func(0.0);
-assume V_sf = tag(quote(hyper), 0, uniform_continuous(0, 10));
-assume V_l = tag(quote(hyper), 1, uniform_continuous(0, 10));
-assume V_se = make_squaredexp(V_sf, V_l);
-assume V_package = gpmem(V, zero_func, V_se);
-
-// A very naive estimate of the argmax of the given function
-define mc_argmax = proc(func) {
-  candidate_xs = mapv(proc(i) {uniform_continuous(-20, 20)},
-                      linspace(0, 19, 20));
-  candidate_ys = mapv(func, candidate_xs);
-  lookup(candidate_xs, argmax_of_array(candidate_ys))
-};
-
-// Shortcut to sample the emulator at a single point without packing
-// and unpacking arrays
-define V_emu_pointwise = proc(x) {
-    run(sample(lookup(second(V_package)(array(unquote(x))), 0)))
-};
-
-// Main inference loop
-infer repeat(15, do(pass,
-    // Probe V at the point mc_argmax(V_emu_pointwise)
-    predict(first(V_package)(unquote(mc_argmax(V_emu_pointwise)))),
-    // Infer hyperparameters
-    mh(quote(hyper), one, 50)));
+<%= `cat gp-6.vnts`.strip() %>
 ```
 
 Here is a visualization of a run of this program (not the same run as above),

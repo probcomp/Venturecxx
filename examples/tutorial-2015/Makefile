@@ -15,7 +15,7 @@ vis-outlier.png: mk_outlier_frame.vnts curve-fitting.py
 	venture lite -L curve-fitting.py -f $<
 
 REGRESSION_DOWNLOADS = lin-reg-1.vnts lin-reg-2.vnts lin-reg-3.vnts reg-test.csv curve-fitting.py lin-reg-demo.vnts
-GP_DOWNLOADS = gpexample_plugin.py gpmem.py multiline_plot_plugin.py gp-1.vnts
+GP_DOWNLOADS = gpexample_plugin.py gpmem.py multiline_plot_plugin.py gp-1.vnts gp-2.vnts gp-3.vnts gp-4.vnts gp-5.vnts gp-6.vnts
 
 BASIC_ASSETS = gauss_plot.png
 REGRESSION_ASSETS = $(REGRESSION_DOWNLOADS) vis-frame.png vis-outlier.png

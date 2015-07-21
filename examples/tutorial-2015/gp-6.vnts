@@ -1,0 +1,32 @@
+run(load_plugin("gpexample_plugin.py"));
+
+// The target
+assume V = make_audited_expensive_function("V");
+
+// The GP memoizer
+assume zero_func = make_const_func(0.0);
+assume V_sf = tag(quote(hyper), 0, uniform_continuous(0, 10));
+assume V_l = tag(quote(hyper), 1, uniform_continuous(0, 10));
+assume V_se = make_squaredexp(V_sf, V_l);
+assume V_package = gpmem(V, zero_func, V_se);
+
+// A very naive estimate of the argmax of the given function
+define mc_argmax = proc(func) {
+  candidate_xs = mapv(proc(i) {uniform_continuous(-20, 20)},
+                      linspace(0, 19, 20));
+  candidate_ys = mapv(func, candidate_xs);
+  lookup(candidate_xs, argmax_of_array(candidate_ys))
+};
+
+// Shortcut to sample the emulator at a single point without packing
+// and unpacking arrays
+define V_emu_pointwise = proc(x) {
+    run(sample(lookup(second(V_package)(array(unquote(x))), 0)))
+};
+
+// Main inference loop
+infer repeat(15, do(pass,
+    // Probe V at the point mc_argmax(V_emu_pointwise)
+    predict(first(V_package)(unquote(mc_argmax(V_emu_pointwise)))),
+    // Infer hyperparameters
+    mh(quote(hyper), one, 50)));
