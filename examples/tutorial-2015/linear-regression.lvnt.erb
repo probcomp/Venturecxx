@@ -520,8 +520,30 @@ ones are inliers.
 stop_continuous_inference
 ```
 
-[TODO What exericses should we give on this segment?  Is this a good
-place to talk about Bayes Occam's Razor?]
+<% TODO What exericses should we give on this segment? Make gradients do the following thing? %>
+
+If you are used to least squares regression, the above model may look
+a bit weird.  A search process that was trying to minimize, say,
+squared error on inliers would be very happy to just call every data
+point an outlier and be done with it.  Why doesn't the Markov chain
+decide to do that?
+
+This is an instance of the phenomenon known as _Bayesian Occam's
+Razor_.  On this example, it works as follows: Since we are being
+fully Bayesian here, we have to give a probability model for the
+outliers as well as the inliers.  Since it's a probability model, its
+total mass per data point must add up to 1, just like the inlier
+model's total mass per data point.  Since the point of the outlier
+model is to assign reasonable probability to a broad range of points
+(outliers!), it perforce cannot assign very high mass to any of them
+-- necessarily lower than the mass the inlier model assigns to points
+sufficiently near the line.  Consequently, several nearly colinear
+points are much more likely to be inliers on a line than to all be
+outliers; and the Markov chain, being a correct algorithm, finds this.
+Philosophically, one might call the outlier model "complex", in the
+sense of being high entropy; and Bayesian Occam's Razor automatically
+causes the posterior to prefer lower entropy -- "simpler" --
+explanations.
 
 Topic: Using tags for inference control
 =======================================
