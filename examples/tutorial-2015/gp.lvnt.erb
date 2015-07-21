@@ -1,3 +1,5 @@
+Title: Advanced Curve Fitting: Mixture Models and Gaussian Processes
+
 <% sample_size = 500 %>
 <% if ENV['SMOKETEST'] then sample_size = 5 end %>
 <% smaller_sample_size = [sample_size / 5, 5].max %>
@@ -5,6 +7,21 @@
 
 [< Prev: More VentureScript: Linear Regression](../linear-regression/index.html)
 [^ Top](../index.html)
+
+Advanced Curve Fitting: Mixture Models and Gaussian Processes
+=============================================================
+
+In this chapter, we will take a dive into some more advanced modeling
+idioms.  We will move faster than we did in previous chapters.  You
+can skim this for a flavor of the sorts of things that are possible in
+VentureScript; and/or study the programs and refer to the [manual](<%=
+refman_url %>) for a deeper understanding of what's going on.
+
+We will also see more examples of extending Venture by writing and
+loading plugins.  [Plugins](<%= refman_url %>plugins.html) and foreign
+procedures generally are very much an intentional part of using
+VentureScript, both to take advantage of existing deterministic
+libraries and to interoperate with custom or legacy probabilistic codes.
 
 [%TOC%]
 
@@ -252,8 +269,9 @@ improbable in the posterior (but don't cheat -- the region from `r = -0.8` to
 model have a describable effect on the behavior of inference?
 
 
-GP Regression
-=============
+Gaussian Process Regression
+===========================
+
 While the above examples rergess nonlinearly on a data set, they are still
 hard-coded parametric models, and as such, the amount of modeller/programmer
 resources required to write them grows with the complexity of the model.
