@@ -1,0 +1,70 @@
+// Copyright (c) 2015 MIT Probabilistic Computing Project.
+//
+// This file is part of Venture.
+//
+// Venture is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Venture is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
+// Model from here:
+// http://ppaml.galois.com/wiki/attachment/wiki/SummerSchools/2015/LectureMaterials/PPAMLSS2015Foundations.pdf?format=raw
+
+// Data obtained from: https://github.com/cran/Flury/blob/master/data/
+
+// Absolute value function.
+assume abs = proc(x) {
+  if (x < 0) {
+    0 - x
+  } else {
+    x
+  }
+};
+
+// Female average
+assume mu_f = tag("param", "mu_f", normal(86, 1));
+
+// Male average
+assume mu_m = tag("param", "mu_m", normal(92, 1));
+
+// Standard deviations
+assume sigma_f = tag("param", "sigma_f", abs(student_t(1, 0, 3)));
+assume sigma_m = tag("param", "sigma_m", abs(student_t(1, 0, 3)));
+
+// Proportion of females
+assume phi = tag("param", "phi", uniform_continuous(0, 1));
+
+// Sex of n-th bird
+assume z = mem(proc(n) { tag("z", n, bernoulli(phi)) });
+
+// Wing length of n-th bird
+assume x = mem(proc(n) {
+  if (z(n)) {
+    normal(mu_f, sigma_f)
+  } else {
+    normal(mu_m, sigma_m)
+  }
+});
+
+// Read in the data
+run(pyexec("import pandas as pd"));
+run(pyexec("from collections import Counter"));
+run(pyexec("frame = pd.read_csv('pipits.csv')"));
+run(pyexec("counts = Counter(dict(zip(frame['Wing.Length'], frame['Frequency'])))"));
+run(pyexec("ripl.observe_dataset('x', enumerate(counts.elements()))"));
+run(pyexec("ripl.define('num_birds', sum(counts.values()))"));
+
+// Inference program
+define do_sweeps = proc(n) {
+  accumulate_dataset(n, do(gibbs("z", one, num_birds),
+                           mh("param", one, 10),
+                           collect(mu_m, mu_f, sigma_m, sigma_f, phi)))
+}
