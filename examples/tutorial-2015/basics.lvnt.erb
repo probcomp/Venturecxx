@@ -904,7 +904,8 @@ infer repeat(10, my_markov_chain);
 sample x
 ```
 
-And as before, let's plot the distribution it makes:
+Looks promising... now let's plot the distribution it makes, as we
+have been doing:
 
 ```venture
 plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>,
@@ -923,7 +924,7 @@ Exercises:
    <a href="javascript:toggle('answer-custom-mh-1')">(show answer)</a>
 
    <div class="answer" id="answer-custom-mh-1" markdown="1">
-   Answer: Shown below are plots after 30 and 100 transitions,
+   Answer: Shown below are plots after 30 and 60 transitions,
    respectively, which suggest that the chain has basically converged
    after 30 transitions.
 
@@ -937,13 +938,13 @@ Exercises:
    ```venture
    plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>,
       do(reset_to_prior,
-         repeat(100, my_markov_chain),
+         repeat(60, my_markov_chain),
          collect(x)))));
    ```
    </div>
 
-2. Run the chain for <%= sample_size %> transitions and plot the chain
-   history.  Compare this with <%= sample_size %> transitions of the
+2. Run a few independent chains for <%= sample_size %> transitions and plot the chain
+   histories.  Compare this with <%= sample_size %> transitions of the
    default Markov chain.  (Remember to `reset_to_prior` before each of
    these.)  Which one is more effective at moving toward and exploring
    the posterior?
