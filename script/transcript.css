@@ -14,6 +14,24 @@ pre {
     padding: 2em;
     border-radius: 3px;}
 
+pre.stdout {
+    padding-top: 0em;
+    margin-top: -3em;
+}
+
+pre.stdout code {
+    font-style: italic;
+}
+
+pre.value {
+    padding-top: 0em;
+    margin-top: -3em;
+}
+
+pre.value code {
+    font-style: italic;
+}
+
 html {
     margin-left: auto;
     margin-right: auto;

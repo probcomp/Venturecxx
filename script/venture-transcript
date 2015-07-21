@@ -26,6 +26,7 @@ import re
 import os.path
 from StringIO import StringIO
 import shutil
+import cgi
 
 try:
     import markdown2
@@ -86,23 +87,6 @@ def with_output_to_string(f, *args, **kwargs):
     sys.stdout = old_stdout
     captured_from_stdout = result.getvalue()
     return (retval, captured_from_stdout)
-
-def format_printed(text, comment_start):
-    if len(text) == 0:
-        return text
-    else:
-        lines = text.split('\n')
-        # Suppress final line if blank
-        if len(lines[-1]) == 0:
-            lines.pop()
-        return '\n'.join(comment_start + ' [--STDOUT--] ' + line
-                for line in lines) + '\n'
-
-def format_returned(val, comment_start):
-    lines = str(val).split('\n')
-    return comment_start + ' [--RETURN--] ' + lines[0] + '\n'.join(
-            comment_start + ' [..........] ' + line for line in lines[1:]) + '\n'
-
 
 def getValue(v):
     if v is not None and 'value' in v:
@@ -169,8 +153,12 @@ class Writer(object):
         (returned, printed) = with_output_to_string(self.execute_program, munged, expect_error)
         val = getValue(returned[-1])
         indent = self.detect_indent(string)
+        self.out_chunks.extend([indent, "```", string, "```\n"])
+        if len(printed.strip()) > 0:
+            self.out_chunks.extend([indent, '<pre class="stdout"><code>', cgi.escape(printed), "</code></pre>\n"])
+        self.out_chunks.extend([indent, '<pre class="value"><code>', cgi.escape(str(val)), "</code></pre>\n"])
         figure_blocks = [indent + "![A Venture plot](%s)\n" % (figure,) for figure in figures]
-        self.out_chunks.extend([indent, "```", string, format_printed(printed, comment_start), indent, format_returned(val, comment_start), "\n", indent, "```\n"] + figure_blocks)
+        self.out_chunks.extend(figure_blocks)
 
     def munge_plotfs(self, mode, string):
         # TODO Instead of munging the source, should also be able to
@@ -231,6 +219,7 @@ class Writer(object):
 
     def finish(self):
         result = ''.join(self.out_chunks)
+        print result
         marked_down = markdown2.markdown(result, extras=['fenced-code-blocks', 'markdown-in-html', 'toc'])
         with open(self.outfile, 'w') as out:
             out.write(header(self.title))
