@@ -5,6 +5,26 @@ Title: Advanced Curve Fitting: Mixture Models and Gaussian Processes
 <% smaller_sample_size = [sample_size / 5, 5].max %>
 <% refman_url = "http://probcomp.csail.mit.edu/venture/edge/reference/" %>
 
+<script type="text/javascript">
+function hideAnswers() {
+  var answers = document.getElementsByClassName("answer");
+  for (var i = 0; i < answers.length; ++i) {
+    var answer = answers[i];
+    answer.style.display = "none";
+  }
+}
+window.addEventListener('load', hideAnswers);
+function toggle(id) {
+  var answer = document.getElementById(id);
+  if (answer.style.display === "none") {
+    answer.style.display = "block";
+  }
+  else {
+    answer.style.display = "none";
+  }
+}
+</script>
+
 [< Prev: More VentureScript: Linear Regression](../linear-regression/index.html)
 [^ Top](../index.html)
 
@@ -363,9 +383,18 @@ Exercise: verify and explain why the following two commands are not equivalent:
 // Command 1
 assume gg = proc(x) { lookup(g(array(x)), 0) };
 sample array(gg(1.0), gg(2.0));
+
 // Command 2
 sample g(array(1.0, 2.0));
 ```
+
+<a href="javascript:toggle('answer-inequivalent')">(show answer)</a>
+
+<div class="answer" id="answer-inequivalent" markdown="1">
+Answer: TODO  Did Ben actually mean array(run(sample(gg(1.0))), run(sample(gg(2.0))))
+for command 1?
+
+</div>
 
 Note that the choice of covariance function can itself be random (as long as
 all possible functions are symmetric and positive-semidefinite).  For example,
