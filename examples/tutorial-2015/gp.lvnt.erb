@@ -128,37 +128,40 @@ The following code asks, "what is the posterior on models that are
 either linear or sine wave, conditioned on the given data?"
 
 ```venture
+// Coefficient priors
 assume a = uniform_continuous(-2, 2);
 assume b = uniform_continuous(-2, 2);
 assume c = uniform_continuous(-2, 2);
 assume d = uniform_continuous(0, 3);
 assume e = uniform_continuous(0, 2*3.14159);
-assume ccomponents = array(
+
+// Mixture
+assume components = array(
     proc(x) { a*x + b },
     proc(x) { c*sin(d*x + e) }
     );
-assume cweights = simplex(0.5, 0.5);
-assume cf = categorical(cweights, ccomponents);
+assume weights = simplex(0.5, 0.5);
+assume true_f = categorical(weights, components);
 
-// Observe data points (with modelled noise variance cv)
-assume cv = 1.0;
-define obs_cf = proc(xy) {
-    run(do(
-        x <- return(lookup(xy, 0)),
-        y <- return(lookup(xy, 1)),
-        observe(normal(cf(unquote(x)), cv), y)))
-};
+// Data (inline, in this case)
 define data_xs = array(8.73, 7.47, 0.11, 0.26, 3.94, 4.86, 4.07, 5.65, 9.1, 6.62, 9.98, 3.54, 8.12, 5.17, 5.39);
 define data_ys = array(0.53, 0.67, 0.23, 0.02, 0.13, 0.27, 0.33, 0.04, 0.68, 0.17, 0.1, 0.16, 0.53, 0.42, 0.4);
 define data = zip(data_xs, data_ys);
-infer return(mapv(obs_cf, data));
-infer incorporate();
 
-// Collect several snapshots of the inferred posterior
+// Function for programmatically observing the data
+define obs = proc(xy) {
+    run(do(
+        x <- return(lookup(xy, 0)),
+        y <- return(lookup(xy, 1)),
+        observe(normal(true_f(unquote(x)), 1.0), y)))
+};
+mapv(obs, data);
+
+// Collect several snapshots of the progress of inference
 define xs = linspace(0, 10, 200);
 define yss = mapv(proc(i) {
     run(do(
-        ys <- sample(mapv(cf, unquote(xs))),
+        ys <- sample(mapv(true_f, unquote(xs))),
         mh(default, one, <%= mixreg_increment = sample_size.div(10) %>),
         return(ys)))
     }, linspace(0, 0, 10));
@@ -179,7 +182,7 @@ plot_lines(xs, yss, data_xs, data_ys, -2, 2, 0.5, 1.0, 1.0);
 
 ![Plots of f as inference progresses](gp_mixreg_hardcoded.png)
 
-The plot contains samples of the function `cf` as inference progresses, <%=
+The plot contains samples of the function `true_f` as inference progresses, <%=
 mixreg_increment %> steps at time.  As time progresses, the hue changes from
 cyan to blue to purple to red.  Notice that neither a line nor a sine wave is a
 perfect fit for this data set; lines incur a penalty due to the waviness of the
