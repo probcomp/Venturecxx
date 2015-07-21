@@ -312,6 +312,8 @@ Load it with
 run(load_plugin("gpexample_plugin.py"));
 ```
 
+and set up the Gaussian process like so
+
 ```venture
 // Covariance function
 assume se = make_squaredexp(1.2, 0.8);
@@ -332,10 +334,10 @@ prior_covariance(g(x1), g(x2)) = 1.2 * exp((x1-x2)^2 / (2*0.8))
 We can observe the value of `g` at given data points:
 
 ```venture
+// Data
 assume data_xs = array(3.2, 2.2, 8.7);
 define data_ys = array(8.7, 0.2, 5.5);
 infer observe(g(data_xs), data_ys);
-infer incorporate();
 
 // Plot several samples of the gp
 define xs = linspace(0, 10, 200);
@@ -344,7 +346,7 @@ define yss = mapv(proc(i) {
         ys <- sample(g(unquote(xs))),
         return(ys)))
     }, linspace(0, 0, 10));
-infer return(plot_lines(xs, yss, run(sample(data_xs)), data_ys, -5, 12, 1.0, 1.0, 0.5));
+plot_lines(xs, yss, run(sample(data_xs)), data_ys, -5, 12, 1.0, 1.0, 0.5);
 ```
 
 ![Posterior of toy GP](gp_toy_posterior.png)
