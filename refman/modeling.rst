@@ -27,13 +27,15 @@ JavaScript.  The major differences from JavaScript are
 Special Forms
 -------------
 
-The special forms in VenChurch are as follows:
+The special forms in VentureScript are as follows:
 
-- `(quote datum)`: Literal data.
+.. function:: quote(<datum>)
 
-  The datum must be a Venture expression.
+  Literal data.
+
+  The datum must be a VentureScript expression.
   As in Scheme, a `quote` form returns a representation of the given
-  expression as Venture data structures.
+  expression as VentureScript data structures.
 
 .. include:: model-macros.gen
 
@@ -42,8 +44,8 @@ are (as of this writing) expanded in expressions of the modeling
 language as well.  The results are generally not useful, so it's
 appropriate to treat those as reserved words when writing models:
 
-- do, begin, call_back, collect, assume, observe, predict,
-  force, sample, sample_all
+- `do`, `begin`, `call_back`, `collect`, `assume`, `observe`, `predict`,
+  `force`, `sample`, `sample_all`
 
 Built-in Procedures
 -------------------

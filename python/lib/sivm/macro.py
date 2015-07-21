@@ -229,21 +229,28 @@ identityMacro = SyntaxRule(['identity', 'exp'], ['lambda', [], 'exp'])
 lambdaMacro = SyntaxRule(['lambda', 'args', 'body'],
                          ['make_csp', ['quote', 'args'], ['quote', 'body']],
                          desc="""\
-- `(lambda (param ...) body)`: Construct a procedure.
+.. _proc:
+.. object:: proc(<param>, ...) { <body> }
 
-  The formal parameters must be Venture symbols.
-  The body must be a Venture expression.
-  The semantics are as in Scheme or Church.  Unlike Scheme, the body
-  must be a single expression, and creation of variable arity
-  procedures is not supported.
+  Construct a procedure.
+
+  The formal parameters must be VentureScript symbols.
+  The body must be a VentureScript expression.
+  The semantics are like `function` in JavaScript -- produces
+  an anonymous function that may read its lexical environment.
+
+  Creation of variable arity procedures is not yet supported.
 """)
 
 ifMacro = SyntaxRule(['if', 'predicate', 'consequent', 'alternative'],
                      [['biplex', 'predicate', ['lambda', [], 'consequent'], ['lambda', [], 'alternative']]],
                      desc="""\
-- `(if predicate consequent alternate)`: Branch control.
+.. _if:
+.. object:: if (<predicate>) { <consequent> } else { <alternate> }
 
-  The predicate, consequent, and alternate must be Venture expressions.
+  Branch control.
+
+  The predicate, consequent, and alternate must be VentureScript expressions.
 """)
 
 # Cond is not directly a SyntaxRule because the pattern language does
@@ -251,33 +258,56 @@ ifMacro = SyntaxRule(['if', 'predicate', 'consequent', 'alternative'],
 # ground pattern and template pair of the right size and dynamically
 # forms and uses a SyntaxRule out of that.
 condMacro = Macro(arg0("cond"), CondExpand, desc="""\
-- `(cond (predicate expression) ...)`: Multiple branching.
+.. _cond:
+.. object:: (cond (<predicate> <expression>) ...)
 
-  Each predicate and each expression must be a Venture expression.
+  Multiple branching.
+
+  Each predicate and each expression must be a VentureScript expression.
   If none of the predicates match, returns nil.
+  The above is the parsed form; no special concrete syntax for `cond`
+  is provided.
 """)
 
 andMacro = SyntaxRule(['and', 'exp1', 'exp2'],
                       ['if', 'exp1', 'exp2', v.boolean(False)],
-                      desc="""- `(and exp1 exp2)`: Short-circuiting and. """)
+                      desc="""\
+.. function:: and(<exp1>, <exp2>)
+
+  Short-circuiting and.
+""")
 
 orMacro = SyntaxRule(['or', 'exp1', 'exp2'],
                      ['if', 'exp1', v.boolean(True), 'exp2'],
-                     desc="""- `(or exp1 exp2)`: Short-circuiting or. """)
+                     desc="""\
+.. function:: or(<exp1>, <exp2>)
+
+  Short-circuiting or.
+""")
 
 # Let is not directly a SyntaxRule because the pattern language does
 # not support repetition.  Instead, expansion of a let form computes a
 # ground pattern and template pair of the right size and dynamically
 # forms and uses a SyntaxRule out of that.
 letMacro = Macro(arg0("let"), LetExpand, desc="""\
-- `(let ((param exp) ...) body)`: Evaluation with local scope.
+.. _let:
+.. object:: (let ((<param> <exp>) ...) <body>)
 
-  Each parameter must be a Venture symbol.
-  Each exp must be a Venture expression.
-  The body must be a Venture expression.
-  The semantics are as Scheme's `let*`: each `exp` is evaluated in turn,
-  its result is bound to the `param`, and made available to subsequent
-  `exp` s and the `body`.
+  Evaluation with local scope.
+
+  Each parameter must be a VentureScript symbol.
+  Each exp must be a VentureScript expression.
+  The body must be a VentureScript expression.
+  The semantics are as JavaScript's variable declaration and Scheme's `let*`:
+  each `exp` is evaluated in turn, its result is bound to the `param`,
+  and made available to subsequent `exp` s and the `body`.
+
+  The concrete syntax is::
+
+      <param> = <exp>;
+      ...
+      <body>
+
 """)
 
 # Letrec is not directly a SyntaxRule because the pattern language does
@@ -285,12 +315,18 @@ letMacro = Macro(arg0("let"), LetExpand, desc="""\
 # ground pattern and template pair of the right size and dynamically
 # forms and uses a SyntaxRule out of that.
 letrecMacro = Macro(arg0("letrec"), LetRecExpand, desc="""\
-- `(letrec ((param exp) ...) body)`: Evaluation with local scope.
+.. _letrec:
+.. object:: (letrec ((<param> <exp>) ...) <body>)
 
-  Each parameter must be a Venture symbol.
-  Each exp must be a Venture expression that evaluates to a procedure.
-  The body must be a Venture expression.
-  The semantics are as Scheme's `letrec`: (TODO)
+  Evaluation with local scope.
+
+  Each parameter must be a VentureScript symbol.
+  Each exp must be a VentureScript expression that evaluates to a procedure.
+  The body must be a VentureScript expression.
+  The semantics are as Scheme's `letrec` (TODO).
+  This is useful for defining locally-scoped mutually recursive procedures.
+
+  No concrete syntax is provided (yet).
 """)
 
 # Do is not directly a SyntaxRule because the pattern language does
@@ -349,10 +385,12 @@ beginMacro = Macro(arg0("begin"), BeginExpand, desc="""\
 """, intended_for_inference=True)
 
 qqMacro = Macro(arg0("quasiquote"), QuasiquoteExpand, desc="""\
-- `(quasiquote <datum>)`: Data constructed by template instantiation.
+.. function:: quasiquote(<datum>)
 
-  If the datum contains no ``unquote`` expressions, ``quasiquote`` is
-  the same as ``quote``.  Otherwise, the unquoted expressions are
+  Data constructed by template instantiation.
+
+  If the datum contains no `unquote` expressions, `quasiquote` is
+  the same as `quote`.  Otherwise, the unquoted expressions are
   evaluated and their results spliced in.  This is particularly useful
   for constructing model program fragments in inference programs -- so
   much so, that the modeling inference SPs automatically quasiquote
