@@ -76,7 +76,6 @@ def testCollectSmoke4():
   ripl.infer("(resample 10)")
   ripl.assume("x", "(normal 0 1)")
   ripl.assume("y", "(normal x 1)")
-  ripl.assume("abs", "(lambda (x) (if (< x 0) (- 0 x) x))")
   out = ripl.infer("""
 (let ((d (empty)))
   (do (repeat 3

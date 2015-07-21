@@ -219,13 +219,13 @@ class TestPrelude(TestCase):
       self.assertAlmostEqual(res_py, res_ven)
 
   @on_inf_prim("none")
-  def test_negative(self):
+  def test_negate(self):
     '''
-    Make sure the Venture "negative" gives the negative of a number.
+    Make sure the Venture "negate" gives the negate of a number.
     '''
     self.reset_ripl()
     x = self.r.assume('x', np.random.randn())
-    neg_x = self.r.sample('(negative x)')
+    neg_x = self.r.sample('(negate x)')
     self.assertAlmostEqual(-1 * x, neg_x)
 
   @on_inf_prim("none")
