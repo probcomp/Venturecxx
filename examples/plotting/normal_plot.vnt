@@ -18,7 +18,6 @@
 [infer (resample 10)]
 [assume x (normal 0 1)]
 [assume y (normal x 1)]
-[assume abs (lambda (x) (if (< x 0) (- 0 x) x))]
 [infer
  (let ((d (empty)))
    (do (repeat 100
