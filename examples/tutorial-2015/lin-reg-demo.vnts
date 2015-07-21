@@ -1,0 +1,57 @@
+// Copyright (c) 2015 MIT Probabilistic Computing Project.
+//
+// This file is part of Venture.
+//
+// Venture is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Venture is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
+// Run this file with:
+// venture -f examples/lin-reg-demo.vnts -L examples/tutorial-2015/curve-fitting.py
+
+// Line parameter prior
+assume intercept = tag("param", "intercept", normal(0,7));
+assume slope = tag("param", "slope", normal(0,4));
+
+// Hypothesized linear relationship
+assume line = proc(x) { slope * x + intercept };
+
+// Prior for unknown noise level
+assume noise = tag("hyper", "noise", gamma(1, 1));
+
+// Prior on the outlier rate
+assume outlier_prob = tag("hyper", "outlier_prob", uniform_continuous(0.01, 0.3));
+
+// Per-point outlier check
+assume is_outlier = mem(proc(i) { tag("outlier", i, flip(outlier_prob)) });
+
+// Full data model: linear relationship with additive noise of unknown
+// but consistent magnitude, plus outlier detection with a broad
+// Gaussian outlier model.
+assume obs = proc(i, x) {
+  if (is_outlier(i)) {
+    normal(0,20)
+  } else {
+    normal(line(x), noise)
+  }
+};
+
+observe obs(0,1) = 2.5;
+observe obs(1,4) = 1;
+observe obs(2,-3) = -1;
+observe obs(3,-5) = 6;
+
+infer repeat(1000, do(mh("param", one, 2),
+                      mh("hyper", one, 1),
+                      gibbs("outlier", one, 1),
+                      call_back(draw)));
+
