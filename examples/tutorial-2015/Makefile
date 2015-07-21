@@ -16,7 +16,7 @@ vis-outlier.png: mk_outlier_frame.vnts curve-fitting.py
 
 BASIC_ASSETS = gauss_plot.png
 REGRESSION_ASSETS = lin-reg-1.vnts lin-reg-2.vnts lin-reg-3.vnts reg-test.csv vis-frame.png vis-outlier.png curve-fitting.py
-GP_ASSETS = gpexample_plugin.py gpmem.py BayesOpt_gpmem_sequence.png gp_mixreg_hardcoded.png gp_progressivemixreg_data.png gp_toy_posterior.png
+GP_ASSETS = gpexample_plugin.py gpmem.py multiline_plot_plugin.py BayesOpt_gpmem_sequence.png gp_mixreg_hardcoded.png gp_progressivemixreg_data.png gp_toy_posterior.png
 
 # Tutorial content files
 
