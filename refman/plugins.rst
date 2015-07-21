@@ -1,11 +1,26 @@
 .. _plugins-section:
 
-Plugins and Callbacks
----------------------
+Python Interface
+----------------
 
-The simplest way to invoke custom Python code from a toplevel VentureScript
-program is to write a plugin and define some callbacks or Python SPs
-in it.
+The simplest way to invoke custom Python code from a toplevel
+VentureScript program are the `pyexec` and `pyeval` inference actions
+(which see).
+
+For more elaborate integrations, one can write a plugin.  In a plugin,
+one can
+
+- Define callbacks
+
+- Define foreign stochastic procedures for the inference language
+
+- Define foreign stochastic procedures for the modeling language
+
+- Manipulate Venture programmatically for any other purpose also
+
+Plugins and Callbacks
+=====================
+
 
 A Venture `plugin` is just a Python module that defines a toplevel
 function called ``__venture_start__``.
@@ -26,8 +41,8 @@ The plugin is then free to invoke what methods it will on that Ripl.
 
 If extra arguments are passed to either the ripl method
 ``load_plugin`` or the inference action ``load_plugin``, those will be
-forwarded to the plugin's ``__venture_start`` function.  If
-``__venture_start`` returns a value, that value will be returned by
+forwarded to the plugin's ``__venture_start__`` function.  If
+``__venture_start__`` returns a value, that value will be returned by
 ``load_plugin``.  There is currently no way to pass arguments to a
 plugin loaded from the command line, nor to capture any value that it
 might return.
