@@ -14,9 +14,12 @@ vis-frame.png: mk_frame.vnts curve-fitting.py reg-test.csv
 vis-outlier.png: mk_outlier_frame.vnts curve-fitting.py
 	venture lite -L curve-fitting.py -f $<
 
+REGRESSION_DOWNLOADS = lin-reg-1.vnts lin-reg-2.vnts lin-reg-3.vnts reg-test.csv curve-fitting.py
+GP_DOWNLOADS = gpexample_plugin.py gpmem.py multiline_plot_plugin.py
+
 BASIC_ASSETS = gauss_plot.png
-REGRESSION_ASSETS = lin-reg-1.vnts lin-reg-2.vnts lin-reg-3.vnts reg-test.csv vis-frame.png vis-outlier.png curve-fitting.py
-GP_ASSETS = gpexample_plugin.py gpmem.py multiline_plot_plugin.py BayesOpt_gpmem_sequence.png gp_mixreg_hardcoded.png gp_progressivemixreg_data.png gp_toy_posterior.png
+REGRESSION_ASSETS = $(REGRESSION_DOWNLOADS) vis-frame.png vis-outlier.png
+GP_ASSETS = $(GP_DOWNLOADS) BayesOpt_gpmem_sequence.png gp_mixreg_hardcoded.png gp_progressivemixreg_data.png gp_toy_posterior.png
 
 # Tutorial content files
 
@@ -48,6 +51,7 @@ build-smoke: index.html tutorial-smoke/basics/index.html tutorial-smoke/linear-r
 
 upload: build
 	scp -r tutorial/ login.csail.mit.edu:/afs/csail.mit.edu/proj/probcomp/www/data/venture/
+	scp $(REGRESSION_DOWNLOADS) $(GP_DOWNLOADS) login.csail.mit.edu:/afs/csail.mit.edu/u/g/gremio/ppaml/venture-tutorial/
 
 upload-smoke: build-smoke
 	scp -r tutorial-smoke/ login.csail.mit.edu:/afs/csail.mit.edu/proj/probcomp/www/data/venture/
