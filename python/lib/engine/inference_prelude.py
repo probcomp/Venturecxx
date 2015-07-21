@@ -326,4 +326,79 @@ prelude = [
 """,
 "(lambda (k) (mh default one k))"],
 
+["regeneration_local_proposal", """\
+.. function:: regeneration_local_proposal(<list>)
+
+  :rtype: proc(<subproblem>) -> proc(<foreignblob>) -> <pair () <foreignblob>>
+
+  Propose the given values for the given subproblem.
+
+""",
+"""\
+(lambda (values)
+  (lambda (subproblem)
+    (do (rho_weight_and_rho_db <- (detach_for_proposal subproblem))
+        (xi_weight <- (regen_with_proposal subproblem values))
+        (let ((rho_weight (first rho_weight_and_rho_db))
+              (rho_db (rest rho_weight_and_rho_db)))
+          (return
+           (list (- xi_weight rho_weight)
+                 pass                    ; accept
+                 (do (detach subproblem) ; reject
+                     (restore subproblem rho_db))))))))"""],
+
+["mh_correct", """\
+.. function:: mh_correct(<action>)
+
+  :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
+
+  Accept or reject the given proposal according to the
+  Metropolis-Hastings acceptance ratio.
+
+""",
+"""\
+(lambda (proposal)
+  (do (result <- proposal)
+      (let ((weight (first result))
+            (accept (second result))
+            (reject (second (rest result))))
+        (if (< (log (uniform_continuous 0 1)) weight)
+            accept
+            reject))))"""],
+
+["symmetric_local_proposal", """\
+.. function:: symmetric_local_proposal(proc(<value>) -> <value>)
+
+  :rtype: proc(<subproblem>) -> proc(<foreignblob>) -> <pair () <foreignblob>>
+
+  Propose using the given kernel for the given subproblem.
+
+""",
+"""\
+(lambda (kernel)
+  (lambda (subproblem)
+    (do (values <- (get_current_values subproblem))
+        (let ((new_values (mapv kernel values)))
+          ((regeneration_local_proposal new_values) subproblem)))))"""],
+
+["on_subproblem", """\
+.. function:: on_subproblem(scope: object, block: object, proposal: proc(<subproblem>) -> <action>)
+
+  :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
+
+  Select the subproblem indicated by the given scope and block, and
+  apply the given proposal procedure to that subproblem.
+
+""",
+"""\
+(lambda (scope block proposal)
+  (do (subproblem <- (select scope block))
+      (let ((rhoWeight 0 ; (assess subproblem select scope block)
+                       ))
+        (do (result <- (proposal subproblem))
+            (let ((xiWeight 0 ; (assess subproblem select scope block)
+                            )
+                  (new_weight (+ xiWeight (first result) (- 0 rhoWeight))))
+              (return (pair new_weight (rest result))))))))"""]
+
 ]
