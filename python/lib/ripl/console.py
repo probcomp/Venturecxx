@@ -250,7 +250,7 @@ class RiplCmd(Cmd, object):
       if len(self.files) == 0 and len(self.plugins) == 0:
         self.prompt = "venture[script] > "
       else:
-        self.prompt = "venture[script]" + " ".join(self.plugins + self.files) + " > "
+        self.prompt = "venture[script] " + " ".join(self.plugins + self.files) + " > "
     else:
       self.prompt =   "            ... > "
 
