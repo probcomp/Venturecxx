@@ -3,3 +3,5 @@ tutorial/
 tutorial-smoke/
 *.lvnt
 reg-test.csv
+vis-frame.png
+vis-outlier.png
