@@ -63,22 +63,12 @@ $ venture -f script.vnts
 A Simple Mixture Model
 ======================
 
-One simple way to define a mixture model is to choose a mixture component at
-top-level, and define each component in a separate code path.
+One simple way to define a mixture model is to choose a mixture
+component at top-level, and define each component in a separate code
+path.  (This code block is downloadable as [gp-1.vnts](gp-1.vnts)).
 
 ```venture
-assume mix_components = array(
-    proc() { uniform_continuous(0, 10) },  // component 0
-    proc() { uniform_continuous(0, 5) },   // component 1
-    proc() { uniform_continuous(0, 2) }    // component 2
-    );
-
-assume mix_weights = simplex(0.3, 0.3, 0.4);
-
-assume comp_index = tag(quote(comp_index), 0, categorical(mix_weights));
-assume mix_f = lookup(mix_components, comp_index);
-
-sample mix_f()
+<%= `cat gp-1.vnts`.strip() %>
 ```
 
 Here the value of `mix_f()` is "doubly random" -- the procedure `mix_f` is randomly

@@ -1,0 +1,12 @@
+assume mix_components = array(
+    proc() { uniform_continuous(0, 10) },  // component 0
+    proc() { uniform_continuous(0, 5) },   // component 1
+    proc() { uniform_continuous(0, 2) }    // component 2
+    );
+
+assume mix_weights = simplex(0.3, 0.3, 0.4);
+
+assume comp_index = tag(quote(comp_index), 0, categorical(mix_weights));
+assume mix_f = lookup(mix_components, comp_index);
+
+sample mix_f()
