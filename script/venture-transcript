@@ -231,7 +231,7 @@ class Writer(object):
         marked_down = markdown2.markdown(result, extras=['fenced-code-blocks', 'markdown-in-html', 'toc'])
         with open(self.outfile, 'w') as out:
             out.write(header(self.title))
-            out.write(re.sub(r"\[%TOC%\]", "<h1>Contents</h1>\n" + marked_down.toc_html, marked_down))
+            out.write(re.sub(r"<p>\[%TOC%\]</p>", "<h1>Contents</h1>\n" + marked_down.toc_html, marked_down))
             out.write(footer)
         shutil.copy(css_file, self.outdir)
         return self.unexpected_errors
