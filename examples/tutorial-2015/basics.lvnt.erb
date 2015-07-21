@@ -500,11 +500,73 @@ Exercises:
 1. Vary the location of the observation without varying the inference
    program.  Confirm that the runtime does not change, but the quality
    of the result (relative to the true posterior) does.
+   <a href="javascript:toggle('answer-resampling-1')">(show answer)</a>
+
+   <div class="answer" id="answer-resampling-1" markdown="1">
+   Answer: With the observation at y = 2
+
+   ```venture
+   clear;
+   assume x = normal(0, 1);
+   assume y = normal(x, 1);
+   observe y = 2;
+   plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>,
+      do(resample(5),
+         likelihood_weight(),
+         resample(1),
+         collect(x)))))
+   ```
+
+   and at y = 6
+
+   ```venture
+   clear;
+   assume x = normal(0, 1);
+   assume y = normal(x, 1);
+   observe y = 6;
+   plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>,
+      do(resample(5),
+         likelihood_weight(),
+         resample(1),
+         collect(x)))))
+   ```
+   </div>
 
 2. Vary the number of trials (the argument to the first resample) for
    a fixed location of the datum.  Confirm that the runtime is
    asymptotically linear in that, and that the result distribution
    approaches the true posterior as the number of trials increases.
+   <a href="javascript:toggle('answer-resampling-2')">(show answer)</a>
+
+   <div class="answer" id="answer-resampling-2" markdown="1">
+   Answer: With 10 trials
+
+   ```venture
+   clear;
+   assume x = normal(0, 1);
+   assume y = normal(x, 1);
+   observe y = 4;
+   plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>,
+      do(resample(10),
+         likelihood_weight(),
+         resample(1),
+         collect(x)))))
+   ```
+
+   and with 50 trials
+
+   ```venture
+   clear;
+   assume x = normal(0, 1);
+   assume y = normal(x, 1);
+   observe y = 4;
+   plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>,
+      do(resample(50),
+         likelihood_weight(),
+         resample(1),
+         collect(x)))))
+   ```
+   </div>
 
 3. What happens if we don't do the second `resample` at all?  Why?
    <a href="javascript:toggle('answer-resampling-3')">(show answer)</a>
@@ -660,11 +722,73 @@ Exercises:
    program.  Confirm that the runtime of a fixed-length chain does not
    change, but the quality of the result (relative to the true
    posterior) does.
+   <a href="javascript:toggle('answer-mh-1')">(show answer)</a>
+
+   <div class="answer" id="answer-mh-1" markdown="1">
+   Answer: With the observation at y = 2
+
+   ```venture
+   clear;
+   assume x = normal(0, 1);
+   assume y = normal(x, 1);
+   observe y = 2;
+   plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>,
+      do(resample(10),
+         reset_to_prior,
+         default_markov_chain(5),
+         collect(x)))))
+   ```
+
+   and at y = 6
+
+   ```venture
+   clear;
+   assume x = normal(0, 1);
+   assume y = normal(x, 1);
+   observe y = 6;
+   plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>,
+      do(resample(10),
+         reset_to_prior,
+         default_markov_chain(5),
+         collect(x)))))
+   ```
+   </div>
 
 2. Vary the number of transitions for a fixed location of the datum.
    Confirm that the runtime is asymptotically linear in that, and that
    the result distribution approaches the true posterior as the number
    of steps increases.
+   <a href="javascript:toggle('answer-mh-2')">(show answer)</a>
+
+   <div class="answer" id="answer-mh-2" markdown="1">
+   Answer: With 10 transitions
+
+   ```venture
+   clear;
+   assume x = normal(0, 1);
+   assume y = normal(x, 1);
+   observe y = 4;
+   plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>,
+      do(resample(10),
+         reset_to_prior,
+         default_markov_chain(10),
+         collect(x)))))
+   ```
+
+   and with 50 transitions
+
+   ```venture
+   clear;
+   assume x = normal(0, 1);
+   assume y = normal(x, 1);
+   observe y = 4;
+   plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>,
+      do(resample(10),
+         reset_to_prior,
+         default_markov_chain(50),
+         collect(x)))))
+   ```
+   </div>
 
 3. What happens if we don't `reset_to_prior`?
    <a href="javascript:toggle('answer-mh-3')">(show answer)</a>
@@ -684,14 +808,23 @@ Exercises:
 
    <div class="answer" id="answer-mh-4" markdown="1">
    Answer: The further the chain gets, the longer it will sit still
-   before advancing.  The reason this happens is that the default
-   Markov chain proposes new candidate values from the prior,
-   independently of the current state.  If most of the prior mass has
-   lower posterior probability than the current state, the chain will
-   only rarely make progress. In this case, the probability of
-   proposing a new state larger than the current one decreases
-   exponentially, but at least it's not the squared exponential of
-   rejection sampling.
+   before advancing.
+
+   ```venture
+   clear;
+   assume x = normal(0, 1);
+   assume y = normal(x, 1);
+   observe y = 6;
+   plot("lc0", run(accumulate_dataset(<%= sample_size %>, do(default_markov_chain(1), collect(x)))))
+   ```
+
+   The reason this happens is that the default Markov chain proposes
+   new candidate values from the prior, independently of the current
+   state.  If most of the prior mass has lower posterior probability
+   than the current state, the chain will only rarely make
+   progress. In this case, the probability of proposing a new state
+   larger than the current one decreases exponentially, but at least
+   it's not the squared exponential of rejection sampling.
    </div>
 
 Optional Subunit: Custom Metropolis-Hastings Proposals
