@@ -1,23 +1,25 @@
-Modeling Syntax Reference (VenChurch)
-=====================================
+Modeling Syntax Reference
+=========================
 
 Introduction
 ------------
 
-The Venture modeling language is the language in which model
+The VentureScript modeling language is the language in which model
 expressions, namely the arguments to the `assume`, `observe`, and
-`predict` instructions are written.  The Venture inference language is
+`predict` instructions are written.  The VentureScript inference language is
 the same language, but with a few additional predefined procedures and
 special forms.
 
-The VenChurch surface syntax for the Venture modeling language is a
-pure-functional dialect of Scheme, which puts it in the Lisp family of
-programming languages.  The major differences from Scheme are
+The VentureScript modeling language is a pure-functional dialect of
+JavaScript.  The major differences from JavaScript are
 
 - No mutation (only inference can effect mutation, and that only in a
   restricted way)
 
-- A spare set of predefined procedures and special forms
+- A spare set of predefined procedures and syntactic constructs
+
+- Several constructs relating specifically to probabilistic modeling
+  or functional programming
 
 - Predefined procedures for random choices according to various
   distributions.

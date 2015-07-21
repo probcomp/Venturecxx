@@ -3,7 +3,7 @@
 Plugins and Callbacks
 ---------------------
 
-The simplest way to invoke custom Python code from a toplevel Venture
+The simplest way to invoke custom Python code from a toplevel VentureScript
 program is to write a plugin and define some callbacks or Python SPs
 in it.
 
@@ -16,7 +16,7 @@ function called ``__venture_start__``.
 - To load a plugin when using Venture as a Python library,
   call ``ripl.load_plugin(filename)``.
 
-- To load a plugin from a Venture inference program, use the
+- To load a plugin from a VentureScript inference program, use the
   ``load_plugin`` action (which see).
 
 Any of these will load the plugin in the given file, and call its

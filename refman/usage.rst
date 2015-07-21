@@ -15,7 +15,7 @@ Source file::
     $ cat prog.vnt
     [assume x (normal 0 1)]
     [observe (normal x 1) 2]
-    $ venture puma -f prog.vnt
+    $ venture -f prog.vnt
 
 Python library::
 
@@ -27,7 +27,7 @@ Python library::
 Python library (batch invocation)::
 
     import venture.shortcuts as s
-    v = s.Puma().make_church_prime_ripl()
+    v = s.Lite().make_church_prime_ripl()
     v.execute_program("""
         [assume x (normal 0 1)]
         [observe (normal x 1) 2]
@@ -47,15 +47,3 @@ modes.
 
 .. include:: venture-command-help.gen
 
-Library Invocation
-==================
-
-TODO
-
-::
-
-   import venture.shortcuts as ven
-   ripl = ven.Lite().make_combined_ripl()
-   ripl.assume ...
-   ripl.observe ...
-   ripl.infer ...

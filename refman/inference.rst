@@ -1,23 +1,23 @@
-Inference Syntax Reference (VenChurch)
-======================================
+Inference Syntax Reference
+==========================
 
 Introduction
 ------------
 
-The Venture inference language is the language in which the toplevel
-Venture program, and particularly arguments to the `infer`
+The VentureScript inference language is the language in which the toplevel
+VentureScript program, and particularly arguments to the `infer`
 instruction, are written.  It is actually the same language as the
-Venture modeling language, except with a few additional predefined
+VentureScript modeling language, except with a several additional predefined
 procedures and special forms.
 
-Venture inference programs are effectively evaluated in a context
+VentureScript inference programs are effectively evaluated in a context
 where the underlying model trace is available as a reified object, on
 which built-in inference procedures can operate. [#]_
 
 Scopes, Blocks, and the Local Posterior
 ---------------------------------------
 
-Venture defines the notion of `inference scope` to allow the
+VentureScript defines the notion of `inference scope` to allow the
 programmer to control the parts of their model on which to apply
 various inference procedures.  The idea is that a `scope` is some
 collection of related random choices (for example, the states of a
