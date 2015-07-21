@@ -1,3 +1,5 @@
+.. _inference-section:
+
 Inference Syntax Reference
 ==========================
 
