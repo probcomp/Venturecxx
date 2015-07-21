@@ -75,6 +75,7 @@ from StringIO import StringIO
 
 import venture.shortcuts as s
 import venture.venturemagics.ip_parallel as ip_parallel
+import venture.value.dicts as v
 
 def yes_like(thing):
   if isinstance(thing, str):
@@ -193,7 +194,9 @@ def _collectData(iid,ripl,address,num_samples=None,infer=None):
     # TODO Consider going direct here to avoid the parser
     ripl.infer(infer)
     predictions.append(ripl.report(address))
-    if iid: ripl.sivm.core_sivm.engine.reinit_inference_problem()
+    if iid:
+      ripl.sivm.core_sivm.engine.reinit_inference_problem()
+      ripl.infer(v.app(v.sym("incorporate")))
   return predictions
 
 disable_default_infer = False
