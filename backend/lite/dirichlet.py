@@ -42,7 +42,7 @@ class DirichletOutputPSP(RandomPSP):
     return logDensityDirichlet(val,alpha)
 
   def description(self,name):
-    return "  (%s alphas) samples a simplex point according to the given Dirichlet distribution." % name
+    return "  %s(alphas) samples a simplex point according to the given Dirichlet distribution." % name
 
 class SymmetricDirichletOutputPSP(RandomPSP):
 
@@ -55,7 +55,7 @@ class SymmetricDirichletOutputPSP(RandomPSP):
     return logDensityDirichlet(val,[float(alpha) for _ in range(int(n))])
 
   def description(self,name):
-    return "  (%s alpha n) samples a simplex point according to the symmetric Dirichlet distribution on n dimensions with concentration parameter alpha." % name
+    return "  %s(alpha, n) samples a simplex point according to the symmetric Dirichlet distribution on n dimensions with concentration parameter alpha." % name
 
 #### Common classes for AAA dirichlet distributions
 
@@ -105,7 +105,7 @@ class MakerCDirMultOutputPSP(DeterministicMakerAAAPSP):
     return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,len(alpha)))
 
   def description(self,name):
-    return "  (%s alphas objects) returns a sampler for a collapsed Dirichlet multinomial model.  If the objects argument is given, the sampler will return one of those objects on each call; if not, it will return one of n <atom>s where n is the length of the list of alphas.  It is an error if the list of objects is supplied and has different length from the list of alphas.  While this procedure itself is deterministic, the returned sampler is stochastic." % name
+    return "  %s(alphas, objects) returns a sampler for a collapsed Dirichlet multinomial model.  If the objects argument is given, the sampler will return one of those objects on each call; if not, it will return one of n <atom>s where n is the length of the list of alphas.  It is an error if the list of objects is supplied and has different length from the list of alphas.  While this procedure itself is deterministic, the returned sampler is stochastic." % name
 
 class CDirMultOutputPSP(RandomPSP):
   def __init__(self,alpha,os):

@@ -96,7 +96,7 @@ class MakeCMVNOutputPSP(DeterministicMakerAAAPSP):
     return VentureSPRecord(CMVNSP(NullRequestPSP(),output,d))
 
   def description(self,name):
-    return "(%s m0 k0 v0 S0) -> <SP () <float array>>\n  Collapsed multivariate normal with hyperparameters m0,k0,v0,S0, where parameters are named as in (Murphy, section 4.6.3.3, page 134)." % name
+    return "%s(m0, k0, v0, S0) -> <SP () <float array>>\n  Collapsed multivariate normal with hyperparameters m0, k0, v0, S0, where parameters are named as in (Murphy, section 4.6.3.3, page 134)." % name
 
 
 class CMVNOutputPSP(RandomPSP):

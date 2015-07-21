@@ -96,7 +96,7 @@ class MVNormalOutputPSP(RandomPSP):
       raise Exception("Cannot rejection sample psp with unbounded likelihood")
 
   def description(self,name):
-    return "  (%s mean covariance) samples a vector according to the given multivariate Gaussian distribution.  It is an error if the dimensionalities of the arguments do not line up." % name
+    return "  %s(mean, covariance) samples a vector according to the given multivariate Gaussian distribution.  It is an error if the dimensionalities of the arguments do not line up." % name
 
   @staticmethod
   def __parse_args__(args):
@@ -148,7 +148,7 @@ class InverseWishartPSP(RandomPSP):
     return gradX, [gradLmbda, gradDof]
 
   def description(self,name):
-    return "  (%s scale_matrix degree_of_freedeom) samples a positive definite matrix according to the given inverse wishart distribution " % name
+    return "  %s(scale_matrix, degree_of_freedeom) samples a positive definite matrix according to the given inverse wishart distribution " % name
 
   def __parse_args__(self, args):
     (lmbda, dof) = args.operandValues()
@@ -211,7 +211,7 @@ class WishartPSP(RandomPSP):
     return gradX, [gradSigma, gradDof]
 
   def description(self,name):
-    return "  (%s scale_matrix degree_of_freedeom) samples a positive definite matrix according to the given inverse wishart distribution " % name
+    return "  %s(scale_matrix, degree_of_freedeom) samples a positive definite matrix according to the given inverse wishart distribution " % name
 
   def __parse_args__(self, args):
     (sigma, dof) = args.operandValues()
@@ -265,7 +265,7 @@ class NormalOutputPSP(RandomPSP):
     return (gradX,[gradMu,gradSigma])
 
   def description(self,name):
-    return "  (%s mu sigma) samples a normal distribution with mean mu and standard deviation sigma." % name
+    return "  %s(mu, sigma) samples a normal distribution with mean mu and standard deviation sigma." % name
 
 class NormalvvOutputPSP(RandomPSP):
   def simulate(self, args): return np.random.normal(*args.operandValues())
@@ -328,7 +328,7 @@ class VonMisesOutputPSP(RandomPSP):
     return (gradX, [gradMu, gradK])
 
   def description(self,name):
-    return "  (%s mu kappa) samples a von Mises distribution with mean mu and shape kappa. The output is normalized to the interval [-pi,pi]." % name
+    return "  %s(mu, kappa) samples a von Mises distribution with mean mu and shape kappa. The output is normalized to the interval [-pi,pi]." % name
 
 
 class UniformOutputPSP(RandomPSP):
@@ -351,7 +351,7 @@ class UniformOutputPSP(RandomPSP):
   def logDensityBound(self, x, args): return self.logDensityBoundNumeric(x, *args.operandValues())
 
   def description(self,name):
-    return "  (%s low high) -> samples a uniform real number between low and high." % name
+    return "  %s(low, high) -> samples a uniform real number between low and high." % name
 
   # TODO Uniform presumably has a variational kernel?
 
@@ -371,7 +371,7 @@ class BetaOutputPSP(RandomPSP):
     return (gradX,[gradAlpha,gradBeta])
 
   def description(self,name):
-    return "  (%s alpha beta) returns a sample from a beta distribution with shape parameters alpha and beta." % name
+    return "  %s(alpha, beta) returns a sample from a beta distribution with shape parameters alpha and beta." % name
 
   # TODO Beta presumably has a variational kernel too?
 
@@ -390,7 +390,7 @@ class ExponOutputPSP(RandomPSP):
     return (gradX,[gradTheta])
 
   def description(self,name):
-    return "  (%s theta) returns a sample from an exponential distribution with rate (inverse scale) parameter theta." % name
+    return "  %s(theta) returns a sample from an exponential distribution with rate (inverse scale) parameter theta." % name
 
 class GammaOutputPSP(RandomPSP):
   # TODO don't need to be class methods
@@ -441,7 +441,7 @@ class GammaOutputPSP(RandomPSP):
     return (gradX,[gradAlpha,gradBeta])
 
   def description(self,name):
-    return "  (%s alpha beta) returns a sample from a gamma distribution with shape parameter alpha and rate parameter beta." % name
+    return "  %s(alpha, beta) returns a sample from a gamma distribution with shape parameter alpha and rate parameter beta." % name
 
   # TODO Gamma presumably has a variational kernel too?
 
@@ -485,7 +485,7 @@ class StudentTOutputPSP(RandomPSP):
     return (gradX,[gradNu,gradLoc,gradShape])
 
   def description(self,name):
-    return "  (%s nu loc shape) returns a sample from Student's t distribution with nu degrees of freedom, with optional location and scale parameters." % name
+    return "  %s(nu, loc, shape) returns a sample from Student's t distribution with nu degrees of freedom, with optional location and scale parameters." % name
 
   # TODO StudentT presumably has a variational kernel too?
 
@@ -505,7 +505,7 @@ class InvGammaOutputPSP(RandomPSP):
     return (gradX,[gradAlpha,gradBeta])
 
   def description(self,name):
-    return "(%s alpha beta) returns a sample from an inverse gamma distribution with shape parameter alpha and scale parameter beta" % name
+    return "%s(alpha, beta) returns a sample from an inverse gamma distribution with shape parameter alpha and scale parameter beta" % name
 
   # TODO InvGamma presumably has a variational kernel too?
 
@@ -531,4 +531,4 @@ class LaplaceOutputPSP(RandomPSP):
     return (gradX,[gradA,gradB])
 
   def description(self,name):
-    return "(%s a b) returns a sample from a laplace (double exponential) distribution with shape parameter a and scale parameter b" % name
+    return "%s(a, b) returns a sample from a laplace (double exponential) distribution with shape parameter a and scale parameter b" % name

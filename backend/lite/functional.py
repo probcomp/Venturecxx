@@ -31,7 +31,7 @@ class ApplyRequestPSP(DeterministicPSP):
         return Request([ESR(args.node, exp, emptyAddress, env)])
 
     def description(self, name):
-        return "(%s func vals) returns the result of applying a variadic function to an array of operands" % name
+        return "%s(func, vals) returns the result of applying a variadic function to an array of operands" % name
 
 class ArrayMapRequestPSP(DeterministicPSP):
     def simulate(self, args):
@@ -41,7 +41,7 @@ class ArrayMapRequestPSP(DeterministicPSP):
         return Request([ESR((args.node, i), exp, emptyAddress, env) for i, exp in enumerate(exps)])
 
     def description(self, name):
-        return "(%s func vals) returns the results of applying a function to each value in an array" % name
+        return "%s(func, vals) returns the results of applying a function to each value in an array" % name
 
 class IndexedArrayMapRequestPSP(DeterministicPSP):
     def simulate(self, args):
@@ -51,7 +51,7 @@ class IndexedArrayMapRequestPSP(DeterministicPSP):
         return Request([ESR((args.node, i), exp, emptyAddress, env) for i, exp in enumerate(exps)])
 
     def description(self, name):
-        return "(%s func vals) returns the results of applying a function to each value in an array, together with its index" % name
+        return "%s(func, vals) returns the results of applying a function to each value in an array, together with its index" % name
 
 class ESRArrayOutputPSP(DeterministicPSP):
     def simulate(self, args):
@@ -105,4 +105,4 @@ class AssessOutputPSP(DeterministicPSP):
         return operator.sp.outputPSP.logDensity(value, assessedArgs)
 
     def description(self, name):
-        return "  (%s val func arg1 arg2 ...) returns the log probability (density) of simulating val from (func arg1 arg2 ...)" % name
+        return "  %s(val, func, arg1, arg2, ...) returns the log probability (density) of simulating val from func(arg1, arg2, ...)" % name

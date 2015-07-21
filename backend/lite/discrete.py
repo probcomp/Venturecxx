@@ -56,7 +56,7 @@ class BernoulliOutputPSP(DiscretePSP):
     else: return [True,False]
 
   def description(self,name):
-    return "  (%s p) returns true with probability p and false otherwise.  If omitted, p is taken to be 0.5." % name
+    return "  %s(p) returns true with probability p and false otherwise.  If omitted, p is taken to be 0.5." % name
 
 class LogBernoulliOutputPSP(DiscretePSP):
   def simulate(self,args):
@@ -80,7 +80,7 @@ class LogBernoulliOutputPSP(DiscretePSP):
     else: return [True,False]
 
   def description(self,name):
-    return "  (%s p) returns true with probability exp(p) and false otherwise.  This is useful for modeling very low probability events, because it does not suffer the underflow that (%s (exp p)) would." % (name, name)
+    return "  %s(p) returns true with probability exp(p) and false otherwise.  This is useful for modeling very low probability events, because it does not suffer the underflow that %s(exp(p)) would." % (name, name)
 
 class BinomialOutputPSP(DiscretePSP):
   def simulate(self,args):
@@ -98,7 +98,7 @@ class BinomialOutputPSP(DiscretePSP):
     else: return [i for i in range(int(n)+1)]
 
   def description(self,name):
-    return "  (%s n p) simulates flipping n Bernoulli trials independently with probability p and returns the total number of successes." % name
+    return "  %s(n, p) simulates flipping n Bernoulli trials independently with probability p and returns the total number of successes." % name
 
 
 class CategoricalOutputPSP(DiscretePSP):
@@ -126,7 +126,7 @@ class CategoricalOutputPSP(DiscretePSP):
     else: return [vals[1][i] for i in indexes]
 
   def description(self,name):
-    return "  (%s weights objects) samples a categorical with the given weights.  In the one argument case, returns the index of the chosen option as an atom; in the two argument case returns the item at that index in the second argument.  It is an error if the two arguments have different length." % name
+    return "  %s(weights, objects) samples a categorical with the given weights.  In the one argument case, returns the index of the chosen option as an atom; in the two argument case returns the item at that index in the second argument.  It is an error if the two arguments have different length." % name
 
 class UniformDiscreteOutputPSP(DiscretePSP):
   def simulate(self,args):
@@ -143,13 +143,13 @@ class UniformDiscreteOutputPSP(DiscretePSP):
   def enumerateValues(self,args): return range(*[int(x) for x in args.operandValues()])
 
   def description(self,name):
-    return "  (%s start end) samples a uniform discrete on the (start, start + 1, ..., end - 1)" % name
+    return "  %s(start, end) samples a uniform discrete on the (start, start + 1, ..., end - 1)" % name
 
 class PoissonOutputPSP(DiscretePSP):
   def simulate(self,args): return scipy.stats.poisson.rvs(args.operandValues()[0])
   def logDensity(self,val,args): return scipy.stats.poisson.logpmf(val,args.operandValues()[0])
   def description(self,name):
-    return "  (%s lambda) samples a poisson with rate lambda" % name
+    return "  %s(lam) samples a poisson with rate lam" % name
 
 
 #### Collapsed Beta Bernoulli
@@ -188,7 +188,7 @@ class MakerCBetaBernoulliOutputPSP(DeterministicMakerAAAPSP):
     return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output))
 
   def description(self,name):
-    return "  (%s alpha beta) returns a collapsed beta bernoulli sampler with pseudocounts alpha (for true) and beta (for false).  While this procedure itself is deterministic, the returned sampler is stochastic." % name
+    return "  %s(alpha, beta) returns a collapsed beta bernoulli sampler with pseudocounts alpha (for true) and beta (for false).  While this procedure itself is deterministic, the returned sampler is stochastic." % name
 
 class CBetaBernoulliOutputPSP(DiscretePSP):
   def __init__(self,alpha,beta):
@@ -253,7 +253,7 @@ class MakerUBetaBernoulliOutputPSP(DiscretePSP):
     return scipy.stats.beta.logpdf(coinWeight,alpha,beta)
 
   def description(self,name):
-    return "  (%s alpha beta) returns an uncollapsed beta bernoulli sampler with pseudocounts alpha (for true) and beta (for false)." % name
+    return "  %s(alpha, beta) returns an uncollapsed beta bernoulli sampler with pseudocounts alpha (for true) and beta (for false)." % name
 
 class UBetaBernoulliAAALKernel(SimulationAAALKernel):
   def simulate(self, _trace, args):
@@ -317,7 +317,7 @@ class MakerSuffBernoulliOutputPSP(DeterministicMakerAAAPSP):
     return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output))
 
   def description(self,name):
-    return "  (%s weight) returns a bernoulli sampler (weighted coin) with given weight.  The latter maintains application statistics sufficient to absorb changes to the weight in O(1) time (without traversing all the applications)." % name
+    return "  %s(weight) returns a bernoulli sampler (weighted coin) with given weight.  The latter maintains application statistics sufficient to absorb changes to the weight in O(1) time (without traversing all the applications)." % name
 
   def gradientOfLogDensityOfCounts(self, aux, args):
     """The derivatives with respect to the args of the log density of the counts collected by the made SP."""
