@@ -47,23 +47,23 @@ One simple way to define a mixture model is to choose a mixture component at
 top-level, and define each component in a separate code path.
 
 ```venture
-assume mcomponents = array(
+assume mix_components = array(
     proc() { uniform_continuous(0, 10) },  // component 0
     proc() { uniform_continuous(0, 5) },   // component 1
     proc() { uniform_continuous(0, 2) }    // component 2
     );
 
-assume mweights = simplex(0.3, 0.3, 0.4);
+assume mix_weights = simplex(0.3, 0.3, 0.4);
 
-assume mnum = tag(quote(mnum), 0, categorical(mweights));
-assume mf = lookup(mcomponents, mnum);
+assume comp_index = tag(quote(comp_index), 0, categorical(mix_weights));
+assume mix_f = lookup(mix_components, comp_index);
 
-sample mf()
+sample mix_f()
 ```
 
-Here the value of `mf()` is "doubly random" -- the procedure `mf` is randomly
-chosen, and after `mf` is fixed, the output of a call to `mf` is also random.
-Equivalently, the value of `mf()` follows a mixture model with mixture
+Here the value of `mix_f()` is "doubly random" -- the procedure `mix_f` is randomly
+chosen, and after `mix_f` is fixed, the output of a call to `mix_f` is also random.
+Equivalently, the value of `mix_f()` follows a mixture model with mixture
 components `mcomponents` and corresponding weights `mweights`.  
 
 It can be instructive to examine the effect of observations.  The prior on
@@ -72,16 +72,16 @@ mixture components is:
 ```venture
 plot("h0",
  run(accumulate_dataset(<%= smaller_sample_size %>,
-  do(mh(quote(mnum), one, 10),
-     collect(mnum)))))
+  do(mh(quote(comp_index), one, 10),
+     collect(comp_index)))))
 ```
 
 Now let's make some observations
 
 ```venture
-observe mf() = 3.3;
-observe mf() = 3.1;
-observe mf() = 4.5;
+observe mix_f() = 3.3;
+observe mix_f() = 3.1;
+observe mix_f() = 4.5;
 ```
 
 and examine the posterior
@@ -89,12 +89,12 @@ and examine the posterior
 ```venture
 plot("h0",
  run(accumulate_dataset(<%= smaller_sample_size %>,
-  do(mh(quote(mnum), one, 10),
-     collect(mnum)))))
+  do(mh(quote(comp_index), one, 10),
+     collect(comp_index)))))
 ```
 
 As we would expect, the possibility of `uniform_continuous(0, 2)` has been
-eliminated, as the sampled values of `mf()` are not possible in that component.
+eliminated, as the sampled values of `mix_f()` are not possible in that component.
 The remaining components are `uniform_continuous(0, 10)` and
 `uniform_continuous(0, 5)`.
 
@@ -106,10 +106,10 @@ automatically favors more parsimonious ones, because they are better
 able to concentrate predictive mass.  Said differently, confirmation is
 more impressive for a more constrained prediction.
 
-In the present case this shows up thus: if `mf` were
+In the present case this shows up thus: if `mix_f` were
 `uniform_continuous(0, 10)`, wouldn't it be a suspicious coincidence
-that three independent samples of `mf()` were all between 3 and 5?
-The coincidence would be much less suspicious if `mf` were
+that three independent samples of `mix_f()` were all between 3 and 5?
+The coincidence would be much less suspicious if `mix_f` were
 `uniform_continuous(0, 5)`.
 
 Regression With a Mixture
