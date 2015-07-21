@@ -234,6 +234,10 @@ using in our mixture model: `y = 0.9` (blue), `y = 1/x` (green), and `y = x^r`
 clear
 ```
 
+```venture
+run(load_plugin("multiline_plot_plugin.py"));
+```
+
 and look at a probabilistic program for regression using this mixture:
 
 ```venture
@@ -329,6 +333,7 @@ where we implement a Gaussian process as a foreign stochastic procedure.
 Load it with
 
 ```venture
+run(load_plugin("multiline_plot_plugin.py"));
 run(load_plugin("gpexample_plugin.py"));
 ```
 

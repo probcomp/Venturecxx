@@ -442,6 +442,7 @@ clear
 We start with our linear model much the same as before
 
 ```venture
+run(load_plugin("curve-fitting.py"));
 assume intercept = normal(0,7);
 assume slope = normal(0,4);
 
@@ -563,6 +564,7 @@ clear
 ```
 
 ```venture
+run(load_plugin("curve-fitting.py"));
 assume intercept = tag("param", "intercept", normal(0,7));
 assume slope = tag("param", "slope", normal(0,4));
 
