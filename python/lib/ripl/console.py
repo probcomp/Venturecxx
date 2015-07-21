@@ -26,9 +26,12 @@ import os
 from venture.exception import VentureException
 from utils import strip_types
 
-def getValue(directive):
+def printValue(directive):
   '''Gets the actual value returned by an assume, predict, report, or sample directive.'''
-  return strip_types(directive['value'])
+  if directive is None:
+    pass
+  else:
+    print strip_types(directive['value'])
 
 def catchesVentureException(f):
   @wraps(f)
@@ -51,6 +54,8 @@ class RiplCmd(Cmd, object):
     self.rebuild = rebuild
     self.files = []
     self.plugins = []
+    self.pending_instruction = None
+    self.pending_instruction_string = None
 
   def emptyline(self):
     pass
@@ -67,9 +72,20 @@ class RiplCmd(Cmd, object):
   def _do_instruction(self, instruction, s):
     if self.ripl.get_mode() == "church_prime":
       r_inst = '[%s %s]' % (instruction, s)
+      # Not supporting multiline paste for abstract syntax yet
+      return self.ripl.execute_instruction(r_inst)
     else:
-      r_inst = '%s %s' % (instruction, s)
-    return self.ripl.execute_instruction(r_inst)
+      if instruction == 'evaluate':
+        r_inst = s
+      else:
+        r_inst = '%s %s' % (instruction, s)
+      from venture.parser.venture_script.parse import string_complete_p
+      if string_complete_p(r_inst):
+        return self.ripl.execute_instruction(r_inst)
+      else:
+        self.pending_instruction = instruction
+        self.pending_instruction_string = s
+        self._update_prompt()
 
   def precmd(self, line):
     self.strip_hack = False
@@ -82,21 +98,35 @@ class RiplCmd(Cmd, object):
 
   @catchesVentureException
   def default(self, line):
+    '''Continue a pending instruction or evaluate an expression in the inference program.'''
+    if self.pending_instruction is None:
+      self._do_eval(line)
+    else:
+      self._do_continue_instruction(line)
+
+  def _do_continue_instruction(self, line):
+    inst = self.pending_instruction
+    string = self.pending_instruction_string + "\n" + line
+    self.pending_instruction = None
+    self.pending_instruction_string = None
+    self._update_prompt()
+    printValue(self._do_instruction(inst, string))
+
+  def _do_eval(self, line):
     '''Evaluate an expression in the inference program.'''
     if self.strip_hack:
       line = '(' + line + ')'
-    ans = self.ripl.execute_instruction(line)
-    print getValue(ans)
+    self._do_instruction('evaluate', line)
 
   @catchesVentureException
   def do_define(self, s):
     '''Define a variable in the inference program.'''
-    print getValue(self._do_instruction('define', s))
+    printValue(self._do_instruction('define', s))
 
   @catchesVentureException
   def do_assume(self, s):
     '''Add a named variable to the model.'''
-    print getValue(self._do_instruction('assume', s))
+    printValue(self._do_instruction('assume', s))
 
   @catchesVentureException
   def do_observe(self, s):
@@ -106,7 +136,7 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def do_predict(self, s):
     '''Register an expression as a model prediction.'''
-    print getValue(self._do_instruction('predict', s))
+    printValue(self._do_instruction('predict', s))
 
   @catchesVentureException
   def do_forget(self, s):
@@ -116,13 +146,13 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def do_report(self, s):
     '''Report the current value of a given directive.'''
-    print getValue(self._do_instruction('report', s))
+    printValue(self._do_instruction('report', s))
 
   @catchesVentureException
   def do_sample(self, s):
     '''Sample the given expression immediately,
     without registering it as a prediction.'''
-    print getValue(self._do_instruction('sample', s))
+    printValue(self._do_instruction('sample', s))
 
   @catchesVentureException
   def do_force(self, s):
@@ -216,10 +246,13 @@ class RiplCmd(Cmd, object):
     self._update_prompt()
 
   def _update_prompt(self):
-    if len(self.files) == 0 and len(self.plugins) == 0:
-      self.prompt = "venture[script] > "
+    if self.pending_instruction is None:
+      if len(self.files) == 0 and len(self.plugins) == 0:
+        self.prompt = "venture[script] > "
+      else:
+        self.prompt = "venture[script]" + " ".join(self.plugins + self.files) + " > "
     else:
-      self.prompt = "venture[script]" + " ".join(self.plugins + self.files) + " > "
+      self.prompt =   "            ... > "
 
 def run_venture_console(ripl, rebuild):
   RiplCmd(ripl, rebuild).cmdloop()

@@ -26,3 +26,11 @@ def testConsoleAlive():
   assert console.returncode == 0
   assert 'venture[script] > 0.' in stdout
   print stdout
+
+@in_backend("none")
+def testConsoleMultiline():
+  console = s.Popen("venture", shell=True, stdout=s.PIPE, stdin=s.PIPE)
+  (stdout, _) = console.communicate("assume x = \nuniform_continuous(0.0, 0.9)\n")
+  assert console.returncode == 0
+  assert '... > 0.' in stdout
+  print stdout
