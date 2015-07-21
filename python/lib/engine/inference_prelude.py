@@ -37,7 +37,7 @@ prelude = [
   :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
 
   Repeatedly apply the given action, suppressing the returned values.
-  This is the same as ``iterate``, except for taking its arguments
+  This is the same as `iterate`, except for taking its arguments
   in the opposite order, as a convenience.
 """,
 """(lambda (iter f) (iterate f iter))"""],
@@ -184,7 +184,7 @@ prelude = [
   :rtype: proc(<foreignblob>) -> <pair <object> <foreignblob>>
 
   An inference action that does nothing and just returns the argument
-  passed to ``return``.
+  passed to `return`.
 """,
 """action"""],
 
@@ -267,13 +267,13 @@ prelude = [
   Run the given inference action the given number of times,
   accumulating all the returned datasets into one.
 
-  For example,
+  For example::
 
-      (accumulate_dataset 1000
-        (do (mh default one 10)
-            (collect x)))
+      accumulate_dataset(1000,
+        do(default_markov_chain(10),
+           collect(x)))
 
-  will return a dataset consisting of the values of x that occur at
+  will return a dataset consisting of the values of ``x`` that occur at
   10-step intervals in the history of a 10000-step default Markov
   chain on the current model.
 """,
@@ -293,7 +293,7 @@ prelude = [
 
   Reset all particles to the prior.  Also reset their weights to the likelihood.
 
-  This is equivalent to ``(likelihood_weight)''.""",
+  This is equivalent to ``likelihood_weight()``.""",
 "(likelihood_weight)"],
 
 ["run", """\
@@ -317,11 +317,13 @@ prelude = [
 
   The default Markov chain is single-site resimulation M-H.
 
-    (default_markov_chain k)
+    default_markov_chain(k)
 
   is equivalent to
 
-    (mh default one k)
+    mh(default, one, k)
+
+  See `mh`.
 
 """,
 "(lambda (k) (mh default one k))"],
@@ -360,8 +362,8 @@ prelude = [
   The action must return a list of three items:
 
   - The local acceptance ratio (in log space)
-  - An action to run to accept the proposal (which in this case is `pass`)
-  - An action to run to reject the proposal (which changes the model back)
+  - An action to run to accept the proposal
+  - An action to run to reject the proposal
 """,
 """\
 (lambda (proposal)
