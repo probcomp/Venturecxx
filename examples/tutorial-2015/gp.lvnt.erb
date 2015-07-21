@@ -217,37 +217,39 @@ clear
 and look at a probabilistic program for regression using this mixture:
 
 ```venture
+// Parameter for component 2
 assume r = tag(quote(r), 0, 0 - beta(2,2));
+
+// Mixture
 assume pcomponents = array(
     proc(x) { 0.9 },           // component 0
     proc(x) { pow(x, -1) },    // component 1
     proc(x) { pow(x, r) }      // component 2
     );
-
 assume pweights = simplex(0.3, 0.3, 0.4);
 assume pnum = tag(quote(pnum), 0, categorical(pweights));
 assume pf = lookup(pcomponents, pnum);
 
-// Observe data points (with modelled noise variance pv)
-assume pv = 1.0;
+// Data
+define xs = array(0.67, 3.58, 2.52, 1.09, 0.7, 0.4);
+define ys = array(1.19, 0.47, 0.67, 0.9, 1.09, 1.67);
+define data = zip(xs, ys);
+
+// Observe data points
 define obs_pf = proc(xy) {
     run(do(
         x <- return(lookup(xy, 0)),
         y <- return(lookup(xy, 1)),
-        observe(normal(pf(unquote(x)), pv), y)))
+        observe(normal(pf(unquote(x)), 1.0), y)))
 };
-define xs = array(0.67, 3.58, 2.52, 1.09, 0.7, 0.4);
-define ys = array(1.19, 0.47, 0.67, 0.9, 1.09, 1.67);
-define data = zip(xs, ys);
-infer return(mapv(obs_pf, data));
-infer incorporate();
+mapv(obs_pf, data);
 
 // Do inference, and plot the inferred values of r and pnum over time
 define dataset = run(accumulate_dataset(<%= smaller_sample_size %>,
     do(if(eq(run(sample(pnum)), atom<2>)) { mh(quote(r), one, 10) } else { pass },
        mh(quote(pnum), one, 10),
        collect(pnum, r))));
-plot(quote(p0d1dcd), dataset);
+plot("p0d1dcd", dataset);
 ```
 
 Above, the parameter `r` is plotted against `pnum` (where `pnum = 0` for `y =
