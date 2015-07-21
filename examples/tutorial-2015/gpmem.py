@@ -1,13 +1,12 @@
-from venture.lite.psp import PSP, DeterministicPSP, TypedPSP, RandomPSP
-from venture.lite.sp import SP, VentureSPRecord, SPType
+from venture.lite.psp import DeterministicPSP
+from venture.lite.sp import SP, VentureSPRecord
 from venture.lite.lkernel import SimulationAAALKernel
 from venture.lite.env import VentureEnvironment
 from venture.lite.request import Request,ESR
 from venture.lite.address import emptyAddress
-from venture.lite.builtin import no_request, typed_nr, deterministic_typed, typed_func_psp
-from venture.lite.function import VentureFunction
+from venture.lite.builtin import no_request
 import venture.lite.types as t
-from venture.lite.gp import GPOutputPSP, GPSP, GPSPAux
+from venture.lite.gp import GPSP, GPSPAux
 import collections
 
 class MakeGPMSPOutputPSP(DeterministicPSP):
@@ -61,7 +60,7 @@ class GPMDeterministicMakerAAALKernel(SimulationAAALKernel):
         # during detach/regen. TODO: fix it so that this code is less
         # fragile.
 
-        (f_compute, f_emu) = newValue.asPythonList()
+        (_f_compute, f_emu) = newValue.asPythonList()
         answer = f_emu.sp.outputPSP.logDensityOfCounts(self.makerPSP.shared_aux)
         # print "gpmem LKernel weight = %s" % answer
         return answer
