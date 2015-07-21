@@ -415,7 +415,8 @@ function structures.
 Gaussian Process Memoization
 ============================
 
-We recently developed language support for a new idiom for GP modeling, called
+In this segment, we will play with a new idiom for GP modeling
+that the Venture team recently developed language support for, called
 _Gaussian process memoization_, or `gpmem`.  The idea is to wrap a function `f`
 into a package containing both a self-caching "prober" (which actually calls
 `f`) and a statistical emulator, which simulates `f` using a GP prior
@@ -424,9 +425,23 @@ arguments to `gpmem` are the function `f`, a prior mean function for the
 GP-based emulator, and a prior covariance function.  For example:
 
 ```venture
+clear
+```
+
+```venture
+run(load_plugin("gpexample_plugin.py"));
+
+// Function to model
 assume f = make_audited_expensive_function("f");
+
+// Mean and covariance functions for the GP emulator
+assume zero_func = make_const_func(0.0);
+assume se = make_squaredexp(1.2, 0.8);
+
+// GPMem package
 assume package = gpmem(f, zero_func, se);
 
+// Test
 assume ffive = first(package)(5);
 assume fsix = first(package)(6);
 
