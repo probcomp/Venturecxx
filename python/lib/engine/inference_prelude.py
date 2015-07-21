@@ -329,9 +329,11 @@ prelude = [
 ["regeneration_local_proposal", """\
 .. function:: regeneration_local_proposal(<list>)
 
-  :rtype: proc(<subproblem>) -> proc(<foreignblob>) -> <pair () <foreignblob>>
+  :rtype: proc(<subproblem>) -> proc(<foreignblob>) -> <pair <result> <foreignblob>>
 
-  Propose the given values for the given subproblem.
+  Propose the given values for the given subproblem.  Changes the
+  underlying model to represent the proposed state, and returns a
+  proposal result (see `mh_correct`).
 
 """,
 """\
@@ -352,9 +354,14 @@ prelude = [
 
   :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
 
-  Accept or reject the given proposal according to the
-  Metropolis-Hastings acceptance ratio.
+  Run the given proposal, and accept or reject it according to the
+  Metropolis-Hastings acceptance ratio returned in its result.
 
+  The action must return a list of three items:
+
+  - The local acceptance ratio (in log space)
+  - An action to run to accept the proposal (which in this case is `pass`)
+  - An action to run to reject the proposal (which changes the model back)
 """,
 """\
 (lambda (proposal)
@@ -371,7 +378,11 @@ prelude = [
 
   :rtype: proc(<subproblem>) -> proc(<foreignblob>) -> <pair () <foreignblob>>
 
-  Propose using the given kernel for the given subproblem.
+  Propose using the given kernel for the given subproblem.  Changes the
+  underlying model to represent the proposed state, and returns a
+  proposal result (see `mh_correct`).
+
+  The kernel function must be symmetric, but need not be assessable.
 
 """,
 """\
@@ -384,10 +395,17 @@ prelude = [
 ["on_subproblem", """\
 .. function:: on_subproblem(scope: object, block: object, proposal: proc(<subproblem>) -> <action>)
 
-  :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
+  :rtype: proc(<foreignblob>) -> <pair <result> <foreignblob>>
 
   Select the subproblem indicated by the given scope and block, and
-  apply the given proposal procedure to that subproblem.
+  apply the given proposal procedure to that subproblem.  Returns
+  a proposal result (see `mh_correct`).
+
+  The given proposal function must accept a subproblem and produce an
+  action that returns a proposal result.  The result returned by
+  `on_subproblem` consists of modifying the acceptance ratio to
+  account for any change in the probability of selecting the same
+  subproblem from the given scope and block.
 
 """,
 """\
