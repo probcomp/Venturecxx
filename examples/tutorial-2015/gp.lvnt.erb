@@ -486,10 +486,17 @@ Metropolis-Hastings inference on the hyperparameters of the covariance function
 after each probe.
 
 ```venture
+clear
+```
+
+```venture
+run(load_plugin("gpexample_plugin.py"));
+
 // The target
 assume V = make_audited_expensive_function("V");
 
 // The GP memoizer
+assume zero_func = make_const_func(0.0);
 assume V_sf = tag(quote(hyper), 0, uniform_continuous(0, 10));
 assume V_l = tag(quote(hyper), 1, uniform_continuous(0, 10));
 assume V_se = make_squaredexp(V_sf, V_l);
