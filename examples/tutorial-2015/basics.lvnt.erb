@@ -594,8 +594,9 @@ sample x
 we should see `x` moving (perhaps haltingly and non-monotonically)
 toward regions of high posterior mass.
 
-(Aside: Internally, Venture's default Markov chain uses an algorithm
-called [Metropolis-Hastings](https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm),
+(Aside: Internally, Venture's default Markov chain uses an instance of an algorithm
+template called
+[Metropolis-Hastings](https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm),
 which examines random choices made during the program execution,
 samples new proposed values for those choices, and decides whether to
 accept a proposed value based on a ratio of likelihoods.)
