@@ -155,6 +155,20 @@ def grad_atan2(args, direction):
   denom = x*x + y*y
   return [direction * (x / denom), direction * (-y / denom)]
 
+def grad_negate(args, direction):
+  return [-direction]
+
+def grad_abs(args, direction):
+  # XXX discontinuity?
+  [x] = args
+  return [direction * signum(x)]
+
+def signum(x):
+  if x == 0:
+    return 0
+  else:
+    return x/abs(x)
+
 def grad_list(args, direction):
   if direction == 0:
     return [0 for _ in args]
@@ -281,6 +295,17 @@ builtInSPsList = [
            [ "atan2", binaryNum(math.atan2,
                                 sim_grad=grad_atan2,
                                 descr="atan2(y,x) returns the angle from the positive x axis to the point x,y.  The order of arguments is conventional.") ],
+
+           [ "negate", unaryNum(lambda x: -x,
+                                sim_grad=grad_negate,
+                                descr="negate(x) returns -x, the additive inverse of x.") ],
+
+           [ "abs", unaryNum(abs,
+                             sim_grad=grad_abs,
+                             descr="abs(x) returns the absolute value of x.") ],
+
+           [ "signum", unaryNum(signum,
+                                descr="signum(x) returns the sign of x (1 if positive, -1 if negative, 0 if zero).") ],
 
            [ "not", deterministic_typed(lambda x: not x, [t.BoolType()], t.BoolType(),
                                         descr="not returns the logical negation of its argument") ],
