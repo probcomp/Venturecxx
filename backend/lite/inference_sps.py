@@ -246,11 +246,11 @@ enumeration).
 All the random choices identified by the scope-block pair must be
 discrete.
 
-The `transitions` argument specifies how many times to do this.
-Specifying more than one transition is redundant unless the `block`
-is ``one``.
+The ``transitions`` argument specifies how many times to do this.
+Specifying more than one transition is redundant unless the ``block``
+is `one`.
 
-The `in-parallel` argument, if supplied, toggles parallel evaluation
+The ``in-parallel`` argument, if supplied, toggles parallel evaluation
 of the local posterior.  Parallel evaluation is only available in
 the Puma backend, and is on by default."""),
 
@@ -259,23 +259,23 @@ the Puma backend, and is on by default."""),
                   desc="""\
 Move to a sample of the local posterior computed by particle Gibbs.
 
-The `block` must indicate a sequential grouping of the random
+The ``block`` must indicate a sequential grouping of the random
 choices in the `scope`.  This can be done by supplying the keyword
-``ordered`` as the block, or the value of calling ``ordered_range``.
+`ordered` as the block, or the value of calling `ordered_range`.
 
-The `particles` argument specifies how many particles to use in the
+The ``particles`` argument specifies how many particles to use in the
 particle Gibbs filter.
 
-The `transitions` argument specifies how many times to do this.
+The ``transitions`` argument specifies how many times to do this.
 
-The `in-parallel` argument, if supplied, toggles per-particle
+The ``in-parallel`` argument, if supplied, toggles per-particle
 parallelism.  Parallel evaluation is only available in the Puma
 backend, and is on by default. """),
 
   trace_method_sp("pgibbs",
                   par_transition_oper_type([t.IntegerType("particles : int")]),
                   desc="""\
-Like ``func_pgibbs`` but reuse a single trace instead of having several.
+Like `func_pgibbs` but reuse a single trace instead of having several.
 
 The performance is asymptotically worse in the sequence length, but
 does not rely on stochastic procedures being able to functionally
@@ -311,7 +311,7 @@ Print some statistics about the requested scaffold.
 This may be useful as a diagnostic.
 
 The `transitions` argument specifies how many times to do this;
-this is not redundant if the `block` argument is ``one``."""),
+this is not redundant if the `block` argument is `one`."""),
 
   trace_method_sp("nesterov",
                   transition_oper_type([t.NumberType("step_size : number"), t.IntegerType("steps : int")]),
@@ -347,7 +347,7 @@ gradient ascent.
 Not available in the Puma backend.  Not all the builtin procedures
 support all the gradient information necessary for this.
 
-This is just like ``nesterov``, except without the Nesterov
+This is just like `nesterov`, except without the Nesterov
 correction. """),
 
   trace_method_sp("hmc",
@@ -362,13 +362,13 @@ The presence of discrete random choices in the scope-block pair will
 not prevent this inference strategy, but none of the discrete
 choices will be moved.
 
-The `step_size` argument gives the step size of the integrator used
+The ``step_size`` argument gives the step size of the integrator used
 by HMC.
 
-The `steps` argument gives how many steps to take in each HMC
+The ``steps`` argument gives how many steps to take in each HMC
 trajectory.
 
-The `transitions` argument specifies how many times to do this."""),
+The ``transitions`` argument specifies how many times to do this."""),
 
   trace_method_sp("rejection", transition_oper_type([t.NumberType("attempt_bound : number")], min_req_args=2), desc="""\
 Sample from the local posterior by rejection sampling.
@@ -376,7 +376,7 @@ Sample from the local posterior by rejection sampling.
 Not available in the Puma backend.  Not all the builtin procedures
 support all the density bound information necessary for this.
 
-The `attempt_bound` bound argument, if supplied, indicates how many
+The ``attempt_bound`` bound argument, if supplied, indicates how many
 attempts to make.  If no sample is accepted after that many trials,
 stop, and leave the local state as it was.  Warning: bounded rejection
 is not a Bayes-sound inference algorithm.  If `attempt_bound` is not
@@ -384,9 +384,9 @@ given, keep trying until acceptance (possibly leaving the session
 unresponsive).  Note: if three arguments are supplied, the last one is
 taken to be the number of transitions, not the attempt bound.
 
-The `transitions` argument specifies how many times to do this.
+The ``transitions`` argument specifies how many times to do this.
 Specifying more than 1 transition is redundant if the `block` is
-anything other than ``one``. """),
+anything other than `one`. """),
 
   trace_method_sp("bogo_possibilize", transition_oper_type(min_req_args=2), desc="""\
 Initialize the local inference problem to a possible state.
@@ -411,16 +411,16 @@ Notes:
 
 - Does not change the particle weight, because the right one is not
   obvious for general scaffolds, or for the case where the state was
-  possible to begin with.  If you're using ``(bogo_possibilize default
+  possible to begin with.  If you're using ``bogo_possibilize(default,
   all)`` for pure initialization from the prior, consider following it
   with::
 
-    (do (l <- global_likelihood)
-        (set_particle_log_weights l))
+    do(l <- global_likelihood,
+       set_particle_log_weights(l))
 
-The `transitions` argument specifies how many times to do this.
+The ``transitions`` argument specifies how many times to do this.
 Specifying more than 1 transition is redundant if the `block` is
-anything other than ``one``. """),
+anything other than `one`. """),
 
   trace_method_sp("slice",
                   transition_oper_type([t.NumberType("w : number"), t.IntegerType("m : int")]),
@@ -472,24 +472,24 @@ for alternatives."""),
   engine_method_sp("resample_multiprocess",
                    infer_action_maker_type([t.IntegerType("particles : int"), t.IntegerType("max_processes : int")], min_req_args=1),
                    desc="""\
-Like ``resample``, but fork multiple OS processes to simulate the
+Like `resample`, but fork multiple OS processes to simulate the
 resulting particles in parallel.
 
-The `max_processes` argument, if supplied, puts a cap on the number of
+The ``max_processes`` argument, if supplied, puts a cap on the number of
 processes to make.  The particles are distributed evenly among the
 processes.  If no cap is given, fork one process per particle.
 
 Subtlety: Collecting results (and especially performing further
 resampling steps) requires inter-process communication, and therefore
 requires serializing and deserializing any state that needs
-transmitting.  ``resample_multiprocess`` is therefore not a drop-in
-replacement for ``resample``, as the former will handle internal
+transmitting.  `resample_multiprocess` is therefore not a drop-in
+replacement for `resample`, as the former will handle internal
 states that cannot be serialized, whereas the latter will not.  """),
 
   engine_method_sp("resample_serializing",
                    infer_action_maker_type([t.IntegerType("particles : int")]),
                    desc="""\
-Like ``resample``, but performs serialization the same way ``resample_multiprocess`` does.
+Like `resample`, but performs serialization the same way `resample_multiprocess` does.
 
 Use this to debug serialization problems without messing with actually
 spawning multiple processes.  """),
@@ -497,7 +497,7 @@ spawning multiple processes.  """),
   engine_method_sp("resample_threaded",
                    infer_action_maker_type([t.IntegerType("particles : int")]),
                    desc="""\
-Like ``resample_multiprocess`` but uses threads rather than actual processes, and does not serialize, transmitting objects in shared memory instead.
+Like `resample_multiprocess` but uses threads rather than actual processes, and does not serialize, transmitting objects in shared memory instead.
 
 Python's global interpreter lock is likely to prevent any speed gains
 this might have produced.
@@ -509,7 +509,7 @@ be rare. """),
   engine_method_sp("resample_thread_ser",
                    infer_action_maker_type([t.IntegerType("particles : int")]),
                    desc="""\
-Like ``resample_threaded``, but serializes the same way ``resample_multiprocess`` does.
+Like `resample_threaded`, but serializes the same way `resample_multiprocess` does.
 
 Python's global interpreter lock is likely to prevent any speed gains
 this might have produced.
@@ -542,8 +542,8 @@ Specifically:
 
 Unlike most inference SPs, this transformation is deterministic.
 
-This is useful together with ``collapse_equal`` and
-``collapse_equal_map`` for implementing certain kinds of dynamic
+This is useful together with `collapse_equal` and
+`collapse_equal_map` for implementing certain kinds of dynamic
 programs in Venture. """),
 
   engine_method_sp("collapse_equal",
@@ -566,13 +566,13 @@ Viewed as an operation on only the random variables in the given scope
 and block, this is deterministic (the randomness only affects other
 values).
 
-This is useful together with ``enumerative_diversify`` for
+This is useful together with `enumerative_diversify` for
 implementing certain kinds of dynamic programs in Venture. """),
 
   engine_method_sp("collapse_equal_map",
                    infer_action_maker_type([t.ExpressionType("scope : object"), t.ExpressionType("block : object")]),
                    desc="""\
-Like ``collapse_equal`` but deterministically retain the max-weight particle.
+Like `collapse_equal` but deterministically retain the max-weight particle.
 
 And leave its weight unaltered, instead of adding in the weights of
 all the other particles in the bin. """),
@@ -590,10 +590,10 @@ Run a subsampled Metropolis-Hastings kernel
 
 per the Austerity MCMC paper.
 
-Note: not all dependency structures that might occur in a scaffold are supported.  See ``subsampled_mh_check_applicability``.
+Note: not all dependency structures that might occur in a scaffold are supported.  See `subsampled_mh_check_applicability`.
 
 Note: the resulting execution history may not actually be possible, so
-may confuse other transition kernels.  See ``subsampled_mh_make_consistent``
+may confuse other transition kernels.  See `subsampled_mh_make_consistent`
 and ``*_update``.  """),
 
   trace_method_sp("subsampled_mh_check_applicability", transition_oper_type(), desc="""\
@@ -623,29 +623,32 @@ Fix inconsistencies introduced by subsampled MH."""),
   trace_method_sp("mh_kernel_update",
                   transition_oper_type([t.BoolType("useDeltaKernels : bool"), t.NumberType("deltaKernelArgs : number"), t.BoolType("updateValues : bool")]),
                   desc="""\
-Run a normal ``mh`` kernel, tolerating inconsistencies introduced by previous subsampled MH."""),
+Run a normal `mh` kernel, tolerating inconsistencies introduced by previous subsampled MH."""),
 
   trace_method_sp("gibbs_update", par_transition_oper_type(), desc="""\
-Run a normal ``gibbs`` kernel, tolerating inconsistencies introduced by previous subsampled MH. """),
+Run a normal `gibbs` kernel, tolerating inconsistencies introduced by previous subsampled MH. """),
 
   trace_method_sp("pgibbs_update",
                   par_transition_oper_type([t.IntegerType("particles : int")]),
                   desc="""\
-Run a normal ``pgibbs`` kernel, tolerating inconsistencies introduced by previous subsampled MH."""),
+Run a normal `pgibbs` kernel, tolerating inconsistencies introduced by previous subsampled MH."""),
 
   engine_method_sp("incorporate", infer_action_maker_type([]), desc="""\
-Make the history consistent with observations.
+Explicitly make the history consistent with observations.
 
 Specifically, modify the execution history so that the values of
-variables that have been observed since the last ``incorporate`` match
+variables that have been observed since the last `incorporate` match
 the given observations.  If there are multiple particles, also adjust
 their relative weights by the relative likelihoods of the
 observations being incorporated.
 
-This is done automatically at the beginning of every `infer` command,
-but is also provided explicitly because it may be appropriate to
-invoke in the middle of complex inference programs that introduce new
-observations."""),
+This is done automatically at the end of every `observe` command,
+but is also provided explicitly in case is proves needful.
+
+Note: In the future, VentureScript may implement various different
+incorporation algorithms, in which case explicit incorporation may become
+necessary again.
+"""),
 
   engine_method_sp("likelihood_at",
                    infer_action_maker_type([t.AnyType("scope : object"), t.AnyType("block : object")], return_type=t.ArrayUnboxedType(t.NumberType())),
@@ -656,12 +659,12 @@ If there are stochastic nodes in the conditional regeneration graph,
 reuses their current values.  This could be viewed as a one-sample
 estimate of the local likelihood.
 
-(likelihood_at default all) is not the same as getGlobalLogScore
+likelihood_at(default, all) is not the same as ``getGlobalLogScore``
 because it does not count the scores of any nodes that cannot report
-likelihoods, or whose existence is conditional.  likelihood_at also
+likelihoods, or whose existence is conditional.  `likelihood_at` also
 treats exchangeably coupled nodes correctly.
 
-Compare posterior_at."""),
+Compare `posterior_at`."""),
 
   engine_method_sp("posterior_at",
                    infer_action_maker_type([t.AnyType("scope : object"), t.AnyType("block : object")], return_type=t.ArrayUnboxedType(t.NumberType())),
@@ -684,7 +687,7 @@ Set the weights of the particles to the given array.  It is an error if the leng
   engine_method_sp("load_plugin", infer_action_maker_type([t.SymbolType("filename")], return_type=t.AnyType(), variadic=True), desc="""\
 Load the plugin located at <filename>.
 
-Any additional arguments to ``load_plugin`` are passed to the plugin's
+Any additional arguments to `load_plugin` are passed to the plugin's
 ``__venture_start__`` function, whose result is returned.
 
 XXX: Currently, extra arguments must be VentureSymbols, which are
@@ -704,17 +707,17 @@ Plot a data set according to a plot specification.
 
 Example::
 
-    [define d (empty)]
-    [infer (do (assume x (normal 0 1))
-               (repeat 1000
-                       (do (mh default one 1)
-                           (bind (collect x) (curry into d)))))]
-    (plot d)
+    define d = empty()
+    assume x = normal(0, 1)
+    infer accumulate_dataset(1000,
+              do(mh(default, one, 1),
+                 collect(x)))
+    plot("c0s", d)
     
-will do 1000 iterations of MH collecting some standard data and
-the value of x, and then show a plot of the x variable (which
+will do 1000 iterations of `mh` collecting some standard data and
+the value of ``x``, and then show a plot of the ``x`` variable (which
 should be a scalar) against the iteration number (from 1 to 1000),
-colored according to the global log score.  See ``collect``
+colored according to the global log score.  See `collect`
 for details on collecting and labeling data to be plotted.
 
 The format specifications are inspired loosely by the classic
@@ -762,101 +765,42 @@ If the given specification is a list, make all those plots at once.
   engine_method_sp("plotf", infer_action_maker_type([t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")]), desc="""\
 Plot a data set according to a plot specification.
 
+This is identical to `plot`, except it's an inference action,
+so can participate in `do` blocks.
+
 Example::
 
-    [INFER (let ((d (empty)))
-             (do (assume x (normal 0 1))
-                 (repeat 1000
-                         (do (mh default one 1)
-                             (bind (collect x) (curry into d))))
-                 (plotf (quote c0s) d))) ]
-    
-will do 1000 iterations of MH collecting some standard data and
-the value of x, and then show a plot of the x variable (which
-should be a scalar) against the iteration number (from 1 to 1000),
-colored according to the global log score.  See ``collect``
-for details on collecting and labeling data to be plotted.
-
-The format specifications are inspired loosely by the classic
-printf.  To wit, each individual plot that appears on a page is
-specified by some line noise consisting of format characters
-matching the following regex::
-
-    [<geom>]*(<stream>?<scale>?){1,3}
-
-specifying
-
-- the geometric objects to draw the plot with, and
-- for each dimension (x, y, and color, respectively)
-    - the data stream to use
-    - the scale
-
-The possible geometric objects are:
-
-- _p_oint,
-- _l_ine,
-- _b_ar, and
-- _h_istogram
-
-The possible data streams are:
-
-- _<an integer>_ that column in the data set, 0-indexed,
-- _%_ the next column after the last used one
-- iteration _c_ounter,
-- _t_ime (wall clock, since the beginning of the Venture program),
-- log _s_core, and
-- pa_r_ticle
-
-The possible scales are:
-
-- _d_irect, and
-- _l_ogarithmic
-
-If one stream is indicated for a 2-D plot (points or lines), the x
-axis is filled in with the iteration counter.  If three streams are
-indicated, the third is mapped to color.
-
-If the given specification is a list, make all those plots at once.
+    do(assume x, normal(0, 1),
+       ...
+       plotf("c0s", d))
 """),
 
   ["plot_to_file", deterministic_typed(plot_to_file_fun, [t.AnyType("<basename>"), t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")], t.NilType(), descr="""\
 Save plot(s) to file(s).
 
-  Like ``plot``, but save the resulting plot(s) instead of displaying on screen.
-  Just as <spec> may be either a single expression or a list, <basenames> may
-  either be a single symbol or a list of symbols. The number of basenames must
-  be the same as the number of specifications.
+Like `plot`, but save the resulting plot(s) instead of displaying on screen.
+Just as ``<spec>`` may be either a single expression or a list, ``<basenames>`` may
+either be a single symbol or a list of symbols. The number of basenames must
+be the same as the number of specifications.
 
-  Examples:
-    (plot_to_file (quote basename) (quote spec) <expression> ...) saves the plot specified by
-      the spec in the file "basename.png"
-    (plot_to_file (quote (basename1 basename2)) (quote (spec1 spec2)) <expression> ...) saves
-      the spec1 plot in the file basename1.png, and the spec2 plot in basename2.png.
+Examples:
+  plot_to_file("basename", "spec", <expression> ...) saves the plot specified by
+    the spec in the file "basename.png"
+  plot_to_file(quote(basename1, basename2), (quote(spec1, spec2)), <expression> ...) saves
+    the spec1 plot in the file basename1.png, and the spec2 plot in basename2.png.
 """)],
 
   engine_method_sp("plotf_to_file", infer_action_maker_type([t.AnyType("<basename>"), t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")]), desc="""\
 Save plot(s) to file(s).
 
-  Like ``plotf``, but save the resulting plot(s) instead of displaying on screen.
-  Just as <spec> may be either a single expression or a list, <basenames> may
-  either be a single symbol or a list of symbols. The number of basenames must
-  be the same as the number of specifications.
-
-  Examples:
-    (plotf_to_file (quote basename) (quote spec) <expression> ...) saves the plot specified by
-      the spec in the file "basename.png"
-    (plotf_to_file (quote (basename1 basename2)) (quote (spec1 spec2)) <expression> ...) saves
-      the spec1 plot in the file basename1.png, and the spec2 plot in basename2.png.
+Like `plotf`, but save the resulting plot(s) instead of displaying on screen.
+See `plot_to_file`.
 """),
 
   engine_method_sp("sweep", infer_action_maker_type([t.ForeignBlobType("<dataset>")]), desc="""\
 Print the iteration count.
 
-  Extracts the last row of the supplied inference Dataset and prints its iteration count.
-
-  Examples:
-    (sweep d)
-
+Extracts the last row of the supplied inference Dataset and prints its iteration count.
 """),
 
   ripl_macro_helper("assume", infer_action_maker_type([t.AnyType("<symbol>"), t.AnyType("<expression>"), t.AnyType("<label>")], min_req_args=2)),
@@ -868,40 +812,38 @@ Print the iteration count.
   macro_helper("extract_stats", infer_action_maker_type([t.AnyType("<expression>")], return_type=t.AnyType())),
 
   ripl_method_sp("forget", infer_action_maker_type([t.AnyType("<label>")]), desc="""\
-  Forget an observation, prediction, or unused assumption.
+Forget an observation, prediction, or unused assumption.
 
-  Removes the directive indicated by the label argument from the
-  model.  If an assumption is forgotten, the symbol it binds
-  disappears from scope; the behavior if that symbol was still
-  referenced is unspecified.
-
+Removes the directive indicated by the label argument from the
+model.  If an assumption is forgotten, the symbol it binds
+disappears from scope; the behavior if that symbol was still
+referenced is unspecified.
 """),
 
   ripl_method_sp("freeze", infer_action_maker_type([t.AnyType("<label>")]), desc="""\
-  Freeze an assumption to its current sample.
+Freeze an assumption to its current sample.
 
-  Replaces the assumption indicated by the label argument with a
-  constant whose value is that assumption's current value (which may
-  differ across particles).  This has the effect of preventing future
-  inference on that assumption, and decoupling it from its (former)
-  dependecies, as well as reclaiming any memory of random choices
-  that can no longer influence any toplevel value.
+Replaces the assumption indicated by the label argument with a
+constant whose value is that assumption's current value (which may
+differ across particles).  This has the effect of preventing future
+inference on that assumption, and decoupling it from its (former)
+dependecies, as well as reclaiming any memory of random choices
+that can no longer influence any toplevel value.
 
-  Together with forget, freeze makes it possible for particle filters
-  in Venture to use model memory independent of the sequence length.
-
+Together with forget, freeze makes it possible for particle filters
+in Venture to use model memory independent of the sequence length.
 """),
 
   ["empty", deterministic_typed(lambda *args: Dataset(), [], t.ForeignBlobType("<dataset>"), descr="""\
-Create an empty dataset ``into`` which further ``collect`` ed stuff may be merged.
+Create an empty dataset `into` which further `collect` ed stuff may be merged.
   """)],
 
   ["into", sequenced_sp(lambda orig, new: orig.merge_bang(new), infer_action_maker_type([t.ForeignBlobType(), t.ForeignBlobType()]), desc="""\
 Destructively merge the contents of the second argument into the
 first.
 
-Right now only implemented on datasets created by ``empty`` and
-``collect``, but in principle generalizable to any monoid.  """)],
+Right now only implemented on datasets created by `empty` and
+`collect`, but in principle generalizable to any monoid.  """)],
 
   # Hackety hack hack backward compatibility
   ["ordered_range", deterministic_typed(lambda *args: (t.VentureSymbol("ordered_range"),) + args,
@@ -924,9 +866,8 @@ current implicit model.
 
 This is an inference action rather than a pure operation due to
 implementation accidents. [It reads the Engine to determine the
-default backend to use (TODO could take that as an argument) and for the
-registry of bound foreign sps (TODO: Implicitly bind extant foreign
-sps into new models?)]
+default backend to use and for the
+registry of bound foreign sps.]
 
  """),
 
@@ -941,17 +882,16 @@ to actually run the given action].
 """),
 
   engine_method_sp("model_import_foreign", infer_action_maker_type([t.SymbolType("<name>")]), desc="""\
-  Import the named registered foregin SP into the current model.
+Import the named registered foregin SP into the current model.
 
-  This is typically only necessary in conjunction with ``new_model``,
-  because foreign SPs are automatically imported into the model that
-  is ambient at the time the foreign SP is bound by the ripl (which is
-  usually the toplevel model).
+This is typically only necessary in conjunction with `new_model`,
+because foreign SPs are automatically imported into the model that
+is ambient at the time the foreign SP is bound by the ripl (which is
+usually the toplevel model).
 
-  The name must refer to an SP that was previously registered with
-  Venture via ``ripl.register_foreign_sp`` or ``ripl.bind_foreign_sp``.
-  Binds that symbol to that procedure in the current model.
-
+The name must refer to an SP that was previously registered with
+Venture via `ripl.register_foreign_sp` or `ripl.bind_foreign_sp`.
+Binds that symbol to that procedure in the current model.
 """),
 
   engine_method_sp("select", infer_action_maker_type([t.AnyType("scope : object"), t.AnyType("block : object")], t.ForeignBlobType("subproblem")), desc="""\
@@ -1036,8 +976,8 @@ Execute the given string as Python code, via exec.
 
 The code is executed in an environment where the RIPL is accessible
 via the name ``ripl``.  Values from the ambient inference program are
-not directly accessible.  The environment against which ``pyexec`` is
-executed persists across invocations of ``pyexec`` and ``pyeval``.
+not directly accessible.  The environment against which `pyexec` is
+executed persists across invocations of `pyexec` and `pyeval`.
 """),
 
   engine_method_sp("pyeval", infer_action_maker_type([t.SymbolType("<code>")], return_type=t.AnyType()), desc="""\
@@ -1045,8 +985,8 @@ Evaluate the given string as a Python expression, via eval.
 
 The code is executed in an environment where the RIPL is accessible
 via the name ``ripl``.  Values from the ambient inference program are
-not directly accessible.  The environment against which ``pyeval`` is
-evaluated persists across invocations of ``pyexec`` and ``pyeval``.
+not directly accessible.  The environment against which `pyeval` is
+evaluated persists across invocations of `pyexec` and `pyeval`.
 """),
 
 ]
