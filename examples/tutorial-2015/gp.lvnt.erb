@@ -72,7 +72,7 @@ mixture components is:
 ```venture
 plot("h0",
  run(accumulate_dataset(<%= smaller_sample_size %>,
-  do(mh(quote(comp_index), one, 10),
+  do(reset_to_prior,
      collect(comp_index)))))
 ```
 
@@ -89,27 +89,29 @@ and examine the posterior
 ```venture
 plot("h0",
  run(accumulate_dataset(<%= smaller_sample_size %>,
-  do(mh(quote(comp_index), one, 10),
+  do(reset_to_prior,
+     mh(quote(comp_index), one, 20),
      collect(comp_index)))))
 ```
 
-As we would expect, the possibility of `uniform_continuous(0, 2)` has been
+As we would expect, the possibility of `uniform_continuous(0, 2)` (component 2) has been
 eliminated, as the sampled values of `mix_f()` are not possible in that component.
 The remaining components are `uniform_continuous(0, 10)` and
 `uniform_continuous(0, 5)`.
 
-Notice that `uniform_continuous(0, 10)` is much less probable than
-`uniform_continuous(0, 5)` in the posterior, whereas it was equally
+Notice that `uniform_continuous(0, 10)` (component 0) is much less probable than
+`uniform_continuous(0, 5)` (component 1) in the posterior, whereas it was equally
 probable in the prior.  This is a case of the _Bayesian Occam's
 razor:_ among models that agree with the data, Bayesian inference
 automatically favors more parsimonious ones, because they are better
-able to concentrate predictive mass.  Said differently, confirmation is
-more impressive for a more constrained prediction.
+able to concentrate predictive mass.  Said differently, a specific
+prediction is more impressive to get confirmed.
 
 In the present case this shows up thus: if `mix_f` were
 `uniform_continuous(0, 10)`, wouldn't it be a suspicious coincidence
 that three independent samples of `mix_f()` were all between 3 and 5?
-The coincidence would be much less suspicious if `mix_f` were
+The coincidence would be much (in fact, exactly `2^(#data)` times)
+less suspicious if `mix_f` were
 `uniform_continuous(0, 5)`.
 
 Regression With a Mixture
