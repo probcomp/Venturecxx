@@ -334,7 +334,13 @@ letrecMacro = Macro(arg0("letrec"), LetRecExpand, desc="""\
 # form computes a ground pattern and template pair of the right shape
 # and size and dynamically forms and uses a SyntaxRule out of that.
 doMacro = Macro(arg0("do"), DoExpand, desc="""\
-- `(do <stmt> <stmt> ...)`: Sequence actions that may return results.
+.. _do:
+.. object:: (do <stmt> <stmt> ...)
+
+  Sequence actions that may return results.
+
+  Note: The above template is abstract syntax.  Concrete syntax for `do`
+  is under development.
 
   Each <stmt> except the last may either be
 
@@ -343,45 +349,48 @@ doMacro = Macro(arg0("do"), DoExpand, desc="""\
 
     - a binder of the form ``(<variable> <- <kernel>)`` in which case the
       kernel is performed and its value is made available to the remainder
-      of the ``do`` form by being bound to the variable.
+      of the `do` form by being bound to the variable.
 
   The last <stmt> may not be a binder and must be a kernel.  The whole
-  ``do`` expression is then a single compound heterogeneous kernel,
+  `do` expression is then a single compound heterogeneous kernel,
   whose value is the value returned by the last <stmt>.
 
   If you need a kernel that produces a value without doing anything, use
-  ``(return <value>)``.  If you need a kernel that does nothing and
-  produces no useful value, you can use ``pass``.
+  ``return(<value>)`` (see `return`).  If you need a kernel that does nothing and
+  produces no useful value, you can use `pass`.
 
   For example, to make a kernel that does inference until some variable
   in the model becomes "true" (why would anyone want to do that?), you
   can write::
 
-      1 [define my_strange_kernel (lambda ()
-      2   (do
-      3     (finish <- (sample something_from_the_model))
-      4     (if finish
-      5         pass
-      6         (do
-      7           (mh default one 1)
-      8           (my_strange_kernel)))))]
+      1 define my_strange_kernel = proc () {
+      2   do(finish <- sample(something_from_the_model),
+      3      if (finish) {
+      4         pass
+      5      } else {
+      6         do(default_markov_chain(1),
+      7            my_strange_kernel())
+      8      })}
 
-  Line 3 is a binder for the ``do`` started on line 2, which makes
+  Line 2 is a binder for the `do`, which makes
   ``finish`` a variable usable by the remainder of the procedure.  The
-  ``if`` starting on line 4 is a kernel, and is the last statement of
-  the outer ``do``.  Line 7 is a non-binder statement for the inner
-  ``do``.
+  `if` starting on line 3 is a kernel, and is the last statement of
+  the outer `do`.  Line 6 is a non-binder statement for the inner
+  `do`.
 
   The nomenclature is borrowed from the (in)famous ``do`` notation of
   Haskell.  If this helps you think about it, Venture's ``do`` is
   exactly Haskell ``do``, except there is only one monad, which is
   essentially ``State ModelHistory``.  Randomness and actual i/o are not
   treated monadically, but just executed, which we can get away with
-  because Venture is strict and doesn't aspire to complete functional
-  purity.""", intended_for_inference=True)
+  because VentureScript is strict and doesn't aspire to complete functional
+  purity.
+""", intended_for_inference=True)
 
 beginMacro = Macro(arg0("begin"), BeginExpand, desc="""\
-- `(begin <kernel> ...)`: Perform the given kernels in sequence.
+.. function:: begin(<kernel>, ...)
+
+  Perform the given kernels in sequence.
 """, intended_for_inference=True)
 
 qqMacro = Macro(arg0("quasiquote"), QuasiquoteExpand, desc="""\
@@ -402,156 +411,168 @@ qqMacro = Macro(arg0("quasiquote"), QuasiquoteExpand, desc="""\
  """)
 
 callBackMacro = quasiquotation_macro("call_back", min_size = 2, desc="""\
-- `(call_back <name> <model-expression> ...)`: Invoke a user-defined callback.
+.. function:: call_back(<name>, <model-expression>, ...)
 
-  Locate the callback registered under the name `name` and invoke it with
+  Invoke a user-defined callback.
 
-  - First, the Infer instance in which the present inference program
+  Locate the callback registered under the name ``name`` and invoke it with
+
+  - First, the `Infer` instance in which the present inference program
     is being run
 
-  - Then, for each expression in the call_back form, a list of
+  - Then, for each expression in the `call_back` form, a list of
     values for that expression, represented as stack dicts, sampled
     across all extant particles.  The lists are parallel to each
     other.
 
-  Return the value returned by the callback, or Nil if the callback
-  returned None.
+  Return the value returned by the callback, or ``Nil`` if the callback
+  returned ``None``.
 
-  To bind a callback, call the ``bind_callback`` method on the Ripl object::
+  To bind a callback, call the `bind_callback` method on the `Ripl` object::
 
       ripl.bind_callback(<name>, <callable>):
 
       Bind the given Python callable as a callback function that can be
       referred to by `call_back` by the given name (which is a string).
 
-  There is an example in test/inference_language/test_callback.py.
+  There is an example in the source in ``test/inference_language/test_callback.py``.
 """)
 
 collectMacro = quasiquotation_macro("collect", min_size = 2, desc="""\
-- `(collect <model-expression> ...)`: Extract data from the underlying
-  model during inference.
+.. function:: collect(<model-expression> ...)
+
+  Extract data from the underlying model during inference.
 
   When a `collect` inference command is executed, the given
   expressions are sampled and their values are returned in a
-  ``Dataset`` object.  This is the way to get data into datasets; see
-  ``into`` for accumulating datasets, and ``printf``, ``plotf``, and
-  ``plotf_to_file`` for using them.
+  `Dataset` object.  This is the way to get data into datasets; see
+  `accumulate_dataset` and `into` for accumulating datasets, and `print`, `plot`, and
+  `plot_to_file` for using them.
 
-  Each <model-expression> may optionally be given in the form (labelled
-  <model-expression> <name>), in which case the given `name` serves as the
+  Each ``<model-expression>`` may optionally be given in the form ``labelled(
+  <model-expression>, <name>)``, in which case the given ``name`` serves as the
   key in the returned table of data.  Otherwise, the key defaults
-  to a string representation of the given `expression`.
+  to a string representation of the given ``expression``.
 
-  *Note:* The <model-expression>s are sampled in the _model_, not the
+  *Note:* The ``<model-expression>`` s are sampled in the *model*, not the
   inference program.  For example, they may refer to variables
-  ``assume`` d in the model, but may not refer to variables ``define`` d
-  in the inference program.  The <model-expression>s may be constructed
-  programmatically: see ``unquote``.
+  `assume` d in the model, but may not refer to variables `define` d
+  in the inference program.  The ``<model-expression>`` s may be constructed
+  programmatically: see `unquote`.
 
-  ``collect`` also automatically collects some standard items: the
+  `collect` also automatically collects some standard items: the
   iteration count (maintained by merging datasets), the particle id, the
-  wall clock time that passed since the Venture program began, the
+  wall clock time that passed since the VentureScript program began, the
   global log score, the particle weights in log space, and the
   normalized weights of the particles in direct space.
 
   If you want to do something custom with the data, you will want to
-  use the asPandas() method of the Dataset object from your callback
+  use the `asPandas()` method of the `Dataset` object from your callback
   or foreign inference sp.
 """)
 
 assumeMacro = quasiquotation_macro("assume", min_size = 3, max_size = 4, desc="""\
-- `(assume <symbol> <model-expression> [<label>])`: Programmatically add an assumption.
+.. function:: assume(<symbol>, <model-expression>, [<label>])
+
+  Programmatically add an assumption.
 
   Extend the underlying model by adding a new generative random
-  variable, like the ``assume`` directive.  The given model expression
-  may be constructed programmatically -- see ``unquote``.
+  variable, like the `assume` directive.  The given model expression
+  may be constructed programmatically -- see `unquote`.
 
-  The <label>, if supplied, may be used to ``freeze`` or ``forget``
+  The ``<label>``, if supplied, may be used to `freeze` or `forget`
   this directive.
 """)
 
 observeMacro = Macro(arg0("observe"), ObserveExpand, desc="""\
-- `(observe <model-expression> <value> [<label>])`: Programmatically add an observation.
+.. function:: observe(<model-expression>, <value>, [<label>])
+
+  Programmatically add an observation.
 
   Condition the underlying model by adding a new observation, like the
-  ``observe`` directive.  The given model expression may be
-  constructed programmatically -- see ``unquote``.  The given value is
+  `observe` directive.  The given model expression may be
+  constructed programmatically -- see `unquote`.  The given value is
   computed in the inference program, and may be stochastic.  This
   corresponds to conditioning a model on randomly chosen data.
 
-  The <label>, if supplied, may be used to ``forget`` this observation.
-
-  *Note:* Observations are buffered by Venture, and do not take effect
-  immediately.  Call ``incorporate`` when you want them to.
-  ``incorporate`` is called automatically before every toplevel
-  ``infer`` instruction, but if you are using ``observe`` inside a
-  compound inference program, you may not execute another toplevel
-  ``infer`` instruction for a while.
+  The ``<label>``, if supplied, may be used to `forget` this observation.
 
 """, intended_for_inference=True)
 
 forceMacro = SyntaxRule(["force", "exp", "val"],
                         ["_force", ["quasiquote", "exp"], "val"],
                         desc="""\
-- `(force <model-expression> <value>)`: Programatically force the state of the model.
+.. function:: force(<model-expression>, <value>)
+
+  Programatically force the state of the model.
 
   Force the model to set the requested variable to the given value,
   without constraining it to stay that way. Implemented as an
-  ``observe`` followed by a ``forget``.
+  `observe` followed by a `forget`.
 
 """, intended_for_inference=True)
 
 predictMacro = quasiquotation_macro("predict", min_size = 2, max_size = 3, desc="""\
-- `(predict <model-expression> [<label>])`: Programmatically add a prediction.
+.. function:: predict(<model-expression>, [<label>])
+
+  Programmatically add a prediction.
 
   Extend the underlying model by adding a new generative random
-  variable, like the ``predict`` directive.  The given model expression
-  may be constructed programmatically -- see ``unquote``.
+  variable, like the `predict` directive.  The given model expression
+  may be constructed programmatically -- see `unquote`.
 
-  The <label>, if supplied, may be used to ``freeze`` or ``forget``
-  this directive. """)
+  The ``<label>``, if supplied, may be used to `freeze` or `forget`
+  this directive.
+""")
 
 sampleMacro = quasiquotation_macro("sample", min_size = 2, max_size = 2, desc="""\
-- `(sample <model-expression>)`: Programmatically sample from the model.
+.. function:: sample(<model-expression>)
+
+  Programmatically sample from the model.
 
   Sample an expression from the underlying model by simulating a new
   generative random variable without adding it to the model, like the
-  ``sample`` directive.  If there are multiple particles, refers to
+  `sample` directive.  If there are multiple particles, refers to
   the distinguished one.
 
   The given model expression may be constructed programmatically --
-  see ``unquote``.  """)
+  see `unquote`.
+""")
 
 sampleAllMacro = quasiquotation_macro("sample_all", min_size = 2, max_size = 2, desc="""\
-- `(sample_all <model-expression>)`: Programmatically sample from the model in all particles.
+.. function:: sample_all(<model-expression>)
+
+  Programmatically sample from the model in all particles.
 
   Sample an expression from the underlying model by simulating a new
   generative random variable without adding it to the model, like the
-  ``sample`` directive.
+  `sample` directive.
 
-  Unlike the ``sample`` directive, interacts with all the particles,
+  Unlike the `sample` directive, interacts with all the particles,
   and returns values from all of them as a list.
 
   The given model expression may be constructed programmatically --
-  see ``unquote``.  """)
+  see `unquote`.
+""")
 
 extractStatsMacro = quasiquotation_macro("extract_stats", min_size = 2, max_size = 2, desc="""\
-- `(extract_stats <model-expression>)`: Extract maintained statistics.
+.. function:: extract_stats(<model-expression>)
 
-  Specifically, sample the given model expression, like ``sample``,
+  Extract maintained statistics.
+
+  Specifically, sample the given model expression, like `sample`,
   but expect it to return a stochastic procedure and reify and return
   the statistics about its applications that it has collected.
 
-  The exact Venture-level representation of the returned statistics
+  The exact VentureScript-level representation of the returned statistics
   depends on the procedure in question.  If the procedure does not
-  collect statistics, return nil.
+  collect statistics, return ``nil``.
 
   For example::
 
-    (assume coin (make_beta_bernoulli 1 1))
-    (observe (coin) true)
-    (incorporate)
-    (extract_stats coin) --> (list 1 0)
+    assume coin = make_beta_bernoulli(1, 1)
+    observe coin() = true
+    extract_stats(coin) --> list(1, 0)
 
 """)
 

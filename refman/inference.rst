@@ -69,12 +69,12 @@ Built-in Helpers
 - `none`: Affect no choices in the scope.
 
   If given as a block keyword, `none` causes the inference procedure to
-  apply to no random choices.  This is useful only for ``collapse_equal``
-  and ``collapse_equal_map``.
+  apply to no random choices.  This is useful only for `collapse_equal`
+  and `collapse_equal_map`.
 
 - `ordered`: Make particle Gibbs operate on all blocks in order of block ID.
 
-- `(ordered_range <block> <block>)`: Make particle Gibbs operate on a
+- `ordered_range(<block>, <block>)`: Make particle Gibbs operate on a
   range of blocks in order of block ID.
 
   Specifically, all the blocks whose IDs lie between the given lower
@@ -87,24 +87,27 @@ All the macros available in the modeling language can be used in the
 inference language, too.  In addition, the following inference macros
 are available.
 
-- `(loop <kernel>)`: Run the given kernel continuously in a background
-  thread.
+.. function:: loop(<kernel>)
+
+  Run the given kernel continuously in a background thread.
 
   Available in Lite and Puma.
 
   Can only be used as the top level of the `infer` instruction:
-  ``[infer (loop something)]``.
+  ``infer loop(something)``.
 
-  Execute the ``[stop_continuous_inference]`` instruction to stop.
+  Execute the `stop_continuous_inference` instruction to stop.
 
 .. include:: inference-macros.gen
 
-- `(unquote <object>)`: Programmatically construct part of a model expression.
+.. function:: unquote(<object>)
+
+  Programmatically construct part of a model expression.
 
   All the ``<model-expression>`` s in the above special forms may be
   constructed programmatically.  An undecorated expression is taken
-  literally, but if ``(unquote ...)`` appears in such an expression,
-  the code inside the unquote is executed `in the inference program`,
+  literally, but if ``unquote(...)`` appears in such an expression,
+  the code inside the unquote is executed **in the inference program**,
   and its result is spliced in to the model program.
 
   For example, suppose one wanted to observe every value in a data
@@ -113,23 +116,23 @@ are available.
   expression needs to be different, but in a programmable manner.
   Here is a way to do that::
 
-    [define data ...]
-    [define (observe_after i)
-      (lambda (i)
-        (if (< i (length data))
-            (begin
-              (observe (obs_fun (unquote i)) (lookup data i)) ; (*)
-              (observe_after (+ i 1)))
-            pass))]
-    [infer (observe_after 0)]
+    define data = ...
+    define observe_after = proc(i) {
+      if (i < length(data)) {
+         do(observe(obs_fun(unquote(i)), lookup(data, i)),  // (*)
+            observe_after(i + 1))
+      } else {
+         pass
+      }}
+    infer observe_after(0)
 
   Note the use of unquote on the like marked ``(*)`` to construct
   different observe expressions for each data element.  To the
   underlying model, this will look like::
 
-    [observe (obs_fun 0) <val0>]
-    [observe (obs_fun 1) <val1>]
-    [observe (obs_fun 2) <val2>]
+    observe obs_fun(0) = <val0>
+    observe obs_fun(1) = <val1>
+    observe obs_fun(2) = <val2>
     ...
 
 .. rubric:: Footnotes
@@ -147,6 +150,6 @@ are available.
    exactly the type signature one would get by implementing a
    ``State`` monad on execution histories.  This is why the ``do``
    form is called ``do``.  The ``begin`` form is a simplification of
-   ``do`` that drops all intermediate return values.  As of this
-   writing, there are no analogues to ``get``, ``put``, or
-   ``runState``.
+   ``do`` that drops all intermediate return values.  For the analogues
+   of ``runState``, see `in_model` and `run`.  As of this writing, there are
+   no analogues of ``get`` or ``put``.
