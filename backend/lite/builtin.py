@@ -234,6 +234,16 @@ generic_times = dispatching_psp(
                      sim_grad=lambda args, direction: [ direction * args[1], v.VentureNumber(v.vv_dot_product(v.VentureArrayUnboxed(args[0], t.NumberType()), direction)) ],
                      descr="vector times scalar")])
 
+generic_biplex = dispatching_psp(
+  [SPType([t.BoolType(), t.AnyType(), t.AnyType()], t.AnyType()),
+   SPType([t.ArrayUnboxedType(t.NumberType()), t.ArrayUnboxedType(t.NumberType()), t.ArrayUnboxedType(t.NumberType())], t.ArrayUnboxedType(t.NumberType()))],
+  [deterministic_psp(lambda p, c, a: c if p else a,
+                     sim_grad=lambda args, direction: [0, direction, 0] if args[0] else [0, 0, direction],
+                     descr="biplex returns either its second or third argument, depending on the first."),
+   deterministic_psp(np.where,
+                     # TODO sim_grad
+                     descr="vector-wise biplex")])
+
 generic_normal = dispatching_psp(
   [SPType([t.NumberType(), t.NumberType()], t.NumberType()), # TODO Sigma is really non-zero, but negative is OK by scaling
    SPType([t.NumberType(), t.ArrayUnboxedType(t.NumberType())],
@@ -501,9 +511,7 @@ builtInSPsList = [
                                         descr="zip returns a list of lists, where the i-th nested list contains the i-th element from each of the input arguments") ],
 
            [ "branch", esr_output(conditionals.branch_request_psp()) ],
-           [ "biplex", deterministic_typed(lambda p, c, a: c if p else a, [t.BoolType(), t.AnyType(), t.AnyType()], t.AnyType(),
-                                           sim_grad=lambda args, direc: [0, direc, 0] if args[0] else [0, 0, direc],
-                                           descr="biplex returns either its second or third argument.")],
+           [ "biplex", no_request(generic_biplex) ],
            [ "make_csp", typed_nr(csp.MakeCSPOutputPSP(),
                                   [t.HomogeneousArrayType(t.SymbolType()), t.ExpressionType()],
                                   t.AnyType("a compound SP")) ],
