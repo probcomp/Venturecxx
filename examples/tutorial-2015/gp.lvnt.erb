@@ -124,6 +124,13 @@ regression.  Feel free to clear your session
 clear
 ```
 
+We are going to use a [small plugin](multiline_plot_plugin.py) to make
+a custom plot.  Download it and load it into VentureScript with
+
+```venture
+run(load_plugin("multiline_plot_plugin.py"));
+```
+
 The following code asks, "what is the posterior on models that are
 either linear or sine wave, conditioned on the given data?"
 
@@ -165,18 +172,8 @@ define yss = mapv(proc(i) {
         mh(default, one, <%= mixreg_increment = sample_size.div(10) %>),
         return(ys)))
     }, linspace(0, 0, 10));
-```
 
-We're going to use a [small plugin](multiline_plot_plugin.py) to make
-a custom plot.  Download it and load it into VentureScript with
-
-```venture
-run(load_plugin("multiline_plot_plugin.py"));
-```
-
-then plot, for example, with
-
-```venture
+// Plot them
 plot_lines(xs, yss, data_xs, data_ys, -2, 2, 0.5, 1.0, 1.0);
 ```
 
