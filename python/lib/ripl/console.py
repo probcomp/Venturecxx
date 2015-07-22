@@ -116,7 +116,7 @@ class RiplCmd(Cmd, object):
     '''Evaluate an expression in the inference program.'''
     if self.strip_hack:
       line = '(' + line + ')'
-    self._do_instruction('evaluate', line)
+    printValue(self._do_instruction('evaluate', line))
 
   @catchesVentureException
   def do_define(self, s):
