@@ -269,9 +269,10 @@ define data = run(accumulate_dataset(10, do(posterior, collect(x))))
 
 If you really want to know what's going on in this expression you can
 study the documentation of [do](<%= refman_url
-%>inference.html#special-forms), [run](<%= refman_url
-%>inference.html#run), and [accumulate_dataset](<%= refman_url
-%>inference.html#accumulate_dataset).  The effect is to gather up the
+%>inference.html#do), [run](<%= refman_url
+%>inference.html#run), [accumulate_dataset](<%= refman_url
+%>inference.html#accumulate_dataset), and [collect](<%= refman_url
+%>inference.html#collect).  The effect is to gather up the
 values of `x` (and some metadata) over 10
 iterations of the `posterior` inference command.
 
