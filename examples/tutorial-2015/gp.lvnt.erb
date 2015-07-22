@@ -372,24 +372,77 @@ function (see [R&W](http://www.gaussianprocess.org/gpml/chapters/RW2.pdf) for
 more on this).  The inputs and outputs of `g` are arrays, because `g` samples
 from the joint distribution of the GP's values on all supplied inputs.
 
-Exercise: verify and explain why the following two commands are not equivalent:
+Exercise: Consider the following three ways to query a GP.
 
 ```venture
-// Command 1
+// Way 1
+sample g(array(1.0, 2.0));
+
+// Way 2
 assume gg = proc(x) { lookup(g(array(x)), 0) };
+sample gg(1.0);
+sample gg(2.0);
+
+// Way 3
 sample array(gg(1.0), gg(2.0));
 
-// Command 2
-sample g(array(1.0, 2.0));
 ```
 
-<a href="javascript:toggle('answer-inequivalent')">(show answer)</a>
+1. Ascertain the distributions on values they produce.  Are they the same or different?
+   <a href="javascript:toggle('answer-inequivalent-1')">(show answer)</a>
 
-<div class="answer" id="answer-inequivalent" markdown="1">
-Answer: TODO  Did Ben actually mean array(run(sample(gg(1.0))), run(sample(gg(2.0))))
-for command 1?
+   <div class="answer" id="answer-inequivalent-1" markdown="1">
+   Answer: Here's the distribution given by Way 2:
 
-</div>
+   ```venture
+   plot("p0d1d", run(accumulate_dataset(<%= sample_size %>, collect(gg(1.0), gg(2.0)))))
+   ```
+
+   Plotting Ways 1 and 3 is a little trickier, because `collect` doesn't
+   (yet) have native support for vector-valued expressions (the use of
+   `labelled` is needed to align the data):
+
+   ```venture
+   plot("p0d1d", run(accumulate_dataset(<%= sample_size %>,
+     do(vals <- sample(array(gg(1.0), gg(2.0))),
+        collect(labelled(lookup(quote(unquote(vals)), 0), gg_1),
+                labelled(lookup(quote(unquote(vals)), 1), gg_2))))))
+   ```
+
+   ```venture
+   plot("p0d1d", run(accumulate_dataset(<%= sample_size %>,
+     do(vals <- sample(g(array(1.0, 2.0))),
+        collect(labelled(lookup(quote(unquote(vals)), 0), g_1),
+                labelled(lookup(quote(unquote(vals)), 1), g_2))))))
+   ```
+
+   Ways 1 and 3 produce the same multivariate Gaussian, whereas Way 2
+   produces independent samples.
+
+   </div>
+
+2. Why does that happen?
+   <a href="javascript:toggle('answer-inequivalent-2')">(show answer)</a>
+
+   <div class="answer" id="answer-inequivalent-2" markdown="1">
+   Answer: Let's take them one at a time.
+
+   Way 1 is the "right" way to query a Gaussian process: supply all
+   the test inputs at once.  By definition, the GP returns a sample
+   from a multivariate Gaussian determined by the mean and covariance
+   functions applied to those points and previously queried ones.
+
+   Way 2 exhibits an important property of VentureScript: a `sample`
+   expression does not modify the model.  So, the GP cannot "remember"
+   the value sampled at `x=1.0` when sampling at `x=2.0`, and produces
+   independent samples.
+
+   Way 3 is "right" again.  Expressions evaluated in the same `sample`
+   command can influence each other.  Way 3 samples a value from the
+   GP at `x=1.0` conditioned on the observations, and then one at
+   `x=2.0` conditioned on the observations _and_ the value at `x=1.0`.
+
+   </div>
 
 Note that the choice of covariance function can itself be random (as long as
 all possible functions are symmetric and positive-semidefinite).  For example,
