@@ -239,6 +239,17 @@ improbable in the posterior (but don't cheat -- the region from `r = -0.8` to
 `r = -0.4` should still have positive probability).  What other parts of the
 model have a describable effect on the behavior of inference?
 
+<a href="javascript:toggle('answer-newprior')">(show answer)</a>
+
+<div class="answer" id="answer-newprior" markdown="1">
+One such prior on r would be `normal(-10, 0.1)`, or `normal(10, 0.1)` would
+work too.
+
+TODO: Show the math here, integrating `P(comp2) P(r) P(D|r)` from r=-inf to inf
+and comparing that to P(comp1) P(D|comp1), etc.
+
+</div>
+
 
 Gaussian Process Regression
 ===========================
