@@ -331,7 +331,7 @@ Exercise: verify and explain why the following two commands are not equivalent:
 ```venture
 // Command 1
 assume gg = proc(x) { lookup(g(array(x)), 0) };
-array(run(sample(gg(1.0))), run(sample(gg(2.0))))
+array(run(sample(gg(1.0))), run(sample(gg(2.0))));
 
 // Command 2
 sample g(array(1.0, 2.0));
