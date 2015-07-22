@@ -82,7 +82,7 @@ path.  (This code block is downloadable as [gp-1.vnts](gp-1.vnts)).
 Here the value of `mix_f()` is "doubly random" -- the procedure `mix_f` is randomly
 chosen, and after `mix_f` is fixed, the output of a call to `mix_f` is also random.
 Equivalently, the value of `mix_f()` follows a mixture model with mixture
-components `mcomponents` and corresponding weights `mweights`.  
+components `mix_components` and corresponding weights `mix_weights`.
 
 It can be instructive to examine the effect of observations.  The prior on
 mixture components is:
@@ -211,7 +211,7 @@ Note that the inference loop contains the instruction
 if(eq(run(sample(pnum)), atom<2>)) { mh(quote(r), one, 10) } else { pass }
 ```
 
-This says, if the current value of `pnum` is 2 (so that y = x^(-r)), then do
+This says, if the current value of `pnum` is 2 (so that `y = x^(-r)`), then do
 inference on `r`, and otherwise, do not touch `r`.  This is a sensible thing to
 do since the likelihood is indifferent to `r` if `pnum != 2`, so any inference
 steps taken on `r` when `pnum != 2` would retrogress on inference progress.
