@@ -187,15 +187,11 @@ data as shown below:
 ![Observation data](gp_progressivemixreg_data.png)
 
 We have drawn in curves for each of the three mixture components we will be
-using in our mixture model: `y = 0.9` (blue), `y = 1/x` (green), and `y = x^r`
-(magenta, with parameter value `r = -0.6`).  Now let's clear our session
+using in our mixture model: `y = 0.9` (blue), `y = 1/x` (green), and `y = x^(-r)`
+(magenta, with parameter value `r = 0.6`).  Now let's clear our session
 
 ```venture
 clear
-```
-
-```venture
-run(load_plugin("multiline_plot_plugin.py"));
 ```
 
 and look at a probabilistic program for regression using this mixture
@@ -233,11 +229,72 @@ how wide a region of very-good solutions surround the MAP, which is related to
 how sensitive the likelihood is to small changes in the parameters.  In the
 above example, `r` is the only parameter.
 
-Exercise: Come up with a prior on `r` such that component 2 dominates the
-posterior.  Then come up with a prior on `r` such that component 2 is very
-improbable in the posterior (but don't cheat -- the region from `r = -0.8` to
-`r = -0.4` should still have positive probability).  What other parts of the
-model have a describable effect on the behavior of inference?
+Exercise:
+
+1. Compute a coarse approximation to the posterior on mixture components.
+   Does this model make a clear choice on this data set?
+   <a href="javascript:toggle('answer-mix-1')">(show answer)</a>
+
+   <div class="answer" id="answer-mix-1" markdown="1">
+   Answer:
+
+   ```venture
+   infer resample(10);
+   plot("h0", run(accumulate_dataset(<%= [smaller_sample_size.div(10), 1].max %>,
+     do(posterior,
+        collect(pnum)))))
+   ```
+
+   </div>
+
+2. Come up with a prior on `r` such that component 2 (`x^(-r)`) dominates the
+   posterior.
+   <a href="javascript:toggle('answer-mix-2')">(show answer)</a>
+
+   <div class="answer" id="answer-mix-2" markdown="1">
+   Answer: Setting `r` to be deterministically the "right" value will
+   favor that component.  Of course, since the "right" value
+   is in this case inferred from the data (by eyeballing), this risks
+   overfitting.
+
+   ```venture
+   observe r = 0.6;
+   infer resample(10);
+   plot("h0", run(accumulate_dataset(<%= [smaller_sample_size.div(10), 1].max %>,
+     do(posterior,
+        collect(pnum)))))
+   ```
+
+   </div>
+
+3. Come up with a prior on `r` such that component 2 is very
+   improbable in the posterior (but don't cheat -- the region from `r = 0.4` to
+   `r = 0.8` should still have positive probability).
+   <a href="javascript:toggle('answer-mix-3')">(show answer)</a>
+
+   <div class="answer" id="answer-mix-3" markdown="1">
+   Answer: Putting a very broad prior on `r` lets us produce an
+   arbitrarily severe Bayes Occam's Razor penalty against it.
+
+   ```venture
+   clear
+   ```
+
+   ```venture
+   assume r = uniform_continuous(-100, 100);
+
+   <%= `cat gp-3.vnts | tail -n +3 | head -24`.gsub(/^/, "   ") %>
+
+   infer resample(10);
+   plot("h0", run(accumulate_dataset(<%= [smaller_sample_size.div(10), 1].max %>,
+     do(posterior,
+        collect(pnum)))))
+   ```
+
+   </div>
+
+4. (Open ended) What other parts or aspects of the model have a
+   describable effect on the behavior of inference?
 
 
 Gaussian Process Regression

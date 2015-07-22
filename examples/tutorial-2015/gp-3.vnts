@@ -1,11 +1,11 @@
 // Parameter for component 2
-assume r = tag(quote(r), 0, 0 - beta(2,2));
+assume r = tag(quote(r), 0, beta(2,2));
 
 // Mixture
 assume pcomponents = array(
     proc(x) { 0.9 },           // component 0
     proc(x) { pow(x, -1) },    // component 1
-    proc(x) { pow(x, r) }      // component 2
+    proc(x) { pow(x, 0 - r) }  // component 2
     );
 assume pweights = simplex(0.3, 0.3, 0.4);
 assume pnum = tag(quote(pnum), 0, categorical(pweights));
