@@ -103,8 +103,8 @@ Things to ship:
     objects with a syntax of my choosing that get nice permalinks!?
   - [Later]: Add infer endloop and deprecate stop_continuous_inference
 - Idea:
-  - Have the transcript machine feed strings into a console instance
-    rather than a ripl
+  - [next] Have the transcript machine feed strings into a console
+    instance rather than a ripl
     - This also prompts making the console more testable
     - Would want to suppress the prompts, either in the console with a
       flag or by detecting and removing them externally
@@ -120,9 +120,9 @@ Things to ship:
     intervening forget) seems to bork the thing in a confusing way
   - Anthony doesn't think the reference manual should say <foreignblob>
     especially not proc(<foreignblob>) -> pair<blah, <foreignblob>>
-  - [next] plot('aaoeu', aoeu) (single quotes) causes the prompt to enter an
+  + plot('aaoeu', aoeu) (single quotes) causes the prompt to enter an
     infinite "more input please" loop.
-  - [patched locally] infer posterior in the console is different from infer posterior
+  + infer posterior in the console is different from infer posterior
     in the tutorial, b/c I forgot the return value correction when I
     made it tolerate long lines
   - Minor strange thing: if you run venture with -f and load a file
@@ -130,7 +130,8 @@ Things to ship:
   - Idea: likelihood_weight reads like it just changes the weights,
     not the content.  Could make that so.
   - feature request: plot multiple histograms on the same plot
-  - sample returning the same value repeatedly is a mental model sticking point
+  - sample returning the same value repeatedly is a mental model
+    sticking point
   - different namespaces confuse people, as Grem predicted
   - feature request: do something to each block in a scope (as opposed
     to "one" or to "all", which is blocking the whole thing).

@@ -142,6 +142,26 @@ class Writer(object):
         self.out_chunks.append(string)
 
     def emit_code(self, mode, expect_error, string):
+        indent = self.detect_indent(string)
+        (figures, munged) = self.munge_plotfs(mode, string)
+        print munged.strip()
+        first = True
+        for (line, munged_line) in zip(string.strip().splitlines(), munged.strip().splitlines()):
+            (returned, printed) = with_output_to_string(self.pass_line, munged_line)
+            if first:
+                self.out_chunks.extend([indent, "```\n", line, "\n```\n"])
+                first = False
+            else:
+                self.out_chunks.extend([indent, '<pre class="code-cont"><code>', line[len(indent):], "</code></pre>\n"])
+            self.out_chunks.extend([indent, '<pre class="value"><code>', cgi.escape(printed), "</code></pre>\n"])
+        figure_blocks = [indent + "![A Venture plot](%s)\n" % (figure,) for figure in figures]
+        self.out_chunks.extend(figure_blocks)
+
+    def pass_line(self, line):
+        munged = self.console.precmd(line)
+        return self.console.onecmd(munged)
+
+    def xxx_emit_code(self, mode, expect_error, string):
         print "Trying program in %s mode" % (mode,)
         if mode == "venture":
             self.ripl.set_mode("venture_script")
