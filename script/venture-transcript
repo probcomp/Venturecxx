@@ -37,6 +37,7 @@ except ImportError:
 import venture.shortcuts as vs
 from venture.ripl.utils import strip_types
 from venture.exception import VentureException
+from venture.ripl.console import RiplCmd
 
 start_of_block = re.compile(r"^[ \t\r\f\v]*```(venture|church')(/error)?[ \t\r\f\v]*$", re.MULTILINE)
 end_of_block = re.compile(r"^[ \t\r\f\v]*```[ \t\r\f\v]*$", re.MULTILINE)
@@ -99,15 +100,16 @@ class Writer(object):
         self.outdir = outdir
         self.outfile = outdir + "/index.html"
         self.out_chunks = []
-        self.ripl = self._create_ripl()
         self.fignum = 0
         self.title = title
         self.unexpected_errors = 0
+        (_, ripl) = self._create_ripl()
+        self.console = RiplCmd(ripl, self._create_ripl)
 
     def _create_ripl(self):
         ripl = vs.backend("lite").make_combined_ripl()
         ripl.set_mode("venture_script")
-        return ripl
+        return (False, ripl)
 
     def in_text(self, string):
         split_res = re.split(start_of_block, string, maxsplit=1)
@@ -191,7 +193,7 @@ class Writer(object):
         if munged.strip() == "list_directives":
             return [self.ripl.print_directives()]
         elif munged.strip() == "clear":
-            self.ripl = self._create_ripl()
+            (_, self.ripl) = self._create_ripl()
             return [None]
         else:
             try:
