@@ -225,7 +225,7 @@ def ObserveExpand(program):
     template = ["_observe", ["quasiquote", "exp"], "val"]
   return SyntaxRule(pattern, template).expand(program)
 
-identityMacro = SyntaxRule(['identity', 'exp'], ['lambda', [], 'exp'])
+identityMacro = SyntaxRule(['identity', 'exp'], 'exp')
 lambdaMacro = SyntaxRule(['lambda', 'args', 'body'],
                          ['make_csp', ['quote', 'args'], ['quote', 'body']],
                          desc="""\
