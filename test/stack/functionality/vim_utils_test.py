@@ -160,7 +160,7 @@ class TestSivmUtils(unittest.TestCase):
 
     def test_desugar_expression_identity(self):
         a = ['identity','b']
-        b = ['make_csp', ['quote', []], ['quote', 'b']]
+        b = 'b'
         self.assertEqual(macro_system.desugar_expression(a),b)
 
     def test_desugar_nothing(self):
