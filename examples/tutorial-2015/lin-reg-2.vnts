@@ -9,7 +9,7 @@ assume line = proc(x) { slope * x + intercept };
 assume outlier_prob = uniform_continuous(0.01, 0.3);
 
 // Per-point outlier check
-assume is_outlier = mem(proc(i) { flip(outlier_prob) });
+assume is_outlier = proc() { flip(outlier_prob) };
 
 // Outlier model: Broad Gaussian independent of the line
 assume obs_outlier = proc(x) { normal(0,20) };
@@ -22,8 +22,8 @@ assume noise = gamma(1, 1);
 assume obs_inlier = proc(x) { normal(line(x), noise) };
 
 // Full data model: Either outlier or inlier.
-assume obs = proc(i, x) {
-  if (is_outlier(i)) {
+assume obs = proc(x) {
+  if (is_outlier()) {
     obs_outlier(x)
   } else {
     obs_inlier(x)
