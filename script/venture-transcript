@@ -99,14 +99,15 @@ class Writer(object):
         self.outdir = outdir
         self.outfile = outdir + "/index.html"
         self.out_chunks = []
-        self._create_ripl()
+        self.ripl = self._create_ripl()
         self.fignum = 0
         self.title = title
         self.unexpected_errors = 0
 
     def _create_ripl(self):
-        self.ripl = vs.backend("lite").make_combined_ripl()
-        self.ripl.set_mode("venture_script")
+        ripl = vs.backend("lite").make_combined_ripl()
+        ripl.set_mode("venture_script")
+        return ripl
 
     def in_text(self, string):
         split_res = re.split(start_of_block, string, maxsplit=1)
@@ -190,7 +191,8 @@ class Writer(object):
         if munged.strip() == "list_directives":
             return [self.ripl.print_directives()]
         elif munged.strip() == "clear":
-            return [self._create_ripl()]
+            self.ripl = self._create_ripl()
+            return [None]
         else:
             try:
                 return self.ripl.execute_program(munged)
