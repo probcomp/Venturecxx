@@ -355,7 +355,8 @@ such a simple model, there are a couple reasons:
 Rejection sampling does not solve all problems
 ----------------------------------------------
 
-The inference command `posterior` is global [rejection sampling](https://en.wikipedia.org/wiki/Rejection_sampling) -- guessing and checking.
+The inference command [posterior](<%= refman_url %>inference.html#posterior)
+is global [rejection sampling](https://en.wikipedia.org/wiki/Rejection_sampling) -- guessing and checking.
 As you might know or imagine, this is likely to get slow.  In
 particular, let's fiddle with the position of the observation
 and see what happens as we change the model to make the
@@ -495,7 +496,7 @@ sample x
 ```
 
 Using the plotting tools we learned before, here's the distribution
-this algrithm makes (note the use of `do` to sequence inference actions):
+this algorithm makes (note the use of `do` to sequence inference actions):
 
 ```venture
 plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>,

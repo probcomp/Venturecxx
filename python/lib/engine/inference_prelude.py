@@ -230,7 +230,7 @@ prelude = [
 "(posterior_at (quote default) (quote all))"],
 
 ["posterior", """\
-.. function:: global_posterior(<foreignblob>)
+.. function:: posterior(<foreignblob>)
 
   :rtype: <pair () <foreignblob>>
 

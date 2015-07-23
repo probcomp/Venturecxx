@@ -1,0 +1,331 @@
+Todo list convention: A '+' bullet means "done"; a "x" bullet means
+"will not do (for the immediate goal)".
+
+Things to ship:
++ Replace v0.4 with one that passes smoke tests
++ Serious bug: I think error annotation always crashes in VS mode
++ Serious bug: Ben's list_directives problem
+- Tutorial slowness
+  + Vectorize (on a few SPs)
+  + Add gradients to the vectorized SPs
+  - Could probably bum ~30% more from the vectorized thing by staring
+    at the profile
++ Tutorial video infrastructure
+  + The pygame plugin will need to be adapted to the vectorized
+    observation style
+  + Put into the document one externally-generated frame
+  + [VS] Make load_plugin work in the tutorial (as an inference command)
+  - Decide whether and how to transform custom visual renderings,
+    e.g. so they at least don't show up on the screen when building
+    the tutorial.
+    - Option: Leave it
+    - Option: Make them be blocks that are not actually executed
+      - Con: No syntax check
+    - Option: Some kind of customization for the transcript runner
+  - Optional: Simplify the plugin code so it is more readable by the
+    more curious students (e.g., flush the quadratic term, drawing by
+    sampling points)
+- Shipping the tutorial for noon Portland time Tuesday
+  x Anthony tried the lecture example, and said
+    - Want cauchy
+    - Want abs
+    - Observing histograms is annoying
+  + Explain Bayes Occam's Razor
+  + Tell a story about custom proposals
+  x Can we use drift mh to actually really solve the lin reg model?
+  + Cut remaining TODOs.
+  + Finish the GP chapter Ben is adding
+    + Needs and title and an introductory sign post
+    + "We'll be using a plugin" is a little undermotivated
+    + Link the chapter in
+    + Bug: transcript "clear" doesn't rebuild the ripl, and thus keeps
+      plugins; if the plugin is not idempotent, this may be a problem
+    + Make the code blocks be downloadable files.
+  + Nitpick: Separate the nav links horizontally
+  + Mechanize making all the downloadable files available on probcomp.
+    How does Grem want that done?  Check lab notebook.
+  + Fix broken links
+    + #loop is broken
+    + multiline_plot_plugin.py is broken
+  + Remove copyright headers from downloadable examples
+  + Fix Ben's butt-ugly answer markup
+  + Change VenChurch to VentureScript in the reference manual; can
+    make a blanket excuse about parse trees.
+  + Rewrite the plugins thing to mention pyexec and pyeval
+  + Build full and upload
+  + Build and upload the reference manual
+  + Tell vkm about the BOR paragraphs
+  + Copying multiline commands into the console doesn't work
+    - Would need to adapt the state machine from bayeslite/shell/src/core.py
+      - _do_instruction needs to save the pending instruction
+    - Would need to adapt at least the VS parser to be able to report
+      completeness of phrases; ideally also not crashing on errors
+      - in bql, all phrases end in a semicolon
+      - possible hack: feed in the string without catching errors;
+        then feed in EOF and if it crashes that was not a complete
+        phrase, but if it doesn't it was
+    - The strip hack likely won't work, but that's ok; can explicitly turn it off
+  + Thoroughly rewrite the reference manual in VentureScript.
+    + Instruction Reference
+    + Modeling Syntax special forms
+    + Modeling syntax function usage examples
+    + Code snippets in Inference Syntax
+    x Built-in helpers in Inference Syntax?
+    + Special forms in Inference Syntax
+    x Do I want to make _targets for the directives, so that
+      e.g. incorporate will link properly?
+      - Problem: will name-clash with the programmatic versions.
+    + Rebuild and reupload the reference manual
+    - [Later] Would also be nice to get rid of the stupid operator
+      substitution and rename everything its proper name
+  + Make sure every exercise in the GP chapter has a (show answer) link
+  + Rebuild the full tutorial and reupload
+  + Recheck that none of the links are broken (n.b. downloads, reference anchors)
+    - The link checker checks fragments
+  + Redepoly Venture to probcomps (multiline paste, other bug fixes)
+  + Build a release tarball and put it up on the web space, unlinked
+  + Check that the student files are all good
+  - [Option] Demo gradients (maybe on the outlier model?)
+  - [Option] Demo refactoring the model so resimulation MH works better
+  - [Option] Add venture.value.dicts, venture.lite.value,
+    venture.lite.types to API reference
+  - [Option] We haven't rewritten the linear regression model vectorized,
+    so it's a few times slower than it relatively easily could be
+    - TypeError: array([-10.,  -9.,  -8.,  -7.,  -6.,  -5.,  -4.,  -3.,  -2.,  -1.,   0.,
+         1.,   2.,   3.,   4.,   5.,   6.,   7.,   8.,   9.,  10.]) is not JSON serializable
+      in the venturescript unparser?
+  - [Option]: A chapter on sufficient statistics
+    - Insert a reference to it from the second GP exercise.
+  - [Option]: A segment introducing mem
+  - [Option]: Document mem
+  - [Later]: Prevent copyright headers from being auto-added to tutorial downloads.
+  - [Later]: What in the world do I have to do to create Sphinx
+    objects with a syntax of my choosing that get nice permalinks!?
+  - [Later]: Add infer endloop and deprecate stop_continuous_inference
+- Idea:
+  - Have the transcript machine feed strings into a console instance
+    rather than a ripl
+    - This also prompts making the console more testable
+    - Would want to suppress the prompts, either in the console with a
+      flag or by detecting and removing them externally
+  - Have the transcript machine create a general environment variable
+    with the figure number that anything can read, and maybe also have
+    it insert a doctored plot into the environment that reads this
+    environment variable.
+- Live bugs:
+  + Flush the argument from is_outlier, since it's not doing anything
+  + Add a link to http://probcomp.csail.mit.edu/venture/edge/reference/inference.html#posterior
+    in the tutorial
+  - observe y = 2 and then observe y = 7 (without an
+    intervening forget) seems to bork the thing in a confusing way
+  - Anthony doesn't think the reference manual should say <foreignblob>
+    especially not proc(<foreignblob>) -> pair<blah, <foreignblob>>
+  - [next] plot('aaoeu', aoeu) (single quotes) causes the prompt to enter an
+    infinite "more input please" loop.
+  - [patched locally] infer posterior in the console is different from infer posterior
+    in the tutorial, b/c I forgot the return value correction when I
+    made it tolerate long lines
+  - Minor strange thing: if you run venture with -f and load a file
+    that runs plotting, 'clear' will run it and show the plot again.
+  - Idea: likelihood_weight reads like it just changes the weights,
+    not the content.  Could make that so.
+  - feature request: plot multiple histograms on the same plot
+  - sample returning the same value repeatedly is a mental model sticking point
+  - different namespaces confuse people, as Grem predicted
+  - feature request: do something to each block in a scope (as opposed
+    to "one" or to "all", which is blocking the whole thing).
+  - -f and "load" are inconsistent about adding files to the prompt
+  - repeated loading adds a file to the prompt more than once
+  - error message request: "cannot convert VentureSPRecord to
+    foreignblob" is incomprehensible. "cannot convert inference action
+    to dataset" would be better.
+- For fixing bugs, bump version number to 4.1rc{k} and reinstall
+  on probcomps
+  - Maybe also on a private url (or location on probcomp!) if there is
+    a student that decided to install locally
+- Tutorial polish (see workproj)
+  - Idea: pull quotes on the side might help experienced people skim
+    and decide where to dive in
+  - How can we automatically test that error messages, e.g. for being
+    off by one character, are good?
+  - Can I get non-binding sequences as do blocks?
+  + VS rewrite is done when grep church' yields no results
+  - Read through and nitpick Grem's first line of reactions
+  - Idea: Navigation side bar for the sections
+  - Check that the sample counts are something sensible
+  - Check and add hyperlinks into the reference manual
+  - Per Chad's suggestion, go through for sign-posting
+  - Replace or augment usage example link with the tutorial
+  - Idea for not flashing pictures from custom graphics all the time:
+    environment variable that the custom code detects (with the name
+    of the file to render to?)
+  - Blocked on variadic compounds to define a reasonable non-symmetric
+    local_proposal combinator
+- Bugs reported by writing team on flowdock
+  - observing arrays from the top level sucks
+  - VS parser error messages suck
+  - unary minus doesn't work (but -2 is now parsed as a negative number literal)
+  - may need to reset the frame count in the drawing thing externally
+  - assume z = normal(0,1); assume w = normal(0,1) at the console triggers a ripl annotation failure
+  - Idea: easy timeouts for long inference processes
+  - Ulli: multi-spec plot does not work with string specs
+- Custom proposal bugs:
+  - Define an assess that works on actions
+  - Define logDensity for engine_method_sp(foo) that calls
+    foo_logDensity, if that method exists
+- Venture reference documentation
+  - Programmatically generate reasonable descriptions of generic psps?
+  - Manually write them instead?
+  - Re-link foreigns.rst (and actually finish it?)
+- Probcomp login due July 20th or 21st
+  - Should provide locations on probcomp to put private tarballs of
+    bugfix releases, in case anyone wants to follow along from home
+  - Grem says: one account named "ppaml"
+
+----------------------------------------------------------------------
+Tutorial-relevant bugs
+
+The ggplot problem is a blocker, but we can fix it locally on probcomp
+without committing to forking ggplot
+
+----------------------------------------------------------------------
+
+Technical clarification idea: The inference programming language has
+support for Markov chains.  Execution histories of models are one
+possible kind of state space, but there's really nothing magic about
+them (except that they are common enough to deserve supporting
+machinery).
+
+Technical clarification idea: Separate the notion of a subproblem
+(scaffold) from the notion of a local proposal (the LKernel dict).
+
+- It's called a "local" proposal because it's tied to the structure of
+  the subproblem, and can exploit cancellations in the acceptance
+  ratio
+
+- It makes sense to have the proposal itself be an object because of
+  coordination between the detach and regen phases
+
+- Each subproblem admits a default local proposal (prior resimulation)
+
+- One can construct a local proposal by supplying values for the
+  principal nodes and forswearing prior cancellation for them
+
+- Do I want a facility for per-SP customization of the otherwise
+  default local proposal?
+
+- This nomenclature does not seem to cover the uses of detach and regen
+  to implement complex stories like pgibbs, slice and hmc.
+
+Technical simplification project: The inference program should be able
+to export compound procedures to be callable by foreign Python code
+(e.g., (lambda (values) detach, regen, report posterior weight)).
+
+
+----------------------------------------------------------------------
+
+Do the trickiness integration tests pollute some directory with figure
+files?  Should the integration test check that those files get
+written?
+
+I really should capture the standard output of at least the automatic
+tests of the "print" procedure, and maybe even check that it agrees
+with expectations.
+
+More bugs:
+- Anthony wants a shortcut for mapm over arange
+- mapm doesn't work on arrays/vectors
+
+Later:
+- Broaden the distributions that the random tester chooses for
+  dispatching psps to select uniformly from the alternatives
+- Check Jenkins/Flowdock integration -- the Venture Jenkins's backlink seems broken
+- Dispatch as written breaks automatic coersion
+- rename global_posterior to assess_global_posterior or something like
+  that, to avoid name clashing with move to global posterior
+- announce reset_to_prior, posterior, run
+- Could make prefix ! (exclamation point) be a shortcut for (run foo)
+
+Idea: Do we want to implement vkm's own sequential rejection algorithm
+generically for Venture?
+
+----------------------------------------------------------------------
+
+Idea: is there a cogent definition for observe (expr) = number?
+- Can try factor (assess number (expr))
+  - Problem: assessment of an application expression needs to
+    integrate over the possible operators
+  - Alternative problem: conditional assessment of an application
+    expression has the base measure problem
+
+----------------------------------------------------------------------
+
+A "proposal on X" is a stochastic function X -> R X
+  x' ~ q(x'|x)
+that also computes the acceptance ratio component
+         q(x|x')
+beta_q = -------
+         q(x'|x)
+such that
+alpha = beta * p(x)/p(x') is a valid M-H ratio for any target distribution p on x
+
+Proposal combinations - aux-mh:
+  start with x
+  u  ~ p(u|x)
+  u' ~ q(u'|u), beta
+  x' ~ r(x'|u')
+Intuition is that u is an alternate representation of x, but we will
+analyze it as an auxiliary variable in addition to x.
+Then the proposal is x -> x', with component
+           p(u|x)   q(u|u') r(x|u)
+beta_pqr = -------------------------
+           p(u'|x') q(u'|u) r(x'|u')
+
+This is a morphism from proposals on X to proposals on U.  Proof
+obligation: whenever beta_q is a valid ratio for proposing to U,
+beta_pqr is a valid ratio for proposing to X.  Conjecture: this can be
+discharged by analyzing u as an auxiliary variable with conditional
+distribution p(u|x).
+
+----------------------------------------
+
+Generic proposals, as above, with proposal combinations, form a
+category.  It does not obviously have products, though.
+
+----------------------------------------------------------------------
+
+Hakaru's answer to the base measure problem: permit sum measures;
+compute base measures statically
+
+----------------------------------------------------------------------
+
+Future:
+- Fix egregious introduced discrepancies
+  - What should Puma's asExpression produce for strings?
+  - Lite's ExpressionType?
+  - There appears to be considerable code duplication between the
+    church' and VS parsers (e.g., the Trie class?)
+  - I can probably flush the old parser class too
+  - Can I get rid of the dependency on pyparsing?
+  - examples/hmm.vnt is wrong (the current CP solution fixes whatever
+    the bug was).
+- Crosscat
+- Delete things
+  - extra parsed directives and support code
+  - operator substitution
+  - does the core sivm still have _modify ?
+  - can I flush the SIVM's observation reporting cache?
+- System cleaning
+  - Flesh out vectorization by generic operations
+    - Stan does this
+    - Read numpy's design for inspiration (or matlab?)
+  - Fun fact: the infer command is now an alias for the run function,
+    except it has its own code path (and supports infer loop).
+- Performance (vectorization, partial evaluator, per-family sharing)
+- Papers
+- High-achiever educational goal: ship standalone self-study document
+  we can give interested people to learn Venture
+  - Exchangeable coupling chapter (with discrete models?)
+  - Maybe LDA chapter
+  - Fuller reference manual
+- BayesBD integration (metamodel interface, VS metamodels, etc)
