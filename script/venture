@@ -57,21 +57,24 @@ def lite(args):
 
 def local_ripl(args, backend):
     build = ripl_builder(args, backend)
-    (interactive, r) = build()
+    (interactive, r, files, plugins) = build()
     if interactive:
         banner()
-        run_venture_console(r, build)
+        run_venture_console(r, build, files=files, plugins=plugins)
     return r
 
 def ripl_builder(args, backend):
   def build():
     interactive = True
+    files = []
+    plugins = []
     r = backend.make_combined_ripl(persistent_inference_trace = True)
     if args is not None:
         if args.prelude: r.load_prelude()
         if args.library:
             for l in args.library:
                 r.load_plugin(l)
+                plugins.append(l)
         if args.abstract_syntax:
             r.set_mode("church_prime")
         else:
@@ -80,6 +83,7 @@ def ripl_builder(args, backend):
             for f in args.file:
                 interactive = False
                 r.execute_program_from_file(f)
+                files.append(f)
         if args.eval:
             for e in args.eval:
                 interactive = False
@@ -88,7 +92,7 @@ def ripl_builder(args, backend):
             interactive = True
     else:
         r.set_mode("venture_script")
-    return (interactive, r)
+    return (interactive, r, files, plugins)
   return build
 
 def add_local_args(parser):

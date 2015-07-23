@@ -47,15 +47,16 @@ def catchesVentureException(f):
   return try_f
 
 class RiplCmd(Cmd, object):
-  def __init__(self, ripl, rebuild):
+  def __init__(self, ripl, rebuild, files=None, plugins=None):
     super(RiplCmd, self).__init__()
     self.ripl = ripl
     self.prompt = 'venture[script] > '
     self.rebuild = rebuild
-    self.files = []
-    self.plugins = []
+    self.files = [] if files is None else files
+    self.plugins = [] if plugins is None else plugins
     self.pending_instruction = None
     self.pending_instruction_string = None
+    self._update_prompt()
 
   def emptyline(self):
     pass
@@ -169,9 +170,9 @@ class RiplCmd(Cmd, object):
   def do_clear(self, _):
     '''Clear the console state.  (Replay the effects of command line arguments.)'''
     self.ripl.stop_continuous_inference()
-    (_, self.ripl) = self.rebuild()
-    self.files = []
-    self.plugins = []
+    (_, self.ripl, files, plugins) = self.rebuild()
+    self.files = files
+    self.plugins = plugins
     self._update_prompt()
   
   @catchesVentureException
@@ -250,8 +251,8 @@ class RiplCmd(Cmd, object):
     else:
       self.prompt =   "            ... > "
 
-def run_venture_console(ripl, rebuild):
-  RiplCmd(ripl, rebuild).cmdloop()
+def run_venture_console(ripl, rebuild, files=None, plugins=None):
+  RiplCmd(ripl, rebuild, files=files, plugins=plugins).cmdloop()
 
 def main():
   import venture.shortcuts as s
