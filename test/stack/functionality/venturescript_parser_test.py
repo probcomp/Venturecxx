@@ -648,4 +648,5 @@ class TestInstructions(unittest.TestCase):
                         'expression' : {'loc':j(30,3), 'value':v.number(132.0)},
                     }}])
 
-
+def testPunctuationTermination():
+    assert module.string_complete_p("plot('aaoeu', aoeu)")

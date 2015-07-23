@@ -455,7 +455,7 @@ def string_complete_p(string):
     while True:
         token = scanner.read()
         if token[0] == -1:      # scan error
-            return False
+            return True
         else:
             if token[0] == 0:   # EOF
                 # Implicit ; at EOF.
