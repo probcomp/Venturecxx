@@ -35,6 +35,7 @@ fi
 echo Making a tarball marked version $release
 
 tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
+    --exclude=axch-*.org \
     --exclude=.git \
     --exclude=.gitignore \
     --exclude=.gitmodules \

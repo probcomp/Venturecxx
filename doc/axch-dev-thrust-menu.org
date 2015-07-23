@@ -1,0 +1,2605 @@
+#+STARTUP: odd
+#+STARTUP: hidestars
+
+Venture thrust menu by axch, updated 6/15/15
+
+composed 12/22/14; updated on 3/19/15; current on 4/16/15
+
+Todo list convention: A '+' bullet means "done"; a "x" bullet means
+"will not do (for the immediate goal)".
+
+Dimensions on which I evaluated these projects:
+- Required effort
+- Does it help me feel better about Venture
+- Will it help integrate Taylor
+- Will it help integrate Grem
+- Will it help with the summer school
+  - Making Venture a system in which one would want to do the tutorial
+  - Making Venture a system in which one would want to do the challenge problems
+- Will it help with the papers (venturescript/metaprob)
+
+|                            | Effort    | Me     | Taylor | Grem | SS    | Papers |
+|----------------------------+-----------+--------+--------+------+-------+--------|
+| Replay inf prog            | < 1 day?  | ??     | --     | --   | some  | yes ?  |
+| Functional traces Lite     | 1-2 days  | ??     | --     | --   | ?     | ?      |
+| Functional traces Puma     | ?         | ??     | --     | --   | some  | some   |
+| Untraced models Lite       | 1-2 days  | ??     | --     | --   | ?     | ?      |
+| Untraced models Puma       | ?         | ??     | --     | --   | some  | some   |
+| First-class integers       | 1-2 days  | --     | some   | --   | some  | some   |
+| More testing               | open      | ??     | some   | --   | some  | --     |
+| regen SP over Lite         | drafted   | yes    | some   | --   | --    | yes ?  |
+| regen SP over Puma         | 1 day?    | yes    | some   | --   | --    | ?      |
+| make-sp in Lite            | < 1 day?  | ??     | ?      | --   | --    | yes    |
+| make-sp in Puma            | < 1 day?  | ??     | ?      | --   | --    | ?      |
+| toplevel as [infer (do )]  | < 1 day?  | --     | some   | ??   | --    | --     |
+| Profiler for Lite          | 2-3 days? | yes ?  | ?      | --   | yes   | yes ?  |
+| Profiler for Puma          | 2-3 days? | yes ?  | ?      | --   | yes ? | ?      |
+| Scaffold over source L     | 1-2 days? | yes ?  | ?      | --   | yes   | yes ?  |
+| Scaffold over source P     | 1-2 days? | yes ?  | ?      | --   | yes ? | ?      |
+| Compositing by particle    | 1-2 days? | --     | --     | ??   | yes ? | ?      |
+| Animating by sweep count   | 1-2 days? | --     | --     | ??   | yes ? | --     |
+| Faceted plots              | 1-2 days? | --     | --     | ??   | yes ? | ?      |
+| Debug error reporting      | done      | some   | ?      | some | yes   | --     |
+| Fix double-macroexpand bug | < 1 day   | some   | ?      | some | yes   | --     |
+| Eat Python callables       | < 1 day?  | some   | ?      | ??   | yes ? | --     |
+| Reassume                   | < 1 day?  | some ? | ?      | --   | yes ? | ?      |
+| slam.vnt                   | 1 day?    | --     | --     | --   | ?     | some   |
+| Full SP serialization      | 2-3 days? | --     | some   | --   | --    | --     |
+| Perf measurements          | 1-2 days  | prereq | ?      | ?    | --    | --     |
+| Perf benchmarks            | 1-2 days  | maybe  | ?      | ?    | --    | --     |
+| No Args in Lite            | 1-2 days  | maybe  | --     | --   | maybe | --     |
+| No Args in Puma            | 1-2 days  | maybe  | --     | --   | maybe | --     |
+| Family sharing in Lite     | 2-3 days  | maybe  | --     | --   | maybe | maybe  |
+| Family sharing in Puma     | 3-4 days? | maybe  | --     | --   | maybe | maybe  |
+| Flesh                      | open      | --     | some ? | ?    | ?     | --     |
+| Bugs                       | open      | --     | some ? | ?    | ?     | --     |
+| Reference documentation    | 1-2 wks   | some   | some   | some | yes   | ?      |
+| Release polish             | open      | some   | some   | some | yes   | ?      |
+| Refactorings               | weeks     | --     | yes ?  | --   | --    | --     |
+| Hs-RandomDB-v1             | 1 wk?     | yes ?  | ?      | --   | --    | maybe  |
+|----------------------------+-----------+--------+--------+------+-------+--------|
+| Web demos on HsVenture     |           |        |        |      |       |        |
+| Integrate blog demos       |           |        |        |      |       |        |
+| Multi-makers               |           |        |        |      |       |        |
+| Integrate Ulli GPs         |           |        |        |      |       |        |
+| Mixmh combinator           |           |        |        |      |       |        |
+|----------------------------+-----------+--------+--------+------+-------+--------|
+
+Table update: fixed another error reporting bug, and partially reduced
+their rate of incidence.
+
+Notes on work estimates:
+- I had estimated regen SP over Lite at 1 day; drafted it in a few
+  hours, but for perfection ran afoul of various stumbling block (and
+  declared victory regardless)
+- I had estimated 1-2 days for "debug error reporting"; got one bug
+  out of it in a couple hours
+- So far spent about 1 day on "scaffold over source L"
+*** Project: Replay trace around the inference program; win "estimate"
+- [Feature] 1000 samples (maybe likelihood-weighted) on 60 cores
+  using O(60) memory instead of O(1000)
+  - Add a engine.trace.Trace around the inference trace
+    - Do I want a TraceSet around it too?  Or enforce that there's
+      only one inference trace by not doing that?
+  - Might want to record toplevel-instruction-generated assumes,
+    observes, predicts in the inference trace, so that its directive
+    map contains a full history of the program.
+    - Could do perhaps that by changing the core_sivm to issue infer
+      method calls to the engine instead of assume, etc (but, avoid
+      infinite loops).
+      - also avoid triggering auto-incorporations?
+- [Feature] estimate
+- [Feature] was vkm telling me about a version of full SMC that's
+  possible in this setting?
+*** Project: Functional traces
+- Benefits:
+  - Make (sophisticated) particle methods have better performance
+  - Make dynamic programs representing multiple distributions not
+    stupidly inefficient (e.g., forward-backward algorithm, or
+    inside-outside for pcfgs)
+  - Nested forking
+  - Top-level pgibbs as an inference program
+- LKernel cleanup would make this somewhat easier
+  - could cut LKernels if needed
+  - could replace AAALKernel with another special SP thing, parallel
+    to density (logDensityOfCounts)
+- Could be implemented by reproducing the trace interface from Lite
+  - regen and detach might be sharable, if they can be written in a
+    functionality-agnostic style (which might actually be somewhat
+    difficult)
+    - particles as practiced are not functional traces -- they're
+      imperative traces with functionally shared parts
+    - that might actually be ok for "functional traces" too -- an
+      imperative shell around functionally sharable parts
+  - do particles currently have a bug with undercloning shared auxes?
+- Hack: leave the interface to a trace itself imperative, but confine
+  the mutation to the trace's direct field pointers, and have all
+  those be persistent data structures.  Then "copy" is still an
+  operation, but now O(1).
+  - Is it appropriate to make a version of detach that does not build
+    a rhodb, or do we want that anyway?
+    - Actually, this feels orthogonal, because there may be situations
+      even with imperative traces where rhodb is not needed
+  - Is this what a "particle" is?  Can I just make "particles" without
+    a base trace?
+  - Still room to munge the inference primitives to take maximal
+    advantage
+*** Project: Untraced models
+Notes on the untraced backend
++ mkdir backend/untraced
++ design desideratum: exactly reuse the Lite SP library
++ still want to support addresses (e.g. for error reporting) so will
+  need to carry them through the interpreter (and catch and annotate
+  errors in the same way, etc).
++ will probably want to make bogus nodes for requesters that just
+  contain their values and nothing else
++ will need to call incorporate like the PET does
+- question: do I try to respect on-SP LKernels?
+- scopes and blocks probably don't make much sense anymore, so can't
+  really do much block-controlled stuff
+
+Outstanding work:
++ I worry that my shoot-from-the-hip evaluator may not transmit auxes
+  properly.  Are there tests for auxes in the inference trace?  Should
+  I attempt to use the untraced backend for the model trace?
++ I worry that ignoring LSRs may not be the right thing, even when
+  untraced
++ mem is probably broken in the untraced interpreter, b/c I did not
+  implement the request id protocol
++ Since there is no unevaluation, will leak entries in request-result
+  maps.
+  + One mitigation strategy: make an explicit marker for a "do not
+    track" request id and do not track them
+- Test case: run the sp property tests (then maybe all the conformance
+  tests?)
+  - First, define a backend named Untraced
+  - Likely to break all the collapsed samplers, if they are tested at
+    all
+x Should also resurrect core-slam.vnt and run it with untraced
+  inference (watch performance)
+
+Choice: do I implement the interface that engine.Trace expects, or the
+one it provides?  Or do I make engine.Trace a true combinator?
+- Making the choice commits me to either storing or not storing the
+  source code and value history of toplevel directives
+- Decision: implement the interface that engine.Trace expects.  Maybe
+  it will become a true combinator later.
+
+Comment: The untraced interpreter is the list of all the extra noise
+that Venture creates that is not actually used to track dependencies.
+
+Later:
+- can support a somewhat limited form of OBSERVE via an
+  eval-constrained method, which
+  - does whatever constrain does on constants (crash or equality test)
+  - crashes on lookups [*]
+  - on applications
+    - evaluates the arguments unconstrained
+    - runs the requester if any unconstrained
+    - if the outputPSP is ESRRefOutputPSP, evals the first request
+      constrained (and the others unconstrained)
+    - else, evals all the requests unconstrained and calls the
+      logDensity of the outputPSP, returning the weight
+- Possible UI hack: have OBSERVE do nothing, but set a flag disabling
+  further non-OBSERVE operations (including resample!) until an
+  INCORPORATE.
+- The above should suffice to implement concurrent-particle likelihood
+  weighting and particle filtering; and also rejection sampling if
+  density bounds are available (can be extracted by eval-constrained
+  as well).
+  - Storing the program text enables stream likelihood weighting
+    - Maybe the inference program's source code is a sufficient store
+      of the program text, where one (in_model ...) call suffices for
+      one particle/likelihood trial.
+- Actually, it seems as though the program text is sufficient to
+  implement global regeneration over an untrace (with only the top
+  random choices of the directives for principal nodes).  Does this
+  mean I can do (mh default all ...)?  Or is detach (and
+  unincorporate) a problem?
+
+[*] Crashing on lookups means can't
+  [assume x (stuff)]
+  [observe x 5]
+This program is equivalent to
+  [observe (stuff) 5]
+  [assume x 5]
+Observing variables in general requires PETs, because need to
+repropagate the new value (which actually makes problems even for
+PETs).
+*** Project: First-class integers
+- Check that Puma has an integer type
+- Decide what the density of a continuous-valued SP should be on an
+  integer output.  -inf, or convert the integer to a float?
+  - If the former, do I want to flag that situation, to detect the
+    tons of soon-to-be-impossible conditions pervading our test suite?
+- Teach the parser to produce integers (test on a constant)
+- Introduce a NumberOrInteger type, and make Lite arithmetic generic over floats and ints
+  - Test on some trivial examples, and with the existing randomized tests
+- Devise (abstract?) some boilerplate for genericity in Puma and make
+  Puma arithmetic generic
+- Go through the types of all the builtins and make integers where appropriate
+*** Project: Test simulator/log density agreement
+*** Project: Test gradients computed by Lite backend
+- Prereq: inference program can extract gradients from regen/detach without
+  harming anything
+  - reusable scaffolds and maybe functional traces would help
+*** Project: Regen/Detach as inference SPs
+- can start with a restricted interface, permitting built-in
+  operators to access the broader one.  Eventually try to
+  replicate/replace built-in facilities with inference programming
+- reusable scaffolds would help, perhaps after
+- enables generic Gaussian drift (finally)
+  - If I have generic Gaussian drift, I will feel better about
+    killing the LKernel mechanism
+
+- Subgoals:
+  + Reproduce resimulation mh on a fixed scaffold
+  - Reproduce resimulation mh on a randomly selected scaffold
+  - Gaussian drift kernel
+
+- Initial limitations:
+  - Lite only
+  - One trace only
+    - Can add "distribute" or "scatter" to multiprocessing by passing
+      explicit parallel lists and a command type tag to the worker
+      - cleans up the rest of the control channel too: tags can be
+        "stop", "dump", "at", "map", "scatter", each with their own
+        arguments.
+  - Non-serializing parallelism mode only
+  - Non-stochastic subproblems only
+
+Would be nice if:
+- destructuring worked
+- subproblems did not mutate
+- could transmit this program to the workers to make their random
+  choices independently from each other
+- subproblems, rho_dbs were serializable (?)
+
+;; Imperative mh looks like this if the default regen is from the prior
+(do (subproblem <- (select foo bar)) ; really, select by availability of log densities
+    ((rho_weight, rho_db) <- (detach subproblem))
+    (xi_weight <- (regen subproblem))
+    (if (< (uniform ...) ...)
+        ...
+        (do (detach subproblem)
+            (restore subproblem rho_db))))
+
+;; With functional-underneath traces, we can have this
+(do (subproblem <- (select foo bar))
+    (original <- (copy_trace))
+    (rho_weight <- (detach subproblem))
+    (xi_weight <- (regen subproblem))
+    (if (< (uniform ...) ...)
+        ...
+        (set_trace original)))
+
+(do (subproblem <- (select foo bar))
+    (current_x <- ...)
+    ((rho_weight, rho_db) <- (detach subproblem))
+    ; somewhere need credit for the reverse proposal, rather than the prior
+    (new_x <- (normal current_x 1))
+    (correction <- ....)
+    set x to new x
+    (xi_weight <- (regen subproblem))
+    (if (< (uniform ...) ...)
+        ...
+        (do (detach subproblem)
+            (regen/restore subproblem rho_db))))
+*** Project: make-sp
+- Define a class named something like SyntheticSP, whose methods etc.
+*** Project: Treat the top level as the inside of an [infer (begin ...)]
+- Then we don't need so much special parsing hair
+- Some of the current "instructions" just become special interpreter
+  commands rather than actually part of the program in any sense
+  - These are applicable to the remote interpreter that the server
+    serves, too
+- With per-trace directive lists applied to the inference program,
+  enables replaying full programs faithfully (because the [assume ...]
+  instructions will be recorded).
+- Issue: syntax of toplevel directives (e.g. forget), including
+  in the console, differs from their infer version.
+  - Notably labels
+*** Project: A normal profiler (based on addresses)
+- specific suggestion: get profiling data on SLAM
+  - problem: the profile data is almost certainly not serialized or
+    deserialized, so resampling would tend to lose it
+  - problem: there is some directive id mismatch bug in the ripl's
+    post-processing of the profiler data involving sivm resugaring
+    - could gain more insight into it by making the sivm assign
+      directive ids
+- Milestone: When we have shown using the profiler that it is faster
+  to write an SP in Python
+*** Project: A scaffold display that draws on your model source code
+(using addresses, presumably)
+- This is not even cleaner with regen/detach inference SPs
+
+- Might want to make the stack frames that SIVM produces be actual objects
+- SIVM knows how to convert one address into a stack of frames
+  - [frame for frame in [self._resugar(index) for index in address] if frame is not None]
+  - a Frame is a did, exp, and resugared index into the expression
+  - the stack is not really part of the scaffold -- just about
+    locating it in the execution history
+- RIPL's humanReadable method knows how to unparse a (Lisp)
+  expression, convert the index into a text index, and highlight.
+  - This includes reparsing it, to get the 'loc' attribute!
+  - The returned text index includes subexpressions, even though the
+    node does not, but I am sure there are ways to hack that.
+
+First cut: forget the location information.  Just draw the bottom
+frame for every node that appears in the scaffold, color coded by
+type, and see what that looks like.  Steps:
+- Extract the addresses from the scaffold
+- Ask the SIVM for their bottom frames
+  x Am I going to have a problem with popping the in-flight id stack?
+- Print out all the expressions that appear (in did order?), marking
+  them up with colors (skip the underlines, I think)
+  + Bug: Do I want to avoid marking up subexpressions?  If so, how do
+    I do that?  Since the scaffold will typically be application
+    nodes, it will just be open and close parens; maybe I could mark them
+    with a leading * or something?
+  + Bug: ANSI color code pairs do not nest properly, of course.
+  + Abstraction: Parser.unparse_and_mark_up(exp, [(index, color)])
+
+Todo:
++ Q: Does Python already have a believable Trie data structure?
++ A: No.
++ Bug: The principal node probably got hidden by multiple different
+  nodes, with different classifications, having the same bottom frame.
+- Probably would be cleaner to have a Doc abstraction and let the
+  markup operations modify it
+  - Surely much faster, too.
+- Other performance: Is there a faster way to build the trie?  Does
+  [1:] walk down the key efficiently?
++ I want to show the directives, not just the expressions
++ Try it on a big scaffold, like SLAM or David's BLOG examples
++ Colors for other nodes too
++ Mark applications more precisely, rather than coloring their whole subexpression
++ Bug: drg is not explicitly represented in the scaffold, thus doesn't show up
+  + Fix: the drg is represented during scaffold construction; just save it
+x Bug: Address alignment through macro unexpansion (i.e., the SIVM)
+  may be wrong, and thus give erroneous displays
+x Bug: "Bottom frame" may not always be accurate, if the SIVM finds a
+  None on the bottom.
+x What do I do with request nodes?  Just ignore them?  Do they have
+  the same address or frame as the outputs?
++ Phenomenon: One expression may macroexpand to multiple nodes, and
+  thus be multi-counted in the scaffold.
++ Resolution: That's ok; shows true performance cost.
++ Draw a separate display with all the frames that appear in all the
+  stacks
+  + Avoid over-counting recursive calls: Is it enough to filter equal
+    addresses from each stack?
++ I really want to count node repetitions in decimal rather than unary
++ Infelicity: lookup nodes get marked "brush" repeatedly, but my
+  display doesn't indicate the repetition.
+- Bug: Wadden's program triggers double macro-expansion
+- Feature request: Display all subexpressions sorted by count, as
+  distinct from all affected program points sorted by code order.
+*** Project: Compositing graphics across particles
+*** Project: Animating graphics by sweep count
+*** Project: Faceted plots
+*** Project: Fix the double-macro-expand bug
+- One approach is to not expand inside quote and
+  quasiquote
+  - For eval to still work, it needs to be able to invoke the macro
+    expander
+    - Eval will break this error reporting anyway, so don't need to be
+      careful about the indexes yet
+*** Project: Python callables as foreign (inference?) SPs; flush "callbacks"?
+- Benefit: lowers the authorship burden for foreign SPs
+- Solve relationship to "callbacks".
+- Example (is it of this?): Could write an "inference operator" that
+  called some horrible optimization routine for you, like L-BFGS.
+  - Might be better to expose the function that would be passed to it,
+    as a function, for programmatic manipulation.
+  - If L-BFGS deals gracefully with hard edges, those could probably
+    be exposed to it in a reasonable way.
+*** Project: Redefine/reassume as uneval, eval, rebind, propagate
+the latter being what incorporate does
+*** Project: Finish Venture-on-top SLAM (in light of untraced inference)
+*** Project: Full SP serialization
+- I keep thinking that I can avoid having to explicitly serialize
+  primitive and compound SPs, because I should be able to serialize
+  just the random content, and then rerun the maker choice with the
+  same random content to restore.
+  - The interface adjustment would be to values: "tell me your
+    serializable random content" and "update your random content with
+    this deserialized thing".
+- Problem with this plan: categorical.
+  - In effect, categorical has latent stochastic control flow, in that
+    it can return closures with different bodies depending on which
+    way the internal flip goes.
+  - The "random content" of a categorical flip is the index of which
+    of its arguments it chose last time.
+- Could add yet two more methods to the SP interface:
+    psp.reconstructionInfo(value, args) -> VentureValue (presumably serializable)
+    psp.reconstruct(info, args) -> VentureValue
+  Categorical would return the atom in the first case, and that answer
+  in the second.
+  - The serialization mechanism would wrap reconstruction info in an
+    extra tag telling the deserialization mechanism to use the
+    reconstruction code path rather than just replacing the value.
+  - Still problematic, because categorical would need equality on
+    proedures to answer this question (but, of course, it still needs
+    it in order to absorb).
+- May be able to fix the categorical problem by serializing SPRefs
+  using stable addresses, and only doing something interesting when
+  the SPRef points to the node it is in.
+
+Associated bug (circumstances of discovery unknown): Random variables
+of type SP break the second resample_multiprocess
+*** Project: Collect a suite of performance test problems
+Only requirement: we abstractly want to make them faster
+- Challenge problems
+- Examples (including lda, crosscat, curve fitting with pygame)
+- Web demos
+
+Set up push-button profiling (and time measurement)
+- cProfile for Python stuff (can I get a Venture commandline argument
+  to profile itself?)
+- startprof also an option for Python stuff
+- what for Puma?
+*** Project: Start a suite of micro-benchmarks (ideally with baselines)
+Specific micro-benchmarks:
+- long simple Markov chain on simple model (normal-normal) in Puma.
+  - resimulation MH stresses just detach and regen
+  - slice also checks slice logic
+  - pgibbs stresses particles, pgibbs logic
+- long simple Markov chain on simple model (normal-normal) in Lite
+  - resimulation MH
+  - slice
+  - pgibbs
+  - nesterov
+  - HMC
+- big likelihood weighting run on simple model in Puma
+- big likelihood weighting run on simple model in Lite
+  - Is rejection sampling the same thing?
+- long simple Markov chain on more complicated model in Puma/Lite.  Possible
+  issues (both for Venture and for the comparative baseline):
+  - selection of subproblems
+  - creation/destruction of brush
+- SMC or particle filter on simple series model in Puma/Lite.  Stresses:
+  - resampling
+  - inference program interpretation, somewhat
+- long complicated Markov chain (with many operators) as a tall
+  inference program repeat.  Stresses:
+  - inference interpretation
+  - crossing whatever barriers
+- long complicated Markov chain as a Python program.  Stresses:
+  - jumping in and out of inference program interpretation; parsing
+
+My C program for the normal-normal benchmark is on the hs-venture
+branch, in the backend/hs directory.
+
+Can use any surprises from profiling the test corpus for more inspiration.
+*** Project: Flush the Args struct
+in a way that simplifies the SP interface
+- likely to improve performance as well
+*** Project: Performance: Share static dependency info across instances of the same family
+*** Project: Finish the Foreign SP Author's guide (notes from 4/20/15)
+- Note: cleaning up LKernels would simplify the foreign interface
+  (somewhat)
+  - Actually, one option is to leave LKernels as they are,
+    representing proposals that have cancellations against the prior,
+    and introduce another object that doesn't, for, e.g., Gaussian
+    drift (and, of course, the DeterministicLKernel)
+    - Do we need accommodations for such things, or can they be
+      handled entirely in the inference program?
+
+Outline:
+Venture Foreign SPs
+- What is a Venture stochastic procedure?
+- When should I write a foreign SP for Venture?
+- How do I write a foreign SP for Venture?
+  - Just functions
+  - Distributions with densities
+    - Absorbing at some arguments but not others
+  - Gradient methods 1: density gradients
+  - Gradient methods 2: simulation gradients
+    - Randomness control
+  - Rejection: density bounds
+  - Enumeration
+  - Distributions with sufficient statistics
+    - Just sufficient statistics [We don't actually have any of these
+      in the standard library --Ed]
+    - Gibbs proposals
+    - Collapsed models
+  [The rest of the interface is about LKernels, which have essentially
+  bit-rotted for me --Ed]
+  [And then there are latents a la lazy foreign hmm.  Would need to
+  reconstruct that --Ed]
+- How do I write a foreign SP for the Puma backend in C++?
+  [Short answer: Don't. --Ed]
+  [Longer answer: The example is in cp4/p1_regression/ --Ed]
+
+What parts of the system do I want to show autogenerated documentation
+for, and to whom and for what?
+- the shortcuts module is the entry point to the programmatic api
+- the Ripl class is the center of the programmatic api; also
+  used by plugins
+- callbacks get an Inferrer
+  - which gives them access to an Engine (but maybe I want to hide that)
+  - and a Ripl
+- the Types are necessary for annotating foreign SPs
+- there are a bunch of combinators for convenient SP definition
+  (currently in builtin.py, but probably shouldn't be there anymore)
+- there are a bunch of base classes for somewhat less convenient SP
+  definition (psp.py)
+- the actual SPs and Auxes may be needed for foreigns with nontrivial
+  state and incorporation (sp.py, not counting SPType; but SPFamilies
+  and SPRecord are completely internal)
+
+The convenience combinators that make sps (suitable for
+ripl.bind_foreign_sp) should live in the sp module.  There, less
+important, one can also make a custom SP class by inheritance, or make
+a regular SP out of custom PSPs.
+- There should be one combinator for functions
+  - description should be optional
+  - gradient of simulate should be optional
+  - can the type be optional?
+- Combinator could take the requester as an optional argument, or I
+  could define one with a different name that expects the requester.
+- Could keep the ones in builtin.py for convenience for now, and
+  migrate the codebase off them later.
+  - Don't even need reuse, I suppose, except to make sure testing works.
+  - builtin imports sp anyway.
+  - psp imports lkernel which imports sp (but only for VentureSPRecord)
+
+Map of information provided to methods that need to be implemented, or
+subclasses that need to be derived from:
+- simulate
+- gradientOfSimulate
+- isRandom tells whether simulate is actually stochastic, making it
+  a valid or invalid principal node
+  - Derive subclass?
+- canAbsorb goes together with logDensity, and describes circumstances
+  when an SP claims to be happy on the absorbing border.
+  - Unlike what it says, -inf logDensity is occasionally ok; will
+    just reject the transition.
+- logDensity
+- gradientOfLogDensity
+- logDensityBound
+- logDensityOfCounts
+- madeSpLogDensityOfCountsBound
+- incorporate
+- unincorporate
+- canEnumerate goes with enumerateValues
+- enumerateValues
+- description and description_rst_format is for autogenerated
+  documentation, only relevant for builtins.
+- the rest are basically bit-rotten; they were about changing the
+  default proposal distribution
+  - and I never understood what hasVariationalLKernel was all about
+
+Other nitpicks:
+- SPFamilies is just renaming some dict methods (in Lite).  Why do
+  I need it?
+- Get rid of the wildcard import of types.py in value.py
+
+Idea: define a surface syntax for Venture type annotations
+- Taylor recommended sticking with combinators for now
+- could move them to a separate module and remove "Type" from the name
+- could also define pre-instantiated versions of the parameterless
+  ones with lowercase names
+*** Project: Perfect the web demos running on HsVenture (forget, memory leak, inference quality, cleanup)
+What would it take to run the curve-fitting demo?
+- Stretch win condition: a fast backend that can do gradients!
++ Step 1: log all requests and responses server-side, to be able to debug
+x Step 2: check out Baxter's suggested ghc-mod for in-editor type checking
+  - Could do a grammar pass on the documentation thereof via github
+  - To make this work, I would want to either upgrade to GHC 7.10+ or
+    downgrade Cabal to before 1.22
+    - The error is
+      Fail errors:
+
+      BUG: /home/axch/work/pcp/Venturecxx/backend/hs/dist/setup-config: hGetContents: invalid argument (invalid byte sequence)
+  - Query out to Baxter, 4/28/15
++ Get the server to talk crossdomain mumbo-jumbo properly
++ Split off from Server a WireProtocol module that exports a function
+  run :: (Command num) -> IO (Either String ByteString)
+  + start with no either; encode errors later
+  + generalize to unknown directive type
+- Interpret all requests the demo makes
+  + list directives
+    + record the directives on the Model
+    + pretty-print them
+    + in the proper format
+    - refactoring: can use .= to make Pair objects, or not
+    - future bug: quote literal lists where appropriate when rendering an expression
+  - stop continuous inference
+    - can hold the thread id in an IORef, and have stop
+      grab the model mvar and then send a thread kill with killThread
+      - actually, warp might run the application multithreaded, so
+        another MVar might be better.
+  + clear
+  + set_mode (ha!)
+  + assume should already work
+  + how much support do I need for labeled assume, observe, predict?
+    - the client relies on labels being echoed back to extract data
+      points from them
+      - why use a labeled predict to store a piece of state on the
+        model instead of an assume?  You're programmatically
+        synthesizing the name anyway...
+      - historical advantage: one used to not be able to forget assumes
+      - probably can't get away from the labeled observe anyway
+        (except by introspecting on the expression?)
+    + could do it by maintaining a bidirectional map between labels
+      and addresses in the same MVar as the model (due to intertwined
+      invariants).
+  + observe
+    - might be nice to define a separate entry point into the parser
+      for the values
+  + predict
+  + infer
+  + infer loop
+    x tune the number of transitions it takes for good performance?
+  - forget
+    + in the demo as written, forget relies on the server echoing
+      integer directive ids, too (absent which, sends a "null" as the
+      directive id to forget!)
+      + use the integer value of the Addresses as the ids
+    - remove the directive from the directive map
+    - if it was an observation, unconstrain
+      - unconstrain is a problem because I need to know when to stop,
+        and which node to add to the randoms set.
+    - uneval the root expression
+      - uneval is a problem, because it entails reference counting or
+        garbage collection, and I don't have it yet.
+    - if it was an assume, unbind the symbol
+    - note: unlike a Trace, a Model is a complete object.  It admits a
+      notion of garbage collection, and of checking the random choices
+      set.
+- Model SPs should be easy (deterministic ones should be very easy)
+  + But, need to add "quote"
+  + true, false
+  + I seem to be lacking deterministic + (and who knows what else)
+  + uniform_continuous, flip for inferring outliers
+  + sqrt, inv_gamma for inferring noise
+  + tag, uniform_discrete, maybe parsing >= for the advanced model
+  + variadic + (and maybe *) for the advanced model
+  + gamma, make_crp for the clustering demo
+    - might want an optional d parameter for the crp
+  - I should add unit tests for uniform_continuous, sqrt(?)
+  - I should probably do a quality test involving the {inv_}gamma
+    distributions, to make sure I haven't made any strange mistakes.
+  - I should probably do quality tests for CRP to make sure I got it right
+- The advanced model of the curve fitting demo is leaking memory.
+  Looks like the trace accumulates garbage, because clearing reduces
+  memory use.
+- The clustering demo looks visually terrible -- how should I debug
+  its inference quality?
+  - Issue: proposals involving changing the CRP alpha will rebuild the
+    entire process.  Where are these absorbed?  Do they end up
+    destroying and resampling the cluster parameters?  If so, why are
+    they accepted so often?  Or are they?
+  - Debugging strategy:
+    - Confirm correctness of simulators and densities of gamma,
+      inv_gamma, uniforms (by statistical tests)
+    - Introduce Integer type to avoid possible screw-ups with floating
+      point stuff (also use for uniform_discrete)
+    - Confirm correctness of crp in isolation (how, exactly?)
+    - Teach make_crp to absorb changes to the parameter (how do I do
+      that? ReferringSPMaker?)
++ I need to deal with if
++ Test that restarting the client doesn't clobber the server
++ Test that changing the model works
+- I have a problem with out of order definitions, because my Envs are
+  not recursive :(
+- I also have a problem with queueing requests client-side, because (I
+  think) the "done" callback is not invoked until the queue empties,
+  which is not the right thing at all for streaming list_directives.
+  - Not sure that's true; the observed slowness may just be due to the
+    Firefox debugger having high overhead (does logging request bodies
+    matter here?)
++ When I get to benchmarking, the path can be
+  - Make a commandline program that accepts a transition count and
+    runs a tiny model for that many steps of MH.
+  - Profile that and improve things until it stabilizes
+  - See whether the server still exihibits any interesting performance
+    issues
++ Later, I will want to either generalize the Haskell parser to accept
+  json numbers and booleans here and there, or adjust all the other
+  demos to send strings everywhere.
+- Problem for later: I want derivatives to be able to travel through a
+  CRP log density to its alpha parameter if they need to, but I also
+  want to permit lifting a non-differentiated CRP alpha into a
+  derivative that is proceeding without it.  These two desiderata
+  create a problem for the type signature of crp_log_d.
+  - Also, this sounds like I am back to needing SPs that can be
+    fmapped to change their stored number type.
+    - This is, however, not the same as the problem I had before.  Now
+      it's just about mapping the aux if it has relevant numbers in
+      it.
+  - Does Lite do this right?  Propagating derivative information
+    through the aux of a CRP?
+- Later, I may want to do a dead code elimination pass on jripl.js
+- Later, I need another intermediate language, corresponding to the
+  interior of quote.
+  - parse :: String -> Intermediate
+  - expand :: Intermediate -> Exp (with combinators like v_if expanded)
+    - quote produces literal values
+    - theoretically I have a choice of what value quote produces;
+      e.g. I could use exp_to_value on the final results.
+      However, it seems more sensible to let the Intermediate type be
+      Value
+- Later, I will want to either include the ExamplesEmbedded in the
+  test suite or flush them
+- Later, I will want to port other demos to HsVenture
+- Later, I may want to test that changing clients works (that is,
+  swapping to a different demo)
+- Later, could contribute to Data.Bimap by expanding the interface to
+  look like Data.Map.
+  - fork, pull, code, push, send pull request
+  - the real story would be type-level selection of representations in
+    both directions, which seems to call for a mapping typeclass.
+- Later, could edit to documentation of Data.CircularList (if I care),
+  or ghc-mod for grammar.
+
+----------------------------------------
+Profiling notes.
+- It leaks, of course.
+- had to blow away my sandbox and rebuild with library profiling on
+  (but actually that wasn't too bad)
+
+Process:
+- cabal configure --enable-profiling
+- cabal build benchmark
+- time dist/build/benchmark/benchmark 10000 +RTS -hy && make benchmark.pdf
+- evince benchmark.pdf
+
+compilation notes: cabal test, cabal build venture-server, cabal build benchmark
+
+Initial state:
+- 1.8 seconds (profiled) for 10000 steps on the observed normal-normal
+  model building heap at a rate of about 1MB/sec (1400k for the run)
+- 11s and 450k if SP.current is marked strict
+- same pattern as strict SP.current but faster on cbeta-bernoulli; not
+  affected by removing the strictness annotation.
+  - scaling is worse than linear.  Why?
+- time venture puma -e '[infer (do (assume x (normal 0 1)) (assume y (normal x 1)) (observe y 2) (incorporate) (mh default one 100000))]'
+  takes 0.5 seconds to start up
+  after that, 100,000 transitions in 3 seconds
+- Lite, 10,000 in 8
+- time venture puma -e '[infer (do (assume coin (make_beta_bernoulli 1 1)) (assume f (coin)) (mh default one 200000))]'
+  100,000 transitions per second
+- Lite, a little under 10,000 transitions per second
+- A little C program for the normal-normal chain does 10,000,000
+  transitions in 1.7s -- 200x better than Puma
+
+The first duplex of problems was a thunk leak for states of SPs that
+have no state (and thus do not read it), and a GHC bug:
+https://ghc.haskell.org/trac/ghc/ticket/10359
+
+After fixing that, 8 seconds profiled for 50,000 steps of
+normal-normal, 4 for 50,000 of cbeta-bernoulli
+- unprofiled, 6.6s for 100,000 steps of normal-normal
+- 3.1s for 100,000 steps of cbeta-bernoulli
+
+Residual laziness:
+- Function arguments, etc.
+- I don't know whether Data.Sequence.Sequence is strict or lazy in the
+  elements
+  - Stack overflow "Is there a stricter Sequence?" seems to think
+    Sequences are element-strict but spine-lazy.
+  - The documentation also says "strict operations"
+  - Experimentally, sequences are not element-strict
+- I am reasonably confident that my InsertionOrderedSet is
+  element-strict, because the elements are used as keys in a map.
++ SPs are lazy in the state
++ The actual state of make_cbeta_bernoulli and mem might have laziness
+- mem tables might still be key-lazy, though I doubt it
+? The maps in Trace and SPRecord are handled lazily
+  - Lenses I use, e.g. ix, might be lazy in e.g. map values
+    - In particular, ix falls back on lazy insert
+x May wish to fold NFData into Numerical
+
+----------------------------------------
+Other notes:
+- The win condition for most of these cleanups is "I look at the
+  relevant piece of code and it doesn't look ugly to me".
+- I probably want variable names to be my own type, rather than Text
+  - map (DT.pack . show) $ ([1..] :: [Int]) is a pretty dumb way to get
+    a bunch of unique variables.
++ Might not want to store a Bimap to Strings in the server state
+  - Might also want a strict version...
+- Might want to rename the imports of strict Maybe to something smaller
+  and less obvious after I have flushed lazy Maybe
+  - May need to hide Prelude stuff
+  - SP.hs
+  - Trace.hs
+  - Regen.hs as a matter of convention
+x Might be nice to replace addFreshNode with a device for making a
+  request-output node pair together, to simplify the types.
+- Choice: should responsesAt lens to a list or a vector?
+- Choice: Do I want the haskell functions that implement parts of an
+  SP to take lists or vectors of e.g. values?
+- Might be a good idea to migrate the current state field of an SP to
+  SPRecord instead, to avoid copying the other 8 fields of SP every
+  time it changes.  This is mildly a pain because it will force the
+  existential types to move around.
+- Do I even want the node graph to be fully strict?  That may weaken
+  the asymptotics of gradients.
+  - What alternative do I have?  Strictness annotations on all
+    functions that manipulate these things?  What discipline can I
+    follow?  How does Data.Map.Strict do it?
+  - Should I just upgrade to GHC 7.10 and make the whole thing strict
+    by default?
+- Making SPs lazy in the state remains tempting, because of a history
+  of work saved for stateless SPs (at the cost of a thunk leak).
+  - Do I want to implement incorporation avoidance for stateless SPs
+    expliclty?
+  - Does this matter anywhere near as much now, given how much cheaper
+    incorporation got?
+- On typeclasses for SP state operations:
+  - It is tempting because it will simplify the code and reduce the
+    quantity of boilerplate functions.
+  - May also improve performance by reducing copying of SP records,
+    and possibly simplify migration of the state to SPRecord instead.
+  - The actual typeclass story is:
+    - an AbelianGroup a  (is there a library definition of this class?)
+    - a state type s with an AbelianGroupAction a s (is there a
+      library definition of this? If not, how should I encode it?)
+    - a homomorphism from Value num (to be incorporated) to a
+    - a homomorphism from the request nonsense to a
+    - this works great for () state and for cbeta-bernoulli state
+    - looks kinda clumsy for the state of mem (a pair of an insertion
+      set and a deletion set? group operations by set union and set
+      difference? I guess...)
+    - is tempting to simplify to a and s being the same with the
+      standard self-action, but doesn't capture all the flexibility of
+      the current regime
++ Do I want to abstract non-requesting SPs (there are plenty of them!)
+  - Issue: technically, declaring a lack of state and a lack of
+    requests should commute, but it's not obvious how to do that.
+  - Alternately, I may want to move to the trampoline style completely.
+*** Project: Integrate Wadden's Blog demos
+*** Project: Multi-procedure makers (by true downstream abosrbing? by true multivalue returns?)
+Good thing to do: change makers to say "I am in charge of everything
+that happens to my output value, be it a single SP or not".
+- bug, encountered by Zinberg: deterministic consequences still need
+  to be propagated (well enough).  e.g., if claiming AAA of a list of
+  SPs that may close over state (e.g. from the parameters to the
+  maker), need to propagate that state to locations that extract
+  values from that list as inference proceeds.
+- does Church-encoding the list solve this problem?
+  - I would tend to assume not
+- another possible approach: cause the made SP to be responsible for
+  its own applications
+  - problem: what if it's taken out of the list multiple times?
+- another possible approach: make the list contain nodes, or perhaps
+  implicit nodes
+- might also be fixable with true pattern matching and multivalue
+  returns
+  - second-class multivalue returns a la Scheme are actually
+    appropriate for a "machine language"
+*** Project: Integrate BenZ's and Ulli's gaussian processes
+Bug: Being a deterministic AAA maker suppresses propagation of updates
+to one's output value.  When that value is a list (of SPs), new values
+of that list are not propagated to extractors.
+- Could I solve this by
+  - Passing all values by Refs, such that parametrically polymorphic
+    things manipulate only the refs?
+  - Holding nodes in data structures (or all parametrically
+    polymorphic circumstances) and having accessors just collect them?
+  - Are these essentially the same?
+
+Possible problem with:
+https://github.com/Schaechtle/VentIPyN/blob/master/Experiments/gpmem.py
+
+Will the SPRefs for f_compute and f_emu point to the places where they
+are taken out of the list that the actual maker returns?  Is that
+going to break things?
+*** Project: Mixmh combinator in the inference programming language
+Should be able to make mixmh be a combinator (not necessarily with
+that name).
+- Takes an assessable function from the current state to something
+- Makes an auxiliary variable out of that
+- Knows how to complete a weighted proposal that reads this variable
+  to one that includes it (thus chainable)
+
+Two analyses of a Markov chain with state X, auxiliary variable given
+by p(v|x), and conditional proposal q(x'|x,v):
+- Persistent augmentation:
+  - Expand the state space to X x V
+  - One move is to resample v by p(v|x); this is a Gibbs step on v
+  - Another move is to propose (x',v) where x' ~ q(x'|x,v).  The
+    acceptance ratio is
+      p(x') p(v|x') q(x|x',v)
+      -----------------------
+      p(x)  p(v|x)  q(x'|x,v)
+    which evidences the correction p(v|x')/p(v|x) to the MH ratio as
+    it would obtain for moving on x alone, or if v were independent of
+    x.
+- Transient augmentation 1:
+  - If we rigidly cycle between moves on x and moves on v, it is not
+    necessary to store v between them, so the same analysis justifies
+    the same acceptance ratio for a move q' on x consisting of
+      v  ~ p(v|x)
+      x' ~ q(x'|x,v)
+- Transient augmentation 2:
+  - If we can integrate v out of the above proposal, however, we can
+    have an acceptance ratio of
+      p(x') q'(x|x')
+      -------------
+      p(x)  q'(x'|x)
+    where q'(x'|x) = sum_v q(x'|x,v) p(v|x)
+- Blend:
+  - If v can be factored into an assessable component v1 ~ p(v_1|x)
+    and a component v2 such that q(x'|v_2,v_1,x) p(v_2|v_1,x) is
+    marginalizable over v_2, those two can be analyzed in those two
+    ways.
+
+Question: Is integrating v always better?
+
+Relationship: Transient 1 can be read as using stochastic one-point
+estimates of the integral involved in Transient 2, with the proviso
+that it be the same point in both places.
+- Intuitively, one should be able to use a k-point estimate of the
+  integral.
+- What if I propose like this:
+  - {v_i} ~ iid p(v|x)
+  - i     ~ uniform 0 n
+  - x'    ~ q(x'|x,v_i)
+- Then I assess auxiliarizing {v_i} and integrating i:
+    p(x') p({v_i}|x') q'(x|x',{v_i})
+    -------------------------------- 
+    p(x)  p({v_i}|x)  q'(x'|x,{v_i})
+  Where q'(x'|x,{v_i}) = (1/n) sum_i q(x'|x,v_i)
+- This is not actually a k-point estimate of the integral.
+- If the v_i are independent of x, this assessment does form a k-point
+  estimate of the integral of q(x|x',v) wrt v.
+
+Question: Is there an algorithm and analysis that leads to the
+acceptance ratio
+  p(x') q'(x|x',{v_i})
+  --------------------
+  p(x)  q'(x'|x,{v_i})
+where
+  q'(x'|x,{v_i}) = sum_{v_i} p(v_i|x) q(x'|x,v_i)
+
+Partial Answer: Choosing i weighted according to p(v_i|x) will produce
+that term in the acceptance ratio, but will not eliminate the
+prod_{v_i} p(v_i|x) term.
+*** Conceptual Bug: Non-independent principal nodes
+Consider the situation of a block proposal in which the principal
+nodes are not conditionally independent.  Does the prior still cancel
+out of the acceptance ratio, like the system treats it?
+*** Conceptual Bug: Principal node in the brush [or does brush just take it out of the principal node set?]
+What if you have a proposal where a principal node
+is also in the brush (because its existence is conditional on some
+other principal node)?
+- What does regen/detach do with this?
+- What should regen/detach do with this?
+- What about restore?
+- This could affect gradients/hmc
+- This could affect global log likelihood reporting
+*** Conceptual Bug: Proposal (e.g. HMC) walking off into the impossible
+What to do?
+
+This is the boundary condition problem; it has bitten Wadden.
+
+Should we try to systematically prevent this (e.g., HMC that bounces
+off the walls)?
+*** Conceptual Bug: What are the constrainability rules?
+- I remember the current system's rules for what operator SPs and
+  what operator-changing proposals are permitted in observations,
+  and how to react to violations of such rules, as being arbitrary
+  and inconsistent.
+- In the code, this manifests in various corner cases of constrain
+  (and unconstrain).
+- Perhaps the Indian GPA issue and our choice of how to answer it
+  may help clarify the confusion here.
+*** Activity: Reference manual improvement
+- Is it possible to set up a tracked, indexed system for displaying
+  which statements in the documentation are checked how, and the
+  results of those processes? (This includes decomposition of
+  high-level statements into lower-level statements, like "the
+  VentureScript syntax is equiexpressive and equiconvenient with the
+  parentheses").
+  - Extracting tested invariants from the property suite:
+    - Could give every property, say, a description
+    - Could instrument a run to compute a table matching SPs to properties
+      about them that were tested
+    - Storing the result: pass, fail, skip
+    - Issue: some of the skips may be stochastic, in which case it would
+      be interesting to track the rate of their incidence across runs
+- Can we make the reference documentation of conceptually additive
+  parts of the system be actually additive?  Preferably with
+  cross-checks on how thoroughly tested those items and any claims
+  about them are?  Additive referencable symbols include:
+  + Lite SPs
+  - Puma SPs
+  + Inference SPs
+  - Inference SPs that work in Puma (how can I autodetect this?)
+  + Modeling macros
+  x Hard-coded modeling special forms: quote, application, variable lookup, literals
+  + Inference macros
+  x Hard-coded inference special form: loop
+  - The list of "reserved words" induced on the modeling language by inference macros
+  - Functions defined in the prelude
+  + Functions defined in the inference prelude
+    + Maybe separate it into its own file, so I don't have to diff engine.py
+  x Non-function objects defined in the initial environment (true,
+    false, default, one, all, scope keywords)
+  + Built-in call-backs in plugins.py
+- Other additive things include:
+  - Directives / Ripl instructions (include json syntax thereof)
+    - Currently embedded as an explicit list in the parser, and as
+      funny methods of various ripls, sivms, and engines.
+  - The public Python API (for library use):
+    - shortcuts functions
+    - Ripl methods
+    - classes returned by them (e.g., SpecPlot)
+  - The Python API for extensions
+    - How to define plugins
+    - How to define SPs and callbacks
+    - How to interact with Venture data
+  - Console commands
+  + Console command line options
+    - [Optional] Admit more elaborate documentation than just terse help messages?
+  - Data types? (and various representations thereof, notably json)
+- Write actual documentation for all Venture elements (right now, +
+  means "every such element has some doc, but it may be stale; except
+  ones I am explicitly embarassed by, which may be omitted")
+  + SPs (Lite dominates)
+  + Non-macro inference SPs
+    - Except "load_plugin", which is not tested
+  + Modeling special forms
+  + Inference macros
+  - Functions defined in the prelude
+  + Functions defined in the inference prelude (incl: pass)
+  + Non-function objects defined in the initial environment (true, false, default, one, all, scope keywords)
+  + Built-in call-backs in plugins.py
+- Things that are not referencable symbols but ought to be documented regardless:
+  + Directives / Ripl instructions
+    - Except "load", which appears to be broken?
+  - The public Python API (for library use):
+    - shortcuts functions
+    - Ripl methods
+    - classes returned by them (e.g., SpecPlot, Infer(!))
+  - Console commands
+  + Console command line options
+    - [Optional] Write more elaborate documentation than just terse help messages?
+  - Data types? (and various representations thereof)
+- Add cross-references among all the program elements.
+- Spell "quasiquote" and "unquote" sensibly in the documentation, but
+  do not lose the example use case (or the fact that quasiquote works
+  in model expressions too).
+- Should really nail the words and story for tagging (scope_include) by the release
+  - Related idea from Will Cushing: Maybe make a default tagging
+    scheme based on existing variable names and procedure arguments
+- vkm likes doctests: "I like the idea of a registry of content bits
+  that is programmatically assembled, so that someone who writes an SP
+  can locate an intro use case 'in the comments', and the code +
+  results appear 'in the docs'"
+- vkm suggests that error messages and profiling can be kept more alive
+  by being made into "example-documentation-generating self-test cases"
+- Emit, in the documentation of each SP, a table
+  describing its usability in each position (principal
+  node, internal node, border node) for each inference method
+  (mh, gibbs, slice, hmc, rejection) in each backend
+- Also notes about which inference methods are available
+  in which backend
+- Could potentially set Jenkins up to push an updated edge reference manual
+  to the web on every successful smoke build.  This needs:
+  - A CSAIL machine account for Jenkins
+  - Adequate storage for credentials thereto
+  - A Jenkins job that actually does it
+  - A note in the Jenkins setup tool about how to set that up again if
+    we lose the Jenkins config
+- Could split built-in stuff into modules (with an "import" command),
+  and reorganize the reference manual by module.
+  - This makes room for modules of different degrees of "stability",
+    like sticking Wadden's permutation hack into a module.
+  - Also, the vector nonsense has a chance to develop if it lives in a
+    module of its own.
+  - There's a choice of what selections from what modules the prelude
+    re-exports.
+
+Notes for the future of the reference manual:
++ Actually publish the reference manual, so people can read it
+- Automatically update the version number that the built documentation sees
+- Make cross-references in the documentation work
+  - What is the Sphinx-ism for that?
+  - Are there any namespacing issues?
+- Can I get back the symbols +, -, <=, etc, in the generated manual?
+  - Probably the easiest thing is to just flush the operator renaming thing
+- Would be nice to autodetect and add to the documentation which SPs
+  have the metadata necessary to participate in which transition operators
+  (subtle, because it depends on whether they are principal, crg, or absorbing)
+- Would be nice to autodetect and add to the documentation which SPs
+  are ok to observe (subtle!)
+- Would be nice to migrate existing comment documentation to places
+  where the reference manual can refer to it:
+  - How to use SubsampledMH
+  - (needs to be written) How to write dynamic programs with enumerative_diversify
+- A nice exercise would be to extract the subsampled MH stuff into a
+  module (so it can have its own darned reference manual, and not
+  confuse the bejesus out of normal users)
+- Perhaps I could move the macroexpansion target SPs into a module
+  too, so they do not clutter the main presentation.
+*** Activity: Thoughts on release polish circa late March 2015
+The activity of release polishing is to look at the system from the
+outside in and fix what's broken.
+- Does the reference manual explain all the features of the system?
+  - Including the programmatic API?
+  - Including how to make SPs of all the various breeds?
+- Does the reference manual document all the cross-feature
+  interactions?  For example:
+  - Which SPs are available in what backends (with the same behavior?)
+  - Which transition operators are available in what backends?
+  - Which SPs are usable in which positions of scaffolds for what
+    transition operators?
+  - Which SPs in what circumstances will impede serialization or
+    deserialization (and where is serialization implicitly used)?
+  - Which Puma operations will barf on what kinds of Python SPs when?
+- Are the error messages that occur when one hits some corner case
+  clear and helpful (see list of cross-feature interactions above)?
+  - Do we want to compose a glossary of errors?
+- Do the tutorials/demos advertise all the features we want to expose?
+- Are all the examples up to date, and is it clear what they are
+  exemplifying?
+  - Should I exclude examples/notebooks from the release, since they
+    are stale and hard to keep fresh?
+- Is it clear which subsystem to use when and for what?
+- Are the installation instructions simple and reliable?
++ Flush the old c++ backend
++ Update most of the license headers (also copyright years, perhaps)
+- Finish updating the license headers, if desired.
+
+More detailed punch list:
+- SIVM: names of venturescript and metaprob, in source; names of puma
+  and lite, in source. just top-level README (and perhaps also
+  backends README and console README)
+- IPPE: minimal doc (just pointers to "They exist", with a .vnt
+  example) and discoverability for plotf, callbacks, ... -- plus
+  console docs
+- "Online Tutorial": script for new demos (vkm will sketch text and
+  make exercises for Suresh)
+- Model Library: SPs so far, plus various .vnt files, with a read?;
+  weed examples so that they run, with a readme, and rename Model
+  Library
++ There is an issue with deprecations: do I rush to do them for the
+  minirelease, or do I accept doing them immediately afterward
+  (generating spurious non-compatibility).  Cases in point:
+  + scope_include remaining an alias for tag
+  + scope_exclude
+  + loop taking a syntactic list rather than a single action
+- Rerelease
+  - Maybe bump the version number, if enough changed; incl. in the reference manual
+  - Maybe rebuild the reference manual, if changed
+  - Maybe reupload the reference manual, if changed
+  - Rebuild the tarball (maybe recheck exclusions)
+  - Reupload the tarball
+  - Rebuild the docker container
+  - Reupload the docker container
+  - Make a new section on the front page, if version number changed
+  - Update the sha1 sums (index, container instructions)
+  - Rebuild and reupload the front page
+  - tag the release as release-foo
+
+Content to polish:
+- Read the manual and make sure things are interlinked properly by
+  choosing between single backticks and double backticks, and adding
+  roles where needed.
+- Sphinx warning nitpicks:
+  - There is actually a name clash between inference repeat, which
+    repeats an action, and model repeat, which fills an array.
+  - There is a "name clash" between inference print and model print.
+  - The four modules are not listed in any toctree
+
+Other stuff we thought circa Jan 2015 that would be nice to have for release v0.3.1:
+- Mini tutorial on inference programming (IPython? impose on vkm?)
+  - "Like the Classic Bayes article, but executable"
+- Would be nice to have a website where one can see some Venture
+  programs (maybe statically generated)
+- Ideally include the profiler in the release
+*** Activity: More testing (e.g., log density agreement; see Asana)
+- Look for known (unremembered?) small bugs and confirm intended
+  invariants.
+- No doubt we have various asymptotic performance losses now.
+
+Mechanical test idea:
+- check that permuting order of incorporation does not actually affect
+  the answer
+- check that unincorporating (even out of order) actually produces the
+  same result as not having incorporated in the first place
+*** Activity: Cross-port model/inference SPs
+- Port Puma-only model SPs to Lite
+- Port Lite-only model SPs to Puma for efficiency
+- Remove discrepancies evident in exclusion lists in test_properties
+- The inference SP part is mostly about porting Lite things to Puma
+  - Do we want to shrink the trace interface so that all the inference
+    methods are written just once in Python?  Will crossing the C-Python
+    boundary at every regen kill performance?
+  - Can we take an intermediate position and run Python inference SPs
+    just for the things that have not been ported to Puma?
+    - Will this just work if I make the obvious plumbing?
+*** Activity: Fill in Python SPs in Puma interface
+Also, it is not thread-safe
+*** Activity: Fill in gradients
+*** Activity: Fill in conjugate and collapsed models
+*** Activity: Corral all artifacts and mechanically test execution
+- from the releasable artifacts list (web demos, examples/, ppaml-cps,
+  venture-documents)
+- benefit: we can modify the language relatively safely
+- The cluster_crp_mixture demo is possibly broken b/c of
+  list_directives and the api format of directives
+- Liberal use of --smoketest flags may be appropriate
+*** Activity: Fill in HMC
+- Flesh out and debug the gradient definitions
+- Needs porting to Puma
+- Making the numerical approximation be the default for each SP may
+  not be so terrible
+- Could also try some of the Python AD systems, since I have the
+  numerical cross-check
+  - The neural net hyperparameter optimization guys wrote one called
+    FunkyYak
+- The boundary condition problem bit Wadden
+*** Activity: Tweaks that are so easy I should just do them
+- I really should just switch plotf to use the right log score
+  computation, and get rid of the broken one.
+
+- something is definitely wrong with the lite misc inference quality build
+  - test.smc.test_particle_filter.testBasicParticleFilter2
+
+From the slam effort:
+- Add some tests to the parser test suite to make sure quotation
+  produces the desired AST
+- I should add test cases for the do/bind_/recursion bug
+- Performance bug with routing assume, observe, predict through the
+  ripl: converting everything to and from stack dicts
+- Add a test for indexed mapv (for Puma and Lite)
+- Test freezing constants, and freezing the same node twice.
+- Make the labels in assume, observe, predict not quoted, so they can
+  in principle be arbitrary Venture objects (and for symmetry with
+  freeze, forget).
+
+Test enumerative_diversify, collapse_equal, collapse_equal_map,
+resample_multiprocess <p> <cap>, assume, observe, predict,
+call_back_accum
+- For testing collapse_equal{_map}, check that one sums the weights
+  and the other takes the max weight
+  - Possibly by making an integration test out of the hmm model
+    - (Maybe make one up where the difference is apparent?)
+- call_back_accum is like plotf (with no plot spec) but calls you back
+  with the data frame
+  - If there is a unique call_back_accum, can I arrange for the value
+    it returns to be the value returned by the infer command?
+- Test bounded-trial rejection in the test suite
+
+Do I want to write up persistent inference traces more thoroughly?
+*** Activity: Bugs related to error reporting
+- Bug: several things in backend/lite/functional.py use emptyAddress
+  but probably shouldn't.
+
+- Option: Finish getting rid of the attempted field of the sivm by
+  storing 'infer' instructions too.  Then I would need to remove them,
+  because I don't want to accumulate an infinite pile of 'infer'
+  instruction records (especially inside 'infer loop').
+
+- Possible bug: What will happen if there is a failure in a "force"
+  instruction?  If the predict+forget cycle is too low-level, the SIVM
+  might not get an expression record, and fail to annotate it.
+*** Activity: Small urgent bug list
+Bug: Why didn't it even try to annotate the Probability out of range
+-0.0088150436511 I got from universal gradient ascent on the
+inferred-noise version of the curve fitting model?
+
+----------------------------------------------------------------------
+
+I really should stop relying on timeouts and use --smoketest versions
+of the examples for integration testing instead.
+
+----------------------------------------------------------------------
+
+I think test/venturemagics/nb_tester.py is superseded by an official
+functionality of the ipython notebook command, at least in IPython 3
+(maybe even 2?)
+- http://stackoverflow.com/questions/17905350/running-an-ipython-notebook-non-interactively
+- ipython nbconvert --to=html --ExecutePreprocessor.enabled=True analytics_unit.ipynb 
+    did not work on my machine (IPython 2.0.0)
+
+----------------------------------------------------------------------
+
+Wadden found an interesting bug:
+  assume thing (some-random-length-list)
+  sample (is_pair thing) -> True, because that is so in the first particle
+  sample (first thing) -> *gronk* because in the second particle that list is empty
+Resolution: we should be consistent about whether any given thing is
+interacting with one particle or all of them.  Do not give answers from
+one but exceptions from all.
+
+----------------------------------------------------------------------
+
+The implementation of resample in Lite does not conserve incorporation
+status of constraints.  It should.  In the meantime I patched it with
+a forced incorporate afterward (for both backends).  I should fix it
+and remove the patch.
+- Incorporating after resample will mess up the particle weights
+- I may have an incorporation problem after collapse, too
+
+- Can I use engine.trace.Trace to solve the resample over/under
+  incorporation problem by explicitly serializing and deserializing
+  the unincorporated constraints?
+  - Is it safe to just smash the unincorporated constraints of the
+    restored trace with the deserialization, assuming that
+    re-incorporating the constraints that were marked incorporated
+    would be redundant after restoration?
+    - Make sure Puma can do it too.
+  - Do I need to store the unincorporated constraints list inside the
+    backend-specific Trace (for makeConsistent to traverse), or is it
+    ok to store it in the common one?
+  - Might even be reasonable to put in a hack that automatically dumps
+    all the Trace's attributes except "trace" into the serialization
+
+*** Activity: Small feature list
+- Should be able to split models
+- Should be able to merge models (with the relevant weight consequences)
+- Maybe should be able to copy models?
+- liftM
+
+----------------------------------------------------------------------
+
+- [infer (load_plugin 'symbol<"...">)] works but is ugly
+  - also, the parser error message I get if I omit the symbol part is
+    not highlighted in red
+- Might be nice to add a "sleep" inference SP, to make controlled
+  pauses, especially in infer loops
+- Might want to extend the blaming makers hack to other made infer
+  PSPs, so that, e.g., the callback exception gets blamed reasonably.
+- Double use of a label should register as an annotatable exception
+
+----------------------------------------------------------------------
+
+- The console really needs to become like the inside of a do in the
+  inference monad (be able to bind local variables to results of infer
+  actions, etc)
+
+- I think I want a version of define that runs the action and binds
+  the result (maybe only for demo scripts as opposed to importable
+  modules?).
+  - loop really sucks without that
+  - as do interactive inference commands generally
+
+----------------------------------------------------------------------
+
+Macros
+- Suggested to Vlad:
+    It may be worthwhile to adopt the easy parts of Racket's
+    architecture.  In order of increasing difficulty, I see that work
+    as:
+    1) Make sure that Syntax objects can reconstruct the original
+       expression as well as the macroexpanded one?
+    2) Change the type of Macro from Expression -> Maybe Syntax to
+       Syntax -> Maybe Syntax and introduce an explicit Expression ->
+       Syntax step that precedes macro expansion
+    3) [Is this a good idea?] Change to storing all the information
+       needed for error reporting on the produced Syntax objects
+       directly, rather than as functions that transform indexes.  I
+       don't know whether this is a good thing to do: you tell me.
+
+----------------------------------------------------------------------
+
+I am likely to want something that does smart diversifies and smart
+resamples by keeping the results on the workers they came from to the
+extent possible.  Is there a tweak needed to the Master/Worker
+interface to enable this?
+
+----------------------------------------------------------------------
+
+Extend dataset collection (possibly by adjusting parse_exprs) to
+accept overrides for type (sampling (from the model), running (an
+inference action), using (an inference value))
+- By analogy to the "labelled" tag that it at least used to accept
+- Once this works, dike out automatic log score collection, because
+  it's surprisingly expensive.
+- Maybe have two dataset collection forms, one that defaults to
+  sampling and one that defaults to running inference code (or three,
+  distinguishing actions from pure inference code?) with the same
+  overrides?
+
+Can I extend callbacks along the same lines?  Or should I instead
+make writing inference primitives more straightforward?
+- One thing would be to add a generic VentureValue -> Python
+  conversion (which would necessarily not be reversible, but oh
+  well).
+
+----------------------------------------------------------------------
+
+Possible convenience abstractions for dataset collection and use:
+
+    [define bar
+      (do
+        (with_dataset
+         (repeat 100
+          (do (mh 0 one 1)
+              (accumulate (log_likelihood 0 all) a b c (+ a b c))))
+         (plotf (quote (p0d1d2 p0d1dt c3 cs)))))] ; maybe curry here
+
+    [define quux
+      (bind (repeat_collecting (a b c (+ a b c))
+                               (mh 0 one 1)
+                               100)
+            (curry plotf (quote (p0d1d2 p0d1dt c3 cs))))]
+
+    [define quux2
+      (bind (foldM mappend mempty
+                   (replicate (begin (mh 0 one 1)
+                                     (accumulate a b c (+ a b c)))
+                              100))
+            (curry plotf (quote (p0d1d2 p0d1dt c3 cs))))]
+
+----------------------------------------------------------------------
+
+Idea: add a "smoketest" flag to all the example programs, for the test
+suite to run through all of them.
+
+----------------------------------------------------------------------
+
+- Could put in a hack where synchronous workers do not catch and
+  serialize exceptions, but let them propagate to the master directly
+
+----------------------------------------------------------------------
+
+- What would it take to make serializing and deserializing traces
+  truly self-contained?
+  - The dump needs to indicate a (default?) backend type for restoring, and
+    engine.trace.Trace needs to be able to get and run such a constructor.
+  - The dump needs to indicate the set of bound foreign sps, and the Trace
+    needs a registry of all possible foreign sps to be able to rebind them.
+
+----------------------------------------------------------------------
+
+Code cleanup idea: force both the parser modules to be imported
+qualified, and then rename both classes Parser.
+
+----------------------------------------------------------------------
+
+Maybe add an operation that removes zero-probability particles?
+- What should it do if all the particles in a set have zero probability?
+  - I think the point of this is to allow compute-bounded behavior
+- Punt to user-space?
+
+If I am thinking about streams of particles, there are two different
+notions of "from the top":
+- Rerun the whole inference program to this point
+  - Is that even coherent in the presence of multiple models?
+    - I think the answer has to be three layers: the untraced
+      inference program, the replay-only inference program, and the
+      inferrable model.
+- Rerun the current model from the prior, and likelihood-weight the
+  result.
+
+----------------------------------------------------------------------
+
+David Wadden asked for named let (presumably at least in the inference
+programming language, but maybe also in the model language)
+
+----------------------------------------------------------------------
+
+Good idea from Wadden: We now probably have the machinery it would
+take to implement checking log densities through a ripl (to compare
+against the SP method).  Can use this to check Puma port
+compatibility.
+
+----------------------------------------------------------------------
+
+Performance suggestion: May be able to further accelerate things like
+the homophily Gibbs sampler if the initial resample didn't actually
+resample (at least not in series!) but just forked the trace.
+
+----------------------------------------------------------------------
+
+Zenna Tavares was confused by the phrasing "an expression can only be
+constrained by an observe directive if its outermost procedure
+application is the result of a stochastic computation, rather than a
+deterministic one" on the directives page of the reference manual.
+
+----------------------------------------------------------------------
+
+In principle, we should refactor the parallelism control so that
+resampling is independent from choosing the parallelism mode.
+
+----------------------------------------------------------------------
+
+Teach the parsers to parse literal strings, so they can be used as formats, file names, etc.
+- Piggy-back on the fact that the symbol<"..."> syntax is already
+  parsed as a string?
+- Either add a VentureString type that everything ignores, or just use
+  a quoted VentureSymbol
+
+----------------------------------------------------------------------
+
+Maybe enable plotf to overlay "expected" results over obtained ones 
+- "if I expect some Gaussian, fit the best one and draw it; also
+  compute goodness-of-fit statistic"
+- idea courtesy William Cushing at the prob prog workshop
+
+----------------------------------------------------------------------
+
+Coloring by particle weight should be easy to add to plotf
+
+----------------------------------------------------------------------
+
+Serializing and deserializing the callback registry
+
+----------------------------------------------------------------------
+
+I need to figure out the proper semantics for the weights of
+particles, and enforce them.
+- check places where makeConsistent is called
+- collapse_equal{,_map}, enumerative_diversify, resample (incorporates
+  at the end because Lite was effectively unincorporating when it
+  copied)
+- Is there any way to test this, or structure the code such that it is
+  obviously correct?
+
+----------------------------------------------------------------------
+
+Can I allow intermixing of -e and -f such that they happen in the
+order given on the command line?
+
+----------------------------------------------------------------------
+
+Nitpick interface of collapse_equal:
+- how many new particles per bin? 1? arg? arg as ratio of
+  old # particles in that bin?
+
+----------------------------------------------------------------------
+
+Idea:
+- a ripl method named ripl.promote_particles() that returns a list of
+  tuples (ripl, weight).
+- Or instead (or in addition) could have ripl.sample_all_with_weights
+This lets you extract explicit representations of (local) distributions.
+
+----------------------------------------------------------------------
+
+Would be nice to teach C-c to stop the currently running synchronous
+Venture instruction (and leave the thing in a well-defined state)
+
+Problem: since transitions are attempted in place, there is no good
+way to abort.  I guess I could try to have a finally that restores
+from the OmegaDB (or retain that operation, to be done at the user's
+request).
+
+----------------------------------------------------------------------
+
+David's (and Vlad's) experience: It would be nice to have a "trace"
+function.  (like Debug.Trace.trace in Haskell).  To do this right, we
+need invertible functions to forward observability.
+- Question: when do you want the string printed?
+- Why is plotf not solving the problem this is supposed to solve?
+- David added a "print" function himself
+
+----------------------------------------------------------------------
+
+- Pushing sample down to the trace level is a possible performance
+  improvement (e.g., because can ask just one trace to do it?), and
+  allows the possibility of infer being sample rather than predict.
+
+----------------------------------------------------------------------
+
+- So, really, PyTrace::bindPrimitiveSP should be called
+  bindPythonSPthatCommunicatesWithStackDicts and should defer to
+  concrete_trace->bindPrimitiveSP (except for wrapping in the
+  appropriate C++ object that interprets the stack dicts dynamically)
+
+----------------------------------------------------------------------
+
+Do I want to move the foreign.py module from the Lite backend to the
+Puma backend, on the grounds that that's where it's invoked from?  Or
+leave it in Lite on the grounds that the stack dict interface is "more
+basic"?
+
+----------------------------------------------------------------------
+
+Is venture.lite.foreign.ForeignLitePSP just a "TypedPSP" that uses
+a universal conversion to stack dicts as the "type"?
+
+----------------------------------------------------------------------
+
+- Hypothesis: a model's directive list can actually be deduced from
+  the PET.  To wit, every toplevel family that has a binding in the
+  environment came from an assume (except the builtins, which I should
+  be able to identify); every toplevel family that has an incorporated
+  or unincorporated constraint came from an observe (do I have to
+  chase the graph to asertain this?) and every other thing came from a
+  predict.
+  - There seem to be some nits/warts here.
+
+*** Activity: Small bug list
+
+Test:
+- that venture_unit does not drop foreign SPs; foreign inference SPs
+- that crp is enumerable in both backends
+- to_array and to_vector (are they covered by the automatic test suite?)
+
+----------------------------------------------------------------------
+
+- At least some of the error annotation failures in the continuous
+  build log are evidence of actual problems, which are just masked by
+  something expecting "an error".
+
+----------------------------------------------------------------------
+
+N.B.: An error during assume will leave a garbage predict of
+everything it managed to assume before the error
+
+----------------------------------------------------------------------
+
+Possible bug (discovered in conversation with Vlad):
+- Unconditional constraints (e.g., (observe ....)) force-accept the
+  result of back-propagating and forward-propagating the value.
+- However, this may be a problem if there are random choices
+  downstream of a node that becomes constrained this way, because it
+  may change the weight this particle should be assigned.
+- Example:
+    (assume x (normal 0 1))
+    (assume y (inv_gamma 1 1))
+    (assume z (normal x y))
+    (observe z 0)
+    (incorporate)
+    (observe x 0)
+    (incorporate)
+  What is the weight now?  It should be the likelihood of y under (normal 0 y) = 0.
+  (Possibly with some constant offset(s), like the density of (normal 0 1) = 0 for the x observation)
+  Other question: does resample_serializing cause a crash here?
+  - makeConsistent returning the weight of the proposal to reset the
+    value to the desired thing should have the effect of making the
+    particle weight correct in this case.  I hope.
+
+Example:
+  (do
+   (resample 10)
+   (assume mu (normal 0 1))
+   (assume ans (normal mu 1))
+   (observe ans 2)
+   (resample_serializing 10)
+   (incorporate))
+
+Example that should generate "cannot make random choice downstream of
+something that gets constrained during regen" without any inference:
+  (assume x (flip))
+  (force x true)
+  (assume y (normal 0 1))
+  (assume z (normal 0 2))
+  (assume w (if x y z))
+  (observe w 0)
+  (incorporate)
+  (assume y2 (normal y 1))
+  (assume z2 (normal z 2))
+  (observe x false)
+  (incorporate)
+- To fix it, have to answer the question: what should the weight of
+  this particle be, and how are we going to ensure that it is?
+
+We fixed Vlad's "cannot make random choice downstream of something
+that gets constrained during regen" that happens during resampling by
+changing the copying code path to just constrain the random choices,
+without propagating consequences.  This is guaranteed to be OK for
+traces that are fully incorporated when copied because the value it's
+constraining to has to be the same as the value that's already there.
+
+----------------------------------------------------------------------
+
+Possible bug: Should log density of counts be defined as the density
+of one sequence consistent with the aux, or the total density of all
+sequences consistent with the aux?  Or do I need both of those in
+different circumstances?
+- For uncollapsed beta bernoulli, it doesn't matter, because the
+  difference does not depend on the parameter value.
+- Is the logDensityOfCounts of crp even right at all?  How would I
+  detect whether it is or not?
+
+----------------------------------------------------------------------
+
+Add test case for propagating gradients to the parameters of collapsed
+models (DeterministicMakerAAALKernel).
+- How about uncollapsed?
+
+----------------------------------------------------------------------
+
+Noted by Vlad:  ripl.sample(['=', 0, '0']) = False
+- High energy solution: actually distinguish integers from floats,
+  from the parser on up
+
+----------------------------------------------------------------------
+
+Bug: test/performance/asymptotics/test_aaa.py fails for some
+mysterious reason
+
+----------------------------------------------------------------------
+
+- The "SPRef not an SPRef but a 'foo'" error message is not very helpful.
+  I should change it to "cannot apply a 'foo'" or something like that.
+
+----------------------------------------------------------------------
+
+Puma arange produces boxed arrays, because I do not have general
+unboxed arrays in Puma.
+- This causes an incompatibility test exclusion
+
+----------------------------------------------------------------------
+
+- Future conceptual bug: Backpropagating deterministic inverses gets
+  scrod by density scaling.
+    (observe (* 4 (normal x 1)) foo) should be the same as
+    (observe (normal x 4) foo), not
+    (observe (normal x 1) (/ foo 4)), which are different because of the 1/sigma term
+  - which comes from Jacobian scaling though the (* 4) tansformation,
+    which is needed because densities are limits
+
+Maybe this means I should read up on reversible-jump MCMC and see
+whether there is an example there that Venture gets wrong.
+
+----------------------------------------------------------------------
+
+Is nesterov broken in the brownian motion example?
+
+----------------------------------------------------------------------
+
+Idea from David: do we want to invite Continuum to take over ggplot
+and make it work well?
+
+- Patches have been submitted to ggplot (not by us) to fix it against
+  pandas 0.16+; waiting on whether that will actually get merged
+  and/or released.
+  - Option: fork ggplot and maintain it ourselves
+  - Option: rewrite ggplot sensibly (this is a sizeable project)
+
+Other idea for them was to fix numpy to accept pluggable PRNGs.
+
+----------------------------------------------------------------------
+
+Bug (discovered by Vlad): global_posterior and co will ignore
+fully-constrained subgraphs, and also crash on traces that have no
+unconstrained randomness.
+- e.g. observe (exactly 0 -1) 1
+       infer global_posterior
+
+----------------------------------------------------------------------
+
+Bug (discovered by me): the Lite SPs in Puma mechanism doesn't seem to
+work on apply, for some reason.
+
+----------------------------------------------------------------------
+
+Urg.  Our gamma sampler does not appear to actually always return
+positive values, the type signature notwithstanding.
+
+----------------------------------------------------------------------
+
+David notices: Can't actually print just the latest slice of a data
+set, but with the right sweep count.
+
+----------------------------------------------------------------------
+
+- Will error reporting trace through in_model correctly?  Is the
+  extra directive created to actually run the action harmless for
+  this purpose?
+- new_model is likely to make things that do not have the model prelude
+- should the things made by new_model inherit the foreign sps of
+  the original?  If so, how should that be arranged?  If not, how
+  should one explicitly rebind?  (User could perform a callback
+  that uses the bind method...)
+- multiple models will make it very easy for users to create lots
+  of processes; reaping them will be nontrivial (rely on garbage
+  collector?)
+
+----------------------------------------------------------------------
+
+- Might want to conserve the inference trace across backend
+  conversions and save/restore; may need to wrap it in a Trace wrapper
+  to actually work.
+  - make a test case in test_serialize with a persistent inference
+    trace, some defines, etc.
+  - Should probably be able to copy the inference trace, which
+    involves using the inference sps dictionary of foreigns (or
+    restrict it to a registry, and store the set of bound ones with
+    the traces)
+
+----------------------------------------------------------------------
+
+- Should probably actually scope labels to individual models.  The way
+  to do that is probably to make interpreting labels and
+  label-targetting instructions a combinator that can be attached in
+  multiple places of the stack (sivm, trace_set, trace).
+  - labels are used for forget, freeze, and report, which are all
+    model-specific operations.
+
+----------------------------------------------------------------------
+
+Possible bug: does mixMH end up assigning a weight to enumerativeMAP
+and rejecting it sometimes?  Should we have another combinator (not
+mixMH) that will always accept the proposal and not mess with weights?
+- Can we unify the profiler hooks between mixMH and that other thing
+  so that all scaffold interactions are recorded?
+
+----------------------------------------------------------------------
+
+Why in the world does test(1) register as so much slower than all the
+others, in test_double_recursion?
+
+----------------------------------------------------------------------
+
+There's likely to be a nasty performance bug lurking in the way
+Addresses are hashed now.
+
+----------------------------------------------------------------------
+
+Run Wadden's example that breaks Nesterov and see what the problem is
+https://app.asana.com/0/9277420529946/16064839336502
+https://github.com/mit-probabilistic-computing-project/Venturecxx/blob/ml-models/examples/ml-models/pmf.py
+
+----------------------------------------------------------------------
+
+Anthony's SLAM code circa 599ba8829d84f4d8cd94ca3113c818457705dc92
+runs afoul of:
+  Warning: found dangling madeSPRecord entry: 0x5d456c0
+  Warning: found dangling value entry: 0x5d456c0
+once per step.  Could be a hint to a memory leak?
+
+Could this be caused by foreign SPs?
+
+Is this fixed now?
+
+----------------------------------------------------------------------
+
+Potential bug: Is it possible to forget the form containing the body
+of a compound procedure while such a procedure is still in memory?
+- If so, it would presumably cause havor if that procedure were ever
+  invoked, (e.g., by referencing nodes from its closure that are no
+  longer there) and would be undetectable except for a heap scan.
+- If there are no remaining references to the defined symbol, does
+  that imply that there are no such made procedures?
+  - Not in the presence of freeze
+
+[assume mk_f (lambda (...) (let ... (lambda (...) ...)))]
+[assume f (mk_f ...)]
+[freeze f]
+[forget mk_f]
+looks like trouble
+
+----------------------------------------------------------------------
+
+Differences between Lite and Puma scaffold construction:
+- re-traversing an aaa node updates the index assignment in Lite but
+  not Puma
+- re-traversing a drg node updates the index assignment and
+  retraverses all the children (if the index assignment changed) in
+  Lite but not Puma
+
+Test: ordered foo inference should behave differently in the presence
+of dependencies that cross index boundaries (though regen will still
+regenerate everything it needs in order to compute what it wants to
+compute).
+
+----------------------------------------------------------------------
+
+Future bug: func_pmap may actually be looking for max likelihood, but
+in the HMM problem that's actually the same as MAP because the all the
+possible transitions are equally probable.
+
+----------------------------------------------------------------------
+
+Would be nice to chase down warnings that Venture's dependencies print
+at startup.
+
+----------------------------------------------------------------------
+
+Would be nice if the brownian motion thing could run headless
+
+----------------------------------------------------------------------
+
+plotf_to_file:
+- The symbol<"..."> syntax will probably generate arbitrary paths;
+  permit it to specify file extensions (and formats!?)
+
+----------------------------------------------------------------------
+
+Test the venture console interface: --lang should affect -e; multiple
+-f and -e should work; multiple -L should work;
+
+----------------------------------------------------------------------
+
+Clean up or record/document discrepancies between venture console and venture -f:
+- Console prints out intermediate values
+- Console prints list_directives output
+- Console accepts exec and shell escapes (probably don't want either for venture -f)
+- Console has a dump_profile_data function
+
+----------------------------------------------------------------------
+
+Investigate why some test spawns threads that it doesn't ever flush
+- Does this still happen?
+
+----------------------------------------------------------------------
+
+Mechanically exercise all the features of Venture that pull in
+additional dependencies to make sure that the dependency list is
+right.
+
+Is there a better way to do that?  Have a "static import" discipline
+and migrate things with funny optional dependencies to (notionally
+separate) plugins?
+
+----------------------------------------------------------------------
+
+Adjust the manual tests to check against known-good outputs (and
+revert to manual if the test fails).
+
+----------------------------------------------------------------------
+
+Engine's get_seed and set_seed are starting to look pretty grotty
+
+----------------------------------------------------------------------
+
+There are a couple mysterious printouts in Jenkins, e.g.
+- test/inference_language/test_likelihood_weighting.py:testMultiprocessingRegression
+  has a non-fatal ripl-level error annotation problem in Jenkins, but
+  looks like it should not, and I can't reproduce it.
+
+----------------------------------------------------------------------
+
+Hm.  Puma's nodes store their expressions (as Venture Values); Lite's
+nodes do not.
+- Puma's restore does a trace->setValue for constant and frozen nodes,
+  using the node's stored expression; Lite does nothing
+- Puma uses the stored expressions in render.cxx to compute node labels
+- seekInconsistencies also dumps the expression, for fun
+- Storing addresses against an externally managed expression store
+  is, if anything, more informative.
+  - The same effect could be replicated with less separation by
+    storing a stack of zippers on expressions.
+- The expression storage was added by Selsam to make the renderer.
+  - Together with a funny string asExpression() const method
+    for Puma's venture values.
+*** Activity: Cull Asana, fix/complete or record those bugs/projects
+*** Paper: VentureScript, with cleaned up CPs as examples
+*** Paper: Metaprob
+Q: Vikash: what is the schedule for the Metaprob arxiv revision(s)?
+A: After trying out the meta model example at the site visit and
+   DALI, will have a plan for what to do with the paper.
+*** Paper: Gradients ?
+*** Cleanup projects I could potentially have Taylor do
+Selection criterion: feature-driven, fix-driven, or refactoring-driven?
+
+- Rename the types not to have the word Type in the name, since they
+  live in the types module now; provide pre-built instances of the
+  nullary ones (lower-case name)
+  - SPType might pose a minor wart (though, types.SP is still OK, I
+    suppose)
+
+- Unparser for VentureScript
+
+- VentureScript parser in lemonade
+
+- Can I dike out the stupid operator subtitution thing?  It's so useless.
+  - Note: operator recognition may be fine to keep.  It's just the
+    substitution that's silly.
+  - Visible result: the reference manual will show + instead of add.
+  - May need to touch:
+    - The operator substitution in church_prime/parse.py
+    - The builtin names in the lite and new_cxx backends
+    - Probably core_sivm _modify_expression (maybe not)
+    - Probably something in the venturescript parser
+    - The stack test suite
+
+- Finish removing the parsers' tentacles.
+  - Notably, it looks like substitute_params is dead, except for
+    ripl._unparse.  Can we rip it out?
+    - Process: make it crash, run the test suite, delete tests of it, etc.
+
+- Why in the world does core_sivm maintain an observe_dict?  It acts
+  as a cache for reporting values (with an f'ing deep copy!); why do
+  that instead of just relying on the engine to report observations?
+
+- Grow an additional PSP inheritance tree, to distinguish PSPs from
+  the contents of TypedPSP objects.
+  - The superclass could be named "UnboxedPSP"
+
+- Test counter-example minifier?
+  - Visible result: smaller counter examples
+
+- "Sporadically fails" test combinator?
+
+- Transform stack dicts into namedtuples (or objects? VentureValues?)
+
+- Eliminate expToDict by rewriting the interpreter in Puma traces to
+  have the same interface as the one in Lite
+  - The current one has a bug: unwrapVentureValue in expToDict
+    prevents inference from operating on blocks indexed by atoms in
+    Puma.
+    - This affected Baxter; there may be tests that accidentally rely
+      on it.
+
+- Jenkins Docker build
+
+- Remove underwater stones with parallelism for v0.2
+  - namely, SPs that don't serialize properly
+  - visible result: should be able to run the entire test suite having
+    first resample-parallel'd
+
+- Can we pull plotf out as a (standard) plugin?
+
+Flush transient inference traces:
+- Locate places where persistent inference trace was explicitly set to False
+  - Why does regression.py crash with a persistent inference trace?
+- Migrate all client code to rely on the default being on (no -P, etc)
+  - Including David's branch(es)
+- Remove the persistent_inference_trace flag from Venture
+- Remove the persistent_inference_trace option from making a ripl
+- Delete support for transient inference traces
+
+Foreign inference SPs as a registry:
+- Notionally, making the inference sp dict a registry will be trivial
+  when I drop support for transient inference traces
+  - Could also permit transient inference traces to have the bug of
+    picking up all foreign sps, independent of importing
+- Once they are both registries, I can merge them into one registry
+- Share register_foreign_sp across bind_foreign_sp and bind_foreign_inference_sp
+- Consider whether foreign imports should be directives, and/or forgettable
+- Add import_foreign for the inference trace
+*** Cleanup projects I may need to do myself
+- Finish winning from inference program monad actions returning values
+  + When infer is called from the console, it should print the returned value.
+  + When called programmatically from Python, it should return the value.
+  - None of this nonsense with the Infer object.
+  - Adjust any relevant primitives to return useful things
+    - bogo_possibilize might return the weight(s)
+    - incorporate might return the weight(s)
+    - Test that call_back returns the value from the plugin
+    - it would be consistent for assume and predict to return the
+      sampled value.
+    - given sample, call_back and many others can become non-macros
+  - Add more obviously useful new primitives
+    - detach, regen, select-subproblem
+    - compute the gradient of regen here
+    - something exposing profiling data?
+      - enable_profiling
+      - profile_data (which returns the data frame, that you can hardly do anything with)
+      - David wanted this
+    - BenZ wanted the inference interface that exposes "fixed log density of
+      regen" as a differentiable deterministic function (also the current
+      values) so he can manipulate them with his own, more sophisticated
+      routines.
+  - All sorts of crap can be ported to being written directly in Venture
+    - In principle, everything that's currently hanging out as an Engine
+      method should be able to migrate to being an inference prelude
+      routine.
+    - Thorny problem: how to expose the trace_handler thing and the choice
+      between one trace and a list of them
+      - one possibility: always act like there's just one if there's only one
+        - problem: if the number of particles is stochastic
+
+- Can pass a ripl to callbacks instead of this silly inferrer thing
+  - hmm_plugin.py reads inferrer.engine.logscore()
+  - several things read inferrer.particle_normalized_probs()
+  - p8_seismic/plot.py makes a ripl out of the engine in the inferrer and messes with it
+  - test_callback.py would need to be fixed
+  - drawing-plugin.py uses inferrer.engine.sample_all and for (_did, directive) in inferrer.engine.directives.items()
+  - also inferrer.particle_log_weights
+  - Later: check better than git grep inferrer that ripls are acceptable
+    things to pass to all extant callbacks (rather than "inferrer" objects)
+
+- One thing I clearly need is an inference programming level distinction
+  between operating on multiple particles in bulk or one at a time.  It
+  should be possible to send a complete inference program "over the
+  wire" to execute at each particle.  In particular, each particle's
+  instance of the inference program will then make its own random
+  choices.
+
+  over :: ST OneParticle a -> ST ManyParticles [a]
+
+  For this to work, I will need to transmit inference traces.
+  I can ban "define" from such transmitted inference programs.
+
+  After this, and fixing scaffolds to be reusable, I will be able to
+  expose regen, detach, and probably mixmh as inference primitives, and
+  migrate lots of nonsense to the inference prelude (thereby sharing it
+  between Lite and Puma).
+*** User-visible change-log, as of 4/14/15
+- User-facing changes that might be announced?
+  - Made these announcements to Baxter and Taylor; anyone else?
+    - Announce the explicit quasiquote macro and the ` reader macro.
+    - Announce that developers can rebuild the reference manual now(?)
+    - Announce elimination of 'mixture' and 'cycle' inference syntax;
+      with replacements.
+      - Some of the tutorial IPython notebooks are now (more) broken.
+    - Announce the reference manual
+      - Also, inference prelude functions and call backs now documented
+      - Milestone met: every referencable symbol now occurs in the
+        generated documentation somewhere.
+  - I haven't made these announcements:
+    - Announce freeze and forget in the inference language
+    - Announce optional labels in assume, observe, predict inference SPs
+    - Announce default labeling of assumes
+    - Announce new_model and in_model
+    - Announce cond and letrec, thanks to Anthony
+  - More, reconstructed from refman-changelog (since Mar 9 17:37,
+    commit 022429a086d367e221f2c2d7f0ea4bf75527aca9):
+    - Add mod, atan2, vonmises to Lite
+    - Add a gradient for second to Lite
+    - Rename scope_include, scope_exclude to tag, tag_exclude (in Lite and Puma)
+    - Make the noise argument of "exactly" optional (in Lite)
+    - Add an optional attempt bound to rejection (in Lite)
+    - Add vector_dot to Puma
+    - Add new_model, in_model
+    - Delete the ancient cxx backend
+    - Infer loop now takes one action rather than a list
+*** Notes on plotting features
+We theoretically want compositing across particles and animation by sweep count
+- [Taylor?] Figure out how to composite; maybe do all of this?
+  1) Choose a client interface of representations of images you will accept
+     - It would be nice if there were a simple incantation that takes a
+       matplotlib figure and emits an image of the chosen form, but should
+       not be restricted to matplotlib
+  2) Write a function that takes several images in that representation and
+     returns one, alpha blended
+     - Variants that save to disk in some standard format (png?) or that
+       immediately display on screen
+  2b) Allow the client of the above to weight the images, affecting their
+     importance in the blend
+  3) Another function, that takes a list or generator (your choice) of
+     images and produces a movie
+     - Variants that save the movie to disk, or pre-compute and display
+       on screen in batch (external viewer is fine), or [optional]
+       display streaming
+  - Resources: pygame (library for writing video games in Python),
+    pil, pycairo
+- In foreign callbacks:
+  - Maybe offer compositing as a combinator that wraps a function with map
+    - The function is to return an image (png?)
+    - Libraries to consider: pil, pycairo
+  - Leave animation to the client
+- Integrated with plotf:
+  - Just add compositing as a fourth dimension (meaningful options
+    for it include particle id and particle weight; should hack
+    particle ids not to over-darken particles with large ids)
+  - Separate into plotf_now and plotf_accumulate
+  - "Offline video a": Tweak plotf_now_to_file to include the sweep
+    counter in the file name (obeying formatting directives?), which
+    can then be composed into a movie offline.
+    - Usage idiom: delete all the frames && venture foo && make the movie && display it
+  - "Offline video b": plotf_accumulate can use matplotlib animation?
+  - "Streaming video": Make a variant of plotf_now that doesn't wait
+    for you to dismiss the window, but writes over it every time
+  - True streaming video would be that by piping to a viewer that
+    remembers and lets you go back in time (key frame interpolation!?)
+- Deliver test example(s) (for plotf abstract and for others to use
+  while in hectic states)
+- Another possible dimension can be mapped to faceting
+- Can we have additive modifiers for how to treat overplotting?
+  (Exactly identical discrete samples; continuous samples that are
+  close enough for the points to overlap).  Options: control or good
+  choice of point size?; 2D kernel density nonsense?
+*** Notes on error recovery (e.g. at the console)
+When a mistake happens in a live session, what may be wrong?
+- The (persistent?) inference trace may be partially detached or
+  regenerated, making it unusable.
+- The model trace ditto
+- Some model held in some variable ditto
+  - Though, may not be accessible, since the console (currently) does
+    not maintain any explicit inference variables that can be altered
+    by actions.
+- Some plugin's internal state may be in an inconsistent state
+- Who knows what other invariant may be violated?  But the above are
+  the most common in present experience.
+What actions are reasonable in these cases?
+- Forget the relevant section of the inference trace and continue
+  (but can I actually do that?)
+- Rebuild the inference trace and continue
+  - will lose outstanding defines
+  - can probably be recovered by loading a file
+- Rebuild the inference trace replaying defines
+  - need to write that code (definition memory wrapper, etc)
+  - Currently "define"s can't actually take any actions, so replaying
+    them is safe (may repeat prints, perhaps).
+- Rebuild the model and continue
+  - will lose outstanding assumes, observes, predicts
+  - can probably be recovered by loading a file
+- Rebuild the model from the prior and continue
+  - one of the ways to implement reinit_inference_problem would do that
+  - will lose current (potentially interesting) state, but presumably
+    the model had a bug anyway
+- "Continue" from model errors may mean editing the model
+  - Could blow it away and reload, losing state
+  - Could try to make "reassume" work (uneval, eval, propagate the
+    change downstream)
+- "clear" and "load" should more or less fix anything.
+  + could add "reload"
+  + could also define "clear" in the console to just stop continuous
+    inference and construct a new RIPL (perhaps replaying the
+    commandline arguments?)
+*** Research: Try a RandomDB-style v1 embedded in Haskell
+as a guide to conceptual issues.
+- Maybe use Liquid Haskell to keep track of data structure invariants?
+*** Research: Replicate BLOG in Venture (or come up with another open universe story)
+Skeletal plan for replicating BLOG in Venture:
+- First, figure out what inference algorithm(s) the actual BLOG
+  actually has, 'cause if it's just likelihood weighting, the
+  inference quality replication task is trivial (and computational
+  efficiency replication is out of the question anyway).
+- Second, if there is a need to make M-H chains over sets work, do the
+  scaffold visualization project (highlighting model source code).
+- Third, do again what David tried to do on the blog-examples branch,
+  namely
+  - Brainstorm possible representations of sets, set-element-attribute
+    associations, etc.
+  - See (using the scaffold visualizer) what kinds of proposals can be
+    recovered for them under what circumstances; use it to debug
+    library implementations.
+- Alternately or afterward, think about foreign SPs for set-level
+  manipulations.
+
+Reference:
+- Email "Report coming your way soon-ish" and the PDF therein
+- The blog-examples branch of Venturecxx
+***** Reference: Questions I had for David, before the latest round of attempts
+- How well does he understand the dynamics of this?  How good are
+  they?  The real question is: if I think something is weird, am I
+  probably right, or am I probably missing something?
+  - e.g. token/event sets as strict lists rather than thunk lists or
+    mem-tables: proposing to one will likely rebuild at least the
+    whole spine, and possibly also repropose all the earlier ones
+    (depending on details of what detach ends up doing).
+  - e.g. token_attrs token_location will be a block including
+    all the locations of all the tokens; is that a good idea?
+  - similar concern as above with the true_detections set
+  - Why is detected_sign not memmed?  Ditto mean_time_true,
+    variance_time_true, detected_time_*?
+    - May be ok if they are only called once, inside a memmed thing.
+      - Which is not true of detected_time_true, if the event map is
+        not 1-1
+      - Also not true of variance_time_true, which will matter if its
+        body stops being a constant.
+  - What's with that 29?
+  - Might want to raise the mh transition counts: they are relatively
+    cheap, compared to running the inference program (especially if
+    this runs in Puma).
+  - Why is it useful to have a thing that has a logDensity but never
+    absorbs?  I would think that would cause the logDensity to never
+    be called.
+- cycle in [define runner ... ] in seismic_test.vnt has been deprecated
+  - ggplot may still work on my machine; perhaps resurrect?
+  - How long did those tests take to run?
+- plot_demo_1 and plot_demo_2 are supposed to work; what resources do
+  they consume?
+
+- Meta-point: measuring and visualizing the scaffolds that various
+  proposals lead to would make it much easier to reason about choices
+  such as strict lists vs thunk lists.
+  - Is this about cost-center-like profiling of frequency of appearing
+    in scaffolds?  Maybe broken down by principal nodes?
+
+*** Candidate semantic addition: Backward model extension
+There is another operation that one can do in light of a generative
+model that regen is also good for.  The example is the backward step
+in the backward part of the forward-backward algorithm.  To wit, in
+the presence of a materialized value for some variable Z, extend the
+currently materialized portion of the model to include a value x for
+some X, and compute the weight corresponding to p(Z=z|X=x).  This is
+dual to extending a model that has a materialized x with a fixed value
+of z (i.e., regeneration with a "DeterministicLKernel").
+*** Candidate semantic addition: Non-transient tori
+Non-transient tori permit another useful idea: extending a model with
+an expression without evaluating (regenerating) the expression.  If
+this operation is implemented, it becomes possible to put in the
+constraint of an observation first and then regenerate with the
+constraint already in place, thereby not calling the simulator (and
+not needing the simulator to exist, etc).
+*** Back burner: Get traces to actually read values from each other's nodes
+(proper nesting).
+
+Feels like this requires rewriting (or at least re-understanding) the
+core interpreter.
+*** Back burner: Pluggable traces (RandomDB, void, replay, weighted-trace-set)
+looks like it requires rewriting (or at least re-understanding) the
+core interpreter
+*** Reference: system architectural thoughts circa early March 2015
+Interesting features the current Venture architecture has
+- The ability to report something about the current model distribution
+  (either it's the definition of the concrete distribution, which
+  involves recording the whole program, or it's meant to be the
+  definition of the current sample space and ideal posterior, which
+  would just be non-forgotten assumes, observes, predicts (albeit
+  buggy, because there is no way to record the result of a freeze)
+  (and is itself a random variable, because the inference program that
+  gave rise to it may have made random choices)).
+- Addressing schemes by which aspects of the current model
+  distribution may be inspected or modified
+  - scopes and blocks for targeting inference
+  - labels or directive ids for targeting interventions like freeze
+    and forget
+    - I guess the distinction is that only toplevel things may
+      currently be targeted by such interventions?
+    - Forget only makes sense for toplevel things anyway
+    - Freeze gets really confusing unless you hit all dynamic
+      occurrences of the same static code (otherwise there is no
+      longer a program whose execution history the current trace is).
+  - internal addresses, meant for profiling and error reporting (are
+    they also used in serialization?)
+  - another bug: not every runtime address will be valid in every
+    particle.  How are we dealing with that?
+- Parsing, with a notion of parse error locations.
+- Unparsing (I think this is broken for programmatically generated
+  expressions, namely quasiquote)
+- Error reporting (sometimes).
+- Some moderate quantity of error-checking in the core sivm.
+- Implementer-defined macros.
+- An interpreter that runs the inference program in one trace and the
+  model program in another, nearly capable of managing multiple model
+  programs.
+- Parallel operations across multiple traces.
+- Inner loop evaluation available in a Python or a C++ backend.
+
+Where these features should live:
+- There should be a clean interface to inner loop evaluation, so the
+  Python and C++ backends can both implement it.
+  - Maintaining a trace
+  - Some compounding of inference loops, as is currently done
+  - Ideally, error reporting with locations
+- Immediately around one trace, ability to report and mutate the
+  current sample space and ideal posterior.
+  - Source recording, "directive ids", etc.
+  - Arbitrary Eq-able VentureValues as labels?
+  - Track the incorporation state of constraints, because those affect
+    the "ideal" posterior (and can source bugs).
+  - Doesn't need to be cloned across backends.
+  - Freeze means this may vary across particles.
+  - Lite's trace copying (and serialization?) strategy depends on
+    knowing the program structure.
+  - This means a trace can locally interpret error locations,
+    construct stack traces, etc.
+- Around that, a (possibly parallelizing) TraceSet for particle methods
+  - Probably separated into the actual parallel handling and the
+    set-level operations like resampling.
+- Around that, an interpreter for the inference programming language,
+  with its own error reporting; be able to manage TraceSets as values.
+- Parsing, type checking (if any), and macro expansion should be
+  callable (iso)morphisms (e.g., so that eval may call them).
+- Something needs to have a sufficiently friendly API that will parse
+  strings, interpret errors, and possibly implement a "best effort"
+  isomorphism between Python and Venture values.
+
+Why Python is a pain in the arse for this layer:
+- I really want strong (whether static or dynamic) typing here, so the
+  contracts and data representations can be very clear.
+- Python exceptions are difficult to treat as manipulable objects.
+  - The ideal error report for a crash in a foreign SP would give the
+    inference program trace, the model program trace, and then the
+    trace inside the foreign SP.
+- Parallel computing in Python is pretty hopeless.
+- There are no good Python parser generators.
+
+----------------------------------------------------------------------
+
+Let's write the above again in terms of services, places it makes
+sense to provide them, and why.
+
+Per-backend Trace (including backend/new_cxx/trace.py)
+- RNG state (in Puma)
+- Node graph of an individual execution history (trace.families)
+  - regen/detach r/w
+  - toplevel eval adds, uneval removes
+- Scopes map thereof (incl. trace.rcs)
+  - regen/detach writes, scaffold reads
+- Constrained choice set
+  - regen/detach affect this via constrain/unconstrain
+- Unpropagated observations
+  - observe adds, incorporate removes
+  - How does this interact with the unconstraining that regen does if
+    control flow changes?
+- Global environment
+  - passed to regen explicitly, adjusted by toplevel assume, bind_foreign_sp
+  - mapping between ids and top nodes
+- AEKernel storage
+  - ??
+- Also a bunch of indirections for storing things that could live on
+  Nodes, for the persistent particle use case.
+- Regen/Detach
+- Scaffold construction
+- Primitive inference operator implementation
+  - The iteration loops want to be migratable to C++
+- Profiling information
+  - Collected by instrumenting primitive inference operators; wants to
+    live somewhere persistent.
+
+Possible refinements:
+- Stuff regen/detach interact with
+- Stuff that needs to be different for persistent particles
+- Stuff scaffold construction interacts with
+- Layer for unpropagated observations
+- Layer? separate object? for profiling information
+- Layer for recording source expressions
+
+engine.trace.Trace
+- implements define, evaluate, observe, and such for one trace in
+  terms of eval, bindInGlobalEnv
+- directive cache
+- serialization/deserialization of traces
+- reinit_inference_problem which resamples the model from the prior
+  based on the stored directives
+
+multiprocess.Worker
+- messes with IPC on the slave side
+- catches exceptions quasi-serializably
+
+multiprocess.Master
+- messes with IPC on the master side
+- chunking and mapping over multiple underlying objects
+- reconstitution and rethrowing of exceptions serialized by workers
+
+Engine
+- Point of selection for Puma vs Lite backend (by subclassing!)
+  - run-time backend swapping API
+- Management of an inference trace as distinct from a
+  multiprocess.Master of model traces
+  - assume, observe, predict, report_value get routed to the model
+  - define, infer get routed to the inference trace
+    - self_evaluating_scope_hack
+- Inference prelude by somewhat grotty hackery
+- Registry of bound foreign sps and bound foreign inference sps
+- Assigns globally unique directive ids
+- Actual thread management for continuous inference, inlcuding infer loop
+  - delegated to ContinuousInferrer, but still
+- Inference callback table
+- Records time since creation, presumably for plotf to read
+- ensure_rng_seeded_decently (?)
+- Multi-particle modeling
+  - choice of whether operations are routed to the model "map"ped or
+    evaluated at one point
+  - log_weights; operations that impact them
+  - resampling and changes of across-trace parallelism style
+  - handles changes in the number of model traces from other inference
+    SPs (diversify, collapse)
+  - including retrieve_dump{s}, retrieve_trace{s} for serialization
+    and resampling
+- get_entropy_info (?)
+- some respectable interaction with whole-system serialization
+- Theoretically supposed to enable RNG state management, but
+  practically doesn't
+
+Infer
+- Exposed as the object directly manipulated by inference SPs
+- parsing collect's kooky sublanguage of what to do with each expression
+- Actually implement collect, plotf, printf
+- Delegate to the engine (sometimes with minor tweaks) for all other
+  inference action SPs (except the ones that bypass it and go to the ripl)
+- A few convenience methods for callbacks (e.g. particle_normalized_probs)
+
+CoreSivm
+- Interprets data instructions as engine method calls
+  - Some (runtime!) type validation of the instructions
+  - Munges the incoming and outgoing data some, with the _modify_foo
+    functions.
+- Reports the values of observe instructions (because the engine
+  allegedly doesn't)
+- Action locking based on current state, on the theory that rollbacks
+  might be possible.  This appears to be broken and unusable.
+  - In particular, there seems to be no way for the state to become
+    anything other than "default".
+- Attempt at introspection on whether the profiler is enabled; not
+  sure which profiler it has in mind.
+- Some interaction with global serialization (namely storing the
+  observe_dict)
+
+VentureSivm
+- Performs macro expansion on incoming model and inference programs
+- Annotates exceptions from instruction execution with error
+  locations, in terms of pre-macro-expansion expressions.
+- Pauses continuous inference (in terms, ultimately, of the Engine's
+  methods) when other instructions are invoked.
+- Maintains labels of "labeled" instructions, and resolves them
+  when some other instruction refers by label.
+- Implements list_directives (by storing the directives separately
+  from the Engine)
+- Implements several "macro" instructions, like force and sample (and
+  then the Engine implements them again, to give inference SPs and
+  others access)
+  - This includes interpreting the data structure to decide what to do
+- Some scaffolding for interpreting debugger instructions like setting
+  breakpoints, which surely do not work.
+
+Ripl
+- Parses string-form (and partially structured) instructions into
+  structured form (by delegating to a parser)
+- Parses string-form programs into sturctured instruction streams
+- Provides an API frontend to the data instructions (as an alternative
+  to string parsing)
+- Annotates errors from lower layers with string-form location
+  indicators
+- Provides a multi-instruction program execution loop (much like do or
+  begin, lower down).
+- Loads the model prelude, if requested
+- Loads the default plugin
+- bulk_observe and observe_dataset, such as they are
+- Some delegation directly to the underlying engine, without defining
+  instruction data representations
+- Bitrotten stubs for "future" profiler support
+- Some machinery for data display for Vlad's actual profiler
+- General plugin loading
+
+Console
+- An actual terminal read-eval-print loop
+- Delegates to ripl with minor tweaks
+
+Venture Unit
+- Don't even want to think about the services this provides
+
+A bug: the object that represents a complete, encapsulated system
+state that may be interacted with by the external API is currently
+conflated with the object that accepts and produces the string-based
+(thus presumably human-friendly) language encoding.
+- This is a bug because it muddles inference programs programmatically
+  controlling models
+
+Some architectural rationales:
+- engine.trace.Trace and down needs to be fully serializable, so
+  cannot maintain the foreign sp registry.
+- Everything at TraceSet down should be agnostic as to whether it is
+  used for the "model" or the "inference program"
+- Master/Worker should be as agnostic as possible about the objects
+  they are managing, because just general IPC is hard enough.
+
+*** Reference: Design-ish notes on getting gradients through AAA
+Problem:
+
+In principle, CRP should pass gradient information through to its
+alpha parameter.  In order to do that, information needs to flow
+though the closure of the made SP.
+
+For deterministic AAA makers, it may be possible to get away with
+migrating the logDensityOfCounts and the gradient thereof to the maker
+procedure.
+
+Matters become fuzzier with stochastic makers: Is it reasonable to
+take gradient steps on the made SP itself (if it has continuous latent
+state)?
+- Gradient of what, exactly?  The AAALKernels associated with
+  stochastic makers take Gibbs steps, so the gradient of their weight
+  is not very informative.
+  - Perhaps I need an explicit notion of logDensityOfCounts even for
+    stochastic made SPs, in order to be able to take gradient steps
+    with respect to it.  (On a simplex, in some cases!)
+  - On the other hand, what is the desired behavior if an uncollapsed
+    AAA maker (that takes Gibbs steps) is a non-principal resampling
+    node in a gradient-based proposal?
+
+- Issue: The current LKernel interface forbids LKernels that can
+  compute their own densities and do not pretend to be able to account
+  for the prior (e.g., DeterministicLKernel, and Gaussian drift
+  applied to a non-Gaussian prior SP), except by hackery.  Perhaps I
+  should enable that.
+- Issue: The current LKernel interface also doesn't support symmetric
+  kernels very well, in that they become required to compute the prior
+  ratio instead of being able to just cancel their own density against
+  themselves and go home.
+- Does Puma not have AAA for uncollapsed models?  The Gibbs steps are
+  implemented as AEKernels; does that mechanism have the desired
+  effect of suppressing traversal of the children when proposing?
+- Issue: AAALKernels actually have a different weight contract: they
+  are called upon to account for the whole local posterior of their
+  node, not just the prior.
+  - Option: change the method name(s) for AAALKernels, to strengthen the
+    indication that their obligations differ.
+- Yes, there is conceptually such a thing as a DeltaAAALKernel:
+  Gaussian drift applied to the weight argument of
+  make_suff_stat_bernoulli.
+- Does Puma need to be tweaked to make DeterministicMakerAAALKernel
+  not the default, but explicitly named by all the examples?  In Lite
+  this is another subclass.
+*** Reference: Sysadmining notes
+around May 2015
+
+Probcomp 2 exhibited 
+dkms: removing: openafs 1.6.11.1 (3.8.0-37-generic) (x86_64)
+
+Something on the probcomp machines leaks linux image and linux header
+packages, which tend to make the /boot partition run out of disk space
+and wedge apt.
+
+The latest Jenkins requires Java 7.  I have marked Jenkins as hold on
+both probcomps that have it for now.
