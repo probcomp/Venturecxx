@@ -16,6 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import defaultdict
+from functools import wraps
 
 import Tkinter, ttk
 
@@ -25,6 +26,16 @@ import venture.lite.value
 from venture.lite.node import ConstantNode, LookupNode, RequestNode
 from venture.lite.value import SPRef
 from venture.lite.utils import logWeightsToNormalizedDirect
+
+def catchesException(f):
+  @wraps(f)
+  def try_f(*args, **kwargs):
+    try:
+      return f(*args, **kwargs)
+    except Exception:
+      pass
+
+  return try_f
 
 def find_labels_for_random_choices(trace):
   # very hacky heuristic for naming random choices.
@@ -170,4 +181,4 @@ class Workspace(object):
 def __venture_start__(ripl):
   workspace = Workspace()
   ripl.bind_methods_as_callbacks(workspace)
-  ripl.bind_callback('__postcmd__', workspace.draw_workspace)
+  ripl.bind_callback('__postcmd__', catchesException(workspace.draw_workspace))
