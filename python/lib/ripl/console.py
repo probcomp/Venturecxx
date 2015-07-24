@@ -43,6 +43,8 @@ def catchesVentureException(f):
     except Exception:
       print "Your query has generated an error:"
       traceback.print_exc()
+    except KeyboardInterrupt:
+      pass
 
   return try_f
 
