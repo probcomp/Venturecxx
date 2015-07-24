@@ -1219,13 +1219,7 @@ Mechanical test idea:
 Also, it is not thread-safe
 *** Activity: Fill in gradients
 *** Activity: Fill in conjugate and collapsed models
-*** Activity: Corral all artifacts and mechanically test execution
-- from the releasable artifacts list (web demos, examples/, ppaml-cps,
-  venture-documents)
-- benefit: we can modify the language relatively safely
-- The cluster_crp_mixture demo is possibly broken b/c of
-  list_directives and the api format of directives
-- Liberal use of --smoketest flags may be appropriate
+*** Activity: Corral all artifacts and mechanically test execution (Issue #48)
 *** Activity: Fill in HMC
 - Flesh out and debug the gradient definitions
 - Needs porting to Puma
@@ -1285,11 +1279,6 @@ Do I want to write up persistent inference traces more thoroughly?
 Bug: Why didn't it even try to annotate the Probability out of range
 -0.0088150436511 I got from universal gradient ascent on the
 inferred-noise version of the curve fitting model?
-
-----------------------------------------------------------------------
-
-I really should stop relying on timeouts and use --smoketest versions
-of the examples for integration testing instead.
 
 ----------------------------------------------------------------------
 
@@ -1974,27 +1963,12 @@ Selection criterion: feature-driven, fix-driven, or refactoring-driven?
 
 - Unparser for VentureScript
 
-- VentureScript parser in lemonade
++ VentureScript parser in lemonade
 
-- Can I dike out the stupid operator subtitution thing?  It's so useless.
-  - Note: operator recognition may be fine to keep.  It's just the
-    substitution that's silly.
-  - Visible result: the reference manual will show + instead of add.
-  - May need to touch:
-    - The operator substitution in church_prime/parse.py
-    - The builtin names in the lite and new_cxx backends
-    - Probably core_sivm _modify_expression (maybe not)
-    - Probably something in the venturescript parser
-    - The stack test suite
-
-- Finish removing the parsers' tentacles.
-  - Notably, it looks like substitute_params is dead, except for
-    ripl._unparse.  Can we rip it out?
-    - Process: make it crash, run the test suite, delete tests of it, etc.
-
-- Why in the world does core_sivm maintain an observe_dict?  It acts
-  as a cache for reporting values (with an f'ing deep copy!); why do
-  that instead of just relying on the engine to report observations?
+Issue #55.
+Issue #56.
+Issue #57.
+Issue #58.
 
 - Grow an additional PSP inheritance tree, to distinguish PSPs from
   the contents of TypedPSP objects.
@@ -2024,14 +1998,7 @@ Selection criterion: feature-driven, fix-driven, or refactoring-driven?
 
 - Can we pull plotf out as a (standard) plugin?
 
-Flush transient inference traces:
-- Locate places where persistent inference trace was explicitly set to False
-  - Why does regression.py crash with a persistent inference trace?
-- Migrate all client code to rely on the default being on (no -P, etc)
-  - Including David's branch(es)
-- Remove the persistent_inference_trace flag from Venture
-- Remove the persistent_inference_trace option from making a ripl
-- Delete support for transient inference traces
+Issue #59.
 
 Foreign inference SPs as a registry:
 - Notionally, making the inference sp dict a registry will be trivial
@@ -2069,7 +2036,7 @@ Foreign inference SPs as a registry:
     - In principle, everything that's currently hanging out as an Engine
       method should be able to migrate to being an inference prelude
       routine.
-    - Thorny problem: how to expose the trace_handler thing and the choice
+    - Thorny problem: how to expose the trace_set thing and the choice
       between one trace and a list of them
       - one possibility: always act like there's just one if there's only one
         - problem: if the number of particles is stochastic
