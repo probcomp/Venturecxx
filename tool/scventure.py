@@ -152,7 +152,7 @@ class VentureInstaller(ClusterSetup): # Exceptions by default are acceptable pyl
 
   def ensure_python_deps(self, node):
     log.info("Installing Python dependencies on %s" % node.alias)
-    node.apt_install('python-pyparsing python-flask python-requests python-numpy python-matplotlib')
+    node.apt_install('python-flask python-requests python-numpy python-matplotlib')
 
   def ensure_venture_source(self, node):
     if self.checkout is not None:

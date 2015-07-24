@@ -43,7 +43,7 @@ MAINTAINER  MIT Probabilistic Computing Project
 RUN         apt-get update
 RUN         apt-get install -y libboost-all-dev libgsl0-dev python-pip ccache libfreetype6-dev
 RUN         pip install -U distribute
-RUN         apt-get install -y python-pyparsing python-flask python-requests python-numpy python-matplotlib python-scipy python-zmq ipython ipython-notebook
+RUN         apt-get install -y python-flask python-requests python-numpy python-matplotlib python-scipy python-zmq ipython ipython-notebook
 
 # Install VNC (for graphical plotting) and other useful utilities
 RUN         apt-get install -y x11vnc xvfb

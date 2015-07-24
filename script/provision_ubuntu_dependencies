@@ -26,7 +26,7 @@ sudo pip install -U distribute
 # Also pulls in required external libraries
 # HOWEVER, version skew problems have been reported if installing
 # python-numpy and python-scipy via apt-get on older versions of Ubuntu
-sudo apt-get install -y python-pyparsing python-flask python-requests python-numpy python-matplotlib python-scipy python-zmq ipython
+sudo apt-get install -y python-flask python-requests python-numpy python-matplotlib python-scipy python-zmq ipython
 
 # [Optional] Get dependencies for ggplot (needed for the built-in plotting facilities)
 # Note: on older versions of Ubuntu, install them via pip (see "Install ggplot" below)

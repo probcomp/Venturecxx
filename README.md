@@ -84,7 +84,7 @@ higher).  This dependency installation is replicated as
     # Also pulls in required external libraries
     # HOWEVER, version skew problems have been reported if installing
     # python-numpy and python-scipy via apt-get on older versions of Ubuntu
-    sudo apt-get install -y python-pyparsing python-flask python-requests python-numpy python-matplotlib python-scipy python-zmq ipython
+    sudo apt-get install -y python-flask python-requests python-numpy python-matplotlib python-scipy python-zmq ipython
 
     # [Optional] Get dependencies for ggplot (needed for the built-in plotting facilities)
     # Note: on older versions of Ubuntu, install them via pip (see "Install ggplot" below)
@@ -118,7 +118,7 @@ Finally, install Python dependencies:
     # [Optional] Get Python dependencies (faster to install prepackaged than via pip)
     # Also pulls in required external libraries
     pip install ipython
-    pip install pyparsing flask numpy matplotlib scipy
+    pip install flask numpy matplotlib scipy
 
 Dependencies (OSX, macports)
 ----------------------------
