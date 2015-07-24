@@ -43,22 +43,28 @@ def catchesVentureException(f):
     except Exception:
       print "Your query has generated an error:"
       traceback.print_exc()
+    except KeyboardInterrupt:
+      pass
 
   return try_f
 
 class RiplCmd(Cmd, object):
-  def __init__(self, ripl, rebuild):
+  def __init__(self, ripl, rebuild, files=None, plugins=None):
     super(RiplCmd, self).__init__()
     self.ripl = ripl
     self.prompt = 'venture[script] > '
     self.rebuild = rebuild
-    self.files = []
-    self.plugins = []
+    self.files = [] if files is None else files
+    self.plugins = [] if plugins is None else plugins
     self.pending_instruction = None
     self.pending_instruction_string = None
+    self._update_prompt()
 
+  @catchesVentureException
   def emptyline(self):
-    pass
+    if self.pending_instruction is not None:
+      # force evaluation of pending instruction
+      self._do_continue_instruction("", force_complete=True)
 
   def do_quit(self, _s):
     '''Exit the Venture console.'''
@@ -69,7 +75,7 @@ class RiplCmd(Cmd, object):
 
   do_EOF = do_quit
 
-  def _do_instruction(self, instruction, s):
+  def _do_instruction(self, instruction, s, force_complete=False):
     if self.ripl.get_mode() == "church_prime":
       r_inst = '[%s %s]' % (instruction, s)
       # Not supporting multiline paste for abstract syntax yet
@@ -80,7 +86,7 @@ class RiplCmd(Cmd, object):
       else:
         r_inst = '%s %s' % (instruction, s)
       from venture.parser.venture_script.parse import string_complete_p
-      if string_complete_p(r_inst):
+      if force_complete or string_complete_p(r_inst):
         return self.ripl.execute_instruction(r_inst)
       else:
         self.pending_instruction = instruction
@@ -104,13 +110,13 @@ class RiplCmd(Cmd, object):
     else:
       self._do_continue_instruction(line)
 
-  def _do_continue_instruction(self, line):
+  def _do_continue_instruction(self, line, force_complete=False):
     inst = self.pending_instruction
     string = self.pending_instruction_string + "\n" + line
     self.pending_instruction = None
     self.pending_instruction_string = None
     self._update_prompt()
-    printValue(self._do_instruction(inst, string))
+    printValue(self._do_instruction(inst, string, force_complete))
 
   def _do_eval(self, line):
     '''Evaluate an expression in the inference program.'''
@@ -169,9 +175,9 @@ class RiplCmd(Cmd, object):
   def do_clear(self, _):
     '''Clear the console state.  (Replay the effects of command line arguments.)'''
     self.ripl.stop_continuous_inference()
-    (_, self.ripl) = self.rebuild()
-    self.files = []
-    self.plugins = []
+    (_, self.ripl, files, plugins) = self.rebuild()
+    self.files = files
+    self.plugins = plugins
     self._update_prompt()
   
   @catchesVentureException
@@ -250,8 +256,8 @@ class RiplCmd(Cmd, object):
     else:
       self.prompt =   "            ... > "
 
-def run_venture_console(ripl, rebuild):
-  RiplCmd(ripl, rebuild).cmdloop()
+def run_venture_console(ripl, rebuild, files=None, plugins=None):
+  RiplCmd(ripl, rebuild, files=files, plugins=plugins).cmdloop()
 
 def main():
   import venture.shortcuts as s
