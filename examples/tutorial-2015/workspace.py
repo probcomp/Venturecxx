@@ -148,3 +148,4 @@ class Workspace(object):
 def __venture_start__(ripl):
   workspace = Workspace()
   ripl.bind_methods_as_callbacks(workspace)
+  ripl.bind_callback('__postcmd__', workspace.draw_workspace)
