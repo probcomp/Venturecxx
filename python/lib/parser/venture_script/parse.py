@@ -510,6 +510,17 @@ def tagged_value_to_string(v):
     elif v['type'] == 'string':
         assert isinstance(v['value'], basestring)
         return quote_string(v['value'])
+    elif v['type'] == 'array_unboxed':
+        # first problem: the JSON representation for this isn't one-to-one,
+        # because it doesn't include a way to specify subtype.
+        # second: the value might be a numpy array, which JSON doesn't like.
+        # solution: convert to lite's VentureValue, unbox, convert back.
+        # XXX is there a better way?
+        from venture.lite.value import VentureValue, VentureArray
+        v = VentureValue.fromStackDict(v)
+        v = VentureArray(v.getArray())
+        v = v.asStackDict()
+        return '%s<%s>' % (v['type'], json.dumps(v['value']))
     else:
         return '%s<%s>' % (v['type'], json.dumps(v['value']))
 
