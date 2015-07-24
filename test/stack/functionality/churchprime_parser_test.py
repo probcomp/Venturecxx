@@ -21,7 +21,6 @@ from nose.plugins.attrib import attr
 
 from venture.exception import VentureException
 from venture.parser import ChurchPrimeParser
-from venture.test.test_helpers import ParserTestCase
 import venture.value.dicts as v
 
 # Almost the same effect as @venture.test.config.in_backend("none"),
