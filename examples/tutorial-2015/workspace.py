@@ -19,6 +19,7 @@ import math
 from collections import defaultdict
 
 import venture.ripl.utils as u
+import venture.lite.value
 
 from venture.lite.node import ConstantNode, LookupNode, OutputNode, RequestNode
 from venture.lite.value import SPRef
@@ -56,11 +57,18 @@ def find_labels_for_random_choices(trace):
         if isinstance(key, RequestNode):
           # look up the arguments
           key = ", ".join(map(lookup_label, key.operandNodes))
-        return "{0}([{1}])".format(name, key)
+        else:
+          # super hack to prettify the string
+          try:
+            [value] = eval(key, vars(venture.lite.value))
+            key = str(u.strip_types(value.asStackDict()))
+          except Exception:
+            pass
+        return "{0}({1})".format(name, key)
       else:
         return label
     elif isinstance(node, ConstantNode):
-      return str(node.value)
+      return str(u.strip_types(node.value.asStackDict()))
     elif isinstance(node, LookupNode):
       return lookup_label(node.sourceNode)
     # elif isinstance(node, OutputNode):
