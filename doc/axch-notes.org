@@ -139,6 +139,8 @@ Things to ship:
   - error message request: "cannot convert VentureSPRecord to
     foreignblob" is incomprehensible. "cannot convert inference action
     to dataset" would be better.
+  - Pasting full-line comments into the console produces an annoying
+    parse error
 - For fixing bugs, bump version number to 4.1rc{k} and reinstall
   on probcomps
   - Maybe also on a private url (or location on probcomp!) if there is
