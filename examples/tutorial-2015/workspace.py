@@ -62,14 +62,14 @@ def find_labels_for_random_choices(trace):
           # super hack to prettify the string
           try:
             [value] = eval(key, vars(venture.lite.value))
-            key = str(u.strip_types(value.asStackDict()))
+            key = str(u.strip_types(value.asStackDict(trace)))
           except Exception:
             pass
         return "{0}({1})".format(name, key)
       else:
         return label
     elif isinstance(node, ConstantNode):
-      return str(u.strip_types(node.value.asStackDict()))
+      return str(u.strip_types(node.value.asStackDict(trace)))
     elif isinstance(node, LookupNode):
       return lookup_label(node.sourceNode)
     # elif isinstance(node, OutputNode):
@@ -78,8 +78,8 @@ def find_labels_for_random_choices(trace):
     #   return [operator_label] + operand_labels
     else:
       return '<unknown value>'
-  rcs = sorted((lookup_label(choice), u.strip_types(choice.value.asStackDict())) for choice in trace.rcs)
-  ccs = sorted((lookup_label(choice), u.strip_types(choice.value.asStackDict())) for choice in trace.ccs)
+  rcs = sorted((lookup_label(choice), u.strip_types(choice.value.asStackDict(trace))) for choice in trace.rcs)
+  ccs = sorted((lookup_label(choice), u.strip_types(choice.value.asStackDict(trace))) for choice in trace.ccs)
   return rcs, ccs
 
 class Workspace(object):
