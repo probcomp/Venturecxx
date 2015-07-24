@@ -103,6 +103,14 @@ class RiplCmd(Cmd, object):
     return line
 
   @catchesVentureException
+  def postcmd(self, stop, line):
+    callbacks = self.ripl.sivm.core_sivm.engine.callbacks
+    if '__postcmd__' in callbacks:
+      inferrer = self.ripl.evaluate('__the_inferrer__')
+      callbacks['__postcmd__'](inferrer)
+    return stop
+
+  @catchesVentureException
   def default(self, line):
     '''Continue a pending instruction or evaluate an expression in the inference program.'''
     if self.pending_instruction is None:
