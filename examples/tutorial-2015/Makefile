@@ -42,12 +42,14 @@ build: index.html tutorial/basics/index.html tutorial/linear-regression/index.ht
 	cp $(BASIC_ASSETS) tutorial/basics/
 	cp $(REGRESSION_ASSETS) tutorial/linear-regression
 	cp $(GP_ASSETS) tutorial/gp
+	cp good-gp-figure-2.png tutorial/gp/figure-2.png
 
-build-smoke: index.html tutorial-smoke/basics/index.html tutorial-smoke/linear-regression/index.html tutorial-smoke/gp/index.html $(BASIC_ASSETS) $(REGRESSION_ASSETS)
+build-smoke: index.html tutorial-smoke/basics/index.html tutorial-smoke/linear-regression/index.html tutorial-smoke/gp/index.html $(BASIC_ASSETS) $(REGRESSION_ASSETS) $(GP_ASSETS)
 	cp index.html tutorial-smoke/
 	cp $(BASIC_ASSETS) tutorial-smoke/basics/
 	cp $(REGRESSION_ASSETS) tutorial-smoke/linear-regression
 	cp $(GP_ASSETS) tutorial-smoke/gp
+	cp good-gp-figure-2.png tutorial-smoke/gp/figure-2.png
 
 upload: build
 	scp -r tutorial/ login.csail.mit.edu:/afs/csail.mit.edu/proj/probcomp/www/data/venture/
