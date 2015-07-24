@@ -156,32 +156,14 @@ class Writer(object):
             self.out_chunks.extend([indent, '<pre class="value"><code>', cgi.escape(printed.rstrip()), "</code></pre>\n"])
         figure_blocks = [indent + "![A Venture plot](%s)\n" % (figure,) for figure in figures]
         self.out_chunks.extend(figure_blocks)
+        # TODO Detect errors by e.g. scanning the output (or asking
+        # the console object for some state?) in order to report how
+        # many there were
+        # TODO [Optional] Support dynamic mode switch in the transcript by poking self.console.ripl
 
     def pass_line(self, line):
         munged = self.console.precmd(line)
         return self.console.onecmd(munged)
-
-    def xxx_emit_code(self, mode, expect_error, string):
-        print "Trying program in %s mode" % (mode,)
-        if mode == "venture":
-            self.ripl.set_mode("venture_script")
-            comment_start = '//'
-        elif mode == "church'":
-            self.ripl.set_mode("church_prime")
-            comment_start = ';'
-        else:
-            raise Exception("Unknown block mode %s", mode)
-        (figures, munged) = self.munge_plotfs(mode, string)
-        print munged.strip()
-        (returned, printed) = with_output_to_string(self.execute_program, munged, expect_error)
-        val = getValue(returned[-1])
-        indent = self.detect_indent(string)
-        self.out_chunks.extend([indent, "```", string, "```\n"])
-        if len(printed.strip()) > 0:
-            self.out_chunks.extend([indent, '<pre class="stdout"><code>', cgi.escape(printed), "</code></pre>\n"])
-        self.out_chunks.extend([indent, '<pre class="value"><code>', cgi.escape(str(val)), "</code></pre>\n"])
-        figure_blocks = [indent + "![A Venture plot](%s)\n" % (figure,) for figure in figures]
-        self.out_chunks.extend(figure_blocks)
 
     def munge_plotfs(self, mode, string):
         # TODO Instead of munging the source, should also be able to
@@ -208,25 +190,6 @@ class Writer(object):
                 figures.append("figure-%s.png" % (self.fignum,))
                 self.fignum += 1
         return (figures, ans)
-
-    def execute_program(self, munged, expect_error):
-        if munged.strip() == "list_directives":
-            return [self.ripl.print_directives()]
-        elif munged.strip() == "clear":
-            (_, self.ripl, _, _) = self._create_ripl()
-            return [None]
-        else:
-            try:
-                return self.ripl.execute_program(munged)
-            except VentureException as e:
-                print e
-                if not expect_error:
-                    sys.stderr.write("Inserting unexpected exception into output:\n")
-                    sys.stderr.write(str(e))
-                    sys.stderr.write("\n")
-                    sys.stderr.flush()
-                    self.unexpected_errors += 1
-                return [None]
 
     def detect_indent(self, string):
         indents = []
