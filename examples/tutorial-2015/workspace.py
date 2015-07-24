@@ -23,7 +23,7 @@ import Tkinter, ttk
 import venture.ripl.utils as u
 import venture.lite.value
 
-from venture.lite.node import ConstantNode, LookupNode, RequestNode
+from venture.lite.node import ConstantNode, LookupNode, RequestNode, OutputNode
 from venture.lite.value import SPRef
 from venture.lite.utils import logWeightsToNormalizedDirect
 
@@ -83,10 +83,10 @@ def find_labels_for_random_choices(trace):
       return str(u.strip_types(node.value.asStackDict(trace)))
     elif isinstance(node, LookupNode):
       return lookup_label(node.sourceNode)
-    # elif isinstance(node, OutputNode):
-    #   operator_label = lookup_label(node.operatorNode)
-    #   operand_labels = map(lookup_label, node.operandNodes)
-    #   return [operator_label] + operand_labels
+    elif isinstance(node, OutputNode):
+      operator_label = lookup_label(node.operatorNode)
+      operand_labels = ", ".join(map(lookup_label, node.operandNodes))
+      return "{0}({1})".format(operator_label, operand_labels)
     else:
       return '<unknown value>'
   rcs = sorted((lookup_label(choice), u.strip_types(choice.value.asStackDict(trace))) for choice in trace.rcs)
