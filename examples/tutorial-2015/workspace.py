@@ -15,15 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import math
 from collections import defaultdict
 
-import ttk
+import Tkinter, ttk
 
 import venture.ripl.utils as u
 import venture.lite.value
 
-from venture.lite.node import ConstantNode, LookupNode, OutputNode, RequestNode
+from venture.lite.node import ConstantNode, LookupNode, RequestNode
 from venture.lite.value import SPRef
 from venture.lite.utils import logWeightsToNormalizedDirect
 
@@ -108,25 +107,47 @@ class Workspace(object):
       print
 
   def draw_workspace(self, inferrer):
+    directives = inferrer.engine.ripl.list_directives()
+    root = Tkinter._default_root
+
+    if not directives:
+      # don't bother drawing a window, and destroy any existing one.
+      if root is not None:
+        root.destroy()
+      return
+
+    if root is None:
+      # create a new window
+      self.treeview = None
+      root = Tkinter.Tk()
+
     if self.treeview is None:
-      self.treeview = ttk.Treeview(show='tree')
+      # destroy any existing elements in the window
+      for child in root.children.values():
+        child.destroy()
+      # create the treeview
+      self.treeview = ttk.Treeview(root, show='tree')
       self.treeview["columns"] = ['value']
       self.treeview.column('#0', width=300)
       self.treeview.column('value', width=500)
       self.treeview.tag_configure('rcs', foreground='#722')
       self.treeview.tag_configure('ccs', foreground='#227')
       self.treeview.pack()
+
+    # clear the treeview
     self.treeview.delete(*self.treeview.get_children())
 
     num_columns = 1
 
+    # modeling directives
     model_item = self.treeview.insert('', 0, 'model', text="Modeling Directives", open=True)
-    for i, directive in enumerate(inferrer.engine.ripl.list_directives()):
+    for i, directive in enumerate(directives):
       dir_id = int(directive['directive_id'])
       dir_text = inferrer.engine.ripl._get_raw_text(dir_id)
       self.treeview.insert(model_item, i, text="%d:" % dir_id, values=[dir_text])
       num_columns += 1
 
+    # traces
     model = inferrer.engine.model
     normalized_direct = logWeightsToNormalizedDirect(model.log_weights)
     for i, (trace, weight) in enumerate(zip(model.retrieve_traces(), model.log_weights)):
@@ -143,6 +164,7 @@ class Workspace(object):
         num_columns += 1
       num_columns += 1
 
+    # set the height dynamically
     self.treeview["height"] = num_columns
 
 def __venture_start__(ripl):
