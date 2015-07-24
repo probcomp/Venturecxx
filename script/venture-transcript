@@ -103,13 +103,13 @@ class Writer(object):
         self.fignum = 0
         self.title = title
         self.unexpected_errors = 0
-        (_, ripl) = self._create_ripl()
+        (_, ripl, _, _) = self._create_ripl()
         self.console = RiplCmd(ripl, self._create_ripl)
 
     def _create_ripl(self):
         ripl = vs.backend("lite").make_combined_ripl()
         ripl.set_mode("venture_script")
-        return (False, ripl)
+        return (False, ripl, [], [])
 
     def in_text(self, string):
         split_res = re.split(start_of_block, string, maxsplit=1)
@@ -213,7 +213,7 @@ class Writer(object):
         if munged.strip() == "list_directives":
             return [self.ripl.print_directives()]
         elif munged.strip() == "clear":
-            (_, self.ripl) = self._create_ripl()
+            (_, self.ripl, _, _) = self._create_ripl()
             return [None]
         else:
             try:

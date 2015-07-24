@@ -148,6 +148,9 @@ Things to ship:
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     Caused by
     expected square matrix
+  - [Later] Stopping multiline query interpretation on blank line will
+    break paste of e.g. definitions that are large enough to have gaps.
+    We don't have any of those yet.
 - For fixing bugs, bump version number to 4.1rc{k} and reinstall
   on probcomps
   - Maybe also on a private url (or location on probcomp!) if there is
