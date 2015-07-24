@@ -140,6 +140,14 @@ Things to ship:
   - error message request: "cannot convert VentureSPRecord to
     foreignblob" is incomprehensible. "cannot convert inference action
     to dataset" would be better.
+- More recent live bugs
+  - documentation of wishart, inv_wishart
+  - venture[script] > inv_wishart(id_matrix(2), 1)
+    *** evaluation: expected square matrix
+    (inv_wishart (id_matrix 2) 1)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    Caused by
+    expected square matrix
 - For fixing bugs, bump version number to 4.1rc{k} and reinstall
   on probcomps
   - Maybe also on a private url (or location on probcomp!) if there is
