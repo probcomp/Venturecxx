@@ -18,6 +18,8 @@
 import math
 from collections import defaultdict
 
+import ttk
+
 import venture.ripl.utils as u
 import venture.lite.value
 
@@ -82,6 +84,9 @@ def find_labels_for_random_choices(trace):
   return rcs, ccs
 
 class Workspace(object):
+  def __init__(self):
+    self.treeview = None
+
   def print_workspace(self, inferrer):
     print 'Model:'
     for directive in inferrer.engine.ripl.list_directives():
@@ -101,6 +106,44 @@ class Workspace(object):
       for label, value in ccs:
         print label, value, '(constrained)'
       print
+
+  def draw_workspace(self, inferrer):
+    if self.treeview is None:
+      self.treeview = ttk.Treeview(show='tree')
+      self.treeview["columns"] = ['value']
+      self.treeview.column('#0', width=300)
+      self.treeview.column('value', width=500)
+      self.treeview.tag_configure('rcs', foreground='#722')
+      self.treeview.tag_configure('ccs', foreground='#227')
+      self.treeview.pack()
+    self.treeview.delete(*self.treeview.get_children())
+
+    num_columns = 1
+
+    model_item = self.treeview.insert('', 0, 'model', text="Modeling Directives", open=True)
+    for i, directive in enumerate(inferrer.engine.ripl.list_directives()):
+      dir_id = int(directive['directive_id'])
+      dir_text = inferrer.engine.ripl._get_raw_text(dir_id)
+      self.treeview.insert(model_item, i, text="%d:" % dir_id, values=[dir_text])
+      num_columns += 1
+
+    model = inferrer.engine.model
+    normalized_direct = logWeightsToNormalizedDirect(model.log_weights)
+    for i, (trace, weight) in enumerate(zip(model.retrieve_traces(), model.log_weights)):
+      trace_text = "Trace %d (weight %.2f, prob %.3g)" % (i+1, weight, normalized_direct[i])
+      trace_item = self.treeview.insert('', i+1, text=trace_text, open=True)
+      rcs, ccs = find_labels_for_random_choices(trace)
+      # rcs_item = self.treeview.insert(trace_item, 0, text='Random Variables', open=True)
+      # ccs_item = self.treeview.insert(trace_item, 1, text='Constrained Variables', open=True)
+      for label, value in rcs:
+        self.treeview.insert(trace_item, 'end', text=label, values=[value], tags=['rcs'])
+        num_columns += 1
+      for label, value in ccs:
+        self.treeview.insert(trace_item, 'end', text=label, values=[value], tags=['ccs'])
+        num_columns += 1
+      num_columns += 1
+
+    self.treeview["height"] = num_columns
 
 def __venture_start__(ripl):
   workspace = Workspace()
