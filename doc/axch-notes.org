@@ -305,18 +305,17 @@ Future:
 - Fix egregious introduced discrepancies
   - What should Puma's asExpression produce for strings?
   - Lite's ExpressionType?
-  - There appears to be considerable code duplication between the
+  - #39 There appears to be considerable code duplication between the
     church' and VS parsers (e.g., the Trie class?)
-  - I can probably flush the old parser class too
-  - Can I get rid of the dependency on pyparsing?
+  - #63 Can I get rid of the dependency on pyparsing?
   - examples/hmm.vnt is wrong (the current CP solution fixes whatever
     the bug was).
 - Crosscat
 - Delete things
-  - extra parsed directives and support code
-  - operator substitution
-  - does the core sivm still have _modify ?
-  - can I flush the SIVM's observation reporting cache?
+  - #18, #61, #62 extra parsed directives and support code
+  - #56 operator substitution
+  - #57 does the core sivm still have _modify ?
+  - #58 can I flush the SIVM's observation reporting cache?
 - System cleaning
   - Flesh out vectorization by generic operations
     - Stan does this
