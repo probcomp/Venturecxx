@@ -354,3 +354,194 @@ is willing to pretend to be able to stochastically return any object.
 The second argument, if given, is the penalty (in log space) for a mismatch.
 If not given, taken to be -infinity. """
 
+# SP for Poisson, maintaining sufficient statistics.
+class SuffPoissonSP(SP):
+  def constructSPAux(self):
+    return SuffPoissonSPAux()
+
+  def show(self,spaux):
+    return spaux.cts()
+
+# SPAux for Poisson. The sufficent statistics for N observations are
+# ctN (number of observations) and ctS (sum of the observations).
+class SuffPoissonSPAux(SPAux):
+  def __init__(self):
+    self.ctS = 0.0
+    self.ctN = 0.0
+
+  def copy(self):
+    aux = SuffPoissonSPAux()
+    aux.ctS = self.ctS
+    aux.ctN = self.ctN
+    return aux
+
+  v_type = t.HomogeneousListType(t.NumberType())
+
+  def asVentureValue(self):
+    return SuffPoissonSPAux.v_type.asVentureValue([self.ctS,
+        self.ctN])
+
+  @staticmethod
+  def fromVentureValue(val):
+    aux = SuffPoissonSPAux()
+    (aux.ctS, aux.ctN) = SuffPoissonSPAux.v_type.asPython(val)
+    return aux
+
+  def cts(self): 
+    return [self.ctS,self.ctN]
+
+
+# Generic PSP maintaining sufficient statistics.
+class SuffPoissonOutputPSP(DiscretePSP):
+  
+  def __init__(self, mean):
+    self.mean = mean
+
+  def incorporate(self, value, args):
+    spaux = args.spaux()
+    spaux.ctS += value
+    spaux.ctN += 1
+
+  def unincorporate(self, value, args):
+    spaux = args.spaux()
+    spaux.ctS -= value
+    spaux.ctN -= 1
+
+  def simulate(self, _args): 
+    return scipy.stats.poisson.rvs(mu=self.mean)
+
+  def logDensity(self, value, _args):
+    return scipy.stats.poisson.logpmf(value, self.mean)
+
+  def logDensityOfCounts(self, aux):
+    [ctS, ctN] = aux.cts()
+    return scipy.stats.poisson.logpmf(ctS, ctN*self.mean)
+
+
+# Collapsed Gamma Poisson PSP.
+class CGammaPoissonOutputPSP(DiscretePSP):
+  def __init__(self, alpha, beta):
+    assert isinstance(alpha, float)
+    assert isinstance(beta, float)
+    self.alpha = alpha
+    self.beta = beta
+
+  def incorporate(self, value, args):
+    spaux = args.spaux()
+    spaux.ctS += value
+    spaux.ctN += 1
+
+  def unincorporate(self, value, args):
+    spaux = args.spaux()
+    spaux.ctS -= value
+    spaux.ctN -= 1
+
+  def simulate(self, args):
+    # Posterior predictive is Negative Binomial.
+    # http://www.stat.wisc.edu/courses/st692-newton/notes.pdf#page=50
+    [ctS, ctN] = args.spaux().cts()
+    n = self.alpha + ctS
+    p = (self.beta + ctN) / (self.beta + ctN + 1)
+    return scipy.stats.nbinom.rvs(n,p)
+
+  def logDensity(self, value, args):
+    [ctS, ctN] = args.spaux().cts()
+    n = self.alpha + ctS
+    p = (self.beta + ctN) / (self.beta + ctN + 1)
+    return scipy.stats.nbinom.logpmf(value, n, p)
+
+  def logDensityOfCounts(self, aux):
+    # The ctS | Mu ~ Poisson(N*Mu).
+    # Since Mu ~ Gamma(a,b), then N*Mu ~ Gamma(a, b/N).
+    # Integrating over the prior results in a Negative Binomial distribution
+    # marginal for ctS.
+    [ctS, ctN] = aux.cts()
+    n = self.alpha
+    p = (self.beta/ctN) / (self.beta/ctN + 1)
+    return scipy.stats.nbinom.logpmf(ctS, n, p)
+
+
+# Maker for Collapsed Gamma Poisson
+class MakerCGammaPoissonOutputPSP(DeterministicMakerAAAPSP):
+  def simulate(self, args):
+    (alpha, beta) = args.operandValues()
+    output = TypedPSP(CGammaPoissonOutputPSP(alpha, beta), SPType([],
+        t.CountType()))
+    return VentureSPRecord(SuffPoissonSP(NullRequestPSP(), output))
+
+  def description(self, name):
+    return '  %s(alpha, beta) returns a collapsed Gamma Poisson sampler. '\
+        'While this procedure itself is deterministic, the returned sampler '\
+        'is stochastic.' % name
+
+
+#### Uncollapsed AAA GammaPoisson
+class MakerUGammaPoissonOutputPSP(DiscretePSP):
+  
+  def childrenCanAAA(self):
+    return True
+  
+  def getAAALKernel(self):
+    return UGammaPoissonAAALKernel()
+
+  def simulate(self, args):
+    (alpha, beta) = args.operandValues()
+    mean = scipy.stats.gamma.rvs(alpha, beta)
+    output = TypedPSP(SuffPoissonOutputPSP(mean), SPType([], t.CountType()))
+    return VentureSPRecord(SuffPoissonSP(NullRequestPSP(), output))
+
+  def logDensity(self, value, args):
+    (alpha, beta) = args.operandValues()
+    assert isinstance(value,VentureSPRecord)
+    assert isinstance(value.sp,SuffPoissonSP)
+    mean = value.sp.outputPSP.psp.mean
+    return scipy.stats.gamma.logpdf(mean,alpha,beta)
+
+  def description(self, name):
+    return '  %s(alpha, beta) returns an uncollapsed Gamma Poisson sampler.'
+
+class UGammaPoissonAAALKernel(SimulationAAALKernel):
+  
+  def simulate(self, _trace, args):
+    (alpha, beta) = args.operandValues()
+    madeaux = args.madeSPAux()
+    [ctS, n_counts] = madeaux.cts()
+    newMean = scipy.stats.gamma.rvs(alpha + ctS, beta + n_counts)
+    output = TypedPSP(SuffPoissonOutputPSP(newMean), SPType([], t.CountType()))
+    return VentureSPRecord(SuffPoissonSP(NullRequestPSP(), output), madeaux)
+
+  def weight(self, _trace, _newValue, _args):
+    # Gibbs step, samples exactly from the local posterior.  Being a
+    # AAALKernel, this one gets to cancel against the likelihood as
+    # well as the prior.
+    return 0
+
+  def weightBound(self, _trace, _value, _args): return 0
+
+#### Non-conjugate AAA Poisson
+class MakerSuffPoissonOutputPSP(DeterministicMakerAAAPSP):
+  
+  def simulate(self, args):
+    mean = args.operandValues()[0]
+    # The made SP is the same as in the conjugate case: flip coins
+    # based on an explicit weight, and maintain sufficient statistics.
+    output = TypedPSP(SuffPoissonOutputPSP(mean), SPType([], t.CountType()))
+    return VentureSPRecord(SuffPoissonSP(NullRequestPSP(), output))
+
+  def description(self,name):
+    return '  %s(mean) returns Poisson sampler with given mean. '\
+      'While this procedure itself is deterministic, the returned sampler '\
+      'is stochastic. The latter maintains application statistics sufficient '\
+      'to absorb changes to the weight in O(1) time (without traversing all '\
+      'the applications.' % name
+
+  def gradientOfLogDensityOfCounts(self, aux, args):
+    """The derivatives with respect to the args of the log density of the counts
+    collected by the made SP."""
+    mean = args.operandValues()[0]
+    [ctS, ctN] = aux.cts()
+    return -ctN + ctS / mean
+
+  def madeSpLogDensityOfCountsBound(self, _aux):
+    return 0
+    
