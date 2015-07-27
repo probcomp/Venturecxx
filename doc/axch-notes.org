@@ -119,6 +119,12 @@ Things to ship:
     intervening forget) seems to bork the thing in a confusing way
   - Anthony doesn't think the reference manual should say <foreignblob>
     especially not proc(<foreignblob>) -> pair<blah, <foreignblob>>
+    - Need to be able to create record types.
+      - A tag (i.e., a VentureValue subclass)
+      - A type
+      - A constructor
+      - Accessors
+      - Input: arity; maybe names of fields
   - Minor strange thing: if you run venture with -f and load a file
     that runs plotting, 'clear' will run it and show the plot again.
   - Idea: likelihood_weight reads like it just changes the weights,
@@ -135,6 +141,17 @@ Things to ship:
     to dataset" would be better.
   - Pasting full-line comments into the console produces an annoying
     parse error
+  - Anthony says: "The reference manual doesn't really answer any
+    questions about using the abstract syntax, like "how do you get it
+    to read a file in the abstract syntax?" (use the file ending .vnt,
+    rather than .vnts)"
+  - Anthony says: "the tutorial claims that the difference between
+    "define" and "assume" is that assume "flags it as uncertain", but
+    this makes it seem like you can't use assume to set deterministic
+    constants"
+    - This is poor wording that should be fixed.
+  - Anthony says "bug with unquoting matrices ("not JSON
+    serializable"), but I'm not able to reproduce"
 - For fixing bugs, bump version number to 4.1rc{k} and reinstall
   on probcomps
   - Also on a private url if there is a student that decided to
