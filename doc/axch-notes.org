@@ -122,9 +122,11 @@ Things to ship:
     - Need to be able to create record types.
       - A tag (i.e., a VentureValue subclass)
       - A type
+      - A tester
       - A constructor
       - Accessors
       - Input: arity; maybe names of fields
+    - Am I using expressionFor for anything useful anymore?
   - Minor strange thing: if you run venture with -f and load a file
     that runs plotting, 'clear' will run it and show the plot again.
   - Idea: likelihood_weight reads like it just changes the weights,
