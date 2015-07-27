@@ -42,7 +42,7 @@ import env
 from utils import careful_exp, raise_
 from exception import VentureBuiltinSPMethodError, VentureValueError
 
-# The types in the value module are generated programmatically, so
+# The types in the types module are generated programmatically, so
 # pylint doesn't find out about them.
 # pylint: disable=no-member
 
