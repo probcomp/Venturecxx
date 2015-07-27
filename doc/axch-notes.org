@@ -101,7 +101,6 @@ Things to ship:
   - [Later]: Prevent copyright headers from being auto-added to tutorial downloads.
   - [Later]: What in the world do I have to do to create Sphinx
     objects with a syntax of my choosing that get nice permalinks!?
-  - [Later]: Add infer endloop and deprecate stop_continuous_inference
 - Idea:
   - Have the transcript machine feed strings into a console instance
     rather than a ripl
@@ -120,11 +119,6 @@ Things to ship:
     intervening forget) seems to bork the thing in a confusing way
   - Anthony doesn't think the reference manual should say <foreignblob>
     especially not proc(<foreignblob>) -> pair<blah, <foreignblob>>
-  - [next] plot('aaoeu', aoeu) (single quotes) causes the prompt to enter an
-    infinite "more input please" loop.
-  - [patched locally] infer posterior in the console is different from infer posterior
-    in the tutorial, b/c I forgot the return value correction when I
-    made it tolerate long lines
   - Minor strange thing: if you run venture with -f and load a file
     that runs plotting, 'clear' will run it and show the plot again.
   - Idea: likelihood_weight reads like it just changes the weights,
@@ -143,8 +137,8 @@ Things to ship:
     parse error
 - For fixing bugs, bump version number to 4.1rc{k} and reinstall
   on probcomps
-  - Maybe also on a private url (or location on probcomp!) if there is
-    a student that decided to install locally
+  - Also on a private url if there is a student that decided to
+    install locally
 - Tutorial polish (see workproj)
   - Idea: pull quotes on the side might help experienced people skim
     and decide where to dive in
@@ -154,8 +148,6 @@ Things to ship:
   + VS rewrite is done when grep church' yields no results
   - Read through and nitpick Grem's first line of reactions
   - Idea: Navigation side bar for the sections
-  - Check that the sample counts are something sensible
-  - Check and add hyperlinks into the reference manual
   - Per Chad's suggestion, go through for sign-posting
   - Replace or augment usage example link with the tutorial
   - Idea for not flashing pictures from custom graphics all the time:
@@ -179,10 +171,6 @@ Things to ship:
   - Programmatically generate reasonable descriptions of generic psps?
   - Manually write them instead?
   - Re-link foreigns.rst (and actually finish it?)
-- Probcomp login due July 20th or 21st
-  - Should provide locations on probcomp to put private tarballs of
-    bugfix releases, in case anyone wants to follow along from home
-  - Grem says: one account named "ppaml"
 
 ----------------------------------------------------------------------
 Tutorial-relevant bugs
@@ -307,7 +295,7 @@ Future:
   - Lite's ExpressionType?
   - #39 There appears to be considerable code duplication between the
     church' and VS parsers (e.g., the Trie class?)
-  - #63 Can I get rid of the dependency on pyparsing?
+  + #63 Can I get rid of the dependency on pyparsing?
   - examples/hmm.vnt is wrong (the current CP solution fixes whatever
     the bug was).
 - Crosscat
