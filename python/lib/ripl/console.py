@@ -77,7 +77,10 @@ class RiplCmd(Cmd, object):
 
   def _do_instruction(self, instruction, s, force_complete=False):
     if self.ripl.get_mode() == "church_prime":
-      r_inst = '[%s %s]' % (instruction, s)
+      if instruction == 'evaluate':
+        r_inst = s
+      else:
+        r_inst = '[%s %s]' % (instruction, s)
       # Not supporting multiline paste for abstract syntax yet
       return self.ripl.execute_instruction(r_inst)
     else:
