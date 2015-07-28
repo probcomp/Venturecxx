@@ -16,9 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose.tools import eq_
-from nose import SkipTest
 import scipy.stats as stats
-from testconfig import config
 import math
 
 from venture.test.stats import statisticalTest, reportKnownContinuous
@@ -27,8 +25,7 @@ import venture.value.dicts as v
 
 @on_inf_prim("none")
 def testMVGaussSmoke():
-  if config["get_ripl"] == "puma": raise SkipTest("Puma Vectors do not answer to is_array")
-  eq_(get_ripl().predict("(is_array (multivariate_normal (vector 1 2) (matrix (array (array 3 4) (array 4 6)))))"), True)
+  eq_(get_ripl().predict("(is_vector (multivariate_normal (vector 1 2) (matrix (array (array 3 4) (array 4 6)))))"), True)
 
 @statisticalTest
 def testMVGaussPrior():
