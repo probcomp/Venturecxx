@@ -54,7 +54,9 @@ import sys
 import numpy as np
 
 from venture.exception import VentureException
-from venture.lite.value import VentureValue
+from venture.lite.value import VentureValue, VentureForeignBlob
+from venture.lite.types import VentureType
+import venture.lite.types
 import plugins
 import utils as u
 import venture.value.dicts as v
@@ -82,6 +84,9 @@ class Ripl():
         else:
             print "Wrapping sivm %s in a new ripl but it already has one: %s.  Engine to ripl references may be incorrect." % (self.sivm, r)
         self.pyglobals = {"ripl": self} # A global environment for dropping to Python
+        for name, value in vars(venture.lite.types).items():
+            if isinstance(value, type) and issubclass(value, (VentureValue, VentureType)):
+                self.pyglobals[name] = value
         plugins.__venture_start__(self)
 
 
@@ -807,7 +812,10 @@ Open issues:
         exec code in self.pyglobals
 
     def pyeval(self, code):
-        return eval(code, self.pyglobals)
+        result = eval(code, self.pyglobals)
+        if not isinstance(result, VentureValue):
+            result = VentureForeignBlob(result)
+        return result
 
     ############################################
     # Serialization
