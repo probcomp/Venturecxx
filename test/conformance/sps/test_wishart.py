@@ -52,11 +52,11 @@ def testWishartPrior2():
 
   ripl = get_ripl()
   ripl.assume("s", "(matrix (array (array 2 -1) (array -1 3)))")
-  ripl.assume("m", "(wishart s 5)")
+  ripl.assume("m", "(wishart s 4.2)")
   ripl.predict("(lookup m (pair 1 1))", label="prediction")
 
   predictions = collectSamples(ripl, "prediction")
-  cdf = scipy.stats.chi2(df=5, scale=3).cdf
+  cdf = scipy.stats.chi2(df=4.2, scale=3).cdf
   return reportKnownContinuous(cdf, predictions)
 
 @statisticalTest
@@ -78,11 +78,11 @@ def testInvWishartPrior2():
 
   ripl = get_ripl()
   ripl.assume("s", "(matrix (array (array 2 -1) (array -1 3)))")
-  ripl.assume("m", "(inv_wishart s 5)")
+  ripl.assume("m", "(inv_wishart s 4.2)")
   ripl.predict("(lookup m (pair 1 1))", label="prediction")
 
   predictions = collectSamples(ripl, "prediction")
-  cdf = scipy.stats.invgamma(a=2, scale=1.5).cdf
+  cdf = scipy.stats.invgamma(a=1.6, scale=1.5).cdf
   return reportKnownContinuous(cdf, predictions)
 
 @statisticalTest
