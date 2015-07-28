@@ -16,14 +16,11 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose.tools import eq_
-# from nose import SkipTest
 import numpy as np
 import scipy.stats
-# from testconfig import config
 
 from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, on_inf_prim
-# import venture.value.dicts as v
+from venture.test.config import get_ripl, collectSamples, on_inf_prim
 
 @on_inf_prim("none")
 def testWishartSmoke():
