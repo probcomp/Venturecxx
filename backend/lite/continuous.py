@@ -108,6 +108,9 @@ class InverseWishartPSP(RandomPSP):
     (lmbda, dof) = self.__parse_args__(args)
     p = len(lmbda)
 
+    if dof <= p - 1:
+      raise VentureValueError("Degrees of freedom cannot be less than dimension of scale matrix")
+
     try:
       chol = np.linalg.cholesky(lmbda)
     except np.linalg.linalg.LinAlgError, e:
@@ -167,6 +170,9 @@ class WishartPSP(RandomPSP):
   def simulate(self, args):
     (sigma, dof) = self.__parse_args__(args)
     p = len(sigma)
+
+    if dof <= p - 1:
+      raise VentureValueError("Degrees of freedom cannot be less than dimension of scale matrix")
 
     try:
       chol = np.linalg.cholesky(sigma)
