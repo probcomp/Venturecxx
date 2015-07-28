@@ -116,11 +116,11 @@ class InverseWishartPSP(RandomPSP):
     # use matlab's heuristic for choosing between the two different sampling schemes
     if (dof <= 81+p) and (dof == int(dof)):
       # direct
-      x = np.random.normal(size=(dof, p))
+      A = np.random.normal(size=(p, dof))
     else:
-      x = np.diag(np.sqrt(np.random.chisquare(dof - np.arange(p), size=p)))
-      x[np.triu_indices_from(x,1)] = np.random.normal(size=(p*(p-1)//2))
-    R = np.linalg.qr(x, 'r')
+      A = np.diag(np.sqrt(np.random.chisquare(dof - np.arange(p), size=p)))
+      A[np.tril_indices_from(A,-1)] = np.random.normal(size=(p*(p-1)//2))
+    R = np.linalg.qr(A.T, 'r')
     T = scipy.linalg.solve_triangular(R.T, chol.T).T
     return np.matrix(np.dot(T,T.T))
 
