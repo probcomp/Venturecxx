@@ -203,6 +203,13 @@ def vvsum(venture_array):
 def dispatching_psp(types, psps):
   return DispatchingPSP(types, [TypedPSP(psp, tp) for (psp, tp) in zip(psps, types)])
 
+def catches_linalg_error(f, *args, **kwargs):
+  def try_f(*args, **kwargs):
+    try:
+      return f(*args, **kwargs)
+    except np.linalg.LinAlgError as e: raise VentureValueError(e)
+  return try_f
+
 generic_add = dispatching_psp(
   [SPType([t.NumberType()], t.NumberType(), variadic=True),
    SPType([t.ArrayUnboxedType(t.NumberType()), t.NumberType()],
@@ -479,13 +486,13 @@ builtInSPsList = [
                                  descr="%s(v, M) returns the vector-matrix product vM.") ],
 
            [ "matrix_inverse",
-             deterministic_typed(np.linalg.inv,
+             deterministic_typed(catches_linalg_error(np.linalg.inv),
                                  [t.MatrixType()],
                                  t.MatrixType(),
                                  descr="%s(M) returns the (multiplicative) inverse of the matrix M.") ],
 
            [ "matrix_solve",
-             deterministic_typed(np.linalg.solve,
+             deterministic_typed(catches_linalg_error(np.linalg.solve),
                                  [t.MatrixType(), t.MatrixType()],
                                  t.MatrixType(),
                                  descr="%s(A, B) returns the solution to the matrix equation AX = B.") ],
