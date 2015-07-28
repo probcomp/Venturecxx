@@ -532,3 +532,228 @@ class LaplaceOutputPSP(RandomPSP):
 
   def description(self,name):
     return "%s(a, b) returns a sample from a laplace (double exponential) distribution with shape parameter a and scale parameter b" % name
+
+
+class SuffNormalSP(SP):
+# SP for Normal, maintaining sufficient statistics.
+  def constructSPAux(self):
+    return SuffNormalSPAux()
+
+  def show(self,spaux):
+    return spaux.cts()
+
+class SuffNormalSPAux(SPAux):
+# SPAux for Normal. The sufficent statistics for N observations are N (ctN),
+# sum (xsum) and sum squares (xsumsq)
+  def __init__(self):
+    self.ctN = 0
+    self.xsum = 0.0
+    self.xsumsq = 0.0
+
+  def copy(self):
+    aux = SuffNormalSPAux()
+    aux.ctN = self.ctN
+    aux.xsum = self.xsum
+    aux.xsumsq = self.xsumsq
+    return aux
+
+  v_type = t.HomogeneousListType(t.NumberType())
+
+  def asVentureValue(self):
+    return SuffNormalSPAux.v_type.asVentureValue([self.ctN, self.xsum,
+        self.xsumsq])
+
+  @staticmethod
+  def fromVentureValue(val):
+    aux = SuffNormalSPAux()
+    (aux,ctN, aux.xsum, aux.xsumsq) = SuffNormalSPAux.v_type.asPython(val)
+    return aux
+
+  def cts(self):
+    return [self.ctN, self.xsum, self.xsumsq]
+
+
+class SuffNormalOutputPSP(RandomPSP):
+# Generic PSP maintaining sufficient statistics.
+
+  def __init__(self, mu, sigma):
+    self.mu = mu
+    self.sigma = sigma
+
+  def incorporate(self, value, args):
+    spaux = args.spaux()
+    spaux.ctN += 1
+    spaux.xsum += value
+    spaux.xsumsq += value * value
+
+  def unincorporate(self, value, args):
+    spaux = args.spaux()
+    spaux.ctN -= 1
+    spaux.xsum -= value
+    spaux.xsumsq -= value * value
+
+  def simulate(self, _args):
+    return scipy.stats.norm.rvs(loc=self.mu, scale=self.sigma)
+
+  def logDensity(self, value, _args):
+    return scipy.stats.norm.logpdf(values, loc=self.mu, scale=self.sigma)
+
+  def logDensityOfCounts(self, aux):
+    [ctN, xsum, xsumsq] = aux.cts()
+    return scipy.stats.norm.logpdf(xsum, loc=ctN*self.mu,
+      scale=math.sqrt(ctN)*self.sigma)
+
+
+class CNigNormalOutputPSP(RandomPSP):
+# Collapsed NormalInverseGamma (prior) for Normal (likelihood)
+# http://www.cs.ubc.ca/~murphyk/Papers/bayesGauss.pdf#page=16
+  def __init__(self, m, V, a, b):
+    assert isinstance(m, float)
+    assert isinstance(V, float)
+    assert isinstance(a, float)
+    assert isinstance(b, float)
+    self.m = m
+    self.V = V
+    self.a = a
+    self.b = b
+
+  def incorporate(self, value, args):
+    spaux = args.spaux()
+    spaux.ctN += 1
+    spaux.xsum += value
+    spaux.xsumsq += value * value
+
+  def unincorporate(self, value, args):
+    spaux = args.spaux()
+    spaux.ctN -= 1
+    spaux.xsum -= value
+    spaux.xsumsq -= value * value
+
+  def updatedParams(self, aux):
+    [ctN, xsum, xsumsq] = aux.cts()
+    Vn = 1 / (1/self.V + ctN)
+    mn = Vn*(1/self.V*self.m + ctN * xsum/ctN)
+    an = self.a + ctN / 2
+    bn = self.b + 0.5*(self.m**2/self.V + xsumsq - mn**2/Vn)
+    return (mn, Vn, an, bn)
+
+  def simulate(self, args):
+    # Posterior predictive is Student's t.
+    (mn, Vn, an, bn) = updatedParams(self, args.spaux())
+    return scipy.stats.t.rvs(2*an, loc=mn, scale=math.sqrt(bn/an*(1+Vn)))
+
+  def logDensity(self, value, args):
+    (mn, Vn, an, bn) = updatedParams(self, args.spaux())
+    return scipy.stats.t.logpdf(value, 2*an, loc=mn,
+      scale=math.sqrt(bn/an*(1+Vn)))
+
+  def logDensityOfCounts(self, aux):
+    (mn, Vn, an, bn) = updatedParams(self, args.spaux())
+    term1 = 0.5 * math.log(abs(Vn)) - 0.5 * math.log(abs(self.V))
+    term2 = self.a * math.log(self.b) - an * math.log(bn)
+    term3 = scipy.special.gammaln(an) - scipy.special.gammaln(self.a)
+    term4 = math.log(1) - ctN/2. * math.log(math.pi) - ctN * math.log(2)
+    return term1 + term2 + term3 + term4
+
+
+class MakerCNigNormalOutputPSP(DeterministicMakerAAAPSP):
+# Maker for Collapsed NIG-Normal
+  def simulate(self, args):
+    (m, V, a, b) = args.operandValues()
+    output = TypedPSP(CNigNormalOutputPSP(m, v, a, b), SPType([],
+        t.NumberType()))
+    return VentureSPRecord(SuffNormalSP(NullRequestPSP(), output))
+
+  def description(self, name):
+    return '  %s(m,V,a,b) returns collapsed NormalInverseGamma Normal '\
+        'sampler. While this procedure itself is deterministic, the returned '\
+        'sampler is stochastic.' % name
+
+
+class MakerUNigNormalOutputPSP(RandomPSP):
+# Uncollapsed AAA NigNormal
+
+  def childrenCanAAA(self):
+    return True
+
+  def getAAALKernel(self):
+    return UNigNormalAAALKernel()
+
+  def simulate(self, args):
+    (m, V, a, b) = args.operandValues()
+    # Simulate the mean and variance from NormalInverseGamma.
+    sigma2 = scipy.stats.invgamma.rvs(a, scale=b)
+    mu = scipy.stats.norm.rvs(loc=m, scale=math.sqrt(sigma2*V))
+    output = TypedPSP(SuffNormalOutputPSP(mu, math.sqrt(sigma2)),
+      SPType([], t.NumberType()))
+    return VentureSPRecord(SuffNormalSP(NullRequestPSP(), output))
+
+  def logDensity(self, value, args):
+    assert isinstance(value, VentureSPRecord)
+    assert isinstance(value.sp, SuffNormalSP)
+    (m, V, a, b) = args.operandValues()
+    mu = value.sp.outputPSP.psp.mu
+    sigma2 = value.sp.outputPSP.psp.sigma**2
+    return scipy.stats.invgamma.logpdf(sigma2, a, scale=b) +
+      scipy.stats.norm.logpdf(mu, loc=m, scale=math.sqrt(sigma2*V))
+
+  def description(self, name):
+    return '  %s(alpha, beta) returns an uncollapsed Normal-InverseGamma '\
+      'Normal sampler.'
+
+class UNigNormalAAALKernel(SimulationAAALKernel):
+
+  def simulate(self, _trace, args):
+    (m, V, a, b) = args.operandValues()
+    madeaux = args.madeSPAux()
+    [ctN, xsum, xsumsq] = aux.cts()
+    Vn = 1 / (1/V + ctN)
+    mn = Vn*(1/V*m + ctN * xsum/ctN)
+    an = a + ctN / 2
+    bn = b + 0.5*(m**2/V + xsumsq - mn**2/Vn)
+    newSigma2 = scipy.stats.invgamma.rvs(an, scale=bn)
+    newMu = scipy.stats.norm.rvs(loc=mn, scale = math.sqrt(newSigma2*Vn))
+    output = TypedPSP(SuffNormalOutputPSP(newMu, math.sqrt(newSigma2)),
+      SPType([], t.NumberType()))
+    return VentureSPRecord(SuffNormalSP(NullRequestPSP(), output), madeaux)
+
+  def weight(self, _trace, _newValue, _args):
+    # Gibbs step, samples exactly from the local posterior.  Being a
+    # AAALKernel, this one gets to cancel against the likelihood as
+    # well as the prior.
+    return 0
+
+  def weightBound(self, _trace, _value, _args):
+    return 0
+
+class MakerSuffNormalOutputPSP(DeterministicMakerAAAPSP):
+# Non-conjugate AAA Normal
+
+  def simulate(self, args):
+    (mu, sigma) = args.operandValues()
+    # The made SP is the same as in the conjugate case: flip coins
+    # based on an explicit weight, and maintain sufficient statistics.
+    output = TypedPSP(SuffNormalOutputPSP(mu, sigma), SPType([],
+      t.NumberType()))
+    return VentureSPRecord(SuffNormalSP(NullRequestPSP(), output))
+
+  def description(self,name):
+    return '  %s(mu, sigma) returns Normal sampler with given mean and sigma. '\
+      'While this procedure itself is deterministic, the returned sampler '\
+      'is stochastic. The latter maintains application statistics sufficient '\
+      'to absorb changes to the weight in O(1) time (without traversing all '\
+      'the applications.' % name
+
+  def gradientOfLogDensityOfCounts(self, aux, args):
+    """The derivatives with respect to the args of the log density of the counts
+    collected by the made SP."""
+    # http://aleph0.clarku.edu/~djoyce/ma218/meeting12.pdf
+    (mu, sigma) = args.operandValues()
+    [ctN, xsum, xsumsq] = aux.cts()
+    xsumsq_dev = xsumsq - 2*mu*xsum + ctN*mu**2
+    grad_mu =  xsumsq_dev / sigma**2
+    grad_sigma = -ctN / sigma + xsumsq_dev * sigma**3
+    return [grad_mu, grad_sigma]
+
+  def madeSpLogDensityOfCountsBound(self, _aux):
+    return 0
