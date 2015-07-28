@@ -22,6 +22,8 @@ from numbers import Number
 from sp import SP, SPType
 from psp import TypedPSP, DispatchingPSP
 
+from sp_registry import registerBuiltinSP, builtInSPs, builtInSPsIter # Importing for re-export pylint:disable=unused-import
+
 import discrete
 import dirichlet
 import continuous
@@ -188,7 +190,7 @@ generic_normal = dispatching_psp(
   [continuous.NormalOutputPSP(), continuous.NormalsvOutputPSP(),
    continuous.NormalvsOutputPSP(), continuous.NormalvvOutputPSP()])
 
-builtInSPsList = [
+__builtInSPsList = [
            [ "add", no_request(generic_add)],
            [ "sub", binaryNum(lambda x,y: x - y,
                               sim_grad=lambda args, direction: [direction, -direction],
@@ -539,5 +541,5 @@ builtInSPsList = [
            [ "value_error", deterministic_typed(lambda s: raise_(VentureValueError(str(s))), [t.AnyType()], t.AnyType())]
 ]
 
-def builtInSPs():
-  return dict(builtInSPsList)
+for item in __builtInSPsList:
+  registerBuiltinSP(*item)
