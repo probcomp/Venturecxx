@@ -106,26 +106,21 @@ class MVNormalOutputPSP(RandomPSP):
 class InverseWishartPSP(RandomPSP):
   def simulate(self, args):
     (lmbda, dof) = self.__parse_args__(args)
-    p = len(lmbda)
+    n = lmbda.shape[0]
 
     try:
       chol = np.linalg.cholesky(lmbda)
     except np.linalg.linalg.LinAlgError, e:
       raise VentureValueError(e)
 
-    # use matlab's heuristic for choosing between the two different sampling schemes
-    if (dof <= 81+p) and (dof == int(dof)):
-      # direct
-      A = np.random.normal(size=(p, dof))
+    if (dof <= 81+n) and (dof == np.round(dof)):
+        x = np.random.randn(dof,n)
     else:
-      A = np.diag(np.sqrt(np.random.chisquare(dof - np.arange(p), size=p)))
-      A[np.tril_indices_from(A,-1)] = np.random.normal(size=(p*(p-1)//2))
-    # inv(A * A.T) = inv(R.T * Q.T * Q * R) = inv(R.T * I * R) = inv(R) * inv(R.T)
-    # inv(X * X.T) = chol * inv(A * A.T) * chol.T = chol * inv(R) * inv(R.T) * chol.T
-    # TODO why do the QR decomposition here? it seems slower than solving directly
-    R = np.linalg.qr(A.T, 'r')
-    T = scipy.linalg.solve_triangular(R.T, chol.T, lower=True)
-    return np.dot(T.T, T)
+        x = np.diag(np.sqrt(scipy.stats.chi2.rvs(dof-(np.arange(n)))))
+        x[np.triu_indices_from(x,1)] = np.random.randn(n*(n-1)/2)
+    R = np.linalg.qr(x,'r')
+    T = scipy.linalg.solve_triangular(R.T,chol.T).T
+    return np.matrix(np.dot(T,T.T))
 
   def logDensity(self, x, args):
     (lmbda, dof) = self.__parse_args__(args)
@@ -166,22 +161,22 @@ class WishartPSP(RandomPSP):
   '''
   def simulate(self, args):
     (sigma, dof) = self.__parse_args__(args)
-    p = len(sigma)
-
+    n = sigma.shape[0]
     try:
       chol = np.linalg.cholesky(sigma)
     except np.linalg.linalg.LinAlgError, e:
       raise VentureValueError(e)
 
     # use matlab's heuristic for choosing between the two different sampling schemes
-    if (dof <= 81+p) and (dof == int(dof)):
-      # direct
-      A = np.random.normal(size=(p, dof))
+    if (dof <= 81+n) and (dof == round(dof)):
+        # direct
+        X = np.dot(chol,np.random.normal(size=(n,dof)))
     else:
-      A = np.diag(np.sqrt(np.random.chisquare(dof - np.arange(p), size=p)))
-      A[np.tril_indices_from(A,-1)] = np.random.normal(size=(p*(p-1)//2))
-    X = np.dot(chol, A)
-    return np.dot(X, X.T)
+        A = np.diag(np.sqrt(np.random.chisquare(dof - np.arange(0,n),size=n)))
+        A[np.tri(n,k=-1,dtype=bool)] = np.random.normal(size=(n*(n-1)/2.))
+        X = np.dot(chol,A)
+    return np.matrix(np.dot(X,X.T))
+
 
   def logDensity(self, X, args):
     (sigma, dof) = self.__parse_args__(args)
