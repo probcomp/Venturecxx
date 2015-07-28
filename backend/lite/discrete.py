@@ -270,7 +270,8 @@ class UBetaBernoulliAAALKernel(SimulationAAALKernel):
     # well as the prior.
     return 0
 
-  def weightBound(self, _trace, _value, _args): return 0
+  def weightBound(self, _trace, _value, _args):
+    return 0
 
 class UBetaBernoulliOutputPSP(DiscretePSP):
   def __init__(self,weight):
@@ -450,14 +451,13 @@ class CGammaPoissonOutputPSP(DiscretePSP):
     return scipy.stats.nbinom.logpmf(value, n, p)
 
   def logDensityOfCounts(self, aux):
-    # The xsum | mu ~ Poisson(ctN*mu).
-    # Since Mu ~ Gamma(a,b), then N*mu ~ Gamma(a, b/ctN).
-    # Integrating over the prior results in a Negative Binomial distribution
-    # marginal for xsum.
-    [xsum, ctN] = aux.cts()
-    n = self.alpha
-    p = (self.beta/ctN) / (self.beta/ctN + 1)
-    return scipy.stats.nbinom.logpmf(xsum, n, p)
+    # The marginal loglikelihood of the data p(D) under the prior.
+    # http://seor.gmu.edu/~klaskey/SYST664/Bayes_Unit3.pdf#page=42
+    # Note that our parameterization is different than the reference, since
+    # self.beta = 1 / ref.beta
+    return scipy.special.gammaln(self.alpha + xsum) -
+      scipy.special.gammaln(self.alpha) + self.alpha * math.log(self.beta) -
+      (self.alpha + xsum) * math.log(self.beta + ctN)
 
 
 class MakerCGammaPoissonOutputPSP(DeterministicMakerAAAPSP):
@@ -475,7 +475,7 @@ class MakerCGammaPoissonOutputPSP(DeterministicMakerAAAPSP):
 
 
 class MakerUGammaPoissonOutputPSP(DiscretePSP):
-#### Uncollapsed AAA GammaPoisson
+# Uncollapsed AAA GammaPoisson
   
   def childrenCanAAA(self):
     return True
@@ -490,9 +490,9 @@ class MakerUGammaPoissonOutputPSP(DiscretePSP):
     return VentureSPRecord(SuffPoissonSP(NullRequestPSP(), output))
 
   def logDensity(self, value, args):
-    (alpha, beta) = args.operandValues()
     assert isinstance(value,VentureSPRecord)
     assert isinstance(value.sp,SuffPoissonSP)
+    (alpha, beta) = args.operandValues()
     mu = value.sp.outputPSP.psp.mu
     return scipy.stats.gamma.logpdf(mu,alpha,beta)
 
@@ -518,7 +518,7 @@ class UGammaPoissonAAALKernel(SimulationAAALKernel):
   def weightBound(self, _trace, _value, _args): return 0
 
 class MakerSuffPoissonOutputPSP(DeterministicMakerAAAPSP):
-#### Non-conjugate AAA Poisson
+# Non-conjugate AAA Poisson
   
   def simulate(self, args):
     mu = args.operandValues()[0]
@@ -539,7 +539,7 @@ class MakerSuffPoissonOutputPSP(DeterministicMakerAAAPSP):
     collected by the made SP."""
     mu = args.operandValues()[0]
     [xsum, ctN] = aux.cts()
-    return -ctN + xsum / mu
+    return [-ctN + xsum / mu]
 
   def madeSpLogDensityOfCountsBound(self, _aux):
     return 0
