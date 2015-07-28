@@ -27,6 +27,7 @@ class VentureSivm(object):
 
     def __init__(self, core_sivm):
         self.core_sivm = core_sivm
+        self._do_not_annotate = False
         self._clear()
         self._init_continuous_inference()
 
@@ -128,7 +129,8 @@ class VentureSivm(object):
         try:
             response = self.core_sivm.execute_instruction(desugared_instruction)
         except VentureException as e:
-            # raise # One can suppress error annotation by uncommenting this
+            if self._do_not_annotate:
+                raise
             import sys
             info = sys.exc_info()
             try:
