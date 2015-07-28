@@ -121,12 +121,14 @@ class InverseWishartPSP(RandomPSP):
       # direct
       A = np.random.normal(size=(p, dof))
     else:
+      # https://en.wikipedia.org/wiki/Wishart_distribution#Bartlett_decomposition
       A = np.diag(np.sqrt(np.random.chisquare(dof - np.arange(p), size=p)))
       A[np.tril_indices_from(A,-1)] = np.random.normal(size=(p*(p-1)//2))
     # inv(A * A.T) = inv(R.T * Q.T * Q * R) = inv(R.T * I * R) = inv(R) * inv(R.T)
     # inv(X * X.T) = chol * inv(A * A.T) * chol.T = chol * inv(R) * inv(R.T) * chol.T
     # TODO why do the QR decomposition here? it seems slower than solving directly
     R = np.linalg.qr(A.T, 'r')
+    # NB: have to pass lower=True because R.T is a lower-triangular matrix
     T = scipy.linalg.solve_triangular(R.T, chol.T, lower=True)
     return np.dot(T.T, T)
 
@@ -184,6 +186,7 @@ class WishartPSP(RandomPSP):
       # direct
       A = np.random.normal(size=(p, dof))
     else:
+      # https://en.wikipedia.org/wiki/Wishart_distribution#Bartlett_decomposition
       A = np.diag(np.sqrt(np.random.chisquare(dof - np.arange(p), size=p)))
       A[np.tril_indices_from(A,-1)] = np.random.normal(size=(p*(p-1)//2))
     X = np.dot(chol, A)
