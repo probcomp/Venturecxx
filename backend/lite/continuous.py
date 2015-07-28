@@ -114,7 +114,7 @@ class InverseWishartPSP(RandomPSP):
       raise VentureValueError(e)
 
     # use matlab's heuristic for choosing between the two different sampling schemes
-    if (dof <= 81+p) and (dof == np.round(dof)):
+    if (dof <= 81+p) and (dof == int(dof)):
       # direct
       x = np.random.randn(dof,p)
     else:
@@ -171,7 +171,7 @@ class WishartPSP(RandomPSP):
       raise VentureValueError(e)
 
     # use matlab's heuristic for choosing between the two different sampling schemes
-    if (dof <= 81+p) and (dof == round(dof)):
+    if (dof <= 81+p) and (dof == int(dof)):
       # direct
       A = np.random.normal(size=(p, dof))
     else:
