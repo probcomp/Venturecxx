@@ -121,8 +121,8 @@ class InverseWishartPSP(RandomPSP):
       A = np.diag(np.sqrt(np.random.chisquare(dof - np.arange(p), size=p)))
       A[np.tril_indices_from(A,-1)] = np.random.normal(size=(p*(p-1)//2))
     R = np.linalg.qr(A.T, 'r')
-    T = scipy.linalg.solve_triangular(R.T, chol.T).T
-    return np.matrix(np.dot(T,T.T))
+    T = scipy.linalg.solve_triangular(R.T, chol.T)
+    return np.matrix(np.dot(T.T, T))
 
   def logDensity(self, x, args):
     (lmbda, dof) = self.__parse_args__(args)
