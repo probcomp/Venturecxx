@@ -190,7 +190,9 @@ def vector_dot(v1, v2):
     return 0
 
 def grad_vector_dot(args, direction):
-  unscaled = [v.VentureArray(args[1]), v.VentureArray(args[0])]
+  gradient_type = t.HomogeneousArrayType(t.NumberType())
+  untyped = [args[1], args[0]]
+  unscaled = [gradient_type.asVentureValue(x) for x in untyped]
   return [direction.getNumber() * x for x in unscaled]
 
 def vvsum(venture_array):
