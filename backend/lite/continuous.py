@@ -120,8 +120,11 @@ class InverseWishartPSP(RandomPSP):
     else:
       A = np.diag(np.sqrt(np.random.chisquare(dof - np.arange(p), size=p)))
       A[np.tril_indices_from(A,-1)] = np.random.normal(size=(p*(p-1)//2))
+    # inv(A * A.T) = inv(R.T * Q.T * Q * R) = inv(R.T * I * R) = inv(R) * inv(R.T)
+    # inv(X * X.T) = chol * inv(A * A.T) * chol.T = chol * inv(R) * inv(R.T) * chol.T
+    # TODO why do the QR decomposition here? it seems slower than solving directly
     R = np.linalg.qr(A.T, 'r')
-    T = scipy.linalg.solve_triangular(R.T, chol.T)
+    T = scipy.linalg.solve_triangular(R.T, chol.T, lower=True)
     return np.dot(T.T, T)
 
   def logDensity(self, x, args):
