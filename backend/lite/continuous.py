@@ -118,7 +118,7 @@ class InverseWishartPSP(RandomPSP):
       # direct
       x = np.random.normal(size=(dof, p))
     else:
-      x = np.diag(np.sqrt(np.random.chisquare(dof - np.arange(p))))
+      x = np.diag(np.sqrt(np.random.chisquare(dof - np.arange(p), size=p)))
       x[np.triu_indices_from(x,1)] = np.random.normal(size=(p*(p-1)/2))
     R = np.linalg.qr(x, 'r')
     T = scipy.linalg.solve_triangular(R.T, chol.T).T
@@ -175,7 +175,7 @@ class WishartPSP(RandomPSP):
       # direct
       A = np.random.normal(size=(p, dof))
     else:
-      A = np.diag(np.sqrt(np.random.chisquare(dof - np.arange(0,p), size=p)))
+      A = np.diag(np.sqrt(np.random.chisquare(dof - np.arange(p), size=p)))
       A[np.tri(n,k=-1,dtype=bool)] = np.random.normal(size=(p*(p-1)/2.))
     X = np.dot(chol, A)
     return np.matrix(np.dot(X, X.T))
