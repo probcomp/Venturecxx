@@ -678,7 +678,7 @@ class VentureArrayUnboxed(VentureValue):
   def lookup_grad(self, index, direction):
     # TODO Really this should be an unboxed array of the gradient
     # types of the elements, with generic zeroes.
-    return VentureArray([direction if i == index else 0 for (_,i) in enumerate(self.array)])
+    return VentureArrayUnboxed([self.elt_type.asPython(direction) if i == index else 0 for (_,i) in enumerate(self.array)], self.elt_type)
   def contains(self, obj):
     return any(obj.equal(self.elt_type.asVentureValue(li)) for li in self.array)
   def size(self): return len(self.array)

@@ -217,28 +217,6 @@ class HomogeneousListType(VentureType):
     # TODO Is this splitting what I want?
     return base("list", elt_dist=self.subtype.distribution(base, **kwargs), **kwargs)
 
-class HomogeneousArrayType(VentureType):
-  """Type objects for homogeneous arrays.  Right now, the homogeneity
-  is not captured in the implementation, in that on the Venture side
-  such data is still stored as heterogenous Venture arrays.  This type
-  does, however, encapsulate the necessary wrapping and unwrapping."""
-  def __init__(self, subtype, name = None):
-    assert isinstance(subtype, VentureType)
-    self.subtype = subtype
-    self._name = name
-  def asVentureValue(self, thing):
-    return VentureArray([self.subtype.asVentureValue(val) for val in thing])
-  def asPython(self, vthing):
-    return vthing.getArray(self.subtype)
-  def __contains__(self, vthing):
-    return isinstance(vthing, VentureArray) and all([val in self.subtype for val in vthing.getArray()])
-  def __eq__(self, other):
-    return type(self) == type(other) and self.subtype == other.subtype
-  def name(self): return self._name or "<array %s>" % self.subtype.name()
-  def distribution(self, base, **kwargs):
-    # TODO Is this splitting what I want?
-    return base("array", elt_dist=self.subtype.distribution(base, **kwargs), **kwargs)
-
 class ArrayUnboxedType(VentureType):
   """Type objects for arrays of unboxed values.  Perforce homogeneous."""
   def __init__(self, subtype, name = None):
@@ -251,12 +229,15 @@ class ArrayUnboxedType(VentureType):
     return vthing.getArray(self.subtype)
   def __contains__(self, vthing):
     # TODO Need a more general element type compatibility check
-    return isinstance(vthing, VentureArrayUnboxed) and vthing.elt_type == self.subtype
+    unboxed = isinstance(vthing, VentureArrayUnboxed) and vthing.elt_type == self.subtype
+    return unboxed or (isinstance(vthing, VentureArray) and all([val in self.subtype for val in vthing.getArray()]))
   def __eq__(self, other):
     return type(self) == type(other) and self.subtype == other.subtype
   def name(self): return self._name or "<array %s>" % self.subtype.name()
   def distribution(self, base, **kwargs):
     return base("array_unboxed", elt_type=self.subtype, **kwargs)
+
+HomogeneousArrayType = ArrayUnboxedType
 
 class HomogeneousSequenceType(VentureType):
   """Type objects for homogeneous sequences of any persuasion (lists,
