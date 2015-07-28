@@ -16,11 +16,12 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose.tools import eq_
+from testconfig import config
 import numpy as np
 import scipy.stats
 
 from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, collectSamples, on_inf_prim
+from venture.test.config import get_ripl, collectSamples, on_inf_prim, inParallel, SkipTest
 
 @on_inf_prim("none")
 def testWishartSmoke():
@@ -37,6 +38,9 @@ def testWishartSmoke():
 def testWishartPrior1():
   """Confirm that the diagonal elements of a Wishart are a chi-squared distribution."""
 
+  if inParallel() and config["get_ripl"] == "puma":
+    raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
+
   ripl = get_ripl()
   ripl.assume("s", "(matrix (array (array 2 -1) (array -1 3)))")
   ripl.assume("m", "(wishart s 5)")
@@ -49,6 +53,9 @@ def testWishartPrior1():
 @statisticalTest
 def testWishartPrior2():
   """Confirm that the diagonal elements of a Wishart are a chi-squared distribution."""
+
+  if inParallel() and config["get_ripl"] == "puma":
+    raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
 
   ripl = get_ripl()
   ripl.assume("s", "(matrix (array (array 2 -1) (array -1 3)))")
@@ -63,6 +70,9 @@ def testWishartPrior2():
 def testInvWishartPrior1():
   """Confirm that the diagonal elements of an inverse Wishart are an inverse Gamma distribution."""
 
+  if inParallel() and config["get_ripl"] == "puma":
+    raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
+
   ripl = get_ripl()
   ripl.assume("s", "(matrix (array (array 2 -1) (array -1 3)))")
   ripl.assume("m", "(inv_wishart s 5)")
@@ -75,6 +85,9 @@ def testInvWishartPrior1():
 @statisticalTest
 def testInvWishartPrior2():
   """Confirm that the diagonal elements of an inverse Wishart are an inverse Gamma distribution."""
+
+  if inParallel() and config["get_ripl"] == "puma":
+    raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
 
   ripl = get_ripl()
   ripl.assume("s", "(matrix (array (array 2 -1) (array -1 3)))")
@@ -89,6 +102,9 @@ def testInvWishartPrior2():
 def testWishartPrior3():
   """Confirm that as dof increases, the elements of a Wishart obey the central limit theorem."""
 
+  if inParallel() and config["get_ripl"] == "puma":
+    raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
+
   ripl = get_ripl()
   ripl.assume("s", "(id_matrix 3)")
   ripl.assume("m", "(wishart s 10000)")
@@ -101,6 +117,9 @@ def testWishartPrior3():
 @statisticalTest
 def testWishartPrior4():
   """Confirm that as dof increases, the elements of a Wishart obey the central limit theorem."""
+
+  if inParallel() and config["get_ripl"] == "puma":
+    raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
 
   ripl = get_ripl()
   ripl.assume("s", "(id_matrix 3)")
@@ -116,6 +135,9 @@ def testWishartPrior4():
 def testInvWishartPrior3():
   """Confirm that as dof increases, the elements of a Wishart obey the central limit theorem."""
 
+  if inParallel() and config["get_ripl"] == "puma":
+    raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
+
   ripl = get_ripl()
   ripl.assume("s", "(scale_matrix 10000 (id_matrix 3))")
   ripl.assume("m", "(inv_wishart s 10000)")
@@ -128,6 +150,9 @@ def testInvWishartPrior3():
 @statisticalTest
 def testInvWishartPrior4():
   """Confirm that as dof increases, the elements of a Wishart obey the central limit theorem."""
+
+  if inParallel() and config["get_ripl"] == "puma":
+    raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
 
   ripl = get_ripl()
   ripl.assume("s", "(scale_matrix 10000 (id_matrix 3))")
