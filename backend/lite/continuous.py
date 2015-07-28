@@ -106,7 +106,7 @@ class MVNormalOutputPSP(RandomPSP):
 class InverseWishartPSP(RandomPSP):
   def simulate(self, args):
     (lmbda, dof) = self.__parse_args__(args)
-    p = lmbda.shape[0]
+    p = len(lmbda)
 
     try:
       chol = np.linalg.cholesky(lmbda)
@@ -163,7 +163,7 @@ class WishartPSP(RandomPSP):
   '''
   def simulate(self, args):
     (sigma, dof) = self.__parse_args__(args)
-    p = sigma.shape[0]
+    p = len(sigma)
 
     try:
       chol = np.linalg.cholesky(sigma)
