@@ -478,6 +478,18 @@ builtInSPsList = [
                                  t.ArrayUnboxedType(t.NumberType()),
                                  descr="%s(v, M) returns the vector-matrix product vM.") ],
 
+           [ "matrix_inverse",
+             deterministic_typed(np.linalg.inv,
+                                 [t.MatrixType()],
+                                 t.MatrixType(),
+                                 descr="%s(M) returns the (multiplicative) inverse of the matrix M.") ],
+
+           [ "matrix_solve",
+             deterministic_typed(np.linalg.solve,
+                                 [t.MatrixType(), t.MatrixType()],
+                                 t.MatrixType(),
+                                 descr="%s(A, B) returns the solution to the matrix equation AX = B.") ],
+
            [ "debug", deterministic_typed(debug_print,
                                            [t.SymbolType(), t.AnyType("k")],
                                            t.AnyType("k"),
