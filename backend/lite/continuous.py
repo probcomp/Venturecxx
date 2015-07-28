@@ -176,7 +176,7 @@ class WishartPSP(RandomPSP):
       A = np.random.normal(size=(p, dof))
     else:
       A = np.diag(np.sqrt(np.random.chisquare(dof - np.arange(p), size=p)))
-      A[np.tri(n,k=-1,dtype=bool)] = np.random.normal(size=(p*(p-1)//2))
+      A[np.tril_indices_from(A,-1)] = np.random.normal(size=(p*(p-1)//2))
     X = np.dot(chol, A)
     return np.matrix(np.dot(X, X.T))
 
