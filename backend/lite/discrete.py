@@ -387,13 +387,13 @@ class SuffPoissonSPAux(SPAux):
     (aux.xsum, aux.ctN) = SuffPoissonSPAux.v_type.asPython(val)
     return aux
 
-  def cts(self): 
+  def cts(self):
     return [self.xsum,self.ctN]
 
 
 class SuffPoissonOutputPSP(DiscretePSP):
 # Generic PSP maintaining sufficient statistics.
-  
+
   def __init__(self, mu):
     self.mu = mu
 
@@ -407,7 +407,7 @@ class SuffPoissonOutputPSP(DiscretePSP):
     spaux.xsum -= value
     spaux.ctN -= 1
 
-  def simulate(self, _args): 
+  def simulate(self, _args):
     return scipy.stats.poisson.rvs(mu=self.mu)
 
   def logDensity(self, value, _args):
@@ -476,10 +476,10 @@ class MakerCGammaPoissonOutputPSP(DeterministicMakerAAAPSP):
 
 class MakerUGammaPoissonOutputPSP(DiscretePSP):
 # Uncollapsed AAA GammaPoisson
-  
+
   def childrenCanAAA(self):
     return True
-  
+
   def getAAALKernel(self):
     return UGammaPoissonAAALKernel()
 
@@ -500,7 +500,7 @@ class MakerUGammaPoissonOutputPSP(DiscretePSP):
     return '  %s(alpha, beta) returns an uncollapsed Gamma Poisson sampler.'
 
 class UGammaPoissonAAALKernel(SimulationAAALKernel):
-  
+
   def simulate(self, _trace, args):
     (alpha, beta) = args.operandValues()
     madeaux = args.madeSPAux()
@@ -519,7 +519,7 @@ class UGammaPoissonAAALKernel(SimulationAAALKernel):
 
 class MakerSuffPoissonOutputPSP(DeterministicMakerAAAPSP):
 # Non-conjugate AAA Poisson
-  
+
   def simulate(self, args):
     mu = args.operandValues()[0]
     # The made SP is the same as in the conjugate case: flip coins
