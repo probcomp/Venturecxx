@@ -106,20 +106,22 @@ class MVNormalOutputPSP(RandomPSP):
 class InverseWishartPSP(RandomPSP):
   def simulate(self, args):
     (lmbda, dof) = self.__parse_args__(args)
-    n = lmbda.shape[0]
+    p = lmbda.shape[0]
 
     try:
       chol = np.linalg.cholesky(lmbda)
     except np.linalg.linalg.LinAlgError, e:
       raise VentureValueError(e)
 
-    if (dof <= 81+n) and (dof == np.round(dof)):
-        x = np.random.randn(dof,n)
+    # use matlab's heuristic for choosing between the two different sampling schemes
+    if (dof <= 81+p) and (dof == np.round(dof)):
+      # direct
+      x = np.random.randn(dof,p)
     else:
-        x = np.diag(np.sqrt(scipy.stats.chi2.rvs(dof-(np.arange(n)))))
-        x[np.triu_indices_from(x,1)] = np.random.randn(n*(n-1)/2)
-    R = np.linalg.qr(x,'r')
-    T = scipy.linalg.solve_triangular(R.T,chol.T).T
+      x = np.diag(np.sqrt(np.random.chisquare(dof - np.arange(p))))
+      x[np.triu_indices_from(x,1)] = np.random.randn(p*(p-1)/2)
+    R = np.linalg.qr(x, 'r')
+    T = scipy.linalg.solve_triangular(R.T, chol.T).T
     return np.matrix(np.dot(T,T.T))
 
   def logDensity(self, x, args):
@@ -161,22 +163,22 @@ class WishartPSP(RandomPSP):
   '''
   def simulate(self, args):
     (sigma, dof) = self.__parse_args__(args)
-    n = sigma.shape[0]
+    p = sigma.shape[0]
+
     try:
       chol = np.linalg.cholesky(sigma)
     except np.linalg.linalg.LinAlgError, e:
       raise VentureValueError(e)
 
     # use matlab's heuristic for choosing between the two different sampling schemes
-    if (dof <= 81+n) and (dof == round(dof)):
-        # direct
-        X = np.dot(chol,np.random.normal(size=(n,dof)))
+    if (dof <= 81+p) and (dof == round(dof)):
+      # direct
+      A = np.random.normal(size=(p, dof))
     else:
-        A = np.diag(np.sqrt(np.random.chisquare(dof - np.arange(0,n),size=n)))
-        A[np.tri(n,k=-1,dtype=bool)] = np.random.normal(size=(n*(n-1)/2.))
-        X = np.dot(chol,A)
-    return np.matrix(np.dot(X,X.T))
-
+      A = np.diag(np.sqrt(np.random.chisquare(dof - np.arange(0,p), size=p)))
+      A[np.tri(n,k=-1,dtype=bool)] = np.random.normal(size=(p*(p-1)/2.))
+    X = np.dot(chol, A)
+    return np.matrix(np.dot(X, X.T))
 
   def logDensity(self, X, args):
     (sigma, dof) = self.__parse_args__(args)
