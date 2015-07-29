@@ -15,6 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+"""The registry of Lite SPs."""
+
+# You might be curious why a registry independent of the initial
+# environment in the trace.  Several reasons:
+# - There are multiple clients: Lite traces, Untraced traces, Vendoc
+# - Trace construction involves additional activity (e.g., Venture SP
+#   Records)
+
 _builtInSPsList = []
 
 def registerBuiltinSP(name, sp):
