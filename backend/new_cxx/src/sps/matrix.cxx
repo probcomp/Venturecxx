@@ -109,7 +109,19 @@ VentureValuePtr IsVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng
 {
   checkArgsLength("is_vector", args, 1);
 
-  return VentureValuePtr(new VentureBool(NULL != dynamic_pointer_cast<VentureVector>(args->operandValues[0])));
+  bool native_vector = NULL != dynamic_pointer_cast<VentureVector>(args->operandValues[0]);
+  if (native_vector) { return VentureValuePtr(new VentureBool(true)); }
+
+  bool is_array = NULL != dynamic_pointer_cast<VentureArray>(args->operandValues[0]);
+  if (!is_array) { return VentureValuePtr(new VentureBool(false)); }
+
+  vector<VentureValuePtr> xs = args->operandValues[0]->getArray();
+  for(size_t i = 0; i < xs.size(); ++i)
+  {
+    bool is_number = NULL != dynamic_pointer_cast<VentureNumber>(xs[i]);
+    if (!is_number) { return VentureValuePtr(new VentureBool(false)); }
+  }
+  return VentureValuePtr(new VentureBool(true));
 }
 
 VentureValuePtr ToVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
