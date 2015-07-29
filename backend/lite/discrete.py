@@ -379,7 +379,7 @@ class SuffPoissonSPAux(SPAux):
 
   def asVentureValue(self):
     return SuffPoissonSPAux.v_type.asVentureValue([self.xsum,
-        self.ctN])
+      self.ctN])
 
   @staticmethod
   def fromVentureValue(val):
@@ -455,8 +455,9 @@ class CGammaPoissonOutputPSP(DiscretePSP):
     # http://seor.gmu.edu/~klaskey/SYST664/Bayes_Unit3.pdf#page=42
     # Note that our parameterization is different than the reference, since
     # self.beta = 1 / ref.beta
-    return scipy.special.gammaln(self.alpha + xsum) -
-      scipy.special.gammaln(self.alpha) + self.alpha * math.log(self.beta) -
+    [xsum, ctN] = aux().cts()
+    return scipy.special.gammaln(self.alpha + xsum) - \
+      scipy.special.gammaln(self.alpha) + self.alpha * math.log(self.beta) - \
       (self.alpha + xsum) * math.log(self.beta + ctN)
 
 
@@ -497,7 +498,8 @@ class MakerUGammaPoissonOutputPSP(DiscretePSP):
     return scipy.stats.gamma.logpdf(mu,alpha,beta)
 
   def description(self, name):
-    return '  %s(alpha, beta) returns an uncollapsed Gamma Poisson sampler.'
+    return '  %s(alpha, beta) returns an uncollapsed Gamma Poisson sampler.' \
+      % name
 
 class UGammaPoissonAAALKernel(SimulationAAALKernel):
 
@@ -522,8 +524,6 @@ class MakerSuffPoissonOutputPSP(DeterministicMakerAAAPSP):
 
   def simulate(self, args):
     mu = args.operandValues()[0]
-    # The made SP is the same as in the conjugate case: flip coins
-    # based on an explicit weight, and maintain sufficient statistics.
     output = TypedPSP(SuffPoissonOutputPSP(mu), SPType([], t.CountType()))
     return VentureSPRecord(SuffPoissonSP(NullRequestPSP(), output))
 
