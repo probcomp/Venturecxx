@@ -37,8 +37,8 @@ import eval_sps
 import msp
 import scope
 import discrete
-import dirichlet
 import continuous
+import dirichlet
 import crp
 import hmm
 import cmvn
@@ -122,31 +122,6 @@ registerBuiltinSP("make_uc_beta_bernoulli", typed_nr(discrete.MakerUBetaBernoull
                                                      [t.PositiveType(), t.PositiveType()], SPType([], t.BoolType())))
 registerBuiltinSP("make_suff_stat_bernoulli", typed_nr(discrete.MakerSuffBernoulliOutputPSP(),
                                                        [t.NumberType()], SPType([], t.BoolType())))
-
-registerBuiltinSP("dirichlet", typed_nr(dirichlet.DirichletOutputPSP(),
-                                        [t.HomogeneousArrayType(t.PositiveType())], t.SimplexType()))
-registerBuiltinSP("symmetric_dirichlet", typed_nr(dirichlet.SymmetricDirichletOutputPSP(),
-                                                  [t.PositiveType(), t.CountType()], t.SimplexType()))
-
-registerBuiltinSP("make_dir_mult",
-                  typed_nr(dirichlet.MakerCDirMultOutputPSP(),
-                           [t.HomogeneousArrayType(t.PositiveType()), t.ArrayType()],
-                           SPType([], t.AnyType()), min_req_args=1))
-registerBuiltinSP("make_uc_dir_mult",
-                  typed_nr(dirichlet.MakerUDirMultOutputPSP(),
-                           [t.HomogeneousArrayType(t.PositiveType()), t.ArrayType()],
-                           SPType([], t.AnyType()), min_req_args=1))
-
-registerBuiltinSP("make_sym_dir_mult",
-                  typed_nr(dirichlet.MakerCSymDirMultOutputPSP(),
-                           [t.PositiveType(), t.CountType(), t.ArrayType()],
-                           # Saying AnyType here requires the underlying psp to emit a VentureValue.
-                           SPType([], t.AnyType()), min_req_args=2))
-
-registerBuiltinSP("make_uc_sym_dir_mult",
-                  typed_nr(dirichlet.MakerUSymDirMultOutputPSP(),
-                           [t.PositiveType(), t.CountType(), t.ArrayType()],
-                           SPType([], t.AnyType()), min_req_args=2))
 
 registerBuiltinSP("exactly", typed_nr(discrete.ExactlyOutputPSP(),
                                       [t.AnyType(), t.NumberType()], t.AnyType(), min_req_args=1))
