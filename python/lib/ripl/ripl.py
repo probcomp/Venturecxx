@@ -55,8 +55,6 @@ import numpy as np
 
 from venture.exception import VentureException
 from venture.lite.value import VentureValue, VentureForeignBlob
-from venture.lite.types import VentureType
-import venture.lite.types
 import plugins
 import utils as u
 import venture.value.dicts as v
@@ -73,6 +71,7 @@ class Ripl():
         self.directive_id_to_mode = {}
         self.mode = parsers.keys()[0]
         self._n_prelude = 0
+        self._do_not_annotate = False
         # TODO Loading the prelude currently (6/26/14) slows the test suite to a crawl
         # self.load_prelude()
         r = self.sivm.core_sivm.engine.ripl
@@ -84,9 +83,6 @@ class Ripl():
         else:
             print "Wrapping sivm %s in a new ripl but it already has one: %s.  Engine to ripl references may be incorrect." % (self.sivm, r)
         self.pyglobals = {"ripl": self} # A global environment for dropping to Python
-        for name, value in vars(venture.lite.types).items():
-            if isinstance(value, type) and issubclass(value, (VentureValue, VentureType)):
-                self.pyglobals[name] = value
         plugins.__venture_start__(self)
 
 
@@ -143,6 +139,8 @@ class Ripl():
                 self.directive_id_to_mode[did] = self.mode
             ret_value = self.sivm.execute_instruction(parsed_instruction)
         except VentureException as e:
+            if self._do_not_annotate:
+                raise
             import sys
             info = sys.exc_info()
             try:
@@ -831,6 +829,21 @@ Open issues:
         extra = self.sivm.load(fname)
         self.directive_id_to_stringable_instruction = extra['directive_id_to_stringable_instruction']
         self.directive_id_to_mode = extra['directive_id_to_mode']
+
+    ############################################
+    # Error reporting control
+    ############################################
+
+    def disable_error_annotation(self):
+        # Sadly, this is necessary, because the error annotation
+        # facility is too brittle to be relied upon, and all to often
+        # hides underlying errors.
+        self._do_not_annotate = True
+        self.sivm._do_not_annotate = True
+
+    def enable_error_annotation(self):
+        self._do_not_annotate = False
+        self.sivm._do_not_annotate = False
 
     ############################################
     # Profiler methods (stubs)
