@@ -13,7 +13,7 @@ assume V_package = gpmem(V, zero_func, V_se);
 // A very naive estimate of the argmax of the given function
 define mc_argmax = proc(func) {
   candidate_xs = mapv(proc(i) {uniform_continuous(-20, 20)},
-                      linspace(0, 19, 20));
+                      arange(20));
   candidate_ys = mapv(func, candidate_xs);
   lookup(candidate_xs, argmax_of_array(candidate_ys))
 };

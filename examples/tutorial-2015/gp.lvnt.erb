@@ -355,10 +355,8 @@ infer observe(g(data_xs), data_ys);
 // Plot several samples of the gp
 define xs = linspace(0, 10, 200);
 define yss = mapv(proc(i) {
-    run(do(
-        ys <- sample(g(unquote(xs))),
-        return(ys)))
-    }, linspace(0, 0, 10));
+    run(sample(g(unquote(xs))))
+}, arange(10));
 plot_lines(xs, yss, run(sample(data_xs)), data_ys, -5, 12, 1.0, 1.0, 0.5);
 ```
 
