@@ -24,12 +24,20 @@ from psp import TypedPSP, DispatchingPSP
 
 from sp_registry import registerBuiltinSP, builtInSPs, builtInSPsIter # Importing for re-export pylint:disable=unused-import
 
+import value as v
+import types as t
+import env
+from utils import careful_exp, raise_
+from exception import VentureValueError
+
+from sp_help import *
+
+# These modules actually define the PSPs.
 import discrete
 import dirichlet
 import continuous
 import csp
 import crp
-import cmvn
 import function
 import gp
 import msp
@@ -38,13 +46,7 @@ import conditionals
 import scope
 import eval_sps
 import functional
-import value as v
-import types as t
-import env
-from utils import careful_exp, raise_
-from exception import VentureValueError
-
-from sp_help import *
+import cmvn
 
 # The types in the types module are generated programmatically, so
 # pylint doesn't find out about them.
