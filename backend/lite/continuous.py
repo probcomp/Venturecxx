@@ -30,8 +30,11 @@ import warnings
 # For some reason, pylint can never find numpy members (presumably metaprogramming).
 # pylint: disable=no-member
 
-from psp import RandomPSP
-from lkernel import DeltaLKernel
+import types as t
+from sp import SP, SPAux, VentureSPRecord, SPType
+from psp import RandomPSP, DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP,\
+  TypedPSP
+from lkernel import DeltaLKernel, SimulationAAALKernel
 
 class NormalDriftKernel(DeltaLKernel):
   def __init__(self,epsilon = 0.7): self.epsilon = epsilon
@@ -542,6 +545,7 @@ class SuffNormalSP(SP):
   def show(self,spaux):
     return spaux.cts()
 
+
 class SuffNormalSPAux(SPAux):
 # SPAux for Normal. The sufficent statistics for N observations are N (ctN),
 # sum (xsum) and sum squares (xsumsq)
@@ -566,7 +570,7 @@ class SuffNormalSPAux(SPAux):
   @staticmethod
   def fromVentureValue(val):
     aux = SuffNormalSPAux()
-    (aux,ctN, aux.xsum, aux.xsumsq) = SuffNormalSPAux.v_type.asPython(val)
+    (aux.ctN, aux.xsum, aux.xsumsq) = SuffNormalSPAux.v_type.asPython(val)
     return aux
 
   def cts(self):
@@ -596,9 +600,11 @@ class SuffNormalOutputPSP(RandomPSP):
     return scipy.stats.norm.rvs(loc=self.mu, scale=self.sigma)
 
   def logDensity(self, value, _args):
-    return scipy.stats.norm.logpdf(values, loc=self.mu, scale=self.sigma)
+    return scipy.stats.norm.logpdf(value, loc=self.mu, scale=self.sigma)
 
   def logDensityOfCounts(self, aux):
+    # TODO: Is this the correct behavior? Given (mu,sigma), each `incorporate`
+    # is a realizaiton of X ~IID Norm(mu, sigma) so their
     [ctN, xsum, xsumsq] = aux.cts()
     return scipy.stats.norm.logpdf(xsum, loc=ctN*self.mu,
       scale=math.sqrt(ctN)*self.sigma)
@@ -648,7 +654,7 @@ class CNigNormalOutputPSP(RandomPSP):
       scale=math.sqrt(bn/an*(1+Vn)))
 
   def logDensityOfCounts(self, aux):
-    (mn, Vn, an, bn) = updatedParams(self, args.spaux())
+    (mn, Vn, an, bn) = updatedParams(self, aux)
     term1 = 0.5 * math.log(abs(Vn)) - 0.5 * math.log(abs(self.V))
     term2 = self.a * math.log(self.b) - an * math.log(bn)
     term3 = scipy.special.gammaln(an) - scipy.special.gammaln(self.a)
@@ -660,7 +666,7 @@ class MakerCNigNormalOutputPSP(DeterministicMakerAAAPSP):
 # Maker for Collapsed NIG-Normal
   def simulate(self, args):
     (m, V, a, b) = args.operandValues()
-    output = TypedPSP(CNigNormalOutputPSP(m, v, a, b), SPType([],
+    output = TypedPSP(CNigNormalOutputPSP(m, V, a, b), SPType([],
         t.NumberType()))
     return VentureSPRecord(SuffNormalSP(NullRequestPSP(), output))
 
@@ -694,19 +700,19 @@ class MakerUNigNormalOutputPSP(RandomPSP):
     (m, V, a, b) = args.operandValues()
     mu = value.sp.outputPSP.psp.mu
     sigma2 = value.sp.outputPSP.psp.sigma**2
-    return scipy.stats.invgamma.logpdf(sigma2, a, scale=b) +
+    return scipy.stats.invgamma.logpdf(sigma2, a, scale=b) + \
       scipy.stats.norm.logpdf(mu, loc=m, scale=math.sqrt(sigma2*V))
 
   def description(self, name):
     return '  %s(alpha, beta) returns an uncollapsed Normal-InverseGamma '\
-      'Normal sampler.'
+      'Normal sampler.' % name
 
 class UNigNormalAAALKernel(SimulationAAALKernel):
 
   def simulate(self, _trace, args):
     (m, V, a, b) = args.operandValues()
     madeaux = args.madeSPAux()
-    [ctN, xsum, xsumsq] = aux.cts()
+    [ctN, xsum, xsumsq] = madeaux.cts()
     Vn = 1 / (1/V + ctN)
     mn = Vn*(1/V*m + ctN * xsum/ctN)
     an = a + ctN / 2
@@ -731,8 +737,6 @@ class MakerSuffNormalOutputPSP(DeterministicMakerAAAPSP):
 
   def simulate(self, args):
     (mu, sigma) = args.operandValues()
-    # The made SP is the same as in the conjugate case: flip coins
-    # based on an explicit weight, and maintain sufficient statistics.
     output = TypedPSP(SuffNormalOutputPSP(mu, sigma), SPType([],
       t.NumberType()))
     return VentureSPRecord(SuffNormalSP(NullRequestPSP(), output))
@@ -747,6 +751,7 @@ class MakerSuffNormalOutputPSP(DeterministicMakerAAAPSP):
   def gradientOfLogDensityOfCounts(self, aux, args):
     """The derivatives with respect to the args of the log density of the counts
     collected by the made SP."""
+    # Log likelihood equations are from (derivatives derived manually):
     # http://aleph0.clarku.edu/~djoyce/ma218/meeting12.pdf
     (mu, sigma) = args.operandValues()
     [ctN, xsum, xsumsq] = aux.cts()
