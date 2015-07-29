@@ -15,12 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
-from sp import SP, SPAux, VentureSPRecord, SPType
 import math
 from scipy.special import gammaln
-from types import HomogeneousArrayType, NumberType # The type names are metaprogrammed pylint: disable=no-name-in-module
 import numpy as np
+
+from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
+from sp import SP, SPAux, VentureSPRecord, SPType
+import types as t
+from sp_registry import registerBuiltinSP
+from sp_help import typed_nr
 
 def logGenGamma(d,x):
   term1 = float(d * (d - 1)) / 4 * math.log(math.pi)
@@ -92,7 +95,7 @@ class MakeCMVNOutputPSP(DeterministicMakerAAAPSP):
     m0 = np.mat(m0).transpose()
 
     d = np.size(m0)
-    output = TypedPSP(CMVNOutputPSP(d,m0,k0,v0,S0), SPType([], HomogeneousArrayType(NumberType())))
+    output = TypedPSP(CMVNOutputPSP(d,m0,k0,v0,S0), SPType([], t.HomogeneousArrayType(t.NumberType())))
     return VentureSPRecord(CMVNSP(NullRequestPSP(),output,d))
 
   def description(self,name):
@@ -156,4 +159,10 @@ class CMVNOutputPSP(RandomPSP):
     term5 = -(float(vN) / 2) * np.linalg.slogdet(SN)[1]
     term6 = (float(self.d) / 2) * math.log(float(self.k0) / kN)
     return term1 + term2 + term3 + term4 + term5 + term6
+
+
+registerBuiltinSP("make_cmvn",
+                  typed_nr(MakeCMVNOutputPSP(),
+                           [t.HomogeneousArrayType(t.NumberType()),t.NumberType(),t.NumberType(),t.MatrixType()],
+                           SPType([], t.HomogeneousArrayType(t.NumberType()))))
 
