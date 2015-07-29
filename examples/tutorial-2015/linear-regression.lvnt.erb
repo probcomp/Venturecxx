@@ -698,7 +698,16 @@ What are scoped inference commands good for? Here are some use cases:
 Here is an inference program that illustrates these ideas:
 
 ```venture
-infer loop(do(mh("param", one, 2),
+define drift_kernel = proc(x) { student_t(1, x, 1) };
+
+define drift_mh =
+  proc(scope, block) {
+    mh_correct(
+     on_subproblem(scope, block,
+       symmetric_local_proposal(drift_kernel)))
+  };
+
+infer loop(do(drift_mh("param", all),
               mh("hyper", one, 1),
               gibbs("outlier", one, 1),
               call_back(draw)))
