@@ -539,7 +539,7 @@ but this time, each point has some probability of being an outlier.
 
 ```venture
 assume outlier_prob = uniform_continuous(0.01,0.3);
-assume is_outlier = proc() { flip(outlier_prob) }
+assume is_outlier = proc(i) { flip(outlier_prob) }
 ```
 
 What does it mean for a point to be an outlier? Unlike most of the
@@ -565,8 +565,8 @@ assume obs_inlier = proc(x) { normal(line(x), noise) }
 Putting that all together, our full data model is
 
 ```venture
-assume obs = proc(x) {
-  if (is_outlier()) {
+assume obs = proc(i,x) {
+  if (is_outlier(i)) {
     obs_outlier(x)
   } else {
     obs_inlier(x)
@@ -580,10 +580,10 @@ Whew. If you don't want to type all that in, it's also in
 Let's try this with some data
 
 ```venture
-observe obs(1) = 2.5;
-observe obs(4) = 1;
-observe obs(-3) = -1;
-observe obs(-5) = 6
+observe obs(0,1) = 2.5;
+observe obs(1,4) = 1;
+observe obs(2,-3) = -1;
+observe obs(3,-5) = 6
 ```
 
 and load it into our visualization
