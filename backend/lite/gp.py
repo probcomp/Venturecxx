@@ -24,6 +24,7 @@ from exception import VentureValueError
 from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, SPAux, VentureSPRecord, SPType
 import types as t
+from sp_registry import registerBuiltinSP
 
 # XXX Replace by scipy.stats.multivariate_normal.logpdf when we
 # upgrade to scipy 0.14.
@@ -170,3 +171,4 @@ class MakeGPOutputPSP(DeterministicMakerAAAPSP):
 makeGPType = SPType([t.AnyType("mean function"), t.AnyType("covariance function")], gpType)
 makeGPSP = SP(NullRequestPSP(), TypedPSP(MakeGPOutputPSP(), makeGPType))
 
+registerBuiltinSP("make_gp", makeGPSP)

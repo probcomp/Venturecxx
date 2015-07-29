@@ -20,6 +20,8 @@ from psp import DeterministicPSP, NullRequestPSP
 from sp import SP, SPType
 import venture.value.dicts as v
 
+from sp_registry import registerBuiltinSP
+
 """This doesn't subclass VentureSPRecord, as if it did, then
 the trace would turn it into an SPRef. While this would make it
 a first-class function in Venture, it would prevent other SPs
@@ -72,3 +74,4 @@ class ApplyFunctionOutputPSP(DeterministicPSP):
 # TODO Add type signature. Look at signature of apply?
 applyFunctionSP = SP(NullRequestPSP(), ApplyFunctionOutputPSP())
 
+registerBuiltinSP("apply_function", applyFunctionSP)

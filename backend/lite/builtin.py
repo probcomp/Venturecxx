@@ -148,8 +148,6 @@ registerBuiltinSP("make_uc_sym_dir_mult",
                            [t.PositiveType(), t.CountType(), t.ArrayType()],
                            SPType([], t.AnyType()), min_req_args=2))
 
-registerBuiltinSP("make_gp", gp.makeGPSP)
-registerBuiltinSP("apply_function", function.applyFunctionSP)
 registerBuiltinSP("exactly", typed_nr(discrete.ExactlyOutputPSP(),
                                       [t.AnyType(), t.NumberType()], t.AnyType(), min_req_args=1))
 registerBuiltinSP("value_error", deterministic_typed(lambda s: raise_(VentureValueError(str(s))),
