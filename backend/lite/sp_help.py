@@ -18,7 +18,7 @@
 """Helpers for creating SP objects."""
 
 from sp import SP, SPType
-from psp import NullRequestPSP, ESRRefOutputPSP, DeterministicPSP, TypedPSP
+from psp import NullRequestPSP, ESRRefOutputPSP, DeterministicPSP, TypedPSP, DispatchingPSP
 from exception import VentureBuiltinSPMethodError
 import types as t
 
@@ -100,4 +100,5 @@ def type_test(tp):
                              sim_grad = zero_gradient,
                              descr="%s returns true iff its argument is a " + tp.name())
 
-
+def dispatching_psp(types, psps):
+  return DispatchingPSP(types, [TypedPSP(psp, tp) for (psp, tp) in zip(psps, types)])
