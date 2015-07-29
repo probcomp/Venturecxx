@@ -663,18 +663,18 @@ class CNigNormalOutputPSP(RandomPSP):
 
   def simulate(self, args):
     # Posterior predictive is Student's t (206)
-    (mn, Vn, an, bn) = self.updatedParams(self, args.spaux())
+    (mn, Vn, an, bn) = self.updatedParams(args.spaux())
     return scipy.stats.t.rvs(2*an, loc=mn, scale=math.sqrt(bn/an*(1+Vn)))
 
   def logDensity(self, value, args):
-    (mn, Vn, an, bn) = self.updatedParams(self, args.spaux())
+    (mn, Vn, an, bn) = self.updatedParams(args.spaux())
     return scipy.stats.t.logpdf(value, 2*an, loc=mn,
       scale=math.sqrt(bn/an*(1+Vn)))
 
   def logDensityOfCounts(self, aux):
     # Marginal likelihoo of the data (203)
     [ctN, xsum, xsumsq] = aux.cts()
-    (mn, Vn, an, bn) = self.updatedParams(self, aux)
+    (mn, Vn, an, bn) = self.updatedParams(aux)
     term1 = 0.5 * math.log(abs(Vn)) - 0.5 * math.log(abs(self.V))
     term2 = self.a * math.log(self.b) - an * math.log(bn)
     term3 = scipy.special.gammaln(an) - scipy.special.gammaln(self.a)
