@@ -235,7 +235,7 @@ class CBetaBernoulliOutputPSP(DiscretePSP):
 
 #### Uncollapsed AAA Beta Bernoulli
 
-class MakerUBetaBernoulliOutputPSP(DiscretePSP):
+class MakerUBetaBernoulliOutputPSP(RandomPSP):
   def childrenCanAAA(self): return True
   def getAAALKernel(self): return UBetaBernoulliAAALKernel()
 
