@@ -356,7 +356,7 @@ class ExactlyOutputPSP(RandomPSP):
 
 class SuffPoissonSP(SP):
 # SP for Poisson, maintaining sufficient statistics.
-  def construxsumPAux(self):
+  def constructSPAux(self):
     return SuffPoissonSPAux()
 
   def show(self,spaux):
