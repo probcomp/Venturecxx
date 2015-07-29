@@ -699,23 +699,36 @@ What are scoped inference commands good for? Here are some use cases:
   discrete variables and normal drift proposals only make sense for
   continuous variables.
 
-Here is an inference program that illustrates these ideas:
+Let's apply these ideas to our model. Load the observations again
+
+```venture
+observe obs(0,1) = 2.5;
+observe obs(1,4) = 1;
+observe obs(2,-3) = -1;
+observe obs(3,-5) = 6
+```
+
+and run the following inference program:
 
 ```venture
 define drift_kernel = proc(x) { student_t(1, x, 1) };
 
 define drift_mh =
-  proc(scope, block) {
-    mh_correct(
-     on_subproblem(scope, block,
-       symmetric_local_proposal(drift_kernel)))
+  proc(scope, block, transitions) {
+    repeat(transitions,
+      mh_correct(
+       on_subproblem(scope, block,
+         symmetric_local_proposal(drift_kernel))))
   };
 
-infer loop(do(drift_mh("param", all),
+infer loop(do(drift_mh("param", all, 2),
               mh("hyper", one, 1),
               gibbs("outlier", one, 1),
               call_back(draw)))
 ```
+
+This will alternate between the different tagged parts of the model,
+using a different inference strategy for each one.
 
 Exercise: Compare this to the infer loop that only used
 `default_markov_chain` from earlier. What qualitative differences in
