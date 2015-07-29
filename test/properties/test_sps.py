@@ -24,7 +24,7 @@ from flaky import flaky
 
 from venture.test.config import gen_in_backend
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
-from venture.lite.builtin import builtInSPsList
+from venture.lite.builtin import builtInSPsIter
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSPRecord
 from venture.lite.utils import FixedRandomness
@@ -34,7 +34,7 @@ blacklist = ['make_csp', 'apply_function', 'make_gp']
 # Select particular SPs to test thus:
 # nosetests --tc=relevant:'["foo", "bar", "baz"]'
 def relevantSPs():
-  for (name,sp) in builtInSPsList:
+  for (name,sp) in builtInSPsIter():
     if isinstance(sp.requestPSP, NullRequestPSP):
       if "relevant" not in config or config["relevant"] is None or name in config["relevant"]:
         if name not in blacklist: # Placeholder for selecting SPs to do or not do

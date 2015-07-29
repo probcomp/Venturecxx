@@ -24,6 +24,10 @@ from utils import simulateCategorical
 from types import AtomType # The type names are metaprogrammed pylint: disable=no-name-in-module
 from copy import deepcopy
 
+import types as t
+from sp_registry import registerBuiltinSP
+from sp_help import typed_nr
+
 class CRPSPAux(SPAux):
   def __init__(self):
     self.tableCounts = {}
@@ -118,3 +122,6 @@ class CRPOutputPSP(RandomPSP):
     old_indices = [i for i in aux.tableCounts]
     indices = old_indices + [aux.nextIndex]
     return indices
+
+registerBuiltinSP("make_crp", typed_nr(MakeCRPOutputPSP(),
+                                       [t.NumberType(),t.NumberType()], SPType([], t.AtomType()), min_req_args = 1))

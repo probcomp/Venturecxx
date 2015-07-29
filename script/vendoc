@@ -22,7 +22,7 @@ import string
 import textwrap
 import subprocess
 
-from venture.lite.builtin import builtInSPsList
+from venture.lite.builtin import builtInSPsIter
 from venture.lite.inference_sps import inferenceSPsList
 import venture.sivm.macro # To register the macros
 from venture.sivm.macro_system import macros
@@ -61,13 +61,13 @@ def wrap_description_rst_format(header, body):
   return header + "\n\n" + indent(body, "   ")
 
 def model_SPs():
-  for (name,sp) in builtInSPsList:
+  for (name,sp) in builtInSPsIter():
     print ""
     print wrap_description(sp.description(name))
     print "  " + string.capitalize(string.join(flags(sp.outputPSP), ", "))
 
 def model_SPs_rst_format():
-  for (name,sp) in builtInSPsList:
+  for (name,sp) in builtInSPsIter():
     print ""
     print wrap_description_rst_format(*sp.description_rst_format(name))
     print

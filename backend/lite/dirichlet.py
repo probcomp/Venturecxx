@@ -22,12 +22,16 @@ import math
 
 from lkernel import SimulationAAALKernel
 from sp import SP, VentureSPRecord, SPAux, SPType
-from psp import DeterministicPSP, DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
+from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
 from utils import simulateDirichlet, logDensityDirichlet
 from value import VentureAtom
 from types import AnyType
 from exception import VentureValueError
 from range_tree import Node, sample
+
+import types as t
+from sp_registry import registerBuiltinSP
+from sp_help import typed_nr
 
 #### Directly sampling simplexes
 
@@ -44,6 +48,9 @@ class DirichletOutputPSP(RandomPSP):
   def description(self,name):
     return "  %s(alphas) samples a simplex point according to the given Dirichlet distribution." % name
 
+registerBuiltinSP("dirichlet", typed_nr(DirichletOutputPSP(),
+                                        [t.HomogeneousArrayType(t.PositiveType())], t.SimplexType()))
+
 class SymmetricDirichletOutputPSP(RandomPSP):
 
   def simulate(self,args):
@@ -56,6 +63,9 @@ class SymmetricDirichletOutputPSP(RandomPSP):
 
   def description(self,name):
     return "  %s(alpha, n) samples a simplex point according to the symmetric Dirichlet distribution on n dimensions with concentration parameter alpha." % name
+
+registerBuiltinSP("symmetric_dirichlet", typed_nr(SymmetricDirichletOutputPSP(),
+                                                  [t.PositiveType(), t.CountType()], t.SimplexType()))
 
 #### Common classes for AAA dirichlet distributions
 
@@ -150,6 +160,11 @@ class CDirMultOutputPSP(RandomPSP):
     term2 = sum([scipy.special.gammaln(alpha + count) - scipy.special.gammaln(alpha) for (alpha,count) in zip(self.alpha,aux.counts)])
     return term1 + term2
 
+registerBuiltinSP("make_dir_mult",
+                  typed_nr(MakerCDirMultOutputPSP(),
+                           [t.HomogeneousArrayType(t.PositiveType()), t.ArrayType()],
+                           SPType([], t.AnyType()), min_req_args=1))
+
 #### Uncollapsed dirichlet multinomial
 
 class MakerUDirMultOutputPSP(RandomPSP):
@@ -229,6 +244,11 @@ class UDirMultOutputPSP(RandomPSP):
   def enumerateValues(self, _args):
     return self.os
 
+registerBuiltinSP("make_uc_dir_mult",
+                  typed_nr(MakerUDirMultOutputPSP(),
+                           [t.HomogeneousArrayType(t.PositiveType()), t.ArrayType()],
+                           SPType([], t.AnyType()), min_req_args=1))
+
 #### Collapsed symmetric dirichlet multinomial
 
 class MakerCSymDirMultOutputPSP(DeterministicMakerAAAPSP):
@@ -265,6 +285,12 @@ class MakerCSymDirMultOutputPSP(DeterministicMakerAAAPSP):
 class CSymDirMultOutputPSP(CDirMultOutputPSP):
   def __init__(self,alpha,n,os):
     super(CSymDirMultOutputPSP, self).__init__([alpha] * n, os)
+
+registerBuiltinSP("make_sym_dir_mult",
+                  typed_nr(MakerCSymDirMultOutputPSP(),
+                           [t.PositiveType(), t.CountType(), t.ArrayType()],
+                           # Saying AnyType here requires the underlying psp to emit a VentureValue.
+                           SPType([], t.AnyType()), min_req_args=2))
 
 #### Uncollapsed symmetric dirichlet multinomial
 
@@ -315,3 +341,8 @@ class USymDirMultAAALKernel(SimulationAAALKernel):
 
 class USymDirMultOutputPSP(UDirMultOutputPSP):
   pass
+
+registerBuiltinSP("make_uc_sym_dir_mult",
+                  typed_nr(MakerUSymDirMultOutputPSP(),
+                           [t.PositiveType(), t.CountType(), t.ArrayType()],
+                           SPType([], t.AnyType()), min_req_args=2))

@@ -20,7 +20,7 @@
 import sys
 import re
 
-from venture.lite.builtin import builtInSPsList
+from venture.lite.builtin import builtInSPsIter
 from venture.lite.inference_sps import inferenceSPsList
 from venture.engine import inference_prelude
 from venture.sivm.macro_system import macros
@@ -41,7 +41,7 @@ def extract_macro_names(intended_for_inference):
   return sorted(macro_names)
 
 def model_SPs():
-  print_sorted_first_component(builtInSPsList)
+  print_sorted_first_component(builtInSPsIter())
 
 def inference_SPs():
   print_sorted_first_component(inferenceSPsList)
