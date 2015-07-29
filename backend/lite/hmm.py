@@ -25,6 +25,10 @@ from copy import copy
 from types import CountType, AtomType, RequestType
 from exception import VentureValueError
 
+import types as t
+from sp_registry import registerBuiltinSP
+from sp_help import typed_nr
+
 def npSampleVector(pVec): return np.mat(npr.multinomial(1,np.array(pVec)[0,:]))
 def npIndexOfOne(pVec): return np.where(pVec[0] == 1)[1][0,0]
 def npMakeDiag(colvec):
@@ -152,6 +156,6 @@ class UncollapsedHMMOutputPSP(RandomPSP):
 class UncollapsedHMMRequestPSP(DeterministicPSP):
   def simulate(self,args): return Request([],[args.operandValues()[0]])
 
-
-##########################################
-
+registerBuiltinSP("make_lazy_hmm", typed_nr(MakeUncollapsedHMMOutputPSP(),
+                                            [t.SimplexType(), t.MatrixType(), t.MatrixType()],
+                                            SPType([t.CountType()], t.AtomType())))

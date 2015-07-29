@@ -40,10 +40,10 @@ import discrete
 import dirichlet
 import continuous
 import crp
-import function
-import gp
 import hmm
 import cmvn
+import function
+import gp
 
 # The types in the types module are generated programmatically, so
 # pylint doesn't find out about them.
@@ -148,11 +148,6 @@ registerBuiltinSP("make_uc_sym_dir_mult",
                            [t.PositiveType(), t.CountType(), t.ArrayType()],
                            SPType([], t.AnyType()), min_req_args=2))
 
-registerBuiltinSP("make_crp", typed_nr(crp.MakeCRPOutputPSP(),
-                                       [t.NumberType(),t.NumberType()], SPType([], t.AtomType()), min_req_args = 1))
-registerBuiltinSP("make_lazy_hmm", typed_nr(hmm.MakeUncollapsedHMMOutputPSP(),
-                                            [t.SimplexType(), t.MatrixType(), t.MatrixType()],
-                                            SPType([t.CountType()], t.AtomType())))
 registerBuiltinSP("make_gp", gp.makeGPSP)
 registerBuiltinSP("apply_function", function.applyFunctionSP)
 registerBuiltinSP("exactly", typed_nr(discrete.ExactlyOutputPSP(),
