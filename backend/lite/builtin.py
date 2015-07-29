@@ -36,10 +36,10 @@ import basic_sps
 import vectors
 import functional
 import conditionals
+import csp
 import discrete
 import dirichlet
 import continuous
-import csp
 import crp
 import function
 import gp
@@ -78,10 +78,6 @@ registerBuiltinSP("debug",
 
 registerBuiltinSP("zip", deterministic_typed(zip, [t.ListType()], t.HomogeneousListType(t.ListType()), variadic=True,
                                              descr="zip returns a list of lists, where the i-th nested list contains the i-th element from each of the input arguments"))
-
-registerBuiltinSP("make_csp", typed_nr(csp.MakeCSPOutputPSP(),
-                                       [t.HomogeneousArrayType(t.SymbolType()), t.ExpressionType()],
-                                       t.AnyType("a compound SP")))
 
 registerBuiltinSP("get_current_environment", typed_func(lambda args: args.env, [], env.EnvironmentType(),
                                                         descr="get_current_environment returns the lexical environment of its invocation site"))
