@@ -15,16 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import numpy as np
-
-from sp import SP, SPType
-from psp import TypedPSP
+from sp import SPType
 
 from sp_registry import registerBuiltinSP, builtInSPs, builtInSPsIter # Importing for re-export pylint:disable=unused-import
 
 import value as v
 import types as t
-import env
 from utils import raise_
 from exception import VentureValueError
 
@@ -37,6 +33,7 @@ import vectors
 import functional
 import conditionals
 import csp
+import eval_sps
 import discrete
 import dirichlet
 import continuous
@@ -46,7 +43,6 @@ import gp
 import msp
 import hmm
 import scope
-import eval_sps
 import cmvn
 
 # The types in the types module are generated programmatically, so
@@ -78,18 +74,6 @@ registerBuiltinSP("debug",
 
 registerBuiltinSP("zip", deterministic_typed(zip, [t.ListType()], t.HomogeneousListType(t.ListType()), variadic=True,
                                              descr="zip returns a list of lists, where the i-th nested list contains the i-th element from each of the input arguments"))
-
-registerBuiltinSP("get_current_environment", typed_func(lambda args: args.env, [], env.EnvironmentType(),
-                                                        descr="get_current_environment returns the lexical environment of its invocation site"))
-registerBuiltinSP("get_empty_environment", typed_func(lambda args: env.VentureEnvironment(), [], env.EnvironmentType(),
-                                                      descr="get_empty_environment returns the empty environment"))
-registerBuiltinSP("is_environment", type_test(env.EnvironmentType()))
-registerBuiltinSP("extend_environment", typed_nr(eval_sps.ExtendEnvOutputPSP(),
-                                                 [env.EnvironmentType(), t.SymbolType(), t.AnyType()],
-                                                 env.EnvironmentType()))
-registerBuiltinSP("eval",esr_output(TypedPSP(eval_sps.EvalRequestPSP(),
-                                             SPType([t.ExpressionType(), env.EnvironmentType()],
-                                                    t.RequestType("<object>")))))
 
 registerBuiltinSP("mem",typed_nr(msp.MakeMSPOutputPSP(),
                                  [SPType([t.AnyType("a")], t.AnyType("b"), variadic=True)],
