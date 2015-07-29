@@ -18,6 +18,10 @@
 from utils import override
 from psp import DeterministicPSP, TypedPSP
 
+import types as t
+from sp_registry import registerBuiltinSP
+from sp_help import typed_nr
+
 class TagOutputPSP(DeterministicPSP):
   @override(DeterministicPSP)
   def simulate(self,args): return args.operandValues()[2]
@@ -34,6 +38,11 @@ def isTagOutputPSP(thing):
   return isinstance(thing, TagOutputPSP) or \
     (isinstance(thing, TypedPSP) and isTagOutputPSP(thing.psp))
 
+registerBuiltinSP("tag", typed_nr(TagOutputPSP(),
+                                  # These are type-restricted in Venture, but the actual PSP doesn't care.
+                                  [t.AnyType("<scope>"), t.AnyType("<block>"), t.AnyType()],
+                                  t.AnyType()))
+
 class TagExcludeOutputPSP(DeterministicPSP):
   @override(DeterministicPSP)
   def simulate(self,args): return args.operandValues()[1]
@@ -49,3 +58,8 @@ class TagExcludeOutputPSP(DeterministicPSP):
 def isTagExcludeOutputPSP(thing):
   return isinstance(thing, TagExcludeOutputPSP) or \
     (isinstance(thing, TypedPSP) and isTagExcludeOutputPSP(thing.psp))
+
+registerBuiltinSP("tag_exclude", typed_nr(TagExcludeOutputPSP(),
+                                          # These are type-restricted in Venture, but the actual PSP doesn't care.
+                                          [t.AnyType("<scope>"), t.AnyType()],
+                                          t.AnyType()))

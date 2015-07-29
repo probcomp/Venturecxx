@@ -21,6 +21,11 @@ from env import VentureEnvironment
 from request import Request,ESR
 from address import emptyAddress
 
+from sp import SPType
+import types as t
+from sp_registry import registerBuiltinSP
+from sp_help import typed_nr
+
 class MakeMSPOutputPSP(DeterministicPSP):
   def simulate(self,args):
     sharedOperatorNode = args.operandNodes[0]
@@ -39,3 +44,7 @@ class MSPRequestPSP(DeterministicPSP):
     exp = ["memoizedSP"] + [["quote",val] for val in vals]
     env = VentureEnvironment(None,["memoizedSP"],[self.sharedOperatorNode])
     return Request([ESR(id,exp,emptyAddress,env)])
+
+registerBuiltinSP("mem",typed_nr(MakeMSPOutputPSP(),
+                                 [SPType([t.AnyType("a")], t.AnyType("b"), variadic=True)],
+                                 SPType([t.AnyType("a")], t.AnyType("b"), variadic=True)))

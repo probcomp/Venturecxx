@@ -34,15 +34,15 @@ import functional
 import conditionals
 import csp
 import eval_sps
+import msp
+import scope
 import discrete
 import dirichlet
 import continuous
 import crp
 import function
 import gp
-import msp
 import hmm
-import scope
 import cmvn
 
 # The types in the types module are generated programmatically, so
@@ -74,20 +74,6 @@ registerBuiltinSP("debug",
 
 registerBuiltinSP("zip", deterministic_typed(zip, [t.ListType()], t.HomogeneousListType(t.ListType()), variadic=True,
                                              descr="zip returns a list of lists, where the i-th nested list contains the i-th element from each of the input arguments"))
-
-registerBuiltinSP("mem",typed_nr(msp.MakeMSPOutputPSP(),
-                                 [SPType([t.AnyType("a")], t.AnyType("b"), variadic=True)],
-                                 SPType([t.AnyType("a")], t.AnyType("b"), variadic=True)))
-
-registerBuiltinSP("tag", typed_nr(scope.TagOutputPSP(),
-                                  # These are type-restricted in Venture, but the actual PSP doesn't care.
-                                  [t.AnyType("<scope>"), t.AnyType("<block>"), t.AnyType()],
-                                  t.AnyType()))
-
-registerBuiltinSP("tag_exclude", typed_nr(scope.TagExcludeOutputPSP(),
-                                          # These are type-restricted in Venture, but the actual PSP doesn't care.
-                                          [t.AnyType("<scope>"), t.AnyType()],
-                                          t.AnyType()))
 
 registerBuiltinSP("binomial", typed_nr(discrete.BinomialOutputPSP(),
                                        [t.CountType(), t.ProbabilityType()], t.CountType()))
