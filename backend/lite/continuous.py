@@ -603,11 +603,14 @@ class SuffNormalOutputPSP(RandomPSP):
     return scipy.stats.norm.logpdf(value, loc=self.mu, scale=self.sigma)
 
   def logDensityOfCounts(self, aux):
-    # TODO: Is this the correct behavior? Given (mu,sigma), each `incorporate`
-    # is a realizaiton of X ~IID Norm(mu, sigma) so their
+    # Derived from:
+    # http://www.encyclopediaofmath.org/index.php/Sufficient_statistic
     [ctN, xsum, xsumsq] = aux.cts()
-    return scipy.stats.norm.logpdf(xsum, loc=ctN*self.mu,
-      scale=math.sqrt(ctN)*self.sigma)
+    term1 = -ctN/2. * ( math.log(2*math.pi) + 2*math.log(self.sigma) )
+    term2 = -ctN/2. * self.mu**2 / self.sigma**2
+    term3 = -1/(2*self.sigma**2) * xsumsq
+    term4 = self.mu/self.sigma**2 * xsum
+    return term1 + term2 + term3 + term4
 
 
 class CNigNormalOutputPSP(RandomPSP):
@@ -636,6 +639,7 @@ class CNigNormalOutputPSP(RandomPSP):
     spaux.xsumsq -= value * value
 
   def updatedParams(self, aux):
+    # (197 - 200)
     [ctN, xsum, xsumsq] = aux.cts()
     Vn = 1 / (1/self.V + ctN)
     mn = Vn*(1/self.V*self.m + ctN * xsum/ctN)
@@ -644,17 +648,19 @@ class CNigNormalOutputPSP(RandomPSP):
     return (mn, Vn, an, bn)
 
   def simulate(self, args):
-    # Posterior predictive is Student's t.
-    (mn, Vn, an, bn) = updatedParams(self, args.spaux())
+    # Posterior predictive is Student's t (206)
+    (mn, Vn, an, bn) = self.updatedParams(self, args.spaux())
     return scipy.stats.t.rvs(2*an, loc=mn, scale=math.sqrt(bn/an*(1+Vn)))
 
   def logDensity(self, value, args):
-    (mn, Vn, an, bn) = updatedParams(self, args.spaux())
+    (mn, Vn, an, bn) = self.updatedParams(self, args.spaux())
     return scipy.stats.t.logpdf(value, 2*an, loc=mn,
       scale=math.sqrt(bn/an*(1+Vn)))
 
   def logDensityOfCounts(self, aux):
-    (mn, Vn, an, bn) = updatedParams(self, aux)
+    # Marginal likelihoo of the data (203)
+    [ctN, xsum, xsumsq] = aux.cts()
+    (mn, Vn, an, bn) = self.updatedParams(self, aux)
     term1 = 0.5 * math.log(abs(Vn)) - 0.5 * math.log(abs(self.V))
     term2 = self.a * math.log(self.b) - an * math.log(bn)
     term3 = scipy.special.gammaln(an) - scipy.special.gammaln(self.a)
@@ -688,6 +694,7 @@ class MakerUNigNormalOutputPSP(RandomPSP):
   def simulate(self, args):
     (m, V, a, b) = args.operandValues()
     # Simulate the mean and variance from NormalInverseGamma.
+    # https://en.wikipedia.org/wiki/Normal-inverse-gamma_distribution#Generating_normal-inverse-gamma_random_variates
     sigma2 = scipy.stats.invgamma.rvs(a, scale=b)
     mu = scipy.stats.norm.rvs(loc=m, scale=math.sqrt(sigma2*V))
     output = TypedPSP(SuffNormalOutputPSP(mu, math.sqrt(sigma2)),
