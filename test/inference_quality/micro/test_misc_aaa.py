@@ -124,6 +124,44 @@ def checkMakeBetaBernoulli4(maker):
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete(ans, predictions)
 
+def testAAAParticleWeights():
+  for sp in ["(make_beta_bernoulli a a)",
+             "(make_uc_beta_bernoulli a a)",
+             "(let ((weight (beta a a))) (make_suff_stat_bernoulli weight))",
+             "(make_dir_mult (array a a) (array true false))",
+             "(make_uc_dir_mult (array a a) (array true false))",
+             "(make_sym_dir_mult a 2 (array true false))",
+             "(make_uc_sym_dir_mult a 2 (array true false))",
+            ]:
+    yield checkAAAParticleWeights, sp
+
+@statisticalTest
+def checkAAAParticleWeights(sp):
+  if inParallel() and "make_suff_stat_bernoulli" in sp and config["get_ripl"] == "puma":
+    raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and make_suff_stat_bernoulli comes from Lite.")
+  elif config["get_ripl"] == "puma":
+    raise SkipTest("Fails due to a mystery bug in Puma stop_and_copy. Issue: https://app.asana.com/0/11127829865276/13039650533872")
+  ripl = get_ripl()
+
+  ripl.assume("a", "1.0")
+  # bogus labelled directives, so the infer step can forget them
+  ripl.predict("nil", label="f")
+  ripl.predict("nil", label="pid")
+
+  predictions = collectSamples(ripl,"pid",infer="""\
+(do (resample 10)
+    (forget 'pid)
+    (forget 'f)
+    (assume f %s f)
+    (predict (f) pid)
+    (observe (f) true obs1)
+    (observe (f) true obs2)
+    (resample 1)
+    (forget 'obs2)
+    (forget 'obs1))""" % sp)
+  ans = [(False,.25), (True,.75)]
+  return reportKnownDiscrete(ans, predictions)
+
 
 ##### (3) Staleness
 

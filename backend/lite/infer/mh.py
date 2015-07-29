@@ -28,6 +28,8 @@ def getCurrentValues(trace,pnodes): return [trace.valueAt(pnode) for pnode in pn
 def registerDeterministicLKernels(trace,scaffold,pnodes,currentValues):
   for (pnode,currentValue) in zip(pnodes,currentValues):
     assert not isinstance(currentValue,list)
+    if pnode in scaffold.brush:
+      raise Exception("Cannot deterministically propose values for nodes whose existence is conditional")
     scaffold.lkernels[pnode] = DeterministicLKernel(trace.pspAt(pnode),currentValue)
 
 def unregisterDeterministicLKernels(_trace,scaffold,pnodes):

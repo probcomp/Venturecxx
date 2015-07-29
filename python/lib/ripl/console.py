@@ -77,7 +77,10 @@ class RiplCmd(Cmd, object):
 
   def _do_instruction(self, instruction, s, force_complete=False):
     if self.ripl.get_mode() == "church_prime":
-      r_inst = '[%s %s]' % (instruction, s)
+      if instruction == 'evaluate':
+        r_inst = s
+      else:
+        r_inst = '[%s %s]' % (instruction, s)
       # Not supporting multiline paste for abstract syntax yet
       return self.ripl.execute_instruction(r_inst)
     else:
@@ -101,6 +104,14 @@ class RiplCmd(Cmd, object):
         self.strip_hack = True
         return line[1:-1]
     return line
+
+  @catchesVentureException
+  def postcmd(self, stop, line):
+    callbacks = self.ripl.sivm.core_sivm.engine.callbacks
+    if '__postcmd__' in callbacks:
+      inferrer = self.ripl.evaluate('__the_inferrer__')
+      callbacks['__postcmd__'](inferrer)
+    return stop
 
   @catchesVentureException
   def default(self, line):

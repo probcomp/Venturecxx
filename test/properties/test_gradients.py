@@ -52,8 +52,15 @@ def propGradientOfLogDensity(rnd, name, sp):
   if math.isnan(answer) or math.isinf(answer):
     raise ArgumentsNotAppropriate("Log density turned out not to be finite")
 
+  expected_grad_type = sp.venture_type().gradient_type().args_types
   try:
     computed_gradient = sp.outputPSP.gradientOfLogDensity(value, args)
+    (dvalue, dargs) = computed_gradient
+    for (g, tp) in [(dvalue, sp.venture_type().gradient_type().return_type)] + zip(dargs, expected_grad_type):
+      if g == 0:
+        pass # OK
+      else:
+        assert g in tp
   except VentureBuiltinSPMethodError:
     raise SkipTest("%s does not support computing gradient of log density :(" % name)
 
@@ -130,8 +137,14 @@ def propGradientOfSimulate(args_lists, name, sp):
   # having to coordinate compound types (like the length of the list
   # that 'list' returns being the same as the number of arguments)
   direction = asGradient(value)
+  expected_grad_type = sp.venture_type().gradient_type().args_types
   try:
     computed_gradient = carefully(sp.outputPSP.gradientOfSimulate, args, value, direction)
+    for (g, tp) in zip(computed_gradient, expected_grad_type):
+      if g == 0:
+        pass # OK
+      else:
+        assert g in tp
   except VentureBuiltinSPMethodError:
     raise SkipTest("%s does not support computing gradient of simulate :(" % name)
 

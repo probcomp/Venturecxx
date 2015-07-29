@@ -15,13 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from psp import DeterministicPSP, NullRequestPSP
-from env import VentureEnvironment
+from psp import DeterministicPSP, NullRequestPSP, TypedPSP
+from env import VentureEnvironment, EnvironmentType
 from request import Request, ESR
 from value import VentureArray, SPRef
 from address import emptyAddress
 from exception import VentureValueError
 from node import FixedValueArgs
+
+import types as t
+from sp import SP, SPType
+from sp_registry import registerBuiltinSP
+from sp_help import esr_output, typed_nr
 
 class ApplyRequestPSP(DeterministicPSP):
     def simulate(self, args):
@@ -33,6 +38,11 @@ class ApplyRequestPSP(DeterministicPSP):
     def description(self, name):
         return "%s(func, vals) returns the result of applying a variadic function to an array of operands" % name
 
+registerBuiltinSP("apply", esr_output(TypedPSP(ApplyRequestPSP(),
+                                               SPType([SPType([t.AnyType("a")], t.AnyType("b"), variadic=True),
+                                                       t.HomogeneousArrayType(t.AnyType("a"))],
+                                                      t.RequestType("b")))))
+
 class ArrayMapRequestPSP(DeterministicPSP):
     def simulate(self, args):
         (operator, operands) = args.operandValues()
@@ -42,6 +52,16 @@ class ArrayMapRequestPSP(DeterministicPSP):
 
     def description(self, name):
         return "%s(func, vals) returns the results of applying a function to each value in an array" % name
+
+class ESRArrayOutputPSP(DeterministicPSP):
+    def simulate(self, args):
+        return VentureArray(args.esrValues())
+
+registerBuiltinSP("mapv", SP(TypedPSP(ArrayMapRequestPSP(),
+                                      SPType([SPType([t.AnyType("a")], t.AnyType("b")),
+                                              t.HomogeneousArrayType(t.AnyType("a"))],
+                                             t.RequestType("<array b>"))),
+                             ESRArrayOutputPSP()))
 
 class IndexedArrayMapRequestPSP(DeterministicPSP):
     def simulate(self, args):
@@ -53,9 +73,11 @@ class IndexedArrayMapRequestPSP(DeterministicPSP):
     def description(self, name):
         return "%s(func, vals) returns the results of applying a function to each value in an array, together with its index" % name
 
-class ESRArrayOutputPSP(DeterministicPSP):
-    def simulate(self, args):
-        return VentureArray(args.esrValues())
+registerBuiltinSP("imapv", SP(TypedPSP(IndexedArrayMapRequestPSP(),
+                                       SPType([SPType([t.AnyType("index"), t.AnyType("a")], t.AnyType("b")),
+                                               t.HomogeneousArrayType(t.AnyType("a"))],
+                                              t.RequestType("<array b>"))),
+                              ESRArrayOutputPSP()))
 
 class FixRequestPSP(DeterministicPSP):
     def simulate(self, args):
@@ -86,6 +108,15 @@ class FixOutputPSP(DeterministicPSP):
     def description(self, name):
         return "%s\n  Used internally in the implementation of letrec." % name
 
+registerBuiltinSP("fix", SP(TypedPSP(FixRequestPSP(),
+                                     SPType([t.HomogeneousArrayType(t.SymbolType()),
+                                             t.HomogeneousArrayType(t.ExpressionType())],
+                                            t.RequestType())),
+                            TypedPSP(FixOutputPSP(),
+                                     SPType([t.HomogeneousArrayType(t.SymbolType()),
+                                             t.HomogeneousArrayType(t.ExpressionType())],
+                                            EnvironmentType()))))
+
 class AssessOutputPSP(DeterministicPSP):
     def simulate(self, args):
         vals = args.operandValues()
@@ -106,3 +137,8 @@ class AssessOutputPSP(DeterministicPSP):
 
     def description(self, name):
         return "  %s(val, func, arg1, arg2, ...) returns the log probability (density) of simulating val from func(arg1, arg2, ...)" % name
+
+registerBuiltinSP("assess", typed_nr(AssessOutputPSP(),
+                                     [t.AnyType("<val>"), SPType([t.AnyType("<args>")], t.AnyType("<val>"), variadic=True), t.AnyType("<args>")],
+                                     t.NumberType(),
+                                     variadic=True))

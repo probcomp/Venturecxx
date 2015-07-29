@@ -15,10 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import numpy as np
+
 from psp import DeterministicPSP, TypedPSP
 from request import Request,ESR
 from sp import SPType
 import types as t
+from sp_registry import registerBuiltinSP
+from sp_help import dispatching_psp, deterministic_psp, no_request, esr_output
 
 # TODO This is used very little because the stack expands if to biplex.  Flush?
 class BranchRequestPSP(DeterministicPSP):
@@ -40,3 +44,17 @@ class BranchRequestPSP(DeterministicPSP):
 
 def branch_request_psp():
   return TypedPSP(BranchRequestPSP(), SPType([t.BoolType(), t.ExpressionType(), t.ExpressionType()], t.RequestType("<object>")))
+
+registerBuiltinSP("branch", esr_output(branch_request_psp()))
+
+generic_biplex = dispatching_psp(
+  [SPType([t.BoolType(), t.AnyType(), t.AnyType()], t.AnyType()),
+   SPType([t.ArrayUnboxedType(t.NumberType()), t.ArrayUnboxedType(t.NumberType()), t.ArrayUnboxedType(t.NumberType())], t.ArrayUnboxedType(t.NumberType()))],
+  [deterministic_psp(lambda p, c, a: c if p else a,
+                     sim_grad=lambda args, direction: [0, direction, 0] if args[0] else [0, 0, direction],
+                     descr="biplex returns either its second or third argument, depending on the first."),
+   deterministic_psp(np.where,
+                     # TODO sim_grad
+                     descr="vector-wise biplex")])
+
+registerBuiltinSP("biplex", no_request(generic_biplex))

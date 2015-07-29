@@ -15,23 +15,42 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from psp import DeterministicPSP
-from env import VentureEnvironment
+from psp import DeterministicPSP, TypedPSP
+import env
 from request import Request,ESR
+
+from sp import SPType
+import types as t
+from sp_registry import registerBuiltinSP
+from sp_help import typed_func, type_test, typed_nr, esr_output
+
+registerBuiltinSP("get_current_environment", typed_func(lambda args: args.env, [], env.EnvironmentType(),
+                                                        descr="get_current_environment returns the lexical environment of its invocation site"))
+registerBuiltinSP("get_empty_environment", typed_func(lambda args: env.VentureEnvironment(), [], env.EnvironmentType(),
+                                                      descr="get_empty_environment returns the empty environment"))
+registerBuiltinSP("is_environment", type_test(env.EnvironmentType()))
+
+class ExtendEnvOutputPSP(DeterministicPSP):
+  def simulate(self,args):
+    (en, sym, _) = args.operandValues()
+    node = args.operandNodes[2]
+    return env.VentureEnvironment(en,[sym],[node])
+  def description(self,name):
+    return "%s returns an extension of the given environment where the given symbol is bound to the given object" % name
+
+registerBuiltinSP("extend_environment", typed_nr(ExtendEnvOutputPSP(),
+                                                 [env.EnvironmentType(), t.SymbolType(), t.AnyType()],
+                                                 env.EnvironmentType()))
 
 class EvalRequestPSP(DeterministicPSP):
   def simulate(self,args):
-    (exp, env) = args.operandValues()
+    (exp, en) = args.operandValues()
     # point to the desugared source code location of lambda body
     addr = args.operandNodes[0].address.last.append(1)    
-    return Request([ESR(args.node,exp,addr,env)])
+    return Request([ESR(args.node,exp,addr,en)])
   def description(self,name):
     return "%s evaluates the given expression in the given environment and returns the result.  Is itself deterministic, but the given expression may involve a stochasitc computation." % name
 
-class ExtendEnvOutputPSP(DeterministicPSP):
-  def simulate(self,args): 
-    (env, sym, _) = args.operandValues()
-    node = args.operandNodes[2]
-    return VentureEnvironment(env,[sym],[node])
-  def description(self,name):
-    return "%s returns an extension of the given environment where the given symbol is bound to the given object" % name
+registerBuiltinSP("eval",esr_output(TypedPSP(EvalRequestPSP(),
+                                             SPType([t.ExpressionType(), env.EnvironmentType()],
+                                                    t.RequestType("<object>")))))

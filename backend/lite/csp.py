@@ -21,6 +21,10 @@ from env import VentureEnvironment
 from request import Request,ESR
 from exception import VentureError
 
+import types as t
+from sp_registry import registerBuiltinSP
+from sp_help import typed_nr
+
 class CSPRequestPSP(DeterministicPSP):
   def __init__(self,ids,exp,addr,env):
     self.ids = ids
@@ -56,3 +60,7 @@ class MakeCSPOutputPSP(DeterministicPSP):
 
   def description(self,name):
     return "%s\n  Used internally in the implementation of compound procedures." % name
+
+registerBuiltinSP("make_csp", typed_nr(MakeCSPOutputPSP(),
+                                       [t.HomogeneousArrayType(t.SymbolType()), t.ExpressionType()],
+                                       t.AnyType("a compound SP")))

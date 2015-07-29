@@ -266,3 +266,15 @@ def testAnnotateErrorInMemmedProcedure():
                                ^^^^^^^
 """,
   ripl.predict, "(f)")
+
+@broken_in("puma", "Puma does not report polite exceptions")
+def testAnnotationSuppressionSmoke():
+  from nose.tools import assert_raises
+  from venture.exception import VentureException
+
+  ripl = get_ripl()
+  ripl.disable_error_annotation()
+  with assert_raises(VentureException) as cm:
+    ripl.predict("(f)")
+  # I want annotation not to succeed
+  assert "stack_trace" not in cm.exception.data
