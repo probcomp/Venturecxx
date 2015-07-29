@@ -28,10 +28,9 @@ run(for_each(data, obs));
 
 // Collect several snapshots of the progress of inference
 define xs = linspace(0, 10, 200);
-define yss = mapv(proc(i) {
-    run(do(mh(default, one, 50),
-           sample(mapv(true_f, unquote(xs)))))
-}, arange(10));
+define yss = array_from_dataset(run(accumulate_dataset(10,
+    do(mh(default, one, 50),
+       collect(mapv(true_f, unquote(xs)))))));
 
 // Plot them
 plot_lines(xs, yss, data_xs, data_ys, -2, 2, 0.5, 1.0, 1.0);
