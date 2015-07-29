@@ -178,7 +178,7 @@ class BetaBernoulliSPAux(SPAux):
   def cts(self): return [self.yes,self.no]
 
 class BetaBernoulliSP(SP):
-  def construxsumPAux(self): return BetaBernoulliSPAux()
+  def constructSPAux(self): return BetaBernoulliSPAux()
   def show(self,spaux): return spaux.cts()
 
 class MakerCBetaBernoulliOutputPSP(DeterministicMakerAAAPSP):
