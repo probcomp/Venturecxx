@@ -116,12 +116,26 @@ registerBuiltinSP("inv_wishart", typed_nr(continuous.InverseWishartPSP(),
 registerBuiltinSP("wishart", typed_nr(continuous.WishartPSP(),
                                       [t.SymmetricMatrixType(), t.PositiveType()], t.SymmetricMatrixType()))
 
+registerBuiltinSP("make_nig_normal", typed_nr(continuous.MakerCNigNormalOutputPSP(),
+                                                  [t.PositiveType(), t.PositiveType()], SPType([], t.NumberType())))
+registerBuiltinSP("make_uc_nig_normal", typed_nr(continuous.MakerUNigNormalOutputPSP(),
+                                                     [t.PositiveType(), t.PositiveType()], SPType([], t.NumberType())))
+registerBuiltinSP("make_suff_stat_normal", typed_nr(continuous.MakerSuffNormalOutputPSP(),
+                                                       [t.NumberType(), t.PositiveType], SPType([], t.NumberType())))
+
 registerBuiltinSP("make_beta_bernoulli", typed_nr(discrete.MakerCBetaBernoulliOutputPSP(),
                                                   [t.PositiveType(), t.PositiveType()], SPType([], t.BoolType())))
 registerBuiltinSP("make_uc_beta_bernoulli", typed_nr(discrete.MakerUBetaBernoulliOutputPSP(),
                                                      [t.PositiveType(), t.PositiveType()], SPType([], t.BoolType())))
 registerBuiltinSP("make_suff_stat_bernoulli", typed_nr(discrete.MakerSuffBernoulliOutputPSP(),
                                                        [t.NumberType()], SPType([], t.BoolType())))
+
+registerBuiltinSP("make_gamma_poisson", typed_nr(discrete.MakerCGammaPoissonOutputPSP(),
+                                                  [t.PositiveType(), t.PositiveType()], SPType([], t.CountType())))
+registerBuiltinSP("make_uc_gamma_poisson", typed_nr(discrete.MakerUGammaPoissonOutputPSP(),
+                                                     [t.PositiveType(), t.PositiveType()], SPType([], t.CountType())))
+registerBuiltinSP("make_suff_stat_poisson", typed_nr(discrete.MakerSuffPoissonOutputPSP(),
+                                                       [t.PositiveType()], SPType([], t.CountType())))
 
 registerBuiltinSP("exactly", typed_nr(discrete.ExactlyOutputPSP(),
                                       [t.AnyType(), t.NumberType()], t.AnyType(), min_req_args=1))
