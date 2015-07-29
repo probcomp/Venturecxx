@@ -35,6 +35,7 @@ import venmath
 import basic_sps
 import vectors
 import functional
+import conditionals
 import discrete
 import dirichlet
 import continuous
@@ -44,7 +45,6 @@ import function
 import gp
 import msp
 import hmm
-import conditionals
 import scope
 import eval_sps
 import cmvn
@@ -59,16 +59,6 @@ def builtInValues():
 def debug_print(label, value):
   print 'debug ' + label + ': ' + str(value)
   return value
-
-generic_biplex = dispatching_psp(
-  [SPType([t.BoolType(), t.AnyType(), t.AnyType()], t.AnyType()),
-   SPType([t.ArrayUnboxedType(t.NumberType()), t.ArrayUnboxedType(t.NumberType()), t.ArrayUnboxedType(t.NumberType())], t.ArrayUnboxedType(t.NumberType()))],
-  [deterministic_psp(lambda p, c, a: c if p else a,
-                     sim_grad=lambda args, direction: [0, direction, 0] if args[0] else [0, 0, direction],
-                     descr="biplex returns either its second or third argument, depending on the first."),
-   deterministic_psp(np.where,
-                     # TODO sim_grad
-                     descr="vector-wise biplex")])
 
 generic_normal = dispatching_psp(
   [SPType([t.NumberType(), t.NumberType()], t.NumberType()), # TODO Sigma is really non-zero, but negative is OK by scaling
@@ -89,8 +79,6 @@ registerBuiltinSP("debug",
 registerBuiltinSP("zip", deterministic_typed(zip, [t.ListType()], t.HomogeneousListType(t.ListType()), variadic=True,
                                              descr="zip returns a list of lists, where the i-th nested list contains the i-th element from each of the input arguments"))
 
-registerBuiltinSP("branch", esr_output(conditionals.branch_request_psp()))
-registerBuiltinSP("biplex", no_request(generic_biplex))
 registerBuiltinSP("make_csp", typed_nr(csp.MakeCSPOutputPSP(),
                                        [t.HomogeneousArrayType(t.SymbolType()), t.ExpressionType()],
                                        t.AnyType("a compound SP")))
