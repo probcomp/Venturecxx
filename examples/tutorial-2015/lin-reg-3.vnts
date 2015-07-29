@@ -12,7 +12,7 @@ assume noise = tag("hyper", "noise", gamma(1, 1));
 assume outlier_prob = tag("hyper", "outlier_prob", uniform_continuous(0.01, 0.3));
 
 // Per-point outlier check
-assume is_outlier = proc(i) { tag("outlier", i, flip(outlier_prob)) };
+assume is_outlier = mem(proc(i) { tag("outlier", i, flip(outlier_prob)) });
 
 // Full data model: linear relationship with additive noise of unknown
 // but consistent magnitude, plus outlier detection with a broad
