@@ -98,7 +98,6 @@ If the start state is already possible, don't move."""
     while True:
       rhoWeight = self.prepare(trace, scaffold)
       xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, {})
-      print rhoWeight, xiWeight
       if rhoWeight > float("-inf"):
         # The original state was possible; force rejecting the
         # transition
