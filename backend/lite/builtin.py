@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import math
 import numpy as np
 from numbers import Number
 
@@ -27,7 +26,7 @@ from sp_registry import registerBuiltinSP, builtInSPs, builtInSPsIter # Importin
 import value as v
 import types as t
 import env
-from utils import careful_exp, raise_
+from utils import raise_
 from exception import VentureValueError
 
 from sp_help import *
@@ -55,41 +54,6 @@ import cmvn
 
 def builtInValues():
   return { "true" : v.VentureBool(True), "false" : v.VentureBool(False), "nil" : v.VentureNil() }
-
-def grad_sin(args, direction):
-  return [direction * math.cos(args[0])]
-
-def grad_cos(args, direction):
-  return [-direction * math.sin(args[0])]
-
-def grad_tan(args, direction):
-  return [direction * math.pow(math.cos(args[0]), -2)]
-
-def grad_pow(args, direction):
-  x, y = args
-  return [direction * y * math.pow(x, y - 1), direction * math.log(x) * math.pow(x, y)]
-
-def grad_sqrt(args, direction):
-  return [direction * (0.5 / math.sqrt(args[0]))]
-
-def grad_atan2(args, direction):
-  (y,x) = args
-  denom = x*x + y*y
-  return [direction * (x / denom), direction * (-y / denom)]
-
-def grad_negate(args, direction):
-  return [-direction]
-
-def grad_abs(args, direction):
-  # XXX discontinuity?
-  [x] = args
-  return [direction * signum(x)]
-
-def signum(x):
-  if x == 0:
-    return 0
-  else:
-    return x/abs(x)
 
 def grad_list(args, direction):
   if direction == 0:
@@ -166,11 +130,6 @@ registerBuiltinSP("lte",
                   binaryPred(lambda x,y: x.compare(y) <= 0,
                              descr="lte returns true if its first argument compares less than or equal to its second") )
 
-registerBuiltinSP("floor",
-                  unaryNum(math.floor,
-                           sim_grad=zero_gradient,
-                           descr="floor returns the largest integer less than or equal to its argument (as a VentureNumber)") )
-
 # Only makes sense with VentureAtom/VentureNumber distinction
 registerBuiltinSP("real",
                   deterministic_typed(lambda x:x, [t.AtomType()], t.NumberType(),
@@ -188,34 +147,6 @@ registerBuiltinSP("atom_eq",
 registerBuiltinSP("probability",
                   deterministic_typed(lambda x:x, [t.ProbabilityType()], t.ProbabilityType(),
                                       descr="probability converts its argument to a probability (in direct space)"))
-
-registerBuiltinSP("sin", unaryNum(math.sin, sim_grad=grad_sin, descr="Returns the sin of its argument"))
-registerBuiltinSP("cos", unaryNum(math.cos, sim_grad=grad_cos, descr="Returns the cos of its argument"))
-registerBuiltinSP("tan", unaryNum(math.tan, sim_grad=grad_tan, descr="Returns the tan of its argument"))
-registerBuiltinSP("hypot", binaryNum(math.hypot, descr="Returns the hypot of its arguments"))
-registerBuiltinSP("exp", unaryNum(careful_exp, sim_grad=lambda args, direction: [direction * careful_exp(args[0])],
-                                  descr="Returns the exp of its argument"))
-registerBuiltinSP("log", unaryNum(math.log, sim_grad=lambda args, direction: [direction * (1 / float(args[0]))],
-                                  descr="Returns the log of its argument"))
-registerBuiltinSP("pow", binaryNum(math.pow, sim_grad=grad_pow,
-                                   descr="pow returns its first argument raised to the power of its second argument"))
-registerBuiltinSP("sqrt", unaryNum(math.sqrt, sim_grad=grad_sqrt, descr="Returns the sqrt of its argument"))
-registerBuiltinSP("atan2",
-                  binaryNum(math.atan2,
-                            sim_grad=grad_atan2,
-                            descr="atan2(y,x) returns the angle from the positive x axis to the point x,y.  The order of arguments is conventional."))
-
-registerBuiltinSP("negate",
-                  unaryNum(lambda x: -x,
-                           sim_grad=grad_negate,
-                           descr="negate(x) returns -x, the additive inverse of x."))
-
-registerBuiltinSP("abs", unaryNum(abs, sim_grad=grad_abs,
-                                  descr="abs(x) returns the absolute value of x."))
-
-registerBuiltinSP("signum",
-                  unaryNum(signum,
-                           descr="signum(x) returns the sign of x (1 if positive, -1 if negative, 0 if zero)."))
 
 registerBuiltinSP("not", deterministic_typed(lambda x: not x, [t.BoolType()], t.BoolType(),
                                              descr="not returns the logical negation of its argument"))
