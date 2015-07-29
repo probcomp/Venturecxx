@@ -428,11 +428,87 @@ Exercise: Play with this visualization to see how inference is doing.
    infer resample(20);
    infer do(reset_to_prior,
             repeat(<%= iterations %>, do(default_markov_chain(1),
-                          call_back(draw))))
+                          call_back(draw))));
+   infer resample(1);
    ```
    </div>
 
-<% # TODO drop in custom proposals here for better inference %>
+4. Inference alternatives
+
+    a. In the [optional subunit at the end of the previous
+       chapter](../basics/index.html#optional-subunit-custom-metropolis-hastings-proposals),
+       we saw how to construct our own Markov chains that used custom
+       transition operators, with a drift kernel example. Experiment
+       with using a drift kernel for this problem. How quickly can you
+       get it to converge by choosing a good proposal distribution?
+       <a href="javascript:toggle('answer-vis-4a')">(show answer)</a>
+
+       <div class="answer" id="answer-vis-4a" markdown="1">
+
+       Here is an example program using a Cauchy proposal kernel (you
+       may have used something different):
+
+       ```venture
+       define drift_kernel = proc(x) { student_t(1, x, 1) };
+
+       define drift_markov_chain =
+         mh_correct(
+          on_subproblem(default, all,
+            symmetric_local_proposal(drift_kernel)));
+
+       infer do(reset_to_prior,
+                repeat(<%= iterations %>, do(drift_markov_chain,
+                              call_back(draw))))
+       ```
+
+       The Cauchy distribution has heavy tails, which means that this
+       will usually take small steps but occasionally propose large
+       steps. This seems to work fairly well here.
+
+       </div>
+
+    b. As an alternative to Markov chains, we can use gradient ascent
+       to find the best fit. Venture provides an inference primitive,
+       [`map`](<%= refman_url %>inference.html#map) (for "maximum a
+       posteriori") which deterministically climbs the gradient toward
+       the most probable parameter values. It can be invoked as
+       follows:
+
+       ```venture
+       infer repeat(<%= iterations %>, do(map(default, all, 0.001, 1, 1),
+                           call_back(draw)))
+       ```
+
+       This has a very different character than the inference
+       primitives we've seen so far. Experiment with it, tweaking the
+       step size (the "0.001"; be careful setting it too high!) and
+       using `reset_to_prior` to start from a few different initial
+       conditions. Can you think of some advantages and disadvantages
+       of gradient methods compared to Monte Carlo methods?
+       <a href="javascript:toggle('answer-vis-4b')">(show answer)</a>
+
+       <div class="answer" id="answer-vis-4b" markdown="1">
+
+       Answer: Gradient ascent can move toward high-probability
+       regions of the parameter space faster and more directly than
+       Monte Carlo methods. However, the convergence of gradient
+       ascent highly depends on the shape of the posterior probability
+       density function; if the posterior density is too flat, it will
+       move very slowly, whereas if the posterior density is too steep
+       relative to the step size, it may overshoot and spiral off to
+       infinity. Additionally, if there are local maxima, gradient
+       ascent will not be able to escape them. (Markov chains are also
+       susceptible to local maxima, although less so.)
+
+       Convergence aside, an important conceptual difference is that
+       gradient ascent gives only a point estimate of the single most
+       probable values. In contrast, sampling methods return values
+       that are (approximately) distributed according to the full
+       posterior distribution, allowing the uncertainty in those
+       values to be quantified and taken into account when making
+       decisions.
+
+       </div>
 
 Elaboration: Outlier Detection
 ==============================
