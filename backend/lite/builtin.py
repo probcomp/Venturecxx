@@ -34,6 +34,7 @@ from sp_help import *
 import venmath
 import basic_sps
 import vectors
+import functional
 import discrete
 import dirichlet
 import continuous
@@ -46,7 +47,6 @@ import hmm
 import conditionals
 import scope
 import eval_sps
-import functional
 import cmvn
 
 # The types in the types module are generated programmatically, so
@@ -85,31 +85,6 @@ registerBuiltinSP("debug",
                   deterministic_typed(debug_print, [t.SymbolType(), t.AnyType("k")], t.AnyType("k"),
                                       descr = "Print the given value, labeled by a Symbol. Return the value. Intended for debugging or for monitoring execution."))
 
-registerBuiltinSP("apply", esr_output(TypedPSP(functional.ApplyRequestPSP(),
-                                               SPType([SPType([t.AnyType("a")], t.AnyType("b"), variadic=True),
-                                                       t.HomogeneousArrayType(t.AnyType("a"))],
-                                                      t.RequestType("b")))))
-
-registerBuiltinSP("fix", SP(TypedPSP(functional.FixRequestPSP(),
-                                     SPType([t.HomogeneousArrayType(t.SymbolType()),
-                                             t.HomogeneousArrayType(t.ExpressionType())],
-                                            t.RequestType())),
-                            TypedPSP(functional.FixOutputPSP(),
-                                     SPType([t.HomogeneousArrayType(t.SymbolType()),
-                                             t.HomogeneousArrayType(t.ExpressionType())],
-                                            env.EnvironmentType()))))
-
-registerBuiltinSP("mapv", SP(TypedPSP(functional.ArrayMapRequestPSP(),
-                                      SPType([SPType([t.AnyType("a")], t.AnyType("b")),
-                                              t.HomogeneousArrayType(t.AnyType("a"))],
-                                             t.RequestType("<array b>"))),
-                             functional.ESRArrayOutputPSP()))
-
-registerBuiltinSP("imapv", SP(TypedPSP(functional.IndexedArrayMapRequestPSP(),
-                                       SPType([SPType([t.AnyType("index"), t.AnyType("a")], t.AnyType("b")),
-                                               t.HomogeneousArrayType(t.AnyType("a"))],
-                                              t.RequestType("<array b>"))),
-                              functional.ESRArrayOutputPSP()))
 
 registerBuiltinSP("zip", deterministic_typed(zip, [t.ListType()], t.HomogeneousListType(t.ListType()), variadic=True,
                                              descr="zip returns a list of lists, where the i-th nested list contains the i-th element from each of the input arguments"))
@@ -145,11 +120,6 @@ registerBuiltinSP("tag_exclude", typed_nr(scope.TagExcludeOutputPSP(),
                                           # These are type-restricted in Venture, but the actual PSP doesn't care.
                                           [t.AnyType("<scope>"), t.AnyType()],
                                           t.AnyType()))
-
-registerBuiltinSP("assess", typed_nr(functional.AssessOutputPSP(),
-                                     [t.AnyType("<val>"), SPType([t.AnyType("<args>")], t.AnyType("<val>"), variadic=True), t.AnyType("<args>")],
-                                     t.NumberType(),
-                                     variadic=True))
 
 registerBuiltinSP("binomial", typed_nr(discrete.BinomialOutputPSP(),
                                        [t.CountType(), t.ProbabilityType()], t.CountType()))
