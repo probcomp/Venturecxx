@@ -656,7 +656,7 @@ class CNigNormalOutputPSP(RandomPSP):
     # (197 - 200)
     [ctN, xsum, xsumsq] = aux.cts()
     Vn = 1 / (1/self.V + ctN)
-    mn = Vn*(1/self.V*self.m + ctN * xsum/ctN)
+    mn = Vn*(1/self.V*self.m + xsum)
     an = self.a + ctN / 2
     bn = self.b + 0.5*(self.m**2/self.V + xsumsq - mn**2/Vn)
     return (mn, Vn, an, bn)
