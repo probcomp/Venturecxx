@@ -645,6 +645,8 @@ function.
     pnodes = scaffold.getPrincipalNodes()
     from infer.mh import getCurrentValues
     currentValues = getCurrentValues(self, pnodes)
+    for val in currentValues:
+      assert val is not None, "Tried to get_current_values of a detached subproblem"
     return currentValues
 
   def block_values(self, scope, block):
