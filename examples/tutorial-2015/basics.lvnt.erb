@@ -725,9 +725,9 @@ distribution that obtains after taking some number of steps by
 plotting the end point rather than the history
 
 ```venture
-plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>,
-   do(resample(10),
-      reset_to_prior,
+infer resample(1);  // Back to 1 particle
+plot("h0", run(accumulate_dataset(<%= sample_size %>,
+   do(reset_to_prior,
       default_markov_chain(5),
       collect(x)))))
 ```
@@ -751,9 +751,8 @@ Exercises:
    assume x = normal(0, 1);
    assume y = normal(x, 1);
    observe y = 2;
-   plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>,
-      do(resample(10),
-         reset_to_prior,
+   plot("h0", run(accumulate_dataset(<%= sample_size %>,
+      do(reset_to_prior,
          default_markov_chain(5),
          collect(x)))))
    ```
@@ -765,9 +764,8 @@ Exercises:
    assume x = normal(0, 1);
    assume y = normal(x, 1);
    observe y = 6;
-   plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>,
-      do(resample(10),
-         reset_to_prior,
+   plot("h0", run(accumulate_dataset(<%= sample_size %>,
+      do(reset_to_prior,
          default_markov_chain(5),
          collect(x)))))
    ```
@@ -787,9 +785,8 @@ Exercises:
    assume x = normal(0, 1);
    assume y = normal(x, 1);
    observe y = 4;
-   plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>,
-      do(resample(10),
-         reset_to_prior,
+   plot("h0", run(accumulate_dataset(<%= sample_size %>,
+      do(reset_to_prior,
          default_markov_chain(10),
          collect(x)))))
    ```
@@ -801,9 +798,8 @@ Exercises:
    assume x = normal(0, 1);
    assume y = normal(x, 1);
    observe y = 4;
-   plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>,
-      do(resample(10),
-         reset_to_prior,
+   plot("h0", run(accumulate_dataset(<%= sample_size %>,
+      do(reset_to_prior,
          default_markov_chain(50),
          collect(x)))))
    ```
