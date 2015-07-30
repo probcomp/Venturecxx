@@ -22,6 +22,8 @@ import types as t
 from exception import VentureTypeError
 import builtin
 
+from sp_registry import registerBuiltinSP
+
 class RecordType(object):
   def __init__(self, tag):
     self.tag = tag
@@ -119,3 +121,12 @@ def record(tag, arity):
                                        descr="%s" + " extracts the %s field of a %s record" % (i, tag))
 
   return (tester, constructor, [accessor(i) for i in range(arity)])
+
+def register_record(name, *fields):
+  (tester, constructor, accessors) = record(name, len(fields))
+  registerBuiltinSP(name, constructor)
+  registerBuiltinSP("is_" + name, tester)
+  for (f, a) in zip(fields, accessors):
+    registerBuiltinSP(f, a)
+
+register_record("inference_action", "action_func")
