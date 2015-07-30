@@ -26,6 +26,7 @@ from venture.exception import VentureException
 from venture.lite.value import VentureForeignBlob
 from venture.lite.exception import VentureValueError
 from venture.engine.plot_spec import PlotSpec
+from venture.lite.records import VentureRecord, RecordType
 
 class InferPrimitiveOutputPSP(psp.DeterministicPSP):
   def __init__(self, val, klass, desc, tp):
@@ -39,8 +40,9 @@ class InferPrimitiveOutputPSP(psp.DeterministicPSP):
       # Hack to allow MadeRiplMethodInferOutputPSP s to blame the
       # maker application for errors.
       result.addr = args.node.address
-    return sp.VentureSPRecord(sp.SP(psp.NullRequestPSP(),
-                                    psp.TypedPSP(result, self.tp)))
+    result_sp = sp.VentureSPRecord(sp.SP(psp.NullRequestPSP(),
+                                         psp.TypedPSP(result, self.tp.field_type)))
+    return VentureRecord("inference_action", [result_sp])
   def description(self, _name):
     return self.desc
 
@@ -112,7 +114,10 @@ class MadeActionOutputPSP(psp.DeterministicPSP):
     return self.desc
 
 def infer_action_type(return_type):
-  return sp.SPType([t.ForeignBlobType()], t.PairType(return_type, t.ForeignBlobType()))
+  func_type = sp.SPType([t.ForeignBlobType()], t.PairType(return_type, t.ForeignBlobType()))
+  ans_type = RecordType("inference_action", "returning " + return_type.name())
+  ans_type.field_type = func_type
+  return ans_type
 
 def infer_action_maker_type(args_types, return_type=None, **kwargs):
   # Represent the underlying trace as a ForeignBlob for now.
@@ -121,6 +126,7 @@ def infer_action_maker_type(args_types, return_type=None, **kwargs):
   return sp.SPType(args_types, infer_action_type(return_type), **kwargs)
 
 def typed_inf_sp(name, tp, klass, desc=""):
+  assert isinstance(tp, sp.SPType)
   return no_request(psp.TypedPSP(InferPrimitiveOutputPSP(name, klass=klass, desc=desc, tp=tp.return_type), tp))
 
 def trace_method_sp(name, tp, desc=""):
@@ -677,7 +683,7 @@ non-observed stochastic nodes."""),
 
   [ "particle_log_weights", no_request(psp.TypedPSP(MadeEngineMethodInferOutputPSP("particle_log_weights", [], desc="""\
 Return the weights of all extant particles as an array of numbers (in log space).
-"""), infer_action_type(t.ArrayUnboxedType(t.NumberType())))) ],
+  """), infer_action_type(t.ArrayUnboxedType(t.NumberType())).field_type)) ],
 
   engine_method_sp("set_particle_log_weights",
                    infer_action_maker_type([t.ArrayUnboxedType(t.NumberType())]),

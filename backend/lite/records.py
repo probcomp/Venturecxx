@@ -24,7 +24,7 @@ import builtin
 
 from sp_registry import registerBuiltinSP
 
-class RecordType(object):
+class RecordType(t.VentureType):
   def __init__(self, tag, name_extra=None):
     self.tag = tag
     self.name_extra = name_extra
