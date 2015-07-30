@@ -120,36 +120,35 @@ prelude = [
 
 # pass :: State a ()  pass = return ()
 ["pass", """\
-.. function:: pass(<foreignblob>)
-
-  :rtype: <pair () <foreignblob>>
+.. object:: <inference action returning ()>
 
   An inference action that does nothing and returns nil.  Useful in
   the same sorts of situations as Python's ``pass`` statement.
 """,
-"(lambda (t) (pair nil t))"],
+"(inference_action (lambda (t) (pair nil t)))"],
 
 # bind :: State s a -> (a -> State s b) -> State s b
 ["bind", """\
 .. function:: bind(<inference action returning a>, proc(a) -> <inference action returning b>)
 
-  :rtype: proc(<foreignblob>) -> <pair b <foreignblob>>
+  :rtype: <inference action returning b>
 
   Chain two inference actions sequentially, passing the value of the
   first into the procedure computing the second.  This is Haskell's
   ``bind``, specialized to inference actions.
 """,
 """(lambda (act next)
+ (inference_action
   (lambda (t)
-    (let ((res (act t)))
-      ((next (first res)) (rest res)))))"""],
+    (let ((res ((action_func act) t)))
+      ((action_func (next (first res))) (rest res))))))"""],
 
 # bind_ :: State s b -> State s a -> State s a
 # drop the value of type b but perform both actions
 ["bind_", """\
 .. function:: bind_(<inference action>, proc() -> <inference action returning a>)
 
-  :rtype: proc(<foreignblob>) -> <pair a <foreignblob>>
+  :rtype: <inference action returning a>
 
   Chain two inference actions sequentially, ignoring the value of the
   first.  This is Haskell's ``>>`` operator, specialized to inference
@@ -162,26 +161,29 @@ prelude = [
   procedures.
 """,
 """(lambda (act next)
+ (inference_action
   (lambda (t)
-    (let ((res (act t)))
-      ((next) (rest res)))))"""],
+    (let ((res ((action_func act) t)))
+      ((action_func (next)) (rest res))))))"""],
 
 # action :: b -> State a b
 ["action", """\
 .. function:: action(<object>)
 
-  :rtype: proc(<foreignblob>) -> <pair <object> <foreignblob>>
+  :rtype: <inference action returning <object>>
 
   Wrap an object, usually a non-inference function like plotf,
   as an inference action, so it can be used inside a do(...) block.
 """,
-"""(lambda (val) (lambda (t) (pair val t)))"""],
+"""(lambda (val)
+ (inference_action
+  (lambda (t) (pair val t))))"""],
 
 # return :: b -> State a b
 ["return", """\
 .. function:: return(<object>)
 
-  :rtype: proc(<foreignblob>) -> <pair <object> <foreignblob>>
+  :rtype: <inference action returning <object>>
 
   An inference action that does nothing and just returns the argument
   passed to `return`.
@@ -305,7 +307,7 @@ prelude = [
 """,
 """\
 (lambda (action)
-  (let ((result (action __the_inferrer__)))
+  (let ((result ((action_func action) __the_inferrer__)))
     (first result)))"""],
 
 ["default_markov_chain", """\
