@@ -25,8 +25,9 @@ import builtin
 from sp_registry import registerBuiltinSP
 
 class RecordType(object):
-  def __init__(self, tag):
+  def __init__(self, tag, name_extra=None):
     self.tag = tag
+    self.name_extra = name_extra
 
   def asVentureValue(self, thing):
     assert isinstance(thing, VentureRecord) and thing.tag == self.tag
@@ -40,7 +41,10 @@ class RecordType(object):
     return isinstance(vthing, VentureRecord) and vthing.tag == self.tag
 
   def name(self):
-    return "<" + self.tag + ">"
+    if self.name_extra is not None:
+      return "<" + self.tag + " " + self.name_extra + ">"
+    else:
+      return "<" + self.tag + ">"
 
 class VentureRecord(vv.VentureValue):
   def __init__(self, tag, fields):
