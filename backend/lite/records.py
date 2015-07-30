@@ -119,8 +119,13 @@ def record(tag, arity):
   constructor = builtin.deterministic_typed(lambda *fields: VentureRecord(tag, fields),
                                             [t.AnyType()] * arity, typ,
                                             descr="%s" + " constructs a %s record" % tag)
+  def accessor_func(r, i):
+    if r in typ:
+      return r.fields[i]
+    else:
+      raise VentureTypeError("Accessor for field %s expected record of type %s but got %s" % (i, tag, r))
   def accessor(i):
-    return builtin.deterministic_typed(lambda r: r.fields[i],
+    return builtin.deterministic_typed(lambda r: accessor_func(r, i),
                                        [typ], t.AnyType(),
                                        descr="%s" + " extracts the %s field of a %s record" % (i, tag))
 
