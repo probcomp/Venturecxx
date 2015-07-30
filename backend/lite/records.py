@@ -117,7 +117,7 @@ def record(tag, arity):
                                             descr="%s" + " constructs a %s record" % tag)
   def accessor(i):
     return builtin.deterministic_typed(lambda r: r.fields[i],
-                                       typ, t.AnyType(),
+                                       [typ], t.AnyType(),
                                        descr="%s" + " extracts the %s field of a %s record" % (i, tag))
 
   return (tester, constructor, [accessor(i) for i in range(arity)])
