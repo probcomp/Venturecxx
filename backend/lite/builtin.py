@@ -117,10 +117,10 @@ registerBuiltinSP("wishart", typed_nr(continuous.WishartPSP(),
                                       [t.SymmetricMatrixType(), t.PositiveType()], t.SymmetricMatrixType()))
 
 registerBuiltinSP("make_nig_normal", typed_nr(continuous.MakerCNigNormalOutputPSP(),
-                                                  [t.PositiveType(), t.PositiveType(), t.PositiveType(), t.PositiveType()],
+                                                  [t.NumberType(), t.PositiveType(), t.PositiveType(), t.PositiveType()],
                                                   SPType([], t.NumberType())))
 registerBuiltinSP("make_uc_nig_normal", typed_nr(continuous.MakerUNigNormalOutputPSP(),
-                                                     [t.PositiveType(), t.PositiveType(), t.PositiveType(), t.PositiveType()],
+                                                     [t.NumberType(), t.PositiveType(), t.PositiveType(), t.PositiveType()],
                                                      SPType([], t.NumberType())))
 registerBuiltinSP("make_suff_stat_normal", typed_nr(continuous.MakerSuffNormalOutputPSP(),
                                                        [t.NumberType(), t.PositiveType], SPType([], t.NumberType())))
