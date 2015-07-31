@@ -212,13 +212,13 @@ def testAnnotateInferenceErrorInDefinedDo():
 def testAnnotateInferenceErrorInQuasiquote():
   ripl = get_ripl()
   expression = """\
-(lambda (t) (pair (lookup `(,(+ 1 badness) 5) 0) t))
+(inference_action (lambda (t) (pair (lookup `(,(+ 1 badness) 5) 0) t)))
 """
   err.assert_error_message_contains("""\
-(run (lambda (t) (pair (lookup (quasiquote ((unquote (add 1 badness)) 5)) 0) t)))
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-(run (lambda (t) (pair (lookup (quasiquote ((unquote (add 1 badness)) 5)) 0) t)))
-                                                            ^^^^^^^
+(run (inference_action (lambda (t) (pair (lookup (quasiquote ((unquote (add 1 badness)) 5)) 0) t))))
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(run (inference_action (lambda (t) (pair (lookup (quasiquote ((unquote (add 1 badness)) 5)) 0) t))))
+                                                                              ^^^^^^^
 """,
   ripl.infer, expression)
 
