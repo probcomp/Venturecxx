@@ -21,7 +21,7 @@ from nose.plugins.attrib import attr
 
 from venture.test.config import get_ripl, on_inf_prim
 import venture.lite.continuous as cont
-from venture.lite.builtin import typed_nr
+from venture.lite.sp_help import typed_nr
 import venture.lite.types as t
 
 @attr("slow")

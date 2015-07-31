@@ -28,7 +28,7 @@ longer run as written.
 from venture.shortcuts import make_lite_church_prime_ripl
 from scipy.stats import norm
 from venture.lite.psp import RandomPSP
-from venture.lite.builtin import typed_nr
+from venture.lite.sp_help import typed_nr
 import random
 import venture.lite.types as t
 import numpy as np

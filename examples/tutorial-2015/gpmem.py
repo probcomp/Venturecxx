@@ -4,7 +4,7 @@ from venture.lite.lkernel import SimulationAAALKernel
 from venture.lite.env import VentureEnvironment
 from venture.lite.request import Request,ESR
 from venture.lite.address import emptyAddress
-from venture.lite.builtin import no_request
+from venture.lite.sp_help import no_request
 import venture.lite.types as t
 from venture.lite.gp import GPSP, GPSPAux
 import collections

@@ -16,7 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import numpy as np
-from venture.lite.builtin import deterministic_typed
+from venture.lite.sp_help import deterministic_typed
 import venture.lite.types as t
 
 def loadUtilSPs(ripl):

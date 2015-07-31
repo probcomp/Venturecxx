@@ -19,9 +19,9 @@ from sp_registry import registerBuiltinSP, builtInSPs, builtInSPsIter # Importin
 
 import value as v
 
-from sp_help import *
-
 # These modules actually define the PSPs.
+# Import them for their effect on the registry.
+# pylint:disable=unused-import
 import venmath
 import basic_sps
 import vectors

@@ -23,7 +23,7 @@ from scipy import stats
 from venture.test.config import get_ripl, on_inf_prim
 from venture.lite.psp import LikelihoodFreePSP
 from venture.lite import types as t
-from venture.lite.builtin import typed_nr
+from venture.lite.sp_help import typed_nr
 
 @on_inf_prim("none")
 def test_global_logscore():
