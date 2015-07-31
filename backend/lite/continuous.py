@@ -36,6 +36,9 @@ from psp import RandomPSP, DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP,\
   TypedPSP
 from lkernel import DeltaLKernel, SimulationAAALKernel
 
+from sp_registry import registerBuiltinSP
+from sp_helper import typed_nr
+
 class NormalDriftKernel(DeltaLKernel):
   def __init__(self,epsilon = 0.7): self.epsilon = epsilon
 
