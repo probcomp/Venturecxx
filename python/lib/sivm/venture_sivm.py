@@ -169,6 +169,8 @@ class VentureSivm(object):
                 # "infer" causes the engine to run a variant of the
                 # actual passed expression.
                 record = self._hack_infer_expression_structure(*record)
+        if instruction_type is 'evaluate':
+            record = self._hack_infer_expression_structure(*record, prefix="autorun")
 
         did = self.core_sivm.engine.predictNextDirectiveId()
         assert did not in self.syntax_dict
@@ -181,11 +183,11 @@ class VentureSivm(object):
         self.syntax_dict[did] = record
         return did
 
-    def _hack_infer_expression_structure(self, exp, syntax):
+    def _hack_infer_expression_structure(self, exp, syntax, prefix="run"):
         # The engine actually executes an application form around the
         # passed inference program.  Storing this will align the
         # indexes correctly.
-        symbol = v.symbol("run")
+        symbol = v.symbol(prefix)
         hacked_exp = [symbol, exp]
         hacked_syntax = macro.ListSyntax([macro.LiteralSyntax(symbol), syntax])
         return (hacked_exp, hacked_syntax)

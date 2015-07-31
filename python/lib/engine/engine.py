@@ -169,7 +169,7 @@ class Engine(object):
   def incorporate(self): self.model.incorporate()
 
   def evaluate(self, program):
-    return self.raw_evaluate(program)
+    return self.raw_evaluate([v.sym("autorun"), program])
 
   def raw_evaluate(self, program):
     with self.inference_trace():
