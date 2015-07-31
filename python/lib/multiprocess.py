@@ -186,7 +186,8 @@ class MasterBase(object):
 
   def reset_seeds(self):
     for i in range(len(self.processes)):
-      self.map_chunk(i, 'set_seeds', [random.randint(1,2**31-1) for _ in range(self.chunk_sizes[i])])
+      seeds = [random.randint(1,2**31-1) for _ in range(self.chunk_sizes[i])]
+      self.map_chunk(i, 'set_seeds', seeds)
 
   def map(self, cmd, *args, **kwargs):
     '''Delegate command to all workers'''
@@ -338,6 +339,8 @@ class Safely(object):
     # eta expand b/c getattr might fail pylint:disable=W0108
     return safely(lambda *args,**kwargs: getattr(self.obj, attrname)(*args, **kwargs))
 
+  def has_own_prng(self):
+    return self.obj.has_own_prng()
 
 class WorkerBase(object):
 
