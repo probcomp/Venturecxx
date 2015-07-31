@@ -22,6 +22,8 @@ import value as v
 import types as t
 from sp_registry import registerBuiltinSP
 from sp_help import deterministic_typed, type_test, binaryPred
+from utils import raise_
+from exception import VentureValueError
 
 registerBuiltinSP("eq",
                   binaryPred(lambda x,y: x.compare(y) == 0,
@@ -104,6 +106,9 @@ registerBuiltinSP("to_list", deterministic_typed(lambda seq: seq.asPythonList(),
                                                  t.HomogeneousListType(t.AnyType()),
                                                  descr="to_list converts its argument sequence to a list"))
 
+registerBuiltinSP("zip", deterministic_typed(zip, [t.ListType()], t.HomogeneousListType(t.ListType()), variadic=True,
+                                             descr="zip returns a list of lists, where the i-th nested list contains the i-th element from each of the input arguments"))
+
 registerBuiltinSP("dict",
                   deterministic_typed(lambda keys, vals: dict(zip(keys, vals)),
                                       [t.HomogeneousListType(t.AnyType("k")), t.HomogeneousListType(t.AnyType("v"))],
@@ -131,3 +136,13 @@ registerBuiltinSP("take", deterministic_typed(lambda ind, xs: xs.take(ind),
                                               t.HomogeneousSequenceType(t.AnyType("k")),
                                               descr="take returns the requested number of elements from the beginning of the given sequence, as another sequence of the same type."))
 
+def debug_print(label, value):
+  print 'debug ' + label + ': ' + str(value)
+  return value
+
+registerBuiltinSP("debug",
+                  deterministic_typed(debug_print, [t.SymbolType(), t.AnyType("k")], t.AnyType("k"),
+                                      descr = "Print the given value, labeled by a Symbol. Return the value. Intended for debugging or for monitoring execution."))
+
+registerBuiltinSP("value_error", deterministic_typed(lambda s: raise_(VentureValueError(str(s))),
+                                                     [t.AnyType()], t.AnyType()))

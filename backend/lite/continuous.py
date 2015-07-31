@@ -26,12 +26,17 @@ from utils import logDensityMVNormal, numpy_force_number
 from utils import override
 from exception import VentureValueError, GradientWarning
 import warnings
+import types as t
+from sp import SPType
 
 # For some reason, pylint can never find numpy members (presumably metaprogramming).
 # pylint: disable=no-member
 
 from psp import RandomPSP
 from lkernel import DeltaLKernel
+
+from sp_registry import registerBuiltinSP
+from sp_help import typed_nr, no_request, dispatching_psp
 
 class NormalDriftKernel(DeltaLKernel):
   def __init__(self,epsilon = 0.7): self.epsilon = epsilon
@@ -103,6 +108,9 @@ class MVNormalOutputPSP(RandomPSP):
     (mu, sigma) = args.operandValues()
     return (np.array(mu), np.array(sigma))
 
+registerBuiltinSP("multivariate_normal", typed_nr(MVNormalOutputPSP(),
+                                                  [t.HomogeneousArrayType(t.NumberType()), t.SymmetricMatrixType()],
+                                                  t.HomogeneousArrayType(t.NumberType())))
 class InverseWishartPSP(RandomPSP):
   def simulate(self, args):
     (lmbda, dof) = self.__parse_args__(args)
@@ -164,6 +172,8 @@ class InverseWishartPSP(RandomPSP):
     (lmbda, dof) = args.operandValues()
     return (np.array(lmbda), dof)
 
+registerBuiltinSP("inv_wishart", typed_nr(InverseWishartPSP(),
+                                          [t.SymmetricMatrixType(), t.PositiveType()], t.SymmetricMatrixType()))
 
 class WishartPSP(RandomPSP):
   '''
@@ -230,6 +240,9 @@ class WishartPSP(RandomPSP):
   def __parse_args__(self, args):
     (sigma, dof) = args.operandValues()
     return (np.array(sigma), dof)
+
+registerBuiltinSP("wishart", typed_nr(WishartPSP(),
+                                      [t.SymmetricMatrixType(), t.PositiveType()], t.SymmetricMatrixType()))
 
 half_log2pi = 0.5 * math.log(2 * math.pi)
 
@@ -315,6 +328,19 @@ class NormalvsOutputPSP(RandomPSP):
     gradSigma = (np.power(x - mu,2) - np.power(sigma,2)) / np.power(sigma,3)
     return (gradX,[gradMu,sum(gradSigma)])
 
+generic_normal = dispatching_psp(
+  [SPType([t.NumberType(), t.NumberType()], t.NumberType()), # TODO Sigma is really non-zero, but negative is OK by scaling
+   SPType([t.NumberType(), t.ArrayUnboxedType(t.NumberType())],
+          t.ArrayUnboxedType(t.NumberType())),
+   SPType([t.ArrayUnboxedType(t.NumberType()), t.NumberType()],
+          t.ArrayUnboxedType(t.NumberType())),
+   SPType([t.ArrayUnboxedType(t.NumberType()), t.ArrayUnboxedType(t.NumberType())],
+          t.ArrayUnboxedType(t.NumberType()))],
+  [NormalOutputPSP(), NormalsvOutputPSP(),
+   NormalvsOutputPSP(), NormalvvOutputPSP()])
+
+registerBuiltinSP("normal", no_request(generic_normal))
+
 class VonMisesOutputPSP(RandomPSP):
   def simulate(self,args):
     (mu, kappa) = args.operandValues()
@@ -344,6 +370,8 @@ class VonMisesOutputPSP(RandomPSP):
   def description(self,name):
     return "  %s(mu, kappa) samples a von Mises distribution with mean mu and shape kappa. The output is normalized to the interval [-pi,pi]." % name
 
+registerBuiltinSP("vonmises", typed_nr(VonMisesOutputPSP(),
+                                       [t.NumberType(), t.PositiveType()], t.NumberType()))
 
 class UniformOutputPSP(RandomPSP):
   # TODO don't need to be class methods
@@ -369,6 +397,9 @@ class UniformOutputPSP(RandomPSP):
 
   # TODO Uniform presumably has a variational kernel?
 
+registerBuiltinSP("uniform_continuous",typed_nr(UniformOutputPSP(),
+                                                [t.NumberType(), t.NumberType()], t.NumberType()))
+
 class BetaOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self,params): return scipy.stats.beta.rvs(*params)
@@ -389,6 +420,9 @@ class BetaOutputPSP(RandomPSP):
 
   # TODO Beta presumably has a variational kernel too?
 
+registerBuiltinSP("beta", typed_nr(BetaOutputPSP(),
+                                   [t.PositiveType(), t.PositiveType()], t.ProbabilityType()))
+
 class ExponOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self,theta): return scipy.stats.expon.rvs(scale=1.0/theta)
@@ -405,6 +439,9 @@ class ExponOutputPSP(RandomPSP):
 
   def description(self,name):
     return "  %s(theta) returns a sample from an exponential distribution with rate (inverse scale) parameter theta." % name
+
+registerBuiltinSP("expon", typed_nr(ExponOutputPSP(),
+                                    [t.PositiveType()], t.PositiveType()))
 
 class GammaOutputPSP(RandomPSP):
   # TODO don't need to be class methods
@@ -459,6 +496,9 @@ class GammaOutputPSP(RandomPSP):
 
   # TODO Gamma presumably has a variational kernel too?
 
+registerBuiltinSP("gamma", typed_nr(GammaOutputPSP(),
+                                    [t.PositiveType(), t.PositiveType()], t.PositiveType()))
+
 class StudentTOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self,nu,loc,scale): return scipy.stats.t.rvs(nu,loc,scale)
@@ -503,6 +543,10 @@ class StudentTOutputPSP(RandomPSP):
 
   # TODO StudentT presumably has a variational kernel too?
 
+registerBuiltinSP("student_t", typed_nr(StudentTOutputPSP(),
+                                        [t.PositiveType(), t.NumberType(), t.NumberType()],
+                                        t.NumberType(), min_req_args=1 ))
+
 class InvGammaOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self,a,b): return scipy.stats.invgamma.rvs(a,scale=b)
@@ -522,6 +566,9 @@ class InvGammaOutputPSP(RandomPSP):
     return "%s(alpha, beta) returns a sample from an inverse gamma distribution with shape parameter alpha and scale parameter beta" % name
 
   # TODO InvGamma presumably has a variational kernel too?
+
+registerBuiltinSP("inv_gamma", typed_nr(InvGammaOutputPSP(),
+                                        [t.PositiveType(), t.PositiveType()], t.PositiveType()))
 
 class LaplaceOutputPSP(RandomPSP):
   # a is the location, b is the scale; parametrization is same as Wikipedia
@@ -546,3 +593,6 @@ class LaplaceOutputPSP(RandomPSP):
 
   def description(self,name):
     return "%s(a, b) returns a sample from a laplace (double exponential) distribution with shape parameter a and scale parameter b" % name
+
+registerBuiltinSP("laplace", typed_nr(LaplaceOutputPSP(),
+                                      [t.NumberType(), t.PositiveType()], t.NumberType()))
