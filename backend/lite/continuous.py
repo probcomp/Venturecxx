@@ -33,6 +33,9 @@ import warnings
 from psp import RandomPSP
 from lkernel import DeltaLKernel
 
+from sp_registry import registerBuiltinSP
+from sp_helper import typed_nr
+
 class NormalDriftKernel(DeltaLKernel):
   def __init__(self,epsilon = 0.7): self.epsilon = epsilon
 
