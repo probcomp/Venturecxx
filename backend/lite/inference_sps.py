@@ -42,9 +42,37 @@ class InferPrimitiveOutputPSP(psp.DeterministicPSP):
       result.addr = args.node.address
     result_sp = sp.VentureSPRecord(sp.SP(psp.NullRequestPSP(),
                                          psp.TypedPSP(result, self.tp.field_type)))
+    # See note below
     return VentureRecord("inference_action", [result_sp])
   def description(self, _name):
     return self.desc
+
+# Note on returning VentureRecord from InferPrimitiveOutputPSP.
+
+# Returning an SP inside a structure currently doesn't play very well
+# with PETs, because it fools the detection of constructed
+# VentureSPRecords and the allocation of SPRefs for them.  The effect
+# here is that tracing one of these inference actions in the Lite
+# backend may produce strange effects.
+#
+# Options:
+# - Don't wrap these primitives in inference action records, and
+#   instead define compounds in the inference prelude that do that.
+#   - Requires optional and variadic arguments in compounds
+# - Hack the detector in regen to recognize VentureSPRecords in
+#   structures
+#   - Problem: will be a (small?) performance hit, due to inspecting
+#     every structure every time
+#   - Problem: not clear whether the result will satisfy the intended
+#     invariants, because I no longer remember what the invariants
+#     are.
+#  - Migrate the responsibility for SPRefs into the primitive maker
+#    SPs (possibly including the current detector as a convenience).
+#    - Not clear how to do this or whether it will work.
+#  - Don't worry about it, since the inference SPs are currently only
+#    used by the untraced backend anyway.
+#
+# Decision: Leaving it.
 
 class MadeInferPrimitiveOutputPSP(psp.LikelihoodFreePSP):
   def __init__(self, name, exp):
