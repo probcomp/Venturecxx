@@ -75,20 +75,6 @@ registerBuiltinSP("debug",
 registerBuiltinSP("zip", deterministic_typed(zip, [t.ListType()], t.HomogeneousListType(t.ListType()), variadic=True,
                                              descr="zip returns a list of lists, where the i-th nested list contains the i-th element from each of the input arguments"))
 
-registerBuiltinSP("binomial", typed_nr(discrete.BinomialOutputPSP(),
-                                       [t.CountType(), t.ProbabilityType()], t.CountType()))
-registerBuiltinSP("flip", typed_nr(discrete.BernoulliOutputPSP(),
-                                   [t.ProbabilityType()], t.BoolType(), min_req_args=0))
-registerBuiltinSP("bernoulli", typed_nr(discrete.BernoulliOutputPSP(),
-                                        [t.ProbabilityType()], t.IntegerType(), min_req_args=0))
-registerBuiltinSP("log_flip", typed_nr(discrete.LogBernoulliOutputPSP(),
-                                       [t.NumberType()], t.BoolType()))
-registerBuiltinSP("log_bernoulli", typed_nr(discrete.LogBernoulliOutputPSP(), [t.NumberType()], t.BoolType()))
-registerBuiltinSP("categorical", typed_nr(discrete.CategoricalOutputPSP(),
-                                          [t.SimplexType(), t.ArrayType()], t.AnyType(), min_req_args=1))
-registerBuiltinSP("uniform_discrete", typed_nr(discrete.UniformDiscreteOutputPSP(),
-                                               [t.IntegerType(), t.IntegerType()], t.IntegerType()))
-registerBuiltinSP("poisson", typed_nr(discrete.PoissonOutputPSP(), [t.PositiveType()], t.CountType()))
 registerBuiltinSP("normal", no_request(generic_normal))
 registerBuiltinSP("vonmises", typed_nr(continuous.VonMisesOutputPSP(),
                                        [t.NumberType(), t.PositiveType()], t.NumberType()))
@@ -116,14 +102,5 @@ registerBuiltinSP("inv_wishart", typed_nr(continuous.InverseWishartPSP(),
 registerBuiltinSP("wishart", typed_nr(continuous.WishartPSP(),
                                       [t.SymmetricMatrixType(), t.PositiveType()], t.SymmetricMatrixType()))
 
-registerBuiltinSP("make_beta_bernoulli", typed_nr(discrete.MakerCBetaBernoulliOutputPSP(),
-                                                  [t.PositiveType(), t.PositiveType()], SPType([], t.BoolType())))
-registerBuiltinSP("make_uc_beta_bernoulli", typed_nr(discrete.MakerUBetaBernoulliOutputPSP(),
-                                                     [t.PositiveType(), t.PositiveType()], SPType([], t.BoolType())))
-registerBuiltinSP("make_suff_stat_bernoulli", typed_nr(discrete.MakerSuffBernoulliOutputPSP(),
-                                                       [t.NumberType()], SPType([], t.BoolType())))
-
-registerBuiltinSP("exactly", typed_nr(discrete.ExactlyOutputPSP(),
-                                      [t.AnyType(), t.NumberType()], t.AnyType(), min_req_args=1))
 registerBuiltinSP("value_error", deterministic_typed(lambda s: raise_(VentureValueError(str(s))),
                                                      [t.AnyType()], t.AnyType()))
