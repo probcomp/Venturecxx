@@ -235,7 +235,7 @@ class CBetaBernoulliOutputPSP(DiscretePSP):
 
 #### Uncollapsed AAA Beta Bernoulli
 
-class MakerUBetaBernoulliOutputPSP(DiscretePSP):
+class MakerUBetaBernoulliOutputPSP(RandomPSP):
   def childrenCanAAA(self): return True
   def getAAALKernel(self): return UBetaBernoulliAAALKernel()
 
@@ -414,8 +414,10 @@ class SuffPoissonOutputPSP(DiscretePSP):
     return scipy.stats.poisson.logpmf(value, self.mu)
 
   def logDensityOfCounts(self, aux):
+    # Derived from
+    # http://www.stat.cmu.edu/~larry/=stat705/Lecture5.pdf#page=3
     [xsum, ctN] = aux.cts()
-    return scipy.stats.poisson.logpmf(xsum, ctN*self.mu)
+    return -ctN * self.mu + xsum * math.log(mu)
 
 
 class CGammaPoissonOutputPSP(DiscretePSP):
@@ -425,6 +427,12 @@ class CGammaPoissonOutputPSP(DiscretePSP):
     assert isinstance(beta, float)
     self.alpha = alpha
     self.beta = beta
+
+  def updatedParams(self, aux):
+    [ctN, xsum] = aux.cts()
+    alpha_n = self.alpha + xsum
+    beta_n = self.beta + ctN
+    return (alpha_n, beta_n)
 
   def incorporate(self, value, args):
     spaux = args.spaux()
@@ -439,16 +447,12 @@ class CGammaPoissonOutputPSP(DiscretePSP):
   def simulate(self, args):
     # Posterior predictive is Negative Binomial.
     # http://www.stat.wisc.edu/courses/st692-newton/notes.pdf#page=50
-    [xsum, ctN] = args.spaux().cts()
-    n = self.alpha + xsum
-    p = (self.beta + ctN) / (self.beta + ctN + 1)
-    return scipy.stats.nbinom.rvs(n,p)
+    (alpha_n, beta_n) = self.updatedParams(args.spaux)
+    return scipy.stats.nbinom.rvs(alpha_n, (beta_n)/(beta_n+1))
 
   def logDensity(self, value, args):
-    [xsum, ctN] = args.spaux().cts()
-    n = self.alpha + xsum
-    p = (self.beta + ctN) / (self.beta + ctN + 1)
-    return scipy.stats.nbinom.logpmf(value, n, p)
+    (alpha_n, beta_n) = self.updatedParams(args.spaux)
+    return scipy.stats.nbinom.logpmf(value, alpha_n, (beta_n)/(beta_n+1))
 
   def logDensityOfCounts(self, aux):
     # The marginal loglikelihood of the data p(D) under the prior.
@@ -475,8 +479,12 @@ class MakerCGammaPoissonOutputPSP(DeterministicMakerAAAPSP):
         'is stochastic.' % name
 
 
+class UGammaPoissonOutputPSP(SuffPoissonOutputPSP):
+# Uncollapsed Gamma Poisson PSP.
+  pass
+
 class MakerUGammaPoissonOutputPSP(DiscretePSP):
-# Uncollapsed AAA GammaPoisson
+# Maker for Uncollapsed AAA GammaPoisson
 
   def childrenCanAAA(self):
     return True
@@ -487,7 +495,7 @@ class MakerUGammaPoissonOutputPSP(DiscretePSP):
   def simulate(self, args):
     (alpha, beta) = args.operandValues()
     mu = scipy.stats.gamma.rvs(alpha, beta)
-    output = TypedPSP(SuffPoissonOutputPSP(mu), SPType([], t.CountType()))
+    output = TypedPSP(UGammaPoissonOutputPSP(mu), SPType([], t.CountType()))
     return VentureSPRecord(SuffPoissonSP(NullRequestPSP(), output))
 
   def logDensity(self, value, args):
