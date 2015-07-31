@@ -24,6 +24,7 @@ from exception import VentureValueError
 from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, SPAux, VentureSPRecord, SPType
 import types as t
+from sp_help import dispatching_psp
 from sp_registry import registerBuiltinSP
 
 # XXX Replace by scipy.stats.multivariate_normal.logpdf when we
@@ -140,7 +141,31 @@ class GPOutputPSP(RandomPSP):
     for x in xs:
       del samples[x]
 
+class GPOutputPSP1(GPOutputPSP):
+  # version of GPOutputPSP that accepts and returns scalars.
+
+  def simulate(self,args):
+    samples = args.spaux().samples
+    x = args.operandValues()[0]
+    return self.makeGP(samples).sample(x)[0]
+
+  def logDensity(self,o,args):
+    samples = args.spaux().samples
+    x = args.operandValues()[0]
+    return self.makeGP(samples).logDensity([x], [o])
+
+  def incorporate(self,o,args):
+    samples = args.spaux().samples
+    x = args.operandValues()[0]
+    samples[x] = o
+
+  def unincorporate(self,_o,args):
+    samples = args.spaux().samples
+    x = args.operandValues()[0]
+    del samples[x]
+
 gpType = SPType([t.ArrayUnboxedType(t.NumberType())], t.ArrayUnboxedType(t.NumberType()))
+gp1Type = SPType([t.NumberType()], t.NumberType())
 
 class GPSPAux(SPAux):
   def __init__(self, samples):
@@ -152,7 +177,9 @@ class GPSP(SP):
   def __init__(self, mean, covariance):
     self.mean = mean
     self.covariance = covariance
-    output = TypedPSP(GPOutputPSP(mean, covariance), gpType)
+    output = dispatching_psp([gpType, gp1Type],
+                             [GPOutputPSP(mean, covariance),
+                              GPOutputPSP1(mean, covariance)])
     super(GPSP, self).__init__(NullRequestPSP(),output)
 
   def constructSPAux(self): return GPSPAux({})
@@ -166,7 +193,7 @@ class MakeGPOutputPSP(DeterministicMakerAAAPSP):
   def childrenCanAAA(self): return True
 
   def description(self, _name=None):
-    return """Constructs a Gaussian Process with the given mean and covariance functions. Wrap the gp in a mem if input points might be sampled multiple times. Global Logscore is broken with GPs, as it is with all SPs that have auxen."""
+    return """Constructs a Gaussian Process with the given mean and covariance functions. Note that each application of the GP involves a matrix inversion, so when sampling at many inputs it is much more efficient to batch-query by passing a vector of input values. Wrap the GP in a mem if input points might be sampled multiple times. Global Logscore is broken with GPs, as it is with all SPs that have auxen."""
 
 makeGPType = SPType([t.AnyType("mean function"), t.AnyType("covariance function")], gpType)
 makeGPSP = SP(NullRequestPSP(), TypedPSP(MakeGPOutputPSP(), makeGPType))

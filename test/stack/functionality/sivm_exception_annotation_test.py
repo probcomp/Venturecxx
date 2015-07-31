@@ -212,13 +212,13 @@ def testAnnotateInferenceErrorInDefinedDo():
 def testAnnotateInferenceErrorInQuasiquote():
   ripl = get_ripl()
   expression = """\
-(lambda (t) (pair (lookup `(,(+ 1 badness) 5) 0) t))
+(inference_action (lambda (t) (pair (lookup `(,(+ 1 badness) 5) 0) t)))
 """
   err.assert_error_message_contains("""\
-(run (lambda (t) (pair (lookup (quasiquote ((unquote (add 1 badness)) 5)) 0) t)))
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-(run (lambda (t) (pair (lookup (quasiquote ((unquote (add 1 badness)) 5)) 0) t)))
-                                                            ^^^^^^^
+(run (inference_action (lambda (t) (pair (lookup (quasiquote ((unquote (add 1 badness)) 5)) 0) t))))
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(run (inference_action (lambda (t) (pair (lookup (quasiquote ((unquote (add 1 badness)) 5)) 0) t))))
+                                                                              ^^^^^^^
 """,
   ripl.infer, expression)
 
@@ -241,16 +241,16 @@ def testLoopErrorAnnotationSmoke():
   numthreads = threading.active_count()
 
   ripl = get_ripl()
-  expression = "(loop (lambda (t) (pair (+ 1 badness) t)))"
+  expression = "(loop (inference_action (lambda (t) (pair (+ 1 badness) t))))"
   def doit():
     ripl.infer(expression)
     time.sleep(0.01) # Give it time to start
     ripl.stop_continuous_inference() # Join the other thread to make sure it errored
   err.assert_print_output_contains("""\
-(run (make_csp (quote (t)) (quote (pair (add 1 badness) t))))
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-(run (make_csp (quote (t)) (quote (pair (add 1 badness) t))))
-                                               ^^^^^^^
+(run (inference_action (make_csp (quote (t)) (quote (pair (add 1 badness) t)))))
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(run (inference_action (make_csp (quote (t)) (quote (pair (add 1 badness) t)))))
+                                                                 ^^^^^^^
 """, doit)
   eq_(numthreads, threading.active_count()) # Erroring out in loop does not leak active threads
 
@@ -278,3 +278,11 @@ def testAnnotationSuppressionSmoke():
     ripl.predict("(f)")
   # I want annotation not to succeed
   assert "stack_trace" not in cm.exception.data
+
+def testAnnotateErrorInEvaluate():
+  ripl = get_ripl()
+  err.assert_error_message_contains("""\
+(autorun (badness))
+          ^^^^^^^
+""",
+  ripl.evaluate, "(badness)")

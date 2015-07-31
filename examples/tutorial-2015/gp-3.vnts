@@ -18,12 +18,11 @@ define data = zip(xs, ys);
 
 // Observe data points
 define obs_pf = proc(xy) {
-    run(do(
-        x <- return(lookup(xy, 0)),
-        y <- return(lookup(xy, 1)),
-        observe(normal(pf(unquote(x)), 1.0), y)))
+    x = lookup(xy, 0);
+    y = lookup(xy, 1);
+    observe(normal(pf(unquote(x)), 1.0), y)
 };
-mapv(obs_pf, data);
+run(for_each(data, obs_pf));
 
 // Do inference, and plot the inferred values of r and pnum over time
 define dataset = run(accumulate_dataset(100,

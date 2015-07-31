@@ -102,3 +102,7 @@ def testBackendSwitchingSmoke():
       (in_model m1 something)
       (in_model m2 something))]
 """)
+
+@on_inf_prim("autorun")
+def testAutorunSmoke():
+  eq_(3.0, get_ripl().evaluate("(sample 3)"))

@@ -21,7 +21,7 @@ prelude = [
 """\
 .. function:: iterate(f : <inference action>, iterations : int)
 
-  :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
+  :rtype: <inference action>
 
   Repeatedly apply the given action, suppressing the returned values.
 """,
@@ -34,7 +34,7 @@ prelude = [
 """\
 .. function:: repeat(iterations : int, f : <inference action>)
 
-  :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
+  :rtype: <inference action>
 
   Repeatedly apply the given action, suppressing the returned values.
   This is the same as `iterate`, except for taking its arguments
@@ -45,7 +45,7 @@ prelude = [
 ["sequence", """\
 .. function:: sequence(ks : list<inference action returning a>)
 
-  :rtype: proc(<foreignblob>) -> <pair list<a> <foreignblob>>
+  :rtype: <inference action returning list<a>>
 
   Apply the given list of actions in sequence, returning the values.
   This is Haskell's sequence.
@@ -60,7 +60,7 @@ prelude = [
 ["sequence_", """\
 .. function:: sequence(ks : list<inference action>)
 
-  :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
+  :rtype: <inference action>
 
   Apply the given list of actions in sequence, discarding the values.
   This is Haskell's sequence\\_.
@@ -74,7 +74,7 @@ prelude = [
 ["mapM", """\
 .. function:: mapM(act : proc(a) -> <inference action returning b>, objs : list<a>)
 
-  :rtype: proc(<foreignblob>) -> <pair list<b> <foreignblob>>
+  :rtype: <inference action returning list<b>>
 
   Apply the given action function to each given object and perform
   those actions in order.  Return a list of the resulting values.  The
@@ -86,7 +86,7 @@ prelude = [
 ["imapM", """\
 .. function:: imapM(act : proc(int, a) -> <inference action returning b>, objs : list<a>)
 
-  :rtype: proc(<foreignblob>) -> <pair list<b> <foreignblob>>
+  :rtype: <inference action returning list<b>>
 
   Apply the given action function to each given object and its index
   in the list and perform those actions in order.  Return a list of
@@ -98,7 +98,7 @@ prelude = [
 ["for_each", """\
 .. function:: for_each(objs : list<a>, act : proc(a) -> <inference action>)
 
-  :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
+  :rtype: <inference action>
 
   Apply the given action function to each given object and perform
   those actions in order.  Discard the results.
@@ -109,7 +109,7 @@ prelude = [
 ["for_each_indexed", """\
 .. function:: for_each_indexed(objs : list<a>, act : proc(int, a) -> <inference action>)
 
-  :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
+  :rtype: <inference action>
 
   Apply the given action function to each given object and its index
   in the list and perform those actions in order.  Discard the
@@ -120,36 +120,36 @@ prelude = [
 
 # pass :: State a ()  pass = return ()
 ["pass", """\
-.. function:: pass(<foreignblob>)
-
-  :rtype: <pair () <foreignblob>>
+.. _pass:
+.. object:: pass <inference action>
 
   An inference action that does nothing and returns nil.  Useful in
   the same sorts of situations as Python's ``pass`` statement.
 """,
-"(lambda (t) (pair nil t))"],
+"(inference_action (lambda (t) (pair nil t)))"],
 
 # bind :: State s a -> (a -> State s b) -> State s b
 ["bind", """\
 .. function:: bind(<inference action returning a>, proc(a) -> <inference action returning b>)
 
-  :rtype: proc(<foreignblob>) -> <pair b <foreignblob>>
+  :rtype: <inference action returning b>
 
   Chain two inference actions sequentially, passing the value of the
   first into the procedure computing the second.  This is Haskell's
   ``bind``, specialized to inference actions.
 """,
 """(lambda (act next)
+ (inference_action
   (lambda (t)
-    (let ((res (act t)))
-      ((next (first res)) (rest res)))))"""],
+    (let ((res ((action_func act) t)))
+      ((action_func (next (first res))) (rest res))))))"""],
 
 # bind_ :: State s b -> State s a -> State s a
 # drop the value of type b but perform both actions
 ["bind_", """\
 .. function:: bind_(<inference action>, proc() -> <inference action returning a>)
 
-  :rtype: proc(<foreignblob>) -> <pair a <foreignblob>>
+  :rtype: <inference action returning a>
 
   Chain two inference actions sequentially, ignoring the value of the
   first.  This is Haskell's ``>>`` operator, specialized to inference
@@ -162,26 +162,29 @@ prelude = [
   procedures.
 """,
 """(lambda (act next)
+ (inference_action
   (lambda (t)
-    (let ((res (act t)))
-      ((next) (rest res)))))"""],
+    (let ((res ((action_func act) t)))
+      ((action_func (next)) (rest res))))))"""],
 
 # action :: b -> State a b
 ["action", """\
 .. function:: action(<object>)
 
-  :rtype: proc(<foreignblob>) -> <pair <object> <foreignblob>>
+  :rtype: <inference action returning <object>>
 
   Wrap an object, usually a non-inference function like plotf,
   as an inference action, so it can be used inside a do(...) block.
 """,
-"""(lambda (val) (lambda (t) (pair val t)))"""],
+"""(lambda (val)
+ (inference_action
+  (lambda (t) (pair val t))))"""],
 
 # return :: b -> State a b
 ["return", """\
 .. function:: return(<object>)
 
-  :rtype: proc(<foreignblob>) -> <pair <object> <foreignblob>>
+  :rtype: <inference action returning <object>>
 
   An inference action that does nothing and just returns the argument
   passed to `return`.
@@ -210,9 +213,8 @@ prelude = [
 """(lambda (f arg1 arg2) (lambda (arg3) (f arg1 arg2 arg3)))"""],
 
 ["global_likelihood", """\
-.. function:: global_likelihood(<foreignblob>)
-
-  :rtype: <pair <number> <foreignblob>>
+.. _global_likelihood:
+.. object:: global_likelihood <inference action returning <number>>
 
   An inference action that computes and returns the global likelihood
   (in log space).  Cost: O(size of trace).
@@ -220,9 +222,8 @@ prelude = [
 "(likelihood_at (quote default) (quote all))"],
 
 ["global_posterior", """\
-.. function:: global_posterior(<foreignblob>)
-
-  :rtype: <pair <number> <foreignblob>>
+.. _global_posterior:
+.. object:: global_posterior <inference action returning <number>>
 
   An inference action that computes and returns the global posterior
   (in log space).  Cost: O(size of trace).
@@ -230,9 +231,8 @@ prelude = [
 "(posterior_at (quote default) (quote all))"],
 
 ["posterior", """\
-.. function:: posterior(<foreignblob>)
-
-  :rtype: <pair () <foreignblob>>
+.. _posterior:
+.. object:: posterior <inference action>
 
   An inference action that sets each particle to an independent sample
   from the full posterior (with respect to currently incorporated
@@ -248,7 +248,7 @@ prelude = [
 ["join_datasets", """\
 .. function:: join_datasets(datasets : list<dataset>)
 
-  :rtype: proc(<foreignblob>) -> <pair <dataset> <foreignblob>>
+  :rtype: <inference action returning <dataset>>
 
   Merge all the given datasets into one.
 """,
@@ -260,9 +260,9 @@ prelude = [
         (return d))))"""],
 
 ["accumulate_dataset", """\
-.. function:: accumulate_dataset(iterations : int, a : <inference action returning a dataset>)
+.. function:: accumulate_dataset(iterations : int, a : <inference action returning <dataset>>)
 
-  :rtype: proc(<foreignblob>) -> <pair <dataset> <foreignblob>>
+  :rtype: <inference action returning <dataset>>
 
   Run the given inference action the given number of times,
   accumulating all the returned datasets into one.
@@ -286,10 +286,8 @@ prelude = [
         (return d))))"""],
 
 ["reset_to_prior", """\
-
-.. function:: reset_to_prior(<foreignblob>)
-
-  :rtype: <pair () <foreignblob>>
+.. _reset_to_prior:
+.. object:: reset_to_prior <inference action>
 
   Reset all particles to the prior.  Also reset their weights to the likelihood.
 
@@ -305,13 +303,25 @@ prelude = [
 """,
 """\
 (lambda (action)
-  (let ((result (action __the_inferrer__)))
+  (let ((result ((action_func action) __the_inferrer__)))
     (first result)))"""],
+
+["autorun", """\
+.. function:: autorun(<object>)
+
+  :rtype: <object>
+
+   If the argument is an inference action, run it and return the result.  Otherwise, return the argument.""",
+"""\
+(lambda (thing)
+  (if (is_inference_action thing)
+      (run thing)
+      thing))"""],
 
 ["default_markov_chain", """\
 .. function:: default_markov_chain(transitions : int)
 
-  :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
+  :rtype: <inference action>
 
   Take the requested number of steps of the default Markov chain.
 
@@ -331,7 +341,7 @@ prelude = [
 ["regeneration_local_proposal", """\
 .. function:: regeneration_local_proposal(<list>)
 
-  :rtype: proc(<subproblem>) -> proc(<foreignblob>) -> <pair <result> <foreignblob>>
+  :rtype: proc(<subproblem>) -> <inference action returning <result>>
 
   Propose the given values for the given subproblem.  Changes the
   underlying model to represent the proposed state, and returns a
@@ -352,9 +362,9 @@ prelude = [
                      (restore subproblem rho_db))))))))"""],
 
 ["mh_correct", """\
-.. function:: mh_correct(<action>)
+.. function:: mh_correct(<inference action returning <result>>)
 
-  :rtype: proc(<foreignblob>) -> <pair () <foreignblob>>
+  :rtype: <inference action>
 
   Run the given proposal, and accept or reject it according to the
   Metropolis-Hastings acceptance ratio returned in its result.
@@ -378,7 +388,7 @@ prelude = [
 ["symmetric_local_proposal", """\
 .. function:: symmetric_local_proposal(proc(<value>) -> <value>)
 
-  :rtype: proc(<subproblem>) -> proc(<foreignblob>) -> <pair () <foreignblob>>
+  :rtype: proc(<subproblem>) -> <inference action returning <result>>
 
   Propose using the given kernel for the given subproblem.  Changes the
   underlying model to represent the proposed state, and returns a
@@ -395,9 +405,9 @@ prelude = [
           ((regeneration_local_proposal new_values) subproblem)))))"""],
 
 ["on_subproblem", """\
-.. function:: on_subproblem(scope: object, block: object, proposal: proc(<subproblem>) -> <action>)
+.. function:: on_subproblem(scope: object, block: object, proposal: proc(<subproblem>) -> <inference action returning <result>>)
 
-  :rtype: proc(<foreignblob>) -> <pair <result> <foreignblob>>
+  :rtype: <inference action returning <result>>
 
   Select the subproblem indicated by the given scope and block, and
   apply the given proposal procedure to that subproblem.  Returns

@@ -355,10 +355,8 @@ infer observe(g(data_xs), data_ys);
 // Plot several samples of the gp
 define xs = linspace(0, 10, 200);
 define yss = mapv(proc(i) {
-    run(do(
-        ys <- sample(g(unquote(xs))),
-        return(ys)))
-    }, linspace(0, 0, 10));
+    run(sample(g(unquote(xs))))
+}, arange(10));
 plot_lines(xs, yss, run(sample(data_xs)), data_ys, -5, 12, 1.0, 1.0, 0.5);
 ```
 
@@ -379,12 +377,11 @@ Exercise: Consider the following three ways to query a GP.
 sample g(array(1.0, 2.0));
 
 // Way 2
-assume gg = proc(x) { lookup(g(array(x)), 0) };
-sample gg(1.0);
-sample gg(2.0);
+sample g(1.0);
+sample g(2.0);
 
 // Way 3
-sample array(gg(1.0), gg(2.0));
+sample array(g(1.0), g(2.0));
 
 ```
 
@@ -395,7 +392,7 @@ sample array(gg(1.0), gg(2.0));
    Answer: Here's the distribution given by Way 2:
 
    ```venture
-   plot("p0d1d", run(accumulate_dataset(<%= sample_size %>, collect(gg(1.0), gg(2.0)))))
+   plot("p0d1d", run(accumulate_dataset(<%= sample_size %>, collect(g(1.0), g(2.0)))))
    ```
 
    Plotting Ways 1 and 3 is a little trickier, because `collect` doesn't
@@ -404,9 +401,9 @@ sample array(gg(1.0), gg(2.0));
 
    ```venture
    plot("p0d1d", run(accumulate_dataset(<%= sample_size %>,
-     do(vals <- sample(array(gg(1.0), gg(2.0))),
-        collect(labelled(lookup(quote(unquote(vals)), 0), gg_1),
-                labelled(lookup(quote(unquote(vals)), 1), gg_2))))))
+     do(vals <- sample(array(g(1.0), g(2.0))),
+        collect(labelled(lookup(quote(unquote(vals)), 0), g_1),
+                labelled(lookup(quote(unquote(vals)), 1), g_2))))))
    ```
 
    ```venture

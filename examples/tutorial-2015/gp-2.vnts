@@ -20,21 +20,17 @@ define data = zip(data_xs, data_ys);
 
 // Function for programmatically observing the data
 define obs = proc(xy) {
-    run(do(
-        x <- return(lookup(xy, 0)),
-        y <- return(lookup(xy, 1)),
-        observe(normal(true_f(unquote(x)), 1.0), y)))
+    x = lookup(xy, 0);
+    y = lookup(xy, 1);
+    observe(normal(true_f(unquote(x)), 1.0), y)
 };
-mapv(obs, data);
+run(for_each(data, obs));
 
 // Collect several snapshots of the progress of inference
 define xs = linspace(0, 10, 200);
-define yss = mapv(proc(i) {
-    run(do(
-        ys <- sample(mapv(true_f, unquote(xs))),
-        mh(default, one, 50),
-        return(ys)))
-    }, linspace(0, 0, 10));
+define yss = array_from_dataset(run(accumulate_dataset(10,
+    do(mh(default, one, 50),
+       collect(mapv(true_f, unquote(xs)))))));
 
 // Plot them
 plot_lines(xs, yss, data_xs, data_ys, -2, 2, 0.5, 1.0, 1.0);

@@ -22,9 +22,12 @@ import types as t
 from exception import VentureTypeError
 import builtin
 
-class RecordType(object):
-  def __init__(self, tag):
+from sp_registry import registerBuiltinSP
+
+class RecordType(t.VentureType):
+  def __init__(self, tag, name_extra=None):
     self.tag = tag
+    self.name_extra = name_extra
 
   def asVentureValue(self, thing):
     assert isinstance(thing, VentureRecord) and thing.tag == self.tag
@@ -38,7 +41,10 @@ class RecordType(object):
     return isinstance(vthing, VentureRecord) and vthing.tag == self.tag
 
   def name(self):
-    return "<" + self.tag + ">"
+    if self.name_extra is not None:
+      return "<" + self.tag + " " + self.name_extra + ">"
+    else:
+      return "<" + self.tag + ">"
 
 class VentureRecord(vv.VentureValue):
   def __init__(self, tag, fields):
@@ -113,9 +119,23 @@ def record(tag, arity):
   constructor = builtin.deterministic_typed(lambda *fields: VentureRecord(tag, fields),
                                             [t.AnyType()] * arity, typ,
                                             descr="%s" + " constructs a %s record" % tag)
+  def accessor_func(r, i):
+    if r in typ:
+      return r.fields[i]
+    else:
+      raise VentureTypeError("Accessor for field %s expected record of type %s but got %s" % (i, tag, r))
   def accessor(i):
-    return builtin.deterministic_typed(lambda r: r.fields[i],
-                                       typ, t.AnyType(),
+    return builtin.deterministic_typed(lambda r: accessor_func(r, i),
+                                       [typ], t.AnyType(),
                                        descr="%s" + " extracts the %s field of a %s record" % (i, tag))
 
   return (tester, constructor, [accessor(i) for i in range(arity)])
+
+def register_record(name, *fields):
+  (tester, constructor, accessors) = record(name, len(fields))
+  registerBuiltinSP(name, constructor)
+  registerBuiltinSP("is_" + name, tester)
+  for (f, a) in zip(fields, accessors):
+    registerBuiltinSP(f, a)
+
+register_record("inference_action", "action_func")

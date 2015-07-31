@@ -110,6 +110,11 @@ through a ripl (applied fully uncurried)."""
     expr = [v.symbol(name)] + [val.expressionFor() for val in args_lists[0]]
     eq_(answer, carefully(eval_in_ripl, expr))
 
+def testVectorArrayExample():
+  from venture.lite.sp_registry import builtInSPs
+  from venture.lite.value import VentureArray
+  propRiplAgreesWithDeterministicSimulate([[VentureArray([])]], "is_vector", builtInSPs()["is_vector"])
+
 def eval_foreign_sp(name, sp, expr):
   ripl = get_ripl()
   ripl.bind_foreign_sp(name, sp)

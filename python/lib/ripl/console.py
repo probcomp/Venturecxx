@@ -246,9 +246,11 @@ class RiplCmd(Cmd, object):
     files = copy.copy(self.files)
     self.do_clear(None)
     for p in plugins:
-      self.do_load_plugin(p)
+      if p not in self.plugins:
+        self.do_load_plugin(p)
     for f in files:
-      self.do_load(f)
+      if f not in self.files:
+        self.do_load(f)
 
   @catchesVentureException
   def do_load_plugin(self, s):

@@ -28,7 +28,7 @@ import types as t
 from exception import VentureValueError
 
 from sp_registry import registerBuiltinSP
-from sp_helper import typed_nr
+from sp_help import typed_nr
 
 class DiscretePSP(RandomPSP):
   def logDensityBound(self, _x, _args): return 0
@@ -61,6 +61,11 @@ class BernoulliOutputPSP(DiscretePSP):
   def description(self,name):
     return "  %s(p) returns true with probability p and false otherwise.  If omitted, p is taken to be 0.5." % name
 
+registerBuiltinSP("flip", typed_nr(BernoulliOutputPSP(),
+                                   [t.ProbabilityType()], t.BoolType(), min_req_args=0))
+registerBuiltinSP("bernoulli", typed_nr(BernoulliOutputPSP(),
+                                        [t.ProbabilityType()], t.IntegerType(), min_req_args=0))
+
 class LogBernoulliOutputPSP(DiscretePSP):
   def simulate(self,args):
     logp = args.operandValues()[0]
@@ -85,6 +90,9 @@ class LogBernoulliOutputPSP(DiscretePSP):
   def description(self,name):
     return "  %s(p) returns true with probability exp(p) and false otherwise.  This is useful for modeling very low probability events, because it does not suffer the underflow that %s(exp(p)) would." % (name, name)
 
+registerBuiltinSP("log_flip", typed_nr(LogBernoulliOutputPSP(), [t.NumberType()], t.BoolType()))
+registerBuiltinSP("log_bernoulli", typed_nr(LogBernoulliOutputPSP(), [t.NumberType()], t.BoolType()))
+
 class BinomialOutputPSP(DiscretePSP):
   def simulate(self,args):
     (n,p) = args.operandValues()
@@ -103,6 +111,8 @@ class BinomialOutputPSP(DiscretePSP):
   def description(self,name):
     return "  %s(n, p) simulates flipping n Bernoulli trials independently with probability p and returns the total number of successes." % name
 
+registerBuiltinSP("binomial", typed_nr(BinomialOutputPSP(),
+                                       [t.CountType(), t.ProbabilityType()], t.CountType()))
 
 class CategoricalOutputPSP(DiscretePSP):
   # (categorical ps outputs)
@@ -131,6 +141,9 @@ class CategoricalOutputPSP(DiscretePSP):
   def description(self,name):
     return "  %s(weights, objects) samples a categorical with the given weights.  In the one argument case, returns the index of the chosen option as an atom; in the two argument case returns the item at that index in the second argument.  It is an error if the two arguments have different length." % name
 
+registerBuiltinSP("categorical", typed_nr(CategoricalOutputPSP(),
+                                          [t.SimplexType(), t.ArrayType()], t.AnyType(), min_req_args=1))
+
 class UniformDiscreteOutputPSP(DiscretePSP):
   def simulate(self,args):
     vals = args.operandValues()
@@ -148,12 +161,16 @@ class UniformDiscreteOutputPSP(DiscretePSP):
   def description(self,name):
     return "  %s(start, end) samples a uniform discrete on the (start, start + 1, ..., end - 1)" % name
 
+registerBuiltinSP("uniform_discrete", typed_nr(UniformDiscreteOutputPSP(),
+                                               [t.IntegerType(), t.IntegerType()], t.IntegerType()))
+
 class PoissonOutputPSP(DiscretePSP):
   def simulate(self,args): return scipy.stats.poisson.rvs(args.operandValues()[0])
   def logDensity(self,val,args): return scipy.stats.poisson.logpmf(val,args.operandValues()[0])
   def description(self,name):
     return "  %s(lam) samples a poisson with rate lam" % name
 
+registerBuiltinSP("poisson", typed_nr(PoissonOutputPSP(), [t.PositiveType()], t.CountType()))
 
 #### Collapsed Beta Bernoulli
 class BetaBernoulliSPAux(SPAux):
@@ -236,6 +253,9 @@ class CBetaBernoulliOutputPSP(DiscretePSP):
     denominator = scipy.special.betaln(self.alpha,self.beta)
     return math.log(numCombinations) + numerator - denominator
 
+registerBuiltinSP("make_beta_bernoulli", typed_nr(MakerCBetaBernoulliOutputPSP(),
+                                                  [t.PositiveType(), t.PositiveType()], SPType([], t.BoolType())))
+
 #### Uncollapsed AAA Beta Bernoulli
 
 class MakerUBetaBernoulliOutputPSP(RandomPSP):
@@ -310,6 +330,9 @@ class UBetaBernoulliOutputPSP(DiscretePSP):
     # numCombinations = scipy.misc.comb(ctY + ctN,ctY) # TODO Do this directly in log space
     return ctY * math.log(self.weight) + ctN * math.log(1 - self.weight) # + math.log(numCombinations)
 
+registerBuiltinSP("make_uc_beta_bernoulli", typed_nr(MakerUBetaBernoulliOutputPSP(),
+                                                     [t.PositiveType(), t.PositiveType()], SPType([], t.BoolType())))
+
 #### Non-conjugate AAA bernoulli
 
 class MakerSuffBernoulliOutputPSP(DeterministicMakerAAAPSP):
@@ -330,6 +353,9 @@ class MakerSuffBernoulliOutputPSP(DeterministicMakerAAAPSP):
     return [float(ctY) / weight - float(ctN) / (1 - weight)]
 
   def madeSpLogDensityOfCountsBound(self, _aux): return 0
+
+registerBuiltinSP("make_suff_stat_bernoulli", typed_nr(MakerSuffBernoulliOutputPSP(),
+                                                       [t.NumberType()], SPType([], t.BoolType())))
 
 class ExactlyOutputPSP(RandomPSP):
   def simulate(self, args):
@@ -356,6 +382,9 @@ class ExactlyOutputPSP(RandomPSP):
     is willing to pretend to be able to stochastically return any object.
     The second argument, if given, is the penalty (in log space) for a mismatch.
     If not given, taken to be -infinity."""
+
+registerBuiltinSP("exactly", typed_nr(ExactlyOutputPSP(),
+                                      [t.AnyType(), t.NumberType()], t.AnyType(), min_req_args=1))
 
 class SuffPoissonSP(SP):
 # SP for Poisson, maintaining sufficient statistics.

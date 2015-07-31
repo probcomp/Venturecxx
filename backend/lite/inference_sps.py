@@ -26,6 +26,7 @@ from venture.exception import VentureException
 from venture.lite.value import VentureForeignBlob
 from venture.lite.exception import VentureValueError
 from venture.engine.plot_spec import PlotSpec
+from venture.lite.records import VentureRecord, RecordType
 
 class InferPrimitiveOutputPSP(psp.DeterministicPSP):
   def __init__(self, val, klass, desc, tp):
@@ -39,10 +40,39 @@ class InferPrimitiveOutputPSP(psp.DeterministicPSP):
       # Hack to allow MadeRiplMethodInferOutputPSP s to blame the
       # maker application for errors.
       result.addr = args.node.address
-    return sp.VentureSPRecord(sp.SP(psp.NullRequestPSP(),
-                                    psp.TypedPSP(result, self.tp)))
+    result_sp = sp.VentureSPRecord(sp.SP(psp.NullRequestPSP(),
+                                         psp.TypedPSP(result, self.tp.field_type)))
+    # See note below
+    return VentureRecord("inference_action", [result_sp])
   def description(self, _name):
     return self.desc
+
+# Note on returning VentureRecord from InferPrimitiveOutputPSP.
+
+# Returning an SP inside a structure currently doesn't play very well
+# with PETs, because it fools the detection of constructed
+# VentureSPRecords and the allocation of SPRefs for them.  The effect
+# here is that tracing one of these inference actions in the Lite
+# backend may produce strange effects.
+#
+# Options:
+# - Don't wrap these primitives in inference action records, and
+#   instead define compounds in the inference prelude that do that.
+#   - Requires optional and variadic arguments in compounds
+# - Hack the detector in regen to recognize VentureSPRecords in
+#   structures
+#   - Problem: will be a (small?) performance hit, due to inspecting
+#     every structure every time
+#   - Problem: not clear whether the result will satisfy the intended
+#     invariants, because I no longer remember what the invariants
+#     are.
+#  - Migrate the responsibility for SPRefs into the primitive maker
+#    SPs (possibly including the current detector as a convenience).
+#    - Not clear how to do this or whether it will work.
+#  - Don't worry about it, since the inference SPs are currently only
+#    used by the untraced backend anyway.
+#
+# Decision: Leaving it.
 
 class MadeInferPrimitiveOutputPSP(psp.LikelihoodFreePSP):
   def __init__(self, name, exp):
@@ -112,7 +142,10 @@ class MadeActionOutputPSP(psp.DeterministicPSP):
     return self.desc
 
 def infer_action_type(return_type):
-  return sp.SPType([t.ForeignBlobType()], t.PairType(return_type, t.ForeignBlobType()))
+  func_type = sp.SPType([t.ForeignBlobType()], t.PairType(return_type, t.ForeignBlobType()))
+  ans_type = RecordType("inference_action", "returning " + return_type.name())
+  ans_type.field_type = func_type
+  return ans_type
 
 def infer_action_maker_type(args_types, return_type=None, **kwargs):
   # Represent the underlying trace as a ForeignBlob for now.
@@ -121,6 +154,7 @@ def infer_action_maker_type(args_types, return_type=None, **kwargs):
   return sp.SPType(args_types, infer_action_type(return_type), **kwargs)
 
 def typed_inf_sp(name, tp, klass, desc=""):
+  assert isinstance(tp, sp.SPType)
   return no_request(psp.TypedPSP(InferPrimitiveOutputPSP(name, klass=klass, desc=desc, tp=tp.return_type), tp))
 
 def trace_method_sp(name, tp, desc=""):
@@ -675,9 +709,11 @@ The principal nodes must be able to assess.  Otherwise behaves like
 likelihood_at, except that it includes the log densities of
 non-observed stochastic nodes."""),
 
-  [ "particle_log_weights", no_request(psp.TypedPSP(MadeEngineMethodInferOutputPSP("particle_log_weights", [], desc="""\
+  engine_method_sp("particle_log_weights",
+                   infer_action_maker_type([], t.ArrayUnboxedType(t.NumberType())),
+                   desc="""\
 Return the weights of all extant particles as an array of numbers (in log space).
-"""), infer_action_type(t.ArrayUnboxedType(t.NumberType())))) ],
+"""),
 
   engine_method_sp("set_particle_log_weights",
                    infer_action_maker_type([t.ArrayUnboxedType(t.NumberType())]),

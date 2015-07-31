@@ -169,14 +169,17 @@ class Engine(object):
   def incorporate(self): self.model.incorporate()
 
   def evaluate(self, program):
+    return self.raw_evaluate([v.sym("autorun"), program])
+
+  def raw_evaluate(self, program):
     with self.inference_trace():
-      did = self._do_evaluate(program)
+      did = self._do_raw_evaluate(program)
       ans = self.infer_trace.extractValue(did)
       self.infer_trace.uneval(did) # TODO This becomes "forget" after the engine.Trace wrapper
       # Return the forgotten did to better coordinate with the sivm
       return (did, ans)
 
-  def _do_evaluate(self, program):
+  def _do_raw_evaluate(self, program):
     did = self.nextBaseAddr()
     self.infer_trace.eval(did, program)
     return did
@@ -192,7 +195,7 @@ class Engine(object):
     try:
       self.swapped_model = True
       with self.inference_trace():
-        did = self._do_evaluate(program)
+        did = self._do_raw_evaluate(program)
         ans = self.infer_trace.extractRaw(did)
         self.infer_trace.uneval(did) # TODO This becomes "forget" after the engine.Trace wrapper
         return (ans, model)
@@ -206,7 +209,7 @@ class Engine(object):
       self.start_continuous_inference(program[1])
       return (None, None) # The core_sivm expects a 2-tuple
     else:
-      return self.evaluate([v.sym("run"), program])
+      return self.raw_evaluate([v.sym("run"), program])
 
   def is_infer_loop_program(self, program):
     return isinstance(program, list) and isinstance(program[0], dict) and program[0]["value"] == "loop"

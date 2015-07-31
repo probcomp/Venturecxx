@@ -33,13 +33,13 @@ def testAssertSmoke2():
 
 @on_inf_prim("particle_log_weights")
 def testWeightsSmoke():
-  get_ripl().infer("(do (w <- particle_log_weights) (assert (eq 0 (lookup w 0))))")
+  get_ripl().infer("(do (w <- (particle_log_weights)) (assert (eq 0 (lookup w 0))))")
 
 @on_inf_prim("set_particle_log_weights")
 def testWeightsSmoke2():
   get_ripl().infer("""(do
   (set_particle_log_weights (array -1))
-  (w <- particle_log_weights)
+  (w <- (particle_log_weights))
   (assert (eq -1 (lookup w 0))))""")
 
 @on_inf_prim("likelihood_at")
@@ -74,8 +74,8 @@ def testPosteriorSmoke():
 
 @on_inf_prim("quasiquote")
 def testExplicitQuasiquotation():
-  eq_(3, get_ripl().infer("(lambda (t) (pair (lookup (quasiquote ((unquote (+ 1 2)) 5)) 0) t))"))
+  eq_(3, get_ripl().infer("(inference_action (lambda (t) (pair (lookup (quasiquote ((unquote (+ 1 2)) 5)) 0) t)))"))
 
 @on_inf_prim("quasiquote")
 def testExplicitQuasiquotation2():
-  eq_(3, get_ripl().infer("(lambda (t) (pair (lookup `(,(+ 1 2) 5) 0) t))"))
+  eq_(3, get_ripl().infer("(inference_action (lambda (t) (pair (lookup `(,(+ 1 2) 5) 0) t)))"))

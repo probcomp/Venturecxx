@@ -444,15 +444,18 @@ class Trace(object):
     return len(self.rcs)
 
   def primitive_infer(self,exp):
-    assert len(exp) >= 4
+    assert len(exp) >= 3
     (operator, scope, block) = exp[0:3]
     scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
-    maybe_transitions = exp[-1]
-    if isinstance(maybe_transitions, bool):
-      # The last item was the parallelism indicator
-      transitions = int(exp[-2])
+    if len(exp) == 3:
+      transitions = 1
     else:
-      transitions = int(exp[-1])
+      maybe_transitions = exp[-1]
+      if isinstance(maybe_transitions, bool):
+        # The last item was the parallelism indicator
+        transitions = int(exp[-2])
+      else:
+        transitions = int(exp[-1])
     if not self.scopeHasEntropy(scope):
       return
     for _ in range(transitions):
@@ -642,6 +645,8 @@ function.
     pnodes = scaffold.getPrincipalNodes()
     from infer.mh import getCurrentValues
     currentValues = getCurrentValues(self, pnodes)
+    for val in currentValues:
+      assert val is not None, "Tried to get_current_values of a detached subproblem"
     return currentValues
 
   def block_values(self, scope, block):
