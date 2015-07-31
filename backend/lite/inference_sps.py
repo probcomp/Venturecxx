@@ -709,9 +709,11 @@ The principal nodes must be able to assess.  Otherwise behaves like
 likelihood_at, except that it includes the log densities of
 non-observed stochastic nodes."""),
 
-  [ "particle_log_weights", no_request(psp.TypedPSP(MadeEngineMethodInferOutputPSP("particle_log_weights", [], desc="""\
+  engine_method_sp("particle_log_weights",
+                   infer_action_maker_type([], t.ArrayUnboxedType(t.NumberType())),
+                   desc="""\
 Return the weights of all extant particles as an array of numbers (in log space).
-  """), infer_action_type(t.ArrayUnboxedType(t.NumberType())).field_type)) ],
+"""),
 
   engine_method_sp("set_particle_log_weights",
                    infer_action_maker_type([t.ArrayUnboxedType(t.NumberType())]),

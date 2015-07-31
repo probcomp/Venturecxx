@@ -33,13 +33,13 @@ def testAssertSmoke2():
 
 @on_inf_prim("particle_log_weights")
 def testWeightsSmoke():
-  get_ripl().infer("(do (w <- (inference_action particle_log_weights)) (assert (eq 0 (lookup w 0))))")
+  get_ripl().infer("(do (w <- (particle_log_weights)) (assert (eq 0 (lookup w 0))))")
 
 @on_inf_prim("set_particle_log_weights")
 def testWeightsSmoke2():
   get_ripl().infer("""(do
   (set_particle_log_weights (array -1))
-  (w <- (inference_action particle_log_weights))
+  (w <- (particle_log_weights))
   (assert (eq -1 (lookup w 0))))""")
 
 @on_inf_prim("likelihood_at")
