@@ -28,7 +28,7 @@ import types as t
 from exception import VentureValueError
 
 from sp_registry import registerBuiltinSP
-from sp_helper import typed_nr
+from sp_help import typed_nr
 
 class DiscretePSP(RandomPSP):
   def logDensityBound(self, _x, _args): return 0
