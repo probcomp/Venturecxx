@@ -111,7 +111,7 @@ class MVNormalOutputPSP(RandomPSP):
 registerBuiltinSP("multivariate_normal", typed_nr(MVNormalOutputPSP(),
                                                   [t.HomogeneousArrayType(t.NumberType()), t.SymmetricMatrixType()],
                                                   t.HomogeneousArrayType(t.NumberType())))
-class InverseWishartPSP(RandomPSP):
+class InverseWishartOutputPSP(RandomPSP):
   def simulate(self, args):
     (lmbda, dof) = self.__parse_args__(args)
     p = len(lmbda)
@@ -172,10 +172,10 @@ class InverseWishartPSP(RandomPSP):
     (lmbda, dof) = args.operandValues()
     return (np.array(lmbda), dof)
 
-registerBuiltinSP("inv_wishart", typed_nr(InverseWishartPSP(),
+registerBuiltinSP("inv_wishart", typed_nr(InverseWishartOutputPSP(),
                                           [t.SymmetricMatrixType(), t.PositiveType()], t.SymmetricMatrixType()))
 
-class WishartPSP(RandomPSP):
+class WishartOutputPSP(RandomPSP):
   '''
     Returns a sample from the Wishart distn, conjugate prior for precision matrices.
   '''
@@ -241,7 +241,7 @@ class WishartPSP(RandomPSP):
     (sigma, dof) = args.operandValues()
     return (np.array(sigma), dof)
 
-registerBuiltinSP("wishart", typed_nr(WishartPSP(),
+registerBuiltinSP("wishart", typed_nr(WishartOutputPSP(),
                                       [t.SymmetricMatrixType(), t.PositiveType()], t.SymmetricMatrixType()))
 
 half_log2pi = 0.5 * math.log(2 * math.pi)
