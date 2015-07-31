@@ -481,6 +481,9 @@ class MakerCGammaPoissonOutputPSP(DeterministicMakerAAAPSP):
         'While this procedure itself is deterministic, the returned sampler '\
         'is stochastic.' % name
 
+registerBuiltinSP("make_gamma_poisson", typed_nr(MakerCGammaPoissonOutputPSP(),
+                                                 [t.PositiveType(), t.PositiveType()], SPType([], t.CountType())))
+
 
 class UGammaPoissonOutputPSP(SuffPoissonOutputPSP):
 # Uncollapsed Gamma Poisson PSP.
@@ -530,6 +533,9 @@ class UGammaPoissonAAALKernel(SimulationAAALKernel):
 
   def weightBound(self, _trace, _value, _args): return 0
 
+registerBuiltinSP("make_uc_gamma_poisson", typed_nr(MakerUGammaPoissonOutputPSP(),
+                                                    [t.PositiveType(), t.PositiveType()], SPType([], t.CountType())))
+
 class MakerSuffPoissonOutputPSP(DeterministicMakerAAAPSP):
 # Non-conjugate AAA Poisson
 
@@ -554,3 +560,6 @@ class MakerSuffPoissonOutputPSP(DeterministicMakerAAAPSP):
 
   def madeSpLogDensityOfCountsBound(self, _aux):
     return 0
+
+registerBuiltinSP("make_suff_stat_poisson", typed_nr(MakerSuffPoissonOutputPSP(),
+                                                     [t.PositiveType()], SPType([], t.CountType())))

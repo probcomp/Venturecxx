@@ -698,6 +698,9 @@ class MakerCNigNormalOutputPSP(DeterministicMakerAAAPSP):
         'sampler. While this procedure itself is deterministic, the returned '\
         'sampler is stochastic.' % name
 
+registerBuiltinSP("make_nig_normal", typed_nr(MakerCNigNormalOutputPSP(),
+                                              [t.NumberType(), t.PositiveType(), t.PositiveType(), t.PositiveType()],
+                                              SPType([], t.NumberType())))
 
 class MakerUNigNormalOutputPSP(RandomPSP):
 # Uncollapsed AAA NigNormal
@@ -756,6 +759,11 @@ class UNigNormalAAALKernel(SimulationAAALKernel):
   def weightBound(self, _trace, _value, _args):
     return 0
 
+
+registerBuiltinSP("make_uc_nig_normal", typed_nr(MakerUNigNormalOutputPSP(),
+                                                 [t.NumberType(), t.PositiveType(), t.PositiveType(), t.PositiveType()],
+                                                 SPType([], t.NumberType())))
+
 class MakerSuffNormalOutputPSP(DeterministicMakerAAAPSP):
 # Non-conjugate AAA Normal
 
@@ -786,3 +794,6 @@ class MakerSuffNormalOutputPSP(DeterministicMakerAAAPSP):
 
   def madeSpLogDensityOfCountsBound(self, _aux):
     return 0
+
+registerBuiltinSP("make_suff_stat_normal", typed_nr(MakerSuffNormalOutputPSP(),
+                                                    [t.NumberType(), t.PositiveType], SPType([], t.NumberType())))
