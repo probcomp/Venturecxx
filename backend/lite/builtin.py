@@ -18,9 +18,6 @@
 from sp_registry import registerBuiltinSP, builtInSPs, builtInSPsIter # Importing for re-export pylint:disable=unused-import
 
 import value as v
-import types as t
-from utils import raise_
-from exception import VentureValueError
 
 from sp_help import *
 
@@ -49,18 +46,3 @@ import gp
 
 def builtInValues():
   return { "true" : v.VentureBool(True), "false" : v.VentureBool(False), "nil" : v.VentureNil() }
-
-def debug_print(label, value):
-  print 'debug ' + label + ': ' + str(value)
-  return value
-
-registerBuiltinSP("debug",
-                  deterministic_typed(debug_print, [t.SymbolType(), t.AnyType("k")], t.AnyType("k"),
-                                      descr = "Print the given value, labeled by a Symbol. Return the value. Intended for debugging or for monitoring execution."))
-
-
-registerBuiltinSP("zip", deterministic_typed(zip, [t.ListType()], t.HomogeneousListType(t.ListType()), variadic=True,
-                                             descr="zip returns a list of lists, where the i-th nested list contains the i-th element from each of the input arguments"))
-
-registerBuiltinSP("value_error", deterministic_typed(lambda s: raise_(VentureValueError(str(s))),
-                                                     [t.AnyType()], t.AnyType()))
