@@ -306,6 +306,18 @@ prelude = [
   (let ((result ((action_func action) __the_inferrer__)))
     (first result)))"""],
 
+["autorun", """\
+.. function:: autorun(<object>)
+
+  :rtype: <object>
+
+   If the argument is an inference action, run it and return the result.  Otherwise, return the argument.""",
+"""\
+(lambda (thing)
+  (if (is_inference_action thing)
+      (run thing)
+      thing))"""],
+
 ["default_markov_chain", """\
 .. function:: default_markov_chain(transitions : int)
 

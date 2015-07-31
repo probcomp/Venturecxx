@@ -278,3 +278,11 @@ def testAnnotationSuppressionSmoke():
     ripl.predict("(f)")
   # I want annotation not to succeed
   assert "stack_trace" not in cm.exception.data
+
+def testAnnotateErrorInEvaluate():
+  ripl = get_ripl()
+  err.assert_error_message_contains("""\
+(autorun (badness))
+          ^^^^^^^
+""",
+  ripl.evaluate, "(badness)")
