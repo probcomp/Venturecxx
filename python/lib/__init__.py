@@ -16,3 +16,5 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+from venture.version import __version__
