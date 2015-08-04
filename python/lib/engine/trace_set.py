@@ -193,6 +193,8 @@ if freeze has been used.
       self.log_weights[i] += increment
 
   def for_each_trace_sequential(self, f):
+    # Rather than sending the engine to the traces, bring the traces
+    # to the engine.
     # TODO is there any way to do something like this while leveraging
     # parallelism?
     traces = self.retrieve_traces()
