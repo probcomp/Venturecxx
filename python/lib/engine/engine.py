@@ -216,7 +216,7 @@ class Engine(object):
     program = [v.sym("run"), v.quote(stack_dict_action)]
     def do_action(_trace):
       with self.inference_trace():
-        did = self._do_evaluate(program)
+        did = self._do_raw_evaluate(program)
         ans = self.infer_trace.extractRaw(did)
         self.infer_trace.uneval(did) # TODO This becomes "forget" after the engine.Trace wrapper
         return ans
