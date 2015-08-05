@@ -15,9 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from nose.tools import assert_equals, eq_
+
 from venture.test.config import get_ripl, broken_in, on_inf_prim
 from venture.test.errors import assert_error_message_contains
-from nose.tools import assert_equals
 
 @on_inf_prim("none")
 def testFix1():
@@ -27,6 +28,14 @@ def testFix1():
   (f 5))
 """, label="pid")
   assert_equals(ripl.report("pid"), 17.0)
+
+@on_inf_prim("none")
+def testFix1b():
+  ripl = get_ripl()
+  eq_(17.0, ripl.evaluate("""
+(letrec ((f (lambda (n) (if (> n 0) (f (- n 1)) 17))))
+  (f 5))
+"""))
 
 @on_inf_prim("none")
 def testFix2():
