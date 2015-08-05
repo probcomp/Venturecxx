@@ -19,7 +19,7 @@ import sp
 import psp
 import value as v
 import types as t
-from builtin import no_request, deterministic_typed
+from sp_help import no_request, deterministic_typed
 from exception import VentureError, VentureTypeError
 from venture.engine.inference import Dataset
 from venture.exception import VentureException

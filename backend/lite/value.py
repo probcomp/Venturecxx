@@ -121,6 +121,8 @@ class VentureValue(object):
   def map_real(self, _f): return 0
 
   def expressionFor(self):
+    # TODO Do we actually need to be able to override this anywhere?
+    # Or does quote insertion work reliably now?
     return v.quote(self.asStackDict(None))
 
   def isValidCompoundForm(self): return False

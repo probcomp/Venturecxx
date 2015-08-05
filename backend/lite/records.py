@@ -20,7 +20,7 @@ from numbers import Number
 import value as vv
 import types as t
 from exception import VentureTypeError
-import builtin
+import sp_help
 
 from sp_registry import registerBuiltinSP
 
@@ -115,8 +115,8 @@ class VentureRecord(vv.VentureValue):
 
 def record(tag, arity):
   typ = RecordType(tag)
-  tester = builtin.type_test(typ)
-  constructor = builtin.deterministic_typed(lambda *fields: VentureRecord(tag, fields),
+  tester = sp_help.type_test(typ)
+  constructor = sp_help.deterministic_typed(lambda *fields: VentureRecord(tag, fields),
                                             [t.AnyType()] * arity, typ,
                                             descr="%s" + " constructs a %s record" % tag)
   def accessor_func(r, i):
@@ -125,7 +125,7 @@ def record(tag, arity):
     else:
       raise VentureTypeError("Accessor for field %s expected record of type %s but got %s" % (i, tag, r))
   def accessor(i):
-    return builtin.deterministic_typed(lambda r: accessor_func(r, i),
+    return sp_help.deterministic_typed(lambda r: accessor_func(r, i),
                                        [typ], t.AnyType(),
                                        descr="%s" + " extracts the %s field of a %s record" % (i, tag))
 

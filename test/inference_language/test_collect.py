@@ -24,7 +24,7 @@ from venture.test.stats import statisticalTest, reportKnownContinuous
 from venture.test.config import get_ripl, default_num_samples, on_inf_prim
 from venture.lite.psp import LikelihoodFreePSP
 import venture.lite.types as t
-from venture.lite.builtin import typed_nr
+from venture.lite.sp_help import typed_nr
 
 def extract_from_dataset(result, names):
   return result.asPandas()[names]

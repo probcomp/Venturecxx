@@ -77,7 +77,7 @@ def apply(address, nodes, env):
   requests = applyPSP(spr.sp.requestPSP, req_args)
   req_nodes = [evalRequest(req_args, spr, r) for r in requests.esrs]
   assert not requests.lsrs, "The untraced evaluator does not yet support LSRs."
-  return applyPSP(spr.sp.outputPSP, OutputArgs(address, nodes[1:], env, req_nodes))
+  return applyPSP(spr.sp.outputPSP, OutputArgs(address, nodes[1:], env, req_nodes, requests))
 
 class RequestArgs(object):
   "A package containing all the evaluation context information that a RequestPSP might need, parallel to venture.lite.node.Args"
@@ -95,12 +95,14 @@ class RequestArgs(object):
 
 class OutputArgs(RequestArgs):
   "A package containing all the evaluation context information that an OutputPSP might need, parallel to venture.lite.node.Args"
-  def __init__(self, address, inputs, env, esr_nodes):
+  def __init__(self, address, inputs, env, esr_nodes, requests):
     super(OutputArgs, self).__init__(address, inputs, env)
     self.esr_nodes = esr_nodes
+    self.requests = requests # This field is used by "fix" for getting the environment to modify
 
   def esrNodes(self): return self.esr_nodes
   def esrValues(self): return [n.value for n in self.esr_nodes]
+  def requestValue(self): return self.requests
 
 def applyPSP(psp, args):
   assert isinstance(psp, PSP)

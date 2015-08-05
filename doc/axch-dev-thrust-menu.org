@@ -474,8 +474,15 @@ branch, in the backend/hs directory.
 Can use any surprises from profiling the test corpus for more inspiration.
 *** Project: Flush the Args struct
 in a way that simplifies the SP interface
-- likely to improve performance as well
+
+Some (much?) of the performance gain here has been gained by replacing
+the Args fields with methods, such that they are not computed unless
+called for.
+- Could still memoize the methods, if desired
 *** Project: Performance: Share static dependency info across instances of the same family
+*** Project: Performance: Vectorized versions of all the SPs (in Lite and Puma)
+Could probably bum another ~30% on the linear regression example (1-D,
+20 data points) in Lite by staring at the profile
 *** Project: Finish the Foreign SP Author's guide (notes from 4/20/15)
 - Note: cleaning up LKernels would simplify the foreign interface
   (somewhat)

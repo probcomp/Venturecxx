@@ -21,7 +21,7 @@ from venture.test.config import get_ripl, broken_in
 from venture.exception import underline
 from venture.lite.psp import LikelihoodFreePSP
 from venture.lite import types as t
-from venture.lite.builtin import typed_nr
+from venture.lite.sp_help import typed_nr
 
 @broken_in('puma', "Profiler only implemented for Lite")
 def test_profiling1():

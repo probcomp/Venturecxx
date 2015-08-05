@@ -23,7 +23,6 @@ from testconfig import config
 from venture.test.stats import statisticalTest, reportKnownDiscrete, reportSameDiscrete
 from venture.test.config import get_ripl, collectStateSequence, on_inf_prim, default_num_transitions_per_sample, gen_on_inf_prim
 from venture.lite import builtin
-from venture.lite.builtin import binaryNum
 
 @statisticalTest
 def _test_serialize_program(v, label, action):

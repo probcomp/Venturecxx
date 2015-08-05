@@ -5,7 +5,7 @@ import matplotlib.colors as clr
 import pandas as pd
 
 import venture.lite.types as t
-from venture.lite.builtin import deterministic_typed
+from venture.lite.sp_help import deterministic_typed
 
 def array_from_dataset(d):
     [ind_name] = d.ind_names

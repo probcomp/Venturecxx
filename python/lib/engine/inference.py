@@ -168,7 +168,7 @@ class Infer(object):
   def particle_log_weights(self):
     return self.engine.model.log_weights
   def set_particle_log_weights(self, new_weights):
-    assert len(new_weights) == len(self.engine.model.log_weights)
+    assert len(new_weights) == len(self.engine.model.log_weights), "set_particle_log_weights got %d weights, but there are %d particles"
     self.engine.model.log_weights = new_weights
   def particle_normalized_probs(self):
     return logWeightsToNormalizedDirect(self.particle_log_weights())

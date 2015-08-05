@@ -8,7 +8,7 @@ import scipy.spatial.distance as spdist
 import venture.lite.types as t
 import venture.lite.sp as sp
 from venture.lite.function import VentureFunction
-from venture.lite.builtin import deterministic_typed
+from venture.lite.sp_help import deterministic_typed
 import gpmem
 
 

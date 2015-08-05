@@ -18,7 +18,7 @@
 from venture.test.config import get_ripl, defaultInfer, skipWhenInParallel, collectSamples
 from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.lite import builtin
-from venture.lite.builtin import binaryNum
+from venture.lite.sp_help import binaryNum
 
 import numpy as np
 from nose.tools import assert_raises_regexp
