@@ -479,11 +479,11 @@ class CGammaPoissonOutputPSP(DiscretePSP):
   def simulate(self, args):
     # Posterior predictive is Negative Binomial.
     # http://www.stat.wisc.edu/courses/st692-newton/notes.pdf#page=50
-    (alpha_n, beta_n) = self.updatedParams(args.spaux)
+    (alpha_n, beta_n) = self.updatedParams(args.spaux())
     return scipy.stats.nbinom.rvs(alpha_n, (beta_n)/(beta_n+1))
 
   def logDensity(self, value, args):
-    (alpha_n, beta_n) = self.updatedParams(args.spaux)
+    (alpha_n, beta_n) = self.updatedParams(args.spaux())
     return scipy.stats.nbinom.logpmf(value, alpha_n, (beta_n)/(beta_n+1))
 
   def logDensityOfCounts(self, aux):
