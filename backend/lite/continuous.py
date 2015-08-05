@@ -639,7 +639,7 @@ class SuffNormalSPAux(SPAux):
 
 
 class SuffNormalOutputPSP(RandomPSP):
-# Generic PSP maintaining sufficient statistics.
+# Generic Normal PSP maintaining sufficient statistics.
 
   def __init__(self, mu, sigma):
     self.mu = mu
@@ -673,6 +673,9 @@ class SuffNormalOutputPSP(RandomPSP):
     term4 = self.mu/self.sigma**2 * xsum
     return term1 + term2 + term3 + term4
 
+class UNigNormalOutputPSP(SuffNormalOutputPSP):
+# Collapsed NormalInverseGamma (prior) for Normal (likelihood)
+  pass
 
 class CNigNormalOutputPSP(RandomPSP):
 # Collapsed NormalInverseGamma (prior) for Normal (likelihood)
@@ -743,8 +746,8 @@ class MakerCNigNormalOutputPSP(DeterministicMakerAAAPSP):
         'sampler is stochastic.' % name
 
 registerBuiltinSP("make_nig_normal", typed_nr(MakerCNigNormalOutputPSP(),
-                                              [t.NumberType(), t.PositiveType(), t.PositiveType(), t.PositiveType()],
-                                              SPType([], t.NumberType())))
+  [t.NumberType(), t.PositiveType(), t.PositiveType(),t.PositiveType()],
+  SPType([], t.NumberType())))
 
 class MakerUNigNormalOutputPSP(RandomPSP):
 # Uncollapsed AAA NigNormal
@@ -761,7 +764,7 @@ class MakerUNigNormalOutputPSP(RandomPSP):
     # https://en.wikipedia.org/wiki/Normal-inverse-gamma_distribution#Generating_normal-inverse-gamma_random_variates
     sigma2 = scipy.stats.invgamma.rvs(a, scale=b)
     mu = scipy.stats.norm.rvs(loc=m, scale=math.sqrt(sigma2*V))
-    output = TypedPSP(SuffNormalOutputPSP(mu, math.sqrt(sigma2)),
+    output = TypedPSP(UNigNormalOutputPSP(mu, math.sqrt(sigma2)),
       SPType([], t.NumberType()))
     return VentureSPRecord(SuffNormalSP(NullRequestPSP(), output))
 
@@ -805,8 +808,8 @@ class UNigNormalAAALKernel(SimulationAAALKernel):
 
 
 registerBuiltinSP("make_uc_nig_normal", typed_nr(MakerUNigNormalOutputPSP(),
-                                                 [t.NumberType(), t.PositiveType(), t.PositiveType(), t.PositiveType()],
-                                                 SPType([], t.NumberType())))
+  [t.NumberType(), t.PositiveType(), t.PositiveType(), t.PositiveType()],
+    SPType([], t.NumberType())))
 
 class MakerSuffNormalOutputPSP(DeterministicMakerAAAPSP):
 # Non-conjugate AAA Normal
@@ -840,4 +843,4 @@ class MakerSuffNormalOutputPSP(DeterministicMakerAAAPSP):
     return 0
 
 registerBuiltinSP("make_suff_stat_normal", typed_nr(MakerSuffNormalOutputPSP(),
-                                                    [t.NumberType(), t.PositiveType], SPType([], t.NumberType())))
+  [t.NumberType(), t.PositiveType], SPType([], t.NumberType())))
