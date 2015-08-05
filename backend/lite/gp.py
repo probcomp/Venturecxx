@@ -24,6 +24,7 @@ from exception import VentureValueError
 from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
 from sp import SP, SPAux, VentureSPRecord, SPType
 import types as t
+import value as v
 from sp_help import dispatching_psp
 from sp_registry import registerBuiltinSP
 
@@ -172,6 +173,13 @@ class GPSPAux(SPAux):
     self.samples = samples
   def copy(self):
     return GPSPAux(copy.copy(self.samples))
+  def asVentureValue(self):
+    def encode(xy):
+      # (x,y) = xy
+      # Since we are assuming the domain of the GP is numeric, the
+      # following suffices:
+      return v.VentureArray(map(v.VentureNumber, xy))
+    return v.VentureArray([encode(xy) for xy in self.samples.items()])
 
 class GPSP(SP):
   def __init__(self, mean, covariance):
