@@ -197,6 +197,8 @@ if freeze has been used.
     # to the engine.
     # TODO is there any way to do something like this while leveraging
     # parallelism?
+    mode = self.mode
+    self.mode = 'sequential'
     traces = self.retrieve_traces()
     weights = self.log_weights
     try:
@@ -213,6 +215,7 @@ if freeze has been used.
       weights = new_weights
       return res
     finally:
+      self.mode = mode
       self.create_trace_pool(traces, weights)
 
   def primitive_infer(self, exp):

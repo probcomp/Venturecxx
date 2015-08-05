@@ -66,8 +66,6 @@ def testForEachParticleCustomMH():
 @broken_in("puma", "Does not support the regen SP yet")
 @statisticalTest
 def checkForEachParticleCustomMH(mode):
-  if mode == "_multiprocess":
-    raise SkipTest("Fails due to mystery PicklingError.")
   n = max(2, default_num_samples())
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.define("drift_mh", """\
