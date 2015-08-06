@@ -75,7 +75,10 @@ class SpawnVentureExpect(pexpect.spawn):
     # inserts SPC BS at end of line, whereas Linux inserts SPC CR).
     def remove_control(strn):
       return strn.translate(None, ''.join(map(chr, range(32 + 1) + [127])))
-    assert remove_control(check_echo) == remove_control(cmd)
+    # Turns out removing control characters is not enough to get
+    # equality, because if the prompt and the command together are too
+    # long, the pty might echo part of it
+    assert remove_control(check_echo).endswith(remove_control(cmd))
 
   def expect_lines(self, lines):
     for line in lines:
