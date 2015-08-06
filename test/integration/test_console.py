@@ -367,12 +367,5 @@ def __venture_start__(*args, **kwargs):
   assert "" == vnt.read_to_prompt()
   vnt.send_command("reload")  # No longer have anything to reload.
   assert "" == vnt.read_to_prompt()
-  # TODO: actually use a newly available command from the plugin?
   os.unlink(vnts)
   os.unlink(plgn)
-
-# TODO:
-# start_continuous_inference
-# dump_profile_data
-# shortcuts/__init__.py?
-# graphics
