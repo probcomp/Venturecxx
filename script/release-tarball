@@ -23,7 +23,7 @@ root_dirname=$(dirname $(dirname $my_abs_path))
 echo "$root_dirname"
 cd $root_dirname
 
-release=`grep "version_str=" script/venture | cut -d '"' -f 2`
+release=`cat VERSION`
 if [[ ! -z $1 ]]; then
     release=$1
 fi
