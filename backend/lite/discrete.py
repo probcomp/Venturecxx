@@ -420,7 +420,7 @@ class SuffPoissonSPAux(SPAux):
     return aux
 
   def cts(self):
-    return [self.xsum,self.ctN]
+    return [self.xsum, self.ctN]
 
 
 class SuffPoissonOutputPSP(DiscretePSP):
@@ -461,7 +461,7 @@ class CGammaPoissonOutputPSP(DiscretePSP):
     self.beta = beta
 
   def updatedParams(self, aux):
-    [ctN, xsum] = aux.cts()
+    [xsum, ctN] = aux.cts()
     alpha_n = self.alpha + xsum
     beta_n = self.beta + ctN
     return (alpha_n, beta_n)
