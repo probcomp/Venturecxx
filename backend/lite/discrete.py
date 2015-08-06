@@ -684,7 +684,7 @@ class UGammaPoissonAAALKernel(SimulationAAALKernel):
 
 registerBuiltinSP("make_uc_gamma_poisson",
   typed_nr(MakerUGammaPoissonOutputPSP(), [t.PositiveType(), t.PositiveType()],
-    SPType([], t.CountType())))
+  SPType([], t.CountType())))
 
 
 class MakerSuffPoissonOutputPSP(DeterministicMakerAAAPSP):
@@ -714,4 +714,4 @@ class MakerSuffPoissonOutputPSP(DeterministicMakerAAAPSP):
 
 registerBuiltinSP("make_suff_stat_poisson",
   typed_nr(MakerSuffPoissonOutputPSP(), [t.PositiveType()], SPType([],
-    t.CountType())))
+  t.CountType())))
