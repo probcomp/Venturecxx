@@ -307,7 +307,7 @@ def test_shell():
   # the rest of the line, so this is as if you had typed ("echo foo") at the
   # shell.
   vnt.send_command('shell("echo foo")')
-  vnt.expect_exact('command not found')
+  vnt.expect('not found')
 
 def test_loading():
   vnt = spawn_venture()
