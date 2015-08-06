@@ -75,7 +75,10 @@ class SpawnVentureExpect(pexpect.spawn):
     # inserts SPC BS at end of line, whereas Linux inserts SPC CR).
     def remove_control(strn):
       return strn.translate(None, ''.join(map(chr, range(32 + 1) + [127])))
-    assert remove_control(check_echo) == remove_control(cmd)
+    # Turns out removing control characters is not enough to get
+    # equality, because if the prompt and the command together are too
+    # long, the pty might echo part of it
+    assert remove_control(check_echo).endswith(remove_control(cmd))
 
   def expect_lines(self, lines):
     for line in lines:
@@ -307,7 +310,7 @@ def test_shell():
   # the rest of the line, so this is as if you had typed ("echo foo") at the
   # shell.
   vnt.send_command('shell("echo foo")')
-  vnt.expect_exact('command not found')
+  vnt.expect('not found')
 
 def test_loading():
   vnt = spawn_venture()
@@ -367,7 +370,6 @@ def __venture_start__(*args, **kwargs):
   assert "" == vnt.read_to_prompt()
   vnt.send_command("reload")  # No longer have anything to reload.
   assert "" == vnt.read_to_prompt()
-  # TODO: actually use a newly available command from the plugin?
   os.unlink(vnts)
   os.unlink(plgn)
 
@@ -387,11 +389,3 @@ def test_plots_to_file():
   vnt.expect(r': PNG image data, \d\d+ x \d\d+, \d-bit.*\r\n')
 
 
-# TODO:
-# start_continuous_inference
-# dump_profile_data
-# shortcuts/__init__.py?
-# all commands respond to help?
-# help links to expanded docs online?
-# Would be neat to implement "examples" like help that greps the tutorials for
-#    instances of the function you're asking about...
