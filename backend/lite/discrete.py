@@ -392,7 +392,7 @@ class SuffPoissonSP(SP):
     return SuffPoissonSPAux()
 
   def show(self,spaux):
-    return spaux.cts()
+    return self.outputPSP.psp.show(spaux)
 
 class SuffPoissonSPAux(SPAux):
 # SPAux for Poisson. The sufficent statistics for N observations are
@@ -443,17 +443,43 @@ class SuffPoissonOutputPSP(DiscretePSP):
     return scipy.stats.poisson.rvs(mu=self.mu)
 
   def logDensity(self, value, _args):
-    return scipy.stats.poisson.logpmf(value, self.mu)
+    return scipy.stats.poisson.logpmf(value, mu=self.mu)
 
   def logDensityOfCounts(self, aux):
     # Derived from
     # http://www.stat.cmu.edu/~larry/=stat705/Lecture5.pdf#page=3
     [xsum, ctN] = aux.cts()
-    return -ctN * self.mu + xsum * math.log(mu)
+    return -ctN * self.mu + xsum * math.log(self.mu)
+
+  def show(self, spaux):
+    return {'type': 'suff_stat_poisson',
+      'mu': self.mu,
+      'ctN': spaux.ctN,
+      'xsum': spaux.xsum
+      }
+
+
+class UGammaPoissonOutputPSP(SuffPoissonOutputPSP):
+# Uncollapsed Gamma Poisson PSP.
+
+  def __init__(self, mu, alpha, beta):
+    SuffPoissonOutputPSP.__init__(self, mu)
+    self.alpha = alpha
+    self.beta = beta
+
+  def show(self, spaux):
+    return {'type': 'uc_gamma_poisson',
+      'mu': self.mu,
+      'alpha': self.alpha,
+      'beta': self.beta,
+      'ctN': spaux.ctN,
+      'xsum': spaux.xsum
+    }
 
 
 class CGammaPoissonOutputPSP(DiscretePSP):
 # Collapsed Gamma Poisson PSP.
+
   def __init__(self, alpha, beta):
     assert isinstance(alpha, float)
     assert isinstance(beta, float)
@@ -480,11 +506,11 @@ class CGammaPoissonOutputPSP(DiscretePSP):
     # Posterior predictive is Negative Binomial.
     # http://www.stat.wisc.edu/courses/st692-newton/notes.pdf#page=50
     (alpha_n, beta_n) = self.updatedParams(args.spaux())
-    return scipy.stats.nbinom.rvs(alpha_n, (beta_n)/(beta_n+1))
+    return scipy.stats.nbinom.rvs(n=alpha_n, p=(beta_n)/(beta_n+1))
 
   def logDensity(self, value, args):
     (alpha_n, beta_n) = self.updatedParams(args.spaux())
-    return scipy.stats.nbinom.logpmf(value, alpha_n, (beta_n)/(beta_n+1))
+    return scipy.stats.nbinom.logpmf(value, n=alpha_n, p=(beta_n)/(beta_n+1))
 
   def logDensityOfCounts(self, aux):
     # The marginal loglikelihood of the data p(D) under the prior.
@@ -495,6 +521,17 @@ class CGammaPoissonOutputPSP(DiscretePSP):
     return scipy.special.gammaln(self.alpha + xsum) - \
       scipy.special.gammaln(self.alpha) + self.alpha * math.log(self.beta) - \
       (self.alpha + xsum) * math.log(self.beta + ctN)
+
+  def show(self, spaux):
+    (alpha_n, beta_n) = self.updatedParams(spaux)
+    return {'type': 'gamma_poisson',
+      'alpha_0': self.alpha,
+      'beta_0': self.beta,
+      'alpha_n': alpha_n,
+      'beta_n': beta_n,
+      'ctN': spaux.ctN,
+      'xsum': spaux.xsum
+      }
 
 
 class MakerCGammaPoissonOutputPSP(DeterministicMakerAAAPSP):
@@ -514,10 +551,6 @@ registerBuiltinSP("make_gamma_poisson", typed_nr(MakerCGammaPoissonOutputPSP(),
   [t.PositiveType(), t.PositiveType()], SPType([], t.CountType())))
 
 
-class UGammaPoissonOutputPSP(SuffPoissonOutputPSP):
-# Uncollapsed Gamma Poisson PSP.
-  pass
-
 class MakerUGammaPoissonOutputPSP(DiscretePSP):
 # Maker for Uncollapsed AAA GammaPoisson
 
@@ -530,7 +563,8 @@ class MakerUGammaPoissonOutputPSP(DiscretePSP):
   def simulate(self, args):
     (alpha, beta) = args.operandValues()
     mu = scipy.stats.gamma.rvs(alpha, beta)
-    output = TypedPSP(UGammaPoissonOutputPSP(mu), SPType([], t.CountType()))
+    output = TypedPSP(UGammaPoissonOutputPSP(mu, alpha, beta), SPType([],
+      t.CountType()))
     return VentureSPRecord(SuffPoissonSP(NullRequestPSP(), output))
 
   def logDensity(self, value, args):
@@ -538,20 +572,23 @@ class MakerUGammaPoissonOutputPSP(DiscretePSP):
     assert isinstance(value.sp,SuffPoissonSP)
     (alpha, beta) = args.operandValues()
     mu = value.sp.outputPSP.psp.mu
-    return scipy.stats.gamma.logpdf(mu,alpha,beta)
+    return scipy.stats.gamma.logpdf(mu,a=alpha,scale=1./beta)
 
   def description(self, name):
-    return '  %s(alpha, beta) returns an uncollapsed Gamma Poisson sampler.' \
+    return '  %s(alpha, beta) returns an uncollapsed Gamma Poisson sampler.'\
       % name
 
 class UGammaPoissonAAALKernel(SimulationAAALKernel):
 
   def simulate(self, _trace, args):
-    (alpha, beta) = args.operandValues()
     madeaux = args.madeSPAux()
     [xsum, ctN] = madeaux.cts()
-    newMean = scipy.stats.gamma.rvs(alpha + xsum, beta + ctN)
-    output = TypedPSP(SuffPoissonOutputPSP(newMean), SPType([], t.CountType()))
+    (alpha, beta) = args.operandValues()
+    new_alpha = alpha + xsum
+    new_beta = beta + ctN
+    new_mu = scipy.stats.gamma.rvs(a=alpha + xsum, scale = 1./new_beta)
+    output = TypedPSP(UGammaPoissonOutputPSP(new_mu, new_alpha, new_beta),
+      SPType([], t.CountType()))
     return VentureSPRecord(SuffPoissonSP(NullRequestPSP(), output), madeaux)
 
   def weight(self, _trace, _newValue, _args):
@@ -560,7 +597,8 @@ class UGammaPoissonAAALKernel(SimulationAAALKernel):
     # well as the prior.
     return 0
 
-  def weightBound(self, _trace, _value, _args): return 0
+  def weightBound(self, _trace, _value, _args):
+    return 0
 
 registerBuiltinSP("make_uc_gamma_poisson",
   typed_nr(MakerUGammaPoissonOutputPSP(), [t.PositiveType(), t.PositiveType()],
