@@ -2,7 +2,7 @@
 
 Test that things we expect to work at the console actually do.
 """
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -183,6 +183,10 @@ def test_arithmetic():
 @in_backend("none")
 def test_lines_and_comments():
   vnt = spawn_venture()
+
+  vnt.send('\n')
+  assert "" == vnt.read_to_prompt()
+
   # https://github.com/mit-probabilistic-computing-project/Venturecxx/issues/108
   # Trying to annotate an excep...
   # {'text_index': [0, 26]}"
