@@ -16,6 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose import SkipTest
+from nose.tools import eq_
 from venture.test.config import get_ripl, collectSamples, broken_in
 from venture.test.stats import statisticalTest, reportKnownMean, reportKnownMeanVariance
 
@@ -131,4 +132,28 @@ def testGPLogscore1():
   ripl.assume('gp', '(make_gp zero sq_exp)')
   ripl.predict('(gp (array 0 0))')
   ripl.get_global_logscore()
+
+@broken_in('puma', "Puma does not define the gaussian process builtins")
+def testGPAux():
+  """Make sure the GP's aux is properly maintained.  It should be an array of
+  all pairs (x,y) such that the GP has been called with input x and returned
+  output y."""
+
+  ripl = get_ripl()
+  prep_ripl(ripl)
+
+  def check_firsts(stats, firsts):
+    eq_(len(stats), len(firsts))
+    eq_(set(map(lambda xy: xy[0], stats)), set(firsts))
+
+  ripl.assume('gp', '(make_gp zero sq_exp)')
+  ripl.predict('(gp (array 1.0 3.0))')
+  check_firsts(ripl.infer('(extract_stats gp)'), {1.0, 3.0})
+
+  ripl.observe('(gp (array 5.0))', v.VentureArray(map(v.VentureNumber, [8.8])),
+          label='obs')
+  check_firsts(ripl.infer('(extract_stats gp)'), {1.0, 3.0, 5.0})
+
+  ripl.forget('obs')
+  check_firsts(ripl.infer('(extract_stats gp)'), {1.0, 3.0})
 
