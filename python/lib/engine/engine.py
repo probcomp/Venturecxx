@@ -208,7 +208,7 @@ class Engine(object):
     # disallow the ripl.
     class NoRipl(object):
       def __getattr__(self, attr):
-        raise Exception('Modeling commands not allowed in for_each_particle.')
+        raise VentureException('Modeling commands not allowed in for_each_particle.')
     self.ripl = NoRipl()
     # TODO asStackDict doesn't do the right thing because it tries to
     # be politely printable.  Maybe I should change that.
