@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
@@ -17,17 +17,16 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+set -Ceu
+
 # Reset the working directory to the directory above the script's path
 my_abs_path=$(readlink -f "$0")
-root_dirname=$(dirname $(dirname $my_abs_path))
+root_dirname=$(dirname "$(dirname "$my_abs_path")")
 echo "$root_dirname"
-cd $root_dirname
+cd "$root_dirname"
 
-release=`python setup.py --version`
-if [[ ! -z $1 ]]; then
-    release=$1
-fi
-if [[ -z $release ]]; then
+release=${1:-`python setup.py --version`}
+if [ -z "$release" ]; then
     echo Could not determine a release number, exiting
     exit 1
 fi
