@@ -241,7 +241,7 @@ for grammar in grammars:
 
 setup (
     name = 'Venture CXX',
-    version = '0.2',
+    version = version,
     author = 'MIT.PCP',
     url = 'TBA',
     long_description = 'TBA.',
