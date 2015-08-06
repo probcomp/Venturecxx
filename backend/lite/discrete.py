@@ -415,10 +415,10 @@ class MakerSuffBernoulliOutputPSP(DeterministicMakerAAAPSP):
     return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output))
 
   def description(self,name):
-    return '''  %s(weight) returns a Bernoulli sampler (weighted coin) with
-    given weight.  The latter maintains application statistics sufficient to
-    absorb changes to the weight in O(1) time (without traversing all the
-    applications).''' % name
+    return '  %s(weight) returns a Bernoulli sampler (weighted coin) with '\
+      'given weight. The latter maintains application statistics sufficient '\
+      'to absorb changes to the weight in O(1) time (without traversing all '\
+      ' the applications).' % name
 
   def gradientOfLogDensityOfCounts(self, aux, args):
     '''The derivatives with respect to the args of the log density of the counts
