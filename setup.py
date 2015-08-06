@@ -20,6 +20,35 @@ from distutils.core import setup, Extension
 import os
 import sys
 
+with open('VERSION', 'rU') as f:
+    version = f.readline().strip()
+
+# Append the Git commit id if this is a development version.
+if version.endswith('+'):
+    prefix = 'release-'
+    tag = prefix + version[:-1]
+    try:
+        import subprocess
+        desc = subprocess.check_output([
+            'git', 'describe', '--dirty', '--match', tag,
+        ])
+    except Exception:
+        version += 'unknown'
+    else:
+        assert desc.startswith(tag)
+        version = desc[len(prefix):].strip()
+
+# XXX Mega-kludge.  See below about grammars for details.
+try:
+    with open('python/lib/version.py', 'rU') as f:
+        version_old = f.readlines()
+except IOError:
+    version_old = None
+version_new = ['__version__ = %s\n' % (repr(version),)]
+if version_old != version_new:
+    with open('python/lib/version.py', 'w') as f:
+        f.writelines(version_new)
+
 ON_LINUX = 'linux' in sys.platform
 ON_MAC = 'darwin' in sys.platform
 
@@ -212,7 +241,7 @@ for grammar in grammars:
 
 setup (
     name = 'Venture CXX',
-    version = '0.2',
+    version = version,
     author = 'MIT.PCP',
     url = 'TBA',
     long_description = 'TBA.',
