@@ -372,7 +372,7 @@ def __venture_start__(*args, **kwargs):
   os.unlink(plgn)
 
 def test_plots_to_file():
-  vnt = spawn_venture()
+  vnt = spawn_venture(timeout=3)
   plotfile = tempfile.NamedTemporaryFile(suffix="plot.png", delete=False)
   plotpath = os.path.abspath(plotfile.name)
   vnt.send_command("assume x = normal(0, 1)")
@@ -381,17 +381,7 @@ def test_plots_to_file():
   vnt.send_command("define chain_history = run(accumulate_dataset(50, \n" +
                    "do(default_markov_chain(1), collect(x))))")
   vnt.send_command('plot_to_file("%s", "lc0", chain_history)' % plotpath[0:-4])
-  vnt.expect_exact("[]")
+  vnt.expect_exact("[]\r\n")
   vnt.send_command('shell file %s' % plotpath)
   vnt.expect_exact(plotpath)
   vnt.expect(r': PNG image data, \d\d+ x \d\d+, \d-bit.*\r\n')
-
-
-# TODO:
-# start_continuous_inference
-# dump_profile_data
-# shortcuts/__init__.py?
-# all commands respond to help?
-# help links to expanded docs online?
-# Would be neat to implement "examples" like help that greps the tutorials for
-#    instances of the function you're asking about...

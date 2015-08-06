@@ -181,7 +181,7 @@ class RiplCmd(Cmd, object):
   def do_list_directives(self, _s):
     '''List active directives and their current values.'''
     self.ripl.print_directives()
-  
+
   @catchesVentureException
   def do_clear(self, _):
     '''Clear the console state.  (Replay the effects of command line arguments.)'''
@@ -190,7 +190,7 @@ class RiplCmd(Cmd, object):
     self.files = files
     self.plugins = plugins
     self._update_prompt()
-  
+
   @catchesVentureException
   def do_infer(self, s):
     '''Run inference synchronously.'''
@@ -221,11 +221,6 @@ class RiplCmd(Cmd, object):
     '''Save the current profile data to the given file.'''
     self.ripl.profile_data().to_csv(s)
     print "Profile data saved to %s" % s
-
-  @catchesVentureException
-  def do_eval(self, s):
-    '''Escape into Python (evaluate the given string as Python source)'''
-    exec(s)
 
   @catchesVentureException
   def do_shell(self, s):
