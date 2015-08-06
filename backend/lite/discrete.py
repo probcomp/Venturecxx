@@ -457,11 +457,11 @@ class ExactlyOutputPSP(RandomPSP):
     return 0
 
   def description(self, _name):
-    return '''Force a variable to be treated as random even though its value is
-    known. This deterministically returns the first argument when simulated, but
-    is willing to pretend to be able to stochastically return any object.
-    The second argument, if given, is the penalty (in log space) for a mismatch.
-    If not given, taken to be -infinity.'''
+    return 'Force a variable to be treated as random even though its value is '\
+      'known. This deterministically returns the first argument when '\
+      'simulated, but is willing to pretend to be able to stochastically '\
+      'return any object. The second argument, if given, is the penalty '\
+      '(in log space) for a mismatch. If not given, taken to be -infinity.'
 
 
 registerBuiltinSP("exactly", typed_nr(ExactlyOutputPSP(),
