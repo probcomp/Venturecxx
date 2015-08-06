@@ -27,7 +27,7 @@ cd "$root_dirname"
 
 release=${1:-`python setup.py --version`}
 if [ -z "$release" ]; then
-    echo Could not determine a release number, exiting
+    echo >&2 Could not determine a release number, exiting
     exit 1
 fi
 
