@@ -173,6 +173,9 @@ class Infer(object):
   def particle_normalized_probs(self):
     return logWeightsToNormalizedDirect(self.particle_log_weights())
 
+  def for_each_particle(self, action):
+    return self.engine.for_each_particle(action)
+
   def new_model(self, backend_name=None):
     if backend_name is None:
       return TraceSet(self.engine, self.engine.model.backend)
