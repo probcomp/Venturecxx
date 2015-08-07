@@ -601,21 +601,25 @@ registerBuiltinSP("gamma", typed_nr(GammaOutputPSP(),
 
 class StudentTOutputPSP(RandomPSP):
   # TODO don't need to be class methods
-  def simulateNumeric(self,nu,loc,scale): return scipy.stats.t.rvs(nu,loc,scale)
-  def logDensityNumeric(self,x,nu,loc,scale): return scipy.stats.t.logpdf(x,nu,loc,scale)
+  def simulateNumeric(self, nu, loc, scale):
+    return scipy.stats.t.rvs(nu,loc,scale)
 
-  def simulate(self,args):
+  def logDensityNumeric(self, x, nu, loc, scale):
+    return scipy.stats.t.logpdf(x,nu,loc,scale)
+
+  def simulate(self, args):
     vals = args.operandValues()
     loc = vals[1] if len(vals) > 1 else 0
     shape = vals[2] if len(vals) > 1 else 1
     return self.simulateNumeric(vals[0],loc,shape)
-  def logDensity(self,x,args):
+
+  def logDensity(self, x, args):
     vals = args.operandValues()
     loc = vals[1] if len(vals) > 1 else 0
     shape = vals[2] if len(vals) > 1 else 1
     return self.logDensityNumeric(x,vals[0],loc,shape)
 
-  def gradientOfLogDensity(self,x,args):
+  def gradientOfLogDensity(self, x, args):
     vals = args.operandValues()
     nu = vals[0]
     loc = vals[1] if len(vals) > 1 else 0
@@ -638,14 +642,18 @@ class StudentTOutputPSP(RandomPSP):
                  (loc - x) ** 2) / (shape * (nu * shape ** 2 + (loc - x) ** 2)))
     return (gradX,[gradNu,gradLoc,gradShape])
 
-  def description(self,name):
-    return "  %s(nu, loc, shape) returns a sample from Student's t distribution with nu degrees of freedom, with optional location and scale parameters." % name
+  def description(self, name):
+    return "  %s(nu, loc, shape) returns a sample from Student's t "\
+      "distribution with nu degrees of freedom, with optional location "\
+      "and scale parameters." % name
 
   # TODO StudentT presumably has a variational kernel too?
 
+
 registerBuiltinSP("student_t", typed_nr(StudentTOutputPSP(),
-                                        [t.PositiveType(), t.NumberType(), t.NumberType()],
-                                        t.NumberType(), min_req_args=1 ))
+  [t.PositiveType(), t.NumberType(), t.NumberType()], t.NumberType(),
+  min_req_args=1 ))
+
 
 class InvGammaOutputPSP(RandomPSP):
   # TODO don't need to be class methods
