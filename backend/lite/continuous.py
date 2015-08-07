@@ -367,28 +367,33 @@ class NormalsvOutputPSP(RandomPSP):
 
 
 class NormalvsOutputPSP(RandomPSP):
-  def simulate(self, args): return np.random.normal(*args.operandValues())
-  def logDensity(self, x, args): return sum(scipy.stats.norm.logpdf(x, *args.operandValues()))
-  def gradientOfLogDensity(self,x,args):
-    (mu, sigma) = args.operandValues()
+  def simulate(self, args):
+    return np.random.normal(*args.operandValues())
 
+  def logDensity(self, x, args):
+    return sum(scipy.stats.norm.logpdf(x, *args.operandValues()))
+
+  def gradientOfLogDensity(self, x, args):
+    (mu, sigma) = args.operandValues()
     gradX = -(x - mu) / (np.power(sigma,2))
     gradMu = (x - mu) / (np.power(sigma,2))
     gradSigma = (np.power(x - mu,2) - np.power(sigma,2)) / np.power(sigma,3)
     return (gradX,[gradMu,sum(gradSigma)])
 
+
 generic_normal = dispatching_psp(
   [SPType([t.NumberType(), t.NumberType()], t.NumberType()), # TODO Sigma is really non-zero, but negative is OK by scaling
-   SPType([t.NumberType(), t.ArrayUnboxedType(t.NumberType())],
-          t.ArrayUnboxedType(t.NumberType())),
-   SPType([t.ArrayUnboxedType(t.NumberType()), t.NumberType()],
-          t.ArrayUnboxedType(t.NumberType())),
-   SPType([t.ArrayUnboxedType(t.NumberType()), t.ArrayUnboxedType(t.NumberType())],
-          t.ArrayUnboxedType(t.NumberType()))],
-  [NormalOutputPSP(), NormalsvOutputPSP(),
-   NormalvsOutputPSP(), NormalvvOutputPSP()])
+    SPType([t.NumberType(), t.ArrayUnboxedType(t.NumberType())],
+      t.ArrayUnboxedType(t.NumberType())),
+    SPType([t.ArrayUnboxedType(t.NumberType()), t.NumberType()],
+      t.ArrayUnboxedType(t.NumberType())),
+    SPType([t.ArrayUnboxedType(t.NumberType()),
+      t.ArrayUnboxedType(t.NumberType())], t.ArrayUnboxedType(t.NumberType()))],
+  [NormalOutputPSP(), NormalsvOutputPSP(), NormalvsOutputPSP(),
+    NormalvvOutputPSP()])
 
 registerBuiltinSP("normal", no_request(generic_normal))
+
 
 class VonMisesOutputPSP(RandomPSP):
   def simulate(self,args):
