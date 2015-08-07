@@ -126,13 +126,15 @@ registerBuiltinSP("multivariate_normal", typed_nr(MVNormalOutputPSP(),
   [t.HomogeneousArrayType(t.NumberType()), t.SymmetricMatrixType()],
   t.HomogeneousArrayType(t.NumberType())))
 
+
 class InverseWishartOutputPSP(RandomPSP):
   def simulate(self, args):
     (lmbda, dof) = self.__parse_args__(args)
     p = len(lmbda)
 
     if dof <= p - 1:
-      raise VentureValueError("Degrees of freedom cannot be less than dimension of scale matrix")
+      raise VentureValueError("Degrees of freedom cannot be less than "\
+        "dimension of scale matrix")
 
     try:
       chol = np.linalg.cholesky(lmbda)
@@ -158,13 +160,15 @@ class InverseWishartOutputPSP(RandomPSP):
   def logDensity(self, x, args):
     (lmbda, dof) = self.__parse_args__(args)
     p = len(lmbda)
-    log_density =  dof/2*(np.log(npla.det(lmbda))-p*np.log(2))-spsp.multigammaln(dof*.5, p) \
-        +(-.5*(dof+p+1))*np.log(npla.det(x))-.5*np.trace(np.dot(lmbda, npla.inv(x)))
+    log_density =  dof/2*(np.log(npla.det(lmbda)) - p*np.log(2)) \
+      - spsp.multigammaln(dof*.5, p) \
+      + (-.5*(dof+p+1))*np.log(npla.det(x)) \
+      - .5*np.trace(np.dot(lmbda, npla.inv(x)))
     return log_density
 
   def gradientOfLogDensity(self, X, args):
     '''
-    based on the following wikipedia page:
+    Based on the following Wikipedia page:
       http://en.wikipedia.org/wiki/Inverse-Wishart_distribution
       http://en.wikipedia.org/wiki/Multivariate_gamma_function
       http://en.wikipedia.org/wiki/Matrix_calculus
@@ -173,22 +177,26 @@ class InverseWishartOutputPSP(RandomPSP):
     p = len(lmbda)
     invX = npla.inv(X)
     invLmbda = npla.inv(lmbda)
-    gradX = -.5*(dof+p+1)*invX+.5*np.dot(invX, np.dot(lmbda, invX))
-    gradLmbda = .5*dof*invLmbda-.5*invX
+    gradX = -.5*(dof+p+1)*invX + .5*np.dot(invX, np.dot(lmbda, invX))
+    gradLmbda = .5*dof*invLmbda - .5*invX
     gradDof = .5*np.log(npla.det(lmbda))-.5*np.log(npla.det(X))-.5*p*np.log(2)
     for i in range(p):
       gradDof = gradDof-.5*spsp.psi(.5*(dof-i))
     return gradX, [gradLmbda, gradDof]
 
   def description(self,name):
-    return "  %s(scale_matrix, degree_of_freedeom) samples a positive definite matrix according to the given inverse wishart distribution " % name
+    return "  %s(scale_matrix, degree_of_freedeom) samples a positive "\
+      "definite matrix according to the given inverse Wishart distribution."\
+      % name
 
   def __parse_args__(self, args):
     (lmbda, dof) = args.operandValues()
     return (np.array(lmbda), dof)
 
+
 registerBuiltinSP("inv_wishart", typed_nr(InverseWishartOutputPSP(),
-                                          [t.SymmetricMatrixType(), t.PositiveType()], t.SymmetricMatrixType()))
+  [t.SymmetricMatrixType(), t.PositiveType()], t.SymmetricMatrixType()))
+
 
 class WishartOutputPSP(RandomPSP):
   '''
