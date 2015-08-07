@@ -40,6 +40,9 @@ from utils import override
 import types as t
 
 
+HALF_LOG2PI = 0.5 * math.log(2 * math.pi)
+
+
 class NormalDriftKernel(DeltaLKernel):
   def __init__(self, epsilon = 0.7):
     self.epsilon = epsilon
@@ -268,17 +271,17 @@ registerBuiltinSP("wishart", typed_nr(WishartOutputPSP(),
   [t.SymmetricMatrixType(), t.PositiveType()], t.SymmetricMatrixType()))
 
 
-HALF_LOG2PI = 0.5 * math.log(2 * math.pi)
-
-
 class NormalOutputPSP(RandomPSP):
   # TODO don't need to be class methods
-  def simulateNumeric(self,params): return scipy.stats.norm.rvs(*params)
+  def simulateNumeric(self,params):
+    return scipy.stats.norm.rvs(*params)
+
   def logDensityNumeric(self,x,params):
     (mu, sigma) = params
     deviation = x - mu
-    ans = - math.log(sigma) - HALF_LOG2PI - (0.5 * deviation * deviation / (sigma * sigma))
-    return ans
+    return - math.log(sigma) - HALF_LOG2PI \
+      - (0.5 * deviation * deviation / (sigma * sigma))
+
   def logDensityBoundNumeric(self, x, mu, sigma):
     if sigma is not None:
       return -(math.log(sigma) + HALF_LOG2PI)
@@ -290,25 +293,36 @@ class NormalOutputPSP(RandomPSP):
     else:
       raise Exception("Cannot rejection sample psp with unbounded likelihood")
 
-  def simulate(self,args): return self.simulateNumeric(args.operandValues())
+  def simulate(self, args):
+    return self.simulateNumeric(args.operandValues())
+
   def gradientOfSimulate(self, args, value, direction):
     # Reverse engineering the behavior of scipy.stats.norm.rvs
     # suggests this gradient is correct.
     (mu, sigma) = args.operandValues()
     deviation = (value - mu) / sigma
     return [direction*1, direction*deviation]
-  def logDensity(self,x,args): return self.logDensityNumeric(x,args.operandValues())
-  def logDensityBound(self, x, args): return self.logDensityBoundNumeric(x, *args.operandValues())
 
-  def hasDeltaKernel(self): return False # have each gkernel control whether it is delta or not
-  def getDeltaKernel(self,args): return NormalDriftKernel(args)
+  def logDensity(self, x, args):
+    return self.logDensityNumeric(x,args.operandValues())
 
-  def hasVariationalLKernel(self): return True
-  def getParameterScopes(self): return ["REAL","POSITIVE_REAL"]
+  def logDensityBound(self, x, args):
+    return self.logDensityBoundNumeric(x, *args.operandValues())
+
+  def hasDeltaKernel(self):
+    return False # have each gkernel control whether it is delta or not
+
+  def getDeltaKernel(self, args):
+    return NormalDriftKernel(args)
+
+  def hasVariationalLKernel(self):
+    return True
+
+  def getParameterScopes(self):
+    return ["REAL","POSITIVE_REAL"]
 
   def gradientOfLogDensity(self,x,args):
     (mu, sigma) = args.operandValues()
-
     gradX = -(x - mu) / (math.pow(sigma,2))
     gradMu = (x - mu) / (math.pow(sigma,2))
     gradSigma = (math.pow(x - mu,2) - math.pow(sigma,2)) / math.pow(sigma,3)
@@ -317,7 +331,9 @@ class NormalOutputPSP(RandomPSP):
     return (gradX,[gradMu,gradSigma])
 
   def description(self,name):
-    return "  %s(mu, sigma) samples a normal distribution with mean mu and standard deviation sigma." % name
+    return "  %s(mu, sigma) samples a normal distribution with mean mu "\
+      "and standard deviation sigma." % name
+
 
 class NormalvvOutputPSP(RandomPSP):
   def simulate(self, args): return np.random.normal(*args.operandValues())
