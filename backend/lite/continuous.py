@@ -537,10 +537,10 @@ registerBuiltinSP("expon", typed_nr(ExponOutputPSP(),
 class GammaOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self, alpha, beta):
-    return scipy.stats.gamma.rvs(alpha,scale=1.0/beta)
+    return scipy.stats.gamma.rvs(alpha, scale=1.0/beta)
 
   def logDensityNumeric(self, x, alpha, beta):
-    return scipy.stats.gamma.logpdf(x,alpha,scale=1.0/beta)
+    return scipy.stats.gamma.logpdf(x, alpha, scale=1.0/beta)
 
   def simulate(self, args):
     return self.simulateNumeric(*args.operandValues())
