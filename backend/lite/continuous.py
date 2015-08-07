@@ -15,29 +15,29 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import math
-import warnings
-import scipy.stats
-import scipy.special
-import numpy as np
-import numpy.random as npr
-import numpy.linalg as npla
-import scipy.special as spsp
-from utils import logDensityMVNormal, numpy_force_number
-from utils import override
-from exception import VentureValueError, GradientWarning
-
 # For some reason, pylint can never find numpy members (presumably metaprogramming).
 # pylint: disable=no-member
 
-import types as t
-from sp import SP, SPAux, VentureSPRecord, SPType
+import math
+
+import numpy as np
+import numpy.random as npr
+import numpy.linalg as npla
+import scipy.stats
+import scipy.special
+import scipy.special as spsp
+import warnings
+
+from exception import VentureValueError, GradientWarning
+from lkernel import DeltaLKernel, SimulationAAALKernel
 from psp import RandomPSP, DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP,\
   TypedPSP
-from lkernel import DeltaLKernel, SimulationAAALKernel
-
+from sp import SP, SPAux, VentureSPRecord, SPType
 from sp_registry import registerBuiltinSP
 from sp_help import typed_nr, no_request, dispatching_psp
+from utils import logDensityMVNormal, numpy_force_number
+from utils import override
+import types as t
 
 class NormalDriftKernel(DeltaLKernel):
   def __init__(self,epsilon = 0.7): self.epsilon = epsilon
