@@ -536,17 +536,22 @@ registerBuiltinSP("expon", typed_nr(ExponOutputPSP(),
 
 class GammaOutputPSP(RandomPSP):
   # TODO don't need to be class methods
-  def simulateNumeric(self,alpha,beta): return scipy.stats.gamma.rvs(alpha,scale=1.0/beta)
-  def logDensityNumeric(self,x,alpha,beta): return scipy.stats.gamma.logpdf(x,alpha,scale=1.0/beta)
+  def simulateNumeric(self, alpha, beta):
+    return scipy.stats.gamma.rvs(alpha,scale=1.0/beta)
 
-  def simulate(self,args): return self.simulateNumeric(*args.operandValues())
-  def gradientOfSimulate(self,args,value,direction):
+  def logDensityNumeric(self, x, alpha, beta):
+    return scipy.stats.gamma.logpdf(x,alpha,scale=1.0/beta)
+
+  def simulate(self, args):
+    return self.simulateNumeric(*args.operandValues())
+
+  def gradientOfSimulate(self, args, value, direction):
     # These gradients were computed by Sympy; the script to get them is
     # in doc/gradients.py
     alpha, beta = args.operandValues()
     if alpha == 1:
       warnstr = ('Gradient of simulate is discontinuous at alpha = 1.\n'
-                 'Issue: https://app.asana.com/0/11192551635048/14271708124534.')
+                 'Issue https://app.asana.com/0/11192551635048/14271708124534.')
       warnings.warn(warnstr, GradientWarning)
       gradAlpha = 0
       gradBeta = -value / math.pow(beta, 2.0)
@@ -569,26 +574,30 @@ class GammaOutputPSP(RandomPSP):
         gradAlpha = (x4 ** (x0 * x1) * (x3 + (alpha + x2 - 1) *
                      math.log(x4)) / (alpha ** 2.0 * beta))
         x0 = 1.0 / alpha
-        gradBeta = (-(-alpha * math.log(math.exp(-x0 * (alpha + (beta * value) ** alpha - 1))) -
-                    alpha + 1) ** x0 / beta ** 2.0)
+        gradBeta = ( -(-alpha * math.log(math.exp(-x0 * (alpha +
+          (beta * value) ** alpha - 1))) - alpha + 1) ** x0 / beta ** 2.0 )
     return [direction * gradAlpha, direction * gradBeta]
 
-  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues())
+  def logDensity(self, x, args):
+    return self.logDensityNumeric(x,*args.operandValues())
 
-  def gradientOfLogDensity(self,x,args):
+  def gradientOfLogDensity(self, x, args):
     (alpha, beta) = args.operandValues()
     gradX = ((alpha - 1) / float(x)) - beta
     gradAlpha = math.log(beta) - spsp.digamma(alpha) + math.log(x)
     gradBeta = (float(alpha) / beta) - x
     return (gradX,[gradAlpha,gradBeta])
 
-  def description(self,name):
-    return "  %s(alpha, beta) returns a sample from a gamma distribution with shape parameter alpha and rate parameter beta." % name
+  def description(self, name):
+    return "  %s(alpha, beta) returns a sample from a Gamma distribution "\
+      "with shape parameter alpha and rate parameter beta." % name
 
   # TODO Gamma presumably has a variational kernel too?
 
+
 registerBuiltinSP("gamma", typed_nr(GammaOutputPSP(),
-                                    [t.PositiveType(), t.PositiveType()], t.PositiveType()))
+  [t.PositiveType(), t.PositiveType()], t.PositiveType()))
+
 
 class StudentTOutputPSP(RandomPSP):
   # TODO don't need to be class methods
