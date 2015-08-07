@@ -481,20 +481,20 @@ class BetaOutputPSP(RandomPSP):
   def logDensityNumeric(self, x, params):
     return scipy.stats.beta.logpdf(x,*params)
 
-  def simulate(self,args):
+  def simulate(self, args):
     return self.simulateNumeric(args.operandValues())
 
-  def logDensity(self,x,args):
+  def logDensity(self, x, args):
     return self.logDensityNumeric(x,args.operandValues())
 
-  def gradientOfLogDensity(self,x,args):
+  def gradientOfLogDensity(self, x, args):
     (alpha, beta) = args.operandValues()
     gradX = ((float(alpha) - 1) / x) - ((float(beta) - 1) / (1 - x))
     gradAlpha = spsp.digamma(alpha + beta) - spsp.digamma(alpha) + math.log(x)
     gradBeta = spsp.digamma(alpha + beta) - spsp.digamma(beta) + math.log(1 - x)
     return (gradX,[gradAlpha,gradBeta])
 
-  def description(self,name):
+  def description(self, name):
     return "  %s(alpha, beta) returns a sample from a Beta distribution with "\
       "shape parameters alpha and beta." % name
 
@@ -507,11 +507,17 @@ registerBuiltinSP("beta", typed_nr(BetaOutputPSP(),
 
 class ExponOutputPSP(RandomPSP):
   # TODO don't need to be class methods
-  def simulateNumeric(self,theta): return scipy.stats.expon.rvs(scale=1.0/theta)
-  def logDensityNumeric(self,x,theta): return scipy.stats.expon.logpdf(x,scale=1.0/theta)
+  def simulateNumeric(self, theta):
+    return scipy.stats.expon.rvs(scale=1.0/theta)
 
-  def simulate(self,args): return self.simulateNumeric(*args.operandValues())
-  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues())
+  def logDensityNumeric(self, x, theta):
+    return scipy.stats.expon.logpdf(x,scale=1.0/theta)
+
+  def simulate(self,args):
+    return self.simulateNumeric(*args.operandValues())
+
+  def logDensity(self,x,args):
+    return self.logDensityNumeric(x,*args.operandValues())
 
   def gradientOfLogDensity(self,x,args):
     theta = args.operandValues()[0]
@@ -520,10 +526,13 @@ class ExponOutputPSP(RandomPSP):
     return (gradX,[gradTheta])
 
   def description(self,name):
-    return "  %s(theta) returns a sample from an exponential distribution with rate (inverse scale) parameter theta." % name
+    return "  %s(theta) returns a sample from an exponential distribution "\
+      "with rate (inverse scale) parameter theta." % name
+
 
 registerBuiltinSP("expon", typed_nr(ExponOutputPSP(),
-                                    [t.PositiveType()], t.PositiveType()))
+  [t.PositiveType()], t.PositiveType()))
+
 
 class GammaOutputPSP(RandomPSP):
   # TODO don't need to be class methods
