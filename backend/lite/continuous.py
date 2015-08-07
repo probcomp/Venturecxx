@@ -969,4 +969,4 @@ class MakerSuffNormalOutputPSP(DeterministicMakerAAAPSP):
     return 0
 
 registerBuiltinSP("make_suff_stat_normal", typed_nr(MakerSuffNormalOutputPSP(),
-  [t.NumberType(), t.PositiveType], SPType([], t.NumberType())))
+  [t.NumberType(), t.PositiveType()], SPType([], t.NumberType())))
