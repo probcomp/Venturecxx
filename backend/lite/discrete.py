@@ -644,7 +644,7 @@ class MakerUGammaPoissonOutputPSP(DiscretePSP):
 
   def simulate(self, args):
     (alpha, beta) = args.operandValues()
-    mu = scipy.stats.gamma.rvs(alpha, beta)
+    mu = scipy.stats.gamma.rvs(a=alpha, scale=1./beta)
     output = TypedPSP(UGammaPoissonOutputPSP(mu, alpha, beta),
       SPType([], t.CountType()))
     return VentureSPRecord(SuffPoissonSP(NullRequestPSP(), output))
