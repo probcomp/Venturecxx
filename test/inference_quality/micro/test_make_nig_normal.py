@@ -76,8 +76,5 @@ def checkRecoverNormalDist(maker, true_mean, true_var):
   predictive_samples = collectIidSamples(ripl, 'pid',
     num_samples=default_num_samples())
 
-  print true_samples
-  print predictive_samples
-
   # Perform the t-test
   return reportKnownMeanVariance(true_mean, true_var, predictive_samples)
