@@ -396,13 +396,15 @@ registerBuiltinSP("normal", no_request(generic_normal))
 
 
 class VonMisesOutputPSP(RandomPSP):
-  def simulate(self,args):
+  def simulate(self, args):
     (mu, kappa) = args.operandValues()
     return scipy.stats.vonmises.rvs(kappa, loc=mu)
-  def logDensity(self,x,args):
+
+  def logDensity(self, x, args):
     (mu, kappa) = args.operandValues()
     # k * cos (x - mu) - log(2pi I_0(k))
     return scipy.stats.vonmises.logpdf(x, kappa, loc=mu)
+
   def logDensityBound(self, x, args):
     (mu, kappa) = args.operandValues()
     if kappa is not None:
@@ -411,21 +413,25 @@ class VonMisesOutputPSP(RandomPSP):
       raise Exception("TODO What is the bound for a vonmises varying kappa?")
     else:
       raise Exception("Cannot rejection sample psp with unbounded likelihood")
+
   def gradientOfLogDensity(self, x, args):
     (mu, kappa) = args.operandValues()
-
     gradX  = -math.sin(x - mu) * kappa
     gradMu = math.sin(x - mu) * kappa
     # d/dk(log density) = cos(x-mu) - [2pi d(I_0)(k)]/2pi I_0(k)
     # d/dk I_0(k) = I_1(k)
-    gradK  = math.cos(x - mu) - (scipy.special.i1(kappa) / scipy.special.i0(kappa))
+    gradK  = math.cos(x - mu) - (scipy.special.i1(kappa) \
+      / scipy.special.i0(kappa))
     return (gradX, [gradMu, gradK])
 
   def description(self,name):
-    return "  %s(mu, kappa) samples a von Mises distribution with mean mu and shape kappa. The output is normalized to the interval [-pi,pi]." % name
+    return "  %s(mu, kappa) samples a von Mises distribution with mean mu and "\
+      "shape kappa. The output is normalized to the interval [-pi,pi]." % name
+
 
 registerBuiltinSP("vonmises", typed_nr(VonMisesOutputPSP(),
-                                       [t.NumberType(), t.PositiveType()], t.NumberType()))
+  [t.NumberType(), t.PositiveType()], t.NumberType()))
+
 
 class UniformOutputPSP(RandomPSP):
   # TODO don't need to be class methods
