@@ -40,7 +40,8 @@ from utils import override
 import types as t
 
 class NormalDriftKernel(DeltaLKernel):
-  def __init__(self,epsilon = 0.7): self.epsilon = epsilon
+  def __init__(self, epsilon = 0.7):
+    self.epsilon = epsilon
 
   def forwardSimulate(self, _trace, oldValue, args):
     mu,sigma = args.operandValues()
@@ -69,7 +70,8 @@ class MVNormalRandomWalkKernel(DeltaLKernel):
   def forwardWeight(self, _trace, newValue, oldValue, args):
     # log P(_newValue --> _oldValue) == log P(_oldValue --> _newValue)
     (mu, sigma) = MVNormalOutputPSP.__parse_args__(args)
-    return logDensityMVNormal(newValue, mu, sigma) - logDensityMVNormal(oldValue, mu, sigma)
+    return logDensityMVNormal(newValue, mu, sigma) - \
+      logDensityMVNormal(oldValue, mu, sigma)
 
 class MVNormalOutputPSP(RandomPSP):
   def simulate(self, args):
