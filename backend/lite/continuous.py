@@ -200,21 +200,23 @@ registerBuiltinSP("inv_wishart", typed_nr(InverseWishartOutputPSP(),
 
 class WishartOutputPSP(RandomPSP):
   '''
-    Returns a sample from the Wishart distn, conjugate prior for precision matrices.
+  Returns a sample from the Wishart distribution, conjugate prior for
+  precision matrices.
   '''
   def simulate(self, args):
     (sigma, dof) = self.__parse_args__(args)
     p = len(sigma)
 
     if dof <= p - 1:
-      raise VentureValueError("Degrees of freedom cannot be less than dimension of scale matrix")
+      raise VentureValueError("Degrees of freedom cannot be less than "\
+        "dimension of scale matrix")
 
     try:
       chol = np.linalg.cholesky(sigma)
     except np.linalg.linalg.LinAlgError, e:
       raise VentureValueError(e)
 
-    # use matlab's heuristic for choosing between the two different sampling schemes
+    # Use Matlab's heuristic for choosing between the two different sampling schemes.
     if (dof <= 81+p) and (dof == int(dof)):
       # direct
       A = np.random.normal(size=(p, dof))
@@ -229,13 +231,14 @@ class WishartOutputPSP(RandomPSP):
     (sigma, dof) = self.__parse_args__(args)
     invSigma = npla.inv(sigma)
     p = len(sigma)
-    log_density =  -.5*dof*(np.log(npla.det(sigma))+p*np.log(2))-spsp.multigammaln(dof*.5, p) \
-          +.5*(dof-p-1)*np.log(npla.det(X))-.5*np.trace(np.dot(invSigma, X))
+    log_density =  -.5*dof*(np.log(npla.det(sigma)) + p*np.log(2)) \
+      - spsp.multigammaln(dof*.5, p) \
+      + .5*(dof-p-1)*np.log(npla.det(X)) - .5*np.trace(np.dot(invSigma, X))
     return log_density
 
   def gradientOfLogDensity(self, X, args):
     '''
-    based on the following wikipedia page:
+    Based on the following Wikipedia page:
       http://en.wikipedia.org/wiki/Inverse-Wishart_distribution
       http://en.wikipedia.org/wiki/Multivariate_gamma_function
       http://en.wikipedia.org/wiki/Matrix_calculus
@@ -244,13 +247,7 @@ class WishartOutputPSP(RandomPSP):
     p = len(sigma)
     invX = npla.inv(X)
     invSigma = npla.inv(sigma)
-    # print 'invSigma', invSigma
     gradX = .5*(dof-p-1)*invX-.5*invSigma
-    # print 'X', X
-    # print 'invX', invX
-    # print 'invSigma', invSigma
-    # print 'gradX', gradX
-    # assert (gradX==np.transpose(gradX)).all()
     gradSigma = -.5*invSigma+.5*np.dot(invSigma, np.dot(X, invSigma))
     gradDof = .5*np.log(npla.det(X))-.5*p*np.log(2)-.5*np.log(npla.det(sigma))
     for i in range(p):
@@ -258,16 +255,21 @@ class WishartOutputPSP(RandomPSP):
     return gradX, [gradSigma, gradDof]
 
   def description(self,name):
-    return "  %s(scale_matrix, degree_of_freedeom) samples a positive definite matrix according to the given inverse wishart distribution " % name
+    return "  %s(scale_matrix, degree_of_freedeom) samples a positive "\
+      "definite matrix according to the given inverse Wishart distribution."\
+      % name
 
   def __parse_args__(self, args):
     (sigma, dof) = args.operandValues()
     return (np.array(sigma), dof)
 
-registerBuiltinSP("wishart", typed_nr(WishartOutputPSP(),
-                                      [t.SymmetricMatrixType(), t.PositiveType()], t.SymmetricMatrixType()))
 
-half_log2pi = 0.5 * math.log(2 * math.pi)
+registerBuiltinSP("wishart", typed_nr(WishartOutputPSP(),
+  [t.SymmetricMatrixType(), t.PositiveType()], t.SymmetricMatrixType()))
+
+
+HALF_LOG2PI = 0.5 * math.log(2 * math.pi)
+
 
 class NormalOutputPSP(RandomPSP):
   # TODO don't need to be class methods
@@ -275,11 +277,11 @@ class NormalOutputPSP(RandomPSP):
   def logDensityNumeric(self,x,params):
     (mu, sigma) = params
     deviation = x - mu
-    ans = - math.log(sigma) - half_log2pi - (0.5 * deviation * deviation / (sigma * sigma))
+    ans = - math.log(sigma) - HALF_LOG2PI - (0.5 * deviation * deviation / (sigma * sigma))
     return ans
   def logDensityBoundNumeric(self, x, mu, sigma):
     if sigma is not None:
-      return -(math.log(sigma) + half_log2pi)
+      return -(math.log(sigma) + HALF_LOG2PI)
     elif x is not None and mu is not None:
       # Per the derivative of the log density noted in the
       # gradientOfLogDensity method, the maximum occurs when
