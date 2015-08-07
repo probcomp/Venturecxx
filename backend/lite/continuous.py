@@ -723,8 +723,8 @@ registerBuiltinSP("laplace", typed_nr(LaplaceOutputPSP(),
   [t.NumberType(), t.PositiveType()], t.NumberType()))
 
 
-class SuffNormalSP(SP):
 # SP for Normal, maintaining sufficient statistics.
+class SuffNormalSP(SP):
   def constructSPAux(self):
     return SuffNormalSPAux()
 
@@ -732,9 +732,9 @@ class SuffNormalSP(SP):
     return spaux.cts()
 
 
-class SuffNormalSPAux(SPAux):
 # SPAux for Normal. The sufficent statistics for N observations are N (ctN),
 # sum (xsum) and sum squares (xsumsq)
+class SuffNormalSPAux(SPAux):
   def __init__(self):
     self.ctN = 0
     self.xsum = 0.0
@@ -763,9 +763,8 @@ class SuffNormalSPAux(SPAux):
     return [self.ctN, self.xsum, self.xsumsq]
 
 
-class SuffNormalOutputPSP(RandomPSP):
 # Generic Normal PSP maintaining sufficient statistics.
-
+class SuffNormalOutputPSP(RandomPSP):
   def __init__(self, mu, sigma):
     self.mu = mu
     self.sigma = sigma
@@ -798,13 +797,15 @@ class SuffNormalOutputPSP(RandomPSP):
     term4 = self.mu/self.sigma**2 * xsum
     return term1 + term2 + term3 + term4
 
+
 class UNigNormalOutputPSP(SuffNormalOutputPSP):
 # Collapsed NormalInverseGamma (prior) for Normal (likelihood)
   pass
 
-class CNigNormalOutputPSP(RandomPSP):
+
 # Collapsed NormalInverseGamma (prior) for Normal (likelihood)
 # http://www.cs.ubc.ca/~murphyk/Papers/bayesGauss.pdf#page=16
+class CNigNormalOutputPSP(RandomPSP):
   def __init__(self, m, V, a, b):
     assert isinstance(m, float)
     assert isinstance(V, float)
@@ -857,8 +858,8 @@ class CNigNormalOutputPSP(RandomPSP):
     return term1 + term2 + term3 + term4
 
 
-class MakerCNigNormalOutputPSP(DeterministicMakerAAAPSP):
 # Maker for Collapsed NIG-Normal
+class MakerCNigNormalOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self, args):
     (m, V, a, b) = args.operandValues()
     output = TypedPSP(CNigNormalOutputPSP(m, V, a, b), SPType([],
@@ -874,9 +875,9 @@ registerBuiltinSP("make_nig_normal", typed_nr(MakerCNigNormalOutputPSP(),
   [t.NumberType(), t.PositiveType(), t.PositiveType(),t.PositiveType()],
   SPType([], t.NumberType())))
 
-class MakerUNigNormalOutputPSP(RandomPSP):
-# Uncollapsed AAA NigNormal
 
+# Uncollapsed AAA NigNormal
+class MakerUNigNormalOutputPSP(RandomPSP):
   def childrenCanAAA(self):
     return True
 
@@ -906,8 +907,8 @@ class MakerUNigNormalOutputPSP(RandomPSP):
     return '  %s(alpha, beta) returns an uncollapsed Normal-InverseGamma '\
       'Normal sampler.' % name
 
-class UNigNormalAAALKernel(SimulationAAALKernel):
 
+class UNigNormalAAALKernel(SimulationAAALKernel):
   def simulate(self, _trace, args):
     (m, V, a, b) = args.operandValues()
     madeaux = args.madeSPAux()
@@ -934,11 +935,11 @@ class UNigNormalAAALKernel(SimulationAAALKernel):
 
 registerBuiltinSP("make_uc_nig_normal", typed_nr(MakerUNigNormalOutputPSP(),
   [t.NumberType(), t.PositiveType(), t.PositiveType(), t.PositiveType()],
-    SPType([], t.NumberType())))
+  SPType([], t.NumberType())))
 
-class MakerSuffNormalOutputPSP(DeterministicMakerAAAPSP):
+
 # Non-conjugate AAA Normal
-
+class MakerSuffNormalOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self, args):
     (mu, sigma) = args.operandValues()
     output = TypedPSP(SuffNormalOutputPSP(mu, sigma), SPType([],
