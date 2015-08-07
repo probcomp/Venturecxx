@@ -39,6 +39,7 @@ from utils import logDensityMVNormal, numpy_force_number
 from utils import override
 import types as t
 
+
 class NormalDriftKernel(DeltaLKernel):
   def __init__(self, epsilon = 0.7):
     self.epsilon = epsilon
@@ -57,6 +58,7 @@ class NormalDriftKernel(DeltaLKernel):
     # symmetric, it remains responsible for the prior weight).
     return 0
 
+
 class MVNormalRandomWalkKernel(DeltaLKernel):
   def __init__(self, epsilon = 0.7):
     self.epsilon = epsilon if epsilon is not None else 0.7
@@ -72,6 +74,7 @@ class MVNormalRandomWalkKernel(DeltaLKernel):
     (mu, sigma) = MVNormalOutputPSP.__parse_args__(args)
     return logDensityMVNormal(newValue, mu, sigma) - \
       logDensityMVNormal(oldValue, mu, sigma)
+
 
 class MVNormalOutputPSP(RandomPSP):
   def simulate(self, args):
@@ -90,30 +93,39 @@ class MVNormalOutputPSP(RandomPSP):
     gradSigma = .5*np.dot(np.dot(isigma, xvar),isigma)-.5*isigma
     return np.array(gradX).tolist(), [np.array(gradMu).tolist(), gradSigma]
 
-  def hasDeltaKernel(self): return True
-  def getDeltaKernel(self,*args): return MVNormalRandomWalkKernel(*args)
+  def hasDeltaKernel(self):
+    return True
+
+  def getDeltaKernel(self, *args):
+    return MVNormalRandomWalkKernel(*args)
 
   def logDensityBound(self, x, args):
     (mu, sigma) = self.__parse_args__(args)
     if sigma is not None:
       # The maximum is obtained when x = mu
-      return numpy_force_number(-.5*len(sigma)*np.log(np.pi)-.5*np.log(abs(npla.det(sigma))))
+      return numpy_force_number(-.5*len(sigma)*np.log(np.pi) - \
+        .5*np.log(abs(npla.det(sigma))))
     elif x is not None and mu is not None:
-      raise Exception("TODO: Find an analytical form for the maximum of the log density of MVNormal for fixed x, mu, but varying sigma")
+      raise Exception('TODO: Find an analytical form for the maximum of the '\
+        'log density of MVNormal for fixed x, mu, but varying sigma')
     else:
       raise Exception("Cannot rejection sample psp with unbounded likelihood")
 
   def description(self,name):
-    return "  %s(mean, covariance) samples a vector according to the given multivariate Gaussian distribution.  It is an error if the dimensionalities of the arguments do not line up." % name
+    return '  %s(mean, covariance) samples a vector according to the '\
+      'given multivariate Gaussian distribution.  It is an error if the '\
+      'dimensionalities of the arguments do not line up.' % name
 
   @staticmethod
   def __parse_args__(args):
     (mu, sigma) = args.operandValues()
     return (np.array(mu), np.array(sigma))
 
+
 registerBuiltinSP("multivariate_normal", typed_nr(MVNormalOutputPSP(),
-                                                  [t.HomogeneousArrayType(t.NumberType()), t.SymmetricMatrixType()],
-                                                  t.HomogeneousArrayType(t.NumberType())))
+  [t.HomogeneousArrayType(t.NumberType()), t.SymmetricMatrixType()],
+  t.HomogeneousArrayType(t.NumberType())))
+
 class InverseWishartOutputPSP(RandomPSP):
   def simulate(self, args):
     (lmbda, dof) = self.__parse_args__(args)
