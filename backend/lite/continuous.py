@@ -15,17 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import math
+import warnings
 import scipy.stats
 import scipy.special
-import math
+import numpy as np
 import numpy.random as npr
 import numpy.linalg as npla
 import scipy.special as spsp
-import numpy as np
 from utils import logDensityMVNormal, numpy_force_number
 from utils import override
 from exception import VentureValueError, GradientWarning
-import warnings
 
 # For some reason, pylint can never find numpy members (presumably metaprogramming).
 # pylint: disable=no-member
