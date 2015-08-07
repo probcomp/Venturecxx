@@ -4,19 +4,19 @@ Overview
 If you disagree with a suggestion you see here, please bring it up
 rather than silently not following it.
 
-- We use [Asana](http://asana.com) to coordinate tasks.
+- We use [Github Issues](http://github.com/mit-probabilistic-computing-project/Venturecxx/Issues/) to track issues.
 
 - We use [Flowdock](https://www.flowdock.com/app/mit-probcomp/main) for persistent group chat.
 
 - We use [nosetests](https://nose.readthedocs.org/en/latest/) for running the test suite.
 
-- We use [Starcluster](http://star.mit.edu/cluster/) (which is backed by EC2) for cloud compute.
+- We have a compute cluster at `probcomp-{1,2,3,4}.csail.mit.edu`, and we have EC2 as a fallback.
 
 - We use [Jenkins](http://jenkins-ci.org/) for the continuous build.  As of this writing, the
-  server listens to http://probcomp-3.csail.mit.edu:8080/
+  server listens to https://probcomp-3.csail.mit.edu/
 
 - We use [pylint](http://www.pylint.org/) to maintain our Python code style.  The normative
-  pylint configuration file is in `tool/pylintrc`.
+  pylint configuration file is in `tool/pylintrc`.  See also [pylint](#pylint).
 
 - We have a [Testing Policy](#testing-policy).
 
@@ -39,16 +39,22 @@ Testing Policy
     - `nosetests -c puma-crashes.cfg` runs only the tests that test
       the Puma backend
 
-- We treat a skipped test as an issue.  To wit, resolution is required
-  but need not be immediate.  The actual skipped test should be linked
-  to an issue in the issue tracker. [*] When that issue is closed, the
-  test should be re-enabled.  Issues that have skipped tests
-  associated with them should be marked as such, so the tests can be
-  found (by grep) and turned back on.
+    - `nosetests -c crashes.cfg --tc=get_ripl:lite` runs all the
+      tests, using the Lite backend where not specified in the test.
+      `puma` likewise.
 
-  [*] While we're using Asana as the main issue tracker, this means
-  copy the Asana URL of the task into the message given to the
-  SkipTest exception.
+- We treat a skipped test as an issue.  To wit, resolution is required
+  but need not be immediate.  The actual skipped test should ideally
+  be linked to an issue in the issue tracker. [*] When that issue is
+  closed, the test should be re-enabled.  Issues that have skipped
+  tests associated with them should ideally be marked as such, so the
+  tests can be found (by grep) and turned back on.
+
+  [*] Typically by copying the issue's URL into the message given to
+  the SkipTest exception.
+
+- See [test/README.md](https://github.com/mit-probabilistic-computing-project/Venturecxx/tree/master/test)
+  for the organization of the test suite.
 
 Test Suite Configuration
 ------------------------
@@ -61,29 +67,14 @@ Test Suite Configuration
 - You can select the default inference program (used when the
   particular test doesn't specify) like this:
   `nosetests -c inference-quality.cfg --tc=infer:"(func_pgibbs default ordered 10 3)"`
-  The default is `(mh default one 50)`.
+  The default is `(mh default one 100)`.
 
 - `all-inference-quality` checks inference quality in several generic
   inference programs.  This takes a while.
 
-- You can select the backend against which to run the suite like this:
-  `nosetests -c inference-quality.cfg --tc=get_ripl:puma`
-  (the default is `lite`).
-
 - `nosetests -c performance.cfg` checks for performance issues.
-  Currently there are only three performance tests, all of which are
-  asymptotic checks rather than benchmarks.
-
-- See [test/README.md](https://github.com/mit-probabilistic-computing-project/Venturecxx/tree/master/test)
-  for the organization of the test suite.
-
-- The test suite can be run in parallel via the nose multiprocessing
-  plugin:
-  `--processes=[NUM] --process-timeout=[SECONDS]`
-  Note that the timeout is essentially for the whole suite rather than
-  per test.  This facility has caused no end of problems, so the
-  continuous build now parallelizes across builds rather than within
-  them.
+  Currently there are only a handful of performance tests, all of
+  which are asymptotic checks rather than benchmarks.
 
 - The test suite can be sliced by test/group in the usual way.
 
@@ -111,26 +102,12 @@ installation exists that satisfies the requirements listed there but
 Venture does not run on it because of a Python library version
 problem.
 
-Starcluster
------------
-
-- We have a Starcluster Venture plugin in that lets you painlessly get
-  a cluster with Venture installed on every node.  See instructions in
-  `tool/scventure.py` for how to use it (assuming you already know how
-  to use Starcluster).  For development, we suggest you configure the
-  plugin to build Venture either from a Github branch or from your
-  local clone.
-
 Pylint
 ------
 
 We use pylint to maintain a Python code style.  The normative style
 file is in `tool/pylintrc`.  A number of existing style violations are
 grandfathered, but we try not to introduce new ones.
-
-- Our pylint config doesn't work with the version packaged for Ubuntu,
-  so install pylint from pip:
-  `sudo pip install pylint`
 
 - You can run pylint in batch mode using the Venture style with, e.g.,
   `pylint --rcfile=tool/pylintrc backend/lite/wttree.py`
