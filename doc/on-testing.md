@@ -161,7 +161,7 @@ distribution agree.
   - The Gaussian distribution can be tested by comparing the K-L of
     the tail-assessable representation
 
-    normal 0 1 >>= \mu -> normal mu 1
+    `normal 0 1 >>= \mu -> normal mu 1`
 
     to the analytic answer `normal 0 (sqrt 2)`
 
