@@ -689,11 +689,17 @@ registerBuiltinSP("inv_gamma", typed_nr(InvGammaOutputPSP(),
 
 class LaplaceOutputPSP(RandomPSP):
   # a is the location, b is the scale; parametrization is same as Wikipedia
-  def simulateNumeric(self,a,b): return scipy.stats.laplace.rvs(a,b)
-  def logDensityNumeric(self,x,a,b): return scipy.stats.laplace.logpdf(x,a,b)
+  def simulateNumeric(self, a, b):
+    return scipy.stats.laplace.rvs(a,b)
 
-  def simulate(self, args): return self.simulateNumeric(*args.operandValues())
-  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues())
+  def logDensityNumeric(self, x, a, b):
+    return scipy.stats.laplace.logpdf(x,a,b)
+
+  def simulate(self, args):
+    return self.simulateNumeric(*args.operandValues())
+
+  def logDensity(self, x, args):
+    return self.logDensityNumeric(x,*args.operandValues())
 
   def gradientOfLogDensity(self,x,args):
     (a, b) = args.operandValues()
@@ -709,10 +715,13 @@ class LaplaceOutputPSP(RandomPSP):
     return (gradX,[gradA,gradB])
 
   def description(self,name):
-    return "%s(a, b) returns a sample from a laplace (double exponential) distribution with shape parameter a and scale parameter b" % name
+    return "%s(a, b) returns a sample from a Laplace (double exponential) "\
+      "distribution with shape parameter a and scale parameter b" % name
+
 
 registerBuiltinSP("laplace", typed_nr(LaplaceOutputPSP(),
-                                      [t.NumberType(), t.PositiveType()], t.NumberType()))
+  [t.NumberType(), t.PositiveType()], t.NumberType()))
+
 
 class SuffNormalSP(SP):
 # SP for Normal, maintaining sufficient statistics.
