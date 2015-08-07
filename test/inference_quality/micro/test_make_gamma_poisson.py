@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import itertools
 from scipy.stats import poisson
 from venture.test.stats import statisticalTest, reportKernelTwoSampleTest
 from venture.test.config import get_ripl, collectIidSamples, default_num_samples
