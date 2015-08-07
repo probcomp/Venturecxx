@@ -20,7 +20,7 @@ Test that things we expect to work at the console actually do.
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import subprocess
-from nose import SkipTest
+from flaky import flaky
 
 from venture.test.config import in_backend
 
@@ -374,6 +374,7 @@ def __venture_start__(*args, **kwargs):
   os.unlink(vnts)
   os.unlink(plgn)
 
+@flaky
 def test_plots_to_file():
   vnt = spawn_venture(timeout=3)
   plotfile = tempfile.NamedTemporaryFile(suffix="plot.png", delete=False)
