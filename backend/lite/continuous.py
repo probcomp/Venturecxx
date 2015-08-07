@@ -435,8 +435,12 @@ registerBuiltinSP("vonmises", typed_nr(VonMisesOutputPSP(),
 
 class UniformOutputPSP(RandomPSP):
   # TODO don't need to be class methods
-  def simulateNumeric(self,low,high): return scipy.stats.uniform.rvs(low, high-low)
-  def logDensityNumeric(self,x,low,high): return scipy.stats.uniform.logpdf(x, low, high-low)
+  def simulateNumeric(self, low, high):
+    return scipy.stats.uniform.rvs(low, high-low)
+
+  def logDensityNumeric(self, x, low, high):
+    return scipy.stats.uniform.logpdf(x, low, high-low)
+
   def logDensityBoundNumeric(self, _, low, high):
     if low is None or high is None:
       # Unbounded
@@ -444,29 +448,44 @@ class UniformOutputPSP(RandomPSP):
     else:
       return -math.log(high - low)
 
-  def simulate(self,args): return self.simulateNumeric(*args.operandValues())
-  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues())
+  def simulate(self, args):
+    return self.simulateNumeric(*args.operandValues())
+
+  def logDensity(self, x, args):
+    return self.logDensityNumeric(x,*args.operandValues())
+
   def gradientOfLogDensity(self, _, args):
     (low, high) = args.operandValues()
     spread = 1.0 / (high - low)
     return (0, [spread, -spread])
-  def logDensityBound(self, x, args): return self.logDensityBoundNumeric(x, *args.operandValues())
 
-  def description(self,name):
-    return "  %s(low, high) -> samples a uniform real number between low and high." % name
+  def logDensityBound(self, x, args):
+    return self.logDensityBoundNumeric(x, *args.operandValues())
+
+  def description(self, name):
+    return "  %s(low, high) samples a uniform real number between low "\
+      "and high." % name
 
   # TODO Uniform presumably has a variational kernel?
 
+
 registerBuiltinSP("uniform_continuous",typed_nr(UniformOutputPSP(),
-                                                [t.NumberType(), t.NumberType()], t.NumberType()))
+  [t.NumberType(), t.NumberType()], t.NumberType()))
+
 
 class BetaOutputPSP(RandomPSP):
   # TODO don't need to be class methods
-  def simulateNumeric(self,params): return scipy.stats.beta.rvs(*params)
-  def logDensityNumeric(self,x,params): return scipy.stats.beta.logpdf(x,*params)
+  def simulateNumeric(self, params):
+    return scipy.stats.beta.rvs(*params)
 
-  def simulate(self,args): return self.simulateNumeric(args.operandValues())
-  def logDensity(self,x,args): return self.logDensityNumeric(x,args.operandValues())
+  def logDensityNumeric(self, x, params):
+    return scipy.stats.beta.logpdf(x,*params)
+
+  def simulate(self,args):
+    return self.simulateNumeric(args.operandValues())
+
+  def logDensity(self,x,args):
+    return self.logDensityNumeric(x,args.operandValues())
 
   def gradientOfLogDensity(self,x,args):
     (alpha, beta) = args.operandValues()
@@ -476,12 +495,15 @@ class BetaOutputPSP(RandomPSP):
     return (gradX,[gradAlpha,gradBeta])
 
   def description(self,name):
-    return "  %s(alpha, beta) returns a sample from a beta distribution with shape parameters alpha and beta." % name
+    return "  %s(alpha, beta) returns a sample from a Beta distribution with "\
+      "shape parameters alpha and beta." % name
 
   # TODO Beta presumably has a variational kernel too?
 
+
 registerBuiltinSP("beta", typed_nr(BetaOutputPSP(),
-                                   [t.PositiveType(), t.PositiveType()], t.ProbabilityType()))
+  [t.PositiveType(), t.PositiveType()], t.ProbabilityType()))
+
 
 class ExponOutputPSP(RandomPSP):
   # TODO don't need to be class methods
