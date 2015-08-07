@@ -654,7 +654,7 @@ class MakerUGammaPoissonOutputPSP(DiscretePSP):
     assert isinstance(value.sp,SuffPoissonSP)
     (alpha, beta) = args.operandValues()
     mu = value.sp.outputPSP.psp.mu
-    return scipy.stats.gamma.logpdf(mu,a=alpha,scale=1./beta)
+    return scipy.stats.gamma.logpdf(mu, a=alpha, scale=1./beta)
 
   def description(self, name):
     return '  %s(alpha, beta) returns an uncollapsed Gamma Poisson sampler.'\
