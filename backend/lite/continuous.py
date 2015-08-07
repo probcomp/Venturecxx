@@ -336,27 +336,35 @@ class NormalOutputPSP(RandomPSP):
 
 
 class NormalvvOutputPSP(RandomPSP):
-  def simulate(self, args): return np.random.normal(*args.operandValues())
-  def logDensity(self, x, args): return sum(scipy.stats.norm.logpdf(x, *args.operandValues()))
+  def simulate(self, args):
+    return np.random.normal(*args.operandValues())
+
+  def logDensity(self, x, args):
+    return sum(scipy.stats.norm.logpdf(x, *args.operandValues()))
+
   def gradientOfLogDensity(self,x,args):
     (mu, sigma) = args.operandValues()
-
     gradX = -(x - mu) / (np.power(sigma,2))
     gradMu = (x - mu) / (np.power(sigma,2))
     gradSigma = (np.power(x - mu,2) - np.power(sigma,2)) / np.power(sigma,3)
     return (gradX,[gradMu,gradSigma])
 
+
 # These two only differ because the gradients need to account for broadcasting
 class NormalsvOutputPSP(RandomPSP):
-  def simulate(self, args): return np.random.normal(*args.operandValues())
-  def logDensity(self, x, args): return sum(scipy.stats.norm.logpdf(x, *args.operandValues()))
-  def gradientOfLogDensity(self,x,args):
-    (mu, sigma) = args.operandValues()
+  def simulate(self, args):
+    return np.random.normal(*args.operandValues())
 
+  def logDensity(self, x, args):
+    return sum(scipy.stats.norm.logpdf(x, *args.operandValues()))
+
+  def gradientOfLogDensity(self, x, args):
+    (mu, sigma) = args.operandValues()
     gradX = -(x - mu) / (np.power(sigma,2))
     gradMu = (x - mu) / (np.power(sigma,2))
     gradSigma = (np.power(x - mu,2) - np.power(sigma,2)) / np.power(sigma,3)
     return (gradX,[sum(gradMu),gradSigma])
+
 
 class NormalvsOutputPSP(RandomPSP):
   def simulate(self, args): return np.random.normal(*args.operandValues())
