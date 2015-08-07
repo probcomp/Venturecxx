@@ -657,13 +657,19 @@ registerBuiltinSP("student_t", typed_nr(StudentTOutputPSP(),
 
 class InvGammaOutputPSP(RandomPSP):
   # TODO don't need to be class methods
-  def simulateNumeric(self,a,b): return scipy.stats.invgamma.rvs(a,scale=b)
-  def logDensityNumeric(self,x,a,b): return scipy.stats.invgamma.logpdf(x,a,scale=b)
+  def simulateNumeric(self, a, b):
+    return scipy.stats.invgamma.rvs(a, scale=b)
 
-  def simulate(self,args): return self.simulateNumeric(*args.operandValues())
-  def logDensity(self,x,args): return self.logDensityNumeric(x,*args.operandValues())
+  def logDensityNumeric(self, x, a, b):
+    return scipy.stats.invgamma.logpdf(x, a, scale=b)
 
-  def gradientOfLogDensity(self,x,args):
+  def simulate(self, args):
+    return self.simulateNumeric(*args.operandValues())
+
+  def logDensity(self, x, args):
+    return self.logDensityNumeric(x, *args.operandValues())
+
+  def gradientOfLogDensity(self, x, args):
     (alpha, beta) = args.operandValues()
     gradX = (1.0 / x) * (-alpha - 1 + (beta / x))
     gradAlpha = math.log(beta) - spsp.digamma(alpha) - math.log(x)
@@ -671,12 +677,15 @@ class InvGammaOutputPSP(RandomPSP):
     return (gradX,[gradAlpha,gradBeta])
 
   def description(self,name):
-    return "%s(alpha, beta) returns a sample from an inverse gamma distribution with shape parameter alpha and scale parameter beta" % name
+    return "%s(alpha, beta) returns a sample from an inverse Gamma "\
+      "distribution with shape parameter alpha and scale parameter beta" % name
 
   # TODO InvGamma presumably has a variational kernel too?
 
+
 registerBuiltinSP("inv_gamma", typed_nr(InvGammaOutputPSP(),
-                                        [t.PositiveType(), t.PositiveType()], t.PositiveType()))
+  [t.PositiveType(), t.PositiveType()], t.PositiveType()))
+
 
 class LaplaceOutputPSP(RandomPSP):
   # a is the location, b is the scale; parametrization is same as Wikipedia
