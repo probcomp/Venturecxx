@@ -10,5 +10,9 @@ Please be patient as we fill the documentation in.
 
    venture.shortcuts.rst
    venture.ripl.ripl.rst
+   venture.value.dicts.rst
    venture.lite.sp.rst
    venture.lite.psp.rst
+   venture.lite.sp_help.rst
+   venture.lite.types.rst
+   venture.lite.value.rst
