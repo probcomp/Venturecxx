@@ -36,6 +36,31 @@ sys.setrecursionlimit(max(10**6, sys.getrecursionlimit()))
 
 from venture import parser, ripl, sivm, server
 
+def make_ripl(*args, **kwargs):
+    return backend().make_ripl(*args, **kwargs)
+
+def make_lite_ripl(*args, **kwargs):
+    return Lite().make_ripl(*args, **kwargs)
+
+def make_puma_ripl(*args, **kwargs):
+    return Puma().make_ripl(*args, **kwargs)
+
+def make_church_prime_ripl(*args, **kwargs):
+    return backend().make_church_prime_ripl(*args, **kwargs)
+
+def make_lite_church_prime_ripl(*args, **kwargs):
+    return Lite().make_church_prime_ripl(*args, **kwargs)
+
+def make_puma_church_prime_ripl(*args, **kwargs):
+    return Puma().make_church_prime_ripl(*args, **kwargs)
+
+def make_ripl_rest_server():
+    r = backend().make_combined_ripl()
+    return server.RiplRestServer(r)
+
+def make_ripl_rest_client(base_url):
+    return ripl.RiplRestClient(base_url)
+
 class Backend(object):
     def trace_constructor(self): pass
     def make_engine(self, persistent_inference_trace=True):
@@ -88,28 +113,3 @@ def backend(name = "puma"):
     if name == "puma":
         return Puma()
     raise Exception("Unknown backend %s" % name)
-
-def make_ripl(*args, **kwargs):
-    return backend().make_ripl(*args, **kwargs)
-
-def make_lite_ripl(*args, **kwargs):
-    return Lite().make_ripl(*args, **kwargs)
-
-def make_puma_ripl(*args, **kwargs):
-    return Puma().make_ripl(*args, **kwargs)
-
-def make_church_prime_ripl(*args, **kwargs):
-    return backend().make_church_prime_ripl(*args, **kwargs)
-
-def make_lite_church_prime_ripl(*args, **kwargs):
-    return Lite().make_church_prime_ripl(*args, **kwargs)
-
-def make_puma_church_prime_ripl(*args, **kwargs):
-    return Puma().make_church_prime_ripl(*args, **kwargs)
-
-def make_ripl_rest_server():
-    r = backend().make_combined_ripl()
-    return server.RiplRestServer(r)
-
-def make_ripl_rest_client(base_url):
-    return ripl.RiplRestClient(base_url)
