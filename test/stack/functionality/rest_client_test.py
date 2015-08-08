@@ -23,7 +23,7 @@ from nose import SkipTest
 from nose.plugins.attrib import attr
 
 from venture.server import RiplRestServer
-from venture.shortcuts import make_combined_ripl
+from venture.shortcuts import Lite
 from venture.ripl import RiplRestClient
 
 # from stackoverflow
@@ -58,7 +58,7 @@ class ClientTestCase(unittest.TestCase):
 @attr(backend="none")
 class TestRiplRestClient(ClientTestCase):
     def setUp(self):
-        self.local_ripl = make_combined_ripl()
+        self.local_ripl = Lite().make_combined_ripl()
         self.server = RiplRestServer(self.local_ripl)
         port = get_open_port()
         def run_server():

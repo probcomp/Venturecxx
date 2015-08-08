@@ -19,8 +19,7 @@ from IPython.parallel import Client
 from IPython.parallel.util import interactive
 from venture.shortcuts import make_puma_church_prime_ripl
 from venture.shortcuts import make_lite_church_prime_ripl
-from venture.shortcuts import make_puma_venture_script_ripl
-from venture.shortcuts import make_lite_venture_script_ripl
+from venture.shortcuts import Lite, Puma
 import numpy as np
 import matplotlib.pylab as plt
 from scipy.stats import kde
@@ -206,12 +205,12 @@ class MRipl():
             if self.syntax == 'church_prime':
                 mk_ripl = make_puma_church_prime_ripl
             else:
-                mk_ripl = make_puma_venture_script_ripl
+                mk_ripl = Puma().make_venture_script_ripl
         else:
             if self.syntax == 'church_prime':
                 mk_ripl = make_lite_church_prime_ripl
             else:
-                mk_ripl = make_lite_venture_script_ripl
+                mk_ripl = Lite().make_venture_script_ripl
                 
         self.local_ripls=[mk_ripl() for i in range(self.no_local_ripls)]
         self.mr_set_seeds(local_seeds=self.local_seeds)
@@ -270,8 +269,8 @@ class MRipl():
                 mk_puma = make_puma_church_prime_ripl
                 mk_lite = make_lite_church_prime_ripl
             else:
-                mk_puma = make_puma_venture_script_ripl
-                mk_lite = make_lite_venture_script_ripl
+                mk_puma = Puma().make_venture_script_ripl
+                mk_lite = Lite().make_venture_script_ripl
                 
             mripls.append({'lite':[mk_lite() for i in range(k)],
                            'puma':[mk_puma() for i in range(k)], 'seeds':[]})
