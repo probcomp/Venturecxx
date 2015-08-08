@@ -37,31 +37,45 @@ sys.setrecursionlimit(max(10**6, sys.getrecursionlimit()))
 from venture import parser, ripl, sivm, server
 
 def make_ripl(*args, **kwargs):
+    """Construct and return a VentureScript RIPL object.
+
+Traces models in the default backend.  See `venture.ripl.ripl.Ripl` for what
+you can do with it."""
     return backend().make_ripl(*args, **kwargs)
 
 def make_lite_ripl(*args, **kwargs):
+    """Construct and return a VentureScript RIPL object that traces models in the Lite backend."""
     return Lite().make_ripl(*args, **kwargs)
 
 def make_puma_ripl(*args, **kwargs):
+    """Construct and return a VentureScript RIPL object that traces models in the Puma backend."""
     return Puma().make_ripl(*args, **kwargs)
 
 def make_church_prime_ripl(*args, **kwargs):
+    """Construct and return a VentureScript RIPL object that parses input in the abstract syntax."""
     return backend().make_church_prime_ripl(*args, **kwargs)
 
 def make_lite_church_prime_ripl(*args, **kwargs):
+    """Construct and return a VentureScript RIPL object that parses input in the abstract syntax and traces models in the Lite backend."""
     return Lite().make_church_prime_ripl(*args, **kwargs)
 
 def make_puma_church_prime_ripl(*args, **kwargs):
+    """Construct and return a VentureScript RIPL object that parses input in the abstract syntax and traces models in the Puma backend."""
     return Puma().make_church_prime_ripl(*args, **kwargs)
 
 def make_ripl_rest_server():
+    """Return a VentureScript REST server object backed by a default RIPL."""
     r = backend().make_combined_ripl()
     return server.RiplRestServer(r)
 
 def make_ripl_rest_client(base_url):
+    """Return a VentureScript REST client object pointed at the given URL."""
     return ripl.RiplRestClient(base_url)
 
 class Backend(object):
+    """Base class representing a model backend.
+
+See `Lite` and `Puma`."""
     def trace_constructor(self): pass
     def make_engine(self, persistent_inference_trace=True):
         from venture.engine import engine
@@ -96,18 +110,21 @@ class Backend(object):
         return server.RiplRestServer(self.make_combined_ripl())
 
 class Lite(Backend):
+    """An instance of this class represents the Lite backend."""
     def trace_constructor(self):
         from venture.lite import trace
         return trace.Trace
     def name(self): return "lite"
 
 class Puma(Backend):
+    """An instance of this class represents the Puma backend."""
     def trace_constructor(self):
         from venture.puma import trace
         return trace.Trace
     def name(self): return "puma"
 
 def backend(name = "puma"):
+    """Return a backend by name: 'lite' or 'puma'."""
     if name == "lite":
         return Lite()
     if name == "puma":

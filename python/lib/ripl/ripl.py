@@ -38,7 +38,7 @@ Typical usage begins by using one of the factory functions in the
 `venture.shortcuts` module::
 
     import venture.shortcuts as s
-    r = s.Lite().make_church_prime_ripl()
+    r = s.make_ripl()
     # r is a fresh Ripl
     r.assume(...)
     r.observe(...)
