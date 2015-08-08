@@ -20,8 +20,8 @@
 # Raise Python's recursion limit, per
 # http://log.brandonthomson.com/2009/07/increase-pythons-recursion-limit.html
 # The reason to do this is that Venture is not tail recursive, and the
-# cycle and mixture inference programs are written as recursive
-# functions in Venture.
+# repeat inference function are written as recursive functions in
+# Venture.
 import sys
 import resource
 # Try to increase max stack size from 8MB to 512MB
@@ -63,6 +63,10 @@ class Backend(object):
         r.set_mode("church_prime")
         r.backend_name = self.name()
         return r
+    def make_ripl(self, init_mode="venture_script", persistent_inference_trace=True):
+        r = self.make_combined_ripl(persistent_inference_trace=persistent_inference_trace)
+        r.set_mode(init_mode)
+        return r
     def make_ripl_rest_server(self):
         return server.RiplRestServer(self.make_combined_ripl())
 
@@ -85,29 +89,26 @@ def backend(name = "puma"):
         return Puma()
     raise Exception("Unknown backend %s" % name)
 
-for (prefix, suffix) in [("make_core_", "sivm"),
-                         ("make_venture_", "sivm"),
-                         ("make_", "church_prime_ripl"),
-                         ("make_", "venture_script_ripl"),
-                         ("make_", "combined_ripl")]:
-    method = prefix + suffix
-    # Your complaints about metaprogramming do not fall upon deaf ears, pylint: disable=exec-used
-    string2 = """
-def %s(*args, **kwargs):
-  return backend().%s(*args, **kwargs)
-""" % (method, method)
-    exec(string2)
+def make_ripl(*args, **kwargs):
+    return backend().make_ripl(*args, **kwargs)
 
-    for backend_name in ["lite", "puma"]:
-        function = prefix + backend_name + "_" + suffix
-        string = """
-def %s(*args, **kwargs):
-  return backend("%s").%s(*args, **kwargs)
-""" % (function, backend_name, method)
-        exec(string)
+def make_lite_ripl(*args, **kwargs):
+    return Lite().make_ripl(*args, **kwargs)
+
+def make_puma_ripl(*args, **kwargs):
+    return Puma().make_ripl(*args, **kwargs)
+
+def make_church_prime_ripl(*args, **kwargs):
+    return backend().make_church_prime_ripl(*args, **kwargs)
+
+def make_lite_church_prime_ripl(*args, **kwargs):
+    return Lite().make_church_prime_ripl(*args, **kwargs)
+
+def make_puma_church_prime_ripl(*args, **kwargs):
+    return Puma().make_church_prime_ripl(*args, **kwargs)
 
 def make_ripl_rest_server():
-    r = make_combined_ripl() # Metaprogrammed.  pylint: disable=undefined-variable
+    r = backend().make_combined_ripl()
     return server.RiplRestServer(r)
 
 def make_ripl_rest_client(base_url):
