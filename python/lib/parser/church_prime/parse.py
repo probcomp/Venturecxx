@@ -307,7 +307,9 @@ def parse_instructions(string):
 
 def parse_instruction(string):
     ls = parse_instructions(string)
-    if len(ls) != 1:
+    if not ls:
+        return None
+    if len(ls) > 1:
         raise VentureException('parse', 'Expected a single instruction')
     return ls[0]
 
@@ -488,7 +490,8 @@ class ChurchPrimeParser(object):
     def parse_instruction(self, string):
         '''Parse STRING as a single instruction.'''
         l = parse_instruction(string)
-        return dict((k, delocust(v)) for k, v in l['value'].iteritems())
+        if l:
+            return dict((k, delocust(v)) for k, v in l['value'].iteritems())
 
     def parse_locexpression(self, string):
         '''Parse STRING as an expression, and include location records.'''
@@ -622,14 +625,15 @@ class ChurchPrimeParser(object):
         [1] a dict mapping operand keys to [start, end] positions.
         '''
         l = parse_instruction(string)
-        locs = dict((k, v['loc']) for k, v in l['value'].iteritems())
-        # XXX + 1?
-        strings = dict((k, string[loc[0] : loc[1] + 1]) for k, loc in
-            locs.iteritems())
-        # XXX Sort???
-        sortlocs = dict((k, list(sorted(loc))) for k, loc in locs.iteritems())
-        # XXX List???
-        return [strings, sortlocs]
+        if l:
+            locs = dict((k, v['loc']) for k, v in l['value'].iteritems())
+            # XXX + 1?
+            strings = dict((k, string[loc[0] : loc[1] + 1]) for k, loc in
+                locs.iteritems())
+            # XXX Sort???
+            sortlocs = dict((k, list(sorted(loc))) for k, loc in locs.iteritems())
+            # XXX List???
+            return [strings, sortlocs]
 
     # XXX Make the tests pass, nobody else calls this.
     def character_index_to_expression_index(self, _string, index):
