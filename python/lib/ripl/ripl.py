@@ -561,11 +561,11 @@ the semantics in `observe_dataset`.
 Syntax:
 ripl.observe_dataset("<expr>", <iterable>)
 
-- The expr must evaluate to a (presumably stochastic) Venture
+- The `<expr>` must evaluate to a (presumably stochastic) Venture
   procedure.  We expect in typical usage expr would just look up a
   recent assume.
 
-- The <iterable> is a Python iterable each of whose elements must be a
+- The `<iterable>` is a Python iterable each of whose elements must be a
   nonempty list of valid Venture values.
 
 - There is no Venture syntax for this; it is accessible only when
@@ -575,9 +575,9 @@ Semantics:
 
 - As to its effect on the distribution over traces, this is equivalent
   to looping over the contents of the given iterable, calling
-  ripl.observe on each element as ripl.observe("(<expr> *item[:-1])",
-  item[-1]). In other words, the first elements of each item of
-  the iterable give the arguments to the procedure given by <expr>,
+  ripl.observe on each element as `ripl.observe("(<expr> *item[:-1])", item[-1])`.
+  In other words, the first elements of each item of
+  the iterable give the arguments to the procedure given by `<expr>`,
   and the last element gives the value to observe.
 
 - The ripl method returns a list of directive ids, which correspond to
@@ -585,7 +585,7 @@ Semantics:
 
 Open issues:
 
-- If the <expr> is itself stochastic, it is unspecified whether we
+- If the `<expr>` is itself stochastic, it is unspecified whether we
   notionally evaluate it once per bulk_observe or once per data item.
 
 - This is not the same as directly observing sufficient statistics
@@ -595,7 +595,7 @@ Open issues:
   once.
 
 - Currently, list_directives will not respect the nesting structure of
-  observations implied by bulk_observe.  How can we improve this? Do
+  observations implied by `bulk_observe`.  How can we improve this? Do
   we represent the bulk_observe as one directive? If so, we can hardly
   return a useful representation of the iterable representing the data
   set. If not, we will hardly win anything because list_directives
