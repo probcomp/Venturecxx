@@ -132,12 +132,16 @@ class Ripl():
                 stringable_instruction = instruction
                 parsed_instruction = self._ensure_parsed(instruction)
             # if directive, then save the text string
-            if parsed_instruction['instruction'] in ['assume', 'observe', 'predict', 'define',
-                                                     'labeled_assume','labeled_observe','labeled_predict']:
-                did = self.sivm.core_sivm.engine.predictNextDirectiveId()
-                self.directive_id_to_stringable_instruction[did] = stringable_instruction
-                self.directive_id_to_mode[did] = self.mode
-            ret_value = self.sivm.execute_instruction(parsed_instruction)
+            ret_value = None
+            if parsed_instruction:
+                if parsed_instruction['instruction'] in [
+                        'assume', 'observe', 'predict', 'define',
+                        'labeled_assume','labeled_observe','labeled_predict']:
+                    did = self.sivm.core_sivm.engine.predictNextDirectiveId()
+                    self.directive_id_to_stringable_instruction[did] = (
+                        stringable_instruction)
+                    self.directive_id_to_mode[did] = self.mode
+                ret_value = self.sivm.execute_instruction(parsed_instruction)
         except VentureException as e:
             if self._do_not_annotate:
                 raise

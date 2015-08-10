@@ -475,15 +475,18 @@ def parse_instructions(string):
 
 def parse_instruction(string):
     ls = parse_instructions(string)
-    if len(ls) != 1:
+    if not ls:
+        return None
+    if len(ls) > 1:
         raise VentureException('text_parse', 'Expected a single instruction')
     return ls[0]
 
 def parse_expression(string):
     inst = parse_instruction(string)['value']
-    if not inst['instruction']['value'] == 'evaluate':
-        raise VentureException('text_parse', 'Expected an expression')
-    return inst['expression']
+    if inst:
+        if not inst['instruction']['value'] == 'evaluate':
+            raise VentureException('text_parse', 'Expected an expression')
+        return inst['expression']
 
 def value_to_string(v):
     if isinstance(v, dict):
@@ -656,7 +659,8 @@ class VentureScriptParser(object):
     def parse_instruction(self, string):
         '''Parse STRING as a single instruction.'''
         l = parse_instruction(string)
-        return dict((k, delocust(v)) for k, v in l['value'].iteritems())
+        if l:
+            return dict((k, delocust(v)) for k, v in l['value'].iteritems())
 
     def parse_locexpression(self, string):
         '''Parse STRING as an expression, and include location records.'''
