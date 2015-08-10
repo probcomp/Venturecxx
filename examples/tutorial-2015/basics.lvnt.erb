@@ -3,7 +3,7 @@ Title: Basic VentureScript
 <% sample_size = 500 %>
 <% if ENV['SMOKETEST'] then sample_size = 5 end %>
 <% smaller_sample_size = [sample_size / 5, 5].max %>
-<% refman_url = "http://probcomp.csail.mit.edu/venture/edge/reference/" %>
+<% refman_url = "../../reference/" %>
 <% inf_prelude_size = `cat ../../python/lib/engine/inference_prelude.py | grep '[[]"' | wc -l`.to_i %>
 
 <script type="text/javascript">

@@ -64,6 +64,7 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=examples/tutorial-2015/tutorial \
     --exclude=examples/tutorial-2015/tutorial-smoke \
     --exclude=examples/tutorial-2015/vis-*.png \
+    --exclude=tool/jenkins \
     --exclude=backend/hs \
     `# Excluding Terminal because it's unused and copyright-intermixed` \
     --exclude=demos/jsripl/Terminal \
