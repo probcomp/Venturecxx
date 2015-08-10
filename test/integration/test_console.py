@@ -144,8 +144,8 @@ class SpawnVentureExpect(pexpect.spawn):
     return float_result
 
 
-def spawn_venture(**kwargs):
-  child = SpawnVentureExpect('venture', **kwargs)
+def spawn_venture(*args, **kwargs):
+  child = SpawnVentureExpect('venture '+str.join(" ", args), **kwargs)
   child.delaybeforesend = 0
   child.expect(r'\w+ backend', timeout=10)  # Startup time can be long.
   child.expect(
@@ -228,6 +228,53 @@ def test_lines_and_comments():
   #                    0.9)
   #                    //  Comment after.
   #                    )
+  # """)
+  # good(vnt.expect_capture_one_floatln())
+
+@in_backend("none")
+def test_lines_and_comments_abstract_syntax():
+  vnt = spawn_venture("--abstract-syntax")
+
+  vnt.send('\n')
+  assert "" == vnt.read_to_prompt(), str(vnt)
+  vnt.send_command(';; just a comment by itself')
+  assert "" == vnt.read_to_prompt(), str(vnt)
+
+  def good(val):
+    assert val >= 0.1, str(vnt)
+    assert val <= 0.9, str(vnt)
+    vnt.read_to_prompt()
+
+  vnt.send_command('assume w (uniform_continuous 0.1 0.9)')
+  good(vnt.expect_capture_one_float())
+
+  # No multiline console support in venture abstract syntax.
+  # https://github.com/mit-probabilistic-computing-project/Venturecxx/issues/130
+  # vnt.send_command("""(assume x
+  # (uniform_continuous 0.1
+  #                     0.9))
+  # """)
+  # good(vnt.expect_capture_one_float())
+  # vnt.send_command("""(assume y
+  # ;;comment before
+  # (uniform_continuous 0.1  ;; comment two
+  #                     ;; another comment.
+  #                     0.9))
+  # """)
+  # good(vnt.expect_capture_one_float())
+  # vnt.send_command("""(assume z
+  # ;;comment before
+  # (uniform_continuous 0.1  ;; comment two
+  #                     ;; another comment.
+  #                     0.9) ;;  Comment after.
+  #   )""")
+  # good(vnt.expect_capture_one_float())
+  # vnt.send_command("""(assume v =
+  # ;;comment before
+  # (uniform_continuous 0.1  ;; comment two
+  #                     ;; another comment.
+  #                     0.9))
+  #                     ;;  Comment after.
   # """)
   # good(vnt.expect_capture_one_floatln())
 

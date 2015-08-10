@@ -35,5 +35,5 @@ VentureScript programs have multiple meanings:
 
 For a more extensive conceptual introduction to Venture, see the
 `draft Venture paper <http://arxiv.org/abs/1404.0099>`_ or the
-`VentureScript tutorial <http://probcomp.csail.mit.edu/venture/tutorial/index.html>`_.
+`VentureScript tutorial <../tutorial/index.html>`_.
 

@@ -52,7 +52,7 @@ build-smoke: index.html tutorial-smoke/basics/index.html tutorial-smoke/linear-r
 	cp good-gp-figure-2.png tutorial-smoke/gp/figure-2.png
 
 upload: build
-	scp -r tutorial/ login.csail.mit.edu:/afs/csail.mit.edu/proj/probcomp/www/data/venture/
+	scp -r tutorial/ login.csail.mit.edu:/afs/csail.mit.edu/proj/probcomp/www/data/venture/edge/
 	scp $(REGRESSION_DOWNLOADS) $(GP_DOWNLOADS) login.csail.mit.edu:/afs/csail.mit.edu/u/g/gremio/ppaml/venture-tutorial/
 	@echo "You might want to point the W3C link checker at the uploaded result:"
 	@echo "https://validator.w3.org/checklink?uri=http%3A%2F%2Fprobcomp.csail.mit.edu%2Fventure%2Ftutorial%2Findex.html&hide_type=all&recursive=on&depth=1&check=Check"
