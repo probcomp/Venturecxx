@@ -53,6 +53,9 @@ seem to call for different testing strategies.
       - The number of samples used to estimate full assessment from
         tail assessment, if applicable
 
+  - For discrete or low-D distributions, could also compute the K-L by
+    enumeration or quadrature.
+
 - Testing transition operators that converge to a **known exact
   posterior**: All too often, the precise intended action of a
   transition operator is not characterized well enough to serve as a

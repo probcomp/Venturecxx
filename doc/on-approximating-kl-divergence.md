@@ -25,11 +25,15 @@ by sampling, we need to admit the approximation error, because getting
 to machine precision with an O(n^1/2) convergence rate will take
 around 2^100 samples.
 
-It may be possible to use numerical techniques like [Richardson
+One might think that it may be possible to use numerical techniques
+like [Richardson
 extrapolation](https://en.wikipedia.org/wiki/Richardson_extrapolation)
 (on the number of sample points) to reduce the approximation error,
-but I am surprised not to find any literature on that.  You'd think it
-would be published and readily accessible if it worked.
+but you can't.  I thought it through; the essential reason is that the
+approximation error from Monte Carlo integration is (intentionally!)
+unpredictable, so can't be extrapolatd from.  I am surprised not to
+find any literature on this; the question is so obvious that even a
+description of the negative result would be socially valuable.
 
 Aside: Tail Assessable Distributions
 ------------------------------------
@@ -106,3 +110,37 @@ interacting time-accuracy knobs:
 I do not know any reliable techniques for efficiently reducing such a
 tableau to a confidently assertable answer, but the tableau is better
 than nothing.
+
+Aside: Tempting alternate analysis.  One can consider the following
+procedure:
+
+```haskell
+one_point :: TailAssessable a -> TailAssessable a -> RVar Double
+one_point query_d base_d = do
+  (_, q_assess) <- query_d
+  (b_sample, b_assess) <- base_d
+  point <- b_sample
+  return (b_assess point - q_assess point)
+```
+
+This is a one-point estimate of the KL divergence of `query_d` from
+`base_d`, in that both are transformed by `approximately_assess 1` and
+tested at one point.  This is tempting becuase it reduces two
+dimensions of limits to one, but wrong, because the expected value of
+this is not the KL divergence.  Why not?  Because expectation does not
+distribute over KL.  Counterexample: consider computing the KL
+divergence of a bimodal mixture from itself, treating it as tail
+assessable over choice of mode in one instance but assessing it end to
+end in the other.
+
+Notes
+-----
+
+For discrete or low-dimensional distributions, quadrature would be
+much faster than Monte Carlo, and may be drivable to machine precision
+(obviating the need for dealing with significant approximation
+errors).
+
+All the above depends upon the assessments being normalized.  If the P
+and Q densities were scaled by the same normalization constant it
+would cancel, but how often does that happen?
