@@ -184,7 +184,8 @@ class Semantics(object):
     def p_command_report(self, k, dr):
         assert isloc(dr[1])
         ui = 'labeled_report' if dr[0] == 'label' else 'report'
-        inst = {'instruction': loctoken1(k, ui), dr[0]: dr[1]}
+        i = loctoken1(k, ui)
+        inst = {'instruction': i, dr[0]: dr[1]}
         return locmerge(i, dr[1], inst)
     def p_command_infer(self, k, e):
         assert isloc(e)
@@ -802,14 +803,6 @@ class VentureScriptParser(object):
         sortlocs = dict((k, list(sorted(loc))) for k, loc in locs.iteritems())
         # XXX List???
         return [strings, sortlocs]
-
-    # XXX Make the tests pass, nobody else calls this.
-    def get_instruction_string(self, i):
-        if i == 'observe':
-            return 'observe %(expression)s = %(value)v'
-        elif i == 'infer':
-            return 'infer %(expression)s'
-        assert False
 
     # XXX Make the tests pass, nobody else calls this.
     def character_index_to_expression_index(self, _string, index):

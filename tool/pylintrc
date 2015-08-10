@@ -107,4 +107,9 @@ variable-rgx=[a-z_][a-z0-9_]{0,30}$
 # to define but not use.  TODO Here I use the underscore convention from
 # Haskell despite its conflict with the Python convention of treating
 # underscored names as semi-private.
-dummy-variables-rgx=_|dummy
+dummy-variables-rgx=_|dummy|unused_.*
+
+[TYPECHECK]
+
+ignored-modules = numpy
+# Rationale: http://stackoverflow.com/questions/20553551/how-do-i-get-pylint-to-recognize-numpy-members
