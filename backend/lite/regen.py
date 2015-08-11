@@ -83,8 +83,12 @@ def propagateConstraint(trace,node,value):
 
 def attach(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients)
+  weight += absorb(trace, node)
+  return weight
+
+def absorb(trace, node):
   psp,args,gvalue = trace.pspAt(node),trace.argsAt(node),trace.groundValueAt(node)
-  weight += psp.logDensity(gvalue,args)
+  weight = psp.logDensity(gvalue,args)
   psp.incorporate(gvalue,args)
   assert isinstance(weight, numbers.Number)
   return weight
@@ -108,7 +112,7 @@ def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
     if trace.regenCountAt(scaffold,node) == 0:
       weight += regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients)
       if isLookupNode(node):
-        trace.setValueAt(node, trace.valueAt(node.sourceNode))
+        propagateLookup(trace,node)
       else:
         weight += applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients)
         if isRequestNode(node): weight += evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients)
@@ -120,6 +124,9 @@ def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
 
   assert isinstance(weight, numbers.Number)
   return weight
+
+def propagateLookup(trace, node):
+  trace.setValueAt(node, trace.valueAt(node.sourceNode))
 
 def evalFamily(trace,address,exp,env,scaffold,shouldRestore,omegaDB,gradients):
   if e.isVariable(exp):

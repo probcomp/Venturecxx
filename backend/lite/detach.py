@@ -55,6 +55,11 @@ def unconstrain(trace,node):
   return weight
 
 def detach(trace, node, scaffold, omegaDB, compute_gradient = False):
+  weight = unabsorb(trace, node, omegaDB, compute_gradient)
+  weight += extractParents(trace, node, scaffold, omegaDB, compute_gradient)
+  return weight
+
+def unabsorb(trace, node, omegaDB, compute_gradient = False):
   # we need to pass groundValue here in case the return value is an SP
   # in which case the node would only contain an SPRef
   psp,args,gvalue = trace.pspAt(node),trace.argsAt(node),trace.groundValueAt(node)  
@@ -64,7 +69,6 @@ def detach(trace, node, scaffold, omegaDB, compute_gradient = False):
     # Ignore the partial derivative of the value because the value is fixed
     (_, grad) = psp.gradientOfLogDensity(gvalue, args)
     omegaDB.addPartials(args.operandNodes + trace.esrParentsAt(node), grad)
-  weight += extractParents(trace, node, scaffold, omegaDB, compute_gradient)
   return weight
 
 def extractParents(trace, node, scaffold, omegaDB, compute_gradient = False):
