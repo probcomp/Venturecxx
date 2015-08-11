@@ -33,8 +33,7 @@ class TestChurchPrimeParser(unittest.TestCase):
         self.expression = None
 
     def test_expression(self):
-        with self.assertRaises(VentureException):
-            self.p.parse_locexpression("")
+        self.assertEqual(None, self.p.parse_locexpression(""))
         self.assertEqual(self.p.parse_locexpression("(a b (c real<1>))"),
                 {'loc': [0,16], 'value':[
                     {'loc': [1,1], 'value': v.sym('a')},
