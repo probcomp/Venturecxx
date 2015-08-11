@@ -18,7 +18,6 @@
 from nose.plugins.attrib import attr
 import unittest
 
-from venture.exception import VentureException
 from venture.parser import VentureScriptParser
 import venture.parser.venture_script.parse as module
 import venture.value.dicts as v
@@ -515,13 +514,6 @@ class TestVentureScriptParser(unittest.TestCase):
         self.assertEqual(output, [2])
         output = f(s, 5)
         self.assertEqual(output, [2,0])
-
-    def test_get_instruction_string(self):
-        f = self.p.get_instruction_string
-        output = f('observe')
-        self.assertEqual(output,'observe %(expression)s = %(value)v')
-        output = f('infer')
-        self.assertEqual(output,'infer %(expression)s')
 
     def test_string(self):
         output = self.p.parse_expression('"foo"')

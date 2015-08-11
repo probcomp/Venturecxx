@@ -116,13 +116,6 @@ class TestChurchPrimeParser(unittest.TestCase):
         output = f(s, 6)
         self.assertEqual(output, [2,0])
 
-    def test_get_instruction_string(self):
-        f = self.p.get_instruction_string
-        output = f('observe')
-        self.assertEqual(output,'[ observe %(expression)s %(value)v ]')
-        output = f('infer')
-        self.assertEqual(output,'[ infer %(expression)s ]')
-
     def test_mark_up_expression_smoke(self):
         parsed = self.p.parse_expression("(add 2 3)")
         def red(string):

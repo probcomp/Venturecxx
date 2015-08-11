@@ -479,14 +479,6 @@ class ChurchPrimeParser(object):
         '''Return STRING with %-directives formatted using PARAMS.'''
         return substitute_params(string, params)
 
-    # XXX Make the tests pass, nobody else calls this.
-    def get_instruction_string(self, i):
-        d = {
-            'observe': '[ observe %(expression)s %(value)v ]',
-            'infer': '[ infer %(expression)s ]',
-        }
-        return d[i]
-
     def parse_instruction(self, string):
         '''Parse STRING as a single instruction.'''
         l = parse_instruction(string)
