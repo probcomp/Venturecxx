@@ -55,10 +55,11 @@ def locbracket((_ovalue, ostart, oend), (_cvalue, cstart, cend), value):
 
 def delocust(l):
     # XXX Why do we bother with tuples in the first place?
-    if isinstance(l['value'], list) or isinstance(l['value'], tuple):
-        return [delocust(v) for v in l['value']]
-    else:
-        return l['value']
+    if l:
+        if isinstance(l['value'], list) or isinstance(l['value'], tuple):
+            return [delocust(v) for v in l['value']]
+        else:
+            return l['value']
 
 operators = {
     '+':        'add',
@@ -314,10 +315,12 @@ def parse_instruction(string):
     return ls[0]
 
 def parse_expression(string):
-    inst = parse_instruction(string)['value']
-    if not inst['instruction']['value'] == 'evaluate':
-        raise VentureException('parse', 'Expected an expression')
-    return inst['expression']
+    parsed_instruction = parse_instruction(string)
+    if parsed_instruction:
+        inst = parsed_instruction['value']
+        if not inst['instruction']['value'] == 'evaluate':
+            raise VentureException('parse', 'Expected an expression')
+        return inst['expression']
 
 def value_to_string(v):
     if isinstance(v, dict):
