@@ -575,17 +575,17 @@ class MRipl():
     ## END FIXME
 
 
-    def execute_program(self,program_string,params=None):
+    def execute_program(self,program_string):
 
-        local_out=[r.execute_program(program_string, params) for r in self.local_ripls]
+        local_out=[r.execute_program(program_string) for r in self.local_ripls]
 
         @interactive
-        def f(mrid,backend,program_string, params ):
+        def f(mrid,backend,program_string):
             mripl=mripls[mrid]
-            out = [r.execute_program(program_string, params) for r in mripl[backend]]
+            out = [r.execute_program(program_string) for r in mripl[backend]]
             return backend_filter(backend,out)
 
-        out_execute= self._mr_apply(local_out,f,program_string,params)
+        out_execute= self._mr_apply(local_out,f,program_string)
 
         if '[clear]' in program_string.lower():
             self.total_transitions = 0

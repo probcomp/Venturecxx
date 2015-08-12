@@ -220,11 +220,8 @@ class Ripl():
         e.annotated = True
         return e
 
-    def parse_program(self, program_string, params=None):
+    def parse_program(self, program_string):
         p = self._cur_parser()
-        # perform parameter substitution if necessary
-        if params != None:
-            program_string = self.substitute_params(program_string,params)
         # TODO the right thing is to make "comment" a valid instruction type.
         if self.get_mode() == "church_prime":
             start_comment_regex = ";"
@@ -236,8 +233,8 @@ class Ripl():
         instructions, positions = p.split_program(no_comments)
         return [self._ensure_parsed(i) for i in instructions], positions
 
-    def execute_program(self, program_string, params=None):
-        return self.execute_parsed_program(*self.parse_program(program_string, params=params))
+    def execute_program(self, program_string):
+        return self.execute_parsed_program(*self.parse_program(program_string))
 
     def execute_parsed_program(self, instructions, _positions):
         vals = []

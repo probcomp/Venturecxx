@@ -109,7 +109,7 @@ class VentureMagics(Magics):
         else:
             old_directives = ipy_ripl.list_directives()
 
-            venture_outs = ipy_ripl.execute_program( str(cell), params=None )
+            venture_outs = ipy_ripl.execute_program(str(cell))
 
             new_directives = ipy_ripl.list_directives()
 
