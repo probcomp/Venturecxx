@@ -15,5 +15,5 @@ infer observe(g(data_xs), data_ys);
 // Plot several samples of the gp
 define xs = linspace(0, 10, 200);
 define yss = array_from_dataset(run(accumulate_dataset(10,
-    sample(g(unquote(xs))))));
+    collect(g(unquote(xs))))));
 plot_lines(xs, yss, run(sample(data_xs)), data_ys, -5, 12, 1.0, 1.0, 0.5);
