@@ -93,7 +93,7 @@ class VentureMagics(Magics):
         ## LINE MAGIC
         if cell is None:
             
-            venture_outs = ipy_ripl.execute_instruction( str(line), params=None )
+            venture_outs = ipy_ripl.execute_instruction(str(line))
 
             directives = ipy_ripl.list_directives()
 
