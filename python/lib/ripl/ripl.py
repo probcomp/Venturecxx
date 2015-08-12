@@ -132,8 +132,8 @@ class Ripl():
                 stringable_instruction = instruction
                 parsed_instruction = self._ensure_parsed(instruction)
             # if directive, then save the text string
-            ret_value = None
-            if parsed_instruction:
+            ret_value = None  # None is appropriate, not just a sentinel.
+            if parsed_instruction != v.NO_PARSE_EXPRESSION:
                 if parsed_instruction['instruction'] in [
                         'assume', 'observe', 'predict', 'define',
                         'labeled_assume','labeled_observe','labeled_predict']:

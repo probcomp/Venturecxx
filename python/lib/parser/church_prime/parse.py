@@ -53,9 +53,11 @@ def locbracket((_ovalue, ostart, oend), (_cvalue, cstart, cend), value):
     assert cstart <= cend
     return located([ostart, cend], value)
 
+NO_PARSE_EXPRESSION = val.NO_PARSE_EXPRESSION
+
 def delocust(l):
     # XXX Why do we bother with tuples in the first place?
-    if l:
+    if l != NO_PARSE_EXPRESSION:
         if isinstance(l['value'], list) or isinstance(l['value'], tuple):
             return [delocust(v) for v in l['value']]
         else:
@@ -282,6 +284,8 @@ def parse_church_prime(f, context):
             parser.feed(token)
         if token[0] == 0:       # EOF
             break
+    if semantics.answer is None:
+        return NO_PARSE_EXPRESSION
     return semantics.answer
 
 def parse_church_prime_string(string):
@@ -309,18 +313,19 @@ def parse_instructions(string):
 def parse_instruction(string):
     ls = parse_instructions(string)
     if not ls:
-        return None
+        return NO_PARSE_EXPRESSION
     if len(ls) > 1:
         raise VentureException('parse', 'Expected a single instruction')
     return ls[0]
 
 def parse_expression(string):
     parsed_instruction = parse_instruction(string)
-    if parsed_instruction:
-        inst = parsed_instruction['value']
-        if not inst['instruction']['value'] == 'evaluate':
-            raise VentureException('parse', 'Expected an expression')
-        return inst['expression']
+    if parsed_instruction is NO_PARSE_EXPRESSION:
+        return NO_PARSE_EXPRESSION
+    inst = parsed_instruction['value']
+    if not inst['instruction']['value'] == 'evaluate':
+        raise VentureException('parse', 'Expected an expression')
+    return inst['expression']
 
 def value_to_string(v):
     if isinstance(v, dict):
@@ -485,8 +490,9 @@ class ChurchPrimeParser(object):
     def parse_instruction(self, string):
         '''Parse STRING as a single instruction.'''
         l = parse_instruction(string)
-        if l:
-            return dict((k, delocust(v)) for k, v in l['value'].iteritems())
+        if l is NO_PARSE_EXPRESSION:
+            return l
+        return dict((k, delocust(v)) for k, v in l['value'].iteritems())
 
     def parse_locexpression(self, string):
         '''Parse STRING as an expression, and include location records.'''
