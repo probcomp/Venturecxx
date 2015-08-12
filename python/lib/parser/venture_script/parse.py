@@ -577,7 +577,6 @@ class VentureScriptParser(object):
             return NO_PARSE_EXPRESSION
         return dict((k, delocust(v)) for k, v in l['value'].iteritems())
 
-
     def parse_locexpression(self, string):
         '''Parse STRING as an expression, and include location records.'''
         return parse_expression(string)
@@ -602,7 +601,8 @@ class VentureScriptParser(object):
             terms = (self.unparse_expression(e) for e in expression)
             return '(' + ' '.join(terms) + ')'
         else:
-            raise TypeError('Invalid expression: %s of type %s' % (repr(expression),type(expression)))
+            raise TypeError('Invalid expression: %s of type %s' %
+                (repr(expression), type(expression)))
 
     def unparse_integer(self, integer):
         return str(integer)
