@@ -322,7 +322,7 @@ class Ripl():
                 return {'type':'symbol', 'value':answer}
             else:
                 return answer
-        elif isinstance(expr, list):
+        elif isinstance(expr, list) or isinstance(expr, tuple):
             return [self._ensure_parsed_expression(e) for e in expr]
         elif isinstance(expr, dict):
             # A literal value as a stack dict.  These are all assumed
