@@ -120,7 +120,6 @@ class Ripl():
     def execute_instruction(self, instruction=None):
         p = self._cur_parser()
         try: # execute instruction, and handle possible exception
-            # perform parameter substitution if necessary
             if isinstance(instruction, basestring):
                 stringable_instruction = instruction
                 # parse instruction
