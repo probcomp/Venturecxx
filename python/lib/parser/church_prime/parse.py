@@ -389,86 +389,6 @@ def quote_string(s):
     out.write('"')
     return out.getvalue()
 
-# XXX Ugh, whattakludge.  If we can get rid of substitute_params, we
-# can get rid of this.
-def value_or_number_to_string(v):
-    if isinstance(v, int) or isinstance(v, float):
-        return str(v)
-    else:
-        return value_to_string(v)
-
-formatters = {
-    's': str,
-    'v': value_or_number_to_string,
-    'j': json.dumps,
-}
-
-def substitute_params(string, params):
-    if isinstance(params, tuple) or isinstance(params, list):
-        return substitute_params_indexed(string, params)
-    elif isinstance(params, dict):
-        return substitute_params_named(string, params)
-    else:
-        raise TypeError('Invalid parameter set: %s' % (params,))
-
-def substitute_params_indexed(string, params):
-    out = StringIO.StringIO()
-    i = 0
-    n = 0
-    while i < len(string):
-        j = string.find('%', i)
-        if j == -1:
-            j = len(string)     # Silly indexing convention.
-        if i < j:
-            out.write(buffer(string, i, j - i))
-        if j == len(string):
-            break
-        j += 1
-        if j == len(string):
-            raise ValueError('Dangling escape: %s' % (repr(string),))
-        d = string[j]
-        if d == '%':
-            out.write('%')
-        else:
-            if d not in formatters:
-                raise ValueError('Unknown formatting directive: %s' % (d,))
-            if n == len(params):
-                raise ValueError('Not enough parameters %d: %s' %
-                    (n, repr(string)))
-            out.write(formatters[d](params[n]))
-            n += 1
-        i = j + 1
-    return out.getvalue()
-
-def substitute_params_named(string, params):
-    out = StringIO.StringIO()
-    i = 0
-    while i < len(string):
-        j = string.find('%', i)
-        if j == -1:
-            j = len(string)     # Silly indexing convention.
-        if i < j:
-            out.write(buffer(string, i, j - i))
-        if j == len(string):
-            break
-        j += 1
-        if j == len(string):
-            raise ValueError('Dangling escape: %s' % (repr(string),))
-        if string[j] == '%':
-            out.write('%')
-        elif string[j] == '(':
-            k = string.find(')', j + 1)
-            if k == -1 or k + 1 == len(string):
-                raise ValueError('Dangling escape: %s' % (repr(string),))
-            key = string[j + 1 : k]
-            if key not in params:
-                raise ValueError('Missing parameter: %s' % (key,))
-            out.write(formatters[string[k + 1]](params[key]))
-        else:
-            raise ValueError('Invalid formatting directive: %%%s' %
-                (string[j],))
-    return out.getvalue()
-
 the_parser = None
 
 class ChurchPrimeParser(object):
@@ -481,11 +401,6 @@ class ChurchPrimeParser(object):
         if the_parser is None:
             the_parser = ChurchPrimeParser()
         return the_parser
-
-    # XXX Doesn't really belong here.
-    def substitute_params(self, string, params):
-        '''Return STRING with %-directives formatted using PARAMS.'''
-        return substitute_params(string, params)
 
     def parse_instruction(self, string):
         '''Parse STRING as a single instruction.'''
