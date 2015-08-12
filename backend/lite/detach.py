@@ -87,9 +87,7 @@ def extractESRParents(trace, node, scaffold, omegaDB, compute_gradient = False):
 
 def extract(trace, node, scaffold, omegaDB, compute_gradient = False):
   weight = 0
-  value = trace.valueAt(node)
-  if isinstance(value,SPRef) and value.makerNode != node and scaffold.isAAA(value.makerNode):
-    weight += extract(trace, value.makerNode, scaffold, omegaDB, compute_gradient)
+  weight += maybeExtractStaleAAA(trace, node, scaffold, omegaDB, compute_gradient)
 
   if scaffold.isResampling(node):
     trace.decRegenCountAt(scaffold,node)
@@ -108,6 +106,20 @@ def extract(trace, node, scaffold, omegaDB, compute_gradient = False):
             omegaDB.addPartial(p, omegaDB.getPartial(node)) # d/dx is 1 for a lookup node
       weight += extractParents(trace, node, scaffold, omegaDB, compute_gradient)
 
+  return weight
+
+def maybeExtractStaleAAA(trace, node, scaffold, omegaDB, compute_gradient = False):
+  # "[this] has to do with worries about crazy thing[s] that can
+  # happen if aaa makers are shuffled around as first-class functions,
+  # and the made SPs are similarly shuffled, including with stochastic
+  # flow of such data, which may cause regeneration order to be hard
+  # to predict, and the check is trying to avoid a stale AAA aux"
+  # TODO: apparently nothing in the test suite actually hits this
+  # case. can we come up with an example that does?
+  weight = 0
+  value = trace.valueAt(node)
+  if isinstance(value,SPRef) and value.makerNode != node and scaffold.isAAA(value.makerNode):
+    weight += extract(trace, value.makerNode, scaffold, omegaDB, compute_gradient)
   return weight
 
 def unevalFamily(trace, node, scaffold, omegaDB, compute_gradient = False):

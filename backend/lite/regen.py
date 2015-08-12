@@ -117,16 +117,27 @@ def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
         weight += applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients)
         if isRequestNode(node): weight += evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients)
     trace.incRegenCountAt(scaffold,node)
-
-  value = trace.valueAt(node)
-  if isinstance(value,SPRef) and value.makerNode != node and scaffold.isAAA(value.makerNode):
-    weight += regen(trace,value.makerNode,scaffold,shouldRestore,omegaDB,gradients)
+  weight += maybeRegenStaleAAA(trace, node, scaffold, shouldRestore, omegaDB, gradients)
 
   assert isinstance(weight, numbers.Number)
   return weight
 
 def propagateLookup(trace, node):
   trace.setValueAt(node, trace.valueAt(node.sourceNode))
+
+def maybeRegenStaleAAA(trace, node, scaffold, shouldRestore, omegaDB, gradients):
+  # "[this] has to do with worries about crazy thing[s] that can
+  # happen if aaa makers are shuffled around as first-class functions,
+  # and the made SPs are similarly shuffled, including with stochastic
+  # flow of such data, which may cause regeneration order to be hard
+  # to predict, and the check is trying to avoid a stale AAA aux"
+  # TODO: apparently nothing in the test suite actually hits this
+  # case. can we come up with an example that does?
+  weight = 0
+  value = trace.valueAt(node)
+  if isinstance(value,SPRef) and value.makerNode != node and scaffold.isAAA(value.makerNode):
+    weight += regen(trace,value.makerNode,scaffold,shouldRestore,omegaDB,gradients)
+  return weight
 
 def evalFamily(trace,address,exp,env,scaffold,shouldRestore,omegaDB,gradients):
   if e.isVariable(exp):
