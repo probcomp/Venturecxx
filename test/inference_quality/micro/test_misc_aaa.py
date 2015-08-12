@@ -161,11 +161,3 @@ def checkAAAParticleWeights(sp):
     (forget 'obs1))""" % sp)
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete(ans, predictions)
-
-
-##### (3) Staleness
-
-# This section should not hope to find staleness, since all backends should
-# assert that a makerNode has been regenerated before applying it.
-# Therefore this section should try to trigger that assertion.
-

@@ -165,7 +165,11 @@ def checkMakeSymDirMultWeakPrior(maker):
   return checkDirichletMultinomialWeakPrior(ripl,"pid")
 
 
-#### Staleness
+#### (2) Staleness
+
+# This section should not hope to find staleness, since all backends should
+# assert that a makerNode has been regenerated before applying it.
+# Therefore this section should try to trigger that assertion.
 
 @statisticalTest
 def testStaleAAA_MSP():
