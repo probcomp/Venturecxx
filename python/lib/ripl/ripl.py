@@ -262,10 +262,6 @@ class Ripl():
     # Text manipulation
     ############################################
 
-    def substitute_params(self,instruction_string,params):
-        p = self._cur_parser()
-        return p.substitute_params(instruction_string,params)
-
     def split_program(self,program_string):
         p = self._cur_parser()
         return p.split_program(program_string)

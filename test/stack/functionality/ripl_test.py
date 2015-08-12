@@ -97,13 +97,6 @@ class TestRipl(unittest.TestCase):
     # Text manipulation
     ############################################
 
-    def test_substitute_params(self):
-        string = "a %s %j %v"
-        params = ['b','2',2]
-        expected_output = 'a b "2" 2'
-        output = self.ripl.substitute_params(string,params)
-        self.assertEqual(output, expected_output)
-
     def test_split_program(self):
         output = self.ripl.split_program(" [ force blah count<132>][ infer 132 ]")
         instructions = ['[ force blah count<132>]','[ infer 132 ]']
