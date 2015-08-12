@@ -141,18 +141,21 @@ class Ripl():
         except VentureException as e:
             if self._do_not_annotate:
                 raise
-            import sys
-            info = sys.exc_info()
-            try:
-                annotated = self._annotated_error(e, instruction)
-            except Exception as e2:
-                print "Trying to annotate an exception led to:"
-                import traceback
-                print traceback.format_exc()
-                e.annotated = False
-                raise e, None, info[2]
-            raise annotated, None, info[2]
+            self._raise_annotated(e, instruction)
         return ret_value
+
+    def _raise_annotated(self, e, instruction):
+        import sys
+        info = sys.exc_info()
+        try:
+            annotated = self._annotated_error(e, instruction)
+        except Exception as e2:
+            print "Trying to annotate an exception led to:"
+            import traceback
+            print traceback.format_exc()
+            e.annotated = False
+            raise e, None, info[2]
+        raise annotated, None, info[2]
 
     def _annotated_error(self, e, instruction):
         if e.exception is 'evaluation':
