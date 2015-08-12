@@ -42,9 +42,12 @@ def detachAndExtractAtBorder(trace, border, scaffold, compute_gradient = False):
     if scaffold.isAbsorbing(node):
       weight += detach(trace, node, scaffold, omegaDB, compute_gradient)
     else:
-      if node.isObservation: weight += unconstrain(trace,trace.getConstrainableNode(node))
+      if node.isObservation: weight += getAndUnconstrain(trace,node)
       weight += extract(trace,node,scaffold,omegaDB, compute_gradient)
   return weight,omegaDB
+
+def getAndUnconstrain(trace,node):
+  return unconstrain(trace,trace.getConstrainableNode(node))
 
 def unconstrain(trace,node):
   psp,args,value = trace.pspAt(node),trace.argsAt(node),trace.valueAt(node)

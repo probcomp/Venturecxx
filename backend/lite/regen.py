@@ -45,14 +45,16 @@ def regenAndAttachAtBorder(trace,border,scaffold,shouldRestore,omegaDB,gradients
     else:
       weight += regen(trace,node,scaffold,shouldRestore,omegaDB,gradients)
       if node.isObservation:
-        appNode = trace.getConstrainableNode(node)
-        weight += constrain(trace,appNode,node.observedValue)
-        constraintsToPropagate[appNode] = node.observedValue
-  for node,value in constraintsToPropagate.iteritems():
-    for child in trace.childrenAt(node):
-      propagateConstraint(trace,child,value)
+        weight += getAndConstrain(trace,node,constraintsToPropagate)
+  propagateConstraints(trace,constraintsToPropagate)
 
   assert isinstance(weight, numbers.Number)
+  return weight
+
+def getAndConstrain(trace,node,constraintsToPropagate):
+  appNode = trace.getConstrainableNode(node)
+  weight = constrain(trace,appNode,node.observedValue)
+  constraintsToPropagate[appNode] = node.observedValue
   return weight
 
 def constrain(trace,node,value):
@@ -64,6 +66,11 @@ def constrain(trace,node,value):
   trace.registerConstrainedChoice(node)
   assert isinstance(weight, numbers.Number)
   return weight
+
+def propagateConstraints(trace,constraintsToPropagate):
+  for node,value in constraintsToPropagate.iteritems():
+    for child in trace.childrenAt(node):
+      propagateConstraint(trace,child,value)
 
 def propagateConstraint(trace,node,value):
   if isLookupNode(node): trace.setValueAt(node,value)
