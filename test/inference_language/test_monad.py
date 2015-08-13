@@ -58,6 +58,34 @@ define foo = proc() {
   ripl.infer("foo()")
   assert isinstance(ripl.sample("y"), bool)
 
+@on_inf_prim("assume")
+def testMonadicAssume():
+  ripl = get_ripl(persistent_inference_trace=True)
+  ripl.execute_program("""
+[define foo
+  (lambda ()
+    (do
+      (z <- (assume x (flip)))
+      (if z
+          (assume y true)
+          (assume y false))))]
+""")
+  eq_(ripl.infer("(foo)"), ripl.sample("x"))
+
+@on_inf_prim("predict")
+def testMonadicPredict():
+  ripl = get_ripl(persistent_inference_trace=True)
+  ripl.execute_program("""
+[define foo
+  (lambda ()
+    (do
+      (z <- (predict (flip) pid))
+      (if z
+          (assume y true)
+          (assume y false))))]
+""")
+  eq_(ripl.infer("(foo)"), ripl.report("pid"))
+
 @on_inf_prim("in_model")
 @statisticalTest
 def testModelSwitchingSmoke():
