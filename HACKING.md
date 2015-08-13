@@ -27,6 +27,48 @@ rather than silently not following it.
 Particulars
 ===========
 
+Issue Metadata
+--------------
+
+- **Assigned** means you're imminently working on it. You preferably
+  have <= 3 bugs assigned.
+
+- **Milestones** are used to say why you want this done, or what
+  deadline you want it done for, e.g. "summer school" or "language
+  revision 2" or "performance fixit".  Issues with no milestone
+  attached are considered untraiged.
+
+- For everything else, there are labels:
+
+- **Disposition** [grays]: "no/wontfix/obsolete/etc." and "duplicate".
+  All issues that are closed and not labelled with a disposition are
+  assumed to be done as suggested in some sense.  The particular
+  sub-disposition should be clear from the notes.
+
+- **Time** [greens]: "k hours", "k days", "k weeks" -- how long you
+  imagine it might take.
+
+- **Blockage** [reds]:
+
+  - _"blocked"_: some other bug (mentioned) logically comes before
+    this. There may be a workaround, or this may be doable with
+    technical debt even without the other bug, but that order would be
+    better.
+
+  - _"needs decision"_: blocked not on software, but on a human
+    decision. These should be super high priority.
+
+  - _"help wanted"_: use especially for projects that an incoming
+    person might be able to take up. Take care to describe how to get
+    started well enough so such a person might even want to.
+
+  - _"waiting"_: (cookie licked) you have a change in progress in some
+    client, or on some branch, but you consider it unfinished. Write
+    down enough context about what's left so that someone else could
+    potentially pick it up, and do push your branch! But this is for
+    bugs you intend to come back to.
+
+
 Testing Policy
 --------------
 
