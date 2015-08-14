@@ -23,8 +23,6 @@ import numbers
 python_list = list
 python_dict = dict
 
-NO_PARSE_EXPRESSION = {None: "__NO_PARSE_EXPRESSION__"}
-
 def val(t,v):
   return {"type":t,"value":v}
 

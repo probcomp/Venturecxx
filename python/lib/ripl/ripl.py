@@ -150,11 +150,8 @@ class Ripl():
                 stringable_instruction = instruction
                 parsed_instruction = self._ensure_parsed(instruction)
             # if directive, then save the text string
-            ret_value = None  # None is appropriate, not just a sentinel.
-            if parsed_instruction != v.NO_PARSE_EXPRESSION:
-                ret_value = \
-                    self._execute_parsed_instruction(parsed_instruction,
-                        stringable_instruction)
+            return self._execute_parsed_instruction(parsed_instruction,
+                stringable_instruction)
         except VentureException as e:
             if self._do_not_annotate:
                 raise

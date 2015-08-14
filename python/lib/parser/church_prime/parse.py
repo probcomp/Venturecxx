@@ -53,15 +53,12 @@ def locbracket((_ovalue, ostart, oend), (_cvalue, cstart, cend), value):
     assert cstart <= cend
     return located([ostart, cend], value)
 
-NO_PARSE_EXPRESSION = val.NO_PARSE_EXPRESSION
-
 def delocust(l):
     # XXX Why do we bother with tuples in the first place?
-    if l != NO_PARSE_EXPRESSION:
-        if isinstance(l['value'], list) or isinstance(l['value'], tuple):
-            return [delocust(v) for v in l['value']]
-        else:
-            return l['value']
+    if isinstance(l['value'], list) or isinstance(l['value'], tuple):
+        return [delocust(v) for v in l['value']]
+    else:
+        return l['value']
 
 operators = {
     '+':        'add',
@@ -284,8 +281,7 @@ def parse_church_prime(f, context):
             parser.feed(token)
         if token[0] == 0:       # EOF
             break
-    if semantics.answer is None:
-        return NO_PARSE_EXPRESSION
+    assert semantics.answer is not None
     return semantics.answer
 
 def parse_church_prime_string(string):
@@ -314,16 +310,10 @@ def parse_instruction(string):
     ls = parse_instructions(string)
     if len(ls) != 1:
         raise VentureException('parse', 'Expected a single instruction')
-    assert ls
-    if not ls:
-        return NO_PARSE_EXPRESSION
     return ls[0]
 
 def parse_expression(string):
-    parsed_instruction = parse_instruction(string)
-    if parsed_instruction is NO_PARSE_EXPRESSION:
-        return NO_PARSE_EXPRESSION
-    inst = parsed_instruction['value']
+    inst = parse_instruction(string)['value']
     if not inst['instruction']['value'] == 'evaluate':
         raise VentureException('parse', 'Expected an expression')
     return inst['expression']
@@ -406,8 +396,6 @@ class ChurchPrimeParser(object):
     def parse_instruction(self, string):
         '''Parse STRING as a single instruction.'''
         l = parse_instruction(string)
-        if l is NO_PARSE_EXPRESSION:
-            return l
         return dict((k, delocust(v)) for k, v in l['value'].iteritems())
 
     def parse_locexpression(self, string):
@@ -542,15 +530,14 @@ class ChurchPrimeParser(object):
         [1] a dict mapping operand keys to [start, end] positions.
         '''
         l = parse_instruction(string)
-        if l:
-            locs = dict((k, v['loc']) for k, v in l['value'].iteritems())
-            # XXX + 1?
-            strings = dict((k, string[loc[0] : loc[1] + 1]) for k, loc in
-                locs.iteritems())
-            # XXX Sort???
-            sortlocs = dict((k, list(sorted(loc))) for k, loc in locs.iteritems())
-            # XXX List???
-            return [strings, sortlocs]
+        locs = dict((k, v['loc']) for k, v in l['value'].iteritems())
+        # XXX + 1?
+        strings = dict((k, string[loc[0] : loc[1] + 1]) for k, loc in
+            locs.iteritems())
+        # XXX Sort???
+        sortlocs = dict((k, list(sorted(loc))) for k, loc in locs.iteritems())
+        # XXX List???
+        return [strings, sortlocs]
 
     # XXX Make the tests pass, nobody else calls this.
     def character_index_to_expression_index(self, _string, index):
