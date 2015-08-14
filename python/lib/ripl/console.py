@@ -77,12 +77,11 @@ class RiplCmd(Cmd, object):
 
   def _do_instruction(self, instruction, s, force_complete=False):
     if self.ripl.get_mode() == "church_prime":
-      if instruction == 'evaluate':
-        r_inst = s
-      else:
-        r_inst = '[%s %s]' % (instruction, s)
       # Not supporting multiline paste for abstract syntax yet
-      return self.ripl.execute_instruction(r_inst)
+      if instruction == 'evaluate':
+        return self.ripl.execute_instructions(s)
+      else:
+        return self.ripl.execute_instruction('[%s %s]' % (instruction, s))
     else:
       if instruction == 'evaluate':
         r_inst = s
@@ -90,7 +89,7 @@ class RiplCmd(Cmd, object):
         r_inst = '%s %s' % (instruction, s)
       from venture.parser.venture_script.parse import string_complete_p
       if force_complete or string_complete_p(r_inst):
-        return self.ripl.execute_instruction(r_inst)
+        return self.ripl.execute_instructions(r_inst)
       else:
         self.pending_instruction = instruction
         self.pending_instruction_string = s

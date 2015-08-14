@@ -65,8 +65,6 @@ def locbracket((_ovalue, ostart, oend), (_cvalue, cstart, cend), value):
     assert cstart <= cend
     return located([ostart, cend], value)
 
-NO_PARSE_EXPRESSION = val.NO_PARSE_EXPRESSION
-
 def delocust(l):
     # XXX Why do we bother with tuples in the first place?
     if isinstance(l['value'], list) or isinstance(l['value'], tuple):
@@ -430,8 +428,6 @@ def parse(f, context):
     assert isinstance(semantics.answer, list)
     for i in semantics.answer:
         assert isloc(i)
-    if semantics.answer is None:
-        return NO_PARSE_EXPRESSION
     return semantics.answer
 
 def parse_string(string):
@@ -474,23 +470,18 @@ def string_complete_p(string):
                     return False
             else:
                 parser.feed(token)
-    return NO_PARSE_EXPRESSION
 
 def parse_instructions(string):
     return parse_string(string)
 
 def parse_instruction(string):
     ls = parse_instructions(string)
-    if not ls:
-        return NO_PARSE_EXPRESSION
-    if len(ls) > 1:
+    if len(ls) != 1:
         raise VentureException('text_parse', 'Expected a single instruction')
     return ls[0]
 
 def parse_expression(string):
     inst = parse_instruction(string)['value']
-    if inst == NO_PARSE_EXPRESSION:
-        return inst
     if not inst['instruction']['value'] == 'evaluate':
         raise VentureException('text_parse', 'Expected an expression')
     return inst['expression']
@@ -573,8 +564,6 @@ class VentureScriptParser(object):
     def parse_instruction(self, string):
         '''Parse STRING as a single instruction.'''
         l = parse_instruction(string)
-        if l is NO_PARSE_EXPRESSION:
-            return NO_PARSE_EXPRESSION
         return dict((k, delocust(v)) for k, v in l['value'].iteritems())
 
     def parse_locexpression(self, string):
@@ -693,8 +682,6 @@ class VentureScriptParser(object):
         [1] a list of [start, end] positions of each instruction in STRING.
         '''
         ls = parse_instructions(string)
-        if ls == NO_PARSE_EXPRESSION:
-            return [[], []]
         locs = [l['loc'] for l in ls]
         # XXX + 1?
         strings = [string[loc[0] : loc[1] + 1] for loc in locs]
@@ -712,8 +699,6 @@ class VentureScriptParser(object):
         [1] a dict mapping operand keys to [start, end] positions.
         '''
         l = parse_instruction(string)
-        if l == NO_PARSE_EXPRESSION:
-            return [[], []]
         locs = dict((k, v['loc']) for k, v in l['value'].iteritems())
         # XXX + 1?
         strings = dict((k, string[loc[0] : loc[1] + 1]) for k, loc in

@@ -115,7 +115,29 @@ class Ripl():
     # Execution
     ############################################
 
-
+    def execute_instructions(self, instructions=None):
+        p = self._cur_parser()
+        try:
+            strings, locs = self.split_program(instructions)
+        except VentureException as e:
+            if self._do_not_annotate:
+                raise
+            self._raise_annotated(e, instructions)
+        else:
+            stringable_instruction = None
+            try:
+                ret_value = None
+                for string in strings:
+                    stringable_instruction = string
+                    parsed_instruction = p.parse_instruction(string)
+                    ret_value = \
+                        self._execute_parsed_instruction(parsed_instruction,
+                            stringable_instruction)
+            except VentureException as e:
+                if self._do_not_annotate or stringable_instruction is None:
+                    raise
+                self._raise_annotated(e, stringable_instruction)
+            return ret_value
 
     def execute_instruction(self, instruction=None):
         p = self._cur_parser()
@@ -128,31 +150,37 @@ class Ripl():
                 stringable_instruction = instruction
                 parsed_instruction = self._ensure_parsed(instruction)
             # if directive, then save the text string
-            ret_value = None  # None is appropriate, not just a sentinel.
-            if parsed_instruction != v.NO_PARSE_EXPRESSION:
-                if parsed_instruction['instruction'] in [
-                        'assume', 'observe', 'predict', 'define',
-                        'labeled_assume','labeled_observe','labeled_predict']:
-                    did = self.sivm.core_sivm.engine.predictNextDirectiveId()
-                    self.directive_id_to_stringable_instruction[did] = (
-                        stringable_instruction)
-                    self.directive_id_to_mode[did] = self.mode
-                ret_value = self.sivm.execute_instruction(parsed_instruction)
+            return self._execute_parsed_instruction(parsed_instruction,
+                stringable_instruction)
         except VentureException as e:
             if self._do_not_annotate:
                 raise
-            import sys
-            info = sys.exc_info()
-            try:
-                annotated = self._annotated_error(e, instruction)
-            except Exception as e2:
-                print "Trying to annotate an exception led to:"
-                import traceback
-                print traceback.format_exc()
-                e.annotated = False
-                raise e, None, info[2]
-            raise annotated, None, info[2]
+            self._raise_annotated(e, instruction)
         return ret_value
+
+    def _execute_parsed_instruction(self, parsed_instruction,
+            stringable_instruction):
+        if parsed_instruction['instruction'] in [
+                'assume', 'observe', 'predict', 'define',
+                'labeled_assume','labeled_observe','labeled_predict']:
+            did = self.sivm.core_sivm.engine.predictNextDirectiveId()
+            self.directive_id_to_stringable_instruction[did] = (
+                stringable_instruction)
+            self.directive_id_to_mode[did] = self.mode
+        return self.sivm.execute_instruction(parsed_instruction)
+
+    def _raise_annotated(self, e, instruction):
+        import sys
+        info = sys.exc_info()
+        try:
+            annotated = self._annotated_error(e, instruction)
+        except Exception as e2:
+            print "Trying to annotate an exception led to:"
+            import traceback
+            print traceback.format_exc()
+            e.annotated = False
+            raise e, None, info[2]
+        raise annotated, None, info[2]
 
     def _annotated_error(self, e, instruction):
         if e.exception is 'evaluation':
