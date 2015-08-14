@@ -219,6 +219,9 @@ def test_lines_and_comments():
                      0.9) //  Comment after.
   """)
   good(vnt.expect_capture_one_float())
+  vnt.send_command(
+    'assume x = 0.1; assume y = 0.9; assume z = uniform_continuous(x, y)')
+  good(vnt.expect_capture_one_float())
   # Bug in console.py:precmd: it should handle multiline but doesn't?
   # *** text_parse: Syntax error at 'bad' (token 2)
   # vnt.send_command("""(assume bad =
@@ -277,6 +280,8 @@ def test_lines_and_comments_abstract_syntax():
   #                     ;;  Comment after.
   # """)
   # good(vnt.expect_capture_one_floatln())
+  vnt.send_command('0 1 (uniform_continuous 0.1 0.9)')
+  good(vnt.expect_capture_one_float())
 
 def test_eof_quits():
   vnt = spawn_venture()

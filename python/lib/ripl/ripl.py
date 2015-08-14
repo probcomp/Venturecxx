@@ -115,7 +115,29 @@ class Ripl():
     # Execution
     ############################################
 
-
+    def execute_instructions(self, instructions=None):
+        p = self._cur_parser()
+        try:
+            strings, locs = self.split_program(instructions)
+        except VentureException as e:
+            if self._do_not_annotate:
+                raise
+            self._raise_annotated(e, instructions)
+        else:
+            stringable_instruction = None
+            try:
+                ret_value = None
+                for string in strings:
+                    stringable_instruction = string
+                    parsed_instruction = p.parse_instruction(string)
+                    ret_value = \
+                        self._execute_parsed_instruction(parsed_instruction,
+                            stringable_instruction)
+            except VentureException as e:
+                if self._do_not_annotate or stringable_instruction is None:
+                    raise
+                self._raise_annotated(e, stringable_instruction)
+            return ret_value
 
     def execute_instruction(self, instruction=None):
         p = self._cur_parser()
