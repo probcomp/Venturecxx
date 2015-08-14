@@ -95,15 +95,6 @@ class RiplCmd(Cmd, object):
         self.pending_instruction_string = s
         self._update_prompt()
 
-  def precmd(self, line):
-    self.strip_hack = False
-    line = line.strip()
-    if len(line) > 0 and (line[0] == "[" or line[0] == "("):
-      if line[-1] == "]" or line[-1] == ")":
-        self.strip_hack = True
-        return line[1:-1]
-    return line
-
   @catchesVentureException
   def postcmd(self, stop, line):
     callbacks = self.ripl.sivm.core_sivm.engine.callbacks
@@ -130,8 +121,6 @@ class RiplCmd(Cmd, object):
 
   def _do_eval(self, line):
     '''Evaluate an expression in the inference program.'''
-    if self.strip_hack:
-      line = '(' + line + ')'
     printValue(self._do_instruction('evaluate', line))
 
   @catchesVentureException
