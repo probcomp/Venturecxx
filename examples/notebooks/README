@@ -8,6 +8,43 @@ As of 4/16/15, these IPython notebooks are stale.
 - They may attempt to illustrate Venture concepts that have evolved,
   or whose intended manifestations have evolved.
 
+Specific Notes
+==============
+
+As of 8/20/15, the content here was as follows:
+
+- examples/notebooks/bivariate_gaussian.ipynb is a unique kind of
+  artifact: a contrastive exploration of the behavior of different
+  inference methods on a sample problem.
+
+  - examples/gaussian_funnel.py is also an attempt to study something
+    like that; would need updating.
+
+- examples/notebooks/continuous_example.ipynb is interesting because it
+  purports to be an example of continuous inference running in IPython.
+  - Seems to depend on some kooky IPython notebook magic.
+  - Depends on MRipl, probably spuriously.
+  - Spuriously depends on venture magics
+  - Not clear whether the architecture is any good
+
+- examples/notebooks/geweke_single_scope_fail.ipynb is interesting,
+  because it's the only example we have of confirming that inference
+  isn't working without knowing the answer.
+
+  - Not sure how that confirmation is happening though, because as I
+    understood it, Geweke testing can't tell whether a correct Markov
+    chain was run long enough.
+
+- examples/notebooks/subsampled_mh.ipynb is the only documentation on
+  how subsampled MH is supposed to actually operate (except maybe some
+  tests in the test suite?)
+
+- examples/notebooks/subsampled_mh.ipynb is the first segment of the
+  old summer school tutorial, on the simple trick coin problem.  It
+  may concievably be useful as semi-worked-out introductory material.
+
+  - Doesn't run, due to software bit rot.
+
 Issues
 ======
 
