@@ -32,13 +32,13 @@ from venture.test.config import get_ripl, collectIidSamples, default_num_samples
 
 # The tests explore various combinations of mu*, gamma hyperparameters, and
 # observed sample size. It is expected that, when the prior on mu is far from
-# the true mu*, lager sample size will be requried for the likelihood to
+# the true mu*, a larger sample size will be requried for the likelihood to
 # dominate the prior. In theory the Bayesian posterior will converge to a delta
 # on the true mu* if prior density on mu* is non-zero. There are things to be
 # said about convergence rate.
 
 
-# Use variety of priors. SMALL and LARGE are mostly informative, WIDE is vague.
+# Use a variety of priors. SMALL and LARGE are mostly informative, WIDE is vague.
 PRIOR_SMALL = (1,1)
 PRIOR_WIDE = (2, 0.1)
 PRIOR_LARGE = (60,1)
