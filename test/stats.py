@@ -298,7 +298,7 @@ def reportKnownMean(expMean, observed):
     "T stat  : " + str(tstat),
     "P value : " + str(pval)]))
 
-def reportKernelTwoSampleTest(X, Y, permutations=2500):
+def reportKernelTwoSampleTest(X, Y, permutations=None):
   '''
   Tests the null hypothesis that X and Y are samples drawn
   from the same population of arbitrary dimension D. The non-parametric
@@ -321,6 +321,8 @@ def reportKernelTwoSampleTest(X, Y, permutations=2500):
 
   :returns: p-value of the statistical test
   '''
+  if permutations is None:
+    permutations = 2500
   # Validate the inputs
   D = len(X[0])
   for x in X:
