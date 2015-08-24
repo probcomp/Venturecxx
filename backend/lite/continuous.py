@@ -848,7 +848,7 @@ class CNigNormalOutputPSP(RandomPSP):
       scale=math.sqrt(bn/an*(1+Vn)))
 
   def logDensityOfCounts(self, aux):
-    # Marginal likelihoo of the data (203)
+    # Marginal likelihood of the data (203)
     [ctN, xsum, xsumsq] = aux.cts()
     (mn, Vn, an, bn) = self.updatedParams(aux)
     term1 = 0.5 * math.log(abs(Vn)) - 0.5 * math.log(abs(self.V))
