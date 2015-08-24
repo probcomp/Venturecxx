@@ -102,4 +102,5 @@ def checkRecoverPoissonDist(maker, gamma_hypers, mu_true):
   # Perform non-parametric two-sample test.
   return reportKernelTwoSampleTest(
     [[r] for r in test_samples],
-    [[r] for r in predictive_samples])
+    [[r] for r in predictive_samples],
+    2 if ignore_inference_quality() else None)
