@@ -18,7 +18,7 @@
 import itertools
 import numpy as np
 from scipy.stats import norm
-from venture.test.stats import statisticalTest, reportKnownMeanVariance
+from venture.test.stats import statisticalTest, reportKnownContinuous
 from venture.test.config import get_ripl, collectIidSamples, default_num_samples, ignore_inference_quality
 
 # This test suite targets
@@ -30,7 +30,7 @@ from venture.test.config import get_ripl, collectIidSamples, default_num_samples
 # - Observe a random sample from a true underlying Normal(mu*, sigma*) dist.
 # - Run posterior inference.
 # - Simulate a random sample from the samplers.
-# - Perform a t-test under the null that Normal(mu*, sigma*) is the dist.
+# - Perform a KS-test under the null that Normal(mu*, sigma*) is the dist.
 
 # Test against a variety of Normal distributions.
 MU_TRUE_SMALL, VAR_TRUE_SMALL = 5, 2
@@ -79,7 +79,8 @@ def checkRecoverNormalDist(maker, true_mean, true_var):
   # Collect samples from the posterior.
   ripl.predict('(f)',label='pid')
   predictive_samples = collectIidSamples(ripl, 'pid',
-    num_samples=default_num_samples())
+    num_samples=default_num_samples() * 5)
 
-  # Perform the t-test
-  return reportKnownMeanVariance(true_mean, true_var, predictive_samples)
+  return reportKnownContinuous(norm(loc=true_mean, scale=np.sqrt(true_var)).cdf,
+                               predictive_samples,
+                               "N(%s,%s)" % (true_mean, np.sqrt(true_var)))
