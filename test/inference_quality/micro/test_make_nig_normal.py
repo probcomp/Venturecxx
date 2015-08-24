@@ -42,8 +42,14 @@ DRAW_SAMPLE_SIZE = 100
 
 # We will use emperical Bayes methods for the prior NIG hyperparams.
 
+suff_stat_nig_normal = """(lambda (m V a b)
+  (let ((variance (inv_gamma a b))
+        (mean (normal m (sqrt (* V variance))))
+        (stddev (sqrt variance)))
+    (make_suff_stat_normal mean stddev)))"""
+
 def testRecoverNormalDist():
-  for maker in ['make_nig_normal', 'make_uc_nig_normal']:
+  for maker in ['make_nig_normal', 'make_uc_nig_normal', suff_stat_nig_normal]:
     for (true_mean, true_var) in itertools.product(
       [MU_TRUE_SMALL, MU_TRUE_MEDIUM, MU_TRUE_LARGE],
       [VAR_TRUE_SMALL, VAR_TRUE_MEDIUM, VAR_TRUE_LARGE]
