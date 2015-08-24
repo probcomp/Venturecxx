@@ -52,7 +52,7 @@ MU_TRUE_LARGE = 100
 DRAW_SAMPLE_SIZE = 200
 
 def testRecoverPoissonDist():
-  for maker in ['make_gamma_poisson', 'make_uc_gamma_poisson']:
+  for maker in ['make_gamma_poisson', 'make_uc_gamma_poisson', 'make_suff_stat_poisson']:
     for gamma_hypers, mu_true in [
       (PRIOR_SMALL, MU_TRUE_SMALL),
       (PRIOR_SMALL, MU_TRUE_MEDIUM),
