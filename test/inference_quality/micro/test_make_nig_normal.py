@@ -22,9 +22,9 @@ from venture.test.stats import statisticalTest, reportKnownMeanVariance
 from venture.test.config import get_ripl, collectIidSamples, default_num_samples
 
 # This test suite targets
-# - make_gamma_poisson(a,b)
-# - make_uc_gamma_poisson(a,b)
-# - make_suff_stat_poisson(mu)
+# - make_nig_normal(m,V,a,b)
+# - make_uc_nig_normal(m,V,a,b)
+# - make_suff_stat_normal(mu,sigma)
 
 # The procedure for testing each of these functions is to:
 # - Observe a random sample from a true underlying Normal(mu*, sigma*) dist.
