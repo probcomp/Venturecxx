@@ -55,12 +55,16 @@ test function as @statisticalTest, not the generator.
 """
 
 import math
-import scipy.stats as stats
+
 import numpy as np
 import nose.tools as nose
+import sys
+import scipy.stats as stats
+from scipy.spatial.distance import pdist, squareform
+from scipy.stats.mstats import rankdata
+
 from testconfig import config
 from venture.test.config import ignore_inference_quality
-import sys
 
 def normalizeList(seq):
   denom = sum(seq)
@@ -82,7 +86,8 @@ def tabulatelst(fmt, lst, width=10, prefix=""):
   return prefix + "[" + bulk + "]"
 
 class TestResult(object):
-  """A container for a p-value and a report to print to the user if the test is deemed to have failed."""
+  """A container for a p-value and a report to print to the user if the test
+  is deemed to have failed."""
   def __init__(self, pval, report):
     self.pval = pval
     self.report = report
@@ -162,7 +167,8 @@ def reportKnownDiscrete(expectedRates, observed):
   # is incomplete.
   counts = [observed.count(x) for x in items if itemsDict[x] is not None]
   total = sum(counts)
-  expRates = normalizeList([pair[1] for pair in expectedRates if pair[1] is not None])
+  expRates = normalizeList([pair[1] for pair in expectedRates
+    if pair[1] is not None])
   expCounts = [total * r for r in expRates]
   (chisq,pval) = stats.chisquare(counts, np.array(expCounts))
   return TestResult(pval, "\n".join([
@@ -186,7 +192,8 @@ def chi2_contingency(cts1, cts2):
     expected2 = [ratio2 * (cts1[i] + cts2[i]) for i in range(len(cts2))]
     assert len(expected1) == len(expected2)
     dof = len(expected1) -1
-    return stats.chisquare(cts1 + cts2, f_exp = np.array(expected1 + expected2), ddof = len(cts1 + cts2) - 1 - dof)
+    return stats.chisquare(cts1 + cts2, f_exp=np.array(expected1 + expected2),
+      ddof=len(cts1 + cts2) - 1 - dof)
 
 def reportSameDiscrete(observed1, observed2):
   """Chi^2 test for sameness of two empirical discrete distributions.
@@ -210,7 +217,8 @@ def explainOneDSample(observed):
   count = len(observed)
   mean = np.mean(observed)
   stddev = np.std(observed)
-  ans = "Observed: % 4d samples with mean %4.3f, stddev %4.3f" % (count, mean, stddev)
+  ans = "Observed: % 4d samples with mean %4.3f, stddev %4.3f" \
+    % (count, mean, stddev)
   if count < 101:
     ans += ", data\n"
     ans += tabulatelst("%.2f", sorted(observed), width=10, prefix="  ")
@@ -221,9 +229,9 @@ def explainOneDSample(observed):
   return ans
 
 def reportKnownContinuous(expectedCDF, observed, descr=None):
-  """Kolmogorov-Smirnov test for agreement with known 1-D cumulative density function.
-
-  The CDF argument should be a Python callable that computes the cumulative density. """
+  """Kolmogorov-Smirnov test for agreement with known 1-D cumulative density
+  function. The CDF argument should be a Python callable that computes the
+  cumulative density."""
   (K, pval) = stats.kstest(observed, expectedCDF)
   return TestResult(pval, "\n".join([
     "Expected: %4d samples from %s" % (len(observed), descr),
@@ -263,7 +271,8 @@ def reportKnownMeanVariance(expMean, expVar, observed):
   zscore = (mean - expMean) * math.sqrt(count) / math.sqrt(expVar)
   pval = 2*stats.norm.sf(abs(zscore)) # Two-tailed
   return TestResult(pval, "\n".join([
-    "Expected: % 4d samples with mean %4.3f, stddev %4.3f" % (count, expMean, math.sqrt(expVar)),
+    "Expected: % 4d samples with mean %4.3f, stddev %4.3f" \
+      % (count, expMean, math.sqrt(expVar)),
     explainOneDSample(observed),
     "Z score : " + str(zscore),
     "P value : " + str(pval)]))
@@ -288,6 +297,96 @@ def reportKnownMean(expMean, observed):
     explainOneDSample(observed),
     "T stat  : " + str(tstat),
     "P value : " + str(pval)]))
+
+def reportKernelTwoSampleTest(X, Y, permutations=None):
+  '''
+  Tests the null hypothesis that X and Y are samples drawn
+  from the same population of arbitrary dimension D. The non-parametric
+  permutation method is used and the test is exact. We use the statistic:
+  E[k(X,X')] + E[k(Y,Y')] - 2E[k(X,Y)].
+
+  A Gaussian kernel k(.,.) is used with width equal to the median distance
+  between vectors in the aggregate sample. While the size of any permutation
+  test is trivially exact, a permutation test with an arbitrary kernel is not
+  guaranteed to have high power. However the Gaussian kernel has several
+  optimal properties. For more information, see:
+
+    http://www.stat.berkeley.edu/~sbalakri/Papers/MMD12.pdf
+
+  :param X: List of N samples from the first population.
+      Each entry in the list X must itself a D-dimensional (D>=1) list.
+  :param Y: List of N samples from the second population.
+      Each entry in the list Y must itself a D-dimensional (D>=1) list.
+  :param permutations: (optional) number of times to resample, default 2500.
+
+  :returns: p-value of the statistical test
+  '''
+  if permutations is None:
+    permutations = 2500
+  # Validate the inputs
+  D = len(X[0])
+  for x in X:
+    assert len(x) == D
+  for y in Y:
+    assert len(y) == D
+  X = np.asarray(X)
+  Y = np.asarray(Y)
+  assert isinstance(X, np.ndarray)
+  assert isinstance(Y, np.ndarray)
+  assert X.shape[1] == Y.shape[1]
+  N = X.shape[0]
+
+  # Compute the observed statistic.
+  t_star = computeGaussianKernelStatistic(X, Y)
+  T = [t_star]
+
+  # Pool the samples.
+  S = np.vstack((X, Y))
+
+  # Compute resampled test statistics.
+  for _ in xrange(permutations-1):
+      np.random.shuffle(S)
+      Xp, Yp = S[:N], S[N:]
+      tb = computeGaussianKernelStatistic(Xp, Yp)
+      T.append(tb)
+
+  # Fraction of samples larger than observed t_star.
+  t_star_rank = rankdata(T)[0]
+  f = len(T) - t_star_rank
+  pval = 1. * f / (len(T))
+
+  return TestResult(pval, "\n".join([
+    "Permutations        : %i" % permutations,
+    "Observed Stat Rank  : %i" % t_star_rank,
+    "P value             : %s" % str(pval)]))
+
+def computeGaussianKernelStatistic(X, Y):
+  """Compute a single two-sample test statistic using Gaussian kernel."""
+  assert isinstance(X, np.ndarray)
+  assert isinstance(Y, np.ndarray)
+  assert X.shape[1] == Y.shape[1]
+
+  N = X.shape[0]
+
+  # Determine width of Gaussian kernel.
+  Pxyxy = pdist(np.vstack((X, Y)), 'euclidean')
+  s = np.median(Pxyxy)
+  if s == 0:
+      s = 1
+
+  Kxy = squareform(Pxyxy)[:N, N:]
+  Exy = np.exp(- Kxy ** 2 / s ** 2)
+  Exy = np.mean(Exy)
+
+  Kxx = squareform(pdist(X), 'euclidean')
+  Exx = np.exp(- Kxx ** 2 / s ** 2)
+  Exx = np.mean(Exx)
+
+  Kyy = squareform(pdist(Y), 'euclidean')
+  Eyy = np.exp(- Kyy ** 2 / s ** 2)
+  Eyy = np.mean(Eyy)
+
+  return Exx + Eyy - 2*Exy
 
 def reportPassage():
   """Pass a deterministic test that is nevertheless labeled statistical.
