@@ -17,7 +17,7 @@
 
 from scipy.stats import poisson
 from venture.test.stats import statisticalTest, reportKernelTwoSampleTest
-from venture.test.config import get_ripl, collectIidSamples, default_num_samples
+from venture.test.config import get_ripl, collectIidSamples, default_num_samples, ignore_inference_quality
 
 # This test suite targets
 # - make_gamma_poisson(a,b)
@@ -79,8 +79,13 @@ def checkRecoverPoissonDist(maker, gamma_hypers, mu_true):
   else:
     raise Exception('Unknown maker {}'.format(maker))
 
+  if ignore_inference_quality():
+    num_condition_samples = 2
+  else:
+    num_condition_samples = DRAW_SAMPLE_SIZE
+
   # Obtain samples from the true distribution.
-  true_samples = poisson.rvs(mu_true, size = DRAW_SAMPLE_SIZE)
+  true_samples = poisson.rvs(mu_true, size = num_condition_samples)
 
   # Observe.
   for s in true_samples:
@@ -92,7 +97,7 @@ def checkRecoverPoissonDist(maker, gamma_hypers, mu_true):
     num_samples=default_num_samples())
 
   # Resample from the true distribution to test the posterior.
-  test_samples = poisson.rvs(mu_true, size = DRAW_SAMPLE_SIZE)
+  test_samples = poisson.rvs(mu_true, size = num_condition_samples)
 
   # Perform non-parametric two-sample test.
   return reportKernelTwoSampleTest(
