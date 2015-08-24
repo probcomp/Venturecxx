@@ -19,7 +19,7 @@ import itertools
 import numpy as np
 from scipy.stats import norm
 from venture.test.stats import statisticalTest, reportKnownMeanVariance
-from venture.test.config import get_ripl, collectIidSamples, default_num_samples
+from venture.test.config import get_ripl, collectIidSamples, default_num_samples, ignore_inference_quality
 
 # This test suite targets
 # - make_nig_normal(m,V,a,b)
@@ -52,9 +52,14 @@ def testRecoverNormalDist():
 
 @statisticalTest
 def checkRecoverNormalDist(maker, true_mean, true_var):
+  if ignore_inference_quality():
+    num_condition_samples = 2
+  else:
+    num_condition_samples = DRAW_SAMPLE_SIZE
+
   # Obtain samples from the true distribution.
   true_samples = norm.rvs(loc=true_mean, scale=np.sqrt(true_var),
-    size = DRAW_SAMPLE_SIZE)
+                          size=num_condition_samples)
 
   # Emperical Bayes for hyperpriors. In theory we should converge regradless
   # of the hyperparameters. Should we test Griddy Gibbs? Slice sampling?
