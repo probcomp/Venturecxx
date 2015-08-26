@@ -956,13 +956,12 @@ class MakerSuffNormalOutputPSP(DeterministicMakerAAAPSP):
   def gradientOfLogDensityOfCounts(self, aux, args):
     """The derivatives with respect to the args of the log density of the counts
     collected by the made SP."""
-    # Log likelihood equations are from (derivatives derived manually):
-    # http://aleph0.clarku.edu/~djoyce/ma218/meeting12.pdf
+    # See the derivation in doc/sp-math/
     (mu, sigma) = args.operandValues()
     [ctN, xsum, xsumsq] = aux.cts()
     xsumsq_dev = xsumsq - 2*mu*xsum + ctN*mu**2
-    grad_mu =  xsumsq_dev / sigma**2
-    grad_sigma = -ctN / sigma + xsumsq_dev * sigma**3
+    grad_mu =  (xsum - ctN*mu) / sigma**2
+    grad_sigma = -ctN / sigma + xsumsq_dev / sigma**3
     return [grad_mu, grad_sigma]
 
   def madeSpLogDensityOfCountsBound(self, _aux):
