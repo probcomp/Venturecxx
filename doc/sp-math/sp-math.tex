@@ -1,0 +1,58 @@
+\documentclass[12pt]{article}
+
+\usepackage{hyperref}
+
+\begin{document}
+
+\begin{abstract}
+This TeX file serves as a location to collect reference formulas and
+derivations for Venture SP implementations.  Ideally, premises of
+derivations would be copied in from cited sources verbatim, so we can
+check the correspondence easily (and don't depend on any transient
+sources to stick around).  Also ideally, a given piece of code should
+be as direct a translation of the conclusion of a derivation as
+possible---same parameterization, same variable naming, etc.  As of
+this writing, this document is far from complete.
+\end{abstract}
+
+\section{Continuous}
+
+\subsection{Non-conjugate normal with sufficient statistics}
+\texttt{SuffNormalOutputPSP}
+
+\subsubsection{Log density of counts}
+
+\url{http://www.encyclopediaofmath.org/index.php/Sufficient_statistic}
+says that the likelihood of a vector $\{x_i\}$ of $n$ Gaussian
+observations with given mean $\mu$ and variance $\sigma^2$ is
+
+\[ p_{\mu,\sigma^2}(\{x_i\}) = (2\pi\sigma^2)^{-n/2} \exp\left( -\frac{n \mu^2}{2 \sigma^2}
+   - \frac{1}{2 \sigma^2} \sum_{i=1}^n x_i^2 + \frac{\mu}{\sigma^2}\sum_{i=1}^nx_i\right). \]
+\newcommand{\xsum}{x_{\textrm{sum}}}
+\newcommand{\xsumsq}{x_{\textrm{sumsq}}}
+Therefore, letting
+\[ \xsum = \sum_{i=1}^nx_i \qquad \xsumsq = \sum_{i=1}^n x_i^2 \]
+we have
+\[ \log p_{\mu,\sigma^2}(\{x_i\}) = -\frac{n}{2}(\log(2\pi) + 2\log(\sigma))
+   -\frac{n \mu^2}{2 \sigma^2}
+   - \frac{1}{2 \sigma^2} \xsumsq + \frac{\mu}{\sigma^2}\xsum. \]
+
+\subsubsection{Gradient of log density of counts}
+
+Gradient with respect to $\mu$, $\sigma$, attached at \texttt{MakerSuffNormalOutputPSP}.
+
+\begin{eqnarray*}
+\frac{d}{d\mu} \log p_{\mu,\sigma^2}(\{x_i\}) & = & -\frac{n\mu}{\sigma^2} + \frac{\xsum}{\sigma^2}.
+\end{eqnarray*}
+To differentiate with respect to $\sigma$ it helps to group terms.  Letting
+\newcommand{\deviance}{x_{\textrm{sq-dev}}}
+\[ \deviance = \sum_{i=1}^n (x_i - \mu)^2 = n\mu^2 + \xsumsq - 2 \mu \xsum, \]
+we have
+\[ \log p_{\mu,\sigma^2}(\{x_i\}) = -\frac{n}{2}(\log(2\pi) + 2\log(\sigma))
+   - \frac{\deviance}{2\sigma^2} \]
+and
+\[ \frac{d}{d\sigma} \log p_{\mu,\sigma^2}(\{x_i\}) = -\frac{n}{\sigma} + \frac{\deviance}{\sigma^3} \]
+
+This cross-checks with \url{http://aleph0.clarku.edu/~djoyce/ma218/meeting12.pdf}
+
+\end{document}
