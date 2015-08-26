@@ -55,4 +55,14 @@ and
 
 This cross-checks with \url{http://aleph0.clarku.edu/~djoyce/ma218/meeting12.pdf}
 
+\subsubsection{Upper bound of log density of counts}
+
+Setting the above to zero and solving for $\mu$, $\sigma$ gives (for $n > 0$)
+\begin{eqnarray*}
+ \hat\mu & = & \frac{\xsum}{n} \\
+ \hat\sigma^2 & = & \frac{1}{n}\left(n\hat\mu^2 + \xsumsq -2\hat\mu\xsum\right) \\
+  & = & \frac{\xsum^2}{n^2} + \frac{\xsumsq}{n} - 2\frac{\xsum^2}{n^2} \\
+  & = & \frac{\xsumsq}{n} - \frac{\xsum^2}{n^2}
+\end{eqnarray*}
+
 \end{document}

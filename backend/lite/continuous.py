@@ -969,8 +969,13 @@ class MakerSuffNormalOutputPSP(DeterministicMakerAAAPSP):
     grad_sigma = -ctN / sigma + xsumsq_dev / sigma**3
     return [grad_mu, grad_sigma]
 
-  def madeSpLogDensityOfCountsBound(self, _aux):
-    return 0
+  def madeSpLogDensityOfCountsBound(self, aux):
+    [ctN, xsum, xsumsq] = aux.cts()
+    if ctN == 0:
+      return 0
+    mu_hat = xsum / ctN
+    sigma_hat = math.sqrt(xsumsq / ctN - xsum ** 2 / ctN ** 2)
+    return SuffNormalOutputPSP.logDensityOfCountsNumeric(aux, mu_hat, sigma_hat)
 
 registerBuiltinSP("make_suff_stat_normal", typed_nr(MakerSuffNormalOutputPSP(),
   [t.NumberType(), t.PositiveType()], SPType([], t.NumberType())))
