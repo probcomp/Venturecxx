@@ -203,13 +203,20 @@ class PSP(object):
     uses via incorporate and unincorporate that are sufficient to bulk
     absorb at all applications of the PSP, without traversing them.
 
-    Specifically, the log-density to be returned is the sum of the
+    Specifically, the current ideal is to return the sum of the
     log-density at each application of this PSP; which is also the
-    log-density of producing any one output sequence consistent with
-    the given collected statistics, given inputs consistent with the
-    same set of collected statistics (which should be equal for all
-    such output sequences, since the statistics are supposed to be
-    sufficient).
+    log-density of producing any one permutation of the observed
+    output sequence.  For some distributions (e.g., Poisson), this may
+    not be computable from the sufficient statisitc; it is also
+    permissible to return a value shifted from this by any constant
+    independent of the parameters.  In that case, make sure the same
+    constant appears appropriately in madeSpLogDensityOfCountsBound
+    (gradientOfLogDensityOfCounts is by definition unchanged).
+
+    TODO Consider whether to change the spec to the probability
+    (density) of getting the statistic value, which should always be
+    computable from the statistic alone.  See
+    doc/on-log-density-of-counts.md.
 
     """
     raise VentureBuiltinSPMethodError("Cannot compute log density of counts of %s", type(self))
