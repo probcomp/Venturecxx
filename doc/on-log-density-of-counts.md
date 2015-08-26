@@ -58,6 +58,11 @@ Issues:
   not be quite symmetric with the suff stat collecting non-bulk
   procedures discussed here.
 
+- Because the specified thing is not always computable and the
+  normalizing constant mostly doesn't matter, there may be some
+  logDensityOfCounts methods (poisson, crp?) that already violate this
+  spec.
+
 Proposal: redefine logDensityOfCounts to return p(t|theta).  Issues:
 
 - Would need to change the formulas in all the current
