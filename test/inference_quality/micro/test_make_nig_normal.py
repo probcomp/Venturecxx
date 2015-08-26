@@ -89,7 +89,7 @@ def checkRecoverNormalDist(maker, true_mean, true_var):
   # Collect samples from the posterior.
   ripl.predict('(f)',label='pid')
   predictive_samples = collectIidSamples(ripl, 'pid',
-    num_samples=default_num_samples() * 5)
+    num_samples=default_num_samples(5))
 
   return reportKnownContinuous(norm(loc=true_mean, scale=np.sqrt(true_var)).cdf,
                                predictive_samples,
