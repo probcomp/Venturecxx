@@ -527,10 +527,14 @@ class SuffPoissonOutputPSP(DiscretePSP):
     return scipy.stats.poisson.logpmf(value, mu=self.mu)
 
   def logDensityOfCounts(self, aux):
-    # Derived from
+    # Returns log P(counts|mu) because log P(xs|mu) cannot be computed
+    # from the counts alone.  This is ok because the difference does
+    # not depend on mu, and the 0 upper bound still applies.
+
     # http://www.stat.cmu.edu/~larry/=stat705/Lecture5.pdf#page=3
+    # comments that the total is distributed as poisson(ctN * mu)
     [xsum, ctN] = aux.cts()
-    return -ctN * self.mu + xsum * math.log(self.mu)
+    return scipy.stats.poisson.logpmf(xsum, mu = ctN * self.mu)
 
   def show(self, spaux):
     return {
