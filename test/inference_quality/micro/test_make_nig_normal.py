@@ -60,8 +60,6 @@ def testRecoverNormalDist():
 
 @statisticalTest
 def checkRecoverNormalDist(maker, true_mean, true_var):
-  if maker == suff_stat_nig_normal and rejectionSampling():
-    raise SkipTest("Rejection sampling is too slow for make_suff_stat_normal")
   if ignore_inference_quality():
     num_condition_samples = 2
   else:
