@@ -77,6 +77,8 @@ class RejectionOperator(InPlaceOperator):
     attempt = 0
     while not accept and (self.trials is None or self.trials > attempt):
       xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, {})
+      assert xiWeight <= logBound, \
+        "Detected regen weight %s above weight bound %s" % (xiWeight, logBound)
       accept = random.random() < math.exp(xiWeight - logBound)
       if not accept:
         detachAndExtract(trace, scaffold)
