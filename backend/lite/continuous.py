@@ -788,13 +788,18 @@ class SuffNormalOutputPSP(RandomPSP):
     return scipy.stats.norm.logpdf(value, loc=self.mu, scale=self.sigma)
 
   def logDensityOfCounts(self, aux):
+    return SuffNormalOutputPSP.logDensityOfCountsNumeric(aux, self.mu, self.sigma)
+
+  @staticmethod
+  def logDensityOfCountsNumeric(aux, mu, sigma):
     # Derived from:
     # http://www.encyclopediaofmath.org/index.php/Sufficient_statistic
+    # See doc/sp-math/
     [ctN, xsum, xsumsq] = aux.cts()
-    term1 = -ctN/2. * ( math.log(2*math.pi) + 2*math.log(self.sigma) )
-    term2 = -ctN/2. * self.mu**2 / self.sigma**2
-    term3 = -1/(2*self.sigma**2) * xsumsq
-    term4 = self.mu/self.sigma**2 * xsum
+    term1 = -ctN/2. * ( math.log(2*math.pi) + 2*math.log(sigma) )
+    term2 = -ctN/2. * mu**2 / sigma**2
+    term3 = -1/(2*sigma**2) * xsumsq
+    term4 = mu/sigma**2 * xsum
     return term1 + term2 + term3 + term4
 
 
@@ -956,17 +961,21 @@ class MakerSuffNormalOutputPSP(DeterministicMakerAAAPSP):
   def gradientOfLogDensityOfCounts(self, aux, args):
     """The derivatives with respect to the args of the log density of the counts
     collected by the made SP."""
-    # Log likelihood equations are from (derivatives derived manually):
-    # http://aleph0.clarku.edu/~djoyce/ma218/meeting12.pdf
+    # See the derivation in doc/sp-math/
     (mu, sigma) = args.operandValues()
     [ctN, xsum, xsumsq] = aux.cts()
     xsumsq_dev = xsumsq - 2*mu*xsum + ctN*mu**2
-    grad_mu =  xsumsq_dev / sigma**2
-    grad_sigma = -ctN / sigma + xsumsq_dev * sigma**3
+    grad_mu =  (xsum - ctN*mu) / sigma**2
+    grad_sigma = -ctN / sigma + xsumsq_dev / sigma**3
     return [grad_mu, grad_sigma]
 
-  def madeSpLogDensityOfCountsBound(self, _aux):
-    return 0
+  def madeSpLogDensityOfCountsBound(self, aux):
+    [ctN, xsum, xsumsq] = aux.cts()
+    if ctN == 0:
+      return 0
+    mu_hat = xsum / ctN
+    sigma_hat = math.sqrt(xsumsq / ctN - xsum ** 2 / ctN ** 2)
+    return SuffNormalOutputPSP.logDensityOfCountsNumeric(aux, mu_hat, sigma_hat)
 
 registerBuiltinSP("make_suff_stat_normal", typed_nr(MakerSuffNormalOutputPSP(),
   [t.NumberType(), t.PositiveType()], SPType([], t.NumberType())))
