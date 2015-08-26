@@ -15,11 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from nose import SkipTest
+
 import itertools
 import numpy as np
 from scipy.stats import norm
 from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, collectIidSamples, default_num_samples, ignore_inference_quality
+from venture.test.config import get_ripl, collectIidSamples, default_num_samples, ignore_inference_quality, rejectionSampling
 
 # This test suite targets
 # - make_nig_normal(m,V,a,b)
@@ -58,6 +60,8 @@ def testRecoverNormalDist():
 
 @statisticalTest
 def checkRecoverNormalDist(maker, true_mean, true_var):
+  if maker == suff_stat_nig_normal and rejectionSampling():
+    raise SkipTest("Rejection sampling is too slow for make_suff_stat_normal")
   if ignore_inference_quality():
     num_condition_samples = 2
   else:
