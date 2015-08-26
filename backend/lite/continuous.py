@@ -788,13 +788,18 @@ class SuffNormalOutputPSP(RandomPSP):
     return scipy.stats.norm.logpdf(value, loc=self.mu, scale=self.sigma)
 
   def logDensityOfCounts(self, aux):
+    return SuffNormalOutputPSP.logDensityOfCountsNumeric(aux, self.mu, self.sigma)
+
+  @staticmethod
+  def logDensityOfCountsNumeric(aux, mu, sigma):
     # Derived from:
     # http://www.encyclopediaofmath.org/index.php/Sufficient_statistic
+    # See doc/sp-math/
     [ctN, xsum, xsumsq] = aux.cts()
-    term1 = -ctN/2. * ( math.log(2*math.pi) + 2*math.log(self.sigma) )
-    term2 = -ctN/2. * self.mu**2 / self.sigma**2
-    term3 = -1/(2*self.sigma**2) * xsumsq
-    term4 = self.mu/self.sigma**2 * xsum
+    term1 = -ctN/2. * ( math.log(2*math.pi) + 2*math.log(sigma) )
+    term2 = -ctN/2. * mu**2 / sigma**2
+    term3 = -1/(2*sigma**2) * xsumsq
+    term4 = mu/sigma**2 * xsum
     return term1 + term2 + term3 + term4
 
 
