@@ -106,9 +106,9 @@ def collect_iid_samples():
 # These sorts of contortions are necessary because nose's parser of
 # configuration files doesn't seem to deal with supplying the same
 # option repeatedly, as the nose-testconfig plugin calls for.
-def default_num_samples():
+def default_num_samples(factor=1):
   if not ignore_inference_quality():
-    return int(config["num_samples"])
+    return int(config["num_samples"]) * factor
   else:
     return 2
 

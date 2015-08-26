@@ -15,9 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from nose import SkipTest
+
 from scipy.stats import poisson
 from venture.test.stats import statisticalTest, reportKernelTwoSampleTest
-from venture.test.config import get_ripl, collectIidSamples, default_num_samples, ignore_inference_quality
+from venture.test.config import get_ripl, collectIidSamples, default_num_samples, ignore_inference_quality, rejectionSampling
 
 # This test suite targets
 # - make_gamma_poisson(a,b)
@@ -74,6 +76,10 @@ def checkRecoverPoissonDist(maker, gamma_hypers, mu_true):
       gamma_hypers[0], gamma_hypers[1]))
   # Set up a conjugate prior for the vanilla Poisson. Test an arbitrary prior?
   elif maker in ['make_suff_stat_poisson']:
+    if rejectionSampling() and \
+       not (gamma_hypers == PRIOR_WIDE and \
+            mu_true < 10):
+      raise SkipTest("Rejection sampling is too slow for make_suff_stat_poisson")
     ripl.assume('mu', '(gamma {} {})'.format(gamma_hypers[0], gamma_hypers[1]))
     ripl.assume('f', '({} mu)'.format(maker))
   else:
