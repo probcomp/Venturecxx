@@ -17,7 +17,7 @@
 
 from nose import SkipTest
 from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, rejectionSampling, skipWhenSubSampling
+from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, rejectionSampling, skipWhenSubSampling, on_inf_prim, gen_on_inf_prim
 
 # TODO this whole file will need to be parameterized.
 # Most of these will become "check" functions instead of "test"
@@ -28,6 +28,7 @@ from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampl
 ############## (1) Test SymDirMult AAA
 
 #
+@gen_on_inf_prim("any")
 def testMakeSymDirMult1():
   for maker in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
     yield checkMakeSymDirMult1, maker
@@ -42,6 +43,7 @@ def checkMakeSymDirMult1(maker):
   ans = [(0,.5), (1,.5)]
   return reportKnownDiscrete(ans, predictions)
 
+@gen_on_inf_prim("any")
 def testMakeSymDirMultAAA():
   for maker in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
     yield checkMakeSymDirMultAAA,maker
@@ -56,12 +58,13 @@ def checkMakeSymDirMultAAA(maker):
   ripl.predict("(f)",label="pid")
   return checkDirichletMultinomialAAA(ripl, "pid")
 
+@gen_on_inf_prim("any")
 def testMakeSymDirMultFlip():
   """AAA where the SP flips between collapsed and uncollapsed."""
   for maker_1 in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
     for maker_2 in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
       yield checkMakeSymDirMultFlip,maker_1,maker_2
-  
+
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
 @statisticalTest
@@ -73,6 +76,7 @@ def checkMakeSymDirMultFlip(maker_1,maker_2):
   ripl.predict("(f)",label="pid")
   return checkDirichletMultinomialAAA(ripl, "pid")
 
+@gen_on_inf_prim("any")
 def testMakeSymDirMultBrushObserves():
   """AAA where the SP flips between collapsed and uncollapsed, and
      there are observations in the brush."""
@@ -95,6 +99,7 @@ def checkMakeSymDirMultBrushObserves(maker_1,maker_2):
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
 @statisticalTest
+@on_inf_prim("any")
 def testMakeSymDirMultNative():
   """AAA where the SP flips between collapsed, uncollapsed, and native"""
   ripl = get_ripl()
@@ -102,11 +107,11 @@ def testMakeSymDirMultNative():
   ripl.assume("a", "(normal 10.0 1.0)")
 # Might be collapsed, uncollapsed, or uncollapsed in Venture
   ripl.assume("f","""
-((if (lt a 9.5) 
-     make_sym_dir_mult 
+((if (lt a 9.5)
+     make_sym_dir_mult
      (if (lt a 10.5)
          make_uc_sym_dir_mult
-         (lambda (alpha k) 
+         (lambda (alpha k)
            ((lambda (theta) (lambda () (categorical theta)))
             (symmetric_dirichlet alpha k)))))
  a 4)
@@ -114,6 +119,7 @@ def testMakeSymDirMultNative():
   ripl.predict("(f)",label="pid")
   return checkDirichletMultinomialAAA(ripl, "pid")
 
+@gen_on_inf_prim("any")
 def testMakeSymDirMultAppControlsFlip():
   for maker_1 in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
     for maker_2 in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
@@ -134,6 +140,7 @@ def checkMakeSymDirMultAppControlsFlip(maker_1,maker_2):
   ripl.predict("(if (eq (g) atom<1>) (f) (f))")
   return checkDirichletMultinomialAAA(ripl, "pid", infer="mixes_slowly")
 
+@gen_on_inf_prim("any")
 def testMakeDirMult1():
   for maker in ["make_dir_mult","make_uc_dir_mult"]:
     yield checkMakeDirMult1,maker
@@ -149,6 +156,7 @@ def checkMakeDirMult1(maker):
   ripl.predict("(f)", label="pid")
   return checkDirichletMultinomialAAA(ripl, "pid")
 
+@gen_on_inf_prim("any")
 def testMakeSymDirMultWeakPrior():
   """This used to fail because nothing ever got unincorporated. Should work now"""
   for maker in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
@@ -171,6 +179,7 @@ def checkMakeSymDirMultWeakPrior(maker):
 # assert that a makerNode has been regenerated before applying it.
 # Therefore this section should try to trigger that assertion.
 
+@on_inf_prim("any")
 @statisticalTest
 def testStaleAAA_MSP():
   ripl = get_ripl()
@@ -181,8 +190,9 @@ def testStaleAAA_MSP():
   ripl.assume("h", "g")
   ripl.predict("(h)",label="pid")
 
-  return checkDirichletMultinomialWeakPrior(ripl,"pid")  
+  return checkDirichletMultinomialWeakPrior(ripl,"pid")
 
+@on_inf_prim("any")
 @statisticalTest
 def testStaleAAA_CSP():
   ripl = get_ripl()
@@ -193,8 +203,9 @@ def testStaleAAA_CSP():
   ripl.assume("h", "(g)")
   ripl.predict("(h)",label="pid")
 
-  return checkDirichletMultinomialWeakPrior(ripl,"pid")  
- 
+  return checkDirichletMultinomialWeakPrior(ripl,"pid")
+
+@on_inf_prim("any")
 @statisticalTest
 def testStaleAAA_Madness():
   ripl = get_ripl()
@@ -212,8 +223,8 @@ def testStaleAAA_Madness():
   ripl.assume("g","(deref (if (flip) (lookup ys (quote aaa)) (lookup ys (quote bbb))))")
   ripl.predict("(g)",label="pid")
 
-  return checkDirichletMultinomialWeakPrior(ripl,"pid") 
- 
+  return checkDirichletMultinomialWeakPrior(ripl,"pid")
+
 
 #### Helpers
 

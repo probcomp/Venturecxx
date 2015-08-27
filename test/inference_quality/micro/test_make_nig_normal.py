@@ -21,7 +21,7 @@ import itertools
 import numpy as np
 from scipy.stats import norm
 from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, collectIidSamples, default_num_samples, ignore_inference_quality, rejectionSampling
+from venture.test.config import get_ripl, collectIidSamples, default_num_samples, ignore_inference_quality, rejectionSampling, gen_on_inf_prim
 
 # This test suite targets
 # - make_nig_normal(m,V,a,b)
@@ -50,6 +50,7 @@ suff_stat_nig_normal = """(lambda (m V a b)
         (stddev (sqrt variance)))
     (make_suff_stat_normal mean stddev)))"""
 
+@gen_on_inf_prim("any")
 def testRecoverNormalDist():
   for maker in ['make_nig_normal', 'make_uc_nig_normal', suff_stat_nig_normal]:
     for (true_mean, true_var) in itertools.product(

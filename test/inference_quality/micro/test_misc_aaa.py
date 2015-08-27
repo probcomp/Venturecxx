@@ -19,8 +19,9 @@ from nose import SkipTest
 from testconfig import config
 
 from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, rejectionSampling, skipWhenSubSampling, inParallel
+from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, rejectionSampling, skipWhenSubSampling, inParallel, gen_on_inf_prim
 
+@gen_on_inf_prim("any")
 def testMakeBetaBernoulli1():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli",
                 "(lambda (a b) (let ((weight (beta a b))) (make_suff_stat_bernoulli weight)))"]:
@@ -45,6 +46,7 @@ def checkMakeBetaBernoulli1(maker, hyper):
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete(ans, predictions)
 
+@gen_on_inf_prim("any")
 def testMakeBetaBernoulli2():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli",
                 "(lambda (a b) (let ((weight (beta a b))) (make_suff_stat_bernoulli weight)))"]:
@@ -71,6 +73,7 @@ def checkMakeBetaBernoulli2(maker):
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete(ans, predictions)
 
+@gen_on_inf_prim("any")
 def testMakeBetaBernoulli3():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli",
                 "(lambda (a b) (let ((weight (beta a b))) (make_suff_stat_bernoulli weight)))"]:
@@ -98,6 +101,7 @@ def checkMakeBetaBernoulli3(maker):
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete(ans, predictions)
 
+@gen_on_inf_prim("any")
 def testMakeBetaBernoulli4():
   for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli",
                 "(lambda (a b) (let ((weight (beta a b))) (make_suff_stat_bernoulli weight)))"]:
@@ -124,6 +128,7 @@ def checkMakeBetaBernoulli4(maker):
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete(ans, predictions)
 
+@gen_on_inf_prim("resample")
 def testAAAParticleWeights():
   for sp in ["(make_beta_bernoulli a a)",
              "(make_uc_beta_bernoulli a a)",

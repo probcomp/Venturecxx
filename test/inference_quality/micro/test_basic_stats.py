@@ -20,8 +20,9 @@ import scipy.stats as stats
 from nose import SkipTest
 
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownMeanVariance, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, collect_iid_samples, skipWhenRejectionSampling, skipWhenSubSampling
+from venture.test.config import get_ripl, collectSamples, collect_iid_samples, skipWhenRejectionSampling, skipWhenSubSampling, on_inf_prim
 
+@on_inf_prim("any")
 @statisticalTest
 def testBernoulliIfNormal1():
   "A simple program with bernoulli, if, and normal applications in the brush"
@@ -32,6 +33,7 @@ def testBernoulliIfNormal1():
   cdf = lambda x: 0.3 * stats.norm.cdf(x,loc=0,scale=1) + 0.7 * stats.norm.cdf(x,loc=10,scale=1)
   return reportKnownContinuous(cdf, predictions, "0.3*N(0,1) + 0.7*N(10,1)")
 
+@on_inf_prim("any")
 @statisticalTest
 def testBernoulliIfNormal2():
   "A simple program with bernoulli, if, and an absorbing application of normal"
@@ -44,6 +46,7 @@ def testBernoulliIfNormal2():
   cdf = lambda x: 0.3 * stats.norm.cdf(x,loc=0,scale=1) + 0.7 * stats.norm.cdf(x,loc=10,scale=1)
   return reportKnownContinuous(cdf, predictions, "0.3*N(0,1) + 0.7*N(10,1)")
 
+@on_inf_prim("any")
 @statisticalTest
 def testNormalWithObserve1():
   "Checks the posterior distribution on a Gaussian given an unlikely observation"
@@ -57,6 +60,7 @@ def testNormalWithObserve1():
   cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
   return reportKnownContinuous(cdf, predictions, "N(12,sqrt(1.5))")
 
+@on_inf_prim("any")
 @statisticalTest
 def testNormalWithObserve2a():
   "Checks the posterior distribution on a Gaussian given an unlikely observation.  The difference between this and 1 is an extra predict, which apparently has a deleterious effect on mixing."
@@ -70,6 +74,7 @@ def testNormalWithObserve2a():
   cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
   return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
 
+@on_inf_prim("any")
 @statisticalTest
 def testNormalWithObserve2b():
   "Checks the posterior distribution on a Gaussian given an unlikely observation"
@@ -83,6 +88,7 @@ def testNormalWithObserve2b():
   cdf = stats.norm(loc=12, scale=math.sqrt(1.5)).cdf
   return reportKnownContinuous(cdf, predictions, "N(12,sqrt(1.5))")
 
+@on_inf_prim("any")
 @statisticalTest
 def testNormalWithObserve3():
   "Checks the posterior of a Gaussian in a Linear-Gaussian-BN"
@@ -107,6 +113,7 @@ def testNormalWithObserve3():
   cdf = stats.norm(loc=24, scale=math.sqrt(7.0/3.0)).cdf
   return reportKnownContinuous(cdf, predictions, "approximately N(24,sqrt(7/3))")
 
+@on_inf_prim("any")
 @statisticalTest
 def testStudentT1():
   "Simple program involving simulating from a student_t"
@@ -126,6 +133,7 @@ def testStudentT1():
   vara = meanasq - meana * meana
   return reportKnownMeanVariance(meana, vara, predictions)
 
+@on_inf_prim("any")
 @statisticalTest
 def testStudentT2():
   "Simple program involving simulating from a student_t, with basic testing of loc and shape params"
@@ -148,6 +156,7 @@ def testStudentT2():
   return reportKnownMeanVariance(meana, vara + 1.0, predictions)
 
 
+@on_inf_prim("any")
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
 @statisticalTest
@@ -167,6 +176,7 @@ def testSprinkler1():
   ans = [(True, .3577), (False, .6433)]
   return reportKnownDiscrete(ans, predictions)
 
+@on_inf_prim("any")
 @statisticalTest
 @skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
 def testSprinkler2():
@@ -187,6 +197,7 @@ def testSprinkler2():
   ans = [(True, .3577), (False, .6433)]
   return reportKnownDiscrete(ans, predictions)
 
+@on_inf_prim("any")
 @statisticalTest
 def testBLOGCSI1():
   "Context-sensitive Bayes-net taken from BLOG examples"
@@ -201,6 +212,7 @@ def testBLOGCSI1():
   ans = [(True, .596), (False, .404)]
   return reportKnownDiscrete(ans, predictions)
 
+@on_inf_prim("any")
 @statisticalTest
 def testGeometric1():
   "Geometric written with bernoullis and ifs, with absorbing at the condition."

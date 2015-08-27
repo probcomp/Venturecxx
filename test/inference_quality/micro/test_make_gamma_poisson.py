@@ -19,7 +19,7 @@ from nose import SkipTest
 
 from scipy.stats import poisson
 from venture.test.stats import statisticalTest, reportKernelTwoSampleTest
-from venture.test.config import get_ripl, collectIidSamples, default_num_samples, ignore_inference_quality, rejectionSampling
+from venture.test.config import get_ripl, collectIidSamples, default_num_samples, ignore_inference_quality, rejectionSampling, gen_on_inf_prim
 
 # This test suite targets
 # - make_gamma_poisson(a,b)
@@ -53,6 +53,7 @@ MU_TRUE_LARGE = 100
 # Sample 200 times from the true distribution.
 DRAW_SAMPLE_SIZE = 200
 
+@gen_on_inf_prim("any")
 def testRecoverPoissonDist():
   for maker in ['make_gamma_poisson', 'make_uc_gamma_poisson', 'make_suff_stat_poisson']:
     for gamma_hypers, mu_true in [
