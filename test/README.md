@@ -148,6 +148,9 @@ The build structure is as follows:
     - `puma-{meanfield,rejection}-inference-quality` are disabled
       because Puma does not implement those two methods (yet).
 
+    - `lite-{meanfield,func-pgibbs}-inference-quality` are disabled
+      because they have never passed.
+
     - `<backend>-misc-inference-quality` test methods we do not have
       many tests for, as well as combinations of methods.
 
