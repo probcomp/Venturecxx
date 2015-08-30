@@ -896,7 +896,11 @@ class MakerUNigNormalOutputPSP(RandomPSP):
     return UNigNormalAAALKernel()
 
   def simulate(self, args):
-    (m, V, a, b) = args.operandValues()
+    return MakerUNigNormalOutputPSP.simulateStatic(args.operandValues())
+
+  @staticmethod
+  def simulateStatic(hypers):
+    (m, V, a, b) = hypers
     # Simulate the mean and variance from NormalInverseGamma.
     # https://en.wikipedia.org/wiki/Normal-inverse-gamma_distribution#Generating_normal-inverse-gamma_random_variates
     sigma2 = scipy.stats.invgamma.rvs(a, scale=b)
