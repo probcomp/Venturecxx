@@ -921,13 +921,9 @@ class MakerUNigNormalOutputPSP(RandomPSP):
 
 class UNigNormalAAALKernel(SimulationAAALKernel):
   def simulate(self, _trace, args):
-    (m, V, a, b) = args.operandValues()
     madeaux = args.madeSPAux()
-    [ctN, xsum, xsumsq] = madeaux.cts()
-    Vn = 1 / (1/V + ctN)
-    mn = Vn*(1/V*m + ctN * xsum/ctN)
-    an = a + ctN / 2
-    bn = b + 0.5*(m**2/V + xsumsq - mn**2/Vn)
+    (mn, Vn, an, bn) = CNigNormalOutputPSP.posteriorHypersNumeric \
+      (args.operandValues(), madeaux.cts())
     newSigma2 = scipy.stats.invgamma.rvs(an, scale=bn)
     newMu = scipy.stats.norm.rvs(loc=mn, scale = math.sqrt(newSigma2*Vn))
     output = TypedPSP(SuffNormalOutputPSP(newMu, math.sqrt(newSigma2)),
