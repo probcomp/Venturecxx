@@ -834,13 +834,8 @@ class CNigNormalOutputPSP(RandomPSP):
     spaux.xsumsq -= value * value
 
   def updatedParams(self, aux):
-    # (197 - 200)
-    [ctN, xsum, xsumsq] = aux.cts()
-    Vn = 1 / (1/self.V + ctN)
-    mn = Vn*(1/self.V*self.m + xsum)
-    an = self.a + ctN / 2
-    bn = self.b + 0.5*(self.m**2/self.V + xsumsq - mn**2/Vn)
-    return (mn, Vn, an, bn)
+    return CNigNormalOutputPSP.posteriorHypersNumeric \
+      ((self.m, self.V, self.a, self.b), aux.cts())
 
   def simulate(self, args):
     # Posterior predictive is Student's t (206)
@@ -862,6 +857,17 @@ class CNigNormalOutputPSP(RandomPSP):
     term4 = math.log(1) - ctN/2. * math.log(math.pi) - ctN * math.log(2)
     return term1 + term2 + term3 + term4
 
+  @staticmethod
+  def posteriorHypersNumeric(prior_hypers, counts):
+    # http://www.cs.ubc.ca/~murphyk/Papers/bayesGauss.pdf#page=16
+    # (197 - 200)
+    [m, V, a, b] = prior_hypers
+    [ctN, xsum, xsumsq] = counts
+    Vn = 1 / (1/V + ctN)
+    mn = Vn*(1/V*m + xsum)
+    an = a + ctN / 2
+    bn = b + 0.5*(m**2/V + xsumsq - mn**2/Vn)
+    return (mn, Vn, an, bn)
 
 # Maker for Collapsed NIG-Normal
 class MakerCNigNormalOutputPSP(DeterministicMakerAAAPSP):
