@@ -899,7 +899,7 @@ class MakerUNigNormalOutputPSP(RandomPSP):
     return MakerUNigNormalOutputPSP.simulateStatic(args.operandValues())
 
   @staticmethod
-  def simulateStatic(hypers):
+  def simulateStatic(hypers, spaux=None):
     (m, V, a, b) = hypers
     # Simulate the mean and variance from NormalInverseGamma.
     # https://en.wikipedia.org/wiki/Normal-inverse-gamma_distribution#Generating_normal-inverse-gamma_random_variates
@@ -907,7 +907,7 @@ class MakerUNigNormalOutputPSP(RandomPSP):
     mu = scipy.stats.norm.rvs(loc=m, scale=math.sqrt(sigma2*V))
     output = TypedPSP(UNigNormalOutputPSP(mu, math.sqrt(sigma2)),
       SPType([], t.NumberType()))
-    return VentureSPRecord(SuffNormalSP(NullRequestPSP(), output))
+    return VentureSPRecord(SuffNormalSP(NullRequestPSP(), output), spaux)
 
   def logDensity(self, value, args):
     assert isinstance(value, VentureSPRecord)
@@ -926,13 +926,9 @@ class MakerUNigNormalOutputPSP(RandomPSP):
 class UNigNormalAAALKernel(SimulationAAALKernel):
   def simulate(self, _trace, args):
     madeaux = args.madeSPAux()
-    (mn, Vn, an, bn) = CNigNormalOutputPSP.posteriorHypersNumeric \
+    post_hypers = CNigNormalOutputPSP.posteriorHypersNumeric \
       (args.operandValues(), madeaux.cts())
-    newSigma2 = scipy.stats.invgamma.rvs(an, scale=bn)
-    newMu = scipy.stats.norm.rvs(loc=mn, scale = math.sqrt(newSigma2*Vn))
-    output = TypedPSP(SuffNormalOutputPSP(newMu, math.sqrt(newSigma2)),
-      SPType([], t.NumberType()))
-    return VentureSPRecord(SuffNormalSP(NullRequestPSP(), output), madeaux)
+    return MakerUNigNormalOutputPSP.simulateStatic(post_hypers, spaux=madeaux)
 
   def weight(self, _trace, _newValue, _args):
     # Gibbs step, samples exactly from the local posterior.  Being a
