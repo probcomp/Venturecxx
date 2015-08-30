@@ -863,9 +863,9 @@ class CNigNormalOutputPSP(RandomPSP):
     # (197 - 200)
     [m, V, a, b] = prior_hypers
     [ctN, xsum, xsumsq] = counts
-    Vn = 1 / (1/V + ctN)
-    mn = Vn*(1/V*m + xsum)
-    an = a + ctN / 2
+    Vn = 1 / (1.0/V + ctN)
+    mn = Vn*(1.0/V*m + xsum)
+    an = a + ctN / 2.0
     bn = b + 0.5*(m**2/V + xsumsq - mn**2/Vn)
     return (mn, Vn, an, bn)
 
