@@ -29,8 +29,9 @@ if version.endswith('+'):
     tag = prefix + version[:-1]
     try:
         import subprocess
+        # The --tags option includes non-annotated tags in the search.
         desc = subprocess.check_output([
-            'git', 'describe', '--dirty', '--match', tag,
+            'git', 'describe', '--dirty', '--match', tag, '--tags'
         ])
     except Exception:
         version += 'unknown'
