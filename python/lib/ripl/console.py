@@ -28,7 +28,7 @@ from utils import strip_types
 
 def printValue(directive):
   '''Gets the actual value returned by an assume, predict, report, or sample directive.'''
-  if directive is None:
+  if directive is None or 'value' not in directive:
     pass
   else:
     print strip_types(directive['value'])
