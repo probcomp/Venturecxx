@@ -205,7 +205,20 @@ we have
  & = & \E_\N \left[ A^2 x^4 - 2 A B x^3 + \left(-2A^2 + B^2\right) x^2 + 2 A B x + A^2 \right] \\
  & = & 3A^2 -2A^2 + B^2 + A^2 \\
  & = & 2A^2 + B^2 \\
- & = & \frac{1}{2} - \frac{1}{\sigma^2} + \frac{1 + 2\mu^2}{2\sigma^4}.
+ & = & \frac{1}{2} - \frac{1}{\sigma^2} + \frac{1 + 2\mu^2}{2\sigma^4},
 \end{eqnarray*}
+where line 4 relies on the known values for the moments of the
+standard Gaussian distribution: $\E_\N(1) = 1$, $\E_\N(x) = 0$,
+$\E_\N(x^2) = 1$, $\E_\N(x^3) = 0$, $\E_\N(x^4) = 3$.
 
+I read the above formulas as good news and bad news.  The good news is
+that the variance of our KL estimator is finite for all divergences of
+non-degenerate Gaussians, so the CLT applies and the estimate will
+eventually converge to having a predictable error.  The bad news is
+that this may take a \emph{long} time: the variance is quadratic in
+the difference of means (when that difference begins to exceed the
+standard deviation of $P$), and \emph{quartic} in the ratio of
+standard deviations.  Comparing this to the formula for the mean
+estimate itself, getting down to 10\% relative error means taking
+$O(100 / \sigma^2)$ samples in the small-$\sigma$ regime.
 \end{document}
