@@ -1,0 +1,224 @@
+\documentclass[12pt]{article}
+
+\title{Building Intuition about K-L Divergence}
+
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\N}{\mathcal{N}}
+
+\newtheorem{proposition}{Proposition}
+
+\begin{document}
+
+\maketitle
+
+\section{Definition}
+
+The Kullback-Leibler
+divergence\footnote{\url{https://en.wikipedia.org/wiki/Kullback-Leibler_divergence}}
+of $Q$ from $P$ is defined as
+\[ D_{KL}(P\|Q) = \int P(x) \left[ \log P(x) - \log Q(x) \right] dx , \]
+where $P$ and $Q$ are probability densities with respect to a common
+measure.  (In the case of counting measure, this makes $P$ and $Q$ be
+probability mass functions.)  This is also an expectation over $P$
+of a function involving logs of densities:
+\[ D_{KL}(P\|Q) = \E_P (x \mapsto \log P(x) - \log Q(x)). \]
+
+\section{Interpretations}
+
+For discrete distributions, KL divergence can be interpreted as the
+expected extra bits needed to code elements of $P$ with an optimal
+code for $Q$, over what would be needed for an optimal code for $P$.
+
+Freer, Mansinghka, and
+Roy \footnote{\url{danroy.org/papers/FreerManRoy-NIPSMC-2010.pdf} When
+  are probabilistic programs probably computationally tractable?}
+prove that the KL divergence also gives the performance of a rejection
+sampler.  Specifically,
+
+\begin{proposition}[Freer, Mansinghka, Roy, pg. 2]
+Let $N$ be the number of attempts before a rejection sampler for $P$
+with proposal distribution $Q$ succeeds.  $N$ is geometrically distributed
+with mean $\exp(D_{KL}(P\|Q))$.
+\end{proposition}
+This corresponds with the general intuition that proposal
+distributions should try to be broader than their targets rather than
+narrower.
+
+\section{Properties}
+
+KL divergnce is
+\begin{itemize}
+\item Non-negative, and zero only if $P = Q$ almost everywhere
+\item Invariant to parameterization
+\item \emph{Not} symmetric
+\item Does \emph{not} obey the triangle inequality
+\end{itemize}
+
+For non-negativity, consider the function whose expected value is the
+divergence: $x \mapsto \log P(x) - \log Q(x)$.  This function will be
+(large and) positive in areas that are (much) more likely under $P$
+than under $Q$, and (large and) negative in areas that are (much) more
+likely under $Q$ than under $P$.  But since the expectation is being
+taken with respect to $P$, it should stand to reason that the behavior
+in areas likely under $P$ dominates.
+
+For parameterization invariance, we reproduce the derivation from Wikipedia.
+\begin{proof}
+If a transformation is made from variable $x$ to variable $y(x)$,
+then, since $P(x) dx = P(y) dy$ and $Q(x) dx = Q(y) dy$ the KL divergence
+may be rewritten
+\begin{eqnarray*}
+ D_{KL}(P\|Q) & = & \int P(x) \log \left( \frac{P(x)}{Q(x)} \right) dx \\
+  & = & \int P(y) \log \left( \frac{P(y)dy/dx}{Q(y)dy/dx} \right) dy \\
+  & = & \int P(y) \log \left( \frac{P(y)}{Q(y)} \right) dy
+\end{eqnarray*}
+\end{proof}
+
+\section{Example: KL of 1-D Gaussians}
+\label{sec:example}
+
+As a refresher, the probability density function of the Gaussian
+distribution with mean $\mu$ and standard deviation $\sigma$ is
+
+\[ \N(\mu,\sigma)(x) = \frac{1}{\sigma \sqrt{2 \pi}} \exp \left(-\frac{(x-\mu)^2}{2\sigma^2} \right), \]
+and its log is correspondingly
+\[ \log \N(\mu,\sigma)(x) = -\frac{(x-\mu)^2}{2\sigma^2} - \log \sigma - \log \sqrt{2\pi}. \]
+
+Let us examine the behavior of the KL divergence of one Gaussian
+distribution $Q$ from another, $P$.  By parameterization invariance,
+we can normalize $P$ to be the standard Gaussian, which we will denote
+$\N$, dropping the mean and deviation arguments.  Then we have
+
+\begin{eqnarray*}
+ D_{KL}(\N\|\N(\mu,\sigma)) & = & \E_\N \left[ \log \N(x) - \log \N(\mu,\sigma)(x) \right] \\
+ & = & \E_\N \left[ -\frac{x^2}{2} + \frac{(x-\mu)^2}{2\sigma^2} + \log \sigma \right] \\
+ & = & -\frac{1}{2} \E_\N[x^2] + \frac{1}{2\sigma^2} \E_\N[x^2] - \frac{2\mu}{2\sigma^2}\E_\N(x)
+       + \frac{\mu^2}{2\sigma^2} + \log \sigma \\
+ & = & \frac{\mu^2 + 1}{2\sigma^2} + \log \sigma - \frac{1}{2}.
+\end{eqnarray*}
+where we used that $\E_\N(x) = 0$ and $\E_\N(x^2) = 1$ are
+the mean and variance of the standard Gaussian distribution.
+Using translation and scaling, we get for the general case
+\[ D_{KL}(\N(\mu_P,\sigma_P)\|\N(\mu_Q,\sigma_Q)) = \frac{(\mu_Q-\mu_P)^2 + \sigma_P^2}{2\sigma_Q^2} + \log \sigma_Q - \log \sigma_P - \frac{1}{2}. \]
+
+Some interpretation:
+\begin{itemize}
+\item If $\sigma_Q$ is large relative to the other quantities, the
+  $\log \sigma_Q$ term will dominate, so the divergence of a broad
+  Gaussian from a narrow one grows logarithmically.
+\item For fixed standard deviations that are small relative to the
+  mean difference, the KL divergence of two Gaussians is quadratic in
+  said mean difference.
+\item If $\sigma_P$ is large relative to the other quantities, the KL
+  divergence is quadratic in it.
+\end{itemize}
+
+\section{Mixture distributions}
+
+Consider the definition of KL divergence again
+\[ D_{KL}(P\|Q) = \E_P (x \mapsto \log P(x) - \log Q(x)), \]
+this time in the context of $P$ and $Q$ being mixture distributions
+\[ P(x) = \sum_i w_iP_i(x) \qquad Q(x) = \sum_j w_jQ_j(x) \qquad \sum_iw_i = \sum_jw_j = 1. \]
+
+If the mixture components $P_i$ and widely separated, one
+term will dominate each sum.  Call its index $i(x)$.
+Then
+\[ D_{KL}(P\|Q) \approx \E_P \left[ \log P_{i(x)}(x) + \log w_{i(x)} - \log Q(x) \right]. \]
+The approximateness comes from the smaller terms in each sum, which
+can be viewed as bumping up the weight of the best component a bit if
+there is another component that's amost as good.\footnote{For
+  instance, if $P_1(x) = P_2(x) \gg P_i(x)$, then $\log P(x) \approx
+  \log P_1(x) + \log w_1 + \log w_2$.}  Moreover, the expectation over
+$P$ is the weighted sum of expectations over $P_i$, and we may assume
+that for $x$ drawn from $P_i$, $P_i$ stands to dominate the density
+function.  This brings us to
+\begin{eqnarray*}
+ D_{KL}(P\|Q) & \approx & \sum_i w_i \log w_i + \sum_i w_i \E_{P_i} \left[ \log P_i(x) - \log Q(x) \right] \\
+ & = & \sum_i w_i D_{KL}(P_i\|Q) - H(w_i).
+\end{eqnarray*}
+This is the weighted sum of divergences of $Q$ from the mixture
+components $P_i$, less the entropy of the mixture weights $w_i$.
+
+If the mixture components $Q_j$ are also widely separated, the same
+reasoning applies to the $\log Q(x)$ term.  If we further assume that
+for samples from any given component $P_i$, the contribution of a
+single component $Q_{j(i)}$ always dominates, we find
+\begin{eqnarray*}
+ D_{KL}(P\|Q) & \approx & \sum_i w_i \log w_i + \sum_i w_i \E_{P_i} \left[ \log P_i(x) - \log Q_{j(i)}(x) - \log w_{j(i)} \right] \\
+ & = & \sum_i w_i D_{KL}(P_i\|Q_{j(i)}) - H(w_i) + H(w_i, w_{j(i)}),
+\end{eqnarray*}
+which is the weighted (by the weights in $P$) sum of the KL divergences
+of corresponding mixture components, less the entropy of the weights
+of $P$, plus the cross-entropy of the weights $w_{j(i)}$ with respect
+to the $w_i$.\footnote{Well, not exactly, because the $w_{j(i)}$ needn't
+sum to 1, but the notation serves as a mnemonic.}
+
+\section{Computing KL divergence}
+
+KL divergence of $Q$ from $P$ is an expectation over $P$ of a function
+determined by the density functions of $P$ and $Q$.  Therefore, if $P$
+is samplable and $P$ and $Q$ are assessable (resp. approximately
+assessable), we can approximate the KL (resp. the KL of approximate
+distributions) by Monte Carlo integration:
+
+\begin{eqnarray*}
+ x_i & \sim & P \qquad \textrm{$N$ samples from $P$} \\
+ \widehat{D_{KL}} & = & \frac{1}{N} \sum_i \log P(x_i) - \log Q(x_i).
+\end{eqnarray*}
+
+The Central Limit Theorem implies that if the random variable obtained
+by computing $\log P(x_i) - \log Q(x_i)$ for $x_i$ sampled from $P$
+has finite mean $M$ and variance $\Sigma^2$, then as $N$ rises the
+distribution of the above estimate will converge to the Gaussian
+$\N(M, \Sigma / \sqrt N)$.  We can therefore estimate the error
+of any particular computed mean as the sample variance of
+$\{\log P(x_i) - \log Q(x_i)\}_1^N$.
+
+Let's check this for the Gaussian case.  From
+Section~\ref{sec:example}, the true mean $M$ is
+\begin{eqnarray*}
+ M & = & D_{KL}(\N\|\N(\mu,\sigma)) = \frac{\mu^2 + 1}{2\sigma^2} + \log \sigma - \frac{1}{2}.
+\end{eqnarray*}
+The variance of our estimator
+is
+
+\begin{eqnarray*}
+ \Sigma^2 & = & \E_\N\left[ \log \N(x) - \log \N(\mu,\sigma)(x) - M \right]^2 \\
+ & = & \E_\N \left[ -\frac{x^2}{2} + \frac{(x-\mu)^2}{2\sigma^2} + \log \sigma - M \right]^2.
+\end{eqnarray*}
+To perform this calculation, we are going to first expand both squares
+and group the powers of $x$.  Letting
+\begin{eqnarray*}
+ A & = & -\frac{1}{2} + \frac{1}{2 \sigma^2} \\
+ B & = & \frac{\mu}{\sigma^2} \\
+ C & = & \frac{\mu^2}{2\sigma^2} + \log \sigma
+\end{eqnarray*}
+we have
+\begin{eqnarray*}
+ M & = & A + C \\
+ \Sigma^2 & = & \E_\N \left[ A x^2 - B x + C - (A + C)\right]^2 \\
+ & = & \E_\N \left[ A^2 x^4 - 2 A B x^3 + \left(-2A^2 + B^2\right) x^2 + 2 A B x + A^2 \right] \\
+ & = & 3A^2 -2A^2 + B^2 + A^2 \\
+ & = & 2A^2 + B^2 \\
+ & = & \frac{1}{2} - \frac{1}{\sigma^2} + \frac{1 + 2\mu^2}{2\sigma^4},
+\end{eqnarray*}
+where line 4 relies on the known values for the moments of the
+standard Gaussian distribution: $\E_\N(1) = 1$, $\E_\N(x) = 0$,
+$\E_\N(x^2) = 1$, $\E_\N(x^3) = 0$, $\E_\N(x^4) = 3$.
+
+I read the above formulas as good news and bad news.  The good news is
+that the variance of our KL estimator is finite for all divergences of
+non-degenerate Gaussians, so the CLT applies and the estimate will
+eventually converge to having a predictable error.  The bad news is
+that this may take a \emph{long} time: the variance is quadratic in
+the difference of means (when that difference begins to exceed the
+standard deviation of $P$), and \emph{quartic} in the ratio of
+standard deviations.  Comparing this to the formula for the mean
+estimate itself, getting down to 10\% relative error means taking
+$O(100 / \sigma^2)$ samples in the small-$\sigma$ regime.
+\end{document}
