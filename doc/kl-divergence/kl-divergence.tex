@@ -189,8 +189,7 @@ is
 
 \begin{eqnarray*}
  \Sigma^2 & = & \E_\N\left[ \log \N(x) - \log \N(\mu,\sigma)(x) - M \right]^2 \\
- & = & \E_\N \left[ \log \N(x) - \log \N(\mu,\sigma)(x) \right]^2 - M^2 \\
- & = & \E_\N \left[ -\frac{x^2}{2} + \frac{(x-\mu)^2}{2\sigma^2} + \log \sigma \right]^2 - M^2.
+ & = & \E_\N \left[ -\frac{x^2}{2} + \frac{(x-\mu)^2}{2\sigma^2} + \log \sigma - M \right]^2.
 \end{eqnarray*}
 To perform this calculation, we are going to first expand both squares
 and group the powers of $x$.  Letting
@@ -202,11 +201,11 @@ and group the powers of $x$.  Letting
 we have
 \begin{eqnarray*}
  M & = & A + C \\
- \Sigma^2 & = & \E_\N \left[ A x^2 - B x + C \right] ^2 - (A + C)^2 \\
- & = & \E_\N \left[ x^4 A^2 - 2 A B x^3 + x^2 \left(2AC + B^2\right) - 2 B C x + C^2 \right] - (A+C)^2 \\
- & = & 3A^2 + 2AC + B^2 + C^2 - (A+C)^2 \\
+ \Sigma^2 & = & \E_\N \left[ A x^2 - B x + C - (A + C)\right]^2 \\
+ & = & \E_\N \left[ A^2 x^4 - 2 A B x^3 + \left(-2A^2 + B^2\right) x^2 + 2 A B x + A^2 \right] \\
+ & = & 3A^2 -2A^2 + B^2 + A^2 \\
  & = & 2A^2 + B^2 \\
- & = & \frac{1}{2} - \frac{1}{\sigma^2} + \frac{1 + 2\mu^2}{\sigma^4}.
+ & = & \frac{1}{2} - \frac{1}{\sigma^2} + \frac{1 + 2\mu^2}{2\sigma^4}.
 \end{eqnarray*}
 
 \end{document}
