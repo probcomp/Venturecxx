@@ -80,6 +80,7 @@ may be rewritten
 \end{proof}
 
 \section{Example: KL of 1-D Gaussians}
+\label{sec:example}
 
 As a refresher, the probability density function of the Gaussian
 distribution with mean $\mu$ and standard deviation $\sigma$ is
@@ -158,5 +159,54 @@ to the $w_i$.\footnote{Well, not exactly, because the $w_{j(i)}$ needn't
 sum to 1, but the notation serves as a mnemonic.}
 
 \section{Computing KL divergence}
+
+KL divergence of $Q$ from $P$ is an expectation over $P$ of a function
+determined by the density functions of $P$ and $Q$.  Therefore, if $P$
+is samplable and $P$ and $Q$ are assessable (resp. approximately
+assessable), we can approximate the KL (resp. the KL of approximate
+distributions) by Monte Carlo integration:
+
+\begin{eqnarray*}
+ x_i & \sim & P \qquad \textrm{$N$ samples from $P$} \\
+ \widehat{D_{KL}} & = & \frac{1}{N} \sum_i \log P(x_i) - \log Q(x_i).
+\end{eqnarray*}
+
+The Central Limit Theorem implies that if the random variable obtained
+by computing $\log P(x_i) - \log Q(x_i)$ for $x_i$ sampled from $P$
+has finite mean $M$ and variance $\Sigma^2$, then as $N$ rises the
+distribution of the above estimate will converge to the Gaussian
+$\N(M, \Sigma / \sqrt N)$.  We can therefore estimate the error
+of any particular computed mean as the sample variance of
+$\{\log P(x_i) - \log Q(x_i)\}_1^N$.
+
+Let's check this for the Gaussian case.  From
+Section~\ref{sec:example}, the true mean $M$ is
+\begin{eqnarray*}
+ M & = & D_{KL}(\N\|\N(\mu,\sigma)) = \frac{\mu^2 + 1}{2\sigma^2} + \log \sigma - \frac{1}{2}.
+\end{eqnarray*}
+The variance of our estimator
+is
+
+\begin{eqnarray*}
+ \Sigma^2 & = & \E_\N\left[ \log \N(x) - \log \N(\mu,\sigma)(x) - M \right]^2 \\
+ & = & \E_\N \left[ \log \N(x) - \log \N(\mu,\sigma)(x) \right]^2 - M^2 \\
+ & = & \E_\N \left[ -\frac{x^2}{2} + \frac{(x-\mu)^2}{2\sigma^2} + \log \sigma \right]^2 - M^2.
+\end{eqnarray*}
+To perform this calculation, we are going to first expand both squares
+and group the powers of $x$.  Letting
+\begin{eqnarray*}
+ A & = & -\frac{1}{2} + \frac{1}{2 \sigma^2} \\
+ B & = & \frac{\mu}{\sigma^2} \\
+ C & = & \frac{\mu^2}{2\sigma^2} + \log \sigma
+\end{eqnarray*}
+we have
+\begin{eqnarray*}
+ M & = & A + C \\
+ \Sigma^2 & = & \E_\N \left[ A x^2 - B x + C \right] ^2 - (A + C)^2 \\
+ & = & \E_\N \left[ x^4 A^2 - 2 A B x^3 + x^2 \left(2AC + B^2\right) - 2 B C x + C^2 \right] - (A+C)^2 \\
+ & = & 3A^2 + 2AC + B^2 + C^2 - (A+C)^2 \\
+ & = & 2A^2 + B^2 \\
+ & = & \frac{1}{2} - \frac{1}{\sigma^2} + \frac{1 + 2\mu^2}{\sigma^4}.
+\end{eqnarray*}
 
 \end{document}
