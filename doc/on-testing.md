@@ -1,5 +1,5 @@
 Ways of Testing Probabilistic Programs
---------------------------------------
+======================================
 
 Probabilistic programming admits a variety of operating regimes, which
 seem to call for different testing strategies.
@@ -10,7 +10,7 @@ seem to call for different testing strategies.
 
   - Just run the program and check the answer
 
-- Testing **unversal invariants**: For any program, there are
+- Testing **universal invariants**: For any program, there are
   situations that should never happen (for example, type errors).
   Traditional testing is a good fit here, too.
 
@@ -24,37 +24,154 @@ seem to call for different testing strategies.
   the same way as universal invariants -- see [Musings on the
   Impossible](https://github.com/mit-probabilistic-computing-project/Venturecxx/blob/master/doc/impossibility.md).
 
-- Testing **known exact answer distributions**: In the simplest
+- Testing **exact equality in distribution**: In the simplest
   nontrivial case, one knows the exact probability distribution on
-  outputs that should obtain.
+  outputs that should obtain.  The tests that are applicable classify
+  by the characterizations of the two putatively equal distributions
+  that are available, or that one wishes to compare, and by the
+  dimension of the output space:
 
-  - If the expected distribution is discrete or 1-D can use Chi^2 or
-    K-S (one or two sample).
+  - exact measure vs exact measure
 
-    - Sampling from the expected and test distributions is sufficient;
-      can also use the measure of either or both
+    - Should always agree on every query -- this is a universal
+      invariant.
 
-    - Test is valid at ~every sample size, but drawing more samples
-      increases its strength
+  - exact sampler vs exact measure
 
-    - Can plug this in to a traditional test framework by thresholding
-      the p-value.
+    - 0-D (discrete) output: one-sample Chi^2 test.
 
-  - Can compute approximate K-L and check that it approaches 0 as the
-    fidelity of the approximation improves.
+    - 1-D output: one-sample K-S test.
 
-    - Works for any tail-assessable (preferably full-assessable)
-      expected and tested distributions (see [Approximating K-L Divergence](https://github.com/mit-probabilistic-computing-project/Venturecxx/blob/master/doc/on-approximating-kl-divergence.md))
+    - more-D output: When do you ever have an exact measure in high
+      dimensions?  Project and/or bin down to 1-D or 0-D if the
+      measure permits.
 
-    - Test is asymptotic in
+  - exact sampler vs exact sampler
 
-      - The number of samples used to estimate the K-L
+    - 0-D (discrete) output: two-sample Chi^2 test.
 
-      - The number of samples used to estimate full assessment from
-        tail assessment, if applicable
+    - 1-D output: two-sample K-S test.
 
-  - For discrete or low-D distributions, could also compute the K-L by
-    enumeration or quadrature.
+    - more-D output: project to various independent 1-D tests and/or
+      bin to various independent 0-D tests (as many and as varied as
+      desired).
+
+      - TODO Is there anything better?
+
+  - exact density vs exact density
+
+    - Should always agree on every query -- this is a universal
+      invariant.
+
+  - exact sampler vs exact density
+
+    - In 0-D the density is a measure: one-sample Chi^2 test.
+
+    - 1-D: Compute the cumulative distribution function by quadrature
+      and one-sample K-S test.
+
+    - more-D: TODO ???
+
+  - These tests are valid at ~every sample size, but drawing more
+    samples increases their strength.
+
+  - Can plug this in to a traditional test framework by thresholding
+    the p-value.
+
+  - an exact tail-assessable representation (see [Approximating K-L
+    Divergence]
+    (https://github.com/mit-probabilistic-computing-project/Venturecxx/blob/master/doc/on-approximating-kl-divergence.md))
+    behaves like an exact fully-assessable representation for an
+    approximate distribution.  See the next item.
+
+- Testing **approximate equality in distribution** is where I no
+  longer know good decision procedures.  By "approxmate" I
+  specifically mean "there is a parameter N such that sending it to
+  infinity makes the equality exact", though I admit multiple
+  dimensions of approximation (i.e., multiple parameters such that
+  some nested limit is exact.
+
+  - sampler+density vs density
+
+    - small 0-D: Compute K-L divergence by enumeration.
+
+    - 1-D or low-D: Compute K-L divergence by quadrature.
+
+    - large 0-D or high-D: Compute K-L divergence by Monte Carlo
+      integration.
+
+  - Test is asymptotic in
+
+    - The number of samples used to estimate the K-L, if Monte Carlo.
+
+    - The parameters of approximation of the distributions (e.g., the
+      number of samples used to estimate full assessment from tail
+      assessment).
+
+  - The best "decision procedure" I know so far is to eye-ball the
+    results of multiple runs with various parameters and see whether
+    they are zero or not.
+
+  - One good trick: Calibrate errors in the K-L divergence by
+    evaluating it for two different approximations of the same
+    distribution.  That is, if testing whether K-L between A_n and B_m
+    converges to zero, calibrate by comparing different realizations
+    of A_n.
+
+Examples of Exact Distribution Equality
+---------------------------------------
+
+- Testing **probabilistic primitives**.  The various methods of an SP
+  are different representations of purportedly the same probability
+  distribution, so cross-check them.
+
+  - log densities of counts methods may be comparable to versions of the
+    same SP that do not attempt to maintain sufficient statistics, for
+    example on the inferences they produce.
+
+- Testing **distribution identities**, for example that
+
+    N(N(mu,var1),var2) = N(mu,var1+var2).
+
+  Such identities give an additional way to cross-check various
+  methods of the primitives used to implement those distributions.
+  The Gaussian example above can be tested sampler-vs-sampler to gain
+  confidence in the Gaussian sampler, or tail-assessor vs assessor
+  to gain confidence in sampler-assessor agreement.
+
+  - One class of identities is the behavior of location and scale
+    parameters, for SPs that have such.  These tests can detect
+    mis-parameterization bugs.
+
+  - Distributions like Student-T that are defined as compositions can
+    be (partially) tested by comparing their definition as a
+    tail-assessable process to their purported direct assessor.
+
+    - Actually can compute the K-L in both directions, which hits two
+      distinct code paths.
+
+  - The sampler for a distribution that is a conjugate prior can be
+    tested by comparing a posterior computed by rejection sampling to
+    one computed by the collapsed version of the model.
+
+  - Rejection sampling results can be compared exactly against
+    analytic solutions.
+
+- The **Geweke identity**:
+
+  - given p(x), p(d|x), and stationary T_d: x -> x', the chain
+      x_n+1 ~ T_{d_n}
+      d_n+1 ~ p(.|x_n+1)
+    should be stationary on the joint distribution p(x,d).  Can compare
+    any iterate, or any sub-collection of a long run, against repeated
+    forward simulation from p(x,d).
+
+  - In practice, the distributions involved tend to be only
+    tail-assessable, so are well-treated as instances of approximate
+    equality in distribution.
+
+Examples of Approximate Distribution Equality
+---------------------------------------------
 
 - Testing transition operators that converge to a **known exact
   posterior**: All too often, the precise intended action of a
@@ -82,9 +199,11 @@ seem to call for different testing strategies.
       - The number of iterations of the transition operator
 
   - Alternately, can take "many" iterates of the operator, hoping for
-    it to have converged, and use Chi^2 or K-S on the result (if it's
-    discrete or 1-D).  This is somewhat risky, because it's hard to
-    detect convergence in general.
+    it to have converged, and treat it as exact equality in
+    distribution (i.e., use Chi^2 or K-S on 0-D or 1-D projections of
+    the result).  This is somewhat risky, because it's hard to detect
+    convergence in general, but could be a reasonable test of
+    inference algorithms with convergence heuristics
 
 - One can similarly approach a **computable exact posterior**: If some
   instances of the problem are tractable to an exact method like
@@ -105,7 +224,7 @@ seem to call for different testing strategies.
   If the supplied data are IID according to some distribution Q, then,
   as the number of data points increases:
 
-  - If Q is in the model's hypothesis class, the posterior predictive of 
+  - If Q is in the model's hypothesis class, the posterior predictive of
     the model converges to Q.
 
   - If not, the posterior predictive converges to that distribution in
@@ -113,7 +232,7 @@ seem to call for different testing strategies.
 
   - TODO: Is the convergence known to be monotonic in K-L?
 
-  As a consequence of this, 
+  As a consequence of this,
 
   - Can do K-L as above on the predictive distribution
 
@@ -133,60 +252,8 @@ seem to call for different testing strategies.
 
       - The number of data points used for training
 
-Testing Probabilistic Primitives
---------------------------------
-
-There is a slightly different problem facing attempts to test
-primitives, because here the subject of the test is whether two (or
-more) different descriptions of the same (usually well-understood)
-distribution agree.
-
-- The typical example would be agreement between the sampler and
-  assessor for a Venture SP.
-
-  - For discrete SPs, can compare the simulator to the log density with
-    Chi^2.
-
-  - For 1-D SPs, can compare the simulator to the log density with K-S,
-    computing the CDF by quadrature.
-
-    - May be necessary to ensure the quadrature is successful.
-
-  - For more dimensions, can always try various (or random)
-    projections
-
-  - TODO Is there any story for full-coverage comparisons of
-    simulators and assessors for multi-dimensional distributions?
-
-- In special cases, it may be possible to use some identities to gain
-  confidence.  For example:
-
-  - The Gaussian distribution can be tested by comparing the K-L of
-    the tail-assessable representation
-
-    `normal 0 1 >>= \mu -> normal mu 1`
-
-    to the analytic answer `normal 0 (sqrt 2)`
-
-  - Distributions like Student-T that are defined as compositions can
-    be (partially) tested by comparing their definition as a
-    tail-assessable process to their purported direct assessor.
-
-    - Actually can compute the K-L in both directions, which hits two
-      distinct code paths.
-
-  - The sampler for a distribution that is a conjugate prior can be
-    tested by comparing a posterior computed by rejection sampling to
-    one computed by the collapsed version of the model.
-
-- log densities of counts methods may be comparable to versions of the
-  same SP that do not attempt to maintain sufficient statistics, for
-  example on the inferences they produce.
-
 TODO
 ----
-
-- Geweke-style testing?
 
 - vkm suggested that there are ways to distinguish three cases:
 
@@ -200,8 +267,8 @@ TODO
   operator that don't impact the distribution it converges to?  Are
   there such things?
 
-- Note: the above assumes exact assessments.  If the assessments or
-  tail assessments are up to a normalizing constant, the K-L measures
-  will be off.
+- Note: the above assumes normalized assessments.  If the assessments
+  or tail assessments are up to a normalizing constant, the K-L
+  measures will be off.
 
   - Is that situation salvageable?
