@@ -1,5 +1,49 @@
-Ways of Testing Probabilistic Programs
-======================================
+Correctness-Testing Probabilistic Programs
+==========================================
+
+This document concerns itself with the question "Did I implement my
+model and inference correctly?".
+
+By way of clearing the context, I will mention several kinds of other
+questions one might want to answer when testing a probabilistic
+program.  This document is *not* about any of these questions:
+
+- Did I push my time-accuracy tradeoffs far enough?
+
+  - Variant: Did my Markov chain converge?
+
+  - Variant: Do I have enough samples?
+
+  - Variant: Do I have enough effective sample size (drawing
+    repeatedly from a few long chains)?
+
+  - Apparently there is a robust literature of convergence
+    diagnostics, but I have not yet studied it.
+
+- Is this a good Markov chain for this model?  (That is, can it be
+  made to converge faster?)
+
+  - This is in a sense a performance question.
+
+- Was this a good model to begin with?
+
+  - Cross-validation (including the PSIS trick in that Gelman paper)
+
+  - WAIC
+
+Another note: testing and debugging are two different things.  For
+testing, you want as narrow an information pipe as possible, flowing
+from as broad a segment of your program as possible, to gain
+confidence that there are no problems in a broad range of
+circumstances, and to quickly focus attention on circumstances where
+there are problems.  For debugging, you want as thick an information
+pipe as possible, to understand where the problem you are looking for
+may be hiding.  But, of course, you also want to focus that thick pipe
+to source from the actual problem area, to avoid being overwhelmed by
+information.  This document is not about debugging strategies either.
+
+Regimes
+-------
 
 Probabilistic programming admits a variety of operating regimes, which
 seem to call for different testing strategies.
@@ -143,6 +187,14 @@ Examples of Exact Distribution Equality
     parameters, for SPs that have such.  These tests can detect
     mis-parameterization bugs.
 
+  - Another class of identities arises when some object (like a
+    BayesDB population model) purports to be able to compute
+    conditioned variants of a distribution.  Then equalities like
+      p(x'|z)   p(x',z)
+      ------- = -------
+      p(x|z)    p(x,z)
+    for all x', x, z become relevant.
+
   - Distributions like Student-T that are defined as compositions can
     be (partially) tested by comparing their definition as a
     tail-assessable process to their purported direct assessor.
@@ -157,7 +209,7 @@ Examples of Exact Distribution Equality
   - Rejection sampling results can be compared exactly against
     analytic solutions.
 
-- The **Geweke identity**:
+- The **Geweke identity** from [1]:
 
   - given p(x), p(d|x), and stationary T_d: x -> x', the chain
       x_n+1 ~ T_{d_n}
@@ -255,6 +307,15 @@ Examples of Approximate Distribution Equality
 TODO
 ----
 
+- Where does: Cook, Gelman, Rubin 2006, Validation of Software for
+  Bayesian Models Using Posterior Quantiles
+  http://www.stat.cmu.edu/~acthomas/724/Cook.pdf
+  fit in?
+
+- There is a testing mechanism proposed in Roger Grosse's PhD
+  dissertation.  I recall thinking it was very complicated, but it may
+  be worth perusing again.
+
 - vkm suggested that there are ways to distinguish three cases:
 
   - A coding bug
@@ -272,3 +333,14 @@ TODO
   measures will be off.
 
   - Is that situation salvageable?
+
+References
+----------
+
+[1] J. Geweke. Getting it right: joint distribution tests of posterior
+simulators. JASA, 2004.
+http://qed.econ.queensu.ca/pub/faculty/ferrall/quant/papers/04_04_29_geweke.pdf
+
+See also Roger Grosse
+https://hips.seas.harvard.edu/blog/2013/06/10/testing-mcmc-code-part-2-integration-tests/
+for a more intuitive introduction.
