@@ -175,7 +175,7 @@ Examples of Exact Distribution Equality
 
 - Testing **distribution identities**, for example that
 
-    N(N(mu,var1),var2) = N(mu,var1+var2).
+    N(N(mu, var1), var2) = N(mu, var1 + var2).
 
   Such identities give an additional way to cross-check various
   methods of the primitives used to implement those distributions.
@@ -190,9 +190,9 @@ Examples of Exact Distribution Equality
   - Another class of identities arises when some object (like a
     BayesDB population model) purports to be able to compute
     conditioned variants of a distribution.  Then equalities like
-      p(x'|z)   p(x',z)
-      ------- = -------
-      p(x|z)    p(x,z)
+
+      p(x'|z)/p(x|z) =  p(x',z)/p(x,z)
+
     for all x', x, z become relevant.
 
   - Distributions like Student-T that are defined as compositions can
@@ -212,8 +212,12 @@ Examples of Exact Distribution Equality
 - The **Geweke identity** from [1]:
 
   - given p(x), p(d|x), and stationary T_d: x -> x', the chain
-      x_n+1 ~ T_{d_n}
-      d_n+1 ~ p(.|x_n+1)
+
+    ```
+    x_n+1 ~ T_{d_n}
+    d_n+1 ~ p(.|x_n+1)
+    ```
+
     should be stationary on the joint distribution p(x,d).  Can compare
     any iterate, or any sub-collection of a long run, against repeated
     forward simulation from p(x,d).
