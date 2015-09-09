@@ -747,6 +747,16 @@ class SuffNormalSPAux(SPAux):
     aux.xsumsq = self.xsumsq
     return aux
 
+  def incorporate(self, value):
+    self.ctN += 1
+    self.xsum += value
+    self.xsumsq += value * value
+
+  def unincorporate(self, value):
+    self.ctN -= 1
+    self.xsum -= value
+    self.xsumsq -= value * value
+
   v_type = t.HomogeneousListType(t.NumberType())
 
   def asVentureValue(self):
@@ -770,16 +780,10 @@ class SuffNormalOutputPSP(RandomPSP):
     self.sigma = sigma
 
   def incorporate(self, value, args):
-    spaux = args.spaux()
-    spaux.ctN += 1
-    spaux.xsum += value
-    spaux.xsumsq += value * value
+    args.spaux().incorporate(value)
 
   def unincorporate(self, value, args):
-    spaux = args.spaux()
-    spaux.ctN -= 1
-    spaux.xsum -= value
-    spaux.xsumsq -= value * value
+    args.spaux().unincorporate(value)
 
   def simulate(self, _args):
     return scipy.stats.norm.rvs(loc=self.mu, scale=self.sigma)
@@ -822,16 +826,10 @@ class CNigNormalOutputPSP(RandomPSP):
     self.b = b
 
   def incorporate(self, value, args):
-    spaux = args.spaux()
-    spaux.ctN += 1
-    spaux.xsum += value
-    spaux.xsumsq += value * value
+    args.spaux().incorporate(value)
 
   def unincorporate(self, value, args):
-    spaux = args.spaux()
-    spaux.ctN -= 1
-    spaux.xsum -= value
-    spaux.xsumsq -= value * value
+    args.spaux().unincorporate(value)
 
   def updatedParams(self, aux):
     return CNigNormalOutputPSP.posteriorHypersNumeric \
