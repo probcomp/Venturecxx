@@ -1827,7 +1827,7 @@ Addresses are hashed now.
 
 Run Wadden's example that breaks Nesterov and see what the problem is
 https://app.asana.com/0/9277420529946/16064839336502
-https://github.com/mit-probabilistic-computing-project/Venturecxx/blob/ml-models/examples/ml-models/pmf.py
+https://github.com/probcomp/Venturecxx/blob/ml-models/examples/ml-models/pmf.py
 
 ----------------------------------------------------------------------
 

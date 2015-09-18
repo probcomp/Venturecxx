@@ -175,7 +175,7 @@ class VentureInstaller(ClusterSetup): # Exceptions by default are acceptable pyl
       # TODO blows away all the caches :( but at least ensures unpacking
       # of fresh source.
       node.ssh.execute('rm -rf Venturecxx')
-      node.shell(forward_agent=True, command="git clone git@github.com:mit-probabilistic-computing-project/Venturecxx.git")
+      node.shell(forward_agent=True, command="git clone git@github.com:probcomp/Venturecxx.git")
       node.ssh.execute('cd Venturecxx; git checkout %s' % self.github_branch)
     elif self.tarfile is not None:
       log.info("Uploading venture to %s from %s" % (node.alias, self.tarfile))

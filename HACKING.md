@@ -4,7 +4,7 @@ Overview
 If you disagree with a suggestion you see here, please bring it up
 rather than silently not following it.
 
-- We use [Github Issues](http://github.com/mit-probabilistic-computing-project/Venturecxx/Issues/) to track issues.
+- We use [Github Issues](http://github.com/probcomp/Venturecxx/Issues/) to track issues.
 
 - We use [Flowdock](https://www.flowdock.com/app/mit-probcomp/main) for persistent group chat.
 
@@ -97,7 +97,7 @@ Testing Policy
   [*] Typically by copying the issue's URL into the message given to
   the SkipTest exception.
 
-- See [test/README.md](https://github.com/mit-probabilistic-computing-project/Venturecxx/tree/master/test)
+- See [test/README.md](https://github.com/probcomp/Venturecxx/tree/master/test)
   for the organization of the test suite.
 
 Test Suite Configuration

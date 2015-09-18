@@ -66,7 +66,7 @@ seem to call for different testing strategies.
 - Testing **almost-everywhere invariants**: Some things happen in a
   model "with probability zero".  These cannot be treated as errors
   the same way as universal invariants -- see [Musings on the
-  Impossible](https://github.com/mit-probabilistic-computing-project/Venturecxx/blob/master/doc/impossibility.md).
+  Impossible](https://github.com/probcomp/Venturecxx/blob/master/doc/impossibility.md).
 
 - Testing **exact equality in distribution**: In the simplest
   nontrivial case, one knows the exact probability distribution on
@@ -124,7 +124,7 @@ seem to call for different testing strategies.
 
   - an exact tail-assessable representation (see [Approximating K-L
     Divergence]
-    (https://github.com/mit-probabilistic-computing-project/Venturecxx/blob/master/doc/on-approximating-kl-divergence.md))
+    (https://github.com/probcomp/Venturecxx/blob/master/doc/on-approximating-kl-divergence.md))
     behaves like an exact fully-assessable representation for an
     approximate distribution.  See the next item.
 

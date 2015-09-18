@@ -171,7 +171,7 @@ def test_syntax_error():  # does not crash
 @in_backend("none")
 def test_arithmetic():
   vnt = spawn_venture()
-  # https://github.com/mit-probabilistic-computing-project/Venturecxx/issues/122
+  # https://github.com/probcomp/Venturecxx/issues/122
   for nine in ('9', '+9', '9.0',
                # '-(-9)', '--9',  *** text_parse: Syntax error at '-' (token 54)
                '0--9', '0 - -9',
@@ -252,7 +252,7 @@ def test_lines_and_comments_abstract_syntax():
   good(vnt.expect_capture_one_float())
 
   # No multiline console support in venture abstract syntax.
-  # https://github.com/mit-probabilistic-computing-project/Venturecxx/issues/130
+  # https://github.com/probcomp/Venturecxx/issues/130
   # vnt.send_command("""(assume x
   # (uniform_continuous 0.1
   #                     0.9))
@@ -325,7 +325,7 @@ def test_directives_and_forget():
   assert "" == vnt.before
 
 def test_python_eval():
-  # https://github.com/mit-probabilistic-computing-project/Venturecxx/issues/122
+  # https://github.com/probcomp/Venturecxx/issues/122
   vnt = spawn_venture()
   vnt.send_command('pyexec("import collections")')
   assert "[]" == vnt.read_to_prompt()

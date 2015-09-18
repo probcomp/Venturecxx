@@ -270,7 +270,7 @@ The interesting parts of the code are:
   Elm), and `demos/hill-curve-fitting`, which is a single demo that
   exemplifies web sockets.
 - There are language-level benchmarks (and correctness tests) in the
-  [VentureBenchmarksAndTests](https://github.com/mit-probabilistic-computing-project/VentureBenchmarksAndTests)
+  [VentureBenchmarksAndTests](https://github.com/probcomp/VentureBenchmarksAndTests)
   repository, but they may have bit rotted by now.
 
 Python Development

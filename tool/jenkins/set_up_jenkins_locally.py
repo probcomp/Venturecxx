@@ -270,7 +270,7 @@ def save_jobs():
 #### Access to the repository
 
 def github_trusts_jenkins():
-    return len(queryit("git ls-remote git@github.com:mit-probabilistic-computing-project/Venturecxx.git | grep HEAD")) > 0
+    return len(queryit("git ls-remote git@github.com:probcomp/Venturecxx.git | grep HEAD")) > 0
 
 def ensure_github_trusts_jenkins():
     if github_trusts_jenkins():
