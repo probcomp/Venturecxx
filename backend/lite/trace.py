@@ -54,7 +54,7 @@ class Trace(object):
       self.bindPrimitiveName(name, val)
     for name,sp in builtInSPs().iteritems():
       self.bindPrimitiveSP(name, sp)
-    self.globalEnv = VentureEnvironment(self.globalEnv) # New frame so users can shadow globals
+    self.sealEnvironment() # New frame so users can shadow globals
 
     self.rcs = set()
     self.ccs = set()
@@ -70,6 +70,9 @@ class Trace(object):
     # A hack for allowing scope names not to be quoted in inference
     # programs (needs to be a method so Puma can implement it)
     return self.scopes.keys()
+
+  def sealEnvironment(self):
+    self.globalEnv = VentureEnvironment(self.globalEnv)
 
   def bindPrimitiveName(self, name, val):
     self.globalEnv.addBinding(name,self.createConstantNode(None, val))

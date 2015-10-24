@@ -34,6 +34,7 @@ struct ConcreteTrace : Trace
   ConcreteTrace();
   void initialize();
   Node* bindPrimitiveSP(const string& name, SP* sp);
+  void sealEnvironment();
 
   /* Registering metadata */
   void registerAEKernel(Node * node);
