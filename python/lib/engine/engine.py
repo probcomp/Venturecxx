@@ -262,6 +262,7 @@ class Engine(object):
   def install_inference_prelude(self, next_trace):
     for name, exp in _inference_prelude():
       self._define_in(name, exp, next_trace)
+    next_trace.sealEnvironment()
 
   def primitive_infer(self, exp): self.model.primitive_infer(exp)
   def logscore(self): return self.model.logscore()

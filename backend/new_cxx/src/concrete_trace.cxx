@@ -68,6 +68,11 @@ void ConcreteTrace::initialize()
   }
 
   // New frame so users can shadow globals
+  sealEnvironment();
+}
+
+void ConcreteTrace::sealEnvironment()
+{
   globalEnvironment = boost::shared_ptr<VentureEnvironment>(new VentureEnvironment(globalEnvironment));
 }
 
