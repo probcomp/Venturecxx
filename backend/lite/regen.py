@@ -109,7 +109,7 @@ def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
       weight += regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients)
       if isLookupNode(node):
         trace.setValueAt(node, trace.valueAt(node.sourceNode))
-      else: 
+      else:
         weight += applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients)
         if isRequestNode(node): weight += evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients)
     trace.incRegenCountAt(scaffold,node)
@@ -194,9 +194,9 @@ def applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients):
     newValue = k.forwardSimulate(trace,oldValue,args) if not shouldRestore else oldValue
     weight += k.forwardWeight(trace,newValue,oldValue,args)
     assert isinstance(weight, numbers.Number)
-    if isinstance(k,VariationalLKernel): 
+    if isinstance(k,VariationalLKernel):
       gradients[node] = k.gradientOfLogDensity(newValue,args)
-  else: 
+  else:
     # if we simulate from the prior, the weight is 0
     newValue = psp.simulate(args) if not shouldRestore else oldValue
 
@@ -244,7 +244,7 @@ def evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients):
     if omegaDB.hasLatentDB(trace.spAt(node)): latentDB = omegaDB.getLatentDB(trace.spAt(node))
     else: latentDB = None
     weight += trace.spAt(node).simulateLatents(trace.spauxAt(node),lsr,shouldRestore,latentDB)
-  
+
   assert isinstance(weight, numbers.Number)
   return weight
 
