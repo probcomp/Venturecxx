@@ -36,48 +36,62 @@ class ApplyRequestPSP(DeterministicPSP):
         return Request([ESR(args.node, exp, emptyAddress, env)])
 
     def description(self, name):
-        return "%s(func, vals) returns the result of applying a variadic function to an array of operands" % name
+        return "%s(func, vals) returns the result of applying a variadic" \
+            " function to an array of operands" % name
 
-registerBuiltinSP("apply", esr_output(TypedPSP(ApplyRequestPSP(),
-                                               SPType([SPType([t.AnyType("a")], t.AnyType("b"), variadic=True),
-                                                       t.HomogeneousArrayType(t.AnyType("a"))],
-                                                      t.RequestType("b")))))
+registerBuiltinSP(
+    "apply",
+    esr_output(TypedPSP(
+        ApplyRequestPSP(),
+        SPType([SPType([t.AnyType("a")], t.AnyType("b"), variadic=True),
+                t.HomogeneousArrayType(t.AnyType("a"))],
+               t.RequestType("b")))))
 
 class ArrayMapRequestPSP(DeterministicPSP):
     def simulate(self, args):
         (operator, operands) = args.operandValues()
         exps = [[operator, operand] for operand in operands]
         env = VentureEnvironment()
-        return Request([ESR((args.node, i), exp, emptyAddress, env) for i, exp in enumerate(exps)])
+        return Request([ESR((args.node, i), exp, emptyAddress, env)
+                        for i, exp in enumerate(exps)])
 
     def description(self, name):
-        return "%s(func, vals) returns the results of applying a function to each value in an array" % name
+        return "%s(func, vals) returns the results of applying a function" \
+            " to each value in an array" % name
 
 class ESRArrayOutputPSP(DeterministicPSP):
     def simulate(self, args):
         return VentureArray(args.esrValues())
 
-registerBuiltinSP("mapv", SP(TypedPSP(ArrayMapRequestPSP(),
-                                      SPType([SPType([t.AnyType("a")], t.AnyType("b")),
-                                              t.HomogeneousArrayType(t.AnyType("a"))],
-                                             t.RequestType("<array b>"))),
-                             ESRArrayOutputPSP()))
+registerBuiltinSP(
+    "mapv",
+    SP(TypedPSP(ArrayMapRequestPSP(),
+                SPType([SPType([t.AnyType("a")], t.AnyType("b")),
+                        t.HomogeneousArrayType(t.AnyType("a"))],
+                       t.RequestType("<array b>"))),
+       ESRArrayOutputPSP()))
 
 class IndexedArrayMapRequestPSP(DeterministicPSP):
     def simulate(self, args):
         (operator, operands) = args.operandValues()
-        exps = [[operator, index, operand] for (index, operand) in enumerate(operands)]
+        exps = [[operator, index, operand]
+                for (index, operand) in enumerate(operands)]
         env = VentureEnvironment()
-        return Request([ESR((args.node, i), exp, emptyAddress, env) for i, exp in enumerate(exps)])
+        return Request([ESR((args.node, i), exp, emptyAddress, env)
+                        for i, exp in enumerate(exps)])
 
     def description(self, name):
-        return "%s(func, vals) returns the results of applying a function to each value in an array, together with its index" % name
+        return "%s(func, vals) returns the results of applying a function" \
+            " to each value in an array, together with its index" % name
 
-registerBuiltinSP("imapv", SP(TypedPSP(IndexedArrayMapRequestPSP(),
-                                       SPType([SPType([t.AnyType("index"), t.AnyType("a")], t.AnyType("b")),
-                                               t.HomogeneousArrayType(t.AnyType("a"))],
-                                              t.RequestType("<array b>"))),
-                              ESRArrayOutputPSP()))
+registerBuiltinSP(
+    "imapv",
+    SP(TypedPSP(
+        IndexedArrayMapRequestPSP(),
+        SPType([SPType([t.AnyType("index"), t.AnyType("a")], t.AnyType("b")),
+                t.HomogeneousArrayType(t.AnyType("a"))],
+               t.RequestType("<array b>"))),
+       ESRArrayOutputPSP()))
 
 class FixRequestPSP(DeterministicPSP):
     def simulate(self, args):
@@ -108,37 +122,47 @@ class FixOutputPSP(DeterministicPSP):
     def description(self, name):
         return "%s\n  Used internally in the implementation of letrec." % name
 
-registerBuiltinSP("fix", SP(TypedPSP(FixRequestPSP(),
-                                     SPType([t.HomogeneousArrayType(t.SymbolType()),
-                                             t.HomogeneousArrayType(t.ExpressionType())],
-                                            t.RequestType())),
-                            TypedPSP(FixOutputPSP(),
-                                     SPType([t.HomogeneousArrayType(t.SymbolType()),
-                                             t.HomogeneousArrayType(t.ExpressionType())],
-                                            EnvironmentType()))))
+registerBuiltinSP(
+    "fix",
+    SP(TypedPSP(FixRequestPSP(),
+                SPType([t.HomogeneousArrayType(t.SymbolType()),
+                        t.HomogeneousArrayType(t.ExpressionType())],
+                       t.RequestType())),
+       TypedPSP(FixOutputPSP(),
+                SPType([t.HomogeneousArrayType(t.SymbolType()),
+                        t.HomogeneousArrayType(t.ExpressionType())],
+                       EnvironmentType()))))
 
 class AssessOutputPSP(DeterministicPSP):
     def simulate(self, args):
         vals = args.operandValues()
         value = vals[0]
         if isinstance(value, SPRef):
-            value = value.makerNode.madeSPRecord # XXX trace.madeSPRecordAt(value.makerNode)
+            # XXX trace.madeSPRecordAt(value.makerNode)
+            value = value.makerNode.madeSPRecord
 
         operator = vals[1]
         if isinstance(operator, SPRef):
-            operator = operator.makerNode.madeSPRecord # XXX trace.madeSPRecordAt(operator.makerNode)
+            # XXX trace.madeSPRecordAt(operator.makerNode)
+            operator = operator.makerNode.madeSPRecord
         if not isinstance(operator.sp.requestPSP, NullRequestPSP):
             raise VentureValueError("Cannot assess a requesting SP.")
         if not operator.sp.outputPSP.isRandom():
             raise VentureValueError("Cannot assess a deterministic SP.")
 
-        assessedArgs = FixedValueArgs(args, vals[2:], operandNodes=args.operandNodes[2:])
+        assessedArgs = FixedValueArgs(
+            args, vals[2:], operandNodes=args.operandNodes[2:])
         return operator.sp.outputPSP.logDensity(value, assessedArgs)
 
     def description(self, name):
-        return "  %s(val, func, arg1, arg2, ...) returns the log probability (density) of simulating val from func(arg1, arg2, ...)" % name
+        return "  %s(val, func, arg1, arg2, ...) returns the log probability" \
+            " (density) of simulating val from func(arg1, arg2, ...)" % name
 
-registerBuiltinSP("assess", typed_nr(AssessOutputPSP(),
-                                     [t.AnyType("<val>"), SPType([t.AnyType("<args>")], t.AnyType("<val>"), variadic=True), t.AnyType("<args>")],
-                                     t.NumberType(),
-                                     variadic=True))
+registerBuiltinSP(
+    "assess", typed_nr(
+        AssessOutputPSP(),
+        [t.AnyType("<val>"),
+         SPType([t.AnyType("<args>")], t.AnyType("<val>"), variadic=True),
+         t.AnyType("<args>")],
+        t.NumberType(),
+        variadic=True))
