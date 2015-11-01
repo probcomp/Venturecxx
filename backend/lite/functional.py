@@ -151,7 +151,8 @@ class AssessOutputPSP(DeterministicPSP):
             raise VentureValueError("Cannot assess a deterministic SP.")
 
         assessedArgs = FixedValueArgs(
-            args, vals[2:], operandNodes=args.operandNodes[2:])
+            args, vals[2:], operandNodes=args.operandNodes[2:],
+            spaux=operator.spAux)
         return operator.sp.outputPSP.logDensity(value, assessedArgs)
 
     def description(self, name):

@@ -145,7 +145,8 @@ class Args(object):
     return "%s(%r)" % (self.__class__, self.__dict__)
 
 class FixedValueArgs(object):
-  def __init__(self, args, operandValues, operandNodes = None):
+  def __init__(self, args, operandValues, operandNodes = None,
+               spaux = None):
     self.args = args
     self._operandValues = operandValues
     self.node = args.node
@@ -153,10 +154,15 @@ class FixedValueArgs(object):
       self.operandNodes = args.operandNodes
     else:
       self.operandNodes = operandNodes
+    self._spaux = spaux
     self.env = args.env
 
   def operandValues(self): return self._operandValues
-  def spaux(self): return self.args.spaux()
+  def spaux(self):
+    if self._spaux is None:
+      return self.args.spaux()
+    else:
+      return self._spaux
 
   # These four are only used on output nodes
   def requestValue(self): return self.args.requestValue()

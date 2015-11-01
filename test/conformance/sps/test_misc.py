@@ -18,8 +18,17 @@
 import math
 from nose.tools import eq_
 
-from venture.test.config import get_ripl, on_inf_prim
+from venture.test.config import get_ripl, on_inf_prim, broken_in
 
 @on_inf_prim("none")
 def testAssessSmoke():
   eq_(math.log(0.5), get_ripl().infer("(return (assess true bernoulli 0.5))"))
+
+@broken_in("puma", "Can't use Lite assess in Puma because can't package "
+           "Puma SP argument to it")
+def testAssessAuxSmoke():
+  r = get_ripl()
+  r.assume("coin", "(make_beta_bernoulli 1 1)")
+  eq_(math.log(0.5), r.sample("(assess true coin)"))
+  r.observe("(coin)", True)
+  eq_(math.log(float(2)/3), r.sample("(assess true coin)"))
