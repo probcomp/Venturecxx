@@ -37,7 +37,14 @@ if version.endswith('+'):
         version += 'unknown'
     else:
         assert desc.startswith(tag)
-        version = desc[len(prefix):].strip()
+        import re
+        match = re.match(prefix + r'([^-]*)-([0-9]+)-(.*)$', desc)
+        if match is None:       # paranoia
+            version += 'unknown'
+        else:
+            ver, rev, local = match.groups()
+            version = '%s.post%s+%s' % (ver, rev, local.replace('-', '.'))
+            assert '-' not in version
 
 # XXX Mega-kludge.  See below about grammars for details.
 try:
