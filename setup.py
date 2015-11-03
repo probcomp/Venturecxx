@@ -253,6 +253,34 @@ setup (
     author = 'MIT.PCP',
     url = 'TBA',
     long_description = 'TBA.',
+    install_requires = [
+        'numpy>=1.8',
+        'matplotlib>=1.1',
+        'scipy>=0.13',
+        'dill',
+        # Plotting
+        'patsy', # Because ggplot needs this installed first ??
+        'pandas>=0.14, <0.16', # <0.16 because that version introduces a change that breaks ggplot
+        'ggplot',
+        # Debug pictures of scaffolds
+        'networkx',
+        # Ripl server
+        'flask>=0.10',
+        'requests>=1.2',
+        # IPython magics; MRipl
+        'ipython>=1.2',
+        'ipyparallel',
+        'pyzmq>=13',
+        'jsonschema', # Ubuntu 14.04 apparently needs this mentioned for notebooks to work
+    ],
+    tests_require = [
+        'nose>=1.3',
+        'nose-testconfig>=0.9',
+        'nose-ignore-docstring>=0.2',
+        'nose-cov>=1.6',
+        'flaky',
+        'pexpect',
+    ],
     packages = packages,
     package_dir = {
         "venture": "python/lib/",
