@@ -412,7 +412,7 @@ def __venture_start__(*args, **kwargs):
 
 @flaky
 def test_plots_to_file():
-  vnt = spawn_venture(timeout=3)
+  vnt = spawn_venture(timeout=6)
   plotfile = tempfile.NamedTemporaryFile(suffix="plot.png", delete=False)
   plotpath = os.path.abspath(plotfile.name)
   vnt.send_command("assume x = normal(0, 1)")
