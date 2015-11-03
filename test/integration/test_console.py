@@ -416,8 +416,11 @@ def test_plots_to_file():
   plotfile = tempfile.NamedTemporaryFile(suffix="plot.png", delete=False)
   plotpath = os.path.abspath(plotfile.name)
   vnt.send_command("assume x = normal(0, 1)")
+  vnt.expect_capture_one_floatln()
   vnt.send_command("assume y = normal(x, 1)")
+  vnt.expect_capture_one_floatln()
   vnt.send_command("observe y = 4")
+  vnt.expect_prompt()
   vnt.send_command("define chain_history = run(accumulate_dataset(50, \n" +
                    "do(default_markov_chain(1), collect(x))))")
   vnt.send_command('plot_to_file("%s", "lc0", chain_history)' % plotpath[0:-4])
