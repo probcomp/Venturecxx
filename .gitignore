@@ -27,6 +27,8 @@ dump
 /venture-*.tgz
 /venture-*.tar
 /venture-*.tar.gz
+/dist
+/MANIFEST
 
 # Lemonade parser generator output
 /python/lib/parser/church_prime/grammar.out
