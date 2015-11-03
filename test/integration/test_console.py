@@ -219,9 +219,8 @@ def test_lines_and_comments():
                      0.9) //  Comment after.
   """)
   good(vnt.expect_capture_one_float())
-  vnt.send_command(
-    'assume x = 0.1; assume y = 0.9; assume z = uniform_continuous(x, y)')
-  good(vnt.expect_capture_one_float())
+  vnt.send_command('assume x2 = 0.1; assume y2 = 0.9;')
+  assert vnt.expect_capture_one_float() == 0.9
   # Bug in console.py:precmd: it should handle multiline but doesn't?
   # *** text_parse: Syntax error at 'bad' (token 2)
   # vnt.send_command("""(assume bad =
