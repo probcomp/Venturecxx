@@ -20,7 +20,7 @@ virtualenv $venv_dir
 pip install "dist/$dist_name"
 
 # Test the result
-verifyinstall.sh
+./verifyinstall.sh
 
 # Clean up
 /bin/rm -fr $venv_dir
