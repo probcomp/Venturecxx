@@ -269,6 +269,7 @@ setup (
         'requests>=1.2',
         # IPython magics; MRipl
         'ipython>=1.2',
+        'ipyparallel',
         'pyzmq>=13',
         'jsonschema', # Ubuntu 14.04 apparently needs this mentioned for notebooks to work
     ],
