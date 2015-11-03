@@ -46,6 +46,11 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=*.ext \
     --exclude=v1-pre-scm/**/todo.txt \
     --exclude=build \
+    --exclude=Venturecxx/dist \
+    --exclude=doc/**/*.aux \
+    --exclude=doc/**/*.log \
+    --exclude=doc/**/*.out \
+    --exclude=doc/**/*.pdf \
     --exclude=CMakeCache.txt \
     --exclude=CMakeFiles \
     --exclude=cmake_install.cmake \
@@ -64,12 +69,15 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=examples/tutorial-2015/tutorial \
     --exclude=examples/tutorial-2015/tutorial-smoke \
     --exclude=examples/tutorial-2015/vis-*.png \
+    --exclude=Venturecxx/examples/tutorial-2015/gauss_plot.png \
+    --exclude=Venturecxx/examples/tutorial-2015/reg-test.csv \
     --exclude=tool/jenkins \
     --exclude=backend/hs \
     `# Excluding Terminal because it's unused and copyright-intermixed` \
     --exclude=demos/jsripl/Terminal \
     --exclude=CP1-Quad-Rotor \
     --exclude=.coverage \
+    --exclude=.coverage.* \
     --exclude=.idea \
     --exclude=.ipynb_checkpoints \
     --exclude=tool/logs \
