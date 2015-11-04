@@ -16,7 +16,11 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 #!/usr/bin/env python
 
-from distutils.core import setup, Extension
+try:
+    from setuptools import setup, Extension
+except ImportError:
+    from distutils.core import setup, Extension
+
 import os
 import sys
 
