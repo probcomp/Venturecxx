@@ -251,45 +251,52 @@ for grammar in grammars:
         grammar,
     ])
 
+install_requires = [
+    'numpy>=1.8',
+    'matplotlib>=1.1',
+    'scipy>=0.13',
+    'dill',
+    # Plotting
+    'patsy', # Because ggplot needs this installed first ??
+    'pandas>=0.14, <0.16', # <0.16 because that version introduces a change that breaks ggplot
+    'ggplot',
+    # Debug pictures of scaffolds
+    'networkx',
+    # Ripl server
+    'flask>=0.10',
+    'requests>=1.2',
+    # IPython magics; MRipl
+    'ipython>=1.2',
+    'ipyparallel',
+    'pyzmq>=13',
+    'jsonschema', # Ubuntu 14.04 apparently needs this mentioned for notebooks to work
+    # Extra
+    # XXX python/lib/unit/history.py depends on test/stats.py for
+    # the K-S test, which in turn depends on nose.tools for
+    # defining the statisticalTest decorator.
+    'nose>=1.3',
+]
+
+tests_require = [
+    'nose>=1.3',
+    'nose-testconfig>=0.9',
+    'nose-ignore-docstring>=0.2',
+    'nose-cov>=1.6',
+    'flaky',
+    'pexpect',
+]
+
 setup (
     name = 'Venture-CXX',
     version = version,
     author = 'MIT.PCP',
     url = 'TBA',
     long_description = 'TBA.',
-    install_requires = [
-        'numpy>=1.8',
-        'matplotlib>=1.1',
-        'scipy>=0.13',
-        'dill',
-        # Plotting
-        'patsy', # Because ggplot needs this installed first ??
-        'pandas>=0.14, <0.16', # <0.16 because that version introduces a change that breaks ggplot
-        'ggplot',
-        # Debug pictures of scaffolds
-        'networkx',
-        # Ripl server
-        'flask>=0.10',
-        'requests>=1.2',
-        # IPython magics; MRipl
-        'ipython>=1.2',
-        'ipyparallel',
-        'pyzmq>=13',
-        'jsonschema', # Ubuntu 14.04 apparently needs this mentioned for notebooks to work
-        # Extra
-        # XXX python/lib/unit/history.py depends on test/stats.py for
-        # the K-S test, which in turn depends on nose.tools for
-        # defining the statisticalTest decorator.
-        'nose>=1.3',
-    ],
-    tests_require = [
-        'nose>=1.3',
-        'nose-testconfig>=0.9',
-        'nose-ignore-docstring>=0.2',
-        'nose-cov>=1.6',
-        'flaky',
-        'pexpect',
-    ],
+    install_requires = install_requires,
+    tests_require = tests_require,
+    extras_require = {
+        'tests': tests_require,
+    },
     packages = packages,
     package_dir = {
         "venture": "python/lib/",
