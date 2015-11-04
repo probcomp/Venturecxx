@@ -6,9 +6,8 @@ set -ex
 # the version.
 python setup.py --version
 
-# Compute the version that will be built, ignoring local versions
-# (which seem to be unnecessary and may confuse pip (sometimes?))
-version=`python setup.py --version | cut -d '+' -f 1`
+# Compute the version that will be built.
+version=`python setup.py --version`
 
 # Build the distribution.
 python setup.py sdist

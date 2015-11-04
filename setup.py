@@ -286,9 +286,33 @@ tests_require = [
     'pexpect',
 ]
 
+# XXX It appears that setuptools doesn't like developers to create
+# distributions of local versions (those indicated by the '+'
+# character) of their packages.  Specifically, I have observed that
+# python setup.py sdist would, before adding this section,
+# occasionally change the '+' to a hypen:
+#   $ ls dist/
+#   Venture-CXX-0.4.1.post183+gb0f4204.tar.gz
+#   Venture-CXX-0.4.1.post184+g0abf18f.tar.gz
+#   Venture-CXX-0.4.1.post185+g8e252ec.tar.gz
+#   Venture-CXX-0.4.1.post189-g8d55da8.tar.gz
+#   Venture-CXX-0.4.1.post190-ga198fc4.tar.gz
+# I suspect that this is due to detecting version modifiers (the "a8"
+# and "c4") in the local version string.  Since such substrings cannot
+# be prevented from appearing in git commit numbers, I chose to
+# suppress the local component.  (And alternative would have been to
+# try to confuse setuptools' regex by adding extra characters, perhaps
+# at the end).
+
+pos = version.find('+')
+if pos > -1:
+    public_version = version[:pos]
+else:
+    public_version = version
+
 setup (
     name = 'Venture-CXX',
-    version = version,
+    version = public_version,
     author = 'MIT.PCP',
     url = 'TBA',
     long_description = 'TBA.',
