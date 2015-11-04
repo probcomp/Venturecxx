@@ -276,6 +276,11 @@ setup (
         'ipyparallel',
         'pyzmq>=13',
         'jsonschema', # Ubuntu 14.04 apparently needs this mentioned for notebooks to work
+        # Extra
+        # XXX python/lib/unit/history.py depends on test/stats.py for
+        # the K-S test, which in turn depends on nose.tools for
+        # defining the statisticalTest decorator.
+        'nose>=1.3',
     ],
     tests_require = [
         'nose>=1.3',
