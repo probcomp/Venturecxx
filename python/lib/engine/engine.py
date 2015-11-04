@@ -332,6 +332,20 @@ class Engine(object):
     self.model.load(data)
     return data['extra']
 
+  def saves(self, extra=None):
+    data = self.model.saveable()
+    data['directiveCounter'] = self.directiveCounter
+    data['extra'] = extra
+    version = '0.2'
+    return dill.dumps((data, version))
+
+  def loads(self, string):
+    (data, version) = dill.loads(string)
+    assert version == '0.2', "Incompatible version or unrecognized object"
+    self.directiveCounter = data['directiveCounter']
+    self.model.load(data)
+    return data['extra']
+
   def convert(self, backend):
     engine = backend.make_engine(self.persistent_inference_trace)
     if self.persistent_inference_trace:

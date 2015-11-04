@@ -851,6 +851,19 @@ Open issues:
         self.directive_id_to_stringable_instruction = extra['directive_id_to_stringable_instruction']
         self.directive_id_to_mode = extra['directive_id_to_mode']
 
+    def saves(self):
+        extra = {}
+        extra['directive_id_to_stringable_instruction'] = \
+            self.directive_id_to_stringable_instruction
+        extra['directive_id_to_mode'] = self.directive_id_to_mode
+        return self.sivm.saves(extra)
+
+    def loads(self, string):
+        extra = self.sivm.loads(string)
+        self.directive_id_to_stringable_instruction = \
+            extra['directive_id_to_stringable_instruction']
+        self.directive_id_to_mode = extra['directive_id_to_mode']
+
     ############################################
     # Error reporting control
     ############################################

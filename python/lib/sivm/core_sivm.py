@@ -60,6 +60,17 @@ class CoreSivm(object):
         self.observe_dict = extra['observe_dict']
         return extra
 
+    def saves(self, extra=None):
+        if extra is None:
+            extra = {}
+        extra['observe_dict'] = self.observe_dict
+        return self.engine.saves(extra)
+
+    def loads(self, string):
+        extra = self.engine.loads(string)
+        self.observe_dict = extra['observe_dict']
+        return extra
+
     ###############################
     # Instruction implementations
     ###############################

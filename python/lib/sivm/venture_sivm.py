@@ -101,6 +101,19 @@ class VentureSivm(object):
             setattr(self, d, extra[d])
         return extra
 
+    def saves(self, extra=None):
+        if extra is None:
+            extra = {}
+        for d in self.dicts:
+            extra[d] = getattr(self, d)
+        return self.core_sivm.saves(extra)
+
+    def loads(self, string):
+        extra = self.core_sivm.loads(string)
+        for d in self.dicts:
+            setattr(self, d, extra[d])
+        return extra
+
     ###############################
     # Sugars/desugars
     # for the CoreSivm instructions
