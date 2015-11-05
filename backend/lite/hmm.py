@@ -29,8 +29,10 @@ import types as t
 from sp_registry import registerBuiltinSP
 from sp_help import typed_nr
 
-def npSampleVector(pVec): return np.mat(npr.multinomial(1,np.array(pVec)[0,:]))
-def npIndexOfOne(pVec): return np.where(pVec[0] == 1)[1][0,0]
+def npSampleVector(pVec):
+  return npr.multinomial(1,pVec)
+def npIndexOfOne(pVec):
+  return np.where(pVec == 1)[0][0]
 def npMakeDiag(colvec):
   return np.diag(np.array(colvec))
 def npNormalizeVector(vec): return vec / np.sum(vec)
@@ -50,8 +52,6 @@ class HMMSPAux(SPAux):
 class MakeUncollapsedHMMOutputPSP(DeterministicPSP):
   def simulate(self,args):
     (p0,T,O) = args.operandValues()
-    # p0 comes in as a simplex but needs to become a 1-row matrix
-    p0 = np.mat([p0])
     # Transposition for compatibility with Puma
     return VentureSPRecord(UncollapsedHMMSP(p0,np.transpose(T),np.transpose(O)))
 
@@ -79,7 +79,7 @@ class UncollapsedHMMSP(SP):
 
     for i in range(len(aux.xs),lsr+1):
       if shouldRestore: aux.xs.append(latentDB[i])
-      else: aux.xs.append(npSampleVector(aux.xs[-1] * self.T))
+      else: aux.xs.append(npSampleVector(np.dot(aux.xs[-1], self.T)))
 
     assert len(aux.xs) > lsr
     return 0
@@ -116,7 +116,7 @@ class UncollapsedHMMSP(SP):
     for i in range(len(aux.xs) - 2,-1,-1):
       index = npIndexOfOne(aux.xs[i+1])
       T_i = npMakeDiag(self.T[:,index])
-      gamma = npNormalizeVector(fs[i] * T_i)
+      gamma = npNormalizeVector(np.dot(fs[i], T_i))
       aux.xs[i] = npSampleVector(gamma)
 
 
@@ -130,7 +130,7 @@ class UncollapsedHMMOutputPSP(RandomPSP):
     n = args.operandValues()[0]
     xs = args.spaux().xs
     if 0 <= n and n < len(xs):
-      return npIndexOfOne(npSampleVector(xs[n] * self.O))
+      return npIndexOfOne(npSampleVector(np.dot(xs[n], self.O)))
     else:
       raise VentureValueError("Index out of bounds %s" % n)
 
@@ -138,8 +138,8 @@ class UncollapsedHMMOutputPSP(RandomPSP):
     n = args.operandValues()[0]
     xs = args.spaux().xs
     assert len(xs) > n
-    theta = xs[n] * self.O
-    return math.log(theta[0,value])
+    theta = np.dot(xs[n], self.O)
+    return math.log(theta[value])
 
   def incorporate(self,value,args):
     n = args.operandValues()[0]
