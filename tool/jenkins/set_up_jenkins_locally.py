@@ -134,7 +134,7 @@ Jenkins security appears not to be set up, and this script is too dumb
 to do it automatically.
 
 1) Please set up Jenkins security:
-   - Browse http://probcomp-3.csail.mit.edu:8080
+   - Browse https://probcomp-3.csail.mit.edu
    - Navigate "Manage Jenkins" -> "Configure Global Security"
      - Check "Enable security"
      - Select "Jenkins' own user database"
@@ -148,7 +148,7 @@ to do it automatically.
      creation screen
 
 3) Please upload your ssh public key to your Jenkins user account:
-   - Browse http://probcomp-3.csail.mit.edu:8080
+   - Browse https://probcomp-3.csail.mit.edu
    - Navigate "People" -> your user name -> "Configure"
      - Paste in the public key, taking care of any copying artifacts
    - Click "Save"
@@ -158,7 +158,7 @@ to do it automatically.
 
 5) While you're at it, please configure the proper number of
    executors:
-   - Browse http://probcomp-3.csail.mit.edu:8080
+   - Browse https://probcomp-3.csail.mit.edu
    - Navigate "Manage Jenkins" -> "Configure System"
      - Fill in the form
    - Click "Save"
