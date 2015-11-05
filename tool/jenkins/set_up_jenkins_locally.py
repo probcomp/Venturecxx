@@ -69,7 +69,7 @@ def tryit(command):
 def doit(command):
     status = tryit(command)
     if status != 0:
-        raise "Command failed!"    
+        raise "Command failed!"
 
 def queryit(command):
     return subprocess.check_output(command, shell=True).strip()
