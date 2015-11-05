@@ -1,9 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?><project>
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
   <actions/>
-  <description/>
+  <description></description>
   <keepDependencies>false</keepDependencies>
   <properties/>
-  <scm class="hudson.plugins.git.GitSCM" plugin="git@2.0.1">
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@2.2.6">
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
@@ -31,7 +32,7 @@
       <command>#!/bin/bash -xe
 
 source ~/env/bin/activate
-nosetests -c inference-quality.cfg --tc=get_ripl:puma --tc=infer:"(meanfield default one 10 10)" --eval-attr="(not backend or backend in ['puma', 'any']) and (not inf_prim or inf_prim in ['meanfield', 'any'])"</command>
+nosetests -c inference-quality.cfg --tc=get_ripl:puma --tc=infer:&quot;(meanfield default one 10 10)&quot; --eval-attr=&quot;(not backend or backend in [&apos;puma&apos;, &apos;any&apos;]) and (not inf_prim or inf_prim in [&apos;meanfield&apos;, &apos;any&apos;])&quot;</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>
