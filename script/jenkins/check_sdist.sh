@@ -8,6 +8,7 @@ python setup.py --version
 
 # Compute the version that will be built.
 version=`python setup.py --version`
+version=${version%+*} # Strip the +foo suffix
 
 # Build the distribution.
 python setup.py sdist
