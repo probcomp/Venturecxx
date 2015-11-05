@@ -22,8 +22,8 @@
 If you need to rebuild a Jenkins config, just run this script and
 follow any instructions.  It's idempotent.
 
-If you need to save a Jenkins config for future rebuilding, edit the
-file to call save_jobs().
+If you need to save a Jenkins config for future rebuilding, use
+save_jenkins_jobs_config.py.
 """
 
 import sys
@@ -321,4 +321,3 @@ if __name__ == '__main__':
     # replace_credential_id_locally("<credentialsId>2fd68a05-da40-45e1-a59c-32e795448dd5<\\/credentialsId>")
     # ensure_jobs()
     main()
-    # save_jobs()
