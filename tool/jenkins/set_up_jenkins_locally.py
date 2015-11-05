@@ -109,7 +109,7 @@ def wait_for_web_response(url):
 #### SSH access
 
 def discover_jenkins_ssh_port():
-    return queryit('curl -s -I http://probcomp-3.csail.mit.edu:8080 | grep "X-SSH-Endpoint" | cut -f 3 -d ":"')
+    return queryit('curl -s -I https://probcomp-3.csail.mit.edu | grep "X-SSH-Endpoint" | cut -f 3 -d ":"')
 
 cached_port = None
 
