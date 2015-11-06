@@ -255,10 +255,12 @@ for grammar in grammars:
 
 install_requires = [
     'numpy>=1.8',
-    'matplotlib>=1.1',
     'scipy>=0.13',
+    # Plotf, VentureUnit, MRipl
+    'matplotlib>=1.1',
+    # Saving and restoring ripls
     'dill',
-    # Plotting
+    # Plotf
     'patsy', # Because ggplot needs this installed first ??
     'pandas>=0.14, <0.16', # <0.16 because that version introduces a change that breaks ggplot
     'ggplot',
