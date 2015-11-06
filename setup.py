@@ -334,7 +334,7 @@ setup (
     name = 'venture',
     version = version,
     author = 'MIT.PCP',
-    url = 'TBA',
+    url = 'http://probcomp.csail.mit.edu/venture/',
     long_description = 'TBA.',
     install_requires = install_requires,
     tests_require = tests_require,
