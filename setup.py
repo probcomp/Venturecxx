@@ -18,9 +18,11 @@
 
 try:
     from setuptools import setup, Extension
+    from setuptools.command.build_py import build_py
     from setuptools.command.sdist import sdist
 except ImportError:
     from distutils.core import setup, Extension
+    from distutils.command.build_py import build_py
     from distutils.command.sdist import sdist
 
 import os
@@ -218,40 +220,65 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
 import distutils.ccompiler
 distutils.ccompiler.CCompiler.compile=parallelCCompile
 
-# XXX This is a mega-kludge.  Since distutils/setuptools has no way to
-# order dependencies (what kind of brain-dead build system can't do
-# this?), we just always regenerate the grammar.  Could hack
-# distutils.command.build to include a dependency mechanism, but this
-# is more expedient for now.
+lemonade = 'external/lemonade/dist'
 grammars = [
     'python/lib/parser/church_prime/grammar.y',
     'python/lib/parser/venture_script/grammar.y',
 ]
 
-import distutils.spawn
-import errno
-import os
-import os.path
-root = os.path.dirname(os.path.abspath(__file__))
-lemonade = root + '/external/lemonade/dist'
-for grammar in grammars:
-    parser = os.path.splitext(grammar)[0] + '.py'
-    parser_mtime = None
+def sha256_file(pathname):
+    import hashlib
+    sha256 = hashlib.sha256()
+    with open(pathname, 'rb') as source_file:
+        for block in iter(lambda: source_file.read(65536), ''):
+            sha256.update(block)
+    return sha256
+
+def uptodate(path_in, path_out, path_sha256):
+    import errno
     try:
-        parser_mtime = os.path.getmtime(parser)
-    except OSError as e:
+        with open(path_sha256, 'rb') as file_sha256:
+            # Strip newlines and compare.
+            if file_sha256.next()[:-1] != sha256_file(path_in).hexdigest():
+                return False
+            if file_sha256.next()[:-1] != sha256_file(path_out).hexdigest():
+                return False
+    except (IOError, OSError) as e:
         if e.errno != errno.ENOENT:
             raise
-    if parser_mtime is not None:
-        if os.path.getmtime(grammar) < parser_mtime:
-            continue
-    print 'generating %s -> %s' % (grammar, parser)
+        return False
+    return True
+
+def commit(path_in, path_out, path_sha256):
+    with open(path_sha256 + '.tmp', 'wb') as file_sha256:
+        file_sha256.write('%s\n' % (sha256_file(path_in).hexdigest(),))
+        file_sha256.write('%s\n' % (sha256_file(path_out).hexdigest(),))
+    os.rename(path_sha256 + '.tmp', path_sha256)
+
+def generate_parser(lemonade, path_y):
+    import distutils.spawn
+    root = os.path.dirname(os.path.abspath(__file__))
+    lemonade = os.path.join(root, *lemonade.split('/'))
+    base, ext = os.path.splitext(path_y)
+    assert ext == '.y'
+    path_py = base + '.py'
+    path_sha256 = base + '.sha256'
+    if uptodate(path_y, path_py, path_sha256):
+        return
+    print 'generating %s -> %s' % (path_y, path_py)
     distutils.spawn.spawn([
         '/usr/bin/env', 'PYTHONPATH=' + lemonade,
         lemonade + '/bin/lemonade',
         '-s',                   # Write statistics to stdout.
-        grammar,
+        path_y,
     ])
+    commit(path_y, path_py, path_sha256)
+
+class local_build_py(build_py):
+    def run(self):
+        for grammar in grammars:
+            generate_parser(lemonade, grammar)
+        build_py.run(self)
 
 install_requires = [
     'numpy>=1.8',
@@ -327,6 +354,7 @@ setup (
     ext_modules = ext_modules,
     scripts = ['script/venture', 'script/vendoc'],
     cmdclass={
+        'build_py': local_build_py,
         'sdist': local_sdist,
     },
 )
