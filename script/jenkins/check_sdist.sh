@@ -23,6 +23,9 @@ set -ex
 version=`python setup.py --version | tail -1`
 version=${version%+*} # Strip the +foo suffix
 
+# Save the version in the sdist, b/c git describe will not be available.
+echo $version > VERSION
+
 # Build the distribution.
 python setup.py sdist
 
