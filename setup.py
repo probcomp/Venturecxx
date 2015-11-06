@@ -331,7 +331,7 @@ class local_sdist(sdist):
     sub_commands = [('sdist_fixidioticegginfomess', fixidioticegginfomess)]
 
 setup (
-    name = 'Venture-CXX',
+    name = 'venture',
     version = version,
     author = 'MIT.PCP',
     url = 'TBA',

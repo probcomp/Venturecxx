@@ -30,7 +30,7 @@ python setup.py sdist
 venv_dir=`mktemp -dt "jenkins-sdist-install.XXXXXXXXXX"`
 virtualenv $venv_dir
 . $venv_dir/bin/activate
-pip install --find-links dist/ "Venture-CXX==$version"
+pip install --find-links dist/ "venture==$version"
 
 # Smoke test the result without testing-only dependencies
 ./tool/check_capabilities.sh
@@ -41,7 +41,7 @@ else
 fi
 
 # Install the test dependencies.
-pip install --find-links dist/ "Venture-CXX[tests]==$version"
+pip install --find-links dist/ "venture[tests]==$version"
 
 # Test more thoroughly.
 # TODO This should be the crash test suite.  Right now the only
