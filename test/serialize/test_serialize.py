@@ -51,6 +51,10 @@ def _test_serialize_program(v, label, action):
         assert isinstance(trace2, type(trace1))
         assert isinstance(trace2.trace, type(trace1.trace))
     elif action == 'convert_puma':
+        try:
+            from venture.puma import trace
+        except ImportError:
+            raise SkipTest("Puma backend does not appear to be installed")
         trace1 = engine.getDistinguishedTrace()
         engine = engine.to_puma()
         trace2 = engine.getDistinguishedTrace()
