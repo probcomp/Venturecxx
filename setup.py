@@ -333,7 +333,8 @@ class local_sdist(sdist):
 setup (
     name = 'venture',
     version = version,
-    author = 'MIT.PCP',
+    author = 'MIT Probabilistic Computing Project',
+    author_email = 'venture-dev@lists.csail.mit.edu',
     url = 'http://probcomp.csail.mit.edu/venture/',
     long_description = 'TBA.',
     install_requires = install_requires,
