@@ -34,6 +34,11 @@ pip install --find-links dist/ "Venture-CXX==$version"
 
 # Smoke test the result without testing-only dependencies
 ./tool/check_capabilities.sh
+if [ -z $SKIP_PUMA_BACKEND ]; then
+    ./tool/check_capabilities.sh puma
+else
+    ! venture puma --abstract-syntax -e '(normal 0 1)'
+fi
 
 # Install the test dependencies.
 pip install --find-links dist/ "Venture-CXX[tests]==$version"
