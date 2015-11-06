@@ -19,12 +19,8 @@
 
 set -ex
 
-# Build the grammar files if needed, for clean output when detecting
-# the version.
-python setup.py --version
-
-# Compute the version that will be built.
-version=`python setup.py --version`
+# Compute the version that will be built (tail skips warnings setup.py emits).
+version=`python setup.py --version | tail -1`
 version=${version%+*} # Strip the +foo suffix
 
 # Build the distribution.
