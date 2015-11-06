@@ -27,12 +27,18 @@ set -ex
 # least minimally exercise each of Venture's (Python) dependencies,
 # for early detection of gross install problems.
 
+if [ -z $1 ]; then
+    backend="lite"
+else
+    backend=$1
+fi
+
 # Basic simulation
-venture lite --abstract-syntax -e '(normal 0 1)'
+venture $backend --abstract-syntax -e '(normal 0 1)'
 
 # Plotting (to file)
 plot_file=`mktemp -t "check-capabilities-normal-plot.XXXXXXX"`
-venture lite --abstract-syntax -e "
+venture $backend --abstract-syntax -e "
 [infer (resample 10)]
 [assume x (normal 0 1)]
 [assume y (normal x 1)]
@@ -47,10 +53,10 @@ rm -rf "$plot_file.png"
 
 # Saving and restoring a ripl
 save_file=`mktemp -t "check-capabilities-save.XXXXXXX"`
-venture lite --abstract-syntax -e "
+venture $backend --abstract-syntax -e "
 [assume x (normal 0 1)]
 (pyexec \"ripl.save(\\\"$save_file\\\")\")"
-venture lite --abstract-syntax -e "
+venture $backend --abstract-syntax -e "
 (pyexec \"ripl.load(\\\"$save_file\\\")\")
 (sample (normal x 1))"
 rm -rf $save_file
