@@ -36,11 +36,8 @@ virtualenv $venv_dir
 . $venv_dir/bin/activate
 pip install --find-links dist/ "Venture-CXX==$version"
 
-# Smoke test the result without testing-only dependencies (copied from
-# verifyinstall.sh)
-# TODO This should be a separate script, and should exercise all the
-# major functions.
-venture lite --abstract-syntax -e '[infer (bind (collect (normal 0 1)) printf)]'
+# Smoke test the result without testing-only dependencies
+./tool/check_capabilities.sh
 
 # Install the test dependencies.
 pip install --find-links dist/ "Venture-CXX[tests]==$version"
