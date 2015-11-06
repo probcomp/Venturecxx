@@ -42,8 +42,10 @@ pip install --find-links dist/ "Venture-CXX==$version"
 # Install the test dependencies.
 pip install --find-links dist/ "Venture-CXX[tests]==$version"
 
-# Test more thoroughly (copied from verifyinstall.sh).
-# TODO Should this be the crash test suite?
+# Test more thoroughly.
+# TODO This should be the crash test suite.  Right now the only
+# difference is that it skips test_analytics.py:testCompareSnapshots,
+# and doesn't try to generate the coverage report.
 nosetests -c unattended.cfg
 
 # Clean up
