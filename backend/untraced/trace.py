@@ -36,7 +36,10 @@ class Trace(object):
       self.bindPrimitiveName(name, val)
     for name, sp in builtin.builtInSPs().iteritems():
       self.bindPrimitiveSP(name, sp)
-    self.env = env.VentureEnvironment(self.env) # New frame so users can shadow globals
+    self.sealEnvironment() # New frame so users can shadow globals
+
+  def sealEnvironment(self):
+    self.env = env.VentureEnvironment(self.env)
 
   def extractRaw(self, id):
     return self.results[id]
