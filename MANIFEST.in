@@ -865,7 +865,6 @@ include examples/venture-unit/lda_slice.py
 include examples/venture-unit/crp-demo.py
 include examples/venture-unit/gaussian_geweke.py
 include examples/venture-unit/crp-2d-demo.py
-include examples/venture-unit/analytics_gaussian_geweke.py
 include examples/venture-unit/hmm-demo.py
 include examples/venture-unit/hmc-demo.py
 include examples/venture-unit/lda.py
