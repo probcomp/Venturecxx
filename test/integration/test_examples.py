@@ -46,7 +46,7 @@ def testExamplesPuma():
 @gen_in_backend("none")
 @gen_needs_backend("lite")
 def testExamples():
-  for ex in ["venture-unit/crp-2d-demo.py", "venture-unit/hmc-demo.py",
+  for ex in ["crp-2d-demo.py", "venture-unit/hmc-demo.py",
              "venture-unit/hmm-demo.py"]:
     yield checkExample, ex
 
