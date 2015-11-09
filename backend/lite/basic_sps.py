@@ -50,6 +50,10 @@ registerBuiltinSP("real",
                   deterministic_typed(lambda x:x, [t.AtomType()], t.NumberType(),
                                       descr="real returns the identity of its argument atom as a number"))
 
+registerBuiltinSP("atom",
+                  deterministic_typed(lambda x:x, [t.NumberType()], t.AtomType(),
+                                      descr="atom returns the identity of its argument number as an atom"))
+
 registerBuiltinSP("atom_eq",
                   deterministic_typed(lambda x,y: x == y, [t.AtomType(), t.AtomType()], t.BoolType(),
                                       descr="atom_eq tests its two arguments, which must be atoms, for equality"))
