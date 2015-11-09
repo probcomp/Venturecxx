@@ -15,6 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+"""2-D Chinese Restaurant Clustering example.
+
+The clusters are 2-D Gaussian.  The model infers the number of
+clusters using a Chinese Restaurant Process prior on the partition of
+the data into clusters.
+
+TODO: May not actually work properly (cluster means don't seem to move?)
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
