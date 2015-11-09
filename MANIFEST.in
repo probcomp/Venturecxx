@@ -860,7 +860,7 @@ include examples/trickiness-concrete.vnts
 include examples/hmm.vnt
 include examples/trickiness-ideal.vnts
 include examples/on-teaching-exchangeable-coupling.txt
-include examples/venture-unit/crosscat.py
+include examples/crosscat.vnt
 include examples/venture-unit/lda_slice.py
 include examples/venture-unit/crp-demo.py
 include examples/venture-unit/gaussian_geweke.py

@@ -40,7 +40,7 @@ def checkExample(example):
 @gen_in_backend("none")
 @gen_needs_backend("puma")
 def testExamplesPuma():
-  for ex in ["venture-unit/lda.py", "venture-unit/crosscat.py"]:
+  for ex in ["venture-unit/lda.py"]:
     yield checkExample, ex
 
 @gen_in_backend("none")
@@ -80,3 +80,12 @@ def testVentureExamplesLite():
   for ex in ["venture lite -L examples/hmm_plugin.py -f examples/hmm.vnt -e 'infer exact_filtering()'",
   ]:
     yield checkVentureExample, ex
+
+def checkVentureExampleComplete(command):
+  assert s.call(command, shell=True) == 0
+
+@gen_in_backend("none")
+@gen_needs_backend("puma")
+def testVentureExamplesPumaComplete():
+  for ex in ["venture puma -f examples/crosscat.vnt"]:
+    yield checkVentureExampleComplete, ex
