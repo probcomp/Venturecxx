@@ -20,6 +20,7 @@ DISCLAIMER: This code relied on an older version of plotf, and so will no
 longer run as written.
 '''
 
+import os
 from venture.shortcuts import make_lite_church_prime_ripl
 import numpy as np
 import pandas as pd
@@ -132,28 +133,41 @@ def one_pp_plot(g_marginal, g_successive, ax, p):
   ax.text(x = 0, y = 1, s = 'p value: {0:0.2f}'.format(p),
           verticalalignment = 'top')
 
-def pp_plots(stats_marginal, stats_successive, stats, ps, out = None):
+def pp_plots(stats_marginal, stats_successive, stats, ps, outdir):
   n = len(stats)
   fig, ax = plt.subplots(n, 1, figsize = [6, n * 4])
   for i in range(n):
     one_pp_plot(stats_marginal['g'].iloc[:,i],
                 stats_successive['g'].iloc[:,i],
                 ax[i], ps[i])
-  if out is None: out = 'geweke-results/mh-one-report.pdf'
+  out = os.path.join(outdir, 'mh-one-report.pdf')
   fig.savefig(out, format = 'pdf')
 
-def parameter_histograms(df_marginal, df_successive):
+def parameter_histograms(df_marginal, df_successive, outdir):
   fig, ax = plt.subplots(2, 1, figsize = [6,10])
   for i, param in enumerate(['mu', 'sigma']):
     sns.distplot(df_marginal[param], label = 'marginal', ax = ax[i])
     sns.distplot(df_successive[param], label = 'conditional', ax = ax[i])
     ax[i].set_title(param)
-  fig.savefig('geweke-results/mh-one-parameters.pdf')
+  fig.savefig(os.path.join(outdir, 'mh-one-parameters.pdf'))
 
-def main():
+def main(outdir = None, n_sample = None, burn_in = None, thin = None):
+  if outdir is None:
+    outdir = 'geweke-results'
+  if n_sample is not None:
+    global NSAMPLE
+    NSAMPLE = n_sample
+  if burn_in is not None:
+    global BURN
+    BURN = burn_in
+  if thin is not None:
+    global THIN
+    THIN = thin
+  if not os.path.exists(outdir):
+    os.makedirs(outdir)
   df_marginal = collect_marginal_conditional(build_ripl())
   df_successive = collect_succesive_conditional(build_ripl())
-  parameter_histograms(df_marginal, df_successive)
+  parameter_histograms(df_marginal, df_successive, outdir)
   # the list of functions of the data and parameters to compute
   g = [lambda df: df.mu,
        lambda df: df.sigma,
@@ -163,7 +177,7 @@ def main():
   stats_marginal = compute_statistics(df_marginal, g)
   stats_successive = compute_statistics(df_successive, g)
   stats, ps = hypothesis_tests(stats_marginal, stats_successive)
-  pp_plots(stats_marginal, stats_successive, stats, ps)
+  pp_plots(stats_marginal, stats_successive, stats, ps, outdir)
 
 if __name__ == '__main__':
   main()
