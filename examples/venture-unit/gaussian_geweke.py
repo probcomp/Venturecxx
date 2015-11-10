@@ -15,10 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
-DISCLAIMER: This code relied on an older version of plotf, and so will no
-longer run as written.
-'''
+"""An example of Geweke testing a simple Gaussian model."""
 
 import os
 from venture.shortcuts import make_lite_church_prime_ripl
