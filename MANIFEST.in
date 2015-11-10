@@ -861,7 +861,6 @@ include examples/hmm.vnt
 include examples/trickiness-ideal.vnts
 include examples/on-teaching-exchangeable-coupling.txt
 include examples/crosscat.vnt
-include examples/venture-unit/lda_slice.py
 include examples/gaussian_geweke.py
 include examples/crp-2d-demo.py
 include examples/venture-unit/hmm-demo.py
