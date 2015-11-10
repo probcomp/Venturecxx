@@ -127,7 +127,6 @@ include python/lib/shortcuts/__init__.py
 include python/lib/__init__.py
 include python/lib/value/dicts.py
 include python/lib/value/__init__.py
-include verifyinstall.sh
 include all.cfg
 include crashes-base.cfg
 include mripl-ipy-parallel.cfg
