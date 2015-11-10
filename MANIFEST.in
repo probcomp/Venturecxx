@@ -863,7 +863,6 @@ include examples/on-teaching-exchangeable-coupling.txt
 include examples/crosscat.vnt
 include examples/gaussian_geweke.py
 include examples/crp-2d-demo.py
-include examples/venture-unit/hmm-demo.py
 include examples/venture-unit/hmc-demo.py
 include examples/food/food-table.csv
 include examples/food/crp-mixture.vnt
