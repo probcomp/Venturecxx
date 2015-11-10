@@ -100,7 +100,7 @@ def testVentureExamplesPumaComplete():
 @needs_backend("lite")
 def testGaussianGeweke():
   root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-  exs_path = os.path.join(root, "examples", "venture-unit")
+  exs_path = os.path.join(root, "examples")
 
   plots_dir = None
   old_path = copy.copy(sys.path)
