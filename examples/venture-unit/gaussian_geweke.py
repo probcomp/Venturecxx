@@ -20,14 +20,13 @@ DISCLAIMER: This code relied on an older version of plotf, and so will no
 longer run as written.
 '''
 
-from venture.shortcuts import (make_puma_church_prime_ripl,
-                               make_lite_church_prime_ripl)
-import numpy as np, scipy as sp, pandas as pd
+from venture.shortcuts import make_lite_church_prime_ripl
+import numpy as np
+import pandas as pd
 from matplotlib import pyplot as plt
 import seaborn as sns
 from scipy.stats import norm
 from statsmodels.distributions import ECDF
-from venture.unit import VentureUnit
 
 NSAMPLE = 1000
 BURN = 100
@@ -166,29 +165,5 @@ def main():
   stats, ps = hypothesis_tests(stats_marginal, stats_successive)
   pp_plots(stats_marginal, stats_successive, stats, ps)
 
-def analytics_comparison():
-  '''
-  Run Geweke test using Analytics framework
-  '''
-  class GaussianModel(VentureUnit):
-    def makeAssumes(self):
-      self.assume('mu', '(tag (quote params) 0 (normal 0 10))')
-      self.assume('sigma', '(tag (quote params) 1 (sqrt (inv_gamma 1 1)))')
-      self.assume('x', '(lambda () (normal mu sigma))')
-
-    def makeObserves(self):
-      self.observe('(x)', 1.0)
-
-  ripl = make_lite_church_prime_ripl()
-  model = GaussianModel(ripl).getAnalytics(ripl)
-  fh, ih, cr = model.gewekeTest(samples = 100000,
-                                infer = '(hmc default all 0.05 10 1)',
-                                plot = True)
-  with open('geweke-results/analytics-hmc.txt', 'w') as f:
-    f.write(cr.reportString)
-  cr.compareFig.savefig('geweke-results/analytics-hmc.pdf', format = 'pdf')
-
 if __name__ == '__main__':
   main()
-  # run the comparison
-  # analytics_comparison()
