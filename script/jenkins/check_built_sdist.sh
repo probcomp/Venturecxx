@@ -19,23 +19,24 @@
 
 set -ex
 
-# Compute the version that will be built (tail skips warnings setup.py emits).
-version=`python setup.py --version | tail -1`
-version=${version%+*} # Strip the +foo suffix
+search_dir=$1
+version=$2
 
-# Save the version in the sdist, b/c git describe will not be available.
-echo $version > VERSION
+pip install --find-links "$search_dir" "venture==$version"
 
-# Build the distribution.
-python setup.py sdist
+# Smoke test the result without testing-only dependencies
+./tool/check_capabilities.sh
+if [ -z $SKIP_PUMA_BACKEND ]; then
+    ./tool/check_capabilities.sh puma
+else
+    ! venture puma --abstract-syntax -e '(normal 0 1)'
+fi
 
-# Build a fresh virtualenv for it
-venv_dir=`mktemp -dt "jenkins-sdist-install.XXXXXXXXXX"`
-virtualenv $venv_dir
-. $venv_dir/bin/activate
+# Install the test dependencies.
+pip install --find-links "$search_dir" "venture[tests]==$version"
 
-# Check it
-./script/jenkins/check_built_sdist.sh dist/ $version
-
-# Clean up
-/bin/rm -fr $venv_dir
+# Test more thoroughly.
+# TODO This should be the crash test suite.  Right now the only
+# difference is that it skips test_analytics.py:testCompareSnapshots,
+# and doesn't try to generate the coverage report.
+nosetests -c unattended.cfg
