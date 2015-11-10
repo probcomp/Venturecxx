@@ -74,4 +74,4 @@ def check_time_vs_dimension(dimension):
     # n_docs and n_words_per_doc produce much more strikingly linear
     # runtimes, because they both increase the number of random
     # choices over which to infer.
-    timing.assertLinearTime(prep, verbose=True)
+    timing.assertLinearTime(prep, verbose=False)
