@@ -44,12 +44,6 @@ def checkExample(example):
   assert s.call("%s 1.5s python examples/%s" % (timeout, example), shell=True) == 124
 
 @gen_in_backend("none")
-@gen_needs_backend("puma")
-def testExamplesPuma():
-  for ex in ["venture-unit/lda.py"]:
-    yield checkExample, ex
-
-@gen_in_backend("none")
 @gen_needs_backend("lite")
 def testExamples():
   for ex in ["crp-2d-demo.py", "venture-unit/hmc-demo.py"]:
