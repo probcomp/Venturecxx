@@ -44,49 +44,50 @@ def build_ripl():
   return ripl
 
 def format_results_marginal(res):
-  res = res[0]['value']
-  return pd.DataFrame({key : map(lambda x: x['value'], res[key]) for key in res})
+  res = res[0]['value']['value']
+  return res.asPandas()
 
 def collect_marginal_conditional(ripl):
   'Take draws from priors for mu and sigma'
   infer_statement = '''
   [INFER
     (let ((ds (empty)))
-      (repeat {0}
-       (do (bind (collect mu sigma) (curry into ds))
-           (mh (quote parameters) all 1))))]'''.format(NSAMPLE)
+      (do (repeat {0}
+           (do (bind (collect mu sigma) (curry into ds))
+               (mh (quote parameters) all 1)))
+          (return ds)))]'''.format(NSAMPLE)
   res = format_results_marginal(ripl.execute_program(infer_statement))
   return res
 
 def format_results_successive(res):
   out = []
   for item in res:
-    tmp = item[-2]['value']
-    out.append(pd.Series({x : tmp[x][0]['value'] for x in tmp}))
-  return pd.concat(out, axis = 1).T
+    tmp = item[1]['value']['value']
+    out.append(tmp.asPandas())
+  return pd.concat(out, ignore_index=True)
 
 def collect_succesive_conditional(ripl):
   'Simulate data, infer based on it, forget the simulation, repeat'
   # program = '''
   #   forgetme : [ASSUME dummy (x)]
-  #   [INFER (do (peek mu) (peek sigma) (peek dummy)
-  #              (hmc (quote parameters) all 0.05 10 1))]
+  #   [INFER (do (hmc (quote parameters) all 0.05 10 1)
+  #              (collect mu sigma dummy))]
   #   [FORGET forgetme]'''
   program = '''
     forgetme : [ASSUME dummy (x)]
-    [INFER (do (peek mu) (peek sigma) (peek dummy)
-               (mh (quote parameters) one 1))]
+    [INFER (do (mh (quote parameters) one 1)
+               (collect mu sigma dummy))]
     [FORGET forgetme]'''
   # program = '''
   #   forgetme : [ASSUME dummy (x)]
-  #   [INFER (do (peek mu) (peek sigma) (peek dummy)
-  #              (slice (quote params) 0 10 100 1)
-  #              (slice (quote params) 1 1 100 1))]
+  #   [INFER (do (slice (quote params) 0 10 100 1)
+  #              (slice (quote params) 1 1 100 1)
+  #              (collect mu sigma dummy))]
   #   [FORGET forgetme]'''
   res = []
   for i in range(BURN + NSAMPLE * THIN):
     tmp = ripl.execute_program(program)
-    if (i >= BURN) and not ((i - BURN) % THIN):
+    if (i >= BURN) and not (i - BURN) % THIN:
       res.append(tmp)
       print (i - BURN) / THIN
   return format_results_successive(res)
@@ -188,12 +189,6 @@ def analytics_comparison():
   cr.compareFig.savefig('geweke-results/analytics-hmc.pdf', format = 'pdf')
 
 if __name__ == '__main__':
-  # main()
+  main()
   # run the comparison
-  analytics_comparison()
-
-
-
-
-
-
+  # analytics_comparison()
