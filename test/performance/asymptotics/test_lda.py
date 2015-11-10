@@ -45,12 +45,12 @@ def sweep(ripl):
         ripl.infer("(mh default one %d)" % (step,))
         iters_done += step
 
+@attr('slow')
 @gen_on_inf_prim('mh')
 def test_time_vs_dimension():
     for d in ["n_topics", "vocab_size", "n_docs", "n_words_per_doc"]:
         yield check_time_vs_dimension, d
 
-@attr('slow')
 def check_time_vs_dimension(dimension):
     def prep(n):
         kwargs = {dimension: n}
