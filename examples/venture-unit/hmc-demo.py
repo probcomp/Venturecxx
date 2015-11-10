@@ -52,7 +52,7 @@ def true_pdf(x, y):
 
 def make_pic(name, inf_prog):
   model = HMCDemo(shortcuts.Lite().make_church_prime_ripl())
-  history = model.runFromConditional(70, runs=3, verbose=True, name=name, infer=inf_prog)
+  history, _ = model.runFromConditional(70, runs=3, verbose=True, name=name, infer=inf_prog)
   return history
 
 
