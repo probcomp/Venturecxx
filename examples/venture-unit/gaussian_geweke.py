@@ -29,6 +29,7 @@ import seaborn as sns
 from scipy.stats import norm
 from statsmodels.distributions import ECDF
 
+VERBOSE = False
 NSAMPLE = 1000
 BURN = 100
 THIN = 100
@@ -89,7 +90,8 @@ def collect_succesive_conditional(ripl):
     tmp = ripl.execute_program(program)
     if (i >= BURN) and not (i - BURN) % THIN:
       res.append(tmp)
-      print (i - BURN) / THIN
+      if VERBOSE:
+        print "Collecting sample %d of %d" % ((i - BURN) / THIN, NSAMPLE)
   return format_results_successive(res)
 
 def compute_statistics(df, g):
@@ -151,7 +153,8 @@ def parameter_histograms(df_marginal, df_successive, outdir):
     ax[i].set_title(param)
   fig.savefig(os.path.join(outdir, 'mh-one-parameters.pdf'))
 
-def main(outdir = None, n_sample = None, burn_in = None, thin = None):
+def main(outdir = None, n_sample = None, burn_in = None, thin = None,
+         verbose = None):
   if outdir is None:
     outdir = 'geweke-results'
   if n_sample is not None:
@@ -163,6 +166,9 @@ def main(outdir = None, n_sample = None, burn_in = None, thin = None):
   if thin is not None:
     global THIN
     THIN = thin
+  if verbose is not None:
+    global VERBOSE
+    VERBOSE = verbose
   if not os.path.exists(outdir):
     os.makedirs(outdir)
   df_marginal = collect_marginal_conditional(build_ripl())
@@ -180,4 +186,4 @@ def main(outdir = None, n_sample = None, burn_in = None, thin = None):
   pp_plots(stats_marginal, stats_successive, stats, ps, outdir)
 
 if __name__ == '__main__':
-  main()
+  main(verbose=True)
