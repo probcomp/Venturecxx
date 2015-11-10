@@ -127,7 +127,6 @@ include python/lib/shortcuts/__init__.py
 include python/lib/__init__.py
 include python/lib/value/dicts.py
 include python/lib/value/__init__.py
-include verifyinstall.sh
 include all.cfg
 include crashes-base.cfg
 include mripl-ipy-parallel.cfg
@@ -860,15 +859,10 @@ include examples/trickiness-concrete.vnts
 include examples/hmm.vnt
 include examples/trickiness-ideal.vnts
 include examples/on-teaching-exchangeable-coupling.txt
-include examples/venture-unit/crosscat.py
-include examples/venture-unit/lda_slice.py
-include examples/venture-unit/crp-demo.py
-include examples/venture-unit/gaussian_geweke.py
-include examples/venture-unit/crp-2d-demo.py
-include examples/venture-unit/analytics_gaussian_geweke.py
-include examples/venture-unit/hmm-demo.py
+include examples/crosscat.vnt
+include examples/gaussian_geweke.py
+include examples/crp-2d-demo.py
 include examples/venture-unit/hmc-demo.py
-include examples/venture-unit/lda.py
 include examples/food/food-table.csv
 include examples/food/crp-mixture.vnt
 include examples/food/assess.py
@@ -1092,6 +1086,7 @@ include test/performance/asymptotics/test_subsampled_mh.py
 include test/performance/asymptotics/test_aaa.py
 include test/performance/asymptotics/test_references.py
 include test/performance/asymptotics/test_double_recursion.py
+include test/performance/asymptotics/test_lda.py
 include test/performance/stack/__init__.py
 include test/performance/__init__.py
 include test/stats.py

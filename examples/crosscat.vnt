@@ -1,0 +1,65 @@
+;;; Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+;;;
+;;; This file is part of Venture.
+;;;
+;;; Venture is free software: you can redistribute it and/or modify
+;;; it under the terms of the GNU General Public License as published by
+;;; the Free Software Foundation, either version 3 of the License, or
+;;; (at your option) any later version.
+;;;
+;;; Venture is distributed in the hope that it will be useful,
+;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;; GNU General Public License for more details.
+;;;
+;;; You should have received a copy of the GNU General Public License
+;;; along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; A version of the crosscat model, with categorical components.
+
+[define model (lambda (n_values)
+  (do
+    (assume n_values ,n_values)
+
+    (assume get_component_hyperparameter
+      (mem (lambda (col) (gamma 1.0 1.0))))
+
+    (assume get_component_model
+      (mem
+        (lambda (col category)
+          (make_sym_dir_mult (get_component_hyperparameter col) n_values))))
+
+    (assume view_crp_hyperparameter (gamma 1.0 1.0))
+
+    (assume view_crp (make_crp view_crp_hyperparameter))
+
+    (assume get_view (mem (lambda (col) (view_crp))))
+
+    (assume get_categorization_crp_hyperparameter
+      (mem (lambda (view) (gamma 1.0 1.0))))
+
+    (assume get_categorization_crp
+      (mem (lambda (view)
+             (make_crp (get_categorization_crp_hyperparameter view)))))
+
+    (assume get_category
+      (mem (lambda (view row) ((get_categorization_crp view)))))
+
+    (assume get_cell
+      (mem (lambda (row col)
+             ((get_component_model
+               col (get_category (get_view col) row))))))))]
+
+[define observe_square
+  (lambda (n_values n_rows n_cols)
+    (for_each (arange n_rows)
+     (lambda (r)
+       (for_each (arange n_cols)
+        (lambda (c)
+          (let ((value (atom (int_div r n_values))))
+            (observe (get_cell ,r ,c) value)))))))]
+
+[define smoke_test
+  (do (model 2)
+      (observe_square 2 4 4)
+      (mh default one 1000))]

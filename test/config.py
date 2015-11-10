@@ -293,7 +293,7 @@ def needs_backend(backend):
   def wrap(f):
     assert not isgeneratorfunction(f), \
       "Use gen_needs_backend for test generator %s" % (f.__name__,)
-    @nose.make_decorator
+    @nose.make_decorator(f)
     def wrapped(*args):
       try:
         s.backend(backend).make_combined_ripl()

@@ -1,3 +1,4 @@
+Owain Evans
 notes towards tutorial on exchangeability, collapsed samplers, AAA
 
 1. Venture thunks output exchangeable sequence of RVs

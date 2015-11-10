@@ -30,9 +30,11 @@ class HMCDemo(u.VentureUnit):
 [ASSUME xout (if (< x 0)
     (normal x 0.5)
     (normal x 4))]
-[ASSUME out (multivariate_normal (array xout y) (matrix (list (list 1 0.5) (list 0.5 1))))]
+[ASSUME out (multivariate_normal
+  (array xout y) (matrix (list (list 1 0.5) (list 0.5 1))))]
 """
-    commands = [command_str.split("]")[0].split(" ", 1) for command_str in program.strip().split("[ASSUME ") if command_str]
+    commands = [command_str.split("]")[0].split(" ", 1)
+                for command_str in program.strip().split("[ASSUME ") if command_str]
     for (var, exp) in commands:
       self.assume(var, exp)
 
@@ -46,29 +48,29 @@ def true_pdf(x, y):
   import scipy.integrate as integrate
   from venture.lite.utils import logDensityMVNormal
   def postprop(xout):
-    return scipy.stats.norm.pdf(xout, loc=x, scale=scale) * logDensityMVNormal([0,0], np.array([xout,y]), cov)
+    prior = scipy.stats.norm.pdf(xout, loc=x, scale=scale)
+    likelihood = logDensityMVNormal([0,0], np.array([xout,y]), cov)
+    # TODO Should this be math.exp(likelihood)?
+    return prior * likelihood
   (ans,_) = integrate.quad(postprop, x-4*scale, x+4*scale)
   return ans
 
 def make_pic(name, inf_prog):
   model = HMCDemo(shortcuts.Lite().make_church_prime_ripl())
-  history = model.runFromConditional(70, runs=3, verbose=True, name=name, infer=inf_prog)
+  history, _ = model.runFromConditional(
+    70, runs=3, verbose=True, name=name, infer=inf_prog)
   return history
 
 
 if __name__ == '__main__':
-  # TODO To compare rejection sampling, would need to define logDensityBound for MVNormalOutputPSP
+  # TODO To compare rejection sampling, would need to define
+  # logDensityBound for MVNormalOutputPSP
   # make_pic("rej", "(rejection default all 1)")
   h1 = make_pic("hmc", "(hmc 'param all 0.1 20 1)")
-# h1.quickScatter("x", "y", style="-", contour_func=true_pdf, contour_delta=0.5)
+  # h1.quickScatter("x", "y", style="-", contour_func=true_pdf, contour_delta=0.5)
   h2 = make_pic("mh", "(mh default one 10)")
+  # h2.quickScatter("x", "y", style="-", contour_func=true_pdf, contour_delta=0.5)
   h3 = make_pic("map", "(map 'param all 0.1 2 1)")
-# h3.quickScatter("x", "y", style="-", contour_func=true_pdf, contour_delta=0.5)
-  u.historyOverlay("demo", [("hmc", h1), ("mh", h2), ("map", h3)]).quickScatter("x", "y", contour_func=true_pdf, contour_delta=0.5)
-
-
-
-
-
-
-
+  # h3.quickScatter("x", "y", style="-", contour_func=true_pdf, contour_delta=0.5)
+  u.historyOverlay("demo", [("hmc", h1), ("mh", h2), ("map", h3)]) \
+    .quickScatter("x", "y", contour_func=true_pdf, contour_delta=0.5)

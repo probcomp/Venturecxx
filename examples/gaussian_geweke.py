@@ -15,20 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-'''
-DISCLAIMER: This code relied on an older version of plotf, and so will no
-longer run as written.
-'''
+"""An example of Geweke testing a simple Gaussian model."""
 
-from venture.shortcuts import (make_puma_church_prime_ripl,
-                               make_lite_church_prime_ripl)
-import numpy as np, scipy as sp, pandas as pd
+import os
+from venture.shortcuts import make_lite_church_prime_ripl
+import numpy as np
+import pandas as pd
 from matplotlib import pyplot as plt
 import seaborn as sns
 from scipy.stats import norm
 from statsmodels.distributions import ECDF
-from venture.unit import VentureUnit
 
+VERBOSE = False
 NSAMPLE = 1000
 BURN = 100
 THIN = 100
@@ -44,51 +42,53 @@ def build_ripl():
   return ripl
 
 def format_results_marginal(res):
-  res = res[0]['value']
-  return pd.DataFrame({key : map(lambda x: x['value'], res[key]) for key in res})
+  res = res[0]['value']['value']
+  return res.asPandas()
 
 def collect_marginal_conditional(ripl):
   'Take draws from priors for mu and sigma'
   infer_statement = '''
   [INFER
     (let ((ds (empty)))
-      (repeat {0}
-       (do (bind (collect mu sigma) (curry into ds))
-           (mh (quote parameters) all 1))))]'''.format(NSAMPLE)
+      (do (repeat {0}
+           (do (bind (collect mu sigma) (curry into ds))
+               (mh (quote parameters) all 1)))
+          (return ds)))]'''.format(NSAMPLE)
   res = format_results_marginal(ripl.execute_program(infer_statement))
   return res
 
 def format_results_successive(res):
   out = []
   for item in res:
-    tmp = item[-2]['value']
-    out.append(pd.Series({x : tmp[x][0]['value'] for x in tmp}))
-  return pd.concat(out, axis = 1).T
+    tmp = item[1]['value']['value']
+    out.append(tmp.asPandas())
+  return pd.concat(out, ignore_index=True)
 
 def collect_succesive_conditional(ripl):
   'Simulate data, infer based on it, forget the simulation, repeat'
   # program = '''
   #   forgetme : [ASSUME dummy (x)]
-  #   [INFER (do (peek mu) (peek sigma) (peek dummy)
-  #              (hmc (quote parameters) all 0.05 10 1))]
+  #   [INFER (do (hmc (quote parameters) all 0.05 10 1)
+  #              (collect mu sigma dummy))]
   #   [FORGET forgetme]'''
   program = '''
     forgetme : [ASSUME dummy (x)]
-    [INFER (do (peek mu) (peek sigma) (peek dummy)
-               (mh (quote parameters) one 1))]
+    [INFER (do (mh (quote parameters) one 1)
+               (collect mu sigma dummy))]
     [FORGET forgetme]'''
   # program = '''
   #   forgetme : [ASSUME dummy (x)]
-  #   [INFER (do (peek mu) (peek sigma) (peek dummy)
-  #              (slice (quote params) 0 10 100 1)
-  #              (slice (quote params) 1 1 100 1))]
+  #   [INFER (do (slice (quote params) 0 10 100 1)
+  #              (slice (quote params) 1 1 100 1)
+  #              (collect mu sigma dummy))]
   #   [FORGET forgetme]'''
   res = []
   for i in range(BURN + NSAMPLE * THIN):
     tmp = ripl.execute_program(program)
-    if (i >= BURN) and not ((i - BURN) % THIN):
+    if (i >= BURN) and not (i - BURN) % THIN:
       res.append(tmp)
-      print (i - BURN) / THIN
+      if VERBOSE:
+        print "Collecting sample %d of %d" % ((i - BURN) / THIN, NSAMPLE)
   return format_results_successive(res)
 
 def compute_statistics(df, g):
@@ -132,28 +132,45 @@ def one_pp_plot(g_marginal, g_successive, ax, p):
   ax.text(x = 0, y = 1, s = 'p value: {0:0.2f}'.format(p),
           verticalalignment = 'top')
 
-def pp_plots(stats_marginal, stats_successive, stats, ps, out = None):
+def pp_plots(stats_marginal, stats_successive, stats, ps, outdir):
   n = len(stats)
   fig, ax = plt.subplots(n, 1, figsize = [6, n * 4])
   for i in range(n):
     one_pp_plot(stats_marginal['g'].iloc[:,i],
                 stats_successive['g'].iloc[:,i],
                 ax[i], ps[i])
-  if out is None: out = 'geweke-results/mh-one-report.pdf'
+  out = os.path.join(outdir, 'mh-one-report.pdf')
   fig.savefig(out, format = 'pdf')
 
-def parameter_histograms(df_marginal, df_successive):
+def parameter_histograms(df_marginal, df_successive, outdir):
   fig, ax = plt.subplots(2, 1, figsize = [6,10])
   for i, param in enumerate(['mu', 'sigma']):
     sns.distplot(df_marginal[param], label = 'marginal', ax = ax[i])
     sns.distplot(df_successive[param], label = 'conditional', ax = ax[i])
     ax[i].set_title(param)
-  fig.savefig('geweke-results/mh-one-parameters.pdf')
+  fig.savefig(os.path.join(outdir, 'mh-one-parameters.pdf'))
 
-def main():
+def main(outdir = None, n_sample = None, burn_in = None, thin = None,
+         verbose = None):
+  if outdir is None:
+    outdir = 'geweke-results'
+  if n_sample is not None:
+    global NSAMPLE
+    NSAMPLE = n_sample
+  if burn_in is not None:
+    global BURN
+    BURN = burn_in
+  if thin is not None:
+    global THIN
+    THIN = thin
+  if verbose is not None:
+    global VERBOSE
+    VERBOSE = verbose
+  if not os.path.exists(outdir):
+    os.makedirs(outdir)
   df_marginal = collect_marginal_conditional(build_ripl())
   df_successive = collect_succesive_conditional(build_ripl())
-  parameter_histograms(df_marginal, df_successive)
+  parameter_histograms(df_marginal, df_successive, outdir)
   # the list of functions of the data and parameters to compute
   g = [lambda df: df.mu,
        lambda df: df.sigma,
@@ -163,37 +180,7 @@ def main():
   stats_marginal = compute_statistics(df_marginal, g)
   stats_successive = compute_statistics(df_successive, g)
   stats, ps = hypothesis_tests(stats_marginal, stats_successive)
-  pp_plots(stats_marginal, stats_successive, stats, ps)
-
-def analytics_comparison():
-  '''
-  Run Geweke test using Analytics framework
-  '''
-  class GaussianModel(VentureUnit):
-    def makeAssumes(self):
-      self.assume('mu', '(tag (quote params) 0 (normal 0 10))')
-      self.assume('sigma', '(tag (quote params) 1 (sqrt (inv_gamma 1 1)))')
-      self.assume('x', '(lambda () (normal mu sigma))')
-
-    def makeObserves(self):
-      self.observe('(x)', 1.0)
-
-  ripl = make_lite_church_prime_ripl()
-  model = GaussianModel(ripl).getAnalytics(ripl)
-  fh, ih, cr = model.gewekeTest(samples = 100000,
-                                infer = '(hmc default all 0.05 10 1)',
-                                plot = True)
-  with open('geweke-results/analytics-hmc.txt', 'w') as f:
-    f.write(cr.reportString)
-  cr.compareFig.savefig('geweke-results/analytics-hmc.pdf', format = 'pdf')
+  pp_plots(stats_marginal, stats_successive, stats, ps, outdir)
 
 if __name__ == '__main__':
-  # main()
-  # run the comparison
-  analytics_comparison()
-
-
-
-
-
-
+  main(verbose=True)
