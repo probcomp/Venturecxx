@@ -865,7 +865,6 @@ include examples/gaussian_geweke.py
 include examples/crp-2d-demo.py
 include examples/venture-unit/hmm-demo.py
 include examples/venture-unit/hmc-demo.py
-include examples/venture-unit/lda.py
 include examples/food/food-table.csv
 include examples/food/crp-mixture.vnt
 include examples/food/assess.py
@@ -1089,6 +1088,7 @@ include test/performance/asymptotics/test_subsampled_mh.py
 include test/performance/asymptotics/test_aaa.py
 include test/performance/asymptotics/test_references.py
 include test/performance/asymptotics/test_double_recursion.py
+include test/performance/asymptotics/test_lda.py
 include test/performance/stack/__init__.py
 include test/performance/__init__.py
 include test/stats.py

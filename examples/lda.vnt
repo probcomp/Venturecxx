@@ -1,0 +1,24 @@
+[define model
+  (lambda (n_topics vocab_size)
+    (do (assume n_topics ,n_topics)
+        (assume vocab_size ,vocab_size)
+        (assume alpha_document_topic (gamma 1.0 2.0))
+        (assume alpha_topic_word (gamma 1.0 2.0))
+        (assume doc
+          (mem (lambda (doc_id)
+            (make_sym_dir_mult alpha_document_topic n_topics))))
+        (assume topic
+          (mem (lambda (topic_id)
+            (make_sym_dir_mult alpha_topic_word vocab_size))))
+        (assume word
+          (mem (lambda (doc_id pos)
+            ((topic ((doc doc_id)))))))))]
+
+;; TODO Generate data from the prior
+[define data
+  (lambda (n_docs n_words_per_doc)
+    (for_each (arange n_docs)
+     (lambda (doc_id)
+       (for_each (arange n_words_per_doc)
+        (lambda (pos)
+          (observe (word ,doc_id ,pos) (atom 0)))))))]
