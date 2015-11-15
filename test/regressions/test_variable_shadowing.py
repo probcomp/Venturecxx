@@ -27,7 +27,8 @@ def testVariableShadowing():
 """
   ripl = get_ripl()
   ripl.execute_program('''
+[assume x (normal 0 1)]
 [define repeat 3]
-[infer (accumulate_dataset 10 (do (collect repeat)))]
+[infer (accumulate_dataset 10 (do (collect x)))]
 ''')
   eq_(ripl.evaluate('repeat'), ripl.evaluate('3.0'))
