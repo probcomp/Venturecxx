@@ -88,6 +88,11 @@ def plot(name, xname, yname, style, dfs, contour_func=None, contour_delta=None,
   ax.set_ylim([ymin, ymax])
   ax.legend()
   if contour_func is not None:
+    # Adding the fuzz again is a kludgey attempt to keep the contours
+    # from being cut off.  It doesn't always work but it usually looks
+    # marginally better, without incurring a terribly substantial
+    # performance hit when the function being contoured does heavy
+    # numerical integration.
     xc = np.arange(xmin - xfuzz, xmax + xfuzz, contour_delta)
     yc = np.arange(ymin - yfuzz, ymax + yfuzz, contour_delta)
     XG, YG = np.meshgrid(xc, yc)
