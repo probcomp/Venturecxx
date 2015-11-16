@@ -315,6 +315,8 @@ tests_require = [
     'nose-cov>=1.6',
     'flaky',
     'pexpect',
+    'seaborn', # For examples/gaussian_geweke.py
+    'statsmodels', # For examples/gaussian_geweke.py
 ]
 
 # XXX For inexplicable reasons, during sdist.run, setuptools quietly
