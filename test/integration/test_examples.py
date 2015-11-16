@@ -46,7 +46,7 @@ def checkExample(example):
 @gen_in_backend("none")
 @gen_needs_backend("lite")
 def testExamples():
-  for ex in ["crp-2d-demo.py", "venture-unit/hmc-demo.py"]:
+  for ex in ["crp-2d-demo.py", "hmc-demo.py"]:
     yield checkExample, ex
 
 def checkVentureExample(command):
