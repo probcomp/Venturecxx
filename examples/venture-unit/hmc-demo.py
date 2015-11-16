@@ -88,6 +88,11 @@ def plot(name, xname, yname, style, dfs, contour_func=None, contour_delta=None,
   ax.set_ylim([ymin, ymax])
   ax.legend()
   if contour_func is not None:
+    # Adding the fuzz again is a kludgey attempt to keep the contours
+    # from being cut off.  It doesn't always work but it usually looks
+    # marginally better, without incurring a terribly substantial
+    # performance hit when the function being contoured does heavy
+    # numerical integration.
     xc = np.arange(xmin - xfuzz, xmax + xfuzz, contour_delta)
     yc = np.arange(ymin - yfuzz, ymax + yfuzz, contour_delta)
     XG, YG = np.meshgrid(xc, yc)
@@ -111,7 +116,7 @@ if __name__ == "__main__":
       print ds_name
       datasets[run] = (ds_name, compute(nsamples, program))
       overlay[nruns*i + run] = datasets[run]
-    plot(name, "x", "y", "-", datasets, contour_func=true_pdf,
+    plot(name, "x", "y", "-o", datasets, contour_func=true_pdf,
       contour_delta=0.5, ax=plt.figure().gca())
     plt.show()
   plot("overlay", "x", "y", "o", overlay, contour_func=true_pdf,
