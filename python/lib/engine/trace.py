@@ -73,6 +73,10 @@ class Trace(object):
     directive = self.directives[directiveId]
     if directive[0] == "observe": self.trace.unobserve(directiveId)
     self.trace.uneval(directiveId)
+    # TODO This may cause a problem in the presence of variable
+    # shadowing.  Really, it should remove the binding from the frame
+    # into which the directive being forgotten had placed it, rather
+    # than the bottom-most frame in which it occurs, as this does.
     if directive[0] == "define": self.trace.unbindInGlobalEnv(directive[1])
     del self.directives[directiveId]
 
