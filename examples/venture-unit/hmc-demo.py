@@ -15,31 +15,36 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import scipy.stats
+import matplotlib.pyplot as plt
 import numpy as np
+import scipy
 
-from venture import shortcuts
-import venture.unit as u
-import venture.value.dicts as v
+from venture.shortcuts import make_lite_church_prime_ripl
 
-class HMCDemo(u.VentureUnit):
-  def makeAssumes(self):
-    program = """
-[ASSUME x (tag (quote param) 0 (uniform_continuous -4 4))]
-[ASSUME y (tag (quote param) 1 (uniform_continuous -4 4))]
-[ASSUME xout (if (< x 0)
-    (normal x 0.5)
-    (normal x 4))]
-[ASSUME out (multivariate_normal
-  (array xout y) (matrix (list (list 1 0.5) (list 0.5 1))))]
+model = """
+[assume x (tag 'param 0 (uniform_continuous -4 4))]
+[assume y (tag 'param 0 (uniform_continuous -4 4))]
+[assume xout
+  (if (< x 0)
+      (normal x 0.5)
+      (normal x 4))]
+[assume out
+  (multivariate_normal
+   (array xout y)
+   (matrix (list (list 1 0.5) (list 0.5 1))))]
 """
-    commands = [command_str.split("]")[0].split(" ", 1)
-                for command_str in program.strip().split("[ASSUME ") if command_str]
-    for (var, exp) in commands:
-      self.assume(var, exp)
 
-  def makeObserves(self):
-    self.observe("out", v.list([v.real(0), v.real(0)]))
+observation = """
+; Should be [observe out (list 0.0 0.0)], but we can't put evaluated
+; expressions on the right-hand side of `observe' at the moment.
+[infer (observe out (list 0.0 0.0))]
+"""
+
+examples = [
+  ("hmc", "(hmc 'param all 0.1 20 1)"),
+  ("mh", "(mh default one 10)"),
+  ("map", "(map 'param all 0.1 2 1)"),
+]
 
 # int_R pdf(xout|x) pdf([0,0]|[xout, y])
 def true_pdf(x, y):
@@ -51,26 +56,64 @@ def true_pdf(x, y):
     prior = scipy.stats.norm.pdf(xout, loc=x, scale=scale)
     likelihood = logDensityMVNormal([0,0], np.array([xout,y]), cov)
     # TODO Should this be math.exp(likelihood)?
-    return prior * likelihood
+    return prior * np.exp(likelihood)
   (ans,_) = integrate.quad(postprop, x-4*scale, x+4*scale)
   return ans
 
-def make_pic(name, inf_prog):
-  model = HMCDemo(shortcuts.Lite().make_church_prime_ripl())
-  history, _ = model.runFromConditional(
-    70, runs=3, verbose=True, name=name, infer=inf_prog)
-  return history
+def compute(nsamples, program):
+  ripl = make_lite_church_prime_ripl()
+  ripl.execute_program(model)
+  ripl.execute_program(observation)
+  dataset = ripl.infer("""
+    (let ((d (empty)))
+      (do (repeat %s (do %s (bind (collect x y) (curry into d))))
+          (return d)))
+  """ % (nsamples, program))
+  return dataset.asPandas()
 
+def plot(name, xname, yname, style, dfs, contour_func=None, contour_delta=None,
+    ax=None):
+  if contour_delta is None:
+    contour_delta = 0.125
+  if ax is None:
+    ax = plt.gca()
+  ax.set_title(name)
+  ax.set_xlabel(xname)
+  ax.set_ylabel(yname)
+  for label, df in dfs:
+    ax.plot(df[xname], df[yname], style, label=label)
+  xmin, xmax, xfuzz = bounds(dfs, xname)
+  ymin, ymax, yfuzz = bounds(dfs, yname)
+  ax.set_xlim([xmin, xmax])
+  ax.set_ylim([ymin, ymax])
+  ax.legend()
+  if contour_func is not None:
+    xc = np.arange(xmin - xfuzz, xmax + xfuzz, contour_delta)
+    yc = np.arange(ymin - yfuzz, ymax + yfuzz, contour_delta)
+    XG, YG = np.meshgrid(xc, yc)
+    ZG = np.vectorize(contour_func)(XG, YG)
+    ax.contour(XG, YG, ZG)
 
-if __name__ == '__main__':
-  # TODO To compare rejection sampling, would need to define
-  # logDensityBound for MVNormalOutputPSP
-  # make_pic("rej", "(rejection default all 1)")
-  h1 = make_pic("hmc", "(hmc 'param all 0.1 20 1)")
-  # h1.quickScatter("x", "y", style="-", contour_func=true_pdf, contour_delta=0.5)
-  h2 = make_pic("mh", "(mh default one 10)")
-  # h2.quickScatter("x", "y", style="-", contour_func=true_pdf, contour_delta=0.5)
-  h3 = make_pic("map", "(map 'param all 0.1 2 1)")
-  # h3.quickScatter("x", "y", style="-", contour_func=true_pdf, contour_delta=0.5)
-  u.historyOverlay("demo", [("hmc", h1), ("mh", h2), ("map", h3)]) \
-    .quickScatter("x", "y", contour_func=true_pdf, contour_delta=0.5)
+def bounds(dfs, var):
+  minimum = min(v for _l, df in dfs for v in df[var])
+  maximum = max(v for _l, df in dfs for v in df[var])
+  fuzz = 0.1 * max(maximum - minimum, 1.)
+  return minimum - fuzz, maximum + fuzz, fuzz
+
+if __name__ == "__main__":
+  nsamples = 70
+  nruns = 3
+  overlay = [0] * len(examples) * nruns
+  for i, (name, program) in enumerate(examples):
+    datasets = [0] * nruns
+    for run in xrange(nruns):
+      ds_name = "%s %d" % (name, run)
+      print ds_name
+      datasets[run] = (ds_name, compute(nsamples, program))
+      overlay[nruns*i + run] = datasets[run]
+    plot(name, "x", "y", "-", datasets, contour_func=true_pdf,
+      contour_delta=2., ax=plt.figure().gca())
+    plt.show()
+  plot("overlay", "x", "y", "o", overlay, contour_func=true_pdf,
+    contour_delta=2., ax=plt.figure().gca())
+  plt.show()
