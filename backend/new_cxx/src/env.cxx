@@ -51,13 +51,12 @@ void VentureEnvironment::removeBinding(const string& sym)
   if (frame.count(sym))
   {
     frame.erase(sym);
-  } else if (outerEnv.get() == NULL)
+  } else if (lookupSymbol(sym))
+  {
+    return;
+  } else
   {
     throw "Cannot unbind unbound symbol '" + sym + "'";
-  }
-  else
-  {
-    return outerEnv->removeBinding(sym);
   }
 }
 

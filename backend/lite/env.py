@@ -43,8 +43,8 @@ class VentureEnvironment(VentureValue):
   def removeBinding(self,sym):
     assert isinstance(sym, str)
     if sym in self.frame: del self.frame[sym]
-    elif not self.outerEnv: raise VentureError("Cannot unbind unbound symbol '%s'" % sym)
-    else: self.outerEnv.removeBinding(sym)
+    elif self.symbolBound(sym): return
+    else: raise VentureError("Cannot unbind unbound symbol '%s'" % sym)
 
   def fillBinding(self,sym,val):
     # Used in the implementation of letrec
