@@ -116,7 +116,7 @@ if __name__ == "__main__":
       print ds_name
       datasets[run] = (ds_name, compute(nsamples, program))
       overlay[nruns*i + run] = datasets[run]
-    plot(name, "x", "y", "-", datasets, contour_func=true_pdf,
+    plot(name, "x", "y", "-o", datasets, contour_func=true_pdf,
       contour_delta=0.5, ax=plt.figure().gca())
     plt.show()
   plot("overlay", "x", "y", "o", overlay, contour_func=true_pdf,
