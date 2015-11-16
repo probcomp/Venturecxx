@@ -36,7 +36,10 @@ class Trace(object):
       self.bindPrimitiveName(name, val)
     for name, sp in builtin.builtInSPs().iteritems():
       self.bindPrimitiveSP(name, sp)
-    self.env = env.VentureEnvironment(self.env) # New frame so users can shadow globals
+    self.sealEnvironment() # New frame so users can shadow globals
+
+  def sealEnvironment(self):
+    self.env = env.VentureEnvironment(self.env)
 
   def extractRaw(self, id):
     return self.results[id]
@@ -65,9 +68,9 @@ class Trace(object):
     self.env.addBinding(name, node.Node(None, spVal))
 
   def bindInGlobalEnv(self, sym, id):
-    if self.boundInGlobalEnv(sym):
-      # No problems with overwrites in the untraced setting.
-      self.unbindInGlobalEnv(sym)
+    if sym in self.env.frame:
+      # No problems with overwrites in the untraced setting
+      del self.env.frame[sym]
     try:
       self.env.addBinding(sym, node.Node(id, self.results[id]))
     except VentureError as e:
