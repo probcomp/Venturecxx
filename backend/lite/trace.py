@@ -432,11 +432,12 @@ class Trace(object):
     node = self.families[id]
     appNode = self.getConstrainableNode(node)
     if node.isObservation:
-      unconstrain(self,appNode)
+      weight = unconstrain(self,appNode)
       node.isObservation = False
     else:
       assert node in self.unpropagatedObservations
       del self.unpropagatedObservations[node]
+    return weight
 
   def uneval(self,id):
     assert id in self.families

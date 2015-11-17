@@ -64,7 +64,7 @@ class TraceSet(object):
     self.traces.map('observe', baseAddr, datum, val)
 
   def forget(self, directiveId):
-    self.traces.map('forget', directiveId)
+    return self.traces.map('forget', directiveId)
 
   def freeze(self, directiveId):
     self.traces.map('freeze', directiveId)
@@ -191,6 +191,7 @@ if freeze has been used.
     weight_increments = self.traces.map('makeConsistent')
     for i, increment in enumerate(weight_increments):
       self.log_weights[i] += increment
+    return weight_increments
 
   def for_each_trace_sequential(self, f):
     # Rather than sending the engine to the traces, bring the traces

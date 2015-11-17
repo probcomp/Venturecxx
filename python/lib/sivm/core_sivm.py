@@ -89,9 +89,9 @@ class CoreSivm(object):
                 utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
         val = utils.validate_arg(instruction,'value',
                 utils.validate_value,modifier=_modify_value)
-        did = self.engine.observe(exp,val)
+        did, weights = self.engine.observe(exp,val)
         self.observe_dict[did] = instruction
-        return {"directive_id":did}
+        return {"directive_id":did, "value":weights}
 
     def _do_predict(self,instruction):
         utils.require_state(self.state,'default')
@@ -120,14 +120,14 @@ class CoreSivm(object):
         did = utils.validate_arg(instruction,'directive_id',
                 utils.validate_nonnegative_integer)
         try:
-            self.engine.forget(did)
+            weights = self.engine.forget(did)
             if did in self.observe_dict:
                 del self.observe_dict[did]
         except Exception as e:
             if e.message == 'There is no such directive.':
                 raise VentureException('invalid_argument',e.message,argument='directive_id')
             raise
-        return {}
+        return {"value": weights}
 
     def _do_freeze(self,instruction):
         utils.require_state(self.state,'default')
