@@ -115,10 +115,28 @@ def extract_sample(maker, params, index):
   results = [one_sample() for _ in range(default_num_samples(5))]
   return results
 
+def extract_cross_sample(maker, params, index1, index2):
+  r = get_ripl()
+  r.assume("maker", maker)
+  index = max(index1, index2)
+  expr = v.app(v.sym("list"), *[v.app(v.sym("made")) for _ in range(index+1)])
+  def one_sample():
+    r.assume("made", v.app(v.sym("maker"), *params))
+    vec = r.sample(expr)
+    r.forget("made")
+    return vec[index1] * vec[index2]
+  results = [one_sample() for _ in range(default_num_samples(5))]
+  return results
+
 @statisticalTest
 def checkSameMarginal(maker, params, index):
   return reportSameContinuous(extract_sample(native_nig_normal, params, index),
                               extract_sample(maker, params, index))
+
+@statisticalTest
+def checkSameCross(maker, params, index1, index2):
+  return reportSameContinuous(extract_cross_sample(native_nig_normal, params, index1, index2),
+                              extract_cross_sample(maker, params, index1, index2))
 
 def testSameMarginal():
   for maker in ['make_nig_normal', 'make_uc_nig_normal', suff_stat_nig_normal]:
@@ -126,3 +144,5 @@ def testSameMarginal():
                    (2.0, 3.0, 4.0, 5.0)]:
       for index in [0, 10]:
         yield checkSameMarginal, maker, params, index
+      for index1, index2 in [(1,2), (3,7)]:
+        yield checkSameCross, maker, params, index1, index2
