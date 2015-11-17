@@ -24,6 +24,7 @@ from venture.test.stats import statisticalTest, reportKnownContinuous
 from venture.test.stats import reportSameContinuous
 from venture.test.config import get_ripl, collectIidSamples
 from venture.test.config import default_num_samples, ignore_inference_quality
+from venture.test.config import default_num_transitions_per_sample
 from venture.test.config import gen_on_inf_prim
 
 # This test suite targets
@@ -186,3 +187,19 @@ def testSameAssessment():
                     map(float, range(10)),
                     frob]:
       checkSameAssessment('make_suff_stat_normal', params, dataset)
+
+@statisticalTest
+def testUCKernel():
+  r = get_ripl()
+  r.assume("made", "(tag 'latent 0 (make_uc_nig_normal 1 1 1 1))")
+  for i in range(5):
+    r.predict("(tag 'data %d (made))" % i, label="datum_%d" % i)
+  def samples(infer):
+    return collectIidSamples(r, address="datum_0",
+                             num_samples=default_num_samples(),
+                             infer=infer)
+  prior = samples("pass")
+  geweke = """(repeat %d (do (mh 'latent one 1)
+    (mh 'data all 1)))""" % default_num_transitions_per_sample()
+  geweke_result = samples(geweke)
+  return reportSameContinuous(prior, geweke_result)
