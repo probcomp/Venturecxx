@@ -1023,6 +1023,7 @@ include test/properties/test_sps.py
 include test/properties/test_gradients.py
 include test/properties/__init__.py
 include test/properties/test_ripl.py
+include test/properties/test_conjugacy.py
 include test/inference_language/test_ordered_range_blocking.py
 include test/inference_language/test_pgibbs.py
 include test/inference_language/test_plugins.py
