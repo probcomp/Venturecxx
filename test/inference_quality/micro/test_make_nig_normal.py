@@ -19,7 +19,9 @@ import itertools
 import numpy as np
 from scipy.stats import norm
 
+import venture.value.dicts as v
 from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.stats import reportSameContinuous
 from venture.test.config import get_ripl, collectIidSamples
 from venture.test.config import default_num_samples, ignore_inference_quality
 from venture.test.config import gen_on_inf_prim
@@ -94,3 +96,33 @@ def checkRecoverNormalDist(maker, true_mean, true_var):
   return reportKnownContinuous(norm(loc=true_mean, scale=np.sqrt(true_var)).cdf,
                                predictive_samples,
                                "N(%s,%s)" % (true_mean, np.sqrt(true_var)))
+
+native_nig_normal = """(lambda (m V a b)
+  (let ((variance (inv_gamma a b))
+        (mean (normal m (sqrt (* V variance))))
+        (stddev (sqrt variance)))
+    (lambda () (normal mean stddev))))"""
+
+def extract_sample(maker, params, index):
+  r = get_ripl()
+  r.assume("maker", maker)
+  expr = v.app(v.sym("list"), *[v.app(v.sym("made")) for _ in range(index+1)])
+  def one_sample():
+    r.assume("made", v.app(v.sym("maker"), *params))
+    ans = r.sample(expr)[-1]
+    r.forget("made")
+    return ans
+  results = [one_sample() for _ in range(default_num_samples(5))]
+  return results
+
+@statisticalTest
+def checkSameMarginal(maker, params, index):
+  return reportSameContinuous(extract_sample(native_nig_normal, params, index),
+                              extract_sample(maker, params, index))
+
+def testSameMarginal():
+  for maker in ['make_nig_normal', 'make_uc_nig_normal', suff_stat_nig_normal]:
+    for params in [(1.0, 1.0, 1.0, 1.0),
+                   (2.0, 3.0, 4.0, 5.0)]:
+      for index in [0, 10]:
+        yield checkSameMarginal, maker, params, index
