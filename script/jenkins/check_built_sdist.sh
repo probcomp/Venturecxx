@@ -36,6 +36,4 @@ fi
 pip install --find-links "$search_dir" "venture[tests]==$version"
 
 # Test more thoroughly.
-# TODO This should be the crash test suite.  Right now the only
-# difference is that doesn't try to generate the coverage report.
-nosetests -c unattended.cfg
+nosetests -c crashes.cfg

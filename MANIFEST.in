@@ -73,7 +73,6 @@ include demos/jsripl/gp_fitting.js
 include demos/jsripl/common-scripts.js
 include HACKING.md
 include sanity_tests.sh
-include unattended.cfg
 include base.cfg
 include VERSION
 include install_osx_macports.sh
