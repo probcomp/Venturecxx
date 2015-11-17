@@ -15,13 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose import SkipTest
-
 import itertools
 import numpy as np
 from scipy.stats import norm
+
 from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, collectIidSamples, default_num_samples, ignore_inference_quality, rejectionSampling, gen_on_inf_prim
+from venture.test.config import get_ripl, collectIidSamples
+from venture.test.config import default_num_samples, ignore_inference_quality
+from venture.test.config import gen_on_inf_prim
 
 # This test suite targets
 # - make_nig_normal(m,V,a,b)
