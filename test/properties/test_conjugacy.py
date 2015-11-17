@@ -24,18 +24,6 @@ from venture.test.stats import reportSameContinuous
 from venture.test.stats import statisticalTest
 import venture.value.dicts as v
 
-native_nig_normal = """(lambda (m V a b)
-  (let ((variance (inv_gamma a b))
-        (mean (normal m (sqrt (* V variance))))
-        (stddev (sqrt variance)))
-    (lambda () (normal mean stddev))))"""
-
-suff_stat_nig_normal = """(lambda (m V a b)
-  (let ((variance (inv_gamma a b))
-        (mean (normal m (sqrt (* V variance))))
-        (stddev (sqrt variance)))
-    (make_suff_stat_normal mean stddev)))"""
-
 def extract_sample(maker, params, index):
   r = get_ripl()
   r.assume("maker", maker)
@@ -48,7 +36,7 @@ def extract_sample(maker, params, index):
   results = [one_sample() for _ in range(default_num_samples(5))]
   return results
 
-def extract_cross_sample(maker, params, index1, index2):
+def extract_cross_sample(maker, params, index1, index2, combiner):
   r = get_ripl()
   r.assume("maker", maker)
   index = max(index1, index2)
@@ -57,28 +45,61 @@ def extract_cross_sample(maker, params, index1, index2):
     r.assume("made", v.app(v.sym("maker"), *params))
     vec = r.sample(expr)
     r.forget("made")
-    return vec[index1] * vec[index2]
+    return combiner(vec[index1], vec[index2])
   results = [one_sample() for _ in range(default_num_samples(5))]
   return results
 
 @statisticalTest
-def checkSameMarginal(maker, params, index):
-  return reportSameContinuous(extract_sample(native_nig_normal, params, index),
-                              extract_sample(maker, params, index))
+def checkSameMarginal(name, maker2, params, index):
+  package = simulation_agreement_packages[name]
+  native = package['native']
+  report = package['reporter']
+  return report(extract_sample(native, params, index),
+                extract_sample(maker2, params, index))
 
 @statisticalTest
-def checkSameCross(maker, params, index1, index2):
-  return reportSameContinuous(extract_cross_sample(native_nig_normal, params, index1, index2),
-                              extract_cross_sample(maker, params, index1, index2))
+def checkSameCross(name, maker2, params, index1, index2):
+  package = simulation_agreement_packages[name]
+  native = package['native']
+  report = package['reporter']
+  combiner = package['combiner']
+  one = extract_cross_sample(native, params, index1, index2, combiner)
+  other = extract_cross_sample(maker2, params, index1, index2, combiner)
+  return report(one, other)
 
-def testSameMarginal():
-  for maker in ['make_nig_normal', 'make_uc_nig_normal', suff_stat_nig_normal]:
-    for params in [(1.0, 1.0, 1.0, 1.0),
-                   (2.0, 3.0, 4.0, 5.0)]:
+native_nig_normal = """(lambda (m V a b)
+  (let ((variance (inv_gamma a b))
+        (mean (normal m (sqrt (* V variance))))
+        (stddev (sqrt variance)))
+    (lambda () (normal mean stddev))))"""
+
+suff_stat_nig_normal = """(lambda (m V a b)
+  (let ((variance (inv_gamma a b))
+        (mean (normal m (sqrt (* V variance))))
+        (stddev (sqrt variance)))
+    (make_suff_stat_normal mean stddev)))"""
+
+simulation_agreement_packages = {
+  'nig_normal' : {
+    'native' : native_nig_normal,
+    'optimized' : ['make_nig_normal', 'make_uc_nig_normal',
+                   suff_stat_nig_normal],
+    'param_sets': [(1.0, 1.0, 1.0, 1.0),
+                   (2.0, 3.0, 4.0, 5.0)],
+    'reporter' : reportSameContinuous,
+    'combiner' : lambda x, y: x*y
+  }
+}
+
+def testNigNormalSimulationAgreement():
+  name = 'nig_normal'
+  package = simulation_agreement_packages[name]
+  for maker in package['optimized']:
+    for params in package['param_sets']:
       for index in [0, 10]:
-        yield checkSameMarginal, maker, params, index
+        yield checkSameMarginal, name, maker, params, index
       for index1, index2 in [(1,2), (3,7)]:
-        yield checkSameCross, maker, params, index1, index2
+        yield checkSameCross, name, maker, params, index1, index2
 
 native_fixed_normal = """(lambda (mu sigma)
   (lambda () (normal mu sigma)))"""
