@@ -21,6 +21,7 @@ from venture.test.config import default_num_samples
 from venture.test.config import default_num_transitions_per_sample
 from venture.test.config import get_ripl, collectIidSamples
 from venture.test.stats import reportSameContinuous
+from venture.test.stats import reportSameDiscrete
 from venture.test.stats import statisticalTest
 import venture.value.dicts as v
 
@@ -79,20 +80,36 @@ suff_stat_nig_normal = """(lambda (m V a b)
         (stddev (sqrt variance)))
     (make_suff_stat_normal mean stddev)))"""
 
+native_beta_bernoulli = """(lambda (al be)
+  (let ((weight (beta al be)))
+    (lambda () (bernoulli weight))))"""
+
+suff_stat_beta_bernoulli = """(lambda (al be)
+  (let ((weight (beta al be)))
+    (make_suff_stat_bernoulli weight)))"""
+
 simulation_agreement_packages = {
   'nig_normal' : {
     'native' : native_nig_normal,
     'optimized' : ['make_nig_normal', 'make_uc_nig_normal',
                    suff_stat_nig_normal],
-    'param_sets': [(1.0, 1.0, 1.0, 1.0),
-                   (2.0, 3.0, 4.0, 5.0)],
+    'param_sets' : [(1.0, 1.0, 1.0, 1.0),
+                    (2.0, 3.0, 4.0, 5.0)],
     'reporter' : reportSameContinuous,
     'combiner' : lambda x, y: x*y
+  },
+  'beta_bernoulli' : {
+    'native' : native_beta_bernoulli,
+    'optimized' : ['make_beta_bernoulli', 'make_uc_beta_bernoulli',
+                   suff_stat_beta_bernoulli],
+    'param_sets' : [(1.0, 1.0),
+                    (2.0, 3.0)],
+    'reporter' : reportSameDiscrete,
+    'combiner' : lambda x, y: (x,y)
   }
 }
 
-def testNigNormalSimulationAgreement():
-  name = 'nig_normal'
+def generateSimulationAgreementChecks(name):
   package = simulation_agreement_packages[name]
   for maker in package['optimized']:
     for params in package['param_sets']:
@@ -100,6 +117,14 @@ def testNigNormalSimulationAgreement():
         yield checkSameMarginal, name, maker, params, index
       for index1, index2 in [(1,2), (3,7)]:
         yield checkSameCross, name, maker, params, index1, index2
+
+def testNigNormalSimulationAgreement():
+  for c in generateSimulationAgreementChecks('nig_normal'):
+    yield c
+
+def testBetaBernoulliSimulationAgreement():
+  for c in generateSimulationAgreementChecks('beta_bernoulli'):
+    yield c
 
 native_fixed_normal = """(lambda (mu sigma)
   (lambda () (normal mu sigma)))"""
