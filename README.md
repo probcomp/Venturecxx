@@ -241,11 +241,7 @@ Getting Started
     [examples](http://probcomp.csail.mit.edu/venture/library-examples.html)
     for inspiration.
 
--   You can find several examples in the `examples/` directory.  Those
-    in the `venture-unit/` subdirectory are somewhat more advanced
-    probabilistic programs; the examples themsevles rely on
-    VentureUnit (included), an experimental inference visualization
-    wrapper using Venture as a library.
+-   You can find several examples in the `examples/` directory.
 
 
 Developing Venture
@@ -257,7 +253,7 @@ directory.  This requires Sphinx; see instructions in the README there.
 The interesting parts of the code are:
 - There is a live tutorial in `examples/tutorial/part*` (run an
   ipython notebook server in that directory)
-- The frontend stack (including SIVM, RIPL, VentureUnit, server, and Python client) in `python/`.
+- The frontend stack (including SIVM, RIPL, server, and Python client) in `python/`.
 - The pure-Python, clearer, normative Lite backend in `backend/lite/`.
 - The C++, faster Puma backend (plus a thin Python driver) in `backend/puma/`.
 - The test suite lives under `test/`.

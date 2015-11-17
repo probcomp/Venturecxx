@@ -88,10 +88,6 @@ include python/lib/venturemagics/reg_demo_utils.py
 include python/lib/venturemagics/ip_parallel.py
 include python/lib/venturemagics/__init__.py
 include python/lib/multiprocess.py
-include python/lib/unit/utils.py
-include python/lib/unit/history.py
-include python/lib/unit/venture_unit.py
-include python/lib/unit/__init__.py
 include python/lib/ripl/utils.py
 include python/lib/ripl/ripl_rest_client.py
 include python/lib/ripl/plugins.py
@@ -1067,10 +1063,8 @@ include test/integration/test_doc_autogen.py
 include test/random_values.py
 include test/README.md
 include test/timing.py
-include test/analytics/test_history.py
 include test/analytics/__init__.py
 include test/analytics/test_mripl.py
-include test/analytics/test_analytics.py
 include test/core/test_basics.py
 include test/core/test_mem.py
 include test/core/test_equals.py

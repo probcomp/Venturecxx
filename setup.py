@@ -159,7 +159,6 @@ packages = [
     "venture.shortcuts",
     "venture.sivm",
     "venture.test",
-    "venture.unit",
     "venture.value",
     "venture.venturemagics",
 ]
@@ -283,7 +282,7 @@ class local_build_py(build_py):
 install_requires = [
     'numpy>=1.8',
     'scipy>=0.13',
-    # Plotf, VentureUnit, MRipl
+    # Plotf, MRipl
     'matplotlib>=1.1',
     # Saving and restoring ripls
     'dill',
@@ -301,11 +300,6 @@ install_requires = [
     'ipyparallel',
     'pyzmq>=13',
     'jsonschema', # Ubuntu 14.04 apparently needs this mentioned for notebooks to work
-    # Extra
-    # XXX python/lib/unit/history.py depends on test/stats.py for
-    # the K-S test, which in turn depends on nose.tools for
-    # defining the statisticalTest decorator.
-    'nose>=1.3',
 ]
 
 tests_require = [

@@ -1608,7 +1608,6 @@ a universal conversion to stack dicts as the "type"?
 *** Activity: Small bug list
 
 Test:
-- that venture_unit does not drop foreign SPs; foreign inference SPs
 - that crp is enumerable in both backends
 - to_array and to_vector (are they covered by the automatic test suite?)
 
@@ -2499,9 +2498,6 @@ Ripl
 Console
 - An actual terminal read-eval-print loop
 - Delegates to ripl with minor tweaks
-
-Venture Unit
-- Don't even want to think about the services this provides
 
 A bug: the object that represents a complete, encapsulated system
 state that may be interacted with by the external API is currently
