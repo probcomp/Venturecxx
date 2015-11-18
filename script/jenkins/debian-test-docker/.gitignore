@@ -1,0 +1,4 @@
+# These things get put here by script/jenkins/venture-in-docker.sh
+check_built_sdist.sh
+dist/
+tool/
