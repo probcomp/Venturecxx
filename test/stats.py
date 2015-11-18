@@ -250,8 +250,11 @@ def reportSameContinuous(observed1, observed2):
     "P value : " + str(pval)]))
 
 def reportKnownGaussian(expMean, expStdDev, observed):
-  # TODO Are there more sensitive tests for being a particular
-  # Gaussian than K-S?
+  """Kolmogorov-Smirnov test for agreement with a known Gaussian.
+
+  TODO Are there more sensitive tests for being a known Gaussian than
+  K-S?
+  """
   cdf = stats.norm(loc=expMean, scale=expStdDev).cdf
   return reportKnownContinuous(cdf, observed, "N(%s,%s)" % (expMean, expStdDev))
 
@@ -263,14 +266,19 @@ def reportKnownGaussian(expMean, expStdDev, observed):
 # for a more precise computation of test validity?  How about
 # comparing sample skewness to expected skewness?
 def reportKnownMeanVariance(expMean, expVar, observed):
-  """Z-score test for data having a known mean and variance.
+  """Z-score test for data having a known mean.
+
+  Assumes the true variance is known and uses it to calibrate the mean
+  test; *does not* test agreement with the observed variance.
 
   Doesn't work for distributions that are fat-tailed enough not to
   have a mean.
 
-  The K-S test done by reportKnownContinuous is much tighter, so try
-  to use that if possible.
+  The K-S test done by reportKnownContinuous accounts for the entire
+  shape of the distribution, so try to use that if possible.
 
+  If you know the distribution should be Gaussian, use
+  reportKnownGaussian.
   """
   count = len(observed)
   mean = np.mean(observed)
@@ -293,8 +301,8 @@ def reportKnownMean(expMean, observed):
   The T-statistic is only valid if there are enough observations; 30
   are recommended.
 
-  The K-S test done by reportKnownContinuous is much tighter, so try
-  to use that if possible.
+  The K-S test done by reportKnownContinuous accounts for the entire
+  shape of the distribution, so try to use that if possible.
   """
   count = len(observed)
   (tstat, pval) = stats.ttest_1samp(observed, expMean)
