@@ -109,6 +109,7 @@ simulation_agreement_packages = {
     'native' : native_nig_normal,
     'optimized' : ['make_nig_normal', 'make_uc_nig_normal',
                    suff_stat_nig_normal],
+    'gibbs' : 'make_uc_nig_normal',
     'param_sets' : [(1.0, 1.0, 1.0, 1.0),
                     (2.0, 3.0, 4.0, 5.0)],
     'reporter' : reportSameContinuous,
@@ -118,6 +119,7 @@ simulation_agreement_packages = {
     'native' : native_beta_bernoulli,
     'optimized' : ['make_beta_bernoulli', 'make_uc_beta_bernoulli',
                    suff_stat_beta_bernoulli],
+    'gibbs' : 'make_uc_beta_bernoulli',
     'param_sets' : [(1.0, 1.0),
                     (2.0, 3.0)],
     'reporter' : reportSameDiscrete,
@@ -126,6 +128,7 @@ simulation_agreement_packages = {
   'dir_mult' : {
     'native' : native_dir_mult,
     'optimized' : ['make_dir_mult', 'make_uc_dir_mult'],
+    'gibbs' : 'make_uc_dir_mult',
     'param_sets' : [(v.app("list", 0.5, 0.5, 0.5),),
                     (v.app("list", 0.2, 0.2, 0.2, 0.2, 0.2),)],
     'reporter' : reportSameDiscrete,
@@ -134,6 +137,7 @@ simulation_agreement_packages = {
   'sym_dir_mult' : {
     'native' : native_sym_dir_mult,
     'optimized' : ['make_sym_dir_mult', 'make_uc_sym_dir_mult'],
+    'gibbs' : 'make_uc_sym_dir_mult',
     'param_sets' : [(0.5, 4), (0.2, 8)],
     'reporter' : reportSameDiscrete,
     'combiner' : lambda x, y: (x,y),
@@ -142,6 +146,7 @@ simulation_agreement_packages = {
     'native' : native_gamma_poisson,
     'optimized' : ['make_gamma_poisson', 'make_uc_gamma_poisson',
                    suff_stat_gamma_poisson],
+    'gibbs' : 'make_uc_gamma_poisson',
     'param_sets' : [(1.0, 1.0), (4.0, 1.5)],
     'reporter' : reportSameDiscrete,
     'combiner' : lambda x, y: (x,y)
@@ -218,9 +223,18 @@ def testSameAssessment():
       checkSameAssessment('make_suff_stat_normal', params, dataset)
 
 @statisticalTest
-def testUCKernel():
+def checkUCKernel(name, params):
+  package = simulation_agreement_packages[name]
+  maker = package['gibbs']
+  def enstring(param):
+    if isinstance(param, list):
+      return "(" + " ".join(enstring(p) for p in param) + ")"
+    else:
+      return str(param)
+  param_str = " ".join([enstring(p) for p in params])
+  report = package['reporter']
   r = get_ripl()
-  r.assume("made", "(tag 'latent 0 (make_uc_nig_normal 1 1 1 1))")
+  r.assume("made", "(tag 'latent 0 (%s %s))" % (maker, param_str))
   for i in range(5):
     r.predict("(tag 'data %d (made))" % i, label="datum_%d" % i)
   def samples(infer):
@@ -231,4 +245,29 @@ def testUCKernel():
   geweke = """(repeat %d (do (mh 'latent one 1)
     (mh 'data all 1)))""" % default_num_transitions_per_sample()
   geweke_result = samples(geweke)
-  return reportSameContinuous(prior, geweke_result)
+  return report(prior, geweke_result)
+
+def testNigNormalUCKernel():
+  name = 'nig_normal'
+  for params in simulation_agreement_packages[name]['param_sets']:
+    yield checkUCKernel, name, params
+
+def testBetaBernoulliUCKernel():
+  name = 'beta_bernoulli'
+  for params in simulation_agreement_packages[name]['param_sets']:
+    yield checkUCKernel, name, params
+
+def testDirMultUCKernel():
+  name = 'dir_mult'
+  for params in simulation_agreement_packages[name]['param_sets']:
+    yield checkUCKernel, name, params
+
+def testSymDirMultUCKernel():
+  name = 'sym_dir_mult'
+  for params in simulation_agreement_packages[name]['param_sets']:
+    yield checkUCKernel, name, params
+
+def testGamPosUCKernel():
+  name = 'gamma_poisson'
+  for params in simulation_agreement_packages[name]['param_sets']:
+    yield checkUCKernel, name, params
