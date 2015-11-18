@@ -214,6 +214,9 @@ frob = \
 native_fixed_normal = """(lambda (mu sigma)
   (lambda () (normal mu sigma)))"""
 
+native_fixed_bernoulli = """(lambda (weight)
+  (lambda () (bernoulli weight)))"""
+
 same_assessment_packages = {
   'normal' : {
     'native' : native_fixed_normal,
@@ -227,6 +230,14 @@ same_assessment_packages = {
                   map(float, range(10)),
                   frob]
   },
+  'bernoulli' : {
+    'native' : native_fixed_bernoulli,
+    'optimized' : 'make_suff_stat_bernoulli',
+    'param_sets' : [(0.1,), (0.3,), (0.5,), (0.7,), (0.9,)],
+    'datasets' : [[True],
+                  [False] * 10,
+                  [True, False, True] * 5],
+  }
 }
 
 def generateAssessmentAgreementChecks(name):
@@ -237,6 +248,10 @@ def generateAssessmentAgreementChecks(name):
 
 def testNormalSuffStatsAssessmentAgreement():
   for c in generateAssessmentAgreementChecks('normal'):
+    yield c
+
+def testBernoulliSuffStatsAssessmentAgreement():
+  for c in generateAssessmentAgreementChecks('bernoulli'):
     yield c
 
 @statisticalTest
