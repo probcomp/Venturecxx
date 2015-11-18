@@ -18,7 +18,9 @@
 from nose import SkipTest
 from nose.tools import eq_
 from venture.test.config import get_ripl, collectSamples, broken_in
-from venture.test.stats import statisticalTest, reportKnownMean, reportKnownMeanVariance
+from venture.test.config import default_num_samples
+from venture.test.stats import statisticalTest, reportKnownMean
+from venture.test.stats import reportKnownGaussian
 
 import numpy as np
 import numpy.linalg as la
@@ -79,10 +81,10 @@ def testGPMean1():
   ripl.assume('gp', '(make_gp zero sq_exp)')
   ripl.predict("(gp (array 0))",label="pid")
 
-  predictions = collectSamples(ripl,"pid")
+  predictions = collectSamples(ripl,"pid",num_samples=default_num_samples(2))
   xs = [p[0] for p in predictions]
 
-  return reportKnownMeanVariance(0, np.exp(-1), xs)
+  return reportKnownGaussian(0, 1, xs)
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 @statisticalTest

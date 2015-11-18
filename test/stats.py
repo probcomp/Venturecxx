@@ -249,6 +249,12 @@ def reportSameContinuous(observed1, observed2):
     "D stat  : " + str(D),
     "P value : " + str(pval)]))
 
+def reportKnownGaussian(expMean, expStdDev, observed):
+  # TODO Are there more sensitive tests for being a particular
+  # Gaussian than K-S?
+  cdf = stats.norm(loc=expMean, scale=expStdDev).cdf
+  return reportKnownContinuous(cdf, observed, "N(%s,%s)" % (expMean, expStdDev))
+
 # TODO Also sensibly compare the variance of the sample to the
 # expected variance (what's the right test statistic when the
 # "population distribution" is not known?  How many samples do I need
