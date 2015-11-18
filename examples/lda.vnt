@@ -21,4 +21,4 @@
      (lambda (doc_id)
        (for_each (arange n_words_per_doc)
         (lambda (pos)
-          (observe (word ,doc_id ,pos) (atom 1)))))))]
+          (observe (word ,doc_id ,pos) (atom 0)))))))]
