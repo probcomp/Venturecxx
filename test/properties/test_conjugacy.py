@@ -88,6 +88,10 @@ suff_stat_beta_bernoulli = """(lambda (al be)
   (let ((weight (beta al be)))
     (make_suff_stat_bernoulli weight)))"""
 
+native_sym_dir_mult = """(lambda (alpha n)
+  (let ((weights (symmetric_dirichlet alpha n)))
+    (lambda () (categorical weights))))"""
+
 simulation_agreement_packages = {
   'nig_normal' : {
     'native' : native_nig_normal,
@@ -106,7 +110,14 @@ simulation_agreement_packages = {
                     (2.0, 3.0)],
     'reporter' : reportSameDiscrete,
     'combiner' : lambda x, y: (x,y)
-  }
+  },
+  'sym_dir_mult' : {
+    'native' : native_sym_dir_mult,
+    'optimized' : ['make_sym_dir_mult', 'make_uc_sym_dir_mult'],
+    'param_sets' : [(0.5, 4), (0.2, 8)],
+    'reporter' : reportSameDiscrete,
+    'combiner' : lambda x, y: (x,y),
+  },
 }
 
 def generateSimulationAgreementChecks(name):
@@ -124,6 +135,10 @@ def testNigNormalSimulationAgreement():
 
 def testBetaBernoulliSimulationAgreement():
   for c in generateSimulationAgreementChecks('beta_bernoulli'):
+    yield c
+
+def testSymDirMultSimulationAgreement():
+  for c in generateSimulationAgreementChecks('sym_dir_mult'):
     yield c
 
 native_fixed_normal = """(lambda (mu sigma)
