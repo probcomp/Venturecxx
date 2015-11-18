@@ -995,7 +995,6 @@ include test/inference_quality/end_to_end/__init__.py
 include test/inference_quality/micro/test_latents.py
 include test/inference_quality/micro/test_basic_stats.py
 include test/inference_quality/micro/test_misc_aaa.py
-include test/inference_quality/micro/test_make_gamma_poisson.py
 include test/inference_quality/micro/test_make_sym_dir_mult.py
 include test/inference_quality/micro/test_sequences.py
 include test/inference_quality/micro/__init__.py
