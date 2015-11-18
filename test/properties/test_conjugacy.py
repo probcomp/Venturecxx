@@ -19,6 +19,7 @@ import numpy as np
 
 from venture.test.config import default_num_samples
 from venture.test.config import default_num_transitions_per_sample
+from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl, collectIidSamples
 from venture.test.stats import reportSameContinuous
 from venture.test.stats import reportSameDiscrete
@@ -162,22 +163,27 @@ def generateSimulationAgreementChecks(name):
       for index1, index2 in [(1,2), (3,7)]:
         yield checkSameCross, name, maker, params, index1, index2
 
+@gen_on_inf_prim("none")
 def testNigNormalSimulationAgreement():
   for c in generateSimulationAgreementChecks('nig_normal'):
     yield c
 
+@gen_on_inf_prim("none")
 def testBetaBernoulliSimulationAgreement():
   for c in generateSimulationAgreementChecks('beta_bernoulli'):
     yield c
 
+@gen_on_inf_prim("none")
 def testDirMultSimulationAgreement():
   for c in generateSimulationAgreementChecks('dir_mult'):
     yield c
 
+@gen_on_inf_prim("none")
 def testSymDirMultSimulationAgreement():
   for c in generateSimulationAgreementChecks('sym_dir_mult'):
     yield c
 
+@gen_on_inf_prim("none")
 def testGamPosSimulationAgreement():
   for c in generateSimulationAgreementChecks('gamma_poisson'):
     yield c
@@ -277,14 +283,17 @@ def generateAssessmentAgreementChecks(name):
       else:
         yield checkSameAssessment, name, params, dataset
 
+@gen_on_inf_prim("none")
 def testNormalSuffStatsAssessmentAgreement():
   for c in generateAssessmentAgreementChecks('normal'):
     yield c
 
+@gen_on_inf_prim("none")
 def testBernoulliSuffStatsAssessmentAgreement():
   for c in generateAssessmentAgreementChecks('bernoulli'):
     yield c
 
+@gen_on_inf_prim("none")
 def testPoissonSuffStatsAssessmentAgreement():
   for c in generateAssessmentAgreementChecks('poisson'):
     yield c
@@ -314,26 +323,31 @@ def checkUCKernel(name, params):
   geweke_result = samples(geweke)
   return report(prior, geweke_result)
 
+@gen_on_inf_prim("mh") # Really just the custom LKernel
 def testNigNormalUCKernel():
   name = 'nig_normal'
   for params in simulation_agreement_packages[name]['param_sets']:
     yield checkUCKernel, name, params
 
+@gen_on_inf_prim("mh") # Really just the custom LKernel
 def testBetaBernoulliUCKernel():
   name = 'beta_bernoulli'
   for params in simulation_agreement_packages[name]['param_sets']:
     yield checkUCKernel, name, params
 
+@gen_on_inf_prim("mh") # Really just the custom LKernel
 def testDirMultUCKernel():
   name = 'dir_mult'
   for params in simulation_agreement_packages[name]['param_sets']:
     yield checkUCKernel, name, params
 
+@gen_on_inf_prim("mh") # Really just the custom LKernel
 def testSymDirMultUCKernel():
   name = 'sym_dir_mult'
   for params in simulation_agreement_packages[name]['param_sets']:
     yield checkUCKernel, name, params
 
+@gen_on_inf_prim("mh") # Really just the custom LKernel
 def testGamPosUCKernel():
   name = 'gamma_poisson'
   for params in simulation_agreement_packages[name]['param_sets']:
