@@ -34,3 +34,8 @@ docker build -t "venture-debian-test" script/jenkins/debian-test-docker
 # Run the acceptance testing in it
 docker run -t "venture-debian-test" ./check_built_sdist.sh dist/ \
     "${version%+*}" # Version without the +foo suffix
+
+# Extract the id of the last container created on the machine, which I
+# hope is the above
+docker_id=`docker ps -a | head -2 | tail -1 | cut -f 1 -d ' '`
+exit `docker wait "$docker_id"`
