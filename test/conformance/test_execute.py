@@ -17,13 +17,10 @@
 
 import math
 from nose.tools import eq_
-import scipy.stats
-import numpy as np
-from numpy.testing import assert_array_equal
 
 import venture.value.dicts as v
 from venture.test.config import get_ripl, default_num_samples, default_num_transitions_per_sample, on_inf_prim
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.stats import statisticalTest, reportKnownGaussian
 
 @on_inf_prim("mh")
 @statisticalTest
@@ -37,8 +34,7 @@ def testExecuteSmoke():
 [observe (normal x 1) 2] ; with an end-of-line comment
 [infer (mh default one %s)]""" % default_num_transitions_per_sample())
     predictions.append(ripl.sample("x"))
-  cdf = scipy.stats.norm(loc=1, scale=math.sqrt(0.5)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(1, sqrt(1/2))")
+  return reportKnownGaussian(1, math.sqrt(0.5), predictions)
 
 def testForgetSmoke():
   '''Check that execute_program does not break on labels and forgets'''

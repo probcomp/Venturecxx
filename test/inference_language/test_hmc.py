@@ -19,7 +19,8 @@ import math
 import scipy.stats as stats
 from nose import SkipTest
 
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportSameContinuous
+from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.stats import reportKnownGaussian, reportSameContinuous
 from venture.test.config import get_ripl, collectSamples, broken_in, gen_broken_in, on_inf_prim, gen_on_inf_prim
 import venture.value.dicts as val
 
@@ -35,8 +36,7 @@ def testNormalWithObserve1():
 #  ripl.predict("(normal a 1.0)")
 
   predictions = collectSamples(ripl,"pid",infer="(hmc default one 0.05 20 10)")
-  cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
+  return reportKnownGaussian(12, math.sqrt(0.5), predictions)
 
 @gen_on_inf_prim("mh")
 def testMVGaussSmokeMH():
@@ -55,8 +55,7 @@ def checkMVGaussSmoke(infer):
   ripl.assume("vec", "(multivariate_normal (vector 1 2) (matrix (list (list 1 0.5) (list 0.5 1))))")
   ripl.assume("x", "(lookup vec 0)", label="pid")
   predictions = collectSamples(ripl,"pid",infer=infer)
-  cdf = stats.norm(loc=1, scale=1).cdf
-  return reportKnownContinuous(cdf, predictions, "N(1,1)")
+  return reportKnownGaussian(1, 1, predictions)
 
 @gen_on_inf_prim("mh")
 def testForceBrush1MH():
@@ -73,8 +72,7 @@ def checkForceBrush1(infer):
   ripl.assume("x", "(normal 0 1)")
   ripl.predict("(if (< x 100) (normal x 1) (normal 100 1))", label="pid")
   predictions = collectSamples(ripl,"pid",infer=infer)
-  cdf = stats.norm(loc=0, scale=math.sqrt(2)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(0,sqrt(2))")
+  return reportKnownGaussian(0, math.sqrt(2), predictions)
 
 @gen_on_inf_prim("mh")
 def testForceBrush2MH():

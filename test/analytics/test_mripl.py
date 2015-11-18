@@ -17,12 +17,12 @@
 
 import time,subprocess
 import numpy as np
-import scipy.stats as stats
 from IPython.parallel import Client
 from nose.tools import eq_,assert_almost_equal
 from nose import SkipTest
 
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.stats import statisticalTest
+from venture.test.stats import reportKnownGaussian
 from venture.test.config import get_ripl, get_mripl, default_num_samples, default_num_transitions_per_sample, on_inf_prim
 
 import venture.venturemagics.ip_parallel as ip_parallel
@@ -129,8 +129,7 @@ def testDirectivesInfer1():
     samples = v.assume('x','(normal 1 1)',label='pid')
     v.infer(5)
     samples.extend(v.report('pid'))
-    cdf = stats.norm(loc=1, scale=1).cdf
-    return reportKnownContinuous(cdf,samples,"N(1,1)")
+    return reportKnownGaussian(1, 1, samples)
 
 @statisticalTest
 @on_inf_prim("mh")
@@ -141,8 +140,7 @@ def testDirectivesInfer2():
     for _ in range(5):
         v.infer(params='(mh default one 1)')
     samples.extend(v.report('pid'))
-    cdf = stats.norm(loc=1, scale=1).cdf
-    return reportKnownContinuous(cdf,samples,"N(1,1)")
+    return reportKnownGaussian(1, 1, samples)
 
 @statisticalTest
 @on_inf_prim("mh")
@@ -155,8 +153,7 @@ def testDirectivesForget():
     v.forget('obs')
     v.infer(default_num_transitions_per_sample())
     samples = v.report('pid')
-    cdf = stats.norm(loc=1, scale=10).cdf
-    return reportKnownContinuous(cdf,samples,"N(1,10)")
+    return reportKnownGaussian(1, 10, samples)
 
 
 @on_inf_prim("none")
@@ -193,8 +190,7 @@ def testSeeds():
     v.sample("(normal 1 1)")
     v.clear()
     samples = v.sample("(normal 1 1)")
-    cdf = stats.norm(loc=1,scale=1).cdf
-    return reportKnownContinuous(cdf,samples,"N(1,1)")
+    return reportKnownGaussian(1, 1, samples)
 
 
 @on_inf_prim("none")
@@ -286,8 +282,7 @@ def testBackendSwitch():
     v.switch_backend(old)
     assert v.report(1)[0] > 100
 
-    cdf = stats.norm(loc=200,scale=.1).cdf
-    return reportKnownContinuous(cdf,v.report(1))
+    return reportKnownGaussian(200, 0.1, v.report(1))
 
 @on_inf_prim("mh")
 def testTransitionsCount():

@@ -15,9 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.stats import statisticalTest, reportKnownGaussian
 from venture.test.config import get_ripl, collectSamples, on_inf_prim
-import scipy.stats as stats
 import venture.value.dicts as v
 
 # TODO
@@ -63,8 +62,7 @@ def testDict1():
                          1.0)""", label="pid")
 
   predictions = collectSamples(ripl,"pid")
-  cdf = stats.norm(loc=20, scale=2).cdf
-  return reportKnownContinuous(cdf, predictions, "N(20,2)")
+  return reportKnownGaussian(20, 2, predictions)
 
 @on_inf_prim("none")
 def testDict2():

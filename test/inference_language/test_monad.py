@@ -15,10 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import scipy.stats as stats
 from nose.tools import eq_
 
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.stats import statisticalTest, reportKnownGaussian
 from venture.test.config import get_ripl, on_inf_prim, default_num_samples, default_num_transitions_per_sample, needs_backend
 
 def testInferenceLanguageEvalSmoke():
@@ -103,8 +102,7 @@ def testModelSwitchingSmoke():
         (return (first res))))]
   """ % default_num_transitions_per_sample())
   predictions = [ripl.infer("(normal_through_model 0 1)") for _ in range(default_num_samples())]
-  cdf = stats.norm(loc=0.0, scale=1.0).cdf
-  return reportKnownContinuous(cdf, predictions, "N(0,1)")
+  return reportKnownGaussian(0.0, 1.0, predictions)
 
 @on_inf_prim("return")
 @on_inf_prim("action")

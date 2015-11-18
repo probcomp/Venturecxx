@@ -20,6 +20,7 @@ import scipy.stats as stats
 from nose import SkipTest
 
 from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
+from venture.test.stats import reportKnownGaussian
 from venture.test.config import get_ripl, collectSamples, collect_iid_samples, default_num_transitions_per_sample, broken_in, on_inf_prim
 
 @statisticalTest
@@ -27,7 +28,7 @@ from venture.test.config import get_ripl, collectSamples, collect_iid_samples, d
 def testBlockingExample0():
   ripl = get_ripl()
   if not collect_iid_samples(): raise SkipTest("This test should not pass without reset.")
-  
+
   ripl.assume("a", "(tag 0 0 (normal 10.0 1.0))", label="pid")
   ripl.assume("b", "(tag 1 1 (normal a 1.0))")
   ripl.observe("(normal b 1.0)", 14.0)
@@ -35,8 +36,7 @@ def testBlockingExample0():
   # If inference only frobnicates b, then the distribution on a
   # remains the prior.
   predictions = collectSamples(ripl,"pid",infer="(mh 1 1 10)")
-  cdf = stats.norm(loc=10.0, scale=1.0).cdf
-  return reportKnownContinuous(cdf, predictions, "N(10.0,1.0)")
+  return reportKnownGaussian(10, 1.0, predictions)
 
 @on_inf_prim("mh")
 def testBlockingExample1():
@@ -137,5 +137,4 @@ def testCycleKernel():
   infer = "(repeat %s (do (mh 0 0 1) (mh 1 1 1)))" % default_num_transitions_per_sample()
 
   predictions = collectSamples(ripl,"pid",infer=infer)
-  cdf = stats.norm(loc=34.0/3.0, scale=math.sqrt(2.0/3.0)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(34/3,sqrt(2/3))")
+  return reportKnownGaussian(34.0/3.0, math.sqrt(2.0/3.0), predictions)

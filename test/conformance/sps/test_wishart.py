@@ -21,6 +21,7 @@ import numpy as np
 import scipy.stats
 
 from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.stats import reportKnownGaussian
 from venture.test.config import get_ripl, collectSamples, on_inf_prim, inParallel, SkipTest
 
 @on_inf_prim("none")
@@ -111,8 +112,7 @@ def testWishartPrior3():
   ripl.predict("(lookup m (pair 0 0))", label="prediction")
 
   predictions = collectSamples(ripl, "prediction")
-  cdf = scipy.stats.norm(loc=10000, scale=141).cdf
-  return reportKnownContinuous(cdf, predictions)
+  return reportKnownGaussian(10000, 141, predictions)
 
 @statisticalTest
 def testWishartPrior4():
@@ -127,8 +127,7 @@ def testWishartPrior4():
   ripl.predict("(lookup m (pair 0 1))", label="prediction")
 
   predictions = collectSamples(ripl, "prediction")
-  cdf = scipy.stats.norm(loc=0, scale=100).cdf
-  return reportKnownContinuous(cdf, predictions)
+  return reportKnownGaussian(0, 100, predictions)
 
 
 @statisticalTest
@@ -144,8 +143,7 @@ def testInvWishartPrior3():
   ripl.predict("(lookup m (pair 0 0))", label="prediction")
 
   predictions = collectSamples(ripl, "prediction")
-  cdf = scipy.stats.norm(loc=1, scale=0.0141).cdf
-  return reportKnownContinuous(cdf, predictions)
+  return reportKnownGaussian(1, 0.0141, predictions)
 
 @statisticalTest
 def testInvWishartPrior4():
@@ -160,5 +158,4 @@ def testInvWishartPrior4():
   ripl.predict("(lookup m (pair 0 1))", label="prediction")
 
   predictions = collectSamples(ripl, "prediction")
-  cdf = scipy.stats.norm(loc=0, scale=0.01).cdf
-  return reportKnownContinuous(cdf, predictions)
+  return reportKnownGaussian(0, 0.01, predictions)

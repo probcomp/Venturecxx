@@ -16,10 +16,10 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose.tools import eq_
-import scipy.stats as stats
 import math
 
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.stats import statisticalTest
+from venture.test.stats import reportKnownGaussian
 from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, on_inf_prim
 import venture.value.dicts as v
 
@@ -37,8 +37,7 @@ def testMVGaussPrior():
   ripl.predict("(lookup vec 0)",label="prediction")
 
   predictions = collectSamples(ripl, "prediction")
-  cdf = stats.norm(loc=1, scale=1).cdf
-  return reportKnownContinuous(cdf, predictions, "N(1,1)")
+  return reportKnownGaussian(1, 1, predictions)
 
 @statisticalTest
 def testMVN1a():
@@ -51,8 +50,7 @@ def testMVN1a():
   ripl.predict("(lookup x 0)",label="pid")
 
   predictions = collectSamples(ripl,"pid")
-  cdf = lambda x: stats.norm.cdf(x,loc=10,scale=1)
-  return reportKnownContinuous(cdf, predictions, "N(10,1)")
+  return reportKnownGaussian(10, 1, predictions)
 
 @statisticalTest
 def testMVN1b():
@@ -66,8 +64,7 @@ def testMVN1b():
   ripl.predict("(lookup x 0)",label="pid")
 
   predictions = collectSamples(ripl,"pid",infer="mixes_slowly")
-  cdf = lambda x: stats.norm.cdf(x,loc=12,scale=math.sqrt(0.5))
-  return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
+  return reportKnownGaussian(12, math.sqrt(0.5), predictions)
 
 @statisticalTest
 def testMVN2a():
@@ -80,8 +77,7 @@ def testMVN2a():
   ripl.predict("(lookup x 1)",label="pid")
 
   predictions = collectSamples(ripl,"pid")
-  cdf = lambda x: stats.norm.cdf(x,loc=10,scale=1)
-  return reportKnownContinuous(cdf, predictions, "N(10,1)")
+  return reportKnownGaussian(10, 1, predictions)
 
 @statisticalTest
 def testMVN2b():
@@ -95,8 +91,7 @@ def testMVN2b():
   ripl.predict("(lookup x 1)",label="pid")
 
   predictions = collectSamples(ripl,"pid")
-  cdf = lambda x: stats.norm.cdf(x,loc=12,scale=math.sqrt(0.5))
-  return reportKnownContinuous(cdf, predictions, "N(12,sqrt(.5))")
+  return reportKnownGaussian(12, math.sqrt(0.5), predictions)
 
 @skipWhenRejectionSampling("MVN has no log density bound")
 @statisticalTest
@@ -112,5 +107,4 @@ def testMVN3():
   ripl.predict("(lookup x 0)",label="pid")
 
   predictions = collectSamples(ripl,"pid")
-  cdf = lambda x: stats.norm.cdf(x,loc=1,scale=math.sqrt(0.5))
-  return reportKnownContinuous(cdf, predictions, "N(1,sqrt(.5))")
+  return reportKnownGaussian(1, math.sqrt(0.5), predictions)

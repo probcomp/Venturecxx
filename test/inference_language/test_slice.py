@@ -18,7 +18,8 @@
 import math
 import scipy.stats as stats
 from nose import SkipTest
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownMean
+from venture.test.stats import statisticalTest, reportKnownMean
+from venture.test.stats import reportKnownGaussian
 from venture.test.config import get_ripl, collectSamples, default_num_transitions_per_sample, gen_on_inf_prim
 from testconfig import config
 
@@ -46,8 +47,7 @@ def checkSliceBasic1(slice_method):
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)",label="pid")
   predictions = collectSamples(ripl,"pid",infer=inferCommand(slice_method,1))
-  cdf = stats.norm(loc=10, scale=1).cdf
-  return reportKnownContinuous(cdf, predictions, "N(10,1.0))")
+  return reportKnownGaussian(10, 1, predictions)
 
 @statisticalTest
 def checkSliceNormalWithObserve1(slice_method):
@@ -61,8 +61,7 @@ def checkSliceNormalWithObserve1(slice_method):
 #  ripl.predict("(normal a 1.0)")
 
   predictions = collectSamples(ripl,"pid",infer=inferCommand(slice_method,1))
-  cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
+  return reportKnownGaussian(12, math.sqrt(0.5), predictions)
 
 @statisticalTest
 def checkSliceNormalWithObserve2a(slice_method):
@@ -76,8 +75,7 @@ def checkSliceNormalWithObserve2a(slice_method):
   ripl.predict("(normal a 1.0)")
 
   predictions = collectSamples(ripl,"pid",infer=inferCommand(slice_method,1))
-  cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
+  return reportKnownGaussian(12, math.sqrt(0.5), predictions)
 
 @statisticalTest
 def checkSliceNormalWithObserve2b(slice_method):
@@ -91,8 +89,7 @@ def checkSliceNormalWithObserve2b(slice_method):
   ripl.predict("(normal a 1.0)", label="pid")
 
   predictions = collectSamples(ripl,"pid",infer=inferCommand(slice_method,1))
-  cdf = stats.norm(loc=12, scale=math.sqrt(1.5)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(12,sqrt(1.5))")
+  return reportKnownGaussian(12, math.sqrt(1.5), predictions)
 
 @statisticalTest
 def checkSliceStudentT1(slice_method):

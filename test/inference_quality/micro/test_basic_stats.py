@@ -19,7 +19,9 @@ import math
 import scipy.stats as stats
 from nose import SkipTest
 
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownMean, reportKnownDiscrete
+from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.stats import reportKnownMean, reportKnownDiscrete
+from venture.test.stats import reportKnownGaussian
 from venture.test.config import get_ripl, collectSamples, collect_iid_samples, skipWhenRejectionSampling, skipWhenSubSampling, on_inf_prim
 
 @on_inf_prim("any")
@@ -57,8 +59,7 @@ def testNormalWithObserve1():
 #  ripl.predict("(normal a 1.0)")
 
   predictions = collectSamples(ripl,"pid")
-  cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(12,sqrt(1.5))")
+  return reportKnownGaussian(12, math.sqrt(0.5), predictions)
 
 @on_inf_prim("any")
 @statisticalTest
@@ -71,8 +72,7 @@ def testNormalWithObserve2a():
   ripl.predict("(normal a 1.0)")
 
   predictions = collectSamples(ripl,"pid",infer="mixes_slowly")
-  cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
+  return reportKnownGaussian(12, math.sqrt(0.5), predictions)
 
 @on_inf_prim("any")
 @statisticalTest
@@ -85,8 +85,7 @@ def testNormalWithObserve2b():
   ripl.predict("(normal a 1.0)", label="pid")
 
   predictions = collectSamples(ripl,"pid",infer="mixes_slowly")
-  cdf = stats.norm(loc=12, scale=math.sqrt(1.5)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(12,sqrt(1.5))")
+  return reportKnownGaussian(12, math.sqrt(1.5), predictions)
 
 @on_inf_prim("any")
 @statisticalTest
@@ -110,8 +109,7 @@ def testNormalWithObserve3():
   predictions = collectSamples(ripl,4,infer="mixes_slowly")
   # Unfortunately, a and b are (anti?)correlated now, so the true
   # distribution of the sum is mysterious to me
-  cdf = stats.norm(loc=24, scale=math.sqrt(7.0/3.0)).cdf
-  return reportKnownContinuous(cdf, predictions, "approximately N(24,sqrt(7/3))")
+  return reportKnownGaussian(24, math.sqrt(7.0/3.0), predictions)
 
 @on_inf_prim("any")
 @statisticalTest

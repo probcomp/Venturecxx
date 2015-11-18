@@ -17,7 +17,9 @@
 
 import scipy.stats as stats
 import math
-from venture.test.stats import statisticalTest, reportKnownDiscrete, reportKnownContinuous, reportKnownMean
+from venture.test.stats import statisticalTest, reportKnownDiscrete
+from venture.test.stats import reportKnownContinuous, reportKnownMean
+from venture.test.stats import reportKnownGaussian
 from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, on_inf_prim, gen_on_inf_prim
 from nose import SkipTest
 from nose.tools import eq_
@@ -156,5 +158,4 @@ def testExtendEnv1():
   ripl.predict("(normal (eval expr env3) 1.0)",label="pid")
 
   predictions = collectSamples(ripl,"pid")
-  cdf = stats.norm(loc=10, scale=math.sqrt(3)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(10,sqrt(3))")
+  return reportKnownGaussian(10, math.sqrt(3), predictions)
