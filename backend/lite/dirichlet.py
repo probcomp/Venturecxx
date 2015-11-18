@@ -40,38 +40,43 @@ class DirichletOutputPSP(RandomPSP):
   def simulate(self,args):
     alpha = args.operandValues()[0]
     return simulateDirichlet(alpha)
-    
+
   def logDensity(self,val,args):
     alpha = args.operandValues()[0]
     return logDensityDirichlet(val,alpha)
 
   def description(self,name):
-    return "  %s(alphas) samples a simplex point according to the given Dirichlet distribution." % name
+    return "  %s(alphas) samples a simplex point according to the given " \
+      "Dirichlet distribution." % name
 
-registerBuiltinSP("dirichlet", typed_nr(DirichletOutputPSP(),
-                                        [t.HomogeneousArrayType(t.PositiveType())], t.SimplexType()))
+registerBuiltinSP("dirichlet", \
+  typed_nr(DirichletOutputPSP(),
+           [t.HomogeneousArrayType(t.PositiveType())], t.SimplexType()))
 
 class SymmetricDirichletOutputPSP(RandomPSP):
 
   def simulate(self,args):
     (alpha,n) = args.operandValues()
     return simulateDirichlet([float(alpha) for _ in range(int(n))])
-    
+
   def logDensity(self,val,args):
     (alpha,n) = args.operandValues()
     return logDensityDirichlet(val,[float(alpha) for _ in range(int(n))])
 
   def description(self,name):
-    return "  %s(alpha, n) samples a simplex point according to the symmetric Dirichlet distribution on n dimensions with concentration parameter alpha." % name
+    return "  %s(alpha, n) samples a simplex point according to the " \
+      "symmetric Dirichlet distribution on n dimensions with " \
+      "concentration parameter alpha." % name
 
-registerBuiltinSP("symmetric_dirichlet", typed_nr(SymmetricDirichletOutputPSP(),
-                                                  [t.PositiveType(), t.CountType()], t.SimplexType()))
+registerBuiltinSP("symmetric_dirichlet", \
+  typed_nr(SymmetricDirichletOutputPSP(),
+           [t.PositiveType(), t.CountType()], t.SimplexType()))
 
 #### Common classes for AAA dirichlet distributions
 
 class DirMultSPAux(SPAux):
   def __init__(self,n=None,counts=None):
-    if counts is not None: 
+    if counts is not None:
       self.counts = counts
     elif n is not None:
       self.counts = Node([0]*n)
@@ -100,7 +105,7 @@ class DirMultSP(SP):
       'n': self.n,
       'counts': spaux.counts.leaves()
     }
-    
+
 
 #### Collapsed dirichlet multinomial
 
@@ -115,7 +120,13 @@ class MakerCDirMultOutputPSP(DeterministicMakerAAAPSP):
     return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,len(alpha)))
 
   def description(self,name):
-    return "  %s(alphas, objects) returns a sampler for a collapsed Dirichlet multinomial model.  If the objects argument is given, the sampler will return one of those objects on each call; if not, it will return one of n <atom>s where n is the length of the list of alphas.  It is an error if the list of objects is supplied and has different length from the list of alphas.  While this procedure itself is deterministic, the returned sampler is stochastic." % name
+    return "  %s(alphas, objects) returns a sampler for a collapsed " \
+      "Dirichlet multinomial model.  If the objects argument is given, " \
+      "the sampler will return one of those objects on each call; if not, " \
+      "it will return one of n <atom>s where n is the length of the list " \
+      "of alphas.  It is an error if the list of objects is supplied and " \
+      "has different length from the list of alphas.  While this procedure " \
+      "itself is deterministic, the returned sampler is stochastic." % name
 
 class CDirMultOutputPSP(RandomPSP):
   def __init__(self,alpha,os):
@@ -126,7 +137,7 @@ class CDirMultOutputPSP(RandomPSP):
   def simulate(self,args):
     index = sample(self.alpha, args.spaux().counts)
     return self.os[index]
-      
+
   def logDensity(self,val,args):
     index = self.index[val]
     aux = args.spaux()
@@ -140,14 +151,14 @@ class CDirMultOutputPSP(RandomPSP):
     index = self.index[val]
     assert aux.counts[index] >= 0
     aux.counts.increment(index)
-    
+
   def unincorporate(self,val,args):
     aux = args.spaux()
     assert isinstance(aux,DirMultSPAux)
     index = self.index[val]
     aux.counts.decrement(index)
     assert aux.counts[index] >= 0
-        
+
   def enumerateValues(self, _args):
     return self.os
 
@@ -157,13 +168,15 @@ class CDirMultOutputPSP(RandomPSP):
     A = self.alpha.total
 
     term1 = scipy.special.gammaln(A) - scipy.special.gammaln(N + A)
-    term2 = sum([scipy.special.gammaln(alpha + count) - scipy.special.gammaln(alpha) for (alpha,count) in zip(self.alpha,aux.counts)])
+    term2 = sum([scipy.special.gammaln(alpha + count)
+                 - scipy.special.gammaln(alpha)
+                 for (alpha,count) in zip(self.alpha,aux.counts)])
     return term1 + term2
 
-registerBuiltinSP("make_dir_mult",
-                  typed_nr(MakerCDirMultOutputPSP(),
-                           [t.HomogeneousArrayType(t.PositiveType()), t.ArrayType()],
-                           SPType([], t.AnyType()), min_req_args=1))
+registerBuiltinSP("make_dir_mult", \
+  typed_nr(MakerCDirMultOutputPSP(),
+           [t.HomogeneousArrayType(t.PositiveType()), t.ArrayType()],
+           SPType([], t.AnyType()), min_req_args=1))
 
 #### Uncollapsed dirichlet multinomial
 
@@ -203,7 +216,8 @@ class UDirMultAAALKernel(SimulationAAALKernel):
     counts = [count + a for (count,a) in zip(madeaux.counts,alpha)]
     newTheta = npr.dirichlet(counts)
     output = TypedPSP(UDirMultOutputPSP(newTheta,os), SPType([], AnyType()))
-    return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,len(alpha)), madeaux)
+    return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,len(alpha)),
+                           madeaux)
 
   def weight(self, _trace, _newValue, _args):
     # Gibbs step, samples exactly from the local posterior.  Being a
@@ -233,7 +247,7 @@ class UDirMultOutputPSP(RandomPSP):
     index = self.index[val]
     assert aux.counts[index] >= 0
     aux.counts.increment(index)
-    
+
   def unincorporate(self,val,args):
     aux = args.spaux()
     assert isinstance(aux,DirMultSPAux)
@@ -244,10 +258,10 @@ class UDirMultOutputPSP(RandomPSP):
   def enumerateValues(self, _args):
     return self.os
 
-registerBuiltinSP("make_uc_dir_mult",
-                  typed_nr(MakerUDirMultOutputPSP(),
-                           [t.HomogeneousArrayType(t.PositiveType()), t.ArrayType()],
-                           SPType([], t.AnyType()), min_req_args=1))
+registerBuiltinSP("make_uc_dir_mult", \
+  typed_nr(MakerUDirMultOutputPSP(),
+           [t.HomogeneousArrayType(t.PositiveType()), t.ArrayType()],
+           SPType([], t.AnyType()), min_req_args=1))
 
 #### Collapsed symmetric dirichlet multinomial
 
@@ -277,7 +291,8 @@ class MakerCSymDirMultOutputPSP(DeterministicMakerAAAPSP):
     A = len(aux.counts) * 1.0
     gamma_one = scipy.special.gammaln(1.0)
     term1 = scipy.special.gammaln(A) - scipy.special.gammaln(N+A)
-    return term1 + sum([scipy.special.gammaln(1+count) - gamma_one for count in aux.counts])
+    return term1 + sum([scipy.special.gammaln(1+count) - gamma_one
+                        for count in aux.counts])
 
   def description(self,name):
     return "  %s is a symmetric variant of make_dir_mult." % name
@@ -286,11 +301,12 @@ class CSymDirMultOutputPSP(CDirMultOutputPSP):
   def __init__(self,alpha,n,os):
     super(CSymDirMultOutputPSP, self).__init__([alpha] * n, os)
 
-registerBuiltinSP("make_sym_dir_mult",
-                  typed_nr(MakerCSymDirMultOutputPSP(),
-                           [t.PositiveType(), t.CountType(), t.ArrayType()],
-                           # Saying AnyType here requires the underlying psp to emit a VentureValue.
-                           SPType([], t.AnyType()), min_req_args=2))
+registerBuiltinSP("make_sym_dir_mult", \
+  typed_nr(MakerCSymDirMultOutputPSP(),
+           [t.PositiveType(), t.CountType(), t.ArrayType()],
+           # Saying AnyType here requires the underlying psp to emit a
+           # VentureValue.
+           SPType([], t.AnyType()), min_req_args=2))
 
 #### Uncollapsed symmetric dirichlet multinomial
 
@@ -314,7 +330,8 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
     assert isinstance(value.sp, DirMultSP)
     assert isinstance(value.sp.outputPSP, TypedPSP)
     assert isinstance(value.sp.outputPSP.psp, USymDirMultOutputPSP)
-    return logDensityDirichlet(value.sp.outputPSP.psp.theta, [float(alpha) for _ in range(int(n))])
+    return logDensityDirichlet(value.sp.outputPSP.psp.theta,
+                               [float(alpha) for _ in range(int(n))])
 
   def description(self,name):
     return "  %s is an uncollapsed symmetric variant of make_dir_mult." % name

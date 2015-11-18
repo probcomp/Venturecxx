@@ -994,9 +994,7 @@ include test/inference_quality/end_to_end/test_pymem.py
 include test/inference_quality/end_to_end/__init__.py
 include test/inference_quality/micro/test_latents.py
 include test/inference_quality/micro/test_basic_stats.py
-include test/inference_quality/micro/test_make_nig_normal.py
 include test/inference_quality/micro/test_misc_aaa.py
-include test/inference_quality/micro/test_make_gamma_poisson.py
 include test/inference_quality/micro/test_make_sym_dir_mult.py
 include test/inference_quality/micro/test_sequences.py
 include test/inference_quality/micro/__init__.py
@@ -1023,6 +1021,7 @@ include test/properties/test_sps.py
 include test/properties/test_gradients.py
 include test/properties/__init__.py
 include test/properties/test_ripl.py
+include test/properties/test_conjugacy.py
 include test/inference_language/test_ordered_range_blocking.py
 include test/inference_language/test_pgibbs.py
 include test/inference_language/test_plugins.py
