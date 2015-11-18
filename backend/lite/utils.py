@@ -32,10 +32,10 @@ def override(interface_class):
 
 def extendedLog(x): return math.log(x) if x > 0 else float("-inf")
 
-def normalizeList(seq): 
+def normalizeList(seq):
   denom = sum(seq)
   if denom > 0: return [ float(x)/denom for x in seq]
-  else: 
+  else:
     # Treat all impossible options as equally impossible.
     n = float(len(seq))
     return [1.0/n for x in seq]
@@ -52,8 +52,8 @@ def logDensityCategorical(val,ps,os=None):
   # done by identity and in the absence of observations; do I want to
   # override the Python magic methods for VentureValues?
   p = None
-  for i in range(len(os)): 
-    if os[i] == val: 
+  for i in range(len(os)):
+    if os[i] == val:
       p = ps[i]
       break
   if p is None or p == 0:
@@ -153,4 +153,3 @@ against fixed randomness.
 
 # raise is a statement and can't be used in a lambda :(
 def raise_(e): raise e
-
