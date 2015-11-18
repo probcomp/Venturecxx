@@ -96,6 +96,14 @@ native_sym_dir_mult = """(lambda (alpha n)
   (let ((weights (symmetric_dirichlet alpha n)))
     (lambda () (categorical weights))))"""
 
+native_gamma_poisson = """(lambda (alpha beta)
+  (let ((rate (gamma alpha beta)))
+    (lambda () (poisson rate))))"""
+
+suff_stat_gamma_poisson = """(lambda (alpha beta)
+  (let ((rate (gamma alpha beta)))
+    (make_suff_stat_poisson rate)))"""
+
 simulation_agreement_packages = {
   'nig_normal' : {
     'native' : native_nig_normal,
@@ -130,6 +138,14 @@ simulation_agreement_packages = {
     'reporter' : reportSameDiscrete,
     'combiner' : lambda x, y: (x,y),
   },
+  'gamma_poisson' : {
+    'native' : native_gamma_poisson,
+    'optimized' : ['make_gamma_poisson', 'make_uc_gamma_poisson',
+                   suff_stat_gamma_poisson],
+    'param_sets' : [(1.0, 1.0), (4.0, 1.5)],
+    'reporter' : reportSameDiscrete,
+    'combiner' : lambda x, y: (x,y)
+  },
 }
 
 def generateSimulationAgreementChecks(name):
@@ -155,6 +171,10 @@ def testDirMultSimulationAgreement():
 
 def testSymDirMultSimulationAgreement():
   for c in generateSimulationAgreementChecks('sym_dir_mult'):
+    yield c
+
+def testGamPosSimulationAgreement():
+  for c in generateSimulationAgreementChecks('gamma_poisson'):
     yield c
 
 native_fixed_normal = """(lambda (mu sigma)
