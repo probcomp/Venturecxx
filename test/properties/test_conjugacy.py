@@ -199,6 +199,16 @@ def checkSameAssessment(name, params, data):
   assert np.allclose(extract_assessment(native, params, data),
                      extract_assessment(maker, params, data))
 
+def checkSameAssessmentRatio(name, params1, params2, data):
+  native = same_assessment_packages[name]['native']
+  maker = same_assessment_packages[name]['optimized']
+  n1s = extract_assessment(native, params1, data)
+  n2s = extract_assessment(native, params2, data)
+  o1s = extract_assessment(maker, params1, data)
+  o2s = extract_assessment(maker, params2, data)
+  assert np.allclose([n1 - n2 for n1, n2 in zip(n1s, n2s)],
+                     [o1 - o2 for o1, o2 in zip(o1s, o2s)])
+
 frob = \
 [-1.81, -1.62, -1.53, -1.35, -1.02, -0.85, -0.69, -0.65, -0.55, -0.48,
  -0.39, -0.28, -0.20, -0.18, -0.16, -0.03, 0.02, 0.06, 0.07, 0.19,
@@ -216,6 +226,9 @@ native_fixed_normal = """(lambda (mu sigma)
 
 native_fixed_bernoulli = """(lambda (weight)
   (lambda () (bernoulli weight)))"""
+
+native_fixed_poisson = """(lambda (rate)
+  (lambda () (poisson rate)))"""
 
 same_assessment_packages = {
   'normal' : {
@@ -237,14 +250,32 @@ same_assessment_packages = {
     'datasets' : [[True],
                   [False] * 10,
                   [True, False, True] * 5],
-  }
+  },
+  'poisson' : {
+    'native' : native_fixed_poisson,
+    'optimized' : 'make_suff_stat_poisson',
+    'param_sets' : [(0.1,), (0.3,), (0.5,), (0.9,)],
+    'datasets' : [[1.0],
+                  [7.0] * 10,
+                  [2.0, 3.0, 5.0] * 5],
+    # make_suff_stat_poisson assesses the probability of its
+    # statistics, not the sequence that produced them, because, unlike
+    # with many other distributions, the probability of the sequence
+    # is not uniquely determined.  This is ok, though: assessment
+    # differences will still be the same as with the native version.
+    'ratio_only' : True
+  },
 }
 
 def generateAssessmentAgreementChecks(name):
   package = same_assessment_packages[name]
   for params in package['param_sets']:
     for dataset in package['datasets']:
-      yield checkSameAssessment, name, params, dataset
+      if 'ratio_only' in package and package['ratio_only']:
+        for params2 in package['param_sets']:
+          yield checkSameAssessmentRatio, name, params, params2, dataset
+      else:
+        yield checkSameAssessment, name, params, dataset
 
 def testNormalSuffStatsAssessmentAgreement():
   for c in generateAssessmentAgreementChecks('normal'):
@@ -252,6 +283,10 @@ def testNormalSuffStatsAssessmentAgreement():
 
 def testBernoulliSuffStatsAssessmentAgreement():
   for c in generateAssessmentAgreementChecks('bernoulli'):
+    yield c
+
+def testPoissonSuffStatsAssessmentAgreement():
+  for c in generateAssessmentAgreementChecks('poisson'):
     yield c
 
 @statisticalTest
