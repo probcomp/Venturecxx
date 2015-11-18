@@ -17,7 +17,7 @@
 
 import scipy.stats as stats
 import math
-from venture.test.stats import statisticalTest, reportKnownDiscrete, reportKnownContinuous, reportKnownMeanVariance
+from venture.test.stats import statisticalTest, reportKnownDiscrete, reportKnownContinuous, reportKnownMean
 from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, on_inf_prim, gen_on_inf_prim
 from nose import SkipTest
 from nose.tools import eq_
@@ -138,7 +138,7 @@ def testApply1():
                label="pid")
 
   predictions = collectSamples(ripl,"pid")
-  return reportKnownMeanVariance(1000, 101**3 - 100**3, predictions)
+  return reportKnownMean(1000, predictions, variance=101**3 - 100**3)
 
 
 # TODO not sure the best interface for extend_environment.

@@ -18,7 +18,7 @@
 import math
 import scipy.stats as stats
 from nose import SkipTest
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownMeanVariance
+from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownMean
 from venture.test.config import get_ripl, collectSamples, default_num_transitions_per_sample, gen_on_inf_prim
 from testconfig import config
 
@@ -113,7 +113,9 @@ def checkSliceStudentT1(slice_method):
   (meana,_) = integrate.quad(lambda x: x * posterior(x), -10, 10)
   (meanasq,_) = integrate.quad(lambda x: x * x * posterior(x), -10, 10)
   vara = meanasq - meana * meana
-  return reportKnownMeanVariance(meana, vara, predictions)
+  # TODO Test agreement with the whole shape of the distribution, not
+  # just the mean
+  return reportKnownMean(meana, predictions, variance=vara)
 
 @statisticalTest
 def checkSliceStudentT2(slice_method):
@@ -135,4 +137,6 @@ def checkSliceStudentT2(slice_method):
   (meana,_) = integrate.quad(lambda x: x * posterior(x), -10, 10)
   (meanasq,_) = integrate.quad(lambda x: x * x * posterior(x), -10, 10)
   vara = meanasq - meana * meana
-  return reportKnownMeanVariance(meana, vara + 1.0, predictions)
+  # TODO Test agreement with the whole shape of the distribution, not
+  # just the mean
+  return reportKnownMean(meana, predictions, variance=vara + 1.0)

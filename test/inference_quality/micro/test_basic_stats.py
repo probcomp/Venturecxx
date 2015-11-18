@@ -19,7 +19,7 @@ import math
 import scipy.stats as stats
 from nose import SkipTest
 
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownMeanVariance, reportKnownDiscrete
+from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownMean, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples, collect_iid_samples, skipWhenRejectionSampling, skipWhenSubSampling, on_inf_prim
 
 @on_inf_prim("any")
@@ -131,7 +131,9 @@ def testStudentT1():
   (meana,_) = integrate.quad(lambda x: x * posterior(x), -10, 10)
   (meanasq,_) = integrate.quad(lambda x: x * x * posterior(x), -10, 10)
   vara = meanasq - meana * meana
-  return reportKnownMeanVariance(meana, vara, predictions)
+  # TODO Test agreement with the whole shape of the distribution, not
+  # just the mean
+  return reportKnownMean(meana, predictions, variance=vara)
 
 @on_inf_prim("any")
 @statisticalTest
@@ -153,7 +155,9 @@ def testStudentT2():
   (meana,_) = integrate.quad(lambda x: x * posterior(x), -10, 10)
   (meanasq,_) = integrate.quad(lambda x: x * x * posterior(x), -10, 10)
   vara = meanasq - meana * meana
-  return reportKnownMeanVariance(meana, vara + 1.0, predictions)
+  # TODO Test agreement with the whole shape of the distribution, not
+  # just the mean
+  return reportKnownMean(meana, predictions, variance=vara + 1.0)
 
 
 @on_inf_prim("any")
