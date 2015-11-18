@@ -64,18 +64,18 @@ def array(xs):
 def testGP1():
   ripl = get_ripl()
   prep_ripl(ripl)
-  
+
   ripl.assume('gp', '(make_gp zero sq_exp)')
   ripl.sample('(gp (array 0))')
   ripl.sample('(gp (array 1))')
   ripl.sample('(gp (array 2))')
-  
+
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 @statisticalTest
 def testGPMean1():
   ripl = get_ripl()
   prep_ripl(ripl)
-  
+
   ripl.assume('gp', '(make_gp zero sq_exp)')
   ripl.predict("(gp (array 0))",label="pid")
 
@@ -89,15 +89,15 @@ def testGPMean1():
 def testGPMean2():
   ripl = get_ripl()
   prep_ripl(ripl)
-  
+
   ripl.assume('gp', '(make_gp zero sq_exp)')
   ripl.observe('(gp (array -1 1))', array([-1, 1]))
-  
+
   ripl.predict("(gp (array 0))",label="pid")
 
   predictions = collectSamples(ripl,"pid")
   xs = [p[0] for p in predictions]
-  
+
   # TODO: variance
   return reportKnownMean(0, xs)
 
@@ -123,12 +123,12 @@ def testGPLogscore1():
   (and to the corresponding bug with unincorporate) is to wrap the gp
   in a mem. This could be done automatically I suppose, or better
   through a library function."""
-   
+
   raise SkipTest("GP logDensity is broken for multiple samples of the same input.")
 
   ripl = get_ripl()
   prep_ripl(ripl)
-  
+
   ripl.assume('gp', '(make_gp zero sq_exp)')
   ripl.predict('(gp (array 0 0))')
   ripl.get_global_logscore()
@@ -144,7 +144,7 @@ def testGPAux():
 
   def check_firsts(stats, firsts):
     eq_(len(stats), len(firsts))
-    eq_(set(map(lambda xy: xy[0], stats)), set(firsts))
+    eq_(set([xy[0] for xy in stats]), set(firsts))
 
   ripl.assume('gp', '(make_gp zero sq_exp)')
   ripl.predict('(gp (array 1.0 3.0))')
@@ -156,4 +156,3 @@ def testGPAux():
 
   ripl.forget('obs')
   check_firsts(ripl.infer('(extract_stats gp)'), {1.0, 3.0})
-
