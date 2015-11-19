@@ -4,7 +4,9 @@ set -eu
 
 # Compute the version that will be built (tail skips warnings setup.py emits).
 version=`python setup.py --version | tail -1`
-dist_file="dist/venture-$version.tar.gz"
+dist_file_base="venture-$version"
+dist_file="$dist_file_base.tar.gz"
+dist_path="dist/$dist_file"
 
 # Save the version in the sdist, b/c git describe will not be available.
 echo $version > VERSION
@@ -21,19 +23,18 @@ rm -rf script/jenkins/debian-test-docker/dist/
 mkdir -p script/jenkins/debian-test-docker/dist/
 
 # - Put the distribution there
-cp "$dist_file" script/jenkins/debian-test-docker/dist/
-
-# - Make the distribution test scripts available to the container
-cp script/jenkins/check_built_sdist.sh script/jenkins/debian-test-docker/
-mkdir -p script/jenkins/debian-test-docker/tool/
-cp tool/check_capabilities.sh script/jenkins/debian-test-docker/tool/
+cp "$dist_path" script/jenkins/debian-test-docker/dist/
 
 # - Actually build the container
 docker build -t "venture-debian-test" script/jenkins/debian-test-docker
 
-# Run the acceptance testing in it
-docker run -t "venture-debian-test" ./check_built_sdist.sh dist/ \
-    "${version%+*}" # Version without the +foo suffix
+# Run the acceptance testing in the container
+docker run -t "venture-debian-test" /bin/sh -c "\
+    tar -xzf $dist_path && \
+    cd $dist_file_base && \
+    test -f test/properties/test_sps.py && \
+    ./script/jenkins/check_built_sdist.sh ../dist/ \
+        ${version%+*}" # Version without the +foo suffix
 
 # Extract the id of the last container created on the machine, which I
 # hope is the above
