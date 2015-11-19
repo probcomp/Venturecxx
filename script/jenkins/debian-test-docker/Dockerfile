@@ -28,6 +28,12 @@ RUN         apt-get install -y libboost-all-dev libgsl0-dev python-pip ccache li
 RUN         pip install -U distribute
 RUN         apt-get install -y python-flask python-requests python-numpy python-matplotlib python-scipy python-zmq ipython ipython-notebook
 
+RUN         mkdir -p ~/.config/matplotlib
+RUN         echo 'backend: Agg' > ~/.config/matplotlib/matplotlibrc
+RUN         mkdir -p ~/.matplotlib
+RUN         echo 'backend: Agg' > ~/.matplotlib/matplotlibrc
+RUN         echo 'backend: Agg' > ~/.matplotlibrc
+
 # The caller is expected to place a built Venture source distribution
 # into the working directory.
 
