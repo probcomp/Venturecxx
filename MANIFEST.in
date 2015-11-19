@@ -882,6 +882,7 @@ include examples/gaussian_funnel.py
 include tool/python-flymake.el
 include tool/scventure.py
 include tool/venture-epylint.py
+include tool/check_capabilities.sh
 include tool/copyrights/copyright.py
 include tool/copyrights/notes.org
 include tool/copyrights/venture
@@ -896,6 +897,7 @@ include script/prepare_virtualenv
 include script/provision_ubuntu_dependencies
 include script/gradients.py
 include script/jenkins/check_sdist.sh
+include script/jenkins/check_built_sdist.sh
 include script/README-world-ipython-server
 include script/docker-tarball
 include script/venture-transcript
