@@ -915,6 +915,15 @@ registry of bound foreign sps.]
 
  """),
 
+  engine_method_sp("fork_model", infer_action_maker_type([t.SymbolType()], t.ForeignBlobType("<model>"), min_req_args=0), desc="""\
+Create an new model by copying the state of the current implicit model.
+
+The symbol, if supplied, gives the name of the backend to use, either
+``puma`` or ``lite``.  If omitted, defaults to the same backend as the
+current implicit model.
+
+ """),
+
   engine_method_sp("in_model", infer_action_maker_type([t.ForeignBlobType("<model>"), t.AnyType("<action>")], t.PairType(t.AnyType(), t.ForeignBlobType("<model>"))), desc="""\
 Run the given inference action against the given model.
 
