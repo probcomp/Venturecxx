@@ -18,9 +18,9 @@
 # Dockerfile for testing Venture's dependency list in an isolated
 # environment.
 
-# Emulating the Debian-major installation strategy (getting everything
-# that has a Debian package from Debian, and only the non-packaged
-# things from pip).
+# Emulating the pip-major installation strategy (getting Python
+# software from pip, and just Debian-only dependencies thereof from
+# Debian).
 
 FROM        ubuntu:14.04
 
@@ -34,11 +34,10 @@ RUN         pip install -U distribute
 # Puma's dependencies (why do we need libfreetype6-dev? matplotlib?)
 RUN         apt-get install -y libboost-all-dev libgsl0-dev ccache libfreetype6-dev
 
-# (Some?) Python dependencies that are available from Debian with
-# reasonable versions
-RUN         apt-get install -y python-flask python-requests python-numpy \
-              python-matplotlib python-scipy python-zmq ipython ipython-notebook
+# Building scipy from source depends on these
+RUN         apt-get install -y libblas-dev liblapack-dev
 
+# Teach matplotlib to work headless by default
 RUN         mkdir -p ~/.config/matplotlib
 RUN         echo 'backend: Agg' > ~/.config/matplotlib/matplotlibrc
 RUN         mkdir -p ~/.matplotlib

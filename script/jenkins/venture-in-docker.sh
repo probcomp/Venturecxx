@@ -2,6 +2,8 @@
 
 set -eu
 
+docker_dir=$1
+
 # Compute the version that will be built (tail skips warnings setup.py emits).
 version=`python setup.py --version | tail -1`
 dist_file_base="venture-$version"
@@ -17,19 +19,19 @@ python setup.py sdist
 # Prepare a Docker container
 
 # - Clear out any stale venture distributions
-rm -rf script/jenkins/debian-test-docker/dist/
+rm -rf "script/jenkins/$docker_dir/dist/"
 
 # - Make sure there is a venture distribution directory
-mkdir -p script/jenkins/debian-test-docker/dist/
+mkdir -p "script/jenkins/$docker_dir/dist/"
 
 # - Put the distribution there
-cp "$dist_path" script/jenkins/debian-test-docker/dist/
+cp "$dist_path" "script/jenkins/$docker_dir/dist/"
 
 # - Actually build the container
-docker build -t "venture-debian-test" script/jenkins/debian-test-docker
+docker build -t "venture-$docker_dir" script/jenkins/$docker_dir
 
 # Run the acceptance testing in the container
-docker run -t "venture-debian-test" /bin/sh -c "\
+docker run -t "venture-$docker_dir" /bin/sh -c "\
     tar -xzf $dist_path && \
     cd $dist_file_base && \
     test -f test/properties/test_sps.py && \
