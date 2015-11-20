@@ -212,35 +212,35 @@ prelude = [
 """,
 """(lambda (f arg1 arg2) (lambda (arg3) (f arg1 arg2 arg3)))"""],
 
-["global_likelihood", """\
-.. _global_likelihood:
-.. object:: global_likelihood <inference action returning <number>>
+["global_log_likelihood", """\
+.. _global_log_likelihood:
+.. object:: global_log_likelihood <inference action returning <number>>
 
   An inference action that computes and returns the global likelihood
   (in log space).  Cost: O(size of trace).
 """,
-"(likelihood_at (quote default) (quote all))"],
+"(log_likelihood_at (quote default) (quote all))"],
 
-["global_posterior", """\
-.. _global_posterior:
-.. object:: global_posterior <inference action returning <number>>
+["global_log_joint", """\
+.. _global_log_joint:
+.. object:: global_log_joint <inference action returning <number>>
 
-  An inference action that computes and returns the global posterior
+  An inference action that computes and returns the global joint density
   (in log space).  Cost: O(size of trace).
 """,
-"(posterior_at (quote default) (quote all))"],
+"(log_joint_at (quote default) (quote all))"],
 
-["posterior", """\
-.. _posterior:
-.. object:: posterior <inference action>
+["conditional", """\
+.. _conditional:
+.. object:: conditional <inference action>
 
   An inference action that sets each particle to an independent sample
-  from the full posterior (with respect to currently incorporated
+  from the full conditional (with respect to currently incorporated
   observations).
 
   This is implemented by global rejection sampling (generalized to
   continuous equality constraints), so may take a while for problems
-  where the posterior is far from the prior in KL divergence.
+  where the conditional is far from the prior in KL divergence.
 
 """,
 "(rejection default all 1)"],

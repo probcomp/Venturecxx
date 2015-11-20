@@ -202,10 +202,10 @@ sample x
 Now infer.
 
 ```venture
-infer posterior
+infer conditional 
 ```
 
-Now `x` is a sample from the posterior distribution `p(x|y=2)` defined
+Now `x` is a sample from the conditional distribution `p(x|y=2)` defined
 by our assumptions and observations:
 
 ```venture
@@ -218,11 +218,11 @@ If we do no more inference, `x` doesn't change.
 sample x
 ```
 
-But we can compute a new posterior sample by running the posterior
+But we can compute a new conditional sample by running the conditional 
 inferrer again.
 
 ```venture
-infer posterior;
+infer conditional;
 sample x
 ```
 
@@ -242,7 +242,7 @@ observe y = 2
 We can get samples from inference
 
 ```venture
-infer posterior;
+infer conditional;
 sample x
 ```
 
@@ -250,12 +250,12 @@ but are they actually from the right distribution?  We could eyeball
 it like this a bit more:
 
 ```venture
-infer posterior;
+infer conditional;
 sample x
 ```
 
 ```venture
-infer posterior;
+infer conditional;
 sample x
 ```
 
@@ -264,7 +264,7 @@ but that will get old quickly.
 It's better to gather data programmatically, for example like this:
 
 ```venture
-define data = run(accumulate_dataset(10, do(posterior, collect(x))))
+define data = run(accumulate_dataset(10, do(conditional, collect(x))))
 ```
 
 If you really want to know what's going on in this expression you can
@@ -274,7 +274,7 @@ study the documentation of [do](<%= refman_url
 %>inference.html#accumulate_dataset), and [collect](<%= refman_url
 %>inference.html#collect).  The effect is to gather up the
 values of `x` (and some metadata) over 10
-iterations of the `posterior` inference command.
+iterations of the `conditional` inference command.
 
 ```venture
 print(data)
@@ -285,7 +285,7 @@ can't eyeball a table of numbers and tell whether they are distributed
 properly.  Let's get more data and plot it:
 
 ```venture
-define more_data = run(accumulate_dataset(<%= smaller_sample_size %>, do(posterior, collect(x))))
+define more_data = run(accumulate_dataset(<%= smaller_sample_size %>, do(conditional, collect(x))))
 ```
 
 ```venture
@@ -300,7 +300,7 @@ on the x, y, or color axis of a plot.
 Here's a version with more samples for better resolution:
 
 ```venture
-plot("h0", run(accumulate_dataset(<%= sample_size %>, do(posterior, collect(x)))))
+plot("h0", run(accumulate_dataset(<%= sample_size %>, do(conditional, collect(x)))))
 ```
 
 The analytical answer is a Gaussian with mean 1 and precision 2 (which
@@ -355,7 +355,7 @@ such a simple model, there are a couple reasons:
 Rejection sampling does not solve all problems
 ----------------------------------------------
 
-The inference command [posterior](<%= refman_url %>inference.html#posterior)
+The inference command [conditional](<%= refman_url %>inference.html#conditional)
 is global [rejection sampling](https://en.wikipedia.org/wiki/Rejection_sampling) -- guessing and checking.
 As you might know or imagine, this is likely to get slow.  In
 particular, let's fiddle with the position of the observation
@@ -372,7 +372,7 @@ observe y = 2;
 plot("h0",
  run(
   accumulate_dataset(<%= smaller_sample_size %>,
-   do(posterior,
+   do(conditional,
       collect(x)))))
 ```
 
@@ -408,7 +408,7 @@ list_directives
 The same solution still works
 
 ```venture
-plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>, do(posterior, collect(x)))))
+plot("h0", run(accumulate_dataset(<%= smaller_sample_size %>, do(conditional, collect(x)))))
 ```
 
 but as you move the datum still further out (with more `forget` and
@@ -419,12 +419,12 @@ longer to get samples for.  Don't move the datum too far: rejection takes
 The inference phenomenon at work here is this:
 
 - The [KL divergence](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence)
-  from the posterior to the prior is one notion of the "distance" between the
-  posterior and the prior.  Intuitively, we can think of this KL divergence as
+  from the conditional (e.g. posterior) to the marginal (e.g. prior) is one notion of the "distance" between the
+  conditional and the marginal.  Intuitively, we can think of this KL divergence as
   measuring the difficulty of the problem.  In the current example, the KL
   divergence grows quadratically with position of the datum.
 
-- Rejection sampling (which is the algorithm the `posterior` command
+- Rejection sampling (which is the algorithm the `conditional` command
   uses) is [exponentially slow in the KL gap it is trying to
   cross](http://danroy.org/papers/FreerManRoy-NIPSMC-2010.pdf).  This is one
   case in which the intuitive notion that KL divergence measures the difficulty

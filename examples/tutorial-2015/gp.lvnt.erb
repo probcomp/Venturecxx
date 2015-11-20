@@ -241,7 +241,7 @@ Exercise:
    ```venture
    infer resample(10);
    plot("h0", run(accumulate_dataset(<%= [smaller_sample_size.div(10), 1].max %>,
-     do(posterior,
+     do(conditional,
         collect(pnum)))))
    ```
 
@@ -261,7 +261,7 @@ Exercise:
    observe r = 0.6;
    infer resample(10);
    plot("h0", run(accumulate_dataset(<%= [smaller_sample_size.div(10), 1].max %>,
-     do(posterior,
+     do(conditional,
         collect(pnum)))))
    ```
 
@@ -287,7 +287,7 @@ Exercise:
 
    infer resample(10);
    plot("h0", run(accumulate_dataset(<%= [smaller_sample_size.div(10), 1].max %>,
-     do(posterior,
+     do(conditional,
         collect(pnum)))))
    ```
 

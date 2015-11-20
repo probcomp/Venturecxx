@@ -96,10 +96,10 @@ class Infer(object):
   def resample_thread_ser(self, ct): self.engine.resample(ct, 'thread_ser')
   def resample_multiprocess(self, ct, process_cap = None): self.engine.resample(ct, 'multiprocess', process_cap)
   def likelihood_weight(self): self.engine.likelihood_weight()
-  def likelihood_at(self, scope, block):
-    return self.engine.model.traces.map('likelihood_at', scope, block)
-  def posterior_at(self, scope, block):
-    return self.engine.model.traces.map('posterior_at', scope, block)
+  def log_likelihood_at(self, scope, block):
+    return self.engine.model.traces.map('log_likelihood_at', scope, block)
+  def log_joint_at(self, scope, block):
+    return self.engine.model.traces.map('log_joint_at', scope, block)
   def enumerative_diversify(self, scope, block): self.engine.diversify(["enumerative", scope, block])
   def collapse_equal(self, scope, block): self.engine.collapse(scope, block)
   def collapse_equal_map(self, scope, block): self.engine.collapse_map(scope, block)
@@ -137,7 +137,7 @@ class Infer(object):
       answer['iter'] = [1] * engine.num_traces()
       answer['prt. id'] = range(engine.num_traces())
       answer['time (s)'] = [the_time] * engine.num_traces()
-      answer['log score'] = engine.logscore_all() # TODO Replace this by explicit references to (global_likelihood), because the current implementation is wrong
+      answer['log score'] = engine.logscore_all() # TODO Replace this by explicit references to (global_log_likelihood), because the current implementation is wrong
       log_weights = copy(engine.model.log_weights)
       answer['prt. log wgt.'] = log_weights
       answer['prt. prob.'] = logWeightsToNormalizedDirect(log_weights)
