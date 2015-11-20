@@ -46,11 +46,20 @@ If this doesn't work or you want Puma, you could
   file](https://github.com/probcomp/Venturecxx/blob/master/script/jenkins/debian-test-docker/Dockerfile)
   for inspiration), or
 
+- Run Venture in a full Ubuntu virtual machine, or
+
 - Have a look at [how someone managed to get Venture running on a mac
   in September 2014](https://github.com/probcomp/Venturecxx/blob/master/doc/stale-mac-install-instructions.md)
 
 The Puma backend is an optional faster VentureScript engine written in
 C++.
+
+Windows
+-------
+
+We do not officially support installing Venture directly on Windows.
+Your best bet is likely to be running Venture in a Docker container or
+a virtual machine with a guest Ubuntu.
 
 Checking that your installation was successful
 ----------------------------------------------
