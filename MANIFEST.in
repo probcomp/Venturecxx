@@ -75,7 +75,6 @@ include HACKING.md
 include sanity_tests.sh
 include base.cfg
 include VERSION
-include install_osx_macports.sh
 include python/lib/engine/engine.py
 include python/lib/engine/trace.py
 include python/lib/engine/inference.py
@@ -919,7 +918,6 @@ include script/windows/3_run_container.sh
 include script/windows/4_remove_all_containers.sh
 include script/windows/1_initialize_boot2docker.sh
 include script/venture
-include global_install.sh
 include performance.cfg
 include test/development_milestones/test_bernoulli.py
 include test/development_milestones/test_continuous.py
@@ -1097,7 +1095,6 @@ include test/manual/all.sh
 include test/manual/python-error.sh
 include test/manual/test_docker.py
 include test/manual/console-error.sh
-include local_install.sh
 include requirements.txt
 include profile/example_profile_script.py
 include profile/matplotlibrc
