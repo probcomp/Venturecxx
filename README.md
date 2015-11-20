@@ -26,116 +26,31 @@ Ubuntu
 ------
 
     sudo apt-get install -y libboost-all-dev libgsl0-dev ccache
+    sudo apt-get install -y python-matplotlib  # If you don't already have it
+    sudo apt-get install -y python-scipy       # If you don't already have it
     pip install venture-0.4.2.tar.gz
 
-or, if you don't want the Puma backend
+OSX
+---
+
+We do not officially support installing Venture directly on OSX.
+Installation with pip should work, but we are not routinely testing
+it:
 
     SKIP_PUMA_BACKEND=1 pip install venture-0.4.2.tar.gz
 
-*Note about matplotlib*: pip doesn't install matplotlib cleanly on an
-empty system, so if you don't already have matplotlib you should either
+If this doesn't work or you want Puma, you could
 
-    sudo apt-get install python-matplotlib
+- Run Venture in a [Docker](https://www.docker.com/) container (see
+  our testing [Docker
+  file](https://github.com/probcomp/Venturecxx/blob/master/script/jenkins/debian-test-docker/Dockerfile)
+  for inspiration), or
 
-or
+- Have a look at [how someone managed to get Venture running on a mac
+  in September 2014](https://github.com/probcomp/Venturecxx/blob/master/doc/stale-mac-install-instructions.md)
 
-    sudo apt-get install pkg-config libfreetype6-dev # matplotlib's Debian dependencies
-
-before installing Venture.
-
-*Note about scipy*: pip doesn't install scipy cleanly on an empty
-system either, so if you don't already have scipy you should either
-
-    sudo apt-get install python-scipy
-
-or
-
-    sudo apt-get install gfortran libblas-dev liblapack-dev # scipy's Debian dependencies
-
-before installing Venture.
-
-Dependencies (OSX, Homebrew)
-----------------------------
-
-This is the best-supported and best-tested method for building Venture on Mac.
-
-    # Install Packet Manager "Homebrew"
-    http://brew.sh/
-
-    # Install the current Homebrew version of gcc / g++ (4.9 at time of writing)
-    # see this thread: http://apple.stackexchange.com/questions/38222/how-do-i-install-gcc-via-homebrew
-    brew install gcc
-
-    # Install libraries using homebrew
-    brew install python ccache gsl
-
-The one slightly tricky step is installing Boost and Boost.Python. The difficulty comes from the fact that GNU c++ compilers use the standard library libstdc++, while Mac's c++ compiler on Mavericks uses libc++. In order for Venture to build, you must build Boost using libstdc++, and then build Venture using the same. This can be accomplished by building both Boost and Venture using GNU gcc (installed via Homebrew) instead of Mac's compiler. The correct version of gcc is set for Venture installation in the setup.py file. To install Boost with the correct library, call:
-
-    brew install boost --cc=gcc-4.9
-    brew install boost-python --cc=gcc-4.9
-
-Finally, install Python dependencies:
-
-    # [Optional] Get Python dependencies (faster to install prepackaged than via pip)
-    # Also pulls in required external libraries
-    pip install ipython
-    pip install flask numpy matplotlib scipy
-
-Dependencies (OSX, macports)
-----------------------------
-
-This installation method is not as well-tested as Homebrew. It may break. At this point the best advice we can offer is to use Homebrew instead.
-
-For macports installation instructions see: [https://www.macports.org/install.php](https://www.macports.org/install.php)
-
-```
-# System dependencies
-sudo port install \
-    gcc_select gcc49 ccache \
-    python_select python27 \
-    pip_select py27-pip \
-    virtualenv_select virtualenv \
-    boost gsl
-```
-
-```
-# [Optional] Python dependencies
-sudo port install \
-    py27-flask \
-    py27-ipython \
-    py27-matplotlib \
-    py27-numpy \
-    py27-parsing \
-    py27-requests \
-    py27-scipy \
-    py27-zmq \
-```
-
-Macports allows side-by-side installation of multiple versions of gcc, python, ipython, etc. In order to set the default versions of each of these, do
-
-    sudo port select gcc mp-gcc49
-    sudo port select python python27
-    sudo port select ipython ipython27
-    sudo port select pip pip27
-    sudo port select virtualenv virtualenv27
-
-
-System-Wide Installation
-------------------------
-
-On OSX with Macports, run
-
-    ./global_install_osx_macports.sh
-
-
-Local Installation
-------------------
-
-If using macports, run
-
-    ./install_osx_macports.sh
-
-
+The Puma backend is an optional faster VentureScript engine written in
+C++.
 
 Checking that your installation was successful
 ----------------------------------------------
