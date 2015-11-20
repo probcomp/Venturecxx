@@ -28,7 +28,7 @@ MAINTAINER  MIT Probabilistic Computing Project
 
 # Setup
 RUN         apt-get update
-RUN         apt-get install python-pip
+RUN         apt-get install -y python-pip
 RUN         pip install -U distribute
 
 # Puma's dependencies (why do we need libfreetype6-dev? matplotlib?)
