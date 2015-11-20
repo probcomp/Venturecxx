@@ -70,6 +70,11 @@ class RegressOutputPSP(DeterministicPSP):
     f_emu = args.esrValues()[0]
     return t.pythonListToVentureList([f_compute, f_emu])
 
+    # Note: it's still possible to expose a "first package" bug in
+    # which f_compute goes stale if f_emu is some dynamic thing that
+    # switches between different SP/aux types, but hopefully this
+    # doesn't come up as much.
+
   def childrenCanAAA(self): return True
   def getAAALKernel(self): return RegressAAALKernel(self)
 
