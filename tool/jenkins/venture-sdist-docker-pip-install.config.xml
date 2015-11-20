@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <project>
   <actions/>
-  <description>Crash testing Venture</description>
+  <description></description>
   <keepDependencies>false</keepDependencies>
   <properties/>
   <scm class="hudson.plugins.git.GitSCM" plugin="git@2.2.6">
@@ -26,24 +26,23 @@
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
   <triggers>
-    <com.cloudbees.jenkins.GitHubPushTrigger plugin="github@1.9.1">
+    <jenkins.triggers.ReverseBuildTrigger>
       <spec></spec>
-    </com.cloudbees.jenkins.GitHubPushTrigger>
-    <hudson.triggers.SCMTrigger>
-      <spec>H */3 * * *</spec>
-      <ignorePostCommitHooks>false</ignorePostCommitHooks>
-    </hudson.triggers.SCMTrigger>
+      <upstreamProjects>venture-crashes, </upstreamProjects>
+      <threshold>
+        <name>SUCCESS</name>
+        <ordinal>0</ordinal>
+        <color>BLUE</color>
+        <completeBuild>true</completeBuild>
+      </threshold>
+    </jenkins.triggers.ReverseBuildTrigger>
   </triggers>
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
       <command>#!/bin/bash -xe
 
-source ~/env/bin/activate
-pip install &quot;distribute&gt;=0.6.28&quot; # Because the distribute executable has to be there for the rest of it
-CC=&quot;ccache gcc&quot; pip install .
-./all-crashes
-</command>
+./script/jenkins/venture-in-docker.sh pip-test-docker</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>
@@ -53,11 +52,11 @@ CC=&quot;ccache gcc&quot; pip install .
       <chatNotification>false</chatNotification>
       <notifyMap>
         <entry>
-          <com.flowdock.jenkins.BuildResult>FAILURE</com.flowdock.jenkins.BuildResult>
-          <boolean>true</boolean>
+          <com.flowdock.jenkins.BuildResult>UNSTABLE</com.flowdock.jenkins.BuildResult>
+          <boolean>false</boolean>
         </entry>
         <entry>
-          <com.flowdock.jenkins.BuildResult>FIXED</com.flowdock.jenkins.BuildResult>
+          <com.flowdock.jenkins.BuildResult>FAILURE</com.flowdock.jenkins.BuildResult>
           <boolean>true</boolean>
         </entry>
         <entry>
@@ -65,16 +64,16 @@ CC=&quot;ccache gcc&quot; pip install .
           <boolean>true</boolean>
         </entry>
         <entry>
-          <com.flowdock.jenkins.BuildResult>ABORTED</com.flowdock.jenkins.BuildResult>
-          <boolean>false</boolean>
-        </entry>
-        <entry>
           <com.flowdock.jenkins.BuildResult>NOT_BUILT</com.flowdock.jenkins.BuildResult>
           <boolean>false</boolean>
         </entry>
         <entry>
-          <com.flowdock.jenkins.BuildResult>UNSTABLE</com.flowdock.jenkins.BuildResult>
+          <com.flowdock.jenkins.BuildResult>ABORTED</com.flowdock.jenkins.BuildResult>
           <boolean>false</boolean>
+        </entry>
+        <entry>
+          <com.flowdock.jenkins.BuildResult>FIXED</com.flowdock.jenkins.BuildResult>
+          <boolean>true</boolean>
         </entry>
       </notifyMap>
       <notifySuccess>true</notifySuccess>
@@ -84,15 +83,6 @@ CC=&quot;ccache gcc&quot; pip install .
       <notifyAborted>false</notifyAborted>
       <notifyNotBuilt>false</notifyNotBuilt>
     </com.flowdock.jenkins.FlowdockNotifier>
-    <hudson.tasks.BuildTrigger>
-      <childProjects>venture-inference-quality, venture-performance, lite-rejection-inference-quality, lite-func-pgibbs-inference-quality, lite-meanfield-inference-quality, puma-mh-inference-quality, puma-rejection-inference-quality, puma-pgibbs-inference-quality, puma-meanfield-inference-quality, puma-performance, lite-misc-inference-quality, puma-misc-inference-quality, lite-subsampled-mh-inference-quality</childProjects>
-      <threshold>
-        <name>SUCCESS</name>
-        <ordinal>0</ordinal>
-        <color>BLUE</color>
-        <completeBuild>true</completeBuild>
-      </threshold>
-    </hudson.tasks.BuildTrigger>
   </publishers>
   <buildWrappers/>
 </project>

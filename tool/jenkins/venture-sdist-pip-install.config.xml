@@ -42,6 +42,7 @@
     <hudson.tasks.Shell>
       <command>#!/bin/bash -xe
 
+export SKIP_PUMA_BACKEND=1
 script/jenkins/check_sdist.sh</command>
     </hudson.tasks.Shell>
   </builders>
