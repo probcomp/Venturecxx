@@ -105,7 +105,7 @@ Getting Started
 
 -   You can find several examples in the `examples/` directory.
 
--   There is a [reference manual](http://probcomp.csail.mit.edu/venture/latest/refman/)
+-   There is a [reference manual](http://probcomp.csail.mit.edu/venture/latest/reference/)
 
 Developing Venture
 ==================
