@@ -13,54 +13,8 @@ published. We are making Venture available at this early stage
 primarily to facilitate collaboration and support the emerging
 probabilistic programming community.
 
-Running Venture's Docker Container (Linux)
-==========================================
-
-The easiest way to get Venture is to run it inside a [Docker
-container](http://www.docker.com).
-
-    sudo apt-get install docker.io   # Install Docker
-    sudo script/build_docker_image   # Requires network, and a while
-    sudo script/run_docker_container
-
-    venture                          # Inside the container
-
-    firefox localhost:8888           # For example IPython notebooks
-
-You get
-- A shell inside the container to do whatever
-- The source directory mapped into the container so you can edit from
-  outside
-- a VNC server listening on localhost port 5900
-- an IPython notebook server listening on port 8888
-
-Running Venture's Docker Container (Windows)
-==========================================
-
-On Windows and MacOS, you can easily run docker containers with the boot2docker tool.
-Boot2docker is a VM interface and lightweight Linux distribution specifically intended
-to run [Docker containers](http://www.docker.com).
-It runs completely from RAM, weighs ~27MB and boots in ~5s.
-
-    Install latest boot2docker for Windows
-        https://docs.docker.com/installation/windows/   # Installation Instructions
-    script/windows/1_initialize_boot2docker.sh          # Update boot2docker image
-    script/windows/2_build_image.sh                     # Build image (large download + build)
-    script/windows/3_run_container.sh                   # Launch application
-
-    venture                          # Inside the container
-
-    firefox localhost:8888           # For example IPython notebooks
-
-You get
-- A shell inside the container to do whatever
-- The source directory mapped into the container so you can edit from
-  outside
-- a VNC server listening on localhost port 5900
-- an IPython notebook server listening on port 8888
-
-Installing Venture from Source
-==============================
+Installation
+============
 
 This release is for early adopter types who are
 willing to put up with much of the pain that a more mature software
@@ -68,30 +22,37 @@ package would not impose.  In particular, documentation is sparse and
 the user interface is unforgiving.  Often, the only way to learn
 what's going on will be to ask us or to read the source code.
 
-Dependencies (Ubuntu)
----------------------
+Ubuntu
+------
 
-Here is what we install on a clean Ubuntu (works best in 14.04 or
-higher).  This dependency installation is replicated as
-[script/provision_ubuntu_dependencies](script/provision_ubuntu_dependencies)
+    sudo apt-get install -y libboost-all-dev libgsl0-dev ccache
+    pip install venture-0.4.2.tar.gz
 
-    # Get system dependencies
-    sudo apt-get install -y libboost-all-dev libgsl0-dev python-pip ccache libfreetype6-dev
-    # Must update distribute before requirements.txt install
-    sudo pip install -U distribute
+or, if you don't want the Puma backend
 
-    # [Optional] Get Python dependencies (faster to install prepackaged than via pip)
-    # Also pulls in required external libraries
-    # HOWEVER, version skew problems have been reported if installing
-    # python-numpy and python-scipy via apt-get on older versions of Ubuntu
-    sudo apt-get install -y python-flask python-requests python-numpy python-matplotlib python-scipy python-zmq ipython
+    SKIP_PUMA_BACKEND=1 pip install venture-0.4.2.tar.gz
 
-    # [Optional] Get dependencies for ggplot (needed for the built-in plotting facilities)
-    # Note: on older versions of Ubuntu, install them via pip (see "Install ggplot" below)
-    sudo apt-get install -y python-pandas python-patsy
+*Note about matplotlib*: pip doesn't install matplotlib cleanly on an
+empty system, so if you don't already have matplotlib you should either
 
-    # [Optional] Get dependencies for networkx (needed for some scaffold debugging facilities)
-    sudo apt-get install -y libgraphviz-dev
+    sudo apt-get install python-matplotlib
+
+or
+
+    sudo apt-get install pkg-config libfreetype6-dev # matplotlib's Debian dependencies
+
+before installing Venture.
+
+*Note about scipy*: pip doesn't install scipy cleanly on an empty
+system either, so if you don't already have scipy you should either
+
+    sudo apt-get install python-scipy
+
+or
+
+    sudo apt-get install gfortran libblas-dev liblapack-dev # scipy's Debian dependencies
+
+before installing Venture.
 
 Dependencies (OSX, Homebrew)
 ----------------------------
@@ -162,18 +123,6 @@ Macports allows side-by-side installation of multiple versions of gcc, python, i
 System-Wide Installation
 ------------------------
 
-Install any remaining dependencies by doing
-
-    sudo pip install -r requirements.txt
-
-[Optional] Install ggplot (needed for the built-in plotting facilities)
-
-    sudo pip install ggplot
-
-On Linux systems and OSX with Homebrew, now simply do
-
-    sudo python setup.py install
-
 On OSX with Macports, run
 
     ./global_install_osx_macports.sh
@@ -181,34 +130,6 @@ On OSX with Macports, run
 
 Local Installation
 ------------------
-
-In order to install locally, make sure you have python
-[virtualenv](https://pypi.python.org/pypi/virtualenv).
-
-    sudo pip install virtualenv
-
-Then prepare your virtual environment (replicated as
-[script/prepare_virtualenv](script/prepare_virtualenv)):
-
-    # Create a new virtual environment to install Venture (and its Python dependencies):
-    virtualenv env.d
-
-    # If (some) Python dependencies were pre-installed these can be used by typing
-    virtualenv --system-site-packages env.d
-
-    # Activate the environment, and install any remaining dependencies
-    source env.d/bin/activate
-    pip install -r requirements.txt
-
-    # Be sure to put nose into the virtualenv, so it can find its packages
-    pip install --ignore-installed nose
-
-    # [Optional] Install ggplot (needed for the built-in plotting facilities)
-    pip install ggplot
-
-On Linux and OSX with Homebrew, now install by typing
-
-    python setup.py install
 
 If using macports, run
 
@@ -219,7 +140,32 @@ If using macports, run
 Checking that your installation was successful
 ----------------------------------------------
 
+For a quick check that should catch most installation problems, unpack
+the source distribution and run
+
+    ./tool/check_capabilities.sh
+
+in it, or
+
+    SKIP_PUMA_BACKEND=1 ./tool/check_capabilities.sh
+
+if you didn't install the Puma backend.
+
+For a more thorough check, you can run our development test suite.
+
+This requires installing the test dependencies:
+
+    pip intall --find-links /path/to/tarball/directory venture[tests]
+
+and then
+
     ./sanity_tests.sh
+
+or
+
+    ./sanity_tests.sh lite
+
+if you didn't install the Puma backend.
 
 Getting Started
 ---------------
@@ -228,21 +174,23 @@ Getting Started
 
         venture
 
-    You might like to type in the [trick coin
-    example](http://probcomp.csail.mit.edu/venture/console-examples.html)
-    to start getting a feel for Venture.
+-   Run a VentureScript program:
+
+        venture -f <file>.vnts
+
+-   You might like to go through the [Venture
+    tutorial](http://probcomp.csail.mit.edu/venture/latest/tutorial/)
 
 -   Venture as a library in Python:
 
         python -i -c 'from venture import shortcuts; ripl = shortcuts.Puma().make_church_prime_ripl()'
 
     Using Venture as a library allows you to drive it
-    programmatically.  You might like to peruse the
-    [examples](http://probcomp.csail.mit.edu/venture/library-examples.html)
-    for inspiration.
+    programmatically.
 
 -   You can find several examples in the `examples/` directory.
 
+-   There is a [reference manual](http://probcomp.csail.mit.edu/venture/latest/refman/)
 
 Developing Venture
 ==================
