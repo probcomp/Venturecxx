@@ -19,6 +19,10 @@
 
 set -ex
 
+# UNUSED, PRESUMED STALE script for testing that Venture installs in a
+# clean virtual env.  We moved to Docker for isolation of installation
+# builds.
+
 # Compute the version that will be built (tail skips warnings setup.py emits).
 version=`python setup.py --version | tail -1`
 version=${version%+*} # Strip the +foo suffix
