@@ -38,7 +38,7 @@ RUN         apt-get install -y libboost-all-dev libgsl0-dev ccache
 RUN         apt-get install -y pkg-config libfreetype6-dev
 
 # Building scipy from source depends on these
-RUN         apt-get install -y libblas-dev liblapack-dev
+RUN         apt-get install -y gfortran libblas-dev liblapack-dev
 
 # Teach matplotlib to work headless by default
 RUN         mkdir -p ~/.config/matplotlib
