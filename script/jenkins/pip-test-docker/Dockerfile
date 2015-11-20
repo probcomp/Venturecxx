@@ -31,8 +31,11 @@ RUN         apt-get update
 RUN         apt-get install -y python-pip
 RUN         pip install -U distribute
 
-# Puma's dependencies (why do we need libfreetype6-dev? matplotlib?)
-RUN         apt-get install -y libboost-all-dev libgsl0-dev ccache libfreetype6-dev
+# Puma's dependencies
+RUN         apt-get install -y libboost-all-dev libgsl0-dev ccache
+
+# Building matplotlib from source depends on these
+RUN         apt-get install -y pkg-config libfreetype6-dev
 
 # Building scipy from source depends on these
 RUN         apt-get install -y libblas-dev liblapack-dev
