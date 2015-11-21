@@ -891,8 +891,6 @@ include tool/venture-mode.el
 include tool/pylintrc
 include all-crashes
 include LICENSE
-include script/prepare_virtualenv
-include script/provision_ubuntu_dependencies
 include script/gradients.py
 include script/jenkins/check_sdist.sh
 include script/jenkins/debian-venture.sh
