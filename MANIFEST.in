@@ -1,4 +1,3 @@
-include Dockerfile
 include inference-quality.cfg
 include refman/venture.ripl.ripl.rst
 include refman/conf.py
@@ -75,7 +74,6 @@ include HACKING.md
 include sanity_tests.sh
 include base.cfg
 include VERSION
-include install_osx_macports.sh
 include python/lib/engine/engine.py
 include python/lib/engine/trace.py
 include python/lib/engine/inference.py
@@ -903,23 +901,12 @@ include script/jenkins/check_built_sdist.sh
 include script/jenkins/debian-test-docker/Dockerfile
 include script/jenkins/pip-test-docker/Dockerfile
 include script/README-world-ipython-server
-include script/docker-tarball
 include script/venture-transcript
-include script/run_docker_container
-include script/build_docker_image
 include script/init_client.py
 include script/transcript.css
 include script/init_ripl.py
-include script/supervisord.conf
-include script/container_init.sh
 include script/vendoc
-include script/windows/2_build_image.sh
-include script/windows/5_shutdown_vm.sh
-include script/windows/3_run_container.sh
-include script/windows/4_remove_all_containers.sh
-include script/windows/1_initialize_boot2docker.sh
 include script/venture
-include global_install.sh
 include performance.cfg
 include test/development_milestones/test_bernoulli.py
 include test/development_milestones/test_continuous.py
@@ -1097,7 +1084,6 @@ include test/manual/all.sh
 include test/manual/python-error.sh
 include test/manual/test_docker.py
 include test/manual/console-error.sh
-include local_install.sh
 include requirements.txt
 include profile/example_profile_script.py
 include profile/matplotlibrc
