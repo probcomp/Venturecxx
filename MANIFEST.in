@@ -1080,7 +1080,6 @@ include test/debug/__init__.py
 include test/__init__.py
 include test/manual/all.sh
 include test/manual/python-error.sh
-include test/manual/test_docker.py
 include test/manual/console-error.sh
 include profile/example_profile_script.py
 include profile/matplotlibrc
