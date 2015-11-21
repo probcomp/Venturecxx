@@ -1082,7 +1082,6 @@ include test/manual/all.sh
 include test/manual/python-error.sh
 include test/manual/test_docker.py
 include test/manual/console-error.sh
-include requirements.txt
 include profile/example_profile_script.py
 include profile/matplotlibrc
 include profile/README
