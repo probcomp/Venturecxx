@@ -61,11 +61,14 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=Makefile \
     --exclude=CMakeLists.txt \
     --exclude=*.so \
+    --exclude=*.o \
     --exclude=testEigen \
     --exclude=cmake \
     --exclude=htmlcov \
     --exclude=.gdbinit \
     --exclude=refman/_build \
+    --exclude=refman/_static \
+    --exclude=refman/*.gen \
     --exclude=examples/tutorial-2015/tutorial \
     --exclude=examples/tutorial-2015/tutorial-smoke \
     --exclude=examples/tutorial-2015/vis-*.png \
@@ -83,6 +86,12 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=tool/logs \
     --exclude=doc/v1 \
     --exclude=script/release-tarball \
+    --exclude=script/jenkins/debian-test-docker/dist \
+    --exclude=script/jenkins/pip-test-docker/dist \
+    --exclude=python/lib/parser/church_prime/grammar.out \
+    --exclude=python/lib/parser/church_prime/grammar.sha256 \
+    --exclude=python/lib/parser/venture_script/grammar.out \
+    --exclude=python/lib/parser/venture_script/grammar.sha256 \
     --exclude=venture-*.tgz \
     --exclude=venture-*.tar.gz \
     --exclude=venture-*.tar.bz2 \
