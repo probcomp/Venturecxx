@@ -38,7 +38,7 @@ docker run -t "venture-$docker_dir" /bin/sh -c "\
     ./script/jenkins/check_built_sdist.sh ../dist/ \
         ${version%+*}" # Version without the +foo suffix
 
-# Extract the id of the last container created on the machine, which I
-# hope is the above
-docker_id=`docker ps -a | head -2 | tail -1 | cut -f 1 -d ' '`
+# Extract the id of the last container with the appropriate name
+# created on the machine, which I hope is the above
+docker_id=`docker ps -a | grep venture-$docker_dir | head -1 | cut -f 1 -d ' '`
 exit `docker wait "$docker_id"`
