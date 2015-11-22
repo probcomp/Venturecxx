@@ -123,6 +123,13 @@ class Puma(Backend):
         return trace.Trace
     def name(self): return "puma"
 
+class Mite(Backend):
+    """An instance of this class represents the Mite backend."""
+    def trace_constructor(self):
+        from venture.mite import trace
+        return trace.Trace
+    def name(self): return "mite"
+
 def backend(name = "puma"):
     """Return a backend by name: 'lite' or 'puma'."""
     if name == "lite":

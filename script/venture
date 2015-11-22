@@ -56,6 +56,10 @@ def lite(args):
     print "Tracing models with the Lite backend"
     local_ripl(args, v.Lite())
 
+def mite(args):
+    print "Tracing models with the Mite backend"
+    local_ripl(args, v.Mite())
+
 def local_ripl(args, backend):
     build = ripl_builder(args, backend)
     (interactive, r, files, plugins) = build()
@@ -123,6 +127,11 @@ parser_local = subparsers.add_parser("lite", help="VentureScript, tracing models
 parser_local.set_defaults(func=lite)
 add_local_args(parser_local)
 
+parser_local = subparsers.add_parser("mite", help="VentureScript, tracing models with the Lite backend",
+                                     description="VentureScript, tracing models with the Lite backend")
+parser_local.set_defaults(func=mite)
+add_local_args(parser_local)
+
 default_port = 8082
 
 parser_server = subparsers.add_parser("server", help="Start a VentureScript server",
@@ -159,7 +168,7 @@ add_local_args(parser_no_mode)
 if len(sys.argv) == 1:
     # Work around what appears to be a limitation of argparse
     lite(None)
-elif sys.argv[1] in ["puma", "lite", "server", "remote"]:
+elif sys.argv[1] in ["puma", "lite", "mite", "server", "remote"]:
     args = parser.parse_args()
     args.func(args)
 elif sys.argv[1] == "bql":

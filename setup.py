@@ -148,6 +148,7 @@ packages = [
     "venture.engine",
     "venture.lite",
     "venture.lite.infer",
+    "venture.mite",
     "venture.untraced",
     "venture.parser",
     "venture.parser.church_prime",
@@ -342,6 +343,7 @@ setup (
     package_dir = {
         "venture": "python/lib/",
         "venture.lite": "backend/lite/",
+        "venture.mite": "backend/mite/",
         "venture.untraced": "backend/untraced/",
         "venture.plex": "external/plex/dist/Plex/",
         "venture.puma": "backend/new_cxx/",
