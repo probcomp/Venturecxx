@@ -1071,6 +1071,5 @@ include test/manual/all.sh
 include test/manual/python-error.sh
 include test/manual/console-error.sh
 include profile/example_profile_script.py
-include profile/matplotlibrc
 include profile/README
 include crashes.cfg
