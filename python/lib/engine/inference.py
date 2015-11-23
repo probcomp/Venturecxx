@@ -182,6 +182,10 @@ class Infer(object):
     else:
       import venture.shortcuts as s
       return TraceSet(self.engine, s.backend(backend_name))
+  def fork_model(self, backend_name=None):
+    model = self.new_model(backend_name)
+    model.convertFrom(self.engine.model)
+    return model
   def in_model(self, model, action):
     return self.engine.in_model(model, action)
   def model_import_foreign(self, name):

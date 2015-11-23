@@ -17,7 +17,9 @@
 
 from nose.tools import eq_
 
-from venture.test.stats import statisticalTest, reportKnownGaussian
+import scipy.stats as stats
+
+from venture.test.stats import statisticalTest, reportKnownGaussian, reportKnownContinuous
 from venture.test.config import get_ripl, on_inf_prim, default_num_samples, default_num_transitions_per_sample, needs_backend
 
 def testInferenceLanguageEvalSmoke():
@@ -125,6 +127,47 @@ def testBackendSwitchingSmoke():
 [infer
   (do (m1 <- (new_model 'lite))
       (m2 <- (new_model 'puma))
+      (in_model m1 something)
+      (in_model m2 something))]
+""")
+
+@on_inf_prim("fork_model")
+@statisticalTest
+def testModelForkingSmoke():
+  ripl = get_ripl(persistent_inference_trace=True)
+  ripl.execute_program("""
+[assume p (beta 1 1)]
+
+[define beta_through_model
+  (lambda (a b)
+    (do (m <- (fork_model))
+        (res <- (in_model m
+          (do (repeat (- a 1) (observe (flip p) true))
+              (repeat (- b 1) (observe (flip p) false))
+              (mh default one %s)
+              (sample p))))
+        (return (first res))))]
+  """ % default_num_transitions_per_sample())
+  predictions = [ripl.infer("(beta_through_model 3 2)") for _ in range(default_num_samples())]
+  cdf = stats.beta(3,2).cdf
+  return reportKnownContinuous(cdf, predictions)
+
+@needs_backend("lite")
+@needs_backend("puma")
+@on_inf_prim("fork_model")
+def testBackendForkingSmoke():
+  ripl = get_ripl(persistent_inference_trace=True)
+  ripl.execute_program("""\
+[assume x (normal 0 1)]
+[observe (normal x 1) 2]
+
+[define something
+  (do (mh default one 5)
+      (predict (+ x 1)))]
+
+[infer
+  (do (m1 <- (fork_model 'lite))
+      (m2 <- (fork_model 'puma))
       (in_model m1 something)
       (in_model m2 something))]
 """)
