@@ -42,9 +42,12 @@ def detachAndExtractAtBorder(trace, border, scaffold, compute_gradient = False):
     if scaffold.isAbsorbing(node):
       weight += detach(trace, node, scaffold, omegaDB, compute_gradient)
     else:
-      if node.isObservation: weight += unconstrain(trace,trace.getConstrainableNode(node))
+      if node.isObservation: weight += getAndUnconstrain(trace,node)
       weight += extract(trace,node,scaffold,omegaDB, compute_gradient)
   return weight,omegaDB
+
+def getAndUnconstrain(trace,node):
+  return unconstrain(trace,trace.getConstrainableNode(node))
 
 def unconstrain(trace,node):
   psp,args,value = trace.pspAt(node),trace.argsAt(node),trace.valueAt(node)
@@ -55,6 +58,11 @@ def unconstrain(trace,node):
   return weight
 
 def detach(trace, node, scaffold, omegaDB, compute_gradient = False):
+  weight = unabsorb(trace, node, omegaDB, compute_gradient)
+  weight += extractParents(trace, node, scaffold, omegaDB, compute_gradient)
+  return weight
+
+def unabsorb(trace, node, omegaDB, compute_gradient = False):
   # we need to pass groundValue here in case the return value is an SP
   # in which case the node would only contain an SPRef
   psp,args,gvalue = trace.pspAt(node),trace.argsAt(node),trace.groundValueAt(node)  
@@ -64,7 +72,6 @@ def detach(trace, node, scaffold, omegaDB, compute_gradient = False):
     # Ignore the partial derivative of the value because the value is fixed
     (_, grad) = psp.gradientOfLogDensity(gvalue, args)
     omegaDB.addPartials(args.operandNodes + trace.esrParentsAt(node), grad)
-  weight += extractParents(trace, node, scaffold, omegaDB, compute_gradient)
   return weight
 
 def extractParents(trace, node, scaffold, omegaDB, compute_gradient = False):
@@ -83,9 +90,7 @@ def extractESRParents(trace, node, scaffold, omegaDB, compute_gradient = False):
 
 def extract(trace, node, scaffold, omegaDB, compute_gradient = False):
   weight = 0
-  value = trace.valueAt(node)
-  if isinstance(value,SPRef) and value.makerNode != node and scaffold.isAAA(value.makerNode):
-    weight += extract(trace, value.makerNode, scaffold, omegaDB, compute_gradient)
+  weight += maybeExtractStaleAAA(trace, node, scaffold, omegaDB, compute_gradient)
 
   if scaffold.isResampling(node):
     trace.decRegenCountAt(scaffold,node)
@@ -104,6 +109,20 @@ def extract(trace, node, scaffold, omegaDB, compute_gradient = False):
             omegaDB.addPartial(p, omegaDB.getPartial(node)) # d/dx is 1 for a lookup node
       weight += extractParents(trace, node, scaffold, omegaDB, compute_gradient)
 
+  return weight
+
+def maybeExtractStaleAAA(trace, node, scaffold, omegaDB, compute_gradient = False):
+  # "[this] has to do with worries about crazy thing[s] that can
+  # happen if aaa makers are shuffled around as first-class functions,
+  # and the made SPs are similarly shuffled, including with stochastic
+  # flow of such data, which may cause regeneration order to be hard
+  # to predict, and the check is trying to avoid a stale AAA aux"
+  # TODO: apparently nothing in the test suite actually hits this
+  # case. can we come up with an example that does?
+  weight = 0
+  value = trace.valueAt(node)
+  if isinstance(value,SPRef) and value.makerNode != node and scaffold.isAAA(value.makerNode):
+    weight += extract(trace, value.makerNode, scaffold, omegaDB, compute_gradient)
   return weight
 
 def unevalFamily(trace, node, scaffold, omegaDB, compute_gradient = False):
