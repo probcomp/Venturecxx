@@ -58,7 +58,15 @@ ln -s /scratch/jenkins /var/lib/jenkins
 You may also want to make sure GitHub pushes commit notifications to
 Jenkins.  To do so, visit the settings page of the Venturecxx github
 repository and make sure there is a Jenkins (Git plugin) service
-active, and pointing to the url that Jenkins listens to.'''
+active, and pointing to the url that Jenkins listens to.
+
+To run the Docker-based builds, the docker.io package needs to be
+installed, and the jenkins user needs to be a member of group
+'docker'.  (And the server may need to be restarted once this is so.)
+TODO: Automate this.
+- It may also be appropriate to make sure Docker keeps its images and
+  containers on /scratch.
+'''
 
 #### General helpers
 
