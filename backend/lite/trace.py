@@ -545,7 +545,7 @@ class Trace(object):
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
 
-  def likelihood_at(self, scope, block):
+  def log_likelihood_at(self, scope, block):
     # TODO This is a different control path from infer_exp because it
     # needs to return the weight
     scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
@@ -555,7 +555,7 @@ class Trace(object):
     # Old state restored, don't need to do anything else
     return xiWeight
 
-  def posterior_at(self, scope, block):
+  def log_joint_at(self, scope, block):
     # TODO This is a different control path from infer_exp because it
     # needs to return the weight
     scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)

@@ -522,7 +522,7 @@ void ConcreteTrace::registerConstraints()
 
 int ConcreteTrace::numUnconstrainedChoices() { return unconstrainedChoices.size(); }
 
-double ConcreteTrace::likelihoodAt(ScopeID scope, BlockID block) {
+double ConcreteTrace::logLikelihoodAt(ScopeID scope, BlockID block) {
   // TODO This is a different code path from normal infer commands
   // because it needs to return the weight
   boost::shared_ptr<ScaffoldIndexer> scaffoldIndexer = boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
@@ -533,7 +533,7 @@ double ConcreteTrace::likelihoodAt(ScopeID scope, BlockID block) {
   return xiWeight;
 }
 
-double ConcreteTrace::posteriorAt(ScopeID scope, BlockID block) {
+double ConcreteTrace::logJointAt(ScopeID scope, BlockID block) {
   // TODO This is a different code path from normal infer commands
   // because it needs to return the weight
   boost::shared_ptr<ScaffoldIndexer> scaffoldIndexer = boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));

@@ -270,16 +270,16 @@ void PyTrace::registerConstraints()
   trace->registerConstraints();
 }
 
-double PyTrace::likelihoodAt(boost::python::object pyscope, boost::python::object pyblock) {
+double PyTrace::logLikelihoodAt(boost::python::object pyscope, boost::python::object pyblock) {
   ScopeID scope = fromPython(pyscope);
   ScopeID block = fromPython(pyblock);
-  return trace->likelihoodAt(scope, block);
+  return trace->logLikelihoodAt(scope, block);
 }
 
-double PyTrace::posteriorAt(boost::python::object pyscope, boost::python::object pyblock) {
+double PyTrace::logJointAt(boost::python::object pyscope, boost::python::object pyblock) {
   ScopeID scope = fromPython(pyscope);
   ScopeID block = fromPython(pyblock);
-  return trace->posteriorAt(scope, block);
+  return trace->logJointAt(scope, block);
 }
 
 double PyTrace::likelihoodWeight()
@@ -357,8 +357,8 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("primitive_infer", &PyTrace::primitive_infer)
     .def("makeConsistent", &PyTrace::makeConsistent)
     .def("registerConstraints", &PyTrace::registerConstraints)
-    .def("likelihood_at", &PyTrace::likelihoodAt)
-    .def("posterior_at", &PyTrace::posteriorAt)
+    .def("log_likelihood_at", &PyTrace::logLikelihoodAt)
+    .def("log_joint_at", &PyTrace::logJointAt)
     .def("likelihood_weight", &PyTrace::likelihoodWeight)
     .def("numNodesInBlock", &PyTrace::numNodesInBlock)
     .def("numFamilies", &PyTrace::numFamilies)

@@ -196,7 +196,7 @@ def extract_assessment(maker, params, data):
                  *[v.app(v.sym("exactly"), p) for p in params]))
   for item in data:
     r.observe("(made)", item)
-  ans = r.infer("global_likelihood")
+  ans = r.infer("global_log_likelihood")
   return ans
 
 def checkSameAssessment(name, params, data):
