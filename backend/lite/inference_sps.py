@@ -375,7 +375,7 @@ transition, not across transitions."""),
   trace_method_sp("map",
                   transition_oper_type([t.NumberType("step_size : number"), t.IntegerType("steps : int")]),
                   desc="""\
-Move deterministically toward the maximum of the local conditional 
+Move deterministically toward the maximum of the local conditional by
 gradient ascent.
 
 Not available in the Puma backend.  Not all the builtin procedures
