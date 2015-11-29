@@ -102,7 +102,9 @@ class SimpleArgsWrapper(object):
         assert esr.env is None
         self._ripl.assume(did, esr.exp, did)
         if constraint is not None:
-            [weight] = self._ripl.observe(did, constraint, 'oid')
+            self._ripl.infer(['set_particle_log_weights', ['array', 0]])
+            self._ripl.observe(did, constraint, 'oid')
+            [weight] = self._ripl.infer(['particle_log_weights'])
             self._ripl.forget('oid')
         else:
             weight = 0
@@ -117,7 +119,9 @@ class SimpleArgsWrapper(object):
             del self._requestCounts[eid]
             did = 'esr' + hex(hash(eid))
             if constraint is not None:
-                [weight] = self._ripl.observe(did, constraint, 'oid')
+                self._ripl.infer(['set_particle_log_weights', ['array', 0]])
+                self._ripl.observe(did, constraint, 'oid')
+                [weight] = self._ripl.infer(['particle_log_weights'])
                 self._ripl.forget('oid')
             else:
                 weight = 0
