@@ -3,7 +3,7 @@ from venture.lite.regen import *
 from venture.lite.detach import *
 from sp import *
 
-def evalFamily(trace, address, exp, env):
+def evalFamily(trace, address, exp, env, constraint=None):
     if e.isVariable(exp):
         try:
             sourceNode = env.findSymbol(exp)
@@ -11,9 +11,12 @@ def evalFamily(trace, address, exp, env):
             import sys
             info = sys.exc_info()
             raise VentureException("evaluation", err.message, address=address), None, info[2]
-        weight = 0 # todo regen source node?
+        assert constraint is None, "Cannot constrain" # TODO does it make sense to evaluate a variable lookup subject to a constraint? does this turn the below regen into an absorb? what if multiple lookups of the same variable are constrained to different values? can we detect this as a case of source having already been regenned?
+        weight = 0 # TODO regen source node?
         return (weight, trace.createLookupNode(address, sourceNode))
-    elif e.isSelfEvaluating(exp): return (0, trace.createConstantNode(address,exp))
+    elif e.isSelfEvaluating(exp):
+        assert constraint is None, "Cannot constrain"
+        return (0, trace.createConstantNode(address,exp))
     elif e.isQuotation(exp): return (0, trace.createConstantNode(address,e.textOfQuotation(exp)))
     else: # SP application
         weight = 0
@@ -26,7 +29,7 @@ def evalFamily(trace, address, exp, env):
 
         outputNode = trace.createApplicationNode(address, nodes[0], nodes[1:], env)
         try:
-            weight += apply(trace, outputNode)
+            weight += apply(trace, outputNode, constraint)
         except VentureException:
             raise # Avoid rewrapping with the below
         except Exception as err:
@@ -36,14 +39,31 @@ def evalFamily(trace, address, exp, env):
         assert isinstance(weight, numbers.Number)
         return (weight, outputNode)
 
-def apply(trace, node):
+def apply(trace, node, constraint):
     sp = trace.spAt(node)
     args = trace.argsAt(node)
-    newValue, weight = sp.apply(args, None)
+    newValue, weight = sp.apply(args, constraint)
     trace.setValueAt(node, newValue)
     return weight
 
-def unevalFamily(trace, node):
+def unapply(trace, node, constraint):
+    sp = trace.spAt(node)
+    args = trace.argsAt(node)
+    oldValue = trace.valueAt(node)
+    weight = sp.unapply(oldValue, args, constraint)
+    trace.setValueAt(node, None)
+    return weight
+
+def constrain(trace, node, constraint):
+    sp = trace.spAt(node)
+    args = trace.argsAt(node)
+    oldValue = trace.valueAt(node)
+    sp.unapply(oldValue, args, None)
+    newValue, weight = sp.apply(args, constraint)
+    trace.setValueAt(node, newValue)
+    return weight
+
+def unevalFamily(trace, node, constraint=None):
     weight = 0
     if isConstantNode(node): pass
     elif isLookupNode(node):
@@ -53,7 +73,7 @@ def unevalFamily(trace, node):
         # todo detach source node
     else:
         assert isOutputNode(node)
-        weight += unapply(trace, node)
+        weight += unapply(trace, node, constraint)
         for operandNode in reversed(node.operandNodes):
             weight += unevalFamily(trace, operandNode)
         weight += unevalFamily(trace, node.operatorNode)
@@ -64,6 +84,7 @@ class Trace(LiteTrace):
     def __init__(self):
         self.globalEnv = VentureEnvironment()
         self.families = {}
+        self.unpropagatedObservations = {}
 
         self.bindPrimitiveSP('flip', SimpleRandomSPWrapper(builtInSPs()['flip'].outputPSP))
 
@@ -89,11 +110,18 @@ class Trace(LiteTrace):
             raise VentureException("invalid_argument", message=e.message, argument="symbol")
 
     def observe(self, id, val):
-        print 'observe', id, self.unboxValue(val)
+        node = self.families[id]
+        self.unpropagatedObservations[node] = self.unboxValue(val)
 
     def makeConsistent(self):
-        print 'makeConsistent'
-        return 0
+        weight = 0
+        for node, val in self.unpropagatedObservations.iteritems():
+            # TODO do this with regen to deal with propagation and references and stuff
+            appNode = self.getConstrainableNode(node)
+            node.observe(val)
+            weight += constrain(self, appNode, node.observedValue)
+        self.unpropagatedObservations.clear()
+        return weight
 
     def unobserve(self, id):
         print 'unobserve', id
