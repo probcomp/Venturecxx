@@ -2,6 +2,7 @@ from venture.lite.trace import *
 from venture.lite.regen import *
 from venture.lite.detach import *
 from sp import *
+from venture.lite.discrete import *
 
 def evalFamily(trace, address, exp, env, constraint=None):
     if e.isVariable(exp):
@@ -86,7 +87,14 @@ class Trace(LiteTrace):
         self.families = {}
         self.unpropagatedObservations = {}
 
+        self.bindPrimitiveSP('beta', SimpleRandomSPWrapper(builtInSPs()['beta'].outputPSP))
         self.bindPrimitiveSP('flip', SimpleRandomSPWrapper(builtInSPs()['flip'].outputPSP))
+        self.bindPrimitiveSP('add', SimpleDeterministicSPWrapper(builtInSPs()['add'].outputPSP))
+        coin = SimpleRandomSPWrapper(
+            TypedPSP(CBetaBernoulliOutputPSP(1.0, 1.0),
+                     SPType([], t.BoolType())))
+        coin.constructSPAux = BetaBernoulliSPAux
+        self.bindPrimitiveSP('coin', coin)
 
     def extractValue(self, id):
         return self.boxValue(self.extractRaw(id))
