@@ -1,6 +1,7 @@
 from venture.lite.trace import *
 from venture.lite.regen import *
 from venture.lite.detach import *
+from sp import *
 
 def evalFamily(trace, address, exp, env):
     if e.isVariable(exp):
@@ -35,6 +36,13 @@ def evalFamily(trace, address, exp, env):
         assert isinstance(weight, numbers.Number)
         return (weight, outputNode)
 
+def apply(trace, node):
+    sp = trace.spAt(node)
+    args = trace.argsAt(node)
+    newValue, weight = sp.apply(args, None)
+    trace.setValueAt(node, newValue)
+    return weight
+
 def unevalFamily(trace, node):
     weight = 0
     if isConstantNode(node): pass
@@ -56,6 +64,8 @@ class Trace(LiteTrace):
     def __init__(self):
         self.globalEnv = VentureEnvironment()
         self.families = {}
+
+        self.bindPrimitiveSP('flip', SimpleRandomSPWrapper(builtInSPs()['flip'].outputPSP))
 
     def extractValue(self, id):
         return self.boxValue(self.extractRaw(id))
