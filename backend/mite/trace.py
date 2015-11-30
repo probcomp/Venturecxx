@@ -160,6 +160,11 @@ class Trace(LiteTrace):
         self.unpropagatedObservations.clear()
         return weight
 
+    # this will hopefully become unnecessary, but will do for now
+    def getConstrainableNode(self, node):
+        if isLookupNode(node): return self.getConstrainableNode(node.sourceNode)
+        return node
+
     def unobserve(self, id):
         print 'unobserve', id
 
