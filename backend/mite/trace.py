@@ -86,10 +86,19 @@ def constrain(trace, node, constraint):
     sp = trace.spAt(node)
     args = trace.argsAt(node)
     oldValue = trace.valueAt(node)
-    sp.unapply(oldValue, args, None)
-    newValue, weight = sp.apply(args, constraint)
+    rhoWeight = sp.unapply(oldValue, args, None)
+    newValue, xiWeight = sp.apply(args, constraint)
     trace.setValueAt(node, newValue)
-    return weight
+    return rhoWeight + xiWeight
+
+def unconstrain(trace, node, constraint):
+    sp = trace.spAt(node)
+    args = trace.argsAt(node)
+    oldValue = trace.valueAt(node)
+    rhoWeight = sp.unapply(oldValue, args, constraint)
+    newValue, xiWeight = sp.apply(args, None)
+    trace.setValueAt(node, newValue)
+    return rhoWeight + xiWeight
 
 def unevalFamily(trace, node, constraint=None):
     weight = 0
@@ -181,7 +190,14 @@ class Trace(LiteTrace):
         return node
 
     def unobserve(self, id):
-        print 'unobserve', id
+        node = self.families[id]
+        appNode = self.getConstrainableNode(node)
+        if node.isObservation:
+            unconstrain(self, appNode, node.observedValue)
+            node.isObservation = False
+        else:
+            assert node in self.unpropagatedObservations
+            del self.unpropagatedObservations[node]
 
     def select(self, scope, block):
         print 'select', scope, block
