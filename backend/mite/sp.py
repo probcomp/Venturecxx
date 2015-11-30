@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from venture.lite.request import ESR
+from venture.lite.request import Request, ESR
 from venture.lite.address import emptyAddress
 
 class StochasticProcedure(object):
@@ -63,17 +63,32 @@ class SimpleLikelihoodFreeSP(StochasticProcedure):
         weight = 0.
         return weight
 
+LiteESR = ESR
+class ESR(LiteESR):
+    def __init__(self, id, exp, addr, env, constraint=None):
+        self.id = id
+        self.exp = exp
+        self.addr = addr
+        self.env = env
+        self.constraint = constraint
+
+class ESRPtr(LiteESR):
+    def __init__(self, id, constraint=None):
+        self.id = id
+        self.constraint = constraint
+
 class SimpleRequestingSP(StochasticProcedure):
     def apply(self, args, constraint):
-        eid = self.eid(args)
-        exp, env = self.request(args)
-        esr = ESR(eid, exp, emptyAddress, env)
-        value, weight = args.esrValue(esr, constraint)
+        id = self.requestId(args)
+        exp, env = self.requestEval(args)
+        request = Request([ESR(id, exp, emptyAddress, env, constraint)])
+        [value], weight = args.requestValues(request)
         return value, weight
 
     def unapply(self, value, args, constraint):
-        eid = self.eid(args)
-        weight = args.esrFree(eid, constraint)
+        id = self.requestId(args)
+        request = Request([ESRPtr(id, constraint)])
+        weight = args.requestFree(request)
         return weight
 
 class SimpleArgsWrapper(object):
@@ -90,14 +105,14 @@ class SimpleArgsWrapper(object):
     def spaux(self):
         return self._spaux
 
-    def makeRequest(self, esr, constraint):
+    def _evalESR(self, esr):
         # temporary hack: use an embedded Lite ripl.
         did = 'esr' + hex(hash(esr.id))
         assert esr.env is None
         self._ripl.assume(did, esr.exp, did)
-        if constraint is not None:
+        if esr.constraint is not None:
             self._ripl.infer(['set_particle_log_weights', ['array', 0]])
-            self._ripl.observe(did, constraint, 'oid')
+            self._ripl.observe(did, esr.constraint, 'oid')
             [weight] = self._ripl.infer(['particle_log_weights'])
             self._ripl.forget('oid')
         else:
@@ -105,11 +120,11 @@ class SimpleArgsWrapper(object):
         self._requesters[esr.id].add(id(self))
         return weight
 
-    def unmakeRequest(self, eid, constraint):
-        did = 'esr' + hex(hash(eid))
-        if constraint is not None:
+    def _unevalESR(self, esr):
+        did = 'esr' + hex(hash(esr.id))
+        if esr.constraint is not None:
             self._ripl.infer(['set_particle_log_weights', ['array', 0]])
-            self._ripl.observe(did, constraint, 'oid')
+            self._ripl.observe(did, esr.constraint, 'oid')
             [weight] = self._ripl.infer(['particle_log_weights'])
             self._ripl.forget('oid')
         else:
@@ -117,24 +132,26 @@ class SimpleArgsWrapper(object):
         self._ripl.forget(did)
         return weight
 
-    def esrValue(self, esr, constraint):
-        if esr.id not in self._requesters:
-            self._requesters[esr.id] = set()
-            weight = self.makeRequest(esr, constraint)
-        else:
-            weight = 0
-        # temporary hack: get the value from the embedded ripl
-        did = 'esr' + hex(hash(esr.id))
-        value = self._ripl.report(did)
-        return value, weight
+    def requestValues(self, request):
+        values = []
+        weight = 0
+        for esr in request.esrs:
+            if esr.id not in self._requesters:
+                self._requesters[esr.id] = set()
+                weight += self._evalESR(esr)
+            # temporary hack: get the value from the embedded ripl
+            did = 'esr' + hex(hash(esr.id))
+            values.append(self._ripl.report(did))
+        # TODO lsrs
+        return values, weight
 
-    def esrFree(self, eid, constraint):
-        self._requesters[eid].remove(id(self))
-        if self._requesters[eid]:
-            weight = 0
-        else:
-            del self._requesters[eid]
-            weight = self.unmakeRequest(eid, constraint)
+    def requestFree(self, request):
+        weight = 0
+        for esr in request.esrs:
+            self._requesters[esr.id].remove(id(self))
+            if not self._requesters[esr.id]:
+                del self._requesters[esr.id]
+                weight += self._unevalESR(esr)
         return weight
 
 class SimpleSPWrapper(StochasticProcedure):
@@ -160,10 +177,10 @@ class SimpleDeterministicSPWrapper(SimpleSPWrapper, SimpleLikelihoodFreeSP):
     pass
 
 class RequestFlipSP(SimpleRequestingSP):
-    def eid(self, args):
+    def requestId(self, args):
         return id(args)
 
-    def request(self, args):
+    def requestEval(self, args):
         exp = ['flip'] + args.operandValues()
         env = args.env
         return exp, env

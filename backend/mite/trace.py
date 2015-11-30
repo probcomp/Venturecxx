@@ -3,7 +3,6 @@ from venture.lite.regen import *
 from venture.lite.detach import *
 from sp import *
 from venture.lite.discrete import *
-from venture.lite.request import Request
 
 def evalFamily(trace, address, exp, env, constraint=None):
     if e.isVariable(exp):
@@ -41,7 +40,7 @@ def evalFamily(trace, address, exp, env, constraint=None):
         assert isinstance(weight, numbers.Number)
         return (weight, outputNode)
 
-def evalRequests(trace, node, constraint):
+def evalRequests(trace, node):
     weight = 0
     request = trace.valueAt(node)
 
@@ -49,7 +48,7 @@ def evalRequests(trace, node, constraint):
     for esr in request.esrs:
         if not trace.containsSPFamilyAt(node, esr.id):
             address = node.address.request(esr.addr)
-            (w, esrParent) = evalFamily(trace, address, esr.exp, esr.env)
+            (w, esrParent) = evalFamily(trace, address, esr.exp, esr.env, esr.constraint)
             weight += w
             if trace.containsSPFamilyAt(node,esr.id):
                 # evalFamily already registered a family with this id for the
@@ -205,15 +204,15 @@ class Trace(LiteTrace):
 
 LiteArgs = Args
 class Args(LiteArgs):
-    def esrValue(self, esr, constraint):
+    def requestValues(self, request):
         requestNode = self.trace.createRequestNode(
             self.node.address, self.node.operatorNode, self.operandNodes, self.node, self.env)
-        self.trace.setValueAt(requestNode, Request([esr]))
-        evalRequests(self.trace, requestNode, constraint)
-        value = self.trace.valueAt(self.trace.esrParentsAt(self.node)[-1])
-        return value, 0
+        self.trace.setValueAt(requestNode, request)
+        weight = evalRequests(self.trace, requestNode)
+        values = self.esrValues()
+        return values, weight
 
-    def esrFree(self, eid, constraint):
+    def requestFree(self, request):
         # TODO:
         # if request node was identified as brush, blow it away
         # otherwise, put the request node onto a stack so that esrValue can pop it off later
