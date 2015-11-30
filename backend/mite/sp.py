@@ -1,5 +1,8 @@
 from __future__ import print_function
 
+from venture.lite.request import ESR
+from venture.lite.address import emptyAddress
+
 class StochasticProcedure(object):
     def apply(self, args, constraint):
         raise NotImplementedError
@@ -60,32 +63,25 @@ class SimpleLikelihoodFreeSP(StochasticProcedure):
         weight = 0.
         return weight
 
-class EvalRequest(object):
-    def __init__(self, eid, exp, env):
-        self.eid = eid
-        self.exp = exp
-        self.env = env
-
 class SimpleRequestingSP(StochasticProcedure):
     def apply(self, args, constraint):
         eid = self.eid(args)
         exp, env = self.request(args)
-        esr = EvalRequest(eid, exp, env)
-        weight = args.makeRequest(esr, constraint)
-        value = args.esrValue(eid)
+        esr = ESR(eid, exp, emptyAddress, env)
+        value, weight = args.esrValue(esr, constraint)
         return value, weight
 
     def unapply(self, value, args, constraint):
         eid = self.eid(args)
-        weight = args.unmakeRequest(eid, constraint)
+        weight = args.esrFree(eid, constraint)
         return weight
 
 class SimpleArgsWrapper(object):
-    def __init__(self, operandValues, spaux=None, ripl=None, requestCounts=None):
+    def __init__(self, operandValues, spaux=None, ripl=None, requesters=None):
         self._operandValues = operandValues
         self._spaux = spaux
         self._ripl = ripl
-        self._requestCounts = requestCounts
+        self._requesters = requesters
 
     def operandValues(self):
         return self._operandValues
@@ -94,11 +90,8 @@ class SimpleArgsWrapper(object):
         return self._spaux
 
     def makeRequest(self, esr, constraint):
-        if esr.eid in self._requestCounts:
-            self._requestCounts[esr.eid][0] += 1
-            return 0
         # temporary hack: use an embedded Lite ripl.
-        did = 'esr' + hex(hash(esr.eid))
+        did = 'esr' + hex(hash(esr.id))
         assert esr.env is None
         self._ripl.assume(did, esr.exp, did)
         if constraint is not None:
@@ -108,34 +101,40 @@ class SimpleArgsWrapper(object):
             self._ripl.forget('oid')
         else:
             weight = 0
-        self._requestCounts[esr.eid] = [1, 0]
+        self._requesters[esr.id].add(id(self))
         return weight
 
-    def unmakeRequest(self, eid, constraint, collect=True):
-        if collect:
-            self._requestCounts[eid][0] -= 1
-            if self._requestCounts[eid][0] > 0:
-                return 0
-            del self._requestCounts[eid]
-            did = 'esr' + hex(hash(eid))
-            if constraint is not None:
-                self._ripl.infer(['set_particle_log_weights', ['array', 0]])
-                self._ripl.observe(did, constraint, 'oid')
-                [weight] = self._ripl.infer(['particle_log_weights'])
-                self._ripl.forget('oid')
-            else:
-                weight = 0
-            self._ripl.forget(did)
-            return weight
-        else:
-            self._requestCounts[eid][1] += 1
-            return 0
-
-    def esrValue(self, eid):
-        assert eid in self._requestCounts
-        # temporary hack: get the value from the embedded ripl
+    def unmakeRequest(self, eid, constraint):
         did = 'esr' + hex(hash(eid))
-        return self._ripl.report(did)
+        if constraint is not None:
+            self._ripl.infer(['set_particle_log_weights', ['array', 0]])
+            self._ripl.observe(did, constraint, 'oid')
+            [weight] = self._ripl.infer(['particle_log_weights'])
+            self._ripl.forget('oid')
+        else:
+            weight = 0
+        self._ripl.forget(did)
+        return weight
+
+    def esrValue(self, esr, constraint):
+        if esr.id not in self._requesters:
+            self._requesters[esr.id] = set()
+            weight = self.makeRequest(esr, constraint)
+        else:
+            weight = 0
+        # temporary hack: get the value from the embedded ripl
+        did = 'esr' + hex(hash(esr.id))
+        value = self._ripl.report(did)
+        return value, weight
+
+    def esrFree(self, eid, constraint):
+        self._requesters[eid].remove(id(self))
+        if self._requesters[eid]:
+            weight = 0
+        else:
+            del self._requesters[eid]
+            weight = self.unmakeRequest(eid, constraint)
+        return weight
 
 class SimpleSPWrapper(StochasticProcedure):
     def __init__(self, outputPSP):
@@ -216,12 +215,12 @@ def test():
         assert False
 
     flip = RequestFlipSP()
-    requestCounts = {}
+    requesters = {}
     ripl = make_lite_church_prime_ripl()
-    args1 = SimpleArgsWrapper([0.7], ripl=ripl, requestCounts=requestCounts)
-    args2 = SimpleArgsWrapper([0.7], ripl=ripl, requestCounts=requestCounts)
-    args3 = SimpleArgsWrapper([0.7], ripl=ripl, requestCounts=requestCounts)
-    args4 = SimpleArgsWrapper([0.7], ripl=ripl, requestCounts=requestCounts)
+    args1 = SimpleArgsWrapper([0.7], ripl=ripl, requesters=requesters)
+    args2 = SimpleArgsWrapper([0.7], ripl=ripl, requesters=requesters)
+    args3 = SimpleArgsWrapper([0.7], ripl=ripl, requesters=requesters)
+    args4 = SimpleArgsWrapper([0.7], ripl=ripl, requesters=requesters)
     (x1, w1) = flip.apply(args1, None)
     (x2, w2) = flip.apply(args2, None)
     (x3, w3) = flip.apply(args3, None)
