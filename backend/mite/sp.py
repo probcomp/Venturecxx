@@ -82,6 +82,7 @@ class SimpleArgsWrapper(object):
         self._spaux = spaux
         self._ripl = ripl
         self._requesters = requesters
+        self.env = None
 
     def operandValues(self):
         return self._operandValues
@@ -164,7 +165,7 @@ class RequestFlipSP(SimpleRequestingSP):
 
     def request(self, args):
         exp = ['flip'] + args.operandValues()
-        env = None
+        env = args.env
         return exp, env
 
 

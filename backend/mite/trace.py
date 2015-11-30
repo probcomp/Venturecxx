@@ -3,6 +3,7 @@ from venture.lite.regen import *
 from venture.lite.detach import *
 from sp import *
 from venture.lite.discrete import *
+from venture.lite.request import Request
 
 def evalFamily(trace, address, exp, env, constraint=None):
     if e.isVariable(exp):
@@ -28,7 +29,7 @@ def evalFamily(trace, address, exp, env, constraint=None):
             weight += w
             nodes.append(n)
 
-        outputNode = trace.createApplicationNode(address, nodes[0], nodes[1:], env)
+        outputNode = trace.createOutputNode(address, nodes[0], nodes[1:], env)
         try:
             weight += apply(trace, outputNode, constraint)
         except VentureException:
@@ -39,6 +40,33 @@ def evalFamily(trace, address, exp, env, constraint=None):
             raise VentureException("evaluation", err.message, address=address, cause=err), None, info[2]
         assert isinstance(weight, numbers.Number)
         return (weight, outputNode)
+
+def evalRequests(trace, node, constraint):
+    weight = 0
+    request = trace.valueAt(node)
+
+    # first evaluate exposed simulation requests (ESRs)
+    for esr in request.esrs:
+        if not trace.containsSPFamilyAt(node, esr.id):
+            address = node.address.request(esr.addr)
+            (w, esrParent) = evalFamily(trace, address, esr.exp, esr.env)
+            weight += w
+            if trace.containsSPFamilyAt(node,esr.id):
+                # evalFamily already registered a family with this id for the
+                # operator being applied here, which means a recursive call to
+                # the operator issued a request for the same id.  Currently,
+                # the only way for that it happen is for a recursive memmed
+                # function to call itself with the same arguments.
+                raise VentureException("evaluation", "Recursive mem argument loop detected.", address = node.address)
+            trace.registerFamilyAt(node,esr.id,esrParent)
+
+        esrParent = trace.spFamilyAt(node, esr.id)
+        trace.addESREdge(esrParent, node.outputNode)
+
+    # TODO: next evaluate latent simulation requests (LSRs)
+
+    assert isinstance(weight, numbers.Number)
+    return weight
 
 def apply(trace, node, constraint):
     sp = trace.spAt(node)
@@ -96,6 +124,8 @@ class Trace(LiteTrace):
         coin.constructSPAux = BetaBernoulliSPAux
         self.bindPrimitiveSP('coin', coin)
 
+        self.bindPrimitiveSP('rflip', RequestFlipSP())
+
     def extractValue(self, id):
         return self.boxValue(self.extractRaw(id))
 
@@ -150,10 +180,42 @@ class Trace(LiteTrace):
         print 'restore', scaffold, rhoDB
         return 0
 
-    # modified from lite trace due to no more request node
-    def createApplicationNode(self,address,operatorNode,operandNodes,env):
-        outputNode = OutputNode(address,operatorNode,operandNodes,None,env)
+    # modified from lite trace due to request node change
+    def createOutputNode(self,address,operatorNode,operandNodes,env):
+        outputNode = OutputNode(address,operatorNode,operandNodes,[],env)
         self.addChildAt(operatorNode,outputNode)
         for operandNode in operandNodes:
             self.addChildAt(operandNode,outputNode)
         return outputNode
+
+    def createRequestNode(self,address,operatorNode,operandNodes,outputNode,env):
+        # TODO: compute more precise edges between request node and operands
+        # and add ESR edges to downstream request nodes
+        # also, should probably make subclasses for RequestNode and OutputNode
+        requestNode = RequestNode(address,operatorNode,operandNodes,env)
+        self.addChildAt(operatorNode,requestNode)
+        for operandNode in operandNodes:
+            self.addChildAt(operandNode,requestNode)
+        requestNode.registerOutputNode(outputNode)
+        outputNode.requestNode.append(requestNode)
+        return requestNode
+
+    # modified to return our own Args object
+    def argsAt(self, node): return Args(self, node)
+
+LiteArgs = Args
+class Args(LiteArgs):
+    def esrValue(self, esr, constraint):
+        requestNode = self.trace.createRequestNode(
+            self.node.address, self.node.operatorNode, self.operandNodes, self.node, self.env)
+        self.trace.setValueAt(requestNode, Request([esr]))
+        evalRequests(self.trace, requestNode, constraint)
+        value = self.trace.valueAt(self.trace.esrParentsAt(self.node)[-1])
+        return value, 0
+
+    def esrFree(self, eid, constraint):
+        # TODO:
+        # if request node was identified as brush, blow it away
+        # otherwise, put the request node onto a stack so that esrValue can pop it off later
+        # (and assert that it's actually the same request)
+        return 0
