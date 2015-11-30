@@ -97,6 +97,7 @@ class SimpleArgsWrapper(object):
         self._spaux = spaux
         self._ripl = ripl
         self._requesters = requesters
+        self.node = self
         self.env = None
 
     def operandValues(self):
@@ -178,7 +179,7 @@ class SimpleDeterministicSPWrapper(SimpleSPWrapper, SimpleLikelihoodFreeSP):
 
 class RequestFlipSP(SimpleRequestingSP):
     def requestId(self, args):
-        return id(args)
+        return args.node
 
     def requestEval(self, args):
         exp = ['flip'] + args.operandValues()
