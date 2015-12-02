@@ -25,6 +25,7 @@ import value as v
 import venmath
 import basic_sps
 import vectors
+import records
 import functional
 import conditionals
 import csp
