@@ -90,7 +90,7 @@
   (lambda (x y)
     (if (is_pair x)
       (_dot_list x y)
-      (_dot_vector x y 0 (size x))))]
+      (vector_dot x y)))]
 
 [assume _dot_list
   (lambda (x y)
@@ -99,14 +99,6 @@
       (+
         (* (first x) (first y))
         (dot (rest x) (rest y)))))]
-
-[assume _dot_vector
-  (lambda (x y idx length)
-    (if (= idx length)
-      0
-      (+
-        (* (lookup x idx) (lookup y idx))
-        (_dot_vector x y (+ 1 idx) length))))]
 
 [assume sum
   (lambda (x)
