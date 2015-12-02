@@ -37,17 +37,17 @@ class VentureFunction(VentureValue):
     self.f = f
     self.sp_type = sp_type
     self.stuff = kwargs
-  
+
   @staticmethod
   def fromStackDict(thing):
     return VentureFunction(thing['value'], **thing)
-  
+
   def asStackDict(self, _trace=None):
     val = v.val("function", self.f)
     val["sp_type"] = self.sp_type
     val.update(self.stuff)
     return val
-  
+
   def __call__(self, *args):
     return self.f(*args)
 
@@ -58,16 +58,16 @@ class ApplyFunctionOutputPSP(DeterministicPSP):
     vals = args.operandValues()
     function = vals[0]
     arguments = vals[1:]
-    
+
     sp_type = function.sp_type
     unwrapped_args = sp_type.unwrap_arg_list(arguments)
     #print sp_type.name(), unwrapped_args
-    
+
     returned = function.f(*unwrapped_args)
     wrapped_return = sp_type.wrap_return(returned)
-    
+
     return wrapped_return
-  
+
   def description(self,_name=None):
     return "Apply a VentureFunction to arguments."
 
