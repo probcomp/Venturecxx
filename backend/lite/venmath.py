@@ -28,6 +28,7 @@ from sp_help import dispatching_psp, deterministic_psp, no_request, binaryNum
 from sp_help import unaryNum, zero_gradient
 
 from utils import careful_exp, raise_
+from utils import logistic, T_logistic
 from exception import VentureValueError
 
 def vvsum(venture_array):
@@ -203,3 +204,11 @@ registerBuiltinSP("abs", unaryNum(abs, sim_grad=grad_abs,
 registerBuiltinSP("signum", unaryNum(signum,
     descr="signum(x) returns the sign of x " \
           "(1 if positive, -1 if negative, 0 if zero)."))
+
+def grad_logisitc(args, direction):
+  [x] = args
+  (_, deriv) = T_logistic(x)
+  return [direction * deriv]
+
+registerBuiltinSP("logistic", unaryNum(logistic, sim_grad=grad_logisitc,
+    descr="The logistic function: 1/(1+exp(-x))"))

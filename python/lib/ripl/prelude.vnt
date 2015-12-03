@@ -121,13 +121,6 @@
 ; Useful math functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; The logistic (sigmoid) function
-; Parameters
-;   x : number
-[assume logistic
-  (lambda (x)
-    (/ 1 (+ 1 (exp (negate x)))))]
-
 ; The logit (inverse logistic) function
 ; Parameters
 ;   x : number
