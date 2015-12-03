@@ -255,16 +255,16 @@ class TestPrelude(TestCase):
   @on_inf_prim("none")
   def test_matrices(self):
     'Test that diagonal and identity matrices are as expected'
-    for fname in ['eye', 'diag']:
+    for fname in ['id_matrix', 'diag_matrix']:
       self.reset_ripl()
       D = self.r.assume('D', '(* 1 (uniform_discrete 1 10))')
-      if fname == 'diag':
+      if fname == 'diag_matrix':
         diag_entry = self.r.assume('diag_value', '(uniform_continuous 0 10)')
-        res_ven = self.r.assume('res', '(diag D diag_value)')
+        res_ven = self.r.assume('res', '(diag_matrix (fill D diag_value))')
         res_py = np.diag(np.repeat(diag_entry, D))
       else:
         diag_entry = self.r.assume('diag_value', 1)
-        res_ven = self.r.assume('res', '(eye D)')
+        res_ven = self.r.assume('res', '(id_matrix D)')
         res_py = np.eye(D)
       assert_equal(res_ven, res_py)
 

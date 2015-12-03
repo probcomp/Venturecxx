@@ -126,41 +126,6 @@
           (pair start (range (+ incr start) stop)))))]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Matrix constructors
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Identity matrix of dimension D
-[assume eye
-  (lambda (D)
-    (diag D 1))]
-
-;; Diagonal matrix of dimension D
-[assume diag
-  (lambda (D diag_value)
-    (matrix (_diag_helper D diag_value 0)))]
-
-[assume _diag_helper
-  (lambda (D diag_value idx)
-    (if (= idx D)
-      (list)
-      (pair
-        (_one_row D diag_value idx)
-        (_diag_helper D diag_value (+ idx 1)))))]
-
-; Construct one row of a diagonal matrix.
-[assume _one_row
-  (lambda (D diag_value fill_position)
-    (_one_row_helper D diag_value fill_position 0))]
-
-[assume _one_row_helper
-  (lambda (D diag_value fill_position idx)
-    (if (= idx D)
-      (list)
-      (pair
-        (if (= idx fill_position) diag_value 0)
-        (_one_row_helper D diag_value fill_position (+ idx 1)))))]
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Code for evaluating predictive accuracy
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Supports model accuracy in a traditional supervised learning setting
