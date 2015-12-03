@@ -193,19 +193,6 @@ class TestPrelude(TestCase):
 
   @run_containers
   @on_inf_prim("none")
-  def test_dot(self, container):
-    '''
-    Test the dot product.
-    '''
-    self.reset_ripl()
-    x = self.r.assume('x', self.mk_random_data(container, 'numeric'))
-    y = self.r.assume('y', self.mk_random_data(container, 'numeric', length = len(x)))
-    res_py = np.dot(x, y)
-    res_ven = self.r.sample('(dot x y)')
-    self.assertAlmostEqual(res_py, res_ven)
-
-  @run_containers
-  @on_inf_prim("none")
   def test_math(self, container):
     '''
     Test the "sum", "product", "mean" vector aggregators.

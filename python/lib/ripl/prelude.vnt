@@ -86,20 +86,6 @@
 ; Vector / matrix ops
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-[assume dot
-  (lambda (x y)
-    (if (is_pair x)
-      (_dot_list x y)
-      (vector_dot x y)))]
-
-[assume _dot_list
-  (lambda (x y)
-    (if (is_empty x)
-      0
-      (+
-        (* (first x) (first y))
-        (dot (rest x) (rest y)))))]
-
 [assume sum
   (lambda (x)
     (reduce + x 0))]
