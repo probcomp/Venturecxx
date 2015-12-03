@@ -24,15 +24,6 @@
 ;   and to_list functions) if there were sp's is_vector and is_list. If those
 ;   are made, change things.
 
-; check if a list is empty
-; Parameters
-;   v : list, vector, or array
-[assume is_empty
-  (lambda (v)
-    (if (= (size v) 0)
-      true
-      false))]
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Support for functional programming
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

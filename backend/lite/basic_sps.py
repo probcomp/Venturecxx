@@ -165,6 +165,12 @@ registerBuiltinSP("size", deterministic_typed(lambda xs: xs.size(),
     descr="size returns the number of elements in the given collection " \
           "(lists and arrays work too)"))
 
+registerBuiltinSP("is_empty", deterministic_typed(lambda xs: xs.size() == 0,
+    [t.HomogeneousMappingType(t.AnyType("k"), t.AnyType("v"))],
+    t.BoolType(),
+    descr="is_empty returns whether the given collection is empty " \
+          "(lists and arrays work too)"))
+
 registerBuiltinSP("take", deterministic_typed(lambda ind, xs: xs.take(ind),
     [t.IntegerType(), t.HomogeneousSequenceType(t.AnyType("k"))],
     t.HomogeneousSequenceType(t.AnyType("k")),
