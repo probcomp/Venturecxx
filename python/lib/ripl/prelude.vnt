@@ -118,17 +118,6 @@
     (map (lambda (x) (* x k)) v))]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Useful math functions
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-; The logit (inverse logistic) function
-; Parameters
-;   x : number
-[assume logit
-  (lambda (x)
-    (log (/ x (- 1 x))))]
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Convenience functions for assembling vectors and lists
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -151,6 +151,10 @@ def d_log_logistic(x):
     (logi_x, dlogi_x) = T_logistic(x)
     return (1/logi_x) * dlogi_x
 
+def logit(x):
+  # TODO Check the numeric analysis of this
+  return extendedLog(x / (1 - x))
+
 class FixedRandomness(object):
   """A Python context manager for executing (stochastic) code repeatably
 against fixed randomness.
