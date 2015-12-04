@@ -126,6 +126,35 @@ def careful_exp(x):
     if x > 0: return float("inf")
     else: return float("-inf")
 
+def logistic(x): return 1 / (1 + careful_exp(-x))
+
+def T_logistic(x):
+  # This should be derivable from the above by AD, but here I use the
+  # identity d logistic(x) / dx = logistic(x) * (1 - logistic(x))
+  logi_x = logistic(x)
+  return (logi_x, logi_x * (1 - logi_x))
+
+def log_logistic(x):
+  if x < -40:
+    # Because 1 + exp(40+) = exp(40+) in IEEE-64, and I don't want the
+    # +inf that will come from exp(400+)
+    return x
+  else: return math.log(logistic(x))
+
+def d_log_logistic(x):
+  # This should be derivable from the above by AD.
+  # Perhaps this could be improved upon by analysis, due to the usual
+  # derivative of approximation problem.
+  if x < -40:
+    return 1
+  else:
+    (logi_x, dlogi_x) = T_logistic(x)
+    return (1/logi_x) * dlogi_x
+
+def logit(x):
+  # TODO Check the numeric analysis of this
+  return extendedLog(x / (1 - x))
+
 class FixedRandomness(object):
   """A Python context manager for executing (stochastic) code repeatably
 against fixed randomness.
