@@ -40,10 +40,9 @@ def testDirichletComparisonRegression():
 @statisticalTest
 def testLogFlip():
   ripl = get_ripl()
-  
+
   ripl.predict('(log_flip (log 0.5))', label='pid')
-  
+
   predictions = collectSamples(ripl,'pid')
   ans = [(False,0.5),(True,0.5)]
   return reportKnownDiscrete(ans, predictions)
-
