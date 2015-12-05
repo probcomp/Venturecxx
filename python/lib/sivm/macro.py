@@ -590,11 +590,57 @@ extractStatsMacro = quasiquotation_macro("extract_stats",
 
 """)
 
+# XXX ref and deref don't need to be macros (Issue #225), but
+# rewriting them as definitions is blocked on dealing with the model
+# prelude, Issue #213.
+refMacro = SyntaxRule(['ref', 'expr'],
+                      ['let', [['it', 'expr']],
+                       ['make_ref', ['lambda', [], 'it']]],
+                      desc="""\
+.. function:: ref(<object>)
+
+Create a reference to the given object.
+
+The use of references is that the reference itself is deterministic
+even if the object is stochastic, and constraint back-propagates from
+dereferencing to the random choice generating the object.  A reference
+may therefore be stored in data structures without causing them to
+be resampled if the object changes, and without preventing the object
+from being observed after being taken out of the data structure.
+
+For example::
+
+    [assume lst (list (ref (normal 0 1)) (ref (normal 0 1)))]
+    [observe (deref (first lst)) 3]
+
+""")
+
+derefMacro = SyntaxRule(['deref', 'expr'], [['ref_get', 'expr']],
+                        desc="""\
+.. function:: deref(<object>)
+
+Dereference a reference created with `ref`.
+
+The use of references is that the reference itself is deterministic
+even if the object is stochastic, and constraint back-propagates from
+dereferencing to the random choice generating the object.  A reference
+may therefore be stored in data structures without causing them to
+be resampled if the object changes, and without preventing the object
+from being observed after being taken out of the data structure.
+
+For example::
+
+    [assume lst (list (ref (normal 0 1)) (ref (normal 0 1)))]
+    [observe (deref (first lst)) 3]
+
+""")
+
 for m in [identityMacro, lambdaMacro, ifMacro, condMacro, andMacro, orMacro,
           letMacro, letrecMacro, doMacro, beginMacro, qqMacro,
           callBackMacro, collectMacro,
           assumeMacro, observeMacro, predictMacro, forceMacro,
           sampleMacro, sampleAllMacro,
           extractStatsMacro,
+          refMacro, derefMacro,
           ListMacro(), LiteralMacro()]:
   register_macro(m)

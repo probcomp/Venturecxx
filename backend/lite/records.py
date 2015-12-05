@@ -139,3 +139,4 @@ def register_record(name, *fields):
     registerBuiltinSP(f, a)
 
 register_record("inference_action", "action_func")
+register_record("make_ref", "ref_get")

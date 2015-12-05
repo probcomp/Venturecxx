@@ -18,8 +18,11 @@
 import scipy.stats as stats
 from nose.tools import eq_, assert_greater, assert_less # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
 
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, on_inf_prim
+from venture.test.config import get_ripl, collectSamples
+from venture.test.config import skipWhenRejectionSampling, on_inf_prim
+from venture.test.config import broken_in, default_num_samples
 from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.stats import reportKnownDiscrete
 
 @on_inf_prim("none")
 def testObserveAVar1a():
@@ -134,3 +137,16 @@ def testObserveOutputOfIf1():
   predictions = collectSamples(ripl,"pid")
   cdf = stats.beta(2,1).cdf # The observation nearly guarantees the first branch is taken
   return reportKnownContinuous(cdf, predictions, "approximately beta(2,1)")
+
+@broken_in("puma", "Need to port records to Puma for references to work.  Issue #224")
+@statisticalTest
+def testObserveThroughRef():
+  ripl = get_ripl()
+  ripl.assume("coin", "(make_beta_bernoulli 1 1)")
+  ripl.assume("items", "(list (ref (coin)) (ref (coin)))")
+  ripl.observe("(deref (first items))", True)
+  ripl.predict("(deref (second items))", label="pid")
+
+  predictions = collectSamples(ripl,"pid",num_samples=default_num_samples(5))
+  ans = [(False,0.333),(True,0.666)]
+  return reportKnownDiscrete(ans, predictions)
