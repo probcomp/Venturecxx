@@ -93,16 +93,18 @@ def CondExpand(exp):
 
 def LetExpand(exp):
   if len(exp) != 3:
-      raise VentureException('parse','"let" statement requires 2 arguments',expression_index=[])
+      raise VentureException('parse',
+          '"let" statement requires 2 arguments',expression_index=[])
   if not isinstance(exp[1], list):
-      raise VentureException('parse','"let" first argument must be a list',expression_index=[1])
-  
+      raise VentureException('parse',
+          '"let" first argument must be a list',expression_index=[1])
+
   n = len(exp[1])
   syms = ['__sym%d__' % i for i in range(n)]
   vals = ['__val%d__' % i for i in range(n)]
-  
+
   pattern = ['let', map(list, zip(syms, vals)), 'body']
-  
+
   template = 'body'
   for i in reversed(range(n)):
     template = [['lambda', [syms[i]], template], vals[i]]
@@ -110,9 +112,11 @@ def LetExpand(exp):
 
 def LetRecExpand(exp):
   if len(exp) != 3:
-      raise VentureException('parse','"letrec" statement requires 2 arguments',expression_index=[])
+      raise VentureException('parse',
+          '"letrec" statement requires 2 arguments',expression_index=[])
   if not isinstance(exp[1], list):
-      raise VentureException('parse','"letrec" first argument must be a list',expression_index=[1])
+      raise VentureException('parse',
+          '"letrec" first argument must be a list', expression_index=[1])
 
   n = len(exp[1])
   syms = ['__sym%d__' % i for i in range(n)]
@@ -137,13 +141,15 @@ def DoExpand(exp):
   else:
     (_do, statement, rest) = (exp[0], exp[1], exp[2:])
     rest_vars = ["rest_%d" % i for i in range(len(rest))]
-    if (type(statement) is list and len(statement) == 3 and type(statement[1]) is dict and
+    if (type(statement) is list and len(statement) == 3 and
+        type(statement[1]) is dict and
         statement[1]["value"] == "<-"):
       # Binding statement, regular form
       pattern = ["do", ["var", "<-", "expr"]] + rest_vars
       template = ["bind", "expr", ["lambda", ["var"], ["do"] + rest_vars]]
-    elif (type(statement) is list and len(statement) == 3 and type(statement[0]) is dict and
-        statement[0]["value"] == "<-"):
+    elif (type(statement) is list and len(statement) == 3 and
+          type(statement[0]) is dict and
+          statement[0]["value"] == "<-"):
       # Binding statement, venturescript form
       pattern = ["do", ["<-", "var", "expr"]] + rest_vars
       template = ["bind", "expr", ["lambda", ["var"], ["do"] + rest_vars]]
@@ -168,7 +174,7 @@ def QuasiquoteExpand(exp):
     datum_name = unique_name("datum")
     return (datum_name, ["quote", datum_name], True)
   def qqrecur(exp):
-    """Returns a tuple (pattern, template, bool) explaining how to macroexpand this (sub-)expression.
+    """Gives the macroexpansion of this (sub-)expression as a 3-tuple (pattern, template, bool).
 
 The pattern and template may be used to construct a SyntaxRule object
 that will do the right thing (but are returned seprately because
@@ -219,7 +225,8 @@ def ObserveExpand(program):
   if len(program) == 4:
     # A label was supplied
     pattern = ["observe", "exp", "val", "label"]
-    template = ["_observe", ["quasiquote", "exp"], "val", ["quasiquote", "label"]]
+    template = ["_observe", ["quasiquote", "exp"], "val",
+                ["quasiquote", "label"]]
   else:
     pattern = ["observe", "exp", "val"]
     template = ["_observe", ["quasiquote", "exp"], "val"]
@@ -243,7 +250,8 @@ lambdaMacro = SyntaxRule(['lambda', 'args', 'body'],
 """)
 
 ifMacro = SyntaxRule(['if', 'predicate', 'consequent', 'alternative'],
-                     [['biplex', 'predicate', ['lambda', [], 'consequent'], ['lambda', [], 'alternative']]],
+                     [['biplex', 'predicate', ['lambda', [], 'consequent'],
+                       ['lambda', [], 'alternative']]],
                      desc="""\
 .. _if:
 .. object:: if (<predicate>) { <consequent> } else { <alternate> }
@@ -356,8 +364,8 @@ doMacro = Macro(arg0("do"), DoExpand, desc="""\
   whose value is the value returned by the last <stmt>.
 
   If you need a kernel that produces a value without doing anything, use
-  ``return(<value>)`` (see `return`).  If you need a kernel that does nothing and
-  produces no useful value, you can use `pass`.
+  ``return(<value>)`` (see `return`).  If you need a kernel that does
+  nothing and produces no useful value, you can use `pass`.
 
   For example, to make a kernel that does inference until some variable
   in the model becomes "true" (why would anyone want to do that?), you
@@ -435,7 +443,8 @@ callBackMacro = quasiquotation_macro("call_back", min_size = 2, desc="""\
       Bind the given Python callable as a callback function that can be
       referred to by `call_back` by the given name (which is a string).
 
-  There is an example in the source in ``test/inference_language/test_callback.py``.
+  There is an example in the source in
+  ``test/inference_language/test_callback.py``.
 """)
 
 collectMacro = quasiquotation_macro("collect", min_size = 2, desc="""\
@@ -446,8 +455,8 @@ collectMacro = quasiquotation_macro("collect", min_size = 2, desc="""\
   When a `collect` inference command is executed, the given
   expressions are sampled and their values are returned in a
   `Dataset` object.  This is the way to get data into datasets; see
-  `accumulate_dataset` and `into` for accumulating datasets, and `print`, `plot`, and
-  `plot_to_file` for using them.
+  `accumulate_dataset` and `into` for accumulating datasets,
+  and `print`, `plot`, and `plot_to_file` for using them.
 
   Each ``<model-expression>`` may optionally be given in the form ``labelled(
   <model-expression>, <name>)``, in which case the given ``name`` serves as the
@@ -471,7 +480,8 @@ collectMacro = quasiquotation_macro("collect", min_size = 2, desc="""\
   or foreign inference sp.
 """)
 
-assumeMacro = quasiquotation_macro("assume", min_size = 3, max_size = 4, desc="""\
+assumeMacro = quasiquotation_macro("assume",
+    min_size = 3, max_size = 4, desc="""\
 .. function:: assume(<symbol>, <model-expression>, [<label>])
 
   Programmatically add an assumption.
@@ -512,7 +522,8 @@ forceMacro = SyntaxRule(["force", "exp", "val"],
 
 """, intended_for_inference=True)
 
-predictMacro = quasiquotation_macro("predict", min_size = 2, max_size = 3, desc="""\
+predictMacro = quasiquotation_macro("predict",
+    min_size = 2, max_size = 3, desc="""\
 .. function:: predict(<model-expression>, [<label>])
 
   Programmatically add a prediction.
@@ -525,7 +536,8 @@ predictMacro = quasiquotation_macro("predict", min_size = 2, max_size = 3, desc=
   this directive.
 """)
 
-sampleMacro = quasiquotation_macro("sample", min_size = 2, max_size = 2, desc="""\
+sampleMacro = quasiquotation_macro("sample",
+    min_size = 2, max_size = 2, desc="""\
 .. function:: sample(<model-expression>)
 
   Programmatically sample from the model.
@@ -539,7 +551,8 @@ sampleMacro = quasiquotation_macro("sample", min_size = 2, max_size = 2, desc=""
   see `unquote`.
 """)
 
-sampleAllMacro = quasiquotation_macro("sample_all", min_size = 2, max_size = 2, desc="""\
+sampleAllMacro = quasiquotation_macro("sample_all",
+    min_size = 2, max_size = 2, desc="""\
 .. function:: sample_all(<model-expression>)
 
   Programmatically sample from the model in all particles.
@@ -555,7 +568,8 @@ sampleAllMacro = quasiquotation_macro("sample_all", min_size = 2, max_size = 2, 
   see `unquote`.
 """)
 
-extractStatsMacro = quasiquotation_macro("extract_stats", min_size = 2, max_size = 2, desc="""\
+extractStatsMacro = quasiquotation_macro("extract_stats",
+    min_size = 2, max_size = 2, desc="""\
 .. function:: extract_stats(<model-expression>)
 
   Extract maintained statistics.
@@ -576,9 +590,11 @@ extractStatsMacro = quasiquotation_macro("extract_stats", min_size = 2, max_size
 
 """)
 
-for m in [identityMacro, lambdaMacro, ifMacro, condMacro, andMacro, orMacro, letMacro, letrecMacro, doMacro, beginMacro, qqMacro,
+for m in [identityMacro, lambdaMacro, ifMacro, condMacro, andMacro, orMacro,
+          letMacro, letrecMacro, doMacro, beginMacro, qqMacro,
           callBackMacro, collectMacro,
-          assumeMacro, observeMacro, predictMacro, forceMacro, sampleMacro, sampleAllMacro,
+          assumeMacro, observeMacro, predictMacro, forceMacro,
+          sampleMacro, sampleAllMacro,
           extractStatsMacro,
           ListMacro(), LiteralMacro()]:
   register_macro(m)
