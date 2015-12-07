@@ -25,7 +25,6 @@
 
 #include "types.h"
 
-VentureValuePtr fromPython(boost::python::object o);
 VentureValuePtr parseValueO(boost::python::object o); // Requires it to be a dict
 VentureValuePtr parseValue(boost::python::dict d);
 VentureValuePtr parseExpression(boost::python::object o);
