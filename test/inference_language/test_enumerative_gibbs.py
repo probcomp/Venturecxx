@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from testconfig import config
+
 from venture.test.stats import statisticalTest, reportKnownDiscrete, reportSameDiscrete
 from venture.test.config import get_ripl, collectSamples, default_num_transitions_per_sample, gen_on_inf_prim, on_inf_prim
 
@@ -177,7 +179,15 @@ def testEnumerativeGibbsBrushRandomness():
     ripl.assume("x", "(if z 0 (normal 0 10))")
     ripl.observe("(normal x 1)", "4")
     ripl.predict("z", label="pid")
-    ans = collectSamples(ripl, "pid", infer="(rejection default all 1)")
+    def posterior_inference_action():
+      "Work around the fact that Puma doesn't have rejection sampling by asking for a bunch of MH"
+      if config['get_ripl'] == 'lite':
+        return "(rejection default all 1)"
+      else:
+        return "(mh default one %d)" % (default_num_transitions_per_sample(),)
+    ans = collectSamples(ripl, "pid", infer=posterior_inference_action())
+    gibbs_inference_action = "(do %s (gibbs 'z 0 1))" % \
+                             (posterior_inference_action(),)
     predictions = collectSamples(
-      ripl, "pid", infer="(do (rejection default all 1) (gibbs 'z 0 1))")
+      ripl, "pid", infer=gibbs_inference_action)
     return reportSameDiscrete(ans, predictions)
