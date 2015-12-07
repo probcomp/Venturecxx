@@ -203,8 +203,10 @@ struct Inferer
       gKernel = boost::shared_ptr<GKernel>(new MHGKernel);
     }
 
-    scope = fromPython(params["scope"]);
-    block = fromPython(params["block"]);
+    scope = parseValueO(params["scope"]);
+    block = parseValueO(params["block"]);
+    cout << "Inferring on " << scope->toString() << " and "
+         << block->toString() << endl;
 
     if (block->hasSymbol() && block->getSymbol() == "ordered_range")
     {
@@ -271,14 +273,14 @@ void PyTrace::registerConstraints()
 }
 
 double PyTrace::logLikelihoodAt(boost::python::object pyscope, boost::python::object pyblock) {
-  ScopeID scope = fromPython(pyscope);
-  ScopeID block = fromPython(pyblock);
+  ScopeID scope = parseValueO(pyscope);
+  BlockID block = parseValueO(pyblock);
   return trace->logLikelihoodAt(scope, block);
 }
 
 double PyTrace::logJointAt(boost::python::object pyscope, boost::python::object pyblock) {
-  ScopeID scope = fromPython(pyscope);
-  ScopeID block = fromPython(pyblock);
+  ScopeID scope = parseValueO(pyscope);
+  BlockID block = parseValueO(pyblock);
   return trace->logJointAt(scope, block);
 }
 
@@ -287,9 +289,11 @@ double PyTrace::likelihoodWeight()
   return trace->likelihoodWeight();
 }
 
-int PyTrace::numNodesInBlock(boost::python::object scope, boost::python::object block)
+int PyTrace::numNodesInBlock(boost::python::object pyscope, boost::python::object pyblock)
 {
-  return trace->getNodesInBlock(fromPython(scope), fromPython(block)).size();
+  ScopeID scope = parseValueO(pyscope);
+  BlockID block = parseValueO(pyblock);
+  return trace->getNodesInBlock(scope, block).size();
 }
 
 boost::python::list PyTrace::numFamilies()

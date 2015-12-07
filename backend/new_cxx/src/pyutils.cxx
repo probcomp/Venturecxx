@@ -248,6 +248,12 @@ VentureValuePtr fromPython(object o)
   throw "Failed to parse python object: " + str(o);
 }
 
+VentureValuePtr parseValueO(object o)
+{
+  extract<dict> d(o);
+  return parseValue(d);
+}
+
 VentureValuePtr parseValue(dict d)
 {
   string type = extract<string>(d["type"]);
