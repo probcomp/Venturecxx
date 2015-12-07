@@ -559,7 +559,8 @@ Resample all particles in the current set from the prior and reset
 their weights to the likelihood."""),
 
   engine_method_sp("enumerative_diversify",
-                   infer_action_maker_type([t.ExpressionType("scope : object"), t.ExpressionType("block : object")]),
+                   infer_action_maker_type([t.ExpressionType("scope : object"),
+                                            t.ExpressionType("block : object")]),
                    desc="""\
 Diversify the current particle set to represent the local conditional exactly.
 
@@ -571,7 +572,7 @@ Specifically:
 2) Fork every extant particle as many times are there are values
 
 3) Give each new particle a relative weight proportional to the
-   relative weight of its ancestor particle times the conditional 
+   relative weight of its ancestor particle times the conditional
    probability of the chosen value.
 
 Unlike most inference SPs, this transformation is deterministic.
@@ -581,7 +582,8 @@ This is useful together with `collapse_equal` and
 programs in Venture. """),
 
   engine_method_sp("collapse_equal",
-                   infer_action_maker_type([t.ExpressionType("scope : object"), t.ExpressionType("block : object")]),
+                   infer_action_maker_type([t.ExpressionType("scope : object"),
+                                            t.ExpressionType("block : object")]),
                    desc="""\
 Collapse the current particle set to represent the local conditional less redundantly.
 
@@ -604,7 +606,8 @@ This is useful together with `enumerative_diversify` for
 implementing certain kinds of dynamic programs in Venture. """),
 
   engine_method_sp("collapse_equal_map",
-                   infer_action_maker_type([t.ExpressionType("scope : object"), t.ExpressionType("block : object")]),
+                   infer_action_maker_type([t.ExpressionType("scope : object"),
+                                            t.ExpressionType("block : object")]),
                    desc="""\
 Like `collapse_equal` but deterministically retain the max-weight particle.
 
@@ -624,7 +627,8 @@ Run a subsampled Metropolis-Hastings kernel
 
 per the Austerity MCMC paper.
 
-Note: not all dependency structures that might occur in a scaffold are supported.  See `subsampled_mh_check_applicability`.
+Note: not all dependency structures that might occur in a scaffold are
+supported.  See `subsampled_mh_check_applicability`.
 
 Note: the resulting execution history may not actually be possible, so
 may confuse other transition kernels.  See `subsampled_mh_make_consistent`
@@ -757,7 +761,7 @@ Example::
               do(mh(default, one, 1),
                  collect(x)))
     plot("c0s", d)
-    
+
 will do 1000 iterations of `mh` collecting some standard data and
 the value of ``x``, and then show a plot of the ``x`` variable (which
 should be a scalar) against the iteration number (from 1 to 1000),
