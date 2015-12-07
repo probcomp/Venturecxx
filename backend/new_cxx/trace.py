@@ -129,7 +129,6 @@ def _ensure_stack_dict(val):
   return val.asStackDict(None)
 
 def _expToDict(exp):
-  print exp
   if isinstance(exp, int):
     return {"kernel":"mh", "scope":"default", "block":"one", "transitions": exp}
 

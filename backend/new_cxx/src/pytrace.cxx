@@ -205,8 +205,6 @@ struct Inferer
 
     scope = parseValueO(params["scope"]);
     block = parseValueO(params["block"]);
-    cout << "Inferring on " << scope->toString() << " and "
-         << block->toString() << endl;
 
     if (block->hasSymbol() && block->getSymbol() == "ordered_range")
     {
