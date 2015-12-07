@@ -148,3 +148,17 @@ but a cycle kernel that covers everything should solve it"""
 
   predictions = collectSamples(ripl,"pid",infer=infer)
   return reportKnownGaussian(34.0/3.0, math.sqrt(2.0/3.0), predictions)
+
+@on_inf_prim("mh")
+def testStringScopes():
+  ripl = get_ripl()
+  ripl.assume("a", '(tag "foo" "bar" (normal 0.0 1.0))', label="a")
+  ripl.assume("b", '(tag "foo" "bar" (normal 1.0 1.0))', label="b")
+  olda = ripl.report("a")
+  oldb = ripl.report("b")
+  # The point of block proposals is that both things change at once.
+  ripl.infer('(mh "foo" "bar" 1)')
+  newa = ripl.report("a")
+  newb = ripl.report("b")
+  assert not olda == newa
+  assert not oldb == newb

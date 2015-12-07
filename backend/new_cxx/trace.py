@@ -22,6 +22,7 @@ from venture.lite.sp import VentureSPRecord
 from venture.lite.value import VentureValue
 from venture.lite.builtin import builtInSPs
 import venture.lite.foreign as foreign
+import venture.value.dicts as v
 
 class WarningPSP(object):
   warned = {}
@@ -96,12 +97,26 @@ class Trace(object):
     self.trace.primitive_infer(_expToDict(exp))
 
   def log_likelihood_at(self, scope, block):
-    return self.trace.log_likelihood_at(_unwrapVentureValue(scope), _unwrapVentureValue(block))
+    return self.trace.log_likelihood_at(_ensure_stack_dict(scope),
+                                        _ensure_stack_dict(block))
 
   def log_joint_at(self, scope, block):
-    return self.trace.log_joint_at(_unwrapVentureValue(scope), _unwrapVentureValue(block))
+    return self.trace.log_joint_at(_ensure_stack_dict(scope),
+                                   _ensure_stack_dict(block))
 
-  def set_profiling(self, _enabled): pass # Puma can't be internally profiled (currently)
+  def numNodesInBlock(self, scope, block):
+    # This is kooky for compatibility with the Lite numNodesInBlock method.
+    def guess_type(obj):
+      if isinstance(obj, int):
+        return v.number(obj)
+      if isinstance(obj, basestring):
+        return v.symbol(obj)
+      raise Exception("numNodesInBlock can't handle %s" % obj)
+    return self.trace.numNodesInBlock(guess_type(scope), guess_type(block))
+
+  def set_profiling(self, _enabled):
+    pass # Puma can't be internally profiled (currently)
+
   def clear_profiling(self): pass
 
 def _unwrapVentureValue(val):
@@ -109,25 +124,32 @@ def _unwrapVentureValue(val):
     return val.asStackDict(None)["value"]
   return val
 
+def _ensure_stack_dict(val):
+  assert isinstance(val, VentureValue)
+  return val.asStackDict(None)
+
 def _expToDict(exp):
   if isinstance(exp, int):
     return {"kernel":"mh", "scope":"default", "block":"one", "transitions": exp}
+
+  scope = _ensure_stack_dict(exp[1])
+  block = _ensure_stack_dict(exp[2])
 
   exp = map(_unwrapVentureValue, exp)
 
   tag = exp[0]
   if tag == "mh":
     assert len(exp) == 4
-    return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}
+    return {"kernel":"mh","scope":scope,"block":block,"transitions":int(exp[3])}
   elif tag == "bogo_possibilize":
     assert len(exp) == 4
-    return {"kernel":"bogo_possibilize","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}
+    return {"kernel":"bogo_possibilize","scope":scope,"block":block,"transitions":int(exp[3])}
   elif tag == "func_mh":
     assert len(exp) == 4
-    return {"kernel":"mh","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}
+    return {"kernel":"mh","scope":scope,"block":block,"transitions":int(exp[3])}
   elif tag == "gibbs":
     assert 4 <= len(exp) and len(exp) <= 5
-    ans = {"kernel":"gibbs","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}
+    ans = {"kernel":"gibbs","scope":scope,"block":block,"transitions":int(exp[3])}
     if len(exp) == 5:
       ans["in_parallel"] = exp[4]
     else:
@@ -135,7 +157,7 @@ def _expToDict(exp):
     return ans
   elif tag == "emap":
     assert 4 <= len(exp) and len(exp) <= 5
-    ans = {"kernel":"emap","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}
+    ans = {"kernel":"emap","scope":scope,"block":block,"transitions":int(exp[3])}
     if len(exp) == 5:
       ans["in_parallel"] = exp[4]
     else:
@@ -143,21 +165,21 @@ def _expToDict(exp):
     return ans
   elif tag == "slice":
     assert len(exp) == 6
-    return {"kernel":"slice","scope":exp[1],"block":exp[2],"w":exp[3],"m":int(exp[4]),"transitions":int(exp[5])}
+    return {"kernel":"slice","scope":scope,"block":block,"w":exp[3],"m":int(exp[4]),"transitions":int(exp[5])}
   elif tag == "slice_doubling":
     assert len(exp) == 6
-    return {"kernel":"slice_doubling","scope":exp[1],"block":exp[2],"w":exp[3],"p":int(exp[4]),"transitions":int(exp[5])}
+    return {"kernel":"slice_doubling","scope":scope,"block":block,"w":exp[3],"p":int(exp[4]),"transitions":int(exp[5])}
   # [FIXME] expedient hack for now to allow windowing with pgibbs.
   elif tag == "pgibbs":
     assert 5 <= len(exp) and len(exp) <= 6
-    if type(exp[2]) is list:
-      range_spec = [d["value"] for d in exp[2]]
-      assert range_spec[0] == "ordered_range"
-      ans = {"kernel":"pgibbs","scope":exp[1],"block":"ordered_range",
+    if type(block["value"]) is list:
+      range_spec = block["value"]
+      assert range_spec[0]["value"] == "ordered_range"
+      ans = {"kernel":"pgibbs","scope":scope,"block":v.symbol("ordered_range"),
             "min_block":range_spec[1],"max_block":range_spec[2],
             "particles":int(exp[3]),"transitions":int(exp[4])}
     else:
-      ans = {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":int(exp[3]),"transitions":int(exp[4])}
+      ans = {"kernel":"pgibbs","scope":scope,"block":block,"particles":int(exp[3]),"transitions":int(exp[4])}
     if len(exp) == 6:
       ans["in_parallel"] = exp[5]
     else:
@@ -165,7 +187,7 @@ def _expToDict(exp):
     return ans
   elif tag == "func_pgibbs":
     assert 5 <= len(exp) and len(exp) <= 6
-    ans = {"kernel":"pgibbs","scope":exp[1],"block":exp[2],"particles":int(exp[3]),"transitions":int(exp[4])}
+    ans = {"kernel":"pgibbs","scope":scope,"block":block,"particles":int(exp[3]),"transitions":int(exp[4])}
     if len(exp) == 6:
       ans["in_parallel"] = exp[5]
     else:
@@ -173,25 +195,25 @@ def _expToDict(exp):
     return ans
   elif tag == "meanfield":
     assert len(exp) == 5
-    return {"kernel":"meanfield","scope":exp[1],"block":exp[2],"steps":int(exp[3]),"transitions":int(exp[4])}
+    return {"kernel":"meanfield","scope":scope,"block":block,"steps":int(exp[3]),"transitions":int(exp[4])}
   elif tag == "hmc":
     assert len(exp) == 6
-    return {"kernel":"hmc","scope":exp[1],"block":exp[2],"epsilon":exp[3],"L":int(exp[4]),"transitions":int(exp[5])}
+    return {"kernel":"hmc","scope":scope,"block":block,"epsilon":exp[3],"L":int(exp[4]),"transitions":int(exp[5])}
   elif tag == "map":
     assert len(exp) == 6
-    return {"kernel":"map","scope":exp[1],"block":exp[2],"rate":exp[3],"steps":int(exp[4]),"transitions":int(exp[5])}
+    return {"kernel":"map","scope":scope,"block":block,"rate":exp[3],"steps":int(exp[4]),"transitions":int(exp[5])}
   elif tag == "nesterov":
     assert len(exp) == 6
-    return {"kernel":"nesterov","scope":exp[1],"block":exp[2],"rate":exp[3],"steps":int(exp[4]),"transitions":int(exp[5])}
+    return {"kernel":"nesterov","scope":scope,"block":block,"rate":exp[3],"steps":int(exp[4]),"transitions":int(exp[5])}
   elif tag == "latents":
     assert len(exp) == 4
-    return {"kernel":"latents","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}
+    return {"kernel":"latents","scope":scope,"block":block,"transitions":int(exp[3])}
   elif tag == "rejection":
     assert len(exp) >= 3
     assert len(exp) <= 4
     if len(exp) == 4:
-      return {"kernel":"rejection","scope":exp[1],"block":exp[2],"transitions":int(exp[3])}
+      return {"kernel":"rejection","scope":scope,"block":block,"transitions":int(exp[3])}
     else:
-      return {"kernel":"rejection","scope":exp[1],"block":exp[2],"transitions":1}
+      return {"kernel":"rejection","scope":scope,"block":block,"transitions":1}
   else:
     raise Exception("Cannot parse infer instruction")

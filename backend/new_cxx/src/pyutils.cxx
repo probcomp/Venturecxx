@@ -143,23 +143,6 @@ VentureValuePtr parseVector(object value)
   return VentureValuePtr(new VentureVector(v));
 }
 
-VentureValuePtr parseTuple(object value)
-{
-  extract<tuple> getTuple(value);
-  if (!getTuple.check()) { throw "Tuple must be a tuple."; }
-  tuple t = getTuple();
-
-  ssize_t size = len(t);
-  vector<VentureValuePtr> v;
-
-  for (ssize_t i = 0; i < size; ++i)
-  {
-    v.push_back(fromPython(t[i]));
-  }
-
-  return VentureValuePtr(new VentureArray(v));
-}
-
 VentureValuePtr parseDict(object value)
 {
   extract<list> getItems(value);
@@ -220,32 +203,10 @@ VentureValuePtr parseSymmetricMatrix(object value)
     new VentureSymmetricMatrix(parseMatrix(value)->getSymmetricMatrix()));
 }
 
-VentureValuePtr fromPython(object o)
+VentureValuePtr parseValueO(object o)
 {
-  extract<string> s(o);
-  if (s.check()) { return VentureValuePtr(new VentureSymbol(s)); }
-
-  // be consistent with the parser, which never emits integers
-  // TODO: fix the parser and make this return a VentureInteger
-  extract<int> i(o);
-  if (i.check()) { return VentureValuePtr(new VentureNumber(i)); }
-
-  extract<double> d(o);
-  if (d.check()) { return VentureValuePtr(new VentureNumber(d)); }
-
-  extract<bool> b(o);
-  if (b.check()) { return VentureValuePtr(new VentureBool(b)); }
-
-  extract<list> l(o);
-  if (l.check()) { return parseList(l); }
-
-  extract<tuple> t(o);
-  if (t.check()) { return parseTuple(t); }
-
-  extract<dict> dict(o);
-  if (dict.check()) { return parseDict(dict); }
-
-  throw "Failed to parse python object: " + str(o);
+  extract<dict> d(o);
+  return parseValue(d);
 }
 
 VentureValuePtr parseValue(dict d)
