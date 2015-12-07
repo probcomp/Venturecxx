@@ -948,7 +948,7 @@ class SPRef(VentureValue):
 
 venture_types = [
   VentureNumber, VentureInteger, VentureProbability, VentureAtom, VentureBool,
-  VentureSymbol, VentureForeignBlob, VentureNil, VenturePair,
+  VentureSymbol, VentureString, VentureForeignBlob, VentureNil, VenturePair,
   VentureArray, VentureArrayUnboxed, VentureSimplex, VentureDict, VentureMatrix,
   VentureSymmetricMatrix, SPRef]
   # Break load order dependency by not adding SPs and Environments yet

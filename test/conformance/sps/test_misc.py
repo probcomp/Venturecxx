@@ -32,3 +32,10 @@ def testAssessAuxSmoke():
   eq_(math.log(0.5), r.sample("(assess true coin)"))
   r.observe("(coin)", True)
   eq_(math.log(float(2)/3), r.sample("(assess true coin)"))
+
+def testStringLiterals():
+  r = get_ripl()
+  assert not r.sample('(eq 3 "foo")')
+  assert r.sample('(eq "foo" "foo")')
+  assert not r.sample('(eq"foo" "bar")')
+  assert not r.sample('(eq "foo" 3)')
