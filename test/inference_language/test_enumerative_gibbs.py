@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.stats import statisticalTest, reportKnownDiscrete
+from venture.test.stats import statisticalTest, reportKnownDiscrete, reportSameDiscrete
 from venture.test.config import get_ripl, collectSamples, default_num_transitions_per_sample, gen_on_inf_prim, on_inf_prim
 
 @gen_on_inf_prim("gibbs")
@@ -164,3 +164,20 @@ def checkEnumerativeGibbsXOR3(in_parallel):
   predictions = collectSamples(ripl,"pid",infer=infer)
   ans = [(True,.75),(False,.25)]
   return reportKnownDiscrete(ans, predictions)
+
+@statisticalTest
+@on_inf_prim("gibbs") # Also rejection, but really testing Gibbs
+def testEnumerativeGibbsBrushRandomness():
+    """Test that Gibbs targets the correct stationary distribution, even
+    when there may be random choices downstream of variables being
+    enumerated.
+    """
+    ripl = get_ripl()
+    ripl.assume("z", "(tag 'z 0 (flip))")
+    ripl.assume("x", "(if z 0 (normal 0 10))")
+    ripl.observe("(normal x 1)", "4")
+    ripl.predict("z", label="pid")
+    ans = collectSamples(ripl, "pid", infer="(rejection default all 1)")
+    predictions = collectSamples(
+      ripl, "pid", infer="(do (rejection default all 1) (gibbs 'z 0 1))")
+    return reportSameDiscrete(ans, predictions)
