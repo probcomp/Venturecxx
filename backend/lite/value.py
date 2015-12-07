@@ -981,4 +981,3 @@ def registerVentureType(t, name = None):
     venture_types.append(t)
     if name is not None:
       stackable_types[name] = t
-

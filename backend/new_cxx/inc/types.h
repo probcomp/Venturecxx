@@ -51,7 +51,7 @@ typedef boost::shared_ptr<Node> RootOfFamily;
 typedef vector<double> Simplex;
 typedef vector<double> Gradient;
 
-/* TODO I keep oscillating on these. 
+/* TODO I keep oscillating on these.
    One convention could be to only use this shortcut for VentureValuePtr.
    Another could be to only use it for all VentureValues, which would include
    SP,Environment,SPRef,and others. */
