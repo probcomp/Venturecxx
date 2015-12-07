@@ -176,7 +176,7 @@ def _expToDict(exp):
     if type(block["value"]) is list:
       range_spec = [d["value"] for d in block["value"]]
       assert range_spec[0] == "ordered_range"
-      ans = {"kernel":"pgibbs","scope":scope,"block":{"symbol":"ordered_range"},
+      ans = {"kernel":"pgibbs","scope":scope,"block":v.symbol("ordered_range"),
             "min_block":range_spec[1],"max_block":range_spec[2],
             "particles":int(exp[3]),"transitions":int(exp[4])}
     else:
