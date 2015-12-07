@@ -92,7 +92,7 @@ const VentureValuePtr& VentureValue::getRest() const
   cannotConvertType(this,"pair"); assert(false); throw "no return";
 }
 
-  
+
 vector<VentureValuePtr> VentureValue::getArray() const
 {
   cannotConvertType(this,"array"); assert(false); throw "no return";
@@ -132,7 +132,7 @@ MatrixXd VentureValue::getSymmetricMatrix() const
 
 
 boost::python::dict VentureValue::toPython(Trace * trace) const
-{ 
+{
   boost::python::dict value;
   value["type"] = "unknown";
   value["value"] = "opaque";
@@ -140,7 +140,7 @@ boost::python::dict VentureValue::toPython(Trace * trace) const
 }
 
 
-bool VentureValue::operator<(const VentureValuePtr & rhs) const 
+bool VentureValue::operator<(const VentureValuePtr & rhs) const
 {
   int t1 = getValueTypeRank();
   int t2 = rhs->getValueTypeRank();
@@ -149,12 +149,18 @@ bool VentureValue::operator<(const VentureValuePtr & rhs) const
   else { return ltSameType(rhs); }
 }
 
-int VentureValue::getValueTypeRank() const { throw "Cannot compare type " + toString(); }
+int VentureValue::getValueTypeRank() const
+{
+  throw "Cannot compare type " + toString();
+}
 
-bool VentureValue::ltSameType(const VentureValuePtr & rhs) const { throw "Cannot compare " + toString(); }
+bool VentureValue::ltSameType(const VentureValuePtr & rhs) const
+{
+  throw "Cannot compare " + toString();
+}
 
 
-bool VentureValue::equals(const VentureValuePtr & other) const 
+bool VentureValue::equals(const VentureValuePtr & other) const
 {
   int t1 = getValueTypeRank();
   int t2 = other->getValueTypeRank();
@@ -162,16 +168,30 @@ bool VentureValue::equals(const VentureValuePtr & other) const
   else { return equalsSameType(other); }
 }
 
-bool VentureValue::equalsSameType(const VentureValuePtr & rhs) const { throw "Cannot compare " + toString(); }
+bool VentureValue::equalsSameType(const VentureValuePtr & rhs) const
+{
+  throw "Cannot compare " + toString();
+}
 
 size_t VentureValue::hash() const
 {
   assert(false); assert(false); throw "no return";
 }
 
-VentureValuePtr VentureValue::lookup(VentureValuePtr index) const { throw "Cannot look things up in " + toString(); }
-bool VentureValue::contains(VentureValuePtr index) const { throw "Cannot look for things in " + toString(); }
-int VentureValue::size() const { throw "Cannot measure size of " + toString(); }
+VentureValuePtr VentureValue::lookup(VentureValuePtr index) const
+{
+  throw "Cannot look things up in " + toString();
+}
+
+bool VentureValue::contains(VentureValuePtr index) const
+{
+  throw "Cannot look for things in " + toString();
+}
+
+int VentureValue::size() const
+{
+  throw "Cannot measure size of " + toString();
+}
 
 
 const vector<ESR>& VentureValue::getESRs() const
