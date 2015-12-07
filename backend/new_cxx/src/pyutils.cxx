@@ -163,7 +163,7 @@ VentureValuePtr parseTuple(object value)
 VentureValuePtr parseDict(object value)
 {
   extract<list> getItems(value);
-  
+
   if (!getItems.check()) { throw "Dict value must be a list."; }
 
   list items = getItems();
@@ -175,12 +175,12 @@ VentureValuePtr parseDict(object value)
   {
     extract<tuple> getPair(items[i]);
     if (!getPair.check()) { throw "Dict item must be a pair."; }
-    
+
     tuple pair = getPair();
-    
+
     VentureValuePtr k = parseValue(extract<dict>(pair[0]));
     VentureValuePtr v = parseValue(extract<dict>(pair[1]));
-    
+
     m[k] = v;
   }
 
@@ -190,7 +190,10 @@ VentureValuePtr parseDict(object value)
 VentureValuePtr parseMatrix(object value)
 {
   extract<numeric::array> getNumpyArray(value);
-  if (!getNumpyArray.check()) { throw "Matrix must be represented as a numpy array."; }
+  if (!getNumpyArray.check())
+  {
+    throw "Matrix must be represented as a numpy array.";
+  }
 
   numeric::array data = getNumpyArray();
   tuple shape = extract<tuple>(data.attr("shape"));
@@ -213,7 +216,8 @@ VentureValuePtr parseMatrix(object value)
 
 VentureValuePtr parseSymmetricMatrix(object value)
 {
-  return VentureValuePtr(new VentureSymmetricMatrix(parseMatrix(value)->getSymmetricMatrix()));
+  return VentureValuePtr(
+    new VentureSymmetricMatrix(parseMatrix(value)->getSymmetricMatrix()));
 }
 
 VentureValuePtr fromPython(object o)
@@ -247,29 +251,56 @@ VentureValuePtr fromPython(object o)
 VentureValuePtr parseValue(dict d)
 {
   string type = extract<string>(d["type"]);
-  
+
   object value = d["value"];
 
-  if (type == "number") { return VentureValuePtr(new VentureNumber(extract<double>(value))); }
-  else if (type == "real") { return VentureValuePtr(new VentureNumber(extract<double>(value))); }
+  if (type == "number")
+  {
+    return VentureValuePtr(new VentureNumber(extract<double>(value)));
+  }
+  else if (type == "real")
+  {
+    return VentureValuePtr(new VentureNumber(extract<double>(value)));
+  }
   else if (type == "integer") {
     // The parser currently makes these be Python floats
     extract<int> i(value);
     if (i.check()) { return VentureValuePtr(new VentureInteger(i)); }
     extract<double> d(value);
-    if (d.check()) { return VentureValuePtr(new VentureInteger((int)round(d))); }
+    if (d.check())
+    {
+      return VentureValuePtr(new VentureInteger((int)round(d)));
+    }
     throw "Unknown format for integer";
   }
-  else if (type == "probability") { return VentureValuePtr(new VentureProbability(extract<double>(value))); }
-  else if (type == "atom") { return VentureValuePtr(new VentureAtom(extract<int32_t>(value))); }
-  else if (type == "boolean") { return VentureValuePtr(new VentureBool(extract<bool>(value))); }
-  else if (type == "symbol") { return VentureValuePtr(new VentureSymbol(extract<string>(value))); }
-  else if (type == "string") { return VentureValuePtr(new VentureString(extract<string>(value))); }
+  else if (type == "probability")
+  {
+    return VentureValuePtr(new VentureProbability(extract<double>(value)));
+  }
+  else if (type == "atom")
+  {
+    return VentureValuePtr(new VentureAtom(extract<int32_t>(value)));
+  }
+  else if (type == "boolean")
+  {
+    return VentureValuePtr(new VentureBool(extract<bool>(value)));
+  }
+  else if (type == "symbol")
+  {
+    return VentureValuePtr(new VentureSymbol(extract<string>(value)));
+  }
+  else if (type == "string")
+  {
+    return VentureValuePtr(new VentureString(extract<string>(value)));
+  }
   else if (type == "list") { return parseList(value); }
   else if (type == "improper_list") { return parseImproperList(value); }
   else if (type == "vector") { return parseVector(value); }
   else if (type == "array") { return parseArray(value); }
-  else if (type == "array_unboxed") { return parseArrayUnboxed(value, d["subtype"]); }
+  else if (type == "array_unboxed")
+  {
+    return parseArrayUnboxed(value, d["subtype"]);
+  }
   else if (type == "simplex") { return parseSimplex(value); }
   else if (type == "dict") { return parseDict(value); }
   else if (type == "matrix") { return parseMatrix(value); }
