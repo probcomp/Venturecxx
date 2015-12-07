@@ -210,8 +210,8 @@ struct Inferer
 
     if (block->hasSymbol() && block->getSymbol() == "ordered_range")
     {
-      VentureValuePtr minBlock = fromPython(params["min_block"]);
-      VentureValuePtr maxBlock = fromPython(params["max_block"]);
+      VentureValuePtr minBlock = parseValueO(params["min_block"]);
+      VentureValuePtr maxBlock = parseValueO(params["max_block"]);
       scaffoldIndexer = boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block,minBlock,maxBlock));
     }
     else
