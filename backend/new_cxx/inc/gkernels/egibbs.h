@@ -28,34 +28,37 @@ struct Particle;
 /* enumerative Gibbs */
 struct EnumerativeGibbsGKernel : GKernel
 {
- EnumerativeGibbsGKernel(bool inParallel): inParallel(inParallel) {}
-  pair<Trace*,double> propose(ConcreteTrace * trace,boost::shared_ptr<Scaffold> scaffold);
+  EnumerativeGibbsGKernel(bool inParallel): inParallel(inParallel) {}
+  pair<Trace*,double> propose(ConcreteTrace * trace,
+                              boost::shared_ptr<Scaffold> scaffold);
   void accept();
   void reject();
-  
+
   ConcreteTrace * trace;
   boost::shared_ptr<Scaffold> scaffold;
-  
+
   /* The old DB */
   boost::shared_ptr<DB> rhoDB;
-  
+
   /* The particle chosen by propose(). */
   boost::shared_ptr<Particle> finalParticle;
 
   bool inParallel;
 
   // An overridable hook for enumerative MAP
-  virtual boost::shared_ptr<Particle> selectParticle(const vector<boost::shared_ptr<Particle> >& particles,
-                                              const vector<double>& particleWeights,
-                                              ConcreteTrace* trace) const;
+  virtual boost::shared_ptr<Particle> selectParticle(
+    const vector<boost::shared_ptr<Particle> >& particles,
+    const vector<double>& particleWeights,
+    ConcreteTrace* trace) const;
 };
 
 struct EnumerativeMAPGKernel : EnumerativeGibbsGKernel
 {
   EnumerativeMAPGKernel(bool inParallel): EnumerativeGibbsGKernel(inParallel) {}
-  boost::shared_ptr<Particle> selectParticle(const vector<boost::shared_ptr<Particle> >& particles,
-                                      const vector<double>& particleWeights,
-                                      ConcreteTrace* trace) const;
+  boost::shared_ptr<Particle> selectParticle(
+    const vector<boost::shared_ptr<Particle> >& particles,
+    const vector<double>& particleWeights,
+    ConcreteTrace* trace) const;
 
 };
 #endif
