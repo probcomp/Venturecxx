@@ -33,7 +33,7 @@ class WarningPSP(object):
   def __getattr__(self, attrname):
     sub = getattr(self.psp, attrname)
     def f(*args, **kwargs):
-      if not self.name in WarningPSP.warned:
+      if self.name not in WarningPSP.warned:
         print "Warning: Defaulting to using %s from Python, likely to be slow" % self.name
         WarningPSP.warned[self.name] = True
       return sub(*args, **kwargs)
@@ -138,6 +138,8 @@ def _expToDict(exp):
   exp = map(_unwrapVentureValue, exp)
 
   tag = exp[0]
+  # Silly pylint, I intentionally write x <= (foo) and (foo) <= y below.
+  # pylint:disable=misplaced-comparison-constant
   if tag == "mh":
     assert len(exp) == 4
     return {"kernel":"mh","scope":scope,"block":block,"transitions":int(exp[3])}
@@ -172,7 +174,7 @@ def _expToDict(exp):
   # [FIXME] expedient hack for now to allow windowing with pgibbs.
   elif tag == "pgibbs":
     assert 5 <= len(exp) and len(exp) <= 6
-    if type(block["value"]) is list:
+    if isinstance(block["value"], list):
       range_spec = block["value"]
       assert range_spec[0]["value"] == "ordered_range"
       ans = {"kernel":"pgibbs","scope":scope,"block":v.symbol("ordered_range"),
