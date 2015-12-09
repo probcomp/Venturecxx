@@ -42,12 +42,14 @@ ignore = ",".join ( [
 
 mypath = os.path.dirname(os.path.realpath(sys.argv[0]))
 lintfile = mypath + "/pylintrc"
+rootpath = os.path.dirname(mypath)
+pythenvfile = rootpath + "/pythenv.sh"
 
 workdir = os.path.dirname(sys.argv[1])
 filename = os.path.basename(sys.argv[1])
 
-cmd = "pylint --output-format parseable --reports n --rcfile %s %s" % \
-    (lintfile, filename)
+cmd = "%s pylint --output-format parseable --reports n --rcfile %s %s" % \
+    (pythenvfile, lintfile, filename)
 
 p = Popen ( cmd, shell = True, bufsize = -1, cwd = workdir or None,
             stdin = PIPE, stdout = PIPE, close_fds = True )
