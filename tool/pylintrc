@@ -25,14 +25,12 @@ disable=invalid-name,
  multiple-statements,
 # Don't want hassle about unconventional continuation lines
  bad-continuation,
- no-self-use,
  too-few-public-methods,
  too-many-public-methods,
 # W0142: Used * or ** magic
  W0142,
  fixme,
  logging-not-lazy,
- attribute-defined-outside-init,
  redefined-builtin,
 # Messages disabled pending normalization of our codebase:
  no-name-in-module,
@@ -44,6 +42,7 @@ disable=invalid-name,
  trailing-whitespace,
 # C0324: Comma not followed by a space
  C0324,
+ no-self-use,
  too-many-instance-attributes,
  too-many-return-statements,
  too-many-branches,
@@ -53,7 +52,8 @@ disable=invalid-name,
 # R0921: Abstract class not used
  R0921,
 # R0922: Abstract class little used
- R0922
+ R0922,
+ attribute-defined-outside-init
 
 # Rationale: Suppressing no-member and no-name-in-module errors
 #   Pylint does not understand metaprogramming.  Sadly, much of
