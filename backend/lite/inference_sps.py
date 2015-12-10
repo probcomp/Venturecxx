@@ -18,7 +18,7 @@
 from venture.engine.inference import Dataset
 from venture.engine.plot_spec import PlotSpec
 from venture.exception import VentureException
-from venture.lite.exception import VentureError
+from venture.lite.exception import VentureNestedRiplMethodError
 from venture.lite.exception import VentureTypeError
 from venture.lite.exception import VentureValueError
 from venture.lite.records import RecordType
@@ -96,17 +96,6 @@ class MadeEngineMethodInferOutputPSP(psp.LikelihoodFreePSP):
     return (ans, engine)
   def description(self, _name):
     return self.desc
-
-class VentureNestedRiplMethodError(VentureError):
-  """This exception means that this SP attempted a recursive Ripl operation which failed."""
-  def __init__(self, message, cause, stack, addr):
-    super(VentureNestedRiplMethodError, self).__init__(message)
-    self.cause = cause
-    self.stack = stack
-    self.addr = addr
-
-  def __str__(self):
-    return str(self.cause)
 
 class MadeRiplMethodInferOutputPSP(psp.LikelihoodFreePSP):
   def __init__(self, name, operands, desc=None):

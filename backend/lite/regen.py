@@ -21,7 +21,7 @@ from venture.exception import VentureException
 from venture.lite.consistency import assertTorus
 from venture.lite.consistency import assertTrace
 from venture.lite.exception import VentureError
-from venture.lite.inference_sps import VentureNestedRiplMethodError # TODO Ugh.
+from venture.lite.exception import VentureNestedRiplMethodError
 from venture.lite.lkernel import VariationalLKernel
 from venture.lite.node import isConstantNode
 from venture.lite.node import isLookupNode
