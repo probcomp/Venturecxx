@@ -17,13 +17,15 @@
 
 """(Deterministic) vector operation SPs"""
 
-import numpy as np
 from numbers import Number
 
-import types as t
-from sp_registry import registerBuiltinSP
-from sp_help import deterministic_typed, type_test
-from exception import VentureValueError
+import numpy as np
+
+from venture.lite.exception import VentureValueError
+from venture.lite.sp_help import deterministic_typed
+from venture.lite.sp_help import type_test
+from venture.lite.sp_registry import registerBuiltinSP
+import venture.lite.types as t
 
 registerBuiltinSP("array",
   deterministic_typed(lambda *args: np.array(args),

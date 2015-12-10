@@ -19,8 +19,12 @@
 # For a description of the framework, see macro_system.py
 
 from venture.exception import VentureException
-from macro_system import Macro, Syntax, getSym, register_macro, expand
-from pattern_language import SyntaxRule
+from venture.sivm.macro_system import Macro
+from venture.sivm.macro_system import Syntax
+from venture.sivm.macro_system import expand
+from venture.sivm.macro_system import getSym
+from venture.sivm.macro_system import register_macro
+from venture.sivm.pattern_language import SyntaxRule
 import venture.value.dicts as v
 
 def isLiteral(exp):

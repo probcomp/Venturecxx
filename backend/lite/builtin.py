@@ -15,35 +15,38 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from sp_registry import registerBuiltinSP, builtInSPs, builtInSPsIter # Importing for re-export pylint:disable=unused-import
-
-import value as v
+# Importing for re-export pylint:disable=unused-import
+from venture.lite.sp_registry import registerBuiltinSP
+from venture.lite.sp_registry import builtInSPs
+from venture.lite.sp_registry import builtInSPsIter
+import venture.lite.value as v
 
 # These modules actually define the PSPs.
 # Import them for their effect on the registry.
 # pylint:disable=unused-import
-import venmath
-import basic_sps
-import vectors
-import records
-import functional
-import conditionals
-import csp
-import eval_sps
-import msp
-import scope
-import discrete
-import continuous
-import dirichlet
-import crp
-import hmm
-import cmvn
-import function
-import gp
+import venture.lite.venmath
+import venture.lite.basic_sps
+import venture.lite.vectors
+import venture.lite.records
+import venture.lite.functional
+import venture.lite.conditionals
+import venture.lite.csp
+import venture.lite.eval_sps
+import venture.lite.msp
+import venture.lite.scope
+import venture.lite.discrete
+import venture.lite.continuous
+import venture.lite.dirichlet
+import venture.lite.crp
+import venture.lite.hmm
+import venture.lite.cmvn
+import venture.lite.function
+import venture.lite.gp
 
 # The types in the types module are generated programmatically, so
 # pylint doesn't find out about them.
 # pylint: disable=no-member
 
 def builtInValues():
-  return { "true" : v.VentureBool(True), "false" : v.VentureBool(False), "nil" : v.VentureNil() }
+  return { "true" : v.VentureBool(True), "false" : v.VentureBool(False),
+           "nil" : v.VentureNil() }

@@ -17,18 +17,27 @@
 
 import random
 import math
+
 import scipy
 import scipy.special
-from utils import extendedLog, simulateCategorical, logDensityCategorical
-from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
-from sp import SP, SPAux, VentureSPRecord, SPType
-from lkernel import SimulationAAALKernel
-from value import VentureAtom
-import types as t
-from exception import VentureValueError
 
-from sp_registry import registerBuiltinSP
-from sp_help import typed_nr
+from venture.lite.exception import VentureValueError
+from venture.lite.lkernel import SimulationAAALKernel
+from venture.lite.psp import DeterministicMakerAAAPSP
+from venture.lite.psp import NullRequestPSP
+from venture.lite.psp import RandomPSP
+from venture.lite.psp import TypedPSP
+from venture.lite.sp import SP
+from venture.lite.sp import SPAux
+from venture.lite.sp import SPType
+from venture.lite.sp import VentureSPRecord
+from venture.lite.sp_help import typed_nr
+from venture.lite.sp_registry import registerBuiltinSP
+from venture.lite.utils import extendedLog
+from venture.lite.utils import logDensityCategorical
+from venture.lite.utils import simulateCategorical
+from venture.lite.value import VentureAtom
+import venture.lite.types as t
 
 
 class DiscretePSP(RandomPSP):

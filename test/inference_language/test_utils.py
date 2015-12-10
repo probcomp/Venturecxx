@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import raises, eq_
+from nose.tools import eq_
 
 from venture.test.config import get_ripl, on_inf_prim
 import venture.test.errors as err

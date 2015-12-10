@@ -15,12 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from value import VentureValue, registerVentureType
-from psp import DeterministicPSP, NullRequestPSP
-from sp import SP, SPType
+from venture.lite.psp import DeterministicPSP
+from venture.lite.psp import NullRequestPSP
+from venture.lite.sp import SP
+from venture.lite.sp import SPType
+from venture.lite.sp_registry import registerBuiltinSP
+from venture.lite.value import VentureValue
+from venture.lite.value import registerVentureType
 import venture.value.dicts as v
-
-from sp_registry import registerBuiltinSP
 
 """This doesn't subclass VentureSPRecord, as if it did, then
 the trace would turn it into an SPRef. While this would make it

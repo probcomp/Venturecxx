@@ -66,12 +66,13 @@ To write a new test:
 
 """
 
-import nose.tools as nose
-from nose import SkipTest
-from testconfig import config
+from StringIO import StringIO
 from inspect import isgeneratorfunction
 import sys
-from StringIO import StringIO
+
+from nose import SkipTest
+import nose.tools as nose
+from testconfig import config
 
 import venture.shortcuts as s
 import venture.venturemagics.ip_parallel as ip_parallel

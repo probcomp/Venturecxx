@@ -15,9 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from value import VentureValue, registerVentureType, VentureNil
-from types import VentureType
-from exception import VentureError
+from venture.lite.exception import VentureError
+from venture.lite.types import VentureType
+from venture.lite.value import VentureNil
+from venture.lite.value import VentureValue
+from venture.lite.value import registerVentureType
 import venture.value.dicts as v
 
 class SPFamilies(object):

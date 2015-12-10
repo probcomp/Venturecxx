@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from value import *
-from request import Request
+from venture.lite.value import *
+from venture.lite.request import Request
 
 ### Venture Types
 
@@ -35,7 +35,7 @@ class VentureType(object):
   def gradient_type(self):
     "The type of the cotangent space of the space represented by this type."
     return self
-  
+
   def toJSON(self):
     return self.__class__.__name__
 

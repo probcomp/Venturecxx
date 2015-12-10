@@ -17,10 +17,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import copy
+
 from venture.exception import VentureException
 from venture.sivm import utils
 import venture.value.dicts as v
-import copy
 
 class CoreSivm(object):
     ###############################
@@ -33,13 +34,13 @@ class CoreSivm(object):
         # the engine doesn't support reporting "observe" directives
         self.observe_dict = {}
         self.profiler_enabled = False
-    
+
     _implemented_instructions = {"define","assume","observe","predict",
             "configure","forget","freeze","report","evaluate","infer",
             "clear","rollback","get_global_logscore",
             "start_continuous_inference","stop_continuous_inference",
             "continuous_inference_status", "profiler_configure"}
-    
+
     def execute_instruction(self, instruction):
         utils.validate_instruction(instruction,self._implemented_instructions)
         f = getattr(self,'_do_'+instruction['instruction'])
@@ -176,11 +177,11 @@ class CoreSivm(object):
         utils.require_state(self.state,'default')
         l = self.engine.logscore()
         return {"logscore":l}
-    
+
     ###########################
     # Continuous Inference
     ###########################
-    
+
     def _do_continuous_inference_status(self,_):
         utils.require_state(self.state,'default')
         return self.engine.continuous_inference_status()
@@ -190,15 +191,15 @@ class CoreSivm(object):
         e = utils.validate_arg(instruction, 'expression',
                 utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
         self.engine.start_continuous_inference(e)
-        
+
     def _do_stop_continuous_inference(self,_):
         utils.require_state(self.state,'default')
         return self.engine.stop_continuous_inference()
-    
+
     ##############################
     # Profiler (stubs)
     ##############################
-    
+
     def _do_profiler_configure(self,instruction):
         utils.require_state(self.state,'default')
         d = utils.validate_arg(instruction, 'options', utils.validate_dict)

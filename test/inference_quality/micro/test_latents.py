@@ -15,9 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose import SkipTest
-from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, on_inf_prim
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.config import skipWhenRejectionSampling
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import statisticalTest
 
 # TODO this is just one idea for how to encode matrices.
 # Not sure what the interface to make_lazy_hmm should be.

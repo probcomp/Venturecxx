@@ -17,11 +17,14 @@
 
 import cPickle as pickle
 
-from ..multiprocess import (SynchronousMaster,
-                            SynchronousSerializingMaster, ThreadedMaster,
-                            ThreadedSerializingMaster, MultiprocessingMaster)
-import trace as tr
-from venture.lite.utils import sampleLogCategorical, logaddexp
+from ..multiprocess import MultiprocessingMaster
+from ..multiprocess import SynchronousMaster
+from ..multiprocess import SynchronousSerializingMaster
+from ..multiprocess import ThreadedMaster
+from ..multiprocess import ThreadedSerializingMaster
+from venture.lite.utils import logaddexp
+from venture.lite.utils import sampleLogCategorical
+import venture.engine.trace as tr
 
 class TraceSet(object):
 

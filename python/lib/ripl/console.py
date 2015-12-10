@@ -17,14 +17,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import copy
-import traceback
 from cmd import Cmd
 from functools import wraps
+import copy
 import os
+import traceback
 
 from venture.exception import VentureException
-from utils import strip_types
+from venture.ripl.utils import strip_types
 
 def printValue(directive):
   '''Gets the actual value returned by an assume, predict, report, or sample directive.'''

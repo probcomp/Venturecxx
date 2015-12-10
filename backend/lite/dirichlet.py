@@ -16,22 +16,24 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import copy
-import scipy.special
-import numpy.random as npr
 import math
 
-from lkernel import SimulationAAALKernel
-from sp import SP, VentureSPRecord, SPAux, SPType
-from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
-from utils import simulateDirichlet, logDensityDirichlet
-from value import VentureAtom
-from types import AnyType
-from exception import VentureValueError
-from range_tree import Node, sample
+import scipy.special
+import numpy.random as npr
 
-import types as t
-from sp_registry import registerBuiltinSP
-from sp_help import typed_nr
+from venture.lite.exception import VentureValueError
+from venture.lite.lkernel import SimulationAAALKernel
+from venture.lite.psp import DeterministicMakerAAAPSP
+from venture.lite.psp import NullRequestPSP
+from venture.lite.psp import RandomPSP
+from venture.lite.psp import TypedPSP
+from venture.lite.range_tree import Node, sample
+from venture.lite.sp import SP, VentureSPRecord, SPAux, SPType
+from venture.lite.sp_help import typed_nr
+from venture.lite.sp_registry import registerBuiltinSP
+from venture.lite.utils import simulateDirichlet, logDensityDirichlet
+from venture.lite.value import VentureAtom
+import venture.lite.types as t
 
 #### Directly sampling simplexes
 
@@ -116,7 +118,7 @@ class MakerCDirMultOutputPSP(DeterministicMakerAAAPSP):
     os = vals[1] if len(vals) > 1 else [VentureAtom(i) for i in range(len(alpha))]
     if not len(os) == len(alpha):
       raise VentureValueError("Set of objects to choose from is the wrong length")
-    output = TypedPSP(CDirMultOutputPSP(alpha,os), SPType([], AnyType()))
+    output = TypedPSP(CDirMultOutputPSP(alpha,os), SPType([], t.AnyType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,len(alpha)))
 
   def description(self,name):
@@ -192,7 +194,7 @@ class MakerUDirMultOutputPSP(RandomPSP):
     if not len(os) == n:
       raise VentureValueError("Set of objects to choose from is the wrong length")
     theta = npr.dirichlet(alpha)
-    output = TypedPSP(UDirMultOutputPSP(theta,os), SPType([], AnyType()))
+    output = TypedPSP(UDirMultOutputPSP(theta,os), SPType([], t.AnyType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,n))
 
   def logDensity(self,value,args):
@@ -215,7 +217,7 @@ class UDirMultAAALKernel(SimulationAAALKernel):
     assert isinstance(madeaux,DirMultSPAux)
     counts = [count + a for (count,a) in zip(madeaux.counts,alpha)]
     newTheta = npr.dirichlet(counts)
-    output = TypedPSP(UDirMultOutputPSP(newTheta,os), SPType([], AnyType()))
+    output = TypedPSP(UDirMultOutputPSP(newTheta,os), SPType([], t.AnyType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,len(alpha)),
                            madeaux)
 
@@ -272,7 +274,7 @@ class MakerCSymDirMultOutputPSP(DeterministicMakerAAAPSP):
     os = vals[2] if len(vals) > 2 else [VentureAtom(i) for i in range(n)]
     if not len(os) == n:
       raise VentureValueError("Set of objects to choose from is the wrong length")
-    output = TypedPSP(CSymDirMultOutputPSP(alpha,n,os), SPType([], AnyType()))
+    output = TypedPSP(CSymDirMultOutputPSP(alpha,n,os), SPType([], t.AnyType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,n))
 
   def madeSpLogDensityOfCountsBound(self, aux):
@@ -321,7 +323,7 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
     if not len(os) == n:
       raise VentureValueError("Set of objects to choose from is the wrong length")
     theta = npr.dirichlet([alpha for _ in range(n)])
-    output = TypedPSP(USymDirMultOutputPSP(theta,os), SPType([], AnyType()))
+    output = TypedPSP(USymDirMultOutputPSP(theta,os), SPType([], t.AnyType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,n))
 
   def logDensity(self,value,args):
@@ -345,7 +347,7 @@ class USymDirMultAAALKernel(SimulationAAALKernel):
     assert isinstance(madeaux,DirMultSPAux)
     counts = [count + alpha for count in madeaux.counts]
     newTheta = npr.dirichlet(counts)
-    output = TypedPSP(USymDirMultOutputPSP(newTheta,os), SPType([], AnyType()))
+    output = TypedPSP(USymDirMultOutputPSP(newTheta,os), SPType([], t.AnyType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,n), madeaux)
 
   def weight(self, _trace, _newValue, _args):

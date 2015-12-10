@@ -15,18 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import sp
-import psp
-import value as v
-import types as t
-from sp_help import no_request, deterministic_typed
-from exception import VentureError, VentureTypeError
 from venture.engine.inference import Dataset
-from venture.exception import VentureException
-from venture.lite.value import VentureForeignBlob
-from venture.lite.exception import VentureValueError
 from venture.engine.plot_spec import PlotSpec
-from venture.lite.records import VentureRecord, RecordType
+from venture.exception import VentureException
+from venture.lite.exception import VentureError
+from venture.lite.exception import VentureTypeError
+from venture.lite.exception import VentureValueError
+from venture.lite.records import RecordType
+from venture.lite.records import VentureRecord
+from venture.lite.sp_help import deterministic_typed
+from venture.lite.sp_help import no_request
+from venture.lite.value import VentureForeignBlob
+import venture.lite.psp as psp
+import venture.lite.sp as sp
+import venture.lite.types as t
+import venture.lite.value as v
 
 class InferPrimitiveOutputPSP(psp.DeterministicPSP):
   def __init__(self, val, klass, desc, tp):

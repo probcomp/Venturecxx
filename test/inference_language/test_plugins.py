@@ -16,10 +16,6 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose.tools import assert_raises
-from numpy.testing import assert_array_almost_equal
-from os import path
-import os
-import pandas as pd
 
 from venture.test.config import get_ripl
 from venture.exception import VentureException

@@ -15,9 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, collectSamples, broken_in
 from scipy.stats import laplace
+
+from venture.test.config import collectSamples, broken_in
+from venture.test.config import get_ripl
+from venture.test.stats import reportKnownContinuous
+from venture.test.stats import statisticalTest
 
 @statisticalTest
 @broken_in('puma', "Laplace distribution not implemented in Puma")

@@ -18,12 +18,14 @@
 # -*- coding: utf-8 -*-
 
 import new
-from flask import Flask, request
-import requests
 import json
 
+from flask import Flask
+from flask import request
+import requests
+
 from venture.exception import VentureException
-from crossdomain import crossdomain
+from venture.server.crossdomain import crossdomain
 
 class RestClient(object):
     def __init__(self, base_url, function_list):
@@ -48,14 +50,14 @@ class RestClient(object):
 
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
-        
+
         import numpy
         if isinstance(obj, numpy.ndarray):
             return obj.tolist()
-        
+
         if hasattr(obj, 'toJSON'):
             return obj.toJSON()
-        
+
         return json.JSONEncoder.default(self, obj)
 
 class RestServer(Flask):

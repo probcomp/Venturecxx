@@ -14,16 +14,18 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-import threading
-import dill
-import time
-from contextlib import contextmanager
 
-from venture.exception import VentureException
-from trace_set import TraceSet
+from contextlib import contextmanager
+import threading
+import time
+
+import dill
+
 from venture.engine.inference import Infer
-import venture.value.dicts as v
+from venture.engine.trace_set import TraceSet
+from venture.exception import VentureException
 import venture.lite.value as vv
+import venture.value.dicts as v
 
 class Engine(object):
 
@@ -411,7 +413,7 @@ def _inference_prelude():
 
 def _compute_inference_prelude():
   ans = []
-  import inference_prelude
+  import venture.engine.inference_prelude as inference_prelude
   for (name, _desc, form) in inference_prelude.prelude:
     from venture.parser.church_prime.parse import ChurchPrimeParser
     from venture.sivm.macro_system import desugar_expression

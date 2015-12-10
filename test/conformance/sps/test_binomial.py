@@ -15,11 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from nose.tools import assert_almost_equal
 import scipy.stats
-from nose.tools import assert_equal, assert_almost_equal
 
-from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, default_num_transitions_per_sample, on_inf_prim, broken_in
+from venture.test.config import broken_in
+from venture.test.config import collectSamples
+from venture.test.config import default_num_transitions_per_sample
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import statisticalTest
 
 @statisticalTest
 def testBinomial1():

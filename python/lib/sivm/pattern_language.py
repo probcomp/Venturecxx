@@ -19,7 +19,11 @@
 # See the SyntaxRule class.
 
 from venture.exception import VentureException
-from macro_system import Macro, Syntax, isSym, getSym, expand
+from venture.sivm.macro_system import Macro
+from venture.sivm.macro_system import Syntax
+from venture.sivm.macro_system import expand
+from venture.sivm.macro_system import getSym
+from venture.sivm.macro_system import isSym
 
 def traverse(exp):
   if isinstance(exp, list):

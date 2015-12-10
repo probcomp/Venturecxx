@@ -15,8 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 # -*- coding: utf-8 -*-
-from nose.plugins.attrib import attr
+
 import unittest
+
+from nose.plugins.attrib import attr
 
 from venture.parser import VentureScriptParser
 import venture.parser.venture_script.parse as module

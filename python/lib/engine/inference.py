@@ -15,18 +15,25 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import time
-from pandas import DataFrame
 from copy import copy
+import time
 
-from venture.lite.value import (VentureArray, VentureSymbol, VentureString,
-                                VentureInteger, VentureValue, VentureNil)
-from venture.lite.types import (ExpressionType, SymbolType)
+from pandas import DataFrame
+
+from venture.engine.plot_spec import PlotSpec
+from venture.engine.trace_set import TraceSet
+from venture.lite.exception import VentureCallbackError
+from venture.lite.exception import VentureValueError
+from venture.lite.types import ExpressionType
+from venture.lite.types import SymbolType
 from venture.lite.utils import logWeightsToNormalizedDirect
+from venture.lite.value import VentureArray
+from venture.lite.value import VentureInteger
+from venture.lite.value import VentureNil
+from venture.lite.value import VentureString
+from venture.lite.value import VentureSymbol
+from venture.lite.value import VentureValue
 from venture.ripl.utils import strip_types_from_dict_values
-from venture.lite.exception import VentureValueError, VentureCallbackError
-from trace_set import TraceSet
-from plot_spec import PlotSpec
 
 class Infer(object):
   def __init__(self, engine):

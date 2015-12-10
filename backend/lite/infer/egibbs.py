@@ -20,7 +20,9 @@ from ..regen import regenAndAttach
 from ..detach import detachAndExtract
 from ..utils import sampleLogCategorical, cartesianProduct
 from ..consistency import assertTrace, assertTorus
-from mh import getCurrentValues, registerDeterministicLKernels, registerDeterministicLKernelsByAddress
+from venture.lite.infer.mh import getCurrentValues
+from venture.lite.infer.mh import registerDeterministicLKernels
+from venture.lite.infer.mh import registerDeterministicLKernelsByAddress
 
 def getCartesianProductOfEnumeratedValues(trace,pnodes):
   enumeratedValues = [trace.pspAt(pnode).enumerateValues(trace.argsAt(pnode)) for pnode in pnodes]

@@ -17,12 +17,11 @@
 
 from numbers import Number
 
-import value as vv
-import types as t
-from exception import VentureTypeError
-import sp_help
-
-from sp_registry import registerBuiltinSP
+from venture.lite.exception import VentureTypeError
+from venture.lite.sp_registry import registerBuiltinSP
+import venture.lite.sp_help as sp_help
+import venture.lite.types as t
+import venture.lite.value as vv
 
 class RecordType(t.VentureType):
   def __init__(self, tag, name_extra=None):

@@ -16,17 +16,23 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import numbers
-import exp as e
-from node import isConstantNode, isLookupNode, isRequestNode, isOutputNode
-from sp import VentureSPRecord
-from psp import NullRequestPSP, PSP
-from value import SPRef
-from lkernel import VariationalLKernel
-from scope import isTagOutputPSP
-from consistency import assertTorus, assertTrace
-from exception import VentureError
+
 from venture.exception import VentureException
+from venture.lite.consistency import assertTorus
+from venture.lite.consistency import assertTrace
+from venture.lite.exception import VentureError
 from venture.lite.inference_sps import VentureNestedRiplMethodError # TODO Ugh.
+from venture.lite.lkernel import VariationalLKernel
+from venture.lite.node import isConstantNode
+from venture.lite.node import isLookupNode
+from venture.lite.node import isOutputNode
+from venture.lite.node import isRequestNode
+from venture.lite.psp import NullRequestPSP
+from venture.lite.psp import PSP
+from venture.lite.scope import isTagOutputPSP
+from venture.lite.sp import VentureSPRecord
+from venture.lite.value import SPRef
+import venture.lite.exp as e
 
 def regenAndAttach(trace,scaffold,shouldRestore,omegaDB,gradients):
   assertTorus(scaffold)

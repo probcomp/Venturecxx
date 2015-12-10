@@ -20,17 +20,21 @@
 import math
 import numpy as np
 
-from sp import SPType
-import value as v
-import types as t
-from sp_registry import registerBuiltinSP
-from sp_help import dispatching_psp, deterministic_psp, no_request, binaryNum
-from sp_help import unaryNum, zero_gradient
-
-from utils import careful_exp
-from utils import logistic, T_logistic
-from utils import logit
-from exception import VentureValueError
+from venture.lite.exception import VentureValueError
+from venture.lite.sp import SPType
+from venture.lite.sp_help import binaryNum
+from venture.lite.sp_help import deterministic_psp
+from venture.lite.sp_help import dispatching_psp
+from venture.lite.sp_help import no_request
+from venture.lite.sp_help import unaryNum
+from venture.lite.sp_help import zero_gradient
+from venture.lite.sp_registry import registerBuiltinSP
+from venture.lite.utils import T_logistic
+from venture.lite.utils import careful_exp
+from venture.lite.utils import logistic
+from venture.lite.utils import logit
+import venture.lite.types as t
+import venture.lite.value as v
 
 def vvsum(venture_array):
   # TODO Why do the directions come in and out as Venture Values

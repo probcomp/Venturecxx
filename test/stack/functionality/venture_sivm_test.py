@@ -14,12 +14,14 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-from nose.plugins.attrib import attr
+
 import unittest
+
+from nose.plugins.attrib import attr
 from nose import SkipTest
 
-from venture.sivm import VentureSivm
 from venture.exception import VentureException
+from venture.sivm import VentureSivm
 from venture.test.config import get_core_sivm
 import venture.value.dicts as v
 

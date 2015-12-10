@@ -15,17 +15,22 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.stats import statisticalTest, reportKnownMean
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, on_inf_prim
 from nose import SkipTest
 from testconfig import config
 
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.config import skipWhenRejectionSampling
+from venture.test.stats import reportKnownMean
+from venture.test.stats import statisticalTest
+
 @on_inf_prim("none")
 def testCMVNSmoke():
-  if config["get_ripl"] != "lite": raise SkipTest("CMVN in lite only")  
+  if config["get_ripl"] != "lite": raise SkipTest("CMVN in lite only")
   get_ripl().predict("((make_cmvn (array 1.0 1.0) 2 2 (matrix (array (array 1.0 0.0) (array 0.0 1.0)))))")
 
-@statisticalTest  
+@statisticalTest
 def testCMVN2D_mu1():
   if config["get_ripl"] != "lite": raise SkipTest("CMVN in lite only")
   ripl = get_ripl()
@@ -42,10 +47,10 @@ def testCMVN2D_mu1():
   mu1 = [p[0] for p in predictions]
   return reportKnownMean(5, mu1)
 
-@statisticalTest  
+@statisticalTest
 def testCMVN2D_mu2():
   if config["get_ripl"] != "lite": raise SkipTest("CMVN in lite only")
-  
+
   ripl = get_ripl()
   ripl.assume("m0","(array 5.0 5.0)")
   ripl.assume("k0","7.0")
@@ -62,10 +67,10 @@ def testCMVN2D_mu2():
   return reportKnownMean(5, mu2)
 
 @skipWhenRejectionSampling("Cannot rejection sample cmvn AAA")
-@statisticalTest  
+@statisticalTest
 def testCMVN2D_AAA():
   if config["get_ripl"] != "lite": raise SkipTest("CMVN in lite only")
-  
+
   ripl = get_ripl()
   ripl.assume("m0","(array (normal 5.0 0.0001) (normal 5.0 0.0001))")
   ripl.assume("k0","7.0")
@@ -80,10 +85,10 @@ def testCMVN2D_AAA():
   mu2 = [p[1] for p in predictions]
 
   return reportKnownMean(5, mu2)
-  
+
 
   # Variance is not being tested
-    
+
   # Sigma11 = float(sum([(p[0] - mu1) * (p[0] - mu1) for p in predictions]))/len(predictions)
   # Sigma12 = float(sum([(p[0] - mu1) * (p[1] - mu2) for p in predictions]))/len(predictions)
   # Sigma21 = float(sum([(p[1] - mu2) * (p[0] - mu1) for p in predictions]))/len(predictions)

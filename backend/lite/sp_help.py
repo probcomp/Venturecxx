@@ -17,10 +17,15 @@
 
 """Helpers for creating SP objects."""
 
-from sp import SP, SPType
-from psp import NullRequestPSP, ESRRefOutputPSP, DeterministicPSP, TypedPSP, DispatchingPSP
-from exception import VentureBuiltinSPMethodError
-import types as t
+from venture.lite.exception import VentureBuiltinSPMethodError
+from venture.lite.psp import DeterministicPSP
+from venture.lite.psp import DispatchingPSP
+from venture.lite.psp import ESRRefOutputPSP
+from venture.lite.psp import NullRequestPSP
+from venture.lite.psp import TypedPSP
+from venture.lite.sp import SP
+from venture.lite.sp import SPType
+import venture.lite.types as t
 
 def no_request(output): return SP(NullRequestPSP(), output)
 

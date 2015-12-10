@@ -21,7 +21,6 @@ import re
 
 from venture.exception import VentureException
 from venture.lite.value import VentureValue
-import venture.value.dicts as v
 
 def is_valid_symbol(s):
     if isinstance(s, basestring):

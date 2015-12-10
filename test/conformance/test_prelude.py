@@ -15,15 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import operator
+import random
+import string
+
 from unittest import TestCase
 import nose.tools as nose
 import numpy as np
-import random
-import string
-import operator
 from numpy.testing import assert_equal
 
-from venture.test.config import get_ripl, on_inf_prim, broken_in
+from venture.test.config import broken_in
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 # TODO: Sampling (uniform_discrete) returns atoms, not ints. This breaks things.
 # I hack it by doing (assume foo (* 1 (uniform_discrete ...))). Ideally, make

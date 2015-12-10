@@ -15,9 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from request import Request
-from sp import VentureSPRecord
-from value import VentureValue
+from venture.lite.request import Request
+from venture.lite.sp import VentureSPRecord
+from venture.lite.value import VentureValue
 
 # Part of a mechanism for allowing Lite SPs to be called from
 # Puma. The ForeignLiteSP class is a wrapper that handles value

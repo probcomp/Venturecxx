@@ -16,11 +16,16 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.stats import reportKnownGaussian
-from venture.test.config import get_ripl, default_num_samples, on_inf_prim
 import sys
+
 from nose.plugins.attrib import attr
+
+from venture.test.config import default_num_samples
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import statisticalTest
 
 sys.setrecursionlimit(10000)
 

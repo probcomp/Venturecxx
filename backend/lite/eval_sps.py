@@ -15,14 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from psp import DeterministicPSP, TypedPSP
-import env
-from request import Request,ESR
-
-from sp import SPType
-import types as t
-from sp_registry import registerBuiltinSP
-from sp_help import typed_func, type_test, typed_nr, esr_output
+from venture.lite.psp import DeterministicPSP
+from venture.lite.psp import TypedPSP
+from venture.lite.request import ESR
+from venture.lite.request import Request
+from venture.lite.sp import SPType
+from venture.lite.sp_help import esr_output
+from venture.lite.sp_help import type_test
+from venture.lite.sp_help import typed_func
+from venture.lite.sp_help import typed_nr
+from venture.lite.sp_registry import registerBuiltinSP
+import venture.lite.env as env
+import venture.lite.types as t
 
 registerBuiltinSP("get_current_environment", typed_func(lambda args: args.env, [], env.EnvironmentType(),
                                                         descr="get_current_environment returns the lexical environment of its invocation site"))
@@ -46,7 +50,7 @@ class EvalRequestPSP(DeterministicPSP):
   def simulate(self,args):
     (exp, en) = args.operandValues()
     # point to the desugared source code location of lambda body
-    addr = args.operandNodes[0].address.last.append(1)    
+    addr = args.operandNodes[0].address.last.append(1)
     return Request([ESR(args.node,exp,addr,en)])
   def description(self,name):
     return "%s evaluates the given expression in the given environment and returns the result.  Is itself deterministic, but the given expression may involve a stochasitc computation." % name

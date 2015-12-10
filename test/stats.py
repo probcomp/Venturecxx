@@ -55,12 +55,13 @@ test function as @statisticalTest, not the generator.
 """
 
 import math
-
-import numpy as np
-import nose.tools as nose
 import sys
+
+import nose.tools as nose
+import numpy as np
+from scipy.spatial.distance import pdist
+from scipy.spatial.distance import squareform
 import scipy.stats as stats
-from scipy.spatial.distance import pdist, squareform
 from scipy.stats.mstats import rankdata
 
 from testconfig import config

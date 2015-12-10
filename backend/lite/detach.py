@@ -15,12 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from node import RequestNode, isConstantNode, isLookupNode, isApplicationNode, isRequestNode, isOutputNode
-from omegadb import OmegaDB
-from value import SPRef
-from scope import isTagOutputPSP
-from sp import VentureSPRecord
-from consistency import assertTorus, assertTrace
+from venture.lite.node import isConstantNode
+from venture.lite.node import isLookupNode
+from venture.lite.node import isApplicationNode
+from venture.lite.node import isRequestNode
+from venture.lite.node import isOutputNode
+from venture.lite.omegadb import OmegaDB
+from venture.lite.value import SPRef
+from venture.lite.scope import isTagOutputPSP
+from venture.lite.sp import VentureSPRecord
+from venture.lite.consistency import assertTorus, assertTrace
 
 def detachAndExtract(trace, scaffold, compute_gradient = False):
   assertTrace(trace, scaffold)
@@ -65,7 +69,7 @@ def detach(trace, node, scaffold, omegaDB, compute_gradient = False):
 def unabsorb(trace, node, omegaDB, compute_gradient = False):
   # we need to pass groundValue here in case the return value is an SP
   # in which case the node would only contain an SPRef
-  psp,args,gvalue = trace.pspAt(node),trace.argsAt(node),trace.groundValueAt(node)  
+  psp,args,gvalue = trace.pspAt(node),trace.argsAt(node),trace.groundValueAt(node)
   psp.unincorporate(gvalue,args)
   weight = psp.logDensity(gvalue,args)
   if compute_gradient:
@@ -100,7 +104,7 @@ def extract(trace, node, scaffold, omegaDB, compute_gradient = False):
         if isRequestNode(node):
           weight += unevalRequests(trace, node, scaffold, omegaDB, compute_gradient)
         weight += unapplyPSP(trace, node, scaffold, omegaDB, compute_gradient)
-      else: 
+      else:
         trace.setValueAt(node,None)
         assert isLookupNode(node) or isConstantNode(node)
         assert len(trace.parentsAt(node)) <= 1

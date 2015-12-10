@@ -15,13 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import random
-import numpy.random as npr
 import math
-import scipy.special as ss
+import numbers
+import random
+
 import numpy as np
 import numpy.linalg as npla
-import numbers
+import numpy.random as npr
+import scipy.special as ss
 
 # This one is from http://stackoverflow.com/questions/1167617/in-python-how-do-i-indicate-im-overriding-a-method
 def override(interface_class):

@@ -19,25 +19,34 @@
 # pylint: disable=no-member
 
 import math
-
-import numpy as np
-import numpy.random as npr
-import numpy.linalg as npla
-import scipy.stats
-import scipy.special
-import scipy.special as spsp
 import warnings
 
-from exception import VentureValueError, GradientWarning
-from lkernel import DeltaLKernel, SimulationAAALKernel
-from psp import RandomPSP, DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP,\
-  TypedPSP
-from sp import SP, SPAux, VentureSPRecord, SPType
-from sp_registry import registerBuiltinSP
-from sp_help import typed_nr, no_request, dispatching_psp
-from utils import logDensityMVNormal, numpy_force_number
-from utils import override
-import types as t
+import numpy as np
+import numpy.linalg as npla
+import numpy.random as npr
+import scipy.special as spsp
+import scipy.stats
+
+from venture.lite.exception import GradientWarning
+from venture.lite.exception import VentureValueError
+from venture.lite.lkernel import DeltaLKernel
+from venture.lite.lkernel import SimulationAAALKernel
+from venture.lite.psp import DeterministicMakerAAAPSP
+from venture.lite.psp import NullRequestPSP
+from venture.lite.psp import RandomPSP
+from venture.lite.psp import TypedPSP
+from venture.lite.sp import SP
+from venture.lite.sp import SPAux
+from venture.lite.sp import SPType
+from venture.lite.sp import VentureSPRecord
+from venture.lite.sp_help import dispatching_psp
+from venture.lite.sp_help import no_request
+from venture.lite.sp_help import typed_nr
+from venture.lite.sp_registry import registerBuiltinSP
+from venture.lite.utils import logDensityMVNormal
+from venture.lite.utils import numpy_force_number
+from venture.lite.utils import override
+import venture.lite.types as t
 
 
 HALF_LOG2PI = 0.5 * math.log(2 * math.pi)
@@ -420,8 +429,7 @@ class VonMisesOutputPSP(RandomPSP):
     gradMu = math.sin(x - mu) * kappa
     # d/dk(log density) = cos(x-mu) - [2pi d(I_0)(k)]/2pi I_0(k)
     # d/dk I_0(k) = I_1(k)
-    gradK  = math.cos(x - mu) - (scipy.special.i1(kappa) \
-      / scipy.special.i0(kappa))
+    gradK  = math.cos(x - mu) - (spsp.i1(kappa) / spsp.i0(kappa))
     return (gradX, [gradMu, gradK])
 
   def description(self,name):
@@ -851,7 +859,7 @@ class CNigNormalOutputPSP(RandomPSP):
     (mn, Vn, an, bn) = self.updatedParams(aux)
     term1 = 0.5 * math.log(abs(Vn)) - 0.5 * math.log(abs(self.V))
     term2 = self.a * math.log(self.b) - an * math.log(bn)
-    term3 = scipy.special.gammaln(an) - scipy.special.gammaln(self.a)
+    term3 = spsp.gammaln(an) - spsp.gammaln(self.a)
     term4 = math.log(1) - ctN/2. * math.log(math.pi) - ctN * math.log(2)
     return term1 + term2 + term3 + term4
 

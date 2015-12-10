@@ -17,13 +17,15 @@
 
 """(Deterministic) basic programming SPs"""
 
-from sp import SPType
-import value as v
-import types as t
-from sp_registry import registerBuiltinSP
-from sp_help import deterministic_typed, type_test, binaryPred
-from utils import raise_
-from exception import VentureValueError
+from venture.lite.exception import VentureValueError
+from venture.lite.sp import SPType
+from venture.lite.sp_help import binaryPred
+from venture.lite.sp_help import deterministic_typed
+from venture.lite.sp_help import type_test
+from venture.lite.sp_registry import registerBuiltinSP
+from venture.lite.utils import raise_
+import venture.lite.types as t
+import venture.lite.value as v
 
 registerBuiltinSP("eq", binaryPred(lambda x,y: x.compare(y) == 0,
     descr="eq compares its two arguments for equality"))

@@ -15,10 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import eq_
 import time
 
-from venture.test.config import get_ripl, broken_in, on_inf_prim
+from nose.tools import eq_
+
+from venture.test.config import broken_in
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 import venture.test.errors as err
 import venture.value.dicts as v
 

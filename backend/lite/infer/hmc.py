@@ -23,7 +23,9 @@ from ..detach import detachAndExtract
 from ..scaffold import constructScaffold
 from ..utils import FixedRandomness
 from ..value import vv_dot_product
-from mh import InPlaceOperator, getCurrentValues, registerDeterministicLKernels
+from venture.lite.infer.mh import InPlaceOperator
+from venture.lite.infer.mh import getCurrentValues
+from venture.lite.infer.mh import registerDeterministicLKernels
 
 class GradientOfRegen(object):
   """An applicable object, calling which computes the gradient

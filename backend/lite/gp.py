@@ -20,13 +20,19 @@ import numpy as np
 import numpy.linalg as la
 import numpy.random as npr
 
-from exception import VentureValueError
-from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
-from sp import SP, SPAux, VentureSPRecord, SPType
-import types as t
-import value as v
-from sp_help import dispatching_psp
-from sp_registry import registerBuiltinSP
+from venture.lite.exception import VentureValueError
+from venture.lite.psp import DeterministicMakerAAAPSP
+from venture.lite.psp import NullRequestPSP
+from venture.lite.psp import RandomPSP
+from venture.lite.psp import TypedPSP
+from venture.lite.sp import SP
+from venture.lite.sp import SPAux
+from venture.lite.sp import SPType
+from venture.lite.sp import VentureSPRecord
+from venture.lite.sp_help import dispatching_psp
+from venture.lite.sp_registry import registerBuiltinSP
+import venture.lite.types as t
+import venture.lite.value as v
 
 # XXX Replace by scipy.stats.multivariate_normal.logpdf when we
 # upgrade to scipy 0.14.
