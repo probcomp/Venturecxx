@@ -11,6 +11,7 @@ include refman/README.md
 include refman/usage.rst
 include refman/venture.shortcuts.rst
 include refman/index.rst
+include refman/faq.rst
 include refman/programming-model.rst
 include refman/venture.value.dicts.rst
 include refman/instructions.rst
