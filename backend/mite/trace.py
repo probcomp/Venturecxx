@@ -107,7 +107,7 @@ def unevalFamily(trace, node, constraint=None):
         assert len(trace.parentsAt(node)) == 1
         trace.disconnectLookup(node)
         trace.setValueAt(node,None)
-        # todo detach source node
+        # TODO detach source node
     else:
         assert isOutputNode(node)
         weight += unapply(trace, node, constraint)
@@ -227,6 +227,14 @@ class Trace(LiteTrace):
         # TODO: compute more precise edges between request node and operands
         # and add ESR edges to downstream request nodes
         # also, should probably make subclasses for RequestNode and OutputNode
+        # more precisely:
+        # output node should maintain a set of requests and operands that it currently depends on
+        # request node should copy this set and create child edges to it
+        # any requests made should be added to the output node's set
+        # when the output node is finalized, add any additional ESR edges.
+        # note that addESREdge increments the ref count, which we only want to do once.
+        # also, when popping a request, copy its parent set to the output node (discarding the output node's current set)
+        # it will be copied back over when re-evaluating.
         requestNode = RequestNode(address,operatorNode,operandNodes,env)
         self.addChildAt(operatorNode,requestNode)
         for operandNode in operandNodes:
