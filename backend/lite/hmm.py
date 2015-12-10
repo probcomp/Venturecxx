@@ -58,15 +58,24 @@ class MakeUncollapsedHMMOutputPSP(DeterministicPSP):
   def simulate(self,args):
     (p0,T,O) = args.operandValues()
     # Transposition for compatibility with Puma
-    return VentureSPRecord(UncollapsedHMMSP(p0,np.transpose(T),np.transpose(O)))
+    sp = UncollapsedHMMSP(p0,np.transpose(T),np.transpose(O))
+    return VentureSPRecord(sp)
 
   def description(self, _name):
-    return "  Discrete-state HMM of unbounded length with discrete observations.  The inputs are the probability distribution of the first state, the transition matrix, and the observation matrix.  It is an error if the dimensionalities do not line up.  Returns observations from the HMM encoded as a stochastic procedure that takes the time step and samples a new observation at that time step."
+    return "  Discrete-state HMM of unbounded length with discrete " \
+      "observations.  The inputs are the probability distribution of " \
+      "the first state, the transition matrix, and the observation " \
+      "matrix.  It is an error if the dimensionalities do not line up.  " \
+      "Returns observations from the HMM encoded as a stochastic " \
+      "procedure that takes the time step and samples a new observation " \
+      "at that time step."
 
 class UncollapsedHMMSP(SP):
   def __init__(self,p0,T,O):
-    req = TypedPSP(UncollapsedHMMRequestPSP(), SPType([t.CountType()], t.RequestType()))
-    output = TypedPSP(UncollapsedHMMOutputPSP(O), SPType([t.CountType()], t.AtomType()))
+    req = TypedPSP(UncollapsedHMMRequestPSP(),
+                   SPType([t.CountType()], t.RequestType()))
+    output = TypedPSP(UncollapsedHMMOutputPSP(O),
+                      SPType([t.CountType()], t.AtomType()))
     super(UncollapsedHMMSP,self).__init__(req,output)
     self.p0 = p0
     self.T = T
@@ -90,7 +99,7 @@ class UncollapsedHMMSP(SP):
     return 0
 
   def detachLatents(self,aux,lsr,latentDB):
-    if len(aux.xs) == lsr + 1 and not lsr in aux.os:
+    if len(aux.xs) == lsr + 1 and lsr not in aux.os:
       if not aux.os:
         for i in range(len(aux.xs)): latentDB[i] = aux.xs[i]
         del aux.xs[:]
@@ -149,7 +158,7 @@ class UncollapsedHMMOutputPSP(RandomPSP):
   def incorporate(self,value,args):
     n = args.operandValues()[0]
     os = args.spaux().os
-    if not n in os: os[n] = []
+    if n not in os: os[n] = []
     os[n].append(value)
 
   def unincorporate(self,value,args):
@@ -162,5 +171,5 @@ class UncollapsedHMMRequestPSP(DeterministicPSP):
   def simulate(self,args): return Request([],[args.operandValues()[0]])
 
 registerBuiltinSP("make_lazy_hmm", typed_nr(MakeUncollapsedHMMOutputPSP(),
-                                            [t.SimplexType(), t.MatrixType(), t.MatrixType()],
-                                            SPType([t.CountType()], t.AtomType())))
+    [t.SimplexType(), t.MatrixType(), t.MatrixType()],
+    SPType([t.CountType()], t.AtomType())))
