@@ -222,7 +222,18 @@ class VenStanRequestPSP(DeterministicPSP):
 class VenStanOutputPSP(RandomPSP):
   def __init__(self, stan_model, input_spec, output_spec):
     self.stan_model = stan_model
+    self.input_spec = input_spec
+    self.output_spec = output_spec
     (self.input_names, self.output_names) = io_spec_to_api_spec(input_spec, output_spec)
+
+  def compute_generated_quantities_from_bogus_data(self, inputs, params):
+    data_dict = input_data_as_dict(self.input_spec, inputs)
+    data_dict.update(synthesize_bogus_data(self.output_spec))
+    param_dict = input_data_as_dict(self.param_spec, params)
+    fit = pystan.stan(fit=self.built_result, data=data_dict, iter=0, chains=1,
+                      init=[param_dict])
+    print fit, fit.extract()
+    return fit.extract()
 
   def simulate(self, args):
     inputs = args.operandValues()
