@@ -128,20 +128,36 @@ def io_spec_to_api_spec(inputs, outputs):
 def bogus_valid_value(_tp):
   return vv.VentureNumber(0) # TODO: Actually synthesize type-correct bogosity
 
+def input_data_as_dict(input_spec, inputs):
+  return {}
+
+def synthesize_bogus_data(output_spec):
+  return {}
+
 class MakerVenStanOutputPSP(DeterministicPSP):
   def simulate(self, args):
-    (stan_prog, inputs, outputs) = args.operandValues()
+    (stan_prog, input_spec, output_spec) = args.operandValues()
     built_result = pystan.stanc(model_code=stan_prog)
-    sp = VenStanSP(built_result, inputs, outputs)
+    sp = VenStanSP(built_result, input_spec, output_spec)
     return VentureSPRecord(sp)
 
 class VenStanSP(SP):
-  def __init__(self, built_result, inputs, outputs):
-    (args_types, output_type) = io_spec_to_type_spec(inputs, outputs)
+  def __init__(self, built_result, input_spec, output_spec):
+    (args_types, output_type) = io_spec_to_type_spec(input_spec, output_spec)
     req = TypedPSP(VenStanRequestPSP(), SPType(args_types, t.RequestType()))
-    output = TypedPSP(VenStanOutputPSP(built_result, inputs, outputs),
+    output = TypedPSP(VenStanOutputPSP(built_result, input_spec, output_spec),
                       SPType(args_types, output_type))
     super(VenStanSP, self).__init__(req, output)
+    self.built_result = built_result
+    self.input_spec = input_spec
+    self.output_spec = output_spec
+
+  def synthesize_parameters_with_bogus_data(self, inputs):
+    data_dict = input_data_as_dict(self.input_spec, inputs)
+    data_dict.update(synthesize_bogus_data(self.output_spec))
+    fit = pystan.stan(fit=self.built_result, data=data_dict, iter=0, chains=1)
+    print fit, fit.extract()
+    return fit.extract()
 
   def constructSPAux(self): return VenStanSPAux()
 
@@ -156,7 +172,7 @@ class VenStanSP(SP):
         aux.applications[lsr] = latentDB[lsr]
       else:
         inputs = args.operandValues()
-        params = self.synthesize_parameters_with_bogus_data(args)
+        params = self.synthesize_parameters_with_bogus_data(inputs)
         aux.applications = (inputs, params, None)
     return 0
 
@@ -195,9 +211,9 @@ class VenStanRequestPSP(DeterministicPSP):
     return True
 
 class VenStanOutputPSP(RandomPSP):
-  def __init__(self, stan_model, inputs, outputs):
+  def __init__(self, stan_model, input_spec, output_spec):
     self.stan_model = stan_model
-    (self.input_names, self.output_names) = io_spec_to_api_spec(inputs, outputs)
+    (self.input_names, self.output_names) = io_spec_to_api_spec(input_spec, output_spec)
 
   def simulate(self, args):
     inputs = args.operandValues()
