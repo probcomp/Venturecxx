@@ -89,8 +89,8 @@ import venture.lite.value as vv
 #   simulating the latent, because it doesn't have a pointer to the
 #   trace (which is necessary to respect the particles hack).
 
-# Possible solution: give simulateLatents the Args corresponding to
-# the application in question.
+# Solution: give simulateLatents the Args corresponding to the
+# application in question.
 # - May have the side effect of simplifying other uses of
 #   simulateLatents, but maybe not.
 # - HMM seems to be the only other SP that uses latent simulation
@@ -146,39 +146,43 @@ class VenStanSP(SP):
   def constructSPAux(self): return VenStanSPAux()
 
   def constructLatentDB(self):
-    # { app_id => parameters }
+    # { app_id => (inputs, parameters, outputs) }
     return {}
 
   def simulateLatents(self, args, lsr, shouldRestore, latentDB):
     aux = args.spaux()
-    if lsr not in aux.parameters:
+    if lsr not in aux.applications:
       if shouldRestore:
-        aux[lsr] = latentDB[lsr]
+        aux.applications[lsr] = latentDB[lsr]
       else:
-        aux[lsr] = self.synthesize_parameters_with_bogus_data()
+        inputs = args.operandValues()
+        params = self.synthesize_parameters_with_bogus_data(args)
+        aux.applications = (inputs, params, None)
     return 0
 
   def detachLatents(self, args, lsr, latentDB):
     aux = args.spaux()
-    latentDB[lsr] = aux[lsr]
+    latentDB[lsr] = aux.applications[lsr]
     del aux[lsr]
     return 0
 
   def hasAEKernel(self): return True
 
   def AEInfer(self, aux):
-    pass
+    for lsr, (inputs, params, outputs) in aux.applications.iteritems():
+      new_params = self.update_parameters(inputs, params, outputs)
+      aux[lsr] = (inputs, new_params, outputs)
 
 # The Aux is shared across all applications, so I use a dictionary
 # with unique keys to implement independence.
 class VenStanSPAux(SPAux):
   def __init__(self):
     super(VenStanSPAux,self).__init__()
-    self.parameters_map = {}
+    self.applications = {} # { node -> (inputs, params, Maybe outputs) }
 
   def copy(self):
     ans = VenStanSPAux()
-    ans.parameters_map = copy.copy(self.parameters_map)
+    ans.applications = copy.copy(self.applications)
     return ans
 
 class VenStanRequestPSP(DeterministicPSP):
@@ -196,4 +200,23 @@ class VenStanOutputPSP(RandomPSP):
     (self.input_names, self.output_names) = io_spec_to_api_spec(inputs, outputs)
 
   def simulate(self, args):
-    pass
+    inputs = args.operandValues()
+    (_, params, _) = args.spaux().applications[args.node.requestNode]
+    outputs = self.compute_generated_quantities_from_bogus_data(inputs, params)
+    return outputs
+
+  def logDensity(self, value, args):
+    inputs = args.operandValues()
+    (_, params, _) = args.spaux().applications[args.node.requestNode]
+    return self.evaluate_posterior(inputs, params, value)
+
+  def incorporate(self, value, args):
+    inputs = args.operandValues()
+    aux = args.spaux()
+    (_, params, _) = aux.applications[args.node.requestNode]
+    aux.applications[args.node.requestNode] = (inputs, params, value)
+
+  def unincorporate(self, value, args):
+    aux = args.spaux()
+    (inputs, params, _) = aux.applications[args.node.requestNode]
+    aux.applications[args.node.requestNode] = (inputs, params, None)
