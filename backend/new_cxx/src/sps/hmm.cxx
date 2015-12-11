@@ -33,11 +33,11 @@ VectorXd normalizedVectorXd(VectorXd & v);
 /* MakeUncollapsedHMMSP */
 
 VentureValuePtr MakeUncollapsedHMMOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
-{ 
+{
   MatrixXd p0 = args->operandValues[0]->getMatrix();
   MatrixXd T = args->operandValues[1]->getMatrix();
   MatrixXd O = args->operandValues[2]->getMatrix();
-  return VentureValuePtr( 
+  return VentureValuePtr(
     new VentureSPRecord(
       new UncollapsedHMMSP(
 	new UncollapsedHMMRequestPSP(),
@@ -55,8 +55,8 @@ UncollapsedHMMSP::UncollapsedHMMSP(PSP * requestPSP, PSP * outputPSP,MatrixXd p0
 
 shared_ptr<LatentDB> UncollapsedHMMSP::constructLatentDB() const { return shared_ptr<LatentDB>(new HMMLatentDB()); }
 
-double UncollapsedHMMSP::simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB,gsl_rng * rng) const 
-{ 
+double UncollapsedHMMSP::simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB,gsl_rng * rng) const
+{
   /* if should restore, restore, otherwise do not assert latentDB */
   shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(spaux);
   assert(aux);
@@ -66,15 +66,15 @@ double UncollapsedHMMSP::simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR>
 
   shared_ptr<HMMLatentDB> latents;
   if (latentDB)
-  { 
+  {
     latents = dynamic_pointer_cast<HMMLatentDB>(latentDB);
     assert(latents);
   }
-  
+
   /* No matter what the request is, we must sample the first latent if
      we have not already done so. */
-  if (aux->xs.empty()) 
-  { 
+  if (aux->xs.empty())
+  {
     if (shouldRestore) { aux->xs.push_back(latents->xs[0]); }
     else { aux->xs.push_back(sampleVectorXd(p0,rng)); }
   }
@@ -94,8 +94,8 @@ double UncollapsedHMMSP::simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR>
   return 0;
 }
 
-double UncollapsedHMMSP::detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const 
-{ 
+double UncollapsedHMMSP::detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const
+{
   shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(spaux);
   assert(aux);
 
@@ -105,11 +105,11 @@ double UncollapsedHMMSP::detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> l
   shared_ptr<HMMLatentDB> latents = dynamic_pointer_cast<HMMLatentDB>(latentDB);
   assert(latents);
 
-  if (aux->xs.size() == request->index + 1 && 
+  if (aux->xs.size() == request->index + 1 &&
       !aux->os.count(request->index))
   {
-    if (aux->os.empty()) 
-    { 
+    if (aux->os.empty())
+    {
       for (size_t i = 0; i < aux->xs.size(); ++i)
       { latents->xs[i] = aux->xs[i]; }
       aux->xs.clear();
@@ -128,8 +128,8 @@ double UncollapsedHMMSP::detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> l
   return 0;
 }
 
-void UncollapsedHMMSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args, gsl_rng * rng) const 
-{ 
+void UncollapsedHMMSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args, gsl_rng * rng) const
+{
   shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(spAux);
   assert(aux);
 
@@ -172,7 +172,7 @@ void UncollapsedHMMSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args, g
 UncollapsedHMMOutputPSP::UncollapsedHMMOutputPSP(MatrixXd O): O(O) {}
 
 
-VentureValuePtr UncollapsedHMMOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const 
+VentureValuePtr UncollapsedHMMOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
 {
   shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(args->spAux);
   assert(aux);
@@ -182,7 +182,7 @@ VentureValuePtr UncollapsedHMMOutputPSP::simulate(shared_ptr<Args> args,gsl_rng 
   return VentureValuePtr(new VentureAtom(sampleVector(O * aux->xs[index],rng)));
 }
 
-double UncollapsedHMMOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) const 
+double UncollapsedHMMOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) const
 {
   shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(args->spAux);
   assert(aux);
@@ -197,7 +197,7 @@ double UncollapsedHMMOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args
 }
 
 void UncollapsedHMMOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) const
-{ 
+{
   shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(args->spAux);
   assert(aux);
 
@@ -208,8 +208,8 @@ void UncollapsedHMMOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args>
   aux->os[in].push_back(out);
 }
 
-void UncollapsedHMMOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args) const 
-{ 
+void UncollapsedHMMOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args) const
+{
   shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(args->spAux);
   assert(aux);
 
@@ -228,8 +228,8 @@ void UncollapsedHMMOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Arg
 
 /* UncollapsedHMMRequestPSP */
 
-VentureValuePtr UncollapsedHMMRequestPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const 
-{ 
+VentureValuePtr UncollapsedHMMRequestPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
+{
   int in = args->operandValues[0]->getInt();
   vector<shared_ptr<LSR> > lsrs;
   lsrs.push_back(shared_ptr<LSR>(new HMMLSR(in)));
@@ -273,7 +273,7 @@ MatrixXd vvToEigenMatrix(VentureValue * value)
   {
     vector<VentureValuePtr> row_i = allRows[i]->getArray();
     assert(cols == row_i.size());
-    
+
     for (size_t j = 0; j < cols; ++j)
     {
       M(i,j) = row_i[j]->getDouble();
@@ -305,8 +305,8 @@ VectorXd sampleVectorXd(const VectorXd & v,gsl_rng * rng)
   for (size_t i = 0; i < len; ++i)
   {
     sum += v[i];
-    if (u <= sum) 
-    { 
+    if (u <= sum)
+    {
       sample[i] = 1;
       return sample;
     }
@@ -333,7 +333,7 @@ uint32_t sampleVector(const VectorXd & v,gsl_rng * rng)
 
 VectorXd normalizedVectorXd(VectorXd & v)
 {
-  
+
   size_t len = v.size();
   double sum = 0;
   for (size_t i = 0; i < len; ++i) { sum += v[i]; }

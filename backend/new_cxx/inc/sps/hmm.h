@@ -30,8 +30,8 @@ using Eigen::VectorXd;
 struct HMMSPAux : SPAux
 {
   /* Latents */
-  vector<VectorXd> xs; 
-  
+  vector<VectorXd> xs;
+
   /* Observations: may be many observations at a single index */
   /* We expect very few, otherwise we would use a set */
   map<size_t,vector<uint32_t> > os;
@@ -41,14 +41,14 @@ struct HMMSPAux : SPAux
 };
 
 struct HMMLSR : LSR
-{ 
+{
   HMMLSR(uint32_t index): index(index) {}
-  uint32_t index; 
+  uint32_t index;
 };
 
 struct HMMLatentDB : LatentDB
 {
-  map<size_t,MatrixXd> xs; 
+  map<size_t,MatrixXd> xs;
 };
 
 
