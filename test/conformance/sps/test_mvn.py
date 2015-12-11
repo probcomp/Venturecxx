@@ -15,12 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import eq_
 import math
 
-from venture.test.stats import statisticalTest
+from nose.tools import eq_
+
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.config import skipWhenRejectionSampling
 from venture.test.stats import reportKnownGaussian
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, on_inf_prim
+from venture.test.stats import statisticalTest
 import venture.value.dicts as v
 
 @on_inf_prim("none")

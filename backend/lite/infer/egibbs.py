@@ -20,7 +20,9 @@ from ..regen import regenAndAttach
 from ..detach import detachAndExtract
 from ..utils import sampleLogCategorical, cartesianProduct
 from ..consistency import assertTrace, assertTorus
-from mh import getCurrentValues, registerDeterministicLKernels, registerDeterministicLKernelsByAddress
+from venture.lite.infer.mh import getCurrentValues
+from venture.lite.infer.mh import registerDeterministicLKernels
+from venture.lite.infer.mh import registerDeterministicLKernelsByAddress
 
 def getCartesianProductOfEnumeratedValues(trace,pnodes):
   enumeratedValues = [trace.pspAt(pnode).enumerateValues(trace.argsAt(pnode)) for pnode in pnodes]
@@ -41,17 +43,31 @@ class EnumerativeGibbsOperator(object):
 
     registerDeterministicLKernels(trace,scaffold,pnodes,currentValues)
 
-    detachAndExtract(trace,scaffold)
+    rhoWeight, rhoDB = detachAndExtract(trace,scaffold)
     xiWeights = []
     xiParticles = []
 
     for p in range(len(allSetsOfValues)):
       newValues = allSetsOfValues[p]
+      if newValues == currentValues:
+        # If there are random choices downstream, keep their current values.
+        # This follows the auxiliary variable method in Neal 2000,
+        # "Markov Chain Sampling Methods for Dirichlet Process Models"
+        # (Algorithm 8 with m = 1).
+        # Otherwise, we may target the wrong stationary distribution.
+        # See test/inference_language/test_enumerative_gibbs.py for an example.
+        shouldRestore = True
+        omegaDB = rhoDB
+      else:
+        shouldRestore = False
+        omegaDB = OmegaDB()
       xiParticle = self.copy_trace(trace)
       assertTorus(scaffold)
       registerDeterministicLKernels(trace,scaffold,pnodes,newValues)
       xiParticles.append(xiParticle)
-      xiWeights.append(regenAndAttach(xiParticle,scaffold,False,OmegaDB(),{}))
+      xiWeights.append(regenAndAttach(xiParticle,scaffold,shouldRestore,omegaDB,{}))
+      # if shouldRestore:
+      #   assert_almost_equal(xiWeights[-1], rhoWeight)
     return (xiParticles, xiWeights)
 
   def propose(self, trace, scaffold):

@@ -15,14 +15,22 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import scipy.stats as stats
 import math
-from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.stats import reportKnownContinuous, reportKnownMean
-from venture.test.stats import reportKnownGaussian
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, on_inf_prim, gen_on_inf_prim
+
 from nose import SkipTest
 from nose.tools import eq_
+import scipy.stats as stats
+
+from venture.test.config import collectSamples
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.config import skipWhenRejectionSampling
+from venture.test.stats import reportKnownContinuous
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import reportKnownMean
+from venture.test.stats import statisticalTest
 
 @gen_on_inf_prim("none")
 def testEnvSmoke():

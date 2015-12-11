@@ -17,13 +17,20 @@
 
 from nose import SkipTest
 from nose.tools import eq_
-from venture.test.config import get_ripl, collectSamples, broken_in
-from venture.test.config import default_num_samples
-from venture.test.stats import statisticalTest, reportKnownMean
-from venture.test.stats import reportKnownGaussian
-
 import numpy as np
 import numpy.linalg as la
+
+from venture.lite.function import VentureFunction
+from venture.lite.sp import SPType
+from venture.test.config import broken_in
+from venture.test.config import collectSamples
+from venture.test.config import default_num_samples
+from venture.test.config import get_ripl
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import reportKnownMean
+from venture.test.stats import statisticalTest
+import venture.lite.types as t
+import venture.lite.value as v
 
 def linear(x1, x2):
   return x1 * x2
@@ -32,11 +39,6 @@ def squared_exponential(a, l):
   def f(x1, x2):
     return a * np.exp(- la.norm((x1-x2)/l))
   return f
-
-from venture.lite.function import VentureFunction
-from venture.lite.sp import SPType
-import venture.lite.value as v
-import venture.lite.types as t
 
 # input and output types for gp
 xType = t.NumberType()

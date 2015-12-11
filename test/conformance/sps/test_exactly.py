@@ -15,24 +15,25 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.config import get_ripl, on_inf_prim
 from nose.tools import assert_equal
+
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 @on_inf_prim("none")
 def testExactly1():
   ripl = get_ripl()
-  
+
   ripl.observe('(exactly 0 -1)', 0.0)
   ripl.infer('(incorporate)')
-  
+
   assert_equal(ripl.get_global_logscore(), 0)
 
 @on_inf_prim("none")
 def testExactly2():
   ripl = get_ripl()
-  
+
   ripl.observe('(exactly 0 -1)', 1.0)
   ripl.infer('(incorporate)')
-  
-  assert_equal(ripl.get_global_logscore(), -1)
 
+  assert_equal(ripl.get_global_logscore(), -1)

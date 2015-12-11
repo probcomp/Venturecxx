@@ -19,8 +19,13 @@ Test that things we expect to work at the console actually do.
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
+import re
 import subprocess
+import tempfile
+
 from flaky import flaky
+import pexpect
 
 from venture.test.config import in_backend
 
@@ -40,11 +45,6 @@ def test_console_multiline():
       "assume x = \nuniform_continuous(0.0, 0.9)\n")
   assert console.returncode == 0
   assert '... > 0.' in stdout
-
-import os
-import pexpect
-import re
-import tempfile
 
 TIMEOUT = 1
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -127,7 +127,7 @@ class SpawnVentureExpect(pexpect.spawn):
 
   def expect_capture_one_float(self):
     groups = self.expect_capture(r'(-?\d+\.\d+)')
-    float_result = 0
+    float_result = 0.0
     try:
       float_result = float(groups[0])
     except TypeError:
@@ -136,7 +136,7 @@ class SpawnVentureExpect(pexpect.spawn):
 
   def expect_capture_one_floatln(self):
     groups = self.expect_capture(r'(-?\d+\.\d+)\r\n')
-    float_result = 0
+    float_result = 0.0
     try:
       float_result = float(groups[0])
     except TypeError:

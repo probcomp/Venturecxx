@@ -17,19 +17,24 @@
 
 import numpy as np
 
-from psp import DeterministicPSP, TypedPSP
-from request import Request,ESR
-from sp import SPType
-import types as t
-from sp_registry import registerBuiltinSP
-from sp_help import dispatching_psp, deterministic_psp, no_request, esr_output
+from venture.lite.psp import DeterministicPSP
+from venture.lite.psp import TypedPSP
+from venture.lite.request import ESR
+from venture.lite.request import Request
+from venture.lite.sp import SPType
+from venture.lite.sp_help import deterministic_psp
+from venture.lite.sp_help import dispatching_psp
+from venture.lite.sp_help import esr_output
+from venture.lite.sp_help import no_request
+from venture.lite.sp_registry import registerBuiltinSP
+import venture.lite.types as t
 
 # TODO This is used very little because the stack expands if to biplex.  Flush?
 class BranchRequestPSP(DeterministicPSP):
-  def simulate(self,args): 
+  def simulate(self,args):
 #    print "branchRequest::simulate()"
     vals = args.operandValues()
-    assert not vals[0] is None
+    assert vals[0] is not None
     if vals[0]:
       expIndex = 1
     else:

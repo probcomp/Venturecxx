@@ -9,9 +9,11 @@ assume se = make_squaredexp(1.2, 0.8);
 
 // GPMem package
 assume package = gpmem(f, zero_func, se);
+assume f_probe = first(package);
+assume f_emu = second(package);
 
 // Test
-assume ffive = first(package)(5);
-assume fsix = first(package)(6);
+assume ffive = f_probe(5);
+assume fsix = f_probe(6);
 
-sample second(package)(array(5.5))
+sample f_emu(array(5.5))

@@ -18,8 +18,10 @@
 import warnings
 import random
 import math
+
 import numpy as np
 import scipy.stats as stats
+
 from ..exception import (SubsampledScaffoldError,
                          SubsampledScaffoldNotEffectiveWarning,
                          SubsampledScaffoldNotApplicableWarning,
@@ -29,7 +31,8 @@ from ..regen import regenAndAttach
 from ..detach import detachAndExtract
 from ..node import isLookupNode, isOutputNode
 from ..scaffold import constructScaffold, updateValuesAtScaffold
-from mh import BlockScaffoldIndexer, InPlaceOperator
+from venture.lite.infer.mh import BlockScaffoldIndexer
+from venture.lite.infer.mh import InPlaceOperator
 
 # To apply subsampled MH, we assume the following structure in a scaffold:
 # - The scaffold is partitioned into a global section and N local sections.

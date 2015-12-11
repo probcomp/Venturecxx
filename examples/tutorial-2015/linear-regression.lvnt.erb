@@ -116,13 +116,13 @@ observe obs(1) = 2;
 observe obs(2) = 2;
 
 // Should be solvable exactly
-infer posterior;
+infer conditional;
 
 // Do we get plausible values?
 sample list(intercept, slope, line(3))
 ```
 
-Note that we are using rejection sampling here (`infer posterior`).
+Note that we are using rejection sampling here (`infer conditional`).
 This is fine for this example, but as explored previously, rejection
 sampling can become very slow as you increase the difficulty of the
 problem (such as by adding more data points, as we will do shortly).
@@ -139,7 +139,7 @@ Exercise: For now, evaluate the model's performance on the two data points.
 
    ```venture
    define data = run(accumulate_dataset(<%= smaller_sample_size %>,
-     do(posterior,
+     do(conditional,
         collect(intercept, slope, line(3)))))
    ```
    </div>

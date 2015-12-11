@@ -15,12 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from node import RequestNode, isConstantNode, isLookupNode, isApplicationNode, isRequestNode, isOutputNode
-from omegadb import OmegaDB
-from value import SPRef
-from scope import isTagOutputPSP
-from sp import VentureSPRecord
-from consistency import assertTorus, assertTrace
+from venture.lite.node import isConstantNode
+from venture.lite.node import isLookupNode
+from venture.lite.node import isApplicationNode
+from venture.lite.node import isRequestNode
+from venture.lite.node import isOutputNode
+from venture.lite.omegadb import OmegaDB
+from venture.lite.value import SPRef
+from venture.lite.scope import isTagOutputPSP
+from venture.lite.sp import VentureSPRecord
+from venture.lite.consistency import assertTorus, assertTrace
 
 def detachAndExtract(trace, scaffold, compute_gradient = False):
   assertTrace(trace, scaffold)
@@ -42,9 +46,12 @@ def detachAndExtractAtBorder(trace, border, scaffold, compute_gradient = False):
     if scaffold.isAbsorbing(node):
       weight += detach(trace, node, scaffold, omegaDB, compute_gradient)
     else:
-      if node.isObservation: weight += unconstrain(trace,trace.getConstrainableNode(node))
+      if node.isObservation: weight += getAndUnconstrain(trace,node)
       weight += extract(trace,node,scaffold,omegaDB, compute_gradient)
   return weight,omegaDB
+
+def getAndUnconstrain(trace,node):
+  return unconstrain(trace,trace.getConstrainableNode(node))
 
 def unconstrain(trace,node):
   psp,args,value = trace.pspAt(node),trace.argsAt(node),trace.valueAt(node)
@@ -55,16 +62,20 @@ def unconstrain(trace,node):
   return weight
 
 def detach(trace, node, scaffold, omegaDB, compute_gradient = False):
+  weight = unabsorb(trace, node, omegaDB, compute_gradient)
+  weight += extractParents(trace, node, scaffold, omegaDB, compute_gradient)
+  return weight
+
+def unabsorb(trace, node, omegaDB, compute_gradient = False):
   # we need to pass groundValue here in case the return value is an SP
   # in which case the node would only contain an SPRef
-  psp,args,gvalue = trace.pspAt(node),trace.argsAt(node),trace.groundValueAt(node)  
+  psp,args,gvalue = trace.pspAt(node),trace.argsAt(node),trace.groundValueAt(node)
   psp.unincorporate(gvalue,args)
   weight = psp.logDensity(gvalue,args)
   if compute_gradient:
     # Ignore the partial derivative of the value because the value is fixed
     (_, grad) = psp.gradientOfLogDensity(gvalue, args)
     omegaDB.addPartials(args.operandNodes + trace.esrParentsAt(node), grad)
-  weight += extractParents(trace, node, scaffold, omegaDB, compute_gradient)
   return weight
 
 def extractParents(trace, node, scaffold, omegaDB, compute_gradient = False):
@@ -83,9 +94,7 @@ def extractESRParents(trace, node, scaffold, omegaDB, compute_gradient = False):
 
 def extract(trace, node, scaffold, omegaDB, compute_gradient = False):
   weight = 0
-  value = trace.valueAt(node)
-  if isinstance(value,SPRef) and value.makerNode != node and scaffold.isAAA(value.makerNode):
-    weight += extract(trace, value.makerNode, scaffold, omegaDB, compute_gradient)
+  weight += maybeExtractStaleAAA(trace, node, scaffold, omegaDB, compute_gradient)
 
   if scaffold.isResampling(node):
     trace.decRegenCountAt(scaffold,node)
@@ -95,7 +104,7 @@ def extract(trace, node, scaffold, omegaDB, compute_gradient = False):
         if isRequestNode(node):
           weight += unevalRequests(trace, node, scaffold, omegaDB, compute_gradient)
         weight += unapplyPSP(trace, node, scaffold, omegaDB, compute_gradient)
-      else: 
+      else:
         trace.setValueAt(node,None)
         assert isLookupNode(node) or isConstantNode(node)
         assert len(trace.parentsAt(node)) <= 1
@@ -104,6 +113,20 @@ def extract(trace, node, scaffold, omegaDB, compute_gradient = False):
             omegaDB.addPartial(p, omegaDB.getPartial(node)) # d/dx is 1 for a lookup node
       weight += extractParents(trace, node, scaffold, omegaDB, compute_gradient)
 
+  return weight
+
+def maybeExtractStaleAAA(trace, node, scaffold, omegaDB, compute_gradient = False):
+  # "[this] has to do with worries about crazy thing[s] that can
+  # happen if aaa makers are shuffled around as first-class functions,
+  # and the made SPs are similarly shuffled, including with stochastic
+  # flow of such data, which may cause regeneration order to be hard
+  # to predict, and the check is trying to avoid a stale AAA aux"
+  # TODO: apparently nothing in the test suite actually hits this
+  # case. can we come up with an example that does?
+  weight = 0
+  value = trace.valueAt(node)
+  if isinstance(value,SPRef) and value.makerNode != node and scaffold.isAAA(value.makerNode):
+    weight += extract(trace, value.makerNode, scaffold, omegaDB, compute_gradient)
   return weight
 
 def unevalFamily(trace, node, scaffold, omegaDB, compute_gradient = False):

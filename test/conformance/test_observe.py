@@ -18,8 +18,11 @@
 import scipy.stats as stats
 from nose.tools import eq_, assert_greater, assert_less # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
 
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, on_inf_prim
+from venture.test.config import get_ripl, collectSamples
+from venture.test.config import skipWhenRejectionSampling, on_inf_prim
+from venture.test.config import broken_in, default_num_samples
 from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.stats import reportKnownDiscrete
 
 @on_inf_prim("none")
 def testObserveAVar1a():
@@ -78,14 +81,14 @@ def testObserveThenProcessDeterministically1a():
   ripl.infer("(incorporate)")
   # But the infer should have propagated by here
   eq_(ripl.report("pid"), 15)
-  
+
 @on_inf_prim("none")
 def testObserveThenProcessDeterministically1b():
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.predict("(* x 5)", label="pid")
   ripl.observe("x", 3.0)
-  
+
   # TODO assert that ripl.report("pid") is normally distributed here
   ripl.infer("(incorporate)")
   # But the infer should have propagated by here
@@ -102,15 +105,15 @@ def testObserveThenProcessStochastically1a():
   ripl.infer(1)
   # But the infer should have propagated by here
   assert_greater(ripl.report("pid"), 2.99)
-  assert_less(ripl.report("pid"), 3.01)  
-  
+  assert_less(ripl.report("pid"), 3.01)
+
 @on_inf_prim("mh")
 def testObserveThenProcessStochastically1b():
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.predict("(normal x 0.00001)", label="pid")
   ripl.observe("x", 3.0)
-  
+
   # TODO assert that ripl.report("pid") is normally distributed here
   ripl.infer(1)
   # But the infer should have propagated by here
@@ -134,3 +137,16 @@ def testObserveOutputOfIf1():
   predictions = collectSamples(ripl,"pid")
   cdf = stats.beta(2,1).cdf # The observation nearly guarantees the first branch is taken
   return reportKnownContinuous(cdf, predictions, "approximately beta(2,1)")
+
+@broken_in("puma", "Need to port records to Puma for references to work.  Issue #224")
+@statisticalTest
+def testObserveThroughRef():
+  ripl = get_ripl()
+  ripl.assume("coin", "(make_beta_bernoulli 1 1)")
+  ripl.assume("items", "(list (ref (coin)) (ref (coin)))")
+  ripl.observe("(deref (first items))", True)
+  ripl.predict("(deref (second items))", label="pid")
+
+  predictions = collectSamples(ripl,"pid",num_samples=default_num_samples(5))
+  ans = [(False,0.333),(True,0.666)]
+  return reportKnownDiscrete(ans, predictions)

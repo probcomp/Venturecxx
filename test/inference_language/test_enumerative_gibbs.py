@@ -15,7 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.stats import statisticalTest, reportKnownDiscrete
+from testconfig import config
+
+from venture.test.stats import statisticalTest, reportKnownDiscrete, reportSameDiscrete
 from venture.test.config import get_ripl, collectSamples, default_num_transitions_per_sample, gen_on_inf_prim, on_inf_prim
 
 @gen_on_inf_prim("gibbs")
@@ -164,3 +166,28 @@ def checkEnumerativeGibbsXOR3(in_parallel):
   predictions = collectSamples(ripl,"pid",infer=infer)
   ans = [(True,.75),(False,.25)]
   return reportKnownDiscrete(ans, predictions)
+
+@statisticalTest
+@on_inf_prim("gibbs") # Also rejection, but really testing Gibbs
+def testEnumerativeGibbsBrushRandomness():
+    """Test that Gibbs targets the correct stationary distribution, even
+    when there may be random choices downstream of variables being
+    enumerated.
+    """
+    ripl = get_ripl()
+    ripl.assume("z", "(tag 'z 0 (flip))")
+    ripl.assume("x", "(if z 0 (normal 0 10))")
+    ripl.observe("(normal x 1)", "4")
+    ripl.predict("z", label="pid")
+    def posterior_inference_action():
+      "Work around the fact that Puma doesn't have rejection sampling by asking for a bunch of MH"
+      if config['get_ripl'] == 'lite':
+        return "(rejection default all 1)"
+      else:
+        return "(mh default one %d)" % (default_num_transitions_per_sample(),)
+    ans = collectSamples(ripl, "pid", infer=posterior_inference_action())
+    gibbs_inference_action = "(do %s (gibbs 'z 0 1))" % \
+                             (posterior_inference_action(),)
+    predictions = collectSamples(
+      ripl, "pid", infer=gibbs_inference_action)
+    return reportSameDiscrete(ans, predictions)

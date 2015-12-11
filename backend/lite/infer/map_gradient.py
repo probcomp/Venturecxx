@@ -16,8 +16,11 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-from mh import InPlaceOperator, getCurrentValues, registerDeterministicLKernels
-from hmc import GradientOfRegen
+
+from venture.lite.infer.hmc import GradientOfRegen
+from venture.lite.infer.mh import InPlaceOperator
+from venture.lite.infer.mh import getCurrentValues
+from venture.lite.infer.mh import registerDeterministicLKernels
 
 class MAPOperator(InPlaceOperator):
   def __init__(self, epsilon, steps):

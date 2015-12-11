@@ -16,12 +16,18 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
+
 import scipy.stats as stats
 from nose import SkipTest
-from venture.test.stats import statisticalTest, reportKnownMean
-from venture.test.stats import reportKnownGaussian
-from venture.test.config import get_ripl, collectSamples, default_num_transitions_per_sample, gen_on_inf_prim
 from testconfig import config
+
+from venture.test.config import collectSamples
+from venture.test.config import default_num_transitions_per_sample
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import reportKnownMean
+from venture.test.stats import statisticalTest
 
 @gen_on_inf_prim("slice")
 def testAllSteppingOut():

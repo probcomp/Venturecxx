@@ -51,6 +51,11 @@ class DefaultRandomVentureValue(object):
       length = npr.randint(1, 10)
     alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     return v.VentureSymbol(''.join(npr.choice(list(alphabet), length)))
+  def string(self, length=None, **_kwargs):
+    if length is None:
+      length = npr.randint(1, 10)
+    alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    return v.VentureString(''.join(npr.choice(list(alphabet), length)))
   def array(self, length=None, elt_dist=None, **kwargs):
     if length is None:
       length = npr.randint(0, 10)
@@ -117,6 +122,6 @@ class DefaultRandomVentureValue(object):
     if depth is None:
       depth = npr.randint(0, 5)
     if depth == 0:
-      return getattr(self, npr.choice(["number", "integer", "probability", "atom", "bool", "symbol", "nil"]))(**kwargs)
+      return getattr(self, npr.choice(["number", "integer", "probability", "atom", "bool", "symbol", "string", "nil"]))(**kwargs)
     else:
       return getattr(self, npr.choice(["pair", "list", "array", "array_unboxed", "simplex", "matrix", "symmetricmatrix"]))(depth=depth-1, **kwargs)

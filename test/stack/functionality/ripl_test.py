@@ -15,13 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import unittest
-from nose import SkipTest
+
 from nose.plugins.attrib import attr
 
-from venture.ripl import Ripl
 from venture.exception import VentureException
+from venture.parser import ChurchPrimeParser
+from venture.parser import VentureScriptParser
+from venture.ripl import Ripl
 from venture.sivm import VentureSivm
-from venture.parser import ChurchPrimeParser, VentureScriptParser
 from venture.test.config import get_core_sivm
 import venture.value.dicts as v
 

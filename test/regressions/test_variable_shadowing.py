@@ -17,7 +17,7 @@
 
 from nose.tools import eq_
 
-from venture.test.config import get_ripl, broken_in
+from venture.test.config import get_ripl
 
 def testVariableShadowing():
   """Prior to the patch in which we implemented Trace.sealEnvironment(), we were

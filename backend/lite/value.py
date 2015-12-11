@@ -19,14 +19,16 @@
 
 The design currently lives in doc/type-system.md
 """
-import operator
 from numbers import Number
-import numpy as np
 import hashlib
+import operator
 
-from mlens import MLens
-import ensure_numpy as enp
-from exception import VentureValueError, VentureTypeError
+import numpy as np
+
+from venture.lite.exception import VentureTypeError
+from venture.lite.exception import VentureValueError
+from venture.lite.mlens import MLens
+import venture.lite.ensure_numpy as enp
 import venture.value.dicts as v
 
 # TODO Define reasonable __str__ and/or __repr__ methods for all the
@@ -99,7 +101,7 @@ class VentureValue(object):
       return self.equal(other)
     else:
       return False
-  
+
   def __ne__(self, other):
     return not self == other
 
@@ -630,7 +632,7 @@ class VentureArray(VentureValue):
 class VentureArrayUnboxed(VentureValue):
   """Venture arrays of unboxed objects are homogeneous, with O(1) access and O(n) copy."""
   def __init__(self, array, elt_type):
-    from types import VentureType
+    from venture.lite.types import VentureType
     if not isinstance(elt_type, VentureType):
       raise VentureTypeError("%s of %s is not a VentureType" % (elt_type, type(elt_type)))
     self.elt_type = elt_type
@@ -664,7 +666,7 @@ class VentureArrayUnboxed(VentureValue):
       # TODO HACK: treat Puma's vectors as unboxed arrays of numbers,
       # because Puma can't make a NumberType to stick in the stack
       # dict.
-      from types import NumberType
+      from venture.lite.types import NumberType
       return VentureArrayUnboxed(thing["value"], NumberType())
     return VentureArrayUnboxed(thing["value"], thing["subtype"])
 
@@ -735,7 +737,7 @@ are also supposed to sum to 1, but we are not checking that.
   def __repr__(self):
     return "VentureSimplex(%s)" % self.simplex
   def getArray(self, elt_type=None):
-    from types import ProbabilityType
+    from venture.lite.types import ProbabilityType
     # TODO Abstract similarities between this and the getArray method of ArrayUnboxed
     if elt_type is None: # Convert to VentureValue
       return [ProbabilityType().asVentureValue(val) for val in self.simplex]
@@ -761,21 +763,21 @@ are also supposed to sum to 1, but we are not checking that.
   def fromStackDict(thing): return VentureSimplex(thing["value"])
 
   def lookup(self, index):
-    from types import ProbabilityType
+    from venture.lite.types import ProbabilityType
     return ProbabilityType().asVentureValue(self.simplex[index.getNumber()])
   def contains(self, obj):
     # Homogeneous; TODO make it return False instead of exploding for non-numeric objects.
     return obj.getNumber() in self.simplex
   def size(self): return len(self.simplex)
   def take(self, ind):
-    from types import ProbabilityType
+    from venture.lite.types import ProbabilityType
     return VentureArrayUnboxed(self.simplex[0:ind], ProbabilityType())
 
   def expressionFor(self):
     return [v.symbol("simplex")] + self.simplex
   def map_real(self, f):
     # The cotangent space actually has the constraint that the cotangents sum to 0
-    from types import NumberType
+    from venture.lite.types import NumberType
     return VentureArrayUnboxed([f(p) for p in self.simplex], NumberType())
 
 class VentureDict(VentureValue):
@@ -837,7 +839,7 @@ class VentureMatrix(VentureValue):
       ind2 = vind2.getNumber()
     except VentureTypeError:
       raise VentureValueError("Looking up non-pair-of-numbers %r in a matrix" % index)
-    from types import NumberType
+    from venture.lite.types import NumberType
     return NumberType().asVentureValue(self.matrix[int(ind1), int(ind2)])
 
   def __add__(self, other):
@@ -948,7 +950,7 @@ class SPRef(VentureValue):
 
 venture_types = [
   VentureNumber, VentureInteger, VentureProbability, VentureAtom, VentureBool,
-  VentureSymbol, VentureForeignBlob, VentureNil, VenturePair,
+  VentureSymbol, VentureString, VentureForeignBlob, VentureNil, VenturePair,
   VentureArray, VentureArrayUnboxed, VentureSimplex, VentureDict, VentureMatrix,
   VentureSymmetricMatrix, SPRef]
   # Break load order dependency by not adding SPs and Environments yet
@@ -981,4 +983,3 @@ def registerVentureType(t, name = None):
     venture_types.append(t)
     if name is not None:
       stackable_types[name] = t
-

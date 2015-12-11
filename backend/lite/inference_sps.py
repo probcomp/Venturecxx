@@ -15,18 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import sp
-import psp
-import value as v
-import types as t
-from sp_help import no_request, deterministic_typed
-from exception import VentureError, VentureTypeError
 from venture.engine.inference import Dataset
-from venture.exception import VentureException
-from venture.lite.value import VentureForeignBlob
-from venture.lite.exception import VentureValueError
 from venture.engine.plot_spec import PlotSpec
-from venture.lite.records import VentureRecord, RecordType
+from venture.exception import VentureException
+from venture.lite.exception import VentureNestedRiplMethodError
+from venture.lite.exception import VentureTypeError
+from venture.lite.exception import VentureValueError
+from venture.lite.records import RecordType
+from venture.lite.records import VentureRecord
+from venture.lite.sp_help import deterministic_typed
+from venture.lite.sp_help import no_request
+from venture.lite.value import VentureForeignBlob
+import venture.lite.psp as psp
+import venture.lite.sp as sp
+import venture.lite.types as t
+import venture.lite.value as v
 
 class InferPrimitiveOutputPSP(psp.DeterministicPSP):
   def __init__(self, val, klass, desc, tp):
@@ -93,17 +96,6 @@ class MadeEngineMethodInferOutputPSP(psp.LikelihoodFreePSP):
     return (ans, engine)
   def description(self, _name):
     return self.desc
-
-class VentureNestedRiplMethodError(VentureError):
-  """This exception means that this SP attempted a recursive Ripl operation which failed."""
-  def __init__(self, message, cause, stack, addr):
-    super(VentureNestedRiplMethodError, self).__init__(message)
-    self.cause = cause
-    self.stack = stack
-    self.addr = addr
-
-  def __str__(self):
-    return str(self.cause)
 
 class MadeRiplMethodInferOutputPSP(psp.LikelihoodFreePSP):
   def __init__(self, name, operands, desc=None):
@@ -261,7 +253,7 @@ Up to log factors, there is no asymptotic difference between this and
 doing."""),
 
   trace_method_sp("gibbs", par_transition_oper_type(), desc="""\
-Run a Gibbs sampler that computes the local posterior by enumeration.
+Run a Gibbs sampler that computes the local conditional by enumeration.
 
 All the random choices identified by the scope-block pair must be
 discrete.
@@ -270,11 +262,11 @@ The `transitions` argument specifies how many transitions of the
 chain to run.
 
 The `in-parallel` argument, if supplied, toggles parallel evaluation
-of the local posterior.  Parallel evaluation is only available in the
+of the local conditional.  Parallel evaluation is only available in the
 Puma backend, and is on by default."""),
 
   trace_method_sp("emap", par_transition_oper_type(), desc="""\
-Deterministically move to the local posterior maximum (computed by
+Deterministically move to the local conditional maximum (computed by
 enumeration).
 
 All the random choices identified by the scope-block pair must be
@@ -285,13 +277,13 @@ Specifying more than one transition is redundant unless the ``block``
 is `one`.
 
 The ``in-parallel`` argument, if supplied, toggles parallel evaluation
-of the local posterior.  Parallel evaluation is only available in
+of the local conditional.  Parallel evaluation is only available in
 the Puma backend, and is on by default."""),
 
   trace_method_sp("func_pgibbs",
                   par_transition_oper_type([t.IntegerType("particles : int")]),
                   desc="""\
-Move to a sample of the local posterior computed by particle Gibbs.
+Move to a sample of the local conditional by particle Gibbs.
 
 The ``block`` must indicate a sequential grouping of the random
 choices in the `scope`.  This can be done by supplying the keyword
@@ -324,12 +316,12 @@ Like func_pgibbs, but deterministically
 select the maximum-likelihood particle at the end instead of sampling.
 
 Iterated applications of func_pmap are guaranteed to grow in likelihood
-(and therefore do not converge to the posterior)."""),
+(and therefore do not converge to the conditional)."""),
 
   trace_method_sp("meanfield",
                   transition_oper_type([t.IntegerType("training_steps : int")]),
                   desc="""\
-Sample from a mean-field variational approximation of the local posterior.
+Sample from a mean-field variational approximation of the local conditional.
 
 The mean-field approximation is optimized with gradient ascent.  The
 `training_steps` argument specifies how many steps to take.
@@ -350,13 +342,13 @@ this is not redundant if the `block` argument is `one`."""),
   trace_method_sp("nesterov",
                   transition_oper_type([t.NumberType("step_size : number"), t.IntegerType("steps : int")]),
                   desc="""\
-Move deterministically toward the maximum of the local posterior by
+Move deterministically toward the maximum of the local conditional by
 Nesterov-accelerated gradient ascent.
 
 Not available in the Puma backend.  Not all the builtin procedures
 support all the gradient information necessary for this.
 
-The gradient is of the log posterior.
+The gradient is of the log conditional.
 
 The presence of discrete random choices in the scope-block pair will
 not prevent this inference strategy, but none of the discrete
@@ -375,7 +367,7 @@ transition, not across transitions."""),
   trace_method_sp("map",
                   transition_oper_type([t.NumberType("step_size : number"), t.IntegerType("steps : int")]),
                   desc="""\
-Move deterministically toward the maximum of the local posterior by
+Move deterministically toward the maximum of the local conditional by
 gradient ascent.
 
 Not available in the Puma backend.  Not all the builtin procedures
@@ -405,7 +397,7 @@ trajectory.
 The ``transitions`` argument specifies how many times to do this."""),
 
   trace_method_sp("rejection", transition_oper_type([t.NumberType("attempt_bound : number")], min_req_args=2), desc="""\
-Sample from the local posterior by rejection sampling.
+Sample from the local conditional by rejection sampling.
 
 Not available in the Puma backend.  Not all the builtin procedures
 support all the density bound information necessary for this.
@@ -433,7 +425,7 @@ Notes:
 - If the current state is possible, do nothing.
 
 - This is different from rejection sampling because the distribution
-  on results is not the posterior, but the prior conditioned on the
+  on results is not the conditional, but the prior conditioned on the
   likelihood being non-zero.  As such, it is likely to complete
   faster.
 
@@ -449,7 +441,7 @@ Notes:
   all)`` for pure initialization from the prior, consider following it
   with::
 
-    do(l <- global_likelihood,
+    do(l <- global_log_likelihood,
        set_particle_log_weights(l))
 
 The ``transitions`` argument specifies how many times to do this.
@@ -459,7 +451,7 @@ anything other than `one`. """),
   trace_method_sp("slice",
                   transition_oper_type([t.NumberType("w : number"), t.IntegerType("m : int")]),
                   desc="""\
-Slice sample from the local posterior of the selected random choice.
+Slice sample from the local conditonal of the selected random choice.
 
 The scope-block pair must identify a single random choice, which
 must be continuous and one-dimensional.
@@ -474,7 +466,7 @@ to run."""),
   trace_method_sp("slice_doubling",
                   transition_oper_type([t.NumberType("w : number"), t.IntegerType("p : int")]),
                   desc="""\
-Slice sample from the local posterior of the selected random choice.
+Slice sample from the local conditional of the selected random choice.
 
 The scope-block pair must identify a single random choice, which
 must be continuous and one-dimensional.
@@ -559,19 +551,20 @@ Resample all particles in the current set from the prior and reset
 their weights to the likelihood."""),
 
   engine_method_sp("enumerative_diversify",
-                   infer_action_maker_type([t.ExpressionType("scope : object"), t.ExpressionType("block : object")]),
+                   infer_action_maker_type([t.ExpressionType("scope : object"),
+                                            t.ExpressionType("block : object")]),
                    desc="""\
-Diversify the current particle set to represent the local posterior exactly.
+Diversify the current particle set to represent the local conditional exactly.
 
 Specifically:
 
-1) Compute the local posterior by enumeration of all possible values
+1) Compute the local conditional by enumeration of all possible values
    in the given scope and block
 
 2) Fork every extant particle as many times are there are values
 
 3) Give each new particle a relative weight proportional to the
-   relative weight of its ancestor particle times the posterior
+   relative weight of its ancestor particle times the conditional
    probability of the chosen value.
 
 Unlike most inference SPs, this transformation is deterministic.
@@ -581,9 +574,10 @@ This is useful together with `collapse_equal` and
 programs in Venture. """),
 
   engine_method_sp("collapse_equal",
-                   infer_action_maker_type([t.ExpressionType("scope : object"), t.ExpressionType("block : object")]),
+                   infer_action_maker_type([t.ExpressionType("scope : object"),
+                                            t.ExpressionType("block : object")]),
                    desc="""\
-Collapse the current particle set to represent the local posterior less redundantly.
+Collapse the current particle set to represent the local conditional less redundantly.
 
 Specifically:
 
@@ -604,7 +598,8 @@ This is useful together with `enumerative_diversify` for
 implementing certain kinds of dynamic programs in Venture. """),
 
   engine_method_sp("collapse_equal_map",
-                   infer_action_maker_type([t.ExpressionType("scope : object"), t.ExpressionType("block : object")]),
+                   infer_action_maker_type([t.ExpressionType("scope : object"),
+                                            t.ExpressionType("block : object")]),
                    desc="""\
 Like `collapse_equal` but deterministically retain the max-weight particle.
 
@@ -624,7 +619,8 @@ Run a subsampled Metropolis-Hastings kernel
 
 per the Austerity MCMC paper.
 
-Note: not all dependency structures that might occur in a scaffold are supported.  See `subsampled_mh_check_applicability`.
+Note: not all dependency structures that might occur in a scaffold are
+supported.  See `subsampled_mh_check_applicability`.
 
 Note: the resulting execution history may not actually be possible, so
 may confuse other transition kernels.  See `subsampled_mh_make_consistent`
@@ -684,7 +680,7 @@ incorporation algorithms, in which case explicit incorporation may become
 necessary again.
 """),
 
-  engine_method_sp("likelihood_at",
+  engine_method_sp("log_likelihood_at",
                    infer_action_maker_type([t.AnyType("scope : object"), t.AnyType("block : object")], return_type=t.ArrayUnboxedType(t.NumberType())),
                    desc="""\
 Compute and return the value of the local log likelihood at the given scope and block.
@@ -693,20 +689,20 @@ If there are stochastic nodes in the conditional regeneration graph,
 reuses their current values.  This could be viewed as a one-sample
 estimate of the local likelihood.
 
-likelihood_at(default, all) is not the same as ``getGlobalLogScore``
+log_likelihood_at(default, all) is not the same as ``getGlobalLogScore``
 because it does not count the scores of any nodes that cannot report
-likelihoods, or whose existence is conditional.  `likelihood_at` also
+likelihoods, or whose existence is conditional.  `log_likelihood_at` also
 treats exchangeably coupled nodes correctly.
 
-Compare `posterior_at`."""),
+Compare `log_joint_at`."""),
 
-  engine_method_sp("posterior_at",
+  engine_method_sp("log_joint_at",
                    infer_action_maker_type([t.AnyType("scope : object"), t.AnyType("block : object")], return_type=t.ArrayUnboxedType(t.NumberType())),
                    desc="""\
-Compute and return the value of the local log posterior at the given scope and block.
+Compute and return the value of the local log joint density at the given scope and block.
 
 The principal nodes must be able to assess.  Otherwise behaves like
-likelihood_at, except that it includes the log densities of
+log_likelihood_at, except that it includes the log densities of
 non-observed stochastic nodes."""),
 
   engine_method_sp("particle_log_weights",
@@ -757,7 +753,7 @@ Example::
               do(mh(default, one, 1),
                  collect(x)))
     plot("c0s", d)
-    
+
 will do 1000 iterations of `mh` collecting some standard data and
 the value of ``x``, and then show a plot of the ``x`` variable (which
 should be a scalar) against the iteration number (from 1 to 1000),
@@ -912,6 +908,15 @@ This is an inference action rather than a pure operation due to
 implementation accidents. [It reads the Engine to determine the
 default backend to use and for the
 registry of bound foreign sps.]
+
+ """),
+
+  engine_method_sp("fork_model", infer_action_maker_type([t.SymbolType()], t.ForeignBlobType("<model>"), min_req_args=0), desc="""\
+Create an new model by copying the state of the current implicit model.
+
+The symbol, if supplied, gives the name of the backend to use, either
+``puma`` or ``lite``.  If omitted, defaults to the same backend as the
+current implicit model.
 
  """),
 

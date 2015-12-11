@@ -20,13 +20,19 @@ import numpy as np
 import numpy.linalg as la
 import numpy.random as npr
 
-from exception import VentureValueError
-from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
-from sp import SP, SPAux, VentureSPRecord, SPType
-import types as t
-import value as v
-from sp_help import dispatching_psp
-from sp_registry import registerBuiltinSP
+from venture.lite.exception import VentureValueError
+from venture.lite.psp import DeterministicMakerAAAPSP
+from venture.lite.psp import NullRequestPSP
+from venture.lite.psp import RandomPSP
+from venture.lite.psp import TypedPSP
+from venture.lite.sp import SP
+from venture.lite.sp import SPAux
+from venture.lite.sp import SPType
+from venture.lite.sp import VentureSPRecord
+from venture.lite.sp_help import dispatching_psp
+from venture.lite.sp_registry import registerBuiltinSP
+import venture.lite.types as t
+import venture.lite.value as v
 
 # XXX Replace by scipy.stats.multivariate_normal.logpdf when we
 # upgrade to scipy 0.14.
@@ -50,16 +56,16 @@ class GP(object):
     self.mean = mean
     self.covariance = covariance
     self.samples = samples
-  
+
   def toJSON(self):
     return self.samples
-  
+
   def mean_array(self, xs):
     return col_vec(map(self.mean, xs))
-  
+
   def cov_matrix(self, x1s, x2s):
     return np.matrix([[self.covariance(x1, x2) for x2 in x2s] for x1 in x1s])
-  
+
   def getNormal(self, xs):
     """Returns the mean and covariance matrices at a set of input points."""
     if len(self.samples) == 0:
@@ -68,20 +74,20 @@ class GP(object):
     else:
       x2s = self.samples.keys()
       o2s = self.samples.values()
-      
+
       mu1 = self.mean_array(xs)
       mu2 = self.mean_array(x2s)
       a2 = col_vec(o2s)
-      
+
       sigma11 = self.cov_matrix(xs, xs)
       sigma12 = self.cov_matrix(xs, x2s)
       sigma21 = self.cov_matrix(x2s, xs)
       sigma22 = self.cov_matrix(x2s, x2s)
       inv22 = la.pinv(sigma22)
-      
+
       mu = mu1 + sigma12 * (inv22 * (a2 - mu2))
       sigma = sigma11 - sigma12 * inv22 * sigma21
-    
+
     return mu, sigma
 
   def sample(self, *xs):
@@ -99,23 +105,23 @@ class GP(object):
     """Log density of the current samples."""
     if len(self.samples) == 0:
       return 0
-    
+
     xs = self.samples.keys()
     os = self.samples.values()
-    
+
     mu = self.mean_array(xs)
     sigma = self.cov_matrix(xs, xs)
-    
+
     return multivariate_normal_logpdf(col_vec(os), mu, sigma)
-  
+
 class GPOutputPSP(RandomPSP):
   def __init__(self, mean, covariance):
     self.mean = mean
     self.covariance = covariance
-  
+
   def makeGP(self, samples):
     return GP(self.mean, self.covariance, samples)
-  
+
   def simulate(self,args):
     samples = args.spaux().samples
     xs = args.operandValues()[0]
@@ -128,11 +134,11 @@ class GPOutputPSP(RandomPSP):
 
   def logDensityOfCounts(self,aux):
     return self.makeGP(aux.samples).logDensityOfCounts()
-  
+
   def incorporate(self,os,args):
     samples = args.spaux().samples
     xs = args.operandValues()[0]
-    
+
     for x, o in zip(xs, os):
       samples[x] = o
 

@@ -47,17 +47,18 @@ Typical usage begins by using one of the factory functions in the
 '''
 
 import numbers
-import re
 import os
-from os import path
+import re
 import sys
+
 import numpy as np
 
 from venture.exception import VentureException
-from venture.lite.value import VentureValue, VentureForeignBlob
+from venture.lite.value import VentureForeignBlob
+from venture.lite.value import VentureValue
+import venture.value.dicts as v
 import plugins
 import utils as u
-import venture.value.dicts as v
 
 PRELUDE_FILE = 'prelude.vnt'
 
@@ -170,7 +171,6 @@ class Ripl():
         return self.sivm.execute_instruction(parsed_instruction)
 
     def _raise_annotated(self, e, instruction):
-        import sys
         info = sys.exc_info()
         try:
             annotated = self._annotated_error(e, instruction)
@@ -273,7 +273,7 @@ class Ripl():
         return vals
 
     def execute_program_from_file(self, filename):
-        _, ext = path.splitext(filename)
+        _, ext = os.path.splitext(filename)
         old_mode = self.get_mode()
         if ext == ".vnts":
             self.set_mode("venture_script")
@@ -971,7 +971,7 @@ Open issues:
             # _n_prelude concept anyway.
             self._n_prelude += len(self.list_directives(include_prelude = True))
         elif self.mode == 'church_prime':
-            prelude_path = path.join(path.dirname(__file__), PRELUDE_FILE)
+            prelude_path = os.path.join(os.path.dirname(__file__), PRELUDE_FILE)
             with open(prelude_path) as f:
                 Ripl._parsed_prelude = self.parse_program(f.read())
             self.load_prelude()

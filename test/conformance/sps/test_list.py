@@ -15,10 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import eq_
-from math import sin, cos
-from venture.test.config import get_ripl, on_inf_prim
+from math import cos
+from math import sin
+
 from nose.tools import assert_equal
+from nose.tools import eq_
+
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 @on_inf_prim("none")
 def testList1():

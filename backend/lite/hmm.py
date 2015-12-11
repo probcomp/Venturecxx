@@ -15,19 +15,24 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from sp import SP, VentureSPRecord, SPAux, SPType
-from psp import DeterministicPSP, RandomPSP, TypedPSP
-from request import Request
-import numpy as np
-import numpy.random as npr
 import math
 from copy import copy
-from types import CountType, AtomType, RequestType
-from exception import VentureValueError
 
-import types as t
-from sp_registry import registerBuiltinSP
-from sp_help import typed_nr
+import numpy as np
+import numpy.random as npr
+
+from venture.lite.exception import VentureValueError
+from venture.lite.psp import DeterministicPSP
+from venture.lite.psp import RandomPSP
+from venture.lite.psp import TypedPSP
+from venture.lite.request import Request
+from venture.lite.sp import SP
+from venture.lite.sp import SPAux
+from venture.lite.sp import SPType
+from venture.lite.sp import VentureSPRecord
+from venture.lite.sp_help import typed_nr
+from venture.lite.sp_registry import registerBuiltinSP
+import venture.lite.types as t
 
 def npSampleVector(pVec):
   return npr.multinomial(1,pVec)
@@ -60,8 +65,8 @@ class MakeUncollapsedHMMOutputPSP(DeterministicPSP):
 
 class UncollapsedHMMSP(SP):
   def __init__(self,p0,T,O):
-    req = TypedPSP(UncollapsedHMMRequestPSP(), SPType([CountType()], RequestType()))
-    output = TypedPSP(UncollapsedHMMOutputPSP(O), SPType([CountType()], AtomType()))
+    req = TypedPSP(UncollapsedHMMRequestPSP(), SPType([t.CountType()], t.RequestType()))
+    output = TypedPSP(UncollapsedHMMOutputPSP(O), SPType([t.CountType()], t.AtomType()))
     super(UncollapsedHMMSP,self).__init__(req,output)
     self.p0 = p0
     self.T = T

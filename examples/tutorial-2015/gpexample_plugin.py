@@ -9,7 +9,7 @@ import venture.lite.types as t
 import venture.lite.sp as sp
 from venture.lite.function import VentureFunction
 from venture.lite.sp_help import deterministic_typed
-import gpmem
+import regress_mem
 
 
 @np.vectorize
@@ -83,7 +83,8 @@ def __venture_start__(ripl, *args):
         [t.AnyType("VentureFunction"), t.AnyType("VentureFunction")],
         t.AnyType("VentureFunction"))
 
-    ripl.bind_foreign_sp('gpmem', gpmem.gpmemSP)
+    ripl.bind_foreign_sp('regress_mem', regress_mem.regress_mem)
+    ripl.assume('gpmem', 'proc (f, mean, cov) { regress_mem(f, make_gp, mean, cov) }')
     ripl.bind_foreign_inference_sp('argmax_of_array', argmaxSP)
     ripl.bind_foreign_sp('abs', absSP)
     ripl.bind_foreign_sp('make_squaredexp', make_se_SP)

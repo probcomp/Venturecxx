@@ -15,18 +15,24 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from psp import DeterministicPSP, NullRequestPSP, TypedPSP
-from env import VentureEnvironment, EnvironmentType
-from request import Request, ESR
-from value import VentureArray, SPRef
-from address import emptyAddress
-from exception import VentureValueError
-from node import FixedValueArgs
-
-import types as t
-from sp import SP, SPType
-from sp_registry import registerBuiltinSP
-from sp_help import esr_output, typed_nr
+from venture.lite.address import emptyAddress
+from venture.lite.env import EnvironmentType
+from venture.lite.env import VentureEnvironment
+from venture.lite.exception import VentureValueError
+from venture.lite.node import FixedValueArgs
+from venture.lite.psp import DeterministicPSP
+from venture.lite.psp import NullRequestPSP
+from venture.lite.psp import TypedPSP
+from venture.lite.request import ESR
+from venture.lite.request import Request
+from venture.lite.sp import SP
+from venture.lite.sp import SPType
+from venture.lite.sp_help import esr_output
+from venture.lite.sp_help import typed_nr
+from venture.lite.sp_registry import registerBuiltinSP
+from venture.lite.value import SPRef
+from venture.lite.value import VentureArray
+import venture.lite.types as t
 
 class ApplyRequestPSP(DeterministicPSP):
     def simulate(self, args):

@@ -15,10 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.plugins.attrib import attr
 import os
 
-from venture.test.config import get_ripl, gen_on_inf_prim
+from nose.plugins.attrib import attr
+
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
 import venture.test.timing as timing
 
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))

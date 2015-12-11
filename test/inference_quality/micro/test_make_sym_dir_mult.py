@@ -18,6 +18,7 @@
 from nose import SkipTest
 from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, rejectionSampling, skipWhenSubSampling, on_inf_prim, gen_on_inf_prim
+from venture.test.config import broken_in
 
 # TODO this whole file will need to be parameterized.
 # Most of these will become "check" functions instead of "test"
@@ -207,19 +208,17 @@ def testStaleAAA_CSP():
 
 @on_inf_prim("any")
 @statisticalTest
+@broken_in("puma", "Need to port records to Puma for references to work.  Issue #224")
 def testStaleAAA_Madness():
   ripl = get_ripl()
-
-  ripl.assume("make_ref","(lambda (x) (lambda () x))")
-  ripl.assume("deref","(lambda (x) (x))")
 
   ripl.assume("a", "1.0")
   ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
   ripl.assume("f2_maker", "(lambda () f)")
   ripl.assume("f2", "(f2_maker)")
-  ripl.assume("xs", "(array (make_ref f) (make_ref f2))")
+  ripl.assume("xs", "(array (ref f) (ref f2))")
   ripl.assume("f3","(deref (lookup xs 1))")
-  ripl.assume("ys","(dict (array (quote aaa) (quote bbb)) (array (make_ref f3) (make_ref f3)))")
+  ripl.assume("ys","(dict (array (quote aaa) (quote bbb)) (array (ref f3) (ref f3)))")
   ripl.assume("g","(deref (if (flip) (lookup ys (quote aaa)) (lookup ys (quote bbb))))")
   ripl.predict("(g)",label="pid")
 

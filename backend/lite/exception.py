@@ -64,3 +64,14 @@ class SubsampledScaffoldNotApplicableWarning(VentureWarning):
 class SubsampledScaffoldStaleNodesWarning(VentureWarning):
   '''This warning means that the stale nodes may cause incorrect behavior.'''
   pass
+
+class VentureNestedRiplMethodError(VentureError):
+  """This exception means that this SP attempted a recursive Ripl operation which failed."""
+  def __init__(self, message, cause, stack, addr):
+    super(VentureNestedRiplMethodError, self).__init__(message)
+    self.cause = cause
+    self.stack = stack
+    self.addr = addr
+
+  def __str__(self):
+    return str(self.cause)

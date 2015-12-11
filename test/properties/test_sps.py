@@ -32,7 +32,8 @@ from venture.lite.utils import FixedRandomness
 blacklist = ['make_csp', 'apply_function', 'make_gp',
              # TODO Appropriately construct random inputs to test
              # record constructors and accessors?
-             'inference_action', 'action_func']
+             'inference_action', 'action_func',
+             'make_ref', 'ref_get']
 
 # Select particular SPs to test thus:
 # nosetests --tc=relevant:'["foo", "bar", "baz"]'

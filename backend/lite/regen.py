@@ -16,17 +16,23 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import numbers
-import exp as e
-from node import isConstantNode, isLookupNode, isRequestNode, isOutputNode
-from sp import VentureSPRecord
-from psp import NullRequestPSP, PSP
-from value import SPRef
-from lkernel import VariationalLKernel
-from scope import isTagOutputPSP
-from consistency import assertTorus, assertTrace
-from exception import VentureError
+
 from venture.exception import VentureException
-from venture.lite.inference_sps import VentureNestedRiplMethodError # TODO Ugh.
+from venture.lite.consistency import assertTorus
+from venture.lite.consistency import assertTrace
+from venture.lite.exception import VentureError
+from venture.lite.exception import VentureNestedRiplMethodError
+from venture.lite.lkernel import VariationalLKernel
+from venture.lite.node import isConstantNode
+from venture.lite.node import isLookupNode
+from venture.lite.node import isOutputNode
+from venture.lite.node import isRequestNode
+from venture.lite.psp import NullRequestPSP
+from venture.lite.psp import PSP
+from venture.lite.scope import isTagOutputPSP
+from venture.lite.sp import VentureSPRecord
+from venture.lite.value import SPRef
+import venture.lite.exp as e
 
 def regenAndAttach(trace,scaffold,shouldRestore,omegaDB,gradients):
   assertTorus(scaffold)
@@ -45,14 +51,16 @@ def regenAndAttachAtBorder(trace,border,scaffold,shouldRestore,omegaDB,gradients
     else:
       weight += regen(trace,node,scaffold,shouldRestore,omegaDB,gradients)
       if node.isObservation:
-        appNode = trace.getConstrainableNode(node)
-        weight += constrain(trace,appNode,node.observedValue)
-        constraintsToPropagate[appNode] = node.observedValue
-  for node,value in constraintsToPropagate.iteritems():
-    for child in trace.childrenAt(node):
-      propagateConstraint(trace,child,value)
+        weight += getAndConstrain(trace,node,constraintsToPropagate)
+  propagateConstraints(trace,constraintsToPropagate)
 
   assert isinstance(weight, numbers.Number)
+  return weight
+
+def getAndConstrain(trace,node,constraintsToPropagate):
+  appNode = trace.getConstrainableNode(node)
+  weight = constrain(trace,appNode,node.observedValue)
+  constraintsToPropagate[appNode] = node.observedValue
   return weight
 
 def constrain(trace,node,value):
@@ -64,6 +72,11 @@ def constrain(trace,node,value):
   trace.registerConstrainedChoice(node)
   assert isinstance(weight, numbers.Number)
   return weight
+
+def propagateConstraints(trace,constraintsToPropagate):
+  for node,value in constraintsToPropagate.iteritems():
+    for child in trace.childrenAt(node):
+      propagateConstraint(trace,child,value)
 
 def propagateConstraint(trace,node,value):
   if isLookupNode(node): trace.setValueAt(node,value)
@@ -83,8 +96,12 @@ def propagateConstraint(trace,node,value):
 
 def attach(trace,node,scaffold,shouldRestore,omegaDB,gradients):
   weight = regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients)
+  weight += absorb(trace, node)
+  return weight
+
+def absorb(trace, node):
   psp,args,gvalue = trace.pspAt(node),trace.argsAt(node),trace.groundValueAt(node)
-  weight += psp.logDensity(gvalue,args)
+  weight = psp.logDensity(gvalue,args)
   psp.incorporate(gvalue,args)
   assert isinstance(weight, numbers.Number)
   return weight
@@ -108,17 +125,31 @@ def regen(trace,node,scaffold,shouldRestore,omegaDB,gradients):
     if trace.regenCountAt(scaffold,node) == 0:
       weight += regenParents(trace,node,scaffold,shouldRestore,omegaDB,gradients)
       if isLookupNode(node):
-        trace.setValueAt(node, trace.valueAt(node.sourceNode))
+        propagateLookup(trace,node)
       else:
         weight += applyPSP(trace,node,scaffold,shouldRestore,omegaDB,gradients)
         if isRequestNode(node): weight += evalRequests(trace,node,scaffold,shouldRestore,omegaDB,gradients)
     trace.incRegenCountAt(scaffold,node)
+  weight += maybeRegenStaleAAA(trace, node, scaffold, shouldRestore, omegaDB, gradients)
 
+  assert isinstance(weight, numbers.Number)
+  return weight
+
+def propagateLookup(trace, node):
+  trace.setValueAt(node, trace.valueAt(node.sourceNode))
+
+def maybeRegenStaleAAA(trace, node, scaffold, shouldRestore, omegaDB, gradients):
+  # "[this] has to do with worries about crazy thing[s] that can
+  # happen if aaa makers are shuffled around as first-class functions,
+  # and the made SPs are similarly shuffled, including with stochastic
+  # flow of such data, which may cause regeneration order to be hard
+  # to predict, and the check is trying to avoid a stale AAA aux"
+  # TODO: apparently nothing in the test suite actually hits this
+  # case. can we come up with an example that does?
+  weight = 0
   value = trace.valueAt(node)
   if isinstance(value,SPRef) and value.makerNode != node and scaffold.isAAA(value.makerNode):
     weight += regen(trace,value.makerNode,scaffold,shouldRestore,omegaDB,gradients)
-
-  assert isinstance(weight, numbers.Number)
   return weight
 
 def evalFamily(trace,address,exp,env,scaffold,shouldRestore,omegaDB,gradients):

@@ -15,17 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import scipy.stats as stats
-import re
 from StringIO import StringIO
+import re
 import sys
 
-from venture.test.stats import statisticalTest
-from venture.test.stats import reportKnownGaussian
-from venture.test.config import get_ripl, default_num_samples, on_inf_prim
+import scipy.stats as stats
+
 from venture.lite.psp import LikelihoodFreePSP
-import venture.lite.types as t
 from venture.lite.sp_help import typed_nr
+from venture.test.config import default_num_samples
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import statisticalTest
+import venture.lite.types as t
 
 def extract_from_dataset(result, names):
   return result.asPandas()[names]

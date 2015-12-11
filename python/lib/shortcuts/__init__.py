@@ -17,13 +17,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
+import resource
+
+from venture import parser
+from venture import ripl
+from venture import sivm
+from venture import server
+
 # Raise Python's recursion limit, per
 # http://log.brandonthomson.com/2009/07/increase-pythons-recursion-limit.html
 # The reason to do this is that Venture is not tail recursive, and the
 # repeat inference function are written as recursive functions in
 # Venture.
-import sys
-import resource
+
 # Try to increase max stack size from 8MB to 512MB
 (soft, hard) = resource.getrlimit(resource.RLIMIT_STACK)
 if hard > -1:
@@ -33,8 +40,6 @@ else:
 resource.setrlimit(resource.RLIMIT_STACK, (new_soft, hard))
 # Set a large recursion depth limit
 sys.setrecursionlimit(max(10**6, sys.getrecursionlimit()))
-
-from venture import parser, ripl, sivm, server
 
 def make_ripl(*args, **kwargs):
     """Construct and return a VentureScript RIPL object.

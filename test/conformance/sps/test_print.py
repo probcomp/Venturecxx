@@ -15,10 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import eq_
 from re import search
 
-from venture.test.config import get_ripl, broken_in, capture_output
+from nose.tools import eq_
+
+from venture.test.config import broken_in
+from venture.test.config import capture_output
+from venture.test.config import get_ripl
 
 def extract_integer(captured):
   'Extract the Venture integer from a captured print'

@@ -15,8 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from numpy import array_equal, allclose
-from venture.test.config import get_ripl, on_inf_prim, gen_on_inf_prim
+from numpy import allclose
+from numpy import array_equal
+
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 class TestMatrixVector(object):
   _multiprocess_can_split_ = True

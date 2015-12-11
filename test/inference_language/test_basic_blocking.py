@@ -19,15 +19,23 @@ import math
 import scipy.stats as stats
 from nose import SkipTest
 
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
+from venture.test.config import broken_in
+from venture.test.config import collectSamples
+from venture.test.config import collect_iid_samples
+from venture.test.config import default_num_transitions_per_sample
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownContinuous
+from venture.test.stats import reportKnownDiscrete
 from venture.test.stats import reportKnownGaussian
-from venture.test.config import get_ripl, collectSamples, collect_iid_samples, default_num_transitions_per_sample, broken_in, on_inf_prim
+from venture.test.stats import statisticalTest
 
 @statisticalTest
 @on_inf_prim("mh")
 def testBlockingExample0():
   ripl = get_ripl()
-  if not collect_iid_samples(): raise SkipTest("This test should not pass without reset.")
+  if not collect_iid_samples():
+    raise SkipTest("This test should not pass without reset.")
 
   ripl.assume("a", "(tag 0 0 (normal 10.0 1.0))", label="pid")
   ripl.assume("b", "(tag 1 1 (normal a 1.0))")
@@ -127,14 +135,30 @@ def testBasicRejection3():
 @statisticalTest
 @on_inf_prim("mh")
 def testCycleKernel():
-  """Same example as testBlockingExample0, but a cycle kernel that covers everything should solve it"""
+  """Same example as testBlockingExample0,
+but a cycle kernel that covers everything should solve it"""
   ripl = get_ripl()
 
   ripl.assume("a", "(tag 0 0 (normal 10.0 1.0))", label="pid")
   ripl.assume("b", "(tag 1 1 (normal a 1.0))")
   ripl.observe("(normal b 1.0)", 14.0)
 
-  infer = "(repeat %s (do (mh 0 0 1) (mh 1 1 1)))" % default_num_transitions_per_sample()
+  infer = "(repeat %s (do (mh 0 0 1) (mh 1 1 1)))" % \
+          default_num_transitions_per_sample()
 
   predictions = collectSamples(ripl,"pid",infer=infer)
   return reportKnownGaussian(34.0/3.0, math.sqrt(2.0/3.0), predictions)
+
+@on_inf_prim("mh")
+def testStringScopes():
+  ripl = get_ripl()
+  ripl.assume("a", '(tag "foo" "bar" (normal 0.0 1.0))', label="a")
+  ripl.assume("b", '(tag "foo" "bar" (normal 1.0 1.0))', label="b")
+  olda = ripl.report("a")
+  oldb = ripl.report("b")
+  # The point of block proposals is that both things change at once.
+  ripl.infer('(mh "foo" "bar" 1)')
+  newa = ripl.report("a")
+  newb = ripl.report("b")
+  assert not olda == newa
+  assert not oldb == newb

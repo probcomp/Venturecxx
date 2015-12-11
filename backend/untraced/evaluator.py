@@ -18,7 +18,7 @@
 from ..lite import exp as e
 from ..lite.exception import VentureError
 from venture.exception import VentureException
-from ..lite.inference_sps import VentureNestedRiplMethodError # TODO Ugh.
+from ..lite.exception import VentureNestedRiplMethodError
 from ..lite import value as vv
 
 from ..lite.sp import VentureSPRecord

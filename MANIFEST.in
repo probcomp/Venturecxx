@@ -808,7 +808,7 @@ include examples/tutorial-2015/gp-1.vnts
 include examples/tutorial-2015/linear-regression.lvnt.erb
 include examples/tutorial-2015/gp_mixreg_hardcoded.png
 include examples/tutorial-2015/lin-reg-3.vnts
-include examples/tutorial-2015/gpmem.py
+include examples/tutorial-2015/regress_mem.py
 include examples/tutorial-2015/gp-2.vnts
 include examples/tutorial-2015/good-gp-figure-2.png
 include examples/tutorial-2015/gpexample_plugin.py
@@ -1071,6 +1071,5 @@ include test/manual/all.sh
 include test/manual/python-error.sh
 include test/manual/console-error.sh
 include profile/example_profile_script.py
-include profile/matplotlibrc
 include profile/README
 include crashes.cfg

@@ -15,11 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.stats import statisticalTest, reportKnownMean
-from nose.tools import eq_, raises
-from venture.test.config import get_ripl, collectSamples, collectStateSequence, skipWhenRejectionSampling, on_inf_prim, gen_on_inf_prim
-from testconfig import config
 from nose import SkipTest
+from nose.tools import eq_
+from nose.tools import raises
+from testconfig import config
+
+from venture.test.config import collectSamples
+from venture.test.config import collectStateSequence
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.config import skipWhenRejectionSampling
+from venture.test.stats import reportKnownMean
+from venture.test.stats import statisticalTest
 
 def checkConstrainAVar1a(program):
   ripl = get_ripl()

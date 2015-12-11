@@ -19,17 +19,20 @@ import sys
 from nose.plugins.attrib import attr
 
 from venture.test.config import get_ripl, on_inf_prim
+from venture.test.config import broken_in
 import venture.test.timing as timing
 
-sys.setrecursionlimit(1000000) 
+sys.setrecursionlimit(1000000)
 
 def loadChurchPairProgram(K):
   ripl = get_ripl()
 
-  ripl.assume("make_church_pair","(lambda (x y) (lambda (f) (if (= f 0) x y)))")
-  ripl.assume("church_pair_lookup","(lambda (cp n) (if (= n 0) (cp 0) (church_pair_lookup (cp 1) (- n 1))))")
+  ripl.assume("make_church_pair",
+              "(lambda (x y) (lambda (f) (if (= f 0) x y)))")
+  ripl.assume("church_pair_lookup", """(lambda (cp n)
+    (if (= n 0) (cp 0) (church_pair_lookup (cp 1) (- n 1))))""")
   ripl.assume("cp0","(make_church_pair (flip 0.5) 0)")
-    
+
   for i in range(K):
     ripl.assume('cp%d' % (i+1), '(make_church_pair (flip) cp%d)' % i)
 
@@ -52,13 +55,11 @@ def testChurchPairProgram1():
 
 def loadReferencesProgram(K):
   ripl = get_ripl()
-  ripl.assume("make_ref","(lambda (x) (lambda () x))")
-  ripl.assume("deref","(lambda (r) (r))")
 
-  ripl.assume("cp0","(list (make_ref (flip)))")
-    
+  ripl.assume("cp0","(list (ref (flip)))")
+
   for i in range(K):
-    ripl.assume('cp%d' % (i+1), '(pair (make_ref (flip)) cp%d)' % i)
+    ripl.assume('cp%d' % (i+1), '(pair (ref (flip)) cp%d)' % i)
 
   ripl.predict('(deref (lookup cp%d %d))' % (K, K))
   return ripl
@@ -68,6 +69,7 @@ def loadReferencesProgram(K):
 # (this could be reused from testChurchPairProgram)
 @attr('slow')
 @on_inf_prim("mh")
+@broken_in("puma", "Need to port records to Puma for references to work.  Issue #224")
 def testReferencesProgram1():
 
   def refify(K):

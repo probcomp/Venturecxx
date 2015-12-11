@@ -15,12 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import copy
+
 from ..omegadb import OmegaDB
 from ..regen import regenAndAttachAtBorder
 from ..detach import detachAndExtractAtBorder
-from ..utils import sampleLogCategorical, logaddexp
-from ..consistency import assertTrace, assertTorus
-import copy
+from ..utils import sampleLogCategorical
+from ..utils import logaddexp
+from ..consistency import assertTrace
+from ..consistency import assertTorus
 
 # Construct ancestor path backwards
 def constructAncestorPath(ancestorIndices,t,n):

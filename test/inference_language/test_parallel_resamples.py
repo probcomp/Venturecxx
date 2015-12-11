@@ -15,12 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import eq_
-from nose import SkipTest
 import threading
 
-from venture.test.config import get_ripl, default_num_samples, gen_on_inf_prim, on_inf_prim
-from venture.test.stats import statisticalTest, reportKnownGaussian
+from nose.tools import eq_
+from nose import SkipTest
+
+from venture.test.config import default_num_samples
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import statisticalTest
 
 @gen_on_inf_prim("resample")
 def testSynchronousIsSerial():

@@ -15,18 +15,25 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import time
-from pandas import DataFrame
 from copy import copy
+import time
 
-from venture.lite.value import (VentureArray, VentureSymbol, VentureString,
-                                VentureInteger, VentureValue, VentureNil)
-from venture.lite.types import (ExpressionType, SymbolType)
+from pandas import DataFrame
+
+from venture.engine.plot_spec import PlotSpec
+from venture.engine.trace_set import TraceSet
+from venture.lite.exception import VentureCallbackError
+from venture.lite.exception import VentureValueError
+from venture.lite.types import ExpressionType
+from venture.lite.types import SymbolType
 from venture.lite.utils import logWeightsToNormalizedDirect
+from venture.lite.value import VentureArray
+from venture.lite.value import VentureInteger
+from venture.lite.value import VentureNil
+from venture.lite.value import VentureString
+from venture.lite.value import VentureSymbol
+from venture.lite.value import VentureValue
 from venture.ripl.utils import strip_types_from_dict_values
-from venture.lite.exception import VentureValueError, VentureCallbackError
-from trace_set import TraceSet
-from plot_spec import PlotSpec
 
 class Infer(object):
   def __init__(self, engine):
@@ -96,10 +103,10 @@ class Infer(object):
   def resample_thread_ser(self, ct): self.engine.resample(ct, 'thread_ser')
   def resample_multiprocess(self, ct, process_cap = None): self.engine.resample(ct, 'multiprocess', process_cap)
   def likelihood_weight(self): self.engine.likelihood_weight()
-  def likelihood_at(self, scope, block):
-    return self.engine.model.traces.map('likelihood_at', scope, block)
-  def posterior_at(self, scope, block):
-    return self.engine.model.traces.map('posterior_at', scope, block)
+  def log_likelihood_at(self, scope, block):
+    return self.engine.model.traces.map('log_likelihood_at', scope, block)
+  def log_joint_at(self, scope, block):
+    return self.engine.model.traces.map('log_joint_at', scope, block)
   def enumerative_diversify(self, scope, block): self.engine.diversify(["enumerative", scope, block])
   def collapse_equal(self, scope, block): self.engine.collapse(scope, block)
   def collapse_equal_map(self, scope, block): self.engine.collapse_map(scope, block)
@@ -137,7 +144,7 @@ class Infer(object):
       answer['iter'] = [1] * engine.num_traces()
       answer['prt. id'] = range(engine.num_traces())
       answer['time (s)'] = [the_time] * engine.num_traces()
-      answer['log score'] = engine.logscore_all() # TODO Replace this by explicit references to (global_likelihood), because the current implementation is wrong
+      answer['log score'] = engine.logscore_all() # TODO Replace this by explicit references to (global_log_likelihood), because the current implementation is wrong
       log_weights = copy(engine.model.log_weights)
       answer['prt. log wgt.'] = log_weights
       answer['prt. prob.'] = logWeightsToNormalizedDirect(log_weights)
@@ -182,6 +189,10 @@ class Infer(object):
     else:
       import venture.shortcuts as s
       return TraceSet(self.engine, s.backend(backend_name))
+  def fork_model(self, backend_name=None):
+    model = self.new_model(backend_name)
+    model.convertFrom(self.engine.model)
+    return model
   def in_model(self, model, action):
     return self.engine.in_model(model, action)
   def model_import_foreign(self, name):

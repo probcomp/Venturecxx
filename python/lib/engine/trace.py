@@ -136,6 +136,12 @@ inference.)
     # it that way.  Also, Puma trace reconstruction eits the RNG (as
     # of this writing), so it would need to be reset; whereas the
     # present approach doesn't have that problem.
+
+    # Note: It is also possible to reset_to_prior the way the
+    # like-named inference action does, by detaching and then
+    # regenerating the whole world.  Empirically, that is faster for
+    # traces that have large always-constant deterministic sections
+    # and slower for traces that do not.
     worklist = sorted(self.directives.iteritems())
     for (did, _) in reversed(worklist):
       self.forget(did)
