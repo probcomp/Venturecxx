@@ -317,7 +317,7 @@ def evalRequests(trace, node, scaffold, shouldRestore, omegaDB, gradients):
       latentDB = omegaDB.getLatentDB(trace.spAt(node))
     else:
       latentDB = None
-    weight += trace.spAt(node).simulateLatents(trace.spauxAt(node), lsr,
+    weight += trace.spAt(node).simulateLatents(trace.argsAt(node), lsr,
                                                shouldRestore, latentDB)
 
   assert isinstance(weight, numbers.Number)

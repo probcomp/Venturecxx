@@ -149,7 +149,8 @@ class VenStanSP(SP):
     # { app_id => parameters }
     return {}
 
-  def simulateLatents(self, aux, lsr, shouldRestore, latentDB):
+  def simulateLatents(self, args, lsr, shouldRestore, latentDB):
+    aux = args.spaux()
     if lsr not in aux.parameters:
       if shouldRestore:
         aux[lsr] = latentDB[lsr]
@@ -157,7 +158,8 @@ class VenStanSP(SP):
         aux[lsr] = self.synthesize_parameters_with_bogus_data()
     return 0
 
-  def detachLatents(self, aux, lsr, latentDB):
+  def detachLatents(self, args, lsr, latentDB):
+    aux = args.spaux()
     latentDB[lsr] = aux[lsr]
     del aux[lsr]
     return 0
