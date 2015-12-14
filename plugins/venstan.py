@@ -269,7 +269,10 @@ class VenStanOutputPSP(RandomPSP):
     aux.applications[args.node.requestNode] = (inputs, params, None)
 
 def __venture_start__(ripl):
+  args_types = [t.StringType(),
+                t.HomogeneousListType(t.HomogeneousListType(t.StringType())),
+                t.HomogeneousListType(t.HomogeneousListType(t.StringType()))]
   the_sp = sp.typed_nr(MakerVenStanOutputPSP(),
-                       [t.StringType(), t.ListType(), t.ListType()],
+                       args_types,
                        t.AnyType("SP representing the Stan model"))
   ripl.bind_foreign_sp("make_ven_stan", the_sp)

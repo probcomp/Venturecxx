@@ -16,7 +16,7 @@ generated quantities {
   for (n in 1:N)
     y_out[n] <- normal_rng(mu, sigma);
 }";
-assume inputs = quote("N"("Int"));
-assume outputs = quote("y"("UArray Number", "y_out"));
+assume inputs = quote("N"("Int")());
+assume outputs = quote("y"("UArray Number", "y_out")());
 assume stan_sp = make_ven_stan(stan_prog, inputs, outputs);
 predict stan_sp(5);
