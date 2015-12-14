@@ -211,7 +211,7 @@ class VenStanSP(SP):
       else:
         inputs = args.operandValues()
         params = self.synthesize_parameters_with_bogus_data(inputs)
-        aux.applications = (inputs, params, None)
+        aux.applications[lsr] = (inputs, params, None)
     return 0
 
   def detachLatents(self, args, lsr, latentDB):
