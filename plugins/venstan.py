@@ -28,6 +28,7 @@ from venture.lite.sp import SPAux
 from venture.lite.sp import SPType
 from venture.lite.sp import VentureSPRecord
 
+import venture.lite.sp_help as sp
 import venture.lite.types as t
 import venture.lite.value as vv
 
@@ -266,3 +267,9 @@ class VenStanOutputPSP(RandomPSP):
     aux = args.spaux()
     (inputs, params, _) = aux.applications[args.node.requestNode]
     aux.applications[args.node.requestNode] = (inputs, params, None)
+
+def __venture_start__(ripl):
+  the_sp = sp.typed_nr(MakerVenStanOutputPSP(),
+                       [t.StringType(), t.ListType(), t.ListType()],
+                       t.AnyType("SP representing the Stan model"))
+  ripl.bind_foreign_sp("make_ven_stan", the_sp)
