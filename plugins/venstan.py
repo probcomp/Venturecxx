@@ -235,6 +235,16 @@ class VenStanOutputPSP(RandomPSP):
     print fit, fit.extract()
     return fit.extract()
 
+  def evaluate_posterior(self, inputs, params, outputs):
+    data_dict = input_data_as_dict(self.input_spec, inputs)
+    data_dict.update(input_data_as_dict(self.output_spec, outputs))
+    param_dict = input_data_as_dict(self.param_spec, params)
+    fit = pystan.stan(fit=self.built_result, data=data_dict, iter=0, chains=1,
+                      init=[param_dict])
+    ans = fit.log_prob(param_dict) # TODO Transform the parameters
+    print fit, ans
+    return ans
+
   def simulate(self, args):
     inputs = args.operandValues()
     (_, params, _) = args.spaux().applications[args.node.requestNode]
