@@ -1,0 +1,21 @@
+infer load_plugin("plugins/venstan.py");
+assume stan_prog = "
+data {
+  int N;
+  real y[N];
+}
+parameters {
+  real mu;
+  real sigma;
+}
+model {
+  y ~ normal(mu, sigma);
+}
+generated quantities {
+  real y_out[N];
+  y_out ~ normal(mu, sigma);
+}";
+assume inputs = quote("N"("Int"));
+assume outputs = quote("y"("UArray Number", "y_out"));
+assume stan_sp = make_ven_stan(stan_prog, inputs, outputs);
+predict stan_sp(5);
