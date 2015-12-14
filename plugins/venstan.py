@@ -138,6 +138,9 @@ def input_data_as_dict(input_spec, inputs):
 def synthesize_bogus_data(output_spec):
   return {}
 
+def dict_as_output_data(output_spec, data):
+  return 0
+
 def cached_stan_model(model_code, cache_dir=None, **kwargs):
   if cache_dir is None:
     print "Not using Stan model cache"
@@ -264,7 +267,7 @@ class VenStanOutputPSP(RandomPSP):
     fit = pystan.stan(fit=self.stan_model, data=data_dict, iter=1, chains=1,
                       init=[params])
     print fit.extract()
-    return fit.extract()
+    return dict_as_output_data(self.output_spec, fit.extract())
 
   def evaluate_posterior(self, inputs, params, outputs):
     data_dict = input_data_as_dict(self.input_spec, inputs)
