@@ -261,10 +261,9 @@ class VenStanOutputPSP(RandomPSP):
   def compute_generated_quantities_from_bogus_data(self, inputs, params):
     data_dict = input_data_as_dict(self.input_spec, inputs)
     data_dict.update(synthesize_bogus_data(self.output_spec))
-    param_dict = input_data_as_dict(self.param_spec, params)
-    fit = pystan.stan(fit=self.stan_model, data=data_dict, iter=0, chains=1,
-                      init=[param_dict])
-    print fit, fit.extract()
+    fit = pystan.stan(fit=self.stan_model, data=data_dict, iter=1, chains=1,
+                      init=[params])
+    print fit.extract()
     return fit.extract()
 
   def evaluate_posterior(self, inputs, params, outputs):
