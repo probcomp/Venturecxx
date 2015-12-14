@@ -16,6 +16,9 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import copy
+import cPickle as pickle
+import hashlib
+import os
 
 import pystan
 
@@ -135,6 +138,23 @@ def input_data_as_dict(input_spec, inputs):
 def synthesize_bogus_data(output_spec):
   return {}
 
+def cached_stan_model(model_code, cache_dir=None, **kwargs):
+  if cache_dir is None:
+    print "Not using Stan model cache"
+    return pystan.StanModel(model_code=model_code, **kwargs)
+  code_hash = hashlib.sha256(model_code).hexdigest()
+  cache_file = 'compiled-model-%s.pkl' % code_hash
+  cache_path = os.path.join(cache_dir, cache_file)
+  try:
+    model = pickle.load(open(cache_path, 'rb'))
+    print "Loaded model from cache %s" % cache_file
+  except:
+    model = pystan.StanModel(model_code=model_code, **kwargs)
+    with open(cache_path, 'wb') as f:
+      pickle.dump(model, f)
+      print "Saved model to cache %s" % cache_file
+  return model
+
 class BogusModelFit(object):
   """Trick the PyStan API into accepting a model that was compiled but never run
 
@@ -145,7 +165,7 @@ as a "Fit" for purposes of avoiding recompilation."""
 class MakerVenStanOutputPSP(DeterministicPSP):
   def simulate(self, args):
     (stan_prog, input_spec, output_spec) = args.operandValues()
-    built_result = pystan.StanModel(model_code=stan_prog)
+    built_result = cached_stan_model(stan_prog, cache_dir=".")
     the_sp = VenStanSP(BogusModelFit(built_result), input_spec, output_spec)
     return VentureSPRecord(the_sp)
 
