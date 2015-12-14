@@ -31,8 +31,8 @@ from venture.lite.sp import VentureSPRecord
 import venture.lite.types as t
 import venture.lite.value as vv
 
-# - Inputs are a list of pairs: name and type.
-# - Output are a list of triples: name, type, and constrainable name which may be Nil.
+# - Inputs are a list of 2-lists: name and type.
+# - Output are a list of 3-lists: name, type, and constrainable name which may be Nil.
 # - An output that is not constrainable corresponds to a generated quantity
 #   in Stan.
 # - An output that is constrainable corresponds to a generated quantity
