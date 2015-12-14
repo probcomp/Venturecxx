@@ -13,7 +13,8 @@ model {
 }
 generated quantities {
   real y_out[N];
-  y_out ~ normal(mu, sigma);
+  for (n in 1:N)
+    y_out[n] <- normal_rng(mu, sigma);
 }";
 assume inputs = quote("N"("Int"));
 assume outputs = quote("y"("UArray Number", "y_out"));
