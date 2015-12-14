@@ -164,16 +164,18 @@ as a "Fit" for purposes of avoiding recompilation."""
 
 class MakerVenStanOutputPSP(DeterministicPSP):
   def simulate(self, args):
-    (stan_prog, input_spec, output_spec) = args.operandValues()
+    (stan_prog, input_spec, param_spec, output_spec) = args.operandValues()
     built_result = cached_stan_model(stan_prog, cache_dir=".")
-    the_sp = VenStanSP(BogusModelFit(built_result), input_spec, output_spec)
+    the_sp = VenStanSP(BogusModelFit(built_result),
+                       input_spec, param_spec, output_spec)
     return VentureSPRecord(the_sp)
 
 class VenStanSP(SP):
-  def __init__(self, built_result, input_spec, output_spec):
+  def __init__(self, built_result, input_spec, param_spec, output_spec):
     (args_types, output_type) = io_spec_to_type_spec(input_spec, output_spec)
     req = TypedPSP(VenStanRequestPSP(), SPType(args_types, t.RequestType()))
-    output = TypedPSP(VenStanOutputPSP(built_result, input_spec, output_spec),
+    output = TypedPSP(VenStanOutputPSP(built_result,
+                                       input_spec, param_spec, output_spec),
                       SPType(args_types, output_type))
     super(VenStanSP, self).__init__(req, output)
     self.built_result = built_result
@@ -249,9 +251,10 @@ class VenStanRequestPSP(DeterministicPSP):
     return True
 
 class VenStanOutputPSP(RandomPSP):
-  def __init__(self, stan_model, input_spec, output_spec):
+  def __init__(self, stan_model, input_spec, param_spec, output_spec):
     self.stan_model = stan_model
     self.input_spec = input_spec
+    self.param_spec = param_spec
     self.output_spec = output_spec
     (self.input_names, self.output_names) = io_spec_to_api_spec(input_spec, output_spec)
 
@@ -298,6 +301,7 @@ class VenStanOutputPSP(RandomPSP):
 
 def __venture_start__(ripl):
   args_types = [t.StringType(),
+                t.HomogeneousListType(t.HomogeneousListType(t.StringType())),
                 t.HomogeneousListType(t.HomogeneousListType(t.StringType())),
                 t.HomogeneousListType(t.HomogeneousListType(t.StringType()))]
   the_sp = sp.typed_nr(MakerVenStanOutputPSP(),
