@@ -183,8 +183,9 @@ class VenStanSP(SP):
   def synthesize_parameters_with_bogus_data(self, inputs):
     data_dict = input_data_as_dict(self.input_spec, inputs)
     data_dict.update(synthesize_bogus_data(self.output_spec))
-    fit = pystan.stan(fit=self.built_result, data=data_dict, iter=0, chains=1)
-    print fit, fit.extract()
+    fit = pystan.stan(fit=self.built_result, data=data_dict, iter=1, chains=1, verbose=True)
+    print fit.extract()
+    # print fit Dies in trying to compute the effective sample size?
     return fit.extract()
 
   def update_parameters(self, inputs, params, outputs):
