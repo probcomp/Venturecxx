@@ -135,12 +135,19 @@ def input_data_as_dict(input_spec, inputs):
 def synthesize_bogus_data(output_spec):
   return {}
 
+class BogusModelFit(object):
+  """Trick the PyStan API into accepting a model that was compiled but never run
+
+as a "Fit" for purposes of avoiding recompilation."""
+  def __init__(self, model):
+    self.stanmodel = model
+
 class MakerVenStanOutputPSP(DeterministicPSP):
   def simulate(self, args):
     (stan_prog, input_spec, output_spec) = args.operandValues()
-    built_result = pystan.stanc(model_code=stan_prog)
-    sp = VenStanSP(built_result, input_spec, output_spec)
-    return VentureSPRecord(sp)
+    built_result = pystan.StanModel(model_code=stan_prog)
+    the_sp = VenStanSP(BogusModelFit(built_result), input_spec, output_spec)
+    return VentureSPRecord(the_sp)
 
 class VenStanSP(SP):
   def __init__(self, built_result, input_spec, output_spec):
