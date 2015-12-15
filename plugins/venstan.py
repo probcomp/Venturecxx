@@ -35,8 +35,13 @@ import venture.lite.sp_help as sp
 import venture.lite.types as t
 import venture.lite.value as vv
 
-# - Inputs are a list of 2-lists: name and type.
-# - Outputs are a list of 3-lists: name, type, and constrainable name which may be Nil.
+# - Inputs and unconstrainable outputs are a list of 2-lists: name and type.
+# - Constrainable outputs are a list of 3-lists: name, constrainable
+#   name, type, and any number of size expressions.
+# - A size expression is a string which, when evaluated in an
+#   environment containing the inputs, gives the size in that
+#   dimension.
+#   - This is needed to be able to synthesize values.
 # - An output that is not constrainable corresponds to a generated quantity
 #   in Stan.
 # - An output that is constrainable corresponds to a generated quantity
@@ -97,13 +102,14 @@ def interpret_type_spec(type_str):
 
 def io_spec_to_type_spec(inputs, outputs):
   assert len(outputs) == 1
-  (_, otp, _) = outputs[0]
+  otp = outputs[0][2]
   return ([interpret_type_spec(itp) for _,itp in inputs],
           interpret_type_spec(otp))
 
 def io_spec_to_api_spec(inputs, outputs):
   assert len(outputs) == 1
-  (name, _, observable_name) = outputs[0]
+  name = outputs[0][0]
+  observable_name = outputs[0][1]
   output_names = [name]
   input_names = [name for name,_ in inputs]
   if observable_name is not None:
@@ -118,9 +124,8 @@ def input_data_as_dict(input_spec, inputs):
   return ans
 
 def output_spec_to_back_in_spec(output_spec):
-  # TODO Deal with outputs that are not meant to be folded back in properly
   assert len(output_spec) == 1
-  return [(output_spec[0][2], output_spec[0][1])]
+  return [(output_spec[0][1], output_spec[0][2])]
 
 def synthesize_bogus_data(output_spec):
   print "Synthesizing", output_spec
@@ -128,7 +133,7 @@ def synthesize_bogus_data(output_spec):
 
 def dict_as_output_data(output_spec, data):
   print "Converting output", output_spec, data
-  ans = [data[name][0] for (name, _, _) in output_spec]
+  ans = [data[output[0]][0] for output in output_spec]
   print ans
   return ans
 
@@ -151,27 +156,27 @@ def cached_stan_model(model_code, cache_dir=None, **kwargs):
 
 class MakerVenStanOutputPSP(DeterministicPSP):
   def simulate(self, args):
-    (stan_prog, input_spec, param_spec, output_spec) = args.operandValues()
+    (stan_prog, input_spec, param_spec, c_output_spec) = args.operandValues()
     stan_model = cached_stan_model(stan_prog, cache_dir=".")
-    the_sp = VenStanSP(stan_model, input_spec, param_spec, output_spec)
+    the_sp = VenStanSP(stan_model, input_spec, param_spec, c_output_spec)
     return VentureSPRecord(the_sp)
 
 class VenStanSP(SP):
-  def __init__(self, stan_model, input_spec, param_spec, output_spec):
-    (args_types, output_type) = io_spec_to_type_spec(input_spec, output_spec)
+  def __init__(self, stan_model, input_spec, param_spec, c_output_spec):
+    (args_types, output_type) = io_spec_to_type_spec(input_spec, c_output_spec)
     self.f_type = SPType(args_types, output_type)
     req = TypedPSP(VenStanRequestPSP(), SPType(args_types, t.RequestType()))
     output = TypedPSP(VenStanOutputPSP(stan_model,
-                                       input_spec, param_spec, output_spec),
+                                       input_spec, param_spec, c_output_spec),
                       self.f_type)
     super(VenStanSP, self).__init__(req, output)
     self.stan_model = stan_model
     self.input_spec = input_spec
-    self.output_spec = output_spec
+    self.c_output_spec = c_output_spec
 
   def synthesize_parameters_with_bogus_data(self, inputs):
     data_dict = input_data_as_dict(self.input_spec, inputs)
-    data_dict.update(synthesize_bogus_data(self.output_spec))
+    data_dict.update(synthesize_bogus_data(self.c_output_spec))
     fit = self.stan_model.sampling(data=data_dict, iter=1, chains=1, verbose=True)
     print "Synthesized parameters", fit.extract()
     # print fit Dies in trying to compute the effective sample size?
@@ -179,7 +184,7 @@ class VenStanSP(SP):
 
   def update_parameters(self, inputs, params, outputs):
     print "Original parameters", params
-    second_input_spec = output_spec_to_back_in_spec(self.output_spec)
+    second_input_spec = output_spec_to_back_in_spec(self.c_output_spec)
     data_dict = input_data_as_dict(self.input_spec, inputs)
     data_dict.update(input_data_as_dict(second_input_spec, outputs))
     # Setting the "thin" argument here has the effect that Stan
@@ -243,24 +248,23 @@ class VenStanRequestPSP(DeterministicPSP):
     return True
 
 class VenStanOutputPSP(RandomPSP):
-  def __init__(self, stan_model, input_spec, param_spec, output_spec):
+  def __init__(self, stan_model, input_spec, param_spec, c_output_spec):
     self.stan_model = stan_model
     self.input_spec = input_spec
     self.param_spec = param_spec
-    self.output_spec = output_spec
-    (self.input_names, self.output_names) = io_spec_to_api_spec(input_spec, output_spec)
+    self.c_output_spec = c_output_spec
 
   def compute_generated_quantities_from_bogus_data(self, inputs, params):
     data_dict = input_data_as_dict(self.input_spec, inputs)
-    data_dict.update(synthesize_bogus_data(self.output_spec))
+    data_dict.update(synthesize_bogus_data(self.c_output_spec))
     fit = self.stan_model.sampling(data=data_dict, iter=1, chains=1,
                                    init=[params])
     print "Computed generated quantities", fit.extract()
-    return dict_as_output_data(self.output_spec, fit.extract())
+    return dict_as_output_data(self.c_output_spec, fit.extract())
 
   def evaluate_posterior(self, inputs, params, outputs):
     data_dict = input_data_as_dict(self.input_spec, inputs)
-    data_dict.update(input_data_as_dict(self.output_spec, outputs))
+    data_dict.update(input_data_as_dict(self.c_output_spec, outputs))
     param_dict = input_data_as_dict(self.param_spec, params)
     fit = self.stan_model.sampling(data=data_dict, iter=0, chains=1,
                                    init=[param_dict])
