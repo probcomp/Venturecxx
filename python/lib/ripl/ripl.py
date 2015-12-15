@@ -552,7 +552,7 @@ value to be returned as a dict annotating its Venture type.
             label = _symbolize(label)
             i = {'instruction':'labeled_observe', 'expression':expression, 'value':value, 'label':label}
         weights = self.execute_instruction(i)['value']
-        return weights
+        return v.vector(weights) if type else weights
 
     def bulk_observe(self, exp, items, label=None):
         """Observe many evaluations of an expression.
@@ -665,7 +665,7 @@ Open issues:
             i = {'instruction':'labeled_forget',
                  'label':_symbolize(label_or_did)}
         weights = self.execute_instruction(i)['value']
-        return weights
+        return v.vector(weights) if type else weights
 
     def freeze(self, label_or_did, type=False):
         if isinstance(label_or_did,int):
