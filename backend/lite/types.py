@@ -22,6 +22,10 @@ import numpy as np
 import venture.lite.value as vv
 from venture.lite.request import Request
 
+# No, pylint, I really do mean to check whether two objects have the
+# same type.
+# pylint:disable=unidiomatic-typecheck
+
 ### Venture Types
 
 class VentureType(object):
@@ -116,34 +120,34 @@ class CountType(VentureType):
   def __init__(self, name=None):
     self._name = name
   def asVentureValue(self, thing):
-    assert 0 <= thing
+    assert thing >= 0
     return vv.VentureInteger(thing)
   def asPython(self, vthing):
     ans = vthing.getInteger()
-    if 0 <= ans:
+    if ans >= 0:
       return ans
     else:
       # TODO: Or what?  Clip to 0?
       raise vv.VentureTypeError("Count is not positive %s" % self.number)
   def __contains__(self, vthing):
-    return isinstance(vthing, vv.VentureInteger) and 0 <= vthing.getInteger()
+    return isinstance(vthing, vv.VentureInteger) and vthing.getInteger() >= 0
   def name(self): return self._name or "<count>"
 
 class PositiveType(VentureType):
   def __init__(self, name=None):
     self._name = name
   def asVentureValue(self, thing):
-    assert 0 < thing
+    assert thing > 0
     return vv.VentureNumber(thing)
   def asPython(self, vthing):
     ans = vthing.getNumber()
-    if 0 < ans:
+    if ans > 0:
       return ans
     else:
       # TODO: Or what?  Can't even clip to 0!
       raise vv.VentureTypeError("Number is not positive %s" % ans)
   def __contains__(self, vthing):
-    return isinstance(vthing, vv.VentureNumber) and 0 < vthing.getNumber()
+    return isinstance(vthing, vv.VentureNumber) and vthing.getNumber() > 0
   def name(self): return self._name or "<positive>"
   def gradient_type(self): return NumberType()
 
