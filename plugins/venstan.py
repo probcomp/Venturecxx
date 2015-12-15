@@ -131,8 +131,17 @@ def synthesize_bogus_datum(tp, sizes):
   return [synthesize_bogus_datum(tp, sizes[1:]) for _ in range(sizes[0])]
 
 def dict_as_output_data(output_spec, data):
-  ans = [data[output[0]][0] for output in output_spec]
+  ans = [normalize_output_datum(data[output[0]]) for output in output_spec]
   return ans
+
+def normalize_output_datum(datum):
+  # Apparently the dimensionality of the numpy arrays that Stan emits
+  # depends on the number of iterations done and the dimensionality of
+  # the underlying datum.
+  if len(datum.shape) == 0:
+    return float(datum)
+  else:
+    return datum[0]
 
 def cached_stan_model(model_code, cache_dir=None, **kwargs):
   if cache_dir is None:
