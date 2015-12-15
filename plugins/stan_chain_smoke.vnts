@@ -15,9 +15,8 @@ generated quantities {
   y_out <- normal_rng(mu, sigma);
 }";
 assume inputs = quote("sigma"("Number")());
-assume params = quote("mu"("Number")());
 assume c_outputs = quote("y_out"("y", "Number")());
-assume stan_sp = make_ven_stan(stan_prog, inputs, params, c_outputs);
+assume stan_sp = make_ven_stan(stan_prog, inputs, c_outputs);
 assume is_outlier = flip();
 assume variance = if (is_outlier) { 10 } else { 1 };
 observe stan_sp(variance) = 8;

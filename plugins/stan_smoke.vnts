@@ -17,8 +17,7 @@ generated quantities {
     y_out[n] <- normal_rng(mu, sigma);
 }";
 assume inputs = quote("N"("Int")());
-assume params = quote("mu"("Number")("sigma"("Number")));
 assume c_outputs = quote("y_out"("y", "UArray(Number)", "N")());
-assume stan_sp = make_ven_stan(stan_prog, inputs, params, c_outputs);
+assume stan_sp = make_ven_stan(stan_prog, inputs, c_outputs);
 predict stan_sp(7);
 infer mh(default, one, 3);
