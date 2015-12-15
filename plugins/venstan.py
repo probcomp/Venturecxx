@@ -111,14 +111,20 @@ import venture.lite.value as vv
 # - Problem: The param SP can't properly resimulate, even with a
 #   kernel, because it doesn't see the data.
 
-def interpret_type_spec(_tp):
-  return t.NumberType() # TODO: Actually interpret types
+def interpret_type_spec(type_str):
+  # TODO I should probably write a proper parser for type specs, or
+  # else render the type language in Venture instead of evaling
+  # user-supplied code like this.
+  globals = {}
+  exec "from venture.lite.types import *" in globals
+  ans = eval(type_str, globals)
+  return ans
 
 def io_spec_to_type_spec(inputs, outputs):
   assert len(outputs) == 1
-  (_, tp, _) = outputs[0]
-  return ([interpret_type_spec(tp) for _,tp in inputs],
-          interpret_type_spec(tp))
+  (_, otp, _) = outputs[0]
+  return ([interpret_type_spec(itp) for _,itp in inputs],
+          interpret_type_spec(otp))
 
 def io_spec_to_api_spec(inputs, outputs):
   assert len(outputs) == 1
