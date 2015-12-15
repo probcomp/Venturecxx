@@ -437,6 +437,7 @@ class Trace(object):
     else:
       assert node in self.unpropagatedObservations
       del self.unpropagatedObservations[node]
+      weight = 0
     return weight
 
   def uneval(self,id):
