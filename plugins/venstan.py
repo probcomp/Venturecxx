@@ -196,10 +196,9 @@ class VenStanSP(SP):
   def update_parameters(self, inputs, params, outputs):
     data_dict = input_data_as_dict(self.input_spec, inputs)
     data_dict.update(input_data_as_dict(self.output_spec, outputs))
-    param_dict = input_data_as_dict(self.param_spec, params)
     fit = pystan.stan(fit=self.built_result, data=data_dict, iter=10, chains=1,
-                      init=[param_dict])
-    print fit, fit.extract()
+                      init=[params])
+    print fit.extract()
     return fit.extract()
 
   def constructSPAux(self): return VenStanSPAux()

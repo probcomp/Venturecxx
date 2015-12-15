@@ -21,3 +21,4 @@ assume params = quote("mu"("Number")("sigma"("Number")));
 assume outputs = quote("y"("UArray Number", "y_out")());
 assume stan_sp = make_ven_stan(stan_prog, inputs, params, outputs);
 predict stan_sp(5);
+infer mh(default, one, 3);
