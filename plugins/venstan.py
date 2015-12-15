@@ -160,6 +160,12 @@ def cached_stan_model(model_code, cache_dir=None, **kwargs):
       print "Saved model to cache %s" % cache_file
   return model
 
+def minimal_stan_run(model, **kwargs):
+  """Create a StanFit object from a StanModel object.
+
+Avoid moving the parameters from their initialization as much as possible."""
+  return model.sampling(iter=1, chains=1, **kwargs)
+
 class MakerVenStanOutputPSP(DeterministicPSP):
   def simulate(self, args):
     (stan_prog, input_spec, c_output_spec) = args.operandValues()
@@ -184,7 +190,7 @@ class VenStanSP(SP):
   def synthesize_parameters_with_bogus_data(self, inputs):
     data_dict = input_data_as_dict(self.input_spec, inputs)
     data_dict.update(synthesize_bogus_data(self.c_output_spec, data_dict))
-    fit = self.stan_model.sampling(data=data_dict, iter=1, chains=1)
+    fit = minimal_stan_run(self.stan_model, data=data_dict)
     return fit.extract()
 
   def update_parameters(self, inputs, params, outputs):
@@ -259,8 +265,7 @@ class VenStanOutputPSP(RandomPSP):
   def compute_generated_quantities_from_bogus_data(self, inputs, params):
     data_dict = input_data_as_dict(self.input_spec, inputs)
     data_dict.update(synthesize_bogus_data(self.c_output_spec, data_dict))
-    fit = self.stan_model.sampling(data=data_dict, iter=1, chains=1,
-                                   init=[params])
+    fit = minimal_stan_run(self.stan_model, data=data_dict, init=[params])
     return dict_as_output_data(self.c_output_spec, fit.extract())
 
   def evaluate_posterior(self, inputs, params, outputs):
@@ -268,8 +273,7 @@ class VenStanOutputPSP(RandomPSP):
     second_input_spec = output_spec_to_back_in_spec(self.c_output_spec)
     data_dict = input_data_as_dict(self.input_spec, inputs)
     data_dict.update(input_data_as_dict(second_input_spec, outputs))
-    fit = self.stan_model.sampling(data=data_dict, iter=1, chains=1,
-                                   init=[params])
+    fit = minimal_stan_run(self.stan_model, data=data_dict, init=[params])
     upars = fit.unconstrain_pars(params)
     ans = fit.log_prob(upars)
     print "Evaluated posterior", ans
