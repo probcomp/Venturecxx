@@ -36,27 +36,26 @@ import venture.lite.types as t
 import venture.lite.value as vv
 
 # - Inputs are a list of 2-lists: name and type.
-# - Output are a list of 3-lists: name, type, and constrainable name which may be Nil.
+# - Outputs are a list of 3-lists: name, type, and constrainable name which may be Nil.
 # - An output that is not constrainable corresponds to a generated quantity
 #   in Stan.
 # - An output that is constrainable corresponds to a generated quantity
 #   and an input datum, the latter named by the "constrainable name".
 # - It is up to the user to make sure that the use as a constraint is
 #   compatible with the generating process they define.
-# - This all produces an SP with the given inputs and outputs, which
-#   is likelihood-free on unconstrainable outputs, and has the Stan
+# - This maps to an SP with the given inputs and outputs, which is
+#   likelihood-free on unconstrainable outputs, and has the Stan
 #   parameters as (uncollapsed) latent state.
+# - Temporary restriction: There can be only one output (because
+#   Venture doesn't deal with primitive SPs that return multiple
+#   outputs that are meant to be constrainable separately).
 
 # Operating invariants:
 # - Simulation has the inputs and simulates the parameters and the outputs
 # - Log density has the inputs, outputs, and parameters, and evaluates
-#   the posterior (?) (likelihood only?)
-# - There is an LKernel that has the inputs, outputs, and parameters, and
-#   updates the parameters by taking a step
-#   - Can I have an interface for taking multiple steps in batch?
-#   - Can I have an interface for running to convergence?
-#   - What do I do with the unconstrainable outputs?  They need to be
-#     resampled, without resampling the constrainable ones.
+#   the posterior (of the parameters).
+# - There is an AEKernel that has the inputs, outputs, and parameters, and
+#   updates the parameters by taking a step.
 # - Ergo, simulate needs to be able to synthesize bogus values for the
 #   constrainable outputs
 
@@ -65,42 +64,18 @@ import venture.lite.value as vv
 # - made simulation makes an LSR (which need not carry any information)
 # - simulating this lsr consists of sampling the parameters
 #   conditioned on bogus data
-# - given the result, (communicated via the aux, presumably),
-#   simulating the output is straightforward (but needs bogus data)
+# - given the result, (communicated via the aux), simulating the
+#   output is straightforward (but needs bogus data again)
 # - fiddling with the parameters now looks like a AEKernel, which
 #   means I really need to be able to control when that gets run,
 #   b/c it stands to be expensive
 # - Nuts: The AEKernel is global to all applications, but I want
 #   them to be independent :(
 
-# Thought: Is it reasonable to use primitive multivalue returns to
-# separate constrainable from unconstrainable outputs?
-
-# Problem: There is no way to incorporate downstream uses of the
-# generated quantities and/or parameters into the behavior of the Stan
-# simulator.
-
-# Oddly, simulateLatents doesn't get the Args struct.  Perhaps the
-# intention is that the requester can pass all pertinent information
-# along.
-
 # Note: The mapping from inputs to parameters is not independently
 # assessable in Stan; only the aggregate including the data is.
 
-# The request PSP can't both extract values into the lsr and assess at
-# the same time.  Could do nodes, or could do an ESR for a custom SP.
-# - Problem: The SP can't properly extract values from the nodes when
-#   simulating the latent, because it doesn't have a pointer to the
-#   trace (which is necessary to respect the particles hack).
-
-# Solution: give simulateLatents the Args corresponding to the
-# application in question.
-# - May have the side effect of simplifying other uses of
-#   simulateLatents, but maybe not.
-# - HMM seems to be the only other SP that uses latent simulation
-#   requests?
-
-# Alternate plan:
+# Alternate plan (not implemented):
 # - A made model is represented as a made SP from inputs to outputs,
 #   that uses an ESR to cause the parameters to be simulated (by
 #   another SP customized for the purpose)
