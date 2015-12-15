@@ -139,9 +139,7 @@ def bogus_valid_value(_tp):
   return vv.VentureNumber(0) # TODO: Actually synthesize type-correct bogosity
 
 def input_data_as_dict(input_spec, inputs):
-  print input_spec, inputs
   ans = dict([(k,v) for ((k,_), v) in zip(input_spec, inputs)])
-  print ans
   return ans
 
 def output_spec_to_back_in_spec(output_spec):
@@ -150,10 +148,11 @@ def output_spec_to_back_in_spec(output_spec):
   return [(output_spec[0][2], output_spec[0][1])]
 
 def synthesize_bogus_data(output_spec):
-  return {}
+  print "Synthesizing", output_spec
+  return {"y": [0,0,0,0,0]}
 
 def dict_as_output_data(output_spec, data):
-  print output_spec, data
+  print "Converting output", output_spec, data
   ans = [data[name][0] for (name, _, _) in output_spec]
   print ans
   return ans
@@ -207,11 +206,12 @@ class VenStanSP(SP):
     data_dict = input_data_as_dict(self.input_spec, inputs)
     data_dict.update(synthesize_bogus_data(self.output_spec))
     fit = pystan.stan(fit=self.built_result, data=data_dict, iter=1, chains=1, verbose=True)
-    print fit.extract()
+    print "Synthesized parameters", fit.extract()
     # print fit Dies in trying to compute the effective sample size?
     return fit.extract()
 
   def update_parameters(self, inputs, params, outputs):
+    print "Original parameters", params
     second_input_spec = output_spec_to_back_in_spec(self.output_spec)
     data_dict = input_data_as_dict(self.input_spec, inputs)
     data_dict.update(input_data_as_dict(second_input_spec, outputs))
@@ -221,7 +221,7 @@ class VenStanSP(SP):
     # makes the types of everything else work out.
     fit = pystan.stan(fit=self.built_result, data=data_dict, iter=10, chains=1,
                       warmup=5, thin=5, init=[params])
-    print fit.extract()
+    print "Updated parameters", fit.extract()
     return fit.extract()
 
   def constructSPAux(self): return VenStanSPAux()
@@ -288,7 +288,7 @@ class VenStanOutputPSP(RandomPSP):
     data_dict.update(synthesize_bogus_data(self.output_spec))
     fit = pystan.stan(fit=self.stan_model, data=data_dict, iter=1, chains=1,
                       init=[params])
-    print fit.extract()
+    print "Computed generated quantities", fit.extract()
     return dict_as_output_data(self.output_spec, fit.extract())
 
   def evaluate_posterior(self, inputs, params, outputs):
@@ -298,7 +298,7 @@ class VenStanOutputPSP(RandomPSP):
     fit = pystan.stan(fit=self.stan_model, data=data_dict, iter=0, chains=1,
                       init=[param_dict])
     ans = fit.log_prob(param_dict) # TODO Transform the parameters
-    print fit, ans
+    print "Evaluated posterior", fit, ans
     return ans
 
   def simulate(self, args):
