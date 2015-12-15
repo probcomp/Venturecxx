@@ -182,10 +182,11 @@ class MakerVenStanOutputPSP(DeterministicPSP):
 class VenStanSP(SP):
   def __init__(self, built_result, input_spec, param_spec, output_spec):
     (args_types, output_type) = io_spec_to_type_spec(input_spec, output_spec)
+    self.f_type = SPType(args_types, output_type)
     req = TypedPSP(VenStanRequestPSP(), SPType(args_types, t.RequestType()))
     output = TypedPSP(VenStanOutputPSP(built_result,
                                        input_spec, param_spec, output_spec),
-                      SPType(args_types, output_type))
+                      self.f_type)
     super(VenStanSP, self).__init__(req, output)
     self.built_result = built_result
     self.input_spec = input_spec
@@ -219,7 +220,7 @@ class VenStanSP(SP):
       if shouldRestore:
         aux.applications[lsr] = latentDB[lsr]
       else:
-        inputs = args.operandValues()
+        inputs = self.f_type.unwrap_args(args).operandValues()
         params = self.synthesize_parameters_with_bogus_data(inputs)
         aux.applications[lsr] = (inputs, params, None)
     return 0
