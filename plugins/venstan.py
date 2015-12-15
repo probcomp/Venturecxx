@@ -215,8 +215,12 @@ class VenStanSP(SP):
     second_input_spec = output_spec_to_back_in_spec(self.output_spec)
     data_dict = input_data_as_dict(self.input_spec, inputs)
     data_dict.update(input_data_as_dict(second_input_spec, outputs))
+    # Setting the "thin" argument here has the effect that Stan
+    # reports exactly one set of answers, which, by the magic of
+    # Python being willing to treat a size-1 array as a scalar (!?)
+    # makes the types of everything else work out.
     fit = pystan.stan(fit=self.built_result, data=data_dict, iter=10, chains=1,
-                      init=[params])
+                      warmup=5, thin=5, init=[params])
     print fit.extract()
     return fit.extract()
 
