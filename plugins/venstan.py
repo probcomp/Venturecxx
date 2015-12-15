@@ -184,28 +184,28 @@ as a "Fit" for purposes of avoiding recompilation."""
 class MakerVenStanOutputPSP(DeterministicPSP):
   def simulate(self, args):
     (stan_prog, input_spec, param_spec, output_spec) = args.operandValues()
-    built_result = cached_stan_model(stan_prog, cache_dir=".")
-    the_sp = VenStanSP(BogusModelFit(built_result),
+    stan_model = cached_stan_model(stan_prog, cache_dir=".")
+    the_sp = VenStanSP(BogusModelFit(stan_model),
                        input_spec, param_spec, output_spec)
     return VentureSPRecord(the_sp)
 
 class VenStanSP(SP):
-  def __init__(self, built_result, input_spec, param_spec, output_spec):
+  def __init__(self, stan_model, input_spec, param_spec, output_spec):
     (args_types, output_type) = io_spec_to_type_spec(input_spec, output_spec)
     self.f_type = SPType(args_types, output_type)
     req = TypedPSP(VenStanRequestPSP(), SPType(args_types, t.RequestType()))
-    output = TypedPSP(VenStanOutputPSP(built_result,
+    output = TypedPSP(VenStanOutputPSP(stan_model,
                                        input_spec, param_spec, output_spec),
                       self.f_type)
     super(VenStanSP, self).__init__(req, output)
-    self.built_result = built_result
+    self.stan_model = stan_model
     self.input_spec = input_spec
     self.output_spec = output_spec
 
   def synthesize_parameters_with_bogus_data(self, inputs):
     data_dict = input_data_as_dict(self.input_spec, inputs)
     data_dict.update(synthesize_bogus_data(self.output_spec))
-    fit = pystan.stan(fit=self.built_result, data=data_dict, iter=1, chains=1, verbose=True)
+    fit = pystan.stan(fit=self.stan_model, data=data_dict, iter=1, chains=1, verbose=True)
     print "Synthesized parameters", fit.extract()
     # print fit Dies in trying to compute the effective sample size?
     return fit.extract()
@@ -219,7 +219,7 @@ class VenStanSP(SP):
     # reports exactly one set of answers, which, by the magic of
     # Python being willing to treat a size-1 array as a scalar (!?)
     # makes the types of everything else work out.
-    fit = pystan.stan(fit=self.built_result, data=data_dict, iter=10, chains=1,
+    fit = pystan.stan(fit=self.stan_model, data=data_dict, iter=10, chains=1,
                       warmup=5, thin=5, init=[params])
     print "Updated parameters", fit.extract()
     return fit.extract()
