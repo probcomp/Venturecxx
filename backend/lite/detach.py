@@ -215,7 +215,7 @@ def unevalRequests(trace, node, scaffold, omegaDB, compute_gradient = False):
     omegaDB.registerLatentDB(trace.spAt(node),trace.spAt(node).constructLatentDB())
 
   for lsr in reversed(request.lsrs):
-    weight += trace.spAt(node).detachLatents(trace.spauxAt(node),lsr,omegaDB.getLatentDB(trace.spAt(node)))
+    weight += trace.spAt(node).detachLatents(trace.argsAt(node),lsr,omegaDB.getLatentDB(trace.spAt(node)))
     # TODO add gradient information for detached latents?
 
   for esr in reversed(request.esrs):

@@ -57,8 +57,8 @@ class SP(object):
 
   def constructSPAux(self): return SPAux()
   def constructLatentDB(self): return None
-  def simulateLatents(self,spaux,lsr,shouldRestore,latentDB): pass
-  def detachLatents(self,spaux,lsr,latentDB): pass
+  def simulateLatents(self,args,lsr,shouldRestore,latentDB): pass
+  def detachLatents(self,args,lsr,latentDB): pass
   def hasAEKernel(self): return False
   def show(self, _spaux): return "<procedure>"
   def description(self,name):

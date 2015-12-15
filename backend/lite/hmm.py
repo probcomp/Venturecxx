@@ -86,7 +86,8 @@ class UncollapsedHMMSP(SP):
   def show(self, spaux): return spaux.xs, spaux.os
 
   # lsr: the index of the observation needed
-  def simulateLatents(self, aux, lsr, shouldRestore, latentDB):
+  def simulateLatents(self, args, lsr, shouldRestore, latentDB):
+    aux = args.spaux()
     if not aux.xs:
       if shouldRestore: aux.xs.append(latentDB[0])
       else: aux.xs.append(npSampleVector(self.p0))
@@ -98,7 +99,8 @@ class UncollapsedHMMSP(SP):
     assert len(aux.xs) > lsr
     return 0
 
-  def detachLatents(self, aux, lsr, latentDB):
+  def detachLatents(self, args, lsr, latentDB):
+    aux = args.spaux()
     if len(aux.xs) == lsr + 1 and lsr not in aux.os:
       if not aux.os:
         for i in range(len(aux.xs)): latentDB[i] = aux.xs[i]

@@ -1,0 +1,27 @@
+infer load_plugin("plugins/venstan.py");
+assume stan_prog = "
+data {
+  real<lower=0> sigma;
+  real y;
+}
+parameters {
+  real mu;
+}
+model {
+  y ~ normal(mu, sigma);
+}
+generated quantities {
+  real y_out;
+  y_out <- normal_rng(mu, sigma);
+}";
+assume inputs = quote("sigma"("Number")());
+assume c_outputs = quote("y_out"("y", "Number")());
+assume stan_sp = make_ven_stan(stan_prog, inputs, c_outputs);
+assume is_outlier = flip();
+assume variance = if (is_outlier) { 10 } else { 1 };
+observe stan_sp(variance) = 8;
+define data = run(accumulate_dataset(20, do(
+  reset_to_prior,
+  mh(default, one, 20),
+  collect(is_outlier))));
+print(data)
