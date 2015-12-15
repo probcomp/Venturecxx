@@ -469,13 +469,13 @@ Exercise: Play with this visualization to see how inference is doing.
 
     b. As an alternative to Markov chains, we can use gradient ascent
        to find the best fit. Venture provides an inference primitive,
-       [`map`](<%= refman_url %>inference.html#map) (for "maximum a
-       posteriori") which deterministically climbs the gradient toward
+       [`grad_ascent`](<%= refman_url %>inference.html#grad_ascent)
+       which deterministically climbs the gradient toward
        the most probable parameter values. It can be invoked as
        follows:
 
        ```venture
-       infer repeat(<%= iterations %>, do(map(default, all, 0.001, 1, 1),
+       infer repeat(<%= iterations %>, do(grad_ascent(default, all, 0.001, 1, 1),
                            call_back(draw)))
        ```
 
@@ -754,9 +754,9 @@ like `default_markov_chain` does.
 
 </div>
 
-Exercise: What happens if you replace `drift_mh` with `map` (gradient
-ascent)? Hint: Make sure to pass the appropriate scope and block to
-`map`.
+Exercise: What happens if you replace `drift_mh` with `grad_ascent`?
+Hint: Make sure to pass the appropriate scope and block to
+`grad_ascent`.
 <a href="javascript:toggle('answer-scopes')">(show answer)</a>
 
 <div class="answer" id="answer-scopes" markdown="1">
@@ -767,7 +767,7 @@ alternative hypothesis once it has settled on a (possibly suboptimal)
 fit.
 
 ```venture
-infer loop(do(map("param", all, 0.001, 10, 1),
+infer loop(do(grad_ascent("param", all, 0.001, 10, 1),
               mh("hyper", one, 1),
               gibbs("outlier", one, 1),
               call_back(draw)))

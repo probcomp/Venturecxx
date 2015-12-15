@@ -43,7 +43,7 @@ observation = """
 examples = [
   ("hmc", "(hmc 'param all 0.1 20 1)"),
   ("mh", "(mh default one 10)"),
-  ("map", "(map 'param all 0.1 2 1)"),
+  ("grad_ascent", "(grad_ascent 'param all 0.1 2 1)"),
 ]
 
 # int_R pdf(xout|x) pdf([0,0]|[xout, y])
