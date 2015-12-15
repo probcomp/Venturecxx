@@ -174,19 +174,11 @@ def cached_stan_model(model_code, cache_dir=None, **kwargs):
       print "Saved model to cache %s" % cache_file
   return model
 
-class BogusModelFit(object):
-  """Trick the PyStan API into accepting a model that was compiled but never run
-
-as a "Fit" for purposes of avoiding recompilation."""
-  def __init__(self, model):
-    self.stanmodel = model
-
 class MakerVenStanOutputPSP(DeterministicPSP):
   def simulate(self, args):
     (stan_prog, input_spec, param_spec, output_spec) = args.operandValues()
     stan_model = cached_stan_model(stan_prog, cache_dir=".")
-    the_sp = VenStanSP(BogusModelFit(stan_model),
-                       input_spec, param_spec, output_spec)
+    the_sp = VenStanSP(stan_model, input_spec, param_spec, output_spec)
     return VentureSPRecord(the_sp)
 
 class VenStanSP(SP):
@@ -205,7 +197,7 @@ class VenStanSP(SP):
   def synthesize_parameters_with_bogus_data(self, inputs):
     data_dict = input_data_as_dict(self.input_spec, inputs)
     data_dict.update(synthesize_bogus_data(self.output_spec))
-    fit = pystan.stan(fit=self.stan_model, data=data_dict, iter=1, chains=1, verbose=True)
+    fit = self.stan_model.sampling(data=data_dict, iter=1, chains=1, verbose=True)
     print "Synthesized parameters", fit.extract()
     # print fit Dies in trying to compute the effective sample size?
     return fit.extract()
@@ -219,8 +211,8 @@ class VenStanSP(SP):
     # reports exactly one set of answers, which, by the magic of
     # Python being willing to treat a size-1 array as a scalar (!?)
     # makes the types of everything else work out.
-    fit = pystan.stan(fit=self.stan_model, data=data_dict, iter=10, chains=1,
-                      warmup=5, thin=5, init=[params])
+    fit = self.stan_model.sampling(data=data_dict, iter=10, chains=1,
+                                   warmup=5, thin=5, init=[params])
     print "Updated parameters", fit.extract()
     return fit.extract()
 
@@ -286,8 +278,8 @@ class VenStanOutputPSP(RandomPSP):
   def compute_generated_quantities_from_bogus_data(self, inputs, params):
     data_dict = input_data_as_dict(self.input_spec, inputs)
     data_dict.update(synthesize_bogus_data(self.output_spec))
-    fit = pystan.stan(fit=self.stan_model, data=data_dict, iter=1, chains=1,
-                      init=[params])
+    fit = self.stan_model.sampling(data=data_dict, iter=1, chains=1,
+                                   init=[params])
     print "Computed generated quantities", fit.extract()
     return dict_as_output_data(self.output_spec, fit.extract())
 
@@ -295,8 +287,8 @@ class VenStanOutputPSP(RandomPSP):
     data_dict = input_data_as_dict(self.input_spec, inputs)
     data_dict.update(input_data_as_dict(self.output_spec, outputs))
     param_dict = input_data_as_dict(self.param_spec, params)
-    fit = pystan.stan(fit=self.stan_model, data=data_dict, iter=0, chains=1,
-                      init=[param_dict])
+    fit = self.stan_model.sampling(data=data_dict, iter=0, chains=1,
+                                   init=[param_dict])
     ans = fit.log_prob(param_dict) # TODO Transform the parameters
     print "Evaluated posterior", fit, ans
     return ans
