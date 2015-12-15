@@ -240,7 +240,7 @@ class VenStanSP(SP):
   def detachLatents(self, args, lsr, latentDB):
     aux = args.spaux()
     latentDB[lsr] = aux.applications[lsr]
-    del aux[lsr]
+    del aux.applications[lsr]
     return 0
 
   def hasAEKernel(self): return True
@@ -248,7 +248,7 @@ class VenStanSP(SP):
   def AEInfer(self, aux):
     for lsr, (inputs, params, output) in aux.applications.iteritems():
       new_params = self.update_parameters(inputs, params, [output])
-      aux[lsr] = (inputs, new_params, output)
+      aux.applications[lsr] = (inputs, new_params, output)
 
 # The Aux is shared across all applications, so I use a dictionary
 # with unique keys to implement independence.
