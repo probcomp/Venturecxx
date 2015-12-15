@@ -21,9 +21,9 @@ from nose import SkipTest
 from venture.test.config import get_ripl, collectSamples, broken_in, gen_broken_in, on_inf_prim, gen_on_inf_prim
 
 @gen_broken_in('puma', "Gradient climbers only implemented in Lite.")
-@gen_on_inf_prim("map")
+@gen_on_inf_prim("grad_ascent")
 def testGradientMethodsBasicMap():
-  yield checkGradientMethodsBasic, "map"
+  yield checkGradientMethodsBasic, "grad_ascent"
 
 @gen_broken_in('puma', "Gradient climbers only implemented in Lite.")
 @gen_on_inf_prim("nesterov")
@@ -58,5 +58,5 @@ def testGradientThroughAAA():
   ripl.assume("coin", "(make_suff_stat_bernoulli weight)")
   ripl.observe("(coin)", True)
   ripl.observe("(coin)", True)
-  ripl.infer("(map default all 0.03 1 1)")
+  ripl.infer("(grad_ascent default all 0.03 1 1)")
   assert_almost_equal(ripl.sample("weight"), 0.62)

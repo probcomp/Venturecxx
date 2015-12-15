@@ -357,7 +357,7 @@ non-generator tests---use gen_on_inf_prim for generators.  Possible
 values are:
 
   "mh", "func_mh", "gibbs", "emap", "pgibbs", "func_pgibbs",
-  "meanfield", "hmc", "map", "nesterov", "rejection", "slice", or
+  "meanfield", "hmc", "grad_ascent", "nesterov", "rejection", "slice", or
   "slice_doubling", "resample", "peek", "plotf"
          for that inference primitive
   "none" for a primitive-independent test (i.e., does not test inference meaningfully)
@@ -407,7 +407,7 @@ works for generator tests---use on_inf_prim for non-generators.
 Possible values are:
 
   "mh", "func_mh", "gibbs", "emap", "pgibbs", "func_pgibbs",
-  "meanfield", "hmc", "map", "nesterov", "rejection", "slice", or
+  "meanfield", "hmc", "grad_ascent", "nesterov", "rejection", "slice", or
   "slice_doubling", "resample", "peek", "plotf"
          for that inference primitive
   "none" for primitive-independent tests (i.e., do not test inference meaningfully)
