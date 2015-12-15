@@ -100,22 +100,6 @@ def interpret_type_spec(type_str):
   ans = eval(type_str, globals)
   return ans
 
-def io_spec_to_type_spec(inputs, outputs):
-  assert len(outputs) == 1
-  otp = outputs[0][2]
-  return ([interpret_type_spec(itp) for _,itp in inputs],
-          interpret_type_spec(otp))
-
-def io_spec_to_api_spec(inputs, outputs):
-  assert len(outputs) == 1
-  name = outputs[0][0]
-  observable_name = outputs[0][1]
-  output_names = [name]
-  input_names = [name for name,_ in inputs]
-  if observable_name is not None:
-    input_names.append(observable_name)
-  return (input_names, output_names)
-
 def bogus_valid_value(_tp):
   return vv.VentureNumber(0) # TODO: Actually synthesize type-correct bogosity
 
@@ -180,7 +164,9 @@ class MakerVenStanOutputPSP(DeterministicPSP):
 
 class VenStanSP(SP):
   def __init__(self, stan_model, input_spec, param_spec, c_output_spec):
-    (args_types, output_type) = io_spec_to_type_spec(input_spec, c_output_spec)
+    args_types = [interpret_type_spec(itp) for _,itp in input_spec]
+    assert len(c_output_spec) == 1
+    output_type = interpret_type_spec(c_output_spec[0][2])
     self.f_type = SPType(args_types, output_type)
     req = TypedPSP(VenStanRequestPSP(), SPType(args_types, t.RequestType()))
     output = TypedPSP(VenStanOutputPSP(stan_model,
