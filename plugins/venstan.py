@@ -113,13 +113,11 @@ def output_spec_to_back_in_spec(output_spec):
 
 def synthesize_bogus_data(c_output_spec, input_dict):
   assert len(c_output_spec) == 1
-  print "Synthesizing", c_output_spec
   name = c_output_spec[0][1]
   tp = interpret_type_spec(c_output_spec[0][2])
   input_dict = copy.copy(input_dict)
   sizes = [interpret_size(size, input_dict) for size in c_output_spec[0][3:]]
   ans = {name: synthesize_bogus_datum(tp, sizes)}
-  print ans
   return ans
 
 def interpret_size(size, input_dict):
@@ -133,9 +131,7 @@ def synthesize_bogus_datum(tp, sizes):
   return [synthesize_bogus_datum(tp, sizes[1:]) for _ in range(sizes[0])]
 
 def dict_as_output_data(output_spec, data):
-  print "Converting output", output_spec, data
   ans = [data[output[0]][0] for output in output_spec]
-  print ans
   return ans
 
 def cached_stan_model(model_code, cache_dir=None, **kwargs):
@@ -180,14 +176,10 @@ class VenStanSP(SP):
   def synthesize_parameters_with_bogus_data(self, inputs):
     data_dict = input_data_as_dict(self.input_spec, inputs)
     data_dict.update(synthesize_bogus_data(self.c_output_spec, data_dict))
-    print data_dict
-    fit = self.stan_model.sampling(data=data_dict, iter=1, chains=1, verbose=True)
-    print "Synthesized parameters", fit.extract()
-    # print fit Dies in trying to compute the effective sample size?
+    fit = self.stan_model.sampling(data=data_dict, iter=1, chains=1)
     return fit.extract()
 
   def update_parameters(self, inputs, params, outputs):
-    print "Original parameters", params
     second_input_spec = output_spec_to_back_in_spec(self.c_output_spec)
     data_dict = input_data_as_dict(self.input_spec, inputs)
     data_dict.update(input_data_as_dict(second_input_spec, outputs))
@@ -197,7 +189,6 @@ class VenStanSP(SP):
     # makes the types of everything else work out.
     fit = self.stan_model.sampling(data=data_dict, iter=10, chains=1,
                                    warmup=5, thin=5, init=[params])
-    print "Updated parameters", fit.extract()
     return fit.extract()
 
   def constructSPAux(self): return VenStanSPAux()
@@ -263,7 +254,6 @@ class VenStanOutputPSP(RandomPSP):
     data_dict.update(synthesize_bogus_data(self.c_output_spec, data_dict))
     fit = self.stan_model.sampling(data=data_dict, iter=1, chains=1,
                                    init=[params])
-    print "Computed generated quantities", fit.extract()
     return dict_as_output_data(self.c_output_spec, fit.extract())
 
   def evaluate_posterior(self, inputs, params, outputs):
