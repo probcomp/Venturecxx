@@ -364,7 +364,7 @@ The `transitions` argument specifies how many times to do this.
 Note: the Nesterov acceleration is applied across steps within one
 transition, not across transitions."""),
 
-  trace_method_sp("map",
+  trace_method_sp("grad_ascent",
                   transition_oper_type([t.NumberType("step_size : number"), t.IntegerType("steps : int")]),
                   desc="""\
 Move deterministically toward the maximum of the local conditional by
