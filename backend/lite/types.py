@@ -458,3 +458,62 @@ types like BoolType."""
     assert thing == 0
     return thing
   def name(self): return self._name or "<zero>"
+
+## Smart constructors
+## The idea is to enable a (relatively) convenient embedded DSL for specifying Venture types.
+
+# Many of the type definitions are metaprogrammed
+# pylint:disable=undefined-variable
+Object = AnyType()
+Number = NumberType()
+Int = IntegerType()
+Atom = AtomType()
+Bool = BoolType()
+Symbol = SymbolType()
+String = StringType()
+Blob = ForeignBlobType()
+Probability = ProbabilityType()
+Count = CountType()
+Positive = PositiveType()
+Nil = NilType()
+Zero = ZeroType()
+
+def Array(subtype=None):
+  if subtype is None:
+    return ArrayType()
+  else:
+    return HomogeneousArrayType(subtype)
+
+Simplex = SimplexType()
+Matrix = MatrixType()
+MatrixSym = SymmetricMatrixType()
+
+def Pair(first, second):
+  return PairType(first, second)
+
+def List(subtype=None):
+  if subtype is None:
+    return ListType()
+  else:
+    return HomogeneousListType(subtype)
+
+def Dict(keytype = None, valtype = None):
+  if keytype is None and valtype is None:
+    return DictType()
+  elif keytype is not None and valtype is not None:
+    return HomogeneousDictType(keytype, valtype)
+  else:
+    raise Exception("Dict must be either fully homogeneous or fully " \
+                    "heterogeneous, got %s, %s" % (keytype, valtype))
+
+def UArray(subtype):
+  return ArrayUnboxedType(subtype)
+
+def Seq(subtype):
+  return HomogeneousSequenceType(subtype)
+
+Exp = ExpressionType()
+Request = RequestType()
+
+def Mapping(keytype, valtype):
+  return HomogeneousMappingType(keytype, valtype)
