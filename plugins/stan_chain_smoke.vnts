@@ -22,4 +22,4 @@ assume is_outlier = flip();
 assume variance = if (is_outlier) { 10 } else { 1 };
 observe stan_sp(variance) = 8;
 infer mh(default, one, 20);
-infer print(is_outlier);
+print(run(sample(is_outlier)));
