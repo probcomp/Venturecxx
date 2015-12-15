@@ -21,12 +21,15 @@ from venture.lite.request import Request
 ### Venture Types
 
 class VentureType(object):
-  """Base class of all Venture types.  See the "Types" section of doc/type-system.md."""
+  """Base class of all Venture types.
+
+See the "Types" section of doc/type-system.md."""
   def asPythonNoneable(self, vthing):
     if vthing is None:
       return None
     else:
-      return self.asPython(vthing) # Function will be added by inheritance pylint:disable=no-member
+      # Function will be added by inheritance pylint:disable=no-member
+      return self.asPython(vthing)
   def distribution(self, base, **kwargs):
     return base(self.name()[1:-1], **kwargs) # Strip the angle brackets
   def __eq__(self, other):
@@ -85,19 +88,23 @@ class %sType(VentureType):
   def __contains__(self, vthing): return isinstance(vthing, Venture%s)
   def name(self): return self._name or "<%s>"
   def gradient_type(self): return %sType()
-""" % (typename, typename, typename, typename, typename.lower(), gradient_typename)
+""" % (typename, typename, typename, typename, typename.lower(),
+       gradient_typename)
 
 for typename in ["Integer", "Atom", "Bool", "Symbol", "String", "ForeignBlob"]:
-  # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
+  # Exec is appropriate for metaprogramming, but indeed should not be
+  # used lightly.
   # pylint: disable=exec-used
   exec(standard_venture_type(typename, gradient_typename="Zero"))
 
 for typename in ["Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix"]:
-  # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
+  # Exec is appropriate for metaprogramming, but indeed should not be
+  # used lightly.
   # pylint: disable=exec-used
   exec(standard_venture_type(typename))
 
-# Exec is appropriate for metaprogramming, but indeed should not be used lightly.
+# Exec is appropriate for metaprogramming, but indeed should not be
+# used lightly.
 # pylint: disable=exec-used
 exec(standard_venture_type("Probability", gradient_typename="Number"))
 
@@ -157,7 +164,8 @@ class PairType(VentureType):
     self._name = name
   def asVentureValue(self, thing):
     (f, r) = thing
-    return VenturePair((self.first_type.asVentureValue(f), self.second_type.asVentureValue(r)))
+    return VenturePair((self.first_type.asVentureValue(f),
+                        self.second_type.asVentureValue(r)))
   def asPython(self, vthing):
     (vf, vr) = vthing.getPair()
     return (self.first_type.asPython(vf), self.second_type.asPython(vr))
@@ -171,9 +179,12 @@ class PairType(VentureType):
     second_name = self.second_type.name() if self.second_type else "<object>"
     return "<pair %s %s>" % (first_name, second_name)
   def distribution(self, base, **kwargs):
-    first_dist = self.first_type.distribution(base, **kwargs) if self.first_type else None
-    second_dist = self.second_type.distribution(base, **kwargs) if self.second_type else None
-    return base("pair", first_dist=first_dist, second_dist=second_dist, **kwargs)
+    first_dist = self.first_type.distribution(base, **kwargs) \
+                 if self.first_type else None
+    second_dist = self.second_type.distribution(base, **kwargs) \
+                  if self.second_type else None
+    return base("pair", first_dist=first_dist, second_dist=second_dist,
+                **kwargs)
 
 class ListType(VentureType):
   """A Venture list is either a VentureNil or a VenturePair whose
@@ -192,7 +203,8 @@ data List = Nil | Pair Any List
   def asPython(self, thing):
     return thing.asPythonList()
   def __contains__(self, vthing):
-    return isinstance(vthing, VentureNil) or (isinstance(vthing, VenturePair) and vthing.rest in self)
+    return isinstance(vthing, VentureNil) \
+      or (isinstance(vthing, VenturePair) and vthing.rest in self)
   def name(self): return self._name or "<list>"
 
 class HomogeneousListType(VentureType):
@@ -205,17 +217,20 @@ class HomogeneousListType(VentureType):
     self.subtype = subtype
     self._name = name
   def asVentureValue(self, thing):
-    return pythonListToVentureList([self.subtype.asVentureValue(t) for t in thing])
+    return pythonListToVentureList([self.subtype.asVentureValue(t)
+                                    for t in thing])
   def asPython(self, vthing):
     return vthing.asPythonList(self.subtype)
   def __contains__(self, vthing):
-    return vthing in ListType() and all([val in self.subtype for val in vthing.asPythonList()])
+    return vthing in ListType() \
+      and all([val in self.subtype for val in vthing.asPythonList()])
   def __eq__(self, other):
     return type(self) == type(other) and self.subtype == other.subtype
   def name(self): return self._name or "<list %s>" % self.subtype.name()
   def distribution(self, base, **kwargs):
     # TODO Is this splitting what I want?
-    return base("list", elt_dist=self.subtype.distribution(base, **kwargs), **kwargs)
+    return base("list", elt_dist=self.subtype.distribution(base, **kwargs),
+                **kwargs)
 
 class ArrayUnboxedType(VentureType):
   """Type objects for arrays of unboxed values.  Perforce homogeneous."""
@@ -229,8 +244,11 @@ class ArrayUnboxedType(VentureType):
     return vthing.getArray(self.subtype)
   def __contains__(self, vthing):
     # TODO Need a more general element type compatibility check
-    unboxed = isinstance(vthing, VentureArrayUnboxed) and vthing.elt_type == self.subtype
-    return unboxed or (isinstance(vthing, VentureArray) and all([val in self.subtype for val in vthing.getArray()]))
+    unboxed = isinstance(vthing, VentureArrayUnboxed) \
+              and vthing.elt_type == self.subtype
+    boxed = isinstance(vthing, VentureArray) \
+            and all([val in self.subtype for val in vthing.getArray()])
+    return unboxed or boxed
   def __eq__(self, other):
     return type(self) == type(other) and self.subtype == other.subtype
   def name(self): return self._name or "<array %s>" % self.subtype.name()
@@ -256,13 +274,18 @@ class HomogeneousSequenceType(VentureType):
   def asPython(self, vthing):
     return vthing
   def __contains__(self, vthing):
-    return (isinstance(vthing, VentureArray) or isinstance(vthing, VentureSimplex) or isinstance(vthing, VentureArrayUnboxed) or vthing in ListType()) and all([val in self.subtype for val in vthing.getArray()])
+    return (isinstance(vthing, VentureArray) \
+            or isinstance(vthing, VentureSimplex) \
+            or isinstance(vthing, VentureArrayUnboxed) \
+            or vthing in ListType()) \
+      and all([val in self.subtype for val in vthing.getArray()])
   def __eq__(self, other):
     return type(self) == type(other) and self.subtype == other.subtype
   def name(self): return self._name or "<sequence %s>" % self.subtype.name()
   def distribution(self, base, **kwargs):
     # TODO Other types of sequences?
-    return base("array", elt_dist=self.subtype.distribution(base, **kwargs), **kwargs)
+    return base("array", elt_dist=self.subtype.distribution(base, **kwargs),
+                **kwargs)
 
 
 class ExpressionType(VentureType):
@@ -304,7 +327,8 @@ data Expression = Bool | Number | Integer | Atom | Symbol | Array Expression
     if isinstance(thing, VentureValue):
       return thing
     else:
-      raise Exception("Cannot convert Python object %r to a Venture Expression" % thing)
+      raise Exception("Cannot convert Python object %r to a Venture " \
+                      "Expression" % thing)
 
   def asPython(self, thing):
     if isinstance(thing, VentureBool):
@@ -322,7 +346,8 @@ data Expression = Bool | Number | Integer | Atom | Symbol | Array Expression
       # <thing>) should evaluate to exactly that <thing>, even if
       # constructed programmatically from a <thing> that does not
       # normally appear in expressions.
-      if thing.size() == 2 and thing.lookup(VentureNumber(0)) == VentureSymbol("quote"):
+      if thing.size() == 2 \
+         and thing.lookup(VentureNumber(0)) == VentureSymbol("quote"):
         return ["quote", thing.lookup(VentureNumber(1))]
       else:
         return thing.asPythonList(self)
@@ -343,14 +368,23 @@ class HomogeneousDictType(VentureType):
     self.valtype = valtype
     self._name = name
   def asVentureValue(self, thing):
-    return VentureDict(dict([(self.keytype.asVentureValue(key), self.valtype.asVentureValue(val)) for (key, val) in thing.iteritems()]))
+    return VentureDict(dict([(self.keytype.asVentureValue(key),
+                              self.valtype.asVentureValue(val))
+                             for (key, val) in thing.iteritems()]))
   def asPython(self, vthing):
-    return dict([(self.keytype.asPython(key), self.valtype.asPython(val)) for (key, val) in vthing.getDict().iteritems()])
+    return dict([(self.keytype.asPython(key),
+                  self.valtype.asPython(val))
+                 for (key, val) in vthing.getDict().iteritems()])
   def __contains__(self, vthing):
-    return isinstance(vthing, VentureDict) and all([key in self.keytype and val in self.valtype for (key,val) in vthing.getDict().iteritems()])
+    return isinstance(vthing, VentureDict) \
+      and all([key in self.keytype and val in self.valtype
+               for (key,val) in vthing.getDict().iteritems()])
   def __eq__(self, other):
-    return type(self) == type(other) and self.keytype == other.keytype and self.valtype == other.valtype
-  def name(self): return self._name or "<dict %s %s>" % (self.keytype.name(), self.valtype.name())
+    return type(self) == type(other) \
+      and self.keytype == other.keytype and self.valtype == other.valtype
+  def name(self):
+    return self._name or "<dict %s %s>" % \
+      (self.keytype.name(), self.valtype.name())
   def distribution(self, base, **kwargs):
     # TODO Is this splitting what I want?
     return base("dict", key_dist=self.keytype.distribution(base, **kwargs),
@@ -371,10 +405,14 @@ class HomogeneousMappingType(VentureType):
   def asVentureValue(self, thing):
     return thing
   def asPython(self, vthing):
-    if not isinstance(vthing, (VentureArray, VentureArrayUnboxed, VentureNil, VenturePair, VentureMatrix, VentureDict, VentureSimplex)):
+    if not isinstance(vthing, (VentureArray, VentureArrayUnboxed, VentureNil,
+                               VenturePair, VentureMatrix, VentureDict,
+                               VentureSimplex)):
       raise VentureTypeError(str(vthing) + " is not a HomogeneousMappingType!")
     return vthing
-  def name(self): return self._name or "<mapping %s %s>" % (self.keytype.name(), self.valtype.name())
+  def name(self):
+    return self._name or "<mapping %s %s>" % \
+      (self.keytype.name(), self.valtype.name())
   def distribution(self, base, **kwargs):
     # TODO Is this splitting what I want?
     return base("mapping", key_dist=self.keytype.distribution(base, **kwargs),
