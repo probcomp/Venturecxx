@@ -270,11 +270,11 @@ class VenStanOutputPSP(RandomPSP):
     second_input_spec = output_spec_to_back_in_spec(self.c_output_spec)
     data_dict = input_data_as_dict(self.input_spec, inputs)
     data_dict.update(input_data_as_dict(second_input_spec, outputs))
-    param_dict = input_data_as_dict(self.param_spec, params)
     fit = self.stan_model.sampling(data=data_dict, iter=1, chains=1,
                                    init=[params])
-    ans = fit.log_prob(params) # TODO Transform the parameters
-    print "Evaluated posterior", fit, ans
+    upars = fit.unconstrain_pars(params)
+    ans = fit.log_prob(upars)
+    print "Evaluated posterior", ans
     return ans
 
   def simulate(self, args):
