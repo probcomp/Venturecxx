@@ -15,7 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.lite.value import *
+from numbers import Number
+
+import numpy as np
+
+import venture.lite.value as vv
 from venture.lite.request import Request
 
 ### Venture Types
@@ -50,13 +54,13 @@ class AnyType(VentureType):
   def __init__(self, type_name=None):
     self.type_name = type_name
   def asVentureValue(self, thing):
-    assert isinstance(thing, VentureValue)
+    assert isinstance(thing, vv.VentureValue)
     return thing
   def asPython(self, thing):
     # TODO Make symbolic zeroes a venture value!
-    assert isinstance(thing, VentureValue) or thing is 0
+    assert isinstance(thing, vv.VentureValue) or thing is 0
     return thing
-  def __contains__(self, vthing): return isinstance(vthing, VentureValue)
+  def __contains__(self, vthing): return isinstance(vthing, vv.VentureValue)
   def name(self):
     if self.type_name is None:
       return "<object>"
@@ -71,9 +75,9 @@ class AnyType(VentureType):
 class NumberType(VentureType):
   def __init__(self, name=None):
     self._name = name
-  def asVentureValue(self, thing): return VentureNumber(thing)
+  def asVentureValue(self, thing): return vv.VentureNumber(thing)
   def asPython(self, vthing): return vthing.getNumber()
-  def __contains__(self, vthing): return isinstance(vthing, VentureNumber)
+  def __contains__(self, vthing): return isinstance(vthing, vv.VentureNumber)
   def name(self): return self._name or "<number>"
 
 def standard_venture_type(typename, gradient_typename=None):
@@ -83,9 +87,9 @@ def standard_venture_type(typename, gradient_typename=None):
 class %sType(VentureType):
   def __init__(self, name=None):
     self._name = name
-  def asVentureValue(self, thing): return Venture%s(thing)
+  def asVentureValue(self, thing): return vv.Venture%s(thing)
   def asPython(self, vthing): return vthing.get%s()
-  def __contains__(self, vthing): return isinstance(vthing, Venture%s)
+  def __contains__(self, vthing): return isinstance(vthing, vv.Venture%s)
   def name(self): return self._name or "<%s>"
   def gradient_type(self): return %sType()
 """ % (typename, typename, typename, typename, typename.lower(),
@@ -113,16 +117,16 @@ class CountType(VentureType):
     self._name = name
   def asVentureValue(self, thing):
     assert 0 <= thing
-    return VentureInteger(thing)
+    return vv.VentureInteger(thing)
   def asPython(self, vthing):
     ans = vthing.getInteger()
     if 0 <= ans:
       return ans
     else:
       # TODO: Or what?  Clip to 0?
-      raise VentureTypeError("Count is not positive %s" % self.number)
+      raise vv.VentureTypeError("Count is not positive %s" % self.number)
   def __contains__(self, vthing):
-    return isinstance(vthing, VentureInteger) and 0 <= vthing.getInteger()
+    return isinstance(vthing, vv.VentureInteger) and 0 <= vthing.getInteger()
   def name(self): return self._name or "<count>"
 
 class PositiveType(VentureType):
@@ -130,16 +134,16 @@ class PositiveType(VentureType):
     self._name = name
   def asVentureValue(self, thing):
     assert 0 < thing
-    return VentureNumber(thing)
+    return vv.VentureNumber(thing)
   def asPython(self, vthing):
     ans = vthing.getNumber()
     if 0 < ans:
       return ans
     else:
       # TODO: Or what?  Can't even clip to 0!
-      raise VentureTypeError("Number is not positive %s" % ans)
+      raise vv.VentureTypeError("Number is not positive %s" % ans)
   def __contains__(self, vthing):
-    return isinstance(vthing, VentureNumber) and 0 < vthing.getNumber()
+    return isinstance(vthing, vv.VentureNumber) and 0 < vthing.getNumber()
   def name(self): return self._name or "<positive>"
   def gradient_type(self): return NumberType()
 
@@ -148,11 +152,11 @@ class NilType(VentureType):
     self._name = name
   def asVentureValue(self, _thing):
     # TODO Throw an error if not null-like?
-    return VentureNil()
+    return vv.VentureNil()
   def asPython(self, _vthing):
     # TODO Throw an error if not nil?
     return []
-  def __contains__(self, vthing): return isinstance(vthing, VentureNil)
+  def __contains__(self, vthing): return isinstance(vthing, vv.VentureNil)
   def name(self): return self._name or "()"
   def distribution(self, base, **kwargs):
     return base("nil", **kwargs)
@@ -164,12 +168,12 @@ class PairType(VentureType):
     self._name = name
   def asVentureValue(self, thing):
     (f, r) = thing
-    return VenturePair((self.first_type.asVentureValue(f),
-                        self.second_type.asVentureValue(r)))
+    return vv.VenturePair((self.first_type.asVentureValue(f),
+                           self.second_type.asVentureValue(r)))
   def asPython(self, vthing):
     (vf, vr) = vthing.getPair()
     return (self.first_type.asPython(vf), self.second_type.asPython(vr))
-  def __contains__(self, vthing): return isinstance(vthing, VenturePair)
+  def __contains__(self, vthing): return isinstance(vthing, vv.VenturePair)
   def name(self):
     if self._name is not None:
       return self._name
@@ -199,12 +203,12 @@ data List = Nil | Pair Any List
   def __init__(self, name=None):
     self._name = name
   def asVentureValue(self, thing):
-    return pythonListToVentureList(thing)
+    return vv.pythonListToVentureList(thing)
   def asPython(self, thing):
     return thing.asPythonList()
   def __contains__(self, vthing):
-    return isinstance(vthing, VentureNil) \
-      or (isinstance(vthing, VenturePair) and vthing.rest in self)
+    return isinstance(vthing, vv.VentureNil) \
+      or (isinstance(vthing, vv.VenturePair) and vthing.rest in self)
   def name(self): return self._name or "<list>"
 
 class HomogeneousListType(VentureType):
@@ -217,8 +221,8 @@ class HomogeneousListType(VentureType):
     self.subtype = subtype
     self._name = name
   def asVentureValue(self, thing):
-    return pythonListToVentureList([self.subtype.asVentureValue(t)
-                                    for t in thing])
+    return vv.pythonListToVentureList([self.subtype.asVentureValue(t)
+                                       for t in thing])
   def asPython(self, vthing):
     return vthing.asPythonList(self.subtype)
   def __contains__(self, vthing):
@@ -239,14 +243,14 @@ class ArrayUnboxedType(VentureType):
     self.subtype = subtype
     self._name = name
   def asVentureValue(self, thing):
-    return VentureArrayUnboxed(thing, self.subtype)
+    return vv.VentureArrayUnboxed(thing, self.subtype)
   def asPython(self, vthing):
     return vthing.getArray(self.subtype)
   def __contains__(self, vthing):
     # TODO Need a more general element type compatibility check
-    unboxed = isinstance(vthing, VentureArrayUnboxed) \
+    unboxed = isinstance(vthing, vv.VentureArrayUnboxed) \
               and vthing.elt_type == self.subtype
-    boxed = isinstance(vthing, VentureArray) \
+    boxed = isinstance(vthing, vv.VentureArray) \
             and all([val in self.subtype for val in vthing.getArray()])
     return unboxed or boxed
   def __eq__(self, other):
@@ -274,9 +278,9 @@ class HomogeneousSequenceType(VentureType):
   def asPython(self, vthing):
     return vthing
   def __contains__(self, vthing):
-    return (isinstance(vthing, VentureArray) \
-            or isinstance(vthing, VentureSimplex) \
-            or isinstance(vthing, VentureArrayUnboxed) \
+    return (isinstance(vthing, vv.VentureArray) \
+            or isinstance(vthing, vv.VentureSimplex) \
+            or isinstance(vthing, vv.VentureArrayUnboxed) \
             or vthing in ListType()) \
       and all([val in self.subtype for val in vthing.getArray()])
   def __eq__(self, other):
@@ -313,33 +317,33 @@ data Expression = Bool | Number | Integer | Atom | Symbol | Array Expression
 
   def asVentureValue(self, thing):
     if isinstance(thing, bool) or isinstance(thing, np.bool_):
-      return VentureBool(thing)
+      return vv.VentureBool(thing)
     if isinstance(thing, int):
-      return VentureInteger(thing)
+      return vv.VentureInteger(thing)
     if isinstance(thing, Number):
-      return VentureNumber(thing)
-    if isinstance(thing, VentureAtom):
+      return vv.VentureNumber(thing)
+    if isinstance(thing, vv.VentureAtom):
       return thing
     if isinstance(thing, str):
-      return VentureSymbol(thing)
+      return vv.VentureSymbol(thing)
     if hasattr(thing, "__getitem__"): # Already not a string
-      return VentureArray([self.asVentureValue(val) for val in thing])
-    if isinstance(thing, VentureValue):
+      return vv.VentureArray([self.asVentureValue(val) for val in thing])
+    if isinstance(thing, vv.VentureValue):
       return thing
     else:
       raise Exception("Cannot convert Python object %r to a Venture " \
                       "Expression" % thing)
 
   def asPython(self, thing):
-    if isinstance(thing, VentureBool):
+    if isinstance(thing, vv.VentureBool):
       return thing.getBool()
-    if isinstance(thing, VentureInteger):
+    if isinstance(thing, vv.VentureInteger):
       return thing.getInteger()
-    if isinstance(thing, VentureNumber):
+    if isinstance(thing, vv.VentureNumber):
       return thing.getNumber()
-    if isinstance(thing, VentureAtom):
+    if isinstance(thing, vv.VentureAtom):
       return thing # Atoms are valid elements of expressions
-    if isinstance(thing, VentureSymbol):
+    if isinstance(thing, vv.VentureSymbol):
       return thing.getSymbol()
     if thing.isValidCompoundForm():
       # Leave quoted data as they are, on the grounds that (quote
@@ -347,8 +351,8 @@ data Expression = Bool | Number | Integer | Atom | Symbol | Array Expression
       # constructed programmatically from a <thing> that does not
       # normally appear in expressions.
       if thing.size() == 2 \
-         and thing.lookup(VentureNumber(0)) == VentureSymbol("quote"):
-        return ["quote", thing.lookup(VentureNumber(1))]
+         and thing.lookup(vv.VentureNumber(0)) == vv.VentureSymbol("quote"):
+        return ["quote", thing.lookup(vv.VentureNumber(1))]
       else:
         return thing.asPythonList(self)
     # Most other things are represented as themselves.
@@ -368,15 +372,15 @@ class HomogeneousDictType(VentureType):
     self.valtype = valtype
     self._name = name
   def asVentureValue(self, thing):
-    return VentureDict(dict([(self.keytype.asVentureValue(key),
-                              self.valtype.asVentureValue(val))
-                             for (key, val) in thing.iteritems()]))
+    return vv.VentureDict(dict([(self.keytype.asVentureValue(key),
+                                 self.valtype.asVentureValue(val))
+                                for (key, val) in thing.iteritems()]))
   def asPython(self, vthing):
     return dict([(self.keytype.asPython(key),
                   self.valtype.asPython(val))
                  for (key, val) in vthing.getDict().iteritems()])
   def __contains__(self, vthing):
-    return isinstance(vthing, VentureDict) \
+    return isinstance(vthing, vv.VentureDict) \
       and all([key in self.keytype and val in self.valtype
                for (key,val) in vthing.getDict().iteritems()])
   def __eq__(self, other):
@@ -405,10 +409,11 @@ class HomogeneousMappingType(VentureType):
   def asVentureValue(self, thing):
     return thing
   def asPython(self, vthing):
-    if not isinstance(vthing, (VentureArray, VentureArrayUnboxed, VentureNil,
-                               VenturePair, VentureMatrix, VentureDict,
-                               VentureSimplex)):
-      raise VentureTypeError(str(vthing) + " is not a HomogeneousMappingType!")
+    if not isinstance(vthing, (vv.VentureArray, vv.VentureArrayUnboxed,
+                               vv.VentureNil, vv.VenturePair,
+                               vv.VentureMatrix, vv.VentureDict,
+                               vv.VentureSimplex)):
+      raise vv.VentureTypeError(str(vthing) + " is not a HomogeneousMappingType!")
     return vthing
   def name(self):
     return self._name or "<mapping %s %s>" % \
