@@ -144,11 +144,19 @@ def input_data_as_dict(input_spec, inputs):
   print ans
   return ans
 
+def output_spec_to_back_in_spec(output_spec):
+  # TODO Deal with outputs that are not meant to be folded back in properly
+  assert len(output_spec) == 1
+  return [(output_spec[0][2], output_spec[0][1])]
+
 def synthesize_bogus_data(output_spec):
   return {}
 
 def dict_as_output_data(output_spec, data):
-  return 0
+  print output_spec, data
+  ans = [data[name][0] for (name, _, _) in output_spec]
+  print ans
+  return ans
 
 def cached_stan_model(model_code, cache_dir=None, **kwargs):
   if cache_dir is None:
@@ -204,8 +212,9 @@ class VenStanSP(SP):
     return fit.extract()
 
   def update_parameters(self, inputs, params, outputs):
+    second_input_spec = output_spec_to_back_in_spec(self.output_spec)
     data_dict = input_data_as_dict(self.input_spec, inputs)
-    data_dict.update(input_data_as_dict(self.output_spec, outputs))
+    data_dict.update(input_data_as_dict(second_input_spec, outputs))
     fit = pystan.stan(fit=self.built_result, data=data_dict, iter=10, chains=1,
                       init=[params])
     print fit.extract()
@@ -237,9 +246,9 @@ class VenStanSP(SP):
   def hasAEKernel(self): return True
 
   def AEInfer(self, aux):
-    for lsr, (inputs, params, outputs) in aux.applications.iteritems():
-      new_params = self.update_parameters(inputs, params, outputs)
-      aux[lsr] = (inputs, new_params, outputs)
+    for lsr, (inputs, params, output) in aux.applications.iteritems():
+      new_params = self.update_parameters(inputs, params, [output])
+      aux[lsr] = (inputs, new_params, output)
 
 # The Aux is shared across all applications, so I use a dictionary
 # with unique keys to implement independence.
@@ -292,7 +301,7 @@ class VenStanOutputPSP(RandomPSP):
     inputs = args.operandValues()
     (_, params, _) = args.spaux().applications[args.node.requestNode]
     outputs = self.compute_generated_quantities_from_bogus_data(inputs, params)
-    return outputs
+    return outputs[0]
 
   def logDensity(self, value, args):
     inputs = args.operandValues()
