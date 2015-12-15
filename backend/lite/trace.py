@@ -549,7 +549,7 @@ class Trace(object):
           mixMH(self, BlockScaffoldIndexer(scope, block), infer.ParticlePMAPOperator(particles))
       elif operator == "grad_ascent":
         (rate, steps) = exp[3:5]
-        mixMH(self, BlockScaffoldIndexer(scope, block), infer.MAPOperator(rate, int(steps)))
+        mixMH(self, BlockScaffoldIndexer(scope, block), infer.GradientAscentOperator(rate, int(steps)))
       elif operator == "nesterov":
         (rate, steps) = exp[3:5]
         mixMH(self, BlockScaffoldIndexer(scope, block), infer.NesterovAcceleratedGradientAscentOperator(rate, int(steps)))
