@@ -886,7 +886,7 @@ Right now only implemented on datasets created by `empty` and
 `collect`, but in principle generalizable to any monoid.  """)],
 
   # Hackety hack hack backward compatibility
-  ["ordered_range", deterministic_typed(lambda *args: (t.VentureSymbol("ordered_range"),) + args,
+  ["ordered_range", deterministic_typed(lambda *args: (v.VentureSymbol("ordered_range"),) + args,
                                         [t.AnyType()], t.ListType(), variadic=True)],
 
   ["assert", sequenced_sp(assert_fun, infer_action_maker_type([t.BoolType(), t.SymbolType("message")], min_req_args=1), desc="""\

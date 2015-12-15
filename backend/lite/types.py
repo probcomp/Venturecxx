@@ -84,19 +84,21 @@ class NumberType(VentureType):
   def __contains__(self, vthing): return isinstance(vthing, vv.VentureNumber)
   def name(self): return self._name or "<number>"
 
-def standard_venture_type(typename, gradient_typename=None):
+def standard_venture_type(typename, gradient_typename=None, value_classname=None):
   if gradient_typename is None:
     gradient_typename = typename
+  if value_classname is None:
+    value_classname = "vv.Venture%s" % (typename,)
   return """
 class %sType(VentureType):
   def __init__(self, name=None):
     self._name = name
-  def asVentureValue(self, thing): return vv.Venture%s(thing)
+  def asVentureValue(self, thing): return %s(thing)
   def asPython(self, vthing): return vthing.get%s()
-  def __contains__(self, vthing): return isinstance(vthing, vv.Venture%s)
+  def __contains__(self, vthing): return isinstance(vthing, %s)
   def name(self): return self._name or "<%s>"
   def gradient_type(self): return %sType()
-""" % (typename, typename, typename, typename, typename.lower(),
+""" % (typename, value_classname, typename, value_classname, typename.lower(),
        gradient_typename)
 
 for typename in ["Integer", "Atom", "Bool", "Symbol", "String", "ForeignBlob"]:
