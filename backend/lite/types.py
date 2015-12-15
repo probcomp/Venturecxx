@@ -15,12 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from numbers import Number
+import numbers
 
 import numpy as np
 
 import venture.lite.value as vv
-from venture.lite.request import Request
+import venture.lite.request as req
 
 # No, pylint, I really do mean to check whether two objects have the
 # same type.
@@ -324,7 +324,7 @@ data Expression = Bool | Number | Integer | Atom | Symbol | Array Expression
       return vv.VentureBool(thing)
     if isinstance(thing, int):
       return vv.VentureInteger(thing)
-    if isinstance(thing, Number):
+    if isinstance(thing, numbers.Number):
       return vv.VentureNumber(thing)
     if isinstance(thing, vv.VentureAtom):
       return thing
@@ -438,10 +438,10 @@ class RequestType(VentureType):
     # descriptions of SPs from descriptions of their PSPs.
     self._name = name
   def asVentureValue(self, thing):
-    assert isinstance(thing, Request)
+    assert isinstance(thing, req.Request)
     return thing
   def asPython(self, thing):
-    assert isinstance(thing, Request)
+    assert isinstance(thing, req.Request)
     return thing
   def name(self): return self._name
 
