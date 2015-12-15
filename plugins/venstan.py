@@ -127,9 +127,26 @@ def output_spec_to_back_in_spec(output_spec):
   assert len(output_spec) == 1
   return [(output_spec[0][1], output_spec[0][2])]
 
-def synthesize_bogus_data(output_spec):
-  print "Synthesizing", output_spec
-  return {"y": [0,0,0,0,0]}
+def synthesize_bogus_data(c_output_spec, input_dict):
+  assert len(c_output_spec) == 1
+  print "Synthesizing", c_output_spec
+  name = c_output_spec[0][1]
+  tp = interpret_type_spec(c_output_spec[0][2])
+  input_dict = copy.copy(input_dict)
+  sizes = [interpret_size(size, input_dict) for size in c_output_spec[0][3:]]
+  ans = {name: synthesize_bogus_datum(tp, sizes)}
+  print ans
+  return ans
+
+def interpret_size(size, input_dict):
+  return eval(size, input_dict)
+
+def synthesize_bogus_datum(tp, sizes):
+  # TODO This version ignores the type and just makes an array of the
+  # desired shape.  Is that right?
+  if len(sizes) == 0:
+    return 0
+  return [synthesize_bogus_datum(tp, sizes[1:]) for _ in range(sizes[0])]
 
 def dict_as_output_data(output_spec, data):
   print "Converting output", output_spec, data
@@ -176,7 +193,8 @@ class VenStanSP(SP):
 
   def synthesize_parameters_with_bogus_data(self, inputs):
     data_dict = input_data_as_dict(self.input_spec, inputs)
-    data_dict.update(synthesize_bogus_data(self.c_output_spec))
+    data_dict.update(synthesize_bogus_data(self.c_output_spec, data_dict))
+    print data_dict
     fit = self.stan_model.sampling(data=data_dict, iter=1, chains=1, verbose=True)
     print "Synthesized parameters", fit.extract()
     # print fit Dies in trying to compute the effective sample size?
@@ -256,7 +274,7 @@ class VenStanOutputPSP(RandomPSP):
 
   def compute_generated_quantities_from_bogus_data(self, inputs, params):
     data_dict = input_data_as_dict(self.input_spec, inputs)
-    data_dict.update(synthesize_bogus_data(self.c_output_spec))
+    data_dict.update(synthesize_bogus_data(self.c_output_spec, data_dict))
     fit = self.stan_model.sampling(data=data_dict, iter=1, chains=1,
                                    init=[params])
     print "Computed generated quantities", fit.extract()
