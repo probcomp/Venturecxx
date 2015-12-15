@@ -147,17 +147,19 @@ class TestRipl(unittest.TestCase):
         #normal observe
         self.ripl.assume('a','(uniform_continuous 0 1)')
         a = self.ripl.sample('a')
-        self.ripl.observe('a',0.5)
+        weights = self.ripl.observe('a', 0.5)
         # TODO test for when auto-incorporation is disabled
         self.assertEqual(self.ripl.sample('a'), 0.5)
+        self.assertEqual(weights, [0])
 
     def test_labeled_observe(self):
         #labeled observe
         self.ripl.assume('b','(uniform_continuous 0 1)')
         b = self.ripl.sample('b')
-        self.ripl.observe('b',0.5, 'moo')
+        weights = self.ripl.observe('b', 0.5, 'moo')
         # TODO test for when auto-incorporation is disabled
         self.assertEqual(self.ripl.sample('b'), 0.5)
+        self.assertEqual(weights, [0])
 
     ############################################
     # Core
@@ -170,13 +172,19 @@ class TestRipl(unittest.TestCase):
     def test_forget(self):
         #normal forget
         ret_value = self.ripl.execute_instruction('[ predict (uniform_continuous 0 1) ]')
-        self.ripl.forget(ret_value['directive_id'])
+        weights = self.ripl.forget(ret_value['directive_id'])
+        self.assertEqual(weights, [0])
         with self.assertRaises(VentureException):
             self.ripl.forget(ret_value['directive_id'])
         #labeled forget
         self.ripl.assume('a','(uniform_continuous 0 1)', 'moo')
         # assumes can be forgotten
-        self.ripl.forget('moo')
+        weights = self.ripl.forget('moo')
+        self.assertEqual(weights, [0])
+        # observes can be forgotten
+        self.ripl.observe('(uniform_continuous 0 (exp 1))', 2, 'baa')
+        weights = self.ripl.forget('baa')
+        self.assertEqual(weights, [-1])
 
     def test_report(self):
         #normal report
