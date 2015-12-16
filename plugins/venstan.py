@@ -138,6 +138,10 @@ def normalize_output_datum(datum):
   # Apparently the dimensionality of the numpy arrays that Stan emits
   # depends on the number of iterations done and the dimensionality of
   # the underlying datum.
+  # - Apparently only with scalar-valued outputs, though.  Vector-valued
+  #   ones do what I would expect.
+  # - It also seems that with permuted=True, Stan squashes all the chains'
+  #   outputs together.
   if len(datum.shape) == 0:
     return float(datum)
   else:
