@@ -97,11 +97,12 @@ class Engine(object):
     baseAddr = self.nextBaseAddr()
     self.model.observe(baseAddr, datum, val)
     if True: # TODO: add flag to toggle auto-incorporation
-      self.incorporate()
-    return baseAddr
+      weights = self.incorporate()
+    return (baseAddr, weights)
 
   def forget(self,directiveId):
-    self.model.forget(directiveId)
+    weights = self.model.forget(directiveId)
+    return weights
 
   def force(self,datum,val):
     # TODO: The directive counter increments, but the "force" isn't added
@@ -168,7 +169,7 @@ class Engine(object):
   def collapse(self, scope, block): self.model.collapse(scope, block)
   def collapse_map(self, scope, block): self.model.collapse_map(scope, block)
   def likelihood_weight(self): self.model.likelihood_weight()
-  def incorporate(self): self.model.incorporate()
+  def incorporate(self): return self.model.incorporate()
 
   def evaluate(self, program):
     return self.raw_evaluate([v.sym("autorun"), program])

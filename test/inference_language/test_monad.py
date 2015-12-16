@@ -87,6 +87,21 @@ def testMonadicPredict():
 """)
   eq_(ripl.infer("(foo)"), ripl.report("pid"))
 
+@on_inf_prim("observe")
+def testMonadicObserve():
+  ripl = get_ripl(persistent_inference_trace=True)
+  ripl.execute_program("""
+[define foo
+  (lambda ()
+    (do
+      (rho <- (observe (flip) true pid))
+      (xi <- (forget 'pid))
+      (return (list (mapv exp rho) (mapv exp xi)))))]
+""")
+  [[rho], [xi]] = ripl.infer("(foo)")
+  eq_(rho, xi)
+  eq_(rho, 0.5)
+
 @on_inf_prim("in_model")
 @statisticalTest
 def testModelSwitchingSmoke():
