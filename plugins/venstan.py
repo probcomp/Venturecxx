@@ -164,7 +164,17 @@ def minimal_stan_run(model, **kwargs):
   """Create a StanFit object from a StanModel object.
 
 Avoid moving the parameters from their initialization as much as possible."""
-  return model.sampling(iter=1, chains=1, **kwargs)
+  # Apparently, pystan offers no way to completely avoid moving the
+  # parameters:
+  # https://github.com/stan-dev/pystan/issues/199
+  # https://github.com/stan-dev/pystan/issues/200
+  # For now, move a "small" amount (assuming the problem's geometry
+  # has unit scale).
+  control = {'adapt_engaged': False, 'stepsize': 1e-12, 'int_time': 1e-12,
+             'stepsize_jitter': 0}
+  ans = model.sampling(iter=1, chains=1, algorithm="HMC", control=control,
+                       **kwargs)
+  return ans
 
 class MakerVenStanOutputPSP(DeterministicPSP):
   def simulate(self, args):
