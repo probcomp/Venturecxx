@@ -60,18 +60,17 @@ class Trace(object):
   def observe(self, baseAddr, exp, val):
     assert baseAddr not in self.directives
     self.trace.eval(baseAddr, exp)
-    logDensity = self.trace.observe(baseAddr,val)
-    if logDensity == float("-inf"):
-      raise VentureException("invalid_constraint", "Observe failed to constrain",
-                             expression=exp, value=val)
+    self.trace.observe(baseAddr,val)
     self.directives[baseAddr] = ["observe", exp, val]
 
   def forget(self, directiveId):
     if directiveId not in self.directives:
       raise VentureException("invalid_argument", "Cannot forget a non-existent directive id.  Valid options are %s" % self.directives.keys(),
                              argument="directive_id", directive_id=directiveId)
+    weight = 0
     directive = self.directives[directiveId]
-    if directive[0] == "observe": self.trace.unobserve(directiveId)
+    if directive[0] == "observe":
+      weight += self.trace.unobserve(directiveId)
     self.trace.uneval(directiveId)
     # TODO This may cause a problem in the presence of variable
     # shadowing.  Really, it should remove the binding from the frame
@@ -79,6 +78,7 @@ class Trace(object):
     # than the bottom-most frame in which it occurs, as this does.
     if directive[0] == "define": self.trace.unbindInGlobalEnv(directive[1])
     del self.directives[directiveId]
+    return weight
 
   def freeze(self, directiveId):
     if directiveId not in self.directives:
