@@ -152,7 +152,7 @@ def cached_stan_model(model_code, cache_dir=None, **kwargs):
     print "Not using Stan model cache"
     return pystan.StanModel(model_code=model_code, **kwargs)
   code_hash = hashlib.sha256(model_code).hexdigest()
-  cache_file = 'compiled-model-%s.pkl' % code_hash
+  cache_file = 'compiled-stan-model-%s.pkl' % code_hash
   cache_path = os.path.join(cache_dir, cache_file)
   try:
     model = pickle.load(open(cache_path, 'rb'))
