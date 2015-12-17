@@ -64,7 +64,13 @@ Usage Requirements and Gotchas
   follows a somewhat wonky distribution, because there is actually no
   way that I discovered and that works in pystan to ask Stan to
   generate simulated quantities without doing any inference on the
-  latent parameters.  See Issue #TODO.
+  latent parameters.  See [Issue #253](https://github.com/probcomp/Venturecxx/issues/253).
+
+- There are tons of outstanding bugs and infelicities even at this
+  level of integration.  They are tracked in the [Venture integrates
+  Stan
+  well](https://github.com/probcomp/Venturecxx/milestones/Venture%20integrates%20Stan%20well)
+  milestone.
 
 Alternatives not Attempted
 --------------------------
