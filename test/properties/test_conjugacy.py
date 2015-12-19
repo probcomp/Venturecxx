@@ -26,6 +26,33 @@ from venture.test.stats import reportSameDiscrete
 from venture.test.stats import statisticalTest
 import venture.value.dicts as v
 
+# Conjugate distributions participate in several useful relationships
+# that we can take advantage of to test that they were implemented
+# correctly.
+
+# - For all hyper-parameter values and all data series lengths,
+#   iterated collapsed sampling should produce the same distribution
+#   on series as the foreign uncollapsed version, and the in-Venture
+#   uncollapsed version.
+#   - This is generateSimulationAgreementChecks, checking agreement on
+#     a couple marginal distributions and a couple combinations of
+#     2-item marginals.
+#   - This exercises sampling and aux updating.
+
+# - For all pairs of parameter values and all data sets, the suff stat
+#   version should produce the same assessment ratio as the in-Venture
+#   uncollapsed version.  In some cases, the exact assessment should
+#   also be equal, if the suff stat program is coded to return the
+#   probability of the sequence (when that is even computable from the
+#   sufficient statistic).
+#   - This is generateAssessmentAgreementChecks
+#   - This exercises aux updating and assessment (of the suff stat version)
+
+# - The Gibbs sampler for the foreign uncollapsed version can be
+#   Geweke tested against its maker's simulation and made simulation.
+#   - This is checkUCKernel
+#   - This exercises the LKernel
+
 def extract_sample(maker, params, index):
   r = get_ripl()
   r.assume("maker", maker)
