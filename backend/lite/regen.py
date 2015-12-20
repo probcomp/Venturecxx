@@ -155,13 +155,10 @@ def propagateLookup(trace, node):
 
 def maybeRegenStaleAAA(trace, node, scaffold,
                        shouldRestore, omegaDB, gradients):
-  # "[this] has to do with worries about crazy thing[s] that can
-  # happen if aaa makers are shuffled around as first-class functions,
-  # and the made SPs are similarly shuffled, including with stochastic
-  # flow of such data, which may cause regeneration order to be hard
-  # to predict, and the check is trying to avoid a stale AAA aux"
-  # TODO: apparently nothing in the test suite actually hits this
-  # case. can we come up with an example that does?
+  # If we're an SPRef that points to an AAA procedure, regenerate the
+  # AAA procedure in case it's stale and something tries to
+  # dereference us.
+  # See test/regressions/test_regen_stale_aaa.py for an example.
   weight = 0
   value = trace.valueAt(node)
   if isinstance(value, SPRef) and \
