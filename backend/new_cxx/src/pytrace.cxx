@@ -62,7 +62,9 @@ void PyTrace::evalExpression(DirectiveID did, boost::python::object object)
 void PyTrace::unevalDirectiveID(DirectiveID did)
 {
  assert(trace->families.count(did));
- unevalFamily(trace.get(),trace->families[did].get(),boost::shared_ptr<Scaffold>(new Scaffold()),boost::shared_ptr<DB>(new DB()));
+ unevalFamily(trace.get(),trace->families[did].get(),
+              boost::shared_ptr<Scaffold>(new Scaffold()),
+              boost::shared_ptr<DB>(new DB()));
  trace->families.erase(did);
 }
 
@@ -122,13 +124,16 @@ void PyTrace::setSeed(size_t n) {
 }
 
 size_t PyTrace::getSeed() {
-  // TODO FIXME get_seed can't be implemented as spec'd (need a generic RNG state); current impl always returns 0, which may not interact well with VentureUnit
+  // TODO FIXME get_seed can't be implemented as spec'd (need a
+  // generic RNG state); current impl always returns 0, which may not
+  // interact well with VentureUnit
   return 0;
 }
 
 double PyTrace::getGlobalLogScore()
 {
-  // TODO This algorithm is totally wrong: https://app.asana.com/0/16653194948424/20100308871203
+  // TODO This algorithm is totally wrong:
+  // https://app.asana.com/0/16653194948424/20100308871203
   double ls = 0.0;
   for (set<Node*>::iterator iter = trace->unconstrainedChoices.begin();
        iter != trace->unconstrainedChoices.end();
@@ -154,7 +159,10 @@ double PyTrace::getGlobalLogScore()
   return ls;
 }
 
-uint32_t PyTrace::numUnconstrainedChoices() { return trace->numUnconstrainedChoices(); }
+uint32_t PyTrace::numUnconstrainedChoices()
+{
+  return trace->numUnconstrainedChoices();
+}
 
 // parses params and does inference
 struct Inferer
