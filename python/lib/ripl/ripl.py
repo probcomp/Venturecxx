@@ -159,7 +159,6 @@ class Ripl():
             if self._do_not_annotate:
                 raise
             self._raise_annotated(e, instruction)
-        return ret_value
 
     def _execute_parsed_instruction(self, parsed_instruction,
             stringable_instruction):
