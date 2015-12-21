@@ -1275,52 +1275,12 @@ make writing inference primitives more straightforward?
 
 ----------------------------------------------------------------------
 
-Possible convenience abstractions for dataset collection and use:
-
-    [define bar
-      (do
-        (with_dataset
-         (repeat 100
-          (do (mh 0 one 1)
-              (accumulate (log_likelihood 0 all) a b c (+ a b c))))
-         (plotf (quote (p0d1d2 p0d1dt c3 cs)))))] ; maybe curry here
-
-    [define quux
-      (bind (repeat_collecting (a b c (+ a b c))
-                               (mh 0 one 1)
-                               100)
-            (curry plotf (quote (p0d1d2 p0d1dt c3 cs))))]
-
-    [define quux2
-      (bind (foldM mappend mempty
-                   (replicate (begin (mh 0 one 1)
-                                     (accumulate a b c (+ a b c)))
-                              100))
-            (curry plotf (quote (p0d1d2 p0d1dt c3 cs))))]
-
-----------------------------------------------------------------------
-
-Idea: add a "smoketest" flag to all the example programs, for the test
-suite to run through all of them.
-
-----------------------------------------------------------------------
-
-- Could put in a hack where synchronous workers do not catch and
-  serialize exceptions, but let them propagate to the master directly
-
-----------------------------------------------------------------------
-
 - What would it take to make serializing and deserializing traces
   truly self-contained?
   - The dump needs to indicate a (default?) backend type for restoring, and
     engine.trace.Trace needs to be able to get and run such a constructor.
   - The dump needs to indicate the set of bound foreign sps, and the Trace
     needs a registry of all possible foreign sps to be able to rebind them.
-
-----------------------------------------------------------------------
-
-Code cleanup idea: force both the parser modules to be imported
-qualified, and then rename both classes Parser.
 
 ----------------------------------------------------------------------
 
