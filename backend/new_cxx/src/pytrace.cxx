@@ -73,17 +73,24 @@ void PyTrace::observe(DirectiveID did,boost::python::object valueExp)
   trace->unpropagatedObservations[root.get()] = parseExpression(valueExp);
 }
 
-void PyTrace::unobserve(DirectiveID did)
+double PyTrace::unobserve(DirectiveID did)
 {
   assert(trace->families.count(did));
   Node * node = trace->families[did].get();
   OutputNode * appNode = trace->getConstrainableNode(node);
-  if (trace->isObservation(node)) { unconstrain(trace.get(),appNode); trace->unobserveNode(node); }
+  double weight;
+  if (trace->isObservation(node))
+  {
+    weight = unconstrain(trace.get(),appNode);
+    trace->unobserveNode(node);
+  }
   else
   {
     assert(trace->unpropagatedObservations.count(node));
     trace->unpropagatedObservations.erase(node);
+    weight = 0;
   }
+  return weight;
 }
 
 void PyTrace::bindInGlobalEnv(const string& sym, DirectiveID did)
