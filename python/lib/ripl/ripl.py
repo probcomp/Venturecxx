@@ -73,7 +73,8 @@ class Ripl():
         self.mode = parsers.keys()[0]
         self._n_prelude = 0
         self._do_not_annotate = False
-        # TODO Loading the prelude currently (6/26/14) slows the test suite to a crawl
+        # TODO Loading the prelude currently (6/26/14) slows the test
+        # suite to a crawl
         # self.load_prelude()
         r = self.sivm.core_sivm.engine.ripl
         if r is None:
@@ -83,7 +84,8 @@ class Ripl():
             pass
         else:
             print "Wrapping sivm %s in a new ripl but it already has one: %s.  Engine to ripl references may be incorrect." % (self.sivm, r)
-        self.pyglobals = {"ripl": self} # A global environment for dropping to Python
+        # A global environment for dropping to Python
+        self.pyglobals = {"ripl": self}
         plugins.__venture_start__(self)
 
 
@@ -119,7 +121,7 @@ class Ripl():
     def execute_instructions(self, instructions=None):
         p = self._cur_parser()
         try:
-            strings, locs = self.split_program(instructions)
+            strings, _locs = self.split_program(instructions)
         except VentureException as e:
             if self._do_not_annotate:
                 raise
@@ -522,12 +524,13 @@ value to be returned as a dict annotating its Venture type.
             # directives are in.
             # Failing that, this code just suppresses labeling
             # directives in any except the main model.
-            if label==None:
-                i = {'instruction': 'assume', 'symbol':name, 'expression':expression}
+            if label is None:
+                i = {'instruction': 'assume', 'symbol':name,
+                     'expression':expression}
             else:
                 raise Exception("TODO Cannot label instructions inside in_model.")
         else:
-            if label==None:
+            if label is None:
                 label = name
             else:
                 label = _symbolize(label)
@@ -537,20 +540,23 @@ value to be returned as a dict annotating its Venture type.
         return value if type else u.strip_types(value)
 
     def predict(self, expression, label=None, type=False):
-        if label==None:
+        if label is None:
             i = {'instruction':'predict', 'expression':expression}
         else:
             label = _symbolize(label)
-            i = {'instruction':'labeled_predict', 'expression':expression, 'label':label}
+            i = {'instruction':'labeled_predict', 'expression':expression,
+                 'label':label}
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 
     def observe(self, expression, value, label=None, type=False):
-        if label==None:
-            i = {'instruction':'observe', 'expression':expression, 'value':value}
+        if label is None:
+            i = {'instruction':'observe', 'expression':expression,
+                 'value':value}
         else:
             label = _symbolize(label)
-            i = {'instruction':'labeled_observe', 'expression':expression, 'value':value, 'label':label}
+            i = {'instruction':'labeled_observe', 'expression':expression,
+                 'value':value, 'label':label}
         weights = self.execute_instruction(i)['value']
         return v.vector(weights) if type else weights
 
@@ -573,7 +579,8 @@ the semantics in `observe_dataset`.
         ret_vals = []
         parsed = self._ensure_parsed_expression(exp)
         for i, val in enumerate(items):
-          ret_vals.append(self.observe(parsed,val,label+"_"+str(i) if label is not None else None))
+          lab = label+"_"+str(i) if label is not None else None
+          ret_vals.append(self.observe(parsed, val, lab))
         return ret_vals
 
     def observe_dataset(self, proc_expression, iterable, label=None):
@@ -628,7 +635,8 @@ Open issues:
         parsed = self._ensure_parsed_expression(proc_expression)
         for i, args_val in enumerate(iterable):
           expr = [parsed] + [v.quote(a) for a in args_val[:-1]]
-          ret_vals.append(self.observe(expr,args_val[-1],label+"_"+str(i) if label is not None else None))
+          lab = label+"_"+str(i) if label is not None else None
+          ret_vals.append(self.observe(expr, args_val[-1], lab))
         return ret_vals
 
     ############################################
@@ -703,12 +711,15 @@ Open issues:
             return program
 
     def evaluate(self, program, type=False):
-        o = self.execute_instruction({'instruction':'evaluate', 'expression': program})
+        o = self.execute_instruction({'instruction':'evaluate',
+                                      'expression': program})
         value = o["value"]
         return value if type else u.strip_types(value)
 
     def infer(self, params=None, type=False):
-        o = self.execute_instruction({'instruction':'infer', 'expression': self.defaultInferProgram(params)})
+        inst = {'instruction':'infer',
+                'expression': self.defaultInferProgram(params)}
+        o = self.execute_instruction(inst)
         value = o["value"]
         return value if type else u.strip_types(value)
 
@@ -784,7 +795,9 @@ Open issues:
         return self.execute_instruction({'instruction':'continuous_inference_status'})
 
     def start_continuous_inference(self, program=None):
-        self.execute_instruction({'instruction':'start_continuous_inference', 'expression': self.defaultInferProgram(program)})
+        inst = {'instruction':'start_continuous_inference',
+                'expression': self.defaultInferProgram(program)}
+        self.execute_instruction(inst)
         return None
 
     def stop_continuous_inference(self):
@@ -842,13 +855,15 @@ Open issues:
 
     def save(self, fname):
         extra = {}
-        extra['directive_id_to_stringable_instruction'] = self.directive_id_to_stringable_instruction
+        extra['directive_id_to_stringable_instruction'] = \
+            self.directive_id_to_stringable_instruction
         extra['directive_id_to_mode'] = self.directive_id_to_mode
         return self.sivm.save(fname, extra)
 
     def load(self, fname):
         extra = self.sivm.load(fname)
-        self.directive_id_to_stringable_instruction = extra['directive_id_to_stringable_instruction']
+        self.directive_id_to_stringable_instruction = \
+            extra['directive_id_to_stringable_instruction']
         self.directive_id_to_mode = extra['directive_id_to_mode']
 
     ############################################
