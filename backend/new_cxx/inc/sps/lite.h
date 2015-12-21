@@ -113,10 +113,10 @@ struct ForeignLiteSP : SP
     sp(sp) {}
 
   shared_ptr<LatentDB> constructLatentDB() const;
-  double simulateLatents(shared_ptr<SPAux> spaux, shared_ptr<LSR> lsr,
+  double simulateLatents(shared_ptr<Args> args, shared_ptr<LSR> lsr,
                          bool shouldRestore, shared_ptr<LatentDB> latentDB,
                          gsl_rng * rng) const;
-  double detachLatents(shared_ptr<SPAux> spaux, shared_ptr<LSR> lsr,
+  double detachLatents(shared_ptr<Args> args, shared_ptr<LSR> lsr,
                        shared_ptr<LatentDB> latentDB) const;
 
   bool hasAEKernel() const;

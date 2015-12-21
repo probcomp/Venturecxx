@@ -60,14 +60,14 @@ shared_ptr<LatentDB> UncollapsedHMMSP::constructLatentDB() const
   return shared_ptr<LatentDB>(new HMMLatentDB());
 }
 
-double UncollapsedHMMSP::simulateLatents(shared_ptr<SPAux> spaux,
+double UncollapsedHMMSP::simulateLatents(shared_ptr<Args> args,
                                          shared_ptr<LSR> lsr,
                                          bool shouldRestore,
                                          shared_ptr<LatentDB> latentDB,
                                          gsl_rng * rng) const
 {
   /* if should restore, restore, otherwise do not assert latentDB */
-  shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(spaux);
+  shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(args->spAux);
   assert(aux);
 
   shared_ptr<HMMLSR> request = dynamic_pointer_cast<HMMLSR>(lsr);
@@ -103,11 +103,11 @@ double UncollapsedHMMSP::simulateLatents(shared_ptr<SPAux> spaux,
   return 0;
 }
 
-double UncollapsedHMMSP::detachLatents(shared_ptr<SPAux> spaux,
+double UncollapsedHMMSP::detachLatents(shared_ptr<Args> args,
                                        shared_ptr<LSR> lsr,
                                        shared_ptr<LatentDB> latentDB) const
 {
-  shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(spaux);
+  shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(args->spAux);
   assert(aux);
 
   shared_ptr<HMMLSR> request = dynamic_pointer_cast<HMMLSR>(lsr);

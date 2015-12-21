@@ -56,7 +56,7 @@ SP::SP(PSP * requestPSP, PSP * outputPSP) :
   outputPSP(boost::shared_ptr<PSP>(outputPSP))
   {}
 
-double SP::simulateLatents(boost::shared_ptr<SPAux> spaux,
+double SP::simulateLatents(boost::shared_ptr<Args> args,
                            boost::shared_ptr<LSR> lsr,
                            bool shouldRestore,
                            boost::shared_ptr<LatentDB> latentDB,
@@ -65,7 +65,7 @@ double SP::simulateLatents(boost::shared_ptr<SPAux> spaux,
   assert(false); throw "no default latent handling";
 }
 
-double SP::detachLatents(boost::shared_ptr<SPAux> spaux,
+double SP::detachLatents(boost::shared_ptr<Args> args,
                          boost::shared_ptr<LSR> lsr,
                          boost::shared_ptr<LatentDB> latentDB) const
 {

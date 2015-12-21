@@ -225,30 +225,30 @@ shared_ptr<LatentDB> ForeignLiteSP::constructLatentDB() const
   return shared_ptr<LatentDB>(new ForeignLiteLatentDB(sp.attr("constructLatentDB")()));
 }
 
-double ForeignLiteSP::simulateLatents(shared_ptr<SPAux> spaux,
+double ForeignLiteSP::simulateLatents(shared_ptr<Args> args,
                                       shared_ptr<LSR> lsr,
                                       bool shouldRestore,
                                       shared_ptr<LatentDB> latentDB,
                                       gsl_rng * rng) const
 {
-  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(spaux)->aux;
+  boost::python::dict foreignArgs = foreignArgsToPython(args);
   boost::python::object foreignLSR = dynamic_pointer_cast<ForeignLiteLSR>(lsr)->lsr;
   boost::python::object foreignLatentDB;
   if (latentDB)
   {
     foreignLatentDB = dynamic_pointer_cast<ForeignLiteLatentDB>(latentDB)->latentDB;
   }
-  return boost::python::extract<double>(sp.attr("simulateLatents")(foreignAux, foreignLSR, shouldRestore, foreignLatentDB));
+  return boost::python::extract<double>(sp.attr("simulateLatents")(foreignArgs, foreignLSR, shouldRestore, foreignLatentDB));
 }
 
-double ForeignLiteSP::detachLatents(shared_ptr<SPAux> spaux,
+double ForeignLiteSP::detachLatents(shared_ptr<Args> args,
                                     shared_ptr<LSR> lsr,
                                     shared_ptr<LatentDB> latentDB) const
 {
-  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(spaux)->aux;
+  boost::python::dict foreignArgs = foreignArgsToPython(args);
   boost::python::object foreignLSR = dynamic_pointer_cast<ForeignLiteLSR>(lsr)->lsr;
   boost::python::object foreignLatentDB = dynamic_pointer_cast<ForeignLiteLatentDB>(latentDB)->latentDB;
-  return boost::python::extract<double>(sp.attr("detachLatents")(foreignAux, foreignLSR, foreignLatentDB));
+  return boost::python::extract<double>(sp.attr("detachLatents")(foreignArgs, foreignLSR, foreignLatentDB));
 }
 
 bool ForeignLiteSP::hasAEKernel() const

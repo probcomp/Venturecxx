@@ -19,6 +19,7 @@
 #define SP_H
 
 #include "types.h"
+#include "args.h"
 #include "value.h"
 #include <map>
 
@@ -80,12 +81,12 @@ struct SP
   virtual boost::shared_ptr<PSP> getPSP(ApplicationNode * node) const;
 
   virtual boost::shared_ptr<LatentDB> constructLatentDB() const;
-  virtual double simulateLatents(boost::shared_ptr<SPAux> spaux,
+  virtual double simulateLatents(boost::shared_ptr<Args> args,
                                  boost::shared_ptr<LSR> lsr,
                                  bool shouldRestore,
                                  boost::shared_ptr<LatentDB> latentDB,
                                  gsl_rng * rng) const;
-  virtual double detachLatents(boost::shared_ptr<SPAux> spaux,
+  virtual double detachLatents(boost::shared_ptr<Args> args,
                                boost::shared_ptr<LSR> lsr,
                                boost::shared_ptr<LatentDB> latentDB) const;
   virtual bool hasAEKernel() const { return false; }

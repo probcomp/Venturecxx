@@ -263,7 +263,7 @@ double unevalRequests(ConcreteTrace * trace,RequestNode * node,boost::shared_ptr
 
   Node * makerNode = trace->getOperatorSPMakerNode(node);
   boost::shared_ptr<SP> sp = trace->getMadeSP(makerNode);
-  boost::shared_ptr<SPAux> spAux = trace->getMadeSPAux(makerNode);
+  boost::shared_ptr<Args> args = trace->getArgs(node);
 
   if (!lsrs.empty() && !db->hasLatentDB(makerNode)) { db->registerLatentDB(makerNode,sp->constructLatentDB()); }
 
@@ -271,7 +271,7 @@ double unevalRequests(ConcreteTrace * trace,RequestNode * node,boost::shared_ptr
        lsrIter != lsrs.rend();
        ++lsrIter)
   {
-    weight += sp->detachLatents(spAux,*lsrIter,db->getLatentDB(makerNode));
+    weight += sp->detachLatents(args,*lsrIter,db->getLatentDB(makerNode));
   }
 
 
