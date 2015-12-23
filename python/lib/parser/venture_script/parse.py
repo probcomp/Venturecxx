@@ -65,6 +65,15 @@ def locbracket((_ovalue, ostart, oend), (_cvalue, cstart, cend), value):
     assert cstart <= cend
     return located([ostart, cend], value)
 
+def loclist(items):
+    assert len(items) >= 1
+    (start, _) = items[0]['loc']
+    (_, end) = items[-1]['loc']
+    return located([start, end], items)
+
+def expression_evaluation_instruction(e):
+    return { 'instruction': locmap(e, lambda _: 'evaluate'), 'expression': e }
+
 def delocust(l):
     # XXX Why do we bother with tuples in the first place?
     if isinstance(l['value'], list) or isinstance(l['value'], tuple):
@@ -133,10 +142,22 @@ class Semantics(object):
 
     # instruction: Return located {'instruction': 'foo', ...}.
     def p_instruction_labelled(self, l, d):
-        d['value']['label'] = locmap(loctoken(l), val.symbol)
-        d['value']['instruction'] = \
-            locmap(d['value']['instruction'], lambda i: 'labeled_' + i)
-        return locmerge(loctoken(l), d, d['value'])
+        label = locmap(loctoken(l), val.symbol)
+        if d['value']['instruction']['value'] == 'evaluate':
+            # The grammar only permits expressions that are calls to
+            # the 'assume', 'observe', or 'predict' macros to be
+            # labeled with syntactic sugar.
+            locexp = d['value']['expression']
+            exp = locexp['value']
+            new_exp = exp + [label]
+            new_locexp = located(locexp['loc'], new_exp)
+            new_d = expression_evaluation_instruction(new_locexp)
+            return locmerge(loctoken(l), d, new_d)
+        else:
+            d['value']['label'] = label
+            d['value']['instruction'] = \
+                locmap(d['value']['instruction'], lambda i: 'labeled_' + i)
+            return locmerge(loctoken(l), d, d['value'])
     def p_instruction_unlabelled(self, d):
         assert isloc(d)
         return d
@@ -157,7 +178,7 @@ class Semantics(object):
         assert isloc(e)
         i = loctoken1(k, 'assume')
         s = locmap(loctoken(n), val.symbol)
-        return locmerge(i, e, {'instruction': i, 'symbol': s, 'expression': e})
+        return locmerge(i, e, expression_evaluation_instruction(loclist([i, s, e])))
     def p_directive_observe(self, k, e, eq, v):
         assert isloc(e)
         i = loctoken1(k, 'observe')
