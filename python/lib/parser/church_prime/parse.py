@@ -331,7 +331,8 @@ def parse_instructions(string):
 def parse_instruction(string):
     ls = parse_instructions(string)
     if len(ls) != 1:
-        raise VentureException('parse', 'Expected a single instruction')
+        msg = 'Expected %s to parse as a single instruction, got %s' % (string, ls)
+        raise VentureException('parse', msg)
     return ls[0]
 
 def parse_expression(string):
