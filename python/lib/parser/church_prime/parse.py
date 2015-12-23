@@ -53,6 +53,15 @@ def locbracket((_ovalue, ostart, oend), (_cvalue, cstart, cend), value):
     assert cstart <= cend
     return located([ostart, cend], value)
 
+def loclist(items):
+    assert len(items) >= 1
+    (start, _) = items[0]['loc']
+    (_, end) = items[-1]['loc']
+    return located([start, end], items)
+
+def expression_evaluation_instruction(e):
+    return { 'instruction': locmap(e, lambda _: 'evaluate'), 'expression': e }
+
 def delocust(l):
     # XXX Why do we bother with tuples in the first place?
     if isinstance(l['value'], list) or isinstance(l['value'], tuple):
@@ -116,7 +125,8 @@ class Semantics(object):
     def p_instruction_command(self, open, c, close):
         return locbracket(open, close, c)
     def p_instruction_expression(self, e):
-        return locmap(e, lambda _: { 'instruction': locmap(e, lambda _: 'evaluate'), 'expression': e })
+        inst = expression_evaluation_instruction(e)
+        return locmap(e, lambda _: inst)
     def p_instruction_laberror(self, d):
         return 'error'
     def p_instruction_labdirerror(self):
@@ -129,8 +139,8 @@ class Semantics(object):
         return { 'instruction': loctoken1(k, 'define'),
                  'symbol': locmap(loctoken(n), val.symbol), 'expression': e }
     def p_directive_assume(self, k, n, e):
-        return { 'instruction': loctoken1(k, 'assume'),
-                 'symbol': locmap(loctoken(n), val.symbol), 'expression': e }
+        expr = [loctoken1(k, 'assume'), locmap(loctoken(n), val.symbol), e]
+        return expression_evaluation_instruction(loclist(expr))
     def p_directive_observe(self, k, e, v):
         return { 'instruction': loctoken1(k, 'observe'),
                  'expression': e, 'value': v }
