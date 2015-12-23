@@ -197,8 +197,9 @@ class TestRipl(unittest.TestCase):
 
     def test_report(self):
         #normal report
-        ret_value = self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
-        output = self.ripl.report(ret_value['directive_id'])
+        self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
+        did = self.ripl.directive_id_for_label('moo')
+        output = self.ripl.report(did)
         self.assertEqual(output,1)
         #labeled report
         output = self.ripl.report('moo')
