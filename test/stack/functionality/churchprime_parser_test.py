@@ -102,20 +102,6 @@ class TestChurchPrimeParser(unittest.TestCase):
         self.assertEqual(output, [11,11])
 
 
-    def test_character_index_to_expression_index(self):
-        s = "(a b (c (d e) f ))"
-        f = self.p.character_index_to_expression_index
-        output = f(s, 0)
-        self.assertEqual(output, [])
-        output = f(s, 1)
-        self.assertEqual(output, [0])
-        output = f(s, 2)
-        self.assertEqual(output, [])
-        output = f(s, 5)
-        self.assertEqual(output, [2])
-        output = f(s, 6)
-        self.assertEqual(output, [2,0])
-
     def test_mark_up_expression_smoke(self):
         parsed = self.p.parse_expression("(add 2 3)")
         def red(string):

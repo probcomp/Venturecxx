@@ -383,11 +383,6 @@ class Ripl():
             # parsed instruction has a large string in it.
             return self._unparse(self._ensure_parsed(instruction))
 
-    def character_index_to_expression_index(self, directive_id, character_index):
-        p = self._cur_parser()
-        expression, offset = self._extract_expression(directive_id)
-        return p.character_index_to_expression_index(expression, character_index-offset)
-
     def expression_index_to_text_index(self, directive_id, expression_index):
         p = self._cur_parser()
         expression, offset = self._extract_expression(directive_id)

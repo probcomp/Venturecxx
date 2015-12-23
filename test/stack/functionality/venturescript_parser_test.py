@@ -502,21 +502,6 @@ class TestVentureScriptParser(unittest.TestCase):
         self.assertEqual(output, [8,8])
 
 
-    def test_character_index_to_expression_index(self):
-        # '(a b (c (d e) f ))'
-        s = 'a( b,c(d(e),f))'
-        f = self.p.character_index_to_expression_index
-        output = f(s, 1)
-        self.assertEqual(output, [])
-        output = f(s, 0)
-        self.assertEqual(output, [0])
-        output = f(s, 2)
-        self.assertEqual(output, [])
-        output = f(s, 6)
-        self.assertEqual(output, [2])
-        output = f(s, 5)
-        self.assertEqual(output, [2,0])
-
     def test_string(self):
         output = self.p.parse_expression('"foo"')
         expected = v.string('foo')

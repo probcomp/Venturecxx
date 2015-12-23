@@ -708,11 +708,6 @@ class VentureScriptParser(object):
         # XXX List???
         return [strings, sortlocs]
 
-    # XXX Make the tests pass, nobody else calls this.
-    def character_index_to_expression_index(self, _string, index):
-        '''Return bogus data to make tests pass.  Nobody cares!'''
-        return [[0], [], [], None, None, [2,0], [2]][index]
-
     def expression_index_to_text_index(self, string, index):
         '''Return position of expression in STRING indexed by INDEX.
 
