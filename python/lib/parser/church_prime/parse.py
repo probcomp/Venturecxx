@@ -314,7 +314,7 @@ def parse_instruction(string):
 
 def parse_expression(string):
     inst = parse_instruction(string)['value']
-    if not inst['instruction']['value'] == 'evaluate':
+    if inst['instruction']['value'] != 'evaluate':
         raise VentureException('parse', 'Expected an expression')
     return inst['expression']
 
