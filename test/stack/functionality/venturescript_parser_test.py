@@ -470,7 +470,7 @@ class TestVentureScriptParser(unittest.TestCase):
     def test_parse_instruction(self):
         output = self.p.parse_instruction('assume a = b(c,d)')
         expected = {'instruction':'evaluate',
-                    'expression':['assume', v.sym('a'),
+                    'expression':[v.sym('assume'), v.sym('a'),
                                   [v.sym('b'), v.sym('c'), v.sym('d')]]}
         self.assertEqual(output, expected)
 
@@ -534,7 +534,7 @@ class TestInstructions(unittest.TestCase):
                 [{'loc': full_loc, 'value': {
                     'instruction' : {'loc': full_loc, 'value':'evaluate'},
                     'expression' : {'loc': full_loc, 'value':
-                        [{'loc': j(0,6), 'value':'assume'},
+                        [{'loc': j(0,6), 'value':v.sym('assume')},
                          {'loc': j(7,4), 'value':v.sym('blah')},
                          {'loc': j(14,3), 'value':v.sym('moo')}]},
                     }}])
@@ -546,7 +546,7 @@ class TestInstructions(unittest.TestCase):
                 [{'loc':full_loc, 'value':{
                     'instruction' : {'loc': expr_loc, 'value':'evaluate'},
                     'expression' : {'loc': expr_loc, 'value':
-                        [{'loc':j(7,6), 'value':'assume'},
+                        [{'loc':j(7,6), 'value':v.sym('assume')},
                          {'loc': j(14,1), 'value':v.sym('a')},
                          {'loc':j(18,1), 'value':v.sym('b')},
                          {'loc':j(0,4), 'value':v.sym('name')}]},

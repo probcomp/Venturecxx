@@ -176,7 +176,7 @@ class Semantics(object):
         return locmerge(i, e, {'instruction': i, 'symbol': s, 'expression': e})
     def p_directive_assume(self, k, n, eq, e):
         assert isloc(e)
-        i = loctoken1(k, 'assume')
+        i = loctoken1(k, val.symbol('assume'))
         s = locmap(loctoken(n), val.symbol)
         return locmerge(i, e, expression_evaluation_instruction(loclist([i, s, e])))
     def p_directive_observe(self, k, e, eq, v):
