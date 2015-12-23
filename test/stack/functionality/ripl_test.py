@@ -106,10 +106,15 @@ class TestRipl(unittest.TestCase):
 
     def test_get_text(self):
         self.ripl.set_mode('church_prime')
-        text = "[assume a (+ (if true 2 3) 4)]"
-        value = self.ripl.execute_instruction(text)
-        output = self.ripl.get_text(value['directive_id'])
-        self.assertEqual(output, ['church_prime',text])
+        text = "mumble: [assume a (+ (if true 2 3) 4)]"
+        self.ripl.execute_instruction(text)
+        did = self.ripl.directive_id_for_label("mumble")
+        output = self.ripl.get_text(did)
+        # Beware the double macroexpansion bug
+        munged = 'mumble: [assume a (add ((biplex true ' \
+                 '(make_csp (quote ()) (quote 2.0)) ' \
+                 '(make_csp (quote ()) (quote 3.0)))) 4.0)]'
+        self.assertEqual(output, ['church_prime',munged])
 
     def test_expression_index_to_text_index(self):
         text = "mumble : [assume a (+ (if true 2 3) 4)]"
@@ -224,9 +229,10 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(n_after, n_before + 1)
 
     def test_get_directive(self):
-        ret_value = self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
-        output = self.ripl.get_directive(ret_value['directive_id'])
-        self.assertEqual(output['directive_id'],output['directive_id'])
+        self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
+        did = self.ripl.directive_id_for_label("moo")
+        output = self.ripl.get_directive(did)
+        self.assertEqual(output['directive_id'],did)
 
     def test_force(self):
         #normal force
