@@ -120,6 +120,14 @@ class TestRipl(unittest.TestCase):
         # macroexpansion bug.
         self.assertEqual(output, [9,110])
 
+    def test_expression_index_to_text_index_vs(self):
+        self.ripl.set_mode('venture_script')
+        text = "mumble : assume a = if (true) { 2 } else { 3 } + 4"
+        self.ripl.execute_instruction(text)
+        did = self.ripl.directive_id_for_label("mumble")
+        output = self.ripl.expression_index_to_text_index(did, [])
+        self.assertEqual(output, [20,49])
+
 
     ############################################
     # Directives
