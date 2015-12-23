@@ -384,10 +384,14 @@ class Ripl():
             return self._unparse(self._ensure_parsed(instruction))
 
     def expression_index_to_text_index(self, directive_id, expression_index):
-        p = self._cur_parser()
-        expression, offset = self._extract_expression(directive_id)
-        tmp = p.expression_index_to_text_index(expression, expression_index)
-        return [x+offset for x in tmp]
+        text = self._get_raw_text(directive_id)
+        mode = self.directive_id_to_mode[directive_id]
+        p = self.parsers[mode]
+        ans = p.expression_index_to_text_index_in_instruction(text, expression_index)
+        return ans
+
+    def directive_id_for_label(self, label):
+        return self.sivm.label_dict[label]
 
     def addr2Source(self, addr):
         """Takes an address and gives the corresponding (unparsed)
@@ -997,13 +1001,6 @@ Open issues:
 
     def _cur_parser(self):
         return self.parsers[self.mode]
-
-    def _extract_expression(self,directive_id):
-        text = self._get_raw_text(directive_id)
-        mode = self.directive_id_to_mode[directive_id]
-        p = self.parsers[mode]
-        args, arg_ranges = p.split_instruction(text)
-        return args['expression'], arg_ranges['expression'][0]
 
 def load_library(name):
     import imp

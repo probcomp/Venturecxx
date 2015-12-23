@@ -572,12 +572,28 @@ class ChurchPrimeParser(object):
         Return [start, end] position of the last nested subexpression.
         '''
         l = parse_expression(string)
+        return self._expression_index_to_text_index_in_parsed_expression(l, index, string)
+
+    def _expression_index_to_text_index_in_parsed_expression(self, l, index, string):
         for i in range(len(index)):
             if index[i] < 0 or len(l['value']) <= index[i]:
                 raise ValueError('Index out of range: %s in %s' %
                     (index, repr(string)))
             l = l['value'][index[i]]
         return l['loc']
+
+    def expression_index_to_text_index_in_instruction(self, string, index):
+        '''Return position of expression in STRING indexed by INDEX.
+
+        - STRING is a string of an instruction that has a unique expression.
+        - INDEX is a list of indices into successively nested
+          subexpressions.
+
+        Return [start, end] position of the last nested subexpression.
+        '''
+        inst = parse_instruction(string)
+        l = inst['value']['expression']
+        return self._expression_index_to_text_index_in_parsed_expression(l, index, string)
 
     def unparse_expression_and_mark_up(self, exp, places=None):
         '''Return a string representing the given EXP with markings at the given PLACES.

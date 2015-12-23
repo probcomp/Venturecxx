@@ -112,10 +112,13 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(output, ['church_prime',text])
 
     def test_expression_index_to_text_index(self):
-        text = "[assume a (+ (if true 2 3) 4)]"
-        value = self.ripl.execute_instruction(text)
-        output = self.ripl.expression_index_to_text_index(value['directive_id'], [])
-        self.assertEqual(output, [10,28])
+        text = "mumble : [assume a (+ (if true 2 3) 4)]"
+        self.ripl.execute_instruction(text)
+        did = self.ripl.directive_id_for_label("mumble")
+        output = self.ripl.expression_index_to_text_index(did, [])
+        # The indexes in this ouptut are large because of the double
+        # macroexpansion bug.
+        self.assertEqual(output, [9,110])
 
 
     ############################################
