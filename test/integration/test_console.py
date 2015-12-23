@@ -299,10 +299,10 @@ def test_directives_and_forget():
   vnt.read_to_prompt()
   vnt.send_command('list_directives')
   x_id = vnt.expect_capture_one_int()
-  vnt.expect_exact(': assume x = normal(0, 1):')
+  vnt.expect_exact(': x: [assume x (normal 0.0 1.0)]:')
   x_val2 = vnt.expect_capture_one_floatln()
   y_id = vnt.expect_capture_one_int()
-  vnt.expect_exact(': assume y = uniform_continuous(1, 2):')
+  vnt.expect_exact(': y: [assume y (uniform_continuous 1.0 2.0)]:')
   y_val2 = vnt.expect_capture_one_floatln()
   vnt.read_to_prompt()
   assert x_id > 0
