@@ -117,9 +117,21 @@ class Semantics(object):
 
     # instruction: Return located { 'instruction': 'foo', ... }.
     def p_instruction_labelled(self, l, open, d, close):
-        d['label'] = locmap(loctoken(l), val.symbol)
-        d['instruction'] = locmap(d['instruction'], lambda i: 'labeled_' + i)
-        return locbracket(l, close, d)
+        label = locmap(loctoken(l), val.symbol)
+        if d['instruction']['value'] == 'evaluate':
+            # The grammar only permits expressions that are calls to
+            # the 'assume', 'observe', or 'predict' macros to be
+            # labeled with syntactic sugar.
+            locexp = d['expression']
+            exp = locexp['value']
+            new_exp = exp + [label]
+            new_locexp = located(locexp['loc'], new_exp)
+            new_d = expression_evaluation_instruction(new_locexp)
+            return locbracket(l, close, new_d)
+        else:
+            d['label'] = label
+            d['instruction'] = locmap(d['instruction'], lambda i: 'labeled_' + i)
+            return locbracket(l, close, d)
     def p_instruction_unlabelled(self, open, d, close):
         return locbracket(open, close, d)
     def p_instruction_command(self, open, c, close):
