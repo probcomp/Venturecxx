@@ -257,7 +257,8 @@ class Ripl():
             start_comment_regex = "//"
         else:
             raise Exception("Do not know comment syntax for mode {}".format(self.get_mode()))
-        no_comments = '\n'.join(re.split(start_comment_regex, x)[0] for x in program_string.split('\n'))
+        no_comments = '\n'.join(re.split(start_comment_regex, x)[0]
+                                for x in program_string.split('\n'))
         instructions, positions = p.split_program(no_comments)
         return [self._ensure_parsed(i) for i in instructions], positions
 
