@@ -182,16 +182,16 @@ def test_arithmetic():
                '+3 + 6', '3 + +6', '+3 + +6', '+3+ +6', '+3 ++6', '+3++6',
                '81/9', '-27/-3'):
     vnt.send_command(nine)
-    assert '9.0' == vnt.read_to_prompt(), nine
+    assert vnt.read_to_prompt() == '9.0', nine
 
 @in_backend("none")
 def test_lines_and_comments():
   vnt = spawn_venture()
 
   vnt.send('\n')
-  assert "" == vnt.read_to_prompt(), str(vnt)
+  assert vnt.read_to_prompt() == "", str(vnt)
   vnt.send_command('// just a comment by itself')
-  assert "" == vnt.read_to_prompt(), str(vnt)
+  assert vnt.read_to_prompt() == "", str(vnt)
 
   def good(val):
     assert val >= 0.1, str(vnt)
@@ -238,9 +238,9 @@ def test_lines_and_comments_abstract_syntax():
   vnt = spawn_venture("--abstract-syntax")
 
   vnt.send('\n')
-  assert "" == vnt.read_to_prompt(), str(vnt)
+  assert vnt.read_to_prompt() == "", str(vnt)
   vnt.send_command(';; just a comment by itself')
-  assert "" == vnt.read_to_prompt(), str(vnt)
+  assert vnt.read_to_prompt() == "", str(vnt)
 
   def good(val):
     assert val >= 0.1, str(vnt)
@@ -321,23 +321,23 @@ def test_directives_and_forget():
   vnt.read_to_prompt()
   vnt.send_command('list_directives')
   vnt.read_to_prompt()
-  assert "" == vnt.before
+  assert vnt.before == ""
 
 def test_python_eval():
   # https://github.com/probcomp/Venturecxx/issues/122
   vnt = spawn_venture()
   vnt.send_command('pyexec("import collections")')
-  assert "[]" == vnt.read_to_prompt()
+  assert vnt.read_to_prompt() == "[]"
   vnt.send_command('pyexec("d = collections.defaultdict(int)")')
-  assert "[]" == vnt.read_to_prompt()
+  assert vnt.read_to_prompt() == "[]"
   vnt.send_command('pyexec("d[\\"a\\"]+=1")')
-  assert "[]" == vnt.read_to_prompt()
+  assert vnt.read_to_prompt() == "[]"
   vnt.send_command('pyeval("d[\\"a\\"]")')
-  assert 1 == vnt.expect_capture_one_intln()
+  assert vnt.expect_capture_one_intln() == 1
   vnt.send_command('pyexec("d[\\"a\\"]+=1")')
-  assert "[]" == vnt.read_to_prompt()
+  assert vnt.read_to_prompt() == "[]"
   vnt.send_command('pyeval("d[\\"a\\"]")')
-  assert 2 == vnt.expect_capture_one_intln()
+  assert vnt.expect_capture_one_intln() == 2
 
 def test_shell():
   vnt = spawn_venture()
@@ -383,7 +383,7 @@ def __venture_start__(*args, **kwargs):
   vnt.expect_exact("Strng(I am a venture script)\r\n")
   vnt.expect_prompt()
   vnt.send_command("clear")
-  assert "" == vnt.read_to_prompt()
+  assert vnt.read_to_prompt() == ""
   # Now in the other order:
   vnt.send_command("load_plugin %s" % plgn)
   vnt.expect_exact("I am a plugin at load time\r\n")
@@ -404,9 +404,9 @@ def __venture_start__(*args, **kwargs):
   vnt.expect_exact("Strng(I am a venture script)\r\n")
   vnt.expect_prompt()
   vnt.send_command("clear")
-  assert "" == vnt.read_to_prompt()
+  assert vnt.read_to_prompt() == ""
   vnt.send_command("reload")  # No longer have anything to reload.
-  assert "" == vnt.read_to_prompt()
+  assert vnt.read_to_prompt() == ""
   os.unlink(vnts)
   os.unlink(plgn)
 
