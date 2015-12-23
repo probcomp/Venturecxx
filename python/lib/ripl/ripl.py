@@ -211,13 +211,9 @@ class Ripl():
         # in the case of a parse exception, the text_index gets narrowed
         # down to the exact expression/atom that caused the error
         if e.exception == 'parse':
-            # calculate the positions of the arguments
-            args, arg_ranges = p.split_instruction(instruction_string)
             try:
-                text_index = self._cur_parser().expression_index_to_text_index(
-                        args['expression'], e.data['expression_index'])
-                offset = arg_ranges['expression'][0]
-                text_index = [x + offset for x in text_index]
+                text_index = p.expression_index_to_text_index_in_instruction(
+                    instruction_string, e.data['expression_index'])
             except VentureException as e2:
                 if e2.exception == 'no_text_index': text_index = None
                 else: raise
