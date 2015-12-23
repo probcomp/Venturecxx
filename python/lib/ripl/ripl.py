@@ -384,7 +384,14 @@ class Ripl():
         text = self._get_raw_text(directive_id)
         mode = self.directive_id_to_mode[directive_id]
         p = self.parsers[mode]
-        ans = p.expression_index_to_text_index_in_instruction(text, expression_index)
+        try:
+            ans = p.expression_index_to_text_index_in_instruction(text, expression_index)
+        except VentureException:
+            # Perhaps the instruction got round-tripped through the
+            # unparser, which always emits church' syntax
+            from venture.parser.church_prime import ChurchPrimeParser
+            q = ChurchPrimeParser.instance()
+            ans = q.expression_index_to_text_index_in_instruction(text, expression_index)
         return ans
 
     def directive_id_for_label(self, label):
