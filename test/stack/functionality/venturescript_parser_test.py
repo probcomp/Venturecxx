@@ -469,8 +469,10 @@ class TestVentureScriptParser(unittest.TestCase):
 
     def test_parse_instruction(self):
         output = self.p.parse_instruction('assume a = b(c,d)')
-        expected = {'instruction':'assume', 'symbol':v.sym('a'), 'expression':[v.sym('b'),v.sym('c'),v.sym('d')]}
-        self.assertEqual(output,expected)
+        expected = {'instruction':'evaluate',
+                    'expression':['assume', v.sym('a'),
+                                  [v.sym('b'), v.sym('c'), v.sym('d')]]}
+        self.assertEqual(output, expected)
 
     def test_split_program(self):
         output = self.p.split_program(' force blah = count<132>;infer 132')
@@ -520,26 +522,34 @@ class TestInstructions(unittest.TestCase):
         self.p = VentureScriptParser.instance()
 
     def run_test(self, string, expected):
-        self.assertEqual(module.parse_instructions(string), expected)
+        got = module.parse_instructions(string)
+        self.assertEqual(got, expected)
     run_test.__test__ = False
 
     def test_assume(self):
         # Assume
         #
+        full_loc = j(0,6,7,4,12,1,14,3)
         self.run_test( 'assuMe blah = moo',
-                [{'loc': j(0,6,7,4,12,1,14,3), 'value':{
-                    'instruction' : {'loc': j(0,6), 'value':'assume'},
-                    'symbol' : {'loc': j(7,4), 'value':v.sym('blah')},
-                    'expression' : {'loc': j(14,3), 'value':v.sym('moo')},
+                [{'loc': full_loc, 'value': {
+                    'instruction' : {'loc': full_loc, 'value':'evaluate'},
+                    'expression' : {'loc': full_loc, 'value':
+                        [{'loc': j(0,6), 'value':'assume'},
+                         {'loc': j(7,4), 'value':v.sym('blah')},
+                         {'loc': j(14,3), 'value':v.sym('moo')}]},
                     }}])
 
     def test_labeled_assume(self):
+        full_loc = j(0,4,5,1,7,6,14,1,16,1,18,1)
+        expr_loc = j(7,6,14,1,16,1,18,1)
         self.run_test( 'name : assume a = b',
-                [{'loc':j(0,4,5,1,7,6,14,1,16,1,18,1), 'value':{
-                    'instruction' : {'loc':j(7,6), 'value':'labeled_assume'},
-                    'symbol' : {'loc': j(14,1), 'value':v.sym('a')},
-                    'expression' : {'loc':j(18,1), 'value':v.sym('b')},
-                    'label' : {'loc':j(0,4), 'value':v.sym('name')},
+                [{'loc':full_loc, 'value':{
+                    'instruction' : {'loc': expr_loc, 'value':'evaluate'},
+                    'expression' : {'loc': expr_loc, 'value':
+                        [{'loc':j(7,6), 'value':'assume'},
+                         {'loc': j(14,1), 'value':v.sym('a')},
+                         {'loc':j(18,1), 'value':v.sym('b')},
+                         {'loc':j(0,4), 'value':v.sym('name')}]},
                     }}])
 
     def test_predict(self):

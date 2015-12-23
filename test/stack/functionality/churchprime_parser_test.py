@@ -46,7 +46,8 @@ class TestChurchPrimeParser(unittest.TestCase):
     def test_parse_instruction(self):
         output = self.p.parse_instruction('[assume a (b c d)]')
         expected = {'instruction':'evaluate',
-                    'expression':['assume', v.sym('a'), [v.sym('b'),v.sym('c'),v.sym('d')]]}
+                    'expression':['assume', v.sym('a'),
+                                  [v.sym('b'), v.sym('c'), v.sym('d')]]}
         self.assertEqual(output,expected)
 
     def test_parse_and_unparse_instruction(self):
