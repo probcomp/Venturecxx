@@ -649,6 +649,9 @@ class VentureScriptParser(object):
         '''Unparse INSTRUCTION into a string.'''
         # XXX Urgh.  Whattakludge!
         i = instruction['instruction']
+        if i == 'evaluate':
+            return self.unparse_expression_and_mark_up(
+                instruction['expression'], expr_markers)
         unparsers = self.unparsers[i]
         chunks = []
         if 'label' in instruction and 'label' not in (k for k,_u in unparsers):

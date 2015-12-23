@@ -45,13 +45,17 @@ class TestChurchPrimeParser(unittest.TestCase):
 
     def test_parse_instruction(self):
         output = self.p.parse_instruction('[assume a (b c d)]')
-        expected = {'instruction':'assume', 'symbol':v.sym('a'),
-                    'expression':[v.sym('b'),v.sym('c'),v.sym('d')]}
+        expected = {'instruction':'evaluate',
+                    'expression':['assume', v.sym('a'), [v.sym('b'),v.sym('c'),v.sym('d')]]}
         self.assertEqual(output,expected)
 
     def test_parse_and_unparse_instruction(self):
-        for instruction in ["[assume a (b c d)]", "foo: [assume a (b c d)]"]:
-            self.assertEqual(self.p.unparse_instruction(self.p.parse_instruction(instruction)), instruction)
+        def round_tripped(inst):
+            return self.p.unparse_instruction(self.p.parse_instruction(inst))
+        self.assertEqual(round_tripped("[assume a (b c d)]"),
+                         "(assume a (b c d))")
+        self.assertEqual(round_tripped("foo: [assume a (b c d)]"),
+                         "(assume a (b c d) foo)")
 
     # detects bug where '>=' is parsed as '> =' (because '>' is its own symbol)
     def test_double_symbol(self):

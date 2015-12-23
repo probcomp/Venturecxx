@@ -503,6 +503,9 @@ class ChurchPrimeParser(object):
         '''Unparse INSTRUCTION into a string.'''
         # XXX Urgh.  Whattakludge!
         i = instruction['instruction']
+        if i == 'evaluate':
+            return self.unparse_expression_and_mark_up(
+                instruction['expression'], expr_markers)
         unparsers = self.unparsers[i]
         chunks = []
         if 'label' in instruction and 'label' not in (k for k,_u in unparsers):
@@ -516,7 +519,8 @@ class ChurchPrimeParser(object):
         for key, unparser in unparsers:
             chunks.append(' ')
             if key == 'expression': # Urk
-                chunks.append(self.unparse_expression_and_mark_up(instruction[key], expr_markers))
+                chunks.append(self.unparse_expression_and_mark_up(
+                    instruction[key], expr_markers))
             else:
                 chunks.append(unparser(self, instruction[key]))
         chunks.append(']')
