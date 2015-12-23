@@ -38,6 +38,10 @@ def r(*args):
 def j(*args):
     mins = []
     maxes = []
+    # This kooky expression traverses the args list by pairs.  How?
+    # Zipping a mutable iterator with itself.  See
+    # http://stackoverflow.com/questions/4628290/pairs-from-single-list
+    # for an in-depth discussion.
     for a, b in zip(*(iter(args),)*2):
         mins.append(a)
         maxes.append(a+b-1)
