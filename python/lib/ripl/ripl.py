@@ -169,7 +169,8 @@ class Ripl():
             self.directive_id_to_stringable_instruction[did] = (
                 stringable_instruction)
             self.directive_id_to_mode[did] = self.mode
-        return self.sivm.execute_instruction(parsed_instruction)
+        ans = self.sivm.execute_instruction(parsed_instruction)
+        return ans
 
     def _raise_annotated(self, e, instruction):
         info = sys.exc_info()
