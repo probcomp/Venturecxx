@@ -74,22 +74,20 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(ret_value['value'], v.number(2))
 
     def test_execute_program(self):
-        f = self.ripl.execute_program
-        ret_value = f("[assume a 1] [assume b (+ 1 2)] [assume c (- b a)] [predict c]")
+        prog = "[assume a 1] [assume b (+ 1 2)] [assume c (- b a)] [predict c]"
+        ret_value = self.ripl.execute_program(prog)
         self.assertEqual(ret_value[-1]['value'], v.number(2))
 
     def test_parse_exception_sugaring(self):
-        f = self.ripl.execute_instruction
         try:
-            f("[assume a (+ (if 1 2) 3)]")
+            self.ripl.execute_instruction("[assume a (+ (if 1 2) 3)]")
         except VentureException as e:
             self.assertEqual(e.data['text_index'], [13,20])
             self.assertEqual(e.exception, 'parse')
 
     def test_invalid_argument_exception_sugaring(self):
-        f = self.ripl.execute_instruction
         try:
-            f("[forget moo]")
+            self.ripl.execute_instruction("[forget moo]")
         except VentureException as e:
             self.assertEqual(e.data['text_index'], [8,10])
             self.assertEqual(e.exception, 'invalid_argument')
