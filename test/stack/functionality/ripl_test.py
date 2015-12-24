@@ -90,8 +90,8 @@ class TestRipl(unittest.TestCase):
     ############################################
 
     def test_split_program(self):
-        output = self.ripl.split_program(" [ force blah count<132>][ infer 132 ]")
-        instructions = ['[ force blah count<132>]','[ infer 132 ]']
+        output = self.ripl.split_program(" ( force blah count<132>)[ infer 132 ]")
+        instructions = ['( force blah count<132>)','[ infer 132 ]']
         indices = [[1,24],[25,37]]
         self.assertEqual(output,[instructions, indices])
 

@@ -49,7 +49,6 @@ directive(observe)	::= K_OBSERVE(k) expression(e) T_EQDEF(eq) literal(v).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
 command(infer)		::= K_INFER(k) expression(e).
-command(force)		::= K_FORCE(k) expression(e) T_EQDEF(eq) literal(v).
 command(sample)		::= K_SAMPLE(k) expression(e).
 /* XXX are these commands supposed to be one keyword or three? */
 command(continuous_inference_status)	::= K_CONTINUOUS_INFERENCE_STATUS(k).
@@ -175,7 +174,6 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_ELSE
 	K_EQ
 	K_EXCEPTION
-	K_FORCE
 	K_GE
 	K_GET
 	K_GLOBAL

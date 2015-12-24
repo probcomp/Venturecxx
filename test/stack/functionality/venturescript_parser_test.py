@@ -475,22 +475,22 @@ class TestVentureScriptParser(unittest.TestCase):
         self.assertEqual(output, expected)
 
     def test_split_program(self):
-        output = self.p.split_program(' force blah = count<132>;infer 132')
-        instructions = ['force blah = count<132>','infer 132']
-        indices = [[1,23],[25,33]]
+        output = self.p.split_program(' define blah = count<132>;infer 132')
+        instructions = ['define blah = count<132>','infer 132']
+        indices = [[1,24],[26,34]]
         self.assertEqual(output,[instructions, indices])
 
     def test_split_instruction(self):
-        output = self.p.split_instruction(' force blah = count<132>')
+        output = self.p.split_instruction(' define blah = count<132>')
         indices = {
-                'instruction': [1,5],
-                'expression': [7,10],
-                'value': [14,23],
+                'instruction': [1,6],
+                'symbol': [8,11],
+                'expression': [15,24],
                 }
         strings = {
-                'instruction': 'force',
-                'expression': 'blah',
-                'value': 'count<132>',
+                'instruction': 'define',
+                'symbol': 'blah',
+                'expression': 'count<132>',
                 }
         self.assertEqual(output,[strings,indices])
 
@@ -609,16 +609,6 @@ class TestInstructions(unittest.TestCase):
                     'expression' : {'loc':j(7,4), 'value':v.sym('blah')},
                     }}])
 
-    def test_force(self):
-        # Force
-        #
-        self.run_test( 'force blah = count<132>',
-                [{'loc':j(0,5,6,4,11,1,13,10), 'value':{
-                    'instruction' : {'loc':j(0,5), 'value':'force'},
-                    'expression' : {'loc':j(6,4), 'value':v.sym('blah')},
-                    'value' : {'loc':j(13,10), 'value':{'type':'count', 'value':132.0}},
-                    }}])
-
     def test_infer(self):
         # Infer
         #
@@ -629,14 +619,14 @@ class TestInstructions(unittest.TestCase):
                     }}])
 
     def test_program(self):
-        self.run_test( 'force blah = count<132>;infer 132',
-                [{'loc':j(0,5,6,4,11,1,13,10), 'value':{
-                        'instruction' : {'loc':j(0,5), 'value':'force'},
-                        'expression' : {'loc':j(6,4), 'value':v.sym('blah')},
-                        'value' : {'loc':j(13,10), 'value':{'type':'count', 'value':132.0}},
-                        }},{'loc':j(24,5,30,3), 'value':{
-                        'instruction' : {'loc':j(24,5), 'value':'infer'},
-                        'expression' : {'loc':j(30,3), 'value':v.number(132.0)},
+        self.run_test( 'define blah = count<132>;infer 132',
+                [{'loc':j(0,6,7,4,12,1,14,10), 'value':{
+                        'instruction' : {'loc':j(0,6), 'value':'define'},
+                        'symbol' : {'loc':j(7,4), 'value':v.sym('blah')},
+                        'expression' : {'loc':j(14,10), 'value':{'type':'count', 'value':132.0}},
+                        }},{'loc':j(25,5,31,3), 'value':{
+                        'instruction' : {'loc':j(25,5), 'value':'infer'},
+                        'expression' : {'loc':j(31,3), 'value':v.number(132.0)},
                     }}])
 
 def testPunctuationTermination():
