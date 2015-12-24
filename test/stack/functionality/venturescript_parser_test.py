@@ -555,35 +555,49 @@ class TestInstructions(unittest.TestCase):
     def test_predict(self):
         # Predict
         #
+        full_loc = j(2,7,10,4)
         self.run_test( '  prediCt blah',
-                [{'loc':j(2,7,10,4), 'value':{
-                    'instruction' : {'loc':j(2,7), 'value':'predict'},
-                    'expression' : {'loc':j(10,4), 'value':v.sym('blah')},
+                [{'loc':full_loc, 'value':{
+                    'instruction' : {'loc':full_loc, 'value': 'evaluate'},
+                    'expression' : {'loc': full_loc, 'value':
+                        [{'loc':j(2,7), 'value':v.sym('predict')},
+                         {'loc':j(10,4), 'value':v.sym('blah')}]}
                     }}])
     def test_labeled_predict(self):
+        full_loc = j(0,4,5,1,7,7,15,4)
+        expr_loc = j(7,7,15,4)
         self.run_test( 'name : predict blah',
-                [{'loc':j(0,4,5,1,7,7,15,4), 'value':{
-                    'instruction' : {'loc':j(7,7), 'value':'labeled_predict'},
-                    'expression' : {'loc':j(15,4), 'value':v.sym('blah')},
-                    'label' : {'loc':j(0,4), 'value':v.sym('name')},
+                [{'loc':full_loc, 'value':{
+                    'instruction' : {'loc':expr_loc, 'value': 'evaluate'},
+                    'expression' : {'loc': expr_loc, 'value':
+                        [{'loc':j(7,7), 'value':v.sym('predict')},
+                         {'loc':j(15,4), 'value':v.sym('blah')},
+                         {'loc':j(0,4), 'value':v.sym('name')}]}
                     }}])
 
     def test_observe(self):
         # Observe
         #
+        full_loc = j(0,7,8,4,13,1,15,3)
         self.run_test( 'obServe blah = 1.3',
-                [{'loc':j(0,7,8,4,13,1,15,3), 'value':{
-                    'instruction' : {'loc':j(0,7), 'value':'observe'},
-                    'expression' : {'loc':j(8,4), 'value':v.sym('blah')},
-                    'value' : {'loc': j(15,3), 'value':v.number(1.3)},
+                [{'loc':full_loc, 'value':{
+                    'instruction' : {'loc':full_loc, 'value': 'evaluate'},
+                    'expression' : {'loc': full_loc, 'value':
+                        [{'loc':j(0,7), 'value':v.sym('observe')},
+                         {'loc':j(8,4), 'value':v.sym('blah')},
+                         {'loc': j(15,3), 'value':v.number(1.3)}]}
                     }}])
     def test_labeled_observe(self):
+        full_loc = j(0,4,5,1,7,7,15,1,17,1,19,9)
+        expr_loc = j(7,7,15,1,17,1,19,9)
         self.run_test( 'name : observe a = count<32>',
-                [{'loc':j(0,4,5,1,7,7,15,1,17,1,19,9), 'value':{
-                    'instruction' : {'loc':j(7,7), 'value':'labeled_observe'},
-                    'expression' : {'loc':j(15,1), 'value':v.sym('a')},
-                    'value' : {'loc':j(19,9), 'value':{'type':'count', 'value':32.0}},
-                    'label' : {'loc':j(0,4), 'value':v.sym('name')},
+                [{'loc':full_loc, 'value':{
+                    'instruction' : {'loc':expr_loc, 'value': 'evaluate'},
+                    'expression' : {'loc':expr_loc, 'value':
+                        [{'loc':j(7,7), 'value':v.sym('observe')},
+                         {'loc':j(15,1), 'value':v.sym('a')},
+                         {'loc':j(19,9), 'value':{'type':'count', 'value':32.0}},
+                         {'loc':j(0,4), 'value':v.sym('name')}]}
                     }}])
 
     def test_forget(self):

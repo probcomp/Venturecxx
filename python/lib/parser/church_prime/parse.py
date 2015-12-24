@@ -159,7 +159,8 @@ class Semantics(object):
         expr = [loctoken1(k, val.symbol('observe')), e, v]
         return expression_evaluation_instruction(loclist(expr))
     def p_directive_predict(self, k, e):
-        return { 'instruction': loctoken1(k, 'predict'), 'expression': e }
+        expr = [loctoken1(k, val.symbol('predict')), e]
+        return expression_evaluation_instruction(loclist(expr))
 
     # command: Return { 'instruction': located(..., 'foo'), ... }.
     def p_command_configure(self, k, options):

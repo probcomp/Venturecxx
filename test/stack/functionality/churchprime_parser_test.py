@@ -62,15 +62,17 @@ class TestChurchPrimeParser(unittest.TestCase):
     def test_double_symbol(self):
         output = self.p.parse_instruction('[predict (>= 1 1)]')
         expected = {
-            'expression': [v.symbol('gte'), v.number(1.0), v.number(1.0)],
-            'instruction': 'predict'}
+            'expression': [v.symbol('predict'),
+                           [v.symbol('gte'), v.number(1.0), v.number(1.0)]],
+            'instruction': 'evaluate'}
         self.assertEqual(output, expected)
 
     # detects bug parsing lambda expressions with no arguments
     def test_empty_lambda(self):
         output = self.p.parse_instruction('[predict (lambda () 0)]')
-        expected = {'instruction': 'predict',
-                    'expression': [v.symbol('lambda'), [], v.number(0.0)]}
+        expected = {'instruction': 'evaluate',
+                    'expression': [v.symbol('predict'),
+                                   [v.symbol('lambda'), [], v.number(0.0)]]}
         self.assertEqual(output, expected)
 
     def test_split_program(self):

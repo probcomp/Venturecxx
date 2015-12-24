@@ -181,12 +181,12 @@ class Semantics(object):
         return locmerge(i, e, expression_evaluation_instruction(loclist([i, s, e])))
     def p_directive_observe(self, k, e, eq, v):
         assert isloc(e)
-        i = loctoken1(k, 'observe')
-        return locmerge(i, v, {'instruction': i, 'expression': e, 'value': v})
+        i = loctoken1(k, val.symbol('observe'))
+        return locmerge(i, v, expression_evaluation_instruction(loclist([i, e, v])))
     def p_directive_predict(self, k, e):
         assert isloc(e)
-        i = loctoken1(k, 'predict')
-        return locmerge(i, e, {'instruction': i, 'expression': e})
+        i = loctoken1(k, val.symbol('predict'))
+        return locmerge(i, e, expression_evaluation_instruction(loclist([i, e])))
 
     # command: Return located { 'instruction': located(..., 'foo'), ... }.
     def p_command_configure(self, k, options):

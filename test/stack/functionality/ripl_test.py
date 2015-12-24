@@ -182,11 +182,13 @@ class TestRipl(unittest.TestCase):
 
     def test_forget(self):
         #normal forget
-        ret_value = self.ripl.execute_instruction('[ predict (uniform_continuous 0 1) ]')
-        weights = self.ripl.forget(ret_value['directive_id'])
+        inst = 'frob: [ predict (uniform_continuous 0 1) ]'
+        self.ripl.execute_instruction(inst)
+        did = self.ripl.directive_id_for_label('frob')
+        weights = self.ripl.forget(did)
         self.assertEqual(weights, [0])
         with self.assertRaises(VentureException):
-            self.ripl.forget(ret_value['directive_id'])
+            self.ripl.forget(did)
         #labeled forget
         self.ripl.assume('a','(uniform_continuous 0 1)', 'moo')
         # assumes can be forgotten
