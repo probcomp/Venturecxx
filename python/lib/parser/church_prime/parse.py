@@ -165,9 +165,6 @@ class Semantics(object):
     # command: Return { 'instruction': located(..., 'foo'), ... }.
     def p_command_infer(self, k, e):
         return { 'instruction': loctoken1(k, 'infer'), 'expression': e }
-    def p_command_start_continuous_inference(self, k, e):
-        return { 'instruction': loctoken1(k, 'start_continuous_inference'),
-                 'expression': e }
     def p_command_stop_continuous_inference(self, k):
         return { 'instruction': loctoken1(k, 'stop_continuous_inference') }
     def p_command_get_current_exception(self, k):
@@ -479,7 +476,8 @@ class ChurchPrimeParser(object):
         if i in ['forget', 'labeled_forget', 'freeze', 'labeled_freeze',
                  'report', 'labeled_report', 'clear', 'rollback',
                  'list_directives', 'get_directive', 'labeled_get_directive',
-                 'force', 'sample', 'continuous_inference_status']:
+                 'force', 'sample', 'continuous_inference_status',
+                 'start_continuous_inference']:
             open_char = '('
             close_char = ')'
         else:

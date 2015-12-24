@@ -50,8 +50,6 @@ directive(predict)	::= K_PREDICT(k) expression(e).
 
 command(infer)		::= K_INFER(k) expression(e).
 /* XXX are these commands supposed to be one keyword or three? */
-command(start_continuous_inference)	::= K_START(k0) K_CONTINUOUS(k1)
-						K_INFERENCE(k2).
 command(stop_continuous_inference)	::= K_STOP_CONTINUOUS_INFERENCE(k).
 command(get_current_exception)		::= K_GET(k0) K_CURRENT(k1)
 						K_EXCEPTION(k2).
@@ -165,7 +163,6 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_ADD
 	K_AND
 	K_ASSUME
-	K_CONTINUOUS
 	K_CURRENT
 	K_DEFINE
 	K_DIV
@@ -178,7 +175,6 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_GT
 	K_IF
 	K_INFER
-	K_INFERENCE
 	K_LE
 	K_LOAD
 	K_LOGSCORE
@@ -190,7 +186,6 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_POW
 	K_PREDICT
 	K_PROC
-	K_START
 	K_STATE
 	K_STOP
 	K_SUB
