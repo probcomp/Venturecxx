@@ -70,7 +70,6 @@ directive(observe)	::= K_OBSERVE(k) expression(e) literal(v).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
 command(infer)		::= K_INFER(k) expression(e).
-command(stop_continuous_inference)	::= K_STOP_CONTINUOUS_INFERENCE(k).
 command(get_current_exception)		::= K_GET_CURRENT_EXCEPTION(k).
 command(get_state)		::= K_GET_STATE(k).
 command(get_global_logscore)	::= K_GET_GLOBAL_LOGSCORE(k).
@@ -151,5 +150,4 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_PROFILER_CLEAR
 	K_PROFILER_CONFIGURE
 	K_PROFILER_LIST_RANDOM
-	K_STOP_CONTINUOUS_INFERENCE
 	.
