@@ -163,8 +163,6 @@ class Semantics(object):
         return expression_evaluation_instruction(loclist(expr))
 
     # command: Return { 'instruction': located(..., 'foo'), ... }.
-    def p_command_configure(self, k, options):
-        return { 'instruction': loctoken1(k, 'configure'), 'options': options }
     def p_command_forget(self, k, dr):
         i = 'labeled_forget' if dr[0] == 'label' else 'forget'
         return { 'instruction': loctoken1(k, i), dr[0]: dr[1] }
@@ -477,7 +475,6 @@ class ChurchPrimeParser(object):
         'labeled_observe': [('expression', unparse_expression), ('value', unparse_value)],
         'predict': [('expression', unparse_expression)],
         'labeled_predict': [('expression', unparse_expression)],
-        'configure': [('options', unparse_json)],
         'forget': [('directive_id', unparse_integer)],
         'labeled_forget': [('label', unparse_symbol)],
         'freeze': [('directive_id', unparse_integer)],

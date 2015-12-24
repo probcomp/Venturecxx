@@ -189,9 +189,6 @@ class Semantics(object):
         return locmerge(i, e, expression_evaluation_instruction(loclist([i, e])))
 
     # command: Return located { 'instruction': located(..., 'foo'), ... }.
-    def p_command_configure(self, k, options):
-        i = loctoken1(k, 'configure')
-        return locmerge(i, options, {'instruction': i, 'options': options})
     def p_command_forget(self, k, dr):
         assert isloc(dr[1])
         ui = 'labeled_forget' if dr[0] == 'label' else 'forget'
@@ -641,7 +638,6 @@ class VentureScriptParser(object):
         'labeled_observe': [('expression', unparse_expression), ('value', unparse_value)],
         'predict': [('expression', unparse_expression)],
         'labeled_predict': [('expression', unparse_expression)],
-        'configure': [('options', unparse_json)],
         'forget': [('directive_id', unparse_integer)],
         'labeled_forget': [('label', unparse_symbol)],
         'freeze': [('directive_id', unparse_integer)],
