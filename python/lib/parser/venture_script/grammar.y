@@ -49,11 +49,6 @@ directive(observe)	::= K_OBSERVE(k) expression(e) T_EQDEF(eq) literal(v).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
 command(infer)		::= K_INFER(k) expression(e).
-/* XXX are these commands supposed to be one keyword or three? */
-command(get_current_exception)		::= K_GET(k0) K_CURRENT(k1)
-						K_EXCEPTION(k2).
-command(get_state)		::= K_GET(k0) K_STATE(k1).
-command(get_global_logscore)	::= K_GET(k0) K_GLOBAL(k1) K_LOGSCORE(k2).
 command(load)		::= K_LOAD(k) L_STRING(pathname).
 
 body(let)		::= let(l) T_SEMI(semi) expression(e).
@@ -162,21 +157,16 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_ADD
 	K_AND
 	K_ASSUME
-	K_CURRENT
 	K_DEFINE
 	K_DIV
 	K_ELSE
 	K_EQ
-	K_EXCEPTION
 	K_GE
-	K_GET
-	K_GLOBAL
 	K_GT
 	K_IF
 	K_INFER
 	K_LE
 	K_LOAD
-	K_LOGSCORE
 	K_LT
 	K_MUL
 	K_NEQ
@@ -185,7 +175,6 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_POW
 	K_PREDICT
 	K_PROC
-	K_STATE
 	K_SUB
 	.
 

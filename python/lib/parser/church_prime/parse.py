@@ -165,10 +165,6 @@ class Semantics(object):
     # command: Return { 'instruction': located(..., 'foo'), ... }.
     def p_command_infer(self, k, e):
         return { 'instruction': loctoken1(k, 'infer'), 'expression': e }
-    def p_command_get_current_exception(self, k):
-        return { 'instruction': loctoken1(k, 'get_current_exception') }
-    def p_command_get_state(self, k):
-        return { 'instruction': loctoken1(k, 'get_state') }
     def p_command_get_global_logscore(self, k):
         return { 'instruction': loctoken1(k, 'get_global_logscore') }
     def p_command_profiler_configure(self, k, options):
@@ -475,7 +471,8 @@ class ChurchPrimeParser(object):
                  'report', 'labeled_report', 'clear', 'rollback',
                  'list_directives', 'get_directive', 'labeled_get_directive',
                  'force', 'sample', 'continuous_inference_status',
-                 'start_continuous_inference', 'stop_continuous_inference']:
+                 'start_continuous_inference', 'stop_continuous_inference',
+                 'get_current_exception', 'get_state']:
             open_char = '('
             close_char = ')'
         else:

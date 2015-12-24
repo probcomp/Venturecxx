@@ -193,15 +193,6 @@ class Semantics(object):
         assert isloc(e)
         i = loctoken1(k, 'infer')
         return locmerge(i, e, {'instruction': i, 'expression': e})
-    def p_command_get_current_exception(self, k):
-        i = loctoken1(k, 'get_current_exception')
-        return locval(i, {'instruction': i})
-    def p_command_get_state(self, k):
-        i = loctoken1(k, 'get_state')
-        return locval(i, {'instruction': i})
-    def p_command_get_global_logscore(self, k):
-        i = loctoken1(k, 'get_global_logscore')
-        return locval(i, {'instruction': i})
     def p_command_load(self, k, pathname):
         i = loctoken1(k, 'load')
         p = loctoken(pathname)
@@ -619,7 +610,8 @@ class VentureScriptParser(object):
                  'report', 'labeled_report', 'clear', 'rollback',
                  'list_directives', 'get_directive', 'labeled_get_directive',
                  'force', 'sample', 'continuous_inference_status',
-                 'start_continuous_inference', 'stop_continuous_inference']:
+                 'start_continuous_inference', 'stop_continuous_inference',
+                 'get_current_exception', 'get_state']:
             open_char = '('
             close_char = ')'
         else:
