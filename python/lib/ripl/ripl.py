@@ -672,40 +672,33 @@ Open issues:
         return None
 
     def forget(self, label_or_did, type=False):
-        if isinstance(label_or_did, int) or \
-            (isinstance(label_or_did, dict) and
-             'type' in label_or_did and
-             label_or_did['type'] == 'number'):
-            if isinstance(label_or_did, int):
-                did = label_or_did
-            else:
-                did = label_or_did['value']
-            i = {'instruction':'forget', 'directive_id':did}
+        (tp, val) = _interp_label_or_did(label_or_did)
+        if tp == 'did':
+            i = {'instruction':'forget', 'directive_id':val}
             # if asked to forget prelude instruction, decrement _n_prelude
             if label_or_did <= self._n_prelude:
                 self._n_prelude -= 1
         else:
             # assume that prelude instructions don't have labels
-            i = {'instruction':'labeled_forget',
-                 'label':_symbolize(label_or_did)}
+            i = {'instruction':'labeled_forget', 'label':val}
         weights = self.execute_instruction(i)['value']
         return v.vector(weights) if type else weights
 
     def freeze(self, label_or_did, type=False):
-        if isinstance(label_or_did,int):
-            i = {'instruction':'freeze', 'directive_id':label_or_did}
+        (tp, val) = _interp_label_or_did(label_or_did)
+        if tp == 'did':
+            i = {'instruction':'freeze', 'directive_id':val}
         else:
-            i = {'instruction':'labeled_freeze',
-                 'label':_symbolize(label_or_did)}
+            i = {'instruction':'labeled_freeze', 'label':val}
         self.execute_instruction(i)
         return None
 
     def report(self, label_or_did, type=False):
-        if isinstance(label_or_did,int):
-            i = {'instruction':'report', 'directive_id':label_or_did}
+        (tp, val) = _interp_label_or_did(label_or_did)
+        if tp == 'did':
+            i = {'instruction':'report', 'directive_id':val}
         else:
-            i = {'instruction':'labeled_report',
-                 'label':v.symbol(label_or_did)}
+            i = {'instruction':'labeled_report', 'label':val}
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 
@@ -1054,3 +1047,16 @@ def _symbolize(thing):
         return v.symbol(thing)
     else:
         return thing # Assume it's already the proper stack dict
+
+def _interp_label_or_did(label_or_did):
+    if isinstance(label_or_did, int) or \
+        (isinstance(label_or_did, dict) and
+         'type' in label_or_did and
+         label_or_did['type'] == 'number'):
+        if isinstance(label_or_did, int):
+            did = label_or_did
+        else:
+            did = label_or_did['value']
+        return ('did', did)
+    else:
+        return ('label', _symbolize(label_or_did))
