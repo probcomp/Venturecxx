@@ -49,7 +49,6 @@ directive(observe)	::= K_OBSERVE(k) expression(e) T_EQDEF(eq) literal(v).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
 command(infer)		::= K_INFER(k) expression(e).
-command(clear)		::= K_CLEAR(k).
 command(rollback)	::= K_ROLLBACK(k).
 command(list_directives)::= K_LIST(k0) K_DIRECTIVES(k1).
 command(get_directive)	::= K_GET(k0) K_DIRECTIVE(k1) directive_ref(dr).
@@ -175,7 +174,6 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_ADD
 	K_AND
 	K_ASSUME
-	K_CLEAR
 	K_CONTINUOUS
 	K_CURRENT
 	K_DEFINE

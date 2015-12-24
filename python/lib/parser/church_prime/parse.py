@@ -165,8 +165,6 @@ class Semantics(object):
     # command: Return { 'instruction': located(..., 'foo'), ... }.
     def p_command_infer(self, k, e):
         return { 'instruction': loctoken1(k, 'infer'), 'expression': e }
-    def p_command_clear(self, k):
-        return { 'instruction': loctoken1(k, 'clear') }
     def p_command_rollback(self, k):
         return { 'instruction': loctoken1(k, 'rollback') }
     def p_command_list_directives(self, k):
@@ -499,7 +497,7 @@ class ChurchPrimeParser(object):
                 instruction['expression'], expr_markers)
         unparsers = self.unparsers[i]
         if i in ['forget', 'labeled_forget', 'freeze', 'labeled_freeze',
-                 'report', 'labeled_report']:
+                 'report', 'labeled_report', 'clear']:
             open_char = '('
             close_char = ')'
         else:

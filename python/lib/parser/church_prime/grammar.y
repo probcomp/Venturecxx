@@ -70,7 +70,6 @@ directive(observe)	::= K_OBSERVE(k) expression(e) literal(v).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
 command(infer)		::= K_INFER(k) expression(e).
-command(clear)		::= K_CLEAR(k).
 command(rollback)	::= K_ROLLBACK(k).
 command(list_directives)::= K_LIST_DIRECTIVES(k).
 command(get_directive)	::= K_GET_DIRECTIVE(k) directive_ref(dr).
@@ -153,7 +152,6 @@ json_dict_entry(error)	::= error T_COLON json(value).
 %fallback L_NAME
 	K_ASSUME
 	K_CHOICES
-	K_CLEAR
 	K_CONTINUOUS_INFERENCE_STATUS
 	K_FORCE
 	K_GET_CURRENT_EXCEPTION

@@ -44,7 +44,6 @@ keywords = {                    # XXX Use a perfect hash.
     'add': grammar.K_ADD,
     'and': grammar.K_AND,
     'assume': grammar.K_ASSUME,
-    'clear': grammar.K_CLEAR,
     'continuous': grammar.K_CONTINUOUS,
     'continuous_inference_status': grammar.K_CONTINUOUS_INFERENCE_STATUS,
     'current': grammar.K_CURRENT,

@@ -43,7 +43,6 @@ END {
 keywords = {                    # XXX Use a perfect hash.
     'assume': grammar.K_ASSUME,
     'choices': grammar.K_CHOICES,
-    'clear': grammar.K_CLEAR,
     'continuous_inference_status': grammar.K_CONTINUOUS_INFERENCE_STATUS,
     'define': grammar.K_DEFINE,
     'force': grammar.K_FORCE,

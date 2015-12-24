@@ -193,9 +193,6 @@ class Semantics(object):
         assert isloc(e)
         i = loctoken1(k, 'infer')
         return locmerge(i, e, {'instruction': i, 'expression': e})
-    def p_command_clear(self, k):
-        i = loctoken1(k, 'clear')
-        return locval(i, {'instruction': i})
     def p_command_rollback(self, k):
         i = loctoken1(k, 'rollback')
         return locval(i, {'instruction': i})
@@ -655,7 +652,7 @@ class VentureScriptParser(object):
                 instruction['expression'], expr_markers)
         unparsers = self.unparsers[i]
         if i in ['forget', 'labeled_forget', 'freeze', 'labeled_freeze',
-                 'report', 'labeled_report']:
+                 'report', 'labeled_report', 'clear']:
             open_char = '('
             close_char = ')'
         else:
