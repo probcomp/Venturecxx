@@ -672,8 +672,15 @@ Open issues:
         return None
 
     def forget(self, label_or_did, type=False):
-        if isinstance(label_or_did,int):
-            i = {'instruction':'forget', 'directive_id':label_or_did}
+        if isinstance(label_or_did, int) or \
+            (isinstance(label_or_did, dict) and
+             'type' in label_or_did and
+             label_or_did['type'] == 'number'):
+            if isinstance(label_or_did, int):
+                did = label_or_did
+            else:
+                did = label_or_did['value']
+            i = {'instruction':'forget', 'directive_id':did}
             # if asked to forget prelude instruction, decrement _n_prelude
             if label_or_did <= self._n_prelude:
                 self._n_prelude -= 1
