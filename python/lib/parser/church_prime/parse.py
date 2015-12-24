@@ -165,9 +165,6 @@ class Semantics(object):
     # command: Return { 'instruction': located(..., 'foo'), ... }.
     def p_command_infer(self, k, e):
         return { 'instruction': loctoken1(k, 'infer'), 'expression': e }
-    def p_command_get_directive(self, k, dr):
-        i = 'labeled_get_directive' if dr[0] == 'label' else 'get_directive'
-        return { 'instruction': loctoken1(k, i), dr[0]: dr[1] }
     def p_command_force(self, k, e, v):
         return { 'instruction': loctoken1(k, 'force'), 'expression': e,
                  'value': v }
@@ -196,12 +193,6 @@ class Semantics(object):
     def p_command_load(self, k, pathname):
         return { 'instruction': loctoken1(k, 'load'),
                  'file': loctoken(pathname) }
-
-    # directive_ref: Return (reftype, located value) tuple.
-    def p_directive_ref_numbered(self, number):
-        return ('directive_id', loctoken(number))
-    def p_directive_ref_labelled(self, label):
-        return ('label', loctoken(label))
 
     # expression: Return located expression.
     def p_expression_symbol(self, name):
@@ -494,7 +485,7 @@ class ChurchPrimeParser(object):
         unparsers = self.unparsers[i]
         if i in ['forget', 'labeled_forget', 'freeze', 'labeled_freeze',
                  'report', 'labeled_report', 'clear', 'rollback',
-                 'list_directives']:
+                 'list_directives', 'get_directive', 'labeled_get_directive']:
             open_char = '('
             close_char = ')'
         else:

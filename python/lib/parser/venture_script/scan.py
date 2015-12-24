@@ -48,7 +48,6 @@ keywords = {                    # XXX Use a perfect hash.
     'continuous_inference_status': grammar.K_CONTINUOUS_INFERENCE_STATUS,
     'current': grammar.K_CURRENT,
     'define': grammar.K_DEFINE,
-    'directive': grammar.K_DIRECTIVE,
     'div': grammar.K_DIV,
     'else': grammar.K_ELSE,
     'eq': grammar.K_EQ,

@@ -70,7 +70,6 @@ directive(observe)	::= K_OBSERVE(k) expression(e) literal(v).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
 command(infer)		::= K_INFER(k) expression(e).
-command(get_directive)	::= K_GET_DIRECTIVE(k) directive_ref(dr).
 command(force)		::= K_FORCE(k) expression(e) literal(v).
 command(sample)		::= K_SAMPLE(k) expression(e).
 command(continuous_inference_status)	::= K_CONTINUOUS_INFERENCE_STATUS(k).
@@ -84,9 +83,6 @@ command(profiler_configure)	::= K_PROFILER_CONFIGURE(k) json(options).
 command(profiler_clear)		::= K_PROFILER_CLEAR(k).
 command(profiler_list_random)	::= K_PROFILER_LIST_RANDOM(k) K_CHOICES.
 command(load)		::= K_LOAD(k) L_STRING(pathname).
-
-directive_ref(numbered)	::= L_INTEGER(number).
-directive_ref(labelled)	::= L_NAME(label).
 
 expression(symbol)	::= L_NAME(name).
 expression(operator)	::= L_OPERATOR(op).
@@ -153,7 +149,6 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_CONTINUOUS_INFERENCE_STATUS
 	K_FORCE
 	K_GET_CURRENT_EXCEPTION
-	K_GET_DIRECTIVE
 	K_GET_GLOBAL_LOGSCORE
 	K_GET_STATE
 	K_INFER

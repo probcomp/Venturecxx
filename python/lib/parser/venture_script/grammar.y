@@ -49,7 +49,6 @@ directive(observe)	::= K_OBSERVE(k) expression(e) T_EQDEF(eq) literal(v).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
 command(infer)		::= K_INFER(k) expression(e).
-command(get_directive)	::= K_GET(k0) K_DIRECTIVE(k1) directive_ref(dr).
 command(force)		::= K_FORCE(k) expression(e) T_EQDEF(eq) literal(v).
 command(sample)		::= K_SAMPLE(k) expression(e).
 /* XXX are these commands supposed to be one keyword or three? */
@@ -62,9 +61,6 @@ command(get_current_exception)		::= K_GET(k0) K_CURRENT(k1)
 command(get_state)		::= K_GET(k0) K_STATE(k1).
 command(get_global_logscore)	::= K_GET(k0) K_GLOBAL(k1) K_LOGSCORE(k2).
 command(load)		::= K_LOAD(k) L_STRING(pathname).
-
-directive_ref(numbered)	::= L_INTEGER(number).
-directive_ref(labelled)	::= L_NAME(label).
 
 body(let)		::= let(l) T_SEMI(semi) expression(e).
 body(exp)		::= expression(e).
@@ -175,7 +171,6 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_CONTINUOUS
 	K_CURRENT
 	K_DEFINE
-	K_DIRECTIVE
 	K_DIV
 	K_ELSE
 	K_EQ

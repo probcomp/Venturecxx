@@ -193,11 +193,6 @@ class Semantics(object):
         assert isloc(e)
         i = loctoken1(k, 'infer')
         return locmerge(i, e, {'instruction': i, 'expression': e})
-    def p_command_get_directive(self, k, dr):
-        assert isloc(dr[1])
-        ui = 'labeled_get_directive' if dr[0] == 'label' else 'get_directive'
-        i = loctoken1(k, ui)
-        return locmerge(i, dr[1], {'instruction': i, dr[0]: dr[1]})
     def p_command_force(self, k, e, eq, v):
         assert isloc(e)
         assert isloc(v)
@@ -230,12 +225,6 @@ class Semantics(object):
         i = loctoken1(k, 'load')
         p = loctoken(pathname)
         return locmerge(i, p, {'instruction': i, 'file': p})
-
-    # directive_ref: Return (reftype, located value) tuple.
-    def p_directive_ref_numbered(self, number):
-        return ('directive_id', loctoken(number))
-    def p_directive_ref_labelled(self, label):
-        return ('label', locmap(loctoken(label), val.symbol))
 
     # body: Return located expression.
     def p_body_let(self, l, semi, e):
@@ -647,7 +636,7 @@ class VentureScriptParser(object):
         unparsers = self.unparsers[i]
         if i in ['forget', 'labeled_forget', 'freeze', 'labeled_freeze',
                  'report', 'labeled_report', 'clear', 'rollback',
-                 'list_directives']:
+                 'list_directives', 'get_directive', 'labeled_get_directive']:
             open_char = '('
             close_char = ')'
         else:
