@@ -70,7 +70,6 @@ directive(observe)	::= K_OBSERVE(k) expression(e) literal(v).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
 command(infer)		::= K_INFER(k) expression(e).
-command(list_directives)::= K_LIST_DIRECTIVES(k).
 command(get_directive)	::= K_GET_DIRECTIVE(k) directive_ref(dr).
 command(force)		::= K_FORCE(k) expression(e) literal(v).
 command(sample)		::= K_SAMPLE(k) expression(e).
@@ -158,7 +157,6 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_GET_GLOBAL_LOGSCORE
 	K_GET_STATE
 	K_INFER
-	K_LIST_DIRECTIVES
 	K_LOAD
 	K_OBSERVE
 	K_PREDICT

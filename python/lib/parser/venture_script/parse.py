@@ -193,9 +193,6 @@ class Semantics(object):
         assert isloc(e)
         i = loctoken1(k, 'infer')
         return locmerge(i, e, {'instruction': i, 'expression': e})
-    def p_command_list_directives(self, k):
-        i = loctoken1(k, 'list_directives')
-        return locval(i, {'instruction': i})
     def p_command_get_directive(self, k, dr):
         assert isloc(dr[1])
         ui = 'labeled_get_directive' if dr[0] == 'label' else 'get_directive'
@@ -649,7 +646,8 @@ class VentureScriptParser(object):
                 instruction['expression'], expr_markers)
         unparsers = self.unparsers[i]
         if i in ['forget', 'labeled_forget', 'freeze', 'labeled_freeze',
-                 'report', 'labeled_report', 'clear', 'rollback']:
+                 'report', 'labeled_report', 'clear', 'rollback',
+                 'list_directives']:
             open_char = '('
             close_char = ')'
         else:

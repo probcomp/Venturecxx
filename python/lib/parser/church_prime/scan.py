@@ -51,7 +51,6 @@ keywords = {                    # XXX Use a perfect hash.
     'get_global_logscore': grammar.K_GET_GLOBAL_LOGSCORE,
     'get_state': grammar.K_GET_STATE,
     'infer': grammar.K_INFER,
-    'list_directives': grammar.K_LIST_DIRECTIVES,
     'load': grammar.K_LOAD,
     'observe': grammar.K_OBSERVE,
     'predict': grammar.K_PREDICT,
