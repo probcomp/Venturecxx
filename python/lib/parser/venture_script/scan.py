@@ -71,7 +71,6 @@ keywords = {                    # XXX Use a perfect hash.
     'pow': grammar.K_POW,
     'predict': grammar.K_PREDICT,
     'proc': grammar.K_PROC,
-    'sample': grammar.K_SAMPLE,
     'start': grammar.K_START,
     'state': grammar.K_STATE,
     'status': grammar.K_STATUS,

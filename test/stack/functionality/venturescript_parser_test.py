@@ -600,15 +600,6 @@ class TestInstructions(unittest.TestCase):
                          {'loc':j(0,4), 'value':v.sym('name')}]}
                     }}])
 
-    def test_sample(self):
-        # Sample
-        #
-        self.run_test( 'saMple blah',
-                [{'loc':j(0,6,7,4), 'value':{
-                    'instruction' : {'loc':j(0,6), 'value':'sample'},
-                    'expression' : {'loc':j(7,4), 'value':v.sym('blah')},
-                    }}])
-
     def test_infer(self):
         # Infer
         #
