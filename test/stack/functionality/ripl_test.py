@@ -85,13 +85,6 @@ class TestRipl(unittest.TestCase):
             self.assertEqual(e.data['text_index'], [13,20])
             self.assertEqual(e.exception, 'parse')
 
-    def test_invalid_argument_exception_sugaring(self):
-        try:
-            self.ripl.execute_instruction("[forget moo]")
-        except VentureException as e:
-            self.assertEqual(e.data['text_index'], [8,10])
-            self.assertEqual(e.exception, 'invalid_argument')
-
     ############################################
     # Text manipulation
     ############################################

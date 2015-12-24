@@ -163,9 +163,6 @@ class Semantics(object):
         return expression_evaluation_instruction(loclist(expr))
 
     # command: Return { 'instruction': located(..., 'foo'), ... }.
-    def p_command_forget(self, k, dr):
-        i = 'labeled_forget' if dr[0] == 'label' else 'forget'
-        return { 'instruction': loctoken1(k, i), dr[0]: dr[1] }
     def p_command_freeze(self, k, dr):
         i = 'labeled_freeze' if dr[0] == 'label' else 'freeze'
         return { 'instruction': loctoken1(k, i), dr[0]: dr[1] }
@@ -507,11 +504,17 @@ class ChurchPrimeParser(object):
             return self.unparse_expression_and_mark_up(
                 instruction['expression'], expr_markers)
         unparsers = self.unparsers[i]
+        if i in ['forget', 'labeled_forget']:
+            open_char = '('
+            close_char = ')'
+        else:
+            open_char = '['
+            close_char = ']'
         chunks = []
         if 'label' in instruction and 'label' not in (k for k,_u in unparsers):
             chunks.append(instruction['label']['value'])
             chunks.append(': ')
-        chunks.append('[')
+        chunks.append(open_char)
         if i[0 : len('labeled_')] == 'labeled_':
             chunks.append(i[len('labeled_'):])
         else:
@@ -523,7 +526,7 @@ class ChurchPrimeParser(object):
                     instruction[key], expr_markers))
             else:
                 chunks.append(unparser(self, instruction[key]))
-        chunks.append(']')
+        chunks.append(close_char)
         return ''.join(chunks)
 
     # XXX ???

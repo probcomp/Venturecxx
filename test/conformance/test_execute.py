@@ -41,7 +41,7 @@ def testForgetSmoke():
   ripl = get_ripl()
   prog = '''
   label : [ASSUME x 1]
-  [FORGET label]'''
+  (forget 'label)'''
   ripl.execute_program(prog)
 
 def testInferReturn():
