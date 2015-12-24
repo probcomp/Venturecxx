@@ -47,13 +47,13 @@ observe obs(1,4) = 1;
 observe obs(2,-3) = -1;
 observe obs(3,-5) = 6;
 
-force slope = -0.6;
-force intercept = 3.2;
-force noise = 0.3;
+force(slope, -0.6);
+force(intercept, 3.2);
+force(noise, 0.3);
 
-force is_outlier(0) = false;
-force is_outlier(1) = false;
-force is_outlier(2) = true;
-force is_outlier(3) = false;
+force(is_outlier(0), false);
+force(is_outlier(1), false);
+force(is_outlier(2), true);
+force(is_outlier(3), false);
 
 infer call_back(draw_to_disk, "vis-outlier.png")
