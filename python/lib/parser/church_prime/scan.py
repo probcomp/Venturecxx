@@ -48,9 +48,6 @@ keywords = {                    # XXX Use a perfect hash.
     'load': grammar.K_LOAD,
     'observe': grammar.K_OBSERVE,
     'predict': grammar.K_PREDICT,
-    'profiler_clear': grammar.K_PROFILER_CLEAR,
-    'profiler_configure': grammar.K_PROFILER_CONFIGURE,
-    'profiler_list_random': grammar.K_PROFILER_LIST_RANDOM,
     'true': grammar.T_TRUE,
     'false': grammar.T_FALSE,
 }

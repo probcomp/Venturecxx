@@ -167,13 +167,6 @@ class Semantics(object):
         return { 'instruction': loctoken1(k, 'infer'), 'expression': e }
     def p_command_get_global_logscore(self, k):
         return { 'instruction': loctoken1(k, 'get_global_logscore') }
-    def p_command_profiler_configure(self, k, options):
-        return { 'instruction': loctoken1(k, 'profiler_configure'),
-                 'options': options }
-    def p_command_profiler_clear(self, k):
-        return { 'instruction': loctoken1(k, 'profiler_clear') }
-    def p_command_list_random(self, k):
-        return { 'instruction': loctoken1(k, 'profiler_list_random_choices') }
     def p_command_load(self, k, pathname):
         return { 'instruction': loctoken1(k, 'load'),
                  'file': loctoken(pathname) }
@@ -472,7 +465,8 @@ class ChurchPrimeParser(object):
                  'list_directives', 'get_directive', 'labeled_get_directive',
                  'force', 'sample', 'continuous_inference_status',
                  'start_continuous_inference', 'stop_continuous_inference',
-                 'get_current_exception', 'get_state']:
+                 'get_current_exception', 'get_state', 'profiler_configure',
+                 'profiler_clear', 'profiler_list_random']:
             open_char = '('
             close_char = ')'
         else:

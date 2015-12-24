@@ -70,9 +70,6 @@ directive(observe)	::= K_OBSERVE(k) expression(e) literal(v).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
 command(infer)		::= K_INFER(k) expression(e).
-command(profiler_configure)	::= K_PROFILER_CONFIGURE(k) json(options).
-command(profiler_clear)		::= K_PROFILER_CLEAR(k).
-command(profiler_list_random)	::= K_PROFILER_LIST_RANDOM(k) K_CHOICES.
 command(load)		::= K_LOAD(k) L_STRING(pathname).
 
 expression(symbol)	::= L_NAME(name).
@@ -141,7 +138,4 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_LOAD
 	K_OBSERVE
 	K_PREDICT
-	K_PROFILER_CLEAR
-	K_PROFILER_CONFIGURE
-	K_PROFILER_LIST_RANDOM
 	.

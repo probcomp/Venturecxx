@@ -611,7 +611,8 @@ class VentureScriptParser(object):
                  'list_directives', 'get_directive', 'labeled_get_directive',
                  'force', 'sample', 'continuous_inference_status',
                  'start_continuous_inference', 'stop_continuous_inference',
-                 'get_current_exception', 'get_state']:
+                 'get_current_exception', 'get_state', 'profiler_configure',
+                 'profiler_clear', 'profiler_list_random']:
             open_char = '('
             close_char = ')'
         else:
