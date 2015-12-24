@@ -600,22 +600,6 @@ class TestInstructions(unittest.TestCase):
                          {'loc':j(0,4), 'value':v.sym('name')}]}
                     }}])
 
-    def test_forget(self):
-        # Forget
-        #
-        self.run_test( 'FORGET 34',
-                [{'loc':j(0,6,7,2), 'value':{
-                    'instruction' : {'loc':j(0,6), 'value':'forget'},
-                    'directive_id' : {'loc':j(7,2), 'value':34},
-                    }}])
-
-    def test_labeled_forget(self):
-        self.run_test( 'forget blah',
-                [{'loc':j(0,6,7,4), 'value':{
-                    'instruction' : {'loc':j(0,6), 'value':'labeled_forget'},
-                    'label' : {'loc':j(7,4), 'value':v.sym('blah')},
-                    }}])
-
     def test_sample(self):
         # Sample
         #

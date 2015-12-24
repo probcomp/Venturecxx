@@ -309,7 +309,7 @@ def test_directives_and_forget():
   assert y_id > 0
   assert abs(x_val2 - x_val) < 10e-5
   assert abs(y_val2 - y_val) < 10e-5
-  vnt.send_command('forget %d' % x_id)
+  vnt.send_command('forget(%d)' % x_id)
   vnt.read_to_prompt()
   vnt.send_command('list_directives')
   next_y_id = vnt.expect_capture_one_int()

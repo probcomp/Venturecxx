@@ -48,7 +48,6 @@ directive(assume)	::= K_ASSUME(k) L_NAME(n) T_EQDEF(eq) expression(e).
 directive(observe)	::= K_OBSERVE(k) expression(e) T_EQDEF(eq) literal(v).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
-command(forget)		::= K_FORGET(k) directive_ref(dr).
 command(freeze)		::= K_FREEZE(k) directive_ref(dr).
 command(report)		::= K_REPORT(k) directive_ref(dr).
 command(infer)		::= K_INFER(k) expression(e).
@@ -189,7 +188,6 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_EQ
 	K_EXCEPTION
 	K_FORCE
-	K_FORGET
 	K_FREEZE
 	K_GE
 	K_GET

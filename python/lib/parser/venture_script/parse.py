@@ -189,11 +189,6 @@ class Semantics(object):
         return locmerge(i, e, expression_evaluation_instruction(loclist([i, e])))
 
     # command: Return located { 'instruction': located(..., 'foo'), ... }.
-    def p_command_forget(self, k, dr):
-        assert isloc(dr[1])
-        ui = 'labeled_forget' if dr[0] == 'label' else 'forget'
-        i = loctoken1(k, ui)
-        return locmerge(i, dr[1], {'instruction': i, dr[0]: dr[1]})
     def p_command_freeze(self, k, dr):
         assert isloc(dr[1])
         ui = 'labeled_freeze' if dr[0] == 'label' else 'freeze'
@@ -670,11 +665,17 @@ class VentureScriptParser(object):
             return self.unparse_expression_and_mark_up(
                 instruction['expression'], expr_markers)
         unparsers = self.unparsers[i]
+        if i in ['forget', 'labeled_forget']:
+            open_char = '('
+            close_char = ')'
+        else:
+            open_char = '['
+            close_char = ']'
         chunks = []
         if 'label' in instruction and 'label' not in (k for k,_u in unparsers):
             chunks.append(instruction['label']['value'])
             chunks.append(': ')
-        chunks.append('[')
+        chunks.append(open_char)
         if i[0 : len('labeled_')] == 'labeled_':
             chunks.append(i[len('labeled_'):])
         else:
@@ -685,7 +686,7 @@ class VentureScriptParser(object):
                 chunks.append(self.unparse_expression_and_mark_up(instruction[key], expr_markers))
             else:
                 chunks.append(unparser(self, instruction[key]))
-        chunks.append(']')
+        chunks.append(close_char)
         return ''.join(chunks)
 
     # XXX ???
