@@ -77,22 +77,23 @@ class TestChurchPrimeParser(unittest.TestCase):
 
     def test_split_program(self):
         # FIXME: this test should pass, but should be revised since infer has changed
-        output = self.p.split_program(" [ force blah count<132>][ infer 132 ]")
-        instructions = ['[ force blah count<132>]','[ infer 132 ]']
+        output = self.p.split_program(" ( force blah count<132>)[ infer 132 ]")
+        instructions = ['( force blah count<132>)','[ infer 132 ]']
         indices = [[1,24],[25,37]]
         self.assertEqual(output,[instructions, indices])
 
     def test_split_instruction(self):
-        output = self.p.split_instruction(" [force blah count<132> ]")
+        output = self.p.split_instruction(" [define blah count<132> ]")
+        print output
         indices = {
-                "instruction": [2,6],
-                "expression": [8,11],
-                "value": [13,22],
+                "instruction": [2,7],
+                "symbol": [9,12],
+                "expression": [14,23],
                 }
         strings = {
-                "instruction": "force",
-                "expression": "blah",
-                "value": "count<132>",
+                "instruction": "define",
+                "symbol": "blah",
+                "expression": "count<132>",
                 }
         self.assertEqual(output,[strings,indices])
 

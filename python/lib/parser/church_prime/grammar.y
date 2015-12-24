@@ -70,7 +70,6 @@ directive(observe)	::= K_OBSERVE(k) expression(e) literal(v).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
 command(infer)		::= K_INFER(k) expression(e).
-command(force)		::= K_FORCE(k) expression(e) literal(v).
 command(sample)		::= K_SAMPLE(k) expression(e).
 command(continuous_inference_status)	::= K_CONTINUOUS_INFERENCE_STATUS(k).
 command(start_continuous_inference)	::= K_START_CONTINUOUS_INFERENCE(k)
@@ -147,7 +146,6 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_ASSUME
 	K_CHOICES
 	K_CONTINUOUS_INFERENCE_STATUS
-	K_FORCE
 	K_GET_CURRENT_EXCEPTION
 	K_GET_GLOBAL_LOGSCORE
 	K_GET_STATE

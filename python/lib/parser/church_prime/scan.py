@@ -45,7 +45,6 @@ keywords = {                    # XXX Use a perfect hash.
     'choices': grammar.K_CHOICES,
     'continuous_inference_status': grammar.K_CONTINUOUS_INFERENCE_STATUS,
     'define': grammar.K_DEFINE,
-    'force': grammar.K_FORCE,
     'get_current_exception': grammar.K_GET_CURRENT_EXCEPTION,
     'get_global_logscore': grammar.K_GET_GLOBAL_LOGSCORE,
     'get_state': grammar.K_GET_STATE,
