@@ -232,10 +232,16 @@ class Ripl():
         # refers to the argument's location in the string
         if e.exception == 'invalid_argument':
             # calculate the positions of the arguments
-            args, arg_ranges = p.split_instruction(instruction_string)
+            _, arg_ranges = p.split_instruction(instruction_string)
             arg = e.data['argument']
-            text_index = arg_ranges[arg]
-            e.data['text_index'] = text_index
+            if arg in arg_ranges:
+                # Instruction unparses and reparses to structured
+                # form; can point at the argument.
+                e.data['text_index']  = arg_ranges[arg]
+            else:
+                # Insturction unparses and reparses to evaluation
+                # instruction; can't refine the text index.
+                pass
 
         a = e.data['text_index'][0]
         b = e.data['text_index'][1]+1
