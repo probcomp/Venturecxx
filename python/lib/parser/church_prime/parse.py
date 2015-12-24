@@ -163,9 +163,6 @@ class Semantics(object):
         return expression_evaluation_instruction(loclist(expr))
 
     # command: Return { 'instruction': located(..., 'foo'), ... }.
-    def p_command_report(self, k, dr):
-        i = 'labeled_report' if dr[0] == 'label' else 'report'
-        return { 'instruction': loctoken1(k, i), dr[0]: dr[1] }
     def p_command_infer(self, k, e):
         return { 'instruction': loctoken1(k, 'infer'), 'expression': e }
     def p_command_clear(self, k):
@@ -501,7 +498,8 @@ class ChurchPrimeParser(object):
             return self.unparse_expression_and_mark_up(
                 instruction['expression'], expr_markers)
         unparsers = self.unparsers[i]
-        if i in ['forget', 'labeled_forget', 'freeze', 'labeled_freeze']:
+        if i in ['forget', 'labeled_forget', 'freeze', 'labeled_freeze',
+                 'report', 'labeled_report']:
             open_char = '('
             close_char = ')'
         else:

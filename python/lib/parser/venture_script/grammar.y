@@ -48,7 +48,6 @@ directive(assume)	::= K_ASSUME(k) L_NAME(n) T_EQDEF(eq) expression(e).
 directive(observe)	::= K_OBSERVE(k) expression(e) T_EQDEF(eq) literal(v).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
-command(report)		::= K_REPORT(k) directive_ref(dr).
 command(infer)		::= K_INFER(k) expression(e).
 command(clear)		::= K_CLEAR(k).
 command(rollback)	::= K_ROLLBACK(k).
@@ -206,7 +205,6 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_POW
 	K_PREDICT
 	K_PROC
-	K_REPORT
 	K_ROLLBACK
 	K_SAMPLE
 	K_START

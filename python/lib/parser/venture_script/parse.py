@@ -189,12 +189,6 @@ class Semantics(object):
         return locmerge(i, e, expression_evaluation_instruction(loclist([i, e])))
 
     # command: Return located { 'instruction': located(..., 'foo'), ... }.
-    def p_command_report(self, k, dr):
-        assert isloc(dr[1])
-        ui = 'labeled_report' if dr[0] == 'label' else 'report'
-        i = loctoken1(k, ui)
-        inst = {'instruction': i, dr[0]: dr[1]}
-        return locmerge(i, dr[1], inst)
     def p_command_infer(self, k, e):
         assert isloc(e)
         i = loctoken1(k, 'infer')
@@ -660,7 +654,8 @@ class VentureScriptParser(object):
             return self.unparse_expression_and_mark_up(
                 instruction['expression'], expr_markers)
         unparsers = self.unparsers[i]
-        if i in ['forget', 'labeled_forget', 'freeze', 'labeled_freeze']:
+        if i in ['forget', 'labeled_forget', 'freeze', 'labeled_freeze',
+                 'report', 'labeled_report']:
             open_char = '('
             close_char = ')'
         else:
