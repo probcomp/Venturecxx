@@ -58,7 +58,6 @@ keywords = {                    # XXX Use a perfect hash.
     'profiler_clear': grammar.K_PROFILER_CLEAR,
     'profiler_configure': grammar.K_PROFILER_CONFIGURE,
     'profiler_list_random': grammar.K_PROFILER_LIST_RANDOM,
-    'rollback': grammar.K_ROLLBACK,
     'sample': grammar.K_SAMPLE,
     'start_continuous_inference': grammar.K_START_CONTINUOUS_INFERENCE,
     'stop_continuous_inference': grammar.K_STOP_CONTINUOUS_INFERENCE,

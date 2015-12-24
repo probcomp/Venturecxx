@@ -70,7 +70,6 @@ directive(observe)	::= K_OBSERVE(k) expression(e) literal(v).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
 command(infer)		::= K_INFER(k) expression(e).
-command(rollback)	::= K_ROLLBACK(k).
 command(list_directives)::= K_LIST_DIRECTIVES(k).
 command(get_directive)	::= K_GET_DIRECTIVE(k) directive_ref(dr).
 command(force)		::= K_FORCE(k) expression(e) literal(v).
@@ -166,7 +165,6 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_PROFILER_CLEAR
 	K_PROFILER_CONFIGURE
 	K_PROFILER_LIST_RANDOM
-	K_ROLLBACK
 	K_SAMPLE
 	K_START_CONTINUOUS_INFERENCE
 	K_STOP_CONTINUOUS_INFERENCE

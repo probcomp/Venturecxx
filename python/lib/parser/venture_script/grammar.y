@@ -49,7 +49,6 @@ directive(observe)	::= K_OBSERVE(k) expression(e) T_EQDEF(eq) literal(v).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
 command(infer)		::= K_INFER(k) expression(e).
-command(rollback)	::= K_ROLLBACK(k).
 command(list_directives)::= K_LIST(k0) K_DIRECTIVES(k1).
 command(get_directive)	::= K_GET(k0) K_DIRECTIVE(k1) directive_ref(dr).
 command(force)		::= K_FORCE(k) expression(e) T_EQDEF(eq) literal(v).
@@ -203,7 +202,6 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_POW
 	K_PREDICT
 	K_PROC
-	K_ROLLBACK
 	K_SAMPLE
 	K_START
 	K_STATE
