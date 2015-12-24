@@ -69,7 +69,6 @@ directive(assume)	::= K_ASSUME(k) L_NAME(n) expression(e).
 directive(observe)	::= K_OBSERVE(k) expression(e) literal(v).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
-command(freeze)		::= K_FREEZE(k) directive_ref(dr).
 command(report)		::= K_REPORT(k) directive_ref(dr).
 command(infer)		::= K_INFER(k) expression(e).
 command(clear)		::= K_CLEAR(k).
@@ -158,7 +157,6 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_CLEAR
 	K_CONTINUOUS_INFERENCE_STATUS
 	K_FORCE
-	K_FREEZE
 	K_GET_CURRENT_EXCEPTION
 	K_GET_DIRECTIVE
 	K_GET_GLOBAL_LOGSCORE
