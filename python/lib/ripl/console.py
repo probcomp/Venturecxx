@@ -81,7 +81,7 @@ class RiplCmd(Cmd, object):
       if instruction == 'evaluate':
         return self.ripl.execute_instructions(s)
       else:
-        return self.ripl.execute_instruction('[%s %s]' % (instruction, s))
+        return self.ripl.execute_instruction('(%s %s)' % (instruction, s))
     else:
       if instruction == 'evaluate':
         r_inst = s
