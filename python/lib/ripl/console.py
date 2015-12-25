@@ -85,6 +85,9 @@ class RiplCmd(Cmd, object):
     else:
       if instruction == 'evaluate':
         r_inst = s
+      elif instruction in ['force', 'sample', 'forget', 'report']:
+        # One-argument inference actions
+        r_inst = '%s(%s)' % (instruction, s)
       else:
         r_inst = '%s %s' % (instruction, s)
       from venture.parser.venture_script.parse import string_complete_p
