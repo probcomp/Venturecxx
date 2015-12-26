@@ -123,7 +123,7 @@ function jripl() {
     /* These functions are all supported, and can be called just as in
      * the python layer, except the user cannot receive the return values.
      */
-    var supported_pripl_functions = ['set_mode', 'execute_instruction', 'execute_program', 'split_program', 'character_index_to_expression_index', 'expression_index_to_text_index', 'configure', 'infer', 'clear', 'rollback', 'assume', 'predict', 'observe', 'forget', 'force', 'sample', 'start_continuous_inference', 'stop_continuous_inference', 'continuous_inference_status'];
+    var supported_pripl_functions = ['set_mode', 'execute_instruction', 'execute_program', 'split_program', 'expression_index_to_text_index', 'configure', 'infer', 'clear', 'rollback', 'assume', 'predict', 'observe', 'forget', 'force', 'sample', 'start_continuous_inference', 'stop_continuous_inference', 'continuous_inference_status'];
 
     /* Creates a function corresponding to one of the supported pripl functions 
      * listed above. */

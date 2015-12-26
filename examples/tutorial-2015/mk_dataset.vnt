@@ -17,8 +17,8 @@
 
 [assume a (normal 0 1)]
 [assume b (normal 0 1)]
-[force a 2.5]
-[force b 0.4]
+(force a 2.5)
+(force b 0.4)
 [assume f (lambda (x) (+ a (* x b)))]
 [assume obs_fun (lambda (x) (normal (f x) 0.3))]
 

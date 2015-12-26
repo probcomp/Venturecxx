@@ -70,18 +70,18 @@ def collect_succesive_conditional(ripl):
   #   forgetme : [ASSUME dummy (x)]
   #   [INFER (do (hmc (quote parameters) all 0.05 10 1)
   #              (collect mu sigma dummy))]
-  #   [FORGET forgetme]'''
+  #   (forget 'forgetme)'''
   program = '''
     forgetme : [ASSUME dummy (x)]
     [INFER (do (mh (quote parameters) one 1)
                (collect mu sigma dummy))]
-    [FORGET forgetme]'''
+    (forget 'forgetme)'''
   # program = '''
   #   forgetme : [ASSUME dummy (x)]
   #   [INFER (do (slice (quote params) 0 10 100 1)
   #              (slice (quote params) 1 1 100 1)
   #              (collect mu sigma dummy))]
-  #   [FORGET forgetme]'''
+  #   (forget 'forgetme)'''
   res = []
   for i in range(BURN + NSAMPLE * THIN):
     tmp = ripl.execute_program(program)

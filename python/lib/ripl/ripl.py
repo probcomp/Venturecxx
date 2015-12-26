@@ -169,7 +169,8 @@ class Ripl():
             self.directive_id_to_stringable_instruction[did] = (
                 stringable_instruction)
             self.directive_id_to_mode[did] = self.mode
-        return self.sivm.execute_instruction(parsed_instruction)
+        ans = self.sivm.execute_instruction(parsed_instruction)
+        return ans
 
     def _raise_annotated(self, e, instruction):
         info = sys.exc_info()
@@ -210,13 +211,9 @@ class Ripl():
         # in the case of a parse exception, the text_index gets narrowed
         # down to the exact expression/atom that caused the error
         if e.exception == 'parse':
-            # calculate the positions of the arguments
-            args, arg_ranges = p.split_instruction(instruction_string)
             try:
-                text_index = self._cur_parser().expression_index_to_text_index(
-                        args['expression'], e.data['expression_index'])
-                offset = arg_ranges['expression'][0]
-                text_index = [x + offset for x in text_index]
+                text_index = p.expression_index_to_text_index_in_instruction(
+                    instruction_string, e.data['expression_index'])
             except VentureException as e2:
                 if e2.exception == 'no_text_index': text_index = None
                 else: raise
@@ -235,10 +232,16 @@ class Ripl():
         # refers to the argument's location in the string
         if e.exception == 'invalid_argument':
             # calculate the positions of the arguments
-            args, arg_ranges = p.split_instruction(instruction_string)
+            _, arg_ranges = p.split_instruction(instruction_string)
             arg = e.data['argument']
-            text_index = arg_ranges[arg]
-            e.data['text_index'] = text_index
+            if arg in arg_ranges:
+                # Instruction unparses and reparses to structured
+                # form; can point at the argument.
+                e.data['text_index']  = arg_ranges[arg]
+            else:
+                # Insturction unparses and reparses to evaluation
+                # instruction; can't refine the text index.
+                pass
 
         a = e.data['text_index'][0]
         b = e.data['text_index'][1]+1
@@ -383,16 +386,22 @@ class Ripl():
             # parsed instruction has a large string in it.
             return self._unparse(self._ensure_parsed(instruction))
 
-    def character_index_to_expression_index(self, directive_id, character_index):
-        p = self._cur_parser()
-        expression, offset = self._extract_expression(directive_id)
-        return p.character_index_to_expression_index(expression, character_index-offset)
-
     def expression_index_to_text_index(self, directive_id, expression_index):
-        p = self._cur_parser()
-        expression, offset = self._extract_expression(directive_id)
-        tmp = p.expression_index_to_text_index(expression, expression_index)
-        return [x+offset for x in tmp]
+        text = self._get_raw_text(directive_id)
+        mode = self.directive_id_to_mode[directive_id]
+        p = self.parsers[mode]
+        try:
+            ans = p.expression_index_to_text_index_in_instruction(text, expression_index)
+        except VentureException:
+            # Perhaps the instruction got round-tripped through the
+            # unparser, which always emits church' syntax
+            from venture.parser.church_prime import ChurchPrimeParser
+            q = ChurchPrimeParser.instance()
+            ans = q.expression_index_to_text_index_in_instruction(text, expression_index)
+        return ans
+
+    def directive_id_for_label(self, label):
+        return self.sivm.label_dict[label]
 
     def addr2Source(self, addr):
         """Takes an address and gives the corresponding (unparsed)
@@ -663,33 +672,33 @@ Open issues:
         return None
 
     def forget(self, label_or_did, type=False):
-        if isinstance(label_or_did,int):
-            i = {'instruction':'forget', 'directive_id':label_or_did}
+        (tp, val) = _interp_label_or_did(label_or_did)
+        if tp == 'did':
+            i = {'instruction':'forget', 'directive_id':val}
             # if asked to forget prelude instruction, decrement _n_prelude
             if label_or_did <= self._n_prelude:
                 self._n_prelude -= 1
         else:
             # assume that prelude instructions don't have labels
-            i = {'instruction':'labeled_forget',
-                 'label':_symbolize(label_or_did)}
+            i = {'instruction':'labeled_forget', 'label':val}
         weights = self.execute_instruction(i)['value']
         return v.vector(weights) if type else weights
 
     def freeze(self, label_or_did, type=False):
-        if isinstance(label_or_did,int):
-            i = {'instruction':'freeze', 'directive_id':label_or_did}
+        (tp, val) = _interp_label_or_did(label_or_did)
+        if tp == 'did':
+            i = {'instruction':'freeze', 'directive_id':val}
         else:
-            i = {'instruction':'labeled_freeze',
-                 'label':_symbolize(label_or_did)}
+            i = {'instruction':'labeled_freeze', 'label':val}
         self.execute_instruction(i)
         return None
 
     def report(self, label_or_did, type=False):
-        if isinstance(label_or_did,int):
-            i = {'instruction':'report', 'directive_id':label_or_did}
+        (tp, val) = _interp_label_or_did(label_or_did)
+        if tp == 'did':
+            i = {'instruction':'report', 'directive_id':val}
         else:
-            i = {'instruction':'labeled_report',
-                 'label':v.symbol(label_or_did)}
+            i = {'instruction':'labeled_report', 'label':val}
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 
@@ -740,11 +749,7 @@ Open issues:
             # modified to add value to each directive
             # FIXME: is this correct behavior?
             for directive in directives:
-                inst = { 'instruction':'report',
-                         'directive_id':directive['directive_id'],
-                         }
-                value = self.execute_instruction(inst)['value']
-                directive['value'] = value if type else u.strip_types(value)
+                self._collect_value_of(directive, type=type)
             # if not requested to include the prelude, exclude those directives
             if hasattr(self, '_n_prelude') and (not include_prelude):
                 directives = directives[self._n_prelude:]
@@ -752,29 +757,41 @@ Open issues:
                 directives = [d for d in directives if d['instruction'] in instructions]
             return directives
 
+    def _collect_value_of(self, directive, type=False):
+        inst = { 'instruction':'report',
+                 'directive_id':directive['directive_id'],
+                 }
+        value = self.execute_instruction(inst)['value']
+        directive['value'] = value if type else u.strip_types(value)
+
     def print_directives(self, *instructions, **kwargs):
         for directive in self.list_directives(instructions = instructions, **kwargs):
-            dir_id = int(directive['directive_id'])
-            dir_val = str(directive['value'])
-            dir_type = directive['instruction']
-            dir_text = self._get_raw_text(dir_id)
+            self.print_one_directive(directive)
 
-            if dir_type == "assume":
-                print "%d: %s:\t%s" % (dir_id, dir_text, dir_val)
-            elif dir_type == "observe":
-                print "%d: %s" % (dir_id, dir_text)
-            elif dir_type == "predict":
-                print "%d: %s:\t %s" % (dir_id, dir_text, dir_val)
-            else:
-                assert False, "Unknown directive type found: %s" % str(directive)
+    def print_one_directive(self, directive):
+        dir_id = int(directive['directive_id'])
+        dir_val = str(directive['value'])
+        dir_type = directive['instruction']
+        dir_text = self._get_raw_text(dir_id)
 
-    def get_directive(self, label_or_did):
-        if isinstance(label_or_did,int):
+        if dir_type == "assume":
+            print "%d: %s:\t%s" % (dir_id, dir_text, dir_val)
+        elif dir_type == "observe":
+            print "%d: %s" % (dir_id, dir_text)
+        elif dir_type == "predict":
+            print "%d: %s:\t %s" % (dir_id, dir_text, dir_val)
+        else:
+            assert False, "Unknown directive type found: %s" % str(directive)
+
+    def get_directive(self, label_or_did, type=False):
+        if isinstance(label_or_did, int):
             i = {'instruction':'get_directive', 'directive_id':label_or_did}
         else:
             i = {'instruction':'labeled_get_directive',
                  'label':v.symbol(label_or_did)}
-        return self.execute_instruction(i)['directive']
+        d = self.execute_instruction(i)['directive']
+        self._collect_value_of(d)
+        return d
 
     def force(self, expression, value):
         i = {'instruction':'force', 'expression':expression, 'value':value}
@@ -800,7 +817,9 @@ Open issues:
         self.execute_instruction(inst)
         return None
 
-    def stop_continuous_inference(self):
+    def stop_continuous_inference(self, type=False):
+        # Inference SPs that call ripl methods currently require a
+        # type argument.
         self.execute_instruction({'instruction':'stop_continuous_inference'})
         return None
 
@@ -1003,13 +1022,6 @@ Open issues:
     def _cur_parser(self):
         return self.parsers[self.mode]
 
-    def _extract_expression(self,directive_id):
-        text = self._get_raw_text(directive_id)
-        mode = self.directive_id_to_mode[directive_id]
-        p = self.parsers[mode]
-        args, arg_ranges = p.split_instruction(text)
-        return args['expression'], arg_ranges['expression'][0]
-
 def load_library(name):
     import imp
     pathname = name
@@ -1045,3 +1057,16 @@ def _symbolize(thing):
         return v.symbol(thing)
     else:
         return thing # Assume it's already the proper stack dict
+
+def _interp_label_or_did(label_or_did):
+    if isinstance(label_or_did, int) or \
+        (isinstance(label_or_did, dict) and
+         'type' in label_or_did and
+         label_or_did['type'] == 'number'):
+        if isinstance(label_or_did, int):
+            did = label_or_did
+        else:
+            did = label_or_did['value']
+        return ('did', did)
+    else:
+        return ('label', _symbolize(label_or_did))

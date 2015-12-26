@@ -21,6 +21,7 @@ import scipy.stats as stats
 
 from venture.test.stats import statisticalTest, reportKnownGaussian, reportKnownContinuous
 from venture.test.config import get_ripl, on_inf_prim, default_num_samples, default_num_transitions_per_sample, needs_backend
+import venture.ripl.utils as u
 
 def testInferenceLanguageEvalSmoke():
   ripl = get_ripl()
@@ -190,3 +191,10 @@ def testBackendForkingSmoke():
 @on_inf_prim("autorun")
 def testAutorunSmoke():
   eq_(3.0, get_ripl().evaluate("(sample 3)"))
+
+def testReportActionSmoke():
+  vals = get_ripl().execute_program("""\
+foo : [assume x (+ 1 2)]
+(report 'foo)
+""")
+  eq_([3.0, 3.0], u.strip_types([v['value'] for v in vals]))

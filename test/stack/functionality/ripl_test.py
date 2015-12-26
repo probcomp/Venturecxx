@@ -74,54 +74,57 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(ret_value['value'], v.number(2))
 
     def test_execute_program(self):
-        f = self.ripl.execute_program
-        ret_value = f("[assume a 1] [assume b (+ 1 2)] [assume c (- b a)] [predict c]")
+        prog = "[assume a 1] [assume b (+ 1 2)] [assume c (- b a)] [predict c]"
+        ret_value = self.ripl.execute_program(prog)
         self.assertEqual(ret_value[-1]['value'], v.number(2))
 
     def test_parse_exception_sugaring(self):
-        f = self.ripl.execute_instruction
         try:
-            f("[assume a (+ (if 1 2) 3)]")
+            self.ripl.execute_instruction("[assume a (+ (if 1 2) 3)]")
         except VentureException as e:
             self.assertEqual(e.data['text_index'], [13,20])
             self.assertEqual(e.exception, 'parse')
-
-    def test_invalid_argument_exception_sugaring(self):
-        f = self.ripl.execute_instruction
-        try:
-            f("[forget moo]")
-        except VentureException as e:
-            self.assertEqual(e.data['text_index'], [8,10])
-            self.assertEqual(e.exception, 'invalid_argument')
 
     ############################################
     # Text manipulation
     ############################################
 
     def test_split_program(self):
-        output = self.ripl.split_program(" [ force blah count<132>][ infer 132 ]")
-        instructions = ['[ force blah count<132>]','[ infer 132 ]']
+        output = self.ripl.split_program(" ( force blah count<132>)[ infer 132 ]")
+        instructions = ['( force blah count<132>)','[ infer 132 ]']
         indices = [[1,24],[25,37]]
         self.assertEqual(output,[instructions, indices])
 
     def test_get_text(self):
         self.ripl.set_mode('church_prime')
-        text = "[assume a (+ (if true 2 3) 4)]"
-        value = self.ripl.execute_instruction(text)
-        output = self.ripl.get_text(value['directive_id'])
-        self.assertEqual(output, ['church_prime',text])
-
-    def test_character_index_to_expression_index(self):
-        text = "[assume a (+ (if true 2 3) 4)]"
-        value = self.ripl.execute_instruction(text)
-        output = self.ripl.character_index_to_expression_index(value['directive_id'], 10)
-        self.assertEqual(output, [])
+        text = "mumble: [assume a (+ (if true 2 3) 4)]"
+        self.ripl.execute_instruction(text)
+        did = self.ripl.directive_id_for_label("mumble")
+        output = self.ripl.get_text(did)
+        # Beware the double macroexpansion bug
+        munged = 'mumble: [assume a (add ((biplex true ' \
+                 '(make_csp (quote ()) (quote 2.0)) ' \
+                 '(make_csp (quote ()) (quote 3.0)))) 4.0)]'
+        self.assertEqual(output, ['church_prime',munged])
 
     def test_expression_index_to_text_index(self):
-        text = "[assume a (+ (if true 2 3) 4)]"
-        value = self.ripl.execute_instruction(text)
-        output = self.ripl.expression_index_to_text_index(value['directive_id'], [])
-        self.assertEqual(output, [10,28])
+        text = "mumble : [assume a (+ (if true 2 3) 4)]"
+        self.ripl.execute_instruction(text)
+        did = self.ripl.directive_id_for_label("mumble")
+        output = self.ripl.expression_index_to_text_index(did, [])
+        # The indexes in this ouptut are large because of the double
+        # macroexpansion bug.
+        self.assertEqual(output, [9,110])
+
+    def test_expression_index_to_text_index_vs(self):
+        self.ripl.set_mode('venture_script')
+        text = "mumble : assume a = if (true) { 2 } else { 3 } + 4"
+        self.ripl.execute_instruction(text)
+        did = self.ripl.directive_id_for_label("mumble")
+        output = self.ripl.expression_index_to_text_index(did, [])
+        # The indexes in this ouptut are large because of the double
+        # macroexpansion bug.
+        self.assertEqual(output, [9,110])
 
 
     ############################################
@@ -172,11 +175,13 @@ class TestRipl(unittest.TestCase):
 
     def test_forget(self):
         #normal forget
-        ret_value = self.ripl.execute_instruction('[ predict (uniform_continuous 0 1) ]')
-        weights = self.ripl.forget(ret_value['directive_id'])
+        inst = 'frob: [ predict (uniform_continuous 0 1) ]'
+        self.ripl.execute_instruction(inst)
+        did = self.ripl.directive_id_for_label('frob')
+        weights = self.ripl.forget(did)
         self.assertEqual(weights, [0])
         with self.assertRaises(VentureException):
-            self.ripl.forget(ret_value['directive_id'])
+            self.ripl.forget(did)
         #labeled forget
         self.ripl.assume('a','(uniform_continuous 0 1)', 'moo')
         # assumes can be forgotten
@@ -189,8 +194,9 @@ class TestRipl(unittest.TestCase):
 
     def test_report(self):
         #normal report
-        ret_value = self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
-        output = self.ripl.report(ret_value['directive_id'])
+        self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
+        did = self.ripl.directive_id_for_label('moo')
+        output = self.ripl.report(did)
         self.assertEqual(output,1)
         #labeled report
         output = self.ripl.report('moo')
@@ -219,9 +225,10 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(n_after, n_before + 1)
 
     def test_get_directive(self):
-        ret_value = self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
-        output = self.ripl.get_directive(ret_value['directive_id'])
-        self.assertEqual(output['directive_id'],output['directive_id'])
+        self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
+        did = self.ripl.directive_id_for_label("moo")
+        output = self.ripl.get_directive(did)
+        self.assertEqual(output['directive_id'],did)
 
     def test_force(self):
         #normal force
