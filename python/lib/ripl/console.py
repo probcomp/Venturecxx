@@ -127,48 +127,6 @@ class RiplCmd(Cmd, object):
     printValue(self._do_instruction('evaluate', line))
 
   @catchesVentureException
-  def do_define(self, s):
-    '''Define a variable in the inference program.'''
-    printValue(self._do_instruction('define', s))
-
-  @catchesVentureException
-  def do_assume(self, s):
-    '''Add a named variable to the model.'''
-    printValue(self._do_instruction('assume', s))
-
-  @catchesVentureException
-  def do_observe(self, s):
-    '''Condition on an expression being the value.'''
-    self._do_instruction('observe', s)
-
-  @catchesVentureException
-  def do_predict(self, s):
-    '''Register an expression as a model prediction.'''
-    printValue(self._do_instruction('predict', s))
-
-  @catchesVentureException
-  def do_forget(self, s):
-    '''Forget a given prediction or observation.'''
-    self._do_instruction('forget', s)
-
-  @catchesVentureException
-  def do_report(self, s):
-    '''Report the current value of a given directive.'''
-    printValue(self._do_instruction('report', s))
-
-  @catchesVentureException
-  def do_sample(self, s):
-    '''Sample the given expression immediately,
-    without registering it as a prediction.'''
-    printValue(self._do_instruction('sample', s))
-
-  @catchesVentureException
-  def do_force(self, s):
-    '''Set the given expression to the given value,
-    without conditioning on it.'''
-    self._do_instruction('force', s)
-
-  @catchesVentureException
   def do_list_directives(self, _s):
     '''List active directives and their current values.'''
     self.ripl.print_directives()
@@ -183,29 +141,9 @@ class RiplCmd(Cmd, object):
     self._update_prompt()
 
   @catchesVentureException
-  def do_infer(self, s):
-    '''Run inference synchronously.'''
-    printValue(self._do_instruction('infer', self.ripl.defaultInferProgram(s if s else None)))
-
-  @catchesVentureException
-  def do_continuous_inference_status(self, s):
+  def do_ci_status(self, _s):
     '''Report status of continuous inference.'''
-    print self._do_instruction('continuous_inference_status', s)
-
-  @catchesVentureException
-  def do_start_continuous_inference(self, s):
-    '''Start continuous inference.'''
-    self.ripl.start_continuous_inference(s if s else None)
-
-  @catchesVentureException
-  def do_stop_continuous_inference(self, s):
-    '''Stop continuous inference.'''
-    self._do_instruction('stop_continuous_inference', s)
-
-  @catchesVentureException
-  def do_get_global_logscore(self, s):
-    '''Report the global logscore.'''
-    print self._do_instruction('get_global_logscore', s)
+    print self.ripl.continuous_inference_status()
 
   @catchesVentureException
   def do_dump_profile_data(self, s):

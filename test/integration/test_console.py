@@ -247,7 +247,7 @@ def test_lines_and_comments_abstract_syntax():
     assert val <= 0.9, str(vnt)
     vnt.read_to_prompt()
 
-  vnt.send_command('assume w (uniform_continuous 0.1 0.9)')
+  vnt.send_command('(assume w (uniform_continuous 0.1 0.9))')
   good(vnt.expect_capture_one_float())
 
   # No multiline console support in venture abstract syntax.
@@ -420,7 +420,7 @@ def test_plots_to_file():
   vnt.send_command("assume y = normal(x, 1)")
   vnt.expect_capture_one_floatln()
   vnt.send_command("observe y = 4")
-  vnt.expect_prompt()
+  vnt.read_to_prompt()
   vnt.send_command("define chain_history = run(accumulate_dataset(50, \n" +
                    "do(default_markov_chain(1), collect(x))))")
   vnt.send_command('plot_to_file("%s", "lc0", chain_history)' % plotpath[0:-4])
