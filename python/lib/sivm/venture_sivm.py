@@ -28,6 +28,7 @@ class VentureSivm(object):
     def __init__(self, core_sivm):
         self.core_sivm = core_sivm
         self._do_not_annotate = False
+        self._ci_pauser_stack = []
         self._clear()
         self._init_continuous_inference()
 
@@ -73,12 +74,27 @@ class VentureSivm(object):
         pause = instruction_type not in self._dont_pause_continuous_inference \
             and not self.core_sivm.engine.on_continuous_inference_thread()
         with self._pause_continuous_inference(pause=pause):
+            if instruction_type == 'stop_continuous_inference':
+                # It is possible for a paused CI to exist when
+                # executing a stop ci instruction, because of the
+                # 'endloop' inference SP.  To wit, the 'infer'
+                # triggers a pause, and then the 'endloop' causes a
+                # reentrant execute_instruction, which can land here.
+                self._drop_top_paused_ci()
             if instruction_type in self._extra_instructions:
                 f = getattr(self,'_do_'+instruction_type)
                 return f(instruction)
             else:
                 response = self._call_core_sivm_instruction(instruction)
                 return response
+
+    def _drop_top_paused_ci(self):
+        candidate = len(self._ci_pauser_stack) - 1
+        while candidate >= 0:
+            if self._ci_pauser_stack[candidate].ci_was_running:
+                self._ci_pauser_stack[candidate].ci_was_running = False
+                break
+            candidate -= 1
 
     ###############################
     # Reset stuffs
@@ -323,7 +339,9 @@ class VentureSivm(object):
                     self.ci_was_running = self.ci_status["running"]
                 else:
                     self.ci_was_running = False
+                sivm._ci_pauser_stack.append(self)
             def __exit__(self, type, value, traceback):
+                sivm._ci_pauser_stack.pop()
                 if sivm._continuous_inference_status()["running"]:
                     # The instruction started a new CI, so let it win
                     pass

@@ -809,7 +809,9 @@ Open issues:
         self.execute_instruction(inst)
         return None
 
-    def stop_continuous_inference(self):
+    def stop_continuous_inference(self, type=False):
+        # Inference SPs that call ripl methods currently require a
+        # type argument.
         self.execute_instruction({'instruction':'stop_continuous_inference'})
         return None
 
