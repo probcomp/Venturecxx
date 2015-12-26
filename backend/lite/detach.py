@@ -116,13 +116,6 @@ def extract(trace, node, scaffold, omegaDB, compute_gradient = False):
   return weight
 
 def maybeExtractStaleAAA(trace, node, scaffold, omegaDB, compute_gradient = False):
-  # "[this] has to do with worries about crazy thing[s] that can
-  # happen if aaa makers are shuffled around as first-class functions,
-  # and the made SPs are similarly shuffled, including with stochastic
-  # flow of such data, which may cause regeneration order to be hard
-  # to predict, and the check is trying to avoid a stale AAA aux"
-  # TODO: apparently nothing in the test suite actually hits this
-  # case. can we come up with an example that does?
   weight = 0
   value = trace.valueAt(node)
   if isinstance(value,SPRef) and value.makerNode != node and scaffold.isAAA(value.makerNode):
