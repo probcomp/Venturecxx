@@ -123,7 +123,7 @@ class RiplCmd(Cmd, object):
     try:
       s = int(s)
     except: pass
-    print self.ripl.get_directive(s)
+    self.ripl.print_one_directive(self.ripl.get_directive(s))
 
   @catchesVentureException
   def do_clear(self, _):

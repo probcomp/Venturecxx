@@ -749,11 +749,7 @@ Open issues:
             # modified to add value to each directive
             # FIXME: is this correct behavior?
             for directive in directives:
-                inst = { 'instruction':'report',
-                         'directive_id':directive['directive_id'],
-                         }
-                value = self.execute_instruction(inst)['value']
-                directive['value'] = value if type else u.strip_types(value)
+                self._collect_value_of(directive, type=type)
             # if not requested to include the prelude, exclude those directives
             if hasattr(self, '_n_prelude') and (not include_prelude):
                 directives = directives[self._n_prelude:]
@@ -761,29 +757,41 @@ Open issues:
                 directives = [d for d in directives if d['instruction'] in instructions]
             return directives
 
+    def _collect_value_of(self, directive, type=False):
+        inst = { 'instruction':'report',
+                 'directive_id':directive['directive_id'],
+                 }
+        value = self.execute_instruction(inst)['value']
+        directive['value'] = value if type else u.strip_types(value)
+
     def print_directives(self, *instructions, **kwargs):
         for directive in self.list_directives(instructions = instructions, **kwargs):
-            dir_id = int(directive['directive_id'])
-            dir_val = str(directive['value'])
-            dir_type = directive['instruction']
-            dir_text = self._get_raw_text(dir_id)
+            self.print_one_directive(directive)
 
-            if dir_type == "assume":
-                print "%d: %s:\t%s" % (dir_id, dir_text, dir_val)
-            elif dir_type == "observe":
-                print "%d: %s" % (dir_id, dir_text)
-            elif dir_type == "predict":
-                print "%d: %s:\t %s" % (dir_id, dir_text, dir_val)
-            else:
-                assert False, "Unknown directive type found: %s" % str(directive)
+    def print_one_directive(self, directive):
+        dir_id = int(directive['directive_id'])
+        dir_val = str(directive['value'])
+        dir_type = directive['instruction']
+        dir_text = self._get_raw_text(dir_id)
 
-    def get_directive(self, label_or_did):
+        if dir_type == "assume":
+            print "%d: %s:\t%s" % (dir_id, dir_text, dir_val)
+        elif dir_type == "observe":
+            print "%d: %s" % (dir_id, dir_text)
+        elif dir_type == "predict":
+            print "%d: %s:\t %s" % (dir_id, dir_text, dir_val)
+        else:
+            assert False, "Unknown directive type found: %s" % str(directive)
+
+    def get_directive(self, label_or_did, type=False):
         if isinstance(label_or_did, int):
             i = {'instruction':'get_directive', 'directive_id':label_or_did}
         else:
             i = {'instruction':'labeled_get_directive',
                  'label':v.symbol(label_or_did)}
-        return self.execute_instruction(i)['directive']
+        d = self.execute_instruction(i)['directive']
+        self._collect_value_of(d)
+        return d
 
     def force(self, expression, value):
         i = {'instruction':'force', 'expression':expression, 'value':value}
