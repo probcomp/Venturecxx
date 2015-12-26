@@ -56,13 +56,12 @@ class RiplCmd(Cmd, object):
     self.rebuild = rebuild
     self.files = [] if files is None else files
     self.plugins = [] if plugins is None else plugins
-    self.pending_instruction = None
     self.pending_instruction_string = None
     self._update_prompt()
 
   @catchesVentureException
   def emptyline(self):
-    if self.pending_instruction is not None:
+    if self.pending_instruction_string is not None:
       # force evaluation of pending instruction
       self._do_continue_instruction("", force_complete=True)
 
@@ -75,26 +74,15 @@ class RiplCmd(Cmd, object):
 
   do_EOF = do_quit
 
-  def _do_instruction(self, instruction, s, force_complete=False):
+  def _do_instruction(self, s, force_complete=False):
     if self.ripl.get_mode() == "church_prime":
       # Not supporting multiline paste for abstract syntax yet
-      if instruction == 'evaluate':
+      return self.ripl.execute_instructions(s)
+    else:
+      from venture.parser.venture_script.parse import string_complete_p
+      if force_complete or string_complete_p(s):
         return self.ripl.execute_instructions(s)
       else:
-        return self.ripl.execute_instruction('(%s %s)' % (instruction, s))
-    else:
-      if instruction == 'evaluate':
-        r_inst = s
-      elif instruction in ['force', 'sample', 'forget', 'report']:
-        # One-argument inference actions
-        r_inst = '%s(%s)' % (instruction, s)
-      else:
-        r_inst = '%s %s' % (instruction, s)
-      from venture.parser.venture_script.parse import string_complete_p
-      if force_complete or string_complete_p(r_inst):
-        return self.ripl.execute_instructions(r_inst)
-      else:
-        self.pending_instruction = instruction
         self.pending_instruction_string = s
         self._update_prompt()
 
@@ -109,22 +97,20 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def default(self, line):
     '''Continue a pending instruction or evaluate an expression in the inference program.'''
-    if self.pending_instruction is None:
+    if self.pending_instruction_string is None:
       self._do_eval(line)
     else:
       self._do_continue_instruction(line)
 
   def _do_continue_instruction(self, line, force_complete=False):
-    inst = self.pending_instruction
     string = self.pending_instruction_string + "\n" + line
-    self.pending_instruction = None
     self.pending_instruction_string = None
     self._update_prompt()
-    printValue(self._do_instruction(inst, string, force_complete))
+    printValue(self._do_instruction(string, force_complete))
 
   def _do_eval(self, line):
     '''Evaluate an expression in the inference program.'''
-    printValue(self._do_instruction('evaluate', line))
+    printValue(self._do_instruction(line))
 
   @catchesVentureException
   def do_list_directives(self, _s):
@@ -185,7 +171,7 @@ class RiplCmd(Cmd, object):
     self._update_prompt()
 
   def _update_prompt(self):
-    if self.pending_instruction is None:
+    if self.pending_instruction_string is None:
       if len(self.files) == 0 and len(self.plugins) == 0:
         self.prompt = "venture[script] > "
       else:
