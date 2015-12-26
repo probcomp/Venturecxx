@@ -35,32 +35,43 @@ class VentureSivm(object):
 
     # list of all instructions supported by venture sivm
     _extra_instructions = {'labeled_assume','labeled_observe',
-            'labeled_predict','labeled_forget','labeled_freeze','labeled_report',
+            'labeled_predict','labeled_forget','labeled_freeze',
+            'labeled_report',
             'list_directives','get_directive','labeled_get_directive',
             'force','sample','get_current_exception',
-            'get_state', 'reset', 'debugger_list_breakpoints','debugger_get_breakpoint'}
+            'get_state', 'reset', 'debugger_list_breakpoints',
+            'debugger_get_breakpoint'}
     _core_instructions = {"define","assume","observe","predict",
-            "configure","forget","freeze","report","evaluate","infer","start_continuous_inference",
+            "configure","forget","freeze","report","evaluate","infer",
+            "start_continuous_inference",
             "stop_continuous_inference","continuous_inference_status",
             "clear","rollback","get_global_logscore",
-            "debugger_configure","debugger_list_random_choices", "debugger_clear",
+            "debugger_configure","debugger_list_random_choices",
+            "debugger_clear",
             "debugger_force_random_choice","debugger_report_address",
-            "debugger_history","debugger_dependents","debugger_address_to_source_code_location",
-            "debugger_set_breakpoint_address","debugger_set_breakpoint_source_code_location",
-            "debugger_remove_breakpoint","debugger_continue","profiler_configure",
+            "debugger_history","debugger_dependents",
+            "debugger_address_to_source_code_location",
+            "debugger_set_breakpoint_address",
+            "debugger_set_breakpoint_source_code_location",
+            "debugger_remove_breakpoint","debugger_continue",
+            "profiler_configure",
             "profiler_clear","profiler_list_random_choices",
-            "profiler_address_to_source_code_location","profiler_get_random_choice_acceptance_rate",
-            "profiler_get_global_acceptance_rate","profiler_get_random_choice_proposal_time",
+            "profiler_address_to_source_code_location",
+            "profiler_get_random_choice_acceptance_rate",
+            "profiler_get_global_acceptance_rate",
+            "profiler_get_random_choice_proposal_time",
             "profiler_get_global_proposal_time"}
 
     _dont_pause_continuous_inference = {"start_continuous_inference",
             "stop_continuous_inference", "continuous_inference_status"}
 
     def execute_instruction(self, instruction):
-        utils.validate_instruction(instruction,self._core_instructions | self._extra_instructions)
+        utils.validate_instruction(instruction, self._core_instructions |
+                                   self._extra_instructions)
         instruction_type = instruction['instruction']
 
-        pause = instruction_type not in self._dont_pause_continuous_inference and not self.core_sivm.engine.on_continuous_inference_thread()
+        pause = instruction_type not in self._dont_pause_continuous_inference \
+            and not self.core_sivm.engine.on_continuous_inference_thread()
         with self._pause_continuous_inference(pause=pause):
             if instruction_type in self._extra_instructions:
                 f = getattr(self,'_do_'+instruction_type)
@@ -77,7 +88,9 @@ class VentureSivm(object):
         self.label_dict = {} # Maps labels to directive ids
         self.did_dict = {} # Maps directive ids back to labels
         self.directive_dict = {} # Maps directive ids to the actual instructions
-        self.syntax_dict = {} # Maps directive ids to the Syntax objects that record their macro expansion history
+        # Maps directive ids to the Syntax objects that record their
+        # macro expansion history
+        self.syntax_dict = {}
         self._debugger_clear()
         self.state = 'default'
 
@@ -221,7 +234,8 @@ class VentureSivm(object):
         return e
 
     def trace_address_to_stack(self, address):
-        return [frame for frame in [self._resugar(index) for index in address] if frame is not None]
+        return [frame for frame in [self._resugar(index) for index in address]
+                if frame is not None]
 
     def _get_syntax_record(self, did):
         return self.syntax_dict[did]
@@ -253,11 +267,12 @@ class VentureSivm(object):
     def _hack_skip_inference_prelude_entry(self, did):
         import venture.engine.engine as e
         # <= because directive IDs are 1-indexed (see Engine.nextBaseAddr)
-        return self.core_sivm.engine.persistent_inference_trace and did <= len(e._inference_prelude())
+        return self.core_sivm.engine.persistent_inference_trace \
+            and did <= len(e._inference_prelude())
 
     def _register_executed_instruction(self, instruction, predicted_did, response):
         if response is not None and 'directive_id' in response:
-            if not response['directive_id'] == predicted_did:
+            if response['directive_id'] != predicted_did:
                 warning = "Warning: Instruction %s was pre-assigned did %s but actually assigned did %s"
                 print warning % (instruction, predicted_did, response['directive_id'])
         elif predicted_did is not None:
@@ -326,13 +341,17 @@ class VentureSivm(object):
         pass
 
     def _continuous_inference_status(self):
-        return self._call_core_sivm_instruction({"instruction" : "continuous_inference_status"})
+        return self._call_core_sivm_instruction(
+            {"instruction" : "continuous_inference_status"})
 
     def _start_continuous_inference(self, expression):
-        self._call_core_sivm_instruction({"instruction" : "start_continuous_inference", "expression" : expression})
+        self._call_core_sivm_instruction(
+            {"instruction" : "start_continuous_inference",
+             "expression" : expression})
 
     def _stop_continuous_inference(self):
-        return self._call_core_sivm_instruction({"instruction" : "stop_continuous_inference"})
+        return self._call_core_sivm_instruction(
+            {"instruction" : "stop_continuous_inference"})
 
     ###############################
     # Shortcuts
@@ -341,11 +360,11 @@ class VentureSivm(object):
     def _validate_label(self, instruction, exists=False):
         label = utils.validate_arg(instruction,'label',
                 utils.validate_symbol)
-        if exists==False and label in self.label_dict:
+        if exists is False and label in self.label_dict:
             raise VentureException('invalid_argument',
                     'Label "{}" is already assigned to a different directive.'.format(label),
                     argument='label')
-        if exists==True and label not in self.label_dict:
+        if exists is True and label not in self.label_dict:
             raise VentureException('invalid_argument',
                     'Label "{}" does not exist.'.format(label),
                     argument='label')
@@ -395,12 +414,16 @@ class VentureSivm(object):
         return tmp
 
     def _do_list_directives(self, _):
-        candidates = [self.get_directive(did) for did in sorted(self.directive_dict.keys())]
-        return { "directives" : [c for c in candidates if c['instruction'] in ['assume', 'observe', 'predict']] }
+        candidates = [self.get_directive(did)
+                      for did in sorted(self.directive_dict.keys())]
+        return { "directives" :
+                 [c for c in candidates
+                  if c['instruction'] in ['assume', 'observe', 'predict']] }
 
     def _do_get_directive(self, instruction):
-        did = utils.validate_arg(instruction, 'directive_id', utils.validate_positive_integer)
-        if not did in self.directive_dict:
+        did = utils.validate_arg(instruction, 'directive_id',
+                                 utils.validate_positive_integer)
+        if did not in self.directive_dict:
             raise VentureException('invalid_argument',
                     "Directive with directive_id = {} does not exist".format(did),
                     argument='directive_id')
@@ -454,9 +477,9 @@ class VentureSivm(object):
         enable_ci = utils.validate_arg(d,'continuous_inference_enable',
                 utils.validate_boolean, required=False)
         if enable_ci != None:
-            if enable_ci == True and self._continuous_inference_enabled() == False:
+            if enable_ci is True and self._continuous_inference_enabled() is False:
                 self._enable_continuous_inference()
-            if enable_ci == False and self._continuous_inference_enabled() == True:
+            if enable_ci is False and self._continuous_inference_enabled() is True:
                 self._disable_continuous_inference()
         return {"options":{
                 "continuous_inference_enable" : self._continuous_inference_enabled(),
@@ -511,21 +534,24 @@ class VentureSivm(object):
             d = {'instruction': 'assume', 'symbol':name, 'expression':expression}
         else:
             label = v.symbol(label)
-            d = {'instruction': 'labeled_assume', 'symbol':name, 'expression':expression,'label':label}
+            d = {'instruction': 'labeled_assume', 'symbol':name,
+                 'expression':expression, 'label':label}
         return self.execute_instruction(d)
 
     def predict(self, expression, label=None):
         if label==None:
             d = {'instruction': 'predict', 'expression':expression}
         else:
-            d = {'instruction': 'labeled_predict', 'expression':expression,'label':v.symbol(label)}
+            d = {'instruction': 'labeled_predict',
+                 'expression':expression, 'label':v.symbol(label)}
         return self.execute_instruction(d)
 
     def observe(self, expression, value, label=None):
         if label==None:
             d = {'instruction': 'observe', 'expression':expression, 'value':value}
         else:
-            d = {'instruction': 'labeled_observe', 'expression':expression, 'value':value, 'label':v.symbol(label)}
+            d = {'instruction': 'labeled_observe', 'expression':expression,
+                 'value':value, 'label':v.symbol(label)}
         return self.execute_instruction(d)
 
     def forget(self, label_or_did):
@@ -558,4 +584,5 @@ class VentureSivm(object):
         d = {'instruction':'sample','expression':expression}
         return self.execute_instruction(d)
 
-    def list_directives(self): return self.execute_instruction({'instruction':'list_directives'})
+    def list_directives(self):
+        return self.execute_instruction({'instruction':'list_directives'})
