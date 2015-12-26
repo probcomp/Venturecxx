@@ -874,6 +874,12 @@ Together with forget, freeze makes it possible for particle filters
 in Venture to use model memory independent of the sequence length.
 """),
 
+  ripl_method_sp("report", infer_action_maker_type([t.AnyType("<label>")], return_type=t.AnyType()), desc="""\
+Report the current value of the given directive.
+
+The directive can be specified by label or by directive id.
+"""),
+
   ["empty", deterministic_typed(lambda *args: Dataset(), [], t.ForeignBlobType("<dataset>"), descr="""\
 Create an empty dataset `into` which further `collect` ed stuff may be merged.
   """)],
