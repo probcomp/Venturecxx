@@ -778,7 +778,7 @@ Open issues:
                 assert False, "Unknown directive type found: %s" % str(directive)
 
     def get_directive(self, label_or_did):
-        if isinstance(label_or_did,int):
+        if isinstance(label_or_did, int):
             i = {'instruction':'get_directive', 'directive_id':label_or_did}
         else:
             i = {'instruction':'labeled_get_directive',

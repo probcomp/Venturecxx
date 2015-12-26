@@ -117,6 +117,14 @@ class RiplCmd(Cmd, object):
     '''List active directives and their current values.'''
     self.ripl.print_directives()
 
+  def do_get_directive(self, s):
+    '''List active directives and their current values.'''
+    # See whether we got a string representing an integer directive id
+    try:
+      s = int(s)
+    except: pass
+    print self.ripl.get_directive(s)
+
   @catchesVentureException
   def do_clear(self, _):
     '''Clear the console state.  (Replay the effects of command line arguments.)'''
