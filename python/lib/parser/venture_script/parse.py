@@ -179,10 +179,10 @@ class Semantics(object):
         i = loctoken1(k, val.symbol('assume'))
         s = locmap(loctoken(n), val.symbol)
         return locmerge(i, e, expression_evaluation_instruction(loclist([i, s, e])))
-    def p_directive_observe(self, k, e, eq, v):
+    def p_directive_observe(self, k, e, eq, e1):
         assert isloc(e)
         i = loctoken1(k, val.symbol('observe'))
-        return locmerge(i, v, expression_evaluation_instruction(loclist([i, e, v])))
+        return locmerge(i, e1, expression_evaluation_instruction(loclist([i, e, e1])))
     def p_directive_predict(self, k, e):
         assert isloc(e)
         i = loctoken1(k, val.symbol('predict'))

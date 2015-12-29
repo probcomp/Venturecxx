@@ -66,7 +66,7 @@ instruction(error)	::= T_LSQUARE(open) error T_RSQUARE(close).
 
 directive(define)	::= K_DEFINE(k) L_NAME(n) expression(e).
 directive(assume)	::= K_ASSUME(k) L_NAME(n) expression(e).
-directive(observe)	::= K_OBSERVE(k) expression(e) literal(v).
+directive(observe)	::= K_OBSERVE(k) expression(e) expression(e1).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
 command(infer)		::= K_INFER(k) expression(e).

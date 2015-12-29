@@ -45,7 +45,7 @@ instruction(expression)	::= expression(e).
 
 directive(define)	::= K_DEFINE(k) L_NAME(n) T_EQDEF(eq) expression(e).
 directive(assume)	::= K_ASSUME(k) L_NAME(n) T_EQDEF(eq) expression(e).
-directive(observe)	::= K_OBSERVE(k) expression(e) T_EQDEF(eq) literal(v).
+directive(observe)	::= K_OBSERVE(k) expression(e) T_EQDEF(eq) expression(e1).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
 command(infer)		::= K_INFER(k) expression(e).

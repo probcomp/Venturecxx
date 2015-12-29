@@ -155,8 +155,8 @@ class Semantics(object):
                 locmap(loctoken(n), val.symbol),
                 e]
         return expression_evaluation_instruction(loclist(expr))
-    def p_directive_observe(self, k, e, v):
-        expr = [loctoken1(k, val.symbol('observe')), e, v]
+    def p_directive_observe(self, k, e, e1):
+        expr = [loctoken1(k, val.symbol('observe')), e, e1]
         return expression_evaluation_instruction(loclist(expr))
     def p_directive_predict(self, k, e):
         expr = [loctoken1(k, val.symbol('predict')), e]
