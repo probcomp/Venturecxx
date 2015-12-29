@@ -253,16 +253,7 @@ class Ripl():
 
     def parse_program(self, program_string):
         p = self._cur_parser()
-        # TODO the right thing is to make "comment" a valid instruction type.
-        if self.get_mode() == "church_prime":
-            start_comment_regex = ";"
-        elif self.get_mode() == "venture_script":
-            start_comment_regex = "//"
-        else:
-            raise Exception("Do not know comment syntax for mode {}".format(self.get_mode()))
-        no_comments = '\n'.join(re.split(start_comment_regex, x)[0]
-                                for x in program_string.split('\n'))
-        instructions, positions = p.split_program(no_comments)
+        instructions, positions = p.split_program(program_string)
         return [self._ensure_parsed(i) for i in instructions], positions
 
     def execute_program(self, program_string, type=True):
