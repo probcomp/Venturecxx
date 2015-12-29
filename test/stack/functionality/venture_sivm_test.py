@@ -244,9 +244,3 @@ class TestVentureSivm(unittest.TestCase):
                 }
         o2 = self.sivm.execute_instruction(inst2)
         self.assertEquals(o2['directives'], [])
-    def test_reset(self):
-        #TODO: write an actual test for reset
-        inst1 = {
-                'instruction':'reset',
-                }
-        self.sivm.execute_instruction(inst1)

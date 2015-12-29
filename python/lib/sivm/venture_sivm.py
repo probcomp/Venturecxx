@@ -39,7 +39,7 @@ class VentureSivm(object):
             'labeled_report',
             'list_directives','get_directive','labeled_get_directive',
             'force','sample',
-            'reset'}
+    }
     _core_instructions = {'define','assume','observe','predict',
             'forget','freeze','report','evaluate','infer',
             'start_continuous_inference',
@@ -440,13 +440,6 @@ class VentureSivm(object):
                 }
         self._call_core_sivm_instruction(inst2)
         return {'value':o1['value']}
-
-    def _do_reset(self, instruction):
-        instruction = {
-                'instruction': 'clear',
-                }
-        self._call_core_sivm_instruction(instruction)
-        return {}
 
 
     ###############################
