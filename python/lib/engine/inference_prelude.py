@@ -214,7 +214,7 @@ prelude = [
 
 ["global_log_likelihood", """\
 .. _global_log_likelihood:
-.. object:: global_log_likelihood <inference action returning <number>>
+.. object:: global_log_likelihood <inference action returning <array <number>>>
 
   An inference action that computes and returns the global likelihood
   (in log space).  Cost: O(size of trace).
@@ -223,7 +223,7 @@ prelude = [
 
 ["global_log_joint", """\
 .. _global_log_joint:
-.. object:: global_log_joint <inference action returning <number>>
+.. object:: global_log_joint <inference action returning <array <number>>>
 
   An inference action that computes and returns the global joint density
   (in log space).  Cost: O(size of trace).
