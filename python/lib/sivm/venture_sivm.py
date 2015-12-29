@@ -292,18 +292,18 @@ class VentureSivm(object):
             def __enter__(self):
                 if pause:
                     self.ci_status = sivm._stop_continuous_inference()
-                    self.ci_was_running = self.ci_status["running"]
+                    self.ci_was_running = self.ci_status['running']
                 else:
                     self.ci_was_running = False
                 sivm._ci_pauser_stack.append(self)
             def __exit__(self, type, value, traceback):
                 sivm._ci_pauser_stack.pop()
-                if sivm._continuous_inference_status()["running"]:
+                if sivm._continuous_inference_status()['running']:
                     # The instruction started a new CI, so let it win
                     pass
                 elif self.ci_was_running:
                     # print "restarting continuous inference"
-                    sivm._start_continuous_inference(self.ci_status["expression"])
+                    sivm._start_continuous_inference(self.ci_status['expression'])
         return tmp()
 
 
@@ -313,16 +313,16 @@ class VentureSivm(object):
 
     def _continuous_inference_status(self):
         return self._call_core_sivm_instruction(
-            {"instruction" : "continuous_inference_status"})
+            {'instruction' : 'continuous_inference_status'})
 
     def _start_continuous_inference(self, expression):
         self._call_core_sivm_instruction(
-            {"instruction" : "start_continuous_inference",
-             "expression" : expression})
+            {'instruction' : 'start_continuous_inference',
+             'expression' : expression})
 
     def _stop_continuous_inference(self):
         return self._call_core_sivm_instruction(
-            {"instruction" : "stop_continuous_inference"})
+            {'instruction' : 'stop_continuous_inference'})
 
     ###############################
     # Shortcuts
@@ -411,17 +411,17 @@ class VentureSivm(object):
         val = utils.validate_arg(instruction,'value',
                 utils.validate_value)
         inst1 = {
-                "instruction" : "observe",
-                "expression" : exp,
-                "value" : val,
+                'instruction' : 'observe',
+                'expression' : exp,
+                'value' : val,
                 }
         o1 = self._call_core_sivm_instruction(inst1)
-        inst2 = { "instruction" : "infer",
-                  "expression" : [v.symbol("incorporate")] }
+        inst2 = { 'instruction' : 'infer',
+                  'expression' : [v.symbol('incorporate')] }
         self._call_core_sivm_instruction(inst2)
         inst3 = {
-                "instruction" : "forget",
-                "directive_id" : o1['directive_id'],
+                'instruction' : 'forget',
+                'directive_id' : o1['directive_id'],
                 }
         self._call_core_sivm_instruction(inst3)
         return {}
@@ -430,16 +430,16 @@ class VentureSivm(object):
         exp = utils.validate_arg(instruction,'expression',
                 utils.validate_expression, wrap_exception=False)
         inst1 = {
-                "instruction" : "predict",
-                "expression" : exp,
+                'instruction' : 'predict',
+                'expression' : exp,
                 }
         o1 = self._call_core_sivm_instruction(inst1)
         inst2 = {
-                "instruction" : "forget",
-                "directive_id" : o1['directive_id'],
+                'instruction' : 'forget',
+                'directive_id' : o1['directive_id'],
                 }
         self._call_core_sivm_instruction(inst2)
-        return {"value":o1['value']}
+        return {'value':o1['value']}
 
     def _do_reset(self, instruction):
         instruction = {

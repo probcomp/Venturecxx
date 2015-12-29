@@ -35,14 +35,14 @@ class TestRipl(unittest.TestCase):
 
     def setUp(self):
         self.core_sivm = get_core_sivm()
-        self.core_sivm.execute_instruction({"instruction":"clear"})
+        self.core_sivm.execute_instruction({'instruction':'clear'})
         self.venture_sivm = VentureSivm(self.core_sivm)
         parser1 = ChurchPrimeParser.instance()
         parser2 = VentureScriptParser.instance()
         self.ripl = Ripl(self.venture_sivm,
-                {"church_prime":parser1,
-                    "church_prime_2":parser1,
-                    "venture_script":parser2})
+                {'church_prime':parser1,
+                    'church_prime_2':parser1,
+                    'venture_script':parser2})
         self.ripl.set_mode('church_prime')
 
     ############################################
@@ -59,7 +59,7 @@ class TestRipl(unittest.TestCase):
         output = self.ripl.get_mode()
         self.assertEqual(output,'church_prime_2')
         with self.assertRaises(VentureException):
-            self.ripl.set_mode("moo")
+            self.ripl.set_mode('moo')
 
     ############################################
     # Execution

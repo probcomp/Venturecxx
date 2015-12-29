@@ -340,28 +340,26 @@ class TestSivmUtils(unittest.TestCase):
             self.assertEqual(e.exception, 'parse')
 
     def test_validate_arg_1(self):
-        i = {"instruction":"moo","symbol":"moo"}
-        self.assertEqual(utils.validate_arg(i,"symbol",utils.validate_symbol),"moo")
+        i = {'instruction':"moo",'symbol':"moo"}
+        self.assertEqual(utils.validate_arg(i,'symbol',utils.validate_symbol),"moo")
     def test_validate_arg_2(self):
-        i = {"instruction":"moo","symbol":2}
+        i = {'instruction':"moo",'symbol':2}
         try:
-            utils.validate_arg(i,"symbol",utils.validate_symbol)
+            utils.validate_arg(i,'symbol',utils.validate_symbol)
         except VentureException as e:
             self.assertEqual(e.exception,'invalid_argument')
             self.assertEqual(e.data['argument'],'symbol')
     def test_validate_arg_3(self):
-        i = {"instruction":"moo","symbol":2}
+        i = {'instruction':"moo",'symbol':2}
         try:
-            utils.validate_arg(i,"red",utils.validate_symbol)
+            utils.validate_arg(i,'red',utils.validate_symbol)
         except VentureException as e:
             self.assertEqual(e.exception,'missing_argument')
             self.assertEqual(e.data['argument'],'red')
     def test_validate_arg_4(self):
-        i = {"instruction":"moo"}
-        self.assertEqual(utils.validate_arg(i,"red",utils.validate_symbol,required=False),None)
+        i = {'instruction':"moo"}
+        self.assertEqual(utils.validate_arg(i,'red',utils.validate_symbol,required=False),None)
     def test_validate_arg_5(self):
-        i = {"instruction":"moo","symbol":"moo"}
-        self.assertEqual(utils.validate_arg(i,"symbol",utils.validate_symbol,
-            modifier=lambda x: "red"),"red")
-
-
+        i = {'instruction':"moo",'symbol':"moo"}
+        self.assertEqual(utils.validate_arg(i,'symbol',utils.validate_symbol,
+            modifier=lambda x: 'red'),'red')

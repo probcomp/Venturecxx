@@ -314,19 +314,19 @@ class Ripl():
 
     def _ensure_parsed_dict(self, partial_dict):
         def by_key(key, value):
-            if key == "instruction":
+            if key == 'instruction':
                 return value
-            elif key == "expression":
+            elif key == 'expression':
                 return self._ensure_parsed_expression(value)
-            elif key in ["directive_id", "seed"]:
+            elif key in ['directive_id', 'seed']:
                 return self._ensure_parsed_number(value)
-            elif key in ["options", "params"]:
+            elif key in ['options', 'params']:
                 # Do not support partially parsed options or param
                 # hashes, since they have too many possible key types
                 return value
-            elif key in ["symbol", "label"]:
+            elif key in ['symbol', 'label']:
                 return value
-            elif key == "value":
+            elif key == 'value':
                 # I believe values are a subset of expressions
                 return self._ensure_parsed_expression(value)
             else:

@@ -36,7 +36,7 @@ class TestVentureSivm(unittest.TestCase):
 
     def setUp(self):
         self.core_sivm = get_core_sivm()
-        self.core_sivm.execute_instruction({"instruction":"clear"})
+        self.core_sivm.execute_instruction({'instruction':'clear'})
         self.sivm = VentureSivm(self.core_sivm)
 
     def tearDown(self):
@@ -50,8 +50,8 @@ class TestVentureSivm(unittest.TestCase):
     def test_missing_argument(self):
         try:
             self.sivm.execute_instruction({
-                "instruction":"assume",
-                "symbol":"MOO"
+                'instruction':'assume',
+                'symbol':"MOO"
                 })
         except VentureException as e:
             self.assertEqual(e.exception,'missing_argument')
@@ -59,9 +59,9 @@ class TestVentureSivm(unittest.TestCase):
     def test_invalid_argument(self):
         try:
             self.sivm.execute_instruction({
-                "instruction":"assume",
-                "symbol":v.symbol("9,d"),
-                "expression":['a','b',['c']]
+                'instruction':'assume',
+                'symbol':v.symbol("9,d"),
+                'expression':['a','b',['c']]
                 })
         except VentureException as e:
             self.assertEqual(e.exception,'invalid_argument')
@@ -101,9 +101,9 @@ class TestVentureSivm(unittest.TestCase):
         self.core_sivm.execute_instruction = f
         try:
             self.sivm.execute_instruction({
-                "instruction":"assume",
-                "symbol":"d",
-                "expression":['if','a','b',['let',[['c','d']],'e']]
+                'instruction':'assume',
+                'symbol':"d",
+                'expression':['if','a','b',['let',[['c','d']],'e']]
                 })
         except VentureException as e:
             self.assertEqual(e.exception,'parse')
