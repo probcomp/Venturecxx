@@ -210,10 +210,6 @@ class TestRipl(unittest.TestCase):
         with self.assertRaises(VentureException):
             self.ripl.report('moo')
 
-    def test_rollback(self):
-        #TODO: write test after exception states are implemented
-        pass
-
     def test_list_directives(self):
         n_before = len(self.ripl.list_directives())
         self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')

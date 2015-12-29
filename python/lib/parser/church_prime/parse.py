@@ -436,7 +436,6 @@ class ChurchPrimeParser(object):
         'labeled_report': [('label', unparse_symbol)],
         'infer': [('expression', unparse_expression)],
         'clear': [],
-        'rollback': [],
         'list_directives': [],
         'get_directive': [('directive_id', unparse_integer)],
         'labeled_get_directive': [('label', unparse_symbol)],
@@ -461,7 +460,7 @@ class ChurchPrimeParser(object):
                 instruction['expression'], expr_markers)
         unparsers = self.unparsers[i]
         if i in ['forget', 'labeled_forget', 'freeze', 'labeled_freeze',
-                 'report', 'labeled_report', 'clear', 'rollback',
+                 'report', 'labeled_report', 'clear',
                  'list_directives', 'get_directive', 'labeled_get_directive',
                  'force', 'sample', 'continuous_inference_status',
                  'start_continuous_inference', 'stop_continuous_inference',

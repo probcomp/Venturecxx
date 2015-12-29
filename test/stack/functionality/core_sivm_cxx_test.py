@@ -185,24 +185,6 @@ class TestCoreSivm(unittest.TestCase):
         except VentureException as e:
             self.assertEquals(e.exception,'invalid_argument')
 
-    def test_rollback(self):
-        raise SkipTest("Engine should report a polite exception on unbound variable.  Issue: https://app.asana.com/0/9277419963067/9940667562266")
-        inst1 = {
-                'instruction':'observe',
-                'expression': 'aweopfjiaweopfaweopfjopawejiawoiejf',
-                'value':v.number(3)
-                }
-        try:
-            self.sivm.execute_instruction(inst1)
-        except VentureException as e:
-            self.assertEquals(e.exception,'evaluation')
-        self.assertEquals(self.sivm.state,'exception')
-        inst2 = {
-                'instruction':'rollback',
-                }
-        self.sivm.execute_instruction(inst2)
-        self.assertEquals(self.sivm.state,'default')
-
     def test_get_global_logscore(self):
         inst1 = {
                 'instruction':'observe',

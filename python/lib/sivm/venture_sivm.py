@@ -46,7 +46,7 @@ class VentureSivm(object):
             'forget','freeze','report','evaluate','infer',
             'start_continuous_inference',
             'stop_continuous_inference','continuous_inference_status',
-            'clear','rollback','get_global_logscore',
+            'clear','get_global_logscore',
             'debugger_configure','debugger_list_random_choices',
             'debugger_clear',
             'debugger_force_random_choice','debugger_report_address',
@@ -515,11 +515,6 @@ class VentureSivm(object):
                 }
 
     def _do_reset(self, instruction):
-        if self.state != 'default':
-            instruction = {
-                    'instruction': 'rollback',
-                    }
-            self._call_core_sivm_instruction(instruction)
         instruction = {
                 'instruction': 'clear',
                 }

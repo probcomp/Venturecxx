@@ -38,7 +38,7 @@ _RIPL_FUNCTIONS = [
         'split_program','get_text',
         'expression_index_to_text_index','assume','predict',
         'observe','forget','report','infer',
-        'clear','rollback','list_directives','get_directive',
+        'clear','list_directives','get_directive',
         'force','sample','continuous_inference_status',
         'start_continuous_inference','stop_continuous_inference',
         'get_current_exception','get_state',

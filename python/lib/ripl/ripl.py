@@ -722,10 +722,6 @@ Open issues:
         self._n_prelude = 0
         return None
 
-    def rollback(self):
-        self.execute_instruction({'instruction':'rollback'})
-        return None
-
     def list_directives(self, type=False, include_prelude = False, instructions = []):
         with self.sivm._pause_continuous_inference():
             directives = self.execute_instruction({'instruction':'list_directives'})['directives']

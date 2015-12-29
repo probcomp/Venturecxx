@@ -37,7 +37,7 @@ class CoreSivm(object):
 
     _implemented_instructions = {'define','assume','observe','predict',
             'forget','freeze','report','evaluate','infer',
-            'clear','rollback','get_global_logscore',
+            'clear','get_global_logscore',
             'start_continuous_inference','stop_continuous_inference',
             'continuous_inference_status', 'profiler_configure'}
 
@@ -150,12 +150,6 @@ class CoreSivm(object):
         utils.require_state(self.state,'default')
         self.engine.clear()
         self.observe_dict = {}
-        return {}
-
-    def _do_rollback(self,_):
-        utils.require_state(self.state,'exception','paused')
-        #rollback not implemented in C++
-        self.state = 'default'
         return {}
 
     def _do_get_global_logscore(self,_):
