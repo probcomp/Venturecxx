@@ -810,7 +810,6 @@ Open issues:
 
     def get_global_logscore(self):
         return self.infer('global_log_likelihood')
-        # return self.infer(v.app('for_each_particle', 'global_log_likelihood'))
 
     def register_foreign_sp(self, name, sp):
         # TODO Remember this somehow?  Is it storable for copies and
