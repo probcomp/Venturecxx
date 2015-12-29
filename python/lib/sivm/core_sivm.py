@@ -36,7 +36,7 @@ class CoreSivm(object):
         self.profiler_enabled = False
 
     _implemented_instructions = {"define","assume","observe","predict",
-            "configure","forget","freeze","report","evaluate","infer",
+            "forget","freeze","report","evaluate","infer",
             "clear","rollback","get_global_logscore",
             "start_continuous_inference","stop_continuous_inference",
             "continuous_inference_status", "profiler_configure"}
@@ -100,16 +100,6 @@ class CoreSivm(object):
                 utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
         did, val = self.engine.predict(exp)
         return {"directive_id":did, "value":val}
-
-    def _do_configure(self,instruction):
-        utils.require_state(self.state,'default')
-        d = utils.validate_arg(instruction,'options',
-                utils.validate_dict)
-        s = utils.validate_arg(d,'seed',
-                utils.validate_nonnegative_integer,required=False)
-        if s != None:
-            self.engine.set_seed(s)
-        return {"options":{"seed":self.engine.get_seed()}}
 
     def _do_forget(self,instruction):
         utils.require_state(self.state,'default')

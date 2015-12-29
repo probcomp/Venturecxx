@@ -169,10 +169,6 @@ class TestRipl(unittest.TestCase):
     # Core
     ############################################
 
-    def test_configure(self):
-        ret_value = self.ripl.configure({"seed":0})
-        self.assertEqual(ret_value, {"seed":0})
-
     def test_forget(self):
         #normal forget
         inst = 'frob: [ predict (uniform_continuous 0 1) ]'

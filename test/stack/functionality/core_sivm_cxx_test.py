@@ -119,18 +119,6 @@ class TestCoreSivm(unittest.TestCase):
         self.assertIsInstance(o['directive_id'],(int,float))
         self.assertEquals(o['value'],val)
 
-    def test_configure(self):
-        inst = {
-                'instruction':'configure',
-                'options':{
-                    'seed':0,
-                    },
-                }
-
-        o = self.sivm.execute_instruction(inst)
-        # FIXME: seed is always returned as 0
-        self.assertEquals(o['options']['seed'],0)
-
     def test_forget(self):
         inst1 = {
                 'instruction':'predict',

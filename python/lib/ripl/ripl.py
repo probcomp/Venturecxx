@@ -647,16 +647,11 @@ Open issues:
     # Core
     ############################################
 
-    def configure(self, options=None):
-        if options is None: options = {}
-        i = {'instruction':'configure', 'options':options}
-        return self.execute_instruction(i)['options']
-
     def get_seed(self):
-        return self.configure()['seed']
+        return self.sivm.core_sivm.engine.get_seed()
 
     def set_seed(self, seed):
-        self.configure({'seed': seed})
+        self.sivm.core_sivm.engine.set_seed(seed)
         return None
 
     def forget(self, label_or_did, type=False):
