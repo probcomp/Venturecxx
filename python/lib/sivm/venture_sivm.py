@@ -441,21 +441,6 @@ class VentureSivm(object):
         self._call_core_sivm_instruction(inst2)
         return {"value":o1['value']}
 
-    # not used anymore?
-    def _do_continuous_inference_configure(self, instruction):
-        d = utils.validate_arg(instruction,'options',
-                utils.validate_dict, required=False)
-        enable_ci = utils.validate_arg(d,'continuous_inference_enable',
-                utils.validate_boolean, required=False)
-        if enable_ci != None:
-            if enable_ci is True and self._continuous_inference_enabled() is False:
-                self._enable_continuous_inference()
-            if enable_ci is False and self._continuous_inference_enabled() is True:
-                self._disable_continuous_inference()
-        return {"options":{
-                "continuous_inference_enable" : self._continuous_inference_enabled(),
-                }}
-
     def _do_reset(self, instruction):
         instruction = {
                 'instruction': 'clear',
