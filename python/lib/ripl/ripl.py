@@ -802,9 +802,6 @@ Open issues:
         self.execute_instruction({'instruction':'stop_continuous_inference'})
         return None
 
-    def get_state(self):
-        return self.execute_instruction({'instruction':'get_state'})['state']
-
     def reinit_inference_problem(self, num_particles=None):
         # TODO Adapt to renumbering of directives by the engine (or
         # change the engine not to do that)

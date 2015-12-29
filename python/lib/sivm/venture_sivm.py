@@ -40,7 +40,7 @@ class VentureSivm(object):
             'labeled_report',
             'list_directives','get_directive','labeled_get_directive',
             'force','sample',
-            'get_state', 'reset', 'debugger_list_breakpoints',
+            'reset', 'debugger_list_breakpoints',
             'debugger_get_breakpoint'}
     _core_instructions = {'define','assume','observe','predict',
             'forget','freeze','report','evaluate','infer',
@@ -108,7 +108,6 @@ class VentureSivm(object):
         # macro expansion history
         self.syntax_dict = {}
         self._debugger_clear()
-        self.state = 'default'
 
     def _debugger_clear(self):
         self.breakpoint_dict = {}
@@ -223,13 +222,9 @@ class VentureSivm(object):
 
     def _annotate(self, e, instruction):
         if e.exception == "evaluation":
-            self.state='exception'
-
             address = e.data['address'].asList()
             e.data['stack_trace'] = self.trace_address_to_stack(address)
             del e.data['address']
-        if e.exception == "breakpoint":
-            self.state='paused'
         # re-sugar the expression index
         if e.exception == 'parse':
             i = e.data['expression_index']
@@ -499,11 +494,6 @@ class VentureSivm(object):
         return {"options":{
                 "continuous_inference_enable" : self._continuous_inference_enabled(),
                 }}
-
-    def _do_get_state(self, _):
-        return {
-                'state': self.state,
-                }
 
     def _do_reset(self, instruction):
         instruction = {

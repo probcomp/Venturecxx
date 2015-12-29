@@ -235,10 +235,6 @@ class TestRipl(unittest.TestCase):
         output = self.ripl.sample('(+ 1 1)')
         self.assertEqual(output, 2)
 
-    def test_get_state(self):
-        output = self.ripl.get_state()
-        self.assertEqual(output,'default')
-
     def test_get_global_logscore(self):
         self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
         output = self.ripl.get_global_logscore()

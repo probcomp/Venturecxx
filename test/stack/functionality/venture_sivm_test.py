@@ -267,12 +267,6 @@ class TestVentureSivm(unittest.TestCase):
                 }
         o2 = self.sivm.execute_instruction(inst2)
         self.assertEquals(o2['directives'], [])
-    def test_get_state(self):
-        inst1 = {
-                'instruction':'get_state',
-                }
-        o1 = self.sivm.execute_instruction(inst1)
-        self.assertEqual(o1['state'], 'default')
     def test_reset(self):
         #TODO: write an actual test for reset
         inst1 = {
