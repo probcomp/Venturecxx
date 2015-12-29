@@ -2297,8 +2297,6 @@ VentureSivm
   then the Engine implements them again, to give inference SPs and
   others access)
   - This includes interpreting the data structure to decide what to do
-- Some scaffolding for interpreting debugger instructions like setting
-  breakpoints, which surely do not work.
 
 Ripl
 - Parses string-form (and partially structured) instructions into

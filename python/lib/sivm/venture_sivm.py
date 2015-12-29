@@ -32,7 +32,7 @@ class VentureSivm(object):
         self._clear()
         self._init_continuous_inference()
 
-    dicts = [s + '_dict' for s in ['breakpoint', 'label', 'did', 'syntax', 'directive']]
+    dicts = [s + '_dict' for s in ['label', 'did', 'syntax', 'directive']]
 
     # list of all instructions supported by venture sivm
     _extra_instructions = {'labeled_assume','labeled_observe',
@@ -40,21 +40,12 @@ class VentureSivm(object):
             'labeled_report',
             'list_directives','get_directive','labeled_get_directive',
             'force','sample',
-            'reset', 'debugger_list_breakpoints',
-            'debugger_get_breakpoint'}
+            'reset'}
     _core_instructions = {'define','assume','observe','predict',
             'forget','freeze','report','evaluate','infer',
             'start_continuous_inference',
             'stop_continuous_inference','continuous_inference_status',
             'clear',
-            'debugger_configure','debugger_list_random_choices',
-            'debugger_clear',
-            'debugger_force_random_choice','debugger_report_address',
-            'debugger_history','debugger_dependents',
-            'debugger_address_to_source_code_location',
-            'debugger_set_breakpoint_address',
-            'debugger_set_breakpoint_source_code_location',
-            'debugger_remove_breakpoint','debugger_continue',
     }
 
     _dont_pause_continuous_inference = {'start_continuous_inference',
@@ -101,10 +92,6 @@ class VentureSivm(object):
         # Maps directive ids to the Syntax objects that record their
         # macro expansion history
         self.syntax_dict = {}
-        self._debugger_clear()
-
-    def _debugger_clear(self):
-        self.breakpoint_dict = {}
 
     ###############################
     # Serialization
@@ -140,14 +127,6 @@ class VentureSivm(object):
             desugared_instruction['expression'] = syntax.desugared()
             # for error handling
             predicted_did = self._record_running_instruction(instruction, (exp, syntax))
-        # desugar the expression index
-        if instruction_type == 'debugger_set_breakpoint_source_code_location':
-            desugared_src_location = desugared_instruction['source_code_location']
-            did = desugared_src_location['directive_id']
-            old_index = desugared_src_location['expression_index']
-            exp = self.directive_dict[did]['expression']
-            new_index = macro_system.desugar_expression_index(exp, old_index)
-            desugared_src_location['expression_index'] = new_index
         try:
             response = self.core_sivm.execute_instruction(desugared_instruction)
         except VentureException as e:
@@ -303,14 +282,6 @@ class VentureSivm(object):
             else:
                 del self.directive_dict[predicted_did]
                 del self.syntax_dict[predicted_did]
-        # save the breakpoint if the instruction sets the breakpoint
-        if instruction_type in ['debugger_set_breakpoint_address',
-                'debugger_set_breakpoint_source_code_location']:
-            bid = response['breakpoint_id']
-            tmp_instruction = copy.copy(instruction)
-            tmp_instruction['breakpoint_id'] = bid
-            del tmp_instruction['instruction']
-            self.breakpoint_dict[bid] = tmp_instruction
 
     ###############################
     # Continuous Inference Pauser
@@ -495,20 +466,6 @@ class VentureSivm(object):
                 }
         self._call_core_sivm_instruction(instruction)
         return {}
-
-    def _do_debugger_list_breakpoints(self, _):
-        return {
-                "breakpoints" : copy.deepcopy(self.breakpoint_dict.values()),
-                }
-
-    def _do_debugger_get_breakpoint(self, instruction):
-        bid = utils.validate_arg(instruction,'breakpoint_id',
-                utils.validate_positive_integer)
-        if not bid in self.breakpoint_dict:
-            raise VentureException('invalid_argument',
-                    "Breakpoint with breakpoint_id = {} does not exist".format(bid),
-                    argument='breakpoint_id')
-        return {"breakpoint":copy.deepcopy(self.breakpoint_dict[bid])}
 
 
     ###############################

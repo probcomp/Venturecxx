@@ -108,29 +108,6 @@ class TestVentureSivm(unittest.TestCase):
         except VentureException as e:
             self.assertEqual(e.exception,'parse')
             self.assertEqual(e.data['expression_index'],[3,1,0,0])
-    # test exception_index desugaring
-    def test_sugaring_2(self):
-        raise SkipTest("Stubbing the sivm breaks pausing continuous inference.  Issue: https://app.asana.com/0/9277419963067/10281673660714")
-        num = v.number(1)
-        did = self.sivm.execute_instruction({
-            "instruction":"assume",
-            "symbol":"d",
-            "expression":['if',num,num,['let',[['a',num]],num]]
-            })['directive_id']
-        #stub the Sivm
-        def f(expression):
-            got = expression['source_code_location']['expression_index']
-            expected = [0,3,2,0,1,0]
-            self.assertEqual(got,expected)
-            return {"breakpoint_id":14}
-        self.core_sivm.execute_instruction = f
-        self.sivm.execute_instruction({
-            "instruction":"debugger_set_breakpoint_source_code_location",
-            "source_code_location": {
-                "directive_id" : did,
-                "expression_index" : [3,1,0,0],
-                }
-            })
 
     # just make sure these don't crash
     def test_labeled_assume(self):
@@ -273,30 +250,3 @@ class TestVentureSivm(unittest.TestCase):
                 'instruction':'reset',
                 }
         self.sivm.execute_instruction(inst1)
-    def test_debugger_list_breakpoints_and_debugger_get_breakpoint(self):
-        raise SkipTest("Breakpoints not implemented.  Issue: https://app.asana.com/0/9277419963067/9280122191539")
-        #stub the Sivm
-        def f(_):
-            return {"breakpoint_id":14}
-        self.core_sivm.execute_instruction = f
-        inst1 = {
-            "instruction":"debugger_set_breakpoint_address",
-            "address": "fefefefefefefe",
-            }
-        o1 = self.sivm.execute_instruction(inst1)
-        del inst1['instruction']
-        inst1['breakpoint_id'] = o1['breakpoint_id']
-        inst2 = {
-                'instruction' : 'debugger_list_breakpoints',
-                }
-        o2 = self.sivm.execute_instruction(inst2)
-        self.assertEqual(o2['breakpoints'], [inst1])
-        inst3 = {
-                'instruction' : 'debugger_get_breakpoint',
-                'breakpoint_id' : o1['breakpoint_id'],
-                }
-        o3 = self.sivm.execute_instruction(inst3)
-        self.assertEqual(o3['breakpoint'], inst1)
-
-
-
