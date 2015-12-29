@@ -42,29 +42,29 @@ class VentureSivm(object):
             'force','sample','get_current_exception',
             'get_state', 'reset', 'debugger_list_breakpoints',
             'debugger_get_breakpoint'}
-    _core_instructions = {"define","assume","observe","predict",
-            "forget","freeze","report","evaluate","infer",
-            "start_continuous_inference",
-            "stop_continuous_inference","continuous_inference_status",
-            "clear","rollback","get_global_logscore",
-            "debugger_configure","debugger_list_random_choices",
-            "debugger_clear",
-            "debugger_force_random_choice","debugger_report_address",
-            "debugger_history","debugger_dependents",
-            "debugger_address_to_source_code_location",
-            "debugger_set_breakpoint_address",
-            "debugger_set_breakpoint_source_code_location",
-            "debugger_remove_breakpoint","debugger_continue",
-            "profiler_configure",
-            "profiler_clear","profiler_list_random_choices",
-            "profiler_address_to_source_code_location",
-            "profiler_get_random_choice_acceptance_rate",
-            "profiler_get_global_acceptance_rate",
-            "profiler_get_random_choice_proposal_time",
-            "profiler_get_global_proposal_time"}
+    _core_instructions = {'define','assume','observe','predict',
+            'forget','freeze','report','evaluate','infer',
+            'start_continuous_inference',
+            'stop_continuous_inference','continuous_inference_status',
+            'clear','rollback','get_global_logscore',
+            'debugger_configure','debugger_list_random_choices',
+            'debugger_clear',
+            'debugger_force_random_choice','debugger_report_address',
+            'debugger_history','debugger_dependents',
+            'debugger_address_to_source_code_location',
+            'debugger_set_breakpoint_address',
+            'debugger_set_breakpoint_source_code_location',
+            'debugger_remove_breakpoint','debugger_continue',
+            'profiler_configure',
+            'profiler_clear','profiler_list_random_choices',
+            'profiler_address_to_source_code_location',
+            'profiler_get_random_choice_acceptance_rate',
+            'profiler_get_global_acceptance_rate',
+            'profiler_get_random_choice_proposal_time',
+            'profiler_get_global_proposal_time'}
 
-    _dont_pause_continuous_inference = {"start_continuous_inference",
-            "stop_continuous_inference", "continuous_inference_status"}
+    _dont_pause_continuous_inference = {'start_continuous_inference',
+            'stop_continuous_inference', 'continuous_inference_status'}
 
     def execute_instruction(self, instruction):
         utils.validate_instruction(instruction, self._core_instructions |
