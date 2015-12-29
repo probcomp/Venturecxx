@@ -890,38 +890,6 @@ Open issues:
         self.profiler_configure({'profiler_enabled': False})
         return None
 
-    def profiler_clear(self):
-        self.random_choices = []
-        self.address_to_acceptance_rate = {}
-        self.address_to_proposal_time = {}
-        return None
-
-    # insert a random choice into the profiler
-    def profiler_make_random_choice(self):
-        import random
-        address = random.randrange(1 << 16)
-        trials = random.randrange(1, 1000)
-        successes = random.randint(0, trials)
-        proposal_time = trials * random.random()
-
-        self.random_choices.append(address)
-        self.address_to_acceptance_rate[address] = (trials, successes)
-        self.address_to_proposal_time[address] = proposal_time
-
-        return address
-
-    def profiler_list_random_choices(self):
-        return self.random_choices
-
-    def profiler_address_to_source_code_location(self,address):
-        return address
-
-    def profiler_get_acceptance_rate(self,address):
-        return self.address_to_acceptance_rate[address]
-
-    def profiler_get_proposal_time(self,address):
-        return self.address_to_proposal_time[address]
-
     ############################################
     # Hacky profiling support since the above is ill understood
     ############################################

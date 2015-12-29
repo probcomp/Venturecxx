@@ -591,8 +591,6 @@ class VentureScriptParser(object):
         'start_continuous_inference': [('expression', unparse_expression)],
         'stop_continuous_inference': [],
         'profiler_configure': [('options', unparse_json)],
-        'profiler_clear': [],
-        'profiler_list_random': [], # XXX Urk, extra keyword.
         'load': [('file', unparse_string)],
     }
     def unparse_instruction(self, instruction, expr_markers=None):
@@ -609,7 +607,7 @@ class VentureScriptParser(object):
                  'force', 'sample', 'continuous_inference_status',
                  'start_continuous_inference', 'stop_continuous_inference',
                  'profiler_configure',
-                 'profiler_clear', 'profiler_list_random']:
+        ]:
             open_char = '('
             close_char = ')'
         else:
