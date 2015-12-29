@@ -30,7 +30,6 @@ class VentureSivm(object):
         self._do_not_annotate = False
         self._ci_pauser_stack = []
         self._clear()
-        self._init_continuous_inference()
 
     dicts = [s + '_dict' for s in ['label', 'did', 'syntax', 'directive']]
 
@@ -311,9 +310,6 @@ class VentureSivm(object):
     ###############################
     # Continuous Inference on/off
     ###############################
-
-    def _init_continuous_inference(self):
-        pass
 
     def _continuous_inference_status(self):
         return self._call_core_sivm_instruction(
