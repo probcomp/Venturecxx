@@ -874,25 +874,19 @@ Open issues:
         self.sivm._do_not_annotate = False
 
     ############################################
-    # Profiler methods (stubs)
+    # Profiler methods
     ############################################
 
-    def profiler_configure(self, options=None):
-        if options is None: options = {}
-        i = {'instruction': 'profiler_configure', 'options': options}
-        return self.execute_instruction(i)['options']
+    def profiler_running(self, enable=None):
+        return self.sivm.core_sivm.profiler_running(enable)
 
     def profiler_enable(self):
-        self.profiler_configure({'profiler_enabled': True})
+        self.profiler_running(True)
         return None
 
     def profiler_disable(self):
-        self.profiler_configure({'profiler_enabled': False})
+        self.profiler_running(False)
         return None
-
-    ############################################
-    # Hacky profiling support since the above is ill understood
-    ############################################
 
     def profile_data(self):
         rows = self.sivm.core_sivm.engine.profile_data()

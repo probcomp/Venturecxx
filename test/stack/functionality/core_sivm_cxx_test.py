@@ -197,20 +197,3 @@ class TestCoreSivm(unittest.TestCase):
                 }
         o2 = self.sivm.execute_instruction(inst2)
         self.assertEquals(o2['logscore'],-0.6931471805599453)
-    
-    def test_profiler_configure(self):
-        i1 = {'instruction':'profiler_configure', 'options': {}}
-        o1 = self.sivm.execute_instruction(i1)
-        e1 = {'options': {'profiler_enabled': False}}
-        self.assertEquals(o1, e1)
-        
-        i2 = {'instruction':'profiler_configure', 'options': {'profiler_enabled': True}}
-        o2 = self.sivm.execute_instruction(i2)
-        e2 = {'options': {'profiler_enabled': True}}
-        self.assertEquals(o2, e2)
-
-        i3 = {'instruction':'profiler_configure', 'options': {'profiler_enabled': False}}
-        o3 = self.sivm.execute_instruction(i3)
-        e3 = {'options': {'profiler_enabled': False}}
-        self.assertEquals(o3, e3)
-

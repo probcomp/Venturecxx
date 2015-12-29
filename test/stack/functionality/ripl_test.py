@@ -239,16 +239,3 @@ class TestRipl(unittest.TestCase):
         self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
         output = self.ripl.get_global_logscore()
         self.assertEqual(output,0)
-
-    ############################################
-    # Profiler
-    ############################################
-
-    def test_profiler_configure(self):
-        output = self.ripl.profiler_configure()
-        self.assertEqual(output, {'profiler_enabled': False})
-        output = self.ripl.profiler_configure({'profiler_enabled': True})
-        self.assertEqual(output, {'profiler_enabled': True})
-        output = self.ripl.profiler_configure({'profiler_enabled': False})
-        self.assertEqual(output, {'profiler_enabled': False})
-

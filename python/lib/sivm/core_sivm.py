@@ -38,7 +38,7 @@ class CoreSivm(object):
             'forget','freeze','report','evaluate','infer',
             'clear','get_global_logscore',
             'start_continuous_inference','stop_continuous_inference',
-            'continuous_inference_status', 'profiler_configure'}
+            'continuous_inference_status'}
 
     def execute_instruction(self, instruction):
         utils.validate_instruction(instruction,self._implemented_instructions)
@@ -161,16 +161,15 @@ class CoreSivm(object):
         return self.engine.stop_continuous_inference()
 
     ##############################
-    # Profiler (stubs)
+    # Profiler
     ##############################
 
-    def _do_profiler_configure(self,instruction):
-        d = utils.validate_arg(instruction, 'options', utils.validate_dict)
-        e = utils.validate_arg(d, 'profiler_enabled', utils.validate_boolean, required=False)
-        if e != None:
-            self.profiler_enabled = e
-            self.engine.set_profiling(e)
-        return {'options': {'profiler_enabled': self.profiler_enabled}}
+    def profiler_running(self, enable=None):
+        old_state = self.profiler_enabled
+        if enable is not None:
+            self.profiler_enabled = enable
+            self.engine.set_profiling(enable)
+        return old_state
 
 ###############################
 # Input modification functions

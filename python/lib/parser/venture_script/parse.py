@@ -590,7 +590,6 @@ class VentureScriptParser(object):
         'continuous_inference_status': [],
         'start_continuous_inference': [('expression', unparse_expression)],
         'stop_continuous_inference': [],
-        'profiler_configure': [('options', unparse_json)],
         'load': [('file', unparse_string)],
     }
     def unparse_instruction(self, instruction, expr_markers=None):
@@ -606,7 +605,6 @@ class VentureScriptParser(object):
                  'list_directives', 'get_directive', 'labeled_get_directive',
                  'force', 'sample', 'continuous_inference_status',
                  'start_continuous_inference', 'stop_continuous_inference',
-                 'profiler_configure',
         ]:
             open_char = '('
             close_char = ')'

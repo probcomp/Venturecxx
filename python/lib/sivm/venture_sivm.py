@@ -55,7 +55,6 @@ class VentureSivm(object):
             'debugger_set_breakpoint_address',
             'debugger_set_breakpoint_source_code_location',
             'debugger_remove_breakpoint','debugger_continue',
-            'profiler_configure',
     }
 
     _dont_pause_continuous_inference = {'start_continuous_inference',
