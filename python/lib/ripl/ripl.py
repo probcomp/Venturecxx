@@ -802,9 +802,6 @@ Open issues:
         self.execute_instruction({'instruction':'stop_continuous_inference'})
         return None
 
-    def get_current_exception(self):
-        return self.execute_instruction({'instruction':'get_current_exception'})['exception']
-
     def get_state(self):
         return self.execute_instruction({'instruction':'get_state'})['state']
 

@@ -267,23 +267,6 @@ class TestVentureSivm(unittest.TestCase):
                 }
         o2 = self.sivm.execute_instruction(inst2)
         self.assertEquals(o2['directives'], [])
-        
-    def test_get_current_exception(self):
-        raise SkipTest("cxx -> python exceptions not implemented.  Issue: https://app.asana.com/0/9277419963067/9940667562266")
-        inst1 = {
-                'instruction':'force',
-                'expression': ['moo',v.number(1),v.number(2)],
-                'value': v.real(3)
-                }
-        try:
-            self.sivm.execute_instruction(inst1)
-        except VentureException:
-            pass
-        inst2 = {
-                'instruction':'get_current_exception',
-                }
-        o2 = self.sivm.execute_instruction(inst2)
-        self.assertEqual(o2['exception']['exception'], 'evaluation')
     def test_get_state(self):
         inst1 = {
                 'instruction':'get_state',

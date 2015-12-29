@@ -235,10 +235,6 @@ class TestRipl(unittest.TestCase):
         output = self.ripl.sample('(+ 1 1)')
         self.assertEqual(output, 2)
 
-    def test_get_current_exception(self):
-        # TODO: write test after exception states are implemented
-        pass
-
     def test_get_state(self):
         output = self.ripl.get_state()
         self.assertEqual(output,'default')

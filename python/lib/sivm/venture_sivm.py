@@ -39,7 +39,7 @@ class VentureSivm(object):
             'labeled_predict','labeled_forget','labeled_freeze',
             'labeled_report',
             'list_directives','get_directive','labeled_get_directive',
-            'force','sample','get_current_exception',
+            'force','sample',
             'get_state', 'reset', 'debugger_list_breakpoints',
             'debugger_get_breakpoint'}
     _core_instructions = {'define','assume','observe','predict',
@@ -228,11 +228,8 @@ class VentureSivm(object):
             address = e.data['address'].asList()
             e.data['stack_trace'] = self.trace_address_to_stack(address)
             del e.data['address']
-
-            self.current_exception = e.to_json_object()
         if e.exception == "breakpoint":
             self.state='paused'
-            self.current_exception = e.to_json_object()
         # re-sugar the expression index
         if e.exception == 'parse':
             i = e.data['expression_index']
@@ -502,12 +499,6 @@ class VentureSivm(object):
         return {"options":{
                 "continuous_inference_enable" : self._continuous_inference_enabled(),
                 }}
-
-    def _do_get_current_exception(self, _):
-        utils.require_state(self.state,'exception','paused')
-        return {
-                'exception': copy.deepcopy(self.current_exception),
-                }
 
     def _do_get_state(self, _):
         return {

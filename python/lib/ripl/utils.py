@@ -41,7 +41,7 @@ _RIPL_FUNCTIONS = [
         'clear','list_directives','get_directive',
         'force','sample','continuous_inference_status',
         'start_continuous_inference','stop_continuous_inference',
-        'get_current_exception','get_state',
+        'get_state',
         'get_global_logscore'
         ]
 
