@@ -265,8 +265,12 @@ class Ripl():
         instructions, positions = p.split_program(no_comments)
         return [self._ensure_parsed(i) for i in instructions], positions
 
-    def execute_program(self, program_string):
-        return self.execute_parsed_program(*self.parse_program(program_string))
+    def execute_program(self, program_string, type=True):
+        res = self.execute_parsed_program(*self.parse_program(program_string))
+        if not type:
+            return u.strip_types([r["value"] for r in res])
+        else:
+            return res
 
     def execute_parsed_program(self, instructions, _positions):
         vals = []
