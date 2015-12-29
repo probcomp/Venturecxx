@@ -294,15 +294,6 @@ class TestSivmUtils(unittest.TestCase):
         i = {'instruction':"moo"}
         self.assertEqual(utils.validate_instruction(i,['moo']),i)
 
-    def test_require_state_1(self):
-        utils.require_state('default','red','default')
-    def test_require_state_2(self):
-        try:
-            utils.require_state('moo','default')
-        except VentureException as e:
-            self.assertEqual(e.exception,'invalid_state')
-            self.assertEqual(e.data['state'],'moo')
-
     def test_validate_symbol_1(self):
         self.assertEqual(utils.validate_symbol('add'),'add')
     def test_validate_symbol_2(self):
