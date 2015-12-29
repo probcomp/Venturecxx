@@ -318,7 +318,7 @@ class Ripl():
                 return value
             elif key == "expression":
                 return self._ensure_parsed_expression(value)
-            elif key in ["directive_id", "seed", "inference_timeout"]:
+            elif key in ["directive_id", "seed"]:
                 return self._ensure_parsed_number(value)
             elif key in ["options", "params"]:
                 # Do not support partially parsed options or param
@@ -657,13 +657,6 @@ Open issues:
 
     def set_seed(self, seed):
         self.configure({'seed': seed})
-        return None
-
-    def get_inference_timeout(self):
-        return self.configure()['inference_timeout']
-
-    def set_inference_timeout(self, inference_timeout):
-        self.configure({'inference_timeout': inference_timeout})
         return None
 
     def forget(self, label_or_did, type=False):

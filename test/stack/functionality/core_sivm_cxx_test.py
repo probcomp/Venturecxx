@@ -123,13 +123,11 @@ class TestCoreSivm(unittest.TestCase):
         inst = {
                 'instruction':'configure',
                 'options':{
-                    'inference_timeout':5000,           # inference timeout hook is not implemented
                     'seed':0,
                     },
                 }
 
         o = self.sivm.execute_instruction(inst)
-        self.assertEquals(o['options']['inference_timeout'],5000)
         # FIXME: seed is always returned as 0
         self.assertEquals(o['options']['seed'],0)
 

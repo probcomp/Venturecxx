@@ -107,14 +107,9 @@ class CoreSivm(object):
                 utils.validate_dict)
         s = utils.validate_arg(d,'seed',
                 utils.validate_nonnegative_integer,required=False)
-        t = utils.validate_arg(d,'inference_timeout',
-                utils.validate_positive_integer,required=False)
         if s != None:
             self.engine.set_seed(s)
-        if t != None:
-            #do something
-            pass
-        return {"options":{"seed":self.engine.get_seed(), "inference_timeout":5000}}
+        return {"options":{"seed":self.engine.get_seed()}}
 
     def _do_forget(self,instruction):
         utils.require_state(self.state,'default')

@@ -170,8 +170,8 @@ class TestRipl(unittest.TestCase):
     ############################################
 
     def test_configure(self):
-        ret_value = self.ripl.configure({"seed":0,"inference_timeout":5000})
-        self.assertEqual(ret_value, {"seed":0, "inference_timeout":5000})
+        ret_value = self.ripl.configure({"seed":0})
+        self.assertEqual(ret_value, {"seed":0})
 
     def test_forget(self):
         #normal forget
