@@ -210,4 +210,3 @@ def _modify_symbol(s):
     # NOTE: need to str() b/c unicode might come via REST,
     #       which the boost python wrappings can't convert
     return v.symbol(str(s))
-
