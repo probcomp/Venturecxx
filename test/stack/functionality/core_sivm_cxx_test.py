@@ -184,16 +184,3 @@ class TestCoreSivm(unittest.TestCase):
             self.sivm.execute_instruction(inst)
         except VentureException as e:
             self.assertEquals(e.exception,'invalid_argument')
-
-    def test_get_global_logscore(self):
-        inst1 = {
-                'instruction':'observe',
-                'expression': ['flip'],
-                'value': v.boolean(True)
-                }
-        self.sivm.execute_instruction(inst1)
-        inst2 = {
-                'instruction':'get_global_logscore',
-                }
-        o2 = self.sivm.execute_instruction(inst2)
-        self.assertEquals(o2['logscore'],-0.6931471805599453)

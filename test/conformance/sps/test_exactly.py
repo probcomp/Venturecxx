@@ -24,16 +24,16 @@ from venture.test.config import on_inf_prim
 def testExactly1():
   ripl = get_ripl()
 
-  ripl.observe('(exactly 0 -1)', 0.0)
+  ripl.observe('(exactly (exactly 0) -1)', 0.0)
   ripl.infer('(incorporate)')
 
-  assert_equal(ripl.get_global_logscore(), 0)
+  assert_equal(ripl.get_global_logscore()[0], 0)
 
 @on_inf_prim("none")
 def testExactly2():
   ripl = get_ripl()
 
-  ripl.observe('(exactly 0 -1)', 1.0)
+  ripl.observe('(exactly (exactly 0) -1)', 1.0)
   ripl.infer('(incorporate)')
 
-  assert_equal(ripl.get_global_logscore(), -1)
+  assert_equal(ripl.get_global_logscore()[0], -1)

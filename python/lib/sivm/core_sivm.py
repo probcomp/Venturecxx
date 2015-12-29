@@ -36,7 +36,7 @@ class CoreSivm(object):
 
     _implemented_instructions = {'define','assume','observe','predict',
             'forget','freeze','report','evaluate','infer',
-            'clear','get_global_logscore',
+            'clear',
             'start_continuous_inference','stop_continuous_inference',
             'continuous_inference_status'}
 
@@ -140,10 +140,6 @@ class CoreSivm(object):
         self.engine.clear()
         self.observe_dict = {}
         return {}
-
-    def _do_get_global_logscore(self,_):
-        l = self.engine.logscore()
-        return {"logscore":l}
 
     ###########################
     # Continuous Inference

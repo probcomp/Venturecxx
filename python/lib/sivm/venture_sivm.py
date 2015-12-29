@@ -46,7 +46,7 @@ class VentureSivm(object):
             'forget','freeze','report','evaluate','infer',
             'start_continuous_inference',
             'stop_continuous_inference','continuous_inference_status',
-            'clear','get_global_logscore',
+            'clear',
             'debugger_configure','debugger_list_random_choices',
             'debugger_clear',
             'debugger_force_random_choice','debugger_report_address',

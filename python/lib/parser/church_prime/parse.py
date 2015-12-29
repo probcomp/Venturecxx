@@ -165,8 +165,6 @@ class Semantics(object):
     # command: Return { 'instruction': located(..., 'foo'), ... }.
     def p_command_infer(self, k, e):
         return { 'instruction': loctoken1(k, 'infer'), 'expression': e }
-    def p_command_get_global_logscore(self, k):
-        return { 'instruction': loctoken1(k, 'get_global_logscore') }
     def p_command_load(self, k, pathname):
         return { 'instruction': loctoken1(k, 'load'),
                  'file': loctoken(pathname) }
