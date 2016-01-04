@@ -151,6 +151,15 @@ class Semantics(object):
         return { 'instruction': loctoken1(k, 'define'),
                  'symbol': locmap(loctoken(n), val.symbol), 'expression': e }
     def p_directive_assume(self, k, n, e):
+        # Fun fact.  This manipulation (and the similar treatment of
+        # observe and predict, here and in the VentureScript parser)
+        # breaks an invariant that parsing used to satisfy.  To wit,
+        # once upon a time it was the case that the string picked out
+        # by the location tags of every node in a parse tree was
+        # guaranteed to re-parse to an equal node.  This cannot be the
+        # case now, because the 'expr' node constructed here is not
+        # parsed from the string, but synthesized based on knowing
+        # that its constituents appear in an 'assume' directive.
         expr = [loctoken1(k, val.symbol('assume')),
                 locmap(loctoken(n), val.symbol),
                 e]
