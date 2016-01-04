@@ -39,7 +39,7 @@ class DPMixtureSPAux(SPAux):
   def __init__(self):
     self.cluster_crp_aux = CRPSPAux()
     self.cluster_assignments = {} # row -> cluster
-    self.num_cells = {} # row -> count
+    self.cells_by_row = defaultdict(dict) # row -> (column -> value)
     self.component_bb_auxs = defaultdict(BetaBernoulliSPAux) # column x cluster -> aux
 
   def copy(self):
@@ -70,7 +70,6 @@ class DPMixtureSP(SP):
   def simulateLatents(self, args, lsr, shouldRestore, latentDB):
     aux = args.spaux()
     if lsr in aux.cluster_assignments:
-      aux.num_cells[lsr] += 1
       return 0
 
     cluster_crp_aux = aux.cluster_crp_aux
@@ -97,17 +96,15 @@ class DPMixtureSP(SP):
         cluster_crp_aux.nextIndex = max(index+1, cluster_crp_aux.nextIndex)
 
     aux.cluster_assignments[lsr] = index
-    aux.num_cells[lsr] = 1
     return 0
 
   def detachLatents(self, args, lsr, latentDB):
     aux = args.spaux()
-    aux.num_cells[lsr] -= 1
-    if aux.num_cells[lsr] > 0:
+    if len(aux.cells_by_row[lsr]) > 0:
       return 0
 
     cluster_crp_aux = aux.cluster_crp_aux
-    index = self.cluster_assignments[lsr]
+    index = aux.cluster_assignments[lsr]
 
     # TODO: duplicated from CRP.unincorporate
     cluster_crp_aux.numCustomers -= 1
@@ -118,14 +115,78 @@ class DPMixtureSP(SP):
       cluster_crp_aux.freeIndices.add(index)
 
     del aux.cluster_assignments[lsr]
-    del aux.num_cells[lsr]
     return 0
 
   def hasAEKernel(self): return True
 
   def AEInfer(self, aux):
-    # TODO: Gibbs steps
-    pass
+    # Gibbs scan over the cluster assignments
+    # TODO: inference control?
+    cluster_crp_aux = aux.cluster_crp_aux
+    for row in aux.cluster_assignments:
+      index = aux.cluster_assignments[row]
+      cells = aux.cells_by_row[row]
+
+      # TODO: duplicated from CBetaBernoulli.unincorporate
+      for col, value in cells.items():
+        bbaux = aux.component_bb_auxs[(col, index)]
+        if value: # I produced true
+          bbaux.yes -= 1
+        else: # I produced false
+          bbaux.no -= 1
+
+      # TODO: duplicated from CRP.unincorporate
+      cluster_crp_aux.numCustomers -= 1
+      cluster_crp_aux.tableCounts[index] -= 1
+      if cluster_crp_aux.tableCounts[index] == 0:
+        cluster_crp_aux.numTables -= 1
+        del cluster_crp_aux.tableCounts[index]
+        cluster_crp_aux.freeIndices.add(index)
+
+      # TODO: partially duplicated from CRP.simulate
+      old_indices = [i for i in cluster_crp_aux.tableCounts]
+      counts = [cluster_crp_aux.tableCounts[i] for i in old_indices] + [self.cluster_crp_alpha]
+      nextIndex = cluster_crp_aux.nextIndex if len(cluster_crp_aux.freeIndices) == 0 else cluster_crp_aux.freeIndices.__iter__().next()
+      indices = old_indices + [nextIndex]
+
+      likelihoods = []
+      for z in indices:
+        ll = 0
+        for col, value in cells.items():
+          # TODO: partially duplicated from CBetaBernoulli.logDensity
+          (ctY, ctN) = aux.component_bb_auxs[(col, z)].cts()
+          weight = (self.component_bb_alpha + ctY) / (self.component_bb_alpha + ctY + self.component_bb_alpha + ctN)
+          if value == True:
+            ll += math.log(weight)
+          else:
+            ll += math.log(1-weight)
+        likelihoods.append(ll)
+
+      the_max = max(likelihoods)
+      conditionals = [count * math.exp(ll - the_max) for count, ll in zip(counts, likelihoods)]
+      index = simulateCategorical(conditionals, indices)
+
+      # TODO: duplicated from CRP.incorporate
+      cluster_crp_aux.numCustomers += 1
+      if index in cluster_crp_aux.tableCounts:
+        cluster_crp_aux.tableCounts[index] += 1
+      else:
+        cluster_crp_aux.tableCounts[index] = 1
+        cluster_crp_aux.numTables += 1
+        if index in cluster_crp_aux.freeIndices:
+          cluster_crp_aux.freeIndices.discard(index)
+        else:
+          cluster_crp_aux.nextIndex = max(index+1, cluster_crp_aux.nextIndex)
+
+      # TODO: duplicated from CBetaBernoulli.incorporate
+      for col, value in cells.items():
+        bbaux = aux.component_bb_auxs[(col, index)]
+        if value: # I produced true
+          bbaux.yes += 1
+        else: # I produced false
+          bbaux.no += 1
+
+      aux.cluster_assignments[row] = index
 
 class DPMixtureOutputPSP(RandomPSP):
   def __init__(self, component_bb_alpha):
@@ -153,6 +214,12 @@ class DPMixtureOutputPSP(RandomPSP):
       return math.log(1-weight)
 
   def incorporate(self, value, args):
+    (row, col) = args.operandValues()
+    cells = args.spaux().cells_by_row[row]
+    # TODO: either memoize or allow for multiple observations
+    assert col not in cells
+    cells[col] = value
+
     # TODO: duplicated from CBetaBernoulli.incorporate
     spaux = self._get_component_bb_aux(args)
     if value: # I produced true
@@ -161,6 +228,11 @@ class DPMixtureOutputPSP(RandomPSP):
       spaux.no += 1
 
   def unincorporate(self, value, args):
+    (row, col) = args.operandValues()
+    cells = args.spaux().cells_by_row[row]
+    assert cells[col] == value
+    del cells[col]
+
     # TODO: duplicated from CBetaBernoulli.incorporate
     spaux = self._get_component_bb_aux(args)
     if value: # I produced true
