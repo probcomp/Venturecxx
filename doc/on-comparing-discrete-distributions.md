@@ -83,6 +83,19 @@ observations.  Both the G statistic above and the chi^2 statistic are
 alleged to be approximations to it, and various corrections to them
 are alleged to be better approximations.
 
+There are actually two plausible versions of this for the parametric
+family situation:
+
+a) Fit a member of the family from the original sample and measure
+   the likelihood of other possible samples in that member, or
+
+b) For each possible sample, measure the likelihood of that sample
+   coming from the member that best fits it.
+
+TODO What, actually, are the distributions of the test statistic that
+obtain in situations (a) or (b) in the parametric family phrasing of
+this test?
+
 Kolmogorov-Smirnoff
 -------------------
 
@@ -107,6 +120,64 @@ b) Construct a quasi-empirical cdf by interpreting the sample as
    implying a piecewise-linear cdf that passes through the expected
    points at the endpoints of the intervals and is linear within each
    one.
+
+Permutation Test
+----------------
+
+TODO describe the family of permutation tests
+
+Axch Test
+---------
+
+TODO I assume this has been invented before; what is it called?
+
+Given a fixed target distribution, it is possible to estimate the
+results of the exact test directly, without enumerating all possible
+samples.  To wit, choose any test statistic (such as the chi^2), then
+draw N samples of size n from the known distribution and compute that
+test statistic for all of them, and measure the ordinal position of
+the query sample in that list.  If the sample was drawn from the
+hypothesized distribution, the ordinal should be distributed uniformly
+between 0 and N.
+
+The issue with this test is that it scales linearly with the original
+sample size and with the desired test precision.  It is
+computationally favorable for small n, if at all.
+
+TODO Is there a coherent variant for goodness of fit to a parametric
+family?  I anticipate some of the same difficulties as for the exact
+test.
+
+Structure
+---------
+
+Chi^2 and G are tests of goodness of fit to a parametric family, which
+
+- can be used as tests of independence by choosing the family to be
+  "products of all marginal distributions", and
+
+- can be used as two-sample tests of equidistribution by testing for
+  the independence of the sample membership label.
+
+K-S is a test of goodness of fit to a fixed distribution, which
+
+- has a variant that is a test of equality directly
+
+- TODO Is there a variant of K-S for testing goodness of fit to a
+  parametric family?
+
+The exact test and the axch test are tests of goodness of fit to a
+fixed distribution, which
+
+- have an unchecked candidate variant that is a test of goodness of fit
+  to a parametric family, which
+
+- could then be used as a test of independence or a two-sample test of
+  equidistribution as above
+
+The permutation test is directly a test of independence, which
+
+- can be used as a two-sample test of equidistribution.
 
 Issues
 ------
@@ -145,6 +216,10 @@ Issues
   constructing a distribution equality test from one-sample K-S by
   fitting an independent multinomial as above?  Do K-S tests even make
   sense for distributions obtained as fits from a parametric family?
+
+- What, if any, consistency properties should we expect under the
+  operations of coarsening the bins or restricting attention to a
+  subset of bins?
 
 - Should we move to the G test, or some more elaborate procedure that
   involves computing exact probabilities sometimes, for testing
