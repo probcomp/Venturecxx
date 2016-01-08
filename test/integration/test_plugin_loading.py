@@ -47,5 +47,7 @@ def testPluginsLoad4():
 
 def testPluginsLoadFail():
   r = get_ripl(extra_search_paths = [this_dir])
-  err.assert_error_message_contains("Plugin frob.py not found in any of ['/home/axch/work/pcp/Venturecxx/test/integration', '/home/axch/work/pcp/Venturecxx/build/lib.linux-x86_64-2.7/venture/plugins', '.']",
+  assert len(r.search_paths) == 3
+  err.assert_error_message_contains("Plugin frob.py not found in any of %s" %
+                                    r.search_paths,
   r.infer, '(load_plugin "frob.py")')
