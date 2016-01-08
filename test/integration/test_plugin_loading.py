@@ -30,19 +30,19 @@ def testPluginsLoad():
 
 def testPluginsLoad2():
   r = get_ripl()
-  r.infer("(load_plugin (quote symbol<\"" + plugin_abs_path + "\">))")
+  r.infer("(load_plugin \"" + plugin_abs_path + "\")")
   r.infer("(call_back foo)")
 
 def testPluginsLoad3():
   r = get_ripl()
   r.infer("""(do
-  (seven <- (load_plugin (quote symbol<"%s">)))
+  (seven <- (load_plugin "%s"))
   (assert (eq 7 seven)))""" % (plugin_abs_path,))
 
 def testPluginsLoad4():
   r = get_ripl(extra_search_paths = [this_dir])
   r.infer("""(do
-  (seven <- (load_plugin (quote symbol<"%s">)))
+  (seven <- (load_plugin "%s"))
   (assert (eq 7 seven)))""" % (plugin_name,))
 
 def testPluginsLoadFail():
