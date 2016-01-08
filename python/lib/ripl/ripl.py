@@ -65,9 +65,10 @@ PRELUDE_FILE = 'prelude.vnt'
 class Ripl():
     '''The Read, Infer, Predict Layer of one running Venture instance.'''
 
-    def __init__(self,sivm,parsers):
+    def __init__(self, sivm, parsers, extra_search_paths = None):
         self.sivm = sivm
         self.parsers = parsers
+        self._compute_search_paths(extra_search_paths or [])
         self.directive_id_to_stringable_instruction = {}
         self.directive_id_to_mode = {}
         self.mode = parsers.keys()[0]
@@ -88,6 +89,10 @@ class Ripl():
         self.pyglobals = {"ripl": self}
         plugins.__venture_start__(self)
 
+    def _compute_search_paths(self, extra_search_paths):
+        self_dir = os.path.dirname(__file__)
+        system_plugins_dir = os.path.join(os.path.dirname(self_dir), "plugins")
+        self.search_paths = extra_search_paths + [system_plugins_dir, "."]
 
     ############################################
     # Languages
@@ -946,7 +951,7 @@ Open issues:
             self.load_prelude()
 
     def load_plugin(self, name, *args, **kwargs):
-        m = load_library(name)
+        m = load_library(name, self.search_paths)
         if hasattr(m, "__venture_start__"):
             return m.__venture_start__(self, *args, **kwargs)
 
@@ -957,9 +962,9 @@ Open issues:
     def _cur_parser(self):
         return self.parsers[self.mode]
 
-def load_library(name):
+def load_library(name, search_paths):
     import imp
-    pathname = name
+    pathname = _search_for_path(name, search_paths)
     if name.endswith('.py'):
         name = name[0 : len(name) - len('.py')]
     with open(pathname, 'rb') as f:
@@ -986,6 +991,13 @@ def load_library(name):
     # (file, pathname, description) = imp.find_module(name, ["."] + sys.path)
     # print (file, pathname, description)
     # return imp.load_module(name, file, pathname, description)
+
+def _search_for_path(name, search_paths):
+    for place in search_paths:
+        candidate = os.path.join(place, name)
+        if os.path.exists(candidate):
+            return candidate
+    raise Exception("Plugin %s not found in any of %s" % (name, search_paths))
 
 def _symbolize(thing):
     if isinstance(thing, basestring):
