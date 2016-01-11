@@ -76,3 +76,7 @@ Proposal: redefine logDensityOfCounts to return p(t|theta).  Issues:
   (somewhat) impeding the ability to, for example, use the acceptance
   rate of a rejection sampler as a way to estimate the probability of
   the data under the model.
+
+Note: This decision has no effect on gradientOfLogDensityOfCounts,
+because the p(x_i|t) term is additive in log space and its derivative
+with respect to theta is zero.
