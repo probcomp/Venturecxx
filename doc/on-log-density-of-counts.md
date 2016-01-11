@@ -77,6 +77,15 @@ Proposal: redefine logDensityOfCounts to return p(t|theta).  Issues:
   rate of a rejection sampler as a way to estimate the probability of
   the data under the model.
 
+1/11/16: Additional proposal: when available, provide access to both.
+- One way to do this would be to augment the above proposal with an
+  optional method named along the lines of
+  "logDensityOfCountedSequence", or
+  "logDensityOfCountedSequenceCorrection", the latter returning the
+  difference.
+- It may also be possible to maintain the constant p(x_i|t) alongside
+  the sufficient statistic t.
+
 Note: This decision has no effect on gradientOfLogDensityOfCounts,
 because the p(x_i|t) term is additive in log space and its derivative
 with respect to theta is zero.
