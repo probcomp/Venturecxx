@@ -265,6 +265,18 @@ class PSP(object):
   def hasSimulationKernel(self): return False
   def hasDeltaKernel(self): return False
 
+  def gradientOfLogDensityOfCounts(self, _value, _args):
+    """Return the gradient of the made PSP's logDensityOfCounts function.
+    This method is needed only for gradient-based methods and is
+    relevant only for makers of PSPs that collect sufficient
+    statistics via incorporate and unincorporate.
+
+    The gradient should be returned as a list of the partial
+    derivatives with respect to the arguments.
+
+    """
+    raise VentureBuiltinSPMethodError("Cannot compute gradient of log density of counts of %s", type(self))
+
   def madeSpLogDensityOfCountsBound(self, _aux):
     raise VentureBuiltinSPMethodError("Cannot rejection sample AAA procedure with unbounded log density of counts")
 
