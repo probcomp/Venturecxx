@@ -25,6 +25,9 @@ from venture.test.config import collectSamples
 from venture.test.config import get_ripl
 from venture.test.stats import reportKnownGaussian
 
+this_dir = os.path.dirname(os.path.abspath(__file__))
+cache_dir = os.path.join(this_dir, "models")
+
 def testSmoke():
   program = """
 infer load_plugin("venstan.py");
@@ -47,10 +50,10 @@ generated quantities {
 }";
 assume inputs = quote("N"("Int")());
 assume c_outputs = quote("y_out"("y", "UArray(Number)", "N")());
-assume stan_sp = make_ven_stan(stan_prog, inputs, c_outputs);
+assume stan_sp = make_ven_stan(stan_prog, inputs, c_outputs, "%s");
 predict stan_sp(7);
 infer mh(default, one, 3);
-"""
+""" % cache_dir
   r = get_ripl()
   r.set_mode("venture_script")
   r.execute_program(program)
@@ -77,16 +80,13 @@ generated quantities {
 }")
 (assume inputs '(("N" "Int")))
 (assume c_outputs '(("y_out" "y" "UArray(Number)" "N")))
-(assume stan_sp (make_ven_stan stan_prog inputs c_outputs))
+(assume stan_sp (make_ven_stan stan_prog inputs c_outputs "%s"))
 (predict (stan_sp 7))
 (mh default one 3)
-"""
+""" % cache_dir
   r = get_ripl()
   r.set_mode("church_prime")
   r.execute_program(program)
-
-this_dir = os.path.dirname(os.path.abspath(__file__))
-cache_dir = os.path.join(this_dir, "models")
 
 normal_in_stan_snippet = """
 (load_plugin "venstan.py")
