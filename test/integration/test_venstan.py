@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from nose.tools import eq_
+import scipy.stats as stats
+
 from venture.test.config import get_ripl
 
 def testSmoke():
@@ -76,3 +79,30 @@ generated quantities {
   r = get_ripl()
   r.set_mode("church_prime")
   r.execute_program(program)
+
+normal_in_stan_snippet = """
+(load_plugin "venstan.py")
+(assume stan_prog "
+data {
+  real mu;
+  real<lower=0> sigma;
+  real y;
+}
+parameters {
+  real bogon;
+}
+model {
+  increment_log_prob(normal_log(y, mu, sigma));
+}
+generated quantities {
+  real y_out;
+  y_out <- normal_rng(mu, sigma);
+}")
+(assume inputs '(("mu" "Number") ("sigma" "Number")))
+(assume c_outputs '(("y_out" "y" "Number")))
+(assume stan_normal (make_ven_stan stan_prog inputs c_outputs))"""
+
+def testReportedPosterior():
+  r = get_ripl()
+  r.execute_program(normal_in_stan_snippet)
+  eq_(stats.norm.logpdf(1, loc=0, scale=1), r.observe("(stan_normal 0 1)", 1))
