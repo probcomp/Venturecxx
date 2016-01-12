@@ -134,6 +134,7 @@ class CountType(VentureType):
   def __contains__(self, vthing):
     return isinstance(vthing, vv.VentureInteger) and vthing.getInteger() >= 0
   def name(self): return self._name or "<count>"
+  def gradient_type(self): return ZeroType()
 
 class PositiveType(VentureType):
   def __init__(self, name=None):
@@ -264,6 +265,7 @@ class ArrayUnboxedType(VentureType):
   def name(self): return self._name or "<array %s>" % self.subtype.name()
   def distribution(self, base, **kwargs):
     return base("array_unboxed", elt_type=self.subtype, **kwargs)
+  def gradient_type(self): return ArrayUnboxedType(self.subtype.gradient_type())
 
 HomogeneousArrayType = ArrayUnboxedType
 

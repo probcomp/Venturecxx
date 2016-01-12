@@ -130,6 +130,17 @@ class MakerCDirMultOutputPSP(DeterministicMakerAAAPSP):
       "has different length from the list of alphas.  While this procedure " \
       "itself is deterministic, the returned sampler is stochastic." % name
 
+  def gradientOfLogDensityOfCounts(self, aux, args):
+    vals = args.operandValues()
+    alphas = vals[0]
+    N = aux.counts.total
+    A = sum(alphas)
+    term1 = scipy.special.digamma(A) - scipy.special.digamma(N + A)
+    term2 = [scipy.special.digamma(alpha + count)
+             - scipy.special.digamma(alpha)
+             for (alpha, count) in zip(alphas, aux.counts)]
+    return [[term1 + t2 for t2 in term2]]
+
 class CDirMultOutputPSP(RandomPSP):
   def __init__(self,alpha,os):
     self.alpha = Node(alpha)
@@ -276,6 +287,17 @@ class MakerCSymDirMultOutputPSP(DeterministicMakerAAAPSP):
       raise VentureValueError("Set of objects to choose from is the wrong length")
     output = TypedPSP(CSymDirMultOutputPSP(alpha,n,os), SPType([], t.AnyType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,n))
+
+  def gradientOfLogDensityOfCounts(self, aux, args):
+    vals = args.operandValues()
+    (alpha,n) = (float(vals[0]),int(vals[1]))
+    N = aux.counts.total
+    A = alpha*n
+    term1 = scipy.special.digamma(A) - scipy.special.digamma(N + A)
+    term2 = [scipy.special.digamma(alpha + count)
+             - scipy.special.digamma(alpha)
+             for count in aux.counts]
+    return [sum(term1 + t2 for t2 in term2), 0]
 
   def madeSpLogDensityOfCountsBound(self, aux):
     """Upper bound the log density the made SP may report for its
