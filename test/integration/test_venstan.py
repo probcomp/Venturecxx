@@ -46,3 +46,33 @@ infer mh(default, one, 3);
   r = get_ripl()
   r.set_mode("venture_script")
   r.execute_program(program)
+
+def testSmokeChurchPrime():
+  program = """
+(load_plugin "venstan.py")
+(assume stan_prog "
+data {
+  int N;
+  real y[N];
+}
+parameters {
+  real mu;
+  real<lower=0> sigma;
+}
+model {
+  y ~ normal(mu, sigma);
+}
+generated quantities {
+  real y_out[N];
+  for (n in 1:N)
+    y_out[n] <- normal_rng(mu, sigma);
+}")
+(assume inputs '(("N" "Int")))
+(assume c_outputs '(("y_out" "y" "UArray(Number)" "N")))
+(assume stan_sp (make_ven_stan stan_prog inputs c_outputs))
+(predict (stan_sp 7))
+(mh default one 3)
+"""
+  r = get_ripl()
+  r.set_mode("church_prime")
+  r.execute_program(program)
