@@ -151,6 +151,8 @@ def cached_stan_model(model_code, cache_dir=None, **kwargs):
   if cache_dir is None:
     print "Not using Stan model cache"
     return pystan.StanModel(model_code=model_code, **kwargs)
+  if not os.path.exists(cache_dir):
+    os.makedirs(cache_dir)
   code_hash = hashlib.sha256(model_code).hexdigest()
   cache_file = 'compiled-stan-model-%s.pkl' % code_hash
   cache_path = os.path.join(cache_dir, cache_file)
@@ -182,8 +184,13 @@ Avoid moving the parameters from their initialization as much as possible."""
 
 class MakerVenStanOutputPSP(DeterministicPSP):
   def simulate(self, args):
-    (stan_prog, input_spec, c_output_spec) = args.operandValues()
-    stan_model = cached_stan_model(stan_prog, cache_dir=".")
+    vals = args.operandValues()
+    if len(vals) == 3:
+      (stan_prog, input_spec, c_output_spec) = vals
+      cache_dir = "."
+    else:
+      (stan_prog, input_spec, c_output_spec, cache_dir) = vals
+    stan_model = cached_stan_model(stan_prog, cache_dir=cache_dir)
     the_sp = VenStanSP(stan_model, input_spec, c_output_spec)
     return VentureSPRecord(the_sp)
 
@@ -318,8 +325,10 @@ class VenStanOutputPSP(RandomPSP):
 def __venture_start__(ripl):
   args_types = [t.StringType(),
                 t.HomogeneousListType(t.HomogeneousListType(t.StringType())),
-                t.HomogeneousListType(t.HomogeneousListType(t.StringType()))]
+                t.HomogeneousListType(t.HomogeneousListType(t.StringType())),
+                t.StringType()]
   the_sp = sp.typed_nr(MakerVenStanOutputPSP(),
                        args_types,
-                       t.AnyType("SP representing the Stan model"))
+                       t.AnyType("SP representing the Stan model"),
+                       min_req_args=3)
   ripl.bind_foreign_sp("make_ven_stan", the_sp)

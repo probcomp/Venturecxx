@@ -16,13 +16,13 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
+import os.path
 
 from nose.tools import eq_
 import scipy.stats as stats
 
 from venture.test.config import collectSamples
 from venture.test.config import get_ripl
-from venture.test.config import on_inf_prim
 from venture.test.stats import reportKnownGaussian
 
 def testSmoke():
@@ -85,6 +85,9 @@ generated quantities {
   r.set_mode("church_prime")
   r.execute_program(program)
 
+this_dir = os.path.dirname(os.path.abspath(__file__))
+cache_dir = os.path.join(this_dir, "models")
+
 normal_in_stan_snippet = """
 (load_plugin "venstan.py")
 (assume stan_prog "
@@ -105,7 +108,8 @@ generated quantities {
 }")
 (assume inputs '(("mu" "Number") ("sigma" "Number")))
 (assume c_outputs '(("y_out" "y" "Number")))
-(assume stan_normal (make_ven_stan stan_prog inputs c_outputs))"""
+(assume stan_normal (make_ven_stan stan_prog inputs c_outputs "%s"))""" % \
+  (cache_dir,)
 
 def testReportedPosterior():
   r = get_ripl()
