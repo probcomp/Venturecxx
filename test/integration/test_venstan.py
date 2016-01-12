@@ -15,10 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import math
+
 from nose.tools import eq_
 import scipy.stats as stats
 
+from venture.test.config import collectSamples
 from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownGaussian
 
 def testSmoke():
   program = """
@@ -89,7 +94,7 @@ data {
   real y;
 }
 parameters {
-  real bogon;
+  real<lower=0, upper=1> bogon;
 }
 model {
   increment_log_prob(normal_log(y, mu, sigma));
@@ -106,3 +111,12 @@ def testReportedPosterior():
   r = get_ripl()
   r.execute_program(normal_in_stan_snippet)
   eq_(stats.norm.logpdf(1, loc=0, scale=1), r.observe("(stan_normal 0 1)", 1))
+
+def testInference():
+  r = get_ripl()
+  r.execute_program(normal_in_stan_snippet)
+  r.execute_program("""
+(assume x (normal 0 1))
+(observe (stan_normal x 1) 2)""")
+  predictions = collectSamples(r, "x")
+  return reportKnownGaussian(1, math.sqrt(0.5), predictions)
