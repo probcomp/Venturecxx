@@ -1,4 +1,4 @@
-infer load_plugin("plugins/venstan.py");
+infer load_plugin("venstan.py");
 assume stan_prog = "
 data {
   int N;

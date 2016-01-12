@@ -1,4 +1,4 @@
-infer load_plugin("plugins/venstan.py");
+infer load_plugin("venstan.py");
 assume stan_prog = "
 data {
   real<lower=0> sigma;
