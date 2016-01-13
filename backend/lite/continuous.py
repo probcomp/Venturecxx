@@ -118,15 +118,16 @@ class MVNormalOutputPSP(RandomPSP):
       return numpy_force_number(-.5*len(sigma)*np.log(np.pi) - \
         .5*np.log(abs(npla.det(sigma))))
     elif x is not None and mu is not None:
-      raise Exception('TODO: Find an analytical form for the maximum of the '\
-        'log density of MVNormal for fixed x, mu, but varying sigma')
+      raise Exception('TODO: Find an analytical form for the maximum of '
+        'the log density of MVNormal for fixed x, mu, but varying sigma.')
     else:
-      raise Exception("Cannot rejection sample psp with unbounded likelihood")
+      raise Exception('Cannot rejection sample psp with unbounded '
+        'likelihood.')
 
   def description(self,name):
-    return '  %s(mean, covariance) samples a vector according to the '\
-      'given multivariate Gaussian distribution.  It is an error if the '\
-      'dimensionalities of the arguments do not line up.' % name
+    return ('  %s(mean, covariance) samples a vector according to the '
+      'given multivariate Gaussian distribution.  It is an error if the '
+      'dimensionalities of the arguments do not line up.' % name)
 
   @staticmethod
   def __parse_args__(args):
@@ -145,8 +146,8 @@ class InverseWishartOutputPSP(RandomPSP):
     p = len(lmbda)
 
     if dof <= p - 1:
-      raise VentureValueError("Degrees of freedom cannot be less than "\
-        "dimension of scale matrix")
+      raise VentureValueError('Degrees of freedom cannot be less than '
+        'dimension of scale matrix.')
 
     try:
       chol = np.linalg.cholesky(lmbda)
@@ -179,12 +180,11 @@ class InverseWishartOutputPSP(RandomPSP):
     return log_density
 
   def gradientOfLogDensity(self, X, args):
-    '''
-    Based on the following Wikipedia page:
-      http://en.wikipedia.org/wiki/Inverse-Wishart_distribution
-      http://en.wikipedia.org/wiki/Multivariate_gamma_function
-      http://en.wikipedia.org/wiki/Matrix_calculus
-    '''
+    """Based on the following Wikipedia page:
+    http://en.wikipedia.org/wiki/Inverse-Wishart_distribution
+    http://en.wikipedia.org/wiki/Multivariate_gamma_function
+    http://en.wikipedia.org/wiki/Matrix_calculus
+    """
     (lmbda, dof) = self.__parse_args__(args)
     p = len(lmbda)
     invX = npla.inv(X)
@@ -197,9 +197,9 @@ class InverseWishartOutputPSP(RandomPSP):
     return gradX, [gradLmbda, gradDof]
 
   def description(self,name):
-    return "  %s(scale_matrix, degree_of_freedeom) samples a positive "\
-      "definite matrix according to the given inverse Wishart distribution."\
-      % name
+    return ('  %s(scale_matrix, degree_of_freedeom) samples a positive '
+      'definite matrix according to the given inverse Wishart '
+      'distribution.' % name)
 
   def __parse_args__(self, args):
     (lmbda, dof) = args.operandValues()
@@ -211,17 +211,16 @@ registerBuiltinSP("inv_wishart", typed_nr(InverseWishartOutputPSP(),
 
 
 class WishartOutputPSP(RandomPSP):
-  '''
-  Returns a sample from the Wishart distribution, conjugate prior for
+  """Returns a sample from the Wishart distribution, conjugate prior for
   precision matrices.
-  '''
+  """
   def simulate(self, args):
     (sigma, dof) = self.__parse_args__(args)
     p = len(sigma)
 
     if dof <= p - 1:
-      raise VentureValueError("Degrees of freedom cannot be less than "\
-        "dimension of scale matrix")
+      raise VentureValueError('Degrees of freedom cannot be less than '
+        'dimension of scale matrix.')
 
     try:
       chol = np.linalg.cholesky(sigma)
@@ -249,12 +248,11 @@ class WishartOutputPSP(RandomPSP):
     return log_density
 
   def gradientOfLogDensity(self, X, args):
-    '''
-    Based on the following Wikipedia page:
-      http://en.wikipedia.org/wiki/Inverse-Wishart_distribution
-      http://en.wikipedia.org/wiki/Multivariate_gamma_function
-      http://en.wikipedia.org/wiki/Matrix_calculus
-    '''
+    """Based on the following Wikipedia pages:
+    http://en.wikipedia.org/wiki/Inverse-Wishart_distribution
+    http://en.wikipedia.org/wiki/Multivariate_gamma_function
+    http://en.wikipedia.org/wiki/Matrix_calculus
+    """
     (sigma, dof) = self.__parse_args__(args)
     p = len(sigma)
     invX = npla.inv(X)
@@ -267,9 +265,9 @@ class WishartOutputPSP(RandomPSP):
     return gradX, [gradSigma, gradDof]
 
   def description(self,name):
-    return "  %s(scale_matrix, degree_of_freedeom) samples a positive "\
-      "definite matrix according to the given inverse Wishart distribution."\
-      % name
+    return ('  %s(scale_matrix, degree_of_freedeom) samples a positive '
+      'definite matrix according to the given inverse Wishart '
+      'distribution.' % name)
 
   def __parse_args__(self, args):
     (sigma, dof) = args.operandValues()
@@ -300,7 +298,8 @@ class NormalOutputPSP(RandomPSP):
       # (x-mu)^2 = sigma^2
       return self.logDensityNumeric(x, [mu, abs(x-mu)])
     else:
-      raise Exception("Cannot rejection sample psp with unbounded likelihood")
+      raise Exception('Cannot rejection sample psp with unbounded '
+        'likelihood.')
 
   def simulate(self, args):
     return self.simulateNumeric(args.operandValues())
@@ -328,20 +327,21 @@ class NormalOutputPSP(RandomPSP):
     return True
 
   def getParameterScopes(self):
-    return ["REAL","POSITIVE_REAL"]
+    return ["REAL", "POSITIVE_REAL"]
 
   def gradientOfLogDensity(self,x,args):
     (mu, sigma) = args.operandValues()
-    gradX = -(x - mu) / (math.pow(sigma,2))
-    gradMu = (x - mu) / (math.pow(sigma,2))
-    gradSigma = (math.pow(x - mu,2) - math.pow(sigma,2)) / math.pow(sigma,3)
+    gradX = -(x - mu) / (math.pow(sigma, 2))
+    gradMu = (x - mu) / (math.pow(sigma, 2))
+    gradSigma = ((math.pow(x-mu, 2) - math.pow(sigma, 2)) /
+      math.pow(sigma, 3))
     # for positive sigma, d(log density)/d(sigma) is <=> zero
     # when math.pow(x - mu,2) <=> math.pow(sigma,2) respectively
     return (gradX,[gradMu,gradSigma])
 
   def description(self,name):
-    return "  %s(mu, sigma) samples a normal distribution with mean mu "\
-      "and standard deviation sigma." % name
+    return ('  %s(mu, sigma) samples a normal distribution with mean mu '
+      'and standard deviation sigma.' % name)
 
 
 class NormalvvOutputPSP(RandomPSP):
@@ -355,7 +355,8 @@ class NormalvvOutputPSP(RandomPSP):
     (mu, sigma) = args.operandValues()
     gradX = -(x - mu) / (np.power(sigma,2))
     gradMu = (x - mu) / (np.power(sigma,2))
-    gradSigma = (np.power(x - mu,2) - np.power(sigma,2)) / np.power(sigma,3)
+    gradSigma = (np.power(x-mu, 2) - np.power(sigma, 2)) \
+      / np.power(sigma, 3)
     return (gradX,[gradMu,gradSigma])
 
 
@@ -369,9 +370,10 @@ class NormalsvOutputPSP(RandomPSP):
 
   def gradientOfLogDensity(self, x, args):
     (mu, sigma) = args.operandValues()
-    gradX = -(x - mu) / (np.power(sigma,2))
-    gradMu = (x - mu) / (np.power(sigma,2))
-    gradSigma = (np.power(x - mu,2) - np.power(sigma,2)) / np.power(sigma,3)
+    gradX = -(x-mu) / (np.power(sigma, 2))
+    gradMu = (x-mu) / (np.power(sigma, 2))
+    gradSigma = ((np.power(x-mu, 2) - np.power(sigma,2)) /
+      np.power(sigma, 3))
     return (gradX,[sum(gradMu),gradSigma])
 
 
@@ -384,9 +386,10 @@ class NormalvsOutputPSP(RandomPSP):
 
   def gradientOfLogDensity(self, x, args):
     (mu, sigma) = args.operandValues()
-    gradX = -(x - mu) / (np.power(sigma,2))
-    gradMu = (x - mu) / (np.power(sigma,2))
-    gradSigma = (np.power(x - mu,2) - np.power(sigma,2)) / np.power(sigma,3)
+    gradX = -(x-mu) / (np.power(sigma, 2))
+    gradMu = (x-mu) / (np.power(sigma, 2))
+    gradSigma = ((np.power(x-mu, 2) - np.power(sigma, 2)) /
+      np.power(sigma, 3))
     return (gradX,[gradMu,sum(gradSigma)])
 
 
@@ -397,7 +400,8 @@ generic_normal = dispatching_psp(
     SPType([t.ArrayUnboxedType(t.NumberType()), t.NumberType()],
       t.ArrayUnboxedType(t.NumberType())),
     SPType([t.ArrayUnboxedType(t.NumberType()),
-      t.ArrayUnboxedType(t.NumberType())], t.ArrayUnboxedType(t.NumberType()))],
+      t.ArrayUnboxedType(t.NumberType())],
+      t.ArrayUnboxedType(t.NumberType()))],
   [NormalOutputPSP(), NormalsvOutputPSP(), NormalvsOutputPSP(),
     NormalvvOutputPSP()])
 
@@ -419,9 +423,11 @@ class VonMisesOutputPSP(RandomPSP):
     if kappa is not None:
       return scipy.stats.vonmises.logpdf(0, kappa)
     elif x is not None and mu is not None:
-      raise Exception("TODO What is the bound for a vonmises varying kappa?")
+      raise Exception('TODO What is the bound for a vonmises varying '
+        'kappa?')
     else:
-      raise Exception("Cannot rejection sample psp with unbounded likelihood")
+      raise Exception('Cannot rejection sample psp with unbounded '
+        'likelihood.')
 
   def gradientOfLogDensity(self, x, args):
     (mu, kappa) = args.operandValues()
@@ -433,8 +439,9 @@ class VonMisesOutputPSP(RandomPSP):
     return (gradX, [gradMu, gradK])
 
   def description(self,name):
-    return "  %s(mu, kappa) samples a von Mises distribution with mean mu and "\
-      "shape kappa. The output is normalized to the interval [-pi,pi]." % name
+    return ('  %s(mu, kappa) samples a von Mises distribution with mean '
+      'mu and shape kappa. The output is normalized to the interval '
+      '[-pi,pi].' % name)
 
 
 registerBuiltinSP("vonmises", typed_nr(VonMisesOutputPSP(),
@@ -452,7 +459,8 @@ class UniformOutputPSP(RandomPSP):
   def logDensityBoundNumeric(self, _, low, high):
     if low is None or high is None:
       # Unbounded
-      raise Exception("Cannot rejection sample psp with unbounded likelihood")
+      raise Exception('Cannot rejection sample psp with unbounded'
+        'likelihood.')
     else:
       return -math.log(high - low)
 
@@ -471,8 +479,8 @@ class UniformOutputPSP(RandomPSP):
     return self.logDensityBoundNumeric(x, *args.operandValues())
 
   def description(self, name):
-    return "  %s(low, high) samples a uniform real number between low "\
-      "and high." % name
+    return ('  %s(low, high) samples a uniform real number between low '
+      'and high.' % name)
 
   # TODO Uniform presumably has a variational kernel?
 
@@ -497,14 +505,16 @@ class BetaOutputPSP(RandomPSP):
 
   def gradientOfLogDensity(self, x, args):
     (alpha, beta) = args.operandValues()
-    gradX = ((float(alpha) - 1) / x) - ((float(beta) - 1) / (1 - x))
-    gradAlpha = spsp.digamma(alpha + beta) - spsp.digamma(alpha) + math.log(x)
-    gradBeta = spsp.digamma(alpha + beta) - spsp.digamma(beta) + math.log(1 - x)
+    gradX = ((float(alpha)-1) / x) - ((float(beta)-1) / (1-x))
+    gradAlpha = spsp.digamma(alpha + beta) - spsp.digamma(alpha) \
+      + math.log(x)
+    gradBeta = spsp.digamma(alpha + beta) - spsp.digamma(beta) \
+      + math.log(1 - x)
     return (gradX,[gradAlpha,gradBeta])
 
   def description(self, name):
-    return "  %s(alpha, beta) returns a sample from a Beta distribution with "\
-      "shape parameters alpha and beta." % name
+    return ('  %s(alpha, beta) returns a sample from a Beta '
+      'distribution with shape parameters alpha and beta.' % name)
 
   # TODO Beta presumably has a variational kernel too?
 
@@ -525,7 +535,7 @@ class ExponOutputPSP(RandomPSP):
     return self.simulateNumeric(*args.operandValues())
 
   def logDensity(self,x,args):
-    return self.logDensityNumeric(x,*args.operandValues())
+    return self.logDensityNumeric(x, *args.operandValues())
 
   def gradientOfLogDensity(self,x,args):
     theta = args.operandValues()[0]
@@ -534,8 +544,8 @@ class ExponOutputPSP(RandomPSP):
     return (gradX,[gradTheta])
 
   def description(self,name):
-    return "  %s(theta) returns a sample from an exponential distribution "\
-      "with rate (inverse scale) parameter theta." % name
+    return ('  %s(theta) returns a sample from an exponential '
+      'distribution with rate (inverse scale) parameter theta.' % name)
 
 
 registerBuiltinSP("expon", typed_nr(ExponOutputPSP(),
@@ -559,7 +569,7 @@ class GammaOutputPSP(RandomPSP):
     alpha, beta = args.operandValues()
     if alpha == 1:
       warnstr = ('Gradient of simulate is discontinuous at alpha = 1.\n'
-                 'Issue https://app.asana.com/0/11192551635048/14271708124534.')
+        'Issue https://app.asana.com/0/11192551635048/14271708124534.')
       warnings.warn(warnstr, GradientWarning)
       gradAlpha = 0
       gradBeta = -value / math.pow(beta, 2.0)
@@ -593,12 +603,12 @@ class GammaOutputPSP(RandomPSP):
     (alpha, beta) = args.operandValues()
     gradX = ((alpha - 1) / float(x)) - beta
     gradAlpha = math.log(beta) - spsp.digamma(alpha) + math.log(x)
-    gradBeta = (float(alpha) / beta) - x
+    gradBeta = (float(alpha)/beta) - x
     return (gradX,[gradAlpha,gradBeta])
 
   def description(self, name):
-    return "  %s(alpha, beta) returns a sample from a Gamma distribution "\
-      "with shape parameter alpha and rate parameter beta." % name
+    return ('  %s(alpha, beta) returns a sample from a Gamma distribution '
+      'with shape parameter alpha and rate parameter beta.' % name)
 
   # TODO Gamma presumably has a variational kernel too?
 
@@ -647,13 +657,14 @@ class StudentTOutputPSP(RandomPSP):
       return (gradX,[gradNu])
     gradLoc = -(loc - x) * (nu + 1) / (nu * shape ** 2 + (loc - x) ** 2)
     gradShape = ((-nu * shape ** 2 + (loc - x) ** 2 * (nu + 1) -
-                 (loc - x) ** 2) / (shape * (nu * shape ** 2 + (loc - x) ** 2)))
+                 (loc - x) ** 2) / (shape * (nu * shape ** 2 +
+                  (loc - x) ** 2)))
     return (gradX,[gradNu,gradLoc,gradShape])
 
   def description(self, name):
-    return "  %s(nu, loc, shape) returns a sample from Student's t "\
-      "distribution with nu degrees of freedom, with optional location "\
-      "and scale parameters." % name
+    return ('  %s(nu, loc, shape) returns a sample from a Student t '
+      'distribution with nu degrees of freedom, with optional location '
+      'and scale parameters.' % name)
 
   # TODO StudentT presumably has a variational kernel too?
 
@@ -679,14 +690,15 @@ class InvGammaOutputPSP(RandomPSP):
 
   def gradientOfLogDensity(self, x, args):
     (alpha, beta) = args.operandValues()
-    gradX = (1.0 / x) * (-alpha - 1 + (beta / x))
+    gradX = (1./x) * (-alpha - 1 + (beta/x))
     gradAlpha = math.log(beta) - spsp.digamma(alpha) - math.log(x)
-    gradBeta = (float(alpha) / beta) - (1.0 / x)
+    gradBeta = (float(alpha)/beta) - (1./x)
     return (gradX,[gradAlpha,gradBeta])
 
   def description(self,name):
-    return "%s(alpha, beta) returns a sample from an inverse Gamma "\
-      "distribution with shape parameter alpha and scale parameter beta" % name
+    return ('  %s(alpha, beta) returns a sample from an inverse Gamma '
+      'distribution with shape parameter alpha and scale parameter '
+      'beta.' % name)
 
   # TODO InvGamma presumably has a variational kernel too?
 
@@ -698,16 +710,16 @@ registerBuiltinSP("inv_gamma", typed_nr(InvGammaOutputPSP(),
 class LaplaceOutputPSP(RandomPSP):
   # a is the location, b is the scale; parametrization is same as Wikipedia
   def simulateNumeric(self, a, b):
-    return scipy.stats.laplace.rvs(a,b)
+    return scipy.stats.laplace.rvs(a, b)
 
   def logDensityNumeric(self, x, a, b):
-    return scipy.stats.laplace.logpdf(x,a,b)
+    return scipy.stats.laplace.logpdf(x, a, b)
 
   def simulate(self, args):
     return self.simulateNumeric(*args.operandValues())
 
   def logDensity(self, x, args):
-    return self.logDensityNumeric(x,*args.operandValues())
+    return self.logDensityNumeric(x, *args.operandValues())
 
   def gradientOfLogDensity(self,x,args):
     (a, b) = args.operandValues()
@@ -717,14 +729,15 @@ class LaplaceOutputPSP(RandomPSP):
       gradA = np.nan
     else:
       xgta = float(np.sign(x - a))
-      gradX = -xgta / b
-      gradA = xgta / b
-    gradB = (-1. / b) + abs(x - float(a)) / (b ** 2)
-    return (gradX,[gradA,gradB])
+      gradX = -xgta/b
+      gradA = xgta/b
+    gradB = (-1./b) + abs(x-float(a)) / (b**2)
+    return (gradX, [gradA,gradB])
 
   def description(self,name):
-    return "%s(a, b) returns a sample from a Laplace (double exponential) "\
-      "distribution with shape parameter a and scale parameter b" % name
+    return (  '%s(a, b) returns a sample from a Laplace (double '
+      'exponential) distribution with shape parameter a and scale'
+      'parameter b' % name)
 
 
 registerBuiltinSP("laplace", typed_nr(LaplaceOutputPSP(),
@@ -800,7 +813,8 @@ class SuffNormalOutputPSP(RandomPSP):
     return scipy.stats.norm.logpdf(value, loc=self.mu, scale=self.sigma)
 
   def logDensityOfCounts(self, aux):
-    return SuffNormalOutputPSP.logDensityOfCountsNumeric(aux, self.mu, self.sigma)
+    return SuffNormalOutputPSP.logDensityOfCountsNumeric(aux, self.mu,
+      self.sigma)
 
   @staticmethod
   def logDensityOfCountsNumeric(aux, mu, sigma):
@@ -884,9 +898,9 @@ class MakerCNigNormalOutputPSP(DeterministicMakerAAAPSP):
     return VentureSPRecord(SuffNormalSP(NullRequestPSP(), output))
 
   def description(self, name):
-    return '  %s(m,V,a,b) returns collapsed NormalInverseGamma Normal '\
-        'sampler. While this procedure itself is deterministic, the returned '\
-        'sampler is stochastic.' % name
+    return ('  %s(m,V,a,b) returns collapsed NormalInverseGamma Normal '
+      'sampler. While this procedure itself is deterministic, the '
+      'returned sampler is stochastic.' % name)
 
 registerBuiltinSP("make_nig_normal", typed_nr(MakerCNigNormalOutputPSP(),
   [t.NumberType(), t.PositiveType(), t.PositiveType(),t.PositiveType()],
@@ -925,8 +939,8 @@ class MakerUNigNormalOutputPSP(RandomPSP):
       scipy.stats.norm.logpdf(mu, loc=m, scale=math.sqrt(sigma2*V))
 
   def description(self, name):
-    return '  %s(alpha, beta) returns an uncollapsed Normal-InverseGamma '\
-      'Normal sampler.' % name
+    return ('  %s(alpha, beta) returns an uncollapsed Normal-InverseGamma '
+      'Normal sampler.' % name)
 
 
 class UNigNormalAAALKernel(SimulationAAALKernel):
@@ -934,7 +948,8 @@ class UNigNormalAAALKernel(SimulationAAALKernel):
     madeaux = args.madeSPAux()
     post_hypers = CNigNormalOutputPSP.posteriorHypersNumeric \
       (args.operandValues(), madeaux.cts())
-    return MakerUNigNormalOutputPSP.simulateStatic(post_hypers, spaux=madeaux)
+    return MakerUNigNormalOutputPSP.simulateStatic(post_hypers,
+      spaux=madeaux)
 
   def weight(self, _trace, _newValue, _args):
     # Gibbs step, samples exactly from the local posterior.  Being a
@@ -960,15 +975,16 @@ class MakerSuffNormalOutputPSP(DeterministicMakerAAAPSP):
     return VentureSPRecord(SuffNormalSP(NullRequestPSP(), output))
 
   def description(self,name):
-    return '  %s(mu, sigma) returns Normal sampler with given mean and sigma. '\
-      'While this procedure itself is deterministic, the returned sampler '\
-      'is stochastic. The latter maintains application statistics sufficient '\
-      'to absorb changes to the weight in O(1) time (without traversing all '\
-      'the applications.' % name
+    return ('  %s(mu, sigma) returns Normal sampler with given mean and. '
+      'sigma. While this procedure itself is deterministic, the returned '
+      'sampler is stochastic. The latter maintains application statistics '
+      'sufficient to absorb changes to the weight in O(1) time (without '
+      'traversing all the applications.' % name)
 
   def gradientOfLogDensityOfCounts(self, aux, args):
-    """The derivatives with respect to the args of the log density of the counts
-    collected by the made SP."""
+    """The derivatives with respect to the args of the log density of the
+    counts collected by the made SP.
+    """
     # See the derivation in doc/sp-math/
     (mu, sigma) = args.operandValues()
     [ctN, xsum, xsumsq] = aux.cts()
@@ -983,7 +999,8 @@ class MakerSuffNormalOutputPSP(DeterministicMakerAAAPSP):
       return 0
     mu_hat = xsum / ctN
     sigma_hat = math.sqrt(xsumsq / ctN - xsum ** 2 / ctN ** 2)
-    return SuffNormalOutputPSP.logDensityOfCountsNumeric(aux, mu_hat, sigma_hat)
+    return SuffNormalOutputPSP.logDensityOfCountsNumeric(aux, mu_hat,
+      sigma_hat)
 
 registerBuiltinSP("make_suff_stat_normal", typed_nr(MakerSuffNormalOutputPSP(),
   [t.NumberType(), t.PositiveType()], SPType([], t.NumberType())))
