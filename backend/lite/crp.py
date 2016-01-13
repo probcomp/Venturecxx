@@ -69,7 +69,9 @@ class MakeCRPOutputPSP(DeterministicMakerAAAPSP):
     return VentureSPRecord(CRPSP(NullRequestPSP(),output))
 
   def description(self,name):
-    return "%s(alpha) -> <SP () <number>>\n  Chinese Restaurant Process with hyperparameter alpha.  Returns a sampler for the table number." % name
+    return ('  %s(alpha) -> <SP () <number>>\n  Chinese Restaurant '
+      'Process with hyperparameter alpha.  Returns a sampler for the '
+      'table number.' % name)
 
 class CRPOutputPSP(RandomPSP):
   def __init__(self,alpha,d):
@@ -79,17 +81,21 @@ class CRPOutputPSP(RandomPSP):
   def simulate(self,args):
     aux = args.spaux()
     old_indices = [i for i in aux.tableCounts]
-    counts = [aux.tableCounts[i] - self.d for i in old_indices] + [self.alpha + (aux.numTables * self.d)]
-    nextIndex = aux.nextIndex if len(aux.freeIndices) == 0 else aux.freeIndices.__iter__().next()
+    counts = [aux.tableCounts[i] - self.d for i in old_indices] + \
+      [self.alpha + (aux.numTables * self.d)]
+    nextIndex = (aux.nextIndex if len(aux.freeIndices) == 0
+      else aux.freeIndices.__iter__().next())
     indices = old_indices + [nextIndex]
     return simulateCategorical(counts,indices)
 
   def logDensity(self,index,args):
     aux = args.spaux()
     if index in aux.tableCounts:
-      return math.log(aux.tableCounts[index] - self.d) - math.log(self.alpha + aux.numCustomers)
+      return math.log(aux.tableCounts[index] - self.d) - \
+        math.log(self.alpha + aux.numCustomers)
     else:
-      return math.log(self.alpha + (aux.numTables * self.d)) - math.log(self.alpha + aux.numCustomers)
+      return math.log(self.alpha + (aux.numTables * self.d)) - \
+        math.log(self.alpha + aux.numCustomers)
 
   # def gradientOfLogDensity(self, value, args):
   #   aux = args.spaux()
@@ -118,9 +124,11 @@ class CRPOutputPSP(RandomPSP):
       aux.freeIndices.add(index)
 
   def logDensityOfCounts(self,aux):
-    term1 = scipy.special.gammaln(self.alpha) - scipy.special.gammaln(self.alpha + aux.numCustomers)
+    term1 = scipy.special.gammaln(self.alpha) - \
+        scipy.special.gammaln(self.alpha + aux.numCustomers)
     term2 = aux.numTables + math.log(self.alpha + (aux.numTables * self.d))
-    term3 = sum([scipy.special.gammaln(aux.tableCounts[index] - self.d) for index in aux.tableCounts])
+    term3 = sum([scipy.special.gammaln(aux.tableCounts[index] -
+        self.d) for index in aux.tableCounts])
     return term1 + term2 + term3
 
   def enumerateValues(self,args):
@@ -130,4 +138,5 @@ class CRPOutputPSP(RandomPSP):
     return indices
 
 registerBuiltinSP("make_crp", typed_nr(MakeCRPOutputPSP(),
-                                       [t.NumberType(),t.NumberType()], SPType([], t.AtomType()), min_req_args = 1))
+  [t.NumberType(),t.NumberType()], SPType([], t.AtomType()),
+  min_req_args = 1))
