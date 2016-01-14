@@ -21,6 +21,7 @@ import bisect
 import itertools
 
 import matplotlib.pyplot as plt
+import scipy.stats as stats
 
 # Returns a "massive cdf": a function a -> (Double, Double) that
 # returns the total probability mass strictly below a, and the total
@@ -63,5 +64,12 @@ def p_p_plot_2samp(observed1, observed2, ax=None):
   points = sorted(dedup1 + dedup2)
   cdf1 = expand_state_space(empirical_cdf(observed1))
   cdf2 = expand_state_space(empirical_cdf(observed2))
-  ax.scatter(map(cdf1, points), map(cdf2, points))
+  ax.plot([0,1], [0,1], 'r-', label="equality line")
+  ax.scatter(map(cdf1, points), map(cdf2, points), label="observed")
+  ax.legend()
+  ax.set_xlabel("Probability (%s samples)" % len(observed1))
+  ax.set_ylabel("Probability (%s samples)" % len(observed2))
+  ax.set_title("Probability-probability plot", loc='left')
+  (D, pval) = stats.ks_2samp(observed1, observed2)
+  ax.set_title("Two-sided K-S stat: %s, p-value: %s" % (D, pval), loc='right')
   return ax
