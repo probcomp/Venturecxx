@@ -73,3 +73,14 @@ def p_p_plot_2samp(observed1, observed2, ax=None):
   (D, pval) = stats.ks_2samp(observed1, observed2)
   ax.set_title("Two-sided K-S stat: %s, p-value: %s" % (D, pval), loc='right')
   return ax
+
+def show_example_plot(size=50, same=True):
+  import math
+  samp1 = stats.norm.rvs(size=size)
+  if same is True:
+    samp2 = stats.norm.rvs(size=size)
+  else:
+    samp2 = stats.norm.rvs(loc=1, scale=math.sqrt(0.5), size=size)
+  print samp1, samp2
+  p_p_plot_2samp(samp1, samp2)
+  plt.show()
