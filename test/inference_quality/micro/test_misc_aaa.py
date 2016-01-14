@@ -144,8 +144,6 @@ def testAAAParticleWeights():
 def checkAAAParticleWeights(sp):
   if inParallel() and "make_suff_stat_bernoulli" in sp and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and make_suff_stat_bernoulli comes from Lite.")
-  elif config["get_ripl"] == "puma":
-    raise SkipTest("Fails due to a mystery bug in Puma stop_and_copy. Issue: https://app.asana.com/0/11127829865276/13039650533872")
   ripl = get_ripl()
 
   ripl.assume("a", "1.0")

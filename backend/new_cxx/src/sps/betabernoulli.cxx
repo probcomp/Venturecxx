@@ -181,5 +181,16 @@ VentureValuePtr BetaBernoulliSPAux::asVentureValue() const
   return VentureValuePtr(new VenturePair(hd, VentureValuePtr(new VenturePair(tl, end))));
 }
 
-SPAux* BetaBernoulliSPAux::copy_help(ForwardingMap* m) const  { return new BetaBernoulliSPAux(*this);  }
-SPAux* UBetaBernoulliSPAux::copy_help(ForwardingMap* m) const { return new UBetaBernoulliSPAux(*this); }
+BetaBernoulliSPAux* BetaBernoulliSPAux::copy_help(ForwardingMap* m) const
+{
+  BetaBernoulliSPAux* answer = new BetaBernoulliSPAux(*this);
+  (*m)[this] = answer;
+  return answer;
+}
+
+UBetaBernoulliSPAux* UBetaBernoulliSPAux::copy_help(ForwardingMap* m) const
+{
+  UBetaBernoulliSPAux* answer = new UBetaBernoulliSPAux(*this);
+  (*m)[this] = answer;
+  return answer;
+}

@@ -23,7 +23,7 @@ struct ForwardingMap
   map<const void*, void*> pointers;
   map<const void*, shared_ptr<void> > shared_ptrs;
   size_t count(const void* k) const;
-  void*& operator[] (const void* k);
+  void*& operator[] (const void* const k);
 };
 
 #endif
