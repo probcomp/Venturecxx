@@ -24,6 +24,7 @@ import scipy.stats as stats
 from venture.test.config import collectSamples
 from venture.test.config import get_ripl
 from venture.test.stats import reportKnownGaussian
+from venture.test.stats import statisticalTest
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 cache_dir = os.path.join(this_dir, "models")
@@ -116,6 +117,7 @@ def testReportedPosterior():
   r.execute_program(normal_in_stan_snippet)
   eq_(stats.norm.logpdf(1, loc=0, scale=1), r.observe("(stan_normal 0 1)", 1))
 
+@statisticalTest
 def testInference():
   r = get_ripl()
   r.execute_program(normal_in_stan_snippet)
