@@ -296,7 +296,7 @@ class VenStanOutputPSP(RandomPSP):
     data_dict.update(input_data_as_dict(second_input_spec, outputs))
     fit = minimal_stan_run(self.stan_model, data=data_dict, init=[params])
     upars = fit.unconstrain_pars(params)
-    ans = fit.log_prob(upars)
+    ans = fit.log_prob(upars, adjust_transform=False)
     print "Evaluated posterior", ans
     return ans
 
