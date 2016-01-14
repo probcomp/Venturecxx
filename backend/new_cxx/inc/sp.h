@@ -67,8 +67,7 @@ struct SPAux
   boost::shared_ptr<SPAux> clone();
   virtual boost::python::object toPython(Trace * trace) const;
   virtual VentureValuePtr asVentureValue() const;
-  // TODO stupid and may make bugs hard to find
-  virtual SPAux* copy_help(ForwardingMap* m) const { return new SPAux(); }
+  virtual SPAux* copy_help(ForwardingMap* m) const = 0;
 };
 
 struct SP
