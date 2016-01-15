@@ -25,8 +25,7 @@ GP_DOWNLOADS = gpexample_plugin.py regress_mem.py multiline_plot_plugin.py \
 BASIC_ASSETS = gauss_plot.png
 REGRESSION_ASSETS = $(REGRESSION_DOWNLOADS) vis-frame.png vis-outlier.png
 GP_ASSETS = $(GP_DOWNLOADS) BayesOpt_gpmem_sequence.png \
-	gp_mixreg_hardcoded.png gp_progressivemixreg_data.png \
-	gp_toy_posterior.png
+	gp_progressivemixreg_data.png
 
 # Tutorial content files
 

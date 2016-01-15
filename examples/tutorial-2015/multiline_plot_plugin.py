@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as clr
@@ -5,22 +7,28 @@ import matplotlib.colors as clr
 import pandas as pd
 
 import venture.lite.types as t
+import venture.lite.value as vv
 from venture.lite.sp_help import deterministic_typed
 
 def array_from_dataset(d):
     [ind_name] = d.ind_names
     yss = d.data[ind_name]
-    return map(t.VentureValue.fromStackDict, yss)
+    return map(vv.VentureValue.fromStackDict, yss)
+
+def convert_color(hue):
+    return clr.hsv_to_rgb(np.array([hue, 1, 1]).reshape((1,1,3))).reshape(3)
 
 def plot_lines(xs, yss, data_xs, data_ys, ymin, ymax, huemin, huemax, linewidth):
     hues = np.linspace(huemin, huemax, len(yss))
     fig, ax = plt.subplots(1)
     for (ys, hue) in zip(yss, hues):
-        ax.plot(xs, ys, color=clr.hsv_to_rgb(np.array([hue, 1, 1]).reshape((1,1,3))).reshape(3), linewidth=linewidth)
+        ax.plot(xs, ys, color=convert_color(hue), linewidth=linewidth)
     ax.scatter(data_xs, data_ys, color='k')
     ax.set_ylim(ymin, ymax)
-    plt.show()
-    # plt.savefig('plotlines_fig.png')
+    if 'PLOT_LINES_FILE_NAME' not in os.environ:
+        plt.show()
+    else:
+        plt.savefig(os.environ['PLOT_LINES_FILE_NAME'])
 
 def __venture_start__(ripl):
     array_from_dataset_sp = deterministic_typed(array_from_dataset,
