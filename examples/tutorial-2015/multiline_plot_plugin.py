@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as clr
@@ -23,8 +25,10 @@ def plot_lines(xs, yss, data_xs, data_ys, ymin, ymax, huemin, huemax, linewidth)
         ax.plot(xs, ys, color=convert_color(hue), linewidth=linewidth)
     ax.scatter(data_xs, data_ys, color='k')
     ax.set_ylim(ymin, ymax)
-    plt.show()
-    # plt.savefig('plotlines_fig.png')
+    if 'PLOT_LINES_FILE_NAME' not in os.environ:
+        plt.show()
+    else:
+        plt.savefig(os.environ['PLOT_LINES_FILE_NAME'])
 
 def __venture_start__(ripl):
     array_from_dataset_sp = deterministic_typed(array_from_dataset,

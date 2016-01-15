@@ -153,8 +153,18 @@ The following code ([gp-2.vnts](gp-2.vnts)) asks, "what is the posterior on mode
 either linear or sine wave, conditioned on the given data?"
 <% mixreg_increment = sample_size.div(10) %>
 
+```python
+import os
+os.environ['PLOT_LINES_FILE_NAME'] = 'gp_mixreg.png'
+```
+
 ```venture
 <%= `cat gp-2.vnts`.strip().sub("mh(default, one, 50)", "mh(default, one, #{mixreg_increment})") %>
+```
+
+```python
+import os
+del os.environ['PLOT_LINES_FILE_NAME']
 ```
 
 ![Plots of f as inference progresses](gp_mixreg_hardcoded.png)
@@ -346,6 +356,11 @@ prior_covariance(g(x1), g(x2)) = 1.2 * exp((x1-x2)^2 / (2*0.8))
 
 We can observe the value of `g` at given data points:
 
+```python
+import os
+os.environ['PLOT_LINES_FILE_NAME'] = 'gp_toy.png'
+```
+
 ```venture
 // Data
 assume data_xs = array(3.2, 2.2, 8.7);
@@ -357,6 +372,11 @@ define xs = linspace(0, 10, 200);
 define yss = array_from_dataset(run(accumulate_dataset(10,
     collect(g(unquote(xs))))));
 plot_lines(xs, yss, run(sample(data_xs)), data_ys, -5, 12, 1.0, 1.0, 0.5);
+```
+
+```python
+import os
+del os.environ['PLOT_LINES_FILE_NAME']
 ```
 
 ![Posterior of toy GP](gp_toy_posterior.png)
