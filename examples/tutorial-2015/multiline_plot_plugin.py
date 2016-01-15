@@ -5,12 +5,13 @@ import matplotlib.colors as clr
 import pandas as pd
 
 import venture.lite.types as t
+import venture.lite.value as vv
 from venture.lite.sp_help import deterministic_typed
 
 def array_from_dataset(d):
     [ind_name] = d.ind_names
     yss = d.data[ind_name]
-    return map(t.VentureValue.fromStackDict, yss)
+    return map(vv.VentureValue.fromStackDict, yss)
 
 def convert_color(hue):
     return clr.hsv_to_rgb(np.array([hue, 1, 1]).reshape((1,1,3))).reshape(3)
