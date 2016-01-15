@@ -1,0 +1,19 @@
+(assume kepler
+  (lambda (apogee perigee)
+    (let ((GM 398600.4418)
+          (earth_radius 6378)
+          (a (+ (* .5 (+ apogee perigee)) earth_radius)))
+      (/ (* 2 3.1415 (sqrt (/ (pow a 3) GM))) 60))))
+
+; TODO : hyperparameter inference?
+
+(assume sim_cluster (make_crp 1))
+(assume z (mem (lambda (i) (sim_cluster))))
+
+(assume apogee_sampler (mem (lambda (i) (make_nig_normal 2e5 1 1 1))))
+(assume perigee_sampler (mem (lambda (i) (make_nig_normal 5e4 1 1 1))))
+
+(assume satellite (mem (lambda (i)
+  (let ((apogee ((apogee_sampler (z i))))
+        (perigee ((perigee_sampler (z i)))))
+    (list apogee perigee (normal (kepler apogee perigee) 0.1))))))
