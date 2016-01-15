@@ -312,6 +312,7 @@ tests_require = [
     'pexpect',
     'seaborn', # For examples/gaussian_geweke.py
     'statsmodels', # For examples/gaussian_geweke.py
+    'pystan', # For testing the venstan integration
 ]
 
 # XXX For inexplicable reasons, during sdist.run, setuptools quietly
