@@ -12,11 +12,14 @@ def array_from_dataset(d):
     yss = d.data[ind_name]
     return map(t.VentureValue.fromStackDict, yss)
 
+def convert_color(hue):
+    return clr.hsv_to_rgb(np.array([hue, 1, 1]).reshape((1,1,3))).reshape(3)
+
 def plot_lines(xs, yss, data_xs, data_ys, ymin, ymax, huemin, huemax, linewidth):
     hues = np.linspace(huemin, huemax, len(yss))
     fig, ax = plt.subplots(1)
     for (ys, hue) in zip(yss, hues):
-        ax.plot(xs, ys, color=clr.hsv_to_rgb(np.array([hue, 1, 1]).reshape((1,1,3))).reshape(3), linewidth=linewidth)
+        ax.plot(xs, ys, color=convert_color(hue), linewidth=linewidth)
     ax.scatter(data_xs, data_ys, color='k')
     ax.set_ylim(ymin, ymax)
     plt.show()
