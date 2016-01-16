@@ -1,8 +1,10 @@
-from matplotlib import cm
-from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy.stats import invgamma, norm
+
+from matplotlib import cm
+from mpl_toolkits.mplot3d import Axes3D
 
 from gpmcc.dists.normal import Normal
 
@@ -38,4 +40,17 @@ if plot:
     ax.set_xlabel('Apogee', fontweight='bold')
     ax.set_ylabel('Perigee', fontweight='bold')
     ax.set_zlabel('Period', fontweight='bold')
+
+def simulate_params(m, V, a, b):
+    # Simulate the mean and variance from NormalInverseGamma.
+    # https://en.wikipedia.org/wiki/Normal-inverse-gamma_distribution#Generating_normal-inverse-gamma_random_variates
+    sigma2 = invgamma.rvs(a, scale=b)
+    mu = norm.rvs(loc=m, scale=np.sqrt(sigma2*V))
+    return (mu, sigma2)
+
+def plot_samples(samples):
+    fig, ax = plt.subplots()
+    for x in samples:
+        ax.vlines(x, 0, .1, linewidth=1)
+    ax.set_ylim([0, 1])
 
