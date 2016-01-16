@@ -316,6 +316,8 @@ tests_require = [
               # does the wrong thing with ordering packages pulled in
               # as dependencies.
     'pystan', # For testing the venstan integration
+    'markdown2', # For building the tutorial with venture-transcript
+    # TODO Is markdown2 a real dependency?
 ]
 
 # XXX For inexplicable reasons, during sdist.run, setuptools quietly
