@@ -39,3 +39,8 @@ dump
 /python/lib/parser/venture_script/grammar.sha256
 
 ideal_prior_trick_mar.png
+
+# Latex artifacts
+*.aux
+*.log
+*.synctex.gz
