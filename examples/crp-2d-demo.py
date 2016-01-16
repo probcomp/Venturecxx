@@ -24,6 +24,8 @@ the data into clusters.
 TODO: May not actually work properly (cluster means don't seem to move?)
 """
 
+import math
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
@@ -99,10 +101,9 @@ def doit():
       var_l.append(ripl.predict('(get_variance %d)'%ci))
     # print 'components: ', component_set
     # print 'mean: ', mean_l
+    # print 'variance: ', var_l
     return {'data':data_l, 'mean':mean_l, 'var':var_l, \
             'component_set':list(component_set)}
-  mean_l = list()
-  var_l = list()
   plt.ion()
   x_l = list()
   y_l = list()
@@ -114,8 +115,6 @@ def doit():
     func(ripl, 1)
     plt.clf()
     sample = makeData(ripl, num_sample)
-    mean_l.append(sample['mean'])
-    var_l.append(sample['var'])
     print sample['mean']
 
     plt.plot(x_l, y_l, 'r.')
@@ -123,8 +122,10 @@ def doit():
       plot_xrange = np.arange(2*min(x_l)-max(x_l), 2*max(x_l)-min(x_l), 2*(max(x_l)-min(x_l))/100)
       plot_yrange = np.arange(2*min(y_l)-max(y_l), 2*max(y_l)-min(y_l), 2*(max(y_l)-min(y_l))/100)
       plot_xrange, plot_yrange = np.meshgrid(plot_xrange, plot_yrange)
-      plot_zrange = mlab.bivariate_normal(plot_xrange, plot_yrange, mean_x[0], mean_x[1],  \
-                    var_x[0,0], var_x[1,1], var_x[0,1])
+      plot_zrange = mlab.bivariate_normal(plot_xrange, plot_yrange, \
+          mux=mean_x[0], muy=mean_x[1],  \
+          sigmax=math.sqrt(var_x[0,0]), sigmay=math.sqrt(var_x[1,1]), \
+          sigmaxy=math.sqrt(var_x[0,1]))
 
       plt.contour(plot_xrange, plot_yrange, plot_zrange)
     plt.draw()
