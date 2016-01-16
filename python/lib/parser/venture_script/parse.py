@@ -246,8 +246,14 @@ class Semantics(object):
         i = loctoken1(k, val.symbol('force'))
         app = [i, e1, e2]
         return locmerge(i, e2, app)
+    def p_sample_some(self, k, e):
+        assert isloc(e)
+        i = loctoken1(k, val.symbol('sample'))
+        app = [i, e]
+        return locmerge(i, e, app)
     p_do_bind_none = _p_exp
     p_force_none = _p_exp
+    p_sample_none = _p_exp
     p_boolean_or_or = _p_binop
     p_boolean_or_none = _p_exp
     p_boolean_and_and = _p_binop

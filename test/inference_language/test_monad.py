@@ -208,3 +208,9 @@ force x = 5;
 report(quote(x));
 """)
   eq_(5, u.strip_types([v['value'] for v in vals])[2])
+
+def testSampleSugar():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  vals = r.execute_program("sample 2 + 2;")
+  eq_([4], u.strip_types([v['value'] for v in vals]))
