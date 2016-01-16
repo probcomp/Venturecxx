@@ -120,4 +120,4 @@ def testHmcDemo():
   with extra_module_path("examples"):
     with temp_directory("hmc") as plot_dir:
       import hmc_demo
-      hmc_demo.doit(nsamples=3, nruns=1, plot_dir=plot_dir)
+      hmc_demo.doit(nsamples=3, nruns=1, plot_dir=plot_dir, contour_delta=2)

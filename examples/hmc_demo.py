@@ -107,7 +107,7 @@ def bounds(dfs, var):
   fuzz = 0.1 * max(maximum - minimum, 1.)
   return minimum - fuzz, maximum + fuzz, fuzz
 
-def doit(nsamples, nruns, plot_dir):
+def doit(nsamples, nruns, plot_dir, contour_delta):
   overlay = [0] * len(examples) * nruns
   for i, (name, program) in enumerate(examples):
     datasets = [0] * nruns
@@ -117,14 +117,14 @@ def doit(nsamples, nruns, plot_dir):
       datasets[run] = (ds_name, compute(nsamples, program))
       overlay[nruns*i + run] = datasets[run]
     plot(name, "x", "y", "-o", datasets, contour_func=true_pdf,
-      contour_delta=0.5, ax=plt.figure().gca())
+      contour_delta=contour_delta, ax=plt.figure().gca())
     if plot_dir is None:
       plt.show()
     else:
       plt.savefig(os.path.join(plot_dir, name + ".png"))
       plt.clf()
   plot("overlay", "x", "y", "o", overlay, contour_func=true_pdf,
-    contour_delta=0.5, ax=plt.figure().gca())
+    contour_delta=contour_delta, ax=plt.figure().gca())
   if plot_dir is None:
     plt.show()
   else:
@@ -132,4 +132,4 @@ def doit(nsamples, nruns, plot_dir):
     plt.clf()
 
 if __name__ == "__main__":
-  doit(nsamples=70, nruns=3, plot_dir=None)
+  doit(nsamples=70, nruns=3, plot_dir=None, contour_delta=0.5)
