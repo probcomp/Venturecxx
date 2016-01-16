@@ -73,3 +73,12 @@ upload: build
 upload-smoke: build-smoke
 	scp -r tutorial-smoke/ \
 	 login.csail.mit.edu:/afs/csail.mit.edu/proj/probcomp/www/data/venture/
+
+clean:
+	rm -rf tutorial
+	rm -rf tutorial-smoke
+	rm -f *.lvnt
+	rm -f gauss_plot.png
+	rm -f reg-test.csv
+	rm -f vis-frame.png
+	rm -f vis-outlier.png
