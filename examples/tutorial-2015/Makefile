@@ -3,10 +3,10 @@ all: build
 # Assets
 
 gauss_plot.png:  # This takes about 3 minutes on my laptop
-	venture puma --abstract-syntax -e '(run (resample 100)) \
+	venture puma --abstract-syntax -e "(run (resample 100)) \
 	 (plot_to_file (quote gauss_plot) (quote h0) \
 	  (run (accumulate_dataset 10000 \
-	        (collect (labelled (normal 1 0.7071067811865475) x)))))'
+	        (collect (labelled (normal 1 0.7071067811865475) x)))))"
 
 reg-test.csv: mk_dataset.vnt
 	venture puma -f $<
