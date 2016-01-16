@@ -62,10 +62,13 @@ class Draw(object):
       self._draw(inferrer, alpha_levels)
 
   def draw_to_disk(self, inferrer, paths):
+    path = paths[0]["value"]
     if pygame_found:
-      path = paths[0]["value"]
       self.draw(inferrer)
       pygame.image.save(self.window, path)
+    else:
+      with open(path, "w") as f:
+        f.write("No pygame, can't make images")
 
   def stop(self, _inferrer):
     if pygame_found:
