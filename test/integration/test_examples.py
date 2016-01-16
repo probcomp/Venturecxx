@@ -87,7 +87,7 @@ def checkVentureExampleComplete(command):
 @gen_in_backend("none")
 @gen_needs_backend("puma")
 def testVentureExamplesPumaComplete():
-  for ex in ["venture puma -f examples/crosscat.vnt"]:
+  for ex in ["venture puma -f examples/crosscat.vnt -e smoke_test"]:
     yield checkVentureExampleComplete, ex
 
 @contextlib.contextmanager
