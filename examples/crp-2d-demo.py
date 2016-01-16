@@ -41,7 +41,7 @@ model = '''
   (mem (lambda (id)
     (tag (quote clustering) id (crp))))]
 [assume mean_hyper_mean (array 0 0)]
-[assume mean_hyper_variance (matrix (list (list 10 0) (list 0 10)))]
+[assume mean_hyper_variance (matrix (list (list 20 0) (list 0 20)))]
 [assume get_mean
   (mem (lambda (cluster)
     (tag (quote parameters) cluster
@@ -73,63 +73,68 @@ def makeObserves(ripl):
   ripl.observe('(get_datapoint 8)', v.list([v.num(-1.1235421108040797), v.num(-5.261098458581845)]))
   ripl.observe('(get_datapoint 9)', v.list([v.num(1.1794444234381136), v.num(-3.630199721409284)]))
 
+def do_infer(ripl, iter):
+  ripl.infer("(mh default one 50)")
+  # ripl.infer("""(repeat 3 (do
+  #   (mh 'hypers one 2)
+  #   (mh 'parameters one 3)
+  #   (pgibbs 'clustering ordered 2 1)))""")
+  # self.ripl.infer("(repeat 1 (do (mh 'hypers one 2) (mh 'parameters one 3) (mh 'clustering one 8)))")
+  # self.ripl.infer('(mh 'hypers one %d)'%iter)
+  # self.ripl.infer('(mh 'clustering one %d)'%(iter))
+  # self.ripl.infer('(mh 'parameters one %d)'%(iter))
+  # self.ripl.infer('(hmc 'parameters all %f %d %d)'%(eps, L, iter))
+  # self.ripl.infer('(pgibbs 'clustering ordered 2 %d)'%iter)
+
+def collect_clusters(ripl, num_points):
+  mean_l = list()
+  var_l = list()
+  component_set = set()
+  for ni in range(num_points):
+    # print 'ni = %d, cluster = %d'%(ni, self.ripl.predict('(get_cluster %d)'%ni))
+    component_set.add(ripl.sample('(get_cluster %d)'%ni))
+  for ci in component_set:
+    mean_l.append(ripl.sample('(get_mean atom<%d>)'%ci))
+    var_l.append(ripl.sample('(get_variance atom<%d>)'%ci))
+  # print 'components: ', component_set
+  # print 'mean: ', mean_l
+  # print 'variance: ', var_l
+  return {'mean':mean_l, 'var':var_l, \
+          'component_set':list(component_set)}
+
+def do_plot(x_l, y_l, sample):
+  plt.clf()
+  plt.plot(x_l, y_l, 'r.')
+  for (mean_x,var_x) in zip(sample['mean'], sample['var']):
+    plot_xrange = np.arange(2*min(x_l)-max(x_l), 2*max(x_l)-min(x_l), 2*(max(x_l)-min(x_l))/100)
+    plot_yrange = np.arange(2*min(y_l)-max(y_l), 2*max(y_l)-min(y_l), 2*(max(y_l)-min(y_l))/100)
+    plot_xrange, plot_yrange = np.meshgrid(plot_xrange, plot_yrange)
+    plot_zrange = mlab.bivariate_normal(plot_xrange, plot_yrange, \
+        mux=mean_x[0], muy=mean_x[1],  \
+        sigmax=math.sqrt(var_x[0,0]), sigmay=math.sqrt(var_x[1,1]), \
+        sigmaxy=math.sqrt(var_x[0,1]))
+
+    plt.contour(plot_xrange, plot_yrange, plot_zrange)
+  plt.draw()
+  plt.show()
+
 def doit():
-  num_sample = 10
+  num_points = 10
   ripl = shortcuts.make_lite_church_prime_ripl()
   ripl.execute_program(model)
   makeObserves(ripl)
-  def func(ripl, iter):
-    ripl.infer("(repeat 3 (do (mh 'hypers one 2) (mh 'parameters one 3) (pgibbs 'clustering ordered 2 1)))")
-    # self.ripl.infer("(repeat 1 (do (mh 'hypers one 2) (mh 'parameters one 3) (mh 'clustering one 8)))")
-    # self.ripl.infer('(mh 'hypers one %d)'%iter)
-    # self.ripl.infer('(mh 'clustering one %d)'%(iter))
-    # self.ripl.infer('(mh 'parameters one %d)'%(iter))
-    # self.ripl.infer('(hmc 'parameters all %f %d %d)'%(eps, L, iter))
-    # self.ripl.infer('(pgibbs 'clustering ordered 2 %d)'%iter)
-  def makeData(ripl, num_sample):
-    data_l = list()
-    mean_l = list()
-    var_l = list()
-    component_set = set()
-    for ni in range(num_sample):
-      data_l.append(ripl.predict('(get_datapoint %d)'%ni))
-      # print 'ni = %d, cluster = %d'%(ni, self.ripl.predict('(get_cluster %d)'%ni))
-      component_set.add(ripl.predict('(get_cluster %d)'%ni))
-      # print data_l[-1]
-    for ci in component_set:
-      mean_l.append(ripl.predict('(get_mean %d)'%ci))
-      var_l.append(ripl.predict('(get_variance %d)'%ci))
-    # print 'components: ', component_set
-    # print 'mean: ', mean_l
-    # print 'variance: ', var_l
-    return {'data':data_l, 'mean':mean_l, 'var':var_l, \
-            'component_set':list(component_set)}
   plt.ion()
   x_l = list()
   y_l = list()
-  for ni in range(num_sample):
+  for ni in range(num_points):
     dpoint = ripl.predict('(get_datapoint %d)'%ni)
     x_l.append(dpoint[0])
     y_l.append(dpoint[1])
   for ni in range(100):
-    func(ripl, 1)
-    plt.clf()
-    sample = makeData(ripl, num_sample)
-    print sample['mean']
-
-    plt.plot(x_l, y_l, 'r.')
-    for (mean_x,var_x) in zip(sample['mean'], sample['var']):
-      plot_xrange = np.arange(2*min(x_l)-max(x_l), 2*max(x_l)-min(x_l), 2*(max(x_l)-min(x_l))/100)
-      plot_yrange = np.arange(2*min(y_l)-max(y_l), 2*max(y_l)-min(y_l), 2*(max(y_l)-min(y_l))/100)
-      plot_xrange, plot_yrange = np.meshgrid(plot_xrange, plot_yrange)
-      plot_zrange = mlab.bivariate_normal(plot_xrange, plot_yrange, \
-          mux=mean_x[0], muy=mean_x[1],  \
-          sigmax=math.sqrt(var_x[0,0]), sigmay=math.sqrt(var_x[1,1]), \
-          sigmaxy=math.sqrt(var_x[0,1]))
-
-      plt.contour(plot_xrange, plot_yrange, plot_zrange)
-    plt.draw()
-    plt.show()
+    do_infer(ripl, 1)
+    clusters = collect_clusters(ripl, num_points)
+    print clusters['mean']
+    do_plot(x_l, y_l, clusters)
 
 if __name__ == '__main__':
   doit()
