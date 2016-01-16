@@ -147,8 +147,10 @@ class VentureSivm(object):
                     # (presumably!) not recorded in the underlying
                     # engine (so e.g. future list_directives commands
                     # should not list it)
-                    del self.directive_dict[predicted_did]
-                    del self.syntax_dict[predicted_did]
+                    if predicted_did in self.directive_dict:
+                        del self.directive_dict[predicted_did]
+                    if predicted_did in self.syntax_dict:
+                        del self.syntax_dict[predicted_did]
             raise e, None, info[2]
         self._register_executed_instruction(instruction, predicted_did, response)
         return response
@@ -279,8 +281,14 @@ class VentureSivm(object):
                 # We didn't save the infer loop thing
                 pass
             else:
-                del self.directive_dict[predicted_did]
-                del self.syntax_dict[predicted_did]
+                # There is at least one way in which the predicted_did
+                # may fail to be present in these dicts: if the
+                # instruction being executed caused a "load" operation
+                # (which mutates the current sivm!?).
+                if predicted_did in self.directive_dict:
+                    del self.directive_dict[predicted_did]
+                if predicted_did in self.syntax_dict:
+                    del self.syntax_dict[predicted_did]
 
     ###############################
     # Continuous Inference Pauser
