@@ -194,8 +194,11 @@ class Writer(object):
     def execute_program(self, munged, expect_error):
         if munged.strip() == "list_directives":
             return [self.ripl.print_directives()]
-        elif munged.strip() == "clear":
-            return [self._create_ripl()]
+        elif munged.strip().startswith("clear"):
+            cleared = [self._create_ripl()]
+            prog = munged.strip()[len("clear"):]
+            rest = self.execute_program(prog, expect_error)
+            return cleared + rest
         else:
             try:
                 return self.ripl.execute_program(munged)
