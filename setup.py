@@ -312,6 +312,9 @@ tests_require = [
     'pexpect',
     'seaborn', # For examples/gaussian_geweke.py
     'statsmodels', # For examples/gaussian_geweke.py
+    'cython', # Because it has to be installed before pystan, and pip
+              # does the wrong thing with ordering packages pulled in
+              # as dependencies.
     'pystan', # For testing the venstan integration
 ]
 
