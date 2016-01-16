@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import contextlib
 import copy
 import os.path
 import shutil
@@ -89,20 +90,25 @@ def testVentureExamplesPumaComplete():
   for ex in ["venture puma -f examples/crosscat.vnt"]:
     yield checkVentureExampleComplete, ex
 
+@contextlib.contextmanager
+def extra_module_path(path):
+  root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+  exs_path = os.path.join(root, path)
+  old_path = copy.copy(sys.path)
+  sys.path.append(exs_path)
+  yield
+  sys.path = old_path
+
 @in_backend("none")
 @needs_backend("lite")
 def testGaussianGeweke():
-  root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-  exs_path = os.path.join(root, "examples")
 
   plots_dir = None
-  old_path = copy.copy(sys.path)
-  sys.path.append(exs_path)
-  try:
-    import gaussian_geweke
-    plots_dir = tempfile.mkdtemp(suffix='geweke')
-    gaussian_geweke.main(outdir=plots_dir, n_sample=2, burn_in=2, thin=2)
-  finally:
-    sys.path = old_path
-    if plots_dir is not None:
-      shutil.rmtree(plots_dir)
+  with extra_module_path("examples"):
+    try:
+      import gaussian_geweke
+      plots_dir = tempfile.mkdtemp(suffix='geweke')
+      gaussian_geweke.main(outdir=plots_dir, n_sample=2, burn_in=2, thin=2)
+    finally:
+      if plots_dir is not None:
+        shutil.rmtree(plots_dir)
