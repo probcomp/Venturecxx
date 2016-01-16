@@ -58,3 +58,23 @@ In the first case there is a variable in the outer context that is
 being spliced into the expression in the inner language; in the second
 case there is just a symbol, which is interpreted as a variable
 reference in the inner lnaguage.
+
+Q: Why is the `venture` console ignoring the `--abstract-syntax` flag when
+reading a file written in the the abstract syntax?
+
+For instance::
+
+    $ cat foo.vnts
+    (assume earth_radius 6378)
+    $ venture --abstract-syntax -f foo.vnts
+    Tracing models with the Lite backend
+    Traceback (most recent call last):
+    venture.exception.VentureException: *** text_parse: Syntax error at 'earth_radius' (token 2)
+    (assume earth_radius 6378)
+            ^^^^^^^^^^^^
+    {'instruction_string': '(assume earth_radius 6378)', 'text_index': [8, 19]}
+
+A: The extension in `foo.vnts` tells the console to interpret the
+program in the concrete syntax, regardless of the `--abstract-syntax` flag. To
+ensure the program is interpreted in the abstract syntax, use the extension
+`foo.vnt` instead (without the `s`).
