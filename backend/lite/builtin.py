@@ -42,6 +42,7 @@ import venture.lite.hmm
 import venture.lite.cmvn
 import venture.lite.function
 import venture.lite.gp
+import venture.untraced.usp
 
 # The types in the types module are generated programmatically, so
 # pylint doesn't find out about them.

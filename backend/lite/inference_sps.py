@@ -954,6 +954,8 @@ Venture via `ripl.register_foreign_sp` or `ripl.bind_foreign_sp`.
 Binds that symbol to that procedure in the current model.
 """),
 
+  engine_method_sp("bind_untraced_sp", infer_action_maker_type([t.SymbolType("<name>"), t.AnyType("<procedure>")])),
+
   engine_method_sp("select", infer_action_maker_type([t.AnyType("scope : object"), t.AnyType("block : object")], t.ForeignBlobType("subproblem")), desc="""\
 Select the subproblem indicated by the given scope and block from the current model.
 

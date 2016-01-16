@@ -198,6 +198,10 @@ class Infer(object):
   def model_import_foreign(self, name):
     return self.engine.import_foreign(name)
 
+  def bind_untraced_sp(self, name, spr):
+    self.engine.register_foreign_sp(name, spr.sp)
+    self.engine.import_foreign(name)
+
   def select(self, scope, block):
     assert len(self.engine.model.log_weights) == 1, "Custom subproblems only supported for one trace at a time"
     return self.engine.model.traces.at(0, 'select', scope, block)
