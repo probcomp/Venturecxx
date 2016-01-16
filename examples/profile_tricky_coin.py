@@ -31,7 +31,7 @@ ripl.execute_program("""
 
 ripl.profiler_enable()
 ripl.infer('(mh default one 10)')
-ripl.infer('(gibbs tricky one 1)')
+ripl.infer("(gibbs 'tricky one 1)")
 
 def printAddr((did, index)):
   exp = ripl.sivm._get_exp(did)
@@ -41,8 +41,10 @@ def printAddr((did, index)):
 
 data = ripl.profile_data()
 
+for addrs in data.principal:
+  map(printAddr, addrs)
 
-map(lambda addrs: map(printAddr, addrs), data.principal)
+print data
 
 # plot profile data:
 # group by principal, operator
@@ -50,8 +52,7 @@ map(lambda addrs: map(printAddr, addrs), data.principal)
 
 grouped = data.groupby(['principal', 'operator'], sort=False)
 
-#grouped.alpha.hist(legend=True)
-#grouped.alpha.value_counts().plot(kind='hist', legend=True, alpha=0.5)
-#import pylab as pl
-#pl.show()
-
+# grouped.alpha.hist(legend=True)
+# grouped.alpha.value_counts().plot(kind='hist', legend=True, alpha=0.5)
+# import pylab as pl
+# pl.show()
