@@ -24,6 +24,6 @@ def testUnquoteWorksAtToplevel():
   r.set_mode('venture_script')
   ans = r.execute_program('''
 define y = 42;
-sample(unquote(y) + 1);
+sample unquote(y) + 1;
   ''', type=False)
   eq_(ans, [42.0, 43.0])
