@@ -38,10 +38,10 @@
 
 [assume emission_matrix
   (array (simplex .6 .1 .1 .1 .1)
-	 (simplex .1 .6 .1 .1 .1)
-	 (simplex .1 .1 .6 .1 .1)
-	 (simplex .1 .1 .1 .6 .1)
-	 (simplex .1 .1 .1 .1 .6))]
+         (simplex .1 .6 .1 .1 .1)
+         (simplex .1 .1 .6 .1 .1)
+         (simplex .1 .1 .1 .6 .1)
+         (simplex .1 .1 .1 .1 .6))]
 
 [assume transition
   (lambda (state)
@@ -53,7 +53,7 @@
 
 [assume state
   (mem (lambda (t)
-	 (tag (quote seq) t
+         (tag (quote seq) t
           (if (<= t 1)
               1
               (transition (state (- t 1)))))))]
@@ -109,9 +109,9 @@
       (call_back hmm_begin)
       (for_each_observation
        (lambda (time)
-	 (begin
-	   (forward_phase_step time)
-	   (call_back hmm_state (state (unquote time))))))
+         (begin
+           (forward_phase_step time)
+           (call_back hmm_state (state (unquote time))))))
       (call_back hmm_end)))]
 
 ;;; Viterbi algorithm
@@ -141,4 +141,4 @@
        (do ;(func_pgibbs (quote seq) ordered 5 (/ nsweeps 5))
            (mh default one (* 20 nsweeps))
            (call_back hmm_smoothed_nw
-	     (mapv state (mapv int_to_float (arange 1 21))))))))]
+             (mapv state (mapv int_to_float (arange 1 21))))))))]
