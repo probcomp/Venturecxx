@@ -60,7 +60,7 @@ case there is just a symbol, which is interpreted as a variable
 reference in the inner lnaguage.
 
 Q: Why is the `venture` console ignoring the `--abstract-syntax` flag when
-reading a file written in the the abstract syntax?
+reading a file written in the abstract syntax?
 
 For instance::
 
