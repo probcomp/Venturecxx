@@ -240,7 +240,14 @@ class Semantics(object):
         n = loctoken(n)
         # XXX Yes, this remains infix, for the macro expander to handle...
         return locmerge(n, e, [n, locmap(loctoken(op), val.symbol), e])
+    def p_force_some(self, k, e1, eq, e2):
+        assert isloc(e1)
+        assert isloc(e2)
+        i = loctoken1(k, val.symbol('force'))
+        app = [i, e1, e2]
+        return locmerge(i, e2, app)
     p_do_bind_none = _p_exp
+    p_force_none = _p_exp
     p_boolean_or_or = _p_binop
     p_boolean_or_none = _p_exp
     p_boolean_and_and = _p_binop

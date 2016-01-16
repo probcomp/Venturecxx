@@ -60,7 +60,10 @@ let1(l)			::= L_NAME(n) T_EQDEF(eq) expression(e).
 expression(top)		::= do_bind(e).
 
 do_bind(bind)		::= L_NAME(n) T_LARR(op) expression(e).
-do_bind(none)		::= boolean_and(e).
+do_bind(none)		::= force(e).
+
+force(some)		::= K_FORCE(k) boolean_and(e1) T_EQDEF(eq) boolean_and(e2).
+force(none)		::= boolean_and(e).
 
 /* XXX This AND/OR precedence is backwards from everyone else!  */
 boolean_and(and)	::= boolean_and(l) K_AND|T_AND(op) boolean_or(r).
@@ -161,6 +164,7 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_DIV
 	K_ELSE
 	K_EQ
+	K_FORCE
 	K_GE
 	K_GT
 	K_IF
