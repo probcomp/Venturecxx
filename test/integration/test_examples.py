@@ -47,7 +47,7 @@ def checkExample(example):
 @gen_in_backend("none")
 @gen_needs_backend("lite")
 def testExamples():
-  for ex in ["crp-2d-demo.py", "hmc-demo.py"]:
+  for ex in ["hmc-demo.py"]:
     yield checkExample, ex
 
 def checkVentureExample(command):
@@ -112,3 +112,10 @@ def testGaussianGeweke():
     finally:
       if plots_dir is not None:
         shutil.rmtree(plots_dir)
+
+@in_backend("none")
+@needs_backend("lite")
+def testCrp2dDemo():
+  with extra_module_path("examples"):
+    import crp_2d_demo
+    crp_2d_demo.doit(num_points=2, num_frames=3, show_pics=False)

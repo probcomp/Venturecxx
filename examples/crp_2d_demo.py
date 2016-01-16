@@ -20,8 +20,6 @@
 The clusters are 2-D Gaussian.  The model infers the number of
 clusters using a Chinese Restaurant Process prior on the partition of
 the data into clusters.
-
-TODO: May not actually work properly (cluster means don't seem to move?)
 """
 
 import math
@@ -35,7 +33,6 @@ import venture.value.dicts as v
 
 model = '''
 [assume alpha (tag (quote hypers) 0 (gamma 1.0 1.0))]
-[assume scale (tag (quote hypers) 1 (gamma 1.0 1.0))]
 [assume crp (make_crp alpha)]
 [assume get_cluster
   (mem (lambda (id)
@@ -61,17 +58,19 @@ model = '''
 '''
 
 
-def makeObserves(ripl):
-  ripl.observe('(get_datapoint 0)', v.list([v.real(-2.4121470179012272), v.real(-4.0898807104175177)]))
-  ripl.observe('(get_datapoint 1)', v.list([v.real(-3.5742473969392483), v.real(16.047761595206289)]))
-  ripl.observe('(get_datapoint 2)', v.list([v.num(-0.44139814963230056), v.num(-4.366209321011203)]))
-  ripl.observe('(get_datapoint 3)', v.list([v.num(-0.23258164982263235), v.num(-5.687017265835844)]))
-  ripl.observe('(get_datapoint 4)', v.list([v.num(0.035565573263568961), v.num(-3.337136380872824)]))
-  ripl.observe('(get_datapoint 5)', v.list([v.num(-4.3443008510924654), v.num(17.827515632039944)]))
-  ripl.observe('(get_datapoint 6)', v.list([v.num(-0.19026889153157978), v.num(-3.6065264508558972)]))
-  ripl.observe('(get_datapoint 7)', v.list([v.num(-4.8535236723040498), v.num(17.098870618931819)]))
-  ripl.observe('(get_datapoint 8)', v.list([v.num(-1.1235421108040797), v.num(-5.261098458581845)]))
-  ripl.observe('(get_datapoint 9)', v.list([v.num(1.1794444234381136), v.num(-3.630199721409284)]))
+def makeObserves(ripl, num_points):
+  data = [v.list([v.real(-2.4121470179012272), v.real(-4.0898807104175177)]),
+          v.list([v.real(-3.5742473969392483), v.real(16.047761595206289)]),
+          v.list([v.num(-0.44139814963230056), v.num(-4.366209321011203)]),
+          v.list([v.num(-0.23258164982263235), v.num(-5.687017265835844)]),
+          v.list([v.num(0.035565573263568961), v.num(-3.337136380872824)]),
+          v.list([v.num(-4.3443008510924654), v.num(17.827515632039944)]),
+          v.list([v.num(-0.19026889153157978), v.num(-3.6065264508558972)]),
+          v.list([v.num(-4.8535236723040498), v.num(17.098870618931819)]),
+          v.list([v.num(-1.1235421108040797), v.num(-5.261098458581845)]),
+          v.list([v.num(1.1794444234381136), v.num(-3.630199721409284)])]
+  for i in range(num_points):
+    ripl.observe('(get_datapoint %d)' % i, data[i])
 
 def do_infer(ripl, iter):
   ripl.infer("(mh default one 50)")
@@ -102,7 +101,7 @@ def collect_clusters(ripl, num_points):
   return {'mean':mean_l, 'var':var_l, \
           'component_set':list(component_set)}
 
-def do_plot(x_l, y_l, sample):
+def do_plot(x_l, y_l, sample, show_pics):
   plt.clf()
   plt.plot(x_l, y_l, 'r.')
   for (mean_x,var_x) in zip(sample['mean'], sample['var']):
@@ -115,26 +114,28 @@ def do_plot(x_l, y_l, sample):
         sigmaxy=math.sqrt(var_x[0,1]))
 
     plt.contour(plot_xrange, plot_yrange, plot_zrange)
-  plt.draw()
-  plt.show()
+  if show_pics:
+    plt.draw()
+    plt.show()
 
-def doit():
-  num_points = 10
+def doit(num_points, num_frames, show_pics):
   ripl = shortcuts.make_lite_church_prime_ripl()
   ripl.execute_program(model)
-  makeObserves(ripl)
-  plt.ion()
+  makeObserves(ripl, num_points)
+  if show_pics:
+    plt.ion()
   x_l = list()
   y_l = list()
   for ni in range(num_points):
-    dpoint = ripl.predict('(get_datapoint %d)'%ni)
+    dpoint = ripl.sample('(get_datapoint %d)'%ni)
     x_l.append(dpoint[0])
     y_l.append(dpoint[1])
-  for ni in range(100):
+  for ni in range(num_frames):
     do_infer(ripl, 1)
     clusters = collect_clusters(ripl, num_points)
-    print clusters['mean']
-    do_plot(x_l, y_l, clusters)
+    if show_pics:
+      print "Cluster means:", clusters['mean']
+    do_plot(x_l, y_l, clusters, show_pics=show_pics)
 
 if __name__ == '__main__':
-  doit()
+  doit(num_points=10, num_frames=100, show_pics=True)
