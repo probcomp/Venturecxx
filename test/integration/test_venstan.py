@@ -21,6 +21,7 @@ import os.path
 from nose.tools import eq_
 import scipy.stats as stats
 
+from venture.test.config import broken_in
 from venture.test.config import collectSamples
 from venture.test.config import get_ripl
 from venture.test.stats import reportKnownGaussian
@@ -29,6 +30,7 @@ from venture.test.stats import statisticalTest
 this_dir = os.path.dirname(os.path.abspath(__file__))
 cache_dir = os.path.join(this_dir, "models")
 
+@broken_in('puma', "https://github.com/probcomp/Venturecxx/issues/329")
 def testSmoke():
   program = """
 infer load_plugin("venstan.py");
@@ -59,6 +61,7 @@ infer mh(default, one, 3);
   r.set_mode("venture_script")
   r.execute_program(program)
 
+@broken_in('puma', "https://github.com/probcomp/Venturecxx/issues/329")
 def testSmokeChurchPrime():
   program = """
 (load_plugin "venstan.py")
@@ -112,11 +115,13 @@ generated quantities {
 (assume stan_normal (make_ven_stan stan_prog inputs c_outputs "%s"))""" % \
   (cache_dir,)
 
+@broken_in('puma', "https://github.com/probcomp/Venturecxx/issues/329")
 def testReportedPosterior():
   r = get_ripl()
   r.execute_program(normal_in_stan_snippet)
   eq_(stats.norm.logpdf(1, loc=0, scale=1), r.observe("(stan_normal 0 1)", 1))
 
+@broken_in('puma', "https://github.com/probcomp/Venturecxx/issues/329")
 @statisticalTest
 def testInference():
   r = get_ripl()
