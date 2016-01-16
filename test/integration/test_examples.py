@@ -99,19 +99,23 @@ def extra_module_path(path):
   yield
   sys.path = old_path
 
+@contextlib.contextmanager
+def temp_directory(suffix):
+  temp_dir = None
+  try:
+    temp_dir = tempfile.mkdtemp(suffix=suffix)
+    yield temp_dir
+  finally:
+    if temp_dir is not None:
+      shutil.rmtree(temp_dir)
+
 @in_backend("none")
 @needs_backend("lite")
 def testGaussianGeweke():
-
-  plots_dir = None
   with extra_module_path("examples"):
-    try:
+    with temp_directory("geweke") as plots_dir:
       import gaussian_geweke
-      plots_dir = tempfile.mkdtemp(suffix='geweke')
       gaussian_geweke.main(outdir=plots_dir, n_sample=2, burn_in=2, thin=2)
-    finally:
-      if plots_dir is not None:
-        shutil.rmtree(plots_dir)
 
 @in_backend("none")
 @needs_backend("lite")
