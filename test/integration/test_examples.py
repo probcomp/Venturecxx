@@ -69,7 +69,7 @@ def testVentureExamplesLitePlot():
 def testVentureExamplesLite():
   for ex in ["venture lite -L examples/hmm_plugin.py -f examples/hmm.vnt -e 'infer exact_filtering()'",
   ]:
-    yield checkVentureExample, ex
+    yield checkVentureExampleComplete, ex
 
 def checkVentureExampleComplete(command):
   assert s.call(command, shell=True) == 0
@@ -77,7 +77,9 @@ def checkVentureExampleComplete(command):
 @gen_in_backend("none")
 @gen_needs_backend("puma")
 def testVentureExamplesPumaComplete():
-  for ex in ["venture puma -f examples/crosscat.vnt -e smoke_test"]:
+  lda_cmd = "'do(model(2, 2), data(3, 4), mh(default, one, 500))'"
+  for ex in ["venture puma -f examples/crosscat.vnt -e smoke_test",
+             "venture puma -f examples/lda.vnt -e " + lda_cmd  ]:
     yield checkVentureExampleComplete, ex
 
 @contextlib.contextmanager
