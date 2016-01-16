@@ -19,7 +19,8 @@ class Draw(object):
     self.view_y = (-10.0, 10.0)
     self.win_x = (0.0, self.winsize[0])
     self.win_y = (0.0, self.winsize[1])
-    self._do_start()
+    if pygame_found:
+      self._do_start()
 
   def _do_start(self):
     pygame.init()
