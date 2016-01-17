@@ -53,4 +53,3 @@ def plot_samples(samples):
     for x in samples:
         ax.vlines(x, 0, .1, linewidth=1)
     ax.set_ylim([0, 1])
-
