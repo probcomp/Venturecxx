@@ -29,8 +29,31 @@
 (assume apogee_sampler (mem (lambda (i) (make_nig_normal 1.5e5 1e9 1 20))))
 (assume perigee_sampler (mem (lambda (i) (make_nig_normal 2e4 1e9 1 20))))
 
-(assume satellite (mem (lambda (i)
-  (let ((apogee (abs ((apogee_sampler (z i)))))
-        (perigee (abs ((perigee_sampler (z i))))))
-    (list apogee perigee (normal (kepler apogee perigee) 0.1))))))
+(assume apogee (mem (lambda (i) ((apogee_sampler (z i))))))
+(assume perigee (mem (lambda (i) ((perigee_sampler (z i))))))
+(assume period
+  (mem (lambda (i)
+    (normal (kepler (apogee (z i)) (perigee (z i))) 0.1))))
 
+; Observation process.
+[define observer
+  (lambda (iapt)
+      (let ((sat_id (lookup iapt 0))
+            (sat_ap (lookup iapt 1))
+            (sat_pg (lookup iapt 2))
+            (sat_pr (lookup iapt 3)))
+        (do
+          (if (< 0 sat_ap) (observe (apogee (atom ,sat_id)) sat_ap) pass)
+          (if (< 0 sat_pg) (observe (perigee (atom ,sat_id)) sat_pg) pass)
+          (if (< 0 sat_pr) (observe (period (atom ,sat_id)) sat_pr) pass))))]
+
+(pyexec "import pandas as pd; import venture.value.dicts as vd")
+(pyexec "from venture.lite.value import VentureValue as VV")
+(pyexec "data = pd.read_csv('satellites.csv').itertuples()")
+
+[define n_samples 1167] ; XXX Retrieve.
+[define observation
+  (lambda (i) (run (pyeval "VV.fromStackDict(vd.vector(list(data.next())))")))]
+(for_each (arange n_samples) (lambda (i) (observer (observation i))))
+
+; TODO Inference program.
