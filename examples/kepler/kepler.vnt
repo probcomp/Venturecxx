@@ -23,6 +23,8 @@
           (a (+ (* .5 (+ (abs apogee) (abs perigee))) earth_radius)))
       (/ (* 2 3.1415 (sqrt (/ (pow a 3) GM))) 60))))
 
+(assume noise (gamma 15 .5))
+
 (assume sim_cluster (make_crp 1))
 (assume z (mem (lambda (i) (sim_cluster))))
 
@@ -33,7 +35,7 @@
 (assume perigee (mem (lambda (i) ((perigee_sampler (z i))))))
 (assume period
   (mem (lambda (i)
-    (normal (kepler (apogee (z i)) (perigee (z i))) 0.1))))
+    (normal (kepler (apogee i) (perigee i)) noise))))
 
 ; Observation process.
 [define observer
@@ -43,9 +45,9 @@
             (sat_pg (lookup iapt 2))
             (sat_pr (lookup iapt 3)))
         (do
-          (if (< 0 sat_ap) (observe (apogee (atom ,sat_id)) sat_ap) pass)
-          (if (< 0 sat_pg) (observe (perigee (atom ,sat_id)) sat_pg) pass)
-          (if (< 0 sat_pr) (observe (period (atom ,sat_id)) sat_pr) pass))))]
+          (if (< 0 sat_ap) (observe (apogee ,sat_id) sat_ap) pass)
+          (if (< 0 sat_pg) (observe (perigee ,sat_id) sat_pg) pass)
+          (if (< 0 sat_pr) (observe (period ,sat_id) sat_pr) pass))))]
 
 (pyexec "import pandas as pd; import venture.value.dicts as vd")
 (pyexec "from venture.lite.value import VentureValue as VV")
