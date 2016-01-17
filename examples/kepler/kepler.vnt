@@ -31,8 +31,8 @@
 (assume apogee_sampler (mem (lambda (i) (make_nig_normal 1.5e5 1e9 1 20))))
 (assume perigee_sampler (mem (lambda (i) (make_nig_normal 2e4 1e9 1 20))))
 
-(assume apogee (mem (lambda (i) ((apogee_sampler (z i))))))
-(assume perigee (mem (lambda (i) ((perigee_sampler (z i))))))
+(assume apogee (mem (lambda (i) (normal ((apogee_sampler (z i))) 1))))
+(assume perigee (mem (lambda (i) (normal ((perigee_sampler (z i))) 1))))
 (assume period
   (mem (lambda (i)
     (normal (kepler (apogee i) (perigee i)) noise))))
