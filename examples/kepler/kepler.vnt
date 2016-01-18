@@ -68,3 +68,6 @@
 (for_each (arange n_samples) (lambda (d) (observer (observation d))))
 
 ; TODO Inference program.
+[infer (mh 'default 'one 30000)]
+[define assignments
+  (run (mapM (lambda (i) (sample (z (atom ,i)))) (arange n_samples)))]
