@@ -19,7 +19,6 @@ from copy import deepcopy
 import math
 
 from scipy.special import gammaln
-import scipy.stats
 
 from venture.lite.psp import DeterministicMakerAAAPSP
 from venture.lite.psp import NullRequestPSP
@@ -65,37 +64,43 @@ class MakeCRPOutputPSP(DeterministicMakerAAAPSP):
     alpha = vals[0]
     d = vals[1] if len(vals) == 2 else 0
 
-    output = TypedPSP(CRPOutputPSP(alpha,d), SPType([], t.AtomType()))
+    output = TypedPSP(CRPOutputPSP(alpha, d), SPType([], t.AtomType()))
     return VentureSPRecord(CRPSP(NullRequestPSP(),output))
 
-  def description(self,name):
-    return "%s(alpha) -> <SP () <number>>\n  Chinese Restaurant Process with hyperparameter alpha.  Returns a sampler for the table number." % name
+  def description(self, name):
+    return ('  %s(alpha, d) -> <SP () <number>>\n  Chinese Restaurant Process '
+      'with hyperparameters alpha, and d (defaults to zero, recovering the '
+      'one-parameter CRP). Returns a sampler for the table number.' % name)
 
 class CRPOutputPSP(RandomPSP):
   def __init__(self,alpha,d):
     self.alpha = float(alpha)
     self.d = float(d)
 
-  def simulate(self,args):
+  def simulate(self, args):
     aux = args.spaux()
     old_indices = [i for i in aux.tableCounts]
-    counts = [aux.tableCounts[i] - self.d for i in old_indices] + [self.alpha + (aux.numTables * self.d)]
-    nextIndex = aux.nextIndex if len(aux.freeIndices) == 0 else aux.freeIndices.__iter__().next()
+    counts = [aux.tableCounts[i] - self.d for i in old_indices] + \
+        [self.alpha + (aux.numTables * self.d)]
+    nextIndex = aux.nextIndex if len(aux.freeIndices) == 0 \
+        else iter(aux.freeIndices).next()
     indices = old_indices + [nextIndex]
-    return simulateCategorical(counts,indices)
+    return simulateCategorical(counts, indices)
 
-  def logDensity(self,index,args):
+  def logDensity(self, index, args):
     aux = args.spaux()
     if index in aux.tableCounts:
-      return math.log(aux.tableCounts[index] - self.d) - math.log(self.alpha + aux.numCustomers)
+      return math.log(aux.tableCounts[index] - self.d) - \
+        math.log(self.alpha + aux.numCustomers)
     else:
-      return math.log(self.alpha + (aux.numTables * self.d)) - math.log(self.alpha + aux.numCustomers)
+      return math.log(self.alpha + (aux.numTables * self.d)) - \
+        math.log(self.alpha + aux.numCustomers)
 
   # def gradientOfLogDensity(self, value, args):
   #   aux = args.spaux()
   #   if index in aux.tableCounts:
 
-  def incorporate(self,index,args):
+  def incorporate(self, index, args):
     aux = args.spaux()
     aux.numCustomers += 1
     if index in aux.tableCounts:
@@ -108,7 +113,7 @@ class CRPOutputPSP(RandomPSP):
       else:
         aux.nextIndex = max(index+1, aux.nextIndex)
 
-  def unincorporate(self,index,args):
+  def unincorporate(self, index, args):
     aux = args.spaux()
     aux.numCustomers -= 1
     aux.tableCounts[index] -= 1
@@ -117,24 +122,25 @@ class CRPOutputPSP(RandomPSP):
       del aux.tableCounts[index]
       aux.freeIndices.add(index)
 
-  def logDensityOfCounts(self,aux):
-    # To see the derivation see Section Chinese Restaraunt Process in
+  def logDensityOfCounts(self, aux):
+    # For derivation see Section Chinese Restaraunt Process in
     # doc/sp-math/sp-math.tex and sources therein, use:
     #   self.alpha = \theta,
     #   self.d = \alpha
     # term1 and term2 are the log numerator, and term3 is the log denominator.
-    term1 = sum(math.log(self.alpha + i*self.d) for i in xrange(1, aux.numTables))
-    term2 = sum(gammaln(aux.tableCounts[t] - self.d) - gammaln(1 - self.d)
+    term1 = sum(math.log(self.alpha + i*self.d)
+      for i in xrange(1, aux.numTables))
+    term2 = sum(gammaln(aux.tableCounts[t]-self.d) - gammaln(1-self.d)
       for t in aux.tableCounts)
     term3 = gammaln(self.alpha + max(aux.numCustomers, 1)) - \
         gammaln(self.alpha + 1)
     return term1 + term2 - term3
 
-  def enumerateValues(self,args):
+  def enumerateValues(self, args):
     aux = args.spaux()
     old_indices = [i for i in aux.tableCounts]
     indices = old_indices + [aux.nextIndex]
     return indices
 
-registerBuiltinSP("make_crp", typed_nr(MakeCRPOutputPSP(),
-                                       [t.NumberType(),t.NumberType()], SPType([], t.AtomType()), min_req_args = 1))
+registerBuiltinSP('make_crp', typed_nr(MakeCRPOutputPSP(),
+    [t.NumberType(),t.NumberType()], SPType([], t.AtomType()), min_req_args=1))
