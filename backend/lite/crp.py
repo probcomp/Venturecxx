@@ -33,6 +33,21 @@ from venture.lite.sp_registry import registerBuiltinSP
 from venture.lite.utils import simulateCategorical
 import venture.lite.types as t
 
+"""
+Implements the two-parameter Chinese Restaurant Process CRP(alpha, d=0) where
+alpha is the concentration parameter and d is the discount parameter (which
+defaults to zero, recovering the one parameter CRP). The parameters must satisfy
+
+either
+  -- d \in [0,1] and alpha > -d
+or
+  -- d = -k (k > 0) and alpha = Ld for L \in {1,2,...}
+
+The current implementation does not ensure that either of these conditions, and
+failing to either enter valid hyperparameters directly or assign hyperpriors
+with the valid domains will results in dangerous behavior.
+"""
+
 class CRPSPAux(SPAux):
   def __init__(self):
     self.tableCounts = {}
@@ -80,7 +95,7 @@ class MakeCRPOutputPSP(DeterministicMakerAAAPSP):
       'one-parameter CRP). Returns a sampler for the table number.' % name)
 
 class CRPOutputPSP(RandomPSP):
-  def __init__(self,alpha,d):
+  def __init__(self, alpha, d):
     self.alpha = float(alpha)
     self.d = float(d)
 
