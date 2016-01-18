@@ -95,10 +95,6 @@ class CRPOutputPSP(RandomPSP):
       return math.log(self.alpha + (aux.numTables * self.d)) - \
         math.log(self.alpha + aux.numCustomers)
 
-  # def gradientOfLogDensity(self, value, args):
-  #   aux = args.spaux()
-  #   if index in aux.tableCounts:
-
   def incorporate(self, table, args):
     aux = args.spaux()
     aux.numCustomers += 1
