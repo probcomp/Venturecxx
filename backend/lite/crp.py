@@ -18,7 +18,7 @@
 from copy import deepcopy
 import math
 
-from scipy.special import gammaln
+from scipy.special import digamma, gammaln
 
 from venture.lite.psp import DeterministicMakerAAAPSP
 from venture.lite.psp import NullRequestPSP
@@ -65,16 +65,22 @@ class CRPSPAux(SPAux):
     crp.numCustomers = self.numCustomers
     return crp
 
+  def cts(self):
+    # XXX Check that this is the correct way to return suffstats.
+    return [self.tableCounts, self.numTables, self.numCustomers]
+
 class CRPSP(SP):
-  def constructSPAux(self): return CRPSPAux()
-  def show(self,spaux):
+  def constructSPAux(self):
+    return CRPSPAux()
+
+  def show(self, spaux):
     return {
       'type' : 'crp',
       'counts': spaux.tableCounts,
     }
 
 class MakeCRPOutputPSP(DeterministicMakerAAAPSP):
-  def simulate(self,args):
+  def simulate(self, args):
     vals = args.operandValues()
     alpha = vals[0]
     d = vals[1] if len(vals) == 2 else 0
@@ -82,12 +88,18 @@ class MakeCRPOutputPSP(DeterministicMakerAAAPSP):
     return VentureSPRecord(CRPSP(NullRequestPSP(), output))
 
   def gradientOfLogDensityOfCounts(self, aux, args):
-    # This function is strange because d is an optoinal parameter.
+    # This function is strange because d is an optional parameter.
     # Question 1: Will args always have (alpha, d)?
     # Question 2: If not, do we return either a length one list (if only alpha)
     #   and length two list (if both alph and d)?
-    # TODO fsaad Write out the derivatives in doc/sp-math/ before implementing.
-    pass
+    # For now, just compute the graident for Case 1 (d=0).
+    vals = args.operandValues()
+    alpha = vals[0]
+    if len(vals) == 2 and vals[1] != 0:
+      raise ValueError('Gradient of CRP implemented only for one-parmaeter '
+        'case.')
+    [_, numTables, numCustomers] = aux.cts()
+    return [numTables/alpha - (digamma(alpha + numCustomers) - digamma(alpha))]
 
   def description(self, name):
     return ('  %s(alpha, d) -> <SP () <number>>\n  Chinese Restaurant Process '

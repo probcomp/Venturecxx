@@ -1,5 +1,6 @@
 \documentclass[12pt]{article}
 
+\usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{parskip}
 
@@ -106,10 +107,13 @@ According to Equation (6) in
 \href{http://arxiv.org/pdf/0909.3642.pdf}{Gndedin, et al}
 for any partition $B=(B_1,\dots,B_K)$ of $[N]$ we have
 
-\[
+\textbf{General Case}
+
+\begin{equation}
 \mathbf{P}(B|\alpha,\theta)
 := \frac{\Pi_{i=1}^{K-1}(\theta+i\alpha)}{(\theta+1)_{N-1}}\Pi_{j=1}^K(1-\alpha)_{N_k-1}
-\]
+\label{eq:crp-density}
+\end{equation}
 
 where $(x)_n := x(x+1)\dots(x+n-1) = \frac{\Gamma(x+n)}{\Gamma(x)}$.
 
@@ -121,13 +125,13 @@ derivations math can cross-check easily with references on the two-parameter fam
 
 \textbf{Case 1} $\alpha = 0$
 
-\begin{eqnarray*}
-&\mathbf{P}(B|\alpha=0,\theta)
-    & = \frac{\Pi_{i=1}^{K-1}(\theta)}{(\theta+1)_{N-1}}\Pi_{j=1}^K(1)_{N_k-1}\\
-&   & = \frac{\theta^{K-1}}{\frac{\Gamma(\theta+N)}{\Gamma(\theta+1)}}\Pi_{j=1}^K\Gamma(N_k)\\
-&   & = \frac{\theta^{K-1}}{\frac{\Gamma(\theta+N)}{\theta\Gamma(\theta)}}\Pi_{j=1}^K\Gamma(N_k)\\
-&   & = \frac{\theta^{K}}{\frac{\Gamma(\theta+N)}{\Gamma(\theta)}}\Pi_{j=1}^K\Gamma(N_k)
-\end{eqnarray*}
+\begin{align*}
+\mathbf{P}(B|\alpha=0,\theta)
+    & = \frac{\Pi_{i=1}^{K-1}(\theta)}{(\theta+1)_{N-1}}\Pi_{k=1}^K(1)_{N_k-1}\\
+   & = \frac{\theta^{K-1}}{\frac{\Gamma(\theta+N)}{\Gamma(\theta+1)}}\Pi_{k=1}^K\Gamma(N_k)\\
+   & = \frac{\theta^{K-1}}{\frac{\Gamma(\theta+N)}{\theta\Gamma(\theta)}}\Pi_{k=1}^K\Gamma(N_k)\\
+   & = \frac{\theta^{K}}{\frac{\Gamma(\theta+N)}{\Gamma(\theta)}}\Pi_{k=1}^K\Gamma(N_k)\\
+\end{align*}
 
 which cross checks with Equation (8) from
 \href{http://web.mit.edu/sjgershm/www/GershmanBlei12.pdf#page=4}{Gershman, et al},
@@ -148,6 +152,30 @@ The only available reference with which this result cross checks is the
 \href{https://en.wikipedia.org/wiki/Chinese_restaurant_process#Generalization}
 {Wikipedia entry} on the CRP.
 
-\subsubsection{TODO: Gradient of log density of counts}
+\subsubsection{Gradient of log density of counts}
 
+Gradient with respect to $\theta, \alpha$ attached at \texttt{MakeCRPOutputPSP}.
+
+Since the general density in \eqref{eq:crp-density} is quite complex, we will derive
+only the gradient for \textbf{Case 1} which is the traditional CRP,
+and leave both \textbf{General Case} and \textbf{Case 2} for a
+future exposition.
+
+\textbf{General Case} TODO
+
+\textbf{Case 1} $\alpha = 0$
+
+From the derivation, it follows directly that
+
+\begin{align*}
+\ln\mathbf{P}(B|\alpha=0,\theta)
+    & = K\ln\theta + \sum_{k=1}^{K}\ln\Gamma(N_k) -(\ln\Gamma(\theta+N)-\ln\Gamma(\theta))\\
+\implies \partial_\theta\ln\mathbf{P}(B|\alpha=0,\theta)
+    &= \frac{K}{\theta} - (\psi(\theta+N) - \psi(\theta))
+\end{align*}
+
+where $\psi(x) = \partial_x\ln\Gamma(x)$ is the digamma function, the logarithmic
+derivative of the gamma function.
+
+\textbf{Case 2} $\theta = 0$ TODO
 \end{document}
