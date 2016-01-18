@@ -18,7 +18,7 @@
 from copy import deepcopy
 import math
 
-import scipy.special
+from scipy.special import gammaln
 import scipy.stats
 
 from venture.lite.psp import DeterministicMakerAAAPSP
@@ -118,10 +118,17 @@ class CRPOutputPSP(RandomPSP):
       aux.freeIndices.add(index)
 
   def logDensityOfCounts(self,aux):
-    term1 = scipy.special.gammaln(self.alpha) - scipy.special.gammaln(self.alpha + aux.numCustomers)
-    term2 = aux.numTables + math.log(self.alpha + (aux.numTables * self.d))
-    term3 = sum([scipy.special.gammaln(aux.tableCounts[index] - self.d) for index in aux.tableCounts])
-    return term1 + term2 + term3
+    # To see the derivation see Section Chinese Restaraunt Process in
+    # doc/sp-math/sp-math.tex and sources therein, use:
+    #   self.alpha = \theta,
+    #   self.d = \alpha
+    # term1 and term2 are the log numerator, and term3 is the log denominator.
+    term1 = sum(math.log(self.alpha + i*self.d) for i in xrange(1, aux.numTables))
+    term2 = sum(gammaln(aux.tableCounts[t] - self.d) - gammaln(1 - self.d)
+      for t in aux.tableCounts)
+    term3 = gammaln(self.alpha + max(aux.numCustomers, 1)) - \
+        gammaln(self.alpha + 1)
+    return term1 + term2 - term3
 
   def enumerateValues(self,args):
     aux = args.spaux()
