@@ -78,13 +78,13 @@ class CRPOutputPSP(RandomPSP):
 
   def simulate(self, args):
     aux = args.spaux()
-    old_tables = [i for i in aux.tableCounts]
-    counts = [aux.tableCounts[i] - self.d for i in old_tables] + \
+    oldTables = [i for i in aux.tableCounts]
+    counts = [aux.tableCounts[i] - self.d for i in oldTables] + \
         [self.alpha + (aux.numTables * self.d)]
     nextTable = aux.nextTable if len(aux.freeTables) == 0 \
         else iter(aux.freeTables).next()
-    all_tables = old_tables + [nextTable]
-    return simulateCategorical(counts, all_tables)
+    allTables = oldTables + [nextTable]
+    return simulateCategorical(counts, allTables)
 
   def logDensity(self, table, args):
     aux = args.spaux()
@@ -133,8 +133,8 @@ class CRPOutputPSP(RandomPSP):
 
   def enumerateValues(self, args):
     aux = args.spaux()
-    old_tables = [i for i in aux.tableCounts]
-    return old_tables + [aux.nextTable]
+    oldTables = [i for i in aux.tableCounts]
+    return oldTables + [aux.nextTable]
 
 registerBuiltinSP('make_crp', typed_nr(MakeCRPOutputPSP(),
     [t.NumberType(),t.NumberType()], SPType([], t.AtomType()), min_req_args=1))
