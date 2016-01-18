@@ -64,7 +64,15 @@ class MakeCRPOutputPSP(DeterministicMakerAAAPSP):
     alpha = vals[0]
     d = vals[1] if len(vals) == 2 else 0
     output = TypedPSP(CRPOutputPSP(alpha, d), SPType([], t.AtomType()))
-    return VentureSPRecord(CRPSP(NullRequestPSP(),output))
+    return VentureSPRecord(CRPSP(NullRequestPSP(), output))
+
+  def gradientOfLogDensityOfCounts(self, aux, args):
+    # This function is strange because d is an optoinal parameter.
+    # Question 1: Will args always have (alpha, d)?
+    # Question 2: If not, do we return either a length one list (if only alpha)
+    #   and length two list (if both alph and d)?
+    # TODO fsaad Write out the derivatives in doc/sp-math/ before implementing.
+    pass
 
   def description(self, name):
     return ('  %s(alpha, d) -> <SP () <number>>\n  Chinese Restaurant Process '
@@ -128,7 +136,7 @@ class CRPOutputPSP(RandomPSP):
     term2 = sum(gammaln(aux.tableCounts[t]-self.d) - gammaln(1-self.d)
       for t in aux.tableCounts)
     term3 = gammaln(self.alpha + max(aux.numCustomers, 1)) - \
-        gammaln(self.alpha + 1)
+        gammaln(self.alpha+1)
     return term1 + term2 - term3
 
   def enumerateValues(self, args):
