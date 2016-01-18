@@ -2,7 +2,10 @@
 
 \usepackage{hyperref}
 
+\title{Mathematical Derivations For Stochastic Procedures}
+
 \begin{document}
+\maketitle
 
 \begin{abstract}
 This TeX file serves as a location to collect reference formulas and
@@ -21,8 +24,8 @@ this writing, this document is far from complete.
 \texttt{SuffNormalOutputPSP}
 
 \subsubsection{Log density of counts}
-
-\url{http://www.encyclopediaofmath.org/index.php/Sufficient_statistic}
+\href{http://www.encyclopediaofmath.org/index.php/Sufficient_statistic}
+{The Encyclopedia of Math}
 says that the likelihood of a vector $\{x_i\}$ of $n$ Gaussian
 observations with given mean $\mu$ and variance $\sigma^2$ is
 
@@ -42,7 +45,8 @@ we have
 Gradient with respect to $\mu$, $\sigma$, attached at \texttt{MakerSuffNormalOutputPSP}.
 
 \begin{eqnarray*}
-\frac{d}{d\mu} \log p_{\mu,\sigma^2}(\{x_i\}) & = & -\frac{n\mu}{\sigma^2} + \frac{\xsum}{\sigma^2}.
+\frac{d}{d\mu} \log p_{\mu,\sigma^2}(\{x_i\}) & = & -\frac{n\mu}{\sigma^2} + 
+    \frac{\xsum}{\sigma^2}.
 \end{eqnarray*}
 To differentiate with respect to $\sigma$ it helps to group terms.  Letting
 \newcommand{\deviance}{x_{\textrm{sq-dev}}}
@@ -51,9 +55,11 @@ we have
 \[ \log p_{\mu,\sigma^2}(\{x_i\}) = -\frac{n}{2}(\log(2\pi) + 2\log(\sigma))
    - \frac{\deviance}{2\sigma^2} \]
 and
-\[ \frac{d}{d\sigma} \log p_{\mu,\sigma^2}(\{x_i\}) = -\frac{n}{\sigma} + \frac{\deviance}{\sigma^3} \]
+\[ \frac{d}{d\sigma} \log p_{\mu,\sigma^2}(\{x_i\}) = -\frac{n}{\sigma} + 
+    \frac{\deviance}{\sigma^3} \]
 
-This cross-checks with \url{http://aleph0.clarku.edu/~djoyce/ma218/meeting12.pdf}
+This cross-checks with
+\href{http://aleph0.clarku.edu/~djoyce/ma218/meeting12.pdf}{this reference} (now broken).
 
 \subsubsection{Upper bound of log density of counts}
 
