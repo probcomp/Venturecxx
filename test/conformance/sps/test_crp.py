@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import eq_
+from nose.tools import eq_, assert_almost_equal
 from venture.test.config import get_ripl, on_inf_prim, collectSamples
 from venture.test.stats import statisticalTest, reportKnownDiscrete
 
@@ -23,6 +23,7 @@ from venture.test.stats import statisticalTest, reportKnownDiscrete
 @on_inf_prim("none")
 def testCRPSmoke():
   eq_(get_ripl().predict("((make_crp 1.0))"), 1)
+  eq_(get_ripl().predict("((make_crp 1.0 .2))"), 1)
 
 def replaceWithDefault(items, known, default):
   "Replace all irrelevant items with a default."
@@ -62,3 +63,31 @@ def checkCRPCounter(n):
   predictions = collectSamples(ripl, "pid")
   ans = [(n, 0.5), ("other", 0.5)]
   return reportKnownDiscrete(ans, replaceWithDefault(predictions, [n], "other"))
+
+def testLogDensityOfCounts():
+  """Ensures that the logDensityOfCounts of the CRP (represented by the
+  global_log_likelihood) is equal to the sum of the predictive logDensity(table)
+  returned by the sequnce of obesrvations.
+  """
+  for sampler in ["(make_crp a)", "(make_crp a d)"]:
+    ripl = get_ripl()
+    ripl.assume("a", "(uniform_continuous 0 1)")
+    ripl.assume("d", "(uniform_continuous 0 1)")
+    ripl.assume("f", sampler)
+
+    ripl.force("a", ".5")
+    [x1] = ripl.observe("(f)", "atom<1>")
+    [x2] = ripl.observe("(f)", "atom<2>")
+    [x3] = ripl.observe("(f)", "atom<3>")
+    [x4] = ripl.observe("(f)", "atom<4>")
+    [ckpt1] = ripl.infer('global_log_likelihood')
+    assert_almost_equal(ckpt1, x1+x2+x3+x4)
+
+    ripl.force("a", ".1")
+    [ckpt2] = ripl.infer('global_log_likelihood')
+    [y1] = ripl.observe("(f)", "atom<1>")
+    [y2] = ripl.observe("(f)", "atom<2>")
+    [y3] = ripl.observe("(f)", "atom<3>")
+    [y4] = ripl.observe("(f)", "atom<4>")
+    [ckpt3] = ripl.infer('global_log_likelihood')
+    assert_almost_equal(ckpt3-ckpt2, y1+y2+y3+y4)
