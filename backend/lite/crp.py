@@ -36,16 +36,16 @@ import venture.lite.types as t
 class CRPSPAux(SPAux):
   def __init__(self):
     self.tableCounts = {}
-    self.nextIndex = 1
-    self.freeIndices = set()
+    self.nextTable = 1
+    self.freeTables = set()
     self.numTables = 0
     self.numCustomers = 0
 
   def copy(self):
     crp = CRPSPAux()
     crp.tableCounts = deepcopy(self.tableCounts)
-    crp.nextIndex = self.nextIndex
-    crp.freeIndices = self.freeIndices.copy()
+    crp.nextTable = self.nextTable
+    crp.freeTables = self.freeTables.copy()
     crp.numTables = self.numTables
     crp.numCustomers = self.numCustomers
     return crp
@@ -63,7 +63,6 @@ class MakeCRPOutputPSP(DeterministicMakerAAAPSP):
     vals = args.operandValues()
     alpha = vals[0]
     d = vals[1] if len(vals) == 2 else 0
-
     output = TypedPSP(CRPOutputPSP(alpha, d), SPType([], t.AtomType()))
     return VentureSPRecord(CRPSP(NullRequestPSP(),output))
 
@@ -79,18 +78,18 @@ class CRPOutputPSP(RandomPSP):
 
   def simulate(self, args):
     aux = args.spaux()
-    old_indices = [i for i in aux.tableCounts]
-    counts = [aux.tableCounts[i] - self.d for i in old_indices] + \
+    old_tables = [i for i in aux.tableCounts]
+    counts = [aux.tableCounts[i] - self.d for i in old_tables] + \
         [self.alpha + (aux.numTables * self.d)]
-    nextIndex = aux.nextIndex if len(aux.freeIndices) == 0 \
-        else iter(aux.freeIndices).next()
-    indices = old_indices + [nextIndex]
-    return simulateCategorical(counts, indices)
+    nextTable = aux.nextTable if len(aux.freeTables) == 0 \
+        else iter(aux.freeTables).next()
+    all_tables = old_tables + [nextTable]
+    return simulateCategorical(counts, all_tables)
 
-  def logDensity(self, index, args):
+  def logDensity(self, table, args):
     aux = args.spaux()
-    if index in aux.tableCounts:
-      return math.log(aux.tableCounts[index] - self.d) - \
+    if table in aux.tableCounts:
+      return math.log(aux.tableCounts[table] - self.d) - \
         math.log(self.alpha + aux.numCustomers)
     else:
       return math.log(self.alpha + (aux.numTables * self.d)) - \
@@ -100,27 +99,27 @@ class CRPOutputPSP(RandomPSP):
   #   aux = args.spaux()
   #   if index in aux.tableCounts:
 
-  def incorporate(self, index, args):
+  def incorporate(self, table, args):
     aux = args.spaux()
     aux.numCustomers += 1
-    if index in aux.tableCounts:
-      aux.tableCounts[index] += 1
+    if table in aux.tableCounts:
+      aux.tableCounts[table] += 1
     else:
-      aux.tableCounts[index] = 1
+      aux.tableCounts[table] = 1
       aux.numTables += 1
-      if index in aux.freeIndices:
-        aux.freeIndices.discard(index)
+      if table in aux.freeTables:
+        aux.freeTables.discard(table)
       else:
-        aux.nextIndex = max(index+1, aux.nextIndex)
+        aux.nextTable = max(table+1, aux.nextTable)
 
-  def unincorporate(self, index, args):
+  def unincorporate(self, table, args):
     aux = args.spaux()
     aux.numCustomers -= 1
-    aux.tableCounts[index] -= 1
-    if aux.tableCounts[index] == 0:
+    aux.tableCounts[table] -= 1
+    if aux.tableCounts[table] == 0:
       aux.numTables -= 1
-      del aux.tableCounts[index]
-      aux.freeIndices.add(index)
+      del aux.tableCounts[table]
+      aux.freeTables.add(table)
 
   def logDensityOfCounts(self, aux):
     # For derivation see Section Chinese Restaraunt Process in
@@ -138,9 +137,8 @@ class CRPOutputPSP(RandomPSP):
 
   def enumerateValues(self, args):
     aux = args.spaux()
-    old_indices = [i for i in aux.tableCounts]
-    indices = old_indices + [aux.nextIndex]
-    return indices
+    old_tables = [i for i in aux.tableCounts]
+    return old_tables + [aux.nextTable]
 
 registerBuiltinSP('make_crp', typed_nr(MakeCRPOutputPSP(),
     [t.NumberType(),t.NumberType()], SPType([], t.AtomType()), min_req_args=1))
