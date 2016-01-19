@@ -198,6 +198,13 @@ class Infer(object):
   def model_import_foreign(self, name):
     return self.engine.import_foreign(name)
 
+  def save_model(self, filename):
+    # go through the ripl because serialize includes extra ripl-level stuff
+    # TODO does this work with in_model?
+    self.engine.ripl.save(filename)
+  def load_model(self, filename):
+    self.engine.ripl.load(filename)
+
   def select(self, scope, block):
     assert len(self.engine.model.log_weights) == 1, "Custom subproblems only supported for one trace at a time"
     return self.engine.model.traces.at(0, 'select', scope, block)
