@@ -158,6 +158,9 @@ class CRPOutputPSP(RandomPSP):
     #   self.alpha = \theta,
     #   self.d = \alpha
     # term1 and term2 are the log numerator, and term3 is the log denominator.
+    # log( (foo+1)_{bar-1} ) in the notation of sp-math.tex turns into
+    # gammaln(foo+bar) - gammaln(foo+1)
+    # TODO No doubt there is a numerically better way to compute this quantity.
     term1 = sum(math.log(self.alpha + i*self.d)
       for i in xrange(1, aux.numTables))
     term2 = sum(gammaln(aux.tableCounts[t]-self.d) - gammaln(1-self.d)
