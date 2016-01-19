@@ -25,6 +25,8 @@
       (/ (* (* 2 3.1415) (sqrt (/ (pow a 3) GM))) 60))))
 ; (load_plugin "kepler_plugin.py")
 
+(load_plugin "absorbing_apply.py")
+
 ; Cluster sampler and assignemnts (z i).
 (assume alpha (gamma 2 .5))
 (assume sim_cluster (make_crp alpha))
@@ -40,17 +42,11 @@
 ; Observations of apogee and perigee for satellite i.
 (assume apogee
   (mem (lambda (i)
-    (tag i 'observed_apgoee
-      (normal
-        (tag i 'latent_apogee ((apogee_sampler (z i))))
-        .1)))))
+    (tag i 'apogee (absorbing_apply (apogee_sampler (z i)))))))
 
 (assume perigee
   (mem (lambda (i)
-    (tag i 'observed_perigee
-      (normal
-        (tag i 'latent_perigee ((perigee_sampler (z i))))
-        .1)))))
+    (tag i 'perigee (absorbing_apply (perigee_sampler (z i)))))))
 
 ; Kepler's law P(T|A,P).
 (assume noise (gamma 15 .5))
