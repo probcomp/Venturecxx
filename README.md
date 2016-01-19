@@ -123,14 +123,13 @@ You can build a local version of the refence manual from the `refman/`
 directory.  This requires Sphinx; see instructions in the README there.
 
 The interesting parts of the code are:
-- There is a live tutorial in `examples/tutorial/part*` (run an
-  ipython notebook server in that directory)
 - The frontend stack (including SIVM, RIPL, server, and Python client) in `python/`.
 - The pure-Python, clearer, normative Lite backend in `backend/lite/`.
 - The C++, faster Puma backend (plus a thin Python driver) in `backend/puma/`.
 - The test suite lives under `test/`.
 - The actual entry points are in `script/`, notably `script/venture`.
 - Advanced example programs live in `examples/`.
+- The sources for the tutorial live in `examples/tutorial-2015`.
 - There are some developer tools available in `tool/`.
 - The Javascript client and web demos are in `demos/`, subdivided by
   architecture into `demos/jsripl` (which corresponds to the erstwile
