@@ -168,3 +168,23 @@ def checkAAAParticleWeights(sp):
     (forget 'obs1))""" % sp)
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete(ans, predictions)
+
+@gen_on_inf_prim("resample")
+def testAAAResampleSmoke():
+  for sp in ["(make_beta_bernoulli 1 1)",
+             "(make_uc_beta_bernoulli 1 1)",
+             # From Lite
+             "(let ((weight (beta 1 1))) (make_suff_stat_bernoulli weight))",
+             "(make_dir_mult (array 0.5 0.5))",
+             "(make_uc_dir_mult (array 0.5 0.5))",
+             "(make_sym_dir_mult 0.5 2)",
+             "(make_uc_sym_dir_mult 0.5 2)",
+             "(make_crp 1)",
+            ]:
+    yield checkAAAResampleSmoke, sp
+
+def checkAAAResampleSmoke(sp):
+  get_ripl().execute_program("""
+(assume foo %s)
+(resample 4)
+""" % sp)
