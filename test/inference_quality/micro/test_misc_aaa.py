@@ -144,6 +144,10 @@ def testAAAParticleWeights():
 def checkAAAParticleWeights(sp):
   if inParallel() and "make_suff_stat_bernoulli" in sp and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and make_suff_stat_bernoulli comes from Lite.")
+  if "make_suff_stat_bernoulli" in sp and config["get_ripl"] == "puma":
+    raise SkipTest("Now this mysteriously gives 'VentureTypeError: Invalid type \"sp\"'")
+  if "dir_mult" in sp and config['get_ripl'] == 'puma':
+    raise SkipTest("Dirichlet multinomial in Puma does not accept objects parameter.  Issue #340")
   ripl = get_ripl()
 
   ripl.assume("a", "1.0")
