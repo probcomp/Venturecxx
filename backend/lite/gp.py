@@ -31,21 +31,9 @@ from venture.lite.sp import SPType
 from venture.lite.sp import VentureSPRecord
 from venture.lite.sp_help import dispatching_psp
 from venture.lite.sp_registry import registerBuiltinSP
+import venture.lite.mvnormal as mvnormal
 import venture.lite.types as t
 import venture.lite.value as v
-
-# XXX Replace by scipy.stats.multivariate_normal.logpdf when we
-# upgrade to scipy 0.14.
-def multivariate_normal_logpdf(x, mu, sigma):
-  try:
-    # dev = x - mu
-    ans = 0
-    ans += (-.5*(x-mu).transpose() * la.inv(sigma) * (x-mu))[0, 0]
-    ans += -.5*len(sigma)*np.log(2 * np.pi)
-    ans += -.5*np.log(la.det(sigma))
-    return ans
-  except la.LinAlgError:
-    raise VentureValueError("Bad GP covariance matrix.")
 
 def col_vec(xs):
   return np.matrix([xs]).T
@@ -99,7 +87,7 @@ class GP(object):
   def logDensity(self, xs, os):
     """Log density of a set of samples."""
     mu, sigma = self.getNormal(xs)
-    return multivariate_normal_logpdf(col_vec(os), mu, sigma)
+    return mvnormal.logpdf(col_vec(os), mu, sigma)
 
   def logDensityOfCounts(self):
     """Log density of the current samples."""
@@ -112,7 +100,7 @@ class GP(object):
     mu = self.mean_array(xs)
     sigma = self.cov_matrix(xs, xs)
 
-    return multivariate_normal_logpdf(col_vec(os), mu, sigma)
+    return mvnormal.logpdf(col_vec(os), mu, sigma)
 
 class GPOutputPSP(RandomPSP):
   def __init__(self, mean, covariance):
