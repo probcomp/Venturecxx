@@ -25,12 +25,12 @@ satellites['Period_minutes_kepler'] = satellite_period_minutes(A, P)
 T = satellites['Period_minutes']
 TT = satellites['Period_minutes_kepler']
 
-x, y = np.linspace(0, 1000, 100), np.linspace(0, 1000, 100)
+x, y = np.linspace(0, 100000, 100), np.linspace(0, 100000, 100)
 X, Y = np.meshgrid(x, y)
 X, Y = X[Y<X], Y[Y<X]
 Z = satellite_period_minutes(X, Y)
 
-plot = False
+plot = 0
 if plot:
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
@@ -53,3 +53,24 @@ def plot_samples(samples):
     for x in samples:
         ax.vlines(x, 0, .1, linewidth=1)
     ax.set_ylim([0, 1])
+
+# Plot a clustering of satellites on the 2D plane.
+Zr = np.loadtxt('clusters.txt', delimiter=',')
+Q = np.genfromtxt('satellites.csv', delimiter=',', skip_header=1,
+    missing_values='')
+clusters = [[Q[i] for i in xrange(len(Q)) if Zr[i] == j] for j in set(Zr)]
+clusters.sort(key=lambda c: len(c), reverse=True)
+
+# Plot the clusters.
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+colors = ['blue','red','lightgreen','yellow','maroon','black','cyan','darkorchid',
+    'pink','green','turquoise']
+for i,c in enumerate(clusters):
+    data = np.asarray(c)
+    ax.scatter(data[:,0], data[:,1], data[:,2], color=colors[i])
+ax.set_xlabel('Apogee', fontweight='bold')
+ax.set_ylabel('Perigee [km]', fontweight='bold')
+ax.set_zlabel('Period [mins]', fontweight='bold')
+# ax.set_zlim([0,2000])
+ax.set_title('Learned Mixture', fontweight='bold')
