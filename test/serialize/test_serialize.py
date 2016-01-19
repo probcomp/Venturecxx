@@ -193,30 +193,41 @@ def test_serialize_latents():
     for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
         yield check, action
 
-@on_inf_prim("mh")
+@gen_on_inf_prim("mh")
 def test_serialize_ripl():
-    with tempfile.NamedTemporaryFile(prefix='serialized.ripl') as f:
-        v1 = get_ripl()
-        v1.assume('is_tricky', '(flip 0.2)')
-        v1.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
-        v1.assume('flip_coin', '(lambda () (flip theta))')
-        v1.observe('(flip_coin)', 'true')
+    def check(mode):
+        with tempfile.NamedTemporaryFile(prefix='serialized.ripl') as f:
+            v1 = get_ripl()
+            v1.assume('is_tricky', '(flip 0.2)')
+            v1.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
+            v1.assume('flip_coin', '(lambda () (flip theta))')
+            v1.observe('(flip_coin)', 'true')
 
-        v1.infer(1)
-        result1 = v1.predict('theta', label='theta_prediction')
+            v1.infer(1)
+            result1 = v1.predict('theta', label='theta_prediction')
 
-        v1.save(f.name)
+            call(v1, 'save', f.name, mode)
 
-        v2 = get_ripl()
-        v2.load(f.name)
-        result2 = v2.report('theta_prediction')
-        result3 = v2.predict('theta')
+            v2 = get_ripl()
+            call(v2, 'load', f.name, mode)
+            result2 = v2.report('theta_prediction')
+            result3 = v2.predict('theta')
 
-        assert result1 == result2 and result1 == result3
+            assert result1 == result2 and result1 == result3
 
-        text1 = v1.get_text(1)
-        text2 = v2.get_text(1)
-        assert text1 == text2
+            text1 = v1.get_text(1)
+            text2 = v2.get_text(1)
+            assert text1 == text2
+    def call(ripl, save_or_load, filename, mode):
+        if mode == 'ripl':
+            if save_or_load == 'save':
+                ripl.save(filename)
+            elif save_or_load == 'load':
+                ripl.load(filename)
+        elif mode == 'inference_language':
+            ripl.infer('(%s_model "%s")' % (save_or_load, filename))
+    for mode in ['ripl', 'inference_language']:
+        yield check, mode
 
 @on_inf_prim("mh") # Easy to generalize but little testing value
 @statisticalTest
