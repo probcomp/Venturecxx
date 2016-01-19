@@ -42,18 +42,22 @@ boost::python::object CRPSPAux::toPython(Trace * trace) const
 VentureValuePtr MakeCRPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("make_crp", args, 1, 2);
-  
+
   double alpha = args->operandValues[0]->getDouble();
   double d = 0;
-  
-  if (args->operandValues.size() == 2) { d = args->operandValues[1]->getDouble(); }
+
+  if (args->operandValues.size() == 2)
+  {
+    d = args->operandValues[1]->getDouble();
+  }
 
   return VentureValuePtr(new VentureSPRecord(new CRPSP(alpha, d),new CRPSPAux()));
 }
 
 // Made
 
-CRPSP::CRPSP(double alpha, double d) : SP(new NullRequestPSP(), new CRPOutputPSP(alpha, d)), alpha(alpha), d(d) {}
+CRPSP::CRPSP(double alpha, double d) :
+  SP(new NullRequestPSP(), new CRPOutputPSP(alpha, d)), alpha(alpha), d(d) {}
 
 boost::python::dict CRPSP::toPython(Trace * trace, shared_ptr<SPAux> spAux) const
 {
@@ -62,22 +66,22 @@ boost::python::dict CRPSP::toPython(Trace * trace, shared_ptr<SPAux> spAux) cons
   crp["alpha"] = alpha;
   crp["d"] = d;
   crp["counts"] = spAux->toPython(trace);
-  
+
   boost::python::dict value;
   value["type"] = "sp";
   value["value"] = crp;
-  
+
   return value;
 }
 
 VentureValuePtr CRPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  checkArgsLength("crp", args, 0);  
-  
+  checkArgsLength("crp", args, 0);
+
   shared_ptr<CRPSPAux> aux = dynamic_pointer_cast<CRPSPAux>(args->spAux);
   assert(aux);
 
-  vector<uint32_t> tables;  
+  vector<uint32_t> tables;
   vector<double> counts;
 
   BOOST_FOREACH(tableCountPair p, aux->tableCounts)
@@ -122,8 +126,8 @@ void CRPOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) cons
 
   aux->numCustomers++;
   if (aux->tableCounts.count(table))
-  { 
-    aux->tableCounts[table]++; 
+  {
+    aux->tableCounts[table]++;
   }
   else
   {
@@ -178,7 +182,6 @@ vector<VentureValuePtr> CRPOutputPSP::enumerateValues(shared_ptr<Args> args) con
     vs.push_back(VentureValuePtr(new VentureAtom(p.first)));
   }
   vs.push_back(VentureValuePtr(new VentureAtom(aux->nextIndex)));
-  
+
   return vs;
 }
-
