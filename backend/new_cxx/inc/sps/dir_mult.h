@@ -45,7 +45,7 @@ struct SymDirMultSP : SP
 {
   SymDirMultSP(double alpha, size_t n);
   boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;
-  
+
   // for toPython
   const double alpha;
   const size_t n;
