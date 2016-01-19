@@ -19,6 +19,7 @@
 
 #include "utils.h"
 #include "sprecord.h"
+#include "stop-and-copy.h"
 
 #include "gsl/gsl_sf_gamma.h"
 #include <gsl/gsl_rng.h>
