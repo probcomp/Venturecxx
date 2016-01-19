@@ -52,6 +52,11 @@ Issues:
   misleading here, because in those cases t suffices to determine the
   data completely up to permutation.
 
+  - Update, 1/19/16: For the poisson distribution, the additional
+    information needed to compute p(x_i|theta) has size O(1), so can
+    be maintained as part of the "sufficient statistic" (see [issue
+    #333](https://github.com/probcomp/Venturecxx/issues/333)).
+
 - Relatedly, if we provided "lifted" versions of SPs that accept an
   application count and return values of t, the natural log density
   for those would be log p(t|theta).  Such bulk versions would thus
@@ -62,6 +67,10 @@ Issues:
   normalizing constant mostly doesn't matter, there may be some
   logDensityOfCounts methods (poisson, crp?) that already violate this
   spec.
+
+  - Update, 1/19/16: CRP was fixed to obey this spec by
+    [pull #335](https://github.com/probcomp/Venturecxx/pull/335), poisson
+    is [issue #333](https://github.com/probcomp/Venturecxx/issues/333).
 
 Proposal: redefine logDensityOfCounts to return p(t|theta).  Issues:
 
