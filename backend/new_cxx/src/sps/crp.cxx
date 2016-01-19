@@ -161,13 +161,17 @@ double CRPOutputPSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
   shared_ptr<CRPSPAux> aux = dynamic_pointer_cast<CRPSPAux>(spAux);
   assert(aux);
 
-  double sum = gsl_sf_lngamma(alpha) - gsl_sf_lngamma(alpha + aux->numCustomers);
+  // -term3 from backend/lite/crp.py
+  double sum = gsl_sf_lngamma(alpha+1) -
+    gsl_sf_lngamma(alpha + std::max(aux->numCustomers, 1u));
   size_t k = 0;
 
   BOOST_FOREACH (tableCountPair p, aux->tableCounts)
   {
-    sum += gsl_sf_lngamma(p.second - d);
-    sum += log(alpha + k * d);
+    // term2 from backend/lite/crp.py
+    sum += gsl_sf_lngamma(p.second - d) - gsl_sf_lngamma(1 - d);
+    // term1 from backend/lite/crp.py
+    if (k >= 1) { sum += log(alpha + k * d); }
     k++;
   }
   return sum;
