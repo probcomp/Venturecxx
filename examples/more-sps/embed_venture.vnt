@@ -1,0 +1,16 @@
+(load_plugin "embed_venture.py")
+
+(assume prefix_program
+  '(do (assume x (normal 0 1))
+       (assume y (normal x 1))
+       (observe y 4)))
+
+(assume infer_program
+  '(mh default one 1))
+
+(assume v (make_venture prefix_program infer_program))
+(assume dummy (flip))
+
+(mh default one 100)
+
+(print (run (sample (v 'x))))
