@@ -69,25 +69,28 @@ def testLogDensityOfCounts():
   global_log_likelihood) is equal to the sum of the predictive logDensity(table)
   returned by the sequnce of obesrvations.
   """
-  for sampler in ["(make_crp a)", "(make_crp a d)"]:
-    ripl = get_ripl()
-    ripl.assume("a", "(uniform_continuous 0 1)")
-    ripl.assume("d", "(uniform_continuous 0 1)")
-    ripl.assume("f", sampler)
+  yield checkLogDensityOfCounts, "(make_crp a)"
+  yield checkLogDensityOfCounts, "(make_crp a d)"
 
-    ripl.force("a", ".5")
-    [x1] = ripl.observe("(f)", "atom<1>")
-    [x2] = ripl.observe("(f)", "atom<2>")
-    [x3] = ripl.observe("(f)", "atom<3>")
-    [x4] = ripl.observe("(f)", "atom<4>")
-    [ckpt1] = ripl.infer('global_log_likelihood')
-    assert_almost_equal(ckpt1, x1+x2+x3+x4)
+def checkLogDensityOfCounts(sampler):
+  ripl = get_ripl()
+  ripl.assume("a", "(uniform_continuous 0 1)")
+  ripl.assume("d", "(uniform_continuous 0 1)")
+  ripl.assume("f", sampler)
 
-    ripl.force("a", ".1")
-    [ckpt2] = ripl.infer('global_log_likelihood')
-    [y1] = ripl.observe("(f)", "atom<1>")
-    [y2] = ripl.observe("(f)", "atom<2>")
-    [y3] = ripl.observe("(f)", "atom<3>")
-    [y4] = ripl.observe("(f)", "atom<4>")
-    [ckpt3] = ripl.infer('global_log_likelihood')
-    assert_almost_equal(ckpt3-ckpt2, y1+y2+y3+y4)
+  ripl.force("a", ".5")
+  [x1] = ripl.observe("(f)", "atom<1>")
+  [x2] = ripl.observe("(f)", "atom<2>")
+  [x3] = ripl.observe("(f)", "atom<3>")
+  [x4] = ripl.observe("(f)", "atom<4>")
+  [ckpt1] = ripl.infer('global_log_likelihood')
+  assert_almost_equal(ckpt1, x1+x2+x3+x4)
+
+  ripl.force("a", ".1")
+  [ckpt2] = ripl.infer('global_log_likelihood')
+  [y1] = ripl.observe("(f)", "atom<1>")
+  [y2] = ripl.observe("(f)", "atom<2>")
+  [y3] = ripl.observe("(f)", "atom<3>")
+  [y4] = ripl.observe("(f)", "atom<4>")
+  [ckpt3] = ripl.infer('global_log_likelihood')
+  assert_almost_equal(ckpt3-ckpt2, y1+y2+y3+y4)
