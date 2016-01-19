@@ -22,6 +22,7 @@
 #include "psp.h"
 #include "args.h"
 #include "sp.h"
+#include "stop-and-copy.h"
 
 // Collapsed SPAux
 struct DirMultSPAux : SPAux
@@ -29,7 +30,7 @@ struct DirMultSPAux : SPAux
   DirMultSPAux(int n) : counts(n, 0), total(0) {}
   vector<int> counts;
   int total;
-  SPAux* copy_help(ForwardingMap* m) const;
+  DirMultSPAux* copy_help(ForwardingMap* m) const;
   boost::python::object toPython(Trace * trace) const;
 };
 
@@ -100,7 +101,7 @@ private:
 struct UCDirMultSPAux : DirMultSPAux
 {
   UCDirMultSPAux(int n): DirMultSPAux(n), theta(n,0) {}
-  SPAux* copy_help(ForwardingMap* m) const;
+  UCDirMultSPAux* copy_help(ForwardingMap* m) const;
   vector<double> theta;
 };
 

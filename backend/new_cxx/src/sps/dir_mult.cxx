@@ -492,5 +492,16 @@ vector<VentureValuePtr> UCDirMultOutputPSP::enumerateValues(shared_ptr<Args> arg
 }
 
 // Aux clones
-SPAux* DirMultSPAux::copy_help(ForwardingMap* m) const { return new DirMultSPAux(*this); }
-SPAux* UCDirMultSPAux::copy_help(ForwardingMap* m) const { return new UCDirMultSPAux(*this); }
+DirMultSPAux* DirMultSPAux::copy_help(ForwardingMap* m) const
+{
+  DirMultSPAux* answer = new DirMultSPAux(*this);
+  (*m)[this] = answer;
+  return answer;
+}
+
+UCDirMultSPAux* UCDirMultSPAux::copy_help(ForwardingMap* m) const
+{
+  UCDirMultSPAux* answer = new UCDirMultSPAux(*this);
+  (*m)[this] = answer;
+  return answer;
+}
