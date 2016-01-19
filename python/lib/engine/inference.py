@@ -199,8 +199,9 @@ class Infer(object):
     return self.engine.import_foreign(name)
 
   def save_model(self, filename):
-    # go through the ripl because serialize includes extra ripl-level stuff
-    # TODO does this work with in_model?
+    # Go through the ripl because serialize includes extra ripl-level stuff.
+    # TODO This does not work with in_model because of
+    # https://github.com/probcomp/Venturecxx/issues/338
     self.engine.ripl.save(filename)
   def load_model(self, filename):
     self.engine.ripl.load(filename)
