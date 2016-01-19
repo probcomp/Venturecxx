@@ -96,7 +96,7 @@ class MakeCRPOutputPSP(DeterministicMakerAAAPSP):
     vals = args.operandValues()
     alpha = vals[0]
     if len(vals) == 2 and vals[1] != 0:
-      raise ValueError('Gradient of CRP implemented only for one-parmaeter '
+      raise ValueError('Gradient of CRP implemented only for one-parameter '
         'case.')
     [_, numTables, numCustomers] = aux.cts()
     return [numTables/alpha - (digamma(alpha + numCustomers) - digamma(alpha))]
