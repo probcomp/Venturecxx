@@ -22,6 +22,7 @@
 #include "concrete_trace.h"
 #include "regen.h"
 #include "env.h"
+#include "stop-and-copy.h"
 
 VentureValuePtr foreignFromPython(boost::python::object thing)
 {
@@ -161,6 +162,13 @@ double ForeignLitePSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
   boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(spAux)->aux;
   boost::python::object foreignLogDensityOfCounts = psp.attr("logDensityOfCounts")(foreignAux);
   return boost::python::extract<double>(foreignLogDensityOfCounts);
+}
+
+ForeignLiteSPAux* ForeignLiteSPAux::copy_help(ForwardingMap* m) const
+{
+  ForeignLiteSPAux* answer = new ForeignLiteSPAux(aux.attr("copy")());
+  (*m)[this] = answer;
+  return answer;
 }
 
 VentureValuePtr ForeignLiteLKernel::forwardSimulate(Trace * trace,

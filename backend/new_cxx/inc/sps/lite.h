@@ -62,8 +62,7 @@ struct ForeignLitePSP : PSP
 struct ForeignLiteSPAux : SPAux
 {
   ForeignLiteSPAux(boost::python::object aux): aux(aux) {}
-  SPAux* copy_help(ForwardingMap* m) const {
-    return new ForeignLiteSPAux(aux.attr("copy")()); }
+  ForeignLiteSPAux* copy_help(ForwardingMap* m) const;
   boost::python::object aux;
 };
 
