@@ -1032,6 +1032,20 @@ Does not interoperate with multiple particles.
 
 """),
 
+  engine_method_sp("save_model", infer_action_maker_type([t.StringType("<filename>")]), desc="""\
+Save the current model to a file.
+
+Note: ``save_model`` and ``load_model`` rely on Python's ``pickle``
+module.
+"""),
+
+  engine_method_sp("load_model", infer_action_maker_type([t.StringType("<filename>")]), desc="""\
+Load from a file created by ``save_model``, clobbering the current model.
+
+Note: ``save_model`` and ``load_model`` rely on Python's ``pickle``
+module.
+"""),
+
   engine_method_sp("pyexec", infer_action_maker_type([t.SymbolType("<code>")]), desc="""\
 Execute the given string as Python code, via exec.
 
