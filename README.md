@@ -107,7 +107,7 @@ Getting Started
 
 -   Venture as a library in Python:
 
-        python -i -c 'from venture import shortcuts; ripl = shortcuts.Puma().make_church_prime_ripl()'
+        python -i -c 'from venture import shortcuts; ripl = shortcuts.Puma().make_ripl()'
 
     Using Venture as a library allows you to drive it
     programmatically.
