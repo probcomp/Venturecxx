@@ -1,0 +1,40 @@
+(load_plugin "dpmm.py")
+
+(assume compound_make_bernoulli_dpmm
+  (lambda (cluster_crp_alpha component_bb_alpha)
+    (let ((crp (make_crp cluster_crp_alpha))
+          (get_cluster (mem (lambda (row) (crp))))
+          (get_component_model (mem (lambda (col cluster)
+            (make_beta_bernoulli component_bb_alpha
+                                 component_bb_alpha))))
+          (get_cell (lambda (row col)
+            ((get_component_model col (get_cluster row))))))
+      get_cell)))
+
+(assume f (make_bernoulli_dpmm 1 0.5))
+(assume dummy (flip)) ;; needed so that the AEKernel does its thing
+
+(for_each_indexed
+ '((0 0 0 0 1 1 1 1)
+   (0 0 0 0 1 1 1 1)
+   (0 0 0 0 1 1 1 1)
+   (0 0 0 0 1 1 1 1)
+   (1 1 1 1 0 0 0 0)
+   (1 1 1 1 0 0 0 0)
+   (1 1 1 1 0 0 0 0)
+   (1 1 1 1 0 0 0 0))
+ (lambda (row values)
+   (for_each_indexed values
+     (lambda (col value)
+       (observe (f ,(atom row) ,(atom col)) value)))))
+
+(mh default one 1000)
+
+(for_each (arange 8 20)
+  (lambda (row)
+    (do (values <- (mapM
+                    (lambda (col)
+                      (predict (f ,(atom row) ,(atom col))))
+                    (arange 8)))
+        (return (print (apply vector (mapv atom values)))))))
+
