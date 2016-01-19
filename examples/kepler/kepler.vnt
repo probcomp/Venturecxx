@@ -49,29 +49,27 @@
             (sat_pr (lookup iapt 3)))
         (do
           (if (< 0 sat_ap)
-            (observe (apogee (atom ,sat_id)) sat_ap)
-            (return (print (list sat_ap sat_pg sat_pr sat_id))))
+            (observe (apogee (atom ,sat_id)) sat_ap) pass)
           (if (< 0 sat_pg)
-            (observe (perigee (atom ,sat_id)) sat_pg)
-            (return (print (list sat_ap sat_pg sat_pr sat_id))))
+            (observe (perigee (atom ,sat_id)) sat_pg) pass)
           (if (< 0 sat_pr)
-            (observe (period (atom ,sat_id)) sat_pr)
-            (return (print (list sat_ap sat_pg sat_pr sat_id)))))))]
+            (observe (period (atom ,sat_id)) sat_pr) pass))))]
 
 (pyexec "import pandas as pd; import venture.value.dicts as vd")
 (pyexec "from venture.lite.value import VentureValue as VV")
 (pyexec "data = pd.read_csv('satellites.csv').itertuples()")
 
-[define n_samples 1167]
+[define n_samples 110]
 [define observation
   (lambda (d) (run (pyeval "VV.fromStackDict(vd.vector(list(data.next())))")))]
 (for_each (arange n_samples) (lambda (d) (observer (observation d))))
 
-Inference program.
+; Inference program.
 [infer (mh 'default 'one 30000)]
 [define assignments
   (run (mapM (lambda (i) (sample (z (atom ,i)))) (arange n_samples)))]
 
+; Likelihood weighting.
 [define simulate_joint
   (lambda (period_val sat_id samples)
     (run
@@ -85,3 +83,5 @@ Inference program.
                   (period (atom ,sat_id))
                   (kepler (apogee (atom ,sat_id))
                           (perigee (atom ,sat_id))))))))]
+
+; HMC.
