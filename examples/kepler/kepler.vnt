@@ -50,13 +50,13 @@
         (do
           (if (< 0 sat_ap)
             (observe (apogee (atom ,sat_id)) sat_ap)
-            (return (print sat_id)))
+            (return (print (list sat_ap sat_pg sat_pr sat_id))))
           (if (< 0 sat_pg)
             (observe (perigee (atom ,sat_id)) sat_pg)
-            (return (print sat_id)))
+            (return (print (list sat_ap sat_pg sat_pr sat_id))))
           (if (< 0 sat_pr)
             (observe (period (atom ,sat_id)) sat_pr)
-            (return (print sat_id))))))]
+            (return (print (list sat_ap sat_pg sat_pr sat_id)))))))]
 
 (pyexec "import pandas as pd; import venture.value.dicts as vd")
 (pyexec "from venture.lite.value import VentureValue as VV")
@@ -67,7 +67,21 @@
   (lambda (d) (run (pyeval "VV.fromStackDict(vd.vector(list(data.next())))")))]
 (for_each (arange n_samples) (lambda (d) (observer (observation d))))
 
-; Inference program.
+Inference program.
 [infer (mh 'default 'one 30000)]
 [define assignments
   (run (mapM (lambda (i) (sample (z (atom ,i)))) (arange n_samples)))]
+
+[define simulate_joint
+  (lambda (period_val sat_id samples)
+    (run
+        (do
+          (resample samples)
+          (observe (period (atom ,sat_id)) period_val)
+          (resample 1)
+          (predict
+            (list (apogee (atom ,sat_id))
+                  (perigee (atom ,sat_id))
+                  (period (atom ,sat_id))
+                  (kepler (apogee (atom ,sat_id))
+                          (perigee (atom ,sat_id))))))))]
