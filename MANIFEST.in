@@ -848,7 +848,7 @@ include examples/on-teaching-exchangeable-coupling.txt
 include examples/crosscat.vnt
 include examples/gaussian_geweke.py
 include examples/crp_2d_demo.py
-include examples/hmc-demo.py
+include examples/hmc_demo.py
 include examples/brownian/pic.vnt
 include examples/brownian/model.vnt
 include examples/brownian/data-gen.py
