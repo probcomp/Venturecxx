@@ -239,3 +239,37 @@ def dlogpdf(X, Mu, dMu, Sigma, dSigma):
   dlogp_dSigma = numpy.array([np.sum(Q*dsigma_i)/2. for dsigma_i in dSigma])
 
   return (dlogp_dMu, dlogp_dSigma)
+
+def conditional(X2, Mu1, Mu2, Sigma11, Sigma12, Sigma21, Sigma22):
+  """Parameters of conditional multivariate normal."""
+  # The conditional distribution of a multivariate normal given some
+  # fixed values of some variables is itself a multivariate normal on
+  # the remaining values, with a slightly different mean and
+  # covariance matrix.  In particular, for
+  #
+  #     Mu = [Mu_1; Mu_2],
+  #     Sigma = [Sigma_11, Sigma_12; Sigma_21, Sigma_22],
+  #
+  # where `;' separates rows and `,' separates columns within a row,
+  # the conditional distribution given the fixed values X_2 for the
+  # first block of variables is multivariate normal with
+  #
+  #     Mu' = Mu_1 + Sigma_12 Sigma_22^-1 (X_2 - Mu_2),
+  #     Sigma' = Sigma_11 - Sigma_12 Sigma_22^-1 Sigma_21,
+  #
+  # where Sigma' is the Schur complement of Sigma_22 in Sigma.
+  #
+  d1 = len(Mu1)
+  d2 = len(Mu2)
+  assert X2.shape == (d2,)
+  assert Mu1.shape == (d1,)
+  assert Mu2.shape == (d2,)
+  assert Sigma11.shape == (d1, d1)
+  assert Sigma12.shape == (d1, d2)
+  assert Sigma21.shape == (d2, d1)
+  assert Sigma22.shape == (d2, d2)
+
+  covf22 = _covariance_factor(Sigma22)
+  Mu_ = Mu1 + np.dot(Sigma12, covf22.solve(X2 - Mu2))
+  Sigma_ = Sigma11 - np.dot(Sigma12, covf22.solve(Sigma21))
+  return (Mu_, Sigma_)
