@@ -76,14 +76,11 @@
 (pyexec "from venture.lite.value import VentureValue as VV")
 (pyexec "data = pd.read_csv('satellites.csv').itertuples()")
 
-[define n_samples 1000]
+[define n_samples 1167]
 [define observation
-  (lambda ()
-    (run (pyeval "VV.fromStackDict(vd.vector(list(data.next())))")))]
+  (lambda () (run (pyeval "VV.fromStackDict(vd.vector(list(data.next())))")))]
 (print "Observing")
-(for_each
-  (arange n_samples)
-  (lambda (d) (observer (observation))))
+(for_each (arange n_samples) (lambda (d) (observer (observation))))
 
 ; Importance sampling with resampling.
 ; Simulate (A,P)|T for a fresh satellite.
