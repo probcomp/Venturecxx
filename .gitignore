@@ -22,6 +22,8 @@ a.out
 # Dev/testing
 dump
 .noseids
+# Compiled Stan model cache
+/test/integration/models/
 
 # Release artifacts
 /venture-*.tgz
