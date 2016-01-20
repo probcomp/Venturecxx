@@ -169,6 +169,13 @@ def checkAAAParticleWeights(sp):
 
 @gen_on_inf_prim("resample")
 def testAAAResampleSmoke():
+  hmm = """
+(make_lazy_hmm
+ (simplex 0.5 0.5)
+ (matrix (array (array 0.7 0.3)
+               (array 0.3 0.7)))
+ (matrix (array (array 0.9 0.2)
+               (array 0.1 0.8))))"""
   for sp in ["(make_beta_bernoulli 1 1)",
              "(make_uc_beta_bernoulli 1 1)",
              # From Lite
@@ -178,6 +185,7 @@ def testAAAResampleSmoke():
              "(make_sym_dir_mult 0.5 2)",
              "(make_uc_sym_dir_mult 0.5 2)",
              "(make_crp 1)",
+             hmm
             ]:
     yield checkAAAResampleSmoke, sp
 

@@ -36,7 +36,7 @@ struct HMMSPAux : SPAux
   /* We expect very few, otherwise we would use a set */
   map<size_t,vector<uint32_t> > os;
 
-  SPAux* copy_help(ForwardingMap* m) const;
+  HMMSPAux* copy_help(ForwardingMap* m) const;
 
 };
 
@@ -71,6 +71,7 @@ struct UncollapsedHMMSP : SP
   bool hasAEKernel() const { return true; }
   void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
                gsl_rng * rng) const;
+  UncollapsedHMMSP* copy_help(ForwardingMap* m) const;
 
   const MatrixXd p0;
   const MatrixXd T;
