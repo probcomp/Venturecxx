@@ -82,11 +82,9 @@
 (print "Observing")
 (for_each (arange n_samples) (lambda (d) (observer (observation))))
 
-; Importance sampling with resampling.
-; Simulate (A,P)|T for a fresh satellite.
-; Make a scope
-[define simulate_joint
-  (lambda (period_val)
+; Probabilistically invert Kepler's law using single-site MH in local scope.
+[define invert_kepler
+  (lambda (period_val mh_steps mh_thin n_samples)
     (run
         (do
           (observe (period (atom -1)) period_val foo)
@@ -94,13 +92,18 @@
           ;   (do
               ; (mh (atom -1) 'z 100)
               ; (hmc (atom -1) all .5 100 50)))
-          (mh (atom -1) one 10000)
-          (result <- (sample
-                      (list (apogee (atom -1))
-                            (perigee (atom -1))
-                            (period (atom -1))
-                            (kepler (apogee (atom -1))
-                                    (perigee (atom -1))))))
+          (mh (atom -1) one mh_steps)
+          (result <-
+            (mapM
+              (lambda (k)
+                (do
+                  (mh (atom -1) one mh_thin)
+                  (sample
+                    (list (apogee (atom -1))
+                          (perigee (atom -1))
+                          (kepler (apogee (atom -1))
+                                  (perigee (atom -1)))))))
+              (arange n_samples)))
           (forget 'foo)
           (return result))))]
 
