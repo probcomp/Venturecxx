@@ -51,8 +51,7 @@ CREATE TABLE bayesdb_vsgpm_ripl (
 
 class VsGpm(object):
     def __init__(self):
-        self.hack_in_memory_cache = {}
-        self.multithread = False
+        self.memory_cache = dict()
 
     def name(self):
         return 'vsgpm'
@@ -114,25 +113,15 @@ class VsGpm(object):
         results = [[] for _ in xrange(num_predictions)]
         for k in range(num_predictions):
             m = bdb.np_prng.randint(0, high=n_model)
-            ripl = self._hack_ripl(bdb, generator_id, m)
+            ripl = self._duplicate_ripl(bdb, generator_id, m)
             for (rowid, col, val) in constraints:
-                ripl.observe('(get_cell %i %i)' % (col, rowid), val)
+                ripl.observe('(get_cell %i %i)' % (rowid, col), val)
             for rowid in set([r for (r, _, _) in constraints]):
                 ripl.infer('(mh %i one 250)' % rowid)
             for (rowid, col) in targets:
-                rc_sample = ripl.predict('(get_cell %i %i)' % (col, rowid))
+                rc_sample = ripl.predict('(get_cell %i %i)' % (rowid, col))
                 results[k].append(rc_sample)
         return results
-
-    def set_multithread(self, multithread=None):
-        self.multithread = multithread
-
-    def _mapper(self):
-        pool, mapper = None, map
-        if self.multithread:
-            pool = multiprocessing.Pool(multiprocessing.cpu_count())
-            mapper = pool.map
-        return pool, mapper
 
     def _parse_schema(self, bdb, schema):
         program = None
@@ -216,6 +205,12 @@ class VsGpm(object):
         ''' % (','.join('t.%s' % (qcn,) for qcn in qcns), qt))
         return [row for row in cursor]
 
+    def _ripl(self, bdb, generator_id, model_no):
+        if (generator_id, model_no) not in self.memory_cache:
+            self.memory_cache[(generator_id, model_no)] = \
+                self._load_ripl(bdb, generator_id, model_no)
+        return self.memory_cache[(generator_id, model_no)]
+
     def _save_ripl(self, bdb, generator_id, model_no, ripl):
         ripl_binary = ripl.saves()
         insert_ripl_sql = '''
@@ -228,36 +223,7 @@ class VsGpm(object):
             'modelno': model_no,
             'ripl_binary': sqlite3.Binary(ripl_binary),
         })
-        self._cache_for(bdb, ('ripls', generator_id, model_no)).set(ripl)
-
-    def _ripl(self, bdb, generator_id, model_no):
-        box = self._cache_for(bdb, ('ripls', generator_id, model_no))
-        return box.get() or box.set(self._load_ripl(bdb, generator_id,
-            model_no))
-
-    def _hack_ripl(self, bdb, generator_id, model_no):
-        hack_ripl_binary = self._ripl(bdb, generator_id, model_no).saves()
-        hack_ripl = vs.make_lite_church_prime_ripl()
-        hack_ripl.loads(hack_ripl_binary)
-        return hack_ripl
-
-    def _cache(self, bdb):
-        return self.hack_in_memory_cache
-        if bdb.cache is None:
-            return None
-        if 'vsgpm' in bdb.cache:
-            return bdb.cache['vsgpm']
-        else:
-            _cache = {}
-            bdb.cache['vsgpm'] = _cache
-            return _cache
-
-    def _cache_for(self, bdb, key):
-        cache = self._cache(bdb)
-        if cache is None:
-            return NullBox()
-        else:
-            return HashBox(cache, key)
+        self.memory_cache[(generator_id, model_no)] = ripl
 
     def _load_ripl(self, bdb, generator_id, model_no):
         sql = '''
@@ -269,13 +235,19 @@ class VsGpm(object):
             row = cursor.next()
         except StopIteration:
             generator = core.bayesdb_generator_name(bdb, generator_id)
-            raise BQLError(bdb, 'No vsgpm ripl for generator: %s model: %s.' %
-                (generator, model_no))
+            raise BQLError(bdb, 'No %s ripl for generator: %s model: %s.' %
+                (self.name(), generator, model_no))
         else:
             ripl = vs.make_lite_church_prime_ripl()
             ripl_binary = row[0]
             ripl.loads(ripl_binary)
             return ripl
+
+    def _duplicate_ripl(self, bdb, generator_id, model_no):
+        hack_ripl_binary = self._ripl(bdb, generator_id, model_no).saves()
+        hack_ripl = vs.make_lite_church_prime_ripl()
+        hack_ripl.loads(hack_ripl_binary)
+        return hack_ripl
 
     def _column_map(self, bdb, generator_id):
         table_cols = core.bayesdb_generator_column_numbers(bdb, generator_id)
@@ -288,24 +260,3 @@ class VsGpm(object):
     def _remap_targets(self, bdb, generator_id, targets):
         column_map = self._column_map(bdb, generator_id)
         return [(row, column_map[col]) for (row, col) in targets]
-
-class NullBox(object):
-    def get(self):
-        return None
-    def set(self, value):
-        return value
-
-class HashBox(object):
-    def __init__(self, cache, key):
-        self.cache = cache
-        self.key = key
-
-    def get(self):
-        if self.key in self.cache:
-            return self.cache[self.key]
-        else:
-            return None
-
-    def set(self, value):
-        self.cache[self.key] = value
-        return value
