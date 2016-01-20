@@ -56,6 +56,7 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=cmake_install.cmake \
     --exclude=env.d \
     --exclude=*~ \
+    --exclude=Venturecxx/pythenv.sh \
     --exclude=.owainnotes.txt \
     --exclude=valgrind-python.supp \
     --exclude=Makefile \
@@ -86,8 +87,10 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=tool/logs \
     --exclude=doc/v1 \
     --exclude=script/release-tarball \
+    --exclude=script/compare-release-content \
     --exclude=script/jenkins/debian-test-docker/dist \
     --exclude=script/jenkins/pip-test-docker/dist \
+    --exclude=Venturecxx/test/integration/models \
     --exclude=python/lib/parser/church_prime/grammar.out \
     --exclude=python/lib/parser/church_prime/grammar.sha256 \
     --exclude=python/lib/parser/venture_script/grammar.out \

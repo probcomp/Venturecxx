@@ -1,3 +1,4 @@
+include check.sh
 include inference-quality.cfg
 include refman/venture.ripl.ripl.rst
 include refman/conf.py
@@ -685,11 +686,13 @@ include doc/sp-math/sp-math.tex
 include doc/stale-mac-install-instructions.md
 include doc/error-reporting.md
 include doc/on-approximating-kl-divergence.md
+include doc/on-comparing-discrete-distributions.md
 include doc/foreign-interface.md
 include doc/impossibility.md
 include doc/on-log-density-of-counts.md
 include doc/deep-freeze.md
 include doc/intuiting-kl/intuiting-kl.tex
+include doc/venstan.md
 include external/README
 include external/plex/dist/tests/test6.out
 include external/plex/dist/tests/test11.py
@@ -823,7 +826,8 @@ include examples/tutorial-2015/gp-3.vnts
 include examples/tutorial-2015/mk_outlier_frame.vnts
 include examples/tutorial-2015/index.html
 include examples/tutorial-2015/BayesOpt_gpmem_sequence.png
-include examples/tutorial-2015/gp_toy_posterior.png
+include examples/venstan/smoke.vnts
+include examples/venstan/chain_smoke.vnts
 include examples/ppaml-talk/pipits2.csv
 include examples/ppaml-talk/pipits.vnts
 include examples/ppaml-talk/pipits.csv
@@ -954,14 +958,17 @@ include test/unit/test_lenses.py
 include test/exception/test_syntax.py
 include test/exception/test_runtime.py
 include test/exception/__init__.py
+include test/regressions/test_comments_in_strings.py
 include test/regressions/test_if.py
 include test/regressions/test_observe_mem_scope.py
 include test/regressions/test_scopes_wttree.py
 include test/regressions/test_esr_ref_absorb.py
 include test/regressions/test_uneval_constant.py
 include test/regressions/test_regen_copying.py
+include test/regressions/test_regen_stale_aaa.py
 include test/regressions/test_owain_mixture.py
 include test/regressions/test_scopes_in_brush.py
+include test/regressions/test_toplevel_unquote.py
 include test/regressions/__init__.py
 include test/regressions/test_references.py
 include test/regressions/test_logdensitymvnormal.py
@@ -988,7 +995,6 @@ include test/stack/functionality/sivm_exception_annotation_test.py
 include test/stack/functionality/core_sivm_cxx_test.py
 include test/stack/functionality/rest_client_test.py
 include test/stack/functionality/vim_utils_test.py
-include test/stack/functionality/ripl_utils_test.py
 include test/stack/functionality/churchprime_parser_test.py
 include test/stack/functionality/test_bulk_observe.py
 include test/stack/functionality/venturescript_parser_test.py
@@ -1039,6 +1045,7 @@ include test/integration/test_plugin_loading.py
 include test/integration/test_console.py
 include test/integration/__init__.py
 include test/integration/test_doc_autogen.py
+include test/integration/test_venstan.py
 include test/random_values.py
 include test/README.md
 include test/timing.py
