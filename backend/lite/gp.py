@@ -35,9 +35,6 @@ import venture.lite.mvnormal as mvnormal
 import venture.lite.types as t
 import venture.lite.value as v
 
-def col_vec(xs):
-  return np.matrix([xs]).T
-
 class GP(object):
   """An immutable GP object."""
   def __init__(self, mean, covariance, samples={}):
@@ -49,10 +46,10 @@ class GP(object):
     return self.samples
 
   def mean_array(self, xs):
-    return col_vec(map(self.mean, xs))
+    return np.array(map(self.mean, xs))
 
   def cov_matrix(self, x1s, x2s):
-    return np.matrix([[self.covariance(x1, x2) for x2 in x2s] for x1 in x1s])
+    return np.array([[self.covariance(x1, x2) for x2 in x2s] for x1 in x1s])
 
   def getNormal(self, xs):
     """Returns the mean and covariance matrices at a set of input points."""
@@ -65,7 +62,7 @@ class GP(object):
 
       mu1 = self.mean_array(xs)
       mu2 = self.mean_array(x2s)
-      a2 = col_vec(o2s)
+      a2 = np.array(o2s)
 
       sigma11 = self.cov_matrix(xs, xs)
       sigma12 = self.cov_matrix(xs, x2s)
@@ -73,21 +70,21 @@ class GP(object):
       sigma22 = self.cov_matrix(x2s, x2s)
       inv22 = la.pinv(sigma22)
 
-      mu = mu1 + sigma12 * (inv22 * (a2 - mu2))
-      sigma = sigma11 - sigma12 * inv22 * sigma21
+      mu = mu1 + np.dot(sigma12, np.dot(inv22, (a2 - mu2)))
+      sigma = sigma11 - np.dot(sigma12, np.dot(inv22, sigma21))
 
     return mu, sigma
 
   def sample(self, *xs):
     """Sample at a (set of) point(s)."""
     mu, sigma = self.getNormal(xs)
-    os = npr.multivariate_normal(mu.A1, sigma)
+    os = npr.multivariate_normal(mu, sigma)
     return os
 
   def logDensity(self, xs, os):
     """Log density of a set of samples."""
     mu, sigma = self.getNormal(xs)
-    return mvnormal.logpdf(col_vec(os), mu, sigma)
+    return mvnormal.logpdf(np.asarray(os).reshape(len(xs),), mu, sigma)
 
   def logDensityOfCounts(self):
     """Log density of the current samples."""
@@ -100,7 +97,7 @@ class GP(object):
     mu = self.mean_array(xs)
     sigma = self.cov_matrix(xs, xs)
 
-    return mvnormal.logpdf(col_vec(os), mu, sigma)
+    return mvnormal.logpdf(np.asarray(os), mu, sigma)
 
 class GPOutputPSP(RandomPSP):
   def __init__(self, mean, covariance):

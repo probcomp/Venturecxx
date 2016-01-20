@@ -20,82 +20,122 @@ import scipy.linalg as la
 
 # XXX Use LDL decomposition instead of Cholesky so that we can handle
 # merely positive-semidefinite, rather than positive-definite,
-# covariance matrices.  Problem: neither numpy nor scipy supports it.
-# We could do it ourselves, but that's a lot of work and will be slow
-# in Python.
-#
-# The only reason we require scipy is to efficiently solve Cholesky
-# systems, L^T L x = y where L is lower-triangular.  numpy can compute
-# the Cholesky decomposition L, but has no linear system solver that
-# takes advantage of the fact that it is triangular.
+# covariance matrices better than LU decomposition.  Problem: neither
+# numpy nor scipy supports it.  We could do it ourselves, but that's a
+# lot of work and will be slow in Python.
 
-def _covariance_factor(A):      return la.cho_factor(A)
-def _covariance_solve(L, X):    return la.cho_solve(L, X)
-def _covariance_logsqrtdet(L):  M, _low = L; return np.sum(np.log(np.diag(M)))
+def _covariance_factor(Sigma):
+  # Assume it is positive-definite and try Cholesky decomposition.
+  try:
+    return Covariance_Cholesky(Sigma)
+  except la.LinAlgError:
+    pass
+
+  # Assume it is at least nonsingular and try LU decomposition.
+  try:
+    return Covariance_LU(Sigma)
+  except la.LinAlgError:
+    pass
+
+  # Otherwise, fall back to whatever heuristics scipy can manage.
+  return Covariance_Loser(Sigma)
+
+class Covariance_Cholesky(object):
+  def __init__(self, Sigma):
+    self._cholesky = la.cho_factor(Sigma)
+  def solve(self, Y):
+    return la.cho_solve(self._cholesky, Y)
+  def inverse(self):
+    return self.solve(np.eye(self._cholesky[0].shape[0]))
+  def logsqrtdet(self):
+    # Sigma = L^T L -- but be careful: only the lower triangle and
+    # diagonal of L are actually initialized; the upper triangle is
+    # garbage.
+    L, _lower = self._cholesky
+
+    # det Sigma = det L^T L = det L^T det L = (det L)^2.  Since L is
+    # triangular, its determinant is the product of its diagonal.  To
+    # compute log sqrt(det Sigma) = log det L, we sum the logs of its
+    # diagonal.
+    return np.sum(np.log(np.diag(L)))
+
+class Covariance_LU(object):
+  def __init__(self, Sigma):
+    self._lu = la.lu_factor(Sigma)
+    LU, P = self._lu
+    # If the sign of the determinant is negative, can't do it.
+    signP = +1 if (np.sum(P != np.arange(len(P))) % 2) == 0 else -1
+    signU = np.prod(np.sign(np.diag(LU)))
+    if signP*signU != +1:
+      raise la.LinAlgError('non-positive-semidefinite covariance matrix')
+  def solve(self, Y):
+    return la.lu_solve(self._lu, Y)
+  def inverse(self):
+    return self.solve(np.eye(self._lu[0].shape[0]))
+  def logsqrtdet(self):
+    # P Sigma = L U, where P is a permutation matrix, L is unit lower
+    # triangular, and U is upper triangular.  LU stores the lower
+    # triangle of L, the diagonal of U, and the upper triangle of U,
+    # since the diagonal entries of L are all 1.
+    LU, P = self._lu
+    diagU = np.diag(LU)
+
+    # Since P is a permutation matrix, L is a unit triangular matrix
+    # whose determinant is 1, and U is a triangular matrix whose
+    # determinant is the product of its diagonal, we have
+    #
+    #   det Sigma = det (P L U) = det P * det L * det U
+    #     = sign P * 1 * \prod_i u_ii
+    #     = sign P \prod_i u_ii.
+    #
+    # where u_ii is the ith diagonal entry of u.  Since we assume a
+    # positive semidefinite covariance matrix, the result is positive,
+    # so we can compute this by \sum_i \log_i |u_ii|.  Hence:
+    #
+    #   log sqrt(det Sigma) = log (\prod_i u_ii)^(1/2)
+    #     = (1/2) log \prod_i u_ii
+    #     = (1/2) \sum_i \log |u_ii|.
+    return (1/2.) * np.sum(np.log(np.abs(diagU)))
+
+class Covariance_Loser(object):
+  def __init__(self, Sigma):
+    self._Sigma = Sigma
+  def solve(self, Y):
+    X, _residues, _rank, _sv = la.lstsq(self._Sigma, Y)
+    return X
+  def inverse(self):
+    return la.pinv(self._Sigma)
+  def logsqrtdet(self):
+    return la.det(self._Sigma)
 
 def logpdf(X, Mu, Sigma):
   """Multivariate normal log pdf."""
-  # This is the multivariate normal log pdf for a column X of n
-  # outputs, a column Mu of n means, and an n-by-n positive-definite
+  # This is the multivariate normal log pdf for an array X of n
+  # outputs, an array Mu of n means, and an n-by-n positive-definite
   # covariance matrix Sigma.  The direct-space density is:
   #
   #     p(X | Mu, Sigma)
   #       = ((2 pi)^n det Sigma)^(-1/2)
   #         exp((-1/2) (X - Mu)^T Sigma^-1 (X - Mu)),
   #
-  # Since Sigma is symmetric and positive-definite, it has a Cholesky
-  # decomposition
-  #
-  #     Sigma = L^T L
-  #
-  # for some lower-triangular matrix L.  We can use this both to
-  # compute Sigma^-1 X efficiently, i.e. to solve Sigma alpha = X, and
-  # to compute det Sigma efficiently, since
-  #
-  #     det Sigma = det (L^T L) = (det L^T) (det L) = (det L)^2,
-  #
-  # where det L is the determinant of a lower-triangular matrix and
-  # hence is simply the product of the diagonals.
-  #
   # We want this in log-space, so we have
   #
   #     log p(X | Mu, Sigma)
   #     = (-1/2) (X - Mu)^T Sigma^-1 (X - Mu) - log ((2 pi)^n det Sigma)^(1/2)
-  #     = (-1/2) (X - Mu)^T Sigma^-1 (X - Mu) - log ((2 pi)^n (det L)^2)^(1/2)
-  #     = (-1/2) (X - Mu)^T Sigma^-1 (X - Mu) - log ((2 pi)^(n/2) det L)
-  #     = (-1/2) (X - Mu)^T Sigma^-1 (X - Mu) - log (2 pi)^(n/2) - log det L
-  #     = (-1/2) (X - Mu)^T Sigma^-1 (X - Mu) - (n/2) log (2 pi) - log det L,
+  #     = (-1/2) (X - Mu)^T Sigma^-1 (X - Mu)
+  #         - (n/2) log (2 pi) - log sqrt(det Sigma).
   #
   n = len(X)
-  assert Mu.shape in ((n,), (n, 1))
+  assert Mu.shape == (n,)
   assert Sigma.shape == (n, n)
 
   X_ = X - Mu
+  covf = _covariance_factor(Sigma)
 
-  # Solve
-  #
-  #     Sigma alpha = X
-  #
-  # for alpha and compute
-  #
-  #     log sqrt(det Sigma).
-  #
-  # If the covariance matrix is not positive-definite, we may be
-  # unable to factor it.  In that case, just try to solve the equation
-  # by the standard methods and compute the determinant naively.
-  try:
-    L = _covariance_factor(Sigma)
-  except la.LinAlgError:
-    alpha = la.solve(Sigma, X_)
-    logsqrtdet = (1/2.)*np.log(la.det(Sigma))
-  else:
-    alpha = _covariance_solve(L, X_)
-    logsqrtdet = _covariance_logsqrtdet(L)
-
-  # Compute the log density.
-  logp = -np.dot(X_.T, alpha)/2.
+  alpha = covf.solve(X_)
+  logp = -np.dot(X_.T, covf.solve(X_)/2.)
   logp -= (n/2.)*np.log(2*np.pi)
-  logp -= logsqrtdet
+  logp -= covf.logsqrtdet()
 
   # Convert 1x1 matrix to float.
   return float(logp)
@@ -176,30 +216,26 @@ def dlogpdf(X, Mu, dMu, Sigma, dSigma):
   # the matrices, since alpha alpha^T - Sigma^-1 is symmetric.
   #
   n = len(X)
-  assert Mu.shape in ((n,), (n, 1))
+  assert Mu.shape == (n,)
   assert all(dmu_i.shape == (n,) for dmu_i in dMu)
   assert Sigma.shape == (n, n)
   assert all(dsigma_i.shape == (n, n) for dsigma_i in dSigma)
 
-  # Solve Sigma alpha = (X - Mu), Sigma Sigma^-1 = I.
+  X_ = X - Mu
+  covf = _covariance_factor(Sigma)
+
+  # Solve Sigma alpha = X - Mu for alpha.
   #
   # XXX It is ~10 times faster to compute Sigma^-1 and do a single
   # multiplication per partial derivative than to solve a linear
   # system per partial derivative.  But is it numerically safe?  I
   # doubt it.
-  try:
-    L = _covariance_factor(Sigma)
-  except la.LinAlgError:
-    alpha = la.solve(Sigma, X - Mu)
-    Sigma_inv = np.invert(Sigma)
-  else:
-    alpha = _covariance_solve(L, X - Mu)
-    Sigma_inv = _covariance_solve(L, np.eye(n))
+  alpha = covf.solve(X - Mu)
 
   # Compute Q = alpha alpha^T - Sigma^-1.
-  Q = np.dot(alpha, alpha.T) - Sigma_inv
+  Q = np.outer(alpha, alpha) - covf.inverse()
 
-  dlogp_dMu = np.dot(alpha.T, dMu)
+  dlogp_dMu = numpy.array([np.dot(alpha, dmu_i) for dmu_i in dMu])
   dlogp_dSigma = numpy.array([np.sum(Q*dsigma_i)/2. for dsigma_i in dSigma])
 
   return (dlogp_dMu, dlogp_dSigma)
