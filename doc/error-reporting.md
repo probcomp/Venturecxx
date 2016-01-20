@@ -107,10 +107,7 @@ description as well as the model-level one.
 Further Facts
 -------------
 
-- There's all this nonsesnse involving a non-existent debugger and
-  states system cluttering up the venture sivm code.
-
-- It seems that the sivm annotator never sees breakpoint or parse
+- It seems that the sivm annotator never sees parse
   exceptions in the test suite.  (Or the innermost variety of invalid
   argument exception, but that seems less important.)
 
@@ -147,9 +144,6 @@ Further Facts
     - It can't because it has to canonicalize arrays one way or the other
 
     - It also canonicalizes number literals to floats
-
-- Q: Is there any reason not to just delete the debugger instructions?
-  They are unexercised, and I have likely to broken them further.
 
 Explanations
 ------------

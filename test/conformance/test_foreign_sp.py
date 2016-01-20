@@ -15,13 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.config import get_ripl, defaultInfer, skipWhenInParallel, collectSamples
-from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.lite import builtin
-from venture.lite.sp_help import binaryNum
-
 import numpy as np
 from nose.tools import assert_raises_regexp
+
+from venture.lite import builtin
+from venture.lite.sp_help import binaryNum
+from venture.test.config import collectSamples
+from venture.test.config import defaultInfer
+from venture.test.config import get_ripl
+from venture.test.config import skipWhenInParallel
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import statisticalTest
 
 def test_foreign_aaa():
     builtins = builtin.builtInSPs()

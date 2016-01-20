@@ -17,14 +17,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import copy
-import traceback
 from cmd import Cmd
 from functools import wraps
+import copy
 import os
+import traceback
 
 from venture.exception import VentureException
-from utils import strip_types
+from venture.ripl.utils import strip_types
 
 def printValue(directive):
   '''Gets the actual value returned by an assume, predict, report, or sample directive.'''
@@ -56,13 +56,12 @@ class RiplCmd(Cmd, object):
     self.rebuild = rebuild
     self.files = [] if files is None else files
     self.plugins = [] if plugins is None else plugins
-    self.pending_instruction = None
     self.pending_instruction_string = None
     self._update_prompt()
 
   @catchesVentureException
   def emptyline(self):
-    if self.pending_instruction is not None:
+    if self.pending_instruction_string is not None:
       # force evaluation of pending instruction
       self._do_continue_instruction("", force_complete=True)
 
@@ -75,23 +74,15 @@ class RiplCmd(Cmd, object):
 
   do_EOF = do_quit
 
-  def _do_instruction(self, instruction, s, force_complete=False):
+  def _do_instruction(self, s, force_complete=False):
     if self.ripl.get_mode() == "church_prime":
       # Not supporting multiline paste for abstract syntax yet
-      if instruction == 'evaluate':
+      return self.ripl.execute_instructions(s)
+    else:
+      from venture.parser.venture_script.parse import string_complete_p
+      if force_complete or string_complete_p(s):
         return self.ripl.execute_instructions(s)
       else:
-        return self.ripl.execute_instruction('[%s %s]' % (instruction, s))
-    else:
-      if instruction == 'evaluate':
-        r_inst = s
-      else:
-        r_inst = '%s %s' % (instruction, s)
-      from venture.parser.venture_script.parse import string_complete_p
-      if force_complete or string_complete_p(r_inst):
-        return self.ripl.execute_instructions(r_inst)
-      else:
-        self.pending_instruction = instruction
         self.pending_instruction_string = s
         self._update_prompt()
 
@@ -106,69 +97,33 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def default(self, line):
     '''Continue a pending instruction or evaluate an expression in the inference program.'''
-    if self.pending_instruction is None:
+    if self.pending_instruction_string is None:
       self._do_eval(line)
     else:
       self._do_continue_instruction(line)
 
   def _do_continue_instruction(self, line, force_complete=False):
-    inst = self.pending_instruction
     string = self.pending_instruction_string + "\n" + line
-    self.pending_instruction = None
     self.pending_instruction_string = None
     self._update_prompt()
-    printValue(self._do_instruction(inst, string, force_complete))
+    printValue(self._do_instruction(string, force_complete))
 
   def _do_eval(self, line):
     '''Evaluate an expression in the inference program.'''
-    printValue(self._do_instruction('evaluate', line))
-
-  @catchesVentureException
-  def do_define(self, s):
-    '''Define a variable in the inference program.'''
-    printValue(self._do_instruction('define', s))
-
-  @catchesVentureException
-  def do_assume(self, s):
-    '''Add a named variable to the model.'''
-    printValue(self._do_instruction('assume', s))
-
-  @catchesVentureException
-  def do_observe(self, s):
-    '''Condition on an expression being the value.'''
-    self._do_instruction('observe', s)
-
-  @catchesVentureException
-  def do_predict(self, s):
-    '''Register an expression as a model prediction.'''
-    printValue(self._do_instruction('predict', s))
-
-  @catchesVentureException
-  def do_forget(self, s):
-    '''Forget a given prediction or observation.'''
-    self._do_instruction('forget', s)
-
-  @catchesVentureException
-  def do_report(self, s):
-    '''Report the current value of a given directive.'''
-    printValue(self._do_instruction('report', s))
-
-  @catchesVentureException
-  def do_sample(self, s):
-    '''Sample the given expression immediately,
-    without registering it as a prediction.'''
-    printValue(self._do_instruction('sample', s))
-
-  @catchesVentureException
-  def do_force(self, s):
-    '''Set the given expression to the given value,
-    without conditioning on it.'''
-    self._do_instruction('force', s)
+    printValue(self._do_instruction(line))
 
   @catchesVentureException
   def do_list_directives(self, _s):
     '''List active directives and their current values.'''
     self.ripl.print_directives()
+
+  def do_get_directive(self, s):
+    '''List active directives and their current values.'''
+    # See whether we got a string representing an integer directive id
+    try:
+      s = int(s)
+    except: pass
+    self.ripl.print_one_directive(self.ripl.get_directive(s))
 
   @catchesVentureException
   def do_clear(self, _):
@@ -180,29 +135,9 @@ class RiplCmd(Cmd, object):
     self._update_prompt()
 
   @catchesVentureException
-  def do_infer(self, s):
-    '''Run inference synchronously.'''
-    printValue(self._do_instruction('infer', self.ripl.defaultInferProgram(s if s else None)))
-
-  @catchesVentureException
-  def do_continuous_inference_status(self, s):
+  def do_ci_status(self, _s):
     '''Report status of continuous inference.'''
-    print self._do_instruction('continuous_inference_status', s)
-
-  @catchesVentureException
-  def do_start_continuous_inference(self, s):
-    '''Start continuous inference.'''
-    self.ripl.start_continuous_inference(s if s else None)
-
-  @catchesVentureException
-  def do_stop_continuous_inference(self, s):
-    '''Stop continuous inference.'''
-    self._do_instruction('stop_continuous_inference', s)
-
-  @catchesVentureException
-  def do_get_global_logscore(self, s):
-    '''Report the global logscore.'''
-    print self._do_instruction('get_global_logscore', s)
+    print self.ripl.continuous_inference_status()
 
   @catchesVentureException
   def do_dump_profile_data(self, s):
@@ -244,7 +179,7 @@ class RiplCmd(Cmd, object):
     self._update_prompt()
 
   def _update_prompt(self):
-    if self.pending_instruction is None:
+    if self.pending_instruction_string is None:
       if len(self.files) == 0 and len(self.plugins) == 0:
         self.prompt = "venture[script] > "
       else:

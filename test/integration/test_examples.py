@@ -15,11 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import copy
+import os.path
+import shutil
+import sys
 import subprocess as s
+import tempfile
 from unittest import SkipTest
 from distutils.spawn import find_executable
 
 from venture.test.config import gen_in_backend, gen_needs_backend, gen_needs_ggplot
+from venture.test.config import in_backend, needs_backend
 
 def findTimeout():
   '''
@@ -38,17 +44,9 @@ def checkExample(example):
   assert s.call("%s 1.5s python examples/%s" % (timeout, example), shell=True) == 124
 
 @gen_in_backend("none")
-@gen_needs_backend("puma")
-def testExamplesPuma():
-  for ex in ["venture-unit/lda.py", "venture-unit/crosscat.py"]:
-    yield checkExample, ex
-
-@gen_in_backend("none")
 @gen_needs_backend("lite")
 def testExamples():
-  for ex in ["venture-unit/analytics_gaussian_geweke.py",
-             "venture-unit/crp-demo.py", "venture-unit/crp-2d-demo.py", "venture-unit/hmc-demo.py",
-             "venture-unit/hmm-demo.py"]:
+  for ex in ["crp-2d-demo.py", "hmc-demo.py"]:
     yield checkExample, ex
 
 def checkVentureExample(command):
@@ -81,3 +79,30 @@ def testVentureExamplesLite():
   for ex in ["venture lite -L examples/hmm_plugin.py -f examples/hmm.vnt -e 'infer exact_filtering()'",
   ]:
     yield checkVentureExample, ex
+
+def checkVentureExampleComplete(command):
+  assert s.call(command, shell=True) == 0
+
+@gen_in_backend("none")
+@gen_needs_backend("puma")
+def testVentureExamplesPumaComplete():
+  for ex in ["venture puma -f examples/crosscat.vnt"]:
+    yield checkVentureExampleComplete, ex
+
+@in_backend("none")
+@needs_backend("lite")
+def testGaussianGeweke():
+  root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+  exs_path = os.path.join(root, "examples")
+
+  plots_dir = None
+  old_path = copy.copy(sys.path)
+  sys.path.append(exs_path)
+  try:
+    import gaussian_geweke
+    plots_dir = tempfile.mkdtemp(suffix='geweke')
+    gaussian_geweke.main(outdir=plots_dir, n_sample=2, burn_in=2, thin=2)
+  finally:
+    sys.path = old_path
+    if plots_dir is not None:
+      shutil.rmtree(plots_dir)

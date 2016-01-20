@@ -55,16 +55,18 @@ test function as @statisticalTest, not the generator.
 """
 
 import math
-
-import numpy as np
-import nose.tools as nose
 import sys
+
+import nose.tools as nose
+import numpy as np
+from scipy.spatial.distance import pdist
+from scipy.spatial.distance import squareform
 import scipy.stats as stats
-from scipy.spatial.distance import pdist, squareform
 from scipy.stats.mstats import rankdata
 
 from testconfig import config
 from venture.test.config import ignore_inference_quality
+import venture.test.plots as plots
 
 def normalizeList(seq):
   denom = sum(seq)
@@ -228,11 +230,13 @@ def explainOneDSample(observed):
     ans += tabulatelst("%.2f", percentiles, width=10, prefix="  ")
   return ans
 
-def reportKnownContinuous(expectedCDF, observed, descr=None):
+def reportKnownContinuous(expectedCDF, observed, descr=None, show_plot=False):
   """Kolmogorov-Smirnov test for agreement with known 1-D cumulative density
   function. The CDF argument should be a Python callable that computes the
   cumulative density."""
   (K, pval) = stats.kstest(observed, expectedCDF)
+  if show_plot:
+    plots.p_p_plot(expectedCDF, observed, show=True)
   return TestResult(pval, "\n".join([
     "Expected: %4d samples from %s" % (len(observed), descr),
     explainOneDSample(observed),
@@ -249,22 +253,58 @@ def reportSameContinuous(observed1, observed2):
     "D stat  : " + str(D),
     "P value : " + str(pval)]))
 
-# TODO Also sensibly compare the variance of the sample to the
-# expected variance (what's the right test statistic when the
-# "population distribution" is not known?  How many samples do I need
-# for it to become effectively normal, if it does?)
-# TODO Can I use the Barry-Esseen theorem to use skewness information
-# for a more precise computation of test validity?  How about
-# comparing sample skewness to expected skewness?
-def reportKnownMeanVariance(expMean, expVar, observed):
-  """Z-score test for data having a known mean and variance.
+def reportKnownGaussian(expMean, expStdDev, observed, show_plot=False):
+  """Kolmogorov-Smirnov test for agreement with a known Gaussian.
+
+  TODO Are there more sensitive tests for being a known Gaussian than
+  K-S?
+  """
+  cdf = stats.norm(loc=expMean, scale=expStdDev).cdf
+  label = "N(%s,%s)" % (expMean, expStdDev)
+  return reportKnownContinuous(cdf, observed, label, show_plot=show_plot)
+
+# TODO Warn if not enough observations?
+def reportKnownMean(expMean, observed, variance=None):
+  """Test for data having an expected mean.
+
+  If the variance is not given, use a T-test.
+  If the variance is given, use a (stricter) Z-score test.
+  *Does not* test agreement of the observed variance.
 
   Doesn't work for distributions that are fat-tailed enough not to
   have a mean.
 
-  The K-S test done by reportKnownContinuous is much tighter, so try
-  to use that if possible.
+  The T-statistic is only a good approximation if there are enough
+  observations; 30 are recommended.
 
+  The K-S test done by reportKnownGaussian or reportKnownContinuous
+  accounts for the entire shape of the distribution, so try to use
+  that if possible.
+  """
+  if variance is not None:
+    return reportKnownMeanZScore(expMean, variance, observed)
+  count = len(observed)
+  (tstat, pval) = stats.ttest_1samp(observed, expMean)
+  return TestResult(pval, "\n".join([
+    "Expected: % 4d samples with mean %4.3f" % (count, expMean),
+    explainOneDSample(observed),
+    "T stat  : " + str(tstat),
+    "P value : " + str(pval)]))
+
+def reportKnownMeanZScore(expMean, expVar, observed):
+  """Z-score test for data having a known mean.
+
+  Assumes the true variance is known and uses it to calibrate the mean
+  test; *does not* test agreement with the observed variance.
+
+  Doesn't work for distributions that are fat-tailed enough not to
+  have a mean.
+
+  The K-S test done by reportKnownContinuous accounts for the entire
+  shape of the distribution, so try to use that if possible.
+
+  If you know the distribution should be Gaussian, use
+  reportKnownGaussian.
   """
   count = len(observed)
   mean = np.mean(observed)
@@ -277,26 +317,16 @@ def reportKnownMeanVariance(expMean, expVar, observed):
     "Z score : " + str(zscore),
     "P value : " + str(pval)]))
 
-# TODO Warn if not enough observations?
-def reportKnownMean(expMean, observed):
-  """T-test for known mean, without knowing the variance.
-
-  Doesn't work for distributions that are fat-tailed enough not to
-  have a mean.
-
-  The T-statistic is only valid if there are enough observations; 30
-  are recommended.
-
-  The K-S test done by reportKnownContinuous is much tighter, so try
-  to use that if possible.
-  """
-  count = len(observed)
-  (tstat, pval) = stats.ttest_1samp(observed, expMean)
-  return TestResult(pval, "\n".join([
-    "Expected: % 4d samples with mean %4.3f" % (count, expMean),
-    explainOneDSample(observed),
-    "T stat  : " + str(tstat),
-    "P value : " + str(pval)]))
+# TODO Provide a test for distributions of unknown shape but known
+# mean and variance that sensibly compares the variance of the sample
+# to the expected variance.
+# - What's the right test statistic when the "population distribution"
+#   is not known?
+# - How many samples do I need for the test statistic to become
+#   effectively normal, if it does?
+# - Can I use the Barry-Esseen theorem to use skewness information for
+#   a more precise computation of test validity?  How about comparing
+#   sample skewness to expected skewness?
 
 def reportKernelTwoSampleTest(X, Y, permutations=None):
   '''

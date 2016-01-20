@@ -29,7 +29,7 @@ def testPersistenceSmoke1():
 
 def testPersistenceSmoke2():
   r = get_ripl(persistent_inference_trace=True)
-  r.set_mode("venture_script")
+  r.set_mode('venture_script')
   r.execute_program("""
 define foo = 5;
 assume x = flip(0.1);
@@ -129,15 +129,15 @@ def testForceSmoke2():
   x = r.sample('x')
   eq_(x, -3)
 
-@on_inf_prim("assume")
+@on_inf_prim('assume')
 def testAssumeTracked():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.infer("(assume x (normal 0 1))")
   directives = ripl.list_directives()
   assert len(directives) == 1
-  assert directives[0]["instruction"] == "assume"
+  assert directives[0]['instruction'] == 'assume'
 
-@on_inf_prim("assume")
+@on_inf_prim('assume')
 def testDirectivesTracked():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.infer("(assume x (normal 0 1))")
@@ -145,11 +145,11 @@ def testDirectivesTracked():
   ripl.infer("(predict (normal x 1))")
   directives = ripl.list_directives()
   assert len(directives) == 3
-  assert directives[0]["instruction"] == "assume"
-  assert directives[1]["instruction"] == "observe"
-  assert directives[2]["instruction"] == "predict"
+  assert directives[0]['instruction'] == 'assume'
+  assert directives[1]['instruction'] == 'observe'
+  assert directives[2]['instruction'] == 'predict'
 
-@on_inf_prim("assume")
+@on_inf_prim('assume')
 def testLabelingDirectives():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.infer("(assume x 5 foo)")
@@ -159,7 +159,7 @@ def testLabelingDirectives():
   eq_(2, ripl.report("bar"))
   eq_(6, ripl.report("baz"))
 
-@on_inf_prim("forget")
+@on_inf_prim('forget')
 def testDirectivesForgettable():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.infer("(assume x 5 foo)")
@@ -169,10 +169,10 @@ def testDirectivesForgettable():
   ripl.forget("bar")
   directives = ripl.list_directives()
   assert len(directives) == 2
-  assert directives[0]["instruction"] == "assume"
-  assert directives[1]["instruction"] == "predict"
+  assert directives[0]['instruction'] == 'assume'
+  assert directives[1]['instruction'] == 'predict'
 
-@on_inf_prim("forget")
+@on_inf_prim('forget')
 def testDirectivesForgettableFromInference():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.infer("(assume x 5 foo)")
@@ -182,14 +182,14 @@ def testDirectivesForgettableFromInference():
   ripl.infer("(forget 'bar)")
   directives = ripl.list_directives()
   assert len(directives) == 2
-  assert directives[0]["instruction"] == "assume"
-  assert directives[1]["instruction"] == "predict"
+  assert directives[0]['instruction'] == 'assume'
+  assert directives[1]['instruction'] == 'predict'
   ripl.infer("(forget 'baz)")
   assert len(ripl.list_directives()) == 1
   ripl.infer("(forget 'foo)")
   assert len(ripl.list_directives()) == 0
 
-@on_inf_prim("freeze")
+@on_inf_prim('freeze')
 def testDirectivesFreezableFromInference():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.infer("(assume x (normal 0 1) foo)")
@@ -198,10 +198,10 @@ def testDirectivesFreezableFromInference():
   xval = ripl.sample("x")
   yval = ripl.sample("y")
   engine = ripl.sivm.core_sivm.engine
-  eq_(engine.get_entropy_info()["unconstrained_random_choices"],2)
+  eq_(engine.get_entropy_info()['unconstrained_random_choices'],2)
 
   ripl.infer("(freeze 'bar)")
-  eq_(engine.get_entropy_info()["unconstrained_random_choices"],1)
+  eq_(engine.get_entropy_info()['unconstrained_random_choices'],1)
   ripl.infer(30)
   assert not xval == ripl.sample("x")
   eq_(yval, ripl.sample("y"))

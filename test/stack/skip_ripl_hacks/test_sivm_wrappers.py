@@ -24,16 +24,16 @@ from venture.test.config import get_core_sivm
 import venture.value.dicts as v
 
 # TODO Not really backend independent, but doesn't test the backend much.
-# Almost the same effect as @venture.test.config.in_backend("none"),
+# Almost the same effect as @venture.test.config.in_backend('none'),
 # but works on the whole class
-@attr(backend="none")
+@attr(backend='none')
 class TestVentureSivm(unittest.TestCase):
 
     _multiprocess_can_split_ = True
 
     def setUp(self):
         self.core_sivm = get_core_sivm()
-        self.core_sivm.execute_instruction({"instruction":"clear"})
+        self.core_sivm.execute_instruction({'instruction':'clear'})
         self.sivm = VentureSivm(self.core_sivm)
 
     def tearDown(self):

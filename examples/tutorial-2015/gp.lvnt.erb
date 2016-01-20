@@ -4,6 +4,8 @@ Title: Advanced Curve Fitting: Mixture Models and Gaussian Processes
 <% if ENV['SMOKETEST'] then sample_size = 5 end %>
 <% smaller_sample_size = [sample_size / 5, 5].max %>
 <% refman_url = "../../reference/" %>
+<% target_path = "tutorial/gp/" %>
+<% if ENV['SMOKETEST'] then target_path = "tutorial-smoke/gp/" end %>
 
 <script type="text/javascript">
 function hideAnswers() {
@@ -153,11 +155,22 @@ The following code ([gp-2.vnts](gp-2.vnts)) asks, "what is the posterior on mode
 either linear or sine wave, conditioned on the given data?"
 <% mixreg_increment = sample_size.div(10) %>
 
+```python
+import os
+os.environ['PLOT_LINES_FILE_NAME'] = 'gp_mixreg.png'
+```
+
 ```venture
 <%= `cat gp-2.vnts`.strip().sub("mh(default, one, 50)", "mh(default, one, #{mixreg_increment})") %>
 ```
 
-![Plots of f as inference progresses](gp_mixreg_hardcoded.png)
+```python
+import os
+del os.environ['PLOT_LINES_FILE_NAME']
+os.system("mv gp_mixreg.png <%= target_path %>")
+```
+
+![Plots of f as inference progresses](gp_mixreg.png)
 
 The plot contains samples of the function `true_f` as inference progresses, <%=
 mixreg_increment %> steps at time.  As time progresses, the hue changes from
@@ -241,7 +254,7 @@ Exercise:
    ```venture
    infer resample(10);
    plot("h0", run(accumulate_dataset(<%= [smaller_sample_size.div(10), 1].max %>,
-     do(posterior,
+     do(conditional,
         collect(pnum)))))
    ```
 
@@ -261,7 +274,7 @@ Exercise:
    observe r = 0.6;
    infer resample(10);
    plot("h0", run(accumulate_dataset(<%= [smaller_sample_size.div(10), 1].max %>,
-     do(posterior,
+     do(conditional,
         collect(pnum)))))
    ```
 
@@ -287,7 +300,7 @@ Exercise:
 
    infer resample(10);
    plot("h0", run(accumulate_dataset(<%= [smaller_sample_size.div(10), 1].max %>,
-     do(posterior,
+     do(conditional,
         collect(pnum)))))
    ```
 
@@ -346,6 +359,11 @@ prior_covariance(g(x1), g(x2)) = 1.2 * exp((x1-x2)^2 / (2*0.8))
 
 We can observe the value of `g` at given data points:
 
+```python
+import os
+os.environ['PLOT_LINES_FILE_NAME'] = 'gp_toy_post.png'
+```
+
 ```venture
 // Data
 assume data_xs = array(3.2, 2.2, 8.7);
@@ -359,7 +377,13 @@ define yss = array_from_dataset(run(accumulate_dataset(10,
 plot_lines(xs, yss, run(sample(data_xs)), data_ys, -5, 12, 1.0, 1.0, 0.5);
 ```
 
-![Posterior of toy GP](gp_toy_posterior.png)
+```python
+import os
+del os.environ['PLOT_LINES_FILE_NAME']
+os.system("mv gp_toy_post.png <%= target_path %>")
+```
+
+![Posterior of toy GP](gp_toy_post.png)
 
 (The above two VentureScript blocks are [gp-4.vnts](gp-4.vnts).)
 

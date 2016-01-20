@@ -33,22 +33,22 @@ struct SamplableMap
   MapVVPtrInt d;
   vector<pair<VentureValuePtr,V> > a;
 
-  V & get(VentureValuePtr k) 
-    {       
+  V & get(VentureValuePtr k)
+    {
       assert(size() > 0);
       assert(d.count(k));
-      V & v = a[d[k]].second; 
+      V & v = a[d[k]].second;
       return v;
     }
-  void set(VentureValuePtr k,V v) 
-    { 
+  void set(VentureValuePtr k,V v)
+    {
       assert(!d.count(k));
       d[k] = a.size();
       a.push_back(make_pair(k,v));
       assert(size() > 0);
     }
 
-  void erase(const VentureValuePtr & k) 
+  void erase(const VentureValuePtr & k)
     {
       assert(d.count(k));
       int index = d[k];
@@ -77,12 +77,12 @@ struct SamplableMap
   {
     std::set<VentureValuePtr,VentureValuePtrsLess> keys;
     for (size_t i = 0; i < a.size(); ++i)
+    {
+      if (a[i].first <= max && a[i].first >= min)
       {
-  	if (a[i].first <= max && a[i].first >= min) 
-	  { 
-	    keys.insert(a[i].first); 
-	  }
+        keys.insert(a[i].first);
       }
+    }
     return vector<VentureValuePtr>(keys.begin(),keys.end());
   }
 
@@ -91,16 +91,16 @@ struct SamplableMap
   size_t size() const { return a.size(); }
   bool contains(VentureValuePtr k) { return d.count(k); }
 
-  VentureValuePtr & sampleKeyUniformly(gsl_rng * rng) 
-    { 
+  VentureValuePtr & sampleKeyUniformly(gsl_rng * rng)
+    {
       assert(size() > 0);
       int index = gsl_rng_uniform_int(rng, size());
       return a[index].first;
     }
 
-  // TODO for keys(), we should write a custom iterator. 
+  // TODO for keys(), we should write a custom iterator.
   // For now, users can just iterate over d and ignore the second element
-  
+
 };
 
 typedef boost::unordered_map<VentureValuePtr, SamplableMap<set<Node*> >, HashVentureValuePtr, VentureValuePtrsEqual> ScopesMap;

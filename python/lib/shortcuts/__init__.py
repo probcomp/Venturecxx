@@ -17,13 +17,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
+import resource
+
+from venture import parser
+from venture import ripl
+from venture import sivm
+from venture import server
+
 # Raise Python's recursion limit, per
 # http://log.brandonthomson.com/2009/07/increase-pythons-recursion-limit.html
 # The reason to do this is that Venture is not tail recursive, and the
 # repeat inference function are written as recursive functions in
 # Venture.
-import sys
-import resource
+
 # Try to increase max stack size from 8MB to 512MB
 (soft, hard) = resource.getrlimit(resource.RLIMIT_STACK)
 if hard > -1:
@@ -33,8 +40,6 @@ else:
 resource.setrlimit(resource.RLIMIT_STACK, (new_soft, hard))
 # Set a large recursion depth limit
 sys.setrecursionlimit(max(10**6, sys.getrecursionlimit()))
-
-from venture import parser, ripl, sivm, server
 
 def make_ripl(*args, **kwargs):
     """Construct and return a VentureScript RIPL object.
@@ -84,30 +89,33 @@ See `Lite` and `Puma`."""
         return sivm.CoreSivm(self.make_engine(persistent_inference_trace))
     def make_venture_sivm(self, persistent_inference_trace=True):
         return sivm.VentureSivm(self.make_core_sivm(persistent_inference_trace))
-    def make_church_prime_ripl(self, persistent_inference_trace=True):
+    def make_church_prime_ripl(self, persistent_inference_trace=True, **kwargs):
         r = ripl.Ripl(self.make_venture_sivm(persistent_inference_trace),
-                      {"church_prime":parser.ChurchPrimeParser.instance()})
+                      {"church_prime":parser.ChurchPrimeParser.instance()},
+                      **kwargs)
         r.backend_name = self.name()
         return r
-    def make_venture_script_ripl(self, persistent_inference_trace=True):
+    def make_venture_script_ripl(self, persistent_inference_trace=True, **kwargs):
         r = ripl.Ripl(self.make_venture_sivm(persistent_inference_trace),
-                      {"venture_script":parser.VentureScriptParser.instance()})
+                      {"venture_script":parser.VentureScriptParser.instance()},
+                      **kwargs)
         r.backend_name = self.name()
         return r
-    def make_combined_ripl(self, persistent_inference_trace=True):
+    def make_combined_ripl(self, persistent_inference_trace=True, **kwargs):
         v = self.make_venture_sivm(persistent_inference_trace)
         parser1 = parser.ChurchPrimeParser.instance()
         parser2 = parser.VentureScriptParser.instance()
-        r = ripl.Ripl(v,{"church_prime":parser1, "venture_script":parser2})
+        modes = {"church_prime": parser1, "venture_script": parser2}
+        r = ripl.Ripl(v, modes, **kwargs)
         r.set_mode("church_prime")
         r.backend_name = self.name()
         return r
-    def make_ripl(self, init_mode="venture_script", persistent_inference_trace=True):
-        r = self.make_combined_ripl(persistent_inference_trace=persistent_inference_trace)
+    def make_ripl(self, init_mode="venture_script", **kwargs):
+        r = self.make_combined_ripl(**kwargs)
         r.set_mode(init_mode)
         return r
-    def make_ripl_rest_server(self):
-        return server.RiplRestServer(self.make_combined_ripl())
+    def make_ripl_rest_server(self, **kwargs):
+        return server.RiplRestServer(self.make_combined_ripl(**kwargs))
 
 class Lite(Backend):
     """An instance of this class represents the Lite backend."""

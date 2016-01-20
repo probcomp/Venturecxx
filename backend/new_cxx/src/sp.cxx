@@ -22,7 +22,7 @@
 #include "stop-and-copy.h"
 
 bool SPFamilies::containsFamily(FamilyID id)  { return families.count(id); }
-RootOfFamily SPFamilies::getRootOfFamily(FamilyID id) 
+RootOfFamily SPFamilies::getRootOfFamily(FamilyID id)
 {
   assert(families.count(id));
   return families[id];
@@ -46,15 +46,31 @@ boost::shared_ptr<SPAux> SPAux::clone()
   return boost::shared_ptr<SPAux>(this->copy_help(&m));
 }
 
-boost::shared_ptr<LatentDB> SP::constructLatentDB() const { return boost::shared_ptr<LatentDB>(); }
+boost::shared_ptr<LatentDB> SP::constructLatentDB() const
+{
+  return boost::shared_ptr<LatentDB>();
+}
 
 SP::SP(PSP * requestPSP, PSP * outputPSP) :
   requestPSP(boost::shared_ptr<PSP>(requestPSP)),
   outputPSP(boost::shared_ptr<PSP>(outputPSP))
   {}
 
-double SP::simulateLatents(boost::shared_ptr<SPAux> spaux,boost::shared_ptr<LSR> lsr,bool shouldRestore,boost::shared_ptr<LatentDB> latentDB,gsl_rng * rng) const { assert(false); throw "no default latent handling"; }
-double SP::detachLatents(boost::shared_ptr<SPAux> spaux,boost::shared_ptr<LSR> lsr,boost::shared_ptr<LatentDB> latentDB) const { assert(false); throw "no default latent handling"; }
+double SP::simulateLatents(boost::shared_ptr<Args> args,
+                           boost::shared_ptr<LSR> lsr,
+                           bool shouldRestore,
+                           boost::shared_ptr<LatentDB> latentDB,
+                           gsl_rng * rng) const
+{
+  assert(false); throw "no default latent handling";
+}
+
+double SP::detachLatents(boost::shared_ptr<Args> args,
+                         boost::shared_ptr<LSR> lsr,
+                         boost::shared_ptr<LatentDB> latentDB) const
+{
+  assert(false); throw "no default latent handling";
+}
 
 
 boost::shared_ptr<PSP> SP::getPSP(ApplicationNode * node) const
@@ -63,7 +79,11 @@ boost::shared_ptr<PSP> SP::getPSP(ApplicationNode * node) const
   else { return outputPSP; }
 }
 
-void SP::AEInfer(boost::shared_ptr<SPAux> spAux, boost::shared_ptr<Args> args,gsl_rng * rng) const { assert(false); }
+void SP::AEInfer(boost::shared_ptr<SPAux> spAux, boost::shared_ptr<Args> args,
+                 gsl_rng * rng) const
+{
+  assert(false);
+}
 
 boost::python::object SPAux::toPython(Trace * trace) const
 {
@@ -79,7 +99,8 @@ VentureValuePtr SPAux::asVentureValue() const
 }
 
 
-boost::python::dict SP::toPython(Trace * trace, boost::shared_ptr<SPAux> spAux) const
+boost::python::dict SP::toPython(Trace * trace,
+                                 boost::shared_ptr<SPAux> spAux) const
 {
   boost::python::dict value;
   value["type"] = "sp";
@@ -93,7 +114,7 @@ boost::python::dict SP::toPython(Trace * trace, boost::shared_ptr<SPAux> spAux) 
   return value;
 }
 
-boost::python::dict VentureSPRef::toPython(Trace * trace) const 
+boost::python::dict VentureSPRef::toPython(Trace * trace) const
 {
   return trace->getMadeSP(makerNode)->toPython(trace, trace->getMadeSPAux(makerNode));
 }
@@ -104,8 +125,8 @@ bool VentureSPRef::equals(const VentureValuePtr & other) const
   return other_v && (other_v->makerNode == makerNode);
 }
 
-size_t VentureSPRef::hash() const 
-{ 
+size_t VentureSPRef::hash() const
+{
   boost::hash<long> long_hash;
   return long_hash(reinterpret_cast<long>(makerNode));
 }

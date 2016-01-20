@@ -15,16 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from psp import DeterministicPSP, ESRRefOutputPSP
-from sp import SP, VentureSPRecord
-from env import VentureEnvironment
-from request import Request,ESR
-from address import emptyAddress
-
-from sp import SPType
-import types as t
-from sp_registry import registerBuiltinSP
-from sp_help import typed_nr
+from venture.lite.address import emptyAddress
+from venture.lite.env import VentureEnvironment
+from venture.lite.psp import DeterministicPSP, ESRRefOutputPSP
+from venture.lite.request import Request,ESR
+from venture.lite.sp import SP, VentureSPRecord
+from venture.lite.sp import SPType
+from venture.lite.sp_help import typed_nr
+from venture.lite.sp_registry import registerBuiltinSP
+import venture.lite.types as t
 
 class MakeMSPOutputPSP(DeterministicPSP):
   def simulate(self,args):
@@ -38,7 +37,7 @@ class MSPRequestPSP(DeterministicPSP):
   def __init__(self,sharedOperatorNode):
     self.sharedOperatorNode = sharedOperatorNode
 
-  def simulate(self,args): 
+  def simulate(self,args):
     vals = args.operandValues()
     id = str(vals)
     exp = ["memoizedSP"] + [["quote",val] for val in vals]

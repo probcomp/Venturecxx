@@ -19,11 +19,17 @@ import math
 from scipy.special import gammaln
 import numpy as np
 
-from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
-from sp import SP, SPAux, VentureSPRecord, SPType
-import types as t
-from sp_registry import registerBuiltinSP
-from sp_help import typed_nr
+from venture.lite.psp import DeterministicMakerAAAPSP
+from venture.lite.psp import NullRequestPSP
+from venture.lite.psp import RandomPSP
+from venture.lite.psp import TypedPSP
+from venture.lite.sp import SP
+from venture.lite.sp import SPAux
+from venture.lite.sp import SPType
+from venture.lite.sp import VentureSPRecord
+from venture.lite.sp_help import typed_nr
+from venture.lite.sp_registry import registerBuiltinSP
+import venture.lite.types as t
 
 def logGenGamma(d,x):
   term1 = float(d * (d - 1)) / 4 * math.log(math.pi)
@@ -165,4 +171,3 @@ registerBuiltinSP("make_cmvn",
                   typed_nr(MakeCMVNOutputPSP(),
                            [t.HomogeneousArrayType(t.NumberType()),t.NumberType(),t.NumberType(),t.MatrixType()],
                            SPType([], t.HomogeneousArrayType(t.NumberType()))))
-

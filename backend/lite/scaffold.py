@@ -15,11 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from node import isLookupNode, isRequestNode, isOutputNode
-from value import SPRef
-from omegadb import OmegaDB
-from detach import unapplyPSP
-from regen import applyPSP
+from venture.lite.detach import unapplyPSP
+from venture.lite.node import isLookupNode
+from venture.lite.node import isOutputNode
+from venture.lite.node import isRequestNode
+from venture.lite.omegadb import OmegaDB
+from venture.lite.regen import applyPSP
+from venture.lite.value import SPRef
 
 class Scaffold(object):
   def __init__(self,setsOfPNodes=None,regenCounts=None,absorbing=None,aaa=None,border=None,lkernels=None,brush=None,drg=None):

@@ -22,8 +22,8 @@
 If you need to rebuild a Jenkins config, just run this script and
 follow any instructions.  It's idempotent.
 
-If you need to save a Jenkins config for future rebuilding, edit the
-file to call save_jobs().
+If you need to save a Jenkins config for future rebuilding, use
+save_jenkins_jobs_config.py.
 """
 
 import sys
@@ -58,7 +58,15 @@ ln -s /scratch/jenkins /var/lib/jenkins
 You may also want to make sure GitHub pushes commit notifications to
 Jenkins.  To do so, visit the settings page of the Venturecxx github
 repository and make sure there is a Jenkins (Git plugin) service
-active, and pointing to the url that Jenkins listens to.'''
+active, and pointing to the url that Jenkins listens to.
+
+To run the Docker-based builds, the docker.io package needs to be
+installed, and the jenkins user needs to be a member of group
+'docker'.  (And the server may need to be restarted once this is so.)
+TODO: Automate this.
+- It may also be appropriate to make sure Docker keeps its images and
+  containers on /scratch.
+'''
 
 #### General helpers
 
@@ -69,7 +77,7 @@ def tryit(command):
 def doit(command):
     status = tryit(command)
     if status != 0:
-        raise "Command failed!"    
+        raise "Command failed!"
 
 def queryit(command):
     return subprocess.check_output(command, shell=True).strip()
@@ -109,7 +117,7 @@ def wait_for_web_response(url):
 #### SSH access
 
 def discover_jenkins_ssh_port():
-    return queryit('curl -s -I http://probcomp-3.csail.mit.edu:8080 | grep "X-SSH-Endpoint" | cut -f 3 -d ":"')
+    return queryit('curl -s --insecure -I https://probcomp-3.csail.mit.edu | grep "X-SSH-Endpoint" | cut -f 3 -d ":"')
 
 cached_port = None
 
@@ -134,7 +142,7 @@ Jenkins security appears not to be set up, and this script is too dumb
 to do it automatically.
 
 1) Please set up Jenkins security:
-   - Browse http://probcomp-3.csail.mit.edu:8080
+   - Browse https://probcomp-3.csail.mit.edu
    - Navigate "Manage Jenkins" -> "Configure Global Security"
      - Check "Enable security"
      - Select "Jenkins' own user database"
@@ -148,7 +156,7 @@ to do it automatically.
      creation screen
 
 3) Please upload your ssh public key to your Jenkins user account:
-   - Browse http://probcomp-3.csail.mit.edu:8080
+   - Browse https://probcomp-3.csail.mit.edu
    - Navigate "People" -> your user name -> "Configure"
      - Paste in the public key, taking care of any copying artifacts
    - Click "Save"
@@ -158,7 +166,7 @@ to do it automatically.
 
 5) While you're at it, please configure the proper number of
    executors:
-   - Browse http://probcomp-3.csail.mit.edu:8080
+   - Browse https://probcomp-3.csail.mit.edu
    - Navigate "Manage Jenkins" -> "Configure System"
      - Fill in the form
    - Click "Save"
@@ -321,4 +329,3 @@ if __name__ == '__main__':
     # replace_credential_id_locally("<credentialsId>2fd68a05-da40-45e1-a59c-32e795448dd5<\\/credentialsId>")
     # ensure_jobs()
     main()
-    # save_jobs()

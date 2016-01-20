@@ -36,12 +36,12 @@ struct PyTrace
 {
   PyTrace();
   ~PyTrace();
-  
+
   void evalExpression(DirectiveID did, boost::python::object object);
   void unevalDirectiveID(DirectiveID did);
 
   void observe(DirectiveID did,boost::python::object valueExp);
-  void unobserve(DirectiveID did);
+  double unobserve(DirectiveID did);
 
   void bindInGlobalEnv(const string& sym, DirectiveID did);
   void unbindInGlobalEnv(const string& sym);
@@ -60,29 +60,35 @@ struct PyTrace
 
   double makeConsistent();
   void registerConstraints();
-  
-  double likelihoodAt(boost::python::object pyscope, boost::python::object pyblock);
-  double posteriorAt(boost::python::object pyscope, boost::python::object pyblock);
+
+  double logLikelihoodAt(boost::python::object pyscope,
+                         boost::python::object pyblock);
+  double logJointAt(boost::python::object pyscope,
+                    boost::python::object pyblock);
   double likelihoodWeight();
 
   boost::python::list dotTrace(bool colorIgnored);
 
   // for testing
-  int numNodesInBlock(boost::python::object scope, boost::python::object block);
+  int numNodesInBlock(boost::python::object scope,
+                      boost::python::object block);
   boost::python::list numFamilies();
 
   void primitive_infer(boost::python::dict params);
-  
+
   void freeze(DirectiveID did);
 
   PyTrace* stop_and_copy() const;
 
   shared_ptr<OrderedDB> makeEmptySerializationDB();
-  shared_ptr<OrderedDB> makeSerializationDB(boost::python::list stackDicts, bool skipStackDictConversion);
-  boost::python::list dumpSerializationDB(shared_ptr<OrderedDB> db, bool skipStackDictConversion);
+  shared_ptr<OrderedDB> makeSerializationDB(boost::python::list stackDicts,
+                                            bool skipStackDictConversion);
+  boost::python::list dumpSerializationDB(shared_ptr<OrderedDB> db,
+                                          bool skipStackDictConversion);
   void unevalAndExtract(DirectiveID did, shared_ptr<OrderedDB> db);
   void restoreDirectiveID(DirectiveID did, shared_ptr<OrderedDB> db);
-  void evalAndRestore(DirectiveID did, boost::python::object object, shared_ptr<OrderedDB> db);
+  void evalAndRestore(DirectiveID did, boost::python::object object,
+                      shared_ptr<OrderedDB> db);
 
   boost::python::list scope_keys();
 

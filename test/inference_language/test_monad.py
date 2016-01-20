@@ -15,11 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import scipy.stats as stats
 from nose.tools import eq_
 
-from venture.test.stats import statisticalTest, reportKnownContinuous
+import scipy.stats as stats
+
+from venture.test.stats import statisticalTest, reportKnownGaussian, reportKnownContinuous
 from venture.test.config import get_ripl, on_inf_prim, default_num_samples, default_num_transitions_per_sample, needs_backend
+import venture.ripl.utils as u
 
 def testInferenceLanguageEvalSmoke():
   ripl = get_ripl()
@@ -86,6 +88,21 @@ def testMonadicPredict():
 """)
   eq_(ripl.infer("(foo)"), ripl.report("pid"))
 
+@on_inf_prim("observe")
+def testMonadicObserve():
+  ripl = get_ripl(persistent_inference_trace=True)
+  ripl.execute_program("""
+[define foo
+  (lambda ()
+    (do
+      (rho <- (observe (flip) true pid))
+      (xi <- (forget 'pid))
+      (return (list (mapv exp rho) (mapv exp xi)))))]
+""")
+  [[rho], [xi]] = ripl.infer("(foo)")
+  eq_(rho, xi)
+  eq_(rho, 0.5)
+
 @on_inf_prim("in_model")
 @statisticalTest
 def testModelSwitchingSmoke():
@@ -103,8 +120,7 @@ def testModelSwitchingSmoke():
         (return (first res))))]
   """ % default_num_transitions_per_sample())
   predictions = [ripl.infer("(normal_through_model 0 1)") for _ in range(default_num_samples())]
-  cdf = stats.norm(loc=0.0, scale=1.0).cdf
-  return reportKnownContinuous(cdf, predictions, "N(0,1)")
+  return reportKnownGaussian(0.0, 1.0, predictions)
 
 @on_inf_prim("return")
 @on_inf_prim("action")
@@ -131,6 +147,54 @@ def testBackendSwitchingSmoke():
       (in_model m2 something))]
 """)
 
+@on_inf_prim("fork_model")
+@statisticalTest
+def testModelForkingSmoke():
+  ripl = get_ripl(persistent_inference_trace=True)
+  ripl.execute_program("""
+[assume p (beta 1 1)]
+
+[define beta_through_model
+  (lambda (a b)
+    (do (m <- (fork_model))
+        (res <- (in_model m
+          (do (repeat (- a 1) (observe (flip p) true))
+              (repeat (- b 1) (observe (flip p) false))
+              (mh default one %s)
+              (sample p))))
+        (return (first res))))]
+  """ % default_num_transitions_per_sample())
+  predictions = [ripl.infer("(beta_through_model 3 2)") for _ in range(default_num_samples())]
+  cdf = stats.beta(3,2).cdf
+  return reportKnownContinuous(cdf, predictions)
+
+@needs_backend("lite")
+@needs_backend("puma")
+@on_inf_prim("fork_model")
+def testBackendForkingSmoke():
+  ripl = get_ripl(persistent_inference_trace=True)
+  ripl.execute_program("""\
+[assume x (normal 0 1)]
+[observe (normal x 1) 2]
+
+[define something
+  (do (mh default one 5)
+      (predict (+ x 1)))]
+
+[infer
+  (do (m1 <- (fork_model 'lite))
+      (m2 <- (fork_model 'puma))
+      (in_model m1 something)
+      (in_model m2 something))]
+""")
+
 @on_inf_prim("autorun")
 def testAutorunSmoke():
   eq_(3.0, get_ripl().evaluate("(sample 3)"))
+
+def testReportActionSmoke():
+  vals = get_ripl().execute_program("""\
+foo : [assume x (+ 1 2)]
+(report 'foo)
+""")
+  eq_([3.0, 3.0], u.strip_types([v['value'] for v in vals]))

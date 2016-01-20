@@ -16,9 +16,9 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-import scipy.stats as stats
 
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.stats import statisticalTest
+from venture.test.stats import reportKnownGaussian
 from venture.test.config import get_ripl, on_inf_prim, broken_in, collectSamples, default_num_transitions_per_sample
 
 def custom_mh_ripl():
@@ -54,8 +54,7 @@ def testDetachRegenInference():
   ripl.assume("x", "(normal 0 1)")
   ripl.observe("(normal x 1)", 2)
   predictions = collectSamples(ripl, "x", infer="(repeat %d (custom_mh default all))" % default_num_transitions_per_sample())
-  cdf = stats.norm(loc=1, scale=math.sqrt(0.5)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(1,sqrt(0.5))")
+  return reportKnownGaussian(1, math.sqrt(0.5), predictions)
 
 def gaussian_drift_mh_ripl():
   ripl = get_ripl(persistent_inference_trace=True)
@@ -93,8 +92,7 @@ def testCustomProposalInference():
   ripl.assume("x", "(normal 0 1)")
   ripl.observe("(normal x 1)", 2)
   predictions = collectSamples(ripl, "x", infer="(repeat %d (gaussian_drift_mh default all 0.5))" % default_num_transitions_per_sample())
-  cdf = stats.norm(loc=1, scale=math.sqrt(0.5)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(1,sqrt(0.5))")
+  return reportKnownGaussian(1, math.sqrt(0.5), predictions)
 
 @on_inf_prim("regen")
 @broken_in("puma", "Does not support the regen SP yet")

@@ -14,16 +14,18 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-import threading
-import dill
-import time
-from contextlib import contextmanager
 
-from venture.exception import VentureException
-from trace_set import TraceSet
+from contextlib import contextmanager
+import threading
+import time
+
+import dill
+
 from venture.engine.inference import Infer
-import venture.value.dicts as v
+from venture.engine.trace_set import TraceSet
+from venture.exception import VentureException
 import venture.lite.value as vv
+import venture.value.dicts as v
 
 class Engine(object):
 
@@ -95,17 +97,18 @@ class Engine(object):
     baseAddr = self.nextBaseAddr()
     self.model.observe(baseAddr, datum, val)
     if True: # TODO: add flag to toggle auto-incorporation
-      self.incorporate()
-    return baseAddr
+      weights = self.incorporate()
+    return (baseAddr, weights)
 
   def forget(self,directiveId):
-    self.model.forget(directiveId)
+    weights = self.model.forget(directiveId)
+    return weights
 
   def force(self,datum,val):
     # TODO: The directive counter increments, but the "force" isn't added
     # to the list of directives
     # This mirrors the implementation in the core_sivm, but could be changed?
-    did = self.observe(datum, val)
+    (did, _weights) = self.observe(datum, val)
     self.incorporate()
     self.forget(did)
     return did
@@ -166,7 +169,7 @@ class Engine(object):
   def collapse(self, scope, block): self.model.collapse(scope, block)
   def collapse_map(self, scope, block): self.model.collapse_map(scope, block)
   def likelihood_weight(self): self.model.likelihood_weight()
-  def incorporate(self): self.model.incorporate()
+  def incorporate(self): return self.model.incorporate()
 
   def evaluate(self, program):
     return self.raw_evaluate([v.sym("autorun"), program])
@@ -262,6 +265,7 @@ class Engine(object):
   def install_inference_prelude(self, next_trace):
     for name, exp in _inference_prelude():
       self._define_in(name, exp, next_trace)
+    next_trace.sealEnvironment()
 
   def primitive_infer(self, exp): self.model.primitive_infer(exp)
   def logscore(self): return self.model.logscore()
@@ -424,7 +428,7 @@ def _inference_prelude():
 
 def _compute_inference_prelude():
   ans = []
-  import inference_prelude
+  import venture.engine.inference_prelude as inference_prelude
   for (name, _desc, form) in inference_prelude.prelude:
     from venture.parser.church_prime.parse import ChurchPrimeParser
     from venture.sivm.macro_system import desugar_expression

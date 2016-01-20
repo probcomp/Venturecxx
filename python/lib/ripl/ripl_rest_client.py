@@ -32,7 +32,7 @@ class RiplRestClient(RestClient):
             dir_val = str(directive['value'])
             dir_type = directive['instruction']
             dir_text = self._get_raw_text(dir_id)
-            
+
             if dir_type == "assume":
                 print "%d: %s:\t%s" % (dir_id, dir_text, dir_val)
             elif dir_type == "observe":
@@ -41,4 +41,3 @@ class RiplRestClient(RestClient):
                 print "%d: %s:\t %s" % (dir_id, dir_text, dir_val)
             else:
                 assert False, "Unknown directive type found: %s" % str(directive)
-

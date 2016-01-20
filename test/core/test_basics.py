@@ -16,10 +16,15 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from numbers import Number
-from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, on_inf_prim
-from venture.ripl import Ripl
+
 from nose.tools import eq_
+
+from venture.ripl import Ripl
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import statisticalTest
 
 @on_inf_prim("none")
 def testRIPL():

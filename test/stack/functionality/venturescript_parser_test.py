@@ -15,8 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 # -*- coding: utf-8 -*-
-from nose.plugins.attrib import attr
+
 import unittest
+
+from nose.plugins.attrib import attr
 
 from venture.parser import VentureScriptParser
 import venture.parser.venture_script.parse as module
@@ -36,6 +38,10 @@ def r(*args):
 def j(*args):
     mins = []
     maxes = []
+    # This kooky expression traverses the args list by pairs.  How?
+    # Zipping a mutable iterator with itself.  See
+    # http://stackoverflow.com/questions/4628290/pairs-from-single-list
+    # for an in-depth discussion.
     for a, b in zip(*(iter(args),)*2):
         mins.append(a)
         maxes.append(a+b-1)
@@ -463,26 +469,28 @@ class TestVentureScriptParser(unittest.TestCase):
 
     def test_parse_instruction(self):
         output = self.p.parse_instruction('assume a = b(c,d)')
-        expected = {'instruction':'assume', 'symbol':v.sym('a'), 'expression':[v.sym('b'),v.sym('c'),v.sym('d')]}
-        self.assertEqual(output,expected)
+        expected = {'instruction':'evaluate',
+                    'expression':[v.sym('assume'), v.sym('a'),
+                                  [v.sym('b'), v.sym('c'), v.sym('d')]]}
+        self.assertEqual(output, expected)
 
     def test_split_program(self):
-        output = self.p.split_program(' force blah = count<132>;infer 132')
-        instructions = ['force blah = count<132>','infer 132']
-        indices = [[1,23],[25,33]]
+        output = self.p.split_program(' define blah = count<132>;infer 132')
+        instructions = ['define blah = count<132>','infer 132']
+        indices = [[1,24],[26,34]]
         self.assertEqual(output,[instructions, indices])
 
     def test_split_instruction(self):
-        output = self.p.split_instruction(' force blah = count<132>')
+        output = self.p.split_instruction(' define blah = count<132>')
         indices = {
-                'instruction': [1,5],
-                'expression': [7,10],
-                'value': [14,23],
+                'instruction': [1,6],
+                'symbol': [8,11],
+                'expression': [15,24],
                 }
         strings = {
-                'instruction': 'force',
-                'expression': 'blah',
-                'value': 'count<132>',
+                'instruction': 'define',
+                'symbol': 'blah',
+                'expression': 'count<132>',
                 }
         self.assertEqual(output,[strings,indices])
 
@@ -500,21 +508,6 @@ class TestVentureScriptParser(unittest.TestCase):
         self.assertEqual(output, [8,8])
 
 
-    def test_character_index_to_expression_index(self):
-        # '(a b (c (d e) f ))'
-        s = 'a( b,c(d(e),f))'
-        f = self.p.character_index_to_expression_index
-        output = f(s, 1)
-        self.assertEqual(output, [])
-        output = f(s, 0)
-        self.assertEqual(output, [0])
-        output = f(s, 2)
-        self.assertEqual(output, [])
-        output = f(s, 6)
-        self.assertEqual(output, [2])
-        output = f(s, 5)
-        self.assertEqual(output, [2,0])
-
     def test_string(self):
         output = self.p.parse_expression('"foo"')
         expected = v.string('foo')
@@ -529,95 +522,82 @@ class TestInstructions(unittest.TestCase):
         self.p = VentureScriptParser.instance()
 
     def run_test(self, string, expected):
-        self.assertEqual(module.parse_instructions(string), expected)
+        got = module.parse_instructions(string)
+        self.assertEqual(got, expected)
     run_test.__test__ = False
 
     def test_assume(self):
         # Assume
         #
+        full_loc = j(0,6,7,4,12,1,14,3)
         self.run_test( 'assuMe blah = moo',
-                [{'loc': j(0,6,7,4,12,1,14,3), 'value':{
-                    'instruction' : {'loc': j(0,6), 'value':'assume'},
-                    'symbol' : {'loc': j(7,4), 'value':v.sym('blah')},
-                    'expression' : {'loc': j(14,3), 'value':v.sym('moo')},
+                [{'loc': full_loc, 'value': {
+                    'instruction' : {'loc': full_loc, 'value':'evaluate'},
+                    'expression' : {'loc': full_loc, 'value':
+                        [{'loc': j(0,6), 'value':v.sym('assume')},
+                         {'loc': j(7,4), 'value':v.sym('blah')},
+                         {'loc': j(14,3), 'value':v.sym('moo')}]},
                     }}])
 
     def test_labeled_assume(self):
+        full_loc = j(0,4,5,1,7,6,14,1,16,1,18,1)
+        expr_loc = j(7,6,14,1,16,1,18,1)
         self.run_test( 'name : assume a = b',
-                [{'loc':j(0,4,5,1,7,6,14,1,16,1,18,1), 'value':{
-                    'instruction' : {'loc':j(7,6), 'value':'labeled_assume'},
-                    'symbol' : {'loc': j(14,1), 'value':v.sym('a')},
-                    'expression' : {'loc':j(18,1), 'value':v.sym('b')},
-                    'label' : {'loc':j(0,4), 'value':v.sym('name')},
+                [{'loc':full_loc, 'value':{
+                    'instruction' : {'loc': expr_loc, 'value':'evaluate'},
+                    'expression' : {'loc': expr_loc, 'value':
+                        [{'loc':j(7,6), 'value':v.sym('assume')},
+                         {'loc': j(14,1), 'value':v.sym('a')},
+                         {'loc':j(18,1), 'value':v.sym('b')},
+                         {'loc':j(0,4), 'value':v.sym('name')}]},
                     }}])
 
     def test_predict(self):
         # Predict
         #
+        full_loc = j(2,7,10,4)
         self.run_test( '  prediCt blah',
-                [{'loc':j(2,7,10,4), 'value':{
-                    'instruction' : {'loc':j(2,7), 'value':'predict'},
-                    'expression' : {'loc':j(10,4), 'value':v.sym('blah')},
+                [{'loc':full_loc, 'value':{
+                    'instruction' : {'loc':full_loc, 'value': 'evaluate'},
+                    'expression' : {'loc': full_loc, 'value':
+                        [{'loc':j(2,7), 'value':v.sym('predict')},
+                         {'loc':j(10,4), 'value':v.sym('blah')}]}
                     }}])
     def test_labeled_predict(self):
+        full_loc = j(0,4,5,1,7,7,15,4)
+        expr_loc = j(7,7,15,4)
         self.run_test( 'name : predict blah',
-                [{'loc':j(0,4,5,1,7,7,15,4), 'value':{
-                    'instruction' : {'loc':j(7,7), 'value':'labeled_predict'},
-                    'expression' : {'loc':j(15,4), 'value':v.sym('blah')},
-                    'label' : {'loc':j(0,4), 'value':v.sym('name')},
+                [{'loc':full_loc, 'value':{
+                    'instruction' : {'loc':expr_loc, 'value': 'evaluate'},
+                    'expression' : {'loc': expr_loc, 'value':
+                        [{'loc':j(7,7), 'value':v.sym('predict')},
+                         {'loc':j(15,4), 'value':v.sym('blah')},
+                         {'loc':j(0,4), 'value':v.sym('name')}]}
                     }}])
 
     def test_observe(self):
         # Observe
         #
+        full_loc = j(0,7,8,4,13,1,15,3)
         self.run_test( 'obServe blah = 1.3',
-                [{'loc':j(0,7,8,4,13,1,15,3), 'value':{
-                    'instruction' : {'loc':j(0,7), 'value':'observe'},
-                    'expression' : {'loc':j(8,4), 'value':v.sym('blah')},
-                    'value' : {'loc': j(15,3), 'value':v.number(1.3)},
+                [{'loc':full_loc, 'value':{
+                    'instruction' : {'loc':full_loc, 'value': 'evaluate'},
+                    'expression' : {'loc': full_loc, 'value':
+                        [{'loc':j(0,7), 'value':v.sym('observe')},
+                         {'loc':j(8,4), 'value':v.sym('blah')},
+                         {'loc': j(15,3), 'value':v.number(1.3)}]}
                     }}])
     def test_labeled_observe(self):
+        full_loc = j(0,4,5,1,7,7,15,1,17,1,19,9)
+        expr_loc = j(7,7,15,1,17,1,19,9)
         self.run_test( 'name : observe a = count<32>',
-                [{'loc':j(0,4,5,1,7,7,15,1,17,1,19,9), 'value':{
-                    'instruction' : {'loc':j(7,7), 'value':'labeled_observe'},
-                    'expression' : {'loc':j(15,1), 'value':v.sym('a')},
-                    'value' : {'loc':j(19,9), 'value':{'type':'count', 'value':32.0}},
-                    'label' : {'loc':j(0,4), 'value':v.sym('name')},
-                    }}])
-
-    def test_forget(self):
-        # Forget
-        #
-        self.run_test( 'FORGET 34',
-                [{'loc':j(0,6,7,2), 'value':{
-                    'instruction' : {'loc':j(0,6), 'value':'forget'},
-                    'directive_id' : {'loc':j(7,2), 'value':34},
-                    }}])
-
-    def test_labeled_forget(self):
-        self.run_test( 'forget blah',
-                [{'loc':j(0,6,7,4), 'value':{
-                    'instruction' : {'loc':j(0,6), 'value':'labeled_forget'},
-                    'label' : {'loc':j(7,4), 'value':v.sym('blah')},
-                    }}])
-
-    def test_sample(self):
-        # Sample
-        #
-        self.run_test( 'saMple blah',
-                [{'loc':j(0,6,7,4), 'value':{
-                    'instruction' : {'loc':j(0,6), 'value':'sample'},
-                    'expression' : {'loc':j(7,4), 'value':v.sym('blah')},
-                    }}])
-
-    def test_force(self):
-        # Force
-        #
-        self.run_test( 'force blah = count<132>',
-                [{'loc':j(0,5,6,4,11,1,13,10), 'value':{
-                    'instruction' : {'loc':j(0,5), 'value':'force'},
-                    'expression' : {'loc':j(6,4), 'value':v.sym('blah')},
-                    'value' : {'loc':j(13,10), 'value':{'type':'count', 'value':132.0}},
+                [{'loc':full_loc, 'value':{
+                    'instruction' : {'loc':expr_loc, 'value': 'evaluate'},
+                    'expression' : {'loc':expr_loc, 'value':
+                        [{'loc':j(7,7), 'value':v.sym('observe')},
+                         {'loc':j(15,1), 'value':v.sym('a')},
+                         {'loc':j(19,9), 'value':{'type':'count', 'value':32.0}},
+                         {'loc':j(0,4), 'value':v.sym('name')}]}
                     }}])
 
     def test_infer(self):
@@ -630,14 +610,14 @@ class TestInstructions(unittest.TestCase):
                     }}])
 
     def test_program(self):
-        self.run_test( 'force blah = count<132>;infer 132',
-                [{'loc':j(0,5,6,4,11,1,13,10), 'value':{
-                        'instruction' : {'loc':j(0,5), 'value':'force'},
-                        'expression' : {'loc':j(6,4), 'value':v.sym('blah')},
-                        'value' : {'loc':j(13,10), 'value':{'type':'count', 'value':132.0}},
-                        }},{'loc':j(24,5,30,3), 'value':{
-                        'instruction' : {'loc':j(24,5), 'value':'infer'},
-                        'expression' : {'loc':j(30,3), 'value':v.number(132.0)},
+        self.run_test( 'define blah = count<132>;infer 132',
+                [{'loc':j(0,6,7,4,12,1,14,10), 'value':{
+                        'instruction' : {'loc':j(0,6), 'value':'define'},
+                        'symbol' : {'loc':j(7,4), 'value':v.sym('blah')},
+                        'expression' : {'loc':j(14,10), 'value':{'type':'count', 'value':132.0}},
+                        }},{'loc':j(25,5,31,3), 'value':{
+                        'instruction' : {'loc':j(25,5), 'value':'infer'},
+                        'expression' : {'loc':j(31,3), 'value':v.number(132.0)},
                     }}])
 
 def testPunctuationTermination():

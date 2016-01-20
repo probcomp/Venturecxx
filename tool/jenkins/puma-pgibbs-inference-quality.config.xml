@@ -32,7 +32,7 @@
       <command>#!/bin/bash -xe
 
 source ~/env/bin/activate
-nosetests -c inference-quality.cfg --tc=get_ripl:puma --tc=infer:&quot;(pgibbs default ordered 4 10)&quot; --eval-attr=&quot;(not backend or backend in [&apos;puma&apos;, &apos;any&apos;]) and (not inf_prim or inf_prim in [&apos;pgibbs&apos;, &apos;func_pgibbs&apos;, &apos;any&apos;])&quot;</command>
+nosetests -c inference-quality.cfg --tc=get_ripl:puma --tc=infer:&quot;(pgibbs default ordered 4 10 false)&quot; --eval-attr=&quot;(not backend or backend in [&apos;puma&apos;, &apos;any&apos;]) and (not inf_prim or inf_prim in [&apos;pgibbs&apos;, &apos;func_pgibbs&apos;, &apos;any&apos;])&quot;</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>

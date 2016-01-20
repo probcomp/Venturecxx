@@ -16,8 +16,8 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-import scipy.stats as stats
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
+from venture.test.stats import statisticalTest, reportKnownDiscrete
+from venture.test.stats import reportKnownGaussian
 from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, skipWhenSubSampling
 
 @statisticalTest
@@ -58,8 +58,7 @@ def testVentureNormalHMM1():
   ripl.predict("(f 4)", label="pid")
 
   predictions = collectSamples(ripl,"pid",infer="mixes_slowly")
-  cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
+  return reportKnownGaussian(390/89.0, math.sqrt(55/89.0), predictions)
 
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")

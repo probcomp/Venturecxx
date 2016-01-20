@@ -17,11 +17,14 @@
 
 import cPickle as pickle
 
-from ..multiprocess import (SynchronousMaster,
-                            SynchronousSerializingMaster, ThreadedMaster,
-                            ThreadedSerializingMaster, MultiprocessingMaster)
-import trace as tr
-from venture.lite.utils import sampleLogCategorical, logaddexp
+from ..multiprocess import MultiprocessingMaster
+from ..multiprocess import SynchronousMaster
+from ..multiprocess import SynchronousSerializingMaster
+from ..multiprocess import ThreadedMaster
+from ..multiprocess import ThreadedSerializingMaster
+from venture.lite.utils import logaddexp
+from venture.lite.utils import sampleLogCategorical
+import venture.engine.trace as tr
 
 class TraceSet(object):
 
@@ -64,7 +67,7 @@ class TraceSet(object):
     self.traces.map('observe', baseAddr, datum, val)
 
   def forget(self, directiveId):
-    self.traces.map('forget', directiveId)
+    return self.traces.map('forget', directiveId)
 
   def freeze(self, directiveId):
     self.traces.map('freeze', directiveId)
@@ -191,6 +194,7 @@ if freeze has been used.
     weight_increments = self.traces.map('makeConsistent')
     for i, increment in enumerate(weight_increments):
       self.log_weights[i] += increment
+    return weight_increments
 
   def for_each_trace_sequential(self, f):
     # Rather than sending the engine to the traces, bring the traces

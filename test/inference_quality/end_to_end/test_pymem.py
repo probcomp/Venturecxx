@@ -15,10 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.stats import statisticalTest, reportSameDiscrete, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples
 from nose import SkipTest
 from nose.plugins.attrib import attr
+
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import reportSameDiscrete
+from venture.test.stats import statisticalTest
 
 def loadPYMem(ripl):
   ripl.assume("pick_a_stick","""
@@ -62,7 +66,7 @@ def loadHPYModel1(ripl,topCollapsed,botCollapsed):
   ripl.assume("alpha","(gamma 1.0 1.0)")
   ripl.assume("d","(uniform_continuous 0.0 0.1)")
   ripl.assume("base_dist","""
-(lambda () 
+(lambda ()
   (categorical (simplex 0.2 0.2 0.2 0.2 0.2)
                (array 0 1 2 3 4)))
 """)

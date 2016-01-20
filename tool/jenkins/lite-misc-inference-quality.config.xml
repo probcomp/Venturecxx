@@ -1,9 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?><project>
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
   <actions/>
-  <description/>
+  <description></description>
   <keepDependencies>false</keepDependencies>
   <properties/>
-  <scm class="hudson.plugins.git.GitSCM" plugin="git@2.0.1">
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@2.2.6">
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
@@ -31,7 +32,7 @@
       <command>#!/bin/bash -xe
 
 source ~/env/bin/activate
-nosetests -c inference-quality.cfg --tc=get_ripl:lite --tc=infer:"(mh default one 50)" --eval-attr="(not backend or backend in ['lite', 'any']) and (inf_prim not in ['mh', 'func_pgibbs', 'pgibbs', 'meanfield', 'rejection', 'any'])"</command>
+nosetests -c inference-quality.cfg --tc=get_ripl:lite --tc=infer:&quot;(mh default one 50)&quot; --eval-attr=&quot;(not backend or backend in [&apos;lite&apos;, &apos;any&apos;]) and (inf_prim not in [&apos;mh&apos;, &apos;func_pgibbs&apos;, &apos;pgibbs&apos;, &apos;meanfield&apos;, &apos;rejection&apos;, &apos;any&apos;])&quot;</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>

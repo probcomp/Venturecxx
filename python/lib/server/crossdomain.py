@@ -17,8 +17,11 @@
 # from http://flask.pocoo.org/snippets/56/
 
 from datetime import timedelta
-from flask import make_response, request, current_app
 from functools import update_wrapper
+
+from flask import make_response
+from flask import request
+from flask import current_app
 
 def crossdomain(origin=None, methods=None, headers=None,
                 max_age=21600, attach_to_all=True,

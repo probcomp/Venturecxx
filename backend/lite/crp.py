@@ -15,18 +15,24 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from psp import DeterministicMakerAAAPSP, NullRequestPSP, RandomPSP, TypedPSP
-from sp import SP, SPAux, VentureSPRecord, SPType
+from copy import deepcopy
 import math
+
 import scipy.special
 import scipy.stats
-from utils import simulateCategorical
-from types import AtomType # The type names are metaprogrammed pylint: disable=no-name-in-module
-from copy import deepcopy
 
-import types as t
-from sp_registry import registerBuiltinSP
-from sp_help import typed_nr
+from venture.lite.psp import DeterministicMakerAAAPSP
+from venture.lite.psp import NullRequestPSP
+from venture.lite.psp import RandomPSP
+from venture.lite.psp import TypedPSP
+from venture.lite.sp import SP
+from venture.lite.sp import SPAux
+from venture.lite.sp import SPType
+from venture.lite.sp import VentureSPRecord
+from venture.lite.sp_help import typed_nr
+from venture.lite.sp_registry import registerBuiltinSP
+from venture.lite.utils import simulateCategorical
+import venture.lite.types as t
 
 class CRPSPAux(SPAux):
   def __init__(self):
@@ -59,7 +65,7 @@ class MakeCRPOutputPSP(DeterministicMakerAAAPSP):
     alpha = vals[0]
     d = vals[1] if len(vals) == 2 else 0
 
-    output = TypedPSP(CRPOutputPSP(alpha,d), SPType([], AtomType()))
+    output = TypedPSP(CRPOutputPSP(alpha,d), SPType([], t.AtomType()))
     return VentureSPRecord(CRPSP(NullRequestPSP(),output))
 
   def description(self,name):

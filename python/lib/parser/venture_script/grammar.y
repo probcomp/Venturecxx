@@ -45,32 +45,11 @@ instruction(expression)	::= expression(e).
 
 directive(define)	::= K_DEFINE(k) L_NAME(n) T_EQDEF(eq) expression(e).
 directive(assume)	::= K_ASSUME(k) L_NAME(n) T_EQDEF(eq) expression(e).
-directive(observe)	::= K_OBSERVE(k) expression(e) T_EQDEF(eq) literal(v).
+directive(observe)	::= K_OBSERVE(k) expression(e) T_EQDEF(eq) expression(e1).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
-command(forget)		::= K_FORGET(k) directive_ref(dr).
-command(freeze)		::= K_FREEZE(k) directive_ref(dr).
-command(report)		::= K_REPORT(k) directive_ref(dr).
 command(infer)		::= K_INFER(k) expression(e).
-command(clear)		::= K_CLEAR(k).
-command(rollback)	::= K_ROLLBACK(k).
-command(list_directives)::= K_LIST(k0) K_DIRECTIVES(k1).
-command(get_directive)	::= K_GET(k0) K_DIRECTIVE(k1) directive_ref(dr).
-command(force)		::= K_FORCE(k) expression(e) T_EQDEF(eq) literal(v).
-command(sample)		::= K_SAMPLE(k) expression(e).
-/* XXX are these commands supposed to be one keyword or three? */
-command(continuous_inference_status)	::= K_CONTINUOUS_INFERENCE_STATUS(k).
-command(start_continuous_inference)	::= K_START(k0) K_CONTINUOUS(k1)
-						K_INFERENCE(k2).
-command(stop_continuous_inference)	::= K_STOP_CONTINUOUS_INFERENCE(k).
-command(get_current_exception)		::= K_GET(k0) K_CURRENT(k1)
-						K_EXCEPTION(k2).
-command(get_state)		::= K_GET(k0) K_STATE(k1).
-command(get_global_logscore)	::= K_GET(k0) K_GLOBAL(k1) K_LOGSCORE(k2).
 command(load)		::= K_LOAD(k) L_STRING(pathname).
-
-directive_ref(numbered)	::= L_INTEGER(number).
-directive_ref(labelled)	::= L_NAME(label).
 
 body(let)		::= let(l) T_SEMI(semi) expression(e).
 body(exp)		::= expression(e).
@@ -178,30 +157,16 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_ADD
 	K_AND
 	K_ASSUME
-	K_CLEAR
-	K_CONTINUOUS
-	K_CURRENT
 	K_DEFINE
-	K_DIRECTIVE
-	K_DIRECTIVES
 	K_DIV
 	K_ELSE
 	K_EQ
-	K_EXCEPTION
-	K_FORCE
-	K_FORGET
-	K_FREEZE
 	K_GE
-	K_GET
-	K_GLOBAL
 	K_GT
 	K_IF
 	K_INFER
-	K_INFERENCE
 	K_LE
-	K_LIST
 	K_LOAD
-	K_LOGSCORE
 	K_LT
 	K_MUL
 	K_NEQ
@@ -210,13 +175,6 @@ json_dict_entry(error)	::= error T_COLON json(value).
 	K_POW
 	K_PREDICT
 	K_PROC
-	K_REPORT
-	K_ROLLBACK
-	K_SAMPLE
-	K_START
-	K_STATE
-	K_STATUS
-	K_STOP
 	K_SUB
 	.
 

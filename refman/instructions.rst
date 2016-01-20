@@ -1,5 +1,5 @@
-Instruction Reference
-=====================
+Directive Cheatsheet
+====================
 
 Summary::
 
@@ -21,7 +21,7 @@ Summary::
 Directives
 ----------
 
-The `assume`, `observe`, and `predict` instructions, also called
+The `assume`, `observe`, and `predict` operators, also called
 *directives*, make up the core modeling language of VentureScript. Each
 directive contains a modeling expression to be evaluated. At any time,
 the probabilistic execution trace consists of all directives that have
@@ -31,7 +31,7 @@ instructions.
 
 - `assume symbol = expression`: declare and initialize a variable.
 
-  Assume evaluates the `expression` and binds the result to `symbol`
+  Assume evaluates the `expression` and binds the result to ``symbol``
   in the global environment.
 
 - `observe expression = value`: condition on observed data.
@@ -45,8 +45,9 @@ instructions.
   normal(0, 1) = 0` is valid, but `observe normal(0, 1) + 1 = 0` is
   not, because `+` is a deterministic function of its arguments.
 
-  `observe` has no effect on the distribution of other values
-  (besides the one directly constrained) until the next time `infer` is invoked.
+  `observe` has no effect on the distribution of other values (besides
+  the one directly constrained) until the next time inference is
+  invoked.
 
 - `predict expression`: register a persistent prediction.
 
@@ -59,10 +60,10 @@ instructions.
   evaluation of later expressions that are correlated or conditionally
   dependent.  To evaluate an expression non-persistently, use `sample`.
 
-Directive manipulation instructions
------------------------------------
+Directive manipulation
+----------------------
 
-In addition to the directives themselves, there are instructions
+In addition to the directives themselves, there are operators
 `forget`, `freeze`, and `report` which manipulate directives.
 
 - `forget directive_id`: remove a directive from the program history.
@@ -109,31 +110,23 @@ have temporary effects on the current program history.
   inference, and `sample` d expressions will be independent of one
   another (conditioned on the rest of the program history).
 
-Inference Instructions
-----------------------
+Inference
+---------
 
 By themselves, the modeling directives do not perform any inference.
 When the directives are initially evaluated, their values will be
 drawn from the prior, ignoring any observations that have been made.
 To move from the prior to the posterior, it is necessary to invoke
-some inference program.
+some inference operators.
 
-Venture inference is available in two modes: batch (with the `infer`
-instruction) and continuous (with the `infer loop(...)` idiom).
-
-The `infer` instruction takes an *inference
-program*, which is an expression that specifies what inference
-strategy to use.  In simple cases, this will just amount to a
+In simple cases, this will just amount to a
 transition count and some parameter settings for some generic
 inference strategy.  For more complex cases, Venture supports
 user-programmable inference that can capture arbitrarily complex
 problem-specific insights.  The inference expressions are described
 in the :ref:`Inference Syntax Reference <inference-section>`.
 
-- `infer expression`: execute batch inference.
-
-  Infer evaluates an inference expression and executes the specified
-  inference program over the current program trace.
+Venture inference is also available in a continuous mode:
 
 - `infer loop(expression)`: execute continuous inference.
 
@@ -142,34 +135,43 @@ in the :ref:`Inference Syntax Reference <inference-section>`.
   in the background. Values can be queried (e.g. with `report`) while
   inference is in progress.  See `loop`.
 
-- `stop_continuous_inference`: stop any ongoing continuous inference.
+- `endloop`: stop any ongoing continuous inference.
 
-  Stop_continuous_inference is safe to invoke even if continuous
+  endloop is safe to invoke even if continuous
   inference is not running.
 
-- `continuous_inference_status`: report the status of continuous inference.
-
-  The continuous_inference_status instruction reports whether
-  continuous inference is currently running, and if so with what
-  inference program.
+Definitions
+-----------
 
 - `define symbol = expression`: define a reusable inference subroutine.
 
   A typical use case would be::
 
-    define frob = proc(a b) {
+    define frob = proc(a, b) {
       some(inference commmand);
       some(other inference commmand);
-      ... }
+      ... };
 
-  whereupon a later ``infer`` instruction can invoke ``frob`` like any
+  whereupon ``frob`` can be invoked like any
   other inference procedure::
 
-    infer frob(1, 4)
+    frob(1, 4);
+
+  This is exactly analogous to definitions in other programming
+  languages.
+
+  Note: Model program expressions do not see symbols defined in the
+  inference program, (and vice versa: inference expressions do not
+  see symbols `assume` d in the model program, except via `sample`).
 
 Miscellaneous Instructions
 --------------------------
 
 - `clear`: reset VentureScript to an empty state.
 
-- `list_directives`: return a description of all extant directives.
+- `list_directives`: print a description of all extant directives.
+
+- `ci_status`: report the status of continuous inference.
+
+  The ci_status command reports whether continuous inference is
+  currently running, and if so with what inference program.

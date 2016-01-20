@@ -15,36 +15,52 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from address import Address, List
-from builtin import builtInValues, builtInSPs
-from env import VentureEnvironment
-from node import ConstantNode,LookupNode,RequestNode,OutputNode,Args,isConstantNode,isLookupNode,isRequestNode,isOutputNode
 import math
-from regen import constrain, processMadeSP, evalFamily, restore
-from detach import unconstrain, unevalFamily
-from value import SPRef, VentureValue, VentureSymbol, VentureNumber, VenturePair
-from types import ExpressionType
-from scaffold import Scaffold
-from infer import (mixMH,MHOperator,FuncMHOperator,MeanfieldOperator,BlockScaffoldIndexer,
-                   EnumerativeGibbsOperator,EnumerativeMAPOperator,EnumerativeDiversify,
-                   PGibbsOperator,ParticlePGibbsOperator,ParticlePMAPOperator,
-                   RejectionOperator, BogoPossibilizeOperator, MissingEsrParentError, NoSPRefError,
-                   HamiltonianMonteCarloOperator, MAPOperator, StepOutSliceOperator,
-                   DoublingSliceOperator, NesterovAcceleratedGradientAscentOperator,
-                   drawScaffold, subsampledMixMH, SubsampledMHOperator,
-                   SubsampledBlockScaffoldIndexer)
-from omegadb import OmegaDB
-from smap import SamplableMap
-from sp import SPFamilies, VentureSPRecord
-from scope import isTagOutputPSP, isTagExcludeOutputPSP
-from regen import regenAndAttach
-from detach import detachAndExtract
-from scaffold import constructScaffold
-from lkernel import DeterministicLKernel
-from psp import ESRRefOutputPSP
-from serialize import OrderedOmegaDB
-from exception import VentureError, VentureBuiltinSPMethodError
+
 from venture.exception import VentureException
+from venture.lite.address import Address
+from venture.lite.address import List
+from venture.lite.builtin import builtInSPs
+from venture.lite.builtin import builtInValues
+from venture.lite.detach import detachAndExtract
+from venture.lite.detach import unconstrain
+from venture.lite.detach import unevalFamily
+from venture.lite.env import VentureEnvironment
+from venture.lite.exception import VentureBuiltinSPMethodError
+from venture.lite.exception import VentureError
+from venture.lite.infer import BlockScaffoldIndexer
+from venture.lite.infer import mixMH
+from venture.lite.lkernel import DeterministicLKernel
+from venture.lite.node import Args
+from venture.lite.node import ConstantNode
+from venture.lite.node import LookupNode
+from venture.lite.node import OutputNode
+from venture.lite.node import RequestNode
+from venture.lite.node import isConstantNode
+from venture.lite.node import isLookupNode
+from venture.lite.node import isOutputNode
+from venture.lite.omegadb import OmegaDB
+from venture.lite.psp import ESRRefOutputPSP
+from venture.lite.regen import constrain
+from venture.lite.regen import evalFamily
+from venture.lite.regen import processMadeSP
+from venture.lite.regen import regenAndAttach
+from venture.lite.regen import restore
+from venture.lite.scaffold import Scaffold
+from venture.lite.scaffold import constructScaffold
+from venture.lite.scope import isTagExcludeOutputPSP
+from venture.lite.scope import isTagOutputPSP
+from venture.lite.serialize import OrderedOmegaDB
+from venture.lite.smap import SamplableMap
+from venture.lite.sp import SPFamilies
+from venture.lite.sp import VentureSPRecord
+from venture.lite.types import ExpressionType
+from venture.lite.value import SPRef
+from venture.lite.value import VentureNumber
+from venture.lite.value import VenturePair
+from venture.lite.value import VentureSymbol
+from venture.lite.value import VentureValue
+import venture.lite.infer as infer
 
 class Trace(object):
   def __init__(self):
@@ -54,7 +70,7 @@ class Trace(object):
       self.bindPrimitiveName(name, val)
     for name,sp in builtInSPs().iteritems():
       self.bindPrimitiveSP(name, sp)
-    self.globalEnv = VentureEnvironment(self.globalEnv) # New frame so users can shadow globals
+    self.sealEnvironment() # New frame so users can shadow globals
 
     self.rcs = set()
     self.ccs = set()
@@ -70,6 +86,9 @@ class Trace(object):
     # A hack for allowing scope names not to be quoted in inference
     # programs (needs to be a method so Puma can implement it)
     return self.scopes.keys()
+
+  def sealEnvironment(self):
+    self.globalEnv = VentureEnvironment(self.globalEnv)
 
   def bindPrimitiveName(self, name, val):
     self.globalEnv.addBinding(name,self.createConstantNode(None, val))
@@ -193,7 +212,7 @@ class Trace(object):
   def spRefAt(self,node):
     candidate = self.valueAt(node.operatorNode)
     if not isinstance(candidate, SPRef):
-      raise NoSPRefError("Cannot apply a non-procedure: %s (at node %s with operator %s)" % (candidate, node, node.operatorNode))
+      raise infer.NoSPRefError("Cannot apply a non-procedure: %s (at node %s with operator %s)" % (candidate, node, node.operatorNode))
     assert isinstance(candidate, SPRef)
     return candidate
 
@@ -393,7 +412,7 @@ class Trace(object):
       # a nan weight.  I want to normalize these to indicating that
       # the resulting state is impossible.
       return float("-inf")
-  
+
   # use instead of makeConsistent when restoring a trace
   def registerConstraints(self):
     for node,val in self.unpropagatedObservations.iteritems():
@@ -402,7 +421,7 @@ class Trace(object):
       node.observe(val)
       constrain(self,appNode,node.observedValue)
     self.unpropagatedObservations.clear()
-  
+
   def getConstrainableNode(self, node):
     candidate = self.getOutermostNonReferenceNode(node)
     if isConstantNode(candidate):
@@ -420,7 +439,7 @@ class Trace(object):
         return self.getOutermostNonReferenceNode(self.esrParentsAt(node)[0])
       else:
         # Could happen if this method is called on a torus, e.g. for rejection sampling
-        raise MissingEsrParentError()
+        raise infer.MissingEsrParentError()
     elif isTagOutputPSP(self.pspAt(node)):
       return self.getOutermostNonReferenceNode(node.operandNodes[2])
     else: return node
@@ -429,11 +448,13 @@ class Trace(object):
     node = self.families[id]
     appNode = self.getConstrainableNode(node)
     if node.isObservation:
-      unconstrain(self,appNode)
+      weight = unconstrain(self,appNode)
       node.isObservation = False
     else:
       assert node in self.unpropagatedObservations
       del self.unpropagatedObservations[node]
+      weight = 0
+    return weight
 
   def uneval(self,id):
     assert id in self.families
@@ -460,89 +481,95 @@ class Trace(object):
       return
     for _ in range(transitions):
       if operator == "mh":
-        mixMH(self, BlockScaffoldIndexer(scope, block), MHOperator())
+        mixMH(self, BlockScaffoldIndexer(scope, block), infer.MHOperator())
       elif operator == "func_mh":
-        mixMH(self, BlockScaffoldIndexer(scope, block), FuncMHOperator())
+        mixMH(self, BlockScaffoldIndexer(scope, block), infer.FuncMHOperator())
       elif operator == "draw_scaffold":
-        drawScaffold(self, BlockScaffoldIndexer(scope, block))
+        infer.drawScaffold(self, BlockScaffoldIndexer(scope, block))
       elif operator == "mh_kernel_update":
         (useDeltaKernels, deltaKernelArgs, updateValues) = exp[3:6]
-        mixMH(self, BlockScaffoldIndexer(scope, block, useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs, updateValues=updateValues), MHOperator())
+        scaffolder = BlockScaffoldIndexer(scope, block,
+          useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs,
+          updateValues=updateValues)
+        mixMH(self, scaffolder, infer.MHOperator())
       elif operator == "subsampled_mh":
         (Nbatch, k0, epsilon, useDeltaKernels, deltaKernelArgs, updateValues) = exp[3:9]
-        subsampledMixMH(self, SubsampledBlockScaffoldIndexer(scope, block, useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs, updateValues=updateValues), SubsampledMHOperator(), Nbatch, k0, epsilon)
+        scaffolder = infer.SubsampledBlockScaffoldIndexer(scope, block,
+          useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs,
+          updateValues=updateValues)
+        infer.subsampledMixMH(self, scaffolder, infer.SubsampledMHOperator(), Nbatch, k0, epsilon)
       elif operator == "subsampled_mh_check_applicability":
-        SubsampledBlockScaffoldIndexer(scope, block).checkApplicability(self)
+        infer.SubsampledBlockScaffoldIndexer(scope, block).checkApplicability(self)
       elif operator == "subsampled_mh_make_consistent":
         (useDeltaKernels, deltaKernelArgs, updateValues) = exp[3:6]
-        SubsampledMHOperator().makeConsistent(self,SubsampledBlockScaffoldIndexer(scope, block, useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs, updateValues=updateValues))
+        infer.SubsampledMHOperator().makeConsistent(self, infer.SubsampledBlockScaffoldIndexer(scope, block, useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs, updateValues=updateValues))
       elif operator == "meanfield":
         steps = int(exp[3])
-        mixMH(self, BlockScaffoldIndexer(scope, block), MeanfieldOperator(steps, 0.0001))
+        mixMH(self, BlockScaffoldIndexer(scope, block), infer.MeanfieldOperator(steps, 0.0001))
       elif operator == "hmc":
         (epsilon,  L) = exp[3:5]
-        mixMH(self, BlockScaffoldIndexer(scope, block), HamiltonianMonteCarloOperator(epsilon, int(L)))
+        mixMH(self, BlockScaffoldIndexer(scope, block), infer.HamiltonianMonteCarloOperator(epsilon, int(L)))
       elif operator == "gibbs":
-        mixMH(self, BlockScaffoldIndexer(scope, block), EnumerativeGibbsOperator())
+        mixMH(self, BlockScaffoldIndexer(scope, block), infer.EnumerativeGibbsOperator())
       elif operator == "emap":
-        mixMH(self, BlockScaffoldIndexer(scope, block), EnumerativeMAPOperator())
+        mixMH(self, BlockScaffoldIndexer(scope, block), infer.EnumerativeMAPOperator())
       elif operator == "gibbs_update":
-        mixMH(self, BlockScaffoldIndexer(scope, block, updateValues=True), EnumerativeGibbsOperator())
+        mixMH(self, BlockScaffoldIndexer(scope, block, updateValues=True), infer.EnumerativeGibbsOperator())
       elif operator == "slice":
         (w, m) = exp[3:5]
-        mixMH(self, BlockScaffoldIndexer(scope, block), StepOutSliceOperator(w, m))
+        mixMH(self, BlockScaffoldIndexer(scope, block), infer.StepOutSliceOperator(w, m))
       elif operator == "slice_doubling":
         (w, p) = exp[3:5]
-        mixMH(self, BlockScaffoldIndexer(scope, block), DoublingSliceOperator(w, p))
+        mixMH(self, BlockScaffoldIndexer(scope, block), infer.DoublingSliceOperator(w, p))
       elif operator == "pgibbs":
         particles = int(exp[3])
         if isinstance(block, list): # Ordered range
           (_, min_block, max_block) = block
-          mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block)), PGibbsOperator(particles))
+          mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block)), infer.PGibbsOperator(particles))
         else:
-          mixMH(self, BlockScaffoldIndexer(scope, block), PGibbsOperator(particles))
+          mixMH(self, BlockScaffoldIndexer(scope, block), infer.PGibbsOperator(particles))
       elif operator == "pgibbs_update":
         particles = int(exp[3])
         if isinstance(block, list): # Ordered range
           (_, min_block, max_block) = block
-          mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block), updateValues=True), PGibbsOperator(particles))
+          mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block), updateValues=True), infer.PGibbsOperator(particles))
         else:
-          mixMH(self, BlockScaffoldIndexer(scope, block, updateValues=True), PGibbsOperator(particles))
+          mixMH(self, BlockScaffoldIndexer(scope, block, updateValues=True), infer.PGibbsOperator(particles))
       elif operator == "func_pgibbs":
         particles = int(exp[3])
         if isinstance(block, list): # Ordered range
           (_, min_block, max_block) = block
-          mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block)), ParticlePGibbsOperator(particles))
+          mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block)), infer.ParticlePGibbsOperator(particles))
         else:
-          mixMH(self, BlockScaffoldIndexer(scope, block), ParticlePGibbsOperator(particles))
+          mixMH(self, BlockScaffoldIndexer(scope, block), infer.ParticlePGibbsOperator(particles))
       elif operator == "func_pmap":
         particles = int(exp[3])
         if isinstance(block, list): # Ordered range
           (_, min_block, max_block) = block
-          mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block)), ParticlePMAPOperator(particles))
+          mixMH(self, BlockScaffoldIndexer(scope, "ordered_range", (min_block, max_block)), infer.ParticlePMAPOperator(particles))
         else:
-          mixMH(self, BlockScaffoldIndexer(scope, block), ParticlePMAPOperator(particles))
-      elif operator == "map":
+          mixMH(self, BlockScaffoldIndexer(scope, block), infer.ParticlePMAPOperator(particles))
+      elif operator == "grad_ascent":
         (rate, steps) = exp[3:5]
-        mixMH(self, BlockScaffoldIndexer(scope, block), MAPOperator(rate, int(steps)))
+        mixMH(self, BlockScaffoldIndexer(scope, block), infer.GradientAscentOperator(rate, int(steps)))
       elif operator == "nesterov":
         (rate, steps) = exp[3:5]
-        mixMH(self, BlockScaffoldIndexer(scope, block), NesterovAcceleratedGradientAscentOperator(rate, int(steps)))
+        mixMH(self, BlockScaffoldIndexer(scope, block), infer.NesterovAcceleratedGradientAscentOperator(rate, int(steps)))
       elif operator == "rejection":
         if len(exp) == 5:
           trials = int(exp[3])
         else:
           trials = None
-        mixMH(self, BlockScaffoldIndexer(scope, block), RejectionOperator(trials))
+        mixMH(self, BlockScaffoldIndexer(scope, block), infer.RejectionOperator(trials))
       elif operator == "bogo_possibilize":
-        mixMH(self, BlockScaffoldIndexer(scope, block), BogoPossibilizeOperator())
+        mixMH(self, BlockScaffoldIndexer(scope, block), infer.BogoPossibilizeOperator())
       elif operator == "print_scaffold_stats":
         BlockScaffoldIndexer(scope, block).sampleIndex(self).show()
       else: raise Exception("INFER %s is not implemented" % operator)
 
       for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
 
-  def likelihood_at(self, scope, block):
+  def log_likelihood_at(self, scope, block):
     # TODO This is a different control path from infer_exp because it
     # needs to return the weight
     scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
@@ -552,7 +579,7 @@ class Trace(object):
     # Old state restored, don't need to do anything else
     return xiWeight
 
-  def posterior_at(self, scope, block):
+  def log_joint_at(self, scope, block):
     # TODO This is a different control path from infer_exp because it
     # needs to return the weight
     scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
@@ -605,7 +632,7 @@ function.
     (operator, scope, block) = exp[0:3]
     scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
     if operator == "enumerative":
-      return EnumerativeDiversify(copy_trace)(self, BlockScaffoldIndexer(scope, block))
+      return infer.EnumerativeDiversify(copy_trace)(self, BlockScaffoldIndexer(scope, block))
     else: raise Exception("DIVERSIFY %s is not implemented" % operator)
 
   def select(self, scope, block):

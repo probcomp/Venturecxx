@@ -17,7 +17,7 @@
 
 from nose.tools import eq_
 
-from venture.test.config import get_ripl, broken_in
+from venture.test.config import get_ripl
 
 def testCopyingChoiceAfterObservation():
   """Conjecture: makeConsistent may actually be stochastic, if there are

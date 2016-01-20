@@ -17,10 +17,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import copy
+
 from venture.exception import VentureException
 from venture.sivm import utils
 import venture.value.dicts as v
-import copy
 
 class CoreSivm(object):
     ###############################
@@ -29,17 +30,16 @@ class CoreSivm(object):
 
     def __init__(self, engine):
         self.engine = engine
-        self.state = 'default'
         # the engine doesn't support reporting "observe" directives
         self.observe_dict = {}
         self.profiler_enabled = False
-    
-    _implemented_instructions = {"define","assume","observe","predict",
-            "configure","forget","freeze","report","evaluate","infer",
-            "clear","rollback","get_global_logscore",
-            "start_continuous_inference","stop_continuous_inference",
-            "continuous_inference_status", "profiler_configure"}
-    
+
+    _implemented_instructions = {'define','assume','observe','predict',
+            'forget','freeze','report','evaluate','infer',
+            'clear',
+            'start_continuous_inference','stop_continuous_inference',
+            'continuous_inference_status'}
+
     def execute_instruction(self, instruction):
         utils.validate_instruction(instruction,self._implemented_instructions)
         f = getattr(self,'_do_'+instruction['instruction'])
@@ -76,7 +76,6 @@ class CoreSivm(object):
     ###############################
 
     def _do_define(self,instruction):
-        utils.require_state(self.state,'default')
         exp = utils.validate_arg(instruction,'expression',
                 utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
         sym = utils.validate_arg(instruction,'symbol',
@@ -86,7 +85,6 @@ class CoreSivm(object):
 
     #FIXME: remove the modifier arguments in new implementation
     def _do_assume(self,instruction):
-        utils.require_state(self.state,'default')
         exp = utils.validate_arg(instruction,'expression',
                 utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
         sym = utils.validate_arg(instruction,'symbol',
@@ -95,60 +93,40 @@ class CoreSivm(object):
         return {"directive_id":did, "value":val}
 
     def _do_observe(self,instruction):
-        utils.require_state(self.state,'default')
         exp = utils.validate_arg(instruction,'expression',
                 utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
         val = utils.validate_arg(instruction,'value',
                 utils.validate_value,modifier=_modify_value)
-        did = self.engine.observe(exp,val)
+        did, weights = self.engine.observe(exp,val)
         self.observe_dict[did] = instruction
-        return {"directive_id":did}
+        return {"directive_id":did, "value":weights}
 
     def _do_predict(self,instruction):
-        utils.require_state(self.state,'default')
         exp = utils.validate_arg(instruction,'expression',
                 utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
         did, val = self.engine.predict(exp)
         return {"directive_id":did, "value":val}
 
-    def _do_configure(self,instruction):
-        utils.require_state(self.state,'default')
-        d = utils.validate_arg(instruction,'options',
-                utils.validate_dict)
-        s = utils.validate_arg(d,'seed',
-                utils.validate_nonnegative_integer,required=False)
-        t = utils.validate_arg(d,'inference_timeout',
-                utils.validate_positive_integer,required=False)
-        if s != None:
-            self.engine.set_seed(s)
-        if t != None:
-            #do something
-            pass
-        return {"options":{"seed":self.engine.get_seed(), "inference_timeout":5000}}
-
     def _do_forget(self,instruction):
-        utils.require_state(self.state,'default')
         did = utils.validate_arg(instruction,'directive_id',
                 utils.validate_nonnegative_integer)
         try:
-            self.engine.forget(did)
+            weights = self.engine.forget(did)
             if did in self.observe_dict:
                 del self.observe_dict[did]
         except Exception as e:
             if e.message == 'There is no such directive.':
                 raise VentureException('invalid_argument',e.message,argument='directive_id')
             raise
-        return {}
+        return {"value": weights}
 
     def _do_freeze(self,instruction):
-        utils.require_state(self.state,'default')
         did = utils.validate_arg(instruction,'directive_id',
                 utils.validate_nonnegative_integer)
         self.engine.freeze(did)
         return {}
 
     def _do_report(self,instruction):
-        utils.require_state(self.state,'default')
         did = utils.validate_arg(instruction,'directive_id',
                 utils.validate_nonnegative_integer)
         if did in self.observe_dict:
@@ -158,66 +136,47 @@ class CoreSivm(object):
             return {"value":val}
 
     def _do_evaluate(self,instruction):
-        utils.require_state(self.state,'default')
         e = utils.validate_arg(instruction,'expression',
                 utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
         (did, val) = self.engine.evaluate(e)
         return {"directive_id": did, "value":val}
 
     def _do_infer(self,instruction):
-        utils.require_state(self.state,'default')
         e = utils.validate_arg(instruction,'expression',
                 utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
         (did, val) = self.engine.infer(e)
         return {"directive_id": did, "value":val}
 
     def _do_clear(self,_):
-        utils.require_state(self.state,'default')
         self.engine.clear()
         self.observe_dict = {}
         return {}
 
-    def _do_rollback(self,_):
-        utils.require_state(self.state,'exception','paused')
-        #rollback not implemented in C++
-        self.state = 'default'
-        return {}
-
-    def _do_get_global_logscore(self,_):
-        utils.require_state(self.state,'default')
-        l = self.engine.logscore()
-        return {"logscore":l}
-    
     ###########################
     # Continuous Inference
     ###########################
-    
+
     def _do_continuous_inference_status(self,_):
-        utils.require_state(self.state,'default')
         return self.engine.continuous_inference_status()
 
     def _do_start_continuous_inference(self,instruction):
-        utils.require_state(self.state,'default')
         e = utils.validate_arg(instruction, 'expression',
                 utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
         self.engine.start_continuous_inference(e)
-        
+
     def _do_stop_continuous_inference(self,_):
-        utils.require_state(self.state,'default')
         return self.engine.stop_continuous_inference()
-    
+
     ##############################
-    # Profiler (stubs)
+    # Profiler
     ##############################
-    
-    def _do_profiler_configure(self,instruction):
-        utils.require_state(self.state,'default')
-        d = utils.validate_arg(instruction, 'options', utils.validate_dict)
-        e = utils.validate_arg(d, 'profiler_enabled', utils.validate_boolean, required=False)
-        if e != None:
-            self.profiler_enabled = e
-            self.engine.set_profiling(e)
-        return {'options': {'profiler_enabled': self.profiler_enabled}}
+
+    def profiler_running(self, enable=None):
+        old_state = self.profiler_enabled
+        if enable is not None:
+            self.profiler_enabled = enable
+            self.engine.set_profiling(enable)
+        return old_state
 
 ###############################
 # Input modification functions
@@ -262,4 +221,3 @@ def _modify_symbol(s):
     # NOTE: need to str() b/c unicode might come via REST,
     #       which the boost python wrappings can't convert
     return v.symbol(str(s))
-

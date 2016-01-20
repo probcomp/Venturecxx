@@ -16,7 +16,11 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import warnings
-from ..node import Node, isConstantNode, isLookupNode, isRequestNode, isOutputNode
+from ..node import Node
+from ..node import isConstantNode
+from ..node import isLookupNode
+from ..node import isRequestNode
+from ..node import isOutputNode
 
 try:
   import networkx as nx

@@ -19,3 +19,4 @@ Contents:
    inference.rst
    plugins.rst
    apiref.rst
+   faq.rst

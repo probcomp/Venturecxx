@@ -16,10 +16,13 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-from mh import InPlaceOperator, getCurrentValues, registerDeterministicLKernels
-from hmc import GradientOfRegen
 
-class MAPOperator(InPlaceOperator):
+from venture.lite.infer.hmc import GradientOfRegen
+from venture.lite.infer.mh import InPlaceOperator
+from venture.lite.infer.mh import getCurrentValues
+from venture.lite.infer.mh import registerDeterministicLKernels
+
+class GradientAscentOperator(InPlaceOperator):
   def __init__(self, epsilon, steps):
     self.epsilon = epsilon
     self.steps = steps
@@ -55,7 +58,7 @@ class MAPOperator(InPlaceOperator):
 
   def name(self): return "gradient ascent"
 
-class NesterovAcceleratedGradientAscentOperator(MAPOperator):
+class NesterovAcceleratedGradientAscentOperator(GradientAscentOperator):
   def step_lam(self, lam):
     return (1 + math.sqrt(1 + 4 * lam * lam))/2
   def gamma(self, lam):

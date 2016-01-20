@@ -35,5 +35,7 @@ dump
 /python/lib/parser/church_prime/grammar.py
 /python/lib/parser/venture_script/grammar.out
 /python/lib/parser/venture_script/grammar.py
+/python/lib/parser/church_prime/grammar.sha256
+/python/lib/parser/venture_script/grammar.sha256
 
 ideal_prior_trick_mar.png

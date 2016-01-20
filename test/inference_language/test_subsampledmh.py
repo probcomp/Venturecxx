@@ -88,4 +88,3 @@ def setupNormalWithObserves(N, sigma):
   cdf = stats.norm(loc=post_mean, scale=post_std).cdf
 
   return ripl, post_mean, post_std, cdf
-

@@ -15,9 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from wttree import PMap, PSet
-from trace import Trace
-from sp import VentureSPRecord
+from venture.lite.sp import VentureSPRecord
+from venture.lite.trace import Trace
+from venture.lite.wttree import PMap
+from venture.lite.wttree import PSet
 
 class Particle(Trace):
 
@@ -30,7 +31,7 @@ class Particle(Trace):
 
   # Note: using "copy()" informally for both legit_copy and persistent_copy
   def initFromParticle(self,particle):
-    self.base = particle.base    
+    self.base = particle.base
 
     # (1) Persistent stuff
     self.rcs = particle.rcs
@@ -80,10 +81,10 @@ class Particle(Trace):
     self.rcs = self.rcs.insert(node)
     self.registerRandomChoiceInScope("default",node,node)
 
-  def registerAEKernel(self,node): 
+  def registerAEKernel(self,node):
     self.aes = self.aes.insert(node)
 
-  def registerConstrainedChoice(self,node): 
+  def registerConstrainedChoice(self,node):
     self.ccs = self.ccs.insert(node)
 
   def unregisterRandomChoice(self,node): assert False
@@ -99,12 +100,12 @@ class Particle(Trace):
 
 #### Misc
 
-  def valueAt(self,node): 
+  def valueAt(self,node):
     if node in self.values: return self.values.lookup(node)
-    else: 
+    else:
       return self.base.valueAt(node)
 
-  def setValueAt(self,node,value): 
+  def setValueAt(self,node,value):
     self.values = self.values.insert(node,value)
 
   def madeSPRecordAt(self,node):
@@ -119,12 +120,12 @@ class Particle(Trace):
     if node in self.madeSPs: return self.madeSPs.lookup(node)
     else: return self.base.madeSPAt(node)
 
-  def setMadeSPAt(self,node,sp): 
+  def setMadeSPAt(self,node,sp):
     assert not node in self.madeSPs
     assert self.base.madeSPAt(node) is None
     self.madeSPs = self.madeSPs.insert(node,sp)
 
-  def esrParentsAt(self,node): 
+  def esrParentsAt(self,node):
     if node in self.esrParents: return self.esrParents.lookup(node)
     else: return self.base.esrParentsAt(node)
 
@@ -133,12 +134,12 @@ class Particle(Trace):
     if not node in self.esrParents: self.esrParents = self.esrParents.insert(node,[])
     self.esrParents.lookup(node).append(parent)
 
-  def regenCountAt(self,scaffold,node): 
+  def regenCountAt(self,scaffold,node):
     assert self.base.regenCountAt(scaffold,node) == 0
     if node in self.regenCounts: return self.regenCounts.lookup(node)
     else: return self.base.regenCountAt(scaffold,node)
 
-  def incRegenCountAt(self,scaffold,node): 
+  def incRegenCountAt(self,scaffold,node):
     if not node in self.regenCounts: self.regenCounts = self.regenCounts.insert(node,0)
     self.regenCounts = self.regenCounts.adjust(node,lambda rc: rc + 1)
 
@@ -164,40 +165,40 @@ class Particle(Trace):
 
 ### SPFamilies
 
-  def containsSPFamilyAt(self,node,id): 
+  def containsSPFamilyAt(self,node,id):
     makerNode = self.spRefAt(node).makerNode
     if makerNode in self.newMadeSPFamilies:
       assert isinstance(self.newMadeSPFamilies.lookup(makerNode),PMap)
-      if id in self.newMadeSPFamilies.lookup(makerNode): 
+      if id in self.newMadeSPFamilies.lookup(makerNode):
         return True
     elif self.base.madeSPFamiliesAt(makerNode).containsFamily(id): return True
     return False
 
-  def initMadeSPFamiliesAt(self,node): 
+  def initMadeSPFamiliesAt(self,node):
     assert not node in self.newMadeSPFamilies
     assert node.madeSPFamilies is None
     self.newMadeSPFamilies = self.newMadeSPFamilies.insert(node,PMap())
 
-  def registerFamilyAt(self,node,esrId,esrParent): 
+  def registerFamilyAt(self,node,esrId,esrParent):
     makerNode = self.spRefAt(node).makerNode
     if not makerNode in self.newMadeSPFamilies: self.newMadeSPFamilies = self.newMadeSPFamilies.insert(makerNode,PMap())
     self.newMadeSPFamilies = self.newMadeSPFamilies.adjust(makerNode,lambda ids: ids.insert(esrId,esrParent))
 
 
-  def madeSPFamilyAt(self,node,esrId): 
-    if node in self.newMadeSPFamilies and esrId in self.newMadeSPFamilies.lookup(node): 
+  def madeSPFamilyAt(self,node,esrId):
+    if node in self.newMadeSPFamilies and esrId in self.newMadeSPFamilies.lookup(node):
       return self.newMadeSPFamilies.lookup(node).lookup(esrId)
-    else: 
+    else:
       return self.base.madeSPFamilyAt(node,esrId)
 
-  def spFamilyAt(self,node,esrId): 
+  def spFamilyAt(self,node,esrId):
     makerNode = self.spRefAt(node).makerNode
     return self.madeSPFamilyAt(makerNode,esrId)
- 
+
 ### Regular maps
 
   def madeSPAuxAt(self,node):
-    if not node in self.madeSPAuxs: 
+    if not node in self.madeSPAuxs:
       if self.base.madeSPAuxAt(node) is not None:
         self.madeSPAuxs[node] = self.base.madeSPAuxAt(node).copy()
       else: return None
@@ -209,7 +210,7 @@ class Particle(Trace):
     self.madeSPAuxs[node] = aux
 
 ### Miscellaneous bookkeeping
-  def numBlocksInScope(self,scope): 
+  def numBlocksInScope(self,scope):
     if scope != "default": return len(self.scopes.lookup(scope)) + self.base.numBlocksInScope(scope)
     actualUnconstrainedChoices = self.base.rcs.copy()
     for node in self.rcs: actualUnconstrainedChoices.add(node)
@@ -217,7 +218,7 @@ class Particle(Trace):
     return len(actualUnconstrainedChoices)
 
 ### Commit
-  def commit(self): 
+  def commit(self):
     # note that we do not call registerRandomChoice() because it in turn calls registerRandomChoiceInScope()
     for node in self.rcs: self.base.rcs.add(node)
 
@@ -232,14 +233,14 @@ class Particle(Trace):
 
     for node in self.aes: self.base.registerAEKernel(node)
 
-    for (node,value) in self.values.iteritems(): 
+    for (node,value) in self.values.iteritems():
       self.base.setValueAt(node,value)
 
     for (node,madeSP) in self.madeSPs.iteritems():
       self.base.setMadeSPRecordAt(node,VentureSPRecord(madeSP))
 
-    
-          
+
+
     for (node,esrParents) in self.esrParents.iteritems(): self.base.setEsrParentsAt(node,esrParents)
     for (node,numRequests) in self.numRequests.iteritems(): self.base.setNumRequestsAt(node,numRequests)
     for (node,newMadeSPFamilies) in self.newMadeSPFamilies.iteritems(): self.base.addNewMadeSPFamilies(node,newMadeSPFamilies)

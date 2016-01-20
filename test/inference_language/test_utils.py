@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import raises, eq_
+from nose.tools import eq_
 
 from venture.test.config import get_ripl, on_inf_prim
 import venture.test.errors as err
@@ -42,35 +42,35 @@ def testWeightsSmoke2():
   (w <- (particle_log_weights))
   (assert (eq -1 (lookup w 0))))""")
 
-@on_inf_prim("likelihood_at")
+@on_inf_prim("log_likelihood_at")
 def testLikelihoodSmoke():
   get_ripl().infer("""(do
   (assume x (normal 0 1))
   (observe (normal x 1) 2)
   (incorporate)
-  (l <- (likelihood_at default all))
+  (l <- (log_likelihood_at default all))
   (assert (< (lookup l 0) 0)))""")
 
-@on_inf_prim("likelihood_at")
+@on_inf_prim("log_likelihood_at")
 def testLikelihoodOnNumericBlock():
   get_ripl().infer("""(do
   (assume x (tag 'value 0 (normal 0 1)))
   (observe (normal x 1) 2)
   (incorporate)
-  (l <- (likelihood_at 'value 0))
+  (l <- (log_likelihood_at 'value 0))
   (assert (< (lookup l 0) 0)))""")
 
-@on_inf_prim("posterior_at")
+@on_inf_prim("log_joint_at")
 def testPosteriorSmoke():
   get_ripl().infer("""(do
   (assume x (normal 0 1))
   (observe (normal x 1) 2)
   (incorporate)
-  (l <- (likelihood_at default all))
-  (p <- (posterior_at default all))
+  (l <- (log_likelihood_at default all))
+  (p <- (log_joint_at default all))
   (assert (< (lookup p 0) (lookup l 0))))""")
 
-# TODO Also want statistical test cases for likelihood_at and posterior_at
+# TODO Also want statistical test cases for log_likelihood_at and log_joint_at
 
 @on_inf_prim("quasiquote")
 def testExplicitQuasiquotation():

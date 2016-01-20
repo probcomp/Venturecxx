@@ -19,8 +19,13 @@ Test that things we expect to work at the console actually do.
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
+import re
 import subprocess
+import tempfile
+
 from flaky import flaky
+import pexpect
 
 from venture.test.config import in_backend
 
@@ -40,11 +45,6 @@ def test_console_multiline():
       "assume x = \nuniform_continuous(0.0, 0.9)\n")
   assert console.returncode == 0
   assert '... > 0.' in stdout
-
-import os
-import pexpect
-import re
-import tempfile
 
 TIMEOUT = 1
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -127,7 +127,7 @@ class SpawnVentureExpect(pexpect.spawn):
 
   def expect_capture_one_float(self):
     groups = self.expect_capture(r'(-?\d+\.\d+)')
-    float_result = 0
+    float_result = 0.0
     try:
       float_result = float(groups[0])
     except TypeError:
@@ -136,7 +136,7 @@ class SpawnVentureExpect(pexpect.spawn):
 
   def expect_capture_one_floatln(self):
     groups = self.expect_capture(r'(-?\d+\.\d+)\r\n')
-    float_result = 0
+    float_result = 0.0
     try:
       float_result = float(groups[0])
     except TypeError:
@@ -182,16 +182,16 @@ def test_arithmetic():
                '+3 + 6', '3 + +6', '+3 + +6', '+3+ +6', '+3 ++6', '+3++6',
                '81/9', '-27/-3'):
     vnt.send_command(nine)
-    assert '9.0' == vnt.read_to_prompt(), nine
+    assert vnt.read_to_prompt() == '9.0', nine
 
 @in_backend("none")
 def test_lines_and_comments():
   vnt = spawn_venture()
 
   vnt.send('\n')
-  assert "" == vnt.read_to_prompt(), str(vnt)
+  assert vnt.read_to_prompt() == "", str(vnt)
   vnt.send_command('// just a comment by itself')
-  assert "" == vnt.read_to_prompt(), str(vnt)
+  assert vnt.read_to_prompt() == "", str(vnt)
 
   def good(val):
     assert val >= 0.1, str(vnt)
@@ -238,16 +238,16 @@ def test_lines_and_comments_abstract_syntax():
   vnt = spawn_venture("--abstract-syntax")
 
   vnt.send('\n')
-  assert "" == vnt.read_to_prompt(), str(vnt)
+  assert vnt.read_to_prompt() == "", str(vnt)
   vnt.send_command(';; just a comment by itself')
-  assert "" == vnt.read_to_prompt(), str(vnt)
+  assert vnt.read_to_prompt() == "", str(vnt)
 
   def good(val):
     assert val >= 0.1, str(vnt)
     assert val <= 0.9, str(vnt)
     vnt.read_to_prompt()
 
-  vnt.send_command('assume w (uniform_continuous 0.1 0.9)')
+  vnt.send_command('(assume w (uniform_continuous 0.1 0.9))')
   good(vnt.expect_capture_one_float())
 
   # No multiline console support in venture abstract syntax.
@@ -299,17 +299,17 @@ def test_directives_and_forget():
   vnt.read_to_prompt()
   vnt.send_command('list_directives')
   x_id = vnt.expect_capture_one_int()
-  vnt.expect_exact(': assume x = normal(0, 1):')
+  vnt.expect_exact(': x: [assume x (normal 0.0 1.0)]:')
   x_val2 = vnt.expect_capture_one_floatln()
   y_id = vnt.expect_capture_one_int()
-  vnt.expect_exact(': assume y = uniform_continuous(1, 2):')
+  vnt.expect_exact(': y: [assume y (uniform_continuous 1.0 2.0)]:')
   y_val2 = vnt.expect_capture_one_floatln()
   vnt.read_to_prompt()
   assert x_id > 0
   assert y_id > 0
   assert abs(x_val2 - x_val) < 10e-5
   assert abs(y_val2 - y_val) < 10e-5
-  vnt.send_command('forget %d' % x_id)
+  vnt.send_command('forget(%d)' % x_id)
   vnt.read_to_prompt()
   vnt.send_command('list_directives')
   next_y_id = vnt.expect_capture_one_int()
@@ -321,23 +321,23 @@ def test_directives_and_forget():
   vnt.read_to_prompt()
   vnt.send_command('list_directives')
   vnt.read_to_prompt()
-  assert "" == vnt.before
+  assert vnt.before == ""
 
 def test_python_eval():
   # https://github.com/probcomp/Venturecxx/issues/122
   vnt = spawn_venture()
   vnt.send_command('pyexec("import collections")')
-  assert "[]" == vnt.read_to_prompt()
+  assert vnt.read_to_prompt() == "[]"
   vnt.send_command('pyexec("d = collections.defaultdict(int)")')
-  assert "[]" == vnt.read_to_prompt()
+  assert vnt.read_to_prompt() == "[]"
   vnt.send_command('pyexec("d[\\"a\\"]+=1")')
-  assert "[]" == vnt.read_to_prompt()
+  assert vnt.read_to_prompt() == "[]"
   vnt.send_command('pyeval("d[\\"a\\"]")')
-  assert 1 == vnt.expect_capture_one_intln()
+  assert vnt.expect_capture_one_intln() == 1
   vnt.send_command('pyexec("d[\\"a\\"]+=1")')
-  assert "[]" == vnt.read_to_prompt()
+  assert vnt.read_to_prompt() == "[]"
   vnt.send_command('pyeval("d[\\"a\\"]")')
-  assert 2 == vnt.expect_capture_one_intln()
+  assert vnt.expect_capture_one_intln() == 2
 
 def test_shell():
   vnt = spawn_venture()
@@ -383,7 +383,7 @@ def __venture_start__(*args, **kwargs):
   vnt.expect_exact("Strng(I am a venture script)\r\n")
   vnt.expect_prompt()
   vnt.send_command("clear")
-  assert "" == vnt.read_to_prompt()
+  assert vnt.read_to_prompt() == ""
   # Now in the other order:
   vnt.send_command("load_plugin %s" % plgn)
   vnt.expect_exact("I am a plugin at load time\r\n")
@@ -404,9 +404,9 @@ def __venture_start__(*args, **kwargs):
   vnt.expect_exact("Strng(I am a venture script)\r\n")
   vnt.expect_prompt()
   vnt.send_command("clear")
-  assert "" == vnt.read_to_prompt()
+  assert vnt.read_to_prompt() == ""
   vnt.send_command("reload")  # No longer have anything to reload.
-  assert "" == vnt.read_to_prompt()
+  assert vnt.read_to_prompt() == ""
   os.unlink(vnts)
   os.unlink(plgn)
 
@@ -420,7 +420,7 @@ def test_plots_to_file():
   vnt.send_command("assume y = normal(x, 1)")
   vnt.expect_capture_one_floatln()
   vnt.send_command("observe y = 4")
-  vnt.expect_prompt()
+  vnt.read_to_prompt()
   vnt.send_command("define chain_history = run(accumulate_dataset(50, \n" +
                    "do(default_markov_chain(1), collect(x))))")
   vnt.send_command('plot_to_file("%s", "lc0", chain_history)' % plotpath[0:-4])

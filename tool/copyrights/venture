@@ -45,8 +45,6 @@ def venture_comment_syntax_convention(filename):
     return "skip"
   elif filename in ["tool/pylintrc"]:
     return copyright.repeated_character_comment_syntax('#', 1, 1)
-  elif filename in ["profile/matplotlibrc"]:
-    return "skip"
   elif os.path.basename(filename) in ["README", ".gitignore", ".gitmodules", ".gitattributes",
                                       "Makefile", ".png", ".gdbinit", "Dockerfile", "LICENSE"]:
     return "skip"

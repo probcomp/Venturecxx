@@ -31,23 +31,21 @@ import sys
 from subprocess import Popen, PIPE
 
 ignore = ",".join ( [
-    "C0103",  # Naming convention
     "I0011",  # Warning locally suppressed using disable-msg
     "I0012",  # Warning locally suppressed using disable-msg
     "W0511",  # FIXME/TODO
-    "W0142",  # *args or **kwargs magic.
-    "R0904",  # Too many public methods
-    "R0201",  # Method could be a function
 ] )
 
 mypath = os.path.dirname(os.path.realpath(sys.argv[0]))
 lintfile = mypath + "/pylintrc"
+rootpath = os.path.dirname(mypath)
+pythenvfile = rootpath + "/pythenv.sh"
 
 workdir = os.path.dirname(sys.argv[1])
 filename = os.path.basename(sys.argv[1])
 
-cmd = "pylint --output-format parseable --reports n --rcfile %s %s" % \
-    (lintfile, filename)
+cmd = "%s pylint --output-format parseable --reports n --rcfile %s %s" % \
+    (pythenvfile, lintfile, filename)
 
 p = Popen ( cmd, shell = True, bufsize = -1, cwd = workdir or None,
             stdin = PIPE, stdout = PIPE, close_fds = True )

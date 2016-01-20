@@ -16,8 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-import scipy.stats as stats
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.stats import statisticalTest, reportKnownGaussian
 from venture.test.config import (get_ripl, collectSamples, gen_on_inf_prim,
                                  gen_broken_in)
 
@@ -33,8 +32,7 @@ def checkMeanFieldBasic1(infer):
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)",label="pid")
   predictions = collectSamples(ripl,"pid",infer=infer)
-  cdf = stats.norm(loc=10, scale=1).cdf
-  return reportKnownContinuous(cdf, predictions, "N(10,1.0))")
+  return reportKnownGaussian(10, 1, predictions)
 
 @statisticalTest
 def checkMeanFieldNormalWithObserve1(infer):
@@ -46,5 +44,4 @@ def checkMeanFieldNormalWithObserve1(infer):
 #  ripl.predict("(normal a 1.0)")
 
   predictions = collectSamples(ripl,"pid",infer=infer)
-  cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
+  return reportKnownGaussian(12, math.sqrt(0.5), predictions)

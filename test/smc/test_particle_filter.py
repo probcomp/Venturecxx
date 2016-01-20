@@ -16,11 +16,16 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-import scipy.stats as stats
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
-from venture.test.config import get_ripl, default_num_samples, on_inf_prim
 import sys
+
 from nose.plugins.attrib import attr
+
+from venture.test.config import default_num_samples
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import statisticalTest
 
 sys.setrecursionlimit(10000)
 
@@ -62,8 +67,7 @@ def testResampling1(P=10):
     ripl.infer("(resample 1)")
     return ripl.sample("x")
   predictions = [a_sample() for _ in range(default_num_samples())]
-  cdf = stats.norm(loc=1, scale=math.sqrt(0.5)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(1,sqrt(0.5))")
+  return reportKnownGaussian(1, math.sqrt(0.5), predictions)
 
 @on_inf_prim("resample")
 @statisticalTest
@@ -82,15 +86,14 @@ def testResampling2(P=20):
     ripl.infer("(resample 1)")
     return ripl.sample("x")
   predictions = [a_sample() for _ in range(4*default_num_samples())]
-  cdf = stats.norm(loc=1, scale=math.sqrt(0.5)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(1,sqrt(0.5))")
+  return reportKnownGaussian(1, math.sqrt(0.5), predictions)
 
 def initBasicPFripl1():
   ripl = get_ripl()
   ripl.assume("f","""
 (mem (lambda (i)
-  (tag 0 i 
-    (bernoulli (if (eq i 0) 0.5 
+  (tag 0 i
+    (bernoulli (if (eq i 0) 0.5
                    (if (f (- i 1)) 0.7 0.3))))))
 """)
 
@@ -133,7 +136,7 @@ def initBasicPFripl2():
   ripl = get_ripl()
   ripl.assume("f","""
 (mem (lambda (i)
-  (tag 0 i 
+  (tag 0 i
     (normal (if (eq i 0) 0 (f (- i 1))) 1))))
 """)
 
@@ -167,5 +170,4 @@ def testBasicParticleFilter2(P = 10):
     ripl.predict("(f 4)",label="pid")
     predictions.append(ripl.report("pid"))
 
-  cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
+  return reportKnownGaussian(390/89.0, math.sqrt(55/89.0), predictions)

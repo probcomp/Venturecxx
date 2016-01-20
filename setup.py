@@ -18,8 +18,12 @@
 
 try:
     from setuptools import setup, Extension
+    from setuptools.command.build_py import build_py
+    from setuptools.command.sdist import sdist
 except ImportError:
     from distutils.core import setup, Extension
+    from distutils.command.build_py import build_py
+    from distutils.command.sdist import sdist
 
 import os
 import sys
@@ -149,13 +153,13 @@ packages = [
     "venture.parser.church_prime",
     "venture.parser.venture_script",
     "venture.plex",
+    "venture.plugins",
     "venture.puma",
     "venture.ripl",
     "venture.server",
     "venture.shortcuts",
     "venture.sivm",
     "venture.test",
-    "venture.unit",
     "venture.value",
     "venture.venturemagics",
 ]
@@ -216,47 +220,74 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
 import distutils.ccompiler
 distutils.ccompiler.CCompiler.compile=parallelCCompile
 
-# XXX This is a mega-kludge.  Since distutils/setuptools has no way to
-# order dependencies (what kind of brain-dead build system can't do
-# this?), we just always regenerate the grammar.  Could hack
-# distutils.command.build to include a dependency mechanism, but this
-# is more expedient for now.
+lemonade = 'external/lemonade/dist'
 grammars = [
     'python/lib/parser/church_prime/grammar.y',
     'python/lib/parser/venture_script/grammar.y',
 ]
 
-import distutils.spawn
-import errno
-import os
-import os.path
-root = os.path.dirname(os.path.abspath(__file__))
-lemonade = root + '/external/lemonade/dist'
-for grammar in grammars:
-    parser = os.path.splitext(grammar)[0] + '.py'
-    parser_mtime = None
+def sha256_file(pathname):
+    import hashlib
+    sha256 = hashlib.sha256()
+    with open(pathname, 'rb') as source_file:
+        for block in iter(lambda: source_file.read(65536), ''):
+            sha256.update(block)
+    return sha256
+
+def uptodate(path_in, path_out, path_sha256):
+    import errno
     try:
-        parser_mtime = os.path.getmtime(parser)
-    except OSError as e:
+        with open(path_sha256, 'rb') as file_sha256:
+            # Strip newlines and compare.
+            if file_sha256.next()[:-1] != sha256_file(path_in).hexdigest():
+                return False
+            if file_sha256.next()[:-1] != sha256_file(path_out).hexdigest():
+                return False
+    except (IOError, OSError) as e:
         if e.errno != errno.ENOENT:
             raise
-    if parser_mtime is not None:
-        if os.path.getmtime(grammar) < parser_mtime:
-            continue
-    print 'generating %s -> %s' % (grammar, parser)
+        return False
+    return True
+
+def commit(path_in, path_out, path_sha256):
+    with open(path_sha256 + '.tmp', 'wb') as file_sha256:
+        file_sha256.write('%s\n' % (sha256_file(path_in).hexdigest(),))
+        file_sha256.write('%s\n' % (sha256_file(path_out).hexdigest(),))
+    os.rename(path_sha256 + '.tmp', path_sha256)
+
+def generate_parser(lemonade, path_y):
+    import distutils.spawn
+    root = os.path.dirname(os.path.abspath(__file__))
+    lemonade = os.path.join(root, *lemonade.split('/'))
+    base, ext = os.path.splitext(path_y)
+    assert ext == '.y'
+    path_py = base + '.py'
+    path_sha256 = base + '.sha256'
+    if uptodate(path_y, path_py, path_sha256):
+        return
+    print 'generating %s -> %s' % (path_y, path_py)
     distutils.spawn.spawn([
         '/usr/bin/env', 'PYTHONPATH=' + lemonade,
         lemonade + '/bin/lemonade',
         '-s',                   # Write statistics to stdout.
-        grammar,
+        path_y,
     ])
+    commit(path_y, path_py, path_sha256)
+
+class local_build_py(build_py):
+    def run(self):
+        for grammar in grammars:
+            generate_parser(lemonade, grammar)
+        build_py.run(self)
 
 install_requires = [
     'numpy>=1.8',
-    'matplotlib>=1.1',
     'scipy>=0.13',
+    # Plotf, MRipl
+    'matplotlib>=1.1',
+    # Saving and restoring ripls
     'dill',
-    # Plotting
+    # Plotf
     'patsy', # Because ggplot needs this installed first ??
     'pandas>=0.14, <0.16', # <0.16 because that version introduces a change that breaks ggplot
     'ggplot',
@@ -270,11 +301,6 @@ install_requires = [
     'ipyparallel',
     'pyzmq>=13',
     'jsonschema', # Ubuntu 14.04 apparently needs this mentioned for notebooks to work
-    # Extra
-    # XXX python/lib/unit/history.py depends on test/stats.py for
-    # the K-S test, which in turn depends on nose.tools for
-    # defining the statisticalTest decorator.
-    'nose>=1.3',
 ]
 
 tests_require = [
@@ -284,37 +310,33 @@ tests_require = [
     'nose-cov>=1.6',
     'flaky',
     'pexpect',
+    'seaborn', # For examples/gaussian_geweke.py
+    'statsmodels', # For examples/gaussian_geweke.py
+    'cython', # Because it has to be installed before pystan, and pip
+              # does the wrong thing with ordering packages pulled in
+              # as dependencies.
+    'pystan', # For testing the venstan integration
 ]
 
-# XXX It appears that setuptools doesn't like developers to create
-# distributions of local versions (those indicated by the '+'
-# character) of their packages.  Specifically, I have observed that
-# python setup.py sdist would, before adding this section,
-# occasionally change the '+' to a hypen:
-#   $ ls dist/
-#   Venture-CXX-0.4.1.post183+gb0f4204.tar.gz
-#   Venture-CXX-0.4.1.post184+g0abf18f.tar.gz
-#   Venture-CXX-0.4.1.post185+g8e252ec.tar.gz
-#   Venture-CXX-0.4.1.post189-g8d55da8.tar.gz
-#   Venture-CXX-0.4.1.post190-ga198fc4.tar.gz
-# I suspect that this is due to detecting version modifiers (the "a8"
-# and "c4") in the local version string.  Since such substrings cannot
-# be prevented from appearing in git commit numbers, I chose to
-# suppress the local component.  (And alternative would have been to
-# try to confuse setuptools' regex by adding extra characters, perhaps
-# at the end).
-
-pos = version.find('+')
-if pos > -1:
-    public_version = version[:pos]
-else:
-    public_version = version
+# XXX For inexplicable reasons, during sdist.run, setuptools quietly
+# modifies self.distribution.metadata.version to replace plus signs by
+# hyphens -- even where they are explicitly allowed by PEP 440.
+# distutils does not do this -- only setuptools.
+class local_sdist(sdist):
+    # This is not really a subcommand -- it's actually a predicate to
+    # determine whether to run a subcommand.  So modifying anything in
+    # it is a little evil.  But it'll do.
+    def fixidioticegginfomess(self):
+        self.distribution.metadata.version = version
+        return False
+    sub_commands = [('sdist_fixidioticegginfomess', fixidioticegginfomess)]
 
 setup (
-    name = 'Venture-CXX',
-    version = public_version,
-    author = 'MIT.PCP',
-    url = 'TBA',
+    name = 'venture',
+    version = version,
+    author = 'MIT Probabilistic Computing Project',
+    author_email = 'venture-dev@lists.csail.mit.edu',
+    url = 'http://probcomp.csail.mit.edu/venture/',
     long_description = 'TBA.',
     install_requires = install_requires,
     tests_require = tests_require,
@@ -332,5 +354,9 @@ setup (
     },
     package_data = {'':['*.vnt']},
     ext_modules = ext_modules,
-    scripts = ['script/venture', 'script/vendoc']
+    scripts = ['script/venture', 'script/vendoc'],
+    cmdclass={
+        'build_py': local_build_py,
+        'sdist': local_sdist,
+    },
 )

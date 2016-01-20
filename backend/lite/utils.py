@@ -15,13 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import random
-import numpy.random as npr
 import math
-import scipy.special as ss
+import numbers
+import random
+
 import numpy as np
 import numpy.linalg as npla
-import numbers
+import numpy.random as npr
+import scipy.special as ss
 
 # This one is from http://stackoverflow.com/questions/1167617/in-python-how-do-i-indicate-im-overriding-a-method
 def override(interface_class):
@@ -32,10 +33,10 @@ def override(interface_class):
 
 def extendedLog(x): return math.log(x) if x > 0 else float("-inf")
 
-def normalizeList(seq): 
+def normalizeList(seq):
   denom = sum(seq)
   if denom > 0: return [ float(x)/denom for x in seq]
-  else: 
+  else:
     # Treat all impossible options as equally impossible.
     n = float(len(seq))
     return [1.0/n for x in seq]
@@ -52,8 +53,8 @@ def logDensityCategorical(val,ps,os=None):
   # done by identity and in the absence of observations; do I want to
   # override the Python magic methods for VentureValues?
   p = None
-  for i in range(len(os)): 
-    if os[i] == val: 
+  for i in range(len(os)):
+    if os[i] == val:
       p = ps[i]
       break
   if p is None or p == 0:
@@ -126,6 +127,35 @@ def careful_exp(x):
     if x > 0: return float("inf")
     else: return float("-inf")
 
+def logistic(x): return 1 / (1 + careful_exp(-x))
+
+def T_logistic(x):
+  # This should be derivable from the above by AD, but here I use the
+  # identity d logistic(x) / dx = logistic(x) * (1 - logistic(x))
+  logi_x = logistic(x)
+  return (logi_x, logi_x * (1 - logi_x))
+
+def log_logistic(x):
+  if x < -40:
+    # Because 1 + exp(40+) = exp(40+) in IEEE-64, and I don't want the
+    # +inf that will come from exp(400+)
+    return x
+  else: return math.log(logistic(x))
+
+def d_log_logistic(x):
+  # This should be derivable from the above by AD.
+  # Perhaps this could be improved upon by analysis, due to the usual
+  # derivative of approximation problem.
+  if x < -40:
+    return 1
+  else:
+    (logi_x, dlogi_x) = T_logistic(x)
+    return (1/logi_x) * dlogi_x
+
+def logit(x):
+  # TODO Check the numeric analysis of this
+  return extendedLog(x / (1 - x))
+
 class FixedRandomness(object):
   """A Python context manager for executing (stochastic) code repeatably
 against fixed randomness.
@@ -153,4 +183,3 @@ against fixed randomness.
 
 # raise is a statement and can't be used in a lambda :(
 def raise_(e): raise e
-

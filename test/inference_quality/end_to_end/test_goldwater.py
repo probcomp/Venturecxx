@@ -15,11 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose import SkipTest
 import itertools
+
+from nose import SkipTest
 from nose.plugins.attrib import attr
 
-from venture.test.config import get_ripl, default_num_transitions_per_sample, on_inf_prim
+from venture.test.config import default_num_transitions_per_sample
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 @attr("slow")
 @on_inf_prim("mh")
@@ -31,7 +34,7 @@ def testGoldwater1():
   brent = ["catanddog", "dogandcat", "birdandcat","dogandbird","birdcatdog"]
 
   N = default_num_transitions_per_sample()
-  
+
   alphabet = "".join(set("".join(list(itertools.chain.from_iterable(brent)))))
   d = {}
   for i in xrange(len(alphabet)): d[alphabet[i]] = i

@@ -15,9 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from request import Request
-from sp import VentureSPRecord
-from value import VentureValue
+from venture.lite.request import Request
+from venture.lite.sp import VentureSPRecord
+from venture.lite.value import VentureValue
 
 # Part of a mechanism for allowing Lite SPs to be called from
 # Puma. The ForeignLiteSP class is a wrapper that handles value
@@ -164,10 +164,11 @@ class ForeignLiteSP(object):
 
     def constructLatentDB(self):
         return self.sp.constructLatentDB()
-    def simulateLatents(self,spaux,lsr,shouldRestore,latentDB):
-        return self.sp.simulateLatents(spaux,lsr,shouldRestore,latentDB)
-    def detachLatents(self,spaux,lsr,latentDB):
-        return self.sp.detachLatents(spaux,lsr,latentDB)
+    def simulateLatents(self, args, lsr, shouldRestore, latentDB):
+        return self.sp.simulateLatents(ForeignArgs(args), lsr,
+                                       shouldRestore, latentDB)
+    def detachLatents(self, args, lsr, latentDB):
+        return self.sp.detachLatents(ForeignArgs(args), lsr, latentDB)
 
     def hasAEKernel(self):
         return self.sp.hasAEKernel()

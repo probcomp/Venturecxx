@@ -15,10 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from utils import override
-from lkernel import DeterministicMakerAAALKernel,DefaultVariationalLKernel,LKernel
-from request import Request
-from exception import VentureBuiltinSPMethodError, VentureError
+from venture.lite.exception import VentureBuiltinSPMethodError
+from venture.lite.lkernel import DefaultVariationalLKernel
+from venture.lite.lkernel import DeterministicMakerAAALKernel
+from venture.lite.lkernel import LKernel
+from venture.lite.request import Request
+from venture.lite.utils import override
 
 class PSP(object):
   """A Primitive Stochastic Procedure.

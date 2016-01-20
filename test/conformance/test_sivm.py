@@ -15,8 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.config import get_ripl, on_inf_prim
-from nose.tools import assert_equal, assert_less
+from nose.tools import assert_equal
+from nose.tools import assert_less
+
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 @on_inf_prim("none")
 def testForget1():

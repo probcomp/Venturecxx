@@ -18,12 +18,14 @@
 from scipy import stats
 
 from venture.test.config import get_ripl, broken_in
+from venture.test.config import on_inf_prim
 from venture.exception import underline
 from venture.lite.psp import LikelihoodFreePSP
 from venture.lite import types as t
 from venture.lite.sp_help import typed_nr
 
 @broken_in('puma', "Profiler only implemented for Lite")
+@on_inf_prim("none") # Does not test inference quality of anything
 def test_profiling1():
   ripl = get_ripl()
 
@@ -53,6 +55,7 @@ def test_profiling1():
   map(lambda addrs: map(printAddr, addrs), data.principal)
 
 @broken_in('puma', "Profiler only implemented for Lite")
+@on_inf_prim("none") # Does not test inference quality of anything
 def test_profiling_likelihoodfree():
   "Make sure profiling doesn't break with likelihood-free SP's"
   class TestPSP(LikelihoodFreePSP):
@@ -67,4 +70,3 @@ def test_profiling_likelihoodfree():
   [INFER (mh default one 10)]'''
   ripl.profiler_enable()
   ripl.execute_program(prog)
-

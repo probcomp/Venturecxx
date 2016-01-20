@@ -15,14 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import tempfile
+
 from nose import SkipTest
 from nose.tools import eq_
-import tempfile
 from testconfig import config
 
-from venture.test.stats import statisticalTest, reportKnownDiscrete, reportSameDiscrete
-from venture.test.config import get_ripl, collectStateSequence, on_inf_prim, default_num_transitions_per_sample, gen_on_inf_prim
 from venture.lite import builtin
+from venture.test.config import collectStateSequence
+from venture.test.config import default_num_transitions_per_sample
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import reportSameDiscrete
+from venture.test.stats import statisticalTest
 
 @statisticalTest
 def _test_serialize_program(v, label, action):
@@ -51,6 +58,10 @@ def _test_serialize_program(v, label, action):
         assert isinstance(trace2, type(trace1))
         assert isinstance(trace2.trace, type(trace1.trace))
     elif action == 'convert_puma':
+        try:
+            from venture.puma import trace
+        except ImportError:
+            raise SkipTest("Puma backend does not appear to be installed")
         trace1 = engine.getDistinguishedTrace()
         engine = engine.to_puma()
         trace2 = engine.getDistinguishedTrace()

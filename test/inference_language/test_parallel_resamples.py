@@ -15,13 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import threading
+
 from nose.tools import eq_
 from nose import SkipTest
-import threading
-import scipy.stats
 
-from venture.test.config import get_ripl, default_num_samples, gen_on_inf_prim, on_inf_prim
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.config import default_num_samples
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import statisticalTest
 
 @gen_on_inf_prim("resample")
 def testSynchronousIsSerial():
@@ -47,7 +51,7 @@ def checkResamplingSmoke(mode):
   r.infer("(resample%s %s)" % (mode, n))
   stack_dicts = r.sivm.core_sivm.engine.sample_all(r._ensure_parsed_expression("(normal 0 1)"))
   predictions = [d["value"] for d in stack_dicts]
-  return reportKnownContinuous(scipy.stats.norm(loc=0, scale=1).cdf, predictions, "N(0,1)")
+  return reportKnownGaussian(0, 1, predictions)
 
 @on_inf_prim("resample")
 def testResamplingSmoke2():
@@ -72,7 +76,7 @@ def testResamplingSmoke4():
   r.infer("(resample_multiprocess %s %s)" % (n, n/2)) # Limit the number of processes
   predictions = r.sample_all("(normal 0 1)")
   eq_(n, len(predictions))
-  return reportKnownContinuous(scipy.stats.norm(loc=0, scale=1).cdf, predictions, "N(0,1)")
+  return reportKnownGaussian(0, 1, predictions)
 
 @on_inf_prim("resample_serializing")
 def testSerializingTracesWithRandomSPs():

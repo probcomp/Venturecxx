@@ -19,10 +19,10 @@ import numbers
 import sys
 import math
 
-from sp import VentureSPRecord
-from value import VentureValue
-from exception import VentureBuiltinLKernelMethodError
-from node import FixedValueArgs
+from venture.lite.exception import VentureBuiltinLKernelMethodError
+from venture.lite.node import FixedValueArgs
+from venture.lite.sp import VentureSPRecord
+from venture.lite.value import VentureValue
 
 class LKernel(object):
   """A local proposal distribution for one node."""

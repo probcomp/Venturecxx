@@ -16,9 +16,12 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-import scipy.stats as stats
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, ignore_inference_quality, default_num_transitions_per_sample, gen_on_inf_prim, on_inf_prim
+from venture.test.stats import statisticalTest, reportKnownDiscrete
+from venture.test.stats import reportKnownGaussian
+from venture.test.config import get_ripl, collectSamples
+from venture.test.config import ignore_inference_quality
+from venture.test.config import default_num_transitions_per_sample
+from venture.test.config import gen_on_inf_prim, on_inf_prim
 
 @gen_on_inf_prim("pgibbs")
 def testPGibbsBasic1():
@@ -51,7 +54,7 @@ def checkPGibbsBasic2(in_parallel):
   ans = [(False,.9),(True,.1)]
   return reportKnownDiscrete(ans, predictions)
 
-# Not the same test generator because I want to annotate them differently. 
+# Not the same test generator because I want to annotate them differently.
 @gen_on_inf_prim("pgibbs")
 def testPGibbsBlockingMHHMM1():
   yield checkPGibbsBlockingMHHMM1, "pgibbs"
@@ -90,8 +93,7 @@ def checkPGibbsBlockingMHHMM1(operator):
     infer = "(%s 0 ordered 20 10)" % operator
 
   predictions = collectSamples(ripl,"pid",infer=infer)
-  cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
+  return reportKnownGaussian(390.0/89.0, math.sqrt(55/89.0), predictions)
 
 
 @gen_on_inf_prim("pgibbs")
@@ -105,7 +107,7 @@ def testFuncPGibbsDynamicScope1():
 @statisticalTest
 def checkPGibbsDynamicScope1(operator):
   ripl = get_ripl()
-  
+
   ripl.assume("transition_fn", "(lambda (x) (normal x 1.0))")
   ripl.assume("observation_fn", "(lambda (y) (normal y 1.0))")
 
@@ -113,7 +115,7 @@ def checkPGibbsDynamicScope1(operator):
   ripl.assume("f","""
 (mem (lambda (t)
   (tag 0 t (if (= t 0) (initial_state_fn) (transition_fn (f (- t 1)))))))
-""")  
+""")
 
   ripl.assume("g","(mem (lambda (t) (observation_fn (f t))))")
 
@@ -131,8 +133,7 @@ def checkPGibbsDynamicScope1(operator):
     infer = "(%s 0 ordered 20 10)" % operator
 
   predictions = collectSamples(ripl,"pid",infer=infer)
-  cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
+  return reportKnownGaussian(390/89.0, math.sqrt(55/89.0), predictions)
 
 @on_inf_prim("pgibbs")
 @statisticalTest
@@ -146,7 +147,7 @@ def testPGibbsDynamicScopeInterval():
   ripl.assume("f","""
 (mem (lambda (t)
   (tag 0 t (if (= t 0) (initial_state_fn) (transition_fn (f (- t 1)))))))
-""")  
+""")
 
   ripl.assume("g","(mem (lambda (t) (observation_fn (f t))))")
 
@@ -164,8 +165,7 @@ def testPGibbsDynamicScopeInterval():
   infer = "(do (pgibbs 0 (ordered_range 0 3) %d %d) (pgibbs 0 (ordered_range 1 4) %d %d))" % (P,P,T,T)
 
   predictions = collectSamples(ripl,"pid",infer=infer)
-  cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
+  return reportKnownGaussian(390/89.0, math.sqrt(55/89.0), predictions)
 
 @gen_on_inf_prim("func_pgibbs")
 def testFunnyHMM():
@@ -174,7 +174,7 @@ def testFunnyHMM():
 
 def checkFunnyHMM(in_parallel):
   ripl = get_ripl()
-  
+
   ripl.assume("hypers", "(mem (lambda (t) (tag 0 t (normal 0 1))))")
   ripl.assume("init", "0")
   ripl.assume("next", "(lambda (state delta) (+ state delta))")
@@ -183,9 +183,8 @@ def checkFunnyHMM(in_parallel):
           (if (= t 0) init
             (next (get_state (- t 1)) (hypers t)))))""")
   ripl.assume("obs", "(mem (lambda (t) (normal (get_state t) 1)))")
-  
+
   for t in range(1, 5):
     ripl.observe("(obs %d)" % t, t)
-  
-  ripl.infer("(func_pgibbs 0 ordered 3 2 %s)" % in_parallel)
 
+  ripl.infer("(func_pgibbs 0 ordered 3 2 %s)" % in_parallel)

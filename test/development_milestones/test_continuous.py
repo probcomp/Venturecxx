@@ -16,9 +16,9 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-import scipy.stats as stats
 
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.stats import statisticalTest
+from venture.test.stats import reportKnownGaussian
 from venture.test.config import get_ripl, collectSamples
 
 @statisticalTest
@@ -26,8 +26,7 @@ def testNormal1():
   ripl = get_ripl()
   ripl.predict("(normal 0 1)", label="pid")
   predictions = collectSamples(ripl,"pid")
-  cdf = stats.norm(loc=0,scale=1).cdf
-  return reportKnownContinuous(cdf, predictions, "N(0,1)")
+  return reportKnownGaussian(0, 1, predictions)
 
 @statisticalTest
 def testNormal2():
@@ -35,8 +34,7 @@ def testNormal2():
   ripl.assume("x","(normal 0 1)")
   ripl.predict("(normal x 1)")
   predictions = collectSamples(ripl,"x")
-  cdf = stats.norm(loc=0,scale=1).cdf
-  return reportKnownContinuous(cdf, predictions, "N(0,1)")
+  return reportKnownGaussian(0, 1, predictions)
 
 @statisticalTest
 def testNormal3():
@@ -44,8 +42,7 @@ def testNormal3():
   ripl.assume("f","(lambda (mu) (normal mu 1))")
   ripl.predict("(f (normal 0 1))", label="pid")
   predictions = collectSamples(ripl,"pid")
-  cdf = stats.norm(loc=0,scale=math.sqrt(2)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(0,sqrt(2))")
+  return reportKnownGaussian(0, math.sqrt(2), predictions)
 
 @statisticalTest
 def testNormal4():
@@ -54,5 +51,4 @@ def testNormal4():
   ripl.assume("g","(lambda (x y z) ((lambda () f)))")
   ripl.predict("((g (f (normal 0 1)) (f 5) (f (f 1))) 5)", label="pid")
   predictions = collectSamples(ripl,"pid")
-  cdf = stats.norm(loc=5,scale=1).cdf
-  return reportKnownContinuous(cdf, predictions, "N(5,1)")
+  return reportKnownGaussian(5, 1, predictions)

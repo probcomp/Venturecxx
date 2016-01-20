@@ -16,11 +16,18 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
+
 import scipy.stats as stats
 from nose import SkipTest
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownMeanVariance
-from venture.test.config import get_ripl, collectSamples, default_num_transitions_per_sample, gen_on_inf_prim
 from testconfig import config
+
+from venture.test.config import collectSamples
+from venture.test.config import default_num_transitions_per_sample
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import reportKnownMean
+from venture.test.stats import statisticalTest
 
 @gen_on_inf_prim("slice")
 def testAllSteppingOut():
@@ -46,8 +53,7 @@ def checkSliceBasic1(slice_method):
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)",label="pid")
   predictions = collectSamples(ripl,"pid",infer=inferCommand(slice_method,1))
-  cdf = stats.norm(loc=10, scale=1).cdf
-  return reportKnownContinuous(cdf, predictions, "N(10,1.0))")
+  return reportKnownGaussian(10, 1, predictions)
 
 @statisticalTest
 def checkSliceNormalWithObserve1(slice_method):
@@ -61,8 +67,7 @@ def checkSliceNormalWithObserve1(slice_method):
 #  ripl.predict("(normal a 1.0)")
 
   predictions = collectSamples(ripl,"pid",infer=inferCommand(slice_method,1))
-  cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
+  return reportKnownGaussian(12, math.sqrt(0.5), predictions)
 
 @statisticalTest
 def checkSliceNormalWithObserve2a(slice_method):
@@ -76,8 +81,7 @@ def checkSliceNormalWithObserve2a(slice_method):
   ripl.predict("(normal a 1.0)")
 
   predictions = collectSamples(ripl,"pid",infer=inferCommand(slice_method,1))
-  cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
+  return reportKnownGaussian(12, math.sqrt(0.5), predictions)
 
 @statisticalTest
 def checkSliceNormalWithObserve2b(slice_method):
@@ -91,8 +95,7 @@ def checkSliceNormalWithObserve2b(slice_method):
   ripl.predict("(normal a 1.0)", label="pid")
 
   predictions = collectSamples(ripl,"pid",infer=inferCommand(slice_method,1))
-  cdf = stats.norm(loc=12, scale=math.sqrt(1.5)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(12,sqrt(1.5))")
+  return reportKnownGaussian(12, math.sqrt(1.5), predictions)
 
 @statisticalTest
 def checkSliceStudentT1(slice_method):
@@ -113,7 +116,9 @@ def checkSliceStudentT1(slice_method):
   (meana,_) = integrate.quad(lambda x: x * posterior(x), -10, 10)
   (meanasq,_) = integrate.quad(lambda x: x * x * posterior(x), -10, 10)
   vara = meanasq - meana * meana
-  return reportKnownMeanVariance(meana, vara, predictions)
+  # TODO Test agreement with the whole shape of the distribution, not
+  # just the mean
+  return reportKnownMean(meana, predictions, variance=vara)
 
 @statisticalTest
 def checkSliceStudentT2(slice_method):
@@ -135,4 +140,6 @@ def checkSliceStudentT2(slice_method):
   (meana,_) = integrate.quad(lambda x: x * posterior(x), -10, 10)
   (meanasq,_) = integrate.quad(lambda x: x * x * posterior(x), -10, 10)
   vara = meanasq - meana * meana
-  return reportKnownMeanVariance(meana, vara + 1.0, predictions)
+  # TODO Test agreement with the whole shape of the distribution, not
+  # just the mean
+  return reportKnownMean(meana, predictions, variance=vara + 1.0)

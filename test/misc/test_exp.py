@@ -15,12 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import numpy
+
 from venture.test.config import get_ripl
 import venture.value.dicts as v
-import numpy
 
 def testVector():
   """Test that array-like objects don't get interpreted as expressions."""
   ripl = get_ripl()
   ripl.predict(v.vector(numpy.array([1, 2])))
-

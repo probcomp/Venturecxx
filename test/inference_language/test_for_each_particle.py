@@ -16,11 +16,12 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose.tools import eq_, assert_raises
-from nose import SkipTest
-import scipy.stats
 
-from venture.test.config import get_ripl, default_num_samples, gen_on_inf_prim, on_inf_prim, broken_in, default_num_transitions_per_sample
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.config import get_ripl, default_num_samples, gen_on_inf_prim
+from venture.test.config import on_inf_prim, broken_in
+from venture.test.config import default_num_transitions_per_sample
+from venture.test.stats import statisticalTest
+from venture.test.stats import reportKnownGaussian
 
 @on_inf_prim("for_each_particle")
 def testForEachParticleSmoke():
@@ -56,7 +57,7 @@ def propNotAllEqual(predictions):
 
 @statisticalTest
 def propDistributedNormally(predictions):
-  return reportKnownContinuous(scipy.stats.norm(loc=0, scale=1).cdf, predictions, "N(0,1)")
+  return reportKnownGaussian(0, 1, predictions)
 
 @gen_on_inf_prim("for_each_particle")
 def testForEachParticleCustomMH():
@@ -81,8 +82,7 @@ def checkForEachParticleCustomMH(mode):
   for _ in range(default_num_transitions_per_sample()):
     ripl.infer("(for_each_particle (drift_mh default all))")
   predictions = ripl.infer("(for_each_particle (sample x))")
-  cdf = scipy.stats.norm(loc=1, scale=0.5**0.5).cdf
-  return reportKnownContinuous(cdf, predictions, "N(1,sqrt(0.5))")
+  return reportKnownGaussian(1, 0.5**0.5, predictions)
 
 def testForEachParticleNoModeling():
   ripl = get_ripl()

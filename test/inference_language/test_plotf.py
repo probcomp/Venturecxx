@@ -17,13 +17,16 @@
 
 from os import remove
 from os.path import exists
-from nose import SkipTest
+
 from nose.tools import assert_raises_regexp
 
-from venture.test.config import (get_ripl, on_inf_prim, gen_on_inf_prim,
-                                 needs_ggplot, gen_needs_ggplot,
-                                 capture_output)
 from venture.exception import VentureException
+from venture.test.config import capture_output
+from venture.test.config import gen_needs_ggplot
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import needs_ggplot
+from venture.test.config import on_inf_prim
 
 @needs_ggplot
 @on_inf_prim("plotf_to_file")

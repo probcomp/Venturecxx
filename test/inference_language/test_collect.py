@@ -15,16 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import scipy.stats as stats
-import re
 from StringIO import StringIO
+import re
 import sys
 
-from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, default_num_samples, on_inf_prim
+import scipy.stats as stats
+
 from venture.lite.psp import LikelihoodFreePSP
-import venture.lite.types as t
 from venture.lite.sp_help import typed_nr
+from venture.test.config import default_num_samples
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import statisticalTest
+import venture.lite.types as t
 
 def extract_from_dataset(result, names):
   return result.asPandas()[names]
@@ -41,8 +45,7 @@ def testCollectSmoke1():
            (bind (collect x) (curry into d))))
       (return d)))""" % default_num_samples()
   predictions = extract_from_dataset(ripl.infer(prog), 'x')
-  cdf = stats.norm(loc=0.0, scale=1.0).cdf
-  return reportKnownContinuous(cdf, predictions, "N(0,1)")
+  return reportKnownGaussian(0.0, 1.0, predictions)
 
 @statisticalTest
 @on_inf_prim("collect")
@@ -53,8 +56,7 @@ def testCollectSmoke2():
   (do (repeat %s (bind (collect (normal 0 1)) (curry into d)))
       (return d)))""" % default_num_samples()
   predictions = extract_from_dataset(ripl.infer(prog), '(normal 0.0 1.0)')
-  cdf = stats.norm(loc=0.0, scale=1.0).cdf
-  return reportKnownContinuous(cdf, predictions, "N(0,1)")
+  return reportKnownGaussian(0.0, 1.0, predictions)
 
 @statisticalTest
 @on_inf_prim("collect")
@@ -65,8 +67,7 @@ def testCollectSmoke3():
   (do (repeat %s (bind (collect (labelled (normal 0 1) label)) (curry into d)))
       (return d)))""" % default_num_samples()
   predictions = extract_from_dataset(ripl.infer(prog), 'label')
-  cdf = stats.norm(loc=0.0, scale=1.0).cdf
-  return reportKnownContinuous(cdf, predictions, "N(0,1)")
+  return reportKnownGaussian(0.0, 1.0, predictions)
 
 @statisticalTest
 @on_inf_prim("collect") # Technically also resample and MH, but not testing them
@@ -82,7 +83,6 @@ def testCollectSmoke4():
        (do (mh default all 1)
            (bind (collect x y (abs (- y x)) (labelled (abs x) abs_x)) (curry into d))))
       (return d)))""")
-  cdf = stats.norm(loc=0.0, scale=2.0).cdf
   result = out.asPandas()
   for k in ["x", "y", "iter", "time (s)", "log score", "prt. id", "(abs (sub y x))", "abs_x"]:
     assert k in result
@@ -90,7 +90,7 @@ def testCollectSmoke4():
   # Check that the dataset can be extracted again
   (result == out.asPandas()).all()
   # TODO Also check the distributions of x and the difference
-  return reportKnownContinuous(cdf, result["y"], "N(0,1)")
+  return reportKnownGaussian(0.0, 2.0, result["y"])
 
 def testPrintf():
   '''Intercept stdout and make sure the message read what we expect'''
@@ -139,4 +139,3 @@ def testCollectLogScore():
 def make_pattern():
   iteration = r".*x.*foo.*\n.*2.1.*3.1.*\n.*2.1.*3.1.*"
   return re.compile(iteration + iteration, re.DOTALL)
-

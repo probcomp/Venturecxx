@@ -18,9 +18,8 @@
 import math
 import scipy.stats as stats
 from nose.tools import assert_almost_equal
-from nose import SkipTest
 
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.stats import statisticalTest, reportKnownGaussian
 from venture.test.config import get_ripl, default_num_samples
 
 @statisticalTest
@@ -35,9 +34,8 @@ def testNormalWithObserve1():
   for (s, w) in zip(samples, weights):
     # The weights I have should be deterministically given by the likelihood
     assert_almost_equal(math.exp(w), stats.norm(loc=14, scale=1).pdf(s))
-  prior = stats.norm(loc=10, scale=1).cdf
   # The test points should be drawn from the prior
-  return reportKnownContinuous(prior, samples, "N(10,1)")
+  return reportKnownGaussian(10, 1, samples)
 
 def collectLikelihoodWeighted(ripl, address):
   vs = []

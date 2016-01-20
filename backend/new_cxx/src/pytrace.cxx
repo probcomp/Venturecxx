@@ -62,7 +62,9 @@ void PyTrace::evalExpression(DirectiveID did, boost::python::object object)
 void PyTrace::unevalDirectiveID(DirectiveID did)
 {
  assert(trace->families.count(did));
- unevalFamily(trace.get(),trace->families[did].get(),boost::shared_ptr<Scaffold>(new Scaffold()),boost::shared_ptr<DB>(new DB()));
+ unevalFamily(trace.get(),trace->families[did].get(),
+              boost::shared_ptr<Scaffold>(new Scaffold()),
+              boost::shared_ptr<DB>(new DB()));
  trace->families.erase(did);
 }
 
@@ -73,17 +75,24 @@ void PyTrace::observe(DirectiveID did,boost::python::object valueExp)
   trace->unpropagatedObservations[root.get()] = parseExpression(valueExp);
 }
 
-void PyTrace::unobserve(DirectiveID did)
+double PyTrace::unobserve(DirectiveID did)
 {
   assert(trace->families.count(did));
   Node * node = trace->families[did].get();
   OutputNode * appNode = trace->getConstrainableNode(node);
-  if (trace->isObservation(node)) { unconstrain(trace.get(),appNode); trace->unobserveNode(node); }
+  double weight;
+  if (trace->isObservation(node))
+  {
+    weight = unconstrain(trace.get(),appNode);
+    trace->unobserveNode(node);
+  }
   else
   {
     assert(trace->unpropagatedObservations.count(node));
     trace->unpropagatedObservations.erase(node);
+    weight = 0;
   }
+  return weight;
 }
 
 void PyTrace::bindInGlobalEnv(const string& sym, DirectiveID did)
@@ -115,13 +124,16 @@ void PyTrace::setSeed(size_t n) {
 }
 
 size_t PyTrace::getSeed() {
-  // TODO FIXME get_seed can't be implemented as spec'd (need a generic RNG state); current impl always returns 0, which may not interact well with VentureUnit
+  // TODO FIXME get_seed can't be implemented as spec'd (need a
+  // generic RNG state); current impl always returns 0, which may not
+  // interact well with VentureUnit
   return 0;
 }
 
 double PyTrace::getGlobalLogScore()
 {
-  // TODO This algorithm is totally wrong: https://app.asana.com/0/16653194948424/20100308871203
+  // TODO This algorithm is totally wrong:
+  // https://app.asana.com/0/16653194948424/20100308871203
   double ls = 0.0;
   for (set<Node*>::iterator iter = trace->unconstrainedChoices.begin();
        iter != trace->unconstrainedChoices.end();
@@ -147,7 +159,10 @@ double PyTrace::getGlobalLogScore()
   return ls;
 }
 
-uint32_t PyTrace::numUnconstrainedChoices() { return trace->numUnconstrainedChoices(); }
+uint32_t PyTrace::numUnconstrainedChoices()
+{
+  return trace->numUnconstrainedChoices();
+}
 
 // parses params and does inference
 struct Inferer
@@ -203,13 +218,13 @@ struct Inferer
       gKernel = boost::shared_ptr<GKernel>(new MHGKernel);
     }
 
-    scope = fromPython(params["scope"]);
-    block = fromPython(params["block"]);
+    scope = parseValueO(params["scope"]);
+    block = parseValueO(params["block"]);
 
     if (block->hasSymbol() && block->getSymbol() == "ordered_range")
     {
-      VentureValuePtr minBlock = fromPython(params["min_block"]);
-      VentureValuePtr maxBlock = fromPython(params["max_block"]);
+      VentureValuePtr minBlock = parseValueO(params["min_block"]);
+      VentureValuePtr maxBlock = parseValueO(params["max_block"]);
       scaffoldIndexer = boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block,minBlock,maxBlock));
     }
     else
@@ -270,16 +285,16 @@ void PyTrace::registerConstraints()
   trace->registerConstraints();
 }
 
-double PyTrace::likelihoodAt(boost::python::object pyscope, boost::python::object pyblock) {
-  ScopeID scope = fromPython(pyscope);
-  ScopeID block = fromPython(pyblock);
-  return trace->likelihoodAt(scope, block);
+double PyTrace::logLikelihoodAt(boost::python::object pyscope, boost::python::object pyblock) {
+  ScopeID scope = parseValueO(pyscope);
+  BlockID block = parseValueO(pyblock);
+  return trace->logLikelihoodAt(scope, block);
 }
 
-double PyTrace::posteriorAt(boost::python::object pyscope, boost::python::object pyblock) {
-  ScopeID scope = fromPython(pyscope);
-  ScopeID block = fromPython(pyblock);
-  return trace->posteriorAt(scope, block);
+double PyTrace::logJointAt(boost::python::object pyscope, boost::python::object pyblock) {
+  ScopeID scope = parseValueO(pyscope);
+  BlockID block = parseValueO(pyblock);
+  return trace->logJointAt(scope, block);
 }
 
 double PyTrace::likelihoodWeight()
@@ -287,9 +302,11 @@ double PyTrace::likelihoodWeight()
   return trace->likelihoodWeight();
 }
 
-int PyTrace::numNodesInBlock(boost::python::object scope, boost::python::object block)
+int PyTrace::numNodesInBlock(boost::python::object pyscope, boost::python::object pyblock)
 {
-  return trace->getNodesInBlock(fromPython(scope), fromPython(block)).size();
+  ScopeID scope = parseValueO(pyscope);
+  BlockID block = parseValueO(pyblock);
+  return trace->getNodesInBlock(scope, block).size();
 }
 
 boost::python::list PyTrace::numFamilies()
@@ -357,8 +374,8 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("primitive_infer", &PyTrace::primitive_infer)
     .def("makeConsistent", &PyTrace::makeConsistent)
     .def("registerConstraints", &PyTrace::registerConstraints)
-    .def("likelihood_at", &PyTrace::likelihoodAt)
-    .def("posterior_at", &PyTrace::posteriorAt)
+    .def("log_likelihood_at", &PyTrace::logLikelihoodAt)
+    .def("log_joint_at", &PyTrace::logJointAt)
     .def("likelihood_weight", &PyTrace::likelihoodWeight)
     .def("numNodesInBlock", &PyTrace::numNodesInBlock)
     .def("numFamilies", &PyTrace::numFamilies)

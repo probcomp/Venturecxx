@@ -34,6 +34,7 @@ struct ConcreteTrace : Trace
   ConcreteTrace();
   void initialize();
   Node* bindPrimitiveSP(const string& name, SP* sp);
+  void sealEnvironment();
 
   /* Registering metadata */
   void registerAEKernel(Node * node);
@@ -142,8 +143,8 @@ struct ConcreteTrace : Trace
 
   int numUnconstrainedChoices();
 
-  double likelihoodAt(ScopeID pyscope, BlockID pyblock);
-  double posteriorAt(ScopeID pyscope, BlockID pyblock);
+  double logLikelihoodAt(ScopeID pyscope, BlockID pyblock);
+  double logJointAt(ScopeID pyscope, BlockID pyblock);
   double likelihoodWeight();
 
   int getSeed();

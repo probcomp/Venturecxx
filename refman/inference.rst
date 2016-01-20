@@ -7,9 +7,8 @@ Introduction
 ------------
 
 The VentureScript inference language is the language in which the toplevel
-VentureScript program, and particularly arguments to the `infer`
-instruction, are written.  It is actually the same language as the
-VentureScript modeling language, except with a several additional predefined
+VentureScript program is written.  It is actually the same language as the
+VentureScript modeling language, except with several additional predefined
 procedures and special forms.
 
 VentureScript inference programs are effectively evaluated in a context

@@ -15,9 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from value import VentureValue, registerVentureType, VentureNil
-from types import VentureType
-from exception import VentureError
+from venture.lite.exception import VentureError
+from venture.lite.types import VentureType
+from venture.lite.value import VentureNil
+from venture.lite.value import VentureValue
+from venture.lite.value import registerVentureType
 import venture.value.dicts as v
 
 class SPFamilies(object):
@@ -55,8 +57,8 @@ class SP(object):
 
   def constructSPAux(self): return SPAux()
   def constructLatentDB(self): return None
-  def simulateLatents(self,spaux,lsr,shouldRestore,latentDB): pass
-  def detachLatents(self,spaux,lsr,latentDB): pass
+  def simulateLatents(self,args,lsr,shouldRestore,latentDB): pass
+  def detachLatents(self,args,lsr,latentDB): pass
   def hasAEKernel(self): return False
   def show(self, _spaux): return "<procedure>"
   def description(self,name):
