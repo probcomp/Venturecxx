@@ -68,10 +68,8 @@ class GP(object):
       sigma12 = self.cov_matrix(xs, x2s)
       sigma21 = self.cov_matrix(x2s, xs)
       sigma22 = self.cov_matrix(x2s, x2s)
-      inv22 = la.pinv(sigma22)
-
-      mu = mu1 + np.dot(sigma12, np.dot(inv22, (a2 - mu2)))
-      sigma = sigma11 - np.dot(sigma12, np.dot(inv22, sigma21))
+      mu, sigma = mvnormal.conditional(np.array(o2s), mu1, mu2,
+          sigma11, sigma12, sigma21, sigma22)
 
     return mu, sigma
 
