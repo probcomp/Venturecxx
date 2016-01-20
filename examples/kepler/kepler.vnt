@@ -55,63 +55,63 @@
         noise)))))
 
 ; GPM interface commands.
-(assume features (list apogee perigee period))
-(assume get_cell (lambda (col row) ((lookup features col) row)))
-
+(assume columns (list apogee perigee period))
+; (assume get_cell (lambda (i col) ((lookup columns col) i)))
+; (assume get_cell (lambda (i col) ((lookup (list x1 x2) col) i)))
 ;; TODO MOVE ALL THIS NONSE TO SDGPM.
 
 ; Observation process.
-[define observer
-  (lambda (iapt)
-      (let ((sat_id (lookup iapt 0))
-            (sat_ap (lookup iapt 1))
-            (sat_pg (lookup iapt 2))
-            (sat_pr (lookup iapt 3)))
-        (do
-          (if (< 0 sat_ap)
-            (observe (apogee (atom ,sat_id)) sat_ap) pass)
-          (if (< 0 sat_pg)
-            (observe (perigee (atom ,sat_id)) sat_pg) pass)
-          (if (< 0 sat_pr)
-            (observe (period (atom ,sat_id)) sat_pr) pass))))]
+; [define observer
+;   (lambda (iapt)
+;       (let ((sat_id (lookup iapt 0))
+;             (sat_ap (lookup iapt 1))
+;             (sat_pg (lookup iapt 2))
+;             (sat_pr (lookup iapt 3)))
+;         (do
+;           (if (< 0 sat_ap)
+;             (observe (apogee (atom ,sat_id)) sat_ap) pass)
+;           (if (< 0 sat_pg)
+;             (observe (perigee (atom ,sat_id)) sat_pg) pass)
+;           (if (< 0 sat_pr)
+;             (observe (period (atom ,sat_id)) sat_pr) pass))))]
 
-(pyexec "import pandas as pd; import venture.value.dicts as vd")
-(pyexec "from venture.lite.value import VentureValue as VV")
-(pyexec "data = pd.read_csv('satellites.csv').itertuples()")
+; (pyexec "import pandas as pd; import venture.value.dicts as vd")
+; (pyexec "from venture.lite.value import VentureValue as VV")
+; (pyexec "data = pd.read_csv('satellites.csv').itertuples()")
 
-[define n_samples 1167]
-[define observation
-  (lambda () (run (pyeval "VV.fromStackDict(vd.vector(list(data.next())))")))]
-(print "Observing")
-(for_each (arange n_samples) (lambda (d) (observer (observation))))
+; [define n_samples 1167]
+; [define observation
+;   (lambda () (run (pyeval "VV.fromStackDict(vd.vector(list(data.next())))")))]
+; (print "Observing")
+; (for_each (arange n_samples) (lambda (d) (observer (observation))))
 
-; Probabilistically invert Kepler's law using single-site MH in local scope.
-[define invert_kepler
-  (lambda (period_val mh_steps mh_thin n_samples)
-    (run
-        (do
-          (observe (period (atom -1)) period_val foo)
-          ; (repeat 1000
-          ;   (do
-              ; (mh (atom -1) 'z 100)
-              ; (hmc (atom -1) all .5 100 50)))
-          (mh (atom -1) one mh_steps)
-          (result <-
-            (mapM
-              (lambda (k)
-                (do
-                  (mh (atom -1) one mh_thin)
-                  (sample
-                    (list (apogee (atom -1))
-                          (perigee (atom -1))
-                          (kepler (apogee (atom -1))
-                                  (perigee (atom -1)))))))
-              (arange n_samples)))
-          (forget 'foo)
-          (return result))))]
+; ; Probabilistically invert Kepler's law using single-site MH in local scope.
+; [define invert_kepler
+;   (lambda (period_val mh_steps mh_thin n_samples)
+;     (run
+;         (do
+;           (observe (period (atom -1)) period_val foo)
+;           ; (repeat 1000
+;           ;   (do
+;               ; (mh (atom -1) 'z 100)
+;               ; (hmc (atom -1) all .5 100 50)))
+;           (mh (atom -1) one mh_steps)
+;           (result <-
+;             (mapM
+;               (lambda (k)
+;                 (do
+;                   (mh (atom -1) one mh_thin)
+;                   (sample
+;                     (list (apogee (atom -1))
+;                           (perigee (atom -1))
+;                           (kepler (apogee (atom -1))
+;                                   (perigee (atom -1)))))))
+;               (arange n_samples)))
+;           (forget 'foo)
+;           (return result))))]
 
-; Inference program.
-(print "Inferring")
-[infer (mh default one 10000)]
-[define assignments
-  (run (mapM (lambda (i) (sample (z (atom ,i)))) (arange n_samples)))]
+; ; Inference program.
+; (print "Inferring")
+; [infer (mh default one 10000)]
+; [define assignments
+;   (run (mapM (lambda (i) (sample (z (atom ,i)))) (arange n_samples)))]
