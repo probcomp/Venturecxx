@@ -92,11 +92,14 @@ class VsGpm(object):
     def initialize_models(self, bdb, generator_id, modelnos, _model_config):
         program = self._program(bdb, generator_id)
         data = self._data(bdb, generator_id)
-        _, mapper = self._mapper()
-        ripls = mapper(multiproc_observer, ((program, data) for _ in modelnos))
-        for ripls, modelno in zip(ripls, modelnos):
+        # XXX There must be a faster way to observer the data.
+        for modelno in modelnos:
             ripl = vs.make_lite_church_prime_ripl()
-            ripl.loads(ripls)
+            ripl.execute_program(program)
+            for i, row in enumerate(data):
+                for j, val in enumerate(row):
+                    if val is not None and not math.isnan(val):
+                        ripl.observe('(get_cell (atom %i) %i)' % (i, j), val)
             self._save_ripl(bdb, generator_id, modelno, ripl)
 
     def analyze_models(self, bdb, generator_id, modelnos=None, iterations=1,
@@ -285,17 +288,6 @@ class VsGpm(object):
     def _remap_targets(self, bdb, generator_id, targets):
         column_map = self._column_map(bdb, generator_id)
         return [(row, column_map[col]) for (row, col) in targets]
-
-def multiproc_observer((program, data)):
-    print 'Launching'
-    ripl = vs.make_lite_church_prime_ripl()
-    ripl.execute_program(program)
-    for i, row in enumerate(data):
-        for j, val in enumerate(row):
-            if val is not None and not math.isnan(val):
-                ripl.observe(
-                    '(get_cell (atom %i) %i)' % (i, j), val)
-    return ripl.saves()
 
 class NullBox(object):
     def get(self):
