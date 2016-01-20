@@ -99,6 +99,8 @@ class VsGpm(object):
         for modelno in modelnos:
             ripl = vs.make_lite_church_prime_ripl()
             ripl.execute_program(program)
+            ripl.assume('get_cell',
+                '(lambda (i col) ((lookup columns col) i))')
             for i, row in enumerate(data):
                 for j, val in enumerate(row):
                     if val is not None and not math.isnan(val):
