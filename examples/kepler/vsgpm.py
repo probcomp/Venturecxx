@@ -14,11 +14,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import logging
 import math
-import multiprocessing
 import sqlite3
-
-import numpy as np
 
 import bayeslite.core as core
 import venture.value.dicts as vd
@@ -93,20 +91,21 @@ class VsGpm(object):
     def initialize_models(self, bdb, generator_id, modelnos, _model_config):
         program = self._program(bdb, generator_id)
         data =self._data(bdb, generator_id)
-        # import ipdb; ipdb.set_trace()
         # XXX There must be a faster way to observer the data.
-        print 'Initializing VsGpm'
-        for modelno in modelnos:
-            ripl = vs.make_lite_church_prime_ripl()
-            ripl.execute_program(program)
-            ripl.assume('get_cell',
-                '(lambda (i col) ((lookup columns col) i))')
-            for i, row in enumerate(data):
-                for j, val in enumerate(row):
-                    if val is not None and not math.isnan(val):
-                        ripl.observe('(get_cell (atom %i) %i)' % (i, j), val)
-            self._save_ripl(bdb, generator_id, modelno, ripl)
-        print 'Initialized.'
+        logging.info('Initializing %i models.' % len(modelnos))
+        ripl = vs.make_lite_church_prime_ripl()
+        ripl.execute_program(program)
+        logging.info('Resampling %i models.' % len(modelnos))
+        ripl.infer('(resample %i)' % len(modelnos))
+        ripl.assume('get_cell',
+            '(lambda (i col) ((lookup columns col) i))')
+        logging.info('Observing data.' % len(modelnos))
+        for i, row in enumerate(data):
+            for j, val in enumerate(row):
+                if val is not None and not math.isnan(val):
+                    ripl.observe('(get_cell (atom %i) %i)' % (i, j), val)
+        self._save_ripl(bdb, generator_id, 0, ripl)
+        logging.info('Initialization complete.')
 
     def analyze_models(self, bdb, generator_id, modelnos=None, iterations=1,
             max_seconds=None, ckpt_iterations=None, ckpt_seconds=None):
