@@ -15,6 +15,9 @@
 ; You should have received a copy of the GNU General Public License
 ; along with Venture.  If not, see <http:;www.gnu.org/licenses/>.
 
+; (load_plugin "kepler.py")
+(load_plugin "absorbing_apply.py")
+
 ; Model program.
 ; axch suggestion; make foreign SP
 (assume kepler
@@ -23,9 +26,6 @@
           (earth_radius 6378)
           (a (+ (* .5 (+ (abs apogee) (abs perigee))) earth_radius)))
       (/ (* (* 2 3.1415) (sqrt (/ (pow a 3) GM))) 60))))
-; (load_plugin "kepler.py")
-
-(load_plugin "absorbing_apply.py")
 
 ; Cluster sampler and assignemnts (z i).
 (assume alpha (gamma 2 .5))
