@@ -1,14 +1,15 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.stats import invgamma, norm
 
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
+from scipy.stats import invgamma, norm
+
+import venture.lite.types as vt
+from venture.lite.sp_help import deterministic_typed
 
 from gpmcc.dists.normal import Normal
-
-satellites = pd.read_csv('satellites.csv')
 
 def satellite_period_minutes(apogee_km, perigee_km):
     """Period of satellite with specified apogee and perigee.
@@ -18,10 +19,33 @@ def satellite_period_minutes(apogee_km, perigee_km):
     a = 0.5*(abs(apogee_km) + abs(perigee_km)) + EARTH_RADIUS
     return 2 * np.pi * np.sqrt(a**3/GM) / 60.
 
+def simulate_params(m, V, a, b):
+    # Simulate the mean and variance from NormalInverseGamma.
+    # https://en.wikipedia.org/wiki/Normal-inverse-gamma_distribution#Generating_normal-inverse-gamma_random_variates
+    sigma2 = invgamma.rvs(a, scale=b)
+    mu = norm.rvs(loc=m, scale=np.sqrt(sigma2*V))
+    return (mu, sigma2)
+
+def plot_samples(samples):
+    fig, ax = plt.subplots()
+    for x in samples:
+        ax.vlines(x, 0, .1, linewidth=1)
+    ax.set_ylim([0, 1])
+
+def __venture_start__(ripl, *args):
+    kepler_sp = deterministic_typed(satellite_period_minutes,
+        [vt.NumberType(), vt.NumberType()], vt.NumberType())
+    ripl.bind_foreign_sp('kepler', kepler_sp)
+
+
+# Load the dataset and add an extra column.
+satellites = pd.read_csv('satellites.csv')
+satellites['Period_minutes_kepler'] = satellite_period_minutes(
+    satellites['Apogee_km'], satellites['Perigee_km'])
+
+# Extract columns for reuse.
 A = satellites['Apogee_km']
 P = satellites['Perigee_km']
-
-satellites['Period_minutes_kepler'] = satellite_period_minutes(A, P)
 T = satellites['Period_minutes']
 TT = satellites['Period_minutes_kepler']
 
@@ -40,19 +64,6 @@ if plot:
     ax.set_xlabel('Apogee', fontweight='bold')
     ax.set_ylabel('Perigee', fontweight='bold')
     ax.set_zlabel('Period', fontweight='bold')
-
-def simulate_params(m, V, a, b):
-    # Simulate the mean and variance from NormalInverseGamma.
-    # https://en.wikipedia.org/wiki/Normal-inverse-gamma_distribution#Generating_normal-inverse-gamma_random_variates
-    sigma2 = invgamma.rvs(a, scale=b)
-    mu = norm.rvs(loc=m, scale=np.sqrt(sigma2*V))
-    return (mu, sigma2)
-
-def plot_samples(samples):
-    fig, ax = plt.subplots()
-    for x in samples:
-        ax.vlines(x, 0, .1, linewidth=1)
-    ax.set_ylim([0, 1])
 
 # Plot a clustering of satellites on the 2D plane.
 Zr = np.loadtxt('clusters.txt', delimiter=',')
@@ -74,3 +85,6 @@ ax.set_ylabel('Perigee [km]', fontweight='bold')
 ax.set_zlabel('Period [mins]', fontweight='bold')
 # ax.set_zlim([0,2000])
 ax.set_title('Learned Mixture', fontweight='bold')
+
+
+

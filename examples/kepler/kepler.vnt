@@ -23,7 +23,7 @@
           (earth_radius 6378)
           (a (+ (* .5 (+ (abs apogee) (abs perigee))) earth_radius)))
       (/ (* (* 2 3.1415) (sqrt (/ (pow a 3) GM))) 60))))
-; (load_plugin "kepler_plugin.py")
+; (load_plugin "kepler.py")
 
 ; Cluster sampler and assignemnts (z i).
 (assume alpha (gamma 2 .5))
@@ -80,7 +80,7 @@
 (pyexec "from venture.lite.value import VentureValue as VV")
 (pyexec "data = pd.read_csv('satellites.csv').itertuples()")
 
-[define n_samples 500]
+[define n_samples 1000]
 [define observation
   (lambda ()
     (run (pyeval "VV.fromStackDict(vd.vector(list(data.next())))")))]
@@ -91,9 +91,6 @@
 
 ; Importance sampling with resampling.
 ; Simulate (A,P)|T for a fresh satellite.
-; Impl ISR in the inference language directly. One of the challenge problems
-; did this operation in some combination of plugins and inference language.
-; QMR 10K particle weighting as solution.
 ; Make a scope
 [define simulate_joint
   (lambda (period_val)
@@ -104,7 +101,7 @@
           ;   (do
               ; (mh (atom -1) 'z 100)
               ; (hmc (atom -1) all .5 100 50)))
-          (mh (atom -1) one 1000)
+          (mh (atom -1) one 10000)
           (result <- (sample
                       (list (apogee (atom -1))
                             (perigee (atom -1))
@@ -114,9 +111,8 @@
           (forget 'foo)
           (return result))))]
 
-
 ; Inference program.
 (print "Inferring")
-[infer (mh 'default 'one 10000)]
+[infer (mh default one 10000)]
 [define assignments
   (run (mapM (lambda (i) (sample (z (atom ,i)))) (arange n_samples)))]
