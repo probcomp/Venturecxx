@@ -14,6 +14,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import math
+import multiprocessing
 import sqlite3
 
 import bayeslite.core as core
@@ -50,6 +52,7 @@ CREATE TABLE bayesdb_vsgpm_ripl (
 class VsGpm(object):
     def __init__(self):
         self.hack_in_memory_cache = {}
+        self.multithread = False
 
     def name(self):
         return 'vsgpm'
@@ -88,18 +91,12 @@ class VsGpm(object):
 
     def initialize_models(self, bdb, generator_id, modelnos, _model_config):
         program = self._program(bdb, generator_id)
-        # data = self._data(bdb, generator_id)
-        for modelno in modelnos:
+        data = self._data(bdb, generator_id)
+        _, mapper = self._mapper()
+        ripls = mapper(multiproc_observer, ((program, data) for _ in modelnos))
+        for ripls, modelno in zip(ripls, modelnos):
             ripl = vs.make_lite_church_prime_ripl()
-            ripl.execute_program(program)
-            ripl.execute_program('''
-                (assume get_cell (lambda (col rowid)
-                    ((lookup (list u x) col) rowid)))''')
-            # Note: This is not ripl.observe_dataset because I want to
-            # give the inference program a chance to do something
-            # between each row, if it wants.
-            # for row in data:
-            #     ripl.infer(v.app(v.sym("datum"), v.quote(row)))
+            ripl.loads(ripls)
             self._save_ripl(bdb, generator_id, modelno, ripl)
 
     def analyze_models(self, bdb, generator_id, modelnos=None, iterations=1,
@@ -124,6 +121,16 @@ class VsGpm(object):
                 results[k].append(rc_sample)
         return results
 
+    def set_multithread(self, multithread=None):
+        self.multithread = multithread
+
+    def _mapper(self):
+        pool, mapper = None, map
+        if self.multithread:
+            pool = multiprocessing.Pool(multiprocessing.cpu_count())
+            mapper = pool.map
+        return pool, mapper
+
     def _parse_schema(self, bdb, schema):
         program = None
         columns = []
@@ -132,7 +139,21 @@ class VsGpm(object):
                     len(directive) == 2 and \
                     isinstance(directive[0], (str, unicode)) and \
                     casefold(directive[0]) == 'program':
+                if program:
+                    raise BQLError(bdb, 'Cannot specify both program and '
+                        'source in vsgpm schema.')
                 program = directive[1][0]
+                continue
+            if isinstance(directive, list) and \
+                    len(directive) == 2 and \
+                    isinstance(directive[0], (str, unicode)) and \
+                    casefold(directive[0]) == 'source':
+                if program:
+                    raise BQLError(bdb, 'Cannot specify both program and '
+                        'source in vsgpm schema.')
+                filename = ''.join(directive[1])
+                with open(filename, 'r') as program:
+                    program = program.read()
                 continue
             if isinstance(directive, list) and \
                     len(directive) == 2 and \
@@ -264,6 +285,17 @@ class VsGpm(object):
     def _remap_targets(self, bdb, generator_id, targets):
         column_map = self._column_map(bdb, generator_id)
         return [(row, column_map[col]) for (row, col) in targets]
+
+def multiproc_observer((program, data)):
+    print 'Launching'
+    ripl = vs.make_lite_church_prime_ripl()
+    ripl.execute_program(program)
+    for i, row in enumerate(data):
+        for j, val in enumerate(row):
+            if val is not None and not math.isnan(val):
+                ripl.observe(
+                    '(get_cell (atom %i) %i)' % (i, j), val)
+    return ripl.saves()
 
 class NullBox(object):
     def get(self):
