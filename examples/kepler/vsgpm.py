@@ -14,7 +14,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-import logging
 import math
 import sqlite3
 
@@ -92,20 +91,16 @@ class VsGpm(object):
         program = self._program(bdb, generator_id)
         data =self._data(bdb, generator_id)
         # XXX There must be a faster way to observer the data.
-        logging.info('Initializing %i models.' % len(modelnos))
         ripl = vs.make_lite_church_prime_ripl()
         ripl.execute_program(program)
-        logging.info('Resampling %i models.' % len(modelnos))
         ripl.infer('(resample %i)' % len(modelnos))
         ripl.assume('get_cell',
             '(lambda (i col) ((lookup columns col) i))')
-        logging.info('Observing data.' % len(modelnos))
         for i, row in enumerate(data):
             for j, val in enumerate(row):
                 if val is not None and not math.isnan(val):
                     ripl.observe('(get_cell (atom %i) %i)' % (i, j), val)
         self._save_ripl(bdb, generator_id, 0, ripl)
-        logging.info('Initialization complete.')
 
     def analyze_models(self, bdb, generator_id, modelnos=None, iterations=1,
             max_seconds=None, ckpt_iterations=None, ckpt_seconds=None):
