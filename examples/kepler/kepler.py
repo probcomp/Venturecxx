@@ -38,53 +38,51 @@ def __venture_start__(ripl, *args):
     ripl.bind_foreign_sp('kepler', kepler_sp)
 
 
-# Load the dataset and add an extra column.
-satellites = pd.read_csv('satellites.csv')
-satellites['Period_minutes_kepler'] = satellite_period_minutes(
-    satellites['Apogee_km'], satellites['Perigee_km'])
+if __name__ == '__main__':
+    # Load the dataset and add an extra column.
+    satellites = pd.read_csv('satellites.csv')
+    satellites['Period_minutes_kepler'] = satellite_period_minutes(
+        satellites['Apogee_km'], satellites['Perigee_km'])
 
-# Extract columns for reuse.
-A = satellites['Apogee_km']
-P = satellites['Perigee_km']
-T = satellites['Period_minutes']
-TT = satellites['Period_minutes_kepler']
+    # Extract columns for reuse.
+    A = satellites['Apogee_km']
+    P = satellites['Perigee_km']
+    T = satellites['Period_minutes']
+    TT = satellites['Period_minutes_kepler']
 
-x, y = np.linspace(0, 100000, 100), np.linspace(0, 100000, 100)
-X, Y = np.meshgrid(x, y)
-X, Y = X[Y<X], Y[Y<X]
-Z = satellite_period_minutes(X, Y)
+    x, y = np.linspace(0, 100000, 100), np.linspace(0, 100000, 100)
+    X, Y = np.meshgrid(x, y)
+    X, Y = X[Y<X], Y[Y<X]
+    Z = satellite_period_minutes(X, Y)
 
-plot = 0
-if plot:
+    plot = 0
+    if plot:
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.plot_trisurf(X, Y, Z, alpha=.2,)
+        ax.scatter(A, P, T, color='red')
+        ax.set_zlim([0, 500])
+        ax.set_xlabel('Apogee', fontweight='bold')
+        ax.set_ylabel('Perigee', fontweight='bold')
+        ax.set_zlabel('Period', fontweight='bold')
+
+    # Plot a clustering of satellites on the 2D plane.
+    Zr = np.loadtxt('clusters.txt', delimiter=',')
+    Q = np.genfromtxt('satellites.csv', delimiter=',', skip_header=1,
+        missing_values='')
+    clusters = [[Q[i] for i in xrange(len(Q)) if Zr[i] == j] for j in set(Zr)]
+    clusters.sort(key=lambda c: len(c), reverse=True)
+
+    # Plot the clusters.
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    ax.plot_trisurf(X, Y, Z, alpha=.2,)
-    ax.scatter(A, P, T, color='red')
-    ax.set_zlim([0, 500])
+    colors = ['blue','red','lightgreen','yellow','maroon','black','cyan','darkorchid',
+        'pink','green','turquoise']
+    for i,c in enumerate(clusters):
+        data = np.asarray(c)
+        ax.scatter(data[:,0], data[:,1], data[:,2], color=colors[i])
     ax.set_xlabel('Apogee', fontweight='bold')
-    ax.set_ylabel('Perigee', fontweight='bold')
-    ax.set_zlabel('Period', fontweight='bold')
-
-# Plot a clustering of satellites on the 2D plane.
-Zr = np.loadtxt('clusters.txt', delimiter=',')
-Q = np.genfromtxt('satellites.csv', delimiter=',', skip_header=1,
-    missing_values='')
-clusters = [[Q[i] for i in xrange(len(Q)) if Zr[i] == j] for j in set(Zr)]
-clusters.sort(key=lambda c: len(c), reverse=True)
-
-# Plot the clusters.
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-colors = ['blue','red','lightgreen','yellow','maroon','black','cyan','darkorchid',
-    'pink','green','turquoise']
-for i,c in enumerate(clusters):
-    data = np.asarray(c)
-    ax.scatter(data[:,0], data[:,1], data[:,2], color=colors[i])
-ax.set_xlabel('Apogee', fontweight='bold')
-ax.set_ylabel('Perigee [km]', fontweight='bold')
-ax.set_zlabel('Period [mins]', fontweight='bold')
-# ax.set_zlim([0,2000])
-ax.set_title('Learned Mixture', fontweight='bold')
-
-
-
+    ax.set_ylabel('Perigee [km]', fontweight='bold')
+    ax.set_zlabel('Period [mins]', fontweight='bold')
+    # ax.set_zlim([0,2000])
+    ax.set_title('Learned Mixture', fontweight='bold')
