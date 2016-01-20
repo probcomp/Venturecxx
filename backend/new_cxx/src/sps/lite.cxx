@@ -271,6 +271,17 @@ void ForeignLiteSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
   sp.attr("AEInfer")(foreignAux);
 }
 
+ForeignLiteSP* ForeignLiteSP::copy_help(ForwardingMap* forward) const
+{
+  ForeignLiteSP* answer = new ForeignLiteSP(*this);
+  (*forward)[this] = answer;
+  answer->requestPSP = copy_shared(this->requestPSP, forward);
+  answer->outputPSP = copy_shared(this->outputPSP, forward);
+  // TODO I should deep-copy the sp field too, but shallow is OK if
+  // there are no examples where its methods mutate it.
+  return answer;
+}
+
 boost::python::dict ForeignLiteSP::toPython(Trace * trace,
                                             shared_ptr<SPAux> spAux) const
 {
