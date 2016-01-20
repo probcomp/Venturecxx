@@ -139,6 +139,15 @@ void UBetaBernoulliSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gs
   aux->p = gsl_ran_beta(rng,alpha + heads,beta + tails);
 }
 
+UBetaBernoulliSP* UBetaBernoulliSP::copy_help(ForwardingMap* forward) const
+{
+  UBetaBernoulliSP* answer = new UBetaBernoulliSP(*this);
+  (*forward)[this] = answer;
+  answer->requestPSP = copy_shared(this->requestPSP, forward);
+  answer->outputPSP = copy_shared(this->outputPSP, forward);
+  return answer;
+}
+
 // Uncollapsed PSP
 
 VentureValuePtr UBetaBernoulliOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const

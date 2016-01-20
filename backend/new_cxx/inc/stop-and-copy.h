@@ -26,4 +26,7 @@ struct ForwardingMap
   void*& operator[] (const void* const k);
 };
 
+template <typename T>
+boost::shared_ptr<T> copy_shared(const boost::shared_ptr<T>& v, ForwardingMap* forward);
+
 #endif

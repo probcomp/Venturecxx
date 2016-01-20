@@ -187,4 +187,5 @@ def checkAAAResampleSmoke(sp):
   get_ripl().execute_program("""
 (assume foo %s)
 (resample 4)
+(mh default one 1)
 """ % sp)

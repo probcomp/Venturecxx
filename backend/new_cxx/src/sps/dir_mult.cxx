@@ -302,6 +302,15 @@ void UCSymDirMultSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_
   delete[] conjAlphaVector;
 }
 
+UCSymDirMultSP* UCSymDirMultSP::copy_help(ForwardingMap* forward) const
+{
+  UCSymDirMultSP* answer = new UCSymDirMultSP(*this);
+  (*forward)[this] = answer;
+  answer->requestPSP = copy_shared(this->requestPSP, forward);
+  answer->outputPSP = copy_shared(this->outputPSP, forward);
+  return answer;
+}
+
 VentureValuePtr UCSymDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   shared_ptr<UCDirMultSPAux> aux = dynamic_pointer_cast<UCDirMultSPAux>(args->spAux);
@@ -430,6 +439,15 @@ void UCDirMultSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng
   }
 
   gsl_ran_dirichlet(rng,n,conjAlphaVector,&aux->theta[0]);
+}
+
+UCDirMultSP* UCDirMultSP::copy_help(ForwardingMap* forward) const
+{
+  UCDirMultSP* answer = new UCDirMultSP(*this);
+  (*forward)[this] = answer;
+  answer->requestPSP = copy_shared(this->requestPSP, forward);
+  answer->outputPSP = copy_shared(this->outputPSP, forward);
+  return answer;
 }
 
 VentureValuePtr UCDirMultOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const

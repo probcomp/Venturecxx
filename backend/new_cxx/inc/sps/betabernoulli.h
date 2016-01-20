@@ -79,6 +79,7 @@ struct UBetaBernoulliSP : SP
 
   bool hasAEKernel() const { return true; }
   void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng * rng) const;
+  UBetaBernoulliSP* copy_help(ForwardingMap* m) const;
 };
 
 struct UBetaBernoulliOutputPSP : RandomPSP

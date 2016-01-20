@@ -118,6 +118,7 @@ struct UCSymDirMultSP : SP
 
   bool hasAEKernel() const { return true; }
   void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng * rng) const;
+  UCSymDirMultSP* copy_help(ForwardingMap* m) const;
 };
 
 struct UCSymDirMultOutputPSP : RandomPSP
@@ -149,6 +150,7 @@ struct UCDirMultSP : SP
 
   bool hasAEKernel() const { return true; }
   void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng * rng) const;
+  UCDirMultSP* copy_help(ForwardingMap* m) const;
 };
 
 struct UCDirMultOutputPSP : RandomPSP
