@@ -126,6 +126,7 @@ def logpdf(X, Mu, Sigma):
   #         - (n/2) log (2 pi) - log sqrt(det Sigma).
   #
   n = len(X)
+  assert X.shape == (n,)
   assert Mu.shape == (n,)
   assert Sigma.shape == (n, n)
 
