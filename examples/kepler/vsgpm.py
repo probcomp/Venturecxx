@@ -18,6 +18,8 @@ import math
 import multiprocessing
 import sqlite3
 
+import numpy as np
+
 import bayeslite.core as core
 import venture.value.dicts as vd
 import venture.shortcuts as vs
@@ -90,15 +92,30 @@ class VsGpm(object):
 
     def initialize_models(self, bdb, generator_id, modelnos, _model_config):
         program = self._program(bdb, generator_id)
-        data = self._data(bdb, generator_id)
+        data = np.asarray(self._data(bdb, generator_id)).astype(float)
+        nrows, ncols = data.shape
+        rowids = np.arange(nrows)
+        # import ipdb; ipdb.set_trace()
         # XXX There must be a faster way to observer the data.
         for modelno in modelnos:
             ripl = vs.make_lite_church_prime_ripl()
             ripl.execute_program(program)
-            for i, row in enumerate(data):
-                for j, val in enumerate(row):
-                    if val is not None and not math.isnan(val):
-                        ripl.observe('(get_cell (atom %i) %i)' % (i, j), val)
+            ripl.assume('observer',
+                '(lambda (i j) (get_cell (atom i) j))', label='observer')
+            import time
+            start = time.time()
+            for colid in xrange(ncols):
+                print colid
+                Q = np.column_stack(
+                    (rowids, np.repeat(colid, nrows), data[:,colid]))
+                Q = Q[~np.isnan(Q[:,2])]
+                ripl.observe_dataset('observer', Q)
+            ripl.forget('observer')
+            # for i, row in enumerate(data):
+            #     for j, val in enumerate(row):
+            #         print i,j
+            #         if val is not None and not math.isnan(val):
+            #             ripl.observe('(get_cell (atom %i) %i)' % (i, j), val)
             self._save_ripl(bdb, generator_id, modelno, ripl)
 
     def analyze_models(self, bdb, generator_id, modelnos=None, iterations=1,
@@ -150,8 +167,8 @@ class VsGpm(object):
             if isinstance(directive, list) and \
                     len(directive) == 2 and \
                     isinstance(directive[0], (str, unicode)) and \
-                    casefold(directive[0]) == 'columns' and \
-                    isinstance(directive[1], (list)):
+                    casefold(directive[0]) in ['columns','observed', 'exposed'] \
+                    and isinstance(directive[1], (list)):
                 L = [x for x in directive[1] if x != ',']
                 columns.extend(zip(L[::2],L[1::2]))
                 continue
@@ -203,7 +220,7 @@ class VsGpm(object):
         cursor = bdb.sql_execute('''
             SELECT %s FROM %s AS t
         ''' % (','.join('t.%s' % (qcn,) for qcn in qcns), qt))
-        return [row for row in cursor]
+        return cursor.fetchall()
 
     def _ripl(self, bdb, generator_id, model_no):
         if (generator_id, model_no) not in self.memory_cache:
