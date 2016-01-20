@@ -92,31 +92,19 @@ class VsGpm(object):
 
     def initialize_models(self, bdb, generator_id, modelnos, _model_config):
         program = self._program(bdb, generator_id)
-        data = np.asarray(self._data(bdb, generator_id)).astype(float)
-        nrows, ncols = data.shape
-        rowids = np.arange(nrows)
+        data =self._data(bdb, generator_id)
         # import ipdb; ipdb.set_trace()
         # XXX There must be a faster way to observer the data.
+        print 'Initializing VsGpm'
         for modelno in modelnos:
             ripl = vs.make_lite_church_prime_ripl()
             ripl.execute_program(program)
-            ripl.assume('observer',
-                '(lambda (i j) (get_cell (atom i) j))', label='observer')
-            import time
-            start = time.time()
-            for colid in xrange(ncols):
-                print colid
-                Q = np.column_stack(
-                    (rowids, np.repeat(colid, nrows), data[:,colid]))
-                Q = Q[~np.isnan(Q[:,2])]
-                ripl.observe_dataset('observer', Q)
-            ripl.forget('observer')
-            # for i, row in enumerate(data):
-            #     for j, val in enumerate(row):
-            #         print i,j
-            #         if val is not None and not math.isnan(val):
-            #             ripl.observe('(get_cell (atom %i) %i)' % (i, j), val)
+            for i, row in enumerate(data):
+                for j, val in enumerate(row):
+                    if val is not None and not math.isnan(val):
+                        ripl.observe('(get_cell (atom %i) %i)' % (i, j), val)
             self._save_ripl(bdb, generator_id, modelno, ripl)
+        print 'Initialized.'
 
     def analyze_models(self, bdb, generator_id, modelnos=None, iterations=1,
             max_seconds=None, ckpt_iterations=None, ckpt_seconds=None):
