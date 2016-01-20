@@ -30,10 +30,7 @@
 ; Cluster sampler and assignemnts (z i).
 (assume alpha (gamma 2 .5))
 (assume sim_cluster (make_crp alpha))
-(assume z
-  (mem (lambda (i)
-    (tag i 'z
-      (sim_cluster)))))
+(assume z (mem (lambda (i) (tag i (quote z) (sim_cluster)))))
 
 ; Samplers for apogee, perigee cluster c.
 (assume apogee_sampler (mem (lambda (c) (make_nig_normal 1.5e5 1e9 1 20))))
@@ -42,20 +39,26 @@
 ; Observations of apogee and perigee for satellite i.
 (assume apogee
   (mem (lambda (i)
-    (tag i 'apogee (absorbing_apply (apogee_sampler (z i)))))))
+    (tag i (quote apogee) (absorbing_apply (apogee_sampler (z i)))))))
 
 (assume perigee
   (mem (lambda (i)
-    (tag i 'perigee (absorbing_apply (perigee_sampler (z i)))))))
+    (tag i (quote perigee) (absorbing_apply (perigee_sampler (z i)))))))
 
 ; Kepler's law P(T|A,P).
 (assume noise (gamma 15 .5))
 (assume period
   (mem (lambda (i)
-    (tag i 'period
+    (tag i (quote period)
       (normal
         (kepler (apogee i) (perigee i))
         noise)))))
+
+; GPM interface commands.
+(assume features (list apogee perigee period))
+(assume get_cell (lambda (col row) ((lookup features col) row)))
+
+;; TODO MOVE ALL THIS NONSE TO SDGPM.
 
 ; Observation process.
 [define observer
