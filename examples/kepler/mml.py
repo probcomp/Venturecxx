@@ -27,9 +27,10 @@ from bdbcontrib import query
 from bdbcontrib.metamodels.composer import Composer
 from bdbcontrib.predictors import keplers_law
 
+from vsgpm import VsGpm
+
 timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
 bdb = bayeslite.bayesdb_open('bdb/%s.bdb' % timestamp)
-
 
 bayeslite.bayesdb_read_csv_file(bdb, 'satellites', 'satellites.csv',
     header=True, create=True)
@@ -38,6 +39,9 @@ bdbcontrib.nullify(bdb, 'satellites', '')
 composer = Composer()
 composer.register_foreign_predictor(keplers_law.KeplersLaw)
 bayeslite.bayesdb_register_metamodel(bdb, composer)
+
+vsgpm = VsGpm()
+bayeslite.bayesdb_register_metamodel(bdb, vsgpm)
 
 query(bdb, '''
     CREATE GENERATOR orbital_default FOR satellites USING crosscat(
@@ -60,8 +64,20 @@ query(bdb, '''
         DEPENDENT(Apogee_km, Perigee_km)
     );''')
 
-query(bdb, 'INITIALIZE 8 MODELS FOR orbital_default;')
-query(bdb, 'INITIALIZE 8 MODELS FOR orbital_kepler;')
 
-query(bdb, 'ANALYZE orbital_default FOR 10 ITERATION WAIT;')
-query(bdb, 'ANALYZE orbital_kepler FOR 10 ITERATION WAIT;')
+query(bdb, '''
+    CREATE GENERATOR ven_kep FOR satellites USING vsgpm(
+        columns (
+            Apogee_km NUMERICAL, Perigee_km NUMERICAL,
+            Period_minutes NUMERICAL),
+        source (
+            kepler.vnt
+        ));''')
+
+query(bdb, 'INITIALIZE 2 MODELS FOR ven_kep')
+
+# query(bdb, 'INITIALIZE 8 MODELS FOR orbital_default;')
+# query(bdb, 'INITIALIZE 8 MODELS FOR orbital_kepler;')
+
+# query(bdb, 'ANALYZE orbital_default FOR 10 ITERATION WAIT;')
+# query(bdb, 'ANALYZE orbital_kepler FOR 10 ITERATION WAIT;')
