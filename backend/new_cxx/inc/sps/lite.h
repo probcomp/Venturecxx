@@ -62,8 +62,7 @@ struct ForeignLitePSP : PSP
 struct ForeignLiteSPAux : SPAux
 {
   ForeignLiteSPAux(boost::python::object aux): aux(aux) {}
-  SPAux* copy_help(ForwardingMap* m) const {
-    return new ForeignLiteSPAux(aux.attr("copy")()); }
+  ForeignLiteSPAux* copy_help(ForwardingMap* m) const;
   boost::python::object aux;
 };
 
@@ -123,6 +122,7 @@ struct ForeignLiteSP : SP
   void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
                gsl_rng * rng) const;
 
+  ForeignLiteSP* copy_help(ForwardingMap* m) const;
   boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;
 
   boost::python::object sp;

@@ -95,7 +95,7 @@ Node* ConcreteTrace::bindPrimitiveSP(const string& name, SP* sp)
 /* Registering metadata */
 void ConcreteTrace::registerAEKernel(Node * node)
 {
-  assert(!arbitraryErgodicKernels.count(node));
+  assert(arbitraryErgodicKernels.count(node) == 0);
   arbitraryErgodicKernels.insert(node);
 }
 
@@ -139,7 +139,7 @@ void ConcreteTrace::registerConstrainedChoice(Node * node) {
 /* Unregistering metadata */
 void ConcreteTrace::unregisterAEKernel(Node * node)
 {
-  assert(arbitraryErgodicKernels.count(node));
+  assert(arbitraryErgodicKernels.count(node) > 0);
   arbitraryErgodicKernels.erase(node);
 }
 

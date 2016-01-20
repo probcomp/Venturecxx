@@ -32,14 +32,14 @@ struct Node
   virtual Node* copy_help(ForwardingMap* m) const =0;
 };
 
-struct ConstantNode : Node 
+struct ConstantNode : Node
 {
   ConstantNode(VentureValuePtr exp): Node(exp) {}
   ConstantNode* copy_help(ForwardingMap* m) const;
 };
 
-struct LookupNode : Node 
-{ 
+struct LookupNode : Node
+{
   LookupNode(Node * sourceNode, VentureValuePtr exp);
   vector<Node*> getDefiniteParents() { vector<Node*> dps; dps.push_back(sourceNode); return dps; }
   Node * sourceNode;

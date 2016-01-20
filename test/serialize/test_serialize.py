@@ -127,8 +127,6 @@ def test_serialize_aaa():
     def check_beta_bernoulli(maker, action):
         if maker == "make_uc_beta_bernoulli" and action in ['serialize', 'convert_lite', 'convert_puma']:
             raise SkipTest("Cannot convert BetaBernoulliSP to a stack dictionary. Issue: https://app.asana.com/0/9277420529946/16149214487233")
-        elif action == 'copy' and config['get_ripl'] == 'puma':
-            raise SkipTest("Fails due to a mystery bug in Puma stop_and_copy. Issue: https://app.asana.com/0/11127829865276/13039650533872")
         v = get_ripl()
         v.assume('a', '(normal 10.0 1.0)')
         v.assume('f', '({0} a a)'.format(maker))
@@ -141,8 +139,6 @@ def test_serialize_aaa():
             yield check_beta_bernoulli, maker, action
 
     def check_crp(maker, action):
-        if action == 'copy' and config['get_ripl'] == 'puma':
-            raise SkipTest("Fails due to a mystery bug in Puma stop_and_copy. Issue: https://app.asana.com/0/11127829865276/13039650533872")
         v = get_ripl()
         v.assume('a', '(gamma 1.0 1.0)')
         v.assume('f', '({0} a)'.format(maker))

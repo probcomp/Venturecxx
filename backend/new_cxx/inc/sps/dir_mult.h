@@ -22,6 +22,7 @@
 #include "psp.h"
 #include "args.h"
 #include "sp.h"
+#include "stop-and-copy.h"
 
 // Collapsed SPAux
 struct DirMultSPAux : SPAux
@@ -29,7 +30,7 @@ struct DirMultSPAux : SPAux
   DirMultSPAux(int n) : counts(n, 0), total(0) {}
   vector<int> counts;
   int total;
-  SPAux* copy_help(ForwardingMap* m) const;
+  DirMultSPAux* copy_help(ForwardingMap* m) const;
   boost::python::object toPython(Trace * trace) const;
 };
 
@@ -45,7 +46,7 @@ struct SymDirMultSP : SP
 {
   SymDirMultSP(double alpha, size_t n);
   boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;
-  
+
   // for toPython
   const double alpha;
   const size_t n;
@@ -100,7 +101,7 @@ private:
 struct UCDirMultSPAux : DirMultSPAux
 {
   UCDirMultSPAux(int n): DirMultSPAux(n), theta(n,0) {}
-  SPAux* copy_help(ForwardingMap* m) const;
+  UCDirMultSPAux* copy_help(ForwardingMap* m) const;
   vector<double> theta;
 };
 
@@ -117,6 +118,7 @@ struct UCSymDirMultSP : SP
 
   bool hasAEKernel() const { return true; }
   void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng * rng) const;
+  UCSymDirMultSP* copy_help(ForwardingMap* m) const;
 };
 
 struct UCSymDirMultOutputPSP : RandomPSP
@@ -148,6 +150,7 @@ struct UCDirMultSP : SP
 
   bool hasAEKernel() const { return true; }
   void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng * rng) const;
+  UCDirMultSP* copy_help(ForwardingMap* m) const;
 };
 
 struct UCDirMultOutputPSP : RandomPSP

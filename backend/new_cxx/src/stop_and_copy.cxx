@@ -53,6 +53,10 @@
 // because copy_pointer encapsulates the cycle-breaking at the heart
 // of the algorithm (and calls the object's copy_help method only if
 // needed).
+//
+// Note also that one needs to #include "stop-and-copy.h" for the
+// above template to work.  I found the compilation error rather
+// inscrutable.
 
 size_t ForwardingMap::count(const void* k) const
 {
