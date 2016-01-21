@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from venture.test.config import broken_in
 from venture.test.config import collectSamples
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
@@ -84,6 +85,7 @@ def testHMMSP2():
   ans = [(0,0.6528), (1,0.3472)]
   return reportKnownDiscrete(ans, predictions)
 
+@broken_in('lite', "https://github.com/probcomp/Venturecxx/issues/342")
 def testHMMResampleSmoke():
   ripl = get_ripl()
   ripl.assume("f","""
