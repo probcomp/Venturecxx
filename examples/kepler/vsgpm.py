@@ -16,6 +16,7 @@
 
 import math
 import sqlite3
+import time
 
 import bayeslite.core as core
 import venture.value.dicts as vd
@@ -32,25 +33,26 @@ vsgpm_schema_1 = [
 INSERT INTO bayesdb_metamodel (name, version) VALUES ('vsgpm', 1);
 ''','''
 CREATE TABLE bayesdb_vsgpm_program (
-	generator_id    INTEGER NOT NULL PRIMARY KEY
-        REFERENCES bayesdb_generator(id),
-	program    TEXT NOT NULL
+    generator_id    INTEGER NOT NULL PRIMARY KEY
+                        REFERENCES bayesdb_generator(id),
+    program         TEXT NOT NULL
 );
 ''','''
 CREATE TABLE bayesdb_vsgpm_ripl (
-	generator_id	INTEGER NOT NULL
-        REFERENCES bayesdb_generator(id),
-	modelno    INTEGER NOT NULL,
-	ripl_binary	BLOB NOT NULL,
-	PRIMARY KEY(generator_id, modelno),
-	FOREIGN KEY(generator_id, modelno)
-		REFERENCES bayesdb_generator_model(generator_id, modelno)
+    generator_id   INTEGER NOT NULL REFERENCES bayesdb_generator(id),
+    modelno        INTEGER NOT NULL,
+    ripl_binary    BLOB NOT NULL,
+    PRIMARY KEY(generator_id, modelno),
+    FOREIGN KEY(generator_id, modelno)
+        REFERENCES bayesdb_generator_model(generator_id, modelno)
 );
 ''']
 
 class VsGpm(object):
     def __init__(self):
         self.memory_cache = dict()
+        self.mh_steps = 2000
+        self.mh_thin = 100
 
     def name(self):
         return 'vsgpm'
@@ -89,22 +91,32 @@ class VsGpm(object):
 
     def initialize_models(self, bdb, generator_id, modelnos, _model_config):
         program = self._program(bdb, generator_id)
-        data =self._data(bdb, generator_id)
+        data = self._data(bdb, generator_id)
+        # import ipdb; ipdb.set_trace()
         # XXX There must be a faster way to observer the data.
-        ripl = vs.make_lite_church_prime_ripl()
-        ripl.execute_program(program)
-        ripl.infer('(resample %i)' % len(modelnos))
-        ripl.assume('get_cell',
-            '(lambda (i col) ((lookup columns col) i))')
-        for i, row in enumerate(data):
-            for j, val in enumerate(row):
-                if val is not None and not math.isnan(val):
-                    ripl.observe('(get_cell (atom %i) %i)' % (i, j), val)
-        self._save_ripl(bdb, generator_id, 0, ripl)
+        print 'Initializing VsGpm'
+        for modelno in modelnos:
+            ripl = vs.make_lite_church_prime_ripl()
+            ripl.execute_program(program)
+            ripl.assume('get_cell',
+                '(lambda (i col) ((lookup columns col) (atom i)))')
+            for i, row in enumerate(data):
+                for j, val in enumerate(row):
+                    if val is not None and not math.isnan(val):
+                        ripl.observe('(get_cell %i %i)' % (i, j), val)
+            # self._save_ripl(bdb, generator_id, modelno, ripl)
+            self.memory_cache[(generator_id, modelno)] = ripl
+        print 'Initialized.'
 
     def analyze_models(self, bdb, generator_id, modelnos=None, iterations=1,
             max_seconds=None, ckpt_iterations=None, ckpt_seconds=None):
-        return
+        if modelnos is None:
+            modelnos = core.bayesdb_generator_modelnos(bdb, generator_id)
+        for m in modelnos:
+            print 'Running MH.'
+            ripl = self._ripl(bdb, generator_id, m)
+            ripl.infer('(mh default one %i)' % iterations)
+            # self._save_ripl(bdb, generator_id, modelno, ripl)
 
     def simulate_joint(self, bdb, generator_id, targets, constraints, modelno,
             num_predictions=1):
@@ -112,16 +124,35 @@ class VsGpm(object):
         targets = self._remap_targets(bdb, generator_id, targets)
         n_model = len(core.bayesdb_generator_modelnos(bdb, generator_id))
         results = [[] for _ in xrange(num_predictions)]
-        for k in range(num_predictions):
-            m = bdb.np_prng.randint(0, high=n_model)
-            ripl = self._duplicate_ripl(bdb, generator_id, m)
-            for (rowid, col, val) in constraints:
-                ripl.observe('(get_cell %i %i)' % (rowid, col), val)
-            for rowid in set([r for (r, _, _) in constraints]):
-                ripl.infer('(mh %i one 250)' % rowid)
-            for (rowid, col) in targets:
-                rc_sample = ripl.predict('(get_cell %i %i)' % (rowid, col))
-                results[k].append(rc_sample)
+        # for k in xrange(num_predictions):
+        m = bdb.np_prng.randint(0, high=n_model)
+        # ripl = self._duplicate_ripl(bdb, generator_id, m)
+        ripl = self._ripl(bdb, generator_id, m)
+        # Observe the constraints.
+        clabel = 'l' + str(time.time()).replace('.','')
+        import ipdb; ipdb.set_trace()
+        for (row, col, val) in constraints:
+            ripl.observe('(get_cell %i %i)' % (row, col), val,
+                label='%s%i%i' % (clabel, row, col))
+        # Run mh_steps of inference.
+        for row in set([r for (r, _, _) in constraints]):
+            ripl.infer('(mh (atom %i) one %i)' % (row, self.mh_steps - self.mh_thin))
+        for k in xrange(num_predictions):
+            tlabel = 'l' + str(time.time()).replace('.','')
+            # Run mh_thin intermediate steps.
+            for row in set([constraint[0] for constraint in constraints]):
+                ripl.infer('(mh (atom %i) one %i)' % (row, self.mh_thin))
+            result = []
+            for (row, col) in targets:
+                rc_sample = ripl.predict('(get_cell %i %i)' % (row, col),
+                    label='%s%i%i' % (tlabel, row, col))
+                result.extend([rc_sample])
+            for (row, col) in targets:
+                ripl.forget('%s%i%i' % (tlabel, row, col))
+            results[k] = result
+        # Forget the constraints.
+        for (row, col, val) in constraints:
+            ripl.forget('%s%i%i' % (clabel, row, col))
         return results
 
     def _parse_schema(self, bdb, schema):
@@ -224,7 +255,6 @@ class VsGpm(object):
             'modelno': model_no,
             'ripl_binary': sqlite3.Binary(ripl_binary),
         })
-        self.memory_cache[(generator_id, model_no)] = ripl
 
     def _load_ripl(self, bdb, generator_id, model_no):
         sql = '''
