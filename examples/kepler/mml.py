@@ -45,6 +45,10 @@ bayeslite.bayesdb_register_metamodel(bdb, composer)
 vsgpm = VsGpm()
 bayeslite.bayesdb_register_metamodel(bdb, vsgpm)
 
+# Declare the competing GPMs.
+gpms = ['orbital_default', 'orbital_kepler', 'ven_kep']
+
+# Create the GPMs.
 query(bdb, '''
     CREATE GENERATOR orbital_default FOR satellites USING crosscat(
         Apogee_km NUMERICAL,
@@ -75,51 +79,26 @@ query(bdb, '''
             kepler.vnt
         ));''')
 
-print 'INITIALIZE'
-query(bdb, 'INITIALIZE 1 MODELS FOR orbital_default;')
-query(bdb, 'INITIALIZE 1 MODELS FOR orbital_kepler;')
-query(bdb, 'INITIALIZE 1 MODELS FOR ven_kep')
+print 'Initializing'
+for g in gpms:
+    query(bdb, 'INITIALIZE 1 MODELS FOR {gpm};'.format(gpm=g))
 
-print 'ANALYZE'
-query(bdb, 'ANALYZE orbital_default FOR 1000 ITERATION WAIT;')
-query(bdb, 'ANALYZE orbital_kepler FOR 1000 ITERATION WAIT;')
-query(bdb, 'ANALYZE ven_kep FOR 10000 ITERATION WAIT;')
+print 'Analyzing'
+for g in gpms:
+    query(bdb, 'ANALYZE {gpm} FOR {n_iter} ITERATION WAIT;'.format(
+        gpm=g, n_iter=1000))
 
-# DIFFICULT PERIOD
-D1 = query(bdb,
-    '''SIMULATE Apogee_km, Perigee_km FROM orbital_default
-        GIVEN Period_minutes = 7500 LIMIT 100''')
+Q1 = []
+for g in gpms:
+    Q1.append(query(bdb, '''SIMULATE Apogee_km, Perigee_km FROM {gpm}
+        GIVEN Period_minutes = 100 LIMIT 100'''.format(gpm=g)))
 
-K1 = query(bdb,
-    '''SIMULATE Apogee_km, Perigee_km FROM orbital_kepler
-        GIVEN Period_minutes = 7500 LIMIT 100''')
+Q2 = []
+for g in gpms:
+    Q2.append(query(bdb, '''SIMULATE Apogee_km, Perigee_km FROM {gpm}
+        GIVEN Period_minutes = 7500 LIMIT 100'''.format(gpm=g)))
 
-V1 = query(bdb,
-    '''SIMULATE Apogee_km, Perigee_km FROM ven_kep
-        GIVEN Period_minutes = 100 LIMIT 100''')
-
-# EASY PERIOD
-D2 = query(bdb,
-    '''SIMULATE Apogee_km, Perigee_km FROM orbital_default
-        GIVEN Period_minutes = 100 LIMIT 100''')
-
-K2 = query(bdb,
-    '''SIMULATE Apogee_km, Perigee_km FROM orbital_kepler
-        GIVEN Period_minutes = 100 LIMIT 100''')
-
-V2 = query(bdb,
-    '''SIMULATE Apogee_km, Perigee_km FROM ven_kep
-        GIVEN Period_minutes = 100 LIMIT 100''')
-
-# TRUE ANSWER
-D3 = query(bdb,
-    '''SIMULATE Apogee_km FROM orbital_default
-        GIVEN Perigee_km = 17800, Period_minutes = 900 LIMIT 100''')
-
-K3 = query(bdb,
-    '''SIMULATE Apogee_km FROM orbital_kepler
-        GIVEN Perigee_km = 17800, Period_minutes = 900 LIMIT 100''')
-
-V3 = query(bdb,
-    '''SIMULATE Apogee_km FROM ven_kep
-        GIVEN Perigee_km = 17800, Period_minutes = 900 LIMIT 100''')
+Q3 = []
+for g in gpms:
+    Q3.append(query(bdb, '''SIMULATE Apogee_km FROM {gpm} GIVEN
+        Perigee_km = 17800, Period_minutes = 900 LIMIT 100'''.format(gpm=g)))
