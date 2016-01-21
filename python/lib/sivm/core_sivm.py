@@ -18,6 +18,7 @@
 # -*- coding: utf-8 -*-
 
 import copy
+import cStringIO as StringIO
 
 from venture.exception import VentureException
 from venture.sivm import utils
@@ -49,27 +50,32 @@ class CoreSivm(object):
     # Serialization
     ###############################
 
-    def save(self, fname, extra=None):
+    def save_io(self, stream, extra=None):
         if extra is None:
             extra = {}
         extra['observe_dict'] = self.observe_dict
-        return self.engine.save(fname, extra)
+        return self.engine.save_io(stream, extra)
 
-    def load(self, fname):
-        extra = self.engine.load(fname)
+    def load_io(self, stream):
+        extra = self.engine.load_io(stream)
         self.observe_dict = extra['observe_dict']
         return extra
+
+    def save(self, fname, extra=None):
+        with open(fname, 'w') as fp:
+            self.save_io(fp, extra=extra)
 
     def saves(self, extra=None):
-        if extra is None:
-            extra = {}
-        extra['observe_dict'] = self.observe_dict
-        return self.engine.saves(extra)
+        ans = StringIO.StringIO()
+        self.save_io(ans, extra=extra)
+        return ans.getvalue()
+
+    def load(self, fname):
+        with open(fname) as fp:
+            return self.load_io(fp)
 
     def loads(self, string):
-        extra = self.engine.loads(string)
-        self.observe_dict = extra['observe_dict']
-        return extra
+        return self.load_io(StringIO.StringIO(string))
 
     ###############################
     # Instruction implementations

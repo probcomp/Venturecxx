@@ -46,6 +46,7 @@ Typical usage begins by using one of the factory functions in the
 
 '''
 
+import cStringIO as StringIO
 import numbers
 import os
 import re
@@ -850,31 +851,36 @@ Open issues:
     # Serialization
     ############################################
 
-    def save(self, fname):
-        extra = {}
+    def save_io(self, stream, extra=None):
+        if extra is None:
+            extra = {}
         extra['directive_id_to_stringable_instruction'] = \
             self.directive_id_to_stringable_instruction
         extra['directive_id_to_mode'] = self.directive_id_to_mode
-        return self.sivm.save(fname, extra)
+        return self.sivm.save_io(stream, extra)
+
+    def load_io(self, stream):
+        extra = self.sivm.load_io(stream)
+        self.directive_id_to_stringable_instruction = \
+            extra['directive_id_to_stringable_instruction']
+        self.directive_id_to_mode = extra['directive_id_to_mode']
+        return extra
+
+    def save(self, fname, extra=None):
+        with open(fname, 'w') as fp:
+            self.save_io(fp, extra=extra)
+
+    def saves(self, extra=None):
+        ans = StringIO.StringIO()
+        self.save_io(ans, extra=extra)
+        return ans.getvalue()
 
     def load(self, fname):
-        extra = self.sivm.load(fname)
-        self.directive_id_to_stringable_instruction = \
-            extra['directive_id_to_stringable_instruction']
-        self.directive_id_to_mode = extra['directive_id_to_mode']
-
-    def saves(self):
-        extra = {}
-        extra['directive_id_to_stringable_instruction'] = \
-            self.directive_id_to_stringable_instruction
-        extra['directive_id_to_mode'] = self.directive_id_to_mode
-        return self.sivm.saves(extra)
+        with open(fname) as fp:
+            return self.load_io(fp)
 
     def loads(self, string):
-        extra = self.sivm.loads(string)
-        self.directive_id_to_stringable_instruction = \
-            extra['directive_id_to_stringable_instruction']
-        self.directive_id_to_mode = extra['directive_id_to_mode']
+        return self.load_io(StringIO.StringIO(string))
 
     ############################################
     # Error reporting control
