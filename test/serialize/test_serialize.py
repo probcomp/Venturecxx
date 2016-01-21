@@ -169,7 +169,7 @@ def test_serialize_aaa():
 @gen_on_inf_prim("mh") # Easy to generalize but little testing value
 def test_serialize_latents():
     def check(action):
-        raise SkipTest("Cannot serialize latents")
+        raise SkipTest("Cannot serialize latents https://github.com/probcomp/Venturecxx/issues/342")
         v = get_ripl()
         v.assume('f','''\
     (make_lazy_hmm
