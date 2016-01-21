@@ -92,7 +92,6 @@ class VsGpm(object):
     def initialize_models(self, bdb, generator_id, modelnos, _model_config):
         program = self._program(bdb, generator_id)
         data = self._data(bdb, generator_id)
-        # import ipdb; ipdb.set_trace()
         # XXX There must be a faster way to observer the data.
         print 'Initializing VsGpm'
         for modelno in modelnos:
@@ -116,7 +115,7 @@ class VsGpm(object):
             print 'Running MH.'
             ripl = self._ripl(bdb, generator_id, m)
             ripl.infer('(mh default one %i)' % iterations)
-            # self._save_ripl(bdb, generator_id, modelno, ripl)
+            # self._save_ripl(bdb, generator_id, m, ripl)
 
     def simulate_joint(self, bdb, generator_id, targets, constraints, modelno,
             num_predictions=1):
@@ -130,7 +129,6 @@ class VsGpm(object):
         ripl = self._ripl(bdb, generator_id, m)
         # Observe the constraints.
         clabel = 'l' + str(time.time()).replace('.','')
-        import ipdb; ipdb.set_trace()
         for (row, col, val) in constraints:
             ripl.observe('(get_cell %i %i)' % (row, col), val,
                 label='%s%i%i' % (clabel, row, col))
@@ -245,12 +243,26 @@ class VsGpm(object):
 
     def _save_ripl(self, bdb, generator_id, model_no, ripl):
         ripl_binary = ripl.saves()
+        search_ripl_sql = '''
+            SELECT generator_id, modelno FROM bayesdb_vsgpm_ripl
+                WHERE generator_id = :generator_id AND modelno = :modelno
+        '''
+        exists = bdb.sql_execute(search_ripl_sql, {
+            'generator_id': generator_id,
+            'modelno': model_no,
+            }).fetchall()
         insert_ripl_sql = '''
             INSERT INTO bayesdb_vsgpm_ripl
                 (generator_id, modelno, ripl_binary)
                 VALUES (:generator_id, :modelno, :ripl_binary)
         '''
-        bdb.sql_execute(insert_ripl_sql, {
+        update_ripl_sql = '''
+            UPDATE bayesdb_vsgpm_ripl SET ripl_binary = :ripl_binary
+                WHERE generator_id = :generator_id
+                    AND modelno = :modelno
+        '''
+        ripl_sql = update_ripl_sql if exists else insert_ripl_sql
+        bdb.sql_execute(ripl_sql, {
             'generator_id': generator_id,
             'modelno': model_no,
             'ripl_binary': sqlite3.Binary(ripl_binary),
