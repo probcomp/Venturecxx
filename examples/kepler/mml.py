@@ -15,7 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import itertools
 from datetime import datetime
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -88,17 +90,19 @@ for g in gpms:
     query(bdb, 'ANALYZE {gpm} FOR {n_iter} ITERATION WAIT;'.format(
         gpm=g, n_iter=1000))
 
-Q1 = []
-for g in gpms:
-    Q1.append(query(bdb, '''SIMULATE Apogee_km, Perigee_km FROM {gpm}
-        GIVEN Period_minutes = 100 LIMIT 100'''.format(gpm=g)))
+queries = ['''
+SIMULATE Apogee_km, Perigee_km FROM {gpm} GIVEN Period_minutes = 100 LIMIT 100
+''',
+'''
+SIMULATE Apogee_km, Perigee_km FROM {gpm} GIVEN Period_minutes = 7500 LIMIT 100
+''',
+'''
+SIMULATE Apogee_km FROM {gpm} GIVEN Perigee_km = 17800,
+    Period_minutes = 900 LIMIT 100
+'''
+]
 
-Q2 = []
-for g in gpms:
-    Q2.append(query(bdb, '''SIMULATE Apogee_km, Perigee_km FROM {gpm}
-        GIVEN Period_minutes = 7500 LIMIT 100'''.format(gpm=g)))
+results = {g:[] for g in gpms}
 
-Q3 = []
-for g in gpms:
-    Q3.append(query(bdb, '''SIMULATE Apogee_km FROM {gpm} GIVEN
-        Perigee_km = 17800, Period_minutes = 900 LIMIT 100'''.format(gpm=g)))
+for bql, g in itertools.product(queries, gpms):
+    results[g].append(query(bdb, bql.format(gpm=g)))
