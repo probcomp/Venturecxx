@@ -38,18 +38,18 @@ def __venture_start__(ripl, *args):
     ripl.bind_foreign_sp('kepler', kepler_sp)
 
 
-if __name__ == '__main__':
-    # Load the dataset and add an extra column.
-    satellites = pd.read_csv('satellites.csv')
-    satellites['Period_minutes_kepler'] = satellite_period_minutes(
-        satellites['Apogee_km'], satellites['Perigee_km'])
+# Load the dataset and add an extra column.
+satellites = pd.read_csv('satellites.csv')
+satellites['Period_minutes_kepler'] = satellite_period_minutes(
+    satellites['Apogee_km'], satellites['Perigee_km'])
 
-    # Extract columns for reuse.
-    A = satellites['Apogee_km']
-    P = satellites['Perigee_km']
-    T = satellites['Period_minutes']
-    TT = satellites['Period_minutes_kepler']
+# Extract columns for reuse.
+A = satellites['Apogee_km']
+P = satellites['Perigee_km']
+T = satellites['Period_minutes']
+TT = satellites['Period_minutes_kepler']
 
+if False:
     x, y = np.linspace(0, 100000, 100), np.linspace(0, 100000, 100)
     X, Y = np.meshgrid(x, y)
     X, Y = X[Y<X], Y[Y<X]
@@ -86,3 +86,47 @@ if __name__ == '__main__':
     ax.set_zlabel('Period [mins]', fontweight='bold')
     # ax.set_zlim([0,2000])
     ax.set_title('Learned Mixture', fontweight='bold')
+
+
+# Load Experiment 3
+D3 = pd.read_csv('simulations/d3.csv')
+K3 = pd.read_csv('simulations/k3.csv')
+V3 = pd.read_csv('simulations/v3.csv')
+# Plot.
+fig, ax = plt.subplots()
+ax.vlines(np.asarray(D3)[:,1],ymin=0, ymax=1, label='Default MML', color='red')
+ax.vlines(np.asarray(K3)[:,1],ymin=1, ymax=2, label='MML+Kepler', color='blue')
+ax.vlines(np.asarray(V3)[:,1],ymin=2, ymax=3, label='VenKep', color='green')
+ax.set_ylim([0, 5])
+ax.vlines(31200, ymin=0, ymax=5, linewidth=2, linestyle='dashed', label='Exact Invert')
+ax.set_xlabel('Posterior Samples of Apogee (km)', fontweight='bold')
+ax.set_title(
+    'SIMULATE Apogee_km GIVEN Perigee_km = 17800, Period_minutes = 900 LIMIT 100',
+    fontweight='bold')
+ax.legend(loc='upper left', framealpha=0)
+ax.grid()
+
+
+# Load Experiment 1
+D1 = np.asarray(pd.read_csv('simulations/d1.csv'))
+K1 = np.asarray(pd.read_csv('simulations/k1.csv'))
+V1 = np.asarray(pd.read_csv('simulations/v1.csv'))
+# Plot.
+fig, ax = plt.subplots()
+ax.scatter(D1[:,1], D1[:,2], label='Default MML', color='red')
+ax.scatter(K1[:,1], K1[:,2], label='MML+Kepler', color='blue')
+ax.scatter(V1[:,1], V1[:,2], label='VenKep', color='green')
+ax.scatter(A, P, label='Real Satellites', color='orange')
+
+# Compute the true curve.
+X = np.linspace(ax.get_xlim()[0], ax.get_xlim()[1], 2)
+Y = 0.333*(-3*X-38268)+253843
+ax.plot(X, Y, label='Noiseless Keplerian Solutions', color='black')
+
+ax.set_title(
+    'SIMULATE Apogee_km, Perigee_km GIVEN Period_minutes = 7500 LIMIT 100',
+    fontweight='bold')
+ax.set_xlabel('Posterior Samples of Apogee (km)', fontweight='bold')
+ax.set_ylabel('Posterior Samples of Perigee (km)', fontweight='bold')
+ax.legend(loc='upper left', framealpha=0)
+ax.grid()
