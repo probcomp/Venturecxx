@@ -16,6 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from contextlib import contextmanager
+import cStringIO as StringIO
 import threading
 import time
 
@@ -320,21 +321,35 @@ class Engine(object):
       return inferrer_obj.inference_thread_id == threading.currentThread().ident
 
 
-  def save(self, fname, extra=None):
+  def save_io(self, stream, extra=None):
     data = self.model.saveable()
     data['directiveCounter'] = self.directiveCounter
     data['extra'] = extra
     version = '0.2'
-    with open(fname, 'w') as fp:
-      dill.dump((data, version), fp)
+    dill.dump((data, version), stream)
 
-  def load(self, fname):
-    with open(fname) as fp:
-      (data, version) = dill.load(fp)
+  def load_io(self, stream):
+    (data, version) = dill.load(stream)
     assert version == '0.2', "Incompatible version or unrecognized object"
     self.directiveCounter = data['directiveCounter']
     self.model.load(data)
     return data['extra']
+
+  def save(self, fname, extra=None):
+    with open(fname, 'w') as fp:
+      self.save_io(fp, extra=extra)
+
+  def saves(self, extra=None):
+    ans = StringIO.StringIO()
+    self.save_io(ans, extra=extra)
+    return ans.getvalue()
+
+  def load(self, fname):
+    with open(fname) as fp:
+      return self.load_io(fp)
+
+  def loads(self, string):
+    return self.load_io(StringIO.StringIO(string))
 
   def convert(self, backend):
     engine = backend.make_engine(self.persistent_inference_trace)
