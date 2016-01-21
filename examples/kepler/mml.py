@@ -16,26 +16,28 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import datetime
-
 import matplotlib.pyplot as plt
 import numpy as np
 
 import bayeslite
 import bdbcontrib
+
 from bayeslite.metamodels import sdgpm
 from bdbcontrib import query
 from bdbcontrib.metamodels.composer import Composer
 from bdbcontrib.predictors import keplers_law
-
 from vsgpm import VsGpm
 
+# Load the bdb.
 timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
 bdb = bayeslite.bayesdb_open('bdb/%s.bdb' % timestamp)
 
+# Load satellites data.
 bayeslite.bayesdb_read_csv_file(bdb, 'satellites', 'satellites.csv',
     header=True, create=True)
 bdbcontrib.nullify(bdb, 'satellites', '')
 
+# Register MML models.
 composer = Composer()
 composer.register_foreign_predictor(keplers_law.KeplersLaw)
 bayeslite.bayesdb_register_metamodel(bdb, composer)
@@ -64,7 +66,6 @@ query(bdb, '''
         DEPENDENT(Apogee_km, Perigee_km)
     );''')
 
-
 query(bdb, '''
     CREATE GENERATOR ven_kep FOR satellites USING vsgpm(
         columns (
@@ -74,10 +75,51 @@ query(bdb, '''
             kepler.vnt
         ));''')
 
-query(bdb, 'INITIALIZE 2 MODELS FOR ven_kep')
+print 'INITIALIZE'
+query(bdb, 'INITIALIZE 1 MODELS FOR orbital_default;')
+query(bdb, 'INITIALIZE 1 MODELS FOR orbital_kepler;')
+query(bdb, 'INITIALIZE 1 MODELS FOR ven_kep')
 
-# query(bdb, 'INITIALIZE 8 MODELS FOR orbital_default;')
-# query(bdb, 'INITIALIZE 8 MODELS FOR orbital_kepler;')
+print 'ANALYZE'
+query(bdb, 'ANALYZE orbital_default FOR 10 ITERATION WAIT;')
+query(bdb, 'ANALYZE orbital_kepler FOR 10 ITERATION WAIT;')
+query(bdb, 'ANALYZE ven_kep FOR 10 ITERATION WAIT;')
 
-# query(bdb, 'ANALYZE orbital_default FOR 10 ITERATION WAIT;')
-# query(bdb, 'ANALYZE orbital_kepler FOR 10 ITERATION WAIT;')
+# DIFFICULT PERIOD
+D1 = query(bdb,
+    '''SIMULATE Apogee_km, Perigee_km FROM orbital_default
+        GIVEN Period_minutes = 7500 LIMIT 100''')
+
+K1 = query(bdb,
+    '''SIMULATE Apogee_km, Perigee_km FROM orbital_kepler
+        GIVEN Period_minutes = 7500 LIMIT 100''')
+
+V1 = query(bdb,
+    '''SIMULATE Apogee_km, Perigee_km FROM ven_kep
+        GIVEN Period_minutes = 100 LIMIT 100''')
+
+# EASY PERIOD
+D2 = query(bdb,
+    '''SIMULATE Apogee_km, Perigee_km FROM orbital_default
+        GIVEN Period_minutes = 100 LIMIT 100''')
+
+K2 = query(bdb,
+    '''SIMULATE Apogee_km, Perigee_km FROM orbital_kepler
+        GIVEN Period_minutes = 100 LIMIT 100''')
+
+V2 = query(bdb,
+    '''SIMULATE Apogee_km, Perigee_km FROM ven_kep
+        GIVEN Period_minutes = 100 LIMIT 100''')
+
+# TRUE ANSWER
+D3 = query(bdb,
+    '''SIMULATE Apogee_km FROM orbital_default
+        GIVEN Perigee_km = 17800, Period_minutes = 900 LIMIT 100''')
+
+K3 = query(bdb,
+    '''SIMULATE Apogee_km FROM orbital_kepler
+        GIVEN Perigee_km = 17800, Period_minutes = 900 LIMIT 100''')
+
+K3 = query(bdb,
+    '''SIMULATE Apogee_km FROM ven_kep
+        GIVEN Perigee_km = 17800, Period_minutes = 900 LIMIT 100''')
