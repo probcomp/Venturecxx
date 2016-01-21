@@ -93,7 +93,6 @@ class VsGpm(object):
         program = self._program(bdb, generator_id)
         data = self._data(bdb, generator_id)
         # XXX There must be a faster way to observer the data.
-        print 'Initializing VsGpm'
         for modelno in modelnos:
             ripl = vs.make_lite_church_prime_ripl()
             ripl.execute_program(program)
@@ -103,19 +102,17 @@ class VsGpm(object):
                 for j, val in enumerate(row):
                     if val is not None and not math.isnan(val):
                         ripl.observe('(get_cell %i %i)' % (i, j), val)
-            # self._save_ripl(bdb, generator_id, modelno, ripl)
+            self._save_ripl(bdb, generator_id, modelno, ripl)
             self.memory_cache[(generator_id, modelno)] = ripl
-        print 'Initialized.'
 
     def analyze_models(self, bdb, generator_id, modelnos=None, iterations=1,
             max_seconds=None, ckpt_iterations=None, ckpt_seconds=None):
         if modelnos is None:
             modelnos = core.bayesdb_generator_modelnos(bdb, generator_id)
         for m in modelnos:
-            print 'Running MH.'
             ripl = self._ripl(bdb, generator_id, m)
             ripl.infer('(mh default one %i)' % iterations)
-            # self._save_ripl(bdb, generator_id, m, ripl)
+            self._save_ripl(bdb, generator_id, m, ripl)
 
     def simulate_joint(self, bdb, generator_id, targets, constraints, modelno,
             num_predictions=1):
