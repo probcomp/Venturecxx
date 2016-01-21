@@ -81,9 +81,9 @@ query(bdb, 'INITIALIZE 1 MODELS FOR orbital_kepler;')
 query(bdb, 'INITIALIZE 1 MODELS FOR ven_kep')
 
 print 'ANALYZE'
-query(bdb, 'ANALYZE orbital_default FOR 10 ITERATION WAIT;')
-query(bdb, 'ANALYZE orbital_kepler FOR 10 ITERATION WAIT;')
-query(bdb, 'ANALYZE ven_kep FOR 10 ITERATION WAIT;')
+query(bdb, 'ANALYZE orbital_default FOR 1000 ITERATION WAIT;')
+query(bdb, 'ANALYZE orbital_kepler FOR 1000 ITERATION WAIT;')
+query(bdb, 'ANALYZE ven_kep FOR 10000 ITERATION WAIT;')
 
 # DIFFICULT PERIOD
 D1 = query(bdb,
@@ -120,6 +120,6 @@ K3 = query(bdb,
     '''SIMULATE Apogee_km FROM orbital_kepler
         GIVEN Perigee_km = 17800, Period_minutes = 900 LIMIT 100''')
 
-K3 = query(bdb,
+V3 = query(bdb,
     '''SIMULATE Apogee_km FROM ven_kep
         GIVEN Perigee_km = 17800, Period_minutes = 900 LIMIT 100''')
