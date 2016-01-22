@@ -827,8 +827,7 @@ include examples/tutorial-2015/gp-3.vnts
 include examples/tutorial-2015/mk_outlier_frame.vnts
 include examples/tutorial-2015/index.html
 include examples/tutorial-2015/BayesOpt_gpmem_sequence.png
-include examples/venstan/smoke.vnts
-include examples/venstan/chain_smoke.vnts
+include examples/venstan/normal_normal.vnts
 include examples/ppaml-talk/pipits2.csv
 include examples/ppaml-talk/pipits.vnts
 include examples/ppaml-talk/pipits.csv

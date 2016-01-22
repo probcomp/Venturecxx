@@ -8,6 +8,9 @@ one may use Stan's NUTS sampler to make transitions over some block of
 continuous variables and VentureScript's native enumerative Gibbs over
 a collection of discrete ones.
 
+For a complete (if contrived) example, see
+``examples/venstan/normal_normal.vnts`` in the Venture distribution.
+
 Architecture
 ------------
 
