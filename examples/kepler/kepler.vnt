@@ -34,14 +34,26 @@
 (assume z (mem (lambda (i) (tag i (quote z) (sim_cluster)))))
 
 ; Samplers for apogee, perigee cluster c.
-(assume apogee_sampler (mem (lambda (c) (make_nig_normal 1.5e5 1e9 1 20))))
-(assume perigee_sampler (mem (lambda (c) (make_nig_normal 2e4 1e9 1 20))))
+; (assume apogee_sampler (mem (lambda (c) (make_nig_normal 1.5e5 1e9 1 20))))
+; (assume perigee_sampler (mem (lambda (c) (make_nig_normal 2e4 1e9 1 20))))
 
-; (assume sigma2_apogee (mem (lambda (c) (inv_gamma 1 20))))
-; (assume sigma2_perigee (mem (lambda (c) (inv_gamma 1 20))))
+(assume sigma2_apogee (mem (lambda (c) (inv_gamma 1 20))))
+(assume sigma2_perigee (mem (lambda (c) (inv_gamma 1 20))))
 
-; (assume mu_apogee (mem (lambda (c) (normal 1.5e5 (sqrt (* 1e9 (sigma2_apogee c)))))))
-; (assume mu_perigee (mem (lambda (c) (normal 2e4 (sqrt (* 1e9 (sigma2_perigee c)))))))
+(assume mu_apogee (mem (lambda (c)
+  (normal 1e9 (sqrt (* 1e9 (sigma2_apogee c)))))))
+(assume mu_perigee (mem (lambda (c)
+  (normal 1e9 (sqrt (* 1e9 (sigma2_perigee c)))))))
+
+(assume apogee_sampler
+  (mem (lambda (i)
+    (make_suff_stat_normal
+      (mu_apogee (z i)) (sqrt (sigma2_apogee (z i)))))))
+
+(assume perigee_sampler
+  (mem (lambda (i)
+    (make_suff_stat_normal
+      (mu_perigee (z i)) (sqrt (sigma2_perigee (z i)))))))
 
 ; Observations of apogee and perigee for satellite i.
  (assume apogee
@@ -98,13 +110,14 @@
           (repeat 10
             (do
               (gibbs (atom -1) 'z 1)
-              (mh (atom -1) one 100)))
+              (hmc (atom -1) 'apogee 0.1 10 10)
+              (hmc (atom -1) 'perigee 0.1 10 10)))
           ; (mh (atom -1) one mh_steps)
           (result <-
             (mapM
               (lambda (k)
                 (do
-                  (mh (atom -1) one mh_thin)
+                  (mh (atom -1) one 20)
                   (sample
                     (list (apogee (atom -1))
                           (perigee (atom -1))
