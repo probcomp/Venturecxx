@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -50,6 +50,7 @@ keywords = {                    # XXX Use a perfect hash.
     'eq': grammar.K_EQ,
     'ge': grammar.K_GE,
     'gt': grammar.K_GT,
+    'force': grammar.K_FORCE,
     'if': grammar.K_IF,
     'infer': grammar.K_INFER,
     'lambda': grammar.K_LAMBDA,
@@ -63,6 +64,7 @@ keywords = {                    # XXX Use a perfect hash.
     'pow': grammar.K_POW,
     'predict': grammar.K_PREDICT,
     'proc': grammar.K_PROC,
+    'sample': grammar.K_SAMPLE,
     'sub': grammar.K_SUB,
     'true': grammar.T_TRUE,
     'false': grammar.T_FALSE,

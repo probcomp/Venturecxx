@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -14,6 +14,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
+import os.path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -105,9 +107,7 @@ def bounds(dfs, var):
   fuzz = 0.1 * max(maximum - minimum, 1.)
   return minimum - fuzz, maximum + fuzz, fuzz
 
-if __name__ == "__main__":
-  nsamples = 70
-  nruns = 3
+def doit(nsamples, nruns, plot_dir, contour_delta):
   overlay = [0] * len(examples) * nruns
   for i, (name, program) in enumerate(examples):
     datasets = [0] * nruns
@@ -117,8 +117,19 @@ if __name__ == "__main__":
       datasets[run] = (ds_name, compute(nsamples, program))
       overlay[nruns*i + run] = datasets[run]
     plot(name, "x", "y", "-o", datasets, contour_func=true_pdf,
-      contour_delta=0.5, ax=plt.figure().gca())
-    plt.show()
+      contour_delta=contour_delta, ax=plt.figure().gca())
+    if plot_dir is None:
+      plt.show()
+    else:
+      plt.savefig(os.path.join(plot_dir, name + ".png"))
+      plt.clf()
   plot("overlay", "x", "y", "o", overlay, contour_func=true_pdf,
-    contour_delta=0.5, ax=plt.figure().gca())
-  plt.show()
+    contour_delta=contour_delta, ax=plt.figure().gca())
+  if plot_dir is None:
+    plt.show()
+  else:
+    plt.savefig(os.path.join(plot_dir, "all.png"))
+    plt.clf()
+
+if __name__ == "__main__":
+  doit(nsamples=70, nruns=3, plot_dir=None, contour_delta=0.5)

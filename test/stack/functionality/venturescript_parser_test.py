@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 # -*- coding: utf-8 -*-
 
 import unittest
@@ -57,49 +58,6 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
     def setUp(self):
         self.p = VentureScriptParser.instance()
 
-    def test_collapse_identity(self):
-        # '((a+b))'
-        a = {'loc':[0,6],'value':[
-                {'loc':[0,6], 'value':v.sym('identity')},
-                {'loc':[1,5], 'value':[
-                    {'loc':[1,5], 'value':v.sym('identity')},
-                    {'loc':[2,4], 'value':[
-                        {'loc':[2,2], 'value':v.sym('+')},
-                        {'loc':[3,3], 'value':'a'},
-                        {'loc':[4,4], 'value':'b'},
-                        ]}
-                    ]}
-                ]}
-        b = {'loc':[0,6],'value':[
-                {'loc':[0,6], 'value':v.sym('identity')},
-                {'loc':[1,5], 'value':[
-                    {'loc':[2,2], 'value':v.sym('+')},
-                    {'loc':[3,3], 'value':'a'},
-                    {'loc':[4,4], 'value':'b'},
-                    ]}
-                ]}
-        output = module._collapse_identity(a,('+'))
-        self.assertEqual(output,b)
-        # ' a+b'
-        a = {'loc':[1,3], 'value':[
-                {'loc':[1,1], 'value':v.sym('+')},
-                {'loc':[2,2], 'value':'a'},
-                {'loc':[3,3], 'value':'b'},
-                ]}
-        output = module._collapse_identity(a,('+'))
-        self.assertEqual(output,a)
-        # ' (a)'
-        a = {'loc':[1,3], 'value':[
-                {'loc':[1,3], 'value':v.sym('identity')},
-                {'loc':[2,2], 'value':'a'},
-                ]}
-        output = module._collapse_identity(a,('+'))
-        self.assertEqual(output,a)
-        # ' a'
-        a = {'loc':[1,1], 'value':'a'}
-        output = module._collapse_identity(a,('+'))
-        self.assertEqual(output,a)
-
     def run_test(self, string, expected):
         self.maxDiff = None
         self.assertEqual([self.p.parse_locexpression(string)], expected)
@@ -114,7 +72,7 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
         self.run_test( 'a',
                 r(0,1,v.sym('a')))
         self.run_test( '(a=b;c)',
-                r(0,7,r(0,7,v.sym('identity'),1,5,r(1,5,v.sym('let'),1,3,r(1,3,r(1,1,v.sym('a'),3,1,v.sym('b'))),5,1,v.sym('c')))))
+                r(0,7,r(1,5,v.sym('let'),1,3,r(1,3,r(1,1,v.sym('a'),3,1,v.sym('b'))),5,1,v.sym('c'))))
 
     def test_proc(self):
         self.run_test( 'proc(arg, arg){ true }',
@@ -130,7 +88,7 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
 
     def test_identity(self):
         self.run_test( '(a)',
-                r(0,3,r(0,3,v.sym('identity'),1,1,v.sym('a'))))
+                r(0,3,v.sym('a')))
 
 
     def test_if_else(self):
@@ -145,7 +103,7 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
 
     def test_infix_locations(self):
         self.run_test( 'a+(b+c)',
-                r(0,7,r(1,1,v.sym('add'),0,1,v.sym('a'),2,5,r(2,5,v.sym('identity'),3,3,r(4,1,v.sym('add'),3,1,v.sym('b'),5,1,v.sym('c')))))
+                r(0,7,r(1,1,v.sym('add'),0,1,v.sym('a'),2,5,r(4,1,v.sym('add'),3,1,v.sym('b'),5,1,v.sym('c'))))
                 )
 
 
@@ -170,10 +128,10 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                     'expression')
         for x, y in boolean_and_ops + boolean_or_ops + comparison_ops + add_sub_ops + mul_div_ops + exponent_ops:
             self.run_legacy_test( '(a ' + x + ' b)()',
-                    [[[v.sym('identity'), [v.sym(y), v.sym('a'), v.sym('b')]]]],
+                    [[[v.sym(y), v.sym('a'), v.sym('b')]]],
                     'fn_application')
         self.run_legacy_test( '((a+b))()',
-                [[[v.sym('identity'), [v.sym('identity'), [v.sym('add'), v.sym('a'), v.sym('b')]]]]],
+                [[[v.sym('add'), v.sym('a'), v.sym('b')]]],
                 'fn_application')
 
 
@@ -182,17 +140,17 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                 [[v.sym('pow'), v.sym('a'), [v.sym('pow'), v.sym('b'), v.sym('c')]]],
                 'exponent')
         self.run_legacy_test( 'a**(b**c)',
-                [[v.sym('pow'), v.sym('a'), [v.sym('identity'), [v.sym('pow'), v.sym('b'), v.sym('c')]]]],
+                [[v.sym('pow'), v.sym('a'), [v.sym('pow'), v.sym('b'), v.sym('c')]]],
                 'exponent')
         self.run_legacy_test( '(a**b)**c',
-                [[v.sym('pow'), [v.sym('identity'), [v.sym('pow'), v.sym('a'), v.sym('b')]], v.sym('c')]],
+                [[v.sym('pow'), [v.sym('pow'), v.sym('a'), v.sym('b')], v.sym('c')]],
                 'exponent')
         self.run_legacy_test( '((a**b))**c',
-                [[v.sym('pow'), [v.sym('identity'), [v.sym('identity'), [v.sym('pow'), v.sym('a'), v.sym('b')]]], v.sym('c')]],
+                [[v.sym('pow'), [v.sym('pow'), v.sym('a'), v.sym('b')], v.sym('c')]],
                 'exponent')
         for x, y in boolean_and_ops + boolean_or_ops + comparison_ops + equality_ops + add_sub_ops + mul_div_ops:
             self.run_legacy_test( '(a ' + x + ' b)**c',
-                    [[v.sym('pow'),[v.sym('identity'), [v.sym(y), v.sym('a'), v.sym('b')]], v.sym('c')]],
+                    [[v.sym('pow'),[v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'exponent')
 
 
@@ -207,22 +165,22 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                 'mul_div')
         # Don't collapse redundant identities
         self.run_legacy_test( '(a*b)/c',
-                [[v.sym('div'),[v.sym('identity'), [v.sym('mul'), v.sym('a'), v.sym('b')]], v.sym('c')]],
+                [[v.sym('div'),[v.sym('mul'), v.sym('a'), v.sym('b')], v.sym('c')]],
                 'mul_div')
         self.run_legacy_test( '(a/b)*c',
-                [[v.sym('mul'),[v.sym('identity'), [v.sym('div'), v.sym('a'), v.sym('b')]], v.sym('c')]],
+                [[v.sym('mul'),[v.sym('div'), v.sym('a'), v.sym('b')], v.sym('c')]],
                 'mul_div')
         self.run_legacy_test( 'a*(b/c)',
-                [[v.sym('mul'), v.sym('a'), [v.sym('identity'), [v.sym('div'), v.sym('b'), v.sym('c')]]]],
+                [[v.sym('mul'), v.sym('a'), [v.sym('div'), v.sym('b'), v.sym('c')]]],
                 'mul_div')
         self.run_legacy_test( 'a/(b*c)',
-                [[v.sym('div'), v.sym('a'), [v.sym('identity'), [v.sym('mul'), v.sym('b'), v.sym('c')]]]],
+                [[v.sym('div'), v.sym('a'), [v.sym('mul'), v.sym('b'), v.sym('c')]]],
                 'mul_div')
         self.run_legacy_test( 'a/((b/c))',
-                [[v.sym('div'), v.sym('a'), [v.sym('identity'), [v.sym('identity'), [v.sym('div'), v.sym('b'), v.sym('c')]]]]],
+                [[v.sym('div'), v.sym('a'), [v.sym('div'), v.sym('b'), v.sym('c')]]],
                 'mul_div')
         self.run_legacy_test( 'a*(((b*c)))',
-                [[v.sym('mul'), v.sym('a'), [v.sym('identity'), [v.sym('identity'), [v.sym('identity'), [v.sym('mul'), v.sym('b'), v.sym('c')]]]]]],
+                [[v.sym('mul'), v.sym('a'), [v.sym('mul'), v.sym('b'), v.sym('c')]]],
                 'mul_div')
         # Test that mul_div has medium precedence
         for x, y in exponent_ops:
@@ -231,11 +189,11 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                     'mul_div')
         for x, y in boolean_and_ops + boolean_or_ops + equality_ops + comparison_ops + add_sub_ops:
             self.run_legacy_test( '(a ' + x + ' b)*c',
-                    [[v.sym('mul'), [v.sym('identity'), [v.sym(y), v.sym('a'), v.sym('b')]], v.sym('c')]],
+                    [[v.sym('mul'), [v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'mul_div')
         for x, y in exponent_ops:
             self.run_legacy_test( '(a' + x + 'b)*c',
-                    [[v.sym('mul'),[v.sym('identity'),[v.sym(y), v.sym('a'), v.sym('b')]], v.sym('c')]],
+                    [[v.sym('mul'),[v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'mul_div')
 
 
@@ -249,22 +207,22 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                 [[v.sym('add'),[v.sym('sub'), v.sym('a'), v.sym('b')], v.sym('c')]],
                 'add_sub')
         self.run_legacy_test( '(a+b)-c',
-                [[v.sym('sub'),[v.sym('identity'), [v.sym('add'), v.sym('a'), v.sym('b')]], v.sym('c')]],
+                [[v.sym('sub'),[v.sym('add'), v.sym('a'), v.sym('b')], v.sym('c')]],
                 'add_sub')
         self.run_legacy_test( '(a-b)+c',
-                [[v.sym('add'),[v.sym('identity'), [v.sym('sub'), v.sym('a'), v.sym('b')]], v.sym('c')]],
+                [[v.sym('add'),[v.sym('sub'), v.sym('a'), v.sym('b')], v.sym('c')]],
                 'add_sub')
         self.run_legacy_test( 'a+(b-c)',
-                [[v.sym('add'), v.sym('a'), [v.sym('identity'), [v.sym('sub'), v.sym('b'), v.sym('c')]]]],
+                [[v.sym('add'), v.sym('a'), [v.sym('sub'), v.sym('b'), v.sym('c')]]],
                 'add_sub')
         self.run_legacy_test( 'a-(b+c)',
-                [[v.sym('sub'), v.sym('a'), [v.sym('identity'), [v.sym('add'), v.sym('b'), v.sym('c')]]]],
+                [[v.sym('sub'), v.sym('a'), [v.sym('add'), v.sym('b'), v.sym('c')]]],
                 'add_sub')
         self.run_legacy_test( 'a-((b-c))',
-                [[v.sym('sub'), v.sym('a'), [v.sym('identity'), [v.sym('identity'), [v.sym('sub'), v.sym('b'), v.sym('c')]]]]],
+                [[v.sym('sub'), v.sym('a'), [v.sym('sub'), v.sym('b'), v.sym('c')]]],
                 'add_sub')
         self.run_legacy_test( 'a+(((b+c)))',
-                [[v.sym('add'), v.sym('a'), [v.sym('identity'), [v.sym('identity'), [v.sym('identity'), [v.sym('add'), v.sym('b'), v.sym('c')]]]]]],
+                [[v.sym('add'), v.sym('a'), [v.sym('add'), v.sym('b'), v.sym('c')]]],
                 'add_sub')
         # Test that add_sub has medium precedence
         for x, y in exponent_ops + mul_div_ops:
@@ -273,12 +231,12 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                     'add_sub')
         for x, y in boolean_and_ops + boolean_or_ops + equality_ops + comparison_ops:
             self.run_legacy_test( '(a ' + x + ' b)+c',
-                    [[v.sym('add'), [v.sym('identity'), [v.sym(y), v.sym('a'), v.sym('b')]], v.sym('c')]],
+                    [[v.sym('add'), [v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'add_sub')
         # Don't collapse identities with greater precedence
         for x, y in exponent_ops + mul_div_ops:
             self.run_legacy_test( '(a' + x + 'b)+c',
-                    [[v.sym('add'),[v.sym('identity'),[v.sym(y), v.sym('a'), v.sym('b')]], v.sym('c')]],
+                    [[v.sym('add'),[v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'add_sub')
 
         # Comparison
@@ -298,17 +256,17 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                     'comparison')
         for x, y in boolean_and_ops + boolean_or_ops + equality_ops:
             self.run_legacy_test( '(a' + x + 'b)<c',
-                    [[v.sym('lt'), [v.sym('identity'), [v.sym(y), v.sym('a'), v.sym('b')]], v.sym('c')]],
+                    [[v.sym('lt'), [v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'comparison')
         for x, y in mul_div_ops + exponent_ops + add_sub_ops:
             self.run_legacy_test( '(a' + x + 'b) < c',
-                    [[v.sym('lt'),[v.sym('identity'),[v.sym(y), v.sym('a'), v.sym('b')]], v.sym('c')]],
+                    [[v.sym('lt'),[v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'comparison')
         self.run_legacy_test( '(a > b) < (c > d)',
-                [[v.sym('lt'),[v.sym('identity'),[v.sym('gt'), v.sym('a'), v.sym('b')]], [v.sym('identity'), [v.sym('gt'), v.sym('c'), v.sym('d')]]]],
+                [[v.sym('lt'),[v.sym('gt'), v.sym('a'), v.sym('b')], [v.sym('gt'), v.sym('c'), v.sym('d')]]],
                 'comparison')
         self.run_legacy_test( 'a < ((b > c))',
-                [[v.sym('lt'), v.sym('a'), [v.sym('identity'), [v.sym('identity'), [v.sym('gt'), v.sym('b'), v.sym('c')]]]]],
+                [[v.sym('lt'), v.sym('a'), [v.sym('gt'), v.sym('b'), v.sym('c')]]],
                 'comparison')
 
         # Equality
@@ -328,17 +286,17 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                     'equality')
         for x, y in boolean_and_ops + boolean_or_ops:
             self.run_legacy_test( '(a' + x + 'b)==c',
-                    [[v.sym('eq'), [v.sym('identity'), [v.sym(y), v.sym('a'), v.sym('b')]], v.sym('c')]],
+                    [[v.sym('eq'), [v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'equality')
         for x, y in mul_div_ops + exponent_ops + add_sub_ops + comparison_ops:
             self.run_legacy_test( '(a ' + x + ' b)==c',
-                    [[v.sym('eq'),[v.sym('identity'),[v.sym(y), v.sym('a'), v.sym('b')]], v.sym('c')]],
+                    [[v.sym('eq'),[v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'equality')
         self.run_legacy_test( '(a!=b)==(c!=d)',
-                [[v.sym('eq'),[v.sym('identity'),[v.sym('neq'), v.sym('a'), v.sym('b')]], [v.sym('identity'), [v.sym('neq'), v.sym('c'), v.sym('d')]]]],
+                [[v.sym('eq'),[v.sym('neq'), v.sym('a'), v.sym('b')], [v.sym('neq'), v.sym('c'), v.sym('d')]]],
                 'equality')
         self.run_legacy_test( 'a==((b!=c))',
-                [[v.sym('eq'), v.sym('a'), [v.sym('identity'), [v.sym('identity'), [v.sym('neq'), v.sym('b'), v.sym('c')]]]]],
+                [[v.sym('eq'), v.sym('a'), [v.sym('neq'), v.sym('b'), v.sym('c')]]],
                 'equality')
 
 
@@ -348,13 +306,13 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                 [[v.sym('and'), [v.sym('and'), v.sym('a'), v.sym('b')], v.sym('c')]],
                 'boolean_and')
         self.run_legacy_test( '(a&&b)&&c',
-                [[v.sym('and'), [v.sym('identity'), [v.sym('and'), v.sym('a'), v.sym('b')]], v.sym('c')]],
+                [[v.sym('and'), [v.sym('and'), v.sym('a'), v.sym('b')], v.sym('c')]],
                 'boolean_and')
         self.run_legacy_test( 'a&&(b&&c)',
-                [[v.sym('and'), v.sym('a'), [v.sym('identity'), [v.sym('and'), v.sym('b'), v.sym('c')]]]],
+                [[v.sym('and'), v.sym('a'), [v.sym('and'), v.sym('b'), v.sym('c')]]],
                 'boolean_and')
         self.run_legacy_test( 'a&&((b&&c))',
-                [[v.sym('and'), v.sym('a'), [v.sym('identity'), [v.sym('identity'), [v.sym('and'), v.sym('b'), v.sym('c')]]]]],
+                [[v.sym('and'), v.sym('a'), [v.sym('and'), v.sym('b'), v.sym('c')]]],
                 'boolean_and')
         # Test that and has low precedence
         for x, y in comparison_ops + equality_ops + add_sub_ops + mul_div_ops + exponent_ops:
@@ -363,11 +321,11 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                     'boolean_and')
         for x, y in boolean_or_ops:
             self.run_legacy_test( '(a' + x + 'b)&&c',
-                    [[v.sym('and'), [v.sym('identity'), [v.sym(y), v.sym('a'), v.sym('b')]], v.sym('c')]],
+                    [[v.sym('and'), [v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'boolean_and')
         for x, y in comparison_ops + equality_ops + mul_div_ops + exponent_ops + add_sub_ops:
             self.run_legacy_test( '(a ' + x + ' b)&&c',
-                    [[v.sym('and'),[v.sym('identity'),[v.sym(y), v.sym('a'), v.sym('b')]], v.sym('c')]],
+                    [[v.sym('and'),[v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'boolean_and')
 
         # Or
@@ -376,13 +334,13 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                 [[v.sym('or'), [v.sym('or'), v.sym('a'), v.sym('b')], v.sym('c')]],
                 'boolean_or')
         self.run_legacy_test( '(a||b)||c',
-                [[v.sym('or'), [v.sym('identity'), [v.sym('or'), v.sym('a'), v.sym('b')]], v.sym('c')]],
+                [[v.sym('or'), [v.sym('or'), v.sym('a'), v.sym('b')], v.sym('c')]],
                 'boolean_or')
         self.run_legacy_test( 'a||(b||c)',
-                [[v.sym('or'), v.sym('a'), [v.sym('identity'), [v.sym('or'), v.sym('b'), v.sym('c')]]]],
+                [[v.sym('or'), v.sym('a'), [v.sym('or'), v.sym('b'), v.sym('c')]]],
                 'boolean_or')
         self.run_legacy_test( 'a||((b||c))',
-                [[v.sym('or'), v.sym('a'), [v.sym('identity'), [v.sym('identity'), [v.sym('or'), v.sym('b'), v.sym('c')]]]]],
+                [[v.sym('or'), v.sym('a'), [v.sym('or'), v.sym('b'), v.sym('c')]]],
                 'boolean_or')
         # Test that or has low precedence
         for x, y in comparison_ops + equality_ops + add_sub_ops + mul_div_ops + exponent_ops:
@@ -391,7 +349,7 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                     'boolean_or')
         for x, y in comparison_ops + equality_ops + mul_div_ops + exponent_ops + add_sub_ops:
             self.run_legacy_test( '(a ' + x + ' b)||c',
-                    [[v.sym('or'),[v.sym('identity'),[v.sym(y), v.sym('a'), v.sym('b')]], v.sym('c')]],
+                    [[v.sym('or'),[v.sym(y), v.sym('a'), v.sym('b')], v.sym('c')]],
                     'boolean_or')
 
 
@@ -399,7 +357,7 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
         #
         #identity
         self.run_legacy_test( '(a)',
-                [[v.symbol('identity'), v.sym('a')]],
+                [v.sym('a')],
                 'expression')
         #let
         self.run_legacy_test( '{ a=b; c=d; e}',
@@ -453,7 +411,7 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
         ''',
                 [[v.sym('sub'),
                             [v.sym('add'),
-                                [v.sym('div'),[v.sym('identity'), [v.sym('add'),v.number(1.0),v.number(4.0)]],[v.sym('pow'),v.number(3.0),v.number(5.11)]],
+                                [v.sym('div'),[v.sym('add'),v.number(1.0),v.number(4.0)],[v.sym('pow'),v.number(3.0),v.number(5.11)]],
                                 [v.sym('mul'),v.number(32.0),v.number(4.0)],
                                 ],
                             v.number(2.0)]],

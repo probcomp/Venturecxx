@@ -1,4 +1,4 @@
-# Copyright (c) 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -198,3 +198,19 @@ foo : [assume x (+ 1 2)]
 (report 'foo)
 """)
   eq_([3.0, 3.0], u.strip_types([v['value'] for v in vals]))
+
+def testForceSugar():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  vals = r.execute_program("""\
+assume x = normal(0,1);
+force x = 5;
+report(quote(x));
+""")
+  eq_(5, u.strip_types([v['value'] for v in vals])[2])
+
+def testSampleSugar():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  vals = r.execute_program("sample 2 + 2;")
+  eq_([4], u.strip_types([v['value'] for v in vals]))

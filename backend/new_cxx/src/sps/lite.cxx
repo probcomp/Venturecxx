@@ -1,4 +1,4 @@
-// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -22,6 +22,7 @@
 #include "concrete_trace.h"
 #include "regen.h"
 #include "env.h"
+#include "stop-and-copy.h"
 
 VentureValuePtr foreignFromPython(boost::python::object thing)
 {
@@ -163,6 +164,13 @@ double ForeignLitePSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
   return boost::python::extract<double>(foreignLogDensityOfCounts);
 }
 
+ForeignLiteSPAux* ForeignLiteSPAux::copy_help(ForwardingMap* m) const
+{
+  ForeignLiteSPAux* answer = new ForeignLiteSPAux(aux.attr("copy")());
+  (*m)[this] = answer;
+  return answer;
+}
+
 VentureValuePtr ForeignLiteLKernel::forwardSimulate(Trace * trace,
                                                     VentureValuePtr oldValue,
                                                     shared_ptr<Args> args,
@@ -261,6 +269,17 @@ void ForeignLiteSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
 {
   boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(spAux)->aux;
   sp.attr("AEInfer")(foreignAux);
+}
+
+ForeignLiteSP* ForeignLiteSP::copy_help(ForwardingMap* forward) const
+{
+  ForeignLiteSP* answer = new ForeignLiteSP(*this);
+  (*forward)[this] = answer;
+  answer->requestPSP = copy_shared(this->requestPSP, forward);
+  answer->outputPSP = copy_shared(this->outputPSP, forward);
+  // TODO I should deep-copy the sp field too, but shallow is OK if
+  // there are no examples where its methods mutate it.
+  return answer;
 }
 
 boost::python::dict ForeignLiteSP::toPython(Trace * trace,

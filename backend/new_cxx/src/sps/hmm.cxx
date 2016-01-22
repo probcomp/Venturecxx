@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -18,6 +18,7 @@
 #include "sps/hmm.h"
 #include "args.h"
 #include "sprecord.h"
+#include "stop-and-copy.h"
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 #include <boost/foreach.hpp>
@@ -178,6 +179,14 @@ void UncollapsedHMMSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
   }
 }
 
+UncollapsedHMMSP* UncollapsedHMMSP::copy_help(ForwardingMap* forward) const
+{
+  UncollapsedHMMSP* answer = new UncollapsedHMMSP(*this);
+  (*forward)[this] = answer;
+  answer->requestPSP = copy_shared(this->requestPSP, forward);
+  answer->outputPSP = copy_shared(this->outputPSP, forward);
+  return answer;
+}
 
 /* UncollapsedHMMOutputPSP */
 
@@ -360,7 +369,9 @@ VectorXd normalizedVectorXd(VectorXd & v)
   return newVector;
 }
 
-SPAux* HMMSPAux::copy_help(ForwardingMap* m) const
+HMMSPAux* HMMSPAux::copy_help(ForwardingMap* m) const
 {
-  return new HMMSPAux(*this);
+  HMMSPAux* answer = new HMMSPAux(*this);
+  (*m)[this] = answer;
+  return answer;
 }

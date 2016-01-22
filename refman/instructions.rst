@@ -27,7 +27,7 @@ directive contains a modeling expression to be evaluated. At any time,
 the probabilistic execution trace consists of all directives that have
 been evaluated and not forgotten.  VentureScript maintains an index of
 unique identifiers for directives so they can be referred to by other
-instructions.
+operations.
 
 - `assume symbol = expression`: declare and initialize a variable.
 
@@ -54,7 +54,7 @@ instructions.
   Predict tracks the `expression`, allowing its value to be reported
   before or after inference.
 
-  A `predict` instruction is persistent, in the sense that it becomes
+  A `predict` directive is persistent, in the sense that it becomes
   part of the program history and will be maintained and potentially
   resampled during inference.  A `predict` ed expression may affect the
   evaluation of later expressions that are correlated or conditionally
@@ -79,7 +79,7 @@ In addition to the directives themselves, there are operators
 
   Freeze removes the directive's random choices from the program
   history and fixes the directive to its current value.  This
-  instruction is used to gain efficiency for inference strategies in
+  operation is used to gain efficiency for inference strategies in
   the Sequential Monte Carlo style.
 
 - `report directive_id`: report the current value of a directive.
@@ -90,7 +90,7 @@ In addition to the directives themselves, there are operators
 Pseudo-Directives
 -----------------
 
-The `force` and `sample` instructions are "pseudo-directives" which
+The `force` and `sample` operations are "pseudo-directives" which
 have temporary effects on the current program history.
 
 - `force expression = value`: set an expression to a value momentarily.
@@ -106,7 +106,7 @@ have temporary effects on the current program history.
   Sample is a temporary version of `predict` which is immediately
   forgotten. This has the effect of evaluating `expression` once,
   without adding it to the program trace.  Therefore, unlike
-  `predict`, a `sample` instruction will not be maintained during
+  `predict`, a `sample` d expression will not be maintained during
   inference, and `sample` d expressions will be independent of one
   another (conditioned on the rest of the program history).
 

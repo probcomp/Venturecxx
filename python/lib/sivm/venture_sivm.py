@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -14,10 +14,12 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import copy
+import cStringIO as StringIO
 
 from venture.exception import VentureException
 from venture.sivm import utils, macro, macro_system
@@ -96,18 +98,34 @@ class VentureSivm(object):
     # Serialization
     ###############################
 
-    def save(self, fname, extra=None):
+    def save_io(self, stream, extra=None):
         if extra is None:
             extra = {}
         for d in self.dicts:
             extra[d] = getattr(self, d)
-        return self.core_sivm.save(fname, extra)
+        return self.core_sivm.save_io(stream, extra)
 
-    def load(self, fname):
-        extra = self.core_sivm.load(fname)
+    def load_io(self, stream):
+        extra = self.core_sivm.load_io(stream)
         for d in self.dicts:
             setattr(self, d, extra[d])
         return extra
+
+    def save(self, fname, extra=None):
+        with open(fname, 'w') as fp:
+            self.save_io(fp, extra=extra)
+
+    def saves(self, extra=None):
+        ans = StringIO.StringIO()
+        self.save_io(ans, extra=extra)
+        return ans.getvalue()
+
+    def load(self, fname):
+        with open(fname) as fp:
+            return self.load_io(fp)
+
+    def loads(self, string):
+        return self.load_io(StringIO.StringIO(string))
 
     ###############################
     # Sugars/desugars

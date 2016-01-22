@@ -3,10 +3,10 @@ all: build
 # Assets
 
 gauss_plot.png:  # This takes about 3 minutes on my laptop
-	venture puma -e '(run (resample 100)) \
+	venture puma --abstract-syntax -e "(run (resample 100)) \
 	 (plot_to_file (quote gauss_plot) (quote h0) \
 	  (run (accumulate_dataset 10000 \
-	        (collect (labelled (normal 1 0.7071067811865475) x)))))'
+	        (collect (labelled (normal 1 0.7071067811865475) x)))))"
 
 reg-test.csv: mk_dataset.vnt
 	venture puma -f $<
@@ -73,3 +73,12 @@ upload: build
 upload-smoke: build-smoke
 	scp -r tutorial-smoke/ \
 	 login.csail.mit.edu:/afs/csail.mit.edu/proj/probcomp/www/data/venture/
+
+clean:
+	rm -rf tutorial
+	rm -rf tutorial-smoke
+	rm -f *.lvnt
+	rm -f gauss_plot.png
+	rm -f reg-test.csv
+	rm -f vis-frame.png
+	rm -f vis-outlier.png

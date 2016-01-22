@@ -1,4 +1,4 @@
-// Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+// Copyright (c) 2013, 2014, 2015, 2016 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -32,14 +32,14 @@ struct Node
   virtual Node* copy_help(ForwardingMap* m) const =0;
 };
 
-struct ConstantNode : Node 
+struct ConstantNode : Node
 {
   ConstantNode(VentureValuePtr exp): Node(exp) {}
   ConstantNode* copy_help(ForwardingMap* m) const;
 };
 
-struct LookupNode : Node 
-{ 
+struct LookupNode : Node
+{
   LookupNode(Node * sourceNode, VentureValuePtr exp);
   vector<Node*> getDefiniteParents() { vector<Node*> dps; dps.push_back(sourceNode); return dps; }
   Node * sourceNode;

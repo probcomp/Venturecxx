@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -240,7 +240,20 @@ class Semantics(object):
         n = loctoken(n)
         # XXX Yes, this remains infix, for the macro expander to handle...
         return locmerge(n, e, [n, locmap(loctoken(op), val.symbol), e])
+    def p_force_some(self, k, e1, eq, e2):
+        assert isloc(e1)
+        assert isloc(e2)
+        i = loctoken1(k, val.symbol('force'))
+        app = [i, e1, e2]
+        return locmerge(i, e2, app)
+    def p_sample_some(self, k, e):
+        assert isloc(e)
+        i = loctoken1(k, val.symbol('sample'))
+        app = [i, e]
+        return locmerge(i, e, app)
     p_do_bind_none = _p_exp
+    p_force_none = _p_exp
+    p_sample_none = _p_exp
     p_boolean_or_or = _p_binop
     p_boolean_or_none = _p_exp
     p_boolean_and_and = _p_binop
@@ -279,7 +292,7 @@ class Semantics(object):
 
     def p_primary_paren(self, o, e, c):
         assert isloc(e)
-        return locbracket(o, c, [locbracket(o, c, val.symbol('identity')), e])
+        return locbracket(o, c, e['value'])
     def p_primary_brace(self, o, l, semi, e, c):
         assert isloc(e)
         return locbracket(o, c, [locbracket(o, c, val.symbol('let')), l, e])
@@ -809,38 +822,3 @@ class Trie(object):
         for (ks, v) in keyed_items:
             answer.insert(ks, v)
         return answer
-
-def _collapse_identity(toks, operators):
-    """
-    Removes one layer of nested identity functions if the
-    inner expression is a function application contained
-    in the list of operators. For example:
-
-    _collapse_identity(
-        ['identity',
-            ['identity',
-                ['+', a, b]]],
-        ('+'))
-
-    returns: ['identity',
-                ['+',a, b]]
-
-    Of course, this function operates on the 'full'
-    {"loc":[], "value":[]} representation the above
-    parse trees. When a layer of parentheses is
-    collapsed, the loc range of the inner expression
-    is expanded to include the collapsed parens.
-    """
-    if not isinstance(toks['value'], (list, tuple)):
-        return toks
-    if not toks['value'][0]['value'] == val.symbol('identity'):
-        return toks
-    if not isinstance(toks['value'][1]['value'], (list, tuple)):
-        return toks
-    if toks['value'][1]['value'][0]['value'] == val.symbol('identity'):
-        return {"loc":toks['loc'], "value":[
-            toks['value'][0],
-            _collapse_identity(toks['value'][1], operators)]}
-    if toks['value'][1]['value'][0]['value']['value'] in operators:
-        return {"loc":toks['loc'], "value":toks['value'][1]['value']}
-    return toks

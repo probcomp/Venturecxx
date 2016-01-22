@@ -1,4 +1,4 @@
-// Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+// Copyright (c) 2013, 2014, 2015, 2016 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -67,8 +67,7 @@ struct SPAux
   boost::shared_ptr<SPAux> clone();
   virtual boost::python::object toPython(Trace * trace) const;
   virtual VentureValuePtr asVentureValue() const;
-  // TODO stupid and may make bugs hard to find
-  virtual SPAux* copy_help(ForwardingMap* m) const { return new SPAux(); }
+  virtual SPAux* copy_help(ForwardingMap* m) const = 0;
 };
 
 struct SP

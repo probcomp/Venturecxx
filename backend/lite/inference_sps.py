@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -1030,6 +1030,20 @@ Does not interoperate with multiple particles.
   ripl_method_sp("draw_subproblem", infer_action_maker_type([t.AnyType("<subproblem>")]), desc="""\
   Draw a subproblem by printing out the source code of affected random choices.
 
+"""),
+
+  engine_method_sp("save_model", infer_action_maker_type([t.StringType("<filename>")]), desc="""\
+Save the current model to a file.
+
+Note: ``save_model`` and ``load_model`` rely on Python's ``pickle``
+module.
+"""),
+
+  engine_method_sp("load_model", infer_action_maker_type([t.StringType("<filename>")]), desc="""\
+Load from a file created by ``save_model``, clobbering the current model.
+
+Note: ``save_model`` and ``load_model`` rely on Python's ``pickle``
+module.
 """),
 
   engine_method_sp("pyexec", infer_action_maker_type([t.SymbolType("<code>")]), desc="""\

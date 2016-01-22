@@ -1,8 +1,13 @@
 \documentclass[12pt]{article}
 
+\usepackage{amsmath}
 \usepackage{hyperref}
+\usepackage{parskip}
+
+\title{Mathematical Derivations For Stochastic Procedures}
 
 \begin{document}
+\maketitle
 
 \begin{abstract}
 This TeX file serves as a location to collect reference formulas and
@@ -21,8 +26,8 @@ this writing, this document is far from complete.
 \texttt{SuffNormalOutputPSP}
 
 \subsubsection{Log density of counts}
-
-\url{http://www.encyclopediaofmath.org/index.php/Sufficient_statistic}
+\href{http://www.encyclopediaofmath.org/index.php/Sufficient_statistic}
+{The Encyclopedia of Math}
 says that the likelihood of a vector $\{x_i\}$ of $n$ Gaussian
 observations with given mean $\mu$ and variance $\sigma^2$ is
 
@@ -42,7 +47,8 @@ we have
 Gradient with respect to $\mu$, $\sigma$, attached at \texttt{MakerSuffNormalOutputPSP}.
 
 \begin{eqnarray*}
-\frac{d}{d\mu} \log p_{\mu,\sigma^2}(\{x_i\}) & = & -\frac{n\mu}{\sigma^2} + \frac{\xsum}{\sigma^2}.
+\frac{d}{d\mu} \log p_{\mu,\sigma^2}(\{x_i\}) & = & -\frac{n\mu}{\sigma^2} +
+    \frac{\xsum}{\sigma^2}.
 \end{eqnarray*}
 To differentiate with respect to $\sigma$ it helps to group terms.  Letting
 \newcommand{\deviance}{x_{\textrm{sq-dev}}}
@@ -51,9 +57,11 @@ we have
 \[ \log p_{\mu,\sigma^2}(\{x_i\}) = -\frac{n}{2}(\log(2\pi) + 2\log(\sigma))
    - \frac{\deviance}{2\sigma^2} \]
 and
-\[ \frac{d}{d\sigma} \log p_{\mu,\sigma^2}(\{x_i\}) = -\frac{n}{\sigma} + \frac{\deviance}{\sigma^3} \]
+\[ \frac{d}{d\sigma} \log p_{\mu,\sigma^2}(\{x_i\}) = -\frac{n}{\sigma} +
+    \frac{\deviance}{\sigma^3} \]
 
-This cross-checks with \url{http://aleph0.clarku.edu/~djoyce/ma218/meeting12.pdf}
+This cross-checks with
+\href{http://aleph0.clarku.edu/~djoyce/ma218/meeting12.pdf}{this reference} (now broken).
 
 \subsubsection{Upper bound of log density of counts}
 
@@ -65,4 +73,109 @@ Setting the above to zero and solving for $\mu$, $\sigma$ gives (for $n > 0$)
   & = & \frac{\xsumsq}{n} - \frac{\xsum^2}{n^2}
 \end{eqnarray*}
 
+\section{Chinese Restaurant Process}
+
+\texttt{CRPOutputPSP}
+
+The Chinese Restaurant Process (CRP) is a two-parameter family indexed by
+real numbers $(\alpha, \theta)$ satisfying either
+
+\[
+0 \le \alpha < 1, \theta > - \alpha
+\]
+
+or
+
+\[
+\alpha < 0, \theta = L\alpha
+\]
+
+for some $L \in \{1,2,\dots\}$. The stochastic procedure and mathematical
+derivations below will only consider the \textit{first} requirement and
+ignore the second one, for ease of exposition and availability of references.
+
+We will let $[N] = \{1,\dots,N\}$ be the set which we are partitioning (customers),
+$K$ be the number of blocks in the partition (tables) written as an ordered sequence
+$(B_1,\dots,B_K)$, and $N_k$ be the cardinality $|B_k|$, $k = 1,\dots,K$
+(number of customers at table $k$). Since the CRP is exchangeable, the probability
+$\mathbf{P}(B|\alpha,\theta)$ of any partition is a function only of the statistics
+$(N,\{N_k\},K)$.
+
+\subsubsection{Log density of counts}
+
+According to Equation (6) in
+\href{http://arxiv.org/pdf/0909.3642.pdf}{Gndedin, et al}
+for any partition $B=(B_1,\dots,B_K)$ of $[N]$ we have
+
+\textbf{General Case}
+
+\begin{equation}
+\mathbf{P}(B|\alpha,\theta)
+:= \frac{\Pi_{i=1}^{K-1}(\theta+i\alpha)}{(\theta+1)_{N-1}}\Pi_{j=1}^K(1-\alpha)_{N_k-1}
+\label{eq:crp-density}
+\end{equation}
+
+where $(x)_n := x(x+1)\dots(x+n-1) = \frac{\Gamma(x+n)}{\Gamma(x)}$.
+
+We will show that this formula recovers the simple one-parameter CRP which is more
+common in the literature where $\alpha = 0$ (unfortunately, most references use
+$\alpha$ for what we denote as $\theta$, but we have chosen the original notation from
+\href{http://link.springer.com/article/10.1007/BF01213386}{Pitman} so that our
+derivations math can cross-check easily with references on the two-parameter family).
+
+\textbf{Case 1} $\alpha = 0$
+
+\begin{align*}
+\mathbf{P}(B|\alpha=0,\theta)
+    & = \frac{\Pi_{i=1}^{K-1}(\theta)}{(\theta+1)_{N-1}}\Pi_{k=1}^K(1)_{N_k-1}\\
+   & = \frac{\theta^{K-1}}{\frac{\Gamma(\theta+N)}{\Gamma(\theta+1)}}\Pi_{k=1}^K\Gamma(N_k)\\
+   & = \frac{\theta^{K-1}}{\frac{\Gamma(\theta+N)}{\theta\Gamma(\theta)}}\Pi_{k=1}^K\Gamma(N_k)\\
+   & = \frac{\theta^{K}}{\frac{\Gamma(\theta+N)}{\Gamma(\theta)}}\Pi_{k=1}^K\Gamma(N_k)\\
+\end{align*}
+
+which cross checks with Equation (8) from
+\href{http://web.mit.edu/sjgershm/www/GershmanBlei12.pdf#page=4}{Gershman, et al},
+using the fact that $\Gamma(n) = (n-1)!$ for integer $n$.
+
+\textbf{Case 2} $\theta = 0$
+
+\begin{eqnarray*}
+&\mathbf{P}(B|\alpha,\theta=0)
+    & = \frac{\Pi_{i=1}^{K-1}(i\alpha)}{(1)_{N-1}}\Pi_{j=1}^K(1-\alpha)_{N_k-1}\\
+&   & = \frac{\alpha^{K-1}(K-1)!}{\Gamma(N)}\Pi_{j=1}^K
+            \frac{\Gamma(N_k-\alpha)}{\Gamma(1-\alpha)}\\
+&   & = \frac{\alpha^{K-1}\Gamma(K)}{\Gamma(N)}\Pi_{j=1}^K
+\frac{\Gamma(N_k-\alpha)}{\Gamma(1-\alpha)}
+\end{eqnarray*}
+
+The only available reference with which this result cross checks is the
+\href{https://en.wikipedia.org/wiki/Chinese_restaurant_process#Generalization}
+{Wikipedia entry} on the CRP.
+
+\subsubsection{Gradient of log density of counts}
+
+Gradient with respect to $\theta, \alpha$ attached at \texttt{MakeCRPOutputPSP}.
+
+Since the general density in \eqref{eq:crp-density} is quite complex, we will derive
+only the gradient for \textbf{Case 1} which is the traditional CRP,
+and leave both \textbf{General Case} and \textbf{Case 2} for a
+future exposition.
+
+\textbf{General Case} TODO
+
+\textbf{Case 1} $\alpha = 0$
+
+From the derivation, it follows directly that
+
+\begin{align*}
+\ln\mathbf{P}(B|\alpha=0,\theta)
+    & = K\ln\theta + \sum_{k=1}^{K}\ln\Gamma(N_k) -(\ln\Gamma(\theta+N)-\ln\Gamma(\theta))\\
+\implies \partial_\theta\ln\mathbf{P}(B|\alpha=0,\theta)
+    &= \frac{K}{\theta} - (\psi(\theta+N) - \psi(\theta))
+\end{align*}
+
+where $\psi(x) = \partial_x\ln\Gamma(x)$ is the digamma function, the logarithmic
+derivative of the gamma function.
+
+\textbf{Case 2} $\theta = 0$ TODO
 \end{document}

@@ -1,4 +1,4 @@
-// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -95,7 +95,7 @@ Node* ConcreteTrace::bindPrimitiveSP(const string& name, SP* sp)
 /* Registering metadata */
 void ConcreteTrace::registerAEKernel(Node * node)
 {
-  assert(!arbitraryErgodicKernels.count(node));
+  assert(arbitraryErgodicKernels.count(node) == 0);
   arbitraryErgodicKernels.insert(node);
 }
 
@@ -139,7 +139,7 @@ void ConcreteTrace::registerConstrainedChoice(Node * node) {
 /* Unregistering metadata */
 void ConcreteTrace::unregisterAEKernel(Node * node)
 {
-  assert(arbitraryErgodicKernels.count(node));
+  assert(arbitraryErgodicKernels.count(node) > 0);
   arbitraryErgodicKernels.erase(node);
 }
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -144,8 +144,8 @@ def testAAAParticleWeights():
 def checkAAAParticleWeights(sp):
   if inParallel() and "make_suff_stat_bernoulli" in sp and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and make_suff_stat_bernoulli comes from Lite.")
-  elif config["get_ripl"] == "puma":
-    raise SkipTest("Fails due to a mystery bug in Puma stop_and_copy. Issue: https://app.asana.com/0/11127829865276/13039650533872")
+  if "dir_mult" in sp and config['get_ripl'] == 'puma':
+    raise SkipTest("Dirichlet multinomial in Puma does not accept objects parameter.  Issue #340")
   ripl = get_ripl()
 
   ripl.assume("a", "1.0")
@@ -166,3 +166,32 @@ def checkAAAParticleWeights(sp):
     (forget 'obs1))""" % sp)
   ans = [(False,.25), (True,.75)]
   return reportKnownDiscrete(ans, predictions)
+
+@gen_on_inf_prim("resample")
+def testAAAResampleSmoke():
+  hmm = """
+(make_lazy_hmm
+ (simplex 0.5 0.5)
+ (matrix (array (array 0.7 0.3)
+               (array 0.3 0.7)))
+ (matrix (array (array 0.9 0.2)
+               (array 0.1 0.8))))"""
+  for sp in ["(make_beta_bernoulli 1 1)",
+             "(make_uc_beta_bernoulli 1 1)",
+             # From Lite
+             "(let ((weight (beta 1 1))) (make_suff_stat_bernoulli weight))",
+             "(make_dir_mult (array 0.5 0.5))",
+             "(make_uc_dir_mult (array 0.5 0.5))",
+             "(make_sym_dir_mult 0.5 2)",
+             "(make_uc_sym_dir_mult 0.5 2)",
+             "(make_crp 1)",
+             hmm
+            ]:
+    yield checkAAAResampleSmoke, sp
+
+def checkAAAResampleSmoke(sp):
+  get_ripl().execute_program("""
+(assume foo %s)
+(resample 4)
+(mh default one 1)
+""" % sp)

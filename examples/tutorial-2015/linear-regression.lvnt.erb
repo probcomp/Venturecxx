@@ -362,7 +362,7 @@ which will iterate the Markov chain and draw an animation frame every
  with
 
 ```venture
-stop_continuous_inference
+endloop
 ```
 
 Exercise: Play with this visualization to see how inference is doing.
@@ -408,7 +408,7 @@ Exercise: Play with this visualization to see how inference is doing.
    part.)
 
    ```venture
-   stop_continuous_inference
+   endloop
    ```
 
    We can use `resample` to run multiple independent chains and plot
@@ -608,7 +608,7 @@ The grey dot is currently assumed to be an outlier, whereas the green
 ones are inliers.
 
 ```venture
-stop_continuous_inference
+endloop
 ```
 
 <% # TODO What exericses should we give on this segment? Make gradients do the following thing? %>
@@ -776,7 +776,7 @@ infer loop(do(grad_ascent("param", all, 0.001, 10, 1),
 </div>
 
 ```venture
-stop_continuous_inference
+endloop
 ```
 
 <% # TODO Maybe play with gradients or drift proposals for the weights? %>
