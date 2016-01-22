@@ -33,28 +33,26 @@
 (assume sim_cluster (make_crp alpha))
 (assume z (mem (lambda (i) (tag i (quote z) (sim_cluster)))))
 
-; Priors for the samplers.
-(assume sigma2 (inv_gamma 1 20))
-(assume mu_apogee (normal 1.5e5 (sqrt (* 1e9 sigma2))))
-(assume mu_perigee (normal 2e4 (sqrt (* 1e9 sigma2))))
-
 ; Samplers for apogee, perigee cluster c.
 ; (assume apogee_sampler (mem (lambda (c) (make_nig_normal 1.5e5 1e9 1 20))))
 ; (assume perigee_sampler (mem (lambda (c) (make_nig_normal 2e4 1e9 1 20))))
 
-(assume apogee_sampler
-    (mem (lambda (c) (make_suff_stat_normal mu_apogee (sqrt sigma2)))))
-(assume perigee_sampler
-    (mem (lambda (c) (make_suff_stat_normal mu_perigee (sqrt sigma2)))))
+(assume sigma2_apogee (mem (lambda (c) (inv_gamma 1 20))))
+(assume sigma2_perigee (mem (lambda (c) (inv_gamma 1 20))))
+
+(assume mu_apogee (mem (lambda (c) (normal 1.5e5 (sqrt (* 1e9 (sigma2_apogee c)))))))
+(assume mu_perigee (mem (lambda (c) (normal 2e4 (sqrt (* 1e9 (sigma2_perigee c)))))))
 
 ; Observations of apogee and perigee for satellite i.
 (assume apogee
   (mem (lambda (i)
-    (tag i (quote apogee) (absorbing_apply (apogee_sampler (z i)))))))
+    (tag i (quote apogee)
+      (normal (mu_apogee (z i)) (sqrt (sigma2_apogee (z i))))))))
 
 (assume perigee
   (mem (lambda (i)
-    (tag i (quote perigee) (absorbing_apply (perigee_sampler (z i)))))))
+    (tag i (quote perigee)
+      (normal (mu_perigee (z i)) (sqrt (sigma2_perigee (z i))))))))
 
 ; Kepler's law P(T|A,P).
 (assume noise (gamma 15 .5))
@@ -87,7 +85,7 @@
 (pyexec "from venture.lite.value import VentureValue as VV")
 (pyexec "data = pd.read_csv('satellites.csv').itertuples()")
 
-[define n_samples 1000]
+[define n_samples 100]
 [define observation
   (lambda () (run (pyeval "VV.fromStackDict(vd.vector(list(data.next())))")))]
 (print "Observing")
@@ -99,11 +97,11 @@
     (run
         (do
           (observe (period (atom -1)) period_val foo)
-          ; (repeat 1000
-          ;   (do
-          ;     (mh (atom -1) 'z 100)
-          ;     (hmc (atom -1) all .5 100 50)))
-          (mh (atom -1) one mh_steps)
+          (repeat 1000
+            (do
+              (mh (atom -1) 'z 100)
+              (hmc (atom -1) all .5 100 50)))
+          ; (mh (atom -1) one mh_steps)
           (result <-
             (mapM
               (lambda (k)
@@ -120,6 +118,6 @@
 
 ; ; Inference program.
 (print "Inferring")
-[infer (mh default one 10000)]
+[infer (mh default one 100)]
 [define assignments
   (run (mapM (lambda (i) (sample (z (atom ,i)))) (arange n_samples)))]
