@@ -15,17 +15,18 @@
 ; You should have received a copy of the GNU General Public License
 ; along with Venture.  If not, see <http:;www.gnu.org/licenses/>.
 
-(load_plugin "kepler.py")
+; (load_plugin "kepler.py")
 (load_plugin "absorbing_apply.py")
 
-; Model program.
-; axch suggestion; make foreign SP
-; (assume kepler
-;   (lambda (apogee perigee)
-;     (let ((GM 398600.4418)
-;           (earth_radius 6378)
-;           (a (+ (* .5 (+ (abs apogee) (abs perigee))) earth_radius)))
-;       (/ (* (* 2 3.1415) (sqrt (/ (pow a 3) GM))) 60))))
+;; Model program ;;
+
+; Kepler's law.
+(assume kepler
+  (lambda (apogee perigee)
+    (let ((GM 398600.4418)
+          (earth_radius 6378)
+          (a (+ (* .5 (+ (abs apogee) (abs perigee))) earth_radius)))
+      (/ (* (* 2 3.1415) (sqrt (/ (pow a 3) GM))) 60))))
 
 ; Cluster sampler and assignemnts (z i).
 (assume alpha (gamma 2 .5))
@@ -76,13 +77,13 @@
 (pyexec "from venture.lite.value import VentureValue as VV")
 (pyexec "data = pd.read_csv('satellites.csv').itertuples()")
 
-[define n_samples 1167]
+[define n_samples 1000]
 [define observation
   (lambda () (run (pyeval "VV.fromStackDict(vd.vector(list(data.next())))")))]
 (print "Observing")
 (for_each (arange n_samples) (lambda (d) (observer (observation))))
 
-; Probabilistically invert Kepler's law using single-site MH in local scope.
+; ; Probabilistically invert Kepler's law using single-site MH in local scope.
 [define invert_kepler
   (lambda (period_val mh_steps mh_thin n_samples)
     (run
@@ -90,8 +91,8 @@
           (observe (period (atom -1)) period_val foo)
           ; (repeat 1000
           ;   (do
-              ; (mh (atom -1) 'z 100)
-              ; (hmc (atom -1) all .5 100 50)))
+          ;     (mh (atom -1) 'z 100)
+          ;     (hmc (atom -1) all .5 100 50)))
           (mh (atom -1) one mh_steps)
           (result <-
             (mapM
@@ -107,7 +108,7 @@
           (forget (quote foo))
           (return result))))]
 
-; Inference program.
+; ; Inference program.
 (print "Inferring")
 [infer (mh default one 10000)]
 [define assignments
