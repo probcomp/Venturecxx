@@ -20,7 +20,8 @@ def regexmpl_f_noiseless(x):
 # Covariance functions
 def squared_exponential(sf, l):
     def f(x1, x2):
-        A = spdist.cdist([[x1/l]],[[x2/l]],'sqeuclidean')
+        A = spdist.cdist([[x1]],[[x2]],'sqeuclidean')
+        A /= l**2
         ans = sf * np.exp(-0.5*A)[0,0]
         return ans
     return f
