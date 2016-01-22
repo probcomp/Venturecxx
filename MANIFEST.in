@@ -21,6 +21,7 @@ include refman/apiref.rst
 include refman/venture.lite.value.rst
 include refman/inference.rst
 include refman/venture.lite.sp.rst
+include refman/venstan.rst
 include puma-crashes.cfg
 include all-inference-quality
 include setup.py
