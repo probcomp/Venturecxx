@@ -51,8 +51,10 @@ CREATE TABLE bayesdb_vsgpm_ripl (
 class VsGpm(object):
     def __init__(self):
         self.memory_cache = dict()
-        self.mh_steps = 2000
-        self.mh_thin = 100
+        self.mh_steps = 1000
+        self.mh_thin = 20
+        self.algorithms = ['block_mh', 'single_site_mh', 'gibbs']
+        self.algorithm = 'block_mh'
 
     def name(self):
         return 'vsgpm'
@@ -100,9 +102,10 @@ class VsGpm(object):
                 '(lambda (i col) ((lookup columns col) (atom i)))')
             for i, row in enumerate(data):
                 for j, val in enumerate(row):
+                    if i % 100 == 0: print (i, j, val)
                     if val is not None and not math.isnan(val):
                         ripl.observe('(get_cell %i %i)' % (i, j), val)
-            self._save_ripl(bdb, generator_id, modelno, ripl)
+            # self._save_ripl(bdb, generator_id, modelno, ripl)
             self.memory_cache[(generator_id, modelno)] = ripl
 
     def analyze_models(self, bdb, generator_id, modelnos=None, iterations=1,
@@ -124,14 +127,26 @@ class VsGpm(object):
         m = bdb.np_prng.randint(0, high=n_model)
         # ripl = self._duplicate_ripl(bdb, generator_id, m)
         ripl = self._ripl(bdb, generator_id, m)
+
         # Observe the constraints.
         clabel = 'l' + str(time.time()).replace('.','')
         for (row, col, val) in constraints:
             ripl.observe('(get_cell %i %i)' % (row, col), val,
                 label='%s%i%i' % (clabel, row, col))
-        # Run mh_steps of inference.
+
+        # Run inference.
         for row in set([r for (r, _, _) in constraints]):
-            ripl.infer('(mh (atom %i) one %i)' % (row, self.mh_steps - self.mh_thin))
+            if self.algorithm == 'block_mh':
+                ripl.infer('(mh (atom %i) all %i)' % (row, self.mh_steps))
+            elif self.algorithm == 'single_site_mh':
+                ripl.infer('(mh (atom %i) one %i)' % (row, self.mh_steps))
+            elif self.algorithm == 'gibbs':
+                ripl.infer('(gibbs (atom %i) (quote z) 5)' % (row))
+                ripl.infer('(mh (atom %i) one %i)' % (row, self.mh_steps))
+            else:
+                raise ValueError('HMC is to be implemented.')
+
+        # Obtain the samples.
         for k in xrange(num_predictions):
             tlabel = 'l' + str(time.time()).replace('.','')
             # Run mh_thin intermediate steps.
@@ -145,9 +160,11 @@ class VsGpm(object):
             for (row, col) in targets:
                 ripl.forget('%s%i%i' % (tlabel, row, col))
             results[k] = result
+
         # Forget the constraints.
         for (row, col, val) in constraints:
             ripl.forget('%s%i%i' % (clabel, row, col))
+
         return results
 
     def _parse_schema(self, bdb, schema):

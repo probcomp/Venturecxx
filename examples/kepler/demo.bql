@@ -1,0 +1,57 @@
+-- Load an observed sample from satellite population.
+.csv satellites satellites.csv
+
+-- Default MML GPM with dependence assertion.
+CREATE GPM orbital_default FOR satellites USING default(
+    Apogee_km NUMERICAL,
+    Perigee_km NUMERICAL,
+    Period_minutes NUMERICAL,
+    ENSURE DEPENDENT(Apogee_km, Perigee_km, Period_minutes)
+    );
+
+-- Default MML GPM extended with kepler foreign predictor (likelihood weighting).
+CREATE GPM orbital_kepler FOR satellites USING composer(
+    default (
+        Perigee_km NUMERICAL,
+        Apogee_km NUMERICAL,
+    ),
+    foreign_model ( source = stochastic_kepler.py
+        Period_minutes NUMERICAL
+            GIVEN Perigee_km, Apogee_km
+    )
+    ENSURE DEPENDENT(Apogee_km, Perigee_km)
+    );
+
+-- Foreign MML GPM implemented in VentureScript (single-site MH).
+CREATE GPM ven_kep FOR satellites USING vsgpm(
+    columns (
+        Apogee_km NUMERICAL, Perigee_km NUMERICAL,
+        Period_minutes NUMERICAL),
+    program (
+        (assume kepler
+          (lambda (apogee perigee)
+            (let ((GM 398600.4418) (earth_radius 6378)
+                  (a (+ (* .5 (+ (abs apogee) (abs perigee))) earth_radius)))
+              (/ (* (* 2 3.1415) (sqrt (/ (pow a 3) GM))) 60))))
+
+        (assume alpha (gamma 2 .5))
+        (assume sim_cluster (make_crp alpha))
+        (assume z (mem (lambda (i) (tag i (quote z) (sim_cluster)))))
+
+        (assume apogee_sampler (mem (lambda (c) (make_nig_normal 1.5e5 1e9 1 20))))
+        (assume perigee_sampler (mem (lambda (c) (make_nig_normal 2e4 1e9 1 20))))
+
+        (assume apogee (mem (lambda (i) (apogee_sampler (z i)))))
+        (assume perigee (mem (lambda (i) (perigee_sampler (z i)))))
+
+        (assume noise (gamma 15 .5))
+        (assume period
+          (mem (lambda (i) (normal (kepler (apogee i) (perigee i)) noise))))
+    ));
+
+INITIALIZE 12 MODELS FOR [orbital_default, orbital_kepler, ven_kep]
+
+ANALYZE [orbital_default, orbital_kepler, ven_kep] FOR 1000 ITERATION WAIT
+
+SIMULATE Apogee_km FROM [orbital_default, orbital_kepler, ven_kep]
+    GIVEN Perigee_km = 17800, Period_minutes = 900 LIMIT 100

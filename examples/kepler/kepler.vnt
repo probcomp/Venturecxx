@@ -15,18 +15,18 @@
 ; You should have received a copy of the GNU General Public License
 ; along with Venture.  If not, see <http:;www.gnu.org/licenses/>.
 
-; (load_plugin "kepler.py")
+(load_plugin "kepler.py")
 (load_plugin "absorbing_apply.py")
 
 ;; Model program ;;
 
 ; Kepler's law.
-(assume kepler
-  (lambda (apogee perigee)
-    (let ((GM 398600.4418)
-          (earth_radius 6378)
-          (a (+ (* .5 (+ (abs apogee) (abs perigee))) earth_radius)))
-      (/ (* (* 2 3.1415) (sqrt (/ (pow a 3) GM))) 60))))
+; (assume kepler
+;   (lambda (apogee perigee)
+;     (let ((GM 398600.4418)
+;           (earth_radius 6378)
+;           (a (+ (* .5 (+ (abs apogee) (abs perigee))) earth_radius)))
+;       (/ (* (* 2 3.1415) (sqrt (/ (pow a 3) GM))) 60))))
 
 ; Cluster sampler and assignemnts (z i).
 (assume alpha (gamma 2 .5))
@@ -34,25 +34,22 @@
 (assume z (mem (lambda (i) (tag i (quote z) (sim_cluster)))))
 
 ; Samplers for apogee, perigee cluster c.
-; (assume apogee_sampler (mem (lambda (c) (make_nig_normal 1.5e5 1e9 1 20))))
-; (assume perigee_sampler (mem (lambda (c) (make_nig_normal 2e4 1e9 1 20))))
+(assume apogee_sampler (mem (lambda (c) (make_nig_normal 1.5e5 1e9 1 20))))
+(assume perigee_sampler (mem (lambda (c) (make_nig_normal 2e4 1e9 1 20))))
 
-(assume sigma2_apogee (mem (lambda (c) (inv_gamma 1 20))))
-(assume sigma2_perigee (mem (lambda (c) (inv_gamma 1 20))))
-
-(assume mu_apogee
-  (mem (lambda (c) (normal 1.5e5 (sqrt (* 1e9 (sigma2_apogee c)))))))
-(assume mu_perigee
-  (mem (lambda (c) (normal 2e4 (sqrt (* 1e9 (sigma2_perigee c)))))))
-
-(assume apogee_sampler
-  (mem (lambda (c)
-    (tag c 'as
-      (make_suff_stat_normal (mu_apogee c) (sqrt (sigma2_apogee c)))))))
-
-(assume perigee_sampler
-  (mem (lambda (c)
-    (make_suff_stat_normal (mu_perigee c) (sqrt (sigma2_perigee c))))))
+; (assume sigma2_apogee (mem (lambda (c) (inv_gamma 1 20))))
+; (assume sigma2_perigee (mem (lambda (c) (inv_gamma 1 20))))
+; (assume mu_apogee
+;   (mem (lambda (c) (normal 1.5e5 (sqrt (* 1e9 (sigma2_apogee c)))))))
+; (assume mu_perigee
+;   (mem (lambda (c) (normal 2e4 (sqrt (* 1e9 (sigma2_perigee c)))))))
+; (assume apogee_sampler
+;   (mem (lambda (c)
+;     (tag c 'as
+;       (make_suff_stat_normal (mu_apogee c) (sqrt (sigma2_apogee c)))))))
+; (assume perigee_sampler
+;   (mem (lambda (c)
+;     (make_suff_stat_normal (mu_perigee c) (sqrt (sigma2_perigee c))))))
 
 ; Observations of apogee and perigee for satellite i.
  (assume apogee
@@ -75,59 +72,59 @@
 ; GPM interface commands.
 (assume columns (list apogee perigee period))
 
-; Observation process.
-[define observer
-  (lambda (iapt)
-      (let ((sat_id (lookup iapt 0))
-            (sat_ap (lookup iapt 1))
-            (sat_pg (lookup iapt 2))
-            (sat_pr (lookup iapt 3)))
-        (do
-          (if (< 0 sat_ap)
-            (observe (apogee (atom ,sat_id)) sat_ap) pass)
-          (if (< 0 sat_pg)
-            (observe (perigee (atom ,sat_id)) sat_pg) pass)
-          (if (< 0 sat_pr)
-            (observe (period (atom ,sat_id)) sat_pr) pass))))]
+; ; Observation process.
+; [define observer
+;   (lambda (iapt)
+;       (let ((sat_id (lookup iapt 0))
+;             (sat_ap (lookup iapt 1))
+;             (sat_pg (lookup iapt 2))
+;             (sat_pr (lookup iapt 3)))
+;         (do
+;           (if (< 0 sat_ap)
+;             (observe (apogee (atom ,sat_id)) sat_ap) pass)
+;           (if (< 0 sat_pg)
+;             (observe (perigee (atom ,sat_id)) sat_pg) pass)
+;           (if (< 0 sat_pr)
+;             (observe (period (atom ,sat_id)) sat_pr) pass))))]
 
-(pyexec "import pandas as pd; import venture.value.dicts as vd")
-(pyexec "from venture.lite.value import VentureValue as VV")
-(pyexec "data = pd.read_csv('satellites.csv').itertuples()")
+; (pyexec "import pandas as pd; import venture.value.dicts as vd")
+; (pyexec "from venture.lite.value import VentureValue as VV")
+; (pyexec "data = pd.read_csv('satellites.csv').itertuples()")
 
-[define n_samples 1100]
-[define observation
-  (lambda () (run (pyeval "VV.fromStackDict(vd.vector(list(data.next())))")))]
-(print "Observing")
-(for_each (arange n_samples) (lambda (d) (observer (observation))))
+; [define n_samples 10]
+; [define observation
+;   (lambda () (run (pyeval "VV.fromStackDict(vd.vector(list(data.next())))")))]
+; (print "Observing")
+; (for_each (arange n_samples) (lambda (d) (observer (observation))))
 
 ; ; Probabilistically invert Kepler's law using single-site MH in local scope.
-[define invert_kepler
-  (lambda (period_val n_samples)
-    (run
-        (do
-          (observe (period (atom -1)) period_val foo)
-          (repeat 10
-            (do
-              (gibbs (atom -1) 'z 1)
-              (hmc (atom -1) 'apogee 0.1 10 10)
-              (hmc (atom -1) 'perigee 0.1 10 10)))
-          ; (mh (atom -1) one mh_steps)
-          (result <-
-            (mapM
-              (lambda (k)
-                (do
-                  (mh (atom -1) one 20)
-                  (sample
-                    (list (apogee (atom -1))
-                          (perigee (atom -1))
-                          (kepler (apogee (atom -1))
-                                  (perigee (atom -1)))))))
-              (arange n_samples)))
-          (forget (quote foo))
-          (return result))))]
+; [define invert_kepler
+;   (lambda (period_val n_samples)
+;     (run
+;         (do
+;           (observe (period (atom -1)) period_val foo)
+;           (repeat 10
+;             (do
+;               (gibbs (atom -1) 'z 1)
+;               (hmc (atom -1) 'apogee 0.1 10 10)
+;               (hmc (atom -1) 'perigee 0.1 10 10)))
+;           ; (mh (atom -1) one mh_steps)
+;           (result <-
+;             (mapM
+;               (lambda (k)
+;                 (do
+;                   (mh (atom -1) one 20)
+;                   (sample
+;                     (list (apogee (atom -1))
+;                           (perigee (atom -1))
+;                           (kepler (apogee (atom -1))
+;                                   (perigee (atom -1)))))))
+;               (arange n_samples)))
+;           (forget (quote foo))
+;           (return result))))]
 
 ; ; Inference program.
-(print "Inferring")
-[infer (mh default one 100)]
-[define assignments
-  (run (mapM (lambda (i) (sample (z (atom ,i)))) (arange n_samples)))]
+; (print "Inferring")
+; [infer (mh default one 100)]
+; [define assignments
+;   (run (mapM (lambda (i) (sample (z (atom ,i)))) (arange n_samples)))]
