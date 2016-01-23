@@ -18,36 +18,45 @@ def regexmpl_f_noiseless(x):
 
 
 # Covariance functions
+def isotropic_covariance(f):
+    def k(x1, x2):
+        return f(spdist.cdist([[x1]], [[x2]], 'sqeuclidean'))
+    return k
+
+def dotproduct_covariance(f):
+    def k(x1, x2):
+        return f(x1 * x2)
+    return k
+
+
 def squared_exponential(sf, l):
-    def f(x1, x2):
-        A = spdist.cdist([[x1]],[[x2]],'sqeuclidean')
+    def f(A):
         A /= l**2
         ans = sf * np.exp(-0.5*A)[0,0]
         return ans
-    return f
+    return isotropic_covariance(f)
 
 def whitenoise(s):
-    def f(x1, x2):
+    def f(M):
         tol = 1.e-9  # Tolerance for declaring two vectors "equal"
-        M = spdist.cdist([[x1]], [[x2]], 'sqeuclidean')
         A = s * (M < tol)[0,0]
         return A
-    return f
+    return isotropic_covariance(f)
 
 def periodic(l,p,sf):
-    def f(x1, x2):
-        A = np.sqrt(spdist.cdist([[x1]],[[x2]],'sqeuclidean'))[0,0]
+    def f(A):
+        A = np.sqrt(A)[0,0]
         A = np.pi*A/p
         A = np.sin(A)/l
         A = A * A
         A = sf *np.exp(-2.*A)
         return A
-    return f
+    return isotropic_covariance(f)
 
 def linear(sf):
-    def f(x1, x2):
-        return sf * (x1*x2 + 1e-10)  # 1e-10 required for numerical accuracy
-    return f
+    def f(t):
+        return sf * (t + 1e-10)  # 1e-10 required for numerical accuracy
+    return dotproduct_covariance(f)
 
 covType = sp.SPType([t.NumberType(), t.NumberType()], t.NumberType())
 
