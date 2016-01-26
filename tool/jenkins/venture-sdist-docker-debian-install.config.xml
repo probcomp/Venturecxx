@@ -28,7 +28,7 @@
   <triggers>
     <jenkins.triggers.ReverseBuildTrigger>
       <spec></spec>
-      <upstreamProjects>venture-crashes, </upstreamProjects>
+      <upstreamProjects>venture-crashes,</upstreamProjects>
       <threshold>
         <name>SUCCESS</name>
         <ordinal>0</ordinal>
@@ -52,23 +52,23 @@
       <chatNotification>false</chatNotification>
       <notifyMap>
         <entry>
-          <com.flowdock.jenkins.BuildResult>UNSTABLE</com.flowdock.jenkins.BuildResult>
-          <boolean>false</boolean>
+          <com.flowdock.jenkins.BuildResult>SUCCESS</com.flowdock.jenkins.BuildResult>
+          <boolean>true</boolean>
         </entry>
         <entry>
           <com.flowdock.jenkins.BuildResult>FAILURE</com.flowdock.jenkins.BuildResult>
           <boolean>true</boolean>
         </entry>
         <entry>
-          <com.flowdock.jenkins.BuildResult>SUCCESS</com.flowdock.jenkins.BuildResult>
-          <boolean>true</boolean>
+          <com.flowdock.jenkins.BuildResult>ABORTED</com.flowdock.jenkins.BuildResult>
+          <boolean>false</boolean>
         </entry>
         <entry>
           <com.flowdock.jenkins.BuildResult>NOT_BUILT</com.flowdock.jenkins.BuildResult>
           <boolean>false</boolean>
         </entry>
         <entry>
-          <com.flowdock.jenkins.BuildResult>ABORTED</com.flowdock.jenkins.BuildResult>
+          <com.flowdock.jenkins.BuildResult>UNSTABLE</com.flowdock.jenkins.BuildResult>
           <boolean>false</boolean>
         </entry>
         <entry>
