@@ -339,11 +339,12 @@ run(load_plugin("gpexample_plugin.py"));
 and set up the Gaussian process like so
 
 ```venture
-// Covariance function
-assume se = make_squaredexp(1.2, 0.8);
+// Covariance function: squared exponential with length-scale 0.8,
+// scaled by an squared output scale of 1.2
+assume se = gp_cov_scale(1.2, gp_cov_se(0.8*0.8));
 
 // Mean function
-assume zero_func = make_const_func(0.0);
+assume zero_func = gp_mean_const(0.0);
 
 // Gaussian process
 assume g = make_gp(zero_func, se);

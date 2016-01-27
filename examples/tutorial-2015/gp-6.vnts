@@ -4,10 +4,11 @@ run(load_plugin("gpexample_plugin.py"));
 assume V = make_audited_expensive_function("V");
 
 // The GP memoizer
-assume zero_func = make_const_func(0.0);
+assume zero_func = gp_mean_const(0.0);
 assume V_sf = tag(quote(hyper), 0, uniform_continuous(0, 10));
 assume V_l = tag(quote(hyper), 1, uniform_continuous(0, 10));
-assume V_se = make_squaredexp(V_sf, V_l);
+assume V_l2 = V_l*V_l;
+assume V_se = gp_cov_scale(V_sf, gp_cov_se(V_l2));
 assume V_package = gpmem(V, zero_func, V_se);
 assume V_probe = first(V_package);
 assume V_emu = second(V_package);
