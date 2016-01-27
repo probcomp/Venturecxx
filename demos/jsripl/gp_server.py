@@ -149,5 +149,5 @@ ripl.infer("(incorporate)")
 from venture.server import RiplRestServer
 
 server = RiplRestServer(ripl)
-server.run(host='0.0.0.0', port=8082)
+server.run(host='127.0.0.1', port=8082)
 
