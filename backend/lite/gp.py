@@ -46,10 +46,10 @@ class GP(object):
     return self.samples
 
   def mean_array(self, xs):
-    return np.array(map(self.mean, xs))
+    return self.mean(np.asarray(xs))
 
   def cov_matrix(self, x1s, x2s):
-    return np.array([[self.covariance(x1, x2) for x2 in x2s] for x1 in x1s])
+    return self.covariance(np.asarray(x1s), np.asarray(x2s))
 
   def getNormal(self, xs):
     """Returns the mean and covariance matrices at a set of input points."""

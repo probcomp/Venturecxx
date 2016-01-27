@@ -35,15 +35,17 @@ import scipy.spatial.distance
 
 def dotproduct_covariance(f):
   def k(x1, x2):
-    return f(np.outer(x1, x2)[0][0])
+    return f(np.outer(x1, x2))
   return k
 
 linear = dotproduct_covariance(lambda p: p)
 
 def isotropic_covariance(f):
   def k(x1, x2):
-    r2 = scipy.spatial.distance.cdist([[x1]], [[x2]], 'sqeuclidean')
-    return f(r2[0][0])
+    x1 = x1.reshape(len(x1), -1)
+    x2 = x2.reshape(len(x2), -1)
+    r2 = scipy.spatial.distance.cdist(x1, x2, 'sqeuclidean')
+    return f(r2)
   return k
 
 def squared_exponential(a, l):
@@ -54,20 +56,22 @@ def squared_exponential(a, l):
 # input and output types for gp
 xType = t.NumberType()
 oType = t.NumberType()
+xsType = t.HomogeneousArrayType(xType)
+osType = t.HomogeneousArrayType(oType)
 
-constantType = SPType([t.AnyType()], oType)
+meanType = SPType([xsType], osType)
 def makeConstFunc(c):
-  return VentureFunction(lambda _: c, sp_type=constantType)
+  return VentureFunction(lambda x: c*np.ones(x.shape), sp_type=meanType)
 
 #print ripl.predict('(app zero 1)')
 
-squaredExponentialType = SPType([xType, xType], oType)
+squaredExponentialType = SPType([xsType, xsType], osType)
 def makeSquaredExponential(a, l):
   return VentureFunction(squared_exponential(a, l), sp_type=squaredExponentialType)
 
 def prep_ripl(ripl):
   ripl.assume('app', 'apply_function')
-  ripl.assume('make_const_func', VentureFunction(makeConstFunc, [xType], constantType))
+  ripl.assume('make_const_func', VentureFunction(makeConstFunc, [xType], meanType))
   ripl.assume('make_squared_exponential', VentureFunction(makeSquaredExponential, [t.NumberType(), xType], t.AnyType("VentureFunction")))
   ripl.assume('zero', "(app make_const_func 0)")
   ripl.assume('sq_exp', "(app make_squared_exponential 1 1)")
@@ -120,7 +124,7 @@ def testGPMean2():
 def testHyperparameterInferenceSmoke():
   ripl = get_ripl()
   fType = t.AnyType("VentureFunction")
-  ripl.assume('make_const_func', VentureFunction(makeConstFunc, [xType], constantType))
+  ripl.assume('make_const_func', VentureFunction(makeConstFunc, [xType], meanType))
   ripl.assume('make_squared_exponential', VentureFunction(makeSquaredExponential, [t.NumberType(), xType], fType))
   ripl.execute_program("""\
   [assume mean (apply_function make_const_func 0)]

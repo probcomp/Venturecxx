@@ -20,12 +20,14 @@ def regexmpl_f_noiseless(x):
 # Covariance functions
 def isotropic_covariance(f):
     def k(x1, x2):
-        return f(spdist.cdist([[x1]], [[x2]], 'sqeuclidean')[0][0])
+        x1 = x1.reshape(len(x1), -1)
+        x2 = x2.reshape(len(x2), -1)
+        return f(spdist.cdist(x1, x2, 'sqeuclidean'))
     return k
 
 def dotproduct_covariance(f):
     def k(x1, x2):
-        return f(np.outer(x1, x2)[0][0])
+        return f(np.outer(x1, x2))
     return k
 
 
@@ -58,7 +60,13 @@ def linear(sf):
         return sf * (t + 1e-10)  # 1e-10 required for numerical accuracy
     return dotproduct_covariance(f)
 
-covType = sp.SPType([t.NumberType(), t.NumberType()], t.NumberType())
+xType = t.NumberType()
+oType = t.NumberType()
+xsType = t.HomogeneousArrayType(xType)
+osType = t.HomogeneousArrayType(oType)
+
+meanType = sp.SPType([xsType], osType)
+covType = sp.SPType([xsType, xsType], osType)
 
 def __venture_start__(ripl, *args):
 
@@ -82,8 +90,8 @@ def __venture_start__(ripl, *args):
                     name="LIN",parameter=[sf], sp_type=covType),
             [t.NumberType()], t.AnyType("VentureFunction"))
     make_const_func_SP = deterministic_typed(lambda c:
-            VentureFunction(lambda x: c,
-                sp_type = sp.SPType([], t.NumberType())),
+            VentureFunction(lambda x: c*np.ones(x.shape),
+                sp_type = meanType),
             [t.NumberType()], t.AnyType("VentureFunction"))
 
     add_funcs_SP = deterministic_typed(lambda f1, f2: VentureFunction(lambda x1,x2: f1(x1,x2) + f2(x1,x2), sp_type=covType),

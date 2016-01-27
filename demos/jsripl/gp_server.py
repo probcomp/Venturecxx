@@ -27,15 +27,17 @@ def const(c):
 
 def isotropic_covariance(f):
   def k(x1, x2):
-    r2 = scipy.spatial.distance.cdist([[x1]], [[x2]], 'sqeuclidean')
-    return f(r2[0][0])
+    x1 = x1.reshape(len(x1), -1)
+    x2 = x2.reshape(len(x2), -1)
+    r2 = scipy.spatial.distance.cdist(x1, x2, 'sqeuclidean')
+    return f(r2)
   return k
 
 delta = isotropic_covariance(lambda r: 1.*(r == 0))
 
 def dotproduct_covariance(f, origin):
   def k(x1, x2):
-    return f(np.outer(x1 - origin, x2 - origin)[0][0])
+    return f(np.outer(x1 - origin, x2 - origin))
   return k
 
 def linear(v, c):
@@ -67,15 +69,17 @@ fType = t.AnyType("VentureFunction")
 # input and output types for gp
 xType = t.NumberType()
 oType = t.NumberType()
-kernelType = SPType([xType, xType], oType)
+xsType = t.HomogeneousArrayType(xType)
+osType = t.HomogeneousArrayType(oType)
+kernelType = SPType([xsType, xsType], osType)
 
 ripl.assume('app', 'apply_function')
 
-constantType = SPType([t.AnyType()], oType)
+meanType = SPType([xsType], osType)
 def makeConstFunc(c):
-  return VentureFunction(lambda _: c, sp_type=constantType)
+  return VentureFunction(lambda x: c*np.ones(x.shape), sp_type=meanType)
 
-ripl.assume('make_const_func', VentureFunction(makeConstFunc, [xType], constantType))
+ripl.assume('make_const_func', VentureFunction(makeConstFunc, [xType], meanType))
 
 #ripl.assume('zero', "(app make_const_func 0)")
 #print ripl.predict('(app zero 1)')
