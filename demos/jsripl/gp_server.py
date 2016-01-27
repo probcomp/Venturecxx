@@ -24,8 +24,13 @@ def const(c):
     return c
   return f
 
-def delta(x1, x2):
-  return 1 if x1 == x2 else 0
+def isotropic_covariance(f):
+  def k(x1, x2):
+    d = x1 - x2
+    return f(d*d)
+  return k
+
+delta = isotropic_covariance(lambda r: 1 if r == 0 else 0)
 
 def linear(v, c):
   def f(x1, x2):
@@ -33,10 +38,9 @@ def linear(v, c):
   return f
 
 def squared_exponential(a, l):
-  def f(x1, x2):
-    x = (x1-x2)/l
-    return a * np.exp(- np.dot(x, x))
-  return f
+  def f(r2):
+    return a * np.exp(-r2/l**2)
+  return isotropic_covariance(f)
 
 def lift_binary(op):
   def lifted(f1, f2):
