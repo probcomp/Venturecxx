@@ -21,6 +21,7 @@ import numpy.linalg as la
 import numpy.random as npr
 
 from venture.lite.exception import VentureValueError
+from venture.lite.function import VentureFunction
 from venture.lite.psp import DeterministicMakerAAAPSP
 from venture.lite.psp import NullRequestPSP
 from venture.lite.psp import RandomPSP
@@ -30,7 +31,9 @@ from venture.lite.sp import SPAux
 from venture.lite.sp import SPType
 from venture.lite.sp import VentureSPRecord
 from venture.lite.sp_help import dispatching_psp
+from venture.lite.sp_help import deterministic_typed
 from venture.lite.sp_registry import registerBuiltinSP
+import venture.lite.covariance as cov
 import venture.lite.mvnormal as mvnormal
 import venture.lite.types as t
 import venture.lite.value as v
@@ -196,3 +199,47 @@ makeGPType = SPType([t.AnyType("mean function"), t.AnyType("covariance function"
 makeGPSP = SP(NullRequestPSP(), TypedPSP(MakeGPOutputPSP(), makeGPType))
 
 registerBuiltinSP("make_gp", makeGPSP)
+
+xType = t.NumberType()
+oType = t.NumberType()
+xsType = t.HomogeneousArrayType(xType)
+osType = t.HomogeneousArrayType(oType)
+
+meanType = SPType([xsType], osType)
+covarianceType = SPType([xsType, xsType], osType)
+functionType = t.AnyType("VentureFunction")
+
+def _mean_maker(f, argtypes):
+  return deterministic_typed(
+    lambda *x: VentureFunction(f(*x), sp_type=meanType),
+    argtypes, functionType)
+def _cov_maker(f, argtypes):
+  return deterministic_typed(
+    lambda *x: VentureFunction(f(*x), sp_type=covarianceType),
+    argtypes, functionType)
+
+def mean_const(c):
+  return lambda x: c*np.ones(x.shape)
+registerBuiltinSP("gp_mean_const", _mean_maker(mean_const, [t.NumberType()]))
+registerBuiltinSP("gp_cov_const", _cov_maker(cov.const, [t.NumberType()]))
+registerBuiltinSP("gp_cov_delta", _cov_maker(cov.delta, [t.NumberType()]))
+registerBuiltinSP("gp_cov_se", _cov_maker(cov.se, [t.NumberType()]))
+registerBuiltinSP("gp_cov_periodic", _cov_maker(cov.periodic,
+    [t.NumberType(), t.NumberType()]))
+registerBuiltinSP("gp_cov_rq", _cov_maker(cov.rq,
+    [t.NumberType(), t.NumberType()]))
+registerBuiltinSP("gp_cov_matern", _cov_maker(cov.matern,
+    [t.NumberType(), t.NumberType()]))
+registerBuiltinSP("gp_cov_matern_32", _cov_maker(cov.matern_32,
+    [t.NumberType()]))
+registerBuiltinSP("gp_cov_matern_52", _cov_maker(cov.matern_52,
+    [t.NumberType()]))
+registerBuiltinSP("gp_cov_linear", _cov_maker(cov.linear, [xType]))
+registerBuiltinSP("gp_cov_noise", _cov_maker(cov.noise,
+    [t.NumberType(), functionType]))
+registerBuiltinSP("gp_cov_scale", _cov_maker(cov.scale,
+    [t.NumberType(), functionType]))
+registerBuiltinSP("gp_cov_sum", _cov_maker(cov.sum,
+    [functionType, functionType]))
+registerBuiltinSP("gp_cov_product", _cov_maker(cov.product,
+    [functionType, functionType]))
