@@ -20,32 +20,32 @@ def regexmpl_f_noiseless(x):
 # Covariance functions
 def isotropic_covariance(f):
     def k(x1, x2):
-        return f(spdist.cdist([[x1]], [[x2]], 'sqeuclidean'))
+        return f(spdist.cdist([[x1]], [[x2]], 'sqeuclidean')[0][0])
     return k
 
 def dotproduct_covariance(f):
     def k(x1, x2):
-        return f(x1 * x2)
+        return f(np.outer(x1, x2)[0][0])
     return k
 
 
 def squared_exponential(sf, l):
     def f(A):
         A /= l**2
-        ans = sf * np.exp(-0.5*A)[0,0]
+        ans = sf * np.exp(-0.5*A)
         return ans
     return isotropic_covariance(f)
 
 def whitenoise(s):
     def f(M):
         tol = 1.e-9  # Tolerance for declaring two vectors "equal"
-        A = s * (M < tol)[0,0]
+        A = s * (M < tol)
         return A
     return isotropic_covariance(f)
 
 def periodic(l,p,sf):
     def f(A):
-        A = np.sqrt(A)[0,0]
+        A = np.sqrt(A)
         A = np.pi*A/p
         A = np.sin(A)/l
         A = A * A

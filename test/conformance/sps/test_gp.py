@@ -31,14 +31,25 @@ from venture.test.stats import reportKnownMean
 from venture.test.stats import statisticalTest
 import venture.lite.types as t
 import venture.lite.value as v
+import scipy.spatial.distance
 
-def linear(x1, x2):
-  return x1 * x2
+def dotproduct_covariance(f):
+  def k(x1, x2):
+    return f(np.outer(x1, x2)[0][0])
+  return k
+
+linear = dotproduct_covariance(lambda p: p)
+
+def isotropic_covariance(f):
+  def k(x1, x2):
+    r2 = scipy.spatial.distance.cdist([[x1]], [[x2]], 'sqeuclidean')
+    return f(r2[0][0])
+  return k
 
 def squared_exponential(a, l):
-  def f(x1, x2):
-    return a * np.exp(- la.norm((x1-x2)/l))
-  return f
+  def f(r2):
+    return a * np.exp(-r2/l**2)
+  return isotropic_covariance(f)
 
 # input and output types for gp
 xType = t.NumberType()

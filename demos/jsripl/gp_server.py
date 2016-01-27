@@ -18,6 +18,7 @@
 import numpy as np
 import numpy.linalg as la
 import numpy.random as npr
+import scipy.spatial.distance
 
 def const(c):
   def f(x1, x2):
@@ -26,16 +27,21 @@ def const(c):
 
 def isotropic_covariance(f):
   def k(x1, x2):
-    d = x1 - x2
-    return f(d*d)
+    r2 = scipy.spatial.distance.cdist([[x1]], [[x2]], 'sqeuclidean')
+    return f(r2[0][0])
   return k
 
-delta = isotropic_covariance(lambda r: 1 if r == 0 else 0)
+delta = isotropic_covariance(lambda r: 1.*(r == 0))
+
+def dotproduct_covariance(f, origin):
+  def k(x1, x2):
+    return f(np.outer(x1 - origin, x2 - origin)[0][0])
+  return k
 
 def linear(v, c):
-  def f(x1, x2):
-    return v * (x1-c) * (x2-c)
-  return f
+  def f(p):
+    return v*p
+  return dotproduct_covariance(f, c)
 
 def squared_exponential(a, l):
   def f(r2):
