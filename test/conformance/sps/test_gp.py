@@ -29,29 +29,15 @@ from venture.test.config import get_ripl
 from venture.test.stats import reportKnownGaussian
 from venture.test.stats import reportKnownMean
 from venture.test.stats import statisticalTest
+import venture.lite.covariance as cov
 import venture.lite.types as t
 import venture.lite.value as v
-import scipy.spatial.distance
-
-def dotproduct_covariance(f):
-  def k(x1, x2):
-    return f(np.outer(x1, x2))
-  return k
-
-linear = dotproduct_covariance(lambda p: p)
-
-def isotropic_covariance(f):
-  def k(x1, x2):
-    x1 = x1.reshape(len(x1), -1)
-    x2 = x2.reshape(len(x2), -1)
-    r2 = scipy.spatial.distance.cdist(x1, x2, 'sqeuclidean')
-    return f(r2)
-  return k
 
 def squared_exponential(a, l):
-  def f(r2):
-    return a * np.exp(-r2/l**2)
-  return isotropic_covariance(f)
+  # XXX We take a squared output factor and a length-scale, divided by
+  # sqrt(2) because we had omitted a factor of 2 in the formula.
+  # cov.se takes a squared length-scale.
+  return cov.scale(a, cov.se(2. * l**2))
 
 # input and output types for gp
 xType = t.NumberType()

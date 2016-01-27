@@ -18,37 +18,20 @@
 import numpy as np
 import numpy.linalg as la
 import numpy.random as npr
-import scipy.spatial.distance
 
-def const(c):
-  def f(x1, x2):
-    return c
-  return f
+import venture.lite.covariance as cov
 
-def isotropic_covariance(f):
-  def k(x1, x2):
-    x1 = x1.reshape(len(x1), -1)
-    x2 = x2.reshape(len(x2), -1)
-    r2 = scipy.spatial.distance.cdist(x1, x2, 'sqeuclidean')
-    return f(r2)
-  return k
-
-delta = isotropic_covariance(lambda r: 1.*(r == 0))
-
-def dotproduct_covariance(f, origin):
-  def k(x1, x2):
-    return f(np.outer(x1 - origin, x2 - origin))
-  return k
+const = cov.const
+delta = cov.delta(0.)
 
 def linear(v, c):
-  def f(p):
-    return v*p
-  return dotproduct_covariance(f, c)
+  return cov.scale(v, cov.linear(c))
 
 def squared_exponential(a, l):
-  def f(r2):
-    return a * np.exp(-r2/l**2)
-  return isotropic_covariance(f)
+  # XXX We take a squared output factor and a length-scale, multiplied
+  # by sqrt(2) because we had omitted a factor of 2 in the formula.
+  # cov.se takes a squared length-scale.
+  return cov.scale(a, cov.se(l**2 / 2.))
 
 def lift_binary(op):
   def lifted(f1, f2):

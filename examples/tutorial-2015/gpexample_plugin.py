@@ -3,8 +3,8 @@ sys.path.append('.')
 
 import numpy as np
 from numpy.random import random as rand
-import scipy.spatial.distance as spdist
 
+import venture.lite.covariance as cov
 import venture.lite.types as t
 import venture.lite.sp as sp
 from venture.lite.function import VentureFunction
@@ -18,47 +18,19 @@ def regexmpl_f_noiseless(x):
 
 
 # Covariance functions
-def isotropic_covariance(f):
-    def k(x1, x2):
-        x1 = x1.reshape(len(x1), -1)
-        x2 = x2.reshape(len(x2), -1)
-        return f(spdist.cdist(x1, x2, 'sqeuclidean'))
-    return k
-
-def dotproduct_covariance(f):
-    def k(x1, x2):
-        return f(np.outer(x1, x2))
-    return k
-
-
 def squared_exponential(sf, l):
-    def f(A):
-        A /= l**2
-        ans = sf * np.exp(-0.5*A)
-        return ans
-    return isotropic_covariance(f)
+    return cov.scale(sf, cov.se(l**2))
 
 def whitenoise(s):
-    def f(M):
-        tol = 1.e-9  # Tolerance for declaring two vectors "equal"
-        A = s * (M < tol)
-        return A
-    return isotropic_covariance(f)
+    tol = 1.e-9                 # Tolerance for declaring two vectors "equal"
+    return cov.scale(s, cov.delta(tol))
 
 def periodic(l,p,sf):
-    def f(A):
-        A = np.sqrt(A)
-        A = np.pi*A/p
-        A = np.sin(A)/l
-        A = A * A
-        A = sf *np.exp(-2.*A)
-        return A
-    return isotropic_covariance(f)
+    return cov.scale(sf, cov.periodic(l**2, 2*p))
 
 def linear(sf):
-    def f(t):
-        return sf * (t + 1e-10)  # 1e-10 required for numerical accuracy
-    return dotproduct_covariance(f)
+    # 1e-10 required for numerical accuracy
+    return cov.scale(sf, cov.noise(1e-10, cov.linear(0.)))
 
 xType = t.NumberType()
 oType = t.NumberType()
