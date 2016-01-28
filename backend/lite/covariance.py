@@ -61,9 +61,9 @@ def periodic(l2, period):
   return isotropic(f)
 
 def rq(l2, alpha):
-  """Rational quadratic kernel: (1 + r^2/(2 alpha l^2))^alpha"""
+  """Rational quadratic kernel: (1 + r^2/(2 alpha l^2))^-alpha"""
   def f(r2):
-    return np.power(1. + r2/(2 * alpha * l2), alpha)
+    return np.power(1. + r2/(2 * alpha * l2), -alpha)
   return isotropic(f)
 
 def matern(l2, df):
