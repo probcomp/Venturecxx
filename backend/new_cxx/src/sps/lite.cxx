@@ -1,4 +1,4 @@
-// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -22,6 +22,7 @@
 #include "concrete_trace.h"
 #include "regen.h"
 #include "env.h"
+#include "stop-and-copy.h"
 
 VentureValuePtr foreignFromPython(boost::python::object thing)
 {
@@ -82,14 +83,16 @@ boost::python::dict foreignArgsToPython(shared_ptr<Args> args)
   return foreignArgs;
 }
 
-VentureValuePtr ForeignLitePSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr ForeignLitePSP::simulate(shared_ptr<Args> args,
+                                         gsl_rng * rng) const
 {
   boost::python::dict foreignArgs = foreignArgsToPython(args);
   boost::python::object foreignResult = psp.attr("simulate")(foreignArgs);
   return foreignFromPython(foreignResult);
 }
 
-double ForeignLitePSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double ForeignLitePSP::logDensity(VentureValuePtr value,
+                                  shared_ptr<Args> args) const
 {
   boost::python::dict foreignValue = value->toPython(args->_trace);
   boost::python::dict foreignArgs = foreignArgsToPython(args);
@@ -116,7 +119,9 @@ bool ForeignLitePSP::isRandom() const
   return boost::python::extract<bool>(psp.attr("isRandom")());
 }
 
-bool ForeignLitePSP::canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const
+bool ForeignLitePSP::canAbsorb(ConcreteTrace * trace,
+                               ApplicationNode * appNode,
+                               Node * parentNode) const
 {
   // TODO: include the node information somehow
   // currently the Lite wrapper stubs it
@@ -159,7 +164,17 @@ double ForeignLitePSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
   return boost::python::extract<double>(foreignLogDensityOfCounts);
 }
 
-VentureValuePtr ForeignLiteLKernel::forwardSimulate(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args,gsl_rng * rng)
+ForeignLiteSPAux* ForeignLiteSPAux::copy_help(ForwardingMap* m) const
+{
+  ForeignLiteSPAux* answer = new ForeignLiteSPAux(aux.attr("copy")());
+  (*m)[this] = answer;
+  return answer;
+}
+
+VentureValuePtr ForeignLiteLKernel::forwardSimulate(Trace * trace,
+                                                    VentureValuePtr oldValue,
+                                                    shared_ptr<Args> args,
+                                                    gsl_rng * rng)
 {
   boost::python::object foreignOldValue;
   if (oldValue)
@@ -171,7 +186,10 @@ VentureValuePtr ForeignLiteLKernel::forwardSimulate(Trace * trace,VentureValuePt
   return foreignFromPython(foreignResult);
 }
 
-double ForeignLiteLKernel::forwardWeight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,shared_ptr<Args> args)
+double ForeignLiteLKernel::forwardWeight(Trace * trace,
+                                         VentureValuePtr newValue,
+                                         VentureValuePtr oldValue,
+                                         shared_ptr<Args> args)
 {
   boost::python::dict foreignNewValue = newValue->toPython(args->_trace);
   boost::python::object foreignOldValue;
@@ -215,24 +233,30 @@ shared_ptr<LatentDB> ForeignLiteSP::constructLatentDB() const
   return shared_ptr<LatentDB>(new ForeignLiteLatentDB(sp.attr("constructLatentDB")()));
 }
 
-double ForeignLiteSP::simulateLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,bool shouldRestore,shared_ptr<LatentDB> latentDB,gsl_rng * rng) const
+double ForeignLiteSP::simulateLatents(shared_ptr<Args> args,
+                                      shared_ptr<LSR> lsr,
+                                      bool shouldRestore,
+                                      shared_ptr<LatentDB> latentDB,
+                                      gsl_rng * rng) const
 {
-  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(spaux)->aux;
+  boost::python::dict foreignArgs = foreignArgsToPython(args);
   boost::python::object foreignLSR = dynamic_pointer_cast<ForeignLiteLSR>(lsr)->lsr;
   boost::python::object foreignLatentDB;
   if (latentDB)
   {
     foreignLatentDB = dynamic_pointer_cast<ForeignLiteLatentDB>(latentDB)->latentDB;
   }
-  return boost::python::extract<double>(sp.attr("simulateLatents")(foreignAux, foreignLSR, shouldRestore, foreignLatentDB));
+  return boost::python::extract<double>(sp.attr("simulateLatents")(foreignArgs, foreignLSR, shouldRestore, foreignLatentDB));
 }
 
-double ForeignLiteSP::detachLatents(shared_ptr<SPAux> spaux,shared_ptr<LSR> lsr,shared_ptr<LatentDB> latentDB) const
+double ForeignLiteSP::detachLatents(shared_ptr<Args> args,
+                                    shared_ptr<LSR> lsr,
+                                    shared_ptr<LatentDB> latentDB) const
 {
-  boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(spaux)->aux;
+  boost::python::dict foreignArgs = foreignArgsToPython(args);
   boost::python::object foreignLSR = dynamic_pointer_cast<ForeignLiteLSR>(lsr)->lsr;
   boost::python::object foreignLatentDB = dynamic_pointer_cast<ForeignLiteLatentDB>(latentDB)->latentDB;
-  return boost::python::extract<double>(sp.attr("detachLatents")(foreignAux, foreignLSR, foreignLatentDB));
+  return boost::python::extract<double>(sp.attr("detachLatents")(foreignArgs, foreignLSR, foreignLatentDB));
 }
 
 bool ForeignLiteSP::hasAEKernel() const
@@ -240,13 +264,26 @@ bool ForeignLiteSP::hasAEKernel() const
   return boost::python::extract<bool>(sp.attr("hasAEKernel")());
 }
 
-void ForeignLiteSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args, gsl_rng * rng) const
+void ForeignLiteSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
+                            gsl_rng * rng) const
 {
   boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(spAux)->aux;
   sp.attr("AEInfer")(foreignAux);
 }
 
-boost::python::dict ForeignLiteSP::toPython(Trace * trace, shared_ptr<SPAux> spAux) const
+ForeignLiteSP* ForeignLiteSP::copy_help(ForwardingMap* forward) const
+{
+  ForeignLiteSP* answer = new ForeignLiteSP(*this);
+  (*forward)[this] = answer;
+  answer->requestPSP = copy_shared(this->requestPSP, forward);
+  answer->outputPSP = copy_shared(this->outputPSP, forward);
+  // TODO I should deep-copy the sp field too, but shallow is OK if
+  // there are no examples where its methods mutate it.
+  return answer;
+}
+
+boost::python::dict ForeignLiteSP::toPython(Trace * trace,
+                                            shared_ptr<SPAux> spAux) const
 {
   boost::python::object foreignAux;
   if (shared_ptr<ForeignLiteSPAux> aux = dynamic_pointer_cast<ForeignLiteSPAux>(spAux))

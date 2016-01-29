@@ -1,4 +1,4 @@
-// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -40,12 +40,12 @@ struct EGibbsWorker
                 boost::shared_ptr<DB> origDB)
   {
     particle = boost::shared_ptr<Particle>(new Particle(trace));
+    registerDeterministicLKernels(particle.get(), scaffold,
+                                  applicationNodes, valueTuple);
     if (valueTuple == origValues) {
       weight = regenAndAttach(particle.get(), scaffold->border[0], scaffold,
                               true, origDB, nullGradients);
     } else {
-      registerDeterministicLKernels(particle.get(), scaffold,
-                                    applicationNodes, valueTuple);
       weight = regenAndAttach(particle.get(), scaffold->border[0], scaffold,
                               false, boost::shared_ptr<DB>(new DB()),
                               nullGradients);

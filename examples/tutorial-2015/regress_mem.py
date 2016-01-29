@@ -18,7 +18,7 @@ from venture.lite.request import Request,ESR
 from venture.lite.address import emptyAddress
 from venture.lite.msp import MSPRequestPSP
 from venture.lite.lkernel import SimulationAAALKernel
-import venture.lite.types as t
+import venture.lite.value as vv
 
 class RegressRequestPSP(DeterministicPSP):
   """
@@ -68,7 +68,7 @@ class RegressOutputPSP(DeterministicPSP):
     # (Normal AAA SPs don't have this problem because they turn into
     # SPRefs when they are made.)
     f_emu = args.esrValues()[0]
-    return t.pythonListToVentureList([f_compute, f_emu])
+    return vv.pythonListToVentureList([f_compute, f_emu])
 
     # Note: it's still possible to expose a "first package" bug in
     # which f_compute goes stale if f_emu is some dynamic thing that

@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
@@ -32,7 +33,7 @@ class RiplRestClient(RestClient):
             dir_val = str(directive['value'])
             dir_type = directive['instruction']
             dir_text = self._get_raw_text(dir_id)
-            
+
             if dir_type == "assume":
                 print "%d: %s:\t%s" % (dir_id, dir_text, dir_val)
             elif dir_type == "observe":
@@ -41,4 +42,3 @@ class RiplRestClient(RestClient):
                 print "%d: %s:\t %s" % (dir_id, dir_text, dir_val)
             else:
                 assert False, "Unknown directive type found: %s" % str(directive)
-

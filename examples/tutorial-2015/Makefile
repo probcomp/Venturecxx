@@ -3,10 +3,10 @@ all: build
 # Assets
 
 gauss_plot.png:  # This takes about 3 minutes on my laptop
-	venture puma -e '(run (resample 100)) \
+	venture puma --abstract-syntax -e "(run (resample 100)) \
 	 (plot_to_file (quote gauss_plot) (quote h0) \
 	  (run (accumulate_dataset 10000 \
-	        (collect (labelled (normal 1 0.7071067811865475) x)))))'
+	        (collect (labelled (normal 1 0.7071067811865475) x)))))"
 
 reg-test.csv: mk_dataset.vnt
 	venture puma -f $<
@@ -19,14 +19,13 @@ vis-outlier.png: mk_outlier_frame.vnts curve-fitting.py
 
 REGRESSION_DOWNLOADS = lin-reg-1.vnts lin-reg-2.vnts lin-reg-3.vnts \
 	reg-test.csv curve-fitting.py lin-reg-demo.vnts
-GP_DOWNLOADS = gpexample_plugin.py gpmem.py multiline_plot_plugin.py \
+GP_DOWNLOADS = gpexample_plugin.py regress_mem.py multiline_plot_plugin.py \
 	gp-1.vnts gp-2.vnts gp-3.vnts gp-4.vnts gp-5.vnts gp-6.vnts
 
 BASIC_ASSETS = gauss_plot.png
 REGRESSION_ASSETS = $(REGRESSION_DOWNLOADS) vis-frame.png vis-outlier.png
 GP_ASSETS = $(GP_DOWNLOADS) BayesOpt_gpmem_sequence.png \
-	gp_mixreg_hardcoded.png gp_progressivemixreg_data.png \
-	gp_toy_posterior.png
+	gp_progressivemixreg_data.png
 
 # Tutorial content files
 
@@ -74,3 +73,12 @@ upload: build
 upload-smoke: build-smoke
 	scp -r tutorial-smoke/ \
 	 login.csail.mit.edu:/afs/csail.mit.edu/proj/probcomp/www/data/venture/
+
+clean:
+	rm -rf tutorial
+	rm -rf tutorial-smoke
+	rm -f *.lvnt
+	rm -f gauss_plot.png
+	rm -f reg-test.csv
+	rm -f vis-frame.png
+	rm -f vis-outlier.png

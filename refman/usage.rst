@@ -7,30 +7,30 @@ a Python library.
 Interactive console::
 
     $ venture
-    venture[script] > assume x (normal 0 1)
-    venture[script] > observe (normal x 1) 2
+    venture[script] > assume x = normal(0, 1)
+    venture[script] > observe normal(x, 1) = 2
 
 Source file::
 
-    $ cat prog.vnt
-    [assume x (normal 0 1)]
-    [observe (normal x 1) 2]
-    $ venture -f prog.vnt
+    $ cat prog.vnts
+    assume x = normal(0, 1);
+    observe normal(x, 1) = 2;
+    $ venture -f prog.vnts
 
 Python library::
 
     from venture.shortcuts import *
-    v = make_church_prime_ripl()
-    v.assume("x", "(normal 0 1)")
-    v.observe("(normal x 1)", 2)
+    v = make_ripl()
+    v.assume("x", "normal(0, 1)")
+    v.observe("normal(x, 1)", 2)
 
 Python library (batch invocation)::
 
     import venture.shortcuts as s
-    v = s.Lite().make_church_prime_ripl()
+    v = s.Lite().make_ripl()
     v.execute_program("""
-        [assume x (normal 0 1)]
-        [observe (normal x 1) 2]
+        assume x = normal(0, 1);
+        observe normal(x, 1) = 2;
     """)
 
 The expressive power of the two methods is equivalent, because the

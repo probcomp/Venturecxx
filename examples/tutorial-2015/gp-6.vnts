@@ -23,7 +23,7 @@ define mc_argmax = proc(func) {
 // Shortcut to sample the emulator at a single point without packing
 // and unpacking arrays
 define V_emu_pointwise = proc(x) {
-    run(sample(lookup(V_emu(array(unquote(x))), 0)))
+    run(sample lookup(V_emu(array(unquote(x))), 0))
 };
 
 // Main inference loop

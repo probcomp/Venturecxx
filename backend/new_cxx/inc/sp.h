@@ -1,4 +1,4 @@
-// Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+// Copyright (c) 2013, 2014, 2015, 2016 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -19,6 +19,7 @@
 #define SP_H
 
 #include "types.h"
+#include "args.h"
 #include "value.h"
 #include <map>
 
@@ -66,26 +67,33 @@ struct SPAux
   boost::shared_ptr<SPAux> clone();
   virtual boost::python::object toPython(Trace * trace) const;
   virtual VentureValuePtr asVentureValue() const;
-  // TODO stupid and may make bugs hard to find
-  virtual SPAux* copy_help(ForwardingMap* m) const { return new SPAux(); }
+  virtual SPAux* copy_help(ForwardingMap* m) const = 0;
 };
 
 struct SP
 {
   SP(PSP * requestPSP, PSP * outputPSP);
-  
+
   boost::shared_ptr<PSP> requestPSP;
   boost::shared_ptr<PSP> outputPSP;
-  
+
   virtual boost::shared_ptr<PSP> getPSP(ApplicationNode * node) const;
 
   virtual boost::shared_ptr<LatentDB> constructLatentDB() const;
-  virtual double simulateLatents(boost::shared_ptr<SPAux> spaux,boost::shared_ptr<LSR> lsr,bool shouldRestore,boost::shared_ptr<LatentDB> latentDB,gsl_rng * rng) const;
-  virtual double detachLatents(boost::shared_ptr<SPAux> spaux,boost::shared_ptr<LSR> lsr,boost::shared_ptr<LatentDB> latentDB) const;
+  virtual double simulateLatents(boost::shared_ptr<Args> args,
+                                 boost::shared_ptr<LSR> lsr,
+                                 bool shouldRestore,
+                                 boost::shared_ptr<LatentDB> latentDB,
+                                 gsl_rng * rng) const;
+  virtual double detachLatents(boost::shared_ptr<Args> args,
+                               boost::shared_ptr<LSR> lsr,
+                               boost::shared_ptr<LatentDB> latentDB) const;
   virtual bool hasAEKernel() const { return false; }
-  virtual void AEInfer(boost::shared_ptr<SPAux> spAux, boost::shared_ptr<Args> args, gsl_rng * rng) const;
-  
-  virtual boost::python::dict toPython(Trace * trace, boost::shared_ptr<SPAux> spAux) const;
+  virtual void AEInfer(boost::shared_ptr<SPAux> spAux,
+                       boost::shared_ptr<Args> args, gsl_rng * rng) const;
+
+  virtual boost::python::dict toPython(Trace * trace,
+                                       boost::shared_ptr<SPAux> spAux) const;
   virtual SP* copy_help(ForwardingMap* m) const;
   virtual ~SP() {}
 };

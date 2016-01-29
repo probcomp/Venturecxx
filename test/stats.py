@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -66,6 +66,7 @@ from scipy.stats.mstats import rankdata
 
 from testconfig import config
 from venture.test.config import ignore_inference_quality
+import venture.test.plots as plots
 
 def normalizeList(seq):
   denom = sum(seq)
@@ -229,11 +230,13 @@ def explainOneDSample(observed):
     ans += tabulatelst("%.2f", percentiles, width=10, prefix="  ")
   return ans
 
-def reportKnownContinuous(expectedCDF, observed, descr=None):
+def reportKnownContinuous(expectedCDF, observed, descr=None, show_plot=False):
   """Kolmogorov-Smirnov test for agreement with known 1-D cumulative density
   function. The CDF argument should be a Python callable that computes the
   cumulative density."""
   (K, pval) = stats.kstest(observed, expectedCDF)
+  if show_plot:
+    plots.p_p_plot(expectedCDF, observed, show=True)
   return TestResult(pval, "\n".join([
     "Expected: %4d samples from %s" % (len(observed), descr),
     explainOneDSample(observed),
@@ -250,14 +253,15 @@ def reportSameContinuous(observed1, observed2):
     "D stat  : " + str(D),
     "P value : " + str(pval)]))
 
-def reportKnownGaussian(expMean, expStdDev, observed):
+def reportKnownGaussian(expMean, expStdDev, observed, show_plot=False):
   """Kolmogorov-Smirnov test for agreement with a known Gaussian.
 
   TODO Are there more sensitive tests for being a known Gaussian than
   K-S?
   """
   cdf = stats.norm(loc=expMean, scale=expStdDev).cdf
-  return reportKnownContinuous(cdf, observed, "N(%s,%s)" % (expMean, expStdDev))
+  label = "N(%s,%s)" % (expMean, expStdDev)
+  return reportKnownContinuous(cdf, observed, label, show_plot=show_plot)
 
 # TODO Warn if not enough observations?
 def reportKnownMean(expMean, observed, variance=None):

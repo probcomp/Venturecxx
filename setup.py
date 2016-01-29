@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 #!/usr/bin/env python
 
 try:
@@ -154,6 +155,7 @@ packages = [
     "venture.parser.church_prime",
     "venture.parser.venture_script",
     "venture.plex",
+    "venture.plugins",
     "venture.puma",
     "venture.ripl",
     "venture.server",
@@ -312,6 +314,12 @@ tests_require = [
     'pexpect',
     'seaborn', # For examples/gaussian_geweke.py
     'statsmodels', # For examples/gaussian_geweke.py
+    'cython', # Because it has to be installed before pystan, and pip
+              # does the wrong thing with ordering packages pulled in
+              # as dependencies.
+    'pystan', # For testing the venstan integration
+    'markdown2', # For building the tutorial with venture-transcript
+    # TODO Is markdown2 a real dependency?
 ]
 
 # XXX For inexplicable reasons, during sdist.run, setuptools quietly

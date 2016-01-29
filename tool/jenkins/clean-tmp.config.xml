@@ -19,8 +19,14 @@
     <hudson.tasks.Shell>
       <command>#!/bin/bash -xe
 
+# Flush old temporary files
 find /tmp -maxdepth 1 -readable -atime +0 | xargs -l -I{} find {} -atime +0 -user jenkins -print -delete
-find /tmp -maxdepth 1 -readable -atime +0 | xargs -l -I{} find {} -user jenkins -type d -empty -print -delete</command>
+# Flush old empty temporary directories
+find /tmp -maxdepth 1 -readable -atime +0 | xargs -l -I{} find {} -user jenkins -type d -empty -print -delete
+# Flush unused Docker containers, ignoring failure to remove running ones
+(docker ps -a -q | xargs docker rm) || true
+# Flush untagged Docker images
+docker images | grep &quot;&lt;none&gt;&quot; | awk &quot;{print \$3}&quot; | xargs --no-run-if-empty docker rmi</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>

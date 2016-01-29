@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -52,6 +52,15 @@ def locbracket((_ovalue, ostart, oend), (_cvalue, cstart, cend), value):
     assert oend < cstart
     assert cstart <= cend
     return located([ostart, cend], value)
+
+def loclist(items):
+    assert len(items) >= 1
+    (start, _) = items[0]['loc']
+    (_, end) = items[-1]['loc']
+    return located([start, end], items)
+
+def expression_evaluation_instruction(e):
+    return { 'instruction': locmap(e, lambda _: 'evaluate'), 'expression': e }
 
 def delocust(l):
     # XXX Why do we bother with tuples in the first place?
@@ -108,15 +117,28 @@ class Semantics(object):
 
     # instruction: Return located { 'instruction': 'foo', ... }.
     def p_instruction_labelled(self, l, open, d, close):
-        d['label'] = locmap(loctoken(l), val.symbol)
-        d['instruction'] = locmap(d['instruction'], lambda i: 'labeled_' + i)
-        return locbracket(l, close, d)
+        label = locmap(loctoken(l), val.symbol)
+        if d['instruction']['value'] == 'evaluate':
+            # The grammar only permits expressions that are calls to
+            # the 'assume', 'observe', or 'predict' macros to be
+            # labeled with syntactic sugar.
+            locexp = d['expression']
+            exp = locexp['value']
+            new_exp = exp + [label]
+            new_locexp = located(locexp['loc'], new_exp)
+            new_d = expression_evaluation_instruction(new_locexp)
+            return locbracket(l, close, new_d)
+        else:
+            d['label'] = label
+            d['instruction'] = locmap(d['instruction'], lambda i: 'labeled_' + i)
+            return locbracket(l, close, d)
     def p_instruction_unlabelled(self, open, d, close):
         return locbracket(open, close, d)
     def p_instruction_command(self, open, c, close):
         return locbracket(open, close, c)
     def p_instruction_expression(self, e):
-        return locmap(e, lambda _: { 'instruction': locmap(e, lambda _: 'evaluate'), 'expression': e })
+        inst = expression_evaluation_instruction(e)
+        return locmap(e, lambda _: inst)
     def p_instruction_laberror(self, d):
         return 'error'
     def p_instruction_labdirerror(self):
@@ -129,71 +151,32 @@ class Semantics(object):
         return { 'instruction': loctoken1(k, 'define'),
                  'symbol': locmap(loctoken(n), val.symbol), 'expression': e }
     def p_directive_assume(self, k, n, e):
-        return { 'instruction': loctoken1(k, 'assume'),
-                 'symbol': locmap(loctoken(n), val.symbol), 'expression': e }
-    def p_directive_observe(self, k, e, v):
-        return { 'instruction': loctoken1(k, 'observe'),
-                 'expression': e, 'value': v }
+        # Fun fact.  This manipulation (and the similar treatment of
+        # observe and predict, here and in the VentureScript parser)
+        # breaks an invariant that parsing used to satisfy.  To wit,
+        # once upon a time it was the case that the string picked out
+        # by the location tags of every node in a parse tree was
+        # guaranteed to re-parse to an equal node.  This cannot be the
+        # case now, because the 'expr' node constructed here is not
+        # parsed from the string, but synthesized based on knowing
+        # that its constituents appear in an 'assume' directive.
+        expr = [loctoken1(k, val.symbol('assume')),
+                locmap(loctoken(n), val.symbol),
+                e]
+        return expression_evaluation_instruction(loclist(expr))
+    def p_directive_observe(self, k, e, e1):
+        expr = [loctoken1(k, val.symbol('observe')), e, e1]
+        return expression_evaluation_instruction(loclist(expr))
     def p_directive_predict(self, k, e):
-        return { 'instruction': loctoken1(k, 'predict'), 'expression': e }
+        expr = [loctoken1(k, val.symbol('predict')), e]
+        return expression_evaluation_instruction(loclist(expr))
 
     # command: Return { 'instruction': located(..., 'foo'), ... }.
-    def p_command_configure(self, k, options):
-        return { 'instruction': loctoken1(k, 'configure'), 'options': options }
-    def p_command_forget(self, k, dr):
-        i = 'labeled_forget' if dr[0] == 'label' else 'forget'
-        return { 'instruction': loctoken1(k, i), dr[0]: dr[1] }
-    def p_command_freeze(self, k, dr):
-        i = 'labeled_freeze' if dr[0] == 'label' else 'freeze'
-        return { 'instruction': loctoken1(k, i), dr[0]: dr[1] }
-    def p_command_report(self, k, dr):
-        i = 'labeled_report' if dr[0] == 'label' else 'report'
-        return { 'instruction': loctoken1(k, i), dr[0]: dr[1] }
     def p_command_infer(self, k, e):
         return { 'instruction': loctoken1(k, 'infer'), 'expression': e }
-    def p_command_clear(self, k):
-        return { 'instruction': loctoken1(k, 'clear') }
-    def p_command_rollback(self, k):
-        return { 'instruction': loctoken1(k, 'rollback') }
-    def p_command_list_directives(self, k):
-        return { 'instruction': loctoken1(k, 'list_directives') }
-    def p_command_get_directive(self, k, dr):
-        i = 'labeled_get_directive' if dr[0] == 'label' else 'get_directive'
-        return { 'instruction': loctoken1(k, i), dr[0]: dr[1] }
-    def p_command_force(self, k, e, v):
-        return { 'instruction': loctoken1(k, 'force'), 'expression': e,
-                 'value': v }
-    def p_command_sample(self, k, e):
-        return { 'instruction': loctoken1(k, 'sample'), 'expression': e }
-    def p_command_continuous_inference_status(self, k):
-        return { 'instruction': loctoken1(k, 'continuous_inference_status') }
-    def p_command_start_continuous_inference(self, k, e):
-        return { 'instruction': loctoken1(k, 'start_continuous_inference'),
-                 'expression': e }
-    def p_command_stop_continuous_inference(self, k):
-        return { 'instruction': loctoken1(k, 'stop_continuous_inference') }
-    def p_command_get_current_exception(self, k):
-        return { 'instruction': loctoken1(k, 'get_current_exception') }
-    def p_command_get_state(self, k):
-        return { 'instruction': loctoken1(k, 'get_state') }
-    def p_command_get_global_logscore(self, k):
-        return { 'instruction': loctoken1(k, 'get_global_logscore') }
-    def p_command_profiler_configure(self, k, options):
-        return { 'instruction': loctoken1(k, 'profiler_configure'),
-                 'options': options }
-    def p_command_profiler_clear(self, k):
-        return { 'instruction': loctoken1(k, 'profiler_clear') }
-    def p_command_list_random(self, k):
-        return { 'instruction': loctoken1(k, 'profiler_list_random_choices') }
     def p_command_load(self, k, pathname):
         return { 'instruction': loctoken1(k, 'load'),
                  'file': loctoken(pathname) }
-
-    # directive_ref: Return (reftype, located value) tuple.
-    def p_directive_ref_numbered(self, number):
-        return ('directive_id', loctoken(number))
-    def p_directive_ref_labelled(self, label):
-        return ('label', loctoken(label))
 
     # expression: Return located expression.
     def p_expression_symbol(self, name):
@@ -309,12 +292,13 @@ def parse_instructions(string):
 def parse_instruction(string):
     ls = parse_instructions(string)
     if len(ls) != 1:
-        raise VentureException('parse', 'Expected a single instruction')
+        msg = 'Expected %s to parse as a single instruction, got %s' % (string, ls)
+        raise VentureException('parse', msg)
     return ls[0]
 
 def parse_expression(string):
     inst = parse_instruction(string)['value']
-    if not inst['instruction']['value'] == 'evaluate':
+    if inst['instruction']['value'] != 'evaluate':
         raise VentureException('parse', 'Expected an expression')
     return inst['expression']
 
@@ -451,7 +435,6 @@ class ChurchPrimeParser(object):
         'labeled_observe': [('expression', unparse_expression), ('value', unparse_value)],
         'predict': [('expression', unparse_expression)],
         'labeled_predict': [('expression', unparse_expression)],
-        'configure': [('options', unparse_json)],
         'forget': [('directive_id', unparse_integer)],
         'labeled_forget': [('label', unparse_symbol)],
         'freeze': [('directive_id', unparse_integer)],
@@ -460,7 +443,6 @@ class ChurchPrimeParser(object):
         'labeled_report': [('label', unparse_symbol)],
         'infer': [('expression', unparse_expression)],
         'clear': [],
-        'rollback': [],
         'list_directives': [],
         'get_directive': [('directive_id', unparse_integer)],
         'labeled_get_directive': [('label', unparse_symbol)],
@@ -469,23 +451,32 @@ class ChurchPrimeParser(object):
         'continuous_inference_status': [],
         'start_continuous_inference': [('expression', unparse_expression)],
         'stop_continuous_inference': [],
-        'get_current_exception': [],
-        'get_state': [],
-        'profiler_configure': [('options', unparse_json)],
-        'profiler_clear': [],
-        'profiler_list_random': [], # XXX Urk, extra keyword.
         'load': [('file', unparse_string)],
     }
     def unparse_instruction(self, instruction, expr_markers=None):
         '''Unparse INSTRUCTION into a string.'''
         # XXX Urgh.  Whattakludge!
         i = instruction['instruction']
+        if i == 'evaluate':
+            return self.unparse_expression_and_mark_up(
+                instruction['expression'], expr_markers)
         unparsers = self.unparsers[i]
+        if i in ['forget', 'labeled_forget', 'freeze', 'labeled_freeze',
+                 'report', 'labeled_report', 'clear',
+                 'list_directives', 'get_directive', 'labeled_get_directive',
+                 'force', 'sample', 'continuous_inference_status',
+                 'start_continuous_inference', 'stop_continuous_inference',
+        ]:
+            open_char = '('
+            close_char = ')'
+        else:
+            open_char = '['
+            close_char = ']'
         chunks = []
         if 'label' in instruction and 'label' not in (k for k,_u in unparsers):
             chunks.append(instruction['label']['value'])
             chunks.append(': ')
-        chunks.append('[')
+        chunks.append(open_char)
         if i[0 : len('labeled_')] == 'labeled_':
             chunks.append(i[len('labeled_'):])
         else:
@@ -493,10 +484,11 @@ class ChurchPrimeParser(object):
         for key, unparser in unparsers:
             chunks.append(' ')
             if key == 'expression': # Urk
-                chunks.append(self.unparse_expression_and_mark_up(instruction[key], expr_markers))
+                chunks.append(self.unparse_expression_and_mark_up(
+                    instruction[key], expr_markers))
             else:
                 chunks.append(unparser(self, instruction[key]))
-        chunks.append(']')
+        chunks.append(close_char)
         return ''.join(chunks)
 
     # XXX ???
@@ -539,11 +531,6 @@ class ChurchPrimeParser(object):
         # XXX List???
         return [strings, sortlocs]
 
-    # XXX Make the tests pass, nobody else calls this.
-    def character_index_to_expression_index(self, _string, index):
-        '''Return bogus data to make tests pass.  Nobody cares!'''
-        return [[], [0], [], None, None, [2], [2,0]][index]
-
     def expression_index_to_text_index(self, string, index):
         '''Return position of expression in STRING indexed by INDEX.
 
@@ -554,12 +541,28 @@ class ChurchPrimeParser(object):
         Return [start, end] position of the last nested subexpression.
         '''
         l = parse_expression(string)
+        return self._expression_index_to_text_index_in_parsed_expression(l, index, string)
+
+    def _expression_index_to_text_index_in_parsed_expression(self, l, index, string):
         for i in range(len(index)):
             if index[i] < 0 or len(l['value']) <= index[i]:
                 raise ValueError('Index out of range: %s in %s' %
                     (index, repr(string)))
             l = l['value'][index[i]]
         return l['loc']
+
+    def expression_index_to_text_index_in_instruction(self, string, index):
+        '''Return position of expression in STRING indexed by INDEX.
+
+        - STRING is a string of an instruction that has a unique expression.
+        - INDEX is a list of indices into successively nested
+          subexpressions.
+
+        Return [start, end] position of the last nested subexpression.
+        '''
+        inst = parse_instruction(string)
+        l = inst['value']['expression']
+        return self._expression_index_to_text_index_in_parsed_expression(l, index, string)
 
     def unparse_expression_and_mark_up(self, exp, places=None):
         '''Return a string representing the given EXP with markings at the given PLACES.

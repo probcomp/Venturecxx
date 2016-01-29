@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
@@ -46,6 +47,7 @@ Typical usage begins by using one of the factory functions in the
 
 '''
 
+import cStringIO as StringIO
 import numbers
 import os
 import re
@@ -65,15 +67,17 @@ PRELUDE_FILE = 'prelude.vnt'
 class Ripl():
     '''The Read, Infer, Predict Layer of one running Venture instance.'''
 
-    def __init__(self,sivm,parsers):
+    def __init__(self, sivm, parsers, extra_search_paths = None):
         self.sivm = sivm
         self.parsers = parsers
+        self._compute_search_paths(extra_search_paths or [])
         self.directive_id_to_stringable_instruction = {}
         self.directive_id_to_mode = {}
         self.mode = parsers.keys()[0]
         self._n_prelude = 0
         self._do_not_annotate = False
-        # TODO Loading the prelude currently (6/26/14) slows the test suite to a crawl
+        # TODO Loading the prelude currently (6/26/14) slows the test
+        # suite to a crawl
         # self.load_prelude()
         r = self.sivm.core_sivm.engine.ripl
         if r is None:
@@ -83,9 +87,14 @@ class Ripl():
             pass
         else:
             print "Wrapping sivm %s in a new ripl but it already has one: %s.  Engine to ripl references may be incorrect." % (self.sivm, r)
-        self.pyglobals = {"ripl": self} # A global environment for dropping to Python
+        # A global environment for dropping to Python
+        self.pyglobals = {"ripl": self}
         plugins.__venture_start__(self)
 
+    def _compute_search_paths(self, extra_search_paths):
+        self_dir = os.path.dirname(__file__)
+        system_plugins_dir = os.path.join(os.path.dirname(self_dir), "plugins")
+        self.search_paths = extra_search_paths + [system_plugins_dir, "."]
 
     ############################################
     # Languages
@@ -119,7 +128,7 @@ class Ripl():
     def execute_instructions(self, instructions=None):
         p = self._cur_parser()
         try:
-            strings, locs = self.split_program(instructions)
+            strings, _locs = self.split_program(instructions)
         except VentureException as e:
             if self._do_not_annotate:
                 raise
@@ -157,7 +166,6 @@ class Ripl():
             if self._do_not_annotate:
                 raise
             self._raise_annotated(e, instruction)
-        return ret_value
 
     def _execute_parsed_instruction(self, parsed_instruction,
             stringable_instruction):
@@ -168,7 +176,8 @@ class Ripl():
             self.directive_id_to_stringable_instruction[did] = (
                 stringable_instruction)
             self.directive_id_to_mode[did] = self.mode
-        return self.sivm.execute_instruction(parsed_instruction)
+        ans = self.sivm.execute_instruction(parsed_instruction)
+        return ans
 
     def _raise_annotated(self, e, instruction):
         info = sys.exc_info()
@@ -209,13 +218,9 @@ class Ripl():
         # in the case of a parse exception, the text_index gets narrowed
         # down to the exact expression/atom that caused the error
         if e.exception == 'parse':
-            # calculate the positions of the arguments
-            args, arg_ranges = p.split_instruction(instruction_string)
             try:
-                text_index = self._cur_parser().expression_index_to_text_index(
-                        args['expression'], e.data['expression_index'])
-                offset = arg_ranges['expression'][0]
-                text_index = [x + offset for x in text_index]
+                text_index = p.expression_index_to_text_index_in_instruction(
+                    instruction_string, e.data['expression_index'])
             except VentureException as e2:
                 if e2.exception == 'no_text_index': text_index = None
                 else: raise
@@ -234,10 +239,16 @@ class Ripl():
         # refers to the argument's location in the string
         if e.exception == 'invalid_argument':
             # calculate the positions of the arguments
-            args, arg_ranges = p.split_instruction(instruction_string)
+            _, arg_ranges = p.split_instruction(instruction_string)
             arg = e.data['argument']
-            text_index = arg_ranges[arg]
-            e.data['text_index'] = text_index
+            if arg in arg_ranges:
+                # Instruction unparses and reparses to structured
+                # form; can point at the argument.
+                e.data['text_index']  = arg_ranges[arg]
+            else:
+                # Insturction unparses and reparses to evaluation
+                # instruction; can't refine the text index.
+                pass
 
         a = e.data['text_index'][0]
         b = e.data['text_index'][1]+1
@@ -249,19 +260,15 @@ class Ripl():
 
     def parse_program(self, program_string):
         p = self._cur_parser()
-        # TODO the right thing is to make "comment" a valid instruction type.
-        if self.get_mode() == "church_prime":
-            start_comment_regex = ";"
-        elif self.get_mode() == "venture_script":
-            start_comment_regex = "//"
-        else:
-            raise Exception("Do not know comment syntax for mode {}".format(self.get_mode()))
-        no_comments = '\n'.join(re.split(start_comment_regex, x)[0] for x in program_string.split('\n'))
-        instructions, positions = p.split_program(no_comments)
+        instructions, positions = p.split_program(program_string)
         return [self._ensure_parsed(i) for i in instructions], positions
 
-    def execute_program(self, program_string):
-        return self.execute_parsed_program(*self.parse_program(program_string))
+    def execute_program(self, program_string, type=True):
+        res = self.execute_parsed_program(*self.parse_program(program_string))
+        if not type:
+            return u.strip_types([r["value"] for r in res])
+        else:
+            return res
 
     def execute_parsed_program(self, instructions, _positions):
         vals = []
@@ -314,19 +321,19 @@ class Ripl():
 
     def _ensure_parsed_dict(self, partial_dict):
         def by_key(key, value):
-            if key == "instruction":
+            if key == 'instruction':
                 return value
-            elif key == "expression":
+            elif key == 'expression':
                 return self._ensure_parsed_expression(value)
-            elif key in ["directive_id", "seed", "inference_timeout"]:
+            elif key in ['directive_id', 'seed']:
                 return self._ensure_parsed_number(value)
-            elif key in ["options", "params"]:
+            elif key in ['options', 'params']:
                 # Do not support partially parsed options or param
                 # hashes, since they have too many possible key types
                 return value
-            elif key in ["symbol", "label"]:
+            elif key in ['symbol', 'label']:
                 return value
-            elif key == "value":
+            elif key == 'value':
                 # I believe values are a subset of expressions
                 return self._ensure_parsed_expression(value)
             else:
@@ -381,16 +388,22 @@ class Ripl():
             # parsed instruction has a large string in it.
             return self._unparse(self._ensure_parsed(instruction))
 
-    def character_index_to_expression_index(self, directive_id, character_index):
-        p = self._cur_parser()
-        expression, offset = self._extract_expression(directive_id)
-        return p.character_index_to_expression_index(expression, character_index-offset)
-
     def expression_index_to_text_index(self, directive_id, expression_index):
-        p = self._cur_parser()
-        expression, offset = self._extract_expression(directive_id)
-        tmp = p.expression_index_to_text_index(expression, expression_index)
-        return [x+offset for x in tmp]
+        text = self._get_raw_text(directive_id)
+        mode = self.directive_id_to_mode[directive_id]
+        p = self.parsers[mode]
+        try:
+            ans = p.expression_index_to_text_index_in_instruction(text, expression_index)
+        except VentureException:
+            # Perhaps the instruction got round-tripped through the
+            # unparser, which always emits church' syntax
+            from venture.parser.church_prime import ChurchPrimeParser
+            q = ChurchPrimeParser.instance()
+            ans = q.expression_index_to_text_index_in_instruction(text, expression_index)
+        return ans
+
+    def directive_id_for_label(self, label):
+        return self.sivm.label_dict[label]
 
     def addr2Source(self, addr):
         """Takes an address and gives the corresponding (unparsed)
@@ -522,12 +535,13 @@ value to be returned as a dict annotating its Venture type.
             # directives are in.
             # Failing that, this code just suppresses labeling
             # directives in any except the main model.
-            if label==None:
-                i = {'instruction': 'assume', 'symbol':name, 'expression':expression}
+            if label is None:
+                i = {'instruction': 'assume', 'symbol':name,
+                     'expression':expression}
             else:
                 raise Exception("TODO Cannot label instructions inside in_model.")
         else:
-            if label==None:
+            if label is None:
                 label = name
             else:
                 label = _symbolize(label)
@@ -537,22 +551,25 @@ value to be returned as a dict annotating its Venture type.
         return value if type else u.strip_types(value)
 
     def predict(self, expression, label=None, type=False):
-        if label==None:
+        if label is None:
             i = {'instruction':'predict', 'expression':expression}
         else:
             label = _symbolize(label)
-            i = {'instruction':'labeled_predict', 'expression':expression, 'label':label}
+            i = {'instruction':'labeled_predict', 'expression':expression,
+                 'label':label}
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 
     def observe(self, expression, value, label=None, type=False):
-        if label==None:
-            i = {'instruction':'observe', 'expression':expression, 'value':value}
+        if label is None:
+            i = {'instruction':'observe', 'expression':expression,
+                 'value':value}
         else:
             label = _symbolize(label)
-            i = {'instruction':'labeled_observe', 'expression':expression, 'value':value, 'label':label}
-        self.execute_instruction(i)
-        return None
+            i = {'instruction':'labeled_observe', 'expression':expression,
+                 'value':value, 'label':label}
+        weights = self.execute_instruction(i)['value']
+        return v.vector(weights) if type else weights
 
     def bulk_observe(self, exp, items, label=None):
         """Observe many evaluations of an expression.
@@ -573,7 +590,8 @@ the semantics in `observe_dataset`.
         ret_vals = []
         parsed = self._ensure_parsed_expression(exp)
         for i, val in enumerate(items):
-          ret_vals.append(self.observe(parsed,val,label+"_"+str(i) if label is not None else None))
+          lab = label+"_"+str(i) if label is not None else None
+          ret_vals.append(self.observe(parsed, val, lab))
         return ret_vals
 
     def observe_dataset(self, proc_expression, iterable, label=None):
@@ -628,60 +646,49 @@ Open issues:
         parsed = self._ensure_parsed_expression(proc_expression)
         for i, args_val in enumerate(iterable):
           expr = [parsed] + [v.quote(a) for a in args_val[:-1]]
-          ret_vals.append(self.observe(expr,args_val[-1],label+"_"+str(i) if label is not None else None))
+          lab = label+"_"+str(i) if label is not None else None
+          ret_vals.append(self.observe(expr, args_val[-1], lab))
         return ret_vals
 
     ############################################
     # Core
     ############################################
 
-    def configure(self, options=None):
-        if options is None: options = {}
-        i = {'instruction':'configure', 'options':options}
-        return self.execute_instruction(i)['options']
-
     def get_seed(self):
-        return self.configure()['seed']
+        return self.sivm.core_sivm.engine.get_seed()
 
     def set_seed(self, seed):
-        self.configure({'seed': seed})
-        return None
-
-    def get_inference_timeout(self):
-        return self.configure()['inference_timeout']
-
-    def set_inference_timeout(self, inference_timeout):
-        self.configure({'inference_timeout': inference_timeout})
+        self.sivm.core_sivm.engine.set_seed(seed)
         return None
 
     def forget(self, label_or_did, type=False):
-        if isinstance(label_or_did,int):
-            i = {'instruction':'forget', 'directive_id':label_or_did}
+        (tp, val) = _interp_label_or_did(label_or_did)
+        if tp == 'did':
+            i = {'instruction':'forget', 'directive_id':val}
             # if asked to forget prelude instruction, decrement _n_prelude
             if label_or_did <= self._n_prelude:
                 self._n_prelude -= 1
         else:
             # assume that prelude instructions don't have labels
-            i = {'instruction':'labeled_forget',
-                 'label':_symbolize(label_or_did)}
-        self.execute_instruction(i)
-        return None
+            i = {'instruction':'labeled_forget', 'label':val}
+        weights = self.execute_instruction(i)['value']
+        return v.vector(weights) if type else weights
 
     def freeze(self, label_or_did, type=False):
-        if isinstance(label_or_did,int):
-            i = {'instruction':'freeze', 'directive_id':label_or_did}
+        (tp, val) = _interp_label_or_did(label_or_did)
+        if tp == 'did':
+            i = {'instruction':'freeze', 'directive_id':val}
         else:
-            i = {'instruction':'labeled_freeze',
-                 'label':_symbolize(label_or_did)}
+            i = {'instruction':'labeled_freeze', 'label':val}
         self.execute_instruction(i)
         return None
 
     def report(self, label_or_did, type=False):
-        if isinstance(label_or_did,int):
-            i = {'instruction':'report', 'directive_id':label_or_did}
+        (tp, val) = _interp_label_or_did(label_or_did)
+        if tp == 'did':
+            i = {'instruction':'report', 'directive_id':val}
         else:
-            i = {'instruction':'labeled_report',
-                 'label':v.symbol(label_or_did)}
+            i = {'instruction':'labeled_report', 'label':val}
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 
@@ -703,12 +710,15 @@ Open issues:
             return program
 
     def evaluate(self, program, type=False):
-        o = self.execute_instruction({'instruction':'evaluate', 'expression': program})
+        o = self.execute_instruction({'instruction':'evaluate',
+                                      'expression': program})
         value = o["value"]
         return value if type else u.strip_types(value)
 
     def infer(self, params=None, type=False):
-        o = self.execute_instruction({'instruction':'infer', 'expression': self.defaultInferProgram(params)})
+        inst = {'instruction':'infer',
+                'expression': self.defaultInferProgram(params)}
+        o = self.execute_instruction(inst)
         value = o["value"]
         return value if type else u.strip_types(value)
 
@@ -719,21 +729,13 @@ Open issues:
         self._n_prelude = 0
         return None
 
-    def rollback(self):
-        self.execute_instruction({'instruction':'rollback'})
-        return None
-
     def list_directives(self, type=False, include_prelude = False, instructions = []):
         with self.sivm._pause_continuous_inference():
             directives = self.execute_instruction({'instruction':'list_directives'})['directives']
             # modified to add value to each directive
             # FIXME: is this correct behavior?
             for directive in directives:
-                inst = { 'instruction':'report',
-                         'directive_id':directive['directive_id'],
-                         }
-                value = self.execute_instruction(inst)['value']
-                directive['value'] = value if type else u.strip_types(value)
+                self._collect_value_of(directive, type=type)
             # if not requested to include the prelude, exclude those directives
             if hasattr(self, '_n_prelude') and (not include_prelude):
                 directives = directives[self._n_prelude:]
@@ -741,29 +743,41 @@ Open issues:
                 directives = [d for d in directives if d['instruction'] in instructions]
             return directives
 
+    def _collect_value_of(self, directive, type=False):
+        inst = { 'instruction':'report',
+                 'directive_id':directive['directive_id'],
+                 }
+        value = self.execute_instruction(inst)['value']
+        directive['value'] = value if type else u.strip_types(value)
+
     def print_directives(self, *instructions, **kwargs):
         for directive in self.list_directives(instructions = instructions, **kwargs):
-            dir_id = int(directive['directive_id'])
-            dir_val = str(directive['value'])
-            dir_type = directive['instruction']
-            dir_text = self._get_raw_text(dir_id)
+            self.print_one_directive(directive)
 
-            if dir_type == "assume":
-                print "%d: %s:\t%s" % (dir_id, dir_text, dir_val)
-            elif dir_type == "observe":
-                print "%d: %s" % (dir_id, dir_text)
-            elif dir_type == "predict":
-                print "%d: %s:\t %s" % (dir_id, dir_text, dir_val)
-            else:
-                assert False, "Unknown directive type found: %s" % str(directive)
+    def print_one_directive(self, directive):
+        dir_id = int(directive['directive_id'])
+        dir_val = str(directive['value'])
+        dir_type = directive['instruction']
+        dir_text = self._get_raw_text(dir_id)
 
-    def get_directive(self, label_or_did):
-        if isinstance(label_or_did,int):
+        if dir_type == "assume":
+            print "%d: %s:\t%s" % (dir_id, dir_text, dir_val)
+        elif dir_type == "observe":
+            print "%d: %s" % (dir_id, dir_text)
+        elif dir_type == "predict":
+            print "%d: %s:\t %s" % (dir_id, dir_text, dir_val)
+        else:
+            assert False, "Unknown directive type found: %s" % str(directive)
+
+    def get_directive(self, label_or_did, type=False):
+        if isinstance(label_or_did, int):
             i = {'instruction':'get_directive', 'directive_id':label_or_did}
         else:
             i = {'instruction':'labeled_get_directive',
                  'label':v.symbol(label_or_did)}
-        return self.execute_instruction(i)['directive']
+        d = self.execute_instruction(i)['directive']
+        self._collect_value_of(d)
+        return d
 
     def force(self, expression, value):
         i = {'instruction':'force', 'expression':expression, 'value':value}
@@ -784,18 +798,16 @@ Open issues:
         return self.execute_instruction({'instruction':'continuous_inference_status'})
 
     def start_continuous_inference(self, program=None):
-        self.execute_instruction({'instruction':'start_continuous_inference', 'expression': self.defaultInferProgram(program)})
+        inst = {'instruction':'start_continuous_inference',
+                'expression': self.defaultInferProgram(program)}
+        self.execute_instruction(inst)
         return None
 
-    def stop_continuous_inference(self):
+    def stop_continuous_inference(self, type=False):
+        # Inference SPs that call ripl methods currently require a
+        # type argument.
         self.execute_instruction({'instruction':'stop_continuous_inference'})
         return None
-
-    def get_current_exception(self):
-        return self.execute_instruction({'instruction':'get_current_exception'})['exception']
-
-    def get_state(self):
-        return self.execute_instruction({'instruction':'get_state'})['state']
 
     def reinit_inference_problem(self, num_particles=None):
         # TODO Adapt to renumbering of directives by the engine (or
@@ -804,7 +816,7 @@ Open issues:
         self.sivm.core_sivm.engine.reinit_inference_problem(num_particles)
 
     def get_global_logscore(self):
-        return self.execute_instruction({'instruction':'get_global_logscore'})['logscore']
+        return self.infer('global_log_likelihood')
 
     def register_foreign_sp(self, name, sp):
         # TODO Remember this somehow?  Is it storable for copies and
@@ -840,16 +852,36 @@ Open issues:
     # Serialization
     ############################################
 
-    def save(self, fname):
-        extra = {}
-        extra['directive_id_to_stringable_instruction'] = self.directive_id_to_stringable_instruction
+    def save_io(self, stream, extra=None):
+        if extra is None:
+            extra = {}
+        extra['directive_id_to_stringable_instruction'] = \
+            self.directive_id_to_stringable_instruction
         extra['directive_id_to_mode'] = self.directive_id_to_mode
-        return self.sivm.save(fname, extra)
+        return self.sivm.save_io(stream, extra)
+
+    def load_io(self, stream):
+        extra = self.sivm.load_io(stream)
+        self.directive_id_to_stringable_instruction = \
+            extra['directive_id_to_stringable_instruction']
+        self.directive_id_to_mode = extra['directive_id_to_mode']
+        return extra
+
+    def save(self, fname, extra=None):
+        with open(fname, 'w') as fp:
+            self.save_io(fp, extra=extra)
+
+    def saves(self, extra=None):
+        ans = StringIO.StringIO()
+        self.save_io(ans, extra=extra)
+        return ans.getvalue()
 
     def load(self, fname):
-        extra = self.sivm.load(fname)
-        self.directive_id_to_stringable_instruction = extra['directive_id_to_stringable_instruction']
-        self.directive_id_to_mode = extra['directive_id_to_mode']
+        with open(fname) as fp:
+            return self.load_io(fp)
+
+    def loads(self, string):
+        return self.load_io(StringIO.StringIO(string))
 
     ############################################
     # Error reporting control
@@ -867,57 +899,19 @@ Open issues:
         self.sivm._do_not_annotate = False
 
     ############################################
-    # Profiler methods (stubs)
+    # Profiler methods
     ############################################
 
-    def profiler_configure(self, options=None):
-        if options is None: options = {}
-        i = {'instruction': 'profiler_configure', 'options': options}
-        return self.execute_instruction(i)['options']
+    def profiler_running(self, enable=None):
+        return self.sivm.core_sivm.profiler_running(enable)
 
     def profiler_enable(self):
-        self.profiler_configure({'profiler_enabled': True})
+        self.profiler_running(True)
         return None
 
     def profiler_disable(self):
-        self.profiler_configure({'profiler_enabled': False})
+        self.profiler_running(False)
         return None
-
-    def profiler_clear(self):
-        self.random_choices = []
-        self.address_to_acceptance_rate = {}
-        self.address_to_proposal_time = {}
-        return None
-
-    # insert a random choice into the profiler
-    def profiler_make_random_choice(self):
-        import random
-        address = random.randrange(1 << 16)
-        trials = random.randrange(1, 1000)
-        successes = random.randint(0, trials)
-        proposal_time = trials * random.random()
-
-        self.random_choices.append(address)
-        self.address_to_acceptance_rate[address] = (trials, successes)
-        self.address_to_proposal_time[address] = proposal_time
-
-        return address
-
-    def profiler_list_random_choices(self):
-        return self.random_choices
-
-    def profiler_address_to_source_code_location(self,address):
-        return address
-
-    def profiler_get_acceptance_rate(self,address):
-        return self.address_to_acceptance_rate[address]
-
-    def profiler_get_proposal_time(self,address):
-        return self.address_to_proposal_time[address]
-
-    ############################################
-    # Hacky profiling support since the above is ill understood
-    ############################################
 
     def profile_data(self):
         rows = self.sivm.core_sivm.engine.profile_data()
@@ -977,7 +971,7 @@ Open issues:
             self.load_prelude()
 
     def load_plugin(self, name, *args, **kwargs):
-        m = load_library(name)
+        m = load_library(name, self.search_paths)
         if hasattr(m, "__venture_start__"):
             return m.__venture_start__(self, *args, **kwargs)
 
@@ -988,16 +982,9 @@ Open issues:
     def _cur_parser(self):
         return self.parsers[self.mode]
 
-    def _extract_expression(self,directive_id):
-        text = self._get_raw_text(directive_id)
-        mode = self.directive_id_to_mode[directive_id]
-        p = self.parsers[mode]
-        args, arg_ranges = p.split_instruction(text)
-        return args['expression'], arg_ranges['expression'][0]
-
-def load_library(name):
+def load_library(name, search_paths):
     import imp
-    pathname = name
+    pathname = _search_for_path(name, search_paths)
     if name.endswith('.py'):
         name = name[0 : len(name) - len('.py')]
     with open(pathname, 'rb') as f:
@@ -1025,8 +1012,28 @@ def load_library(name):
     # print (file, pathname, description)
     # return imp.load_module(name, file, pathname, description)
 
+def _search_for_path(name, search_paths):
+    for place in search_paths:
+        candidate = os.path.join(place, name)
+        if os.path.exists(candidate):
+            return candidate
+    raise Exception("Plugin %s not found in any of %s" % (name, search_paths))
+
 def _symbolize(thing):
     if isinstance(thing, basestring):
         return v.symbol(thing)
     else:
         return thing # Assume it's already the proper stack dict
+
+def _interp_label_or_did(label_or_did):
+    if isinstance(label_or_did, int) or \
+        (isinstance(label_or_did, dict) and
+         'type' in label_or_did and
+         label_or_did['type'] == 'number'):
+        if isinstance(label_or_did, int):
+            did = label_or_did
+        else:
+            did = label_or_did['value']
+        return ('did', did)
+    else:
+        return ('label', _symbolize(label_or_did))

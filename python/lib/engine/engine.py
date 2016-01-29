@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -16,6 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from contextlib import contextmanager
+import cStringIO as StringIO
 import threading
 import time
 
@@ -97,17 +98,18 @@ class Engine(object):
     baseAddr = self.nextBaseAddr()
     self.model.observe(baseAddr, datum, val)
     if True: # TODO: add flag to toggle auto-incorporation
-      self.incorporate()
-    return baseAddr
+      weights = self.incorporate()
+    return (baseAddr, weights)
 
   def forget(self,directiveId):
-    self.model.forget(directiveId)
+    weights = self.model.forget(directiveId)
+    return weights
 
   def force(self,datum,val):
     # TODO: The directive counter increments, but the "force" isn't added
     # to the list of directives
     # This mirrors the implementation in the core_sivm, but could be changed?
-    did = self.observe(datum, val)
+    (did, _weights) = self.observe(datum, val)
     self.incorporate()
     self.forget(did)
     return did
@@ -168,7 +170,7 @@ class Engine(object):
   def collapse(self, scope, block): self.model.collapse(scope, block)
   def collapse_map(self, scope, block): self.model.collapse_map(scope, block)
   def likelihood_weight(self): self.model.likelihood_weight()
-  def incorporate(self): self.model.incorporate()
+  def incorporate(self): return self.model.incorporate()
 
   def evaluate(self, program):
     return self.raw_evaluate([v.sym("autorun"), program])
@@ -319,21 +321,35 @@ class Engine(object):
       return inferrer_obj.inference_thread_id == threading.currentThread().ident
 
 
-  def save(self, fname, extra=None):
+  def save_io(self, stream, extra=None):
     data = self.model.saveable()
     data['directiveCounter'] = self.directiveCounter
     data['extra'] = extra
     version = '0.2'
-    with open(fname, 'w') as fp:
-      dill.dump((data, version), fp)
+    dill.dump((data, version), stream)
 
-  def load(self, fname):
-    with open(fname) as fp:
-      (data, version) = dill.load(fp)
+  def load_io(self, stream):
+    (data, version) = dill.load(stream)
     assert version == '0.2', "Incompatible version or unrecognized object"
     self.directiveCounter = data['directiveCounter']
     self.model.load(data)
     return data['extra']
+
+  def save(self, fname, extra=None):
+    with open(fname, 'w') as fp:
+      self.save_io(fp, extra=extra)
+
+  def saves(self, extra=None):
+    ans = StringIO.StringIO()
+    self.save_io(ans, extra=extra)
+    return ans.getvalue()
+
+  def load(self, fname):
+    with open(fname) as fp:
+      return self.load_io(fp)
+
+  def loads(self, string):
+    return self.load_io(StringIO.StringIO(string))
 
   def convert(self, backend):
     engine = backend.make_engine(self.persistent_inference_trace)

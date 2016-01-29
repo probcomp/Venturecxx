@@ -99,4 +99,4 @@ class VentureEnvironment(VentureValue):
 
 registerVentureType(VentureEnvironment, "environment")
 # Exec is appropriate for metaprogramming
-exec(standard_venture_type("Environment")) # pylint: disable=exec-used
+exec(standard_venture_type("Environment", value_classname="VentureEnvironment")) # pylint: disable=exec-used

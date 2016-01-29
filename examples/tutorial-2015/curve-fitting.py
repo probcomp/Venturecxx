@@ -1,6 +1,12 @@
-import pygame
-import pygame.image
 import numbers
+
+try:
+  import pygame
+  import pygame.image
+  pygame_found = True
+except ImportError:
+  print "pygame not found; will not draw graphics."
+  pygame_found = False
 
 import venture.ripl.utils as u
 import venture.value.dicts as v
@@ -13,7 +19,8 @@ class Draw(object):
     self.view_y = (-10.0, 10.0)
     self.win_x = (0.0, self.winsize[0])
     self.win_y = (0.0, self.winsize[1])
-    self._do_start()
+    if pygame_found:
+      self._do_start()
 
   def _do_start(self):
     pygame.init()
@@ -46,20 +53,27 @@ class Draw(object):
     self.window.blit(text, (1,1))
 
   def draw(self, inferrer):
-    self._draw(inferrer)
+    if pygame_found:
+      self._draw(inferrer)
 
   def wdraw(self, inferrer):
-    alpha_levels = [int(255.0 * p) for p in inferrer.particle_normalized_probs()]
-    self._draw(inferrer, alpha_levels)
+    if pygame_found:
+      alpha_levels = [int(255.0 * p) for p in inferrer.particle_normalized_probs()]
+      self._draw(inferrer, alpha_levels)
 
   def draw_to_disk(self, inferrer, paths):
     path = paths[0]["value"]
-    self.draw(inferrer)
-    pygame.image.save(self.window, path)
+    if pygame_found:
+      self.draw(inferrer)
+      pygame.image.save(self.window, path)
+    else:
+      with open(path, "w") as f:
+        f.write("No pygame, can't make images")
 
   def stop(self, _inferrer):
-    pygame.quit()
-    self.window = None
+    if pygame_found:
+      pygame.quit()
+      self.window = None
 
   def _draw_observations(self, inferrer):
     has_quad = False

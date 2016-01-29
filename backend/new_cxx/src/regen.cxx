@@ -440,11 +440,11 @@ double evalRequests(Trace * trace,
     boost::shared_ptr<LatentDB> latentDB;
     Node * makerNode = trace->getOperatorSPMakerNode(requestNode);
     boost::shared_ptr<SP> sp = trace->getMadeSP(makerNode);
-    boost::shared_ptr<SPAux> spAux = trace->getMadeSPAux(makerNode);
+    boost::shared_ptr<Args> args = trace->getArgs(requestNode);
 
     if (db->hasLatentDB(makerNode)) { latentDB = db->getLatentDB(makerNode); }
 
-    weight += sp->simulateLatents(spAux,lsr,shouldRestore,latentDB,trace->getRNG());
+    weight += sp->simulateLatents(args,lsr,shouldRestore,latentDB,trace->getRNG());
   }
 
   return weight;

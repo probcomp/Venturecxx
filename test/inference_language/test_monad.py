@@ -1,4 +1,4 @@
-# Copyright (c) 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -21,6 +21,7 @@ import scipy.stats as stats
 
 from venture.test.stats import statisticalTest, reportKnownGaussian, reportKnownContinuous
 from venture.test.config import get_ripl, on_inf_prim, default_num_samples, default_num_transitions_per_sample, needs_backend
+import venture.ripl.utils as u
 
 def testInferenceLanguageEvalSmoke():
   ripl = get_ripl()
@@ -86,6 +87,21 @@ def testMonadicPredict():
           (assume y false))))]
 """)
   eq_(ripl.infer("(foo)"), ripl.report("pid"))
+
+@on_inf_prim("observe")
+def testMonadicObserve():
+  ripl = get_ripl(persistent_inference_trace=True)
+  ripl.execute_program("""
+[define foo
+  (lambda ()
+    (do
+      (rho <- (observe (flip) true pid))
+      (xi <- (forget 'pid))
+      (return (list (mapv exp rho) (mapv exp xi)))))]
+""")
+  [[rho], [xi]] = ripl.infer("(foo)")
+  eq_(rho, xi)
+  eq_(rho, 0.5)
 
 @on_inf_prim("in_model")
 @statisticalTest
@@ -175,3 +191,26 @@ def testBackendForkingSmoke():
 @on_inf_prim("autorun")
 def testAutorunSmoke():
   eq_(3.0, get_ripl().evaluate("(sample 3)"))
+
+def testReportActionSmoke():
+  vals = get_ripl().execute_program("""\
+foo : [assume x (+ 1 2)]
+(report 'foo)
+""")
+  eq_([3.0, 3.0], u.strip_types([v['value'] for v in vals]))
+
+def testForceSugar():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  vals = r.execute_program("""\
+assume x = normal(0,1);
+force x = 5;
+report(quote(x));
+""")
+  eq_(5, u.strip_types([v['value'] for v in vals])[2])
+
+def testSampleSugar():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  vals = r.execute_program("sample 2 + 2;")
+  eq_([4], u.strip_types([v['value'] for v in vals]))

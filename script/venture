@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -104,7 +104,7 @@ def add_local_args(parser):
     parser.add_argument('-f', '--file', action='append', help="execute the given file")
     parser.add_argument('-e', '--eval', action='append', help="execute the given program")
     parser.add_argument('-i', '--interactive', action='store_true', help="enter interactive interpreter after completing script file")
-    parser.add_argument('--abstract-syntax', action='store_true',
+    parser.add_argument('-a', '--abstract-syntax', action='store_true',
                         help="interpret abstract rather than concrete syntax")
     parser.add_argument('-L', '--library', action='append',
                         help="load a Python file in the local directory.  If the file defines\na __venture_start__ function, call it with the ripl to\ninitialize the library.")

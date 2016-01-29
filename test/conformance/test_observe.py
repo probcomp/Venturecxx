@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -150,3 +150,20 @@ def testObserveThroughRef():
   predictions = collectSamples(ripl,"pid",num_samples=default_num_samples(5))
   ans = [(False,0.333),(True,0.666)]
   return reportKnownDiscrete(ans, predictions)
+
+def testObserveExpression():
+  r = get_ripl()
+  r.execute_program('''
+[assume y (normal 0 1)]
+[observe y (sqrt 4)]
+''')
+  eq_(2, r.report('y'))
+
+def testObserveExpressionVS():
+  r = get_ripl()
+  r.set_mode('venture_script')
+  r.execute_program('''
+assume y = normal(0,1);
+observe y = sqrt(4);
+''')
+  eq_(2, r.report('y'))

@@ -1237,128 +1237,7 @@ Also, it is not thread-safe
   - The neural net hyperparameter optimization guys wrote one called
     FunkyYak
 - The boundary condition problem bit Wadden
-*** Activity: Tweaks that are so easy I should just do them
-- I really should just switch plotf to use the right log score
-  computation, and get rid of the broken one.
-
-- something is definitely wrong with the lite misc inference quality build
-  - test.smc.test_particle_filter.testBasicParticleFilter2
-
-From the slam effort:
-- Add some tests to the parser test suite to make sure quotation
-  produces the desired AST
-- I should add test cases for the do/bind_/recursion bug
-- Performance bug with routing assume, observe, predict through the
-  ripl: converting everything to and from stack dicts
-- Add a test for indexed mapv (for Puma and Lite)
-- Test freezing constants, and freezing the same node twice.
-- Make the labels in assume, observe, predict not quoted, so they can
-  in principle be arbitrary Venture objects (and for symmetry with
-  freeze, forget).
-
-Test enumerative_diversify, collapse_equal, collapse_equal_map,
-resample_multiprocess <p> <cap>, assume, observe, predict,
-call_back_accum
-- For testing collapse_equal{_map}, check that one sums the weights
-  and the other takes the max weight
-  - Possibly by making an integration test out of the hmm model
-    - (Maybe make one up where the difference is apparent?)
-- call_back_accum is like plotf (with no plot spec) but calls you back
-  with the data frame
-  - If there is a unique call_back_accum, can I arrange for the value
-    it returns to be the value returned by the infer command?
-- Test bounded-trial rejection in the test suite
-
-Do I want to write up persistent inference traces more thoroughly?
-*** Activity: Bugs related to error reporting
-- Bug: several things in backend/lite/functional.py use emptyAddress
-  but probably shouldn't.
-
-- Option: Finish getting rid of the attempted field of the sivm by
-  storing 'infer' instructions too.  Then I would need to remove them,
-  because I don't want to accumulate an infinite pile of 'infer'
-  instruction records (especially inside 'infer loop').
-
-- Possible bug: What will happen if there is a failure in a "force"
-  instruction?  If the predict+forget cycle is too low-level, the SIVM
-  might not get an expression record, and fail to annotate it.
-*** Activity: Small urgent bug list
-Bug: Why didn't it even try to annotate the Probability out of range
--0.0088150436511 I got from universal gradient ascent on the
-inferred-noise version of the curve fitting model?
-
-----------------------------------------------------------------------
-
-I think test/venturemagics/nb_tester.py is superseded by an official
-functionality of the ipython notebook command, at least in IPython 3
-(maybe even 2?)
-- http://stackoverflow.com/questions/17905350/running-an-ipython-notebook-non-interactively
-- ipython nbconvert --to=html --ExecutePreprocessor.enabled=True analytics_unit.ipynb 
-    did not work on my machine (IPython 2.0.0)
-
-----------------------------------------------------------------------
-
-Wadden found an interesting bug:
-  assume thing (some-random-length-list)
-  sample (is_pair thing) -> True, because that is so in the first particle
-  sample (first thing) -> *gronk* because in the second particle that list is empty
-Resolution: we should be consistent about whether any given thing is
-interacting with one particle or all of them.  Do not give answers from
-one but exceptions from all.
-
-----------------------------------------------------------------------
-
-The implementation of resample in Lite does not conserve incorporation
-status of constraints.  It should.  In the meantime I patched it with
-a forced incorporate afterward (for both backends).  I should fix it
-and remove the patch.
-- Incorporating after resample will mess up the particle weights
-- I may have an incorporation problem after collapse, too
-
-- Can I use engine.trace.Trace to solve the resample over/under
-  incorporation problem by explicitly serializing and deserializing
-  the unincorporated constraints?
-  - Is it safe to just smash the unincorporated constraints of the
-    restored trace with the deserialization, assuming that
-    re-incorporating the constraints that were marked incorporated
-    would be redundant after restoration?
-    - Make sure Puma can do it too.
-  - Do I need to store the unincorporated constraints list inside the
-    backend-specific Trace (for makeConsistent to traverse), or is it
-    ok to store it in the common one?
-  - Might even be reasonable to put in a hack that automatically dumps
-    all the Trace's attributes except "trace" into the serialization
-
 *** Activity: Small feature list
-- Should be able to split models
-- Should be able to merge models (with the relevant weight consequences)
-- Maybe should be able to copy models?
-- liftM
-
-----------------------------------------------------------------------
-
-- [infer (load_plugin 'symbol<"...">)] works but is ugly
-  - also, the parser error message I get if I omit the symbol part is
-    not highlighted in red
-- Might be nice to add a "sleep" inference SP, to make controlled
-  pauses, especially in infer loops
-- Might want to extend the blaming makers hack to other made infer
-  PSPs, so that, e.g., the callback exception gets blamed reasonably.
-- Double use of a label should register as an annotatable exception
-
-----------------------------------------------------------------------
-
-- The console really needs to become like the inside of a do in the
-  inference monad (be able to bind local variables to results of infer
-  actions, etc)
-
-- I think I want a version of define that runs the action and binds
-  the result (maybe only for demo scripts as opposed to importable
-  modules?).
-  - loop really sucks without that
-  - as do interactive inference commands generally
-
-----------------------------------------------------------------------
 
 Macros
 - Suggested to Vlad:
@@ -1374,13 +1253,6 @@ Macros
        needed for error reporting on the produced Syntax objects
        directly, rather than as functions that transform indexes.  I
        don't know whether this is a good thing to do: you tell me.
-
-----------------------------------------------------------------------
-
-I am likely to want something that does smart diversifies and smart
-resamples by keeping the results on the workers they came from to the
-extent possible.  Is there a tweak needed to the Master/Worker
-interface to enable this?
 
 ----------------------------------------------------------------------
 
@@ -1403,52 +1275,12 @@ make writing inference primitives more straightforward?
 
 ----------------------------------------------------------------------
 
-Possible convenience abstractions for dataset collection and use:
-
-    [define bar
-      (do
-        (with_dataset
-         (repeat 100
-          (do (mh 0 one 1)
-              (accumulate (log_likelihood 0 all) a b c (+ a b c))))
-         (plotf (quote (p0d1d2 p0d1dt c3 cs)))))] ; maybe curry here
-
-    [define quux
-      (bind (repeat_collecting (a b c (+ a b c))
-                               (mh 0 one 1)
-                               100)
-            (curry plotf (quote (p0d1d2 p0d1dt c3 cs))))]
-
-    [define quux2
-      (bind (foldM mappend mempty
-                   (replicate (begin (mh 0 one 1)
-                                     (accumulate a b c (+ a b c)))
-                              100))
-            (curry plotf (quote (p0d1d2 p0d1dt c3 cs))))]
-
-----------------------------------------------------------------------
-
-Idea: add a "smoketest" flag to all the example programs, for the test
-suite to run through all of them.
-
-----------------------------------------------------------------------
-
-- Could put in a hack where synchronous workers do not catch and
-  serialize exceptions, but let them propagate to the master directly
-
-----------------------------------------------------------------------
-
 - What would it take to make serializing and deserializing traces
   truly self-contained?
   - The dump needs to indicate a (default?) backend type for restoring, and
     engine.trace.Trace needs to be able to get and run such a constructor.
   - The dump needs to indicate the set of bound foreign sps, and the Trace
     needs a registry of all possible foreign sps to be able to rebind them.
-
-----------------------------------------------------------------------
-
-Code cleanup idea: force both the parser modules to be imported
-qualified, and then rename both classes Parser.
 
 ----------------------------------------------------------------------
 
@@ -1496,14 +1328,6 @@ deterministic one" on the directives page of the reference manual.
 
 In principle, we should refactor the parallelism control so that
 resampling is independent from choosing the parallelism mode.
-
-----------------------------------------------------------------------
-
-Teach the parsers to parse literal strings, so they can be used as formats, file names, etc.
-- Piggy-back on the fact that the symbol<"..."> syntax is already
-  parsed as a string?
-- Either add a VentureString type that everything ignores, or just use
-  a quoted VentureSymbol
 
 ----------------------------------------------------------------------
 
@@ -2473,8 +2297,6 @@ VentureSivm
   then the Engine implements them again, to give inference SPs and
   others access)
   - This includes interpreting the data structure to decide what to do
-- Some scaffolding for interpreting debugger instructions like setting
-  breakpoints, which surely do not work.
 
 Ripl
 - Parses string-form (and partially structured) instructions into

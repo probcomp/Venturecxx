@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -98,11 +98,11 @@ def testEnumerativeGibbsCategorical1():
   ripl = get_ripl()
   ripl.assume('x', '(categorical (simplex 0.1 0.9) (array 0 1))', label="pid")
   ripl.observe('(flip (if (= x 0) 0.9 0.1))', "true")
-  
+
   predictions = collectSamples(ripl, "pid", infer="(gibbs default all 1)")
   ans = [(False, .5), (True, .5)]
   return reportKnownDiscrete(ans, predictions)
-  
+
 @gen_on_inf_prim("gibbs")
 def testEnumerativeGibbsXOR1():
   yield checkEnumerativeGibbsXOR1, "false"

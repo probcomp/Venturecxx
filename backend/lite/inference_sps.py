@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -364,7 +364,7 @@ The `transitions` argument specifies how many times to do this.
 Note: the Nesterov acceleration is applied across steps within one
 transition, not across transitions."""),
 
-  trace_method_sp("map",
+  trace_method_sp("grad_ascent",
                   transition_oper_type([t.NumberType("step_size : number"), t.IntegerType("steps : int")]),
                   desc="""\
 Move deterministically toward the maximum of the local conditional by
@@ -844,14 +844,14 @@ Extracts the last row of the supplied inference Dataset and prints its iteration
 """),
 
   ripl_macro_helper("assume", infer_action_maker_type([t.AnyType("<symbol>"), t.AnyType("<expression>"), t.AnyType("<label>")], return_type=t.AnyType(), min_req_args=2)),
-  ripl_macro_helper("observe", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType(), t.AnyType("<label>")], min_req_args=2)),
+  ripl_macro_helper("observe", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType(), t.AnyType("<label>")], return_type=t.AnyType(), min_req_args=2)),
   macro_helper("force", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType()])),
   ripl_macro_helper("predict", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType("<label>")], return_type=t.AnyType(), min_req_args=1)),
   macro_helper("sample", infer_action_maker_type([t.AnyType("<expression>")], return_type=t.AnyType())),
   macro_helper("sample_all", infer_action_maker_type([t.AnyType("<expression>")], return_type=t.ListType())),
   macro_helper("extract_stats", infer_action_maker_type([t.AnyType("<expression>")], return_type=t.AnyType())),
 
-  ripl_method_sp("forget", infer_action_maker_type([t.AnyType("<label>")]), desc="""\
+  ripl_method_sp("forget", infer_action_maker_type([t.AnyType("<label>")], return_type=t.AnyType()), desc="""\
 Forget an observation, prediction, or unused assumption.
 
 Removes the directive indicated by the label argument from the
@@ -874,6 +874,18 @@ Together with forget, freeze makes it possible for particle filters
 in Venture to use model memory independent of the sequence length.
 """),
 
+  ripl_method_sp("report", infer_action_maker_type([t.AnyType("<label>")],
+                  return_type=t.AnyType()), desc="""\
+Report the current value of the given directive.
+
+The directive can be specified by label or by directive id.
+"""),
+
+  ripl_method_sp("endloop", infer_action_maker_type([], return_type=t.AnyType()),
+                 method_name="stop_continuous_inference", desc="""\
+Stop any continuous inference that may be running.
+"""),
+
   ["empty", deterministic_typed(lambda *args: Dataset(), [], t.ForeignBlobType("<dataset>"), descr="""\
 Create an empty dataset `into` which further `collect` ed stuff may be merged.
   """)],
@@ -886,7 +898,7 @@ Right now only implemented on datasets created by `empty` and
 `collect`, but in principle generalizable to any monoid.  """)],
 
   # Hackety hack hack backward compatibility
-  ["ordered_range", deterministic_typed(lambda *args: (t.VentureSymbol("ordered_range"),) + args,
+  ["ordered_range", deterministic_typed(lambda *args: (v.VentureSymbol("ordered_range"),) + args,
                                         [t.AnyType()], t.ListType(), variadic=True)],
 
   ["assert", sequenced_sp(assert_fun, infer_action_maker_type([t.BoolType(), t.SymbolType("message")], min_req_args=1), desc="""\
@@ -1018,6 +1030,20 @@ Does not interoperate with multiple particles.
   ripl_method_sp("draw_subproblem", infer_action_maker_type([t.AnyType("<subproblem>")]), desc="""\
   Draw a subproblem by printing out the source code of affected random choices.
 
+"""),
+
+  engine_method_sp("save_model", infer_action_maker_type([t.StringType("<filename>")]), desc="""\
+Save the current model to a file.
+
+Note: ``save_model`` and ``load_model`` rely on Python's ``pickle``
+module.
+"""),
+
+  engine_method_sp("load_model", infer_action_maker_type([t.StringType("<filename>")]), desc="""\
+Load from a file created by ``save_model``, clobbering the current model.
+
+Note: ``save_model`` and ``load_model`` rely on Python's ``pickle``
+module.
 """),
 
   engine_method_sp("pyexec", infer_action_maker_type([t.SymbolType("<code>")]), desc="""\

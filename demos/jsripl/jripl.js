@@ -17,18 +17,18 @@
 
 /* Description: Javascript library for communicating with Venture's RIPL
  * asynchronously, to assist in the development of Web demos.
- *  
+ *
  * Design Overview: A JRIPL object is essentially a wrapper around the
  * Python-layer RIPL class, except everything is made asynchronous so that
- * no values are returned from functions. All interaction with Venture is 
+ * no values are returned from functions. All interaction with Venture is
  * done via callbacks.
  *
- * Extensions: There are other RIPL functions that return values, that we 
+ * Extensions: There are other RIPL functions that return values, that we
  * may want to support via callbacks, such as GET_LOG_SCORE(). One option
- * is to add <pripl_function>_once(f,args) and 
+ * is to add <pripl_function>_once(f,args) and
  * <pripl_function>_continuously(time,f,args) for every function supported
  * by PRIPL.
- * 
+ *
  * Author: Daniel Selsam
  */
 
@@ -80,16 +80,16 @@ function jripl() {
     /* Send via AJAX in sequence, going through the request queue. */
     var ajax_post_in_sequence = function(URL,data_in,on_success) {
         if (request_in_progressQ) {
-            request_queue.push({url: URL, 
+            request_queue.push({url: URL,
                                 data_in: data_in,
                                 on_success: on_success});
-        } 
+        }
         else {
             request_in_progressQ = true;
             ajax_execute_post(URL,data_in,on_success);
         }
     };
-    
+
     this.method = ajax_post_in_sequence
 
     /* Perform the actual AJAX request. */
@@ -98,7 +98,7 @@ function jripl() {
         console.log("Ajax request sent", request_queue.length, "left in queue")
         $.ajax({
             url: full_url(URL),
-            type:'POST', 
+            type:'POST',
             data: JSON.stringify(data_in),
             dataType: 'json',
             contentType: 'application/json',
@@ -111,7 +111,7 @@ function jripl() {
                 ajax_continue_requests();
             },
             // TODO this error callback needs updating
-            error: function(data) { 
+            error: function(data) {
                 console.log("Got an error", data);
                 ajax_continue_requests();
             },
@@ -119,23 +119,28 @@ function jripl() {
         });
     };
 
-    
+
     /* These functions are all supported, and can be called just as in
      * the python layer, except the user cannot receive the return values.
      */
-    var supported_pripl_functions = ['set_mode', 'execute_instruction', 'execute_program', 'split_program', 'character_index_to_expression_index', 'expression_index_to_text_index', 'configure', 'infer', 'clear', 'rollback', 'assume', 'predict', 'observe', 'forget', 'force', 'sample', 'start_continuous_inference', 'stop_continuous_inference', 'continuous_inference_status'];
+    var supported_pripl_functions = [
+        'set_mode', 'execute_instruction', 'execute_program', 'split_program',
+        'expression_index_to_text_index', 'infer', 'clear',
+        'assume', 'predict', 'observe', 'forget', 'force', 'sample',
+        'start_continuous_inference', 'stop_continuous_inference',
+        'continuous_inference_status'];
 
-    /* Creates a function corresponding to one of the supported pripl functions 
+    /* Creates a function corresponding to one of the supported pripl functions
      * listed above. */
     var create_closure = function(name, on_success) {
         return function() {
             ajax_post_in_sequence(name,
-                                  Array.prototype.slice.call(arguments, 0), 
+                                  Array.prototype.slice.call(arguments, 0),
                                   on_success);
         };
     };
 
-    /* Dynamically add supported pripl functions to JRIPL. */  
+    /* Dynamically add supported pripl functions to JRIPL. */
     for (i = 0; i < supported_pripl_functions.length; i++) {
         var name = supported_pripl_functions[i];
         this[name] = create_closure(name, function() {});
@@ -246,7 +251,7 @@ function jripl() {
     this.get_directives_once = function(f) {
         ajax_post_in_sequence("list_directives", [], f);
     };
-    
+
     /*
     this.display_directives = function() {
         var success_fun = function(data) {
@@ -266,13 +271,13 @@ function jripl() {
         ajax_post_in_sequence("list_directives", [], success_fun);
     };
     */
-    
+
 /* Registering special callback functions */
     this.register_a_request_processed_callback = function(f) {
         a_request_processed_callback = f;
     }
 
-    
+
 /* The user will register this callback after sending all requests of interest.
    If the request_queue is empty, all such requests have all been processed, and
    so we call the callback. Otherwise, the next time it becomes empty, we call the

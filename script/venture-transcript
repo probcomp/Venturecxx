@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -38,7 +38,7 @@ import venture.shortcuts as vs
 from venture.ripl.utils import strip_types
 from venture.exception import VentureException
 
-start_of_block = re.compile(r"^[ \t\r\f\v]*```(venture|church')(/error)?[ \t\r\f\v]*$", re.MULTILINE)
+start_of_block = re.compile(r"^[ \t\r\f\v]*```(venture|church'|python)(/error)?[ \t\r\f\v]*$", re.MULTILINE)
 end_of_block = re.compile(r"^[ \t\r\f\v]*```[ \t\r\f\v]*$", re.MULTILINE)
 
 def header(title=None):
@@ -146,6 +146,11 @@ class Writer(object):
         elif mode == "church'":
             self.ripl.set_mode("church_prime")
             comment_start = ';'
+        elif mode == "python":
+            # Python blocks are for hidden sneaks; if you want to show
+            # Python use pyexec in Venture.
+            exec(string)
+            return
         else:
             raise Exception("Unknown block mode %s", mode)
         (figures, munged) = self.munge_plotfs(mode, string)
@@ -189,8 +194,11 @@ class Writer(object):
     def execute_program(self, munged, expect_error):
         if munged.strip() == "list_directives":
             return [self.ripl.print_directives()]
-        elif munged.strip() == "clear":
-            return [self._create_ripl()]
+        elif munged.strip().startswith("clear"):
+            cleared = [self._create_ripl()]
+            prog = munged.strip()[len("clear"):]
+            rest = self.execute_program(prog, expect_error)
+            return cleared + rest
         else:
             try:
                 return self.ripl.execute_program(munged)

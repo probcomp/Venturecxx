@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 import unittest
 
 from nose.plugins.attrib import attr
@@ -35,14 +36,14 @@ class TestRipl(unittest.TestCase):
 
     def setUp(self):
         self.core_sivm = get_core_sivm()
-        self.core_sivm.execute_instruction({"instruction":"clear"})
+        self.core_sivm.execute_instruction({'instruction':'clear'})
         self.venture_sivm = VentureSivm(self.core_sivm)
         parser1 = ChurchPrimeParser.instance()
         parser2 = VentureScriptParser.instance()
         self.ripl = Ripl(self.venture_sivm,
-                {"church_prime":parser1,
-                    "church_prime_2":parser1,
-                    "venture_script":parser2})
+                {'church_prime':parser1,
+                    'church_prime_2':parser1,
+                    'venture_script':parser2})
         self.ripl.set_mode('church_prime')
 
     ############################################
@@ -59,7 +60,7 @@ class TestRipl(unittest.TestCase):
         output = self.ripl.get_mode()
         self.assertEqual(output,'church_prime_2')
         with self.assertRaises(VentureException):
-            self.ripl.set_mode("moo")
+            self.ripl.set_mode('moo')
 
     ############################################
     # Execution
@@ -74,54 +75,57 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(ret_value['value'], v.number(2))
 
     def test_execute_program(self):
-        f = self.ripl.execute_program
-        ret_value = f("[assume a 1] [assume b (+ 1 2)] [assume c (- b a)] [predict c]")
+        prog = "[assume a 1] [assume b (+ 1 2)] [assume c (- b a)] [predict c]"
+        ret_value = self.ripl.execute_program(prog)
         self.assertEqual(ret_value[-1]['value'], v.number(2))
 
     def test_parse_exception_sugaring(self):
-        f = self.ripl.execute_instruction
         try:
-            f("[assume a (+ (if 1 2) 3)]")
+            self.ripl.execute_instruction("[assume a (+ (if 1 2) 3)]")
         except VentureException as e:
             self.assertEqual(e.data['text_index'], [13,20])
             self.assertEqual(e.exception, 'parse')
-
-    def test_invalid_argument_exception_sugaring(self):
-        f = self.ripl.execute_instruction
-        try:
-            f("[forget moo]")
-        except VentureException as e:
-            self.assertEqual(e.data['text_index'], [8,10])
-            self.assertEqual(e.exception, 'invalid_argument')
 
     ############################################
     # Text manipulation
     ############################################
 
     def test_split_program(self):
-        output = self.ripl.split_program(" [ force blah count<132>][ infer 132 ]")
-        instructions = ['[ force blah count<132>]','[ infer 132 ]']
+        output = self.ripl.split_program(" ( force blah count<132>)[ infer 132 ]")
+        instructions = ['( force blah count<132>)','[ infer 132 ]']
         indices = [[1,24],[25,37]]
         self.assertEqual(output,[instructions, indices])
 
     def test_get_text(self):
         self.ripl.set_mode('church_prime')
-        text = "[assume a (+ (if true 2 3) 4)]"
-        value = self.ripl.execute_instruction(text)
-        output = self.ripl.get_text(value['directive_id'])
-        self.assertEqual(output, ['church_prime',text])
-
-    def test_character_index_to_expression_index(self):
-        text = "[assume a (+ (if true 2 3) 4)]"
-        value = self.ripl.execute_instruction(text)
-        output = self.ripl.character_index_to_expression_index(value['directive_id'], 10)
-        self.assertEqual(output, [])
+        text = "mumble: [assume a (+ (if true 2 3) 4)]"
+        self.ripl.execute_instruction(text)
+        did = self.ripl.directive_id_for_label("mumble")
+        output = self.ripl.get_text(did)
+        # Beware the double macroexpansion bug
+        munged = 'mumble: [assume a (add ((biplex true ' \
+                 '(make_csp (quote ()) (quote 2.0)) ' \
+                 '(make_csp (quote ()) (quote 3.0)))) 4.0)]'
+        self.assertEqual(output, ['church_prime',munged])
 
     def test_expression_index_to_text_index(self):
-        text = "[assume a (+ (if true 2 3) 4)]"
-        value = self.ripl.execute_instruction(text)
-        output = self.ripl.expression_index_to_text_index(value['directive_id'], [])
-        self.assertEqual(output, [10,28])
+        text = "mumble : [assume a (+ (if true 2 3) 4)]"
+        self.ripl.execute_instruction(text)
+        did = self.ripl.directive_id_for_label("mumble")
+        output = self.ripl.expression_index_to_text_index(did, [])
+        # The indexes in this ouptut are large because of the double
+        # macroexpansion bug.
+        self.assertEqual(output, [9,110])
+
+    def test_expression_index_to_text_index_vs(self):
+        self.ripl.set_mode('venture_script')
+        text = "mumble : assume a = if (true) { 2 } else { 3 } + 4"
+        self.ripl.execute_instruction(text)
+        did = self.ripl.directive_id_for_label("mumble")
+        output = self.ripl.expression_index_to_text_index(did, [])
+        # The indexes in this ouptut are large because of the double
+        # macroexpansion bug.
+        self.assertEqual(output, [9,110])
 
 
     ############################################
@@ -148,41 +152,48 @@ class TestRipl(unittest.TestCase):
         #normal observe
         self.ripl.assume('a','(uniform_continuous 0 1)')
         a = self.ripl.sample('a')
-        self.ripl.observe('a',0.5)
+        weights = self.ripl.observe('a', 0.5)
         # TODO test for when auto-incorporation is disabled
         self.assertEqual(self.ripl.sample('a'), 0.5)
+        self.assertEqual(weights, [0])
 
     def test_labeled_observe(self):
         #labeled observe
         self.ripl.assume('b','(uniform_continuous 0 1)')
         b = self.ripl.sample('b')
-        self.ripl.observe('b',0.5, 'moo')
+        weights = self.ripl.observe('b', 0.5, 'moo')
         # TODO test for when auto-incorporation is disabled
         self.assertEqual(self.ripl.sample('b'), 0.5)
+        self.assertEqual(weights, [0])
 
     ############################################
     # Core
     ############################################
 
-    def test_configure(self):
-        ret_value = self.ripl.configure({"seed":0,"inference_timeout":5000})
-        self.assertEqual(ret_value, {"seed":0, "inference_timeout":5000})
-
     def test_forget(self):
         #normal forget
-        ret_value = self.ripl.execute_instruction('[ predict (uniform_continuous 0 1) ]')
-        self.ripl.forget(ret_value['directive_id'])
+        inst = 'frob: [ predict (uniform_continuous 0 1) ]'
+        self.ripl.execute_instruction(inst)
+        did = self.ripl.directive_id_for_label('frob')
+        weights = self.ripl.forget(did)
+        self.assertEqual(weights, [0])
         with self.assertRaises(VentureException):
-            self.ripl.forget(ret_value['directive_id'])
+            self.ripl.forget(did)
         #labeled forget
         self.ripl.assume('a','(uniform_continuous 0 1)', 'moo')
         # assumes can be forgotten
-        self.ripl.forget('moo')
+        weights = self.ripl.forget('moo')
+        self.assertEqual(weights, [0])
+        # observes can be forgotten
+        self.ripl.observe('(uniform_continuous 0 (exp 1))', 2, 'baa')
+        weights = self.ripl.forget('baa')
+        self.assertEqual(weights, [-1])
 
     def test_report(self):
         #normal report
-        ret_value = self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
-        output = self.ripl.report(ret_value['directive_id'])
+        self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
+        did = self.ripl.directive_id_for_label('moo')
+        output = self.ripl.report(did)
         self.assertEqual(output,1)
         #labeled report
         output = self.ripl.report('moo')
@@ -200,10 +211,6 @@ class TestRipl(unittest.TestCase):
         with self.assertRaises(VentureException):
             self.ripl.report('moo')
 
-    def test_rollback(self):
-        #TODO: write test after exception states are implemented
-        pass
-
     def test_list_directives(self):
         n_before = len(self.ripl.list_directives())
         self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
@@ -211,9 +218,10 @@ class TestRipl(unittest.TestCase):
         self.assertEqual(n_after, n_before + 1)
 
     def test_get_directive(self):
-        ret_value = self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
-        output = self.ripl.get_directive(ret_value['directive_id'])
-        self.assertEqual(output['directive_id'],output['directive_id'])
+        self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
+        did = self.ripl.directive_id_for_label("moo")
+        output = self.ripl.get_directive(did)
+        self.assertEqual(output['directive_id'],did)
 
     def test_force(self):
         #normal force
@@ -227,29 +235,3 @@ class TestRipl(unittest.TestCase):
         #normal force
         output = self.ripl.sample('(+ 1 1)')
         self.assertEqual(output, 2)
-
-    def test_get_current_exception(self):
-        # TODO: write test after exception states are implemented
-        pass
-
-    def test_get_state(self):
-        output = self.ripl.get_state()
-        self.assertEqual(output,'default')
-
-    def test_get_global_logscore(self):
-        self.ripl.execute_instruction('moo : [ assume a (+ 0 1) ]')
-        output = self.ripl.get_global_logscore()
-        self.assertEqual(output,0)
-
-    ############################################
-    # Profiler
-    ############################################
-
-    def test_profiler_configure(self):
-        output = self.ripl.profiler_configure()
-        self.assertEqual(output, {'profiler_enabled': False})
-        output = self.ripl.profiler_configure({'profiler_enabled': True})
-        self.assertEqual(output, {'profiler_enabled': True})
-        output = self.ripl.profiler_configure({'profiler_enabled': False})
-        self.assertEqual(output, {'profiler_enabled': False})
-

@@ -15,9 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose import SkipTest
+import math
+
 from nose.tools import assert_almost_equal
-import numpy as np
 from scipy import stats
 
 from venture.test.config import get_ripl, on_inf_prim
@@ -29,22 +29,21 @@ from venture.lite.sp_help import typed_nr
 def test_global_logscore():
     ripl = get_ripl()
     for _ in range(100):
-        ripl.observe('(flip)', 'true')
+        ripl.observe('(flip (exactly 0.5))', 'true')
     ripl.infer('(incorporate)')
-    logscore = ripl.get_global_logscore()
-    logscore_true = -100*np.log(2)
+    logscore = ripl.get_global_logscore()[0]
+    logscore_true = -100*math.log(2)
     assert_almost_equal(logscore, logscore_true)
 
 @on_inf_prim("none")
 def test_global_logscore_coupled():
-    raise SkipTest("Exchangeable coupling breaks get_global_logscore. Issue: https://app.asana.com/0/11127829865276/14115439427385")
     ripl = get_ripl()
-    ripl.assume('f', '(make_beta_bernoulli 1.0 1.0)')
+    ripl.assume('f', '(exactly (make_beta_bernoulli 1.0 1.0))')
     for _ in range(100):
         ripl.observe('(f)', 'true')
     ripl.infer('(incorporate)')
-    logscore = ripl.get_global_logscore()
-    logscore_true = -np.log(100)
+    logscore = ripl.get_global_logscore()[0]
+    logscore_true = -math.log(101)
     assert_almost_equal(logscore, logscore_true)
 
 @on_inf_prim("none")
@@ -56,7 +55,7 @@ def test_logscore_likelihood_free():
     ripl.infer('(incorporate)')
     ripl.predict('(test1 0)')
     ripl.predict('(test2 0)')
-    logscore = ripl.get_global_logscore()
+    ripl.get_global_logscore()
 
 def setup_likelihood_free():
     class TestPSP1(LikelihoodFreePSP):

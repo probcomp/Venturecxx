@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -127,8 +127,6 @@ def test_serialize_aaa():
     def check_beta_bernoulli(maker, action):
         if maker == "make_uc_beta_bernoulli" and action in ['serialize', 'convert_lite', 'convert_puma']:
             raise SkipTest("Cannot convert BetaBernoulliSP to a stack dictionary. Issue: https://app.asana.com/0/9277420529946/16149214487233")
-        elif action == 'copy' and config['get_ripl'] == 'puma':
-            raise SkipTest("Fails due to a mystery bug in Puma stop_and_copy. Issue: https://app.asana.com/0/11127829865276/13039650533872")
         v = get_ripl()
         v.assume('a', '(normal 10.0 1.0)')
         v.assume('f', '({0} a a)'.format(maker))
@@ -141,8 +139,6 @@ def test_serialize_aaa():
             yield check_beta_bernoulli, maker, action
 
     def check_crp(maker, action):
-        if action == 'copy' and config['get_ripl'] == 'puma':
-            raise SkipTest("Fails due to a mystery bug in Puma stop_and_copy. Issue: https://app.asana.com/0/11127829865276/13039650533872")
         v = get_ripl()
         v.assume('a', '(gamma 1.0 1.0)')
         v.assume('f', '({0} a)'.format(maker))
@@ -173,7 +169,7 @@ def test_serialize_aaa():
 @gen_on_inf_prim("mh") # Easy to generalize but little testing value
 def test_serialize_latents():
     def check(action):
-        raise SkipTest("Cannot serialize latents")
+        raise SkipTest("Cannot serialize latents https://github.com/probcomp/Venturecxx/issues/342")
         v = get_ripl()
         v.assume('f','''\
     (make_lazy_hmm
@@ -193,30 +189,41 @@ def test_serialize_latents():
     for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
         yield check, action
 
-@on_inf_prim("mh")
+@gen_on_inf_prim("mh")
 def test_serialize_ripl():
-    with tempfile.NamedTemporaryFile(prefix='serialized.ripl') as f:
-        v1 = get_ripl()
-        v1.assume('is_tricky', '(flip 0.2)')
-        v1.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
-        v1.assume('flip_coin', '(lambda () (flip theta))')
-        v1.observe('(flip_coin)', 'true')
+    def check(mode):
+        with tempfile.NamedTemporaryFile(prefix='serialized.ripl') as f:
+            v1 = get_ripl()
+            v1.assume('is_tricky', '(flip 0.2)')
+            v1.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
+            v1.assume('flip_coin', '(lambda () (flip theta))')
+            v1.observe('(flip_coin)', 'true')
 
-        v1.infer(1)
-        result1 = v1.predict('theta', label='theta_prediction')
+            v1.infer(1)
+            result1 = v1.predict('theta', label='theta_prediction')
 
-        v1.save(f.name)
+            call(v1, 'save', f.name, mode)
 
-        v2 = get_ripl()
-        v2.load(f.name)
-        result2 = v2.report('theta_prediction')
-        result3 = v2.predict('theta')
+            v2 = get_ripl()
+            call(v2, 'load', f.name, mode)
+            result2 = v2.report('theta_prediction')
+            result3 = v2.predict('theta')
 
-        assert result1 == result2 and result1 == result3
+            assert result1 == result2 and result1 == result3
 
-        text1 = v1.get_text(1)
-        text2 = v2.get_text(1)
-        assert text1 == text2
+            text1 = v1.get_text(1)
+            text2 = v2.get_text(1)
+            assert text1 == text2
+    def call(ripl, save_or_load, filename, mode):
+        if mode == 'ripl':
+            if save_or_load == 'save':
+                ripl.save(filename)
+            elif save_or_load == 'load':
+                ripl.load(filename)
+        elif mode == 'inference_language':
+            ripl.infer('(%s_model "%s")' % (save_or_load, filename))
+    for mode in ['ripl', 'inference_language']:
+        yield check, mode
 
 @on_inf_prim("mh") # Easy to generalize but little testing value
 @statisticalTest

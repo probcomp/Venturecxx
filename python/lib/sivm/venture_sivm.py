@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -14,10 +14,12 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import copy
+import cStringIO as StringIO
 
 from venture.exception import VentureException
 from venture.sivm import utils, macro, macro_system
@@ -28,46 +30,57 @@ class VentureSivm(object):
     def __init__(self, core_sivm):
         self.core_sivm = core_sivm
         self._do_not_annotate = False
+        self._ci_pauser_stack = []
         self._clear()
-        self._init_continuous_inference()
 
-    dicts = [s + '_dict' for s in ['breakpoint', 'label', 'did', 'syntax', 'directive']]
+    dicts = [s + '_dict' for s in ['label', 'did', 'syntax', 'directive']]
 
     # list of all instructions supported by venture sivm
     _extra_instructions = {'labeled_assume','labeled_observe',
-            'labeled_predict','labeled_forget','labeled_freeze','labeled_report',
+            'labeled_predict','labeled_forget','labeled_freeze',
+            'labeled_report',
             'list_directives','get_directive','labeled_get_directive',
-            'force','sample','get_current_exception',
-            'get_state', 'reset', 'debugger_list_breakpoints','debugger_get_breakpoint'}
-    _core_instructions = {"define","assume","observe","predict",
-            "configure","forget","freeze","report","evaluate","infer","start_continuous_inference",
-            "stop_continuous_inference","continuous_inference_status",
-            "clear","rollback","get_global_logscore",
-            "debugger_configure","debugger_list_random_choices", "debugger_clear",
-            "debugger_force_random_choice","debugger_report_address",
-            "debugger_history","debugger_dependents","debugger_address_to_source_code_location",
-            "debugger_set_breakpoint_address","debugger_set_breakpoint_source_code_location",
-            "debugger_remove_breakpoint","debugger_continue","profiler_configure",
-            "profiler_clear","profiler_list_random_choices",
-            "profiler_address_to_source_code_location","profiler_get_random_choice_acceptance_rate",
-            "profiler_get_global_acceptance_rate","profiler_get_random_choice_proposal_time",
-            "profiler_get_global_proposal_time"}
+            'force','sample',
+    }
+    _core_instructions = {'define','assume','observe','predict',
+            'forget','freeze','report','evaluate','infer',
+            'start_continuous_inference',
+            'stop_continuous_inference','continuous_inference_status',
+            'clear',
+    }
 
-    _dont_pause_continuous_inference = {"start_continuous_inference",
-            "stop_continuous_inference", "continuous_inference_status"}
+    _dont_pause_continuous_inference = {'start_continuous_inference',
+            'stop_continuous_inference', 'continuous_inference_status'}
 
     def execute_instruction(self, instruction):
-        utils.validate_instruction(instruction,self._core_instructions | self._extra_instructions)
+        utils.validate_instruction(instruction, self._core_instructions |
+                                   self._extra_instructions)
         instruction_type = instruction['instruction']
 
-        pause = instruction_type not in self._dont_pause_continuous_inference and not self.core_sivm.engine.on_continuous_inference_thread()
+        pause = instruction_type not in self._dont_pause_continuous_inference \
+            and not self.core_sivm.engine.on_continuous_inference_thread()
         with self._pause_continuous_inference(pause=pause):
+            if instruction_type == 'stop_continuous_inference':
+                # It is possible for a paused CI to exist when
+                # executing a stop ci instruction, because of the
+                # 'endloop' inference SP.  To wit, the 'infer'
+                # triggers a pause, and then the 'endloop' causes a
+                # reentrant execute_instruction, which can land here.
+                self._drop_top_paused_ci()
             if instruction_type in self._extra_instructions:
                 f = getattr(self,'_do_'+instruction_type)
                 return f(instruction)
             else:
                 response = self._call_core_sivm_instruction(instruction)
                 return response
+
+    def _drop_top_paused_ci(self):
+        candidate = len(self._ci_pauser_stack) - 1
+        while candidate >= 0:
+            if self._ci_pauser_stack[candidate].ci_was_running:
+                self._ci_pauser_stack[candidate].ci_was_running = False
+                break
+            candidate -= 1
 
     ###############################
     # Reset stuffs
@@ -77,29 +90,42 @@ class VentureSivm(object):
         self.label_dict = {} # Maps labels to directive ids
         self.did_dict = {} # Maps directive ids back to labels
         self.directive_dict = {} # Maps directive ids to the actual instructions
-        self.syntax_dict = {} # Maps directive ids to the Syntax objects that record their macro expansion history
-        self._debugger_clear()
-        self.state = 'default'
-
-    def _debugger_clear(self):
-        self.breakpoint_dict = {}
+        # Maps directive ids to the Syntax objects that record their
+        # macro expansion history
+        self.syntax_dict = {}
 
     ###############################
     # Serialization
     ###############################
 
-    def save(self, fname, extra=None):
+    def save_io(self, stream, extra=None):
         if extra is None:
             extra = {}
         for d in self.dicts:
             extra[d] = getattr(self, d)
-        return self.core_sivm.save(fname, extra)
+        return self.core_sivm.save_io(stream, extra)
 
-    def load(self, fname):
-        extra = self.core_sivm.load(fname)
+    def load_io(self, stream):
+        extra = self.core_sivm.load_io(stream)
         for d in self.dicts:
             setattr(self, d, extra[d])
         return extra
+
+    def save(self, fname, extra=None):
+        with open(fname, 'w') as fp:
+            self.save_io(fp, extra=extra)
+
+    def saves(self, extra=None):
+        ans = StringIO.StringIO()
+        self.save_io(ans, extra=extra)
+        return ans.getvalue()
+
+    def load(self, fname):
+        with open(fname) as fp:
+            return self.load_io(fp)
+
+    def loads(self, string):
+        return self.load_io(StringIO.StringIO(string))
 
     ###############################
     # Sugars/desugars
@@ -118,14 +144,6 @@ class VentureSivm(object):
             desugared_instruction['expression'] = syntax.desugared()
             # for error handling
             predicted_did = self._record_running_instruction(instruction, (exp, syntax))
-        # desugar the expression index
-        if instruction_type == 'debugger_set_breakpoint_source_code_location':
-            desugared_src_location = desugared_instruction['source_code_location']
-            did = desugared_src_location['directive_id']
-            old_index = desugared_src_location['expression_index']
-            exp = self.directive_dict[did]['expression']
-            new_index = macro_system.desugar_expression_index(exp, old_index)
-            desugared_src_location['expression_index'] = new_index
         try:
             response = self.core_sivm.execute_instruction(desugared_instruction)
         except VentureException as e:
@@ -147,8 +165,10 @@ class VentureSivm(object):
                     # (presumably!) not recorded in the underlying
                     # engine (so e.g. future list_directives commands
                     # should not list it)
-                    del self.directive_dict[predicted_did]
-                    del self.syntax_dict[predicted_did]
+                    if predicted_did in self.directive_dict:
+                        del self.directive_dict[predicted_did]
+                    if predicted_did in self.syntax_dict:
+                        del self.syntax_dict[predicted_did]
             raise e, None, info[2]
         self._register_executed_instruction(instruction, predicted_did, response)
         return response
@@ -194,16 +214,9 @@ class VentureSivm(object):
 
     def _annotate(self, e, instruction):
         if e.exception == "evaluation":
-            self.state='exception'
-
             address = e.data['address'].asList()
             e.data['stack_trace'] = self.trace_address_to_stack(address)
             del e.data['address']
-
-            self.current_exception = e.to_json_object()
-        if e.exception == "breakpoint":
-            self.state='paused'
-            self.current_exception = e.to_json_object()
         # re-sugar the expression index
         if e.exception == 'parse':
             i = e.data['expression_index']
@@ -221,7 +234,8 @@ class VentureSivm(object):
         return e
 
     def trace_address_to_stack(self, address):
-        return [frame for frame in [self._resugar(index) for index in address] if frame is not None]
+        return [frame for frame in [self._resugar(index) for index in address]
+                if frame is not None]
 
     def _get_syntax_record(self, did):
         return self.syntax_dict[did]
@@ -253,11 +267,12 @@ class VentureSivm(object):
     def _hack_skip_inference_prelude_entry(self, did):
         import venture.engine.engine as e
         # <= because directive IDs are 1-indexed (see Engine.nextBaseAddr)
-        return self.core_sivm.engine.persistent_inference_trace and did <= len(e._inference_prelude())
+        return self.core_sivm.engine.persistent_inference_trace \
+            and did <= len(e._inference_prelude())
 
     def _register_executed_instruction(self, instruction, predicted_did, response):
         if response is not None and 'directive_id' in response:
-            if not response['directive_id'] == predicted_did:
+            if response['directive_id'] != predicted_did:
                 warning = "Warning: Instruction %s was pre-assigned did %s but actually assigned did %s"
                 print warning % (instruction, predicted_did, response['directive_id'])
         elif predicted_did is not None:
@@ -284,16 +299,14 @@ class VentureSivm(object):
                 # We didn't save the infer loop thing
                 pass
             else:
-                del self.directive_dict[predicted_did]
-                del self.syntax_dict[predicted_did]
-        # save the breakpoint if the instruction sets the breakpoint
-        if instruction_type in ['debugger_set_breakpoint_address',
-                'debugger_set_breakpoint_source_code_location']:
-            bid = response['breakpoint_id']
-            tmp_instruction = copy.copy(instruction)
-            tmp_instruction['breakpoint_id'] = bid
-            del tmp_instruction['instruction']
-            self.breakpoint_dict[bid] = tmp_instruction
+                # There is at least one way in which the predicted_did
+                # may fail to be present in these dicts: if the
+                # instruction being executed caused a "load" operation
+                # (which mutates the current sivm!?).
+                if predicted_did in self.directive_dict:
+                    del self.directive_dict[predicted_did]
+                if predicted_did in self.syntax_dict:
+                    del self.syntax_dict[predicted_did]
 
     ###############################
     # Continuous Inference Pauser
@@ -305,16 +318,18 @@ class VentureSivm(object):
             def __enter__(self):
                 if pause:
                     self.ci_status = sivm._stop_continuous_inference()
-                    self.ci_was_running = self.ci_status["running"]
+                    self.ci_was_running = self.ci_status['running']
                 else:
                     self.ci_was_running = False
+                sivm._ci_pauser_stack.append(self)
             def __exit__(self, type, value, traceback):
-                if sivm._continuous_inference_status()["running"]:
+                sivm._ci_pauser_stack.pop()
+                if sivm._continuous_inference_status()['running']:
                     # The instruction started a new CI, so let it win
                     pass
                 elif self.ci_was_running:
                     # print "restarting continuous inference"
-                    sivm._start_continuous_inference(self.ci_status["expression"])
+                    sivm._start_continuous_inference(self.ci_status['expression'])
         return tmp()
 
 
@@ -322,17 +337,18 @@ class VentureSivm(object):
     # Continuous Inference on/off
     ###############################
 
-    def _init_continuous_inference(self):
-        pass
-
     def _continuous_inference_status(self):
-        return self._call_core_sivm_instruction({"instruction" : "continuous_inference_status"})
+        return self._call_core_sivm_instruction(
+            {'instruction' : 'continuous_inference_status'})
 
     def _start_continuous_inference(self, expression):
-        self._call_core_sivm_instruction({"instruction" : "start_continuous_inference", "expression" : expression})
+        self._call_core_sivm_instruction(
+            {'instruction' : 'start_continuous_inference',
+             'expression' : expression})
 
     def _stop_continuous_inference(self):
-        return self._call_core_sivm_instruction({"instruction" : "stop_continuous_inference"})
+        return self._call_core_sivm_instruction(
+            {'instruction' : 'stop_continuous_inference'})
 
     ###############################
     # Shortcuts
@@ -341,11 +357,11 @@ class VentureSivm(object):
     def _validate_label(self, instruction, exists=False):
         label = utils.validate_arg(instruction,'label',
                 utils.validate_symbol)
-        if exists==False and label in self.label_dict:
+        if exists is False and label in self.label_dict:
             raise VentureException('invalid_argument',
                     'Label "{}" is already assigned to a different directive.'.format(label),
                     argument='label')
-        if exists==True and label not in self.label_dict:
+        if exists is True and label not in self.label_dict:
             raise VentureException('invalid_argument',
                     'Label "{}" does not exist.'.format(label),
                     argument='label')
@@ -395,12 +411,16 @@ class VentureSivm(object):
         return tmp
 
     def _do_list_directives(self, _):
-        candidates = [self.get_directive(did) for did in sorted(self.directive_dict.keys())]
-        return { "directives" : [c for c in candidates if c['instruction'] in ['assume', 'observe', 'predict']] }
+        candidates = [self.get_directive(did)
+                      for did in sorted(self.directive_dict.keys())]
+        return { "directives" :
+                 [c for c in candidates
+                  if c['instruction'] in ['assume', 'observe', 'predict']] }
 
     def _do_get_directive(self, instruction):
-        did = utils.validate_arg(instruction, 'directive_id', utils.validate_positive_integer)
-        if not did in self.directive_dict:
+        did = utils.validate_arg(instruction, 'directive_id',
+                                 utils.validate_positive_integer)
+        if did not in self.directive_dict:
             raise VentureException('invalid_argument',
                     "Directive with directive_id = {} does not exist".format(did),
                     argument='directive_id')
@@ -417,17 +437,17 @@ class VentureSivm(object):
         val = utils.validate_arg(instruction,'value',
                 utils.validate_value)
         inst1 = {
-                "instruction" : "observe",
-                "expression" : exp,
-                "value" : val,
+                'instruction' : 'observe',
+                'expression' : exp,
+                'value' : val,
                 }
         o1 = self._call_core_sivm_instruction(inst1)
-        inst2 = { "instruction" : "infer",
-                  "expression" : [v.symbol("incorporate")] }
+        inst2 = { 'instruction' : 'infer',
+                  'expression' : [v.symbol('incorporate')] }
         self._call_core_sivm_instruction(inst2)
         inst3 = {
-                "instruction" : "forget",
-                "directive_id" : o1['directive_id'],
+                'instruction' : 'forget',
+                'directive_id' : o1['directive_id'],
                 }
         self._call_core_sivm_instruction(inst3)
         return {}
@@ -436,68 +456,16 @@ class VentureSivm(object):
         exp = utils.validate_arg(instruction,'expression',
                 utils.validate_expression, wrap_exception=False)
         inst1 = {
-                "instruction" : "predict",
-                "expression" : exp,
+                'instruction' : 'predict',
+                'expression' : exp,
                 }
         o1 = self._call_core_sivm_instruction(inst1)
         inst2 = {
-                "instruction" : "forget",
-                "directive_id" : o1['directive_id'],
+                'instruction' : 'forget',
+                'directive_id' : o1['directive_id'],
                 }
         self._call_core_sivm_instruction(inst2)
-        return {"value":o1['value']}
-
-    # not used anymore?
-    def _do_continuous_inference_configure(self, instruction):
-        d = utils.validate_arg(instruction,'options',
-                utils.validate_dict, required=False)
-        enable_ci = utils.validate_arg(d,'continuous_inference_enable',
-                utils.validate_boolean, required=False)
-        if enable_ci != None:
-            if enable_ci == True and self._continuous_inference_enabled() == False:
-                self._enable_continuous_inference()
-            if enable_ci == False and self._continuous_inference_enabled() == True:
-                self._disable_continuous_inference()
-        return {"options":{
-                "continuous_inference_enable" : self._continuous_inference_enabled(),
-                }}
-
-    def _do_get_current_exception(self, _):
-        utils.require_state(self.state,'exception','paused')
-        return {
-                'exception': copy.deepcopy(self.current_exception),
-                }
-
-    def _do_get_state(self, _):
-        return {
-                'state': self.state,
-                }
-
-    def _do_reset(self, instruction):
-        if self.state != 'default':
-            instruction = {
-                    'instruction': 'rollback',
-                    }
-            self._call_core_sivm_instruction(instruction)
-        instruction = {
-                'instruction': 'clear',
-                }
-        self._call_core_sivm_instruction(instruction)
-        return {}
-
-    def _do_debugger_list_breakpoints(self, _):
-        return {
-                "breakpoints" : copy.deepcopy(self.breakpoint_dict.values()),
-                }
-
-    def _do_debugger_get_breakpoint(self, instruction):
-        bid = utils.validate_arg(instruction,'breakpoint_id',
-                utils.validate_positive_integer)
-        if not bid in self.breakpoint_dict:
-            raise VentureException('invalid_argument',
-                    "Breakpoint with breakpoint_id = {} does not exist".format(bid),
-                    argument='breakpoint_id')
-        return {"breakpoint":copy.deepcopy(self.breakpoint_dict[bid])}
+        return {'value':o1['value']}
 
 
     ###############################
@@ -511,21 +479,24 @@ class VentureSivm(object):
             d = {'instruction': 'assume', 'symbol':name, 'expression':expression}
         else:
             label = v.symbol(label)
-            d = {'instruction': 'labeled_assume', 'symbol':name, 'expression':expression,'label':label}
+            d = {'instruction': 'labeled_assume', 'symbol':name,
+                 'expression':expression, 'label':label}
         return self.execute_instruction(d)
 
     def predict(self, expression, label=None):
         if label==None:
             d = {'instruction': 'predict', 'expression':expression}
         else:
-            d = {'instruction': 'labeled_predict', 'expression':expression,'label':v.symbol(label)}
+            d = {'instruction': 'labeled_predict',
+                 'expression':expression, 'label':v.symbol(label)}
         return self.execute_instruction(d)
 
     def observe(self, expression, value, label=None):
         if label==None:
             d = {'instruction': 'observe', 'expression':expression, 'value':value}
         else:
-            d = {'instruction': 'labeled_observe', 'expression':expression, 'value':value, 'label':v.symbol(label)}
+            d = {'instruction': 'labeled_observe', 'expression':expression,
+                 'value':value, 'label':v.symbol(label)}
         return self.execute_instruction(d)
 
     def forget(self, label_or_did):
@@ -558,4 +529,5 @@ class VentureSivm(object):
         d = {'instruction':'sample','expression':expression}
         return self.execute_instruction(d)
 
-    def list_directives(self): return self.execute_instruction({'instruction':'list_directives'})
+    def list_directives(self):
+        return self.execute_instruction({'instruction':'list_directives'})

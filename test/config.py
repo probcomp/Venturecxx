@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -122,11 +122,11 @@ def default_num_transitions_per_sample():
 disable_get_ripl = False
 ct_get_ripl_called = 0
 
-def get_ripl(persistent_inference_trace=True):
+def get_ripl(**kwargs):
   assert not disable_get_ripl, "Trying to get the configured ripl in a test marked as not ripl-agnostic."
   global ct_get_ripl_called
   ct_get_ripl_called += 1
-  return s.backend(config["get_ripl"]).make_combined_ripl(persistent_inference_trace=persistent_inference_trace)
+  return s.backend(config["get_ripl"]).make_combined_ripl(**kwargs)
 
 def get_mripl(no_ripls=2,local_mode=None,**kwargs):
    # NB: there is also global "get_mripl_backend" for having special-case backend
@@ -357,7 +357,7 @@ non-generator tests---use gen_on_inf_prim for generators.  Possible
 values are:
 
   "mh", "func_mh", "gibbs", "emap", "pgibbs", "func_pgibbs",
-  "meanfield", "hmc", "map", "nesterov", "rejection", "slice", or
+  "meanfield", "hmc", "grad_ascent", "nesterov", "rejection", "slice", or
   "slice_doubling", "resample", "peek", "plotf"
          for that inference primitive
   "none" for a primitive-independent test (i.e., does not test inference meaningfully)
@@ -407,7 +407,7 @@ works for generator tests---use on_inf_prim for non-generators.
 Possible values are:
 
   "mh", "func_mh", "gibbs", "emap", "pgibbs", "func_pgibbs",
-  "meanfield", "hmc", "map", "nesterov", "rejection", "slice", or
+  "meanfield", "hmc", "grad_ascent", "nesterov", "rejection", "slice", or
   "slice_doubling", "resample", "peek", "plotf"
          for that inference primitive
   "none" for primitive-independent tests (i.e., do not test inference meaningfully)

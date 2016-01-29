@@ -1,4 +1,4 @@
-// Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2013, 2014, 2016 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -22,6 +22,7 @@
 #include "sprecord.h"
 #include "node.h"
 #include "utils.h"
+#include "stop-and-copy.h"
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
@@ -38,22 +39,33 @@ boost::python::object CRPSPAux::toPython(Trace * trace) const
   return toPythonDict(trace, tableCounts);
 }
 
+CRPSPAux* CRPSPAux::copy_help(ForwardingMap* m) const
+{
+  CRPSPAux* answer = new CRPSPAux(*this);
+  (*m)[this] = answer;
+  return answer;
+}
+
 // Maker
 VentureValuePtr MakeCRPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("make_crp", args, 1, 2);
-  
+
   double alpha = args->operandValues[0]->getDouble();
   double d = 0;
-  
-  if (args->operandValues.size() == 2) { d = args->operandValues[1]->getDouble(); }
+
+  if (args->operandValues.size() == 2)
+  {
+    d = args->operandValues[1]->getDouble();
+  }
 
   return VentureValuePtr(new VentureSPRecord(new CRPSP(alpha, d),new CRPSPAux()));
 }
 
 // Made
 
-CRPSP::CRPSP(double alpha, double d) : SP(new NullRequestPSP(), new CRPOutputPSP(alpha, d)), alpha(alpha), d(d) {}
+CRPSP::CRPSP(double alpha, double d) :
+  SP(new NullRequestPSP(), new CRPOutputPSP(alpha, d)), alpha(alpha), d(d) {}
 
 boost::python::dict CRPSP::toPython(Trace * trace, shared_ptr<SPAux> spAux) const
 {
@@ -62,22 +74,22 @@ boost::python::dict CRPSP::toPython(Trace * trace, shared_ptr<SPAux> spAux) cons
   crp["alpha"] = alpha;
   crp["d"] = d;
   crp["counts"] = spAux->toPython(trace);
-  
+
   boost::python::dict value;
   value["type"] = "sp";
   value["value"] = crp;
-  
+
   return value;
 }
 
 VentureValuePtr CRPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
-  checkArgsLength("crp", args, 0);  
-  
+  checkArgsLength("crp", args, 0);
+
   shared_ptr<CRPSPAux> aux = dynamic_pointer_cast<CRPSPAux>(args->spAux);
   assert(aux);
 
-  vector<uint32_t> tables;  
+  vector<uint32_t> tables;
   vector<double> counts;
 
   BOOST_FOREACH(tableCountPair p, aux->tableCounts)
@@ -122,8 +134,8 @@ void CRPOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) cons
 
   aux->numCustomers++;
   if (aux->tableCounts.count(table))
-  { 
-    aux->tableCounts[table]++; 
+  {
+    aux->tableCounts[table]++;
   }
   else
   {
@@ -157,13 +169,17 @@ double CRPOutputPSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
   shared_ptr<CRPSPAux> aux = dynamic_pointer_cast<CRPSPAux>(spAux);
   assert(aux);
 
-  double sum = gsl_sf_lngamma(alpha) - gsl_sf_lngamma(alpha + aux->numCustomers);
+  // -term3 from backend/lite/crp.py
+  double sum = gsl_sf_lngamma(alpha+1) -
+    gsl_sf_lngamma(alpha + std::max(aux->numCustomers, 1u));
   size_t k = 0;
 
   BOOST_FOREACH (tableCountPair p, aux->tableCounts)
   {
-    sum += gsl_sf_lngamma(p.second - d);
-    sum += log(alpha + k * d);
+    // term2 from backend/lite/crp.py
+    sum += gsl_sf_lngamma(p.second - d) - gsl_sf_lngamma(1 - d);
+    // term1 from backend/lite/crp.py
+    if (k >= 1) { sum += log(alpha + k * d); }
     k++;
   }
   return sum;
@@ -178,7 +194,6 @@ vector<VentureValuePtr> CRPOutputPSP::enumerateValues(shared_ptr<Args> args) con
     vs.push_back(VentureValuePtr(new VentureAtom(p.first)));
   }
   vs.push_back(VentureValuePtr(new VentureAtom(aux->nextIndex)));
-  
+
   return vs;
 }
-

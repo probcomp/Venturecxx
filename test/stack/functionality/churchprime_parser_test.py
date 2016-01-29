@@ -23,9 +23,9 @@ from venture.exception import VentureException
 from venture.parser import ChurchPrimeParser
 import venture.value.dicts as v
 
-# Almost the same effect as @venture.test.config.in_backend("none"),
+# Almost the same effect as @venture.test.config.in_backend('none'),
 # but works on the whole class
-@attr(backend="none")
+@attr(backend='none')
 class TestChurchPrimeParser(unittest.TestCase):
     _multiprocess_can_split_ = True
     def setUp(self):
@@ -34,8 +34,8 @@ class TestChurchPrimeParser(unittest.TestCase):
 
     def test_expression(self):
         with self.assertRaises(VentureException):
-            self.p.parse_locexpression("")
-        self.assertEqual(self.p.parse_locexpression("(a b (c real<1>))"),
+            self.p.parse_locexpression('')
+        self.assertEqual(self.p.parse_locexpression('(a b (c real<1>))'),
                 {'loc': [0,16], 'value':[
                     {'loc': [1,1], 'value': v.sym('a')},
                     {'loc': [3,3], 'value': v.sym('b')},
@@ -45,52 +45,60 @@ class TestChurchPrimeParser(unittest.TestCase):
 
     def test_parse_instruction(self):
         output = self.p.parse_instruction('[assume a (b c d)]')
-        expected = {'instruction':'assume', 'symbol':v.sym('a'),
-                    'expression':[v.sym('b'),v.sym('c'),v.sym('d')]}
+        expected = {'instruction':'evaluate',
+                    'expression':[v.sym('assume'), v.sym('a'),
+                                  [v.sym('b'), v.sym('c'), v.sym('d')]]}
         self.assertEqual(output,expected)
 
     def test_parse_and_unparse_instruction(self):
-        for instruction in ["[assume a (b c d)]", "foo: [assume a (b c d)]"]:
-            self.assertEqual(self.p.unparse_instruction(self.p.parse_instruction(instruction)), instruction)
+        def round_tripped(inst):
+            return self.p.unparse_instruction(self.p.parse_instruction(inst))
+        self.assertEqual(round_tripped('[assume a (b c d)]'),
+                         '(assume a (b c d))')
+        self.assertEqual(round_tripped('foo: [assume a (b c d)]'),
+                         '(assume a (b c d) foo)')
 
     # detects bug where '>=' is parsed as '> =' (because '>' is its own symbol)
     def test_double_symbol(self):
         output = self.p.parse_instruction('[predict (>= 1 1)]')
         expected = {
-            'expression': [v.symbol('gte'), v.number(1.0), v.number(1.0)],
-            'instruction': 'predict'}
+            'expression': [v.symbol('predict'),
+                           [v.symbol('gte'), v.number(1.0), v.number(1.0)]],
+            'instruction': 'evaluate'}
         self.assertEqual(output, expected)
 
     # detects bug parsing lambda expressions with no arguments
     def test_empty_lambda(self):
         output = self.p.parse_instruction('[predict (lambda () 0)]')
-        expected = {'instruction': 'predict',
-                    'expression': [v.symbol('lambda'), [], v.number(0.0)]}
+        expected = {'instruction': 'evaluate',
+                    'expression': [v.symbol('predict'),
+                                   [v.symbol('lambda'), [], v.number(0.0)]]}
         self.assertEqual(output, expected)
 
     def test_split_program(self):
         # FIXME: this test should pass, but should be revised since infer has changed
-        output = self.p.split_program(" [ force blah count<132>][ infer 132 ]")
-        instructions = ['[ force blah count<132>]','[ infer 132 ]']
+        output = self.p.split_program(' ( force blah count<132>)[ infer 132 ]')
+        instructions = ['( force blah count<132>)','[ infer 132 ]']
         indices = [[1,24],[25,37]]
         self.assertEqual(output,[instructions, indices])
 
     def test_split_instruction(self):
-        output = self.p.split_instruction(" [force blah count<132> ]")
+        output = self.p.split_instruction(' [define blah count<132> ]')
+        print output
         indices = {
-                "instruction": [2,6],
-                "expression": [8,11],
-                "value": [13,22],
+                'instruction': [2,7],
+                'symbol': [9,12],
+                'expression': [14,23],
                 }
         strings = {
-                "instruction": "force",
-                "expression": "blah",
-                "value": "count<132>",
+                'instruction': 'define',
+                'symbol': 'blah',
+                'expression': 'count<132>',
                 }
         self.assertEqual(output,[strings,indices])
 
     def test_expression_index_to_text_index(self):
-        s = "(a b (c (d e) f ))"
+        s = '(a b (c (d e) f ))'
         f = self.p.expression_index_to_text_index
         output = f(s, [0])
         self.assertEqual(output, [1,1])
@@ -102,22 +110,8 @@ class TestChurchPrimeParser(unittest.TestCase):
         self.assertEqual(output, [11,11])
 
 
-    def test_character_index_to_expression_index(self):
-        s = "(a b (c (d e) f ))"
-        f = self.p.character_index_to_expression_index
-        output = f(s, 0)
-        self.assertEqual(output, [])
-        output = f(s, 1)
-        self.assertEqual(output, [0])
-        output = f(s, 2)
-        self.assertEqual(output, [])
-        output = f(s, 5)
-        self.assertEqual(output, [2])
-        output = f(s, 6)
-        self.assertEqual(output, [2,0])
-
     def test_mark_up_expression_smoke(self):
-        parsed = self.p.parse_expression("(add 2 3)")
+        parsed = self.p.parse_expression('(add 2 3)')
         def red(string):
             return "\x1b[31m" + string + "\x1b[39;49m"
         def green(string):
