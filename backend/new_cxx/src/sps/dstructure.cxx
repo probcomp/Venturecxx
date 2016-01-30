@@ -19,6 +19,7 @@
 #include "values.h"
 #include "utils.h"
 #include "env.h" // For the request in ArrayMapRequestPSP
+#include "expressions.h" // For the request in ArrayMapRequestPSP
 #include "sp.h" // For VentureSPRef in FixRequestPSP
 #include <boost/foreach.hpp>
 #include <boost/range/combine.hpp>
@@ -201,10 +202,10 @@ VentureValuePtr ApplyRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
     shared_ptr<VentureEnvironment>(new VentureEnvironment());
 
   vector<VentureValuePtr> parts;
-  parts.push_back(optor);
+  parts.push_back(quote(optor));
   BOOST_FOREACH(VentureValuePtr opand, opands->getArray())
   {
-    parts.push_back(opand);
+    parts.push_back(quote(opand));
   }
   VentureValuePtr expression = VentureValuePtr(new VentureArray(parts));
   vector<ESR> esrs;
@@ -261,8 +262,8 @@ VentureValuePtr ArrayMapRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rn
   BOOST_FOREACH(VentureValuePtr opand, opands->getArray())
   {
     vector<VentureValuePtr> parts;
-    parts.push_back(optor);
-    parts.push_back(opand);
+    parts.push_back(quote(optor));
+    parts.push_back(quote(opand));
     VentureValuePtr expression = VentureValuePtr(new VentureArray(parts));
     esrs.push_back(ESR(VentureValuePtr(new VentureID()), expression, env));
   }
@@ -282,9 +283,9 @@ VentureValuePtr IndexedArrayMapRequestPSP::simulate(shared_ptr<Args> args,
   BOOST_FOREACH(VentureValuePtr opand, opands->getArray())
   {
     vector<VentureValuePtr> parts;
-    parts.push_back(optor);
+    parts.push_back(quote(optor));
     parts.push_back(VentureValuePtr(new VentureNumber((double)esrs.size()))); // The index
-    parts.push_back(opand);
+    parts.push_back(quote(opand));
     VentureValuePtr expression = VentureValuePtr(new VentureArray(parts));
     esrs.push_back(ESR(VentureValuePtr(new VentureID()), expression, env));
   }

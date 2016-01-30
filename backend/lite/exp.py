@@ -18,16 +18,19 @@
 def isVariable(exp): return isinstance(exp,str)
 def isSelfEvaluating(exp): return not isinstance(exp,list)
 
-def isQuotation(exp): 
+def isQuotation(exp):
   assert isinstance(exp,list)
   assert len(exp) > 0
   return exp[0] == "quote"
 
-def textOfQuotation(exp): 
-  assert len(exp) > 1
-  return exp[1] 
+def quote(obj):
+  return ["quote", obj]
 
-def getOperator(exp): 
+def textOfQuotation(exp):
+  assert len(exp) > 1
+  return exp[1]
+
+def getOperator(exp):
   assert isinstance(exp,list)
   assert len(exp) > 0
   return exp[0]

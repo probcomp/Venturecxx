@@ -25,6 +25,7 @@ bool isSelfEvaluating(VentureValuePtr exp);
 bool isQuotation(VentureValuePtr exp);
 
 VentureValuePtr textOfQuotation(VentureValuePtr exp);
+VentureValuePtr quote(VentureValuePtr exp);
 
 
 #endif

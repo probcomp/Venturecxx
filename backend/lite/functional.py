@@ -32,6 +32,7 @@ from venture.lite.sp_help import typed_nr
 from venture.lite.sp_registry import registerBuiltinSP
 from venture.lite.value import SPRef
 from venture.lite.value import VentureArray
+import venture.lite.exp as e
 import venture.lite.types as t
 
 class ApplyRequestPSP(DeterministicPSP):
@@ -56,7 +57,7 @@ registerBuiltinSP(
 class ArrayMapRequestPSP(DeterministicPSP):
     def simulate(self, args):
         (operator, operands) = args.operandValues()
-        exps = [[operator, operand] for operand in operands]
+        exps = [[operator, e.quote(operand)] for operand in operands]
         env = VentureEnvironment()
         return Request([ESR((args.node, i), exp, emptyAddress, env)
                         for i, exp in enumerate(exps)])
@@ -80,7 +81,7 @@ registerBuiltinSP(
 class IndexedArrayMapRequestPSP(DeterministicPSP):
     def simulate(self, args):
         (operator, operands) = args.operandValues()
-        exps = [[operator, index, operand]
+        exps = [[operator, index, e.quote(operand)]
                 for (index, operand) in enumerate(operands)]
         env = VentureEnvironment()
         return Request([ESR((args.node, i), exp, emptyAddress, env)

@@ -43,3 +43,12 @@ VentureValuePtr textOfQuotation(VentureValuePtr exp)
   assert(!xs.empty());
   return xs[1];
 }
+
+VentureValuePtr quote(VentureValuePtr exp)
+{
+  VentureValuePtr q = VentureValuePtr(new VentureSymbol("quote"));
+  vector<VentureValuePtr> items;
+  items.push_back(q);
+  items.push_back(exp);
+  return VentureValuePtr(new VentureArray(items));
+}
