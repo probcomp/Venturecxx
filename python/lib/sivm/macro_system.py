@@ -60,7 +60,7 @@ class Macro(object):
 
   def applies(self, exp):
     return self.predicate(exp)
-  
+
   def expand(self, exp):
     return self.expander(exp)
 
@@ -71,11 +71,11 @@ class Syntax(object):
   def desugared(self):
     """The desugared expression."""
     raise Exception("Not implemented!")
-  
+
   def desugar_index(self, _index):
     """Desugar an expression index."""
     raise Exception("Not implemented!")
-  
+
   def resugar_index(self, _index):
     """Transform the desugared expression index back into a sugared one."""
     raise Exception("Not implemented!")

@@ -101,16 +101,16 @@ constructs a SyntaxRule object, and expands with that.
     self.pattern = pattern
     self.template = template
     self.desc = desc
-    
+
     patternIndeces = {sym: index for index, sym in traverse(pattern) if isSym(sym)}
     templateIndeces = {sym: index for index, sym in traverse(template) if isSym(sym)}
-    
+
     self.desugar = lambda index: replace(pattern, templateIndeces, index)
     self.resugar = lambda index: replace(template, patternIndeces, index)
-    
+
   def applies(self, exp):
     return isinstance(exp, list) and len(exp) > 0 and getSym(exp[0]) == self.name
-  
+
   def expand(self, exp):
     verify(self.pattern, exp, self.pattern[0])
     try:
@@ -129,10 +129,10 @@ def replace(exp, indexMap, index):
       return []
     exp = exp[index[i]]
     i += 1
-  
+
   if isSym(exp) and exp in indexMap:
     return indexMap[exp] + index[i:]
-  
+
   return []
 
 class SubstitutionSyntax(Syntax):
@@ -148,4 +148,3 @@ class SubstitutionSyntax(Syntax):
   def resugar_index(self, index):
     index = self.syntax.resugar_index(index)
     return self.resugar(index)
-
