@@ -48,7 +48,7 @@ num = number
 
 def real(v):
   assert isinstance(v, numbers.Number)
-  return val("real",v)
+  return val("number",v)
 
 def integer(v):
   assert isinstance(v, numbers.Number)
