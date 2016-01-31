@@ -41,9 +41,9 @@ def loadEnvironments(ripl):
   (list
     (dict
       (array (quote bernoulli) (quote normal) (quote add)
-             (quote mul) (quote branch))
+             (quote mul) (quote biplex))
       (array (ref bernoulli) (ref normal) (ref add)
-             (ref mul) (ref branch)))))
+             (ref mul) (ref biplex)))))
 """)
 
   ripl.assume("extend_env","""
@@ -80,17 +80,17 @@ def loadIncrementalEvaluator(ripl):
 (lambda (expr env)
   (if (is_symbol expr)
       (deref (find_symbol expr env))
-      (if (not (is_pair expr))
-          expr
-      (if (= (deref (lookup expr 0)) (quote lambda))
-          (pair (ref env) (rest expr))
-          ((lambda (operator operands)
-             (if (is_pair operator)
-                 (incremental_apply operator operands)
-                 (incremental_venture_apply operator operands)))
-           (incremental_eval (deref (lookup expr 0)) env)
-           (map_list (lambda (x) (ref (incremental_eval (deref x) env)))
-                     (rest expr)))))))
+  (if (not (is_pair expr))
+      expr
+  (if (= (deref (lookup expr 0)) (quote lambda))
+      (pair (ref env) (rest expr))
+  ((lambda (operator operands)
+     (if (is_pair operator)
+         (incremental_apply operator operands)
+         (incremental_venture_apply operator operands)))
+   (incremental_eval (deref (lookup expr 0)) env)
+   (map_list (lambda (x) (ref (incremental_eval (deref x) env)))
+             (rest expr)))))))
 """)
 
 
@@ -128,7 +128,7 @@ def testIncrementalEvaluator1a():
 @on_inf_prim("none")
 @broken_in("puma", "Need to port records to Puma for references to work.  Issue #224")
 def testIncrementalEvaluator1b():
-  "Extremely basic test"
+  "Incremental appllication"
   ripl = get_ripl()
   loadAll(ripl)
   ripl.assume("expr","(list (ref add) (ref 1) (ref 1))")
@@ -136,25 +136,28 @@ def testIncrementalEvaluator1b():
   ripl.predict("(incremental_eval expr env)",label="pid")
   eq_(ripl.report("pid"),2)
 
-@statisticalTest
+@on_inf_prim("none")
 @broken_in("puma", "Need to port records to Puma for references to work.  Issue #224")
 def testIncrementalEvaluator1c():
-  "Incremental version of micro/test_basic_stats.py:testBernoulli1"
+  "Incremental compound procedure"
   ripl = get_ripl()
   loadAll(ripl)
-  ripl.assume("expr","""
-(list (ref branch)
-      (ref (list (ref bernoulli) (ref 0.3)))
-      (ref (list (ref normal) (ref 0.0) (ref 1.0)))
-      (ref (list (ref normal) (ref 10.0) (ref 1.0))))
-""")
+  ripl.assume("expr","(list (ref (list (ref 'lambda) (ref '()) (ref 1))))")
   ripl.assume("env","(incremental_initial_environment)")
   ripl.predict("(incremental_eval expr env)",label="pid")
-  predictions = collectSamples(ripl,"pid")
-  def cdf(x):
-    return 0.3 * stats.norm.cdf(x,loc=0,scale=1) \
-      + 0.7 * stats.norm.cdf(x,loc=10,scale=1)
-  return reportKnownContinuous(cdf, predictions, "0.3*N(0,1) + 0.7*N(10,1)")
+  eq_(ripl.report("pid"),1.0)
+
+@on_inf_prim("none")
+@broken_in("puma", "Need to port records to Puma for references to work.  Issue #224")
+def testIncrementalEvaluator1d():
+  "Incremental compound with body"
+  ripl = get_ripl()
+  loadAll(ripl)
+  ripl.assume("expr","""(list (ref (list (ref 'lambda) (ref '())
+    (ref (list (ref add) (ref 1) (ref 1))))))""")
+  ripl.assume("env","(incremental_initial_environment)")
+  ripl.predict("(incremental_eval expr env)",label="pid")
+  eq_(ripl.report("pid"),2.0)
 
 @attr('slow')
 @on_inf_prim("mh")
