@@ -26,7 +26,6 @@ def testRequestArrays():
   r = get_ripl()
   eq_([1.0, 2.0], r.sample("((lambda (obj) obj) (array 1 2))"))
   eq_([1.0, 2.0], r.sample("((mem (lambda (obj) obj)) (array 1 2))"))
-  eq_([1.0, 2.0], r.sample("(branch true (array 1 2) (array 3 4))"))
   eq_([[1.0, 2.0]], r.sample("(mapv (lambda (obj) obj) (array (array 1 2)))"))
   eq_([[1.0, 2.0]], r.sample("(imapv (lambda (i obj) obj) (array (array 1 2)))"))
   eq_([1.0, 2.0], r.sample("(apply (lambda (obj) obj) (array (array 1 2)))"))

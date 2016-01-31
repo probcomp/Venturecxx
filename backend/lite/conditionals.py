@@ -17,41 +17,12 @@
 
 import numpy as np
 
-from venture.lite.psp import DeterministicPSP
-from venture.lite.psp import TypedPSP
-from venture.lite.request import ESR
-from venture.lite.request import Request
 from venture.lite.sp import SPType
 from venture.lite.sp_help import deterministic_psp
 from venture.lite.sp_help import dispatching_psp
-from venture.lite.sp_help import esr_output
 from venture.lite.sp_help import no_request
 from venture.lite.sp_registry import registerBuiltinSP
-import venture.lite.exp as e
 import venture.lite.types as t
-
-# TODO This is used very little because the stack expands if to biplex.  Flush?
-class BranchRequestPSP(DeterministicPSP):
-  def simulate(self,args):
-#    print "branchRequest::simulate()"
-    vals = args.operandValues()
-    assert vals[0] is not None
-    if vals[0]:
-      expIndex = 1
-    else:
-      expIndex = 2
-    exp = vals[expIndex]
-    # point to the source code location of the expression
-    addr = args.operandNodes[expIndex].address.last.append(1)
-    return Request([ESR(args.node,e.quote(exp),addr,args.env)])
-
-  def description(self,name):
-    return "%s evaluates either exp1 or exp2 in the current environment and returns the result.  Is itself deterministic, but the chosen expression may involve a stochastic computation." % name
-
-def branch_request_psp():
-  return TypedPSP(BranchRequestPSP(), SPType([t.BoolType(), t.ExpressionType(), t.ExpressionType()], t.RequestType("<object>")))
-
-registerBuiltinSP("branch", esr_output(branch_request_psp()))
 
 generic_biplex = dispatching_psp(
   [SPType([t.BoolType(), t.AnyType(), t.AnyType()], t.AnyType()),

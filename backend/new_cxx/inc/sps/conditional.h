@@ -20,11 +20,6 @@
 
 #include "psp.h"
 
-struct BranchRequestPSP : PSP
-{
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-};
-
 struct BiplexOutputPSP : PSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
