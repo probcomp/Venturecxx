@@ -159,7 +159,6 @@ def test():
     from venture.lite.discrete import CBetaBernoulliOutputPSP, BetaBernoulliSPAux
     from venture.lite.continuous import NormalOutputPSP
     from venture.lite.sp_help import deterministic_psp
-    from venture.shortcuts import make_lite_church_prime_ripl
 
     normal = SimpleRandomSPWrapper(NormalOutputPSP())
 
