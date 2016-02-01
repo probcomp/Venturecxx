@@ -16,7 +16,6 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import warnings
-import random
 import math
 
 import numpy as np
@@ -84,7 +83,7 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
   global_xiMix = indexer.logDensityOfIndex(proposedGlobalTrace,global_index)
 
   # Sample u.
-  log_u = math.log(random.random())
+  log_u = math.log(trace.py_rng.random())
 
   alpha = global_xiMix + logGlobalAlpha - global_rhoMix
 
@@ -99,7 +98,7 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
     assert N > 1
 
     mu_0 = (log_u - alpha) / N
-    perm_local_roots = np.random.permutation(global_index.local_roots)
+    perm_local_roots = trace.np_rng.permutation(global_index.local_roots)
 
     accept, n, _ = sequentialTest(mu_0, k0, Nbatch, N, epsilon,
         lambda i: operator.evalOneLocalSection(indexer, perm_local_roots[i]))
