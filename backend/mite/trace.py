@@ -4,6 +4,7 @@ from venture.lite.discrete import *
 from venture.mite.sp import *
 from venture.mite.csp import *
 from venture.mite.eval import *
+from venture.mite.example_sps import builtInSPs
 
 LiteTrace = Trace
 class Trace(LiteTrace):
@@ -12,16 +13,14 @@ class Trace(LiteTrace):
         self.families = {}
         self.unpropagatedObservations = {}
 
-        self.bindPrimitiveSP('beta', SimpleRandomSPWrapper(builtInSPs()['beta'].outputPSP))
-        self.bindPrimitiveSP('flip', SimpleRandomSPWrapper(builtInSPs()['flip'].outputPSP))
-        self.bindPrimitiveSP('add', SimpleDeterministicSPWrapper(builtInSPs()['add'].outputPSP))
+        for name, sp in builtInSPs():
+            self.bindPrimitiveSP(name, sp)
+
         coin = SimpleRandomSPWrapper(
             TypedPSP(CBetaBernoulliOutputPSP(1.0, 1.0),
                      SPType([], t.BoolType())))
         coin.constructSPAux = BetaBernoulliSPAux
         self.bindPrimitiveSP('coin', coin)
-
-        self.bindPrimitiveSP('make_csp', SimpleDeterministicSPWrapper(make_csp))
 
     def extractValue(self, id):
         return self.boxValue(self.extractRaw(id))
