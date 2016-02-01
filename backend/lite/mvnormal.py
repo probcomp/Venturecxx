@@ -133,7 +133,6 @@ def logpdf(X, Mu, Sigma):
   X_ = X - Mu
   covf = _covariance_factor(Sigma)
 
-  alpha = covf.solve(X_)
   logp = -np.dot(X_.T, covf.solve(X_)/2.)
   logp -= (n/2.)*np.log(2*np.pi)
   logp -= covf.logsqrtdet()
