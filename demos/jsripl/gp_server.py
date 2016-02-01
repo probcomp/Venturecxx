@@ -18,10 +18,11 @@
 import numpy as np
 
 from venture import shortcuts as s
-ripl = s.make_lite_church_prime_ripl()
-
+from venture.server import RiplRestServer
 import venture.lite.gp as gp
 import venture.lite.value as v
+
+ripl = s.make_lite_church_prime_ripl()
 
 program = """
   [assume mu (normal 0 5)]
@@ -34,22 +35,22 @@ program = """
   [assume l 10]
 
 ;  [assume cov ((if (flip) gp_cov_sum gp_cov_product) (gp_cov_scale a (gp_cov_se (/ (* l l) 2.))) (gp_cov_linear (normal 0 10)))]
-  
+
 ;  [assume noise (inv_gamma 3 1)]
   [assume noise 0.1]
   [assume noise_func (gp_cov_scale noise (gp_cov_se (/ (* .1 .1) 2.)))]
-  
+
   [assume is_linear (flip)]
-  [assume cov 
+  [assume cov
     (gp_cov_sum noise_func
       (if is_linear
         (gp_cov_linear (normal 0 10))
         (gp_cov_scale a (gp_cov_se (/ (* l l) 2.)))))]
 
 ;  [assume cov (gp_cov_scale a (gp_cov_linear 0))]
-  
+
   gp : [assume gp (make_gp mean cov)]
-  
+
   [assume obs_fn (lambda (obs_id x) (gp x))]
 ;  [assume obs_fn (lambda (obs_id x) (normal x 1))]
 """
@@ -70,8 +71,5 @@ xs, os = zip(*samples)
 #ripl.observe(['gp', array(xs)], array(os))
 ripl.infer("(incorporate)")
 
-from venture.server import RiplRestServer
-
 server = RiplRestServer(ripl)
 server.run(host='127.0.0.1', port=8082)
-
