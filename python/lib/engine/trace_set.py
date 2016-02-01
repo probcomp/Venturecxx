@@ -117,7 +117,7 @@ if freeze has been used.
     newTraces = [None for p in range(P)]
     used_parents = {}
     for p in range(P):
-      parent = sampleLogCategorical(self.log_weights, self.traces.retrieve(0).np_rng) # will need to include or rewrite
+      parent = sampleLogCategorical(self.log_weights, self.traces.retrieve(0).trace.np_rng) # will need to include or rewrite
       newTrace = self._use_parent(used_parents, parent)
       newTraces[p] = newTrace
     return newTraces

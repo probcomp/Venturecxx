@@ -49,6 +49,9 @@ class Particle(Trace):
     self.newChildren = particle.newChildren
     self.discardedAAAMakerNodes = particle.discardedAAAMakerNodes
 
+    self.np_rng = particle.np_rng
+    self.py_rng = particle.py_rng
+
     # (2) Maps to things that change outside of particle methods
     self.madeSPAuxs = { node : spaux.copy() for node,spaux in particle.madeSPAuxs.iteritems() }
 
@@ -70,6 +73,9 @@ class Particle(Trace):
     self.newMadeSPFamilies = PMap() # PMap Node (PMap id Node)
     self.newChildren = PMap() # PMap Node (PSet Node)
     self.discardedAAAMakerNodes = PSet() # PSet Node
+
+    self.np_rng = trace.np_rng
+    self.py_rng = trace.py_rng
 
     # (2) Maps to things that change outside of particle methods
     self.madeSPAuxs = {}
@@ -265,4 +271,3 @@ class Particle(Trace):
   def unregisterConstrainedChoice(self,node): raise Exception("Should not be called on a particle")
   def decRegenCountAt(self,scaffold,node): raise Exception("Should never be called on a particle")
   def numRequestsAt(self,node): raise Exception("Should not be called on a particle")
-

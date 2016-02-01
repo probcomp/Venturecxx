@@ -303,7 +303,7 @@ class Trace(object):
   #### For kernels
   def getScope(self, scope): return self.scopes[self._normalizeEvaluatedScopeOrBlock(scope)]
 
-  def sampleBlock(self, scope): return self.getScope(scope).sample()[0]
+  def sampleBlock(self, scope): return self.getScope(scope).sample(self.py_rng)[0]
   def logDensityOfBlock(self, scope): return -1 * math.log(self.numBlocksInScope(scope))
   def blocksInScope(self, scope): return self.getScope(scope).keys()
   def numBlocksInScope(self, scope):
