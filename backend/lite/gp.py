@@ -17,10 +17,8 @@
 
 import copy
 import numpy as np
-import numpy.linalg as la
 import numpy.random as npr
 
-from venture.lite.exception import VentureValueError
 from venture.lite.function import VentureFunction
 from venture.lite.psp import DeterministicMakerAAAPSP
 from venture.lite.psp import NullRequestPSP
@@ -40,10 +38,13 @@ import venture.lite.value as v
 
 class GP(object):
   """An immutable GP object."""
-  def __init__(self, mean, covariance, samples={}):
+  def __init__(self, mean, covariance, samples=None):
     self.mean = mean
     self.covariance = covariance
-    self.samples = samples
+    if samples is None:
+      self.samples = {}
+    else:
+      self.samples = samples
 
   def toJSON(self):
     return self.samples
@@ -65,7 +66,6 @@ class GP(object):
 
       mu1 = self.mean_array(xs)
       mu2 = self.mean_array(x2s)
-      a2 = np.array(o2s)
 
       sigma11 = self.cov_matrix(xs, xs)
       sigma12 = self.cov_matrix(xs, x2s)
