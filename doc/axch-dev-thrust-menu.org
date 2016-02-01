@@ -20,7 +20,6 @@ Dimensions on which I evaluated these projects:
 
 |                            | Effort    | Me     | Taylor | Grem | SS    | Papers |
 |----------------------------+-----------+--------+--------+------+-------+--------|
-| Replay inf prog            | < 1 day?  | ??     | --     | --   | some  | yes ?  |
 | Functional traces Lite     | 1-2 days  | ??     | --     | --   | ?     | ?      |
 | Functional traces Puma     | ?         | ??     | --     | --   | some  | some   |
 | Untraced models Lite       | 1-2 days  | ??     | --     | --   | ?     | ?      |
@@ -59,22 +58,6 @@ Dimensions on which I evaluated these projects:
 | Mixmh combinator           |           |        |        |      |       |        |
 |----------------------------+-----------+--------+--------+------+-------+--------|
 
-*** Project: Replay trace around the inference program; win "estimate"
-- [Feature] 1000 samples (maybe likelihood-weighted) on 60 cores
-  using O(60) memory instead of O(1000)
-  - Add a engine.trace.Trace around the inference trace
-    - Do I want a TraceSet around it too?  Or enforce that there's
-      only one inference trace by not doing that?
-  - Might want to record toplevel-instruction-generated assumes,
-    observes, predicts in the inference trace, so that its directive
-    map contains a full history of the program.
-    - Could do perhaps that by changing the core_sivm to issue infer
-      method calls to the engine instead of assume, etc (but, avoid
-      infinite loops).
-      - also avoid triggering auto-incorporations?
-- [Feature] estimate
-- [Feature] was vkm telling me about a version of full SMC that's
-  possible in this setting?
 *** Project: Functional traces
 - Benefits:
   - Make (sophisticated) particle methods have better performance
@@ -1121,86 +1104,6 @@ Also, it is not thread-safe
 - The boundary condition problem bit Wadden
 *** Activity: Small feature list
 
-Macros
-- Suggested to Vlad:
-    It may be worthwhile to adopt the easy parts of Racket's
-    architecture.  In order of increasing difficulty, I see that work
-    as:
-    1) Make sure that Syntax objects can reconstruct the original
-       expression as well as the macroexpanded one?
-    2) Change the type of Macro from Expression -> Maybe Syntax to
-       Syntax -> Maybe Syntax and introduce an explicit Expression ->
-       Syntax step that precedes macro expansion
-    3) [Is this a good idea?] Change to storing all the information
-       needed for error reporting on the produced Syntax objects
-       directly, rather than as functions that transform indexes.  I
-       don't know whether this is a good thing to do: you tell me.
-
-----------------------------------------------------------------------
-
-Extend dataset collection (possibly by adjusting parse_exprs) to
-accept overrides for type (sampling (from the model), running (an
-inference action), using (an inference value))
-- By analogy to the "labelled" tag that it at least used to accept
-- Once this works, dike out automatic log score collection, because
-  it's surprisingly expensive.
-- Maybe have two dataset collection forms, one that defaults to
-  sampling and one that defaults to running inference code (or three,
-  distinguishing actions from pure inference code?) with the same
-  overrides?
-
-Can I extend callbacks along the same lines?  Or should I instead
-make writing inference primitives more straightforward?
-- One thing would be to add a generic VentureValue -> Python
-  conversion (which would necessarily not be reversible, but oh
-  well).
-
-----------------------------------------------------------------------
-
-- What would it take to make serializing and deserializing traces
-  truly self-contained?
-  - The dump needs to indicate a (default?) backend type for restoring, and
-    engine.trace.Trace needs to be able to get and run such a constructor.
-  - The dump needs to indicate the set of bound foreign sps, and the Trace
-    needs a registry of all possible foreign sps to be able to rebind them.
-
-----------------------------------------------------------------------
-
-Maybe add an operation that removes zero-probability particles?
-- What should it do if all the particles in a set have zero probability?
-  - I think the point of this is to allow compute-bounded behavior
-- Punt to user-space?
-
-If I am thinking about streams of particles, there are two different
-notions of "from the top":
-- Rerun the whole inference program to this point
-  - Is that even coherent in the presence of multiple models?
-    - I think the answer has to be three layers: the untraced
-      inference program, the replay-only inference program, and the
-      inferrable model.
-- Rerun the current model from the prior, and likelihood-weight the
-  result.
-
-----------------------------------------------------------------------
-
-David Wadden asked for named let (presumably at least in the inference
-programming language, but maybe also in the model language)
-
-----------------------------------------------------------------------
-
-Good idea from Wadden: We now probably have the machinery it would
-take to implement checking log densities through a ripl (to compare
-against the SP method).  Can use this to check Puma port
-compatibility.
-
-----------------------------------------------------------------------
-
-Performance suggestion: May be able to further accelerate things like
-the homophily Gibbs sampler if the initial resample didn't actually
-resample (at least not in series!) but just forked the trace.
-
-----------------------------------------------------------------------
-
 Zenna Tavares was confused by the phrasing "an expression can only be
 constrained by an observe directive if its outermost procedure
 application is the result of a stochastic computation, rather than a
@@ -1208,34 +1111,7 @@ deterministic one" on the directives page of the reference manual.
 
 ----------------------------------------------------------------------
 
-In principle, we should refactor the parallelism control so that
-resampling is independent from choosing the parallelism mode.
-
-----------------------------------------------------------------------
-
-Maybe enable plotf to overlay "expected" results over obtained ones 
-- "if I expect some Gaussian, fit the best one and draw it; also
-  compute goodness-of-fit statistic"
-- idea courtesy William Cushing at the prob prog workshop
-
-----------------------------------------------------------------------
-
-Coloring by particle weight should be easy to add to plotf
-
-----------------------------------------------------------------------
-
 Serializing and deserializing the callback registry
-
-----------------------------------------------------------------------
-
-I need to figure out the proper semantics for the weights of
-particles, and enforce them.
-- check places where makeConsistent is called
-- collapse_equal{,_map}, enumerative_diversify, resample (incorporates
-  at the end because Lite was effectively unincorporating when it
-  copied)
-- Is there any way to test this, or structure the code such that it is
-  obviously correct?
 
 ----------------------------------------------------------------------
 
@@ -1258,28 +1134,12 @@ This lets you extract explicit representations of (local) distributions.
 
 ----------------------------------------------------------------------
 
-Would be nice to teach C-c to stop the currently running synchronous
-Venture instruction (and leave the thing in a well-defined state)
-
-Problem: since transitions are attempted in place, there is no good
-way to abort.  I guess I could try to have a finally that restores
-from the OmegaDB (or retain that operation, to be done at the user's
-request).
-
-----------------------------------------------------------------------
-
 David's (and Vlad's) experience: It would be nice to have a "trace"
 function.  (like Debug.Trace.trace in Haskell).  To do this right, we
 need invertible functions to forward observability.
 - Question: when do you want the string printed?
 - Why is plotf not solving the problem this is supposed to solve?
 - David added a "print" function himself
-
-----------------------------------------------------------------------
-
-- Pushing sample down to the trace level is a possible performance
-  improvement (e.g., because can ask just one trace to do it?), and
-  allows the possibility of infer being sample rather than predict.
 
 ----------------------------------------------------------------------
 
