@@ -36,12 +36,12 @@ class TestChurchPrimeParser(unittest.TestCase):
         with self.assertRaises(VentureException):
             self.p.parse_locexpression('')
         self.assertEqual(self.p.parse_locexpression('(a b (c number<1>))'),
-                {'loc': [0,16], 'value':[
+                {'loc': [0,18], 'value':[
                     {'loc': [1,1], 'value': v.sym('a')},
                     {'loc': [3,3], 'value': v.sym('b')},
-                    {'loc': [5,15], 'value': [
+                    {'loc': [5,17], 'value': [
                         {'loc': [6,6], 'value': v.sym('c')},
-                        {'loc': [8,14], 'value': v.number(1.0)}]}]})
+                        {'loc': [8,16], 'value': v.number(1.0)}]}]})
 
     def test_parse_instruction(self):
         output = self.p.parse_instruction('[assume a (b c d)]')

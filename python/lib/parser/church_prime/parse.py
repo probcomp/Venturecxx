@@ -217,7 +217,7 @@ class Semantics(object):
         return locmap(loctoken(v), val.string)
     def p_literal_json(self, type, open, value, close):
         t, start, end = type
-        if t == 'number' or t == 'boolean':
+        if t == 'boolean':
             raise VentureException('parse', ('JSON not allowed for %s' % (t,)),
                 text_index=[start, end])
         return locbracket(type, close, { 'type': t, 'value': value })
