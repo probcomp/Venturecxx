@@ -71,14 +71,33 @@ def apply(trace, node, constraint):
     sp = trace.spAt(node)
     args = trace.argsAt(node)
     newValue, weight = sp.apply(args, constraint)
+    while isinstance(newValue, tuple) and isinstance(newValue[0], Request):
+        requestNode = trace.createRequestNode(
+            node.address, node.operatorNode, node.operandNodes, node, node.env)
+        request, cont, uncont = newValue
+        trace.setValueAt(requestNode, request)
+        requestNode.cont = cont # TODO stick this someplace better
+        requestNode.uncont = uncont
+        weight += evalRequests(trace, requestNode)
+        newValue, newWeight = cont(request, args, constraint)
+        weight += newWeight
     trace.setValueAt(node, newValue)
     return weight
 
 def unapply(trace, node, constraint):
+    # TODO: look up the request nodes in the scaffold to determine
+    # whether to unapply them, or keep them and resume from their
+    # continuation when reapplied
     sp = trace.spAt(node)
     args = trace.argsAt(node)
     oldValue = trace.valueAt(node)
     weight = sp.unapply(oldValue, args, constraint)
+    while node.requestNode:
+        requestNode = node.requestNode.pop()
+        weight += unevalRequests(trace, requestNode)
+        request = trace.valueAt(requestNode)
+        weight += requestNode.uncont(request, args, constraint)
+        trace.removeRequestNode(requestNode)
     trace.setValueAt(node, None)
     return weight
 
@@ -242,6 +261,11 @@ class Trace(LiteTrace):
         requestNode.registerOutputNode(outputNode)
         outputNode.requestNode.append(requestNode)
         return requestNode
+
+    def removeRequestNode(self,requestNode):
+        self.removeChildAt(requestNode.operatorNode, requestNode)
+        for operandNode in requestNode.operandNodes:
+            self.removeChildAt(operandNode, requestNode)
 
     def allocateRequestNode(self, node, request, env):
         if not hasattr(node, 'requestStack'):

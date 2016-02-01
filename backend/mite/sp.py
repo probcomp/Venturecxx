@@ -22,7 +22,7 @@ class StochasticProcedure(object):
     def unincorporate(self, value, args):
         pass
 
-    def request(self, args):
+    def request(self, args, constraint):
         raise NotImplementedError
 
     # for backward compatibility with existing implementation
@@ -71,25 +71,22 @@ class ESR(LiteESR):
         self.addr = addr
         self.env = env
         self.constraint = constraint
-
-class ESRPtr(LiteESR):
-    def __init__(self, id, constraint=None):
-        self.id = id
-        self.constraint = constraint
-
+1
 class SimpleRequestingSP(StochasticProcedure):
     def apply(self, args, constraint):
-        id = self.requestId(args)
-        exp, env = self.requestEval(args)
-        request = Request([ESR(id, exp, emptyAddress, env, constraint)])
-        [value], weight = args.requestValues(request)
-        return value, weight
+        esr = self.request(args, constraint)
+        req = Request([esr])
+        return (req, self.cont, self.uncont), 0
+
+    def cont(self, request, args, constraint):
+        [value] = args.esrValues()
+        return value, 0
+
+    def uncont(self, request, args, constraint):
+        return 0
 
     def unapply(self, value, args, constraint):
-        id = self.requestId(args)
-        request = Request([ESRPtr(id, constraint)])
-        weight = args.requestFree(request)
-        return weight
+        return 0
 
 class SimpleArgsWrapper(object):
     def __init__(self, operandValues, spaux=None, ripl=None, requesters=None):
@@ -105,55 +102,6 @@ class SimpleArgsWrapper(object):
 
     def spaux(self):
         return self._spaux
-
-    def _evalESR(self, esr):
-        # temporary hack: use an embedded Lite ripl.
-        did = 'esr' + hex(hash(esr.id))
-        assert esr.env is None
-        self._ripl.assume(did, esr.exp, did)
-        if esr.constraint is not None:
-            self._ripl.infer(['set_particle_log_weights', ['array', 0]])
-            self._ripl.observe(did, esr.constraint, 'oid')
-            [weight] = self._ripl.infer(['particle_log_weights'])
-            self._ripl.forget('oid')
-        else:
-            weight = 0
-        self._requesters[esr.id].add(id(self))
-        return weight
-
-    def _unevalESR(self, esr):
-        did = 'esr' + hex(hash(esr.id))
-        if esr.constraint is not None:
-            self._ripl.infer(['set_particle_log_weights', ['array', 0]])
-            self._ripl.observe(did, esr.constraint, 'oid')
-            [weight] = self._ripl.infer(['particle_log_weights'])
-            self._ripl.forget('oid')
-        else:
-            weight = 0
-        self._ripl.forget(did)
-        return weight
-
-    def requestValues(self, request):
-        values = []
-        weight = 0
-        for esr in request.esrs:
-            if esr.id not in self._requesters:
-                self._requesters[esr.id] = set()
-                weight += self._evalESR(esr)
-            # temporary hack: get the value from the embedded ripl
-            did = 'esr' + hex(hash(esr.id))
-            values.append(self._ripl.report(did))
-        # TODO lsrs
-        return values, weight
-
-    def requestFree(self, request):
-        weight = 0
-        for esr in request.esrs:
-            self._requesters[esr.id].remove(id(self))
-            if not self._requesters[esr.id]:
-                del self._requesters[esr.id]
-                weight += self._unevalESR(esr)
-        return weight
 
 class SimpleSPWrapper(StochasticProcedure):
     def __init__(self, outputPSP):
@@ -178,14 +126,12 @@ class SimpleDeterministicSPWrapper(SimpleSPWrapper, SimpleLikelihoodFreeSP):
     pass
 
 class RequestFlipSP(SimpleRequestingSP):
-    def requestId(self, args):
-        return args.node
-
-    def requestEval(self, args):
+    def request(self, args, constraint):
+        id = args.node
         exp = ['flip'] + args.operandValues()
         env = args.env
-        return exp, env
-
+        addr = emptyAddress
+        return ESR(id, exp, addr, env, constraint)
 
 def test():
     from venture.lite.discrete import CBetaBernoulliOutputPSP, BetaBernoulliSPAux
@@ -232,30 +178,6 @@ def test():
         pass
     else:
         assert False
-
-    flip = RequestFlipSP()
-    requesters = {}
-    ripl = make_lite_church_prime_ripl()
-    args1 = SimpleArgsWrapper([0.7], ripl=ripl, requesters=requesters)
-    args2 = SimpleArgsWrapper([0.7], ripl=ripl, requesters=requesters)
-    args3 = SimpleArgsWrapper([0.7], ripl=ripl, requesters=requesters)
-    args4 = SimpleArgsWrapper([0.7], ripl=ripl, requesters=requesters)
-    (x1, w1) = flip.apply(args1, None)
-    (x2, w2) = flip.apply(args2, None)
-    (x3, w3) = flip.apply(args3, None)
-    (x4, w4) = flip.apply(args4, None)
-    print((x1, w1))
-    print((x2, w2))
-    print((x3, w3))
-    print((x4, w4))
-    print(flip.unapply(x1, args1, x1))
-    print(flip.apply(args1, x1))
-    print(flip.unapply(x2, args2, x2))
-    print(flip.apply(args2, x2))
-    print(flip.unapply(x3, args3, x3))
-    print(flip.unapply(x4, args4, x4))
-    print(flip.apply(args3, x3))
-    print(flip.apply(args4, x4))
 
 if __name__ == '__main__':
     test()
