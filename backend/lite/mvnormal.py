@@ -252,7 +252,7 @@ def conditional(X2, Mu1, Mu2, Sigma11, Sigma12, Sigma21, Sigma22):
   #
   # where `;' separates rows and `,' separates columns within a row,
   # the conditional distribution given the fixed values X_2 for the
-  # first block of variables is multivariate normal with
+  # second block of variables is multivariate normal with
   #
   #     Mu' = Mu_1 + Sigma_12 Sigma_22^-1 (X_2 - Mu_2),
   #     Sigma' = Sigma_11 - Sigma_12 Sigma_22^-1 Sigma_21,
