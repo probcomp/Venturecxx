@@ -16,12 +16,6 @@ class Trace(LiteTrace):
         for name, sp in builtInSPs():
             self.bindPrimitiveSP(name, sp)
 
-        coin = SimpleRandomSPWrapper(
-            TypedPSP(CBetaBernoulliOutputPSP(1.0, 1.0),
-                     SPType([], t.BoolType())))
-        coin.constructSPAux = BetaBernoulliSPAux
-        self.bindPrimitiveSP('coin', coin)
-
     def extractValue(self, id):
         return self.boxValue(self.extractRaw(id))
 
