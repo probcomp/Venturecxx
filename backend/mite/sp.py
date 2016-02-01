@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 from venture.lite.request import Request, ESR
-from venture.lite.address import emptyAddress
+from venture.lite.sp import SPAux
 
 class StochasticProcedure(object):
     def apply(self, args, constraint):
@@ -26,7 +26,7 @@ class StochasticProcedure(object):
         raise NotImplementedError
 
     # for backward compatibility with existing implementation
-    def constructSPAux(self): return None
+    def constructSPAux(self): return SPAux()
     def hasAEKernel(self): return False
     def show(self, _spaux): return '<SP>'
 
@@ -125,13 +125,35 @@ class SimpleRandomSPWrapper(SimpleSPWrapper, SimpleRandomSP):
 class SimpleDeterministicSPWrapper(SimpleSPWrapper, SimpleLikelihoodFreeSP):
     pass
 
-class RequestFlipSP(SimpleRequestingSP):
+from venture.lite.psp import DeterministicPSP, TypedPSP
+import venture.lite.types as t
+from venture.lite.sp import VentureSPRecord, SPType
+from venture.lite.env import VentureEnvironment
+
+# copied from csp.py, modified to return a new-style SP
+class MakeCSPOutputPSP(DeterministicPSP):
+    def simulate(self, args):
+        (ids, exp) = args.operandValues()
+        # point to the desugared source code location of lambda body
+        addr = args.operandNodes[1].address.last.append(1)
+        return VentureSPRecord(CompoundSP(ids, exp, addr, args.env))
+
+make_csp = TypedPSP(MakeCSPOutputPSP(), SPType(
+    [t.HomogeneousArrayType(t.SymbolType()), t.ExpressionType()],
+    t.AnyType("a compound SP")))
+
+class CompoundSP(SimpleRequestingSP):
+    def __init__(self, ids, exp, addr, env):
+        self.ids = ids
+        self.exp = exp
+        self.addr = addr
+        self.env = env
+
     def request(self, args, constraint):
-        id = args.node
-        exp = ['flip'] + args.operandValues()
-        env = args.env
-        addr = emptyAddress
-        return ESR(id, exp, addr, env, constraint)
+        if len(self.ids) != len(args.operandNodes):
+            raise Exception("Wrong number of arguments: compound takes exactly %d arguments, got %d." % (len(self.ids), len(args.operandNodes)))
+        extendedEnv = VentureEnvironment(self.env, self.ids, args.operandNodes)
+        return ESR(args.node, self.exp, self.addr, extendedEnv)
 
 def test():
     from venture.lite.discrete import CBetaBernoulliOutputPSP, BetaBernoulliSPAux

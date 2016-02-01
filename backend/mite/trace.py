@@ -82,6 +82,8 @@ def apply(trace, node, constraint):
         newValue, newWeight = cont(request, args, constraint)
         weight += newWeight
     trace.setValueAt(node, newValue)
+    if isinstance(newValue, VentureSPRecord):
+        processMadeSP(trace, node, False)
     return weight
 
 def unapply(trace, node, constraint):
@@ -91,6 +93,8 @@ def unapply(trace, node, constraint):
     sp = trace.spAt(node)
     args = trace.argsAt(node)
     oldValue = trace.valueAt(node)
+    if isinstance(oldValue, VentureSPRecord):
+        teardownMadeSP(trace, node, False)
     weight = sp.unapply(oldValue, args, constraint)
     while node.requestNode:
         requestNode = node.requestNode.pop()
@@ -166,7 +170,7 @@ class Trace(LiteTrace):
         coin.constructSPAux = BetaBernoulliSPAux
         self.bindPrimitiveSP('coin', coin)
 
-        self.bindPrimitiveSP('rflip', RequestFlipSP())
+        self.bindPrimitiveSP('make_csp', SimpleDeterministicSPWrapper(make_csp))
 
     def extractValue(self, id):
         return self.boxValue(self.extractRaw(id))
