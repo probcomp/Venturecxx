@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import random
+import numpy.random as npr
+
 from ..lite.exception import VentureError
 from venture.exception import VentureException
 from ..lite import types as t
@@ -29,7 +32,7 @@ import evaluator
 
 class Trace(object):
 
-  def __init__(self):
+  def __init__(self, entropy=None):
     self.results = {}
     self.env = env.VentureEnvironment()
     for name, val in builtin.builtInValues().iteritems():
@@ -37,6 +40,9 @@ class Trace(object):
     for name, sp in builtin.builtInSPs().iteritems():
       self.bindPrimitiveSP(name, sp)
     self.sealEnvironment() # New frame so users can shadow globals
+
+    self.np_rng = npr.RandomState(entropy)
+    self.py_rng = random.Random(entropy)
 
   def sealEnvironment(self):
     self.env = env.VentureEnvironment(self.env)

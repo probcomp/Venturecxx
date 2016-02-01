@@ -16,7 +16,6 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from itertools import chain
-import numpy.random as npr
 
 class Node(object):
   """Binary tree to speed up categorical sampling."""
@@ -75,7 +74,7 @@ class Node(object):
     else:
       return len(self.left) + len(self.right)
 
-def sample(*nodes):
+def sample(np_rng, *nodes):
   n = nodes[0]
 
   if n.leaf: return 0
@@ -83,8 +82,7 @@ def sample(*nodes):
   total = sum(node.total for node in nodes)
   left = sum(node.left.total for node in nodes)
 
-  if npr.random() * total < left:
-    return sample(*[node.left for node in nodes])
+  if np_rng.random_sample() * total < left:
+    return sample(np_rng, *[node.left for node in nodes])
   else:
-    return n.mid + sample(*[node.right for node in nodes])
-
+    return n.mid + sample(np_rng, *[node.right for node in nodes])

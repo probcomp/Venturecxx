@@ -19,7 +19,6 @@ import math
 from copy import copy
 
 import numpy as np
-import numpy.random as npr
 
 from venture.lite.exception import VentureValueError
 from venture.lite.psp import DeterministicPSP
@@ -34,8 +33,8 @@ from venture.lite.sp_help import typed_nr
 from venture.lite.sp_registry import registerBuiltinSP
 import venture.lite.types as t
 
-def npSampleVector(pVec):
-  return npr.multinomial(1, pVec)
+def npSampleVector(pVec, np_rng):
+  return np_rng.multinomial(1, pVec)
 def npIndexOfOne(pVec):
   return np.where(pVec == 1)[0][0]
 def npMakeDiag(colvec):
@@ -90,11 +89,12 @@ class UncollapsedHMMSP(SP):
     aux = args.spaux()
     if not aux.xs:
       if shouldRestore: aux.xs.append(latentDB[0])
-      else: aux.xs.append(npSampleVector(self.p0))
+      else: aux.xs.append(npSampleVector(self.p0, args.np_rng))
 
     for i in range(len(aux.xs), lsr + 1):
       if shouldRestore: aux.xs.append(latentDB[i])
-      else: aux.xs.append(npSampleVector(np.dot(aux.xs[-1], self.T)))
+      else: aux.xs.append(npSampleVector(np.dot(aux.xs[-1], self.T),
+        args.np_rng))
 
     assert len(aux.xs) > lsr
     return 0
@@ -114,7 +114,7 @@ class UncollapsedHMMSP(SP):
 
   def hasAEKernel(self): return True
 
-  def AEInfer(self, aux):
+  def AEInfer(self, aux, np_rng):
     if not aux.os: return
 
     # forward sampling
@@ -128,12 +128,12 @@ class UncollapsedHMMSP(SP):
       fs.append(npNormalizeVector(f))
 
     # backwards sampling
-    aux.xs[-1] = npSampleVector(fs[-1])
+    aux.xs[-1] = npSampleVector(fs[-1], np_rng)
     for i in range(len(aux.xs) - 2, -1, -1):
       index = npIndexOfOne(aux.xs[i+1])
       T_i = npMakeDiag(self.T[:, index])
       gamma = npNormalizeVector(np.dot(fs[i], T_i))
-      aux.xs[i] = npSampleVector(gamma)
+      aux.xs[i] = npSampleVector(gamma, np_rng)
 
 
 class UncollapsedHMMOutputPSP(RandomPSP):
@@ -146,7 +146,8 @@ class UncollapsedHMMOutputPSP(RandomPSP):
     n = args.operandValues()[0]
     xs = args.spaux().xs
     if 0 <= n and n < len(xs):
-      return npIndexOfOne(npSampleVector(np.dot(xs[n], self.O)))
+      return npIndexOfOne(npSampleVector(np.dot(xs[n], self.O),
+                          args.args.np_rng))
     else:
       raise VentureValueError("Index out of bounds %s" % n)
 

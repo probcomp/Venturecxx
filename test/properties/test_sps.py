@@ -18,6 +18,8 @@
 # Testing the (Python) SP objects standalone
 
 import math
+import random
+import numpy.random as npr
 from testconfig import config
 from nose.tools import eq_, assert_almost_equal
 from flaky import flaky
@@ -206,7 +208,7 @@ def checkFixingRandomness(name, sp):
   checkTypedProperty(propDeterministicWhenFixed, fully_uncurried_sp_type(sp.venture_type()), name, sp)
 
 def propDeterministicWhenFixed(args_lists, name, sp):
-  randomness = FixedRandomness()
+  randomness = FixedRandomness(random.Random(), npr.RandomState())
   with randomness:
     answer = simulate_fully_uncurried(name, sp, args_lists)
   for _ in range(5):

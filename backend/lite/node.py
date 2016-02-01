@@ -121,6 +121,8 @@ class Args(object):
     self.node = node
     self.operandNodes = node.operandNodes
     self.env = node.env
+    self.np_rng = self.trace.np_rng
+    self.py_rng = self.trace.py_rng
 
   def operandValues(self):
     ans = [self.trace.valueAt(operandNode) for operandNode in self.operandNodes]

@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import random
 import math
 
 import scipy
@@ -49,7 +48,7 @@ class BernoulliOutputPSP(DiscretePSP):
   def simulate(self, args):
     vals = args.operandValues()
     p = vals[0] if vals else 0.5
-    return random.random() < p
+    return args.args.py_rng.random() < p
 
   def logDensity(self, val, args):
     vals = args.operandValues()
@@ -93,7 +92,7 @@ registerBuiltinSP("bernoulli", typed_nr(BernoulliOutputPSP(),
 class LogBernoulliOutputPSP(DiscretePSP):
   def simulate(self, args):
     logp = args.operandValues()[0]
-    return math.log(random.random()) < logp
+    return math.log(args.args.py_rng.random()) < logp
 
   def logDensity(self, val, args):
     logp = args.operandValues()[0]
@@ -127,7 +126,7 @@ registerBuiltinSP("log_bernoulli", typed_nr(LogBernoulliOutputPSP(),
 class BinomialOutputPSP(DiscretePSP):
   def simulate(self, args):
     (n,p) = args.operandValues()
-    return scipy.stats.binom.rvs(n,p)
+    return scipy.stats.binom.rvs(n,p, random_state=args.args.np_rng)
 
   def logDensity(self, val, args):
     (n,p) = args.operandValues()
@@ -156,12 +155,13 @@ class CategoricalOutputPSP(DiscretePSP):
   def simulate(self, args):
     vals = args.operandValues()
     if len(vals) == 1: # Default values to choose from
-      return simulateCategorical(vals[0],
-        [VentureAtom(i) for i in range(len(vals[0]))])
+      return simulateCategorical(vals[0], args.args.np_rng,
+        os=[VentureAtom(i) for i in range(len(vals[0]))])
     else:
       if len(vals[0]) != len(vals[1]):
         raise VentureValueError("Categorical passed different length arguments.")
-      return simulateCategorical(*vals)
+      ps, os = vals
+      return simulateCategorical(ps, args.args.np_rng, os)
 
   def logDensity(self, val, args):
     vals = args.operandValues()
@@ -197,7 +197,7 @@ class UniformDiscreteOutputPSP(DiscretePSP):
     if vals[1] <= vals[0]:
       raise VentureValueError("uniform_discrete called on invalid range "\
         "(%d,%d)" % (vals[0],vals[1]))
-    return random.randrange(*vals)
+    return args.args.py_rng.randrange(*vals)
 
   def logDensity(self, val, args):
     a,b = args.operandValues()
@@ -220,7 +220,8 @@ registerBuiltinSP("uniform_discrete", typed_nr(UniformDiscreteOutputPSP(),
 
 class PoissonOutputPSP(DiscretePSP):
   def simulate(self, args):
-    return scipy.stats.poisson.rvs(args.operandValues()[0])
+    return scipy.stats.poisson.rvs(args.operandValues()[0],
+                                   random_state=args.args.np_rng)
 
   def logDensity(self, val, args):
     return scipy.stats.poisson.logpmf(val, args.operandValues()[0])
@@ -314,7 +315,7 @@ class CBetaBernoulliOutputPSP(DiscretePSP):
   def simulate(self,args):
     [ctY,ctN] = args.spaux().cts()
     weight = (self.alpha + ctY) / (self.alpha + ctY + self.beta + ctN)
-    return random.random() < weight
+    return args.args.py_rng.random() < weight
 
   def logDensity(self,value,args):
     [ctY,ctN] = args.spaux().cts()
@@ -348,7 +349,8 @@ class MakerUBetaBernoulliOutputPSP(RandomPSP):
 
   def simulate(self,args):
     (alpha, beta) = args.operandValues()
-    weight = scipy.stats.beta.rvs(alpha, beta)
+    weight = scipy.stats.beta.rvs(alpha, beta,
+                                  random_state=args.args.np_rng)
     output = TypedPSP(SuffBernoulliOutputPSP(weight), SPType([], t.BoolType()))
     return VentureSPRecord(SuffBernoulliSP(NullRequestPSP(), output))
 
@@ -369,7 +371,8 @@ class UBetaBernoulliAAALKernel(SimulationAAALKernel):
     (alpha, beta) = args.operandValues()
     madeaux = args.madeSPAux()
     [ctY,ctN] = madeaux.cts()
-    new_weight = scipy.stats.beta.rvs(alpha + ctY, beta + ctN)
+    new_weight = scipy.stats.beta.rvs(alpha + ctY, beta + ctN,
+                                      random_state=args.args.np_rng)
     output = TypedPSP(SuffBernoulliOutputPSP(new_weight), SPType([],
       t.BoolType()))
     return VentureSPRecord(SuffBernoulliSP(NullRequestPSP(), output), madeaux)
@@ -403,7 +406,7 @@ class SuffBernoulliOutputPSP(DiscretePSP):
       spaux.no -= 1
 
   def simulate(self, _args):
-    return random.random() < self.weight
+    return _args.args.py_rng.random() < self.weight
 
   def logDensity(self, value, _args):
     if value is True:
@@ -541,7 +544,8 @@ class SuffPoissonOutputPSP(DiscretePSP):
     spaux.ctN -= 1
 
   def simulate(self, _args):
-    return scipy.stats.poisson.rvs(mu=self.mu)
+    return scipy.stats.poisson.rvs(mu=self.mu,
+                                   random_state=_args.args.np_rng)
 
   def logDensity(self, value, _args):
     return scipy.stats.poisson.logpmf(value, mu=self.mu)
@@ -611,7 +615,8 @@ class CGammaPoissonOutputPSP(DiscretePSP):
     # Posterior predictive is Negative Binomial.
     # http://www.stat.wisc.edu/courses/st692-newton/notes.pdf#page=50
     (alpha_n, beta_n) = self.updatedParams(args.spaux())
-    return scipy.stats.nbinom.rvs(n=alpha_n, p=(beta_n)/(beta_n+1))
+    return scipy.stats.nbinom.rvs(n=alpha_n, p=(beta_n)/(beta_n+1),
+                                  random_state=args.args.np_rng)
 
   def logDensity(self, value, args):
     (alpha_n, beta_n) = self.updatedParams(args.spaux())
@@ -668,7 +673,8 @@ class MakerUGammaPoissonOutputPSP(DiscretePSP):
 
   def simulate(self, args):
     (alpha, beta) = args.operandValues()
-    mu = scipy.stats.gamma.rvs(a=alpha, scale=1./beta)
+    mu = scipy.stats.gamma.rvs(a=alpha, scale=1./beta,
+                               random_state=args.args.np_rng)
     output = TypedPSP(UGammaPoissonOutputPSP(mu, alpha, beta),
       SPType([], t.CountType()))
     return VentureSPRecord(SuffPoissonSP(NullRequestPSP(), output))
@@ -691,7 +697,8 @@ class UGammaPoissonAAALKernel(SimulationAAALKernel):
     (alpha, beta) = args.operandValues()
     new_alpha = alpha + xsum
     new_beta = beta + ctN
-    new_mu = scipy.stats.gamma.rvs(a=alpha + xsum, scale = 1./new_beta)
+    new_mu = scipy.stats.gamma.rvs(a=alpha + xsum, scale = 1./new_beta,
+                                   random_state=args.args.np_rng)
     output = TypedPSP(UGammaPoissonOutputPSP(new_mu, new_alpha, new_beta),
       SPType([], t.CountType()))
     return VentureSPRecord(SuffPoissonSP(NullRequestPSP(), output), madeaux)

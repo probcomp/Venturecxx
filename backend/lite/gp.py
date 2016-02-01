@@ -17,7 +17,7 @@
 
 import copy
 import numpy as np
-import numpy.random as npr
+import numpy.linalg as la
 
 from collections import OrderedDict
 
@@ -38,9 +38,9 @@ import venture.lite.mvnormal as mvnormal
 import venture.lite.types as t
 import venture.lite.value as v
 
-def _gp_sample(mean, covariance, samples, xs):
+def _gp_sample(mean, covariance, samples, xs, np_rng):
   mu, sigma = _gp_mvnormal(mean, covariance, samples, xs)
-  return npr.multivariate_normal(mu, sigma)
+  return np_rng.multivariate_normal(mu, sigma)
 
 def _gp_logDensity(mean, covariance, samples, xs, os):
   mu, sigma = _gp_mvnormal(mean, covariance, samples, xs)
@@ -86,7 +86,8 @@ class GPOutputPSP(RandomPSP):
   def simulate(self,args):
     samples = args.spaux().samples
     xs = args.operandValues()[0]
-    return _gp_sample(self.mean, self.covariance, samples, xs)
+    return _gp_sample(self.mean, self.covariance, samples, xs,
+                      args.args.np_rng)
 
   def logDensity(self,os,args):
     samples = args.spaux().samples
@@ -115,7 +116,8 @@ class GPOutputPSP1(GPOutputPSP):
   def simulate(self,args):
     samples = args.spaux().samples
     x = args.operandValues()[0]
-    return _gp_sample(self.mean, self.covariance, samples, [x])[0]
+    return _gp_sample(self.mean, self.covariance, samples, [x],
+                      args.args.np_rng)[0]
 
   def logDensity(self,o,args):
     samples = args.spaux().samples

@@ -45,7 +45,7 @@ def mvtLogDensity(x,mu,Sigma,v):
   nterm4 = (float(v + p)/2) * math.log(1 + (float(1)/v) * (x - mu).T * np.linalg.inv(Sigma) * (x - mu))
   return pterm1 - (nterm1 + nterm2 + nterm3 + nterm4)
 
-def mvtSample(mu,Sigma,N):
+def mvtSample(mu,Sigma,N,rng):
   # TODO at some point this code was copied from the Internet, though it has since been modified
   # enough to make search non trivial
   '''
@@ -59,8 +59,8 @@ def mvtSample(mu,Sigma,N):
   '''
 
   d = len(Sigma)
-  g = np.tile(np.random.gamma(N/2.,2./N,1),(d,1))
-  Z = np.random.multivariate_normal(np.zeros(d),Sigma,1)
+  g = np.tile(rng.gamma(N/2.,2./N,1),(d,1))
+  Z = rng.multivariate_normal(np.zeros(d),Sigma,1)
 
   return mu + (Z.T)/np.sqrt(g)
 
@@ -129,13 +129,13 @@ class CMVNOutputPSP(RandomPSP):
     SArg = (float(kN + 1) / (kN * (vN - self.d + 1))) * SN
     vArg = vN - self.d + 1
     return mArg,SArg,vArg
-  
+
   def getMVTParams(self, spaux):
     return self.mvtParams(*self.updatedParams(spaux))
-  
+
   def simulate(self,args):
-    params = self.getMVTParams(args.spaux())
-    x = mvtSample(*params)
+    (mu, Sigma, N) = self.getMVTParams(args.spaux())
+    x = mvtSample(mu, Sigma, N, args.args.np_rng)
     return x.A1
 
   def logDensity(self,x,args):

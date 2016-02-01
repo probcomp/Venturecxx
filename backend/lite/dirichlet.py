@@ -19,7 +19,6 @@ import copy
 import math
 
 import scipy.special
-import numpy.random as npr
 
 from venture.lite.exception import VentureValueError
 from venture.lite.lkernel import SimulationAAALKernel
@@ -42,7 +41,7 @@ class DirichletOutputPSP(RandomPSP):
 
   def simulate(self, args):
     alpha = args.operandValues()[0]
-    return simulateDirichlet(alpha)
+    return simulateDirichlet(alpha, args.args.np_rng)
 
   def logDensity(self, val, args):
     alpha = args.operandValues()[0]
@@ -60,7 +59,8 @@ class SymmetricDirichletOutputPSP(RandomPSP):
 
   def simulate(self, args):
     (alpha, n) = args.operandValues()
-    return simulateDirichlet([float(alpha) for _ in range(int(n))])
+    return simulateDirichlet([float(alpha) for _ in range(int(n))],
+                             args.args.np_rng)
 
   def logDensity(self, val, args):
     (alpha, n) = args.operandValues()
@@ -156,7 +156,7 @@ class CDirCatOutputPSP(RandomPSP):
     self.index = dict((val, i) for (i, val) in enumerate(os))
 
   def simulate(self, args):
-    index = sample(self.alpha, args.spaux().counts)
+    index = sample(args.args.np_rng, self.alpha, args.spaux().counts)
     return self.os[index]
 
   def logDensity(self, val, args):
@@ -213,7 +213,7 @@ class MakerUDirCatOutputPSP(RandomPSP):
     if len(os) != n:
       raise VentureValueError(
         "Set of objects to choose from is the wrong length")
-    theta = npr.dirichlet(alpha)
+    theta = args.args.np_rng.dirichlet(alpha)
     output = TypedPSP(UDirCatOutputPSP(theta, os), SPType([], t.AnyType()))
     return VentureSPRecord(DirCatSP(NullRequestPSP(), output, alpha, n))
 
@@ -237,7 +237,7 @@ class UDirCatAAALKernel(SimulationAAALKernel):
     madeaux = args.madeSPAux()
     assert isinstance(madeaux, DirCatSPAux)
     counts = [count + a for (count, a) in zip(madeaux.counts, alpha)]
-    newTheta = npr.dirichlet(counts)
+    newTheta = args.args.np_rng.dirichlet(counts)
     output = TypedPSP(UDirCatOutputPSP(newTheta, os), SPType([], t.AnyType()))
     return VentureSPRecord(DirCatSP(NullRequestPSP(), output, alpha,
                                      len(alpha)),
@@ -258,7 +258,7 @@ class UDirCatOutputPSP(RandomPSP):
     self.index = dict((val, i) for (i, val) in enumerate(os))
 
   def simulate(self, _args):
-    index = sample(self.theta)
+    index = sample(_args.args.np_rng, self.theta)
     return self.os[index]
 
   def logDensity(self, val, _args):
@@ -350,7 +350,7 @@ class MakerUSymDirCatOutputPSP(RandomPSP):
     if len(os) != n:
       raise VentureValueError(
         "Set of objects to choose from is the wrong length")
-    theta = npr.dirichlet([alpha for _ in range(n)])
+    theta = args.args.np_rng.dirichlet([alpha for _ in range(n)])
     output = TypedPSP(USymDirCatOutputPSP(theta, os), SPType([], t.AnyType()))
     return VentureSPRecord(DirCatSP(NullRequestPSP(), output, alpha, n))
 
@@ -375,7 +375,7 @@ class USymDirCatAAALKernel(SimulationAAALKernel):
     madeaux = args.madeSPAux()
     assert isinstance(madeaux, DirCatSPAux)
     counts = [count + alpha for count in madeaux.counts]
-    newTheta = npr.dirichlet(counts)
+    newTheta = args.args.np_rng.dirichlet(counts)
     output = TypedPSP(USymDirCatOutputPSP(newTheta, os),
                       SPType([], t.AnyType()))
     return VentureSPRecord(DirCatSP(NullRequestPSP(), output, alpha, n),
