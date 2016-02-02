@@ -35,9 +35,7 @@ Dimensions on which I evaluated these projects:
 | Compositing by particle    | 1-2 days? | --     | --     | ??   | yes ? | ?      |
 | Animating by sweep count   | 1-2 days? | --     | --     | ??   | yes ? | --     |
 | Faceted plots              | 1-2 days? | --     | --     | ??   | yes ? | ?      |
-| Eat Python callables       | < 1 day?  | some   | ?      | ??   | yes ? | --     |
 | Reassume                   | < 1 day?  | some ? | ?      | --   | yes ? | ?      |
-| slam.vnt                   | 1 day?    | --     | --     | --   | ?     | some   |
 | Full SP serialization      | 2-3 days? | --     | some   | --   | --    | --     |
 | Perf measurements          | 1-2 days  | prereq | ?      | ?    | --    | --     |
 | Perf benchmarks            | 1-2 days  | maybe  | ?      | ?    | --    | --     |
@@ -185,11 +183,6 @@ PETs).
 - Devise (abstract?) some boilerplate for genericity in Puma and make
   Puma arithmetic generic
 - Go through the types of all the builtins and make integers where appropriate
-*** Project: Test simulator/log density agreement
-*** Project: Test gradients computed by Lite backend
-- Prereq: inference program can extract gradients from regen/detach without
-  harming anything
-  - reusable scaffolds and maybe functional traces would help
 *** Project: Regen/Detach as inference SPs
 - can start with a restricted interface, permitting built-in
   operators to access the broader one.  Eventually try to
@@ -267,18 +260,8 @@ Would be nice if:
 *** Project: Compositing graphics across particles
 *** Project: Animating graphics by sweep count
 *** Project: Faceted plots
-*** Project: Python callables as foreign (inference?) SPs; flush "callbacks"?
-- Benefit: lowers the authorship burden for foreign SPs
-- Solve relationship to "callbacks".
-- Example (is it of this?): Could write an "inference operator" that
-  called some horrible optimization routine for you, like L-BFGS.
-  - Might be better to expose the function that would be passed to it,
-    as a function, for programmatic manipulation.
-  - If L-BFGS deals gracefully with hard edges, those could probably
-    be exposed to it in a reasonable way.
 *** Project: Redefine/reassume as uneval, eval, rebind, propagate
 the latter being what incorporate does
-*** Project: Finish Venture-on-top SLAM (in light of untraced inference)
 *** Project: Full SP serialization
 - I keep thinking that I can avoid having to explicitly serialize
   primitive and compound SPs, because I should be able to serialize
@@ -362,9 +345,6 @@ the Args fields with methods, such that they are not computed unless
 called for.
 - Could still memoize the methods, if desired
 *** Project: Performance: Share static dependency info across instances of the same family
-*** Project: Performance: Vectorized versions of all the SPs (in Lite and Puma)
-Could probably bum another ~30% on the linear regression example (1-D,
-20 data points) in Lite by staring at the profile
 *** Project: Finish the Foreign SP Author's guide (notes from 4/20/15)
 - Note: cleaning up LKernels would simplify the foreign interface
   (somewhat)
@@ -845,13 +825,6 @@ other principal node)?
 - What about restore?
 - This could affect gradients/hmc
 - This could affect global log likelihood reporting
-*** Conceptual Bug: Proposal (e.g. HMC) walking off into the impossible
-What to do?
-
-This is the boundary condition problem; it has bitten Wadden.
-
-Should we try to systematically prevent this (e.g., HMC that bounces
-off the walls)?
 *** Conceptual Bug: What are the constrainability rules?
 - I remember the current system's rules for what operator SPs and
   what operator-changing proposals are permitted in observations,
@@ -1089,19 +1062,7 @@ Mechanical test idea:
     - Will this just work if I make the obvious plumbing?
 *** Activity: Fill in Python SPs in Puma interface
 Also, it is not thread-safe
-*** Activity: Fill in gradients
 *** Activity: Fill in conjugate and collapsed models
-*** Activity: Corral all artifacts and mechanically test execution (Issue #48)
-*** Activity: Fill in HMC
-- Flesh out and debug the gradient definitions
-- Needs porting to Puma
-- Making the numerical approximation be the default for each SP may
-  not be so terrible
-- Could also try some of the Python AD systems, since I have the
-  numerical cross-check
-  - The neural net hyperparameter optimization guys wrote one called
-    FunkyYak
-- The boundary condition problem bit Wadden
 *** Activity: Small feature list
 
 Zenna Tavares was confused by the phrasing "an expression can only be
@@ -1825,30 +1786,7 @@ Some architectural rationales:
 - Master/Worker should be as agnostic as possible about the objects
   they are managing, because just general IPC is hard enough.
 
-*** Reference: Design-ish notes on getting gradients through AAA
-Problem:
-
-In principle, CRP should pass gradient information through to its
-alpha parameter.  In order to do that, information needs to flow
-though the closure of the made SP.
-
-For deterministic AAA makers, it may be possible to get away with
-migrating the logDensityOfCounts and the gradient thereof to the maker
-procedure.
-
-Matters become fuzzier with stochastic makers: Is it reasonable to
-take gradient steps on the made SP itself (if it has continuous latent
-state)?
-- Gradient of what, exactly?  The AAALKernels associated with
-  stochastic makers take Gibbs steps, so the gradient of their weight
-  is not very informative.
-  - Perhaps I need an explicit notion of logDensityOfCounts even for
-    stochastic made SPs, in order to be able to take gradient steps
-    with respect to it.  (On a simplex, in some cases!)
-  - On the other hand, what is the desired behavior if an uncollapsed
-    AAA maker (that takes Gibbs steps) is a non-principal resampling
-    node in a gradient-based proposal?
-
+*** Reference: Issues with the LKernel interface
 - Issue: The current LKernel interface forbids LKernels that can
   compute their own densities and do not pretend to be able to account
   for the prior (e.g., DeterministicLKernel, and Gaussian drift
@@ -1861,11 +1799,8 @@ state)?
 - Does Puma not have AAA for uncollapsed models?  The Gibbs steps are
   implemented as AEKernels; does that mechanism have the desired
   effect of suppressing traversal of the children when proposing?
-- Issue: AAALKernels actually have a different weight contract: they
-  are called upon to account for the whole local posterior of their
-  node, not just the prior.
-  - Option: change the method name(s) for AAALKernels, to strengthen the
-    indication that their obligations differ.
+- Option: change the method name(s) for AAALKernels, to strengthen the
+  indication that their obligations differ.
 - Yes, there is conceptually such a thing as a DeltaAAALKernel:
   Gaussian drift applied to the weight argument of
   make_suff_stat_bernoulli.
