@@ -11,37 +11,37 @@ from venture.mite.csp import make_csp
 liteBuiltInSPs = builtInSPs
 
 wrappedRandomSPs = [
-    'beta',
-    'flip',
+  'beta',
+  'flip',
 ]
 
 wrappedDeterministicSPs = [
-    'add',
+  'add',
 ]
 
 from venture.lite.discrete import BetaBernoulliSPAux, CBetaBernoulliOutputPSP
 class MakeBetaBernoulliSP(SimpleLikelihoodFreeSP):
-    def simulate(self, args):
-        [alpha, beta] = args.operandValues()
-        alpha = alpha.getNumber()
-        beta = beta.getNumber()
-        return VentureSPRecord(SimpleRandomSPWrapper(
-            TypedPSP(CBetaBernoulliOutputPSP(alpha, beta),
-                     SPType([], t.BoolType()))),
-            BetaBernoulliSPAux())
+  def simulate(self, args):
+    [alpha, beta] = args.operandValues()
+    alpha = alpha.getNumber()
+    beta = beta.getNumber()
+    return VentureSPRecord(SimpleRandomSPWrapper(
+      TypedPSP(CBetaBernoulliOutputPSP(alpha, beta),
+               SPType([], t.BoolType()))),
+      BetaBernoulliSPAux())
 
 def builtInSPs():
-    spsList = []
+  spsList = []
 
-    for sp in wrappedRandomSPs:
-        spsList.append((sp, SimpleRandomSPWrapper(
-            liteBuiltInSPs()[sp].outputPSP)))
+  for sp in wrappedRandomSPs:
+    spsList.append((sp, SimpleRandomSPWrapper(
+      liteBuiltInSPs()[sp].outputPSP)))
 
-    for sp in wrappedDeterministicSPs:
-        spsList.append((sp, SimpleDeterministicSPWrapper(
-            liteBuiltInSPs()[sp].outputPSP)))
+  for sp in wrappedDeterministicSPs:
+    spsList.append((sp, SimpleDeterministicSPWrapper(
+      liteBuiltInSPs()[sp].outputPSP)))
 
-    spsList.append(('make_csp', SimpleDeterministicSPWrapper(make_csp)))
-    spsList.append(('make_beta_bernoulli', MakeBetaBernoulliSP()))
+  spsList.append(('make_csp', SimpleDeterministicSPWrapper(make_csp)))
+  spsList.append(('make_beta_bernoulli', MakeBetaBernoulliSP()))
 
-    return spsList
+  return spsList
