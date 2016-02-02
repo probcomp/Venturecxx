@@ -72,14 +72,14 @@ size_t samplePartialSums(const vector<double> & sums, gsl_rng * rng)
 {
   size_t lower = 0, upper = sums.size() - 1;
   double r = gsl_ran_flat(rng, sums[lower], sums[upper]);
-  
+
   while (lower < upper - 1)
   {
     size_t mid = (lower + upper) / 2;
     if (r < sums[mid]) { upper = mid; }
     else { lower = mid; }
   }
-  
+
   return lower;
 }
 
@@ -102,7 +102,7 @@ Simplex normalizeVector(const vector<double> & xs)
     newSum += ps[i];
   }
   if (!(fabs(newSum - 1) < 0.01))
-  { 
+  {
     cout << "sum: " << sum << endl;
     cout << "newSum: " << newSum << endl;
   }
