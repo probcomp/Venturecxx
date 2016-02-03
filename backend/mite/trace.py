@@ -120,4 +120,11 @@ class Trace(LiteTrace):
 
 LiteArgs = Args
 class Args(LiteArgs):
-  pass
+  def apply(self, spref, args, constraint):
+    sp = self.trace.madeSPAt(spref.makerNode)
+    # TODO patch the aux
+    return sp.apply(args, constraint)
+
+  def unapply(self, spref, value, args, constraint):
+    sp = self.trace.madeSPAt(spref.makerNode)
+    return sp.unapply(value, args, constraint)
