@@ -1063,161 +1063,10 @@ Mechanical test idea:
 *** Activity: Fill in Python SPs in Puma interface
 Also, it is not thread-safe
 *** Activity: Fill in conjugate and collapsed models
-*** Activity: Small feature list
-
-Zenna Tavares was confused by the phrasing "an expression can only be
-constrained by an observe directive if its outermost procedure
-application is the result of a stochastic computation, rather than a
-deterministic one" on the directives page of the reference manual.
-
-----------------------------------------------------------------------
-
-Serializing and deserializing the callback registry
-
-----------------------------------------------------------------------
-
-Can I allow intermixing of -e and -f such that they happen in the
-order given on the command line?
-
-----------------------------------------------------------------------
-
-Nitpick interface of collapse_equal:
-- how many new particles per bin? 1? arg? arg as ratio of
-  old # particles in that bin?
-
-----------------------------------------------------------------------
-
-Idea:
-- a ripl method named ripl.promote_particles() that returns a list of
-  tuples (ripl, weight).
-- Or instead (or in addition) could have ripl.sample_all_with_weights
-This lets you extract explicit representations of (local) distributions.
-
-----------------------------------------------------------------------
-
-David's (and Vlad's) experience: It would be nice to have a "trace"
-function.  (like Debug.Trace.trace in Haskell).  To do this right, we
-need invertible functions to forward observability.
-- Question: when do you want the string printed?
-- Why is plotf not solving the problem this is supposed to solve?
-- David added a "print" function himself
-
-----------------------------------------------------------------------
-
-- So, really, PyTrace::bindPrimitiveSP should be called
-  bindPythonSPthatCommunicatesWithStackDicts and should defer to
-  concrete_trace->bindPrimitiveSP (except for wrapping in the
-  appropriate C++ object that interprets the stack dicts dynamically)
-
-----------------------------------------------------------------------
-
-Do I want to move the foreign.py module from the Lite backend to the
-Puma backend, on the grounds that that's where it's invoked from?  Or
-leave it in Lite on the grounds that the stack dict interface is "more
-basic"?
-
-----------------------------------------------------------------------
-
-Is venture.lite.foreign.ForeignLitePSP just a "TypedPSP" that uses
-a universal conversion to stack dicts as the "type"?
-
-----------------------------------------------------------------------
-
-- Hypothesis: a model's directive list can actually be deduced from
-  the PET.  To wit, every toplevel family that has a binding in the
-  environment came from an assume (except the builtins, which I should
-  be able to identify); every toplevel family that has an incorporated
-  or unincorporated constraint came from an observe (do I have to
-  chase the graph to asertain this?) and every other thing came from a
-  predict.
-  - There seem to be some nits/warts here.
-
 *** Activity: Small bug list
-
-Test:
-- that crp is enumerable in both backends
-- to_array and to_vector (they are not directly covered by the
-  automatic test suite)
-
-----------------------------------------------------------------------
-
-- At least some of the error annotation failures in the continuous
-  build log are evidence of actual problems, which are just masked by
-  something expecting "an error".
-
-----------------------------------------------------------------------
-
-N.B.: An error during assume will leave a garbage predict of
-everything it managed to assume before the error
-
-----------------------------------------------------------------------
-
-Possible bug (discovered in conversation with Vlad):
-- Unconditional constraints (e.g., (observe ....)) force-accept the
-  result of back-propagating and forward-propagating the value.
-- However, this may be a problem if there are random choices
-  downstream of a node that becomes constrained this way, because it
-  may change the weight this particle should be assigned.
-- Example:
-    (assume x (normal 0 1))
-    (assume y (inv_gamma 1 1))
-    (assume z (normal x y))
-    (observe z 0)
-    (incorporate)
-    (observe x 0)
-    (incorporate)
-  What is the weight now?  It should be the likelihood of y under (normal 0 y) = 0.
-  (Possibly with some constant offset(s), like the density of (normal 0 1) = 0 for the x observation)
-  Other question: does resample_serializing cause a crash here?
-  - makeConsistent returning the weight of the proposal to reset the
-    value to the desired thing should have the effect of making the
-    particle weight correct in this case.  I hope.
-
-Example:
-  (do
-   (resample 10)
-   (assume mu (normal 0 1))
-   (assume ans (normal mu 1))
-   (observe ans 2)
-   (resample_serializing 10)
-   (incorporate))
-
-Example that should generate "cannot make random choice downstream of
-something that gets constrained during regen" without any inference:
-  (assume x (flip))
-  (force x true)
-  (assume y (normal 0 1))
-  (assume z (normal 0 2))
-  (assume w (if x y z))
-  (observe w 0)
-  (incorporate)
-  (assume y2 (normal y 1))
-  (assume z2 (normal z 2))
-  (observe x false)
-  (incorporate)
-- To fix it, have to answer the question: what should the weight of
-  this particle be, and how are we going to ensure that it is?
-
-We fixed Vlad's "cannot make random choice downstream of something
-that gets constrained during regen" that happens during resampling by
-changing the copying code path to just constrain the random choices,
-without propagating consequences.  This is guaranteed to be OK for
-traces that are fully incorporated when copied because the value it's
-constraining to has to be the same as the value that's already there.
-
-----------------------------------------------------------------------
 
 David notices: Can't actually print just the latest slice of a data
 set, but with the right sweep count.
-
-----------------------------------------------------------------------
-
-- Should probably actually scope labels to individual models.  The way
-  to do that is probably to make interpreting labels and
-  label-targetting instructions a combinator that can be attached in
-  multiple places of the stack (sivm, trace_set, trace).
-  - labels are used for forget, freeze, and report, which are all
-    model-specific operations.
 
 ----------------------------------------------------------------------
 
@@ -1226,11 +1075,6 @@ and rejecting it sometimes?  Should we have another combinator (not
 mixMH) that will always accept the proposal and not mess with weights?
 - Can we unify the profiler hooks between mixMH and that other thing
   so that all scaffold interactions are recorded?
-
-----------------------------------------------------------------------
-
-There's likely to be a nasty performance bug lurking in the way
-Addresses are hashed now.
 
 ----------------------------------------------------------------------
 
@@ -1283,31 +1127,6 @@ at startup.
 ----------------------------------------------------------------------
 
 Would be nice if the brownian motion thing could run headless
-
-----------------------------------------------------------------------
-
-Test the venture console interface: --lang should affect -e; multiple
--f and -e should work; multiple -L should work;
-
-----------------------------------------------------------------------
-
-Clean up or record/document discrepancies between venture console and venture -f:
-- Console prints out intermediate values
-- Console prints list_directives output
-- Console accepts exec and shell escapes (probably don't want either for venture -f)
-- Console has a dump_profile_data function
-
-----------------------------------------------------------------------
-
-Adjust the manual tests to check against known-good outputs (and
-revert to manual if the test fails).
-
-----------------------------------------------------------------------
-
-There are a couple mysterious printouts in Jenkins, e.g.
-- test/inference_language/test_likelihood_weighting.py:testMultiprocessingRegression
-  has a non-fatal ripl-level error annotation problem in Jenkins, but
-  looks like it should not, and I can't reproduce it.
 
 ----------------------------------------------------------------------
 
@@ -1427,6 +1246,8 @@ When a mistake happens in a live session, what may be wrong?
 - The (persistent?) inference trace may be partially detached or
   regenerated, making it unusable.
 - The model trace ditto
+  - e.g., an error during assume will leave a garbage predict of
+    everything it managed to assume before the error
 - Some model held in some variable ditto
   - Though, may not be accessible, since the console (currently) does
     not maintain any explicit inference variables that can be altered
