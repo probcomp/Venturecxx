@@ -65,7 +65,7 @@ class RepeatCoinSP(StochasticProcedure):
     for result, cval in zip(results, cvals):
       wt = args.unapply(coin, result, [], cval)
       weight += wt
-    return wt
+    return weight
 
 def builtInSPs():
   spsList = []
