@@ -32,7 +32,6 @@ class MakeBetaBernoulliSP(SimpleLikelihoodFreeSP):
       BetaBernoulliSPAux())
 
 from venture.lite.value import VentureInteger, VentureBool
-from venture.lite.node import FixedValueArgs
 class RepeatCoinSP(StochasticProcedure):
   def apply(self, args, constraint):
     [n, coin] = args.operandValues()
@@ -46,8 +45,7 @@ class RepeatCoinSP(StochasticProcedure):
     k = 0
     weight = 0
     for cval in cvals:
-      fvargs = FixedValueArgs(args, [], [])
-      result, wt = args.apply(coin, fvargs, cval)
+      result, wt = args.apply(coin, [], cval)
       if result.getBool():
         k += 1
       weight += wt
@@ -65,8 +63,7 @@ class RepeatCoinSP(StochasticProcedure):
       cvals = map(VentureBool, [True] * c + [False] * (n - c))
     weight = 0
     for result, cval in zip(results, cvals):
-      fvargs = FixedValueArgs(args, [], [])
-      wt = args.unapply(coin, result, fvargs, cval)
+      wt = args.unapply(coin, result, [], cval)
       weight += wt
     return wt
 

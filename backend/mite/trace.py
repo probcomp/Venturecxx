@@ -1,5 +1,6 @@
 from venture.lite.trace import *
 from venture.lite.discrete import *
+from venture.lite.node import FixedValueArgs
 
 from venture.mite.sp import *
 from venture.mite.csp import *
@@ -120,11 +121,16 @@ class Trace(LiteTrace):
 
 LiteArgs = Args
 class Args(LiteArgs):
-  def apply(self, spref, args, constraint):
-    sp = self.trace.madeSPAt(spref.makerNode)
-    # TODO patch the aux
-    return sp.apply(args, constraint)
+  def apply(self, spref, operands, constraint):
+    spr = self.trace.madeSPRecordAt(spref.makerNode)
+    args = FixedValueArgs(
+      self, operands, [None for _ in operands],
+      spaux=spr.spAux)
+    return spr.sp.apply(args, constraint)
 
-  def unapply(self, spref, value, args, constraint):
-    sp = self.trace.madeSPAt(spref.makerNode)
-    return sp.unapply(value, args, constraint)
+  def unapply(self, spref, value, operands, constraint):
+    spr = self.trace.madeSPRecordAt(spref.makerNode)
+    args = FixedValueArgs(
+      self, operands, [None for _ in operands],
+      spaux=spr.spAux)
+    return spr.sp.unapply(value, args, constraint)
