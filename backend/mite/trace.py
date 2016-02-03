@@ -115,49 +115,9 @@ class Trace(LiteTrace):
     for operandNode in requestNode.operandNodes:
       self.removeChildAt(operandNode, requestNode)
 
-  def allocateRequestNode(self, node, request, env):
-    if not hasattr(node, 'requestStack'):
-      node.requestStack = []
-    if node.requestStack:
-      requestNode = node.requestStack.pop()
-      oldRequest = self.valueAt(requestNode)
-      assert all(esr.id == old.id for esr, old in zip(request.esrs, oldRequest.esrs))
-      return requestNode, False
-    else:
-      requestNode = self.createRequestNode(
-        node.address, node.operatorNode, node.operandNodes, node, env)
-      self.setValueAt(requestNode, request)
-      return requestNode, True
-
-  def freeRequestNode(self, node, request, env):
-    # TODO: check if the request node was identified as brush,
-    # and if not, put it on the stack instead of blowing it away
-    # need to get a scaffold here somehow...
-    requestNode = node.requestNode.pop()
-    oldRequest = self.valueAt(requestNode)
-    assert all(esr.id == old.id for esr, old in zip(request.esrs, oldRequest.esrs))
-    if False:
-      node.requestStack.append(requestNode)
-      return requestNode, False
-    else:
-      return requestNode, True
-
   # modified to return our own Args object
   def argsAt(self, node): return Args(self, node)
 
 LiteArgs = Args
 class Args(LiteArgs):
-  def requestValues(self, request):
-    requestNode, created = self.trace.allocateRequestNode(self.node, request, self.env)
-    weight = 0
-    if created:
-      weight += evalRequests(self.trace, requestNode)
-    values = self.esrValues()
-    return values, weight
-
-  def requestFree(self, request):
-    requestNode, deleted = self.trace.freeRequestNode(self.node, request, self.env)
-    weight = 0
-    if deleted:
-      weight += unevalRequests(self.trace, requestNode)
-    return weight
+  pass
