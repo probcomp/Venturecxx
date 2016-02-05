@@ -26,6 +26,7 @@ from venture.lite.exception import VentureCallbackError
 from venture.lite.exception import VentureValueError
 from venture.lite.types import ExpressionType
 from venture.lite.types import SymbolType
+from venture.lite.utils import log_domain_even_out
 from venture.lite.utils import logWeightsToNormalizedDirect
 from venture.lite.value import VentureArray
 from venture.lite.value import VentureInteger
@@ -174,6 +175,10 @@ class Infer(object):
 
   def particle_log_weights(self):
     return self.engine.model.log_weights
+  def equalize_particle_log_weights(self):
+    old = self.engine.model.log_weights
+    self.engine.model.log_weights = log_domain_even_out(old)
+    return old
   def set_particle_log_weights(self, new_weights):
     assert len(new_weights) == len(self.engine.model.log_weights), "set_particle_log_weights got %d weights, but there are %d particles"
     self.engine.model.log_weights = new_weights

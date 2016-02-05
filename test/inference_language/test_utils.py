@@ -42,6 +42,16 @@ def testWeightsSmoke2():
   (w <- (particle_log_weights))
   (assert (eq -1 (lookup w 0))))""")
 
+@on_inf_prim("equalize_particle_log_weights")
+def testWeightsSmoke3():
+  get_ripl().infer("""(do
+  (resample 2)
+  (assume x (normal 0 1))
+  (observe (normal x 1) 2)
+  (equalize_particle_log_weights)
+  (w <- (particle_log_weights))
+  (assert (eq (lookup w 0) (lookup w 1))))""")
+
 @on_inf_prim("log_likelihood_at")
 def testLikelihoodSmoke():
   get_ripl().infer("""(do

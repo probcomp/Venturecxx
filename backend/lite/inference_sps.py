@@ -711,6 +711,14 @@ non-observed stochastic nodes."""),
 Return the weights of all extant particles as an array of numbers (in log space).
 """),
 
+  engine_method_sp("equalize_particle_log_weights",
+                   infer_action_maker_type([], t.ArrayUnboxedType(t.NumberType())),
+                   desc="""\
+Make all the particle weights equal, conserving their logsumexp.
+
+Return the old particle weights.
+"""),
+
   engine_method_sp("set_particle_log_weights",
                    infer_action_maker_type([t.ArrayUnboxedType(t.NumberType())]),
                    desc="""\
