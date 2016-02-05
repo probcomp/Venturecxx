@@ -1060,8 +1060,7 @@ Mechanical test idea:
   - Can we take an intermediate position and run Python inference SPs
     just for the things that have not been ported to Puma?
     - Will this just work if I make the obvious plumbing?
-*** Activity: Fill in Python SPs in Puma interface
-Also, it is not thread-safe
+*** Activity: Fill in the Python SPs in Puma interface (caveat: it is not thread-safe)
 *** Activity: Fill in conjugate and collapsed models
 *** Activity: Small bug list
 
