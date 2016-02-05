@@ -22,6 +22,7 @@ from ..multiprocess import SynchronousMaster
 from ..multiprocess import SynchronousSerializingMaster
 from ..multiprocess import ThreadedMaster
 from ..multiprocess import ThreadedSerializingMaster
+from venture.lite.utils import log_domain_even_out
 from venture.lite.utils import logaddexp
 from venture.lite.utils import sampleLogCategorical
 import venture.engine.trace as tr
@@ -108,7 +109,7 @@ if freeze has been used.
     self.mode = mode
     self.process_cap = process_cap
     newTraces = self._resample_traces(P)
-    self.create_trace_pool(newTraces)
+    self.create_trace_pool(newTraces, log_domain_even_out(self.log_weights, P))
     self.incorporate()
 
   def _resample_traces(self, P):
