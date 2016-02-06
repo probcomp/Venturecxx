@@ -20,8 +20,10 @@
 def strip_types(value):
     if isinstance(value, dict) and "type" in value and "value" in value:
         return strip_types(value['value'])
-    if isinstance(value,list):
+    if isinstance(value, list):
         return [strip_types(v) for v in value]
+    if isinstance(value, tuple):
+        return tuple([strip_types(v) for v in value])
     return value
 
 def strip_types_from_dict_values(value):
