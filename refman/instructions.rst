@@ -14,6 +14,7 @@ Summary::
     infer loop(expression)
     endloop
     define symbol = expression
+    load filename
     clear
     list_directives
     ci_status
@@ -166,6 +167,11 @@ Definitions
 
 Miscellaneous Instructions
 --------------------------
+
+- `load pathname`: execute the given VentureScript program.
+
+  If relative, the path is resolved relative to the current working
+  directory.
 
 - `clear`: reset VentureScript to an empty state.
 
