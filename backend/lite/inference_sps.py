@@ -111,9 +111,13 @@ class MadeRiplMethodInferOutputPSP(psp.LikelihoodFreePSP):
     except VentureException as err:
       import sys
       info = sys.exc_info()
-      raise VentureNestedRiplMethodError("Nested ripl operation signalled an error", err, info, self.addr), None, info[2]
+      raise VentureNestedRiplMethodError("Nested ripl operation signalled an error",
+                                         err, info, self.addr), None, info[2]
     try:
-      ans_vv = v.VentureValue.fromStackDict(ans) if ans is not None else v.VentureNil()
+      if ans is not None:
+        ans_vv = v.VentureValue.fromStackDict(ans)
+      else:
+        ans_vv = v.VentureNil()
     except VentureTypeError:
       # Do not return values that cannot be reconstructed from stack
       # dicts (e.g., SPs)
@@ -147,7 +151,9 @@ def infer_action_maker_type(args_types, return_type=None, **kwargs):
 
 def typed_inf_sp(name, tp, klass, desc=""):
   assert isinstance(tp, sp.SPType)
-  return no_request(psp.TypedPSP(InferPrimitiveOutputPSP(name, klass=klass, desc=desc, tp=tp.return_type), tp))
+  untyped = InferPrimitiveOutputPSP(name, klass=klass, desc=desc,
+                                    tp=tp.return_type)
+  return no_request(psp.TypedPSP(untyped, tp))
 
 def trace_method_sp(name, tp, desc=""):
   return [ name, typed_inf_sp(name, tp, MadeInferPrimitiveOutputPSP, desc) ]
@@ -155,28 +161,38 @@ def trace_method_sp(name, tp, desc=""):
 def engine_method_sp(name, tp, desc="", method_name=None):
   if method_name is None:
     method_name = name
-  return [ name, typed_inf_sp(method_name, tp, MadeEngineMethodInferOutputPSP, desc) ]
+  it = typed_inf_sp(method_name, tp, MadeEngineMethodInferOutputPSP, desc)
+  return [name, it]
 
 def ripl_method_sp(name, tp, desc="", method_name=None):
   if method_name is None:
     method_name = name
-  return [ name, typed_inf_sp(method_name, tp, MadeRiplMethodInferOutputPSP, desc) ]
+  it = typed_inf_sp(method_name, tp, MadeRiplMethodInferOutputPSP, desc)
+  return [name, it]
 
 def sequenced_sp(f, tp, desc=""):
-  "This is for SPs that should be able to participate in do blocks but don't actually read the state (e.g., for doing IO)"
+  """This is for SPs that should be able to participate in do blocks but
+don't actually read the state (e.g., for doing IO)"""
   # TODO Assume they are all deterministic, for now.
-  return no_request(psp.TypedPSP(InferPrimitiveOutputPSP(f, klass=MadeActionOutputPSP, desc=desc, tp=tp.return_type), tp))
+  untyped = InferPrimitiveOutputPSP(f, klass=MadeActionOutputPSP, desc=desc,
+                                    tp=tp.return_type)
+  return no_request(psp.TypedPSP(untyped, tp))
 
 def transition_oper_args_types(extra_args = None):
-  # ExpressionType reasonably approximates the mapping I want for scope and block IDs.
-  return [t.AnyType("scope : object"), t.AnyType("block : object")] + (extra_args if extra_args is not None else []) + [t.IntegerType("transitions : int")]
+  # ExpressionType reasonably approximates the mapping I want for
+  # scope and block IDs.
+  return [t.AnyType("scope : object"), t.AnyType("block : object")] + \
+    (extra_args if extra_args is not None else []) + \
+    [t.IntegerType("transitions : int")]
 
 def transition_oper_type(extra_args = None, **kwargs):
   return infer_action_maker_type(transition_oper_args_types(extra_args), **kwargs)
 
 def par_transition_oper_type(extra_args = None, **kwargs):
   other_args = transition_oper_args_types(extra_args)
-  return infer_action_maker_type(other_args + [t.BoolType("in_parallel : bool")], min_req_args=len(other_args), **kwargs)
+  return infer_action_maker_type(\
+    other_args + [t.BoolType("in_parallel : bool")],
+    min_req_args=len(other_args), **kwargs)
 
 def macro_helper(name, tp):
   return engine_method_sp("_" + name, tp, method_name=name, desc="""\
@@ -196,7 +212,8 @@ def assert_fun(test, msg=""):
 
 def print_fun(*args):
   def convert_arg(arg):
-    if isinstance(arg, VentureForeignBlob) and isinstance(arg.getForeignBlob(), Dataset):
+    if isinstance(arg, VentureForeignBlob) and \
+       isinstance(arg.getForeignBlob(), Dataset):
       return arg.getForeignBlob().asPandas()
     else:
       return arg
@@ -217,9 +234,11 @@ def plot_to_file_fun(basenames, spec, dataset):
   filenames = t.ExpressionType().asPython(basenames)
   spec = t.ExpressionType().asPython(spec)
   if isinstance(dataset, Dataset):
-    PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names, _format_filenames(filenames, spec))
+    PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names,
+                        _format_filenames(filenames, spec))
   else:
-    PlotSpec(spec).plot(dataset, list(dataset.columns.values), _format_filenames(filenames, spec))
+    PlotSpec(spec).plot(dataset, list(dataset.columns.values),
+                        _format_filenames(filenames, spec))
 
 def _format_filenames(filenames,spec):
   if isinstance(filenames, basestring) or isinstance(filenames, v.VentureString):
