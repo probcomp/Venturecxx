@@ -234,22 +234,25 @@ struct Inferer
     transitions = boost::python::extract<size_t>(params["transitions"]);
   }
 
-  void infer()
+  double infer()
   {
-    if (trace->numUnconstrainedChoices() == 0) { return; }
+    if (trace->numUnconstrainedChoices() == 0) { return 0.0; }
+    double total = 0.0;
     for (size_t i = 0; i < transitions; ++i)
     {
-      inferPrimitive(); inferAEKernels();
+      total += (double)inferPrimitive(); total += (double)inferAEKernels();
     }
+    return total / transitions;
   }
 
-  void inferPrimitive()
+  int inferPrimitive()
   {
-    mixMH(trace.get(), scaffoldIndexer, gKernel);
+    return mixMH(trace.get(), scaffoldIndexer, gKernel);
   }
 
-  void inferAEKernels()
+  int inferAEKernels()
   {
+    int ct = 0;
     for (set<Node*>::iterator iter = trace->arbitraryErgodicKernels.begin();
       iter != trace->arbitraryErgodicKernels.end();
       ++iter)
@@ -257,14 +260,16 @@ struct Inferer
       OutputNode * node = dynamic_cast<OutputNode*>(*iter);
       assert(node);
       trace->getMadeSP(node)->AEInfer(trace->getMadeSPAux(node),trace->getArgs(node),trace->getRNG());
+      ct += 1;
     }
+    return ct;
   }
 };
 
-void PyTrace::primitive_infer(boost::python::dict params)
+double PyTrace::primitive_infer(boost::python::dict params)
 {
   Inferer inferer(trace, params);
-  inferer.infer();
+  return inferer.infer();
 }
 
 void translateStringException(const string& err) {

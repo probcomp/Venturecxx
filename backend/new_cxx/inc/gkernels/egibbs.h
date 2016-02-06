@@ -31,8 +31,8 @@ struct EnumerativeGibbsGKernel : GKernel
   EnumerativeGibbsGKernel(bool inParallel): inParallel(inParallel) {}
   pair<Trace*,double> propose(ConcreteTrace * trace,
                               boost::shared_ptr<Scaffold> scaffold);
-  void accept();
-  void reject();
+  int accept();
+  int reject();
 
   ConcreteTrace * trace;
   boost::shared_ptr<Scaffold> scaffold;

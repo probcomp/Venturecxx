@@ -135,16 +135,16 @@ pair<Trace*,double> SliceGKernel::propose(ConcreteTrace * trace,boost::shared_pt
 }
 
 
-void SliceGKernel::accept()
+int SliceGKernel::accept()
 {
-
+  return this->scaffold->numAffectedNodes();
 }
 
 
-void SliceGKernel::reject()
+int SliceGKernel::reject()
 {
   detachAndExtract(trace,scaffold->border[0],scaffold);
   assertTorus(scaffold);
   regenAndAttach(trace,scaffold->border[0],scaffold,true,rhoDB,boost::shared_ptr<map<Node*,Gradient> >());
+  return this->scaffold->numAffectedNodes();
 }
-

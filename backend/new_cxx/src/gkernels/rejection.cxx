@@ -27,7 +27,7 @@ pair<Trace*,double> BogoPossibilizeGKernel::propose(ConcreteTrace * trace,boost:
 {
   this->trace = trace;
   this->scaffold = scaffold;
-  
+
   assert(scaffold->border.size() == 1);
   while (true) {
     pair<double,boost::shared_ptr<DB> > p = detachAndExtract(trace,scaffold->border[0],scaffold);
@@ -51,12 +51,12 @@ pair<Trace*,double> BogoPossibilizeGKernel::propose(ConcreteTrace * trace,boost:
   }
 }
 
-void BogoPossibilizeGKernel::accept() { }
+int BogoPossibilizeGKernel::accept() { return this->scaffold->numAffectedNodes(); }
 
-
-void BogoPossibilizeGKernel::reject()
+int BogoPossibilizeGKernel::reject()
 {
   detachAndExtract(trace,scaffold->border[0],scaffold);
   assertTorus(scaffold);
   regenAndAttach(trace,scaffold->border[0],scaffold,true,rhoDB,boost::shared_ptr<map<Node*,Gradient> >());
+  return this->scaffold->numAffectedNodes();
 }

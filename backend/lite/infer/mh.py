@@ -73,11 +73,11 @@ def mixMH(trace,indexer,operator):
   alpha = xiMix + logAlpha - rhoMix
   if math.log(random.random()) < alpha:
 #    sys.stdout.write(".")
-    operator.accept() # May mutate trace
+    ans = operator.accept() # May mutate trace
     accepted = True
   else:
 #    sys.stdout.write("!")
-    operator.reject() # May mutate trace
+    ans = operator.reject() # May mutate trace
     accepted = False
 
   if trace.profiling_enabled:
@@ -95,6 +95,8 @@ def mixMH(trace,indexer,operator):
       aaa = aaa,
       brush = brush
     )
+
+  return ans
 
 class BlockScaffoldIndexer(object):
   def __init__(self,scope,block,interval=None,useDeltaKernels=False,deltaKernelArgs=None,updateValues=False):
@@ -144,11 +146,13 @@ class InPlaceOperator(object):
     rhoWeight,self.rhoDB = detachAndExtract(trace, scaffold, compute_gradient)
     return rhoWeight
 
-  def accept(self): pass
+  def accept(self):
+    return self.scaffold.numAffectedNodes()
 
   def reject(self):
     detachAndExtract(self.trace,self.scaffold)
     regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,{})
+    return self.scaffold.numAffectedNodes()
 
 #### Resampling from the prior
 
@@ -173,9 +177,11 @@ class FuncMHOperator(object):
 
   def accept(self):
     self.particle.commit()
+    return self.scaffold.numAffectedNodes()
 
   def reject(self):
     regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,{})
+    return self.scaffold.numAffectedNodes()
 
   def name(self):
     return "resimulation MH"

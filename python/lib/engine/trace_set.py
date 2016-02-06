@@ -224,7 +224,7 @@ if freeze has been used.
       self.create_trace_pool(traces, weights)
 
   def primitive_infer(self, exp):
-    self.traces.map('primitive_infer', exp)
+    return self.traces.map('primitive_infer', exp)
 
   def logscore(self): return self.traces.at_distinguished('getGlobalLogScore')
   def logscore_all(self): return self.traces.map('getGlobalLogScore')

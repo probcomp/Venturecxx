@@ -41,7 +41,11 @@ pair<Trace*,double> FuncMHGKernel::propose(ConcreteTrace * trace,boost::shared_p
   return make_pair(particle.get(),xiWeight - rhoWeight);
 }
 
-void FuncMHGKernel::accept() { particle->commit(); }
+int FuncMHGKernel::accept()
+{
+  particle->commit();
+  return this->scaffold->numAffectedNodes();
+}
 
 
-void FuncMHGKernel::reject() { }
+int FuncMHGKernel::reject() { return this->scaffold->numAffectedNodes(); }
