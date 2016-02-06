@@ -33,20 +33,17 @@ pair<Trace*,double> HMCGKernel::propose(ConcreteTrace * trace,boost::shared_ptr<
   rhoDB = p.second;
   assertTorus(scaffold);
 
-  
-
-  
   double xiWeight = regenAndAttach(trace,scaffold->border[0],scaffold,false,rhoDB,boost::shared_ptr<map<Node*,Gradient> >());
 
   return make_pair(trace,xiWeight - rhoWeight);
 }
 
-void HMCGKernel::accept() { }
+int HMCGKernel::accept() { return this->scaffold->numAffectedNodes(); }
 
-
-void HMCGKernel::reject()
+int HMCGKernel::reject()
 {
   detachAndExtract(trace,scaffold->border[0],scaffold);
   assertTorus(scaffold);
   regenAndAttach(trace,scaffold->border[0],scaffold,true,rhoDB,boost::shared_ptr<map<Node*,Gradient> >());
+  return this->scaffold->numAffectedNodes();
 }

@@ -23,8 +23,8 @@ struct ConcreteTrace;
 struct ScaffoldIndexer;
 struct GKernel;
 
-void mixMH(ConcreteTrace * trace,
-	   boost::shared_ptr<ScaffoldIndexer> indexer,
-	   boost::shared_ptr<GKernel> gKernel);
+int mixMH(ConcreteTrace * trace,
+          boost::shared_ptr<ScaffoldIndexer> indexer,
+          boost::shared_ptr<GKernel> gKernel);
 
 #endif

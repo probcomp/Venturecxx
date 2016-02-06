@@ -74,7 +74,7 @@ struct PyTrace
                       boost::python::object block);
   boost::python::list numFamilies();
 
-  void primitive_infer(boost::python::dict params);
+  double primitive_infer(boost::python::dict params);
 
   void freeze(DirectiveID did);
 

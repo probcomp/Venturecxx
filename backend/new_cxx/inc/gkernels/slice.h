@@ -49,8 +49,8 @@ struct SliceGKernel : GKernel
   double sliceSample(double x0, double w, int m, double lower, double upper);
 
   pair<Trace*,double> propose(ConcreteTrace * trace,boost::shared_ptr<Scaffold> scaffold);
-  void accept();
-  void reject();
+  int accept();
+  int reject();
 
   ConcreteTrace * trace;
   boost::shared_ptr<Scaffold> scaffold;

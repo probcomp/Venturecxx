@@ -29,9 +29,9 @@ using std::cout;
 using std::endl;
 using std::flush;
 
-void mixMH(ConcreteTrace * trace,
-	   boost::shared_ptr<ScaffoldIndexer> indexer,
-	   boost::shared_ptr<GKernel> gKernel)
+int mixMH(ConcreteTrace * trace,
+          boost::shared_ptr<ScaffoldIndexer> indexer,
+          boost::shared_ptr<GKernel> gKernel)
 {
   boost::shared_ptr<Scaffold> index = indexer->sampleIndex(trace);
 
@@ -44,15 +44,14 @@ void mixMH(ConcreteTrace * trace,
   double alpha = xiMix + p.second - rhoMix;
   double logU = log(gsl_ran_flat(trace->getRNG(),0.0,1.0));
 
-  
   if (logU < alpha) {
     // cout << ".";
-    gKernel->accept();
+    return gKernel->accept();
   }
   else
   {
     // cout << "!";
-    gKernel->reject();
+    return gKernel->reject();
   }
 
 }

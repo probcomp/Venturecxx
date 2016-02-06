@@ -60,6 +60,7 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,
                                            boost::shared_ptr<Scaffold> scaffold)
 {
   // assertTrace(self.trace,self.scaffold)
+  this->scaffold = scaffold;
 
   size_t numBorderGroups = scaffold->border.size();
 
@@ -201,14 +202,16 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,
   return make_pair(finalParticle.get(),alpha);
 }
 
-void PGibbsGKernel::accept()
+int PGibbsGKernel::accept()
 {
   finalParticle->commit();
   // assertTrace(self.trace,self.scaffold)
+  return this->scaffold->numAffectedNodes();
 }
 
-void PGibbsGKernel::reject()
+int PGibbsGKernel::reject()
 {
   oldParticle->commit();
   // assertTrace(self.trace,self.scaffold)
+  return this->scaffold->numAffectedNodes();
 }

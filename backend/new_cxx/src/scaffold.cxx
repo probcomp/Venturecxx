@@ -70,6 +70,11 @@ boost::shared_ptr<LKernel> Scaffold::getLKernel(Node * node)
   return lkernels[node];
 }
 
+int Scaffold::numAffectedNodes()
+{
+  return regenCounts.size();
+}
+
 string Scaffold::showSizes()
 {
   string p = "(";
