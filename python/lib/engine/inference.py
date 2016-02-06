@@ -97,7 +97,7 @@ class Infer(object):
     else:
       return item
 
-  def primitive_infer(self, exp): self.engine.primitive_infer(exp)
+  def primitive_infer(self, exp): return self.engine.primitive_infer(exp)
   def resample(self, ct): self.engine.resample(ct, 'sequential')
   def resample_serializing(self, ct): self.engine.resample(ct, 'serializing')
   def resample_threaded(self, ct): self.engine.resample(ct, 'threaded')
