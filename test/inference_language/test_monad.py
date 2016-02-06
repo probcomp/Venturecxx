@@ -214,3 +214,11 @@ def testSampleSugar():
   r.set_mode("venture_script")
   vals = r.execute_program("sample 2 + 2;")
   eq_([4], u.strip_types([v['value'] for v in vals]))
+
+def testInferenceWorkCounting():
+  r = get_ripl()
+  eq_([0], r.infer("(mh default one 1)"))
+  r.assume("x", "(normal 0 1)")
+  eq_([1], r.infer("(mh default one 1)"))
+  r.observe("(normal x 1)", 2)
+  eq_([2], r.infer("(mh default one 1)"))
