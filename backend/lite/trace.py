@@ -615,9 +615,12 @@ class Trace(object):
       return float("nan")
 
   def log_likelihood_at(self, scope, block):
-    # TODO This is a different control path from infer_exp because it
-    # needs to return the weight
+    # TODO This is a different control path from primitive_infer
+    # because it needs to return the weight, and that didn't used to
+    # return values when this was writen.
     scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
+    if not self.scopeHasEntropy(scope):
+      return 0.0
     scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
     (_rhoWeight,rhoDB) = detachAndExtract(self, scaffold)
     xiWeight = regenAndAttach(self, scaffold, True, rhoDB, {})
@@ -625,9 +628,12 @@ class Trace(object):
     return xiWeight
 
   def log_joint_at(self, scope, block):
-    # TODO This is a different control path from infer_exp because it
-    # needs to return the weight
+    # TODO This is a different control path from primitive_infer
+    # because it needs to return the weight, and that didn't used to
+    # return values when this was writen.
     scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
+    if not self.scopeHasEntropy(scope):
+      return 0.0
     scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
     pnodes = scaffold.getPrincipalNodes()
     from infer.mh import getCurrentValues, registerDeterministicLKernels
@@ -639,8 +645,9 @@ class Trace(object):
     return xiWeight
 
   def likelihood_weight(self):
-    # TODO This is a different control path from infer_exp because it
-    # needs to return the new weight
+    # TODO This is a different control path from primitive_infer
+    # because it needs to return the weight, and that didn't used to
+    # return values when this was writen.
     scaffold = BlockScaffoldIndexer("default", "all").sampleIndex(self)
     (_rhoWeight,rhoDB) = detachAndExtract(self, scaffold)
     xiWeight = regenAndAttach(self, scaffold, False, rhoDB, {})
@@ -676,6 +683,8 @@ function.
     assert len(exp) >= 3
     (operator, scope, block) = exp[0:3]
     scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
+    if not self.scopeHasEntropy(scope):
+      return [self, 0.0]
     if operator == "enumerative":
       return infer.EnumerativeDiversify(copy_trace)(self, BlockScaffoldIndexer(scope, block))
     else: raise Exception("DIVERSIFY %s is not implemented" % operator)

@@ -60,7 +60,7 @@ struct ConcreteTrace : Trace
 
   void addChild(Node * node, Node * child);
 
-  /* Detach mutations */  
+  /* Detach mutations */
   RootOfFamily popLastESRParent(OutputNode * outputNode);
   void disconnectLookup(LookupNode * lookupNode);
   void decNumRequests(RootOfFamily root);
@@ -85,7 +85,7 @@ struct ConcreteTrace : Trace
   bool isMakerNode(Node * node);
   bool isConstrained(Node * node);
   bool isObservation(Node * node);
-  
+
   /* Primitive Setters */
   void setValue(Node * node, VentureValuePtr value);
   void clearValue(Node * node);
@@ -99,7 +99,7 @@ struct ConcreteTrace : Trace
 
 
   void clearMadeSPFamilies(Node * node);
-  
+
 
   void setMadeSP(Node * node,boost::shared_ptr<SP> sp);
   void setMadeSPAux(Node * node,boost::shared_ptr<SPAux> spaux);
@@ -125,7 +125,7 @@ struct ConcreteTrace : Trace
   vector<BlockID> blocksInScope(ScopeID scope); // TODO this should be an iterator
   int numBlocksInScope(ScopeID scope);
   set<Node*> getAllNodesInScope(ScopeID scope);
-    
+
   vector<set<Node*> > getOrderedSetsInScopeAndRange(ScopeID scope,BlockID minBlock,BlockID maxBlock);
   vector<set<Node*> > getOrderedSetsInScope(ScopeID scope);
 
@@ -137,7 +137,7 @@ struct ConcreteTrace : Trace
   // Helper function for dynamic scoping
   void addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,set<Node*> & pnodes,Node * node);
 
-  bool scopeHasEntropy(ScopeID scope); 
+  bool scopeHasEntropy(ScopeID scope);
   double makeConsistent();
   void registerConstraints();
 

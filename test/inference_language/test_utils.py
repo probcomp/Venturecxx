@@ -80,6 +80,12 @@ def testPosteriorSmoke():
   (p <- (log_joint_at default all))
   (assert (< (lookup p 0) (lookup l 0))))""")
 
+@on_inf_prim("log_likelihood_at")
+def testEmptyScopes():
+  get_ripl().infer("""(do
+  (assert (eq 0 (lookup (run (log_likelihood_at default one)) 0)))
+  (assert (eq 0 (lookup (run (log_joint_at default one)) 0))))""")
+
 # TODO Also want statistical test cases for log_likelihood_at and log_joint_at
 
 @on_inf_prim("quasiquote")
