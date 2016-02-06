@@ -73,11 +73,11 @@ def mixMH(trace,indexer,operator):
   alpha = xiMix + logAlpha - rhoMix
   if math.log(random.random()) < alpha:
 #    sys.stdout.write(".")
-    operator.accept() # May mutate trace
+    ans = operator.accept() # May mutate trace
     accepted = True
   else:
 #    sys.stdout.write("!")
-    operator.reject() # May mutate trace
+    ans = operator.reject() # May mutate trace
     accepted = False
 
   if trace.profiling_enabled:
@@ -95,6 +95,8 @@ def mixMH(trace,indexer,operator):
       aaa = aaa,
       brush = brush
     )
+
+  return ans
 
 class BlockScaffoldIndexer(object):
   def __init__(self,scope,block,interval=None,useDeltaKernels=False,deltaKernelArgs=None,updateValues=False):
