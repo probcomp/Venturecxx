@@ -409,7 +409,7 @@ class SubsampledInPlaceOperator(InPlaceOperator):
 
   def reject(self, indexer, perm_local_roots, n):
     # Restore the global section.
-    super(SubsampledInPlaceOperator, self).reject()
+    ans = super(SubsampledInPlaceOperator, self).reject()
 
     # Restore local sections in perm_local_roots[0:n]
     globalBorder = self.scaffold.globalBorder
@@ -418,6 +418,8 @@ class SubsampledInPlaceOperator(InPlaceOperator):
         local_root = perm_local_roots[i]
         local_scaffold = indexer.sampleLocalIndex(self.trace, local_root, globalBorder)
         updateValuesAtScaffold(self.trace,local_scaffold,set(globalBorder))
+
+    return ans
 
   # Go through every local child and do extract and regen.
   # This is to be called at the end of a number of transitions.
