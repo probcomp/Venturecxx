@@ -71,6 +71,7 @@ class EnumerativeGibbsOperator(object):
     return (xiParticles, xiWeights)
 
   def propose(self, trace, scaffold):
+    self.scaffold = scaffold
     (xiParticles, xiWeights) = self.compute_particles(trace, scaffold)
     # Now sample a NEW particle in proportion to its weight
     finalIndex = self.chooseProposalParticle(xiWeights)
@@ -84,8 +85,13 @@ class EnumerativeGibbsOperator(object):
   def chooseProposalParticle(self, xiWeights):
     return sampleLogCategorical(xiWeights)
 
-  def accept(self): self.finalParticle.commit()
-  def reject(self): assert False
+  def accept(self):
+    self.finalParticle.commit()
+    return self.scaffold.numAffectedNodes()
+
+  def reject(self):
+    assert False
+
   def name(self): return "enumerative gibbs"
 
 class EnumerativeMAPOperator(EnumerativeGibbsOperator):
