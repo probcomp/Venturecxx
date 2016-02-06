@@ -145,6 +145,7 @@ class InPlaceOperator(object):
     return rhoWeight
 
   def accept(self): pass
+
   def reject(self):
     detachAndExtract(self.trace,self.scaffold)
     regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,{})
@@ -170,6 +171,11 @@ class FuncMHOperator(object):
     xiWeight = regenAndAttach(self.particle, scaffold, False, self.rhoDB, {})
     return self.particle, xiWeight - rhoWeight
 
-  def accept(self): self.particle.commit()
-  def reject(self): regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,{})
-  def name(self): return "resimulation MH"
+  def accept(self):
+    self.particle.commit()
+
+  def reject(self):
+    regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,{})
+
+  def name(self):
+    return "resimulation MH"
