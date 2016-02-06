@@ -483,71 +483,73 @@ class Trace(object):
       else:
         transitions = int(exp[-1])
     if not self.scopeHasEntropy(scope):
-      return
+      return 0.0
+    ct = 0
     for _ in range(transitions):
       if operator == "mh":
-        mixMH(self, BlockScaffoldIndexer(scope, block), infer.MHOperator())
+        ct += mixMH(self, BlockScaffoldIndexer(scope, block), infer.MHOperator())
       elif operator == "func_mh":
-        mixMH(self, BlockScaffoldIndexer(scope, block), infer.FuncMHOperator())
+        ct += mixMH(self, BlockScaffoldIndexer(scope, block), infer.FuncMHOperator())
       elif operator == "draw_scaffold":
-        infer.drawScaffold(self, BlockScaffoldIndexer(scope, block))
+        ct += infer.drawScaffold(self, BlockScaffoldIndexer(scope, block))
       elif operator == "mh_kernel_update":
         (useDeltaKernels, deltaKernelArgs, updateValues) = exp[3:6]
         scaffolder = BlockScaffoldIndexer(scope, block,
           useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs,
           updateValues=updateValues)
-        mixMH(self, scaffolder, infer.MHOperator())
+        ct += mixMH(self, scaffolder, infer.MHOperator())
       elif operator == "subsampled_mh":
         (Nbatch, k0, epsilon,
          useDeltaKernels, deltaKernelArgs, updateValues) = exp[3:9]
         scaffolder = infer.SubsampledBlockScaffoldIndexer(scope, block,
           useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs,
           updateValues=updateValues)
-        infer.subsampledMixMH(self, scaffolder, infer.SubsampledMHOperator(),
-                              Nbatch, k0, epsilon)
+        ct += infer.subsampledMixMH(
+          self, scaffolder, infer.SubsampledMHOperator(), Nbatch, k0, epsilon)
       elif operator == "subsampled_mh_check_applicability":
+        # Does not affect nodes
         infer.SubsampledBlockScaffoldIndexer(scope, block).checkApplicability(self)
       elif operator == "subsampled_mh_make_consistent":
         (useDeltaKernels, deltaKernelArgs, updateValues) = exp[3:6]
         scaffolder = infer.SubsampledBlockScaffoldIndexer(scope, block,
           useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs,
           updateValues=updateValues)
-        infer.SubsampledMHOperator().makeConsistent(self, scaffolder)
+        ct += infer.SubsampledMHOperator().makeConsistent(self, scaffolder)
       elif operator == "meanfield":
         steps = int(exp[3])
-        mixMH(self, BlockScaffoldIndexer(scope, block),
-              infer.MeanfieldOperator(steps, 0.0001))
+        ct += mixMH(self, BlockScaffoldIndexer(scope, block),
+                    infer.MeanfieldOperator(steps, 0.0001))
       elif operator == "hmc":
         (epsilon,  L) = exp[3:5]
-        mixMH(self, BlockScaffoldIndexer(scope, block),
-              infer.HamiltonianMonteCarloOperator(epsilon, int(L)))
+        ct += mixMH(self, BlockScaffoldIndexer(scope, block),
+                    infer.HamiltonianMonteCarloOperator(epsilon, int(L)))
       elif operator == "gibbs":
-        mixMH(self, BlockScaffoldIndexer(scope, block),
-              infer.EnumerativeGibbsOperator())
+        ct += mixMH(self, BlockScaffoldIndexer(scope, block),
+                    infer.EnumerativeGibbsOperator())
       elif operator == "emap":
-        mixMH(self, BlockScaffoldIndexer(scope, block),
-              infer.EnumerativeMAPOperator())
+        ct += mixMH(self, BlockScaffoldIndexer(scope, block),
+                    infer.EnumerativeMAPOperator())
       elif operator == "gibbs_update":
-        mixMH(self, BlockScaffoldIndexer(scope, block, updateValues=True),
-              infer.EnumerativeGibbsOperator())
+        ct += mixMH(self, BlockScaffoldIndexer(scope, block, updateValues=True),
+                    infer.EnumerativeGibbsOperator())
       elif operator == "slice":
         (w, m) = exp[3:5]
-        mixMH(self, BlockScaffoldIndexer(scope, block),
-              infer.StepOutSliceOperator(w, m))
+        ct += mixMH(self, BlockScaffoldIndexer(scope, block),
+                    infer.StepOutSliceOperator(w, m))
       elif operator == "slice_doubling":
         (w, p) = exp[3:5]
-        mixMH(self, BlockScaffoldIndexer(scope, block),
-              infer.DoublingSliceOperator(w, p))
+        ct += mixMH(self, BlockScaffoldIndexer(scope, block),
+                    infer.DoublingSliceOperator(w, p))
       elif operator == "pgibbs":
         particles = int(exp[3])
         if isinstance(block, list): # Ordered range
           (_, min_block, max_block) = block
           scaffolder = BlockScaffoldIndexer(scope, "ordered_range",
                                             (min_block, max_block))
-          mixMH(self, scaffolder, infer.PGibbsOperator(particles))
+          ct += mixMH(self, scaffolder, infer.PGibbsOperator(particles))
         else:
-          mixMH(self, BlockScaffoldIndexer(scope, block),
-                infer.PGibbsOperator(particles))
+          ct += mixMH(self, BlockScaffoldIndexer(scope, block),
+                      infer.PGibbsOperator(particles))
       elif operator == "pgibbs_update":
         particles = int(exp[3])
         if isinstance(block, list): # Ordered range
@@ -555,53 +557,62 @@ class Trace(object):
           scaffolder = BlockScaffoldIndexer(
             scope, "ordered_range",
             (min_block, max_block), updateValues=True)
-          mixMH(self, scaffolder, infer.PGibbsOperator(particles))
+          ct += mixMH(self, scaffolder, infer.PGibbsOperator(particles))
         else:
-          mixMH(self, BlockScaffoldIndexer(scope, block, updateValues=True),
-                infer.PGibbsOperator(particles))
+          ct += mixMH(self, BlockScaffoldIndexer(scope, block, updateValues=True),
+                      infer.PGibbsOperator(particles))
       elif operator == "func_pgibbs":
         particles = int(exp[3])
         if isinstance(block, list): # Ordered range
           (_, min_block, max_block) = block
           scaffolder = BlockScaffoldIndexer(scope, "ordered_range",
                                             (min_block, max_block))
-          mixMH(self, scaffolder, infer.ParticlePGibbsOperator(particles))
+          ct += mixMH(self, scaffolder, infer.ParticlePGibbsOperator(particles))
         else:
-          mixMH(self, BlockScaffoldIndexer(scope, block),
-                infer.ParticlePGibbsOperator(particles))
+          ct += mixMH(self, BlockScaffoldIndexer(scope, block),
+                      infer.ParticlePGibbsOperator(particles))
       elif operator == "func_pmap":
         particles = int(exp[3])
         if isinstance(block, list): # Ordered range
           (_, min_block, max_block) = block
           scaffolder = BlockScaffoldIndexer(scope, "ordered_range",
                                             (min_block, max_block))
-          mixMH(self, scaffolder, infer.ParticlePMAPOperator(particles))
+          ct += mixMH(self, scaffolder, infer.ParticlePMAPOperator(particles))
         else:
-          mixMH(self, BlockScaffoldIndexer(scope, block),
-                infer.ParticlePMAPOperator(particles))
+          ct += mixMH(self, BlockScaffoldIndexer(scope, block),
+                      infer.ParticlePMAPOperator(particles))
       elif operator == "grad_ascent":
         (rate, steps) = exp[3:5]
-        mixMH(self, BlockScaffoldIndexer(scope, block),
-              infer.GradientAscentOperator(rate, int(steps)))
+        ct += mixMH(self, BlockScaffoldIndexer(scope, block),
+                    infer.GradientAscentOperator(rate, int(steps)))
       elif operator == "nesterov":
         (rate, steps) = exp[3:5]
-        mixMH(self, BlockScaffoldIndexer(scope, block),
-              infer.NesterovAcceleratedGradientAscentOperator(rate, int(steps)))
+        ct += mixMH(self, BlockScaffoldIndexer(scope, block),
+                    infer.NesterovAcceleratedGradientAscentOperator(rate, int(steps)))
       elif operator == "rejection":
         if len(exp) == 5:
           trials = int(exp[3])
         else:
           trials = None
-        mixMH(self, BlockScaffoldIndexer(scope, block),
-              infer.RejectionOperator(trials))
+        ct += mixMH(self, BlockScaffoldIndexer(scope, block),
+                    infer.RejectionOperator(trials))
       elif operator == "bogo_possibilize":
-        mixMH(self, BlockScaffoldIndexer(scope, block),
-              infer.BogoPossibilizeOperator())
+        ct += mixMH(self, BlockScaffoldIndexer(scope, block),
+                    infer.BogoPossibilizeOperator())
       elif operator == "print_scaffold_stats":
-        BlockScaffoldIndexer(scope, block).sampleIndex(self).show()
+        scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
+        scaffold.show()
+        return scaffold.numAffectedNodes()
       else: raise Exception("INFER %s is not implemented" % operator)
 
-      for node in self.aes: self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
+      for node in self.aes:
+        self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
+      ct += len(self.aes)
+
+    if transitions > 0:
+      return ct/float(transitions)
+    else:
+      return float("nan")
 
   def log_likelihood_at(self, scope, block):
     # TODO This is a different control path from infer_exp because it
