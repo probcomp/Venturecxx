@@ -32,9 +32,6 @@ Dimensions on which I evaluated these projects:
 | make-sp in Puma            | < 1 day?  | ??     | ?      | --   | --    | ?      |
 | Profiler for Lite          | 2-3 days? | yes ?  | ?      | --   | yes   | yes ?  |
 | Profiler for Puma          | 2-3 days? | yes ?  | ?      | --   | yes ? | ?      |
-| Compositing by particle    | 1-2 days? | --     | --     | ??   | yes ? | ?      |
-| Animating by sweep count   | 1-2 days? | --     | --     | ??   | yes ? | --     |
-| Faceted plots              | 1-2 days? | --     | --     | ??   | yes ? | ?      |
 | Reassume                   | < 1 day?  | some ? | ?      | --   | yes ? | ?      |
 | Full SP serialization      | 2-3 days? | --     | some   | --   | --    | --     |
 | Perf measurements          | 1-2 days  | prereq | ?      | ?    | --    | --     |
@@ -287,9 +284,6 @@ Would be nice if:
       directive ids
 - Milestone: When we have shown using the profiler that it is faster
   to write an SP in Python
-*** Project: Compositing graphics across particles
-*** Project: Animating graphics by sweep count
-*** Project: Faceted plots
 *** Project: Redefine/reassume as uneval, eval, rebind, propagate
 the latter being what incorporate does
 *** Project: Full SP serialization
