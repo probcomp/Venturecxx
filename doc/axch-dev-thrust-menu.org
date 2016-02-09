@@ -3176,22 +3176,8 @@ multiprocess.Master
 - chunking and mapping over multiple underlying objects
 - reconstitution and rethrowing of exceptions serialized by workers
 
-Engine
-- Point of selection for Puma vs Lite backend (by subclassing!)
-  - run-time backend swapping API
-- Management of an inference trace as distinct from a
-  multiprocess.Master of model traces
-  - assume, observe, predict, report_value get routed to the model
-  - define, infer get routed to the inference trace
-    - self_evaluating_scope_hack
-- Inference prelude by somewhat grotty hackery
-- Registry of bound foreign sps and bound foreign inference sps
-- Assigns globally unique directive ids
-- Actual thread management for continuous inference, inlcuding infer loop
-  - delegated to ContinuousInferrer, but still
-- Inference callback table
-- Records time since creation, presumably for plotf to read
-- ensure_rng_seeded_decently (?)
+TraceSet
+- Point of selection for Puma vs Lite backend (by accepting the constructor)
 - Multi-particle modeling
   - choice of whether operations are routed to the model "map"ped or
     evaluated at one point
@@ -3201,6 +3187,21 @@ Engine
     SPs (diversify, collapse)
   - including retrieve_dump{s}, retrieve_trace{s} for serialization
     and resampling
+
+Engine
+- Run-time backend swapping API
+- Management of an inference trace as distinct from a TraceSet of
+  model traces
+  - assume, observe, predict, report_value get routed to the model
+  - define, infer get routed to the inference trace
+- Inference prelude by somewhat grotty hackery
+- Registry of bound foreign sps and bound foreign inference sps
+- Assigns globally unique directive ids
+- Actual thread management for continuous inference, inlcuding infer loop
+  - delegated to ContinuousInferrer, but still
+- Inference callback table
+- Records time since creation, presumably for plotf to read
+- ensure_rng_seeded_decently (?)
 - get_entropy_info (?)
 - some respectable interaction with whole-system serialization
 - Theoretically supposed to enable RNG state management, but
@@ -3221,17 +3222,14 @@ CoreSivm
     functions.
 - Reports the values of observe instructions (because the engine
   allegedly doesn't)
-- Action locking based on current state, on the theory that rollbacks
-  might be possible.  This appears to be broken and unusable.
-  - In particular, there seems to be no way for the state to become
-    anything other than "default".
-- Attempt at introspection on whether the profiler is enabled; not
-  sure which profiler it has in mind.
+- Introspection on whether the profiler is enabled
 - Some interaction with global serialization (namely storing the
   observe_dict)
 
 VentureSivm
 - Performs macro expansion on incoming model and inference programs
+  - Stores a table mapping produced directives to pre-expansion
+    expressions for error annotation (this is very brittle!)
 - Annotates exceptions from instruction execution with error
   locations, in terms of pre-macro-expansion expressions.
 - Pauses continuous inference (in terms, ultimately, of the Engine's
@@ -3260,7 +3258,6 @@ Ripl
 - bulk_observe and observe_dataset, such as they are
 - Some delegation directly to the underlying engine, without defining
   instruction data representations
-- Bitrotten stubs for "future" profiler support
 - Some machinery for data display for Vlad's actual profiler
 - General plugin loading
 
