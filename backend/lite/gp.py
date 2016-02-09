@@ -206,40 +206,50 @@ xsType = t.HomogeneousArrayType(xType)
 osType = t.HomogeneousArrayType(oType)
 
 meanType = SPType([xsType], osType)
+meanFunctionType = t.AnyType
 covarianceType = SPType([xsType, xsType], osType)
-functionType = t.AnyType("VentureFunction")
+covarianceFunctionType = t.AnyType
 
 def _mean_maker(f, argtypes):
   return deterministic_typed(
     lambda *x: VentureFunction(f(*x), sp_type=meanType),
-    argtypes, functionType)
+    argtypes, meanFunctionType("mean function"),
+    descr=f.__doc__)
 def _cov_maker(f, argtypes):
   return deterministic_typed(
     lambda *x: VentureFunction(f(*x), sp_type=covarianceType),
-    argtypes, functionType)
+    argtypes, covarianceFunctionType("covariance kernel"),
+    descr=f.__doc__)
 
 def mean_const(c):
+  "Constant mean function, everywhere equal to c."
   return lambda x: c*np.ones(x.shape)
-registerBuiltinSP("gp_mean_const", _mean_maker(mean_const, [t.NumberType()]))
-registerBuiltinSP("gp_cov_const", _cov_maker(cov.const, [t.NumberType()]))
-registerBuiltinSP("gp_cov_delta", _cov_maker(cov.delta, [t.NumberType()]))
-registerBuiltinSP("gp_cov_se", _cov_maker(cov.se, [t.NumberType()]))
-registerBuiltinSP("gp_cov_periodic", _cov_maker(cov.periodic,
-    [t.NumberType(), t.NumberType()]))
-registerBuiltinSP("gp_cov_rq", _cov_maker(cov.rq,
-    [t.NumberType(), t.NumberType()]))
-registerBuiltinSP("gp_cov_matern", _cov_maker(cov.matern,
-    [t.NumberType(), t.NumberType()]))
-registerBuiltinSP("gp_cov_matern_32", _cov_maker(cov.matern_32,
-    [t.NumberType()]))
-registerBuiltinSP("gp_cov_matern_52", _cov_maker(cov.matern_52,
-    [t.NumberType()]))
-registerBuiltinSP("gp_cov_linear", _cov_maker(cov.linear, [xType]))
-registerBuiltinSP("gp_cov_noise", _cov_maker(cov.noise,
-    [t.NumberType(), functionType]))
-registerBuiltinSP("gp_cov_scale", _cov_maker(cov.scale,
-    [t.NumberType(), functionType]))
-registerBuiltinSP("gp_cov_sum", _cov_maker(cov.sum,
-    [functionType, functionType]))
-registerBuiltinSP("gp_cov_product", _cov_maker(cov.product,
-    [functionType, functionType]))
+registerBuiltinSP("gp_mean_const",
+    _mean_maker(mean_const, [t.NumberType("c")]))
+registerBuiltinSP("gp_cov_const",
+    _cov_maker(cov.const, [t.NumberType("c")]))
+registerBuiltinSP("gp_cov_delta",
+    _cov_maker(cov.delta, [t.NumberType("tolerance")]))
+registerBuiltinSP("gp_cov_se", _cov_maker(cov.se, [t.NumberType("l^2")]))
+registerBuiltinSP("gp_cov_periodic",
+    _cov_maker(cov.periodic, [t.NumberType("l^2"), t.NumberType("T")]))
+registerBuiltinSP("gp_cov_rq",
+    _cov_maker(cov.rq, [t.NumberType("l^2"), t.NumberType("alpha")]))
+registerBuiltinSP("gp_cov_matern",
+    _cov_maker(cov.matern, [t.NumberType("l^2"), t.NumberType("df")]))
+registerBuiltinSP("gp_cov_matern_32",
+    _cov_maker(cov.matern_32, [t.NumberType("l^2")]))
+registerBuiltinSP("gp_cov_matern_52",
+    _cov_maker(cov.matern_52, [t.NumberType("l^2")]))
+registerBuiltinSP("gp_cov_linear",
+    _cov_maker(cov.linear, [xType]))
+registerBuiltinSP("gp_cov_noise",
+    _cov_maker(cov.noise, [t.NumberType("n^2"), covarianceFunctionType("k")]))
+registerBuiltinSP("gp_cov_scale",
+    _cov_maker(cov.scale, [t.NumberType("s^2"), covarianceFunctionType("k")]))
+registerBuiltinSP("gp_cov_sum",
+    _cov_maker(cov.sum,
+        [covarianceFunctionType("k_a"), covarianceFunctionType("k_b")]))
+registerBuiltinSP("gp_cov_product",
+    _cov_maker(cov.product,
+        [covarianceFunctionType("k_a"), covarianceFunctionType("k_b")]))

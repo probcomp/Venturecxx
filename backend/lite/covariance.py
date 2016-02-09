@@ -23,6 +23,7 @@ import scipy.spatial.distance
 # Trivial covariance kernel
 
 def const(c):
+  """Constant kernel, everywhere equal to c."""
   def k(x_1, x_2):
     return c*np.ones((len(x_1), len(x_2)))
   return k
@@ -50,13 +51,13 @@ def se(l2):
   """Squared-exponential kernel: e^(-r^2 / (2 l^2))"""
   return isotropic(lambda r2: _se(r2, l2))
 
-def periodic(l2, period):
-  """Periodic kernel: e^(-(2 sin(2pi r / p))^2 / (2 l^2))"""
+def periodic(l2, T):
+  """Periodic kernel: e^(-(2 sin(2pi r / T))^2 / (2 l^2))"""
   sin = np.sin
   pi = np.pi
   sqrt = np.sqrt
   def f(r2):
-    r = 2.*sin(2.*pi*sqrt(r2)/period)
+    r = 2.*sin(2.*pi*sqrt(r2)/T)
     return _se(r**2, l2)
   return isotropic(f)
 
@@ -91,20 +92,20 @@ def matern_52(l2):
     return (1. + q + q2/3.)*np.exp(-q)
   return isotropic(f)
 
-def linear(o):
-  """Linear covariance kernel: k(x_1, x_2) = (x_1 - o) (x_2 - o)."""
+def linear(x):
+  """Linear covariance kernel: k(x_1, x_2) = (x_1 - x) (x_2 - x)."""
   def k(x_1, x_2):
-    return np.outer(x_1 - o, x_2 - o)
+    return np.outer(x_1 - x, x_2 - x)
   return k
 
 # Composite covariance kernels
 
 def noise(n2, k):
-  """Kernel k with constant additive squared noise n2."""
+  """Kernel k with constant additive squared noise n^2."""
   return lambda x_1, x_2: n2 + k(x_1, x_2)
 
 def scale(s2, k):
-  """Kernel k scaled by squared output factor s2."""
+  """Kernel k scaled by squared output factor s^2."""
   return lambda x_1, x_2: s2 * k(x_1, x_2)
 
 def sum(k_a, k_b):
