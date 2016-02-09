@@ -108,9 +108,8 @@ Benefits
   any such weight produced during an M-H step gets accounted for in
   the acceptance ratio.
 
-  - In the presence of such SPs, the `logmeanexp` particle weight
-    becomes the model evidence from the initialization distribution
-    rather than the prior.
+  - The `logmeanexp` particle weight remains the model evidence even
+    in the presence of such SPs.
 
 - The above has the effect of permitting SPs to represent
   non-probability measures.  That should be fine.  In the presence of
