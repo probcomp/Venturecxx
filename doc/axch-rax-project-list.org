@@ -47,6 +47,8 @@ weeks of February 2016.
       `over`.
     - Presumably eases #228 (parallelize custom Markov chains).
     - Could also fix #396 (parallel execution is lockstep).
+    - Draft design notes in doc/axch-dev-thrust-menu.org under "Better
+      for_each_particle".
   - Expose the local posterior to the inference programming language (#199).
     - Seems to impede a lot of stuff
     - Actually really expose detach and regen (with gradients) usefully
