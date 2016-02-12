@@ -22,6 +22,9 @@ set -ex
 search_dir=$1
 version=$2
 
+# Do not suppress exit code of pip install by piping its output
+set -o pipefail
+
 if [ -e "$search_dir/requirements.txt" ]; then
     # The pip suppresses the progress bar, which is what I want since
     # this output is mostly logged by Jenkins rather than watched live.
