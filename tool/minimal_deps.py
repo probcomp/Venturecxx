@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (c) 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
@@ -14,8 +16,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-
-#!/usr/bin/env python
 
 """Write a requirements file specifying the minimum declared versions of Venture's dependencies (for testing)."""
 
