@@ -22,6 +22,10 @@ set -ex
 search_dir=$1
 version=$2
 
+if [ -e "$search_dir/requirements.txt" ]; then
+    pip install -r "$search_dir/requirements.txt"
+fi
+
 pip install --find-links "$search_dir" "venture==$version"
 
 # Smoke test the result without testing-only dependencies
