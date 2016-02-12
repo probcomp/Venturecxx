@@ -67,7 +67,7 @@ chmod +x "script/jenkins/$docker_dir/dist/tests_run.sh"
 
 cat <<EOF > "script/jenkins/$docker_dir/dist/run.sh"
 #!/bin/sh
-./tests_run.sh
+./dist/tests_run.sh
 echo $? > exit_status
 EOF
 chmod +x "script/jenkins/$docker_dir/dist/run.sh"
