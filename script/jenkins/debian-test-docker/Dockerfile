@@ -46,7 +46,8 @@ RUN         echo 'backend: Agg' > ~/.matplotlib/matplotlibrc
 RUN         echo 'backend: Agg' > ~/.matplotlibrc
 
 # The caller is expected to place a built Venture source distribution
-# into the working directory.
+# into the working directory, and a run.sh script that will test it.
 
 ADD         . /root/Venturecxx
 WORKDIR     /root/Venturecxx/
+RUN         ./run.sh
