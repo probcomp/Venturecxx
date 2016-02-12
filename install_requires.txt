@@ -10,7 +10,7 @@ dill
 # Plotf
 patsy # Because ggplot needs this installed first ??
 pandas>=0.14, <0.16 # <0.16 because that version introduces a change that breaks ggplot
-ggplot
+ggplot>=0.5
 
 # Debug pictures of scaffolds
 networkx
