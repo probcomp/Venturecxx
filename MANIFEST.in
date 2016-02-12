@@ -1,4 +1,5 @@
 include check.sh
+include install_requires.txt
 include inference-quality.cfg
 include refman/venture.ripl.ripl.rst
 include refman/conf.py
