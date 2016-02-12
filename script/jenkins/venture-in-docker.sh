@@ -61,7 +61,7 @@ tar -xzf $dist_path && \
 cd $dist_file_base && \
 test -f test/properties/test_sps.py && \
 ./script/jenkins/check_built_sdist.sh ../dist/ \
-    ${version%+*}" # Version without the +foo suffix
+    ${version%+*} # Version without the +foo suffix
 EOF
 chmod +x "script/jenkins/$docker_dir/dist/tests_run.sh"
 
