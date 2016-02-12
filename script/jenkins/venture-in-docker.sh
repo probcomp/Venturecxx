@@ -57,6 +57,7 @@ fi
 #   put it in the distribution directory
 cat <<EOF > "script/jenkins/$docker_dir/dist/tests_run.sh"
 #!/bin/sh
+set -x
 tar -xzf $dist_path && \
 cd $dist_file_base && \
 test -f test/properties/test_sps.py && \
@@ -67,6 +68,7 @@ chmod +x "script/jenkins/$docker_dir/dist/tests_run.sh"
 
 cat <<EOF > "script/jenkins/$docker_dir/dist/run.sh"
 #!/bin/sh
+set -x
 ./dist/tests_run.sh
 echo $? > exit_status
 EOF
