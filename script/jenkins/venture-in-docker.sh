@@ -81,4 +81,4 @@ docker build -t "$image_name" script/jenkins/$docker_dir
 echo "Tests run in $image_name"
 
 # Extract the exit code of the test run.
-exit `docker run -t "$image_name" "cat exit_status"`
+exit `docker run -t "$image_name" cat exit_status`
