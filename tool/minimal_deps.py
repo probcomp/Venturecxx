@@ -35,7 +35,8 @@ def parse_req_file(filename):
 install_requires = parse_req_file(os.path.join(root, "install_requires.txt"))
 
 def all_versions(name):
-    cmd = "curl -s https://pypi.python.org/pypi/%s/json | jq -r '.releases | keys | .[]'" % (name,)
+    cmd = "curl -s https://pypi.python.org/pypi/%s/json " \
+      "| jq -r '.releases | to_entries | map(select(.value | length > 0)) | from_entries | keys | .[]'" % (name,)
     candidates = os.popen(cmd).read().splitlines()
     return sorted(candidates, key=pkg.parse_version)
 
