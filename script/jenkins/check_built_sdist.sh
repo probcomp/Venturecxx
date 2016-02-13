@@ -26,7 +26,7 @@ version=$2
 set -o pipefail
 
 if [ -e "$search_dir/requirements.txt" ]; then
-    # The pip suppresses the progress bar, which is what I want since
+    # The cat suppresses the progress bar, which is what I want since
     # this output is mostly logged by Jenkins rather than watched live.
     pip install -r "$search_dir/requirements.txt" | cat
 fi
