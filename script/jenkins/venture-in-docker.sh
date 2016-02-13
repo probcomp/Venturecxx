@@ -56,10 +56,10 @@ fi
 #   put it in the distribution directory
 cat <<EOF > "script/jenkins/$docker_dir/dist/tests_run.sh"
 #!/bin/sh
-set -x
-tar -xzf $dist_path && \
-cd $dist_file_base && \
-test -f test/properties/test_sps.py && \
+set -ex
+tar -xzf $dist_path
+cd $dist_file_base
+test -f test/properties/test_sps.py
 ./script/jenkins/check_built_sdist.sh ../dist/ \
     ${version%+*} # Version without the +foo suffix
 EOF
