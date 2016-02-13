@@ -27,7 +27,7 @@ FROM        ubuntu:14.04
 MAINTAINER  MIT Probabilistic Computing Project
 
 # Setup
-RUN         apt-get update
+RUN         apt-get update # again
 RUN         apt-get install -y emacs python-pip
 RUN         pip install -U distribute
 
