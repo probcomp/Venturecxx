@@ -65,7 +65,7 @@ test -f test/properties/test_sps.py
 EOF
 chmod +x "script/jenkins/$docker_dir/dist/tests_run.sh"
 
-cat <<EOF > "script/jenkins/$docker_dir/dist/run.sh"
+cat <<'EOF' > "script/jenkins/$docker_dir/dist/run.sh"
 #!/bin/sh
 set -x
 ./dist/tests_run.sh
