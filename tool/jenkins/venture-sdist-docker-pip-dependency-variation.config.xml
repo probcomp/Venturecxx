@@ -1,11 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <project>
   <actions/>
-  <description>Test that installing Venture on a clean Ubuntu using primarily apt-get produces a configuration that passes tests.&#xd;
+  <description>Test that installing Venture on an Ubuntu system that has some nominally valid collection of our dependencies pre-installed produces a configuration that passes tests.&#xd;
 &#xd;
 Isolation mechanism: Docker container.&#xd;
 &#xd;
-To post-mortem a failure, do `docker run -it &lt;image name&gt;` The image name is derived from the build name and build number, and reported near the end of the console output. </description>
+To post-mortem a failure, do `docker run -it &lt;image name&gt;` The image name is derived from the build name and build number, and reported near the end of the console output. &#xd;
+</description>
   <keepDependencies>false</keepDependencies>
   <properties/>
   <scm class="hudson.plugins.git.GitSCM" plugin="git@2.2.6">
@@ -46,7 +47,8 @@ To post-mortem a failure, do `docker run -it &lt;image name&gt;` The image name 
     <hudson.tasks.Shell>
       <command>#!/bin/bash -xe
 
-./script/jenkins/venture-in-docker.sh debian-test-docker</command>
+./tool/minimal_deps.py &gt; low-requirements.txt
+./script/jenkins/venture-in-docker.sh pip-test-docker low-requirements.txt</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>

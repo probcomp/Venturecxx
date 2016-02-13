@@ -1,7 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <project>
   <actions/>
-  <description>Clean up nonsense that other builds leave behind in /tmp, to conserve disk space on the small partition</description>
+  <description>Clean up nonsense that other builds leave behind to conserve disk space on the small partition.&#xd;
+Nonsense includes junk in /tmp and post-mortem Docker images.</description>
   <keepDependencies>false</keepDependencies>
   <properties/>
   <scm class="hudson.scm.NullSCM"/>
@@ -20,7 +21,7 @@
       <command>#!/bin/bash -xe
 
 # Flush old temporary files
-find /tmp -maxdepth 1 -readable -atime +0 | xargs -l -I{} find {} -atime +0 -user jenkins -print -delete
+find /tmp -maxdepth 1 -readable -atime +0 | xargs -l -I{} find {} -user jenkins -atime +0 -print -delete
 # Flush old empty temporary directories
 find /tmp -maxdepth 1 -readable -atime +0 | xargs -l -I{} find {} -user jenkins -type d -empty -print -delete
 # Flush unused Docker containers, ignoring failure to remove running ones
