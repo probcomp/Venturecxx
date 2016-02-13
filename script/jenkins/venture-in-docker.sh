@@ -21,7 +21,6 @@ set -eu
 
 docker_dir=$1
 requirements_file=${2:-}
-image_tag=${BUILD_NUMBER:-0}
 
 # Compute the version that will be built (tail skips warnings setup.py emits).
 version=`python setup.py --version | tail -1`
@@ -29,7 +28,7 @@ dist_file_base="venture-$version"
 dist_file="$dist_file_base.tar.gz"
 dist_path="dist/$dist_file"
 
-image_name="venture-$docker_dir:$image_tag"
+image_name="venture-${JOB_NAME:-$docker_dir}:${BUILD_NUMBER:-0}"
 
 # Save the version in the sdist, b/c git describe will not be available.
 echo $version > VERSION
