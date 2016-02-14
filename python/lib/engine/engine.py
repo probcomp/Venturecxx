@@ -30,8 +30,8 @@ import venture.value.dicts as v
 
 class Engine(object):
 
-  def __init__(self, backend, persistent_inference_trace=True):
-    self.model = TraceSet(self, backend)
+  def __init__(self, backend, persistent_inference_trace=True, entropy=None):
+    self.model = TraceSet(self, backend, entropy)
     self.swapped_model = False
     self.directiveCounter = 0
     self.inferrer = None

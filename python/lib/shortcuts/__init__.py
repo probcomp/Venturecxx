@@ -82,28 +82,33 @@ class Backend(object):
     """Base class representing a model backend.
 
 See `Lite` and `Puma`."""
-    def trace_constructor(self): pass
-    def make_engine(self, persistent_inference_trace=True):
+    def trace_constructor(self, entropy=None): pass
+    def make_engine(self, persistent_inference_trace=True, entropy=None):
         from venture.engine import engine
-        return engine.Engine(self, persistent_inference_trace)
-    def make_core_sivm(self, persistent_inference_trace=True):
-        return sivm.CoreSivm(self.make_engine(persistent_inference_trace))
-    def make_venture_sivm(self, persistent_inference_trace=True):
-        return sivm.VentureSivm(self.make_core_sivm(persistent_inference_trace))
+        return engine.Engine(self, persistent_inference_trace, entropy)
+    def make_core_sivm(self, persistent_inference_trace=True, entropy=None):
+        return sivm.CoreSivm(self.make_engine(persistent_inference_trace,
+                             entropy))
+    def make_venture_sivm(self, persistent_inference_trace=True, entropy=None):
+        return sivm.VentureSivm(self.make_core_sivm(persistent_inference_trace,
+                                entropy))
     def make_church_prime_ripl(self, persistent_inference_trace=True, **kwargs):
-        r = ripl.Ripl(self.make_venture_sivm(persistent_inference_trace),
+        r = ripl.Ripl(self.make_venture_sivm(persistent_inference_trace,
+                                             kwargs.get('entropy', None)),
                       {"church_prime":parser.ChurchPrimeParser.instance()},
                       **kwargs)
         r.backend_name = self.name()
         return r
     def make_venture_script_ripl(self, persistent_inference_trace=True, **kwargs):
-        r = ripl.Ripl(self.make_venture_sivm(persistent_inference_trace),
+        r = ripl.Ripl(self.make_venture_sivm(persistent_inference_trace,
+                                             kwargs.get('entropy', None)),
                       {"venture_script":parser.VentureScriptParser.instance()},
                       **kwargs)
         r.backend_name = self.name()
         return r
-    def make_combined_ripl(self, persistent_inference_trace=True, **kwargs):
-        v = self.make_venture_sivm(persistent_inference_trace)
+    def make_combined_ripl(self, persistent_inference_trace=True, entropy=None,
+                           **kwargs):
+        v = self.make_venture_sivm(persistent_inference_trace, entropy)
         parser1 = parser.ChurchPrimeParser.instance()
         parser2 = parser.VentureScriptParser.instance()
         modes = {"church_prime": parser1, "venture_script": parser2}
