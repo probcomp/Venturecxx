@@ -1050,8 +1050,6 @@ include test/integration/test_venstan.py
 include test/random_values.py
 include test/README.md
 include test/timing.py
-include test/analytics/__init__.py
-include test/analytics/test_mripl.py
 include test/core/test_basics.py
 include test/core/test_mem.py
 include test/core/test_equals.py
