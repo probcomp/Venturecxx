@@ -137,6 +137,43 @@ def arg0(name):
     return isinstance(exp, list) and len(exp) > 0 and getSym(exp[0]) == name
   return applies
 
+def AssumeExpand(exp):
+    assume_exp = exp[1]["value"]
+    split_symbol = "_"
+    if assume_exp.startswith(split_symbol ) and assume_exp.endswith(split_symbol):
+	#import pdb;pdb.set_trace()
+	assert 	exp[2][0]['value']=="list", "compound assume argument is not a list"
+	assume_symbol_string = assume_exp[1:-1]
+	if assume_symbol_string.startswith(split_symbol ) and assume_symbol_string.endswith(split_symbol):
+	    pattern = ['assume', 'datum-1', 'datum-2']
+	    template = ['_assume', ['quasiquote', 'datum-1'], ['quasiquote', 'datum-2']]
+	    exp[1]['value'] = assume_symbol_string 
+	else:
+	    assume_symbols = assume_symbol_string .split(split_symbol)
+	    #import pdb;pdb.set_trace()
+	    n = len(exp[2])
+	    assert len(assume_symbols) + 1 == n, "number of symbols in compound not equal to length of list for value of compound"
+	    pattern =  ['do'] + ["assume-stmt-%i" %  i for i in range(n)]
+	    template = pattern
+	    simple_assume_statements = []
+	    for i,next_assume_symbol in  enumerate(assume_symbols):
+		simple_assume_statements.append([{'type': 'symbol', 'value': 'assume'},
+					    {'type': 'symbol','value': next_assume_symbol},
+					    {'type': 'number', 'value':exp[2][i+1]['value'] }
+					    ])
+					
+	    exp = [{'type': 'symbol', 'value': 'do'},
+			[{'type': 'symbol', 'value': 'assume'},
+			    {'type': 'symbol','value':"__"+assume_symbol_string+"__"},
+			    exp[2]
+			]   
+		    ]+ simple_assume_statements
+	    #import pdb;pdb.set_trace()
+    else:
+	pattern = ['assume', 'datum-1', 'datum-2']
+	template = ['_assume', ['quasiquote', 'datum-1'], ['quasiquote', 'datum-2']]
+    return SyntaxRule(pattern, template).expand(exp)
+
 def DoExpand(exp):
   if len(exp) == 2:
     # One statement
@@ -484,8 +521,27 @@ collectMacro = quasiquotation_macro("collect", min_size = 2, desc="""\
   or foreign inference sp.
 """)
 
-assumeMacro = quasiquotation_macro("assume",
-    min_size = 3, max_size = 4, desc="""\
+
+
+identityMacro = SyntaxRule(['identity', 'exp'], 'exp')
+lambdaMacro = SyntaxRule(['lambda', 'args', 'body'],
+                         ['make_csp', ['quote', 'args'], ['quote', 'body']],
+                         desc="""\
+.. _proc:
+.. object:: proc(<param>, ...) { <body> }
+
+  Construct a procedure.
+
+  The formal parameters must be VentureScript symbols.
+  The body must be a VentureScript expression.
+  The semantics are like `function` in JavaScript -- produces
+  an anonymous function that may read its lexical environment.
+
+  Creation of variable arity procedures is not yet supported.
+""")
+
+assumeMacro = Macro(arg0("assume"), AssumeExpand, 
+    desc="""\
 .. function:: assume(<symbol>, <model-expression>, [<label>])
 
   Programmatically add an assumption.
