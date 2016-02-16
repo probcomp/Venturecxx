@@ -80,7 +80,6 @@ include python/lib/engine/plot_spec.py
 include python/lib/engine/inference_prelude.py
 include python/lib/engine/__init__.py
 include python/lib/venturemagics/reg_demo_utils.py
-include python/lib/venturemagics/ip_parallel.py
 include python/lib/venturemagics/__init__.py
 include python/lib/multiprocess.py
 include python/lib/ripl/utils.py
