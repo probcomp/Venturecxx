@@ -162,7 +162,6 @@ packages = [
     "venture.sivm",
     "venture.test",
     "venture.value",
-    "venture.venturemagics",
 ]
 
 if ON_LINUX:
