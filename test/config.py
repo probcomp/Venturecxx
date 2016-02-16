@@ -35,8 +35,8 @@ that most models are runnable in any backend.
 
 To write a new test:
 
-- If your test should be generic across backends, use get_ripl or
-  get_mripl from this module instead of venture.shortcuts
+- If your test should be generic across backends, use get_ripl
+  from this module instead of venture.shortcuts
 
 - If not, please decorate it with @in_backend (or @gen_in_backend)
   to keep Jenkins from running it redundantly
@@ -75,7 +75,6 @@ import nose.tools as nose
 from testconfig import config
 
 import venture.shortcuts as s
-import venture.venturemagics.ip_parallel as ip_parallel
 import venture.value.dicts as v
 
 def yes_like(thing):
@@ -127,13 +126,6 @@ def get_ripl(**kwargs):
   global ct_get_ripl_called
   ct_get_ripl_called += 1
   return s.backend(config["get_ripl"]).make_combined_ripl(**kwargs)
-
-def get_mripl(no_ripls=2,local_mode=None,**kwargs):
-   # NB: there is also global "get_mripl_backend" for having special-case backend
-   # for mripl
-  backend = config["get_ripl"]
-  local_mode = config["get_mripl_local_mode"] if local_mode is None else local_mode
-  return ip_parallel.MRipl(no_ripls,backend=backend,local_mode=local_mode,**kwargs)
 
 
 def get_core_sivm():
