@@ -158,20 +158,24 @@ def AssumeExpand(exp):
 	    simple_assume_statements = []
 	    for i,next_assume_symbol in  enumerate(assume_symbols):
 		simple_assume_statements.append([{'type': 'symbol', 'value': 'assume'},
-					    {'type': 'symbol','value': next_assume_symbol},
-					    {'type': 'number', 'value':exp[2][i+1]['value'] }
+					    {'type': 'symbol','value':next_assume_symbol}] + [ 
+					    
+						[ {'type': 'symbol','value':'deref'},
+						    exp[2][i+1]
+						]			
 					    ])
-					
+	    #import pdb;pdb.set_trace()
 	    exp = [{'type': 'symbol', 'value': 'do'},
 			[{'type': 'symbol', 'value': 'assume'},
 			    {'type': 'symbol','value':"__"+assume_symbol_string+"__"},
 			    exp[2]
 			]   
-		    ]+ simple_assume_statements
+		    ] + simple_assume_statements
 	    #import pdb;pdb.set_trace()
     else:
 	pattern = ['assume', 'datum-1', 'datum-2']
 	template = ['_assume', ['quasiquote', 'datum-1'], ['quasiquote', 'datum-2']]
+	#import pdb;pdb.set_trace()
     return SyntaxRule(pattern, template).expand(exp)
 
 def DoExpand(exp):
