@@ -119,7 +119,6 @@ include python/lib/value/dicts.py
 include python/lib/value/__init__.py
 include all.cfg
 include crashes-base.cfg
-include mripl-ipy-parallel.cfg
 include lite-crashes.cfg
 include README.md
 include backend/new_cxx/trace.py
