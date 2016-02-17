@@ -20,8 +20,6 @@ from nose.tools import eq_
 import numpy as np
 import numpy.linalg as la
 
-from venture.lite.function import VentureFunction
-from venture.lite.sp import SPType
 from venture.test.config import broken_in
 from venture.test.config import collectSamples
 from venture.test.config import default_num_samples
@@ -29,40 +27,15 @@ from venture.test.config import get_ripl
 from venture.test.stats import reportKnownGaussian
 from venture.test.stats import reportKnownMean
 from venture.test.stats import statisticalTest
-import venture.lite.types as t
+import venture.lite.gp as gp
 import venture.lite.value as v
 
-def linear(x1, x2):
-  return x1 * x2
-
-def squared_exponential(a, l):
-  def f(x1, x2):
-    return a * np.exp(- la.norm((x1-x2)/l))
-  return f
-
-# input and output types for gp
-xType = t.NumberType()
-oType = t.NumberType()
-
-constantType = SPType([t.AnyType()], oType)
-def makeConstFunc(c):
-  return VentureFunction(lambda _: c, sp_type=constantType)
-
-#print ripl.predict('(app zero 1)')
-
-squaredExponentialType = SPType([xType, xType], oType)
-def makeSquaredExponential(a, l):
-  return VentureFunction(squared_exponential(a, l), sp_type=squaredExponentialType)
-
 def prep_ripl(ripl):
-  ripl.assume('app', 'apply_function')
-  ripl.assume('make_const_func', VentureFunction(makeConstFunc, [xType], constantType))
-  ripl.assume('make_squared_exponential', VentureFunction(makeSquaredExponential, [t.NumberType(), xType], t.AnyType("VentureFunction")))
-  ripl.assume('zero', "(app make_const_func 0)")
-  ripl.assume('sq_exp', "(app make_squared_exponential 1 1)")
+  ripl.assume('zero', "(gp_mean_const 0.)")
+  ripl.assume('sq_exp', "(gp_cov_se 1.)")
 
 def array(xs):
-  return v.VentureArrayUnboxed(np.array(xs), xType)
+  return v.VentureArrayUnboxed(np.array(xs), gp.xType)
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 def testGP1():
@@ -108,14 +81,11 @@ def testGPMean2():
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 def testHyperparameterInferenceSmoke():
   ripl = get_ripl()
-  fType = t.AnyType("VentureFunction")
-  ripl.assume('make_const_func', VentureFunction(makeConstFunc, [xType], constantType))
-  ripl.assume('make_squared_exponential', VentureFunction(makeSquaredExponential, [t.NumberType(), xType], fType))
   ripl.execute_program("""\
-  [assume mean (apply_function make_const_func 0)]
+  [assume mean (gp_mean_const 0.)]
   [assume a (tag (quote hypers ) 0 (inv_gamma 2 5))]
   [assume l (tag (quote hypers ) 1 (inv_gamma 5 50))]
-  [assume cov (apply_function make_squared_exponential a l)]
+  [assume cov (gp_cov_scale a (gp_cov_se (* l l)))]
   [assume gp (make_gp mean cov)]
 """)
   ripl.observe("(gp (array 1 2 3))", array([1.1, 2.2, 3.3]))

@@ -16,92 +16,17 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import numpy as np
-import numpy.linalg as la
-import numpy.random as npr
-
-def const(c):
-  def f(x1, x2):
-    return c
-  return f
-
-def delta(x1, x2):
-  return 1 if x1 == x2 else 0
-
-def linear(v, c):
-  def f(x1, x2):
-    return v * (x1-c) * (x2-c)
-  return f
-
-def squared_exponential(a, l):
-  def f(x1, x2):
-    x = (x1-x2)/l
-    return a * np.exp(- np.dot(x, x))
-  return f
-
-def lift_binary(op):
-  def lifted(f1, f2):
-    return lambda *xs: op(f1(*xs), f2(*xs))
-  return lifted
 
 from venture import shortcuts as s
-ripl = s.make_lite_church_prime_ripl()
-
-from venture.lite.function import VentureFunction
-from venture.lite.sp import SPType
+from venture.server import RiplRestServer
+import venture.lite.gp as gp
 import venture.lite.value as v
-import venture.lite.types as t
-import venture.value.dicts as d
 
-fType = t.AnyType("VentureFunction")
-
-# input and output types for gp
-xType = t.NumberType()
-oType = t.NumberType()
-kernelType = SPType([xType, xType], oType)
-
-ripl.assume('app', 'apply_function')
-
-constantType = SPType([t.AnyType()], oType)
-def makeConstFunc(c):
-  return VentureFunction(lambda _: c, sp_type=constantType)
-
-ripl.assume('make_const_func', VentureFunction(makeConstFunc, [xType], constantType))
-
-#ripl.assume('zero', "(app make_const_func 0)")
-#print ripl.predict('(app zero 1)')
-
-def makeSquaredExponential(a, l):
-  return VentureFunction(squared_exponential(a, l), sp_type=kernelType)
-
-ripl.assume('make_squared_exponential', VentureFunction(makeSquaredExponential, [t.NumberType(), xType], fType))
-
-#ripl.assume('sq_exp', '(app make_squared_exponential 1 1)')
-#print ripl.predict('(app sq_exp 0 1)')
-
-def makeLinear(v, c):
-  return VentureFunction(linear(v, c), sp_type=kernelType)
-
-ripl.assume('make_linear', VentureFunction(makeLinear, [t.NumberType(), xType], fType))
-#ripl.assume('linear', '(app make_linear 1 1)')
-#print ripl.predict('(app linear 2 3)')
-
-liftedBinaryType = SPType([t.AnyType(), t.AnyType()], t.AnyType())
-
-def makeLiftedBinary(op):
-  lifted_op = lift_binary(op)
-  def wrapped(f1, f2):
-    sp_type = f1.sp_type
-    assert(f2.sp_type == sp_type)
-    return VentureFunction(lifted_op(f1, f2), sp_type=sp_type)
-  return VentureFunction(wrapped, sp_type=liftedBinaryType)
-
-ripl.assume("func_plus", makeLiftedBinary(lambda x1, x2: x1+x2))
-#print ripl.predict('(app (app func_plus sq_exp sq_exp) 0 1)')
-ripl.assume("func_times", makeLiftedBinary(lambda x1, x2: x1*x2))
+ripl = s.make_lite_church_prime_ripl()
 
 program = """
   [assume mu (normal 0 5)]
-  [assume mean (app make_const_func mu)]
+  [assume mean (gp_mean_const mu)]
 
 ;  [assume a (inv_gamma 2 5)]
   [assume a 1]
@@ -109,23 +34,23 @@ program = """
 ;  [assume l (uniform_continuous 10 100)]
   [assume l 10]
 
-;  [assume cov (app (if (flip) func_plus func_times) (app make_squared_exponential a l) (app make_linear 1 (normal 0 10)))]
-  
+;  [assume cov ((if (flip) gp_cov_sum gp_cov_product) (gp_cov_scale a (gp_cov_se (/ (* l l) 2.))) (gp_cov_linear (normal 0 10)))]
+
 ;  [assume noise (inv_gamma 3 1)]
   [assume noise 0.1]
-  [assume noise_func (app make_squared_exponential noise 0.1)]
-  
-  [assume is_linear (flip)]
-  [assume cov 
-    (app func_plus noise_func
-      (if is_linear
-        (app make_linear 1 (normal 0 10))
-        (app make_squared_exponential a l)))]
+  [assume noise_func (gp_cov_scale noise (gp_cov_se (/ (* .1 .1) 2.)))]
 
-;  [assume cov (app make_linear a 0)]
-  
+  [assume is_linear (flip)]
+  [assume cov
+    (gp_cov_sum noise_func
+      (if is_linear
+        (gp_cov_linear (normal 0 10))
+        (gp_cov_scale a (gp_cov_se (/ (* l l) 2.)))))]
+
+;  [assume cov (gp_cov_scale a (gp_cov_linear 0))]
+
   gp : [assume gp (make_gp mean cov)]
-  
+
   [assume obs_fn (lambda (obs_id x) (gp x))]
 ;  [assume obs_fn (lambda (obs_id x) (normal x 1))]
 """
@@ -139,15 +64,12 @@ samples = [
 ]
 
 def array(xs):
-  return v.VentureArrayUnboxed(np.array(xs), xType)
+  return v.VentureArrayUnboxed(np.array(xs), gp.xType)
 
 xs, os = zip(*samples)
 
 #ripl.observe(['gp', array(xs)], array(os))
 ripl.infer("(incorporate)")
 
-from venture.server import RiplRestServer
-
 server = RiplRestServer(ripl)
-server.run(host='0.0.0.0', port=8082)
-
+server.run(host='127.0.0.1', port=8082)

@@ -47,6 +47,10 @@ def relevantSPs():
 @gen_in_backend("none")
 def testTypes():
   for (name,sp) in relevantSPs():
+    if name.startswith('gp_cov_') or name.startswith('gp_mean_'):
+      # XXX Github issue #432: typed random value generators are
+      # broken.
+      continue
     yield checkTypeCorrect, name, sp
 
 def checkTypeCorrect(_name, sp):
@@ -71,6 +75,10 @@ applied fully uncurried) match the expected types."""
 @gen_in_backend("none")
 def testDeterministic():
   for (name,sp) in relevantSPs():
+    if name.startswith('gp_cov_') or name.startswith('gp_mean_'):
+      # XXX Github issue #432: typed random value generators are
+      # broken.
+      continue
     if not sp.outputPSP.isRandom():
       yield checkDeterministic, name, sp
 
@@ -174,6 +182,10 @@ def log_density_fully_uncurried(name, sp, args_lists, value):
 @gen_in_backend("none")
 def testLogDensityDeterministic():
   for (name,sp) in relevantSPs():
+    if name.startswith('gp_cov_') or name.startswith('gp_mean_'):
+      # XXX Github issue #432: typed random value generators are
+      # broken.
+      continue
     if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart",  # TODO
                     "categorical", "make_dir_mult", "make_sym_dir_mult"]: # Only interesting when the presented value was among the inputs
       yield checkLogDensityDeterministic, name, sp
@@ -192,6 +204,10 @@ def propLogDensityDeterministic(rnd, name, sp):
 @gen_in_backend("none")
 def testFixingRandomness():
   for (name,sp) in relevantSPs():
+    if name.startswith('gp_cov_') or name.startswith('gp_mean_'):
+      # XXX Github issue #432: typed random value generators are
+      # broken.
+      continue
     yield checkFixingRandomness, name, sp
 
 def checkFixingRandomness(name, sp):

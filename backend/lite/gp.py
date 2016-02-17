@@ -17,10 +17,9 @@
 
 import copy
 import numpy as np
-import numpy.linalg as la
 import numpy.random as npr
 
-from venture.lite.exception import VentureValueError
+from venture.lite.function import VentureFunction
 from venture.lite.psp import DeterministicMakerAAAPSP
 from venture.lite.psp import NullRequestPSP
 from venture.lite.psp import RandomPSP
@@ -30,41 +29,31 @@ from venture.lite.sp import SPAux
 from venture.lite.sp import SPType
 from venture.lite.sp import VentureSPRecord
 from venture.lite.sp_help import dispatching_psp
+from venture.lite.sp_help import deterministic_typed
 from venture.lite.sp_registry import registerBuiltinSP
+import venture.lite.covariance as cov
+import venture.lite.mvnormal as mvnormal
 import venture.lite.types as t
 import venture.lite.value as v
 
-# XXX Replace by scipy.stats.multivariate_normal.logpdf when we
-# upgrade to scipy 0.14.
-def multivariate_normal_logpdf(x, mu, sigma):
-  try:
-    # dev = x - mu
-    ans = 0
-    ans += (-.5*(x-mu).transpose() * la.inv(sigma) * (x-mu))[0, 0]
-    ans += -.5*len(sigma)*np.log(2 * np.pi)
-    ans += -.5*np.log(la.det(sigma))
-    return ans
-  except la.LinAlgError:
-    raise VentureValueError("Bad GP covariance matrix.")
-
-def col_vec(xs):
-  return np.matrix([xs]).T
-
 class GP(object):
   """An immutable GP object."""
-  def __init__(self, mean, covariance, samples={}):
+  def __init__(self, mean, covariance, samples=None):
     self.mean = mean
     self.covariance = covariance
-    self.samples = samples
+    if samples is None:
+      self.samples = {}
+    else:
+      self.samples = samples
 
   def toJSON(self):
     return self.samples
 
   def mean_array(self, xs):
-    return col_vec(map(self.mean, xs))
+    return self.mean(np.asarray(xs))
 
   def cov_matrix(self, x1s, x2s):
-    return np.matrix([[self.covariance(x1, x2) for x2 in x2s] for x1 in x1s])
+    return self.covariance(np.asarray(x1s), np.asarray(x2s))
 
   def getNormal(self, xs):
     """Returns the mean and covariance matrices at a set of input points."""
@@ -77,29 +66,26 @@ class GP(object):
 
       mu1 = self.mean_array(xs)
       mu2 = self.mean_array(x2s)
-      a2 = col_vec(o2s)
 
       sigma11 = self.cov_matrix(xs, xs)
       sigma12 = self.cov_matrix(xs, x2s)
       sigma21 = self.cov_matrix(x2s, xs)
       sigma22 = self.cov_matrix(x2s, x2s)
-      inv22 = la.pinv(sigma22)
-
-      mu = mu1 + sigma12 * (inv22 * (a2 - mu2))
-      sigma = sigma11 - sigma12 * inv22 * sigma21
+      mu, sigma = mvnormal.conditional(np.array(o2s), mu1, mu2,
+          sigma11, sigma12, sigma21, sigma22)
 
     return mu, sigma
 
   def sample(self, *xs):
     """Sample at a (set of) point(s)."""
     mu, sigma = self.getNormal(xs)
-    os = npr.multivariate_normal(mu.A1, sigma)
+    os = npr.multivariate_normal(mu, sigma)
     return os
 
   def logDensity(self, xs, os):
     """Log density of a set of samples."""
     mu, sigma = self.getNormal(xs)
-    return multivariate_normal_logpdf(col_vec(os), mu, sigma)
+    return mvnormal.logpdf(np.asarray(os).reshape(len(xs),), mu, sigma)
 
   def logDensityOfCounts(self):
     """Log density of the current samples."""
@@ -112,7 +98,7 @@ class GP(object):
     mu = self.mean_array(xs)
     sigma = self.cov_matrix(xs, xs)
 
-    return multivariate_normal_logpdf(col_vec(os), mu, sigma)
+    return mvnormal.logpdf(np.asarray(os), mu, sigma)
 
 class GPOutputPSP(RandomPSP):
   def __init__(self, mean, covariance):
@@ -213,3 +199,57 @@ makeGPType = SPType([t.AnyType("mean function"), t.AnyType("covariance function"
 makeGPSP = SP(NullRequestPSP(), TypedPSP(MakeGPOutputPSP(), makeGPType))
 
 registerBuiltinSP("make_gp", makeGPSP)
+
+xType = t.NumberType("x")
+oType = t.NumberType("o")
+xsType = t.HomogeneousArrayType(xType)
+osType = t.HomogeneousArrayType(oType)
+
+meanType = SPType([xsType], osType)
+meanFunctionType = t.AnyType
+covarianceType = SPType([xsType, xsType], osType)
+covarianceFunctionType = t.AnyType
+
+def _mean_maker(f, argtypes):
+  return deterministic_typed(
+    lambda *x: VentureFunction(f(*x), sp_type=meanType),
+    argtypes, meanFunctionType("mean function"),
+    descr=f.__doc__)
+def _cov_maker(f, argtypes):
+  return deterministic_typed(
+    lambda *x: VentureFunction(f(*x), sp_type=covarianceType),
+    argtypes, covarianceFunctionType("covariance kernel"),
+    descr=f.__doc__)
+
+def mean_const(c):
+  "Constant mean function, everywhere equal to c."
+  return lambda x: c*np.ones(x.shape)
+registerBuiltinSP("gp_mean_const",
+    _mean_maker(mean_const, [t.NumberType("c")]))
+registerBuiltinSP("gp_cov_const",
+    _cov_maker(cov.const, [t.NumberType("c")]))
+registerBuiltinSP("gp_cov_delta",
+    _cov_maker(cov.delta, [t.NumberType("tolerance")]))
+registerBuiltinSP("gp_cov_se", _cov_maker(cov.se, [t.NumberType("l^2")]))
+registerBuiltinSP("gp_cov_periodic",
+    _cov_maker(cov.periodic, [t.NumberType("l^2"), t.NumberType("T")]))
+registerBuiltinSP("gp_cov_rq",
+    _cov_maker(cov.rq, [t.NumberType("l^2"), t.NumberType("alpha")]))
+registerBuiltinSP("gp_cov_matern",
+    _cov_maker(cov.matern, [t.NumberType("l^2"), t.NumberType("df")]))
+registerBuiltinSP("gp_cov_matern_32",
+    _cov_maker(cov.matern_32, [t.NumberType("l^2")]))
+registerBuiltinSP("gp_cov_matern_52",
+    _cov_maker(cov.matern_52, [t.NumberType("l^2")]))
+registerBuiltinSP("gp_cov_linear",
+    _cov_maker(cov.linear, [xType]))
+registerBuiltinSP("gp_cov_noise",
+    _cov_maker(cov.noise, [t.NumberType("n^2"), covarianceFunctionType("k")]))
+registerBuiltinSP("gp_cov_scale",
+    _cov_maker(cov.scale, [t.NumberType("s^2"), covarianceFunctionType("k")]))
+registerBuiltinSP("gp_cov_sum",
+    _cov_maker(cov.sum,
+        [covarianceFunctionType("k_a"), covarianceFunctionType("k_b")]))
+registerBuiltinSP("gp_cov_product",
+    _cov_maker(cov.product,
+        [covarianceFunctionType("k_a"), covarianceFunctionType("k_b")]))
