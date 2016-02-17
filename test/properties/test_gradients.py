@@ -103,6 +103,9 @@ def testGradientOfSimulate():
                 "tan"
     ]:
       continue
+    elif name.startswith('gp_cov_') or name.startswith('gp_mean_'):
+      # XXX No gradients yet in Gaussian processes -- Github issue #433.
+      continue
     elif name in ["div", "gamma"]:
       # Because of numerical artifacts when test arguments are near zero
       yield checkFlakyGradientOfSimulate, name, sp
