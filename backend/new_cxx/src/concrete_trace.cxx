@@ -626,6 +626,7 @@ int ConcreteTrace::numUnconstrainedChoices()
 double ConcreteTrace::logLikelihoodAt(ScopeID scope, BlockID block) {
   // TODO This is a different code path from normal infer commands
   // because it needs to return the weight
+  if (!scopeHasEntropy(scope)) { return 0; }
   boost::shared_ptr<ScaffoldIndexer> scaffoldIndexer =
     boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
   boost::shared_ptr<Scaffold> scaffold = scaffoldIndexer->sampleIndex(this);
@@ -640,6 +641,7 @@ double ConcreteTrace::logLikelihoodAt(ScopeID scope, BlockID block) {
 double ConcreteTrace::logJointAt(ScopeID scope, BlockID block) {
   // TODO This is a different code path from normal infer commands
   // because it needs to return the weight
+  if (!scopeHasEntropy(scope)) { return 0; }
   boost::shared_ptr<ScaffoldIndexer> scaffoldIndexer =
     boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
   boost::shared_ptr<Scaffold> scaffold = scaffoldIndexer->sampleIndex(this);

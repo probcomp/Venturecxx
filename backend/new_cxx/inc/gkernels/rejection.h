@@ -28,9 +28,9 @@ struct BogoPossibilizeGKernel : GKernel
 {
 
   pair<Trace*,double> propose(ConcreteTrace * trace,boost::shared_ptr<Scaffold> scaffold);
-  void accept();
-  void reject();
-  
+  int accept();
+  int reject();
+
   ConcreteTrace * trace;
   boost::shared_ptr<Scaffold> scaffold;
   boost::shared_ptr<DB> rhoDB;

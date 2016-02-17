@@ -27,8 +27,8 @@ FROM        ubuntu:14.04
 MAINTAINER  MIT Probabilistic Computing Project
 
 # Setup
-RUN         apt-get update
-RUN         apt-get install -y python-pip
+RUN         apt-get update # again
+RUN         apt-get install -y emacs python-pip
 RUN         pip install -U distribute
 
 # Puma's dependencies
@@ -48,7 +48,8 @@ RUN         echo 'backend: Agg' > ~/.matplotlib/matplotlibrc
 RUN         echo 'backend: Agg' > ~/.matplotlibrc
 
 # The caller is expected to place a built Venture source distribution
-# into the working directory.
+# into the dist/ directory, and a run.sh script that will test it.
 
 ADD         . /root/Venturecxx
 WORKDIR     /root/Venturecxx/
+RUN         ./dist/run.sh

@@ -103,9 +103,9 @@ def testEval2():
   ripl.assume("globalEnv","(get_current_environment)")
   ripl.assume("expr","""
 (quote
- (branch (bernoulli p)
-   (quote (normal 10.0 1.0))
-   (quote (normal 0.0 1.0))))
+ ((biplex (bernoulli p)
+   (lambda () (normal 10.0 1.0))
+   (lambda () (normal 0.0 1.0)))))
 """)
 
   ripl.assume("x","(eval expr globalEnv)")
@@ -125,9 +125,9 @@ def testEval3():
   ripl.assume("globalEnv","(get_current_environment)")
   ripl.assume("expr","""
 (quote
- (branch ((lambda () (bernoulli p)))
-   (quote ((lambda () (normal 10.0 1.0))))
-   (quote (normal 0.0 1.0))))
+ ((biplex ((lambda () (bernoulli p)))
+   (lambda () ((lambda () (normal 10.0 1.0))))
+   (lambda () (normal 0.0 1.0)))))
 """)
 
   ripl.assume("x","(eval expr globalEnv)")

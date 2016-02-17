@@ -73,10 +73,10 @@ def compute(nsamples, program):
   """ % (nsamples, program))
   return dataset.asPandas()
 
-def plot(name, xname, yname, style, dfs, contour_func=None, contour_delta=None,
+def plot(name, xname, yname, style, dfs, contour_func=None, contour_res=None,
     ax=None):
-  if contour_delta is None:
-    contour_delta = 0.125
+  if contour_res is None:
+    contour_res = 10
   if ax is None:
     ax = plt.gca()
   ax.set_title(name)
@@ -95,8 +95,8 @@ def plot(name, xname, yname, style, dfs, contour_func=None, contour_delta=None,
     # marginally better, without incurring a terribly substantial
     # performance hit when the function being contoured does heavy
     # numerical integration.
-    xc = np.arange(xmin - xfuzz, xmax + xfuzz, contour_delta)
-    yc = np.arange(ymin - yfuzz, ymax + yfuzz, contour_delta)
+    xc = np.linspace(xmin - xfuzz, xmax + xfuzz, contour_res)
+    yc = np.linspace(ymin - yfuzz, ymax + yfuzz, contour_res)
     XG, YG = np.meshgrid(xc, yc)
     ZG = np.vectorize(contour_func)(XG, YG)
     ax.contour(XG, YG, ZG)
@@ -107,7 +107,7 @@ def bounds(dfs, var):
   fuzz = 0.1 * max(maximum - minimum, 1.)
   return minimum - fuzz, maximum + fuzz, fuzz
 
-def doit(nsamples, nruns, plot_dir, contour_delta):
+def doit(nsamples, nruns, plot_dir, contour_res):
   overlay = [0] * len(examples) * nruns
   for i, (name, program) in enumerate(examples):
     datasets = [0] * nruns
@@ -117,14 +117,14 @@ def doit(nsamples, nruns, plot_dir, contour_delta):
       datasets[run] = (ds_name, compute(nsamples, program))
       overlay[nruns*i + run] = datasets[run]
     plot(name, "x", "y", "-o", datasets, contour_func=true_pdf,
-      contour_delta=contour_delta, ax=plt.figure().gca())
+      contour_res=contour_res, ax=plt.figure().gca())
     if plot_dir is None:
       plt.show()
     else:
       plt.savefig(os.path.join(plot_dir, name + ".png"))
       plt.clf()
   plot("overlay", "x", "y", "o", overlay, contour_func=true_pdf,
-    contour_delta=contour_delta, ax=plt.figure().gca())
+    contour_res=contour_res, ax=plt.figure().gca())
   if plot_dir is None:
     plt.show()
   else:
@@ -132,4 +132,4 @@ def doit(nsamples, nruns, plot_dir, contour_delta):
     plt.clf()
 
 if __name__ == "__main__":
-  doit(nsamples=70, nruns=3, plot_dir=None, contour_delta=0.5)
+  doit(nsamples=70, nruns=3, plot_dir=None, contour_res=10)

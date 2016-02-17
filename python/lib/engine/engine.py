@@ -268,7 +268,7 @@ class Engine(object):
       self._define_in(name, exp, next_trace)
     next_trace.sealEnvironment()
 
-  def primitive_infer(self, exp): self.model.primitive_infer(exp)
+  def primitive_infer(self, exp): return self.model.primitive_infer(exp)
   def logscore(self): return self.model.logscore()
   def logscore_all(self): return self.model.logscore_all()
   def get_entropy_info(self): return self.model.get_entropy_info()

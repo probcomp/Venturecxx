@@ -40,6 +40,7 @@ def drawScaffold(trace, indexer):
     drawScaffoldGraph(trace, G)
     import matplotlib.pyplot as plt
     plt.show()
+    return index.numAffectedNodes()
 
 def traverseScaffold(trace, scaffold):
   G = nx.DiGraph()

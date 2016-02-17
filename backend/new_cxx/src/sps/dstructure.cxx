@@ -19,6 +19,7 @@
 #include "values.h"
 #include "utils.h"
 #include "env.h" // For the request in ArrayMapRequestPSP
+#include "expressions.h" // For the request in ArrayMapRequestPSP
 #include "sp.h" // For VentureSPRef in FixRequestPSP
 #include <boost/foreach.hpp>
 #include <boost/range/combine.hpp>
@@ -197,13 +198,14 @@ VentureValuePtr ApplyRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
   VentureValuePtr optor = args->operandValues[0];
   VentureValuePtr opands = args->operandValues[1];
 
-  shared_ptr<VentureEnvironment> env = shared_ptr<VentureEnvironment>(new VentureEnvironment());
+  shared_ptr<VentureEnvironment> env =
+    shared_ptr<VentureEnvironment>(new VentureEnvironment());
 
   vector<VentureValuePtr> parts;
-  parts.push_back(optor);
+  parts.push_back(quote(optor));
   BOOST_FOREACH(VentureValuePtr opand, opands->getArray())
   {
-    parts.push_back(opand);
+    parts.push_back(quote(opand));
   }
   VentureValuePtr expression = VentureValuePtr(new VentureArray(parts));
   vector<ESR> esrs;
@@ -218,7 +220,8 @@ VentureValuePtr FixRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
 
   VentureValuePtr ids = args->operandValues[0];
   VentureValuePtr expressions = args->operandValues[1];
-  shared_ptr<VentureEnvironment> env = shared_ptr<VentureEnvironment>(new VentureEnvironment(args->env));
+  shared_ptr<VentureEnvironment> env =
+    shared_ptr<VentureEnvironment>(new VentureEnvironment(args->env));
   BOOST_FOREACH(VentureValuePtr id, ids->getArray())
   {
     env->addBinding(id->getSymbol(), NULL);
@@ -252,34 +255,37 @@ VentureValuePtr ArrayMapRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rn
   VentureValuePtr optor = args->operandValues[0];
   VentureValuePtr opands = args->operandValues[1];
 
-  shared_ptr<VentureEnvironment> env = shared_ptr<VentureEnvironment>(new VentureEnvironment());
+  shared_ptr<VentureEnvironment> env =
+    shared_ptr<VentureEnvironment>(new VentureEnvironment());
 
   vector<ESR> esrs;
   BOOST_FOREACH(VentureValuePtr opand, opands->getArray())
   {
     vector<VentureValuePtr> parts;
-    parts.push_back(optor);
-    parts.push_back(opand);
+    parts.push_back(quote(optor));
+    parts.push_back(quote(opand));
     VentureValuePtr expression = VentureValuePtr(new VentureArray(parts));
     esrs.push_back(ESR(VentureValuePtr(new VentureID()), expression, env));
   }
   return VentureValuePtr(new VentureRequest(esrs, vector<shared_ptr<LSR> >()));
 }
 
-VentureValuePtr IndexedArrayMapRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr IndexedArrayMapRequestPSP::simulate(shared_ptr<Args> args,
+                                                    gsl_rng * rng) const
 {
   VentureValuePtr optor = args->operandValues[0];
   VentureValuePtr opands = args->operandValues[1];
 
-  shared_ptr<VentureEnvironment> env = shared_ptr<VentureEnvironment>(new VentureEnvironment());
+  shared_ptr<VentureEnvironment> env =
+    shared_ptr<VentureEnvironment>(new VentureEnvironment());
 
   vector<ESR> esrs;
   BOOST_FOREACH(VentureValuePtr opand, opands->getArray())
   {
     vector<VentureValuePtr> parts;
-    parts.push_back(optor);
+    parts.push_back(quote(optor));
     parts.push_back(VentureValuePtr(new VentureNumber((double)esrs.size()))); // The index
-    parts.push_back(opand);
+    parts.push_back(quote(opand));
     VentureValuePtr expression = VentureValuePtr(new VentureArray(parts));
     esrs.push_back(ESR(VentureValuePtr(new VentureID()), expression, env));
   }

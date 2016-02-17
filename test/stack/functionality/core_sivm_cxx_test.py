@@ -64,20 +64,10 @@ class TestCoreSivm(unittest.TestCase):
             self.assertEqual(e.exception,'invalid_argument')
             self.assertEqual(e.data['argument'],'symbol')
 
-    def test_modify_value(self):
-        val = v.val('count', 1)
-        s = v.number(1)
-        self.assertEqual(module._modify_value(val),s)
-
     def test_modify_symbol(self):
         val = 'add'
         s = v.symbol('add')
         self.assertEqual(module._modify_symbol(val),s)
-
-    def test_modify_expression(self):
-        exp= ['sub', v.real(2), 'a']
-        s = [v.symbol('sub'), v.number(2), v.symbol('a')]
-        self.assertEqual(module._modify_expression(exp),s)
 
     def test_assume(self):
         inst = {

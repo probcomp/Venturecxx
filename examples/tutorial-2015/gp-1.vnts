@@ -6,7 +6,7 @@ assume mix_components = array(
 
 assume mix_weights = simplex(0.3, 0.3, 0.4);
 
-assume comp_index = tag(quote(comp_index), 0, categorical(mix_weights));
+assume comp_index = tag(quote(comp_index), 0, categorical(mix_weights, list(0,1,2)));
 assume mix_f = lookup(mix_components, comp_index);
 
 sample mix_f()

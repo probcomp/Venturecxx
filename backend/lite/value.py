@@ -314,9 +314,7 @@ class VentureAtom(VentureValue):
     assert isinstance(atom, Number)
     self.atom = atom
   def __repr__(self): return "Atom(%s)" % self.atom
-  def getNumber(self): return self.atom
   def getAtom(self): return self.atom
-  def getBool(self): return self.atom
   def asStackDict(self, _trace=None): return v.atom(self.atom)
   @staticmethod
   def fromStackDict(thing): return VentureAtom(thing["value"])

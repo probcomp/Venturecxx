@@ -339,7 +339,7 @@ class Semantics(object):
         t0, start, end = t
         assert t0[-1] == '<'
         t0 = t0[:-1]
-        if t0 == 'number' or t0 == 'boolean':
+        if t0 == 'boolean':
             # XXX Accumulate parse error.
             raise VentureException('text_parse',
                 ('JSON not allowed for %s' % (t0,)),

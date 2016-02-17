@@ -11,12 +11,13 @@ Summary::
     report directive_id
     force expression = value
     sample expression
-    infer expression
-    stop_continuous_inference
-    continuous_inference_status
+    infer loop(expression)
+    endloop
     define symbol = expression
+    load filename
     clear
     list_directives
+    ci_status
 
 Directives
 ----------
@@ -166,6 +167,11 @@ Definitions
 
 Miscellaneous Instructions
 --------------------------
+
+- `load pathname`: execute the given VentureScript program.
+
+  If relative, the path is resolved relative to the current working
+  directory.
 
 - `clear`: reset VentureScript to an empty state.
 

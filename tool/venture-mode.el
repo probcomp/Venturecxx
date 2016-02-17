@@ -137,7 +137,7 @@ See `run-hooks'."
             (regexp-opt
              '(;; model SP's
                "add" "apply" "apply_function" "arange" "array" "assess" "atan2"
-               "atom_eq" "bernoulli" "beta" "binomial" "biplex" "branch" "categorical"
+               "atom_eq" "bernoulli" "beta" "binomial" "biplex" "categorical"
                "contains" "cos" "debug" "diag_matrix" "dict" "dirichlet" "div" "eq"
                "eval" "exactly" "exp" "expon" "extend_environment" "fill" "first"
                "fix" "flip" "floor" "gamma" "get_current_environment"
@@ -155,7 +155,7 @@ See `run-hooks'."
                "size" "sqrt" "student_t" "sub" "symmetric_dirichlet" "tag" "tag_exclude"
                "take" "tan" "to_array" "to_list" "to_vector" "transpose" "uniform_continuous"
                "uniform_discrete" "value_error" "vector" "vector_add" "vector_dot"
-               "vector_times_matrix" "vonmises" "wishart" "xor" "zip" 
+               "vector_times_matrix" "vonmises" "wishart" "xor" "zip"
                ;; inference SP's
                "assert" "bogo_possibilize" "collapse_equal" "collapse_equal_map" "detach"
                "detach_for_proposal" "draw_scaffold" "draw_subproblem" "emap" "empty"
@@ -174,7 +174,7 @@ See `run-hooks'."
                "accumulate_dataset" "action" "bind" "bind_" "curry" "curry3"
                "default_markov_chain" "for_each" "for_each_indexed" "global_log_likelihood"
                "global_log_joint" "imapM" "iterate" "join_datasets" "mapM" "pass" "conditional"
-               "repeat" "reset_to_prior" "return" "run" "sequence" "sequence_" 
+               "repeat" "reset_to_prior" "return" "run" "sequence" "sequence_"
                ;; inference callbacks
                "timer_pause" "timer_resume" "timer_start" "timer_time") t)
             "\\>")

@@ -6,7 +6,6 @@ Third-party software:
 - silva_mvn.h silva_mvn.cxx
 - auto-compilation.scm
 - match.scm
-- test/venturemagics/nb_tester.py (from the Internet)
 - Solution for the copyright processing tool itself: Exclude it from
   the release.  Then it doesn't matter that it's third-party.
 - demos/jsripl/vendor

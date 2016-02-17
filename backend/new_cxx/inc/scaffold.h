@@ -50,7 +50,7 @@ struct Scaffold
     lkernels(lkernels),
     brush(brush)
           {}
-  
+
 
   set<Node *> getPrincipalNodes();
   Node * getPrincipalNode();
@@ -63,6 +63,7 @@ struct Scaffold
   bool hasLKernel(Node * node);
   void registerLKernel(Node * node,boost::shared_ptr<LKernel> lkernel);
   boost::shared_ptr<LKernel> getLKernel(Node * node);
+  int numAffectedNodes();
   string showSizes();
 
 

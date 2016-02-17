@@ -94,7 +94,7 @@ class Trace(object):
     return ret
 
   def primitive_infer(self, exp):
-    self.trace.primitive_infer(_expToDict(exp))
+    return self.trace.primitive_infer(_expToDict(exp))
 
   def log_likelihood_at(self, scope, block):
     return self.trace.log_likelihood_at(_ensure_stack_dict(scope),

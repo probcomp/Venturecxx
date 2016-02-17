@@ -186,11 +186,11 @@ class CoreSivm(object):
         return old_state
 
 ###############################
-# Input modification functions
-# ----------------------------
-# These exist to bridge the gap
-# between the cxx and the stack
+# Input modification
 ###############################
+
+# Convert any bare basestrings to stack dicts (symbols)
+# Convert all symbol names to Python strings from unicode
 
 def _modify_expression(expression):
     if isinstance(expression, basestring):
@@ -202,29 +202,14 @@ def _modify_expression(expression):
     return expression
 
 def _modify_value(ob):
-    if ob['type'] in {'count', 'real'}:
-        ans = copy.copy(ob)
-        ans['type'] = 'number'
-        return ans
-    elif ob['type'] == 'atom':
-        ans = copy.copy(ob)
-        ans['value'] = int(ob['value'])
-        return ans
-    elif ob['type'] == 'symbol':
+    if ob['type'] == 'symbol':
         # Unicode hack for the same reason as in _modify_symbol
         ans = copy.copy(ob)
         ans['value'] = str(ob['value'])
         return ans
     return ob
 
-_symbol_map = {}
-
-for symbol in ["lt", "gt", "lte", "gte"]:
-    _symbol_map["int_" + symbol] = symbol
-
 def _modify_symbol(s):
-    if s in _symbol_map:
-        s = _symbol_map[s]
     # NOTE: need to str() b/c unicode might come via REST,
     #       which the boost python wrappings can't convert
     return v.symbol(str(s))
