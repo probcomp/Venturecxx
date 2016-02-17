@@ -200,8 +200,8 @@ makeGPSP = SP(NullRequestPSP(), TypedPSP(MakeGPOutputPSP(), makeGPType))
 
 registerBuiltinSP("make_gp", makeGPSP)
 
-xType = t.NumberType()
-oType = t.NumberType()
+xType = t.NumberType("x")
+oType = t.NumberType("o")
 xsType = t.HomogeneousArrayType(xType)
 osType = t.HomogeneousArrayType(oType)
 
