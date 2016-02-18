@@ -108,7 +108,7 @@ fully uncurried)."""
       raise SkipTest("Putatively deterministic sp %s returned a requesting SP" % name)
   else:
     for _ in range(5):
-      assert_almost_equal(answer, carefully(sp.outputPSP.simulate, args), places = 10)
+      eq_(answer, carefully(sp.outputPSP.simulate, args))
 
 @gen_in_backend("none")
 def testRandom():
