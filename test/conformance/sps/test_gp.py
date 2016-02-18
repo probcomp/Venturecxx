@@ -29,6 +29,7 @@ from venture.test.config import get_ripl
 from venture.test.config import in_backend
 from venture.test.stats import reportKnownGaussian
 from venture.test.stats import reportKnownMean
+from venture.test.stats import reportPearsonIndependence
 from venture.test.stats import statisticalTest
 import venture.lite.covariance as cov
 import venture.lite.gp as gp
@@ -175,3 +176,26 @@ def testOneSample():
   samples = np.array([gp_class.sample([test_input])[0] for _ in xrange(n)])
   assert samples.shape == (n,)
   return reportKnownGaussian(expect_mu, np.sqrt(expect_sig), samples)
+
+@in_backend('none')
+@statisticalTest
+def testTwoSamples_low_covariance():
+  obs_inputs  = np.array([1.3, -2.0, 0.0])
+  obs_outputs = np.array([5.0,  2.3, 8.0])
+  in_lo_cov = np.array([1.4, -20.0])
+  sigma = 2.1
+  l = 1.8
+  observations = OrderedDict(zip(obs_inputs, obs_outputs))
+
+  mean = gp.mean_const(0.)
+  covariance = cov.scale(sigma**2, cov.se(l**2))
+  gp_class = gp.GP(mean, covariance, observations)
+
+  n = 200
+  lo_cov_x = []
+  lo_cov_y = []
+  for i in range(n):
+    x, y = gp_class.sample(in_lo_cov)
+    lo_cov_x.append(x)
+    lo_cov_y.append(y)
+  return reportPearsonIndependence(lo_cov_x, lo_cov_y)
