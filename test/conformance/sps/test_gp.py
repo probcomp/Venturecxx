@@ -153,11 +153,13 @@ def testNormalParameters():
   np.testing.assert_almost_equal(actual_sig, expect_sig, decimal=4)
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
+@statisticalTest
 def testOneSample():
   obs_inputs  = np.array([1.3, -2.0, 0.0])
   obs_outputs = np.array([5.0,  2.3, 8.0])
   test_input = 1.4
   expect_mu = 4.6307
+  expect_sig = 0.0027
   sigma = 2.1
   l = 1.8
   observations = OrderedDict(zip(obs_inputs, obs_outputs))
@@ -171,13 +173,4 @@ def testOneSample():
   n = 200
   samples = np.array([gp_class.sample([test_input])[0] for _ in xrange(n)])
   assert samples.shape == (n,)
-  test_result, p_value = stats.ttest_1samp(samples, expect_mu)
-  assert p_value >= 0.05
-  test_result, p_value = stats.ttest_1samp(samples, 0)
-  assert p_value < 0.05
-  test_result, p_value = \
-    stats.ttest_1samp(np.random.uniform(0, 1, n), expect_mu)
-  assert p_value < 0.05
-  # Sanity check.
-  test_result, p_value = stats.ttest_1samp(np.random.normal(10, 1, n), n)
-  assert p_value < 0.05
+  return reportKnownGaussian(expect_mu, expect_sig, samples)
