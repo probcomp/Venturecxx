@@ -42,18 +42,21 @@ class Infer(object):
 
   @staticmethod
   def _format_filenames(filenames,spec):
-    if isinstance(filenames, basestring) or isinstance(filenames, VentureString):
+    if isinstance(filenames, basestring) or \
+       isinstance(filenames, VentureString):
       if isinstance(filenames, VentureString):
         filenames = filenames.getString()
       if isinstance(spec, basestring) or isinstance(spec, VentureString):
         return [filenames + '.png']
       else:
-        raise VentureValueError('The number of specs must match the number of filenames.')
+        raise VentureValueError(
+          'The number of specs must match the number of filenames.')
     else:
       if isinstance(spec, list) and len(spec) == len(filenames):
         return [filename + '.png' for filename in filenames]
       else:
-        raise VentureValueError('The number of specs must match the number of filenames.')
+        raise VentureValueError(
+          'The number of specs must match the number of filenames.')
 
   def default_name_for_exp(self,exp):
     if isinstance(exp, basestring):
@@ -64,7 +67,8 @@ class Infer(object):
       return str(exp)
 
   def default_names_from_exprs(self, exprs):
-    return [self.default_name_for_exp(ExpressionType().asPython(e)) for e in exprs]
+    return [self.default_name_for_exp(ExpressionType().asPython(e))
+            for e in exprs]
 
   def parse_exprs(self, exprs, command):
     names = []
@@ -77,16 +81,17 @@ class Infer(object):
 
   def parse_expr(self, expr, command):
     special_names = [VentureSymbol(x) for x in ['iter', 'time', 'score']]
-    if (type(expr) is VentureArray and
+    if (isinstance(expr, VentureArray) and
         expr.lookup(VentureInteger(0)) == VentureSymbol('labelled')):
-      # the first element is the command, the second is the label for the command
+      # The first element is the command, the second is the label for
+      # the command
       stack_dict = expr.lookup(VentureInteger(1)).asStackDict()
       name = expr.lookup(VentureInteger(2)).symbol
     elif command == 'printf' and expr in special_names:
       name = expr.getSymbol()
       stack_dict = None
     else:
-      # generate the default name, get the stack dict
+      # Generate the default name, get the stack dict
       stack_dict = expr.asStackDict()
       name = self.default_name_for_exp(ExpressionType().asPython(expr))
     return name, stack_dict
@@ -98,20 +103,28 @@ class Infer(object):
       return item
 
   def primitive_infer(self, exp): return self.engine.primitive_infer(exp)
+
   def resample(self, ct): self.engine.resample(ct, 'sequential')
   def resample_serializing(self, ct): self.engine.resample(ct, 'serializing')
   def resample_threaded(self, ct): self.engine.resample(ct, 'threaded')
   def resample_thread_ser(self, ct): self.engine.resample(ct, 'thread_ser')
-  def resample_multiprocess(self, ct, process_cap = None): self.engine.resample(ct, 'multiprocess', process_cap)
+  def resample_multiprocess(self, ct, process_cap = None):
+    self.engine.resample(ct, 'multiprocess', process_cap)
+
   def likelihood_weight(self): self.engine.likelihood_weight()
   def log_likelihood_at(self, scope, block):
     return self.engine.model.traces.map('log_likelihood_at', scope, block)
   def log_joint_at(self, scope, block):
     return self.engine.model.traces.map('log_joint_at', scope, block)
-  def enumerative_diversify(self, scope, block): self.engine.diversify(["enumerative", scope, block])
+
+  def enumerative_diversify(self, scope, block):
+    self.engine.diversify(["enumerative", scope, block])
   def collapse_equal(self, scope, block): self.engine.collapse(scope, block)
-  def collapse_equal_map(self, scope, block): self.engine.collapse_map(scope, block)
+  def collapse_equal_map(self, scope, block):
+    self.engine.collapse_map(scope, block)
+
   def incorporate(self): self.engine.incorporate()
+
   def printf(self, dataset): print dataset.asPandas()
   def plotf(self, spec, dataset):
     spec = ExpressionType().asPython(spec)
@@ -119,9 +132,11 @@ class Infer(object):
   def plotf_to_file(self, basenames, spec, dataset):
     filenames = ExpressionType().asPython(basenames)
     spec = ExpressionType().asPython(spec)
-    PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names, self._format_filenames(filenames, spec))
+    PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names,
+                        self._format_filenames(filenames, spec))
   def sweep(self, dataset):
     print 'Iteration count: ' + str(dataset.asPandas()['iter'].values[-1])
+
   def call_back(self, name, *exprs):
     name = SymbolType().asPython(name)
     if name not in self.engine.callbacks:
@@ -134,6 +149,7 @@ class Infer(object):
       info = sys.exc_info()
       raise VentureCallbackError(e), None, info[2]
     return self.convert_none(ans)
+
   def collect(self, *exprs):
     names, stack_dicts = self.parse_exprs(exprs, None)
     answer = {} # Map from column name to list of values; the values
@@ -145,7 +161,9 @@ class Infer(object):
       answer['iter'] = [1] * engine.num_traces()
       answer['prt. id'] = range(engine.num_traces())
       answer['time (s)'] = [the_time] * engine.num_traces()
-      answer['log score'] = engine.logscore_all() # TODO Replace this by explicit references to (global_log_likelihood), because the current implementation is wrong
+      # TODO Replace this by explicit references to
+      # (global_log_likelihood), because the current implementation is wrong
+      answer['log score'] = engine.logscore_all()
       log_weights = copy(engine.model.log_weights)
       answer['prt. log wgt.'] = log_weights
       answer['prt. prob.'] = logWeightsToNormalizedDirect(log_weights)
@@ -166,7 +184,8 @@ class Infer(object):
   def sample(self, exp):
     return VentureValue.fromStackDict(self.engine.sample(exp.asStackDict()))
   def sample_all(self, exp):
-    return [VentureValue.fromStackDict(val) for val in self.engine.sample_all(exp.asStackDict())]
+    return [VentureValue.fromStackDict(val)
+            for val in self.engine.sample_all(exp.asStackDict())]
   def extract_stats(self, exp):
     sp_dict = self.engine.sample(exp.asStackDict())
     return VentureValue.fromStackDict(sp_dict["aux"])
@@ -180,7 +199,8 @@ class Infer(object):
     self.engine.model.log_weights = log_domain_even_out(old)
     return old
   def set_particle_log_weights(self, new_weights):
-    assert len(new_weights) == len(self.engine.model.log_weights), "set_particle_log_weights got %d weights, but there are %d particles"
+    assert len(new_weights) == len(self.engine.model.log_weights), \
+      "set_particle_log_weights got %d weights, but there are %d particles"
     self.engine.model.log_weights = new_weights
   def particle_normalized_probs(self):
     return logWeightsToNormalizedDirect(self.particle_log_weights())
@@ -212,25 +232,33 @@ class Infer(object):
     self.engine.ripl.load(filename)
 
   def select(self, scope, block):
-    assert len(self.engine.model.log_weights) == 1, "Custom subproblems only supported for one trace at a time"
+    assert len(self.engine.model.log_weights) == 1, \
+      "Custom subproblems only supported for one trace at a time"
     return self.engine.model.traces.at(0, 'select', scope, block)
   def detach(self, scaffold):
-    assert len(self.engine.model.log_weights) == 1, "Custom proposals only supported for one trace at a time"
+    assert len(self.engine.model.log_weights) == 1, \
+      "Custom proposals only supported for one trace at a time"
     return self.engine.model.traces.at(0, 'just_detach', scaffold)
   def regen(self, scaffold):
-    assert len(self.engine.model.log_weights) == 1, "Custom proposals only supported for one trace at a time"
+    assert len(self.engine.model.log_weights) == 1, \
+      "Custom proposals only supported for one trace at a time"
     return self.engine.model.traces.at(0, 'just_regen', scaffold)
   def restore(self, scaffold, rhoDB):
-    assert len(self.engine.model.log_weights) == 1, "Custom proposals only supported for one trace at a time"
+    assert len(self.engine.model.log_weights) == 1, \
+      "Custom proposals only supported for one trace at a time"
     return self.engine.model.traces.at(0, 'just_restore', scaffold, rhoDB)
   def detach_for_proposal(self, scaffold):
-    assert len(self.engine.model.log_weights) == 1, "Custom proposals only supported for one trace at a time"
+    assert len(self.engine.model.log_weights) == 1, \
+      "Custom proposals only supported for one trace at a time"
     return self.engine.model.traces.at(0, 'detach_for_proposal', scaffold)
   def regen_with_proposal(self, scaffold, values):
-    assert len(self.engine.model.log_weights) == 1, "Custom proposals only supported for one trace at a time"
-    return self.engine.model.traces.at(0, 'regen_with_proposal', scaffold, values)
+    assert len(self.engine.model.log_weights) == 1, \
+      "Custom proposals only supported for one trace at a time"
+    return self.engine.model.traces.at(
+      0, 'regen_with_proposal', scaffold, values)
   def get_current_values(self, scaffold):
-    assert len(self.engine.model.log_weights) == 1, "Custom proposals only supported for one trace at a time"
+    assert len(self.engine.model.log_weights) == 1, \
+      "Custom proposals only supported for one trace at a time"
     return self.engine.model.traces.at(0, 'get_current_values', scaffold)
 
   def pyexec(self, code):
@@ -272,7 +300,8 @@ Dataset which is the result of the merge. """
     return Dataset(self.ind_names, self.std_names, answer)
 
   def merge_bang(self, other):
-    "Imperative merge of two datasets.  Returns self after merging other into it."
+    """Imperative merge of two datasets.  Returns self after merging other
+into it."""
     if other.ind_names is None:
       return self
     if self.ind_names is None:
@@ -289,13 +318,16 @@ Dataset which is the result of the merge. """
     return self
 
   def _check_compat(self, other):
-    if not self.ind_names == other.ind_names:
-      raise Exception("Cannot merge datasets with different contents %s %s" % (self.ind_names, other.ind_names))
-    if not self.std_names == other.std_names:
-      raise Exception("Cannot merge datasets with different contents %s %s" % (self.std_names, other.std_names))
+    if self.ind_names != other.ind_names:
+      raise Exception("Cannot merge datasets with different contents %s %s"
+                      % (self.ind_names, other.ind_names))
+    if self.std_names != other.std_names:
+      raise Exception("Cannot merge datasets with different contents %s %s"
+                      % (self.std_names, other.std_names))
 
   def asPandas(self):
-    """Return a freshly allocated Pandas DataFrame containing the data in this Dataset."""
+    """Return a freshly allocated Pandas DataFrame containing the data in
+this Dataset."""
     ds = DataFrame.from_dict(strip_types_from_dict_values(self.data))
     order = self.std_names + self.ind_names
     return ds[order]

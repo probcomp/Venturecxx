@@ -1,0 +1,35 @@
+;;; Copyright (c) 2014 MIT Probabilistic Computing Project.
+;;;
+;;; This file is part of Venture.
+;;;
+;;; Venture is free software: you can redistribute it and/or modify
+;;; it under the terms of the GNU General Public License as published by
+;;; the Free Software Foundation, either version 3 of the License, or
+;;; (at your option) any later version.
+;;;
+;;; Venture is distributed in the hope that it will be useful,
+;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;; GNU General Public License for more details.
+;;;
+;;; You should have received a copy of the GNU General Public License
+;;; along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
+[assume w0 (mem (lambda (p) (normal 0 3)))]
+[assume w1 (mem (lambda (p) (normal 0 1)))]
+[assume w2 (mem (lambda (p) (normal 0 .3)))]
+[assume noise (mem (lambda (p) (gamma 2 1)))]
+[assume pivot (normal 0 5)]
+[assume p (lambda (x) (if (< x pivot) false true))]
+
+[assume f (lambda (x)
+             ((lambda (p) (+ (w0 p) (* (w1 p) x) (* (w2 p) (* x x))))
+              (p x)))]
+
+[assume noise_p (lambda (fx x) (normal fx (noise (p x))))]
+
+[assume y_x (lambda (x) (noise_p (f x) x))]
+
+[assume y (mem (lambda (i) (y_x (x i))))]
+
+[assume model_name (quote pivot)]

@@ -79,9 +79,6 @@ include python/lib/engine/trace_set.py
 include python/lib/engine/plot_spec.py
 include python/lib/engine/inference_prelude.py
 include python/lib/engine/__init__.py
-include python/lib/venturemagics/reg_demo_utils.py
-include python/lib/venturemagics/ip_parallel.py
-include python/lib/venturemagics/__init__.py
 include python/lib/multiprocess.py
 include python/lib/ripl/utils.py
 include python/lib/ripl/ripl_rest_client.py
@@ -119,7 +116,6 @@ include python/lib/value/dicts.py
 include python/lib/value/__init__.py
 include all.cfg
 include crashes-base.cfg
-include mripl-ipy-parallel.cfg
 include lite-crashes.cfg
 include README.md
 include backend/new_cxx/trace.py
@@ -843,6 +839,14 @@ include examples/notebooks/subsampled_mh_utils.py
 include examples/plotting/bimodal.vnt
 include examples/plotting/dice_plot.vnt
 include examples/plotting/normal_plot.vnt
+include examples/regression_models/crp2.vnt
+include examples/regression_models/crp.vnt
+include examples/regression_models/hi_quadratic.vnt
+include examples/regression_models/logistic.vnt
+include examples/regression_models/pivot.vnt
+include examples/regression_models/quad_fourier.vnt
+include examples/regression_models/simple_fourier.vnt
+include examples/regression_models/simple_quadratic.vnt
 include examples/trickiness-concrete-2.vnts
 include examples/trickiness-concrete.vnts
 include examples/hmm.vnt
@@ -1050,8 +1054,6 @@ include test/integration/test_venstan.py
 include test/random_values.py
 include test/README.md
 include test/timing.py
-include test/analytics/__init__.py
-include test/analytics/test_mripl.py
 include test/core/test_basics.py
 include test/core/test_mem.py
 include test/core/test_equals.py

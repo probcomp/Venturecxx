@@ -37,7 +37,7 @@ RUN         apt-get install -y libboost-all-dev libgsl0-dev ccache
 # (Some?) Python dependencies that are available from Debian with
 # reasonable versions
 RUN         apt-get install -y python-flask python-requests python-numpy \
-              python-matplotlib python-scipy python-zmq ipython ipython-notebook
+              python-matplotlib python-scipy
 
 RUN         mkdir -p ~/.config/matplotlib
 RUN         echo 'backend: Agg' > ~/.config/matplotlib/matplotlibrc

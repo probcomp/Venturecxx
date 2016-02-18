@@ -64,8 +64,11 @@ To run the Docker-based builds, the docker.io package needs to be
 installed, and the jenkins user needs to be a member of group
 'docker'.  (And the server may need to be restarted once this is so.)
 TODO: Automate this.
-- It may also be appropriate to make sure Docker keeps its images and
-  containers on /scratch.
+
+It is also appropriate to make sure Docker keeps its images and
+containers on /scratch.  This can be arranged by a similar device
+of symlinking /scratch/docker to /var/lib/docker .  One caveat:
+/var/lib/docker/aufs may need to be unmounted if it is in use.
 '''
 
 #### General helpers
