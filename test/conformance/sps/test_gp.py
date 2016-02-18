@@ -154,8 +154,8 @@ def testNormalParameters():
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 def testOneSample():
-  obs_inputs = np.array([1.3, -2, 0])
-  obs_outputs = np.array([5, 2.3, 8])
+  obs_inputs  = np.array([1.3, -2.0, 0.0])
+  obs_outputs = np.array([5.0,  2.3, 8.0])
   test_input = 1.4
   expect_mu = 4.6307
   sigma = 2.1
