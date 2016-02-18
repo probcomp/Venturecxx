@@ -143,25 +143,3 @@ def test_compound_assume_inf():
 
 
 
-def simple():
-
-    smoke_prog = """
-
-    [assume a_ref (ref (uniform_discrete 2 3))]
-    [assume b_ref (ref (uniform_discrete 3 4))]
-    
-    [assume l (list a_ref b_ref)]
-    [assume _c_d_ l]
-
-    """
-    ripl = init_ripl(venChurch=True)
-    ripl.execute_program(smoke_prog)
-
-    assert ripl.sample("c") == 2, "compound assume does not work, first component, symbol instead of list"
-    assert ripl.sample("d") == 3, "compound assume does not work, second component"
-   
-
-simple() 
-test_compound_assume_smoke()
-test_compound_assume_observations()
-test_compound_assume_inf()
