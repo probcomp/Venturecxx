@@ -39,7 +39,12 @@ See the "Types" section of doc/type-system.md."""
       # Function will be added by inheritance pylint:disable=no-member
       return self.asPython(vthing)
   def distribution(self, base, **kwargs):
-    return base(self.name()[1:-1], **kwargs) # Strip the angle brackets
+    name = self.name()
+    if len(name) >= 2 and name[0] == "<" and name[-1] == ">":
+      return base(name[1:-1], **kwargs) # Strip the angle brackets
+    else:
+      raise Exception(
+        "Please implement an explicit 'distribution' method for type %s" % name)
   def __eq__(self, other):
     return type(self) == type(other)
 
@@ -83,6 +88,8 @@ class NumberType(VentureType):
   def asPython(self, vthing): return vthing.getNumber()
   def __contains__(self, vthing): return isinstance(vthing, vv.VentureNumber)
   def name(self): return self._name or "<number>"
+  def distribution(self, base, **kwargs):
+    return base("number", **kwargs)
 
 def standard_venture_type(typename, gradient_typename=None, value_classname=None):
   if gradient_typename is None:
@@ -97,9 +104,10 @@ class %sType(VentureType):
   def asPython(self, vthing): return vthing.get%s()
   def __contains__(self, vthing): return isinstance(vthing, %s)
   def name(self): return self._name or "<%s>"
+  def distribution(self, base, **kwargs): return base("%s", **kwargs)
   def gradient_type(self): return %sType()
 """ % (typename, value_classname, typename, value_classname, typename.lower(),
-       gradient_typename)
+       typename.lower(), gradient_typename)
 
 for typename in ["Integer", "Atom", "Bool", "Symbol", "String", "ForeignBlob"]:
   # Exec is appropriate for metaprogramming, but indeed should not be
@@ -134,6 +142,8 @@ class CountType(VentureType):
   def __contains__(self, vthing):
     return isinstance(vthing, vv.VentureInteger) and vthing.getInteger() >= 0
   def name(self): return self._name or "<count>"
+  def distribution(self, base, **kwargs):
+    return base("count", **kwargs)
 
 class PositiveType(VentureType):
   def __init__(self, name=None):
@@ -151,6 +161,8 @@ class PositiveType(VentureType):
   def __contains__(self, vthing):
     return isinstance(vthing, vv.VentureNumber) and vthing.getNumber() > 0
   def name(self): return self._name or "<positive>"
+  def distribution(self, base, **kwargs):
+    return base("positive", **kwargs)
   def gradient_type(self): return NumberType()
 
 class NilType(VentureType):
@@ -216,6 +228,8 @@ data List = Nil | Pair Any List
     return isinstance(vthing, vv.VentureNil) \
       or (isinstance(vthing, vv.VenturePair) and vthing.rest in self)
   def name(self): return self._name or "<list>"
+  def distribution(self, base, **kwargs):
+    return base("list", **kwargs)
 
 class HomogeneousListType(VentureType):
   """Type objects for homogeneous lists.  Right now, the homogeneity
@@ -365,6 +379,8 @@ data Expression = Bool | Number | Integer | Atom | Symbol | Array Expression
     return thing
 
   def name(self): return self._name or "<exp>"
+  def distribution(self, base, **kwargs):
+    return base("exp", **kwargs)
 
 class HomogeneousDictType(VentureType):
   """Type objects for homogeneous dicts.  Right now, the homogeneity
@@ -460,6 +476,8 @@ types like BoolType."""
     assert thing == 0
     return thing
   def name(self): return self._name or "<zero>"
+  def distribution(self, base, **kwargs):
+    return base("zero", **kwargs)
 
 ## Smart constructors
 ## The idea is to enable a (relatively) convenient embedded DSL for specifying Venture types.
