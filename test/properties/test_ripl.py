@@ -145,8 +145,8 @@ def testForeignInterfaceSimulate():
     ]:
       continue
     if name.startswith('gp_cov_') or name.startswith('gp_mean_'):
-      # XXX Github issue #432: typed random value generators are
-      # broken.
+      # XXX Can't compare equivalent functions for equality without
+      # false negatives.
       continue
     if not sp.outputPSP.isRandom():
       yield checkForeignInterfaceAgreesWithDeterministicSimulate, name, sp
