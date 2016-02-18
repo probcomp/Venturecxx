@@ -26,6 +26,7 @@ from venture.test.config import broken_in
 from venture.test.config import collectSamples
 from venture.test.config import default_num_samples
 from venture.test.config import get_ripl
+from venture.test.config import in_backend
 from venture.test.stats import reportKnownGaussian
 from venture.test.stats import reportKnownMean
 from venture.test.stats import statisticalTest
