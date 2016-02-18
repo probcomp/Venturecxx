@@ -79,8 +79,8 @@ class GP(object):
 
     return mu, sigma
 
-  def sample(self, *xs):
-    """Sample at a (set of) point(s)."""
+  def sample(self, xs):
+    """Sample at each of an array of points."""
     mu, sigma = self.getNormal(xs)
     os = npr.multivariate_normal(mu, sigma)
     return os
@@ -114,7 +114,7 @@ class GPOutputPSP(RandomPSP):
   def simulate(self,args):
     samples = args.spaux().samples
     xs = args.operandValues()[0]
-    return self.makeGP(samples).sample(*xs)
+    return self.makeGP(samples).sample(xs)
 
   def logDensity(self,os,args):
     samples = args.spaux().samples
@@ -143,7 +143,7 @@ class GPOutputPSP1(GPOutputPSP):
   def simulate(self,args):
     samples = args.spaux().samples
     x = args.operandValues()[0]
-    return self.makeGP(samples).sample(x)[0]
+    return self.makeGP(samples).sample(np.array([x]))[0]
 
   def logDensity(self,o,args):
     samples = args.spaux().samples

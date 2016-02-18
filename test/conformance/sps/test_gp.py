@@ -169,7 +169,8 @@ def testOneSample():
   # gp_class.sample(test_input) should be normally distributed with
   # mean expect_mu.
   n = 200
-  samples = [gp_class.sample(test_input) for _ in xrange(n)]
+  samples = np.array([gp_class.sample([test_input])[0] for _ in xrange(n)])
+  assert samples.shape == (n,)
   test_result, p_value = stats.ttest_1samp(samples, expect_mu)
   assert p_value >= 0.05
   test_result, p_value = stats.ttest_1samp(samples, 0)
