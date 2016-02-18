@@ -134,7 +134,7 @@ def testGPAux():
   ripl.forget('obs')
   check_firsts(ripl.infer('(extract_stats gp)'), {1.0, 3.0})
 
-@broken_in('puma', "Puma does not define the gaussian process builtins")
+@in_backend('none')
 def testNormalParameters():
   obs_inputs = np.array([1.3, -2.0, 0.0])
   obs_outputs = np.array([5.0, 2.3, 8.0])
@@ -152,7 +152,7 @@ def testNormalParameters():
   np.testing.assert_almost_equal(actual_mu, expect_mu, decimal=4)
   np.testing.assert_almost_equal(actual_sig, expect_sig, decimal=4)
 
-@broken_in('puma', "Puma does not define the gaussian process builtins")
+@in_backend('none')
 @statisticalTest
 def testOneSample():
   obs_inputs  = np.array([1.3, -2.0, 0.0])
