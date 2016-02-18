@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import OrderedDict
 from nose import SkipTest
 from nose.tools import eq_
 import numpy as np
@@ -27,6 +28,7 @@ from venture.test.config import get_ripl
 from venture.test.stats import reportKnownGaussian
 from venture.test.stats import reportKnownMean
 from venture.test.stats import statisticalTest
+import venture.lite.covariance as cov
 import venture.lite.gp as gp
 import venture.lite.value as v
 
@@ -130,3 +132,21 @@ def testGPAux():
 
   ripl.forget('obs')
   check_firsts(ripl.infer('(extract_stats gp)'), {1.0, 3.0})
+
+@broken_in('puma', "Puma does not define the gaussian process builtins")
+def testNormalParameters():
+  obs_inputs = np.array([1.3, -2.0, 0.0])
+  obs_outputs = np.array([5.0, 2.3, 8.0])
+  test_inputs = np.array([1.4, -3.2])
+  expect_mu = np.array([4.6307, -0.9046])
+  expect_sig = np.array([[0.0027, -0.0231], [-0.0231, 1.1090]])
+  sigma = 2.1
+  l = 1.8
+  observations = OrderedDict(zip(obs_inputs, obs_outputs))
+
+  mean = gp.mean_const(0.)
+  covariance = cov.scale(sigma**2, cov.se(l**2))
+  gp_class = gp.GP(mean, covariance, observations)
+  actual_mu, actual_sig = gp_class.getNormal(test_inputs)
+  np.testing.assert_almost_equal(actual_mu, expect_mu, decimal=4)
+  np.testing.assert_almost_equal(actual_sig, expect_sig, decimal=4)
