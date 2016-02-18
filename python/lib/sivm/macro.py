@@ -139,43 +139,55 @@ def arg0(name):
 
 def AssumeExpand(exp):
     assume_exp = exp[1]["value"]
-    split_symbol = "_"
-    if assume_exp.startswith(split_symbol ) and assume_exp.endswith(split_symbol):
-	#import pdb;pdb.set_trace()
-	assert 	exp[2][0]['value']=="list", "compound assume argument is not a list"
+    split_symbol = "_" # split elements of compounds, indicates start compound 
+    # check here if exp is compound
+    if assume_exp.startswith(split_symbol ) and assume_exp.endswith(split_symbol): 
+	# strip compound from _ in beginning / end
 	assume_symbol_string = assume_exp[1:-1]
+
+	# Is it de-structured already? If so, assume the original compound
 	if assume_symbol_string.startswith(split_symbol ) and assume_symbol_string.endswith(split_symbol):
 	    pattern = ['assume', 'datum-1', 'datum-2']
 	    template = ['_assume', ['quasiquote', 'datum-1'], ['quasiquote', 'datum-2']]
 	    exp[1]['value'] = assume_symbol_string 
-	else:
-	    assume_symbols = assume_symbol_string .split(split_symbol)
-	    #import pdb;pdb.set_trace()
-	    n = len(exp[2])
-	    assert len(assume_symbols) + 1 == n, "number of symbols in compound not equal to length of list for value of compound"
-	    pattern =  ['do'] + ["assume-stmt-%i" %  i for i in range(n)]
+	else: # de-structure
+	    assume_symbols = assume_symbol_string.split(split_symbol) 
+	    n = len(assume_symbols)
+
+	    # here, we are actually editing exp. I don't know if this is too
+	    # hacky for what we're trying to accomplish but it seemed to be the
+	    # easiest way to generate new assume symbols. Not that they have to
+	    # be new and cannot be looked-up, because of expressions like
+	    # assume l = list( 
+	    #[assume a_ref (ref (uniform_discrete 2 3))]
+	    #[assume b_ref (ref (uniform_discrete 3 4))]
+	    #
+	    #[assume l (list a_ref b_ref)]
+	    #[assume _a_b_ l]
+	    pattern =  ['do'] + ["assume-stmt-%i" %  i for i in range(n+1)]
 	    template = pattern
+
+	    # edit exp, create derefs
 	    simple_assume_statements = []
 	    for i,next_assume_symbol in  enumerate(assume_symbols):
 		simple_assume_statements.append([{'type': 'symbol', 'value': 'assume'},
 					    {'type': 'symbol','value':next_assume_symbol}] + [ 
-					    
 						[ {'type': 'symbol','value':'deref'},
-						    exp[2][i+1]
+						    [{'type': 'symbol', 'value': 'lookup'}, exp[2], {'type': 'number', 'value': i}]
 						]			
 					    ])
-	    #import pdb;pdb.set_trace()
+	    # edit exp for original compound
 	    exp = [{'type': 'symbol', 'value': 'do'},
 			[{'type': 'symbol', 'value': 'assume'},
 			    {'type': 'symbol','value':"__"+assume_symbol_string+"__"},
 			    exp[2]
 			]   
 		    ] + simple_assume_statements
-	    #import pdb;pdb.set_trace()
     else:
-	pattern = ['assume', 'datum-1', 'datum-2']
-	template = ['_assume', ['quasiquote', 'datum-1'], ['quasiquote', 'datum-2']]
-	#import pdb;pdb.set_trace()
+	# base case: normal assume
+	pat_names = ["datum-%d" % i for i in range(len(exp))]
+	pattern = ["assume"] + pat_names[1:]
+	template = ["_assume"] + [["quasiquote", pn] for pn in pat_names[1:]]
     return SyntaxRule(pattern, template).expand(exp)
 
 def DoExpand(exp):
