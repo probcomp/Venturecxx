@@ -19,6 +19,8 @@ import copy
 import numpy as np
 import numpy.random as npr
 
+from collections import OrderedDict
+
 from venture.lite.function import VentureFunction
 from venture.lite.psp import DeterministicMakerAAAPSP
 from venture.lite.psp import NullRequestPSP
@@ -42,8 +44,9 @@ class GP(object):
     self.mean = mean
     self.covariance = covariance
     if samples is None:
-      self.samples = {}
+      self.samples = OrderedDict()
     else:
+      assert isinstance(samples, OrderedDict)
       self.samples = samples
 
   def toJSON(self):
@@ -182,8 +185,8 @@ class GPSP(SP):
                               GPOutputPSP1(mean, covariance)])
     super(GPSP, self).__init__(NullRequestPSP(),output)
 
-  def constructSPAux(self): return GPSPAux({})
-  def show(self,spaux): return GP(self.mean, self.covariance, spaux)
+  def constructSPAux(self): return GPSPAux(OrderedDict())
+  def show(self,spaux): return GP(self.mean, self.covariance, spaux.samples)
 
 class MakeGPOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self,args):
