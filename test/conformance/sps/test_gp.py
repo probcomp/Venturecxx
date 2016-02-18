@@ -20,6 +20,7 @@ from nose import SkipTest
 from nose.tools import eq_
 import numpy as np
 import numpy.linalg as la
+import scipy.stats as stats
 
 from venture.test.config import broken_in
 from venture.test.config import collectSamples
@@ -150,3 +151,32 @@ def testNormalParameters():
   actual_mu, actual_sig = gp_class.getNormal(test_inputs)
   np.testing.assert_almost_equal(actual_mu, expect_mu, decimal=4)
   np.testing.assert_almost_equal(actual_sig, expect_sig, decimal=4)
+
+@broken_in('puma', "Puma does not define the gaussian process builtins")
+def testOneSample():
+  obs_inputs = np.array([1.3, -2, 0])
+  obs_outputs = np.array([5, 2.3, 8])
+  test_input = 1.4
+  expect_mu = 4.6307
+  sigma = 2.1
+  l = 1.8
+  observations = OrderedDict(zip(obs_inputs, obs_outputs))
+
+  mean = gp.mean_const(0.)
+  covariance = cov.scale(sigma**2, cov.se(l**2))
+  gp_class = gp.GP(mean, covariance, observations)
+
+  # gp_class.sample(test_input) should be normally distributed with
+  # mean expect_mu.
+  n = 200
+  samples = [gp_class.sample(test_input) for _ in xrange(n)]
+  test_result, p_value = stats.ttest_1samp(samples, expect_mu)
+  assert p_value >= 0.05
+  test_result, p_value = stats.ttest_1samp(samples, 0)
+  assert p_value < 0.05
+  test_result, p_value = \
+    stats.ttest_1samp(np.random.uniform(0, 1, n), expect_mu)
+  assert p_value < 0.05
+  # Sanity check.
+  test_result, p_value = stats.ttest_1samp(np.random.normal(10, 1, n), n)
+  assert p_value < 0.05
