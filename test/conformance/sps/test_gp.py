@@ -174,4 +174,4 @@ def testOneSample():
   n = 200
   samples = np.array([gp_class.sample([test_input])[0] for _ in xrange(n)])
   assert samples.shape == (n,)
-  return reportKnownGaussian(expect_mu, expect_sig, samples)
+  return reportKnownGaussian(expect_mu, np.sqrt(expect_sig), samples)
