@@ -137,57 +137,18 @@ def arg0(name):
     return isinstance(exp, list) and len(exp) > 0 and getSym(exp[0]) == name
   return applies
 
-def AssumeExpand(exp):
-    assume_exp = exp[1]["value"]
-    split_symbol = "_" # split elements of compounds, indicates start compound 
-    # check here if exp is compound
-    if assume_exp.startswith(split_symbol ) and assume_exp.endswith(split_symbol): 
-	# strip compound from _ in beginning / end
-	assume_symbol_string = assume_exp[1:-1]
-
-	# Is it de-structured already? If so, assume the original compound
-	if assume_symbol_string.startswith(split_symbol ) and assume_symbol_string.endswith(split_symbol):
-	    pattern = ['assume', 'datum-1', 'datum-2']
-	    template = ['_assume', ['quasiquote', 'datum-1'], ['quasiquote', 'datum-2']]
-	    exp[1]['value'] = assume_symbol_string 
-	else: # de-structure
-	    assume_symbols = assume_symbol_string.split(split_symbol) 
-	    n = len(assume_symbols)
-
-	    # here, we are actually editing exp. I don't know if this is too
-	    # hacky for what we're trying to accomplish but it seemed to be the
-	    # easiest way to generate new assume symbols. Not that they have to
-	    # be new and cannot be looked-up, because of expressions like
-	    # assume l = list( 
-	    #[assume a_ref (ref (uniform_discrete 2 3))]
-	    #[assume b_ref (ref (uniform_discrete 3 4))]
-	    #
-	    #[assume l (list a_ref b_ref)]
-	    #[assume _a_b_ l]
-	    pattern =  ['do'] + ["assume-stmt-%i" %  i for i in range(n+1)]
-	    template = pattern
-
-	    # edit exp, create derefs
-	    simple_assume_statements = []
-	    for i,next_assume_symbol in  enumerate(assume_symbols):
-		simple_assume_statements.append([{'type': 'symbol', 'value': 'assume'},
-					    {'type': 'symbol','value':next_assume_symbol}] + [ 
-						[ {'type': 'symbol','value':'deref'},
-						    [{'type': 'symbol', 'value': 'lookup'}, exp[2], {'type': 'number', 'value': i}]
-						]			
-					    ])
-	    # edit exp for original compound
-	    exp = [{'type': 'symbol', 'value': 'do'},
-			[{'type': 'symbol', 'value': 'assume'},
-			    {'type': 'symbol','value':"__"+assume_symbol_string+"__"},
-			    exp[2]
-			]   
-		    ] + simple_assume_statements
+def Assume_valuesExpand(exp):
+    if len(exp[1])==1: # base case
+	pattern = ["assume_values", ["datum-1"], "datum-2"]
+	template = ["_assume", ["quasiquote", "datum-1"],
+				["quasiquote",["deref",["first","datum-2"]]]]
     else:
-	# base case: normal assume
-	pat_names = ["datum-%d" % i for i in range(len(exp))]
-	pattern = ["assume"] + pat_names[1:]
-	template = ["_assume"] + [["quasiquote", pn] for pn in pat_names[1:]]
+	(_assume_values, rest, list_symbol) = (exp[0], exp[1], exp[2])
+	rest_vars = ["rest_%d" % i for i in range(len(rest))]
+	pattern = ["assume_values"]  + [rest_vars] + ["list_sym"]
+	template = ["bind_", ["assume_values"] + [[rest_vars[0]]] + ["list_sym"],
+	    ["lambda", [], 
+		["assume_values"] + [rest_vars[1:]] + [["rest","list_sym"] ]]]
     return SyntaxRule(pattern, template).expand(exp)
 
 def DoExpand(exp):
@@ -214,6 +175,8 @@ def DoExpand(exp):
       # Non-binding statement
       pattern = ["do", "stmt"] + rest_vars
       template = ["bind_", "stmt", ["lambda", [], ["do"] + rest_vars]]
+  
+  
   return SyntaxRule(pattern, template).expand(exp)
 
 def BeginExpand(exp):
@@ -556,7 +519,7 @@ lambdaMacro = SyntaxRule(['lambda', 'args', 'body'],
   Creation of variable arity procedures is not yet supported.
 """)
 
-assumeMacro = Macro(arg0("assume"), AssumeExpand, 
+assume_valuesMacro = Macro(arg0("assume_values"), Assume_valuesExpand, 
     desc="""\
 .. function:: assume(<symbol>, <model-expression>, [<label>])
 
@@ -566,6 +529,18 @@ assumeMacro = Macro(arg0("assume"), AssumeExpand,
   variable, like the `assume` directive.  The given model expression
   may be constructed programmatically -- see `unquote`.
 
+  The ``<label>``, if supplied, may be used to `freeze` or `forget`
+  this directive.
+""")
+
+
+assumeMacro = quasiquotation_macro("assume",
+    min_size = 3, max_size = 4, desc="""\
+.. function:: assume(<symbol>, <model-expression>, [<label>])
+  Programmatically add an assumption.
+  Extend the underlying model by adding a new generative random
+  variable, like the `assume` directive.  The given model expression
+  may be constructed programmatically -- see `unquote`.
   The ``<label>``, if supplied, may be used to `freeze` or `forget`
   this directive.
 """)
@@ -714,7 +689,7 @@ For example::
 for m in [identityMacro, lambdaMacro, ifMacro, condMacro, andMacro, orMacro,
           letMacro, letrecMacro, doMacro, beginMacro, qqMacro,
           callBackMacro, collectMacro,
-          assumeMacro, observeMacro, predictMacro, forceMacro,
+          assumeMacro, assume_valuesMacro, observeMacro, predictMacro, forceMacro,
           sampleMacro, sampleAllMacro,
           extractStatsMacro,
           refMacro, derefMacro,
