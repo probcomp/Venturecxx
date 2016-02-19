@@ -206,6 +206,3 @@ def test_compound_assume_inf_second_element():
     return reportKnownGaussian(-15,0.1,post_samples)
 
 
-test_compound_assume_smoke()
-test_compound_assume_observations()
-test_compound_assume_inf_happening()
