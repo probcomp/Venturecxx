@@ -160,18 +160,24 @@ def propGradientOfSimulate(args_lists, name, sp):
   assert_gradients_close(numerical_gradient, computed_gradient)
 
 def testGradientOfLogDensityOfCountsSmoke():
-  for (expr, val) in [("((make_crp (gamma 1 1)))", "atom<1>"),
-                      ("((make_suff_stat_normal (normal 0 1) (gamma 1 1)))", 2),
-                      ("((make_dir_mult (vector 1 1) (list 1 2)))", "1"),
-                      ("((make_sym_dir_mult 0.5 2 (list 1 2)))", "1"),
-                      ("((make_beta_bernoulli 1 1))", True),
-                      ("((make_suff_stat_bernoulli 0.7))", True),
-                      ("((make_suff_stat_poisson 2))", 2)
-  ]:
-    yield checkGradientExists, expr, val
+  models = [("(make_crp a)", ["atom<1>", "atom<2>"]),
+            ("(make_suff_stat_normal a 1)", [2]),
+            ("(make_dir_mult (vector a 1) (list 1 2))", ["1"]),
+            ("(make_sym_dir_mult a 2 (list 1 2))", ["1"]),
+            ("(make_beta_bernoulli a 1)", [True]),
+            ("(make_suff_stat_bernoulli a)", [True]),
+            ("(make_suff_stat_poisson a)", [2])
+          ]
+  for (expr, vals) in models:
+    yield checkGradientExists, expr, vals
 
-def checkGradientExists(expr, val):
+def checkGradientExists(expr, vals):
   ripl = get_ripl()
-  ripl.assume("x", expr)
-  ripl.observe("x", val)
+  ripl.assume("a", "(uniform_continuous 0 1)")
+  value = ripl.sample("a")
+  ripl.assume("f", expr)
+  for val in vals:
+    ripl.observe("(f)", val)
   ripl.infer("(grad_ascent default all 0.01 1 1)")
+  new_value = ripl.sample("a")
+  assert value != new_value, "Gradient was not transmitted to prior"
