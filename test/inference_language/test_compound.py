@@ -18,6 +18,7 @@
 import numpy as np
 from venture import shortcuts
 
+from venture.test.config import get_ripl
 from venture.test.config import in_backend, broken_in
 from venture.test.stats import statisticalTest, reportKnownGaussian
 #from venture.test.config import broken_in
@@ -39,8 +40,7 @@ def init_ripl(venChurch=None):
 
 # simple smoke tests
 
-@broken_in("puma", "Does neither support assume_values nor GPs yet")
-@in_backend("lite")
+@broken_in("puma", "Does not have refs: Issue #224.")
 def test_compound_assume_smoke():
 
     smoke_prog ="""
@@ -52,16 +52,11 @@ def test_compound_assume_smoke():
     [assume l (list a_ref b_ref)]
     (assume_values (c  d ) l)
 
-    [assume y 10]
     (assume_values ( u )  (list (ref (uniform_discrete 20 21))))
 
     """
-    ripl = init_ripl(venChurch=True)
+    ripl = get_ripl()
     ripl.execute_program(smoke_prog)
-
-
-    assert ripl.sample("x") == 1, "simple assume does not work"
-    assert ripl.sample("y") == 10, "simple assume does not work"
 
     assert ripl.sample("a") == 2, "compound assume does not work, first component"
     assert ripl.sample("b") == 3, "compound assume does not work, second component"
