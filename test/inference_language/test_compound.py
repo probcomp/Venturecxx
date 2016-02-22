@@ -4,7 +4,7 @@ __author__ = 'ulli'
 import numpy as np
 from venture import shortcuts
 
-from venture.test.config import in_backend, broken_in   
+from venture.test.config import in_backend, broken_in
 from venture.test.stats import statisticalTest, reportKnownGaussian
 #from venture.test.config import broken_in
 
@@ -12,13 +12,13 @@ from venture.test.stats import statisticalTest, reportKnownGaussian
 # once the syntax thing is resolved, these tests should cover both syntaxes
 def init_ripl(venChurch=None):
     if venChurch is None:
-	venChurch = False
-    ''' 
-    initialize ripl 
+        venChurch = False
+    '''
+    initialize ripl
     '''
     ripl = shortcuts.make_lite_ripl()
     if venChurch:
-	ripl.set_mode("church_prime")
+        ripl.set_mode("church_prime")
     ripl.assume("x",1)
     return ripl
 
@@ -34,7 +34,7 @@ def test_compound_assume_smoke():
     [assume a_ref (ref (uniform_discrete 2 3))]
     [assume b_ref (ref (uniform_discrete 3 4))]
     (assume_values (a b) (list  a_ref b_ref))
-    
+
     [assume l (list a_ref b_ref)]
     (assume_values (c  d ) l)
 
@@ -54,7 +54,7 @@ def test_compound_assume_smoke():
 
     assert ripl.sample("c") == 2, "compound assume does not work, first component, symbol instead of list"
     assert ripl.sample("d") == 3, "compound assume does not work, second component"
-    
+
     assert ripl.sample("u") == 20, "compound assume does not work for a one-element-compound"
 
 
@@ -117,15 +117,15 @@ def test_compound_assume_inf_happening():
     previous_value = ripl.sample("b")
 
     for i in range(20):
-	ripl.observe("(obs_1)",np.random.normal(5,0.1))
+        ripl.observe("(obs_1)",np.random.normal(5,0.1))
 
     ripl.infer("(mh (quote a_scope ) 0 100)")
 
 
     assert ripl.sample("b") == previous_value, "inferred to wrong part of the compound"
-    
+
     for i in range(20):
-	ripl.observe("(obs_2)",np.random.normal(-15,0.1))
+        ripl.observe("(obs_2)",np.random.normal(-15,0.1))
 
     ripl.infer("(mh (quote b_scope ) 0 100)")
 
@@ -156,14 +156,14 @@ def test_compound_assume_inf_first_element():
     previous_value = ripl.sample("b")
 
     for i in range(20):
-	ripl.observe("(obs_1)",np.random.normal(5,1))
+        ripl.observe("(obs_1)",np.random.normal(5,1))
 
     ripl.infer("(mh (quote a_scope ) 0 100)")
-    
-    # just read test/config.py - this should use collectSamples 
+
+    # just read test/config.py - this should use collectSamples
     post_samples = [ripl.sample("(obs_1)")for i in range(30)]
 
-	 
+
     return reportKnownGaussian(5,1,post_samples)
 
 @broken_in("puma", "Does neither support assume_values nor GPs yet")
@@ -189,20 +189,18 @@ def test_compound_assume_inf_second_element():
     previous_value = ripl.sample("b")
 
     for i in range(20):
-	ripl.observe("(obs_1)",np.random.normal(5,0.1))
+        ripl.observe("(obs_1)",np.random.normal(5,0.1))
 
     ripl.infer("(mh (quote a_scope ) 0 100)")
 
 
     for i in range(20):
-	ripl.observe("(obs_2)",np.random.normal(-15,0.1))
+        ripl.observe("(obs_2)",np.random.normal(-15,0.1))
 
     ripl.infer("(mh (quote b_scope ) 0 100)")
 
-    # just read test/config.py - this should use collectSamples 
+    # just read test/config.py - this should use collectSamples
     post_samples = [ripl.sample("(obs_2)")for i in range(30)]
 
-	 
+
     return reportKnownGaussian(-15,0.1,post_samples)
-
-
