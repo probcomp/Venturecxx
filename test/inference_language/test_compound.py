@@ -15,8 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-__author__ = 'ulli'
-
 import numpy as np
 from venture import shortcuts
 
@@ -24,14 +22,14 @@ from venture.test.config import in_backend, broken_in
 from venture.test.stats import statisticalTest, reportKnownGaussian
 #from venture.test.config import broken_in
 
+__author__ = 'ulli'
+
 # so far, I am only testing with VenChurch syntax and ripl-API. I guess that
 # once the syntax thing is resolved, these tests should cover both syntaxes
 def init_ripl(venChurch=None):
     if venChurch is None:
         venChurch = False
-    '''
-    initialize ripl
-    '''
+    # initialize ripl
     ripl = shortcuts.make_lite_ripl()
     if venChurch:
         ripl.set_mode("church_prime")
@@ -132,16 +130,16 @@ def test_compound_assume_inf_happening():
 
     previous_value = ripl.sample("b")
 
-    for i in range(20):
-        ripl.observe("(obs_1)",np.random.normal(5,0.1))
+    for _ in range(20):
+        ripl.observe("(obs_1)", np.random.normal(5,0.1))
 
     ripl.infer("(mh (quote a_scope ) 0 100)")
 
 
     assert ripl.sample("b") == previous_value, "inferred to wrong part of the compound"
 
-    for i in range(20):
-        ripl.observe("(obs_2)",np.random.normal(-15,0.1))
+    for _ in range(20):
+        ripl.observe("(obs_2)", np.random.normal(-15,0.1))
 
     ripl.infer("(mh (quote b_scope ) 0 100)")
 
@@ -169,16 +167,13 @@ def test_compound_assume_inf_first_element():
 
     ripl.execute_program(inf_test_prog)
 
-    previous_value = ripl.sample("b")
-
-    for i in range(20):
-        ripl.observe("(obs_1)",np.random.normal(5,1))
+    for _ in range(20):
+        ripl.observe("(obs_1)", np.random.normal(5,1))
 
     ripl.infer("(mh (quote a_scope ) 0 100)")
 
     # just read test/config.py - this should use collectSamples
-    post_samples = [ripl.sample("(obs_1)")for i in range(30)]
-
+    post_samples = [ripl.sample("(obs_1)") for _ in range(30)]
 
     return reportKnownGaussian(5,1,post_samples)
 
@@ -202,21 +197,17 @@ def test_compound_assume_inf_second_element():
 
     ripl.execute_program(inf_test_prog)
 
-    previous_value = ripl.sample("b")
-
-    for i in range(20):
-        ripl.observe("(obs_1)",np.random.normal(5,0.1))
+    for _ in range(20):
+        ripl.observe("(obs_1)", np.random.normal(5,0.1))
 
     ripl.infer("(mh (quote a_scope ) 0 100)")
 
-
-    for i in range(20):
-        ripl.observe("(obs_2)",np.random.normal(-15,0.1))
+    for _ in range(20):
+        ripl.observe("(obs_2)", np.random.normal(-15,0.1))
 
     ripl.infer("(mh (quote b_scope ) 0 100)")
 
     # just read test/config.py - this should use collectSamples
-    post_samples = [ripl.sample("(obs_2)")for i in range(30)]
-
+    post_samples = [ripl.sample("(obs_2)") for _ in range(30)]
 
     return reportKnownGaussian(-15,0.1,post_samples)
