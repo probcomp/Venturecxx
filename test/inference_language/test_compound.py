@@ -18,6 +18,7 @@
 import numpy as np
 from venture import shortcuts
 
+from venture.test.config import collectSamples
 from venture.test.config import get_ripl
 from venture.test.config import in_backend, broken_in
 from venture.test.stats import statisticalTest, reportKnownGaussian
@@ -142,12 +143,10 @@ def test_compound_assume_inf_first_element():
 
     for _ in range(20):
         ripl.observe("(obs_1)", np.random.normal(5, 1))
-
-    ripl.infer("(mh (quote a_scope) 0 100)")
+    ripl.predict("(obs_1)", label="predictive")
 
     # just read test/config.py - this should use collectSamples
-    post_samples = [ripl.sample("(obs_1)") for _ in range(30)]
-
+    post_samples = collectSamples(ripl, "predictive")
     return reportKnownGaussian(5, 1, post_samples)
 
 @broken_in("puma", "Does neither support assume_values nor GPs yet")
