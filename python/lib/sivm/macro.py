@@ -500,25 +500,6 @@ collectMacro = quasiquotation_macro("collect", min_size = 2, desc="""\
   or foreign inference sp.
 """)
 
-
-
-identityMacro = SyntaxRule(['identity', 'exp'], 'exp')
-lambdaMacro = SyntaxRule(['lambda', 'args', 'body'],
-                         ['make_csp', ['quote', 'args'], ['quote', 'body']],
-                         desc="""\
-.. _proc:
-.. object:: proc(<param>, ...) { <body> }
-
-  Construct a procedure.
-
-  The formal parameters must be VentureScript symbols.
-  The body must be a VentureScript expression.
-  The semantics are like `function` in JavaScript -- produces
-  an anonymous function that may read its lexical environment.
-
-  Creation of variable arity procedures is not yet supported.
-""")
-
 assume_valuesMacro = Macro(arg0("assume_values"), Assume_valuesExpand,
     desc="""\
 .. function:: assume(<symbol>, <model-expression>, [<label>])
@@ -532,7 +513,6 @@ assume_valuesMacro = Macro(arg0("assume_values"), Assume_valuesExpand,
   The ``<label>``, if supplied, may be used to `freeze` or `forget`
   this directive.
 """)
-
 
 assumeMacro = quasiquotation_macro("assume",
     min_size = 3, max_size = 4, desc="""\
