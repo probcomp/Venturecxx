@@ -139,16 +139,16 @@ def arg0(name):
 
 def Assume_valuesExpand(exp):
     if len(exp[1])==1: # base case
-	pattern = ["assume_values", ["datum-1"], "datum-2"]
-	template = ["_assume", ["quasiquote", "datum-1"],
-				["quasiquote",["deref",["first","datum-2"]]]]
+        pattern = ["assume_values", ["datum-1"], "datum-2"]
+        template = ["_assume", ["quasiquote", "datum-1"],
+                                ["quasiquote",["deref",["first","datum-2"]]]]
     else:
-	(_assume_values, rest, list_symbol) = (exp[0], exp[1], exp[2])
-	rest_vars = ["rest_%d" % i for i in range(len(rest))]
-	pattern = ["assume_values"]  + [rest_vars] + ["list_sym"]
-	template = ["bind_", ["assume_values"] + [[rest_vars[0]]] + ["list_sym"],
-	    ["lambda", [], 
-		["assume_values"] + [rest_vars[1:]] + [["rest","list_sym"] ]]]
+        (_assume_values, rest, list_symbol) = (exp[0], exp[1], exp[2])
+        rest_vars = ["rest_%d" % i for i in range(len(rest))]
+        pattern = ["assume_values"]  + [rest_vars] + ["list_sym"]
+        template = ["bind_", ["assume_values"] + [[rest_vars[0]]] + ["list_sym"],
+            ["lambda", [],
+                ["assume_values"] + [rest_vars[1:]] + [["rest","list_sym"] ]]]
     return SyntaxRule(pattern, template).expand(exp)
 
 def DoExpand(exp):
@@ -175,8 +175,6 @@ def DoExpand(exp):
       # Non-binding statement
       pattern = ["do", "stmt"] + rest_vars
       template = ["bind_", "stmt", ["lambda", [], ["do"] + rest_vars]]
-  
-  
   return SyntaxRule(pattern, template).expand(exp)
 
 def BeginExpand(exp):
@@ -519,7 +517,7 @@ lambdaMacro = SyntaxRule(['lambda', 'args', 'body'],
   Creation of variable arity procedures is not yet supported.
 """)
 
-assume_valuesMacro = Macro(arg0("assume_values"), Assume_valuesExpand, 
+assume_valuesMacro = Macro(arg0("assume_values"), Assume_valuesExpand,
     desc="""\
 .. function:: assume(<symbol>, <model-expression>, [<label>])
 
