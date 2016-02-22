@@ -33,7 +33,7 @@ def init_ripl(venChurch=None):
     ripl = shortcuts.make_lite_ripl()
     if venChurch:
         ripl.set_mode("church_prime")
-    ripl.assume("x",1)
+    ripl.assume("x", 1)
     return ripl
 
 
@@ -90,7 +90,7 @@ def test_compound_assume_observations():
 
     ripl.execute_program(obs_prog)
 
-    ripl.observe("(deref a_ref)",1)
+    ripl.observe("(deref a_ref)", 1)
 
     assert ripl.sample("(deref a_ref)") == 1, "simple a_ref is not observed"
     assert ripl.sample("a") == 1, "first element compund is not observed"
@@ -99,7 +99,7 @@ def test_compound_assume_observations():
     assert ripl.sample("(deref b_ref)") != 1, "confused second and first compound element"
     assert ripl.sample("b") != 1, "second element compound is confused with first"
 
-    ripl.observe("b",2)
+    ripl.observe("b", 2)
 
     assert ripl.sample("b") == 2, "second element compound is not observed"
     assert ripl.sample("(deref a_ref)") == 1, "second observation made the first incorrect"
@@ -131,7 +131,7 @@ def test_compound_assume_inf_happening():
     previous_value = ripl.sample("b")
 
     for _ in range(20):
-        ripl.observe("(obs_1)", np.random.normal(5,0.1))
+        ripl.observe("(obs_1)", np.random.normal(5, 0.1))
 
     ripl.infer("(mh (quote a_scope ) 0 100)")
 
@@ -139,7 +139,7 @@ def test_compound_assume_inf_happening():
     assert ripl.sample("b") == previous_value, "inferred to wrong part of the compound"
 
     for _ in range(20):
-        ripl.observe("(obs_2)", np.random.normal(-15,0.1))
+        ripl.observe("(obs_2)", np.random.normal(-15, 0.1))
 
     ripl.infer("(mh (quote b_scope ) 0 100)")
 
@@ -168,14 +168,14 @@ def test_compound_assume_inf_first_element():
     ripl.execute_program(inf_test_prog)
 
     for _ in range(20):
-        ripl.observe("(obs_1)", np.random.normal(5,1))
+        ripl.observe("(obs_1)", np.random.normal(5, 1))
 
     ripl.infer("(mh (quote a_scope ) 0 100)")
 
     # just read test/config.py - this should use collectSamples
     post_samples = [ripl.sample("(obs_1)") for _ in range(30)]
 
-    return reportKnownGaussian(5,1,post_samples)
+    return reportKnownGaussian(5, 1, post_samples)
 
 @broken_in("puma", "Does neither support assume_values nor GPs yet")
 @statisticalTest
@@ -198,16 +198,16 @@ def test_compound_assume_inf_second_element():
     ripl.execute_program(inf_test_prog)
 
     for _ in range(20):
-        ripl.observe("(obs_1)", np.random.normal(5,0.1))
+        ripl.observe("(obs_1)", np.random.normal(5, 0.1))
 
     ripl.infer("(mh (quote a_scope ) 0 100)")
 
     for _ in range(20):
-        ripl.observe("(obs_2)", np.random.normal(-15,0.1))
+        ripl.observe("(obs_2)", np.random.normal(-15, 0.1))
 
     ripl.infer("(mh (quote b_scope ) 0 100)")
 
     # just read test/config.py - this should use collectSamples
     post_samples = [ripl.sample("(obs_2)") for _ in range(30)]
 
-    return reportKnownGaussian(-15,0.1,post_samples)
+    return reportKnownGaussian(-15, 0.1, post_samples)
