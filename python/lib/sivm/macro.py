@@ -138,18 +138,20 @@ def arg0(name):
   return applies
 
 def Assume_valuesExpand(exp):
-    if len(exp[1])==1: # base case
-        pattern = ["assume_values", ["datum-1"], "datum-2"]
-        template = ["_assume", ["quasiquote", "datum-1"],
-                                ["quasiquote",["deref",["first","datum-2"]]]]
-    else:
-        names = exp[1]
-        rest_vars = ["rest_%d" % i for i in range(len(names))]
-        pattern = ["assume_values"]  + [rest_vars] + ["list_sym"]
-        template = ["bind_", ["assume_values"] + [[rest_vars[0]]] + ["list_sym"],
-            ["lambda", [],
-                ["assume_values"] + [rest_vars[1:]] + [["rest","list_sym"] ]]]
-    return SyntaxRule(pattern, template).expand(exp)
+  if len(exp[1])==1: # base case
+    pattern = ["assume_values", ["datum-1"], "datum-2"]
+    template = ["_assume",
+                ["quasiquote", "datum-1"],
+                ["quasiquote",["deref",["first","datum-2"]]]]
+  else:
+    names = exp[1]
+    rest_vars = ["rest_%d" % i for i in range(len(names))]
+    pattern = ["assume_values"]  + [rest_vars] + ["list_sym"]
+    template = ["bind_",
+                ["assume_values"] + [[rest_vars[0]]] + ["list_sym"],
+                ["lambda", [],
+                 ["assume_values"] + [rest_vars[1:]] + [["rest","list_sym"]]]]
+  return SyntaxRule(pattern, template).expand(exp)
 
 def DoExpand(exp):
   if len(exp) == 2:
