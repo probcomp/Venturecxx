@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -14,10 +14,12 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import copy
+import cStringIO as StringIO
 
 from venture.exception import VentureException
 from venture.sivm import utils
@@ -49,16 +51,32 @@ class CoreSivm(object):
     # Serialization
     ###############################
 
-    def save(self, fname, extra=None):
+    def save_io(self, stream, extra=None):
         if extra is None:
             extra = {}
         extra['observe_dict'] = self.observe_dict
-        return self.engine.save(fname, extra)
+        return self.engine.save_io(stream, extra)
 
-    def load(self, fname):
-        extra = self.engine.load(fname)
+    def load_io(self, stream):
+        extra = self.engine.load_io(stream)
         self.observe_dict = extra['observe_dict']
         return extra
+
+    def save(self, fname, extra=None):
+        with open(fname, 'w') as fp:
+            self.save_io(fp, extra=extra)
+
+    def saves(self, extra=None):
+        ans = StringIO.StringIO()
+        self.save_io(ans, extra=extra)
+        return ans.getvalue()
+
+    def load(self, fname):
+        with open(fname) as fp:
+            return self.load_io(fp)
+
+    def loads(self, string):
+        return self.load_io(StringIO.StringIO(string))
 
     ###############################
     # Instruction implementations
@@ -168,11 +186,11 @@ class CoreSivm(object):
         return old_state
 
 ###############################
-# Input modification functions
-# ----------------------------
-# These exist to bridge the gap
-# between the cxx and the stack
+# Input modification
 ###############################
+
+# Convert any bare basestrings to stack dicts (symbols)
+# Convert all symbol names to Python strings from unicode
 
 def _modify_expression(expression):
     if isinstance(expression, basestring):
@@ -184,29 +202,14 @@ def _modify_expression(expression):
     return expression
 
 def _modify_value(ob):
-    if ob['type'] in {'count', 'real'}:
-        ans = copy.copy(ob)
-        ans['type'] = 'number'
-        return ans
-    elif ob['type'] == 'atom':
-        ans = copy.copy(ob)
-        ans['value'] = int(ob['value'])
-        return ans
-    elif ob['type'] == 'symbol':
+    if ob['type'] == 'symbol':
         # Unicode hack for the same reason as in _modify_symbol
         ans = copy.copy(ob)
         ans['value'] = str(ob['value'])
         return ans
     return ob
 
-_symbol_map = {}
-
-for symbol in ["lt", "gt", "lte", "gte"]:
-    _symbol_map["int_" + symbol] = symbol
-
 def _modify_symbol(s):
-    if s in _symbol_map:
-        s = _symbol_map[s]
     # NOTE: need to str() b/c unicode might come via REST,
     #       which the boost python wrappings can't convert
     return v.symbol(str(s))

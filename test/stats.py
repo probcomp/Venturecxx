@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -423,3 +423,13 @@ def reportPassage():
 
   Just returns a TestResult with p-value 1."""
   return TestResult(1.0, "")
+
+def reportPearsonIndependence(X, Y):
+  """Pearson r^2 test of independence."""
+  r2, pval = stats.pearsonr(X, Y)
+  return TestResult(pval, "\n".join([
+      "X  : " + fmtlst("% 4.1f", X),
+      "Y  : " + fmtlst("% 4.1f", Y),
+      "r^2: " + str(r2),
+      "p  : " + str(pval)
+    ]))

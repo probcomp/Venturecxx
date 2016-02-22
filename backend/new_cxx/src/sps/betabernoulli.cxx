@@ -1,4 +1,4 @@
-// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -19,6 +19,7 @@
 
 #include "utils.h"
 #include "sprecord.h"
+#include "stop-and-copy.h"
 
 #include "gsl/gsl_sf_gamma.h"
 #include <gsl/gsl_rng.h>
@@ -138,6 +139,15 @@ void UBetaBernoulliSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gs
   aux->p = gsl_ran_beta(rng,alpha + heads,beta + tails);
 }
 
+UBetaBernoulliSP* UBetaBernoulliSP::copy_help(ForwardingMap* forward) const
+{
+  UBetaBernoulliSP* answer = new UBetaBernoulliSP(*this);
+  (*forward)[this] = answer;
+  answer->requestPSP = copy_shared(this->requestPSP, forward);
+  answer->outputPSP = copy_shared(this->outputPSP, forward);
+  return answer;
+}
+
 // Uncollapsed PSP
 
 VentureValuePtr UBetaBernoulliOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
@@ -181,5 +191,16 @@ VentureValuePtr BetaBernoulliSPAux::asVentureValue() const
   return VentureValuePtr(new VenturePair(hd, VentureValuePtr(new VenturePair(tl, end))));
 }
 
-SPAux* BetaBernoulliSPAux::copy_help(ForwardingMap* m) const  { return new BetaBernoulliSPAux(*this);  }
-SPAux* UBetaBernoulliSPAux::copy_help(ForwardingMap* m) const { return new UBetaBernoulliSPAux(*this); }
+BetaBernoulliSPAux* BetaBernoulliSPAux::copy_help(ForwardingMap* m) const
+{
+  BetaBernoulliSPAux* answer = new BetaBernoulliSPAux(*this);
+  (*m)[this] = answer;
+  return answer;
+}
+
+UBetaBernoulliSPAux* UBetaBernoulliSPAux::copy_help(ForwardingMap* m) const
+{
+  UBetaBernoulliSPAux* answer = new UBetaBernoulliSPAux(*this);
+  (*m)[this] = answer;
+  return answer;
+}

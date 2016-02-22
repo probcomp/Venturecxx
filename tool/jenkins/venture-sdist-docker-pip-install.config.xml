@@ -1,7 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <project>
   <actions/>
-  <description></description>
+  <description>Test that installing Venture on a clean Ubuntu using primarily pip produces a configuration that passes tests.&#xd;
+&#xd;
+Isolation mechanism: Docker container.&#xd;
+&#xd;
+To post-mortem a failure, do `docker run -it &lt;image name&gt;`.  The image name is derived from the build name and build number, and reported near the end of the console output.&#xd;
+</description>
   <keepDependencies>false</keepDependencies>
   <properties/>
   <scm class="hudson.plugins.git.GitSCM" plugin="git@2.2.6">
@@ -28,7 +33,7 @@
   <triggers>
     <jenkins.triggers.ReverseBuildTrigger>
       <spec></spec>
-      <upstreamProjects>venture-crashes, </upstreamProjects>
+      <upstreamProjects>venture-crashes,</upstreamProjects>
       <threshold>
         <name>SUCCESS</name>
         <ordinal>0</ordinal>
@@ -52,23 +57,23 @@
       <chatNotification>false</chatNotification>
       <notifyMap>
         <entry>
-          <com.flowdock.jenkins.BuildResult>UNSTABLE</com.flowdock.jenkins.BuildResult>
-          <boolean>false</boolean>
+          <com.flowdock.jenkins.BuildResult>SUCCESS</com.flowdock.jenkins.BuildResult>
+          <boolean>true</boolean>
         </entry>
         <entry>
           <com.flowdock.jenkins.BuildResult>FAILURE</com.flowdock.jenkins.BuildResult>
           <boolean>true</boolean>
         </entry>
         <entry>
-          <com.flowdock.jenkins.BuildResult>SUCCESS</com.flowdock.jenkins.BuildResult>
-          <boolean>true</boolean>
+          <com.flowdock.jenkins.BuildResult>ABORTED</com.flowdock.jenkins.BuildResult>
+          <boolean>false</boolean>
         </entry>
         <entry>
           <com.flowdock.jenkins.BuildResult>NOT_BUILT</com.flowdock.jenkins.BuildResult>
           <boolean>false</boolean>
         </entry>
         <entry>
-          <com.flowdock.jenkins.BuildResult>ABORTED</com.flowdock.jenkins.BuildResult>
+          <com.flowdock.jenkins.BuildResult>UNSTABLE</com.flowdock.jenkins.BuildResult>
           <boolean>false</boolean>
         </entry>
         <entry>

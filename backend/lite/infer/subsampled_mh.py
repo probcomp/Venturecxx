@@ -105,9 +105,9 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
         lambda i: operator.evalOneLocalSection(indexer, perm_local_roots[i]))
 
   if accept:
-    operator.accept() # May mutate trace
+    return operator.accept() # May mutate trace
   else:
-    operator.reject(indexer, perm_local_roots, n) # May mutate trace
+    return operator.reject(indexer, perm_local_roots, n) # May mutate trace
 
   # DEBUG
   # if global_index.globalBorder:
@@ -359,7 +359,7 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
       # assert maybeBorder
       # assert not isinstance(trace.valueAt(globalBorder[0]), SPRef)
       # assert not trace.pspAt(globalBorder[0]).childrenCanAAA()
-      if not (maybeBorder and 
+      if not (maybeBorder and
           not isinstance(trace.valueAt(globalBorder[0]), SPRef) and
           not trace.pspAt(globalBorder[0]).childrenCanAAA()):
         # Is not a valid globalBorder. Revert to regular MH.
@@ -409,7 +409,7 @@ class SubsampledInPlaceOperator(InPlaceOperator):
 
   def reject(self, indexer, perm_local_roots, n):
     # Restore the global section.
-    super(SubsampledInPlaceOperator, self).reject()
+    ans = super(SubsampledInPlaceOperator, self).reject()
 
     # Restore local sections in perm_local_roots[0:n]
     globalBorder = self.scaffold.globalBorder
@@ -419,21 +419,25 @@ class SubsampledInPlaceOperator(InPlaceOperator):
         local_scaffold = indexer.sampleLocalIndex(self.trace, local_root, globalBorder)
         updateValuesAtScaffold(self.trace,local_scaffold,set(globalBorder))
 
+    return ans
+
   # Go through every local child and do extract and regen.
   # This is to be called at the end of a number of transitions.
   def makeConsistent(self,trace,indexer):
     if hasattr(self, "scaffold"):
-      self.makeConsistentGivenGlobal(trace,indexer,self.scaffold)
+      return self.makeConsistentGivenGlobal(trace,indexer,self.scaffold)
     else:
       # If a global section does not exist yet, try every possible block value.
       block_list = ([indexer.block] if indexer.block != "one"
                     else trace.blocksInScope(indexer.scope))
       block_old = indexer.block
+      tot = 0
       for block in block_list:
         indexer.block = block
         scaffold = indexer.sampleGlobalIndex(trace)
-        self.makeConsistentGivenGlobal(trace,indexer,scaffold)
+        tot += self.makeConsistentGivenGlobal(trace,indexer,scaffold)
       indexer.block = block_old
+      return tot
 
   # Make consistent local sections given a global scaffold.
   def makeConsistentGivenGlobal(self,trace,indexer,scaffold):
@@ -445,6 +449,9 @@ class SubsampledInPlaceOperator(InPlaceOperator):
             scaffold.globalBorder)
         _,local_rhoDB = detachAndExtract(trace, local_scaffold)
         regenAndAttach(trace,local_scaffold,False,local_rhoDB,{})
+      return scaffold.numAffectedNodes() # TODO Is this actually right?
+    else:
+      return 0
 
 #### Subsampled_MH Operator
 #### Resampling from the prior
@@ -456,4 +463,3 @@ class SubsampledMHOperator(SubsampledInPlaceOperator):
     return trace, xiWeight - rhoWeight
 
   def name(self): return "resimulation subsampled MH"
-

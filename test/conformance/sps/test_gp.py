@@ -15,54 +15,32 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import OrderedDict
 from nose import SkipTest
 from nose.tools import eq_
 import numpy as np
 import numpy.linalg as la
+import scipy.stats as stats
 
-from venture.lite.function import VentureFunction
-from venture.lite.sp import SPType
 from venture.test.config import broken_in
 from venture.test.config import collectSamples
 from venture.test.config import default_num_samples
 from venture.test.config import get_ripl
+from venture.test.config import in_backend
 from venture.test.stats import reportKnownGaussian
 from venture.test.stats import reportKnownMean
+from venture.test.stats import reportPearsonIndependence
 from venture.test.stats import statisticalTest
-import venture.lite.types as t
+import venture.lite.covariance as cov
+import venture.lite.gp as gp
 import venture.lite.value as v
 
-def linear(x1, x2):
-  return x1 * x2
-
-def squared_exponential(a, l):
-  def f(x1, x2):
-    return a * np.exp(- la.norm((x1-x2)/l))
-  return f
-
-# input and output types for gp
-xType = t.NumberType()
-oType = t.NumberType()
-
-constantType = SPType([t.AnyType()], oType)
-def makeConstFunc(c):
-  return VentureFunction(lambda _: c, sp_type=constantType)
-
-#print ripl.predict('(app zero 1)')
-
-squaredExponentialType = SPType([xType, xType], oType)
-def makeSquaredExponential(a, l):
-  return VentureFunction(squared_exponential(a, l), sp_type=squaredExponentialType)
-
 def prep_ripl(ripl):
-  ripl.assume('app', 'apply_function')
-  ripl.assume('make_const_func', VentureFunction(makeConstFunc, [xType], constantType))
-  ripl.assume('make_squared_exponential', VentureFunction(makeSquaredExponential, [t.NumberType(), xType], t.AnyType("VentureFunction")))
-  ripl.assume('zero', "(app make_const_func 0)")
-  ripl.assume('sq_exp', "(app make_squared_exponential 1 1)")
+  ripl.assume('zero', "(gp_mean_const 0.)")
+  ripl.assume('sq_exp', "(gp_cov_se 1.)")
 
 def array(xs):
-  return v.VentureArrayUnboxed(np.array(xs), xType)
+  return v.VentureArrayUnboxed(np.array(xs), gp.xType)
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 def testGP1():
@@ -108,14 +86,11 @@ def testGPMean2():
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 def testHyperparameterInferenceSmoke():
   ripl = get_ripl()
-  fType = t.AnyType("VentureFunction")
-  ripl.assume('make_const_func', VentureFunction(makeConstFunc, [xType], constantType))
-  ripl.assume('make_squared_exponential', VentureFunction(makeSquaredExponential, [t.NumberType(), xType], fType))
   ripl.execute_program("""\
-  [assume mean (apply_function make_const_func 0)]
+  [assume mean (gp_mean_const 0.)]
   [assume a (tag (quote hypers ) 0 (inv_gamma 2 5))]
   [assume l (tag (quote hypers ) 1 (inv_gamma 5 50))]
-  [assume cov (apply_function make_squared_exponential a l)]
+  [assume cov (gp_cov_scale a (gp_cov_se (* l l)))]
   [assume gp (make_gp mean cov)]
 """)
   ripl.observe("(gp (array 1 2 3))", array([1.1, 2.2, 3.3]))
@@ -160,3 +135,67 @@ def testGPAux():
 
   ripl.forget('obs')
   check_firsts(ripl.infer('(extract_stats gp)'), {1.0, 3.0})
+
+@in_backend('none')
+def testNormalParameters():
+  obs_inputs = np.array([1.3, -2.0, 0.0])
+  obs_outputs = np.array([5.0, 2.3, 8.0])
+  test_inputs = np.array([1.4, -3.2])
+  expect_mu = np.array([4.6307, -0.9046])
+  expect_sig = np.array([[0.0027, -0.0231], [-0.0231, 1.1090]])
+  sigma = 2.1
+  l = 1.8
+  observations = OrderedDict(zip(obs_inputs, obs_outputs))
+
+  mean = gp.mean_const(0.)
+  covariance = cov.scale(sigma**2, cov.se(l**2))
+  gp_class = gp.GP(mean, covariance, observations)
+  actual_mu, actual_sig = gp_class.getNormal(test_inputs)
+  np.testing.assert_almost_equal(actual_mu, expect_mu, decimal=4)
+  np.testing.assert_almost_equal(actual_sig, expect_sig, decimal=4)
+
+@in_backend('none')
+@statisticalTest
+def testOneSample():
+  obs_inputs  = np.array([1.3, -2.0, 0.0])
+  obs_outputs = np.array([5.0,  2.3, 8.0])
+  test_input = 1.4
+  expect_mu = 4.6307
+  expect_sig = 0.0027
+  sigma = 2.1
+  l = 1.8
+  observations = OrderedDict(zip(obs_inputs, obs_outputs))
+
+  mean = gp.mean_const(0.)
+  covariance = cov.scale(sigma**2, cov.se(l**2))
+  gp_class = gp.GP(mean, covariance, observations)
+
+  # gp_class.sample(test_input) should be normally distributed with
+  # mean expect_mu.
+  n = 200
+  samples = np.array([gp_class.sample([test_input])[0] for _ in xrange(n)])
+  assert samples.shape == (n,)
+  return reportKnownGaussian(expect_mu, np.sqrt(expect_sig), samples)
+
+@in_backend('none')
+@statisticalTest
+def testTwoSamples_low_covariance():
+  obs_inputs  = np.array([1.3, -2.0, 0.0])
+  obs_outputs = np.array([5.0,  2.3, 8.0])
+  in_lo_cov = np.array([1.4, -20.0])
+  sigma = 2.1
+  l = 1.8
+  observations = OrderedDict(zip(obs_inputs, obs_outputs))
+
+  mean = gp.mean_const(0.)
+  covariance = cov.scale(sigma**2, cov.se(l**2))
+  gp_class = gp.GP(mean, covariance, observations)
+
+  n = 200
+  lo_cov_x = []
+  lo_cov_y = []
+  for i in range(n):
+    x, y = gp_class.sample(in_lo_cov)
+    lo_cov_x.append(x)
+    lo_cov_y.append(y)
+  return reportPearsonIndependence(lo_cov_x, lo_cov_y)

@@ -106,7 +106,6 @@ map<string,SP*> initBuiltInSPs()
   m["poisson"] = new SP(new NullRequestPSP(), new PoissonOutputPSP());
 
   /* Conditionals */
-  m["branch"] = new SP(new BranchRequestPSP(), new ESRRefOutputPSP());
   m["biplex"] = new SP(new NullRequestPSP(), new BiplexOutputPSP());
 
   /* Eval and envs */
@@ -184,9 +183,9 @@ map<string,SP*> initBuiltInSPs()
 
   /* Non parametrics */
   m["make_crp"] = new SP(new NullRequestPSP(), new MakeCRPOutputPSP());
-  
+
   /* Misc */
   m["exactly"] = new SP(new NullRequestPSP(), new ExactlyOutputPSP());
-  
+
   return m;
 }

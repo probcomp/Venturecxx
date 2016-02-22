@@ -31,22 +31,22 @@ struct PGibbsGKernel : GKernel
   PGibbsGKernel(size_t numNewParticles,bool inParallel): inParallel(inParallel), numNewParticles(numNewParticles) {}
 
   pair<Trace*,double> propose(ConcreteTrace * trace,boost::shared_ptr<Scaffold> scaffold);
-  void accept();
-  void reject();
-  
+  int accept();
+  int reject();
+
   ConcreteTrace * trace;
   boost::shared_ptr<Scaffold> scaffold;
   boost::shared_ptr<DB> rhoDB;
 
   bool inParallel;
-  
+
   /* Does not include the old particle. */
   size_t numNewParticles;
 private:
-  
+
   /* The particle generated from the old trace. */
   boost::shared_ptr<Particle> oldParticle;
-  
+
   /* The particle chosen by propose(). */
   boost::shared_ptr<Particle> finalParticle;
 };

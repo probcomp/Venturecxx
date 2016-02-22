@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 #!/usr/bin/env python
 
 try:
@@ -161,7 +162,6 @@ packages = [
     "venture.sivm",
     "venture.test",
     "venture.value",
-    "venture.venturemagics",
 ]
 
 if ON_LINUX:
@@ -280,28 +280,14 @@ class local_build_py(build_py):
             generate_parser(lemonade, grammar)
         build_py.run(self)
 
-install_requires = [
-    'numpy>=1.8',
-    'scipy>=0.13',
-    # Plotf, MRipl
-    'matplotlib>=1.1',
-    # Saving and restoring ripls
-    'dill',
-    # Plotf
-    'patsy', # Because ggplot needs this installed first ??
-    'pandas>=0.14, <0.16', # <0.16 because that version introduces a change that breaks ggplot
-    'ggplot',
-    # Debug pictures of scaffolds
-    'networkx',
-    # Ripl server
-    'flask>=0.10',
-    'requests>=1.2',
-    # IPython magics; MRipl
-    'ipython>=1.2',
-    'ipyparallel',
-    'pyzmq>=13',
-    'jsonschema', # Ubuntu 14.04 apparently needs this mentioned for notebooks to work
-]
+def parse_req_file(filename):
+    def parse_req_line(line):
+        return line.split('#')[0].strip()
+    return [parse_req_line(line)
+            for line in open(filename).read().splitlines()
+            if len(parse_req_line(line)) > 0]
+
+install_requires = parse_req_file("install_requires.txt")
 
 tests_require = [
     'nose>=1.3',

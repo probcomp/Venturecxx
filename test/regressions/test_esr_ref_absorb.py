@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -27,7 +27,7 @@ def testESRRefAbsorb1():
   might change.
   """
   ripl = get_ripl()
-  ripl.predict("(branch (flip 0.7) 1 0)",label="pid")
+  ripl.predict("(if (flip 0.7) 1 0)",label="pid")
   predictions = collectSamples(ripl,"pid")
   ans = [(1, .7), (0, .3)]
   return reportKnownDiscrete(ans, predictions)

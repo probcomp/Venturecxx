@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from venture.test.config import broken_in
 from venture.test.config import collectSamples
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
@@ -83,3 +84,19 @@ def testHMMSP2():
   predictions = collectSamples(ripl,"pid")
   ans = [(0,0.6528), (1,0.3472)]
   return reportKnownDiscrete(ans, predictions)
+
+@broken_in('lite', "https://github.com/probcomp/Venturecxx/issues/342")
+def testHMMResampleSmoke():
+  ripl = get_ripl()
+  ripl.assume("f","""
+(make_lazy_hmm
+ (simplex 0.5 0.5)
+ (matrix (array (array 0.7 0.3)
+               (array 0.3 0.7)))
+ (matrix (array (array 0.9 0.2)
+               (array 0.1 0.8))))
+""")
+  ripl.observe("(f 1)","atom<0>")
+  ripl.predict("(f 7)")
+  ripl.infer("(resample 3)")
+  ripl.infer("(mh default one 10)")

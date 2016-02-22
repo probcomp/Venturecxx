@@ -53,15 +53,11 @@ CC=&quot;ccache gcc&quot; pip install .
       <chatNotification>false</chatNotification>
       <notifyMap>
         <entry>
-          <com.flowdock.jenkins.BuildResult>FAILURE</com.flowdock.jenkins.BuildResult>
-          <boolean>true</boolean>
-        </entry>
-        <entry>
-          <com.flowdock.jenkins.BuildResult>FIXED</com.flowdock.jenkins.BuildResult>
-          <boolean>true</boolean>
-        </entry>
-        <entry>
           <com.flowdock.jenkins.BuildResult>SUCCESS</com.flowdock.jenkins.BuildResult>
+          <boolean>true</boolean>
+        </entry>
+        <entry>
+          <com.flowdock.jenkins.BuildResult>FAILURE</com.flowdock.jenkins.BuildResult>
           <boolean>true</boolean>
         </entry>
         <entry>
@@ -69,12 +65,16 @@ CC=&quot;ccache gcc&quot; pip install .
           <boolean>false</boolean>
         </entry>
         <entry>
+          <com.flowdock.jenkins.BuildResult>UNSTABLE</com.flowdock.jenkins.BuildResult>
+          <boolean>false</boolean>
+        </entry>
+        <entry>
           <com.flowdock.jenkins.BuildResult>NOT_BUILT</com.flowdock.jenkins.BuildResult>
           <boolean>false</boolean>
         </entry>
         <entry>
-          <com.flowdock.jenkins.BuildResult>UNSTABLE</com.flowdock.jenkins.BuildResult>
-          <boolean>false</boolean>
+          <com.flowdock.jenkins.BuildResult>FIXED</com.flowdock.jenkins.BuildResult>
+          <boolean>true</boolean>
         </entry>
       </notifyMap>
       <notifySuccess>true</notifySuccess>
@@ -85,7 +85,7 @@ CC=&quot;ccache gcc&quot; pip install .
       <notifyNotBuilt>false</notifyNotBuilt>
     </com.flowdock.jenkins.FlowdockNotifier>
     <hudson.tasks.BuildTrigger>
-      <childProjects>venture-inference-quality, venture-performance, lite-rejection-inference-quality, lite-func-pgibbs-inference-quality, lite-meanfield-inference-quality, puma-mh-inference-quality, puma-rejection-inference-quality, puma-pgibbs-inference-quality, puma-meanfield-inference-quality, puma-performance, lite-misc-inference-quality, puma-misc-inference-quality, lite-subsampled-mh-inference-quality</childProjects>
+      <childProjects>venture-inference-quality,venture-performance,lite-rejection-inference-quality,lite-func-pgibbs-inference-quality,lite-meanfield-inference-quality,puma-mh-inference-quality,puma-rejection-inference-quality,puma-pgibbs-inference-quality,puma-meanfield-inference-quality,puma-performance,lite-misc-inference-quality,puma-misc-inference-quality,lite-subsampled-mh-inference-quality</childProjects>
       <threshold>
         <name>SUCCESS</name>
         <ordinal>0</ordinal>

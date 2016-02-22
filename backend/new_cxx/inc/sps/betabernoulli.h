@@ -1,4 +1,4 @@
-// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -28,7 +28,7 @@ struct BetaBernoulliSPAux : SPAux
 {
   BetaBernoulliSPAux(): heads(0), tails(0) {}
   VentureValuePtr asVentureValue() const;
-  SPAux* copy_help(ForwardingMap* m) const;
+  BetaBernoulliSPAux* copy_help(ForwardingMap* m) const;
 
   int heads;
   int tails;
@@ -61,7 +61,7 @@ private:
 struct UBetaBernoulliSPAux : BetaBernoulliSPAux
 {
   UBetaBernoulliSPAux(double p): BetaBernoulliSPAux(), p(p) {}
-  SPAux* copy_help(ForwardingMap* m) const;
+  UBetaBernoulliSPAux* copy_help(ForwardingMap* m) const;
 
   double p;
 };
@@ -79,6 +79,7 @@ struct UBetaBernoulliSP : SP
 
   bool hasAEKernel() const { return true; }
   void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng * rng) const;
+  UBetaBernoulliSP* copy_help(ForwardingMap* m) const;
 };
 
 struct UBetaBernoulliOutputPSP : RandomPSP

@@ -222,6 +222,5 @@ def _restore_trace(trace, directives, values, foreign_sp_names, foreign_sps, ski
   # mistakes will be rarer than in the past (which will make them even
   # harder to detect).
   trace.registerConstraints()
-  
 
   return trace

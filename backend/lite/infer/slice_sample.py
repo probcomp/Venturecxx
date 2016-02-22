@@ -81,10 +81,13 @@ class SliceOperator(object):
     xiWeight = regenAndAttach(trace,scaffold,False,self.rhoDB,{})
     return trace,xiWeight - rhoWeight
 
-  def accept(self): pass
+  def accept(self):
+    return self.scaffold.numAffectedNodes()
+
   def reject(self):
     detachAndExtract(self.trace,self.scaffold)
     regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,{})
+    return self.scaffold.numAffectedNodes()
 
 
 class StepOutSliceOperator(SliceOperator):
@@ -184,7 +187,3 @@ class DoublingSliceOperator(SliceOperator):
       if D and (logy >= fl) and (logy >= fr):
         return False
     return True
-
-
-
-

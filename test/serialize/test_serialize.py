@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -127,8 +127,6 @@ def test_serialize_aaa():
     def check_beta_bernoulli(maker, action):
         if maker == "make_uc_beta_bernoulli" and action in ['serialize', 'convert_lite', 'convert_puma']:
             raise SkipTest("Cannot convert BetaBernoulliSP to a stack dictionary. Issue: https://app.asana.com/0/9277420529946/16149214487233")
-        elif action == 'copy' and config['get_ripl'] == 'puma':
-            raise SkipTest("Fails due to a mystery bug in Puma stop_and_copy. Issue: https://app.asana.com/0/11127829865276/13039650533872")
         v = get_ripl()
         v.assume('a', '(normal 10.0 1.0)')
         v.assume('f', '({0} a a)'.format(maker))
@@ -141,8 +139,6 @@ def test_serialize_aaa():
             yield check_beta_bernoulli, maker, action
 
     def check_crp(maker, action):
-        if action == 'copy' and config['get_ripl'] == 'puma':
-            raise SkipTest("Fails due to a mystery bug in Puma stop_and_copy. Issue: https://app.asana.com/0/11127829865276/13039650533872")
         v = get_ripl()
         v.assume('a', '(gamma 1.0 1.0)')
         v.assume('f', '({0} a)'.format(maker))
@@ -173,7 +169,7 @@ def test_serialize_aaa():
 @gen_on_inf_prim("mh") # Easy to generalize but little testing value
 def test_serialize_latents():
     def check(action):
-        raise SkipTest("Cannot serialize latents")
+        raise SkipTest("Cannot serialize latents https://github.com/probcomp/Venturecxx/issues/342")
         v = get_ripl()
         v.assume('f','''\
     (make_lazy_hmm

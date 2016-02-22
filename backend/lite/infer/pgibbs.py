@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -121,7 +121,8 @@ class PGibbsOperator(object):
     return alpha
 
   def accept(self):
-    pass
+    return self.scaffold.numAffectedNodes()
+
   def reject(self):
     detachRest(self.trace,self.scaffold.border,self.scaffold,self.T)
     assertTorus(self.scaffold)
@@ -129,6 +130,8 @@ class PGibbsOperator(object):
     assert len(path) == self.T
     restoreAncestorPath(self.trace,self.scaffold.border,self.scaffold,self.omegaDBs,self.T,path)
     assertTrace(self.trace,self.scaffold)
+    return self.scaffold.numAffectedNodes()
+
   def name(self): return "particle gibbs (mutating)"
 
 
@@ -216,10 +219,12 @@ class ParticlePGibbsOperator(object):
   def accept(self):
     self.particles[self.finalIndex].commit()
     assertTrace(self.trace,self.scaffold)
+    return self.scaffold.numAffectedNodes()
 
   def reject(self):
     self.particles[-1].commit()
     assertTrace(self.trace,self.scaffold)
+    return self.scaffold.numAffectedNodes()
 
   def name(self): return "particle gibbs (functional)"
 

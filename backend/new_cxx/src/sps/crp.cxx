@@ -1,4 +1,4 @@
-// Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2013, 2014, 2016 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -22,6 +22,7 @@
 #include "sprecord.h"
 #include "node.h"
 #include "utils.h"
+#include "stop-and-copy.h"
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
@@ -36,6 +37,13 @@ typedef pair<uint32_t,uint32_t> tableCountPair;
 boost::python::object CRPSPAux::toPython(Trace * trace) const
 {
   return toPythonDict(trace, tableCounts);
+}
+
+CRPSPAux* CRPSPAux::copy_help(ForwardingMap* m) const
+{
+  CRPSPAux* answer = new CRPSPAux(*this);
+  (*m)[this] = answer;
+  return answer;
 }
 
 // Maker

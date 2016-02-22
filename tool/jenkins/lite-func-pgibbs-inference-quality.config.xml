@@ -22,7 +22,7 @@
     <extensions/>
   </scm>
   <canRoam>true</canRoam>
-  <disabled>true</disabled>
+  <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
   <triggers/>
@@ -32,7 +32,7 @@
       <command>#!/bin/bash -xe
 
 source ~/env/bin/activate
-nosetests -c inference-quality.cfg --tc=get_ripl:lite --tc=infer:&quot;(func_pgibbs default ordered 4 5)&quot; --eval-attr=&quot;(not backend or backend in [&apos;lite&apos;, &apos;any&apos;]) and (not inf_prim or inf_prim in [&apos;func_pgibbs&apos;, &apos;any&apos;])&quot;</command>
+nosetests -c inference-quality.cfg --tc=get_ripl:lite --tc=infer:&quot;(func_pgibbs default ordered 20 20)&quot; --eval-attr=&quot;(not backend or backend in [&apos;lite&apos;, &apos;any&apos;]) and (not inf_prim or inf_prim in [&apos;func_pgibbs&apos;, &apos;any&apos;])&quot;</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>

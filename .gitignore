@@ -22,6 +22,8 @@ a.out
 # Dev/testing
 dump
 .noseids
+# Compiled Stan model cache
+/test/integration/models/
 
 # Release artifacts
 /venture-*.tgz
@@ -29,6 +31,7 @@ dump
 /venture-*.tar.gz
 /dist
 /MANIFEST
+/venture.egg-info
 
 # Lemonade parser generator output
 /python/lib/parser/church_prime/grammar.out

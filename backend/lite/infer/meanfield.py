@@ -64,9 +64,9 @@ class MeanfieldOperator(object):
 
   def accept(self):
     if self.delegate is None:
-      pass
+      return self.scaffold.numAffectedNodes()
     else:
-      self.delegate.accept()
+      return self.delegate.accept()
 
   def reject(self):
     # TODO This is the same as MHOperator reject except for the
@@ -74,7 +74,8 @@ class MeanfieldOperator(object):
     if self.delegate is None:
       detachAndExtract(self.trace,self.scaffold)
       regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,{})
+      return self.scaffold.numAffectedNodes()
     else:
-      self.delegate.reject()
+      return self.delegate.reject()
 
   def name(self): return "meanfield"

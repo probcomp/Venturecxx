@@ -132,7 +132,7 @@ def validate_arg(instruction,arg,validator,modifier=lambda x: x,required=True,wr
     except VentureException as e:
         if e.exception == 'parse' and wrap_exception:
             raise VentureException('invalid_argument',
-                    'Invalid argument {}. {}'.format(arg, str(e)),
+                    'Invalid argument {} = {}. {}'.format(arg, val, str(e)),
                     argument=arg)
         raise
     return modifier(val)

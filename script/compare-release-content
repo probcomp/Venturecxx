@@ -1,4 +1,6 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+#!/bin/bash
+
+# Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -14,4 +16,19 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-# -*- coding: utf-8 -*-
+
+set -Ceu
+
+release=${1:-`python setup.py --version`}
+if [ -z "$release" ]; then
+    echo >&2 Could not determine a release number, exiting
+    exit 1
+fi
+
+script/release-tarball
+
+python setup.py sdist
+
+dist_name=xventure-${release} # I only need this for the length anyway
+
+diff -u <(tar -tf ../venture-$release.tgz | cut -c 11- | sort) <(tar -ztf dist/venture-$release.tar.gz | cut -c ${#dist_name}- | sort)

@@ -54,6 +54,9 @@ class Scaffold(object):
     return pnodes[0]
   def isBrush(self, node): return node in self.brush
 
+  def numAffectedNodes(self):
+    return len(self.regenCounts)
+
   def show(self):
     print "---Scaffold---"
     print "# pnodes: " + str(len(self.getPrincipalNodes()))

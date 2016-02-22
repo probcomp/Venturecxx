@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -292,7 +292,7 @@ class Semantics(object):
 
     def p_primary_paren(self, o, e, c):
         assert isloc(e)
-        return locbracket(o, c, [locbracket(o, c, val.symbol('identity')), e])
+        return locbracket(o, c, e['value'])
     def p_primary_brace(self, o, l, semi, e, c):
         assert isloc(e)
         return locbracket(o, c, [locbracket(o, c, val.symbol('let')), l, e])
@@ -339,7 +339,7 @@ class Semantics(object):
         t0, start, end = t
         assert t0[-1] == '<'
         t0 = t0[:-1]
-        if t0 == 'number' or t0 == 'boolean':
+        if t0 == 'boolean':
             # XXX Accumulate parse error.
             raise VentureException('text_parse',
                 ('JSON not allowed for %s' % (t0,)),
@@ -822,38 +822,3 @@ class Trie(object):
         for (ks, v) in keyed_items:
             answer.insert(ks, v)
         return answer
-
-def _collapse_identity(toks, operators):
-    """
-    Removes one layer of nested identity functions if the
-    inner expression is a function application contained
-    in the list of operators. For example:
-
-    _collapse_identity(
-        ['identity',
-            ['identity',
-                ['+', a, b]]],
-        ('+'))
-
-    returns: ['identity',
-                ['+',a, b]]
-
-    Of course, this function operates on the 'full'
-    {"loc":[], "value":[]} representation the above
-    parse trees. When a layer of parentheses is
-    collapsed, the loc range of the inner expression
-    is expanded to include the collapsed parens.
-    """
-    if not isinstance(toks['value'], (list, tuple)):
-        return toks
-    if not toks['value'][0]['value'] == val.symbol('identity'):
-        return toks
-    if not isinstance(toks['value'][1]['value'], (list, tuple)):
-        return toks
-    if toks['value'][1]['value'][0]['value'] == val.symbol('identity'):
-        return {"loc":toks['loc'], "value":[
-            toks['value'][0],
-            _collapse_identity(toks['value'][1], operators)]}
-    if toks['value'][1]['value'][0]['value']['value'] in operators:
-        return {"loc":toks['loc'], "value":toks['value'][1]['value']}
-    return toks

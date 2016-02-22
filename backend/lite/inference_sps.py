@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -111,9 +111,13 @@ class MadeRiplMethodInferOutputPSP(psp.LikelihoodFreePSP):
     except VentureException as err:
       import sys
       info = sys.exc_info()
-      raise VentureNestedRiplMethodError("Nested ripl operation signalled an error", err, info, self.addr), None, info[2]
+      raise VentureNestedRiplMethodError("Nested ripl operation signalled an error",
+                                         err, info, self.addr), None, info[2]
     try:
-      ans_vv = v.VentureValue.fromStackDict(ans) if ans is not None else v.VentureNil()
+      if ans is not None:
+        ans_vv = v.VentureValue.fromStackDict(ans)
+      else:
+        ans_vv = v.VentureNil()
     except VentureTypeError:
       # Do not return values that cannot be reconstructed from stack
       # dicts (e.g., SPs)
@@ -147,7 +151,9 @@ def infer_action_maker_type(args_types, return_type=None, **kwargs):
 
 def typed_inf_sp(name, tp, klass, desc=""):
   assert isinstance(tp, sp.SPType)
-  return no_request(psp.TypedPSP(InferPrimitiveOutputPSP(name, klass=klass, desc=desc, tp=tp.return_type), tp))
+  untyped = InferPrimitiveOutputPSP(name, klass=klass, desc=desc,
+                                    tp=tp.return_type)
+  return no_request(psp.TypedPSP(untyped, tp))
 
 def trace_method_sp(name, tp, desc=""):
   return [ name, typed_inf_sp(name, tp, MadeInferPrimitiveOutputPSP, desc) ]
@@ -155,28 +161,41 @@ def trace_method_sp(name, tp, desc=""):
 def engine_method_sp(name, tp, desc="", method_name=None):
   if method_name is None:
     method_name = name
-  return [ name, typed_inf_sp(method_name, tp, MadeEngineMethodInferOutputPSP, desc) ]
+  it = typed_inf_sp(method_name, tp, MadeEngineMethodInferOutputPSP, desc)
+  return [name, it]
 
 def ripl_method_sp(name, tp, desc="", method_name=None):
   if method_name is None:
     method_name = name
-  return [ name, typed_inf_sp(method_name, tp, MadeRiplMethodInferOutputPSP, desc) ]
+  it = typed_inf_sp(method_name, tp, MadeRiplMethodInferOutputPSP, desc)
+  return [name, it]
 
 def sequenced_sp(f, tp, desc=""):
-  "This is for SPs that should be able to participate in do blocks but don't actually read the state (e.g., for doing IO)"
+  """This is for SPs that should be able to participate in do blocks but
+don't actually read the state (e.g., for doing IO)"""
   # TODO Assume they are all deterministic, for now.
-  return no_request(psp.TypedPSP(InferPrimitiveOutputPSP(f, klass=MadeActionOutputPSP, desc=desc, tp=tp.return_type), tp))
+  untyped = InferPrimitiveOutputPSP(f, klass=MadeActionOutputPSP, desc=desc,
+                                    tp=tp.return_type)
+  return no_request(psp.TypedPSP(untyped, tp))
 
 def transition_oper_args_types(extra_args = None):
-  # ExpressionType reasonably approximates the mapping I want for scope and block IDs.
-  return [t.AnyType("scope : object"), t.AnyType("block : object")] + (extra_args if extra_args is not None else []) + [t.IntegerType("transitions : int")]
+  # ExpressionType reasonably approximates the mapping I want for
+  # scope and block IDs.
+  return [t.AnyType("scope : object"), t.AnyType("block : object")] + \
+    (extra_args if extra_args is not None else []) + \
+    [t.IntegerType("transitions : int")]
 
-def transition_oper_type(extra_args = None, **kwargs):
-  return infer_action_maker_type(transition_oper_args_types(extra_args), **kwargs)
+def transition_oper_type(extra_args = None, return_type=None, **kwargs):
+  if return_type is None:
+    return_type = t.Array(t.Number)
+  return infer_action_maker_type(transition_oper_args_types(extra_args),
+                                 return_type=return_type, **kwargs)
 
 def par_transition_oper_type(extra_args = None, **kwargs):
   other_args = transition_oper_args_types(extra_args)
-  return infer_action_maker_type(other_args + [t.BoolType("in_parallel : bool")], min_req_args=len(other_args), **kwargs)
+  return infer_action_maker_type(\
+    other_args + [t.BoolType("in_parallel : bool")],
+    min_req_args=len(other_args), **kwargs)
 
 def macro_helper(name, tp):
   return engine_method_sp("_" + name, tp, method_name=name, desc="""\
@@ -196,7 +215,8 @@ def assert_fun(test, msg=""):
 
 def print_fun(*args):
   def convert_arg(arg):
-    if isinstance(arg, VentureForeignBlob) and isinstance(arg.getForeignBlob(), Dataset):
+    if isinstance(arg, VentureForeignBlob) and \
+       isinstance(arg.getForeignBlob(), Dataset):
       return arg.getForeignBlob().asPandas()
     else:
       return arg
@@ -217,9 +237,11 @@ def plot_to_file_fun(basenames, spec, dataset):
   filenames = t.ExpressionType().asPython(basenames)
   spec = t.ExpressionType().asPython(spec)
   if isinstance(dataset, Dataset):
-    PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names, _format_filenames(filenames, spec))
+    PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names,
+                        _format_filenames(filenames, spec))
   else:
-    PlotSpec(spec).plot(dataset, list(dataset.columns.values), _format_filenames(filenames, spec))
+    PlotSpec(spec).plot(dataset, list(dataset.columns.values),
+                        _format_filenames(filenames, spec))
 
 def _format_filenames(filenames,spec):
   if isinstance(filenames, basestring) or isinstance(filenames, v.VentureString):
@@ -240,7 +262,10 @@ inferenceSPsList = [
 Run a Metropolis-Hastings kernel, proposing by resimulating the prior.
 
 The `transitions` argument specifies how many transitions of the chain
-to run."""),
+to run.
+
+Returns the average number of nodes touched per transition in each particle.
+"""),
 
   trace_method_sp("func_mh", transition_oper_type(), desc="""\
 Like mh, but functional.
@@ -263,7 +288,10 @@ chain to run.
 
 The `in-parallel` argument, if supplied, toggles parallel evaluation
 of the local conditional.  Parallel evaluation is only available in the
-Puma backend, and is on by default."""),
+Puma backend, and is on by default.
+
+Returns the average number of nodes touched per transition in each particle.
+"""),
 
   trace_method_sp("emap", par_transition_oper_type(), desc="""\
 Deterministically move to the local conditional maximum (computed by
@@ -278,7 +306,10 @@ is `one`.
 
 The ``in-parallel`` argument, if supplied, toggles parallel evaluation
 of the local conditional.  Parallel evaluation is only available in
-the Puma backend, and is on by default."""),
+the Puma backend, and is on by default.
+
+Returns the average number of nodes touched per transition in each particle.
+"""),
 
   trace_method_sp("func_pgibbs",
                   par_transition_oper_type([t.IntegerType("particles : int")]),
@@ -296,7 +327,10 @@ The ``transitions`` argument specifies how many times to do this.
 
 The ``in-parallel`` argument, if supplied, toggles per-particle
 parallelism.  Parallel evaluation is only available in the Puma
-backend, and is on by default. """),
+backend, and is on by default.
+
+Returns the average number of nodes touched per transition in each particle.
+"""),
 
   trace_method_sp("pgibbs",
                   par_transition_oper_type([t.IntegerType("particles : int")]),
@@ -307,7 +341,10 @@ The performance is asymptotically worse in the sequence length, but
 does not rely on stochastic procedures being able to functionally
 clone their auxiliary state.
 
-The only reason to use this is if you know you want to. """),
+The only reason to use this is if you know you want to.
+
+Returns the average number of nodes touched per transition in each particle.
+"""),
 
   trace_method_sp("func_pmap",
                   par_transition_oper_type([t.IntegerType("particles : int")]),
@@ -316,7 +353,10 @@ Like func_pgibbs, but deterministically
 select the maximum-likelihood particle at the end instead of sampling.
 
 Iterated applications of func_pmap are guaranteed to grow in likelihood
-(and therefore do not converge to the conditional)."""),
+(and therefore do not converge to the conditional).
+
+Returns the average number of nodes touched per transition in each particle.
+"""),
 
   trace_method_sp("meanfield",
                   transition_oper_type([t.IntegerType("training_steps : int")]),
@@ -329,7 +369,10 @@ The mean-field approximation is optimized with gradient ascent.  The
 The `transitions` argument specifies how many times to do this.
 
 Note: There is currently no way to save the result of training the
-variational approximation to be able to sample from it many times. """),
+variational approximation to be able to sample from it many times.
+
+Returns the average number of nodes touched per transition in each particle.
+"""),
 
   trace_method_sp("print_scaffold_stats", transition_oper_type(), desc="""\
 Print some statistics about the requested scaffold.
@@ -337,7 +380,10 @@ Print some statistics about the requested scaffold.
 This may be useful as a diagnostic.
 
 The `transitions` argument specifies how many times to do this;
-this is not redundant if the `block` argument is `one`."""),
+this is not redundant if the `block` argument is `one`.
+
+Returns the average number of nodes touched per transition in each particle.
+"""),
 
   trace_method_sp("nesterov",
                   transition_oper_type([t.NumberType("step_size : number"), t.IntegerType("steps : int")]),
@@ -362,7 +408,10 @@ The `steps` argument gives how many steps to take.
 The `transitions` argument specifies how many times to do this.
 
 Note: the Nesterov acceleration is applied across steps within one
-transition, not across transitions."""),
+transition, not across transitions.
+
+Returns the average number of nodes touched per transition in each particle.
+"""),
 
   trace_method_sp("grad_ascent",
                   transition_oper_type([t.NumberType("step_size : number"), t.IntegerType("steps : int")]),
@@ -374,7 +423,10 @@ Not available in the Puma backend.  Not all the builtin procedures
 support all the gradient information necessary for this.
 
 This is just like `nesterov`, except without the Nesterov
-correction. """),
+correction.
+
+Returns the average number of nodes touched per transition in each particle.
+"""),
 
   trace_method_sp("hmc",
                   transition_oper_type([t.NumberType("step_size : number"), t.IntegerType("steps : int")]),
@@ -394,7 +446,10 @@ by HMC.
 The ``steps`` argument gives how many steps to take in each HMC
 trajectory.
 
-The ``transitions`` argument specifies how many times to do this."""),
+The ``transitions`` argument specifies how many times to do this.
+
+Returns the average number of nodes touched per transition in each particle.
+"""),
 
   trace_method_sp("rejection", transition_oper_type([t.NumberType("attempt_bound : number")], min_req_args=2), desc="""\
 Sample from the local conditional by rejection sampling.
@@ -412,7 +467,10 @@ taken to be the number of transitions, not the attempt bound.
 
 The ``transitions`` argument specifies how many times to do this.
 Specifying more than 1 transition is redundant if the `block` is
-anything other than `one`. """),
+anything other than `one`.
+
+Returns the average number of nodes touched per transition in each particle.
+"""),
 
   trace_method_sp("bogo_possibilize", transition_oper_type(min_req_args=2), desc="""\
 Initialize the local inference problem to a possible state.
@@ -446,7 +504,10 @@ Notes:
 
 The ``transitions`` argument specifies how many times to do this.
 Specifying more than 1 transition is redundant if the `block` is
-anything other than `one`. """),
+anything other than `one`.
+
+Returns the average number of nodes touched per transition in each particle.
+"""),
 
   trace_method_sp("slice",
                   transition_oper_type([t.NumberType("w : number"), t.IntegerType("m : int")]),
@@ -461,7 +522,10 @@ This kernel uses the stepping-out procedure to find the slice.  The
 way.
 
 The `transitions` argument specifies how many transitions of the chain
-to run."""),
+to run.
+
+Returns the average number of nodes touched per transition in each particle.
+"""),
 
   trace_method_sp("slice_doubling",
                   transition_oper_type([t.NumberType("w : number"), t.IntegerType("p : int")]),
@@ -476,7 +540,10 @@ The `w` and `p` arguments parameterize the slice sampler in the
 standard way.
 
 The `transitions` argument specifies how many transitions of the chain
-to run."""),
+to run.
+
+Returns the average number of nodes touched per transition in each particle.
+"""),
 
   engine_method_sp("resample",
                    infer_action_maker_type([t.IntegerType("particles : int")]),
@@ -609,7 +676,9 @@ all the other particles in the bin. """),
   trace_method_sp("draw_scaffold", transition_oper_type(), desc="""\
 Draw a visual representation of the scaffold indicated by the given scope and block.
 
-This is useful for debugging.  You probably do not want to specify more than 1 transition."""),
+This is useful for debugging.  You probably do not want to specify more than 1 transition.
+
+Returns the number of nodes in the drawing."""),
 
   trace_method_sp("subsampled_mh",
                   transition_oper_type([t.IntegerType("Nbatch : int"), t.IntegerType("k0 : int"), t.NumberType("epsilon : number"),
@@ -624,7 +693,10 @@ supported.  See `subsampled_mh_check_applicability`.
 
 Note: the resulting execution history may not actually be possible, so
 may confuse other transition kernels.  See `subsampled_mh_make_consistent`
-and ``*_update``.  """),
+and ``*_update``.
+
+Returns the average number of nodes touched per transition in each particle.
+"""),
 
   trace_method_sp("subsampled_mh_check_applicability", transition_oper_type(), desc="""\
 Raise a warning if the given scope and block obviously do not admit subsampled MH
@@ -648,20 +720,28 @@ From the source::
   trace_method_sp("subsampled_mh_make_consistent",
                   transition_oper_type([t.BoolType("useDeltaKernels : bool"), t.NumberType("deltaKernelArgs : number"), t.BoolType("updateValues : bool")]),
                   desc="""\
-Fix inconsistencies introduced by subsampled MH."""),
+Fix inconsistencies introduced by subsampled MH.
+
+Returns the number of nodes touched."""),
 
   trace_method_sp("mh_kernel_update",
                   transition_oper_type([t.BoolType("useDeltaKernels : bool"), t.NumberType("deltaKernelArgs : number"), t.BoolType("updateValues : bool")]),
                   desc="""\
-Run a normal `mh` kernel, tolerating inconsistencies introduced by previous subsampled MH."""),
+Run a normal `mh` kernel, tolerating inconsistencies introduced by previous subsampled MH.
+
+Returns the average number of nodes touched per transition in each particle."""),
 
   trace_method_sp("gibbs_update", par_transition_oper_type(), desc="""\
-Run a normal `gibbs` kernel, tolerating inconsistencies introduced by previous subsampled MH. """),
+Run a normal `gibbs` kernel, tolerating inconsistencies introduced by previous subsampled MH.
+
+Returns the average number of nodes touched per transition in each particle."""),
 
   trace_method_sp("pgibbs_update",
                   par_transition_oper_type([t.IntegerType("particles : int")]),
                   desc="""\
-Run a normal `pgibbs` kernel, tolerating inconsistencies introduced by previous subsampled MH."""),
+Run a normal `pgibbs` kernel, tolerating inconsistencies introduced by previous subsampled MH.
+
+Returns the average number of nodes touched per transition in each particle."""),
 
   engine_method_sp("incorporate", infer_action_maker_type([]), desc="""\
 Explicitly make the history consistent with observations.
@@ -709,6 +789,14 @@ non-observed stochastic nodes."""),
                    infer_action_maker_type([], t.ArrayUnboxedType(t.NumberType())),
                    desc="""\
 Return the weights of all extant particles as an array of numbers (in log space).
+"""),
+
+  engine_method_sp("equalize_particle_log_weights",
+                   infer_action_maker_type([], t.ArrayUnboxedType(t.NumberType())),
+                   desc="""\
+Make all the particle weights equal, conserving their logsumexp.
+
+Return the old particle weights.
 """),
 
   engine_method_sp("set_particle_log_weights",

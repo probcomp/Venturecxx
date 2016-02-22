@@ -2,7 +2,8 @@
 
 Test that things we expect to work at the console actually do.
 """
-# Copyright (c) 2015 MIT Probabilistic Computing Project.
+
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #

@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 import unittest
 from nose import SkipTest
 from nose.plugins.attrib import attr
@@ -63,20 +64,10 @@ class TestCoreSivm(unittest.TestCase):
             self.assertEqual(e.exception,'invalid_argument')
             self.assertEqual(e.data['argument'],'symbol')
 
-    def test_modify_value(self):
-        val = v.val('count', 1)
-        s = v.number(1)
-        self.assertEqual(module._modify_value(val),s)
-
     def test_modify_symbol(self):
         val = 'add'
         s = v.symbol('add')
         self.assertEqual(module._modify_symbol(val),s)
-
-    def test_modify_expression(self):
-        exp= ['sub', v.real(2), 'a']
-        s = [v.symbol('sub'), v.number(2), v.symbol('a')]
-        self.assertEqual(module._modify_expression(exp),s)
 
     def test_assume(self):
         inst = {

@@ -71,6 +71,10 @@ applied fully uncurried) match the expected types."""
 @gen_in_backend("none")
 def testDeterministic():
   for (name,sp) in relevantSPs():
+    if name.startswith('gp_cov_') or name.startswith('gp_mean_'):
+      # XXX Can't compare equivalent functions for equality without
+      # false negatives.
+      continue
     if not sp.outputPSP.isRandom():
       yield checkDeterministic, name, sp
 
@@ -100,7 +104,7 @@ fully uncurried)."""
       raise SkipTest("Putatively deterministic sp %s returned a requesting SP" % name)
   else:
     for _ in range(5):
-      assert_almost_equal(answer, carefully(sp.outputPSP.simulate, args), places = 10)
+      eq_(answer, carefully(sp.outputPSP.simulate, args))
 
 @gen_in_backend("none")
 def testRandom():
@@ -192,6 +196,10 @@ def propLogDensityDeterministic(rnd, name, sp):
 @gen_in_backend("none")
 def testFixingRandomness():
   for (name,sp) in relevantSPs():
+    if name.startswith('gp_cov_') or name.startswith('gp_mean_'):
+      # XXX Can't compare equivalent functions for equality without
+      # false negatives.
+      continue
     yield checkFixingRandomness, name, sp
 
 def checkFixingRandomness(name, sp):

@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2016 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -26,7 +26,7 @@
 struct CRPSPAux : SPAux
 {
   CRPSPAux(): nextIndex(1), numCustomers(0), numTables(0) {}
-  SPAux* copy_help(ForwardingMap* m) const { return new CRPSPAux(*this); }
+  CRPSPAux* copy_help(ForwardingMap* m) const;
   boost::python::object toPython(Trace * trace) const;
 
   uint32_t nextIndex;

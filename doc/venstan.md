@@ -15,50 +15,13 @@ will revisit later:
 2. The Stan model is mirrored in Venture as a stochastic procedure (SP)
    with a semantic output, which is simulable and constrainable.
 
-Architecture
-------------
+The results are now documented in the reference manual:
+http://probcomp.csail.mit.edu/venture/edge/reference/venstan.html
 
-The entry point to Stan integration is the Venture SP `make_van_stan`.
-`make_van_stan` accepts
-- a string representing a Stan model,
-- a description of the Stan names and Venture types of the inputs, and
-- a description of the Stan name and Venture type of the output, and
-- returns a Venture SP representing the model.
+Additional Gotchas
+------------------
 
-The SP returned by `make_van_stan` accepts inputs of the specified
-types and returns an output of the specified type, which can be
-constrained (and therefore can absorb changes to its inputs).
-
-- The parameters (in Stan's sense) of the model are kept internal to
-  the SP (uncollapsed), and indexed by a latent simulation request.
-
-- Each application of the made SP is independent of all the others,
-  and corresponds to a separate instance of Stan.
-
-- Stan inference is packaged for Venture as an `AEKernel` ("AE" for
-  "arbitrary ergodic") on the made SP.
-
-Usage Requirements and Gotchas
-------------------------------
-
-- The output datum has to appear twice in the Stan model: once as a
-  datum that contributes to the density defined by the model, and once
-  as a generated quantity (presumably with a different name; both
-  names need to given to Venture).  It is up to the user to make sure
-  that the density and the sampler define the same probability
-  distribution (conditioned on the inputs and the Stan parameters).
-
-- The Stan model must be written without sampling statements, using
-  only `increment_log_prob` statements.  This is because sampling
-  statements implicitly drop terms of the posterior density that do
-  not depend on the parameters, but Venture needs those to be able to
-  evaluate acceptance ratios for proposals that move the input data.
-  (See [here](https://groups.google.com/forum/#!topic/stan-users/wFr0rYMo0oM).)
-
-- The latent parameters are initialized by Stan's native
-  initialization procedure, not sampled from any prior.  Consequently,
-  forward sampling of the output follows a weird distribution, which
-  does not correspond to anything for which a density is available.
+(that I didn't want to advertise in the reference manual)
 
 - Forward simulation of the output even conditioned on the parameters
   follows a somewhat wonky distribution, because there is actually no
@@ -67,9 +30,8 @@ Usage Requirements and Gotchas
   latent parameters.  See [Issue #253](https://github.com/probcomp/Venturecxx/issues/253).
 
 - There are tons of outstanding bugs and infelicities even at this
-  level of integration.  They are tracked in the [Venture integrates
-  Stan
-  well](https://github.com/probcomp/Venturecxx/milestones/Venture%20integrates%20Stan%20well)
+  level of integration.  They are tracked in the [Stan integration works
+  well](https://github.com/probcomp/Venturecxx/milestones/Stan integration works well)
   milestone.
 
 Alternatives not Attempted

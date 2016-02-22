@@ -39,7 +39,7 @@ As of 8/20/15, the content here was as follows:
   how subsampled MH is supposed to actually operate (except maybe some
   tests in the test suite?)
 
-- examples/notebooks/subsampled_mh.ipynb is the first segment of the
+- examples/notebooks/trick_coin.ipynb is the first segment of the
   old summer school tutorial, on the simple trick coin problem.  It
   may concievably be useful as semi-worked-out introductory material.
 

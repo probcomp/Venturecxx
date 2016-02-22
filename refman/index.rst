@@ -18,5 +18,6 @@ Contents:
    modeling.rst
    inference.rst
    plugins.rst
+   venstan.rst
    apiref.rst
    faq.rst

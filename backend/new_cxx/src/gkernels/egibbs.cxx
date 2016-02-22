@@ -1,4 +1,4 @@
-// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -136,18 +136,20 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,
   return make_pair(finalParticle.get(), 0);
 }
 
-void EnumerativeGibbsGKernel::accept()
+int EnumerativeGibbsGKernel::accept()
 {
   finalParticle->commit();
   // assertTrace(self.trace,self.scaffold)
+  return this->scaffold->numAffectedNodes();
 }
 
-void EnumerativeGibbsGKernel::reject()
+int EnumerativeGibbsGKernel::reject()
 {
   assert(false); // should never reject
   regenAndAttach(trace, scaffold->border[0], scaffold, true,
                  rhoDB, boost::shared_ptr<map<Node*,Gradient> >());
   // assertTrace(self.trace,self.scaffold)
+  return this->scaffold->numAffectedNodes();
 }
 
 boost::shared_ptr<Particle> EnumerativeGibbsGKernel::selectParticle(

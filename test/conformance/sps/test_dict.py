@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -17,11 +17,10 @@
 
 from venture.test.stats import statisticalTest, reportKnownGaussian
 from venture.test.config import get_ripl, collectSamples, on_inf_prim
-import venture.value.dicts as v
 
 # TODO
 # This file contains one possibility for the Dictionary interface
-# Note that "lookup" would be shared by arrays and "contains" would be 
+# Note that "lookup" would be shared by arrays and "contains" would be
 # shared by sets. Also note the convention of using the data-structure name
 # (i.e. "dict") as the constructor.
 # I probably prefer (dict (array k1 v1) ... (array kN vN))
@@ -93,6 +92,5 @@ def testDict3():
 @on_inf_prim("none")
 def testStack():
   ripl = get_ripl()
-  val = ripl.sample("(dict (array 1) (array 4))")
-  assert val == ripl.sample(v.dict(val))
-  
+  val = ripl.sample("(dict (array 1) (array 4))", type=True)
+  assert val == ripl.sample(val, type=True)
