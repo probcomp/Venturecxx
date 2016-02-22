@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from nose.tools import eq_
 import numpy as np
 
 from venture.test.config import broken_in
@@ -50,6 +51,18 @@ def test_compound_assume_smoke():
     assert ripl.sample("d") == 3, "compound assume does not work, second component"
 
     assert ripl.sample("u") == 20, "compound assume does not work for a one-element-compound"
+
+@broken_in("puma", "Does not have refs: Issue #224.")
+def test_compound_assume_nonduplication():
+    ripl = get_ripl()
+    ripl.execute_program("""
+(assume_values (a b)
+  (if (flip) (list (ref 1) (ref 2)) (list (ref 2) (ref 1))))""")
+    engine = ripl.sivm.core_sivm.engine
+    eq_(engine.get_entropy_info()["unconstrained_random_choices"],1)
+    for _ in range(30):
+        ripl.infer("(mh default one 1)")
+        assert ripl.sample("a") != ripl.sample("b")
 
 # Testing observations
 
