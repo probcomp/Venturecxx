@@ -123,9 +123,8 @@ def test_compound_assume_inf_happening():
     ripl.infer("(mh (quote b_scope) 0 50)")
     assert ripl.sample("b") != previous_value, "inferred for second part didn't work"
 
-@broken_in("puma", "Does neither support assume_values nor GPs yet")
+@broken_in("puma", "Does not have refs: Issue #224.")
 @statisticalTest
-@in_backend("lite")
 def test_compound_assume_inf_first_element():
     inf_test_prog ="""
     [assume a_ref (tag (quote a_scope) 0 (ref (normal 0 10)))]
@@ -137,8 +136,7 @@ def test_compound_assume_inf_first_element():
     [assume obs_2 (make_suff_stat_normal b 1)]
     """
 
-    ripl = init_ripl(venChurch=True)
-
+    ripl = get_ripl()
     ripl.execute_program(inf_test_prog)
 
     for _ in range(20):
