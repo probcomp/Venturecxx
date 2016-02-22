@@ -17,10 +17,11 @@
 
 import numpy as np
 
+from venture.test.config import broken_in
 from venture.test.config import collectSamples
 from venture.test.config import get_ripl
-from venture.test.config import broken_in
-from venture.test.stats import statisticalTest, reportKnownGaussian
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import statisticalTest
 
 __author__ = 'ulli'
 
