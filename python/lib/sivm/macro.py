@@ -18,6 +18,8 @@
 # Macros that resyntax errors.
 # For a description of the framework, see macro_system.py
 
+import random
+
 from venture.exception import VentureException
 from venture.sivm.macro_system import Macro
 from venture.sivm.macro_system import Syntax
@@ -145,12 +147,12 @@ def Assume_valuesExpand(exp):
                 ["quasiquote",["deref",["first","datum-2"]]]]
   else:
     names = exp[1]
-    rest_vars = ["rest_%d" % i for i in range(len(names))]
-    pattern = ["assume_values"]  + [rest_vars] + ["list_sym"]
-    template = ["bind_",
-                ["assume_values"] + [[rest_vars[0]]] + ["list_sym"],
-                ["lambda", [],
-                 ["assume_values"] + [rest_vars[1:]] + [["rest","list_sym"]]]]
+    name_vars = ["name_%d" % i for i in range(len(names))]
+    lst_name = "__lst_%d__" % random.randint(10000, 99999)
+    pattern = ["assume_values", name_vars, "lst_exp"]
+    name_exps = [["assume", name, ["deref", ["lookup", lst_name, v.integer(i)]]]
+                 for (i, name) in enumerate(names)]
+    template = ["do", ["assume", lst_name, "lst_exp"]] + name_exps
   return SyntaxRule(pattern, template).expand(exp)
 
 def DoExpand(exp):
