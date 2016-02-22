@@ -143,8 +143,8 @@ def Assume_valuesExpand(exp):
         template = ["_assume", ["quasiquote", "datum-1"],
                                 ["quasiquote",["deref",["first","datum-2"]]]]
     else:
-        (_assume_values, rest, list_symbol) = (exp[0], exp[1], exp[2])
-        rest_vars = ["rest_%d" % i for i in range(len(rest))]
+        names = exp[1]
+        rest_vars = ["rest_%d" % i for i in range(len(names))]
         pattern = ["assume_values"]  + [rest_vars] + ["list_sym"]
         template = ["bind_", ["assume_values"] + [[rest_vars[0]]] + ["list_sym"],
             ["lambda", [],
