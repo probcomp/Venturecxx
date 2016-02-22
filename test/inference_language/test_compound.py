@@ -156,8 +156,8 @@ def test_compound_assume_inf_second_element():
     [assume l (list a_ref b_ref)]
     (assume_values (a b) l)
 
-    [assume obs_1 (lambda () (normal a 1))]
-    [assume obs_2 (lambda () (normal b 1))]
+    [assume obs_1 (make_suff_stat_normal a 1)]
+    [assume obs_2 (make_suff_stat_normal b 1)]
     """
 
     ripl = init_ripl(venChurch=True)
