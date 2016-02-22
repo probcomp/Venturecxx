@@ -97,8 +97,7 @@ def test_compound_assume_observations():
 
 # Testing inference
 
-@broken_in("puma", "Does neither support assume_values nor GPs yet")
-@in_backend("lite")
+@broken_in("puma", "Does not have refs: Issue #224.")
 def test_compound_assume_inf_happening():
     inf_test_prog ="""
     [assume a_ref (tag (quote a_scope) 0 (ref (normal 0 10)))]
@@ -110,8 +109,7 @@ def test_compound_assume_inf_happening():
     [assume obs_2 (lambda () (normal b 1))]
     """
 
-    ripl = init_ripl(venChurch=True)
-
+    ripl = get_ripl()
     ripl.execute_program(inf_test_prog)
 
     previous_value = ripl.sample("b")
