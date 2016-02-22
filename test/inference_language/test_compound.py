@@ -141,9 +141,8 @@ def test_compound_assume_inf_first_element():
 
     for _ in range(20):
         ripl.observe("(obs_1)", np.random.normal(5, 1))
-    ripl.predict("(obs_1)", label="predictive")
 
-    # just read test/config.py - this should use collectSamples
+    ripl.predict("(obs_1)", label="predictive")
     post_samples = collectSamples(ripl, "predictive")
     return reportKnownGaussian(5, 1, post_samples)
 
@@ -168,14 +167,9 @@ def test_compound_assume_inf_second_element():
     for _ in range(20):
         ripl.observe("(obs_1)", np.random.normal(5, 0.1))
 
-    ripl.infer("(mh (quote a_scope) 0 100)")
-
     for _ in range(20):
         ripl.observe("(obs_2)", np.random.normal(-15, 0.1))
 
-    ripl.infer("(mh (quote b_scope) 0 100)")
-
-    # just read test/config.py - this should use collectSamples
-    post_samples = [ripl.sample("(obs_2)") for _ in range(30)]
-
+    ripl.predict("(obs_2)", label="predictive")
+    post_samples = collectSamples(ripl, "predictive")
     return reportKnownGaussian(-15, 1, post_samples)
