@@ -20,6 +20,7 @@ from numpy.testing import assert_allclose
 from flaky import flaky
 
 from venture.test.config import gen_in_backend
+from venture.test.config import get_ripl
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.exception import VentureBuiltinSPMethodError
 from venture.lite.mlens import real_lenses
@@ -157,3 +158,20 @@ def propGradientOfSimulate(args_lists, name, sp):
     return vv.vv_dot_product(direction, asGradient(ans))
   numerical_gradient = carefully(num.gradient_from_lenses, sim_displacement_func, real_lenses(args_lists[0]))
   assert_gradients_close(numerical_gradient, computed_gradient)
+
+def testGradientOfLogDensityOfCountsSmoke():
+  for (expr, val) in [("((make_crp (gamma 1 1)))", "atom<1>"),
+                      ("((make_suff_stat_normal (normal 0 1) (gamma 1 1)))", 2),
+                      ("((make_dir_mult (vector 1 1) (list 1 2)))", "1"),
+                      ("((make_sym_dir_mult 0.5 2 (list 1 2)))", "1"),
+                      ("((make_beta_bernoulli 1 1))", True),
+                      ("((make_suff_stat_bernoulli 0.7))", True),
+                      ("((make_suff_stat_poisson 2))", 2)
+  ]:
+    yield checkGradientExists, expr, val
+
+def checkGradientExists(expr, val):
+  ripl = get_ripl()
+  ripl.assume("x", expr)
+  ripl.observe("x", val)
+  ripl.infer("(grad_ascent default all 0.01 1 1)")
