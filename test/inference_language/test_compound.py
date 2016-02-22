@@ -116,18 +116,12 @@ def test_compound_assume_inf_happening():
 
     previous_value = ripl.sample("b")
 
-    for _ in range(20):
-        ripl.observe("(obs_1)", np.random.normal(5, 0.1))
-
-    ripl.infer("(mh (quote a_scope) 0 100)")
-
+    ripl.observe("(obs_1)", np.random.normal(5, 0.1))
+    ripl.infer("(mh (quote a_scope) 0 50)")
     assert ripl.sample("b") == previous_value, "inferred to wrong part of the compound"
 
-    for _ in range(20):
-        ripl.observe("(obs_2)", np.random.normal(-15, 0.1))
-
-    ripl.infer("(mh (quote b_scope) 0 100)")
-
+    ripl.observe("(obs_2)", np.random.normal(-15, 0.1))
+    ripl.infer("(mh (quote b_scope) 0 50)")
     assert ripl.sample("b") != previous_value, "inferred for second part didn't work"
 
 @broken_in("puma", "Does neither support assume_values nor GPs yet")
