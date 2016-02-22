@@ -500,8 +500,8 @@ collectMacro = quasiquotation_macro("collect", min_size = 2, desc="""\
   or foreign inference sp.
 """)
 
-assume_valuesMacro = Macro(arg0("assume_values"), Assume_valuesExpand,
-    desc="""\
+assumeMacro = quasiquotation_macro("assume",
+    min_size = 3, max_size = 4, desc="""\
 .. function:: assume(<symbol>, <model-expression>, [<label>])
 
   Programmatically add an assumption.
@@ -514,15 +514,33 @@ assume_valuesMacro = Macro(arg0("assume_values"), Assume_valuesExpand,
   this directive.
 """)
 
-assumeMacro = quasiquotation_macro("assume",
-    min_size = 3, max_size = 4, desc="""\
-.. function:: assume(<symbol>, <model-expression>, [<label>])
-  Programmatically add an assumption.
-  Extend the underlying model by adding a new generative random
-  variable, like the `assume` directive.  The given model expression
-  may be constructed programmatically -- see `unquote`.
-  The ``<label>``, if supplied, may be used to `freeze` or `forget`
-  this directive.
+assume_valuesMacro = Macro(arg0("assume_values"), Assume_valuesExpand,
+    desc="""\
+.. function:: assume_values((<symbol> ...), <model-expression>)
+
+  Multiple-value `assume`.
+
+  The expression is expected to produce a list of references (see
+  `ref`) of the same length as the list of symbols given to
+  ``assume_values``.  ``assume_values`` binds those symbols to the
+  `deref`s of the corresponding references.
+
+  For example::
+
+    (assume_values (a b) (list (ref (normal 0 1)) (ref (normal 1 2))))
+
+  is equivalent to::
+
+    (assume _some_name_432_ (list (ref (normal 0 1)) (ref (normal 1 2))))
+    (assume a (deref (first _some_name_432_)))
+    (assume b (deref (second _some_name_432_)))
+
+  which has the same effect as::
+
+    (assume a (normal 0 1))
+    (assume b (normal 0 1))
+
+  `assume_values` does not accept a custom ``label`` argument.
 """)
 
 observeMacro = Macro(arg0("observe"), ObserveExpand, desc="""\
