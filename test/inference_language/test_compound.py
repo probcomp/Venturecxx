@@ -68,8 +68,7 @@ def test_compound_assume_smoke():
 
 
 # testing observations
-@broken_in("puma", "Does neither support assume_values nor GPs yet")
-@in_backend("lite")
+@broken_in("puma", "Does not have refs: Issue #224.")
 def test_compound_assume_observations():
 
     obs_prog ="""
@@ -81,7 +80,7 @@ def test_compound_assume_observations():
 
 
     """
-    ripl = init_ripl(venChurch=True)
+    ripl = get_ripl()
 
     ripl.execute_program(obs_prog)
 
