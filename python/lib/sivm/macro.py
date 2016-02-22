@@ -18,6 +18,8 @@
 # Macros that resyntax errors.
 # For a description of the framework, see macro_system.py
 
+import random
+
 from venture.exception import VentureException
 from venture.sivm.macro_system import Macro
 from venture.sivm.macro_system import Syntax
@@ -136,6 +138,22 @@ def arg0(name):
   def applies(exp):
     return isinstance(exp, list) and len(exp) > 0 and getSym(exp[0]) == name
   return applies
+
+def Assume_valuesExpand(exp):
+  if len(exp[1])==1: # base case
+    pattern = ["assume_values", ["datum-1"], "datum-2"]
+    template = ["_assume",
+                ["quasiquote", "datum-1"],
+                ["quasiquote",["deref",["first","datum-2"]]]]
+  else:
+    names = exp[1]
+    name_vars = ["name_%d" % i for i in range(len(names))]
+    lst_name = "__lst_%d__" % random.randint(10000, 99999)
+    pattern = ["assume_values", name_vars, "lst_exp"]
+    name_exps = [["assume", name, ["deref", ["lookup", lst_name, v.integer(i)]]]
+                 for (i, name) in enumerate(names)]
+    template = ["do", ["assume", lst_name, "lst_exp"]] + name_exps
+  return SyntaxRule(pattern, template).expand(exp)
 
 def DoExpand(exp):
   if len(exp) == 2:
@@ -498,6 +516,35 @@ assumeMacro = quasiquotation_macro("assume",
   this directive.
 """)
 
+assume_valuesMacro = Macro(arg0("assume_values"), Assume_valuesExpand,
+    desc="""\
+.. function:: assume_values((<symbol> ...), <model-expression>)
+
+  Multiple-value `assume`.
+
+  The expression is expected to produce a list of references (see
+  `ref`) of the same length as the list of symbols given to
+  ``assume_values``.  ``assume_values`` binds those symbols to the
+  `deref`s of the corresponding references.
+
+  For example::
+
+    (assume_values (a b) (list (ref (normal 0 1)) (ref (normal 1 2))))
+
+  is equivalent to::
+
+    (assume _some_name_432_ (list (ref (normal 0 1)) (ref (normal 1 2))))
+    (assume a (deref (first _some_name_432_)))
+    (assume b (deref (second _some_name_432_)))
+
+  which has the same effect as::
+
+    (assume a (normal 0 1))
+    (assume b (normal 0 1))
+
+  `assume_values` does not accept a custom ``label`` argument.
+""")
+
 observeMacro = Macro(arg0("observe"), ObserveExpand, desc="""\
 .. function:: observe(<model-expression>, <value>, [<label>])
 
@@ -642,7 +689,7 @@ For example::
 for m in [identityMacro, lambdaMacro, ifMacro, condMacro, andMacro, orMacro,
           letMacro, letrecMacro, doMacro, beginMacro, qqMacro,
           callBackMacro, collectMacro,
-          assumeMacro, observeMacro, predictMacro, forceMacro,
+          assumeMacro, assume_valuesMacro, observeMacro, predictMacro, forceMacro,
           sampleMacro, sampleAllMacro,
           extractStatsMacro,
           refMacro, derefMacro,
