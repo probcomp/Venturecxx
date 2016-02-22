@@ -178,4 +178,4 @@ def test_compound_assume_inf_second_element():
     # just read test/config.py - this should use collectSamples
     post_samples = [ripl.sample("(obs_2)") for _ in range(30)]
 
-    return reportKnownGaussian(-15, 0.1, post_samples)
+    return reportKnownGaussian(-15, 1, post_samples)
