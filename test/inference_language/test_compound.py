@@ -16,27 +16,13 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import numpy as np
-from venture import shortcuts
 
 from venture.test.config import collectSamples
 from venture.test.config import get_ripl
-from venture.test.config import in_backend, broken_in
+from venture.test.config import broken_in
 from venture.test.stats import statisticalTest, reportKnownGaussian
-#from venture.test.config import broken_in
 
 __author__ = 'ulli'
-
-# so far, I am only testing with VenChurch syntax and ripl-API. I guess that
-# once the syntax thing is resolved, these tests should cover both syntaxes
-def init_ripl(venChurch=None):
-    if venChurch is None:
-        venChurch = False
-    # initialize ripl
-    ripl = shortcuts.make_lite_ripl()
-    if venChurch:
-        ripl.set_mode("church_prime")
-    ripl.assume("x", 1)
-    return ripl
 
 # Simple smoke test
 
