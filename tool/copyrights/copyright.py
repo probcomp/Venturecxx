@@ -241,9 +241,9 @@ This is used for a file that has no 'git blame' information to deduce
 years from, and no existing copyright header to blindly propagate
 years from, such as __init__.py files.
 
-Default: "2015"
+Default: "2016"
 '''
-    return "2015"
+    return "2016"
 
   def claim_present(self):
 
