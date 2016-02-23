@@ -20,6 +20,7 @@ from numpy.testing import assert_allclose
 from flaky import flaky
 
 from venture.test.config import gen_in_backend
+from venture.test.config import get_ripl
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.exception import VentureBuiltinSPMethodError
 from venture.lite.mlens import real_lenses
@@ -157,3 +158,26 @@ def propGradientOfSimulate(args_lists, name, sp):
     return vv.vv_dot_product(direction, asGradient(ans))
   numerical_gradient = carefully(num.gradient_from_lenses, sim_displacement_func, real_lenses(args_lists[0]))
   assert_gradients_close(numerical_gradient, computed_gradient)
+
+def testGradientOfLogDensityOfCountsSmoke():
+  models = [("(make_crp a)", ["atom<1>", "atom<2>"]),
+            ("(make_suff_stat_normal a 1)", [2]),
+            ("(make_dir_mult (vector a 1) (list 1 2))", ["1"]),
+            ("(make_sym_dir_mult a 2 (list 1 2))", ["1"]),
+            ("(make_beta_bernoulli a 1)", [True]),
+            ("(make_suff_stat_bernoulli a)", [True]),
+            ("(make_suff_stat_poisson a)", [2])
+          ]
+  for (expr, vals) in models:
+    yield checkGradientExists, expr, vals
+
+def checkGradientExists(expr, vals):
+  ripl = get_ripl()
+  ripl.assume("a", "(uniform_continuous 0 1)")
+  value = ripl.sample("a")
+  ripl.assume("f", expr)
+  for val in vals:
+    ripl.observe("(f)", val)
+  ripl.infer("(grad_ascent default all 0.01 1 1)")
+  new_value = ripl.sample("a")
+  assert value != new_value, "Gradient was not transmitted to prior"

@@ -278,6 +278,14 @@ class MakerCBetaBernoulliOutputPSP(DeterministicMakerAAAPSP):
       'procedure itself is deterministic, the returned sampler is stochastic.'\
       % name
 
+  def gradientOfLogDensityOfCounts(self, aux, args):
+    (alpha, beta) = args.operandValues()
+    [ctY, ctN] = aux.cts()
+    trues = ctY + alpha
+    falses = ctN + beta
+    numerator = scipy.special.digamma([trues, falses]) - scipy.special.digamma(trues + falses)
+    denominator = scipy.special.digamma([alpha, beta]) - scipy.special.digamma(alpha + beta)
+    return numerator - denominator
 
 class CBetaBernoulliOutputPSP(DiscretePSP):
   def __init__(self, alpha, beta):
