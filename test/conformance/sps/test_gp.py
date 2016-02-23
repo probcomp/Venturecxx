@@ -172,7 +172,7 @@ def testOneSample():
 
   # gp_class.sample(test_input) should be normally distributed with
   # mean expect_mu.
-  n = 200
+  n = default_num_samples(4)
   samples = np.array([gp_class.sample([test_input])[0] for _ in xrange(n)])
   assert samples.shape == (n,)
   return reportKnownGaussian(expect_mu, np.sqrt(expect_sig), samples)
@@ -191,6 +191,13 @@ def testTwoSamples_low_covariance():
   covariance = cov.scale(sigma**2, cov.se(l**2))
   gp_class = gp.GP(mean, covariance, observations)
 
+  # Fix n = 200, not higher even if we are doing a long-running
+  # inference quality test, because we're trying to show that a
+  # Pearson r^2 test of independence will fail to reject the null
+  # hypothesis that the GP at two points with low covariance are
+  # simply independent.  If we raised the number of samples
+  # significantly higher, the test is likely to reject the null
+  # hypothesis.
   n = 200
   lo_cov_x = []
   lo_cov_y = []
