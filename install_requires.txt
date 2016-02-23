@@ -9,8 +9,8 @@ dill
 
 # Plotf
 patsy>=0.2 # Because ggplot needs this installed first ??
-pandas>=0.14, <0.16 # <0.16 because that version introduces a change that breaks ggplot
-ggplot>=0.5
+pandas>=0.17
+ggplot>=0.6.8
 
 # Debug pictures of scaffolds
 networkx
