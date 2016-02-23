@@ -34,7 +34,7 @@ vector<VentureValuePtr> VenturePair::getArray() const
   xs.push_back(getFirst());
   VentureValuePtr rest = getRest();
   boost::shared_ptr<VenturePair> p;
-  while (p = dynamic_pointer_cast<VenturePair>(rest))
+  while ((p = dynamic_pointer_cast<VenturePair>(rest)))
   {
     xs.push_back(p->getFirst());
     rest = p->getRest();
@@ -159,7 +159,7 @@ boost::python::dict VenturePair::toPython(Trace * trace) const
   l.append(getFirst()->toPython(trace));
   VentureValuePtr rest = getRest();
   boost::shared_ptr<VenturePair> p;
-  while (p = dynamic_pointer_cast<VenturePair>(rest))
+  while ((p = dynamic_pointer_cast<VenturePair>(rest)))
   {
     l.append(p->getFirst()->toPython(trace));
     rest = p->getRest();
