@@ -33,6 +33,12 @@ root=`cd -- "$(dirname -- "$0")" && pwd`
     set -Ceu
     cd -- "${root}"
     "$PYTHON" setup.py build
+
+    # Running setup.py test will install what test_requires, but instead of
+    # actually running any tests, it tells the user to run check.sh and exits.
+    # Run it for its setup functionality, silence that warning, keep stderr:
+    "$PYTHON" setup.py test >/dev/null
+
     if [ $# -eq 0 ]; then
         # By default, when running all tests, skip tests that have
         # been marked for continuous integration by using __ci_ in

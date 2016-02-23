@@ -21,10 +21,12 @@ try:
     from setuptools import setup, Extension
     from setuptools.command.build_py import build_py
     from setuptools.command.sdist import sdist
+    from setuptools.command.test import test as test_py
 except ImportError:
     from distutils.core import setup, Extension
     from distutils.command.build_py import build_py
     from distutils.command.sdist import sdist
+    from distutils.command.test import test as test_py
 
 import os
 import sys
@@ -282,6 +284,11 @@ def parse_req_file(filename):
             for line in open(filename).read().splitlines()
             if len(parse_req_line(line)) > 0]
 
+class local_test(test_py):
+    def run_tests(self):
+        print "Please use ./check.sh instead and read ./HACKING.md"
+        sys.exit(0)  # A success(!) because it installed what tests_require.
+
 install_requires = parse_req_file("install_requires.txt")
 
 tests_require = [
@@ -341,5 +348,6 @@ setup (
     cmdclass={
         'build_py': local_build_py,
         'sdist': local_sdist,
+        'test': local_test,
     },
 )

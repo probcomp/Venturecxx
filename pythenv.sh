@@ -36,7 +36,16 @@ version=`"${PYTHON}" -c 'import sys; print sys.version[0:3]'`
 # than a handful of microseconds of runtime, so we'll add both.
 libdir="${root}/build/lib"
 plat_libdir="${libdir}.${platform}-${version}"
-export PYTHONPATH="${libdir}:${plat_libdir}${PYTHONPATH:+:${PYTHONPATH}}"
+
+# If distutils/setuptools did not find some libraries, it will install
+# them in .eggs rather than modifying anything remotely global like
+# the virtualenv we're using, by design. So include those eggs:
+eggs=
+for egg in ${root}/.eggs/*.egg; do
+    eggs="$eggs:$egg"
+done
+
+export PYTHONPATH="${libdir}:${plat_libdir}${eggs}${PYTHONPATH:+:${PYTHONPATH}}"
 
 bindir="${root}/build/scripts-${version}"
 export PATH="${bindir}${PATH:+:${PATH}}"
