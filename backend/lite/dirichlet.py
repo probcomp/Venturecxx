@@ -139,7 +139,11 @@ class MakerCDirMultOutputPSP(DeterministicMakerAAAPSP):
     term2 = [scipy.special.digamma(alpha + count)
              - scipy.special.digamma(alpha)
              for (alpha, count) in zip(alphas, aux.counts)]
-    return [[term1 + t2 for t2 in term2]]
+    dalphas = [term1 + t2 for t2 in term2]
+    if len(vals) == 1:
+      return [dalphas]
+    else:
+      return [dalphas, 0]
 
 class CDirMultOutputPSP(RandomPSP):
   def __init__(self,alpha,os):
@@ -297,7 +301,11 @@ class MakerCSymDirMultOutputPSP(DeterministicMakerAAAPSP):
     term2 = [scipy.special.digamma(alpha + count)
              - scipy.special.digamma(alpha)
              for count in aux.counts]
-    return [sum(term1 + t2 for t2 in term2), 0]
+    dalpha = sum(term1 + t2 for t2 in term2)
+    if len(vals) == 2:
+      return [dalpha, 0]
+    else:
+      return [dalpha, 0, 0]
 
   def madeSpLogDensityOfCountsBound(self, aux):
     """Upper bound the log density the made SP may report for its
