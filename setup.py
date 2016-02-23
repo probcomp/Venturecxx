@@ -166,9 +166,6 @@ packages = [
 
 if ON_LINUX:
     puma = Extension("venture.puma.libpumatrace",
-        define_macros = [('MAJOR_VERSION', '0'),
-                         ('MINOR_VERSION', '1'),
-                         ('REVISION', '1')],
         libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread'],
         extra_compile_args = ["-Wall", "-g", "-O2", "-fPIC", "-fno-omit-frame-pointer"] + cflags,
         #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
@@ -176,9 +173,6 @@ if ON_LINUX:
         sources = puma_src_files)
 if ON_MAC:
     puma = Extension("venture.puma.libpumatrace",
-        define_macros = [('MAJOR_VERSION', '0'),
-                         ('MINOR_VERSION', '1'),
-                         ('REVISION', '1')],
         libraries = ['gsl', 'gslcblas', 'boost_python-mt', 'boost_system-mt', 'boost_thread-mt'],
         extra_compile_args = ["-Wall", "-g", "-O2", "-fPIC", "-fno-omit-frame-pointer"] + cflags,
         #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
