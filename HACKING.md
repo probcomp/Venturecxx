@@ -31,10 +31,9 @@ Issue Metadata
 - **Assigned** means you're imminently working on it. You preferably
   have <= 3 bugs assigned.
 
-- **Milestones** are used to say why you want this done, or what
-  deadline you want it done for, e.g. "summer school" or "language
-  revision 2" or "performance fixit".  Issues with no milestone
-  attached are considered untraiged.
+- **Milestones** indicate the most imminent external deliverable that
+  a given issue is needed for.  Issues with no milestone attached are
+  considered untraiged in this sense.
 
 - For everything else, there are labels:
 
@@ -43,8 +42,8 @@ Issue Metadata
   assumed to be done as suggested in some sense.  The particular
   sub-disposition should be clear from the notes.
 
-- **Time** [greens]: "k hours", "k days", "k weeks" -- how long you
-  imagine it might take.
+- **Effort** [greens]: "k hours", "k days" -- how long you imagine it
+  might take.
 
 - **Blockage** [reds]:
 
@@ -65,6 +64,32 @@ Issue Metadata
     down enough context about what's left so that someone else could
     potentially pick it up, and do push your branch! But this is for
     bugs you intend to come back to.
+
+- **Reason** [blues]: Why do we want to do this?  They are mostly
+  self-explanatory, in the context of the following model of
+  capability creation:
+
+  - _proof of concept_ is the minimum needed to conclude that a
+    capability is implementable, and give a frame for how it might
+    integrate into the system.
+
+  - _acquisition_ is the minimum needed to be able to show a
+    capability deployed in the system, that looks integrated.  A demo
+    at this level is permitted to have very large gaps that require a
+    trained demo operator to avoid.  Contrast with
+
+  - _completion_ is the work it takes to actually be able to offer the
+    capability to a user who wants to get something out of it.  A
+    completed capability is expected to interoperate in natural ways
+    with all the system's other capabilities, but may be buggy.
+
+  - _fixing bugs_ is about eliminating known problems with
+    capabilities or their interactions, generally to be viewed in the
+    context of completed capabilities.
+
+  - _testing_ is about preemptively detecting such problems before
+    users do (and preventing them from arising under further software
+    evolution).
 
 
 Testing Policy
