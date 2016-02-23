@@ -866,13 +866,8 @@ include examples/brownian/film.vnt
 include examples/brownian/drawing-plugin.py
 include examples/brownian/plot.vnt
 include examples/brownian/graph.py
-include examples/brownian/subsequent_trajectories.png
 include examples/brownian/measurement_plugin.py
-include examples/brownian/prior_trajectories.png
 include examples/brownian/graph.vnt
-include examples/brownian/converging_trajectories.png
-include examples/brownian/optimal_trajectories.png
-include examples/brownian/brownian-error.png
 include examples/hmm_plugin.py
 include examples/profile_tricky_coin.py
 include examples/gaussian_funnel.py
@@ -935,7 +930,6 @@ include test/conformance/sps/test_wishart.py
 include test/conformance/sps/test_categorical.py
 include test/conformance/sps/test_discrete.py
 include test/conformance/sps/test_trig.py
-include test/conformance/sps/test_branch.py
 include test/conformance/sps/test_mvn.py
 include test/conformance/sps/test_eval.py
 include test/conformance/sps/test_binomial.py
