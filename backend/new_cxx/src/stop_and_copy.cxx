@@ -227,13 +227,13 @@ typedef SamplableMap<set<Node*> > BlocksMap;
 BlocksMap copy_blocks_map(const BlocksMap& m, ForwardingMap* forward)
 {
   BlocksMap answer = BlocksMap();
-  for(typename vector<pair<VentureValuePtr,set<Node*> > >::const_iterator itr = m.a.begin();
+  for(vector<pair<VentureValuePtr,set<Node*> > >::const_iterator itr = m.a.begin();
       itr != m.a.end(); ++itr)
   {
     answer.a.push_back( pair<VentureValuePtr,set<Node*> >(copy_shared((*itr).first, forward),
                                                           copy_set((*itr).second, forward)));
   }
-  for(typename MapVVPtrInt::const_iterator itr = m.d.begin();
+  for(MapVVPtrInt::const_iterator itr = m.d.begin();
       itr != m.d.end(); ++itr)
   {
     answer.d[copy_shared((*itr).first, forward)] = (*itr).second;
@@ -244,7 +244,7 @@ BlocksMap copy_blocks_map(const BlocksMap& m, ForwardingMap* forward)
 ScopesMap copy_scopes_map(const ScopesMap& m, ForwardingMap* forward)
 {
   ScopesMap answer = ScopesMap();
-  typename ScopesMap::const_iterator itr;
+  ScopesMap::const_iterator itr;
   for(itr = m.begin(); itr != m.end(); ++itr)
   {
     SamplableMap<std::set<Node*> > explictly_typed = copy_blocks_map((*itr).second, forward);
