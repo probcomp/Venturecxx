@@ -19,6 +19,7 @@ import math
 from numpy.testing import assert_allclose
 from flaky import flaky
 
+from venture.test.config import gen_broken_in
 from venture.test.config import gen_in_backend
 from venture.test.config import get_ripl
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
@@ -159,6 +160,7 @@ def propGradientOfSimulate(args_lists, name, sp):
   numerical_gradient = carefully(num.gradient_from_lenses, sim_displacement_func, real_lenses(args_lists[0]))
   assert_gradients_close(numerical_gradient, computed_gradient)
 
+@gen_broken_in("puma", "Puma doesn't have gradients")
 def testGradientOfLogDensityOfCountsSmoke():
   models = [("(make_crp a)", ["atom<1>", "atom<2>"]),
             ("(make_suff_stat_normal a 1)", [2]),
