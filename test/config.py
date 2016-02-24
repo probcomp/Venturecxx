@@ -118,6 +118,12 @@ def default_num_transitions_per_sample():
   else:
     return 3
 
+def default_num_data(factor=1):
+  if not ignore_inference_quality():
+    return int(config["num_data"]) * factor
+  else:
+    return 2
+
 disable_get_ripl = False
 ct_get_ripl_called = 0
 

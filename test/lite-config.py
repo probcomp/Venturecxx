@@ -20,6 +20,7 @@ config = {}
 
 config["num_samples"] = 50
 config["num_transitions_per_sample"] = 50
+config["num_data"] = 20
 config["should_reset"] = True
 config["get_ripl"] = "lite"
 
