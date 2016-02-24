@@ -20,7 +20,9 @@ import numpy as np
 
 from venture.test.config import broken_in
 from venture.test.config import collectSamples
+from venture.test.config import default_num_data
 from venture.test.config import get_ripl
+from venture.test.config import skipWhenRejectionSampling
 from venture.test.stats import reportKnownGaussian
 from venture.test.stats import statisticalTest
 
@@ -139,7 +141,7 @@ def test_compound_assume_inf_first_element():
     ripl = get_ripl()
     ripl.execute_program(inf_test_prog)
 
-    for _ in range(20):
+    for _ in range(default_num_data()):
         ripl.observe("(obs_1)", np.random.normal(5, 1))
 
     ripl.predict("(obs_1)", label="predictive")
@@ -148,6 +150,7 @@ def test_compound_assume_inf_first_element():
 
 @broken_in("puma", "Does not have refs: Issue #224.")
 @statisticalTest
+@skipWhenRejectionSampling("Rejection takes too long to solve this")
 def test_compound_assume_inf_second_element():
     inf_test_prog ="""
     [assume a_ref (tag (quote a_scope) 0 (ref (normal 0 10)))]
@@ -162,10 +165,10 @@ def test_compound_assume_inf_second_element():
     ripl = get_ripl()
     ripl.execute_program(inf_test_prog)
 
-    for _ in range(20):
+    for _ in range(default_num_data()):
         ripl.observe("(obs_1)", np.random.normal(5, 0.1))
 
-    for _ in range(20):
+    for _ in range(default_num_data()):
         ripl.observe("(obs_2)", np.random.normal(-15, 0.1))
 
     ripl.predict("(obs_2)", label="predictive")
