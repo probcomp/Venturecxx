@@ -285,6 +285,31 @@ def parse_req_file(filename):
             if len(parse_req_line(line)) > 0]
 
 class local_test(test_py):
+    def acknowledge_missing_egg(self, req):
+        '''To mirror self.distribution.fetch_build_egg, but report instead.'''
+        # req is a Requirements object:
+        # https://pythonhosted.org/setuptools/pkg_resources.html
+        pass  #
+
+    def check_build_eggs(self, requires, **kwargs):
+        '''To mirror self.distribution.fetch_build_eggs, but don't fetch.'''
+        import pkg_resources
+        pkg_resources.working_set.resolve(
+            pkg_resources.parse_requirements(requires),
+            installer=self.acknowledge_missing_egg,
+        )  # Resolve will raise DistributionNotFound for missing deps.
+
+    def run(self):
+        if '-n' in sys.argv or '--dry-run' in sys.argv:
+            # I can't believe self._dry_run exists but does not get set.
+            if self.distribution.install_requires:
+                self.check_build_eggs(self.distribution.install_requires)
+            if self.distribution.tests_require:
+                self.check_build_eggs(self.distribution.tests_require)
+            self.run_tests()
+        else:
+            test_py.run(self)
+
     def run_tests(self):
         status = subprocess.check_output('git submodule status --recursive',
                                          shell=True)
