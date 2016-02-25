@@ -38,91 +38,63 @@ import venture.lite.mvnormal as mvnormal
 import venture.lite.types as t
 import venture.lite.value as v
 
-class GP(object):
-  """An immutable GP object."""
-  def __init__(self, mean, covariance, samples=None):
-    self.mean = mean
-    self.covariance = covariance
-    if samples is None:
-      self.samples = OrderedDict()
-    else:
-      assert isinstance(samples, OrderedDict)
-      self.samples = samples
+def _gp_sample(mean, covariance, samples, xs):
+  mu, sigma = _gp_mvnormal(mean, covariance, samples, xs)
+  return npr.multivariate_normal(mu, sigma)
 
-  def toJSON(self):
-    return self.samples
+def _gp_logDensity(mean, covariance, samples, xs, os):
+  mu, sigma = _gp_mvnormal(mean, covariance, samples, xs)
+  return mvnormal.logpdf(np.asarray(os).reshape(len(xs),), mu, sigma)
 
-  def mean_array(self, xs):
-    return self.mean(np.asarray(xs))
+def _gp_logDensityOfCounts(mean, covariance, samples):
+  if len(samples) == 0:
+    return 0
+  xs = samples.keys()
+  os = samples.values()
+  mu = _gp_mean(mean, xs)
+  sigma = _gp_covariance(covariance, xs, xs)
+  return mvnormal.logpdf(np.asarray(os), mu, sigma)
 
-  def cov_matrix(self, x1s, x2s):
-    return self.covariance(np.asarray(x1s), np.asarray(x2s))
+def _gp_mvnormal(mean, covariance, samples, xs):
+  if len(samples) == 0:
+    mu = _gp_mean(mean, xs)
+    sigma = _gp_covariance(covariance, xs, xs)
+  else:
+    x2s = samples.keys()
+    o2s = samples.values()
+    mu1 = _gp_mean(mean, xs)
+    mu2 = _gp_mean(mean, x2s)
+    sigma11 = _gp_covariance(covariance, xs, xs)
+    sigma12 = _gp_covariance(covariance, xs, x2s)
+    sigma21 = _gp_covariance(covariance, x2s, xs)
+    sigma22 = _gp_covariance(covariance, x2s, x2s)
+    mu, sigma = mvnormal.conditional(np.asarray(o2s), mu1, mu2,
+      sigma11, sigma12, sigma21, sigma22)
+  return mu, sigma
 
-  def getNormal(self, xs):
-    """Returns the mean and covariance matrices at a set of input points."""
-    if len(self.samples) == 0:
-      mu = self.mean_array(xs)
-      sigma = self.cov_matrix(xs, xs)
-    else:
-      x2s = self.samples.keys()
-      o2s = self.samples.values()
+def _gp_mean(mean, xs):
+  return mean(np.asarray(xs))
 
-      mu1 = self.mean_array(xs)
-      mu2 = self.mean_array(x2s)
-
-      sigma11 = self.cov_matrix(xs, xs)
-      sigma12 = self.cov_matrix(xs, x2s)
-      sigma21 = self.cov_matrix(x2s, xs)
-      sigma22 = self.cov_matrix(x2s, x2s)
-      mu, sigma = mvnormal.conditional(np.array(o2s), mu1, mu2,
-          sigma11, sigma12, sigma21, sigma22)
-
-    return mu, sigma
-
-  def sample(self, xs):
-    """Sample at each of an array of points."""
-    mu, sigma = self.getNormal(xs)
-    os = npr.multivariate_normal(mu, sigma)
-    return os
-
-  def logDensity(self, xs, os):
-    """Log density of a set of samples."""
-    mu, sigma = self.getNormal(xs)
-    return mvnormal.logpdf(np.asarray(os).reshape(len(xs),), mu, sigma)
-
-  def logDensityOfCounts(self):
-    """Log density of the current samples."""
-    if len(self.samples) == 0:
-      return 0
-
-    xs = self.samples.keys()
-    os = self.samples.values()
-
-    mu = self.mean_array(xs)
-    sigma = self.cov_matrix(xs, xs)
-
-    return mvnormal.logpdf(np.asarray(os), mu, sigma)
+def _gp_covariance(covariance, x1s, x2s):
+  return covariance(np.asarray(x1s), np.asarray(x2s))
 
 class GPOutputPSP(RandomPSP):
   def __init__(self, mean, covariance):
     self.mean = mean
     self.covariance = covariance
 
-  def makeGP(self, samples):
-    return GP(self.mean, self.covariance, samples)
-
   def simulate(self,args):
     samples = args.spaux().samples
     xs = args.operandValues()[0]
-    return self.makeGP(samples).sample(xs)
+    return _gp_sample(self.mean, self.covariance, samples, xs)
 
   def logDensity(self,os,args):
     samples = args.spaux().samples
     xs = args.operandValues()[0]
-    return self.makeGP(samples).logDensity(xs, os)
+    return _gp_logDensity(self.mean, self.covariance, samples, xs, os)
 
   def logDensityOfCounts(self,aux):
-    return self.makeGP(aux.samples).logDensityOfCounts()
+    return _gp_logDensityOfCounts(self.mean, self.covariance, aux.samples)
 
   def incorporate(self,os,args):
     samples = args.spaux().samples
@@ -143,12 +115,12 @@ class GPOutputPSP1(GPOutputPSP):
   def simulate(self,args):
     samples = args.spaux().samples
     x = args.operandValues()[0]
-    return self.makeGP(samples).sample(np.array([x]))[0]
+    return _gp_sample(self.mean, self.covariance, samples, [x])[0]
 
   def logDensity(self,o,args):
     samples = args.spaux().samples
     x = args.operandValues()[0]
-    return self.makeGP(samples).logDensity([x], [o])
+    return _gp_logDensity(self.mean, self.covariance, samples, [x], [o])
 
   def incorporate(self,o,args):
     samples = args.spaux().samples
@@ -186,7 +158,8 @@ class GPSP(SP):
     super(GPSP, self).__init__(NullRequestPSP(),output)
 
   def constructSPAux(self): return GPSPAux(OrderedDict())
-  def show(self,spaux): return GP(self.mean, self.covariance, spaux.samples)
+  def show(self,spaux):
+    return '<GP mean=%r covariance=%r>' % (self.mean, self.covariance)
 
 class MakeGPOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self,args):

@@ -149,8 +149,8 @@ def testNormalParameters():
 
   mean = gp.mean_const(0.)
   covariance = cov.scale(sigma**2, cov.se(l**2))
-  gp_class = gp.GP(mean, covariance, observations)
-  actual_mu, actual_sig = gp_class.getNormal(test_inputs)
+  actual_mu, actual_sig = gp._gp_mvnormal(mean, covariance, observations,
+    test_inputs)
   np.testing.assert_almost_equal(actual_mu, expect_mu, decimal=4)
   np.testing.assert_almost_equal(actual_sig, expect_sig, decimal=4)
 
@@ -168,12 +168,13 @@ def testOneSample():
 
   mean = gp.mean_const(0.)
   covariance = cov.scale(sigma**2, cov.se(l**2))
-  gp_class = gp.GP(mean, covariance, observations)
 
-  # gp_class.sample(test_input) should be normally distributed with
+  # _gp_sample(..., test_input) should be normally distributed with
   # mean expect_mu.
   n = default_num_samples(4)
-  samples = np.array([gp_class.sample([test_input])[0] for _ in xrange(n)])
+  def sample():
+    return gp._gp_sample(mean, covariance, observations, [test_input])[0]
+  samples = np.array([sample() for _ in xrange(n)])
   assert samples.shape == (n,)
   return reportKnownGaussian(expect_mu, np.sqrt(expect_sig), samples)
 
@@ -189,7 +190,6 @@ def testTwoSamples_low_covariance():
 
   mean = gp.mean_const(0.)
   covariance = cov.scale(sigma**2, cov.se(l**2))
-  gp_class = gp.GP(mean, covariance, observations)
 
   # Fix n = 200, not higher even if we are doing a long-running
   # inference quality test, because we're trying to show that a
@@ -202,7 +202,7 @@ def testTwoSamples_low_covariance():
   lo_cov_x = []
   lo_cov_y = []
   for i in range(n):
-    x, y = gp_class.sample(in_lo_cov)
+    x, y = gp._gp_sample(mean, covariance, observations, in_lo_cov)
     lo_cov_x.append(x)
     lo_cov_y.append(y)
   return reportPearsonIndependence(lo_cov_x, lo_cov_y)
