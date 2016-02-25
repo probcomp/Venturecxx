@@ -29,6 +29,7 @@ except ImportError:
     from distutils.command.test import test as test_py
 
 import os
+import subprocess
 import sys
 
 with open('VERSION', 'rU') as f:
@@ -39,7 +40,6 @@ if version.endswith('+'):
     prefix = 'release-'
     tag = prefix + version[:-1]
     try:
-        import subprocess
         # The --tags option includes non-annotated tags in the search.
         desc = subprocess.check_output([
             'git', 'describe', '--dirty', '--match', tag, '--tags'
@@ -286,8 +286,18 @@ def parse_req_file(filename):
 
 class local_test(test_py):
     def run_tests(self):
+        status = subprocess.check_output('git submodule status --recursive',
+                                         shell=True)
+        for line in status.split('\n'):
+            if not line: continue
+            if line[0] == '-':
+                print status
+                raise ImportError("Missing submodules."
+                                  " Consider running"
+                                  " `git submodule update --init --recursive`.")
+        print "Test prerequisites satisfied."
         print "Please use ./check.sh instead and read ./HACKING.md"
-        sys.exit(0)  # A success(!) because it installed what tests_require.
+        sys.exit(0)  # A success(!) because we have what tests_require.
 
 install_requires = parse_req_file("install_requires.txt")
 
