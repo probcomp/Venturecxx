@@ -45,7 +45,7 @@ def delta(tolerance):
   return isotropic(f)
 
 def _se(r2, l2):
-  return np.exp(-0.5 * r2 / l2)
+  return np.exp(-0.5 * r2 / l2**2)
 
 def se(l2):
   """Squared-exponential kernel: e^(-r^2 / (2 l^2))"""
