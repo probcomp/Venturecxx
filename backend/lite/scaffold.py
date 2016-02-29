@@ -172,8 +172,8 @@ def addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBord
   indexAssignments[node] = i
 
 def addAbsorbingNode(drg,absorbing,aaa,node,indexAssignments,i):
-  assert not node in drg
-  assert not node in aaa
+  assert node not in drg
+  assert node not in aaa
   absorbing.add(node)
   indexAssignments[node] = i
 
@@ -189,18 +189,18 @@ def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i,ha
 
   while q:
     node,isPrincipal,parentNode = q.pop()
-    if node in drg and not node in aaa:
+    if node in drg and node not in aaa:
       addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder)
     elif isLookupNode(node) or node.operatorNode in drg:
       addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder)
     # TODO temporary: once we put all uncollapsed AAA procs into AEKernels, this line won't be necessary
     elif node in aaa:
-      addAAANode(drg,aaa,absorbing,node,indexAssignments,i)      
+      addAAANode(drg,aaa,absorbing,node,indexAssignments,i)
     elif (not isPrincipal) and trace.pspAt(node).canAbsorb(trace,node,parentNode):
       addAbsorbingNode(drg,absorbing,aaa,node,indexAssignments,i)
-    elif trace.pspAt(node).childrenCanAAA(): 
+    elif trace.pspAt(node).childrenCanAAA():
       addAAANode(drg,aaa,absorbing,node,indexAssignments,i)
-    else: 
+    else:
       addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder)
 
 def findBrush(trace,cDRG):
@@ -216,7 +216,7 @@ def disableRequests(trace,node,disableCounts,disabledRequests,brush):
   if node in disabledRequests: return
   disabledRequests.add(node)
   for esrParent in trace.esrParentsAt(node.outputNode):
-    if not esrParent in disableCounts: disableCounts[esrParent] = 0
+    if esrParent not in disableCounts: disableCounts[esrParent] = 0
     disableCounts[esrParent] += 1
     if disableCounts[esrParent] == esrParent.numRequests:
       disableFamily(trace,esrParent,disableCounts,disabledRequests,brush)
@@ -228,7 +228,7 @@ def disableFamily(trace,node,disableCounts,disabledRequests,brush):
     brush.add(node.requestNode)
     disableRequests(trace,node.requestNode,disableCounts,disabledRequests,brush)
     disableFamily(trace,node.operatorNode,disableCounts,disabledRequests,brush)
-    for operandNode in node.operandNodes: 
+    for operandNode in node.operandNodes:
       disableFamily(trace,operandNode,disableCounts,disabledRequests,brush)
 
 def removeBrush(cDRG,cAbsorbing,cAAA,brush):
@@ -251,7 +251,7 @@ def findBorder(trace,drg,absorbing,aaa):
 
 def maybeIncrementAAARegenCount(trace,regenCounts,aaa,node):
   value = trace.valueAt(node)
-  if isinstance(value,SPRef) and value.makerNode in aaa: 
+  if isinstance(value,SPRef) and value.makerNode in aaa:
     regenCounts[value.makerNode] += 1
 
 def computeRegenCounts(trace,drg,absorbing,aaa,border,brush,hardBorder):
