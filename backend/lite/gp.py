@@ -219,8 +219,8 @@ registerBuiltinSP("gp_cov_matern_52",
     _cov_maker(cov.matern_52, [t.NumberType("l^2")]))
 registerBuiltinSP("gp_cov_linear",
     _cov_maker(cov.linear, [xType]))
-registerBuiltinSP("gp_cov_noise",
-    _cov_maker(cov.noise, [t.NumberType("n^2"), covarianceFunctionType("k")]))
+registerBuiltinSP("gp_cov_bias",
+    _cov_maker(cov.bias, [t.NumberType("s^2"), covarianceFunctionType("k")]))
 registerBuiltinSP("gp_cov_scale",
     _cov_maker(cov.scale, [t.NumberType("s^2"), covarianceFunctionType("k")]))
 registerBuiltinSP("gp_cov_sum",

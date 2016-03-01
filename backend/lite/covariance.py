@@ -100,9 +100,12 @@ def linear(x):
 
 # Composite covariance kernels
 
-def noise(n2, k):
-  """Kernel k with constant additive squared noise n^2."""
-  return lambda x_1, x_2: n2 + k(x_1, x_2)
+def bias(s2, k):
+  """Kernel k biased by the constant squared bias s^2.
+
+  Every covariance, including variance/self-covariance, has s^2 added.
+  """
+  return lambda x_1, x_2: s2 + k(x_1, x_2)
 
 def scale(s2, k):
   """Kernel k scaled by squared output factor s^2."""
