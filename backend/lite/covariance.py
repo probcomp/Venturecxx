@@ -52,12 +52,12 @@ def se(l2):
   return isotropic(lambda r2: _se(r2, l2))
 
 def periodic(l2, T):
-  """Periodic kernel: e^(-(2 sin(2pi r / T))^2 / (2 l^2))"""
+  """Periodic kernel: e^(-(2 sin(pi r / T))^2 / (2 l^2))"""
   sin = np.sin
   pi = np.pi
   sqrt = np.sqrt
   def f(r2):
-    r = 2.*sin(2.*pi*sqrt(r2)/T)
+    r = 2.*sin(pi*sqrt(r2)/T)
     return _se(r**2, l2)
   return isotropic(f)
 
