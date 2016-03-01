@@ -17,7 +17,7 @@
 r'''
 Smoke Tests
 ************************
-Smoke tests for GP covariande functions
+Smoke tests for GP covariance functions
 ==========================
 The test functions do not take any input. We fix both, data vectors and hyper-parameters. The expected results were computed by hand and with MATLAB.
 
