@@ -41,7 +41,7 @@ def isotropic(f):
 def delta(tolerance):
   """Delta kernel: 1, if r^2 is at most tolerance; else 0."""
   def f(r2):
-    return 1.*(r2 < tolerance)
+    return 1.*(r2 <= tolerance)
   return isotropic(f)
 
 def _se(r2, l2):
