@@ -37,7 +37,6 @@ and  :math:`\mathbf{y} = [1.3, -3.2]^T` to test both :math:`\mathbf{K}(\mathbf{x
 
 import numpy as np
 
-from nose.tools import nottest
 
 from venture.test.config import broken_in
 import venture.lite.covariance as cov
