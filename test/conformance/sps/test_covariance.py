@@ -140,6 +140,74 @@ def test_linear():
 
 
 @broken_in('puma', "Puma does not define the covariance function builtins")
+def test_kernel_addition():
+  r'''
+  Tests the addition of kernels. We add an SE kernel to a PER kernel.
+  CAVEAT: if either of the tests for SE and PER fails, this will fail, too.
+  '''
+  l = 1.8
+  p = 0.9
+  se  = cov.se(l)
+
+  per  = cov.periodic(l,p)
+  cov_train,cov_test = apply_cov(cov.sum(se,per))
+  expect_SE_train = np.array([[ 1.        ,  0.18628118,  0.77043084],
+				       [ 0.18628118,  1.        ,  0.53941043],
+				       [ 0.77043084,  0.53941043,  1.        ]])
+
+  expect_SE_test =  np.array([[ 1.        ,  0.04394558],
+					[ 0.18628118,  0.8007483 ],
+					[ 0.77043084,  0.20591837]])
+
+  expect_PER_train =np.array([[ 1.        ,  0.62941043,  0.54954649],
+       [ 0.62941043,  1.        ,  0.77488019],
+       [ 0.54954649,  0.77487528,  1.        ]])
+
+  expect_PER_test = np.array([[ 1.        ,  1.        ],
+       [ 0.62941043,  0.62941043],
+       [ 0.54954649,  0.54954649]])
+
+
+  expect_cov_train = expect_SE_train + expect_PER_train 
+  expect_cov_test = expect_SE_test  + expect_PER_test 
+  np.testing.assert_almost_equal(cov_train, expect_cov_train, decimal=4)
+  np.testing.assert_almost_equal(cov_test, expect_cov_test, decimal=4)
+
+@broken_in('puma', "Puma does not define the covariance function builtins")
+def test_kernel_multiplication():
+  r'''
+  Tests the multiplication of kernels. We multiply an SE kernel to a PER kernel.
+  CAVEAT: if either of the tests for SE and PER fails, this will fail, too.
+  '''
+  l = 1.8
+  p = 0.9
+  se  = cov.se(l)
+
+  per  = cov.periodic(l,p)
+  cov_train,cov_test = apply_cov(cov.product(se,per))
+  expect_SE_train = np.array([[ 1.        ,  0.18628118,  0.77043084],
+				       [ 0.18628118,  1.        ,  0.53941043],
+				       [ 0.77043084,  0.53941043,  1.        ]])
+
+  expect_SE_test =  np.array([[ 1.        ,  0.04394558],
+					[ 0.18628118,  0.8007483 ],
+					[ 0.77043084,  0.20591837]])
+
+  expect_PER_train =np.array([[ 1.        ,  0.62941043,  0.54954649],
+       [ 0.62941043,  1.        ,  0.77488019],
+       [ 0.54954649,  0.77487528,  1.        ]])
+
+  expect_PER_test = np.array([[ 1.        ,  1.        ],
+       [ 0.62941043,  0.62941043],
+       [ 0.54954649,  0.54954649]])
+
+
+  expect_cov_train = expect_SE_train * expect_PER_train 
+  expect_cov_test = expect_SE_test  * expect_PER_test 
+  np.testing.assert_almost_equal(cov_train, expect_cov_train, decimal=4)
+  np.testing.assert_almost_equal(cov_test, expect_cov_test, decimal=4)
+
+@broken_in('puma', "Puma does not define the covariance function builtins")
 def test_application_cov_gp():
   r'''
   Tests if a covariance function is correctly applied to vectore input.
