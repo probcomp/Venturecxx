@@ -115,11 +115,14 @@ class MakerCDirMultOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self, args):
     vals = args.operandValues()
     alpha = vals[0]
-    os = vals[1] if len(vals) > 1 else [VentureAtom(i) for i in range(len(alpha))]
+    os = vals[1] if len(vals) > 1 \
+         else [VentureAtom(i) for i in range(len(alpha))]
     if len(os) != len(alpha):
-      raise VentureValueError("Set of objects to choose from is the wrong length")
+      raise VentureValueError(
+        "Set of objects to choose from is the wrong length")
     output = TypedPSP(CDirMultOutputPSP(alpha, os), SPType([], t.AnyType()))
-    return VentureSPRecord(DirMultSP(NullRequestPSP(), output, alpha, len(alpha)))
+    return VentureSPRecord(DirMultSP(NullRequestPSP(), output, alpha,
+                                     len(alpha)))
 
   def description(self, name):
     return "  %s(alphas, objects) returns a sampler for a collapsed " \
@@ -207,7 +210,8 @@ class MakerUDirMultOutputPSP(RandomPSP):
     n = len(alpha)
     os = vals[1] if len(vals) > 1 else [VentureAtom(i) for i in range(n)]
     if len(os) != n:
-      raise VentureValueError("Set of objects to choose from is the wrong length")
+      raise VentureValueError(
+        "Set of objects to choose from is the wrong length")
     theta = npr.dirichlet(alpha)
     output = TypedPSP(UDirMultOutputPSP(theta, os), SPType([], t.AnyType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(), output, alpha, n))
@@ -227,13 +231,15 @@ class UDirMultAAALKernel(SimulationAAALKernel):
   def simulate(self, _trace, args):
     vals = args.operandValues()
     alpha = vals[0]
-    os = vals[1] if len(vals) > 1 else [VentureAtom(i) for i in range(len(alpha))]
+    os = vals[1] if len(vals) > 1 \
+         else [VentureAtom(i) for i in range(len(alpha))]
     madeaux = args.madeSPAux()
     assert isinstance(madeaux, DirMultSPAux)
     counts = [count + a for (count, a) in zip(madeaux.counts, alpha)]
     newTheta = npr.dirichlet(counts)
     output = TypedPSP(UDirMultOutputPSP(newTheta, os), SPType([], t.AnyType()))
-    return VentureSPRecord(DirMultSP(NullRequestPSP(), output, alpha, len(alpha)),
+    return VentureSPRecord(DirMultSP(NullRequestPSP(), output, alpha,
+                                     len(alpha)),
                            madeaux)
 
   def weight(self, _trace, _newValue, _args):
@@ -288,8 +294,10 @@ class MakerCSymDirMultOutputPSP(DeterministicMakerAAAPSP):
     (alpha, n) = (float(vals[0]), int(vals[1]))
     os = vals[2] if len(vals) > 2 else [VentureAtom(i) for i in range(n)]
     if len(os) != n:
-      raise VentureValueError("Set of objects to choose from is the wrong length")
-    output = TypedPSP(CSymDirMultOutputPSP(alpha, n, os), SPType([], t.AnyType()))
+      raise VentureValueError(
+        "Set of objects to choose from is the wrong length")
+    output = TypedPSP(CSymDirMultOutputPSP(alpha, n, os),
+                      SPType([], t.AnyType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(), output, alpha, n))
 
   def gradientOfLogDensityOfCounts(self, aux, args):
@@ -351,7 +359,8 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
     (alpha, n) = (float(vals[0]), int(vals[1]))
     os = vals[2] if len(vals) > 2 else [VentureAtom(i) for i in range(n)]
     if len(os) != n:
-      raise VentureValueError("Set of objects to choose from is the wrong length")
+      raise VentureValueError(
+        "Set of objects to choose from is the wrong length")
     theta = npr.dirichlet([alpha for _ in range(n)])
     output = TypedPSP(USymDirMultOutputPSP(theta, os), SPType([], t.AnyType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(), output, alpha, n))
@@ -377,8 +386,10 @@ class USymDirMultAAALKernel(SimulationAAALKernel):
     assert isinstance(madeaux, DirMultSPAux)
     counts = [count + alpha for count in madeaux.counts]
     newTheta = npr.dirichlet(counts)
-    output = TypedPSP(USymDirMultOutputPSP(newTheta, os), SPType([], t.AnyType()))
-    return VentureSPRecord(DirMultSP(NullRequestPSP(), output, alpha, n), madeaux)
+    output = TypedPSP(USymDirMultOutputPSP(newTheta, os),
+                      SPType([], t.AnyType()))
+    return VentureSPRecord(DirMultSP(NullRequestPSP(), output, alpha, n),
+                           madeaux)
 
   def weight(self, _trace, _newValue, _args):
     # Gibbs step, samples exactly from the local posterior.  Being a
