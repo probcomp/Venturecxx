@@ -154,7 +154,8 @@ VentureValuePtr MakeSymDirMultOutputPSP::simulate(shared_ptr<Args> args,
 }
 
 SymDirMultSP::SymDirMultSP(double alpha, size_t n) :
-  SP(new NullRequestPSP(), new SymDirMultOutputPSP(alpha, n)),
+  SP(new NullRequestPSP(), new DirMultOutputPSP(vector<double>(n, alpha),
+                                                alpha * n)),
   alpha(alpha), n(n) {}
 
 boost::python::dict SymDirMultSP::toPython(Trace * trace,
@@ -171,94 +172,6 @@ boost::python::dict SymDirMultSP::toPython(Trace * trace,
   value["value"] = symDirMult;
 
   return value;
-}
-
-/* SymDirMultOutputPSP */
-VentureValuePtr SymDirMultOutputPSP::simulate(shared_ptr<Args> args,
-                                              gsl_rng * rng) const
-{
-  checkArgsLength("sym_dir_mult", args, 0);
-
-  shared_ptr<DirMultSPAux> aux =
-    dynamic_pointer_cast<DirMultSPAux>(args->spAux);
-  assert(aux);
-  assert(aux->counts.size() == n);
-
-  vector<double> weights(n, alpha);
-  for (size_t i = 0; i < n; ++i) {
-    weights[i] += aux->counts[i];
-  }
-
-  return simulateCategorical(weights, rng);
-}
-
-double SymDirMultOutputPSP::logDensity(VentureValuePtr value,
-                                       shared_ptr<Args> args) const
-{
-  shared_ptr<DirMultSPAux> aux =
-    dynamic_pointer_cast<DirMultSPAux>(args->spAux);
-  assert(aux);
-  assert(aux->counts.size() == n);
-
-  int index = value->getInt();
-  double num = aux->counts[index] + alpha;
-  double denom = aux->total + alpha * n;
-  return log(num/denom);
-}
-
-void SymDirMultOutputPSP::incorporate(VentureValuePtr value,
-                                      shared_ptr<Args> args) const
-{
-  shared_ptr<DirMultSPAux> aux =
-    dynamic_pointer_cast<DirMultSPAux>(args->spAux);
-  assert(aux);
-  assert(aux->counts.size() == n);
-
-  int index = value->getInt();
-  aux->counts[index]++;
-  aux->total++;
-}
-
-void SymDirMultOutputPSP::unincorporate(VentureValuePtr value,
-                                        shared_ptr<Args> args) const
-{
-  shared_ptr<DirMultSPAux> aux =
-    dynamic_pointer_cast<DirMultSPAux>(args->spAux);
-  assert(aux);
-  assert(aux->counts.size() == n);
-
-  int index = value->getInt();
-  aux->counts[index]--;
-  aux->total--;
-
-  assert(aux->counts[index] >= 0);
-}
-
-vector<VentureValuePtr> SymDirMultOutputPSP::enumerateValues(
-    shared_ptr<Args> args) const
-{
-  vector<VentureValuePtr> vs;
-  for (size_t i = 0; i < n; ++i) {
-    vs.push_back(VentureValuePtr(new VentureAtom(i)));
-  }
-  return vs;
-}
-
-double SymDirMultOutputPSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
-{
-  shared_ptr<DirMultSPAux> aux = dynamic_pointer_cast<DirMultSPAux>(spAux);
-  assert(aux);
-
-  int N = aux->total;
-  double A = alpha * n;
-
-  double x = gsl_sf_lngamma(A) - gsl_sf_lngamma(N + A);
-  for (size_t i = 0; i < n; ++i)
-  {
-    x += gsl_sf_lngamma(alpha + aux->counts[i]);
-  }
-  x -= n * gsl_sf_lngamma(alpha);
-  return x;
 }
 
 // Uncollapsed Asymmetric

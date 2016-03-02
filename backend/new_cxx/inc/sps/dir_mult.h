@@ -78,25 +78,6 @@ struct SymDirMultSP : SP
   const size_t n;
 };
 
-struct SymDirMultOutputPSP : RandomPSP
-{
-  SymDirMultOutputPSP(double alpha, size_t n) : alpha(alpha), n(n) {}
-
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value,shared_ptr<Args> args) const;
-  void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
-  void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
-
-  bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
-  vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
-
-  double logDensityOfCounts(shared_ptr<SPAux> spAux) const;
-
-private:
-  const double alpha;
-  const size_t n;
-};
-
 // Uncollapsed SPAux
 struct UCDirMultSPAux : DirMultSPAux
 {
