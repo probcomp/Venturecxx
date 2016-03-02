@@ -80,7 +80,8 @@ struct MakeDirMultOutputPSP : PSP
 
 struct DirMultOutputPSP : RandomPSP
 {
-  DirMultOutputPSP(const vector<double>& alpha, double total) : alpha(alpha), total(total) {}
+  DirMultOutputPSP(const vector<double>& alpha, double total):
+    alpha(alpha), total(total) {}
 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value,shared_ptr<Args> args) const;
@@ -114,10 +115,12 @@ struct MakeUCSymDirMultOutputPSP : RandomPSP
 
 struct UCSymDirMultSP : SP
 {
-  UCSymDirMultSP(PSP * requestPSP, PSP * outputPSP): SP(requestPSP,outputPSP) {}
+  UCSymDirMultSP(PSP * requestPSP, PSP * outputPSP):
+    SP(requestPSP,outputPSP) {}
 
   bool hasAEKernel() const { return true; }
-  void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng * rng) const;
+  void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
+               gsl_rng * rng) const;
   UCSymDirMultSP* copy_help(ForwardingMap* m) const;
 };
 
@@ -149,7 +152,8 @@ struct UCDirMultSP : SP
   UCDirMultSP(PSP * requestPSP, PSP * outputPSP): SP(requestPSP,outputPSP) {}
 
   bool hasAEKernel() const { return true; }
-  void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng * rng) const;
+  void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
+               gsl_rng * rng) const;
   UCDirMultSP* copy_help(ForwardingMap* m) const;
 };
 
