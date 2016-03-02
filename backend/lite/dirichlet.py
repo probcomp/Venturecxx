@@ -116,7 +116,7 @@ class MakerCDirMultOutputPSP(DeterministicMakerAAAPSP):
     vals = args.operandValues()
     alpha = vals[0]
     os = vals[1] if len(vals) > 1 else [VentureAtom(i) for i in range(len(alpha))]
-    if not len(os) == len(alpha):
+    if len(os) != len(alpha):
       raise VentureValueError("Set of objects to choose from is the wrong length")
     output = TypedPSP(CDirMultOutputPSP(alpha,os), SPType([], t.AnyType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,len(alpha)))
@@ -206,7 +206,7 @@ class MakerUDirMultOutputPSP(RandomPSP):
     alpha = vals[0]
     n = len(alpha)
     os = vals[1] if len(vals) > 1 else [VentureAtom(i) for i in range(n)]
-    if not len(os) == n:
+    if len(os) != n:
       raise VentureValueError("Set of objects to choose from is the wrong length")
     theta = npr.dirichlet(alpha)
     output = TypedPSP(UDirMultOutputPSP(theta,os), SPType([], t.AnyType()))
@@ -287,7 +287,7 @@ class MakerCSymDirMultOutputPSP(DeterministicMakerAAAPSP):
     vals = args.operandValues()
     (alpha,n) = (float(vals[0]),int(vals[1]))
     os = vals[2] if len(vals) > 2 else [VentureAtom(i) for i in range(n)]
-    if not len(os) == n:
+    if len(os) != n:
       raise VentureValueError("Set of objects to choose from is the wrong length")
     output = TypedPSP(CSymDirMultOutputPSP(alpha,n,os), SPType([], t.AnyType()))
     return VentureSPRecord(DirMultSP(NullRequestPSP(),output,alpha,n))
@@ -350,7 +350,7 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
     vals = args.operandValues()
     (alpha,n) = (float(vals[0]),int(vals[1]))
     os = vals[2] if len(vals) > 2 else [VentureAtom(i) for i in range(n)]
-    if not len(os) == n:
+    if len(os) != n:
       raise VentureValueError("Set of objects to choose from is the wrong length")
     theta = npr.dirichlet([alpha for _ in range(n)])
     output = TypedPSP(USymDirMultOutputPSP(theta,os), SPType([], t.AnyType()))
