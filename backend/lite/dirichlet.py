@@ -366,7 +366,8 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
     return VentureSPRecord(DirMultSP(NullRequestPSP(), output, alpha, n))
 
   def logDensity(self, value, args):
-    (alpha, n) = args.operandValues()
+    vals = args.operandValues()
+    (alpha, n) = (float(vals[0]), int(vals[1]))
     assert isinstance(value, VentureSPRecord)
     assert isinstance(value.sp, DirMultSP)
     assert isinstance(value.sp.outputPSP, TypedPSP)
