@@ -16,10 +16,12 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose import SkipTest
+from nose.tools import eq_
 
 from venture.test.config import broken_in
 from venture.test.config import collectSamples
 from venture.test.config import default_num_data
+from venture.test.config import gen_broken_in
 from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
@@ -181,6 +183,27 @@ def checkMakeSymDirMultWeakPrior(maker):
 
   return checkDirichletMultinomialWeakPrior(ripl, "pid")
 
+@gen_on_inf_prim("none")
+@gen_broken_in("puma", "Puma doesn't support the specified-objects form "
+               "of dirichlet multinomial.  Issue #340.")
+def testDirMultInvalidOutput():
+  for maker in ["(make_dir_mult (array 1 1) x)",
+                "(make_sym_dir_mult 1 2 x)",
+                "(make_uc_dir_mult (array 1 1) x)",
+                "(make_uc_sym_dir_mult 1 2 x)"]:
+    yield checkDirMultInvalidOutput, maker
+
+def checkDirMultInvalidOutput(maker_form):
+  raise SkipTest("Currently broken.  Issue #451.")
+  r = get_ripl()
+  r.assume("x1", "(flip)")
+  r.assume("x2", "(flip)")
+  r.infer("(force x1 true)")
+  r.infer("(force x2 true)")
+  r.assume("x", "(array x1 x2)")
+  r.assume("f", maker_form)
+  r.observe("(f)", "false")
+  eq_([float("-inf")], r.infer("particle_log_weights"))
 
 #### (2) Staleness
 
