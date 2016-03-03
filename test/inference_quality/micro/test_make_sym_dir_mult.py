@@ -205,6 +205,36 @@ def checkDirMultInvalidOutput(maker_form):
   r.observe("(f)", "false")
   eq_([float("-inf")], r.infer("particle_log_weights"))
 
+@gen_on_inf_prim("any")
+@gen_broken_in("puma", "Puma doesn't support the specified-objects form "
+               "of dirichlet multinomial.  Issue #340.")
+@gen_broken_in("lite", "Inference runs afoul of Issue #451.")
+def testDirMultObjectVariation():
+  for maker in ["(make_dir_mult (array 1 1) x)",
+                "(make_sym_dir_mult 1 2 x)",
+                "(make_uc_dir_mult (array 1 1) x)",
+                "(make_uc_sym_dir_mult 1 2 x)"]:
+    yield checkDirMultObjectVariation, maker
+
+@statisticalTest
+def checkDirMultObjectVariation(maker_form):
+  "Testing for Issue #452."
+  r = get_ripl()
+  r.assume("x1", "(flip)")
+  r.assume("x2", "(flip)")
+  r.assume("x", "(array x1 x2)")
+  r.assume("f", maker_form)
+  r.observe("(f)", "true")
+  r.observe("(f)", "true")
+  r.observe("(f)", "true")
+  predictions = collectSamples(r, "x", infer="mixes_slowly")
+  ans = [([True,  True],  1),
+         ([True,  False], 0.25),
+         ([False, True],  0.25),
+         ([False, False], 0),
+       ]
+  return reportKnownDiscrete(ans, predictions)
+
 #### (2) Staleness
 
 # This section should not hope to find staleness, since all backends should
