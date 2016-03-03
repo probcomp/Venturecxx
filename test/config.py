@@ -118,9 +118,9 @@ def default_num_transitions_per_sample():
   else:
     return 3
 
-def default_num_data(factor=1):
+def default_num_data(desired=None):
   if not ignore_inference_quality():
-    return int(config["num_data"]) * factor
+    return desired or int(config["num_data"])
   else:
     return 2
 

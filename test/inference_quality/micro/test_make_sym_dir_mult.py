@@ -19,6 +19,7 @@ from nose import SkipTest
 
 from venture.test.config import broken_in
 from venture.test.config import collectSamples
+from venture.test.config import default_num_data
 from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
@@ -239,7 +240,7 @@ def testStaleAAA_Madness():
 
 def checkDirichletMultinomialAAA(ripl, label, infer=None):
   for i in range(1, 4):
-    for _ in range(20):
+    for _ in range(default_num_data(20)):
       ripl.observe("(f)", "atom<%d>" % i)
 
   predictions = collectSamples(ripl, label, infer=infer)
@@ -247,8 +248,8 @@ def checkDirichletMultinomialAAA(ripl, label, infer=None):
   return reportKnownDiscrete(ans, predictions)
 
 def checkDirichletMultinomialBrush(ripl, label):
-  for _ in range(10): ripl.observe("(f)", "atom<1>")
-  for _ in range(10): ripl.observe("""
+  for _ in range(default_num_data(10)): ripl.observe("(f)", "atom<1>")
+  for _ in range(default_num_data(10)): ripl.observe("""
 (if (lt a 10.0)
   (f)
   (f))""", "atom<1>")
@@ -258,7 +259,7 @@ def checkDirichletMultinomialBrush(ripl, label):
   return reportKnownDiscrete(ans, predictions)
 
 def checkDirichletMultinomialWeakPrior(ripl, label):
-  for _ in range(8):
+  for _ in range(default_num_data(8)):
     ripl.observe("(f)", "atom<1>")
 
   predictions = collectSamples(ripl, label, infer="mixes_slowly")
