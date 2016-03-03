@@ -154,7 +154,8 @@ def reportKnownDiscrete(expectedRates, observed):
   The input format for the expected distribution is a list of
   item-rate pairs.  The probability of items that do not appear on the
   list is taken to be zero.  If a rate is given as None, that item is
-  assumed possible but with unknown frequency.
+  assumed possible but with unknown frequency.  The rates will be
+  normalized automatically by reportKnownDiscrete.
 
   Try to have enough samples that every item is expected to appear at
   least five times for the Chi^2 statistic to be reasonable.
