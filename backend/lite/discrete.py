@@ -156,7 +156,7 @@ class CategoricalOutputPSP(DiscretePSP):
       return simulateCategorical(vals[0],
         [VentureAtom(i) for i in range(len(vals[0]))])
     else:
-      if not len(vals[0]) == len(vals[1]):
+      if len(vals[0]) != len(vals[1]):
         raise VentureValueError("Categorical passed different length arguments.")
       return simulateCategorical(*vals)
 
@@ -316,7 +316,7 @@ class CBetaBernoulliOutputPSP(DiscretePSP):
   def logDensity(self,value,args):
     [ctY,ctN] = args.spaux().cts()
     weight = (self.alpha + ctY) / (self.alpha + ctY + self.beta + ctN)
-    if value == True:
+    if value is True:
       return math.log(weight)
     else:
       return math.log(1-weight)
@@ -403,7 +403,7 @@ class UBetaBernoulliOutputPSP(DiscretePSP):
     return random.random() < self.weight
 
   def logDensity(self, value, _args):
-    if value == True:
+    if value is True:
       return math.log(self.weight)
     else:
       return math.log(1-self.weight)
