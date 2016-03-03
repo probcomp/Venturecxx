@@ -33,7 +33,7 @@ from venture.test.stats import statisticalTest
 #
 @gen_on_inf_prim("any")
 def testMakeSymDirMult1():
-  for maker in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
+  for maker in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
     yield checkMakeSymDirMult1, maker
 
 @statisticalTest
@@ -41,15 +41,15 @@ def checkMakeSymDirMult1(maker):
   """Extremely simple program, with an AAA procedure when uncollapsed"""
   ripl = get_ripl()
   ripl.assume("f", "(%s 1.0 2)" % maker)
-  ripl.predict("(f)",label="pid")
-  predictions = collectSamples(ripl,"pid")
-  ans = [(0,.5), (1,.5)]
+  ripl.predict("(f)", label="pid")
+  predictions = collectSamples(ripl, "pid")
+  ans = [(0, .5), (1, .5)]
   return reportKnownDiscrete(ans, predictions)
 
 @gen_on_inf_prim("any")
 def testMakeSymDirMultAAA():
-  for maker in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
-    yield checkMakeSymDirMultAAA,maker
+  for maker in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
+    yield checkMakeSymDirMultAAA, maker
 
 @statisticalTest
 def checkMakeSymDirMultAAA(maker):
@@ -58,48 +58,48 @@ def checkMakeSymDirMultAAA(maker):
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(%s a 4)" % maker)
-  ripl.predict("(f)",label="pid")
+  ripl.predict("(f)", label="pid")
   return checkDirichletMultinomialAAA(ripl, "pid")
 
 @gen_on_inf_prim("any")
 def testMakeSymDirMultFlip():
   """AAA where the SP flips between collapsed and uncollapsed."""
-  for maker_1 in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
-    for maker_2 in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
-      yield checkMakeSymDirMultFlip,maker_1,maker_2
+  for maker_1 in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
+    for maker_2 in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
+      yield checkMakeSymDirMultFlip, maker_1, maker_2
 
 @skipWhenRejectionSampling("Observes resimulations of unknown code")
 @skipWhenSubSampling(
   "The current implementation of subsampling can't handle this scaffold shape")
 @statisticalTest
-def checkMakeSymDirMultFlip(maker_1,maker_2):
+def checkMakeSymDirMultFlip(maker_1, maker_2):
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
-  ripl.assume("f", "((if (lt a 10) %s %s) a 4)" % (maker_1,maker_2))
-  ripl.predict("(f)",label="pid")
+  ripl.assume("f", "((if (lt a 10) %s %s) a 4)" % (maker_1, maker_2))
+  ripl.predict("(f)", label="pid")
   return checkDirichletMultinomialAAA(ripl, "pid")
 
 @gen_on_inf_prim("any")
 def testMakeSymDirMultBrushObserves():
   """AAA where the SP flips between collapsed and uncollapsed, and
      there are observations in the brush."""
-  for maker_1 in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
-    for maker_2 in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
-      yield checkMakeSymDirMultBrushObserves,maker_1,maker_2
+  for maker_1 in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
+    for maker_2 in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
+      yield checkMakeSymDirMultBrushObserves, maker_1, maker_2
 
 @skipWhenRejectionSampling("Observes resimulations of unknown code")
 @skipWhenSubSampling(
   "The current implementation of subsampling can't handle this scaffold shape")
 @statisticalTest
-def checkMakeSymDirMultBrushObserves(maker_1,maker_2):
+def checkMakeSymDirMultBrushObserves(maker_1, maker_2):
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
-  ripl.assume("f", "((if (lt a 10) %s %s) a 2)" % (maker_1,maker_2))
-  ripl.predict("(f)",label="pid")
+  ripl.assume("f", "((if (lt a 10) %s %s) a 2)" % (maker_1, maker_2))
+  ripl.predict("(f)", label="pid")
 
-  return checkDirichletMultinomialBrush(ripl,"pid")
+  return checkDirichletMultinomialBrush(ripl, "pid")
 
 @skipWhenRejectionSampling("Observes resimulations of unknown code")
 @skipWhenSubSampling(
@@ -112,7 +112,7 @@ def testMakeSymDirMultNative():
 
   ripl.assume("a", "(normal 10.0 1.0)")
 # Might be collapsed, uncollapsed, or uncollapsed in Venture
-  ripl.assume("f","""
+  ripl.assume("f", """
 ((if (lt a 9.5)
      make_sym_dir_mult
      (if (lt a 10.5)
@@ -122,17 +122,17 @@ def testMakeSymDirMultNative():
             (symmetric_dirichlet alpha k)))))
  a 4)
 """)
-  ripl.predict("(f)",label="pid")
+  ripl.predict("(f)", label="pid")
   return checkDirichletMultinomialAAA(ripl, "pid")
 
 @gen_on_inf_prim("any")
 def testMakeSymDirMultAppControlsFlip():
-  for maker_1 in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
-    for maker_2 in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
-      yield checkMakeSymDirMultAppControlsFlip,maker_1,maker_2
+  for maker_1 in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
+    for maker_2 in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
+      yield checkMakeSymDirMultAppControlsFlip, maker_1, maker_2
 
 @statisticalTest
-def checkMakeSymDirMultAppControlsFlip(maker_1,maker_2):
+def checkMakeSymDirMultAppControlsFlip(maker_1, maker_2):
   """Two AAA SPs with same parameters, where their applications control
 which are applied"""
   ripl = get_ripl()
@@ -140,17 +140,17 @@ which are applied"""
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(%s a 4)" % maker_1)
   ripl.assume("g", "(%s a 4)" % maker_2)
-  ripl.predict("(f)",label="pid")
+  ripl.predict("(f)", label="pid")
   ripl.predict("(g)")
-  for _ in range(5): ripl.observe("(g)","atom<1>")
+  for _ in range(5): ripl.observe("(g)", "atom<1>")
   ripl.predict("(if (eq (f) atom<1>) (g) (g))")
   ripl.predict("(if (eq (g) atom<1>) (f) (f))")
   return checkDirichletMultinomialAAA(ripl, "pid", infer="mixes_slowly")
 
 @gen_on_inf_prim("any")
 def testMakeDirMult1():
-  for maker in ["make_dir_mult","make_uc_dir_mult"]:
-    yield checkMakeDirMult1,maker
+  for maker in ["make_dir_mult", "make_uc_dir_mult"]:
+    yield checkMakeDirMult1, maker
 
 @statisticalTest
 def checkMakeDirMult1(maker):
@@ -167,8 +167,8 @@ def checkMakeDirMult1(maker):
 
 @gen_on_inf_prim("any")
 def testMakeSymDirMultWeakPrior():
-  for maker in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
-    yield checkMakeSymDirMultWeakPrior,maker
+  for maker in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
+    yield checkMakeSymDirMultWeakPrior, maker
 
 @statisticalTest
 def checkMakeSymDirMultWeakPrior(maker):
@@ -176,9 +176,9 @@ def checkMakeSymDirMultWeakPrior(maker):
 
   ripl.assume("a", "1.0")
   ripl.assume("f", "(%s a 2)" % maker)
-  ripl.predict("(f)",label="pid")
+  ripl.predict("(f)", label="pid")
 
-  return checkDirichletMultinomialWeakPrior(ripl,"pid")
+  return checkDirichletMultinomialWeakPrior(ripl, "pid")
 
 
 #### (2) Staleness
@@ -196,9 +196,9 @@ def testStaleAAA_MSP():
   ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
   ripl.assume("g", "(mem f)")
   ripl.assume("h", "g")
-  ripl.predict("(h)",label="pid")
+  ripl.predict("(h)", label="pid")
 
-  return checkDirichletMultinomialWeakPrior(ripl,"pid")
+  return checkDirichletMultinomialWeakPrior(ripl, "pid")
 
 @on_inf_prim("any")
 @statisticalTest
@@ -209,9 +209,9 @@ def testStaleAAA_CSP():
   ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
   ripl.assume("g", "(lambda () f)")
   ripl.assume("h", "(g)")
-  ripl.predict("(h)",label="pid")
+  ripl.predict("(h)", label="pid")
 
-  return checkDirichletMultinomialWeakPrior(ripl,"pid")
+  return checkDirichletMultinomialWeakPrior(ripl, "pid")
 
 @on_inf_prim("any")
 @statisticalTest
@@ -232,35 +232,35 @@ def testStaleAAA_Madness():
                                         (lookup ys (quote bbb))))""")
   ripl.predict("(g)", label="pid")
 
-  return checkDirichletMultinomialWeakPrior(ripl,"pid")
+  return checkDirichletMultinomialWeakPrior(ripl, "pid")
 
 
 #### Helpers
 
 def checkDirichletMultinomialAAA(ripl, label, infer=None):
-  for i in range(1,4):
+  for i in range(1, 4):
     for _ in range(20):
       ripl.observe("(f)", "atom<%d>" % i)
 
-  predictions = collectSamples(ripl,label,infer=infer)
-  ans = [(0,.1), (1,.3), (2,.3), (3,.3)]
+  predictions = collectSamples(ripl, label, infer=infer)
+  ans = [(0, .1), (1, .3), (2, .3), (3, .3)]
   return reportKnownDiscrete(ans, predictions)
 
-def checkDirichletMultinomialBrush(ripl,label):
-  for _ in range(10): ripl.observe("(f)","atom<1>")
+def checkDirichletMultinomialBrush(ripl, label):
+  for _ in range(10): ripl.observe("(f)", "atom<1>")
   for _ in range(10): ripl.observe("""
 (if (lt a 10.0)
   (f)
-  (f))""","atom<1>")
+  (f))""", "atom<1>")
 
-  predictions = collectSamples(ripl,label)
-  ans = [(0,.25), (1,.75)]
+  predictions = collectSamples(ripl, label)
+  ans = [(0, .25), (1, .75)]
   return reportKnownDiscrete(ans, predictions)
 
-def checkDirichletMultinomialWeakPrior(ripl,label):
+def checkDirichletMultinomialWeakPrior(ripl, label):
   for _ in range(8):
     ripl.observe("(f)", "atom<1>")
 
-  predictions = collectSamples(ripl,label,infer="mixes_slowly")
-  ans = [(1,.9), (0,.1)]
+  predictions = collectSamples(ripl, label, infer="mixes_slowly")
+  ans = [(1, .9), (0, .1)]
   return reportKnownDiscrete(ans, predictions)
