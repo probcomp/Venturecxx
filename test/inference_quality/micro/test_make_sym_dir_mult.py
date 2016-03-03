@@ -28,12 +28,6 @@ from venture.test.config import skipWhenSubSampling
 from venture.test.stats import reportKnownDiscrete
 from venture.test.stats import statisticalTest
 
-# TODO this whole file will need to be parameterized.
-# Most of these will become "check" functions instead of "test"
-# functions, and then we will have a few test-generators.
-
-# TODO this folder needs many more interesting test cases!
-
 ############## (1) Test SymDirMult AAA
 
 #
