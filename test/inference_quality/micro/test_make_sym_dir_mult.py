@@ -68,8 +68,9 @@ def testMakeSymDirMultFlip():
     for maker_2 in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
       yield checkMakeSymDirMultFlip,maker_1,maker_2
 
-@skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
-@skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
+@skipWhenRejectionSampling("Observes resimulations of unknown code")
+@skipWhenSubSampling(
+  "The current implementation of subsampling can't handle this scaffold shape")
 @statisticalTest
 def checkMakeSymDirMultFlip(maker_1,maker_2):
   ripl = get_ripl()
@@ -87,8 +88,9 @@ def testMakeSymDirMultBrushObserves():
     for maker_2 in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
       yield checkMakeSymDirMultBrushObserves,maker_1,maker_2
 
-@skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
-@skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
+@skipWhenRejectionSampling("Observes resimulations of unknown code")
+@skipWhenSubSampling(
+  "The current implementation of subsampling can't handle this scaffold shape")
 @statisticalTest
 def checkMakeSymDirMultBrushObserves(maker_1,maker_2):
   ripl = get_ripl()
@@ -99,8 +101,9 @@ def checkMakeSymDirMultBrushObserves(maker_1,maker_2):
 
   return checkDirichletMultinomialBrush(ripl,"pid")
 
-@skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
-@skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
+@skipWhenRejectionSampling("Observes resimulations of unknown code")
+@skipWhenSubSampling(
+  "The current implementation of subsampling can't handle this scaffold shape")
 @statisticalTest
 @on_inf_prim("any")
 def testMakeSymDirMultNative():
@@ -130,7 +133,8 @@ def testMakeSymDirMultAppControlsFlip():
 
 @statisticalTest
 def checkMakeSymDirMultAppControlsFlip(maker_1,maker_2):
-  """Two AAA SPs with same parameters, where their applications control which are applied"""
+  """Two AAA SPs with same parameters, where their applications control
+which are applied"""
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
@@ -151,7 +155,9 @@ def testMakeDirMult1():
 @statisticalTest
 def checkMakeDirMult1(maker):
   if rejectionSampling() and maker == "make_dir_mult":
-    raise SkipTest("Is the log density of counts bounded for collapsed beta bernoulli?  Issue: https://app.asana.com/0/9277419963067/10623454782852")
+    raise SkipTest("Is the log density of counts bounded for "
+                   "collapsed beta bernoulli?  Issue: "
+                   "https://app.asana.com/0/9277419963067/10623454782852")
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
@@ -161,7 +167,6 @@ def checkMakeDirMult1(maker):
 
 @gen_on_inf_prim("any")
 def testMakeSymDirMultWeakPrior():
-  """This used to fail because nothing ever got unincorporated. Should work now"""
   for maker in ["make_sym_dir_mult","make_uc_sym_dir_mult"]:
     yield checkMakeSymDirMultWeakPrior,maker
 
@@ -210,7 +215,8 @@ def testStaleAAA_CSP():
 
 @on_inf_prim("any")
 @statisticalTest
-@broken_in("puma", "Need to port records to Puma for references to work.  Issue #224")
+@broken_in("puma",
+           "Need to port records to Puma for references to work.  Issue #224")
 def testStaleAAA_Madness():
   ripl = get_ripl()
 
@@ -219,10 +225,12 @@ def testStaleAAA_Madness():
   ripl.assume("f2_maker", "(lambda () f)")
   ripl.assume("f2", "(f2_maker)")
   ripl.assume("xs", "(array (ref f) (ref f2))")
-  ripl.assume("f3","(deref (lookup xs 1))")
-  ripl.assume("ys","(dict (array (quote aaa) (quote bbb)) (array (ref f3) (ref f3)))")
-  ripl.assume("g","(deref (if (flip) (lookup ys (quote aaa)) (lookup ys (quote bbb))))")
-  ripl.predict("(g)",label="pid")
+  ripl.assume("f3", "(deref (lookup xs 1))")
+  ripl.assume("ys", """(dict (array (quote aaa) (quote bbb))
+                             (array (ref f3) (ref f3)))""")
+  ripl.assume("g", """(deref (if (flip) (lookup ys (quote aaa))
+                                        (lookup ys (quote bbb))))""")
+  ripl.predict("(g)", label="pid")
 
   return checkDirichletMultinomialWeakPrior(ripl,"pid")
 
@@ -256,4 +264,3 @@ def checkDirichletMultinomialWeakPrior(ripl,label):
   predictions = collectSamples(ripl,label,infer="mixes_slowly")
   ans = [(1,.9), (0,.1)]
   return reportKnownDiscrete(ans, predictions)
-
