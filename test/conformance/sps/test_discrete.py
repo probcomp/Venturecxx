@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import math
+
 from nose.tools import eq_
 from venture.test.config import get_ripl, on_inf_prim, gen_on_inf_prim, broken_in, collectSamples
 from venture.test.stats import statisticalTest, reportKnownDiscrete
@@ -61,3 +63,6 @@ def testDirMultSmoke():
                "(is_number ((make_uc_sym_dir_mult 2 3 (array 1 2 3))))",
              ]:
     eq_(r.sample(form), True)
+
+def testCategoricalDensityWithDuplicates():
+  eq_(get_ripl().evaluate("(assess 1 categorical (simplex 0.25 0.25 0.25 0.25) (array 1 2 3 1))"), math.log(0.5))

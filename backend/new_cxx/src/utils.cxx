@@ -143,8 +143,12 @@ double logDensityCategorical(VentureValuePtr val, const Simplex & ps)
 double logDensityCategorical(VentureValuePtr val, const Simplex & xs,const vector<VentureValuePtr> & os)
 {
   Simplex ps = normalizeVector(xs);
-  for (size_t i = 0; i < os.size(); ++i) { if (os[i]->equals(val)) { return log(ps[i]); } }
-  assert(false);
+  double answer = 0.0;
+  for (size_t i = 0; i < os.size(); ++i)
+  {
+    if (os[i]->equals(val)) { answer += ps[i]; }
+  }
+  return log(answer);
 }
 
 // needs to go in the cxx, for an explanation see
