@@ -46,3 +46,18 @@ def testLogFlip():
   predictions = collectSamples(ripl,'pid')
   ans = [(False,0.5),(True,0.5)]
   return reportKnownDiscrete(ans, predictions)
+
+@on_inf_prim("none")
+@broken_in('puma', "Puma does not accept the objects argument to Dirichlet categoricals.  Issue #430.")
+def testDirMultSmoke():
+  r = get_ripl()
+  for form in ["(is_atom ((make_dir_mult (array 1 1 1))))",
+               "(is_atom ((make_sym_dir_mult 3 2)))",
+               "(is_atom ((make_uc_dir_mult (array 1 1 1))))",
+               "(is_atom ((make_uc_sym_dir_mult 3 2)))",
+               "(is_number ((make_dir_mult (array 1 1 1) (array 1 2 3))))",
+               "(is_number ((make_sym_dir_mult 2 3 (array 1 2 3))))",
+               "(is_number ((make_uc_dir_mult (array 1 1 1) (array 1 2 3))))",
+               "(is_number ((make_uc_sym_dir_mult 2 3 (array 1 2 3))))",
+             ]:
+    eq_(r.sample(form), True)
