@@ -16,9 +16,17 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose import SkipTest
-from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, rejectionSampling, skipWhenSubSampling, on_inf_prim, gen_on_inf_prim
+
 from venture.test.config import broken_in
+from venture.test.config import collectSamples
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.config import rejectionSampling
+from venture.test.config import skipWhenRejectionSampling
+from venture.test.config import skipWhenSubSampling
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import statisticalTest
 
 # TODO this whole file will need to be parameterized.
 # Most of these will become "check" functions instead of "test"
