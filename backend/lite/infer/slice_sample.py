@@ -71,15 +71,18 @@ class SliceOperator(object):
     rhoWeight,self.rhoDB = detachAndExtract(trace,scaffold)
 
     f = makeDensityFunction(trace,scaffold,psp,pnode,FixedRandomness())
-    logy = f(currentValue) + math.log(random.uniform(0,1))
+    rhoLD = f(currentValue)
+    logy = rhoLD + math.log(random.uniform(0,1))
     # print "Slicing with x0", currentValue, "w", w, "m", m
     L,R = self.findInterval(f,currentValue,logy)
     proposedValue = self.sampleInterval(f,currentValue,logy,L,R)
+    xiLD = f(proposedValue)
     proposedVValue = VentureNumber(proposedValue)
     scaffold.lkernels[pnode] = DeterministicLKernel(psp,proposedVValue)
-
     xiWeight = regenAndAttach(trace,scaffold,False,self.rhoDB,{})
-    return trace,xiWeight - rhoWeight
+
+    # Cancel out the weight compensation (see comment in Puma's slice)
+    return trace, (xiWeight - xiLD) - (rhoWeight - rhoLD)
 
   def accept(self):
     return self.scaffold.numAffectedNodes()
