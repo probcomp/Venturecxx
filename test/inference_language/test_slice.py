@@ -25,20 +25,23 @@ from venture.test.config import collectSamples
 from venture.test.config import default_num_transitions_per_sample
 from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
+from venture.test.stats import reportKnownDiscrete
 from venture.test.stats import reportKnownGaussian
 from venture.test.stats import reportKnownMean
 from venture.test.stats import statisticalTest
 
 @gen_on_inf_prim("slice")
 def testAllSteppingOut():
-  tests = (checkSliceBasic1, checkSliceNormalWithObserve1, checkSliceNormalWithObserve2a,
-           checkSliceNormalWithObserve2b, checkSliceStudentT1, checkSliceStudentT2)
+  tests = (checkSliceBasic1, checkSliceNormalWithObserve1,
+           checkSliceNormalWithObserve2a, checkSliceNormalWithObserve2b,
+           checkSliceStudentT1, checkSliceStudentT2, checkSliceL)
   for test in tests: yield test, 'slice'
 
 @gen_on_inf_prim("slice_doubling")
 def testAllDoubling():
-  tests = (checkSliceBasic1, checkSliceNormalWithObserve1, checkSliceNormalWithObserve2a,
-           checkSliceNormalWithObserve2b, checkSliceStudentT1, checkSliceStudentT2)
+  tests = (checkSliceBasic1, checkSliceNormalWithObserve1,
+           checkSliceNormalWithObserve2a, checkSliceNormalWithObserve2b,
+           checkSliceStudentT1, checkSliceStudentT2, checkSliceL)
   for test in tests: yield test, 'slice_doubling'
 
 def inferCommand(slice_method, transitions_mult):
@@ -143,3 +146,18 @@ def checkSliceStudentT2(slice_method):
   # TODO Test agreement with the whole shape of the distribution, not
   # just the mean
   return reportKnownMean(meana, predictions, variance=vara + 1.0)
+
+@statisticalTest
+def checkSliceL(slice_method):
+  "Checks slice sampling on an L-shaped distribution."
+  if (config["get_ripl"] != "lite") and (slice_method == 'slice_doubling'):
+    raise SkipTest("Slice sampling with doubling only implemented in Lite.")
+  ripl = get_ripl()
+  ripl.assume("a", "(uniform_continuous 0.0 1.0)")
+  ripl.assume("b", "(< a 0.2)")
+  ripl.observe("(flip (biplex b 0.8 0.2))", True)
+  # Posterior for b is 0.5 true, 0.5 false
+  ripl.predict("b", label="pid")
+
+  predictions = collectSamples(ripl,"pid",infer=inferCommand(slice_method,1))
+  return reportKnownDiscrete([[True, 0.5], [False, 0.5]], predictions)
