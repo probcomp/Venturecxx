@@ -58,7 +58,7 @@ To post-mortem a failure, do `docker run -it &lt;image name&gt;`.  The image nam
       <notifyMap>
         <entry>
           <com.flowdock.jenkins.BuildResult>SUCCESS</com.flowdock.jenkins.BuildResult>
-          <boolean>true</boolean>
+          <boolean>false</boolean>
         </entry>
         <entry>
           <com.flowdock.jenkins.BuildResult>FAILURE</com.flowdock.jenkins.BuildResult>
@@ -81,7 +81,7 @@ To post-mortem a failure, do `docker run -it &lt;image name&gt;`.  The image nam
           <boolean>true</boolean>
         </entry>
       </notifyMap>
-      <notifySuccess>true</notifySuccess>
+      <notifySuccess>false</notifySuccess>
       <notifyFailure>true</notifyFailure>
       <notifyFixed>true</notifyFixed>
       <notifyUnstable>false</notifyUnstable>
