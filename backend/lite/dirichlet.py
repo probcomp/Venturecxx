@@ -316,10 +316,10 @@ class MakerCSymDirMultOutputPSP(DeterministicMakerAAAPSP):
       return [dalpha, 0, 0]
 
   def madeSpLogDensityOfCountsBound(self, aux):
-    """Upper bound the log density the made SP may report for its
-    counts, up to arbitrary additions to the aux (but not removals
-    from it), and up to arbitrary changes to the args wherewith the
-    maker is simulated."""
+    """Upper bound the log density the made SP may report for its counts
+    for the given aux, up to arbitrary changes to the args
+    wherewith the maker is simulated.
+    """
     # TODO Communicate the maker's fixed parameters here for a more
     # precise bound
     # TODO In the case where alpha is required to be an integer, I
