@@ -32,6 +32,7 @@ from venture.lite.sp import SP, VentureSPRecord, SPAux, SPType
 from venture.lite.sp_help import typed_nr
 from venture.lite.sp_registry import registerBuiltinSP
 from venture.lite.utils import simulateDirichlet, logDensityDirichlet
+from venture.lite.utils import logDensityCategoricalSequence
 from venture.lite.value import VentureAtom
 import venture.lite.types as t
 
@@ -321,18 +322,12 @@ class MakerCSymDirMultOutputPSP(DeterministicMakerAAAPSP):
     wherewith the maker is simulated.
     """
     # TODO Communicate the maker's fixed parameters here for a more
-    # precise bound
-    # TODO In the case where alpha is required to be an integer, I
-    # think the log density of the counts is maximized for all
-    # values being as small as possible.
-    # TODO Can the aux ever be null?
-    # TODO Do the math properly, esp. for alpha < 1
+    # precise bound.
     N = aux.counts.total
-    A = len(aux.counts) * 1.0
-    gamma_one = scipy.special.gammaln(1.0)
-    term1 = scipy.special.gammaln(A) - scipy.special.gammaln(N+A)
-    return term1 + sum([scipy.special.gammaln(1+count) - gamma_one
-                        for count in aux.counts])
+    empirical_freqs = [float(c) / N for c in aux.counts]
+    # The prior can't do better than concentrating all mass on exactly
+    # the best weights, which are the empirical ones.
+    return logDensityCategoricalSequence(empirical_freqs, aux.counts)
 
   def description(self, name):
     return "  %s is a symmetric variant of make_dir_mult." % name

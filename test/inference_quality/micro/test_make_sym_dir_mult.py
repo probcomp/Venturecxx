@@ -134,6 +134,8 @@ def testMakeSymDirMultAppControlsFlip():
     for maker_2 in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
       yield checkMakeSymDirMultAppControlsFlip, maker_1, maker_2
 
+@skipWhenRejectionSampling(
+  "Too slow.  Is the log density of counts bound too conservative?")
 @statisticalTest
 def checkMakeSymDirMultAppControlsFlip(maker_1, maker_2):
   """Two AAA SPs with same parameters, where their applications control

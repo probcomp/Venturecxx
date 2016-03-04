@@ -60,6 +60,21 @@ def logDensityCategorical(val,ps,os=None):
     return float('-inf')
   return math.log(p)
 
+def logDensityCategoricalSequence(weights, counts):
+  """The log probability that repeated application of a categorical with
+  the given weights will give a sequence of results described by the
+  given counts (all such sequences have the same probability).
+
+  weight-count alignment is positional, abstracting away from any
+  underlying objects.  In particular, any collapsing on equal objects
+  should be done before calling this.
+  """
+  def term(w, c):
+    if c == 0: return 0 # Even if w == 0
+    if w == 0: return float('-inf')
+    return np.log(w) * c
+  return sum(term(w, c) for (w, c) in zip(weights, counts))
+
 def simulateDirichlet(alpha): return npr.dirichlet(alpha)
 
 def logDensityDirichlet(theta, alpha):
