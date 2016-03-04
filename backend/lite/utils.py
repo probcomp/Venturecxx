@@ -53,9 +53,9 @@ def logDensityCategorical(val,ps,os=None):
   # done by identity and in the absence of observations; do I want to
   # override the Python magic methods for VentureValues?
   p = 0
-  for i in range(len(os)):
-    if os[i] == val:
-      p += ps[i]
+  for (pi, oi) in zip(ps, os):
+    if oi == val:
+      p += pi
   if p == 0:
     return float('-inf')
   return math.log(p)
