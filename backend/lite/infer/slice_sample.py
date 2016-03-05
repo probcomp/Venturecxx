@@ -81,7 +81,11 @@ class SliceOperator(object):
     scaffold.lkernels[pnode] = DeterministicLKernel(psp,proposedVValue)
     xiWeight = regenAndAttach(trace,scaffold,False,self.rhoDB,{})
 
-    # Cancel out the weight compensation (see comment in Puma's slice)
+    # Cancel out weight compensation.  From Puma's "slice.cxx":
+    #  "This is subtle. We cancel out the weight compensation that we got
+    #   by "forcing" x1, so that the weight is as if it had been sampled.
+    #   This is because this weight is cancelled elsewhere (in the mixing
+    #   over the slice)."
     return trace, (xiWeight - xiLD) - (rhoWeight - rhoLD)
 
   def accept(self):
