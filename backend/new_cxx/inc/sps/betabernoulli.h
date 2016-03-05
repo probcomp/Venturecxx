@@ -82,9 +82,9 @@ struct UBetaBernoulliSP : SP
   UBetaBernoulliSP* copy_help(ForwardingMap* m) const;
 };
 
-struct UBetaBernoulliOutputPSP : RandomPSP
+struct SuffBernoulliOutputPSP : RandomPSP
 {
-  UBetaBernoulliOutputPSP() {}
+  SuffBernoulliOutputPSP() {}
 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value,shared_ptr<Args> args) const;

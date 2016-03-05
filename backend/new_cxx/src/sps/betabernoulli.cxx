@@ -104,7 +104,7 @@ VentureValuePtr MakeUBetaBernoulliOutputPSP::simulate(shared_ptr<Args> args, gsl
 
   UBetaBernoulliSPAux * aux = new UBetaBernoulliSPAux(p);
   PSP * requestPSP = new NullRequestPSP();
-  PSP * outputPSP = new UBetaBernoulliOutputPSP();
+  PSP * outputPSP = new SuffBernoulliOutputPSP();
   return VentureValuePtr(new VentureSPRecord(new UBetaBernoulliSP(requestPSP,outputPSP),aux));
 }
 
@@ -150,7 +150,7 @@ UBetaBernoulliSP* UBetaBernoulliSP::copy_help(ForwardingMap* forward) const
 
 // Uncollapsed PSP
 
-VentureValuePtr UBetaBernoulliOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr SuffBernoulliOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   shared_ptr<UBetaBernoulliSPAux> aux = dynamic_pointer_cast<UBetaBernoulliSPAux>(args->spAux);
   int n = gsl_ran_bernoulli(rng,aux->p);
@@ -159,7 +159,7 @@ VentureValuePtr UBetaBernoulliOutputPSP::simulate(shared_ptr<Args> args, gsl_rng
   else { assert(false); }
 }
 
-double UBetaBernoulliOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) const
+double SuffBernoulliOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) const
 {
   shared_ptr<UBetaBernoulliSPAux> aux = dynamic_pointer_cast<UBetaBernoulliSPAux>(args->spAux);
   double p = aux->p;
@@ -167,14 +167,14 @@ double UBetaBernoulliOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args
   else { return log(1-p); }
 }
 
-void UBetaBernoulliOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) const
+void SuffBernoulliOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) const
 {
   shared_ptr<UBetaBernoulliSPAux> aux = dynamic_pointer_cast<UBetaBernoulliSPAux>(args->spAux);
   if (value->getBool()) { aux->heads++; }
   else { aux->tails++; }
 }
 
-void UBetaBernoulliOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args) const
+void SuffBernoulliOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args) const
 {
   shared_ptr<UBetaBernoulliSPAux> aux = dynamic_pointer_cast<UBetaBernoulliSPAux>(args->spAux);
   if (value->getBool()) { aux->heads--; }

@@ -349,7 +349,7 @@ class MakerUBetaBernoulliOutputPSP(RandomPSP):
   def simulate(self,args):
     (alpha, beta) = args.operandValues()
     weight = scipy.stats.beta.rvs(alpha, beta)
-    output = TypedPSP(UBetaBernoulliOutputPSP(weight), SPType([], t.BoolType()))
+    output = TypedPSP(SuffBernoulliOutputPSP(weight), SPType([], t.BoolType()))
     return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output))
 
   def logDensity(self,value,args):
@@ -370,7 +370,7 @@ class UBetaBernoulliAAALKernel(SimulationAAALKernel):
     madeaux = args.madeSPAux()
     [ctY,ctN] = madeaux.cts()
     new_weight = scipy.stats.beta.rvs(alpha + ctY, beta + ctN)
-    output = TypedPSP(UBetaBernoulliOutputPSP(new_weight), SPType([],
+    output = TypedPSP(SuffBernoulliOutputPSP(new_weight), SPType([],
       t.BoolType()))
     return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output), madeaux)
 
@@ -384,7 +384,7 @@ class UBetaBernoulliAAALKernel(SimulationAAALKernel):
     return 0
 
 
-class UBetaBernoulliOutputPSP(DiscretePSP):
+class SuffBernoulliOutputPSP(DiscretePSP):
   def __init__(self,weight):
     self.weight = weight
 
@@ -431,7 +431,7 @@ class MakerSuffBernoulliOutputPSP(DeterministicMakerAAAPSP):
     weight = args.operandValues()[0]
     # The made SP is the same as in the conjugate case: flip coins
     # based on an explicit weight, and maintain sufficient statistics.
-    output = TypedPSP(UBetaBernoulliOutputPSP(weight), SPType([], t.BoolType()))
+    output = TypedPSP(SuffBernoulliOutputPSP(weight), SPType([], t.BoolType()))
     return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output))
 
   def description(self,name):
