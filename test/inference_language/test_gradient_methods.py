@@ -51,6 +51,7 @@ def testNesterovWithInt():
   ripl.infer('(nesterov default one 0.1 10 20)')
 
 @broken_in('puma', "Gradients only implemented in Lite.")
+@on_inf_prim("grad_ascent")
 def testGradientThroughAAA():
   ripl = get_ripl()
   ripl.assume("weight", "(beta 1 1)")
@@ -60,3 +61,11 @@ def testGradientThroughAAA():
   ripl.observe("(coin)", True)
   ripl.infer("(grad_ascent default all 0.03 1 1)")
   assert_almost_equal(ripl.sample("weight"), 0.62)
+
+@broken_in('puma', "Gradients only implemented in Lite.")
+@on_inf_prim("grad_ascent")
+def testNullaryFlipRegression():
+  r = get_ripl()
+  r.assume("x", "(flip)")
+  # Should not crash
+  r.infer("(grad_ascent default all 0.01 1 1)")
