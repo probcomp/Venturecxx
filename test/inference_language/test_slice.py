@@ -44,9 +44,12 @@ def testAllDoubling():
            checkSliceStudentT1, checkSliceStudentT2, checkSliceL)
   for test in tests: yield test, 'slice_doubling'
 
-def inferCommand(slice_method, transitions_mult):
-  ntransitions = default_num_transitions_per_sample() * transitions_mult
+def inferCommand(slice_method):
+  ntransitions = default_num_transitions_per_sample()
   return "(%s default one 0.5 100 %s)" % (slice_method, ntransitions)
+
+def myCollectSamples(ripl, method):
+  return collectSamples(ripl,"pid",infer=inferCommand(method))
 
 @statisticalTest
 def checkSliceBasic1(slice_method):
@@ -55,7 +58,7 @@ def checkSliceBasic1(slice_method):
     raise SkipTest("Slice sampling with doubling only implemented in Lite.")
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)",label="pid")
-  predictions = collectSamples(ripl,"pid",infer=inferCommand(slice_method,1))
+  predictions = myCollectSamples(ripl, slice_method)
   return reportKnownGaussian(10, 1, predictions)
 
 @statisticalTest
@@ -69,7 +72,7 @@ def checkSliceNormalWithObserve1(slice_method):
   # Posterior for a is normal with mean 12, precision 2
 #  ripl.predict("(normal a 1.0)")
 
-  predictions = collectSamples(ripl,"pid",infer=inferCommand(slice_method,1))
+  predictions = myCollectSamples(ripl, slice_method)
   return reportKnownGaussian(12, math.sqrt(0.5), predictions)
 
 @statisticalTest
@@ -83,7 +86,7 @@ def checkSliceNormalWithObserve2a(slice_method):
   # Posterior for a is normal with mean 12, precision 2
   ripl.predict("(normal a 1.0)")
 
-  predictions = collectSamples(ripl,"pid",infer=inferCommand(slice_method,1))
+  predictions = myCollectSamples(ripl, slice_method)
   return reportKnownGaussian(12, math.sqrt(0.5), predictions)
 
 @statisticalTest
@@ -97,7 +100,7 @@ def checkSliceNormalWithObserve2b(slice_method):
   # Posterior for a is normal with mean 12, precision 2
   ripl.predict("(normal a 1.0)", label="pid")
 
-  predictions = collectSamples(ripl,"pid",infer=inferCommand(slice_method,1))
+  predictions = myCollectSamples(ripl, slice_method)
   return reportKnownGaussian(12, math.sqrt(1.5), predictions)
 
 @statisticalTest
@@ -108,7 +111,7 @@ def checkSliceStudentT1(slice_method):
   ripl = get_ripl()
   ripl.assume("a", "(student_t 1.0)", label="pid")
   ripl.observe("(normal a 1.0)", 3.0)
-  predictions = collectSamples(ripl,"pid",infer=inferCommand(slice_method,1))
+  predictions = myCollectSamples(ripl, slice_method)
 
   # Posterior of a is proprtional to
   def postprop(a):
@@ -132,7 +135,7 @@ def checkSliceStudentT2(slice_method):
   ripl.assume("a", "(student_t 1.0)")
   ripl.observe("(normal a 1.0)", 3.0)
   ripl.predict("(normal a 1.0)", label="pid")
-  predictions = collectSamples(ripl,"pid",infer=inferCommand(slice_method,4))
+  predictions = myCollectSamples(ripl, slice_method)
 
   # Posterior of a is proprtional to
   def postprop(a):
@@ -159,5 +162,5 @@ def checkSliceL(slice_method):
   # Posterior for b is 0.5 true, 0.5 false
   ripl.predict("b", label="pid")
 
-  predictions = collectSamples(ripl,"pid",infer=inferCommand(slice_method,1))
+  predictions = myCollectSamples(ripl, slice_method)
   return reportKnownDiscrete([[True, 0.5], [False, 0.5]], predictions)
