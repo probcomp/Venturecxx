@@ -22,6 +22,7 @@ from nose import SkipTest
 from testconfig import config
 
 from venture.test.config import collectSamples
+from venture.test.config import default_num_samples
 from venture.test.config import default_num_transitions_per_sample
 from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
@@ -49,7 +50,8 @@ def inferCommand(slice_method):
   return "(%s default one 0.5 100 %s)" % (slice_method, ntransitions)
 
 def myCollectSamples(ripl, method):
-  return collectSamples(ripl,"pid",infer=inferCommand(method))
+  return collectSamples(ripl,"pid",num_samples=default_num_samples(4),
+                        infer=inferCommand(method))
 
 @statisticalTest
 def checkSliceBasic1(slice_method):
