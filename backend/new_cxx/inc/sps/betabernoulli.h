@@ -24,11 +24,11 @@
 #include "sp.h"
 
 // Collapsed SPAux
-struct BetaBernoulliSPAux : SPAux
+struct SuffBernoulliSPAux : SPAux
 {
-  BetaBernoulliSPAux(): heads(0), tails(0) {}
+  SuffBernoulliSPAux(): heads(0), tails(0) {}
   VentureValuePtr asVentureValue() const;
-  BetaBernoulliSPAux* copy_help(ForwardingMap* m) const;
+  SuffBernoulliSPAux* copy_help(ForwardingMap* m) const;
 
   int heads;
   int tails;
@@ -58,10 +58,10 @@ private:
 };
 
 // Uncollapsed SPAux
-struct UBetaBernoulliSPAux : BetaBernoulliSPAux
+struct USuffBernoulliSPAux : SuffBernoulliSPAux
 {
-  UBetaBernoulliSPAux(double p): BetaBernoulliSPAux(), p(p) {}
-  UBetaBernoulliSPAux* copy_help(ForwardingMap* m) const;
+  USuffBernoulliSPAux(double p): SuffBernoulliSPAux(), p(p) {}
+  USuffBernoulliSPAux* copy_help(ForwardingMap* m) const;
 
   double p;
 };

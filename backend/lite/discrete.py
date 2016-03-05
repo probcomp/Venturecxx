@@ -234,13 +234,13 @@ registerBuiltinSP("poisson", typed_nr(PoissonOutputPSP(),
 
 
 ### Collapsed Beta Bernoulli
-class BetaBernoulliSPAux(SPAux):
+class SuffBernoulliSPAux(SPAux):
   def __init__(self):
     self.yes = 0.0
     self.no = 0.0
 
   def copy(self):
-    aux = BetaBernoulliSPAux()
+    aux = SuffBernoulliSPAux()
     aux.yes = self.yes
     aux.no = self.no
     return aux
@@ -248,21 +248,21 @@ class BetaBernoulliSPAux(SPAux):
   v_type = t.HomogeneousListType(t.NumberType())
 
   def asVentureValue(self):
-    return BetaBernoulliSPAux.v_type.asVentureValue([self.yes, self.no])
+    return SuffBernoulliSPAux.v_type.asVentureValue([self.yes, self.no])
 
   @staticmethod
   def fromVentureValue(val):
-    aux = BetaBernoulliSPAux()
-    (aux.yes, aux.no) = BetaBernoulliSPAux.v_type.asPython(val)
+    aux = SuffBernoulliSPAux()
+    (aux.yes, aux.no) = SuffBernoulliSPAux.v_type.asPython(val)
     return aux
 
   def cts(self):
     return [self.yes,self.no]
 
 
-class BetaBernoulliSP(SP):
+class SuffBernoulliSP(SP):
   def constructSPAux(self):
-    return BetaBernoulliSPAux()
+    return SuffBernoulliSPAux()
 
   def show(self,spaux):
     return spaux.cts()
@@ -273,7 +273,7 @@ class MakerCBetaBernoulliOutputPSP(DeterministicMakerAAAPSP):
     (alpha, beta) = args.operandValues()
     output = TypedPSP(CBetaBernoulliOutputPSP(alpha, beta),
       SPType([], t.BoolType()))
-    return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output))
+    return VentureSPRecord(SuffBernoulliSP(NullRequestPSP(), output))
 
   def description(self, name):
     return '  %s(alpha, beta) returns a collapsed Beta Bernoulli sampler with '\
@@ -350,12 +350,12 @@ class MakerUBetaBernoulliOutputPSP(RandomPSP):
     (alpha, beta) = args.operandValues()
     weight = scipy.stats.beta.rvs(alpha, beta)
     output = TypedPSP(SuffBernoulliOutputPSP(weight), SPType([], t.BoolType()))
-    return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output))
+    return VentureSPRecord(SuffBernoulliSP(NullRequestPSP(), output))
 
   def logDensity(self,value,args):
     (alpha, beta) = args.operandValues()
     assert isinstance(value,VentureSPRecord)
-    assert isinstance(value.sp,BetaBernoulliSP)
+    assert isinstance(value.sp,SuffBernoulliSP)
     coinWeight = value.sp.outputPSP.psp.weight
     return scipy.stats.beta.logpdf(coinWeight,alpha,beta)
 
@@ -372,7 +372,7 @@ class UBetaBernoulliAAALKernel(SimulationAAALKernel):
     new_weight = scipy.stats.beta.rvs(alpha + ctY, beta + ctN)
     output = TypedPSP(SuffBernoulliOutputPSP(new_weight), SPType([],
       t.BoolType()))
-    return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output), madeaux)
+    return VentureSPRecord(SuffBernoulliSP(NullRequestPSP(), output), madeaux)
 
   def weight(self, _trace, _newValue, _args):
     # Gibbs step, samples exactly from the local posterior.  Being a
@@ -432,7 +432,7 @@ class MakerSuffBernoulliOutputPSP(DeterministicMakerAAAPSP):
     # The made SP is the same as in the conjugate case: flip coins
     # based on an explicit weight, and maintain sufficient statistics.
     output = TypedPSP(SuffBernoulliOutputPSP(weight), SPType([], t.BoolType()))
-    return VentureSPRecord(BetaBernoulliSP(NullRequestPSP(), output))
+    return VentureSPRecord(SuffBernoulliSP(NullRequestPSP(), output))
 
   def description(self,name):
     return '  %s(weight) returns a Bernoulli sampler (weighted coin) with '\
