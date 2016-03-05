@@ -268,6 +268,11 @@ class VentureInteger(VentureValue):
     return stupidCompare(self.number, other.number)
   def __hash__(self):
     return hash(self.number)
+  def __add__(self, other):
+    if other == 0:
+      return self
+    else:
+      raise "Cannot move %s by a non-zero displacement" % (self,)
   def expressionFor(self):
     return self.number
 
@@ -374,6 +379,11 @@ class VentureAtom(VentureValue):
     return stupidCompare(self.atom, other.atom)
   def __hash__(self):
     return hash(self.atom)
+  def __add__(self, other):
+    if other == 0:
+      return self
+    else:
+      raise "Cannot move %s by a non-zero displacement" % (self,)
   def expressionFor(self):
     return v.quote(self) # TODO Is this right?
 
@@ -401,6 +411,11 @@ class VentureBool(VentureValue):
     return stupidCompare(self.boolean, other.boolean)
   def __hash__(self):
     return hash(self.boolean)
+  def __add__(self, other):
+    if other == 0:
+      return self
+    else:
+      raise "Cannot move %s by a non-zero displacement" % (self,)
   def expressionFor(self):
     return v.symbol("true") if self.boolean else v.symbol("false")
 
@@ -420,6 +435,11 @@ class VentureSymbol(VentureValue):
     return stupidCompare(self.symbol, other.symbol)
   def __hash__(self):
     return hash(self.symbol)
+  def __add__(self, other):
+    if other == 0:
+      return self
+    else:
+      raise "Cannot move %s by a non-zero displacement" % (self,)
   def expressionFor(self):
     return v.quote(self.asStackDict(None))
 
@@ -443,6 +463,11 @@ class VentureString(VentureValue):
     return stupidCompare(self.strng, other.strng)
   def __hash__(self):
     return hash(self.strng)
+  def __add__(self, other):
+    if other == 0:
+      return self
+    else:
+      raise "Cannot move %s by a non-zero displacement" % (self,)
   def expressionFor(self):
     return v.quote(self.asStackDict(None))
 
@@ -478,6 +503,11 @@ class VentureNil(VentureValue):
     return 0 # All Nils are equal
   def __hash__(self):
     return 0
+  def __add__(self, other):
+    if other == 0:
+      return self
+    else:
+      raise "Cannot move %s by a non-zero displacement" % (self,)
 
   def lookup(self, index):
     raise VentureValueError("Index out of bounds: too long by %s" % index)
