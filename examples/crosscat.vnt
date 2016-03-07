@@ -27,7 +27,7 @@
     (assume get_component_model
       (mem
         (lambda (col category)
-          (make_sym_dir_mult (get_component_hyperparameter col) n_values))))
+          (make_sym_dir_cat (get_component_hyperparameter col) n_values))))
 
     (assume view_crp_hyperparameter (gamma 1.0 1.0))
 

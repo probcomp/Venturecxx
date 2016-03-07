@@ -31,16 +31,16 @@ from venture.test.config import skipWhenSubSampling
 from venture.test.stats import reportKnownDiscrete
 from venture.test.stats import statisticalTest
 
-############## (1) Test SymDirMult AAA
+############## (1) Test SymDirCat AAA
 
 #
 @gen_on_inf_prim("any")
-def testMakeSymDirMult1():
-  for maker in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
-    yield checkMakeSymDirMult1, maker
+def testMakeSymDirCat1():
+  for maker in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
+    yield checkMakeSymDirCat1, maker
 
 @statisticalTest
-def checkMakeSymDirMult1(maker):
+def checkMakeSymDirCat1(maker):
   """Extremely simple program, with an AAA procedure when uncollapsed"""
   ripl = get_ripl()
   ripl.assume("f", "(%s 1.0 2)" % maker)
@@ -50,66 +50,66 @@ def checkMakeSymDirMult1(maker):
   return reportKnownDiscrete(ans, predictions)
 
 @gen_on_inf_prim("any")
-def testMakeSymDirMultAAA():
-  for maker in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
-    yield checkMakeSymDirMultAAA, maker
+def testMakeSymDirCatAAA():
+  for maker in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
+    yield checkMakeSymDirCatAAA, maker
 
 @statisticalTest
-def checkMakeSymDirMultAAA(maker):
+def checkMakeSymDirCatAAA(maker):
   """Simplest program with collapsed AAA"""
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(%s a 4)" % maker)
   ripl.predict("(f)", label="pid")
-  return checkDirichletMultinomialAAA(ripl, "pid")
+  return checkDirichletCategoricalAAA(ripl, "pid")
 
 @gen_on_inf_prim("any")
-def testMakeSymDirMultFlip():
+def testMakeSymDirCatFlip():
   """AAA where the SP flips between collapsed and uncollapsed."""
-  for maker_1 in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
-    for maker_2 in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
-      yield checkMakeSymDirMultFlip, maker_1, maker_2
+  for maker_1 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
+    for maker_2 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
+      yield checkMakeSymDirCatFlip, maker_1, maker_2
 
 @skipWhenRejectionSampling("Observes resimulations of unknown code")
 @skipWhenSubSampling(
   "The current implementation of subsampling can't handle this scaffold shape")
 @statisticalTest
-def checkMakeSymDirMultFlip(maker_1, maker_2):
+def checkMakeSymDirCatFlip(maker_1, maker_2):
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "((if (lt a 10) %s %s) a 4)" % (maker_1, maker_2))
   ripl.predict("(f)", label="pid")
-  return checkDirichletMultinomialAAA(ripl, "pid")
+  return checkDirichletCategoricalAAA(ripl, "pid")
 
 @gen_on_inf_prim("any")
-def testMakeSymDirMultBrushObserves():
+def testMakeSymDirCatBrushObserves():
   """AAA where the SP flips between collapsed and uncollapsed, and
      there are observations in the brush."""
-  for maker_1 in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
-    for maker_2 in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
-      yield checkMakeSymDirMultBrushObserves, maker_1, maker_2
+  for maker_1 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
+    for maker_2 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
+      yield checkMakeSymDirCatBrushObserves, maker_1, maker_2
 
 @skipWhenRejectionSampling("Observes resimulations of unknown code")
 @skipWhenSubSampling(
   "The current implementation of subsampling can't handle this scaffold shape")
 @statisticalTest
-def checkMakeSymDirMultBrushObserves(maker_1, maker_2):
+def checkMakeSymDirCatBrushObserves(maker_1, maker_2):
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "((if (lt a 10) %s %s) a 2)" % (maker_1, maker_2))
   ripl.predict("(f)", label="pid")
 
-  return checkDirichletMultinomialBrush(ripl, "pid")
+  return checkDirichletCategoricalBrush(ripl, "pid")
 
 @skipWhenRejectionSampling("Observes resimulations of unknown code")
 @skipWhenSubSampling(
   "The current implementation of subsampling can't handle this scaffold shape")
 @statisticalTest
 @on_inf_prim("any")
-def testMakeSymDirMultNative():
+def testMakeSymDirCatNative():
   """AAA where the SP flips between collapsed, uncollapsed, and native"""
   ripl = get_ripl()
 
@@ -117,27 +117,27 @@ def testMakeSymDirMultNative():
 # Might be collapsed, uncollapsed, or uncollapsed in Venture
   ripl.assume("f", """
 ((if (lt a 9.5)
-     make_sym_dir_mult
+     make_sym_dir_cat
      (if (lt a 10.5)
-         make_uc_sym_dir_mult
+         make_uc_sym_dir_cat
          (lambda (alpha k)
            ((lambda (theta) (lambda () (categorical theta)))
             (symmetric_dirichlet alpha k)))))
  a 4)
 """)
   ripl.predict("(f)", label="pid")
-  return checkDirichletMultinomialAAA(ripl, "pid")
+  return checkDirichletCategoricalAAA(ripl, "pid")
 
 @gen_on_inf_prim("any")
-def testMakeSymDirMultAppControlsFlip():
-  for maker_1 in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
-    for maker_2 in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
-      yield checkMakeSymDirMultAppControlsFlip, maker_1, maker_2
+def testMakeSymDirCatAppControlsFlip():
+  for maker_1 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
+    for maker_2 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
+      yield checkMakeSymDirCatAppControlsFlip, maker_1, maker_2
 
 @skipWhenRejectionSampling(
   "Too slow.  Is the log density of counts bound too conservative?")
 @statisticalTest
-def checkMakeSymDirMultAppControlsFlip(maker_1, maker_2):
+def checkMakeSymDirCatAppControlsFlip(maker_1, maker_2):
   """Two AAA SPs with same parameters, where their applications control
 which are applied"""
   ripl = get_ripl()
@@ -150,16 +150,16 @@ which are applied"""
   for _ in range(5): ripl.observe("(g)", "atom<1>")
   ripl.predict("(if (eq (f) atom<1>) (g) (g))")
   ripl.predict("(if (eq (g) atom<1>) (f) (f))")
-  return checkDirichletMultinomialAAA(ripl, "pid", infer="mixes_slowly")
+  return checkDirichletCategoricalAAA(ripl, "pid", infer="mixes_slowly")
 
 @gen_on_inf_prim("any")
-def testMakeDirMult1():
-  for maker in ["make_dir_mult", "make_uc_dir_mult"]:
-    yield checkMakeDirMult1, maker
+def testMakeDirCat1():
+  for maker in ["make_dir_cat", "make_uc_dir_cat"]:
+    yield checkMakeDirCat1, maker
 
 @statisticalTest
-def checkMakeDirMult1(maker):
-  if rejectionSampling() and maker == "make_dir_mult":
+def checkMakeDirCat1(maker):
+  if rejectionSampling() and maker == "make_dir_cat":
     raise SkipTest("Is the log density of counts bounded for "
                    "collapsed beta bernoulli?  Issue: "
                    "https://app.asana.com/0/9277419963067/10623454782852")
@@ -168,34 +168,34 @@ def checkMakeDirMult1(maker):
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(%s (array a a a a))" % maker)
   ripl.predict("(f)", label="pid")
-  return checkDirichletMultinomialAAA(ripl, "pid")
+  return checkDirichletCategoricalAAA(ripl, "pid")
 
 @gen_on_inf_prim("any")
-def testMakeSymDirMultWeakPrior():
-  for maker in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
-    yield checkMakeSymDirMultWeakPrior, maker
+def testMakeSymDirCatWeakPrior():
+  for maker in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
+    yield checkMakeSymDirCatWeakPrior, maker
 
 @statisticalTest
-def checkMakeSymDirMultWeakPrior(maker):
+def checkMakeSymDirCatWeakPrior(maker):
   ripl = get_ripl()
 
   ripl.assume("a", "1.0")
   ripl.assume("f", "(%s a 2)" % maker)
   ripl.predict("(f)", label="pid")
 
-  return checkDirichletMultinomialWeakPrior(ripl, "pid")
+  return checkDirichletCategoricalWeakPrior(ripl, "pid")
 
 @gen_on_inf_prim("none")
 @gen_broken_in("puma", "Puma doesn't support the specified-objects form "
-               "of dirichlet multinomial.  Issue #340.")
-def testDirMultInvalidOutput():
-  for maker in ["(make_dir_mult (array 1 1) x)",
-                "(make_sym_dir_mult 1 2 x)",
-                "(make_uc_dir_mult (array 1 1) x)",
-                "(make_uc_sym_dir_mult 1 2 x)"]:
-    yield checkDirMultInvalidOutput, maker
+               "of dirichlet categorical.  Issue #340.")
+def testDirCatInvalidOutput():
+  for maker in ["(make_dir_cat (array 1 1) x)",
+                "(make_sym_dir_cat 1 2 x)",
+                "(make_uc_dir_cat (array 1 1) x)",
+                "(make_uc_sym_dir_cat 1 2 x)"]:
+    yield checkDirCatInvalidOutput, maker
 
-def checkDirMultInvalidOutput(maker_form):
+def checkDirCatInvalidOutput(maker_form):
   raise SkipTest("Currently broken.  Issue #451.")
   r = get_ripl()
   r.assume("x1", "(flip)")
@@ -209,17 +209,17 @@ def checkDirMultInvalidOutput(maker_form):
 
 @gen_on_inf_prim("any")
 @gen_broken_in("puma", "Puma doesn't support the specified-objects form "
-               "of dirichlet multinomial.  Issue #340.")
+               "of dirichlet categorical.  Issue #340.")
 @gen_broken_in("lite", "Inference runs afoul of Issue #451.")
-def testDirMultObjectVariation():
-  for maker in ["(make_dir_mult (array 1 1) x)",
-                "(make_sym_dir_mult 1 2 x)",
-                "(make_uc_dir_mult (array 1 1) x)",
-                "(make_uc_sym_dir_mult 1 2 x)"]:
-    yield checkDirMultObjectVariation, maker
+def testDirCatObjectVariation():
+  for maker in ["(make_dir_cat (array 1 1) x)",
+                "(make_sym_dir_cat 1 2 x)",
+                "(make_uc_dir_cat (array 1 1) x)",
+                "(make_uc_sym_dir_cat 1 2 x)"]:
+    yield checkDirCatObjectVariation, maker
 
 @statisticalTest
-def checkDirMultObjectVariation(maker_form):
+def checkDirCatObjectVariation(maker_form):
   "Testing for Issue #452."
   r = get_ripl()
   r.assume("x1", "(flip)")
@@ -249,12 +249,12 @@ def testStaleAAA_MSP():
   ripl = get_ripl()
 
   ripl.assume("a", "1.0")
-  ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
+  ripl.assume("f", "(make_uc_sym_dir_cat a 2)")
   ripl.assume("g", "(mem f)")
   ripl.assume("h", "g")
   ripl.predict("(h)", label="pid")
 
-  return checkDirichletMultinomialWeakPrior(ripl, "pid")
+  return checkDirichletCategoricalWeakPrior(ripl, "pid")
 
 @on_inf_prim("any")
 @statisticalTest
@@ -262,12 +262,12 @@ def testStaleAAA_CSP():
   ripl = get_ripl()
 
   ripl.assume("a", "1.0")
-  ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
+  ripl.assume("f", "(make_uc_sym_dir_cat a 2)")
   ripl.assume("g", "(lambda () f)")
   ripl.assume("h", "(g)")
   ripl.predict("(h)", label="pid")
 
-  return checkDirichletMultinomialWeakPrior(ripl, "pid")
+  return checkDirichletCategoricalWeakPrior(ripl, "pid")
 
 @on_inf_prim("any")
 @statisticalTest
@@ -277,7 +277,7 @@ def testStaleAAA_Madness():
   ripl = get_ripl()
 
   ripl.assume("a", "1.0")
-  ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
+  ripl.assume("f", "(make_uc_sym_dir_cat a 2)")
   ripl.assume("f2_maker", "(lambda () f)")
   ripl.assume("f2", "(f2_maker)")
   ripl.assume("xs", "(array (ref f) (ref f2))")
@@ -288,12 +288,12 @@ def testStaleAAA_Madness():
                                         (lookup ys (quote bbb))))""")
   ripl.predict("(g)", label="pid")
 
-  return checkDirichletMultinomialWeakPrior(ripl, "pid")
+  return checkDirichletCategoricalWeakPrior(ripl, "pid")
 
 
 #### Helpers
 
-def checkDirichletMultinomialAAA(ripl, label, infer=None):
+def checkDirichletCategoricalAAA(ripl, label, infer=None):
   for i in range(1, 4):
     for _ in range(default_num_data(20)):
       ripl.observe("(f)", "atom<%d>" % i)
@@ -302,7 +302,7 @@ def checkDirichletMultinomialAAA(ripl, label, infer=None):
   ans = [(0, .1), (1, .3), (2, .3), (3, .3)]
   return reportKnownDiscrete(ans, predictions)
 
-def checkDirichletMultinomialBrush(ripl, label):
+def checkDirichletCategoricalBrush(ripl, label):
   for _ in range(default_num_data(10)): ripl.observe("(f)", "atom<1>")
   for _ in range(default_num_data(10)): ripl.observe("""
 (if (lt a 10.0)
@@ -313,7 +313,7 @@ def checkDirichletMultinomialBrush(ripl, label):
   ans = [(0, .25), (1, .75)]
   return reportKnownDiscrete(ans, predictions)
 
-def checkDirichletMultinomialWeakPrior(ripl, label):
+def checkDirichletCategoricalWeakPrior(ripl, label):
   for _ in range(default_num_data(8)):
     ripl.observe("(f)", "atom<1>")
 

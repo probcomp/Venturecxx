@@ -25,25 +25,25 @@
 #include "stop-and-copy.h"
 
 // Collapsed SPAux
-struct DirMultSPAux : SPAux
+struct DirCatSPAux : SPAux
 {
-  DirMultSPAux(int n) : counts(n, 0), total(0) {}
+  DirCatSPAux(int n) : counts(n, 0), total(0) {}
   vector<int> counts;
   int total;
-  DirMultSPAux* copy_help(ForwardingMap* m) const;
+  DirCatSPAux* copy_help(ForwardingMap* m) const;
   boost::python::object toPython(Trace * trace) const;
 };
 
 // Collapsed Asymmetric
-struct MakeDirMultOutputPSP : PSP
+struct MakeDirCatOutputPSP : PSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   bool childrenCanAAA() const { return true; }
 };
 
-struct DirMultOutputPSP : RandomPSP
+struct DirCatOutputPSP : RandomPSP
 {
-  DirMultOutputPSP(const vector<double>& alpha, double total):
+  DirCatOutputPSP(const vector<double>& alpha, double total):
     alpha(alpha), total(total) {}
 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
@@ -62,15 +62,15 @@ private:
 };
 
 // Collapsed Symmetric
-struct MakeSymDirMultOutputPSP : PSP
+struct MakeSymDirCatOutputPSP : PSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   bool childrenCanAAA() const { return true; }
 };
 
-struct SymDirMultSP : SP
+struct SymDirCatSP : SP
 {
-  SymDirMultSP(double alpha, size_t n);
+  SymDirCatSP(double alpha, size_t n);
   boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;
 
   // for toPython
@@ -79,33 +79,33 @@ struct SymDirMultSP : SP
 };
 
 // Uncollapsed SPAux
-struct UCDirMultSPAux : DirMultSPAux
+struct UCDirCatSPAux : DirCatSPAux
 {
-  UCDirMultSPAux(int n): DirMultSPAux(n), theta(n,0) {}
-  UCDirMultSPAux* copy_help(ForwardingMap* m) const;
+  UCDirCatSPAux(int n): DirCatSPAux(n), theta(n,0) {}
+  UCDirCatSPAux* copy_help(ForwardingMap* m) const;
   vector<double> theta;
 };
 
 // Uncollapsed Asymmetric
-struct MakeUCDirMultOutputPSP : RandomPSP
+struct MakeUCDirCatOutputPSP : RandomPSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 };
 
-struct UCDirMultSP : SP
+struct UCDirCatSP : SP
 {
-  UCDirMultSP(PSP * requestPSP, PSP * outputPSP): SP(requestPSP,outputPSP) {}
+  UCDirCatSP(PSP * requestPSP, PSP * outputPSP): SP(requestPSP,outputPSP) {}
 
   bool hasAEKernel() const { return true; }
   void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
                gsl_rng * rng) const;
-  UCDirMultSP* copy_help(ForwardingMap* m) const;
+  UCDirCatSP* copy_help(ForwardingMap* m) const;
 };
 
-struct UCDirMultOutputPSP : RandomPSP
+struct UCDirCatOutputPSP : RandomPSP
 {
-  UCDirMultOutputPSP(size_t n) : n(n) {}
+  UCDirCatOutputPSP(size_t n) : n(n) {}
 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value,shared_ptr<Args> args) const;
@@ -120,21 +120,21 @@ private:
 };
 
 // Uncollapsed Symmetric
-struct MakeUCSymDirMultOutputPSP : RandomPSP
+struct MakeUCSymDirCatOutputPSP : RandomPSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 };
 
-struct UCSymDirMultSP : SP
+struct UCSymDirCatSP : SP
 {
-  UCSymDirMultSP(PSP * requestPSP, PSP * outputPSP):
+  UCSymDirCatSP(PSP * requestPSP, PSP * outputPSP):
     SP(requestPSP,outputPSP) {}
 
   bool hasAEKernel() const { return true; }
   void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
                gsl_rng * rng) const;
-  UCSymDirMultSP* copy_help(ForwardingMap* m) const;
+  UCSymDirCatSP* copy_help(ForwardingMap* m) const;
 };
 
 #endif

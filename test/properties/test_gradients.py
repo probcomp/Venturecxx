@@ -164,8 +164,8 @@ def propGradientOfSimulate(args_lists, name, sp):
 def testGradientOfLogDensityOfCountsSmoke():
   models = [("(make_crp a)", ["atom<1>", "atom<2>"]),
             ("(make_suff_stat_normal a 1)", [2]),
-            ("(make_dir_mult (vector a 1) (list 1 2))", ["1"]),
-            ("(make_sym_dir_mult a 2 (list 1 2))", ["1", "2"]),
+            ("(make_dir_cat (vector a 1) (list 1 2))", ["1"]),
+            ("(make_sym_dir_cat a 2 (list 1 2))", ["1", "2"]),
             ("(make_beta_bernoulli a 1)", [True]),
             ("(make_suff_stat_bernoulli a)", [True]),
             ("(make_suff_stat_poisson a)", [2])

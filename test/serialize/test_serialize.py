@@ -294,15 +294,15 @@ def check_foreign_sp(mode):
     resample = '[INFER (resample{0} 1)]'.format(mode)
     v.execute_instruction(resample)
     v.bind_foreign_sp('test_binomial', builtins['binomial'])
-    v.bind_foreign_sp('test_sym_dir_mult', builtins['make_sym_dir_mult'])
+    v.bind_foreign_sp('test_sym_dir_cat', builtins['make_sym_dir_cat'])
     test_binomial_result = 1
-    test_sym_dir_result = {'alpha': 1.0, 'counts': [0], 'n': 1, 'type': 'sym_dir_mult'}
+    test_sym_dir_result = {'alpha': 1.0, 'counts': [0], 'n': 1, 'type': 'sym_dir_cat'}
     eq_(v.sample('(test_binomial 1 1)'), test_binomial_result)
-    eq_(v.sample('(test_sym_dir_mult 1 1)'), test_sym_dir_result)
+    eq_(v.sample('(test_sym_dir_cat 1 1)'), test_sym_dir_result)
     engine = v.sivm.core_sivm.engine
     dumped = engine.model.retrieve_dump(0)
     restored = engine.model.restore_trace(dumped)
     engine.model.create_trace_pool([restored])
     # Make sure that the restored trace still has the foreign SP's
     eq_(v.sample('(test_binomial 1 1)'), test_binomial_result)
-    eq_(v.sample('(test_sym_dir_mult 1 1)'), test_sym_dir_result)
+    eq_(v.sample('(test_sym_dir_cat 1 1)'), test_sym_dir_result)

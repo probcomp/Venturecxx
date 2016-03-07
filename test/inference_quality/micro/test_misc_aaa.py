@@ -133,10 +133,10 @@ def testAAAParticleWeights():
   for sp in ["(make_beta_bernoulli a a)",
              "(make_uc_beta_bernoulli a a)",
              "(let ((weight (beta a a))) (make_suff_stat_bernoulli weight))",
-             "(make_dir_mult (array a a) (array true false))",
-             "(make_uc_dir_mult (array a a) (array true false))",
-             "(make_sym_dir_mult a 2 (array true false))",
-             "(make_uc_sym_dir_mult a 2 (array true false))",
+             "(make_dir_cat (array a a) (array true false))",
+             "(make_uc_dir_cat (array a a) (array true false))",
+             "(make_sym_dir_cat a 2 (array true false))",
+             "(make_uc_sym_dir_cat a 2 (array true false))",
             ]:
     yield checkAAAParticleWeights, sp
 
@@ -144,8 +144,8 @@ def testAAAParticleWeights():
 def checkAAAParticleWeights(sp):
   if inParallel() and "make_suff_stat_bernoulli" in sp and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and make_suff_stat_bernoulli comes from Lite.")
-  if "dir_mult" in sp and config['get_ripl'] == 'puma':
-    raise SkipTest("Dirichlet multinomial in Puma does not accept objects parameter.  Issue #340")
+  if "dir_cat" in sp and config['get_ripl'] == 'puma':
+    raise SkipTest("Dirichlet categorical in Puma does not accept objects parameter.  Issue #340")
   ripl = get_ripl()
 
   ripl.assume("a", "1.0")
@@ -180,10 +180,10 @@ def testAAAResampleSmoke():
              "(make_uc_beta_bernoulli 1 1)",
              # From Lite
              "(let ((weight (beta 1 1))) (make_suff_stat_bernoulli weight))",
-             "(make_dir_mult (array 0.5 0.5))",
-             "(make_uc_dir_mult (array 0.5 0.5))",
-             "(make_sym_dir_mult 0.5 2)",
-             "(make_uc_sym_dir_mult 0.5 2)",
+             "(make_dir_cat (array 0.5 0.5))",
+             "(make_uc_dir_cat (array 0.5 0.5))",
+             "(make_sym_dir_cat 0.5 2)",
+             "(make_uc_sym_dir_cat 0.5 2)",
              "(make_crp 1)",
              hmm
             ]:

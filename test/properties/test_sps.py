@@ -110,7 +110,7 @@ fully uncurried)."""
 def testRandom():
   for (name,sp) in relevantSPs():
     if sp.outputPSP.isRandom():
-      if name in ["make_uc_dir_mult", "categorical", "make_uc_sym_dir_mult",
+      if name in ["make_uc_dir_cat", "categorical", "make_uc_sym_dir_cat",
                   "log_bernoulli", "log_flip",  # Because the default distribution does a bad job of picking arguments at which log_bernoulli's output actually varies.
                   "exactly" # Because it intentionally pretends to be random even though it's not.
       ]:
@@ -179,7 +179,7 @@ def log_density_fully_uncurried(name, sp, args_lists, value):
 def testLogDensityDeterministic():
   for (name,sp) in relevantSPs():
     if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart",  # TODO
-                    "categorical", "make_dir_mult", "make_sym_dir_mult"]: # Only interesting when the presented value was among the inputs
+                    "categorical", "make_dir_cat", "make_sym_dir_cat"]: # Only interesting when the presented value was among the inputs
       yield checkLogDensityDeterministic, name, sp
 
 def checkLogDensityDeterministic(name, sp):

@@ -130,8 +130,9 @@ weeks of February 2016.
       but I am currently not sure why).
     - Specific problem: calling simulate even when the SP will be
       observed can be poor if simulate is more expensive than logDensity
-      - The dirichlet multinomials are somewhat smart about efficient
+      - The dirichlet categoricals are somewhat smart about efficient
         repeated sampling and assessing with the same weights.
+        - Only in Lite, not Puma.
     - There may be other lurking problems; our tests are paltry and
       ill-motivated
   - Performance measurement: We should make it very easy to time and

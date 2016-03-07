@@ -30,9 +30,9 @@ from venture.test.stats import statisticalTest
 def test_foreign_aaa():
     builtins = builtin.builtInSPs()
     ripl = get_ripl()
-    ripl.bind_foreign_sp("test_sym_dir_mult", builtins["make_sym_dir_mult"])
+    ripl.bind_foreign_sp("test_sym_dir_cat", builtins["make_sym_dir_cat"])
 
-    ripl.assume("f", "(test_sym_dir_mult 1 1)")
+    ripl.assume("f", "(test_sym_dir_cat 1 1)")
     assert ripl.sample("f")["counts"] == [0]
 
     ripl.observe("(f)", "atom<0>")
@@ -45,10 +45,10 @@ def test_foreign_aaa():
 def test_foreign_aaa_resampled():
     builtins = builtin.builtInSPs()
     ripl = get_ripl()
-    ripl.bind_foreign_sp("test_sym_dir_mult", builtins["make_sym_dir_mult"])
+    ripl.bind_foreign_sp("test_sym_dir_cat", builtins["make_sym_dir_cat"])
 
     ripl.assume("a", "(gamma 1 1)")
-    ripl.assume("f", "(test_sym_dir_mult a 1)")
+    ripl.assume("f", "(test_sym_dir_cat a 1)")
     assert ripl.sample("f")["counts"] == [0]
 
     ripl.observe("(f)", "atom<0>")
@@ -61,9 +61,9 @@ def test_foreign_aaa_resampled():
 def test_foreign_aaa_uc():
     builtins = builtin.builtInSPs()
     ripl = get_ripl()
-    ripl.bind_foreign_sp("test_sym_dir_mult", builtins["make_uc_sym_dir_mult"])
+    ripl.bind_foreign_sp("test_sym_dir_cat", builtins["make_uc_sym_dir_cat"])
 
-    ripl.assume("f", "(test_sym_dir_mult 1 1)")
+    ripl.assume("f", "(test_sym_dir_cat 1 1)")
     assert ripl.sample("f")["counts"] == [0]
 
     ripl.observe("(f)", "atom<0>")

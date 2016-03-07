@@ -65,7 +65,7 @@ def check_time_vs_dimension(dimension):
     # TODO Should the time per sweep be linear in the number of
     # topics?  I can see it growing as the probability of having to
     # create or destroy a topic rises, and as the cost of sampling
-    # from the topic multinomial rises, but linear?  In practice, it
+    # from the topic categorical rises, but linear?  In practice, it
     # does increase, but slowly: from ~4s for 1 topic to ~6.5s for 46.
 
     # TODO Should the time per sweep be linear in the size of the
