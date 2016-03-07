@@ -325,7 +325,7 @@ We can condition this model on arbitary 'observe' statements. Inference (via MH)
 
 Bayesian Online Inference without likelihood function
 
-1. In Venture, there's currently linear scaling for exponential family inference (even with conj prior) because SSs are not tracked. So if you knew the SS for the family, you could get big gains with hand-coded sampler. However, Venture could conceivably track SSs. Moreover, Venture could build on Dirichlet-Multinomial and have other conjugate priors (which need not be collapsed). With conjugate priors you get fast inference and a closed form posterior. 
+1. In Venture, there's currently linear scaling for exponential family inference (even with conj prior) because SSs are not tracked. So if you knew the SS for the family, you could get big gains with hand-coded sampler. However, Venture could conceivably track SSs. Moreover, Venture could build on Dirichlet-Categorical and have other conjugate priors (which need not be collapsed). With conjugate priors you get fast inference and a closed form posterior. 
 
 2. Consider this Venture program:
 [assume theta (normal 0 10)]

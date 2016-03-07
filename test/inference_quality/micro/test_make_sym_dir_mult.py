@@ -62,7 +62,7 @@ def checkMakeSymDirCatAAA(maker):
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(%s a 4)" % maker)
   ripl.predict("(f)", label="pid")
-  return checkDirichletMultinomialAAA(ripl, "pid")
+  return checkDirichletCategoricalAAA(ripl, "pid")
 
 @gen_on_inf_prim("any")
 def testMakeSymDirCatFlip():
@@ -81,7 +81,7 @@ def checkMakeSymDirCatFlip(maker_1, maker_2):
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "((if (lt a 10) %s %s) a 4)" % (maker_1, maker_2))
   ripl.predict("(f)", label="pid")
-  return checkDirichletMultinomialAAA(ripl, "pid")
+  return checkDirichletCategoricalAAA(ripl, "pid")
 
 @gen_on_inf_prim("any")
 def testMakeSymDirCatBrushObserves():
@@ -102,7 +102,7 @@ def checkMakeSymDirCatBrushObserves(maker_1, maker_2):
   ripl.assume("f", "((if (lt a 10) %s %s) a 2)" % (maker_1, maker_2))
   ripl.predict("(f)", label="pid")
 
-  return checkDirichletMultinomialBrush(ripl, "pid")
+  return checkDirichletCategoricalBrush(ripl, "pid")
 
 @skipWhenRejectionSampling("Observes resimulations of unknown code")
 @skipWhenSubSampling(
@@ -126,7 +126,7 @@ def testMakeSymDirCatNative():
  a 4)
 """)
   ripl.predict("(f)", label="pid")
-  return checkDirichletMultinomialAAA(ripl, "pid")
+  return checkDirichletCategoricalAAA(ripl, "pid")
 
 @gen_on_inf_prim("any")
 def testMakeSymDirCatAppControlsFlip():
@@ -150,7 +150,7 @@ which are applied"""
   for _ in range(5): ripl.observe("(g)", "atom<1>")
   ripl.predict("(if (eq (f) atom<1>) (g) (g))")
   ripl.predict("(if (eq (g) atom<1>) (f) (f))")
-  return checkDirichletMultinomialAAA(ripl, "pid", infer="mixes_slowly")
+  return checkDirichletCategoricalAAA(ripl, "pid", infer="mixes_slowly")
 
 @gen_on_inf_prim("any")
 def testMakeDirCat1():
@@ -168,7 +168,7 @@ def checkMakeDirCat1(maker):
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(%s (array a a a a))" % maker)
   ripl.predict("(f)", label="pid")
-  return checkDirichletMultinomialAAA(ripl, "pid")
+  return checkDirichletCategoricalAAA(ripl, "pid")
 
 @gen_on_inf_prim("any")
 def testMakeSymDirCatWeakPrior():
@@ -183,11 +183,11 @@ def checkMakeSymDirCatWeakPrior(maker):
   ripl.assume("f", "(%s a 2)" % maker)
   ripl.predict("(f)", label="pid")
 
-  return checkDirichletMultinomialWeakPrior(ripl, "pid")
+  return checkDirichletCategoricalWeakPrior(ripl, "pid")
 
 @gen_on_inf_prim("none")
 @gen_broken_in("puma", "Puma doesn't support the specified-objects form "
-               "of dirichlet multinomial.  Issue #340.")
+               "of dirichlet categorical.  Issue #340.")
 def testDirCatInvalidOutput():
   for maker in ["(make_dir_cat (array 1 1) x)",
                 "(make_sym_dir_cat 1 2 x)",
@@ -209,7 +209,7 @@ def checkDirCatInvalidOutput(maker_form):
 
 @gen_on_inf_prim("any")
 @gen_broken_in("puma", "Puma doesn't support the specified-objects form "
-               "of dirichlet multinomial.  Issue #340.")
+               "of dirichlet categorical.  Issue #340.")
 @gen_broken_in("lite", "Inference runs afoul of Issue #451.")
 def testDirCatObjectVariation():
   for maker in ["(make_dir_cat (array 1 1) x)",
@@ -254,7 +254,7 @@ def testStaleAAA_MSP():
   ripl.assume("h", "g")
   ripl.predict("(h)", label="pid")
 
-  return checkDirichletMultinomialWeakPrior(ripl, "pid")
+  return checkDirichletCategoricalWeakPrior(ripl, "pid")
 
 @on_inf_prim("any")
 @statisticalTest
@@ -267,7 +267,7 @@ def testStaleAAA_CSP():
   ripl.assume("h", "(g)")
   ripl.predict("(h)", label="pid")
 
-  return checkDirichletMultinomialWeakPrior(ripl, "pid")
+  return checkDirichletCategoricalWeakPrior(ripl, "pid")
 
 @on_inf_prim("any")
 @statisticalTest
@@ -288,12 +288,12 @@ def testStaleAAA_Madness():
                                         (lookup ys (quote bbb))))""")
   ripl.predict("(g)", label="pid")
 
-  return checkDirichletMultinomialWeakPrior(ripl, "pid")
+  return checkDirichletCategoricalWeakPrior(ripl, "pid")
 
 
 #### Helpers
 
-def checkDirichletMultinomialAAA(ripl, label, infer=None):
+def checkDirichletCategoricalAAA(ripl, label, infer=None):
   for i in range(1, 4):
     for _ in range(default_num_data(20)):
       ripl.observe("(f)", "atom<%d>" % i)
@@ -302,7 +302,7 @@ def checkDirichletMultinomialAAA(ripl, label, infer=None):
   ans = [(0, .1), (1, .3), (2, .3), (3, .3)]
   return reportKnownDiscrete(ans, predictions)
 
-def checkDirichletMultinomialBrush(ripl, label):
+def checkDirichletCategoricalBrush(ripl, label):
   for _ in range(default_num_data(10)): ripl.observe("(f)", "atom<1>")
   for _ in range(default_num_data(10)): ripl.observe("""
 (if (lt a 10.0)
@@ -313,7 +313,7 @@ def checkDirichletMultinomialBrush(ripl, label):
   ans = [(0, .25), (1, .75)]
   return reportKnownDiscrete(ans, predictions)
 
-def checkDirichletMultinomialWeakPrior(ripl, label):
+def checkDirichletCategoricalWeakPrior(ripl, label):
   for _ in range(default_num_data(8)):
     ripl.observe("(f)", "atom<1>")
 

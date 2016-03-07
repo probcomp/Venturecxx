@@ -110,7 +110,7 @@ class DirCatSP(SP):
     }
 
 
-#### Collapsed dirichlet multinomial
+#### Collapsed dirichlet categorical
 
 class MakerCDirCatOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self, args):
@@ -199,7 +199,7 @@ registerBuiltinSP("make_dir_cat", \
            [t.HomogeneousArrayType(t.PositiveType()), t.ArrayType()],
            SPType([], t.AnyType()), min_req_args=1))
 
-#### Uncollapsed dirichlet multinomial
+#### Uncollapsed dirichlet categorical
 
 class MakerUDirCatOutputPSP(RandomPSP):
   def childrenCanAAA(self): return True
@@ -287,7 +287,7 @@ registerBuiltinSP("make_uc_dir_cat", \
            [t.HomogeneousArrayType(t.PositiveType()), t.ArrayType()],
            SPType([], t.AnyType()), min_req_args=1))
 
-#### Collapsed symmetric dirichlet multinomial
+#### Collapsed symmetric dirichlet categorical
 
 class MakerCSymDirCatOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self, args):
@@ -343,7 +343,7 @@ registerBuiltinSP("make_sym_dir_cat", \
            # VentureValue.
            SPType([], t.AnyType()), min_req_args=2))
 
-#### Uncollapsed symmetric dirichlet multinomial
+#### Uncollapsed symmetric dirichlet categorical
 
 class MakerUSymDirCatOutputPSP(RandomPSP):
   def childrenCanAAA(self): return True
