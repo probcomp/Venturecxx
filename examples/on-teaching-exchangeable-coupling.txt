@@ -5,7 +5,7 @@ notes towards tutorial on exchangeability, collapsed samplers, AAA
   - re-running whole Venture program will give iid sequence
   - most venture builtin SPs will give iid sequence
   - easy to write 'mixture model' thunk where values are not iid if you don't know the latent parameter values
-  - make_dir_mult constructs a thunk that has non-iid but exchangeable sequence of RVs as output. compare linear scaling of writing dir_mult by hand vs. using primitive. due to AAA. (but could also use sufficient statistics for same linear advantage). no ability in venture to read off the state of the dir_mult directly. at best could use SAMPLE and take an average. can read off counts outside venture by looking at type of the procedure.
+  - make_dir_cat constructs a thunk that has non-iid but exchangeable sequence of RVs as output. compare linear scaling of writing dir_cat by hand vs. using primitive. due to AAA. (but could also use sufficient statistics for same linear advantage). no ability in venture to read off the state of the dir_cat directly. at best could use SAMPLE and take an average. can read off counts outside venture by looking at type of the procedure.
 
 2. Exchangeability: some general results
  - computable mixture models correspond to computable exchangeable sequence of RVs. any relevant complexity results?

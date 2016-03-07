@@ -36,7 +36,7 @@ from venture.test.stats import statisticalTest
 #
 @gen_on_inf_prim("any")
 def testMakeSymDirMult1():
-  for maker in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
+  for maker in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
     yield checkMakeSymDirMult1, maker
 
 @statisticalTest
@@ -51,7 +51,7 @@ def checkMakeSymDirMult1(maker):
 
 @gen_on_inf_prim("any")
 def testMakeSymDirMultAAA():
-  for maker in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
+  for maker in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
     yield checkMakeSymDirMultAAA, maker
 
 @statisticalTest
@@ -67,8 +67,8 @@ def checkMakeSymDirMultAAA(maker):
 @gen_on_inf_prim("any")
 def testMakeSymDirMultFlip():
   """AAA where the SP flips between collapsed and uncollapsed."""
-  for maker_1 in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
-    for maker_2 in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
+  for maker_1 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
+    for maker_2 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
       yield checkMakeSymDirMultFlip, maker_1, maker_2
 
 @skipWhenRejectionSampling("Observes resimulations of unknown code")
@@ -87,8 +87,8 @@ def checkMakeSymDirMultFlip(maker_1, maker_2):
 def testMakeSymDirMultBrushObserves():
   """AAA where the SP flips between collapsed and uncollapsed, and
      there are observations in the brush."""
-  for maker_1 in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
-    for maker_2 in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
+  for maker_1 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
+    for maker_2 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
       yield checkMakeSymDirMultBrushObserves, maker_1, maker_2
 
 @skipWhenRejectionSampling("Observes resimulations of unknown code")
@@ -117,9 +117,9 @@ def testMakeSymDirMultNative():
 # Might be collapsed, uncollapsed, or uncollapsed in Venture
   ripl.assume("f", """
 ((if (lt a 9.5)
-     make_sym_dir_mult
+     make_sym_dir_cat
      (if (lt a 10.5)
-         make_uc_sym_dir_mult
+         make_uc_sym_dir_cat
          (lambda (alpha k)
            ((lambda (theta) (lambda () (categorical theta)))
             (symmetric_dirichlet alpha k)))))
@@ -130,8 +130,8 @@ def testMakeSymDirMultNative():
 
 @gen_on_inf_prim("any")
 def testMakeSymDirMultAppControlsFlip():
-  for maker_1 in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
-    for maker_2 in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
+  for maker_1 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
+    for maker_2 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
       yield checkMakeSymDirMultAppControlsFlip, maker_1, maker_2
 
 @skipWhenRejectionSampling(
@@ -154,12 +154,12 @@ which are applied"""
 
 @gen_on_inf_prim("any")
 def testMakeDirMult1():
-  for maker in ["make_dir_mult", "make_uc_dir_mult"]:
+  for maker in ["make_dir_cat", "make_uc_dir_cat"]:
     yield checkMakeDirMult1, maker
 
 @statisticalTest
 def checkMakeDirMult1(maker):
-  if rejectionSampling() and maker == "make_dir_mult":
+  if rejectionSampling() and maker == "make_dir_cat":
     raise SkipTest("Is the log density of counts bounded for "
                    "collapsed beta bernoulli?  Issue: "
                    "https://app.asana.com/0/9277419963067/10623454782852")
@@ -172,7 +172,7 @@ def checkMakeDirMult1(maker):
 
 @gen_on_inf_prim("any")
 def testMakeSymDirMultWeakPrior():
-  for maker in ["make_sym_dir_mult", "make_uc_sym_dir_mult"]:
+  for maker in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
     yield checkMakeSymDirMultWeakPrior, maker
 
 @statisticalTest
@@ -189,10 +189,10 @@ def checkMakeSymDirMultWeakPrior(maker):
 @gen_broken_in("puma", "Puma doesn't support the specified-objects form "
                "of dirichlet multinomial.  Issue #340.")
 def testDirMultInvalidOutput():
-  for maker in ["(make_dir_mult (array 1 1) x)",
-                "(make_sym_dir_mult 1 2 x)",
-                "(make_uc_dir_mult (array 1 1) x)",
-                "(make_uc_sym_dir_mult 1 2 x)"]:
+  for maker in ["(make_dir_cat (array 1 1) x)",
+                "(make_sym_dir_cat 1 2 x)",
+                "(make_uc_dir_cat (array 1 1) x)",
+                "(make_uc_sym_dir_cat 1 2 x)"]:
     yield checkDirMultInvalidOutput, maker
 
 def checkDirMultInvalidOutput(maker_form):
@@ -212,10 +212,10 @@ def checkDirMultInvalidOutput(maker_form):
                "of dirichlet multinomial.  Issue #340.")
 @gen_broken_in("lite", "Inference runs afoul of Issue #451.")
 def testDirMultObjectVariation():
-  for maker in ["(make_dir_mult (array 1 1) x)",
-                "(make_sym_dir_mult 1 2 x)",
-                "(make_uc_dir_mult (array 1 1) x)",
-                "(make_uc_sym_dir_mult 1 2 x)"]:
+  for maker in ["(make_dir_cat (array 1 1) x)",
+                "(make_sym_dir_cat 1 2 x)",
+                "(make_uc_dir_cat (array 1 1) x)",
+                "(make_uc_sym_dir_cat 1 2 x)"]:
     yield checkDirMultObjectVariation, maker
 
 @statisticalTest
@@ -249,7 +249,7 @@ def testStaleAAA_MSP():
   ripl = get_ripl()
 
   ripl.assume("a", "1.0")
-  ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
+  ripl.assume("f", "(make_uc_sym_dir_cat a 2)")
   ripl.assume("g", "(mem f)")
   ripl.assume("h", "g")
   ripl.predict("(h)", label="pid")
@@ -262,7 +262,7 @@ def testStaleAAA_CSP():
   ripl = get_ripl()
 
   ripl.assume("a", "1.0")
-  ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
+  ripl.assume("f", "(make_uc_sym_dir_cat a 2)")
   ripl.assume("g", "(lambda () f)")
   ripl.assume("h", "(g)")
   ripl.predict("(h)", label="pid")
@@ -277,7 +277,7 @@ def testStaleAAA_Madness():
   ripl = get_ripl()
 
   ripl.assume("a", "1.0")
-  ripl.assume("f", "(make_uc_sym_dir_mult a 2)")
+  ripl.assume("f", "(make_uc_sym_dir_cat a 2)")
   ripl.assume("f2_maker", "(lambda () f)")
   ripl.assume("f2", "(f2_maker)")
   ripl.assume("xs", "(array (ref f) (ref f2))")

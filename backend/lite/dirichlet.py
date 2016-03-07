@@ -97,10 +97,10 @@ class DirMultSP(SP):
   def constructSPAux(self): return DirMultSPAux(n=self.n)
   def show(self, spaux):
     types = {
-      CDirMultOutputPSP: 'dir_mult',
-      UDirMultOutputPSP: 'uc_dir_mult',
-      CSymDirMultOutputPSP: 'sym_dir_mult',
-      USymDirMultOutputPSP: 'uc_sym_dir_mult'
+      CDirMultOutputPSP: 'dir_cat',
+      UDirMultOutputPSP: 'uc_dir_cat',
+      CSymDirMultOutputPSP: 'sym_dir_cat',
+      USymDirMultOutputPSP: 'uc_sym_dir_cat'
     }
     return {
       'type': types[type(self.outputPSP.psp)],
@@ -127,7 +127,7 @@ class MakerCDirMultOutputPSP(DeterministicMakerAAAPSP):
 
   def description(self, name):
     return "  %s(alphas, objects) returns a sampler for a collapsed " \
-      "Dirichlet multinomial model.  If the objects argument is given, " \
+      "Dirichlet categorical model.  If the objects argument is given, " \
       "the sampler will return one of those objects on each call; if not, " \
       "it will return one of n <atom>s where n is the length of the list " \
       "of alphas.  It is an error if the list of objects is supplied and " \
@@ -194,7 +194,7 @@ class CDirMultOutputPSP(RandomPSP):
                  for (alpha, count) in zip(self.alpha, aux.counts)])
     return term1 + term2
 
-registerBuiltinSP("make_dir_mult", \
+registerBuiltinSP("make_dir_cat", \
   typed_nr(MakerCDirMultOutputPSP(),
            [t.HomogeneousArrayType(t.PositiveType()), t.ArrayType()],
            SPType([], t.AnyType()), min_req_args=1))
@@ -226,7 +226,7 @@ class MakerUDirMultOutputPSP(RandomPSP):
     return logDensityDirichlet(value.sp.outputPSP.psp.theta, alpha)
 
   def description(self, name):
-    return "  %s is an uncollapsed variant of make_dir_mult." % name
+    return "  %s is an uncollapsed variant of make_dir_cat." % name
 
 class UDirMultAAALKernel(SimulationAAALKernel):
   def simulate(self, _trace, args):
@@ -282,7 +282,7 @@ class UDirMultOutputPSP(RandomPSP):
   def enumerateValues(self, _args):
     return self.os
 
-registerBuiltinSP("make_uc_dir_mult", \
+registerBuiltinSP("make_uc_dir_cat", \
   typed_nr(MakerUDirMultOutputPSP(),
            [t.HomogeneousArrayType(t.PositiveType()), t.ArrayType()],
            SPType([], t.AnyType()), min_req_args=1))
@@ -330,13 +330,13 @@ class MakerCSymDirMultOutputPSP(DeterministicMakerAAAPSP):
     return logDensityCategoricalSequence(empirical_freqs, aux.counts)
 
   def description(self, name):
-    return "  %s is a symmetric variant of make_dir_mult." % name
+    return "  %s is a symmetric variant of make_dir_cat." % name
 
 class CSymDirMultOutputPSP(CDirMultOutputPSP):
   def __init__(self, alpha, n, os):
     super(CSymDirMultOutputPSP, self).__init__([alpha] * n, os)
 
-registerBuiltinSP("make_sym_dir_mult", \
+registerBuiltinSP("make_sym_dir_cat", \
   typed_nr(MakerCSymDirMultOutputPSP(),
            [t.PositiveType(), t.CountType(), t.ArrayType()],
            # Saying AnyType here requires the underlying psp to emit a
@@ -371,7 +371,7 @@ class MakerUSymDirMultOutputPSP(RandomPSP):
                                [float(alpha) for _ in range(int(n))])
 
   def description(self, name):
-    return "  %s is an uncollapsed symmetric variant of make_dir_mult." % name
+    return "  %s is an uncollapsed symmetric variant of make_dir_cat." % name
 
 class USymDirMultAAALKernel(SimulationAAALKernel):
   def simulate(self, _trace, args):
@@ -398,7 +398,7 @@ class USymDirMultAAALKernel(SimulationAAALKernel):
 class USymDirMultOutputPSP(UDirMultOutputPSP):
   pass
 
-registerBuiltinSP("make_uc_sym_dir_mult",
+registerBuiltinSP("make_uc_sym_dir_cat",
                   typed_nr(MakerUSymDirMultOutputPSP(),
                            [t.PositiveType(), t.CountType(), t.ArrayType()],
                            SPType([], t.AnyType()), min_req_args=2))

@@ -106,7 +106,7 @@ def testHPYLanguageModel1():
   loadPYMem(ripl)
 
   # 5 letters for now
-  ripl.assume("G_init","(make_sym_dir_mult 0.5 5)")
+  ripl.assume("G_init","(make_sym_dir_cat 0.5 5)")
 
   # globally shared parameters for now
   ripl.assume("alpha","(gamma 1.0 1.0)")

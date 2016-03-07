@@ -35,7 +35,7 @@ boost::python::object DirMultSPAux::toPython(Trace * trace) const
 VentureValuePtr MakeDirMultOutputPSP::simulate(shared_ptr<Args> args,
                                                gsl_rng * rng) const
 {
-  checkArgsLength("make_dir_mult", args, 1);
+  checkArgsLength("make_dir_cat", args, 1);
 
   vector<double> alpha;
   BOOST_FOREACH(VentureValuePtr v, args->operandValues[0]->getArray())
@@ -54,7 +54,7 @@ VentureValuePtr MakeDirMultOutputPSP::simulate(shared_ptr<Args> args,
 VentureValuePtr DirMultOutputPSP::simulate(shared_ptr<Args> args,
                                            gsl_rng * rng) const
 {
-  checkArgsLength("dir_mult", args, 0);
+  checkArgsLength("dir_cat", args, 0);
 
   shared_ptr<DirMultSPAux> aux =
     dynamic_pointer_cast<DirMultSPAux>(args->spAux);
@@ -145,7 +145,7 @@ double DirMultOutputPSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
 VentureValuePtr MakeSymDirMultOutputPSP::simulate(shared_ptr<Args> args,
                                                   gsl_rng * rng) const
 {
-  checkArgsLength("make_sym_dir_mult", args, 2);
+  checkArgsLength("make_sym_dir_cat", args, 2);
 
   double alpha = args->operandValues[0]->getDouble();
   int n = args->operandValues[1]->getInt();
@@ -162,7 +162,7 @@ boost::python::dict SymDirMultSP::toPython(Trace * trace,
                                            shared_ptr<SPAux> spAux) const
 {
   boost::python::dict symDirMult;
-  symDirMult["type"] = "sym_dir_mult";
+  symDirMult["type"] = "sym_dir_cat";
   symDirMult["alpha"] = alpha;
   symDirMult["n"] = n;
   symDirMult["counts"] = spAux->toPython(trace);
@@ -180,7 +180,7 @@ VentureValuePtr MakeUCDirMultOutputPSP::simulate(shared_ptr<Args> args,
                                                  gsl_rng * rng) const
 {
   // TODO optional 2nd argument
-  checkArgsLength("make_uc_dir_mult", args, 1);
+  checkArgsLength("make_uc_dir_cat", args, 1);
 
   const vector<VentureValuePtr>& alphaArray =
     args->operandValues[0]->getArray();
@@ -209,7 +209,7 @@ double MakeUCDirMultOutputPSP::logDensity(VentureValuePtr value,
                                           shared_ptr<Args> args) const
 {
   // TODO optional 2nd argument
-  checkArgsLength("make_uc_dir_mult", args, 1);
+  checkArgsLength("make_uc_dir_cat", args, 1);
 
   shared_ptr<VentureArray> alphaArray =
     dynamic_pointer_cast<VentureArray>(args->operandValues[0]);
@@ -267,7 +267,7 @@ UCDirMultSP* UCDirMultSP::copy_help(ForwardingMap* forward) const
 VentureValuePtr UCDirMultOutputPSP::simulate(shared_ptr<Args> args,
                                              gsl_rng * rng) const
 {
-  checkArgsLength("uc_dir_mult", args, 0);
+  checkArgsLength("uc_dir_cat", args, 0);
 
   shared_ptr<UCDirMultSPAux> aux =
     dynamic_pointer_cast<UCDirMultSPAux>(args->spAux);
@@ -338,7 +338,7 @@ VentureValuePtr MakeUCSymDirMultOutputPSP::simulate(shared_ptr<Args> args,
                                                     gsl_rng * rng) const
 {
   // TODO optional 3rd argument
-  checkArgsLength("make_uc_sym_dir_mult", args, 2);
+  checkArgsLength("make_uc_sym_dir_cat", args, 2);
 
   double alpha = args->operandValues[0]->getDouble();
   int n = args->operandValues[1]->getInt();
@@ -359,7 +359,7 @@ VentureValuePtr MakeUCSymDirMultOutputPSP::simulate(shared_ptr<Args> args,
 double MakeUCSymDirMultOutputPSP::logDensity(VentureValuePtr value,
                                              shared_ptr<Args> args) const
 {
-  checkArgsLength("make_uc_sym_dir_mult", args, 2);
+  checkArgsLength("make_uc_sym_dir_cat", args, 2);
 
   double alpha = args->operandValues[0]->getDouble();
   int n = args->operandValues[1]->getInt();

@@ -23,10 +23,10 @@
         (assume alpha_topic_word (gamma 1.0 2.0))
         (assume doc
           (mem (lambda (doc_id)
-            (make_sym_dir_mult alpha_document_topic n_topics))))
+            (make_sym_dir_cat alpha_document_topic n_topics))))
         (assume topic
           (mem (lambda (topic_id)
-            (make_sym_dir_mult alpha_topic_word vocab_size))))
+            (make_sym_dir_cat alpha_topic_word vocab_size))))
         (assume word
           (mem (lambda (doc_id pos)
             ((topic ((doc doc_id)))))))))]

@@ -116,11 +116,11 @@ suff_stat_beta_bernoulli = """(lambda (al be)
   (let ((weight (beta al be)))
     (make_suff_stat_bernoulli weight)))"""
 
-native_dir_mult = """(lambda (alphas)
+native_dir_cat = """(lambda (alphas)
   (let ((weights (dirichlet alphas)))
     (lambda () (categorical weights))))"""
 
-native_sym_dir_mult = """(lambda (alpha n)
+native_sym_dir_cat = """(lambda (alpha n)
   (let ((weights (symmetric_dirichlet alpha n)))
     (lambda () (categorical weights))))"""
 
@@ -153,19 +153,19 @@ simulation_agreement_packages = {
     'reporter' : reportSameDiscrete,
     'combiner' : lambda x, y: (x,y)
   },
-  'dir_mult' : {
-    'native' : native_dir_mult,
-    'optimized' : ['make_dir_mult', 'make_uc_dir_mult'],
-    'gibbs' : 'make_uc_dir_mult',
+  'dir_cat' : {
+    'native' : native_dir_cat,
+    'optimized' : ['make_dir_cat', 'make_uc_dir_cat'],
+    'gibbs' : 'make_uc_dir_cat',
     'param_sets' : [(v.app("array", 0.5, 0.5, 0.5),),
                     (v.app("array", 0.2, 0.2, 0.2, 0.2, 0.2),)],
     'reporter' : reportSameDiscrete,
     'combiner' : lambda x, y: (x,y),
   },
-  'sym_dir_mult' : {
-    'native' : native_sym_dir_mult,
-    'optimized' : ['make_sym_dir_mult', 'make_uc_sym_dir_mult'],
-    'gibbs' : 'make_uc_sym_dir_mult',
+  'sym_dir_cat' : {
+    'native' : native_sym_dir_cat,
+    'optimized' : ['make_sym_dir_cat', 'make_uc_sym_dir_cat'],
+    'gibbs' : 'make_uc_sym_dir_cat',
     'param_sets' : [(0.5, 4), (0.2, 8)],
     'reporter' : reportSameDiscrete,
     'combiner' : lambda x, y: (x,y),
@@ -202,12 +202,12 @@ def testBetaBernoulliSimulationAgreement():
 
 @gen_on_inf_prim("none")
 def testDirMultSimulationAgreement():
-  for c in generateSimulationAgreementChecks('dir_mult'):
+  for c in generateSimulationAgreementChecks('dir_cat'):
     yield c
 
 @gen_on_inf_prim("none")
 def testSymDirMultSimulationAgreement():
-  for c in generateSimulationAgreementChecks('sym_dir_mult'):
+  for c in generateSimulationAgreementChecks('sym_dir_cat'):
     yield c
 
 @gen_on_inf_prim("none")
@@ -364,13 +364,13 @@ def testBetaBernoulliUCKernel():
 
 @gen_on_inf_prim("mh") # Really just the custom LKernel
 def testDirMultUCKernel():
-  name = 'dir_mult'
+  name = 'dir_cat'
   for params in simulation_agreement_packages[name]['param_sets']:
     yield checkUCKernel, name, params
 
 @gen_on_inf_prim("mh") # Really just the custom LKernel
 def testSymDirMultUCKernel():
-  name = 'sym_dir_mult'
+  name = 'sym_dir_cat'
   for params in simulation_agreement_packages[name]['param_sets']:
     yield checkUCKernel, name, params
 
