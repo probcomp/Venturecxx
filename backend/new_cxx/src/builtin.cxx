@@ -176,10 +176,10 @@ map<string,SP*> initBuiltInSPs()
   m["make_uc_beta_bernoulli"] = new SP(new NullRequestPSP(), new MakeUBetaBernoulliOutputPSP());
 
   /* Dirichlet categoricals */
-  m["make_sym_dir_cat"] = new SP(new NullRequestPSP(), new MakeSymDirMultOutputPSP());
-  m["make_dir_cat"] = new SP(new NullRequestPSP(), new MakeDirMultOutputPSP());
-  m["make_uc_sym_dir_cat"] = new SP(new NullRequestPSP(), new MakeUCSymDirMultOutputPSP());
-  m["make_uc_dir_cat"] = new SP(new NullRequestPSP(), new MakeUCDirMultOutputPSP());
+  m["make_sym_dir_cat"] = new SP(new NullRequestPSP(), new MakeSymDirCatOutputPSP());
+  m["make_dir_cat"] = new SP(new NullRequestPSP(), new MakeDirCatOutputPSP());
+  m["make_uc_sym_dir_cat"] = new SP(new NullRequestPSP(), new MakeUCSymDirCatOutputPSP());
+  m["make_uc_dir_cat"] = new SP(new NullRequestPSP(), new MakeUCDirCatOutputPSP());
 
   /* Non parametrics */
   m["make_crp"] = new SP(new NullRequestPSP(), new MakeCRPOutputPSP());

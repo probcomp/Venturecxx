@@ -201,12 +201,12 @@ def testBetaBernoulliSimulationAgreement():
     yield c
 
 @gen_on_inf_prim("none")
-def testDirMultSimulationAgreement():
+def testDirCatSimulationAgreement():
   for c in generateSimulationAgreementChecks('dir_cat'):
     yield c
 
 @gen_on_inf_prim("none")
-def testSymDirMultSimulationAgreement():
+def testSymDirCatSimulationAgreement():
   for c in generateSimulationAgreementChecks('sym_dir_cat'):
     yield c
 
@@ -363,13 +363,13 @@ def testBetaBernoulliUCKernel():
     yield checkUCKernel, name, params
 
 @gen_on_inf_prim("mh") # Really just the custom LKernel
-def testDirMultUCKernel():
+def testDirCatUCKernel():
   name = 'dir_cat'
   for params in simulation_agreement_packages[name]['param_sets']:
     yield checkUCKernel, name, params
 
 @gen_on_inf_prim("mh") # Really just the custom LKernel
-def testSymDirMultUCKernel():
+def testSymDirCatUCKernel():
   name = 'sym_dir_cat'
   for params in simulation_agreement_packages[name]['param_sets']:
     yield checkUCKernel, name, params

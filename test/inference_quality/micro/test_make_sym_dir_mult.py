@@ -31,16 +31,16 @@ from venture.test.config import skipWhenSubSampling
 from venture.test.stats import reportKnownDiscrete
 from venture.test.stats import statisticalTest
 
-############## (1) Test SymDirMult AAA
+############## (1) Test SymDirCat AAA
 
 #
 @gen_on_inf_prim("any")
-def testMakeSymDirMult1():
+def testMakeSymDirCat1():
   for maker in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
-    yield checkMakeSymDirMult1, maker
+    yield checkMakeSymDirCat1, maker
 
 @statisticalTest
-def checkMakeSymDirMult1(maker):
+def checkMakeSymDirCat1(maker):
   """Extremely simple program, with an AAA procedure when uncollapsed"""
   ripl = get_ripl()
   ripl.assume("f", "(%s 1.0 2)" % maker)
@@ -50,12 +50,12 @@ def checkMakeSymDirMult1(maker):
   return reportKnownDiscrete(ans, predictions)
 
 @gen_on_inf_prim("any")
-def testMakeSymDirMultAAA():
+def testMakeSymDirCatAAA():
   for maker in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
-    yield checkMakeSymDirMultAAA, maker
+    yield checkMakeSymDirCatAAA, maker
 
 @statisticalTest
-def checkMakeSymDirMultAAA(maker):
+def checkMakeSymDirCatAAA(maker):
   """Simplest program with collapsed AAA"""
   ripl = get_ripl()
 
@@ -65,17 +65,17 @@ def checkMakeSymDirMultAAA(maker):
   return checkDirichletMultinomialAAA(ripl, "pid")
 
 @gen_on_inf_prim("any")
-def testMakeSymDirMultFlip():
+def testMakeSymDirCatFlip():
   """AAA where the SP flips between collapsed and uncollapsed."""
   for maker_1 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
     for maker_2 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
-      yield checkMakeSymDirMultFlip, maker_1, maker_2
+      yield checkMakeSymDirCatFlip, maker_1, maker_2
 
 @skipWhenRejectionSampling("Observes resimulations of unknown code")
 @skipWhenSubSampling(
   "The current implementation of subsampling can't handle this scaffold shape")
 @statisticalTest
-def checkMakeSymDirMultFlip(maker_1, maker_2):
+def checkMakeSymDirCatFlip(maker_1, maker_2):
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
@@ -84,18 +84,18 @@ def checkMakeSymDirMultFlip(maker_1, maker_2):
   return checkDirichletMultinomialAAA(ripl, "pid")
 
 @gen_on_inf_prim("any")
-def testMakeSymDirMultBrushObserves():
+def testMakeSymDirCatBrushObserves():
   """AAA where the SP flips between collapsed and uncollapsed, and
      there are observations in the brush."""
   for maker_1 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
     for maker_2 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
-      yield checkMakeSymDirMultBrushObserves, maker_1, maker_2
+      yield checkMakeSymDirCatBrushObserves, maker_1, maker_2
 
 @skipWhenRejectionSampling("Observes resimulations of unknown code")
 @skipWhenSubSampling(
   "The current implementation of subsampling can't handle this scaffold shape")
 @statisticalTest
-def checkMakeSymDirMultBrushObserves(maker_1, maker_2):
+def checkMakeSymDirCatBrushObserves(maker_1, maker_2):
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
@@ -109,7 +109,7 @@ def checkMakeSymDirMultBrushObserves(maker_1, maker_2):
   "The current implementation of subsampling can't handle this scaffold shape")
 @statisticalTest
 @on_inf_prim("any")
-def testMakeSymDirMultNative():
+def testMakeSymDirCatNative():
   """AAA where the SP flips between collapsed, uncollapsed, and native"""
   ripl = get_ripl()
 
@@ -129,15 +129,15 @@ def testMakeSymDirMultNative():
   return checkDirichletMultinomialAAA(ripl, "pid")
 
 @gen_on_inf_prim("any")
-def testMakeSymDirMultAppControlsFlip():
+def testMakeSymDirCatAppControlsFlip():
   for maker_1 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
     for maker_2 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
-      yield checkMakeSymDirMultAppControlsFlip, maker_1, maker_2
+      yield checkMakeSymDirCatAppControlsFlip, maker_1, maker_2
 
 @skipWhenRejectionSampling(
   "Too slow.  Is the log density of counts bound too conservative?")
 @statisticalTest
-def checkMakeSymDirMultAppControlsFlip(maker_1, maker_2):
+def checkMakeSymDirCatAppControlsFlip(maker_1, maker_2):
   """Two AAA SPs with same parameters, where their applications control
 which are applied"""
   ripl = get_ripl()
@@ -153,12 +153,12 @@ which are applied"""
   return checkDirichletMultinomialAAA(ripl, "pid", infer="mixes_slowly")
 
 @gen_on_inf_prim("any")
-def testMakeDirMult1():
+def testMakeDirCat1():
   for maker in ["make_dir_cat", "make_uc_dir_cat"]:
-    yield checkMakeDirMult1, maker
+    yield checkMakeDirCat1, maker
 
 @statisticalTest
-def checkMakeDirMult1(maker):
+def checkMakeDirCat1(maker):
   if rejectionSampling() and maker == "make_dir_cat":
     raise SkipTest("Is the log density of counts bounded for "
                    "collapsed beta bernoulli?  Issue: "
@@ -171,12 +171,12 @@ def checkMakeDirMult1(maker):
   return checkDirichletMultinomialAAA(ripl, "pid")
 
 @gen_on_inf_prim("any")
-def testMakeSymDirMultWeakPrior():
+def testMakeSymDirCatWeakPrior():
   for maker in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
-    yield checkMakeSymDirMultWeakPrior, maker
+    yield checkMakeSymDirCatWeakPrior, maker
 
 @statisticalTest
-def checkMakeSymDirMultWeakPrior(maker):
+def checkMakeSymDirCatWeakPrior(maker):
   ripl = get_ripl()
 
   ripl.assume("a", "1.0")
@@ -188,14 +188,14 @@ def checkMakeSymDirMultWeakPrior(maker):
 @gen_on_inf_prim("none")
 @gen_broken_in("puma", "Puma doesn't support the specified-objects form "
                "of dirichlet multinomial.  Issue #340.")
-def testDirMultInvalidOutput():
+def testDirCatInvalidOutput():
   for maker in ["(make_dir_cat (array 1 1) x)",
                 "(make_sym_dir_cat 1 2 x)",
                 "(make_uc_dir_cat (array 1 1) x)",
                 "(make_uc_sym_dir_cat 1 2 x)"]:
-    yield checkDirMultInvalidOutput, maker
+    yield checkDirCatInvalidOutput, maker
 
-def checkDirMultInvalidOutput(maker_form):
+def checkDirCatInvalidOutput(maker_form):
   raise SkipTest("Currently broken.  Issue #451.")
   r = get_ripl()
   r.assume("x1", "(flip)")
@@ -211,15 +211,15 @@ def checkDirMultInvalidOutput(maker_form):
 @gen_broken_in("puma", "Puma doesn't support the specified-objects form "
                "of dirichlet multinomial.  Issue #340.")
 @gen_broken_in("lite", "Inference runs afoul of Issue #451.")
-def testDirMultObjectVariation():
+def testDirCatObjectVariation():
   for maker in ["(make_dir_cat (array 1 1) x)",
                 "(make_sym_dir_cat 1 2 x)",
                 "(make_uc_dir_cat (array 1 1) x)",
                 "(make_uc_sym_dir_cat 1 2 x)"]:
-    yield checkDirMultObjectVariation, maker
+    yield checkDirCatObjectVariation, maker
 
 @statisticalTest
-def checkDirMultObjectVariation(maker_form):
+def checkDirCatObjectVariation(maker_form):
   "Testing for Issue #452."
   r = get_ripl()
   r.assume("x1", "(flip)")

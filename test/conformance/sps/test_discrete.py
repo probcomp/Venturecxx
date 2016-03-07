@@ -51,7 +51,7 @@ def testLogFlip():
 
 @on_inf_prim("none")
 @broken_in('puma', "Puma does not accept the objects argument to Dirichlet categoricals.  Issue #430.")
-def testDirMultSmoke():
+def testDirCatSmoke():
   r = get_ripl()
   for form in ["(is_atom ((make_dir_cat (array 1 1 1))))",
                "(is_atom ((make_sym_dir_cat 3 2)))",
