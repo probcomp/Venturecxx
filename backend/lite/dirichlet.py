@@ -317,12 +317,6 @@ class MakerCSymDirCatOutputPSP(DeterministicMakerAAAPSP):
       return [dalpha, 0, 0]
 
   def madeSpLogDensityOfDataBound(self, aux):
-    """Upper bound the log density the made SP may report for its counts
-    for the given aux, up to arbitrary changes to the args
-    wherewith the maker is simulated.
-    """
-    # TODO Communicate the maker's fixed parameters here for a more
-    # precise bound.
     N = aux.counts.total
     empirical_freqs = [float(c) / N for c in aux.counts]
     # The prior can't do better than concentrating all mass on exactly
