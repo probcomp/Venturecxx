@@ -50,7 +50,7 @@ struct BetaBernoulliOutputPSP : RandomPSP
   void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
 
-  double logDensityOfCounts(shared_ptr<SPAux> spAux) const;
+  double logDensityOfData(shared_ptr<SPAux> spAux) const;
 
 private:
   const double alpha;

@@ -164,7 +164,7 @@ void CRPOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args) co
   // this actually matter?  If the atoms are memoized on?
 }
 
-double CRPOutputPSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
+double CRPOutputPSP::logDensityOfData(shared_ptr<SPAux> spAux) const
 {
   shared_ptr<CRPSPAux> aux = dynamic_pointer_cast<CRPSPAux>(spAux);
   assert(aux);

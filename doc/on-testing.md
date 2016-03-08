@@ -169,9 +169,9 @@ Examples of Exact Distribution Equality
   are different representations of purportedly the same probability
   distribution, so cross-check them.
 
-  - log densities of counts methods may be comparable to versions of the
-    same SP that do not attempt to maintain sufficient statistics, for
-    example on the inferences they produce.
+  - log densities of data methods should be comparable to versions of
+    the same SP that do not attempt to maintain sufficient statistics,
+    for example on the inferences they produce.
 
 - Testing **distribution identities**, for example that
 

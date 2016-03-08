@@ -54,7 +54,7 @@ struct ForeignLitePSP : PSP
   bool canEnumerateValues(shared_ptr<Args> args) const;
   vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
 
-  double logDensityOfCounts(shared_ptr<SPAux> spAux) const;
+  double logDensityOfData(shared_ptr<SPAux> spAux) const;
 
   boost::python::object psp;
 };

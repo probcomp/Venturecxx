@@ -33,8 +33,8 @@ natural type system.  For example, Gaussian drift kernels should be
 applicable, in principle, to any node that holds a 1-D continuous
 variable; and DefaultAAALKernel is applicable to any node whose
 operator 1) is a maker 2) makes things that support the
-logDensityOfCounts method and 3) supports
-madeSpLogDensityOfCountsBound if we are doing rejection sampling.
+logDensityOfData method and 3) supports
+madeSpLogDensityOfDataBound if we are doing rejection sampling.
 
 Venture's foreign interface therefore needs to be a coherent interface
 for both SPs and node-kernels, including how information gets from one

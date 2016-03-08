@@ -156,7 +156,7 @@ class CMVNOutputPSP(RandomPSP):
     aux.xTotal -= x
     aux.STotal -= x * x.T
 
-  def logDensityOfCounts(self,aux):
+  def logDensityOfData(self,aux):
     (mN,kN,vN,SN) = self.updatedParams(aux)
     term1 = - (aux.N * self.d * math.log(math.pi)) / 2
     term2 = logGenGamma(self.d,float(vN) / 2)

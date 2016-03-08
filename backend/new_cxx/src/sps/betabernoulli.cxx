@@ -74,7 +74,7 @@ void BetaBernoulliOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args
   else { aux->tails--; }
 }
 
-double BetaBernoulliOutputPSP::logDensityOfCounts(shared_ptr<SPAux> aux) const
+double BetaBernoulliOutputPSP::logDensityOfData(shared_ptr<SPAux> aux) const
 {
   shared_ptr<SuffBernoulliSPAux> spAux = dynamic_pointer_cast<SuffBernoulliSPAux>(aux);
 

@@ -134,7 +134,7 @@ class MakerCDirCatOutputPSP(DeterministicMakerAAAPSP):
       "has different length from the list of alphas.  While this procedure " \
       "itself is deterministic, the returned sampler is stochastic." % name
 
-  def gradientOfLogDensityOfCounts(self, aux, args):
+  def gradientOfLogDensityOfData(self, aux, args):
     vals = args.operandValues()
     alphas = vals[0]
     N = aux.counts.total
@@ -183,7 +183,7 @@ class CDirCatOutputPSP(RandomPSP):
   def enumerateValues(self, _args):
     return self.os
 
-  def logDensityOfCounts(self, aux):
+  def logDensityOfData(self, aux):
     assert isinstance(aux, DirCatSPAux)
     N = aux.counts.total
     A = self.alpha.total
@@ -301,7 +301,7 @@ class MakerCSymDirCatOutputPSP(DeterministicMakerAAAPSP):
                       SPType([], t.AnyType()))
     return VentureSPRecord(DirCatSP(NullRequestPSP(), output, alpha, n))
 
-  def gradientOfLogDensityOfCounts(self, aux, args):
+  def gradientOfLogDensityOfData(self, aux, args):
     vals = args.operandValues()
     (alpha, n) = (float(vals[0]), int(vals[1]))
     N = aux.counts.total
@@ -316,13 +316,7 @@ class MakerCSymDirCatOutputPSP(DeterministicMakerAAAPSP):
     else:
       return [dalpha, 0, 0]
 
-  def madeSpLogDensityOfCountsBound(self, aux):
-    """Upper bound the log density the made SP may report for its counts
-    for the given aux, up to arbitrary changes to the args
-    wherewith the maker is simulated.
-    """
-    # TODO Communicate the maker's fixed parameters here for a more
-    # precise bound.
+  def madeSpLogDensityOfDataBound(self, aux):
     N = aux.counts.total
     empirical_freqs = [float(c) / N for c in aux.counts]
     # The prior can't do better than concentrating all mass on exactly

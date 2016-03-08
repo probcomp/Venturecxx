@@ -203,7 +203,7 @@ class PSP(object):
     """
     pass
 
-  def logDensityOfCounts(self, _aux):
+  def logDensityOfData(self, _aux):
     """Return the log-density of simulating a dataset with the given
     collected statistics.
 
@@ -211,22 +211,16 @@ class PSP(object):
     uses via incorporate and unincorporate that are sufficient to bulk
     absorb at all applications of the PSP, without traversing them.
 
-    Specifically, the current ideal is to return the sum of the
-    log-density at each application of this PSP; which is also the
-    log-density of producing any one permutation of the observed
-    output sequence.  For some distributions (e.g., Poisson), this may
-    not be computable from the sufficient statisitc; it is also
-    permissible to return a value shifted from this by any constant
-    independent of the parameters.  In that case, make sure the same
-    constant appears appropriately in madeSpLogDensityOfCountsBound
-    (gradientOfLogDensityOfCounts is by definition unchanged).
-
-    TODO Consider whether to change the spec to the probability
-    (density) of getting the statistic value, which should always be
-    computable from the statistic alone.  See
+    Specifically return the sum of the log-density at each application
+    of this PSP; which is also the joint log-density of producing any
+    one permutation of the observed output sequence.  For some
+    distributions (e.g., Poisson), this may not be computable from the
+    traditional sufficient statisitc; in such a case, the sufficient
+    statistic should be augmented with sufficient information to
+    compute this.  For rationales for this specification, see
     doc/on-log-density-of-counts.md.
     """
-    raise VentureBuiltinSPMethodError("Cannot compute log density of counts of "
+    raise VentureBuiltinSPMethodError("Cannot compute log density of data of "
       "%s", type(self))
 
   def canEnumerate(self):
@@ -275,8 +269,8 @@ class PSP(object):
   def hasDeltaKernel(self):
     return False
 
-  def gradientOfLogDensityOfCounts(self, _value, _args):
-    """Return the gradient of the made PSP's logDensityOfCounts function.
+  def gradientOfLogDensityOfData(self, _value, _args):
+    """Return the gradient of the made PSP's logDensityOfData function.
     This method is needed only for gradient-based methods and is
     relevant only for makers of PSPs that collect sufficient
     statistics via incorporate and unincorporate.
@@ -285,11 +279,18 @@ class PSP(object):
     derivatives with respect to the arguments.
 
     """
-    raise VentureBuiltinSPMethodError("Cannot compute gradient of log density of counts of %s", type(self))
+    raise VentureBuiltinSPMethodError("Cannot compute gradient of log density of data of %s", type(self))
 
-  def madeSpLogDensityOfCountsBound(self, _aux):
+  def madeSpLogDensityOfDataBound(self, _aux):
+    """Upper bound the logDensityOfData the made SP may report for the
+    given aux, up to arbitrary changes to the args wherewith the maker
+    is simulated.
+
+    TODO Communicate the maker's fixed parameters here to enable more
+    precise bounds.
+    """
     raise VentureBuiltinSPMethodError("Cannot rejection sample AAA procedure "
-      "with unbounded log density of counts.")
+      "with unbounded log density of data.")
 
 class DeterministicPSP(PSP):
   """Provides good default implementations of PSP methods for deterministic
@@ -439,8 +440,8 @@ class TypedPSP(PSP):
     return self.psp.unincorporate(self.f_type.unwrap_return(value),
       self.f_type.unwrap_args(args))
 
-  def logDensityOfCounts(self, aux):
-    return self.psp.logDensityOfCounts(aux)
+  def logDensityOfData(self, aux):
+    return self.psp.logDensityOfData(aux)
 
   def enumerateValues(self, args):
     return [self.f_type.wrap_return(v) for v in
@@ -523,8 +524,8 @@ class DispatchingPSP(PSP):
     return self._disptach(args).enumerateValues(args)
 
   # Is this really the right treatment of methods that don't give args?
-  def logDensityOfCounts(self, aux):
-    return self.psps[0].logDensityOfCounts(aux)
+  def logDensityOfData(self, aux):
+    return self.psps[0].logDensityOfData(aux)
 
   def isRandom(self):
     return self.psps[0].isRandom()

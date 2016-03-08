@@ -54,7 +54,7 @@ struct DirCatOutputPSP : RandomPSP
   bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
   vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
 
-  double logDensityOfCounts(shared_ptr<SPAux> spAux) const;
+  double logDensityOfData(shared_ptr<SPAux> spAux) const;
 
 private:
   const vector<double> alpha;

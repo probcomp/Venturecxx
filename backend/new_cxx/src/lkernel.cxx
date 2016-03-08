@@ -32,7 +32,7 @@ double DeterministicMakerAAALKernel::weight(Trace * trace,VentureValuePtr value,
 {
   boost::shared_ptr<VentureSPRecord> spRecord = dynamic_pointer_cast<VentureSPRecord>(value);
   assert(spRecord);
-  return spRecord->sp->outputPSP->logDensityOfCounts(spRecord->spAux);
+  return spRecord->sp->outputPSP->logDensityOfData(spRecord->spAux);
 }
 
 VentureValuePtr DeterministicLKernel::simulate(Trace * trace,boost::shared_ptr<Args> args,gsl_rng * rng)

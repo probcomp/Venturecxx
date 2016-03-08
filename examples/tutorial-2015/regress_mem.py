@@ -100,7 +100,7 @@ class RegressAAALKernel(SimulationAAALKernel):
     return self.makerPSP.simulate(args)
 
   def weight(self, _trace, _newValue, _args):
-    # The log density of counts should already have been paid for in
+    # The log density of data should already have been paid for in
     # the request for f_emu, so we can just return 0.
     return 0
 

@@ -94,7 +94,7 @@ Dimensions on which I evaluated these projects:
 - LKernel cleanup would make this somewhat easier
   - could cut LKernels if needed
   - could replace AAALKernel with another special SP thing, parallel
-    to density (logDensityOfCounts)
+    to density (logDensityOfData)
 - Could be implemented by reproducing the trace interface from Lite
   - regen and detach might be sharable, if they can be written in a
     functionality-agnostic style (which might actually be somewhat
@@ -459,8 +459,8 @@ subclasses that need to be derived from:
 - logDensity
 - gradientOfLogDensity
 - logDensityBound
-- logDensityOfCounts
-- madeSpLogDensityOfCountsBound
+- logDensityOfData
+- madeSpLogDensityOfDataBound
 - incorporate
 - unincorporate
 - canEnumerate goes with enumerateValues

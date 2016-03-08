@@ -25,7 +25,7 @@ this writing, this document is far from complete.
 \subsection{Non-conjugate normal with sufficient statistics}
 \texttt{SuffNormalOutputPSP}
 
-\subsubsection{Log density of counts}
+\subsubsection{Log density of data}
 \href{http://www.encyclopediaofmath.org/index.php/Sufficient_statistic}
 {The Encyclopedia of Math}
 says that the likelihood of a vector $\{x_i\}$ of $n$ Gaussian
@@ -42,7 +42,7 @@ we have
    -\frac{n \mu^2}{2 \sigma^2}
    - \frac{1}{2 \sigma^2} \xsumsq + \frac{\mu}{\sigma^2}\xsum. \]
 
-\subsubsection{Gradient of log density of counts}
+\subsubsection{Gradient of log density of data}
 
 Gradient with respect to $\mu$, $\sigma$, attached at \texttt{MakerSuffNormalOutputPSP}.
 
@@ -63,7 +63,7 @@ and
 This cross-checks with
 \href{http://aleph0.clarku.edu/~djoyce/ma218/meeting12.pdf}{this reference} (now broken).
 
-\subsubsection{Upper bound of log density of counts}
+\subsubsection{Upper bound of log density of data}
 
 Setting the above to zero and solving for $\mu$, $\sigma$ gives (for $n > 0$)
 \begin{eqnarray*}
@@ -101,7 +101,7 @@ $(B_1,\dots,B_K)$, and $N_k$ be the cardinality $|B_k|$, $k = 1,\dots,K$
 $\mathbf{P}(B|\alpha,\theta)$ of any partition is a function only of the statistics
 $(N,\{N_k\},K)$.
 
-\subsubsection{Log density of counts}
+\subsubsection{Log density of data}
 
 According to Equation (6) in
 \href{http://arxiv.org/pdf/0909.3642.pdf}{Gndedin, et al}
@@ -152,7 +152,7 @@ The only available reference with which this result cross checks is the
 \href{https://en.wikipedia.org/wiki/Chinese_restaurant_process#Generalization}
 {Wikipedia entry} on the CRP.
 
-\subsubsection{Gradient of log density of counts}
+\subsubsection{Gradient of log density of data}
 
 Gradient with respect to $\theta, \alpha$ attached at \texttt{MakeCRPOutputPSP}.
 

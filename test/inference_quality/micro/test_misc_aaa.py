@@ -31,7 +31,7 @@ def testMakeBetaBernoulli1():
 @statisticalTest
 def checkMakeBetaBernoulli1(maker, hyper):
   if rejectionSampling() and maker == "make_beta_bernoulli" and hyper == "(normal 10.0 1.0)":
-    raise SkipTest("Is the log density of counts bounded for collapsed beta bernoulli?  Issue: https://app.asana.com/0/9277419963067/10623454782852")
+    raise SkipTest("Is the log density of data bounded for collapsed beta bernoulli?  Issue: https://app.asana.com/0/9277419963067/10623454782852")
   if inParallel() and "make_suff_stat_bernoulli" in maker and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and make_suff_stat_bernoulli comes from Lite.")
   ripl = get_ripl()
@@ -58,7 +58,7 @@ def testMakeBetaBernoulli2():
 @statisticalTest
 def checkMakeBetaBernoulli2(maker):
   if rejectionSampling() and maker == "make_beta_bernoulli":
-    raise SkipTest("Is the log density of counts bounded for collapsed beta bernoulli?  Issue: https://app.asana.com/0/9277419963067/10623454782852")
+    raise SkipTest("Is the log density of data bounded for collapsed beta bernoulli?  Issue: https://app.asana.com/0/9277419963067/10623454782852")
   if inParallel() and "make_suff_stat_bernoulli" in maker and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and make_suff_stat_bernoulli comes from Lite.")
   ripl = get_ripl()

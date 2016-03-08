@@ -157,11 +157,11 @@ vector<VentureValuePtr> ForeignLitePSP::enumerateValues(shared_ptr<Args> args) c
   return values;
 }
 
-double ForeignLitePSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
+double ForeignLitePSP::logDensityOfData(shared_ptr<SPAux> spAux) const
 {
   boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(spAux)->aux;
-  boost::python::object foreignLogDensityOfCounts = psp.attr("logDensityOfCounts")(foreignAux);
-  return boost::python::extract<double>(foreignLogDensityOfCounts);
+  boost::python::object foreignLogDensityOfData = psp.attr("logDensityOfData")(foreignAux);
+  return boost::python::extract<double>(foreignLogDensityOfData);
 }
 
 ForeignLiteSPAux* ForeignLiteSPAux::copy_help(ForwardingMap* m) const

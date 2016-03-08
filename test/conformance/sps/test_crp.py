@@ -64,15 +64,15 @@ def checkCRPCounter(n):
   ans = [(n, 0.5), ("other", 0.5)]
   return reportKnownDiscrete(ans, replaceWithDefault(predictions, [n], "other"))
 
-def testLogDensityOfCounts():
-  """Ensures that the logDensityOfCounts of the CRP (represented by the
+def testLogDensityOfData():
+  """Ensures that the logDensityOfData of the CRP (represented by the
   global_log_likelihood) is equal to the sum of the predictive logDensity(table)
   returned by the sequnce of obesrvations.
   """
-  yield checkLogDensityOfCounts, "(make_crp a)"
-  yield checkLogDensityOfCounts, "(make_crp a d)"
+  yield checkLogDensityOfData, "(make_crp a)"
+  yield checkLogDensityOfData, "(make_crp a d)"
 
-def checkLogDensityOfCounts(sampler):
+def checkLogDensityOfData(sampler):
   ripl = get_ripl()
   ripl.assume("a", "(uniform_continuous 0 1)")
   ripl.assume("d", "(uniform_continuous 0 1)")

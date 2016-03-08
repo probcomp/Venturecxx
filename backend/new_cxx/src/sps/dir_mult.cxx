@@ -122,7 +122,7 @@ vector<VentureValuePtr> DirCatOutputPSP::enumerateValues(
   return vs;
 }
 
-double DirCatOutputPSP::logDensityOfCounts(shared_ptr<SPAux> spAux) const
+double DirCatOutputPSP::logDensityOfData(shared_ptr<SPAux> spAux) const
 {
   shared_ptr<DirCatSPAux> aux = dynamic_pointer_cast<DirCatSPAux>(spAux);
   assert(aux);
