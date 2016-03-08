@@ -43,7 +43,7 @@ struct PSP
   virtual bool canEnumerateValues(boost::shared_ptr<Args> args) const { return false; }
   virtual vector<VentureValuePtr> enumerateValues(boost::shared_ptr<Args> args) const { return vector<VentureValuePtr>(); }
 
-  virtual double logDensityOfCounts(boost::shared_ptr<SPAux> spAux) const { assert(false); }
+  virtual double logDensityOfData(boost::shared_ptr<SPAux> spAux) const { assert(false); }
   // TODO variational is punted for now
   // virtual bool hasVariationalLKernel() const { return false; }
   // virtual boost::shared_ptr<LKernel> getVariationalLKernel(ConcreteTrace * trace,Node * node) const;

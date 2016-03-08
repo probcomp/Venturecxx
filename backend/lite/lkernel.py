@@ -154,16 +154,16 @@ class DeterministicMakerAAALKernel(SimulationAAALKernel):
     # during detach/regen. TODO: fix it so that this code is less
     # fragile.
     assert isinstance(newValue,VentureSPRecord)
-    return newValue.sp.outputPSP.logDensityOfCounts(newValue.spAux)
+    return newValue.sp.outputPSP.logDensityOfData(newValue.spAux)
   def gradientOfReverseWeight(self, _trace, value, args):
     """The gradient of the reverse weight, with respect to the vale and the arguments."""
-    return (0, self.makerPSP.gradientOfLogDensityOfCounts(value.spAux, args))
+    return (0, self.makerPSP.gradientOfLogDensityOfData(value.spAux, args))
   def weightBound(self, _trace, _value, args):
     # Going through the maker here because the new value is liable to
     # be None when computing bounds for rejection, but the maker
     # should know enough about its possible values future to answer my
     # question.
-    return self.makerPSP.madeSpLogDensityOfCountsBound(args.madeSPAux())
+    return self.makerPSP.madeSpLogDensityOfDataBound(args.madeSPAux())
 
 class DeterministicLKernel(SimulationLKernel):
   def __init__(self,psp,value):

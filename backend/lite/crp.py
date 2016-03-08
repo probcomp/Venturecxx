@@ -87,7 +87,7 @@ class MakeCRPOutputPSP(DeterministicMakerAAAPSP):
     output = TypedPSP(CRPOutputPSP(alpha, d), SPType([], t.AtomType()))
     return VentureSPRecord(CRPSP(NullRequestPSP(), output))
 
-  def gradientOfLogDensityOfCounts(self, aux, args):
+  def gradientOfLogDensityOfData(self, aux, args):
     # This function is strange because d is an optional parameter.
     # Question 1: Will args always have (alpha, d)?
     # Question 2: If not, do we return either a length one list (if only alpha)
@@ -152,7 +152,7 @@ class CRPOutputPSP(RandomPSP):
       del aux.tableCounts[table]
       aux.freeTables.add(table)
 
-  def logDensityOfCounts(self, aux):
+  def logDensityOfData(self, aux):
     # For derivation see Section Chinese Restaraunt Process in
     # doc/sp-math/sp-math.tex and sources therein, use:
     #   self.alpha = \theta,

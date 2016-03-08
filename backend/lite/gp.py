@@ -46,7 +46,7 @@ def _gp_logDensity(mean, covariance, samples, xs, os):
   mu, sigma = _gp_mvnormal(mean, covariance, samples, xs)
   return mvnormal.logpdf(np.asarray(os).reshape(len(xs),), mu, sigma)
 
-def _gp_logDensityOfCounts(mean, covariance, samples):
+def _gp_logDensityOfData(mean, covariance, samples):
   if len(samples) == 0:
     return 0
   xs = samples.keys()
@@ -93,8 +93,8 @@ class GPOutputPSP(RandomPSP):
     xs = args.operandValues()[0]
     return _gp_logDensity(self.mean, self.covariance, samples, xs, os)
 
-  def logDensityOfCounts(self,aux):
-    return _gp_logDensityOfCounts(self.mean, self.covariance, aux.samples)
+  def logDensityOfData(self,aux):
+    return _gp_logDensityOfData(self.mean, self.covariance, aux.samples)
 
   def incorporate(self,os,args):
     samples = args.spaux().samples

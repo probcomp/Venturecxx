@@ -161,7 +161,7 @@ def propGradientOfSimulate(args_lists, name, sp):
   assert_gradients_close(numerical_gradient, computed_gradient)
 
 @gen_broken_in("puma", "Puma doesn't have gradients")
-def testGradientOfLogDensityOfCountsSmoke():
+def testGradientOfLogDensityOfDataSmoke():
   models = [("(make_crp a)", ["atom<1>", "atom<2>"]),
             ("(make_suff_stat_normal a 1)", [2]),
             ("(make_dir_cat (vector a 1) (list 1 2))", ["1"]),

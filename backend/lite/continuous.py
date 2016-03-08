@@ -799,11 +799,11 @@ class SuffNormalOutputPSP(RandomPSP):
   def logDensity(self, value, _args):
     return scipy.stats.norm.logpdf(value, loc=self.mu, scale=self.sigma)
 
-  def logDensityOfCounts(self, aux):
-    return SuffNormalOutputPSP.logDensityOfCountsNumeric(aux, self.mu, self.sigma)
+  def logDensityOfData(self, aux):
+    return SuffNormalOutputPSP.logDensityOfDataNumeric(aux, self.mu, self.sigma)
 
   @staticmethod
-  def logDensityOfCountsNumeric(aux, mu, sigma):
+  def logDensityOfDataNumeric(aux, mu, sigma):
     # Derived from:
     # http://www.encyclopediaofmath.org/index.php/Sufficient_statistic
     # See doc/sp-math/
@@ -853,7 +853,7 @@ class CNigNormalOutputPSP(RandomPSP):
     return scipy.stats.t.logpdf(value, 2*an, loc=mn,
       scale=math.sqrt(bn/an*(1+Vn)))
 
-  def logDensityOfCounts(self, aux):
+  def logDensityOfData(self, aux):
     # Marginal likelihood of the data (203)
     [ctN, xsum, xsumsq] = aux.cts()
     (mn, Vn, an, bn) = self.updatedParams(aux)
@@ -966,7 +966,7 @@ class MakerSuffNormalOutputPSP(DeterministicMakerAAAPSP):
       'to absorb changes to the weight in O(1) time (without traversing all '\
       'the applications.' % name
 
-  def gradientOfLogDensityOfCounts(self, aux, args):
+  def gradientOfLogDensityOfData(self, aux, args):
     """The derivatives with respect to the args of the log density of the counts
     collected by the made SP."""
     # See the derivation in doc/sp-math/
@@ -977,13 +977,13 @@ class MakerSuffNormalOutputPSP(DeterministicMakerAAAPSP):
     grad_sigma = -ctN / sigma + xsumsq_dev / sigma**3
     return [grad_mu, grad_sigma]
 
-  def madeSpLogDensityOfCountsBound(self, aux):
+  def madeSpLogDensityOfDataBound(self, aux):
     [ctN, xsum, xsumsq] = aux.cts()
     if ctN == 0:
       return 0
     mu_hat = xsum / ctN
     sigma_hat = math.sqrt(xsumsq / ctN - xsum ** 2 / ctN ** 2)
-    return SuffNormalOutputPSP.logDensityOfCountsNumeric(aux, mu_hat, sigma_hat)
+    return SuffNormalOutputPSP.logDensityOfDataNumeric(aux, mu_hat, sigma_hat)
 
 registerBuiltinSP("make_suff_stat_normal", typed_nr(MakerSuffNormalOutputPSP(),
   [t.NumberType(), t.PositiveType()], SPType([], t.NumberType())))

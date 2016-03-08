@@ -150,10 +150,10 @@ Sufficient statistics, exchangeable coupling, collapsing
     absorbs changes to mu without traversing all the applications
     - count, sum, sumsq are certainly enough; perhaps effective mean
       and effective precision are also enough
-  - This looks like a new computational element: logDensityOfCounts,
+  - This looks like a new computational element: logDensityOfData,
     etc.
     - TODO Spell out what the sufficient statistics actually are and
-      how to actually compute the logDensityOfCounts for normal.
+      how to actually compute the logDensityOfData for normal.
   - In Venture, this is (currently) captured with the rather messy
     AAALKernel thing
   - Aside: There's also (make_suff_stat_normal mu sigma) and
@@ -169,7 +169,7 @@ Sufficient statistics, exchangeable coupling, collapsing
     counts and the parameters of the prior as the representation of
     the local posterior on that variable, and perform computational
     operations with respect to it directly
-    - logDensityOfCounts can be reused to absorbing changes to prior
+    - logDensityOfData can be reused to absorbing changes to prior
       parameters (without traversing all the applications)
     - the counts can be used to sample from the predictive
       distribution directly

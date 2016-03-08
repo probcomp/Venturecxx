@@ -281,7 +281,7 @@ class MakerCBetaBernoulliOutputPSP(DeterministicMakerAAAPSP):
       'procedure itself is deterministic, the returned sampler is stochastic.'\
       % name
 
-  def gradientOfLogDensityOfCounts(self, aux, args):
+  def gradientOfLogDensityOfData(self, aux, args):
     (alpha, beta) = args.operandValues()
     [ctY, ctN] = aux.cts()
     trues = ctY + alpha
@@ -324,7 +324,7 @@ class CBetaBernoulliOutputPSP(DiscretePSP):
     else:
       return math.log(1-weight)
 
-  def logDensityOfCounts(self,aux):
+  def logDensityOfData(self,aux):
     [ctY,ctN] = aux.cts()
     trues = ctY + self.alpha
     falses = ctN + self.beta
@@ -411,7 +411,7 @@ class SuffBernoulliOutputPSP(DiscretePSP):
     else:
       return math.log(1-self.weight)
 
-  def logDensityOfCounts(self, aux):
+  def logDensityOfData(self, aux):
     [ctY,ctN] = aux.cts()
     # TODO Do I even want the total for all consistent sequences, or
     # just for one?  The latter is the same, except for the
@@ -440,14 +440,14 @@ class MakerSuffBernoulliOutputPSP(DeterministicMakerAAAPSP):
       'to absorb changes to the weight in O(1) time (without traversing all '\
       ' the applications).' % name
 
-  def gradientOfLogDensityOfCounts(self, aux, args):
+  def gradientOfLogDensityOfData(self, aux, args):
     '''The derivatives with respect to the args of the log density of the counts
     collected by the made SP.'''
     weight = args.operandValues()[0]
     [ctY,ctN] = aux.cts()
     return [float(ctY) / weight - float(ctN) / (1 - weight)]
 
-  def madeSpLogDensityOfCountsBound(self, _aux):
+  def madeSpLogDensityOfDataBound(self, _aux):
     return 0
 
 
@@ -546,7 +546,7 @@ class SuffPoissonOutputPSP(DiscretePSP):
   def logDensity(self, value, _args):
     return scipy.stats.poisson.logpmf(value, mu=self.mu)
 
-  def logDensityOfCounts(self, aux):
+  def logDensityOfData(self, aux):
     # Returns log P(counts|mu) because log P(xs|mu) cannot be computed
     # from the counts alone.  This is ok because the difference does
     # not depend on mu, and the 0 upper bound still applies.
@@ -617,7 +617,7 @@ class CGammaPoissonOutputPSP(DiscretePSP):
     (alpha_n, beta_n) = self.updatedParams(args.spaux())
     return scipy.stats.nbinom.logpmf(value, n=alpha_n, p=(beta_n)/(beta_n+1))
 
-  def logDensityOfCounts(self, aux):
+  def logDensityOfData(self, aux):
     # The marginal loglikelihood of the data p(D) under the prior.
     # http://seor.gmu.edu/~klaskey/SYST664/Bayes_Unit3.pdf#page=42
     # Note that our parameterization is different than the reference, since
@@ -726,14 +726,14 @@ class MakerSuffPoissonOutputPSP(DeterministicMakerAAAPSP):
       'to absorb changes to the weight in O(1) time (without traversing all '\
       'the applications.' % name
 
-  def gradientOfLogDensityOfCounts(self, aux, args):
+  def gradientOfLogDensityOfData(self, aux, args):
     '''The derivatives with respect to the args of the log density of the counts
     collected by the made SP.'''
     mu = args.operandValues()[0]
     [xsum, ctN] = aux.cts()
     return [-ctN + xsum / mu]
 
-  def madeSpLogDensityOfCountsBound(self, _aux):
+  def madeSpLogDensityOfDataBound(self, _aux):
     return 0
 
 registerBuiltinSP("make_suff_stat_poisson",

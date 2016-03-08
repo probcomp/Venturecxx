@@ -91,8 +91,8 @@ class ForeignLitePSP(object):
         args = ForeignArgs(args)
         self.psp.unincorporate(value, args)
 
-    def logDensityOfCounts(self, aux):
-        return self.psp.logDensityOfCounts(aux)
+    def logDensityOfData(self, aux):
+        return self.psp.logDensityOfData(aux)
 
     def isRandom(self):
         return self.psp.isRandom()
