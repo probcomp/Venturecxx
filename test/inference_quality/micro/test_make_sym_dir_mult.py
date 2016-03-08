@@ -135,7 +135,7 @@ def testMakeSymDirCatAppControlsFlip():
       yield checkMakeSymDirCatAppControlsFlip, maker_1, maker_2
 
 @skipWhenRejectionSampling(
-  "Too slow.  Is the log density of counts bound too conservative?")
+  "Too slow.  Is the log density of data bound too conservative?")
 @statisticalTest
 def checkMakeSymDirCatAppControlsFlip(maker_1, maker_2):
   """Two AAA SPs with same parameters, where their applications control
@@ -160,7 +160,7 @@ def testMakeDirCat1():
 @statisticalTest
 def checkMakeDirCat1(maker):
   if rejectionSampling() and maker == "make_dir_cat":
-    raise SkipTest("Is the log density of counts bounded for "
+    raise SkipTest("Is the log density of data bounded for "
                    "collapsed beta bernoulli?  Issue: "
                    "https://app.asana.com/0/9277419963067/10623454782852")
   ripl = get_ripl()
