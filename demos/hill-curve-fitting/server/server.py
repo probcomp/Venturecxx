@@ -127,7 +127,9 @@ class Sampler(threading.Thread):
             max_ = self.ripl.sample('dmax')
             slope = self.ripl.sample('slope')
             noise = self.ripl.sample('noise')
-            outliers = filter(lambda point: self.ripl.sample('(is_outlier ' + str(point[0]) + ')'), self.ripl.point_labels.keys())
+            def is_outlier(point):
+                return self.ripl.sample('(is_outlier ' + str(point[0]) + ')')
+            outliers = filter(is_outlier, self.ripl.point_labels.keys())
             # Without this, the server cannot receive messages, and
             # instead spends all its time in this loop. Probably
             # evidence that something is wrong here...
@@ -193,10 +195,12 @@ def sample():
     max_ = ripl.sample('dmax')
     slope = ripl.sample('slope')
     noise = ripl.sample('noise')
-    outliers = filter(lambda point: ripl.sample('(is_outlier ' + str(point[0]) + ')'),
-                      ripl.point_labels.keys())
+    def is_outlier(point):
+        return ripl.sample('(is_outlier ' + str(point[0]) + ')')
+    outliers = filter(is_outlier, ripl.point_labels.keys())
     if status['running']:
-        params = '(' + ' '.join(map(lambda exp: str(exp['value']), status['expression'])) + ')'
+        params = '(' + ' '.join([str(exp['value'])
+                                 for exp in status['expression']]) + ')'
         ripl.start_continuous_inference(params)
     emit('sample', {'ic50': ic50, 'min': min_, 'max': max_, 'slope': slope,
                     'noise': noise, 'outliers': outliers})
