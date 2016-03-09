@@ -50,8 +50,6 @@ def initialize():
     ripl.observe('gminy', '0', 'observe_gminy')
     ripl.observe('gmaxy', '1', 'observe_gmaxy')
 
-    ripl.assume('abs', '(lambda (x) (if (gt x 0) x (- 0 x)))')
-
     # Estimate the prior for the parameters
     ripl.assume('log_ic50',
                 '(normal (/ (+ gmaxx gminx) 2) (/ (- gmaxx gminx) 4))')
@@ -59,8 +57,8 @@ def initialize():
     ripl.assume('mid', '(normal (/ (+ gmaxy gminy) 2) (/ (- gmaxy gminy) 4))')
     ripl.assume('diff',
                 '(abs (normal (/ (- gmaxy gminy) 4) (/ (- gmaxy gminy) 8)))')
-    ripl.assume('max', '(+ mid diff)')
-    ripl.assume('min', '(- mid diff)')
+    ripl.assume('dmax', '(+ mid diff)')
+    ripl.assume('dmin', '(- mid diff)')
     ripl.assume('slope', '(normal 0 2)')
     ripl.assume('noise', '(normal 0 (/ (- gmaxy gminy) 16))')
 
@@ -74,7 +72,7 @@ def initialize():
     # y is the noisy function, which also accounts for outliers
     ripl.assume('u', '(lambda (x) (pow (/ x ic50) slope))')
     ripl.assume('f',
-                '(lambda (x) (+ (/ (* (- max min) (u x)) (+ (u x) 1)) min))')
+                '(lambda (x) (+ (/ (* (- dmax dmin) (u x)) (+ (u x) 1)) dmin))')
     ripl.assume('y', '''(lambda (x)
  (if (is_outlier x) (normal mid (/ diff 2)) (normal (f x) noise)))''')
 
@@ -125,8 +123,8 @@ class Sampler(threading.Thread):
             # works for now
             self.ripl.infer(self.params)
             ic50 = self.ripl.sample('ic50')
-            min_ = self.ripl.sample('min')
-            max_ = self.ripl.sample('max')
+            min_ = self.ripl.sample('dmin')
+            max_ = self.ripl.sample('dmax')
             slope = self.ripl.sample('slope')
             noise = self.ripl.sample('noise')
             outliers = filter(lambda point: self.ripl.sample('(is_outlier ' + str(point[0]) + ')'), self.ripl.point_labels.keys())
@@ -191,8 +189,8 @@ def sample():
     # This is very pronounced when we have lots of points to sample
     # for outliers.
     ic50 = ripl.sample('ic50')
-    min_ = ripl.sample('min')
-    max_ = ripl.sample('max')
+    min_ = ripl.sample('dmin')
+    max_ = ripl.sample('dmax')
     slope = ripl.sample('slope')
     noise = ripl.sample('noise')
     outliers = filter(lambda point: ripl.sample('(is_outlier ' + str(point[0]) + ')'),
