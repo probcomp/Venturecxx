@@ -34,12 +34,6 @@ root=`cd -- "$(dirname -- "$0")" && pwd`
     cd -- "${root}"
     "$PYTHON" setup.py build
 
-    # Running setup.py test -n will fail fast if install_requires or
-    # test_requires something not available. Instead of running any
-    # tests, it tells the user to run check.sh and exits.  Run it for
-    # its setup functionality, silence that warning, keep stderr:
-    "$PYTHON" setup.py test -n >/dev/null
-
     if [ $# -eq 0 ]; then
         # By default, when running all tests, skip tests that have
         # been marked for continuous integration by using __ci_ in
