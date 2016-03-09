@@ -21,7 +21,7 @@ import threading
 
 from flask import Flask, session
 from flask.ext.socketio import SocketIO, emit, join_room, close_room
-from venture.shortcuts import *
+import venture.shortcuts as ven
 
 app = Flask(__name__)
 # A secret key is required for sessions to work
@@ -206,7 +206,7 @@ def sample():
 @socketio.on('connect', namespace='/venture')
 def connect():
     """Perform initialization when a client connects"""
-    ripl = make_church_prime_ripl()
+    ripl = ven.make_church_prime_ripl()
     ripl.label = 0
     ripl.point_labels = {}
     session['ripl'] = ripl
