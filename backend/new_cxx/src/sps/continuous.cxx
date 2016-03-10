@@ -188,8 +188,6 @@ VentureValuePtr BetaPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
   double b = args->operandValues[1]->getDouble();
 
   double x = gsl_ran_beta(rng,a,b);
-  if (x > .99) { x = 0.99; }
-  if (x < 0.01) { x = 0.01; }
 
   return VentureValuePtr(new VentureProbability(x));
 }
@@ -200,9 +198,6 @@ double BetaPSP::simulateNumeric(const vector<double> & args, gsl_rng * rng) cons
   assert(args[1] > 0);
   double x = gsl_ran_beta(rng,args[0],args[1]);
   assert(isfinite(x));
-  // TODO FIXME GSL NUMERIC
-  if (x > .99) { x = 0.99; }
-  if (x < 0.01) { x = 0.01; }
   return x;
 }
 
