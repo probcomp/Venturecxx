@@ -28,7 +28,7 @@ def test_beta_tail():
     # the middle.
     a = .1
     b = .1
-    nsamples = default_num_samples(4)
+    nsamples = default_num_samples()
     expression = '(beta %r %r)' % (a, b)
     ripl = get_ripl()
     ripl.assume('p', expression, label='p')
