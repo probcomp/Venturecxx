@@ -36,7 +36,8 @@ def checkEnumerativeGibbsBasic1(in_parallel):
   """Basic sanity test"""
   ripl = get_ripl()
   ripl.predict("(bernoulli)", label="pid")
-  infer = "(gibbs default one %s %s)" % (default_num_transitions_per_sample(), in_parallel)
+  infer = "(gibbs default one %s %s)" % \
+      (default_num_transitions_per_sample(), in_parallel)
 
   predictions = collectSamples(ripl, "pid", infer=infer)
   ans = [(True, .5), (False, .5)]
@@ -52,7 +53,8 @@ def checkEnumerativeGibbsBasic2(in_parallel):
   """Basic sanity test"""
   ripl = get_ripl()
   ripl.assume("x", "(flip 0.1)", label="pid")
-  infer = "(gibbs default one %s %s)" % (default_num_transitions_per_sample(), in_parallel)
+  infer = "(gibbs default one %s %s)" % \
+      (default_num_transitions_per_sample(), in_parallel)
   predictions = collectSamples(ripl, "pid", infer=infer)
   ans = [(False, .9), (True, .1)]
   return reportKnownDiscrete(ans, predictions)
@@ -63,7 +65,8 @@ def testEnumerativeGibbsGotcha():
   yield checkEnumerativeGibbsGotcha, "true"
 
 def checkEnumerativeGibbsGotcha(in_parallel):
-  """Enumeration should not break on things that look like they're in the support but aren't"""
+  """Enumeration should not break on things that look like they're in
+the support but aren't."""
   ripl = get_ripl()
   ripl.predict("(bernoulli 1)")
   ripl.predict("(bernoulli 0)")
@@ -73,7 +76,8 @@ def checkEnumerativeGibbsGotcha(in_parallel):
 @statisticalTest
 @on_inf_prim("gibbs")
 def testEnumerativeGibbsBoostThrashExact():
-  """Enumerating two choices with the same posterior probability should not thrash"""
+  """Enumerating two choices with the same posterior probability should
+not thrash."""
   ripl = get_ripl()
   ripl.assume("x", "(flip 0.1)", label="pid")
   ripl.observe("(flip (if x .9 .1))", "true")
@@ -88,11 +92,13 @@ def testEnumerativeGibbsBoostThrashClose():
 
 @statisticalTest
 def checkEnumerativeGibbsBoostThrashClose(in_parallel):
-  """Enumerating two choices with almost the same posterior probability should mix well"""
+  """Enumerating two choices with almost the same posterior probability
+should mix well."""
   ripl = get_ripl()
   ripl.assume("x", "(flip 0.1)", label="pid")
   ripl.observe("(flip (if x .91 .09))", "true")
-  infer = "(gibbs default one %s %s)" % (default_num_transitions_per_sample(), in_parallel)
+  infer = "(gibbs default one %s %s)" % \
+      (default_num_transitions_per_sample(), in_parallel)
   predictions = collectSamples(ripl, "pid", infer=infer)
   ans = [(False, .471), (True, .529)]
   return reportKnownDiscrete(ans, predictions)
@@ -125,7 +131,8 @@ def checkEnumerativeGibbsXOR1(in_parallel):
   ripl.assume("y", "(tag 0 0 (bernoulli 0.001))")
   ripl.assume("noisy_true", "(lambda (pred noise) (flip (if pred 1.0 noise)))")
   ripl.observe("(noisy_true (= (+ x y) 1) .000001)", "true")
-  infer = "(gibbs 0 0 %s %s)" % (default_num_transitions_per_sample(), in_parallel)
+  infer = "(gibbs 0 0 %s %s)" % \
+      (default_num_transitions_per_sample(), in_parallel)
   predictions = collectSamples(ripl, "pid", infer=infer)
   ans = [(True, .5), (False, .5)]
   return reportKnownDiscrete(ans, predictions)
@@ -144,7 +151,8 @@ def checkEnumerativeGibbsXOR2(in_parallel):
   ripl.assume("y", "(tag 0 0 (bernoulli 0.0005))")
   ripl.assume("noisy_true", "(lambda (pred noise) (flip (if pred 1.0 noise)))")
   ripl.observe("(noisy_true (= (+ x y) 1) .000001)", "true")
-  infer = "(gibbs 0 0 %s %s)" % (default_num_transitions_per_sample(), in_parallel)
+  infer = "(gibbs 0 0 %s %s)" % \
+      (default_num_transitions_per_sample(), in_parallel)
   predictions = collectSamples(ripl, "pid", infer=infer)
   ans = [(True, .75), (False, .25)]
   return reportKnownDiscrete(ans, predictions)
@@ -161,14 +169,16 @@ def checkEnumerativeGibbsXOR3(in_parallel):
 
   ripl.assume("x", "(tag 0 0 (bernoulli 0.0015))", label="pid")
   ripl.assume("y", "(tag 0 0 (bernoulli 0.0005))")
-  ripl.assume("noisy_true", "(lambda (pred noise) (tag 0 0 (flip (if pred 1.0 noise))))")
+  ripl.assume("noisy_true",
+              "(lambda (pred noise) (tag 0 0 (flip (if pred 1.0 noise))))")
   # This predict is the different between this test and
   # testEnumerativeGibbsXOR2, and currently causes a mystery math
   # domain error.
 
   ripl.predict("(noisy_true (= (+ x y) 1) .000001)")
   ripl.observe("(noisy_true (= (+ x y) 1) .000001)", "true")
-  infer = "(gibbs 0 0 %s %s)" % (default_num_transitions_per_sample(), in_parallel)
+  infer = "(gibbs 0 0 %s %s)" % \
+      (default_num_transitions_per_sample(), in_parallel)
   predictions = collectSamples(ripl, "pid", infer=infer)
   ans = [(True, .75), (False, .25)]
   return reportKnownDiscrete(ans, predictions)
@@ -186,7 +196,8 @@ def testEnumerativeGibbsBrushRandomness():
     ripl.observe("(normal x 1)", "4")
     ripl.predict("z", label="pid")
     def posterior_inference_action():
-      "Work around the fact that Puma doesn't have rejection sampling by asking for a bunch of MH"
+      # Work around the fact that Puma doesn't have rejection sampling
+      # by asking for a bunch of MH.
       if config['get_ripl'] == 'lite':
         return "(rejection default all 1)"
       else:
