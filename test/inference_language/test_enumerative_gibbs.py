@@ -15,9 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from nose import SkipTest
 from testconfig import config
 
 from venture.test.config import collectSamples
+from venture.test.config import default_num_samples
 from venture.test.config import default_num_transitions_per_sample
 from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
@@ -208,3 +210,82 @@ def testEnumerativeGibbsBrushRandomness():
     predictions = collectSamples(
       ripl, "pid", infer=gibbs_inference_action)
     return reportSameDiscrete(ans, predictions)
+
+@statisticalTest
+@on_inf_prim("gibbs")
+def testEnumerateCoupledChoices1():
+  # A test case for the first problem identified in Issue #462.
+  #
+  # If enumaration collects the candidate value sets all at once at
+  # the beginning of the enumeration run, and if the set of options
+  # for a later choice depends on the choice taken at an earlier one
+  # (e.g., for the made SP of make_crp), trouble will ensue because we
+  # need to compute a dependent rather than independent product.
+  #
+  # This example suffices to bring the problem into relief.  If a CRP
+  # has only one extant table at the time enumeration is invoked,
+  # (arranged by the force calls), each node will consider that table
+  # and one new table as the only options.  Enumeration will therefore
+  # consider 8 options, in none of which will all three nodes be
+  # assigned to distinct tables.
+  raise SkipTest("Fails due to https://github.com/probcomp/Venturecxx/issues/462")
+  r = get_ripl()
+  r.assume("crp", "(make_crp 1)")
+  r.assume("result1", "(crp)")
+  r.assume("result2", "(crp)")
+  r.assume("result3", "(crp)")
+  r.predict("(and (not (eq result1 result2))"
+                 "(and (not (eq result2 result3))"
+                      "(not (eq result1 result3))))", label="pid")
+  ans = collectSamples(r, "pid", infer="reset_to_prior",
+                       num_samples=default_num_samples(4))
+  gibbs_from_same = """(do
+    (force result1 atom<1>)
+    (force result2 atom<1>)
+    (force result3 atom<1>)
+    (gibbs default all 1))"""
+  # One step of Gibbs from any initial condition should move to the
+  # posterior (which in this case equals the prior).
+  predicts = collectSamples(r, "pid", infer=gibbs_from_same,
+                            num_samples=default_num_samples(4))
+  return reportSameDiscrete(ans, predicts)
+
+@statisticalTest
+@on_inf_prim("gibbs")
+def testEnumerateCoupledChoices2():
+  # A second illustration of Issue #462 (second manifestation).
+  #
+  # If enumeration computes the set of candidate values before
+  # detaching, as an independent product, it will invent combinations
+  # that are actually distinct representations of semantically the
+  # same option.  Thus, even though all possibilities will (as in this
+  # variant) be considered, some will be overweighted.
+  #
+  # Specifically, if the initial state is three calls to the same CRP
+  # with distinct values (arranged by the force statements),
+  # enumeration will invent 4^3 different combinations of tables to
+  # try; whereas there are only 5 that differ up to renumbering of the
+  # tables: (1, 1, 1), (1, 1, 2), (1, 2, 1), (1, 2, 2), and (1, 2, 3).
+  # They cannot, therefore, be overrepresented evenly, and this leads
+  # to the wrong posterior.
+  raise SkipTest("Fails due to https://github.com/probcomp/Venturecxx/issues/462")
+  r = get_ripl()
+  r.assume("crp", "(make_crp 1)")
+  r.assume("result1", "(crp)")
+  r.assume("result2", "(crp)")
+  r.assume("result3", "(crp)")
+  r.predict("(and (not (eq result1 result2))"
+                 "(and (not (eq result2 result3))"
+                      "(not (eq result1 result3))))", label="pid")
+  ans = collectSamples(r, "pid", infer="reset_to_prior",
+                       num_samples=default_num_samples(4))
+  gibbs_from_same = """(do
+    (force result1 atom<1>)
+    (force result2 atom<2>)
+    (force result3 atom<3>)
+    (gibbs default all 1))"""
+  # One step of Gibbs from any initial condition should move to the
+  # posterior (which in this case equals the prior).
+  predicts = collectSamples(r, "pid", infer=gibbs_from_same,
+                            num_samples=default_num_samples(4))
+  return reportSameDiscrete(ans, predicts)
