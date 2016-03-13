@@ -17,8 +17,14 @@
 
 from testconfig import config
 
-from venture.test.stats import statisticalTest, reportKnownDiscrete, reportSameDiscrete
-from venture.test.config import get_ripl, collectSamples, default_num_transitions_per_sample, gen_on_inf_prim, on_inf_prim
+from venture.test.config import collectSamples
+from venture.test.config import default_num_transitions_per_sample
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import reportSameDiscrete
+from venture.test.stats import statisticalTest
 
 @gen_on_inf_prim("gibbs")
 def testEnumerativeGibbsBasic1():
