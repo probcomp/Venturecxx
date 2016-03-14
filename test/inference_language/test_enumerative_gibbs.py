@@ -289,3 +289,39 @@ def testEnumerateCoupledChoices2():
   predicts = collectSamples(r, "pid", infer=gibbs_from_different,
                             num_samples=default_num_samples(4))
   return reportSameDiscrete(ans, predicts)
+
+@statisticalTest
+@on_inf_prim("gibbs")
+def testEnumerateCoupledChoices3():
+  # A third illustration of Issue #462 (second manifestation).
+  #
+  # Enumerating a single choice should not depend on the initial value
+  # of that choice, but due to #462 it does.  The setup here is
+  # enumerating one of two choices from a CRP.  If they are initially
+  # distinct, enumeration will consider three options, the latter two
+  # of which will be equivalent: "become the same as the other point",
+  # "remain the same as I was", and "become a unique snowflake".  This
+  # will cause it to overweight the state where the choices are
+  # distinct by 2:1.
+  raise SkipTest("Fails due to https://github.com/probcomp/Venturecxx/issues/462")
+  r = get_ripl()
+  r.assume("crp", "(make_crp 1)")
+  r.assume("result1", "(crp)")
+  r.assume("result2", "(crp)")
+  r.predict("(eq result1 result2)", label="pid")
+  gibbs_from_same = """(do
+    (force result1 atom<1>)
+    (force result2 atom<1>)
+    (gibbs default one 1))"""
+  ans = collectSamples(r, "pid", infer=gibbs_from_same,
+                       num_samples=default_num_samples(6))
+  gibbs_from_different = """(do
+    (force result1 atom<1>)
+    (force result2 atom<2>)
+    (gibbs default one 1))"""
+  # In this case, gibbs_from_same happens to compute the exact
+  # posterior, which equals the prior, and is 50-50 on whether the
+  # atoms are the same.
+  predicts = collectSamples(r, "pid", infer=gibbs_from_different,
+                            num_samples=default_num_samples(6))
+  return reportSameDiscrete(ans, predicts)
