@@ -279,13 +279,13 @@ def testEnumerateCoupledChoices2():
                       "(not (eq result1 result3))))", label="pid")
   ans = collectSamples(r, "pid", infer="reset_to_prior",
                        num_samples=default_num_samples(4))
-  gibbs_from_same = """(do
+  gibbs_from_different = """(do
     (force result1 atom<1>)
     (force result2 atom<2>)
     (force result3 atom<3>)
     (gibbs default all 1))"""
   # One step of Gibbs from any initial condition should move to the
   # posterior (which in this case equals the prior).
-  predicts = collectSamples(r, "pid", infer=gibbs_from_same,
+  predicts = collectSamples(r, "pid", infer=gibbs_from_different,
                             num_samples=default_num_samples(4))
   return reportSameDiscrete(ans, predicts)
