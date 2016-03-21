@@ -325,3 +325,17 @@ def testEnumerateCoupledChoices3():
   predicts = collectSamples(r, "pid", infer=gibbs_from_different,
                             num_samples=default_num_samples(6))
   return reportSameDiscrete(ans, predicts)
+
+@on_inf_prim("gibbs")
+def testOccasionalRejection():
+  if config["get_ripl"] == "puma":
+    raise SkipTest("Puma's MHOperator rejects Puma's Gibbs transitions sometimes, triggering assert False.  See https://github.com/probcomp/Venturecxx/issues/415")
+  # The mem is relevant: without it, the program runs to completion
+  # even in Puma.
+  get_ripl().execute_program("""
+(assume cluster_id (if (flip) 1 2))
+(assume cluster (mem (lambda (id) (normal 0 1))))
+(observe (cluster cluster_id) 1)
+;; Seems to crash with probability about 50% per transition in Puma
+(gibbs default one 10 false)
+""")
