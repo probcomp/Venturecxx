@@ -587,6 +587,20 @@ predictMacro = quasiquotation_macro("predict",
   this directive.
 """)
 
+predictAllMacro = quasiquotation_macro("predict_all",
+    min_size = 2, max_size = 3, desc="""\
+.. function:: predict_all(<model-expression>, [<label>])
+
+  Programmatically add a prediction and return results from all particles.
+
+  Extend the underlying model by adding a new generative random
+  variable, `predict`.  Unlike `predict`, return the values of the
+  expression from all the particles, as a list.
+
+  The ``<label>``, if supplied, may be used to `freeze` or `forget`
+  this directive.
+""")
+
 sampleMacro = quasiquotation_macro("sample",
     min_size = 2, max_size = 2, desc="""\
 .. function:: sample(<model-expression>)
@@ -689,7 +703,8 @@ For example::
 for m in [identityMacro, lambdaMacro, ifMacro, condMacro, andMacro, orMacro,
           letMacro, letrecMacro, doMacro, beginMacro, qqMacro,
           callBackMacro, collectMacro,
-          assumeMacro, assume_valuesMacro, observeMacro, predictMacro, forceMacro,
+          assumeMacro, assume_valuesMacro, observeMacro,
+          predictMacro, predictAllMacro, forceMacro,
           sampleMacro, sampleAllMacro,
           extractStatsMacro,
           refMacro, derefMacro,

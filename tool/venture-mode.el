@@ -113,6 +113,7 @@ See `run-hooks'."
                                        '(;; Inference special forms that introduce model context
                                          ;; Also infer, even though its body is in the inference language
                                          "assume" "observe" "predict" "infer"
+                                         "predict_all"
                                          "sample" "sample_all" "collect" "force"
                                          ) t) "\\>")
                        '(1 font-lock-language-shift-face))
