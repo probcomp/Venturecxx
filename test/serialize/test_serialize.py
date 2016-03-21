@@ -162,7 +162,7 @@ def test_serialize_aaa():
         v.assume('f','({0} m0 k0 v0 S0)'.format(maker))
         v.predict('(f)', label='pid')
         _test_serialize_program(v, 'pid', action)
-    for maker in ["make_cmvn"]:
+    for maker in ["make_niw_normal"]:
         for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
             yield check_cmvn, maker, action
 

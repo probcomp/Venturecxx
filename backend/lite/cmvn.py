@@ -167,7 +167,7 @@ class CMVNOutputPSP(RandomPSP):
     return term1 + term2 + term3 + term4 + term5 + term6
 
 
-registerBuiltinSP("make_cmvn",
+registerBuiltinSP("make_niw_normal",
                   typed_nr(MakeCMVNOutputPSP(),
                            [t.HomogeneousArrayType(t.NumberType()),t.NumberType(),t.NumberType(),t.MatrixType()],
                            SPType([], t.HomogeneousArrayType(t.NumberType()))))

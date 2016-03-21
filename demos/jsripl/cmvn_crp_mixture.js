@@ -148,7 +148,7 @@ function InitializeDemo() {
         ripl.assume('v', 4);
         ripl.assume('S', '(matrix (array (array 1 0) (array 0 1)))');
         
-        ripl.assume('get_cluster_sampler', "(mem (lambda (cluster) (make_cmvn mu k v S)))");
+        ripl.assume('get_cluster_sampler', "(mem (lambda (cluster) (make_niw_normal mu k v S)))");
         
         ripl.assume('get_cluster', "(mem (lambda (point) (cluster_crp)))");
         ripl.assume('sample_cluster', "(lambda (cluster) ((get_cluster_sampler cluster)))");

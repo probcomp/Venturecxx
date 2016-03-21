@@ -28,7 +28,7 @@ from venture.test.stats import statisticalTest
 @on_inf_prim("none")
 def testCMVNSmoke():
   if config["get_ripl"] != "lite": raise SkipTest("CMVN in lite only")
-  get_ripl().predict("((make_cmvn (array 1.0 1.0) 2 2 (matrix (array (array 1.0 0.0) (array 0.0 1.0)))))")
+  get_ripl().predict("((make_niw_normal (array 1.0 1.0) 2 2 (matrix (array (array 1.0 0.0) (array 0.0 1.0)))))")
 
 @statisticalTest
 def testCMVN2D_mu1():
@@ -38,7 +38,7 @@ def testCMVN2D_mu1():
   ripl.assume("k0","7.0")
   ripl.assume("v0","11.0")
   ripl.assume("S0","(matrix (array (array 13.0 0.0) (array 0.0 13.0)))")
-  ripl.assume("f","(make_cmvn m0 k0 v0 S0)")
+  ripl.assume("f","(make_niw_normal m0 k0 v0 S0)")
 
   ripl.predict("(f)",label="pid")
 
@@ -56,7 +56,7 @@ def testCMVN2D_mu2():
   ripl.assume("k0","7.0")
   ripl.assume("v0","11.0")
   ripl.assume("S0","(matrix (array (array 13.0 0.0) (array 0.0 13.0)))")
-  ripl.assume("f","(make_cmvn m0 k0 v0 S0)")
+  ripl.assume("f","(make_niw_normal m0 k0 v0 S0)")
 
   ripl.predict("(f)",label="pid")
 
@@ -76,7 +76,7 @@ def testCMVN2D_AAA():
   ripl.assume("k0","7.0")
   ripl.assume("v0","11.0")
   ripl.assume("S0","(matrix (array (array 13.0 0.0) (array 0.0 13.0)))")
-  ripl.assume("f","(make_cmvn m0 k0 v0 S0)")
+  ripl.assume("f","(make_niw_normal m0 k0 v0 S0)")
 
   ripl.predict("(f)",label="pid")
 
