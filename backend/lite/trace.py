@@ -103,17 +103,17 @@ class Trace(object):
   def unregisterAEKernel(self,node): self.aes.remove(node)
 
   def registerRandomChoice(self,node):
-    assert not node in self.rcs
+    assert node not in self.rcs
     self.rcs.add(node)
     self.registerRandomChoiceInScope("default",node,node)
 
   def registerRandomChoiceInScope(self,scope,block,node,unboxed=False):
     if not unboxed: (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
-    if not scope in self.scopes: self.scopes[scope] = SamplableMap()
-    if not block in self.scopes[scope]: self.scopes[scope][block] = set()
-    assert not node in self.scopes[scope][block]
+    if scope not in self.scopes: self.scopes[scope] = SamplableMap()
+    if block not in self.scopes[scope]: self.scopes[scope][block] = set()
+    assert node not in self.scopes[scope][block]
     self.scopes[scope][block].add(node)
-    assert not scope == "default" or len(self.scopes[scope][block]) == 1
+    assert scope != "default" or len(self.scopes[scope][block]) == 1
 
   def unregisterRandomChoice(self,node):
     assert node in self.rcs
@@ -126,7 +126,7 @@ class Trace(object):
     if scope == "default":
       assert len(self.scopes[scope][block]) == 0
     if len(self.scopes[scope][block]) == 0: del self.scopes[scope][block]
-    if len(self.scopes[scope]) == 0 and (not scope == "default"): del self.scopes[scope]
+    if len(self.scopes[scope]) == 0 and (scope != "default"): del self.scopes[scope]
 
   def _normalizeEvaluatedScopeOrBlock(self, val):
     if isinstance(val, VentureNumber):
@@ -334,10 +334,10 @@ class Trace(object):
   def addRandomChoicesInBlock(self,scope,block,pnodes,node):
     if not isOutputNode(node): return
 
-    if self.pspAt(node).isRandom() and not node in self.ccs: pnodes.add(node)
+    if self.pspAt(node).isRandom() and node not in self.ccs: pnodes.add(node)
 
     requestNode = node.requestNode
-    if self.pspAt(requestNode).isRandom() and not requestNode in self.ccs: pnodes.add(requestNode)
+    if self.pspAt(requestNode).isRandom() and requestNode not in self.ccs: pnodes.add(requestNode)
 
     for esr in self.valueAt(node.requestNode).esrs:
       self.addRandomChoicesInBlock(scope,block,pnodes,self.spFamilyAt(requestNode,esr.id))
@@ -367,7 +367,7 @@ class Trace(object):
 
   #### External interface to engine.py
   def eval(self,id,exp):
-    assert not id in self.families
+    assert id not in self.families
     (_,self.families[id]) = evalFamily(
       self, Address(List(id)), self.unboxExpression(exp), self.globalEnv,
       Scaffold(), False, OmegaDB(), {})
@@ -691,7 +691,7 @@ function.
 
   def select(self, scope, block):
     scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
-    assert not block == "one", "Accounting for stochastic subproblem selection not supported"
+    assert block != "one", "Accounting for stochastic subproblem selection not supported"
     scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
     return scaffold
 
@@ -751,7 +751,7 @@ the scaffold determined by the given expression."""
   def getGlobalLogScore(self):
     # TODO This algorithm is totally wrong: https://app.asana.com/0/16653194948424/20100308871203
     all_scores = [self._getOneLogScore(node) for node in self.rcs.union(self.ccs)]
-    scores, isLikelihoodFree = zip(*all_scores) if all_scores else [(), ()]
+    scores, _isLikelihoodFree = zip(*all_scores) if all_scores else [(), ()]
     return sum(scores)
 
   def _getOneLogScore(self, node):
