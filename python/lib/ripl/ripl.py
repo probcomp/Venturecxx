@@ -484,7 +484,7 @@ class Ripl():
         print color_app('pink')(' absorbing at applications')
         print color_app('green')(' brush')
 
-        print "The nodes"
+        print "\n*** Self subproblem nodes ***\n"
         pnodes = scaffold.getPrincipalNodes()
         mark(pnodes, 'red', only_bottom=True)
         mark(scaffold.drg.difference(pnodes), 'yellow', only_bottom=True)
@@ -496,7 +496,7 @@ class Ripl():
             instr = self._ensure_parsed(instr)
             print self._cur_parser().unparse_instruction(instr, by_did[did])
 
-        print "The stacks"
+        print "\n*** Cumulative subproblem nodes ***\n"
         by_did = {}
         mark(pnodes, 'red', only_bottom=False)
         mark(scaffold.drg.difference(pnodes), 'yellow', only_bottom=False)
