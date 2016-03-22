@@ -457,6 +457,10 @@ class Ripl():
                     return do_color("1@") + string
             return doit
         scaffold = scaffold_dict['value']
+        print ""
+        scaffold.show()
+        print ""
+
         by_did = {}
         def mark(nodes, base_color, only_bottom=False):
             for node in nodes:
