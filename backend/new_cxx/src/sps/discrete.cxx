@@ -186,7 +186,7 @@ VentureValuePtr CategoricalOutputPSP::simulate(shared_ptr<Args> args,
   {
     for (size_t i = 0; i < ps.size(); ++i)
     {
-      os.push_back(VentureValuePtr(new VentureAtom(i)));
+      os.push_back(VentureValuePtr(new VentureInteger(i)));
     }
   }
   else { os = args->operandValues[1]->getArray(); }
@@ -221,7 +221,7 @@ vector<VentureValuePtr> CategoricalOutputPSP::enumerateValues(
     {
       if (s[i] > 0)
       {
-        vs.push_back(VentureValuePtr(new VentureAtom(i)));
+        vs.push_back(VentureValuePtr(new VentureInteger(i)));
       }
     }
   }
@@ -251,7 +251,7 @@ VentureValuePtr LogCategoricalOutputPSP::simulate(shared_ptr<Args> args,
 
   if (args->operandValues.size() == 1)
   {
-    return VentureValuePtr(new VentureNumber(sample));
+    return VentureValuePtr(new VentureInteger(sample));
   }
   else { return args->operandValues[1]->getArray()[sample]; }
 }
@@ -280,7 +280,7 @@ vector<VentureValuePtr> LogCategoricalOutputPSP::enumerateValues(
 
     vector<VentureValuePtr> vs;
     for (size_t i = 0; i < s.size(); ++i)
-      { vs.push_back(VentureValuePtr(new VentureAtom(i))); }
+      { vs.push_back(VentureValuePtr(new VentureInteger(i))); }
     return vs;
   }
   else
