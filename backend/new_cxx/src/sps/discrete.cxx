@@ -25,29 +25,41 @@
 #include "numerical_helpers.h"
 
 
-VentureValuePtr FlipOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
+VentureValuePtr FlipOutputPSP::simulate(shared_ptr<Args> args,
+                                        gsl_rng * rng) const
 {
   checkArgsLength("flip", args, 0, 1);
   double p = 0.5;
-  if (!args->operandValues.empty()) { p = args->operandValues[0]->getProbability(); }
+  if (!args->operandValues.empty())
+  {
+    p = args->operandValues[0]->getProbability();
+  }
   int n = gsl_ran_bernoulli(rng,p);
   assert(n == 0 || n == 1);
   return VentureValuePtr(new VentureBool(n));
 }
 
-double FlipOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double FlipOutputPSP::logDensity(VentureValuePtr value,
+                                 shared_ptr<Args> args) const
 {
   double p = 0.5;
-  if (!args->operandValues.empty()) { p = args->operandValues[0]->getProbability(); }
+  if (!args->operandValues.empty())
+  {
+    p = args->operandValues[0]->getProbability();
+  }
 
   if (value->getBool()) { return log(p); }
   else { return log(1 - p); }
 }
 
-vector<VentureValuePtr> FlipOutputPSP::enumerateValues(shared_ptr<Args> args) const
+vector<VentureValuePtr> FlipOutputPSP::enumerateValues(
+    shared_ptr<Args> args) const
 {
   double p = 0.5;
-  if (!args->operandValues.empty()) { p = args->operandValues[0]->getProbability(); }
+  if (!args->operandValues.empty())
+  {
+    p = args->operandValues[0]->getProbability();
+  }
 
   vector<VentureValuePtr> vs;
 
@@ -56,29 +68,41 @@ vector<VentureValuePtr> FlipOutputPSP::enumerateValues(shared_ptr<Args> args) co
   return vs;
 }
 
-VentureValuePtr BernoulliOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
+VentureValuePtr BernoulliOutputPSP::simulate(shared_ptr<Args> args,
+                                             gsl_rng * rng) const
 {
   checkArgsLength("bernoulli", args, 0, 1);
   double p = 0.5;
-  if (!args->operandValues.empty()) { p = args->operandValues[0]->getProbability(); }
+  if (!args->operandValues.empty())
+  {
+    p = args->operandValues[0]->getProbability();
+  }
   int n = gsl_ran_bernoulli(rng,p);
   assert(n == 0 || n == 1);
   return VentureValuePtr(new VentureInteger(n));
 }
 
-double BernoulliOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double BernoulliOutputPSP::logDensity(VentureValuePtr value,
+                                      shared_ptr<Args> args) const
 {
   double p = 0.5;
-  if (!args->operandValues.empty()) { p = args->operandValues[0]->getProbability(); }
+  if (!args->operandValues.empty())
+  {
+    p = args->operandValues[0]->getProbability();
+  }
 
   if (value->getBool()) { return log(p); }
   else { return log(1 - p); }
 }
 
-vector<VentureValuePtr> BernoulliOutputPSP::enumerateValues(shared_ptr<Args> args) const
+vector<VentureValuePtr> BernoulliOutputPSP::enumerateValues(
+    shared_ptr<Args> args) const
 {
   double p = 0.5;
-  if (!args->operandValues.empty()) { p = args->operandValues[0]->getProbability(); }
+  if (!args->operandValues.empty())
+  {
+    p = args->operandValues[0]->getProbability();
+  }
 
   vector<VentureValuePtr> vs;
 
@@ -88,7 +112,8 @@ vector<VentureValuePtr> BernoulliOutputPSP::enumerateValues(shared_ptr<Args> arg
 }
 
 
-VentureValuePtr UniformDiscreteOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
+VentureValuePtr UniformDiscreteOutputPSP::simulate(shared_ptr<Args> args,
+                                                   gsl_rng * rng) const
 {
   checkArgsLength("uniform_discrete", args, 2);
 
@@ -99,7 +124,8 @@ VentureValuePtr UniformDiscreteOutputPSP::simulate(shared_ptr<Args> args,gsl_rng
   return VentureValuePtr(new VentureInteger(lower + n));
 }
 
-double UniformDiscreteOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double UniformDiscreteOutputPSP::logDensity(VentureValuePtr value,
+                                            shared_ptr<Args> args) const
 {
   checkArgsLength("uniform_discrete", args, 2);
 
@@ -110,7 +136,8 @@ double UniformDiscreteOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Ar
   return log(gsl_ran_flat_pdf(sample,lower,upper));
 }
 
-vector<VentureValuePtr> UniformDiscreteOutputPSP::enumerateValues(shared_ptr<Args> args) const
+vector<VentureValuePtr> UniformDiscreteOutputPSP::enumerateValues(
+    shared_ptr<Args> args) const
 {
   checkArgsLength("uniform_discrete", args, 2);
 
@@ -127,7 +154,8 @@ vector<VentureValuePtr> UniformDiscreteOutputPSP::enumerateValues(shared_ptr<Arg
 }
 
 
-VentureValuePtr BinomialOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
+VentureValuePtr BinomialOutputPSP::simulate(shared_ptr<Args> args,
+                                            gsl_rng * rng) const
 {
   checkArgsLength("binomial", args, 2);
   int n = args->operandValues[0]->getInt();
@@ -136,7 +164,8 @@ VentureValuePtr BinomialOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng)
   return VentureValuePtr(new VentureNumber(val));
 }
 
-double BinomialOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double BinomialOutputPSP::logDensity(VentureValuePtr value,
+                                     shared_ptr<Args> args) const
 {
   checkArgsLength("binomial", args, 2);
   int n = args->operandValues[0]->getInt();
@@ -147,20 +176,38 @@ double BinomialOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> arg
 }
 
 
-VentureValuePtr CategoricalOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
+VentureValuePtr CategoricalOutputPSP::simulate(shared_ptr<Args> args,
+                                               gsl_rng * rng) const
 {
   checkArgsLength("categorical", args, 1, 2);
-  if (args->operandValues.size() == 1) { return simulateCategorical(args->operandValues[0]->getSimplex(),rng); }
-  else { return simulateCategorical(args->operandValues[0]->getSimplex(),args->operandValues[1]->getArray(),rng); }
+  if (args->operandValues.size() == 1)
+  {
+    return simulateCategorical(args->operandValues[0]->getSimplex(), rng);
+  }
+  else
+  {
+    return simulateCategorical(args->operandValues[0]->getSimplex(),
+                               args->operandValues[1]->getArray(),
+                               rng);
+  }
 }
-double CategoricalOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double CategoricalOutputPSP::logDensity(VentureValuePtr value,
+                                        shared_ptr<Args> args) const
 {
   checkArgsLength("categorical", args, 1, 2);
-  if (args->operandValues.size() == 1) { return logDensityCategorical(value,args->operandValues[0]->getSimplex()); }
-  else { return logDensityCategorical(value,args->operandValues[0]->getSimplex(),args->operandValues[1]->getArray()); }
+  if (args->operandValues.size() == 1)
+  {
+    return logDensityCategorical(value, args->operandValues[0]->getSimplex());
+  }
+  else
+  {
+    return logDensityCategorical(value, args->operandValues[0]->getSimplex(),
+                                 args->operandValues[1]->getArray());
+  }
 }
 
-vector<VentureValuePtr> CategoricalOutputPSP::enumerateValues(shared_ptr<Args> args) const
+vector<VentureValuePtr> CategoricalOutputPSP::enumerateValues(
+    shared_ptr<Args> args) const
 {
   const Simplex& s = args->operandValues[0]->getSimplex();
 
@@ -192,17 +239,23 @@ vector<VentureValuePtr> CategoricalOutputPSP::enumerateValues(shared_ptr<Args> a
   return vs;
 }
 
-VentureValuePtr LogCategoricalOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
+VentureValuePtr LogCategoricalOutputPSP::simulate(shared_ptr<Args> args,
+                                                  gsl_rng * rng) const
 {
   checkArgsLength("log_categorical", args, 1, 2);
-  vector<double> ps = mapExpUptoMultConstant(args->operandValues[0]->getSimplex());
+  vector<double> ps =
+    mapExpUptoMultConstant(args->operandValues[0]->getSimplex());
   size_t sample = sampleCategorical(ps,rng);
 
-  if (args->operandValues.size() == 1) { return VentureValuePtr(new VentureNumber(sample)); }
+  if (args->operandValues.size() == 1)
+  {
+    return VentureValuePtr(new VentureNumber(sample));
+  }
   else { return args->operandValues[1]->getArray()[sample]; }
 }
 
-double LogCategoricalOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double LogCategoricalOutputPSP::logDensity(VentureValuePtr value,
+                                           shared_ptr<Args> args) const
 {
   checkArgsLength("log_categorical", args, 1, 2);
 
@@ -216,7 +269,8 @@ double LogCategoricalOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Arg
   return logscore;
 }
 
-vector<VentureValuePtr> LogCategoricalOutputPSP::enumerateValues(shared_ptr<Args> args) const
+vector<VentureValuePtr> LogCategoricalOutputPSP::enumerateValues(
+    shared_ptr<Args> args) const
 {
   if (args->operandValues.size() == 1)
   {
@@ -233,7 +287,8 @@ vector<VentureValuePtr> LogCategoricalOutputPSP::enumerateValues(shared_ptr<Args
   }
 }
 
-VentureValuePtr SymmetricDirichletOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr SymmetricDirichletOutputPSP::simulate(shared_ptr<Args> args,
+                                                      gsl_rng * rng) const
 {
   checkArgsLength("symmetric_dirichlet", args, 2);
   double alpha = args->operandValues[0]->getDouble();
@@ -245,7 +300,8 @@ VentureValuePtr SymmetricDirichletOutputPSP::simulate(shared_ptr<Args> args, gsl
   return VentureValuePtr(new VentureSimplex(theta));;
 }
 
-double SymmetricDirichletOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) const
+double SymmetricDirichletOutputPSP::logDensity(VentureValuePtr value,
+                                               shared_ptr<Args> args) const
 {
   checkArgsLength("symmetric_dirichlet", args, 2);
   double alpha = args->operandValues[0]->getDouble();
@@ -253,10 +309,12 @@ double SymmetricDirichletOutputPSP::logDensity(VentureValuePtr value,shared_ptr<
   vector<double> alphaVector(n,alpha);
   /* TODO GC watch the NEW */
   Simplex theta = value->getSimplex();
-  return gsl_ran_dirichlet_lnpdf(static_cast<uint32_t>(n),&alphaVector[0],&theta[0]);
+  return gsl_ran_dirichlet_lnpdf(static_cast<uint32_t>(n),
+                                 &alphaVector[0], &theta[0]);
 }
 
-VentureValuePtr DirichletOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr DirichletOutputPSP::simulate(shared_ptr<Args> args,
+                                             gsl_rng * rng) const
 {
   checkArgsLength("dirichlet", args, 1);
   vector<VentureValuePtr> vs = args->operandValues[0]->getArray();
@@ -267,7 +325,8 @@ VentureValuePtr DirichletOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rn
   return VentureValuePtr(new VentureSimplex(theta));;
 }
 
-double DirichletOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) const
+double DirichletOutputPSP::logDensity(VentureValuePtr value,
+                                      shared_ptr<Args> args) const
 {
   checkArgsLength("dirichlet", args, 1);
   vector<VentureValuePtr> vs = args->operandValues[0]->getArray();
@@ -278,12 +337,16 @@ double DirichletOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> arg
 }
 
 /* Poisson */
-VentureValuePtr PoissonOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
+VentureValuePtr PoissonOutputPSP::simulate(shared_ptr<Args> args,
+                                           gsl_rng * rng)  const
 {
-  return VentureValuePtr(new VentureInteger(gsl_ran_poisson(rng,args->operandValues[0]->getDouble())));
+  int ans = gsl_ran_poisson(rng,args->operandValues[0]->getDouble());
+  return VentureValuePtr(new VentureInteger(ans));
 }
 
-double PoissonOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
+double PoissonOutputPSP::logDensity(VentureValuePtr value,
+                                    shared_ptr<Args> args)  const
 {
-  return PoissonDistributionLogLikelihood(value->getInt(),args->operandValues[0]->getDouble());
+  return PoissonDistributionLogLikelihood(value->getInt(),
+                                          args->operandValues[0]->getDouble());
 }
