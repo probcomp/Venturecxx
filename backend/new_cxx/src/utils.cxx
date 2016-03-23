@@ -128,14 +128,14 @@ VentureValuePtr simulateCategorical(const Simplex & xs,
   assert(false);
 }
 
-double logDensityCategorical(VentureValuePtr val, const Simplex & ps)
+double logDensityCategorical(VentureValuePtr val, const Simplex & xs)
 {
-  vector<VentureValuePtr> os;
-  for (size_t i = 0; i < ps.size(); ++i)
+  if (val->hasInt())
   {
-    os.push_back(VentureValuePtr(new VentureAtom(i)));
+    Simplex ps = normalizeVector(xs);
+    return log(ps[val->getInt()]);
   }
-  return logDensityCategorical(val,ps,os);
+  else { return log(0.0); }
 }
 
 double logDensityCategorical(VentureValuePtr val, const Simplex & xs,
