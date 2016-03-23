@@ -117,16 +117,6 @@ size_t findVVPtr(VentureValuePtr val, const vector<VentureValuePtr>& vec)
   return vec.size();
 }
 
-VentureValuePtr simulateCategorical(const Simplex & ps, gsl_rng * rng)
-{
-  vector<VentureValuePtr> os;
-  for (size_t i = 0; i < ps.size(); ++i)
-  {
-    os.push_back(VentureValuePtr(new VentureAtom(i)));
-  }
-  return simulateCategorical(ps,os,rng);
-}
-
 VentureValuePtr simulateCategorical(const Simplex & xs,
                                     const vector<VentureValuePtr> & os,
                                     gsl_rng * rng)

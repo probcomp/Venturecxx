@@ -180,17 +180,19 @@ VentureValuePtr CategoricalOutputPSP::simulate(shared_ptr<Args> args,
                                                gsl_rng * rng) const
 {
   checkArgsLength("categorical", args, 1, 2);
+  const Simplex& ps = args->operandValues[0]->getSimplex();
+  vector<VentureValuePtr> os;
   if (args->operandValues.size() == 1)
   {
-    return simulateCategorical(args->operandValues[0]->getSimplex(), rng);
+    for (size_t i = 0; i < ps.size(); ++i)
+    {
+      os.push_back(VentureValuePtr(new VentureAtom(i)));
+    }
   }
-  else
-  {
-    return simulateCategorical(args->operandValues[0]->getSimplex(),
-                               args->operandValues[1]->getArray(),
-                               rng);
-  }
+  else { os = args->operandValues[1]->getArray(); }
+  return simulateCategorical(ps, os, rng);
 }
+
 double CategoricalOutputPSP::logDensity(VentureValuePtr value,
                                         shared_ptr<Args> args) const
 {

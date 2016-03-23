@@ -67,7 +67,12 @@ VentureValuePtr DirCatOutputPSP::simulate(shared_ptr<Args> args,
     weights[i] += aux->counts[i];
   }
 
-  return simulateCategorical(weights, rng);
+  vector<VentureValuePtr> os;
+  for (size_t i = 0; i < weights.size(); ++i)
+  {
+    os.push_back(VentureValuePtr(new VentureAtom(i)));
+  }
+  return simulateCategorical(weights, os, rng);
 }
 
 double DirCatOutputPSP::logDensity(VentureValuePtr value,
