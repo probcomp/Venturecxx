@@ -70,7 +70,7 @@ VentureValuePtr DirCatOutputPSP::simulate(shared_ptr<Args> args,
   vector<VentureValuePtr> os;
   for (size_t i = 0; i < weights.size(); ++i)
   {
-    os.push_back(VentureValuePtr(new VentureAtom(i)));
+    os.push_back(VentureValuePtr(new VentureInteger(i)));
   }
   return simulateCategorical(weights, os, rng);
 }
@@ -122,7 +122,7 @@ vector<VentureValuePtr> DirCatOutputPSP::enumerateValues(
 {
   vector<VentureValuePtr> vs;
   for (size_t i = 0; i < alpha.size(); ++i) {
-    vs.push_back(VentureValuePtr(new VentureAtom(i)));
+    vs.push_back(VentureValuePtr(new VentureInteger(i)));
   }
   return vs;
 }
@@ -284,7 +284,7 @@ VentureValuePtr UCDirCatOutputPSP::simulate(shared_ptr<Args> args,
   for (size_t i = 0; i < n; ++i)
   {
     sum += aux->theta[i];
-    if (u < sum) { return VentureValuePtr(new VentureAtom(i)); }
+    if (u < sum) { return VentureValuePtr(new VentureInteger(i)); }
   }
   assert(false);
   return VentureValuePtr();
@@ -332,7 +332,7 @@ vector<VentureValuePtr> UCDirCatOutputPSP::enumerateValues(
 {
   vector<VentureValuePtr> vs;
   for (size_t i = 0; i < n; ++i) {
-    vs.push_back(VentureValuePtr(new VentureAtom(i)));
+    vs.push_back(VentureValuePtr(new VentureInteger(i)));
   }
   return vs;
 }

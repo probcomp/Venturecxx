@@ -33,7 +33,7 @@ from venture.lite.sp_help import typed_nr
 from venture.lite.sp_registry import registerBuiltinSP
 from venture.lite.utils import simulateDirichlet, logDensityDirichlet
 from venture.lite.utils import logDensityCategoricalSequence
-from venture.lite.value import VentureAtom
+from venture.lite.value import VentureInteger
 import venture.lite.types as t
 
 #### Directly sampling simplexes
@@ -117,7 +117,7 @@ class MakerCDirCatOutputPSP(DeterministicMakerAAAPSP):
     vals = args.operandValues()
     alpha = vals[0]
     os = vals[1] if len(vals) > 1 \
-         else [VentureAtom(i) for i in range(len(alpha))]
+         else [VentureInteger(i) for i in range(len(alpha))]
     if len(os) != len(alpha):
       raise VentureValueError(
         "Set of objects to choose from is the wrong length")
@@ -129,8 +129,8 @@ class MakerCDirCatOutputPSP(DeterministicMakerAAAPSP):
     return "  %s(alphas, objects) returns a sampler for a collapsed " \
       "Dirichlet categorical model.  If the objects argument is given, " \
       "the sampler will return one of those objects on each call; if not, " \
-      "it will return one of n <atom>s where n is the length of the list " \
-      "of alphas.  It is an error if the list of objects is supplied and " \
+      "it will return the index into the corresponding alpha, as an integer." \
+      "  It is an error if the list of objects is supplied and " \
       "has different length from the list of alphas.  While this procedure " \
       "itself is deterministic, the returned sampler is stochastic." % name
 
@@ -209,7 +209,7 @@ class MakerUDirCatOutputPSP(RandomPSP):
     vals = args.operandValues()
     alpha = vals[0]
     n = len(alpha)
-    os = vals[1] if len(vals) > 1 else [VentureAtom(i) for i in range(n)]
+    os = vals[1] if len(vals) > 1 else [VentureInteger(i) for i in range(n)]
     if len(os) != n:
       raise VentureValueError(
         "Set of objects to choose from is the wrong length")
@@ -233,7 +233,7 @@ class UDirCatAAALKernel(SimulationAAALKernel):
     vals = args.operandValues()
     alpha = vals[0]
     os = vals[1] if len(vals) > 1 \
-         else [VentureAtom(i) for i in range(len(alpha))]
+         else [VentureInteger(i) for i in range(len(alpha))]
     madeaux = args.madeSPAux()
     assert isinstance(madeaux, DirCatSPAux)
     counts = [count + a for (count, a) in zip(madeaux.counts, alpha)]
@@ -293,7 +293,7 @@ class MakerCSymDirCatOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self, args):
     vals = args.operandValues()
     (alpha, n) = (float(vals[0]), int(vals[1]))
-    os = vals[2] if len(vals) > 2 else [VentureAtom(i) for i in range(n)]
+    os = vals[2] if len(vals) > 2 else [VentureInteger(i) for i in range(n)]
     if len(os) != n:
       raise VentureValueError(
         "Set of objects to choose from is the wrong length")
@@ -346,7 +346,7 @@ class MakerUSymDirCatOutputPSP(RandomPSP):
   def simulate(self, args):
     vals = args.operandValues()
     (alpha, n) = (float(vals[0]), int(vals[1]))
-    os = vals[2] if len(vals) > 2 else [VentureAtom(i) for i in range(n)]
+    os = vals[2] if len(vals) > 2 else [VentureInteger(i) for i in range(n)]
     if len(os) != n:
       raise VentureValueError(
         "Set of objects to choose from is the wrong length")
@@ -371,7 +371,7 @@ class USymDirCatAAALKernel(SimulationAAALKernel):
   def simulate(self, _trace, args):
     vals = args.operandValues()
     (alpha, n) = (float(vals[0]), int(vals[1]))
-    os = vals[2] if len(vals) > 2 else [VentureAtom(i) for i in range(n)]
+    os = vals[2] if len(vals) > 2 else [VentureInteger(i) for i in range(n)]
     madeaux = args.madeSPAux()
     assert isinstance(madeaux, DirCatSPAux)
     counts = [count + alpha for count in madeaux.counts]

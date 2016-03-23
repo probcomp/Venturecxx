@@ -35,7 +35,7 @@ def test_foreign_aaa():
     ripl.assume("f", "(test_sym_dir_cat 1 1)")
     assert ripl.sample("f")["counts"] == [0]
 
-    ripl.observe("(f)", "atom<0>")
+    ripl.observe("(f)", "integer<0>")
     assert ripl.sample("f")["counts"] == [1]
 
     ripl.infer(defaultInfer())
@@ -51,7 +51,7 @@ def test_foreign_aaa_resampled():
     ripl.assume("f", "(test_sym_dir_cat a 1)")
     assert ripl.sample("f")["counts"] == [0]
 
-    ripl.observe("(f)", "atom<0>")
+    ripl.observe("(f)", "integer<0>")
     assert ripl.sample("f")["counts"] == [1]
 
     ripl.infer(defaultInfer())
@@ -66,7 +66,7 @@ def test_foreign_aaa_uc():
     ripl.assume("f", "(test_sym_dir_cat 1 1)")
     assert ripl.sample("f")["counts"] == [0]
 
-    ripl.observe("(f)", "atom<0>")
+    ripl.observe("(f)", "integer<0>")
     assert ripl.sample("f")["counts"] == [1]
 
     ripl.infer(defaultInfer())

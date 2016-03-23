@@ -147,9 +147,9 @@ which are applied"""
   ripl.assume("g", "(%s a 4)" % maker_2)
   ripl.predict("(f)", label="pid")
   ripl.predict("(g)")
-  for _ in range(5): ripl.observe("(g)", "atom<1>")
-  ripl.predict("(if (eq (f) atom<1>) (g) (g))")
-  ripl.predict("(if (eq (g) atom<1>) (f) (f))")
+  for _ in range(5): ripl.observe("(g)", "integer<1>")
+  ripl.predict("(if (eq (f) integer<1>) (g) (g))")
+  ripl.predict("(if (eq (g) integer<1>) (f) (f))")
   return checkDirichletCategoricalAAA(ripl, "pid", infer="mixes_slowly")
 
 @gen_on_inf_prim("any")
@@ -296,18 +296,18 @@ def testStaleAAA_Madness():
 def checkDirichletCategoricalAAA(ripl, label, infer=None):
   for i in range(1, 4):
     for _ in range(default_num_data(20)):
-      ripl.observe("(f)", "atom<%d>" % i)
+      ripl.observe("(f)", "integer<%d>" % i)
 
   predictions = collectSamples(ripl, label, infer=infer)
   ans = [(0, .1), (1, .3), (2, .3), (3, .3)]
   return reportKnownDiscrete(ans, predictions)
 
 def checkDirichletCategoricalBrush(ripl, label):
-  for _ in range(default_num_data(10)): ripl.observe("(f)", "atom<1>")
+  for _ in range(default_num_data(10)): ripl.observe("(f)", "integer<1>")
   for _ in range(default_num_data(10)): ripl.observe("""
 (if (lt a 10.0)
   (f)
-  (f))""", "atom<1>")
+  (f))""", "integer<1>")
 
   predictions = collectSamples(ripl, label)
   ans = [(0, .25), (1, .75)]
@@ -315,7 +315,7 @@ def checkDirichletCategoricalBrush(ripl, label):
 
 def checkDirichletCategoricalWeakPrior(ripl, label):
   for _ in range(default_num_data(8)):
-    ripl.observe("(f)", "atom<1>")
+    ripl.observe("(f)", "integer<1>")
 
   predictions = collectSamples(ripl, label, infer="mixes_slowly")
   ans = [(1, .9), (0, .1)]
