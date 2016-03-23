@@ -54,7 +54,6 @@ Simplex normalizeVector(const vector<double> & xs);
 
 size_t findVVPtr(VentureValuePtr val, const vector<VentureValuePtr>& vec);
 
-VentureValuePtr simulateCategorical(const Simplex & ps, gsl_rng * rng);
 VentureValuePtr simulateCategorical(const Simplex & ps,const vector<VentureValuePtr> & os, gsl_rng * rng);
 
 double logDensityCategorical(VentureValuePtr val, const Simplex & ps);

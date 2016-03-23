@@ -117,14 +117,9 @@ size_t findVVPtr(VentureValuePtr val, const vector<VentureValuePtr>& vec)
   return vec.size();
 }
 
-VentureValuePtr simulateCategorical(const Simplex & ps, gsl_rng * rng)
-{
-  vector<VentureValuePtr> os;
-  for (size_t i = 0; i < ps.size(); ++i) { os.push_back(VentureValuePtr(new VentureAtom(i))); }
-  return simulateCategorical(ps,os,rng);
-}
-
-VentureValuePtr simulateCategorical(const Simplex & xs,const vector<VentureValuePtr> & os, gsl_rng * rng)
+VentureValuePtr simulateCategorical(const Simplex & xs,
+                                    const vector<VentureValuePtr> & os,
+                                    gsl_rng * rng)
 {
   Simplex ps = normalizeVector(xs);
   vector<unsigned int> ns(ps.size());
@@ -133,14 +128,18 @@ VentureValuePtr simulateCategorical(const Simplex & xs,const vector<VentureValue
   assert(false);
 }
 
-double logDensityCategorical(VentureValuePtr val, const Simplex & ps)
+double logDensityCategorical(VentureValuePtr val, const Simplex & xs)
 {
-  vector<VentureValuePtr> os;
-  for (size_t i = 0; i < ps.size(); ++i) { os.push_back(VentureValuePtr(new VentureAtom(i))); }
-  return logDensityCategorical(val,ps,os);
+  if (val->hasInt())
+  {
+    Simplex ps = normalizeVector(xs);
+    return log(ps[val->getInt()]);
+  }
+  else { return log(0.0); }
 }
 
-double logDensityCategorical(VentureValuePtr val, const Simplex & xs,const vector<VentureValuePtr> & os)
+double logDensityCategorical(VentureValuePtr val, const Simplex & xs,
+                             const vector<VentureValuePtr> & os)
 {
   Simplex ps = normalizeVector(xs);
   double answer = 0.0;
@@ -154,7 +153,8 @@ double logDensityCategorical(VentureValuePtr val, const Simplex & xs,const vecto
 // needs to go in the cxx, for an explanation see
 // http://stackoverflow.com/questions/4445654/multiple-definition-of-template-specialization-when-using-different-objects
 template <>
-boost::python::object toPython<VentureValuePtr>(Trace * trace, const VentureValuePtr& v)
+boost::python::object toPython<VentureValuePtr>(Trace * trace,
+                                                const VentureValuePtr& v)
 {
   return v->toPython(trace);
 }
@@ -179,21 +179,25 @@ boost::python::object toPython<double>(Trace * trace, const double& st)
 
 using boost::lexical_cast;
 
-void checkArgsLength(const string& sp, const boost::shared_ptr<Args> args, size_t expected)
+void checkArgsLength(const string& sp, const boost::shared_ptr<Args> args,
+                     size_t expected)
 {
   size_t length = args->operandValues.size();
   if (length != expected)
   {
-    throw sp + " expects " + lexical_cast<string>(expected) + " arguments, not " + lexical_cast<string>(length);
+    throw sp + " expects " + lexical_cast<string>(expected) +
+      " arguments, not " + lexical_cast<string>(length);
   }
 }
 
-void checkArgsLength(const string& sp, const boost::shared_ptr<Args> args, size_t lower, size_t upper)
+void checkArgsLength(const string& sp, const boost::shared_ptr<Args> args,
+                     size_t lower, size_t upper)
 {
   size_t length = args->operandValues.size();
   if (length < lower || length > upper)
   {
-    throw sp + " expects between " + lexical_cast<string>(lower) + " and " + lexical_cast<string>(upper) + " arguments, not " + lexical_cast<string>(length);
+    throw sp + " expects between " + lexical_cast<string>(lower) + " and "
+      + lexical_cast<string>(upper) + " arguments, not "
+      + lexical_cast<string>(length);
   }
 }
-
