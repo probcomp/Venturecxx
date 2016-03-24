@@ -44,10 +44,11 @@ long VentureValue::getInt() const
 double VentureValue::getProbability() const
 {
   double x;
-  try {
+  if (hasDouble())
+  {
     x = getDouble();
   }
-  catch (string) {
+  else {
     cannotConvertType(this,"probability"); assert(false); throw "no return";
   }
   if (0 <= x && x <= 1) {
