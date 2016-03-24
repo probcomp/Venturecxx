@@ -28,7 +28,7 @@ struct VentureNumber : VentureValue
 
   bool hasDouble() const { return true; }
   double getDouble() const { return x; }
-  bool hasInt() const { return false; }
+  bool hasInt() const { return true; }
   long getInt() const { return static_cast<int>(x); }
   bool getBool() const { return x; }
 
