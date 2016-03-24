@@ -94,6 +94,8 @@ class VentureValue(object):
     ot = type(other)
     if st == ot:
       return self.compareSameType(other)
+    if st in venture_numeric_types and ot in venture_numeric_types:
+      return stupidCompare(self.getNumber(), other.getNumber())
     if venture_types.index(st) < venture_types.index(ot) : return -1
     else: return 1 # We already checked for equality
   def compareSameType(self, _):
@@ -103,6 +105,8 @@ class VentureValue(object):
     ot = type(other)
     if st == ot:
       return self.equalSameType(other)
+    if st in venture_numeric_types and ot in venture_numeric_types:
+      return self.getNumber() == other.getNumber()
     else:
       return False
   def equalSameType(self, other): return self.compareSameType(other) == 0
@@ -1120,6 +1124,8 @@ venture_types = [
   VentureArray, VentureArrayUnboxed, VentureSimplex, VentureDict,
   VentureMatrix, VentureSymmetricMatrix, SPRef]
   # Break load order dependency by not adding SPs and Environments yet
+
+venture_numeric_types = [VentureNumber, VentureInteger, VentureProbability]
 
 stackable_types = {
   "number": VentureNumber,
