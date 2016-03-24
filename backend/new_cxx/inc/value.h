@@ -64,7 +64,7 @@ struct Trace;
 struct VentureValue
 {
   // Conversions to "native" representation
-  virtual bool hasDouble() const; // TODO hack for operator<
+  virtual bool hasDouble() const;
   virtual double getDouble() const;
 
   virtual bool hasInt() const;
