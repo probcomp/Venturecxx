@@ -142,6 +142,10 @@ boost::python::dict VentureValue::toPython(Trace * trace) const
 
 bool VentureValue::operator<(const VentureValuePtr & rhs) const
 {
+  if (hasDouble() && rhs->hasDouble())
+  {
+    return getDouble() < rhs->getDouble();
+  }
   int t1 = getValueTypeRank();
   int t2 = rhs->getValueTypeRank();
   if (t1 < t2) { return true; }
@@ -162,6 +166,10 @@ bool VentureValue::ltSameType(const VentureValuePtr & rhs) const
 
 bool VentureValue::equals(const VentureValuePtr & other) const
 {
+  if (hasDouble() && other->hasDouble())
+  {
+    return getDouble() == other->getDouble();
+  }
   int t1 = getValueTypeRank();
   int t2 = other->getValueTypeRank();
   if (t1 != t2) { return false; }
