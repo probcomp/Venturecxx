@@ -64,7 +64,6 @@ int VentureValue::getAtom() const
   cannotConvertType(this,"atom"); assert(false); throw "no return";
 }
 
-bool VentureValue::isBool() const { return false; }
 bool VentureValue::getBool() const
 {
   cannotConvertType(this,"bool"); assert(false); throw "no return";

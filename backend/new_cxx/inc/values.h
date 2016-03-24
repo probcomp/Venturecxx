@@ -112,7 +112,6 @@ struct VentureBool : VentureValue
 {
   VentureBool(bool b): b(b) {}
 
-  bool isBool() const { return true; }
   bool getBool() const { return b; }
 
   boost::python::dict toPython(Trace * trace) const;
