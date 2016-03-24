@@ -230,7 +230,7 @@ def dlogpdf(X, Mu, dMu, Sigma, dSigma):
   # multiplication per partial derivative than to solve a linear
   # system per partial derivative.  But is it numerically safe?  I
   # doubt it.
-  alpha = covf.solve(X - Mu)
+  alpha = covf.solve(X_)
 
   # Compute Q = alpha alpha^T - Sigma^-1.
   Q = np.outer(alpha, alpha) - covf.inverse()
