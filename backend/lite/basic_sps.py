@@ -59,11 +59,6 @@ registerBuiltinSP("integer", deterministic_typed(int,
     [t.NumberType()], t.IntegerType(),
     descr="integer returns the floor of its argument number as an integer"))
 
-registerBuiltinSP("atom_eq", deterministic_typed(lambda x,y: x == y,
-    [t.AtomType(), t.AtomType()], t.BoolType(),
-    descr="atom_eq tests its two arguments, which must be atoms, " \
-          "for equality"))
-
 # If you are wondering about the type signature, this function
 # bootstraps the implicit coersion from numbers to probabilities into
 # an explicit one.  That means that the valid arguments to it are

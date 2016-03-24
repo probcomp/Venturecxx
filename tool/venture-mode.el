@@ -138,7 +138,7 @@ See `run-hooks'."
             (regexp-opt
              '(;; model SP's
                "add" "apply" "apply_function" "arange" "array" "assess" "atan2"
-               "atom_eq" "bernoulli" "beta" "binomial" "biplex" "categorical"
+               "bernoulli" "beta" "binomial" "biplex" "categorical"
                "contains" "cos" "debug" "diag_matrix" "dict" "dirichlet" "div" "eq"
                "eval" "exactly" "exp" "expon" "extend_environment" "fill" "first"
                "fix" "flip" "floor" "gamma" "get_current_environment"
