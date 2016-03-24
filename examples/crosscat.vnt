@@ -56,7 +56,7 @@
      (lambda (r)
        (for_each (arange n_cols)
         (lambda (c)
-          (let ((value (atom (int_div r n_values))))
+          (let ((value (int_div r n_values)))
             (observe (get_cell ,r ,c) value)))))))]
 
 [define smoke_test
