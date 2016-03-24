@@ -75,7 +75,7 @@ class UncollapsedHMMSP(SP):
     req = TypedPSP(UncollapsedHMMRequestPSP(),
                    SPType([t.CountType()], t.RequestType()))
     output = TypedPSP(UncollapsedHMMOutputPSP(O),
-                      SPType([t.CountType()], t.AtomType()))
+                      SPType([t.CountType()], t.IntegerType()))
     super(UncollapsedHMMSP, self).__init__(req, output)
     self.p0 = p0
     self.T = T
@@ -174,4 +174,4 @@ class UncollapsedHMMRequestPSP(DeterministicPSP):
 
 registerBuiltinSP("make_lazy_hmm", typed_nr(MakeUncollapsedHMMOutputPSP(),
     [t.SimplexType(), t.MatrixType(), t.MatrixType()],
-    SPType([t.CountType()], t.AtomType())))
+    SPType([t.CountType()], t.IntegerType())))

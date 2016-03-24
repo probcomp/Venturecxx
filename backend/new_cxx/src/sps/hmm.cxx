@@ -201,7 +201,7 @@ VentureValuePtr UncollapsedHMMOutputPSP::simulate(shared_ptr<Args> args,
   int index = args->operandValues[0]->getInt();
   assert(aux->xs.size() > static_cast<uint32_t>(index));
 
-  return VentureValuePtr(new VentureAtom(sampleVector(O * aux->xs[index],rng)));
+  return VentureValuePtr(new VentureInteger(sampleVector(O * aux->xs[index],rng)));
 }
 
 double UncollapsedHMMOutputPSP::logDensity(VentureValuePtr value,

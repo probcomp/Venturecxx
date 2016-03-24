@@ -98,7 +98,7 @@ def test_foreign_latents():
     ripl.assume("f", "(test_lazy_hmm (simplex 1) (id_matrix 1) (id_matrix 1))")
     assert ripl.sample("f")[0] == []
 
-    ripl.observe("(f 1)", "atom<0>")
+    ripl.observe("(f 1)", "integer<0>")
     assert ripl.sample("f")[0] == [np.matrix([[1]]), np.matrix([[1]])]
 
     ripl.infer(defaultInfer())
@@ -121,11 +121,11 @@ def test_foreign_latents_infer():
  (matrix (array (array 0.9 0.2)
                 (array 0.1 0.8))))
 """)
-    ripl.observe("(f 1)","atom<0>")
-    ripl.observe("(f 2)","atom<0>")
-    ripl.observe("(f 3)","atom<1>")
-    ripl.observe("(f 4)","atom<0>")
-    ripl.observe("(f 5)","atom<0>")
+    ripl.observe("(f 1)","integer<0>")
+    ripl.observe("(f 2)","integer<0>")
+    ripl.observe("(f 3)","integer<1>")
+    ripl.observe("(f 4)","integer<0>")
+    ripl.observe("(f 5)","integer<0>")
     ripl.predict("(f 6)",label="pid")
     ripl.predict("(f 7)")
     ripl.predict("(f 8)")
