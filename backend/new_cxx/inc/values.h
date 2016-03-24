@@ -93,12 +93,7 @@ struct VentureAtom : VentureValue
 {
   VentureAtom(int n): n(n) {}
 
-  bool hasDouble() const { return true; }
-  double getDouble() const { return n; }
-  bool hasInt() const { return true; }
-  long getInt() const { return n; }
   int getAtom() const { return n; }
-  bool getBool() const { return n; }
 
   boost::python::dict toPython(Trace * trace) const;
 

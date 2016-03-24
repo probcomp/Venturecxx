@@ -106,8 +106,8 @@ vector<VentureValuePtr> BernoulliOutputPSP::enumerateValues(
 
   vector<VentureValuePtr> vs;
 
-  if (p > 0) { vs.push_back(VentureValuePtr(new VentureAtom(1))); }
-  if (p < 1) { vs.push_back(VentureValuePtr(new VentureAtom(0))); }
+  if (p > 0) { vs.push_back(VentureValuePtr(new VentureInteger(1))); }
+  if (p < 1) { vs.push_back(VentureValuePtr(new VentureInteger(0))); }
   return vs;
 }
 

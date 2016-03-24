@@ -118,7 +118,7 @@ double CRPOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) con
 {
   shared_ptr<CRPSPAux> aux = dynamic_pointer_cast<CRPSPAux>(args->spAux);
   assert(aux);
-  uint32_t table = value->getInt();
+  uint32_t table = value->getAtom();
 
   if (aux->tableCounts.count(table))
   { return log(aux->tableCounts[table] - d) - log(aux->numCustomers + alpha); }
@@ -130,7 +130,7 @@ void CRPOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) cons
 {
   shared_ptr<CRPSPAux> aux = dynamic_pointer_cast<CRPSPAux>(args->spAux);
   assert(aux);
-  uint32_t table = value->getInt();
+  uint32_t table = value->getAtom();
 
   aux->numCustomers++;
   if (aux->tableCounts.count(table))
@@ -149,7 +149,7 @@ void CRPOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args) co
 {
   shared_ptr<CRPSPAux> aux = dynamic_pointer_cast<CRPSPAux>(args->spAux);
   assert(aux);
-  uint32_t table = value->getInt();
+  uint32_t table = value->getAtom();
 
   aux->numCustomers--;
   aux->tableCounts[table]--;

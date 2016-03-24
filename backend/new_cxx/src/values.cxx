@@ -688,7 +688,7 @@ string VentureSimplex::asExpression() const {
 VentureValuePtr VenturePair::lookup(VentureValuePtr index) const
 {
   if (index->getInt() == 0) { return car; }
-  else { return cdr->lookup(VentureValuePtr(new VentureAtom(index->getInt() - 1))); }
+  else { return cdr->lookup(VentureValuePtr(new VentureInteger(index->getInt() - 1))); }
 }
 
 VentureValuePtr VentureDictionary::lookup(VentureValuePtr index) const
