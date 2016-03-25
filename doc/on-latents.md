@@ -4,7 +4,9 @@ Anthony Lu and Alexey Radul, 3/24/16
 Consider an SP that represents a distribution on y with a latent z,
 given arguments x.
 
-  p(y,z|x) = p(z|x) p(y|x,z)
+```
+p(y,z|x) = p(z|x) p(y|x,z)
+```
 
 What kinds of M-H type moves can it cooperate with, and what does it
 need to be able to compute in order to cooperate with them?
@@ -27,8 +29,10 @@ Additional computational phenomena:
 Generally, it seems reasonable to require all such things to be
 makers:
 
-  assume foo = make_foo(x)  // z is latent in the object foo
-  predict y = foo()
+```
+assume foo = make_foo(x)  // z is latent in the object foo
+predict y = foo()
+```
 
 This way, z and y have separate trace nodes, so can be referred to
 unambiguously; and no expressive power is lost.[^lsrs]
@@ -38,21 +42,31 @@ Under this assumption,
 - (1) is enabled by `make_foo` creating an aux, `foo` maintaining it,
   and the proposal to z reading it.  It requires being able to
   evaluate the M-H ratio, namely
-    p(z',y|x) q(z|x,z',y)
-   -------------------------
-    p(z,y|x) q(z'|x,z,y)
+
+      ```
+      p(z',y|x) q(z|x,z',y)
+      ---------------------
+      p(z,y|x) q(z'|x,z,y)
+      ```
 
 - (2) requires being able to evaluate the relevant term in the
   compound M-H ratio, namely
-    p(z',y|x') q(z|x',z')
-   -------------------------
-    p(z,y|x) q(z'|x,z)
+
+      ```
+      p(z',y|x') q(z|x',z')
+      ---------------------
+      p(z,y|x) q(z'|x,z)
+      ```
 
 - (2) together with (1) requires being able to evaluate the relevant
   term in the (now different) M-H ratio, namely
-    p(z',y|x') q(z|x',z',y)
-   -------------------------
-    p(z,y|x) q(z'|x,z,y)
+
+      ```
+      p(z',y|x') q(z|x',z',y)
+      -----------------------
+      p(z,y|x) q(z'|x,z,y)
+      ```
+
   This may be more complicated than (2) without (1), because q may now
   depend on y; and more complicated than (1) without (2), because now
   there's an x' to worry about.
@@ -199,9 +213,11 @@ interact somewhat strangely with block proposals already.  Consider: A
 single-site delta kernel q on y given x (never mind latents) must
 compute the M-H term
 
-  p(y'|x) q(y|y',x)
- ------------------- .
-  p(y|x) q(y'|y,x)
+    ```
+    p(y'|x) q(y|y',x)
+    ----------------- .
+    p(y|x) q(y'|y,x)
+    ```
 
 The quantities needed for this, namely x, y, and y', are available
 during regen, and the current LKernel interface permits a method
@@ -210,9 +226,11 @@ to compute it (`forwardWeight`).
 Now consider a block proposal to x and y using this q to propose y.
 The correct term to compute at this node is
 
-  p(y'|x') q(y|y',x)
- -------------------- .
-  p(y|x) q(y'|y,x')
+    ```
+    p(y'|x') q(y|y',x)
+    ------------------ .
+    p(y|x) q(y'|y,x')
+    ```
 
 Those four quantities can be brought into the same place during regen
 by querying the omegadb for the old value of x, but the current
@@ -222,9 +240,11 @@ regen will, in effect, pass x' for x.
 This problem goes away for simulation kernels.  Why?  If q doesn't
 depend on y, the needed term becomes
 
-  p(y'|x') q(y|x)
- ----------------- ,
-  p(y|x) q(y'|x')
+    ```
+    p(y'|x') q(y|x)
+    --------------- ,
+    p(y|x) q(y'|x')
+    ```
 
 and now the unprimed part can be computed during detach, and the
 primed part during regen, calling the same method (`weight`) with two
