@@ -291,6 +291,8 @@ def loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs):
     for node in drg - aaa:
       if not isOutputNode(node): continue
       if node.operatorNode in drg: continue
+      # If you're wondering about this fallback clause, the rationale
+      # is in the "joint-delta-kernels" footnote of doc/on-latents.md
       for o in node.operandNodes:
         if o in drg: continue
       if trace.pspAt(node).hasDeltaKernel(): lkernels[node] = trace.pspAt(node).getDeltaKernel(deltaKernelArgs)

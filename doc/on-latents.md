@@ -251,6 +251,12 @@ In the case of (1) together with (3), the above discussion generalizes
 to delta kernels that see the old value of the aux, as it was before
 detach removed those applications.
 
+Update: Turns out Lite has a clause in `scaffold.py` that detects
+whether the parent node of a putative LKernel is also in the drg, and
+ignores the LKernel in that case (falling back to prior resimulation).
+It also turns out that delta kernels are just off in Lite completely,
+because no transition operator sets useDeltaKernels to True.
+
 P.S. @fsaad suggests "On the flexibility of Metropolis-Hastings
 acceptance probabilities in auxiliary variable proposal generation",
 Geir Storvik. http://folk.uio.no/geirs/publ/wmcmc_storvik.pdf as
