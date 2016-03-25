@@ -55,6 +55,10 @@ registerBuiltinSP("atom", deterministic_typed(lambda x:x,
     [t.IntegerType()], t.AtomType(),
     descr="atom returns the identity of its argument integer as an atom"))
 
+registerBuiltinSP("atom_index", deterministic_typed(lambda x:x,
+    [t.AtomType()], t.IntegerType(),
+    descr="atom_index returns the identity of its argument atom as an integer"))
+
 registerBuiltinSP("integer", deterministic_typed(int,
     [t.NumberType()], t.IntegerType(),
     descr="integer returns the floor of its argument number as an integer"))

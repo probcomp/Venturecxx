@@ -75,6 +75,7 @@ map<string,SP*> initBuiltInSPs()
   m["is_symbol"] = new SP(new NullRequestPSP(), new IsSymbolOutputPSP());
 
   m["atom"] = new SP(new NullRequestPSP(), new AtomOutputPSP());
+  m["atom_index"] = new SP(new NullRequestPSP(), new AtomIndexOutputPSP());
   m["is_atom"] = new SP(new NullRequestPSP(), new IsAtomOutputPSP());
 
   m["probability"] = new SP(new NullRequestPSP(), new ProbabilityOutputPSP());

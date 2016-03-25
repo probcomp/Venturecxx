@@ -191,6 +191,12 @@ VentureValuePtr AtomOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
   return VentureValuePtr(new VentureAtom(args->operandValues[0]->getInt()));
 }
 
+VentureValuePtr AtomIndexOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("atom_index", args, 1);
+  return VentureValuePtr(new VentureInteger(args->operandValues[0]->getAtom()));
+}
+
 VentureValuePtr IsAtomOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("is_atom", args, 1);
