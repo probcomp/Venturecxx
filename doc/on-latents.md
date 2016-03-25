@@ -250,3 +250,8 @@ kernel).
 In the case of (1) together with (3), the above discussion generalizes
 to delta kernels that see the old value of the aux, as it was before
 detach removed those applications.
+
+P.S. @fsaad suggests "On the flexibility of Metropolis-Hastings
+acceptance probabilities in auxiliary variable proposal generation",
+Geir Storvik. http://folk.uio.no/geirs/publ/wmcmc_storvik.pdf as
+possibly relevant.
