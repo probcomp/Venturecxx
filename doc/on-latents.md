@@ -43,29 +43,23 @@ Under this assumption,
   and the proposal to z reading it.  It requires being able to
   evaluate the M-H ratio, namely
 
-      ```
       p(z',y|x) q(z|x,z',y)
       ---------------------
       p(z,y|x) q(z'|x,z,y)
-      ```
 
 - (2) requires being able to evaluate the relevant term in the
   compound M-H ratio, namely
 
-      ```
       p(z',y|x') q(z|x',z')
       ---------------------
       p(z,y|x) q(z'|x,z)
-      ```
 
 - (2) together with (1) requires being able to evaluate the relevant
   term in the (now different) M-H ratio, namely
 
-      ```
       p(z',y|x') q(z|x',z',y)
       -----------------------
       p(z,y|x) q(z'|x,z,y)
-      ```
 
   This may be more complicated than (2) without (1), because q may now
   depend on y; and more complicated than (1) without (2), because now
@@ -213,11 +207,11 @@ interact somewhat strangely with block proposals already.  Consider: A
 single-site delta kernel q on y given x (never mind latents) must
 compute the M-H term
 
-    ```
-    p(y'|x) q(y|y',x)
-    ----------------- .
-    p(y|x) q(y'|y,x)
-    ```
+```
+p(y'|x) q(y|y',x)
+----------------- .
+p(y|x) q(y'|y,x)
+```
 
 The quantities needed for this, namely x, y, and y', are available
 during regen, and the current LKernel interface permits a method
@@ -226,11 +220,11 @@ to compute it (`forwardWeight`).
 Now consider a block proposal to x and y using this q to propose y.
 The correct term to compute at this node is
 
-    ```
-    p(y'|x') q(y|y',x)
-    ------------------ .
-    p(y|x) q(y'|y,x')
-    ```
+```
+p(y'|x') q(y|y',x)
+------------------ .
+p(y|x) q(y'|y,x')
+```
 
 Those four quantities can be brought into the same place during regen
 by querying the omegadb for the old value of x, but the current
@@ -240,11 +234,11 @@ regen will, in effect, pass x' for x.
 This problem goes away for simulation kernels.  Why?  If q doesn't
 depend on y, the needed term becomes
 
-    ```
-    p(y'|x') q(y|x)
-    --------------- ,
-    p(y|x) q(y'|x')
-    ```
+```
+p(y'|x') q(y|x)
+--------------- ,
+p(y|x) q(y'|x')
+```
 
 and now the unprimed part can be computed during detach, and the
 primed part during regen, calling the same method (`weight`) with two
