@@ -131,11 +131,6 @@ struct IsNumberOutputPSP : PSP
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };
 
-struct IsIntegerOutputPSP : PSP
-{
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-};
-
 struct IsBoolOutputPSP : PSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
@@ -157,6 +152,16 @@ struct AtomIndexOutputPSP : PSP
 };
 
 struct IsAtomOutputPSP : PSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
+struct IntegerOutputPSP : PSP
+{
+  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+};
+
+struct IsIntegerOutputPSP : PSP
 {
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
 };

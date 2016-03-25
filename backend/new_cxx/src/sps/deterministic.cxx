@@ -167,12 +167,6 @@ VentureValuePtr IsNumberOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng
   return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureNumber>(args->operandValues[0]) != NULL));
 }
 
-VentureValuePtr IsIntegerOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
-{
-  checkArgsLength("is_integer", args, 1);
-  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureInteger>(args->operandValues[0]) != NULL));
-}
-
 VentureValuePtr IsBoolOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("is_boolean", args, 1);
@@ -201,6 +195,18 @@ VentureValuePtr IsAtomOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
 {
   checkArgsLength("is_atom", args, 1);
   return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureAtom>(args->operandValues[0]) != NULL));
+}
+
+VentureValuePtr IntegerOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("integer", args, 1);
+  return VentureValuePtr(new VentureInteger(args->operandValues[0]->getDouble()));
+}
+
+VentureValuePtr IsIntegerOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("is_integer", args, 1);
+  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureInteger>(args->operandValues[0]) != NULL));
 }
 
 VentureValuePtr ProbabilityOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const

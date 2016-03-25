@@ -70,13 +70,15 @@ map<string,SP*> initBuiltInSPs()
   m["sqrt"] = new SP(new NullRequestPSP(), new SqrtOutputPSP());
   m["not"] = new SP(new NullRequestPSP(), new NotOutputPSP());
   m["is_number"] = new SP(new NullRequestPSP(), new IsNumberOutputPSP());
-  m["is_integer"] = new SP(new NullRequestPSP(), new IsIntegerOutputPSP());
   m["is_boolean"] = new SP(new NullRequestPSP(), new IsBoolOutputPSP());
   m["is_symbol"] = new SP(new NullRequestPSP(), new IsSymbolOutputPSP());
 
   m["atom"] = new SP(new NullRequestPSP(), new AtomOutputPSP());
   m["atom_index"] = new SP(new NullRequestPSP(), new AtomIndexOutputPSP());
   m["is_atom"] = new SP(new NullRequestPSP(), new IsAtomOutputPSP());
+
+  m["integer"] = new SP(new NullRequestPSP(), new IntegerOutputPSP());
+  m["is_integer"] = new SP(new NullRequestPSP(), new IsIntegerOutputPSP());
 
   m["probability"] = new SP(new NullRequestPSP(), new ProbabilityOutputPSP());
   m["is_probability"] = new SP(new NullRequestPSP(), new IsProbabilityOutputPSP());
