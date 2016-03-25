@@ -196,6 +196,10 @@ Questions:
   that their raison d'etre is to take advantage of cancellations in
   acceptance ratios?
 
+  - @luac suggests as possibly relevant "Pseudo-Marginal Slice
+    Sampling", Iain Murray and Matthew Graham,
+    http://arxiv.org/pdf/1510.02958.pdf
+
 [^lsrs]: Does this pattern subsume latent simulation requests?  Can a
 latent simulation request be mechaniced as an exposed simulation
 request for a foreign SP that has a latent like this?  I would be much
