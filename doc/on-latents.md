@@ -182,6 +182,12 @@ Questions:
   attach these LKernels to them (which will need to be compatibility
   checked) and run that proposal."?
 
+- What are the right generalizations to cooperating with other kinds
+  of proposals (slice, HMC, enumeration, variational)?  Do we just
+  want to say that LKernels are M-H only, for instance on the grounds
+  that their raison d'etre is to take advantage of cancellations in
+  acceptance ratios?
+
 [^lsrs]: Does this pattern subsume latent simulation requests?  Can a
 latent simulation request be mechaniced as an exposed simulation
 request for a foreign SP that has a latent like this?  I would be much
