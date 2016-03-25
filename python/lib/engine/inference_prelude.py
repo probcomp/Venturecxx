@@ -167,19 +167,6 @@ prelude = [
     (let ((res ((action_func act) t)))
       ((action_func (next)) (rest res))))))"""],
 
-# action :: b -> State a b
-["action", """\
-.. function:: action(<object>)
-
-  :rtype: <inference action returning <object>>
-
-  Wrap an object, usually a non-inference function like plotf,
-  as an inference action, so it can be used inside a do(...) block.
-""",
-"""(lambda (val)
- (inference_action
-  (lambda (t) (pair val t))))"""],
-
 # return :: b -> State a b
 ["return", """\
 .. function:: return(<object>)
@@ -189,7 +176,9 @@ prelude = [
   An inference action that does nothing and just returns the argument
   passed to `return`.
 """,
-"""action"""],
+"""(lambda (val)
+ (inference_action
+  (lambda (t) (pair val t))))"""],
 
 ["curry", """\
 .. function:: curry(proc(<a>, <b>) -> <c>, <a>)
@@ -302,8 +291,8 @@ prelude = [
   Run the given inference action and return its value.
 """,
 """\
-(lambda (action)
-  (let ((result ((action_func action) __the_inferrer__)))
+(lambda (act)
+  (let ((result ((action_func act) __the_inferrer__)))
     (first result)))"""],
 
 ["autorun", """\
