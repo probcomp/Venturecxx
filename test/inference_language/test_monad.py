@@ -137,7 +137,7 @@ def testLazyAction():
       (return (not (= r1 r2)))))
 """)
 
-@on_inf_prim("action")
+@on_inf_prim("return")
 def testEagerReturn():
   assert get_ripl().infer("""\
 (let ((act (return (normal 0 1))))
