@@ -269,6 +269,19 @@ class PSP(object):
   def hasDeltaKernel(self):
     return False
 
+  def marginalLogDensityOfData(self, _aux, _args):
+    """Return the marginal of the made PSP's logDensityOfData function,
+    integrating over the output distribution of the maker for the
+    given args. This method is relevant only for random makers of PSPs
+    that collect sufficient statistics via incorporate and
+    unincorporate.
+
+    """
+    # a return value of NotImplemented means "defer to the made PSP's
+    # logDensityOfData" (suitable for deterministic makers).
+    # TODO: should this method replace logDensityOfData?
+    return NotImplemented
+
   def gradientOfLogDensityOfData(self, _aux, _args):
     """Return the gradient of the made PSP's logDensityOfData function.
     This method is needed only for gradient-based methods and is
