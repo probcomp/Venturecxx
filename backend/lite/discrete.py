@@ -617,7 +617,7 @@ class CGammaPoissonOutputPSP(DiscretePSP):
     # http://seor.gmu.edu/~klaskey/SYST664/Bayes_Unit3.pdf#page=42
     # Note that our parameterization is different than the reference, since
     # self.beta = 1 / ref.beta
-    [xsum, ctN] = aux().cts()
+    [xsum, ctN] = aux.cts()
     return scipy.special.gammaln(self.alpha + xsum) - \
       scipy.special.gammaln(self.alpha) + self.alpha * math.log(self.beta) - \
       (self.alpha + xsum) * math.log(self.beta + ctN)
