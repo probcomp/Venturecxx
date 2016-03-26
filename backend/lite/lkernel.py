@@ -147,17 +147,12 @@ class DeterministicMakerAAALKernel(SimulationAAALKernel):
     spRecord = self.makerPSP.simulate(args)
     spRecord.spAux = args.madeSPAux()
     return spRecord
-  def weight(self, _trace, newValue, _args):
-    # Using newValue.spAux here because args.madeSPAux() is liable to be
-    # None when detaching. This has something to do with when the Args
-    # object is constructed relative to other things that happen
-    # during detach/regen. TODO: fix it so that this code is less
-    # fragile.
+  def weight(self, _trace, newValue, args):
     assert isinstance(newValue,VentureSPRecord)
-    return newValue.sp.outputPSP.logDensityOfData(newValue.spAux)
-  def gradientOfReverseWeight(self, _trace, value, args):
+    return newValue.sp.outputPSP.logDensityOfData(args.madeSPAux())
+  def gradientOfReverseWeight(self, _trace, _value, args):
     """The gradient of the reverse weight, with respect to the vale and the arguments."""
-    return (0, self.makerPSP.gradientOfLogDensityOfData(value.spAux, args))
+    return (0, self.makerPSP.gradientOfLogDensityOfData(args.madeSPAux(), args))
   def weightBound(self, _trace, _value, args):
     # Going through the maker here because the new value is liable to
     # be None when computing bounds for rejection, but the maker
