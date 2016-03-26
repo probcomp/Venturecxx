@@ -151,7 +151,7 @@ class DeterministicMakerAAALKernel(SimulationAAALKernel):
     assert isinstance(newValue,VentureSPRecord)
     return newValue.sp.outputPSP.logDensityOfData(args.madeSPAux())
   def gradientOfReverseWeight(self, _trace, _value, args):
-    """The gradient of the reverse weight, with respect to the vale and the arguments."""
+    """The gradient of the reverse weight, with respect to the value and the arguments."""
     return (0, self.makerPSP.gradientOfLogDensityOfData(args.madeSPAux(), args))
   def weightBound(self, _trace, _value, args):
     # Going through the maker here because the new value is liable to
