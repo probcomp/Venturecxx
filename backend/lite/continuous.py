@@ -30,7 +30,7 @@ import scipy.stats
 from venture.lite.exception import GradientWarning
 from venture.lite.exception import VentureValueError
 from venture.lite.lkernel import DeltaLKernel
-from venture.lite.lkernel import SimulationAAALKernel
+from venture.lite.lkernel import PosteriorAAALKernel
 from venture.lite.psp import DeterministicMakerAAAPSP
 from venture.lite.psp import NullRequestPSP
 from venture.lite.psp import RandomPSP
@@ -899,7 +899,7 @@ class MakerUNigNormalOutputPSP(RandomPSP):
     return True
 
   def getAAALKernel(self):
-    return UNigNormalAAALKernel()
+    return UNigNormalAAALKernel(self)
 
   def simulate(self, args):
     return MakerUNigNormalOutputPSP.simulateStatic(args.operandValues())
@@ -924,26 +924,21 @@ class MakerUNigNormalOutputPSP(RandomPSP):
     return scipy.stats.invgamma.logpdf(sigma2, a, scale=b) + \
       scipy.stats.norm.logpdf(mu, loc=m, scale=math.sqrt(sigma2*V))
 
+  def marginalLogDensityOfData(self, aux, args):
+    (m, V, a, b) = args.operandValues()
+    return CNigNormalOutputPSP(m, V, a, b).logDensityOfData(aux)
+
   def description(self, name):
     return '  %s(alpha, beta) returns an uncollapsed Normal-InverseGamma '\
       'Normal sampler.' % name
 
 
-class UNigNormalAAALKernel(SimulationAAALKernel):
+class UNigNormalAAALKernel(PosteriorAAALKernel):
   def simulate(self, _trace, args):
     madeaux = args.madeSPAux()
     post_hypers = CNigNormalOutputPSP.posteriorHypersNumeric \
       (args.operandValues(), madeaux.cts())
     return MakerUNigNormalOutputPSP.simulateStatic(post_hypers, spaux=madeaux)
-
-  def weight(self, _trace, _newValue, _args):
-    # Gibbs step, samples exactly from the local posterior.  Being a
-    # AAALKernel, this one gets to cancel against the likelihood as
-    # well as the prior.
-    return 0
-
-  def weightBound(self, _trace, _value, _args):
-    return 0
 
 
 registerBuiltinSP("make_uc_nig_normal", typed_nr(MakerUNigNormalOutputPSP(),

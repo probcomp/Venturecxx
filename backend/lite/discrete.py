@@ -22,7 +22,7 @@ import scipy
 import scipy.special
 
 from venture.lite.exception import VentureValueError
-from venture.lite.lkernel import SimulationAAALKernel
+from venture.lite.lkernel import PosteriorAAALKernel
 from venture.lite.psp import DeterministicMakerAAAPSP
 from venture.lite.psp import NullRequestPSP
 from venture.lite.psp import RandomPSP
@@ -344,7 +344,7 @@ class MakerUBetaBernoulliOutputPSP(RandomPSP):
     return True
 
   def getAAALKernel(self):
-    return UBetaBernoulliAAALKernel()
+    return UBetaBernoulliAAALKernel(self)
 
   def simulate(self,args):
     (alpha, beta) = args.operandValues()
@@ -359,12 +359,16 @@ class MakerUBetaBernoulliOutputPSP(RandomPSP):
     coinWeight = value.sp.outputPSP.psp.weight
     return scipy.stats.beta.logpdf(coinWeight,alpha,beta)
 
+  def marginalLogDensityOfData(self, aux, args):
+    (alpha, beta) = args.operandValues()
+    return CBetaBernoulliOutputPSP(alpha, beta).logDensityOfData(aux)
+
   def description(self,name):
     return '  %s(alpha, beta) returns an uncollapsed Beta Bernoulli sampler '\
       'with pseudocounts alpha (for true) and beta (for false).' % name
 
 
-class UBetaBernoulliAAALKernel(SimulationAAALKernel):
+class UBetaBernoulliAAALKernel(PosteriorAAALKernel):
   def simulate(self, _trace, args):
     (alpha, beta) = args.operandValues()
     madeaux = args.madeSPAux()
@@ -373,15 +377,6 @@ class UBetaBernoulliAAALKernel(SimulationAAALKernel):
     output = TypedPSP(SuffBernoulliOutputPSP(new_weight), SPType([],
       t.BoolType()))
     return VentureSPRecord(SuffBernoulliSP(NullRequestPSP(), output), madeaux)
-
-  def weight(self, _trace, _newValue, _args):
-    # Gibbs step, samples exactly from the local posterior.  Being a
-    # AAALKernel, this one gets to cancel against the likelihood as
-    # well as the prior.
-    return 0
-
-  def weightBound(self, _trace, _value, _args):
-    return 0
 
 
 class SuffBernoulliOutputPSP(DiscretePSP):
@@ -664,7 +659,7 @@ class MakerUGammaPoissonOutputPSP(DiscretePSP):
     return True
 
   def getAAALKernel(self):
-    return UGammaPoissonAAALKernel()
+    return UGammaPoissonAAALKernel(self)
 
   def simulate(self, args):
     (alpha, beta) = args.operandValues()
@@ -680,11 +675,15 @@ class MakerUGammaPoissonOutputPSP(DiscretePSP):
     mu = value.sp.outputPSP.psp.mu
     return scipy.stats.gamma.logpdf(mu, a=alpha, scale=1./beta)
 
+  def marginalLogDensityOfData(self, aux, args):
+    (alpha, beta) = args.operandValues()
+    return CGammaPoissonOutputPSP(alpha, beta).logDensityOfData(aux)
+
   def description(self, name):
     return '  %s(alpha, beta) returns an uncollapsed Gamma Poisson sampler.'\
       % name
 
-class UGammaPoissonAAALKernel(SimulationAAALKernel):
+class UGammaPoissonAAALKernel(PosteriorAAALKernel):
   def simulate(self, _trace, args):
     madeaux = args.madeSPAux()
     [xsum, ctN] = madeaux.cts()
@@ -695,15 +694,6 @@ class UGammaPoissonAAALKernel(SimulationAAALKernel):
     output = TypedPSP(UGammaPoissonOutputPSP(new_mu, new_alpha, new_beta),
       SPType([], t.CountType()))
     return VentureSPRecord(SuffPoissonSP(NullRequestPSP(), output), madeaux)
-
-  def weight(self, _trace, _newValue, _args):
-    # Gibbs step, samples exactly from the local posterior.  Being a
-    # AAALKernel, this one gets to cancel against the likelihood as
-    # well as the prior.
-    return 0
-
-  def weightBound(self, _trace, _value, _args):
-    return 0
 
 
 registerBuiltinSP("make_uc_gamma_poisson",
