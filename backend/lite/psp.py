@@ -269,7 +269,7 @@ class PSP(object):
   def hasDeltaKernel(self):
     return False
 
-  def gradientOfLogDensityOfData(self, _value, _args):
+  def gradientOfLogDensityOfData(self, _aux, _args):
     """Return the gradient of the made PSP's logDensityOfData function.
     This method is needed only for gradient-based methods and is
     relevant only for makers of PSPs that collect sufficient
