@@ -22,6 +22,7 @@ import numpy as np
 import numpy.random as npr
 
 from venture.lite.exception import VentureValueError
+from venture.lite.lkernel import SimulationAAALKernel
 from venture.lite.psp import DeterministicPSP
 from venture.lite.psp import RandomPSP
 from venture.lite.psp import TypedPSP
@@ -54,12 +55,26 @@ class HMMSPAux(SPAux):
     ans.os = {k:copy(v) for k, v in self.os.iteritems()}
     return ans
 
-class MakeUncollapsedHMMOutputPSP(DeterministicPSP):
+class MakeUncollapsedHMMOutputPSP(RandomPSP):
+  def childrenCanAAA(self):
+    return True
+
+  def getAAALKernel(self):
+    return UncollapsedHMMAAALKernel()
+
   def simulate(self, args):
     (p0, T, O) = args.operandValues()
     # Transposition for compatibility with Puma
     sp = UncollapsedHMMSP(p0, np.transpose(T), np.transpose(O))
     return VentureSPRecord(sp)
+
+  def canAbsorb(self, _trace, _appNode, _parentNode):
+    # always resample (and marginalize over) the state sequence
+    # when reproposing parameters.
+    # TODO: define a logDensity for the parameters given the state
+    # sequence, so that the user can choose whether to block propose the
+    # state sequence or not.
+    return False
 
   def description(self, _name):
     return "  Discrete-state HMM of unbounded length with discrete " \
@@ -69,6 +84,18 @@ class MakeUncollapsedHMMOutputPSP(DeterministicPSP):
       "Returns observations from the HMM encoded as a stochastic " \
       "procedure that takes the time step and samples a new observation " \
       "at that time step."
+
+class UncollapsedHMMAAALKernel(SimulationAAALKernel):
+  def simulate(self, _trace, args):
+    madeaux = args.madeSPAux()
+    (p0, T, O) = args.operandValues()
+    sp = UncollapsedHMMSP(p0, np.transpose(T), np.transpose(O))
+    sp.forwardBackwardSample(madeaux)
+    return VentureSPRecord(sp, madeaux)
+
+  def weight(self, _trace, _newValue, _args):
+    # TODO: return the forward-backward filter weight
+    return 0
 
 class UncollapsedHMMSP(SP):
   def __init__(self, p0, T, O):
@@ -112,12 +139,12 @@ class UncollapsedHMMSP(SP):
         assert len(aux.xs) == maxObservation + 1
     return 0
 
-  def hasAEKernel(self): return True
+  def forwardBackwardSample(self, aux):
+    # called by UncollapsedHMMAAALKernel.simulate
 
-  def AEInfer(self, aux):
     if not aux.os: return
 
-    # forward sampling
+    # forward filtering
     fs = []
     for i in range(len(aux.xs)):
       if i == 0:
