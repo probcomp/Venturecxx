@@ -93,9 +93,10 @@ class UncollapsedHMMAAALKernel(SimulationAAALKernel):
     sp.forwardBackwardSample(madeaux)
     return VentureSPRecord(sp, madeaux)
 
-  def weight(self, _trace, _newValue, _args):
-    # TODO: return the forward-backward filter weight
-    return 0
+  def weight(self, _trace, newValue, args):
+    madeaux = args.madeSPAux()
+    sp = newValue.sp
+    return sp.forwardMarginalWeight(madeaux)
 
 class UncollapsedHMMSP(SP):
   def __init__(self, p0, T, O):
@@ -165,6 +166,27 @@ class UncollapsedHMMSP(SP):
       gamma = npNormalizeVector(np.dot(fs[i], T_i))
       aux.xs[i] = npSampleVector(gamma)
 
+  def forwardMarginalWeight(self, aux):
+    # called by UncollapsedHMMAAALKernel.weight
+    # TODO: cache redundant work between this and forwardBackwardSample?
+
+    if not aux.os: return 0
+
+    weight = 0
+    fs = []
+    for i in range(len(aux.xs)):
+      if i == 0:
+        f = self.p0
+      else:
+        f = np.dot(fs[i-1], self.T)
+      if i in aux.os:
+        for o in aux.os[i]:
+          f = np.dot(f, npMakeDiag(self.O[:, o]))
+
+      weight += np.log(np.sum(f))
+      fs.append(npNormalizeVector(f))
+
+    return weight
 
 class UncollapsedHMMOutputPSP(RandomPSP):
 
