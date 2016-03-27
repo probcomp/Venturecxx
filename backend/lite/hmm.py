@@ -118,9 +118,12 @@ class UncollapsedHMMSP(SP):
     if not aux.os: return
 
     # forward sampling
-    fs = [self.p0]
-    for i in range(1, len(aux.xs)):
-      f = np.dot(fs[i-1], self.T)
+    fs = []
+    for i in range(len(aux.xs)):
+      if i == 0:
+        f = self.p0
+      else:
+        f = np.dot(fs[i-1], self.T)
       if i in aux.os:
         for o in aux.os[i]:
           f = np.dot(f, npMakeDiag(self.O[:, o]))
