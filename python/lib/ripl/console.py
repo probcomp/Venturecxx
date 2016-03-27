@@ -76,15 +76,14 @@ class RiplCmd(Cmd, object):
 
   def _do_instruction(self, s, force_complete=False):
     if self.ripl.get_mode() == "church_prime":
-      # Not supporting multiline paste for abstract syntax yet
-      return self.ripl.execute_instructions(s)
+      from venture.parser.church_prime.parse import string_complete_p
     else:
       from venture.parser.venture_script.parse import string_complete_p
-      if force_complete or string_complete_p(s):
-        return self.ripl.execute_instructions(s)
-      else:
-        self.pending_instruction_string = s
-        self._update_prompt()
+    if force_complete or string_complete_p(s):
+      return self.ripl.execute_instructions(s)
+    else:
+      self.pending_instruction_string = s
+      self._update_prompt()
 
   @catchesVentureException
   def postcmd(self, stop, line):
