@@ -149,12 +149,18 @@ void UncollapsedHMMSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
   if (aux->os.empty()) { return; }
 
   uint32_t maxObservation = (*(max_element(aux->os.begin(),aux->os.end()))).first;
-  vector<VectorXd> fs(1,p0);
+  vector<VectorXd> fs;
 
   /* Forwards filtering */
-  for (size_t i = 1; i <= maxObservation; ++i)
+  for (size_t i = 0; i <= maxObservation; ++i)
   {
-    VectorXd f = T * fs[i-1];
+    VectorXd f;
+    if (i == 0) {
+      f = p0;
+    }
+    else {
+      f = T * fs[i-1];
+    }
     if (aux->os.count(i))
     {
       assert(aux->os[i].size() == 1);
