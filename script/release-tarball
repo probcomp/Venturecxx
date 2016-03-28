@@ -91,8 +91,8 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     `# as being even more tenuous than development tools` \
     --exclude=axch-*.org \
     --exclude=v1-pre-scm/**/todo.txt \
-    `# Exclude HsVenture because it isn't merged`\
-    `# (but compile results appear in my working tree)` \
+    `# Exclude HsVenture because it isn't release quality`\
+    `# (also not merged, but compile results appear in my working tree)` \
     --exclude=backend/hs \
     `# Exclude Terminal because it's unused and copyright-intermixed` \
     --exclude=demos/jsripl/Terminal \
