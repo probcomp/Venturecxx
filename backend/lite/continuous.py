@@ -799,9 +799,9 @@ class SuffNormalOutputPSP(RandomPSP):
   def unincorporate(self, value, args):
     args.spaux().unincorporate(value)
 
-  def simulate(self, _args):
+  def simulate(self, args):
     return scipy.stats.norm.rvs(loc=self.mu, scale=self.sigma,
-                                random_state=_args.args.np_rng)
+                                random_state=args.args.np_rng)
 
   def logDensity(self, value, _args):
     return scipy.stats.norm.logpdf(value, loc=self.mu, scale=self.sigma)

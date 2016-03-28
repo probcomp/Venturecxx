@@ -411,8 +411,8 @@ class SuffBernoulliOutputPSP(DiscretePSP):
     else: # I produced false
       spaux.no -= 1
 
-  def simulate(self, _args):
-    return _args.args.py_rng.random() < self.weight
+  def simulate(self, args):
+    return args.args.py_rng.random() < self.weight
 
   def logDensity(self, value, _args):
     if value is True:
@@ -549,9 +549,9 @@ class SuffPoissonOutputPSP(DiscretePSP):
     spaux.xsum -= value
     spaux.ctN -= 1
 
-  def simulate(self, _args):
+  def simulate(self, args):
     return scipy.stats.poisson.rvs(mu=self.mu,
-                                   random_state=_args.args.np_rng)
+                                   random_state=args.args.np_rng)
 
   def logDensity(self, value, _args):
     return scipy.stats.poisson.logpmf(value, mu=self.mu)

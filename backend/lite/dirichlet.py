@@ -267,8 +267,8 @@ class UDirCatOutputPSP(RandomPSP):
     self.os = os
     self.index = dict((val, i) for (i, val) in enumerate(os))
 
-  def simulate(self, _args):
-    index = sample(_args.args.np_rng, self.theta)
+  def simulate(self, args):
+    index = sample(args.args.np_rng, self.theta)
     return self.os[index]
 
   def logDensity(self, val, _args):
