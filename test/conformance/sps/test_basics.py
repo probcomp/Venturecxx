@@ -22,7 +22,20 @@ from venture.test.stats import statisticalTest, reportKnownContinuous
 
 @on_inf_prim("none")
 def testEq():
-  assert get_ripl().predict("(eq 1 1)")
+  r = get_ripl()
+  assert r.predict("(eq 1 1)")
+  assert not r.predict("(eq 1 2)")
+  assert not r.predict("(neq 1 1)")
+  assert r.predict("(neq 1 2)")
+  r.set_mode("venture_script")
+  assert r.predict("1 == 1")
+  assert r.predict("eq(1, 1)")
+  assert not r.predict("1 == 2")
+  assert not r.predict("eq(1, 2)")
+  assert not r.predict("1 != 1")
+  assert not r.predict("neq(1, 1)")
+  assert r.predict("1 != 2")
+  assert r.predict("neq(1, 2)")
 
 @on_inf_prim("none")
 def testCompare():
