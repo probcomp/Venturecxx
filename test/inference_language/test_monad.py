@@ -128,6 +128,24 @@ def testReturnAndAction():
   eq_(3.0, get_ripl().infer("(do (return 3))"))
   eq_(3.0, get_ripl().infer("(do (action 3))"))
 
+@on_inf_prim("action")
+def testLazyAction():
+  assert get_ripl().infer("""\
+(let ((act (action (normal 0 1))))
+  (do (r1 <- act)
+      (r2 <- act)
+      (return (not (= r1 r2)))))
+""")
+
+@on_inf_prim("return")
+def testEagerReturn():
+  assert get_ripl().infer("""\
+(let ((act (return (normal 0 1))))
+  (do (r1 <- act)
+      (r2 <- act)
+      (return (= r1 r2))))
+""")
+
 @needs_backend("lite")
 @needs_backend("puma")
 @on_inf_prim("new_model")

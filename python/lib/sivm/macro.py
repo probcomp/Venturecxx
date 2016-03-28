@@ -386,8 +386,10 @@ doMacro = Macro(arg0("do"), DoExpand, desc="""\
   whose value is the value returned by the last <stmt>.
 
   If you need a kernel that produces a value without doing anything, use
-  ``return(<value>)`` (see `return`).  If you need a kernel that does
-  nothing and produces no useful value, you can use `pass`.
+  ``return(<value>)`` (see `return`).  If you need a kernel that
+  evaluates an expression and returns its value, use ``action(<exp>)``
+  (see `action`).  If you need a kernel that does nothing and produces
+  no useful value, you can use `pass`.
 
   For example, to make a kernel that does inference until some variable
   in the model becomes "true" (why would anyone want to do that?), you
@@ -421,6 +423,20 @@ beginMacro = Macro(arg0("begin"), BeginExpand, desc="""\
 .. function:: begin(<kernel>, ...)
 
   Perform the given kernels in sequence.
+""", intended_for_inference=True)
+
+actionMacro = SyntaxRule(['action', 'exp'],
+                         ['do', 'pass', ['return', 'exp']],
+                         desc="""\
+.. function:: action(<exp>)
+
+  Wrap an object, usually a non-inference function like plotf,
+  as an inference action, so it can be used inside a do(...) block.
+
+  The difference between `action` and `return` is that `action` defers
+  evaluation of its argument until the action is performed, whereas
+  `return` evaluates its argument eagerly.
+
 """, intended_for_inference=True)
 
 qqMacro = Macro(arg0("quasiquote"), QuasiquoteExpand, desc="""\
@@ -701,7 +717,7 @@ For example::
 """)
 
 for m in [identityMacro, lambdaMacro, ifMacro, condMacro, andMacro, orMacro,
-          letMacro, letrecMacro, doMacro, beginMacro, qqMacro,
+          letMacro, letrecMacro, doMacro, beginMacro, actionMacro, qqMacro,
           callBackMacro, collectMacro,
           assumeMacro, assume_valuesMacro, observeMacro,
           predictMacro, predictAllMacro, forceMacro,
