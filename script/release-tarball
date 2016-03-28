@@ -69,7 +69,6 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=examples/tutorial-2015/vis-*.png \
     --exclude=Venturecxx/examples/tutorial-2015/gauss_plot.png \
     --exclude=Venturecxx/examples/tutorial-2015/reg-test.csv \
-    --exclude=CP1-Quad-Rotor \
     --exclude=.coverage \
     --exclude=.coverage.* \
     --exclude=.idea \
@@ -91,7 +90,6 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=Venturecxx/pythenv.sh \
     --exclude=valgrind-python.supp \
     --exclude=Makefile \
-    --exclude=testEigen \
     --exclude=.gdbinit \
     --exclude=tool/jenkins \
     --exclude=script/release-tarball \
@@ -100,7 +98,6 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     `# as being even more tenuous than development tools` \
     --exclude=axch-*.org \
     --exclude=v1-pre-scm/**/todo.txt \
-    --exclude=.owainnotes.txt \
     `# Exclude HsVenture because it isn't merged`\
     `# (but compile results appear in my working tree)` \
     --exclude=backend/hs \
