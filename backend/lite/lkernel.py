@@ -126,7 +126,7 @@ class AAALKernel(LKernel):
   """An AAA LKernel differs from an LKernel only in the weight contract.
 
   To wit, the weight of an AAA LKernel is expected to include the
-  relevant terms from the full posterior on the node, not just the
+  relevant terms from the full joint density on the node, not just the
   prior.  The likelihood should be computable from the statistics that
   the made SP maintains.
 
@@ -136,34 +136,40 @@ class AAALKernel(LKernel):
 class SimulationAAALKernel(SimulationLKernel, AAALKernel):
   """An AAA LKernel that is also a simulation kernel."""
 
-class DeterministicMakerAAALKernel(SimulationAAALKernel):
-  """If the maker is deterministic, then the proposal is necessarily the
-  same as the prior, and the AAA LKernel weight is the likelihood.
+class PosteriorAAALKernel(SimulationAAALKernel):
+  """An AAA LKernel that proposes exactly from the local posterior.
+
+  In this case, the weight is the joint density divided by the
+  posterior, which is the marginal likelihood of the data.
 
   """
 
   def __init__(self,makerPSP): self.makerPSP = makerPSP
-  def simulate(self, _trace, args):
-    spRecord = self.makerPSP.simulate(args)
-    spRecord.spAux = args.madeSPAux()
-    return spRecord
-  def weight(self, _trace, newValue, _args):
-    # Using newValue.spAux here because args.madeSPAux() is liable to be
-    # None when detaching. This has something to do with when the Args
-    # object is constructed relative to other things that happen
-    # during detach/regen. TODO: fix it so that this code is less
-    # fragile.
-    assert isinstance(newValue,VentureSPRecord)
-    return newValue.sp.outputPSP.logDensityOfData(newValue.spAux)
-  def gradientOfReverseWeight(self, _trace, value, args):
-    """The gradient of the reverse weight, with respect to the vale and the arguments."""
-    return (0, self.makerPSP.gradientOfLogDensityOfData(value.spAux, args))
+  def weight(self, _trace, _newValue, args):
+    return self.makerPSP.marginalLogDensityOfData(args.madeSPAux(), args)
+  def gradientOfReverseWeight(self, _trace, _value, args):
+    """The gradient of the reverse weight, with respect to the value and the arguments."""
+    return (0, self.makerPSP.gradientOfLogDensityOfData(args.madeSPAux(), args))
   def weightBound(self, _trace, _value, args):
     # Going through the maker here because the new value is liable to
     # be None when computing bounds for rejection, but the maker
     # should know enough about its possible values future to answer my
     # question.
     return self.makerPSP.madeSpLogDensityOfDataBound(args.madeSPAux())
+
+class DeterministicMakerAAALKernel(PosteriorAAALKernel):
+  """If the maker is deterministic, then the proposal is necessarily the
+  same as the prior (which is also the posterior), and the AAA LKernel
+  weight is the likelihood.
+
+  """
+  def simulate(self, _trace, args):
+    spRecord = self.makerPSP.simulate(args)
+    spRecord.spAux = args.madeSPAux()
+    return spRecord
+  def weight(self, _trace, newValue, args):
+    assert isinstance(newValue,VentureSPRecord)
+    return newValue.sp.outputPSP.logDensityOfData(args.madeSPAux())
 
 class DeterministicLKernel(SimulationLKernel):
   def __init__(self,psp,value):
