@@ -30,6 +30,9 @@ import venture.lite.value as v
 registerBuiltinSP("eq", binaryPred(lambda x,y: x.compare(y) == 0,
     descr="eq compares its two arguments for equality"))
 
+registerBuiltinSP("neq", binaryPred(lambda x,y: x.compare(y) != 0,
+    descr="neq checkes whether its arguments are not equal"))
+
 registerBuiltinSP("gt", binaryPred(lambda x,y: x.compare(y) >  0,
     descr="gt returns true if its first argument compares greater " \
           "than its second"))
