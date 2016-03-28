@@ -94,23 +94,23 @@ def testAnnotateErrorTriggeredByInferenceOverProgrammaticAssume():
 @on_inf_prim("none")
 def testAnnotateDefinedProgrammaticAssume():
   ripl = get_ripl(persistent_inference_trace=True)
-  ripl.define("action", "(lambda () (assume x (+ 1 foo)))")
+  ripl.define("act", "(lambda () (assume x (+ 1 foo)))")
   # Hm.  Blaming makers of inference actions rather than the actions
   # themselves produces this; which does point to the culprit.
   # However, the top stack frame is somewhat misleading as to when the
   # problem was identified.  I might be able to live with that.
   err.assert_error_message_contains("""\
-(run (action))
-     ^^^^^^^^
+(run (act))
+     ^^^^^
 (lambda () (assume x (add 1 foo)))
            ^^^^^^^^^^^^^^^^^^^^^^
 """,
-  ripl.infer, "(action)")
+  ripl.infer, "(act)")
   err.assert_error_message_contains("""\
 (add 1.0 foo)
          ^^^
 """,
-  ripl.infer, "(action)")
+  ripl.infer, "(act)")
 
 @broken_in("puma", "Puma does not report error addresses")
 @on_inf_prim("none")
@@ -149,23 +149,23 @@ def testAnnotateDefinedInferenceProgramError():
 @on_inf_prim("none")
 def testAnnotateDefinedQuasiquotedProgrammaticAssume():
   ripl = get_ripl(persistent_inference_trace=True)
-  ripl.define("action", "(lambda (name) (assume x (+ 1 ,name)))")
+  ripl.define("act", "(lambda (name) (assume x (+ 1 ,name)))")
   # Hm.  Blaming makers of inference actions rather than the actions
   # themselves produces this; which does point to the culprit.
   # However, the top stack frame is somewhat misleading as to when the
   # problem was identified.  I might be able to live with that.
   err.assert_error_message_contains("""\
-(run (action (quote foo)))
-     ^^^^^^^^^^^^^^^^^^^^
+(run (act (quote foo)))
+     ^^^^^^^^^^^^^^^^^
 (lambda (name) (assume x (add 1 (unquote name))))
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 """,
-  ripl.infer, "(action 'foo)")
+  ripl.infer, "(act 'foo)")
   err.assert_error_message_contains("""\
 (add 1.0 foo)
          ^^^
 """,
-  ripl.infer, "(action 'foo)")
+  ripl.infer, "(act 'foo)")
 
 @broken_in("puma", "Puma does not report error addresses")
 @on_inf_prim("none")
@@ -198,17 +198,17 @@ def testAnnotateInferenceErrorInDo():
 @on_inf_prim("none")
 def testAnnotateInferenceErrorInDefinedDo():
   ripl = get_ripl(persistent_inference_trace=True)
-  ripl.define("action", """\
+  ripl.define("act", """\
 (do (assume x (normal 0 1))
     (y <- (sample x))
     (observe x (+ 1 badness)))""")
   err.assert_error_message_contains("""\
-(run action)
-^^^^^^^^^^^^
+(run act)
+^^^^^^^^^
 (do (assume x (normal 0 1)) (y <- (sample x)) (observe x (add 1 badness)))
                                                                 ^^^^^^^
 """,
-  ripl.infer, "action")
+  ripl.infer, "act")
 
 @broken_in("puma", "Puma does not report error addresses")
 @on_inf_prim("none")
