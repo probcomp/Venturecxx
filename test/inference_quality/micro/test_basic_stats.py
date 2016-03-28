@@ -19,10 +19,17 @@ import math
 import scipy.stats as stats
 from nose import SkipTest
 
-from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.stats import reportKnownMean, reportKnownDiscrete
+from venture.test.config import collectSamples
+from venture.test.config import collect_iid_samples
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.config import skipWhenRejectionSampling
+from venture.test.config import skipWhenSubSampling
+from venture.test.stats import reportKnownContinuous
+from venture.test.stats import reportKnownDiscrete
 from venture.test.stats import reportKnownGaussian
-from venture.test.config import get_ripl, collectSamples, collect_iid_samples, skipWhenRejectionSampling, skipWhenSubSampling, on_inf_prim
+from venture.test.stats import reportKnownMean
+from venture.test.stats import statisticalTest
 
 @on_inf_prim("any")
 @statisticalTest
