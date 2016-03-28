@@ -286,6 +286,27 @@ def parse_church_prime_string(string):
             e.data['text_index'] = [start - lstart, end - lstart]
         raise e
 
+
+def string_complete_p(string):
+    scanner = scan.Scanner(StringIO.StringIO(string), '(string)')
+    semantics = Semantics()
+    parser = grammar.Parser(semantics)
+    while True:
+        token = scanner.read()
+        if token[0] == -1:      # scan error
+            return True
+        else:
+            if token[0] == 0:   # EOF
+                try:
+                    parser.feed(token)
+                    # If the EOF parses, then we had a complete string
+                    return True
+                except VentureException:
+                    # Parse was not complete
+                    return False
+            else:
+                parser.feed(token)
+
 def parse_instructions(string):
     return parse_church_prime_string(string)
 
