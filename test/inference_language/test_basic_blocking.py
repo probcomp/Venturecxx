@@ -105,7 +105,7 @@ def testBlockingExample3():
 @on_inf_prim("rejection")
 def testBasicRejection1():
   ripl = get_ripl()
-  ripl.assume("x", "(bernoulli 0.5)",label="pid")
+  ripl.assume("x", "(flip 0.5)",label="pid")
   predictions = collectSamples(ripl, "pid", infer="(rejection default all 1)")
   ans = [(True, 0.5), (False, 0.5)]
   return reportKnownDiscrete(ans, predictions)
@@ -116,7 +116,7 @@ def testBasicRejection1():
 def testBasicRejection2():
   ripl = get_ripl()
   ripl.assume("p", "(uniform_continuous 0 1)")
-  ripl.assume("x", "(bernoulli p)", label="pid")
+  ripl.assume("x", "(flip p)", label="pid")
   predictions = collectSamples(ripl, "pid", infer="(rejection default all 1)")
   ans = [(True, 0.5), (False, 0.5)]
   return reportKnownDiscrete(ans, predictions)
@@ -127,7 +127,7 @@ def testBasicRejection2():
 def testBasicRejection3():
   ripl = get_ripl()
   ripl.assume("p", "(uniform_continuous 0 1)", label="pid")
-  ripl.observe("(bernoulli p)", "true")
+  ripl.observe("(flip p)", "true")
   predictions = collectSamples(ripl, "pid", infer="(rejection default all 1)")
   cdf = stats.beta(2,1).cdf
   return reportKnownContinuous(cdf, predictions, "beta(2,1)")
