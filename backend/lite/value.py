@@ -399,13 +399,6 @@ class VentureBool(VentureValue):
     return "Bool(%s)" % self.boolean
   def getBool(self):
     return self.boolean
-  def getNumber(self):
-    # TODO This horrible thing permits adding the outputs of bernoulli
-    # trials as well as dispatching on them.  Or should flip and
-    # bernoulli be different SPs?
-    return self.boolean
-  def getInteger(self):
-    return self.boolean
   def asStackDict(self, _trace=None):
     return v.boolean(self.boolean)
   @staticmethod

@@ -22,7 +22,7 @@ from venture.test.config import get_ripl, on_inf_prim, broken_in
 
 @on_inf_prim("none")
 def testAssessSmoke():
-  eq_(math.log(0.5), get_ripl().infer("(return (assess true bernoulli 0.5))"))
+  eq_(math.log(0.5), get_ripl().infer("(return (assess 1 bernoulli 0.5))"))
 
 @broken_in("puma", "Can't use Lite assess in Puma because can't package "
            "Puma SP argument to it")
