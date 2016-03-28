@@ -290,6 +290,11 @@ class MakerCBetaBernoulliOutputPSP(DeterministicMakerAAAPSP):
     denominator = scipy.special.digamma([alpha, beta]) - scipy.special.digamma(alpha + beta)
     return numerator - denominator
 
+  def madeSpLogDensityOfDataBound(self, _aux):
+    # Observations are discrete, so the logDensityOfData is bounded by 0.
+    # Improving this bound is Github issue #468.
+    return 0
+
 class CBetaBernoulliOutputPSP(DiscretePSP):
   def __init__(self, alpha, beta):
     assert isinstance(alpha, float)

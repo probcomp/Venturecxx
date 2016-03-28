@@ -149,6 +149,11 @@ class MakerCDirCatOutputPSP(DeterministicMakerAAAPSP):
     else:
       return [dalphas, 0]
 
+  def madeSpLogDensityOfDataBound(self, _aux):
+    # Observations are discrete, so the logDensityOfData is bounded by 0.
+    # Improving this bound is Github issue #468.
+    return 0
+
 class CDirCatOutputPSP(RandomPSP):
   def __init__(self, alpha, os):
     self.alpha = Node(alpha)

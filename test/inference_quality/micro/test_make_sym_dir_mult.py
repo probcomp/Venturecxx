@@ -159,10 +159,6 @@ def testMakeDirCat1():
 
 @statisticalTest
 def checkMakeDirCat1(maker):
-  if rejectionSampling() and maker == "make_dir_cat":
-    raise SkipTest("Is the log density of data bounded for "
-                   "collapsed beta bernoulli?  Issue: "
-                   "https://app.asana.com/0/9277419963067/10623454782852")
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
