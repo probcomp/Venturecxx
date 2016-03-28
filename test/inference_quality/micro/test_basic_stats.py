@@ -39,26 +39,32 @@ def testBernoulliIfNormal1():
   ripl.assume("b", "(bernoulli 0.3)")
   ripl.predict("(if b (normal 0.0 1.0) (normal 10.0 1.0))", label="pid")
   predictions = collectSamples(ripl,"pid")
-  cdf = lambda x: 0.3 * stats.norm.cdf(x,loc=0,scale=1) + 0.7 * stats.norm.cdf(x,loc=10,scale=1)
+  def cdf(x):
+    return 0.3 * stats.norm.cdf(x, loc=0, scale=1) + \
+      0.7 * stats.norm.cdf(x, loc=10, scale=1)
   return reportKnownContinuous(cdf, predictions, "0.3*N(0,1) + 0.7*N(10,1)")
 
 @on_inf_prim("any")
 @statisticalTest
 def testBernoulliIfNormal2():
   "A simple program with bernoulli, if, and an absorbing application of normal"
-  if not collect_iid_samples(): raise SkipTest("This test should not pass without reset.")
+  if not collect_iid_samples():
+    raise SkipTest("This test should not pass without reset.")
 
   ripl = get_ripl()
   ripl.assume("b", "(bernoulli 0.3)")
   ripl.predict("(normal (if b 0.0 10.0) 1.0)", label="pid")
   predictions = collectSamples(ripl,"pid")
-  cdf = lambda x: 0.3 * stats.norm.cdf(x,loc=0,scale=1) + 0.7 * stats.norm.cdf(x,loc=10,scale=1)
+  def cdf(x):
+    return 0.3 * stats.norm.cdf(x, loc=0, scale=1) + \
+      0.7 * stats.norm.cdf(x, loc=10, scale=1)
   return reportKnownContinuous(cdf, predictions, "0.3*N(0,1) + 0.7*N(10,1)")
 
 @on_inf_prim("any")
 @statisticalTest
 def testNormalWithObserve1():
-  "Checks the posterior distribution on a Gaussian given an unlikely observation"
+  # Checks the posterior distribution on a Gaussian given an unlikely
+  # observation.
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)", label="pid")
   ripl.observe("(normal a 1.0)", 14.0)
@@ -71,7 +77,9 @@ def testNormalWithObserve1():
 @on_inf_prim("any")
 @statisticalTest
 def testNormalWithObserve2a():
-  "Checks the posterior distribution on a Gaussian given an unlikely observation.  The difference between this and 1 is an extra predict, which apparently has a deleterious effect on mixing."
+  # Checks the posterior distribution on a Gaussian given an unlikely
+  # observation.  The difference between this and 1 is an extra
+  # predict, which apparently has a deleterious effect on mixing.
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)", label="pid")
   ripl.observe("(normal a 1.0)", 14.0)
@@ -84,7 +92,8 @@ def testNormalWithObserve2a():
 @on_inf_prim("any")
 @statisticalTest
 def testNormalWithObserve2b():
-  "Checks the posterior distribution on a Gaussian given an unlikely observation"
+  # Checks the posterior distribution on a Gaussian given an unlikely
+  # observation.
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.observe("(normal a 1.0)", 14.0)
@@ -98,7 +107,8 @@ def testNormalWithObserve2b():
 @statisticalTest
 def testNormalWithObserve3():
   "Checks the posterior of a Gaussian in a Linear-Gaussian-BN"
-  raise SkipTest("I do not know the right answer.  See issue https://app.asana.com/0/9277419963067/9797699085006")
+  raise SkipTest("I do not know the right answer.  See issue "
+                 "https://app.asana.com/0/9277419963067/9797699085006")
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("b", "(normal a 1.0)")
@@ -143,7 +153,8 @@ def testStudentT1():
 @on_inf_prim("any")
 @statisticalTest
 def testStudentT2():
-  "Simple program involving simulating from a student_t, with basic testing of loc and shape params"
+  # Simple program involving simulating from a student_t, with basic
+  # testing of loc and shape params.
   ripl = get_ripl()
   ripl.assume("x", "(student_t 1.0 3 2)")
   ripl.assume("a", "(/ (- x 3) 2)")
@@ -166,8 +177,12 @@ def testStudentT2():
 
 
 @on_inf_prim("any")
-@skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
-@skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
+@skipWhenRejectionSampling(
+  "Rejection sampling doesn't work when resimulations "
+  "of unknown code are observed")
+@skipWhenSubSampling(
+  "Leads to a scaffold structure that the current "
+  "implementation of subsampling can't handle")
 @statisticalTest
 def testSprinkler1():
   "Classic Bayes-net example, with no absorbing when proposing to 'rain'"
@@ -187,10 +202,13 @@ def testSprinkler1():
 
 @on_inf_prim("any")
 @statisticalTest
-@skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
+@skipWhenSubSampling(
+  "Leads to a scaffold structure that the current "
+  "implementation of subsampling can't handle")
 def testSprinkler2():
-  "Classic Bayes-net example, absorbing at 'sprinkler' when proposing to 'rain'"
-  # this test needs more iterations than most others, because it mixes badly
+  # Classic Bayes-net example, absorbing at 'sprinkler' when proposing
+  # to 'rain'.  This test needs more iterations than most others,
+  # because it mixes badly.
   ripl = get_ripl()
   ripl.assume("rain","(bernoulli 0.2)", label="pid")
   ripl.assume("sprinkler","(bernoulli (if rain 0.01 0.4))")
