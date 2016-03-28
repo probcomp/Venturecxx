@@ -57,8 +57,8 @@ def testBlockingExample1():
   ripl.infer("(mh 0 0 1)")
   newa = ripl.report("a")
   newb = ripl.report("b")
-  assert not olda == newa
-  assert not oldb == newb
+  assert olda != newa
+  assert oldb != newb
 
 @on_inf_prim("mh")
 def testBlockingExample2():
@@ -79,10 +79,10 @@ def testBlockingExample2():
   newd = ripl.report("d")
   if olda == newa:
     assert oldb == newb
-    assert not oldc == newc
-    assert not oldd == newd
+    assert oldc != newc
+    assert oldd != newd
   else:
-    assert not oldb == newb
+    assert oldb != newb
     assert oldc == newc
     assert oldd == newd
 
@@ -97,8 +97,8 @@ def testBlockingExample3():
   ripl.infer("(mh 0 all 1)")
   newa = ripl.report("a")
   newb = ripl.report("b")
-  assert not olda == newa
-  assert not oldb == newb
+  assert olda != newa
+  assert oldb != newb
 
 @statisticalTest
 @broken_in('puma', "rejection is not implemented in Puma")
@@ -160,5 +160,5 @@ def testStringScopes():
   ripl.infer('(mh "foo" "bar" 1)')
   newa = ripl.report("a")
   newb = ripl.report("b")
-  assert not olda == newa
-  assert not oldb == newb
+  assert olda != newa
+  assert oldb != newb
