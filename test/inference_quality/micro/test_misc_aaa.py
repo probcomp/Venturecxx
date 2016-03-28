@@ -20,6 +20,10 @@ from testconfig import config
 
 from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, rejectionSampling, skipWhenSubSampling, inParallel, gen_on_inf_prim
+from venture.test.config import default_num_samples
+from venture.test.config import default_num_transitions_per_sample
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportSameContinuous
 
 @gen_on_inf_prim("any")
 def testMakeBetaBernoulli1():
@@ -195,3 +199,18 @@ def checkAAAResampleSmoke(sp):
 (resample 4)
 (mh default one 1)
 """ % sp)
+
+@on_inf_prim("block mh")
+@statisticalTest
+def testAAAHyperInference():
+  def try_at_five(maker):
+    r = get_ripl()
+    r.assume("mu", "(normal 0 1)")
+    r.assume("obs", "(%s mu 1 1 1)" % maker)
+    r.observe("(obs)", 5)
+    infer = "(mh default all %d)" % default_num_transitions_per_sample()
+    return collectSamples(r, "mu", infer=infer,
+                          num_samples=default_num_samples(2))
+  collapsed = try_at_five("make_nig_normal")
+  uncollapsed = try_at_five("make_uc_nig_normal")
+  return reportSameContinuous(collapsed, uncollapsed)

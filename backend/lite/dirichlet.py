@@ -22,7 +22,7 @@ import scipy.special
 import numpy.random as npr
 
 from venture.lite.exception import VentureValueError
-from venture.lite.lkernel import SimulationAAALKernel
+from venture.lite.lkernel import PosteriorAAALKernel
 from venture.lite.psp import DeterministicMakerAAAPSP
 from venture.lite.psp import NullRequestPSP
 from venture.lite.psp import RandomPSP
@@ -203,7 +203,7 @@ registerBuiltinSP("make_dir_cat", \
 
 class MakerUDirCatOutputPSP(RandomPSP):
   def childrenCanAAA(self): return True
-  def getAAALKernel(self): return UDirCatAAALKernel()
+  def getAAALKernel(self): return UDirCatAAALKernel(self)
 
   def simulate(self, args):
     vals = args.operandValues()
@@ -225,10 +225,17 @@ class MakerUDirCatOutputPSP(RandomPSP):
     assert isinstance(value.sp.outputPSP.psp, UDirCatOutputPSP)
     return logDensityDirichlet(value.sp.outputPSP.psp.theta, alpha)
 
+  def marginalLogDensityOfData(self, aux, args):
+    vals = args.operandValues()
+    alpha = vals[0]
+    n = len(alpha)
+    os = vals[1] if len(vals) > 1 else [VentureInteger(i) for i in range(n)]
+    return CDirCatOutputPSP(alpha, os).logDensityOfData(aux)
+
   def description(self, name):
     return "  %s is an uncollapsed variant of make_dir_cat." % name
 
-class UDirCatAAALKernel(SimulationAAALKernel):
+class UDirCatAAALKernel(PosteriorAAALKernel):
   def simulate(self, _trace, args):
     vals = args.operandValues()
     alpha = vals[0]
@@ -242,14 +249,6 @@ class UDirCatAAALKernel(SimulationAAALKernel):
     return VentureSPRecord(DirCatSP(NullRequestPSP(), output, alpha,
                                      len(alpha)),
                            madeaux)
-
-  def weight(self, _trace, _newValue, _args):
-    # Gibbs step, samples exactly from the local posterior.  Being a
-    # AAALKernel, this one gets to cancel against the likelihood as
-    # well as the prior.
-    return 0
-
-  def weightBound(self, _trace, _value, _args): return 0
 
 class UDirCatOutputPSP(RandomPSP):
   def __init__(self, theta, os):
@@ -341,7 +340,7 @@ registerBuiltinSP("make_sym_dir_cat", \
 
 class MakerUSymDirCatOutputPSP(RandomPSP):
   def childrenCanAAA(self): return True
-  def getAAALKernel(self): return USymDirCatAAALKernel()
+  def getAAALKernel(self): return USymDirCatAAALKernel(self)
 
   def simulate(self, args):
     vals = args.operandValues()
@@ -364,10 +363,16 @@ class MakerUSymDirCatOutputPSP(RandomPSP):
     return logDensityDirichlet(value.sp.outputPSP.psp.theta,
                                [float(alpha) for _ in range(int(n))])
 
+  def marginalLogDensityOfData(self, aux, args):
+    vals = args.operandValues()
+    (alpha, n) = (float(vals[0]), int(vals[1]))
+    os = vals[2] if len(vals) > 2 else [VentureInteger(i) for i in range(n)]
+    return CSymDirCatOutputPSP(alpha, n, os).logDensityOfData(aux)
+
   def description(self, name):
     return "  %s is an uncollapsed symmetric variant of make_dir_cat." % name
 
-class USymDirCatAAALKernel(SimulationAAALKernel):
+class USymDirCatAAALKernel(PosteriorAAALKernel):
   def simulate(self, _trace, args):
     vals = args.operandValues()
     (alpha, n) = (float(vals[0]), int(vals[1]))
@@ -380,14 +385,6 @@ class USymDirCatAAALKernel(SimulationAAALKernel):
                       SPType([], t.AnyType()))
     return VentureSPRecord(DirCatSP(NullRequestPSP(), output, alpha, n),
                            madeaux)
-
-  def weight(self, _trace, _newValue, _args):
-    # Gibbs step, samples exactly from the local posterior.  Being a
-    # AAALKernel, this one gets to cancel against the likelihood as
-    # well as the prior.
-    return 0
-
-  def weightBound(self, _trace, _value, _args): return 0
 
 class USymDirCatOutputPSP(UDirCatOutputPSP):
   pass
