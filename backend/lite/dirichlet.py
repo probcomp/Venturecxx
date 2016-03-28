@@ -328,6 +328,8 @@ class MakerCSymDirCatOutputPSP(DeterministicMakerAAAPSP):
 
   def madeSpLogDensityOfDataBound(self, aux):
     N = aux.counts.total
+    if N == 0:
+      return 0
     empirical_freqs = [float(c) / N for c in aux.counts]
     # The prior can't do better than concentrating all mass on exactly
     # the best weights, which are the empirical ones.
