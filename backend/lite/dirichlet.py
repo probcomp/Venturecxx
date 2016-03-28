@@ -149,6 +149,11 @@ class MakerCDirCatOutputPSP(DeterministicMakerAAAPSP):
     else:
       return [dalphas, 0]
 
+  def madeSpLogDensityOfDataBound(self, _aux):
+    # Observations are discrete, so the logDensityOfData is bounded by 0.
+    # Improving this bound is Github issue #468.
+    return 0
+
 class CDirCatOutputPSP(RandomPSP):
   def __init__(self, alpha, os):
     self.alpha = Node(alpha)
@@ -231,6 +236,12 @@ class MakerUDirCatOutputPSP(RandomPSP):
     n = len(alpha)
     os = vals[1] if len(vals) > 1 else [VentureInteger(i) for i in range(n)]
     return CDirCatOutputPSP(alpha, os).logDensityOfData(aux)
+
+  def gradientOfLogDensityOfData(self, aux, args):
+    return MakerCDirCatOutputPSP().gradientOfLogDensityOfData(aux, args)
+
+  def madeSpLogDensityOfDataBound(self, aux):
+    return MakerCDirCatOutputPSP().madeSpLogDensityOfDataBound(aux)
 
   def description(self, name):
     return "  %s is an uncollapsed variant of make_dir_cat." % name
@@ -317,6 +328,8 @@ class MakerCSymDirCatOutputPSP(DeterministicMakerAAAPSP):
 
   def madeSpLogDensityOfDataBound(self, aux):
     N = aux.counts.total
+    if N == 0:
+      return 0
     empirical_freqs = [float(c) / N for c in aux.counts]
     # The prior can't do better than concentrating all mass on exactly
     # the best weights, which are the empirical ones.
@@ -368,6 +381,12 @@ class MakerUSymDirCatOutputPSP(RandomPSP):
     (alpha, n) = (float(vals[0]), int(vals[1]))
     os = vals[2] if len(vals) > 2 else [VentureInteger(i) for i in range(n)]
     return CSymDirCatOutputPSP(alpha, n, os).logDensityOfData(aux)
+
+  def gradientOfLogDensityOfData(self, aux, args):
+    return MakerCSymDirCatOutputPSP().gradientOfLogDensityOfData(aux, args)
+
+  def madeSpLogDensityOfDataBound(self, aux):
+    return MakerCSymDirCatOutputPSP().madeSpLogDensityOfDataBound(aux)
 
   def description(self, name):
     return "  %s is an uncollapsed symmetric variant of make_dir_cat." % name

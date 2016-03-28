@@ -290,6 +290,11 @@ class MakerCBetaBernoulliOutputPSP(DeterministicMakerAAAPSP):
     denominator = scipy.special.digamma([alpha, beta]) - scipy.special.digamma(alpha + beta)
     return numerator - denominator
 
+  def madeSpLogDensityOfDataBound(self, _aux):
+    # Observations are discrete, so the logDensityOfData is bounded by 0.
+    # Improving this bound is Github issue #468.
+    return 0
+
 class CBetaBernoulliOutputPSP(DiscretePSP):
   def __init__(self, alpha, beta):
     assert isinstance(alpha, float)
@@ -362,6 +367,12 @@ class MakerUBetaBernoulliOutputPSP(RandomPSP):
   def marginalLogDensityOfData(self, aux, args):
     (alpha, beta) = args.operandValues()
     return CBetaBernoulliOutputPSP(alpha, beta).logDensityOfData(aux)
+
+  def gradientOfLogDensityOfData(self, aux, args):
+    return MakerCBetaBernoulliOutputPSP().gradientOfLogDensityOfData(aux, args)
+
+  def madeSpLogDensityOfDataBound(self, aux):
+    return MakerCBetaBernoulliOutputPSP().madeSpLogDensityOfDataBound(aux)
 
   def description(self,name):
     return '  %s(alpha, beta) returns an uncollapsed Beta Bernoulli sampler '\
