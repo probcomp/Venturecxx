@@ -244,9 +244,11 @@ def reportKnownContinuous(expectedCDF, observed, descr=None, show_plot=False):
     "K stat  : " + str(K),
     "P value : " + str(pval)]))
 
-def reportSameContinuous(observed1, observed2):
+def reportSameContinuous(observed1, observed2, show_plot=False):
   """Kolmogorov-Smirnov test for sameness of two empirical 1-D continuous distributions."""
   (D, pval) = stats.ks_2samp(observed1, observed2)
+  if show_plot:
+    plots.p_p_plot_2samp(observed1, observed2, show=True)
   return TestResult(pval, "\n".join([
     "Expected samples from the same distribution",
     explainOneDSample(observed1),
