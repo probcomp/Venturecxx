@@ -74,7 +74,7 @@ class EnumerativeGibbsOperator(object):
     self.scaffold = scaffold
     (xiParticles, xiWeights) = self.compute_particles(trace, scaffold)
     # Now sample a NEW particle in proportion to its weight
-    finalIndex = self.chooseProposalParticle(xiWeights)
+    finalIndex = self.chooseProposalParticle(xiWeights, trace.np_rng)
     self.finalParticle = xiParticles[finalIndex]
     return self.finalParticle,0
 
@@ -82,8 +82,8 @@ class EnumerativeGibbsOperator(object):
     from ..particle import Particle
     return Particle(trace)
 
-  def chooseProposalParticle(self, xiWeights):
-    return sampleLogCategorical(xiWeights)
+  def chooseProposalParticle(self, xiWeights, np_rng):
+    return sampleLogCategorical(xiWeights, np_rng)
 
   def accept(self):
     self.finalParticle.commit()
@@ -95,7 +95,7 @@ class EnumerativeGibbsOperator(object):
   def name(self): return "enumerative gibbs"
 
 class EnumerativeMAPOperator(EnumerativeGibbsOperator):
-  def chooseProposalParticle(self, xiWeights):
+  def chooseProposalParticle(self, xiWeights, np_rng):
     m = max(xiWeights)
     return [i for i, j in enumerate(xiWeights) if j == m][0]
   def name(self): return "enumerative max a-posteriori"

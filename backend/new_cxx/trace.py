@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import random
+import numpy.random as npr
 
 import libpumatrace as puma
 
@@ -49,11 +50,17 @@ class WarningSP(object):
     return getattr(self.sp, attrname)
 
 class Trace(object):
-  def __init__(self, trace=None):
+  def __init__(self, trace=None, entropy=None):
+    if entropy:
+      self.py_rng = random.Random(entropy)
+      self.np_rng = npr.RandomState(entropy)
+    else:
+      self.py_rng = random.Random()
+      self.np_rng = npr.RandomState()
     if trace is None:
       self.trace = puma.Trace()
       # Poor Puma defaults its local RNG seed to the system time
-      self.trace.set_seed(random.randint(1,2**31-1))
+      self.trace.set_seed(self.py_rng.randint(1,2**31-1))
       for name,sp in builtInSPs().iteritems():
         if self.trace.boundInGlobalEnv(name):
           # Already there

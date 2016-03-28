@@ -17,6 +17,9 @@
 
 import math
 
+import random
+import numpy.random as npr
+
 from venture.exception import VentureException
 from venture.lite.address import Address
 from venture.lite.address import List
@@ -63,7 +66,7 @@ from venture.lite.value import VentureValue
 import venture.lite.infer as infer
 
 class Trace(object):
-  def __init__(self):
+  def __init__(self, entropy=None):
 
     self.globalEnv = VentureEnvironment()
     for name, val in builtInValues().iteritems():
@@ -81,6 +84,9 @@ class Trace(object):
 
     self.profiling_enabled = False
     self.stats = []
+
+    self.np_rng = npr.RandomState(entropy)
+    self.py_rng = random.Random(entropy)
 
   def scope_keys(self):
     # A hack for allowing scope names not to be quoted in inference
@@ -297,7 +303,7 @@ class Trace(object):
   #### For kernels
   def getScope(self, scope): return self.scopes[self._normalizeEvaluatedScopeOrBlock(scope)]
 
-  def sampleBlock(self, scope): return self.getScope(scope).sample()[0]
+  def sampleBlock(self, scope): return self.getScope(scope).sample(self.py_rng)[0]
   def logDensityOfBlock(self, scope): return -1 * math.log(self.numBlocksInScope(scope))
   def blocksInScope(self, scope): return self.getScope(scope).keys()
   def numBlocksInScope(self, scope):
@@ -606,7 +612,7 @@ class Trace(object):
       else: raise Exception("INFER %s is not implemented" % operator)
 
       for node in self.aes:
-        self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
+        self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node), self.np_rng)
       ct += len(self.aes)
 
     if transitions > 0:

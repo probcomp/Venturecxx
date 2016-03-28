@@ -18,6 +18,8 @@
 # Testing the (Python) SP objects standalone
 
 import math
+import random
+import numpy.random as npr
 from testconfig import config
 from nose.tools import eq_, assert_almost_equal
 from flaky import flaky
@@ -142,19 +144,19 @@ def checkRandom(name, sp):
 def checkFlakyRandom(name, sp):
   checkRandom(name, sp)
 
-def simulate_fully_uncurried(name, sp, args_lists):
+def simulate_fully_uncurried(name, sp, args_lists, randomness=FixedRandomness()):
   if isinstance(sp, VentureSPRecord):
     sp, aux = sp.sp, sp.spAux
   else:
     aux = carefully(sp.constructSPAux)
   if not isinstance(sp.requestPSP, NullRequestPSP):
     raise SkipTest("SP %s returned a requesting SP" % name)
-  args = BogusArgs(args_lists[0], aux)
+  args = BogusArgs(args_lists[0], aux, randomness)
   answer = carefully(sp.outputPSP.simulate, args)
   if len(args_lists) == 1:
     return answer
   else:
-    return simulate_fully_uncurried(name, answer, args_lists[1:])
+    return simulate_fully_uncurried(name, answer, args_lists[1:], randomness)
 
 def log_density_fully_uncurried(name, sp, args_lists, value):
   if isinstance(sp, VentureSPRecord):
@@ -208,7 +210,7 @@ def checkFixingRandomness(name, sp):
 def propDeterministicWhenFixed(args_lists, name, sp):
   randomness = FixedRandomness()
   with randomness:
-    answer = simulate_fully_uncurried(name, sp, args_lists)
+    answer = simulate_fully_uncurried(name, sp, args_lists, randomness)
   for _ in range(5):
     with randomness:
-      eq_(answer, simulate_fully_uncurried(name, sp, args_lists))
+      eq_(answer, simulate_fully_uncurried(name, sp, args_lists, randomness))

@@ -201,7 +201,7 @@ class DefaultVariationalLKernel(VariationalLKernel):
     self.parameterScopes = psp.getParameterScopes()
 
   def simulate(self, _trace, _args):
-    return self.psp.simulateNumeric(self.parameters)
+    return self.psp.simulateNumeric(self.parameters, _args.args.np_rng)
 
   def weight(self, _trace, newValue, args):
     ld = self.psp.logDensityNumeric(newValue,args.operandValues())

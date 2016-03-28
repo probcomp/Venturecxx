@@ -20,8 +20,8 @@ import numbers
 import random
 
 import numpy as np
-import numpy.linalg as npla
 import numpy.random as npr
+import numpy.linalg as npla
 import scipy.special as ss
 
 # This one is from http://stackoverflow.com/questions/1167617/in-python-how-do-i-indicate-im-overriding-a-method
@@ -41,10 +41,10 @@ def normalizeList(seq):
     n = float(len(seq))
     return [1.0/n for x in seq]
 
-def simulateCategorical(ps,os=None):
+def simulateCategorical(ps,np_rng,os=None):
   if os is None: os = range(len(ps))
   ps = normalizeList(ps)
-  return os[npr.multinomial(1,ps).argmax()]
+  return os[np_rng.multinomial(1,ps).argmax()]
 
 def logDensityCategorical(val,ps,os=None):
   if os is None: os = range(len(ps))
@@ -75,7 +75,7 @@ def logDensityCategoricalSequence(weights, counts):
     return np.log(w) * c
   return sum(term(w, c) for (w, c) in zip(weights, counts))
 
-def simulateDirichlet(alpha): return npr.dirichlet(alpha)
+def simulateDirichlet(alpha, np_rng): return np_rng.dirichlet(alpha)
 
 def logDensityDirichlet(theta, alpha):
   theta = np.array(theta)
@@ -118,16 +118,17 @@ def logWeightsToNormalizedDirect(logs):
     # If all the logs are -inf, force 0 instead of NaN.
     return [0 for _ in logs]
 
-def sampleLogCategorical(logs):
+def sampleLogCategorical(logs, np_rng):
   "Samples from an unnormalized categorical distribution given in logspace."
   the_max = max(logs)
   if the_max > float("-inf"):
-    return simulateCategorical([math.exp(log - the_max) for log in logs])
+    return simulateCategorical([math.exp(log - the_max) for log in logs],
+      np_rng, os=None)
   else:
     # normalizeList, as written above, will actually do the right
     # thing with this, namely treat all impossible options as equally
     # impossible.
-    return simulateCategorical([0 for _ in logs])
+    return simulateCategorical([0 for _ in logs], np_rng, os=None)
 
 def numpy_force_number(answer):
   if isinstance(answer, numbers.Number):
@@ -185,21 +186,23 @@ against fixed randomness.
   the random number generator (other than by calling it) that
   monkeying will be suppressed, and not propagated to its caller. """
 
-  def __init__(self):
-    self.pyr_state = random.getstate()
-    self.numpyr_state = npr.get_state()
-    random.jumpahead(random.randint(1,2**31-1))
-    npr.seed(random.randint(1,2**31-1))
+  def __init__(self, py_rng=random.Random(), np_rng=npr.RandomState()):
+    self.py_rng = py_rng
+    self.np_rng = np_rng
+    self.pyr_state = py_rng.getstate()
+    self.numpyr_state = np_rng.get_state()
+    py_rng.jumpahead(py_rng.randint(1,2**31-1))
+    np_rng.seed(py_rng.randint(1,2**31-1))
 
   def __enter__(self):
-    self.cur_pyr_state = random.getstate()
-    self.cur_numpyr_state = npr.get_state()
-    random.setstate(self.pyr_state)
-    npr.set_state(self.numpyr_state)
+    self.cur_pyr_state = self.py_rng.getstate()
+    self.cur_numpyr_state = self.np_rng.get_state()
+    self.py_rng.setstate(self.pyr_state)
+    self.np_rng.set_state(self.numpyr_state)
 
   def __exit__(self, _type, _value, _backtrace):
-    random.setstate(self.cur_pyr_state)
-    npr.set_state(self.cur_numpyr_state)
+    self.py_rng.setstate(self.cur_pyr_state)
+    self.np_rng.set_state(self.cur_numpyr_state)
     return False # Do not suppress any thrown exception
 
 # raise is a statement and can't be used in a lambda :(

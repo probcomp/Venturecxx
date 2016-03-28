@@ -26,6 +26,9 @@ from ..lite.psp import PSP
 
 import node
 
+import random
+import numpy.random as npr
+
 # We still have a notion of nodes.  A node is a thing that knows its
 # address, and its value if it has one.
 
@@ -85,6 +88,8 @@ class RequestArgs(object):
     self.node = node.Node(address)
     self.operandNodes = nodes
     self.env = env
+    self.py_rng = random.Random()
+    self.np_rng = npr.RandomState()
     # TODO Theoretically need spaux and madeSPAux fields
 
   def operandValues(self):
