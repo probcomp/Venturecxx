@@ -87,8 +87,7 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=venture-*.tgz \
     `# Exclude Jenkins setup from released distribution, for lack of value` \
     --exclude=tool/jenkins \
-    `# Exclude plans and road maps,` \
-    `# as being even more tenuous than development tools` \
+    `# Exclude plans and road maps, as not being something we release` \
     --exclude=axch-*.org \
     --exclude=v1-pre-scm/**/todo.txt \
     `# Exclude HsVenture because it isn't release quality`\
