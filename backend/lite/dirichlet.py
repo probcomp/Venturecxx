@@ -237,6 +237,12 @@ class MakerUDirCatOutputPSP(RandomPSP):
     os = vals[1] if len(vals) > 1 else [VentureInteger(i) for i in range(n)]
     return CDirCatOutputPSP(alpha, os).logDensityOfData(aux)
 
+  def gradientOfLogDensityOfData(self, aux, args):
+    return MakerCDirCatOutputPSP().gradientOfLogDensityOfData(aux, args)
+
+  def madeSpLogDensityOfDataBound(self, aux):
+    return MakerCDirCatOutputPSP().madeSpLogDensityOfDataBound(aux)
+
   def description(self, name):
     return "  %s is an uncollapsed variant of make_dir_cat." % name
 
@@ -373,6 +379,12 @@ class MakerUSymDirCatOutputPSP(RandomPSP):
     (alpha, n) = (float(vals[0]), int(vals[1]))
     os = vals[2] if len(vals) > 2 else [VentureInteger(i) for i in range(n)]
     return CSymDirCatOutputPSP(alpha, n, os).logDensityOfData(aux)
+
+  def gradientOfLogDensityOfData(self, aux, args):
+    return MakerCSymDirCatOutputPSP().gradientOfLogDensityOfData(aux, args)
+
+  def madeSpLogDensityOfDataBound(self, aux):
+    return MakerCSymDirCatOutputPSP().madeSpLogDensityOfDataBound(aux)
 
   def description(self, name):
     return "  %s is an uncollapsed symmetric variant of make_dir_cat." % name

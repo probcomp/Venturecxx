@@ -368,6 +368,12 @@ class MakerUBetaBernoulliOutputPSP(RandomPSP):
     (alpha, beta) = args.operandValues()
     return CBetaBernoulliOutputPSP(alpha, beta).logDensityOfData(aux)
 
+  def gradientOfLogDensityOfData(self, aux, args):
+    return MakerCBetaBernoulliOutputPSP().gradientOfLogDensityOfData(aux, args)
+
+  def madeSpLogDensityOfDataBound(self, aux):
+    return MakerCBetaBernoulliOutputPSP().madeSpLogDensityOfDataBound(aux)
+
   def description(self,name):
     return '  %s(alpha, beta) returns an uncollapsed Beta Bernoulli sampler '\
       'with pseudocounts alpha (for true) and beta (for false).' % name
