@@ -22,9 +22,9 @@ import random
 
 import numpy.random as npr
 
-from flaky import flaky
 from nose.tools import eq_
 from testconfig import config
+from venture.test.flaky import flaky
 
 from venture.lite.builtin import builtInSPsIter
 from venture.lite.psp import NullRequestPSP

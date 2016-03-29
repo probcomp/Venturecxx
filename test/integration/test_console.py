@@ -25,7 +25,7 @@ import re
 import subprocess
 import tempfile
 
-from flaky import flaky
+from venture.test.flaky import flaky
 import pexpect
 
 from venture.test.config import in_backend
