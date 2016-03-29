@@ -33,6 +33,7 @@ property fails stochastically or deterministically, or combinators for
 deciding whether "sporadic fail" should be treated as "fail" or
 "pass"."""
 
+import random
 import numpy.random as npr
 from nose import SkipTest
 
@@ -41,7 +42,6 @@ from venture.lite.exception import VentureValueError
 from venture.lite.sp import SPType
 from venture.lite.types import VentureType
 from venture.lite import env as env
-from venture.lite.utils import FixedRandomness
 
 def checkTypedProperty(prop, type_, *args, **kwargs):
   """Checks a property, given a description of the arguments to pass it.
@@ -162,15 +162,19 @@ class BogusArgs(object):
   to Nodes in a Trace and all sorts of things.  Mock that for testing
   purposes, since most SPs do not read the hairy stuff."""
 
-  def __init__(self, args, aux, randomness=FixedRandomness()):
+  def __init__(self, args, aux, py_rng=None, np_rng=None):
     # TODO Do I want to try to synthesize an actual real random valid Args object?
+    if py_rng is None:
+      py_rng = random.Random()
+    if np_rng is None:
+      np_rng = npr.RandomState()
     self.args = args
     self.aux = aux
     self.node = None
     self.operandNodes = [None for _ in args]
     self.env = env.VentureEnvironment()
-    self.np_rng = randomness.np_rng
-    self.py_rng = randomness.py_rng
+    self.np_rng = np_rng
+    self.py_rng = py_rng
 
   def operandValues(self): return self.args
   def spaux(self): return self.aux

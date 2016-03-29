@@ -133,8 +133,10 @@ def propGradientOfSimulate(args_lists, name, sp):
     raise SkipTest("TODO: Write the code for testing simulation gradients of curried SPs")
   if name == "mul" and len(args_lists[0]) is not 2:
     raise ArgumentsNotAppropriate("TODO mul only has a gradient in its binary form")
-  args = BogusArgs(args_lists[0], sp.constructSPAux())
-  randomness = FixedRandomness()
+  py_rng = random.Random()
+  np_rng = npr.RandomState()
+  args = BogusArgs(args_lists[0], sp.constructSPAux(), py_rng, np_rng)
+  randomness = FixedRandomness(py_rng, np_rng)
   with randomness:
     value = carefully(sp.outputPSP.simulate, args)
 

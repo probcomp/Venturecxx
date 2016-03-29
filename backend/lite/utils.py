@@ -17,10 +17,8 @@
 
 import math
 import numbers
-import random
 
 import numpy as np
-import numpy.random as npr
 import numpy.linalg as npla
 import scipy.special as ss
 
@@ -186,7 +184,7 @@ against fixed randomness.
   the random number generator (other than by calling it) that
   monkeying will be suppressed, and not propagated to its caller. """
 
-  def __init__(self, py_rng=random.Random(), np_rng=npr.RandomState()):
+  def __init__(self, py_rng, np_rng):
     self.py_rng = py_rng
     self.np_rng = np_rng
     self.pyr_state = py_rng.getstate()
