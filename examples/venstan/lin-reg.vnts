@@ -1,0 +1,46 @@
+// Copyright (c) 2015 MIT Probabilistic Computing Project.
+//
+// This file is part of Venture.
+//
+// Venture is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Venture is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
+load_plugin("antsenv.py");
+
+assume stan_program = "
+data {
+  int<lower=0> N;
+  vector[N] x;
+  vector[N] y;
+}
+parameters {
+  real intercept;
+  real slope;
+  real<lower=0> noise;
+}
+model {
+  intercept ~ normal(0, 10);
+  slope ~ normal(0, 1);
+  noise ~ inv_gamma(1, 1);
+  y ~ normal(slope * x + intercept, noise);
+}
+";
+
+assume count = "N";
+assume inputs = list("x");
+assume output = "y";
+assume get_y = make_ven_stan(stan_program, count, inputs, output);
+
+observe get_y(3) = 4;
+
+pyexec("ripl.sample('get_y')()");
