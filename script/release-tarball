@@ -44,6 +44,7 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=*.bin \
     --exclude=*.com \
     --exclude=*.ext \
+    --exclude=*.fig.bak \
     --exclude=*.o \
     --exclude=*.pyc \
     --exclude=*.so \
@@ -90,7 +91,7 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     `# Exclude plans and road maps, as not being something we release` \
     --exclude=axch-*.org \
     `# Exclude the v1 prototype because we are not releasing it` \
-    --exclude=backend/v1-pre-scm/ \
+    --exclude=backend/v1-pre-scm \
     --exclude=doc/v1 \
     `# Exclude HsVenture because it isn't release quality`\
     `# (also not merged, but compile results appear in my working tree)` \
