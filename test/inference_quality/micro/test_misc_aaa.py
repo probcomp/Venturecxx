@@ -34,6 +34,8 @@ def testMakeBetaBernoulli1():
 
 @statisticalTest
 def checkMakeBetaBernoulli1(maker, hyper):
+  if rejectionSampling() and hyper == "(normal 10.0 1.0)":
+    raise SkipTest("Too slow.  Tightening the rejection bound is Issue #468.")
   if inParallel() and "make_suff_stat_bernoulli" in maker and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and make_suff_stat_bernoulli comes from Lite.")
   ripl = get_ripl()
@@ -59,6 +61,8 @@ def testMakeBetaBernoulli2():
 # constraint forwarding and brush).
 @statisticalTest
 def checkMakeBetaBernoulli2(maker):
+  if rejectionSampling():
+    raise SkipTest("Too slow.  Tightening the rejection bound is Issue #468.")
   if inParallel() and "make_suff_stat_bernoulli" in maker and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and make_suff_stat_bernoulli comes from Lite.")
   ripl = get_ripl()

@@ -159,6 +159,8 @@ def testMakeDirCat1():
 
 @statisticalTest
 def checkMakeDirCat1(maker):
+  if rejectionSampling() and maker == "make_dir_cat":
+    raise SkipTest("Too slow.  Tightening the rejection bound is Issue #468.")
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
