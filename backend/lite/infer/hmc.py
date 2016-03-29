@@ -129,7 +129,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
 
   def sampleMomenta(self, currentValues, np_rng):
     def sample_normal(_):
-      return scipy.stats.norm.rvs(loc=0, scale=1, random_state=np_rng)
+      return np_rng.standard_normal()
     return [v.map_real(sample_normal) for v in currentValues]
   def kinetic(self, momenta):
     # This is the log density of sampling these momenta, up to an

@@ -57,7 +57,7 @@ class NormalDriftKernel(DeltaLKernel):
 
   def forwardSimulate(self, _trace, oldValue, args):
     mu,sigma = args.operandValues()
-    nu = scipy.stats.norm.rvs(0,sigma, random_state=args.args.np_rng)
+    nu = args.args.np_rng.normal(loc=0, scale=sigma)
     term1 = mu
     term2 = math.sqrt(1 - (self.epsilon * self.epsilon)) * (oldValue - mu)
     term3 = self.epsilon * nu
@@ -76,8 +76,7 @@ class MVNormalRandomWalkKernel(DeltaLKernel):
 
   def simulate(self, _trace, oldValue, args):
     (mu, _) = MVNormalOutputPSP.__parse_args__(args)
-    nu = scipy.stats.norm.rvs(0,self.epsilon,mu.shape,
-      random_state=args.args.np_rng)
+    nu = args.args.np_rng.normal(loc=0, scale=self.epsilon, size=mu.shape)
     return oldValue + nu
 
   @override(DeltaLKernel)
@@ -282,8 +281,9 @@ registerBuiltinSP("wishart", typed_nr(WishartOutputPSP(),
 
 class NormalOutputPSP(RandomPSP):
   # TODO don't need to be class methods
-  def simulateNumeric(self,params, np_rng):
-    return scipy.stats.norm.rvs(*params, random_state=np_rng)
+  def simulateNumeric(self, params, np_rng):
+    mu, sigma = params
+    return np_rng.normal(loc=mu, scale=sigma)
 
   def logDensityNumeric(self,x,params):
     (mu, sigma) = params
@@ -407,8 +407,7 @@ registerBuiltinSP("normal", no_request(generic_normal))
 class VonMisesOutputPSP(RandomPSP):
   def simulate(self, args):
     (mu, kappa) = args.operandValues()
-    return scipy.stats.vonmises.rvs(kappa, loc=mu,
-                                    random_state=args.args.np_rng)
+    return args.args.np_rng.vonmises(mu=mu, kappa=kappa)
 
   def logDensity(self, x, args):
     (mu, kappa) = args.operandValues()
@@ -445,7 +444,7 @@ registerBuiltinSP("vonmises", typed_nr(VonMisesOutputPSP(),
 class UniformOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self, low, high, np_rng):
-    return scipy.stats.uniform.rvs(low, high-low, random_state=np_rng)
+    return np_rng.uniform(low=low, high=high)
 
   def logDensityNumeric(self, x, low, high):
     return scipy.stats.uniform.logpdf(x, low, high-low)
@@ -486,7 +485,8 @@ registerBuiltinSP("uniform_continuous",typed_nr(UniformOutputPSP(),
 class BetaOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self, params, np_rng):
-    return scipy.stats.beta.rvs(*params, random_state=np_rng)
+    alpha, beta = params
+    return np_rng.beta(a=alpha, b=beta)
 
   def logDensityNumeric(self, x, params):
     return scipy.stats.beta.logpdf(x,*params)
@@ -518,7 +518,7 @@ registerBuiltinSP("beta", typed_nr(BetaOutputPSP(),
 class ExponOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self, theta, np_rng):
-    return scipy.stats.expon.rvs(scale=1.0/theta, random_state=np_rng)
+    return np_rng.exponential(scale=1.0/theta)
 
   def logDensityNumeric(self, x, theta):
     return scipy.stats.expon.logpdf(x,scale=1.0/theta)
@@ -548,7 +548,7 @@ registerBuiltinSP("expon", typed_nr(ExponOutputPSP(),
 class GammaOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self, alpha, beta, np_rng):
-    return scipy.stats.gamma.rvs(alpha, scale=1.0/beta, random_state=np_rng)
+    return np_rng.gamma(shape=alpha, scale=1.0/beta)
 
   def logDensityNumeric(self, x, alpha, beta):
     return scipy.stats.gamma.logpdf(x, alpha, scale=1.0/beta)
@@ -614,7 +614,7 @@ registerBuiltinSP("gamma", typed_nr(GammaOutputPSP(),
 class StudentTOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self, nu, loc, scale, np_rng):
-    return scipy.stats.t.rvs(nu,loc,scale, random_state=np_rng)
+    return loc + scale*np_rng.standard_t(df=nu)
 
   def logDensityNumeric(self, x, nu, loc, scale):
     return scipy.stats.t.logpdf(x,nu,loc,scale)
@@ -670,7 +670,7 @@ registerBuiltinSP("student_t", typed_nr(StudentTOutputPSP(),
 class InvGammaOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self, a, b, np_rng):
-    return scipy.stats.invgamma.rvs(a, scale=b, random_state=np_rng)
+    return 1./np_rng.gamma(shape=a, scale=1./b)
 
   def logDensityNumeric(self, x, a, b):
     return scipy.stats.invgamma.logpdf(x, a, scale=b)
@@ -703,7 +703,7 @@ registerBuiltinSP("inv_gamma", typed_nr(InvGammaOutputPSP(),
 class LaplaceOutputPSP(RandomPSP):
   # a is the location, b is the scale; parametrization is same as Wikipedia
   def simulateNumeric(self, a, b, np_rng):
-    return scipy.stats.laplace.rvs(a,b,random_state=np_rng)
+    return np_rng.laplace(loc=a, scale=b)
 
   def logDensityNumeric(self, x, a, b):
     return scipy.stats.laplace.logpdf(x,a,b)
@@ -800,8 +800,7 @@ class SuffNormalOutputPSP(RandomPSP):
     args.spaux().unincorporate(value)
 
   def simulate(self, args):
-    return scipy.stats.norm.rvs(loc=self.mu, scale=self.sigma,
-                                random_state=args.args.np_rng)
+    return args.args.np_rng.normal(loc=self.mu, scale=self.sigma)
 
   def logDensity(self, value, _args):
     return scipy.stats.norm.logpdf(value, loc=self.mu, scale=self.sigma)
@@ -853,8 +852,10 @@ class CNigNormalOutputPSP(RandomPSP):
   def simulate(self, args):
     # Posterior predictive is Student's t (206)
     (mn, Vn, an, bn) = self.updatedParams(args.spaux())
-    return scipy.stats.t.rvs(2*an, loc=mn, scale=math.sqrt(bn/an*(1+Vn)),
-                             random_state=args.args.np_rng)
+    loc = mn
+    scale = math.sqrt(bn/an*(1 + Vn))
+    df = 2*an
+    return loc + scale*args.args.np_rng.standard_t(df=df)
 
   def logDensity(self, value, args):
     (mn, Vn, an, bn) = self.updatedParams(args.spaux())
@@ -918,8 +919,8 @@ class MakerUNigNormalOutputPSP(RandomPSP):
     (m, V, a, b) = hypers
     # Simulate the mean and variance from NormalInverseGamma.
     # https://en.wikipedia.org/wiki/Normal-inverse-gamma_distribution#Generating_normal-inverse-gamma_random_variates
-    sigma2 = scipy.stats.invgamma.rvs(a, scale=b, random_state=np_rng)
-    mu = scipy.stats.norm.rvs(loc=m, scale=math.sqrt(sigma2*V), random_state=np_rng)
+    sigma2 = 1./np_rng.gamma(shape=a, scale=1./b)
+    mu = np_rng.normal(loc=m, scale=math.sqrt(sigma2*V))
     output = TypedPSP(UNigNormalOutputPSP(mu, math.sqrt(sigma2)),
       SPType([], t.NumberType()))
     return VentureSPRecord(SuffNormalSP(NullRequestPSP(), output), spaux)

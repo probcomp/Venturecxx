@@ -125,8 +125,8 @@ registerBuiltinSP("log_bernoulli", typed_nr(LogBernoulliOutputPSP(),
 
 class BinomialOutputPSP(DiscretePSP):
   def simulate(self, args):
-    (n,p) = args.operandValues()
-    return scipy.stats.binom.rvs(n,p, random_state=args.args.np_rng)
+    (n, p) = args.operandValues()
+    return args.args.np_rng.binomial(n, p)
 
   def logDensity(self, val, args):
     (n,p) = args.operandValues()
@@ -220,8 +220,8 @@ registerBuiltinSP("uniform_discrete", typed_nr(UniformDiscreteOutputPSP(),
 
 class PoissonOutputPSP(DiscretePSP):
   def simulate(self, args):
-    return scipy.stats.poisson.rvs(args.operandValues()[0],
-                                   random_state=args.args.np_rng)
+    (lam,) = args.operandValues()
+    return args.args.np_rng.poisson(lam=lam)
 
   def logDensity(self, val, args):
     return scipy.stats.poisson.logpmf(val, args.operandValues()[0])
@@ -354,8 +354,7 @@ class MakerUBetaBernoulliOutputPSP(RandomPSP):
 
   def simulate(self,args):
     (alpha, beta) = args.operandValues()
-    weight = scipy.stats.beta.rvs(alpha, beta,
-                                  random_state=args.args.np_rng)
+    weight = args.args.np_rng.beta(a=alpha, b=beta)
     output = TypedPSP(SuffBernoulliOutputPSP(weight), SPType([], t.BoolType()))
     return VentureSPRecord(SuffBernoulliSP(NullRequestPSP(), output))
 
@@ -386,8 +385,7 @@ class UBetaBernoulliAAALKernel(PosteriorAAALKernel):
     (alpha, beta) = args.operandValues()
     madeaux = args.madeSPAux()
     [ctY,ctN] = madeaux.cts()
-    new_weight = scipy.stats.beta.rvs(alpha + ctY, beta + ctN,
-                                      random_state=args.args.np_rng)
+    new_weight = args.args.np_rng.beta(a=(alpha + ctY), b=(beta + ctN))
     output = TypedPSP(SuffBernoulliOutputPSP(new_weight), SPType([],
       t.BoolType()))
     return VentureSPRecord(SuffBernoulliSP(NullRequestPSP(), output), madeaux)
@@ -550,8 +548,7 @@ class SuffPoissonOutputPSP(DiscretePSP):
     spaux.ctN -= 1
 
   def simulate(self, args):
-    return scipy.stats.poisson.rvs(mu=self.mu,
-                                   random_state=args.args.np_rng)
+    return args.args.np_rng.poisson(lam=self.mu)
 
   def logDensity(self, value, _args):
     return scipy.stats.poisson.logpmf(value, mu=self.mu)
@@ -621,8 +618,7 @@ class CGammaPoissonOutputPSP(DiscretePSP):
     # Posterior predictive is Negative Binomial.
     # http://www.stat.wisc.edu/courses/st692-newton/notes.pdf#page=50
     (alpha_n, beta_n) = self.updatedParams(args.spaux())
-    return scipy.stats.nbinom.rvs(n=alpha_n, p=(beta_n)/(beta_n+1),
-                                  random_state=args.args.np_rng)
+    return args.args.np_rng.negative_binomial(n=alpha_n, p=(beta_n)/(beta_n+1))
 
   def logDensity(self, value, args):
     (alpha_n, beta_n) = self.updatedParams(args.spaux())
@@ -679,8 +675,7 @@ class MakerUGammaPoissonOutputPSP(DiscretePSP):
 
   def simulate(self, args):
     (alpha, beta) = args.operandValues()
-    mu = scipy.stats.gamma.rvs(a=alpha, scale=1./beta,
-                               random_state=args.args.np_rng)
+    mu = args.args.np_rng.gamma(shape=alpha, scale=1./beta)
     output = TypedPSP(UGammaPoissonOutputPSP(mu, alpha, beta),
       SPType([], t.CountType()))
     return VentureSPRecord(SuffPoissonSP(NullRequestPSP(), output))
@@ -707,8 +702,7 @@ class UGammaPoissonAAALKernel(PosteriorAAALKernel):
     (alpha, beta) = args.operandValues()
     new_alpha = alpha + xsum
     new_beta = beta + ctN
-    new_mu = scipy.stats.gamma.rvs(a=alpha + xsum, scale = 1./new_beta,
-                                   random_state=args.args.np_rng)
+    new_mu = args.args.np_rng.gamma(shape=(alpha + xsum), scale=1./new_beta)
     output = TypedPSP(UGammaPoissonOutputPSP(new_mu, new_alpha, new_beta),
       SPType([], t.CountType()))
     return VentureSPRecord(SuffPoissonSP(NullRequestPSP(), output), madeaux)
