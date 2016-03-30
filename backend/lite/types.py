@@ -124,10 +124,18 @@ for typename in ["Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix"]:
 class ProbabilityType(VentureType):
   def __init__(self, name=None):
     self._name = name
-  def asVentureValue(self, thing): return vv.VentureProbability(thing)
-  def asPython(self, vthing): return vthing.getProbability()
+  def asVentureValue(self, thing):
+    assert isinstance(thing, numbers.Number)
+    assert 0 <= thing and thing <= 1
+    return vv.VentureNumber(thing)
+  def asPython(self, vthing):
+    ans = vthing.getNumber()
+    assert 0 <= ans and ans <= 1
+    return ans
   def __contains__(self, vthing):
-    return isinstance(vthing, vv.VentureProbability)
+    return isinstance(vthing, vv.VentureNumber) and \
+      vthing.getNumber() <= 1 and \
+      vthing.getNumber() >= 0
   def name(self): return self._name or "<probability>"
   def distribution(self, base, **kwargs): return base("probability", **kwargs)
   def gradient_type(self): return NumberType()
