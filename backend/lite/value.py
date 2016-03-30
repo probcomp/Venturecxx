@@ -273,44 +273,6 @@ class VentureInteger(VentureValue):
   def expressionFor(self):
     return self.number
 
-class VentureProbability(VentureValue):
-  def __init__(self, number):
-    assert isinstance(number, Number)
-    assert 0 <= number and number <= 1
-    self.number = float(number)
-  def __repr__(self):
-    if hasattr(self, "number"):
-      return "VentureProbability(%s)" % self.number
-    else:
-      return "VentureProbability(uninitialized)"
-  def getNumber(self):
-    return self.number
-  def asStackDict(self, _trace=None):
-    return v.probability(self.number)
-  @staticmethod
-  def fromStackDict(thing):
-    return VentureProbability(thing["value"])
-  def compareSameType(self, other):
-    return stupidCompare(self.number, other.number)
-  def __hash__(self):
-    return hash(self.number)
-  def expressionFor(self):
-    return [v.symbol("probability"), self.number]
-  def map_real(self, f):
-    return VentureNumber(f(self.number))
-  def real_lenses(self):
-    class NumberLens(MLens):
-      # Poor man's closure: pass the relevant thing from the lexical
-      # scope directly.
-      def __init__(self, vn):
-        self.vn = vn
-      def get(self):
-        return self.vn.number
-      def set(self, new):
-        assert isinstance(new, Number)
-        self.vn.number = new
-    return [NumberLens(self)]
-
 def stupidCompare(thing, other):
   # number.__cmp__(other) works for ints but not floats.  Guido, WTF!?
   # strings don't have __cmp__ either? or lists?
@@ -1103,19 +1065,19 @@ class SPRef(VentureValue):
 ## Not Requests, because we do not reflect on them
 
 venture_types = [
-  VentureNumber, VentureInteger, VentureProbability, VentureAtom, VentureBool,
+  VentureNumber, VentureInteger, VentureAtom, VentureBool,
   VentureSymbol, VentureString, VentureForeignBlob, VentureNil, VenturePair,
   VentureArray, VentureArrayUnboxed, VentureSimplex, VentureDict,
   VentureMatrix, VentureSymmetricMatrix, SPRef]
   # Break load order dependency by not adding SPs and Environments yet
 
-venture_numeric_types = [VentureNumber, VentureInteger, VentureProbability]
+venture_numeric_types = [VentureNumber, VentureInteger]
 
 stackable_types = {
   "number": VentureNumber,
   "real": VentureNumber,
   "integer": VentureInteger,
-  "probability": VentureProbability,
+  "probability": VentureNumber, # TODO Eliminate this stack dict type?
   "atom": VentureAtom,
   "boolean": VentureBool,
   "symbol": VentureSymbol,
