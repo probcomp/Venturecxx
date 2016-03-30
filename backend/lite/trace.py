@@ -797,7 +797,11 @@ the scaffold determined by the given expression."""
       self, Address(List(id)), self.unboxExpression(exp), self.globalEnv,
       Scaffold(), True, db, {})
 
-  def has_own_prng(self): return False
+  def has_own_prng(self): return True
+  def set_seed(self, seed):
+    prng = random.Random(seed)
+    self.np_prng.seed(prng.random())
+    self.py_prng.seed(prng.random())
 
   def short_circuit_copyable(self): return False
 
