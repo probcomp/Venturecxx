@@ -161,6 +161,12 @@ VentureValuePtr NotOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
   return shared_ptr<VentureBool>(new VentureBool(!args->operandValues[0]->getBool()));
 }
 
+VentureValuePtr RealOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("real", args, 1);
+  return VentureValuePtr(new VentureNumber(args->operandValues[0]->getDouble()));
+}
+
 VentureValuePtr IsNumberOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("is_number", args, 1);

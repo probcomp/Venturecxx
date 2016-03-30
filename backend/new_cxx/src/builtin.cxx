@@ -69,7 +69,10 @@ map<string,SP*> initBuiltInSPs()
   m["pow"] = new SP(new NullRequestPSP(), new PowOutputPSP());
   m["sqrt"] = new SP(new NullRequestPSP(), new SqrtOutputPSP());
   m["not"] = new SP(new NullRequestPSP(), new NotOutputPSP());
+
+  m["real"] = new SP(new NullRequestPSP(), new RealOutputPSP());
   m["is_number"] = new SP(new NullRequestPSP(), new IsNumberOutputPSP());
+
   m["is_boolean"] = new SP(new NullRequestPSP(), new IsBoolOutputPSP());
   m["is_symbol"] = new SP(new NullRequestPSP(), new IsSymbolOutputPSP());
 
