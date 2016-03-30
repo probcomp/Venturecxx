@@ -56,7 +56,8 @@ def integer(v):
 
 def probability(v):
   assert isinstance(v, numbers.Number)
-  return val("probability",v)
+  assert 0 <= v and v <= 1
+  return val("number",v)
 
 def atom(v):
   assert isinstance(v, numbers.Number)
