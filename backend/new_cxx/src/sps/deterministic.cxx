@@ -224,9 +224,9 @@ VentureValuePtr ProbabilityOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * 
 VentureValuePtr IsProbabilityOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("is_probability", args, 1);
-  if (args->operandValues[0].hasDouble())
+  if (args->operandValues[0]->hasDouble())
   {
-    double x = args->operandValues[0].getDouble();
+    double x = args->operandValues[0]->getDouble();
     return VentureValuePtr(new VentureBool(0 <= x && x <= 1));
   } else {
     return VentureValuePtr(new VentureBool(false));
