@@ -236,7 +236,7 @@ VentureValuePtr parseValue(dict d)
   }
   else if (type == "probability")
   {
-    return VentureValuePtr(new VentureProbability(extract<double>(value)));
+    return VentureValuePtr(new VentureNumber(extract<double>(value)));
   }
   else if (type == "atom")
   {
