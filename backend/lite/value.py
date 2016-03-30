@@ -41,8 +41,6 @@ class VentureValue(object):
     raise VentureTypeError("Cannot convert %s to number" % type(self))
   def getInteger(self):
     raise VentureTypeError("Cannot convert %s to integer" % type(self))
-  def getProbability(self):
-    raise VentureTypeError("Cannot convert %s to probability" % type(self))
   def getAtom(self):
     raise VentureTypeError("Cannot convert %s to atom" % type(self))
   def getBool(self):
@@ -181,11 +179,6 @@ class VentureNumber(VentureValue):
     return self.number
   def getInteger(self):
     return int(self.number)
-  def getProbability(self):
-    if 0 <= self.number and self.number <= 1:
-      return self.number
-    else: # TODO Do what?  Clip to [0,1]?  Raise?
-      raise VentureTypeError("Probability out of range %s" % self.number)
   def getBool(self):
     return self.number
 
@@ -291,8 +284,6 @@ class VentureProbability(VentureValue):
     else:
       return "VentureProbability(uninitialized)"
   def getNumber(self):
-    return self.number
-  def getProbability(self):
     return self.number
   def asStackDict(self, _trace=None):
     return v.probability(self.number)
