@@ -218,7 +218,7 @@ VentureValuePtr IsIntegerOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rn
 VentureValuePtr ProbabilityOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("probability", args, 1);
-  return VentureValuePtr(new VentureProbability(args->operandValues[0]->getProbability()));
+  return VentureValuePtr(new VentureNumber(args->operandValues[0]->getProbability()));
 }
 
 VentureValuePtr IsProbabilityOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const

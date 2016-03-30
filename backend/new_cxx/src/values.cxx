@@ -51,7 +51,7 @@ vector<VentureValuePtr> VentureSimplex::getArray() const
   vector<VentureValuePtr> xs;
   for(size_t i = 0; i < ps.size(); ++i)
   {
-    xs.push_back(VentureValuePtr(new VentureProbability(ps[i])));
+    xs.push_back(VentureValuePtr(new VentureNumber(ps[i])));
   }
   return xs;
 }

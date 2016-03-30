@@ -189,7 +189,7 @@ VentureValuePtr BetaPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
 
   double x = gsl_ran_beta(rng,a,b);
 
-  return VentureValuePtr(new VentureProbability(x));
+  return VentureValuePtr(new VentureNumber(x));
 }
 
 double BetaPSP::simulateNumeric(const vector<double> & args, gsl_rng * rng) const
