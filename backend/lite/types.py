@@ -121,10 +121,16 @@ for typename in ["Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix"]:
   # pylint: disable=exec-used
   exec(standard_venture_type(typename))
 
-# Exec is appropriate for metaprogramming, but indeed should not be
-# used lightly.
-# pylint: disable=exec-used
-exec(standard_venture_type("Probability", gradient_typename="Number"))
+class ProbabilityType(VentureType):
+  def __init__(self, name=None):
+    self._name = name
+  def asVentureValue(self, thing): return vv.VentureProbability(thing)
+  def asPython(self, vthing): return vthing.getProbability()
+  def __contains__(self, vthing):
+    return isinstance(vthing, vv.VentureProbability)
+  def name(self): return self._name or "<probability>"
+  def distribution(self, base, **kwargs): return base("probability", **kwargs)
+  def gradient_type(self): return NumberType()
 
 class CountType(VentureType):
   def __init__(self, name=None):
