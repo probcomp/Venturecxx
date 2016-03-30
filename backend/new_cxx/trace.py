@@ -51,16 +51,11 @@ class WarningSP(object):
 
 class Trace(object):
   def __init__(self, trace=None, entropy=None):
-    if entropy:
-      self.py_rng = random.Random(entropy)
-      self.np_rng = npr.RandomState(entropy)
-    else:
-      self.py_rng = random.Random()
-      self.np_rng = npr.RandomState()
+    self.py_rng = random.Random()
+    self.np_rng = npr.RandomState()
     if trace is None:
       self.trace = puma.Trace()
-      # Poor Puma defaults its local RNG seed to the system time
-      self.trace.set_seed(self.py_rng.randint(1,2**31-1))
+      self.set_seed(entropy)
       for name,sp in builtInSPs().iteritems():
         if self.trace.boundInGlobalEnv(name):
           # Already there
@@ -71,12 +66,25 @@ class Trace(object):
     else:
       assert isinstance(trace, puma.Trace)
       self.trace = trace
+      # XXX We could copy the Python random state in stop_and_copy.
+      # However, we do not currently copy the C++ GSL random state.
+      # self.py_rng.setstate(entropy[0])
+      # self.np_rng.set_state(entropy[1])
+      assert entropy is None
 
   def __getattr__(self, attrname):
     # Forward all other trace methods without modification
     return getattr(self.trace, attrname)
 
   def has_own_prng(self): return True
+  def set_seed(self, seed):
+    prng = random.Random(seed)
+    # XXX It is unclear why 0 and >=2^31 are not allowed here, but it
+    # will be better to fix this when we replace all seeds by 32-byte
+    # strings and all PRNGs by cryptographic ones.
+    self.np_rng.seed(prng.randint(1, 2**31 - 1))
+    self.py_rng.seed(prng.randint(1, 2**31 - 1))
+    self.trace.set_seed(prng.randint(1, 2**31 - 1))
 
   def stop_and_copy(self):
     return Trace(self.trace.stop_and_copy())
