@@ -133,7 +133,7 @@ class ProbabilityType(VentureType):
     assert 0 <= ans and ans <= 1
     return ans
   def __contains__(self, vthing):
-    return isinstance(vthing, vv.VentureNumber) and \
+    return type(vthing) in vv.venture_numeric_types and \
       vthing.getNumber() <= 1 and \
       vthing.getNumber() >= 0
   def name(self): return self._name or "<probability>"
