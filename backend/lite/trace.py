@@ -129,12 +129,13 @@ class Trace(object):
     if len(self.scopes[scope]) == 0 and (scope != "default"): del self.scopes[scope]
 
   def _normalizeEvaluatedScopeOrBlock(self, val):
-    if isinstance(val, VentureNumber):
-      return val.getNumber()
-    elif isinstance(val, VentureSymbol):
-      return val.getSymbol()
-    elif isinstance(val, VenturePair): # I hope this means it's an ordered range
-      return ExpressionType().asPython(val)
+    if isinstance(val, VentureSymbol):
+      if val.getSymbol() in ["default", "none", "one", "all", "ordered"]:
+        return val.getSymbol()
+    elif isinstance(val, VenturePair):
+      if isinstance(val.first, VentureSymbol) and \
+         val.first.getSymbol() == 'ordered_range':
+        return ['ordered_range', val.rest.first, val.rest.rest.first]
     return val
 
   # [FIXME] repetitive, but not sure why these exist at all

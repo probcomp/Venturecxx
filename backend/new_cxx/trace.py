@@ -23,6 +23,7 @@ from venture.lite.value import VentureValue
 from venture.lite.builtin import builtInSPs
 import venture.lite.foreign as foreign
 import venture.value.dicts as v
+import venture.lite.value as vv
 
 class WarningPSP(object):
   warned = {}
@@ -107,10 +108,10 @@ class Trace(object):
   def numNodesInBlock(self, scope, block):
     # This is kooky for compatibility with the Lite numNodesInBlock method.
     def guess_type(obj):
-      if isinstance(obj, int):
-        return v.number(obj)
-      if isinstance(obj, basestring):
-        return v.symbol(obj)
+      if type(obj) in vv.venture_numeric_types:
+        return v.number(obj.getNumber())
+      if isinstance(obj, vv.VentureSymbol):
+        return v.symbol(obj.getSymbol())
       raise Exception("numNodesInBlock can't handle %s" % obj)
     return self.trace.numNodesInBlock(guess_type(scope), guess_type(block))
 

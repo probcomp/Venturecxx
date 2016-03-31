@@ -20,20 +20,26 @@ from nose.tools import assert_equal
 from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
+import venture.lite.value as vv
+
+def count_nodes(ripl):
+  scope = vv.VentureNumber(0)
+  block = vv.VentureNumber(0)
+  return ripl.sivm.core_sivm.engine.getDistinguishedTrace().numNodesInBlock(scope, block)
 
 @on_inf_prim("none")
 def testDynamicScope1():
   ripl = get_ripl()
   ripl.assume("x", "(normal 0.0 1.0)")
   ripl.predict("(tag 0 0 (normal x 1))")
-  assert_equal(ripl.sivm.core_sivm.engine.getDistinguishedTrace().numNodesInBlock(0,0),1)
+  assert_equal(count_nodes(ripl), 1)
 
 @on_inf_prim("none")
 def testDynamicScope2():
   ripl = get_ripl()
   ripl.assume("x", "(normal 0.0 1.0)")
   ripl.predict("(tag 0 0 (normal (normal x 1) 1))")
-  assert_equal(ripl.sivm.core_sivm.engine.getDistinguishedTrace().numNodesInBlock(0,0),2)
+  assert_equal(count_nodes(ripl), 2)
 
 @on_inf_prim("none")
 def testDynamicScope3():
@@ -41,7 +47,7 @@ def testDynamicScope3():
   ripl.assume("x", "(normal 0.0 1.0)")
   ripl.assume("f", "(lambda () (normal x 1.0))")
   ripl.predict("(tag 0 0 (normal (normal (f) 1) 1))")
-  assert_equal(ripl.sivm.core_sivm.engine.getDistinguishedTrace().numNodesInBlock(0,0),3)
+  assert_equal(count_nodes(ripl), 3)
 
 @on_inf_prim("none")
 def testDynamicScope4():
@@ -49,7 +55,7 @@ def testDynamicScope4():
   ripl.assume("x", "(normal 0.0 1.0)")
   ripl.assume("f", "(mem (lambda () (normal x 1.0)))")
   ripl.predict("(tag 0 0 (normal (+ (f) (normal (f) 1) (normal 0 1)) 1))")
-  assert_equal(ripl.sivm.core_sivm.engine.getDistinguishedTrace().numNodesInBlock(0,0),4)
+  assert_equal(count_nodes(ripl), 4)
 
 @on_inf_prim("none")
 def testDynamicScope5():
@@ -57,7 +63,7 @@ def testDynamicScope5():
   ripl.assume("x", "(tag 0 0 (normal 0.0 1.0))")
   ripl.assume("f", "(mem (lambda () (normal x 1.0)))")
   ripl.predict("(tag 0 0 (normal (+ (f) (normal (f) 1) (normal 0 1)) 1))")
-  assert_equal(ripl.sivm.core_sivm.engine.getDistinguishedTrace().numNodesInBlock(0,0),5)
+  assert_equal(count_nodes(ripl), 5)
 
 @on_inf_prim("none")
 def testDynamicScope6():
@@ -65,7 +71,7 @@ def testDynamicScope6():
   ripl.assume("x", "(normal 0.0 1.0)")
   ripl.assume("f", "(mem (lambda () (tag 0 1 (normal x 1.0))))")
   ripl.predict("(tag 0 0 (normal (+ (f) (normal (f) 1) (normal 0 1)) 1))")
-  assert_equal(ripl.sivm.core_sivm.engine.getDistinguishedTrace().numNodesInBlock(0,0),3)
+  assert_equal(count_nodes(ripl), 3)
 
 @on_inf_prim("none")
 def testDynamicScope6a():
@@ -73,7 +79,7 @@ def testDynamicScope6a():
   ripl.assume("x", "(normal 0.0 1.0)")
   ripl.assume("f", "(mem (lambda () (tag 0 0 (normal x 1.0))))")
   ripl.predict("(tag 0 0 (normal (+ (f) (normal (f) 1) (normal 0 1)) 1))")
-  assert_equal(ripl.sivm.core_sivm.engine.getDistinguishedTrace().numNodesInBlock(0,0),4)
+  assert_equal(count_nodes(ripl), 4)
 
 @on_inf_prim("none")
 def testDynamicScope7():
@@ -81,7 +87,7 @@ def testDynamicScope7():
   ripl.assume("x", "(normal 0.0 1.0)")
   ripl.assume("f", "(mem (lambda () (tag 1 0 (normal x 1.0))))")
   ripl.predict("(tag 0 0 (normal (+ (f) (normal (f) 1) (normal 0 1)) 1))")
-  assert_equal(ripl.sivm.core_sivm.engine.getDistinguishedTrace().numNodesInBlock(0,0),4)
+  assert_equal(count_nodes(ripl), 4)
 
 @on_inf_prim("none")
 def testDynamicScope8():
@@ -90,21 +96,21 @@ def testDynamicScope8():
   ripl.assume("f","(mem (lambda () (tag 1 0 (normal x 1.0))))")
   ripl.assume("g","(lambda (z) (normal (+ (f) (tag 0 0 (normal (f) 1)) (normal z 1)) 1))")
   ripl.predict("(tag 0 0 (+ (g (bernoulli)) (g (bernoulli))))")
-  assert_equal(ripl.sivm.core_sivm.engine.getDistinguishedTrace().numNodesInBlock(0,0),9)
+  assert_equal(count_nodes(ripl), 9)
 
 @on_inf_prim("none")
 def testTagExclude1():
   ripl = get_ripl()
   ripl.assume("f", "(mem (lambda (x) (tag_exclude 0 (bernoulli))))")
   ripl.predict("(tag 0 0 (+ (f 0) (f 1) (f 2) (f 3)))")
-  assert_equal(ripl.sivm.core_sivm.engine.getDistinguishedTrace().numNodesInBlock(0, 0), 0)
+  assert_equal(count_nodes(ripl), 0)
 
 @on_inf_prim("none")
 def testTagExcludeBaseline():
   ripl = get_ripl()
   ripl.assume("f", "(mem (lambda (x) (bernoulli)))")
   ripl.predict("(tag 0 0 (+ (f 0) (f 1) (f 2) (f 3)))")
-  assert_equal(ripl.sivm.core_sivm.engine.getDistinguishedTrace().numNodesInBlock(0, 0), 4)
+  assert_equal(count_nodes(ripl), 4)
 
 @on_inf_prim("none")
 def testArrayBlock():
@@ -116,9 +122,7 @@ def testArrayBlock():
 
 @gen_on_inf_prim("none")
 def testCompoundBlockSerializing():
-  # But not "list" because Lite's _normalizeEvaluatedScopeAndBlock
-  # confuses it for an ordered range object :(
-  for cons in ["array", "pair", "vector"]:
+  for cons in ["array", "list", "pair", "vector"]:
     yield checkCompoundBlockSerializing, cons
 
 def checkCompoundBlockSerializing(cons):
