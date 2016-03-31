@@ -47,7 +47,7 @@ def testAllDoubling():
 
 def inferCommand(slice_method):
   ntransitions = default_num_transitions_per_sample()
-  return "(%s default one 0.5 100 %s)" % (slice_method, ntransitions)
+  return "(%s default one 0.5 10000 %s)" % (slice_method, ntransitions)
 
 def myCollectSamples(ripl, method):
   return collectSamples(ripl,"pid",num_samples=default_num_samples(4),
