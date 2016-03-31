@@ -15,9 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import eq_, assert_almost_equal
-from venture.test.config import get_ripl, on_inf_prim, collectSamples
-from venture.test.stats import statisticalTest, reportKnownDiscrete
+from nose.tools import eq_
+from nose.tools import assert_almost_equal
+
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import statisticalTest
 
 # TODO AXCH why is this a test? Why shouldn't it be legal to start at 0?
 @on_inf_prim("none")
@@ -64,6 +70,7 @@ def checkCRPCounter(n):
   ans = [(n, 0.5), ("other", 0.5)]
   return reportKnownDiscrete(ans, replaceWithDefault(predictions, [n], "other"))
 
+@gen_on_inf_prim("none")
 def testLogDensityOfData():
   """Ensures that the logDensityOfData of the CRP (represented by the
   global_log_likelihood) is equal to the sum of the predictive logDensity(table)
