@@ -112,7 +112,6 @@ class Ripl():
         else:
             raise VentureException('invalid_mode',
                     "Mode {} is not implemented by this RIPL".format(mode))
-        return self
 
     ############################################
     # Backend
