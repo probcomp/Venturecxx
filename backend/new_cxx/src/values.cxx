@@ -566,6 +566,18 @@ size_t VentureSimplex::hash() const
   return boost::hash_range(ps.begin(),ps.end());
 }
 
+size_t VentureVector::hash() const
+{
+  boost::hash<double> double_hash;
+  size_t seed = 0;
+
+  for (int i = 0; i < v.size(); i++)
+  {
+    boost::hash_combine(seed, double_hash(v[i]));
+  }
+  return seed;
+}
+
 size_t VentureNode::hash() const
 {
   return reinterpret_cast<size_t>(node);

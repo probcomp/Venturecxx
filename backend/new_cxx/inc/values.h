@@ -315,6 +315,7 @@ struct VentureVector : VentureValue
   int getValueTypeRank() const;
   bool ltSameType(const VentureValuePtr & other) const;
   bool equalsSameType(const VentureValuePtr & other) const;
+  size_t hash() const;
 
   VentureValuePtr lookup(VentureValuePtr index) const { return VentureValuePtr(new VentureNumber(v(index->getInt()))); }
   bool contains(VentureValuePtr index) const;

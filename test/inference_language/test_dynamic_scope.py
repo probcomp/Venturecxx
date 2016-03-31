@@ -17,7 +17,7 @@
 
 from nose.tools import assert_equal
 
-from venture.test.config import broken_in
+from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
 
@@ -107,7 +107,6 @@ def testTagExcludeBaseline():
   assert_equal(ripl.sivm.core_sivm.engine.getDistinguishedTrace().numNodesInBlock(0, 0), 4)
 
 @on_inf_prim("none")
-@broken_in('puma', "puma can't handle arrays as blocks in a tag.")
 def testArrayBlock():
   ripl = get_ripl()
 
@@ -115,15 +114,20 @@ def testArrayBlock():
 
   ripl.infer('(mh 1 (array 1 1) 1)')
 
-@on_inf_prim("none")
-@broken_in('puma', "puma can't handle arrays as blocks in a tag.")
-def testArrayBlockSerializing():
+@gen_on_inf_prim("none")
+def testCompoundBlockSerializing():
+  # But not "list" because Lite's _normalizeEvaluatedScopeAndBlock
+  # confuses it for an ordered range object :(
+  for cons in ["array", "pair", "vector"]:
+    yield checkCompoundBlockSerializing, cons
+
+def checkCompoundBlockSerializing(cons):
   ripl = get_ripl()
   ripl.infer("(resample_serializing 1)")
-  ripl.assume('x', '(tag 1 (array 1 1) (flip))')
+  ripl.assume('x', '(tag 1 (%s 1 1) (flip))' % cons)
   old_x = ripl.sample("x")
   for _ in range(20):
-    ripl.infer('(mh 1 (array 1 1) 1)')
+    ripl.infer('(mh 1 (%s 1 1) 1)' % cons)
     if ripl.sample("x") == old_x:
       continue
     else:
