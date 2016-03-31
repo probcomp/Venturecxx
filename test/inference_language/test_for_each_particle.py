@@ -22,6 +22,7 @@ from venture.test.config import on_inf_prim, broken_in
 from venture.test.config import default_num_transitions_per_sample
 from venture.test.stats import statisticalTest
 from venture.test.stats import reportKnownGaussian
+from venture.test.stats import reportPassage
 
 @on_inf_prim("for_each_particle")
 def testForEachParticleSmoke():
@@ -45,17 +46,18 @@ def testForEachParticleIsIndependent():
     for prop in [propNotAllEqual, propDistributedNormally]:
       yield checkForEachParticleIsIndependent, mode, prop
 
+@statisticalTest
 def checkForEachParticleIsIndependent(mode, prop):
   n = max(2, default_num_samples())
   ripl = get_ripl()
   ripl.infer("(resample%s %s)" % (mode, n))
   predictions = ripl.infer("(for_each_particle (sample (normal 0 1)))")
-  prop(predictions)
+  return prop(predictions)
 
 def propNotAllEqual(predictions):
   assert len(set(predictions)) > 1
+  return reportPassage()
 
-@statisticalTest
 def propDistributedNormally(predictions):
   return reportKnownGaussian(0, 1, predictions)
 
