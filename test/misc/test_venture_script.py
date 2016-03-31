@@ -15,9 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.config import get_ripl, collectSamples
-from venture.test.stats import statisticalTest, reportKnownDiscrete
 from venture.exception import VentureException
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import statisticalTest
 
 def testVentureScriptProgram():
   """At one point execute_program crashed with VentureScript."""

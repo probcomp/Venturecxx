@@ -15,14 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import eq_, assert_raises
+from nose.tools import assert_raises
+from nose.tools import eq_
 
-from venture.test.config import get_ripl, default_num_samples, gen_on_inf_prim
-from venture.test.config import on_inf_prim, broken_in
+from venture.test.config import broken_in
+from venture.test.config import default_num_samples
 from venture.test.config import default_num_transitions_per_sample
-from venture.test.stats import statisticalTest
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 from venture.test.stats import reportKnownGaussian
 from venture.test.stats import reportPassage
+from venture.test.stats import statisticalTest
 
 @on_inf_prim("for_each_particle")
 def testForEachParticleSmoke():

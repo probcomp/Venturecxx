@@ -17,8 +17,9 @@
 
 from nose.tools import eq_
 
-from venture.test.config import get_ripl, on_inf_prim
 from venture.lite import builtin
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 def testPersistenceSmoke1():
   r = get_ripl(persistent_inference_trace=True)

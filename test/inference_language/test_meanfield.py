@@ -16,9 +16,13 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-from venture.test.stats import statisticalTest, reportKnownGaussian
-from venture.test.config import (get_ripl, collectSamples, gen_on_inf_prim,
-                                 gen_broken_in)
+
+from venture.test.config import collectSamples
+from venture.test.config import gen_broken_in
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import statisticalTest
 
 @gen_broken_in("puma", "Meanfield not implemented in Puma")
 @gen_on_inf_prim("meanfield")

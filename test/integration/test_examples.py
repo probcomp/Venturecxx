@@ -19,14 +19,18 @@ import contextlib
 import copy
 import os.path
 import shutil
-import sys
 import subprocess as s
+import sys
 import tempfile
-from unittest import SkipTest
-from distutils.spawn import find_executable
 
-from venture.test.config import gen_in_backend, gen_needs_backend, gen_needs_ggplot
-from venture.test.config import in_backend, needs_backend
+from distutils.spawn import find_executable
+from unittest import SkipTest
+
+from venture.test.config import gen_in_backend
+from venture.test.config import gen_needs_backend
+from venture.test.config import gen_needs_ggplot
+from venture.test.config import in_backend
+from venture.test.config import needs_backend
 
 def findTimeout():
   '''

@@ -16,11 +16,16 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
+
 from nose.tools import eq_
 
+from venture.test.config import default_num_samples
+from venture.test.config import default_num_transitions_per_sample
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import statisticalTest
 import venture.value.dicts as v
-from venture.test.config import get_ripl, default_num_samples, default_num_transitions_per_sample, on_inf_prim
-from venture.test.stats import statisticalTest, reportKnownGaussian
 
 @on_inf_prim("mh")
 @statisticalTest

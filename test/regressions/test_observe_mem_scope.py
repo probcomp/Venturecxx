@@ -17,8 +17,9 @@
 
 from nose.tools import eq_
 
+from venture.test.config import broken_in
+from venture.test.config import get_ripl
 import venture.lite.value as val
-from venture.test.config import get_ripl, broken_in
 
 @broken_in("puma", "No introspection on blocks in scope")
 def testScopeObservedThroughMem1():

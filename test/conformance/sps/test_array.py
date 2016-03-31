@@ -15,7 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.config import get_ripl, on_inf_prim, gen_on_inf_prim
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 class TestArrayExtended(object):
   _multiprocess_can_split_ = True

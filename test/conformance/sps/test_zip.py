@@ -16,7 +16,10 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose.tools import eq_
-from venture.test.config import get_ripl, on_inf_prim, broken_in
+
+from venture.test.config import broken_in
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 @broken_in('puma', 'zip SP not implemented in Puma')
 @on_inf_prim("none")

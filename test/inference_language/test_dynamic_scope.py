@@ -17,7 +17,9 @@
 
 from nose.tools import assert_equal
 
-from venture.test.config import get_ripl, on_inf_prim, broken_in
+from venture.test.config import broken_in
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 @on_inf_prim("none")
 def testDynamicScope1():

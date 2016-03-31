@@ -16,11 +16,14 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-import scipy.stats as stats
-from nose.tools import assert_almost_equal
 
-from venture.test.stats import statisticalTest, reportKnownGaussian
-from venture.test.config import get_ripl, default_num_samples
+from nose.tools import assert_almost_equal
+import scipy.stats as stats
+
+from venture.test.config import default_num_samples
+from venture.test.config import get_ripl
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import statisticalTest
 
 @statisticalTest
 def testNormalWithObserve1():

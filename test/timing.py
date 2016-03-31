@@ -17,7 +17,9 @@
 
 import math
 import time
-from nose.tools import assert_greater, assert_less
+
+from nose.tools import assert_greater
+from nose.tools import assert_less
 
 # Checks that the runtime of the unary function f(n)() is affine in its
 # input (to wit, f(n)() takes An + B time to run, and A is decidedly

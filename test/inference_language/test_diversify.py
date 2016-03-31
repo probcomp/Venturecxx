@@ -17,10 +17,12 @@
 
 import numpy as np
 
-from venture.test.config import get_ripl, broken_in, on_inf_prim
-import venture.value.dicts as v
-from venture.ripl.utils import strip_types
 from venture.lite.utils import logWeightsToNormalizedDirect
+from venture.ripl.utils import strip_types
+from venture.test.config import broken_in
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+import venture.value.dicts as v
 
 @broken_in("puma", "enumerative_diversify not implemented in Puma")
 @on_inf_prim("enumerative_diversify")

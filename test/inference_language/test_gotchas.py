@@ -15,11 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import eq_, assert_raises # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
 from nose import SkipTest
+from nose.tools import assert_raises # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
+from nose.tools import eq_
 
-from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, collectStateSequence, gen_broken_in, gen_on_inf_prim, defaultInfer, on_inf_prim
+from venture.test.config import collectSamples
+from venture.test.config import collectStateSequence
+from venture.test.config import defaultInfer
+from venture.test.config import gen_broken_in
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import statisticalTest
 
 def testInferWithNoEntropy():
   "Makes sure that infer doesn't crash when there are no random choices in the trace"

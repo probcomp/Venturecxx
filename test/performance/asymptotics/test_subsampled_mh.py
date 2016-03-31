@@ -15,12 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import scipy.stats
 from nose.plugins.attrib import attr
+import scipy.stats
 
-import venture.value.dicts as val
-from venture.test.config import get_ripl, broken_in, on_inf_prim
+from venture.test.config import broken_in
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 import venture.test.timing as timing
+import venture.value.dicts as val
 
 @attr('slow')
 @broken_in('puma', "subsampled_mh is only implemented in Lite")

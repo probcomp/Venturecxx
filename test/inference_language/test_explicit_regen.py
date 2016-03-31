@@ -17,9 +17,13 @@
 
 import math
 
-from venture.test.stats import statisticalTest
+from venture.test.config import broken_in
+from venture.test.config import collectSamples
+from venture.test.config import default_num_transitions_per_sample
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 from venture.test.stats import reportKnownGaussian
-from venture.test.config import get_ripl, on_inf_prim, broken_in, collectSamples, default_num_transitions_per_sample
+from venture.test.stats import statisticalTest
 
 def custom_mh_ripl():
   ripl = get_ripl(persistent_inference_trace=True)

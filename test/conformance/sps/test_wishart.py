@@ -20,9 +20,14 @@ from testconfig import config
 import numpy as np
 import scipy.stats
 
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.config import SkipTest
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.config import inParallel
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownContinuous
 from venture.test.stats import reportKnownGaussian
-from venture.test.config import get_ripl, collectSamples, on_inf_prim, inParallel, SkipTest
+from venture.test.stats import statisticalTest
 
 @on_inf_prim("none")
 def testWishartSmoke():

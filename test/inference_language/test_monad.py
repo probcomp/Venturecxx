@@ -19,8 +19,14 @@ from nose.tools import eq_
 
 import scipy.stats as stats
 
-from venture.test.stats import statisticalTest, reportKnownGaussian, reportKnownContinuous
-from venture.test.config import get_ripl, on_inf_prim, default_num_samples, default_num_transitions_per_sample, needs_backend
+from venture.test.config import default_num_samples
+from venture.test.config import default_num_transitions_per_sample
+from venture.test.config import get_ripl
+from venture.test.config import needs_backend
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownContinuous
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import statisticalTest
 import venture.ripl.utils as u
 
 def testInferenceLanguageEvalSmoke():

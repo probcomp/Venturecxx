@@ -15,13 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import scipy.stats as stats
-from nose.tools import eq_
 from nose.plugins.attrib import attr
+from nose.tools import eq_
 
-from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, collectSamples, on_inf_prim
 from venture.test.config import broken_in
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 ### Expressions
 
