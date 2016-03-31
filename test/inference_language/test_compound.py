@@ -179,3 +179,22 @@ def test_compound_assume_inf_second_element():
     ripl.predict("(obs_2)", label="predictive")
     post_samples = collectSamples(ripl, "predictive")
     return reportKnownGaussian(-15, 1, post_samples)
+
+@statisticalTest
+def test_model_without_compound_assume():
+    inf_test_prog ="""
+    [assume a (tag (quote a_scope) 0 (normal 0 10))]
+    [assume b (tag (quote b_scope) 0 (normal -10 10))]
+    [assume obs_1 (make_suff_stat_normal a 1)]
+    [assume obs_2 (make_suff_stat_normal b 1)]
+    """
+
+    ripl = get_ripl()
+    ripl.execute_program(inf_test_prog)
+
+    for _ in range(default_num_data()):
+        ripl.observe("(obs_1)", np.random.normal(5, 1))
+
+    ripl.predict("(obs_1)", label="predictive")
+    post_samples = collectSamples(ripl, "predictive")
+    return reportKnownGaussian(5, 1, post_samples)
