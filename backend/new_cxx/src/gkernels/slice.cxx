@@ -165,6 +165,7 @@ int SliceGKernel::reject()
 {
   detachAndExtract(trace, scaffold->border[0], scaffold);
   assertTorus(scaffold);
-  regenAndAttach(trace, scaffold->border[0], scaffold, true, rhoDB, boost::shared_ptr<map<Node*, Gradient> >());
+  regenAndAttach(trace, scaffold->border[0], scaffold, true, rhoDB,
+                 boost::shared_ptr<map<Node*, Gradient> >());
   return this->scaffold->numAffectedNodes();
 }
