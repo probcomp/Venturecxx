@@ -29,6 +29,7 @@ from venture.test.stats import reportKnownGaussian
 from venture.test.stats import statisticalTest
 import venture.ripl.utils as u
 
+@on_inf_prim("none")
 def testInferenceLanguageEvalSmoke():
   ripl = get_ripl()
   eq_(4,ripl.evaluate(4))
@@ -216,6 +217,7 @@ def testBackendForkingSmoke():
 def testAutorunSmoke():
   eq_(3.0, get_ripl().evaluate("(sample 3)"))
 
+@on_inf_prim("report")
 def testReportActionSmoke():
   vals = get_ripl().execute_program("""\
 foo : [assume x (+ 1 2)]
@@ -223,6 +225,7 @@ foo : [assume x (+ 1 2)]
 """)
   eq_([3.0, 3.0], u.strip_types([v['value'] for v in vals]))
 
+@on_inf_prim("force")
 def testForceSugar():
   r = get_ripl()
   r.set_mode("venture_script")
@@ -233,12 +236,14 @@ report(quote(x));
 """)
   eq_(5, u.strip_types([v['value'] for v in vals])[2])
 
+@on_inf_prim("sample")
 def testSampleSugar():
   r = get_ripl()
   r.set_mode("venture_script")
   vals = r.execute_program("sample 2 + 2;")
   eq_([4], u.strip_types([v['value'] for v in vals]))
 
+@on_inf_prim("mh")
 def testInferenceWorkCounting():
   r = get_ripl()
   eq_([0], r.infer("(mh default one 1)"))

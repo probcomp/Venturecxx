@@ -116,6 +116,7 @@ through a ripl (applied fully uncurried)."""
     expr = [v.symbol(name)] + [val.expressionFor() for val in args_lists[0]]
     eq_(answer, carefully(eval_in_ripl, expr))
 
+@on_inf_prim("none")
 def testVectorArrayExample():
   from venture.lite.sp_registry import builtInSPs
   from venture.lite.value import VentureArray

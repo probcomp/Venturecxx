@@ -28,6 +28,7 @@ def testAssessSmoke():
 
 @broken_in("puma", "Can't use Lite assess in Puma because can't package "
            "Puma SP argument to it")
+@on_inf_prim("none")
 def testAssessAuxSmoke():
   r = get_ripl()
   r.assume("coin", "(make_beta_bernoulli 1 1)")
@@ -35,6 +36,7 @@ def testAssessAuxSmoke():
   r.observe("(coin)", True)
   eq_(math.log(float(2)/3), r.sample("(assess true coin)"))
 
+@on_inf_prim("none")
 def testStringLiterals():
   r = get_ripl()
   assert not r.sample('(eq 3 "foo")')

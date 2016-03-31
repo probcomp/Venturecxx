@@ -19,9 +19,11 @@ from nose.tools import eq_
 
 from venture.test.config import broken_in
 from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 import venture.lite.value as val
 
 @broken_in("puma", "No introspection on blocks in scope")
+@on_inf_prim("none")
 def testScopeObservedThroughMem1():
   r = get_ripl()
   r.assume("frob", "(mem (lambda (x) (flip 0.5)))")
@@ -33,6 +35,7 @@ def testScopeObservedThroughMem1():
   eq_(0, len(trace.getAllNodesInScope(scope)))
 
 @broken_in("puma", "No introspection on blocks in scope")
+@on_inf_prim("resample")
 def testScopeObservedThroughMem2():
   """The way resample happened to be implemented in Lite when I wrote
 this test, it had the effect of undoing [infer (incorporate)] for all
@@ -52,6 +55,7 @@ observations.  This was detected through a horrible mess involving mem.
   trace = r.sivm.core_sivm.engine.getDistinguishedTrace()
   eq_(0, len(trace.getAllNodesInScope(scope)))
 
+@on_inf_prim("resample")
 def testResamplingObservations():
   """The way resample happened to be implemented in Lite when I wrote
 this test, it had the effect of undoing [infer (incorporate)] for all

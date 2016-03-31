@@ -21,6 +21,7 @@ from venture.lite import builtin
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
 
+@on_inf_prim("define")
 def testPersistenceSmoke1():
   r = get_ripl(persistent_inference_trace=True)
   r.execute_program("""
@@ -28,6 +29,7 @@ def testPersistenceSmoke1():
 [assume x (flip 0.1)]
 [infer (mh default one foo)]""")
 
+@on_inf_prim("define")
 def testPersistenceSmoke2():
   r = get_ripl(persistent_inference_trace=True)
   r.set_mode('venture_script')
@@ -36,12 +38,14 @@ define foo = 5;
 assume x = flip(0.1);
 infer mh(default, one, foo);""")
 
+@on_inf_prim("define")
 def testPersistenceSmoke3():
   r = get_ripl(persistent_inference_trace=True)
   r.define("foo", "5")
   r.assume("x", "(flip 0.1)")
   r.infer("(mh default one foo)")
 
+@on_inf_prim("observe")
 def testInferObserveSmoke1():
   r = get_ripl(persistent_inference_trace=True)
   r.execute_program("""
@@ -50,12 +54,14 @@ def testInferObserveSmoke1():
 [infer (incorporate)]""")
   eq_(3, r.sample("x"))
 
+@on_inf_prim("observe")
 def testInferObserveSmoke2():
   r = get_ripl()
   r.infer("(observe (normal 0 1) 3 label)")
   r.infer("(incorporate)")
   eq_(3, r.report("label"))
 
+@on_inf_prim("define")
 def testInlineSMCSmoke():
   r = get_ripl(persistent_inference_trace=True)
   import venture.engine.inference_prelude as p
@@ -75,6 +81,7 @@ def testInlineSMCSmoke():
   for i in range(20):
     eq_(i, r.report(i+len(p.prelude)+3))
 
+@on_inf_prim("define")
 def testInlineSMCSmoke2():
   r = get_ripl(persistent_inference_trace=True)
   r.execute_program("""
@@ -94,21 +101,25 @@ def testInlineSMCSmoke2():
   for i in range(20):
     eq_(i, r.sample("(frob %s)" % i))
 
+@on_inf_prim("define")
 def testDirectivesInInfer1():
   r = get_ripl()
   r.infer("(assume x 5)")
   eq_(5, r.sample("x"))
 
+@on_inf_prim("define")
 def testDirectivesInInfer2():
   r = get_ripl()
   r.infer("(predict (+ 5 2) foo)")
   eq_(7.0, r.report("foo"))
 
+@on_inf_prim("bind_foreign_sp")
 def testForeignInfSPs():
   r = get_ripl(persistent_inference_trace = True)
   r.bind_foreign_inference_sp("my_mul", builtin.builtInSPs()["mul"])
   r.infer("(mh default one (+ (my_mul 2 2) 1))")
 
+@on_inf_prim("force")
 def testForceSmoke1():
   r = get_ripl(persistent_inference_trace=True)
   r.execute_program("""
@@ -118,6 +129,7 @@ def testForceSmoke1():
   x = r.sample('x')
   eq_(x, 5)
 
+@on_inf_prim("force")
 def testForceSmoke2():
   r = get_ripl(persistent_inference_trace=True)
   r.execute_program("""

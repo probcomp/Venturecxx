@@ -22,10 +22,12 @@ import scipy.stats as stats
 
 from venture.test.config import default_num_samples
 from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 from venture.test.stats import reportKnownGaussian
 from venture.test.stats import statisticalTest
 
 @statisticalTest
+@on_inf_prim("likelihood_weight")
 def testNormalWithObserve1():
   "Checks the posterior distribution on a Gaussian given an unlikely observation"
   ripl = get_ripl()
@@ -49,6 +51,7 @@ def collectLikelihoodWeighted(ripl, address):
     wts.append(ripl.sivm.core_sivm.engine.model.log_weights[0])
   return (vs, wts)
 
+@on_inf_prim("likelihood_weight")
 def testMultiprocessingRegression():
   """Checking for a strange bug in likelihood_weight when using parallel particles.
 

@@ -90,6 +90,7 @@ def checkForEachParticleCustomMH(mode):
   predictions = ripl.infer("(for_each_particle (sample x))")
   return reportKnownGaussian(1, 0.5**0.5, predictions)
 
+@on_inf_prim("for_each_particle")
 def testForEachParticleNoModeling():
   ripl = get_ripl()
   with assert_raises(Exception):
