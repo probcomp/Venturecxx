@@ -22,6 +22,7 @@ from venture.test.config import broken_in
 from venture.test.config import collectSamples
 from venture.test.config import default_num_data
 from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 from venture.test.config import skipWhenRejectionSampling
 from venture.test.stats import reportKnownGaussian
 from venture.test.stats import statisticalTest
@@ -31,6 +32,7 @@ __author__ = 'ulli'
 # Simple smoke test
 
 @broken_in("puma", "Does not have refs: Issue #224.")
+@on_inf_prim("none")
 def test_compound_assume_smoke():
     smoke_prog ="""
     [assume a_ref (ref (uniform_discrete 2 3))]
@@ -55,6 +57,7 @@ def test_compound_assume_smoke():
     assert ripl.sample("u") == 20, "compound assume does not work for a one-element-compound"
 
 @broken_in("puma", "Does not have refs: Issue #224.")
+@on_inf_prim("none")
 def test_compound_assume_nonduplication():
     ripl = get_ripl()
     ripl.execute_program("""
@@ -69,6 +72,7 @@ def test_compound_assume_nonduplication():
 # Testing observations
 
 @broken_in("puma", "Does not have refs: Issue #224.")
+@on_inf_prim("none")
 def test_compound_assume_observations():
     obs_prog ="""
     [assume a_ref (ref (normal 0 1))]
@@ -101,6 +105,7 @@ def test_compound_assume_observations():
 # Testing inference
 
 @broken_in("puma", "Does not have refs: Issue #224.")
+@on_inf_prim("mh")
 def test_compound_assume_inf_happening():
     inf_test_prog ="""
     [assume a_ref (tag (quote a_scope) 0 (ref (normal 0 10)))]
