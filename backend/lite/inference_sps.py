@@ -618,8 +618,8 @@ Resample all particles in the current set from the prior and reset
 their weights to the likelihood."""),
 
   engine_method_sp("enumerative_diversify",
-                   infer_action_maker_type([t.ExpressionType("scope : object"),
-                                            t.ExpressionType("block : object")]),
+                   infer_action_maker_type([t.AnyType("scope : object"),
+                                            t.AnyType("block : object")]),
                    desc="""\
 Diversify the current particle set to represent the local conditional exactly.
 
@@ -641,8 +641,8 @@ This is useful together with `collapse_equal` and
 programs in Venture. """),
 
   engine_method_sp("collapse_equal",
-                   infer_action_maker_type([t.ExpressionType("scope : object"),
-                                            t.ExpressionType("block : object")]),
+                   infer_action_maker_type([t.AnyType("scope : object"),
+                                            t.AnyType("block : object")]),
                    desc="""\
 Collapse the current particle set to represent the local conditional less redundantly.
 
@@ -665,8 +665,8 @@ This is useful together with `enumerative_diversify` for
 implementing certain kinds of dynamic programs in Venture. """),
 
   engine_method_sp("collapse_equal_map",
-                   infer_action_maker_type([t.ExpressionType("scope : object"),
-                                            t.ExpressionType("block : object")]),
+                   infer_action_maker_type([t.AnyType("scope : object"),
+                                            t.AnyType("block : object")]),
                    desc="""\
 Like `collapse_equal` but deterministically retain the max-weight particle.
 
