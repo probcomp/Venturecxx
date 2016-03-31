@@ -91,13 +91,17 @@ See `Lite` and `Puma`."""
     def make_venture_sivm(self, persistent_inference_trace=True):
         return sivm.VentureSivm(self.make_core_sivm(persistent_inference_trace))
     def make_church_prime_ripl(self, persistent_inference_trace=True, **kwargs):
-        return self.make_combined_ripl(
-            persistent_inference_trace=persistent_inference_trace,
-            **kwargs).set_mode("church_prime")
+        r = ripl.Ripl(self.make_venture_sivm(persistent_inference_trace),
+                      {"church_prime":parser.ChurchPrimeParser.instance()},
+                      **kwargs)
+        r.backend_name = self.name()
+        return r
     def make_venture_script_ripl(self, persistent_inference_trace=True, **kwargs):
-        return self.make_combined_ripl(
-            persistent_inference_trace=persistent_inference_trace,
-            **kwargs).set_mode("venture_script")
+        r = ripl.Ripl(self.make_venture_sivm(persistent_inference_trace),
+                      {"venture_script":parser.VentureScriptParser.instance()},
+                      **kwargs)
+        r.backend_name = self.name()
+        return r
     def make_combined_ripl(self, persistent_inference_trace=True, **kwargs):
         v = self.make_venture_sivm(persistent_inference_trace)
         parser1 = parser.ChurchPrimeParser.instance()
