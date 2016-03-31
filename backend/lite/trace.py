@@ -685,7 +685,7 @@ function.
     (operator, scope, block) = exp[0:3]
     scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
     if not self.scopeHasEntropy(scope):
-      return [self, 0.0]
+      return ([self], [0.0])
     if operator == "enumerative":
       return infer.EnumerativeDiversify(copy_trace)(self, BlockScaffoldIndexer(scope, block))
     else: raise Exception("DIVERSIFY %s is not implemented" % operator)
