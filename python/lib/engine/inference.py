@@ -260,6 +260,8 @@ class Infer(object):
     assert len(self.engine.model.log_weights) == 1, \
       "Custom proposals only supported for one trace at a time"
     return self.engine.model.traces.at(0, 'get_current_values', scaffold)
+  def num_blocks(self, scope):
+    return self.engine.model.traces.map('numBlocksInScope', scope)
 
   def pyexec(self, code):
     self.engine.ripl.pyexec(code)

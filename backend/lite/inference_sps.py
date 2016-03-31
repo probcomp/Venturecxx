@@ -1116,6 +1116,11 @@ Does not interoperate with multiple particles.
 
 """),
 
+  engine_method_sp("num_blocks", infer_action_maker_type([t.AnyType("scope : object")], t.ArrayUnboxedType(t.NumberType())), desc="""\
+Report the number of blocks in the given scope in each particle.
+
+"""),
+
   ripl_method_sp("draw_subproblem", infer_action_maker_type([t.AnyType("<subproblem>")]), desc="""\
   Draw a subproblem by printing out the source code of affected random choices.
 

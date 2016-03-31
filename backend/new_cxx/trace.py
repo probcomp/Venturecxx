@@ -115,6 +115,9 @@ class Trace(object):
       raise Exception("numNodesInBlock can't handle %s" % obj)
     return self.trace.numNodesInBlock(guess_type(scope), guess_type(block))
 
+  def numBlocksInScope(self, scope):
+    return self.trace.numBlocksInScope(_coerce_to_stack_dict(scope))
+
   def set_profiling(self, _enabled):
     pass # Puma can't be internally profiled (currently)
 
@@ -128,6 +131,12 @@ def _unwrapVentureValue(val):
 def _ensure_stack_dict(val):
   assert isinstance(val, VentureValue)
   return val.asStackDict(None)
+
+def _coerce_to_stack_dict(val):
+  if isinstance(val, VentureValue):
+    return val.asStackDict(None)
+  else:
+    return val
 
 def _expToDict(exp):
   if isinstance(exp, int):

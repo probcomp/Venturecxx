@@ -33,6 +33,8 @@ def testDynamicScope1():
   ripl.assume("x", "(normal 0.0 1.0)")
   ripl.predict("(tag 0 0 (normal x 1))")
   assert_equal(count_nodes(ripl), 1)
+  assert_equal([2], ripl.infer("(num_blocks default)"))
+  assert_equal([1], ripl.infer("(num_blocks 0)"))
 
 @on_inf_prim("none")
 def testDynamicScope2():

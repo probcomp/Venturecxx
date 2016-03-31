@@ -314,6 +314,12 @@ int PyTrace::numNodesInBlock(boost::python::object pyscope, boost::python::objec
   return trace->getNodesInBlock(scope, block).size();
 }
 
+int PyTrace::numBlocksInScope(boost::python::object pyscope)
+{
+  ScopeID scope = parseValueO(pyscope);
+  return trace->numBlocksInScope(scope);
+}
+
 boost::python::list PyTrace::numFamilies()
 {
   boost::python::list xs;
@@ -383,6 +389,7 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("log_joint_at", &PyTrace::logJointAt)
     .def("likelihood_weight", &PyTrace::likelihoodWeight)
     .def("numNodesInBlock", &PyTrace::numNodesInBlock)
+    .def("numBlocksInScope", &PyTrace::numBlocksInScope)
     .def("numFamilies", &PyTrace::numFamilies)
     .def("freeze", &PyTrace::freeze)
     .def("stop_and_copy", &PyTrace::stop_and_copy, return_value_policy<manage_new_object>())
