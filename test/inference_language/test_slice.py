@@ -65,7 +65,8 @@ def checkSliceBasic1(slice_method):
 
 @statisticalTest
 def checkSliceNormalWithObserve1(slice_method):
-  "Checks the posterior distribution on a Gaussian given an unlikely observation"
+  # Checks the posterior distribution on a Gaussian given an unlikely
+  # observation
   if (config["get_ripl"] != "lite") and (slice_method == 'slice_doubling'):
     raise SkipTest("Slice sampling with doubling only implemented in Lite.")
   ripl = get_ripl()
@@ -79,7 +80,9 @@ def checkSliceNormalWithObserve1(slice_method):
 
 @statisticalTest
 def checkSliceNormalWithObserve2a(slice_method):
-  "Checks the posterior distribution on a Gaussian given an unlikely observation.  The difference between this and 1 is an extra predict, which apparently has a deleterious effect on mixing."
+  # Checks the posterior distribution on a Gaussian given an unlikely
+  # observation.  The difference between this and 1 is an extra
+  # predict, which apparently has a deleterious effect on mixing.
   if (config["get_ripl"] != "lite") and (slice_method == 'slice_doubling'):
     raise SkipTest("Slice sampling with doubling only implemented in Lite.")
   ripl = get_ripl()
@@ -93,7 +96,8 @@ def checkSliceNormalWithObserve2a(slice_method):
 
 @statisticalTest
 def checkSliceNormalWithObserve2b(slice_method):
-  "Checks the posterior distribution on a Gaussian given an unlikely observation"
+  # Checks the posterior distribution on a Gaussian given an unlikely
+  # observation
   if (config["get_ripl"] != "lite") and (slice_method == 'slice_doubling'):
     raise SkipTest("Slice sampling with doubling only implemented in Lite.")
   ripl = get_ripl()
