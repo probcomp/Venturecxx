@@ -48,7 +48,7 @@ def testDetachRegenSmoke():
   ripl.assume("x", "(normal 0 1)")
   old = ripl.sample("x")
   ripl.infer("(custom_mh default all)")
-  assert not old == ripl.sample("x")
+  assert old != ripl.sample("x")
 
 @on_inf_prim("regen")
 @broken_in("puma", "Does not support the regen SP yet")
@@ -86,7 +86,7 @@ def testCustomProposalSmoke():
   ripl.assume("x", "(normal 0 1)")
   old = ripl.sample("x")
   ripl.infer("(repeat 5 (gaussian_drift_mh default all 0.1))")
-  assert not old == ripl.sample("x")
+  assert old != ripl.sample("x")
 
 @on_inf_prim("regen")
 @broken_in("puma", "Does not support the regen SP yet")
@@ -109,4 +109,4 @@ def testDetachForProposalDoesNotMutateScaffold():
     (detach_for_proposal subproblem)
     (regen subproblem))
 """)
-  assert not old == ripl.sample("x")
+  assert old != ripl.sample("x")
