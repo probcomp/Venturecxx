@@ -812,6 +812,13 @@ particle, and is not allowed to contain modeling commands (``assume``,
 ``observe``, ``predict``, ``forget``, ``freeze``).
 """),
 
+  engine_method_sp("on_particle",
+                   infer_action_maker_type([t.IntegerType(), t.AnyType("<action>")], t.AnyType()), desc="""\
+Run the given inference action on the particle with the given index.
+The inference action is not allowed to contain modeling commands (``assume``,
+``observe``, ``predict``, ``forget``, ``freeze``).
+"""),
+
   engine_method_sp("load_plugin", infer_action_maker_type([t.SymbolType("filename")], return_type=t.AnyType(), variadic=True), desc="""\
 Load the plugin located at <filename>.
 

@@ -207,6 +207,8 @@ class Infer(object):
 
   def for_each_particle(self, action):
     return self.engine.for_each_particle(action)
+  def on_particle(self, index, action):
+    return self.engine.on_particle(index, action)
 
   def new_model(self, backend_name=None):
     if backend_name is None:
