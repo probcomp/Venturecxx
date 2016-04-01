@@ -32,6 +32,7 @@ from venture.test.stats import statisticalTest
 def testForEachParticleSmoke():
   ripl = get_ripl()
   eq_([5], ripl.infer("(for_each_particle (return 5))"))
+  eq_(5, ripl.infer("(on_particle 0 (return 5))"))
 
 @gen_on_inf_prim("for_each_particle")
 def testForEachParticleSmoke2():
@@ -43,6 +44,7 @@ def checkForEachParticleSmoke2(mode):
   ripl = get_ripl()
   ripl.infer("(resample%s %s)" % (mode, n))
   eq_([5 for _ in range(n)], ripl.infer("(for_each_particle (return 5))"))
+  eq_(5, ripl.infer("(on_particle 1 (return 5))"))
 
 @gen_on_inf_prim("for_each_particle")
 def testForEachParticleIsIndependent():
@@ -97,3 +99,13 @@ def testForEachParticleNoModeling():
     ripl.infer("(for_each_particle (assume x (normal 0 1)))")
   ripl.assume("x", 0)
   eq_(0, ripl.sample("x"))
+
+@on_inf_prim("on_particle")
+def testHitsOneParticle():
+  ripl = get_ripl()
+  ripl.execute_program("""
+(do (resample 2)
+    (assume x (normal 0 1))
+    (on_particle 0 (force x 0))
+    (on_particle 1 (force x 1)))""")
+  eq_([0, 1], ripl.sample_all("x"))
