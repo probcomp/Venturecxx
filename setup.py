@@ -152,6 +152,7 @@ packages = [
     "venture.lite",
     "venture.lite.infer",
     "venture.mite",
+    "venture.mite.sps",
     "venture.untraced",
     "venture.parser",
     "venture.parser.church_prime",
