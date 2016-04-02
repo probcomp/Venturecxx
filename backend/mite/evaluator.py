@@ -1,7 +1,7 @@
 import numbers
+from contextlib import contextmanager
 
 from venture.exception import VentureException
-from venture.lite.exception import VentureError
 from venture.lite.node import isConstantNode
 from venture.lite.node import isLookupNode
 from venture.lite.node import isOutputNode
@@ -12,16 +12,23 @@ from venture.mite.sp import VentureSP
 
 ## evaluation
 
+@contextmanager
+def annotation(address):
+  try:
+    yield
+  except VentureException:
+    raise # Avoid rewrapping with the below
+  except Exception as err:
+    import sys
+    info = sys.exc_info()
+    raise VentureException("evaluation", err.message, address=address,
+                           cause=err), None, info[2]
+
 def evalFamily(trace, address, exp, env):
   weight = 0
   if e.isVariable(exp):
-    try:
+    with annotation(address):
       sourceNode = env.findSymbol(exp)
-    except VentureError as err:
-      import sys
-      info = sys.exc_info()
-      raise VentureException("evaluation", err.message, address=address), \
-        None, info[2]
     # weight = regen(trace, sourceNode, scaffold,
     #                shouldRestore, omegaDB, gradients)
     return (weight, trace.createLookupNode(address, sourceNode))
@@ -38,15 +45,8 @@ def evalFamily(trace, address, exp, env):
       weight += w
       nodes.append(n)
     outputNode = trace.createApplicationNodes(address, nodes[0], nodes[1:], env)
-    try:
+    with annotation(address):
       weight += apply(trace, outputNode)
-    except VentureException:
-      raise # Avoid rewrapping with the below
-    except Exception as err:
-      import sys
-      info = sys.exc_info()
-      raise VentureException("evaluation", err.message, address=address,
-                             cause=err), None, info[2]
     assert isinstance(weight, numbers.Number)
     return weight, outputNode
 
