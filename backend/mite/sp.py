@@ -2,6 +2,7 @@ from venture.lite.exception import VentureBuiltinSPMethodError
 from venture.lite.node import Args as LiteArgs
 from venture.lite.utils import override
 from venture.lite.value import VentureValue
+import venture.value.dicts as v
 
 class VentureSP(VentureValue):
   """A stochastic procedure."""
@@ -11,6 +12,12 @@ class VentureSP(VentureValue):
 
   def unapply(self, _args):
     raise VentureBuiltinSPMethodError("Unapply not implemented!")
+
+  def show(self):
+    return "<procedure>"
+
+  def asStackDict(self, _trace=None):
+    return v.sp(self.show())
 
 class SimulationSP(VentureSP):
   @override(VentureSP)
