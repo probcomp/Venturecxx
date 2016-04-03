@@ -673,6 +673,13 @@ Like `collapse_equal` but deterministically retain the max-weight particle.
 And leave its weight unaltered, instead of adding in the weights of
 all the other particles in the bin. """),
 
+  engine_method_sp("checkInvariants",
+                   infer_action_maker_type([]),
+                   desc="""\
+Run a trace self-check looking for contract violations in derived data fields.
+
+O(#nodes). """),
+
   trace_method_sp("draw_scaffold", transition_oper_type(), desc="""\
 Draw a visual representation of the scaffold indicated by the given scope and block.
 
