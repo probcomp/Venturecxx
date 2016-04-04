@@ -70,6 +70,7 @@ def unabsorb(trace, node, omegaDB, compute_gradient = False):
   # we need to pass groundValue here in case the return value is an SP
   # in which case the node would only contain an SPRef
   psp,args,gvalue = trace.pspAt(node),trace.argsAt(node),trace.groundValueAt(node)
+  maybeUnregisterRandomChoiceInScope(trace, node)
   psp.unincorporate(gvalue,args)
   weight = psp.logDensity(gvalue,args)
   if compute_gradient:

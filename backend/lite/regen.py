@@ -110,6 +110,7 @@ def absorb(trace, node):
   gvalue = trace.groundValueAt(node)
   weight = psp.logDensity(gvalue, args)
   psp.incorporate(gvalue, args)
+  maybeRegisterRandomChoiceInScope(trace, node)
   assert isinstance(weight, numbers.Number)
   return weight
 
