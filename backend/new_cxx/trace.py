@@ -106,14 +106,8 @@ class Trace(object):
                                    _ensure_stack_dict(block))
 
   def numNodesInBlock(self, scope, block):
-    # This is kooky for compatibility with the Lite numNodesInBlock method.
-    def guess_type(obj):
-      if type(obj) in vv.venture_numeric_types:
-        return v.number(obj.getNumber())
-      if isinstance(obj, vv.VentureSymbol):
-        return v.symbol(obj.getSymbol())
-      raise Exception("numNodesInBlock can't handle %s" % obj)
-    return self.trace.numNodesInBlock(guess_type(scope), guess_type(block))
+    return self.trace.numNodesInBlock(_coerce_to_stack_dict(scope),
+                                      _coerce_to_stack_dict(block))
 
   def numBlocksInScope(self, scope):
     return self.trace.numBlocksInScope(_coerce_to_stack_dict(scope))
