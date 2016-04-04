@@ -25,11 +25,15 @@ from venture.lite.infer.mh import registerDeterministicLKernels
 from venture.lite.infer.mh import registerDeterministicLKernelsByAddress
 
 def getCartesianProductOfEnumeratedValues(trace,pnodes):
-  enumeratedValues = [trace.pspAt(pnode).enumerateValues(trace.argsAt(pnode)) for pnode in pnodes]
+  enumeratedValues = [trace.pspAt(pnode).enumerateValues(trace.argsAt(pnode))
+                      for pnode in pnodes]
   return cartesianProduct(enumeratedValues)
 
 def getCartesianProductOfEnumeratedValuesWithAddresses(trace,pnodes):
-  enumeratedValues = [[(pnode.address, v) for v in trace.pspAt(pnode).enumerateValues(trace.argsAt(pnode))] for pnode in pnodes]
+  enumeratedValues = \
+      [[(pnode.address, v)
+        for v in trace.pspAt(pnode).enumerateValues(trace.argsAt(pnode))]
+       for pnode in pnodes]
   return cartesianProduct(enumeratedValues)
 
 class EnumerativeGibbsOperator(object):
@@ -65,7 +69,8 @@ class EnumerativeGibbsOperator(object):
       assertTorus(scaffold)
       registerDeterministicLKernels(trace,scaffold,pnodes,newValues)
       xiParticles.append(xiParticle)
-      xiWeights.append(regenAndAttach(xiParticle,scaffold,shouldRestore,omegaDB,{}))
+      xiWeights.append(
+        regenAndAttach(xiParticle,scaffold,shouldRestore,omegaDB,{}))
       # if shouldRestore:
       #   assert_almost_equal(xiWeights[-1], rhoWeight)
     return (xiParticles, xiWeights)
@@ -116,14 +121,16 @@ class EnumerativeDiversify(EnumerativeGibbsOperator):
     assertTrace(trace,scaffold)
 
     pnodes = scaffold.getPrincipalNodes()
-    allSetsOfValues = getCartesianProductOfEnumeratedValuesWithAddresses(trace,pnodes)
+    allSetsOfValues = \
+        getCartesianProductOfEnumeratedValuesWithAddresses(trace,pnodes)
 
     xiWeights = []
     xiParticles = []
 
     for newValuesWithAddresses in allSetsOfValues:
       xiParticle = self.copy_trace(trace)
-      xiParticle.makeConsistent() # CONSIDER what to do with the weight from this
+      # CONSIDER what to do with the weight from this
+      xiParticle.makeConsistent()
       # Impossible original state is probably fine
       # ASSUME the scaffolder is deterministic. Have to make the
       # scaffold again b/c detach mutates it, and b/c it may not work
@@ -131,7 +138,8 @@ class EnumerativeDiversify(EnumerativeGibbsOperator):
       scaffold = scaffolder.sampleIndex(xiParticle)
       (rhoWeight, _) = detachAndExtract(xiParticle, scaffold)
       assertTorus(scaffold)
-      registerDeterministicLKernelsByAddress(xiParticle,scaffold,newValuesWithAddresses)
+      registerDeterministicLKernelsByAddress(
+        xiParticle,scaffold,newValuesWithAddresses)
       xiWeight = regenAndAttach(xiParticle,scaffold,False,OmegaDB(),{})
       xiParticles.append(xiParticle)
       # CONSIDER What to do with the rhoWeight.  Subtract off the
