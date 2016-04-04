@@ -160,10 +160,7 @@ def teardownMadeSP(trace,node,isAAA):
 
 def unapplyPSP(trace, node, scaffold, omegaDB, compute_gradient = False):
   psp,args = trace.pspAt(node),trace.argsAt(node)
-  if isTagOutputPSP(psp):
-    scope,block = [trace.valueAt(n) for n in node.operandNodes[0:2]]
-    blockNode = node.operandNodes[2]
-    trace.unregisterRandomChoiceInScope(scope,block,blockNode)
+  maybeUnregisterRandomChoiceInScope(trace, node)
   if psp.isRandom(): trace.unregisterRandomChoice(node)
   if isinstance(trace.valueAt(node),SPRef) and trace.valueAt(node).makerNode == node:
     teardownMadeSP(trace,node,scaffold.isAAA(node))
@@ -219,3 +216,10 @@ def unevalRequests(trace, node, scaffold, omegaDB, compute_gradient = False):
       weight += unevalFamily(trace, esrParent, scaffold, omegaDB, compute_gradient)
 
   return weight
+
+def maybeUnregisterRandomChoiceInScope(trace, node):
+  psp = trace.pspAt(node)
+  if isTagOutputPSP(psp):
+    scope,block = [trace.valueAt(n) for n in node.operandNodes[0:2]]
+    blockNode = node.operandNodes[2]
+    trace.unregisterRandomChoiceInScope(scope,block,blockNode)

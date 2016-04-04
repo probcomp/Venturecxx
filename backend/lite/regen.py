@@ -272,10 +272,7 @@ def applyPSP(trace, node, scaffold, shouldRestore, omegaDB, gradients):
   if isinstance(newValue, VentureSPRecord):
     processMadeSP(trace, node, scaffold.isAAA(node))
   if psp.isRandom(): trace.registerRandomChoice(node)
-  if isTagOutputPSP(psp):
-    scope, block = [trace.valueAt(n) for n in node.operandNodes[0:2]]
-    blockNode = node.operandNodes[2]
-    trace.registerRandomChoiceInScope(scope, block, blockNode)
+  maybeRegisterRandomChoiceInScope(trace, node)
   assert isinstance(weight, numbers.Number)
   return weight
 
@@ -337,3 +334,10 @@ def restore(trace, node, scaffold, omegaDB, gradients):
                     True, omegaDB, gradients)
     assert isinstance(weight, numbers.Number)
     return weight
+
+def maybeRegisterRandomChoiceInScope(trace, node):
+  psp = trace.pspAt(node)
+  if isTagOutputPSP(psp):
+    scope, block = [trace.valueAt(n) for n in node.operandNodes[0:2]]
+    blockNode = node.operandNodes[2]
+    trace.registerRandomChoiceInScope(scope, block, blockNode)
