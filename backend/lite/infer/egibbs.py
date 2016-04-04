@@ -60,7 +60,9 @@ class EnumerativeGibbsOperator(object):
         # "Markov Chain Sampling Methods for Dirichlet Process Models"
         # (Algorithm 8 with m = 1).
         # Otherwise, we may target the wrong stationary distribution.
-        # See test/inference_language/test_enumerative_gibbs.py for an example.
+        # See testEnumerativeGibbsBrushRandomness in
+        # test/inference_language/test_enumerative_gibbs.py for an
+        # example.
         shouldRestore = True
         omegaDB = rhoDB
       else:
