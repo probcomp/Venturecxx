@@ -53,8 +53,7 @@ class EnumerativeGibbsOperator(object):
     xiWeights = []
     xiParticles = []
 
-    for p in range(len(allSetsOfValues)):
-      newValues = allSetsOfValues[p]
+    for newValues in allSetsOfValues:
       if newValues == currentValues:
         # If there are random choices downstream, keep their current values.
         # This follows the auxiliary variable method in Neal 2000,
