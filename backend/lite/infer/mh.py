@@ -23,28 +23,34 @@ from ..detach import detachAndExtract
 from ..scaffold import constructScaffold
 from ..lkernel import DeterministicLKernel
 
-def getCurrentValues(trace, pnodes): return [trace.valueAt(pnode) for pnode in pnodes]
+def getCurrentValues(trace, pnodes):
+  return [trace.valueAt(pnode) for pnode in pnodes]
 
 def registerDeterministicLKernels(trace, scaffold, pnodes, currentValues):
   for (pnode, currentValue) in zip(pnodes, currentValues):
     assert not isinstance(currentValue, list)
     if pnode in scaffold.brush:
-      raise Exception("Cannot deterministically propose values for nodes whose existence is conditional")
-    scaffold.lkernels[pnode] = DeterministicLKernel(trace.pspAt(pnode), currentValue)
+      raise Exception("Cannot deterministically propose values for nodes " \
+                      "whose existence is conditional")
+    scaffold.lkernels[pnode] = \
+        DeterministicLKernel(trace.pspAt(pnode), currentValue)
 
 def unregisterDeterministicLKernels(_trace, scaffold, pnodes):
   for pnode in pnodes:
     del scaffold.lkernels[pnode]
 
-def getCurrentValuesWithAddresses(trace, pnodes): return [(pnode.address, trace.valueAt(pnode)) for pnode in pnodes]
+def getCurrentValuesWithAddresses(trace, pnodes):
+  return [(pnode.address, trace.valueAt(pnode)) for pnode in pnodes]
 
-def registerDeterministicLKernelsByAddress(trace, scaffold, addressesAndValues):
+def registerDeterministicLKernelsByAddress(
+    trace, scaffold, addressesAndValues):
   nodes = dict([(node.address, node) for node in scaffold.getPrincipalNodes()])
   for (addr, currentValue) in addressesAndValues:
     assert not isinstance(currentValue, list)
     assert addr in nodes
     node = nodes[addr]
-    scaffold.lkernels[node] = DeterministicLKernel(trace.pspAt(node), currentValue)
+    scaffold.lkernels[node] = \
+        DeterministicLKernel(trace.pspAt(node), currentValue)
 
 def mixMH(trace, indexer, operator):
   start = time.time()
@@ -99,9 +105,14 @@ def mixMH(trace, indexer, operator):
   return ans
 
 class BlockScaffoldIndexer(object):
-  def __init__(self, scope, block, interval=None, useDeltaKernels=False, deltaKernelArgs=None, updateValues=False):
-    if scope == "default" and not (block == "all" or block == "none" or block == "one" or block == "ordered"):
-        raise Exception("INFER default scope does not admit custom blocks (%r)" % block)
+  def __init__(self, scope, block, interval=None,
+               useDeltaKernels=False, deltaKernelArgs=None,
+               updateValues=False):
+    if scope == "default" and \
+       not (block == "all" or block == "none" or \
+            block == "one" or block == "ordered"):
+        raise Exception(
+          "INFER default scope does not admit custom blocks (%r)" % block)
     self.scope = scope
     self.block = block
     self.interval = interval
@@ -113,9 +124,12 @@ class BlockScaffoldIndexer(object):
     if self.block == "one":
       self.true_block = trace.sampleBlock(self.scope)
       setsOfPNodes = [trace.getNodesInBlock(self.scope, self.true_block)]
-    elif self.block == "all": setsOfPNodes = [trace.getAllNodesInScope(self.scope)]
-    elif self.block == "none": setsOfPNodes = [set()]
-    elif self.block == "ordered": setsOfPNodes = trace.getOrderedSetsInScope(self.scope)
+    elif self.block == "all":
+      setsOfPNodes = [trace.getAllNodesInScope(self.scope)]
+    elif self.block == "none":
+      setsOfPNodes = [set()]
+    elif self.block == "ordered":
+      setsOfPNodes = trace.getOrderedSetsInScope(self.scope)
     elif self.block == "ordered_range":
       assert self.interval
       setsOfPNodes = trace.getOrderedSetsInScope(self.scope, self.interval)
@@ -124,7 +138,10 @@ class BlockScaffoldIndexer(object):
 
   def sampleIndex(self, trace):
     setsOfPNodes = self.getSetsOfPNodes(trace)
-    return constructScaffold(trace, setsOfPNodes, useDeltaKernels=self.useDeltaKernels, deltaKernelArgs=self.deltaKernelArgs, updateValues=self.updateValues)
+    return constructScaffold(
+      trace, setsOfPNodes,
+      useDeltaKernels=self.useDeltaKernels,
+      deltaKernelArgs=self.deltaKernelArgs, updateValues=self.updateValues)
 
   def logDensityOfIndex(self, trace, _):
     if self.block == "one": return trace.logDensityOfBlock(self.scope)
@@ -135,7 +152,9 @@ class BlockScaffoldIndexer(object):
     else: return 0
 
   def name(self):
-    return ["scaffold", self.scope, self.block] + ([self.interval] if self.interval is not None else []) + ([self.true_block] if hasattr(self, "true_block") else [])
+    return ["scaffold", self.scope, self.block] + \
+      ([self.interval] if self.interval is not None else []) + \
+      ([self.true_block] if hasattr(self, "true_block") else [])
 
 class InPlaceOperator(object):
   def prepare(self, trace, scaffold, compute_gradient = False):
