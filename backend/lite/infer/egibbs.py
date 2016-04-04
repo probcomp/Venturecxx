@@ -15,14 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from ..omegadb import OmegaDB
-from ..regen import regenAndAttach
-from ..detach import detachAndExtract
-from ..utils import sampleLogCategorical, cartesianProduct
-from ..consistency import assertTrace, assertTorus
+from venture.lite.consistency import assertTorus
+from venture.lite.consistency import assertTrace
+from venture.lite.detach import detachAndExtract
 from venture.lite.infer.mh import getCurrentValues
 from venture.lite.infer.mh import registerDeterministicLKernels
 from venture.lite.infer.mh import registerDeterministicLKernelsByAddress
+from venture.lite.omegadb import OmegaDB
+from venture.lite.regen import regenAndAttach
+from venture.lite.utils import cartesianProduct
+from venture.lite.utils import sampleLogCategorical
 
 def getCartesianProductOfEnumeratedValues(trace, pnodes):
   enumeratedValues = [trace.pspAt(pnode).enumerateValues(trace.argsAt(pnode))
