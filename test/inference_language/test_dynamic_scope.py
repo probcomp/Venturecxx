@@ -16,6 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose.tools import assert_equal
+from testconfig import config
 
 from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
@@ -139,3 +140,31 @@ def checkCompoundBlockSerializing(cons):
     else:
       return
   assert False, "MH did not move the choice it was supposed to operate on."
+
+@on_inf_prim("none")
+def testRandomBlockIdSmoke():
+  # Test that scope membership maintenance works even if the block id
+  # changes under inference
+  r = get_ripl()
+  if config["get_ripl"] == "puma":
+    # Puma doesn't have the invariant check that Lite does
+    r.define("checkInvariants", "(lambda () pass)")
+  r.execute_program("""
+  (predict (tag "frob" (flip) (flip)))
+  (repeat 50
+    (do (mh default one 1)
+        (checkInvariants)))""")
+
+@on_inf_prim("none")
+def testRandomScopeIdSmoke():
+  # Test that scope membership maintenance works even if the scope id
+  # changes under inference
+  r = get_ripl()
+  if config["get_ripl"] == "puma":
+    # Puma doesn't have the invariant check that Lite does
+    r.define("checkInvariants", "(lambda () pass)")
+  r.execute_program("""
+  (predict (tag (flip) "frob" (flip)))
+  (repeat 50
+    (do (mh default one 1)
+        (checkInvariants)))""")
