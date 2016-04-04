@@ -24,12 +24,12 @@ from venture.lite.infer.mh import getCurrentValues
 from venture.lite.infer.mh import registerDeterministicLKernels
 from venture.lite.infer.mh import registerDeterministicLKernelsByAddress
 
-def getCartesianProductOfEnumeratedValues(trace,pnodes):
+def getCartesianProductOfEnumeratedValues(trace, pnodes):
   enumeratedValues = [trace.pspAt(pnode).enumerateValues(trace.argsAt(pnode))
                       for pnode in pnodes]
   return cartesianProduct(enumeratedValues)
 
-def getCartesianProductOfEnumeratedValuesWithAddresses(trace,pnodes):
+def getCartesianProductOfEnumeratedValuesWithAddresses(trace, pnodes):
   enumeratedValues = \
       [[(pnode.address, v)
         for v in trace.pspAt(pnode).enumerateValues(trace.argsAt(pnode))]
@@ -38,16 +38,16 @@ def getCartesianProductOfEnumeratedValuesWithAddresses(trace,pnodes):
 
 class EnumerativeGibbsOperator(object):
 
-  def compute_particles(self,trace,scaffold):
-    assertTrace(trace,scaffold)
+  def compute_particles(self, trace, scaffold):
+    assertTrace(trace, scaffold)
 
     pnodes = scaffold.getPrincipalNodes()
-    currentValues = getCurrentValues(trace,pnodes)
-    allSetsOfValues = getCartesianProductOfEnumeratedValues(trace,pnodes)
+    currentValues = getCurrentValues(trace, pnodes)
+    allSetsOfValues = getCartesianProductOfEnumeratedValues(trace, pnodes)
 
-    registerDeterministicLKernels(trace,scaffold,pnodes,currentValues)
+    registerDeterministicLKernels(trace, scaffold, pnodes, currentValues)
 
-    rhoWeight, rhoDB = detachAndExtract(trace,scaffold)
+    rhoWeight, rhoDB = detachAndExtract(trace, scaffold)
     xiWeights = []
     xiParticles = []
 
@@ -67,10 +67,10 @@ class EnumerativeGibbsOperator(object):
         omegaDB = OmegaDB()
       xiParticle = self.copy_trace(trace)
       assertTorus(scaffold)
-      registerDeterministicLKernels(trace,scaffold,pnodes,newValues)
+      registerDeterministicLKernels(trace, scaffold, pnodes, newValues)
       xiParticles.append(xiParticle)
       xiWeights.append(
-        regenAndAttach(xiParticle,scaffold,shouldRestore,omegaDB,{}))
+        regenAndAttach(xiParticle, scaffold, shouldRestore, omegaDB, {}))
       # if shouldRestore:
       #   assert_almost_equal(xiWeights[-1], rhoWeight)
     return (xiParticles, xiWeights)
@@ -81,7 +81,7 @@ class EnumerativeGibbsOperator(object):
     # Now sample a NEW particle in proportion to its weight
     finalIndex = self.chooseProposalParticle(xiWeights)
     self.finalParticle = xiParticles[finalIndex]
-    return self.finalParticle,0
+    return self.finalParticle, 0
 
   def copy_trace(self, trace):
     from ..particle import Particle
@@ -118,11 +118,11 @@ class EnumerativeDiversify(EnumerativeGibbsOperator):
     # - copy_trace undoes incorporation (on Lite traces)
 
     scaffold = scaffolder.sampleIndex(trace)
-    assertTrace(trace,scaffold)
+    assertTrace(trace, scaffold)
 
     pnodes = scaffold.getPrincipalNodes()
     allSetsOfValues = \
-        getCartesianProductOfEnumeratedValuesWithAddresses(trace,pnodes)
+        getCartesianProductOfEnumeratedValuesWithAddresses(trace, pnodes)
 
     xiWeights = []
     xiParticles = []
@@ -139,8 +139,8 @@ class EnumerativeDiversify(EnumerativeGibbsOperator):
       (rhoWeight, _) = detachAndExtract(xiParticle, scaffold)
       assertTorus(scaffold)
       registerDeterministicLKernelsByAddress(
-        xiParticle,scaffold,newValuesWithAddresses)
-      xiWeight = regenAndAttach(xiParticle,scaffold,False,OmegaDB(),{})
+        xiParticle, scaffold, newValuesWithAddresses)
+      xiWeight = regenAndAttach(xiParticle, scaffold, False, OmegaDB(), {})
       xiParticles.append(xiParticle)
       # CONSIDER What to do with the rhoWeight.  Subtract off the
       # likelihood?  Subtract off the prior and the likelihood?  Do
