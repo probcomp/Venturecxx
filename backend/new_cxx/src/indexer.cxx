@@ -22,8 +22,8 @@
 #include "concrete_trace.h"
 
 // TODO add assert from lite
-ScaffoldIndexer::ScaffoldIndexer(ScopeID scope,BlockID block): scope(scope),block(block) {}
-ScaffoldIndexer::ScaffoldIndexer(ScopeID scope,BlockID block,BlockID minBlock,BlockID maxBlock): scope(scope),block(block),minBlock(minBlock),maxBlock(maxBlock) {}
+ScaffoldIndexer::ScaffoldIndexer(ScopeID scope, BlockID block): scope(scope), block(block) {}
+ScaffoldIndexer::ScaffoldIndexer(ScopeID scope, BlockID block, BlockID minBlock, BlockID maxBlock): scope(scope), block(block), minBlock(minBlock), maxBlock(maxBlock) {}
 
 boost::shared_ptr<Scaffold> ScaffoldIndexer::sampleIndex(ConcreteTrace * trace) const
 {
@@ -31,8 +31,8 @@ boost::shared_ptr<Scaffold> ScaffoldIndexer::sampleIndex(ConcreteTrace * trace) 
     {
       BlockID actualBlock = trace->sampleBlock(scope);
       vector<set<Node*> > setsOfPNodes;
-      setsOfPNodes.push_back(trace->getNodesInBlock(scope,actualBlock));
-      boost::shared_ptr<Scaffold> scaffold = constructScaffold(trace,setsOfPNodes,false);
+      setsOfPNodes.push_back(trace->getNodesInBlock(scope, actualBlock));
+      boost::shared_ptr<Scaffold> scaffold = constructScaffold(trace, setsOfPNodes, false);
       //cout << scaffold->showSizes() << endl;
       return scaffold;
     }
@@ -40,20 +40,20 @@ boost::shared_ptr<Scaffold> ScaffoldIndexer::sampleIndex(ConcreteTrace * trace) 
     {
       vector<set<Node*> > setsOfPNodes;
       setsOfPNodes.push_back(trace->getAllNodesInScope(scope));
-      return constructScaffold(trace,setsOfPNodes,false);
+      return constructScaffold(trace, setsOfPNodes, false);
     }
   else if (block->hasSymbol() && block->getSymbol() == "ordered")
     {
-      return constructScaffold(trace,trace->getOrderedSetsInScope(scope),false);
+      return constructScaffold(trace, trace->getOrderedSetsInScope(scope), false);
     }
   else if (block->hasSymbol() && block->getSymbol() == "ordered_range")
     {
-      return constructScaffold(trace,trace->getOrderedSetsInScopeAndRange(scope,minBlock,maxBlock),false);
+      return constructScaffold(trace, trace->getOrderedSetsInScopeAndRange(scope, minBlock, maxBlock), false);
     }
   else
     {
-      vector<set<Node*> > setsOfPNodes(1,trace->getNodesInBlock(scope,block));
-      return constructScaffold(trace,setsOfPNodes,false);
+      vector<set<Node*> > setsOfPNodes(1, trace->getNodesInBlock(scope, block));
+      return constructScaffold(trace, setsOfPNodes, false);
     }
 }
 
