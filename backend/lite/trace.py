@@ -15,7 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import copy
 import math
+
+from numpy.testing import assert_allclose
 
 from venture.exception import VentureException
 from venture.lite.address import Address
@@ -722,6 +725,53 @@ function.
     # de-mutate the scaffold in case it is used for subsequent operations
     unregisterDeterministicLKernels(self, scaffold, pnodes)
     return xiWeight
+
+  def checkInvariants(self):
+    # print "Begin invariant check"
+    assert len(self.unpropagatedObservations) == 0, \
+      "Don't checkInvariants with unpropagated observations"
+    rcs = copy.copy(self.rcs)
+    ccs = copy.copy(self.ccs)
+    aes = copy.copy(self.aes)
+    scopes = {}
+    for (scope_name, scope) in self.scopes.iteritems():
+      new_scope = SamplableMap()
+      for (block_name, block) in scope.iteritems():
+        new_scope[block_name] = copy.copy(block)
+      scopes[scope_name] = new_scope
+
+    scaffold = BlockScaffoldIndexer("default", "all").sampleIndex(self)
+    rhoWeight, rhoDB = detachAndExtract(self, scaffold)
+
+    assert len(self.rcs) == 0, "Global detach left random choices registered"
+    # TODO What if an observed random choice had registered an
+    # AEKernel?  Will that be left here?
+    assert len(self.aes) == 0, "Global detach left AEKernels registered"
+    assert len(self.scopes) == 1, "Global detach left random choices in non-default scope %s" % self.scopes
+    assert len(self.scopes['default']) == 0, "Global detach left random choices in default scope %s" % self.scopes['default']
+
+    xiWeight = regenAndAttach(self, scaffold, True, rhoDB, {})
+
+    assert rcs == self.rcs, "Global detach/restore changed the registered random choices from %s to %s" % (rcs, self.rcs)
+    assert ccs == self.ccs, "Global detach/restore changed the registered constrained choices from %s to %s" % (ccs, self.ccs)
+    assert aes == self.aes, "Global detach/restore changed the registered AEKernels from %s to %s" % (aes, self.aes)
+
+    for scope_name in set(scopes.keys()).union(self.scopes.keys()):
+      if scope_name in scopes and scope_name not in self.scopes:
+        assert False, "Global detach/restore destroyed scope %s with blocks %s" % (scope_name, scopes[scope_name])
+      if scope_name not in scopes and scope_name in self.scopes:
+        assert False, "Global detach/restore created scope %s with blocks %s" % (scope_name, self.scopes[scope_name])
+      scope = scopes[scope_name]
+      new_scope = self.scopes[scope_name]
+      for block_name in set(scope.keys()).union(new_scope.keys()):
+        if block_name in scope and block_name not in new_scope:
+          assert False, "Global detach/restore destroyed block %s, %s with nodes %s" % (scope_name, block_name, scope[block_name])
+        if block_name not in scope and block_name in new_scope:
+          assert False, "Global detach/restore created block %s, %s with nodes %s" % (scope_name, block_name, new_scope[block_name])
+        assert scope[block_name] == new_scope[block_name], "Global detach/restore changed the addresses in block %s, %s from %s to %s" %(scope_name, block_name, scope[block_name], new_scope[block_name])
+
+    assert_allclose(rhoWeight, xiWeight, err_msg="Global restore gave different weight from detach")
+    # print "End invariant check"
 
   def get_current_values(self, scaffold):
     pnodes = scaffold.getPrincipalNodes()

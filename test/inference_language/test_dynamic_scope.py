@@ -16,6 +16,8 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose.tools import assert_equal
+from nose.tools import eq_
+from testconfig import config
 
 from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
@@ -139,3 +141,59 @@ def checkCompoundBlockSerializing(cons):
     else:
       return
   assert False, "MH did not move the choice it was supposed to operate on."
+
+@on_inf_prim("none")
+def testRandomBlockIdSmoke():
+  # Test that scope membership maintenance works even if the block id
+  # changes under inference
+  r = get_ripl()
+  if config["get_ripl"] == "puma":
+    # Puma doesn't have the invariant check that Lite does
+    r.define("checkInvariants", "(lambda () pass)")
+  r.execute_program("""
+  (predict (tag "frob" (flip) (flip)))
+  (repeat 50
+    (do (mh default one 1)
+        (checkInvariants)))""")
+
+@on_inf_prim("none")
+def testRandomScopeIdSmoke():
+  # Test that scope membership maintenance works even if the scope id
+  # changes under inference
+  r = get_ripl()
+  if config["get_ripl"] == "puma":
+    # Puma doesn't have the invariant check that Lite does
+    r.define("checkInvariants", "(lambda () pass)")
+  r.execute_program("""
+  (predict (tag (flip) "frob" (flip)))
+  (repeat 50
+    (do (mh default one 1)
+        (checkInvariants)))""")
+
+def count_nodes_2(ripl, scope_str):
+  scope = vv.VentureString(scope_str)
+  block = vv.VentureNumber(0)
+  return ripl.sivm.core_sivm.engine.getDistinguishedTrace().numNodesInBlock(scope, block)
+
+@on_inf_prim("none")
+def testRandomScopeIdExclusionSmoke():
+  # Test that scope membership maintenance works even if the scope id
+  # excluded by tag_exclude changes under inference
+  r = get_ripl()
+  if config["get_ripl"] == "puma":
+    # Puma doesn't have the invariant check that Lite does
+    r.define("checkInvariants", "(lambda () pass)")
+  r.execute_program("""
+  (assume which_exclude (flip)) ; Outside the alice and bob scopes
+  (predict
+   (tag "alice" 0
+    (tag "bob" 0
+     (tag_exclude (if which_exclude "alice" "bob")
+      (flip)))))""")
+  for _ in range(50):
+    alice = count_nodes_2(r, "alice")
+    bob = count_nodes_2(r, "bob")
+    eq_(1, alice + bob)
+    r.infer("""
+    (do (mh default one 1)
+        (checkInvariants))""")

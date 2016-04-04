@@ -123,6 +123,9 @@ class Infer(object):
   def collapse_equal_map(self, scope, block):
     self.engine.collapse_map(scope, block)
 
+  def checkInvariants(self):
+    self.engine.model.traces.map('checkInvariants')
+
   def incorporate(self): self.engine.incorporate()
 
   def printf(self, dataset): print dataset.asPandas()
