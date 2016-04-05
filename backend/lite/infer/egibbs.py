@@ -49,7 +49,7 @@ class EnumerativeGibbsOperator(object):
 
     registerDeterministicLKernels(trace, scaffold, pnodes, currentValues)
 
-    rhoWeight, rhoDB = detachAndExtract(trace, scaffold)
+    rhoWeight, self.rhoDB = detachAndExtract(trace, scaffold)
     xiWeights = []
     xiParticles = []
 
@@ -64,7 +64,7 @@ class EnumerativeGibbsOperator(object):
         # test/inference_language/test_enumerative_gibbs.py for an
         # example.
         shouldRestore = True
-        omegaDB = rhoDB
+        omegaDB = self.rhoDB
       else:
         shouldRestore = False
         omegaDB = OmegaDB()
@@ -79,6 +79,7 @@ class EnumerativeGibbsOperator(object):
     return (xiParticles, xiWeights)
 
   def propose(self, trace, scaffold):
+    self.trace = trace
     self.scaffold = scaffold
     (xiParticles, xiWeights) = self.compute_particles(trace, scaffold)
     # Now sample a NEW particle in proportion to its weight
@@ -98,7 +99,8 @@ class EnumerativeGibbsOperator(object):
     return self.scaffold.numAffectedNodes()
 
   def reject(self):
-    assert False
+    regenAndAttach(self.trace, self.scaffold, True, self.rhoDB, {})
+    return self.scaffold.numAffectedNodes()
 
   def name(self): return "enumerative gibbs"
 
