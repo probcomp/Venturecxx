@@ -339,3 +339,53 @@ def testOccasionalRejection():
 ;; Seems to crash with probability about 50% per transition in Puma
 (gibbs default one 10 false)
 """)
+
+@statisticalTest
+@on_inf_prim("gibbs")
+def testOccasionalRejectionBrush():
+  # Another version, this time with explicit brush creating the mix mh
+  # correction.
+
+  # Note that in this case, the correction is sound: The number of
+  # random choices available in the default one scope really is
+  # changing, whereas in `testOccasionalRejection` it is not.
+
+  # To see why, consider what transition the operator (gibbs default
+  # one 1) induces on this model (assuming the current behavior of
+  # always claiming the proposal weight is 0).
+  # - False, False is not possible
+  # - From False, True:
+  #   - With probability 50%, enumerate the second coin, and propose
+  #     to keep it at True.
+  #   - Else, enumerate the first coin, find that both states are
+  #     equally good, and
+  #     - With probability 50%, propose to leave it
+  #     - Else, propose to change it to True, which is accepted (with
+  #       or without the correction)
+  #   - Ergo, move to the True state 25% of the time.
+  # - From True, enumerate the first coin
+  #   - With probability 50%, the second coin comes up False in the brush;
+  #     propose to stay in the True state.
+  #   - Else, both states equally good
+  #     - With probability 50%, propose to stay in the True state
+  #     - Else, propose to move to the False, True state
+  #       - If the correction is applied, this proposal will be
+  #         rejected with probability 50%.
+  #   - Ergo, move to the False, True state 25% (no correction) or
+  #     12.5% (correction) of the time.
+  # - The former will induce a 50/50 stationary distribution on the
+  #   value of flip1, whereas the right answer is 2:1 odds in favor of
+  #   True.
+  r = get_ripl()
+  r.execute_program("""
+(assume flip1 (flip))
+(assume flip1_or_flip2
+  (if flip1 true (flip)))
+(observe (exactly flip1_or_flip2) true)
+;; Crash with a non-negligible probability per transition in Puma
+(gibbs default one 50 false)
+""")
+  infer = "(gibbs default one %s false)" % default_num_transitions_per_sample()
+  predictions = collectSamples(r, address="flip1", infer=infer)
+  ans = [(True, 2.0/3), (False, 1.0/3)]
+  return reportKnownDiscrete(ans, predictions)
