@@ -237,7 +237,10 @@ class Particle(Trace):
 
   def numBlocksInScope(self, scope):
     if scope != "default":
-      return len(self.scopes.lookup(scope)) + self.base.numBlocksInScope(scope)
+      if scope in self.scopes:
+        return len(self.scopes.lookup(scope)) + self.base.numBlocksInScope(scope)
+      else:
+        return self.base.numBlocksInScope(scope)
     actualUnconstrainedChoices = self.base.rcs.copy()
     for node in self.rcs: actualUnconstrainedChoices.add(node)
     for node in self.ccs: actualUnconstrainedChoices.remove(node)
