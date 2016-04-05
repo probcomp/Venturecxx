@@ -77,7 +77,7 @@ class Particle(Trace):
     self.madeSPAuxs = {}
 
 
-#### Random choices and scopes
+  ### Random choices and scopes
 
   def registerRandomChoice(self, node):
     self.rcs = self.rcs.insert(node)
@@ -106,7 +106,7 @@ class Particle(Trace):
 
   def unregisterRandomChoiceInScope(self, scope, block, node): assert False
 
-#### Misc
+  ### Misc
 
   def valueAt(self, node):
     if node in self.values: return self.values.lookup(node)
@@ -181,7 +181,7 @@ class Particle(Trace):
     else:
       return self.base.getAAAMadeSPAuxAt(node)
 
-### SPFamilies
+  ### SPFamilies
 
   def containsSPFamilyAt(self, node, id):
     makerNode = self.spRefAt(node).makerNode
@@ -217,7 +217,7 @@ class Particle(Trace):
     makerNode = self.spRefAt(node).makerNode
     return self.madeSPFamilyAt(makerNode, esrId)
 
-### Regular maps
+  ### Regular maps
 
   def madeSPAuxAt(self, node):
     if not node in self.madeSPAuxs:
@@ -231,7 +231,8 @@ class Particle(Trace):
     assert self.base.madeSPAuxAt(node) is None
     self.madeSPAuxs[node] = aux
 
-### Miscellaneous bookkeeping
+  ### Miscellaneous bookkeeping
+
   def numBlocksInScope(self, scope):
     if scope != "default":
       return len(self.scopes.lookup(scope)) + self.base.numBlocksInScope(scope)
@@ -240,7 +241,8 @@ class Particle(Trace):
     for node in self.ccs: actualUnconstrainedChoices.remove(node)
     return len(actualUnconstrainedChoices)
 
-### Commit
+  ### Commit
+
   def commit(self):
     # note that we do not call registerRandomChoice() because it in
     # turn calls registerRandomChoiceInScope()
@@ -286,7 +288,8 @@ class Particle(Trace):
       scaffold.regenCounts[node] = self.regenCounts.lookup(node)
 
 
-################### Methods that should never be called on particles
+  ### Methods that should never be called on particles
+
   def registerAAAMadeSPAuxAt(self, node, aux):
     raise Exception("Should not be called on a particle")
 
