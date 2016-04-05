@@ -164,6 +164,20 @@ class Semantics(object):
                 locmap(loctoken(n), val.symbol),
                 e]
         return expression_evaluation_instruction(loclist(expr))
+    # names: Return list of names, or None.
+    def p_name_combination(self, open, ns, close):
+        return locbracket(open, close, ns)
+
+    def p_names_one(self,n):
+        return [locmap(loctoken(n), val.symbol)]
+    def p_names_some(self, ns, n):
+        ns.append(locmap(loctoken(n), val.symbol))
+        return ns
+    def p_directive_assume_values(self, k, n, e):
+        expr = [loctoken1(k, val.symbol('assume_values')),
+                n,
+                e]
+        return expression_evaluation_instruction(loclist(expr))
     def p_directive_observe(self, k, e, e1):
         expr = [loctoken1(k, val.symbol('observe')), e, e1]
         return expression_evaluation_instruction(loclist(expr))
