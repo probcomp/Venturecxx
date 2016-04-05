@@ -326,19 +326,40 @@ def testEnumerateCoupledChoices3():
                             num_samples=default_num_samples(6))
   return reportSameDiscrete(ans, predicts)
 
+@statisticalTest
 @on_inf_prim("gibbs")
 def testOccasionalRejection():
-  if config["get_ripl"] == "puma":
-    raise SkipTest("Puma's MHOperator rejects Puma's Gibbs transitions sometimes, triggering assert False.  See https://github.com/probcomp/Venturecxx/issues/415")
-  # The mem is relevant: without it, the program runs to completion
-  # even in Puma.
-  get_ripl().execute_program("""
-(assume cluster_id (if (flip) 1 2))
+  # The mem is relevant: without it, the test passes even in Puma.
+  r = get_ripl()
+  r.execute_program("""
+(assume cluster_id (flip))
 (assume cluster (mem (lambda (id) (normal 0 1))))
 (observe (cluster cluster_id) 1)
-;; Seems to crash with probability about 50% per transition in Puma
-(gibbs default one 10 false)
 """)
+  infer = "(do (force cluster_id true) (gibbs default one 1 false))"
+  predictions = collectSamples(r, address="cluster_id", infer=infer)
+  ans = [(True, 0.5), (False, 0.5)]
+  return reportKnownDiscrete(ans, predictions)
+
+@on_inf_prim("gibbs")
+def testOccasionalRejectionScope():
+  # Like the previous test but in a custom scope, because Lite
+  # special-cases the default scope when computing the
+  # number-of-blocks correction.
+  # Note: This variant may not be very high power, because the "frob"
+  # scope probably registers as always having two blocks, even though
+  # one of them will, at runtime, end up having no unconstrained
+  # random choices.
+  r = get_ripl()
+  r.execute_program("""
+(assume cluster_id (tag "frob" 0 (flip)))
+(assume cluster (mem (lambda (id) (tag "frob" 1 (normal 0 1)))))
+(observe (cluster cluster_id) 1)
+""")
+  infer = '(do (force cluster_id true) (gibbs "frob" one 1 false))'
+  predictions = collectSamples(r, address="cluster_id", infer=infer)
+  ans = [(True, 0.5), (False, 0.5)]
+  return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
 @on_inf_prim("gibbs")
