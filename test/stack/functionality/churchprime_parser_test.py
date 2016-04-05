@@ -22,6 +22,7 @@ from nose.plugins.attrib import attr
 from venture.exception import VentureException
 from venture.parser import ChurchPrimeParser
 import venture.value.dicts as v
+import venture.test.errors as err
 
 # Almost the same effect as @venture.test.config.in_backend('none'),
 # but works on the whole class
@@ -49,6 +50,33 @@ class TestChurchPrimeParser(unittest.TestCase):
                     'expression':[v.sym('assume'), v.sym('a'),
                                   [v.sym('b'), v.sym('c'), v.sym('d')]]}
         self.assertEqual(output,expected)
+
+    def test_parse_assume_values(self):
+        output = self.p.parse_instruction("[assume_values (a b) c  ]")
+	
+        expected = {'instruction':'evaluate',
+                    'expression':[v.sym('assume_values'), [v.sym('a'),
+		    v.sym('b')], v.sym('c')]}
+        self.assertEqual(output,expected)
+
+    def test_parse_assume_values_empty(self):
+      err.assert_error_message_contains("""\
+	Syntax error at ')'
+	  """, self.p.parse_instruction, "[assume_values ( ) c  ]" )
+
+    def test_assume_values_loc(self):
+      with self.assertRaises(VentureException):
+          self.p.parse_locexpression('')
+      self.assertEqual(self.p.parse_locexpression("[assume_values (a b) c  ]"),
+        {'loc': [1, 21], 'value': [
+          {'loc': [1, 13], 'value': {'type': 'symbol', 'value': 'assume_values'}},
+          {'loc': [15, 19], 'value': [
+            {'loc': [16, 16], 'value': {'type': 'symbol', 'value': 'a'}},
+            {'loc': [18, 18], 'value': {'type': 'symbol', 'value': 'b'}}]},
+          {'loc': [21, 21], 'value': {'type': 'symbol', 'value': 'c'}}]}
+        )
+
+
 
     def test_parse_and_unparse_instruction(self):
         def round_tripped(inst):
