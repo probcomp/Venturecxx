@@ -236,6 +236,13 @@ class Particle(Trace):
   ### Miscellaneous bookkeeping
 
   def numBlocksInScope(self, scope):
+    # Why is this weird piece of code arranged like this?
+    # Because in a custom scope, the number of blocks is given by the
+    # number of `tag` invocations, regardless of whether the resulting
+    # blocks have any unconstrained random choices.  In the default
+    # scope, however, the number of "blocks" does depend on whether
+    # random choices are constrained or not.
+    # This place will need to be touched for Issue #421.
     if scope != "default":
       if scope in self.scopes:
         return len(self.scopes.lookup(scope)) + self.base.numBlocksInScope(scope)

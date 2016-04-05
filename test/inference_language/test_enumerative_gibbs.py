@@ -346,14 +346,27 @@ def testOccasionalRejectionScope():
   # Like the previous test but in a custom scope, because Lite
   # special-cases the default scope when computing the
   # number-of-blocks correction.
-  # Note: This variant may not be very high power, because the "frob"
-  # scope probably registers as always having two blocks, even though
-  # one of them will, at runtime, end up having no unconstrained
-  # random choices.
+  # Note: The "frob" scope registers as always having two blocks, even
+  # though one of them will, at runtime, end up having no
+  # unconstrained random choices.
   r = get_ripl()
   r.execute_program("""
 (assume cluster_id (tag "frob" 0 (flip)))
 (assume cluster (mem (lambda (id) (tag "frob" 1 (normal 0 1)))))
+(observe (cluster cluster_id) 1)
+""")
+  infer = '(do (force cluster_id true) (gibbs "frob" one 1 false))'
+  predictions = collectSamples(r, address="cluster_id", infer=infer)
+  ans = [(True, 0.5), (False, 0.5)]
+  return reportKnownDiscrete(ans, predictions)
+
+@on_inf_prim("gibbs")
+def testOccasionalRejectionScope2():
+  # Variant of the previous (changing block id).
+  r = get_ripl()
+  r.execute_program("""
+(assume cluster_id (tag "frob" 0 (flip)))
+(assume cluster (mem (lambda (id) (tag "frob" id (normal 0 1)))))
 (observe (cluster cluster_id) 1)
 """)
   infer = '(do (force cluster_id true) (gibbs "frob" one 1 false))'

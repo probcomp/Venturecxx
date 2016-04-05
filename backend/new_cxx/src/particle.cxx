@@ -315,7 +315,21 @@ RootOfFamily Particle::getMadeSPFamilyRoot(Node * makerNode, FamilyID id)
 /* Inference (computing reverse weight) */
 int Particle::numBlocksInScope(ScopeID scope)
 {
-  if (scopes.contains(scope))
+  if (scope->hasSymbol() && scope->getSymbol() == "default") {
+    // This should use the copy constructor of set
+    set<Node*> actualUnconstrainedChoices = baseTrace->unconstrainedChoices;
+    vector<Node*> ucs = unconstrainedChoices.keys();
+    actualUnconstrainedChoices.insert(ucs.begin(), ucs.end());
+    // TODO There must be a way to do this removal asymptotically faster,
+    // because the constrainedChoices PSet stores the nodes in order.
+    vector<Node*> ccs = constrainedChoices.keys();
+    BOOST_FOREACH(Node* n, ccs)
+    {
+      actualUnconstrainedChoices.erase(n);
+    }
+    return actualUnconstrainedChoices.size();
+  }
+  else if (scopes.contains(scope))
   {
     return scopes.lookup(scope).size() + baseTrace->numBlocksInScope(scope);
   }
