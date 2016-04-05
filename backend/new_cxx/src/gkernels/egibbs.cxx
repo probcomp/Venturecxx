@@ -96,6 +96,7 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,
   //registerDeterministicLKernels(trace, scaffold, applicationNodes, currentValues);
   pair<double, boost::shared_ptr<DB> > weightAndRhoDB =
     detachAndExtract(trace, scaffold->border[0], scaffold);
+  rhoDB = weightAndRhoDB.second;
   assertTorus(scaffold);
 
   // regen all possible values
@@ -145,7 +146,6 @@ int EnumerativeGibbsGKernel::accept()
 
 int EnumerativeGibbsGKernel::reject()
 {
-  assert(false); // should never reject
   regenAndAttach(trace, scaffold->border[0], scaffold, true,
                  rhoDB, boost::shared_ptr<map<Node*,Gradient> >());
   // assertTrace(self.trace,self.scaffold)
