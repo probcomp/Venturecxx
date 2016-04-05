@@ -1,3 +1,5 @@
+import math
+
 from venture.lite.address import Address
 from venture.lite.address import List
 from venture.lite.env import VentureEnvironment
@@ -7,6 +9,7 @@ from venture.lite.trace import Trace as LiteTrace
 from venture.mite.builtin import builtInSPs
 from venture.mite.builtin import builtInValues
 from venture.mite.evaluator import evalFamily, unevalFamily, processMadeSP
+from venture.mite.evaluator import constrain
 from venture.mite.sp import Args
 
 class Trace(LiteTrace):
@@ -52,10 +55,24 @@ class Trace(LiteTrace):
     del self.families[id]
 
   def makeConsistent(self):
+    weight = 0
     for node, val in self.unpropagatedObservations.iteritems():
-      print 'propagate', node, val
+      # appNode = self.getConstrainableNode(node)
+      # scaffold = constructScaffold(self, [set([appNode])])
+      # rhoWeight, _ = detachAndExtract(self, scaffold)
+      # scaffold.lkernels[appNode] = DeterministicLKernel(self.pspAt(appNode), val)
+      # xiWeight = regenAndAttach(self, scaffold, False, OmegaDB(), {})
+      node.observe(val)
+      weight += constrain(self, node, node.observedValue)
     self.unpropagatedObservations.clear()
-    return 0
+    if not math.isinf(weight) and not math.isnan(weight):
+      return weight
+    else:
+      # If one observation made the state inconsistent, the rhoWeight
+      # of another might conceivably be infinite, possibly leading to
+      # a nan weight.  I want to normalize these to indicating that
+      # the resulting state is impossible.
+      return float("-inf")
 
   def primitive_infer(self, exp):
     print 'primitive_infer', exp

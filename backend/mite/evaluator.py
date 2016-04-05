@@ -80,6 +80,28 @@ def processMadeSP(trace, node):
   trace.setMadeSPRecordAt(node, sp)
   trace.setValueAt(node, SPRef(node))
 
+def constrain(trace, node, value, child=None):
+  if trace.childrenAt(node) - set([child]):
+    raise VentureException("evaluation", "Cannot constrain " \
+      "a value that is referenced more than once.", address=node.address)
+  if isConstantNode(node):
+    raise VentureException("evaluation", "Cannot constrain " \
+      "a constant value.", address=node.address)
+  elif isLookupNode(node):
+    weight = constrain(trace, node.sourceNode, value, child=node)
+    trace.setValueAt(node, value)
+    return weight
+  else:
+    assert isOutputNode(node)
+    sp = trace.spAt(node)
+    args = trace.argsAt(node)
+    with annotation(node.address):
+      weight = sp.constrain(value, args)
+    trace.setValueAt(node, value)
+    # trace.registerConstrainedChoice(node)
+    assert isinstance(weight, numbers.Number)
+    return weight
+
 ## unevaluation
 
 def unevalFamily(trace, node):
