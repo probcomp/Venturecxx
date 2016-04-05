@@ -25,6 +25,8 @@ class Particle(Trace):
   # The trace is expected to be a torus, with the chosen scaffold
   # already detached, or a particle.
   def __init__(self, trace):
+    # Intentionally emulating algebraic data type
+    # pylint: disable=unidiomatic-typecheck
     if type(trace) is Particle: self.initFromParticle(trace)
     elif type(trace) is Trace: self.initFromTrace(trace)
     else: raise Exception("Must init particle from trace or particle")
@@ -94,9 +96,9 @@ class Particle(Trace):
   def registerRandomChoiceInScope(self, scope, block, node):
     assert block is not None
     (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
-    if not scope in self.scopes:
+    if scope not in self.scopes:
       self.scopes = self.scopes.insert(scope, PMap())
-    if not block in self.scopes.lookup(scope):
+    if block not in self.scopes.lookup(scope):
       def ins_b(blocks):
         return blocks.insert(block, PSet())
       self.scopes = self.scopes.adjust(scope, ins_b)
@@ -129,7 +131,7 @@ class Particle(Trace):
     else: return self.base.madeSPAt(node)
 
   def setMadeSPAt(self, node, sp):
-    assert not node in self.madeSPs
+    assert node not in self.madeSPs
     assert self.base.madeSPAt(node) is None
     self.madeSPs = self.madeSPs.insert(node, sp)
 
@@ -139,7 +141,7 @@ class Particle(Trace):
 
   def appendEsrParentAt(self, node, parent):
     assert not self.base.esrParentsAt(node)
-    if not node in self.esrParents:
+    if node not in self.esrParents:
       self.esrParents = self.esrParents.insert(node, [])
     self.esrParents.lookup(node).append(parent)
 
@@ -149,12 +151,12 @@ class Particle(Trace):
     else: return self.base.regenCountAt(scaffold, node)
 
   def incRegenCountAt(self, scaffold, node):
-    if not node in self.regenCounts:
+    if node not in self.regenCounts:
       self.regenCounts = self.regenCounts.insert(node, 0)
     self.regenCounts = self.regenCounts.adjust(node, lambda rc: rc + 1)
 
   def incRequestsAt(self, node):
-    if not node in self.numRequests:
+    if node not in self.numRequests:
       base_num_requests = self.base.numRequestsAt(node)
       self.numRequests = self.numRequests.insert(node, base_num_requests)
     self.numRequests = self.numRequests.adjust(node, lambda nr: nr + 1)
@@ -166,7 +168,7 @@ class Particle(Trace):
       return self.base.childrenAt(node)
 
   def addChildAt(self, node, child):
-    if not node in self.newChildren:
+    if node not in self.newChildren:
       self.newChildren = self.newChildren.insert(node, PSet())
     def ins(children):
       return children.insert(child)
@@ -193,13 +195,13 @@ class Particle(Trace):
     return False
 
   def initMadeSPFamiliesAt(self, node):
-    assert not node in self.newMadeSPFamilies
+    assert node not in self.newMadeSPFamilies
     assert node.madeSPFamilies is None
     self.newMadeSPFamilies = self.newMadeSPFamilies.insert(node, PMap())
 
   def registerFamilyAt(self, node, esrId, esrParent):
     makerNode = self.spRefAt(node).makerNode
-    if not makerNode in self.newMadeSPFamilies:
+    if makerNode not in self.newMadeSPFamilies:
       self.newMadeSPFamilies = self.newMadeSPFamilies.insert(makerNode, PMap())
     def ins(ids):
       return ids.insert(esrId, esrParent)
@@ -220,14 +222,14 @@ class Particle(Trace):
   ### Regular maps
 
   def madeSPAuxAt(self, node):
-    if not node in self.madeSPAuxs:
+    if node not in self.madeSPAuxs:
       if self.base.madeSPAuxAt(node) is not None:
         self.madeSPAuxs[node] = self.base.madeSPAuxAt(node).copy()
       else: return None
     return self.madeSPAuxs[node]
 
   def setMadeSPAuxAt(self, node, aux):
-    assert not node in self.madeSPAuxs
+    assert node not in self.madeSPAuxs
     assert self.base.madeSPAuxAt(node) is None
     self.madeSPAuxs[node] = aux
 
