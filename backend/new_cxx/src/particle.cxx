@@ -329,11 +329,21 @@ int Particle::numBlocksInScope(ScopeID scope)
     }
     return actualUnconstrainedChoices.size();
   }
-  else if (scopes.contains(scope))
+  else
   {
-    return scopes.lookup(scope).size() + baseTrace->numBlocksInScope(scope);
+    vector<BlockID> baseBlocks = baseTrace->blocksInScope(scope);
+    if (scopes.contains(scope))
+    {
+      set<BlockID> actualBlocks(baseBlocks.begin(), baseBlocks.end());
+      vector<BlockID> myBlocks = scopes.lookup(scope).keys();
+      actualBlocks.insert(myBlocks.begin(), myBlocks.end());
+      return actualBlocks.size();
+    }
+    else
+    {
+      return baseBlocks.size();
+    }
   }
-  else { return baseTrace->numBlocksInScope(scope); }
 }
 
 void Particle::commit()
