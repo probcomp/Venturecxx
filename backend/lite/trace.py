@@ -299,15 +299,17 @@ class Trace(object):
   def isConstrainedAt(self, node): return node in self.ccs
 
   #### For kernels
-  def getScope(self, scope): return self.scopes[self._normalizeEvaluatedScopeOrBlock(scope)]
+  def getScope(self, scope):
+    scope = self._normalizeEvaluatedScopeOrBlock(scope)
+    if scope in self.scopes:
+      return self.scopes[scope]
+    else:
+      return SamplableMap()
 
   def sampleBlock(self, scope): return self.getScope(scope).sample()[0]
   def logDensityOfBlock(self, scope): return -1 * math.log(self.numBlocksInScope(scope))
   def blocksInScope(self, scope): return self.getScope(scope).keys()
-  def numBlocksInScope(self, scope):
-    scope = self._normalizeEvaluatedScopeOrBlock(scope)
-    if scope in self.scopes: return len(self.getScope(scope).keys())
-    else: return 0
+  def numBlocksInScope(self, scope): return len(self.getScope(scope).keys())
 
   def getAllNodesInScope(self, scope):
     blocks = [self.getNodesInBlock(scope, block) for block in self.getScope(scope).keys()]

@@ -425,11 +425,15 @@ BlockID ConcreteTrace::sampleBlock(ScopeID scope)
   return scopes[scope].sampleKeyUniformly(getRNG());
 }
 
-//vector<BlockID> ConcreteTrace::blocksInScope(ScopeID scope) { assert(false); }
+vector<BlockID> ConcreteTrace::blocksInScope(ScopeID scope)
+{
+  if (scopes.count(scope)) { return scopes[scope].getOrderedKeys(); }
+  else { return vector<BlockID>(); }
+}
+
 int ConcreteTrace::numBlocksInScope(ScopeID scope)
 {
-  if (scopes.count(scope)) { return scopes[scope].size(); }
-  else { return 0; }
+  return blocksInScope(scope).size();
 }
 
 set<Node*> ConcreteTrace::getAllNodesInScope(ScopeID scope)
