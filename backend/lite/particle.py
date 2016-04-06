@@ -243,15 +243,16 @@ class Particle(Trace):
     # scope, however, the number of "blocks" does depend on whether
     # random choices are constrained or not.
     # This place will need to be touched for Issue #421.
-    if scope != "default":
+    if scope == "default":
+      actualUnconstrainedChoices = self.base.rcs.copy()
+      for node in self.rcs: actualUnconstrainedChoices.add(node)
+      for node in self.ccs: actualUnconstrainedChoices.remove(node)
+      return len(actualUnconstrainedChoices)
+    else:
       if scope in self.scopes:
         return len(self.scopes.lookup(scope)) + self.base.numBlocksInScope(scope)
       else:
         return self.base.numBlocksInScope(scope)
-    actualUnconstrainedChoices = self.base.rcs.copy()
-    for node in self.rcs: actualUnconstrainedChoices.add(node)
-    for node in self.ccs: actualUnconstrainedChoices.remove(node)
-    return len(actualUnconstrainedChoices)
 
   ### Commit
 
