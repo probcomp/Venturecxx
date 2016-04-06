@@ -43,7 +43,11 @@ int mixMH(ConcreteTrace * trace,
 
   double alpha = xiMix + p.second - rhoMix;
   double logU = log(gsl_ran_flat(trace->getRNG(), 0.0, 1.0));
-
+  // cout << "Alpha " << alpha
+  //      << " = xiMix " << xiMix
+  //      << " + proposal alpha " << p.second
+  //      << " - rhoMix " << rhoMix
+  //      << "; logU " << logU << endl;
   if (logU < alpha) {
     // cout << ".";
     return gKernel->accept();

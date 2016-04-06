@@ -77,7 +77,10 @@ def mixMH(trace, indexer, operator):
     proposed = [trace.valueAt(node) for node in nodes]
 
   alpha = xiMix + logAlpha - rhoMix
-  if math.log(random.random()) < alpha:
+  logU = math.log(random.random())
+  # print "Alpha", alpha, "= xiMix", xiMix, "+ proposal alpha", \
+  #   logAlpha, "- rhoMix", rhoMix, "; logU", logU
+  if logU < alpha:
 #    sys.stdout.write(".")
     ans = operator.accept() # May mutate trace
     accepted = True
