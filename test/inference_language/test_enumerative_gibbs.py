@@ -423,3 +423,40 @@ def testOccasionalRejectionBrush():
   predictions = collectSamples(r, address="flip1", infer=infer)
   ans = [(True, 2.0/3), (False, 1.0/3)]
   return reportKnownDiscrete(ans, predictions)
+
+@statisticalTest
+@on_inf_prim("gibbs")
+def testOccasionalRejectionBrushScope():
+  # Another version, this time requiring correct computation of the
+  # correction on a custom scope (which is carefully arranged to avoid
+  # creating blocks where some principal node might be in the brush).
+  #
+  # This particular arrangment of blocks is chosen to falsify the
+  # heuristic present at the time of writing in both Lite and Puma's
+  # correction computation, which is to add the number of blocks the
+  # scope had remaining in the pre-proposal trace with the number of
+  # blocks that gained root nodes in the proposal.  This heuristic is
+  # wrong if a block that is not empty in the pre-proposal trace gains
+  # a new node due to the proposal, which is what happens here, when
+  # `flip2` proposes to move from True to False.
+  r = get_ripl()
+  r.execute_program("""
+(assume flip1 (tag "frob" 1 (flip)))
+(assume flip2 (tag "frob" 2 (flip)))
+(assume flip2_or_flip3
+  (if flip2 true (tag "frob" 1 (flip))))
+(observe (exactly (or flip1 flip2_or_flip3)) true)
+""")
+  infer = '(gibbs "frob" one %s false)' % default_num_transitions_per_sample()
+  predictions = collectSamples(r, address="flip2", infer=infer,
+                               num_samples=default_num_samples(10))
+  # TODO Would be nice to do the power analysis to pick the number of
+  # samples.  Not sure exactly what distribution the expected bug
+  # produces, but empirically it looks like it might be 2:1
+  # True:False.  (The incorrect computation being singled out
+  # overcorrects, which I think means more rejections of True->False
+  # moves than are justified.)  A reasonable fallback might be "Pick
+  # the closest distribution given by comparably small integer ratios
+  # that is skewed in the expected direction".
+  ans = [(True, 4.0/7), (False, 3.0/7)]
+  return reportKnownDiscrete(ans, predictions)
