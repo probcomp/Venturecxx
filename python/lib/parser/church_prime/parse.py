@@ -209,7 +209,7 @@ class Semantics(object):
         es.append(e)
         return es
 
-    # names: Return list of names
+    # names: Return list of names in brackets
     def p_namelist_nl(self, open, ns, close):
         return locbracket(open, close, ns)
 
