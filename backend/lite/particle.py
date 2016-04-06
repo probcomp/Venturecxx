@@ -249,10 +249,11 @@ class Particle(Trace):
       for node in self.ccs: actualUnconstrainedChoices.remove(node)
       return len(actualUnconstrainedChoices)
     else:
+      actualBlocks = set(self.base.blocksInScope(scope))
       if scope in self.scopes:
-        return len(self.scopes.lookup(scope)) + self.base.numBlocksInScope(scope)
-      else:
-        return self.base.numBlocksInScope(scope)
+        for block in self.scopes.lookup(scope):
+          actualBlocks.add(block)
+      return len(actualBlocks)
 
   ### Commit
 
