@@ -117,9 +117,9 @@ What are the recursive rules of (tail-)assessability?
   the bound variable (because it is no longer free in the let
   expression at all).
 
-- A trace-in form technically preserves (tail-)assessability of its
-  body, but connotes that automatic assessor computations should not
-  cross its boundary.
+- A trace-in form (as in the Venture v1 prototype) technically
+  preserves (tail-)assessability of its body, but connotes that
+  automatic assessor computations should not cross its boundary.
 
 - A definition is like a let (whose body is the rest of the scope
   after the definition).
@@ -188,9 +188,6 @@ There are two other pieces of this story, namely:
 
 In fact, is it not the case that resimulation M-H and rejection both
 rely on the whole model being tail-assessable on the observations?
-
-Is giving foreign procedures the ability to expose tail-assessability
-structure what LSRs in Venture v0.2 are all about?
 
 Claim: For LDA (and every other standard statistical model we care
 about) we just know what the decomposition into f^x and f^out is.
