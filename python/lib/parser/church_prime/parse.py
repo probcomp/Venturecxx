@@ -208,11 +208,11 @@ class Semantics(object):
     def p_expressions_some(self, es, e):
         es.append(e)
         return es
-
-    # names: Return list of names in brackets
+    # namelist: return a located list of names
     def p_namelist_nl(self, open, ns, close):
         return locbracket(open, close, ns)
 
+    # names: return list of located symbols
     def p_names_one(self,n):
         return [locmap(loctoken(n), val.symbol)]
     def p_names_some(self, ns, n):
