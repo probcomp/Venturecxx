@@ -66,7 +66,7 @@ instruction(error)	::= T_LSQUARE(open) error T_RSQUARE(close).
 
 directive(define)	::= K_DEFINE(k) L_NAME(n) expression(e).
 directive(assume)	::= K_ASSUME(k) L_NAME(n) expression(e).
-directive(assume_values) ::= K_ASSUME_VALUES(k) name(n) expression(e).
+directive(assume_values) ::= K_ASSUME_VALUES(k) namelist(nl) expression(e).
 directive(observe)	::= K_OBSERVE(k) expression(e) expression(e1).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
@@ -86,7 +86,7 @@ expression(comb_error)	::= T_LROUND(open) expressions(es) error
 expressions(none)	::= .
 expressions(some)	::= expressions(es) expression(e).
 
-name(combination)	::= T_LROUND(open) names(ns) T_RROUND(close).
+namelist(nl)    	::= T_LROUND(open) names(ns) T_RROUND(close).
 names(one)		::= L_NAME(n).
 names(some)		::= names(ns) L_NAME(n).
 
