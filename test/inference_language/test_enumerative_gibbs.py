@@ -416,7 +416,8 @@ def testOccasionalRejectionBrush():
 (assume flip1_or_flip2
   (if flip1 true (flip)))
 (observe (exactly flip1_or_flip2) true)
-;; Crash with a non-negligible probability per transition in Puma
+;; Reject with a non-negligible probability per transition, which would
+;; cause a crash if Gibbs couldn't handle rejection
 (gibbs default one 50 false)
 """)
   infer = "(gibbs default one %s false)" % default_num_transitions_per_sample()
