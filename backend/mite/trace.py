@@ -44,15 +44,24 @@ class Trace(LiteTrace):
     # SPs and SPRecords are the same now.
     return self.madeSPRecordAt(node)
 
-  def evalRequest(self, requester, addr, exp, env):
-    (w, requested) = evalFamily(self, requester.address.request(addr), exp, env)
+  def newRequest(self, requester, addr, exp, env):
     # TODO where to put w?
+    (w, requested) = evalFamily(self, requester.address.request(addr), exp, env)
     assert w == 0
+    self.shareRequest(requester, requested)
     return requested
 
-  def unevalRequest(self, requested):
-    w = unevalFamily(self, requested)
-    assert w == 0
+  def shareRequest(self, requester, requested):
+    self.incRequestsAt(requested)
+    self.addChildAt(requested, requester)
+
+  def freeRequest(self, requester, requested):
+    self.removeChildAt(requested, requester)
+    self.decRequestsAt(requested)
+    if self.numRequestsAt(requested) == 0:
+      # TODO where to put w?
+      w = unevalFamily(self, requested)
+      assert w == 0
 
   def constrainRequest(self, requester, requested, value):
     return constrain(self, requested, value, child=requester)

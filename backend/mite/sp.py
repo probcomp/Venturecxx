@@ -68,7 +68,7 @@ class RequestReferenceSP(VentureSP):
   @override(VentureSP)
   def unapply(self, args):
     ref = self.request_map.pop(args.node)
-    args.unrequest(ref)
+    args.freeRequest(ref)
 
   @override(VentureSP)
   def constrain(self, value, args):
@@ -83,11 +83,14 @@ class Args(LiteArgs):
   def outputValue(self):
     return self.trace.valueAt(self.node)
 
-  def request(self, exp, env, addr=emptyAddress):
-    return self.trace.evalRequest(self.node, addr, exp, env)
+  def newRequest(self, exp, env, addr=emptyAddress):
+    return self.trace.newRequest(self.node, addr, exp, env)
 
-  def unrequest(self, ref):
-    return self.trace.unevalRequest(ref)
+  def shareRequest(self, ref):
+    return self.trace.shareRequest(self.node, ref)
+
+  def freeRequest(self, ref):
+    return self.trace.freeRequest(self.node, ref)
 
   def constrain(self, ref, value):
     return self.trace.constrainRequest(self.node, ref, value)

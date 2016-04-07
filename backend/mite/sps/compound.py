@@ -17,4 +17,4 @@ class CompoundSP(RequestReferenceSP):
         "compound takes exactly %d arguments, got %d." \
         % (len(self.params), len(args.operandNodes)))
     extendedEnv = VentureEnvironment(self.env, self.params, args.operandNodes)
-    return args.request(self.exp, extendedEnv, self.addr)
+    return args.newRequest(self.exp, extendedEnv, self.addr)
