@@ -1,3 +1,4 @@
+from venture.lite.address import emptyAddress
 from venture.lite.exception import VentureBuiltinSPMethodError
 from venture.lite.node import Args as LiteArgs
 from venture.lite.utils import override
@@ -53,6 +54,40 @@ class SimulationSP(VentureSP):
   def unincorporate(self, value, args):
     pass
 
+class RequestReferenceSP(VentureSP):
+  def __init__(self):
+    self.request_map = {}
+
+  @override(VentureSP)
+  def apply(self, args):
+    assert args.node not in self.request_map
+    ref = self.request(args)
+    self.request_map[args.node] = ref
+    return args.trace.valueAt(ref)
+
+  @override(VentureSP)
+  def unapply(self, args):
+    ref = self.request_map.pop(args.node)
+    args.unrequest(ref)
+
+  @override(VentureSP)
+  def constrain(self, value, args):
+    ref = self.request_map[args.node]
+    weight = args.constrain(ref, value)
+    return weight
+
+  def request(self, _args):
+    raise VentureBuiltinSPMethodError("Request not implemented!")
+
 class Args(LiteArgs):
   def outputValue(self):
     return self.trace.valueAt(self.node)
+
+  def request(self, exp, env, addr=emptyAddress):
+    return self.trace.evalRequest(self.node, addr, exp, env)
+
+  def unrequest(self, ref):
+    return self.trace.unevalRequest(ref)
+
+  def constrain(self, ref, value):
+    return self.trace.constrainRequest(self.node, ref, value)
