@@ -68,12 +68,16 @@ class Trace(LiteTrace):
 
   def eval(self, id, exp):
     assert id not in self.families
-    (_, self.families[id]) = evalFamily(
+    (w, self.families[id]) = evalFamily(
       self, Address(List(id)), self.unboxExpression(exp), self.globalEnv)
+    # forward evaluation should not produce a weight
+    # (is this always true?)
+    assert w == 0
 
   def uneval(self, id):
     assert id in self.families
-    unevalFamily(self, self.families[id])
+    w = unevalFamily(self, self.families[id])
+    assert w == 0
     del self.families[id]
 
   def makeConsistent(self):
