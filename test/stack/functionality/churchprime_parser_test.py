@@ -60,9 +60,13 @@ class TestChurchPrimeParser(unittest.TestCase):
         self.assertEqual(output,expected)
 
     def test_parse_assume_values_empty(self):
-      err.assert_error_message_contains("""\
-	Syntax error at ')'
-	  """, self.p.parse_instruction, "[assume_values ( ) c  ]" )
+      self.assertEqual(self.p.parse_instruction("[assume_values ( ) c  ]"),
+          {'instruction': 'evaluate', 
+            'expression': [
+                      {'type': 'symbol', 'value': 'assume_values'},
+                      [],
+                      {'type': 'symbol', 'value': 'c'}]}
+        )
 
     def test_assume_values_loc(self):
       with self.assertRaises(VentureException):
