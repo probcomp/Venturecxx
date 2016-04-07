@@ -9,7 +9,7 @@ from venture.lite.trace import Trace as LiteTrace
 from venture.mite.builtin import builtInSPs
 from venture.mite.builtin import builtInValues
 from venture.mite.evaluator import evalFamily, unevalFamily, processMadeSP
-from venture.mite.evaluator import constrain
+from venture.mite.evaluator import constrain, unconstrain
 from venture.mite.sp import Args
 
 class Trace(LiteTrace):
@@ -99,6 +99,17 @@ class Trace(LiteTrace):
       # a nan weight.  I want to normalize these to indicating that
       # the resulting state is impossible.
       return float("-inf")
+
+  def unobserve(self, id):
+    node = self.families[id]
+    if node.isObservation:
+      weight = unconstrain(self, node)
+      node.isObservation = False
+    else:
+      assert node in self.unpropagatedObservations
+      del self.unpropagatedObservations[node]
+      weight = 0
+    return weight
 
   def primitive_infer(self, exp):
     print 'primitive_infer', exp

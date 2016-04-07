@@ -20,6 +20,9 @@ class VentureSP(VentureValue):
   def constrain(self, _value, _args):
     raise VentureBuiltinSPMethodError("Cannot constrain")
 
+  def unconstrain(self, _args):
+    raise VentureBuiltinSPMethodError("Cannot unconstrain")
+
   def show(self):
     return "<procedure>"
 
@@ -44,6 +47,13 @@ class SimulationSP(VentureSP):
     weight = self.logDensity(value, args)
     self.incorporate(value, args)
     return weight
+
+  @override(VentureSP)
+  def unconstrain(self, args):
+    value = args.outputValue()
+    self.unincorporate(value, args)
+    weight = self.logDensity(value, args)
+    return weight, self.apply(args)
 
   def simulate(self, _args):
     raise VentureBuiltinSPMethodError("Simulate not implemented!")

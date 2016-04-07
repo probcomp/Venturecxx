@@ -157,3 +157,23 @@ def teardownMadeSP(trace, node):
   # if isAAA:
   #   trace.registerAAAMadeSPAuxAt(node,trace.madeSPAuxAt(node))
   trace.setMadeSPRecordAt(node, None)
+
+def unconstrain(trace, node, child=None):
+  if trace.childrenAt(node) - set([child]):
+    raise VentureException("evaluation", "Cannot unconstrain " \
+      "a value that is referenced more than once.", address=node.address)
+  if isLookupNode(node):
+    weight = unconstrain(trace, node.sourceNode, child=node)
+    trace.setValueAt(node, trace.valueAt(node.sourceNode))
+    return weight
+  else:
+    assert isOutputNode(node)
+    sp = trace.spAt(node)
+    args = trace.argsAt(node)
+    with annotation(node.address):
+      weight, value = sp.unconstrain(args)
+    trace.setValueAt(node, value)
+    # trace.unregisterConstrainedChoice(node)
+    assert isinstance(weight, numbers.Number)
+    return weight
+
