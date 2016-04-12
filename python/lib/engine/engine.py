@@ -31,7 +31,7 @@ import venture.value.dicts as v
 
 class Engine(object):
 
-  def __init__(self, backend, persistent_inference_trace=True, entropy=None):
+  def __init__(self, backend, entropy, persistent_inference_trace=True):
     self._py_rng = random.Random(entropy)
     self.model = TraceSet(self, backend, self._py_rng.randint(1, 2**31 - 1))
     self.swapped_model = False
@@ -354,7 +354,10 @@ class Engine(object):
     return self.load_io(StringIO.StringIO(string))
 
   def convert(self, backend):
-    engine = backend.make_engine(self.persistent_inference_trace)
+    engine = backend.make_engine(
+      persistent_inference_trace=self.persistent_inference_trace,
+      entropy=self._py_rng.randint(1, 2**31 - 1),
+    )
     if self.persistent_inference_trace:
       engine.infer_trace = self.infer_trace # TODO Copy?
     engine.directiveCounter = self.directiveCounter
