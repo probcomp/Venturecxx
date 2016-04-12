@@ -92,6 +92,9 @@ class Args(LiteArgs):
   def outputValue(self):
     return self.trace.valueAt(self.node)
 
+  def operandValue(self, ix):
+    return self.trace.valueAt(self.operandNodes[ix])
+
   def newRequest(self, raddr, exp, env):
     return self.trace.newRequest(self.node, raddr, exp, env)
 
