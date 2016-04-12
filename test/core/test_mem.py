@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import eq_
+from nose.tools import eq_, assert_raises_regexp
 
 from venture.test.config import collectSamples
 from venture.test.config import defaultInfer
@@ -207,6 +207,14 @@ def testForgetMem():
   ripl.forget("p2")
   c = ripl.predict("(f)", label="p3")
   assert a != c
+
+def testMemLoop():
+  ripl = get_ripl()
+  ripl.assume("f","(mem (lambda () (if (flip) (+ 1 (f)) 0)))")
+  with assert_raises_regexp(
+      Exception, 'mem argument loop|request at existing address'):
+    for _ in range(50):
+      ripl.sample("(f)")
 
 # TODO slow to run, and not worth it 
 def testMemHashCollisions1():
