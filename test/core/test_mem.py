@@ -197,6 +197,17 @@ def testMemoizingOnASymbol1():
   predictions = collectSamples(ripl,"pid",3)
   assert predictions == [1, 1, 1]
 
+def testForgetMem():
+  ripl = get_ripl()
+  ripl.assume("f","(mem (lambda () (normal 0 1)))")
+  a = ripl.predict("(f)", label="p1")
+  b = ripl.predict("(f)", label="p2")
+  assert a == b
+  ripl.forget("p1")
+  ripl.forget("p2")
+  c = ripl.predict("(f)", label="p3")
+  assert a != c
+
 # TODO slow to run, and not worth it 
 def testMemHashCollisions1():
   """For large A and B, makes sure that MSPs don't allow hash collisions for requests based on
