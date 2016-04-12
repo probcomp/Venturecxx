@@ -25,6 +25,11 @@ from venture.test.config import skipWhenSubSampling
 from venture.test.stats import reportKnownDiscrete
 from venture.test.stats import statisticalTest
 
+def all_equal(results):
+  iresults = iter(results)
+  first = next(iresults)
+  return all(result == first for result in iresults)
+
 @on_inf_prim("none")
 def testMemSmoke1():
   "Mem should be a noop on deterministic procedures (only memoizing)."
@@ -37,7 +42,7 @@ def testMemBasic1():
   ripl.assume("f","(mem (lambda () (bernoulli 0.5)))")
   for i in range(10): ripl.predict("(f)",label="p%d" % i)
   for _ in range(5):
-    assert reduce(lambda x,y: x == y,[ripl.report("p%d" % i) for i in range(10)])
+    assert all_equal([ripl.report("p%d" % i) for i in range(10)])
     ripl.infer(defaultInfer())
 
 @skipWhenSubSampling("Subsampling the consequences causes them to become stale")
@@ -47,7 +52,7 @@ def testMemBasic2():
   ripl.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   for i in range(10): ripl.predict("(f 1)",label="p%d" % i)
   for _ in range(5):
-    assert reduce(lambda x,y: x == y,[ripl.report("p%d" % i) for i in range(10)])
+    assert all_equal([ripl.report("p%d" % i) for i in range(10)])
     ripl.infer(defaultInfer())
 
 @skipWhenSubSampling("Subsampling the consequences causes them to become stale")
@@ -57,7 +62,7 @@ def testMemBasic3():
   ripl.assume("f","(mem (lambda (x y) (bernoulli 0.5)))")
   for i in range(10): ripl.predict("(f 1 2)",label="p%d" % i)
   for _ in range(5):
-    assert reduce(lambda x,y: x == y,[ripl.report("p%d" % i) for i in range(10)])
+    assert all_equal([ripl.report("p%d" % i) for i in range(10)])
     ripl.infer(defaultInfer())
             
   
