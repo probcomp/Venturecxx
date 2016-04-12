@@ -16,6 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import cPickle as pickle
+import random
 
 from ..multiprocess import MultiprocessingMaster
 from ..multiprocess import SynchronousMaster
@@ -35,8 +36,9 @@ class TraceSet(object):
     self.mode = 'sequential'
     self.process_cap = None
     self.traces = None
-    self.initial_entropy = entropy
-    trace = tr.Trace(self.backend.trace_constructor()(self.initial_entropy))
+    self._py_rng = random.Random(entropy)
+    seed = self._py_rng.randint(1, 2**31 - 1)
+    trace = tr.Trace(self.backend.trace_constructor()(seed))
     self.create_trace_pool([trace])
 
   def _trace_master(self, mode):
@@ -91,7 +93,9 @@ class TraceSet(object):
     self.traces.map('bind_foreign_sp', name, sp)
 
   def clear(self):
-    self.create_trace_pool([tr.Trace(self.backend.trace_constructor()())])
+    seed = self._py_rng.randint(1, 2**31 - 1)
+    trace = tr.Trace(self.backend.trace_constructor()(seed))
+    self.create_trace_pool([trace])
 
   def reinit_inference_problem(self, num_particles=1):
     """Unincorporate all observations and return to the prior.
@@ -255,7 +259,9 @@ if freeze has been used.
       return [self.restore_trace(dumped) for dumped in dumped_all]
 
   def restore_trace(self, values, skipStackDictConversion=False):
-    return tr.Trace.restore(self.backend.trace_constructor(), values, self.engine.foreign_sps, skipStackDictConversion)
+    mktrace_seed = self.backend.trace_constructor()
+    mktrace = lambda: mktrace_seed(self._py_rng.randint(1, 2**31 - 1))
+    return tr.Trace.restore(mktrace, values, self.engine.foreign_sps, skipStackDictConversion)
 
   def copy_trace(self, trace):
     if trace.short_circuit_copyable():

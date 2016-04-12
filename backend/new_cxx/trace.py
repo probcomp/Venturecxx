@@ -50,9 +50,10 @@ class WarningSP(object):
     return getattr(self.sp, attrname)
 
 class Trace(object):
-  def __init__(self, trace=None, entropy=None):
-    self.py_rng = random.Random()
-    self.np_rng = npr.RandomState()
+  def __init__(self, entropy, trace=None):
+    assert trace is None or isinstance(trace, puma.Trace)
+    self.py_rng = random.Random(None)
+    self.np_rng = npr.RandomState(None)
     if trace is None:
       self.trace = puma.Trace()
       self.set_seed(entropy)
@@ -87,7 +88,7 @@ class Trace(object):
     self.trace.set_seed(prng.randint(1, 2**31 - 1))
 
   def stop_and_copy(self):
-    return Trace(self.trace.stop_and_copy())
+    return Trace(entropy=None, trace=self.trace.stop_and_copy())
 
   def short_circuit_copyable(self): return True
 

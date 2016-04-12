@@ -66,7 +66,7 @@ from venture.lite.value import VentureValue
 import venture.lite.infer as infer
 
 class Trace(object):
-  def __init__(self, entropy=None):
+  def __init__(self, entropy):
 
     self.globalEnv = VentureEnvironment()
     for name, val in builtInValues().iteritems():

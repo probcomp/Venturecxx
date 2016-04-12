@@ -32,7 +32,7 @@ import evaluator
 
 class Trace(object):
 
-  def __init__(self, entropy=None):
+  def __init__(self, entropy):
     self.results = {}
     self.env = env.VentureEnvironment()
     for name, val in builtin.builtInValues().iteritems():

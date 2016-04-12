@@ -82,7 +82,7 @@ class Backend(object):
     """Base class representing a model backend.
 
 See `Lite` and `Puma`."""
-    def trace_constructor(self, entropy=None): pass
+    def trace_constructor(self): pass
     def make_engine(self, persistent_inference_trace=True, entropy=None):
         from venture.engine import engine
         return engine.Engine(self, persistent_inference_trace, entropy)

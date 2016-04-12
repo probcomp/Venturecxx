@@ -17,6 +17,7 @@
 
 from contextlib import contextmanager
 import cStringIO as StringIO
+import random
 import threading
 import time
 
@@ -31,7 +32,8 @@ import venture.value.dicts as v
 class Engine(object):
 
   def __init__(self, backend, persistent_inference_trace=True, entropy=None):
-    self.model = TraceSet(self, backend, entropy)
+    self._py_rng = random.Random(entropy)
+    self.model = TraceSet(self, backend, self._py_rng.randint(1, 2**31 - 1))
     self.swapped_model = False
     self.directiveCounter = 0
     self.inferrer = None
@@ -252,7 +254,7 @@ class Engine(object):
 
   def init_inference_trace(self):
     import venture.untraced.trace as trace
-    ans = trace.Trace()
+    ans = trace.Trace(self._py_rng.randint(1, 2**31 - 1))
     for name,sp in self.inferenceSPsList():
       ans.bindPrimitiveSP(name, sp)
     import venture.lite.inference_sps as inf
