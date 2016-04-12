@@ -4,6 +4,7 @@ from venture.lite.address import Address
 from venture.lite.address import List
 from venture.lite.env import VentureEnvironment
 from venture.lite.node import OutputNode
+from venture.lite.sp import SPFamilies
 from venture.lite.trace import Trace as LiteTrace
 
 from venture.mite.builtin import builtInSPs
@@ -44,27 +45,51 @@ class Trace(LiteTrace):
     # SPs and SPRecords are the same now.
     return self.madeSPRecordAt(node)
 
-  def newRequest(self, requester, addr, exp, env):
+  def madeSPFamiliesAt(self, node):
+    # TODO: decide whether to re-introduce SP records so we don't have
+    # to do this hack
+    sp = self.madeSPRecordAt(node)
+    if not hasattr(sp, 'requestedFamilies'):
+      sp.requestedFamilies = SPFamilies()
+    assert isinstance(sp.requestedFamilies, SPFamilies)
+    return sp.requestedFamilies
+
+  def newRequest(self, requester, raddr, exp, env):
+    address = requester.address.request(List((
+      self.spRefAt(requester).makerNode.address, raddr)))
     # TODO where to put w?
-    (w, requested) = evalFamily(self, requester.address.request(addr), exp, env)
+    (w, requested) = evalFamily(self, address, exp, env)
     assert w == 0
-    self.shareRequest(requester, requested)
-    return requested
-
-  def shareRequest(self, requester, requested):
+    assert not self.containsSPFamilyAt(requester, raddr), \
+      "Tried to make new request at existing address."
+    self.registerFamilyAt(requester, raddr, requested)
     self.incRequestsAt(requested)
-    self.addChildAt(requested, requester)
+    return raddr
 
-  def freeRequest(self, requester, requested):
-    self.removeChildAt(requested, requester)
+  def incRequest(self, requester, raddr):
+    requested = self.spFamilyAt(requester, raddr)
+    self.incRequestsAt(requested)
+    return raddr
+
+  def decRequest(self, requester, raddr):
+    requested = self.spFamilyAt(requester, raddr)
     self.decRequestsAt(requested)
     if self.numRequestsAt(requested) == 0:
+      self.unregisterFamilyAt(requester, raddr)
       # TODO where to put w?
       w = unevalFamily(self, requested)
       assert w == 0
 
-  def constrainRequest(self, requester, requested, value):
+  def hasRequestAt(self, requester, raddr):
+    return self.containsSPFamilyAt(requester, raddr)
+
+  def constrainRequest(self, requester, raddr, value):
+    requested = self.spFamilyAt(requester, raddr)
     return constrain(self, requested, value, child=requester)
+
+  def requestedValueAt(self, requester, raddr):
+    requested = self.spFamilyAt(requester, raddr)
+    return self.valueAt(requested)
 
   def eval(self, id, exp):
     assert id not in self.families

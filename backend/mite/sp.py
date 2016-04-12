@@ -1,4 +1,3 @@
-from venture.lite.address import emptyAddress
 from venture.lite.exception import VentureBuiltinSPMethodError
 from venture.lite.node import Args as LiteArgs
 from venture.lite.utils import override
@@ -71,19 +70,19 @@ class RequestReferenceSP(VentureSP):
   @override(VentureSP)
   def apply(self, args):
     assert args.node not in self.request_map
-    ref = self.request(args)
-    self.request_map[args.node] = ref
-    return args.trace.valueAt(ref)
+    raddr = self.request(args)
+    self.request_map[args.node] = raddr
+    return args.requestedValue(raddr)
 
   @override(VentureSP)
   def unapply(self, args):
-    ref = self.request_map.pop(args.node)
-    args.freeRequest(ref)
+    raddr = self.request_map.pop(args.node)
+    args.decRequest(raddr)
 
   @override(VentureSP)
   def constrain(self, value, args):
-    ref = self.request_map[args.node]
-    weight = args.constrain(ref, value)
+    raddr = self.request_map[args.node]
+    weight = args.constrain(raddr, value)
     return weight
 
   def request(self, _args):
@@ -93,14 +92,20 @@ class Args(LiteArgs):
   def outputValue(self):
     return self.trace.valueAt(self.node)
 
-  def newRequest(self, exp, env, addr=emptyAddress):
-    return self.trace.newRequest(self.node, addr, exp, env)
+  def newRequest(self, raddr, exp, env):
+    return self.trace.newRequest(self.node, raddr, exp, env)
 
-  def shareRequest(self, ref):
-    return self.trace.shareRequest(self.node, ref)
+  def incRequest(self, raddr):
+    return self.trace.incRequest(self.node, raddr)
 
-  def freeRequest(self, ref):
-    return self.trace.freeRequest(self.node, ref)
+  def decRequest(self, raddr):
+    return self.trace.decRequest(self.node, raddr)
 
-  def constrain(self, ref, value):
-    return self.trace.constrainRequest(self.node, ref, value)
+  def hasRequest(self, raddr):
+    return self.trace.hasRequestAt(self.node, raddr)
+
+  def requestedValue(self, raddr):
+    return self.trace.requestedValueAt(self.node, raddr)
+
+  def constrain(self, raddr, value):
+    return self.trace.constrainRequest(self.node, raddr, value)

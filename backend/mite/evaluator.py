@@ -39,9 +39,7 @@ def evalFamily(trace, address, exp, env):
     return (0, trace.createConstantNode(address, e.textOfQuotation(exp)))
   elif e.isLambda(exp):
     (params, body) = e.destructLambda(exp)
-    # point to the desugared source code location of lambda body
-    addr = address.last.append(2).append(1)
-    sp = CompoundSP(params, body, env, addr)
+    sp = CompoundSP(params, body, env)
     spNode = trace.createConstantNode(address, sp)
     processMadeSP(trace, spNode)
     return (0, spNode)
