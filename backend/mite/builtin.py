@@ -8,6 +8,7 @@ from venture.mite.sp_registry import builtInSPs
 # pylint:disable=unused-import
 import venture.mite.sps.lite_sp
 import venture.mite.sps.mem
+import venture.mite.sps.dpmem
 
 def builtInValues():
   return { "true" : v.VentureBool(True), "false" : v.VentureBool(False),
