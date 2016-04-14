@@ -61,7 +61,7 @@ struct Particle : Trace
   shared_ptr<LKernel> getLKernel(shared_ptr<Scaffold> scaffold,Node * node);
   void addChild(Node * node, Node * child);
 
-  /* Detach mutations */  
+  /* Detach mutations */
   RootOfFamily popLastESRParent(OutputNode * outputNode);
   void disconnectLookup(LookupNode * lookupNode);
   void decNumRequests(RootOfFamily root);
@@ -118,7 +118,7 @@ struct Particle : Trace
   void discardAAAMadeSPAux(OutputNode * makerNode);
   void registerAAAMadeSPAux(OutputNode * makerNode,shared_ptr<SPAux> spAux);
   shared_ptr<SPAux> getAAAMadeSPAux(OutputNode * makerNode);
-  
+
 /* END methods */
 
 
@@ -135,7 +135,7 @@ struct Particle : Trace
 /* Members */
 
   ConcreteTrace * baseTrace;
-  
+
   /* Persistent data structures, with non-persistent analogs in ConcreteTrace */
   PSet<Node*> unconstrainedChoices;
   PSet<Node*> constrainedChoices;

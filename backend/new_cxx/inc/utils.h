@@ -87,7 +87,7 @@ vector<vector<T> > cartesianProduct(vector<vector<T> > sequences)
 
 template <class T>
 boost::python::object toPython(Trace * trace, const T& t)
-{ 
+{
   return boost::python::object(t);
 }
 

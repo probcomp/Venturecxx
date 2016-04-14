@@ -37,13 +37,13 @@ VentureValuePtr MatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
 
   // Vector becomes a vector, I guess
   if (NULL != dynamic_pointer_cast<VentureNumber>(allRows[0]))
-  { 
+  {
     VectorXd v(rows);
 
     for (size_t i = 0; i < rows; ++i) { v(i) = allRows[i]->getDouble(); }
     return VentureValuePtr(new VentureMatrix(v));
   }
- 
+
   vector<VentureValuePtr> row0 = allRows[0]->getArray();
   cols = row0.size();
   //  assert(cols > 0);
@@ -54,7 +54,7 @@ VentureValuePtr MatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
   {
     vector<VentureValuePtr> row_i = allRows[i]->getArray();
     if (cols != row_i.size()) { throw "Matrix must have equal number of elements per row."; }
-    
+
     for (size_t j = 0; j < cols; ++j)
     {
       M(i,j) = row_i[j]->getDouble();
@@ -68,7 +68,7 @@ VentureValuePtr IdentityMatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng
   checkArgsLength("id_matrix", args, 1);
 
   int dim = args->operandValues[0]->getInt();
-  
+
   return VentureValuePtr(new VentureMatrix(MatrixXd::Identity(dim, dim)));
 }
 

@@ -44,18 +44,18 @@ pair<RequestNode*,OutputNode*> Trace::createApplicationNodes(Node * operatorNode
   OutputNode * outputNode = new OutputNode(operatorNode, operandNodes, requestNode, env, exp);
 
   //cout << "createApplicationNodes(" << operatorNode << "," << requestNode << ")";
-  
+
   requestNode->outputNode = outputNode;
   addChild(requestNode, outputNode);
-  
+
   addChild(operatorNode, requestNode);
   addChild(operatorNode, outputNode);
-  
+
   for (size_t i = 0; i < operandNodes.size(); ++i) {
     addChild(operandNodes[i], requestNode);
     addChild(operandNodes[i], outputNode);
   }
-  
+
   return make_pair(requestNode, outputNode);
 }
 
@@ -69,7 +69,7 @@ VentureValuePtr Trace::getGroundValue(Node * node)
 {
   VentureValuePtr value = getValue(node);
   boost::shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(value);
-  
+
   // TODO Hack!
   if (spRef) { return VentureValuePtr(new VentureSPRecord(getMadeSP(spRef->makerNode),getMadeSPAux(spRef->makerNode))); }
   else { return value; }
@@ -90,7 +90,7 @@ Node * Trace::getOperatorSPMakerNode(ApplicationNode * node)
 vector<Node*> Trace::getParents(Node * node)
 {
   vector<Node*> parents = node->getDefiniteParents();
-  if (dynamic_cast<OutputNode*>(node)) 
+  if (dynamic_cast<OutputNode*>(node))
   {
     vector<RootOfFamily> esrRoots = getESRParents(node);
     for (size_t i = 0; i < esrRoots.size(); ++i)
@@ -127,16 +127,16 @@ Node * Trace::getOutermostNonReferenceNode(Node * node)
   if (lookupNode) { return getOutermostNonReferenceNode(lookupNode->sourceNode); }
   OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
   assert(outputNode);
-  
+
   boost::shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
-  
+
   if (dynamic_pointer_cast<ESRRefOutputPSP>(psp))
-  { 
+  {
     assert(getESRParents(outputNode).size() == 1);
     return getOutermostNonReferenceNode(getESRParents(outputNode)[0].get());
   }
   else if (dynamic_pointer_cast<TagOutputPSP>(psp))
-  { 
+  {
     return getOutermostNonReferenceNode(outputNode->operandNodes[2]);
   }
   else

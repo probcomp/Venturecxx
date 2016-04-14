@@ -29,7 +29,7 @@ double ExactlyOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args
 {
   VentureValuePtr in = args->operandValues[0];
   if (in->equals(value)) { return 0; }
-  
+
   if (args->operandValues.size() >= 2) {
     return args->operandValues[1]->getDouble();
   } else {

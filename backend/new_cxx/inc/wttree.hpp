@@ -63,9 +63,9 @@ struct Node
     right(right),
     size(left->size + right->size + 1)
   {}
-  
+
   bool isEmpty() const { return size == 0; }
-  
+
   NodePtr left;
   Key key;
   Value value;
@@ -95,7 +95,7 @@ struct Node
                 NodePtr(new Node(r->left->right, r->key, r->value, r->right))
                 ));
   }
-  
+
   static NodePtr double_right(const NodePtr& l, const Key& ckey, const Value& cvalue, const NodePtr& z)
   {
     return NodePtr(new Node(
@@ -104,7 +104,7 @@ struct Node
                 NodePtr(new Node(l->right->right, ckey, cvalue, z))
                 ));
   }
-  
+
   /*
   For the provenance of these constants, see Yoichi Hirai and Kazuhiko
   Yamamoto, `Balancing Weight-Balanced Trees', Journal of Functional
@@ -168,7 +168,7 @@ struct Node
       return tuple<Key, Value, NodePtr>(get<0>(min), get<1>(min), t_join(get<2>(min), node->key, node->value, node->right));
     }
   }
-  
+
   template <typename Comp>
   static bool node_contains(const NodePtr& node, const Key& key, const Comp& comp)
   {
@@ -312,10 +312,10 @@ struct Node
     vector<NodePtr> nodes;
     nodes.reserve(node->size);
     node_traverse_in_order(node, nodes);
-    
+
     vector<Key> keys;
     keys.reserve(nodes.size());
-    
+
     for(size_t i = 0; i < nodes.size(); ++i) {
       keys.push_back(nodes[i]->key);
     }
@@ -327,10 +327,10 @@ struct Node
     vector<NodePtr> nodes;
     nodes.reserve(node->size);
     node_traverse_in_order(node, nodes);
-    
+
     vector<pair<Key, Value> > items;
     items.reserve(nodes.size());
-    
+
     for(size_t i = 0; i < nodes.size(); ++i) {
       items.push_back(pair<Key, Value>(nodes[i]->key, nodes[i]->value));
     }

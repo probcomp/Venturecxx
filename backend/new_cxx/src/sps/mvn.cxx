@@ -40,19 +40,19 @@ VentureValuePtr MVNormalPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  con
 
   VectorXd mu = args->operandValues[0]->getVector();
   int n = mu.size(); // size may be wrong
-  shared_ptr<gsl_vector> gsl_mu(gsl_vector_alloc(n)); 
+  shared_ptr<gsl_vector> gsl_mu(gsl_vector_alloc(n));
   for (int i = 0; i < n; ++i) { gsl_vector_set(gsl_mu.get(),i,mu(i)); }
 
   MatrixXd sigma = args->operandValues[1]->getSymmetricMatrix();
   shared_ptr<gsl_matrix> gsl_sigma(gsl_matrix_alloc(n,n));
   for (int i = 0; i < n; ++i) {
-    for (int j = 0; j < n; ++j) { 
+    for (int j = 0; j < n; ++j) {
       gsl_matrix_set(gsl_sigma.get(),i,j,sigma(i,j));
     }
   }
 
   shared_ptr<gsl_vector> gsl_x(gsl_vector_alloc(n)); // output
-  
+
   rmvnorm(rng, n, gsl_mu.get(), gsl_sigma.get(), gsl_x.get());
 
   VectorXd x(n);
@@ -66,13 +66,13 @@ double MVNormalPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  co
 {
   VectorXd mu = args->operandValues[0]->getVector();
   int n = mu.size(); // size may be wrong
-  shared_ptr<gsl_vector> gsl_mu(gsl_vector_alloc(n)); 
+  shared_ptr<gsl_vector> gsl_mu(gsl_vector_alloc(n));
   for (int i = 0; i < n; ++i) { gsl_vector_set(gsl_mu.get(),i,mu(i)); }
 
   MatrixXd sigma = args->operandValues[1]->getMatrix();
   shared_ptr<gsl_matrix> gsl_sigma(gsl_matrix_alloc(n,n));
   for (int i = 0; i < n; ++i) {
-    for (int j = 0; j < n; ++j) { 
+    for (int j = 0; j < n; ++j) {
       gsl_matrix_set(gsl_sigma.get(),i,j,sigma(i,j));
     }
   }

@@ -32,10 +32,10 @@ struct Node;
 struct SPRef;
 struct LKernel;
 
-struct Trace 
+struct Trace
 {
   /* Registering metadata */
-  /** AE (Arbitrary Ergodic) kernels repropose random choices within an sp that 
+  /** AE (Arbitrary Ergodic) kernels repropose random choices within an sp that
       have no effect on the trace. This optimizes some cases that otherwise could
       be handled by AAA.
    */
@@ -69,7 +69,7 @@ struct Trace
   virtual boost::shared_ptr<LKernel> getLKernel(boost::shared_ptr<Scaffold> scaffold, Node * node) =0;
   virtual void addChild(Node * node, Node * child) =0;
 
-  /* Detach mutations */  
+  /* Detach mutations */
   virtual RootOfFamily popLastESRParent(OutputNode * outputNode) =0;
   virtual void disconnectLookup(LookupNode * lookupNode) =0;
   virtual void decNumRequests(RootOfFamily root) =0;

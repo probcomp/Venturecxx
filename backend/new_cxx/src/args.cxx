@@ -55,7 +55,7 @@ Args::Args(Trace * trace, ApplicationNode * appNode)
     requestNode = outputNode->requestNode;
     requestValue = dynamic_pointer_cast<VentureRequest>(trace->getValue(requestNode));
     assert(requestValue);
-    
+
     esrParentValues = makeVectorOfValues(trace, trace->getESRParents(outputNode));
     esrParentNodes = trace->getESRParents(outputNode);
     if (trace->hasAAAMadeSPAux(outputNode))

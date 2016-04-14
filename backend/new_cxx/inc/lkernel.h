@@ -78,7 +78,7 @@ struct DeterministicLKernel : SimulationLKernel
 
   VentureValuePtr value;
   shared_ptr<PSP> psp;
-  
+
 };
 
 struct VariationalLKernel : SimulationLKernel
