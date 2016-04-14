@@ -318,11 +318,11 @@ int Particle::numBlocksInScope(ScopeID scope)
   if (scope->hasSymbol() && scope->getSymbol() == "default") {
     // This should use the copy constructor of set
     set<Node*> actualUnconstrainedChoices = baseTrace->unconstrainedChoices;
-    vector<Node*> ucs = unconstrainedChoices.keys();
+    const vector<Node*> &ucs = unconstrainedChoices.keys();
     actualUnconstrainedChoices.insert(ucs.begin(), ucs.end());
     // TODO There must be a way to do this removal asymptotically faster,
     // because the constrainedChoices PSet stores the nodes in order.
-    vector<Node*> ccs = constrainedChoices.keys();
+    const vector<Node*> &ccs = constrainedChoices.keys();
     BOOST_FOREACH(Node* n, ccs)
     {
       actualUnconstrainedChoices.erase(n);
@@ -331,11 +331,11 @@ int Particle::numBlocksInScope(ScopeID scope)
   }
   else
   {
-    vector<BlockID> baseBlocks = baseTrace->blocksInScope(scope);
+    const vector<BlockID> &baseBlocks = baseTrace->blocksInScope(scope);
     if (scopes.contains(scope))
     {
       set<BlockID> actualBlocks(baseBlocks.begin(), baseBlocks.end());
-      vector<BlockID> myBlocks = scopes.lookup(scope).keys();
+      const vector<BlockID> &myBlocks = scopes.lookup(scope).keys();
       actualBlocks.insert(myBlocks.begin(), myBlocks.end());
       return actualBlocks.size();
     }
