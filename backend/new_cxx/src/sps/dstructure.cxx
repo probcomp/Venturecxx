@@ -155,7 +155,7 @@ VentureValuePtr IsArrayOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)
 VentureValuePtr PairOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("pair", args, 2);
-  return VentureValuePtr(new VenturePair(args->operandValues[0],args->operandValues[1]));
+  return VentureValuePtr(new VenturePair(args->operandValues[0], args->operandValues[1]));
 }
 
 VentureValuePtr IsPairOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
@@ -169,7 +169,7 @@ VentureValuePtr ListOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
   VentureValuePtr l(new VentureNil());
   for (size_t i = args->operandValues.size(); i > 0; --i)
   {
-    l = VentureValuePtr(new VenturePair(args->operandValues[i-1],l));
+    l = VentureValuePtr(new VenturePair(args->operandValues[i-1], l));
   }
   return l;
 }

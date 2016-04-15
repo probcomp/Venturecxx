@@ -27,8 +27,8 @@
 VectorXd vvToEigenVector(VentureValue * value);
 MatrixXd vvToEigenMatrix(VentureValue * value);
 uint32_t indexOfOne(const VectorXd & v);
-VectorXd sampleVectorXd(const VectorXd & v,gsl_rng * rng);
-uint32_t sampleVector(const VectorXd & v,gsl_rng * rng);
+VectorXd sampleVectorXd(const VectorXd & v, gsl_rng * rng);
+uint32_t sampleVector(const VectorXd & v, gsl_rng * rng);
 VectorXd normalizedVectorXd(VectorXd & v);
 
 /* MakeUncollapsedHMMSP */
@@ -54,7 +54,7 @@ VentureValuePtr MakeUncollapsedHMMOutputPSP::simulate(shared_ptr<Args> args,
 /* UncollapsedHMMSP */
 UncollapsedHMMSP::UncollapsedHMMSP(PSP * requestPSP, PSP * outputPSP,
                                    MatrixXd p0, MatrixXd T, MatrixXd O):
-  SP(requestPSP,outputPSP), p0(p0), T(T), O(O) {}
+  SP(requestPSP, outputPSP), p0(p0), T(T), O(O) {}
 
 shared_ptr<LatentDB> UncollapsedHMMSP::constructLatentDB() const
 {
@@ -86,7 +86,7 @@ double UncollapsedHMMSP::simulateLatents(shared_ptr<Args> args,
   if (aux->xs.empty())
   {
     if (shouldRestore) { aux->xs.push_back(latents->xs[0]); }
-    else { aux->xs.push_back(sampleVectorXd(p0,rng)); }
+    else { aux->xs.push_back(sampleVectorXd(p0, rng)); }
   }
 
   if (aux->xs.size() <= request->index)
@@ -96,7 +96,7 @@ double UncollapsedHMMSP::simulateLatents(shared_ptr<Args> args,
       MatrixXd sample;
 
       if (shouldRestore) { sample = latents->xs[i]; }
-      else { sample = sampleVectorXd(T * aux->xs.back(),rng); }
+      else { sample = sampleVectorXd(T * aux->xs.back(), rng); }
       aux->xs.push_back(sample);
     }
   }
@@ -128,7 +128,7 @@ double UncollapsedHMMSP::detachLatents(shared_ptr<Args> args,
     }
     else
     {
-      uint32_t maxObservation = (*(max_element(aux->os.begin(),aux->os.end()))).first;
+      uint32_t maxObservation = (*(max_element(aux->os.begin(), aux->os.end()))).first;
       for (size_t i = aux->xs.size()-1; i > maxObservation; --i)
       {
         latents->xs[i] = aux->xs.back();
@@ -148,8 +148,8 @@ void UncollapsedHMMSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
 
   if (aux->os.empty()) { return; }
 
-  uint32_t maxObservation = (*(max_element(aux->os.begin(),aux->os.end()))).first;
-  vector<VectorXd> fs(1,p0);
+  uint32_t maxObservation = (*(max_element(aux->os.begin(), aux->os.end()))).first;
+  vector<VectorXd> fs(1, p0);
 
   /* Forwards filtering */
   for (size_t i = 1; i <= maxObservation; ++i)
@@ -169,13 +169,13 @@ void UncollapsedHMMSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
   /* Backwards sampling */
   aux->xs.resize(maxObservation + 1);
 
-  aux->xs[maxObservation] = sampleVectorXd(fs[maxObservation],rng);
+  aux->xs[maxObservation] = sampleVectorXd(fs[maxObservation], rng);
   for (int i = maxObservation-1; i >= 0; --i)
   {
     size_t rowIndex = indexOfOne(aux->xs[i+1]);
     MatrixXd T_i = T.row(rowIndex).asDiagonal();
     VectorXd gamma = T_i * fs[i];
-    aux->xs[i] = sampleVectorXd(normalizedVectorXd(gamma),rng);
+    aux->xs[i] = sampleVectorXd(normalizedVectorXd(gamma), rng);
   }
 }
 
@@ -201,7 +201,7 @@ VentureValuePtr UncollapsedHMMOutputPSP::simulate(shared_ptr<Args> args,
   int index = args->operandValues[0]->getInt();
   assert(aux->xs.size() > static_cast<uint32_t>(index));
 
-  return VentureValuePtr(new VentureInteger(sampleVector(O * aux->xs[index],rng)));
+  return VentureValuePtr(new VentureInteger(sampleVector(O * aux->xs[index], rng)));
 }
 
 double UncollapsedHMMOutputPSP::logDensity(VentureValuePtr value,
@@ -245,7 +245,7 @@ void UncollapsedHMMOutputPSP::unincorporate(VentureValuePtr value,
   size_t oldSize = iObs.size();
 
   /* Remove observation. */
-  iObs.erase(std::find(iObs.begin(),iObs.end(),out));
+  iObs.erase(std::find(iObs.begin(), iObs.end(), out));
   assert(oldSize == iObs.size() + 1);
   if (iObs.empty()) { aux->os.erase(in); }
 }
@@ -293,7 +293,7 @@ MatrixXd vvToEigenMatrix(VentureValue * value)
   cols = row0.size();
   assert(cols > 0);
 
-  MatrixXd M(rows,cols);
+  MatrixXd M(rows, cols);
 
   for (size_t i = 0; i < rows; ++i)
   {
@@ -302,7 +302,7 @@ MatrixXd vvToEigenMatrix(VentureValue * value)
 
     for (size_t j = 0; j < cols; ++j)
     {
-      M(i,j) = row_i[j]->getDouble();
+      M(i, j) = row_i[j]->getDouble();
     }
   }
   return M;
@@ -320,13 +320,13 @@ uint32_t indexOfOne(const VectorXd & v)
   return -1;
 }
 
-VectorXd sampleVectorXd(const VectorXd & v,gsl_rng * rng)
+VectorXd sampleVectorXd(const VectorXd & v, gsl_rng * rng)
 {
   VectorXd sample(v.size());
   size_t len = v.size();
   for (size_t i = 0; i < len; ++i) { sample[i] = 0; }
 
-  double u = gsl_ran_flat(rng,0.0,1.0);
+  double u = gsl_ran_flat(rng, 0.0, 1.0);
   double sum = 0.0;
   for (size_t i = 0; i < len; ++i)
   {
@@ -341,9 +341,9 @@ VectorXd sampleVectorXd(const VectorXd & v,gsl_rng * rng)
   return sample;
 }
 
-uint32_t sampleVector(const VectorXd & v,gsl_rng * rng)
+uint32_t sampleVector(const VectorXd & v, gsl_rng * rng)
 {
-  double u = gsl_ran_flat(rng,0.0,1.0);
+  double u = gsl_ran_flat(rng, 0.0, 1.0);
 
   double sum = 0.0;
   size_t len = v.size();

@@ -28,17 +28,17 @@ ConstantNode * Trace::createConstantNode(VentureValuePtr value)
   return constantNode;
 }
 
-LookupNode * Trace::createLookupNode(Node * sourceNode,VentureValuePtr sym)
+LookupNode * Trace::createLookupNode(Node * sourceNode, VentureValuePtr sym)
 {
-  LookupNode * lookupNode = new LookupNode(sourceNode,sym);
-  setValue(lookupNode,getValue(sourceNode));
+  LookupNode * lookupNode = new LookupNode(sourceNode, sym);
+  setValue(lookupNode, getValue(sourceNode));
   //cout << "createLookupNode(" << sourceNode << "," << lookupNode << ")";
-  addChild(sourceNode,lookupNode);
+  addChild(sourceNode, lookupNode);
   return lookupNode;
 }
 
 
-pair<RequestNode*,OutputNode*> Trace::createApplicationNodes(Node * operatorNode, const vector<Node*>& operandNodes, const boost::shared_ptr<VentureEnvironment>& env,VentureValuePtr exp)
+pair<RequestNode*, OutputNode*> Trace::createApplicationNodes(Node * operatorNode, const vector<Node*>& operandNodes, const boost::shared_ptr<VentureEnvironment>& env, VentureValuePtr exp)
 {
   RequestNode * requestNode = new RequestNode(operatorNode, operandNodes, env);
   OutputNode * outputNode = new OutputNode(operatorNode, operandNodes, requestNode, env, exp);
@@ -71,7 +71,7 @@ VentureValuePtr Trace::getGroundValue(Node * node)
   boost::shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(value);
 
   // TODO Hack!
-  if (spRef) { return VentureValuePtr(new VentureSPRecord(getMadeSP(spRef->makerNode),getMadeSPAux(spRef->makerNode))); }
+  if (spRef) { return VentureValuePtr(new VentureSPRecord(getMadeSP(spRef->makerNode), getMadeSPAux(spRef->makerNode))); }
   else { return value; }
 }
 
@@ -101,7 +101,7 @@ vector<Node*> Trace::getParents(Node * node)
   return parents;
 }
 
-boost::shared_ptr<Args> Trace::getArgs(ApplicationNode * node) { return boost::shared_ptr<Args>(new Args(this,node)); }
+boost::shared_ptr<Args> Trace::getArgs(ApplicationNode * node) { return boost::shared_ptr<Args>(new Args(this, node)); }
 
 
 ///////// misc

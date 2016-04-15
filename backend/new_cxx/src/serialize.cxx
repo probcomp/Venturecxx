@@ -115,19 +115,19 @@ void PyTrace::restoreDirectiveID(DirectiveID did, boost::shared_ptr<OrderedDB> d
           trace->families[did].get(),
           boost::shared_ptr<Scaffold>(new Scaffold()),
           db,
-          boost::shared_ptr<map<Node*,Gradient> >());
+          boost::shared_ptr<map<Node*, Gradient> >());
 }
 
 void PyTrace::evalAndRestore(DirectiveID did, boost::python::object object, boost::shared_ptr<OrderedDB> db)
 {
   VentureValuePtr exp = parseExpression(object);
-  pair<double,Node*> p = evalFamily(trace.get(),
+  pair<double, Node*> p = evalFamily(trace.get(),
                                     exp,
                                     trace->globalEnvironment,
                                     boost::shared_ptr<Scaffold>(new Scaffold()),
                                     true,
                                     db,
-                                    boost::shared_ptr<map<Node*,Gradient> >());
+                                    boost::shared_ptr<map<Node*, Gradient> >());
   assert(p.first == 0);
   assert(!trace->families.count(did));
   trace->families[did] = boost::shared_ptr<Node>(p.second);

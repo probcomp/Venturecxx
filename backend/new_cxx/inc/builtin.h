@@ -21,7 +21,7 @@
 #include "types.h"
 struct SP;
 
-map<string,VentureValuePtr> initBuiltInValues();
-map<string,SP *> initBuiltInSPs();
+map<string, VentureValuePtr> initBuiltInValues();
+map<string, SP *> initBuiltInSPs();
 
 #endif

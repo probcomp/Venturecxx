@@ -53,7 +53,7 @@ double logSumExp(const vector<double>& xs)
 size_t sampleCategorical(const vector<double> & ps, gsl_rng * rng)
 {
   vector<unsigned int> ns(ps.size());
-  gsl_ran_multinomial(rng,ps.size(),1,&ps[0],&ns[0]);
+  gsl_ran_multinomial(rng, ps.size(), 1, &ps[0], &ns[0]);
   for (size_t i = 0; i < ns.size(); ++i) { if (ns[i] == 1) { return i; } }
   assert(false);
 }
@@ -123,7 +123,7 @@ VentureValuePtr simulateCategorical(const Simplex & xs,
 {
   Simplex ps = normalizeVector(xs);
   vector<unsigned int> ns(ps.size());
-  gsl_ran_multinomial(rng,ps.size(),1,&ps[0],&ns[0]);
+  gsl_ran_multinomial(rng, ps.size(), 1, &ps[0], &ns[0]);
   for (size_t i = 0; i < ns.size(); ++i) { if (ns[i] == 1) { return os[i]; } }
   assert(false);
 }

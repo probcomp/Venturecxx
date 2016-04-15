@@ -185,13 +185,13 @@ VentureValuePtr parseMatrix(object value)
   size_t rows = extract<size_t>(shape[0]);
   size_t cols = extract<size_t>(shape[1]);
 
-  MatrixXd M(rows,cols);
+  MatrixXd M(rows, cols);
 
   for (size_t i = 0; i < rows; ++i)
   {
     for (size_t j = 0; j < cols; ++j)
     {
-      M(i,j) = extract<double>(data[make_tuple(i, j)]);
+      M(i, j) = extract<double>(data[make_tuple(i, j)]);
     }
   }
   return VentureValuePtr(new VentureMatrix(M));

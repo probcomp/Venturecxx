@@ -227,10 +227,10 @@ typedef SamplableMap<set<Node*> > BlocksMap;
 BlocksMap copy_blocks_map(const BlocksMap& m, ForwardingMap* forward)
 {
   BlocksMap answer = BlocksMap();
-  for(vector<pair<VentureValuePtr,set<Node*> > >::const_iterator itr = m.a.begin();
+  for(vector<pair<VentureValuePtr, set<Node*> > >::const_iterator itr = m.a.begin();
       itr != m.a.end(); ++itr)
   {
-    answer.a.push_back( pair<VentureValuePtr,set<Node*> >(copy_shared((*itr).first, forward),
+    answer.a.push_back( pair<VentureValuePtr, set<Node*> >(copy_shared((*itr).first, forward),
                                                           copy_set((*itr).second, forward)));
   }
   for(MapVVPtrInt::const_iterator itr = m.d.begin();

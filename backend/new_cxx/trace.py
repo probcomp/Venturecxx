@@ -54,8 +54,8 @@ class Trace(object):
     if trace is None:
       self.trace = puma.Trace()
       # Poor Puma defaults its local RNG seed to the system time
-      self.trace.set_seed(random.randint(1,2**31-1))
-      for name,sp in builtInSPs().iteritems():
+      self.trace.set_seed(random.randint(1, 2**31-1))
+      for name, sp in builtInSPs().iteritems():
         if self.trace.boundInGlobalEnv(name):
           # Already there
           pass

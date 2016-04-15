@@ -31,14 +31,14 @@ struct RequestNode;
 pair<double, boost::shared_ptr<DB> > detachAndExtract(ConcreteTrace * trace,
                                                       const vector<Node*> & border,
                                                       boost::shared_ptr<Scaffold> scaffold);
-double unconstrain(ConcreteTrace * trace,OutputNode * node);
-double detach(ConcreteTrace * trace,ApplicationNode * node,
+double unconstrain(ConcreteTrace * trace, OutputNode * node);
+double detach(ConcreteTrace * trace, ApplicationNode * node,
               boost::shared_ptr<Scaffold> scaffold,
               boost::shared_ptr<DB> db);
-double extractParents(ConcreteTrace * trace,Node * node,
+double extractParents(ConcreteTrace * trace, Node * node,
                       boost::shared_ptr<Scaffold> scaffold,
                       boost::shared_ptr<DB> db);
-double extractESRParents(ConcreteTrace * trace,Node * node,
+double extractESRParents(ConcreteTrace * trace, Node * node,
                          boost::shared_ptr<Scaffold> scaffold,
                          boost::shared_ptr<DB> db);
 double extract(ConcreteTrace * trace,

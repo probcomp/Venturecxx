@@ -19,7 +19,7 @@
 
 #include "utils.h"
 
-VentureValuePtr ExactlyOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
+VentureValuePtr ExactlyOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("exactly", args, 1, 2);
   return args->operandValues[0];

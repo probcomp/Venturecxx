@@ -40,10 +40,10 @@ double regenAndAttach(Trace * trace,
                       boost::shared_ptr<Scaffold> scaffold,
                       bool shouldRestore,
                       boost::shared_ptr<DB> db,
-                      boost::shared_ptr<map<Node*,Gradient> > gradients)
+                      boost::shared_ptr<map<Node*, Gradient> > gradients)
 {
   double weight = 0;
-  map<Node*,VentureValuePtr> constraintsToPropagate;
+  map<Node*, VentureValuePtr> constraintsToPropagate;
   for (size_t i = 0; i < border.size(); ++i)
   {
     Node * node = border[i];
@@ -51,21 +51,21 @@ double regenAndAttach(Trace * trace,
     {
       ApplicationNode * appNode = dynamic_cast<ApplicationNode*>(node);
       assert(appNode);
-      weight += attach(trace,appNode,scaffold,shouldRestore,db,gradients);
+      weight += attach(trace, appNode, scaffold, shouldRestore, db, gradients);
     }
     else
     {
-      weight += regen(trace,node,scaffold,shouldRestore,db,gradients);
+      weight += regen(trace, node, scaffold, shouldRestore, db, gradients);
       if (trace->isObservation(node))
       {
         OutputNode * outputNode = trace->getConstrainableNode(node);
-        weight += constrain(trace,outputNode,trace->getObservedValue(node));
+        weight += constrain(trace, outputNode, trace->getObservedValue(node));
         constraintsToPropagate[outputNode] = trace->getObservedValue(node);
       }
     }
   }
   // Propagate constraints
-  for (map<Node*,VentureValuePtr>::iterator iter1 = constraintsToPropagate.begin();
+  for (map<Node*, VentureValuePtr>::iterator iter1 = constraintsToPropagate.begin();
        iter1 != constraintsToPropagate.end();
        ++iter1)
   {
@@ -75,7 +75,7 @@ double regenAndAttach(Trace * trace,
          iter2 != children.end();
          ++iter2)
     {
-      propagateConstraint(trace,*iter2,iter1->second);
+      propagateConstraint(trace, *iter2, iter1->second);
     }
   }
   return weight;
@@ -89,10 +89,10 @@ double constrain(Trace * trace,
   boost::shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
   boost::shared_ptr<Args> args = trace->getArgs(node);
 
-  psp->unincorporate(trace->getValue(node),args);
-  double weight = psp->logDensity(value,args);
-  trace->setValue(node,value);
-  psp->incorporate(value,args);
+  psp->unincorporate(trace->getValue(node), args);
+  double weight = psp->logDensity(value, args);
+  trace->setValue(node, value);
+  psp->incorporate(value, args);
   trace->registerConstrainedChoice(node);
   return weight;
 }
@@ -105,7 +105,7 @@ void propagateConstraint(Trace * trace,
   LookupNode * lookupNode = dynamic_cast<LookupNode*>(node);
   RequestNode * requestNode = dynamic_cast<RequestNode*>(node);
   OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
-  if (lookupNode) { trace->setValue(lookupNode,value); }
+  if (lookupNode) { trace->setValue(lookupNode, value); }
   else if (requestNode)
   {
     boost::shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(requestNode))->getPSP(requestNode);
@@ -116,14 +116,14 @@ void propagateConstraint(Trace * trace,
     assert(outputNode);
     boost::shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
     if (psp->isRandom()) { throw "Cannot make random choices downstream of a node that gets constrained during regen"; }
-    trace->setValue(node,psp->simulate(trace->getArgs(outputNode),trace->getRNG()));
+    trace->setValue(node, psp->simulate(trace->getArgs(outputNode), trace->getRNG()));
   }
   set<Node*> children = trace->getChildren(node);
   for (set<Node*>::iterator iter = children.begin();
        iter != children.end();
        ++iter)
   {
-    propagateConstraint(trace,*iter,value);
+    propagateConstraint(trace, *iter, value);
   }
 }
 
@@ -133,23 +133,23 @@ double attach(Trace * trace,
               boost::shared_ptr<Scaffold> scaffold,
               bool shouldRestore,
               boost::shared_ptr<DB> db,
-              boost::shared_ptr<map<Node*,Gradient> > gradients)
+              boost::shared_ptr<map<Node*, Gradient> > gradients)
 {
   //cout << "attach(" << node << ")" << endl;
 
-  double weight = regenParents(trace,node,scaffold,shouldRestore,db,gradients);
+  double weight = regenParents(trace, node, scaffold, shouldRestore, db, gradients);
   boost::shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
   boost::shared_ptr<Args> args = trace->getArgs(node);
   VentureValuePtr groundValue = trace->getGroundValue(node);
-  weight += psp->logDensity(groundValue,args);
-  psp->incorporate(groundValue,args);
+  weight += psp->logDensity(groundValue, args);
+  psp->incorporate(groundValue, args);
 
   if (dynamic_pointer_cast<TagOutputPSP>(psp))
   {
     ScopeID scope = trace->getValue(node->operandNodes[0]);
     BlockID block = trace->getValue(node->operandNodes[1]);
     Node * blockNode = node->operandNodes[2];
-    trace->registerUnconstrainedChoiceInScope(scope,block,blockNode);
+    trace->registerUnconstrainedChoiceInScope(scope, block, blockNode);
   }
 
   return weight;
@@ -161,39 +161,39 @@ double regen(Trace * trace,
               boost::shared_ptr<Scaffold> scaffold,
               bool shouldRestore,
               boost::shared_ptr<DB> db,
-              boost::shared_ptr<map<Node*,Gradient> > gradients)
+              boost::shared_ptr<map<Node*, Gradient> > gradients)
 {
   //cout << "regenOuter(" << node << ")" << endl;
   double weight = 0;
   if (scaffold->isResampling(node))
   {
-    //cout << "regen(" << node << ") = " << trace->getRegenCount(scaffold,node) << endl;
-    if (trace->getRegenCount(scaffold,node) == 0)
+    //cout << "regen(" << node << ") = " << trace->getRegenCount(scaffold, node) << endl;
+    if (trace->getRegenCount(scaffold, node) == 0)
     {
-      weight += regenParents(trace,node,scaffold,shouldRestore,db,gradients);
+      weight += regenParents(trace, node, scaffold, shouldRestore, db, gradients);
       LookupNode * lookupNode = dynamic_cast<LookupNode*>(node);
       RequestNode * requestNode = dynamic_cast<RequestNode*>(node);
       OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
       if (lookupNode) { trace->setValue(node, trace->getValue(lookupNode->sourceNode)); }
       else if (requestNode)
       {
-        weight += applyPSP(trace,requestNode,scaffold,shouldRestore,db,gradients);
-        weight += evalRequests(trace,requestNode,scaffold,shouldRestore,db,gradients);
+        weight += applyPSP(trace, requestNode, scaffold, shouldRestore, db, gradients);
+        weight += evalRequests(trace, requestNode, scaffold, shouldRestore, db, gradients);
       }
       else
       {
         assert(outputNode);
-        weight += applyPSP(trace,outputNode,scaffold,shouldRestore,db,gradients);
+        weight += applyPSP(trace, outputNode, scaffold, shouldRestore, db, gradients);
       }
     }
-    trace->incRegenCount(scaffold,node);
+    trace->incRegenCount(scaffold, node);
   }
   VentureValuePtr value = trace->getValue(node);
 
   boost::shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(value);
   if (spRef && spRef->makerNode != node && scaffold->isAAA(spRef->makerNode))
   {
-    weight += regen(trace,spRef->makerNode,scaffold,shouldRestore,db,gradients);
+    weight += regen(trace, spRef->makerNode, scaffold, shouldRestore, db, gradients);
   }
   return weight;
 }
@@ -203,15 +203,15 @@ double regenParents(Trace * trace,
               boost::shared_ptr<Scaffold> scaffold,
               bool shouldRestore,
               boost::shared_ptr<DB> db,
-              boost::shared_ptr<map<Node*,Gradient> > gradients)
+              boost::shared_ptr<map<Node*, Gradient> > gradients)
 {
   double weight = 0;
   vector<Node*> definiteParents = node->getDefiniteParents();
   for (size_t i = 0; i < definiteParents.size(); ++i)
   {
-    weight += regen(trace,definiteParents[i],scaffold,shouldRestore,db,gradients);
+    weight += regen(trace, definiteParents[i], scaffold, shouldRestore, db, gradients);
   }
-  return weight + regenESRParents(trace,node,scaffold,shouldRestore,db,gradients);
+  return weight + regenESRParents(trace, node, scaffold, shouldRestore, db, gradients);
 }
 
 double regenESRParents(Trace * trace,
@@ -219,41 +219,41 @@ double regenESRParents(Trace * trace,
               boost::shared_ptr<Scaffold> scaffold,
               bool shouldRestore,
               boost::shared_ptr<DB> db,
-              boost::shared_ptr<map<Node*,Gradient> > gradients)
+              boost::shared_ptr<map<Node*, Gradient> > gradients)
 {
   double weight = 0;
   vector<RootOfFamily> esrRoots = trace->getESRParents(node);
   for (size_t i = 0; i < esrRoots.size(); ++i)
   {
-    weight += regen(trace,esrRoots[i].get(),scaffold,shouldRestore,db,gradients);
+    weight += regen(trace, esrRoots[i].get(), scaffold, shouldRestore, db, gradients);
   }
   return weight;
 }
 
-pair<double,Node*> evalFamily(Trace * trace,
+pair<double, Node*> evalFamily(Trace * trace,
                               VentureValuePtr exp,
                               boost::shared_ptr<VentureEnvironment> env,
                               boost::shared_ptr<Scaffold> scaffold,
                               bool shouldRestore,
                               boost::shared_ptr<DB> db,
-                              boost::shared_ptr<map<Node*,Gradient> > gradients)
+                              boost::shared_ptr<map<Node*, Gradient> > gradients)
 {
   if (isVariable(exp))
   {
     double weight = 0;
     boost::shared_ptr<VentureSymbol> symbol = dynamic_pointer_cast<VentureSymbol>(exp);
     Node * sourceNode = env->lookupSymbol(symbol);
-    weight = regen(trace,sourceNode,scaffold,shouldRestore,db,gradients);
+    weight = regen(trace, sourceNode, scaffold, shouldRestore, db, gradients);
 
-    return make_pair(weight,trace->createLookupNode(sourceNode,exp));
+    return make_pair(weight, trace->createLookupNode(sourceNode, exp));
   }
-  else if (isSelfEvaluating(exp)) { return make_pair(0,trace->createConstantNode(exp)); }
-  else if (isQuotation(exp)) { return make_pair(0,trace->createConstantNode(textOfQuotation(exp))); }
+  else if (isSelfEvaluating(exp)) { return make_pair(0, trace->createConstantNode(exp)); }
+  else if (isQuotation(exp)) { return make_pair(0, trace->createConstantNode(textOfQuotation(exp))); }
   else
   {
     assert(exp->hasArray());
     vector<VentureValuePtr> array = exp->getArray();
-    pair<double,Node*> p = evalFamily(trace,array[0],env,scaffold,shouldRestore,db,gradients);
+    pair<double, Node*> p = evalFamily(trace, array[0], env, scaffold, shouldRestore, db, gradients);
     double weight = p.first;
     Node * operatorNode = p.second;
 
@@ -265,14 +265,14 @@ pair<double,Node*> evalFamily(Trace * trace,
     vector<Node*> operandNodes;
     for (size_t i = 1; i < array.size(); ++i)
     {
-      pair<double,Node*>p = evalFamily(trace,array[i],env,scaffold,shouldRestore,db,gradients);
+      pair<double, Node*>p = evalFamily(trace, array[i], env, scaffold, shouldRestore, db, gradients);
       weight += p.first;
       operandNodes.push_back(p.second);
     }
 
-    pair<RequestNode*,OutputNode*> appNodes = trace->createApplicationNodes(operatorNode,operandNodes,env,exp);
-    weight += apply(trace,appNodes.first,appNodes.second,scaffold,shouldRestore,db,gradients);
-    return make_pair(weight,appNodes.second);
+    pair<RequestNode*, OutputNode*> appNodes = trace->createApplicationNodes(operatorNode, operandNodes, env, exp);
+    weight += apply(trace, appNodes.first, appNodes.second, scaffold, shouldRestore, db, gradients);
+    return make_pair(weight, appNodes.second);
   }
 }
 
@@ -282,18 +282,18 @@ double apply(Trace * trace,
               boost::shared_ptr<Scaffold> scaffold,
               bool shouldRestore,
               boost::shared_ptr<DB> db,
-              boost::shared_ptr<map<Node*,Gradient> > gradients)
+              boost::shared_ptr<map<Node*, Gradient> > gradients)
 {
-  double weight = applyPSP(trace,requestNode,scaffold,shouldRestore,db,gradients);
-  weight += evalRequests(trace,requestNode,scaffold,shouldRestore,db,gradients);
+  double weight = applyPSP(trace, requestNode, scaffold, shouldRestore, db, gradients);
+  weight += evalRequests(trace, requestNode, scaffold, shouldRestore, db, gradients);
 
   /* DEBUG */
   const vector<ESR>& esrs = trace->getValue(requestNode)->getESRs();
   assert(trace->getESRParents(outputNode).size() == esrs.size());
   /* END DEBUG */
 
-  weight += regenESRParents(trace,outputNode,scaffold,shouldRestore,db,gradients);
-  weight += applyPSP(trace,outputNode,scaffold,shouldRestore,db,gradients);
+  weight += regenESRParents(trace, outputNode, scaffold, shouldRestore, db, gradients);
+  weight += applyPSP(trace, outputNode, scaffold, shouldRestore, db, gradients);
 
   return weight;
 }
@@ -308,14 +308,14 @@ void processMadeSP(Trace * trace, Node * makerNode, bool isAAA, bool shouldResto
 
   if (shouldRestore && db->hasMadeSPAux(makerNode)) { spRecord->spAux = db->getMadeSPAux(makerNode); }
   if (sp->hasAEKernel()) { trace->registerAEKernel(makerNode); }
-  trace->setMadeSPRecord(makerNode,spRecord);
+  trace->setMadeSPRecord(makerNode, spRecord);
   if (isAAA)
     {
       OutputNode * outputNode = dynamic_cast<OutputNode*>(makerNode);
       assert(outputNode);
       trace->discardAAAMadeSPAux(outputNode);
     }
-  trace->setValue(makerNode,boost::shared_ptr<VentureValue>(new VentureSPRef(makerNode)));
+  trace->setValue(makerNode, boost::shared_ptr<VentureValue>(new VentureSPRef(makerNode)));
 }
 
 double applyPSP(Trace * trace,
@@ -323,7 +323,7 @@ double applyPSP(Trace * trace,
               boost::shared_ptr<Scaffold> scaffold,
               bool shouldRestore,
               boost::shared_ptr<DB> db,
-              boost::shared_ptr<map<Node*,Gradient> > gradients)
+              boost::shared_ptr<map<Node*, Gradient> > gradients)
 {
   //cout << "applyPSP(" << node << ")" << endl;
   double weight = 0;
@@ -335,13 +335,13 @@ double applyPSP(Trace * trace,
 
   if (db->hasValue(node)) { oldValue = db->getValue(node); }
 
-  if (trace->hasLKernel(scaffold,node))
+  if (trace->hasLKernel(scaffold, node))
   {
-    boost::shared_ptr<LKernel> k = trace->getLKernel(scaffold,node);
+    boost::shared_ptr<LKernel> k = trace->getLKernel(scaffold, node);
     if (shouldRestore) { newValue = oldValue; }
-    else { newValue = k->forwardSimulate(trace,oldValue,args,trace->getRNG()); }
+    else { newValue = k->forwardSimulate(trace, oldValue, args, trace->getRNG()); }
 
-    weight += k->forwardWeight(trace,newValue,oldValue,args);
+    weight += k->forwardWeight(trace, newValue, oldValue, args);
     /*
       These lines were causing problems, due to a mismatch between vector<double>
       and double in the gradientOfLogDensity. Puma doesn't actually have variational
@@ -350,13 +350,13 @@ double applyPSP(Trace * trace,
     boost::shared_ptr<VariationalLKernel> vk = dynamic_pointer_cast<VariationalLKernel>(k);
     if (vk) {
       assert(gradients);
-      gradients->insert(make_pair(node,vk->gradientOfLogDensity(newValue,args)));
+      gradients->insert(make_pair(node, vk->gradientOfLogDensity(newValue, args)));
     }*/
   }
   else
   {
     if (shouldRestore) { newValue = oldValue; }
-    else { newValue = psp->simulate(args,trace->getRNG()); } // TODO rng
+    else { newValue = psp->simulate(args, trace->getRNG()); } // TODO rng
   }
 
   if (dynamic_cast<RequestNode*>(node))
@@ -364,13 +364,13 @@ double applyPSP(Trace * trace,
     assert(dynamic_pointer_cast<VentureRequest>(newValue));
   }
 
-  trace->setValue(node,newValue);
+  trace->setValue(node, newValue);
 
-  psp->incorporate(newValue,args);
+  psp->incorporate(newValue, args);
 
   if (dynamic_pointer_cast<VentureSPRecord>(newValue))
   {
-    processMadeSP(trace,node,scaffold->isAAA(node),shouldRestore,db);
+    processMadeSP(trace, node, scaffold->isAAA(node), shouldRestore, db);
   }
   if (psp->isRandom()) { trace->registerUnconstrainedChoice(node); }
 
@@ -379,7 +379,7 @@ double applyPSP(Trace * trace,
     ScopeID scope = trace->getValue(node->operandNodes[0]);
     BlockID block = trace->getValue(node->operandNodes[1]);
     Node * blockNode = node->operandNodes[2];
-    trace->registerUnconstrainedChoiceInScope(scope,block,blockNode);
+    trace->registerUnconstrainedChoiceInScope(scope, block, blockNode);
   }
   return weight;
 }
@@ -390,7 +390,7 @@ double evalRequests(Trace * trace,
               boost::shared_ptr<Scaffold> scaffold,
               bool shouldRestore,
               boost::shared_ptr<DB> db,
-              boost::shared_ptr<map<Node*,Gradient> > gradients)
+              boost::shared_ptr<map<Node*, Gradient> > gradients)
 {
   //cout << "evalRequests(" << requestNode << "," << requestNode->outputNode << ")" << endl;
 
@@ -401,22 +401,22 @@ double evalRequests(Trace * trace,
   for (size_t i = 0; i < esrs.size(); ++i)
   {
     const ESR& esr = esrs[i];
-    if (!trace->containsMadeSPFamily(trace->getOperatorSPMakerNode(requestNode),esr.id))
+    if (!trace->containsMadeSPFamily(trace->getOperatorSPMakerNode(requestNode), esr.id))
     {
       RootOfFamily esrRoot;
       boost::shared_ptr<SP> sp = trace->getMadeSP(trace->getOperatorSPMakerNode(requestNode));
       if (shouldRestore && db->hasESRParent(sp, esr.id))
       {
-        esrRoot = db->getESRParent(sp,esr.id);
-        weight += restore(trace,esrRoot.get(),scaffold,db,gradients);
+        esrRoot = db->getESRParent(sp, esr.id);
+        weight += restore(trace, esrRoot.get(), scaffold, db, gradients);
       }
       else
       {
-        pair<double,Node*> p = evalFamily(trace,esr.exp,esr.env,scaffold,shouldRestore,db,gradients);
+        pair<double, Node*> p = evalFamily(trace, esr.exp, esr.env, scaffold, shouldRestore, db, gradients);
         weight += p.first;
         esrRoot = boost::shared_ptr<Node>(p.second);
       }
-      if (trace->containsMadeSPFamily(trace->getOperatorSPMakerNode(requestNode),esr.id))
+      if (trace->containsMadeSPFamily(trace->getOperatorSPMakerNode(requestNode), esr.id))
       {
         // evalFamily already registered a family with this id for the
         // operator being applied here, which means a recursive call
@@ -426,10 +426,10 @@ double evalRequests(Trace * trace,
         // arguments.
         throw "Recursive mem argument loop detected.";
       }
-      trace->registerMadeSPFamily(trace->getOperatorSPMakerNode(requestNode),esr.id,esrRoot);
+      trace->registerMadeSPFamily(trace->getOperatorSPMakerNode(requestNode), esr.id, esrRoot);
     }
-    RootOfFamily esrRoot = trace->getMadeSPFamilyRoot(trace->getOperatorSPMakerNode(requestNode),esr.id);
-    trace->addESREdge(esrRoot,requestNode->outputNode);
+    RootOfFamily esrRoot = trace->getMadeSPFamilyRoot(trace->getOperatorSPMakerNode(requestNode), esr.id);
+    trace->addESREdge(esrRoot, requestNode->outputNode);
     //cout << "numESRParents(" << requestNode->outputNode << ") = " << trace->getESRParents(requestNode->outputNode).size() << endl;
     assert(!trace->getESRParents(requestNode->outputNode).empty());
   }
@@ -444,7 +444,7 @@ double evalRequests(Trace * trace,
 
     if (db->hasLatentDB(makerNode)) { latentDB = db->getLatentDB(makerNode); }
 
-    weight += sp->simulateLatents(args,lsr,shouldRestore,latentDB,trace->getRNG());
+    weight += sp->simulateLatents(args, lsr, shouldRestore, latentDB, trace->getRNG());
   }
 
   return weight;
@@ -456,7 +456,7 @@ double restore(Trace * trace,
                Node * node,
                boost::shared_ptr<Scaffold> scaffold,
                boost::shared_ptr<DB> db,
-               boost::shared_ptr<map<Node*,Gradient> > gradients)
+               boost::shared_ptr<map<Node*, Gradient> > gradients)
 {
   //cout << "restore(" << node << ")" << endl;
 
@@ -471,19 +471,19 @@ double restore(Trace * trace,
   }
   else if (lookupNode)
   {
-    weight += regenParents(trace,lookupNode,scaffold,true,db,gradients);
+    weight += regenParents(trace, lookupNode, scaffold, true, db, gradients);
     trace->reconnectLookup(lookupNode);
-    trace->setValue(node,trace->getValue(lookupNode->sourceNode));
+    trace->setValue(node, trace->getValue(lookupNode->sourceNode));
   }
   else
   {
     assert(outputNode);
-    weight += restore(trace,outputNode->operatorNode,scaffold,db,gradients);
+    weight += restore(trace, outputNode->operatorNode, scaffold, db, gradients);
     for (size_t i = 0; i < outputNode->operandNodes.size(); ++i)
     {
-      weight += restore(trace,outputNode->operandNodes[i],scaffold,db,gradients);
+      weight += restore(trace, outputNode->operandNodes[i], scaffold, db, gradients);
     }
-    weight += apply(trace,outputNode->requestNode,outputNode,scaffold,true,db,gradients);
+    weight += apply(trace, outputNode->requestNode, outputNode, scaffold, true, db, gradients);
   }
   return weight;
 }

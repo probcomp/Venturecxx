@@ -26,8 +26,8 @@ struct Trace;
 
 struct ScaffoldIndexer
 {
-  ScaffoldIndexer(ScopeID scope,BlockID block);
-  ScaffoldIndexer(ScopeID scope,BlockID block,BlockID minBlock,BlockID maxBlock);
+  ScaffoldIndexer(ScopeID scope, BlockID block);
+  ScaffoldIndexer(ScopeID scope, BlockID block, BlockID minBlock, BlockID maxBlock);
   boost::shared_ptr<Scaffold> sampleIndex(ConcreteTrace * trace) const;
   double logDensityOfIndex(Trace * trace, boost::shared_ptr<Scaffold> scaffold) const;
 

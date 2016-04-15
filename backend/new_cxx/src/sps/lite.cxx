@@ -100,14 +100,14 @@ double ForeignLitePSP::logDensity(VentureValuePtr value,
   return boost::python::extract<double>(foreignLogDensity);
 }
 
-void ForeignLitePSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) const
+void ForeignLitePSP::incorporate(VentureValuePtr value, shared_ptr<Args> args) const
 {
   boost::python::dict foreignValue = value->toPython(args->_trace);
   boost::python::dict foreignArgs = foreignArgsToPython(args);
   psp.attr("incorporate")(foreignValue, foreignArgs);
 }
 
-void ForeignLitePSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args) const
+void ForeignLitePSP::unincorporate(VentureValuePtr value, shared_ptr<Args> args) const
 {
   boost::python::dict foreignValue = value->toPython(args->_trace);
   boost::python::dict foreignArgs = foreignArgsToPython(args);
@@ -202,7 +202,7 @@ double ForeignLiteLKernel::forwardWeight(Trace * trace,
   return boost::python::extract<double>(foreignWeight);
 }
 
-double ForeignLiteLKernel::reverseWeight(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args)
+double ForeignLiteLKernel::reverseWeight(Trace * trace, VentureValuePtr oldValue, shared_ptr<Args> args)
 {
   boost::python::dict foreignOldValue = oldValue->toPython(args->_trace);
   boost::python::dict foreignArgs = foreignArgsToPython(args);

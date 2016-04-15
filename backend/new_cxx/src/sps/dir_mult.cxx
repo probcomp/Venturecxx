@@ -199,15 +199,15 @@ VentureValuePtr MakeUCDirCatOutputPSP::simulate(shared_ptr<Args> args,
 
   PSP * requestPSP = new NullRequestPSP();
   PSP * outputPSP = new UCDirCatOutputPSP(n);
-  SP * sp = new UCDirCatSP(requestPSP,outputPSP);
+  SP * sp = new UCDirCatSP(requestPSP, outputPSP);
 
   UCDirCatSPAux * spAux = new UCDirCatSPAux(n);
 
-  gsl_ran_dirichlet(rng,n,alphaVector,&spAux->theta[0]);
+  gsl_ran_dirichlet(rng, n, alphaVector, &spAux->theta[0]);
 
   delete[] alphaVector;
 
-  return VentureValuePtr(new VentureSPRecord(sp,spAux));
+  return VentureValuePtr(new VentureSPRecord(sp, spAux));
 }
 
 double MakeUCDirCatOutputPSP::logDensity(VentureValuePtr value,
@@ -234,7 +234,7 @@ double MakeUCDirCatOutputPSP::logDensity(VentureValuePtr value,
     alphaVector[i] = alphaArray->xs[i]->getDouble();
   }
 
-  double ld = gsl_ran_dirichlet_lnpdf(n,alphaVector,&spAux->theta[0]);
+  double ld = gsl_ran_dirichlet_lnpdf(n, alphaVector, &spAux->theta[0]);
   delete[] alphaVector;
   return ld;
 }
@@ -257,7 +257,7 @@ void UCDirCatSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
     conjAlphaVector[i] = aux->counts[i] + alphaArray->xs[i]->getDouble();
   }
 
-  gsl_ran_dirichlet(rng,n,conjAlphaVector,&aux->theta[0]);
+  gsl_ran_dirichlet(rng, n, conjAlphaVector, &aux->theta[0]);
 }
 
 UCDirCatSP* UCDirCatSP::copy_help(ForwardingMap* forward) const
@@ -279,7 +279,7 @@ VentureValuePtr UCDirCatOutputPSP::simulate(shared_ptr<Args> args,
   assert(aux);
   assert(aux->counts.size() == n);
 
-  double u = gsl_ran_flat(rng,0.0,1.0);
+  double u = gsl_ran_flat(rng, 0.0, 1.0);
   double sum = 0.0;
   for (size_t i = 0; i < n; ++i)
   {
@@ -350,15 +350,15 @@ VentureValuePtr MakeUCSymDirCatOutputPSP::simulate(shared_ptr<Args> args,
 
   PSP * requestPSP = new NullRequestPSP();
   PSP * outputPSP = new UCDirCatOutputPSP(n);
-  SP * sp = new UCSymDirCatSP(requestPSP,outputPSP);
+  SP * sp = new UCSymDirCatSP(requestPSP, outputPSP);
 
   vector<double> alphaVector(n, alpha);
 
   UCDirCatSPAux * spAux = new UCDirCatSPAux(n);
 
-  gsl_ran_dirichlet(rng,n,&alphaVector[0],&spAux->theta[0]);
+  gsl_ran_dirichlet(rng, n, &alphaVector[0], &spAux->theta[0]);
 
-  return VentureValuePtr(new VentureSPRecord(sp,spAux));
+  return VentureValuePtr(new VentureSPRecord(sp, spAux));
 }
 
 double MakeUCSymDirCatOutputPSP::logDensity(VentureValuePtr value,
@@ -379,7 +379,7 @@ double MakeUCSymDirCatOutputPSP::logDensity(VentureValuePtr value,
   vector<double> alphaVector(n, alpha);
   assert(alphaVector.size() == spAux->counts.size());
 
-  return gsl_ran_dirichlet_lnpdf(n,&alphaVector[0],&spAux->theta[0]);
+  return gsl_ran_dirichlet_lnpdf(n, &alphaVector[0], &spAux->theta[0]);
 }
 
 // Note: odd design
@@ -403,7 +403,7 @@ void UCSymDirCatSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
     conjAlphaVector[i] = alpha + aux->counts[i];
   }
 
-  gsl_ran_dirichlet(rng,d,conjAlphaVector,&aux->theta[0]);
+  gsl_ran_dirichlet(rng, d, conjAlphaVector, &aux->theta[0]);
 
   delete[] conjAlphaVector;
 }

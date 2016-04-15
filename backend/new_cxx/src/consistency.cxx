@@ -21,7 +21,7 @@
 
 void assertTorus(boost::shared_ptr<Scaffold> scaffold)
 {
-  for (map<Node*,int>::iterator iter = scaffold->regenCounts.begin();
+  for (map<Node*, int>::iterator iter = scaffold->regenCounts.begin();
        iter != scaffold->regenCounts.end();
        ++iter)
   {
@@ -29,9 +29,9 @@ void assertTorus(boost::shared_ptr<Scaffold> scaffold)
   }
 }
 
-void assertTrace(Trace * trace,boost::shared_ptr<Scaffold> scaffold)
+void assertTrace(Trace * trace, boost::shared_ptr<Scaffold> scaffold)
 {
-  for (map<Node*,int>::iterator iter = scaffold->regenCounts.begin();
+  for (map<Node*, int>::iterator iter = scaffold->regenCounts.begin();
        iter != scaffold->regenCounts.end();
        ++iter)
   {

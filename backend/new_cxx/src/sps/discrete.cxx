@@ -34,7 +34,7 @@ VentureValuePtr FlipOutputPSP::simulate(shared_ptr<Args> args,
   {
     p = args->operandValues[0]->getProbability();
   }
-  int n = gsl_ran_bernoulli(rng,p);
+  int n = gsl_ran_bernoulli(rng, p);
   assert(n == 0 || n == 1);
   return VentureValuePtr(new VentureBool(n));
 }
@@ -77,7 +77,7 @@ VentureValuePtr BernoulliOutputPSP::simulate(shared_ptr<Args> args,
   {
     p = args->operandValues[0]->getProbability();
   }
-  int n = gsl_ran_bernoulli(rng,p);
+  int n = gsl_ran_bernoulli(rng, p);
   assert(n == 0 || n == 1);
   return VentureValuePtr(new VentureInteger(n));
 }
@@ -133,7 +133,7 @@ double UniformDiscreteOutputPSP::logDensity(VentureValuePtr value,
   long upper = args->operandValues[1]->getInt();
   long sample = value->getInt();
 
-  return log(gsl_ran_flat_pdf(sample,lower,upper));
+  return log(gsl_ran_flat_pdf(sample, lower, upper));
 }
 
 vector<VentureValuePtr> UniformDiscreteOutputPSP::enumerateValues(
@@ -160,7 +160,7 @@ VentureValuePtr BinomialOutputPSP::simulate(shared_ptr<Args> args,
   checkArgsLength("binomial", args, 2);
   int n = args->operandValues[0]->getInt();
   double p = args->operandValues[1]->getProbability();
-  int val = gsl_ran_binomial(rng,p,n);
+  int val = gsl_ran_binomial(rng, p, n);
   return VentureValuePtr(new VentureNumber(val));
 }
 
@@ -172,7 +172,7 @@ double BinomialOutputPSP::logDensity(VentureValuePtr value,
   double p = args->operandValues[1]->getProbability();
   int val = value->getInt();
   // TODO: compute probability in logspace
-  return log(gsl_ran_binomial_pdf(val,p,n));
+  return log(gsl_ran_binomial_pdf(val, p, n));
 }
 
 
@@ -247,7 +247,7 @@ VentureValuePtr LogCategoricalOutputPSP::simulate(shared_ptr<Args> args,
   checkArgsLength("log_categorical", args, 1, 2);
   vector<double> ps =
     mapExpUptoMultConstant(args->operandValues[0]->getSimplex());
-  size_t sample = sampleCategorical(ps,rng);
+  size_t sample = sampleCategorical(ps, rng);
 
   if (args->operandValues.size() == 1)
   {
@@ -265,7 +265,7 @@ double LogCategoricalOutputPSP::logDensity(VentureValuePtr value,
   double logscore = 0;
 
   if (args->operandValues.size() == 1) { logscore = ps[value->getInt()]; }
-  else { logscore = ps[findVVPtr(value,args->operandValues[1]->getArray())]; }
+  else { logscore = ps[findVVPtr(value, args->operandValues[1]->getArray())]; }
 
   logscore -= logSumExp(ps);
   return logscore;
@@ -295,10 +295,10 @@ VentureValuePtr SymmetricDirichletOutputPSP::simulate(shared_ptr<Args> args,
   checkArgsLength("symmetric_dirichlet", args, 2);
   double alpha = args->operandValues[0]->getDouble();
   int n = args->operandValues[1]->getInt();
-  vector<double> alphaVector(n,alpha);
+  vector<double> alphaVector(n, alpha);
   Simplex theta(n,-1);
 
-  gsl_ran_dirichlet(rng,static_cast<uint32_t>(n),&alphaVector[0],&theta[0]);
+  gsl_ran_dirichlet(rng, static_cast<uint32_t>(n), &alphaVector[0], &theta[0]);
   return VentureValuePtr(new VentureSimplex(theta));;
 }
 
@@ -308,7 +308,7 @@ double SymmetricDirichletOutputPSP::logDensity(VentureValuePtr value,
   checkArgsLength("symmetric_dirichlet", args, 2);
   double alpha = args->operandValues[0]->getDouble();
   int n = args->operandValues[1]->getInt();
-  vector<double> alphaVector(n,alpha);
+  vector<double> alphaVector(n, alpha);
   /* TODO GC watch the NEW */
   Simplex theta = value->getSimplex();
   return gsl_ran_dirichlet_lnpdf(static_cast<uint32_t>(n),
@@ -323,7 +323,7 @@ VentureValuePtr DirichletOutputPSP::simulate(shared_ptr<Args> args,
   vector<double> xs;
   BOOST_FOREACH(VentureValuePtr v , vs) { xs.push_back(v->getDouble()); }
   Simplex theta(xs.size(),-1);
-  gsl_ran_dirichlet(rng,xs.size(),&xs[0],&theta[0]);
+  gsl_ran_dirichlet(rng, xs.size(), &xs[0], &theta[0]);
   return VentureValuePtr(new VentureSimplex(theta));;
 }
 
@@ -335,14 +335,14 @@ double DirichletOutputPSP::logDensity(VentureValuePtr value,
   vector<double> xs;
   BOOST_FOREACH(VentureValuePtr v , vs) { xs.push_back(v->getDouble()); }
   Simplex theta = value->getSimplex();
-  return gsl_ran_dirichlet_lnpdf(xs.size(),&xs[0],&theta[0]);
+  return gsl_ran_dirichlet_lnpdf(xs.size(), &xs[0], &theta[0]);
 }
 
 /* Poisson */
 VentureValuePtr PoissonOutputPSP::simulate(shared_ptr<Args> args,
                                            gsl_rng * rng)  const
 {
-  int ans = gsl_ran_poisson(rng,args->operandValues[0]->getDouble());
+  int ans = gsl_ran_poisson(rng, args->operandValues[0]->getDouble());
   return VentureValuePtr(new VentureInteger(ans));
 }
 

@@ -46,9 +46,9 @@ struct BetaBernoulliOutputPSP : RandomPSP
   BetaBernoulliOutputPSP(double alpha, double beta) : alpha(alpha), beta(beta) {}
 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value,shared_ptr<Args> args) const;
-  void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
-  void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
+  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+  void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
+  void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
 
   double logDensityOfData(shared_ptr<SPAux> spAux) const;
 
@@ -75,10 +75,10 @@ struct MakeUBetaBernoulliOutputPSP : RandomPSP
 
 struct UBetaBernoulliSP : SP
 {
-  UBetaBernoulliSP(PSP * requestPSP, PSP * outputPSP): SP(requestPSP,outputPSP) {}
+  UBetaBernoulliSP(PSP * requestPSP, PSP * outputPSP): SP(requestPSP, outputPSP) {}
 
   bool hasAEKernel() const { return true; }
-  void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,gsl_rng * rng) const;
+  void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args, gsl_rng * rng) const;
   UBetaBernoulliSP* copy_help(ForwardingMap* m) const;
 };
 
@@ -87,9 +87,9 @@ struct SuffBernoulliOutputPSP : RandomPSP
   SuffBernoulliOutputPSP() {}
 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value,shared_ptr<Args> args) const;
-  void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
-  void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
+  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+  void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
+  void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
 
 };
 

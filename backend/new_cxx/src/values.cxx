@@ -554,7 +554,7 @@ size_t VentureArray::hash() const
 {
   size_t seed = 0;
 
-  BOOST_FOREACH (VentureValuePtr x,xs)
+  BOOST_FOREACH (VentureValuePtr x, xs)
   {
     boost::hash_combine(seed, x->hash());
   }
@@ -563,7 +563,7 @@ size_t VentureArray::hash() const
 
 size_t VentureSimplex::hash() const
 {
-  return boost::hash_range(ps.begin(),ps.end());
+  return boost::hash_range(ps.begin(), ps.end());
 }
 
 size_t VentureVector::hash() const

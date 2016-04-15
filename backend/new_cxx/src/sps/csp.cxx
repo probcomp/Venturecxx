@@ -58,7 +58,7 @@ VentureValuePtr CSPRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
   }
 
   vector<ESR> esrs;
-  esrs.push_back(ESR(VentureValuePtr(new VentureID()),expression,extendedEnv));
+  esrs.push_back(ESR(VentureValuePtr(new VentureID()), expression, extendedEnv));
 
   return VentureValuePtr(new VentureRequest(esrs, vector<shared_ptr<LSR> >()));
 }

@@ -47,13 +47,13 @@ PyTrace::~PyTrace() {}
 void PyTrace::evalExpression(DirectiveID did, boost::python::object object)
 {
   VentureValuePtr exp = parseExpression(object);
-  pair<double,Node*> p = evalFamily(trace.get(),
+  pair<double, Node*> p = evalFamily(trace.get(),
                                     exp,
                                     trace->globalEnvironment,
                                     boost::shared_ptr<Scaffold>(new Scaffold()),
                                     false,
                                     boost::shared_ptr<DB>(new DB()),
-                                    boost::shared_ptr<map<Node*,Gradient> >());
+                                    boost::shared_ptr<map<Node*, Gradient> >());
   assert(p.first == 0);
   assert(!trace->families.count(did));
   trace->families[did] = boost::shared_ptr<Node>(p.second);
@@ -62,13 +62,13 @@ void PyTrace::evalExpression(DirectiveID did, boost::python::object object)
 void PyTrace::unevalDirectiveID(DirectiveID did)
 {
  assert(trace->families.count(did));
- unevalFamily(trace.get(),trace->families[did].get(),
+ unevalFamily(trace.get(), trace->families[did].get(),
               boost::shared_ptr<Scaffold>(new Scaffold()),
               boost::shared_ptr<DB>(new DB()));
  trace->families.erase(did);
 }
 
-void PyTrace::observe(DirectiveID did,boost::python::object valueExp)
+void PyTrace::observe(DirectiveID did, boost::python::object valueExp)
 {
   assert(trace->families.count(did));
   RootOfFamily root = trace->families[did];
@@ -83,7 +83,7 @@ double PyTrace::unobserve(DirectiveID did)
   double weight;
   if (trace->isObservation(node))
   {
-    weight = unconstrain(trace.get(),appNode);
+    weight = unconstrain(trace.get(), appNode);
     trace->unobserveNode(node);
   }
   else
@@ -97,7 +97,7 @@ double PyTrace::unobserve(DirectiveID did)
 
 void PyTrace::bindInGlobalEnv(const string& sym, DirectiveID did)
 {
-  trace->globalEnvironment->addBinding(sym,trace->families[did].get());
+  trace->globalEnvironment->addBinding(sym, trace->families[did].get());
 }
 
 void PyTrace::unbindInGlobalEnv(const string& sym)
@@ -144,7 +144,7 @@ double PyTrace::getGlobalLogScore()
     boost::shared_ptr<Args> args = trace->getArgs(node);
     if (psp->canAbsorb(trace.get(), node, NULL))
     {
-      ls += psp->logDensity(trace->getGroundValue(node),args);
+      ls += psp->logDensity(trace->getGroundValue(node), args);
     }
   }
   for (set<Node*>::iterator iter = trace->constrainedChoices.begin();
@@ -154,7 +154,7 @@ double PyTrace::getGlobalLogScore()
     ApplicationNode * node = dynamic_cast<ApplicationNode*>(*iter);
     boost::shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
     boost::shared_ptr<Args> args = trace->getArgs(node);
-    ls += psp->logDensity(trace->getGroundValue(node),args);
+    ls += psp->logDensity(trace->getGroundValue(node), args);
   }
   return ls;
 }
@@ -194,7 +194,7 @@ struct Inferer
     {
       size_t particles = boost::python::extract<size_t>(params["particles"]);
       bool inParallel  = boost::python::extract<bool>(params["in_parallel"]);
-      gKernel = boost::shared_ptr<GKernel>(new PGibbsGKernel(particles,inParallel));
+      gKernel = boost::shared_ptr<GKernel>(new PGibbsGKernel(particles, inParallel));
     }
     else if (kernel == "gibbs")
     {
@@ -210,7 +210,7 @@ struct Inferer
     {
       double w = boost::python::extract<double>(params["w"]);
       int m = boost::python::extract<int>(params["m"]);
-      gKernel = boost::shared_ptr<GKernel>(new SliceGKernel(w,m));
+      gKernel = boost::shared_ptr<GKernel>(new SliceGKernel(w, m));
     }
     else
     {
@@ -225,11 +225,11 @@ struct Inferer
     {
       VentureValuePtr minBlock = parseValueO(params["min_block"]);
       VentureValuePtr maxBlock = parseValueO(params["max_block"]);
-      scaffoldIndexer = boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block,minBlock,maxBlock));
+      scaffoldIndexer = boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope, block, minBlock, maxBlock));
     }
     else
     {
-      scaffoldIndexer = boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
+      scaffoldIndexer = boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope, block));
     }
     transitions = boost::python::extract<size_t>(params["transitions"]);
   }
@@ -259,7 +259,7 @@ struct Inferer
     {
       OutputNode * node = dynamic_cast<OutputNode*>(*iter);
       assert(node);
-      trace->getMadeSP(node)->AEInfer(trace->getMadeSPAux(node),trace->getArgs(node),trace->getRNG());
+      trace->getMadeSP(node)->AEInfer(trace->getMadeSPAux(node), trace->getArgs(node), trace->getRNG());
       ct += 1;
     }
     return ct;
@@ -367,7 +367,7 @@ BOOST_PYTHON_MODULE(libpumatrace)
   class_<SP, SP* >("PumaSP", no_init); // raw pointer because Puma wants to take ownership
   class_<OrderedDB, boost::shared_ptr<OrderedDB> >("OrderedDB", no_init);
 
-  class_<PyTrace>("Trace",init<>())
+  class_<PyTrace>("Trace", init<>())
     .def("eval", &PyTrace::evalExpression)
     .def("uneval", &PyTrace::unevalDirectiveID)
     .def("bindInGlobalEnv", &PyTrace::bindInGlobalEnv)

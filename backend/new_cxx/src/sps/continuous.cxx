@@ -156,7 +156,7 @@ double ExponentialPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) 
 {
   double theta = args->operandValues[0]->getDouble();
   double x = value->getDouble();
-  return ExponentialDistributionLogLikelihood(x,theta);
+  return ExponentialDistributionLogLikelihood(x, theta);
 }
 
 /* UniformContinuous */
@@ -167,7 +167,7 @@ VentureValuePtr UniformContinuousPSP::simulate(shared_ptr<Args> args, gsl_rng * 
   double a = args->operandValues[0]->getDouble();
   double b = args->operandValues[1]->getDouble();
 
-  double x = gsl_ran_flat(rng,a,b);
+  double x = gsl_ran_flat(rng, a, b);
   return VentureValuePtr(new VentureNumber(x));
 }
 
@@ -176,7 +176,7 @@ double UniformContinuousPSP::logDensity(VentureValuePtr value, shared_ptr<Args> 
   double a = args->operandValues[0]->getDouble();
   double b = args->operandValues[1]->getDouble();
   double x = value->getDouble();
-  return log(gsl_ran_flat_pdf(x,a,b));
+  return log(gsl_ran_flat_pdf(x, a, b));
 }
 
 /* Beta */
@@ -187,7 +187,7 @@ VentureValuePtr BetaPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
   double a = args->operandValues[0]->getDouble();
   double b = args->operandValues[1]->getDouble();
 
-  double x = gsl_ran_beta(rng,a,b);
+  double x = gsl_ran_beta(rng, a, b);
 
   return VentureValuePtr(new VentureNumber(x));
 }
@@ -196,7 +196,7 @@ double BetaPSP::simulateNumeric(const vector<double> & args, gsl_rng * rng) cons
 {
   assert(args[0] > 0);
   assert(args[1] > 0);
-  double x = gsl_ran_beta(rng,args[0],args[1]);
+  double x = gsl_ran_beta(rng, args[0], args[1]);
   assert(isfinite(x));
   return x;
 }
@@ -262,7 +262,7 @@ VentureValuePtr StudentTPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  con
   double loc = 0; if (args->operandValues.size() > 1) { loc = args->operandValues[1]->getDouble(); }
   double shape = 1; if (args->operandValues.size() > 2) { shape = args->operandValues[2]->getDouble(); }
 
-  double x = gsl_ran_tdist(rng,nu);
+  double x = gsl_ran_tdist(rng, nu);
   return VentureValuePtr(new VentureNumber((shape * x) + loc));
 }
 
@@ -275,7 +275,7 @@ double StudentTPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  co
   double x = value->getDouble();
   double y = (x - loc) / shape;
   // TODO: compute in logspace
-  return log(gsl_ran_tdist_pdf(y,nu) / shape);
+  return log(gsl_ran_tdist_pdf(y, nu) / shape);
 }
 
 VentureValuePtr ChiSquaredPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
@@ -284,7 +284,7 @@ VentureValuePtr ChiSquaredPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
 
   double nu = args->operandValues[0]->getDouble();
 
-  double x = gsl_ran_chisq(rng,nu);
+  double x = gsl_ran_chisq(rng, nu);
   return VentureValuePtr(new VentureNumber(x));
 }
 
@@ -292,7 +292,7 @@ double ChiSquaredPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) c
 {
   double nu = args->operandValues[0]->getDouble();
   double x = value->getDouble();
-  return ChiSquaredDistributionLogLikelihood(x,nu);
+  return ChiSquaredDistributionLogLikelihood(x, nu);
 }
 
 VentureValuePtr InvChiSquaredPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
@@ -301,7 +301,7 @@ VentureValuePtr InvChiSquaredPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)
 
   double nu = args->operandValues[0]->getDouble();
 
-  double x = 1.0 / gsl_ran_chisq(rng,nu);
+  double x = 1.0 / gsl_ran_chisq(rng, nu);
   return VentureValuePtr(new VentureNumber(x));
 }
 
@@ -309,7 +309,7 @@ double InvChiSquaredPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args
 {
   double nu = args->operandValues[0]->getDouble();
   double x = value->getDouble();
-  return InvChiSquaredDistributionLogLikelihood(x,nu);
+  return InvChiSquaredDistributionLogLikelihood(x, nu);
 }
 
 VentureValuePtr ApproximateBinomialPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
@@ -340,5 +340,5 @@ double ApproximateBinomialPSP::logDensity(VentureValuePtr value, shared_ptr<Args
 
   double x = value->getDouble();
 
-  return NormalDistributionLogLikelihood(x,mean,sigma);
+  return NormalDistributionLogLikelihood(x, mean, sigma);
 }

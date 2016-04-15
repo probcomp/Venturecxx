@@ -33,7 +33,7 @@ VentureValuePtr MatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
   rows = allRows.size();
   //  assert(rows > 0);
 
-  if (rows == 0) { return VentureValuePtr(new VentureMatrix(MatrixXd(0,0))); }
+  if (rows == 0) { return VentureValuePtr(new VentureMatrix(MatrixXd(0, 0))); }
 
   // Vector becomes a vector, I guess
   if (NULL != dynamic_pointer_cast<VentureNumber>(allRows[0]))
@@ -48,7 +48,7 @@ VentureValuePtr MatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
   cols = row0.size();
   //  assert(cols > 0);
 
-  MatrixXd M(rows,cols);
+  MatrixXd M(rows, cols);
 
   for (size_t i = 0; i < rows; ++i)
   {
@@ -57,7 +57,7 @@ VentureValuePtr MatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
 
     for (size_t j = 0; j < cols; ++j)
     {
-      M(i,j) = row_i[j]->getDouble();
+      M(i, j) = row_i[j]->getDouble();
     }
   }
   return VentureValuePtr(new VentureMatrix(M));

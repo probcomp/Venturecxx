@@ -52,18 +52,18 @@ struct EGibbsWorker
     }
   }
   ConcreteTrace * trace;
-  boost::shared_ptr<map<Node*,Gradient> > nullGradients;
+  boost::shared_ptr<map<Node*, Gradient> > nullGradients;
   boost::shared_ptr<Particle> particle;
   double weight;
 };
 
-pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,
+pair<Trace*, double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,
     boost::shared_ptr<Scaffold> scaffold)
 {
   this->trace = trace;
   this->scaffold = scaffold;
 
-  assertTrace(trace,scaffold);
+  assertTrace(trace, scaffold);
   assert(scaffold->border.size() == 1);
 
   // principal nodes should be ApplicationNodes
@@ -140,15 +140,15 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,
 int EnumerativeGibbsGKernel::accept()
 {
   finalParticle->commit();
-  // assertTrace(self.trace,self.scaffold)
+  // assertTrace(self.trace, self.scaffold)
   return this->scaffold->numAffectedNodes();
 }
 
 int EnumerativeGibbsGKernel::reject()
 {
   regenAndAttach(trace, scaffold->border[0], scaffold, true,
-                 rhoDB, boost::shared_ptr<map<Node*,Gradient> >());
-  // assertTrace(self.trace,self.scaffold)
+                 rhoDB, boost::shared_ptr<map<Node*, Gradient> >());
+  // assertTrace(self.trace, self.scaffold)
   return this->scaffold->numAffectedNodes();
 }
 

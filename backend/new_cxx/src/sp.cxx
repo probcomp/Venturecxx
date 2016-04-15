@@ -28,7 +28,7 @@ RootOfFamily SPFamilies::getRootOfFamily(FamilyID id)
   return families[id];
 }
 
-void SPFamilies::registerFamily(FamilyID id,RootOfFamily root)
+void SPFamilies::registerFamily(FamilyID id, RootOfFamily root)
 {
   assert(!families.count(id));
   families[id] = root;

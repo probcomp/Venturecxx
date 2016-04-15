@@ -23,7 +23,7 @@ VentureValuePtr TagOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
   return args->operandValues[2];
 }
 
-bool TagOutputPSP::canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const
+bool TagOutputPSP::canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const
 {
   return parentNode != appNode->operandNodes[2];
 }
@@ -33,7 +33,7 @@ VentureValuePtr TagExcludeOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * r
   return args->operandValues[1];
 }
 
-bool TagExcludeOutputPSP::canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const
+bool TagExcludeOutputPSP::canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const
 {
   return parentNode != appNode->operandNodes[1];
 }

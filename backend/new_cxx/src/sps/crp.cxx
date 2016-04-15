@@ -32,7 +32,7 @@
 
 // TODO needed for BOOST_FOREACH macro
 // (cannot use a type with a comma)
-typedef pair<uint32_t,uint32_t> tableCountPair;
+typedef pair<uint32_t, uint32_t> tableCountPair;
 
 boost::python::object CRPSPAux::toPython(Trace * trace) const
 {
@@ -59,7 +59,7 @@ VentureValuePtr MakeCRPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)
     d = args->operandValues[1]->getDouble();
   }
 
-  return VentureValuePtr(new VentureSPRecord(new CRPSP(alpha, d),new CRPSPAux()));
+  return VentureValuePtr(new VentureSPRecord(new CRPSP(alpha, d), new CRPSPAux()));
 }
 
 // Made
@@ -102,7 +102,7 @@ VentureValuePtr CRPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
 
   Simplex ps = normalizeVector(counts);
 
-  double u = gsl_ran_flat(rng,0.0,1.0);
+  double u = gsl_ran_flat(rng, 0.0, 1.0);
   double sum = 0.0;
   for (size_t i = 0; i < counts.size(); ++i)
   {
@@ -114,7 +114,7 @@ VentureValuePtr CRPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
 }
 
 
-double CRPOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) const
+double CRPOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
 {
   shared_ptr<CRPSPAux> aux = dynamic_pointer_cast<CRPSPAux>(args->spAux);
   assert(aux);
@@ -126,7 +126,7 @@ double CRPOutputPSP::logDensity(VentureValuePtr value,shared_ptr<Args> args) con
   { return log(alpha + aux->numTables * d) - log(aux->numCustomers + alpha); }
 }
 
-void CRPOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) const
+void CRPOutputPSP::incorporate(VentureValuePtr value, shared_ptr<Args> args) const
 {
   shared_ptr<CRPSPAux> aux = dynamic_pointer_cast<CRPSPAux>(args->spAux);
   assert(aux);
@@ -145,7 +145,7 @@ void CRPOutputPSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) cons
   }
 }
 
-void CRPOutputPSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args) const
+void CRPOutputPSP::unincorporate(VentureValuePtr value, shared_ptr<Args> args) const
 {
   shared_ptr<CRPSPAux> aux = dynamic_pointer_cast<CRPSPAux>(args->spAux);
   assert(aux);

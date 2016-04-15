@@ -128,7 +128,7 @@ VentureValuePtr TanOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
 VentureValuePtr HypotOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("hypot", args, 2);
-  return shared_ptr<VentureNumber>(new VentureNumber(hypot(args->operandValues[0]->getDouble(),args->operandValues[1]->getDouble())));
+  return shared_ptr<VentureNumber>(new VentureNumber(hypot(args->operandValues[0]->getDouble(), args->operandValues[1]->getDouble())));
 }
 
 VentureValuePtr ExpOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
@@ -146,7 +146,7 @@ VentureValuePtr LogOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
 VentureValuePtr PowOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("pow", args, 2);
-  return shared_ptr<VentureNumber>(new VentureNumber(pow(args->operandValues[0]->getDouble(),args->operandValues[1]->getDouble())));
+  return shared_ptr<VentureNumber>(new VentureNumber(pow(args->operandValues[0]->getDouble(), args->operandValues[1]->getDouble())));
 }
 
 VentureValuePtr SqrtOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const

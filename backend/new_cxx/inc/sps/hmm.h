@@ -34,7 +34,7 @@ struct HMMSPAux : SPAux
 
   /* Observations: may be many observations at a single index */
   /* We expect very few, otherwise we would use a set */
-  map<size_t,vector<uint32_t> > os;
+  map<size_t, vector<uint32_t> > os;
 
   HMMSPAux* copy_help(ForwardingMap* m) const;
 
@@ -48,7 +48,7 @@ struct HMMLSR : LSR
 
 struct HMMLatentDB : LatentDB
 {
-  map<size_t,MatrixXd> xs;
+  map<size_t, MatrixXd> xs;
 };
 
 
@@ -61,7 +61,7 @@ struct MakeUncollapsedHMMOutputPSP : PSP
 struct UncollapsedHMMSP : SP
 {
   UncollapsedHMMSP(PSP * requestPSP, PSP * outputPSP,
-                   MatrixXd p0, MatrixXd T,MatrixXd O);
+                   MatrixXd p0, MatrixXd T, MatrixXd O);
   shared_ptr<LatentDB> constructLatentDB() const;
   double simulateLatents(shared_ptr<Args> args, shared_ptr<LSR> lsr,
                          bool shouldRestore, shared_ptr<LatentDB> latentDB,

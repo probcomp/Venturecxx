@@ -48,7 +48,7 @@ struct LookupNode : Node
 
 struct ApplicationNode : Node
 {
-  ApplicationNode(Node * operatorNode, const vector<Node*>& operandNodes, const boost::shared_ptr<VentureEnvironment>& env,VentureValuePtr exp);
+  ApplicationNode(Node * operatorNode, const vector<Node*>& operandNodes, const boost::shared_ptr<VentureEnvironment>& env, VentureValuePtr exp);
   Node * operatorNode;
   vector<Node *> operandNodes;
   boost::shared_ptr<VentureEnvironment> env;
@@ -66,7 +66,7 @@ struct RequestNode : ApplicationNode
 
 struct OutputNode : ApplicationNode
 {
-  OutputNode(Node * operatorNode, const vector<Node*>& operandNodes, RequestNode * requestNode, const boost::shared_ptr<VentureEnvironment>& env,VentureValuePtr exp);
+  OutputNode(Node * operatorNode, const vector<Node*>& operandNodes, RequestNode * requestNode, const boost::shared_ptr<VentureEnvironment>& env, VentureValuePtr exp);
   vector<Node*> getDefiniteParents();
   RequestNode * requestNode;
   bool isFrozen;

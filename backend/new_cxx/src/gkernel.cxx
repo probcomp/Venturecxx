@@ -35,6 +35,6 @@ void registerDeterministicLKernels(Trace * trace,
 {
   for (size_t i = 0; i < applicationNodes.size(); ++i)
   {
-    trace->registerLKernel(scaffold,applicationNodes[i],boost::shared_ptr<DeterministicLKernel>(new DeterministicLKernel(values[i], trace->getPSP(applicationNodes[i]))));
+    trace->registerLKernel(scaffold, applicationNodes[i], boost::shared_ptr<DeterministicLKernel>(new DeterministicLKernel(values[i], trace->getPSP(applicationNodes[i]))));
   }
 }
