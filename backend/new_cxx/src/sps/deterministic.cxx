@@ -25,8 +25,7 @@ using std::endl;
 VentureValuePtr AddOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   double sum = 0;
-  for (size_t i = 0; i < args->operandValues.size(); ++i)
-  {
+  for (size_t i = 0; i < args->operandValues.size(); ++i) {
     sum += args->operandValues[i]->getDouble();
   }
   return shared_ptr<VentureNumber>(new VentureNumber(sum));
@@ -41,8 +40,7 @@ VentureValuePtr SubOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
 VentureValuePtr MulOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   double prod = 1;
-  for (size_t i = 0; i < args->operandValues.size(); ++i)
-  {
+  for (size_t i = 0; i < args->operandValues.size(); ++i) {
     prod *= args->operandValues[i]->getDouble();
   }
   return shared_ptr<VentureNumber>(new VentureNumber(prod));
@@ -224,8 +222,7 @@ VentureValuePtr ProbabilityOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * 
 VentureValuePtr IsProbabilityOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("is_probability", args, 1);
-  if (args->operandValues[0]->hasDouble())
-  {
+  if (args->operandValues[0]->hasDouble()) {
     double x = args->operandValues[0]->getDouble();
     return VentureValuePtr(new VentureBool(0 <= x && x <= 1));
   } else {

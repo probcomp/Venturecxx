@@ -42,14 +42,14 @@ struct Scaffold
 	   const vector<vector<Node *> > & border,
 	   const map<Node*, boost::shared_ptr<LKernel> > & lkernels,
 	   const set<Node*> & brush):
-  setsOfPNodes(setsOfPNodes),
+    setsOfPNodes(setsOfPNodes),
     regenCounts(regenCounts),
     absorbing(absorbing),
     aaa(aaa),
     border(border),
     lkernels(lkernels),
     brush(brush)
-          {}
+  {}
 
 
   set<Node *> getPrincipalNodes();

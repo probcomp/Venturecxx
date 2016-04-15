@@ -118,49 +118,33 @@ struct Node
   {
     int l_w = node_weight(l);
     int r_w = node_weight(r);
-    if (r_w > _DELTA * l_w)
-    {
+    if (r_w > _DELTA * l_w) {
       // Right is too big
-      if (node_weight(r->left) < _GAMMA * node_weight(r->right))
-      {
+      if (node_weight(r->left) < _GAMMA * node_weight(r->right)) {
         return single_left(l, key, value, r);
-      }
-      else
-      {
+      } else {
         return double_left(l, key, value, r);
       }
-    }
-    else if (l_w > _DELTA * r_w)
-    {
+    } else if (l_w > _DELTA * r_w) {
       // Left is too big
-      if (node_weight(l->right) < _GAMMA * node_weight(l->left))
-      {
+      if (node_weight(l->right) < _GAMMA * node_weight(l->left)) {
         return single_right(l, key, value, r);
-      }
-      else
-      {
+      } else {
         return double_right(l, key, value, r);
       }
-    }
-    else
-    {
+    } else {
       return NodePtr(new Node(l, key, value, r));
     }
   }
 
   static tuple<Key, Value, NodePtr> node_popmin(const NodePtr& node)
   {
-    if (node->isEmpty())
-    {
+    if (node->isEmpty()) {
       assert(false);
       throw "Trying to pop the minimum off an empty node";
-    }
-    else if (node->left->isEmpty())
-    {
+    } else if (node->left->isEmpty()) {
       return tuple<Key, Value, NodePtr>(node->key, node->value, node->right);
-    }
-    else
-    {
+    } else {
       // TODO Is this constant creation and destruction of tuples
       // actually any more efficient than just finding the minimum in one
       // pass and removing it in another?
@@ -172,20 +156,13 @@ struct Node
   template <typename Comp>
   static bool node_contains(const NodePtr& node, const Key& key, const Comp& comp)
   {
-    if (node->isEmpty())
-    {
+    if (node->isEmpty()) {
       return false;
-    }
-    else if (comp(key, node->key))
-    {
+    } else if (comp(key, node->key)) {
       return node_contains(node->left, key, comp);
-    }
-    else if (comp(node->key, key))
-    {
+    } else if (comp(node->key, key)) {
       return node_contains(node->right, key, comp);
-    }
-    else
-    {
+    } else {
       return true;
     }
   }
@@ -193,21 +170,14 @@ struct Node
   template <typename Comp>
   static Value node_lookup(const NodePtr& node, const Key& key, const Comp& comp)
   {
-    if (node->isEmpty())
-    {
+    if (node->isEmpty()) {
       assert(false);
       throw "Key does not exist.";
-    }
-    else if (comp(key, node->key))
-    {
+    } else if (comp(key, node->key)) {
       return node_lookup(node->left, key, comp);
-    }
-    else if (comp(node->key, key))
-    {
+    } else if (comp(node->key, key)) {
       return node_lookup(node->right, key, comp);
-    }
-    else
-    {
+    } else {
       return node->value;
     }
   }
@@ -215,22 +185,15 @@ struct Node
   template <typename Comp>
   static NodePtr node_insert(const NodePtr& node, const Key& key, const Value& value, const Comp& comp)
   {
-    if (node->isEmpty())
-    {
+    if (node->isEmpty()) {
       return NodePtr(new Node(NodePtr(new Node()), key, value, NodePtr(new Node())));
-    }
-    else if (comp(key, node->key))
-    {
+    } else if (comp(key, node->key)) {
       return t_join(node_insert(node->left, key, value, comp),
                     node->key, node->value, node->right);
-    }
-    else if (comp(node->key, key))
-    {
+    } else if (comp(node->key, key)) {
       return t_join(node->left, node->key, node->value,
                     node_insert(node->right, key, value, comp));
-    }
-    else
-    {
+    } else {
       return NodePtr(new Node(node->left, key, value, node->right));
     }
   }
@@ -238,24 +201,17 @@ struct Node
   template <class Function, typename Comp>
   static NodePtr node_adjust(const NodePtr& node, const Key& key, const Function& f, const Comp& comp)
   {
-    if (node->isEmpty())
-    {
+    if (node->isEmpty()) {
       // TODO Optimize the not-found case by not reconstructing the tree
       // on the way up?
       return node;
-    }
-    else if (comp(key, node->key))
-    {
+    } else if (comp(key, node->key)) {
       return NodePtr(new Node(node_adjust(node->left, key, f, comp),
                   node->key, node->value, node->right));
-    }
-    else if (comp(node->key, key))
-    {
+    } else if (comp(node->key, key)) {
       return NodePtr(new Node(node->left, node->key, node->value,
                   node_adjust(node->right, key, f, comp)));
-    }
-    else
-    {
+    } else {
       return NodePtr(new Node(node->left, key, f(node->value), node->right));
     }
   }
@@ -263,33 +219,21 @@ struct Node
   template <typename Comp>
   static NodePtr node_remove(const NodePtr& node, const Key& key, const Comp& comp)
   {
-    if (node->isEmpty())
-    {
+    if (node->isEmpty()) {
       return node;
-    }
-    else if (comp(key, node->key))
-    {
+    } else if (comp(key, node->key)) {
       return t_join(node_remove(node->left, key, comp),
                     node->key, node->value, node->right);
-    }
-    else if (comp(node->key, key))
-    {
+    } else if (comp(node->key, key)) {
       return t_join(node->left, node->key, node->value,
                     node_remove(node->right, key, comp));
-    }
-    else
-    {
+    } else {
       // Deleting the key at this node
-      if (node->right->isEmpty())
-      {
+      if (node->right->isEmpty()) {
         return node->left;
-      }
-      else if (node->left->isEmpty())
-      {
+      } else if (node->left->isEmpty()) {
         return node->right;
-      }
-      else
-      {
+      } else {
         tuple<Key, Value, NodePtr> min = node_popmin(node->right);
         return t_join(node->left, get<0>(min), get<1>(min), get<2>(min));
       }
@@ -299,8 +243,7 @@ struct Node
   // impure helper function
   static void node_traverse_in_order(const NodePtr& node, vector<NodePtr>& nodes)
   {
-    if (!node->isEmpty())
-    {
+    if (!node->isEmpty()) {
       node_traverse_in_order(node->left, nodes);
       nodes.push_back(node);
       node_traverse_in_order(node->right, nodes);
@@ -339,7 +282,5 @@ struct Node
 };
 
 };
-
-
 
 #endif

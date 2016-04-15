@@ -37,8 +37,7 @@ VentureValuePtr parseList(object value)
   ssize_t size = len(l);
   VentureValuePtr tail = VentureValuePtr(new VentureNil());
 
-  for (ssize_t i = size - 1; i >= 0; --i)
-  {
+  for (ssize_t i = size - 1; i >= 0; --i) {
     VentureValuePtr item = parseValue(extract<dict>(l[i]));
     tail = VentureValuePtr(new VenturePair(item, tail));
   }
@@ -55,8 +54,7 @@ VentureValuePtr parseImproperList(object value)
   ssize_t size = len(l);
   VentureValuePtr tail = parseValue(extract<dict>(value[1]));
 
-  for (ssize_t i = size - 1; i >= 0; --i)
-  {
+  for (ssize_t i = size - 1; i >= 0; --i) {
     VentureValuePtr item = parseValue(extract<dict>(l[i]));
     tail = VentureValuePtr(new VenturePair(item, tail));
   }
@@ -73,8 +71,7 @@ VentureValuePtr parseArray(object value)
   ssize_t size = len(l);
   vector<VentureValuePtr> v;
 
-  for (ssize_t i = 0; i < size; ++i)
-  {
+  for (ssize_t i = 0; i < size; ++i) {
     v.push_back(parseValue(extract<dict>(l[i])));
   }
 
@@ -87,7 +84,6 @@ VentureValuePtr parseArray(object value)
 VentureValuePtr parseVector(object value);
 VentureValuePtr parseArrayUnboxed(object value, object subtype)
 {
-
   return parseVector(value);
 }
 
@@ -95,12 +91,9 @@ VentureValuePtr parseSimplex(object value)
 {
   extract<numeric::array> getNumpyArray(value);
   list l;
-  if (getNumpyArray.check())
-  {
+  if (getNumpyArray.check()) {
     l = list(getNumpyArray());
-  }
-  else
-  {
+  } else {
     extract<list> getList(value);
     if (!getList.check()) { throw "Simplex must be a list or numpy array."; }
     l = getList();
@@ -109,8 +102,7 @@ VentureValuePtr parseSimplex(object value)
   ssize_t size = len(l);
   Simplex s;
 
-  for (ssize_t i = 0; i < size; ++i)
-  {
+  for (ssize_t i = 0; i < size; ++i) {
     s.push_back(extract<double>(l[i]));
   }
 
@@ -121,12 +113,9 @@ VentureValuePtr parseVector(object value)
 {
   extract<numeric::array> getNumpyArray(value);
   list l;
-  if (getNumpyArray.check())
-  {
+  if (getNumpyArray.check()) {
     l = list(getNumpyArray());
-  }
-  else
-  {
+  } else {
     extract<list> getList(value);
     if (!getList.check()) { throw "Vector must be a list or numpy array."; }
     l = getList();
@@ -135,8 +124,7 @@ VentureValuePtr parseVector(object value)
   ssize_t size = len(l);
   VectorXd v(size);
 
-  for (ssize_t i = 0; i < size; ++i)
-  {
+  for (ssize_t i = 0; i < size; ++i) {
     v[i] = extract<double>(l[i]);
   }
 
@@ -154,8 +142,7 @@ VentureValuePtr parseDict(object value)
 
   MapVVPtrVVPtr m;
 
-  for (ssize_t i = 0; i < size; ++i)
-  {
+  for (ssize_t i = 0; i < size; ++i) {
     extract<tuple> getPair(items[i]);
     if (!getPair.check()) { throw "Dict item must be a pair."; }
 
@@ -173,8 +160,7 @@ VentureValuePtr parseDict(object value)
 VentureValuePtr parseMatrix(object value)
 {
   extract<numeric::array> getNumpyArray(value);
-  if (!getNumpyArray.check())
-  {
+  if (!getNumpyArray.check()) {
     throw "Matrix must be represented as a numpy array.";
   }
 
@@ -187,10 +173,8 @@ VentureValuePtr parseMatrix(object value)
 
   MatrixXd M(rows, cols);
 
-  for (size_t i = 0; i < rows; ++i)
-  {
-    for (size_t j = 0; j < cols; ++j)
-    {
+  for (size_t i = 0; i < rows; ++i) {
+    for (size_t j = 0; j < cols; ++j) {
       M(i, j) = extract<double>(data[make_tuple(i, j)]);
     }
   }
@@ -215,54 +199,36 @@ VentureValuePtr parseValue(dict d)
 
   object value = d["value"];
 
-  if (type == "number")
-  {
+  if (type == "number") {
     return VentureValuePtr(new VentureNumber(extract<double>(value)));
-  }
-  else if (type == "real")
-  {
+  } else if (type == "real") {
     return VentureValuePtr(new VentureNumber(extract<double>(value)));
-  }
-  else if (type == "integer") {
+  } else if (type == "integer") {
     // The parser currently makes these be Python floats
     extract<int> i(value);
     if (i.check()) { return VentureValuePtr(new VentureInteger(i)); }
     extract<double> d(value);
-    if (d.check())
-    {
+    if (d.check()) {
       return VentureValuePtr(new VentureInteger((int)round(d)));
     }
     throw "Unknown format for integer";
-  }
-  else if (type == "probability")
-  {
+  } else if (type == "probability") {
     return VentureValuePtr(new VentureNumber(extract<double>(value)));
-  }
-  else if (type == "atom")
-  {
+  } else if (type == "atom") {
     return VentureValuePtr(new VentureAtom(extract<int32_t>(value)));
-  }
-  else if (type == "boolean")
-  {
+  } else if (type == "boolean") {
     return VentureValuePtr(new VentureBool(extract<bool>(value)));
-  }
-  else if (type == "symbol")
-  {
+  } else if (type == "symbol") {
     return VentureValuePtr(new VentureSymbol(extract<string>(value)));
-  }
-  else if (type == "string")
-  {
+  } else if (type == "string") {
     return VentureValuePtr(new VentureString(extract<string>(value)));
-  }
-  else if (type == "list") { return parseList(value); }
+  } else if (type == "list") { return parseList(value); }
   else if (type == "improper_list") { return parseImproperList(value); }
   else if (type == "vector") { return parseVector(value); }
   else if (type == "array") { return parseArray(value); }
-  else if (type == "array_unboxed")
-  {
+  else if (type == "array_unboxed") {
     return parseArrayUnboxed(value, d["subtype"]);
-  }
-  else if (type == "simplex") { return parseSimplex(value); }
+  } else if (type == "simplex") { return parseSimplex(value); }
   else if (type == "dict") { return parseDict(value); }
   else if (type == "matrix") { return parseMatrix(value); }
   else if (type == "symmetric_matrix") { return parseSymmetricMatrix(value); }
@@ -283,8 +249,7 @@ VentureValuePtr parseExpression(object o)
 
   ssize_t L = len(l);
 
-  for(ssize_t i=0; i<L; ++i)
-  {
+  for(ssize_t i=0; i<L; ++i) {
     exp.push_back(parseExpression(l[i]));
   }
   return VentureValuePtr(new VentureArray(exp));

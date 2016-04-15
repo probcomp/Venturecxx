@@ -46,8 +46,7 @@ VentureValuePtr OrderedDB::getValue(Node * node)
     stack.pop_back();
     // TODO: check if it's a Request, SPRef, or VentureEnvironment and raise an exception
     return value;
-  }
-  else {
+  } else {
     // resimulate deterministic PSPs
     boost::shared_ptr<Args> args = trace->getArgs(appNode);
     return psp->simulate(args, 0);
@@ -76,8 +75,7 @@ boost::shared_ptr<OrderedDB> PyTrace::makeSerializationDB(boost::python::list st
   assert(!skipStackDictConversion);
 
   vector<VentureValuePtr> values;
-  for (boost::python::ssize_t i = 0; i < boost::python::len(stackDicts); ++i)
-  {
+  for (boost::python::ssize_t i = 0; i < boost::python::len(stackDicts); ++i) {
     values.push_back(parseValue(boost::python::extract<boost::python::dict>(stackDicts[i])));
   }
 
@@ -90,8 +88,7 @@ boost::python::list PyTrace::dumpSerializationDB(boost::shared_ptr<OrderedDB> db
 
   vector<VentureValuePtr> values = db->listValues();
   boost::python::list stackDicts;
-  for (size_t i = 0; i < values.size(); ++i)
-  {
+  for (size_t i = 0; i < values.size(); ++i) {
     stackDicts.append(values[i]->toPython(trace.get()));
   }
 

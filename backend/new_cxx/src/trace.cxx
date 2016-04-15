@@ -79,8 +79,7 @@ Node * Trace::getOperatorSPMakerNode(ApplicationNode * node)
 {
   VentureValuePtr candidate = getValue(node->operatorNode);
   boost::shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(candidate);
-  if (!spRef)
-  {
+  if (!spRef) {
     throw "Cannot apply a non-procedure: " + candidate->toString();
   }
   return spRef->makerNode;
@@ -90,11 +89,9 @@ Node * Trace::getOperatorSPMakerNode(ApplicationNode * node)
 vector<Node*> Trace::getParents(Node * node)
 {
   vector<Node*> parents = node->getDefiniteParents();
-  if (dynamic_cast<OutputNode*>(node))
-  {
+  if (dynamic_cast<OutputNode*>(node)) {
     vector<RootOfFamily> esrRoots = getESRParents(node);
-    for (size_t i = 0; i < esrRoots.size(); ++i)
-    {
+    for (size_t i = 0; i < esrRoots.size(); ++i) {
       parents.push_back(esrRoots[i].get());
     }
   }
@@ -113,8 +110,7 @@ OutputNode * Trace::getConstrainableNode(Node * node)
   OutputNode * outputNode = dynamic_cast<OutputNode*>(candidate);
   assert(outputNode);
 
-  if (!getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode)->isRandom())
-  {
+  if (!getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode)->isRandom()) {
     throw "Cannot constrain a deterministic value.";
   }
   return outputNode;
@@ -130,17 +126,12 @@ Node * Trace::getOutermostNonReferenceNode(Node * node)
 
   boost::shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
 
-  if (dynamic_pointer_cast<ESRRefOutputPSP>(psp))
-  {
+  if (dynamic_pointer_cast<ESRRefOutputPSP>(psp)) {
     assert(getESRParents(outputNode).size() == 1);
     return getOutermostNonReferenceNode(getESRParents(outputNode)[0].get());
-  }
-  else if (dynamic_pointer_cast<TagOutputPSP>(psp))
-  {
+  } else if (dynamic_pointer_cast<TagOutputPSP>(psp)) {
     return getOutermostNonReferenceNode(outputNode->operandNodes[2]);
-  }
-  else
-  {
+  } else {
     return node;
   }
 }

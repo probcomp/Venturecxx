@@ -75,24 +75,20 @@ double UncollapsedHMMSP::simulateLatents(shared_ptr<Args> args,
   assert(request);
 
   shared_ptr<HMMLatentDB> latents;
-  if (latentDB)
-  {
+  if (latentDB) {
     latents = dynamic_pointer_cast<HMMLatentDB>(latentDB);
     assert(latents);
   }
 
   /* No matter what the request is, we must sample the first latent if
      we have not already done so. */
-  if (aux->xs.empty())
-  {
+  if (aux->xs.empty()) {
     if (shouldRestore) { aux->xs.push_back(latents->xs[0]); }
     else { aux->xs.push_back(sampleVectorXd(p0, rng)); }
   }
 
-  if (aux->xs.size() <= request->index)
-  {
-    for (size_t i = aux->xs.size(); i <= request->index; ++i)
-    {
+  if (aux->xs.size() <= request->index) {
+    for (size_t i = aux->xs.size(); i <= request->index; ++i) {
       MatrixXd sample;
 
       if (shouldRestore) { sample = latents->xs[i]; }
@@ -118,19 +114,15 @@ double UncollapsedHMMSP::detachLatents(shared_ptr<Args> args,
   assert(latents);
 
   if (aux->xs.size() == request->index + 1 &&
-      !aux->os.count(request->index))
-  {
-    if (aux->os.empty())
-    {
-      for (size_t i = 0; i < aux->xs.size(); ++i)
-      { latents->xs[i] = aux->xs[i]; }
+      !aux->os.count(request->index)) {
+    if (aux->os.empty()) {
+      for (size_t i = 0; i < aux->xs.size(); ++i) {
+        latents->xs[i] = aux->xs[i];
+      }
       aux->xs.clear();
-    }
-    else
-    {
+    } else {
       uint32_t maxObservation = (*(max_element(aux->os.begin(), aux->os.end()))).first;
-      for (size_t i = aux->xs.size()-1; i > maxObservation; --i)
-      {
+      for (size_t i = aux->xs.size()-1; i > maxObservation; --i) {
         latents->xs[i] = aux->xs.back();
         aux->xs.pop_back();
       }
@@ -152,14 +144,11 @@ void UncollapsedHMMSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
   vector<VectorXd> fs(1, p0);
 
   /* Forwards filtering */
-  for (size_t i = 1; i <= maxObservation; ++i)
-  {
+  for (size_t i = 1; i <= maxObservation; ++i) {
     VectorXd f = T * fs[i-1];
-    if (aux->os.count(i))
-    {
+    if (aux->os.count(i)) {
       assert(aux->os[i].size() == 1);
-      BOOST_FOREACH (uint32_t j, aux->os[i])
-      {
+      BOOST_FOREACH (uint32_t j, aux->os[i]) {
         f = O.row(j).asDiagonal() * f;
       }
     }
@@ -170,8 +159,7 @@ void UncollapsedHMMSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
   aux->xs.resize(maxObservation + 1);
 
   aux->xs[maxObservation] = sampleVectorXd(fs[maxObservation], rng);
-  for (int i = maxObservation-1; i >= 0; --i)
-  {
+  for (int i = maxObservation-1; i >= 0; --i) {
     size_t rowIndex = indexOfOne(aux->xs[i+1]);
     MatrixXd T_i = T.row(rowIndex).asDiagonal();
     VectorXd gamma = T_i * fs[i];
@@ -274,8 +262,7 @@ VectorXd vvToEigenVector(VentureValue * value)
   size_t len = vs.size();
   VectorXd v(len);
 
-  for (size_t i = 0; i < len; ++i)
-  {
+  for (size_t i = 0; i < len; ++i) {
     v(i) = vs[i]->getDouble();
   }
   return v;
@@ -295,13 +282,11 @@ MatrixXd vvToEigenMatrix(VentureValue * value)
 
   MatrixXd M(rows, cols);
 
-  for (size_t i = 0; i < rows; ++i)
-  {
+  for (size_t i = 0; i < rows; ++i) {
     vector<VentureValuePtr> row_i = allRows[i]->getArray();
     assert(cols == row_i.size());
 
-    for (size_t j = 0; j < cols; ++j)
-    {
+    for (size_t j = 0; j < cols; ++j) {
       M(i, j) = row_i[j]->getDouble();
     }
   }
@@ -311,8 +296,7 @@ MatrixXd vvToEigenMatrix(VentureValue * value)
 uint32_t indexOfOne(const VectorXd & v)
 {
   size_t len = v.size();
-  for (size_t i = 0; i < len; ++i)
-  {
+  for (size_t i = 0; i < len; ++i) {
     if (v[i] == 1) { return i; }
     else { assert(v[i] == 0); }
   }
@@ -328,11 +312,9 @@ VectorXd sampleVectorXd(const VectorXd & v, gsl_rng * rng)
 
   double u = gsl_ran_flat(rng, 0.0, 1.0);
   double sum = 0.0;
-  for (size_t i = 0; i < len; ++i)
-  {
+  for (size_t i = 0; i < len; ++i) {
     sum += v[i];
-    if (u <= sum)
-    {
+    if (u <= sum) {
       sample[i] = 1;
       return sample;
     }
@@ -347,8 +329,7 @@ uint32_t sampleVector(const VectorXd & v, gsl_rng * rng)
 
   double sum = 0.0;
   size_t len = v.size();
-  for (size_t i = 0; i < len; ++i)
-  {
+  for (size_t i = 0; i < len; ++i) {
     sum += v[i];
     if (u <= sum) { return i; }
   }

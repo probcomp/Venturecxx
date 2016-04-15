@@ -50,8 +50,7 @@ void ConcreteTrace::initialize()
 
   for (map<string, VentureValuePtr>::iterator iter = builtInValues.begin();
        iter != builtInValues.end();
-       ++iter)
-  {
+       ++iter) {
     boost::shared_ptr<VentureSymbol> sym(new VentureSymbol(iter->first));
     ConstantNode * node = createConstantNode(iter->second);
     syms.push_back(sym);
@@ -65,8 +64,7 @@ void ConcreteTrace::initialize()
 
   for (map<string, SP *>::iterator iter = builtInSPs.begin();
        iter != builtInSPs.end();
-       ++iter)
-  {
+       ++iter) {
     builtInNodes.insert(boost::shared_ptr<Node>(
       bindPrimitiveSP(iter->first, iter->second)));
   }
@@ -127,8 +125,7 @@ void ConcreteTrace::registerUnconstrainedChoiceInScope(
 }
 
 void ConcreteTrace::registerConstrainedChoice(Node * node) {
-  if (constrainedChoices.count(node) > 0)
-  {
+  if (constrainedChoices.count(node) > 0) {
     throw "Cannot constrain the same random choice twice.";
   }
 
@@ -363,11 +360,11 @@ void ConcreteTrace::destroyMadeSPRecord(Node * makerNode)
   madeSPRecords.erase(makerNode);
 }
 
-
 void ConcreteTrace::setMadeSP(Node * makerNode, boost::shared_ptr<SP> sp)
 {
   getMadeSPRecord(makerNode)->sp = sp;
 }
+
 void ConcreteTrace::setMadeSPAux(Node * makerNode,
                                  boost::shared_ptr<SPAux> spAux)
 {
@@ -443,8 +440,7 @@ set<Node*> ConcreteTrace::getAllNodesInScope(ScopeID scope)
   for (vector<pair<BlockID, set<Node*> > >::iterator iter =
          scopes[scope].a.begin();
        iter != scopes[scope].a.end();
-       ++iter)
-  {
+       ++iter) {
     set<Node*> nodesInBlock = getNodesInBlock(scope, iter->first);
     all.insert(nodesInBlock.begin(), nodesInBlock.end());
   }
@@ -457,11 +453,10 @@ vector<set<Node*> > ConcreteTrace::getOrderedSetsInScopeAndRange(
   vector<set<Node*> > ordered;
   vector<BlockID> sortedBlocks =
     scopes[scope].getOrderedKeysInRange(minBlock, maxBlock);
-  for (size_t i = 0; i < sortedBlocks.size(); ++ i)
-    {
-      set<Node*> nodesInBlock = getNodesInBlock(scope, sortedBlocks[i]);
-      ordered.push_back(nodesInBlock);
-    }
+  for (size_t i = 0; i < sortedBlocks.size(); ++ i) {
+    set<Node*> nodesInBlock = getNodesInBlock(scope, sortedBlocks[i]);
+    ordered.push_back(nodesInBlock);
+  }
   return ordered;
 }
 
@@ -469,33 +464,29 @@ vector<set<Node*> > ConcreteTrace::getOrderedSetsInScope(ScopeID scope)
 {
   vector<set<Node*> > ordered;
   vector<BlockID> sortedBlocks = scopes[scope].getOrderedKeys();
-  for (size_t i = 0; i < sortedBlocks.size(); ++ i)
-    {
-      set<Node*> nodesInBlock = getNodesInBlock(scope, sortedBlocks[i]);
-      ordered.push_back(nodesInBlock);
-    }
+  for (size_t i = 0; i < sortedBlocks.size(); ++ i) {
+    set<Node*> nodesInBlock = getNodesInBlock(scope, sortedBlocks[i]);
+    ordered.push_back(nodesInBlock);
+  }
   return ordered;
 }
 
 set<Node*> ConcreteTrace::getNodesInBlock(ScopeID scope, BlockID block)
 {
-  if(!scopes[scope].contains(block))
-  {
+  if(!scopes[scope].contains(block)) {
     throw "scope " + scope->toString() + " does not contain block "
       + block->toString();
   }
 
   set<Node * > nodes = scopes[scope].get(block);
   if (dynamic_pointer_cast<VentureSymbol>(scope)
-      && scope->getSymbol() == "default")
-  {
+      && scope->getSymbol() == "default") {
     return nodes;
   }
   set<Node *> pnodes;
   for (set<Node*>::iterator iter = nodes.begin();
        iter != nodes.end();
-       ++iter)
-  {
+       ++iter) {
     addUnconstrainedChoicesInBlock(scope, block, pnodes, *iter);
   }
   return pnodes;
@@ -508,49 +499,38 @@ void ConcreteTrace::addUnconstrainedChoicesInBlock(
   if (!outputNode) { return; }
   boost::shared_ptr<PSP> psp =
     getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
-  if (psp->isRandom() && !isConstrained(outputNode))
-  {
+  if (psp->isRandom() && !isConstrained(outputNode)) {
     pnodes.insert(outputNode);
   }
   RequestNode * requestNode = outputNode->requestNode;
   boost::shared_ptr<PSP> requestPSP =
     getMadeSP(getOperatorSPMakerNode(requestNode))->getPSP(requestNode);
-  if (requestPSP->isRandom() && !isConstrained(requestNode))
-  {
+  if (requestPSP->isRandom() && !isConstrained(requestNode)) {
     pnodes.insert(requestNode);
   }
 
   const vector<ESR>& esrs = getValue(requestNode)->getESRs();
   Node * makerNode = getOperatorSPMakerNode(requestNode);
-  for (size_t i = 0; i < esrs.size(); ++i)
-  {
+  for (size_t i = 0; i < esrs.size(); ++i) {
     addUnconstrainedChoicesInBlock(
       scope, block, pnodes, getMadeSPFamilyRoot(makerNode, esrs[i].id).get());
   }
 
   addUnconstrainedChoicesInBlock(scope, block, pnodes, outputNode->operatorNode);
-  for (size_t i = 0; i < outputNode->operandNodes.size(); ++i)
-  {
+  for (size_t i = 0; i < outputNode->operandNodes.size(); ++i) {
     Node * operandNode = outputNode->operandNodes[i];
-    if (i == 2 && dynamic_pointer_cast<TagOutputPSP>(psp))
-    {
+    if (i == 2 && dynamic_pointer_cast<TagOutputPSP>(psp)) {
       ScopeID new_scope = getValue(outputNode->operandNodes[0]);
       BlockID new_block = getValue(outputNode->operandNodes[1]);
-      if (!scope->equals(new_scope) || block->equals(new_block))
-      {
+      if (!scope->equals(new_scope) || block->equals(new_block)) {
         addUnconstrainedChoicesInBlock(scope, block, pnodes, operandNode);
       }
-    }
-    else if (i == 1 && dynamic_pointer_cast<TagExcludeOutputPSP>(psp))
-    {
+    } else if (i == 1 && dynamic_pointer_cast<TagExcludeOutputPSP>(psp)) {
       ScopeID new_scope = getValue(outputNode->operandNodes[0]);
-      if (!scope->equals(new_scope))
-      {
+      if (!scope->equals(new_scope)) {
         addUnconstrainedChoicesInBlock(scope, block, pnodes, operandNode);
       }
-    }
-    else
-    {
+    } else {
       addUnconstrainedChoicesInBlock(scope, block, pnodes, operandNode);
     }
   }
@@ -567,8 +547,7 @@ double ConcreteTrace::makeConsistent()
   for (map<Node*, VentureValuePtr>::iterator iter =
          unpropagatedObservations.begin();
        iter != unpropagatedObservations.end();
-       ++iter)
-  {
+       ++iter) {
     OutputNode * appNode = getConstrainableNode(iter->first);
     vector<set<Node*> > setsOfPNodes;
     set<Node*> pnodes;
@@ -612,8 +591,7 @@ void ConcreteTrace::registerConstraints()
   for (map<Node*, VentureValuePtr>::iterator iter =
          unpropagatedObservations.begin();
        iter != unpropagatedObservations.end();
-       ++iter)
-  {
+       ++iter) {
     OutputNode * appNode = getConstrainableNode(iter->first);
     observeNode(iter->first, iter->second);
     constrain(this, appNode, getObservedValue(iter->first));
@@ -654,8 +632,7 @@ double ConcreteTrace::logJointAt(ScopeID scope, BlockID block) {
   // TODO Abstract this conversion between set<Node*> and
   // vector<ApplicationNode*>
   vector<ApplicationNode*> appNodes;
-  BOOST_FOREACH(Node * node, pNodes)
-  {
+  BOOST_FOREACH(Node * node, pNodes) {
     ApplicationNode * applicationNode = dynamic_cast<ApplicationNode*>(node);
     assert(applicationNode);
     appNodes.push_back(applicationNode);
@@ -663,8 +640,7 @@ double ConcreteTrace::logJointAt(ScopeID scope, BlockID block) {
 
   // TODO Abstract this collection of current values
   vector<VentureValuePtr> currentValues;
-  BOOST_FOREACH(Node * node, pNodes)
-  {
+  BOOST_FOREACH(Node * node, pNodes) {
     currentValues.push_back(this->getValue(node));
   }
 
@@ -720,7 +696,6 @@ boost::shared_ptr<SPAux> ConcreteTrace::getAAAMadeSPAux(OutputNode * makerNode)
   return aaaMadeSPAuxs[makerNode];
 }
 
-
 void ConcreteTrace::freezeDirectiveID(DirectiveID did)
 {
   RootOfFamily root = families[did];
@@ -753,8 +728,7 @@ void ConcreteTrace::freezeOutputNode(OutputNode * outputNode)
   setValue(outputNode, curVal);
 
   delete outputNode->requestNode;
-  for (size_t i = 0; i < outputNode->operandNodes.size(); ++i)
-  {
+  for (size_t i = 0; i < outputNode->operandNodes.size(); ++i) {
     delete outputNode->operandNodes[i];
   }
   delete outputNode->operatorNode;
@@ -762,7 +736,6 @@ void ConcreteTrace::freezeOutputNode(OutputNode * outputNode)
   outputNode->requestNode = NULL;
   outputNode->operandNodes.clear();
   outputNode->operatorNode = NULL;
-
 }
 
 template <typename K, typename V>
@@ -770,110 +743,85 @@ set<K> keySet(map<K, V> m)
 {
   set<K> answer;
   pair<K, V> me;
-  BOOST_FOREACH(me, m)
-  {
+  BOOST_FOREACH(me, m) {
     answer.insert(me.first);
   }
   return answer;
-
 }
+
 void ConcreteTrace::seekInconsistencies()
 {
   typedef pair<RootOfFamily, int> countpair;
-  BOOST_FOREACH(countpair p, numRequests)
-  {
-    if (p.second == 0)
-    {
+  BOOST_FOREACH(countpair p, numRequests) {
+    if (p.second == 0) {
       cout << "Warning: found family with zero requests: " << p.first
            << " " << p.first->exp << endl;
     }
   }
   set<Node*> walkedNodes = allNodes();
-  BOOST_FOREACH(Node* n, walkedNodes)
-  {
-    if (values.count(n) < 1)
-    {
+  BOOST_FOREACH(Node* n, walkedNodes) {
+    if (values.count(n) < 1) {
       cout << "Warning: found node with no value: " << n << endl;
     }
   }
-  BOOST_FOREACH(Node* n, unconstrainedChoices)
-  {
-    if (walkedNodes.count(n) < 1)
-    {
+  BOOST_FOREACH(Node* n, unconstrainedChoices) {
+    if (walkedNodes.count(n) < 1) {
       cout << "Warning: found dangling unconstrainedChoice entry: "
            << n << endl;
     }
   }
-  BOOST_FOREACH(Node* n, constrainedChoices)
-  {
-    if (walkedNodes.count(n) < 1)
-    {
+  BOOST_FOREACH(Node* n, constrainedChoices) {
+    if (walkedNodes.count(n) < 1) {
       cout << "Warning: found dangling constrainedChoice entry: " << n << endl;
     }
   }
-  BOOST_FOREACH(Node* n, arbitraryErgodicKernels)
-  {
-    if (walkedNodes.count(n) < 1)
-    {
+  BOOST_FOREACH(Node* n, arbitraryErgodicKernels) {
+    if (walkedNodes.count(n) < 1) {
       cout << "Warning: found dangling arbitraryErgodicKernel entry: "
            << n << endl;
     }
   }
-  BOOST_FOREACH(Node* n, keySet(unpropagatedObservations))
-  {
-    if (walkedNodes.count(n) < 1)
-    {
+  BOOST_FOREACH(Node* n, keySet(unpropagatedObservations)) {
+    if (walkedNodes.count(n) < 1) {
       cout << "Warning: found dangling unpropagatedObservation entry: "
            << n << endl;
     }
   }
-  BOOST_FOREACH(Node* n, keySet(aaaMadeSPAuxs))
-  {
-    if (walkedNodes.count(n) < 1)
-    {
+  BOOST_FOREACH(Node* n, keySet(aaaMadeSPAuxs)) {
+    if (walkedNodes.count(n) < 1) {
       cout << "Warning: found dangling aaaMadeSPAux entry: " << n << endl;
     }
   }
-  BOOST_FOREACH(Node* n, keySet(esrRoots))
-  {
-    if (walkedNodes.count(n) < 1)
-    {
+  BOOST_FOREACH(Node* n, keySet(esrRoots)) {
+    if (walkedNodes.count(n) < 1) {
       cout << "Warning: found dangling esrRoot entry: " << n << endl;
     }
   }
-  BOOST_FOREACH(Node* n, keySet(madeSPRecords))
-  {
-    if (walkedNodes.count(n) < 1)
-    {
+  BOOST_FOREACH(Node* n, keySet(madeSPRecords)) {
+    if (walkedNodes.count(n) < 1) {
       cout << "Warning: found dangling madeSPRecord entry: " << n << endl;
     } else {
-      if (!dynamic_pointer_cast<VentureSPRef>(values[n]).get())
-      {
+      if (!dynamic_pointer_cast<VentureSPRef>(values[n]).get()) {
         cout << "Warning: found node " << n
              << " with madeSPRecord entry but non-SPRef value "
              << values[n] << endl;
       } else {
         boost::shared_ptr<VentureSPRef> spref(
           dynamic_pointer_cast<VentureSPRef>(values[n]));
-        if (!(spref->makerNode == n))
-        {
+        if (!(spref->makerNode == n)) {
           cout << "Warning: found maker node " << n
                << " whose value is not a self-link" << endl;
         }
       }
     }
   }
-  BOOST_FOREACH(Node* n, keySet(values))
-  {
-    if (walkedNodes.count(n) < 1)
-    {
+  BOOST_FOREACH(Node* n, keySet(values)) {
+    if (walkedNodes.count(n) < 1) {
       cout << "Warning: found dangling value entry: " << n << endl;
     }
   }
-  BOOST_FOREACH(Node* n, keySet(observedValues))
-  {
-    if (walkedNodes.count(n) < 1)
-    {
+  BOOST_FOREACH(Node* n, keySet(observedValues)) {
+    if (walkedNodes.count(n) < 1) {
       cout << "Warning: found dangling observedValue entry: " << n << endl;
     }
   }
@@ -884,14 +832,12 @@ vector<Node*> familyParents(Node* node)
   vector<Node*> answer;
   if (dynamic_cast<ConstantNode*>(node)) { return vector<Node*>(); }
   if (dynamic_cast<LookupNode*>(node)) { return vector<Node*>(); }
-  if (dynamic_cast<OutputNode*>(node))
-  {
+  if (dynamic_cast<OutputNode*>(node)) {
     answer.push_back(dynamic_cast<OutputNode*>(node)->requestNode);
     // The operator and operands will get picked up when traversing
     // the requester node
   }
-  if (dynamic_cast<RequestNode*>(node))
-  {
+  if (dynamic_cast<RequestNode*>(node)) {
     RequestNode* n = dynamic_cast<RequestNode*>(node);
     answer.push_back(n->operatorNode);
     answer.insert(answer.end(), n->operandNodes.begin(),
@@ -905,8 +851,7 @@ void addNodes(Node* root, set<Node*>& answer)
   if (root == NULL) { return; }
   assert(answer.count(root) == 0);
   answer.insert(root);
-  BOOST_FOREACH(Node* p, familyParents(root))
-  {
+  BOOST_FOREACH(Node* p, familyParents(root)) {
     addNodes(p, answer);
   }
 }
@@ -914,27 +859,23 @@ void addNodes(Node* root, set<Node*>& answer)
 set<Node*> ConcreteTrace::allNodes()
 {
   set<Node*> answer;
-  BOOST_FOREACH(boost::shared_ptr<Node> node, builtInNodes)
-  {
+  BOOST_FOREACH(boost::shared_ptr<Node> node, builtInNodes) {
     assert(dynamic_cast<ConstantNode*>(node.get()));
     assert(answer.count(node.get()) == 0);
     answer.insert(node.get());
   }
-  BOOST_FOREACH(boost::shared_ptr<Node> node, boundForeignSPNodes)
-  {
+  BOOST_FOREACH(boost::shared_ptr<Node> node, boundForeignSPNodes) {
     assert(dynamic_cast<ConstantNode*>(node.get()));
     assert(answer.count(node.get()) == 0);
     answer.insert(node.get());
   }
   typedef pair<DirectiveID, RootOfFamily> family_map_entry;
-  BOOST_FOREACH(family_map_entry fam, families)
-  {
+  BOOST_FOREACH(family_map_entry fam, families) {
     Node* root(fam.second.get());
     addNodes(root, answer);
   }
   typedef pair<RootOfFamily, int> num_request_map_entry;
-  BOOST_FOREACH(num_request_map_entry fam, numRequests)
-  {
+  BOOST_FOREACH(num_request_map_entry fam, numRequests) {
     Node* root(fam.first.get());
     addNodes(root, answer);
   }

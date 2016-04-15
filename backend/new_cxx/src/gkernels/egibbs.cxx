@@ -70,8 +70,7 @@ pair<Trace*, double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,
   set<Node*> pNodes = scaffold->getPrincipalNodes();
   vector<ApplicationNode*> applicationNodes;
   vector<VentureValuePtr> currentValues;
-  BOOST_FOREACH(Node * node, pNodes)
-  {
+  BOOST_FOREACH(Node * node, pNodes) {
     ApplicationNode * applicationNode = dynamic_cast<ApplicationNode*>(node);
     assert(applicationNode);
     assert(!scaffold->isResampling(applicationNode->operatorNode));
@@ -81,8 +80,7 @@ pair<Trace*, double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,
 
   // compute the cartesian product of all possible values
   vector<vector<VentureValuePtr> > possibleValues;
-  BOOST_FOREACH(ApplicationNode * node, applicationNodes)
-  {
+  BOOST_FOREACH(ApplicationNode * node, applicationNodes) {
     boost::shared_ptr<PSP> psp = trace->getPSP(node);
     boost::shared_ptr<Args> args = trace->getArgs(node);
     assert(psp->canEnumerateValues(args));
@@ -103,11 +101,9 @@ pair<Trace*, double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,
   vector<boost::shared_ptr<Particle> > particles(numValues);
   vector<double> particleWeights(numValues);
   vector<boost::shared_ptr<EGibbsWorker> > workers(numValues);
-  if (inParallel)
-  {
+  if (inParallel) {
     vector<boost::thread*> threads(numValues);
-    for (size_t p = 0; p < numValues; ++p)
-    {
+    for (size_t p = 0; p < numValues; ++p) {
       workers[p] = boost::shared_ptr<EGibbsWorker>(new EGibbsWorker(trace));
       boost::function<void()> th_func =
         boost::bind(&EGibbsWorker::doEGibbs, workers[p], scaffold,
@@ -115,16 +111,14 @@ pair<Trace*, double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,
                     weightAndRhoDB.second);
       threads[p] = new boost::thread(th_func);
     }
-    for (size_t p = 0; p < numValues; ++p)
-    {
+    for (size_t p = 0; p < numValues; ++p) {
       threads[p]->join();
       particles[p] = workers[p]->particle;
       particleWeights[p] = workers[p]->weight;
       delete threads[p];
     }
   } else {
-    for (size_t p = 0; p < numValues; ++p)
-    {
+    for (size_t p = 0; p < numValues; ++p) {
       workers[p] = boost::shared_ptr<EGibbsWorker>(new EGibbsWorker(trace));
       workers[p]->doEGibbs(scaffold, applicationNodes, valueTuples[p],
                            currentValues, weightAndRhoDB.second);
@@ -171,8 +165,7 @@ boost::shared_ptr<Particle> EnumerativeMAPGKernel::selectParticle(
   // Deterministically choose the posterior maximum
   int max_i = -1;
   double max = -FLT_MAX;
-  for (size_t i = 0; i < particleWeights.size(); i++)
-  {
+  for (size_t i = 0; i < particleWeights.size(); i++) {
     if (particleWeights[i] > max) { max_i = i; max = particleWeights[i]; }
   }
   return particles[max_i];

@@ -41,8 +41,7 @@ VentureValuePtr MSPRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
   vector<VentureValuePtr> exp;
   exp.push_back(shared_ptr<VentureSymbol>(new VentureSymbol("memoizedSP")));
 
-  for (size_t i = 0; i < args->operandValues.size(); ++i)
-  {
+  for (size_t i = 0; i < args->operandValues.size(); ++i) {
     exp.push_back(quote(args->operandValues[i]));
   }
 

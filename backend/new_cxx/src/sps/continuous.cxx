@@ -31,7 +31,7 @@ using std::isfinite;
 
 
 /* Normal */
-VentureValuePtr NormalPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
+VentureValuePtr NormalPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("normal", args, 2);
 
@@ -43,11 +43,10 @@ VentureValuePtr NormalPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
   return VentureValuePtr(new VentureNumber(x));
 }
 
-double NormalPSP::simulateNumeric(const vector<double> & args, gsl_rng * rng)  const
+double NormalPSP::simulateNumeric(const vector<double> & args, gsl_rng * rng) const
 {
   double x = gsl_ran_gaussian(rng, args[1]) + args[0];
-  if (!isfinite(x))
-  {
+  if (!isfinite(x)) {
     cout << "Normal(" << args[0] << ", " << args[1] << ") = " << x << endl;
   }
   assert(isfinite(x));
@@ -70,8 +69,7 @@ double NormalPSP::logDensityNumeric(double output, const vector<double> & args) 
   assert(isfinite(output));
   assert(args[1] > 0);
   double ld = NormalDistributionLogLikelihood(output, args[0], args[1]);
-  if (!isfinite(ld))
-  {
+  if (!isfinite(ld)) {
     cout << "Normal(" << args[0] << ", " << args[1] << ") = " << output << " <" << ld << ">" << endl;
   }
   assert(isfinite(ld));
@@ -216,8 +214,7 @@ double BetaPSP::logDensityNumeric(double output, const vector<double> & args) co
   assert(0 <= output);
   assert(output <= 1);
   double ld = BetaDistributionLogLikelihood(output, args[0], args[1]);
-  if (!isfinite(ld))
-  {
+  if (!isfinite(ld)) {
     cout << "Beta(" << args[0] << ", " << args[1] << ") = " << output << " <" << ld << ">" << endl;
   }
 

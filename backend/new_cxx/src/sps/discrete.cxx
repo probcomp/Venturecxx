@@ -30,8 +30,7 @@ VentureValuePtr FlipOutputPSP::simulate(shared_ptr<Args> args,
 {
   checkArgsLength("flip", args, 0, 1);
   double p = 0.5;
-  if (!args->operandValues.empty())
-  {
+  if (!args->operandValues.empty()) {
     p = args->operandValues[0]->getProbability();
   }
   int n = gsl_ran_bernoulli(rng, p);
@@ -43,8 +42,7 @@ double FlipOutputPSP::logDensity(VentureValuePtr value,
                                  shared_ptr<Args> args) const
 {
   double p = 0.5;
-  if (!args->operandValues.empty())
-  {
+  if (!args->operandValues.empty()) {
     p = args->operandValues[0]->getProbability();
   }
 
@@ -56,8 +54,7 @@ vector<VentureValuePtr> FlipOutputPSP::enumerateValues(
     shared_ptr<Args> args) const
 {
   double p = 0.5;
-  if (!args->operandValues.empty())
-  {
+  if (!args->operandValues.empty()) {
     p = args->operandValues[0]->getProbability();
   }
 
@@ -73,8 +70,7 @@ VentureValuePtr BernoulliOutputPSP::simulate(shared_ptr<Args> args,
 {
   checkArgsLength("bernoulli", args, 0, 1);
   double p = 0.5;
-  if (!args->operandValues.empty())
-  {
+  if (!args->operandValues.empty()) {
     p = args->operandValues[0]->getProbability();
   }
   int n = gsl_ran_bernoulli(rng, p);
@@ -86,8 +82,7 @@ double BernoulliOutputPSP::logDensity(VentureValuePtr value,
                                       shared_ptr<Args> args) const
 {
   double p = 0.5;
-  if (!args->operandValues.empty())
-  {
+  if (!args->operandValues.empty()) {
     p = args->operandValues[0]->getProbability();
   }
 
@@ -99,8 +94,7 @@ vector<VentureValuePtr> BernoulliOutputPSP::enumerateValues(
     shared_ptr<Args> args) const
 {
   double p = 0.5;
-  if (!args->operandValues.empty())
-  {
+  if (!args->operandValues.empty()) {
     p = args->operandValues[0]->getProbability();
   }
 
@@ -146,8 +140,7 @@ vector<VentureValuePtr> UniformDiscreteOutputPSP::enumerateValues(
 
   vector<VentureValuePtr> vs;
 
-  for (long index = lower; index <= upper; index++) // TODO Fencepost error?
-  {
+  for (long index = lower; index <= upper; index++) { // TODO Fencepost error?
     vs.push_back(shared_ptr<VentureValue>(new VentureNumber(index)));
   }
   return vs;
@@ -182,10 +175,8 @@ VentureValuePtr CategoricalOutputPSP::simulate(shared_ptr<Args> args,
   checkArgsLength("categorical", args, 1, 2);
   const Simplex& ps = args->operandValues[0]->getSimplex();
   vector<VentureValuePtr> os;
-  if (args->operandValues.size() == 1)
-  {
-    for (size_t i = 0; i < ps.size(); ++i)
-    {
+  if (args->operandValues.size() == 1) {
+    for (size_t i = 0; i < ps.size(); ++i) {
       os.push_back(VentureValuePtr(new VentureInteger(i)));
     }
   }
@@ -197,12 +188,9 @@ double CategoricalOutputPSP::logDensity(VentureValuePtr value,
                                         shared_ptr<Args> args) const
 {
   checkArgsLength("categorical", args, 1, 2);
-  if (args->operandValues.size() == 1)
-  {
+  if (args->operandValues.size() == 1) {
     return logDensityCategorical(value, args->operandValues[0]->getSimplex());
-  }
-  else
-  {
+  } else {
     return logDensityCategorical(value, args->operandValues[0]->getSimplex(),
                                  args->operandValues[1]->getArray());
   }
@@ -215,24 +203,17 @@ vector<VentureValuePtr> CategoricalOutputPSP::enumerateValues(
 
   vector<VentureValuePtr> vs;
 
-  if (args->operandValues.size() == 1)
-  {
-    for (size_t i = 0; i < s.size(); ++i)
-    {
-      if (s[i] > 0)
-      {
+  if (args->operandValues.size() == 1) {
+    for (size_t i = 0; i < s.size(); ++i) {
+      if (s[i] > 0) {
         vs.push_back(VentureValuePtr(new VentureInteger(i)));
       }
     }
-  }
-  else
-  {
+  } else {
     const vector<VentureValuePtr>& os = args->operandValues[1]->getArray();
 
-    for (size_t i = 0; i < s.size(); ++i)
-    {
-      if (s[i] > 0)
-      {
+    for (size_t i = 0; i < s.size(); ++i) {
+      if (s[i] > 0) {
         vs.push_back(os[i]);
       }
     }
@@ -249,8 +230,7 @@ VentureValuePtr LogCategoricalOutputPSP::simulate(shared_ptr<Args> args,
     mapExpUptoMultConstant(args->operandValues[0]->getSimplex());
   size_t sample = sampleCategorical(ps, rng);
 
-  if (args->operandValues.size() == 1)
-  {
+  if (args->operandValues.size() == 1) {
     return VentureValuePtr(new VentureInteger(sample));
   }
   else { return args->operandValues[1]->getArray()[sample]; }
@@ -274,17 +254,15 @@ double LogCategoricalOutputPSP::logDensity(VentureValuePtr value,
 vector<VentureValuePtr> LogCategoricalOutputPSP::enumerateValues(
     shared_ptr<Args> args) const
 {
-  if (args->operandValues.size() == 1)
-  {
+  if (args->operandValues.size() == 1) {
     const Simplex& s = args->operandValues[0]->getSimplex();
 
     vector<VentureValuePtr> vs;
-    for (size_t i = 0; i < s.size(); ++i)
-      { vs.push_back(VentureValuePtr(new VentureInteger(i))); }
+    for (size_t i = 0; i < s.size(); ++i) {
+      vs.push_back(VentureValuePtr(new VentureInteger(i)));
+    }
     return vs;
-  }
-  else
-  {
+  } else {
     return args->operandValues[1]->getArray();
   }
 }

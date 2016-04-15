@@ -23,8 +23,7 @@ void assertTorus(boost::shared_ptr<Scaffold> scaffold)
 {
   for (map<Node*, int>::iterator iter = scaffold->regenCounts.begin();
        iter != scaffold->regenCounts.end();
-       ++iter)
-  {
+       ++iter) {
     assert(iter->second == 0);
   }
 }
@@ -33,8 +32,7 @@ void assertTrace(Trace * trace, boost::shared_ptr<Scaffold> scaffold)
 {
   for (map<Node*, int>::iterator iter = scaffold->regenCounts.begin();
        iter != scaffold->regenCounts.end();
-       ++iter)
-  {
+       ++iter) {
     assert(iter->second > 0);
   }
 }

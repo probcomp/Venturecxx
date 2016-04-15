@@ -89,8 +89,7 @@ boost::shared_ptr<Scaffold> constructScaffold(ConcreteTrace * trace, const vecto
   set<Node*> cAAA;
   map<Node*, int> indexAssignments;
 
-  for (size_t i = 0; i < setsOfPNodes.size(); ++i)
-  {
+  for (size_t i = 0; i < setsOfPNodes.size(); ++i) {
     extendCandidateScaffold(trace, setsOfPNodes[i], cDRG, cAbsorbing, cAAA, indexAssignments, i);
   }
   set<Node*> brush = findBrush(trace, cDRG, cAbsorbing, cAAA);
@@ -122,8 +121,7 @@ void addResamplingNode(ConcreteTrace * trace,
   set<Node*> children = trace->getChildren(node);
   for (set<Node*>::iterator childIter = children.begin();
        childIter != children.end();
-       ++childIter)
-  {
+       ++childIter) {
     q.push(make_tuple(*childIter, false, node));
   }
   indexAssignments[node] = i;
@@ -166,14 +164,12 @@ void extendCandidateScaffold(ConcreteTrace * trace,
   queue<tuple<Node*, bool, Node*> > q;
   for (set<Node*>::iterator pnodeIter = pnodes.begin();
        pnodeIter != pnodes.end();
-       ++pnodeIter)
-  {
+       ++pnodeIter) {
     Node * nullNode = NULL;
     q.push(make_tuple(*pnodeIter, true, nullNode));
   }
 
-  while (!q.empty())
-  {
+  while (!q.empty()) {
     tuple<Node*, bool, Node*> qElem = q.front();
     Node * node = boost::get<0>(qElem);
     bool isPrincipal = boost::get<1>(qElem);
@@ -181,30 +177,20 @@ void extendCandidateScaffold(ConcreteTrace * trace,
     q.pop();
 
     if (cDRG.count(node) && !cAAA.count(node)) { }
-    else if (dynamic_cast<LookupNode*>(node))
-    {
+    else if (dynamic_cast<LookupNode*>(node)) {
       addResamplingNode(trace, cDRG, cAbsorbing, cAAA, q, node, indexAssignments, i);
-    }
-    else
-    {
+    } else {
       ApplicationNode * appNode = dynamic_cast<ApplicationNode*>(node);
       assert(appNode);
       boost::shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(appNode))->getPSP(appNode);
-      if (cDRG.count(appNode->operatorNode))
-      {
+      if (cDRG.count(appNode->operatorNode)) {
         addResamplingNode(trace, cDRG, cAbsorbing, cAAA, q, node, indexAssignments, i);
-      }
-      else if (cAAA.count(appNode)) { }
-      else if (!isPrincipal && psp->canAbsorb(trace, appNode, parentNode))
-      {
+      } else if (cAAA.count(appNode)) { }
+      else if (!isPrincipal && psp->canAbsorb(trace, appNode, parentNode)) {
         addAbsorbingNode(cDRG, cAbsorbing, cAAA, appNode, indexAssignments, i);
-      }
-      else if (psp->childrenCanAAA())
-      {
+      } else if (psp->childrenCanAAA()) {
         addAAANode(cDRG, cAbsorbing, cAAA, node, indexAssignments, i);
-      }
-      else
-      {
+      } else {
         addResamplingNode(trace, cDRG, cAbsorbing, cAAA, q, node, indexAssignments, i);
       }
     }
@@ -221,8 +207,7 @@ set<Node*> findBrush(ConcreteTrace * trace,
   set<Node*> brush;
   for (set<Node*>::iterator drgIter = cDRG.begin();
        drgIter != cDRG.end();
-       ++drgIter)
-  {
+       ++drgIter) {
     RequestNode * requestNode = dynamic_cast<RequestNode*>(*drgIter);
     if (requestNode) { disableRequests(trace, requestNode, disableCounts, disabledRequests, brush); }
   }
@@ -238,12 +223,10 @@ void disableRequests(ConcreteTrace * trace,
   if (disabledRequests.count(node)) { return; }
   disabledRequests.insert(node);
   vector<RootOfFamily> esrRoots = trace->getESRParents(node->outputNode);
-  for (size_t i = 0; i < esrRoots.size(); ++i)
-  {
+  for (size_t i = 0; i < esrRoots.size(); ++i) {
     RootOfFamily esrRoot = esrRoots[i];
     disableCounts[esrRoot] += 1;
-    if (disableCounts[esrRoot] == trace->getNumRequests(esrRoot))
-    {
+    if (disableCounts[esrRoot] == trace->getNumRequests(esrRoot)) {
       disableFamily(trace, esrRoot.get(), disableCounts, disabledRequests, brush);
     }
   }
@@ -256,16 +239,14 @@ void disableFamily(ConcreteTrace * trace,
                    set<RequestNode*> & disabledRequests,
                    set<Node*> & brush)
 {
-  if (brush.count(node)){ return; }
+  if (brush.count(node)) { return; }
   brush.insert(node);
   OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
-  if (outputNode)
-  {
+  if (outputNode) {
     brush.insert(outputNode->requestNode);
     disableRequests(trace, outputNode->requestNode, disableCounts, disabledRequests, brush);
     disableFamily(trace, outputNode->operatorNode, disableCounts, disabledRequests, brush);
-    for (size_t i = 0; i < outputNode->operandNodes.size(); ++i)
-    {
+    for (size_t i = 0; i < outputNode->operandNodes.size(); ++i) {
       disableFamily(trace, outputNode->operandNodes[i], disableCounts, disabledRequests, brush);
     }
   }
@@ -309,8 +290,7 @@ bool hasChildInAorD(ConcreteTrace * trace,
   set<Node *> children = trace->getChildren(node);
   for (set<Node*>::iterator childIter = children.begin();
        childIter != children.end();
-       ++childIter)
-  {
+       ++childIter) {
     if (drg.count(*childIter) || absorbing.count(*childIter)) { return true; }
   }
   return false;
@@ -324,8 +304,7 @@ set<Node*> findBorder(ConcreteTrace * trace,
   set<Node*> border;
   std::set_union(absorbing.begin(), absorbing.end(), aaa.begin(), aaa.end(),
                  std::inserter(border, border.begin()));
-  for (set<Node*>::iterator drgIter = drg.begin(); drgIter != drg.end(); ++drgIter)
-  {
+  for (set<Node*>::iterator drgIter = drg.begin(); drgIter != drg.end(); ++drgIter) {
     if (!hasChildInAorD(trace, drg, absorbing, *drgIter)) { border.insert(*drgIter); }
   }
   return border;
@@ -348,38 +327,31 @@ map<Node*, int> computeRegenCounts(ConcreteTrace * trace,
                                   set<Node*> & brush)
 {
   map<Node*, int> regenCounts;
-  for (set<Node*>::iterator drgIter = drg.begin(); drgIter != drg.end(); ++drgIter)
-  {
+  for (set<Node*>::iterator drgIter = drg.begin(); drgIter != drg.end(); ++drgIter) {
     if (aaa.count(*drgIter)) { regenCounts[*drgIter] = 1; } // will be added to shortly
     else if (border.count(*drgIter)) { regenCounts[*drgIter] = trace->getChildren(*drgIter).size() + 1; }
     else { regenCounts[*drgIter] = trace->getChildren(*drgIter).size(); }
   }
 
-  if (!aaa.empty())
-  {
-    for (set<Node*>::iterator drgIter = drg.begin(); drgIter != drg.end(); ++drgIter)
-    {
+  if (!aaa.empty()) {
+    for (set<Node*>::iterator drgIter = drg.begin(); drgIter != drg.end(); ++drgIter) {
       vector<Node*> parents = trace->getParents(*drgIter);
       for (size_t i = 0; i < parents.size(); ++i) { maybeIncrementAAARegenCount(trace, regenCounts, aaa, parents[i]); }
     }
 
-    for (set<Node*>::iterator absorbingIter = absorbing.begin(); absorbingIter != absorbing.end(); ++absorbingIter)
-    {
+    for (set<Node*>::iterator absorbingIter = absorbing.begin(); absorbingIter != absorbing.end(); ++absorbingIter) {
       vector<Node*> parents = trace->getParents(*absorbingIter);
       for (size_t i = 0; i < parents.size(); ++i) { maybeIncrementAAARegenCount(trace, regenCounts, aaa, parents[i]); }
     }
 
-    for (set<Node*>::iterator brushIter = brush.begin(); brushIter != brush.end(); ++brushIter)
-    {
+    for (set<Node*>::iterator brushIter = brush.begin(); brushIter != brush.end(); ++brushIter) {
       LookupNode * lookupNode = dynamic_cast<LookupNode*>(*brushIter);
       OutputNode * outputNode = dynamic_cast<OutputNode*>(*brushIter);
-      if (outputNode)
-      {
+      if (outputNode) {
         vector<RootOfFamily> esrParents = trace->getESRParents(*brushIter);
         for (size_t i = 0; i < esrParents.size(); ++i) { maybeIncrementAAARegenCount(trace, regenCounts, aaa, esrParents[i].get()); }
       }
-      if (lookupNode)
-      {
+      if (lookupNode) {
         maybeIncrementAAARegenCount(trace, regenCounts, aaa, lookupNode->sourceNode);
       }
     }
@@ -393,26 +365,23 @@ map<Node*, boost::shared_ptr<LKernel> > loadKernels(ConcreteTrace * trace,
                                             bool useDeltaKernels)
 {
   map<Node*, boost::shared_ptr<LKernel> > lkernels;
-  for (set<Node*>::iterator aaaIter = aaa.begin(); aaaIter != aaa.end(); ++aaaIter)
-  {
+  for (set<Node*>::iterator aaaIter = aaa.begin(); aaaIter != aaa.end(); ++aaaIter) {
     OutputNode * outputNode = dynamic_cast<OutputNode*>(*aaaIter);
     assert(outputNode);
     boost::shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
     lkernels[*aaaIter] = psp->getAAALKernel();
   }
 
-  if (useDeltaKernels)
-    {
-      for (set<Node*>::iterator drgIter = drg.begin(); drgIter != drg.end(); ++drgIter)
-        {
-          OutputNode * outputNode = dynamic_cast<OutputNode*>(*drgIter);
-          if (!outputNode) { continue; }
-          if (drg.count(outputNode->operatorNode)) { continue; }
-          if (aaa.count(outputNode)) { continue; }
-          boost::shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
-          if (psp->hasDeltaKernel()) { lkernels[outputNode] = psp->getDeltaKernel(); }
-        }
+  if (useDeltaKernels) {
+    for (set<Node*>::iterator drgIter = drg.begin(); drgIter != drg.end(); ++drgIter) {
+      OutputNode * outputNode = dynamic_cast<OutputNode*>(*drgIter);
+      if (!outputNode) { continue; }
+      if (drg.count(outputNode->operatorNode)) { continue; }
+      if (aaa.count(outputNode)) { continue; }
+      boost::shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
+      if (psp->hasDeltaKernel()) { lkernels[outputNode] = psp->getDeltaKernel(); }
     }
+  }
   return lkernels;
 }
 
@@ -422,8 +391,7 @@ vector<vector<Node *> > assignBorderSequnce(set<Node*> & border,
                                             int numIndices)
 {
   vector<vector<Node *> > borderSequence(numIndices);
-  for (set<Node*>::iterator borderIter = border.begin(); borderIter != border.end(); ++borderIter)
-  {
+  for (set<Node*>::iterator borderIter = border.begin(); borderIter != border.end(); ++borderIter) {
     borderSequence[indexAssignments[*borderIter]].push_back(*borderIter);
   }
   return borderSequence;

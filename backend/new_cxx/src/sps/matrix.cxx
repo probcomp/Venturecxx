@@ -36,8 +36,7 @@ VentureValuePtr MatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
   if (rows == 0) { return VentureValuePtr(new VentureMatrix(MatrixXd(0, 0))); }
 
   // Vector becomes a vector, I guess
-  if (NULL != dynamic_pointer_cast<VentureNumber>(allRows[0]))
-  {
+  if (NULL != dynamic_pointer_cast<VentureNumber>(allRows[0])) {
     VectorXd v(rows);
 
     for (size_t i = 0; i < rows; ++i) { v(i) = allRows[i]->getDouble(); }
@@ -50,13 +49,11 @@ VentureValuePtr MatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
 
   MatrixXd M(rows, cols);
 
-  for (size_t i = 0; i < rows; ++i)
-  {
+  for (size_t i = 0; i < rows; ++i) {
     vector<VentureValuePtr> row_i = allRows[i]->getArray();
     if (cols != row_i.size()) { throw "Matrix must have equal number of elements per row."; }
 
-    for (size_t j = 0; j < cols; ++j)
-    {
+    for (size_t j = 0; j < cols; ++j) {
       M(i, j) = row_i[j]->getDouble();
     }
   }
@@ -96,8 +93,7 @@ VentureValuePtr VectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
   vector<VentureValuePtr> row = args->operandValues;
 
   if (row.size() == 0) { return VentureValuePtr(new VentureVector(VectorXd())); }
-  else
-  {
+  else {
     VectorXd v(row.size());
 
     for (size_t i = 0; i < row.size(); ++i) { v(i) = row[i]->getDouble(); }
@@ -116,8 +112,7 @@ VentureValuePtr IsVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng
   if (!is_array) { return VentureValuePtr(new VentureBool(false)); }
 
   vector<VentureValuePtr> xs = args->operandValues[0]->getArray();
-  for(size_t i = 0; i < xs.size(); ++i)
-  {
+  for(size_t i = 0; i < xs.size(); ++i) {
     bool is_number = NULL != dynamic_pointer_cast<VentureNumber>(xs[i]);
     if (!is_number) { return VentureValuePtr(new VentureBool(false)); }
   }
@@ -131,8 +126,7 @@ VentureValuePtr ToVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng
   vector<VentureValuePtr> row = args->operandValues[0]->getArray();
 
   if (row.size() == 0) { return VentureValuePtr(new VentureVector(VectorXd())); }
-  else
-  {
+  else {
     VectorXd v(row.size());
 
     for (size_t i = 0; i < row.size(); ++i) { v(i) = row[i]->getDouble(); }

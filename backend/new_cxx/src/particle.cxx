@@ -52,8 +52,7 @@ Particle::Particle(boost::shared_ptr<Particle> outerParticle):
     for (map<Node*, boost::shared_ptr<SPAux> >::iterator iter =
            outerParticle->madeSPAuxs.begin();
          iter != outerParticle->madeSPAuxs.end();
-         ++iter)
-    {
+         ++iter) {
       if (iter->second) { madeSPAuxs[iter->first] = iter->second->clone(); }
       else { madeSPAuxs[iter->first] = boost::shared_ptr<SPAux>(); }
     }
@@ -82,17 +81,15 @@ void Particle::registerUnconstrainedChoiceInScope(ScopeID scope,
                                                   BlockID block, Node * node)
 {
   assert(block);
-  if (!scopes.contains(scope))
-  {
+  if (!scopes.contains(scope)) {
     scopes = scopes.insert(
         scope, PMap<BlockID, PSet<Node*>, VentureValuePtrsLess >());
   }
-  if (!scopes.lookup(scope).contains(block))
-  {
+  if (!scopes.lookup(scope).contains(block)) {
     PMap<BlockID, PSet<Node*>, VentureValuePtrsLess > newBlock =
       scopes.lookup(scope).insert(block, PSet<Node*>());
     scopes = scopes.insert(scope, newBlock);
- }
+  }
   PSet<Node*> newPNodes = scopes.lookup(scope).lookup(block).insert(node);
   scopes = scopes.insert(scope, scopes.lookup(scope).insert(block, newPNodes));
 }
@@ -121,8 +118,7 @@ void Particle::addESREdge(RootOfFamily esrRoot, OutputNode * outputNode)
 {
   // Note: this mutates, because it never crosses a particle
   assert(baseTrace->getESRParents(outputNode).empty());
-  if (!esrRoots.contains(outputNode))
-  {
+  if (!esrRoots.contains(outputNode)) {
     esrRoots = esrRoots.insert(outputNode, vector<RootOfFamily>());
   }
   vector<RootOfFamily> pars = esrRoots.lookup(outputNode);
@@ -144,8 +140,7 @@ void Particle::reconnectLookup(LookupNode * lookupNode)
 
 void Particle::incNumRequests(RootOfFamily root)
 {
-  if (!numRequests.contains(root))
-  {
+  if (!numRequests.contains(root)) {
     numRequests = numRequests.insert(root, baseTrace->getNumRequests(root));
   }
   numRequests = numRequests.insert(root, numRequests.lookup(root) + 1);
@@ -153,8 +148,7 @@ void Particle::incNumRequests(RootOfFamily root)
 
 void Particle::incRegenCount(boost::shared_ptr<Scaffold> scaffold, Node * node)
 {
-  if (!regenCounts.contains(node))
-  {
+  if (!regenCounts.contains(node)) {
     regenCounts = regenCounts.insert(node, 0);
   }
   regenCounts = regenCounts.insert(node, regenCounts.lookup(node) + 1);
@@ -183,8 +177,7 @@ boost::shared_ptr<LKernel> Particle::getLKernel(
 
 void Particle::addChild(Node * node, Node * child)
 {
-  if (!newChildren.contains(node))
-  {
+  if (!newChildren.contains(node)) {
     newChildren = newChildren.insert(node, PSet<Node*>());
   }
   newChildren =
@@ -213,13 +206,10 @@ boost::shared_ptr<SP> Particle::getMadeSP(Node * makerNode)
 
 boost::shared_ptr<SPAux> Particle::getMadeSPAux(Node * makerNode)
 {
-  if (!madeSPAuxs.count(makerNode))
-  {
-    if (baseTrace->getMadeSPAux(makerNode))
-    {
+  if (!madeSPAuxs.count(makerNode)) {
+    if (baseTrace->getMadeSPAux(makerNode)) {
       madeSPAuxs[makerNode] = baseTrace->getMadeSPAux(makerNode)->clone();
-    }
-    else { return boost::shared_ptr<SPAux>(); }
+    } else { return boost::shared_ptr<SPAux>(); }
   }
   return madeSPAuxs[makerNode];
 }
@@ -277,8 +267,7 @@ void Particle::setMadeSPAux(Node * makerNode, boost::shared_ptr<SPAux> spAux)
 void Particle::registerMadeSPFamily(Node * makerNode, FamilyID id,
                                     RootOfFamily esrRoot)
 {
-  if (!newMadeSPFamilies.contains(makerNode))
-  {
+  if (!newMadeSPFamilies.contains(makerNode)) {
     newMadeSPFamilies = newMadeSPFamilies.insert(
         makerNode, PMap<FamilyID, RootOfFamily, VentureValuePtrsLess>());
   }
@@ -288,12 +277,9 @@ void Particle::registerMadeSPFamily(Node * makerNode, FamilyID id,
 
 bool Particle::containsMadeSPFamily(Node * makerNode, FamilyID id)
 {
-  if (newMadeSPFamilies.contains(makerNode))
-  {
+  if (newMadeSPFamilies.contains(makerNode)) {
     if (newMadeSPFamilies.lookup(makerNode).contains(id)) { return true; }
-  }
-  else if (baseTrace->getMadeSPFamilies(makerNode)->containsFamily(id))
-  {
+  } else if (baseTrace->getMadeSPFamilies(makerNode)->containsFamily(id)) {
     return true;
   }
   return false;
@@ -302,12 +288,9 @@ bool Particle::containsMadeSPFamily(Node * makerNode, FamilyID id)
 RootOfFamily Particle::getMadeSPFamilyRoot(Node * makerNode, FamilyID id)
 {
   if (newMadeSPFamilies.contains(makerNode) &&
-      newMadeSPFamilies.lookup(makerNode).contains(id))
-  {
+      newMadeSPFamilies.lookup(makerNode).contains(id)) {
     return newMadeSPFamilies.lookup(makerNode).lookup(id);
-  }
-  else
-  {
+  } else {
     return baseTrace->getMadeSPFamilyRoot(makerNode, id);
   }
 }
@@ -323,24 +306,18 @@ int Particle::numBlocksInScope(ScopeID scope)
     // TODO There must be a way to do this removal asymptotically faster,
     // because the constrainedChoices PSet stores the nodes in order.
     const vector<Node*> &ccs = constrainedChoices.keys();
-    BOOST_FOREACH(Node* n, ccs)
-    {
+    BOOST_FOREACH(Node* n, ccs) {
       actualUnconstrainedChoices.erase(n);
     }
     return actualUnconstrainedChoices.size();
-  }
-  else
-  {
+  } else {
     const vector<BlockID> &baseBlocks = baseTrace->blocksInScope(scope);
-    if (scopes.contains(scope))
-    {
+    if (scopes.contains(scope)) {
       set<BlockID> actualBlocks(baseBlocks.begin(), baseBlocks.end());
       const vector<BlockID> &myBlocks = scopes.lookup(scope).keys();
       actualBlocks.insert(myBlocks.begin(), myBlocks.end());
       return actualBlocks.size();
-    }
-    else
-    {
+    } else {
       return baseBlocks.size();
     }
   }
@@ -357,20 +334,17 @@ void Particle::commit()
   vector<pair<ScopeID,
               PMap<BlockID, PSet<Node*>, VentureValuePtrsLess> > > scopeItems =
     scopes.items();
-  for (size_t scopeIndex = 0; scopeIndex < scopeItems.size(); ++scopeIndex)
-  {
+  for (size_t scopeIndex = 0; scopeIndex < scopeItems.size(); ++scopeIndex) {
     pair<ScopeID,
          PMap<BlockID, PSet<Node*>, VentureValuePtrsLess> > & scopeItem =
       scopeItems[scopeIndex];
     vector<pair<BlockID, PSet<Node*> > > blockItems = scopeItem.second.items();
 
-    for (size_t blockIndex = 0; blockIndex < blockItems.size(); ++blockIndex)
-    {
+    for (size_t blockIndex = 0; blockIndex < blockItems.size(); ++blockIndex) {
       pair<BlockID, PSet<Node*> >& blockItem = blockItems[blockIndex];
       vector<Node*> nodes = blockItem.second.keys();
 
-      for (size_t nodeIndex = 0; nodeIndex < nodes.size(); ++nodeIndex)
-      {
+      for (size_t nodeIndex = 0; nodeIndex < nodes.size(); ++nodeIndex) {
         baseTrace->registerUnconstrainedChoiceInScope(
             scopeItem.first, blockItem.first, nodes[nodeIndex]);
       }
@@ -378,8 +352,7 @@ void Particle::commit()
   }
 
   vector<Node*> ccs = constrainedChoices.keys();
-  BOOST_FOREACH(Node * node, ccs)
-  {
+  BOOST_FOREACH(Node * node, ccs) {
     baseTrace->registerConstrainedChoice(node);
   }
 
@@ -392,15 +365,13 @@ void Particle::commit()
   for (vector<pair<Node*, VentureValuePtr> >::iterator iter =
          valueItems.begin();
        iter != valueItems.end();
-       ++iter)
-  {
+       ++iter) {
     baseTrace->values[iter->first] = iter->second;
   }
 
 
   vector<pair<Node*, boost::shared_ptr<SP> > > madeSPItems = madeSPs.items();
-  for (size_t madeSPIndex = 0; madeSPIndex < madeSPItems.size(); ++madeSPIndex)
-  {
+  for (size_t madeSPIndex = 0; madeSPIndex < madeSPItems.size(); ++madeSPIndex) {
     pair<Node*, boost::shared_ptr<SP> > madeSPItem = madeSPItems[madeSPIndex];
     boost::shared_ptr<VentureSPRecord>
       newSPRecord(new VentureSPRecord(madeSPItem.second));
@@ -409,16 +380,14 @@ void Particle::commit()
 
 
   vector<pair<Node*, vector<RootOfFamily> > > esrItems = esrRoots.items();
-  for (size_t esrIndex = 0; esrIndex < esrItems.size(); ++esrIndex)
-  {
+  for (size_t esrIndex = 0; esrIndex < esrItems.size(); ++esrIndex) {
     pair<Node*, vector<RootOfFamily> >& esrItem = esrItems[esrIndex];
     baseTrace->setESRParents(esrItem.first, esrItem.second);
   }
 
   vector<pair<RootOfFamily, int> > numRequestsItems = numRequests.items();
   for (size_t numRequestsIndex = 0; numRequestsIndex < numRequestsItems.size();
-       ++numRequestsIndex)
-  {
+       ++numRequestsIndex) {
     pair<RootOfFamily, int>& numRequestsItem =
       numRequestsItems[numRequestsIndex];
     baseTrace->setNumRequests(numRequestsItem.first, numRequestsItem.second);
@@ -428,8 +397,7 @@ void Particle::commit()
     newMadeSPFamiliesItems = newMadeSPFamilies.items();
   for (size_t newMadeSPFamiliesIndex = 0;
        newMadeSPFamiliesIndex < newMadeSPFamiliesItems.size();
-       ++newMadeSPFamiliesIndex)
-  {
+       ++newMadeSPFamiliesIndex) {
     pair<Node*, PMap<FamilyID, RootOfFamily, VentureValuePtrsLess> >&
       newMadeSPFamilyItem = newMadeSPFamiliesItems[newMadeSPFamiliesIndex];
     Node * node = newMadeSPFamilyItem.first;
@@ -438,42 +406,36 @@ void Particle::commit()
     for (vector<pair<FamilyID, RootOfFamily> >::iterator iter =
            families.begin();
          iter != families.end();
-         ++iter)
-    {
+         ++iter) {
       baseTrace->registerMadeSPFamily(node, iter->first, iter->second);
     }
   }
 
   vector<pair<Node*, PSet<Node*> > > newChildrenItems = newChildren.items();
   for (size_t newChildrenIndex = 0; newChildrenIndex < newChildrenItems.size();
-       ++newChildrenIndex)
-  {
+       ++newChildrenIndex) {
     pair<Node*, PSet<Node*> >& newChildrenItem =
       newChildrenItems[newChildrenIndex];
     Node * node = newChildrenItem.first;
     vector<Node*> newChildrenItems = newChildrenItem.second.keys();
-    BOOST_FOREACH(Node * child, newChildrenItems)
-    {
+    BOOST_FOREACH(Node * child, newChildrenItems) {
       node->children.insert(child);
     }
-    BOOST_FOREACH(Node * child, newChildrenItems)
-    {
+    BOOST_FOREACH(Node * child, newChildrenItems) {
       assert(node->children.count(child));
     }
   }
 
   vector<OutputNode*> discardedAAAMakerNodeItems =
     discardedAAAMakerNodes.keys();
-  BOOST_FOREACH(OutputNode * makerNode, discardedAAAMakerNodeItems)
-  {
+  BOOST_FOREACH(OutputNode * makerNode, discardedAAAMakerNodeItems) {
     baseTrace->discardAAAMadeSPAux(makerNode);
   }
 
   vector<pair<Node*, boost::shared_ptr<SPAux> > >
     madeSPAuxItems(madeSPAuxs.begin(), madeSPAuxs.end());
   for (size_t madeSPAuxIndex = 0; madeSPAuxIndex < madeSPAuxItems.size();
-       ++madeSPAuxIndex)
-  {
+       ++madeSPAuxIndex) {
     pair<Node*, boost::shared_ptr<SPAux> > madeSPAuxItem =
       madeSPAuxItems[madeSPAuxIndex];
     baseTrace->setMadeSPAux(madeSPAuxItem.first, madeSPAuxItem.second);
@@ -497,15 +459,12 @@ VentureValuePtr Particle::getObservedValue(Node * node)
 
 set<Node*> Particle::getChildren(Node * node)
 {
-  if (newChildren.contains(node))
-  {
+  if (newChildren.contains(node)) {
     set<Node *> old_children = baseTrace->getChildren(node);
     vector<Node *> new_children = newChildren.lookup(node).keys();
     old_children.insert(new_children.begin(), new_children.end());
     return old_children;
-  }
-  else
-  {
+  } else {
     return baseTrace->getChildren(node);
   }
 }

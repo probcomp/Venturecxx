@@ -38,8 +38,7 @@ VentureValuePtr MakeDirCatOutputPSP::simulate(shared_ptr<Args> args,
   checkArgsLength("make_dir_cat", args, 1);
 
   vector<double> alpha;
-  BOOST_FOREACH(VentureValuePtr v, args->operandValues[0]->getArray())
-  {
+  BOOST_FOREACH(VentureValuePtr v, args->operandValues[0]->getArray()) {
     alpha.push_back(v->getDouble());
   }
 
@@ -62,14 +61,12 @@ VentureValuePtr DirCatOutputPSP::simulate(shared_ptr<Args> args,
   assert(aux->counts.size() == alpha.size());
 
   vector<double> weights(alpha);
-  for (size_t i = 0; i < alpha.size(); ++i)
-  {
+  for (size_t i = 0; i < alpha.size(); ++i) {
     weights[i] += aux->counts[i];
   }
 
   vector<VentureValuePtr> os;
-  for (size_t i = 0; i < weights.size(); ++i)
-  {
+  for (size_t i = 0; i < weights.size(); ++i) {
     os.push_back(VentureValuePtr(new VentureInteger(i)));
   }
   return simulateCategorical(weights, os, rng);
@@ -136,8 +133,7 @@ double DirCatOutputPSP::logDensityOfData(shared_ptr<SPAux> spAux) const
   double A = total;
 
   double x = gsl_sf_lngamma(A) - gsl_sf_lngamma(N + A);
-  for (size_t i = 0; i < alpha.size(); ++i)
-  {
+  for (size_t i = 0; i < alpha.size(); ++i) {
     x += gsl_sf_lngamma(alpha[i] + aux->counts[i]);
     x -= gsl_sf_lngamma(alpha[i]);
   }
@@ -192,8 +188,7 @@ VentureValuePtr MakeUCDirCatOutputPSP::simulate(shared_ptr<Args> args,
   size_t n = alphaArray.size();
 
   double* alphaVector = new double[n];
-  for (size_t i = 0; i < n; ++i)
-  {
+  for (size_t i = 0; i < n; ++i) {
     alphaVector[i] = alphaArray[i]->getDouble();
   }
 
@@ -229,8 +224,7 @@ double MakeUCDirCatOutputPSP::logDensity(VentureValuePtr value,
   assert(spAux);
 
   double *alphaVector = new double[n];
-  for (size_t i = 0; i < n; ++i)
-  {
+  for (size_t i = 0; i < n; ++i) {
     alphaVector[i] = alphaArray->xs[i]->getDouble();
   }
 
@@ -252,8 +246,7 @@ void UCDirCatSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
   assert(aux->counts.size() == n);
 
   double * conjAlphaVector = new double[n];
-  for (size_t i = 0; i < n; ++i)
-  {
+  for (size_t i = 0; i < n; ++i) {
     conjAlphaVector[i] = aux->counts[i] + alphaArray->xs[i]->getDouble();
   }
 
@@ -281,8 +274,7 @@ VentureValuePtr UCDirCatOutputPSP::simulate(shared_ptr<Args> args,
 
   double u = gsl_ran_flat(rng, 0.0, 1.0);
   double sum = 0.0;
-  for (size_t i = 0; i < n; ++i)
-  {
+  for (size_t i = 0; i < n; ++i) {
     sum += aux->theta[i];
     if (u < sum) { return VentureValuePtr(new VentureInteger(i)); }
   }
@@ -398,8 +390,7 @@ void UCSymDirCatSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
 
   double *conjAlphaVector = new double[d];
 
-  for (size_t i = 0; i < d; ++i)
-  {
+  for (size_t i = 0; i < d; ++i) {
     conjAlphaVector[i] = alpha + aux->counts[i];
   }
 

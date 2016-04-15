@@ -51,9 +51,7 @@ int mixMH(ConcreteTrace * trace,
   if (logU < alpha) {
     // cout << ".";
     return gKernel->accept();
-  }
-  else
-  {
+  } else {
     // cout << "!";
     return gKernel->reject();
   }
