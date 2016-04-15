@@ -23,22 +23,22 @@
 #include "detach.h"
 #include "consistency.h"
 
-pair<Trace*,double> MHGKernel::propose(ConcreteTrace * trace,boost::shared_ptr<Scaffold> scaffold)
+pair<Trace*, double> MHGKernel::propose(ConcreteTrace * trace, boost::shared_ptr<Scaffold> scaffold)
 {
   this->trace = trace;
   this->scaffold = scaffold;
 
   assert(scaffold->border.size() == 1);
 
-  pair<double,boost::shared_ptr<DB> > p = detachAndExtract(trace,scaffold->border[0],scaffold);
+  pair<double, boost::shared_ptr<DB> > p = detachAndExtract(trace, scaffold->border[0], scaffold);
   double rhoWeight = p.first;
   rhoDB = p.second;
 
   assertTorus(scaffold);
 
-  double xiWeight = regenAndAttach(trace,scaffold->border[0],scaffold,false,rhoDB,boost::shared_ptr<map<Node*,Gradient> >());
+  double xiWeight = regenAndAttach(trace, scaffold->border[0], scaffold, false, rhoDB, boost::shared_ptr<map<Node*, Gradient> >());
 
-  return make_pair(trace,xiWeight - rhoWeight);
+  return make_pair(trace, xiWeight - rhoWeight);
 }
 
 int MHGKernel::accept() { return this->scaffold->numAffectedNodes(); }
@@ -46,8 +46,8 @@ int MHGKernel::accept() { return this->scaffold->numAffectedNodes(); }
 
 int MHGKernel::reject()
 {
-  detachAndExtract(trace,scaffold->border[0],scaffold);
+  detachAndExtract(trace, scaffold->border[0], scaffold);
   assertTorus(scaffold);
-  regenAndAttach(trace,scaffold->border[0],scaffold,true,rhoDB,boost::shared_ptr<map<Node*,Gradient> >());
+  regenAndAttach(trace, scaffold->border[0], scaffold, true, rhoDB, boost::shared_ptr<map<Node*, Gradient> >());
   return this->scaffold->numAffectedNodes();
 }

@@ -32,8 +32,7 @@ ScaffoldIndexer::ScaffoldIndexer(ScopeID scope, BlockID block,
 boost::shared_ptr<Scaffold> ScaffoldIndexer::sampleIndex(
     ConcreteTrace * trace) const
 {
-  if (block->hasSymbol() && block->getSymbol() == "one")
-  {
+  if (block->hasSymbol() && block->getSymbol() == "one") {
     BlockID actualBlock = trace->sampleBlock(scope);
     vector<set<Node*> > setsOfPNodes;
     setsOfPNodes.push_back(trace->getNodesInBlock(scope, actualBlock));
@@ -41,26 +40,18 @@ boost::shared_ptr<Scaffold> ScaffoldIndexer::sampleIndex(
       constructScaffold(trace, setsOfPNodes, false);
     //cout << scaffold->showSizes() << endl;
     return scaffold;
-  }
-  else if (block->hasSymbol() && block->getSymbol() == "all")
-  {
+  } else if (block->hasSymbol() && block->getSymbol() == "all") {
     vector<set<Node*> > setsOfPNodes;
     setsOfPNodes.push_back(trace->getAllNodesInScope(scope));
     return constructScaffold(trace, setsOfPNodes, false);
-  }
-  else if (block->hasSymbol() && block->getSymbol() == "ordered")
-  {
+  } else if (block->hasSymbol() && block->getSymbol() == "ordered") {
     return constructScaffold(trace, trace->getOrderedSetsInScope(scope),
                              false);
-  }
-  else if (block->hasSymbol() && block->getSymbol() == "ordered_range")
-  {
+  } else if (block->hasSymbol() && block->getSymbol() == "ordered_range") {
     return constructScaffold(
         trace, trace->getOrderedSetsInScopeAndRange(scope, minBlock, maxBlock),
         false);
-  }
-  else
-  {
+  } else {
     vector<set<Node*> > setsOfPNodes(1, trace->getNodesInBlock(scope, block));
     return constructScaffold(trace, setsOfPNodes, false);
   }
@@ -71,19 +62,13 @@ double ScaffoldIndexer::logDensityOfIndex(
     Trace * trace, boost::shared_ptr<Scaffold> scaffold) const
 {
   if (dynamic_pointer_cast<VentureSymbol>(block) &&
-      block->getSymbol() == "one")
-  {
+      block->getSymbol() == "one") {
     return trace->logDensityOfBlock(scope);
-  }
-  else if (dynamic_pointer_cast<VentureSymbol>(block) &&
-           block->getSymbol() == "all")
-  {
+  } else if (dynamic_pointer_cast<VentureSymbol>(block) &&
+             block->getSymbol() == "all") {
     return 0;
-  }
-  else if (dynamic_pointer_cast<VentureSymbol>(block) &&
-           block->getSymbol() == "ordered")
-  {
+  } else if (dynamic_pointer_cast<VentureSymbol>(block) &&
+             block->getSymbol() == "ordered") {
     return 0;
-  }
-  else { return 0; }
+  } else { return 0; }
 }

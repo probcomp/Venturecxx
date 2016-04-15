@@ -27,8 +27,8 @@ struct Trace;
 
 struct GKernel
 {
-  virtual pair<Trace*,double> propose(ConcreteTrace * trace,
-                                      boost::shared_ptr<Scaffold> scaffold) =0;
+  virtual pair<Trace*, double> propose(ConcreteTrace * trace,
+                                       boost::shared_ptr<Scaffold> scaffold) =0;
 
   virtual int accept() =0;
   virtual int reject() =0;

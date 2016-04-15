@@ -169,7 +169,7 @@ struct VentureNil : VentureValue
 
 struct VenturePair : VentureValue
 {
-  VenturePair(VentureValuePtr car,VentureValuePtr cdr): car(car), cdr(cdr) { }
+  VenturePair(VentureValuePtr car, VentureValuePtr cdr): car(car), cdr(cdr) { }
 
   const VentureValuePtr& getFirst() const { return car; }
   const VentureValuePtr& getRest() const { return cdr; }
