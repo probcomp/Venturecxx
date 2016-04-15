@@ -70,6 +70,5 @@ double ScaffoldIndexer::logDensityOfIndex(
   } else if (dynamic_pointer_cast<VentureSymbol>(block) &&
              block->getSymbol() == "ordered") {
     return 0;
-  }
-  else { return 0; }
+  } else { return 0; }
 }

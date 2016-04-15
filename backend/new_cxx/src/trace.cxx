@@ -71,8 +71,10 @@ VentureValuePtr Trace::getGroundValue(Node * node)
   boost::shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(value);
 
   // TODO Hack!
-  if (spRef) { return VentureValuePtr(new VentureSPRecord(getMadeSP(spRef->makerNode), getMadeSPAux(spRef->makerNode))); }
-  else { return value; }
+  if (spRef) {
+    return VentureValuePtr(new VentureSPRecord(getMadeSP(spRef->makerNode),
+                                               getMadeSPAux(spRef->makerNode)));
+  } else { return value; }
 }
 
 Node * Trace::getOperatorSPMakerNode(ApplicationNode * node)

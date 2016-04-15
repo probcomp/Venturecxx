@@ -179,8 +179,7 @@ VentureValuePtr CategoricalOutputPSP::simulate(shared_ptr<Args> args,
     for (size_t i = 0; i < ps.size(); ++i) {
       os.push_back(VentureValuePtr(new VentureInteger(i)));
     }
-  }
-  else { os = args->operandValues[1]->getArray(); }
+  } else { os = args->operandValues[1]->getArray(); }
   return simulateCategorical(ps, os, rng);
 }
 
@@ -232,8 +231,7 @@ VentureValuePtr LogCategoricalOutputPSP::simulate(shared_ptr<Args> args,
 
   if (args->operandValues.size() == 1) {
     return VentureValuePtr(new VentureInteger(sample));
-  }
-  else { return args->operandValues[1]->getArray()[sample]; }
+  } else { return args->operandValues[1]->getArray()[sample]; }
 }
 
 double LogCategoricalOutputPSP::logDensity(VentureValuePtr value,
