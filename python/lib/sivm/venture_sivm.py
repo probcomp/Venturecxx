@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Copyright (c) 2013, 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
@@ -14,9 +16,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 import copy
 import cStringIO as StringIO
