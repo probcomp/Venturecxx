@@ -32,7 +32,7 @@ import numpy.random as npr
 # We still have a notion of nodes.  A node is a thing that knows its
 # address, and its value if it has one.
 
-def eval(address, exp, env):
+def eval(address, exp, env, rng):
   # The exact parallel to venture.lite.regen.eval would be to return a
   # Node, but since the address will always be the input address,
   # might as well just return the value.
@@ -50,11 +50,11 @@ def eval(address, exp, env):
     nodes = []
     for index, subexp in enumerate(exp):
       addr = address.extend(index)
-      v = eval(addr,subexp,env)
+      v = eval(addr,subexp,env,rng)
       nodes.append(node.Node(addr, v))
 
     try:
-      val = apply(address, nodes, env)
+      val = apply(address, nodes, env, rng)
     except VentureNestedRiplMethodError as err:
       # This is a hack to allow errors raised by inference SP actions
       # that are ripl actions to blame the address of the maker of the
@@ -72,24 +72,25 @@ def eval(address, exp, env):
       raise VentureException("evaluation", err.message, address=address, cause=err), None, info[2]
     return val
 
-def apply(address, nodes, env):
+def apply(address, nodes, env, rng):
   spr = nodes[0].value
   if not isinstance(spr, VentureSPRecord):
     raise VentureException("evaluation", "Cannot apply a non-procedure", address=address)
-  req_args = RequestArgs(address, nodes[1:], env)
+  req_args = RequestArgs(address, nodes[1:], env, rng.randint(1, 2**31 - 1))
   requests = applyPSP(spr.sp.requestPSP, req_args)
-  req_nodes = [evalRequest(req_args, spr, r) for r in requests.esrs]
+  req_nodes = [evalRequest(req_args, spr, r, rng) for r in requests.esrs]
   assert not requests.lsrs, "The untraced evaluator does not yet support LSRs."
-  return applyPSP(spr.sp.outputPSP, OutputArgs(address, nodes[1:], env, req_nodes, requests))
+  return applyPSP(spr.sp.outputPSP, OutputArgs(address, nodes[1:], env, rng.randint(1, 2**31 - 1), req_nodes, requests))
 
 class RequestArgs(object):
   "A package containing all the evaluation context information that a RequestPSP might need, parallel to venture.lite.node.Args"
-  def __init__(self, address, nodes, env):
+  def __init__(self, address, nodes, env, seed):
     self.node = node.Node(address)
     self.operandNodes = nodes
     self.env = env
-    self.py_rng = random.Random()
-    self.np_rng = npr.RandomState()
+    rng = random.Random(seed)
+    self.py_rng = random.Random(rng.randint(1, 2**31 - 1))
+    self.np_rng = npr.RandomState(rng.randint(1, 2**31 - 1))
     # TODO Theoretically need spaux and madeSPAux fields
 
   def operandValues(self):
@@ -100,8 +101,8 @@ class RequestArgs(object):
 
 class OutputArgs(RequestArgs):
   "A package containing all the evaluation context information that an OutputPSP might need, parallel to venture.lite.node.Args"
-  def __init__(self, address, inputs, env, esr_nodes, requests):
-    super(OutputArgs, self).__init__(address, inputs, env)
+  def __init__(self, address, inputs, env, rng, esr_nodes, requests):
+    super(OutputArgs, self).__init__(address, inputs, env, rng)
     self.esr_nodes = esr_nodes
     self.requests = requests # This field is used by "fix" for getting the environment to modify
 
@@ -115,13 +116,13 @@ def applyPSP(psp, args):
   psp.incorporate(val, args)
   return val
 
-def evalRequest(req_args, spr, r):
+def evalRequest(req_args, spr, r, rng):
   families = spr.spFamilies
   if families.containsFamily(r.id):
     return families.getFamily(r.id)
   else:
     new_addr = req_args.node.address.request(r.addr)
-    ans = node.Node(new_addr, eval(new_addr, r.exp, r.env))
+    ans = node.Node(new_addr, eval(new_addr, r.exp, r.env, rng))
     if nonRepeatableRequestID(req_args, r.id):
       pass
     else:
