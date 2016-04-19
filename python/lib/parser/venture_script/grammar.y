@@ -102,8 +102,11 @@ applicative(none)	::= primary(e).
 
 arglist(none)		::= .
 arglist(some)		::= args(args).
-args(one)		::= expression(arg).
-args(many)		::= args(args) T_COMMA expression(arg).
+args(one)		::= tagged(arg).
+args(many)		::= args(args) T_COMMA tagged(arg).
+
+tagged(none)		::= expression(e).
+tagged(kw)		::= L_NAME(name) T_COLON(colon) expression(e).
 
 primary(paren)		::= T_LROUND(o) body(e) T_RROUND(c).
 primary(brace)		::= T_LCURLY(o) let(l) T_SEMI(semi) expression(e)

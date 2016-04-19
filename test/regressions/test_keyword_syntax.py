@@ -24,3 +24,11 @@ def testKeywordSmoke():
   r.execute_program("""
 (assume x (normal loc: 0 scale: 1))
 (mh scope: default block: one 10)""")
+
+@on_inf_prim("none")
+def testKeywordSmokeVS():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  r.execute_program("""
+assume x = normal(loc: 0, scale: 1);
+mh(scope: default, block: one, 10);""")
