@@ -79,12 +79,15 @@ expression(literal)	::= literal(value).
 expression(quote)       ::= T_QUOTE(quote) expression(e).
 expression(qquote)      ::= T_BACKTICK(qquote) expression(e).
 expression(unquote)     ::= T_COMMA(unquote) expression(e).
-expression(combination)	::= T_LROUND(open) expressions(es) T_RROUND(close).
-expression(comb_error)	::= T_LROUND(open) expressions(es) error
+expression(comb0)	::= T_LROUND(open) T_RROUND(close).
+expression(comb1)	::= T_LROUND(open) expression(op) arguments(args) T_RROUND(close).
+expression(comb_error)	::= T_LROUND(open) expression(op) arguments(args) error
 				T_RROUND(close).
 
-expressions(none)	::= .
-expressions(some)	::= expressions(es) expression(e).
+arguments(none)		::= .
+arguments(some)		::= arguments(args) expression(e).
+arguments(some_kw)	::= arguments(args) L_NAME(name) T_COLON(colon) expression(e).
+arguments(kw_error)	::= arguments(args) L_NAME(name) T_COLON(colon) error.
 
 namelist(nl)    	::= T_LROUND(open) names(ns) T_RROUND(close).
 
