@@ -24,6 +24,7 @@
 #include "regen.h"
 #include "db.h"
 #include "concrete_trace.h"
+#include "rng.h"
 
 #include <boost/thread.hpp>
 
@@ -39,9 +40,11 @@ struct PGibbsWorker
   }
 
   void doPGibbsPropagate(vector<boost::shared_ptr<Particle> > & oldParticles,
-                         const vector<double> & sums, gsl_rng * rng, int t)
+                         const vector<double> & sums, unsigned long seed, int t)
   {
-    size_t parentIndex = samplePartialSums(sums, rng);
+    RNGbox rng(gsl_rng_mt19937);
+    rng.set_seed(seed);
+    size_t parentIndex = samplePartialSums(sums, rng.get_rng());
     particle = boost::shared_ptr<Particle>(new Particle(oldParticles[parentIndex]));
     weight = regenAndAttach(particle.get(), scaffold->border[t], scaffold,
                             false, boost::shared_ptr<DB>(new DB()), nullGradients);
@@ -136,7 +139,7 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,
         workers[p] = boost::shared_ptr<PGibbsWorker>(new PGibbsWorker(scaffold));
         boost::function<void()> th_func = boost::bind(
           &PGibbsWorker::doPGibbsPropagate, workers[p], particles, sums,
-          trace->getRNG(), borderGroup);
+          gsl_rng_get(trace->getRNG()), borderGroup);
         threads[p] = new boost::thread(th_func);
       }
 
@@ -160,7 +163,9 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,
       for (size_t p = 0; p < numNewParticles; ++p)
       {
         workers[p] = boost::shared_ptr<PGibbsWorker>(new PGibbsWorker(scaffold));
-        workers[p]->doPGibbsPropagate(particles,sums,trace->getRNG(),borderGroup);
+        workers[p]->doPGibbsPropagate(
+          particles, sums, gsl_rng_get(trace->getRNG()),
+	  borderGroup);
         newParticles[p] = workers[p]->particle;
         newParticleWeights[p] = workers[p]->weight;
       }
