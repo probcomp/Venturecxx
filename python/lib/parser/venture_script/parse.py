@@ -289,6 +289,8 @@ class Semantics(object):
     def p_arglist_some(self, args):     return args
     def p_args_one(self, arg):          return [arg]
     def p_args_many(self, args, arg):   args.append(arg); return args
+    def p_tagged_none(self, e):         return e
+    def p_tagged_kw(self, name, colon, e): return e
 
     def p_primary_paren(self, o, e, c):
         assert isloc(e)
