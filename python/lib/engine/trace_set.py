@@ -55,7 +55,8 @@ class TraceSet(object):
 
   def create_trace_pool(self, traces, weights=None):
     del self.traces # To (try and) force reaping any worker processes
-    self.traces = self._trace_master(self.mode)(traces, self.process_cap)
+    seed = self._py_rng.randint(1, 2**31 - 1)
+    self.traces = self._trace_master(self.mode)(traces, self.process_cap, seed)
     if weights is not None:
       self.log_weights = weights
     else:
