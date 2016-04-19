@@ -85,8 +85,9 @@ class Trace(object):
     self.profiling_enabled = False
     self.stats = []
 
-    self.np_rng = npr.RandomState(entropy)
-    self.py_rng = random.Random(entropy)
+    rng = random.Random(entropy)
+    self.np_rng = npr.RandomState(rng.randint(1, 2**31 - 1))
+    self.py_rng = random.Random(rng.randint(1, 2**31 - 1))
 
   def scope_keys(self):
     # A hack for allowing scope names not to be quoted in inference

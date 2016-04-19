@@ -41,8 +41,9 @@ class Trace(object):
       self.bindPrimitiveSP(name, sp)
     self.sealEnvironment() # New frame so users can shadow globals
 
-    self.np_rng = npr.RandomState(entropy)
-    self.py_rng = random.Random(entropy)
+    rng = random.Random(entropy)
+    self.np_rng = npr.RandomState(rng.randint(1, 2**31 - 1))
+    self.py_rng = random.Random(rng.randint(1, 2**31 - 1))
 
   def sealEnvironment(self):
     self.env = env.VentureEnvironment(self.env)
