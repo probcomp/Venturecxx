@@ -183,14 +183,16 @@ class InverseWishartOutputPSP(RandomPSP):
   # nu     | nu
   # and the published erratum to eq. 4.166 in [1] "In the
   # normalization of inverse Wishart, the exponent of |S| shouldn't be
-  # negated."
+  # negated."  See derivation of logarithm in sp-math.tex.
   def logDensity(self, x, args):
+    def logdet(m):
+      return np.log(npla.det(m))
     (lmbda, dof) = self.__parse_args__(args)
     p = len(lmbda)
-    log_density =  (dof*.5)*(np.log(npla.det(lmbda)) - p*np.log(2)) \
-      - spsp.multigammaln(dof*.5, p) \
-      + (-.5*(dof+p+1))*np.log(npla.det(x)) \
-      - .5*np.trace(np.dot(lmbda, npla.inv(x)))
+    log_density = 0.5 * dof * (logdet(lmbda) - p * np.log(2)) \
+      - spsp.multigammaln(0.5 * dof, p) \
+      - 0.5 * (dof + p + 1) * logdet(x) \
+      - 0.5 * np.trace(np.dot(lmbda, npla.inv(x)))
     return log_density
 
   def gradientOfLogDensity(self, X, args):
