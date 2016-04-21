@@ -83,3 +83,19 @@ def checkDeterminismSmoke(prog, repeatable=False, trials=1, tp=numbers.Number):
     eq_(ans, get_ripl(entropy=1).evaluate(prog))
   if repeatable:
     assert ans != r1.evaluate(prog)
+
+@gen_on_inf_prim("none") # Doesn't exercise any statistical properties
+def testForEachParticleDeterminism():
+  for_each_particle_prog1 = """
+(do (resample 10)
+    (for_each_particle
+     (action (flip))))"""
+  yield checkDeterminismSmoke, for_each_particle_prog1, False, 1, list
+
+  for_each_particle_prog2 = """
+(do (resample 10)
+    (assume x (normal 0 1))
+    (for_each_particle
+     (do pass (if (flip) (mh default one 1) pass)))
+    (sample_all x))"""
+  yield checkDeterminismSmoke, for_each_particle_prog2, False, 1, list
