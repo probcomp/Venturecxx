@@ -187,12 +187,12 @@ class InverseWishartOutputPSP(RandomPSP):
   def logDensity(self, x, args):
     def logdet(m):
       return np.log(npla.det(m))
-    (lmbda, dof) = self.__parse_args__(args)
-    p = len(lmbda)
-    log_density = 0.5 * dof * (logdet(lmbda) - p * np.log(2)) \
+    (psi, dof) = self.__parse_args__(args)
+    p = len(psi)
+    log_density = 0.5 * dof * (logdet(psi) - p * np.log(2)) \
       - spsp.multigammaln(0.5 * dof, p) \
       - 0.5 * (dof + p + 1) * logdet(x) \
-      - 0.5 * np.trace(np.dot(lmbda, npla.inv(x)))
+      - 0.5 * np.trace(np.dot(psi, npla.inv(x)))
     return log_density
 
   def gradientOfLogDensity(self, X, args):
