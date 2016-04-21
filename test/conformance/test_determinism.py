@@ -113,3 +113,25 @@ def testModelSwapDeterminism():
          (sample_all x))))
     (return (first p)))"""
   checkDeterminismSmoke(prog, tp=list)
+
+@on_inf_prim("none") # Doesn't exercise any statistical properties
+def testModelForkDeterminism1():
+  prog = """
+(do (resample 5)
+    (assume x (normal 0 1))
+    (m <- (fork_model))
+    (p <- (in_model m (sample_all x)))
+    (return (first p)))"""
+  checkDeterminismSmoke(prog, tp=list)
+
+@on_inf_prim("none") # Doesn't exercise any statistical properties
+def testModelForkDeterminism2():
+  prog = """
+(do (resample 5)
+    (assume x (normal 0 1))
+    (m <- (fork_model))
+    (p <- (in_model m
+     (do (assume y (normal 0 1))
+         (sample_all y))))
+    (return (first p)))"""
+  checkDeterminismSmoke(prog, tp=list)
