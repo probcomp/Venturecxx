@@ -27,6 +27,7 @@ from nose.tools import eq_
 
 from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 @gen_on_inf_prim("none") # Doesn't exercise any statistical properties
 def testDeterminismSmoke():
@@ -99,3 +100,16 @@ def testForEachParticleDeterminism():
      (do pass (if (flip) (mh default one 1) pass)))
     (sample_all x))"""
   yield checkDeterminismSmoke, for_each_particle_prog2, False, 1, list
+
+@on_inf_prim("none") # Doesn't exercise any statistical properties
+def testModelSwapDeterminism():
+  prog = """
+(do (resample 5)
+    (assume x (normal 0 1))
+    (m <- (new_model))
+    (p <- (in_model m
+     (do (resample 5)
+         (assume x (normal 0 1))
+         (sample_all x))))
+    (return (first p)))"""
+  checkDeterminismSmoke(prog, tp=list)
