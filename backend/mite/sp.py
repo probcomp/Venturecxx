@@ -85,6 +85,12 @@ class RequestReferenceSP(VentureSP):
     weight = args.constrain(raddr, value)
     return weight
 
+  @override(VentureSP)
+  def unconstrain(self, args):
+    raddr = self.request_map[args.node]
+    weight = args.unconstrain(raddr)
+    return weight, args.requestedValue(raddr)
+
   def request(self, _args):
     raise VentureBuiltinSPMethodError("Request not implemented!")
 
@@ -112,3 +118,6 @@ class Args(LiteArgs):
 
   def constrain(self, raddr, value):
     return self.trace.constrainRequest(self.node, raddr, value)
+
+  def unconstrain(self, raddr):
+    return self.trace.unconstrainRequest(self.node, raddr)

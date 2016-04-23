@@ -87,6 +87,10 @@ class Trace(LiteTrace):
     requested = self.spFamilyAt(requester, raddr)
     return constrain(self, requested, value, child=requester)
 
+  def unconstrainRequest(self, requester, raddr):
+    requested = self.spFamilyAt(requester, raddr)
+    return unconstrain(self, requested, child=requester)
+
   def requestedValueAt(self, requester, raddr):
     requested = self.spFamilyAt(requester, raddr)
     return self.valueAt(requested)
