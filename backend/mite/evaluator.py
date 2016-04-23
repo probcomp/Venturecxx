@@ -68,7 +68,7 @@ def apply(trace, node):
   weight = 0
   # if scaffold.hasLKernel(node):
   # else:
-  newValue = sp.apply(args) # if not shouldRestore else oldValue
+  newValue = trace.applyCall(sp, args)
 
   trace.setValueAt(node, newValue)
   if isinstance(newValue, VentureSP):
@@ -139,8 +139,7 @@ def unapply(trace, node):
   weight = 0
   # if scaffold.hasLKernel(node):
   # else:
-  sp.unapply(args)
-  # omegaDB.extractValue(node,trace.valueAt(node))
+  trace.unapplyCall(sp, args)
 
   trace.setValueAt(node, None)
   # if compute_gradient:
@@ -175,3 +174,22 @@ def unconstrain(trace, node, child=None):
     assert isinstance(weight, numbers.Number)
     return weight
 
+## restoration
+
+def restore(trace, node):
+  weight = 0
+  if isConstantNode(node): return 0
+  if isLookupNode(node):
+    # weight = regenParents(trace, node, scaffold, True, omegaDB, gradients)
+    trace.reconnectLookup(node)
+    trace.setValueAt(node, trace.valueAt(node.sourceNode))
+    assert isinstance(weight, numbers.Number)
+    return weight
+  else: # node is output node
+    assert isOutputNode(node)
+    weight = restore(trace, node.operatorNode)
+    for operandNode in node.operandNodes:
+      weight += restore(trace, operandNode)
+    weight += apply(trace, node)
+    assert isinstance(weight, numbers.Number)
+    return weight

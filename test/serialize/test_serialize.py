@@ -83,6 +83,16 @@ def _test_serialize_program(v, label, action):
 
     return reportSameDiscrete(r1, r2)
 
+@gen_on_inf_prim("mh")
+def test_serialize_smoke():
+    def check(action):
+        v = get_ripl()
+        v.assume('x', '(normal 0 1)')
+        v.predict('x', label='pid')
+        _test_serialize_program(v, 'pid', action)
+    for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
+        yield check, action
+
 @gen_on_inf_prim("mh") # Easy to generalize but little testing value
 def test_serialize_basic():
     def check(action):

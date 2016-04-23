@@ -11,7 +11,7 @@ from venture.mite.builtin import builtInSPs
 from venture.mite.builtin import builtInValues
 from venture.mite.evaluator import evalFamily, unevalFamily, processMadeSP
 from venture.mite.evaluator import constrain, unconstrain
-from venture.mite.sp import Args
+from venture.mite.sp import Args, RandomDBArgs
 
 class Trace(LiteTrace):
   def __init__(self):
@@ -29,6 +29,8 @@ class Trace(LiteTrace):
     spNode = self.createConstantNode(None, sp)
     processMadeSP(self, spNode)
     self.globalEnv.addBinding(name, spNode)
+
+  ## Internal interface to eval/regen
 
   def createApplicationNodes(self, address, operatorNode, operandNodes, env):
     # Request nodes don't exist now, so just create a singular node.
@@ -54,11 +56,13 @@ class Trace(LiteTrace):
     assert isinstance(sp.requestedFamilies, SPFamilies)
     return sp.requestedFamilies
 
+  ## Request interface to SPs
+
   def newRequest(self, requester, raddr, exp, env):
     address = requester.address.request(List((
       self.spRefAt(requester).makerNode.address.last, raddr)))
     # TODO where to put w?
-    (w, requested) = evalFamily(self, address, exp, env)
+    (w, requested) = evalFamily(EvalContext(self), address, exp, env)
     assert w == 0
     assert not self.containsSPFamilyAt(requester, raddr), \
       "Tried to make new request at existing address."
@@ -77,7 +81,7 @@ class Trace(LiteTrace):
     if self.numRequestsAt(requested) == 0:
       self.unregisterFamilyAt(requester, raddr)
       # TODO where to put w?
-      w = unevalFamily(self, requested)
+      w = unevalFamily(EvalContext(self), requested)
       assert w == 0
 
   def hasRequestAt(self, requester, raddr):
@@ -95,17 +99,20 @@ class Trace(LiteTrace):
     requested = self.spFamilyAt(requester, raddr)
     return self.valueAt(requested)
 
+  ## External interface to engine
+
   def eval(self, id, exp):
     assert id not in self.families
     (w, self.families[id]) = evalFamily(
-      self, Address(List(id)), self.unboxExpression(exp), self.globalEnv)
+      EvalContext(self), Address(List(id)),
+      self.unboxExpression(exp), self.globalEnv)
     # forward evaluation should not produce a weight
     # (is this always true?)
     assert w == 0
 
   def uneval(self, id):
     assert id in self.families
-    w = unevalFamily(self, self.families[id])
+    w = unevalFamily(EvalContext(self), self.families[id])
     assert w == 0
     del self.families[id]
 
@@ -128,6 +135,14 @@ class Trace(LiteTrace):
       # a nan weight.  I want to normalize these to indicating that
       # the resulting state is impossible.
       return float("-inf")
+
+  # use instead of makeConsistent when restoring a trace
+  def registerConstraints(self):
+    for node, val in self.unpropagatedObservations.iteritems():
+      # appNode = self.getConstrainableNode(node)
+      node.observe(val)
+      constrain(self, node, node.observedValue)
+    self.unpropagatedObservations.clear()
 
   def unobserve(self, id):
     node = self.families[id]
@@ -159,3 +174,70 @@ class Trace(LiteTrace):
   def just_restore(self, scaffold, rhoDB):
     print 'restore', scaffold, rhoDB
     return 0
+
+  ## Serialization interface
+
+  def makeSerializationDB(self, values=None, skipStackDictConversion=False):
+    from venture.lite.omegadb import OmegaDB
+    db = OmegaDB()
+    if values is not None:
+      if not skipStackDictConversion:
+        values = {key: self.unboxValue(value) for key, value in values.items()}
+      db.values.update(values)
+    return db
+
+  def dumpSerializationDB(self, db, skipStackDictConversion=False):
+    values = db.values
+    if not skipStackDictConversion:
+      values = {key: self.boxValue(value) for key, value in values.items()}
+    return values
+
+  def unevalAndExtract(self, id, db):
+    # leaves trace in an inconsistent state. use restore afterward
+    assert id in self.families
+    unevalFamily(RestoreContext(self, db), self.families[id])
+
+  def restore(self, id, db):
+    assert id in self.families
+    from venture.mite.evaluator import restore
+    restore(RestoreContext(self, db), self.families[id])
+
+  def evalAndRestore(self, id, exp, db):
+    assert id not in self.families
+    (w, self.families[id]) = evalFamily(
+      RestoreContext(self, db), Address(List(id)),
+      self.unboxExpression(exp), self.globalEnv)
+    assert w == 0
+
+class EvalContext(object):
+  def __init__(self, trace):
+    self.trace = trace
+
+  def __getattr__(self, name):
+    # proxy the trace interface to eval/regen
+    if name in [
+        'createConstantNode', 'createLookupNode', 'createApplicationNodes',
+        'spAt', 'argsAt', 'valueAt', 'setValueAt',
+        'madeSPRecordAt', 'setMadeSPRecordAt',
+        'parentsAt', 'childrenAt',
+        'disconnectLookup', 'reconnectLookup']:
+      return getattr(self.trace, name)
+    else:
+      return object.__getattribute__(self, name)
+
+  def applyCall(self, sp, args):
+    return sp.apply(args)
+
+  def unapplyCall(self, sp, args):
+    return sp.unapply(args)
+
+class RestoreContext(EvalContext):
+  def __init__(self, trace, omegaDB):
+    super(RestoreContext, self).__init__(trace)
+    self.omegaDB = omegaDB
+
+  def argsAt(self, node):
+    return RandomDBArgs(self.trace, node, self.omegaDB)
+
+  def applyCall(self, sp, args):
+    return sp.restore(args)
