@@ -11,6 +11,7 @@ from venture.mite.builtin import builtInSPs
 from venture.mite.builtin import builtInValues
 from venture.mite.evaluator import evalFamily, unevalFamily, processMadeSP
 from venture.mite.evaluator import constrain, unconstrain
+from venture.mite.evaluator import restore
 from venture.mite.sp import Args
 
 class Trace(LiteTrace):
@@ -82,7 +83,7 @@ class Trace(LiteTrace):
       # scaffold.lkernels[appNode] = DeterministicLKernel(self.pspAt(appNode), val)
       # xiWeight = regenAndAttach(self, scaffold, False, OmegaDB(), {})
       node.observe(val)
-      weight += constrain(self, node, node.observedValue)
+      weight += constrain(EvalContext(self), node, node.observedValue)
     self.unpropagatedObservations.clear()
     if not math.isinf(weight) and not math.isnan(weight):
       return weight
@@ -98,13 +99,13 @@ class Trace(LiteTrace):
     for node, val in self.unpropagatedObservations.iteritems():
       # appNode = self.getConstrainableNode(node)
       node.observe(val)
-      constrain(self, node, node.observedValue)
+      constrain(EvalContext(self), node, node.observedValue)
     self.unpropagatedObservations.clear()
 
   def unobserve(self, id):
     node = self.families[id]
     if node.isObservation:
-      weight = unconstrain(self, node)
+      weight = unconstrain(EvalContext(self), node)
       node.isObservation = False
     else:
       assert node in self.unpropagatedObservations
@@ -156,7 +157,6 @@ class Trace(LiteTrace):
 
   def restore(self, id, db):
     assert id in self.families
-    from venture.mite.evaluator import restore
     restore(RestoreContext(self, db), self.families[id])
 
   def evalAndRestore(self, id, exp, db):
@@ -226,11 +226,11 @@ class EvalContext(object):
 
   def constrainRequest(self, requester, raddr, value):
     requested = self.trace.spFamilyAt(requester, raddr)
-    return constrain(self.trace, requested, value, child=requester)
+    return constrain(self, requested, value, child=requester)
 
   def unconstrainRequest(self, requester, raddr):
     requested = self.trace.spFamilyAt(requester, raddr)
-    return unconstrain(self.trace, requested, child=requester)
+    return unconstrain(self, requested, child=requester)
 
   def requestedValue(self, requester, raddr):
     requested = self.trace.spFamilyAt(requester, raddr)
