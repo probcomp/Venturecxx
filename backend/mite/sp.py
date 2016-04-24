@@ -122,50 +122,28 @@ class Args(LiteArgs):
     return self.trace.valueAt(self.operandNodes[ix])
 
   def newRequest(self, raddr, exp, env):
-    return self.trace.newRequest(self.node, raddr, exp, env, self.context)
+    return self.context.newRequest(self.node, raddr, exp, env)
 
   def incRequest(self, raddr):
-    return self.trace.incRequest(self.node, raddr)
+    return self.context.incRequest(self.node, raddr)
 
   def decRequest(self, raddr):
-    return self.trace.decRequest(self.node, raddr, self.context)
+    return self.context.decRequest(self.node, raddr)
 
   def hasRequest(self, raddr):
-    return self.trace.hasRequestAt(self.node, raddr)
+    return self.context.hasRequest(self.node, raddr)
 
   def requestedValue(self, raddr):
-    return self.trace.requestedValueAt(self.node, raddr)
+    return self.context.requestedValue(self.node, raddr)
 
   def constrain(self, raddr, value):
-    return self.trace.constrainRequest(self.node, raddr, value)
+    return self.context.constrainRequest(self.node, raddr, value)
 
   def unconstrain(self, raddr):
-    return self.trace.unconstrainRequest(self.node, raddr)
-
-  def setState(self, _node, _value):
-    pass
-
-  def getState(self, _node):
-    raise VentureBuiltinSPMethodError(
-      "Cannot restore outside a regeneration context")
-
-from venture.lite.address import List
-from venture.lite.node import Node
-def normalize(address):
-  if isinstance(address, (list, tuple, List)):
-    return tuple(normalize(part) for part in address)
-  elif isinstance(address, Node):
-    return normalize(address.address.last)
-  else:
-    return address
-
-class RandomDBArgs(Args):
-  def __init__(self, trace, node, omegaDB, context=None):
-    super(RandomDBArgs, self).__init__(trace, node, context)
-    self.omegaDB = omegaDB
+    return self.context.unconstrainRequest(self.node, raddr)
 
   def setState(self, node, value):
-    self.omegaDB.extractValue(normalize(node), value)
+    return self.context.setState(node, value)
 
   def getState(self, node):
-    return self.omegaDB.getValue(normalize(node))
+    return self.context.getState(node)

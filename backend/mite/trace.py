@@ -11,7 +11,7 @@ from venture.mite.builtin import builtInSPs
 from venture.mite.builtin import builtInValues
 from venture.mite.evaluator import evalFamily, unevalFamily, processMadeSP
 from venture.mite.evaluator import constrain, unconstrain
-from venture.mite.sp import Args, RandomDBArgs
+from venture.mite.sp import Args
 
 class Trace(LiteTrace):
   def __init__(self):
@@ -55,49 +55,6 @@ class Trace(LiteTrace):
       sp.requestedFamilies = SPFamilies()
     assert isinstance(sp.requestedFamilies, SPFamilies)
     return sp.requestedFamilies
-
-  ## Request interface to SPs
-
-  def newRequest(self, requester, raddr, exp, env, context):
-    address = requester.address.request(List((
-      self.spRefAt(requester).makerNode.address.last, raddr)))
-    # TODO where to put w?
-    (w, requested) = evalFamily(context, address, exp, env)
-    assert w == 0
-    assert not self.containsSPFamilyAt(requester, raddr), \
-      "Tried to make new request at existing address."
-    self.registerFamilyAt(requester, raddr, requested)
-    self.incRequestsAt(requested)
-    return raddr
-
-  def incRequest(self, requester, raddr):
-    requested = self.spFamilyAt(requester, raddr)
-    self.incRequestsAt(requested)
-    return raddr
-
-  def decRequest(self, requester, raddr, context):
-    requested = self.spFamilyAt(requester, raddr)
-    self.decRequestsAt(requested)
-    if self.numRequestsAt(requested) == 0:
-      self.unregisterFamilyAt(requester, raddr)
-      # TODO where to put w?
-      w = unevalFamily(context, requested)
-      assert w == 0
-
-  def hasRequestAt(self, requester, raddr):
-    return self.containsSPFamilyAt(requester, raddr)
-
-  def constrainRequest(self, requester, raddr, value):
-    requested = self.spFamilyAt(requester, raddr)
-    return constrain(self, requested, value, child=requester)
-
-  def unconstrainRequest(self, requester, raddr):
-    requested = self.spFamilyAt(requester, raddr)
-    return unconstrain(self, requested, child=requester)
-
-  def requestedValueAt(self, requester, raddr):
-    requested = self.spFamilyAt(requester, raddr)
-    return self.valueAt(requested)
 
   ## External interface to engine
 
@@ -234,13 +191,74 @@ class EvalContext(object):
   def unapplyCall(self, sp, args):
     return sp.unapply(args)
 
+  ## Request interface to SPs
+
+  def newRequest(self, requester, raddr, exp, env):
+    if hasattr(raddr, 'address'):
+      raddr = raddr.address.last
+    address = requester.address.request(List((
+      self.trace.spRefAt(requester).makerNode.address.last, raddr)))
+    # TODO where to put w?
+    (w, requested) = evalFamily(self, address, exp, env)
+    assert w == 0
+    assert not self.trace.containsSPFamilyAt(requester, raddr), \
+      "Tried to make new request at existing address."
+    self.trace.registerFamilyAt(requester, raddr, requested)
+    self.trace.incRequestsAt(requested)
+    return raddr
+
+  def incRequest(self, requester, raddr):
+    requested = self.trace.spFamilyAt(requester, raddr)
+    self.trace.incRequestsAt(requested)
+    return raddr
+
+  def decRequest(self, requester, raddr):
+    requested = self.trace.spFamilyAt(requester, raddr)
+    self.trace.decRequestsAt(requested)
+    if self.trace.numRequestsAt(requested) == 0:
+      self.trace.unregisterFamilyAt(requester, raddr)
+      # TODO where to put w?
+      w = unevalFamily(self, requested)
+      assert w == 0
+
+  def hasRequest(self, requester, raddr):
+    return self.trace.containsSPFamilyAt(requester, raddr)
+
+  def constrainRequest(self, requester, raddr, value):
+    requested = self.trace.spFamilyAt(requester, raddr)
+    return constrain(self.trace, requested, value, child=requester)
+
+  def unconstrainRequest(self, requester, raddr):
+    requested = self.trace.spFamilyAt(requester, raddr)
+    return unconstrain(self.trace, requested, child=requester)
+
+  def requestedValue(self, requester, raddr):
+    requested = self.trace.spFamilyAt(requester, raddr)
+    return self.trace.valueAt(requested)
+
+  def setState(self, _node, _value):
+    pass
+
+  def getState(self, _node):
+    assert False, "Cannot restore outside a regeneration context"
+
+from collections import Iterable
+def normalize(address):
+  if isinstance(address, Iterable):
+    return tuple(normalize(part) for part in address)
+  else:
+    return address
+
 class RestoreContext(EvalContext):
   def __init__(self, trace, omegaDB):
     super(RestoreContext, self).__init__(trace)
     self.omegaDB = omegaDB
 
-  def argsAt(self, node):
-    return RandomDBArgs(self.trace, node, self.omegaDB, context=self)
-
   def applyCall(self, sp, args):
     return sp.restore(args)
+
+  def setState(self, node, value):
+    self.omegaDB.extractValue(normalize(node), value)
+
+  def getState(self, node):
+    return self.omegaDB.getValue(normalize(node))
