@@ -258,7 +258,7 @@ class RestoreContext(EvalContext):
     return sp.restore(args)
 
   def setState(self, node, value):
-    self.omegaDB.extractValue(normalize(node), value)
+    self.omegaDB.extractValue(normalize(node.address.last), value)
 
   def getState(self, node):
-    return self.omegaDB.getValue(normalize(node))
+    return self.omegaDB.getValue(normalize(node.address.last))
