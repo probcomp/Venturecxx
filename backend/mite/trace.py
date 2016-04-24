@@ -118,18 +118,48 @@ class Trace(LiteTrace):
     return None
 
   def select(self, scope, block):
+    if scope.getSymbol() == 'default' and block.getSymbol() == 'all':
+      return 'default all'
     print 'select', scope, block
     return None
 
   def just_detach(self, scaffold):
+    if scaffold == 'default all':
+      from venture.lite.omegadb import OmegaDB
+      weight = 0
+      rhoDB = OmegaDB()
+      for id in reversed(sorted(self.families)):
+        node = self.families[id]
+        if node.isObservation:
+          weight += unconstrain(RestoreContext(self, rhoDB), self.families[id])
+        unevalFamily(RestoreContext(self, rhoDB), node)
+      return weight, rhoDB
     print 'detach', scaffold
     return 0, None
 
   def just_regen(self, scaffold):
+    if scaffold == 'default all':
+      from venture.lite.omegadb import OmegaDB
+      weight = 0
+      rhoDB = OmegaDB()
+      for id in sorted(self.families):
+        node = self.families[id]
+        restore(EvalContext(self), node)
+        if node.isObservation:
+          weight += constrain(RestoreContext(self, rhoDB), node, node.observedValue)
+      return weight
     print 'regen', scaffold
     return 0
 
   def just_restore(self, scaffold, rhoDB):
+    if scaffold == 'default all':
+      weight = 0
+      for id in sorted(self.families):
+        node = self.families[id]
+        restore(RestoreContext(self, rhoDB), node)
+        if node.isObservation:
+          weight += constrain(RestoreContext(self, rhoDB), node, node.observedValue)
+      return weight
     print 'restore', scaffold, rhoDB
     return 0
 
