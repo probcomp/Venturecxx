@@ -111,6 +111,10 @@ class RequestReferenceSP(VentureSP):
     raise VentureBuiltinSPMethodError("Request not implemented!")
 
 class Args(LiteArgs):
+  def __init__(self, trace, node, context=None):
+    super(Args, self).__init__(trace, node)
+    self.context = context
+
   def outputValue(self):
     return self.trace.valueAt(self.node)
 
@@ -118,13 +122,13 @@ class Args(LiteArgs):
     return self.trace.valueAt(self.operandNodes[ix])
 
   def newRequest(self, raddr, exp, env):
-    return self.trace.newRequest(self.node, raddr, exp, env)
+    return self.trace.newRequest(self.node, raddr, exp, env, self.context)
 
   def incRequest(self, raddr):
     return self.trace.incRequest(self.node, raddr)
 
   def decRequest(self, raddr):
-    return self.trace.decRequest(self.node, raddr)
+    return self.trace.decRequest(self.node, raddr, self.context)
 
   def hasRequest(self, raddr):
     return self.trace.hasRequestAt(self.node, raddr)
@@ -145,13 +149,23 @@ class Args(LiteArgs):
     raise VentureBuiltinSPMethodError(
       "Cannot restore outside a regeneration context")
 
+from venture.lite.address import List
+from venture.lite.node import Node
+def normalize(address):
+  if isinstance(address, (list, tuple, List)):
+    return tuple(normalize(part) for part in address)
+  elif isinstance(address, Node):
+    return normalize(address.address.last)
+  else:
+    return address
+
 class RandomDBArgs(Args):
-  def __init__(self, trace, node, omegaDB):
-    super(RandomDBArgs, self).__init__(trace, node)
+  def __init__(self, trace, node, omegaDB, context=None):
+    super(RandomDBArgs, self).__init__(trace, node, context)
     self.omegaDB = omegaDB
 
   def setState(self, node, value):
-    self.omegaDB.extractValue(tuple(node.address.last), value)
+    self.omegaDB.extractValue(normalize(node), value)
 
   def getState(self, node):
-    return self.omegaDB.getValue(tuple(node.address.last))
+    return self.omegaDB.getValue(normalize(node))

@@ -58,11 +58,11 @@ class Trace(LiteTrace):
 
   ## Request interface to SPs
 
-  def newRequest(self, requester, raddr, exp, env):
+  def newRequest(self, requester, raddr, exp, env, context):
     address = requester.address.request(List((
       self.spRefAt(requester).makerNode.address.last, raddr)))
     # TODO where to put w?
-    (w, requested) = evalFamily(EvalContext(self), address, exp, env)
+    (w, requested) = evalFamily(context, address, exp, env)
     assert w == 0
     assert not self.containsSPFamilyAt(requester, raddr), \
       "Tried to make new request at existing address."
@@ -75,13 +75,13 @@ class Trace(LiteTrace):
     self.incRequestsAt(requested)
     return raddr
 
-  def decRequest(self, requester, raddr):
+  def decRequest(self, requester, raddr, context):
     requested = self.spFamilyAt(requester, raddr)
     self.decRequestsAt(requested)
     if self.numRequestsAt(requested) == 0:
       self.unregisterFamilyAt(requester, raddr)
       # TODO where to put w?
-      w = unevalFamily(EvalContext(self), requested)
+      w = unevalFamily(context, requested)
       assert w == 0
 
   def hasRequestAt(self, requester, raddr):
@@ -225,6 +225,9 @@ class EvalContext(object):
     else:
       return object.__getattribute__(self, name)
 
+  def argsAt(self, node):
+    return Args(self.trace, node, context=self)
+
   def applyCall(self, sp, args):
     return sp.apply(args)
 
@@ -237,7 +240,7 @@ class RestoreContext(EvalContext):
     self.omegaDB = omegaDB
 
   def argsAt(self, node):
-    return RandomDBArgs(self.trace, node, self.omegaDB)
+    return RandomDBArgs(self.trace, node, self.omegaDB, context=self)
 
   def applyCall(self, sp, args):
     return sp.restore(args)

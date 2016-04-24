@@ -35,6 +35,8 @@ from venture.test.stats import statisticalTest
 def _test_serialize_program(v, label, action):
     engine = v.sivm.core_sivm.engine
 
+    if action != 'copy': raise SkipTest
+
     if action == 'serialize':
         trace1 = engine.getDistinguishedTrace()
         serialized = trace1.dump()
@@ -92,6 +94,18 @@ def test_serialize_smoke():
         _test_serialize_program(v, 'pid', action)
     for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
         yield check, action
+
+@gen_on_inf_prim("mh")
+def test_serialize_identical():
+    def check(expr):
+        v = get_ripl()
+        v.assume('x', expr)
+        v.evaluate('(resample 10)')
+        results = v.sample_all('x')
+        assert len(set(results)) == 1
+    for expr in ['(normal 0 1)',
+                 '((lambda () (normal 0 1)))']:
+        yield check, expr
 
 @gen_on_inf_prim("mh") # Easy to generalize but little testing value
 def test_serialize_basic():
