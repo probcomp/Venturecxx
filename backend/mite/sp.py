@@ -52,7 +52,8 @@ class SimulationSP(VentureSP):
 
   @override(VentureSP)
   def constrain(self, value, args):
-    self.unapply(args)
+    oldValue = args.outputValue()
+    self.unincorporate(oldValue, args)
     weight = self.logDensity(value, args)
     self.incorporate(value, args)
     return weight
@@ -62,7 +63,9 @@ class SimulationSP(VentureSP):
     value = args.outputValue()
     self.unincorporate(value, args)
     weight = self.logDensity(value, args)
-    return weight, self.apply(args)
+    newValue = self.simulate(args)
+    self.incorporate(newValue, args)
+    return weight, newValue
 
   def simulate(self, _args):
     raise VentureBuiltinSPMethodError("Simulate not implemented!")
