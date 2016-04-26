@@ -25,6 +25,7 @@ import numbers
 
 from nose.tools import eq_
 
+from venture.lite.sp_registry import builtInSPs
 from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
@@ -135,3 +136,19 @@ def testModelForkDeterminism2():
          (sample_all y))))
     (return (first p)))"""
   checkDeterminismSmoke(prog, tp=list)
+
+@on_inf_prim("none") # Doesn't exercise any statistical properties
+def testForeignDeterminismSmoke():
+  get_ripl() # Build the SP registry (TODO !?)
+  lite_normal_sp = builtInSPs()["normal"]
+  def doit(entropy):
+    r = get_ripl(entropy=entropy)
+    r.bind_foreign_sp("my_normal", lite_normal_sp)
+    r.assume("x", "(my_normal 0 1)")
+    r.infer("(default_markov_chain 3)")
+    return r.sample("x")
+  ans = doit(1)
+  print ans
+  assert isinstance(ans, numbers.Number)
+  eq_(ans, doit(1))
+  assert ans != doit(2)
