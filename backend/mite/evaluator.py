@@ -217,8 +217,10 @@ class EvalContext(object):
     # TODO where to put w?
     (w, requested) = self.evalFamily(address, exp, env)
     assert w == 0
-    assert not self.trace.containsSPFamilyAt(requester, raddr), \
-      "Tried to make new request at existing address."
+    if self.trace.containsSPFamilyAt(requester, raddr):
+      raise VentureException("evaluation",
+        "Tried to make new request at existing address.",
+        address=requester.address)
     self.trace.registerFamilyAt(requester, raddr, requested)
     self.trace.incRequestsAt(requested)
     return raddr
@@ -252,11 +254,13 @@ class EvalContext(object):
     requested = self.trace.spFamilyAt(requester, raddr)
     return self.trace.valueAt(requested)
 
-  def setState(self, _node, _value):
+  def setState(self, node, value):
     pass
 
-  def getState(self, _node):
-    assert False, "Cannot restore outside a regeneration context"
+  def getState(self, node):
+    raise VentureException("evaluation",
+      "Cannot restore outside a regeneration context",
+      address=node.address)
 
 from collections import Iterable
 def normalize(address):
