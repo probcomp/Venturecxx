@@ -152,3 +152,18 @@ def testForeignDeterminismSmoke():
   assert isinstance(ans, numbers.Number)
   eq_(ans, doit(1))
   assert ans != doit(2)
+
+@on_inf_prim("none")
+def testDeterministicUnderChunking():
+  prog1 = """
+(do (resample 3)
+    (sample_all (normal 0 1)))"""
+  prog2 = """
+(do (resample_multiprocess 3)
+    (sample_all (normal 0 1)))"""
+  prog3 = """
+(do (resample_multiprocess 3 2)
+    (sample_all (normal 0 1)))"""
+  ans = get_ripl(entropy=1).evaluate(prog1)
+  eq_(ans, get_ripl(entropy=1).evaluate(prog2))
+  eq_(ans, get_ripl(entropy=1).evaluate(prog3))
