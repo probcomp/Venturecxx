@@ -26,6 +26,7 @@ import numbers
 from nose.tools import eq_
 
 from venture.lite.sp_registry import builtInSPs
+from venture.test.config import broken_in
 from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
@@ -167,3 +168,21 @@ def testDeterministicUnderChunking():
   ans = get_ripl(entropy=1).evaluate(prog1)
   eq_(ans, get_ripl(entropy=1).evaluate(prog2))
   eq_(ans, get_ripl(entropy=1).evaluate(prog3))
+
+@on_inf_prim("none")
+def testFuturesDiverge1():
+  r = get_ripl(entropy=1)
+  [x1, x2] = r.evaluate("""
+(do (resample 2)
+    (sample_all (normal 0 1)))""")
+  assert x1 != x2
+
+@on_inf_prim("none")
+@broken_in("puma", "Puma does not support enumerative diversify")
+def testFuturesDiverge2():
+  r = get_ripl(entropy=1)
+  [x1, x2] = r.evaluate("""
+(do (assume frob (flip))
+    (enumerative_diversify default all)
+    (sample_all (normal 0 1)))""")
+  assert x1 != x2
