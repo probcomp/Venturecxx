@@ -129,6 +129,15 @@ def testModelSwitchingSmoke():
   predictions = [ripl.infer("(normal_through_model 0 1)") for _ in range(default_num_samples())]
   return reportKnownGaussian(0.0, 1.0, predictions)
 
+@on_inf_prim("in_model")
+def testPerModelLabelNamespaceSmoke():
+  ripl = get_ripl()
+  ripl.execute_program("""
+(do (observe (normal 0 1) 3 foo)
+    (in_model (run (new_model))
+      (do (observe (gamma 1 1) 2 foo))))
+""")
+
 @on_inf_prim("return")
 @on_inf_prim("action")
 def testReturnAndAction():
