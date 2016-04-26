@@ -11,7 +11,10 @@ class VentureSP(VentureValue):
     raise VentureBuiltinSPMethodError("Apply not implemented!")
 
   def unapply(self, _args):
-    raise VentureBuiltinSPMethodError("Unapply not implemented!")
+    raise VentureBuiltinSPMethodError("Cannot unapply")
+
+  def restore(self, _args):
+    raise VentureBuiltinSPMethodError("Cannot restore previous state")
 
   def logDensity(self, _value, _args):
     raise VentureBuiltinSPMethodError("Cannot assess log density")
@@ -39,10 +42,18 @@ class SimulationSP(VentureSP):
   def unapply(self, args):
     value = args.outputValue()
     self.unincorporate(value, args)
+    args.setState(args.node, value)
+
+  @override(VentureSP)
+  def restore(self, args):
+    value = args.getState(args.node)
+    self.incorporate(value, args)
+    return value
 
   @override(VentureSP)
   def constrain(self, value, args):
-    self.unapply(args)
+    oldValue = args.outputValue()
+    self.unincorporate(oldValue, args)
     weight = self.logDensity(value, args)
     self.incorporate(value, args)
     return weight
@@ -52,7 +63,9 @@ class SimulationSP(VentureSP):
     value = args.outputValue()
     self.unincorporate(value, args)
     weight = self.logDensity(value, args)
-    return weight, self.apply(args)
+    newValue = self.simulate(args)
+    self.incorporate(newValue, args)
+    return weight, newValue
 
   def simulate(self, _args):
     raise VentureBuiltinSPMethodError("Simulate not implemented!")
@@ -78,6 +91,12 @@ class RequestReferenceSP(VentureSP):
   def unapply(self, args):
     raddr = self.request_map.pop(args.node)
     args.decRequest(raddr)
+
+  @override(VentureSP)
+  def restore(self, args):
+    # NB: this assumes that the request made is deterministic
+    # so we can just reapply
+    return self.apply(args)
 
   @override(VentureSP)
   def constrain(self, value, args):
@@ -121,3 +140,9 @@ class Args(LiteArgs):
 
   def unconstrain(self, raddr):
     return self.trace.unconstrainRequest(self.node, raddr)
+
+  def setState(self, _node, _value):
+    pass
+
+  def getState(self, _node):
+    raise NotImplementedError
