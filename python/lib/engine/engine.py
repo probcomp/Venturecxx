@@ -33,7 +33,7 @@ class Engine(object):
 
   def __init__(self, backend, entropy, persistent_inference_trace=True):
     self._py_rng = random.Random(entropy)
-    self.model = TraceSet(self, backend, self._py_rng.randint(1, 2**31 - 1))
+    self.model = self.new_model(backend)
     self.swapped_model = False
     self.directiveCounter = 0
     self.inferrer = None
@@ -383,6 +383,11 @@ class Engine(object):
         rows.append(dict(stat, particle = pid))
 
     return rows
+
+  def new_model(self, backend=None):
+    if backend is None:
+      backend = self.model.backend
+    return TraceSet(self, backend, self._py_rng.randint(1, 2**31 - 1))
 
 # Support for continuous inference
 

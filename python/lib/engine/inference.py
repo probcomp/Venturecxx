@@ -210,10 +210,11 @@ class Infer(object):
 
   def new_model(self, backend_name=None):
     if backend_name is None:
-      return TraceSet(self.engine, self.engine.model.backend)
+      backend = None
     else:
       import venture.shortcuts as s
-      return TraceSet(self.engine, s.backend(backend_name))
+      backend = s.backend(backend_name)
+    return self.engine.new_model(backend)
   def fork_model(self, backend_name=None):
     model = self.new_model(backend_name)
     model.convertFrom(self.engine.model)
