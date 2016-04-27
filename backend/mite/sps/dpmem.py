@@ -42,6 +42,21 @@ class DPSP(RequestReferenceSP):
     raddr = self.request_map.pop(args.node)
     self.counts[raddr] -= 1
     args.decRequest(raddr)
+    args.setState(args.node, raddr)
+
+  def restore(self, args):
+    raddr = args.getState(args.node)
+    if args.hasRequest(raddr):
+      args.incRequest(raddr)
+    else:
+      raddr = getNextTable(self.counts)
+      exp = ["sp"]
+      env = VentureEnvironment(None, ["sp"], [self.baseSpNode])
+      args.newRequest(raddr, exp, env)
+      self.counts[raddr] = 0
+    self.counts[raddr] += 1
+    self.request_map[args.node] = raddr
+    return args.requestedValue(raddr)
 
 class DPMemSP(SimulationSP):
   def simulate(self, args):
