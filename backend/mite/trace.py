@@ -56,7 +56,7 @@ class Trace(LiteTrace):
 
   def newRequest(self, requester, raddr, exp, env):
     address = requester.address.request(List((
-      self.spRefAt(requester).makerNode.address, raddr)))
+      self.spRefAt(requester).makerNode.address.last, raddr)))
     # TODO where to put w?
     (w, requested) = evalFamily(self, address, exp, env)
     assert w == 0
