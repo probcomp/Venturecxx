@@ -114,6 +114,10 @@ class RequestReferenceSP(VentureSP):
     raise VentureBuiltinSPMethodError("Request not implemented!")
 
 class Args(LiteArgs):
+  def __init__(self, trace, node, context=None):
+    super(Args, self).__init__(trace, node)
+    self.context = context
+
   def outputValue(self):
     return self.trace.valueAt(self.node)
 
@@ -121,28 +125,28 @@ class Args(LiteArgs):
     return self.trace.valueAt(self.operandNodes[ix])
 
   def newRequest(self, raddr, exp, env):
-    return self.trace.newRequest(self.node, raddr, exp, env)
+    return self.context.newRequest(self.node, raddr, exp, env)
 
   def incRequest(self, raddr):
-    return self.trace.incRequest(self.node, raddr)
+    return self.context.incRequest(self.node, raddr)
 
   def decRequest(self, raddr):
-    return self.trace.decRequest(self.node, raddr)
+    return self.context.decRequest(self.node, raddr)
 
   def hasRequest(self, raddr):
-    return self.trace.hasRequestAt(self.node, raddr)
+    return self.context.hasRequest(self.node, raddr)
 
   def requestedValue(self, raddr):
-    return self.trace.requestedValueAt(self.node, raddr)
+    return self.context.requestedValue(self.node, raddr)
 
   def constrain(self, raddr, value):
-    return self.trace.constrainRequest(self.node, raddr, value)
+    return self.context.constrainRequest(self.node, raddr, value)
 
   def unconstrain(self, raddr):
-    return self.trace.unconstrainRequest(self.node, raddr)
+    return self.context.unconstrainRequest(self.node, raddr)
 
-  def setState(self, _node, _value):
-    pass
+  def setState(self, node, value):
+    return self.context.setState(node, value)
 
-  def getState(self, _node):
-    raise NotImplementedError
+  def getState(self, node):
+    return self.context.getState(node)

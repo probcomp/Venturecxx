@@ -9,8 +9,7 @@ from venture.lite.trace import Trace as LiteTrace
 
 from venture.mite.builtin import builtInSPs
 from venture.mite.builtin import builtInValues
-from venture.mite.evaluator import evalFamily, unevalFamily, processMadeSP
-from venture.mite.evaluator import constrain, unconstrain
+from venture.mite.evaluator import EvalContext
 from venture.mite.sp import Args
 
 class Trace(LiteTrace):
@@ -27,7 +26,7 @@ class Trace(LiteTrace):
 
   def bindPrimitiveSP(self, name, sp):
     spNode = self.createConstantNode(None, sp)
-    processMadeSP(self, spNode)
+    EvalContext(self).processMadeSP(spNode)
     self.globalEnv.addBinding(name, spNode)
 
   def createApplicationNodes(self, address, operatorNode, operandNodes, env):
@@ -38,8 +37,8 @@ class Trace(LiteTrace):
       self.addChildAt(operandNode, outputNode)
     return outputNode
 
-  def argsAt(self, node):
-    return Args(self, node)
+  def argsAt(self, node, context=None):
+    return Args(self, node, context=context)
 
   def madeSPAt(self, node):
     # SPs and SPRecords are the same now.
@@ -54,58 +53,17 @@ class Trace(LiteTrace):
     assert isinstance(sp.requestedFamilies, SPFamilies)
     return sp.requestedFamilies
 
-  def newRequest(self, requester, raddr, exp, env):
-    address = requester.address.request(List((
-      self.spRefAt(requester).makerNode.address.last, raddr)))
-    # TODO where to put w?
-    (w, requested) = evalFamily(self, address, exp, env)
-    assert w == 0
-    assert not self.containsSPFamilyAt(requester, raddr), \
-      "Tried to make new request at existing address."
-    self.registerFamilyAt(requester, raddr, requested)
-    self.incRequestsAt(requested)
-    return raddr
-
-  def incRequest(self, requester, raddr):
-    requested = self.spFamilyAt(requester, raddr)
-    self.incRequestsAt(requested)
-    return raddr
-
-  def decRequest(self, requester, raddr):
-    requested = self.spFamilyAt(requester, raddr)
-    self.decRequestsAt(requested)
-    if self.numRequestsAt(requested) == 0:
-      self.unregisterFamilyAt(requester, raddr)
-      # TODO where to put w?
-      w = unevalFamily(self, requested)
-      assert w == 0
-
-  def hasRequestAt(self, requester, raddr):
-    return self.containsSPFamilyAt(requester, raddr)
-
-  def constrainRequest(self, requester, raddr, value):
-    requested = self.spFamilyAt(requester, raddr)
-    return constrain(self, requested, value, child=requester)
-
-  def unconstrainRequest(self, requester, raddr):
-    requested = self.spFamilyAt(requester, raddr)
-    return unconstrain(self, requested, child=requester)
-
-  def requestedValueAt(self, requester, raddr):
-    requested = self.spFamilyAt(requester, raddr)
-    return self.valueAt(requested)
-
   def eval(self, id, exp):
     assert id not in self.families
-    (w, self.families[id]) = evalFamily(
-      self, Address(List(id)), self.unboxExpression(exp), self.globalEnv)
+    (w, self.families[id]) = EvalContext(self).evalFamily(
+      Address(List(id)), self.unboxExpression(exp), self.globalEnv)
     # forward evaluation should not produce a weight
     # (is this always true?)
     assert w == 0
 
   def uneval(self, id):
     assert id in self.families
-    w = unevalFamily(self, self.families[id])
+    w = EvalContext(self).unevalFamily(self.families[id])
     assert w == 0
     del self.families[id]
 
@@ -118,7 +76,7 @@ class Trace(LiteTrace):
       # scaffold.lkernels[appNode] = DeterministicLKernel(self.pspAt(appNode), val)
       # xiWeight = regenAndAttach(self, scaffold, False, OmegaDB(), {})
       node.observe(val)
-      weight += constrain(self, node, node.observedValue)
+      weight += EvalContext(self).constrain(node, node.observedValue)
     self.unpropagatedObservations.clear()
     if not math.isinf(weight) and not math.isnan(weight):
       return weight
@@ -132,7 +90,7 @@ class Trace(LiteTrace):
   def unobserve(self, id):
     node = self.families[id]
     if node.isObservation:
-      weight = unconstrain(self, node)
+      weight = EvalContext(self).unconstrain(node)
       node.isObservation = False
     else:
       assert node in self.unpropagatedObservations
