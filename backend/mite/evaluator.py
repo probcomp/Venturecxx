@@ -187,11 +187,34 @@ class EvalContext(object):
       assert isinstance(weight, numbers.Number)
       return weight
 
+  ## restoration
+
+  def restore(self, node):
+    weight = 0
+    if isConstantNode(node): return 0
+    if isLookupNode(node):
+      # weight = regenParents(trace, node, scaffold, True, omegaDB, gradients)
+      self.trace.reconnectLookup(node)
+      self.trace.setValueAt(node, self.trace.valueAt(node.sourceNode))
+      assert isinstance(weight, numbers.Number)
+      return weight
+    else: # node is output node
+      assert isOutputNode(node)
+      weight = self.restore(node.operatorNode)
+      for operandNode in node.operandNodes:
+        weight += self.restore(operandNode)
+      weight += self.apply(node)
+      assert isinstance(weight, numbers.Number)
+      return weight
+
   ## request interface to SPs
 
   def newRequest(self, requester, raddr, exp, env):
-    address = requester.address.request(List((
-      self.trace.spRefAt(requester).makerNode.address.last, raddr)))
+    base = self.trace.spRefAt(requester).makerNode.address.last
+    ext = raddr
+    if hasattr(ext, 'address'):
+      ext = raddr.address.last
+    address = requester.address.request(List((base, ext)))
     # TODO where to put w?
     (w, requested) = self.evalFamily(address, exp, env)
     assert w == 0
@@ -235,3 +258,24 @@ class EvalContext(object):
 
   def getState(self, _node):
     assert False, "Cannot restore outside a regeneration context"
+
+from collections import Iterable
+def normalize(address):
+  if isinstance(address, Iterable):
+    return tuple(normalize(part) for part in address)
+  else:
+    return address
+
+class RestoreContext(EvalContext):
+  def __init__(self, trace, omegaDB):
+    super(RestoreContext, self).__init__(trace)
+    self.omegaDB = omegaDB
+
+  def applyCall(self, sp, args):
+    return sp.restore(args)
+
+  def setState(self, node, value):
+    self.omegaDB.extractValue(normalize(node.address.last), value)
+
+  def getState(self, node):
+    return self.omegaDB.getValue(normalize(node.address.last))

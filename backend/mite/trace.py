@@ -4,12 +4,13 @@ from venture.lite.address import Address
 from venture.lite.address import List
 from venture.lite.env import VentureEnvironment
 from venture.lite.node import OutputNode
+from venture.lite.omegadb import OmegaDB
 from venture.lite.sp import SPFamilies
 from venture.lite.trace import Trace as LiteTrace
 
 from venture.mite.builtin import builtInSPs
 from venture.mite.builtin import builtInValues
-from venture.mite.evaluator import EvalContext
+from venture.mite.evaluator import EvalContext, RestoreContext
 from venture.mite.sp import Args
 
 class Trace(LiteTrace):
@@ -91,6 +92,14 @@ class Trace(LiteTrace):
       # the resulting state is impossible.
       return float("-inf")
 
+  # use instead of makeConsistent when restoring a trace
+  def registerConstraints(self):
+    for node, val in self.unpropagatedObservations.iteritems():
+      # appNode = self.getConstrainableNode(node)
+      node.observe(val)
+      EvalContext(self).constrain(node, node.observedValue)
+    self.unpropagatedObservations.clear()
+
   def unobserve(self, id):
     node = self.families[id]
     if node.isObservation:
@@ -121,3 +130,34 @@ class Trace(LiteTrace):
   def just_restore(self, scaffold, rhoDB):
     print 'restore', scaffold, rhoDB
     return 0
+
+  ## Serialization interface
+
+  def makeSerializationDB(self, values=None, skipStackDictConversion=False):
+    db = OmegaDB()
+    if values is not None:
+      if not skipStackDictConversion:
+        values = {key: self.unboxValue(value) for key, value in values.items()}
+      db.values.update(values)
+    return db
+
+  def dumpSerializationDB(self, db, skipStackDictConversion=False):
+    values = db.values
+    if not skipStackDictConversion:
+      values = {key: self.boxValue(value) for key, value in values.items()}
+    return values
+
+  def unevalAndExtract(self, id, db):
+    # leaves trace in an inconsistent state. use restore afterward
+    assert id in self.families
+    RestoreContext(self, db).unevalFamily(self.families[id])
+
+  def restore(self, id, db):
+    assert id in self.families
+    RestoreContext(self, db).restore(self.families[id])
+
+  def evalAndRestore(self, id, exp, db):
+    assert id not in self.families
+    (w, self.families[id]) = RestoreContext(self, db).evalFamily(
+      Address(List(id)), self.unboxExpression(exp), self.globalEnv)
+    assert w == 0
