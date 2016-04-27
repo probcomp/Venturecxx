@@ -29,6 +29,8 @@ class Trace(LiteTrace):
     EvalContext(self).processMadeSP(spNode)
     self.globalEnv.addBinding(name, spNode)
 
+  ## Internal interface to eval/regen
+
   def createApplicationNodes(self, address, operatorNode, operandNodes, env):
     # Request nodes don't exist now, so just create a singular node.
     outputNode = OutputNode(address, operatorNode, operandNodes, None, env)
@@ -52,6 +54,8 @@ class Trace(LiteTrace):
       sp.requestedFamilies = SPFamilies()
     assert isinstance(sp.requestedFamilies, SPFamilies)
     return sp.requestedFamilies
+
+  ## External interface to engine
 
   def eval(self, id, exp):
     assert id not in self.families
